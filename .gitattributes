@@ -1,0 +1,15 @@
+# Normalizar line endings: LF en el repo, conversión automática al checkout
+* text=auto
+
+# Lua y documentación: siempre LF
+*.lua text eol=lf
+*.md  text eol=lf
+*.toc text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+
+# Archivos binarios: sin conversión
+*.zip binary
+*.rar binary
+*.png binary
+*.jpg binary

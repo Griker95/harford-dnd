@@ -1,0 +1,56 @@
+# Harford DnD 5e — Reglas para Cursor AI
+
+Este proyecto es un addon de **World of Warcraft** escrito en **Lua** (Interface 45745) para el servidor privado de roleplay **Epsilon**. Implementa un sistema de **D&D 5e** dentro del juego.
+
+## Reglas fundamentales
+
+- Responde siempre al usuario en **español**. Código y comentarios en español.
+- **Lee `AGENTS.md` antes de tocar cualquier módulo.** Contiene contratos, arquitectura y enfoques fallidos.
+- No crear archivos nuevos salvo petición explícita.
+- No agregar comentarios genéricos — solo el WHY no obvio.
+- No reintentar enfoques listados como FALLIDOS en `AGENTS.md`.
+
+## Entorno
+
+- Lua WoW API (Interface 45745) + Epsilon (servidor privado RP)
+- Dependencias opcionales en runtime: `EpsilonLib`, `ARC`, `TRP3_API`, `C_Epsilon`
+- Addon messages: prefixes `DND5EARC`, `HARFORDLOOT`, `HARFORDCFG`, `HARFORDTURN`
+
+## Limitaciones Epsilon — NO reintentar
+
+- **Strata cross-tree**: hijos de `TargetFrame` no respetan strata vs `UIParent`. Overlays → `UIParent` + `SetFrameStrata("DIALOG")` + level 500+.
+- **TargetofTarget_Update**: ~12x/s, restaura barras nativas del ToT. No escribir en ellas.
+- **SetAlpha barras ToT**: restaurado por `OnValueChanged`. No usar.
+- **Reposicionar TargetFrameToT**: `TargetofTarget_Update` resetea anchors. No mover.
+
+## Patrones establecidos
+
+```lua
+-- Dependencias opcionales
+if TRP3_API and TRP3_API.register then ... end
+
+-- Overlay UIParent/DIALOG
+local f = CreateFrame("Frame", nil, UIParent)
+f:SetFrameStrata("DIALOG"); f:SetFrameLevel(500)
+f:SetAllPoints(nativeBar)
+
+-- Máscara circular: aplicar a AMBAS texturas (bg e icon)
+pbg:AddMaskTexture(mask)
+ptex:AddMaskTexture(mask)
+
+-- Debug temporal
+HarfordDebug.RegisterCommand("nombre", function(args) end, "descripción")
+```
+
+## Módulos clave
+
+| Archivo | Rol |
+|---|---|
+| `Harford/HarfordUnitFrames.lua` | Overlays sobre frames WoW (~3800 líneas) |
+| `Harford/HarfordDnD.lua` | Ficha D&D 5e |
+| `Harford/HarfordTurns.lua` | Tracker de turnos |
+| `Harford/HarfordDebug.lua` | Debug — diagnósticos temporales aquí |
+| `Harford/HarfordSync.lua` | Addon messages |
+| `HarfordAdmin/HarfordAdminUnitMenu.lua` | Menú DM |
+
+Para contexto completo: ver `AGENTS.md` y `CLAUDE.md`.

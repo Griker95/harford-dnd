@@ -1,0 +1,21 @@
+## Interface: 45745
+## Title: |cff3536CCHarford|r DnD 5e 
+## Notes: Sistema de Loot y Fichas DnD 5e de |cff3536CCCompañía Harford|r
+## Author: Griker
+## Version: 1.0.0
+## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordLootConfigStore, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordDebugSettings, HarfordConfigStore
+
+HarfordSync.lua
+HarfordDebug.lua
+HarfordConfig.lua
+HarfordAuthority.lua
+HarfordEpsilonCommands.lua
+HarfordServerActions.lua
+HarfordTRP3.lua
+HarfordDnDResources.lua
+HarfordDnDStore.lua
+HarfordDnDComm.lua
+HarfordLoot.lua
+HarfordDnD.lua
+HarfordUnitFrames.lua
+HarfordTurns.lua

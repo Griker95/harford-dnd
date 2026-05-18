@@ -1,0 +1,14 @@
+# Respaldos manuales
+*.zip
+*.rar
+
+# Compilados Lua
+*.luac
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Claude Code — configuración local personal
+.claude/settings.local.json

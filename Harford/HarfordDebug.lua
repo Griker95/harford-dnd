@@ -998,4 +998,114 @@ SlashCmdList["HARFORDDEBUG"] = function(msg)
     end
 end
 
+-- ── INSPECCIÓN DE FRAME TOT / FOCUS ────────────────────────────────────────
+-- Uso: /harforddebug run totframe [tot|focustot]
+-- Vuelca jerarquía completa del frame para diagnosticar overlays y niveles.
+API.RegisterCommand("totframe", function(args)
+    local which = tostring(args or ""):match("^%s*(%S*)")
+    local rootName, root
+    if which == "focustot" then
+        rootName = "FocusFrameToT"
+        root = _G["FocusFrameToT"]
+    else
+        rootName = "TargetFrameToT"
+        root = _G["TargetFrameToT"]
+    end
+
+    if not root then
+        Print(rootName .. " no existe en _G")
+        return
+    end
+
+    local function strata(f)
+        return f.GetFrameStrata and f:GetFrameStrata() or "?"
+    end
+    local function level(f)
+        return f.GetFrameLevel and f:GetFrameLevel() or "?"
+    end
+    local function alpha(f)
+        return f.GetAlpha and string.format("%.2f", f:GetAlpha()) or "?"
+    end
+    local function shown(f)
+        return f.IsShown and (f:IsShown() and "SHOWN" or "hidden") or "?"
+    end
+    local function size(f)
+        if not f.GetWidth then return "?" end
+        return string.format("%.0fx%.0f", f:GetWidth(), f:GetHeight())
+    end
+
+    Print("=== " .. rootName .. " ===")
+    Print(string.format("  strata=%s level=%s alpha=%s vis=%s size=%s",
+        strata(root), level(root), alpha(root), shown(root), size(root)))
+
+    -- Regiones directas
+    if root.GetRegions then
+        local ri = 0
+        for _, region in ipairs({ root:GetRegions() }) do
+            ri = ri + 1
+            local objType = region.GetObjectType and region:GetObjectType() or "?"
+            local tex = region.GetTexture and region:GetTexture() or nil
+            local atl = region.GetAtlas and region:GetAtlas() or nil
+            local ralpha = region.GetAlpha and string.format("%.2f", region:GetAlpha()) or "?"
+            local rshown = region.IsShown and (region:IsShown() and "SHOWN" or "hidden") or "?"
+            Print(string.format("  region[%d] type=%s alpha=%s vis=%s tex=%s atlas=%s",
+                ri, objType, ralpha, rshown,
+                tostring(tex or "-"), tostring(atl or "-")))
+        end
+    end
+
+    -- Hijos directos
+    if root.GetChildren then
+        for _, child in ipairs({ root:GetChildren() }) do
+            local n = child.GetName and child:GetName() or "(sin nombre)"
+            local objType = child.GetObjectType and child:GetObjectType() or "?"
+            Print(string.format("  hijo: %-40s type=%-8s strata=%s level=%s alpha=%s vis=%s size=%s",
+                n, objType, strata(child), level(child), alpha(child), shown(child), size(child)))
+
+            -- Regiones del hijo
+            if child.GetRegions then
+                for _, region in ipairs({ child:GetRegions() }) do
+                    local rtype = region.GetObjectType and region:GetObjectType() or "?"
+                    local tex = region.GetTexture and region:GetTexture() or nil
+                    local atl = region.GetAtlas and region:GetAtlas() or nil
+                    local ralpha = region.GetAlpha and string.format("%.2f", region:GetAlpha()) or "?"
+                    local rshown = region.IsShown and (region:IsShown() and "SHOWN" or "hidden") or "?"
+                    Print(string.format("    region type=%s alpha=%s vis=%s tex=%s atlas=%s",
+                        rtype, ralpha, rshown,
+                        tostring(tex or "-"), tostring(atl or "-")))
+                end
+            end
+
+            -- Nietos
+            if child.GetChildren then
+                for _, grandchild in ipairs({ child:GetChildren() }) do
+                    local gn = grandchild.GetName and grandchild:GetName() or "(sin nombre)"
+                    local gobjType = grandchild.GetObjectType and grandchild:GetObjectType() or "?"
+                    Print(string.format("    nieto: %-36s type=%-8s level=%s alpha=%s vis=%s",
+                        gn, gobjType, level(grandchild), alpha(grandchild), shown(grandchild)))
+                end
+            end
+        end
+    end
+
+    -- Estado de los globals relevantes
+    Print("--- globals ---")
+    Print("TargetofTarget_Update: " .. type(_G.TargetofTarget_Update))
+    Print("FocusofTarget_Update:  " .. type(_G.FocusofTarget_Update))
+    local ov = HarfordUnitFrames and HarfordUnitFrames._totBarsOverlay
+    local fov = HarfordUnitFrames and HarfordUnitFrames._focusTotBarsOverlay
+    Print("totBarsOverlay creado: " .. tostring(ov ~= nil))
+    Print("focusTotOverlay creado: " .. tostring(fov ~= nil))
+    if ov then
+        Print(string.format("  ov.portraitFrame: vis=%s", shown(ov.portraitFrame or {})))
+        local pn = _G["TargetFrameToTPortrait"]
+        Print("  TargetFrameToTPortrait alpha: " .. (pn and pn.GetAlpha and string.format("%.2f", pn:GetAlpha()) or "nil"))
+    end
+    if fov then
+        Print(string.format("  fov.portraitFrame: vis=%s", shown(fov.portraitFrame or {})))
+        local pn = _G["FocusFrameToTPortrait"]
+        Print("  FocusFrameToTPortrait alpha: " .. (pn and pn.GetAlpha and string.format("%.2f", pn:GetAlpha()) or "nil"))
+    end
+end, "inspecciona jerarquía TargetFrameToT o FocusFrameToT. Args: tot (default) | focustot")
+
 SetEnabled(HarfordDebugSettings.enabled == true, true)

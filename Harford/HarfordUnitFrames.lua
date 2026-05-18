@@ -1,46 +1,47 @@
-HarfordUnitFrames = HarfordUnitFrames or {}
+﻿HarfordUnitFrames = HarfordUnitFrames or {}
 
 local API = HarfordUnitFrames
 
-local ADDON_PREFIX = "DND5EARC"
-local DEFAULT_FRAME_W = 232
-local DEFAULT_FRAME_H = 100
-local DEFAULT_BAR_W = 119
-local DEFAULT_BAR_H = 10
-local BAR_GAP = 2
-local BAR_INSET_X = 1
-local BAR_INSET_Y = 0
-local EXTRA_BAR_BG_ALPHA = 0.42
-local TEX_WHITE = "Interface\\Buttons\\WHITE8x8"
-local TEX_STATUS = "Interface\\TargetingFrame\\UI-StatusBar"
-local TEX_FRAME = "Interface\\TargetingFrame\\UI-TargetingFrame"
-local TEX_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+API.C = API.C or {}
+API.C.ADDON_PREFIX = "DND5EARC"
+API.C.DEFAULT_FRAME_W = 232
+API.C.DEFAULT_FRAME_H = 100
+API.C.DEFAULT_BAR_W = 119
+API.C.DEFAULT_BAR_H = 10
+API.C.BAR_GAP = 2
+API.C.BAR_INSET_X = 1
+API.C.BAR_INSET_Y = 0
+API.C.EXTRA_BAR_BG_ALPHA = 0.42
+API.C.TEX_WHITE = "Interface\\Buttons\\WHITE8x8"
+API.C.TEX_STATUS = "Interface\\TargetingFrame\\UI-StatusBar"
+API.C.TEX_FRAME = "Interface\\TargetingFrame\\UI-TargetingFrame"
+API.C.TEX_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+API.C.TOT_OVERLAY_STRATA = "MEDIUM"
+API.C.TOT_ART_LEVEL = 82
+API.C.TOT_BAR_FRAME_LEVEL = 83
+API.C.TOT_BAR_LEVEL = 84
+API.C.TOT_PORTRAIT_LEVEL = 85
 
-local frames = {}
-local layouts = {}
-local resourceRequests = {}
-local nativeState = {}
-local auraAnchors = {}
-local targetOfTargetState = nil
-local targetOfTargetDesired = nil
-local targetOfTargetHooksInstalled = false
-local targetOfTargetLastGUID = nil
-local totBarsOverlay = nil   -- frames Harford sobre TargetFrameToTHealthBar y TargetFrameToTManaBar
+API.S = API.S or {}
+API.S.frames = API.S.frames or {}
+API.S.layouts = API.S.layouts or {}
+API.S.resourceRequests = API.S.resourceRequests or {}
+API.S.nativeState = API.S.nativeState or {}
+API.S.auraAnchors = API.S.auraAnchors or {}
+API.S.focusTot = API.S.focusTot or { overlay=nil, lastGUID=nil, hooksInstalled=false }
+API.S.nativePortraitMasks = API.S.nativePortraitMasks or {}
+API.S.groupOverlays = API.S.groupOverlays or {}
+API.S.groupResourceRequests = API.S.groupResourceRequests or {}
+API.S.compactUnitFrameHooksInstalled = API.S.compactUnitFrameHooksInstalled or {}
+API.S.compactBarState = API.S.compactBarState or {}
+API.S.compactPortraitState = API.S.compactPortraitState or {}
+API.S.compactFramesTouched = API.S.compactFramesTouched or {}
+API.S.classColorCache = API.S.classColorCache or {}
+-- API.S.focusTot.refresh/hide/ensureHooks se asignan dentro del do-block sin consumir slots de local.
 local RefreshTargetOfTargetNative
 local RefreshTargetOfTargetBars
 local HideToTBarsOverlay
 local ReapplyNativeBars
-local nativePortraitMasks = {}
-local groupOverlays = {}
-local groupResourceRequests = {}
-local compactUnitFrameHooksInstalled = {}
-local compactBarState = {}
-local compactPortraitState = {}
-local compactFramesTouched = {}
-local restoringCompactFrames = false
-local classColorCache = {}
-local nativePowerHooksInstalled = false
-local targetNativeRefreshQueued = false
 
 local BarBackgroundInfo
 local StatusBarTextureInfo
@@ -57,6 +58,7 @@ local function NativeFrameForUnit(unit)
     if unit == "player" then return _G.PlayerFrame end
     if unit == "target" then return _G.TargetFrame end
     if unit == "focus" then return _G.FocusFrame end
+    if unit == "focustarget" then return _G["FocusFrameToT"] end
     if unit == "targettarget" then
         return _G.TargetFrameToT
             or (_G.TargetFrame and _G.TargetFrame.totFrame)
@@ -161,14 +163,16 @@ local function NativePiecesForUnit(unit)
 
     local root = unit == "focus" and _G.FocusFrame
         or unit == "targettarget" and NativeFrameForUnit("targettarget")
+        or unit == "focustarget" and _G["FocusFrameToT"]
         or _G.TargetFrame
     local modernMain = FieldPath(root, "TargetFrameContent", "TargetFrameContentMain")
     local prefix = unit == "focus" and "FocusFrame"
         or unit == "targettarget" and "TargetFrameToT"
+        or unit == "focustarget" and "FocusFrameToT"
         or "TargetFrame"
     local health = FirstExisting(FieldPath(modernMain, "HealthBar"), _G[prefix .. "HealthBar"], FieldPath(root, "healthbar"), FieldPath(root, "HealthBar"))
     local power = FirstExisting(FieldPath(modernMain, "ManaBar"), _G[prefix .. "ManaBar"], FieldPath(root, "manabar"), FieldPath(root, "ManaBar"))
-    if unit == "targettarget" then
+    if unit == "targettarget" or unit == "focustarget" then
         health = health or PickStatusBar(root, { "health" })
         power = power or PickStatusBar(root, { "mana", "power" }, health and { [health] = true } or nil)
     end
@@ -234,13 +238,13 @@ local function TextureInfo(texture, unit)
 
     if unit == "player" then
         return {
-            path = TEX_FRAME,
+            path = API.C.TEX_FRAME,
             texCoord = { 1, 0.09375, 0, 0.78125 },
         }
     end
 
     return {
-        path = TEX_FRAME,
+        path = API.C.TEX_FRAME,
         texCoord = { 0.09375, 1, 0, 0.78125 },
     }
 end
@@ -249,11 +253,11 @@ local function FallbackLayout(unit)
     local isPlayer = unit == "player"
     return {
         unit = unit,
-        root = { width = DEFAULT_FRAME_W, height = DEFAULT_FRAME_H },
+        root = { width = API.C.DEFAULT_FRAME_W, height = API.C.DEFAULT_FRAME_H },
         texture = TextureInfo(nil, unit),
-        portrait = { x = isPlayer and 42 or DEFAULT_FRAME_W - 42 - 64, y = 12, width = 64, height = 64 },
-        health = { x = isPlayer and 106 or 7, y = 41, width = DEFAULT_BAR_W, height = DEFAULT_BAR_H },
-        power = { x = isPlayer and 106 or 7, y = 54, width = DEFAULT_BAR_W, height = DEFAULT_BAR_H },
+        portrait = { x = isPlayer and 42 or API.C.DEFAULT_FRAME_W - 42 - 64, y = 12, width = 64, height = 64 },
+        health = { x = isPlayer and 106 or 7, y = 41, width = API.C.DEFAULT_BAR_W, height = API.C.DEFAULT_BAR_H },
+        power = { x = isPlayer and 106 or 7, y = 54, width = API.C.DEFAULT_BAR_W, height = API.C.DEFAULT_BAR_H },
         level = { cx = isPlayer and 54 or 179.5, cy = 65, width = 22, height = 16 },
         name = { cx = isPlayer and 166 or 66, cy = 31, width = 112, height = 14 },
         measured = false,
@@ -277,9 +281,9 @@ end
 
 local function DerivedLayout(unit, rootWidth, rootHeight)
     local fallback = FallbackLayout(unit)
-    local sx = (rootWidth or DEFAULT_FRAME_W) / DEFAULT_FRAME_W
-    local sy = (rootHeight or DEFAULT_FRAME_H) / DEFAULT_FRAME_H
-    fallback.root = { width = rootWidth or DEFAULT_FRAME_W, height = rootHeight or DEFAULT_FRAME_H }
+    local sx = (rootWidth or API.C.DEFAULT_FRAME_W) / API.C.DEFAULT_FRAME_W
+    local sy = (rootHeight or API.C.DEFAULT_FRAME_H) / API.C.DEFAULT_FRAME_H
+    fallback.root = { width = rootWidth or API.C.DEFAULT_FRAME_W, height = rootHeight or API.C.DEFAULT_FRAME_H }
     fallback.portrait = ScaleBox(fallback.portrait, sx, sy)
     fallback.health = ScaleBox(fallback.health, sx, sy)
     fallback.power = ScaleBox(fallback.power, sx, sy)
@@ -300,8 +304,8 @@ local function IsSaneBox(box, rootWidth, rootHeight, minW, minH, maxW, maxH)
 end
 
 local function NormalizeMeasuredLayout(layout)
-    local rootW = layout.root and layout.root.width or DEFAULT_FRAME_W
-    local rootH = layout.root and layout.root.height or DEFAULT_FRAME_H
+    local rootW = layout.root and layout.root.width or API.C.DEFAULT_FRAME_W
+    local rootH = layout.root and layout.root.height or API.C.DEFAULT_FRAME_H
     local derived = DerivedLayout(layout.unit, rootW, rootH)
 
     if not IsSaneBox(layout.portrait, rootW, rootH, 28, 28, 90, 90) then
@@ -404,10 +408,10 @@ function API.MeasureNativeLayout(unit)
 end
 
 local function GetOrMeasureLayout(unit, force)
-    if force or not layouts[unit] then
-        layouts[unit] = API.MeasureNativeLayout(unit)
+    if force or not API.S.layouts[unit] then
+        API.S.layouts[unit] = API.MeasureNativeLayout(unit)
     end
-    return layouts[unit]
+    return API.S.layouts[unit]
 end
 
 local function ResourceValue(tbl, key)
@@ -462,12 +466,12 @@ local WOW_CLASS_ALIASES = {
 local function NormalizeClassKey(value)
     value = tostring(value or ""):lower()
     value = value:gsub("[_%-]+", " ")
-    value = value:gsub("[áàäâÁÀÄÂ]", "a")
-    value = value:gsub("[éèëêÉÈËÊ]", "e")
-    value = value:gsub("[íìïîÍÌÏÎ]", "i")
-    value = value:gsub("[óòöôÓÒÖÔ]", "o")
-    value = value:gsub("[úùüûÚÙÜÛ]", "u")
-    value = value:gsub("[ñÑ]", "n")
+    value = value:gsub("[Ã¡Ã Ã¤Ã¢ÃÃ€Ã„Ã‚]", "a")
+    value = value:gsub("[Ã©Ã¨Ã«ÃªÃ‰ÃˆÃ‹ÃŠ]", "e")
+    value = value:gsub("[Ã­Ã¬Ã¯Ã®ÃÃŒÃÃŽ]", "i")
+    value = value:gsub("[Ã³Ã²Ã¶Ã´Ã“Ã’Ã–Ã”]", "o")
+    value = value:gsub("[ÃºÃ¹Ã¼Ã»ÃšÃ™ÃœÃ›]", "u")
+    value = value:gsub("[Ã±Ã‘]", "n")
     return value
 end
 
@@ -500,18 +504,18 @@ end
 
 local function CacheClassColorForName(unitName, r, g, b, classKey)
     if not unitName or not r then return end
-    classColorCache[unitName] = { r, g, b, classKey }
+    API.S.classColorCache[unitName] = { r, g, b, classKey }
     local short = Ambiguate and Ambiguate(unitName, "short") or unitName
     if short and short ~= "" then
-        classColorCache[short] = classColorCache[unitName]
+        API.S.classColorCache[short] = API.S.classColorCache[unitName]
     end
 end
 
 local function GetCachedClassColorForName(unitName)
-    local color = unitName and classColorCache[unitName]
+    local color = unitName and API.S.classColorCache[unitName]
     if color then return color[1], color[2], color[3], color[4] end
     local short = unitName and Ambiguate and Ambiguate(unitName, "short") or unitName
-    color = short and classColorCache[short]
+    color = short and API.S.classColorCache[short]
     if color then return color[1], color[2], color[3], color[4] end
     return nil
 end
@@ -571,9 +575,9 @@ local function RequestResourcesIfNeeded(unit, unitName, resources)
     if unit == "player" or type(resources) == "table" then return end
     if not HarfordDnDAPI or not HarfordDnDAPI.RequestResourcesForName then return end
     local now = GetTime and GetTime() or time()
-    local last = resourceRequests[unitName] or 0
+    local last = API.S.resourceRequests[unitName] or 0
     if now - last < 5 then return end
-    resourceRequests[unitName] = now
+    API.S.resourceRequests[unitName] = now
     HarfordDnDAPI.RequestResourcesForName(unitName)
 end
 
@@ -582,15 +586,15 @@ local function RequestGroupResourcesIfNeeded(unitName, resources)
     if not unitName or unitName == "" then return end
     if not HarfordDnDAPI or not HarfordDnDAPI.RequestResourcesForName then return end
     local now = GetTime and GetTime() or time()
-    local last = groupResourceRequests[unitName] or 0
+    local last = API.S.groupResourceRequests[unitName] or 0
     if now - last < 8 then return end
-    groupResourceRequests[unitName] = now
+    API.S.groupResourceRequests[unitName] = now
     HarfordDnDAPI.RequestResourcesForName(unitName)
 end
 
 local function SaveFrameState(frame)
-    if not frame or nativeState[frame] then return end
-    nativeState[frame] = {
+    if not frame or API.S.nativeState[frame] then return end
+    API.S.nativeState[frame] = {
         shown = frame.IsShown and frame:IsShown() == true,
         alpha = frame.GetAlpha and frame:GetAlpha() or 1,
         mouse = frame.IsMouseEnabled and frame:IsMouseEnabled() == true,
@@ -602,7 +606,7 @@ local function SetFrameAlpha(frame, alpha)
 end
 
 local function RestoreFrame(frame)
-    local state = frame and nativeState[frame]
+    local state = frame and API.S.nativeState[frame]
     if not state then return end
     SetFrameAlpha(frame, state.alpha or 1)
     if frame.EnableMouse then frame:EnableMouse(state.mouse == true) end
@@ -613,7 +617,7 @@ local function RestoreFrame(frame)
     elseif frame.Hide then
         frame:Hide()
     end
-    nativeState[frame] = nil
+    API.S.nativeState[frame] = nil
 end
 
 local function HideNativeUnitFrame(unit)
@@ -768,20 +772,20 @@ function BarBackgroundInfo(bar, unit)
 end
 
 local function SaveAuraPoints(frame)
-    if not frame or auraAnchors[frame] then return end
+    if not frame or API.S.auraAnchors[frame] then return end
     local points = {}
     for i = 1, frame:GetNumPoints() do
         local point, relativeTo, relativePoint, x, y = frame:GetPoint(i)
         points[#points + 1] = { point, relativeTo, relativePoint, x or 0, y or 0 }
     end
-    auraAnchors[frame] = {
+    API.S.auraAnchors[frame] = {
         parent = frame.GetParent and frame:GetParent() or nil,
         points = points,
     }
 end
 
 local function RestoreTargetAuras()
-    for frame, data in pairs(auraAnchors) do
+    for frame, data in pairs(API.S.auraAnchors) do
         if frame then
             if data.parent and frame.SetParent then frame:SetParent(data.parent) end
             frame:ClearAllPoints()
@@ -790,15 +794,73 @@ local function RestoreTargetAuras()
             end
         end
     end
-    auraAnchors = {}
+    API.S.auraAnchors = {}
 end
 
-local function ShiftAuraFrame(auraFrame, harfordFrame, offsetY)
-    if not auraFrame or not harfordFrame then return end
+local function ClearTargetAuraAnchorCache()
+    API.S.auraAnchors = {}
+end
+
+local function ShiftAuraFrame(auraFrame, verticalOffset)
+    if not auraFrame then return end
     SaveAuraPoints(auraFrame)
+    local data = API.S.auraAnchors[auraFrame]
+    local points = data and data.points
+    if not points or #points == 0 then return end
+
     auraFrame:ClearAllPoints()
-    -- Anchor to the Harford frame bottom, which already includes extra bar height
-    auraFrame:SetPoint("TOPLEFT", harfordFrame, "BOTTOMLEFT", 0, offsetY)
+    for _, point in ipairs(points) do
+        auraFrame:SetPoint(point[1], point[2], point[3], point[4], (point[5] or 0) - verticalOffset)
+    end
+end
+
+local function AuraDependsOnBuffFrame(auraFrame, relativeFrame)
+    if not auraFrame or not relativeFrame then return false end
+    SaveAuraPoints(auraFrame)
+    local data = API.S.auraAnchors[auraFrame]
+    for _, point in ipairs((data and data.points) or {}) do
+        local relativeTo = point[2]
+        local relativeName = relativeTo and relativeTo.GetName and relativeTo:GetName()
+        if relativeTo == relativeFrame
+            or (type(relativeName) == "string" and relativeName:match("^TargetFrameBuff%d+$"))
+        then
+            return true
+        end
+    end
+    return false
+end
+
+local function MeasureAuraGap(upperFrame, lowerFrame)
+    if not upperFrame or not lowerFrame then return nil end
+    if upperFrame.IsShown and not upperFrame:IsShown() then return nil end
+    if lowerFrame.IsShown and not lowerFrame:IsShown() then return nil end
+    local upperBottom = upperFrame.GetBottom and upperFrame:GetBottom()
+    local lowerTop = lowerFrame.GetTop and lowerFrame:GetTop()
+    if not upperBottom or not lowerTop then return nil end
+    return upperBottom - lowerTop
+end
+
+local function NudgeAuraFrame(auraFrame, yDelta)
+    if not auraFrame or not yDelta or math.abs(yDelta) < 0.5 then return end
+    local points = {}
+    for i = 1, auraFrame:GetNumPoints() do
+        local point, relativeTo, relativePoint, x, y = auraFrame:GetPoint(i)
+        points[#points + 1] = { point, relativeTo, relativePoint, x or 0, (y or 0) + yDelta }
+    end
+    if #points == 0 then return end
+    auraFrame:ClearAllPoints()
+    for _, point in ipairs(points) do
+        auraFrame:SetPoint(point[1], point[2], point[3], point[4], point[5])
+    end
+end
+
+local function NormalizeDebuffGap(buffFrame, debuffFrame, desiredGap)
+    if not desiredGap then return end
+    local currentGap = MeasureAuraGap(buffFrame, debuffFrame)
+    if not currentGap then return end
+    -- Mantener la separacion nativa entre la primera fila de buffs y debuffs.
+    -- Esto corrige tanto el doble-offset hacia abajo como el solape hacia arriba.
+    NudgeAuraFrame(debuffFrame, currentGap - desiredGap)
 end
 
 local function FindTargetAuraFrames()
@@ -811,14 +873,25 @@ local function AdjustTargetAuras(frame, resourceCount, extraHeight)
     if frame.unit ~= "target" then return end
     resourceCount = tonumber(resourceCount) or 0
     extraHeight = tonumber(extraHeight) or 0
+    local guid = UnitGUID and UnitGUID("target") or nil
+    if API.S.auraTargetGUID ~= guid then
+        ClearTargetAuraAnchorCache()
+        API.S.auraTargetGUID = guid
+    end
     if resourceCount <= 2 or extraHeight <= 0 then
         RestoreTargetAuras()
         return
     end
 
+    local verticalOffset = extraHeight
+
     local buffFrame, debuffFrame = FindTargetAuraFrames()
-    ShiftAuraFrame(buffFrame, frame, -2)
-    ShiftAuraFrame(debuffFrame, frame, -20)
+    local nativeDebuffGap = MeasureAuraGap(buffFrame, debuffFrame)
+    ShiftAuraFrame(buffFrame, verticalOffset)
+    -- Si los debuffs ya dependen de los buffs en el layout nativo, mover ambos
+    -- aplica el offset dos veces y rompe la separación entre filas.
+    ShiftAuraFrame(debuffFrame, AuraDependsOnBuffFrame(debuffFrame, buffFrame) and 0 or verticalOffset)
+    NormalizeDebuffGap(buffFrame, debuffFrame, nativeDebuffGap)
 end
 
 local function FindTargetOfTargetFrame()
@@ -829,10 +902,10 @@ end
 
 local function ApplyTargetOfTargetLayer()
     local tot = FindTargetOfTargetFrame()
-    if not tot or not targetOfTargetDesired then return end
-    local newLevel = targetOfTargetDesired.level or 90
+    if not tot or not API.S.targetOfTargetDesired then return end
+    local newLevel = API.S.targetOfTargetDesired.level or 90
     if tot.SetFrameStrata then
-        tot:SetFrameStrata(targetOfTargetDesired.strata or "HIGH")
+        tot:SetFrameStrata(API.S.targetOfTargetDesired.strata or "HIGH")
     end
     if tot.SetFrameLevel then
         tot:SetFrameLevel(newLevel)
@@ -850,12 +923,13 @@ local function DeferTargetOfTargetLayer()
 end
 
 -- Construye un frame StatusBar overlay sobre una barra nativa del ToT.
--- Se parenta a UIParent con strata DIALOG para quedar encima de barSlotOverlays
--- independientemente de la jerarquía de frames de TargetFrame en Epsilon.
+-- Se parenta a UIParent con strata HIGH para quedar encima de barSlotOverlays
+-- sin tapar ventanas DIALOG de otros addons.
+-- independientemente de la jerarquÃ­a de frames de TargetFrame en Epsilon.
 local function MakeToTBarOverlayFrame(nativeBar)
     local f = CreateFrame("Frame", nil, UIParent)
-    f:SetFrameStrata("DIALOG")
-    f:SetFrameLevel(500)
+    f:SetFrameStrata(API.C.TOT_OVERLAY_STRATA)
+    f:SetFrameLevel(API.C.TOT_BAR_FRAME_LEVEL)
     f:SetAllPoints(nativeBar)
 
     local bg = f:CreateTexture(nil, "BACKGROUND", nil, 0)
@@ -864,10 +938,10 @@ local function MakeToTBarOverlayFrame(nativeBar)
     f.bg = bg
 
     local bar = CreateFrame("StatusBar", nil, f)
-    bar:SetFrameStrata("DIALOG")
-    bar:SetFrameLevel(501)
+    bar:SetFrameStrata(API.C.TOT_OVERLAY_STRATA)
+    bar:SetFrameLevel(API.C.TOT_BAR_LEVEL)
     bar:SetAllPoints(f)
-    bar:SetStatusBarTexture(TEX_STATUS)
+    bar:SetStatusBarTexture(API.C.TEX_STATUS)
     bar:SetMinMaxValues(0, 1)
     bar:SetValue(0)
     f.bar = bar
@@ -876,19 +950,24 @@ local function MakeToTBarOverlayFrame(nativeBar)
     return f
 end
 
-local function IsToTArtTexture(info)
-    if not info then return false end
-    local path = info.path and tostring(info.path):lower() or ""
-    local atlas = info.atlas and tostring(info.atlas):lower() or ""
-    return path:find("targetingframe", 1, true)
-        or path:find("targetoftarget", 1, true)
-        or atlas:find("targetingframe", 1, true)
-        or atlas:find("targetoftarget", 1, true)
-end
-
+-- Recoge las texturas de arte/borde de un frame ToT para replicarlas en el overlay.
+-- Excluye por nombre los hijos que son barras/portrait (ya cubiertos por overlays Harford).
+-- No filtra por atlas/path porque los nombres varÃ­an entre versiones de Epsilon.
 local function CollectToTArtRegions(root)
     local rootBounds = Bounds(root)
     if not root or not rootBounds then return {} end
+
+    local rootName = root.GetName and root:GetName() or ""
+    local textureFrame = _G[rootName .. "TextureFrame"]
+    if not textureFrame and root.GetChildren then
+        for _, child in ipairs({ root:GetChildren() }) do
+            local n = child.GetName and child:GetName() or ""
+            if n == rootName .. "TextureFrame" then
+                textureFrame = child
+                break
+            end
+        end
+    end
 
     local regions = {}
     local seen = {}
@@ -896,28 +975,28 @@ local function CollectToTArtRegions(root)
         if not region or seen[region] then return end
         seen[region] = true
         if not region.GetObjectType or region:GetObjectType() ~= "Texture" then return end
-
+        -- Solo texturas con contenido real. TextureInfo devuelve un fallback TEX_FRAME
+        -- para texturas sin textura/atlas cargados; usarlo aquÃ­ crearÃ­a cuadrados vacÃ­os.
+        local hasTex = (region.GetTexture and region:GetTexture()) or (region.GetAtlas and region:GetAtlas())
+        if not hasTex then return end
         local info = TextureInfo(region, "targettarget")
-        if not IsToTArtTexture(info) then return end
-
+        if not info or (not info.path and not info.atlas) then return end
+        local path = tostring(info.path or ""):lower()
+        local atlas = tostring(info.atlas or ""):lower()
+        if not path:find("ui%-targetoftargetframe", 1, false)
+        and not path:find("targetoftargetframe", 1, false)
+        and not atlas:find("targetoftargetframe", 1, false) then
+            return
+        end
         local rel = RelativeBounds(info.bounds, rootBounds)
         if not rel or rel.width <= 0 or rel.height <= 0 then return end
         info.rel = rel
         regions[#regions + 1] = info
     end
 
-    if root.GetRegions then
-        for _, region in ipairs({ root:GetRegions() }) do
+    if textureFrame and textureFrame.GetRegions then
+        for _, region in ipairs({ textureFrame:GetRegions() }) do
             consider(region)
-        end
-    end
-    if root.GetChildren then
-        for _, child in ipairs({ root:GetChildren() }) do
-            if child.GetRegions then
-                for _, region in ipairs({ child:GetRegions() }) do
-                    consider(region)
-                end
-            end
         end
     end
 
@@ -926,19 +1005,19 @@ end
 
 local function MakeToTArtOverlayFrame(tot)
     local f = CreateFrame("Frame", nil, UIParent)
-    f:SetFrameStrata("DIALOG")
-    f:SetFrameLevel(503)
+    f:SetFrameStrata(API.C.TOT_OVERLAY_STRATA)
+    f:SetFrameLevel(API.C.TOT_ART_LEVEL)
     f:SetAllPoints(tot)
     f.textures = {}
     f:Hide()
     return f
 end
 
-local function UpdateToTArtOverlay()
-    local ov = totBarsOverlay
-    local tot = FindTargetOfTargetFrame()
+-- Actualiza el artFrame de un overlay ToT con las texturas de arte/borde del frame nativo.
+-- GenÃ©rico: funciona para TargetFrameToT y FocusFrameToT.
+local function UpdateToTArtOverlay(tot, ov)
     if not ov or not ov.artFrame then return end
-    if not (UnitExists and UnitExists("targettarget")) or not (tot and tot.IsShown and tot:IsShown()) then
+    if not tot or not (tot.IsShown and tot:IsShown()) then
         ov.artFrame:Hide()
         return
     end
@@ -969,6 +1048,38 @@ local function UpdateToTArtOverlay()
     end
 end
 
+-- Oculta los hijos del frame ToT que no son barras ni portrait.
+-- En Epsilon aparecen como cuadrados vacÃ­os (buff/debuff slots nativos de WoW).
+local function HideToTNativeExtras(tot)
+    if not tot or not tot.GetChildren then return end
+    local rootName = tot.GetName and tot:GetName() or ""
+    for _, child in ipairs({ tot:GetChildren() }) do
+        local n = child.GetName and child:GetName() or ""
+        if n:match("^" .. rootName .. "Buff%d+$")
+        or n:match("^" .. rootName .. "Debuff%d+$") then
+            -- HookScript("OnShow", hide): patrÃ³n oUF/ElvUI para que el frame
+            -- nunca vuelva a mostrarse aunque TargetofTarget_Update lo intente.
+            pcall(function()
+                child:HookScript("OnShow", function(self) self:Hide() end)
+                child:Hide()
+            end)
+        end
+    end
+end
+
+-- Oculta permanentemente el portrait nativo de un frame ToT usando HookScript.
+-- SetAlpha(0) no es suficiente: TargetofTarget_Update/FocusofTarget_Update lo restaura.
+local function HideToTNativePortrait(portraitNative)
+    if not portraitNative then return end
+    if portraitNative.SetAlpha then portraitNative:SetAlpha(0) end
+end
+
+function API._SyncToTNativePortraitAlpha(portraitNative, portraitOverlay)
+    if not (portraitNative and portraitNative.SetAlpha) then return end
+    local overlayShown = portraitOverlay and portraitOverlay.IsShown and portraitOverlay:IsShown()
+    portraitNative:SetAlpha(overlayShown and 0 or 1)
+end
+
 -- Crea (o reutiliza) los overlays para health, recurso y portrait del ToT.
 -- Todos parentes a UIParent (strata DIALOG) para garantizar que se rendericen
 -- por encima de los barSlotOverlays del Harford frame independientemente de Epsilon.
@@ -977,7 +1088,7 @@ local function EnsureToTBarsOverlay()
     local manaNative   = _G["TargetFrameToTManaBar"]
     local tot          = _G["TargetFrameToT"]
     if not healthNative or not manaNative or not tot then return nil end
-    if totBarsOverlay then return totBarsOverlay end
+    if API.S.totBarsOverlay then return API.S.totBarsOverlay end
 
     local ov = {
         healthFrame = MakeToTBarOverlayFrame(healthNative),
@@ -985,14 +1096,15 @@ local function EnsureToTBarsOverlay()
         artFrame    = MakeToTArtOverlayFrame(tot),
     }
 
-    -- Portrait overlay: UIParent hijo, strata DIALOG, anclado al portrait nativo.
-    -- SetAlpha(0) en TargetFrameToTPortrait desde el hook lo suprime; este frame
-    -- pone encima el icono TRP3 con máscara circular.
+    -- Portrait nativo: ocultarlo permanentemente con HookScript (SetAlpha no es suficiente,
+    -- TargetofTarget_Update lo restaura). Nuestro overlay sustituye visualmente al nativo.
     local portraitNative = _G["TargetFrameToTPortrait"]
+    HideToTNativePortrait(portraitNative)
+
     if portraitNative then
         local pf = CreateFrame("Frame", nil, UIParent)
-        pf:SetFrameStrata("DIALOG")
-        pf:SetFrameLevel(502)
+        pf:SetFrameStrata(API.C.TOT_OVERLAY_STRATA)
+        pf:SetFrameLevel(API.C.TOT_PORTRAIT_LEVEL)
         local ok = pcall(function() pf:SetAllPoints(portraitNative) end)
         if not ok then
             pf:SetSize(32, 32)
@@ -1009,11 +1121,9 @@ local function EnsureToTBarsOverlay()
         ptex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         pf.icon = ptex
 
-        -- Una sola máscara circular aplicada TANTO al fondo como al icono.
-        -- Sin esto, pbg queda cuadrado y se ve como borde oscuro alrededor del círculo.
         if ptex.AddMaskTexture and pf.CreateMaskTexture then
             local mask = pf:CreateMaskTexture(nil, "ARTWORK")
-            mask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+            mask:SetTexture(API.C.TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
             mask:SetAllPoints(pf)
             pbg:AddMaskTexture(mask)
             ptex:AddMaskTexture(mask)
@@ -1024,7 +1134,10 @@ local function EnsureToTBarsOverlay()
         ov.portraitFrame = pf
     end
 
-    totBarsOverlay = ov
+    -- Ocultar hijos extra del ToT nativo (buff/debuff slots vacÃ­os)
+    HideToTNativeExtras(tot)
+
+    API.S.totBarsOverlay = ov
     HarfordUnitFrames._totBarsOverlay = ov
     return ov
 end
@@ -1040,23 +1153,21 @@ local function UpdateToTPortraitOverlay(profile)
         return
     end
 
-    -- GetPortraitCfgKey está definida más abajo; inlineamos la lógica para evitar forward reference
+    -- GetPortraitCfgKey estÃ¡ definida mÃ¡s abajo; inlineamos la lÃ³gica para evitar forward reference
     local isPlayer = UnitIsPlayer and UnitIsPlayer("targettarget")
     local cfgKey = isPlayer and "portrait_target_player" or "portrait_target_npc"
     local useTRP3 = not HarfordConfig or HarfordConfig.Get(cfgKey) ~= "wow"
     local icon = useTRP3 and profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
 
-    local pNative = _G["TargetFrameToTPortrait"]
+    -- El portrait nativo estÃ¡ permanentemente oculto via HookScript (en EnsureToTBarsOverlay).
+    -- Solo mostramos/ocultamos nuestro overlay; no tocamos el alpha nativo.
     if icon then
         ov.portraitFrame.icon:SetTexture(icon)
         ov.portraitFrame:Show()
-        -- Suprimir portrait 3D nativo; nuestra textura 2D queda encima visualmente
-        if pNative and pNative.SetAlpha then pNative:SetAlpha(0) end
     else
         ov.portraitFrame:Hide()
-        -- Restaurar portrait nativo cuando no hay icono TRP3
-        if pNative and pNative.SetAlpha then pNative:SetAlpha(1) end
     end
+    API._SyncToTNativePortraitAlpha(_G["TargetFrameToTPortrait"], ov.portraitFrame)
 end
 
 -- Actualiza los overlays con datos Harford. Llamar tras cada RefreshTargetOfTargetBars.
@@ -1070,7 +1181,7 @@ local function UpdateToTBarsOverlay(healthData, resourceData)
         return
     end
 
-    UpdateToTArtOverlay()
+    UpdateToTArtOverlay(FindTargetOfTargetFrame(), ov)
 
     -- Salud
     if healthData then
@@ -1094,28 +1205,25 @@ local function UpdateToTBarsOverlay(healthData, resourceData)
         ov.manaFrame.bar:SetValue(cur)
         ov.manaFrame.bar:SetStatusBarColor(r, g, b, 0.95)
     else
-        -- Sin datos aún: barra vacía (fondo oscuro cubre el mana WoW)
+        -- Sin datos aÃºn: barra vacÃ­a (fondo oscuro cubre el mana WoW)
         ov.manaFrame.bar:SetValue(0)
     end
 end
 
--- Oculta los overlays cuando el ToT desaparece o se limpia.
--- También restaura el alpha del portrait nativo por si quedó en 0.
 HideToTBarsOverlay = function()
-    if not totBarsOverlay then return end
-    totBarsOverlay.healthFrame:Hide()
-    totBarsOverlay.manaFrame:Hide()
-    if totBarsOverlay.portraitFrame then totBarsOverlay.portraitFrame:Hide() end
-    if totBarsOverlay.artFrame then totBarsOverlay.artFrame:Hide() end
-    local pNative = _G["TargetFrameToTPortrait"]
-    if pNative and pNative.SetAlpha then pNative:SetAlpha(1) end
+    if not API.S.totBarsOverlay then return end
+    API.S.totBarsOverlay.healthFrame:Hide()
+    API.S.totBarsOverlay.manaFrame:Hide()
+    if API.S.totBarsOverlay.portraitFrame then API.S.totBarsOverlay.portraitFrame:Hide() end
+    if API.S.totBarsOverlay.artFrame then API.S.totBarsOverlay.artFrame:Hide() end
+    -- Portrait nativo permanentemente oculto via HookScript; no restaurar alpha.
 end
 
 local function HideToTResourceOverlays()
-    if not totBarsOverlay then return end
-    totBarsOverlay.healthFrame:Hide()
-    totBarsOverlay.manaFrame:Hide()
-    if totBarsOverlay.artFrame then totBarsOverlay.artFrame:Hide() end
+    if not API.S.totBarsOverlay then return end
+    API.S.totBarsOverlay.healthFrame:Hide()
+    API.S.totBarsOverlay.manaFrame:Hide()
+    if API.S.totBarsOverlay.artFrame then API.S.totBarsOverlay.artFrame:Hide() end
 end
 
 local function EnsureTargetOfTargetHooks(tot)
@@ -1128,11 +1236,11 @@ local function EnsureTargetOfTargetHooks(tot)
             end
         end)
         tot:HookScript("OnHide", function()
-            targetOfTargetLastGUID = nil
+            API.S.targetOfTargetLastGUID = nil
             HideToTBarsOverlay()
         end)
     end
-    if targetOfTargetHooksInstalled then return end
+    if API.S.targetOfTargetHooksInstalled then return end
     local installed = false
     if hooksecurefunc then
         if type(_G.TargetofTarget_Update) == "function" then
@@ -1141,15 +1249,8 @@ local function EnsureTargetOfTargetHooks(tot)
                 if RefreshTargetOfTargetBars then
                     RefreshTargetOfTargetBars()
                 end
-                -- Portrait nativo 3D: suprimir DESPUÉS de RefreshTargetOfTargetBars
-                -- para leer el estado definitivo del overlay en este tick.
-                local pNative = _G["TargetFrameToTPortrait"]
-                if pNative and pNative.SetAlpha then
-                    local ov = totBarsOverlay
-                    local harfordShown = ov and ov.portraitFrame
-                        and ov.portraitFrame.IsShown and ov.portraitFrame:IsShown()
-                    pNative:SetAlpha(harfordShown and 0 or 1)
-                end
+                local ov = API.S.totBarsOverlay
+                API._SyncToTNativePortraitAlpha(_G["TargetFrameToTPortrait"], ov and ov.portraitFrame)
             end)
             installed = true
         end
@@ -1163,17 +1264,17 @@ local function EnsureTargetOfTargetHooks(tot)
             installed = true
         end
     end
-    targetOfTargetHooksInstalled = installed
+    API.S.targetOfTargetHooksInstalled = installed
 end
 
 local function QueueTargetNativeReapply()
     if ReapplyNativeBars then
         ReapplyNativeBars("target")
     end
-    if targetNativeRefreshQueued or not (C_Timer and C_Timer.After) then return end
-    targetNativeRefreshQueued = true
+    if API.S.targetNativeRefreshQueued or not (C_Timer and C_Timer.After) then return end
+    API.S.targetNativeRefreshQueued = true
     C_Timer.After(0, function()
-        targetNativeRefreshQueued = false
+        API.S.targetNativeRefreshQueued = false
         if ReapplyNativeBars then
             ReapplyNativeBars("target")
         end
@@ -1181,8 +1282,8 @@ local function QueueTargetNativeReapply()
 end
 
 local function InstallNativePowerHooks()
-    if nativePowerHooksInstalled then return end
-    nativePowerHooksInstalled = true
+    if API.S.nativePowerHooksInstalled then return end
+    API.S.nativePowerHooksInstalled = true
 
     local targetPower = NativePiecesForUnit("target").power
     if targetPower and targetPower.HookScript then
@@ -1225,23 +1326,23 @@ end
 
 local function RestoreTargetOfTargetFrame()
     local tot = FindTargetOfTargetFrame()
-    targetOfTargetDesired = nil
+    API.S.targetOfTargetDesired = nil
     HarfordUnitFrames._totDesired = nil
-    if not targetOfTargetState then return end
+    if not API.S.targetOfTargetState then return end
     if not tot then
-        targetOfTargetState = nil
+        API.S.targetOfTargetState = nil
         return
     end
-    if targetOfTargetState.strata and tot.SetFrameStrata then
-        tot:SetFrameStrata(targetOfTargetState.strata)
+    if API.S.targetOfTargetState.strata and tot.SetFrameStrata then
+        tot:SetFrameStrata(API.S.targetOfTargetState.strata)
     end
-    if targetOfTargetState.level and tot.SetFrameLevel then
-        tot:SetFrameLevel(targetOfTargetState.level)
+    if API.S.targetOfTargetState.level and tot.SetFrameLevel then
+        tot:SetFrameLevel(API.S.targetOfTargetState.level)
     end
-    if targetOfTargetState.topLevel ~= nil and tot.SetToplevel then
-        tot:SetToplevel(targetOfTargetState.topLevel == true)
+    if API.S.targetOfTargetState.topLevel ~= nil and tot.SetToplevel then
+        tot:SetToplevel(API.S.targetOfTargetState.topLevel == true)
     end
-    targetOfTargetState = nil
+    API.S.targetOfTargetState = nil
 end
 
 local function AdjustTargetOfTargetFrame(frame, resourceCount, extraHeight)
@@ -1255,8 +1356,8 @@ local function AdjustTargetOfTargetFrame(frame, resourceCount, extraHeight)
 
     local tot = FindTargetOfTargetFrame()
     if not tot then return end
-    if not targetOfTargetState then
-        targetOfTargetState = {
+    if not API.S.targetOfTargetState then
+        API.S.targetOfTargetState = {
             strata   = tot.GetFrameStrata and tot:GetFrameStrata() or nil,
             level    = tot.GetFrameLevel  and tot:GetFrameLevel()  or nil,
             topLevel = tot.IsToplevel     and tot:IsToplevel()     or nil,
@@ -1265,11 +1366,11 @@ local function AdjustTargetOfTargetFrame(frame, resourceCount, extraHeight)
 
     local base = frame.GetFrameLevel and frame:GetFrameLevel() or 40
     local slotLevel = frame.barSlotsFrame and frame.barSlotsFrame.GetFrameLevel and frame.barSlotsFrame:GetFrameLevel() or (base + 18)
-    targetOfTargetDesired = {
+    API.S.targetOfTargetDesired = {
         strata = "HIGH",
         level  = math.max(base + 80, slotLevel + 30),
     }
-    HarfordUnitFrames._totDesired = targetOfTargetDesired
+    HarfordUnitFrames._totDesired = API.S.targetOfTargetDesired
     EnsureTargetOfTargetHooks(tot)
     ApplyTargetOfTargetLayer()
 end
@@ -1278,7 +1379,7 @@ SetTextureFromInfo = function(texture, info)
     if info and info.atlas and texture.SetAtlas then
         texture:SetAtlas(info.atlas)
     else
-        texture:SetTexture((info and info.path) or TEX_FRAME)
+        texture:SetTexture((info and info.path) or API.C.TEX_FRAME)
     end
     if info and info.texCoord then
         texture:SetTexCoord(unpack(info.texCoord))
@@ -1385,7 +1486,7 @@ local function ApplyMeasuredLayout(frame, layout)
 end
 
 local function CreateUnitFrame(key, unit)
-    if frames[unit] then return frames[unit] end
+    if API.S.frames[unit] then return API.S.frames[unit] end
 
     local frame = CreateFrame("Button", "Harford" .. key .. "UnitFrame", UIParent, "SecureUnitButtonTemplate")
     frame.unit = unit
@@ -1426,7 +1527,7 @@ local function CreateUnitFrame(key, unit)
     frame.barSlotOverlays = {}
 
     local portraitBg = portraitLayer:CreateTexture(nil, "BACKGROUND")
-    portraitBg:SetTexture(TEX_WHITE)
+    portraitBg:SetTexture(API.C.TEX_WHITE)
     portraitBg:SetVertexColor(0.02, 0.02, 0.02, 1)
     frame.portraitBg = portraitBg
 
@@ -1435,26 +1536,26 @@ local function CreateUnitFrame(key, unit)
     frame.portrait = portrait
 
     local nameBg = visual:CreateTexture(nil, "ARTWORK")
-    nameBg:SetTexture(TEX_WHITE)
+    nameBg:SetTexture(API.C.TEX_WHITE)
     nameBg:SetVertexColor(0.02, 0.02, 0.02, 0.72)
     frame.nameBg = nameBg
 
     local levelBg = visual:CreateTexture(nil, "ARTWORK")
-    levelBg:SetTexture(TEX_WHITE)
+    levelBg:SetTexture(API.C.TEX_WHITE)
     levelBg:SetVertexColor(0, 0, 0, 0.92)
     levelBg:Hide()
     frame.levelBg = levelBg
 
     if portrait.AddMaskTexture and visual.CreateMaskTexture then
         local mask = portraitLayer:CreateMaskTexture(nil, "ARTWORK")
-        mask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        mask:SetTexture(API.C.TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
         mask:SetAllPoints(portrait)
         portrait:AddMaskTexture(mask)
         frame.portraitMask = mask
 
         if portraitBg.AddMaskTexture then
             local bgMask = portraitLayer:CreateMaskTexture(nil, "ARTWORK")
-            bgMask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+            bgMask:SetTexture(API.C.TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
             bgMask:SetAllPoints(portraitBg)
             portraitBg:AddMaskTexture(bgMask)
             frame.portraitBgMask = bgMask
@@ -1462,7 +1563,7 @@ local function CreateUnitFrame(key, unit)
 
         if levelBg.AddMaskTexture then
             local levelMask = visual:CreateMaskTexture(nil, "ARTWORK")
-            levelMask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+            levelMask:SetTexture(API.C.TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
             levelMask:SetAllPoints(levelBg)
             levelBg:AddMaskTexture(levelMask)
             frame.levelBgMask = levelMask
@@ -1497,14 +1598,14 @@ local function CreateUnitFrame(key, unit)
     frame.bars = {}
     ApplyMeasuredLayout(frame, GetOrMeasureLayout(unit))
 
-    frames[unit] = frame
+    API.S.frames[unit] = frame
     return frame
 end
 
 local function GetStatusTextMode()
     if not GetCVar then return "NUMERIC" end
     local val = GetCVar("statusTextDisplay")
-    if not val or val == "" then return "NUMERIC" end  -- Epsilon: CVar desconocido → numérico
+    if not val or val == "" then return "NUMERIC" end  -- Epsilon: CVar desconocido â†’ numÃ©rico
     return val:upper()
 end
 
@@ -1636,15 +1737,15 @@ local function EnsureBar(frame, index)
     frame.bars = frame.bars or {}
     if frame.bars[index] then return frame.bars[index] end
 
-    -- Frame contenedor para posicionamiento y propagación de Show/Hide.
+    -- Frame contenedor para posicionamiento y propagaciÃ³n de Show/Hide.
     -- Sin borde de color propio: el overlay de barSlotsFrame (textura del frame
-    -- nativo) provee el borde visual igual que en las barras de vida/maná.
+    -- nativo) provee el borde visual igual que en las barras de vida/manÃ¡.
     local borderFrame = CreateFrame("Frame", nil, frame.visual)
     borderFrame:SetFrameLevel(frame.visual:GetFrameLevel() + 4)
     borderFrame:EnableMouse(false)
 
     -- Contenedor interior: llena borderFrame completamente.
-    -- El overlay de textura cubre esta área y su "agujero" transparente deja ver la barra.
+    -- El overlay de textura cubre esta Ã¡rea y su "agujero" transparente deja ver la barra.
     local container = CreateFrame("Frame", nil, borderFrame)
     container:SetAllPoints(borderFrame)
     container:SetFrameLevel(borderFrame:GetFrameLevel() + 1)
@@ -1652,15 +1753,15 @@ local function EnsureBar(frame, index)
 
     local bg = container:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints(container)
-    bg:SetTexture(TEX_WHITE)
+    bg:SetTexture(API.C.TEX_WHITE)
     bg:SetTexCoord(0, 1, 0, 1)
-    bg:SetVertexColor(0.015, 0.015, 0.015, EXTRA_BAR_BG_ALPHA)
-    bg:SetAlpha(EXTRA_BAR_BG_ALPHA)
+    bg:SetVertexColor(0.015, 0.015, 0.015, API.C.EXTRA_BAR_BG_ALPHA)
+    bg:SetAlpha(API.C.EXTRA_BAR_BG_ALPHA)
     bg:Show()
     container.bg = bg
 
     local bar = CreateFrame("StatusBar", nil, container)
-    bar:SetStatusBarTexture(TEX_STATUS)
+    bar:SetStatusBarTexture(API.C.TEX_STATUS)
     bar:SetFrameLevel(container:GetFrameLevel() + 1)
     bar:SetAllPoints(container)
 
@@ -1678,7 +1779,7 @@ local function EnsureBar(frame, index)
 
     -- bar.container = borderFrame (para posicionamiento y show/hide externo).
     -- bar.innerContainer = container (para acceder a .bg, .textFrame, mouse events).
-    -- Los shortcuts permiten que el código externo siga usando bar.container.bg etc.
+    -- Los shortcuts permiten que el cÃ³digo externo siga usando bar.container.bg etc.
     bar.container = borderFrame
     bar.innerContainer = container
     borderFrame.bg = bg                        -- bar.container.bg sigue funcionando
@@ -1708,10 +1809,10 @@ local function ApplyExtraBarBackground(bg)
     if not bg then return end
     -- Imitamos el hueco sombreado del unitframe nativo sin arrastrar textura
     -- del aro del portrait ni colores residuales del statusbar.
-    bg:SetTexture(TEX_WHITE)
+    bg:SetTexture(API.C.TEX_WHITE)
     bg:SetTexCoord(0, 1, 0, 1)
-    bg:SetVertexColor(0.015, 0.015, 0.015, EXTRA_BAR_BG_ALPHA)
-    bg:SetAlpha(EXTRA_BAR_BG_ALPHA)
+    bg:SetVertexColor(0.015, 0.015, 0.015, API.C.EXTRA_BAR_BG_ALPHA)
+    bg:SetAlpha(API.C.EXTRA_BAR_BG_ALPHA)
     bg:Show()
 end
 
@@ -1737,7 +1838,7 @@ local function ApplyBarTextureInfo(bar, index)
             bar.container.bg:SetVertexColor(0.025, 0.025, 0.025, 0.82)
             bar.container.bg:SetAlpha(0.82)
         else
-            bar.container.bg:SetTexture(TEX_STATUS)
+            bar.container.bg:SetTexture(API.C.TEX_STATUS)
             bar.container.bg:SetTexCoord(0, 1, 0, 1)
             bar.container.bg:SetVertexColor(0.025, 0.025, 0.025, 0.72)
             bar.container.bg:SetAlpha(0.72)
@@ -1751,10 +1852,10 @@ local function ApplyBarTextureInfo(bar, index)
         elseif fillInfo.path then
             bar:SetStatusBarTexture(fillInfo.path)
         else
-            bar:SetStatusBarTexture(TEX_STATUS)
+            bar:SetStatusBarTexture(API.C.TEX_STATUS)
         end
     else
-        bar:SetStatusBarTexture(TEX_STATUS)
+        bar:SetStatusBarTexture(API.C.TEX_STATUS)
     end
 end
 
@@ -1951,9 +2052,9 @@ local function ApplyNativeResourceBars(unit, maxBars, showText)
         _rateCtx.refreshBars = _rateCtx.refreshBars + 1
     end
 
-    if unit == "targettarget" then
+    if unit == "targettarget" or unit == "focustarget" then
         -- Las barras nativas del ToT (health y power) son repintadas constantemente por
-        -- Blizzard via OnUpdate/OnValueChanged. No las tocamos: totBarsOverlay las tapa
+        -- Blizzard via OnUpdate/OnValueChanged. No las tocamos: los overlays Harford las tapan
         -- con StatusBar frames propios en frame level superior.
         if _rateCtx then _rateCtx.alphaOne = _rateCtx.alphaOne + 1 end
     else
@@ -1974,14 +2075,208 @@ local function ApplyNativeResourceBars(unit, maxBars, showText)
     return list, resources, unitName
 end
 
+-- â”€â”€ FOCUS TARGET OF TARGET OVERLAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- Sistema paralelo al totBarsOverlay para FocusFrameToT / unit "focustarget".
+-- Encapsulado en do...end para no consumir slots de local del scope global
+-- (el archivo ya roza el lÃ­mite de 200 locales de Lua 5.1).
+-- Las funciones pÃºblicas se exponen via focusTot.hide / .refresh / .ensureHooks.
+-- IMPORTANTE: este bloque debe estar DESPUÃ‰S de ApplyNativeResourceBars (local).
+do
+
+local function EnsureFocusTotBarsOverlay()
+    if API.S.focusTot.overlay then return API.S.focusTot.overlay end
+    local healthNative = _G["FocusFrameToTHealthBar"]
+    local manaNative   = _G["FocusFrameToTManaBar"]
+    local tot          = _G["FocusFrameToT"]
+    if not healthNative or not manaNative or not tot then return nil end
+
+    local ov = {
+        healthFrame = MakeToTBarOverlayFrame(healthNative),
+        manaFrame   = MakeToTBarOverlayFrame(manaNative),
+        artFrame    = MakeToTArtOverlayFrame(tot),
+    }
+
+    -- Portrait nativo: ocultarlo permanentemente con HookScript.
+    local portraitNative = _G["FocusFrameToTPortrait"]
+    HideToTNativePortrait(portraitNative)
+
+    if portraitNative then
+        local pf = CreateFrame("Frame", nil, UIParent)
+        pf:SetFrameStrata(API.C.TOT_OVERLAY_STRATA)
+        pf:SetFrameLevel(API.C.TOT_PORTRAIT_LEVEL)
+        local ok = pcall(function() pf:SetAllPoints(portraitNative) end)
+        if not ok then
+            pf:SetSize(32, 32)
+            pf:SetPoint("TOPLEFT", tot, "TOPLEFT", 2, -2)
+        end
+        local pbg = pf:CreateTexture(nil, "BACKGROUND", nil, 0)
+        pbg:SetAllPoints(pf)
+        pbg:SetColorTexture(0.04, 0.04, 0.04, 1)
+        pf.bg = pbg
+        local ptex = pf:CreateTexture(nil, "ARTWORK", nil, 1)
+        ptex:SetAllPoints(pf)
+        ptex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        pf.icon = ptex
+        if ptex.AddMaskTexture and pf.CreateMaskTexture then
+            local mask = pf:CreateMaskTexture(nil, "ARTWORK")
+            mask:SetTexture(API.C.TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+            mask:SetAllPoints(pf)
+            pbg:AddMaskTexture(mask)
+            ptex:AddMaskTexture(mask)
+            pf.portraitMask = mask
+        end
+        pf:Hide()
+        ov.portraitFrame = pf
+    end
+
+    -- Ocultar hijos extra del ToT nativo (buff/debuff slots vacÃ­os)
+    HideToTNativeExtras(tot)
+
+    API.S.focusTot.overlay = ov
+    HarfordUnitFrames._focusTotBarsOverlay = ov
+    return ov
+end
+
+local function HideFocusTotBarsOverlay()
+    local ov = API.S.focusTot.overlay
+    if not ov then return end
+    -- Resetear lastGUID para que la prÃ³xima llamada a RefreshFocusTargetOfTargetBars
+    -- re-evalÃºe el portrait. Sin esto, si Hide se llama desde UpdateFocusTotBarsOverlay
+    -- (tot:IsShown() transitoriamente false), el portrait jamÃ¡s se re-muestra porque
+    -- el GUID sigue igual y el branch de portrait-update queda skipped.
+    API.S.focusTot.lastGUID = nil
+    ov.healthFrame:Hide()
+    ov.manaFrame:Hide()
+    if ov.portraitFrame then ov.portraitFrame:Hide() end
+    if ov.artFrame then ov.artFrame:Hide() end
+    -- Portrait nativo permanentemente oculto via HookScript; no restaurar alpha.
+end
+
+local function UpdateFocusTotPortraitOverlay(profile)
+    local ov = EnsureFocusTotBarsOverlay()
+    if not ov or not ov.portraitFrame then return end
+    local tot = _G["FocusFrameToT"]
+    if not tot or not (tot.IsShown and tot:IsShown()) then
+        ov.portraitFrame:Hide()
+        return
+    end
+    -- Portrait nativo permanentemente oculto via HookScript; solo mostramos/ocultamos overlay.
+    local icon = profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
+    if icon then
+        ov.portraitFrame.icon:SetTexture(icon)
+        ov.portraitFrame:Show()
+    else
+        ov.portraitFrame:Hide()
+    end
+    API._SyncToTNativePortraitAlpha(_G["FocusFrameToTPortrait"], ov.portraitFrame)
+end
+
+local function UpdateFocusTotBarsOverlay(healthData, resourceData)
+    local ov = EnsureFocusTotBarsOverlay()
+    if not ov then return end
+    local tot = _G["FocusFrameToT"]
+    if not (UnitExists and UnitExists("focustarget")) or not (tot and tot.IsShown and tot:IsShown()) then
+        HideFocusTotBarsOverlay()
+        return
+    end
+    UpdateToTArtOverlay(tot, ov)
+    if healthData then
+        local max = math.max(tonumber(healthData.max) or 0, 0)
+        local cur = math.max(tonumber(healthData.cur) or 0, 0)
+        ov.healthFrame.bar:SetMinMaxValues(0, math.max(max, 1))
+        ov.healthFrame.bar:SetValue(cur)
+        ov.healthFrame.bar:SetStatusBarColor(0.0, 0.82, 0.08, 0.95)
+        ov.healthFrame:Show()
+    else
+        ov.healthFrame:Hide()
+    end
+    ov.manaFrame:Show()
+    if resourceData then
+        local max = math.max(tonumber(resourceData.max) or 0, 0)
+        local cur = math.max(tonumber(resourceData.cur) or 0, 0)
+        local r, g, b = ResourceColor(resourceData.key)
+        ov.manaFrame.bar:SetMinMaxValues(0, math.max(max, 1))
+        ov.manaFrame.bar:SetValue(cur)
+        ov.manaFrame.bar:SetStatusBarColor(r, g, b, 0.95)
+    else
+        ov.manaFrame.bar:SetValue(0)
+    end
+end
+
+local function RefreshFocusTargetOfTargetBars()
+    local unit = "focustarget"
+    local tot = _G["FocusFrameToT"]
+    if not (UnitExists and UnitExists(unit)) or not (tot and tot.IsShown and tot:IsShown()) then
+        API.S.focusTot.lastGUID = nil
+        HideFocusTotBarsOverlay()
+        return
+    end
+    local frameMode = HarfordConfig and HarfordConfig.Get("resources") == "frame"
+    if frameMode then
+        API.S.focusTot.lastGUID = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
+        local ov = API.S.focusTot.overlay
+        if ov then
+            ov.healthFrame:Hide()
+            ov.manaFrame:Hide()
+            if ov.artFrame then ov.artFrame:Hide() end
+        end
+        UpdateFocusTotPortraitOverlay(GetProfile(unit))
+        return
+    end
+    local guid = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
+    if guid ~= API.S.focusTot.lastGUID then
+        API.S.focusTot.lastGUID = guid
+        UpdateFocusTotPortraitOverlay(GetProfile(unit))
+    end
+    local list, resources, unitName = ApplyNativeResourceBars(unit, 2, false)
+    UpdateFocusTotBarsOverlay(list and list[1], list and list[2])
+    if unitName then
+        RequestResourcesIfNeeded(unit, unitName, resources)
+    end
+end
+
+local function EnsureFocusTargetOfTargetHooks()
+    if API.S.focusTot.hooksInstalled then return end
+    API.S.focusTot.hooksInstalled = true
+    local tot = _G["FocusFrameToT"]
+    if tot and not tot._harfordFocusToTHooked and tot.HookScript then
+        tot._harfordFocusToTHooked = true
+        tot:HookScript("OnShow", function()
+            if RefreshFocusTargetOfTargetBars then RefreshFocusTargetOfTargetBars() end
+        end)
+        tot:HookScript("OnHide", function()
+            API.S.focusTot.lastGUID = nil
+            HideFocusTotBarsOverlay()
+        end)
+    end
+    if hooksecurefunc then
+        -- FocusofTarget_Update: anÃ¡logo a TargetofTarget_Update para el focus frame
+        if type(_G.FocusofTarget_Update) == "function" then
+            hooksecurefunc("FocusofTarget_Update", function()
+                if RefreshFocusTargetOfTargetBars then RefreshFocusTargetOfTargetBars() end
+                local ov = API.S.focusTot.overlay
+                API._SyncToTNativePortraitAlpha(_G["FocusFrameToTPortrait"], ov and ov.portraitFrame)
+            end)
+        end
+    end
+end
+
+-- Exponer funciones pÃºblicas via tabla (accesibles desde fuera del do-block)
+API.S.focusTot.hide       = HideFocusTotBarsOverlay
+API.S.focusTot.refresh    = RefreshFocusTargetOfTargetBars
+API.S.focusTot.ensureHooks = EnsureFocusTargetOfTargetHooks
+
+end  -- do-block focus ToT
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
 local function ApplyLevelBackdrop(frame, layout)
     if not frame or not frame.levelBg or not layout or not layout.level then return end
     frame.levelBg:Hide()
 end
 
 local function EnsureNativePortraitMask(texture)
-    if not texture or nativePortraitMasks[texture] then
-        return nativePortraitMasks[texture]
+    if not texture or API.S.nativePortraitMasks[texture] then
+        return API.S.nativePortraitMasks[texture]
     end
     if not texture.AddMaskTexture or not texture.GetParent then
         return nil
@@ -1992,10 +2287,10 @@ local function EnsureNativePortraitMask(texture)
     end
 
     local mask = parent:CreateMaskTexture(nil, "ARTWORK")
-    mask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    mask:SetTexture(API.C.TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
     mask:SetAllPoints(texture)
     texture:AddMaskTexture(mask)
-    nativePortraitMasks[texture] = mask
+    API.S.nativePortraitMasks[texture] = mask
     return mask
 end
 
@@ -2007,7 +2302,7 @@ local function RefreshNativePortraitMask(texture)
     end
 end
 
--- Deshace lo que Harford escribió en el frame nativo: texto de barras, retrato y nivel.
+-- Deshace lo que Harford escribiÃ³ en el frame nativo: texto de barras, retrato y nivel.
 -- Llamar al entrar en frameMode o cuando la unidad deja de ser soportada.
 local function ForceNativeUnitFrameRepaint(unit)
     if unit == "targettarget" then return end
@@ -2040,6 +2335,7 @@ end
 
 local function RestoreNativeFrameContents(unit)
     if unit == "targettarget" then HideToTBarsOverlay() end
+    if unit == "focustarget" then API.S.focusTot.hide() end
     local pieces = NativePiecesForUnit(unit)
 
     local function ClearBarText(bar)
@@ -2195,11 +2491,11 @@ local function ApplyNativePortraitOption(unit)
 end
 
 local function SetBarBox(bar, relativeTo, point, x, y, width, height)
-    local container = bar.container or bar          -- borde exterior (para posición)
+    local container = bar.container or bar          -- borde exterior (para posiciÃ³n)
     local inner = bar.innerContainer or container   -- contenedor interior (para fill)
     container:ClearAllPoints()
     container:SetPoint(point or "TOPLEFT", relativeTo, point or "TOPLEFT", x or 0, y or 0)
-    container:SetSize(math.max(1, width or DEFAULT_BAR_W), math.max(1, height or DEFAULT_BAR_H))
+    container:SetSize(math.max(1, width or API.C.DEFAULT_BAR_W), math.max(1, height or API.C.DEFAULT_BAR_H))
     bar:ClearAllPoints()
     bar:SetAllPoints(inner)   -- el StatusBar llena solo el interior (no el borde de 1px)
     if inner.textFrame then
@@ -2213,42 +2509,42 @@ local function PlaceBar(frame, bar, index, lastBar)
     local health = layout.health
     local power = layout.power or {
         x = health.x,
-        y = health.y + health.height + BAR_GAP,
+        y = health.y + health.height + API.C.BAR_GAP,
         width = health.width,
         height = health.height,
     }
     local base = index == 1 and health or index == 2 and power or nil
 
     if base then
-        local insetX = BAR_INSET_X
-        local insetY = BAR_INSET_Y
+        local insetX = API.C.BAR_INSET_X
+        local insetY = API.C.BAR_INSET_Y
         SetBarBox(bar, frame.visual, "TOPLEFT", base.x + insetX, -(base.y + insetY), base.width - insetX * 2, base.height - insetY * 2)
         return
     end
 
-    local barW = math.max(1, (power.width or health.width) - BAR_INSET_X * 2)
-    local barH = math.max(1, (power.height or health.height) - BAR_INSET_Y * 2)
+    local barW = math.max(1, (power.width or health.width) - API.C.BAR_INSET_X * 2)
+    local barH = math.max(1, (power.height or health.height) - API.C.BAR_INSET_Y * 2)
     if lastBar then
-        SetBarBox(bar, lastBar.container or lastBar, "TOPLEFT", 0, -(barH + BAR_GAP), barW, barH)
+        SetBarBox(bar, lastBar.container or lastBar, "TOPLEFT", 0, -(barH + API.C.BAR_GAP), barW, barH)
     else
-        local startX = (power.x or health.x) + BAR_INSET_X
-        local startY = (power.y or health.y) + (power.height or health.height) + BAR_GAP
+        local startX = (power.x or health.x) + API.C.BAR_INSET_X
+        local startY = (power.y or health.y) + (power.height or health.height) + API.C.BAR_GAP
         SetBarBox(bar, frame.visual, "TOPLEFT", startX, -startY, barW, barH)
     end
 end
 
--- ─────────────────────────────────────────────────────────────────────────────
--- Slot overlays para barras extra (índice 3+)
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- Slot overlays para barras extra (Ã­ndice 3+)
 -- Cada barra extra recibe una textura hermana de frame.overlay que usa la franja
--- UV del slot de la power bar nativa. Esa franja tiene píxeles opacos en el borde
+-- UV del slot de la power bar nativa. Esa franja tiene pÃ­xeles opacos en el borde
 -- (el marco dorado de WoW) y transparentes en el interior (deja ver la barra).
 -- El resultado es que cada barra extra aparece visualmente dentro del mismo marco.
--- ─────────────────────────────────────────────────────────────────────────────
+-- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 local function GetOrCreateBarSlotOverlay(frame, slotIndex)
     if not frame.barSlotOverlays[slotIndex] then
         -- barSlotsFrame es hijo directo de visual (no de overlayFrame),
-        -- así nunca queda oculto por el reset flow de RefreshUnitFrame.
+        -- asÃ­ nunca queda oculto por el reset flow de RefreshUnitFrame.
         local host = frame.barSlotsFrame or frame.overlayFrame
         local ov = host:CreateTexture(nil, "OVERLAY", nil, 7)
         ov:Hide()
@@ -2280,8 +2576,8 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     if not rel or rel.height <= 0 then
         rel = {
             x = 0, y = 0,
-            width  = (layout.root and layout.root.width)  or DEFAULT_FRAME_W,
-            height = (layout.root and layout.root.height) or DEFAULT_FRAME_H,
+            width  = (layout.root and layout.root.width)  or API.C.DEFAULT_FRAME_W,
+            height = (layout.root and layout.root.height) or API.C.DEFAULT_FRAME_H,
         }
     end
 
@@ -2296,26 +2592,26 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     local hRange = tcR - tcL   -- puede ser negativo (frame espejado como player)
     local vRange = tcB - tcT
 
-    -- ── UV HORIZONTAL: solo el slot de la barra (excluye área de retrato) ─────
+    -- â”€â”€ UV HORIZONTAL: solo el slot de la barra (excluye Ã¡rea de retrato) â”€â”€â”€â”€â”€
     -- Usamos power.x/power.width para el rango horizontal real de la barra.
-    -- Esto evita los píxeles opacos del retrato que antes causaban el fondo amarillo.
+    -- Esto evita los pÃ­xeles opacos del retrato que antes causaban el fondo amarillo.
     local barX    = (power.x or health.x) - rel.x
     local barW    = power.width or health.width
     local relW    = rel.width
     local ovTcL   = tcL + (barX          / relW) * hRange
     local ovTcR   = tcL + ((barX + barW) / relW) * hRange
 
-    -- ── UV VERTICAL: slot de la power bar + expansión de borde ───────────────
-    -- Los píxeles de borde (marco dorado) están en las filas FUERA del rango
-    -- power.y … power.y+barH en la textura:
-    --   · borde superior:  power.y - BPV   ..  power.y        (opaco, marco)
-    --   · agujero:         power.y          ..  power.y+barH   (transparente)
-    --   · borde inferior:  power.y+barH    ..  power.y+barH+BPV (opaco, marco)
-    -- Sin expansión el overlay muestra solo el agujero → invisible sobre la barra.
+    -- â”€â”€ UV VERTICAL: slot de la power bar + expansiÃ³n de borde â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    -- Los pÃ­xeles de borde (marco dorado) estÃ¡n en las filas FUERA del rango
+    -- power.y â€¦ power.y+barH en la textura:
+    --   Â· borde superior:  power.y - BPV   ..  power.y        (opaco, marco)
+    --   Â· agujero:         power.y          ..  power.y+barH   (transparente)
+    --   Â· borde inferior:  power.y+barH    ..  power.y+barH+BPV (opaco, marco)
+    -- Sin expansiÃ³n el overlay muestra solo el agujero â†’ invisible sobre la barra.
     --
-    -- BPV (border pixels vertical): cuántos píxeles de pantalla expandir arriba/abajo.
+    -- BPV (border pixels vertical): cuÃ¡ntos pÃ­xeles de pantalla expandir arriba/abajo.
     -- Con BAR_GAP=2 y BPV=1, los overlays adyacentes se tocan sin solaparse.
-    -- Subir BPV captura más borde pero puede solapar overlays si BPV > BAR_GAP/2.
+    -- Subir BPV captura mÃ¡s borde pero puede solapar overlays si BPV > BAR_GAP/2.
     local BPV          = 1
     local barH         = power.height or health.height
     local relH         = rel.height
@@ -2327,14 +2623,14 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     local ovTcT        = tcT + slotTopRel * vRange
     local ovTcB        = tcT + slotBotRel * vRange
 
-    -- ── UV HORIZONTAL: expansión asimétrica izquierda/derecha ────────────────
-    -- El borde IZQUIERDO del slot de barra proviene de los píxeles del borde
+    -- â”€â”€ UV HORIZONTAL: expansiÃ³n asimÃ©trica izquierda/derecha â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    -- El borde IZQUIERDO del slot de barra proviene de los pÃ­xeles del borde
     -- derecho del portrait ring. El borde DERECHO proviene de los elementos
     -- decorativos a la derecha de la barra. Para el player frame (textura espejada,
-    -- hRange < 0) el cálculo UV invierte automáticamente via hRange, así que los
+    -- hRange < 0) el cÃ¡lculo UV invierte automÃ¡ticamente via hRange, asÃ­ que los
     -- mismos valores funcionan para ambos frames sin tratamiento especial.
-    -- Capturar solo el pequeño remate/rombo del lado del portrait. Si se amplía
-    -- igual que el lado exterior, se arrastran píxeles del aro del retrato.
+    -- Capturar solo el pequeÃ±o remate/rombo del lado del portrait. Si se amplÃ­a
+    -- igual que el lado exterior, se arrastran pÃ­xeles del aro del retrato.
     local BPH_PORTRAIT = 3
     local BPH_OUTER    = 5
     local isLeftPortrait = frame.unit == "player"
@@ -2344,17 +2640,17 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     local ovTcR_exp    = tcL + ((barX + barW + BPH_R) / relW) * hRange
 
     local col      = tex and tex.color
-    local texPath  = (tex and tex.path) or TEX_FRAME
+    local texPath  = (tex and tex.path) or API.C.TEX_FRAME
     local texAtlas = tex and tex.atlas
 
-    -- Overlay con expansión por lado. El lado del portrait solo conserva el
-    -- remate/rombo del slot; el lado exterior puede capturar más marco.
+    -- Overlay con expansiÃ³n por lado. El lado del portrait solo conserva el
+    -- remate/rombo del slot; el lado exterior puede capturar mÃ¡s marco.
     -- Arriba/Abajo: BPV px para capturar borde vertical del slot.
     local ovW       = math.max(1, barW + BPH_L + BPH_R)
     local ovH       = math.max(1, barH + BPV * 2)
     local ovX       = (power.x or health.x) - BPH_L
-    local barStep   = barH + BAR_GAP          -- paso entre barras (no usa ovH)
-    local firstBarY = (power.y or health.y) + barH + BAR_GAP
+    local barStep   = barH + API.C.BAR_GAP          -- paso entre barras (no usa ovH)
+    local firstBarY = (power.y or health.y) + barH + API.C.BAR_GAP
 
     local host = frame.barSlotsFrame or frame.visual
 
@@ -2382,8 +2678,8 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     end
 end
 
--- (obsoleto — reemplazado por ApplyBarSlotOverlays; se mantiene como stub
---  por si algo lo llama, para no romper llamadas antiguas durante transición)
+-- (obsoleto â€” reemplazado por ApplyBarSlotOverlays; se mantiene como stub
+--  por si algo lo llama, para no romper llamadas antiguas durante transiciÃ³n)
 local function ApplyExtensionOverlay(frame, layout, extraHeight)
     local ext = frame.extensionOverlay
     if not ext then return end
@@ -2403,16 +2699,16 @@ local function ApplyExtensionOverlay(frame, layout, extraHeight)
         return
     end
 
-    -- ── rel: posición del overlay dentro del frame ───────────────────────────────
-    -- Si no fue medido (layout de fallback), usamos el frame completo como área.
+    -- â”€â”€ rel: posiciÃ³n del overlay dentro del frame â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    -- Si no fue medido (layout de fallback), usamos el frame completo como Ã¡rea.
     local rel = (tex and tex.rel)
     if not rel or rel.height <= 0 then
-        local rootW = (layout.root and layout.root.width)  or DEFAULT_FRAME_W
-        local rootH = (layout.root and layout.root.height) or DEFAULT_FRAME_H
+        local rootW = (layout.root and layout.root.width)  or API.C.DEFAULT_FRAME_W
+        local rootH = (layout.root and layout.root.height) or API.C.DEFAULT_FRAME_H
         rel = { x = 0, y = 0, width = rootW, height = rootH }
     end
 
-    -- ── Extraer L/R/T/B según formato de texcoord (4 ó 8 valores) ───────────────
+    -- â”€â”€ Extraer L/R/T/B segÃºn formato de texcoord (4 Ã³ 8 valores) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     local tcL, tcR, tcT, tcB
     if #tc == 4 then
         tcL, tcR, tcT, tcB = tc[1], tc[2], tc[3], tc[4]
@@ -2422,9 +2718,9 @@ local function ApplyExtensionOverlay(frame, layout, extraHeight)
         tcT, tcB = tc[2], tc[4]
     end
 
-    -- ── Franja UV: top de health → bottom de power ───────────────────────────────
+    -- â”€â”€ Franja UV: top de health â†’ bottom de power â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     -- La franja captura los bordes laterales del marco + el interior de las barras.
-    -- Al estirarla verticalmente sobre las barras extra repite el patrón de marco.
+    -- Al estirarla verticalmente sobre las barras extra repite el patrÃ³n de marco.
     local relH       = rel.height
     local topRel     = math.max(0, math.min(1, (health.y               - rel.y) / relH))
     local bottomRel  = math.max(0, math.min(1, (power.y + power.height - rel.y) / relH))
@@ -2441,11 +2737,11 @@ local function ApplyExtensionOverlay(frame, layout, extraHeight)
     local stripT = tcT + topRel    * vRange
     local stripB = tcT + bottomRel * vRange
 
-    -- ── Textura y color: idénticos al overlay principal ──────────────────────────
+    -- â”€â”€ Textura y color: idÃ©nticos al overlay principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if tex.atlas and ext.SetAtlas then
         ext:SetAtlas(tex.atlas)
     else
-        ext:SetTexture(tex.path or TEX_FRAME)
+        ext:SetTexture(tex.path or API.C.TEX_FRAME)
     end
     ext:SetTexCoord(tcL, tcR, stripT, stripB)
     local col = tex.color
@@ -2455,10 +2751,10 @@ local function ApplyExtensionOverlay(frame, layout, extraHeight)
         ext:SetVertexColor(1, 1, 1, 1)
     end
 
-    -- ── Posición: empieza justo al fondo del overlay nativo ──────────────────────
+    -- â”€â”€ PosiciÃ³n: empieza justo al fondo del overlay nativo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     -- overlayFrame es SetAllPoints de frame.visual, por tanto sus coordenadas
     -- locales coinciden con las de frame. rel.y + rel.height = borde inferior del
-    -- artwork actual → la extensión empieza ahí sin gap.
+    -- artwork actual â†’ la extensiÃ³n empieza ahÃ­ sin gap.
     ext:ClearAllPoints()
     ext:SetPoint("TOPLEFT", frame.overlayFrame, "TOPLEFT",
                  rel.x, -(rel.y + rel.height))
@@ -2487,8 +2783,8 @@ local function RefreshResourceBars(frame, resources)
 
     frame.fallback:SetShown(false)
     frame.fallback:ClearAllPoints()
-    frame.fallback:SetPoint("TOPLEFT", frame.visual, "TOPLEFT", layout.health.x + BAR_INSET_X, -(layout.health.y + BAR_INSET_Y))
-    frame.fallback:SetSize(math.max(1, layout.health.width - BAR_INSET_X * 2), math.max(1, layout.health.height - BAR_INSET_Y * 2))
+    frame.fallback:SetPoint("TOPLEFT", frame.visual, "TOPLEFT", layout.health.x + API.C.BAR_INSET_X, -(layout.health.y + API.C.BAR_INSET_Y))
+    frame.fallback:SetSize(math.max(1, layout.health.width - API.C.BAR_INSET_X * 2), math.max(1, layout.health.height - API.C.BAR_INSET_Y * 2))
     frame.fallback:SetText("")
 
     local lastBar
@@ -2556,8 +2852,8 @@ local function RefreshResourceBars(frame, resources)
     local extraHeight = 0
     frame.resourceCount = #list
     if #list > 2 then
-        local h = math.max(1, (layout.power and layout.power.height or layout.health.height) - BAR_INSET_Y * 2)
-        extraHeight = ((#list - 2) * (h + BAR_GAP))
+        local h = math.max(1, (layout.power and layout.power.height or layout.health.height) - API.C.BAR_INSET_Y * 2)
+        extraHeight = ((#list - 2) * (h + API.C.BAR_GAP))
         height = height + extraHeight
     end
     frame:SetHeight(height)
@@ -2601,12 +2897,12 @@ RefreshTargetOfTargetNative = function(forceVisual)
 
     local frameMode = HarfordConfig and HarfordConfig.Get("resources") == "frame"
     if not (UnitExists and UnitExists(unit)) then
-        targetOfTargetLastGUID = nil
+        API.S.targetOfTargetLastGUID = nil
         RestoreNativeFrameContents(unit)
         return
     end
     if frameMode then
-        targetOfTargetLastGUID = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
+        API.S.targetOfTargetLastGUID = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
         HideToTResourceOverlays()
         UpdateToTPortraitOverlay(GetProfile(unit))
         return
@@ -2615,8 +2911,8 @@ RefreshTargetOfTargetNative = function(forceVisual)
     local unitName = SafeUnitName(unit)
     local guid = UnitGUID and UnitGUID(unit) or unitName
     local profile = GetProfile(unit)
-    if forceVisual or guid ~= targetOfTargetLastGUID then
-        targetOfTargetLastGUID = guid
+    if forceVisual or guid ~= API.S.targetOfTargetLastGUID then
+        API.S.targetOfTargetLastGUID = guid
         ApplyNativeUnitVisuals(unit, pieces, profile, unitName)
         UpdateToTPortraitOverlay(profile)
     end
@@ -2631,22 +2927,22 @@ RefreshTargetOfTargetBars = function()
     local unit = "targettarget"
     local tot = FindTargetOfTargetFrame()
     if not (UnitExists and UnitExists(unit)) or not (tot and tot.IsShown and tot:IsShown()) then
-        targetOfTargetLastGUID = nil
+        API.S.targetOfTargetLastGUID = nil
         HideToTBarsOverlay()
         return
     end
 
     local frameMode = HarfordConfig and HarfordConfig.Get("resources") == "frame"
     if frameMode then
-        targetOfTargetLastGUID = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
+        API.S.targetOfTargetLastGUID = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
         HideToTResourceOverlays()
         UpdateToTPortraitOverlay(GetProfile(unit))
         return
     end
 
     local guid = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
-    if guid ~= targetOfTargetLastGUID then
-        targetOfTargetLastGUID = guid
+    if guid ~= API.S.targetOfTargetLastGUID then
+        API.S.targetOfTargetLastGUID = guid
         -- Actualizar portrait overlay al cambiar de unidad
         UpdateToTPortraitOverlay(GetProfile(unit))
     end
@@ -2682,6 +2978,7 @@ local function RefreshFrame(key, unit, forceMeasure)
             RefreshTargetOfTargetBars()
         elseif unit == "focus" then
             ApplyNativePortraitOption("focus")
+            API.S.focusTot.refresh()
         elseif unit == "player" and frameMode then
             ApplyNativePortraitOption("player")
         end
@@ -2733,6 +3030,9 @@ local function RefreshFrame(key, unit, forceMeasure)
         AdjustTargetAuras(frame, frame.resourceCount or 0, frame.extraResourceHeight or 0)
         AdjustTargetOfTargetFrame(frame, frame.resourceCount or 0, frame.extraResourceHeight or 0)
         RefreshTargetOfTargetBars()
+    elseif unit == "focus" then
+        API.S.focusTot.ensureHooks()
+        API.S.focusTot.refresh()
     end
     if unitName then RequestResourcesIfNeeded(unit, unitName, resources) end
     frame:Show()
@@ -2831,6 +3131,18 @@ end
 
 local function IsRaidUnit(unit)
     return type(unit) == "string" and unit:match("^raid%d+$") ~= nil
+end
+
+local function IsRaidCompactFrame(frame, unit)
+    if IsRaidUnit(unit) then return true end
+    local name = GetGroupFrameName(frame)
+    return type(name) == "string" and name:match("^CompactRaidFrame%d+$") ~= nil
+end
+
+local function IsPartyCompactFrame(frame, unit)
+    if type(unit) ~= "string" then return false end
+    if IsRaidCompactFrame(frame, unit) then return false end
+    return unit == "player" or unit:match("^party%d+$") ~= nil
 end
 
 local function CollectNamedGroupFrames(out)
@@ -3040,7 +3352,7 @@ local function GetOrCreateGroupOverlay(frame)
     if not frame then return nil end
     local name = GetGroupFrameName(frame)
     if not name then return nil end
-    local overlay = groupOverlays[name]
+    local overlay = API.S.groupOverlays[name]
     if overlay then
         overlay.compactFrame = frame
         return overlay
@@ -3067,7 +3379,7 @@ local function GetOrCreateGroupOverlay(frame)
 
         local bar = CreateFrame("StatusBar", nil, container)
         bar:SetAllPoints(container)
-        bar:SetStatusBarTexture(TEX_STATUS)
+        bar:SetStatusBarTexture(API.C.TEX_STATUS)
         bar:SetFrameLevel(container:GetFrameLevel() + 1)
 
         local textFrame = CreateFrame("Frame", nil, container)
@@ -3095,13 +3407,13 @@ local function GetOrCreateGroupOverlay(frame)
     nameFrame:SetFrameLevel(overlay:GetFrameLevel() + 8)
     local nameText = nameFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     nameText:SetAllPoints(nameFrame)
-    nameText:SetJustifyH("CENTER")
+    nameText:SetJustifyH("LEFT")
     nameText:SetJustifyV("MIDDLE")
     nameText:SetTextColor(1, 0.82, 0.1)
     overlay.nameFrame = nameFrame
     overlay.nameText = nameText
 
-    groupOverlays[name] = overlay
+    API.S.groupOverlays[name] = overlay
     return overlay
 end
 
@@ -3142,8 +3454,10 @@ local function SetGroupOverlayText(frame, container, data)
     local shortText = FormatShortText(cur, max)
     local fullText = FormatFullText(tostring(data.label or data.key), cur, max)
     local mode = GetStatusTextMode()
+    local unit = GetCompactFrameUnit(frame)
+    local partyText = IsPartyCompactFrame(frame, unit)
     if frame and frame._harfordHovering then
-        container.text:SetText(fullText)
+        container.text:SetText(partyText and shortText or fullText)
         container.text:Show()
     elseif mode ~= "NONE" and mode ~= "0" then
         container.text:SetText(shortText)
@@ -3177,7 +3491,7 @@ local function PositionGroupOverlayBar(container, nativeBar, frame, unit, isHeal
         container.textFrame:ClearAllPoints()
         container.text:ClearAllPoints()
         if isHealth and frame and CompactFrameHasVisiblePowerBar(frame) then
-            local yOffset = IsRaidUnit(unit) and -5 or -3
+            local yOffset = IsRaidUnit(unit) and -5 or 0
             container.textFrame:SetPoint("LEFT", container, "LEFT", 0, yOffset)
             container.textFrame:SetPoint("RIGHT", container, "RIGHT", 0, yOffset)
             container.textFrame:SetHeight(container:GetHeight() or 10)
@@ -3203,6 +3517,7 @@ local function ApplyGroupOverlayBar(container, nativeBar, frame, unit, data, col
             r, g, b = 0.0, 0.82, 0.08
         end
     end
+    container.bar:SetStatusBarTexture(API.C.TEX_STATUS)
     container.bar:SetMinMaxValues(0, max > 0 and max or 1)
     container.bar:SetValue(math.min(cur, max > 0 and max or cur))
     container.bar:SetStatusBarColor(r, g, b, 0.95)
@@ -3210,7 +3525,7 @@ local function ApplyGroupOverlayBar(container, nativeBar, frame, unit, data, col
 end
 
 RefreshGroupOverlayTexts = function(frame)
-    local overlay = groupOverlays[GetGroupFrameName(frame)]
+    local overlay = API.S.groupOverlays[GetGroupFrameName(frame)]
     if not overlay or not overlay:IsShown() then return end
     if overlay.healthData then
         SetGroupOverlayText(frame, overlay.bars.health, overlay.healthData)
@@ -3227,7 +3542,7 @@ local function RestoreCompactNativeTexts(frame)
 end
 
 local function RestoreGroupNativeBar(nativeBar)
-    local state = nativeBar and compactBarState[nativeBar]
+    local state = nativeBar and API.S.compactBarState[nativeBar]
     if not state then return end
     local compactFrame = state.frame or nativeBar._harfordCompactFrame
     if nativeBar.SetStatusBarTexture and state.texture then
@@ -3241,7 +3556,7 @@ local function RestoreGroupNativeBar(nativeBar)
     if nativeBar._harfordTextRegion then
         nativeBar._harfordTextRegion:Hide()
     end
-    compactBarState[nativeBar] = nil
+    API.S.compactBarState[nativeBar] = nil
 
     if compactFrame and _G.CompactUnitFrame_UpdateAll then
         pcall(_G.CompactUnitFrame_UpdateAll, compactFrame)
@@ -3252,8 +3567,8 @@ local function RestoreGroupNativeBar(nativeBar)
 end
 
 local function SaveCompactPortraitState(portrait)
-    if not portrait or compactPortraitState[portrait] then return end
-    compactPortraitState[portrait] = {
+    if not portrait or API.S.compactPortraitState[portrait] then return end
+    API.S.compactPortraitState[portrait] = {
         texture = portrait.GetTexture and portrait:GetTexture() or nil,
         atlas = portrait.GetAtlas and portrait:GetAtlas() or nil,
         texCoord = portrait.GetTexCoord and { portrait:GetTexCoord() } or nil,
@@ -3263,7 +3578,7 @@ local function SaveCompactPortraitState(portrait)
 end
 
 local function RestoreCompactPortrait(portrait)
-    local state = portrait and compactPortraitState[portrait]
+    local state = portrait and API.S.compactPortraitState[portrait]
     if not state then return end
     if state.atlas and portrait.SetAtlas then
         portrait:SetAtlas(state.atlas)
@@ -3281,11 +3596,11 @@ local function RestoreCompactPortrait(portrait)
     elseif state.shown == false and portrait.Hide then
         portrait:Hide()
     end
-    compactPortraitState[portrait] = nil
+    API.S.compactPortraitState[portrait] = nil
 end
 
 local function ShouldHandleCompactUnitFrame(frame)
-    if restoringCompactFrames then return false end
+    if API.S.restoringCompactFrames then return false end
     if HarfordConfig and HarfordConfig.Get("resources") == "frame" then return false end
     if not frame then return false end
     local unit = GetCompactFrameUnit(frame)
@@ -3304,7 +3619,7 @@ end
 
 local function ApplyCompactHealthClassColor(frame)
     if not ShouldHandleCompactUnitFrame(frame) then return end
-    local overlay = groupOverlays[GetGroupFrameName(frame)]
+    local overlay = API.S.groupOverlays[GetGroupFrameName(frame)]
     if overlay and overlay:IsShown() and overlay.healthData then
         local color = nil
         local r, g, b = GetCompactFrameClassColor(frame)
@@ -3315,7 +3630,7 @@ end
 
 local function ApplyHarfordCompactUnitFrame(frame)
     if not ShouldHandleCompactUnitFrame(frame) then return end
-    compactFramesTouched[frame] = true
+    API.S.compactFramesTouched[frame] = true
     HookCompactFrameForHover(frame)
     local unit = GetCompactFrameUnit(frame)
     local unitName = SafeUnitName(unit)
@@ -3374,9 +3689,9 @@ local function RefreshManagedGroupOverlays()
 end
 
 local function HookCompactUnitFrameFunction(name, handler)
-    if compactUnitFrameHooksInstalled[name] or not hooksecurefunc or not _G[name] then return false end
+    if API.S.compactUnitFrameHooksInstalled[name] or not hooksecurefunc or not _G[name] then return false end
     hooksecurefunc(name, handler or ApplyHarfordCompactUnitFrame)
-    compactUnitFrameHooksInstalled[name] = true
+    API.S.compactUnitFrameHooksInstalled[name] = true
     return true
 end
 
@@ -3394,20 +3709,20 @@ end
 
 local function RefreshGroupFrameOverlay(frame)
     if not GroupFrameIsUsable(frame) then return end
-    local overlay = groupOverlays[GetGroupFrameName(frame)]
+    local overlay = API.S.groupOverlays[GetGroupFrameName(frame)]
     if overlay then overlay:Hide() end
     ApplyHarfordCompactUnitFrame(frame)
 end
 
 local function RepaintNativeCompactFrames()
     if not _G.CompactUnitFrame_UpdateAll then return end
-    restoringCompactFrames = true
+    API.S.restoringCompactFrames = true
     for frame in pairs(CollectAllGroupFrames()) do
         if frame and frame.IsShown and frame:IsShown() and GroupFrameIsUsable(frame) then
             pcall(_G.CompactUnitFrame_UpdateAll, frame)
         end
     end
-    restoringCompactFrames = false
+    API.S.restoringCompactFrames = false
 end
 
 local function RestoreClassicPartyVisibility()
@@ -3423,8 +3738,8 @@ local function RestoreClassicPartyVisibility()
 end
 
 local function HideGroupOverlays()
-    restoringCompactFrames = true
-    for _, overlay in pairs(groupOverlays) do
+    API.S.restoringCompactFrames = true
+    for _, overlay in pairs(API.S.groupOverlays) do
         overlay:Hide()
         overlay.healthData = nil
         overlay.powerData = nil
@@ -3441,20 +3756,20 @@ local function HideGroupOverlays()
             RestoreGroupNativeBar(nativeBar)
         end
     end
-    for nativeBar in pairs(compactBarState) do
+    for nativeBar in pairs(API.S.compactBarState) do
         RestoreGroupNativeBar(nativeBar)
     end
-    for portrait in pairs(compactPortraitState) do
+    for portrait in pairs(API.S.compactPortraitState) do
         RestoreCompactPortrait(portrait)
     end
-    for frame in pairs(compactFramesTouched) do
+    for frame in pairs(API.S.compactFramesTouched) do
         if frame and frame.IsShown and frame:IsShown() and GroupFrameIsUsable(frame) and _G.CompactUnitFrame_UpdateAll then
             pcall(_G.CompactUnitFrame_UpdateAll, frame)
             RestoreCompactNativeTexts(frame)
         end
-        compactFramesTouched[frame] = nil
+        API.S.compactFramesTouched[frame] = nil
     end
-    restoringCompactFrames = false
+    API.S.restoringCompactFrames = false
     RestoreClassicPartyVisibility()
     RepaintNativeCompactFrames()
     if C_Timer and C_Timer.After then
@@ -3480,7 +3795,7 @@ function RefreshGroupOverlays()
         end
     end
 
-    for name, overlay in pairs(groupOverlays) do
+    for name, overlay in pairs(API.S.groupOverlays) do
         if not active[name] then
             overlay:Hide()
         end
@@ -3488,7 +3803,7 @@ function RefreshGroupOverlays()
 end
 
 function API.GetFrame(unit)
-    return frames[unit]
+    return API.S.frames[unit]
 end
 
 function API.GetMeasuredLayout(unit, force)
@@ -3520,7 +3835,7 @@ end
 -- Se usa en UNIT_HEALTH / UNIT_POWER_UPDATE: Blizzard resetea fill/color en esos eventos.
 ReapplyNativeBars = function(unit)
     if HarfordConfig and HarfordConfig.Get("resources") == "frame" then return end
-    local frame = frames[unit]
+    local frame = API.S.frames[unit]
     if not frame or not frame:IsShown() then return end
     local pieces = NativePiecesForUnit(unit)
     local unitName = SafeUnitName(unit)
@@ -3599,6 +3914,9 @@ events:SetScript("OnEvent", function(_, event, ...)
         if unit == "targettarget" then
             RefreshTargetOfTargetBars()
             return
+        elseif unit == "focustarget" then
+            API.S.focusTot.refresh()
+            return
         elseif unit == "player" or unit == "target" or unit == "focus" then
             ReapplyNativeBars(unit)
         elseif IsGroupUnit(unit) then
@@ -3615,6 +3933,14 @@ events:SetScript("OnEvent", function(_, event, ...)
                 RefreshTargetOfTargetBars()
             end
             return
+        elseif unit == "focustarget" then
+            if event ~= "UNIT_AURA" then
+                API.S.focusTot.refresh()
+            end
+            return
+        end
+        if event == "UNIT_AURA" and unit == "target" then
+            ClearTargetAuraAnchorCache()
         end
         if unit ~= "player" and unit ~= "target" and unit ~= "focus" then
             if IsGroupUnit(unit) then
@@ -3624,7 +3950,7 @@ events:SetScript("OnEvent", function(_, event, ...)
         end
     elseif event == "CHAT_MSG_ADDON" then
         local prefix = ...
-        if prefix ~= ADDON_PREFIX then return end
+        if prefix ~= API.C.ADDON_PREFIX then return end
     elseif event == "PLAYER_TARGET_CHANGED" then
         forceMeasure = true
     elseif event == "PLAYER_FOCUS_CHANGED" then
@@ -3633,6 +3959,8 @@ events:SetScript("OnEvent", function(_, event, ...)
         local unit = ...
         if unit == "target" then
             RefreshTargetOfTargetBars()
+        elseif unit == "focus" then
+            API.S.focusTot.refresh()
         end
         return
     elseif event == "CVAR_UPDATE" then
@@ -3661,7 +3989,7 @@ if C_Timer and C_Timer.After then
     end)
 end
 
--- Refresh inmediato al cambiar cualquier opción de HarfordConfig
+-- Refresh inmediato al cambiar cualquier opciÃ³n de HarfordConfig
 if HarfordConfig and HarfordConfig.RegisterChangeListener then
     HarfordConfig.RegisterChangeListener(function()
         API.Refresh(false)

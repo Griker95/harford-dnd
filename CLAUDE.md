@@ -33,6 +33,7 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 - **SetAlpha en barras ToT**: `TargetofTarget_Update` y `OnValueChanged` lo restauran. No usar.
 - **PlayerFrameTexture SetAlpha(0)**: no funciona en Epsilon para el player frame.
 - **Reposicionar TargetFrameToT físicamente**: `TargetofTarget_Update` resetea anchors entre ticks. No mover el frame nativo — solo gestionar strata/level y cubrir con overlays.
+- **Límite de 200 locales Lua 5.1**: `HarfordUnitFrames.lua` roza el límite. Nuevos bloques de funciones deben ir dentro de `do...end` para no añadir locales al scope global. Exponer funciones públicas vía tabla (ver patrón `focusTot`).
 
 ## Patrones de código recurrentes
 
@@ -59,9 +60,18 @@ HarfordDebug.RegisterCommand("micomando", function(args)
     -- diagnóstico aquí
 end, "Descripción breve del comando")
 
--- RefreshTargetOfTargetBars es la fuente de verdad del ToT overlay
--- Llamar desde ambos branches de RefreshFrame para unit=="target"
--- NUNCA llamar HideToTBarsOverlay() directamente desde RefreshFrame
+-- RefreshTargetOfTargetBars / focusTot.refresh() son las fuentes de verdad
+-- Llamar desde AMBOS branches de RefreshFrame para unit=="target"/"focus"
+-- NUNCA llamar HideToTBarsOverlay() / focusTot.hide() directamente desde RefreshFrame
+
+-- Patrón do...end para añadir funciones sin consumir locales de file-scope
+-- (HarfordUnitFrames.lua está al límite de 200 locales Lua 5.1)
+do
+    local function miFuncionInterna() end
+    local function otraFuncion() end
+    miTabla.publica = miFuncionInterna
+    miTabla.otra    = otraFuncion
+end
 ```
 
 ## Prefixes de addon messages

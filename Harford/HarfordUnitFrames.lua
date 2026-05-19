@@ -16,6 +16,9 @@ API.C.TEX_WHITE = "Interface\\Buttons\\WHITE8x8"
 API.C.TEX_STATUS = "Interface\\TargetingFrame\\UI-StatusBar"
 API.C.TEX_FRAME = "Interface\\TargetingFrame\\UI-TargetingFrame"
 API.C.TEX_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+API.C.TEX_ABSORB      = "Interface\\RaidFrame\\Shield-Overlay"
+API.C.TEX_ABSORB_FILL = "Interface\\RaidFrame\\Shield-Fill"
+API.C.TEX_ABSORB_EDGE = "Interface\\RaidFrame\\Shield-Overshield"
 API.C.TOT_OVERLAY_STRATA = "MEDIUM"
 API.C.TOT_ART_LEVEL = 82
 API.C.TOT_BAR_FRAME_LEVEL = 83
@@ -42,6 +45,8 @@ local RefreshTargetOfTargetNative
 local RefreshTargetOfTargetBars
 local HideToTBarsOverlay
 local ReapplyNativeBars
+local EnsureNativeAbsorbTexture
+local ApplyAbsorbTexture
 
 local BarBackgroundInfo
 local StatusBarTextureInfo
@@ -540,6 +545,7 @@ local function BuildResourceList(resources)
                 label = ResourceLabel(key),
                 cur = ResourceValue(resources, "Res_" .. tostring(key) .. "_Cur"),
                 max = ResourceValue(resources, "Res_" .. tostring(key) .. "_Max"),
+                tempCur = key == "health" and ResourceValue(resources, "Res_temp_health_Cur") or nil,
             }
         end
     end
@@ -1187,10 +1193,12 @@ local function UpdateToTBarsOverlay(healthData, resourceData)
     if healthData then
         local max = math.max(tonumber(healthData.max) or 0, 0)
         local cur = math.max(tonumber(healthData.cur) or 0, 0)
+        local tempCur = math.max(tonumber(healthData.tempCur) or 0, 0)
         ov.healthFrame.bar:SetMinMaxValues(0, math.max(max, 1))
         ov.healthFrame.bar:SetValue(cur)
         ov.healthFrame.bar:SetStatusBarColor(0.0, 0.82, 0.08, 0.95)
         ov.healthFrame:Show()
+        ApplyAbsorbTexture(EnsureNativeAbsorbTexture(ov.healthFrame.bar), ov.healthFrame.bar, cur, max, tempCur, 0.85)
     else
         ov.healthFrame:Hide()
     end
@@ -1666,27 +1674,29 @@ local function ShouldUseCompactClassColor(frame)
 end
 
 -- Texto corto: solo valores, sin nombre de recurso. Se muestra siempre en NUMERIC/PERCENT/BOTH.
-local function FormatShortText(cur, max)
+local function FormatShortText(cur, max, tempCur)
     local mode = GetStatusTextMode()
     local pct = max > 0 and math.floor(cur / max * 100) or 0
+    local temp = (tempCur and tempCur > 0) and ("+" .. tempCur) or ""
     if mode == "PERCENT" then
         return pct .. "%"
     elseif mode == "BOTH" then
-        return cur .. "/" .. max .. " (" .. pct .. "%)"
+        return cur .. temp .. "/" .. max .. " (" .. pct .. "%)"
     end
-    return cur .. "/" .. max
+    return cur .. temp .. "/" .. max
 end
 
 -- Texto completo: nombre de recurso + valores. Se muestra en hover (o siempre en NONE).
-local function FormatFullText(label, cur, max)
+local function FormatFullText(label, cur, max, tempCur)
     local mode = GetStatusTextMode()
     local pct = max > 0 and math.floor(cur / max * 100) or 0
+    local temp = (tempCur and tempCur > 0) and ("+" .. tempCur) or ""
     if mode == "PERCENT" then
         return label .. " " .. pct .. "%"
     elseif mode == "BOTH" then
-        return label .. " " .. cur .. "/" .. max .. " (" .. pct .. "%)"
+        return label .. " " .. cur .. temp .. "/" .. max .. " (" .. pct .. "%)"
     end
-    return label .. " " .. cur .. "/" .. max
+    return label .. " " .. cur .. temp .. "/" .. max
 end
 
 -- Hookea las barras nativas (health/power) una sola vez para mostrar/ocultar
@@ -1731,6 +1741,155 @@ local function GetNativeBarTextRegion(nativeBar)
         nativeBar._harfordTextRegion = text
     end
     return nativeBar._harfordTextRegion
+end
+
+ApplyAbsorbTexture = function(texture, owner, cur, max, temp, alpha)
+    if not texture or not owner then return end
+    max = math.max(tonumber(max) or 0, 0)
+    temp = math.max(tonumber(temp) or 0, 0)
+    if max <= 0 or temp <= 0 then
+        texture:Hide()
+        local decorOwner = texture._harfordAbsorbDecorOwner or owner
+        if decorOwner then
+            if decorOwner._harfordAbsorbBase then decorOwner._harfordAbsorbBase:Hide() end
+            if decorOwner._harfordAbsorbEdge then decorOwner._harfordAbsorbEdge:Hide() end
+        end
+        return
+    end
+
+    local function EnsureDecor(frame)
+        if not frame or not frame.CreateTexture then return end
+        if not frame._harfordAbsorbPattern then
+            local pattern = frame:CreateTexture(nil, "ARTWORK", nil, 1)
+            pattern:SetTexture(API.C.TEX_ABSORB, "REPEAT", "CLAMP")
+            pattern:SetBlendMode("BLEND")
+            pattern:SetVertexColor(0.40, 0.70, 1.0, 1.0)
+            pattern:Hide()
+            frame._harfordAbsorbPattern = pattern
+        end
+        if not frame._harfordAbsorbSpark then
+            local spark = frame:CreateTexture(nil, "ARTWORK", nil, 2)
+            spark:SetTexture(API.C.TEX_ABSORB_EDGE)
+            spark:SetBlendMode("ADD")
+            spark:SetVertexColor(0.55, 0.80, 1.0, 1.0)
+            spark:Hide()
+            frame._harfordAbsorbSpark = spark
+        end
+    end
+
+    local function UpdateDecor(frame, pct, ownerWidth, ownerHeight, a)
+        EnsureDecor(frame)
+        local w = math.max(1, (ownerWidth or 1) * pct)
+        local h = math.max(6, ownerHeight or (owner.GetHeight and owner:GetHeight() or 10))
+        -- Pattern y glow ocultos: el StatusBar usa TEX_ABSORB_FILL directamente como fill,
+        -- así que el overlay de patrón es redundante y causaba ancho=0 cuando ownerWidth no estaba listo.
+        if frame._harfordAbsorbPattern then frame._harfordAbsorbPattern:Hide() end
+        if frame._harfordAbsorbGlow then frame._harfordAbsorbGlow:Hide() end
+        if frame._harfordAbsorbSpark then
+            frame._harfordAbsorbSpark:ClearAllPoints()
+            frame._harfordAbsorbSpark:SetSize(math.max(5, h * 0.8), math.max(4, h * 0.9))
+            -- fillTex:RIGHT en Epsilon apunta al extremo del bar entero (texcoords, no resize).
+            -- Calcular posición manual: frame:GetWidth() * pct = píxel exacto del borde del fill.
+            local realW = (frame.GetWidth and frame:GetWidth() or 0)
+            if realW <= 0 then realW = ownerWidth or 0 end
+            frame._harfordAbsorbSpark:SetPoint("CENTER", frame, "LEFT", realW * pct + 2, 0)
+            frame._harfordAbsorbSpark:SetAlpha(math.min(0.65, (a or 0.85) * 0.70))
+            frame._harfordAbsorbSpark:Show()
+        end
+    end
+
+    if texture.SetStatusBarTexture then
+        texture:ClearAllPoints()
+        texture:SetAllPoints(owner)
+        -- Usar la textura de escudo directamente como fill del StatusBar.
+        -- Así el fill escala solo (sin depender de GetWidth) y muestra la textura real.
+        texture:SetStatusBarTexture(API.C.TEX_ABSORB_FILL)
+        local tex = texture.GetStatusBarTexture and texture:GetStatusBarTexture()
+        if tex and tex.SetHorizTile then tex:SetHorizTile(false) end  -- Shield-Fill se estira, no tilea
+        if tex and tex.SetVertTile then tex:SetVertTile(false) end
+        texture:SetMinMaxValues(0, max)
+        texture:SetValue(math.min(temp, max))
+        texture:SetStatusBarColor(0.35, 0.82, 1.0, 1.0)
+        if texture.SetAlpha then texture:SetAlpha(alpha or 0.85) end
+        texture:Show()
+        local w = owner.GetWidth and owner:GetWidth() or 0
+        local h = owner.GetHeight and owner:GetHeight() or 0
+        UpdateDecor(texture, math.min(temp / max, 1), w, h, alpha or 0.85)
+        return
+    end
+
+    local ownerWidth = owner.GetWidth and owner:GetWidth() or 0
+    if ownerWidth <= 1 then
+        texture:Hide()
+        return
+    end
+
+    -- El absorb se solapa sobre la barra de vida desde el origen (OVERLAY sobre ARTWORK).
+    -- El edge marca el final del área de absorb.
+    local absorbWidth = math.max(1, math.min((temp / max) * ownerWidth, ownerWidth))
+    local ownerHeight = owner.GetHeight and owner:GetHeight() or 0
+    local decorOwner  = texture._harfordAbsorbDecorOwner or owner
+    if decorOwner and decorOwner.CreateTexture and not decorOwner._harfordAbsorbBase then
+        local base = decorOwner:CreateTexture(nil, "OVERLAY", nil, -3)
+        base:SetTexture(API.C.TEX_WHITE)
+        base:SetVertexColor(0.10, 0.62, 0.95, 0.88)
+        base:Hide()
+        decorOwner._harfordAbsorbBase = base
+    end
+    if decorOwner and decorOwner.CreateTexture and not decorOwner._harfordAbsorbEdge then
+        local edge = decorOwner:CreateTexture(nil, "OVERLAY", nil, -1)
+        edge:SetTexture(API.C.TEX_ABSORB_EDGE)
+        edge:SetBlendMode("ADD")
+        edge:SetVertexColor(0.75, 0.95, 1.0, 0.95)
+        edge:Hide()
+        decorOwner._harfordAbsorbEdge = edge
+    end
+
+    if decorOwner and decorOwner._harfordAbsorbBase then
+        if decorOwner._harfordAbsorbBase.SetDrawLayer then decorOwner._harfordAbsorbBase:SetDrawLayer("OVERLAY", -3) end
+        decorOwner._harfordAbsorbBase:ClearAllPoints()
+        decorOwner._harfordAbsorbBase:SetPoint("TOPLEFT", owner, "TOPLEFT", 0, 0)
+        decorOwner._harfordAbsorbBase:SetPoint("BOTTOMLEFT", owner, "BOTTOMLEFT", 0, 0)
+        decorOwner._harfordAbsorbBase:SetWidth(absorbWidth)
+        decorOwner._harfordAbsorbBase:SetAlpha(math.min(0.88, math.max(0.72, alpha or 0.85)))
+        decorOwner._harfordAbsorbBase:Show()
+    end
+
+    texture:ClearAllPoints()
+    texture:SetPoint("TOPLEFT", owner, "TOPLEFT", 0, 0)
+    texture:SetPoint("BOTTOMLEFT", owner, "BOTTOMLEFT", 0, 0)
+    texture:SetWidth(absorbWidth)
+    if texture.SetDrawLayer then texture:SetDrawLayer("OVERLAY", -2) end
+    texture:SetTexture(API.C.TEX_ABSORB, "REPEAT", "CLAMP")
+    if texture.SetHorizTile then texture:SetHorizTile(true) end
+    if texture.SetVertTile then texture:SetVertTile(false) end
+    if texture.SetVertexColor then texture:SetVertexColor(0.95, 1.0, 1.0, 1.0) end
+    if texture.SetAlpha then texture:SetAlpha(math.min(0.60, (alpha or 0.85) * 0.65)) end
+    texture:Show()
+    if decorOwner and decorOwner._harfordAbsorbEdge then
+        local h = math.max(6, ownerHeight)
+        if decorOwner._harfordAbsorbEdge.SetDrawLayer then decorOwner._harfordAbsorbEdge:SetDrawLayer("OVERLAY", -1) end
+        decorOwner._harfordAbsorbEdge:ClearAllPoints()
+        decorOwner._harfordAbsorbEdge:SetSize(math.max(5, h * 0.8), math.max(4, h * 0.9))
+        decorOwner._harfordAbsorbEdge:SetPoint("CENTER", owner, "LEFT", absorbWidth + 2, 0)
+        decorOwner._harfordAbsorbEdge:SetAlpha(math.min(0.65, (alpha or 0.85) * 0.70))
+        decorOwner._harfordAbsorbEdge:Show()
+    end
+    if texture._harfordAbsorbGlow then texture._harfordAbsorbGlow:Hide() end
+    if texture._harfordAbsorbSpark then texture._harfordAbsorbSpark:Hide() end
+end
+
+EnsureNativeAbsorbTexture = function(nativeBar)
+    if not nativeBar or not CreateFrame then return nil end
+    if nativeBar._harfordAbsorbTexture then return nativeBar._harfordAbsorbTexture end
+    local texture = nativeBar:CreateTexture(nil, "OVERLAY", nil, -2)
+    texture:SetTexture(API.C.TEX_ABSORB, "REPEAT", "CLAMP")
+    if texture.SetHorizTile then texture:SetHorizTile(true) end
+    if texture.SetVertTile then texture:SetVertTile(false) end
+    texture._harfordAbsorbDecorOwner = nativeBar
+    texture:Hide()
+    nativeBar._harfordAbsorbTexture = texture
+    return texture
 end
 
 local function EnsureBar(frame, index)
@@ -1881,6 +2040,13 @@ local function ApplyNativeStatusBar(nativeBar, data)
     if nativeBar.GetStatusBarTexture and nativeBar:GetStatusBarTexture() and nativeBar:GetStatusBarTexture().SetDesaturated then
         nativeBar:GetStatusBarTexture():SetDesaturated(false)
     end
+    if data.key == "health" then
+        ApplyAbsorbTexture(EnsureNativeAbsorbTexture(nativeBar), nativeBar, cur, max, data.tempCur, 0.85)
+    elseif nativeBar._harfordAbsorbTexture then
+        nativeBar._harfordAbsorbTexture:Hide()
+        if nativeBar._harfordAbsorbBase then nativeBar._harfordAbsorbBase:Hide() end
+        if nativeBar._harfordAbsorbEdge then nativeBar._harfordAbsorbEdge:Hide() end
+    end
     nativeBar._harfordApplying = nil
     nativeBar._harfordShortText = nil
     nativeBar._harfordFullText = nil
@@ -1914,6 +2080,11 @@ local function ApplyPendingNativeStatusBar(nativeBar, key)
     end
     if nativeBar.GetStatusBarTexture and nativeBar:GetStatusBarTexture() and nativeBar:GetStatusBarTexture().SetDesaturated then
         nativeBar:GetStatusBarTexture():SetDesaturated(false)
+    end
+    if nativeBar._harfordAbsorbTexture then
+        nativeBar._harfordAbsorbTexture:Hide()
+        if nativeBar._harfordAbsorbBase then nativeBar._harfordAbsorbBase:Hide() end
+        if nativeBar._harfordAbsorbEdge then nativeBar._harfordAbsorbEdge:Hide() end
     end
     nativeBar._harfordApplying = nil
     nativeBar._harfordShortText = nil
@@ -1975,6 +2146,11 @@ local function RestoreNativeBarFromUnit(nativeBar, unit, kind, showText)
     if not nativeBar or not unit or not (UnitExists and UnitExists(unit)) then return false end
 
     ClearHarfordNativeBarMarks(nativeBar)
+    if nativeBar._harfordAbsorbTexture then
+        nativeBar._harfordAbsorbTexture:Hide()
+        if nativeBar._harfordAbsorbBase then nativeBar._harfordAbsorbBase:Hide() end
+        if nativeBar._harfordAbsorbEdge then nativeBar._harfordAbsorbEdge:Hide() end
+    end
     if nativeBar.Show then nativeBar:Show() end
     if nativeBar.SetAlpha then nativeBar:SetAlpha(1) end
     if nativeBar.GetStatusBarTexture and nativeBar:GetStatusBarTexture() and nativeBar:GetStatusBarTexture().SetDesaturated then
@@ -2016,8 +2192,9 @@ local function ApplyNativeResourceText(nativeBar, data)
     if not nativeBar or not data then return end
     local cur = math.max(tonumber(data.cur) or 0, 0)
     local max = math.max(tonumber(data.max) or 0, 0)
-    local shortText = FormatShortText(cur, max)
-    local fullText  = FormatFullText(tostring(data.label or data.key), cur, max)
+    local tempCur = math.max(tonumber(data.tempCur) or 0, 0)
+    local shortText = FormatShortText(cur, max, tempCur)
+    local fullText  = FormatFullText(tostring(data.label or data.key), cur, max, tempCur)
 
     nativeBar._harfordShortText = shortText
     nativeBar._harfordFullText = fullText
@@ -2025,6 +2202,7 @@ local function ApplyNativeResourceText(nativeBar, data)
 
     local text = GetNativeBarTextRegion(nativeBar)
     if text then
+        if text.SetDrawLayer then text:SetDrawLayer("OVERLAY", 7) end
         local mode = GetStatusTextMode()
         local hovering = nativeBar.IsMouseOver and nativeBar:IsMouseOver()
         if hovering then
@@ -2183,10 +2361,12 @@ local function UpdateFocusTotBarsOverlay(healthData, resourceData)
     if healthData then
         local max = math.max(tonumber(healthData.max) or 0, 0)
         local cur = math.max(tonumber(healthData.cur) or 0, 0)
+        local tempCur = math.max(tonumber(healthData.tempCur) or 0, 0)
         ov.healthFrame.bar:SetMinMaxValues(0, math.max(max, 1))
         ov.healthFrame.bar:SetValue(cur)
         ov.healthFrame.bar:SetStatusBarColor(0.0, 0.82, 0.08, 0.95)
         ov.healthFrame:Show()
+        ApplyAbsorbTexture(EnsureNativeAbsorbTexture(ov.healthFrame.bar), ov.healthFrame.bar, cur, max, tempCur, 0.85)
     else
         ov.healthFrame:Hide()
     end
@@ -2409,15 +2589,22 @@ local function ApplyUnitVisuals(frame, unit, pieces, profile, unitName)
     if frame.portraitLayer then frame.portraitLayer:Hide() end
 
     if pieces.level and pieces.level.SetText then
-        pieces.level:SetText(GetLevelText(unit, profile))
-        if pieces.level.SetDrawLayer then
-            pieces.level:SetDrawLayer("OVERLAY", 8)
+        -- Si el jugador está desconectado, ocultar el nivel para que Blizzard muestre
+        -- su icono de estado nativo (calavera de desconexión) sin solapamiento.
+        local isDisconnected = UnitIsConnected and UnitIsConnected(unit) == false
+        if isDisconnected then
+            if pieces.level.Hide then pieces.level:Hide() end
+        else
+            pieces.level:SetText(GetLevelText(unit, profile))
+            if pieces.level.SetDrawLayer then
+                pieces.level:SetDrawLayer("OVERLAY", 8)
+            end
+            if pieces.level.SetTextColor then
+                pieces.level:SetTextColor(1, 0.82, 0.1)
+            end
+            if pieces.level.SetAlpha then pieces.level:SetAlpha(1) end
+            if pieces.level.Show then pieces.level:Show() end
         end
-        if pieces.level.SetTextColor then
-            pieces.level:SetTextColor(1, 0.82, 0.1)
-        end
-        if pieces.level.SetAlpha then pieces.level:SetAlpha(1) end
-        if pieces.level.Show then pieces.level:Show() end
     end
     if frame.level then frame.level:Hide() end
 
@@ -2797,8 +2984,9 @@ local function RefreshResourceBars(frame, resources)
         if i <= 2 then
             local nativeBar = i == 1 and pieces.health or pieces.power
             if nativeBar and nativeBar.TextString then
-                local shortText = FormatShortText(cur, max)
-                local fullText  = FormatFullText(tostring(data.label or data.key), cur, max)
+                local tempCur = math.max(tonumber(data.tempCur) or 0, 0)
+                local shortText = FormatShortText(cur, max, tempCur)
+                local fullText  = FormatFullText(tostring(data.label or data.key), cur, max, tempCur)
                 nativeBar._harfordShortText = shortText
                 nativeBar._harfordFullText  = fullText
                 HookNativeBarForHover(nativeBar)
@@ -3301,16 +3489,28 @@ local RefreshGroupOverlayTexts
 local function SetCompactFrameHoverState(frame, hovering)
     if not frame then return end
     frame._harfordHovering = hovering == true
-    SetCompactBarHoverText(FindGroupHealthBar(frame), frame._harfordHovering)
-    SetCompactBarHoverText(FindGroupPowerBar(frame), frame._harfordHovering)
-    if RefreshGroupOverlayTexts then
-        RefreshGroupOverlayTexts(frame)
+    -- Party/group: el hover no actúa cuando el texto ya está visible (NUMERIC/PERCENT/BOTH)
+    -- para evitar parpadeo sin beneficio real.
+    -- Raid: el frame es pequeño y el hover siempre es útil aunque haya texto activo.
+    local mode = GetStatusTextMode()
+    local isRaid = IsRaidCompactFrame(frame, nil)
+    if isRaid or mode == "NONE" or mode == "0" then
+        SetCompactBarHoverText(FindGroupHealthBar(frame), frame._harfordHovering)
+        SetCompactBarHoverText(FindGroupPowerBar(frame), frame._harfordHovering)
+        if RefreshGroupOverlayTexts then
+            RefreshGroupOverlayTexts(frame)
+        end
     end
 end
 
 local function CompactHoverEnter(frame)
     if not frame then return end
     frame._harfordHoverToken = (frame._harfordHoverToken or 0) + 1
+    -- CompactUnitFrame_OnEnter de Blizzard llama TextStatusBar_UpdateTextString
+    -- en las barras nativas justo antes de que este hook corra, re-mostrando el
+    -- TextString que HideNativeStatusBarText habia ocultado. Lo ocultamos de nuevo.
+    HideNativeStatusBarText(FindGroupHealthBar(frame))
+    HideNativeStatusBarText(FindGroupPowerBar(frame))
     SetCompactFrameHoverState(frame, true)
 end
 
@@ -3320,6 +3520,9 @@ local function CompactHoverLeave(frame)
     local token = frame._harfordHoverToken
     local clear = function()
         if frame._harfordHoverToken == token then
+            -- Mismo patron: OnLeave nativo puede restaurar texto; suprimirlo.
+            HideNativeStatusBarText(FindGroupHealthBar(frame))
+            HideNativeStatusBarText(FindGroupPowerBar(frame))
             SetCompactFrameHoverState(frame, false)
         end
     end
@@ -3365,6 +3568,10 @@ local function GetOrCreateGroupOverlay(frame)
     overlay:SetAllPoints(frame)
     overlay:SetFrameLevel((frame.GetFrameLevel and frame:GetFrameLevel() or 1) + 2)
     overlay:EnableMouse(false)
+    -- Desacoplar alpha del padre: en Epsilon el compact frame puede recibir SetAlpha
+    -- cuando el jugador esta lejos de phase, lo que haria semitransparente nuestro overlay
+    -- y dejaria ver las barras nativas por debajo.
+    if overlay.SetIgnoreParentAlpha then overlay:SetIgnoreParentAlpha(true) end
     overlay.compactFrame = frame
     overlay.bars = {}
 
@@ -3372,19 +3579,36 @@ local function GetOrCreateGroupOverlay(frame)
         local container = CreateFrame("Frame", nil, overlay)
         container:EnableMouse(false)
         container:SetFrameLevel(overlay:GetFrameLevel() + 1)
+        if container.SetIgnoreParentAlpha then container:SetIgnoreParentAlpha(true) end
 
         local bg = container:CreateTexture(nil, "BACKGROUND")
         bg:SetAllPoints(container)
-        bg:SetColorTexture(0.02, 0.02, 0.02, 0.88)
+        -- Alpha 1.0: opacidad total para tapar completamente la barra nativa subyacente.
+        bg:SetColorTexture(0.02, 0.02, 0.02, 1.0)
 
         local bar = CreateFrame("StatusBar", nil, container)
         bar:SetAllPoints(container)
         bar:SetStatusBarTexture(API.C.TEX_STATUS)
         bar:SetFrameLevel(container:GetFrameLevel() + 1)
+        if bar.SetIgnoreParentAlpha then bar:SetIgnoreParentAlpha(true) end
+
+        -- Vida temporal: overlay nativo/cian encima del fill de HP.
+        local tempBar = CreateFrame("StatusBar", nil, container)
+        tempBar:SetAllPoints(bar)
+        tempBar:SetStatusBarTexture(API.C.TEX_ABSORB_FILL)
+        local tempTex = tempBar:GetStatusBarTexture()
+        if tempTex and tempTex.SetHorizTile then tempTex:SetHorizTile(false) end
+        if tempTex and tempTex.SetVertTile then tempTex:SetVertTile(false) end
+        tempBar:SetStatusBarColor(0.30, 0.78, 1.00, 0.85)
+        tempBar:SetFrameLevel(container:GetFrameLevel() + 2)
+        if tempBar.SetIgnoreParentAlpha then tempBar:SetIgnoreParentAlpha(true) end
+        tempBar:EnableMouse(false)
+        tempBar:Hide()
 
         local textFrame = CreateFrame("Frame", nil, container)
         textFrame:SetAllPoints(container)
         textFrame:SetFrameLevel(container:GetFrameLevel() + 3)
+        if textFrame.SetIgnoreParentAlpha then textFrame:SetIgnoreParentAlpha(true) end
 
         local text = textFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         text:SetAllPoints(textFrame)
@@ -3392,10 +3616,11 @@ local function GetOrCreateGroupOverlay(frame)
         text:SetJustifyV("MIDDLE")
         text:SetTextColor(1, 1, 1)
 
-        container.bg = bg
-        container.bar = bar
+        container.bg      = bg
+        container.bar     = bar
+        container.tempBar = tempBar
         container.textFrame = textFrame
-        container.text = text
+        container.text    = text
         return container
     end
 
@@ -3405,6 +3630,7 @@ local function GetOrCreateGroupOverlay(frame)
     local nameFrame = CreateFrame("Frame", nil, overlay)
     nameFrame:EnableMouse(false)
     nameFrame:SetFrameLevel(overlay:GetFrameLevel() + 8)
+    if nameFrame.SetIgnoreParentAlpha then nameFrame:SetIgnoreParentAlpha(true) end
     local nameText = nameFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     nameText:SetAllPoints(nameFrame)
     nameText:SetJustifyH("LEFT")
@@ -3451,16 +3677,23 @@ local function SetGroupOverlayText(frame, container, data)
     if not container or not container.text or not data then return end
     local cur = math.max(tonumber(data.cur) or 0, 0)
     local max = math.max(tonumber(data.max) or 0, 0)
-    local shortText = FormatShortText(cur, max)
-    local fullText = FormatFullText(tostring(data.label or data.key), cur, max)
+    local tempCur = math.max(tonumber(data.tempCur) or 0, 0)
+    local shortText = FormatShortText(cur, max, tempCur)
+    local fullText = FormatFullText(tostring(data.label or data.key), cur, max, tempCur)
     local mode = GetStatusTextMode()
     local unit = GetCompactFrameUnit(frame)
     local partyText = IsPartyCompactFrame(frame, unit)
-    if frame and frame._harfordHovering then
-        container.text:SetText(partyText and shortText or fullText)
+    local isRaid    = IsRaidCompactFrame(frame, unit)
+    if mode ~= "NONE" and mode ~= "0" then
+        -- Con texto activo: raid muestra fullText al hacer hover; party siempre shortText.
+        if isRaid and frame and frame._harfordHovering then
+            container.text:SetText(fullText)
+        else
+            container.text:SetText(shortText)
+        end
         container.text:Show()
-    elseif mode ~= "NONE" and mode ~= "0" then
-        container.text:SetText(shortText)
+    elseif frame and frame._harfordHovering then
+        container.text:SetText(partyText and shortText or fullText)
         container.text:Show()
     else
         container.text:SetText(fullText)
@@ -3480,6 +3713,9 @@ local function PositionGroupOverlayBar(container, nativeBar, frame, unit, isHeal
         container:SetFrameLevel(nativeBar:GetFrameLevel() + 1)
         if container.bar and container.bar.SetFrameLevel then
             container.bar:SetFrameLevel(container:GetFrameLevel() + 1)
+        end
+        if container.tempBar and container.tempBar.SetFrameLevel then
+            container.tempBar:SetFrameLevel(container:GetFrameLevel() + 2)
         end
         if container.textFrame and container.textFrame.SetFrameLevel then
             container.textFrame:SetFrameLevel(container:GetFrameLevel() + 3)
@@ -3503,6 +3739,9 @@ local function PositionGroupOverlayBar(container, nativeBar, frame, unit, isHeal
     return true
 end
 
+-- Dibuja el absorb de vida temporal en frames compactos (party/raid).
+-- Usa texturas sobre container.textFrame (nivel alto) para quedar encima de la barra
+-- de vida sin necesidad de modificar su z-order. El fill empieza donde termina el HP.
 local function ApplyGroupOverlayBar(container, nativeBar, frame, unit, data, color, isHealth)
     if not PositionGroupOverlayBar(container, nativeBar, frame, unit, isHealth) or not data then
         if container then container:Hide() end
@@ -3517,10 +3756,28 @@ local function ApplyGroupOverlayBar(container, nativeBar, frame, unit, data, col
             r, g, b = 0.0, 0.82, 0.08
         end
     end
+    -- Replicar el estado visual del compact frame (lejos de phase, fuera de rango):
+    -- Blizzard llama SetAlpha(~0.55) sobre el compact frame en esos estados.
+    -- SetIgnoreParentAlpha(true) evita que las barras nativas sangren por debajo,
+    -- pero debemos leer el alpha del frame y aplicarlo nosotros SOLO a la barra y
+    -- el texto — el bg permanece opaco para tapar las barras nativas en cualquier estado.
+    local stateAlpha = (frame and frame.GetAlpha and frame:GetAlpha()) or 1
     container.bar:SetStatusBarTexture(API.C.TEX_STATUS)
     container.bar:SetMinMaxValues(0, max > 0 and max or 1)
     container.bar:SetValue(math.min(cur, max > 0 and max or cur))
-    container.bar:SetStatusBarColor(r, g, b, 0.95)
+    container.bar:SetStatusBarColor(r, g, b, stateAlpha)
+    if container.bar.SetAlpha then container.bar:SetAlpha(stateAlpha) end
+    if container.textFrame and container.textFrame.SetAlpha then
+        container.textFrame:SetAlpha(stateAlpha)
+    end
+
+    -- Vida temporal: solo health bar. El tempBar (nivel superior al bar) muestra el
+    -- absorb como overlay encima de la barra de vida usando ApplyAbsorbTexture.
+    if isHealth and container.tempBar then
+        local tempCur = math.max(tonumber(data.tempCur) or 0, 0)
+        ApplyAbsorbTexture(container.tempBar, container.bar, cur, max, tempCur, 0.85 * stateAlpha)
+    end
+
     SetGroupOverlayText(frame, container, data)
 end
 
@@ -3630,9 +3887,18 @@ end
 
 local function ApplyHarfordCompactUnitFrame(frame)
     if not ShouldHandleCompactUnitFrame(frame) then return end
+    local unit = GetCompactFrameUnit(frame)
+    -- Desconectado o fuera de phase: ocultar overlay y dejar que el frame nativo muestre
+    -- el icono de estado (calavera de desconexion, etc.).
+    if UnitIsConnected and UnitIsConnected(unit) == false then
+        local overlay = API.S.groupOverlays[GetGroupFrameName(frame)]
+        if overlay then overlay:Hide() end
+        local portrait = FindGroupPortrait(frame)
+        if portrait then RestoreCompactPortrait(portrait) end
+        return
+    end
     API.S.compactFramesTouched[frame] = true
     HookCompactFrameForHover(frame)
-    local unit = GetCompactFrameUnit(frame)
     local unitName = SafeUnitName(unit)
     local profile = GetProfile(unit)
     local portrait = FindGroupPortrait(frame)
@@ -3658,6 +3924,12 @@ local function ApplyHarfordCompactUnitFrame(frame)
     RequestGroupResourcesIfNeeded(unitName, resources)
 
     if #list == 0 then return end
+
+    -- Inyectar vida temporal en el slot de salud para que ApplyGroupOverlayBar la lea
+    if list[1] and list[1].key == "health" and type(resources) == "table" then
+        local tc = math.max(tonumber(resources["Res_temp_health_Cur"]) or 0, 0)
+        if tc > 0 then list[1].tempCur = tc end
+    end
     local classColor = nil
     if ShouldUseCompactClassColor(frame) then
         local r, g, b = LearnClassColor(unit, profile)
@@ -3665,6 +3937,10 @@ local function ApplyHarfordCompactUnitFrame(frame)
     end
     local healthBar = FindGroupHealthBar(frame)
     local powerBar = FindGroupPowerBar(frame)
+    -- Marcar las barras nativas para que el hook global de TextStatusBar las suprima
+    -- en cada tick de CompactUnitFrame_OnUpdate mientras el raton este encima.
+    if healthBar then healthBar._harfordCompactManaged = true end
+    if powerBar  then powerBar._harfordCompactManaged  = true end
     local overlay = GetOrCreateGroupOverlay(frame)
     if overlay then
         overlay.healthData = list[1]
@@ -3695,11 +3971,76 @@ local function HookCompactUnitFrameFunction(name, handler)
     return true
 end
 
+-- Handler ligero para replicar el alpha de "lejos de fase" / fuera de rango.
+-- CompactUnitFrame_UpdateInRange es llamada por el OnUpdate del compact frame
+-- (~1/s) y es donde Blizzard aplica SetAlpha(~0.55). Hookearlo garantiza que
+-- el stateAlpha de nuestras barras se actualiza en el mismo tick que el frame
+-- nativo, sin esperar al siguiente evento de salud/poder.
+local function ApplyCompactStateAlpha(frame)
+    local overlay = frame and API.S.groupOverlays[GetGroupFrameName(frame)]
+    if not overlay or not overlay:IsShown() then return end
+    local stateAlpha = (frame.GetAlpha and frame:GetAlpha()) or 1
+    for _, container in pairs(overlay.bars) do
+        if container and container:IsShown() then
+            if container.bar and container.bar.SetAlpha then
+                container.bar:SetAlpha(stateAlpha)
+                if container.bar.SetStatusBarColor then
+                    -- preservar color existente, solo actualizar alpha
+                    local r, g, b = container.bar:GetStatusBarColor()
+                    container.bar:SetStatusBarColor(r, g, b, stateAlpha)
+                end
+            end
+            if container.tempBar and container.tempBar:IsShown() then
+                container.tempBar:SetAlpha(0.85 * stateAlpha)
+                if container.tempBar.SetStatusBarColor then
+                    container.tempBar:SetStatusBarColor(0.30, 0.78, 1.0, 0.85 * stateAlpha)
+                end
+            end
+            if container.textFrame and container.textFrame.SetAlpha then
+                container.textFrame:SetAlpha(stateAlpha)
+            end
+        end
+    end
+end
+
 local function InstallCompactUnitFrameHooks()
     HookCompactUnitFrameFunction("CompactUnitFrame_UpdateAll")
     HookCompactUnitFrameFunction("CompactUnitFrame_UpdateHealth")
     HookCompactUnitFrameFunction("CompactUnitFrame_UpdateHealthColor", ApplyCompactHealthClassColor)
     HookCompactUnitFrameFunction("CompactUnitFrame_UpdatePower")
+    -- CompactUnitFrame_UpdateStatus NO se hookea: en Epsilon puede dispararse para estados
+    -- "lejos/fuera de fase" ademas de desconexion, causando que ApplyHarfordCompactUnitFrame
+    -- se ejecute en frames intermedios y exponga barras nativas. La desconexion ya se cubre
+    -- con UNIT_CONNECTION + CompactUnitFrame_UpdateAll.
+    -- CompactUnitFrame_UpdateInRange: Blizzard la llama desde OnUpdate (~1/s) y aplica
+    -- SetAlpha(~0.55) al frame cuando el jugador esta fuera de rango/fase. Hookeamos
+    -- aqui para sincronizar el stateAlpha del overlay en el mismo tick.
+    HookCompactUnitFrameFunction("CompactUnitFrame_UpdateInRange", ApplyCompactStateAlpha)
+
+    -- TextStatusBar_UpdateTextString / WithValues: llamadas por CompactUnitFrame_OnUpdate
+    -- cada tick mientras el raton esta encima del frame, re-mostrando el TextString nativo.
+    -- Nuestro hook de OnEnter solo suprime una vez; el OnUpdate lo restaura cada frame.
+    -- Interceptamos globalmente y suprimimos solo en barras marcadas como _harfordCompactManaged.
+    if hooksecurefunc then
+        local function SuppressCompactBarText(statusFrame)
+            if statusFrame and statusFrame._harfordCompactManaged then
+                HideNativeStatusBarText(statusFrame)
+            end
+        end
+        if not API.S.compactUnitFrameHooksInstalled["TextStatusBar_UpdateTextString"] then
+            if type(_G.TextStatusBar_UpdateTextString) == "function" then
+                hooksecurefunc("TextStatusBar_UpdateTextString", SuppressCompactBarText)
+                API.S.compactUnitFrameHooksInstalled["TextStatusBar_UpdateTextString"] = true
+            end
+        end
+        if not API.S.compactUnitFrameHooksInstalled["TextStatusBar_UpdateTextStringWithValues"] then
+            if type(_G.TextStatusBar_UpdateTextStringWithValues) == "function" then
+                hooksecurefunc("TextStatusBar_UpdateTextStringWithValues", SuppressCompactBarText)
+                API.S.compactUnitFrameHooksInstalled["TextStatusBar_UpdateTextStringWithValues"] = true
+            end
+        end
+    end
+
     HookCompactUnitFrameFunction("CompactUnitFrame_SetUnit")
     HookCompactUnitFrameFunction("CompactUnitFrame_SetUpFrame")
     HookCompactUnitFrameFunction("DefaultCompactUnitFrameSetup")
@@ -3863,8 +4204,9 @@ ReapplyNativeBars = function(unit)
         local data = list[i]
         local cur = math.max(tonumber(data.cur) or 0, 0)
         local max = math.max(tonumber(data.max) or 0, 0)
-        local shortText = FormatShortText(cur, max)
-        local fullText  = FormatFullText(tostring(data.label or data.key), cur, max)
+        local tempCur = math.max(tonumber(data.tempCur) or 0, 0)
+        local shortText = FormatShortText(cur, max, tempCur)
+        local fullText  = FormatFullText(tostring(data.label or data.key), cur, max, tempCur)
         local nativeBar = i == 1 and pieces.health or pieces.power
         if nativeBar and nativeBar.TextString then
             nativeBar._harfordShortText = shortText
@@ -3903,6 +4245,7 @@ events:RegisterEvent("UI_SCALE_CHANGED")
 events:RegisterEvent("DISPLAY_SIZE_CHANGED")
 events:RegisterEvent("CHAT_MSG_ADDON")
 events:RegisterEvent("CVAR_UPDATE")
+events:RegisterEvent("UNIT_CONNECTION")
 events:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
         InstallCompactUnitFrameHooks()
@@ -3951,6 +4294,8 @@ events:SetScript("OnEvent", function(_, event, ...)
     elseif event == "CHAT_MSG_ADDON" then
         local prefix = ...
         if prefix ~= API.C.ADDON_PREFIX then return end
+        -- Datos de sync llegaron: refrescar overlays de nameplates
+        if HarfordNamePlates and HarfordNamePlates.RefreshAll then HarfordNamePlates.RefreshAll() end
     elseif event == "PLAYER_TARGET_CHANGED" then
         forceMeasure = true
     elseif event == "PLAYER_FOCUS_CHANGED" then
@@ -3970,6 +4315,16 @@ events:SetScript("OnEvent", function(_, event, ...)
         RefreshGroupOverlays()
         if C_Timer and C_Timer.After then
             C_Timer.After(0.25, RefreshGroupOverlays)
+        end
+        return
+    elseif event == "UNIT_CONNECTION" then
+        local unit = ...
+        -- Conexion/desconexion de un miembro del grupo: refrescar overlays de raid
+        if IsGroupUnit(unit) then
+            RefreshGroupOverlays()
+        elseif unit == "player" or unit == "target" or unit == "focus" then
+            -- Conexion/desconexion del target (jugador en otro grupo/mundo): forzar refresh
+            API.Refresh(false)
         end
         return
     end
@@ -3993,5 +4348,10 @@ end
 if HarfordConfig and HarfordConfig.RegisterChangeListener then
     HarfordConfig.RegisterChangeListener(function()
         API.Refresh(false)
+        if HarfordNamePlates and HarfordNamePlates.RefreshAll then HarfordNamePlates.RefreshAll() end
     end)
 end
+
+-- Utilidades compartidas con HarfordNamePlates (cargado después en el TOC)
+API.BuildResourceList = BuildResourceList
+API.ResourceColor     = ResourceColor

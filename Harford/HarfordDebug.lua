@@ -1108,4 +1108,257 @@ API.RegisterCommand("totframe", function(args)
     end
 end, "inspecciona jerarquía TargetFrameToT o FocusFrameToT. Args: tot (default) | focustot")
 
+API.RegisterCommand("npinspect", function(args)
+    -- Inspecciona la jerarquía de un nameplate para identificar campos disponibles.
+    -- Sin argumento usa el target; con argumento "all" lista todos los nameplates visibles.
+    local which = tostring(args or ""):match("^%s*(%S*)")
+
+    local function InspectNp(unit, np)
+        local unitName = UnitName and UnitName(unit) or "?"
+        local isPlayer = UnitIsPlayer and UnitIsPlayer(unit)
+        Print(string.format("=== nameplate unit=%s name=%s player=%s ===", unit, unitName, tostring(isPlayer)))
+
+        if not np then
+            Print("  (frame nil)")
+            return
+        end
+
+        -- Campos clave en el raiz del nameplate
+        local knownFields = {
+            "UnitFrame", "healthBar", "HealthBar", "health", "Health",
+            "castBar", "name", "kui", "plate", "unitFrame",
+        }
+        Print("  Campos raiz relevantes:")
+        for _, field in ipairs(knownFields) do
+            local v = rawget(np, field)
+            if v ~= nil then
+                local t = type(v)
+                local extra = ""
+                if t == "table" or t == "userdata" then
+                    local objType = (type(v) == "userdata" or type(v.GetObjectType) == "function")
+                                    and v.GetObjectType and v:GetObjectType() or "table"
+                    local vis = v.IsShown and (v:IsShown() and "SHOWN" or "hidden") or "?"
+                    local w = v.GetWidth and string.format("%.0f", v:GetWidth()) or "?"
+                    local h = v.GetHeight and string.format("%.0f", v:GetHeight()) or "?"
+                    extra = string.format(" [%s vis=%s size=%sx%s]", objType, vis, w, h)
+                end
+                Print(string.format("    np.%-20s = %s%s", field, t, extra))
+            end
+        end
+
+        -- UnitFrame: inspeccionar hijos y campos
+        local uf = rawget(np, "UnitFrame")
+        if uf then
+            Print("  UnitFrame campos relevantes:")
+            local ufFields = { "healthBar", "HealthBar", "health", "Health",
+                               "powerBar", "PowerBar", "power", "Power",
+                               "name", "level", "castBar" }
+            for _, field in ipairs(ufFields) do
+                local v = rawget(uf, field)
+                if v ~= nil then
+                    local t = type(v)
+                    local extra = ""
+                    if t == "table" or t == "userdata" then
+                        local objType = v.GetObjectType and v:GetObjectType() or "table"
+                        local vis = v.IsShown and (v:IsShown() and "SHOWN" or "hidden") or "?"
+                        local w = v.GetWidth and string.format("%.0f", v:GetWidth()) or "?"
+                        local h = v.GetHeight and string.format("%.0f", v:GetHeight()) or "?"
+                        extra = string.format(" [%s vis=%s size=%sx%s]", objType, vis, w, h)
+                    end
+                    Print(string.format("    uf.%-20s = %s%s", field, t, extra))
+                end
+            end
+        end
+
+        -- KuiNameplates: inspeccionar nameplate.kui si existe
+        local kui = rawget(np, "kui")
+        if kui then
+            Print("  nameplate.kui existe — campos:")
+            -- iterar todos los campos string del table kui
+            local kuiFields = {}
+            for k, v in pairs(kui) do
+                if type(k) == "string" then
+                    kuiFields[#kuiFields + 1] = k
+                end
+            end
+            table.sort(kuiFields)
+            for _, k in ipairs(kuiFields) do
+                local v = kui[k]
+                local t = type(v)
+                local extra = ""
+                if t == "table" or t == "userdata" then
+                    local objType = v.GetObjectType and v:GetObjectType() or "table"
+                    local vis = v.IsShown and (v:IsShown() and "SHOWN" or "hidden") or "?"
+                    local w = v.GetWidth and string.format("%.0f", v:GetWidth()) or "?"
+                    local h = v.GetHeight and string.format("%.0f", v:GetHeight()) or "?"
+                    extra = string.format(" [%s vis=%s size=%sx%s]", objType, vis, w, h)
+                end
+                Print(string.format("    kui.%-20s = %s%s", k, t, extra))
+            end
+        else
+            Print("  nameplate.kui: nil (KuiNameplates no activo o campo diferente)")
+            Print("  KuiNameplates global: " .. type(KuiNameplates))
+        end
+    end
+
+    if which == "all" then
+        if not C_NamePlate or not C_NamePlate.GetNamePlates then
+            Print("C_NamePlate.GetNamePlates no disponible")
+            return
+        end
+        local plates = C_NamePlate.GetNamePlates()
+        if #plates == 0 then
+            Print("No hay nameplates visibles")
+            return
+        end
+        for _, np in ipairs(plates) do
+            local unit = np.namePlateUnitToken
+            if unit then InspectNp(unit, np) end
+        end
+    else
+        -- Usar target por defecto
+        if not C_NamePlate or not C_NamePlate.GetNamePlateForUnit then
+            Print("C_NamePlate.GetNamePlateForUnit no disponible")
+            return
+        end
+        local unit = "target"
+        local np = C_NamePlate.GetNamePlateForUnit(unit)
+        if not np then
+            Print("No hay nameplate para el target actual (¿tienes algo seleccionado y visible?)")
+            return
+        end
+        InspectNp(unit, np)
+    end
+end, "inspecciona jerarquía de nameplates. Sin args: nameplate del target. Args: all")
+
+API.RegisterCommand("npkui", function()
+    -- Vuelca TODOS los campos de nameplate.kui y sus regiones para identificar
+    -- el frame/textura que Kui usa en modo "name only + health fill".
+    if not C_NamePlate or not C_NamePlate.GetNamePlateForUnit then
+        Print("C_NamePlate no disponible")
+        return
+    end
+    local np = C_NamePlate.GetNamePlateForUnit("target")
+    if not np then
+        Print("No hay nameplate para el target (¿tienes algo seleccionado y visible?)")
+        return
+    end
+    local kui = rawget(np, "kui")
+    if not kui then
+        Print("nameplate.kui es nil — KuiNameplates no activo o estructura distinta")
+        return
+    end
+
+    local unitName = UnitName and UnitName("target") or "?"
+    Print(string.format("=== nameplate.kui dump — target: %s ===", unitName))
+
+    -- Todos los campos string del kui frame
+    local keys = {}
+    for k in pairs(kui) do
+        if type(k) == "string" then keys[#keys + 1] = k end
+    end
+    table.sort(keys)
+
+    for _, k in ipairs(keys) do
+        local v = kui[k]
+        local t = type(v)
+        local extra = ""
+        if t == "table" or t == "userdata" then
+            local ok, objType = pcall(function() return v:GetObjectType() end)
+            objType = ok and objType or "table"
+            local vis = v.IsShown and (v:IsShown() and "SHOWN" or "hidden") or "?"
+            local visReal = v.IsVisible and (v:IsVisible() and "visible" or "occluded") or "?"
+            local w = v.GetWidth  and string.format("%.0f", v:GetWidth())  or "?"
+            local h = v.GetHeight and string.format("%.0f", v:GetHeight()) or "?"
+            local lv = v.GetFrameLevel and tostring(v:GetFrameLevel()) or "?"
+            extra = string.format(" [%s shown=%s vis=%s size=%sx%s level=%s]",
+                objType, vis, visReal, w, h, lv)
+
+            -- Regiones directas del hijo (texturas, fontstrings)
+            if v.GetRegions then
+                local regions = { v:GetRegions() }
+                for i, r in ipairs(regions) do
+                    local rtype = r.GetObjectType and r:GetObjectType() or "?"
+                    local rvis  = r.IsShown and (r:IsShown() and "SHOWN" or "hidden") or "?"
+                    local rw    = r.GetWidth  and string.format("%.0f", r:GetWidth())  or "?"
+                    local rh    = r.GetHeight and string.format("%.0f", r:GetHeight()) or "?"
+                    local rtex  = r.GetTexture and tostring(r:GetTexture() or "-") or "-"
+                    local ralpha = r.GetAlpha and string.format("%.2f", r:GetAlpha()) or "?"
+                    Print(string.format("    region[%d] %s shown=%s size=%sx%s alpha=%s tex=%s",
+                        i, rtype, rvis, rw, rh, ralpha, rtex))
+                end
+            end
+        end
+        Print(string.format("  kui.%-28s = %s%s", k, t, extra))
+    end
+
+    -- Regiones directas del kui frame (texturas del fondo, bordes, etc.)
+    Print("  --- regiones directas de nameplate.kui ---")
+    if kui.GetRegions then
+        local regions = { kui:GetRegions() }
+        if #regions == 0 then
+            Print("  (ninguna)")
+        end
+        for i, r in ipairs(regions) do
+            local rtype  = r.GetObjectType and r:GetObjectType() or "?"
+            local rvis   = r.IsShown and (r:IsShown() and "SHOWN" or "hidden") or "?"
+            local rw     = r.GetWidth  and string.format("%.0f", r:GetWidth())  or "?"
+            local rh     = r.GetHeight and string.format("%.0f", r:GetHeight()) or "?"
+            local rtex   = r.GetTexture and tostring(r:GetTexture() or "-") or "-"
+            local ratlas = r.GetAtlas and tostring(r:GetAtlas() or "-") or "-"
+            local ralpha = r.GetAlpha and string.format("%.2f", r:GetAlpha()) or "?"
+            Print(string.format("  region[%d] %s shown=%s size=%sx%s alpha=%s tex=%s atlas=%s",
+                i, rtype, rvis, rw, rh, ralpha, rtex, ratlas))
+        end
+    end
+
+    -- Hijos directos del kui frame
+    Print("  --- hijos directos de nameplate.kui ---")
+    if kui.GetChildren then
+        local children = { kui:GetChildren() }
+        if #children == 0 then Print("  (ninguno)") end
+        for i, c in ipairs(children) do
+            local cn    = c.GetName and c:GetName() or "(sin nombre)"
+            local ctype = c.GetObjectType and c:GetObjectType() or "?"
+            local cvis  = c.IsShown and (c:IsShown() and "SHOWN" or "hidden") or "?"
+            local cw    = c.GetWidth  and string.format("%.0f", c:GetWidth())  or "?"
+            local ch    = c.GetHeight and string.format("%.0f", c:GetHeight()) or "?"
+            local clv   = c.GetFrameLevel and tostring(c:GetFrameLevel()) or "?"
+            Print(string.format("  hijo[%d] %-30s %s shown=%s size=%sx%s level=%s",
+                i, cn, ctype, cvis, cw, ch, clv))
+        end
+    end
+end, "vuelca nameplate.kui completo del target para identificar name-fill health frame")
+
+API.RegisterCommand("absorbdbg", function()
+    -- Inspecciona el estado del absorb en todos los overlays de grupo activos
+    local HUF = HarfordUnitFrames
+    if not (HUF and HUF.API and HUF.API.S and HUF.API.S.groupOverlays) then
+        print("[AbsorbDbg] HarfordUnitFrames.API.S.groupOverlays no disponible")
+        return
+    end
+    local count = 0
+    for name, overlay in pairs(HUF.API.S.groupOverlays) do
+        count = count + 1
+        local hBar = overlay.bars and overlay.bars.health
+        if hBar then
+            local bar  = hBar.bar
+            local tf   = hBar.textFrame
+            local fill = tf and tf._absorbFill
+            local edge = tf and tf._absorbEdge
+            local bw   = bar and bar.GetWidth  and bar:GetWidth()  or "?"
+            local bh   = bar and bar.GetHeight and bar:GetHeight() or "?"
+            local data = overlay.healthData
+            local cur  = data and data.cur     or "?"
+            local max  = data and data.max     or "?"
+            local tmp  = data and data.tempCur or "?"
+            local fvis = fill and fill:IsShown() and "SHOW" or "HIDE"
+            local evis = edge and edge:IsShown() and "SHOW" or "HIDE"
+            print(string.format("[AbsorbDbg] %s bar=%.0fx%.0f cur=%s max=%s tmp=%s fill=%s edge=%s",
+                name, bw, bh, tostring(cur), tostring(max), tostring(tmp), fvis, evis))
+        end
+    end
+    if count == 0 then print("[AbsorbDbg] No hay group overlays activos") end
+end, "inspecciona absorb en overlays de raid/party activos")
+
 SetEnabled(HarfordDebugSettings.enabled == true, true)

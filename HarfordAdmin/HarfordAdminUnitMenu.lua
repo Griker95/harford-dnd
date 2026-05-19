@@ -423,10 +423,44 @@ end
 
 local function StyleButton(button)
     button:SetSize(BUTTON_SIZE, BUTTON_SIZE)
+
+    button:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
+    button:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
+    button:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight", "ADD")
+
+    local normal = button:GetNormalTexture()
+    if normal then
+        normal:ClearAllPoints()
+        normal:SetPoint("CENTER", button, "CENTER", 0, 0)
+        normal:SetSize(BUTTON_SIZE + 4, BUTTON_SIZE + 4)
+    end
+    local pushedNative = button:GetPushedTexture()
+    if pushedNative then
+        pushedNative:ClearAllPoints()
+        pushedNative:SetPoint("CENTER", button, "CENTER", 0, 0)
+        pushedNative:SetSize(BUTTON_SIZE + 4, BUTTON_SIZE + 4)
+    end
+    local highlightNative = button:GetHighlightTexture()
+    if highlightNative then
+        highlightNative:ClearAllPoints()
+        highlightNative:SetPoint("CENTER", button, "CENTER", 0, 0)
+        highlightNative:SetSize(BUTTON_SIZE + 4, BUTTON_SIZE + 4)
+    end
+
     local icon = button:CreateTexture(nil, "ARTWORK")
-    icon:SetAllPoints()
+    icon:SetPoint("CENTER", button, "CENTER", 0, 0)
+    icon:SetSize(BUTTON_SIZE - 7, BUTTON_SIZE - 7)
     icon:SetTexture("Interface\\Icons\\INV_Misc_Gear_01")
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    if button.CreateMaskTexture and icon.AddMaskTexture then
+        local mask = button:CreateMaskTexture(nil, "BACKGROUND")
+        mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        mask:SetAllPoints(icon)
+        icon:AddMaskTexture(mask)
+    end
+
+    button.icon = icon
 
     button:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -447,6 +481,21 @@ local function GetUnitButtonParent(parentName, unit)
     return _G[parentName]
 end
 
+local function GetMeasuredButtonPoint(unit, parent)
+    if not (HarfordUnitFrames and HarfordUnitFrames.GetMeasuredLayout) then return nil end
+    if not (parent and parent.GetName and parent:GetName() and parent:GetName():match("^Harford")) then return nil end
+
+    local layout = HarfordUnitFrames.GetMeasuredLayout(unit, false)
+    local anchorBox = layout and (layout.name or layout.health)
+    if not anchorBox then return nil end
+
+    local centerY = -((anchorBox.y or 0) - 1)
+    if unit == "target" then
+        return "CENTER", parent, "TOPLEFT", (anchorBox.x or 0) + (anchorBox.width or 0) - 2, centerY
+    end
+    return "CENTER", parent, "TOPLEFT", (anchorBox.x or 0) + 2, centerY
+end
+
 local function AnchorUnitButton(button, parentName, unit, point, relPoint, x, y)
     local parent = GetUnitButtonParent(parentName, unit)
     if not parent then return false end
@@ -455,7 +504,12 @@ local function AnchorUnitButton(button, parentName, unit, point, relPoint, x, y)
         button:SetParent(parent)
     end
     button:ClearAllPoints()
-    button:SetPoint(point, parent, relPoint, x, y)
+    local measuredPoint, measuredParent, measuredRelPoint, measuredX, measuredY = GetMeasuredButtonPoint(unit, parent)
+    if measuredPoint then
+        button:SetPoint(measuredPoint, measuredParent, measuredRelPoint, measuredX, measuredY)
+    else
+        button:SetPoint(point, parent, relPoint, x, y)
+    end
     return true
 end
 
@@ -505,17 +559,18 @@ function API.RefreshVisibility()
 end
 
 local events = CreateFrame("Frame")
+events:RegisterEvent("ADDON_LOADED")
 events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 events:RegisterEvent("PLAYER_TARGET_CHANGED")
-events:SetScript("OnEvent", function()
+events:RegisterEvent("CHAT_MSG_SYSTEM")
+events:SetScript("OnEvent", function(_, event, ...)
+    if event == "ADDON_LOADED" then
+        local addonName = ...
+        if addonName ~= "Harford" and addonName ~= "HarfordAdmin" and addonName ~= "SpellCreator" and addonName ~= "EpsilonLib" then
+            return
+        end
+    end
     API.AttachButtons()
     API.RefreshVisibility()
 end)
-
-if C_Timer and C_Timer.After then
-    C_Timer.After(1, function()
-        API.AttachButtons()
-        API.RefreshVisibility()
-    end)
-end

@@ -352,14 +352,16 @@ for i = 1, 4 do
             GameTooltip:SetItemByID(self.item)
         end
         GameTooltip:Show()
+        self:SetScript("OnUpdate", function(frame)
+            if GameTooltip:IsOwned(frame) and frame.item then
+                GameTooltip:SetItemByID(frame.item)
+            end
+        end)
     end)
 
-    lootButton:SetScript("OnLeave", GameTooltip_Hide)
-
-    lootButton:SetScript("OnUpdate", function(self)
-        if (GameTooltip:IsOwned(self)) then
-            self:GetScript("OnEnter")(self)
-        end
+    lootButton:SetScript("OnLeave", function(self)
+        self:SetScript("OnUpdate", nil)
+        GameTooltip_Hide()
     end)
 
     lootButton:SetScript("OnClick", function(self)
@@ -410,6 +412,13 @@ end
 ButtonFrameTemplate_HideButtonBar(HarfordLootFrame)
 MapNineSliceCornerUVs(HarfordLootFrame.NineSlice, {.65, .6}, {.25, .4}, {.55, .4}, {.35, .4})
 HarfordLootFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "PLAYER_STARTED_MOVING" then
+        if self:IsShown() then
+            self:Hide()
+        end
+        return
+    end
+
     if event == "GET_ITEM_INFO_RECEIVED" then
         if self:IsShown() then
             HarfordLootFrame_Update()
@@ -525,6 +534,7 @@ HarfordLootFrameUpButton:SetScript("OnClick", function()
 end)
 HarfordLootFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 HarfordLootFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+HarfordLootFrame:RegisterEvent("PLAYER_STARTED_MOVING")
 HarfordLootFrame:SetScript("OnShow", function(self)
     if (#self.lootTable == 0) then
         PlaySound(SOUNDKIT.LOOT_WINDOW_OPEN_EMPTY)
@@ -538,11 +548,6 @@ end)
 HarfordLootFrame:SetScript("OnHide", function(self)
     if HarfordServerActions and HarfordServerActions.RemoveAura then
         HarfordServerActions.RemoveAura(224063, "self")
-    end
-end)
-HarfordLootFrame:SetScript("OnUpdate", function(self)
-    if self:IsShown() and IsPlayerMoving() then
-        self:Hide()
     end
 end)
 function HarfordLootFrame_UpdateButton(index)

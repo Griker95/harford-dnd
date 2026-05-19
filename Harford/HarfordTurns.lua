@@ -1694,13 +1694,6 @@ local function CreateTurnFrame()
 
     TurnFrame:SetScript("OnDragStart", function(self) self:StartMoving() end)
     TurnFrame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
-    TurnFrame:SetScript("OnUpdate", function(self, elapsed)
-        self.elapsed = (self.elapsed or 0) + (elapsed or 0)
-        if self.elapsed >= 0.5 then
-            self.elapsed = 0
-            RefreshFrame()
-        end
-    end)
 
     local title = TurnFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
     title:SetPoint("TOPLEFT", 16, -15)
@@ -1764,6 +1757,8 @@ local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("CHAT_MSG_ADDON")
 eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+eventFrame:RegisterEvent("UNIT_HEALTH")
+eventFrame:RegisterEvent("UNIT_MAXHEALTH")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
         EnsureStore()
@@ -1784,6 +1779,16 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             return
         end
         if RefreshFrame then RefreshFrame() end
+        return
+    end
+
+    if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then
+        local unit = ...
+        if unit == "target" and RefreshTargetNpcHealthFromUnit("target") then
+            MarkChanged()
+        elseif TurnFrame and TurnFrame:IsShown() and RefreshFrame then
+            RefreshFrame()
+        end
         return
     end
 

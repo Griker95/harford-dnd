@@ -18,4 +18,5 @@ HarfordDnDComm.lua
 HarfordLoot.lua
 HarfordDnD.lua
 HarfordUnitFrames.lua
+HarfordNamePlates.lua
 HarfordTurns.lua

@@ -5,6 +5,7 @@ local DEFAULTS = {
     portrait_target_player = "trp3",       -- "trp3" | "wow"
     portrait_target_npc    = "trp3",       -- "trp3" | "wow"
     resources              = "unitframe",  -- "unitframe" | "frame"
+    nameplates             = "on",         -- "on" | "off"
 }
 
 local listeners = {}
@@ -163,10 +164,19 @@ local function BuildPanel()
         { value = "frame",     label = "Frame separado" },
     }, 32, 316)
 
+    -- ── Sección: Nameplates ──────────────────────────────────────────────────
+    MakeSeparator(panel, 260)
+    MakeLabel(panel, "Nameplates Harford", "GameFontNormal", 16, 270)
+    MakeLabel(panel, "Overlays D&D en nameplates:", "GameFontHighlight", 24, 292)
+    local _, refreshNameplates = MakeDropDown(panel, "nameplates", {
+        { value = "on",  label = "Activado" },
+        { value = "off", label = "Desactivado" },
+    }, 32, 312)
+
     -- Botón de reset
     local resetBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     resetBtn:SetSize(140, 22)
-    resetBtn:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -262)
+    resetBtn:SetPoint("TOPLEFT", panel, "TOPLEFT", 16, -360)
     resetBtn:SetText("Restaurar defaults")
     resetBtn:SetScript("OnClick", function()
         HarfordConfig.Reset()
@@ -174,6 +184,7 @@ local function BuildPanel()
         refreshPortraitTargetPlayer()
         refreshPortraitTargetNPC()
         refreshResources()
+        refreshNameplates()
     end)
 
     local function RefreshAll()
@@ -181,6 +192,7 @@ local function BuildPanel()
         refreshPortraitTargetPlayer()
         refreshPortraitTargetNPC()
         refreshResources()
+        refreshNameplates()
     end
 
     -- Refrescar estado al abrir el panel

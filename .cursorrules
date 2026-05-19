@@ -1,27 +1,28 @@
-# Harford DnD 5e — Reglas para Cursor AI
+# Harford DnD 5e - Reglas para Cursor AI
 
 Este proyecto es un addon de **World of Warcraft** escrito en **Lua** (Interface 45745) para el servidor privado de roleplay **Epsilon**. Implementa un sistema de **D&D 5e** dentro del juego.
 
 ## Reglas fundamentales
 
-- Responde siempre al usuario en **español**. Código y comentarios en español.
-- **Lee `AGENTS.md` antes de tocar cualquier módulo.** Contiene contratos, arquitectura y enfoques fallidos.
-- No crear archivos nuevos salvo petición explícita.
-- No agregar comentarios genéricos — solo el WHY no obvio.
+- Responde siempre al usuario en **espanol**. Codigo y comentarios en espanol.
+- **Lee `AGENTS.md` antes de tocar cualquier modulo.** Contiene contratos, arquitectura y enfoques fallidos.
+- No crear archivos nuevos salvo peticion explicita.
+- No agregar comentarios genericos; solo el WHY no obvio.
 - No reintentar enfoques listados como FALLIDOS en `AGENTS.md`.
 
 ## Entorno
 
-- Lua WoW API (Interface 45745) + Epsilon (servidor privado RP)
-- Dependencias opcionales en runtime: `EpsilonLib`, `ARC`, `TRP3_API`, `C_Epsilon`
-- Addon messages: prefixes `DND5EARC`, `HARFORDLOOT`, `HARFORDCFG`, `HARFORDTURN`
+- Lua WoW API (Interface 45745) + Epsilon (servidor privado RP).
+- Dependencias opcionales en runtime: `EpsilonLib`, `ARC`, `TRP3_API`, `C_Epsilon`, `KuiNameplates`.
+- Addon messages: prefixes `DND5EARC`, `HARFORDLOOT`, `HARFORDCFG`, `HARFORDTURN`.
 
-## Limitaciones Epsilon — NO reintentar
+## Limitaciones Epsilon - NO reintentar
 
-- **Strata cross-tree**: hijos de `TargetFrame` no respetan strata vs `UIParent`. Overlays → `UIParent` + `SetFrameStrata("DIALOG")` + level 500+.
-- **TargetofTarget_Update**: ~12x/s, restaura barras nativas del ToT. No escribir en ellas.
+- **Strata cross-tree**: hijos de `TargetFrame` no respetan strata vs `UIParent`. Overlays ToT/unitframe -> `UIParent` + `SetFrameStrata("MEDIUM")` + niveles 82-85. Paneles/ventanas -> `DIALOG` 500+. No usar DIALOG para overlays de unitframe: tapa otros addons.
+- **TargetofTarget_Update**: corre via `OnUpdate` a ~60fps, restaura barras nativas del ToT y alpha de portrait. No escribir en ellas. Usar overlays UIParent/MEDIUM + `_SyncToTNativePortraitAlpha` en el hook.
 - **SetAlpha barras ToT**: restaurado por `OnValueChanged`. No usar.
 - **Reposicionar TargetFrameToT**: `TargetofTarget_Update` resetea anchors. No mover.
+- **No ticks continuos**: no usar `C_Timer.NewTicker`, `OnUpdate` permanente ni polling para UI/permisos/nameplates/turnos. Preferir eventos. `OnUpdate` solo mientras dura una interaccion real (drag/hover) y se limpia al terminar.
 
 ## Patrones establecidos
 
@@ -29,28 +30,30 @@ Este proyecto es un addon de **World of Warcraft** escrito en **Lua** (Interface
 -- Dependencias opcionales
 if TRP3_API and TRP3_API.register then ... end
 
--- Overlay UIParent/DIALOG
+-- Overlay UIParent/MEDIUM para ToT/unitframe
 local f = CreateFrame("Frame", nil, UIParent)
-f:SetFrameStrata("DIALOG"); f:SetFrameLevel(500)
+f:SetFrameStrata("MEDIUM")
+f:SetFrameLevel(82)
 f:SetAllPoints(nativeBar)
 
--- Máscara circular: aplicar a AMBAS texturas (bg e icon)
+-- Mascara circular: aplicar a AMBAS texturas (bg e icon)
 pbg:AddMaskTexture(mask)
 ptex:AddMaskTexture(mask)
 
 -- Debug temporal
-HarfordDebug.RegisterCommand("nombre", function(args) end, "descripción")
+HarfordDebug.RegisterCommand("nombre", function(args) end, "descripcion")
 ```
 
-## Módulos clave
+## Modulos clave
 
 | Archivo | Rol |
 |---|---|
-| `Harford/HarfordUnitFrames.lua` | Overlays sobre frames WoW (~3800 líneas) |
+| `Harford/HarfordUnitFrames.lua` | Overlays sobre frames WoW |
+| `Harford/HarfordNamePlates.lua` | Overlays DnD sobre nameplates nativos/Kui |
 | `Harford/HarfordDnD.lua` | Ficha D&D 5e |
 | `Harford/HarfordTurns.lua` | Tracker de turnos |
-| `Harford/HarfordDebug.lua` | Debug — diagnósticos temporales aquí |
+| `Harford/HarfordDebug.lua` | Debug; diagnosticos temporales aqui |
 | `Harford/HarfordSync.lua` | Addon messages |
-| `HarfordAdmin/HarfordAdminUnitMenu.lua` | Menú DM |
+| `HarfordAdmin/HarfordAdminUnitMenu.lua` | Menu DM |
 
 Para contexto completo: ver `AGENTS.md` y `CLAUDE.md`.

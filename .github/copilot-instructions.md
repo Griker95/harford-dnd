@@ -21,8 +21,8 @@ Este proyecto es un addon de **World of Warcraft** escrito en **Lua** (Interface
 
 Estas limitaciones están confirmadas. **No intentar alternativas** — ya se probaron y fallaron:
 
-- **Strata cross-tree**: Frames hijos de `TargetFrame` NO respetan la jerarquía de strata frente a frames de `UIParent`. Cualquier overlay que deba estar encima de `barSlotOverlays` (MEDIUM/UIParent) **debe ser hijo de `UIParent` con `SetFrameStrata("DIALOG")` y level 500+**.
-- **TargetofTarget_Update**: Se ejecuta ~12x/segundo y restaura barras nativas del ToT. No escribir en barras nativas del `TargetFrameToT`. Usar el overlay `totBarsOverlay` (UIParent/DIALOG).
+- **Strata cross-tree**: Frames hijos de `TargetFrame` NO respetan la jerarquía de strata frente a frames de `UIParent`. Overlays ToT/unitframe → **`UIParent` con `SetFrameStrata("MEDIUM")`** y niveles 82-85. Paneles/ventanas → `DIALOG` level 500+. No usar `DIALOG` para overlays de HUD: tapa ventanas de otros addons.
+- **TargetofTarget_Update**: Se ejecuta ~60fps y restaura barras nativas del ToT. No escribir en barras nativas del `TargetFrameToT`. Usar el overlay `totBarsOverlay` (UIParent/MEDIUM, niveles 82-85).
 - **SetAlpha en barras ToT**: `TargetofTarget_Update` y `OnValueChanged` restauran el alpha. No usar `SetAlpha` para ocultar barras nativas del ToT.
 - **PlayerFrameTexture**: `SetAlpha(0)` no funciona en Epsilon para el player frame.
 - **Reposicionar TargetFrameToT**: `TargetofTarget_Update` resetea los anchors entre ticks. No mover el frame nativo.
@@ -34,11 +34,12 @@ Estas limitaciones están confirmadas. **No intentar alternativas** — ya se pr
 if TRP3_API and TRP3_API.register then ... end
 if ARC and ARC.CMD then ... end
 
--- Overlay UIParent/DIALOG para escapar la limitación Epsilon
+-- Overlay UIParent/MEDIUM para ToT/unitframe (no tapa otros addons)
 local f = CreateFrame("Frame", nil, UIParent)
-f:SetFrameStrata("DIALOG")
-f:SetFrameLevel(500)
+f:SetFrameStrata("MEDIUM")
+f:SetFrameLevel(82)  -- art=82, barFrame=83, bar=84, portrait=85
 f:SetAllPoints(nativeBar)  -- anclaje cross-tree OK para posicionamiento
+-- Para paneles/ventanas flotantes: DIALOG level 500+
 
 -- Máscara circular: aplicar a AMBAS texturas (fondo e icono)
 local mask = pf:CreateMaskTexture(nil, "ARTWORK")
@@ -57,7 +58,8 @@ end, "Descripción breve")
 
 | Archivo | Rol |
 |---|---|
-| `Harford/HarfordUnitFrames.lua` | Overlays TRP3/recursos sobre frames nativos (~3800 líneas) |
+| `Harford/HarfordUnitFrames.lua` | Overlays TRP3/recursos sobre frames nativos (~4300 líneas) |
+| `Harford/HarfordNamePlates.lua` | Overlays DnD sobre nameplates (KuiNameplates o nativo WoW) |
 | `Harford/HarfordDnD.lua` | Ficha D&D 5e, UI principal `/FichaHarford` |
 | `Harford/HarfordTurns.lua` | Tracker visual de turnos de combate |
 | `Harford/HarfordDebug.lua` | Sistema de debug — diagnósticos temporales aquí |

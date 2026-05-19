@@ -60,8 +60,12 @@ end, "Descripción breve")
 |---|---|
 | `Harford/HarfordUnitFrames.lua` | Overlays TRP3/recursos sobre frames nativos (~4300 líneas) |
 | `Harford/HarfordNamePlates.lua` | Overlays DnD sobre nameplates (KuiNameplates o nativo WoW) |
-| `Harford/HarfordDnD.lua` | Ficha D&D 5e, UI principal `/FichaHarford` |
+| `Harford/HarfordDnD.lua` | Ficha D&D 5e, UI principal `/FichaHarford`. 3 tabs (Características/Ataque/Habilidades, 124px c/u). Icono tabardo en la esquina superior derecha abre el panel de reputación |
 | `Harford/HarfordTurns.lua` | Tracker visual de turnos de combate |
+| `Harford/HarfordReputation.lua` | Core de reputaciones: facciones, rangos, jugadores, NPCs |
+| `Harford/HarfordReputationUI.lua` | Panel flotante `/harfordrep`. Filas con `ReputationBarTemplate`; caps (`_barLeftTex`/`_barRightTex`) gestionados explícitamente |
+| `Harford/HarfordReputationSync.lua` | Sync de red, prefix `HARFORDREP` |
+| `Harford/HarfordReputationTooltip.lua` | Hook GameTooltip NPCs con facción vinculada |
 | `Harford/HarfordDebug.lua` | Sistema de debug — diagnósticos temporales aquí |
 | `Harford/HarfordSync.lua` | Transporte addon messages |
 | `Harford/HarfordTRP3.lua` | Lectura segura de perfiles TRP3 |

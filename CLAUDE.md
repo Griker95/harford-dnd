@@ -17,8 +17,12 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 | Archivo | Rol | Tamaño aprox |
 |---|---|---|
 | `Harford/HarfordUnitFrames.lua` | Overlays TRP3/DnD sobre frames nativos WoW | ~4300 líneas |
-| `Harford/HarfordDnD.lua` | Ficha D&D 5e — UI principal `/FichaHarford` | grande |
+| `Harford/HarfordDnD.lua` | Ficha D&D 5e — UI principal `/FichaHarford`. 3 tabs (Características/Ataque/Habilidades); icono tabardo en la esquina abre el panel de reputación | grande |
 | `Harford/HarfordTurns.lua` | Tracker visual de turnos de combate | grande |
+| `Harford/HarfordReputation.lua` | Core de reputaciones: facciones, jugadores, gremios, NPCs, rangos | mediano |
+| `Harford/HarfordReputationUI.lua` | Panel flotante `/harfordrep`. Filas via `ReputationBarTemplate`; caps gestionados con `_barLeftTex`/`_barRightTex` | mediano |
+| `Harford/HarfordReputationSync.lua` | Sync de red, prefix `HARFORDREP` | pequeño |
+| `Harford/HarfordReputationTooltip.lua` | Hook GameTooltip para NPCs con facción vinculada | pequeño |
 | `Harford/HarfordTRP3.lua` | Lectura segura de perfiles TRP3 | mediano |
 | `Harford/HarfordDebug.lua` | Sistema de debug — todos los diagnósticos van aquí | mediano |
 | `Harford/HarfordSync.lua` | Transporte addon messages (serialización, canales) | mediano |

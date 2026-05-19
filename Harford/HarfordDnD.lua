@@ -1292,6 +1292,37 @@ end)
 local close = CreateFrame("Button", nil, F, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", -6, -4)
 
+-- Icono de reputacion: a la izquierda del boton cerrar
+do
+    local repBtn = CreateFrame("Button", nil, F)
+    repBtn:SetSize(22, 22)
+    repBtn:SetPoint("RIGHT", close, "LEFT", -2, -6)
+
+    local repIcon = repBtn:CreateTexture(nil, "ARTWORK")
+    repIcon:SetAllPoints()
+    repIcon:SetTexture("Interface\\Icons\\INV_Shirt_GuildTabard_01")
+    repIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    local repHL = repBtn:CreateTexture(nil, "HIGHLIGHT")
+    repHL:SetAllPoints()
+    repHL:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
+    repHL:SetBlendMode("ADD")
+
+    repBtn:SetScript("OnClick", function()
+        if HarfordReputationUI and HarfordReputationUI.Toggle then
+            HarfordReputationUI.Toggle()
+        end
+    end)
+    repBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+        GameTooltip:SetText("Reputaciones", 1, 0.82, 0)
+        GameTooltip:AddLine("Abre o cierra el panel de reputaciones.", 1, 1, 1)
+        GameTooltip:AddLine("/harfordrep — acceso directo", 0.7, 0.9, 0.7)
+        GameTooltip:Show()
+    end)
+    repBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+end
+
 ResourceFrame = CreateFrame("Frame", "HarfordDnDResourceFrame", UIParent, "BackdropTemplate")
 ResourceFrame:SetSize(250, 280)
 ResourceFrame:SetPoint("TOPLEFT", F, "TOPRIGHT", 8, 0)
@@ -1908,14 +1939,15 @@ local function CreateTabButton(parent, key, text, x, w)
     return b
 end
 
-local TAB_W = 110
-local TAB_GAP = 8
-local TOTAL_TABS_W = TAB_W * 3 + TAB_GAP * 2
-local TAB_START_X = math.floor((UI.SEC_W - TOTAL_TABS_W) / 2)
+local TAB_W        = 124   -- (SEC_W 392 - 8px margen - 12px gaps) / 3
+local TAB_GAP      = 6
+local TOTAL_TABS_W = TAB_W * 3 + TAB_GAP * 2  -- 384px de 392 disponibles
+local TAB_START_X  = math.floor((UI.SEC_W - TOTAL_TABS_W) / 2)  -- 4px margen
 
 CreateTabButton(TabBar, "BASE", "Características", TAB_START_X, TAB_W)
-CreateTabButton(TabBar, "ATK", "Ataque", TAB_START_X + TAB_W + TAB_GAP, TAB_W)
+CreateTabButton(TabBar, "ATK", "Ataque", TAB_START_X + (TAB_W + TAB_GAP), TAB_W)
 CreateTabButton(TabBar, "SKL", "Habilidades", TAB_START_X + (TAB_W + TAB_GAP) * 2, TAB_W)
+
 
 local AbilityButtons, SaveButtons, SkillButtons = {}, {}, {}
 local modeLabel = SEC_TOP:CreateFontString(nil, "OVERLAY", "GameFontHighlight")

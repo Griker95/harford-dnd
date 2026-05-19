@@ -35,6 +35,7 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 | Comando | Descripción |
 |---|---|
 | `/FichaHarford` | Abre la ficha de personaje D&D 5e |
+| `/harfordrep` | Abre/cierra el panel de reputaciones (también accesible desde el icono de tabardo en la ficha) |
 | `/harforddebug` | Sistema de debug (on/off/toggle/status/list) |
 | `/hdebug` | Alias de `/harforddebug` |
 | `/harfordadmin` | Herramientas de DM/Admin (loot, fichas, NPCs) |

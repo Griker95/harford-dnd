@@ -3,7 +3,7 @@
 ## Notes: Sistema de Loot y Fichas DnD 5e de |cff3536CCCompañía Harford|r
 ## Author: Griker
 ## Version: 1.0.0
-## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordLootConfigStore, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordDebugSettings, HarfordConfigStore
+## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordLootConfigStore, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordDebugSettings, HarfordConfigStore, HarfordReputationStore
 
 HarfordSync.lua
 HarfordDebug.lua
@@ -17,6 +17,10 @@ HarfordDnDStore.lua
 HarfordDnDComm.lua
 HarfordLoot.lua
 HarfordDnD.lua
+HarfordReputation.lua
+HarfordReputationSync.lua
+HarfordReputationTooltip.lua
+HarfordReputationUI.lua
 HarfordUnitFrames.lua
 HarfordNamePlates.lua
 HarfordTurns.lua

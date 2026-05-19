@@ -74,6 +74,10 @@ Harford/
   HarfordDnDComm.lua          -- recepcion DND5EARC y handlers cliente-cliente
   HarfordLoot.lua             -- UI loot y datos loot; usa wrapper compartido para additem/aura
   HarfordDnD.lua              -- UI ficha, tiradas, recursos
+  HarfordReputation.lua       -- core: facciones, jugadores, gremios, NPCs, rangos
+  HarfordReputationSync.lua   -- sync de red via prefix HARFORDREP
+  HarfordReputationTooltip.lua-- hook GameTooltip para NPCs con faccion vinculada
+  HarfordReputationUI.lua     -- panel flotante de reputaciones (/harfordrep, icono tabardo junto al boton cerrar de la ficha)
   HarfordTurns.lua            -- tracker turnos, HP/mana, sync de turnos
 
 HarfordAdmin/
@@ -108,6 +112,53 @@ Contrato `HarfordServerActions`:
   - `HarfordServerActions.SendRawDebug(command, callback, opts)`: comando raw solo si `HarfordDebug` esta activo.
 - `Harford/HarfordLoot.lua` debe usar esta capa para `additem`, `aura 224063 self` y `unaura 224063 self`.
 - Nuevas features DM/NPC deberian anadir acciones aqui antes de crear UI.
+
+Contrato `HarfordReputation` (core):
+
+- `HarfordReputation.GetFaction(id)` → tabla de faccion o nil.
+- `HarfordReputation.GetFactions(includeHidden)` → lista ordenada de facciones visibles.
+- `HarfordReputation.GetRank(points)` → `name, colorARGB, rankTable`. Rangos: Odiado→Hostil→Adverso→Neutral→Amistoso→Honorable→Venerado→Exaltado. Rango min -42000, max 42000.
+- `HarfordReputation.GetPlayerPoints(playerKey, factionId)` → `points, repEntry`. Si no tiene rep propia, hereda del gremio.
+- `HarfordReputation.SetPlayerPoints(playerKey, factionId, points, opts)` → solo si `CanEdit()` o `opts.fromSync=true`.
+- `HarfordReputation.AdjustTarget(factionId, delta)` → ajusta al target actual + hereda gremio.
+- `HarfordReputation.CanEdit()` → requiere `HarfordAuthority.IsDMMode() == true`.
+- `HarfordReputation.GetCurrentPlayerPoints(factionId)` → atajos al jugador local.
+- `HarfordReputation.GetUnitFactionRelationship(unit)` → `factionId, points, rank, rankColor` si la unidad tiene NPC link.
+- `HarfordReputation.EnsureStore()` → inicializa `HarfordReputationStore` e inyecta facciones por defecto si es la primera vez.
+- Facciones por defecto: La Compania Harford, Los Velasangre, La Compania Bonvapor, La Cruzada Argenta, La Senda Justa.
+- `HarfordReputationStore` guardado en SavedVariables; estructura: `{factions={}, players={}, guilds={}, npcLinks={}, logs={}, ui={}}`.
+
+Contrato `HarfordReputationUI`:
+
+- Panel flotante standalone (no embebido en TabPanel de la ficha: 183px de alto no son suficientes para la lista).
+- `HarfordReputationUI.Toggle()` → abre/cierra el panel. Llamado desde el icono de tabardo junto al boton cerrar de la ficha y desde `/harfordrep`.
+- `HarfordReputationUI.Open()` / `HarfordReputationUI.Close()` → acceso programatico.
+- `HarfordReputationUI.Refresh()` → recarga la lista (llamado por HarfordReputation al cambiar datos).
+- El icono de acceso en la ficha (`HarfordDnD.lua`) es un Button 22x22 hijo de `F` anclado a `RIGHT, close, LEFT, -2, -6`. Textura `INV_Shirt_GuildTabard_01`, highlight `ButtonHilight-Square` en blend ADD. Usa guard `HarfordReputationUI and HarfordReputationUI.Toggle`. NO hay un tab "Reputacion" en la barra de tabs; esos botones son exclusivos para tiradas (Caracteristicas, Ataque, Habilidades).
+- Arquitectura de tabs en HarfordDnD: 3 tabs de 124px de ancho (`TAB_W=124`, `TAB_GAP=6`, `TOTAL_TABS_W=384`) centrados en `SEC_W=392`, dejando 4px de margen a cada lado. Antes eran 4 tabs de 88px; no volver a esa configuracion.
+- Referencia visual correcta: `Interface/FrameXML/ReputationFrame.xml` y `Interface/FrameXML/ReputationFrame.lua` de Shadowlands. No usar el `ReputationFrame` moderno de Retail actual.
+- Layout del panel: frame principal custom con cabeceras `Faccion` y `Prestigio`, lista SL con `ScrollBox` + `WowTrimScrollBar` cuando el cliente lo expone, y fallback manual de filas/scroll si Epsilon no tiene `ScrollUtil`/`CreateScrollBoxListLinearView`.
+- La lista se construye desde `BuildFlatList()`: facciones de `HarfordReputation.GetFactions(includeHidden)`, agrupadas por `faction.group` y `faction.subgroup`. El estado colapsado vive en `HarfordReputationStore.ui.collapsedHeaders`.
+- Cada `elementData` debe tener `name`, `isHeader`, `isChild`, `isCollapsed`, `hasRep`, `value`, `min`, `max`, `standingID`, `standingText`; en filas de reputacion tambien `factionId`, `faction`, `rankColor`.
+- **Fila custom tipo `HarfordReputationBarTemplate`**: se crea por Lua con `CreateRow(parent)`, no depende de `ReputationBarTemplate` nativo. Sub-elementos: `Container`, `Name`, `ExpandOrCollapseButton`, `StatusBar ReputationBar`, `FactionStanding`, `SelectedHighlight`, `Highlight`, `Background`, `ReputationBarBackground`, `ReputationStar`.
+- Texturas usadas: `Interface\\PaperDollInfoFrame\\UI-Character-ReputationBar`, `Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar`, `Interface\\PaperDollInfoFrame\\UI-Character-ReputationBar-Highlight`, `Interface\\Common\\ReputationStar`, `Interface\\Buttons\\UI-PlusButton-Up`, `Interface\\Buttons\\UI-MinusButton-UP`, `Interface\\Buttons\\UI-PlusButton-Hilight`.
+- `InitializeRow(row, elementData)`: `Name:SetText(name)`; headers muestran `+` o `-` y ocultan barra; reputaciones hacen `ReputationBar:SetMinMaxValues(0, max-min)`, `SetValue(value-min)` y `SetStatusBarColor(FACTION_BAR_COLORS[standingID])` con fallback a `rankColor`.
+- Sangria confirmada: header raiz `x=2`, subheader `x=21`, reputacion hija `x=44`, reputacion raiz `x=25`.
+- Click en header alterna `collapsedHeaders[key]` y regenera DataProvider/lista plana. Click en reputacion asigna `selectedFactionId` y refresca detalle.
+- Panel de detalle lateral a la derecha del panel principal: descripcion, standing, progreso y estado visible/oculto. Mantiene botones admin basicos (`+100`, `-100`, reset, NPC, ocultar, borrar); el editor avanzado de facciones queda pendiente de migrar al panel custom SL.
+- Solo el DM (`HarfordReputation.CanEdit()` / `.ph dm`) deberia poder editar reputaciones; si se reintroduce editor avanzado, conservar esta regla.
+- Columnas de rango coloreadas: Exaltado=dorado, Venerado=violeta, Honorable=azul, Amistoso=verde, Neutral=gris, Adverso=naranja, Hostil=naranja oscuro, Odiado=rojo.
+- Enfoques FALLADOS en HarfordReputationUI (no reintentar):
+  - **Barra manual con `BackdropTemplate` + `SetBackdrop`**: el trough (`BackdropColor`) no renderiza correctamente en Epsilon; el StatusBar con valor 0 tampoco pinta nada, barra completamente invisible.
+  - **`StatusBar` hijo de `BackdropTemplate` sin trough propio**: igual que el anterior. `SetStatusBarColor` funciona pero si el valor es 0 no hay fill visible ni borde visible.
+  - **Depender de `ReputationBarTemplate` nativo**: descartado para este panel. En Epsilon/SL el template nativo arrastra posiciones/elementos del `ReputationFrame` original y obliga a perseguir caps/texturas por globals; el panel custom debe tener su propia fila.
+  - **Usar el `ReputationFrame` moderno de Retail como referencia**: no corresponde al cliente objetivo. La referencia es Shadowlands.
+
+Contrato `HarfordReputationSync`:
+
+- Prefix `HARFORDREP`, registrado en PLAYER_LOGIN via `HarfordSync.RegisterPrefix`.
+- Opcodes: `FAC` (datos de faccion), `REP` (puntos jugador), `NPC` (link NPC→faccion), `LOG` (entrada de log), `DEL` (borrar faccion).
+- Solo el DM emite; todos los clientes reciben y aplican con `fromSync=true` para evitar rebroadcast.
 
 Modulo `HarfordDebug`:
 
@@ -650,6 +701,7 @@ Prefixes actuales:
 - `HARFORDLOOT`: loot resuelto y limpieza remota.
 - `HARFORDCFG`: configuracion global de loot.
 - `HARFORDTURN`: estado del tracker de turnos.
+- `HARFORDREP`: reputaciones (facciones, jugadores, gremios, vinculos NPC).
 
 Canales actuales:
 

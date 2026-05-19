@@ -18,6 +18,8 @@ local API = HarfordNamePlates
 
 local npState    = {}   -- [unitToken] = { ov, kuiFrame }
 local npRequests = {}   -- throttle sync: [unitName] = timestamp
+local kuiPluginRegistered
+local kuiClassPowersWasEnabled
 
 -- ── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -123,7 +125,7 @@ local function ApplyAbsorbTexture(texture, owner, cur, max, temp, alpha)
         if frame._harfordAbsorbSpark then
             frame._harfordAbsorbSpark:ClearAllPoints()
             frame._harfordAbsorbSpark:SetSize(math.max(5, h * 0.8), math.max(4, h * 0.9))
-            frame._harfordAbsorbSpark:SetPoint("CENTER", frame, "LEFT", realW * pct + 2, 0)
+            frame._harfordAbsorbSpark:SetPoint("CENTER", frame, "LEFT", realW * pct, 0)
             frame._harfordAbsorbSpark:SetAlpha(a or 0.85)
             frame._harfordAbsorbSpark:Show()
         end
@@ -211,10 +213,162 @@ local function GetNameTextColor(nt)
     return 1, 1, 1
 end
 
+local function ColorHex(r, g, b)
+    r = math.max(0, math.min(255, math.floor((tonumber(r) or 1) * 255 + 0.5)))
+    g = math.max(0, math.min(255, math.floor((tonumber(g) or 1) * 255 + 0.5)))
+    b = math.max(0, math.min(255, math.floor((tonumber(b) or 1) * 255 + 0.5)))
+    return string.format("%02x%02x%02x", r, g, b)
+end
+
+local function SplitUtf8(text)
+    local chars = {}
+    text = tostring(text or "")
+    for ch in text:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+        chars[#chars + 1] = ch
+    end
+    if #chars == 0 and text ~= "" then
+        for i = 1, #text do chars[#chars + 1] = text:sub(i, i) end
+    end
+    return chars
+end
+
+local function BuildProgressNameText(text, pct, r, g, b, fallbackR, fallbackG, fallbackB)
+    local chars = SplitUtf8(text)
+    if #chars == 0 then return "" end
+    pct = math.max(0, math.min(1, tonumber(pct) or 0))
+    local filled = math.floor((#chars * pct) + 0.5)
+    if filled <= 0 then
+        return "|cff" .. ColorHex(fallbackR or 0.55, fallbackG or 0.55, fallbackB or 0.55) .. table.concat(chars) .. "|r"
+    end
+    if filled >= #chars then
+        return "|cff" .. ColorHex(r, g, b) .. table.concat(chars) .. "|r"
+    end
+    local left, right = {}, {}
+    for i = 1, #chars do
+        if i <= filled then left[#left + 1] = chars[i] else right[#right + 1] = chars[i] end
+    end
+    return "|cff" .. ColorHex(r, g, b) .. table.concat(left) .. "|r"
+        .. "|cff" .. ColorHex(fallbackR or 0.45, fallbackG or 0.45, fallbackB or 0.45) .. table.concat(right) .. "|r"
+end
+
+local function SetKuiClassPowersSuppressed(suppressed)
+    local cpf = KuiNameplates and KuiNameplates.ClassPowersFrame
+    local plugin = KuiNameplates and KuiNameplates.GetPlugin and KuiNameplates:GetPlugin("ClassPowers")
+    local shouldSuppress = suppressed == true
+    API._suppressKuiClassPowers = shouldSuppress
+    if suppressed then
+        if plugin and kuiClassPowersWasEnabled == nil then
+            kuiClassPowersWasEnabled = plugin.enabled == true
+        end
+        if plugin and plugin.enabled and plugin.Disable then
+            if plugin.Disable then plugin:Disable() end
+        end
+    else
+        if plugin and kuiClassPowersWasEnabled then
+            if plugin.Enable then plugin:Enable() end
+        end
+        kuiClassPowersWasEnabled = nil
+    end
+
+    if not cpf then return end
+    cpf._harfordSuppressed = shouldSuppress
+    if cpf._harfordSuppressed then
+        if not cpf._harfordHooked then
+            cpf._harfordHooked = true
+            cpf:HookScript("OnShow", function(frame)
+                if frame._harfordSuppressed then frame:Hide() end
+            end)
+        end
+        cpf:Hide()
+    end
+end
+
+local WOW_CLASS_ALIASES = {
+    { "guerrero", "WARRIOR" }, { "warrior", "WARRIOR" },
+    { "paladin", "PALADIN" },
+    { "cazador de demonios", "DEMONHUNTER" }, { "demon hunter", "DEMONHUNTER" }, { "demonhunter", "DEMONHUNTER" },
+    { "cazador", "HUNTER" }, { "hunter", "HUNTER" },
+    { "picaro", "ROGUE" }, { "picar", "ROGUE" }, { "rogue", "ROGUE" },
+    { "sacerdote", "PRIEST" }, { "priest", "PRIEST" },
+    { "caballero de la muerte", "DEATHKNIGHT" }, { "death knight", "DEATHKNIGHT" }, { "deathknight", "DEATHKNIGHT" },
+    { "chaman", "SHAMAN" }, { "shaman", "SHAMAN" },
+    { "mago", "MAGE" }, { "mage", "MAGE" },
+    { "brujo", "WARLOCK" }, { "warlock", "WARLOCK" },
+    { "monje", "MONK" }, { "monk", "MONK" },
+    { "druida", "DRUID" }, { "druid", "DRUID" },
+    { "evocador", "EVOKER" }, { "evoker", "EVOKER" },
+}
+
+local function NormalizeClassKey(value)
+    value = tostring(value or ""):lower()
+    value = value:gsub("[_%-]+", " ")
+    value = value:gsub("[áàäâÁÀÄÂ]", "a")
+    value = value:gsub("[éèëêÉÈËÊ]", "e")
+    value = value:gsub("[íìïîÍÌÏÎ]", "i")
+    value = value:gsub("[óòöôÓÒÖÔ]", "o")
+    value = value:gsub("[úùüûÚÙÜÛ]", "u")
+    value = value:gsub("[ñÑ]", "n")
+    return value
+end
+
+local function GetTRP3ClassColor(unit)
+    if not (HarfordTRP3 and HarfordTRP3.GetPlayerProfile and HarfordTRP3.GetProfilePrimaryClass) then return nil end
+    local profile = HarfordTRP3.GetPlayerProfile(unit)
+    local classText = NormalizeClassKey(profile and HarfordTRP3.GetProfilePrimaryClass(profile))
+    if classText == "" then return nil end
+    for _, entry in ipairs(WOW_CLASS_ALIASES) do
+        if classText:find(entry[1], 1, true) then
+            local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[entry[2]]
+            if color then return color.r, color.g, color.b end
+        end
+    end
+    return nil
+end
+
+local function GetFallbackHealthData(unit)
+    if not unit or not UnitHealth or not UnitHealthMax then return nil end
+    local maxHp = tonumber(UnitHealthMax(unit)) or 0
+    if maxHp <= 0 then return nil end
+    return {
+        key = "health",
+        label = "Salud",
+        cur = tonumber(UnitHealth(unit)) or 0,
+        max = maxHp,
+    }
+end
+
+-- Nombre RP del jugador vía HarfordTRP3.
+-- Usa GetPlayerProfile (BuildUnitID maneja tokens de nameplate) + lee FN/LN del perfil.
+-- Fallback: GetUnitRPName si no hay perfil directo.
+local function GetTRP3Name(unit)
+    if not HarfordTRP3 then return nil end
+    -- Obtener perfil (BuildUnitID convierte nameplate1→name-realm correctamente)
+    if HarfordTRP3.GetPlayerProfile then
+        local profile = HarfordTRP3.GetPlayerProfile(unit)
+        if profile then
+            local char = (profile.data and profile.data.characteristics)
+                      or profile.characteristics
+            if char then
+                local fn = char.FN or ""
+                local ln = char.LN or ""
+                local full = fn .. (ln ~= "" and (" " .. ln) or "")
+                if full ~= "" then return full end
+            end
+        end
+    end
+    -- Fallback: función directa de TRP3 (puede no funcionar con tokens nameplate)
+    if HarfordTRP3.GetUnitRPName then
+        return HarfordTRP3.GetUnitRPName(unit)
+    end
+    return nil
+end
+
 -- Color de clase para health bar y etiqueta de nombre.
 -- Orden: HarfordUnitFrames (TRP3 → cache → WoW class) → WoW class nativo → verde salud.
 local function GetNpClassColor(unit)
     if not unit then return 0.0, 0.82, 0.08 end
+    local tr, tg, tb = GetTRP3ClassColor(unit)
+    if tr then return tr, tg, tb end
     if HarfordUnitFrames and HarfordUnitFrames.GetClassColor then
         local r, g, b = HarfordUnitFrames.GetClassColor(unit)
         if r then return r, g, b end
@@ -297,12 +451,17 @@ local function CreateKuiOverlay(kuiFrame)
     ov.tempBar:EnableMouse(false)
     ov.tempBar:Hide()
 
-    -- Etiqueta del nombre encima de las barras, coloreada por clase TRP3.
-    -- Se ancla al BOTTOM del nameLabel → TOP del overlay, por lo que queda en el espacio
-    -- sobre las barras de HP+recurso sin solaparse con el fill.
-    ov.nameLabel = ov:CreateFontString(nil, "OVERLAY")
-    ov.nameLabel:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
-    ov.nameLabel:SetPoint("BOTTOM", ov, "TOP", 0, 1)
+    ov.nameHost = CreateFrame("Frame", nil, ov)
+    ov.nameHost:SetAllPoints(kuiFrame)
+    ov.nameHost:SetFrameLevel(ov:GetFrameLevel() + 4)
+    ov.nameHost:EnableMouse(false)
+    ov.nameHost:Hide()
+
+    -- Fallback de nombre propio. El camino principal usa kui.NameText directamente,
+    -- porque Kui lo reposiciona/reparenta segun modo y respeta su plano visual.
+    ov.nameLabel = ov.nameHost:CreateFontString(nil, "HIGHLIGHT")
+    ov.nameLabel:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    ov.nameLabel:SetPoint("BOTTOM", ov, "TOP", 0, 2)
     ov.nameLabel:SetJustifyH("CENTER")
     ov.nameLabel:SetTextColor(1, 1, 1, 1)
     ov.nameLabel:Hide()
@@ -313,8 +472,21 @@ end
 -- ── Posicionamiento por modo ───────────────────────────────────────────────────
 
 local function ApplyNormalMode(ov, kuiFrame, healthBar, hpData, resData)
+    SetKuiClassPowersSuppressed(kuiFrame.unit == "target")
+
     -- Frame level ALTO para tapar la barra nativa
-    ov:SetFrameLevel((kuiFrame.GetFrameLevel and kuiFrame:GetFrameLevel() or 1) + 5)
+    local baseLevel = (kuiFrame.GetFrameLevel and kuiFrame:GetFrameLevel() or 1) + 5
+    ov:SetFrameLevel(baseLevel)
+    if ov.hpBar and ov.hpBar.SetFrameLevel then ov.hpBar:SetFrameLevel(baseLevel + 1) end
+    if ov.resBar and ov.resBar.SetFrameLevel then ov.resBar:SetFrameLevel(baseLevel + 1) end
+    if ov.tempBar and ov.tempBar.SetFrameLevel then ov.tempBar:SetFrameLevel(baseLevel + 2) end
+    if ov.hpBar then ov.hpBar:Show() end
+    if ov.nameHost then
+        ov.nameHost:SetFrameLevel(baseLevel + 5)
+        ov.nameHost:ClearAllPoints()
+        ov.nameHost:SetAllPoints(kuiFrame)
+        ov.nameHost:Show()
+    end
     ov:ClearAllPoints()
     ov:SetAllPoints(healthBar)
 
@@ -346,13 +518,29 @@ local function ApplyNormalMode(ov, kuiFrame, healthBar, hpData, resData)
         ApplyAbsorbTexture(ov.tempBar, ov.hpBar, curHp, maxHp, tempCur, 0.85)
     end
 
-    -- Etiqueta del nombre sobre las barras, con color de clase TRP3.
-    if ov.nameLabel then
-        local name = (unit and UnitName and UnitName(unit)) or ""
+    -- Mantener el NameText nativo de Kui: es el elemento que Kui recoloca y pinta
+    -- correctamente en cada modo. Solo cambiamos texto/color, no lo ocultamos.
+    local nt = kuiFrame.NameText
+    local name = GetTRP3Name(unit) or (unit and UnitName and UnitName(unit)) or ""
+    if nt then
+        if nt.SetText then nt:SetText(name) end
+        if nt.SetTextColor then nt:SetTextColor(hpR, hpG, hpB, 1) end
+        if nt.SetAlpha then nt:SetAlpha(1) end
+        if nt.Show then nt:Show() end
+        if ov.nameLabel then ov.nameLabel:Hide() end
+    elseif ov.nameLabel then
         ov.nameLabel:SetText(name)
         ov.nameLabel:SetTextColor(hpR, hpG, hpB, 1)
         ov.nameLabel:Show()
     end
+
+    if nt and ov.nameHost and nt.GetParent and nt.SetParent and nt:GetParent() ~= ov.nameHost then
+        nt:SetParent(ov.nameHost)
+        if kuiFrame.UpdateNameTextPosition then
+            kuiFrame:UpdateNameTextPosition()
+        end
+    end
+    if nt and nt.SetDrawLayer then nt:SetDrawLayer("OVERLAY", 7) end
 
     ov:Show()
 end
@@ -360,12 +548,20 @@ end
 local function ApplyNameOnlyMode(ov, kuiFrame, hpData)
     local nt = kuiFrame.NameText
     if not nt then ov:Hide() ; return end
+    SetKuiClassPowersSuppressed(kuiFrame.unit == "target")
 
     -- Frame level BAJO: el NameText (en OVERLAY del kuiFrame) queda encima del fill.
     local targetLevel = math.max(1, (kuiFrame.GetFrameLevel and kuiFrame:GetFrameLevel() or 2) - 1)
     ov:SetFrameLevel(targetLevel)
     -- Fijar también el hpBar explícitamente: cambia cuando ov cambia de nivel.
     ov.hpBar:SetFrameLevel(targetLevel + 1)
+    if ov.nameHost then ov.nameHost:Hide() end
+    if nt.SetParent and nt:GetParent() ~= kuiFrame then
+        nt:SetParent(kuiFrame)
+        if kuiFrame.UpdateNameTextPosition then
+            kuiFrame:UpdateNameTextPosition()
+        end
+    end
 
     ov:ClearAllPoints()
     ov:SetPoint("TOPLEFT",     nt, "TOPLEFT",     0,  0)
@@ -387,6 +583,22 @@ local function ApplyNameOnlyMode(ov, kuiFrame, hpData)
 
     -- El hpBar se mantiene siempre "lleno" (value=1) pero su ancho es HP%*ancho del nombre.
     -- Así el efecto es: el propio nombre se va coloreando de izquierda a derecha.
+    -- Harford name-only no dibuja barras: colorea el texto real por porcentaje.
+    local name = GetTRP3Name(unit) or (unit and UnitName and UnitName(unit)) or ""
+    if nt.SetText then nt:SetText(BuildProgressNameText(name, pct, r, g, b, 0.48, 0.48, 0.48)) end
+    if nt.SetTextColor then nt:SetTextColor(1, 1, 1, 1) end
+    if nt.SetAlpha then nt:SetAlpha(1) end
+    if nt.Show then nt:Show() end
+    if ov.hpBar then ov.hpBar:Hide() end
+    if ov.sep then ov.sep:Hide() end
+    if ov.resBar then ov.resBar:Hide() end
+    if ov.tempBar then ov.tempBar:Hide() end
+    if ov.nameLabel then ov.nameLabel:Hide() end
+    ov:Hide()
+    return
+end
+
+--[[
     local fullW = nt:GetWidth()
     ov.hpBar:ClearAllPoints()
     if fullW and fullW > 2 then
@@ -406,16 +618,38 @@ local function ApplyNameOnlyMode(ov, kuiFrame, hpData)
     ov.sep:Hide()
     ov.resBar:Hide()
     if ov.tempBar then ov.tempBar:Hide() end
-    -- En name-only el fill ya colorea el nombre; la etiqueta extra quedaría redundante.
+    -- En name-only Kui necesita su NameText visible (el fill lo colorea de izq a der).
+    -- Restaurar alpha por si venimos de normal mode donde lo ocultamos.
+    local name = GetTRP3Name(unit) or (unit and UnitName and UnitName(unit)) or ""
+    if nt.SetText then nt:SetText(name) end
+    if nt and nt.SetAlpha then nt:SetAlpha(1) end
     if ov.nameLabel then ov.nameLabel:Hide() end
     ov:Show()
 end
 
 -- ── Hooks por frame físico ─────────────────────────────────────────────────────
 
+]]
+
 local function SetupKuiHooks(kuiFrame, healthBar)
     if healthBar._harfordHooked then return end
     healthBar._harfordHooked = true
+
+    if not kuiFrame._harfordNameHooked then
+        kuiFrame._harfordNameHooked = true
+        if type(kuiFrame.UpdateNameText) == "function" then
+            hooksecurefunc(kuiFrame, "UpdateNameText", function(frame)
+                local unit = frame and frame.unit
+                if unit and NpEnabled() and not API._applying then API.ApplyUnit(unit) end
+            end)
+        end
+        if type(kuiFrame.UpdateNameTextPosition) == "function" then
+            hooksecurefunc(kuiFrame, "UpdateNameTextPosition", function(frame)
+                local unit = frame and frame.unit
+                if unit and NpEnabled() and not API._applying then API.ApplyUnit(unit) end
+            end)
+        end
+    end
 
     -- HealthBar:Show → Kui salió de name-only
     healthBar:HookScript("OnShow", function()
@@ -460,6 +694,10 @@ function API.ApplyUnit(unit)
 
     local list = resources and BuildResourceList(resources) or {}
     local hpData = list[1]
+    local kui = IsKuiActive() and rawget(nameplate, "kui")
+    if (not hpData) and kui and kui.IN_NAMEONLY then
+        hpData = GetFallbackHealthData(unit)
+    end
 
     -- Inyectar vida temporal en hpData para que los renders la usen
     if hpData and hpData.key == "health" and type(resources) == "table" then
@@ -475,19 +713,29 @@ function API.ApplyUnit(unit)
     end
 
     -- ── Kui ───────────────────────────────────────────────────────────────────
-    local kui = IsKuiActive() and rawget(nameplate, "kui")
+    -- IsKuiActive() + rawget son ambos dinámicos: Kui puede no estar todavía inicializado
+    -- cuando se dispara NAME_PLATE_UNIT_ADDED, por lo que el nameplate podría haberse
+    -- creado antes en modo nativo. Si el modo cambia, destruimos y recreamos el overlay.
     if kui then
+        SetKuiClassPowersSuppressed(true)
         local healthBar = kui.HealthBar or kui.healthBar
         if not healthBar then return end
 
         if not st then st = {} ; npState[unit] = st end
+        -- Recrear si el overlay fue creado en modo nativo (modo incompatible)
+        if st.ov and not st.isKui then
+            st.ov:Hide()
+            st.ov = nil
+        end
         if not st.ov then
-            st.ov      = CreateKuiOverlay(kui)
+            st.ov       = CreateKuiOverlay(kui)
             st.kuiFrame = kui
+            st.isKui    = true
         end
 
         SetupKuiHooks(kui, healthBar)
 
+        API._applying = true
         if kui.IN_NAMEONLY then
             ApplyNameOnlyMode(st.ov, kui, hpData)
         else
@@ -497,6 +745,7 @@ function API.ApplyUnit(unit)
                 st.ov:Hide()
             end
         end
+        API._applying = nil
         return
     end
 
@@ -505,6 +754,12 @@ function API.ApplyUnit(unit)
     if not healthBar then return end
 
     if not st then st = {} ; npState[unit] = st end
+    -- Recrear si el overlay fue creado en modo Kui (modo incompatible)
+    if st.ov and st.isKui then
+        st.ov:Hide()
+        st.ov  = nil
+        st.isKui = nil
+    end
     if not st.ov then
         -- Para nativo usamos un overlay simple parented al nameplate directamente
         local ov = CreateFrame("Frame", nil, healthBar)
@@ -554,7 +809,8 @@ function API.ApplyUnit(unit)
         ov.tempBar:EnableMouse(false)
         ov.tempBar:Hide()
 
-        st.ov = ov
+        st.ov    = ov
+        st.isKui = false
     end
 
     local np = nameplate  -- para claridad
@@ -592,6 +848,17 @@ end
 local function HideUnit(unit)
     local st = npState[unit]
     if st then
+        -- Restaurar alpha del NameText de Kui antes de ocultar (puede haberse puesto a 0).
+        if st.kuiFrame then
+            local nt = st.kuiFrame.NameText
+            if nt and nt.SetAlpha then nt:SetAlpha(1) end
+            if nt and nt.SetParent and nt:GetParent() ~= st.kuiFrame then
+                nt:SetParent(st.kuiFrame)
+                if st.kuiFrame.UpdateNameTextPosition then
+                    st.kuiFrame:UpdateNameTextPosition()
+                end
+            end
+        end
         if st.ov then st.ov:Hide() end
         npState[unit] = nil
     end
@@ -606,28 +873,48 @@ local function RefreshAll()
 end
 
 -- ── Plugin API de Kui ──────────────────────────────────────────────────────────
+-- Diferido a PLAYER_LOGIN: Kui puede no estar inicializado en tiempo de carga del TOC.
+-- Si Kui no existe en ningún momento, el bloque es no-op completo.
 
-if IsKuiActive() and type(KuiNameplates.NewPlugin) == "function" then
+local function TryRegisterKuiPlugin()
+    if kuiPluginRegistered then return end
+    if not IsKuiActive() then return end
+    if type(KuiNameplates.NewPlugin) ~= "function" then return end
     local ok, mod = pcall(function()
         return KuiNameplates:NewPlugin("HarfordDnD", 200)
     end)
-    if ok and mod and type(mod.RegisterMessage) == "function" then
-        function mod:Initialise()
-            self:RegisterMessage("Show")
-            self:RegisterMessage("Hide")
-        end
-        function mod:Show(f)
-            local unit = f and f.unit
-            if unit and NpEnabled() then API.ApplyUnit(unit) end
-        end
-        function mod:Hide(f)
-            local unit = f and f.unit
-            if unit then
-                local st = npState[unit]
-                if st and st.ov then st.ov:Hide() end
-            end
+    if not ok or not mod or type(mod.RegisterMessage) ~= "function" then return end
+    kuiPluginRegistered = true
+    function mod:Initialise()
+        self:RegisterMessage("Show")
+        self:RegisterMessage("Hide")
+        self:RegisterMessage("HealthUpdate")
+        self:RegisterMessage("HealthColourChange")
+        self:RegisterMessage("GainedTarget")
+        self:RegisterMessage("LostTarget")
+    end
+    local function RefreshFrame(f)
+        local unit = f and f.unit
+        if unit and NpEnabled() then API.ApplyUnit(unit) end
+    end
+    function mod:Show(f)
+        RefreshFrame(f)
+    end
+    function mod:Hide(f)
+        local unit = f and f.unit
+        if unit then
+            HideUnit(unit)
         end
     end
+    mod.HealthUpdate = RefreshFrame
+    mod.HealthColourChange = RefreshFrame
+    mod.GainedTarget = RefreshFrame
+    mod.LostTarget = RefreshFrame
+
+    -- Si Harford registra el plugin durante PLAYER_LOGIN despues de que Kui ya haya
+    -- inicializado su lista, hay que activar este plugin manualmente.
+    if type(mod.Initialise) == "function" then mod:Initialise() end
+    if type(mod.Enable) == "function" then mod:Enable() end
 end
 
 -- ── API pública ────────────────────────────────────────────────────────────────
@@ -639,11 +926,16 @@ API.RefreshAll = RefreshAll
 local npEvents = CreateFrame("Frame")
 npEvents:RegisterEvent("NAME_PLATE_UNIT_ADDED")
 npEvents:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+npEvents:RegisterEvent("PLAYER_LOGIN")
 npEvents:SetScript("OnEvent", function(_, event, unit)
     if event == "NAME_PLATE_UNIT_ADDED" then
         API.ApplyUnit(unit)
     elseif event == "NAME_PLATE_UNIT_REMOVED" then
         HideUnit(unit)
+    elseif event == "PLAYER_LOGIN" then
+        -- Intentar registrar el plugin de Kui ahora que todos los addons están cargados.
+        TryRegisterKuiPlugin()
+        if NpEnabled() then SetKuiClassPowersSuppressed(true) end
     end
 end)
 
@@ -652,12 +944,13 @@ end)
 if HarfordConfig and HarfordConfig.RegisterChangeListener then
     HarfordConfig.RegisterChangeListener(function()
         if NpEnabled() then
+            SetKuiClassPowersSuppressed(true)
             RefreshAll()
         else
             for unit, st in pairs(npState) do
-                if st.ov then st.ov:Hide() end
-                npState[unit] = nil
+                HideUnit(unit)
             end
+            SetKuiClassPowersSuppressed(false)
         end
     end)
 end

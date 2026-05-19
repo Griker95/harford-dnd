@@ -1087,8 +1087,8 @@ function API._SyncToTNativePortraitAlpha(portraitNative, portraitOverlay)
 end
 
 -- Crea (o reutiliza) los overlays para health, recurso y portrait del ToT.
--- Todos parentes a UIParent (strata DIALOG) para garantizar que se rendericen
--- por encima de los barSlotOverlays del Harford frame independientemente de Epsilon.
+-- Las barras siguen como overlays en UIParent; el portrait es hijo del ToT
+-- nativo para sustituir solo el icono sin pelear z-order con barras extra.
 local function EnsureToTBarsOverlay()
     local healthNative = _G["TargetFrameToTHealthBar"]
     local manaNative   = _G["TargetFrameToTManaBar"]
@@ -1108,9 +1108,8 @@ local function EnsureToTBarsOverlay()
     HideToTNativePortrait(portraitNative)
 
     if portraitNative then
-        local pf = CreateFrame("Frame", nil, UIParent)
-        pf:SetFrameStrata(API.C.TOT_OVERLAY_STRATA)
-        pf:SetFrameLevel(API.C.TOT_PORTRAIT_LEVEL)
+        local pf = CreateFrame("Frame", nil, tot)
+        if pf.SetFrameLevel and tot.GetFrameLevel then pf:SetFrameLevel((tot:GetFrameLevel() or 0) + 3) end
         local ok = pcall(function() pf:SetAllPoints(portraitNative) end)
         if not ok then
             pf:SetSize(32, 32)
@@ -1792,7 +1791,8 @@ ApplyAbsorbTexture = function(texture, owner, cur, max, temp, alpha)
             -- Calcular posición manual: frame:GetWidth() * pct = píxel exacto del borde del fill.
             local realW = (frame.GetWidth and frame:GetWidth() or 0)
             if realW <= 0 then realW = ownerWidth or 0 end
-            frame._harfordAbsorbSpark:SetPoint("CENTER", frame, "LEFT", realW * pct + 2, 0)
+            local edgeOffset = frame._harfordGroupAbsorb == true and 2 or 0
+            frame._harfordAbsorbSpark:SetPoint("CENTER", frame, "LEFT", realW * pct + edgeOffset, 0)
             frame._harfordAbsorbSpark:SetAlpha(math.min(0.65, (a or 0.85) * 0.70))
             frame._harfordAbsorbSpark:Show()
         end
@@ -1871,7 +1871,7 @@ ApplyAbsorbTexture = function(texture, owner, cur, max, temp, alpha)
         if decorOwner._harfordAbsorbEdge.SetDrawLayer then decorOwner._harfordAbsorbEdge:SetDrawLayer("OVERLAY", -1) end
         decorOwner._harfordAbsorbEdge:ClearAllPoints()
         decorOwner._harfordAbsorbEdge:SetSize(math.max(5, h * 0.8), math.max(4, h * 0.9))
-        decorOwner._harfordAbsorbEdge:SetPoint("CENTER", owner, "LEFT", absorbWidth + 2, 0)
+        decorOwner._harfordAbsorbEdge:SetPoint("CENTER", owner, "LEFT", absorbWidth, 0)
         decorOwner._harfordAbsorbEdge:SetAlpha(math.min(0.65, (alpha or 0.85) * 0.70))
         decorOwner._harfordAbsorbEdge:Show()
     end
@@ -2279,9 +2279,8 @@ local function EnsureFocusTotBarsOverlay()
     HideToTNativePortrait(portraitNative)
 
     if portraitNative then
-        local pf = CreateFrame("Frame", nil, UIParent)
-        pf:SetFrameStrata(API.C.TOT_OVERLAY_STRATA)
-        pf:SetFrameLevel(API.C.TOT_PORTRAIT_LEVEL)
+        local pf = CreateFrame("Frame", nil, tot)
+        if pf.SetFrameLevel and tot.GetFrameLevel then pf:SetFrameLevel((tot:GetFrameLevel() or 0) + 3) end
         local ok = pcall(function() pf:SetAllPoints(portraitNative) end)
         if not ok then
             pf:SetSize(32, 32)
@@ -2339,7 +2338,10 @@ local function UpdateFocusTotPortraitOverlay(profile)
         return
     end
     -- Portrait nativo permanentemente oculto via HookScript; solo mostramos/ocultamos overlay.
-    local icon = profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
+    local isPlayer = UnitIsPlayer and UnitIsPlayer("focustarget")
+    local cfgKey = isPlayer and "portrait_target_player" or "portrait_target_npc"
+    local useTRP3 = not HarfordConfig or HarfordConfig.Get(cfgKey) ~= "wow"
+    local icon = useTRP3 and profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
     if icon then
         ov.portraitFrame.icon:SetTexture(icon)
         ov.portraitFrame:Show()
@@ -2383,7 +2385,7 @@ local function UpdateFocusTotBarsOverlay(healthData, resourceData)
     end
 end
 
-local function RefreshFocusTargetOfTargetBars()
+local function RefreshFocusTargetOfTargetBars(forceVisual)
     local unit = "focustarget"
     local tot = _G["FocusFrameToT"]
     if not (UnitExists and UnitExists(unit)) or not (tot and tot.IsShown and tot:IsShown()) then
@@ -2404,7 +2406,7 @@ local function RefreshFocusTargetOfTargetBars()
         return
     end
     local guid = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
-    if guid ~= API.S.focusTot.lastGUID then
+    if forceVisual or guid ~= API.S.focusTot.lastGUID then
         API.S.focusTot.lastGUID = guid
         UpdateFocusTotPortraitOverlay(GetProfile(unit))
     end
@@ -3111,7 +3113,7 @@ RefreshTargetOfTargetNative = function(forceVisual)
     end
 end
 
-RefreshTargetOfTargetBars = function()
+RefreshTargetOfTargetBars = function(forceVisual)
     local unit = "targettarget"
     local tot = FindTargetOfTargetFrame()
     if not (UnitExists and UnitExists(unit)) or not (tot and tot.IsShown and tot:IsShown()) then
@@ -3129,7 +3131,7 @@ RefreshTargetOfTargetBars = function()
     end
 
     local guid = UnitGUID and UnitGUID(unit) or SafeUnitName(unit)
-    if guid ~= API.S.targetOfTargetLastGUID then
+    if forceVisual or guid ~= API.S.targetOfTargetLastGUID then
         API.S.targetOfTargetLastGUID = guid
         -- Actualizar portrait overlay al cambiar de unidad
         UpdateToTPortraitOverlay(GetProfile(unit))
@@ -3774,6 +3776,7 @@ local function ApplyGroupOverlayBar(container, nativeBar, frame, unit, data, col
     -- Vida temporal: solo health bar. El tempBar (nivel superior al bar) muestra el
     -- absorb como overlay encima de la barra de vida usando ApplyAbsorbTexture.
     if isHealth and container.tempBar then
+        container.tempBar._harfordGroupAbsorb = IsRaidCompactFrame(frame, unit) == true
         local tempCur = math.max(tonumber(data.tempCur) or 0, 0)
         ApplyAbsorbTexture(container.tempBar, container.bar, cur, max, tempCur, 0.85 * stateAlpha)
     end
@@ -4348,6 +4351,8 @@ end
 if HarfordConfig and HarfordConfig.RegisterChangeListener then
     HarfordConfig.RegisterChangeListener(function()
         API.Refresh(false)
+        if RefreshTargetOfTargetBars then RefreshTargetOfTargetBars(true) end
+        if API.S.focusTot and API.S.focusTot.refresh then API.S.focusTot.refresh(true) end
         if HarfordNamePlates and HarfordNamePlates.RefreshAll then HarfordNamePlates.RefreshAll() end
     end)
 end

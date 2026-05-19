@@ -4355,3 +4355,27 @@ end
 -- Utilidades compartidas con HarfordNamePlates (cargado después en el TOC)
 API.BuildResourceList = BuildResourceList
 API.ResourceColor     = ResourceColor
+
+-- Color de clase para nameplates: cache TRP3 → perfil TRP3 directo → clase WoW → nil.
+-- HarfordNamePlates lo llama para colorear la barra de salud y la etiqueta de nombre.
+API.GetClassColor = function(unit)
+    local unitName = SafeUnitName(unit)
+    -- 1. Cache poblado por interacciones previas de unitframes
+    local r, g, b = GetCachedClassColorForName(unitName)
+    if r then return r, g, b end
+    -- 2. Perfil TRP3 directo (jugadores visibles en el nameplate pero no en unitframe todavía)
+    if TRP3_API and TRP3_API.register and unitName then
+        local realm = (GetRealmName and GetRealmName() or ""):gsub("%s+", "")
+        local unitID = unitName .. "-" .. realm
+        if TRP3_API.register.isUnitIDKnown and TRP3_API.register.isUnitIDKnown(unitID)
+        and TRP3_API.register.getUnitIDCurrentProfile then
+            local profile = TRP3_API.register.getUnitIDCurrentProfile(unitID)
+            if profile then
+                r, g, b = GetProfileClassColor(profile)
+                if r then CacheClassColorForName(unitName, r, g, b) ; return r, g, b end
+            end
+        end
+    end
+    -- 3. Clase WoW nativa (fallback para jugadores sin perfil TRP3)
+    return GetUnitClassColor(unit)
+end

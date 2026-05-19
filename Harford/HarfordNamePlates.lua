@@ -91,19 +91,38 @@ local function ApplyAbsorbTexture(texture, owner, cur, max, temp, alpha)
 
     local function UpdateDecor(frame, pct, ownerWidth, ownerHeight, a)
         EnsureDecor(frame)
-        local useKui = frame._harfordUseKui == true
-        local w = math.max(1, (ownerWidth or 1) * pct)
         local h = math.max(6, ownerHeight or (owner.GetHeight and owner:GetHeight() or 10))
-        -- Pattern y glow ocultos: el StatusBar usa GetAbsorbTex directamente como fill.
+        -- Ancho real del fill (compartido por glow y spark).
+        -- fillTex:RIGHT no es fiable en Epsilon (texcoords-based, no resize).
+        local realW = (frame.GetWidth and frame:GetWidth() or 0)
+        if realW <= 0 then realW = ownerWidth or 0 end
+
+        -- Pattern: oculto (el StatusBar ya usa Shield-Fill directamente como fill).
         if frame._harfordAbsorbPattern then frame._harfordAbsorbPattern:Hide() end
-        if frame._harfordAbsorbGlow then frame._harfordAbsorbGlow:Hide() end
+
+        -- Glow: Shield-Overlay tileado sobre el área del fill (combo con Shield-Fill).
+        -- Efecto final = Shield-Fill (fill sólido tintado) + Shield-Overlay (patrón rayado encima).
+        if frame._harfordAbsorbGlow then
+            if realW > 0 then
+                local fillW = math.max(1, realW * pct)
+                frame._harfordAbsorbGlow:ClearAllPoints()
+                frame._harfordAbsorbGlow:SetPoint("TOPLEFT",    frame, "TOPLEFT",    0, 0)
+                frame._harfordAbsorbGlow:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 0, 0)
+                frame._harfordAbsorbGlow:SetWidth(fillW)
+                if frame._harfordAbsorbGlow.SetHorizTile then
+                    frame._harfordAbsorbGlow:SetHorizTile(true)
+                end
+                frame._harfordAbsorbGlow:SetVertexColor(0.65, 0.95, 1.0, 0.45)
+                frame._harfordAbsorbGlow:Show()
+            else
+                frame._harfordAbsorbGlow:Hide()
+            end
+        end
+
+        -- Spark en el borde exacto del fill.
         if frame._harfordAbsorbSpark then
             frame._harfordAbsorbSpark:ClearAllPoints()
             frame._harfordAbsorbSpark:SetSize(math.max(5, h * 0.8), math.max(4, h * 0.9))
-            -- fillTex:RIGHT en Epsilon apunta al extremo del bar entero (texcoords, no resize).
-            -- Calcular posición manual: frame:GetWidth() * pct = píxel exacto del borde del fill.
-            local realW = (frame.GetWidth and frame:GetWidth() or 0)
-            if realW <= 0 then realW = ownerWidth or 0 end
             frame._harfordAbsorbSpark:SetPoint("CENTER", frame, "LEFT", realW * pct + 2, 0)
             frame._harfordAbsorbSpark:SetAlpha(a or 0.85)
             frame._harfordAbsorbSpark:Show()
@@ -192,6 +211,24 @@ local function GetNameTextColor(nt)
     return 1, 1, 1
 end
 
+-- Color de clase para health bar y etiqueta de nombre.
+-- Orden: HarfordUnitFrames (TRP3 → cache → WoW class) → WoW class nativo → verde salud.
+local function GetNpClassColor(unit)
+    if not unit then return 0.0, 0.82, 0.08 end
+    if HarfordUnitFrames and HarfordUnitFrames.GetClassColor then
+        local r, g, b = HarfordUnitFrames.GetClassColor(unit)
+        if r then return r, g, b end
+    end
+    if UnitClass then
+        local _, classFile = UnitClass(unit)
+        if classFile and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile] then
+            local c = RAID_CLASS_COLORS[classFile]
+            return c.r, c.g, c.b
+        end
+    end
+    return 0.0, 0.82, 0.08   -- verde salud por defecto (NPC / sin clase)
+end
+
 -- ── Detección health bar nativo ───────────────────────────────────────────────
 
 local function FindNativeHealthBar(nameplate)
@@ -260,6 +297,16 @@ local function CreateKuiOverlay(kuiFrame)
     ov.tempBar:EnableMouse(false)
     ov.tempBar:Hide()
 
+    -- Etiqueta del nombre encima de las barras, coloreada por clase TRP3.
+    -- Se ancla al BOTTOM del nameLabel → TOP del overlay, por lo que queda en el espacio
+    -- sobre las barras de HP+recurso sin solaparse con el fill.
+    ov.nameLabel = ov:CreateFontString(nil, "OVERLAY")
+    ov.nameLabel:SetFont("Fonts\\FRIZQT__.TTF", 9, "OUTLINE")
+    ov.nameLabel:SetPoint("BOTTOM", ov, "TOP", 0, 1)
+    ov.nameLabel:SetJustifyH("CENTER")
+    ov.nameLabel:SetTextColor(1, 1, 1, 1)
+    ov.nameLabel:Hide()
+
     return ov
 end
 
@@ -274,11 +321,14 @@ local function ApplyNormalMode(ov, kuiFrame, healthBar, hpData, resData)
     -- bg opaco: tapa completamente la barra nativa
     ov.bg:SetColorTexture(0.02, 0.02, 0.02, 1.0)
 
+    local unit = kuiFrame.unit
     local maxHp = math.max(tonumber(hpData.max) or 0, 0)
     local curHp = math.min(math.max(tonumber(hpData.cur) or 0, 0), maxHp > 0 and maxHp or 1)
     ov.hpBar:SetMinMaxValues(0, maxHp > 0 and maxHp or 1)
     ov.hpBar:SetValue(curHp)
-    ov.hpBar:SetStatusBarColor(0.0, 0.82, 0.08)
+    -- Color de clase TRP3 para la barra de salud; fallback clase WoW → verde.
+    local hpR, hpG, hpB = GetNpClassColor(unit)
+    ov.hpBar:SetStatusBarColor(hpR, hpG, hpB)
 
     if resData then
         local maxRes = math.max(tonumber(resData.max) or 0, 0)
@@ -294,6 +344,14 @@ local function ApplyNormalMode(ov, kuiFrame, healthBar, hpData, resData)
     if ov.tempBar then
         local tempCur = math.max(tonumber(hpData.tempCur) or 0, 0)
         ApplyAbsorbTexture(ov.tempBar, ov.hpBar, curHp, maxHp, tempCur, 0.85)
+    end
+
+    -- Etiqueta del nombre sobre las barras, con color de clase TRP3.
+    if ov.nameLabel then
+        local name = (unit and UnitName and UnitName(unit)) or ""
+        ov.nameLabel:SetText(name)
+        ov.nameLabel:SetTextColor(hpR, hpG, hpB, 1)
+        ov.nameLabel:Show()
     end
 
     ov:Show()
@@ -316,7 +374,13 @@ local function ApplyNameOnlyMode(ov, kuiFrame, hpData)
     -- Sin fondo visible: que solo el fill coloree el nombre, nada más.
     ov.bg:SetColorTexture(0, 0, 0, 0)
 
-    local r, g, b = GetNameTextColor(nt)
+    -- Prioridad: color de clase TRP3 → color que Kui puso en NameText → blanco.
+    local unit = kuiFrame.unit
+    local r, g, b = GetNpClassColor(unit)
+    if r == 0.0 and g == 0.82 and b == 0.08 then
+        -- Devolvió verde (NPC / sin clase): usar el color que Kui ya puso en NameText.
+        r, g, b = GetNameTextColor(nt)
+    end
     local maxHp = math.max(tonumber(hpData.max) or 0, 0)
     local curHp = math.min(math.max(tonumber(hpData.cur) or 0, 0), maxHp > 0 and maxHp or 1)
     local pct   = maxHp > 0 and (curHp / maxHp) or 0
@@ -342,6 +406,8 @@ local function ApplyNameOnlyMode(ov, kuiFrame, hpData)
     ov.sep:Hide()
     ov.resBar:Hide()
     if ov.tempBar then ov.tempBar:Hide() end
+    -- En name-only el fill ya colorea el nombre; la etiqueta extra quedaría redundante.
+    if ov.nameLabel then ov.nameLabel:Hide() end
     ov:Show()
 end
 
@@ -498,7 +564,9 @@ function API.ApplyUnit(unit)
     local curHp = math.min(math.max(tonumber(hpData.cur) or 0, 0), maxHp > 0 and maxHp or 1)
     st.ov.hpBar:SetMinMaxValues(0, maxHp > 0 and maxHp or 1)
     st.ov.hpBar:SetValue(curHp)
-    st.ov.hpBar:SetStatusBarColor(0.0, 0.82, 0.08)
+    -- Color de clase TRP3 → clase WoW nativa → verde salud (NPC).
+    local hpR, hpG, hpB = GetNpClassColor(unit)
+    st.ov.hpBar:SetStatusBarColor(hpR, hpG, hpB)
 
     local resData = list[2]
     if resData then

@@ -3,58 +3,35 @@ HarfordReputation = HarfordReputation or {}
 local API = HarfordReputation
 
 API.PREFIX = "HARFORDREP"
-API.TABARD_ICON = "Interface\\Icons\\INV_Shirt_GuildTabard_01"
+API.ICON_PATH = "Interface\\Icons\\"
+API.TABARD_ICON = "INV_Shirt_GuildTabard_01"
 API.MIN_POINTS = -42000
 API.MAX_POINTS = 42000
 API.NEUTRAL_POINTS = 0
 
-local DEFAULT_FACTIONS = {
-    {
-        id = "harford",
-        name = "La Compania Harford",
-        description = "Reputacion con la Compania Harford.",
-        icon = API.TABARD_ICON,
-        color = "ffd0a43a",
-        group = "Reputaciones Harford",
-        subgroup = "Companias",
-    },
-    {
-        id = "velasangre",
-        name = "Los Velasangre",
-        description = "Reputacion con Los Velasangre.",
-        icon = "Interface\\Icons\\Ability_Rogue_BloodyEye",
-        color = "ffb53333",
-        group = "Reputaciones Harford",
-        subgroup = "Facciones",
-    },
-    {
-        id = "bonvapor",
-        name = "La Compania Bonvapor",
-        description = "Reputacion con la Compania Bonvapor.",
-        icon = "Interface\\Icons\\INV_Misc_Gear_01",
-        color = "ff31b6c4",
-        group = "Reputaciones Harford",
-        subgroup = "Companias",
-    },
-    {
-        id = "cruzada_argenta",
-        name = "La Cruzada Argenta",
-        description = "Reputacion con La Cruzada Argenta.",
-        icon = "Interface\\Icons\\INV_BannerPVP_02",
-        color = "ffe8e8d0",
-        group = "Reputaciones Harford",
-        subgroup = "Ordenes",
-    },
-    {
-        id = "senda_justa",
-        name = "La Senda Justa",
-        description = "Reputacion con La Senda Justa.",
-        icon = "Interface\\Icons\\Spell_Holy_HopeAndGrace",
-        color = "ff7cc576",
-        group = "Reputaciones Harford",
-        subgroup = "Ordenes",
-    },
-}
+local DEFAULT_GROUP = "Reputaciones Harford"
+
+function API.NormalizeIconName(value)
+    value = tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    if value == "" then return API.TABARD_ICON end
+    value = value:gsub("/", "\\")
+    value = value:gsub("^Interface\\Icons\\", "")
+    value = value:gsub("^Interface\\ICONS\\", "")
+    value = value:gsub("^interface\\icons\\", "")
+    value = value:gsub("%.blp$", ""):gsub("%.BLP$", "")
+    value = value:gsub("%.tga$", ""):gsub("%.TGA$", "")
+    if value == "" then
+        return API.TABARD_ICON
+    end
+    return value
+end
+
+function API.ResolveIconTexture(value)
+    return API.ICON_PATH .. API.NormalizeIconName(value)
+end
+
+-- Las facciones viven íntegramente en HarfordReputationStore (SavedVariables).
+-- No hay defaults hardcodeados: créalas y gestiónalas desde /harfordadmin rep.
 
 local RANKS = {
     { min = -42000, max = -6001, name = "Odiado", color = "ffff2020" },
@@ -63,8 +40,8 @@ local RANKS = {
     { min = 0, max = 2999, name = "Neutral", color = "ffe0e0e0" },
     { min = 3000, max = 8999, name = "Amistoso", color = "ff60d060" },
     { min = 9000, max = 20999, name = "Honorable", color = "ff40a8ff" },
-    { min = 21000, max = 41999, name = "Venerado", color = "ffb080ff" },
-    { min = 42000, max = 42000, name = "Exaltado", color = "ffffd200" },
+    { min = 21000, max = 41999, name = "Reverenciado", color = "ffb080ff" },
+    { min = 42000, max = 42999, name = "Exaltado",     color = "ffffd200" },
 }
 
 local function Print(message)
@@ -115,19 +92,63 @@ local function EnsureStore()
     if type(store.guilds) ~= "table" then store.guilds = {} end
     if type(store.npcLinks) ~= "table" then store.npcLinks = {} end
     if type(store.logs) ~= "table" then store.logs = {} end
-
-    for _, faction in ipairs(DEFAULT_FACTIONS) do
-        if type(store.factions[faction.id]) ~= "table" then
-            store.factions[faction.id] = CopyTable(faction)
-            store.factions[faction.id].hidden = false
-            store.factions[faction.id].gmNotes = ""
-        else
-            store.factions[faction.id].group = store.factions[faction.id].group or faction.group or "Reputaciones Harford"
-            store.factions[faction.id].subgroup = store.factions[faction.id].subgroup or faction.subgroup or ""
-        end
-    end
+    if type(store.groups) ~= "table" then store.groups = {} end
 
     return store
+end
+
+local function NextGroupSortOrder(store)
+    local maxOrder = 0
+    for _, groupData in pairs((store and store.groups) or {}) do
+        maxOrder = math.max(maxOrder, tonumber(groupData and groupData.sortOrder) or 0)
+    end
+    return maxOrder + 10
+end
+
+local function NextSubgroupSortOrder(groupData)
+    local maxOrder = 0
+    for _, order in pairs((groupData and groupData.subgroupOrder) or {}) do
+        maxOrder = math.max(maxOrder, tonumber(order) or 0)
+    end
+    return maxOrder + 10
+end
+
+local function EnsureGroupRecord(store, groupName)
+    groupName = Trim(groupName)
+    if groupName == "" then groupName = DEFAULT_GROUP end
+    local groupData = store.groups[groupName]
+    if type(groupData) ~= "table" then
+        groupData = {
+            name = groupName,
+            subgroups = {},
+            subgroupOrder = {},
+            sortOrder = NextGroupSortOrder(store),
+        }
+        store.groups[groupName] = groupData
+    end
+    groupData.name = groupName
+    if type(groupData.subgroups) ~= "table" then groupData.subgroups = {} end
+    if type(groupData.subgroupOrder) ~= "table" then groupData.subgroupOrder = {} end
+    if groupData.sortOrder == nil then groupData.sortOrder = NextGroupSortOrder(store) end
+    return groupData, groupName
+end
+
+local function EnsureSubgroupRecord(groupData, subgroupName)
+    subgroupName = Trim(subgroupName)
+    if subgroupName == "" then return subgroupName end
+    if type(groupData.subgroups) ~= "table" then groupData.subgroups = {} end
+    if type(groupData.subgroupOrder) ~= "table" then groupData.subgroupOrder = {} end
+    local exists = false
+    for _, existing in ipairs(groupData.subgroups) do
+        if existing == subgroupName then exists = true; break end
+    end
+    if not exists then
+        groupData.subgroups[#groupData.subgroups + 1] = subgroupName
+    end
+    if groupData.subgroupOrder[subgroupName] == nil then
+        groupData.subgroupOrder[subgroupName] = NextSubgroupSortOrder(groupData)
+    end
+    return subgroupName
 end
 
 local function BuildUnitKey(unit)
@@ -185,9 +206,6 @@ local function FireChanged(kind, ...)
     if HarfordReputationTooltip and HarfordReputationTooltip.Refresh then
         HarfordReputationTooltip.Refresh()
     end
-    if HarfordReputationSync and HarfordReputationSync.BroadcastChange then
-        HarfordReputationSync.BroadcastChange(kind, ...)
-    end
 end
 
 function API.EnsureStore()
@@ -238,18 +256,30 @@ function API.GetFactions(includeHidden)
             faction.id = id
         end
     end
+    -- sortOrder primero (orden manual DM); dentro del mismo sortOrder, alfabético
     table.sort(out, function(a, b)
+        local oa = tonumber(a.sortOrder) or 0
+        local ob = tonumber(b.sortOrder) or 0
+        if oa ~= ob then return oa < ob end
         return tostring(a.name or "") < tostring(b.name or "")
     end)
     return out
 end
 
-function API.CreateFaction(name, description, icon, color)
+-- Acepta tabla de datos o argumentos posicionales (compatibilidad con código viejo)
+function API.CreateFaction(nameOrData, description, icon, color)
     if not API.CanEdit() then
         return false, "Solo un DM con .ph dm activo puede crear reputaciones."
     end
 
-    name = Trim(name)
+    local data
+    if type(nameOrData) == "table" then
+        data = nameOrData
+    else
+        data = { name = nameOrData, description = description, icon = icon, color = color }
+    end
+
+    local name = Trim(data.name or "")
     if name == "" then
         return false, "Nombre de reputacion invalido."
     end
@@ -263,19 +293,367 @@ function API.CreateFaction(name, description, icon, color)
         n = n + 1
     end
 
+    local group = Trim(data.group or "")
+    if group == "" then group = DEFAULT_GROUP end
+
     store.factions[id] = {
         id = id,
         name = name,
-        description = tostring(description or ""),
-        icon = tostring(icon or API.TABARD_ICON),
-        color = tostring(color or "ffe0e0e0"),
-        group = "Reputaciones Harford",
-        subgroup = "",
-        hidden = false,
-        gmNotes = "",
+        description = tostring(data.description or ""),
+        icon = API.NormalizeIconName(data.icon or API.TABARD_ICON),
+        color = tostring(data.color or "ffe0e0e0"),
+        group = group,
+        subgroup = Trim(data.subgroup or ""),
+        hidden = data.hidden == true,
+        gmNotes = tostring(data.gmNotes or ""),
+        sortOrder = tonumber(data.sortOrder) or 0,
     }
     FireChanged("FACTION", id)
     return true, id
+end
+
+-- Devuelve la lista de grupos únicos (con sus subgrupos) para el panel GM
+function API.GetGroups()
+    local store = EnsureStore()
+    local groupMap = {}
+    local groupOrder = {}
+    for groupName, groupData in pairs(store.groups or {}) do
+        local g = Trim(type(groupData) == "table" and groupData.name or groupName)
+        if g ~= "" and not groupMap[g] then
+            local stored = EnsureGroupRecord(store, g)
+            groupMap[g] = {
+                subgroups = {},
+                subgroupOrder = stored.subgroupOrder or {},
+                sortOrder = tonumber(stored.sortOrder) or 0,
+            }
+            groupOrder[#groupOrder + 1] = g
+        end
+        for _, sub in ipairs((groupData and groupData.subgroups) or {}) do
+            sub = Trim(sub)
+            if sub ~= "" then
+                local found = false
+                for _, existing in ipairs(groupMap[g].subgroups) do
+                    if existing == sub then found = true; break end
+                end
+                if not found then groupMap[g].subgroups[#groupMap[g].subgroups + 1] = sub end
+            end
+        end
+    end
+    for _, faction in pairs(store.factions) do
+        local g = Trim(faction.group or "")
+        if g == "" then g = DEFAULT_GROUP end
+        if not groupMap[g] then
+            local stored = EnsureGroupRecord(store, g)
+            groupMap[g] = {
+                subgroups = {},
+                subgroupOrder = stored.subgroupOrder or {},
+                sortOrder = tonumber(stored.sortOrder) or 0,
+            }
+            groupOrder[#groupOrder + 1] = g
+        end
+        local sub = Trim(faction.subgroup or "")
+        if sub ~= "" then
+            EnsureSubgroupRecord(store.groups[g], sub)
+            groupMap[g].subgroupOrder = store.groups[g].subgroupOrder or groupMap[g].subgroupOrder
+            local found = false
+            for _, existing in ipairs(groupMap[g].subgroups) do
+                if existing == sub then found = true; break end
+            end
+            if not found then
+                groupMap[g].subgroups[#groupMap[g].subgroups + 1] = sub
+            end
+        end
+    end
+    table.sort(groupOrder, function(a, b)
+        local ga, gb = groupMap[a], groupMap[b]
+        local oa, ob = tonumber(ga and ga.sortOrder) or 0, tonumber(gb and gb.sortOrder) or 0
+        if oa ~= ob then return oa < ob end
+        return tostring(a) < tostring(b)
+    end)
+    local out = {}
+    for _, g in ipairs(groupOrder) do
+        local subgroups = groupMap[g].subgroups
+        local orderMap = groupMap[g].subgroupOrder or {}
+        table.sort(subgroups, function(a, b)
+            local oa, ob = tonumber(orderMap[a]) or 0, tonumber(orderMap[b]) or 0
+            if oa ~= ob then return oa < ob end
+            return tostring(a) < tostring(b)
+        end)
+        out[#out + 1] = { name = g, subgroups = subgroups, sortOrder = groupMap[g].sortOrder }
+    end
+    return out
+end
+
+function API.CreateGroup(name)
+    if not API.CanEdit() then return false, "Solo DM." end
+    name = Trim(name)
+    if name == "" then return false, "Nombre invalido." end
+    local store = EnsureStore()
+    EnsureGroupRecord(store, name)
+    FireChanged("GROUP")
+    return true, name
+end
+
+function API.CreateSubgroup(groupName, subgroupName)
+    if not API.CanEdit() then return false, "Solo DM." end
+    groupName = Trim(groupName)
+    subgroupName = Trim(subgroupName)
+    if groupName == "" or subgroupName == "" then return false, "Nombre invalido." end
+    local store = EnsureStore()
+    local groupData = EnsureGroupRecord(store, groupName)
+    EnsureSubgroupRecord(groupData, subgroupName)
+    FireChanged("GROUP")
+    return true, subgroupName
+end
+
+function API.SetFactionGroup(factionId, groupName, subgroupName)
+    if not API.CanEdit() then return false, "Solo DM." end
+    local faction = API.GetFaction(factionId)
+    if not faction then return false, "Reputacion no encontrada." end
+    groupName = Trim(groupName)
+    subgroupName = Trim(subgroupName)
+    if groupName == "" then groupName = DEFAULT_GROUP end
+    faction.group = groupName
+    faction.subgroup = subgroupName
+    local store = EnsureStore()
+    local groupData = EnsureGroupRecord(store, groupName)
+    if subgroupName ~= "" then EnsureSubgroupRecord(groupData, subgroupName) end
+    FireChanged("FACTION", factionId)
+    return true
+end
+
+-- Renombra un grupo entero (actualiza todas las facciones que lo usen)
+function API.RenameGroup(oldName, newName)
+    if not API.CanEdit() then return false, "Solo DM." end
+    oldName = Trim(oldName)
+    newName = Trim(newName)
+    if oldName == "" or newName == "" then return false, "Nombre invalido." end
+    if oldName == newName then return true end
+    local store = EnsureStore()
+    if store.groups[oldName] then
+        store.groups[newName] = store.groups[oldName]
+        store.groups[newName].name = newName
+        store.groups[oldName] = nil
+    end
+    local count = 0
+    for _, faction in pairs(store.factions) do
+        local g = Trim(faction.group or "")
+        if g == "" then g = DEFAULT_GROUP end
+        if g == oldName then
+            faction.group = newName
+            count = count + 1
+        end
+    end
+    FireChanged("GROUP")
+    return true
+end
+
+-- Renombra un subgrupo dentro de un grupo
+function API.RenameSubgroup(groupName, oldSub, newSub)
+    if not API.CanEdit() then return false, "Solo DM." end
+    groupName = Trim(groupName)
+    oldSub = Trim(oldSub or "")
+    newSub = Trim(newSub or "")
+    local store = EnsureStore()
+    if store.groups[groupName] and type(store.groups[groupName].subgroups) == "table" then
+        for index, existing in ipairs(store.groups[groupName].subgroups) do
+            if existing == oldSub then
+                store.groups[groupName].subgroups[index] = newSub
+            end
+        end
+        if type(store.groups[groupName].subgroupOrder) == "table" then
+            store.groups[groupName].subgroupOrder[newSub] = store.groups[groupName].subgroupOrder[oldSub]
+            store.groups[groupName].subgroupOrder[oldSub] = nil
+        end
+    end
+    local count = 0
+    for _, faction in pairs(store.factions) do
+        local g = Trim(faction.group or "")
+        if g == "" then g = DEFAULT_GROUP end
+        if g == groupName and Trim(faction.subgroup or "") == oldSub then
+            faction.subgroup = newSub
+            count = count + 1
+        end
+    end
+    FireChanged("GROUP")
+    return true
+end
+
+function API.DeleteGroup(groupName)
+    if not API.CanEdit() then return false, "Solo DM." end
+    local store = EnsureStore()
+    groupName = Trim(groupName or "")
+    if groupName == "" then return false, "Nombre invalido." end
+    local fallbackGroup = DEFAULT_GROUP
+    if groupName == fallbackGroup then return false, "No se puede borrar el grupo base." end
+    for _, faction in pairs(store.factions or {}) do
+        local g = Trim(faction.group or "")
+        if g == "" then g = DEFAULT_GROUP end
+        if g == groupName then
+            faction.group = fallbackGroup
+            faction.subgroup = ""
+        end
+    end
+    store.groups[groupName] = nil
+    EnsureGroupRecord(store, fallbackGroup)
+    FireChanged("GROUP")
+    return true
+end
+
+function API.DeleteSubgroup(groupName, subgroupName)
+    if not API.CanEdit() then return false, "Solo DM." end
+    local store = EnsureStore()
+    groupName    = Trim(groupName or "")
+    subgroupName = Trim(subgroupName or "")
+    if groupName == "" or subgroupName == "" then return false, "Nombre invalido." end
+    for _, faction in pairs(store.factions or {}) do
+        local g = Trim(faction.group or "")
+        if g == "" then g = DEFAULT_GROUP end
+        if g == groupName and Trim(faction.subgroup or "") == subgroupName then
+            faction.subgroup = ""
+        end
+    end
+    local groupData = store.groups[groupName]
+    if groupData and type(groupData.subgroups) == "table" then
+        for i, sub in ipairs(groupData.subgroups) do
+            if sub == subgroupName then
+                table.remove(groupData.subgroups, i)
+                break
+            end
+        end
+        if type(groupData.subgroupOrder) == "table" then
+            groupData.subgroupOrder[subgroupName] = nil
+        end
+    end
+    FireChanged("GROUP")
+    return true
+end
+
+-- Intercambia el sortOrder de dos facciones (para botones ↑/↓ del panel GM)
+function API.MoveGroupOrder(groupName, direction)
+    if not API.CanEdit() then return false, "Solo DM." end
+    groupName = Trim(groupName or "")
+    direction = tonumber(direction) or 0
+    if groupName == "" or direction == 0 then return false, "Datos invalidos." end
+
+    local store = EnsureStore()
+    local groups = API.GetGroups()
+    for index, groupData in ipairs(groups) do
+        local record = EnsureGroupRecord(store, groupData.name)
+        record.sortOrder = index * 10
+    end
+
+    local currentIndex
+    for index, groupData in ipairs(groups) do
+        if groupData.name == groupName then
+            currentIndex = index
+            break
+        end
+    end
+    if not currentIndex then return false, "Grupo no encontrado." end
+
+    local targetIndex = currentIndex + (direction < 0 and -1 or 1)
+    if targetIndex < 1 or targetIndex > #groups then return false, "No se puede mover mas." end
+
+    local current = EnsureGroupRecord(store, groups[currentIndex].name)
+    local target = EnsureGroupRecord(store, groups[targetIndex].name)
+    current.sortOrder, target.sortOrder = target.sortOrder, current.sortOrder
+    FireChanged("GROUP")
+    return true
+end
+
+function API.MoveSubgroupOrder(groupName, subgroupName, direction)
+    if not API.CanEdit() then return false, "Solo DM." end
+    groupName = Trim(groupName or "")
+    subgroupName = Trim(subgroupName or "")
+    direction = tonumber(direction) or 0
+    if groupName == "" or subgroupName == "" or direction == 0 then return false, "Datos invalidos." end
+
+    local store = EnsureStore()
+    local groupData = EnsureGroupRecord(store, groupName)
+    local subgroups = {}
+    for _, sub in ipairs(groupData.subgroups or {}) do
+        sub = Trim(sub)
+        if sub ~= "" then subgroups[#subgroups + 1] = sub end
+    end
+    table.sort(subgroups, function(a, b)
+        local oa = tonumber(groupData.subgroupOrder and groupData.subgroupOrder[a]) or 0
+        local ob = tonumber(groupData.subgroupOrder and groupData.subgroupOrder[b]) or 0
+        if oa ~= ob then return oa < ob end
+        return tostring(a) < tostring(b)
+    end)
+    for index, sub in ipairs(subgroups) do
+        groupData.subgroupOrder[sub] = index * 10
+    end
+
+    local currentIndex
+    for index, sub in ipairs(subgroups) do
+        if sub == subgroupName then
+            currentIndex = index
+            break
+        end
+    end
+    if not currentIndex then return false, "Seccion no encontrada." end
+
+    local targetIndex = currentIndex + (direction < 0 and -1 or 1)
+    if targetIndex < 1 or targetIndex > #subgroups then return false, "No se puede mover mas." end
+
+    local targetSub = subgroups[targetIndex]
+    groupData.subgroupOrder[subgroupName], groupData.subgroupOrder[targetSub] =
+        groupData.subgroupOrder[targetSub], groupData.subgroupOrder[subgroupName]
+    FireChanged("GROUP")
+    return true
+end
+
+function API.SwapFactionOrder(factionIdA, factionIdB)
+    if not API.CanEdit() then return false, "Solo DM." end
+    local fa = API.GetFaction(factionIdA)
+    local fb = API.GetFaction(factionIdB)
+    if not fa or not fb then return false, "Faccion no encontrada." end
+    local oa = tonumber(fa.sortOrder) or 0
+    local ob = tonumber(fb.sortOrder) or 0
+    fa.sortOrder = ob
+    fb.sortOrder = oa
+    FireChanged("FACTION", factionIdA)
+    return true
+end
+
+function API.SetFactionSortOrder(factionId, order)
+    if not API.CanEdit() then return false, "Solo DM." end
+    local faction = API.GetFaction(factionId)
+    if not faction then return false, "Reputacion no encontrada." end
+    faction.sortOrder = tonumber(order) or 0
+    FireChanged("FACTION", factionId)
+    return true
+end
+
+function API.MoveFactionOrder(factionId, direction)
+    if not API.CanEdit() then return false, "Solo DM." end
+    direction = tonumber(direction) or 0
+    if direction == 0 then return false, "Direccion invalida." end
+
+    local factions = API.GetFactions(true)
+    for index, faction in ipairs(factions) do
+        faction.sortOrder = index
+    end
+
+    local currentIndex
+    for index, faction in ipairs(factions) do
+        if faction.id == factionId then
+            currentIndex = index
+            break
+        end
+    end
+    if not currentIndex then return false, "Reputacion no encontrada." end
+
+    local targetIndex = currentIndex + (direction < 0 and -1 or 1)
+    if targetIndex < 1 or targetIndex > #factions then return false, "No se puede mover mas." end
+
+    local current = factions[currentIndex]
+    local target = factions[targetIndex]
+    current.sortOrder, target.sortOrder = target.sortOrder, current.sortOrder
+    FireChanged("FACTION", factionId)
+    return true
 end
 
 function API.SetFactionHidden(factionId, hidden)
@@ -309,13 +687,16 @@ function API.UpdateFaction(factionId, data)
 
     faction.name = name
     faction.description = tostring(data.description or "")
-    faction.icon = tostring(data.icon or API.TABARD_ICON)
+    faction.icon = API.NormalizeIconName(data.icon or API.TABARD_ICON)
     faction.color = tostring(data.color or "ffe0e0e0")
     faction.group = Trim(data.group)
-    if faction.group == "" then faction.group = "Reputaciones Harford" end
+    if faction.group == "" then faction.group = DEFAULT_GROUP end
     faction.subgroup = Trim(data.subgroup)
     faction.hidden = data.hidden == true
     faction.gmNotes = tostring(data.gmNotes or "")
+    if data.sortOrder ~= nil then
+        faction.sortOrder = tonumber(data.sortOrder) or 0
+    end
     FireChanged("FACTION", factionId)
     return true
 end
@@ -436,45 +817,60 @@ function API.AdjustTarget(factionId, delta)
     if not UnitExists or not UnitExists("target") or not UnitIsPlayer or not UnitIsPlayer("target") then
         return false, "Selecciona un jugador objetivo."
     end
-    local playerKey, guildName = API.RememberPlayerGuild("target")
+    local playerKey = API.RememberPlayerGuild("target")
     if not playerKey then return false, "Jugador invalido." end
-
-    local ok, err = API.AdjustPlayerPoints(playerKey, factionId, delta, { guildName = guildName })
-    if ok then
-        local faction = API.GetFaction(factionId)
-        local verb = (tonumber(delta) or 0) >= 0 and "subio" or "bajo"
-        API.AddLog("GM " .. verb .. " " .. tostring(delta) .. " reputacion a " .. playerKey .. " con " .. tostring(faction and faction.name or factionId) .. ".")
+    if not HarfordReputationSync or not HarfordReputationSync.BroadcastRepPoints then
+        return false, "Sync no disponible."
     end
-    return ok, err
+    -- Calcular el nuevo valor a partir de lo que haya en memoria (sin escribirlo
+    -- en el store del DM — los puntos de otros jugadores no se persisten aquí).
+    local current   = API.GetPlayerPoints(playerKey, factionId)
+    local newPoints = Clamp(current + (tonumber(delta) or 0), API.MIN_POINTS, API.MAX_POINTS)
+    local sent = HarfordReputationSync.BroadcastRepPoints(playerKey, factionId, newPoints)
+    if not sent then
+        return false, "No hay canal de grupo/raid activo; el target debe estar en el mismo grupo."
+    end
+    local faction = API.GetFaction(factionId)
+    local verb = (tonumber(delta) or 0) >= 0 and "subio" or "bajo"
+    API.AddLog("GM " .. verb .. " " .. tostring(delta) .. " reputacion a " .. playerKey .. " con " .. tostring(faction and faction.name or factionId) .. ".")
+    return true
 end
 
 function API.ResetTarget(factionId)
     if not UnitExists or not UnitExists("target") or not UnitIsPlayer or not UnitIsPlayer("target") then
         return false, "Selecciona un jugador objetivo."
     end
-    local playerKey, guildName = API.RememberPlayerGuild("target")
+    local playerKey = API.RememberPlayerGuild("target")
     if not playerKey then return false, "Jugador invalido." end
-    local ok, err = API.ResetPlayerPoints(playerKey, factionId, { guildName = guildName })
-    if ok then
-        local faction = API.GetFaction(factionId)
-        API.AddLog("GM reinicio reputacion de " .. playerKey .. " con " .. tostring(faction and faction.name or factionId) .. ".")
+    if not HarfordReputationSync or not HarfordReputationSync.BroadcastRepPoints then
+        return false, "Sync no disponible."
     end
-    return ok, err
+    local sent = HarfordReputationSync.BroadcastRepPoints(playerKey, factionId, 0)
+    if not sent then
+        return false, "No hay canal de grupo/raid activo; el target debe estar en el mismo grupo."
+    end
+    local faction = API.GetFaction(factionId)
+    API.AddLog("GM reinicio reputacion de " .. playerKey .. " con " .. tostring(faction and faction.name or factionId) .. ".")
+    return true
 end
 
 function API.SetTargetPoints(factionId, points)
     if not UnitExists or not UnitExists("target") or not UnitIsPlayer or not UnitIsPlayer("target") then
         return false, "Selecciona un jugador objetivo."
     end
-    local playerKey, guildName = API.RememberPlayerGuild("target")
+    local playerKey = API.RememberPlayerGuild("target")
     if not playerKey then return false, "Jugador invalido." end
-
-    local ok, err = API.SetPlayerPoints(playerKey, factionId, points, { guildName = guildName })
-    if ok then
-        local faction = API.GetFaction(factionId)
-        API.AddLog("GM ajusto reputacion de " .. playerKey .. " con " .. tostring(faction and faction.name or factionId) .. " a " .. tostring(points) .. ".")
+    if not HarfordReputationSync or not HarfordReputationSync.BroadcastRepPoints then
+        return false, "Sync no disponible."
     end
-    return ok, err
+    local newPoints = Clamp(tonumber(points) or 0, API.MIN_POINTS, API.MAX_POINTS)
+    local sent = HarfordReputationSync.BroadcastRepPoints(playerKey, factionId, newPoints)
+    if not sent then
+        return false, "No hay canal de grupo/raid activo."
+    end
+    local faction = API.GetFaction(factionId)
+    API.AddLog("GM ajusto reputacion de " .. playerKey .. " con " .. tostring(faction and faction.name or factionId) .. " a " .. tostring(newPoints) .. ".")
+    return true
 end
 
 function API.GetCurrentPlayerPoints(factionId)

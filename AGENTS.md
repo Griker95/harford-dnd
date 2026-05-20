@@ -82,9 +82,9 @@ Harford/
 
 HarfordAdmin/
   HarfordAdmin.lua            -- bootstrap, slash commands, API admin existente
-  HarfordAdminNPC.lua         -- acciones admin basicas sobre target/NPC/enemigo
-  HarfordAdminUnitMenu.lua    -- menu contextual DM en PlayerFrame/TargetFrame
-  HarfordAdminPanel.lua       -- futuro: panel DM central si hace falta
+  HarfordAdminNPC.lua           -- acciones admin basicas sobre target/NPC/enemigo
+  HarfordAdminUnitMenu.lua      -- menu contextual DM en PlayerFrame/TargetFrame
+  HarfordReputationAdmin.lua    -- panel GM de gestion de reputaciones: crear/editar/ordenar/renombrar grupos
 ```
 
 Contrato `HarfordEpsilonCommands`:
@@ -116,17 +116,74 @@ Contrato `HarfordServerActions`:
 Contrato `HarfordReputation` (core):
 
 - `HarfordReputation.GetFaction(id)` → tabla de faccion o nil.
-- `HarfordReputation.GetFactions(includeHidden)` → lista ordenada de facciones visibles.
-- `HarfordReputation.GetRank(points)` → `name, colorARGB, rankTable`. Rangos: Odiado→Hostil→Adverso→Neutral→Amistoso→Honorable→Venerado→Exaltado. Rango min -42000, max 42000.
+- `HarfordReputation.GetFactions(includeHidden)` → lista ordenada. Orden: `sortOrder` ASC, luego nombre alfabetico.
+- `HarfordReputation.GetRank(points)` → `name, colorARGB, rankTable`. Rangos: Odiado→Hostil→Adverso→Neutral→Amistoso→Honorable→Reverenciado→Exaltado. Tabla confirmada:
+  | Rango        | min    | max    | Tamaño |
+  |---|---|---|---|
+  | Odiado       | -42000 | -6001  | 36000  |
+  | Hostil       |  -6000 | -3001  |  3000  |
+  | Adverso      |  -3000 |    -1  |  3000  |
+  | Neutral      |      0 |  2999  |  3000  |
+  | Amistoso     |   3000 |  8999  |  6000  |
+  | Honorable    |   9000 | 20999  | 12000  |
+  | Reverenciado |  21000 | 41999  | 21000  |
+  | Exaltado     |  42000 | 42999  |  1000  |
+  Neutral empieza en 0. `API.MIN_POINTS = -42000`, `API.MAX_POINTS = 42999`.
 - `HarfordReputation.GetPlayerPoints(playerKey, factionId)` → `points, repEntry`. Si no tiene rep propia, hereda del gremio.
 - `HarfordReputation.SetPlayerPoints(playerKey, factionId, points, opts)` → solo si `CanEdit()` o `opts.fromSync=true`.
 - `HarfordReputation.AdjustTarget(factionId, delta)` → ajusta al target actual + hereda gremio.
 - `HarfordReputation.CanEdit()` → requiere `HarfordAuthority.IsDMMode() == true`.
-- `HarfordReputation.GetCurrentPlayerPoints(factionId)` → atajos al jugador local.
+- `HarfordReputation.GetCurrentPlayerPoints(factionId)` → atajo al jugador local. En el panel principal, un jugador normal ve siempre su reputacion local. Si `HarfordAdmin` esta cargado, el modo DM esta activo y el target es un jugador, el panel puede mostrar las reputaciones de ese target para trabajo admin.
 - `HarfordReputation.GetUnitFactionRelationship(unit)` → `factionId, points, rank, rankColor` si la unidad tiene NPC link.
-- `HarfordReputation.EnsureStore()` → inicializa `HarfordReputationStore` e inyecta facciones por defecto si es la primera vez.
-- Facciones por defecto: La Compania Harford, Los Velasangre, La Compania Bonvapor, La Cruzada Argenta, La Senda Justa.
-- `HarfordReputationStore` guardado en SavedVariables; estructura: `{factions={}, players={}, guilds={}, npcLinks={}, logs={}, ui={}}`.
+- `HarfordReputation.EnsureStore()` → inicializa `HarfordReputationStore` (crea claves vacias si faltan). **No inyecta facciones por defecto**: las facciones viven 100% en SavedVariables y se gestionan desde `/harfordadmin rep`.
+- `HarfordReputation.CreateFaction(nameOrData, ...)` → acepta tabla `{name,description,icon,color,group,subgroup,hidden,gmNotes,sortOrder}` o args posicionales. Devuelve `true, id`.
+- `HarfordReputation.UpdateFaction(factionId, data)` → edita todos los campos incluyendo `sortOrder` (si `data.sortOrder ~= nil`).
+- `HarfordReputation.GetGroups()` → `[{name, subgroups=[...]}]` — lista de grupos únicos con sus subgrupos.
+- `HarfordReputation.CreateGroup(name)` → crea un encabezado de grupo persistente aunque aun no tenga facciones.
+- `HarfordReputation.CreateSubgroup(groupName, subgroupName)` → crea una seccion persistente dentro de un grupo aunque aun no tenga facciones.
+- `HarfordReputation.SetFactionGroup(factionId, groupName, subgroupName)` → mueve una faccion a un grupo/seccion.
+- `HarfordReputation.RenameGroup(oldName, newName)` → actualiza `faction.group` en todas las facciones del grupo.
+- `HarfordReputation.RenameSubgroup(groupName, oldSub, newSub)` → renombra subgrupo dentro de un grupo.
+- `HarfordReputation.DeleteGroup(groupName)` → borra el encabezado persistente; si contiene facciones, no las borra, las mueve al grupo base `Reputaciones Harford` sin subgrupo. No permite borrar el grupo base.
+- `HarfordReputation.DeleteSubgroup(groupName, subgroupName)` → borra la seccion persistente; si contiene facciones, no las borra, les limpia `subgroup` para dejarlas en la raiz del grupo.
+- `HarfordReputation.SwapFactionOrder(factionIdA, factionIdB)` → intercambia `sortOrder` entre dos facciones (uso: botones ↑/↓ en panel admin).
+- `HarfordReputation.SetFactionSortOrder(factionId, order)` → asigna sortOrder directamente.
+- `HarfordReputation.MoveFactionOrder(factionId, direction)` → normaliza sortOrder y mueve una faccion una posicion en el orden global.
+- `HarfordReputation.MoveGroupOrder(groupName, direction)` → normaliza `sortOrder` y mueve un grupo una posicion arriba/abajo en el panel admin.
+- `HarfordReputation.MoveSubgroupOrder(groupName, subgroupName, direction)` → normaliza `subgroupOrder` y mueve una seccion una posicion dentro de su grupo.
+- `HarfordReputation.GetGroups()` debe respetar `group.sortOrder` y `group.subgroupOrder`; no debe devolver el subgrupo vacio como una seccion real.
+- `HarfordReputation.ResolveIconTexture(value)` -> los iconos de reputacion se guardan siempre como nombre corto (`INV_...`, `Ability_...`, `ability_xxx`), sin ruta. Para renderizar, Harford hardcodea `Interface\\Icons\\` + nombre. Si recibe datos antiguos con `Interface\\Icons\\...`, `NormalizeIconName` los limpia antes de guardar/mostrar.
+- No hay facciones por defecto hardcodeadas en el core actual: se crean y gestionan desde `/harfordadmin rep`.
+- `HarfordReputationStore` guardado en SavedVariables; estructura: `{factions={}, players={}, guilds={}, npcLinks={}, logs={}, groups={}, ui={}}`. Cada faccion puede tener `sortOrder` (number, default 0). `groups` guarda encabezados/secciones persistentes aunque esten vacios; cada grupo puede tener `sortOrder` y `subgroupOrder={ [subgroupName]=number }`.
+
+Contrato `HarfordReputationAdmin` (solo HarfordAdmin):
+
+- Panel GM flotante para gestionar facciones: crear, editar, reordenar, renombrar grupos.
+- `HarfordReputationAdmin.Toggle()` → abre/cierra; comprueba `CanEdit()` antes de mostrar.
+- `HarfordReputationAdmin.Open()` / `Close()` → acceso programatico.
+- `HarfordReputationAdmin.Refresh()` → recarga lista + refresca HarfordReputationUI si esta abierto.
+- Acceso: `/harfordadmin rep` | `/harfordadmin reputacion` | boton `Admin` en panel principal (visible solo en modo DM + HarfordAdmin cargado).
+- Lista izquierda (322px): groups → subgroups → facciones. Headers tienen botones subir/bajar, Renombrar (inline popup) y borrar con Shift+click; click en un grupo/subgrupo selecciona el destino para guardar o mover facciones. Filas de faccion tienen botones ASCII/textura para subir/bajar (swapOrder), visibilidad, editar y borrar con Shift+click obligatorio para evitar borrados accidentales.
+- Form derecha (326px): campos Nombre, Icono (con preview en vivo), Color AARRGGBB (con swatch en vivo), Descripcion multilinea alta y Notas GM. `Descripcion` debe ser un textarea compuesto con marco interior propio, `ScrollFrame` interno y altura reservada, no un `InputBoxTemplate` alto directo, para que el texto quede recortado dentro del marco y no desborde sobre Notas/Botones. Botones: Guardar, Mover aqui y Cancelar. No poner boton `Nueva` dentro del form; para nueva faccion se usa el boton superior `Nueva faccion`.
+- No editar `group` ni `subgroup` como texto libre en el formulario de faccion. La asignacion a grupo/subgrupo debe resolverse mas adelante con estructura/orden del panel admin, no escribiendo nombres a mano.
+- Botones `Grupo` y `Seccion` crean encabezados/secciones desde prompt. `Seccion` se crea dentro del grupo seleccionado. El formulario muestra `Destino: grupo / seccion`; guardar una faccion nueva o editada la asigna a ese destino.
+- La lista admin se desplaza con rueda de raton sobre el area de facciones; no usar botones visibles `^/v` para scroll porque ensucian el encabezado.
+- Los botones de subir/bajar de grupos y secciones normalizan su orden persistente (`sortOrder` / `subgroupOrder`) antes de intercambiar con el elemento adyacente. Las secciones solo se mueven dentro de su grupo.
+- Los botones de subir/bajar de facciones en el admin primero normalizan el `sortOrder` segun el orden visible y luego intercambian con la faccion adyacente visible. Esto evita el bug de "no se mueve" cuando varias facciones tienen `sortOrder = 0`.
+- Subir/bajar solo debe moverse dentro del mismo grupo/subgrupo visible. Para mover entre secciones, editar una faccion, seleccionar un grupo/subgrupo destino y pulsar `Mover aqui` o guardar con ese destino.
+- En `HarfordReputationAdmin.BuildFlatList()`, las facciones con `subgroup == ""` son raiz directa del grupo y se emiten justo debajo del header de grupo, antes de las secciones. No volver a meter el subgrupo vacio dentro de `subOrder`: visualmente hace que parezcan colgar de la ultima seccion.
+- No mostrar `Orden` como campo editable: el orden se controla con subir/bajar. No mostrar checkbox `Oculta` en el form: la visibilidad se controla desde el boton de fila `Oc/Ver` y solo afecta a clientes que no estan en modo DM.
+- Icono y color en el form admin tienen selector auxiliar:
+  - Icono: boton `...` abre `HarfordRepIconPicker`, un buscador flotante estilo TRP3 con parrilla 8x6, scroll por rueda/slider, filtro de texto, contador y tooltip por icono. Si TRP3/`LibRPMedia-1.0` esta cargado, se puebla con `LibRPMedia:FindIcons(..., { method = "substring" })` / `TRP3_API.utils.resources.getIconList`; si no, cae a iconos curados + iconos ya usados por facciones. El campo de texto debe contener solo el nombre del icono, no `Interface\\Icons\\`.
+  - El selector de iconos debe ser un popup completo centrado (`FULLSCREEN_DIALOG`) y no anclarse al formulario: evita que clipee con el panel admin. Su fondo debe quedar dentro del borde visual, no `SetAllPoints` hasta el borde exterior.
+  - Rendimiento del selector de iconos: filtrar/consultar `LibRPMedia` solo cuando cambia el texto del filtro o se abre el selector. El scroll debe usar la lista cacheada y repintar solo los botones visibles; no recalcular ni ordenar miles de iconos en cada `OnMouseWheel`/slider.
+  - En el selector de iconos, guardar iconos TRP3 como nombre bare (`ability_xxx`) y resolverlos visualmente siempre con `Interface\\Icons\\<nombre>`. Las rutas completas (`Interface\\Icons\\...`) solo se aceptan como input legado y se normalizan al nombre corto.
+  - Color: boton `...` abre `ColorPickerFrame` nativo y escribe color AARRGGBB en el campo. El swatch se actualiza en vivo.
+- Una faccion nueva o movida recibe `sortOrder` al final del destino seleccionado (`max sortOrder del destino + 10`). El panel principal no debe ordenar facciones alfabeticamente dentro de una seccion; respeta el orden de `HarfordReputation.GetFactions`.
+- `FormLoad(factionId)` no debe cambiar el destino seleccionado. El destino es una seleccion independiente del usuario: se cambia haciendo click en un grupo/subgrupo, no al pulsar `Edit` en una faccion. Esto permite seleccionar destino → editar faccion → `Mover aqui`.
+- `renamePopup`: frame flotante DIALOG-level para renombrar un grupo/subgrupo desde la lista.
+- Boton `X`: requiere `IsShiftKeyDown()` para confirmar; sin shift solo muestra aviso en chat.
+- Evitar glifos Unicode en botones del panel admin: en Epsilon pueden no cargar segun fuente/locale. Usar textos ASCII cortos como `Ver`, `Oc`, `Edit`, `X`, `^`, `v`, o iconos de textura Blizzard si se sustituyen mas adelante.
 
 Contrato `HarfordReputationUI`:
 
@@ -137,28 +194,100 @@ Contrato `HarfordReputationUI`:
 - El icono de acceso en la ficha (`HarfordDnD.lua`) es un Button 22x22 hijo de `F` anclado a `RIGHT, close, LEFT, -2, -6`. Textura `INV_Shirt_GuildTabard_01`, highlight `ButtonHilight-Square` en blend ADD. Usa guard `HarfordReputationUI and HarfordReputationUI.Toggle`. NO hay un tab "Reputacion" en la barra de tabs; esos botones son exclusivos para tiradas (Caracteristicas, Ataque, Habilidades).
 - Arquitectura de tabs en HarfordDnD: 3 tabs de 124px de ancho (`TAB_W=124`, `TAB_GAP=6`, `TOTAL_TABS_W=384`) centrados en `SEC_W=392`, dejando 4px de margen a cada lado. Antes eran 4 tabs de 88px; no volver a esa configuracion.
 - Referencia visual correcta: `Interface/FrameXML/ReputationFrame.xml` y `Interface/FrameXML/ReputationFrame.lua` de Shadowlands. No usar el `ReputationFrame` moderno de Retail actual.
-- Layout del panel: frame principal custom con cabeceras `Faccion` y `Prestigio`, lista SL con `ScrollBox` + `WowTrimScrollBar` cuando el cliente lo expone, y fallback manual de filas/scroll si Epsilon no tiene `ScrollUtil`/`CreateScrollBoxListLinearView`.
+- Layout del panel: frame principal custom compacto (`PANEL_W=390`, `PANEL_H=460`) con cabeceras `Faccion` y `Prestigio`, lista SL con `ScrollBox` + `WowTrimScrollBar` cuando el cliente lo expone, y fallback manual de filas/scroll si Epsilon no tiene `ScrollUtil`/`CreateScrollBoxListLinearView`. `LIST_H=360` para mostrar una fila mas y reducir espacio inferior; mantener `LIST_W=336` para que la barra de prestigio siga alineada.
 - La lista se construye desde `BuildFlatList()`: facciones de `HarfordReputation.GetFactions(includeHidden)`, agrupadas por `faction.group` y `faction.subgroup`. El estado colapsado vive en `HarfordReputationStore.ui.collapsedHeaders`.
+- El panel principal debe respetar el orden de `HarfordReputation.GetGroups()` para grupos/secciones y el `sortOrder` de facciones. Las facciones con `subgroup == ""` se muestran como raiz directa del grupo, antes de las secciones, igual que en el panel admin.
 - Cada `elementData` debe tener `name`, `isHeader`, `isChild`, `isCollapsed`, `hasRep`, `value`, `min`, `max`, `standingID`, `standingText`; en filas de reputacion tambien `factionId`, `faction`, `rankColor`.
-- **Fila custom tipo `HarfordReputationBarTemplate`**: se crea por Lua con `CreateRow(parent)`, no depende de `ReputationBarTemplate` nativo. Sub-elementos: `Container`, `Name`, `ExpandOrCollapseButton`, `StatusBar ReputationBar`, `FactionStanding`, `SelectedHighlight`, `Highlight`, `Background`, `ReputationBarBackground`, `ReputationStar`.
-- Texturas usadas: `Interface\\PaperDollInfoFrame\\UI-Character-ReputationBar`, `Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar`, `Interface\\PaperDollInfoFrame\\UI-Character-ReputationBar-Highlight`, `Interface\\Common\\ReputationStar`, `Interface\\Buttons\\UI-PlusButton-Up`, `Interface\\Buttons\\UI-MinusButton-UP`, `Interface\\Buttons\\UI-PlusButton-Hilight`.
-- `InitializeRow(row, elementData)`: `Name:SetText(name)`; headers muestran `+` o `-` y ocultan barra; reputaciones hacen `ReputationBar:SetMinMaxValues(0, max-min)`, `SetValue(value-min)` y `SetStatusBarColor(FACTION_BAR_COLORS[standingID])` con fallback a `rankColor`.
+- **Fila custom tipo `HarfordReputationBarTemplate`**: creada por Lua con `CreateRow(parent)`. Estructura:
+  ```
+  Button (row, LIST_W × ROW_H)
+  ├── BACKGROUND  solidBg              (tinte custom para headers)
+  ├── ARTWORK     rowBg                (área nombre, LEFT→row LEFT indent | RIGHT→bar LEFT)
+  ├── OVERLAY     Name (FontString)
+  ├── Button      ExpandOrCollapseButton
+  ├── StatusBar   bar                  (RIGHT→row RIGHT 0,0; BAR_W×BAR_H)
+  │   ├── BACKGROUND  fill (Skills-Bar via SetStatusBarTexture)
+  │   ├── OVERLAY -1  leftTex          (LEFT→bar LEFT; 62×21)
+  │   ├── OVERLAY -1  rightTex         (RIGHT→bar RIGHT 0,0; 42×21) ← ancla al RIGHT del bar
+  │   ├── ARTWORK     FactionStanding  (LEFT bar LEFT 2 | RIGHT bar RIGHT -2; ancho completo)
+  │   └── Frame       ReputationStar   (siempre oculto — no flecha/estrella en ningún rango)
+  └── Frame       hlFrame              (SetAllPoints(row); level=bar+1; EnableMouse=false)
+      ├── OVERLAY 0   Highlight1       (cuerpo; texCoord 0→0.9609375, 0→0.4375; blend ADD)
+      └── OVERLAY 0   Highlight2       (cap derecho; texCoord 0.9609375→1, 0→0.4375; 24×(ROW_H+8); TOPRIGHT→hlFrame TOPRIGHT 0,4; blend ADD)
+  ```
+- **Por qué hlFrame**: texturas en StatusBar (101px) quedan clipeadas a 101px aunque se anclen al row. Epsilon no extiende texturas mas alla del frame padre. `hlFrame` cubre el row entero y evita ese clipping.
+- **Highlight1/Highlight2 son objetos SEPARADOS** — no asignar la misma referencia. `OnEnter` y `OnLeave` deben llamar `Show`/`SetShown` en AMBOS explicitamente. `InitializeRow` para headers debe ocultar AMBOS explicitamente (ya no los silencia `bar:Hide()` porque estan en hlFrame, no en bar).
+- **Headers sin highlight**: `OnEnter`/`OnLeave` comprueban `not data.isHeader` antes de tocar el highlight. `InitializeRow` header: `row.Highlight1:Hide()` + `row.Highlight2:Hide()`.
+- **leftTex/rightTex en OVERLAY -1**: el fill del StatusBar renderiza en Epsilon encima de ARTWORK, cubriendo los caps decorativos. Moviendolos a `OVERLAY -1` quedan por encima del fill y por debajo de los highlights (OVERLAY 0).
+- **rightTex ancla a `RIGHT→bar RIGHT 0,0`** — no `LEFT→leftTex RIGHT`. En nuestra barra de 101px, leftTex cubre 62px (61%); anclando rightTex a leftTex.RIGHT quedaría casi fuera del área visible. La ancla al RIGHT del bar garantiza que el cap cierra el borde derecho de la barra.
+- Texturas usadas: `UI-Character-ReputationBar` (caps/rowBg), `UI-Character-Skills-Bar` (fill), `UI-Character-ReputationBar-Highlight` (highlights), `UI-PlusButton-Up/MinusButton-UP/PlusButton-Hilight` (expand).
+- `InitializeRow(row, elementData)`:
+  - **Headers**: `ExpandOrCollapseButton` visible con `+`/`-`, `Name` dorado 12px, `ReputationBar:Hide()`, `rowBg:Hide()`, `FactionStanding:Hide()`, `ReputationStar:Hide()`, `Highlight1:Hide()`, `Highlight2:Hide()`.
+  - **Facciones**: `Name` coloreado con `faction.color` (fallback blanco) en `FRIZQT__` 11; `FactionStanding` muestra `standingText`; hover lo sobreescribe con `cur / rng` formateado con separador de miles. `ReputationStar` siempre oculto.
+  - **Barra Exaltado** (`standingID >= 8`): `SetMinMaxValues(0, 1000)` + `SetValue(1000)` — siempre llena. En hover muestra `"1.000 / 1.000"`. No usar el valor real de puntos para la barra en Exaltado.
+  - **Resto de rangos**: `SetMinMaxValues(0, max-min)`, `SetValue(value-min)`. Hover: `FormatNum(value-min) .. " / " .. FormatNum(max-min+1)`.
+  - `SetStatusBarColor(FACTION_BAR_COLORS[standingID])` con fallback a `ColorToRGB(rankColor)`.
+  - Highlight: `Highlight1` TOPLEFT(row TOPLEFT indent-2, 4) → BOTTOMRIGHT(row BOTTOMRIGHT -24, -4). `Highlight2` posicion fija (set en CreateRow). Ambos `SetShown(isSelected)`.
+- **`FormatNum(n)`**: separa miles con punto (`1.000`, `21.000`). Usado en hover text y cualquier numero de rep en la UI.
 - Sangria confirmada: header raiz `x=2`, subheader `x=21`, reputacion hija `x=44`, reputacion raiz `x=25`.
-- Click en header alterna `collapsedHeaders[key]` y regenera DataProvider/lista plana. Click en reputacion asigna `selectedFactionId` y refresca detalle.
-- Panel de detalle lateral a la derecha del panel principal: descripcion, standing, progreso y estado visible/oculto. Mantiene botones admin basicos (`+100`, `-100`, reset, NPC, ocultar, borrar); el editor avanzado de facciones queda pendiente de migrar al panel custom SL.
+- Click en header alterna `collapsedHeaders[key]` y regenera DataProvider/lista plana. Click en reputacion asigna `selectedFactionId` y refresca detalle. El boton `ExpandOrCollapseButton` (hijo del row Button) tiene su propio `OnClick` delegado al mismo handler — sin esto Epsilon no propaga el click al row padre.
+- **Panel de detalle lateral** (derecha del panel principal): replica compacta de `ReputationDetailFrame` de Shadowlands segun `FrameDump.lua`: tamano aproximado `212x203`, anclado fuera del panel principal con `TOPLEFT` al `TOPRIGHT` del panel de reputacion (`x=1`, `y=-18`) para quedar pegado al borde derecho y algo mas alto sin solaparse con el marco, marco `DialogBorderTemplate`, boton cerrar `UIPanelCloseButton`, icono de faccion arriba a la izquierda, nombre con fuente nativa (`FRIZQT__` 12) coloreado con `faction.color` y descripcion debajo con fuente `FRIZQT__` 11. La descripcion usa altura `132` cuando no hay acciones DM visibles para aprovechar el cuerpo hasta abajo; si el boton DM `Ajustar...` esta visible baja a `108` para no solaparse. Composicion de fondos: base negra habitual ocupando todo el interior del frame, cabecera oscura hasta `y=-52` y textura `Interface\\AchievementFrame\\UI-Achievement-Parchment-Horizontal` (la misma que usan secciones internas como Ataque) desde `y=-52` hasta abajo, siempre en capa `BACKGROUND` para no tapar el marco; encima del pergamino hay un oscurecedor negro `alpha=0.22` para conservar la textura pero bajar su brillo. Entre cabecera y descripcion hay un separador fino propio de dos lineas (`BLACK` + dorado tenue), no la textura nativa `131074`: esa textura corresponde al divisor inferior del `ReputationDetailFrame` antes de los checkboxes nativos y no debe reutilizarse en cabecera. No usar el fileID nativo `136565` como fondo expandido: en Epsilon deja zonas transparentes al escalarlo. No mostrar bloque inferior de booleanos (`Relacion`, `Progreso`, `Visible`) ni su separador. Accion DM compacta: un unico boton `Ajustar...`.
+- **`adjustPrompt`**: frame 200×85, hijo de `panel`, aparece encima del detalle (`BOTTOM→detail TOP 0,6`). Contiene label, EditBox (`InputBoxTemplate`), botones OK y Cancelar. Acepta numero positivo o negativo. Si el target actual es jugador, ajusta la reputacion del target; si no hay target jugador o el target es NPC, ajusta la reputacion propia. Escape/Cancelar cierra sin accion. Click en `Ajustar` mientras esta visible lo cierra (toggle).
+- **Frame level**: `DIALOG` strata, level **100** — igual que `DND5E_PlayerFrame` en `HarfordDnD`. Sin llamadas a `Raise()`. Asi ninguno de los dos paneles pisa al otro permanentemente.
 - Solo el DM (`HarfordReputation.CanEdit()` / `.ph dm`) deberia poder editar reputaciones; si se reintroduce editor avanzado, conservar esta regla.
-- Columnas de rango coloreadas: Exaltado=dorado, Venerado=violeta, Honorable=azul, Amistoso=verde, Neutral=gris, Adverso=naranja, Hostil=naranja oscuro, Odiado=rojo.
+- Columnas de rango coloreadas: Exaltado=dorado, Reverenciado=violeta, Honorable=azul, Amistoso=verde, Neutral=gris, Adverso=naranja, Hostil=naranja oscuro, Odiado=rojo.
+- Texturas de barra CONFIRMADAS en Harford (inspeccionado en cliente con frame debugger):
+  - Fill: `UI-Character-Skills-Bar` via `SetStatusBarTexture`. Confirmado correcto.
+  - `UI-Character-Skills-BarBorder` — **no usar**: no existe como fichero standalone en Epsilon.
+  - Color del fill: `FACTION_BAR_COLORS[standingID]` (tabla WoW global indexada 1-8). Fallback a `ColorToRGB(rankColor)`.
+  - **leftTex/rightTex en capa OVERLAY -1 del StatusBar**: en Epsilon el fill del StatusBar renderiza en ARTWORK o superior, cubriendo los caps si estan en ARTWORK. Moverlos a `OVERLAY -1` los pone por encima del fill y por debajo de los highlights (`OVERLAY 0`). **No volver a ARTWORK para los caps**.
+  - LeftTexture: `SetTexCoord(0.7578125, 1, 0, 0.328125)`, size `62 × (BAR_H+8)`, ancla `LEFT→bar LEFT 0,0`
+  - RightTexture: `SetTexCoord(0, 0.1640625, 0.34375, 0.671875)`, size `42 × (BAR_H+8)`, ancla **`RIGHT→bar RIGHT 0,0`** — NO a leftTex.RIGHT (en bar de 101px, leftTex cubre 62px; anclando rightTex a leftTex.RIGHT quedaría casi fuera del area visible)
+  - BAR_W confirmado: **101px**, BAR_H confirmado: **13px** (caps: BAR_H+8 = 21px alto)
+  - `ReputationBarBackground` (rowBg): ARTWORK en el Button. `LEFT→row LEFT indent` + `RIGHT→bar LEFT 0,0`. Textura `UI-Character-ReputationBar` texCoord `(0, 0.7578125, 0, 0.328125)`, altura 21px.
+  - `FactionStanding`: ARTWORK en StatusBar. Ancla `LEFT bar LEFT 2,0` + `RIGHT bar RIGHT -2,0` (ancho completo del bar). Font FRIZQT__ 10px. Texto normal = `standingText`; hover = `FormatNum(cur) / FormatNum(rng)` o `"1.000 / 1.000"` para Exaltado.
+  - `ReputationStar`: siempre `Hide()` — eliminado el `SetShown(standingID >= 8)`. No mostrar flecha ni estrella en ningun rango; Exaltado se comunica visualmente con la barra llena.
+  - **Highlights — arquitectura hlFrame** (solucion definitiva al clipping en Epsilon):
+    - Texturas en StatusBar (101px) quedan clipeadas a 101px aunque se anclen cross-tree al Button. Epsilon no extiende texturas mas alla del frame padre.
+    - Solucion: `hlFrame = CreateFrame("Frame", nil, row)` con `SetAllPoints(row)` y `SetFrameLevel(bar:GetFrameLevel() + 1)` y `EnableMouse(false)`. Las texturas en `hlFrame` cubren el row entero sin clipping.
+    - `Highlight1` (cuerpo): texCoord `(0, 0.9609375, 0, 0.4375)`, blend ADD, ARTWORK en hlFrame. Anclas en `InitializeRow`: `TOPLEFT(row TOPLEFT indent-2, 4)` + `BOTTOMRIGHT(row BOTTOMRIGHT -24, -4)`.
+    - `Highlight2` (cap derecho): texCoord `(0.9609375, 1, 0, 0.4375)`, blend ADD, SetSize `(24, ROW_H+8)`, `TOPRIGHT→hlFrame TOPRIGHT 0,4`. Ancla fija en `CreateRow` — no cambia con el indent.
+    - Highlight1 y Highlight2 son **objetos separados**. `OnEnter` y `OnLeave` deben llamar `Show`/`SetShown` en ambos explicitamente.
+    - Headers: `InitializeRow` oculta ambos con `Highlight1:Hide()` + `Highlight2:Hide()` (ya no basta con `bar:Hide()` porque hlFrame es independiente del bar).
+    - `OnEnter`/`OnLeave` comprueban `not data.isHeader` antes de tocar los highlights.
+  - **NO usar frame `container` intermediario**: OVERLAY en un container queda detras del StatusBar hijo. No reintentar.
+  - **NO usar HIGHLIGHT del Button**: capa HIGHLIGHT queda detras de frames hijos (StatusBar incluido).
+  - **NO poner highlights como OVERLAY en el StatusBar**: se clipean al ancho del bar (101px) aunque se anclen al Button. Usar hlFrame.
+- Firma real de `SetElementInitializer` en este cliente Epsilon: **3 argumentos** — `view:SetElementInitializer(frameType, nil, function(row, elementData) ... end)`. La forma de 2 argumentos deja `initializer` como nil y produce `attempt to call upvalue 'initializer' (a nil value)` en `ScrollBoxListView.lua:290`. No intentar la forma de 2 args aunque la documentación Blizzard la mencione.
 - Enfoques FALLADOS en HarfordReputationUI (no reintentar):
   - **Barra manual con `BackdropTemplate` + `SetBackdrop`**: el trough (`BackdropColor`) no renderiza correctamente en Epsilon; el StatusBar con valor 0 tampoco pinta nada, barra completamente invisible.
   - **`StatusBar` hijo de `BackdropTemplate` sin trough propio**: igual que el anterior. `SetStatusBarColor` funciona pero si el valor es 0 no hay fill visible ni borde visible.
   - **Depender de `ReputationBarTemplate` nativo**: descartado para este panel. En Epsilon/SL el template nativo arrastra posiciones/elementos del `ReputationFrame` original y obliga a perseguir caps/texturas por globals; el panel custom debe tener su propia fila.
   - **Usar el `ReputationFrame` moderno de Retail como referencia**: no corresponde al cliente objetivo. La referencia es Shadowlands.
+  - **`view:SetElementInitializer("Button", function...)` con 2 args**: produce `initializer = nil`. Siempre pasar 3 args con `nil` como segundo arg.
+  - **Highlights como OVERLAY en StatusBar (cross-anchored al row)**: Epsilon clipea texturas al frame padre aunque el ancla sea cross-tree. El highlight quedaba cortado a 101px (ancho del bar). Solucion: hlFrame hijo del row con `SetAllPoints(row)`.
+  - **Highlight1 = Highlight2 (misma referencia)**: si ambos apuntan al mismo objeto, `Show`/`Hide` funcionan pero se pierde el cap independiente. Deben ser texturas separadas para que el cuerpo y el cap se anclen de forma distinta.
+  - **Anchor cuerpo→cap entre texturas** (`hl1:SetPoint("BOTTOMRIGHT", hlCap, "BOTTOMLEFT")`): WoW puede no resolver anchors cross-texture en algunos contextos de Epsilon. Usar offset directo sobre el row (`BOTTOMRIGHT row BOTTOMRIGHT -24,-4`) en su lugar.
+  - **caps leftTex/rightTex en ARTWORK**: el fill del StatusBar en Epsilon renderiza por encima de ARTWORK, cubriendo los caps. Usar `OVERLAY -1`.
+  - **rightTex anclado a leftTex.RIGHT**: en bar de 101px, leftTex cubre 62px (61%); rightTex quedaría fuera del area visible. Anclar siempre `RIGHT→bar RIGHT 0,0`.
+  - **`ReputationStar:SetShown(standingID >= 8)`**: aparecia una textura tipo flecha en Exaltado. Siempre `Hide()`; la barra llena comunica visualmente el Exaltado.
 
 Contrato `HarfordReputationSync`:
 
 - Prefix `HARFORDREP`, registrado en PLAYER_LOGIN via `HarfordSync.RegisterPrefix`.
-- Opcodes: `FAC` (datos de faccion), `REP` (puntos jugador), `NPC` (link NPC→faccion), `LOG` (entrada de log), `DEL` (borrar faccion).
-- Solo el DM emite; todos los clientes reciben y aplican con `fromSync=true` para evitar rebroadcast.
+- Opcodes legacy: `FAC` (datos de faccion), `REP` (puntos jugador), `NPC` (link NPC→faccion), `LOG` (entrada de log), `DEL` (borrar faccion). Quedan como referencia historica/API interna, pero el receptor actual no debe aplicar mensajes legacy entrantes.
+- Snapshots completos/troceados:
+  - `HarfordReputationSync.BroadcastSnapshotStructure()` serializa solo estructura: facciones, grupos/secciones y links NPC, sin puntos. Es el boton `Compartir estructura`.
+  - `HarfordReputationSync.BroadcastSnapshotAll()` serializa estructura completa + puntos de jugadores/gremios + `SELFREP` para todas las facciones. Es el boton `Compartir todo`.
+  - `HarfordReputationSync.BroadcastSnapshotFaction(factionId)` serializa solo la faccion seleccionada, su grupo/seccion, puntos de esa faccion y links NPC relacionados. Es el boton `Compartir seleccion`.
+  - Cada snapshot incluye tambien `SELFREP|factionId|points`: son los puntos actuales del jugador que comparte para esa faccion. Al recibirlo, cada cliente lo aplica a su propio `playerKey`, para que todos vean el mismo numero en su barra local despues de compartir.
+  - Transporte: `SNAPC|transferId|scope|index|total|chunk`, con `chunk` escapado y limite pequeno (`SNAPSHOT_CHUNK_BYTES`) para evitar desbordamiento de addon messages.
+  - El receptor reensambla por `sender:transferId`; al completar, deserializa y aplica.
+  - Scope `ALL`: sustituye `store.factions`, `store.groups`, `store.players`, `store.guilds` y `store.npcLinks` completos.
+  - Scope `STRUCTURE`: sustituye estructura (`store.factions`, `store.groups`, `store.npcLinks`) y respeta puntos locales de facciones que siguen existiendo. Debe inicializar a 0 las facciones nuevas para el jugador local y borrar puntos locales/gremio de facciones que ya no existan en la estructura recibida.
+  - Scope `FACTION`: sustituye solo esa faccion y limpia/reaplica sus puntos y links relacionados, preservando el resto del store local.
+- Solo el DM emite snapshots desde botones admin explicitos. Los cambios locales (`CreateFaction`, `UpdateFaction`, ajustes de puntos, links NPC, etc.) no se emiten automaticamente; primero modifican SavedVariables locales y refrescan UI. Para compartirlos con la raid/grupo hay que pulsar `Compartir todo` o `Compartir seleccion`.
+- Todos los clientes reciben y aplican snapshots con supresion interna de rebroadcast (`suppress`) para no reenviar el snapshot al grupo.
 
 Modulo `HarfordDebug`:
 

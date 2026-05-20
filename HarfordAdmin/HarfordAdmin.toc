@@ -7,4 +7,5 @@
 
 HarfordAdminNPC.lua
 HarfordAdminUnitMenu.lua
+HarfordReputationAdmin.lua
 HarfordAdmin.lua

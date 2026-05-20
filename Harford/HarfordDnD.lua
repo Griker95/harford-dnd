@@ -1198,7 +1198,7 @@ mainBorder:SetFrameLevel(F:GetFrameLevel() + 5)
 
 local title = F:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
 title:SetPoint("TOP", 0, -15)
-title:SetText("Harford DnD 5º – Ficha Jugador")
+title:SetText("Harford DnD 5ª - Ficha")
 
 local restButton = CreateFrame("Button", nil, F)
 restButton:SetSize(20, 20)

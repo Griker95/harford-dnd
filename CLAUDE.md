@@ -19,8 +19,8 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 | `Harford/HarfordUnitFrames.lua` | Overlays TRP3/DnD sobre frames nativos WoW | ~4300 líneas |
 | `Harford/HarfordDnD.lua` | Ficha D&D 5e — UI principal `/FichaHarford`. 3 tabs (Características/Ataque/Habilidades); icono tabardo en la esquina abre el panel de reputación | grande |
 | `Harford/HarfordTurns.lua` | Tracker visual de turnos de combate | grande |
-| `Harford/HarfordReputation.lua` | Core de reputaciones: facciones, jugadores, gremios, NPCs, rangos | mediano |
-| `Harford/HarfordReputationUI.lua` | Panel flotante `/harfordrep`. Filas via `ReputationBarTemplate`; caps gestionados con `_barLeftTex`/`_barRightTex` | mediano |
+| `Harford/HarfordReputation.lua` | Core de reputaciones: facciones, jugadores, gremios, NPCs, rangos. Sin DEFAULT_FACTIONS; todo en SavedVariables | mediano |
+| `Harford/HarfordReputationUI.lua` | Panel flotante `/harfordrep`. Filas custom: hlFrame para highlights (sin clipping), caps OVERLAY -1, Exaltado siempre lleno, `adjustPrompt` para ajuste libre | mediano |
 | `Harford/HarfordReputationSync.lua` | Sync de red, prefix `HARFORDREP` | pequeño |
 | `Harford/HarfordReputationTooltip.lua` | Hook GameTooltip para NPCs con facción vinculada | pequeño |
 | `Harford/HarfordTRP3.lua` | Lectura segura de perfiles TRP3 | mediano |
@@ -70,6 +70,11 @@ end, "Descripción breve del comando")
 -- RefreshTargetOfTargetBars / focusTot.refresh() son las fuentes de verdad
 -- Llamar desde AMBOS branches de RefreshFrame para unit=="target"/"focus"
 -- NUNCA llamar HideToTBarsOverlay() / focusTot.hide() directamente desde RefreshFrame
+
+-- Highlights en panel de reputación: usar hlFrame (Frame hijo del row, SetAllPoints)
+-- para evitar clipping de texturas al ancho del StatusBar (101px) en Epsilon.
+-- Highlight1 (cuerpo) y Highlight2 (cap) son objetos SEPARADOS — nunca misma ref.
+-- OnEnter/OnLeave muestran/ocultan ambos; InitializeRow de header oculta ambos explícitamente.
 
 -- Nameplates: event-driven. No ticker.
 -- Kui normal: overlay sobre kui.HealthBar. Kui name-only: overlay bajo kui.NameText.

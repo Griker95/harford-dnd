@@ -29,15 +29,26 @@ local panel
 local detail
 local editor
 local adjustPrompt
+local GetAdjustButtonText
 local selectedFactionId
 local searchText = ""
 local collapsedHeaders = {}
 local manualRows = {}
 local manualOffset = 1
 local detailUserClosed = false
+local shiftAdjustDown = false
+local lastTargetSnapshotKey
+local lastTargetSnapshotRequest = 0
 
 local function Print(message)
     DEFAULT_CHAT_FRAME:AddMessage("|cffffd000[HarfordRep]|r " .. tostring(message or ""))
+end
+
+local function IsAnyShiftDown()
+    if IsShiftKeyDown and IsShiftKeyDown() then return true end
+    if IsLeftShiftKeyDown and IsLeftShiftKeyDown() then return true end
+    if IsRightShiftKeyDown and IsRightShiftKeyDown() then return true end
+    return false
 end
 
 local function EnsureUiStore()
@@ -172,11 +183,78 @@ local function GetDisplayTitle()
 end
 
 local function GetDisplayedPoints(factionId)
-    local playerKey = GetPlayerKeyForDisplay()
+    local playerKey, isTarget = GetPlayerKeyForDisplay()
+    if isTarget and HarfordReputationSync and HarfordReputationSync.GetRemoteView then
+        local view = HarfordReputationSync.GetRemoteView(playerKey)
+        if view and view.points and view.points[factionId] ~= nil then
+            local points = tonumber(view.points[factionId]) or 0
+            return points, { points = points, visible = true, atWar = HarfordReputation and HarfordReputation.IsAtWarPoints and HarfordReputation.IsAtWarPoints(points) }
+        end
+        return 0, nil
+    end
     if HarfordReputation and playerKey then
         return HarfordReputation.GetPlayerPoints(playerKey, factionId)
     end
     return HarfordReputation and HarfordReputation.GetCurrentPlayerPoints(factionId) or 0
+end
+
+local function GetRemoteDisplayView()
+    local playerKey, isTarget = GetPlayerKeyForDisplay()
+    if not isTarget or not HarfordReputationSync or not HarfordReputationSync.GetRemoteView then return nil end
+    return HarfordReputationSync.GetRemoteView(playerKey), playerKey
+end
+
+local function GetDisplayGroups()
+    local view = GetRemoteDisplayView()
+    if view and type(view.groups) == "table" then
+        local out = {}
+        for groupName, groupData in pairs(view.groups) do
+            local name = tostring((type(groupData) == "table" and groupData.name) or groupName or "")
+            if name ~= "" then
+                local subgroups = {}
+                for _, sub in ipairs((type(groupData) == "table" and groupData.subgroups) or {}) do
+                    if tostring(sub or "") ~= "" then subgroups[#subgroups + 1] = tostring(sub) end
+                end
+                local orderMap = (type(groupData) == "table" and groupData.subgroupOrder) or {}
+                table.sort(subgroups, function(a, b)
+                    local oa = tonumber(orderMap[a]) or 0
+                    local ob = tonumber(orderMap[b]) or 0
+                    if oa ~= ob then return oa < ob end
+                    return tostring(a) < tostring(b)
+                end)
+                out[#out + 1] = { name = name, subgroups = subgroups, sortOrder = tonumber(groupData and groupData.sortOrder) or 0 }
+            end
+        end
+        table.sort(out, function(a, b)
+            local oa = tonumber(a.sortOrder) or 0
+            local ob = tonumber(b.sortOrder) or 0
+            if oa ~= ob then return oa < ob end
+            return tostring(a.name) < tostring(b.name)
+        end)
+        return out
+    end
+    return HarfordReputation and HarfordReputation.GetGroups and HarfordReputation.GetGroups() or {}
+end
+
+local function GetDisplayFactions(includeHidden)
+    local view = GetRemoteDisplayView()
+    if view and type(view.factions) == "table" then
+        local out = {}
+        for id, faction in pairs(view.factions) do
+            if includeHidden or not faction.hidden then
+                faction.id = id
+                out[#out + 1] = faction
+            end
+        end
+        table.sort(out, function(a, b)
+            local oa = tonumber(a.sortOrder) or 0
+            local ob = tonumber(b.sortOrder) or 0
+            if oa ~= ob then return oa < ob end
+            return tostring(a.name or "") < tostring(b.name or "")
+        end)
+        return out
+    end
+    return HarfordReputation and HarfordReputation.GetFactions and HarfordReputation.GetFactions(includeHidden) or {}
 end
 
 local function CanShowAdminActions()
@@ -184,8 +262,18 @@ local function CanShowAdminActions()
     return hasAdminAddon and HarfordReputation and HarfordReputation.CanEdit and HarfordReputation.CanEdit()
 end
 
+local function IsTargetNpc()
+    return UnitExists and UnitExists("target") and not (UnitIsPlayer and UnitIsPlayer("target"))
+end
+
 local function GetSelectedFaction()
-    if selectedFactionId and HarfordReputation then return HarfordReputation.GetFaction(selectedFactionId) end
+    if selectedFactionId then
+        local view = GetRemoteDisplayView()
+        if view and view.factions and view.factions[selectedFactionId] then
+            return view.factions[selectedFactionId]
+        end
+        if HarfordReputation then return HarfordReputation.GetFaction(selectedFactionId) end
+    end
     return nil
 end
 
@@ -232,8 +320,8 @@ local function BuildFlatList()
         return group.subgroups[subgroupName], subgroupName
     end
 
-    if HarfordReputation.GetGroups then
-        for groupIndex, groupData in ipairs(HarfordReputation.GetGroups() or {}) do
+    do
+        for groupIndex, groupData in ipairs(GetDisplayGroups() or {}) do
             local groupName = tostring(groupData.name or "")
             if groupName ~= "" then
                 groupSort[groupName] = groupIndex
@@ -250,7 +338,7 @@ local function BuildFlatList()
             end
         end
     end
-    for _, faction in ipairs(HarfordReputation.GetFactions(includeHidden) or {}) do
+    for _, faction in ipairs(GetDisplayFactions(includeHidden) or {}) do
         if FactionMatchesSearch(faction) then
             local group, groupName = EnsureGroup(faction.group or "", false)
             local bucket = EnsureSubgroup(group, faction.subgroup or "")
@@ -282,7 +370,7 @@ local function BuildFlatList()
         }
         if not collapsedHeaders[groupKey] then
             for _, faction in ipairs(group.root or {}) do
-                local points = GetDisplayedPoints(faction.id)
+                local points, repEntry = GetDisplayedPoints(faction.id)
                 local standingText, rankColor, rank = HarfordReputation.GetRank(points)
                 local minValue, maxValue = 0, 1
                 if rank then
@@ -306,6 +394,7 @@ local function BuildFlatList()
                     standingID = StandingIdFromRankName(standingText),
                     standingText = standingText,
                     rankColor = rankColor,
+                    atWar = (repEntry and repEntry.atWar == true) or (HarfordReputation.IsAtWarPoints and HarfordReputation.IsAtWarPoints(points)),
                 }
             end
             table.sort(group.subgroupOrder, function(a, b)
@@ -328,7 +417,7 @@ local function BuildFlatList()
                 }
                 if not collapsedHeaders[subgroupKey] then
                     for _, faction in ipairs(factions or {}) do
-                        local points = GetDisplayedPoints(faction.id)
+                        local points, repEntry = GetDisplayedPoints(faction.id)
                         local standingText, rankColor, rank = HarfordReputation.GetRank(points)
                         local minValue, maxValue = 0, 1
                         if rank then
@@ -352,6 +441,7 @@ local function BuildFlatList()
                             standingID = StandingIdFromRankName(standingText),
                             standingText = standingText,
                             rankColor = rankColor,
+                            atWar = (repEntry and repEntry.atWar == true) or (HarfordReputation.IsAtWarPoints and HarfordReputation.IsAtWarPoints(points)),
                         }
                     end
                 end
@@ -430,6 +520,22 @@ local function CreateRow(parent)
     rowBg:SetTexCoord(0, 0.7578125, 0, 0.328125)
     rowBg:SetHeight(BAR_H + 8)
     row.ReputationBarBackground = rowBg
+
+    local atWarRight = row:CreateTexture(nil, "OVERLAY", nil, -2)
+    atWarRight:SetTexture(TEX_REP_BAR)
+    atWarRight:SetTexCoord(0, 0.40234375, 0.734375, 1)
+    atWarRight:SetSize(BAR_W + 2, 17)
+    atWarRight:SetAlpha(0.2)
+    atWarRight:Hide()
+    row.AtWarHighlight2 = atWarRight
+
+    local atWarLeft = row:CreateTexture(nil, "OVERLAY", nil, -2)
+    atWarLeft:SetTexture(TEX_REP_BAR)
+    atWarLeft:SetTexCoord(0.25390625, 1, 0.375, 0.640625)
+    atWarLeft:SetHeight(17)
+    atWarLeft:SetAlpha(0.2)
+    atWarLeft:Hide()
+    row.AtWarHighlight1 = atWarLeft
 
     -- ── HIGHLIGHT en frame dedicado ──────────────────────────────────────────────
     -- hlFrame cubre el row entero → no hay clipping al StatusBar.
@@ -590,6 +696,8 @@ local function InitializeRow(row, elementData)
         row.ReputationBarBackground:Hide()
         row.FactionStanding:Hide()
         row.ReputationStar:Hide()
+        row.AtWarHighlight1:Hide()
+        row.AtWarHighlight2:Hide()
         row.Highlight1:Hide()   -- hl1/hl2 ahora en hlFrame (no en bar), hay que ocultarlos explícitamente
         row.Highlight2:Hide()
         -- Tinte de header (extensión custom, no nativo): BACKGROUND directo en el Button
@@ -620,6 +728,14 @@ local function InitializeRow(row, elementData)
     row.ReputationBarBackground:SetPoint("RIGHT", row.ReputationBar, "LEFT", 0, 0)
     row.ReputationBarBackground:Show()
 
+    row.AtWarHighlight2:ClearAllPoints()
+    row.AtWarHighlight2:SetPoint("TOPRIGHT", row, "TOPRIGHT", -1, -2)
+    row.AtWarHighlight2:SetSize(BAR_W + 2, 17)
+    row.AtWarHighlight1:ClearAllPoints()
+    row.AtWarHighlight1:SetPoint("TOPLEFT", row, "TOPLEFT", indent + 3, -2)
+    row.AtWarHighlight1:SetPoint("RIGHT", row.AtWarHighlight2, "LEFT", 0, 0)
+    row.AtWarHighlight1:SetHeight(17)
+
     -- Highlight cuerpo: desde (indent-2) hasta (row.RIGHT - 24), dejando los últimos 24px al cap.
     -- Anclar a row directamente (no a la textura hlCap) para evitar problemas de resolución
     -- de anchors cruzados entre texturas en Epsilon.
@@ -633,6 +749,8 @@ local function InitializeRow(row, elementData)
     row.ReputationBarLeftTexture:Show()
     row.ReputationBarRightTexture:Show()
     row.FactionStanding:Show()
+    row.AtWarHighlight1:SetShown(elementData.atWar == true)
+    row.AtWarHighlight2:SetShown(elementData.atWar == true)
 
     local minValue = tonumber(elementData.min) or 0
     local maxValue = tonumber(elementData.max) or minValue + 1
@@ -690,12 +808,7 @@ local function RefreshDetail()
     if detail.adjustBtn then
         detail.adjustBtn:SetShown(showAdmin)
         if showAdmin then
-            local hasTarget = UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target")
-            if hasTarget then
-                detail.adjustBtn:SetText("Ajustar: " .. (UnitName("target") or "target"))
-            else
-                detail.adjustBtn:SetText("Ajustar (propio)")
-            end
+            detail.adjustBtn:SetText(GetAdjustButtonText())
         end
     end
     if panel then
@@ -744,6 +857,15 @@ end
 
 local function RefreshRows()
     if not panel or not HarfordReputation then return end
+    local displayKey, isTargetDisplay = GetPlayerKeyForDisplay()
+    if isTargetDisplay and HarfordReputationSync and HarfordReputationSync.RequestPlayerSnapshot then
+        local now = GetTime and GetTime() or time()
+        if displayKey ~= lastTargetSnapshotKey or (now - lastTargetSnapshotRequest) > 8 then
+            lastTargetSnapshotKey = displayKey
+            lastTargetSnapshotRequest = now
+            HarfordReputationSync.RequestPlayerSnapshot(displayKey)
+        end
+    end
     local titleText = GetDisplayTitle()
     if panel.TitleText then panel.TitleText:SetText(titleText) end
     if panel.harfordTitle then panel.harfordTitle:SetText(titleText) end
@@ -786,9 +908,66 @@ end
 local function AdjustTargetSelected(delta)
     local faction = GetSelectedFaction()
     if not faction then return end
-    local ok, err = HarfordReputation.AdjustTarget(faction.id, delta)
+    local playerKey = GetPlayerKeyForDisplay()
+    local current = GetDisplayedPoints(faction.id)
+    local minPoints = HarfordReputation and HarfordReputation.MIN_POINTS or -42000
+    local maxPoints = HarfordReputation and HarfordReputation.MAX_POINTS or 42999
+    local newPoints = math.max(minPoints, math.min(maxPoints, (tonumber(current) or 0) + (tonumber(delta) or 0)))
+    local ok, err = HarfordReputation.SetTargetPoints(faction.id, newPoints)
     if not ok then Print(err) end
+    if ok and HarfordReputationSync and HarfordReputationSync.SetRemoteViewPoints then
+        HarfordReputationSync.SetRemoteViewPoints(playerKey, faction.id, newPoints)
+    end
     RefreshRows()
+end
+
+local function AdjustRaidSelected(delta)
+    local faction = GetSelectedFaction()
+    if not faction or not HarfordReputationSync or not HarfordReputationSync.BroadcastRepDelta then return end
+    delta = math.floor(tonumber(delta) or 0)
+    if delta == 0 then return end
+    AdjustOwnSelected(delta)
+    local ok = HarfordReputationSync.BroadcastRepDelta(faction.id, delta)
+    if ok then
+        Print("Ajuste enviado a raid/grupo: " .. tostring(delta) .. " con " .. tostring(faction.name or faction.id) .. ".")
+    else
+        Print("No hay canal de grupo/raid activo.")
+    end
+    RefreshRows()
+end
+
+local function AssignFactionToTargetNpc()
+    local faction = GetSelectedFaction()
+    if not faction then
+        Print("Selecciona una reputacion primero.")
+        return
+    end
+    if not IsTargetNpc() then
+        Print("Selecciona un NPC para asignar faccion.")
+        return
+    end
+
+    local epsilonFactionId = faction.epsilonFactionId
+    if HarfordReputation and HarfordReputation.NormalizeEpsilonFactionId then
+        epsilonFactionId = HarfordReputation.NormalizeEpsilonFactionId(epsilonFactionId)
+    else
+        epsilonFactionId = tostring(epsilonFactionId or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    end
+    if epsilonFactionId == "" then
+        Print("Esta reputacion no tiene Faction ID de Epsilon configurado.")
+        return
+    end
+    if not HarfordServerActions or not HarfordServerActions.SetPhaseNpcFaction then
+        Print("HarfordServerActions no esta disponible.")
+        return
+    end
+
+    local ok, err = HarfordServerActions.SetPhaseNpcFaction(epsilonFactionId, { addonName = "HarfordAdmin", forceEpsilon = true })
+    if ok then
+        Print("Asignando Faction ID " .. tostring(epsilonFactionId) .. " al NPC objetivo.")
+    else
+        Print(tostring(err or "No se pudo asignar la faccion al NPC."))
+    end
 end
 
 local function ResetSelected()
@@ -827,6 +1006,52 @@ local function OpenFactionEditor()
         HarfordReputationAdmin.Open()
     else
         Print("HarfordReputationAdmin no esta cargado (solo disponible en el addon HarfordAdmin).")
+    end
+end
+
+GetAdjustButtonText = function()
+    if IsTargetNpc() then
+        return "Asignar Faccion"
+    end
+    if shiftAdjustDown or IsAnyShiftDown() then
+        return "Ajustar raid"
+    end
+    local hasTarget = UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target")
+    if hasTarget and not (UnitIsUnit and UnitIsUnit("target", "player")) then
+        return "Ajustar: " .. (UnitName("target") or "target")
+    end
+    return "Ajustar propio"
+end
+
+local function GetAdjustMode()
+    if IsTargetNpc() then
+        return "npc"
+    end
+    if shiftAdjustDown or IsAnyShiftDown() then
+        return "raid"
+    end
+    local hasTarget = UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target")
+    if hasTarget and not (UnitIsUnit and UnitIsUnit("target", "player")) then
+        return "target"
+    end
+    return "self"
+end
+
+local function RefreshAdjustButtonText()
+    if detail and detail:IsShown() and detail.adjustBtn and detail.adjustBtn:IsShown() then
+        detail.adjustBtn:SetText(GetAdjustButtonText())
+    end
+end
+
+local function RunAdjust(delta)
+    delta = math.floor(tonumber(delta) or 0)
+    if delta == 0 then return end
+    if adjustPrompt and adjustPrompt.mode == "raid" then
+        AdjustRaidSelected(delta)
+    elseif adjustPrompt and adjustPrompt.mode == "target" then
+        AdjustTargetSelected(delta)
+    else
+        AdjustOwnSelected(delta)
     end
 end
 
@@ -891,6 +1116,11 @@ local function BuildManualList(parent)
 end
 
 local function OpenAdjustPrompt()
+    if GetAdjustMode() == "npc" then
+        AssignFactionToTargetNpc()
+        return
+    end
+
     if not adjustPrompt then
         adjustPrompt = CreateFrame("Frame", "HarfordRepAdjustPrompt", panel, "BackdropTemplate")
         adjustPrompt:SetSize(200, 85)
@@ -909,13 +1139,7 @@ local function OpenAdjustPrompt()
         eb:SetMaxLetters(8)
         eb:SetScript("OnEnterPressed", function(self)
             local val = tonumber(self:GetText())
-            if val and val ~= 0 then
-                if adjustPrompt.mode == "target" then
-                    AdjustTargetSelected(math.floor(val))
-                else
-                    AdjustOwnSelected(math.floor(val))
-                end
-            end
+            RunAdjust(val)
             adjustPrompt:Hide()
         end)
         eb:SetScript("OnEscapePressed", function() adjustPrompt:Hide() end)
@@ -925,13 +1149,7 @@ local function OpenAdjustPrompt()
             "BOTTOMLEFT", adjustPrompt, "BOTTOMLEFT", 16, 10,
             function()
                 local val = tonumber(adjustPrompt.editBox:GetText())
-                if val and val ~= 0 then
-                    if adjustPrompt.mode == "target" then
-                        AdjustTargetSelected(math.floor(val))
-                    else
-                        AdjustOwnSelected(math.floor(val))
-                    end
-                end
+                RunAdjust(val)
                 adjustPrompt:Hide()
             end)
         MakeButton(adjustPrompt, "Cancelar", 80, 20,
@@ -946,8 +1164,7 @@ local function OpenAdjustPrompt()
         return
     end
 
-    local hasTarget = UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target")
-    adjustPrompt.mode = hasTarget and "target" or "self"
+    adjustPrompt.mode = GetAdjustMode()
     adjustPrompt:ClearAllPoints()
     adjustPrompt:SetPoint("BOTTOM", detail, "TOP", 0, 6)
     adjustPrompt.editBox:SetText("")
@@ -1046,7 +1263,13 @@ local function CreateDetailPanel()
     detail.hidden = detail:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     detail.hidden:Hide()
 
-    detail.adjustBtn = MakeButton(detail, "Ajustar (propio)", 130, 20, "BOTTOMLEFT", detail, "BOTTOMLEFT", 14, 14, OpenAdjustPrompt)
+    detail.adjustBtn = MakeButton(detail, "Ajustar propio", 130, 20, "BOTTOMLEFT", detail, "BOTTOMLEFT", 14, 14, OpenAdjustPrompt)
+    detail.adjustBtn:SetScript("OnEnter", function(self)
+        self:SetText(GetAdjustButtonText())
+    end)
+    detail.adjustBtn:SetScript("OnMouseDown", function(self)
+        self:SetText(GetAdjustButtonText())
+    end)
     detail.adjustBtn:Hide()
     detail.adjust = nil
     detail.reset = nil
@@ -1106,6 +1329,16 @@ local function CreatePanel()
     panel.adminButton = MakeButton(panel, "Admin DM", 78, 20, "TOPLEFT", panel, "TOPLEFT", 18, -36, OpenFactionEditor)
     panel.adminButton:SetText("Admin DM")
     panel.adminButton:SetShown(false)  -- se muestra en RefreshRows si CanEdit()
+
+    panel.modifierWatcher = CreateFrame("Frame", nil, panel)
+    panel.modifierWatcher:RegisterEvent("MODIFIER_STATE_CHANGED")
+    panel.modifierWatcher:SetScript("OnEvent", function(_, _, key, state)
+        key = tostring(key or ""):upper()
+        if key:find("SHIFT", 1, true) then
+            shiftAdjustDown = IsAnyShiftDown() or state == 1 or state == "PRESSED"
+            RefreshAdjustButtonText()
+        end
+    end)
 
     -- Columna "Faccion": alineada con el inicio del contenido de las filas
     local factionHeader = panel:CreateFontString(nil, "OVERLAY")

@@ -59,6 +59,16 @@ local function Trim(value)
     return tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
 end
 
+function API.NormalizeEpsilonFactionId(value)
+    value = Trim(value)
+    if value == "" then return "" end
+    local numberValue = tonumber(value)
+    if not numberValue then return "" end
+    numberValue = math.floor(numberValue)
+    if numberValue <= 0 then return "" end
+    return tostring(numberValue)
+end
+
 local function NormalizeId(value)
     value = Trim(value):lower()
     value = value:gsub("[^%w_]+", "_")
@@ -230,6 +240,11 @@ function API.GetRank(points)
     return "Neutral", "ffe0e0e0", RANKS[4]
 end
 
+function API.IsAtWarPoints(points)
+    points = Clamp(points, API.MIN_POINTS, API.MAX_POINTS)
+    return points <= -3001
+end
+
 function API.GetRankProgress(points)
     points = Clamp(points, API.MIN_POINTS, API.MAX_POINTS)
     local _, _, rank = API.GetRank(points)
@@ -302,10 +317,10 @@ function API.CreateFaction(nameOrData, description, icon, color)
         description = tostring(data.description or ""),
         icon = API.NormalizeIconName(data.icon or API.TABARD_ICON),
         color = tostring(data.color or "ffe0e0e0"),
+        epsilonFactionId = API.NormalizeEpsilonFactionId(data.epsilonFactionId),
         group = group,
         subgroup = Trim(data.subgroup or ""),
         hidden = data.hidden == true,
-        gmNotes = tostring(data.gmNotes or ""),
         sortOrder = tonumber(data.sortOrder) or 0,
     }
     FireChanged("FACTION", id)
@@ -484,18 +499,14 @@ function API.DeleteGroup(groupName)
     local store = EnsureStore()
     groupName = Trim(groupName or "")
     if groupName == "" then return false, "Nombre invalido." end
-    local fallbackGroup = DEFAULT_GROUP
-    if groupName == fallbackGroup then return false, "No se puede borrar el grupo base." end
     for _, faction in pairs(store.factions or {}) do
         local g = Trim(faction.group or "")
         if g == "" then g = DEFAULT_GROUP end
         if g == groupName then
-            faction.group = fallbackGroup
-            faction.subgroup = ""
+            return false, "No se puede borrar un grupo con facciones dentro. Muevelas o borralas primero."
         end
     end
     store.groups[groupName] = nil
-    EnsureGroupRecord(store, fallbackGroup)
     FireChanged("GROUP")
     return true
 end
@@ -665,15 +676,6 @@ function API.SetFactionHidden(factionId, hidden)
     return true
 end
 
-function API.SetFactionNotes(factionId, notes)
-    if not API.CanEdit() then return false, "Solo DM." end
-    local faction = API.GetFaction(factionId)
-    if not faction then return false, "Reputacion no encontrada." end
-    faction.gmNotes = tostring(notes or "")
-    FireChanged("FACTION", factionId)
-    return true
-end
-
 function API.UpdateFaction(factionId, data)
     if not API.CanEdit() then return false, "Solo DM." end
     local faction = API.GetFaction(factionId)
@@ -689,11 +691,11 @@ function API.UpdateFaction(factionId, data)
     faction.description = tostring(data.description or "")
     faction.icon = API.NormalizeIconName(data.icon or API.TABARD_ICON)
     faction.color = tostring(data.color or "ffe0e0e0")
+    faction.epsilonFactionId = API.NormalizeEpsilonFactionId(data.epsilonFactionId)
     faction.group = Trim(data.group)
     if faction.group == "" then faction.group = DEFAULT_GROUP end
     faction.subgroup = Trim(data.subgroup)
     faction.hidden = data.hidden == true
-    faction.gmNotes = tostring(data.gmNotes or "")
     if data.sortOrder ~= nil then
         faction.sortOrder = tonumber(data.sortOrder) or 0
     end
@@ -787,6 +789,7 @@ function API.SetPlayerPoints(playerKey, factionId, points, opts)
     entry.reps[factionId] = entry.reps[factionId] or {}
     entry.reps[factionId].points = points
     entry.reps[factionId].visible = entry.reps[factionId].visible ~= false
+    entry.reps[factionId].atWar = API.IsAtWarPoints(points)
 
     if opts and opts.guildName and opts.guildName ~= "" then
         entry.guild = opts.guildName
@@ -795,6 +798,7 @@ function API.SetPlayerPoints(playerKey, factionId, points, opts)
             guild.reps[factionId] = guild.reps[factionId] or {}
             guild.reps[factionId].points = points
             guild.reps[factionId].visible = true
+            guild.reps[factionId].atWar = API.IsAtWarPoints(points)
         end
     end
 

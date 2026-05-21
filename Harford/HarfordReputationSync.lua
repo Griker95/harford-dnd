@@ -6,6 +6,8 @@ local SNAPSHOT_CHUNK_BYTES = 190
 
 local suppress = false
 local snapshotBuffers = {}
+local remoteSnapshotBuffers = {}
+local remoteViews = {}
 
 local function Escape(value)
     value = tostring(value or "")
@@ -51,6 +53,13 @@ local function GetLocalPlayerKey()
     return (GetUnitName and GetUnitName("player", true)) or (UnitName and UnitName("player")) or "player"
 end
 
+local function IsAtWarPoints(points)
+    if HarfordReputation and HarfordReputation.IsAtWarPoints then
+        return HarfordReputation.IsAtWarPoints(points)
+    end
+    return (tonumber(points) or 0) <= -3001
+end
+
 local function SerializeFaction(faction)
     if type(faction) ~= "table" then return nil end
     return table.concat({
@@ -61,15 +70,15 @@ local function SerializeFaction(faction)
         Escape(faction.icon),
         Escape(faction.color),
         faction.hidden and "1" or "0",
-        Escape(faction.gmNotes),
         Escape(faction.group),
         Escape(faction.subgroup),
         tostring(tonumber(faction.sortOrder) or 0),
+        Escape(faction.epsilonFactionId),
     }, "|")
 end
 
 local function DeserializeFaction(message)
-    local op, id, name, description, icon, color, hidden, gmNotes, group, subgroup, sortOrder = strsplit("|", message or "")
+    local op, id, name, description, icon, color, hidden, group, subgroup, sortOrder, epsilonFactionId = strsplit("|", message or "")
     if op ~= "FAC" or not id or id == "" then return nil end
     return {
         id = Unescape(id),
@@ -78,10 +87,10 @@ local function DeserializeFaction(message)
         icon = Unescape(icon),
         color = Unescape(color),
         hidden = hidden == "1",
-        gmNotes = Unescape(gmNotes),
         group = Unescape(group),
         subgroup = Unescape(subgroup),
         sortOrder = tonumber(sortOrder) or 0,
+        epsilonFactionId = Unescape(epsilonFactionId),
     }
 end
 
@@ -122,6 +131,14 @@ function API.BroadcastRepPoints(playerKey, factionId, points)
     points    = tonumber(points) or 0
     if playerKey == "" or factionId == "" then return false end
     return Send(table.concat({ "REP", Escape(playerKey), Escape(factionId), tostring(points) }, "|"))
+end
+
+function API.BroadcastRepDelta(factionId, delta)
+    if suppress then return false end
+    factionId = tostring(factionId or "")
+    delta = tonumber(delta) or 0
+    if factionId == "" or delta == 0 then return false end
+    return Send(table.concat({ "RDELTA", Escape(factionId), tostring(delta) }, "|"))
 end
 
 function API.BroadcastAll()
@@ -165,9 +182,22 @@ local function SerializeSnapshot(scope, selectedFactionId)
         end
         if includeGroup then
             local resolvedName = (groupData and groupData.name) or groupName
-            lines[#lines + 1] = table.concat({ "GRP", Escape(resolvedName) }, "|")
+            lines[#lines + 1] = table.concat({
+                "GRP",
+                Escape(resolvedName),
+                tostring(tonumber(groupData and groupData.sortOrder) or 0),
+            }, "|")
             for _, sub in ipairs((groupData and groupData.subgroups) or {}) do
-                lines[#lines + 1] = table.concat({ "SUB", Escape(resolvedName), Escape(sub) }, "|")
+                local subOrder = 0
+                if type(groupData and groupData.subgroupOrder) == "table" then
+                    subOrder = tonumber(groupData.subgroupOrder[sub]) or 0
+                end
+                lines[#lines + 1] = table.concat({
+                    "SUB",
+                    Escape(resolvedName),
+                    Escape(sub),
+                    tostring(subOrder),
+                }, "|")
             end
         end
     end
@@ -220,8 +250,8 @@ local function RefreshReputationViews()
     if HarfordReputationAdmin and HarfordReputationAdmin.Refresh then HarfordReputationAdmin.Refresh() end
 end
 
-local function ApplySnapshot(raw)
-    if not HarfordReputation or type(raw) ~= "string" or raw == "" then return false end
+local function ParseSnapshot(raw)
+    if type(raw) ~= "string" or raw == "" then return nil end
     local parsed = { scope = "ALL", selectedFactionId = "", groups = {}, factions = {}, players = {}, guilds = {}, npcLinks = {}, selfReps = {} }
 
     for line in string.gmatch(raw, "([^\n]+)") do
@@ -231,15 +261,24 @@ local function ApplySnapshot(raw)
             parsed.scope = Unescape(scope)
             parsed.selectedFactionId = Unescape(factionId)
         elseif opcode == "GRP" then
-            local _, groupName = strsplit("|", line)
+            local _, groupName, sortOrder = strsplit("|", line)
             groupName = Unescape(groupName)
-            if groupName ~= "" then parsed.groups[groupName] = parsed.groups[groupName] or { name = groupName, subgroups = {} } end
+            if groupName ~= "" then
+                parsed.groups[groupName] = parsed.groups[groupName] or { name = groupName, subgroups = {}, subgroupOrder = {} }
+                parsed.groups[groupName].name = groupName
+                parsed.groups[groupName].sortOrder = tonumber(sortOrder) or 0
+                parsed.groups[groupName].subgroups = parsed.groups[groupName].subgroups or {}
+                parsed.groups[groupName].subgroupOrder = parsed.groups[groupName].subgroupOrder or {}
+            end
         elseif opcode == "SUB" then
-            local _, groupName, subgroupName = strsplit("|", line)
+            local _, groupName, subgroupName, sortOrder = strsplit("|", line)
             groupName, subgroupName = Unescape(groupName), Unescape(subgroupName)
             if groupName ~= "" and subgroupName ~= "" then
-                parsed.groups[groupName] = parsed.groups[groupName] or { name = groupName, subgroups = {} }
+                parsed.groups[groupName] = parsed.groups[groupName] or { name = groupName, subgroups = {}, subgroupOrder = {} }
+                parsed.groups[groupName].subgroups = parsed.groups[groupName].subgroups or {}
+                parsed.groups[groupName].subgroupOrder = parsed.groups[groupName].subgroupOrder or {}
                 parsed.groups[groupName].subgroups[#parsed.groups[groupName].subgroups + 1] = subgroupName
+                parsed.groups[groupName].subgroupOrder[subgroupName] = tonumber(sortOrder) or (#parsed.groups[groupName].subgroups * 10)
             end
         elseif opcode == "FAC" then
             local faction = DeserializeFaction(line)
@@ -250,7 +289,8 @@ local function ApplySnapshot(raw)
             if playerKey ~= "" and factionId ~= "" then
                 parsed.players[playerKey] = parsed.players[playerKey] or { reps = {} }
                 parsed.players[playerKey].guild = Unescape(guildName)
-                parsed.players[playerKey].reps[factionId] = { points = tonumber(points) or 0, visible = true }
+                local repPoints = tonumber(points) or 0
+                parsed.players[playerKey].reps[factionId] = { points = repPoints, visible = true, atWar = IsAtWarPoints(repPoints) }
             end
         elseif opcode == "SELFREP" then
             local _, factionId, points = strsplit("|", line)
@@ -263,7 +303,8 @@ local function ApplySnapshot(raw)
             guildName, factionId = Unescape(guildName), Unescape(factionId)
             if guildName ~= "" and factionId ~= "" then
                 parsed.guilds[guildName] = parsed.guilds[guildName] or { reps = {} }
-                parsed.guilds[guildName].reps[factionId] = { points = tonumber(points) or 0, visible = true }
+                local repPoints = tonumber(points) or 0
+                parsed.guilds[guildName].reps[factionId] = { points = repPoints, visible = true, atWar = IsAtWarPoints(repPoints) }
             end
         elseif opcode == "NPC" then
             local _, key, factionId = strsplit("|", line)
@@ -271,6 +312,48 @@ local function ApplySnapshot(raw)
             if key ~= "" and factionId ~= "" then parsed.npcLinks[key] = factionId end
         end
     end
+    return parsed
+end
+
+local function BuildRemoteAliases(playerKey)
+    local aliases = {}
+    playerKey = tostring(playerKey or "")
+    if playerKey ~= "" then
+        aliases[#aliases + 1] = playerKey
+        if Ambiguate then
+            aliases[#aliases + 1] = Ambiguate(playerKey, "short")
+        end
+        local short = playerKey:match("^[^-]+")
+        if short and short ~= "" then aliases[#aliases + 1] = short end
+    end
+    return aliases
+end
+
+local function StoreRemoteView(playerKey, parsed)
+    if not parsed or not playerKey or playerKey == "" then return false end
+    local view = {
+        playerKey = playerKey,
+        scope = parsed.scope or "ALL",
+        groups = parsed.groups or {},
+        factions = parsed.factions or {},
+        npcLinks = parsed.npcLinks or {},
+        guilds = parsed.guilds or {},
+        points = {},
+        receivedAt = GetTime and GetTime() or time(),
+    }
+    for factionId, points in pairs(parsed.selfReps or {}) do
+        view.points[factionId] = tonumber(points) or 0
+    end
+    for _, alias in ipairs(BuildRemoteAliases(playerKey)) do
+        remoteViews[alias] = view
+    end
+    return true
+end
+
+local function ApplySnapshot(raw)
+    if not HarfordReputation then return false end
+    local parsed = ParseSnapshot(raw)
+    if not parsed then return false end
 
     local store = HarfordReputation.EnsureStore()
     suppress = true
@@ -318,7 +401,8 @@ local function ApplySnapshot(raw)
         store.players[localKey] = store.players[localKey] or { reps = {} }
         store.players[localKey].reps = store.players[localKey].reps or {}
         if parsed.selfReps[factionId] ~= nil then
-            store.players[localKey].reps[factionId] = { points = parsed.selfReps[factionId], visible = true }
+            local repPoints = parsed.selfReps[factionId]
+            store.players[localKey].reps[factionId] = { points = repPoints, visible = true, atWar = IsAtWarPoints(repPoints) }
         end
     elseif parsed.scope == "STRUCTURE" then
         local preservedPlayers = store.players or {}
@@ -348,7 +432,7 @@ local function ApplySnapshot(raw)
         preservedPlayers[localKey] = preservedPlayers[localKey] or { reps = {} }
         preservedPlayers[localKey].reps = preservedPlayers[localKey].reps or {}
         for factionId in pairs(parsed.factions or {}) do
-            preservedPlayers[localKey].reps[factionId] = preservedPlayers[localKey].reps[factionId] or { points = 0, visible = true }
+            preservedPlayers[localKey].reps[factionId] = preservedPlayers[localKey].reps[factionId] or { points = 0, visible = true, atWar = false }
         end
         store.players = preservedPlayers
         store.guilds = preservedGuilds
@@ -367,12 +451,27 @@ local function ApplySnapshot(raw)
         store.players[localKey] = store.players[localKey] or { reps = {} }
         store.players[localKey].reps = store.players[localKey].reps or {}
         for factionId, points in pairs(parsed.selfReps or {}) do
-            store.players[localKey].reps[factionId] = { points = points, visible = true }
+            store.players[localKey].reps[factionId] = { points = points, visible = true, atWar = IsAtWarPoints(points) }
         end
     end
     suppress = false
     RefreshReputationViews()
     return true
+end
+
+local function SendRemoteView(target)
+    target = tostring(target or "")
+    if target == "" or not HarfordSync or not HarfordSync.Send then return false end
+    local raw = SerializeSnapshot("ALL")
+    if not raw or raw == "" then return false end
+    local payload = Escape(raw)
+    local transferId = tostring((time and time() or 0) % 100000) .. tostring(math.random(1000, 9999))
+    local total = math.max(1, math.ceil(#payload / SNAPSHOT_CHUNK_BYTES))
+    for index = 1, total do
+        local chunk = payload:sub(((index - 1) * SNAPSHOT_CHUNK_BYTES) + 1, index * SNAPSHOT_CHUNK_BYTES)
+        HarfordSync.Send(PREFIX, table.concat({ "RVIEWC", transferId, tostring(index), tostring(total), chunk }, "|"), "WHISPER", target)
+    end
+    return true, total
 end
 
 local function SendSnapshot(scope, selectedFactionId)
@@ -406,9 +505,68 @@ function API.BroadcastSnapshotFaction(factionId)
     return SendSnapshot("FACTION", factionId)
 end
 
+function API.RequestPlayerSnapshot(playerKey)
+    if not HarfordSync or not HarfordSync.Send then return false end
+    playerKey = tostring(playerKey or "")
+    if playerKey == "" then return false end
+    HarfordSync.Send(PREFIX, "RVIEWREQ", "WHISPER", playerKey)
+    local short = Ambiguate and Ambiguate(playerKey, "short") or playerKey:match("^[^-]+")
+    if short and short ~= "" and short ~= playerKey then
+        HarfordSync.Send(PREFIX, "RVIEWREQ", "WHISPER", short)
+    end
+    return true
+end
+
+function API.GetRemoteView(playerKey)
+    for _, alias in ipairs(BuildRemoteAliases(playerKey)) do
+        if remoteViews[alias] then return remoteViews[alias] end
+    end
+    return nil
+end
+
+function API.SetRemoteViewPoints(playerKey, factionId, points)
+    local view = API.GetRemoteView(playerKey)
+    if not view then return false end
+    factionId = tostring(factionId or "")
+    if factionId == "" then return false end
+    view.points = view.points or {}
+    view.points[factionId] = tonumber(points) or 0
+    return true
+end
+
 local function HandleMessage(message, sender)
     if not HarfordReputation then return false end
     local opcode = tostring(message or ""):match("^([^|]+)")
+
+    if opcode == "RVIEWREQ" then
+        SendRemoteView(sender)
+        return true
+    end
+
+    if opcode == "RVIEWC" then
+        local transferId, index, total, chunk = tostring(message or ""):match("^RVIEWC|([^|]+)|(%d+)|(%d+)|(.*)$")
+        if transferId and index and total and chunk then
+            local key = tostring(sender or "?") .. ":" .. transferId
+            local buffer = remoteSnapshotBuffers[key] or { chunks = {}, total = tonumber(total) or 0 }
+            buffer.chunks[tonumber(index)] = chunk
+            remoteSnapshotBuffers[key] = buffer
+            local ready = true
+            for i = 1, buffer.total do
+                if not buffer.chunks[i] then ready = false break end
+            end
+            if ready then
+                local assembled = {}
+                for i = 1, buffer.total do assembled[i] = buffer.chunks[i] end
+                remoteSnapshotBuffers[key] = nil
+                local parsed = ParseSnapshot(Unescape(table.concat(assembled)))
+                if parsed then
+                    StoreRemoteView(sender, parsed)
+                    RefreshReputationViews()
+                end
+            end
+        end
+        return true
+    end
 
     -- Cambio de puntos individual enviado por el DM tras AdjustTarget.
     -- Solo se persiste si los puntos son del jugador local; los demás miembros
@@ -422,6 +580,23 @@ local function HandleMessage(message, sender)
             local localKey = GetLocalPlayerKey()
             if playerKey == localKey then
                 HarfordReputation.SetPlayerPoints(playerKey, factionId, points, { fromSync = true })
+            end
+        end
+        RefreshReputationViews()
+        return true
+    end
+
+    if opcode == "RDELTA" then
+        local _, factionId, delta = strsplit("|", message)
+        factionId = Unescape(factionId or "")
+        delta = tonumber(delta) or 0
+        if factionId ~= "" and delta ~= 0 then
+            local localKey = GetLocalPlayerKey()
+            local localName = UnitName and UnitName("player")
+            local localFull = (GetUnitName and GetUnitName("player", true)) or localName
+            if sender ~= localKey and sender ~= localName and sender ~= localFull then
+                local current = HarfordReputation.GetPlayerPoints(localKey, factionId)
+                HarfordReputation.SetPlayerPoints(localKey, factionId, (current or 0) + delta, { fromSync = true })
             end
         end
         RefreshReputationViews()

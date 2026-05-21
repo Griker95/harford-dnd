@@ -1295,8 +1295,8 @@ close:SetPoint("TOPRIGHT", -6, -4)
 -- Icono de reputacion: a la izquierda del boton cerrar
 do
     local repBtn = CreateFrame("Button", nil, F)
-    repBtn:SetSize(22, 22)
-    repBtn:SetPoint("RIGHT", close, "LEFT", -2, -6)
+    repBtn:SetSize(20, 20)
+    repBtn:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, -11)
 
     local repIcon = repBtn:CreateTexture(nil, "ARTWORK")
     repIcon:SetAllPoints()
@@ -1516,7 +1516,7 @@ end
 local function ApplyResourceDeltaFromRemote(resourceKey, delta, sender)
     resourceKey = tostring(resourceKey or "")
     delta = tonumber(delta) or 0
-    if resourceKey ~= "health" or delta == 0 then
+    if (resourceKey ~= "health" and resourceKey ~= "temp_health") or delta == 0 then
         return false
     end
 

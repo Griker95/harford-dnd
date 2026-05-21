@@ -138,10 +138,7 @@ local function MakeTextArea(parent, w, h)
     box:SetMaxLetters(512)
     box:SetFontObject(ChatFontNormal)
     box:SetTextInsets(0, 0, 0, 0)
-    box:SetScript("OnTextChanged", function(self)
-        local textHeight = self:GetStringHeight() or 0
-        self:SetHeight(math.max(h - 10, textHeight + 4))
-    end)
+    box:SetHeight(h - 10)
     scroll:SetScrollChild(box)
     holder:SetScript("OnMouseDown", function()
         box:SetFocus()
@@ -276,7 +273,7 @@ end
 
 -- ─── Formulario de edición ────────────────────────────────────────────────────
 -- Referencias a widgets del form; se crean una vez en BuildForm().
-local fName, fIcon, fColor, fDesc, fNotes
+local fName, fIcon, fColor, fEpsilonFaction, fDesc
 local fIconPreview, fColorSwatch, fFormTitle
 local fDestination
 local formContainer  -- frame padre del formulario
@@ -284,7 +281,7 @@ local iconPicker
 
 local function UpdateDestinationLabel()
     if not fDestination then return end
-    local text = selectedGroup or "Reputaciones Harford"
+    local text = selectedGroup or "Sin destino seleccionado"
     if selectedSubgroup and selectedSubgroup ~= "" then
         text = text .. " / " .. selectedSubgroup
     end
@@ -569,8 +566,8 @@ local function FormClear()
     fName:SetText("")
     fIcon:SetText("")
     fDesc:SetText("")
-    fNotes:SetText("")
     fColor:SetText("ffe0e0e0")
+    fEpsilonFaction:SetText("")
     fIconPreview:SetTexture(nil)
     fColorSwatch:SetColorTexture(0.88, 0.88, 0.88, 1)
     fFormTitle:SetText("Nueva faccion")
@@ -588,8 +585,8 @@ local function FormLoad(factionId)
     fName:SetText(faction.name or "")
     fIcon:SetText(StripIconName(faction.icon or ""))
     fDesc:SetText(faction.description or "")
-    fNotes:SetText(faction.gmNotes or "")
     fColor:SetText(faction.color or "ffe0e0e0")
+    fEpsilonFaction:SetText(faction.epsilonFactionId or "")
     if faction.icon and faction.icon ~= "" then
         fIconPreview:SetTexture(IconTexture(faction.icon))
         fIconPreview:SetTexCoord(0.08, 0.92, 0.08, 0.92)
@@ -611,8 +608,8 @@ local function FormSave()
         subgroup    = selectedSubgroup or "",
         icon        = StripIconName(fIcon:GetText()),
         description = TrimInput(fDesc:GetText()),
-        gmNotes     = TrimInput(fNotes:GetText()),
         color       = TrimInput(fColor:GetText()),
+        epsilonFactionId = TrimInput(fEpsilonFaction:GetText()),
         sortOrder   = changedDestination and GetNextSortOrderForDestination(selectedGroup, selectedSubgroup) or (currentFaction and currentFaction.sortOrder or 0),
         hidden      = currentFaction and currentFaction.hidden == true or false,
     }
@@ -647,8 +644,8 @@ local function MoveEditingToDestination()
         subgroup = selectedSubgroup or "",
         icon = faction.icon,
         description = faction.description,
-        gmNotes = faction.gmNotes,
         color = faction.color,
+        epsilonFactionId = faction.epsilonFactionId,
         hidden = faction.hidden == true,
         sortOrder = GetNextSortOrderForDestination(selectedGroup, selectedSubgroup),
     }
@@ -792,7 +789,10 @@ local function BuildForm(parent)
     local fDescHolder
     fDescHolder, fDesc = MakeTextArea(formContainer, IW, 72)
     AddRow("Descripcion:", fDescHolder, 72)
-    fNotes    = MakeEditBox(formContainer, IW, 20); AddRow("Notas GM:",   fNotes)
+
+    fEpsilonFaction = MakeEditBox(formContainer, 86, 20)
+    fEpsilonFaction:SetMaxLetters(12)
+    AddRow("Faction ID:", fEpsilonFaction)
 
     -- Fila orden + checkbox oculta en la misma línea
     -- Botones de acción del form
@@ -1040,7 +1040,16 @@ local function RefreshList()
                     row.btnDelHeader:SetScript("OnClick", function()
                         if IsShiftKeyDown() then
                             local ok, err = HarfordReputation.DeleteGroup(data.name)
-                            if not ok then Print(tostring(err)) else RefreshList() end
+                            if not ok then
+                                Print(tostring(err))
+                            else
+                                if selectedGroup == data.name then
+                                    selectedGroup = nil
+                                    selectedSubgroup = ""
+                                    UpdateDestinationLabel()
+                                end
+                                RefreshList()
+                            end
                         else
                             Print("Shift+clic en X para borrar el grupo '" .. tostring(data.name) .. "'.")
                         end
@@ -1089,7 +1098,15 @@ local function RefreshList()
                     row.btnDelHeader:SetScript("OnClick", function()
                         if IsShiftKeyDown() then
                             local ok, err = HarfordReputation.DeleteSubgroup(data.group, data.name)
-                            if not ok then Print(tostring(err)) else RefreshList() end
+                            if not ok then
+                                Print(tostring(err))
+                            else
+                                if selectedGroup == data.group and selectedSubgroup == data.name then
+                                    selectedSubgroup = ""
+                                    UpdateDestinationLabel()
+                                end
+                                RefreshList()
+                            end
                         else
                             Print("Shift+clic en X para borrar la seccion '" .. tostring(data.name) .. "'.")
                         end

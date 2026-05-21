@@ -252,7 +252,8 @@ function API.GetPlayerProfile(unit)
     if IsPlayerUnitID(unitID) and TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile then
         local profile = SafeCall(TRP3_API.profile.getPlayerCurrentProfile)
         if profile then
-            return profile, nil, unitID
+            local profileID = register.getUnitIDProfileID and SafeCall(register.getUnitIDProfileID, unitID)
+            return profile, nil, unitID, profileID
         end
     end
 
@@ -269,7 +270,8 @@ function API.GetPlayerProfile(unit)
         return nil, "perfil TRP3 de jugador no disponible"
     end
 
-    return profile, nil, unitID
+    local profileID = register.getUnitIDProfileID and SafeCall(register.getUnitIDProfileID, unitID)
+    return profile, nil, unitID, profileID
 end
 
 function API.GetPlayerProfileByUnitID(unitID)
@@ -283,10 +285,25 @@ function API.GetPlayerProfileByUnitID(unitID)
         return nil, "unitID no disponible"
     end
 
+    local profileID
+    if register.getUnitIDProfileID then
+        profileID = SafeCall(register.getUnitIDProfileID, unitID)
+    end
+    if not profileID and register.isUnitIDKnown and SafeCall(register.isUnitIDKnown, unitID) and register.hasProfile then
+        profileID = SafeCall(register.hasProfile, unitID)
+    end
+    if profileID and register.getProfile then
+        local profile = SafeCall(register.getProfile, profileID)
+        if profile then
+            return profile, nil, unitID, profileID
+        end
+    end
+
     if IsPlayerUnitID(unitID) and TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile then
         local profile = SafeCall(TRP3_API.profile.getPlayerCurrentProfile)
         if profile then
-            return profile, nil, unitID
+            local profileID = register.getUnitIDProfileID and SafeCall(register.getUnitIDProfileID, unitID)
+            return profile, nil, unitID, profileID
         end
     end
 
@@ -309,7 +326,33 @@ function API.GetPlayerProfileByUnitID(unitID)
         return nil, "perfil TRP3 de jugador no disponible"
     end
 
-    return profile, nil, unitID
+    profileID = profileID or (register.getUnitIDProfileID and SafeCall(register.getUnitIDProfileID, unitID))
+    return profile, nil, unitID, profileID
+end
+
+function API.GetPlayerProfileByProfileID(profileID)
+    local register = GetRegister()
+    if not register then
+        return nil, "TRP3_API.register no disponible"
+    end
+
+    profileID = tostring(profileID or "")
+    if profileID == "" then
+        return nil, "profileID no disponible"
+    end
+
+    local profile
+    if register.getProfileOrNil then
+        profile = SafeCall(register.getProfileOrNil, profileID)
+    end
+    if not profile and register.getProfile then
+        profile = SafeCall(register.getProfile, profileID)
+    end
+    if not profile then
+        return nil, "perfil TRP3 de jugador no disponible"
+    end
+
+    return profile, nil, profileID
 end
 
 local function GetAboutSectionText(section)

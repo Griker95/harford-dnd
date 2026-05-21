@@ -3,7 +3,9 @@ HarfordAdminUnitMenu = HarfordAdminUnitMenu or {}
 local API = HarfordAdminUnitMenu
 
 local MENU_NAME = "HarfordAdminUnitMenuDropDown"
-local BUTTON_SIZE = 18
+local BUTTON_SIZE = 22
+local BUTTON_VISUAL_X = 0
+local BUTTON_VISUAL_Y = 1
 
 local dropdown
 local buttons = {}
@@ -201,6 +203,40 @@ local function OpenPlayerTRP3(snapshot)
     TRP3_API.register.openPageByUnitID(unitID)
 end
 
+local function SendSheetToTarget(snapshot)
+    if not EnsureSameUnit(snapshot, "enviar ficha al target") then return end
+    if snapshot.unit ~= "target" or not snapshot.isPlayer then
+        Print("Enviar ficha solo esta disponible desde el TargetFrame de un jugador.")
+        return
+    end
+    if not HarfordDnDAPI or not HarfordDnDAPI.BroadcastConfigForPlayer then
+        Print("HarfordDnDAPI.BroadcastConfigForPlayer no disponible.")
+        return
+    end
+
+    local shortName = UnitName and UnitName(snapshot.unit)
+    local fullName = (GetUnitName and GetUnitName(snapshot.unit, true)) or shortName or snapshot.name
+    local whisperTarget = fullName or shortName
+    if not whisperTarget or whisperTarget == "" then
+        Print("No se pudo resolver el nombre del target.")
+        return
+    end
+
+    local ok, err = false, nil
+    if shortName and shortName ~= "" then
+        ok, err = HarfordDnDAPI.BroadcastConfigForPlayer(shortName, "WHISPER", whisperTarget)
+    end
+    if not ok and fullName and fullName ~= "" and fullName ~= shortName then
+        ok, err = HarfordDnDAPI.BroadcastConfigForPlayer(fullName, "WHISPER", whisperTarget)
+    end
+
+    if ok then
+        Print("Ficha enviada a " .. tostring(whisperTarget) .. ".")
+    else
+        Print("No se pudo enviar ficha: " .. tostring(err or "perfil no encontrado"))
+    end
+end
+
 local function RequestResources(snapshot)
     if not EnsureSameUnit(snapshot, "refrescar recursos") then return end
     if not HarfordDnDAPI or not HarfordDnDAPI.RequestResourcesForName then
@@ -287,6 +323,51 @@ local function ApplyAura(snapshot, applying)
     end)
 end
 
+local function SetNpcAura(snapshot, spellId)
+    if not EnsureSameUnit(snapshot, "aplicar aura NPC") then return end
+    if snapshot.unit ~= "target" then
+        Print("Las auras NPC solo se pueden aplicar desde TargetFrame.")
+        return
+    end
+
+    local ok, err
+    if HarfordAdminNPC and HarfordAdminNPC.SetAuraOnTarget then
+        ok, err = HarfordAdminNPC.SetAuraOnTarget(spellId)
+    elseif HarfordServerActions and HarfordServerActions.SetNpcAura then
+        ok, err = HarfordServerActions.SetNpcAura(spellId, { addonName = "HarfordAdmin" })
+    else
+        ok, err = false, "HarfordServerActions.SetNpcAura no disponible"
+    end
+
+    if not ok then
+        Print("No se pudo aplicar aura NPC: " .. tostring(err or "error desconocido"))
+    end
+end
+
+local function PromptNpcAura(snapshot)
+    PromptNumber("HARFORD_ADMIN_NPC_SET_AURA", "Spell ID:", function(value)
+        local spellId = math.floor(value)
+        if spellId <= 0 then
+            Print("Spell ID invalido.")
+            return
+        end
+        SetNpcAura(snapshot, spellId)
+    end)
+end
+
+local function ApplyNpcLootAura(snapshot)
+    SetNpcAura(snapshot, 140172)
+end
+
+local function OpenLootEditor(snapshot)
+    if not EnsureSameUnit(snapshot, "abrir editor de loot") then return end
+    if not HarfordAdminLoot or not HarfordAdminLoot.OpenEditor then
+        Print("HarfordAdminLoot.OpenEditor no disponible.")
+        return
+    end
+    HarfordAdminLoot.OpenEditor()
+end
+
 local function AddTitle(text, level)
     local info = UIDropDownMenu_CreateInfo()
     info.text = text
@@ -338,8 +419,11 @@ local function BuildNpcSubmenu(menuList, level)
     elseif menuList == "VIDA" then
         AddHealthPresets(snapshot, false, level)
     elseif menuList == "AURAS" then
-        AddAction("Aplicar aura...", function() ApplyAura(snapshot, true) end, level)
+        AddAction("Aplicar aura NPC...", function() PromptNpcAura(snapshot) end, level)
+        AddAction("Loot Aura", function() ApplyNpcLootAura(snapshot) end, level)
         AddAction("Quitar aura...", function() ApplyAura(snapshot, false) end, level)
+    elseif menuList == "LOOT" then
+        AddAction("Cargar loot...", function() OpenLootEditor(snapshot) end, level)
     end
 end
 
@@ -348,6 +432,9 @@ local function BuildPlayerSubmenu(menuList, level)
     if menuList == "FICHA" then
         AddAction("Abrir ficha TRP3", function() OpenPlayerTRP3(snapshot) end, level)
         AddAction("Mostrar TRP3", function() PrintPlayerTRP3(snapshot) end, level)
+        if snapshot and snapshot.unit == "target" then
+            AddAction("Enviar ficha al target", function() SendSheetToTarget(snapshot) end, level)
+        end
     elseif menuList == "TURNOS" then
         AddAction("Anadir a turnos", function() AddToTurns(snapshot) end, level)
         AddAction("Abrir turnos", OpenTurns, level)
@@ -358,6 +445,8 @@ local function BuildPlayerSubmenu(menuList, level)
     elseif menuList == "AURAS" then
         AddAction("Aplicar aura...", function() ApplyAura(snapshot, true) end, level)
         AddAction("Quitar aura...", function() ApplyAura(snapshot, false) end, level)
+    elseif menuList == "LOOT" then
+        AddAction("Cargar loot...", function() OpenLootEditor(snapshot) end, level)
     end
 end
 
@@ -385,11 +474,13 @@ local function InitializeMenu(_, level, menuList)
             AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Vida", "VIDA", level)
             AddSubmenu("Auras", "AURAS", level)
+            AddSubmenu("Loot", "LOOT", level)
         else
             AddSubmenu("TRP3", "TRP3", level)
             AddSubmenu("Turnos", "TURNOS", level)
             AddSubmenu("Vida", "VIDA", level)
             AddSubmenu("Auras", "AURAS", level)
+            AddSubmenu("Loot", "LOOT", level)
         end
         return
     end
@@ -424,32 +515,44 @@ end
 local function StyleButton(button)
     button:SetSize(BUTTON_SIZE, BUTTON_SIZE)
 
-    button:SetNormalTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Up")
-    button:SetPushedTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Down")
-    button:SetHighlightTexture("Interface\\Buttons\\UI-Panel-MinimizeButton-Highlight", "ADD")
+    local bg = button:CreateTexture(nil, "BACKGROUND")
+    bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+    bg:SetPoint("CENTER", button, "CENTER", BUTTON_VISUAL_X, BUTTON_VISUAL_Y)
+    bg:SetSize(14, 14)
+    bg:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-    local normal = button:GetNormalTexture()
-    if normal then
-        normal:ClearAllPoints()
-        normal:SetPoint("CENTER", button, "CENTER", 0, 0)
-        normal:SetSize(BUTTON_SIZE + 4, BUTTON_SIZE + 4)
-    end
-    local pushedNative = button:GetPushedTexture()
-    if pushedNative then
-        pushedNative:ClearAllPoints()
-        pushedNative:SetPoint("CENTER", button, "CENTER", 0, 0)
-        pushedNative:SetSize(BUTTON_SIZE + 4, BUTTON_SIZE + 4)
-    end
-    local highlightNative = button:GetHighlightTexture()
-    if highlightNative then
-        highlightNative:ClearAllPoints()
-        highlightNative:SetPoint("CENTER", button, "CENTER", 0, 0)
-        highlightNative:SetSize(BUTTON_SIZE + 4, BUTTON_SIZE + 4)
-    end
+    local border = button:CreateTexture(nil, "OVERLAY")
+    border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    border:SetPoint("TOPLEFT", button, "TOPLEFT", 0, 0)
+    border:SetSize(36, 36)
+
+    local pushed = button:CreateTexture(nil, "OVERLAY")
+    pushed:SetTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+    pushed:SetAllPoints(button)
+    pushed:SetAlpha(0.65)
+    pushed:Hide()
+
+    local highlight = button:CreateTexture(nil, "HIGHLIGHT")
+    highlight:SetTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    highlight:SetBlendMode("ADD")
+    highlight:SetPoint("CENTER", button, "CENTER", BUTTON_VISUAL_X, BUTTON_VISUAL_Y)
+    highlight:SetSize(15, 15)
+
+    button:SetScript("OnMouseDown", function(self)
+        if self.pushed then self.pushed:Show() end
+        if self.icon then self.icon:SetPoint("CENTER", self, "CENTER", BUTTON_VISUAL_X + 1, BUTTON_VISUAL_Y - 1) end
+    end)
+    button:SetScript("OnMouseUp", function(self)
+        if self.pushed then self.pushed:Hide() end
+        if self.icon then
+            self.icon:ClearAllPoints()
+            self.icon:SetPoint("CENTER", self, "CENTER", BUTTON_VISUAL_X, BUTTON_VISUAL_Y)
+        end
+    end)
 
     local icon = button:CreateTexture(nil, "ARTWORK")
-    icon:SetPoint("CENTER", button, "CENTER", 0, 0)
-    icon:SetSize(BUTTON_SIZE - 7, BUTTON_SIZE - 7)
+    icon:SetPoint("CENTER", button, "CENTER", BUTTON_VISUAL_X, BUTTON_VISUAL_Y)
+    icon:SetSize(12, 12)
     icon:SetTexture("Interface\\Icons\\INV_Misc_Gear_01")
     icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
@@ -460,6 +563,10 @@ local function StyleButton(button)
         icon:AddMaskTexture(mask)
     end
 
+    button.bg = bg
+    button.border = border
+    button.pushed = pushed
+    button.highlight = highlight
     button.icon = icon
 
     button:SetScript("OnEnter", function(self)
@@ -486,14 +593,14 @@ local function GetMeasuredButtonPoint(unit, parent)
     if not (parent and parent.GetName and parent:GetName() and parent:GetName():match("^Harford")) then return nil end
 
     local layout = HarfordUnitFrames.GetMeasuredLayout(unit, false)
-    local anchorBox = layout and (layout.name or layout.health)
+    local anchorBox = layout and (layout.portrait or layout.name or layout.health)
     if not anchorBox then return nil end
 
-    local centerY = -((anchorBox.y or 0) - 1)
+    local centerY = -((anchorBox.y or 0) + 13)
     if unit == "target" then
-        return "CENTER", parent, "TOPLEFT", (anchorBox.x or 0) + (anchorBox.width or 0) - 2, centerY
+        return "CENTER", parent, "TOPLEFT", (anchorBox.x or 0) + 2, centerY
     end
-    return "CENTER", parent, "TOPLEFT", (anchorBox.x or 0) + 2, centerY
+    return "CENTER", parent, "TOPLEFT", (anchorBox.x or 0) + (anchorBox.width or 0) - 2, centerY
 end
 
 local function AnchorUnitButton(button, parentName, unit, point, relPoint, x, y)
@@ -536,8 +643,8 @@ local function CreateUnitButton(key, parentName, unit, point, relPoint, x, y)
 end
 
 function API.AttachButtons()
-    CreateUnitButton("Player", "PlayerFrame", "player", "TOPRIGHT", "TOPRIGHT", -10, -18)
-    CreateUnitButton("Target", "TargetFrame", "target", "TOPRIGHT", "TOPRIGHT", -36, -18)
+    CreateUnitButton("Player", "PlayerFrame", "player", "TOPLEFT", "TOPLEFT", 78, -18)
+    CreateUnitButton("Target", "TargetFrame", "target", "TOPRIGHT", "TOPRIGHT", -78, -18)
     API.RefreshAnchors()
     API.RefreshVisibility()
 end

@@ -116,6 +116,33 @@ function HarfordLootAPI.ImportConfigTables(registryTable, globalTable, saveNow, 
     return true
 end
 
+local function GetTargetCreatureId()
+    local guid = UnitGUID and UnitGUID("target")
+    if not guid or guid == "" then return nil end
+    local _, _, _, _, _, npcId = strsplit("-", guid)
+    if npcId and npcId ~= "" then
+        return tostring(npcId)
+    end
+    return nil
+end
+
+function HarfordLootAPI.GetTargetCreatureId()
+    return GetTargetCreatureId()
+end
+
+function HarfordLootAPI.GetLootEntries(creatureId, createIfMissing)
+    if creatureId == "GLOBAL" then
+        return HarfordLootGlobalLootRegistry
+    end
+    if not creatureId or creatureId == "" then
+        return nil
+    end
+    if createIfMissing then
+        HarfordLootLootRegistry[creatureId] = HarfordLootLootRegistry[creatureId] or {}
+    end
+    return HarfordLootLootRegistry[creatureId]
+end
+
 function HarfordLootAPI.HasResolvedLoot(guid)
     return guid ~= nil and HarfordLootTaggedCreatureRegistry[guid] ~= nil
 end

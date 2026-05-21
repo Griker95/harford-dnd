@@ -6,5 +6,7 @@
 ## RequiredDeps: Harford
 
 HarfordAdminNPC.lua
+HarfordAdminLoot.lua
 HarfordAdminUnitMenu.lua
+HarfordReputationAdmin.lua
 HarfordAdmin.lua

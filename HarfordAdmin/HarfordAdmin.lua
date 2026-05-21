@@ -5,6 +5,7 @@ HarfordAdminAPI.IS_ADMIN = true
 local ADMIN_COMMANDS = {
     "/harfordadmin help",
     "/harfordadmin status",
+    "/harfordadmin rep                           — Panel de administracion de reputaciones",
     "/harfordadmin loot [raid|party|whisper] [target]",
     "/harfordadmin lootclear [raid|party|whisper] [target]",
     "/harfordadmin enviarficha [NombrePJ] (si no pones nombre, usa target)",
@@ -186,6 +187,15 @@ SlashCmdList["HARFORDADMIN"] = function(msg)
             print("|cffffff00[HarfordAdmin]|r 'sendpj' está deprecado. Usa '/harfordadmin enviarficha'.")
         end
         HandleSendProfileCommand(t)
+        return
+    end
+
+    if mode == "rep" or mode == "reputation" or mode == "reputacion" then
+        if HarfordReputationAdmin and HarfordReputationAdmin.Toggle then
+            HarfordReputationAdmin.Toggle()
+        else
+            print("|cffff3333[HarfordAdmin]|r HarfordReputationAdmin no disponible.")
+        end
         return
     end
 

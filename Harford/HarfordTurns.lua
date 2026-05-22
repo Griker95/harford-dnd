@@ -26,6 +26,7 @@ local suppressBroadcast = false
 local broadcastPending = false
 local viewStart = 1
 local editMode = false
+local reorderSelectedIndex
 local lastTurnAlertKey = ""
 local lastTurnNoticeKey = ""
 local lastRoundAlertKey = ""
@@ -74,6 +75,69 @@ local function GetReactionColor(reaction)
     end
 
     return 0.10, 1.0, 0.10, "friendly"
+end
+
+local WOW_CLASS_ALIASES = {
+    { "guerrero", "WARRIOR" }, { "warrior", "WARRIOR" },
+    { "paladin", "PALADIN" },
+    { "cazador de demonios", "DEMONHUNTER" }, { "demon hunter", "DEMONHUNTER" }, { "demonhunter", "DEMONHUNTER" },
+    { "cazador", "HUNTER" }, { "hunter", "HUNTER" },
+    { "picaro", "ROGUE" }, { "picar", "ROGUE" }, { "rogue", "ROGUE" },
+    { "sacerdote", "PRIEST" }, { "priest", "PRIEST" },
+    { "caballero de la muerte", "DEATHKNIGHT" }, { "death knight", "DEATHKNIGHT" }, { "deathknight", "DEATHKNIGHT" },
+    { "chaman", "SHAMAN" }, { "shaman", "SHAMAN" },
+    { "mago", "MAGE" }, { "mage", "MAGE" },
+    { "brujo", "WARLOCK" }, { "warlock", "WARLOCK" },
+    { "monje", "MONK" }, { "monk", "MONK" },
+    { "druida", "DRUID" }, { "druid", "DRUID" },
+    { "evocador", "EVOKER" }, { "evoker", "EVOKER" },
+}
+
+local function NormalizeClassKey(value)
+    value = tostring(value or ""):lower()
+    value = value:gsub("[_%-]+", " ")
+    value = value:gsub("[áàäâÁÀÄÂ]", "a")
+    value = value:gsub("[éèëêÉÈËÊ]", "e")
+    value = value:gsub("[íìïîÍÌÏÎ]", "i")
+    value = value:gsub("[óòöôÓÒÖÔ]", "o")
+    value = value:gsub("[úùüûÚÙÜÛ]", "u")
+    value = value:gsub("[ñÑ]", "n")
+    return value
+end
+
+local function RGBToHex(r, g, b)
+    if not r or not g or not b then return nil end
+    r = math.max(0, math.min(255, math.floor((tonumber(r) or 1) * 255 + 0.5)))
+    g = math.max(0, math.min(255, math.floor((tonumber(g) or 1) * 255 + 0.5)))
+    b = math.max(0, math.min(255, math.floor((tonumber(b) or 1) * 255 + 0.5)))
+    return string.format("%02x%02x%02x", r, g, b)
+end
+
+local function GetProfileClassColorHex(profile)
+    if not (profile and HarfordTRP3 and HarfordTRP3.GetProfilePrimaryClass and RAID_CLASS_COLORS) then return nil end
+    local classText = NormalizeClassKey(HarfordTRP3.GetProfilePrimaryClass(profile))
+    if classText == "" then return nil end
+    for _, entry in ipairs(WOW_CLASS_ALIASES) do
+        if classText:find(entry[1], 1, true) then
+            local color = RAID_CLASS_COLORS[entry[2]]
+            if color then return RGBToHex(color.r, color.g, color.b) end
+        end
+    end
+    return nil
+end
+
+local function GetNativeClassColorHex(unit)
+    if not (unit and UnitClass and RAID_CLASS_COLORS) then return nil end
+    local _, classFile = UnitClass(unit)
+    local color = classFile and RAID_CLASS_COLORS[classFile]
+    return color and RGBToHex(color.r, color.g, color.b) or nil
+end
+
+local function GetPlayerTurnNameColorHex(profile, unit)
+    local manual = profile and HarfordTRP3 and HarfordTRP3.GetProfileNameColor and HarfordTRP3.GetProfileNameColor(profile)
+    manual = NormalizeColorHex(manual)
+    if manual then return manual end
+    return GetProfileClassColorHex(profile) or GetNativeClassColorHex(unit)
 end
 
 local function EntryIconMarkup(entry, size)
@@ -312,30 +376,65 @@ end
 local function ToggleEditMode()
     if not IsTurnAdmin() then Print("Solo el admin puede editar los turnos.") return end
     editMode = not editMode
+    if not editMode then
+        reorderSelectedIndex = nil
+    end
     UpdateEditButton()
     if RefreshFrame then RefreshFrame() end
 end
 
-local function MoveEntry(index, delta)
+local function MoveEntryToIndex(fromIndex, toIndex)
     if not IsTurnAdmin() then Print("Solo el admin puede editar los turnos.") return end
     ClaimAdminIfNeeded()
 
     local store = EnsureStore()
-    local fromIndex = tonumber(index)
-    local toIndex = fromIndex and (fromIndex + (tonumber(delta) or 0)) or nil
+    fromIndex = tonumber(fromIndex)
+    toIndex = tonumber(toIndex)
     if not fromIndex or not toIndex then return end
     if fromIndex < 1 or fromIndex > #store.entries or toIndex < 1 or toIndex > #store.entries then return end
     if fromIndex == toIndex then return end
 
-    store.entries[fromIndex], store.entries[toIndex] = store.entries[toIndex], store.entries[fromIndex]
-    if store.activeIndex == fromIndex then
-        store.activeIndex = toIndex
-    elseif store.activeIndex == toIndex then
-        store.activeIndex = fromIndex
+    local activeEntry = store.entries[store.activeIndex]
+    local selectedEntry = reorderSelectedIndex and store.entries[reorderSelectedIndex] or nil
+    local entry = table.remove(store.entries, fromIndex)
+    table.insert(store.entries, toIndex, entry)
+    store.activeIndex = 1
+    reorderSelectedIndex = nil
+    for i, candidate in ipairs(store.entries) do
+        if candidate == activeEntry then
+            store.activeIndex = i
+        end
+        if selectedEntry and candidate == selectedEntry then
+            reorderSelectedIndex = i
+        end
     end
 
     EnsureActiveVisible()
     MarkChanged()
+end
+
+local function MoveEntry(index, delta)
+    index = tonumber(index)
+    if not index then return end
+    MoveEntryToIndex(index, index + (tonumber(delta) or 0))
+end
+
+local function ClickEditEntry(index)
+    if not IsTurnAdmin() then Print("Solo el admin puede editar los turnos.") return end
+    local store = EnsureStore()
+    index = tonumber(index)
+    if not index or not store.entries[index] then return end
+
+    if reorderSelectedIndex and reorderSelectedIndex ~= index and store.entries[reorderSelectedIndex] then
+        MoveEntryToIndex(reorderSelectedIndex, index)
+    elseif reorderSelectedIndex == index then
+        reorderSelectedIndex = nil
+        if RefreshFrame then RefreshFrame() end
+    else
+        reorderSelectedIndex = index
+        Print("Turno seleccionado para mover. Haz click en otra posicion.")
+        if RefreshFrame then RefreshFrame() end
+    end
 end
 
 local function FindDuplicateEntry(candidate)
@@ -909,29 +1008,77 @@ local function GetEntryTRP3Profile(entry)
     end
 
     if entry.kind == "player" then
-        local unitID = tostring(entry.trpUnitID or "")
-        if unitID == "" then
-            unitID = tostring(entry.unitName or "")
-        end
-        if unitID ~= "" and not unitID:find("-", 1, true) and GetRealmName then
-            local realm = tostring(GetRealmName() or ""):gsub("%s+", "")
-            if realm ~= "" then
-                unitID = unitID .. "-" .. realm
-            end
-        end
-        if unitID ~= "" and HarfordTRP3.GetPlayerProfileByUnitID then
-            local profile = HarfordTRP3.GetPlayerProfileByUnitID(unitID)
+        local profileID = tostring(entry.trpProfileID or "")
+        if profileID ~= "" and HarfordTRP3.GetPlayerProfileByProfileID then
+            local profile = HarfordTRP3.GetPlayerProfileByProfileID(profileID)
             if profile then
-                return profile, nil, unitID
+                entry.nameColor = GetPlayerTurnNameColorHex(profile) or entry.nameColor
+                return profile, nil, profileID
             end
+        end
+
+        local tried = {}
+        local function TryUnitID(value)
+            value = tostring(value or "")
+            if value == "" or tried[value] then return nil end
+            tried[value] = true
+            if HarfordTRP3.GetPlayerProfileByUnitID then
+                local profile, err, resolved, resolvedProfileID = HarfordTRP3.GetPlayerProfileByUnitID(value)
+                if profile then
+                    entry.trpUnitID = resolved or entry.trpUnitID
+                    entry.trpProfileID = resolvedProfileID or entry.trpProfileID
+                    entry.nameColor = GetPlayerTurnNameColorHex(profile) or entry.nameColor
+                    return profile, err, resolved or value
+                end
+            end
+        end
+
+        local candidates = {
+            entry.trpUnitID,
+            entry.unitName,
+            entry.name,
+        }
+        for _, candidate in ipairs(candidates) do
+            local profile, err, resolved = TryUnitID(candidate)
+            if profile then return profile, err, resolved end
+            local normalized = NormalizePlayerUnitID(candidate)
+            profile, err, resolved = TryUnitID(normalized)
+            if profile then return profile, err, resolved end
+            local short = tostring(candidate or ""):match("^[^-]+")
+            profile, err, resolved = TryUnitID(short)
+            if profile then return profile, err, resolved end
+        end
+
+        local function EntryMatchesUnit(unit)
+            if not UnitExists or not UnitExists(unit) then return false end
+            if UnitGUID and entry.id and entry.id ~= "" and UnitGUID(unit) == entry.id then return true end
+            local unitID = HarfordTRP3.BuildUnitID and HarfordTRP3.BuildUnitID(unit)
+            local fullName = GetUnitName and GetUnitName(unit, true)
+            local shortName = UnitName and UnitName(unit)
+            local entryUnitID = NormalizePlayerUnitID(entry.trpUnitID ~= "" and entry.trpUnitID or entry.unitName)
+            local entryUnitShort = Ambiguate and Ambiguate(entry.unitName or "", "short") or tostring(entry.unitName or ""):match("^[^-]+")
+            return (unitID and entryUnitID ~= "" and unitID == entryUnitID)
+                or (fullName and fullName ~= "" and (fullName == entry.unitName or fullName == entry.name))
+                or (shortName and shortName ~= "" and (shortName == entry.name or shortName == entryUnitShort))
         end
 
         local units = { "player", "target", "mouseover", "focus" }
         for i = 1, 4 do units[#units + 1] = "party" .. tostring(i) end
         for i = 1, 40 do units[#units + 1] = "raid" .. tostring(i) end
         for _, unit in ipairs(units) do
-            if UnitExists and UnitExists(unit) and UnitGUID and UnitGUID(unit) == entry.id and HarfordTRP3.GetPlayerProfile then
-                return HarfordTRP3.GetPlayerProfile(unit)
+            if EntryMatchesUnit(unit) and HarfordTRP3.GetPlayerProfile then
+                local profile, err, resolved = HarfordTRP3.GetPlayerProfile(unit)
+                entry.nameColor = GetPlayerTurnNameColorHex(profile, unit) or entry.nameColor
+                if resolved and resolved ~= "" then
+                    entry.trpUnitID = resolved
+                end
+                if profile and TRP3_API and TRP3_API.register and TRP3_API.register.getUnitIDProfileID and resolved then
+                    local okProfileID, resolvedProfileID = pcall(TRP3_API.register.getUnitIDProfileID, resolved)
+                    if okProfileID and resolvedProfileID then
+                        entry.trpProfileID = resolvedProfileID
+                    end
+                end
+                return profile, err, resolved
             end
         end
 
@@ -1078,7 +1225,10 @@ local function TryGetTRP3UnitInfo(unit)
     if HarfordTRP3 then
         local profile
         if UnitIsPlayer and UnitIsPlayer(unit) and HarfordTRP3.GetPlayerProfile then
-            profile = HarfordTRP3.GetPlayerProfile(unit)
+            local resolvedUnitID, resolvedProfileID
+            profile, _, resolvedUnitID, resolvedProfileID = HarfordTRP3.GetPlayerProfile(unit)
+            if resolvedUnitID and resolvedUnitID ~= "" then unitID = resolvedUnitID end
+            if resolvedProfileID and resolvedProfileID ~= "" then out.trpProfileID = resolvedProfileID end
         elseif HarfordTRP3.GetEpsilonNpcProfile then
             profile = HarfordTRP3.GetEpsilonNpcProfile(unit)
         end
@@ -1091,9 +1241,7 @@ local function TryGetTRP3UnitInfo(unit)
                 icon = FindIconInTable(profile, 4)
             end
             if icon then out.icon = NormalizeIconPath(icon) end
-            if HarfordTRP3.GetProfileNameColor then
-                out.nameColor = HarfordTRP3.GetProfileNameColor(profile) or out.nameColor
-            end
+            out.nameColor = GetPlayerTurnNameColorHex(profile, unit) or out.nameColor
         end
 
         if not (UnitIsPlayer and UnitIsPlayer(unit)) and HarfordTRP3.BuildEpsilonNpcFullID then
@@ -1107,7 +1255,15 @@ local function TryGetTRP3UnitInfo(unit)
             end
         elseif UnitIsPlayer and UnitIsPlayer(unit) and HarfordTRP3.BuildUnitID then
             out.trpUnitID = HarfordTRP3.BuildUnitID(unit)
+            if not out.trpProfileID and TRP3_API and TRP3_API.register and TRP3_API.register.getUnitIDProfileID then
+                local okProfileID, profileID = pcall(TRP3_API.register.getUnitIDProfileID, out.trpUnitID)
+                if okProfileID then out.trpProfileID = profileID end
+            end
         end
+    end
+
+    if UnitIsPlayer and UnitIsPlayer(unit) then
+        out.nameColor = out.nameColor or GetPlayerTurnNameColorHex(nil, unit)
     end
 
     if AddOn_TotalRP3 and AddOn_TotalRP3.Player and AddOn_TotalRP3.Player.static and AddOn_TotalRP3.Player.static.CreateFromCharacterID and unitID then
@@ -1123,6 +1279,35 @@ local function TryGetTRP3UnitInfo(unit)
     end
 
     return out
+end
+
+local function RefreshPlayerEntryTRP3Meta(entry)
+    if not entry or entry.kind ~= "player" or not HarfordTRP3 then return end
+    local profile
+    local matchedUnit
+
+    if entry.trpUnitID and entry.trpUnitID ~= "" and HarfordTRP3.GetPlayerProfileByUnitID then
+        profile = HarfordTRP3.GetPlayerProfileByUnitID(entry.trpUnitID)
+    end
+
+    if not profile then
+        local units = { "player", "target", "mouseover", "focus" }
+        for i = 1, 4 do units[#units + 1] = "party" .. tostring(i) end
+        for i = 1, 40 do units[#units + 1] = "raid" .. tostring(i) end
+        for _, unit in ipairs(units) do
+            if UnitExists and UnitExists(unit) then
+                local guidMatches = UnitGUID and entry.id and entry.id ~= "" and UnitGUID(unit) == entry.id
+                local unitID = HarfordTRP3.BuildUnitID and HarfordTRP3.BuildUnitID(unit)
+                if guidMatches or (unitID and entry.trpUnitID ~= "" and unitID == entry.trpUnitID) then
+                    profile = HarfordTRP3.GetPlayerProfile and HarfordTRP3.GetPlayerProfile(unit)
+                    matchedUnit = unit
+                    break
+                end
+            end
+        end
+    end
+
+    entry.nameColor = GetPlayerTurnNameColorHex(profile, matchedUnit) or entry.nameColor
 end
 
 local function GetFallbackCreatureIcon(unit)
@@ -1166,8 +1351,9 @@ local function GetEntryResourceValues(entry)
             local tbl = HarfordDnDAPI.GetResourcesForName(entry.unitName or entry.name)
             if tbl then
                 local cur, max = GetResourceFromTable(tbl, "health")
+                local temp = GetResourceFromTable(tbl, "temp_health")
                 if max > 0 then
-                    return cur, max
+                    return cur, max, temp
                 end
             end
         end
@@ -1175,20 +1361,22 @@ local function GetEntryResourceValues(entry)
         return nil, nil
     end
 
-    return SafeNumber(entry and entry.hp, 0), SafeNumber(entry and entry.maxHp, 0)
+    return SafeNumber(entry and entry.hp, 0), SafeNumber(entry and entry.maxHp, 0), SafeNumber(entry and entry.tempHp, 0)
 end
 
-local function UpdateSmallBar(bar, text, cur, max, r, g, b)
+local function UpdateSmallBar(bar, text, cur, max, r, g, b, temp)
     if cur == nil or max == nil then
         bar:SetMinMaxValues(0, 1)
         bar:SetStatusBarColor(0.28, 0.28, 0.28, 1)
         bar:SetValue(0)
+        if bar.tempFill then bar.tempFill:Hide() end
         text:SetText("--/--")
         return
     end
 
     max = SafeNumber(max, 0)
     cur = SafeNumber(cur, 0)
+    temp = math.max(0, SafeNumber(temp, 0))
     local shownMax = max
     if max <= 0 then max = 1 cur = 0 end
     if cur > max then cur = max end
@@ -1197,7 +1385,20 @@ local function UpdateSmallBar(bar, text, cur, max, r, g, b)
     bar:SetStatusBarColor(r, g, b, 1)
     bar:SetValue(max)
     bar:SetValue(cur)
-    text:SetText(tostring(cur) .. "/" .. tostring(shownMax))
+    if bar.tempFill then
+        if temp > 0 then
+            local width = bar:GetWidth() or 0
+            local tempWidth = math.max(2, width * math.min(temp / max, 1))
+            bar.tempFill:ClearAllPoints()
+            bar.tempFill:SetPoint("TOPLEFT", bar, "TOPLEFT", 0, 0)
+            bar.tempFill:SetPoint("BOTTOMLEFT", bar, "BOTTOMLEFT", 0, 0)
+            bar.tempFill:SetWidth(tempWidth)
+            bar.tempFill:Show()
+        else
+            bar.tempFill:Hide()
+        end
+    end
+    text:SetText(temp > 0 and (tostring(cur) .. "+" .. tostring(temp) .. "/" .. tostring(shownMax)) or (tostring(cur) .. "/" .. tostring(shownMax)))
 end
 
 local function IsEntryCurrentTarget(entry)
@@ -1264,6 +1465,10 @@ RefreshFrame = function()
 
     if not isAdmin and editMode then
         editMode = false
+        reorderSelectedIndex = nil
+    end
+    if reorderSelectedIndex and (reorderSelectedIndex < 1 or reorderSelectedIndex > count) then
+        reorderSelectedIndex = nil
     end
     UpdateEditButton()
 
@@ -1292,6 +1497,7 @@ RefreshFrame = function()
         local entryIndex = displayStart + i - 1
         local entry = store.entries[entryIndex]
         if entry then
+            RefreshPlayerEntryTRP3Meta(entry)
             card.entryIndex = entryIndex
             card:Show()
             card.name:SetText(entry.name or "Sin nombre")
@@ -1304,9 +1510,9 @@ RefreshFrame = function()
                 card.name:SetTextColor(GetEntryNameColor(entry))
                 card.init:SetText("")
                 card.init:Hide()
-                local hp, maxHp = GetEntryResourceValues(entry)
+                local hp, maxHp, tempHp = GetEntryResourceValues(entry)
                 card.hp:Show()
-                UpdateSmallBar(card.hp, card.hpText, hp, maxHp, 0.78, 0.05, 0.08)
+                UpdateSmallBar(card.hp, card.hpText, hp, maxHp, 0.78, 0.05, 0.08, tempHp)
             end
             SetCardTargetState(card, IsEntryCurrentTarget(entry))
             SetEntryPortrait(card.icon, entry)
@@ -1324,9 +1530,11 @@ RefreshFrame = function()
             card.moveRight:SetShown(isAdmin and editMode)
             card.moveLeft:SetEnabled(entryIndex > 1)
             card.moveRight:SetEnabled(entryIndex < #store.entries)
+            card.reorder:SetShown(editMode and reorderSelectedIndex == entryIndex)
         else
             card.entryIndex = nil
             SetCardTargetState(card, false)
+            card.reorder:Hide()
             card:Hide()
         end
     end
@@ -1435,7 +1643,25 @@ local function AdjustHp(index, amount)
         end
 
         local targetName = tostring(entry.unitName or entry.name or "")
-        local ok, err = HarfordDnDAPI.AdjustResourceForName(targetName, "health", amount)
+        local healthDelta = amount
+        if amount < 0 then
+            local _, _, tempHp = GetEntryResourceValues(entry)
+            tempHp = math.max(0, SafeNumber(tempHp, 0))
+            if tempHp > 0 then
+                local absorb = math.min(tempHp, math.abs(amount))
+                local okTemp, errTemp = HarfordDnDAPI.AdjustResourceForName(targetName, "temp_health", -absorb)
+                if not okTemp then
+                    Print("No se pudo ajustar vida temporal de " .. tostring(entry.name or targetName) .. ": " .. tostring(errTemp or "error desconocido"))
+                    return
+                end
+                healthDelta = amount + absorb
+            end
+        end
+
+        local ok, err = true, nil
+        if healthDelta ~= 0 then
+            ok, err = HarfordDnDAPI.AdjustResourceForName(targetName, "health", healthDelta)
+        end
         if not ok then
             Print("No se pudo enviar ajuste de vida a " .. tostring(entry.name or targetName) .. ": " .. tostring(err or "error desconocido"))
         end
@@ -1464,7 +1690,14 @@ local function AdjustHp(index, amount)
     end
 
     local maxHp = SafeNumber(entry.maxHp, 0)
-    entry.hp = math.max(0, math.min(SafeNumber(entry.hp, 0) + amount, maxHp))
+    if amount < 0 and SafeNumber(entry.tempHp, 0) > 0 then
+        local absorb = math.min(SafeNumber(entry.tempHp, 0), math.abs(amount))
+        entry.tempHp = math.max(0, SafeNumber(entry.tempHp, 0) - absorb)
+        amount = amount + absorb
+    end
+    if amount ~= 0 then
+        entry.hp = math.max(0, math.min(SafeNumber(entry.hp, 0) + amount, maxHp))
+    end
     MarkChanged()
 end
 
@@ -1563,7 +1796,12 @@ local function CreateCard(parent, index)
     card:SetScript("OnMouseUp", function(self, button)
         if button ~= "LeftButton" then return end
         local store = EnsureStore()
-        local entry = store.entries[self.entryIndex or index]
+        local entryIndex = self.entryIndex or index
+        if editMode then
+            ClickEditEntry(entryIndex)
+            return
+        end
+        local entry = store.entries[entryIndex]
         ShowEntrySheet(entry)
     end)
     SetFrameBackground(card)
@@ -1577,6 +1815,12 @@ local function CreateCard(parent, index)
     card.active:SetTexture(TEX_WHITE)
     card.active:SetVertexColor(1.0, 0.78, 0.20, 0.28)
     card.active:SetAllPoints(card)
+
+    card.reorder = card:CreateTexture(nil, "OVERLAY")
+    card.reorder:SetTexture(TEX_WHITE)
+    card.reorder:SetVertexColor(0.65, 0.25, 1.0, 0.32)
+    card.reorder:SetAllPoints(card)
+    card.reorder:Hide()
 
     card.targetTop = card:CreateTexture(nil, "OVERLAY")
     card.targetTop:SetTexture(TEX_WHITE)
@@ -1632,8 +1876,13 @@ local function CreateCard(parent, index)
     card.hpBg:SetAllPoints()
     card.hpBg:SetTexture(TEX_WHITE)
     card.hpBg:SetVertexColor(0.08, 0.08, 0.08, 0.95)
+    card.hp.tempFill = card.hp:CreateTexture(nil, "OVERLAY", nil, 1)
+    card.hp.tempFill:SetTexture(TEX_WHITE)
+    card.hp.tempFill:SetVertexColor(0.35, 0.82, 1.0, 0.78)
+    card.hp.tempFill:Hide()
     card.hpText = card.hp:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     card.hpText:SetPoint("CENTER", 0, 0)
+    if card.hpText.SetDrawLayer then card.hpText:SetDrawLayer("OVERLAY", 7) end
 
     card.turn = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     card.turn:SetPoint("BOTTOM", 0, 7)
@@ -1831,6 +2080,13 @@ SlashCmdList["HARFORDTURNOS"] = function(msg)
         PrevTurn()
     elseif cmd == "sort" or cmd == "ordenar" or cmd == "edit" or cmd == "editar" then
         ToggleEditMode()
+    elseif cmd == "move" or cmd == "mover" then
+        local fromIndex, toIndex = rest:match("^(%d+)%s+(%d+)$")
+        if not fromIndex or not toIndex then
+            Print("Uso: /turnos mover <origen> <destino>")
+            return
+        end
+        MoveEntryToIndex(tonumber(fromIndex), tonumber(toIndex))
     elseif cmd == "clear" or cmd == "limpiar" then
         if not IsTurnAdmin() then Print("Solo el admin puede limpiar turnos.") return end
         ClaimAdminIfNeeded()

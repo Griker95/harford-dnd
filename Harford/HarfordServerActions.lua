@@ -104,6 +104,26 @@ function API.SetNpcHealthDelta(delta, opts)
     return SendCommand("npc set health " .. sign, opts)
 end
 
+function API.SetNpcAura(spellId, opts)
+    local safeSpellId, spellErr = ToPositiveInteger(spellId, "spellId")
+    if not safeSpellId then
+        return false, spellErr
+    end
+
+    return SendCommand("npc set aura " .. tostring(safeSpellId), opts)
+end
+
+function API.SetPhaseNpcFaction(factionId, opts)
+    local safeFactionId, factionErr = ToPositiveInteger(factionId, "Faction ID")
+    if not safeFactionId then
+        return false, factionErr
+    end
+
+    opts = opts or {}
+    opts.forceEpsilon = true
+    return SendCommand("ph f n fac " .. tostring(safeFactionId), opts)
+end
+
 function API.SendRawDebug(command, callback, opts)
     if not HarfordDebug or not HarfordDebug.IsEnabled or not HarfordDebug.IsEnabled() then
         local err = "debug desactivado"

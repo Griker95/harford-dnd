@@ -26,7 +26,7 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
    [Cliente Epsilon]\_retail_\Interface\AddOns\
    ```
 3. Iniciar el cliente Epsilon y activar ambos addons en el selector de addons.
-4. `HarfordAdmin` solo debe activarse en cuentas con permisos de DM/Admin.
+4. `HarfordAdmin` solo debe activarse en cuentas con permisos de DM/Admin. Las herramientas sensibles requieren ademas `.ph dm` activo; Harford base queda como receptor/renderizador para jugadores.
 
 ---
 

@@ -10,6 +10,8 @@ local function Print(message)
     print("|cff88ccff[HarfordDebug]|r " .. tostring(message or ""))
 end
 
+API.Print = Print
+
 local function IsEnabled()
     return HarfordDebugSettings.enabled == true
 end
@@ -170,6 +172,29 @@ API.RegisterCommand("auth", function()
     Print("Puede comandos admin: " .. Bool(status.canUseAdminCommands))
     Print("Puede herramientas DM: " .. Bool(status.canUseDMTools))
 end, "estado de permisos Harford/ARC")
+
+API.RegisterCommand("authraw", function()
+    local function RawBool(value)
+        return tostring(value) .. " (" .. type(value) .. ")"
+    end
+
+    Print("raw C_Epsilon.IsDM: " .. RawBool(C_Epsilon and C_Epsilon.IsDM))
+    if ARC and ARC.PHASE and ARC.PHASE.IsDM then
+        local ok, value = pcall(ARC.PHASE.IsDM)
+        Print("raw ARC.PHASE.IsDM(): " .. (ok and RawBool(value) or ("ERROR " .. tostring(value))))
+    else
+        Print("raw ARC.PHASE.IsDM(): no disponible")
+    end
+    if ARC and ARC.XAPI and ARC.XAPI.Phase and ARC.XAPI.Phase.IsDM then
+        local ok, value = pcall(ARC.XAPI.Phase.IsDM)
+        Print("raw ARC.XAPI.Phase.IsDM(): " .. (ok and RawBool(value) or ("ERROR " .. tostring(value))))
+    else
+        Print("raw ARC.XAPI.Phase.IsDM(): no disponible")
+    end
+    Print("HarfordAuthority.IsDMMode(): " .. RawBool(HarfordAuthority and HarfordAuthority.IsDMMode and HarfordAuthority.IsDMMode()))
+    Print("raw C_Epsilon.IsOfficer(): " .. RawBool(C_Epsilon and C_Epsilon.IsOfficer and C_Epsilon.IsOfficer()))
+    Print("raw C_Epsilon.IsOwner(): " .. RawBool(C_Epsilon and C_Epsilon.IsOwner and C_Epsilon.IsOwner()))
+end, "valores raw de C_Epsilon/ARC para .ph dm")
 
 API.RegisterCommand("phase", function()
     if not HarfordServerActions or not HarfordServerActions.GetPhaseInfo then

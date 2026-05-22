@@ -79,16 +79,11 @@ Harford/
 
 HarfordAdmin/
   HarfordAdmin.lua            -- bootstrap, slash commands, API admin existente
-<<<<<<< Updated upstream
-  HarfordAdminNPC.lua         -- acciones admin basicas sobre target/NPC/enemigo
-  HarfordAdminUnitMenu.lua    -- menu contextual DM en PlayerFrame/TargetFrame
-  HarfordAdminPanel.lua       -- futuro: panel DM central si hace falta
-=======
   HarfordAdminNPC.lua           -- acciones admin basicas sobre target/NPC/enemigo
   HarfordAdminLoot.lua          -- editor DM para cargar/editar/compartir tablas de loot
   HarfordAdminUnitMenu.lua      -- menu contextual DM en PlayerFrame/TargetFrame
   HarfordReputationAdmin.lua    -- panel GM de gestion de reputaciones: crear/editar/ordenar/renombrar grupos
->>>>>>> Stashed changes
+  HarfordAdminPanel.lua         -- futuro: panel DM central si hace falta
 ```
 
 Contrato `HarfordEpsilonCommands`:
@@ -113,17 +108,12 @@ Contrato `HarfordServerActions`:
   - `HarfordServerActions.RemoveAura(spellId, target, opts)`: envia `unaura <spellId> <target>`.
   - `HarfordServerActions.GetPhaseInfo(callback, opts)`: envia `phase info addon` con callback via EpsilonLib.
   - `HarfordServerActions.SetNpcHealthDelta(delta, opts)`: envia `npc set health +N/-N`, validando delta numerico y limite absoluto.
-<<<<<<< Updated upstream
-=======
   - `HarfordServerActions.SetNpcAura(spellId, opts)`: envia `npc set aura <spellId>`, validando `spellId`. Uso preferente para auras sobre NPC target desde herramientas DM.
   - `HarfordServerActions.SetPhaseNpcFaction(factionId, opts)`: envia `ph f n fac <FactionID>` para asignar al NPC target la faccion Epsilon configurada en una reputacion Harford. El comando se envia sin punto inicial por el wrapper.
->>>>>>> Stashed changes
   - `HarfordServerActions.SendRawDebug(command, callback, opts)`: comando raw solo si `HarfordDebug` esta activo.
 - `Harford/HarfordLoot.lua` debe usar esta capa para `additem`, `aura 224063 self` y `unaura 224063 self`.
 - Nuevas features DM/NPC deberian anadir acciones aqui antes de crear UI.
 
-<<<<<<< Updated upstream
-=======
 Contrato `HarfordLoot`:
 
 - Vive en `Harford/HarfordLoot.lua`.
@@ -162,7 +152,7 @@ Contrato `HarfordReputation` (core):
 - `HarfordReputation.IsAtWarPoints(points)` → `true` desde `Hostil` hacia abajo (`points <= -3001`: Hostil/Odiado). Al subir por encima de Hostil (`Adverso`, `Neutral` o mejor) debe quitarse. `SetPlayerPoints` actualiza automaticamente `repEntry.atWar` en reputacion de jugador/gremio; sync tambien lo reconstruye al recibir puntos.
 - Visual `At War` en `HarfordReputationUI`: no basta con guardar `repEntry.atWar`. La fila debe mostrar dos texturas nativas `AtWarHighlight1/2` con `Interface\\PaperDollInfoFrame\\UI-Character-ReputationBar`, alpha ~0.20, replicando `ReputationBarXReputationBarAtWarHighlight1/2` del `FrameDump`. Deben ir embebidas en el marco de la fila: `AtWarHighlight1` empieza en `indent+3` (donde empieza el marco de esa fila) y se une a `AtWarHighlight2`, que cierra en `TOPRIGHT row -1,-2`. Usar capa `OVERLAY -2`: `ARTWORK -1` queda tapado por el marco/fondo, mientras `OVERLAY -2` sigue por debajo del texto (`Name`/`FactionStanding`) y no flota por encima de la seleccion. Se muestran solo en filas de faccion con `atWar=true`; headers las ocultan.
 - `HarfordReputation.AdjustTarget(factionId, delta)` → ajusta al target actual + hereda gremio.
-- `HarfordReputation.CanEdit()` → requiere `HarfordAuthority.IsDMMode() == true`.
+- `HarfordReputation.CanEdit()` -> requiere `HarfordAdmin` cargado (`HarfordAuthority.HasAdminAddon() == true`) y `.ph dm` activo (`HarfordAuthority.IsDMMode() == true`). El core Harford recibe/aplica sync, pero no debe editar estructura/puntos sin la capa admin.
 - `HarfordReputation.GetCurrentPlayerPoints(factionId)` → atajo al jugador local. En el panel principal, un jugador normal ve siempre su reputacion local. Si `HarfordAdmin` esta cargado, el modo DM esta activo y el target es un jugador, el panel puede mostrar las reputaciones de ese target para trabajo admin.
 - En modo DM con target jugador, el panel principal **no debe leer los puntos del target desde el store local del DM**. Debe pedir una vista remota al cliente objetivo mediante `HarfordReputationSync.RequestPlayerSnapshot(playerKey)` y mostrar esa cache de solo lectura. Si aun no ha llegado la respuesta, mostrar estructura local/0 temporalmente antes que mezclar valores propios del DM.
 - `HarfordReputation.GetUnitFactionRelationship(unit)` → `factionId, points, rank, rankColor` si la unidad tiene NPC link.
@@ -175,10 +165,8 @@ Contrato `HarfordReputation` (core):
 - `HarfordReputation.SetFactionGroup(factionId, groupName, subgroupName)` → mueve una faccion a un grupo/seccion.
 - `HarfordReputation.RenameGroup(oldName, newName)` → actualiza `faction.group` en todas las facciones del grupo.
 - `HarfordReputation.RenameSubgroup(groupName, oldSub, newSub)` → renombra subgrupo dentro de un grupo.
-- `HarfordReputation.DeleteGroup(groupName)` → borra solo grupos vacios, incluido `Reputaciones Harford` si esta vacio. No debe mover facciones automaticamente al grupo base ni recrear `Reputaciones Harford`, porque eso genera encabezados fantasma al limpiar estructura. Si el grupo tiene facciones, bloquear y pedir mover/borrar primero.
-- `HarfordReputation.DeleteSubgroup(groupName, subgroupName)` → elimina la seccion y deja sus facciones en la raiz del mismo grupo.
-- `HarfordReputation.DeleteGroup(groupName)` → borra el encabezado persistente; si contiene facciones, no las borra, las mueve al grupo base `Reputaciones Harford` sin subgrupo. No permite borrar el grupo base.
-- `HarfordReputation.DeleteSubgroup(groupName, subgroupName)` → borra la seccion persistente; si contiene facciones, no las borra, les limpia `subgroup` para dejarlas en la raiz del grupo.
+- `HarfordReputation.DeleteGroup(groupName)` -> borra solo grupos vacios, incluido `Reputaciones Harford` si esta vacio. No debe mover facciones automaticamente al grupo base ni recrear `Reputaciones Harford`, porque eso genera encabezados fantasma al limpiar estructura. Si el grupo tiene facciones, bloquear y pedir mover/borrar primero.
+- `HarfordReputation.DeleteSubgroup(groupName, subgroupName)` -> borra la seccion persistente; si contiene facciones, no las borra, les limpia `subgroup` para dejarlas en la raiz del grupo.
 - `HarfordReputation.SwapFactionOrder(factionIdA, factionIdB)` → intercambia `sortOrder` entre dos facciones (uso: botones ↑/↓ en panel admin).
 - `HarfordReputation.SetFactionSortOrder(factionId, order)` → asigna sortOrder directamente.
 - `HarfordReputation.MoveFactionOrder(factionId, direction)` → normaliza sortOrder y mueve una faccion una posicion en el orden global.
@@ -277,7 +265,7 @@ Contrato `HarfordReputationUI`:
 - **Panel de detalle lateral** (derecha del panel principal): replica compacta de `ReputationDetailFrame` de Shadowlands segun `FrameDump.lua`: tamano aproximado `212x203`, anclado fuera del panel principal con `TOPLEFT` al `TOPRIGHT` del panel de reputacion (`x=1`, `y=-18`) para quedar pegado al borde derecho y algo mas alto sin solaparse con el marco, marco `DialogBorderTemplate`, boton cerrar `UIPanelCloseButton`, icono de faccion arriba a la izquierda, nombre con fuente nativa (`FRIZQT__` 12) coloreado con `faction.color` y descripcion debajo con fuente `FRIZQT__` 11. La descripcion usa altura `132` cuando no hay acciones DM visibles para aprovechar el cuerpo hasta abajo; si el boton DM `Ajustar...` esta visible baja a `108` para no solaparse. Composicion de fondos: base negra habitual ocupando todo el interior del frame, cabecera oscura hasta `y=-52` y textura `Interface\\AchievementFrame\\UI-Achievement-Parchment-Horizontal` (la misma que usan secciones internas como Ataque) desde `y=-52` hasta abajo, siempre en capa `BACKGROUND` para no tapar el marco; encima del pergamino hay un oscurecedor negro `alpha=0.22` para conservar la textura pero bajar su brillo. Entre cabecera y descripcion hay un separador fino propio de dos lineas (`BLACK` + dorado tenue), no la textura nativa `131074`: esa textura corresponde al divisor inferior del `ReputationDetailFrame` antes de los checkboxes nativos y no debe reutilizarse en cabecera. No usar el fileID nativo `136565` como fondo expandido: en Epsilon deja zonas transparentes al escalarlo. No mostrar bloque inferior de booleanos (`Relacion`, `Progreso`, `Visible`) ni su separador. Accion DM compacta: un unico boton `Ajustar...`.
 - **`adjustPrompt` / boton de accion del detalle**: frame 200×85, hijo de `panel`, aparece encima del detalle (`BOTTOM→detail TOP 0,6`). Contiene label, EditBox (`InputBoxTemplate`), botones OK y Cancelar. Acepta numero positivo o negativo. Si el target actual es otro jugador, ajusta la reputacion del target; si no hay target jugador o `target == player`, ajusta la reputacion propia y el boton debe decir `Ajustar propio` (sin parentesis). Si el target actual es NPC/no jugador, el boton cambia a `Asignar Faccion` y no abre prompt: valida que la reputacion seleccionada tenga `epsilonFactionId` y ejecuta `HarfordServerActions.SetPhaseNpcFaction(epsilonFactionId, { addonName = "HarfordAdmin", forceEpsilon = true })`; si falta ID no ejecuta comando y avisa al usuario. Si se mantiene `SHIFT` al pulsar `Ajustar`, el boton debe mostrar `Ajustar raid` y el prompt envia el valor como delta a toda la party/raid (`RDELTA`) para la faccion seleccionada. No usar ticks para esto: en `MODIFIER_STATE_CHANGED`, normalizar `key:upper()`, aceptar cualquier key que contenga `SHIFT` (incluido `SHIFT` a secas) y recalcular con `IsShiftKeyDown()`, `IsLeftShiftKeyDown()` y `IsRightShiftKeyDown()` si existen. `OnEnter`/`OnMouseDown` quedan solo como respaldo. Escape/Cancelar cierra sin accion. Click en `Ajustar` mientras esta visible lo cierra (toggle).
 - **Frame level**: `DIALOG` strata, level **100** — igual que `DND5E_PlayerFrame` en `HarfordDnD`. Sin llamadas a `Raise()`. Asi ninguno de los dos paneles pisa al otro permanentemente.
-- Solo el DM (`HarfordReputation.CanEdit()` / `.ph dm`) deberia poder editar reputaciones; si se reintroduce editor avanzado, conservar esta regla.
+- Solo HarfordAdmin con `.ph dm` activo (`HarfordReputation.CanEdit()`) deberia poder editar reputaciones; si se reintroduce editor avanzado, conservar esta regla.
 - Columnas de rango coloreadas: Exaltado=dorado, Reverenciado=violeta, Honorable=azul, Amistoso=verde, Neutral=gris, Adverso=naranja, Hostil=naranja oscuro, Odiado=rojo.
 - Texturas de barra CONFIRMADAS en Harford (inspeccionado en cliente con frame debugger):
   - Fill: `UI-Character-Skills-Bar` via `SetStatusBarTexture`. Confirmado correcto.
@@ -338,8 +326,6 @@ Contrato `HarfordReputationSync`:
   - Scope `FACTION`: sustituye solo esa faccion y limpia/reaplica sus puntos y links relacionados, preservando el resto del store local.
 - Solo el DM emite snapshots desde botones admin explicitos. Los cambios locales (`CreateFaction`, `UpdateFaction`, ajustes de puntos, links NPC, etc.) no se emiten automaticamente; primero modifican SavedVariables locales y refrescan UI. Para compartirlos con la raid/grupo hay que pulsar `Compartir todo` o `Compartir seleccion`.
 - Todos los clientes reciben y aplican snapshots con supresion interna de rebroadcast (`suppress`) para no reenviar el snapshot al grupo.
-
->>>>>>> Stashed changes
 Modulo `HarfordDebug`:
 
 - Vive en `Harford/HarfordDebug.lua`.
@@ -395,21 +381,32 @@ Contrato `HarfordAuthority`:
   - `HarfordAuthority.CanUseMemberCommands()`: true si `HarfordAdmin` esta cargado o si es member/officer/owner.
   - `HarfordAuthority.CanUseOfficerCommands()`: true si `HarfordAdmin` esta cargado o si es officer/owner.
   - `HarfordAuthority.CanUseAdminCommands()`: true solo si `HarfordAdmin` esta cargado.
-  - `HarfordAuthority.CanUseDMTools()`: true si `HarfordAdmin` esta cargado o si `.ph dm` esta activo.
+  - `HarfordAuthority.CanUseDMTools()`: true solo si `HarfordAdmin` esta cargado y `.ph dm` esta activo. Tener el addon admin instalado no implica permiso DM; estar en `.ph dm` sin HarfordAdmin tampoco habilita herramientas admin.
   - `HarfordAuthority.CanUse(requirement)`: comprueba `member`, `officer`, `admin` o `dm`.
   - `HarfordAuthority.Require(requirement, actionName)`: helper para bloquear acciones segun capacidad.
   - `HarfordAuthority.GetStatus()`: snapshot para debug/UI.
   - `HarfordAuthority.RequireDMTools(actionName)`: helper para bloquear acciones futuras.
+  - `HarfordAuthority.RegisterChangeListener(owner, callback)`: bus comun para UIs admin; el callback recibe `status, reason` cuando cambian admin addon, phase, rango o `.ph dm`.
+  - `HarfordAuthority.ScheduleRefresh(reason)` / `NotifyChanged(reason, force)`: refresco centralizado de autoridad.
 - Importante: `member`, `officer/owner`, `admin addon` y `.ph dm` son ejes separados. No asumir que estar en DM mode implica rango de phase, ni que ser officer implica estar en DM mode.
+- `RegisterChangeListener` debe invocar callbacks con `pcall` tanto al registrar como en cambios posteriores. Si un listener falla, reportar via `HarfordDebug.Print` o `DEFAULT_CHAT_FRAME`, pero no romper la carga del addon.
+- Lectura robusta de flags Epsilon: tratar `true`, `1`, `"1"` y `"true"` como valores activos. Algunos estados restaurados por Epsilon tras relog/cambio de mapa pueden no llegar como booleano Lua puro.
+- Eventos de autoridad: `HarfordAuthority` escucha `ADDON_LOADED`, `PLAYER_LOGIN`, `PLAYER_ENTERING_WORLD`, `PLAYER_FLAGS_CHANGED`, `CHAT_MSG_SYSTEM` y `UI_ERROR_MESSAGE`. No registrar `EPSILON_PHASE_CHANGE` directamente en un frame WoW: en este cliente produce `Attempt to register unknown event`; si `EpsilonLib.EventManager` esta disponible, registrarse ahi con `EpsilonLib.EventManager:Register("EPSILON_PHASE_CHANGE", ...)` protegido por `pcall`.
+- SpellCreator confirma que `.ph dm` se actualiza desde `UI_ERROR_MESSAGE`: en `SpellCreator.lua`, si el mensaje es `"DM mode is ON"` pone `C_Epsilon.IsDM = true`; si es `"DM mode is OFF"` lo pone en `false`. Tambien resetea `C_Epsilon.IsDM = false` en `PLAYER_ENTERING_WORLD`/cambio de phase. Por tanto, si tras relog/mapa el servidor no vuelve a emitir `DM mode is ON`, `ARC.PHASE.IsDM()` seguira devolviendo falso aunque el jugador tenga `HarfordAdmin`.
+- No usar ticker ni reintentos temporizados esperando `.ph dm`: tener `HarfordAdmin` instalado no implica que el jugador vaya a activar `.ph dm`. Si Epsilon restaura/cambia el estado, debe llegar por evento (`UI_ERROR_MESSAGE`, `PLAYER_FLAGS_CHANGED`, `EpsilonLib.EventManager` o mensaje de sistema) y entonces se refrescan las UIs admin.
+- UIs admin deben registrarse en `RegisterChangeListener` en vez de depender solo de sus propios eventos. Confirmado: `HarfordAdminUnitMenu`, `HarfordAdminLoot` y `HarfordReputationUI` se refrescan desde este bus.
 - Referencia SpellCreator:
   - `ARC.PHASE.IsMember = C_Epsilon.IsMember`
   - `ARC.PHASE.IsOfficer = C_Epsilon.IsOfficer`
   - `ARC.PHASE.IsOwner = C_Epsilon.IsOwner`
   - `ARC.PHASE.GetPhaseId = C_Epsilon.GetPhaseId`
   - `ARC.PHASE.IsDM = function() return C_Epsilon.IsDM end`
+  - `ARC.XAPI.Phase.IsDM = ARC.PHASE.IsDM`
   - `SpellCreator/Permissions.lua` considera DM habilitado solo si `C_Epsilon.IsDM` y (`C_Epsilon.IsOfficer()` o `C_Epsilon.IsOwner()`).
+  - `Permissions.isDMEnabled()` es interno del namespace de SpellCreator (`ns.Permissions`), no API global publica. Para Harford usar `ARC.PHASE.IsDM` / `ARC.XAPI.Phase.IsDM` como fuente publica y mantener `HarfordAuthority.IsDMEnabled()` como equivalente local cuando se necesite el criterio DM+officer/owner.
 - Comando debug:
   - `/harforddebug run auth`: muestra estado de admin addon, phase rank, `.ph dm` y permisos DM tools.
+  - `/harforddebug run authraw`: imprime valores raw de `C_Epsilon.IsDM`, `ARC.PHASE.IsDM()`, `ARC.XAPI.Phase.IsDM()`, `HarfordAuthority.IsDMMode()`, `C_Epsilon.IsOfficer()` y `C_Epsilon.IsOwner()`.
 
 Contrato `HarfordAdminNPC`:
 
@@ -443,6 +440,11 @@ Contrato `HarfordAdminLoot`:
 - El editor sigue automaticamente el target NPC en `PLAYER_TARGET_CHANGED`: al seleccionar un NPC rellena `NPC ID`, desactiva `Loot global`, limpia seleccion si cambia la criatura y refresca la lista sin boton `Usar target`.
 - El campo `ItemID` acepta numeros o enlaces de item tipo chat (`|Hitem:12345:...|h[...]|h`). Si el campo tiene foco, `Shift+click` sobre un item rellena el ID mediante hook seguro de `ChatEdit_InsertLink`; tambien acepta drag de item con `OnReceiveDrag`.
 - El portrait del editor usa mascara circular (`TempPortraitAlphaMask`) y respeta `HarfordConfig.Get("portrait_target_npc")`: icono TRP3 via `HarfordTRP3.GetEpsilonNpcProfile("target")` + `HarfordTRP3.GetProfileIcon(profile)`, fallback WoW 3D via `SetPortraitTexture`, y fallback de bolsa (`Interface\\Icons\\INV_Misc_Bag_10`) si no hay NPC target.
+- El editor tiene acciones para limpiar solo el historico de loot resuelto (`HarfordLootTaggedCreatureRegistry`), sin tocar tablas/configuracion:
+  - `Limpiar local`: llama `HarfordLootAPI.ClearAllResolvedLoot()`.
+  - `Limpiar grupo`: envia `LOOTCLEAR|ALL` por `HARFORDLOOT` al `RAID`/`PARTY` resuelto por `HarfordSync.BestChannel()` y solo despues de envio correcto limpia el historico local, porque el emisor ignora sus propios mensajes addon. Debe llamar `HarfordLootAPI.ClearRemoteLoot(channel, nil, false)`; el tercer parametro debe ser `false` para no enviar `HARFORDCFG` vacio ni borrar configuracion. Si no hay grupo/raid, no debe limpiar localmente desde este boton.
+- `/harfordadmin lootclear ...` sigue la misma regla: limpia historico resuelto remoto, no tablas/configuracion. Para borrar configuracion de loot habria que crear una accion explicita distinta; no reutilizar `lootclear` enviando `HARFORDCFG` vacio.
+- `HarfordLootAPI.ClearRemoteLoot(channel, target, clearConfigToo)` debe devolver `false, err` si no hay canal, si `WHISPER` no tiene target o si `SendAddonMessage` falla. No devolver `true` a ciegas: el boton `Limpiar grupo` depende de ese resultado para decidir si limpia el historico local del emisor.
 
 Contrato `HarfordAdminUnitMenu`:
 
@@ -458,8 +460,9 @@ Contrato `HarfordAdminUnitMenu`:
   - `HarfordAdminUnitMenu.RefreshVisibility()`: muestra/oculta segun permisos y target.
   - `HarfordAdminUnitMenu.Open(unit, anchorButton)`: abre el menu para `player` o `target`.
   - `HarfordAdminUnitMenu.BuildNpcMenu(unit)` / `BuildPlayerMenu(unit)`: capturan snapshot de la unidad.
-  - `GetMeasuredButtonPoint(unit, parent)` (privada): posiciona el boton en el hueco entre portrait y barras usando `HarfordUnitFrames.GetMeasuredLayout(unit, false)`. `player` → borde derecho interior del portrait; `target` → borde izquierdo interior del portrait. Si `GetMeasuredLayout` no esta disponible o el parent no es un frame Harford, devuelve `nil` y `AnchorUnitButton` usa la posicion estatica de respaldo.
-- Inicializacion event-driven: registra `ADDON_LOADED` (filtrando Harford/HarfordAdmin/SpellCreator/EpsilonLib), `PLAYER_LOGIN`, `PLAYER_ENTERING_WORLD`, `PLAYER_TARGET_CHANGED` y `CHAT_MSG_SYSTEM`. No se usa `C_Timer.After` para diferir el attach.
+  - `GetMeasuredButtonPoint(unit, parent)` (privada): posiciona el boton en el hueco entre portrait y barras usando `HarfordUnitFrames.GetMeasuredLayout(unit, false)`. Debe aplicarse tanto si el parent es `HarfordPlayer/TargetUnitFrame` como si es el `PlayerFrame/TargetFrame` nativo, porque en modo frame separado los botones siguen teniendo que caer entre retrato y barras. `player` → borde derecho interior del portrait; `target` → borde izquierdo interior del portrait. Si `GetMeasuredLayout` no esta disponible, `AnchorUnitButton` usa la posicion estatica de respaldo.
+  - `SyncButtonFrameLevel(button, parent, parentName)` (privada): al reanclar, iguala el strata del parent y pone el boton por encima del parent y del `PlayerFrameTextureFrame`/`TargetFrameTextureFrame` nativo (`max(levels)+10`). No subirlo a `DIALOG/HIGH` global: debe quedar por encima de su unitframe, no de ventanas de otros addons.
+- Inicializacion event-driven: registra `ADDON_LOADED` (filtrando Harford/HarfordAdmin/SpellCreator/EpsilonLib), `PLAYER_LOGIN`, `PLAYER_ENTERING_WORLD`, `PLAYER_TARGET_CHANGED`, `PLAYER_FLAGS_CHANGED` y `CHAT_MSG_SYSTEM`. Ademas se registra en `HarfordAuthority.RegisterChangeListener("HarfordAdminUnitMenu", ...)`, que es la fuente comun para relog/cambio de mapa/restauracion `.ph dm`. No usar ticker continuo.
 - Reglas de seguridad:
   - Revalidar permisos antes de ejecutar cualquier accion.
   - Revalidar GUID/unidad antes de ejecutar acciones sobre target.

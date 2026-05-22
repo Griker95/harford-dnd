@@ -75,8 +75,18 @@ function HarfordLootAPI.BroadcastConfig(channel, target)
 end
 
 function HarfordLootAPI.ClearRemoteLoot(channel, target, clearConfigToo)
+    if not channel or channel == "" then
+        return false, "Sin canal disponible"
+    end
+    if channel == "WHISPER" and (not target or target == "") then
+        return false, "WHISPER requiere target"
+    end
+
     if clearConfigToo then
-        HarfordSync.SendLootConfigTables(LOOT_CFG_PREFIX, {}, {}, channel, target)
+        local ok, err = HarfordSync.SendLootConfigTables(LOOT_CFG_PREFIX, {}, {}, channel, target)
+        if not ok then
+            return false, err or "No se pudo enviar limpieza de configuracion"
+        end
     end
 
     return SendLootClearRemote("ALL", channel, target)
@@ -219,13 +229,23 @@ end
 
 SendLootClearRemote = function(scope, channel, target)
     local payload = "LOOTCLEAR|" .. tostring(scope or "ALL")
+    local ok, result
 
     if HarfordSync and HarfordSync.Send then
-        HarfordSync.Send(COMM_PREFIX, payload, channel, target)
+        ok, result = HarfordSync.Send(COMM_PREFIX, payload, channel, target)
     elseif C_ChatInfo and C_ChatInfo.SendAddonMessage then
-        C_ChatInfo.SendAddonMessage(COMM_PREFIX, payload, channel, target)
+        ok, result = pcall(C_ChatInfo.SendAddonMessage, COMM_PREFIX, payload, channel, target)
+    elseif SendAddonMessage then
+        ok, result = pcall(SendAddonMessage, COMM_PREFIX, payload, channel, target)
     else
-        SendAddonMessage(COMM_PREFIX, payload, channel, target)
+        return false, "SendAddonMessage no disponible"
+    end
+
+    if not ok then
+        return false, result or "No se pudo enviar limpieza de loot"
+    end
+    if result == false then
+        return false, "SendAddonMessage devolvio false"
     end
 
     return true
@@ -273,6 +293,9 @@ commFrame:SetScript("OnEvent", function(_, event, ...)
 
 					if scope == "ALL" or scope == "RESOLVED" then
 						HarfordLootAPI.ClearAllResolvedLoot()
+                        if HarfordDebug and HarfordDebug.Log then
+                            HarfordDebug.Log("loot clear recibido", tostring(scope), "de", tostring(sender))
+                        end
 					end
 
 					return

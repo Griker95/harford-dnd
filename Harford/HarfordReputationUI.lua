@@ -1477,3 +1477,9 @@ events:SetScript("OnEvent", function(_, event, addonName)
     end
     RefreshRows()
 end)
+
+if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
+    HarfordAuthority.RegisterChangeListener("HarfordReputationUI", function()
+        RefreshRows()
+    end)
+end

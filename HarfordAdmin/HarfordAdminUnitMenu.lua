@@ -583,14 +583,21 @@ end
 local function GetUnitButtonParent(parentName, unit)
     if HarfordUnitFrames and HarfordUnitFrames.GetFrame then
         local frame = HarfordUnitFrames.GetFrame(unit)
-        if frame then return frame end
+
+        -- HarfordUnitFrames.GetFrame("target") puede devolver HarfordTargetUnitFrame
+        -- aunque ese frame esté oculto, por ejemplo con targets NPC.
+        -- Si usamos un parent oculto, el botón queda shown=true pero visible=false.
+        if frame and frame.IsShown and frame:IsShown() then
+            return frame
+        end
     end
+
     return _G[parentName]
 end
 
 local function GetMeasuredButtonPoint(unit, parent)
     if not (HarfordUnitFrames and HarfordUnitFrames.GetMeasuredLayout) then return nil end
-    if not (parent and parent.GetName and parent:GetName() and parent:GetName():match("^Harford")) then return nil end
+    if not parent then return nil end
 
     local layout = HarfordUnitFrames.GetMeasuredLayout(unit, false)
     local anchorBox = layout and (layout.portrait or layout.name or layout.health)
@@ -603,6 +610,31 @@ local function GetMeasuredButtonPoint(unit, parent)
     return "CENTER", parent, "TOPLEFT", (anchorBox.x or 0) + (anchorBox.width or 0) - 2, centerY
 end
 
+local function GetNativeOverlayFrame(parentName)
+    if parentName == "TargetFrame" then
+        return _G.TargetFrameTextureFrame
+    end
+    if parentName == "PlayerFrame" then
+        return _G.PlayerFrameTextureFrame
+    end
+    return nil
+end
+
+local function SyncButtonFrameLevel(button, parent, parentName)
+    if not button or not parent then return end
+
+    if parent.GetFrameStrata and button.SetFrameStrata then
+        button:SetFrameStrata(parent:GetFrameStrata())
+    end
+
+    if not button.SetFrameLevel then return end
+
+    local parentLevel = parent.GetFrameLevel and parent:GetFrameLevel() or 0
+    local overlay = GetNativeOverlayFrame(parentName)
+    local overlayLevel = overlay and overlay.GetFrameLevel and overlay:GetFrameLevel() or parentLevel
+    button:SetFrameLevel(math.max(parentLevel, overlayLevel) + 10)
+end
+
 local function AnchorUnitButton(button, parentName, unit, point, relPoint, x, y)
     local parent = GetUnitButtonParent(parentName, unit)
     if not parent then return false end
@@ -610,6 +642,7 @@ local function AnchorUnitButton(button, parentName, unit, point, relPoint, x, y)
     if button:GetParent() ~= parent then
         button:SetParent(parent)
     end
+    SyncButtonFrameLevel(button, parent, parentName)
     button:ClearAllPoints()
     local measuredPoint, measuredParent, measuredRelPoint, measuredX, measuredY = GetMeasuredButtonPoint(unit, parent)
     if measuredPoint then
@@ -670,6 +703,7 @@ events:RegisterEvent("ADDON_LOADED")
 events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 events:RegisterEvent("PLAYER_TARGET_CHANGED")
+events:RegisterEvent("PLAYER_FLAGS_CHANGED")
 events:RegisterEvent("CHAT_MSG_SYSTEM")
 events:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
@@ -681,3 +715,10 @@ events:SetScript("OnEvent", function(_, event, ...)
     API.AttachButtons()
     API.RefreshVisibility()
 end)
+
+if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
+    HarfordAuthority.RegisterChangeListener("HarfordAdminUnitMenu", function()
+        API.AttachButtons()
+        API.RefreshVisibility()
+    end)
+end

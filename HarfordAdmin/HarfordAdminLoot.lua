@@ -135,6 +135,27 @@ local function RemoveLootEntry(scope, index)
     return true
 end
 
+local function ClearLocalLootHistory()
+    if not HarfordLootAPI or not HarfordLootAPI.ClearAllResolvedLoot then
+        return false, "HarfordLootAPI.ClearAllResolvedLoot no disponible"
+    end
+
+    return HarfordLootAPI.ClearAllResolvedLoot()
+end
+
+local function ClearGroupLootHistory()
+    if not HarfordLootAPI or not HarfordLootAPI.ClearRemoteLoot then
+        return false, "HarfordLootAPI.ClearRemoteLoot no disponible"
+    end
+
+    local channel = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+    if channel ~= "RAID" and channel ~= "PARTY" then
+        return false, "No hay grupo o raid para limpiar historico remoto."
+    end
+
+    return HarfordLootAPI.ClearRemoteLoot(channel, nil, false)
+end
+
 local function LoadEditorEntry(frame, index)
     local entries = GetEntries(GetEditorScope(frame))
     local entry = entries and entries[index]
@@ -490,6 +511,41 @@ local function CreateLootEditor()
         end
     end)
 
+    frame.clearLocalButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    frame.clearLocalButton:SetSize(118, 24)
+    frame.clearLocalButton:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 64, 50)
+    frame.clearLocalButton:SetText("Limpiar local")
+    frame.clearLocalButton:SetScript("OnClick", function()
+        if not CanEditLoot() then
+            Print("Necesitas HarfordAdmin y .ph dm activo para limpiar historico.")
+            return
+        end
+        local ok, err = ClearLocalLootHistory()
+        if ok then
+            Print("Historico de loot local limpiado.")
+        else
+            Print(err or "No se pudo limpiar el historico local.")
+        end
+    end)
+
+    frame.clearGroupButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    frame.clearGroupButton:SetSize(132, 24)
+    frame.clearGroupButton:SetPoint("LEFT", frame.clearLocalButton, "RIGHT", 10, 0)
+    frame.clearGroupButton:SetText("Limpiar grupo")
+    frame.clearGroupButton:SetScript("OnClick", function()
+        if not CanEditLoot() then
+            Print("Necesitas HarfordAdmin y .ph dm activo para limpiar historico.")
+            return
+        end
+        local ok, err = ClearGroupLootHistory()
+        if ok then
+            ClearLocalLootHistory()
+            Print("Historico de loot limpiado localmente y enviado a grupo/raid.")
+        else
+            Print(err or "No se pudo limpiar el historico remoto.")
+        end
+    end)
+
     local closeButton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     closeButton:SetSize(80, 24)
     closeButton:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -32, 22)
@@ -538,3 +594,11 @@ eventFrame:SetScript("OnEvent", function(_, event)
         API.Refresh(lootEditor)
     end
 end)
+
+if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
+    HarfordAuthority.RegisterChangeListener("HarfordAdminLoot", function()
+        if lootEditor and lootEditor:IsShown() then
+            API.Refresh(lootEditor)
+        end
+    end)
+end

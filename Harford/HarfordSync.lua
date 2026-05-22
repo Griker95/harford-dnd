@@ -86,11 +86,32 @@ function HarfordSync.RegisterPrefix(prefix)
 end
 
 function HarfordSync.Send(prefix, message, channel, target)
-    if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-        C_ChatInfo.SendAddonMessage(prefix, message, channel, target)
-    elseif SendAddonMessage then
-        SendAddonMessage(prefix, message, channel, target)
+    if not prefix or prefix == "" then
+        return false, "Prefix invalido"
     end
+    if not channel or channel == "" then
+        return false, "Sin canal disponible"
+    end
+    if channel == "WHISPER" and (not target or target == "") then
+        return false, "WHISPER requiere target"
+    end
+
+    local ok, result
+    if C_ChatInfo and C_ChatInfo.SendAddonMessage then
+        ok, result = pcall(C_ChatInfo.SendAddonMessage, prefix, message or "", channel, target)
+    elseif SendAddonMessage then
+        ok, result = pcall(SendAddonMessage, prefix, message or "", channel, target)
+    else
+        return false, "SendAddonMessage no disponible"
+    end
+
+    if not ok then
+        return false, result
+    end
+    if result == false then
+        return false, "SendAddonMessage devolvio false"
+    end
+    return true
 end
 
 function HarfordSync.BestChannel()

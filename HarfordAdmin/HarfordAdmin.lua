@@ -58,7 +58,7 @@ end
 
 local function SendLootClear(channel, target)
     if HarfordLootAPI and HarfordLootAPI.ClearRemoteLoot then
-        return HarfordLootAPI.ClearRemoteLoot(channel, target, true)
+        return HarfordLootAPI.ClearRemoteLoot(channel, target, false)
     end
     return false, "HarfordLootAPI.ClearRemoteLoot no disponible"
 end

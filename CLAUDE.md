@@ -36,6 +36,8 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 - **Reposicionar TargetFrameToT físicamente**: `TargetofTarget_Update` resetea anchors entre ticks. No mover el frame nativo — solo gestionar strata/level y cubrir con overlays.
 - **Límite de 200 locales Lua 5.1**: `HarfordUnitFrames.lua` roza el límite. Nuevos bloques de funciones deben ir dentro de `do...end` para no añadir locales al scope global. Exponer funciones públicas vía tabla (ver patrón `focusTot`).
 - **No ticks continuos**: no usar `C_Timer.NewTicker`, `OnUpdate` permanente ni polling para UI/permisos/nameplates/turnos. Preferir eventos WoW/addon. `OnUpdate` solo mientras dura una interacción real (drag/hover) y se limpia al terminar.
+- **Autoridad DM/Admin**: usar `HarfordAuthority.RegisterChangeListener` para refrescar UIs admin. No esperar `.ph dm` con timers: `HarfordAdmin` instalado no implica `.ph dm` activo. `CanUseDMTools()` y `HarfordReputation.CanEdit()` requieren ambas cosas: HarfordAdmin cargado + `.ph dm` activo. SpellCreator actualiza `C_Epsilon.IsDM` desde `UI_ERROR_MESSAGE` (`DM mode is ON/OFF`) y lo resetea al entrar/cambiar fase.
+- **Loot admin**: `Cargar loot Harford` vive en `HarfordAdminLoot`. Limpiar histórico usa `LOOTCLEAR|ALL` por `HARFORDLOOT`; no enviar `HARFORDCFG` vacío salvo que se quiera borrar configuración. `ClearRemoteLoot` debe propagar errores de canal/envío y `/harfordadmin lootclear` no borra configuración.
 
 ## Patrones de código recurrentes
 

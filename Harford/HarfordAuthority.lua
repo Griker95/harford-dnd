@@ -1,6 +1,9 @@
 HarfordAuthority = HarfordAuthority or {}
 
 local API = HarfordAuthority
+local listeners = {}
+local lastSignature
+local epsilonEventRegistered = false
 
 local function SafeCall(fn, ...)
     if type(fn) ~= "function" then
@@ -13,6 +16,10 @@ local function SafeCall(fn, ...)
     end
 
     return nil
+end
+
+local function IsTruthy(value)
+    return value == true or value == 1 or value == "1" or value == "true" or value == "TRUE"
 end
 
 local function ResolvePhaseFunction(name)
@@ -38,17 +45,17 @@ end
 local function PhaseFlag(name)
     local fn = ResolvePhaseFunction(name)
     local value = SafeCall(fn)
-    return value == true
+    return IsTruthy(value)
 end
 
 local function DirectPhaseFlag(name)
-    if C_Epsilon and C_Epsilon[name] == true then
+    if C_Epsilon and IsTruthy(C_Epsilon[name]) then
         return true
     end
 
     local fn = ResolveCepsilonFunction(name)
     local value = SafeCall(fn)
-    return value == true
+    return IsTruthy(value)
 end
 
 function API.HasAdminAddon()
@@ -93,11 +100,7 @@ function API.GetPhaseId()
 end
 
 function API.CanUseDMTools()
-    if API.HasAdminAddon() then
-        return true
-    end
-
-    return API.IsDMMode()
+    return API.HasAdminAddon() and API.IsDMMode()
 end
 
 function API.CanUseMemberCommands()
@@ -138,6 +141,70 @@ function API.GetStatus()
     }
 end
 
+local function StatusSignature(status)
+    status = status or API.GetStatus()
+    return table.concat({
+        tostring(status.adminAddon),
+        tostring(status.phaseId),
+        tostring(status.phaseMember),
+        tostring(status.phaseOfficer),
+        tostring(status.phaseOwner),
+        tostring(status.dmMode),
+        tostring(status.dmEnabled),
+    }, "|")
+end
+
+local function ReportListenerError(owner, err)
+    if HarfordDebug and HarfordDebug.Print then
+        HarfordDebug.Print("authority listener " .. tostring(owner) .. ": " .. tostring(err))
+    elseif DEFAULT_CHAT_FRAME then
+        DEFAULT_CHAT_FRAME:AddMessage("|cffff5555[HarfordAuthority]|r listener " .. tostring(owner) .. ": " .. tostring(err))
+    end
+end
+
+local function InvokeListener(owner, callback, status, reason)
+    local ok, err = pcall(callback, status, reason)
+    if not ok then
+        ReportListenerError(owner, err)
+        return false
+    end
+    return true
+end
+
+function API.NotifyChanged(reason, force)
+    local status = API.GetStatus()
+    local signature = StatusSignature(status)
+    if not force and signature == lastSignature then
+        return false
+    end
+
+    lastSignature = signature
+    for owner, callback in pairs(listeners) do
+        if type(callback) == "function" then
+            InvokeListener(owner, callback, status, reason)
+        end
+    end
+    return true
+end
+
+function API.ScheduleRefresh(reason)
+    API.NotifyChanged(reason, true)
+end
+
+function API.RegisterChangeListener(owner, callback)
+    if type(owner) ~= "string" or owner == "" or type(callback) ~= "function" then
+        return false
+    end
+
+    listeners[owner] = callback
+    InvokeListener(owner, callback, API.GetStatus(), "register")
+    return true
+end
+
+function API.UnregisterChangeListener(owner)
+    listeners[owner] = nil
+end
+
 local REQUIREMENTS = {
     member = API.CanUseMemberCommands,
     officer = API.CanUseOfficerCommands,
@@ -165,4 +232,38 @@ end
 
 function API.RequireDMTools(actionName)
     return API.Require("dm", actionName)
+end
+
+local function RegisterEpsilonEventManager()
+    if epsilonEventRegistered then
+        return
+    end
+
+    if EpsilonLib and EpsilonLib.EventManager and EpsilonLib.EventManager.Register then
+        local ok = pcall(EpsilonLib.EventManager.Register, EpsilonLib.EventManager, "EPSILON_PHASE_CHANGE", function()
+            API.ScheduleRefresh("EPSILON_PHASE_CHANGE")
+        end)
+        epsilonEventRegistered = ok == true
+    end
+end
+
+local eventFrame = CreateFrame and CreateFrame("Frame")
+if eventFrame then
+    eventFrame:RegisterEvent("ADDON_LOADED")
+    eventFrame:RegisterEvent("PLAYER_LOGIN")
+    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    eventFrame:RegisterEvent("PLAYER_FLAGS_CHANGED")
+    eventFrame:RegisterEvent("CHAT_MSG_SYSTEM")
+    eventFrame:RegisterEvent("UI_ERROR_MESSAGE")
+    eventFrame:SetScript("OnEvent", function(_, event, addonName)
+        if event == "ADDON_LOADED" then
+            if addonName ~= "Harford" and addonName ~= "HarfordAdmin" and addonName ~= "SpellCreator" and addonName ~= "EpsilonLib" then
+                return
+            end
+            RegisterEpsilonEventManager()
+        elseif event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+            RegisterEpsilonEventManager()
+        end
+        API.ScheduleRefresh(event)
+    end)
 end

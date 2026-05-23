@@ -170,6 +170,32 @@ function API.RemoveAuraFromTarget(spellId)
     return HarfordServerActions.RemoveAura(safeSpellId, "target", { addonName = "HarfordAdmin" })
 end
 
+function API.SetAuraOnTarget(spellId)
+    local _, targetErr = RequireTarget()
+    if targetErr then
+        return false, targetErr
+    end
+
+    if UnitIsPlayer and UnitIsPlayer("target") then
+        return false, "npc set aura solo debe usarse sobre NPC target"
+    end
+
+    local safeSpellId, spellErr = ParsePositiveInteger(spellId, "spellId")
+    if not safeSpellId then
+        return false, spellErr
+    end
+
+    if not HarfordServerActions or not HarfordServerActions.SetNpcAura then
+        return false, "HarfordServerActions.SetNpcAura no disponible"
+    end
+
+    return HarfordServerActions.SetNpcAura(safeSpellId, { addonName = "HarfordAdmin" })
+end
+
+function API.SetLootAuraOnTarget()
+    return API.SetAuraOnTarget(140172)
+end
+
 function API.GetTargetInfo(callback)
     local _, targetErr = RequireTarget()
     if targetErr then
@@ -191,6 +217,8 @@ local function ShowHelp()
     Print("/harfordadmin npc target")
     Print("/harfordadmin npc trp3")
     Print("/harfordadmin npc aura <spellId>")
+    Print("/harfordadmin npc setaura <spellId>")
+    Print("/harfordadmin npc lootaura")
     Print("/harfordadmin npc unaura <spellId>")
     Print("/harfordadmin npc info")
 end
@@ -217,6 +245,26 @@ function API.HandleSlash(tokens)
         local ok, err = API.ApplyAuraToTarget(tokens[3])
         if ok then
             Print("Aura enviada a target")
+        else
+            Print(err)
+        end
+        return true
+    end
+
+    if mode == "setaura" or mode == "npcaura" then
+        local ok, err = API.SetAuraOnTarget(tokens[3])
+        if ok then
+            Print("npc set aura enviado a target")
+        else
+            Print(err)
+        end
+        return true
+    end
+
+    if mode == "lootaura" then
+        local ok, err = API.SetLootAuraOnTarget()
+        if ok then
+            Print("Loot Aura enviada a target")
         else
             Print(err)
         end

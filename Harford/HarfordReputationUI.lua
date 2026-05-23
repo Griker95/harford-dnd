@@ -13,6 +13,7 @@ local TEX_BTN_PLUS = "Interface\\Buttons\\UI-PlusButton-Up"
 local TEX_BTN_MINUS = "Interface\\Buttons\\UI-MinusButton-UP"
 local TEX_BTN_HILITE = "Interface\\Buttons\\UI-PlusButton-Hilight"
 local TEX_STATUS = "Interface\\TargetingFrame\\UI-StatusBar"
+local TEX_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 
 local PANEL_W = 390
 local PANEL_H = 460
@@ -78,22 +79,24 @@ local function RestorePanelPosition()
     panel:SetPoint(ui.point or "CENTER", UIParent, ui.relativePoint or "CENTER", tonumber(ui.x) or 0, tonumber(ui.y) or 0)
 end
 
-local function SetPanelBackground(frame, alpha)
+local function SetPanelBackground(frame, alpha, topOffset)
     local bg = frame:CreateTexture(nil, "BACKGROUND")
-    bg:SetPoint("TOPLEFT", 7, -24)
+    bg:SetPoint("TOPLEFT", 7, topOffset or -24)
     bg:SetPoint("BOTTOMRIGHT", -7, 7)
     bg:SetTexture(TEX_MARBLE)
     bg:SetAlpha(alpha or 0.95)
     return bg
 end
 
-local function TryHideButtonFramePieces(frame)
+local function TryHideButtonFramePieces(frame, keepPortrait)
     if not frame then return end
-    if ButtonFrameTemplate_HidePortrait then pcall(ButtonFrameTemplate_HidePortrait, frame) end
-    if ButtonFrameTemplate_HideAttic then pcall(ButtonFrameTemplate_HideAttic, frame) end
+    if ButtonFrameTemplate_HidePortrait and not keepPortrait then pcall(ButtonFrameTemplate_HidePortrait, frame) end
+    if ButtonFrameTemplate_HideAttic and not keepPortrait then pcall(ButtonFrameTemplate_HideAttic, frame) end
     if ButtonFrameTemplate_HideButtonBar then pcall(ButtonFrameTemplate_HideButtonBar, frame) end
-    if frame.portrait then frame.portrait:Hide() end
-    if frame.PortraitContainer then frame.PortraitContainer:Hide() end
+    if not keepPortrait then
+        if frame.portrait then frame.portrait:Hide() end
+        if frame.PortraitContainer then frame.PortraitContainer:Hide() end
+    end
     if frame.Inset then frame.Inset:Hide() end
 end
 
@@ -260,6 +263,70 @@ end
 local function CanShowAdminActions()
     local hasAdminAddon = (HarfordReputationAdmin ~= nil) or (HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true)
     return hasAdminAddon and HarfordReputation and HarfordReputation.CanEdit and HarfordReputation.CanEdit()
+end
+
+local function GetPanelPortraitUnit()
+    if CanShowAdminActions()
+        and UnitExists and UnitExists("target")
+        and UnitIsPlayer and UnitIsPlayer("target")
+        and not (UnitIsUnit and UnitIsUnit("target", "player"))
+    then
+        return "target"
+    end
+    return "player"
+end
+
+local function GetPlayerPortraitMode(unit)
+    if HarfordConfig and HarfordConfig.Get then
+        if unit == "player" then
+            return HarfordConfig.Get("portrait_player") or "trp3"
+        end
+        return HarfordConfig.Get("portrait_target_player") or "trp3"
+    end
+    return "trp3"
+end
+
+local function SetupPanelPortrait()
+    if not panel then return end
+    local portrait = panel.portrait or _G["HarfordReputationPanelPortrait"]
+    if not portrait then return end
+
+    panel.reputationPortrait = portrait
+    portrait:Show()
+    portrait:SetAlpha(1)
+
+    if portrait.AddMaskTexture and panel.CreateMaskTexture and not panel.reputationPortraitMask then
+        local mask = panel:CreateMaskTexture(nil, "BACKGROUND")
+        mask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        mask:SetAllPoints(portrait)
+        portrait:AddMaskTexture(mask)
+        panel.reputationPortraitMask = mask
+    end
+end
+
+local function RefreshPanelPortrait()
+    if not panel then return end
+    local portrait = panel.reputationPortrait or panel.portrait or _G["HarfordReputationPanelPortrait"]
+    if not portrait then return end
+
+    local unit = GetPanelPortraitUnit()
+    local mode = GetPlayerPortraitMode(unit)
+    local icon
+    if mode ~= "wow" and HarfordTRP3 and HarfordTRP3.GetPlayerProfile and HarfordTRP3.GetProfileIcon then
+        local profile = HarfordTRP3.GetPlayerProfile(unit)
+        icon = profile and HarfordTRP3.GetProfileIcon(profile)
+    end
+
+    if icon and portrait.SetTexture then
+        portrait:SetTexture(tonumber(icon) or icon)
+        portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    elseif SetPortraitTexture then
+        SetPortraitTexture(portrait, unit)
+        portrait:SetTexCoord(0, 1, 0, 1)
+    end
+
+    portrait:SetAlpha(1)
+    portrait:Show()
 end
 
 local function IsTargetNpc()
@@ -869,6 +936,7 @@ local function RefreshRows()
     local titleText = GetDisplayTitle()
     if panel.TitleText then panel.TitleText:SetText(titleText) end
     if panel.harfordTitle then panel.harfordTitle:SetText(titleText) end
+    RefreshPanelPortrait()
     local list = BuildFlatList()
     if not selectedFactionId then
         for _, data in ipairs(list) do
@@ -1293,8 +1361,9 @@ local function CreatePanel()
     panel:SetFrameLevel(60)
     panel:Hide()
     RestorePanelPosition()
-    TryHideButtonFramePieces(panel)
-    SetPanelBackground(panel, 0.96)
+    TryHideButtonFramePieces(panel, true)
+    SetupPanelPortrait()
+    SetPanelBackground(panel, 0.96, LIST_TOP_Y + 2)
     if panel.TitleText then
         panel.TitleText:SetText("Reputacion")
     end
@@ -1306,10 +1375,10 @@ local function CreatePanel()
     if panel.TitleText then title:Hide() end
 
     local headerBg = panel:CreateTexture(nil, "BORDER")
-    headerBg:SetPoint("TOPLEFT", panel, "TOPLEFT", 9, -27)
-    headerBg:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -28, -27)
-    headerBg:SetHeight(34)
-    headerBg:SetColorTexture(0.03, 0.025, 0.018, 0.86)
+    headerBg:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, LIST_TOP_Y + 2)
+    headerBg:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -18, LIST_TOP_Y + 2)
+    headerBg:SetHeight(28)
+    headerBg:SetColorTexture(0.03, 0.025, 0.018, 0.55)
 
     local search = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
     search:SetSize(120, 18)
@@ -1326,7 +1395,7 @@ local function CreatePanel()
     searchLabel:SetText("Buscar")
 
     -- Boton admin visible solo si HarfordAdmin esta cargado y el jugador esta en modo DM.
-    panel.adminButton = MakeButton(panel, "Admin DM", 78, 20, "TOPLEFT", panel, "TOPLEFT", 18, -36, OpenFactionEditor)
+    panel.adminButton = MakeButton(panel, "Admin DM", 78, 20, "TOPLEFT", panel, "TOPLEFT", 64, -36, OpenFactionEditor)
     panel.adminButton:SetText("Admin DM")
     panel.adminButton:SetShown(false)  -- se muestra en RefreshRows si CanEdit()
 
@@ -1408,3 +1477,9 @@ events:SetScript("OnEvent", function(_, event, addonName)
     end
     RefreshRows()
 end)
+
+if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
+    HarfordAuthority.RegisterChangeListener("HarfordReputationUI", function()
+        RefreshRows()
+    end)
+end

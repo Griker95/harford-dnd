@@ -223,7 +223,11 @@ function API.EnsureStore()
 end
 
 function API.CanEdit()
-    return HarfordAuthority and HarfordAuthority.IsDMMode and HarfordAuthority.IsDMMode() == true
+    return HarfordAuthority
+        and HarfordAuthority.HasAdminAddon
+        and HarfordAuthority.HasAdminAddon() == true
+        and HarfordAuthority.IsDMMode
+        and HarfordAuthority.IsDMMode() == true
 end
 
 function API.GetRanks()

@@ -2573,11 +2573,14 @@ local function ApplyUnitVisuals(frame, unit, pieces, profile, unitName)
     if pieces.portrait then
         if icon and pieces.portrait.SetTexture then
             pieces.portrait:SetTexture(icon)
+            if pieces.portrait.SetTexCoord then
+                pieces.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            end
         elseif SetPortraitTexture then
             SetPortraitTexture(pieces.portrait, unit)
-        end
-        if pieces.portrait.SetTexCoord then
-            pieces.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            if pieces.portrait.SetTexCoord then
+                pieces.portrait:SetTexCoord(0, 1, 0, 1)
+            end
         end
         if pieces.portrait.SetDrawLayer then
             pieces.portrait:SetDrawLayer("ARTWORK", 0)
@@ -2624,11 +2627,14 @@ local function ApplyNativeUnitVisuals(unit, pieces, profile, unitName)
     if pieces.portrait then
         if icon and pieces.portrait.SetTexture then
             pieces.portrait:SetTexture(icon)
+            if pieces.portrait.SetTexCoord then
+                pieces.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            end
         elseif SetPortraitTexture then
             SetPortraitTexture(pieces.portrait, unit)
-        end
-        if pieces.portrait.SetTexCoord then
-            pieces.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            if pieces.portrait.SetTexCoord then
+                pieces.portrait:SetTexCoord(0, 1, 0, 1)
+            end
         end
         if pieces.portrait.SetDrawLayer then
             pieces.portrait:SetDrawLayer("ARTWORK", 0)
@@ -3076,6 +3082,7 @@ local function RefreshNpcUnitPortrait(unit)
         if portrait.SetAlpha then portrait:SetAlpha(1) end
     elseif SetPortraitTexture then
         SetPortraitTexture(portrait, unit)
+        if portrait.SetTexCoord then portrait:SetTexCoord(0, 1, 0, 1) end
     end
 end
 
@@ -3911,11 +3918,14 @@ local function ApplyHarfordCompactUnitFrame(frame)
         local icon = useTRP3Portrait and profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
         if icon and portrait.SetTexture then
             portrait:SetTexture(icon)
+            if portrait.SetTexCoord then
+                portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            end
         elseif SetPortraitTexture then
             SetPortraitTexture(portrait, unit)
-        end
-        if portrait.SetTexCoord then
-            portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            if portrait.SetTexCoord then
+                portrait:SetTexCoord(0, 1, 0, 1)
+            end
         end
         if portrait.SetAlpha then portrait:SetAlpha(1) end
         if portrait.Show then portrait:Show() end

@@ -161,6 +161,8 @@ local function GetPlayerKeyForDisplay()
         and hasAdminAddon
         and UnitExists and UnitExists("target")
         and UnitIsPlayer and UnitIsPlayer("target")
+        -- Si el target soy yo mismo, los datos locales ya están disponibles: no pedir snapshot remoto.
+        and not (UnitIsUnit and UnitIsUnit("target", "player"))
         and HarfordReputation.GetPlayerKey
     then
         local targetKey = HarfordReputation.GetPlayerKey("target")
@@ -924,6 +926,8 @@ end
 
 local function RefreshRows()
     if not panel or not HarfordReputation then return end
+    -- Evita enviar RVIEWREQ al cambiar target con el panel cerrado.
+    if not panel:IsShown() then return end
     local displayKey, isTargetDisplay = GetPlayerKeyForDisplay()
     if isTargetDisplay and HarfordReputationSync and HarfordReputationSync.RequestPlayerSnapshot then
         local now = GetTime and GetTime() or time()
@@ -1399,15 +1403,20 @@ local function CreatePanel()
     panel.adminButton:SetText("Admin DM")
     panel.adminButton:SetShown(false)  -- se muestra en RefreshRows si CanEdit()
 
-    panel.modifierWatcher = CreateFrame("Frame", nil, panel)
-    panel.modifierWatcher:RegisterEvent("MODIFIER_STATE_CHANGED")
-    panel.modifierWatcher:SetScript("OnEvent", function(_, _, key, state)
-        key = tostring(key or ""):upper()
-        if key:find("SHIFT", 1, true) then
-            shiftAdjustDown = IsAnyShiftDown() or state == 1 or state == "PRESSED"
-            RefreshAdjustButtonText()
-        end
-    end)
+    -- MODIFIER_STATE_CHANGED no dispara para shift izquierdo en Epsilon.
+    -- OnUpdate en el panel: detecta cambios de estado del shift en cada frame
+    -- (costo mínimo: una comparación booleana) y solo corre mientras el panel está abierto.
+    do
+        local _lastShift = false
+        panel:SetScript("OnUpdate", function()
+            local now = IsAnyShiftDown()
+            if now ~= _lastShift then
+                _lastShift = now
+                shiftAdjustDown = now
+                RefreshAdjustButtonText()
+            end
+        end)
+    end
 
     -- Columna "Faccion": alineada con el inicio del contenido de las filas
     local factionHeader = panel:CreateFontString(nil, "OVERLAY")
@@ -1444,6 +1453,8 @@ function API.Toggle()
     CreatePanel()
     panel:SetShown(not panel:IsShown())
     if panel:IsShown() then
+        -- Forzar nuevo request aunque sea el mismo target (puede haber pasado tiempo).
+        lastTargetSnapshotKey = nil
         RefreshRows()
     end
 end
@@ -1451,6 +1462,7 @@ end
 function API.Open()
     CreatePanel()
     panel:Show()
+    lastTargetSnapshotKey = nil
     RefreshRows()
 end
 

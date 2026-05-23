@@ -147,6 +147,36 @@ function HarfordDnDStore.ApplyProfileTable(tbl, profileName, allResourceKeys, cu
     return true
 end
 
+-- Fusiona claves específicas en el perfil existente sin reemplazarlo por completo.
+-- Usado para aplicar los flags Hab_X_Prof/Exp llegados via DNDPROF sin destruir
+-- los atributos/salvaciones que ya aplicó el mensaje DNDCFG previo.
+function HarfordDnDStore.MergeProfileKeys(tbl, profileName, ensureDefaultsFn, refreshFn)
+    if type(tbl) ~= "table" then return false end
+    local state  = HarfordDnDStore.state
+    local active = ResolveProfileName(profileName, state.persist)
+    HarfordDnDStore.EnsurePersist(active)
+    state.persist.activeProfile = active
+
+    local profile = state.persist.profiles[active]
+    if type(profile) ~= "table" then
+        profile = {}
+        state.persist.profiles[active] = profile
+    end
+
+    for k, v in pairs(tbl) do
+        if v ~= nil then
+            profile[k] = tostring(v)
+        end
+    end
+
+    state.runtime = CopyTable(profile)
+    HarfordDnDPersistStore = state.persist
+
+    if ensureDefaultsFn then ensureDefaultsFn() end
+    if refreshFn        then refreshFn()        end
+    return true
+end
+
 function HarfordDnDStore.ApplyResourceConfigTable(tbl, profileName, allResourceKeys, curKeyFn, maxKeyFn, ensureDefaultsFn, refreshFn)
     if type(tbl) ~= "table" then return false end
 

@@ -427,6 +427,261 @@ local function BuildNpcSubmenu(menuList, level)
     end
 end
 
+-- ─── Editor de recursos ────────────────────────────────────────────────────
+
+local resourceEditorFrame = nil
+local resourceEditorName  = nil
+
+-- ORDER completo con temp_health insertada después de health
+local function GetResOrderFull()
+    if not (HarfordDnDResources and HarfordDnDResources.ORDER) then return {} end
+    local t = {}
+    for _, k in ipairs(HarfordDnDResources.ORDER) do
+        t[#t+1] = k
+        if k == "health" then t[#t+1] = "temp_health" end
+    end
+    return t
+end
+
+local function GetResourcesSnapshot(name)
+    if not (HarfordDnDAPI and HarfordDnDAPI.GetResourcesForName) then return nil end
+    local tbl = HarfordDnDAPI.GetResourcesForName(name)
+    if not tbl then return nil end
+    local snap = {}
+    local defs = HarfordDnDResources and HarfordDnDResources.DEFS or {}
+    for key in pairs(defs) do
+        local cur = tonumber(tbl["Res_" .. key .. "_Cur"]) or 0
+        local max = tonumber(tbl["Res_" .. key .. "_Max"]) or 0
+        snap[key] = { cur = cur, max = max }
+    end
+    return snap
+end
+
+local function CreateResourceEditorFrame()
+    local RES_ORDER = GetResOrderFull()
+    local ROWS      = #RES_ORDER
+    local ROW_H     = 22
+    local W         = 320
+    local H         = 50 + 18 + ROWS * ROW_H + 10 + 36 + 10
+
+    local f = CreateFrame("Frame", "HarfordAdminResourceEditor", UIParent, "BackdropTemplate")
+    f:SetSize(W, H)
+    f:SetPoint("CENTER")
+    f:SetFrameStrata("DIALOG")
+    f:SetFrameLevel(500)
+    f:SetBackdrop({
+        bgFile   = "Interface\\DialogFrame\\UI-DialogBox-Background",
+        edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+        tile = true, tileSize = 32, edgeSize = 32,
+        insets = { left = 11, right = 12, top = 12, bottom = 11 },
+    })
+    f:SetMovable(true)
+    f:EnableMouse(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", f.StartMoving)
+    f:SetScript("OnDragStop", f.StopMovingOrSizing)
+
+    -- Título
+    f.titleText = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    f.titleText:SetPoint("TOP", f, "TOP", 0, -14)
+    f.titleText:SetText("Recursos")
+
+    -- Botón cerrar
+    local closeX = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+    closeX:SetPoint("TOPRIGHT", f, "TOPRIGHT", -5, -5)
+    closeX:SetScript("OnClick", function() f:Hide() end)
+
+    -- Cabeceras de columna
+    local HDR_Y = -38
+    local colLbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    colLbl:SetPoint("TOPLEFT", f, "TOPLEFT", 14, HDR_Y)
+    colLbl:SetSize(130, 16); colLbl:SetJustifyH("LEFT"); colLbl:SetText("Recurso")
+
+    local colCur = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    colCur:SetPoint("TOPLEFT", f, "TOPLEFT", 152, HDR_Y)
+    colCur:SetSize(60, 16); colCur:SetJustifyH("CENTER"); colCur:SetText("Actual")
+
+    local colMax = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    colMax:SetPoint("TOPLEFT", f, "TOPLEFT", 224, HDR_Y)
+    colMax:SetSize(60, 16); colMax:SetJustifyH("CENTER"); colMax:SetText("Máximo")
+
+    -- Línea separadora
+    local line = f:CreateTexture(nil, "ARTWORK")
+    line:SetPoint("TOPLEFT", f, "TOPLEFT", 14, HDR_Y - 14)
+    line:SetSize(W - 28, 1)
+    line:SetColorTexture(0.5, 0.4, 0.2, 0.7)
+
+    -- Filas
+    f.rows = {}
+    local ROW_Y0 = HDR_Y - 18
+    for i, key in ipairs(RES_ORDER) do
+        local def   = HarfordDnDResources and HarfordDnDResources.DEFS and HarfordDnDResources.DEFS[key]
+        local label = def and def.label or key
+        local color = def and def.color or {1, 1, 1}
+        local y     = ROW_Y0 - (i - 1) * ROW_H
+
+        local lbl = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        lbl:SetPoint("TOPLEFT", f, "TOPLEFT", 14, y)
+        lbl:SetSize(130, ROW_H)
+        lbl:SetJustifyH("LEFT"); lbl:SetJustifyV("MIDDLE")
+        lbl:SetText(label)
+        lbl:SetTextColor(color[1], color[2], color[3])
+
+        local curBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+        curBox:SetSize(55, 18)
+        curBox:SetPoint("TOPLEFT", f, "TOPLEFT", 152, y - 2)
+        curBox:SetAutoFocus(false)
+        curBox:SetNumeric(true)
+        curBox:SetMaxLetters(6)
+        curBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
+        local sep = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        sep:SetPoint("TOPLEFT", f, "TOPLEFT", 212, y)
+        sep:SetSize(8, ROW_H); sep:SetJustifyH("CENTER"); sep:SetJustifyV("MIDDLE")
+        sep:SetText("/")
+
+        local maxBox = CreateFrame("EditBox", nil, f, "InputBoxTemplate")
+        maxBox:SetSize(55, 18)
+        maxBox:SetPoint("TOPLEFT", f, "TOPLEFT", 224, y - 2)
+        maxBox:SetAutoFocus(false)
+        maxBox:SetNumeric(true)
+        maxBox:SetMaxLetters(6)
+        maxBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+
+        f.rows[key] = { lbl = lbl, curBox = curBox, maxBox = maxBox, baseCur = 0, baseMax = 0 }
+    end
+
+    -- PopulateRows: carga los valores en los campos y guarda base para delta
+    function f:PopulateRows(snap)
+        for _, key in ipairs(RES_ORDER) do
+            local row = self.rows[key]
+            local data = snap and snap[key]
+            if row and data then
+                row.baseCur = data.cur
+                row.baseMax = data.max
+                row.curBox:SetText(tostring(data.cur))
+                row.maxBox:SetText(tostring(data.max))
+                local active = data.max > 0 or (key == "temp_health" and data.cur > 0)
+                local a = active and 1.0 or 0.45
+                row.lbl:SetAlpha(a); row.curBox:SetAlpha(a); row.maxBox:SetAlpha(a)
+            end
+        end
+    end
+
+    -- Botones inferiores
+    local btnRefresh = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    btnRefresh:SetSize(88, 22)
+    btnRefresh:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", 14, 14)
+    btnRefresh:SetText("Refrescar")
+    btnRefresh:SetScript("OnClick", function()
+        if not resourceEditorName then return end
+        if HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
+            HarfordDnDAPI.RequestResourcesForName(resourceEditorName)
+        end
+        -- Repoblar ~1.5s después para dar tiempo a que llegue la respuesta de red
+        C_Timer.After(1.5, function()
+            if f:IsShown() and resourceEditorName then
+                local s = GetResourcesSnapshot(resourceEditorName)
+                if s then f:PopulateRows(s) end
+            end
+        end)
+    end)
+
+    local btnApply = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    btnApply:SetSize(88, 22)
+    btnApply:SetPoint("BOTTOM", f, "BOTTOM", 0, 14)
+    btnApply:SetText("Aplicar")
+    btnApply:SetScript("OnClick", function()
+        if not resourceEditorName then return end
+        if not (HarfordDnDAPI and HarfordDnDAPI.AdjustResourceForName) then
+            Print("HarfordDnDAPI no disponible.")
+            return
+        end
+        local sent = 0
+        for _, key in ipairs(RES_ORDER) do
+            local row = f.rows[key]
+            if row then
+                local newCur = tonumber(row.curBox:GetText()) or row.baseCur
+                local newMax = tonumber(row.maxBox:GetText()) or row.baseMax
+                local dCur = newCur - row.baseCur
+                local dMax = newMax - row.baseMax
+                if dCur ~= 0 then
+                    HarfordDnDAPI.AdjustResourceForName(resourceEditorName, "Res_" .. key .. "_Cur", dCur)
+                    row.baseCur = newCur
+                    sent = sent + 1
+                end
+                if dMax ~= 0 then
+                    HarfordDnDAPI.AdjustResourceForName(resourceEditorName, "Res_" .. key .. "_Max", dMax)
+                    row.baseMax = newMax
+                    sent = sent + 1
+                end
+            end
+        end
+        Print(sent > 0
+            and ("Recursos enviados (" .. tostring(sent) .. " cambio(s)).")
+            or "Sin cambios.")
+    end)
+
+    local btnClose = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+    btnClose:SetSize(88, 22)
+    btnClose:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -14, 14)
+    btnClose:SetText("Cerrar")
+    btnClose:SetScript("OnClick", function() f:Hide() end)
+
+    f:Hide()
+    return f
+end
+
+local function OpenResourceEditor(snapshot)
+    if not EnsureSameUnit(snapshot, "editar recursos") then return end
+    if snapshot.unit ~= "target" or not snapshot.isPlayer then
+        Print("Editar recursos solo disponible desde el TargetFrame de un jugador.")
+        return
+    end
+
+    resourceEditorFrame = resourceEditorFrame or CreateResourceEditorFrame()
+    local f = resourceEditorFrame
+
+    local shortName = UnitName and UnitName("target")
+    local newName = shortName or snapshot.name
+
+    -- Toggle: si el frame ya está abierto para este mismo target, cerrarlo
+    if f:IsShown() and resourceEditorName == newName then
+        f:Hide()
+        return
+    end
+
+    resourceEditorName = newName
+    f.titleText:SetText("Recursos: " .. tostring(resourceEditorName or "target"))
+    if not f:IsShown() then f:SetPoint("CENTER") end
+
+    local snap = GetResourcesSnapshot(resourceEditorName)
+    if snap then
+        f:PopulateRows(snap)
+    else
+        -- Sin caché: solicitar y mostrar ceros temporalmente
+        if HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
+            HarfordDnDAPI.RequestResourcesForName(resourceEditorName)
+        end
+        local empty = {}
+        if HarfordDnDResources and HarfordDnDResources.DEFS then
+            for key in pairs(HarfordDnDResources.DEFS) do
+                empty[key] = { cur = 0, max = 0 }
+            end
+        end
+        f:PopulateRows(empty)
+        C_Timer.After(1.5, function()
+            if f:IsShown() and resourceEditorName then
+                local s = GetResourcesSnapshot(resourceEditorName)
+                if s then f:PopulateRows(s) end
+            end
+        end)
+    end
+    f:Show()
+end
+
+-- ─── Fin editor de recursos ─────────────────────────────────────────────────
+
 local function BuildPlayerSubmenu(menuList, level)
     local snapshot = current.snapshot
     if menuList == "FICHA" then
@@ -439,6 +694,20 @@ local function BuildPlayerSubmenu(menuList, level)
         AddAction("Anadir a turnos", function() AddToTurns(snapshot) end, level)
         AddAction("Abrir turnos", OpenTurns, level)
     elseif menuList == "RECURSOS" then
+        local resMode = HarfordConfig and HarfordConfig.Get("resources") or "frame"
+        if resMode == "frame" then
+            -- Frame separado: "Cambiar recursos" activa/desactiva los botones +/- en el frame del target
+            local isEdit = HarfordDnDAPI and HarfordDnDAPI.GetTargetResourceEditMode and HarfordDnDAPI.GetTargetResourceEditMode()
+            AddAction(isEdit and "Desactivar edición" or "Cambiar recursos", function()
+                if HarfordDnDAPI and HarfordDnDAPI.ToggleTargetResourceEditMode then
+                    HarfordDnDAPI.ToggleTargetResourceEditMode()
+                end
+            end, level)
+        else
+            -- Unitframe integrado: "Cambiar recursos" abre/cierra el editor flotante
+            AddAction("Cambiar recursos", function() OpenResourceEditor(snapshot) end, level)
+        end
+        AddAction("Editar recursos...", function() OpenResourceEditor(snapshot) end, level)
         AddAction("Pedir recursos", function() RequestResources(snapshot) end, level)
     elseif menuList == "VIDA" then
         AddHealthPresets(snapshot, true, level)
@@ -698,13 +967,15 @@ function API.RefreshVisibility()
     end
 end
 
+-- CHAT_MSG_SYSTEM eliminado: disparaba AttachButtons()+RefreshVisibility() en cada
+-- mensaje de sistema sin filtrar. HarfordAuthority.RegisterChangeListener (abajo)
+-- ya cubre los cambios de modo DM.
 local events = CreateFrame("Frame")
 events:RegisterEvent("ADDON_LOADED")
 events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 events:RegisterEvent("PLAYER_TARGET_CHANGED")
 events:RegisterEvent("PLAYER_FLAGS_CHANGED")
-events:RegisterEvent("CHAT_MSG_SYSTEM")
 events:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
         local addonName = ...

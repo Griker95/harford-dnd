@@ -115,6 +115,14 @@ local function ApplyResourceConfigTable(tbl, profileName)
     return ok
 end
 
+-- Fusiona los flags Hab_X_Prof/Exp recibidos via DNDPROF en el perfil existente.
+-- No reemplaza el perfil completo para no perder los atributos ya aplicados.
+local function MergeProfFlagsTable(tbl, profileName)
+    local ok = HarfordDnDStore.MergeProfileKeys(tbl, profileName, EnsureDefaults, RefreshMainUI)
+    SyncRuntimeProfileRef()
+    return ok
+end
+
 local function RegisterPrefix(prefix)
     if HarfordSync and HarfordSync.RegisterPrefix then
         HarfordSync.RegisterPrefix(prefix)
@@ -512,6 +520,21 @@ end
 local function GetPB() return toN(ARCGET("BonusCompetencia", "2"), 2) end
 local function GetMode() return ARCGET("ModoTirada", "normal") end
 local function GetMiscBonus() return toN(ARCGET("BonoSituacional", "0"), 0) end
+
+-- true cuando el modo ventaja/desventaja se activó sin shift: se consume tras la próxima tirada.
+local _modoTiradaSingleUse = false
+-- Forward declaration necesaria: ConsumeMode se define aquí pero RefreshTopInfo se asigna
+-- más abajo. Sin esta declaración previa, la referencia dentro de ConsumeMode sería global nil.
+local RefreshTopInfo
+
+-- Llamar al final de CADA tirada que lee GetMode(). Si el modo era de un solo uso, lo resetea.
+local function ConsumeMode()
+    if _modoTiradaSingleUse then
+        _modoTiradaSingleUse = false
+        ARCSET("ModoTirada", "normal")
+        if RefreshTopInfo then RefreshTopInfo() end
+    end
+end
 function HarfordDnDGetInitiativeMod() return toN(ARCGET("ModIniciativa", "0"), 0) end
 local function GetAbilityScore(key) return toN(ARCGET(key, "10"), 10) end
 local function GetAbilityMod(key) return AbilityMod(GetAbilityScore(key)) end
@@ -618,7 +641,15 @@ local function SendResourceResponseForProfileTo(profileName, targetName)
     )
 end
 
+local _resourceRequestTimes = {}
+local RESOURCE_REQUEST_COOLDOWN = 12  -- segundos mínimos entre requests al mismo jugador
+
 local function RequestResourcesFromPlayer(targetName)
+    if not targetName or targetName == "" then return false end
+    local now = GetTime and GetTime() or 0
+    local last = _resourceRequestTimes[targetName] or 0
+    if (now - last) < RESOURCE_REQUEST_COOLDOWN then return false end
+    _resourceRequestTimes[targetName] = now
     local requester = GetUnitName and GetUnitName("player", true) or UnitName("player") or "default"
     return HarfordSync.SendResourceRequest(ADDON_PREFIX, requester, targetName)
 end
@@ -726,6 +757,7 @@ local function DoRoll(label, baseBonus, profBonus)
         mode = (mode == "adv" and "V") or (mode == "dis" and "D") or "",
         miscBonus = miscBonus,
     })
+    ConsumeMode()
 end
 
 local function RollWeaponDamage(def, abilKey)
@@ -1379,6 +1411,8 @@ targetResourceBorder:SetFrameStrata(TargetResourceFrame:GetFrameStrata())
 targetResourceBorder:SetFrameLevel(TargetResourceFrame:GetFrameLevel() + 5)
 
 TargetResourceFrame.rows = {}
+TargetResourceFrame.editMode = false
+TargetResourceFrame._lastEditMode = false
 end
 
 local function CreateResourceRow(parent, index)
@@ -1472,6 +1506,51 @@ local function CreateTargetResourceRow(parent, index)
     return row
 end
 
+-- Fila para modo edición: igual que CreateResourceRow pero sin posición hardcodeada.
+-- El llamador fija la posición con ClearAllPoints/SetPoint en cada refresh.
+local function CreateTargetEditRow(parent)
+    local row = CreateFrame("Frame", nil, parent)
+    row:SetSize(220, 24)
+    row._editRow = true
+
+    row.minus = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    row.minus:SetSize(20, 20)
+    row.minus:SetPoint("LEFT", 0, 0)
+    row.minus:SetText("-")
+
+    row.plus = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
+    row.plus:SetSize(20, 20)
+    row.plus:SetPoint("RIGHT", 0, 0)
+    row.plus:SetText("+")
+
+    row.bar = CreateFrame("StatusBar", nil, row)
+    row.bar:SetPoint("TOPLEFT", row.minus, "TOPRIGHT", 4, 2)
+    row.bar:SetPoint("BOTTOMRIGHT", row.plus, "BOTTOMLEFT", -4, -2)
+    row.bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    row.bar:SetMinMaxValues(0, 1)
+    row.bar:SetValue(0)
+
+    row.bg = row.bar:CreateTexture(nil, "BACKGROUND")
+    row.bg:SetAllPoints()
+    row.bg:SetTexture(TEX.WHITE)
+    row.bg:SetVertexColor(0.08, 0.08, 0.08, 0.95)
+
+    row.border = row.bar:CreateTexture(nil, "BORDER")
+    row.border:SetAllPoints()
+    row.border:SetTexture(TEX.WHITE)
+    row.border:SetVertexColor(0.28, 0.28, 0.28, 0.80)
+
+    row.label = row.bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.label:SetPoint("LEFT", 4, 0)
+    row.label:SetJustifyH("LEFT")
+
+    row.value = row.bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    row.value:SetPoint("RIGHT", -4, 0)
+    row.value:SetJustifyH("RIGHT")
+
+    return row
+end
+
 AnchorTargetResourceFrame = function()
     if not TargetFrame or not TargetFrame:IsShown() then
         TargetResourceFrame:Hide()
@@ -1516,11 +1595,32 @@ end
 local function ApplyResourceDeltaFromRemote(resourceKey, delta, sender)
     resourceKey = tostring(resourceKey or "")
     delta = tonumber(delta) or 0
-    if (resourceKey ~= "health" and resourceKey ~= "temp_health") or delta == 0 then
-        return false
+    if resourceKey == "" or delta == 0 then return false end
+
+    -- Clave corta legacy → ajusta _Cur
+    -- Clave completa "Res_X_Cur" / "Res_X_Max" → ajusta esa clave directamente (editor admin)
+    local baseKey, isMax
+    if resourceKey == "health" or resourceKey == "temp_health" then
+        baseKey = resourceKey
+    else
+        local b = resourceKey:match("^Res_(.+)_Cur$")
+        if b then baseKey = b end
+        b = resourceKey:match("^Res_(.+)_Max$")
+        if b then baseKey, isMax = b, true end
     end
 
-    AdjustResourceCurrent(resourceKey, delta)
+    local defs = HarfordDnDResources and HarfordDnDResources.DEFS
+    if not baseKey or not defs or not defs[baseKey] then return false end
+
+    if isMax then
+        local maxKey = ResourceMaxKey(baseKey)
+        local newMax = math.max(0, toN(ARCGET(maxKey, "0"), 0) + delta)
+        ARCSET(maxKey, newMax)
+        ScheduleMyResourceBroadcast()
+    else
+        AdjustResourceCurrent(baseKey, delta)
+    end
+
     if RefreshResourceFrame and ResourceFrame and ResourceFrame:IsShown() then
         RefreshResourceFrame()
     end
@@ -1770,17 +1870,21 @@ RefreshTargetResourceFrame = function()
 
     AnchorTargetResourceFrame()
 
+    -- Detectar cambio de modo edición → limpiar filas para recrearlas con la estructura correcta
+    local editMode = TargetResourceFrame.editMode
+    if TargetResourceFrame._lastEditMode ~= editMode then
+        TargetResourceFrame._lastEditMode = editMode
+        for _, r in ipairs(TargetResourceFrame.rows) do r:Hide() end
+        TargetResourceFrame.rows = {}
+        TargetResourceFrame:SetWidth(editMode and 256 or 200)
+    end
+
+    local shortTarget = UnitName and UnitName("target")
     local visibleIndex = 0
 
     for _, key in ipairs(RESOURCE_ORDER) do
         if RemoteResourceExists(tbl, key) then
             visibleIndex = visibleIndex + 1
-
-            local row = TargetResourceFrame.rows[visibleIndex]
-            if not row then
-                row = CreateTargetResourceRow(TargetResourceFrame, visibleIndex)
-                TargetResourceFrame.rows[visibleIndex] = row
-            end
 
             local def = RESOURCE_DEFS[key]
             local cur = GetRemoteResourceValue(tbl, ResourceCurKey(key))
@@ -1793,49 +1897,74 @@ RefreshTargetResourceFrame = function()
                 if cur > max then cur = max end
             end
 
-            row.label:SetText(def.label)
+            local row
+            if editMode then
+                -- Modo edición: filas con botones +/-
+                row = TargetResourceFrame.rows[visibleIndex]
+                if not row then
+                    row = CreateTargetEditRow(TargetResourceFrame)
+                    TargetResourceFrame.rows[visibleIndex] = row
+                end
+                row:ClearAllPoints()
+                row:SetPoint("TOPLEFT", 17, -(8 + (visibleIndex - 1) * 28))
 
+                -- Reconectar botones al target y recurso actuales
+                local capturedKey   = key
+                local capturedShort = shortTarget
+                row.minus:SetScript("OnClick", function()
+                    if capturedShort and HarfordDnDAPI and HarfordDnDAPI.AdjustResourceForName then
+                        HarfordDnDAPI.AdjustResourceForName(capturedShort, ResourceCurKey(capturedKey), -1)
+                    end
+                end)
+                row.plus:SetScript("OnClick", function()
+                    if capturedShort and HarfordDnDAPI and HarfordDnDAPI.AdjustResourceForName then
+                        HarfordDnDAPI.AdjustResourceForName(capturedShort, ResourceCurKey(capturedKey), 1)
+                    end
+                end)
+            else
+                -- Modo visualización: filas normales sin botones
+                row = TargetResourceFrame.rows[visibleIndex]
+                if not row then
+                    row = CreateTargetResourceRow(TargetResourceFrame, visibleIndex)
+                    TargetResourceFrame.rows[visibleIndex] = row
+                end
+
+                -- tempFill solo en modo visualización (filas view tienen tempFill)
+                if key == "health" and row.tempFill then
+                    local temp = GetRemoteResourceValue(tbl, ResourceCurKey("temp_health"))
+                    local barWidth = row.bar:GetWidth() or 0
+                    if temp > 0 and max > 0 and barWidth > 0 then
+                        local tempWidth = math.min(math.max(math.floor(barWidth * (temp / max)), 0), barWidth)
+                        row.tempFill:ClearAllPoints()
+                        row.tempFill:SetPoint("TOPLEFT",  row.bar, "TOPLEFT",  0, 0)
+                        row.tempFill:SetPoint("BOTTOMLEFT", row.bar, "BOTTOMLEFT", 0, 0)
+                        row.tempFill:SetWidth(tempWidth)
+                        row.tempFill:SetVertexColor(0.45, 0.75, 1.00, 0.95)
+                        row.tempFill:Show()
+                    else
+                        row.tempFill:SetWidth(0)
+                        row.tempFill:Hide()
+                    end
+                elseif row.tempFill then
+                    row.tempFill:SetWidth(0)
+                    row.tempFill:Hide()
+                end
+            end
+
+            -- Actualizar barra y texto (igual en ambos modos)
+            row.label:SetText(def.label)
             if key == "health" then
                 local temp = GetRemoteResourceValue(tbl, ResourceCurKey("temp_health"))
-                if temp > 0 then
-                    row.value:SetText(tostring(cur) .. " (+" .. tostring(temp) .. ")/" .. tostring(max))
-                else
-                    row.value:SetText(tostring(cur) .. "/" .. tostring(max))
-                end
+                row.value:SetText(temp > 0
+                    and (tostring(cur) .. " (+" .. tostring(temp) .. ")/" .. tostring(max))
+                    or  (tostring(cur) .. "/" .. tostring(max)))
             else
                 row.value:SetText(tostring(cur) .. "/" .. tostring(max))
             end
-
             row.bar:SetMinMaxValues(0, max)
             row.bar:SetStatusBarColor(def.color[1], def.color[2], def.color[3], 1)
             row.bar:SetValue(cur)
             row.bar:Show()
-			
-			if key == "health" and row.tempFill then
-				local temp = GetRemoteResourceValue(tbl, ResourceCurKey("temp_health"))
-				local barWidth = row.bar:GetWidth() or 0
-
-				if temp > 0 and max > 0 and barWidth > 0 then
-					local tempWidth = math.floor(barWidth * (temp / max))
-
-					if tempWidth < 0 then tempWidth = 0 end
-					if tempWidth > barWidth then tempWidth = barWidth end
-
-					row.tempFill:ClearAllPoints()
-					row.tempFill:SetPoint("TOPLEFT", row.bar, "TOPLEFT", 0, 0)
-					row.tempFill:SetPoint("BOTTOMLEFT", row.bar, "BOTTOMLEFT", 0, 0)
-					row.tempFill:SetWidth(tempWidth)
-					row.tempFill:SetVertexColor(0.45, 0.75, 1.00, 0.95)
-					row.tempFill:Show()
-				else
-					row.tempFill:SetWidth(0)
-					row.tempFill:Hide()
-				end
-			elseif row.tempFill then
-				row.tempFill:SetWidth(0)
-				row.tempFill:Hide()
-			end
-
             row:Show()
         end
     end
@@ -1849,7 +1978,9 @@ RefreshTargetResourceFrame = function()
         return
     end
 
-    TargetResourceFrame:SetHeight(20 + visibleIndex * 18)
+    TargetResourceFrame:SetHeight(editMode
+        and (16 + visibleIndex * 28)
+        or  (20 + visibleIndex * 18))
     TargetResourceFrame:Show()
 end
 
@@ -1959,22 +2090,51 @@ pbText:SetPoint("TOPRIGHT", -6, -34)
 pbText:SetJustifyH("RIGHT")
 pbText:SetText("Bonus competencia: " .. GREEN .. fmtSigned(GetPB()) .. ENDCLR)
 
-local RefreshTopInfo
-
 MakeButton(SEC_TOP, "Normal", 72, 20, 10, -48, function()
+    _modoTiradaSingleUse = false
     ARCSET("ModoTirada", "normal")
     if RefreshTopInfo then RefreshTopInfo() end
 end)
 
-MakeButton(SEC_TOP, "Ventaja", 72, 20, 88, -48, function()
-    ARCSET("ModoTirada", "adv")
-    if RefreshTopInfo then RefreshTopInfo() end
-end)
+local function IsAnyShiftDown()
+    return (IsShiftKeyDown and IsShiftKeyDown())
+        or (IsLeftShiftKeyDown and IsLeftShiftKeyDown())
+        or (IsRightShiftKeyDown and IsRightShiftKeyDown())
+end
 
-MakeButton(SEC_TOP, "Desv.", 72, 20, 166, -48, function()
-    ARCSET("ModoTirada", "dis")
-    if RefreshTopInfo then RefreshTopInfo() end
-end)
+local _btnVentaja, _btnDesventaja
+
+local function RefreshModeButtonLabels()
+    local shift = IsAnyShiftDown()
+    if _btnVentaja    then _btnVentaja:SetText(shift    and "Modo V" or "Ventaja")    end
+    if _btnDesventaja then _btnDesventaja:SetText(shift and "Modo D" or "Desventaja") end
+end
+
+-- MODIFIER_STATE_CHANGED no dispara para shift izquierdo en Epsilon.
+-- OnUpdate en SEC_TOP: una comparación booleana por frame, solo mientras la ficha está abierta.
+do
+    local _lastShift = false
+    SEC_TOP:SetScript("OnUpdate", function()
+        local now = IsAnyShiftDown()
+        if now ~= _lastShift then
+            _lastShift = now
+            RefreshModeButtonLabels()
+        end
+    end)
+end
+
+local function MakeModeButton(label, labelShift, xOff, arcValue)
+    local btn = MakeButton(SEC_TOP, label, 72, 20, xOff, -48, function()
+        -- Sin shift → un solo uso. Con shift → permanente.
+        _modoTiradaSingleUse = not IsAnyShiftDown()
+        ARCSET("ModoTirada", arcValue)
+        if RefreshTopInfo then RefreshTopInfo() end
+    end)
+    return btn
+end
+
+_btnVentaja    = MakeModeButton("Ventaja",    "Modo V", 88,  "adv")
+_btnDesventaja = MakeModeButton("Desventaja", "Modo D", 166, "dis")
 
 local scModLabel = SEC_TOP:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 scModLabel:SetPoint("TOPLEFT", 10, -74)
@@ -2239,6 +2399,7 @@ local function DoWeaponAttack()
         critical = critTag,
         mode = (mode == "adv" and "V") or (mode == "dis" and "D") or ""
     })
+    ConsumeMode()
 end
 
 MakeButton(SEC_ATK, "Ataque Arma", 110, 22, 266, -66, function()
@@ -2262,6 +2423,90 @@ HarfordDnDInitLabel, HarfordDnDInitBox, HarfordDnDSetInitBoxFromARC = MakeSigned
 MakeButton(SEC_ATK, "Iniciativa", 110, 22, 266, -150, function()
     DoRoll("Iniciativa", GetAbilityMod("Destreza"), HarfordDnDGetInitiativeMod())
 end)
+
+-- ─── Tracker de movimiento ──────────────────────────────────────────────────
+do
+    local YARDS_TO_METERS = 0.9144
+    local POLL_INTERVAL   = 0.1
+
+    local _tracking    = false
+    local _totalMeters = 0
+    local _lastX, _lastY, _lastZ
+    local _elapsed     = 0
+
+    local movBtn = MakeButton(SEC_ATK, "Movimiento", 110, 22, 266, -178, function() end)
+    local movLabel = SEC_ATK:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    movLabel:SetPoint("TOPLEFT", SEC_ATK, "TOPLEFT", 266, -202)
+    movLabel:SetSize(110, 14)
+    movLabel:SetJustifyH("CENTER")
+    movLabel:SetText("")
+
+    -- Detecta qué API de posición está disponible en este cliente
+    local function GetPos()
+        if UnitPosition then
+            local x, y, z = UnitPosition("player")
+            if x and y then return x, y, z or 0 end
+        end
+        if C_Map and C_Map.GetBestMapForUnit and C_Map.GetPlayerMapPosition then
+            local mapID = C_Map.GetBestMapForUnit("player")
+            if mapID then
+                local p = C_Map.GetPlayerMapPosition(mapID, "player")
+                if p then return p.x, p.y, 0 end
+            end
+        end
+        return nil
+    end
+
+    local function FormatMeters(m)
+        return string.format("%.1f m", m)
+    end
+
+    -- Throttle a 10fps; activo solo mientras _tracking=true
+    movBtn:SetScript("OnUpdate", function(_, dt)
+        if not _tracking then return end
+        _elapsed = _elapsed + dt
+        if _elapsed < POLL_INTERVAL then return end
+        _elapsed = 0
+
+        local nx, ny, nz = GetPos()
+        if not nx then return end
+        if _lastX then
+            local dx = nx - _lastX
+            local dy = ny - _lastY
+            local dz = nz - _lastZ
+            local dist = math.sqrt(dx*dx + dy*dy + dz*dz) * YARDS_TO_METERS
+            if dist > 0.05 then
+                _totalMeters = _totalMeters + dist
+                movBtn:SetText(string.format("Parar %s", FormatMeters(_totalMeters)))
+                movLabel:SetText(FormatMeters(_totalMeters))
+            end
+        end
+        _lastX, _lastY, _lastZ = nx, ny, nz
+    end)
+
+    movBtn:SetScript("OnClick", function()
+        if _tracking then
+            -- Parar
+            _tracking = false
+            movBtn:SetText("Movimiento")
+            movLabel:SetText(_totalMeters > 0 and FormatMeters(_totalMeters) or "")
+        else
+            -- Arrancar: verificar que hay API de posición disponible
+            local x, y, z = GetPos()
+            if not x then
+                movLabel:SetText("Sin posición")
+                return
+            end
+            _totalMeters = 0
+            _elapsed     = 0
+            _lastX, _lastY, _lastZ = x, y, z
+            _tracking = true
+            movBtn:SetText("Parar  0.0m")
+            movLabel:SetText("0.0 m")
+        end
+    end)
+end
+-- ─── Fin tracker movimiento ─────────────────────────────────────────────────
 
 DoSpellAttack = function()
     local abil = GetSpellAbilityKey()
@@ -2298,6 +2543,7 @@ DoSpellAttack = function()
         critical = critTag,
         mode = (mode == "adv" and "V") or (mode == "dis" and "D") or ""
     })
+    ConsumeMode()
 end
 
 local scAtkText = SEC_TOP:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
@@ -2329,7 +2575,14 @@ end)
 
 RefreshTopInfo = function()
     local mode = GetMode()
-    local modeName = (mode == "adv" and "Ventaja") or (mode == "dis" and "Desventaja") or "Normal"
+    local modeName
+    if mode == "adv" then
+        modeName = _modoTiradaSingleUse and "Ventaja" or "Ventaja Perm."
+    elseif mode == "dis" then
+        modeName = _modoTiradaSingleUse and "Desventaja" or "Desventaja Perm."
+    else
+        modeName = "Normal"
+    end
     modeLabel:SetText("Modo activo: " .. modeName)
 
     local pb = GetPB()
@@ -2630,13 +2883,16 @@ function HarfordDnDAPI.BroadcastConfig(channel, target)
     local profileName = tostring(HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
     local tbl = HarfordSync.ReadProfileFromRuntime(RuntimeProfile, HarfordSync.ProfileKeys.DnD)
 
-    return HarfordSync.SendDnDProfile(
+    local ok, err = HarfordSync.SendDnDProfile(
         ADDON_PREFIX,
         profileName,
         tbl,
         channel,
         target
     )
+    if not ok then return false, err end
+    HarfordSync.SendDnDProfFlags(ADDON_PREFIX, profileName, tbl, channel, target)
+    return true
 end
 
 local function ExportProfileResourcesFromBank(profileName)
@@ -2683,6 +2939,7 @@ function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
 
     if resolvedTarget == myShortName or (myFullName and resolvedTarget == myFullName) then
         ApplyProfileTable(tbl, characterName)
+        MergeProfFlagsTable(tbl, characterName)
 
         local resourceTblLocal = ExportProfileResourcesFromBank(characterName)
         if resourceTblLocal then
@@ -2692,6 +2949,7 @@ function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
         return true
     end
 
+    -- Mensaje 1: DNDCFG — atributos, salvaciones, misc (cabe en un mensaje de red)
     local ok, err = HarfordSync.SendDnDProfile(
         ADDON_PREFIX,
         characterName,
@@ -2703,6 +2961,10 @@ function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
     if not ok then
         return false, err
     end
+
+    -- Mensaje 2: DNDPROF — flags prof/exp de las 18 habilidades (compacto, ~60 bytes).
+    -- Se envía siempre aunque todos sean "0" para garantizar un estado limpio en el cliente.
+    HarfordSync.SendDnDProfFlags(ADDON_PREFIX, characterName, tbl, channel, resolvedTarget)
 
     local resourceTbl = ExportProfileResourcesFromBank(characterName)
     if resourceTbl then
@@ -2722,14 +2984,19 @@ function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
 end
 
 function HarfordDnDAPI.BroadcastAll(channel, target)
-    return HarfordSync.BroadcastProfiles(
+    local ok, count = HarfordSync.BroadcastProfiles(
         ADDON_PREFIX,
         "DNDCFG",
         HarfordDnDProfileBank,
-        HarfordSync.ProfileKeys.DnD,
+        HarfordSync.ProfileKeys.DnDBase,
         channel,
         target
     )
+    -- DNDPROF masivo: un mensaje compacto por perfil en el banco
+    for name, tbl in pairs(HarfordDnDProfileBank or {}) do
+        HarfordSync.SendDnDProfFlags(ADDON_PREFIX, name, tbl, channel, target)
+    end
+    return ok, count
 end
 
 function HarfordDnDAPI.GetCurrentResources()
@@ -2795,6 +3062,19 @@ function HarfordDnDAPI.AdjustResourceForName(characterName, resourceKey, delta)
     return SendResourceAdjustToPlayer(characterName, resourceKey, delta)
 end
 
+-- Activa/desactiva edición inline en TargetResourceFrame (modo "frame separado").
+-- Solo disponible con HarfordAdmin activo.
+function HarfordDnDAPI.ToggleTargetResourceEditMode()
+    if not (HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true) then return false end
+    TargetResourceFrame.editMode = not (TargetResourceFrame.editMode or false)
+    if RefreshTargetResourceFrame then RefreshTargetResourceFrame() end
+    return TargetResourceFrame.editMode
+end
+
+function HarfordDnDAPI.GetTargetResourceEditMode()
+    return TargetResourceFrame.editMode or false
+end
+
 local listener = CreateFrame("Frame")
 listener:RegisterEvent("PLAYER_LOGIN")
 listener:RegisterEvent("CHAT_MSG_ADDON")
@@ -2814,6 +3094,7 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
     SendResourceResponseForProfileTo = SendResourceResponseForProfileTo,
     ApplyResourceDelta = ApplyResourceDeltaFromRemote,
     ApplyProfileTable = ApplyProfileTable,
+    MergeProfFlagsTable = MergeProfFlagsTable,
     ApplyResourceConfigTable = ApplyResourceConfigTable,
     BuildRuntimeFromConfig = HarfordDnDResources.BuildRuntimeFromConfig,
     CacheRemoteResources = HarfordDnDResources.CacheRemoteResources,
@@ -2836,12 +3117,16 @@ listener:SetScript("OnEvent", function(_, event, ...)
         return
     end
     if event == "PLAYER_TARGET_CHANGED" then
+        -- Resetear edición inline al cambiar de target para no quedarse con botones del target anterior
+        if TargetResourceFrame then TargetResourceFrame.editMode = false end
         AddonHandlers.HandlePlayerTargetChanged()
         return
     end
     local prefix, message, _, sender = ...
-    AddonHandlers.HandleAddonMessage(prefix, message, sender)
-    if HarfordUnitFrames and HarfordUnitFrames.Refresh then
+    local resourcesChanged = AddonHandlers.HandleAddonMessage(prefix, message, sender)
+    -- Refrescar overlays de unitframes solo cuando llegaron datos de recursos remotos.
+    -- Evita un Refresh completo en cada mensaje de turnos, loot, reputaciones, tiradas.
+    if resourcesChanged and HarfordUnitFrames and HarfordUnitFrames.Refresh then
         HarfordUnitFrames.Refresh()
     end
 end)

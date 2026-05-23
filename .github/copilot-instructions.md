@@ -26,6 +26,8 @@ Estas limitaciones están confirmadas. **No intentar alternativas** — ya se pr
 - **SetAlpha en barras ToT**: `TargetofTarget_Update` y `OnValueChanged` restauran el alpha. No usar `SetAlpha` para ocultar barras nativas del ToT.
 - **PlayerFrameTexture**: `SetAlpha(0)` no funciona en Epsilon para el player frame.
 - **Reposicionar TargetFrameToT**: `TargetofTarget_Update` resetea los anchors entre ticks. No mover el frame nativo.
+- **`ClearTargetAuraAnchorCache()` directamente**: provoca drift infinito de buff frames. Siempre usar `RestoreTargetAuras()` (restaura Y limpia). Con focus activo, `UNIT_AURA focus` también dispara `RefreshFrame("Target")`, duplicando la deriva.
+- **`CHAT_MSG_SYSTEM` para estado DM**: dispara en cualquier mensaje de sistema. Usar `HarfordAuthority.RegisterChangeListener` para cambios de modo DM.
 
 ## Patrones de código establecidos
 
@@ -40,6 +42,30 @@ f:SetFrameStrata("MEDIUM")
 f:SetFrameLevel(82)  -- art=82, barFrame=83, bar=84, portrait=85
 f:SetAllPoints(nativeBar)  -- anclaje cross-tree OK para posicionamiento
 -- Para paneles/ventanas flotantes: DIALOG level 500+
+
+-- Buff frames: SIEMPRE restaurar antes de limpiar el cache de anclas
+RestoreTargetAuras()  -- OK: restaura posición nativa Y limpia cache
+-- ClearTargetAuraAnchorCache()  -- MAL: limpia sin restaurar → drift infinito
+
+-- HandleAddonMessage retorna boolean; usar para condicionar refreshes costosos
+local changed = AddonHandlers.HandleAddonMessage(prefix, message, sender)
+if changed and HarfordUnitFrames then HarfordUnitFrames.Refresh() end
+
+-- Throttle de requests por jugador (evitar spam de WHISPER en PLAYER_TARGET_CHANGED)
+local _reqTimes = {}  -- tabla en scope de módulo
+if (GetTime() - (_reqTimes[name] or 0)) < 12 then return false end
+_reqTimes[name] = GetTime()
+
+-- Nombres en sync (turnos, fichas): siempre cortos, sin realm
+local short = Ambiguate and Ambiguate(name, "short") or name:match("^[^%-]+") or name
+
+-- Debounce para rafagas de mensajes (HarfordReputationSync, etc.)
+local _pending = false
+local function RefreshViews()
+    if _pending then return end
+    _pending = true
+    C_Timer.After(0.1, function() _pending = false; DoActualRefresh() end)
+end
 
 -- Máscara circular: aplicar a AMBAS texturas (fondo e icono)
 local mask = pf:CreateMaskTexture(nil, "ARTWORK")

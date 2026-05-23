@@ -881,7 +881,7 @@ local function AdjustTargetAuras(frame, resourceCount, extraHeight)
     extraHeight = tonumber(extraHeight) or 0
     local guid = UnitGUID and UnitGUID("target") or nil
     if API.S.auraTargetGUID ~= guid then
-        ClearTargetAuraAnchorCache()
+        RestoreTargetAuras()  -- restaurar antes de limpiar al cambiar target
         API.S.auraTargetGUID = guid
     end
     if resourceCount <= 2 or extraHeight <= 0 then
@@ -4296,7 +4296,12 @@ events:SetScript("OnEvent", function(_, event, ...)
             return
         end
         if event == "UNIT_AURA" and unit == "target" then
-            ClearTargetAuraAnchorCache()
+            -- RestoreTargetAuras devuelve los aura frames a su posición nativa ANTES de
+            -- limpiar el caché. Sin esto, SaveAuraPoints guarda la posición ya desplazada
+            -- como base y cada UNIT_AURA acumula un desplazamiento extra hasta que los
+            -- buff frames salen de pantalla ("congelados"). Con focus activo llegan el
+            -- doble de eventos UNIT_AURA, lo que duplica la velocidad de deriva.
+            RestoreTargetAuras()
         end
         if unit ~= "player" and unit ~= "target" and unit ~= "focus" then
             if IsGroupUnit(unit) then

@@ -327,7 +327,9 @@ end
 local function ClaimAdminIfNeeded()
     local store = EnsureStore()
     if tostring(store.adminName or "") == "" then
-        store.adminName = GetMyName()
+        -- Nombre corto sin realm, igual que la clave del banco de fichas.
+        local name = GetMyName()
+        store.adminName = Ambiguate and Ambiguate(name, "short") or name:match("^[^%-]+") or name
     end
 end
 
@@ -650,12 +652,20 @@ end
 
 local function SerializeTurnNoticeEntry(entry)
     entry = NormalizeEntryLinks(entry or {}) or {}
+    -- Nombre corto sin realm para unitName y trpUnitID, igual que el banco de fichas.
+    -- El receptor llama a NormalizePlayerUnitID al deserializar si necesita el realm.
+    local unitNameShort = Ambiguate and Ambiguate(tostring(entry.unitName or ""), "short")
+        or tostring(entry.unitName or ""):match("^[^%-]+")
+        or tostring(entry.unitName or "")
+    local trpUnitIDShort = Ambiguate and Ambiguate(tostring(entry.trpUnitID or ""), "short")
+        or tostring(entry.trpUnitID or ""):match("^[^%-]+")
+        or tostring(entry.trpUnitID or "")
     return table.concat({
         EscapeText(entry.id),
         EscapeText(entry.name),
         EscapeText(entry.kind),
-        EscapeText(entry.unitName),
-        EscapeText(entry.trpUnitID),
+        EscapeText(unitNameShort),
+        EscapeText(trpUnitIDShort),
     }, ",")
 end
 
@@ -714,7 +724,10 @@ local function ApplyTurnNotice(message)
     local store = EnsureStore()
     if adminRaw ~= nil then
         local adminName = UnescapeText(adminRaw)
-        if adminName ~= "" then store.adminName = adminName end
+        -- Normalizar a nombre corto por compatibilidad con mensajes antiguos que incluían realm.
+        if adminName ~= "" then
+            store.adminName = Ambiguate and Ambiguate(adminName, "short") or adminName:match("^[^%-]+") or adminName
+        end
     end
     if serial > (tonumber(store.turnSerial) or 0) then
         store.turnSerial = serial
@@ -743,7 +756,10 @@ local function ApplySerializedState(message)
     local store = EnsureStore()
     store.entries = {}
     store.activeIndex = SafeNumber(activeRaw, 1)
-    if fourth ~= nil then store.adminName = UnescapeText(third) end
+    if fourth ~= nil then
+        local adminName = UnescapeText(third)
+        store.adminName = Ambiguate and Ambiguate(adminName, "short") or adminName:match("^[^%-]+") or adminName
+    end
 
     local entriesRaw = fourth or third
     if entriesRaw and entriesRaw ~= "" then
@@ -857,6 +873,49 @@ local function ApplyChunkedState(message, sender)
     return ApplySerializedState(table.concat(assembled))
 end
 
+-- Igual que ApplyChunkedState pero para TCHUNK (TURN notices largos).
+-- El prefijo "T:" en la clave del buffer evita colisiones con buffers SCHUNK.
+local function ApplyChunkedTurnNotice(message, sender)
+    local transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^TCHUNK|([^|]+)|([^|]+)|([^|]+)|(.*)$")
+    if not transferId or transferId == "" then return false end
+
+    local index = tonumber(indexRaw)
+    local total = tonumber(totalRaw)
+    if not index or not total or total < 1 or total > TURN_MAX_CHUNKS or index < 1 or index > total then
+        return false
+    end
+
+    local key = "T:" .. tostring(sender or "?") .. ":" .. transferId
+    local buffer = turnChunkBuffers[key]
+    if not buffer or buffer.total ~= total then
+        buffer = { total = total, received = 0, chunks = {} }
+        turnChunkBuffers[key] = buffer
+        if C_Timer and C_Timer.After then
+            C_Timer.After(15, function()
+                if turnChunkBuffers[key] == buffer then
+                    turnChunkBuffers[key] = nil
+                end
+            end)
+        end
+    end
+
+    if not buffer.chunks[index] then
+        buffer.chunks[index] = UnescapeChunk(chunk)
+        buffer.received = buffer.received + 1
+    end
+
+    if buffer.received < total then return false end
+
+    local assembled = {}
+    for i = 1, total do
+        if not buffer.chunks[i] then return false end
+        assembled[i] = buffer.chunks[i]
+    end
+
+    turnChunkBuffers[key] = nil
+    return ApplyTurnNotice(table.concat(assembled))
+end
+
 local function ApplyTurnMessage(message, sender)
     local opcode = tostring(message or ""):match("^([^|]+)")
     if opcode == "STATE" then
@@ -865,6 +924,8 @@ local function ApplyTurnMessage(message, sender)
         return ApplyChunkedState(message, sender)
     elseif opcode == "TURN" then
         return ApplyTurnNotice(message)
+    elseif opcode == "TCHUNK" then
+        return ApplyChunkedTurnNotice(message, sender)
     end
     return false
 end
@@ -883,12 +944,23 @@ local function SendTurnNotice()
 
     local payload = SerializeTurnNotice()
     if not payload then return false end
-    if #payload > TURN_SINGLE_MESSAGE_LIMIT then
+
+    if #payload <= TURN_SINGLE_MESSAGE_LIMIT then
+        HarfordSync.Send(COMM_PREFIX, payload, ch)
+        return true
+    end
+
+    -- Nombre largo (TRP3 con espacios/caracteres codificados): enviar en TCHUNK.
+    local chunks = SplitEscapedChunks(payload)
+    if #chunks > TURN_MAX_CHUNKS then
         Print("No se pudo anunciar el turno: mensaje demasiado grande.")
         return false
     end
 
-    HarfordSync.Send(COMM_PREFIX, payload, ch)
+    local transferId = NewId()
+    for i = 1, #chunks do
+        HarfordSync.Send(COMM_PREFIX, "TCHUNK|" .. transferId .. "|" .. tostring(i) .. "|" .. tostring(#chunks) .. "|" .. chunks[i], ch)
+    end
     return true
 end
 
@@ -1283,6 +1355,14 @@ end
 
 local function RefreshPlayerEntryTRP3Meta(entry)
     if not entry or entry.kind ~= "player" or not HarfordTRP3 then return end
+
+    -- Solo volver a buscar si no se encontró perfil antes, o si pasaron más de 30s
+    -- (cubre cambios de perfil TRP3 en sesión sin buscar en cada RefreshFrame).
+    -- El sweep sobre raid1-40 puede ser 47 llamadas por entrada × 6 tarjetas × 2 RefreshFrame
+    -- por turno → ~564 llamadas API WoW por tecla "Siguiente". Con el cache, es 0 si ya se encontró.
+    local now = GetTime and GetTime() or 0
+    if entry._trpMetaCached and (now - (entry._trpMetaCachedAt or 0)) < 30 then return end
+
     local profile
     local matchedUnit
 
@@ -1308,6 +1388,10 @@ local function RefreshPlayerEntryTRP3Meta(entry)
     end
 
     entry.nameColor = GetPlayerTurnNameColorHex(profile, matchedUnit) or entry.nameColor
+    -- Marcar como cacheado para no repetir el sweep en cada RefreshFrame.
+    -- Se invalida automáticamente a los 30s o cuando ApplySerializedState reconstruye entries.
+    entry._trpMetaCached = true
+    entry._trpMetaCachedAt = now
 end
 
 local function GetFallbackCreatureIcon(unit)
@@ -2033,10 +2117,10 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
 
     if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then
         local unit = ...
+        -- Solo interesa el HP del target (NPC trackeado). Cambios de HP de otras
+        -- unidades no modifican el estado de los turnos → no hacer RefreshFrame.
         if unit == "target" and RefreshTargetNpcHealthFromUnit("target") then
             MarkChanged()
-        elseif TurnFrame and TurnFrame:IsShown() and RefreshFrame then
-            RefreshFrame()
         end
         return
     end
@@ -2052,7 +2136,11 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     if applied then
         local store = EnsureStore()
         if opcode ~= "TURN" then
-            AlertMyTurn(store.entries[store.activeIndex], store.activeIndex)
+            -- Pasar store.turnSerial para que la clave de dedup coincida con la ya
+            -- grabada por ApplyTurnNotice (TURN llegó primero, serial > 0).
+            -- Sin esto, STATE llega 150ms después con serial=nil → clave "0:id:name"
+            -- diferente → AlertMyTurn dispara por segunda vez → doble sonido/animación.
+            AlertMyTurn(store.entries[store.activeIndex], store.activeIndex, store.turnSerial)
         end
         RefreshFrame()
     end

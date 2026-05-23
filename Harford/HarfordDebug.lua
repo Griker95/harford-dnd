@@ -993,6 +993,126 @@ API.RegisterCommand("totportrait", function()
     end
 end, "diagnostica portrait overlay del ToT y estado TRP3")
 
+-- Diagnóstico de APIs de posición disponibles en Epsilon.
+-- Uso: /harforddebug run testpos
+API.RegisterCommand("testpos", function()
+    Print("=== APIs de posición ===")
+
+    -- UnitPosition
+    if UnitPosition then
+        local a, b, c, d = UnitPosition("player")
+        Print("UnitPosition(player) = " .. tostring(a) .. ", " .. tostring(b) .. ", " .. tostring(c) .. ", " .. tostring(d))
+    else
+        Print("UnitPosition: NO EXISTE")
+    end
+
+    -- C_Map.GetPlayerMapPosition
+    if C_Map and C_Map.GetBestMapForUnit and C_Map.GetPlayerMapPosition then
+        local mapID = C_Map.GetBestMapForUnit("player")
+        Print("C_Map.GetBestMapForUnit(player) = " .. tostring(mapID))
+        if mapID then
+            local p = C_Map.GetPlayerMapPosition(mapID, "player")
+            if p then
+                Print("C_Map.GetPlayerMapPosition = x=" .. tostring(p.x) .. " y=" .. tostring(p.y))
+            else
+                Print("C_Map.GetPlayerMapPosition = nil")
+            end
+        end
+    else
+        Print("C_Map.GetPlayerMapPosition: NO EXISTE")
+    end
+
+    -- GetPlayerFacing para saber si hay frame de movimiento disponible
+    if GetPlayerFacing then
+        Print("GetPlayerFacing() = " .. tostring(GetPlayerFacing()))
+    else
+        Print("GetPlayerFacing: NO EXISTE")
+    end
+end, "diagnóstico de APIs de posición disponibles en Epsilon")
+
+-- Observa la posición del jugador durante N segundos y muestra si cambia.
+-- Útil para confirmar que UnitPosition actualiza mientras el jugador se mueve.
+-- Uso: /harforddebug run poswatch [segundos]   (por defecto 8s)
+do
+    local _posWatchFrame
+    API.RegisterCommand("poswatch", function(args)
+        local seconds = tonumber(args) or 8
+        seconds = math.max(2, math.min(30, seconds))
+
+        local startTime = GetTime and GetTime() or 0
+        local endTime   = startTime + seconds
+        local samples   = 0
+        local prevX, prevY, prevZ
+        local totalDist = 0
+        local YARDS_TO_METERS = 0.9144
+
+        local function GetPosDbg()
+            if UnitPosition then
+                local a, b, c = UnitPosition("player")
+                if a and b then return a, b, c or 0, "UnitPosition" end
+            end
+            if C_Map and C_Map.GetBestMapForUnit and C_Map.GetPlayerMapPosition then
+                local mapID = C_Map.GetBestMapForUnit("player")
+                if mapID then
+                    local p = C_Map.GetPlayerMapPosition(mapID, "player")
+                    if p then return p.x, p.y, 0, "C_Map" end
+                end
+            end
+            return nil, nil, nil, "ninguna"
+        end
+
+        if not _posWatchFrame then
+            _posWatchFrame = CreateFrame("Frame")
+        end
+
+        Print("poswatch activo " .. seconds .. "s — muévete para comprobar")
+
+        local elapsed = 0
+        _posWatchFrame:SetScript("OnUpdate", function(_, dt)
+            local now = GetTime and GetTime() or 0
+            if now >= endTime then
+                _posWatchFrame:SetScript("OnUpdate", nil)
+                Print("=== poswatch resultado (" .. samples .. " muestras, " .. string.format("%.1f", seconds) .. "s) ===")
+                Print("  Distancia total acumulada: " .. string.format("%.2f m", totalDist))
+                if samples == 0 then
+                    Print("  PROBLEMA: ninguna API retornó coordenadas")
+                elseif totalDist < 0.01 then
+                    Print("  PROBLEMA: posición no cambió — API existe pero no actualiza")
+                else
+                    Print("  OK: posición se actualizó correctamente")
+                end
+                return
+            end
+
+            elapsed = elapsed + dt
+            if elapsed < 0.1 then return end
+            elapsed = 0
+            samples = samples + 1
+
+            local nx, ny, nz, api = GetPosDbg()
+            if not nx then return end
+
+            if prevX then
+                local dx = nx - prevX
+                local dy = ny - prevY
+                local dz = nz - prevZ
+                local dist = math.sqrt(dx*dx + dy*dy + dz*dz) * YARDS_TO_METERS
+                if dist > 0.02 then
+                    totalDist = totalDist + dist
+                    Print("  [" .. samples .. "] api=" .. api .. " dist=" .. string.format("+%.2fm", dist)
+                        .. " total=" .. string.format("%.2fm", totalDist))
+                end
+            else
+                Print("  [primera muestra] api=" .. api
+                    .. " x=" .. string.format("%.4f", nx)
+                    .. " y=" .. string.format("%.4f", ny)
+                    .. " z=" .. string.format("%.4f", nz))
+            end
+            prevX, prevY, prevZ = nx, ny, nz
+        end)
+    end, "observa posición del jugador N segundos para verificar que UnitPosition actualiza: poswatch [segundos]")
+end
+
 SLASH_HARFORDDEBUG1 = "/harforddebug"
 SLASH_HARFORDDEBUG2 = "/hdebug"
 SlashCmdList["HARFORDDEBUG"] = function(msg)

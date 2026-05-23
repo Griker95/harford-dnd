@@ -40,6 +40,8 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 - **Reposicionar TargetFrameToT físicamente**: `TargetofTarget_Update` resetea anchors entre ticks. No mover el frame nativo — solo gestionar strata/level y cubrir con overlays.
 - **Límite de 200 locales Lua 5.1**: `HarfordUnitFrames.lua` roza el límite. Nuevos bloques de funciones deben ir dentro de `do...end` para no añadir locales al scope global. Exponer funciones públicas vía tabla (ver patrón `focusTot`).
 - **No ticks continuos**: no usar `C_Timer.NewTicker`, `OnUpdate` permanente ni polling para UI/permisos/nameplates/turnos. Preferir eventos WoW/addon. `OnUpdate` solo mientras dura una interacción real (drag/hover) y se limpia al terminar.
+- **`ClearTargetAuraAnchorCache()` sin restaurar primero**: limpiar el cache de anclas de buff frames sin restaurar antes las posiciones nativas hace que cada `UNIT_AURA` acumule un offset extra → drift infinito hasta que los buff frames salen de pantalla. Siempre usar `RestoreTargetAuras()` que restaura Y limpia. Con focus activo los eventos `UNIT_AURA focus` también disparan RefreshFrame("Target"), duplicando la velocidad de deriva.
+- **`CHAT_MSG_SYSTEM` para detectar modo DM**: dispara en cualquier mensaje de sistema (kills, quests, etc.). Usar `HarfordAuthority.RegisterChangeListener` para reaccionar a cambios de DM mode.
 
 ## Patrones de código recurrentes
 
@@ -79,6 +81,31 @@ end, "Descripción breve del comando")
 -- Nameplates: event-driven. No ticker.
 -- Kui normal: overlay sobre kui.HealthBar. Kui name-only: overlay bajo kui.NameText.
 -- Nativo: overlay simple sobre UnitFrame.healthBar.
+
+-- Buff drift fix: SIEMPRE usar RestoreTargetAuras() en lugar de ClearTargetAuraAnchorCache().
+-- RestoreTargetAuras restaura frames a posición nativa ANTES de limpiar el cache.
+-- Aplica en: handler UNIT_AURA target + branch de cambio de GUID en AdjustTargetAuras.
+-- (Con focus activo, UNIT_AURA "focus" también dispara RefreshFrame("Target") → duplica la deriva)
+RestoreTargetAuras()  -- correcto
+-- ClearTargetAuraAnchorCache()  -- NUNCA llamar directamente; deja cache vacío sin restaurar
+
+-- HandleAddonMessage (HarfordDnDComm) retorna boolean:
+-- true  → cache de recursos remota actualizada (RES / RESCFG / RADJ) → llamar HarfordUnitFrames.Refresh()
+-- false → REQ, perfiles, prof flags, tiradas → NO hacer Refresh completo
+local resourcesChanged = AddonHandlers.HandleAddonMessage(prefix, message, sender)
+if resourcesChanged and HarfordUnitFrames and HarfordUnitFrames.Refresh then
+    HarfordUnitFrames.Refresh()
+end
+
+-- RequestResourcesFromPlayer: throttle 12s por jugador
+-- (tabla _resourceRequestTimes en scope de módulo, no en el handler de evento)
+
+-- Nombres en turnos/sync: siempre cortos (sin realm), igual que claves banco de fichas
+local shortName = Ambiguate and Ambiguate(name, "short") or name:match("^[^%-]+") or name
+
+-- Debounce de RefreshReputationViews (HarfordReputationSync):
+-- _refreshViewsPending + C_Timer.After(0.1) colapsa rafagas REP/RDELTA en un único refresh.
+-- No aplicar a ApplySnapshot (ya es una sola llamada al final del reensamblado).
 
 -- Patrón do...end para añadir funciones sin consumir locales de file-scope
 -- (HarfordUnitFrames.lua está al límite de 200 locales Lua 5.1)

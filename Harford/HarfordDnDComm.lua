@@ -39,15 +39,18 @@ function HarfordDnDComm.CreateHandlers(deps)
         deps.RefreshTargetResourceFrame()
     end
 
+    -- Retorna true solo cuando se actualiza caché de recursos remotos → el caller
+    -- puede refrescar los overlays de unitframes. No retorna true para REQ, tiradas
+    -- ni sincronías de perfil que no cambian lo que muestran los overlays.
     handlers.HandleAddonMessage = function(prefix, message, sender)
-        if prefix ~= deps.ADDON_PREFIX then return end
+        if prefix ~= deps.ADDON_PREFIX then return false end
 
         local resKind, resourceProfileName, resourceTbl = HarfordSync.ReceiveResourceMessage(message)
         if resKind == "REQ" then
             if sender and sender ~= "" and not handlers.IsSelfSender(sender) then
                 deps.SendResourceResponseTo(sender)
             end
-            return
+            return false
         end
 
         if resKind == "RES" and resourceTbl then
@@ -56,7 +59,7 @@ function HarfordDnDComm.CreateHandlers(deps)
             if HarfordTurnOrderAPI and HarfordTurnOrderAPI.Refresh then
                 HarfordTurnOrderAPI.Refresh()
             end
-            return
+            return true  -- caché actualizada → refrescar overlays
         end
 
         local adjustKey, adjustDelta = HarfordSync.DeserializeResourceAdjustMessage(message)
@@ -64,13 +67,21 @@ function HarfordDnDComm.CreateHandlers(deps)
             if deps.ApplyResourceDelta then
                 deps.ApplyResourceDelta(adjustKey, adjustDelta, sender)
             end
-            return
+            return true  -- recurso ajustado → refrescar overlays
         end
 
         local profileName, profileTbl = HarfordSync.ReceiveDnDProfile(message)
         if profileName and profileTbl then
             deps.ApplyProfileTable(profileTbl, profileName)
-            return
+            return false  -- perfil DnD: no afecta overlays de recursos directamente
+        end
+
+        -- DNDPROF: flags de proficiencia/expertía de habilidades (mensaje compacto).
+        -- Llega justo después de DNDCFG; se fusiona en el perfil sin reemplazarlo.
+        local profProfileName, profTbl = HarfordSync.DeserializeDnDProfFlags(message)
+        if profProfileName and profTbl then
+            deps.MergeProfFlagsTable(profTbl, profProfileName)
+            return false
         end
 
         local resourceProfileNameCfg, resourceCfgTbl = HarfordSync.ReceiveResourceConfig(message)
@@ -85,10 +96,11 @@ function HarfordDnDComm.CreateHandlers(deps)
             if sender and sender ~= "" and not handlers.IsSelfSender(sender) then
                 deps.SendResourceResponseForProfileTo(resourceProfileNameCfg, sender)
             end
-            return
+            return true  -- caché de config actualizada → refrescar overlays
         end
 
         deps.HandleRollSync(message)
+        return false
     end
 
     return handlers

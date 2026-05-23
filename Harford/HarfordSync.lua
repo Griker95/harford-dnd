@@ -6,6 +6,36 @@ HarfordSync.RESOURCE_ENCODING_MARKER = HarfordSync.RESOURCE_ENCODING_MARKER or "
 HarfordSync.ProfileKeys = HarfordSync.ProfileKeys or {}
 HarfordSync.ResourceKeys = HarfordSync.ResourceKeys or {}
 
+-- IDs de habilidades en el mismo orden que SKILLS en HarfordDnD.lua.
+-- Si se añade o reordena una habilidad en SKILLS, actualizar aquí también.
+HarfordSync.PROF_SKILL_IDS = {
+    "Acrobacias", "Atletismo", "Arcano", "Engano", "Historia",
+    "Interpretacion", "Intimidacion", "Investigacion", "JuegoManos",
+    "Medicina", "Naturaleza", "Percepcion", "Perspicacia", "Persuasion",
+    "Religion", "Sigilo", "Supervivencia", "Animales",
+}
+
+-- Claves base del perfil DnD (sin Hab_): caben holgadamente en un mensaje de red.
+HarfordSync.ProfileKeys.DnDBase = {
+    "BonusCompetencia",
+    "AtributoConjuro",
+    "ModIniciativa",
+    "Fuerza",
+    "Destreza",
+    "Constitucion",
+    "Inteligencia",
+    "Sabiduria",
+    "Carisma",
+    "Salv_Fuerza",
+    "Salv_Destreza",
+    "Salv_Constitucion",
+    "Salv_Inteligencia",
+    "Salv_Sabiduria",
+    "Salv_Carisma",
+}
+
+-- Lista completa (base + prof/exp): se usa para persist local y banco del DM.
+-- NO usar para envío de red — supera el límite de SendAddonMessage.
 HarfordSync.ProfileKeys.DnD = {
     "BonusCompetencia",
     "AtributoConjuro",
@@ -332,13 +362,15 @@ function HarfordSync.SendProfile(prefix, opcode, profileName, profileTable, keys
     return true
 end
 
+-- Envía las claves base (atributos, salvaciones, misc) como DNDCFG.
+-- Las prof/exp de habilidades van en un mensaje DNDPROF separado.
 function HarfordSync.SendDnDProfile(prefix, profileName, profileTable, channel, target)
     return HarfordSync.SendProfile(
         prefix,
         "DNDCFG",
         profileName,
         profileTable,
-        HarfordSync.ProfileKeys.DnD,
+        HarfordSync.ProfileKeys.DnDBase,
         channel,
         target
     )
@@ -351,6 +383,60 @@ function HarfordSync.ReceiveDnDProfile(message)
     end
     return profileName, tbl
 end
+
+-- ---------------------------------------------------------------------------
+-- DNDPROF: mensaje compacto para los 36 flags Hab_X_Prof / Hab_X_Exp.
+-- Formato: "DNDPROF|<profileName>|<18 bits Prof><18 bits Exp>"
+-- Cada bit es "1" (competente/experto) o "0", en el orden de PROF_SKILL_IDS.
+-- Total ~60 bytes — siempre cabe en un mensaje de red.
+-- ---------------------------------------------------------------------------
+
+function HarfordSync.SerializeDnDProfFlags(profileName, tbl)
+    profileName = tostring(profileName or "")
+    local ids = HarfordSync.PROF_SKILL_IDS
+    local profBits = {}
+    local expBits  = {}
+    for _, id in ipairs(ids) do
+        profBits[#profBits + 1] = ((tbl and tbl["Hab_" .. id .. "_Prof"] == "1") and "1" or "0")
+        expBits [#expBits  + 1] = ((tbl and tbl["Hab_" .. id .. "_Exp"]  == "1") and "1" or "0")
+    end
+    return "DNDPROF|" .. profileName .. "|" .. table.concat(profBits) .. table.concat(expBits)
+end
+
+function HarfordSync.DeserializeDnDProfFlags(message)
+    if type(message) ~= "string" then return nil, nil end
+    local s1 = string.find(message, "|", 1, true)
+    if not s1 then return nil, nil end
+    local s2 = string.find(message, "|", s1 + 1, true)
+    if not s2 then return nil, nil end
+    local opcode      = string.sub(message, 1, s1 - 1)
+    local profileName = string.sub(message, s1 + 1, s2 - 1)
+    local bits        = string.sub(message, s2 + 1)
+    if opcode ~= "DNDPROF" or profileName == "" or #bits < 36 then
+        return nil, nil
+    end
+    local ids = HarfordSync.PROF_SKILL_IDS
+    local n   = #ids  -- 18
+    local tbl = {}
+    for i, id in ipairs(ids) do
+        tbl["Hab_" .. id .. "_Prof"] = string.sub(bits, i,     i    )
+        tbl["Hab_" .. id .. "_Exp"]  = string.sub(bits, i + n, i + n)
+    end
+    return profileName, tbl
+end
+
+function HarfordSync.SendDnDProfFlags(prefix, profileName, tbl, channel, target)
+    local ch = channel
+    if (not ch or ch == "") and (target and target ~= "") then
+        ch = "WHISPER"
+    end
+    if not ch or ch == "" then
+        return false, "Sin canal disponible"
+    end
+    local payload = HarfordSync.SerializeDnDProfFlags(profileName, tbl)
+    return HarfordSync.Send(prefix, payload, ch, target)
+end
+
 
 function HarfordSync.BroadcastProfiles(prefix, opcode, bank, keys, channel, target)
     local ch = channel or HarfordSync.BestChannel()
@@ -1013,6 +1099,8 @@ HarfordSync.DnD = HarfordSync.DnD or {
     ReceiveResourceMessage = HarfordSync.ReceiveResourceMessage,
     ReceiveResourceConfig = HarfordSync.ReceiveResourceConfig,
     ScheduleResourceBroadcast = HarfordSync.ScheduleResourceBroadcast,
+    SendDnDProfFlags         = HarfordSync.SendDnDProfFlags,
+    DeserializeDnDProfFlags  = HarfordSync.DeserializeDnDProfFlags,
 }
 
 HarfordSync.Loot = HarfordSync.Loot or {

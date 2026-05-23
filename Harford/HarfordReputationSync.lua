@@ -244,10 +244,19 @@ local function SerializeSnapshot(scope, selectedFactionId)
     return table.concat(lines, "\n")
 end
 
+-- Debounce: colapsa ráfagas de mensajes REP/RDELTA en un único refresh de UI.
+-- BroadcastAll() y BroadcastRepPoints() envían un mensaje por jugador/facción;
+-- sin debounce cada uno dispararía un Refresh completo.
+local _refreshViewsPending = false
 local function RefreshReputationViews()
-    if HarfordReputationUI and HarfordReputationUI.Refresh then HarfordReputationUI.Refresh() end
-    if HarfordReputationTooltip and HarfordReputationTooltip.Refresh then HarfordReputationTooltip.Refresh() end
-    if HarfordReputationAdmin and HarfordReputationAdmin.Refresh then HarfordReputationAdmin.Refresh() end
+    if _refreshViewsPending then return end
+    _refreshViewsPending = true
+    C_Timer.After(0.1, function()
+        _refreshViewsPending = false
+        if HarfordReputationUI and HarfordReputationUI.Refresh then HarfordReputationUI.Refresh() end
+        if HarfordReputationTooltip and HarfordReputationTooltip.Refresh then HarfordReputationTooltip.Refresh() end
+        if HarfordReputationAdmin and HarfordReputationAdmin.Refresh then HarfordReputationAdmin.Refresh() end
+    end)
 end
 
 local function ParseSnapshot(raw)

@@ -22,6 +22,9 @@ HarfordDamageMitigation.lua
 HarfordDnDResources.lua
 HarfordDnDStore.lua
 HarfordDnDContext.lua
+HarfordDnDProfile.lua
+HarfordDnDUI.lua
+HarfordDnDRolls.lua
 HarfordDnDData.lua
 HarfordDnDWeapons.lua
 HarfordDnDCalc.lua

@@ -29,24 +29,14 @@ HarfordDnDContext.State = HarfordDnDContext.State or {
     onDamageRolled = nil,
 }
 
--- Hook opcional para resincronizar la referencia al runtime profile que vive
--- como local en HarfordDnD.lua. Se registra en load con SetSyncHook.
-local _syncHook = nil
-
-function HarfordDnDContext.SetSyncHook(fn)
-    _syncHook = type(fn) == "function" and fn or nil
-end
-
 -- Lee un valor de la ficha. Prioriza los overrides del contexto (modo NPC) y
--- cae al store persistente/runtime.
+-- cae al store persistente/runtime (siempre en vivo desde HarfordDnDStore).
 function HarfordDnDContext.Get(k, default)
     local State = HarfordDnDContext.State
     if State.overrides and State.overrides[k] ~= nil then
         return State.overrides[k]
     end
-    local value = HarfordDnDStore.GetValue(k, default)
-    if _syncHook then _syncHook() end
-    return value
+    return HarfordDnDStore.GetValue(k, default)
 end
 
 -- Escribe un valor de la ficha. Durante la hidratacion desde persistencia
@@ -57,5 +47,4 @@ function HarfordDnDContext.Set(k, v)
     else
         HarfordDnDStore.SetValue(k, tostring(v))
     end
-    if _syncHook then _syncHook() end
 end

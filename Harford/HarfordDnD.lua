@@ -19,7 +19,6 @@ HarfordDnDStore = HarfordDnDStore or {}
 HarfordDnDStore.state = HarfordDnDStore.state or { persist = HarfordDnDPersistStore, runtime = {} }
 HarfordDnDStore.state.persist = HarfordDnDPersistStore
 HarfordDnDStore.state.runtime = HarfordDnDStore.state.runtime or {}
-local RuntimeProfile = HarfordDnDStore.state.runtime
 
 local GetWeaponKey
 local GetWeaponDef
@@ -47,44 +46,10 @@ local ALL_RESOURCE_KEYS = HarfordDnDResources.ALL_KEYS
 local ResourceCurKey = HarfordDnDResources.CurKey
 local ResourceMaxKey = HarfordDnDResources.MaxKey
 
-local function SyncRuntimeProfileRef()
-    RuntimeProfile = (HarfordDnDStore.state and HarfordDnDStore.state.runtime) or {}
-end
-
-local function EnsurePersist(profileName)
-    HarfordDnDStore.EnsurePersist(profileName)
-    SyncRuntimeProfileRef()
-end
-
-local function LoadPersistToRuntime(profileName)
-    HarfordDnDStore.LoadPersistToRuntime(profileName)
-    SyncRuntimeProfileRef()
-end
-
-local function SaveCurrentProfileToBank(profileName)
-    SyncRuntimeProfileRef()
-    return HarfordDnDStore.SaveCurrentProfileToBank(profileName)
-end
-
--- Contexto temporal de ficha y accesores ARC: viven en HarfordDnDContext para
--- que otros modulos (calculo, recursos) puedan leerlos sin estar en este chunk.
--- Aqui solo se mantienen aliases locales; los call-sites no cambian.
+-- Contexto temporal de ficha y accesores ARC: viven en HarfordDnDContext.
+-- El runtime profile se lee siempre en vivo de HarfordDnDStore.state.runtime
+-- (ya no hay alias local ni sync-hook).
 local SheetContext = HarfordDnDContext.State
-HarfordDnDContext.SetSyncHook(SyncRuntimeProfileRef)
-
--- Nombre que aparece en el chat al tirar: NPC (contexto externo) > TRP3 > WoW
-local function GetRollDisplayName()
-    if SheetContext.rollName and SheetContext.rollName ~= "" then
-        return SheetContext.rollName
-    end
-    if HarfordTRP3 and HarfordTRP3.GetUnitRPName then
-        local trpName = HarfordTRP3.GetUnitRPName("player")
-        if trpName and trpName ~= "" then
-            return trpName
-        end
-    end
-    return UnitName("player") or "Unknown"
-end
 
 local ARCGET = HarfordDnDContext.Get
 local ARCSET = HarfordDnDContext.Set
@@ -95,41 +60,9 @@ local function RefreshMainUI()
     end
 end
 
-local function ApplyProfileTable(tbl, profileName)
-    local ok = HarfordDnDStore.ApplyProfileTable(
-        tbl,
-        profileName,
-        ALL_RESOURCE_KEYS,
-        ResourceCurKey,
-        ResourceMaxKey,
-        EnsureDefaults,
-        RefreshMainUI
-    )
-    SyncRuntimeProfileRef()
-    return ok
-end
-
-local function ApplyResourceConfigTable(tbl, profileName)
-    local ok = HarfordDnDStore.ApplyResourceConfigTable(
-        tbl,
-        profileName,
-        ALL_RESOURCE_KEYS,
-        ResourceCurKey,
-        ResourceMaxKey,
-        EnsureDefaults,
-        RefreshMainUI
-    )
-    SyncRuntimeProfileRef()
-    return ok
-end
-
--- Fusiona los flags Hab_X_Prof/Exp recibidos via DNDPROF en el perfil existente.
--- No reemplaza el perfil completo para no perder los atributos ya aplicados.
-local function MergeProfFlagsTable(tbl, profileName)
-    local ok = HarfordDnDStore.MergeProfileKeys(tbl, profileName, EnsureDefaults, RefreshMainUI)
-    SyncRuntimeProfileRef()
-    return ok
-end
+-- Persistencia de perfil: EnsurePersist/LoadPersistToRuntime/SaveCurrentProfileToBank
+-- se invocan directamente sobre HarfordDnDStore. Apply*/MergeProfFlags viven en
+-- HarfordDnDProfile (con EnsureDefaults/RefreshMainUI inyectados via SetHooks mas abajo).
 
 local function RegisterPrefix(prefix)
     if HarfordSync and HarfordSync.RegisterPrefix then
@@ -160,46 +93,6 @@ local function BestChannel()
     return nil
 end
 
-local TEX = {
-    PARCH  = "Interface\\AchievementFrame\\UI-Achievement-Parchment-Horizontal",
-    ROCK   = "Interface\\FrameGeneral\\UI-Background-Rock",
-    MARBLE = "Interface\\FrameGeneral\\UI-Background-Marble",
-    WHITE  = "Interface\\Buttons\\WHITE8x8",
-    BOOK   = "Interface\\Icons\\INV_Misc_Book_09",
-    QMARK  = "Interface\\Icons\\inv_misc_dice_02",
-    STR    = "Interface\\Icons\\Ability_Warrior_StrengthOfArms",
-    SHIELD = "Interface\\Icons\\INV_Shield_06",
-    EYE    = "Interface\\Icons\\Ability_EyeOfTheOwl",
-    ATK    = "Interface\\Icons\\Ability_Warrior_OffensiveStance",
-	CAMPFIRE = "Interface\\Icons\\ability_racial_makecamp",
-    HOURGLASS = "Interface\\Icons\\INV_Misc_PocketWatch_01",
-}
-
-local TEX_SEC_TOP = TEX.PARCH
-local TEX_SEC_ABI = TEX.PARCH
-local TEX_SEC_SAV = TEX.ROCK
-local TEX_SEC_ATK = TEX.PARCH
-local TEX_SEC_SKL = TEX.PARCH
-
-local UI = {
-    FRAME_W = 420,
-    FRAME_H = 405,
-    FRAME_X = -210,
-    FRAME_Y = 0,
-
-    SEC_X = 14,
-    SEC_W = 392,
-
-    TOP_Y = -44,
-    TOP_H = 126,
-
-    TAB_Y = -176,
-    TAB_H = 28,
-
-    PANEL_Y = -208,
-    PANEL_H = 183,
-}
-
 local GREEN = "|cff00ff00"
 local RED   = "|cffff3333"
 local ENDCLR = "|r"
@@ -223,141 +116,6 @@ local function ColorSigned(n)
 end
 
 RegisterPrefix(ADDON_PREFIX)
-
-local function SerializeRoll(data)
-    return string.format("%s^%s^%s^%d^%s^%s^%s^%s^%s^%s",
-        data.type or "roll",
-        GetRollDisplayName(),
-        data.label or "",
-        data.total or 0,
-        data.dice or "",
-        data.modifiers or "",
-        data.critical or "",
-        data.mode or "",
-        tostring(data.miscBonus or ""),
-        tostring(data.nameColor or "")  -- color TRP3 del emisor (hex sin "#", puede ser "")
-    )
-end
-
-local function DeserializeRoll(msg)
-    local parts = {strsplit("^", msg)}
-    if #parts < 8 then return nil end
-    local color = parts[10]
-    return {
-        type      = parts[1],
-        player    = parts[2],
-        label     = parts[3],
-        total     = tonumber(parts[4]) or 0,
-        dice      = parts[5],
-        modifiers = parts[6],
-        critical  = parts[7],
-        mode      = parts[8],
-        miscBonus = parts[9],
-        nameColor = (color and color ~= "") and color or nil,
-    }
-end
-
-local function DisplayRollInChat(data)
-    if not data then return end
-
-    local COLOR_HEADER = "|cff00ccff"
-    local COLOR_ROLL = "|cff66ccff"
-    local COLOR_DETAIL = "|cffb0b0b0"
-    local COLOR_CRIT = "|cff00ff00"
-    local COLOR_FUMBLE = "|cffff3333"
-
-    local parts = {}
-    local playerName = data.player or UnitName("player") or "Unknown"
-    -- nameColor: TRP3 del remitente si está disponible, sino dorado por defecto
-    local nameColor = data.nameColor and ("|cff" .. data.nameColor) or "|cffffcc00"
-    table.insert(parts, COLOR_HEADER .. "[D&D]" .. ENDCLR .. " " .. nameColor .. playerName .. ENDCLR)
-
-    local modeStr = ""
-    if data.mode == "V" then
-        modeStr = " " .. COLOR_CRIT .. "[V]" .. ENDCLR
-    elseif data.mode == "D" then
-        modeStr = " " .. COLOR_FUMBLE .. "[D]" .. ENDCLR
-    end
-
-    local labelStr = parts[1] .. modeStr .. " " .. (data.label or "Tirada") .. ": " .. COLOR_ROLL .. tostring(data.total or 0) .. ENDCLR
-
-    local damageTypeStr = ""
-    if data.type == "damage" and data.modifiers and data.modifiers ~= "" then
-        damageTypeStr = " " .. data.modifiers
-    end
-
-    local critStr = ""
-    if data.critical == "CRÍTICO" then
-        critStr = " " .. COLOR_CRIT .. "CRÍTICO" .. ENDCLR
-    elseif data.critical == "PIFIA" then
-        critStr = " " .. COLOR_FUMBLE .. "PIFIA" .. ENDCLR
-    end
-
-	local detailStr = ""
-	local miscOutsideStr = ""
-
-	if data.dice and data.dice ~= "" then
-		if data.type ~= "damage" and data.modifiers and data.modifiers ~= "" then
-			local modifiersText = tostring(data.modifiers or "")
-			local miscRaw = tonumber(data.miscBonus) or 0
-
-			if miscRaw ~= 0 then
-				local miscText = fmtSigned(miscRaw)
-				local pos = string.find(modifiersText, miscText, 1, true)
-
-				if pos then
-					modifiersText = string.sub(modifiersText, 1, pos - 1)
-						.. string.sub(modifiersText, pos + string.len(miscText))
-				end
-
-				miscOutsideStr = ColorSigned(miscRaw)
-			end
-
-			detailStr = " " .. COLOR_DETAIL .. "(" .. data.dice .. modifiersText .. ")" .. ENDCLR .. miscOutsideStr
-		else
-			detailStr = " " .. COLOR_DETAIL .. "(" .. data.dice .. ")" .. ENDCLR
-		end
-	end
-
-    local output = labelStr .. damageTypeStr .. critStr .. detailStr
-    DEFAULT_CHAT_FRAME:AddMessage(output)
-    if ChatFrame2 then
-        ChatFrame2:AddMessage(output)
-    end
-end
-
-local function BroadcastRoll(rollData)
-    local displayColor = SheetContext.active
-        and SheetContext.rollColor
-        or (HarfordTRP3 and HarfordTRP3.GetUnitNameColor and HarfordTRP3.GetUnitNameColor("player") or nil)
-    -- Incluir el color en el mensaje para que el receptor lo muestre sin leer TRP3
-    rollData.nameColor = displayColor
-    local channel = BestChannel()
-    if channel then
-        SendPrefix(ADDON_PREFIX, SerializeRoll(rollData), channel)
-    end
-    DisplayRollInChat({
-        type      = rollData.type,
-        player    = GetRollDisplayName(),
-        nameColor = displayColor,
-        label     = rollData.label,
-        total     = rollData.total,
-        dice      = rollData.dice,
-        modifiers = rollData.modifiers,
-        critical  = rollData.critical,
-        mode      = rollData.mode,
-        miscBonus = rollData.miscBonus,
-    })
-    -- TRP3 usa este sound kit al resolver dados; reproducirlo solo en la emision
-    -- local evita duplicar sonido al recibir tiradas Harford del grupo.
-    if rollData.type ~= "info" and rollData.dice and rollData.dice ~= "" and rollData.dice ~= "-" then
-        if TRP3_API and TRP3_API.ui and TRP3_API.ui.misc and TRP3_API.ui.misc.playSoundKit then
-            TRP3_API.ui.misc.playSoundKit(36629, "SFX")
-        elseif PlaySound then
-            PlaySound(36629, "SFX")
-        end
-    end
-end
 
 -- AbilityMod, RollDie, RollD20 viven en HarfordDnDCalc.
 
@@ -403,6 +161,10 @@ EnsureDefaults = function()
         if ARCGET("Hab_" .. s.id .. "_Exp", nil) == nil then ARCSET("Hab_" .. s.id .. "_Exp", "0") end
     end
 end
+
+-- HarfordDnDProfile aplica tablas de perfil/recursos; le inyectamos los callbacks
+-- de la ficha (defaults + refresh) una vez definidos.
+HarfordDnDProfile.SetHooks(EnsureDefaults, RefreshMainUI)
 
 -- GetPB, GetSpellPB, GetMode, GetMiscBonus, GetAbilityScore, GetAbilityMod,
 -- GetSaveProf, GetWeaponMod, GetVersatileActive viven en HarfordDnDCalc.
@@ -531,7 +293,7 @@ local function DoRoll(label, baseBonus, profBonus)
         diceStr = tostring(chosen)
     end
 
-    BroadcastRoll({
+    HarfordDnDRolls.Broadcast({
         type = "roll",
         label = label,
         total = total,
@@ -547,7 +309,7 @@ end
 
 local function RollWeaponDamage(def, abilKey, maximizeDice)
     if not def or not def.dmgN or not def.dmgS or def.dmgN == 0 or def.dmgS == 0 then
-        BroadcastRoll({
+        HarfordDnDRolls.Broadcast({
             type = "damage",
             label = "Daño " .. (def and def.key or "???"),
             total = 0,
@@ -562,7 +324,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice)
     local diceStr = HarfordDnDWeapons.WeaponBaseDice(def)
     local n, sides = HarfordDnDWeapons.ParseDice(diceStr)
     if not n or not sides then
-        BroadcastRoll({
+        HarfordDnDRolls.Broadcast({
             type = "damage",
             label = "Daño " .. def.key,
             total = 0,
@@ -606,7 +368,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice)
     local modifiersTxt = dtype
     if marker ~= "" then modifiersTxt = dtype .. " " .. marker end
 
-    BroadcastRoll({
+    HarfordDnDRolls.Broadcast({
         type = "damage",
         label = (offhand and "Daño Offhand " or "Daño ") .. def.key,
         total = total,
@@ -642,7 +404,7 @@ local function SendSpellDC()
     if pb ~= 0 then parts[#parts+1] = fmtSigned(pb) end
     if mod ~= 0 then parts[#parts+1] = fmtSigned(mod) end
 
-    BroadcastRoll({
+    HarfordDnDRolls.Broadcast({
         type = "info",
         label = "CD Conjuro (" .. short .. ")",
         total = dc,
@@ -669,68 +431,6 @@ local function FormatSkillButtonText(skill)
     local base, prof = HarfordDnDCalc.GetSkillRollBonuses(skill)
     local total = base + prof
     return ("%s %s"):format(skill.name, ColorSigned(total))
-end
-
-local function SetFrameBackground(frame, texturePath, alpha)
-    local bg = frame:CreateTexture(nil, "BACKGROUND")
-    bg:SetPoint("TOPLEFT", frame, "TOPLEFT", 7, -13)
-    bg:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -7, 7)
-    bg:SetTexture(texturePath)
-    bg:SetAlpha(alpha or 1)
-    return bg
-end
-
-local function CreateSection(parent, titleText, iconPath, x, y, w, h, bgTexture, bgAlpha)
-    local section = CreateFrame("Frame", nil, parent)
-    section:SetPoint("TOPLEFT", parent, "TOPLEFT", x, y)
-    section:SetSize(w, h)
-
-    local bg = section:CreateTexture(nil, "BACKGROUND")
-    bg:SetAllPoints(section)
-    bg:SetTexture(bgTexture or TEX.PARCH)
-    bg:SetAlpha(bgAlpha or 0.9)
-
-    local border = section:CreateTexture(nil, "BORDER")
-    border:SetPoint("TOPLEFT", 0, 0)
-    border:SetPoint("BOTTOMRIGHT", 0, 0)
-    border:SetTexture(TEX.WHITE)
-    border:SetAlpha(0.10)
-
-    local header = CreateFrame("Frame", nil, section)
-    header:SetPoint("TOPLEFT", 8, -6)
-    header:SetPoint("TOPRIGHT", -8, -6)
-    header:SetHeight(20)
-
-    local icon
-    if iconPath then
-        icon = header:CreateTexture(nil, "ARTWORK")
-        icon:SetSize(16, 16)
-        icon:SetPoint("LEFT", 0, 0)
-        icon:SetTexture(iconPath)
-        icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    end
-
-    local title = header:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    title:SetPoint("LEFT", icon and 20 or 0, 0)
-    title:SetText(titleText or "")
-
-    local sep = section:CreateTexture(nil, "BORDER")
-    sep:SetPoint("TOPLEFT", 8, -28)
-    sep:SetPoint("TOPRIGHT", -8, -28)
-    sep:SetHeight(1)
-    sep:SetTexture(TEX.WHITE)
-    sep:SetAlpha(0.20)
-
-    return section
-end
-
-local function MakeButton(parent, text, w, h, x, y, onClick)
-    local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-    b:SetSize(w, h)
-    b:SetPoint("TOPLEFT", x, y)
-    b:SetText(text)
-    b:SetScript("OnClick", onClick)
-    return b
 end
 
 local function MakeSignedEditBox(parent, labelText, xRight, yTop, arcKey, default)
@@ -850,7 +550,7 @@ local function ResetAllFramePositions()
     if F then
         F:StopMovingOrSizing()
         F:ClearAllPoints()
-        F:SetPoint("CENTER", UIParent, "CENTER", UI.FRAME_X, UI.FRAME_Y)
+        F:SetPoint("CENTER", UIParent, "CENTER", HarfordDnDUI.LAYOUT.FRAME_X, HarfordDnDUI.LAYOUT.FRAME_Y)
     end
 
     if ResourceFrame and F then
@@ -872,11 +572,11 @@ HarfordDnDMinimap.SetResetHandler(ResetAllFramePositions)
 
 do
 local initialProfile = UnitName("player") or "default"
-LoadPersistToRuntime(initialProfile)
+HarfordDnDStore.LoadPersistToRuntime(initialProfile)
 
 F = CreateFrame("Frame", "DND5E_PlayerFrame", UIParent, "BackdropTemplate")
-F:SetSize(UI.FRAME_W, UI.FRAME_H)
-F:SetPoint("CENTER", UIParent, "CENTER", UI.FRAME_X, UI.FRAME_Y)
+F:SetSize(HarfordDnDUI.LAYOUT.FRAME_W, HarfordDnDUI.LAYOUT.FRAME_H)
+F:SetPoint("CENTER", UIParent, "CENTER", HarfordDnDUI.LAYOUT.FRAME_X, HarfordDnDUI.LAYOUT.FRAME_Y)
 F:SetMovable(true)
 F:EnableMouse(true)
 F:RegisterForDrag("LeftButton")
@@ -886,7 +586,7 @@ F:SetFrameStrata("DIALOG")
 F:SetFrameLevel(100)
 F:Hide()
 
-SetFrameBackground(F, TEX.MARBLE, 0.95)
+HarfordDnDUI.SetFrameBackground(F, HarfordDnDUI.TEX.MARBLE, 0.95)
 
 local mainBorder = CreateFrame("Frame", nil, F, "DialogBorderTemplate")
 mainBorder:SetAllPoints(F)
@@ -903,7 +603,7 @@ restButton:SetPoint("TOPLEFT", 18, -15)
 
 local titleIcon = restButton:CreateTexture(nil, "ARTWORK")
 titleIcon:SetAllPoints()
-titleIcon:SetTexture(TEX.CAMPFIRE)
+titleIcon:SetTexture(HarfordDnDUI.TEX.CAMPFIRE)
 titleIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
 HarfordDnDTurnButton = CreateFrame("Button", nil, F)
@@ -912,7 +612,7 @@ HarfordDnDTurnButton:SetPoint("LEFT", restButton, "RIGHT", 5, 0)
 
 HarfordDnDTurnIcon = HarfordDnDTurnButton:CreateTexture(nil, "ARTWORK")
 HarfordDnDTurnIcon:SetAllPoints()
-HarfordDnDTurnIcon:SetTexture(TEX.HOURGLASS)
+HarfordDnDTurnIcon:SetTexture(HarfordDnDUI.TEX.HOURGLASS)
 HarfordDnDTurnIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
 local RestMenu = CreateFrame("Frame", "HarfordDnDRestMenu", F, "BackdropTemplate")
@@ -922,20 +622,20 @@ RestMenu:SetFrameStrata("DIALOG")
 RestMenu:SetFrameLevel(F:GetFrameLevel() + 30)
 RestMenu:Hide()
 
-SetFrameBackground(RestMenu, TEX.MARBLE, 0.96)
+HarfordDnDUI.SetFrameBackground(RestMenu, HarfordDnDUI.TEX.MARBLE, 0.96)
 
 local restBorder = CreateFrame("Frame", nil, RestMenu, "DialogBorderTemplate")
 restBorder:SetAllPoints(RestMenu)
 restBorder:SetFrameStrata(RestMenu:GetFrameStrata())
 restBorder:SetFrameLevel(RestMenu:GetFrameLevel() + 5)
 
-local shortRestBtn = MakeButton(RestMenu, "Descanso corto", 120, 22, 15, -12, function()
+local shortRestBtn = HarfordDnDUI.MakeButton(RestMenu, "Descanso corto", 120, 22, 15, -12, function()
     RestMenu:Hide()
     ApplyShortRest()
     DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[HarfordDnD]|r Descanso corto")
 end)
 
-local longRestBtn = MakeButton(RestMenu, "Descanso largo", 120, 22, 15, -38, function()
+local longRestBtn = HarfordDnDUI.MakeButton(RestMenu, "Descanso largo", 120, 22, 15, -38, function()
     RestMenu:Hide()
     ApplyLongRest()
     DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[HarfordDnD]|r Descanso largo")
@@ -1032,7 +732,7 @@ ResourceFrame:SetFrameStrata("DIALOG")
 ResourceFrame:SetFrameLevel(F:GetFrameLevel() + 20)
 ResourceFrame:Hide()
 
-SetFrameBackground(ResourceFrame, TEX.MARBLE, 0.95)
+HarfordDnDUI.SetFrameBackground(ResourceFrame, HarfordDnDUI.TEX.MARBLE, 0.95)
 
 local resourceBorder = CreateFrame("Frame", nil, ResourceFrame, "DialogBorderTemplate")
 resourceBorder:SetAllPoints(ResourceFrame)
@@ -1068,7 +768,7 @@ TargetResourceFrame:SetScript("OnDragStop", function(self)
     SaveTargetResourceFramePosition(self)
 end)
 
-SetFrameBackground(TargetResourceFrame, TEX.MARBLE, 0.92)
+HarfordDnDUI.SetFrameBackground(TargetResourceFrame, HarfordDnDUI.TEX.MARBLE, 0.92)
 
 local targetResourceBorder = CreateFrame("Frame", nil, TargetResourceFrame, "DialogBorderTemplate")
 targetResourceBorder:SetAllPoints(TargetResourceFrame)
@@ -1110,12 +810,12 @@ local function CreateResourceRow(parent, index)
 
     row.bg = row.bar:CreateTexture(nil, "BACKGROUND")
     row.bg:SetAllPoints()
-    row.bg:SetTexture(TEX.WHITE)
+    row.bg:SetTexture(HarfordDnDUI.TEX.WHITE)
     row.bg:SetVertexColor(0.08, 0.08, 0.08, 0.95)
 
     row.border = row.bar:CreateTexture(nil, "BORDER")
     row.border:SetAllPoints()
-    row.border:SetTexture(TEX.WHITE)
+    row.border:SetTexture(HarfordDnDUI.TEX.WHITE)
     row.border:SetVertexColor(0.30, 0.30, 0.30, 0.85)
 
     row.label = row.bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -1150,12 +850,12 @@ local function CreateTargetResourceRow(parent, index)
 
     row.bg = row.bar:CreateTexture(nil, "BACKGROUND")
     row.bg:SetAllPoints()
-    row.bg:SetTexture(TEX.WHITE)
+    row.bg:SetTexture(HarfordDnDUI.TEX.WHITE)
     row.bg:SetVertexColor(0.08, 0.08, 0.08, 0.95)
 
     row.border = row.bar:CreateTexture(nil, "BORDER")
     row.border:SetAllPoints()
-    row.border:SetTexture(TEX.WHITE)
+    row.border:SetTexture(HarfordDnDUI.TEX.WHITE)
     row.border:SetVertexColor(0.28, 0.28, 0.28, 0.80)
 
     row.label = row.bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -1587,25 +1287,25 @@ end
 
 local function CreateSections(frame)
     local secs = {}
-    secs.TOP = CreateSection(frame, "Bonificadores", TEX.QMARK, UI.SEC_X, UI.TOP_Y, UI.SEC_W, UI.TOP_H, TEX_SEC_TOP, 0.95)
-    secs.ABI = CreateSection(frame, "Características", TEX.STR, 0, 0, UI.SEC_W, 92, TEX_SEC_ABI, 0.92)
-    secs.SAV = CreateSection(frame, "Salvaciones", TEX.SHIELD, 0, 0, UI.SEC_W, 92, TEX_SEC_SAV, 0.86)
-    secs.ATK = CreateSection(frame, "Ataque", TEX.ATK, 0, 0, UI.SEC_W, UI.PANEL_H, TEX_SEC_ATK, 0.92)
-    secs.SKL = CreateSection(frame, "Habilidades", TEX.EYE, 0, 0, UI.SEC_W, UI.PANEL_H, TEX_SEC_SKL, 0.90)
+    secs.TOP = HarfordDnDUI.CreateSection(frame, "Bonificadores", HarfordDnDUI.TEX.QMARK, HarfordDnDUI.LAYOUT.SEC_X, HarfordDnDUI.LAYOUT.TOP_Y, HarfordDnDUI.LAYOUT.SEC_W, HarfordDnDUI.LAYOUT.TOP_H, HarfordDnDUI.SECTION_TEX.TOP, 0.95)
+    secs.ABI = HarfordDnDUI.CreateSection(frame, "Características", HarfordDnDUI.TEX.STR, 0, 0, HarfordDnDUI.LAYOUT.SEC_W, 92, HarfordDnDUI.SECTION_TEX.ABI, 0.92)
+    secs.SAV = HarfordDnDUI.CreateSection(frame, "Salvaciones", HarfordDnDUI.TEX.SHIELD, 0, 0, HarfordDnDUI.LAYOUT.SEC_W, 92, HarfordDnDUI.SECTION_TEX.SAV, 0.86)
+    secs.ATK = HarfordDnDUI.CreateSection(frame, "Ataque", HarfordDnDUI.TEX.ATK, 0, 0, HarfordDnDUI.LAYOUT.SEC_W, HarfordDnDUI.LAYOUT.PANEL_H, HarfordDnDUI.SECTION_TEX.ATK, 0.92)
+    secs.SKL = HarfordDnDUI.CreateSection(frame, "Habilidades", HarfordDnDUI.TEX.EYE, 0, 0, HarfordDnDUI.LAYOUT.SEC_W, HarfordDnDUI.LAYOUT.PANEL_H, HarfordDnDUI.SECTION_TEX.SKL, 0.90)
     return secs
 end
 
 local SEC = CreateSections(F)
 local SEC_TOP, SEC_ABI, SEC_SAV, SEC_ATK, SEC_SKL = SEC.TOP, SEC.ABI, SEC.SAV, SEC.ATK, SEC.SKL
 local TabBar = CreateFrame("Frame", nil, F)
-TabBar:SetPoint("TOPLEFT", F, "TOPLEFT", UI.SEC_X, UI.TAB_Y)
-TabBar:SetSize(UI.SEC_W, UI.TAB_H)
+TabBar:SetPoint("TOPLEFT", F, "TOPLEFT", HarfordDnDUI.LAYOUT.SEC_X, HarfordDnDUI.LAYOUT.TAB_Y)
+TabBar:SetSize(HarfordDnDUI.LAYOUT.SEC_W, HarfordDnDUI.LAYOUT.TAB_H)
 TabBar:SetFrameStrata(F:GetFrameStrata())
 TabBar:SetFrameLevel(F:GetFrameLevel() + 10)
 
 local TabPanel = CreateFrame("Frame", nil, F)
-TabPanel:SetPoint("TOPLEFT", F, "TOPLEFT", UI.SEC_X, UI.PANEL_Y)
-TabPanel:SetSize(UI.SEC_W, UI.PANEL_H)
+TabPanel:SetPoint("TOPLEFT", F, "TOPLEFT", HarfordDnDUI.LAYOUT.SEC_X, HarfordDnDUI.LAYOUT.PANEL_Y)
+TabPanel:SetSize(HarfordDnDUI.LAYOUT.SEC_W, HarfordDnDUI.LAYOUT.PANEL_H)
 TabPanel:SetFrameStrata(F:GetFrameStrata())
 TabPanel:SetFrameLevel(F:GetFrameLevel() + 1)
 
@@ -1674,7 +1374,7 @@ end
 local TAB_W        = 124   -- (SEC_W 392 - 8px margen - 12px gaps) / 3
 local TAB_GAP      = 6
 local TOTAL_TABS_W = TAB_W * 3 + TAB_GAP * 2  -- 384px de 392 disponibles
-local TAB_START_X  = math.floor((UI.SEC_W - TOTAL_TABS_W) / 2)  -- 4px margen
+local TAB_START_X  = math.floor((HarfordDnDUI.LAYOUT.SEC_W - TOTAL_TABS_W) / 2)  -- 4px margen
 
 CreateTabButton(TabBar, "BASE", "Características", TAB_START_X, TAB_W)
 CreateTabButton(TabBar, "ATK", "Ataque", TAB_START_X + (TAB_W + TAB_GAP), TAB_W)
@@ -1691,7 +1391,7 @@ pbText:SetPoint("TOPRIGHT", -6, -34)
 pbText:SetJustifyH("RIGHT")
 pbText:SetText("Bonus competencia: " .. GREEN .. fmtSigned(HarfordDnDCalc.GetPB()) .. ENDCLR)
 
-MakeButton(SEC_TOP, "Normal", 72, 20, 10, -48, function()
+HarfordDnDUI.MakeButton(SEC_TOP, "Normal", 72, 20, 10, -48, function()
     _modoTiradaSingleUse = false
     ARCSET("ModoTirada", "normal")
     if RefreshTopInfo then RefreshTopInfo() end
@@ -1728,7 +1428,7 @@ do
 end
 
 local function MakeModeButton(label, labelShift, xOff, arcValue)
-    local btn = MakeButton(SEC_TOP, label, 72, 20, xOff, -48, function()
+    local btn = HarfordDnDUI.MakeButton(SEC_TOP, label, 72, 20, xOff, -48, function()
         -- Sin shift → un solo uso. Con shift → permanente.
         _modoTiradaSingleUse = not IsAnyShiftDown()
         ARCSET("ModoTirada", arcValue)
@@ -1797,7 +1497,7 @@ UIDropDownMenu_SetWidth(weaponDrop, 145)
 weaponDrop:ClearAllPoints()
 weaponDrop:SetPoint("TOPLEFT", -7, -64)
 
-local versBtn = MakeButton(SEC_ATK, "Versátil", 70, 22, 175, -66, function()
+local versBtn = HarfordDnDUI.MakeButton(SEC_ATK, "Versátil", 70, 22, 175, -66, function()
     local def = GetWeaponDef(GetWeaponKey())
     if not HarfordDnDWeapons.GetVersatileDice(def) then return end
     ARCSET("Versatil", HarfordDnDCalc.GetVersatileActive() and 0 or 1)
@@ -2024,7 +1724,7 @@ local function DoWeaponAttack()
     local wmodLabel = ""
     if wmod ~= 0 then wmodLabel = " " .. fmtSigned(wmod) end
 
-    BroadcastRoll({
+    HarfordDnDRolls.Broadcast({
         type = "attack",
         label = (offhand and "Ataque Offhand " or "Ataque ") .. def.key .. wmodLabel,
         total = total,
@@ -2122,7 +1822,7 @@ do
         return "one_hand"
     end
 
-    local btn = MakeButton(SEC_ATK, "Modo combate", 110, 22, 150, -6, function()
+    local btn = HarfordDnDUI.MakeButton(SEC_ATK, "Modo combate", 110, 22, 150, -6, function()
         if not (HarfordDnDStore.AreAnimationsEnabled and HarfordDnDStore.AreAnimationsEnabled()) then return end
         if not (HarfordServerActions and HarfordServerActions.ModAnim) then return end
         -- No se limpia el target aqui: ClearTarget() es una funcion protegida de WoW
@@ -2152,11 +1852,11 @@ do
     btn:SetShown(HarfordDnDStore.AreAnimationsEnabled())
 end
 
-local weaponAttackButton = MakeButton(SEC_ATK, "Ataque Arma", 110, 22, 266, -66, function()
+local weaponAttackButton = HarfordDnDUI.MakeButton(SEC_ATK, "Ataque Arma", 110, 22, 266, -66, function()
     DoWeaponAttack()
 end)
 
-local weaponDamageButton = MakeButton(SEC_ATK, "Daño Arma", 110, 22, 266, -94, function()
+local weaponDamageButton = HarfordDnDUI.MakeButton(SEC_ATK, "Daño Arma", 110, 22, 266, -94, function()
     if HarfordDnDStore.RefreshWeaponDamageButton
         and not HarfordDnDStore.RefreshWeaponDamageButton() then
         return
@@ -2204,25 +1904,32 @@ end
 HarfordDnDStore.RefreshWeaponDamageButton()
 
 do
+    -- Acepta notacion de dados (XdY, dY, XdY+Z, dY-Z; X opcional = 1) o un numero
+    -- plano. El numero plano es un valor FIJO (no se tira 1dN): devuelve { flat = N }
+    -- y RollCustomDamage le aplica el bonus de caracteristica como a cualquier tirada.
     local function ParseCustomDamageInput(text)
         text = tostring(text or ""):lower():gsub("%s+", "")
-        if text == "" then return nil, "Introduce dados" end
+        if text == "" then return nil, "Introduce dados o un numero" end
 
         local n, sides, bonus = text:match("^(%d*)d(%d+)([+-]%d+)$")
         if not sides then
             n, sides = text:match("^(%d*)d(%d+)$")
+            bonus = nil
         end
-        if not sides then
-            n, sides = "1", text:match("^(%d+)$")
+        if sides then
+            n = (n ~= "" and tonumber(n)) or 1
+            sides = tonumber(sides)
+            bonus = tonumber(bonus) or 0
+            if n <= 0 or sides <= 0 then return nil, "Formato de dados invalido" end
+            return { count = n, sides = sides, bonus = bonus }
         end
 
-        n = (n ~= "" and tonumber(n)) or 1
-        sides = tonumber(sides)
-        bonus = tonumber(bonus) or 0
-        if not n or not sides or n <= 0 or sides <= 0 then
-            return nil, "Formato de dados invalido"
+        local flat = text:match("^(%d+)$")
+        if flat then
+            return { flat = tonumber(flat) }
         end
-        return { count = n, sides = sides, bonus = bonus }
+
+        return nil, "Formato invalido (usa XdY, dY o un numero)"
     end
 
     local function PrintCustomDamageError(message)
@@ -2238,15 +1945,21 @@ do
             return 0
         end
 
+        local isFlat = parsed.flat ~= nil
         local rolls, sum = {}, 0
-        for i = 1, parsed.count do
-            local r = maximizeDice and parsed.sides or HarfordDnDCalc.RollDie(parsed.sides)
-            rolls[#rolls + 1] = r
-            sum = sum + r
+        if isFlat then
+            sum = parsed.flat
+        else
+            for i = 1, parsed.count do
+                local r = maximizeDice and parsed.sides or HarfordDnDCalc.RollDie(parsed.sides)
+                rolls[#rolls + 1] = r
+                sum = sum + r
+            end
         end
 
         local abilityMod = abilityKey and HarfordDnDCalc.GetAbilityMod(abilityKey) or 0
-        local total = sum + (parsed.bonus or 0) + abilityMod
+        local fixedBonus = isFlat and 0 or (parsed.bonus or 0)
+        local total = sum + fixedBonus + abilityMod
         if total < 0 then total = 0 end
 
         local dtype = HarfordDamageTypes and HarfordDamageTypes.GetLabel
@@ -2261,23 +1974,29 @@ do
         end
 
         local parts = {}
-        if parsed.bonus and parsed.bonus ~= 0 then parts[#parts + 1] = fmtSigned(parsed.bonus) end
+        if fixedBonus ~= 0 then parts[#parts + 1] = fmtSigned(fixedBonus) end
         if abilityMod ~= 0 then parts[#parts + 1] = fmtSigned(abilityMod) end
         local bonusTxt = table.concat(parts, "")
 
+        -- Numero plano: muestra el valor fijo + bonus (sin "XdY"); dados: muestra la tirada.
         local diceText
-        diceText = parsed.count .. "d" .. parsed.sides .. ": " .. table.concat(rolls, "+") .. bonusTxt
+        if isFlat then
+            diceText = tostring(parsed.flat) .. bonusTxt
+        else
+            diceText = parsed.count .. "d" .. parsed.sides .. ": " .. table.concat(rolls, "+") .. bonusTxt
+        end
 
         local modifiersTxt = dtype
         if marker ~= "" then modifiersTxt = dtype .. " " .. marker end
 
-        BroadcastRoll({
+        HarfordDnDRolls.Broadcast({
             type = "damage",
             label = "Daño",
             total = total,
             dice = diceText,
+            -- Sin dados no hay critico que maximizar; el valor fijo no se marca CRITICO.
+            critical = (maximizeDice and not isFlat) and "CRÍTICO" or "",
             modifiers = modifiersTxt,
-            critical = maximizeDice and "CRÍTICO" or "",
             mode = "",
         })
         return total
@@ -2364,6 +2083,8 @@ do
         frame.diceBox:SetPoint("LEFT", diceLabel, "RIGHT", 48, 0)
         frame.diceBox:SetAutoFocus(false)
         frame.diceBox:SetText("1d6")
+        frame.diceBox:SetScript("OnEnterPressed", function(self) self:ClearFocus(); ApplyCustomDamage() end)
+        frame.diceBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 
         local abilLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         abilLabel:SetPoint("TOPLEFT", 18, -68)
@@ -2428,7 +2149,7 @@ do
         UIDropDownMenu_SetText(frame.damageDrop,
             HarfordDamageTypes and HarfordDamageTypes.GetLabel and HarfordDamageTypes.GetLabel("slashing") or "Cortante")
 
-        MakeButton(frame, "Lanzar", 112, 22, 94, -122, ApplyCustomDamage)
+        HarfordDnDUI.MakeButton(frame, "Lanzar", 112, 22, 94, -122, ApplyCustomDamage)
 
         HarfordDnDStore.customDamageFrame = frame
         return frame
@@ -2448,7 +2169,7 @@ do
     end
 end
 
-local spellAttackButton = MakeButton(SEC_ATK, "Ataque Conjuro", 110, 22, 266, -122, function()
+local spellAttackButton = HarfordDnDUI.MakeButton(SEC_ATK, "Ataque Conjuro", 110, 22, 266, -122, function()
     DoSpellAttack()
 end)
 
@@ -2456,7 +2177,7 @@ HarfordDnDInitLabel, HarfordDnDInitBox, HarfordDnDSetInitBoxFromARC = MakeSigned
     SEC_ATK, "Mod Ini:", -240, -146, "ModIniciativa", 0
 )
 
-local initiativeButton = MakeButton(SEC_ATK, "Iniciativa", 110, 22, 266, -150, function()
+local initiativeButton = HarfordDnDUI.MakeButton(SEC_ATK, "Iniciativa", 110, 22, 266, -150, function()
     DoRoll("Iniciativa", HarfordDnDCalc.GetAbilityMod("Destreza"), HarfordDnDGetInitiativeMod())
 end)
 
@@ -2493,7 +2214,7 @@ do
 	movLabel:SetJustifyH("CENTER")
 	movLabel:SetText("")
 
-	local movBtn = MakeButton(SEC_ATK, "Movimiento", 90, 22, 166, -150, function() end)
+	local movBtn = HarfordDnDUI.MakeButton(SEC_ATK, "Movimiento", 90, 22, 166, -150, function() end)
     HarfordDnDStore.playerAttackControls.movementLabel = movLabel
     HarfordDnDStore.playerAttackControls.movementButton = movBtn
 
@@ -2590,7 +2311,7 @@ DoSpellAttack = function()
         diceStr = tostring(chosen)
     end
 
-    BroadcastRoll({
+    HarfordDnDRolls.Broadcast({
         type = "spell",
         label = "Ataque Conjuro",
         total = total,
@@ -2617,7 +2338,7 @@ end
 
     local bg = panel:CreateTexture(nil, "BACKGROUND")
     bg:SetAllPoints()
-    bg:SetTexture(TEX_SEC_ATK)
+    bg:SetTexture(HarfordDnDUI.SECTION_TEX.ATK)
     bg:SetAlpha(0.98)
 
     local label = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -2770,7 +2491,7 @@ end
             end
         end
         if #rolledComponents == 0 then return nil end
-        BroadcastRoll({
+        HarfordDnDRolls.Broadcast({
             type = "damage",
             label = "Daño " .. tostring(action.title or "Accion"),
             total = total,
@@ -2842,7 +2563,7 @@ end
         end
     end)
 
-    attackButton = MakeButton(panel, "Atacar", 112, 22, 72, -122, function()
+    attackButton = HarfordDnDUI.MakeButton(panel, "Atacar", 112, 22, 72, -122, function()
         if selectedAction and selectedAction.attackBonus ~= nil then
             -- Admin valida que el NPC de la ficha siga siendo el target exacto.
             local critTag = DoRoll("Ataque " .. GetActionChatName(selectedAction), selectedAction.attackBonus, 0)
@@ -2864,7 +2585,7 @@ end
         end
     end)
 
-    damageButton = MakeButton(panel, "Daño", 112, 22, 198, -122, function()
+    damageButton = HarfordDnDUI.MakeButton(panel, "Daño", 112, 22, 198, -122, function()
         local isCritical = pendingCriticalAction ~= nil and pendingCriticalAction == selectedAction
         pendingCriticalAction = nil
         local total, rolledComponents = RollActionDamage(selectedAction, isCritical)
@@ -2998,7 +2719,7 @@ dcButton:SetScript("OnClick", function()
 end)
 
 
-MakeButton(SEC_TOP, "Recursos", 96, 22, 286, -6, function()
+HarfordDnDUI.MakeButton(SEC_TOP, "Recursos", 96, 22, 286, -6, function()
     if ResourceFrame:IsShown() then
         ResourceFrame:Hide()
     else
@@ -3124,7 +2845,7 @@ local RefreshSkillLayout
     for i, a in ipairs(HarfordDnDData.ABIL) do
         local col = ((i-1) % 3)
         local row = math.floor((i-1)/3)
-        local b = MakeButton(SEC_ABI, "…", 140, 22, 10 + col*160, -36 - row*26, function()
+        local b = HarfordDnDUI.MakeButton(SEC_ABI, "…", 140, 22, 10 + col*160, -36 - row*26, function()
             DoRoll(a.short, HarfordDnDCalc.GetAbilityMod(a.key), 0)
         end)
         AbilityButtons[a.key] = b
@@ -3135,7 +2856,7 @@ local RefreshSkillLayout
     for i, a in ipairs(HarfordDnDData.ABIL) do
         local col = ((i-1) % 3)
         local row = math.floor((i-1)/3)
-        local b = MakeButton(SEC_SAV, "…", 140, 22, 10 + col*160, -36 - row*26, function()
+        local b = HarfordDnDUI.MakeButton(SEC_SAV, "…", 140, 22, 10 + col*160, -36 - row*26, function()
             local base, prof = HarfordDnDCalc.GetSaveRollBonuses(a.key)
             DoRoll("Salv " .. a.short, base, prof)
         end)
@@ -3204,7 +2925,7 @@ local RefreshSkillLayout
         local row = math.floor((i-1) / 2)
         local x = PAD_X + col * (200 + COL_GAP)
         local y = -(PAD_Y + row * (BTN_H + GAP_Y))
-        local b = MakeButton(scrollChild, "…", 200, BTN_H, x, y, function()
+        local b = HarfordDnDUI.MakeButton(scrollChild, "…", 200, BTN_H, x, y, function()
             local base, prof = HarfordDnDCalc.GetSkillRollBonuses(s)
             DoRoll(s.name, base, prof)
         end)
@@ -3368,7 +3089,7 @@ do
         end
 
         -- El marcador acumulado distingue este resultado de una salvacion CON normal.
-        BroadcastRoll({
+        HarfordDnDRolls.Broadcast({
             type     = "roll",
             label    = "Salv Muerte " .. FormatDeathCounter(),
             total    = total,
@@ -3443,8 +3164,7 @@ _G.DND5E_ARC_API = _G.DND5E_ARC_API or {}
 _G.DND5E_ARC_API.Refresh = function()
     local playerProfile = UnitName("player") or "default"
 
-    LoadPersistToRuntime(playerProfile)
-	SyncRuntimeProfileRef()
+    HarfordDnDStore.LoadPersistToRuntime(playerProfile)
 
 	_G.HarfordDnDHydratingFromPersist = true
 	EnsureDefaults()
@@ -3497,7 +3217,7 @@ HarfordDnDAPI = HarfordDnDAPI or {}
 
 function HarfordDnDAPI.ExportCurrentProfile()
     local profileName = tostring(HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
-    SaveCurrentProfileToBank(profileName)
+    HarfordDnDStore.SaveCurrentProfileToBank(profileName)
     return profileName, HarfordSync.LoadProfileFromBank(HarfordDnDProfileBank, profileName)
 end
 
@@ -3506,15 +3226,15 @@ function HarfordDnDAPI.ExportProfile(profileName)
 end
 
 function HarfordDnDAPI.ApplyProfile(profileName, tbl)
-    return ApplyProfileTable(tbl, profileName)
+    return HarfordDnDProfile.Apply(tbl, profileName)
 end
 
 function HarfordDnDAPI.BroadcastConfig(channel, target)
-    EnsurePersist()
-    LoadPersistToRuntime(HarfordDnDPersistStore.activeProfile or (UnitName("player") or "default"))
+    HarfordDnDStore.EnsurePersist()
+    HarfordDnDStore.LoadPersistToRuntime(HarfordDnDPersistStore.activeProfile or (UnitName("player") or "default"))
 
     local profileName = tostring(HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
-    local tbl = HarfordSync.ReadProfileFromRuntime(RuntimeProfile, HarfordSync.ProfileKeys.DnD)
+    local tbl = HarfordSync.ReadProfileFromRuntime(HarfordDnDStore.state.runtime, HarfordSync.ProfileKeys.DnD)
 
     local ok, err = HarfordSync.SendDnDProfile(
         ADDON_PREFIX,
@@ -3556,12 +3276,12 @@ function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
     end
 
     if resolvedTarget == myShortName or (myFullName and resolvedTarget == myFullName) then
-        ApplyProfileTable(tbl, characterName)
-        MergeProfFlagsTable(tbl, characterName)
+        HarfordDnDProfile.Apply(tbl, characterName)
+        HarfordDnDProfile.MergeProfFlags(tbl, characterName)
 
         local resourceTblLocal = HarfordDnDNet.ExportProfileResourcesFromBank(characterName)
         if resourceTblLocal then
-            ApplyResourceConfigTable(resourceTblLocal, characterName)
+            HarfordDnDProfile.ApplyResourceConfig(resourceTblLocal, characterName)
         end
 
         return true
@@ -3763,8 +3483,8 @@ listener:RegisterEvent("PLAYER_TARGET_CHANGED")
 
 local AddonHandlers = HarfordDnDComm.CreateHandlers({
     ADDON_PREFIX = ADDON_PREFIX,
-    EnsurePersist = EnsurePersist,
-    LoadPersistToRuntime = LoadPersistToRuntime,
+    EnsurePersist = HarfordDnDStore.EnsurePersist,
+    LoadPersistToRuntime = HarfordDnDStore.LoadPersistToRuntime,
     EnsureTargetResourceFrameState = EnsureTargetResourceFrameState,
     CreateDnDMinimapButton = HarfordDnDMinimap.Create,
     PlayerFrame = F,
@@ -3774,15 +3494,15 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
     SendResourceResponseTo = HarfordDnDNet.SendResourceResponseTo,
     SendResourceResponseForProfileTo = HarfordDnDNet.SendResourceResponseForProfileTo,
     ApplyResourceDelta = ApplyResourceDeltaFromRemote,
-    ApplyProfileTable = ApplyProfileTable,
-    MergeProfFlagsTable = MergeProfFlagsTable,
-    ApplyResourceConfigTable = ApplyResourceConfigTable,
+    ApplyProfileTable = HarfordDnDProfile.Apply,
+    MergeProfFlagsTable = HarfordDnDProfile.MergeProfFlags,
+    ApplyResourceConfigTable = HarfordDnDProfile.ApplyResourceConfig,
     BuildRuntimeFromConfig = HarfordDnDResources.BuildRuntimeFromConfig,
     CacheRemoteResources = HarfordDnDResources.CacheRemoteResources,
     HandleRollSync = function(message)
-        local data = DeserializeRoll(message)
+        local data = HarfordDnDRolls.Deserialize(message)
         if data then
-            DisplayRollInChat(data)
+            HarfordDnDRolls.DisplayInChat(data)
         end
     end,
     -- El DM nos ordena aplicarnos una aura a nosotros mismos

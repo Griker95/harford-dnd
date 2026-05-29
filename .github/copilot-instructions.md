@@ -9,6 +9,14 @@ Este proyecto es un addon de **World of Warcraft** escrito en **Lua** (Interface
 - **No crear archivos nuevos** salvo petición explícita. Preferir editar los existentes.
 - **No agregar comentarios genéricos** — solo el WHY no obvio.
 - **No reintentar** enfoques marcados como FALLIDOS en `AGENTS.md`.
+- **Todo comportamiento exclusivo de modo DM en `HarfordAdmin/`**. El core `Harford/` puede exponer callbacks sobrescribibles (patron `HarfordTRP3.InsertGlanceLink(glance)`); HarfordAdmin los reemplaza. Nunca poner `if IsDMMode()` para logica de UI/accion en modulos core.
+- `HarfordDnD.lua` solo representa contextos externos mediante `ApplySheetContext`; el armado de ficha NPC desde target/TRP3 y la edicion de recursos remotos viven en `HarfordAdmin`, no en core.
+- `HarfordDnD.lua` tambien esta sujeto al limite de 200 locales del chunk Lua: el contexto externo vive agrupado en `SheetContext`. No volver a crear locales de file-scope separados para sus campos.
+- **Links TRP3 en DM**: crear links mediante `HarfordTRP3.CreateGlanceLink(glance)` solo para estados ajenos. Sin DM, insertar `[TRP3:id]`; en DM con NPC target, enviar `npc te <hyperlink totalrp3>` por `HarfordServerActions.SendNpcTRP3Hyperlink`, cayendo a impresion local si no puede emitirse.
+- **Links nativos TRP3**: no enganchar `ChatFrame_OnHyperlinkShow`, no sobrescribir `OpenMakeImportablePrompt` ni `AtFirstGlanceChatLinksModule.InsertLink`. Los links visibles y estados propios quedan en manos de TRP3.
+- **Envio NPC de links TRP3**: la via directa con hyperlink completo por EpsilonLib esta validada en dos clientes. Solo aceptar hyperlinks creados/reconocidos por `HarfordTRP3.IsKnownGlanceHyperlink`; el marcador `[TRP3:id]` no funciona por NPC. Conservar `/harforddebug run trp3npctest hyperlink` solo para regresion.
+- **Daño y mitigación**: el core `HarfordDnD.lua` calcula resistencias/inmunidades/vulnerabilidades con `HarfordDamageMitigation.ForTarget(...)` y muestra marcadores `R`/`V`/`I` en la tirada. `HarfordAdmin` solo aplica el total ya mitigado con acciones servidor validadas.
+- **Herida NPC**: `HarfordServerActions.SetNpcHealthDelta` dispara `npc emote 33` para daño real normal y `npc emote 34` para daño crítico (`opts.isCritical`). No duplicar esta lógica en UI.
 
 ## Entorno técnico
 
@@ -95,7 +103,12 @@ end, "Descripción breve")
 | `Harford/HarfordDebug.lua` | Sistema de debug — diagnósticos temporales aquí |
 | `Harford/HarfordSync.lua` | Transporte addon messages |
 | `Harford/HarfordTRP3.lua` | Lectura segura de perfiles TRP3 |
-| `Harford/HarfordServerActions.lua` | Comandos Epsilon validados (additem, aura, etc.) |
+| `Harford/HarfordCommandTemplates.lua` | Plantillas de comandos Epsilon con placeholders |
+| `Harford/HarfordEmotes.lua` | Datos de emotes, heridas y posturas de combate |
+| `Harford/HarfordAuras.lua` | Datos/helpers para auras conocidas por scope |
+| `Harford/HarfordDamageTypes.lua` | Tipos de daño D&D 5e y normalización de palabras |
+| `Harford/HarfordDamageMitigation.lua` | Resistencias, inmunidades y vulnerabilidades por stat block TRP3 |
+| `Harford/HarfordServerActions.lua` | Comandos Epsilon validados (additem, auras, npc health/emotes, npc te) |
 | `HarfordAdmin/HarfordAdminUnitMenu.lua` | Menú contextual DM en unitframes |
 
 ## Seguridad

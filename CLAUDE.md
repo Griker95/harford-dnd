@@ -11,13 +11,37 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 - No agregar comentarios genéricos — solo el WHY no obvio.
 - Al confirmar una limitación, patrón o bug nuevo, actualizar `AGENTS.md` en la sección correspondiente.
 - Los diagnósticos temporales van en `HarfordDebug.lua` con `RegisterCommand`, nunca en módulos de gameplay.
+- **Todo comportamiento exclusivo de modo DM va en `HarfordAdmin/`**, nunca en el core `Harford/`. El core puede exponer callbacks sobrescribibles (patron `HarfordTRP3.InsertGlanceLink(glance)`); HarfordAdmin los reemplaza en su `PLAYER_LOGIN`. No poner `if HarfordAuthority.IsDMMode()` en modulos core para cambiar comportamiento de UI o acciones: eso es responsabilidad de HarfordAdmin.
+- **`ClearTarget()` es protegida**: no llamarla desde addon (core ni Admin) — dispara "blocked from an action only available to the Blizzard UI". No hay equivalente inseguro (`RunMacroText("/cleartarget")`/`TargetUnit` tambien protegidas). El "Modo combate" no deselecciona el target.
+- **Modelo de autoridad de 3 ejes**: (1) **Oficial** `HarfordAuthority.IsOfficerPlus()` → el core puede emitir comandos de servidor ligeros sin datos de Admin (daño en bruto a NPC al tirar via `SetNpcHealthDelta`, sin resistencias); la modificacion de vida al tirar daño vive en el core (NPC oficial + jugador `RADJ`). (2) **DM+Admin** `HarfordAuthority.CanUseDMTools()` → exclusivo de `HarfordAdmin/`. (3) **Recepcion/render** → siempre en el core. Usar solo `HarfordAuthority.*` para la señal; no leer `HarfordAdminAPI.IS_ADMIN` ni `C_Epsilon`/`ARC` directo desde core.
+- La ficha core solo acepta contextos neutrales con `HarfordDnDAPI.ApplySheetContext(context)`. Construir/cargar un contexto NPC desde TRP3, incluidos sus estados de ataque convertidos a `context.actions` y `context.kind = "npc"` + `context.spellProficiencyBonus` exclusivo para informacion/tiradas de `Ataque Conjuro`/`CD Conjuro`, activar el boton de modo NPC y editar recursos remotos son herramientas exclusivas de `HarfordAdmin`; `HarfordDnD.lua` solo renderiza/tira el contexto recibido y debe ignorar ese bonus en cualquier contexto no NPC.
+- **Flujo NPC atacante/victima**: modo normal sigue al NPC target (otro NPC reemplaza la ficha, `Atacar` activo y `Daño` inactivo); al targetear un jugador conserva la ficha anterior y habilita solo `Daño`; sin target deshabilita ambos. `Shift+click` marca/fija `npcSourceGuid` y `titleText = "[Nombre]"` solo localmente: el mismo GUID habilita solo `Atacar`, cualquier unidad distinta habilita solo `Daño`, incluidos otros NPC. `rollName` siempre queda sin corchetes. `onAttackAnimation` usa `SetNpcEmote(id)` sobre el NPC ficha. Los ataques pueden tener `action.damageComponents` multiples (`2d8 + 4 perforante + 1d4 necrotico`): el core tira cada componente, aplica `HarfordDamageMitigation.ForTarget("target", tipo, total)` y muestra el daño ya mitigado con marcador `R`/`V`/`I` en la tirada publica. `HarfordAdminNPC.ApplyNpcSheetDamage` recibe ese total ya mitigado y solo llama `SetNpcHealthDelta(-danoAplicado)`; no re-mitiga ni imprime lineas locales de defensa. Si `Atacar` es `CRÍTICO`, `HarfordDnD` guarda una carga para esa accion y el siguiente `Daño` usa el maximo de todos sus dados, conserva bonus fijos y despues aplica las defensas por tipo; se consume al usarla y otra tirada de ataque no critica la limpia. `SetNpcHealthDelta` centraliza ademas `npc emote 33` (`ONESHOT_WOUND`) o `npc emote 34` (`ONESHOT_WOUND_CRIT`, con `opts.isCritical`) sobre la victima cuando cualquier ruta le resta mas de 1 de vida; no se ejecuta al restar solo 1. Las defensas no se aplican a victimas jugador.
+- **Control rapido de posesion NPC**: `Ctrl+click` en el boton `Modo NPC` de la ficha con NPC target llama exclusivamente a `HarfordServerActions.RepossessCurrentNpc({ addonName = "HarfordAdmin" })`, que envia la cadena fija `unposs`/`poss` mediante `HarfordEpsilonCommands.SendChain`; con target jugador o sin target llama `UnpossessCurrentNpc` y envia solo `unposs`. El gesto requiere Admin + `.ph dm`, revalida NPC actual cuando procede, no cambia el contexto de ficha y nunca acepta comandos libres.
+- **Limite de 200 locales en `HarfordDnD.lua`** (~154 tras modularizar): el contexto temporal vive en `HarfordDnDContext.State` (alias local `SheetContext`); no desglosarlo en nuevos locales de file-scope. Datos/calculo/red estan en modulos `HarfordDnD*` (Context/Data/Weapons/Calc/Net/Minimap) — añadir alli antes que en el chunk principal. Encapsular ampliaciones grandes en `do...end` o tablas de estado.
+- **Links de estados TRP3 en DM**: `HarfordTRP3.CreateGlanceLink(glance)` es la puerta de creacion solo para estados ajenos y cachea por `TI`/`TX`/`IC`. Sin DM, se inserta `[TRP3:id]`. En DM con NPC target, `HarfordAdminNPC` envia `npc te <hyperlink totalrp3>` mediante `HarfordServerActions.SendNpcTRP3Hyperlink`; si no puede emitirlo, imprime el hyperlink local como fallback.
+- **Links nativos TRP3**: no enganchar `ChatFrame_OnHyperlinkShow`, no sobrescribir `OpenMakeImportablePrompt` ni `AtFirstGlanceChatLinksModule.InsertLink`. Los links ya visibles y los estados propios los procesa TRP3 sin intervención Harford.
+- **Envio NPC de links TRP3 confirmado**: se valido en Epsilon que el hyperlink completo via `EpsilonLib.AddonCommands` genera un mensaje NPC clicable y resuelve tooltip en dos clientes; el marcador `[TRP3:id]` no sirve. Solo aceptar hyperlinks reconocidos por `HarfordTRP3.IsKnownGlanceHyperlink`; mantener `/harforddebug run trp3npctest hyperlink` como prueba de regresion.
+- **No enviar `npc info`**: la carga de fichas NPC usa TRP3 local. `HarfordAdminNPC.GetTargetInfo` y `/harfordadmin npc info` estan neutralizados y no deben volver a ejecutar ese comando servidor sin una feature explicitamente aprobada.
+- **Salv Muerte**: en la ficha core reutiliza los bonus/modo de `Salv CON`, presenta contador coloreado compacto `fallos|exitos` sin signos ni corchetes desde `0|0`, centra el unico boton visible en cada refresh y no debe bloquear el acceso al frame de `Recursos`. Al recuperar vida desde estado moribundo con animaciones activadas debe retirar la aura 29266 incluso si `deathAuraActive` local se perdio.
+- `AdjustResourceCurrent` refresca `ResourceFrame` si esta visible; no retirar ese refresh porque la recuperacion de `Salv Muerte` debe reflejar el punto de salud al instante.
+- **Titulo de ficha**: en modo jugador permanece `Harford DnD 5ª - Ficha`; no usar nombre/color TRP3 del jugador en esa cabecera. Solo el contexto NPC aplicado desde Admin puede sustituirlo.
+- **Sonido de tiradas**: TRP3 usa el sound kit `36629`. `HarfordDnD.BroadcastRoll` lo reproduce solo en tiradas locales reales; usa `TRP3_API.ui.misc.playSoundKit` si existe y no debe reproducirse desde el render/receptor del chat.
+- **Critico de arma del jugador**: `Ataque Arma` con `CRÍTICO` guarda `HarfordDnDStore.pendingWeaponCriticalKey`; el siguiente `Daño Arma` maximiza todos los dados solo si sigue seleccionada esa arma y consume la marca siempre. No anadir locales de file-scope para este estado. `Ataque Conjuro` no tiene actualmente tirada de daño automatizada asociada.
 
 ## Módulos principales
 
 | Archivo | Rol | Tamaño aprox |
 |---|---|---|
-| `Harford/HarfordUnitFrames.lua` | Overlays TRP3/DnD sobre frames nativos WoW | ~4300 líneas |
-| `Harford/HarfordDnD.lua` | Ficha D&D 5e — UI principal `/FichaHarford`. 3 tabs (Características/Ataque/Habilidades); icono tabardo en la esquina abre el panel de reputación | grande |
+| `Harford/HarfordUnitFrames.lua` | Overlays TRP3/DnD sobre frames nativos WoW | ~4400 líneas (~169 locales) |
+| `Harford/HarfordClassColors.lua` | Fuente única de color de clase WoW (alias es/en, normalización, RGB/hex). Consumido por UnitFrames/NamePlates/Turns | pequeño |
+| `Harford/HarfordUIGeom.lua` | Helpers puros de geometría/búsqueda de StatusBars para overlays | pequeño |
+| `Harford/HarfordDnD.lua` | Ficha D&D 5e — UI principal `/FichaHarford`. 3 tabs (Características/Ataque/Habilidades); icono tabardo en la esquina abre el panel de reputación. Consume los módulos `HarfordDnD*` (Context/Data/Weapons/Calc/Net/Minimap) | grande (~154 locales) |
+| `Harford/HarfordDnDContext.lua` | Estado de contexto de ficha (`SheetContext`) + accesores `Get`/`Set` (ARCGET/ARCSET). Bisagra que desacopla los helpers del chunk de DnD | pequeño |
+| `Harford/HarfordDnDData.lua` | Datos: tablas `ABIL` (características) y `SKILLS` (habilidades) | pequeño |
+| `Harford/HarfordDnDWeapons.lua` | Datos: tabla `WEAPONS` + helpers de arma (dados, props, menú) | pequeño |
+| `Harford/HarfordDnDCalc.lua` | Cálculo puro: modificadores, dados, bonos. Lee vía `HarfordDnDContext` | pequeño |
+| `Harford/HarfordDnDNet.lua` | Recursos/red: export/request/adjust vía HarfordSync. `HarfordDnDAPI` delega aquí | pequeño |
+| `Harford/HarfordDnDMinimap.lua` | Botón de minimapa de la ficha (toggle + reset de posiciones inyectado) | pequeño |
 | `Harford/HarfordTurns.lua` | Tracker visual de turnos de combate | grande |
 | `Harford/HarfordReputation.lua` | Core de reputaciones: facciones, jugadores, gremios, NPCs, rangos. Sin DEFAULT_FACTIONS; todo en SavedVariables | mediano |
 | `Harford/HarfordReputationUI.lua` | Panel flotante `/harfordrep`. Filas custom: hlFrame para highlights (sin clipping), caps OVERLAY -1, Exaltado siempre lleno, `adjustPrompt` para ajuste libre | mediano |
@@ -27,7 +51,12 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 | `Harford/HarfordDebug.lua` | Sistema de debug — todos los diagnósticos van aquí | mediano |
 | `Harford/HarfordSync.lua` | Transporte addon messages (serialización, canales) | mediano |
 | `Harford/HarfordNamePlates.lua` | Overlays DnD sobre nameplates nativos/KuiNameplates | mediano |
-| `Harford/HarfordServerActions.lua` | Comandos Epsilon validados (additem, aura, etc.) | pequeño |
+| `Harford/HarfordCommandTemplates.lua` | Plantillas de comandos Epsilon con placeholders | pequeño |
+| `Harford/HarfordEmotes.lua` | Datos de emotes, heridas y posturas de combate | pequeño |
+| `Harford/HarfordAuras.lua` | Datos/helpers para auras conocidas por scope | pequeño |
+| `Harford/HarfordDamageTypes.lua` | Tipos de daño D&D 5e y normalización de palabras | pequeño |
+| `Harford/HarfordDamageMitigation.lua` | Resistencias, inmunidades y vulnerabilidades por stat block TRP3 | pequeño |
+| `Harford/HarfordServerActions.lua` | Comandos Epsilon validados (additem, auras, npc health/emotes, npc te) | pequeño |
 | `Harford/HarfordEpsilonCommands.lua` | Wrapper bajo nivel para EpsilonLib/ARC | pequeño |
 | `HarfordAdmin/HarfordAdminUnitMenu.lua` | Menú contextual DM en unitframes | mediano |
 
@@ -39,7 +68,9 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 - **PlayerFrameTexture SetAlpha(0)**: no funciona en Epsilon para el player frame.
 - **Reposicionar TargetFrameToT físicamente**: `TargetofTarget_Update` resetea anchors entre ticks. No mover el frame nativo — solo gestionar strata/level y cubrir con overlays.
 - **Límite de 200 locales Lua 5.1**: `HarfordUnitFrames.lua` roza el límite. Nuevos bloques de funciones deben ir dentro de `do...end` para no añadir locales al scope global. Exponer funciones públicas vía tabla (ver patrón `focusTot`).
-- **No ticks continuos**: no usar `C_Timer.NewTicker`, `OnUpdate` permanente ni polling para UI/permisos/nameplates/turnos. Preferir eventos WoW/addon. `OnUpdate` solo mientras dura una interacción real (drag/hover) y se limpia al terminar.
+- **No ticks continuos**: no usar `C_Timer.NewTicker`, `OnUpdate` permanente ni polling para UI/permisos/nameplates/turnos. Preferir eventos WoW/addon. `OnUpdate` solo mientras dura una interacción real (drag/hover) y se limpia al terminar. **Excepción**: el tracker de movimiento usa `OnUpdate` permanente en `movBtn` con `if not _tracking then return end` como guardia — coste prácticamente cero cuando inactivo.
+- **`PLAYER_STARTED_MOVING`/`PLAYER_STOPPED_MOVING`**: pueden no disparar en Epsilon. No usarlos para activar/desactivar lógica de seguimiento de posición.
+- **`UnitPosition("player")` en Epsilon**: puede devolver solo `x, y` sin `z` (z = nil). Siempre usar `nz = nz or 0` y guard `if not nx or not ny then return end` antes de cualquier aritmética sobre las coordenadas. Devuelve yards; multiplicar por `0.9144` para metros.
 - **`ClearTargetAuraAnchorCache()` sin restaurar primero**: limpiar el cache de anclas de buff frames sin restaurar antes las posiciones nativas hace que cada `UNIT_AURA` acumule un offset extra → drift infinito hasta que los buff frames salen de pantalla. Siempre usar `RestoreTargetAuras()` que restaura Y limpia. Con focus activo los eventos `UNIT_AURA focus` también disparan RefreshFrame("Target"), duplicando la velocidad de deriva.
 - **`CHAT_MSG_SYSTEM` para detectar modo DM**: dispara en cualquier mensaje de sistema (kills, quests, etc.). Usar `HarfordAuthority.RegisterChangeListener` para reaccionar a cambios de DM mode.
 
@@ -114,6 +145,50 @@ do
     local function otraFuncion() end
     miTabla.publica = miFuncionInterna
     miTabla.otra    = otraFuncion
+end
+
+-- Forward declaration para cerrar sobre una función definida más abajo:
+local RefreshTopInfo  -- se declara aquí, se asigna ~N líneas más abajo
+local function ConsumeMode()
+    if RefreshTopInfo then RefreshTopInfo() end  -- OK aunque aún sea nil al definir
+end
+-- ... más adelante en el mismo scope:
+RefreshTopInfo = function() ... end  -- la asignación "rellena" la upvalue
+
+-- Tracker de movimiento con OnUpdate throttleado (patrón en do...end):
+do
+    local POLL_INTERVAL = 0.1  -- 10fps
+    local _tracking, _elapsed, _totalMeters = false, 0, 0
+    local _lastX, _lastY, _lastZ
+    local function GetPos()
+        if UnitPosition then
+            local x, y, z = UnitPosition("player")
+            if x and y then return x, y, z or 0 end
+        end
+        -- fallback C_Map si UnitPosition no está disponible
+        if C_Map and C_Map.GetBestMapForUnit and C_Map.GetPlayerMapPosition then
+            local mapID = C_Map.GetBestMapForUnit("player")
+            if mapID then
+                local p = C_Map.GetPlayerMapPosition(mapID, "player")
+                if p then return p.x, p.y, 0 end
+            end
+        end
+        return nil
+    end
+    movBtn:SetScript("OnUpdate", function(_, dt)
+        if not _tracking then return end  -- guardia barata: coste ~0 cuando inactivo
+        _elapsed = _elapsed + dt
+        if _elapsed < POLL_INTERVAL then return end
+        _elapsed = 0
+        local nx, ny, nz = GetPos()
+        if not nx or not ny then return end  -- CRÍTICO: z puede ser nil en Epsilon
+        nz = nz or 0
+        if _lastX then
+            local dist = math.sqrt((nx-_lastX)^2 + (ny-_lastY)^2 + (nz-_lastZ)^2) * 0.9144
+            if dist > 0.05 then _totalMeters = _totalMeters + dist end
+        end
+        _lastX, _lastY, _lastZ = nx, ny, nz
+    end)
 end
 ```
 

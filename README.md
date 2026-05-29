@@ -1,6 +1,6 @@
 # Harford DnD 5e
 
-Addon de World of Warcraft para el servidor Epsilon RP de la **Compañía Harford**. Implementa un sistema completo de **D&D 5e** dentro del juego: ficha de personaje, recursos, combate por turnos, loot y sincronización entre jugadores.
+Addon de World of Warcraft para el servidor Epsilon RP de la **Compañía Harford**. Implementa un sistema de **D&D 5e** dentro del juego: ficha de personaje, recursos, reputaciones, combate por turnos, loot, sincronización entre jugadores y herramientas DM opcionales.
 
 > Addon privado. Requiere acceso al servidor Epsilon de la Compañía Harford.
 
@@ -25,8 +25,8 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
    ```
    [Cliente Epsilon]\_retail_\Interface\AddOns\
    ```
-3. Iniciar el cliente Epsilon y activar ambos addons en el selector de addons.
-4. `HarfordAdmin` solo debe activarse en cuentas con permisos de DM/Admin.
+3. Iniciar el cliente Epsilon y activar **`Harford`** en el selector de addons.
+4. Activar **`HarfordAdmin`** solo en cuentas con permisos de DM/Admin. Las herramientas DM requieren `HarfordAdmin` cargado y `.ph dm` activo.
 
 ---
 
@@ -38,7 +38,7 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 | `/harfordrep` | Abre/cierra el panel de reputaciones (también accesible desde el icono de tabardo en la ficha) |
 | `/harforddebug` | Sistema de debug (on/off/toggle/status/list) |
 | `/hdebug` | Alias de `/harforddebug` |
-| `/harfordadmin` | Herramientas de DM/Admin (loot, fichas, NPCs) |
+| `/harfordadmin` | Herramientas de DM/Admin (loot, reputaciones, fichas NPC, acciones sobre NPCs) |
 | `/hconfig` | Panel de configuración del addon |
 
 ---
@@ -46,14 +46,24 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 ## Estructura del proyecto
 
 ```
-Harford/            ← Addon principal (carga para todos los jugadores)
-HarfordAdmin/       ← Addon admin (solo DMs/Officers)
+Harford/            ← Addon principal: jugadores y DM
+HarfordAdmin/       ← Addon admin: herramientas DM, editores y comandos protegidos
 AGENTS.md           ← Arquitectura, contratos de módulos y enfoques fallidos
 CLAUDE.md           ← Instrucciones para Claude Code
 .github/
   copilot-instructions.md  ← Instrucciones para GitHub Copilot
 .cursorrules        ← Instrucciones para Cursor AI
 ```
+
+---
+
+## Arquitectura resumida
+
+- **Harford** contiene el core compartido: ficha D&D, recursos, turnos, reputaciones, loot visible/usable, unitframes, nameplates, sync addon y acciones servidor validadas que también pueden necesitar jugadores.
+- **HarfordAdmin** contiene la capa DM: menú contextual, ficha Modo NPC, editores de loot/reputación, compartir datos, ajustar recursos/reputación y comandos protegidos.
+- Los comandos Epsilon se construyen desde plantillas y acciones validadas (`HarfordCommandTemplates` + `HarfordServerActions`), nunca desde texto arbitrario recibido de otros clientes.
+- La mitigación de daño (`resistente`, `inmune`, `vulnerable`) se calcula en core con el stat block TRP3 del target y se muestra en la tirada con marcadores `R`/`I`/`V`. Admin solo aplica el total ya calculado.
+- La herida visual de NPC al perder vida se centraliza en `HarfordServerActions.SetNpcHealthDelta`: emote `33` para daño normal y `34` para daño crítico.
 
 ---
 
@@ -64,6 +74,11 @@ CLAUDE.md           ← Instrucciones para Claude Code
 - Limitaciones conocidas del cliente Epsilon (strata, hooks, frames)
 - Enfoques que ya se probaron y fallaron (no reintentar)
 - Patrones de código establecidos
+
+Documentación auxiliar:
+
+- [`CLAUDE.md`](CLAUDE.md): resumen compacto para Claude Code.
+- [`.github/copilot-instructions.md`](.github/copilot-instructions.md): resumen compacto para GitHub Copilot.
 
 ### Flujo de trabajo
 

@@ -1,0 +1,127 @@
+-- HarfordDnDNet: capa de recursos/red de la ficha (export, request, adjust).
+--
+-- Saca de HarfordDnD.lua la logica de construccion de payloads de recursos y el
+-- envio/solicitud por HarfordSync. HarfordDnDAPI delega aqui; las firmas publicas
+-- no cambian. La APLICACION local de deltas (UI, aura de muerte) se queda en
+-- HarfordDnD.lua: este modulo solo construye datos y habla con la red.
+
+HarfordDnDNet = HarfordDnDNet or {}
+
+local ADDON_PREFIX = "DND5EARC"
+
+local function toN(x, d)
+    local n = tonumber(x)
+    if n == nil then return d or 0 end
+    return n
+end
+
+-- ─── Construccion de payloads ────────────────────────────────────────────────
+function HarfordDnDNet.BuildActiveResourcePayload(readValueFn, options)
+    return HarfordDnDResources.BuildPayloadFromRuntime(readValueFn, options)
+end
+
+function HarfordDnDNet.ExportCurrentResources()
+    HarfordDnDStore.EnsurePersist()
+    local out = HarfordDnDNet.BuildActiveResourcePayload(function(key)
+        return HarfordDnDContext.Get(key, "0")
+    end)
+    return out
+end
+
+function HarfordDnDNet.ExportProfileResourcesFromBank(profileName)
+    local tbl = HarfordDnDProfileBank and HarfordDnDProfileBank[profileName]
+    if type(tbl) ~= "table" then
+        return nil
+    end
+
+    local out = HarfordDnDResources.BuildPayloadFromTable(tbl, {
+        includeCurrent = false,
+        includeMax = true,
+        activityMode = "max",
+    })
+    if next(out) == nil then
+        return nil
+    end
+    return out
+end
+
+-- ─── Lectura de cache remota ─────────────────────────────────────────────────
+function HarfordDnDNet.GetRemoteResourceValue(tbl, key)
+    if not tbl then return 0 end
+    return toN(tbl[key], 0)
+end
+
+function HarfordDnDNet.RemoteResourceExists(tbl, resourceKey)
+    if not tbl then return false end
+    local cur = HarfordDnDNet.GetRemoteResourceValue(tbl, HarfordDnDResources.CurKey(resourceKey))
+    local max = HarfordDnDNet.GetRemoteResourceValue(tbl, HarfordDnDResources.MaxKey(resourceKey))
+    return HarfordDnDResources.Exists(resourceKey, cur, max)
+end
+
+-- ─── Envio / solicitud por HarfordSync ───────────────────────────────────────
+function HarfordDnDNet.SendResourceResponseTo(targetName)
+    if not targetName or targetName == "" then
+        return false
+    end
+
+    local profileName = tostring(HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
+
+    local tbl, keysToSend = HarfordDnDNet.BuildActiveResourcePayload(function(key)
+        return HarfordDnDContext.Get(key, "0")
+    end)
+
+    -- Junto con los recursos, informamos de nuestro flag de animaciones
+    HarfordSync.SendAnimFlag(ADDON_PREFIX, HarfordDnDStore.animsEnabled ~= false, targetName)
+
+    return HarfordSync.SendResourceResponse(
+        ADDON_PREFIX,
+        profileName,
+        tbl,
+        targetName,
+        keysToSend
+    )
+end
+
+function HarfordDnDNet.SendResourceResponseForProfileTo(profileName, targetName)
+    if not targetName or targetName == "" then
+        return false
+    end
+
+    local resolvedProfile = tostring(profileName or HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
+    HarfordDnDStore.EnsurePersist(resolvedProfile)
+
+    local profile = HarfordDnDPersistStore.profiles and HarfordDnDPersistStore.profiles[resolvedProfile]
+    if type(profile) ~= "table" then
+        profile = {}
+    end
+
+    local tbl, keysToSend = HarfordDnDNet.BuildActiveResourcePayload(function(key)
+        return profile[key] or "0"
+    end)
+
+    return HarfordSync.SendResourceResponse(
+        ADDON_PREFIX,
+        resolvedProfile,
+        tbl,
+        targetName,
+        keysToSend
+    )
+end
+
+-- Throttle de solicitudes por jugador (estado privado del modulo).
+local _resourceRequestTimes = {}
+local RESOURCE_REQUEST_COOLDOWN = 12  -- segundos mínimos entre requests al mismo jugador
+
+function HarfordDnDNet.RequestResourcesFromPlayer(targetName)
+    if not targetName or targetName == "" then return false end
+    local now = GetTime and GetTime() or 0
+    local last = _resourceRequestTimes[targetName] or 0
+    if (now - last) < RESOURCE_REQUEST_COOLDOWN then return false end
+    _resourceRequestTimes[targetName] = now
+    local requester = GetUnitName and GetUnitName("player", true) or UnitName("player") or "default"
+    return HarfordSync.SendResourceRequest(ADDON_PREFIX, requester, targetName)
+end
+
+function HarfordDnDNet.SendResourceAdjustToPlayer(targetName, resourceKey, delta)
+    return HarfordSync.SendResourceAdjust(ADDON_PREFIX, resourceKey, delta, targetName)
+end

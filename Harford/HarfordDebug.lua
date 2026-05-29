@@ -1926,4 +1926,105 @@ do
 end
 -- ─── Fin Interceptor npc info ─────────────────────────────────────────────────
 
+-- ─── Diagnostico: retrato del PlayerFrame que revierte a 3D ───────────────────
+-- Caso a investigar: con icono TRP3 en el retrato del player (modo "frame"), al
+-- aplicar ciertas auras (p.ej. "llamas" + "asustado") a un NPC, el retrato del
+-- player vuelve al modelo 3D hasta el siguiente cambio de target. Este comando
+-- registra los eventos relevantes y hookea SetPortraitTexture (guarded) para ver
+-- QUIEN/CUANDO repinta el retrato del player. hooksecurefunc no se desinstala,
+-- pero todo el log queda tras un flag _pwActive, asi que es inocuo cuando esta off.
+do
+    local _pw = { active = false, count = 0, max = 120, hooked = false, frame = nil, untilTime = 0 }
+
+    local function PlayerPortraitRegion()
+        return _G.PlayerPortrait or (_G.PlayerFrame and _G.PlayerFrame.portrait) or nil
+    end
+
+    local function PortraitTexDesc()
+        local region = PlayerPortraitRegion()
+        if not (region and region.GetTexture) then return "sin region" end
+        local tex = region:GetTexture()
+        if type(tex) == "string" then return "icono:" .. tex end
+        if tex == nil then return "modelo3D/nil" end
+        return "fileID:" .. tostring(tex)  -- numerico => normalmente modelo/portrait nativo
+    end
+
+    local function PWLog(what)
+        if not _pw.active then return end
+        if _pw.count >= _pw.max then return end
+        _pw.count = _pw.count + 1
+        Print(string.format("|cff88ccff[pw %02d]|r %s | retrato=%s", _pw.count, tostring(what), PortraitTexDesc()))
+    end
+
+    local function StopWatch()
+        if not _pw.active then return end
+        _pw.active = false
+        if _pw.frame then _pw.frame:UnregisterAllEvents() end
+        Print("portraitwatch finalizado (" .. tostring(_pw.count) .. " lineas)")
+    end
+
+    API.RegisterCommand("portraitwatch", function(args)
+        local arg = tostring(args or ""):lower():match("^%s*(%S*)")
+        if arg == "off" then StopWatch() return end
+
+        local seconds = tonumber(tostring(args or ""):match("(%d+)")) or 20
+        seconds = math.max(5, math.min(60, seconds))
+
+        _pw.active = true
+        _pw.count = 0
+        _pw.untilTime = (GetTime and GetTime() or 0) + seconds
+
+        if not _pw.frame then
+            _pw.frame = CreateFrame("Frame")
+            _pw.frame:SetScript("OnEvent", function(_, event, unit)
+                if unit == nil or unit == "player" or unit == "target" then
+                    PWLog(event .. (unit and (":" .. tostring(unit)) or ""))
+                end
+            end)
+        end
+        _pw.frame:RegisterEvent("UNIT_PORTRAIT_UPDATE")
+        _pw.frame:RegisterEvent("UNIT_AURA")
+        _pw.frame:RegisterEvent("UNIT_MODEL_CHANGED")
+        _pw.frame:RegisterEvent("UNIT_DISPLAYPOWER")
+        _pw.frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+
+        -- Hook (una sola vez) del repintado nativo del retrato. Si algo llama a
+        -- SetPortraitTexture sobre el retrato del player, AQUI se ve el culpable:
+        -- el addon, con icono TRP3, NO usa SetPortraitTexture (usa SetTexture), asi
+        -- que cualquier llamada sobre el player viene de Blizzard.
+        if not _pw.hooked and hooksecurefunc then
+            local region = PlayerPortraitRegion()
+            if type(SetPortraitTexture) == "function" then
+                hooksecurefunc("SetPortraitTexture", function(tex, u)
+                    if not _pw.active then return end
+                    if tex == PlayerPortraitRegion() or u == "player" then
+                        PWLog("!! SetPortraitTexture(player) unit=" .. tostring(u))
+                    end
+                end)
+            end
+            if type(_G.UnitFramePortrait_Update) == "function" then
+                hooksecurefunc("UnitFramePortrait_Update", function(self)
+                    if not _pw.active then return end
+                    if self == _G.PlayerFrame then PWLog("!! UnitFramePortrait_Update(PlayerFrame)") end
+                end)
+            end
+            if region and region.SetTexture and not region._pwTexHooked then
+                hooksecurefunc(region, "SetTexture", function(_, value)
+                    if not _pw.active then return end
+                    PWLog("PlayerPortrait:SetTexture(" .. tostring(value) .. ")")
+                end)
+                region._pwTexHooked = true
+            end
+            _pw.hooked = true
+        end
+
+        Print("portraitwatch activo " .. tostring(seconds) .. "s — aplica ahora las auras al NPC. (off para parar)")
+        PWLog("start")
+        if C_Timer and C_Timer.After then
+            C_Timer.After(seconds, StopWatch)
+        end
+    end, "diagnostica que repinta el retrato del player (auras llamas/asustado). arg: [segundos]|off")
+end
+-- ─── Fin diagnostico retrato player ───────────────────────────────────────────
+
 SetEnabled(HarfordDebugSettings.enabled == true, true)

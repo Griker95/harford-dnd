@@ -2535,6 +2535,13 @@ local function ApplyNativePortraitOption(unit)
     if portrait.Show then portrait:Show() end
 end
 
+-- NOTA (caso limite no resuelto): el retrato del PlayerFrame con icono TRP3 puede
+-- revertir al modelo 3D al aplicar ciertas auras (p.ej. "llamas"+"asustado") a un NPC.
+-- Se probó un hook defensivo sobre UnitFramePortrait_Update + SetPortraitTexture y
+-- NO lo arregla (el repintado de Blizzard persiste). Revertido por no aportar y por el
+-- coste del hook global. Se deja documentado en AGENTS.md para no reintentar lo mismo.
+-- Diagnostico disponible: /harforddebug run portraitwatch.
+
 local function SetBarBox(bar, relativeTo, point, x, y, width, height)
     local container = bar.container or bar          -- borde exterior (para posiciÃ³n)
     local inner = bar.innerContainer or container   -- contenedor interior (para fill)

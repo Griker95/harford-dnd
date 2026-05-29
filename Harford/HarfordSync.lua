@@ -718,6 +718,46 @@ function HarfordSync.DeserializeResourceAdjustMessage(message)
     return key, math.floor(delta)
 end
 
+-- ─── Flag de animaciones (ANIMFLG) ───────────────────────────────────────────
+function HarfordSync.SerializeAnimFlag(enabled)
+    return "ANIMFLG|" .. (enabled and "1" or "0")
+end
+
+function HarfordSync.DeserializeAnimFlag(message)
+    local opcode, val = strsplit("|", tostring(message or ""))
+    if opcode ~= "ANIMFLG" then return nil end
+    return val == "1"
+end
+
+function HarfordSync.SendAnimFlag(prefix, enabled, target)
+    local payload = HarfordSync.SerializeAnimFlag(enabled)
+    if target and target ~= "" then
+        HarfordSync.Send(prefix, payload, "WHISPER", target)
+    else
+        local ch = HarfordSync.BestChannel and HarfordSync.BestChannel()
+        if ch then HarfordSync.Send(prefix, payload, ch) end
+    end
+end
+
+-- ─── Instrucción de aura sobre uno mismo (DOAPPLYAURA) ────────────────────────
+function HarfordSync.SerializeApplyAuraSelf(spellId)
+    return "DOAPPLYAURA|" .. tostring(math.floor(tonumber(spellId) or 0))
+end
+
+function HarfordSync.DeserializeApplyAuraSelf(message)
+    local opcode, id = strsplit("|", tostring(message or ""))
+    if opcode ~= "DOAPPLYAURA" then return nil end
+    return tonumber(id)
+end
+
+function HarfordSync.SendApplyAuraSelf(prefix, spellId, target)
+    if not target or target == "" then return false end
+    local id = math.floor(tonumber(spellId) or 0)
+    if id <= 0 then return false end
+    HarfordSync.Send(prefix, HarfordSync.SerializeApplyAuraSelf(id), "WHISPER", target)
+    return true
+end
+
 function HarfordSync.SendResourceAdjust(prefix, resourceKey, delta, target)
     if not target or target == "" then
         return false, "Target invÃ¡lido"

@@ -67,7 +67,10 @@ HarfordDnDResources.RUNTIME_KEYS = {
     "Res_soul_shard_Cur", "Res_soul_shard_Max", "Res_astral_power_Cur", "Res_astral_power_Max", "Res_living_seeds_Cur", "Res_living_seeds_Max",
 }
 
-HarfordDnDResources.RemoteCache = HarfordDnDResources.RemoteCache or {}
+HarfordDnDResources.RemoteCache    = HarfordDnDResources.RemoteCache    or {}
+-- Cache del flag de animaciones por jugador (nombre corto → boolean).
+-- true = quiere recibir animaciones; nil = desconocido (tratar como true).
+HarfordDnDResources.AnimFlagCache  = HarfordDnDResources.AnimFlagCache  or {}
 
 function HarfordDnDResources.CurKey(key)
     return "Res_" .. tostring(key) .. "_Cur"

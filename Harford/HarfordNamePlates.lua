@@ -283,46 +283,11 @@ local function SetKuiClassPowersSuppressed(suppressed)
     end
 end
 
-local WOW_CLASS_ALIASES = {
-    { "guerrero", "WARRIOR" }, { "warrior", "WARRIOR" },
-    { "paladin", "PALADIN" },
-    { "cazador de demonios", "DEMONHUNTER" }, { "demon hunter", "DEMONHUNTER" }, { "demonhunter", "DEMONHUNTER" },
-    { "cazador", "HUNTER" }, { "hunter", "HUNTER" },
-    { "picaro", "ROGUE" }, { "picar", "ROGUE" }, { "rogue", "ROGUE" },
-    { "sacerdote", "PRIEST" }, { "priest", "PRIEST" },
-    { "caballero de la muerte", "DEATHKNIGHT" }, { "death knight", "DEATHKNIGHT" }, { "deathknight", "DEATHKNIGHT" },
-    { "chaman", "SHAMAN" }, { "shaman", "SHAMAN" },
-    { "mago", "MAGE" }, { "mage", "MAGE" },
-    { "brujo", "WARLOCK" }, { "warlock", "WARLOCK" },
-    { "monje", "MONK" }, { "monk", "MONK" },
-    { "druida", "DRUID" }, { "druid", "DRUID" },
-    { "evocador", "EVOKER" }, { "evoker", "EVOKER" },
-}
-
-local function NormalizeClassKey(value)
-    value = tostring(value or ""):lower()
-    value = value:gsub("[_%-]+", " ")
-    value = value:gsub("[áàäâÁÀÄÂ]", "a")
-    value = value:gsub("[éèëêÉÈËÊ]", "e")
-    value = value:gsub("[íìïîÍÌÏÎ]", "i")
-    value = value:gsub("[óòöôÓÒÖÔ]", "o")
-    value = value:gsub("[úùüûÚÙÜÛ]", "u")
-    value = value:gsub("[ñÑ]", "n")
-    return value
-end
-
+-- Alias/resolucion de clase viven en HarfordClassColors.
 local function GetTRP3ClassColor(unit)
-    if not (HarfordTRP3 and HarfordTRP3.GetPlayerProfile and HarfordTRP3.GetProfilePrimaryClass) then return nil end
+    if not (HarfordTRP3 and HarfordTRP3.GetPlayerProfile) then return nil end
     local profile = HarfordTRP3.GetPlayerProfile(unit)
-    local classText = NormalizeClassKey(profile and HarfordTRP3.GetProfilePrimaryClass(profile))
-    if classText == "" then return nil end
-    for _, entry in ipairs(WOW_CLASS_ALIASES) do
-        if classText:find(entry[1], 1, true) then
-            local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[entry[2]]
-            if color then return color.r, color.g, color.b end
-        end
-    end
-    return nil
+    return HarfordClassColors.ProfileColorRGB(profile)
 end
 
 local function GetTRP3NameColor(unit)

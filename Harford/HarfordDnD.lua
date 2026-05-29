@@ -21,11 +21,8 @@ HarfordDnDStore.state.persist = HarfordDnDPersistStore
 HarfordDnDStore.state.runtime = HarfordDnDStore.state.runtime or {}
 local RuntimeProfile = HarfordDnDStore.state.runtime
 
-local ParseDice
-local WeaponBaseDice
 local GetWeaponKey
 local GetWeaponDef
-local GetVersatileDice
 local UpdateWeaponInfoUI
 local SyncWeaponDrop
 local ApplyShortRest
@@ -35,8 +32,11 @@ local AnchorTargetResourceFrame
 local DoSpellAttack
 local RefreshResourceFrame
 local RefreshTargetResourceFrame
+local RefreshSheetActionPanel
+local RefreshDyingState
 
 local F
+local FrameTitle          -- FontString del titulo principal; admite contexto externo de ficha
 local ResourceFrame
 local TargetResourceFrame
 
@@ -66,20 +66,28 @@ local function SaveCurrentProfileToBank(profileName)
     return HarfordDnDStore.SaveCurrentProfileToBank(profileName)
 end
 
-local function ARCGET(k, default)
-    local value = HarfordDnDStore.GetValue(k, default)
-    SyncRuntimeProfileRef()
-    return value
+-- Contexto temporal de ficha y accesores ARC: viven en HarfordDnDContext para
+-- que otros modulos (calculo, recursos) puedan leerlos sin estar en este chunk.
+-- Aqui solo se mantienen aliases locales; los call-sites no cambian.
+local SheetContext = HarfordDnDContext.State
+HarfordDnDContext.SetSyncHook(SyncRuntimeProfileRef)
+
+-- Nombre que aparece en el chat al tirar: NPC (contexto externo) > TRP3 > WoW
+local function GetRollDisplayName()
+    if SheetContext.rollName and SheetContext.rollName ~= "" then
+        return SheetContext.rollName
+    end
+    if HarfordTRP3 and HarfordTRP3.GetUnitRPName then
+        local trpName = HarfordTRP3.GetUnitRPName("player")
+        if trpName and trpName ~= "" then
+            return trpName
+        end
+    end
+    return UnitName("player") or "Unknown"
 end
 
-local function ARCSET(k, v)
-    if _G.HarfordDnDHydratingFromPersist then
-        HarfordDnDStore.state.runtime[k] = tostring(v)
-    else
-        HarfordDnDStore.SetValue(k, tostring(v))
-    end
-    SyncRuntimeProfileRef()
-end
+local ARCGET = HarfordDnDContext.Get
+local ARCSET = HarfordDnDContext.Set
 
 local function RefreshMainUI()
     if _G.DND5E_ARC_API and _G.DND5E_ARC_API.Refresh then
@@ -217,32 +225,35 @@ end
 RegisterPrefix(ADDON_PREFIX)
 
 local function SerializeRoll(data)
-    return string.format("%s^%s^%s^%d^%s^%s^%s^%s^%s",
+    return string.format("%s^%s^%s^%d^%s^%s^%s^%s^%s^%s",
         data.type or "roll",
-        UnitName("player") or "Unknown",
+        GetRollDisplayName(),
         data.label or "",
         data.total or 0,
         data.dice or "",
         data.modifiers or "",
         data.critical or "",
         data.mode or "",
-        tostring(data.miscBonus or "")
+        tostring(data.miscBonus or ""),
+        tostring(data.nameColor or "")  -- color TRP3 del emisor (hex sin "#", puede ser "")
     )
 end
 
 local function DeserializeRoll(msg)
     local parts = {strsplit("^", msg)}
     if #parts < 8 then return nil end
+    local color = parts[10]
     return {
-        type = parts[1],
-        player = parts[2],
-        label = parts[3],
-        total = tonumber(parts[4]) or 0,
-        dice = parts[5],
+        type      = parts[1],
+        player    = parts[2],
+        label     = parts[3],
+        total     = tonumber(parts[4]) or 0,
+        dice      = parts[5],
         modifiers = parts[6],
-        critical = parts[7],
-        mode = parts[8],
+        critical  = parts[7],
+        mode      = parts[8],
         miscBonus = parts[9],
+        nameColor = (color and color ~= "") and color or nil,
     }
 end
 
@@ -250,7 +261,6 @@ local function DisplayRollInChat(data)
     if not data then return end
 
     local COLOR_HEADER = "|cff00ccff"
-    local COLOR_PLAYER = "|cffffcc00"
     local COLOR_ROLL = "|cff66ccff"
     local COLOR_DETAIL = "|cffb0b0b0"
     local COLOR_CRIT = "|cff00ff00"
@@ -258,7 +268,9 @@ local function DisplayRollInChat(data)
 
     local parts = {}
     local playerName = data.player or UnitName("player") or "Unknown"
-    table.insert(parts, COLOR_HEADER .. "[D&D]" .. ENDCLR .. " " .. COLOR_PLAYER .. playerName .. ENDCLR)
+    -- nameColor: TRP3 del remitente si está disponible, sino dorado por defecto
+    local nameColor = data.nameColor and ("|cff" .. data.nameColor) or "|cffffcc00"
+    table.insert(parts, COLOR_HEADER .. "[D&D]" .. ENDCLR .. " " .. nameColor .. playerName .. ENDCLR)
 
     local modeStr = ""
     if data.mode == "V" then
@@ -315,168 +327,42 @@ local function DisplayRollInChat(data)
 end
 
 local function BroadcastRoll(rollData)
+    local displayColor = SheetContext.active
+        and SheetContext.rollColor
+        or (HarfordTRP3 and HarfordTRP3.GetUnitNameColor and HarfordTRP3.GetUnitNameColor("player") or nil)
+    -- Incluir el color en el mensaje para que el receptor lo muestre sin leer TRP3
+    rollData.nameColor = displayColor
     local channel = BestChannel()
     if channel then
         SendPrefix(ADDON_PREFIX, SerializeRoll(rollData), channel)
     end
     DisplayRollInChat({
-        type = rollData.type,
-        player = UnitName("player"),
-        label = rollData.label,
-        total = rollData.total,
-        dice = rollData.dice,
+        type      = rollData.type,
+        player    = GetRollDisplayName(),
+        nameColor = displayColor,
+        label     = rollData.label,
+        total     = rollData.total,
+        dice      = rollData.dice,
         modifiers = rollData.modifiers,
-        critical = rollData.critical,
-        mode = rollData.mode,
+        critical  = rollData.critical,
+        mode      = rollData.mode,
         miscBonus = rollData.miscBonus,
     })
-end
-
-local function AbilityMod(score)
-    score = toN(score, 10)
-    return math.floor((score - 10) / 2)
-end
-
-local function RollDie(sides)
-    return math.random(1, sides)
-end
-
-local function RollD20(mode)
-    local a, b = RollDie(20), RollDie(20)
-    if mode == "adv" then return math.max(a, b), a, b end
-    if mode == "dis" then return math.min(a, b), a, b end
-    return a, a, nil
-end
-
-local ABIL = {
-    { key = "Fuerza",       short = "FUE" },
-    { key = "Destreza",     short = "DES" },
-    { key = "Constitucion", short = "CON" },
-    { key = "Inteligencia", short = "INT" },
-    { key = "Sabiduria",    short = "SAB" },
-    { key = "Carisma",      short = "CAR" },
-}
-
-local SKILLS = {
-    { name="Acrobacias", ability="Destreza", id="Acrobacias" },
-    { name="Atletismo", ability="Fuerza", id="Atletismo" },
-    { name="Conocimiento Arcano", ability="Inteligencia", id="Arcano" },
-    { name="Engaño", ability="Carisma", id="Engano" },
-    { name="Historia", ability="Inteligencia", id="Historia" },
-    { name="Interpretación", ability="Carisma", id="Interpretacion" },
-    { name="Intimidación", ability="Carisma", id="Intimidacion" },
-    { name="Investigación", ability="Inteligencia", id="Investigacion" },
-    { name="Juego de Manos", ability="Destreza", id="JuegoManos" },
-    { name="Medicina", ability="Sabiduria", id="Medicina" },
-    { name="Naturaleza", ability="Inteligencia", id="Naturaleza" },
-    { name="Percepción", ability="Sabiduria", id="Percepcion" },
-    { name="Perspicacia", ability="Sabiduria", id="Perspicacia" },
-    { name="Persuasión", ability="Carisma", id="Persuasion" },
-    { name="Religión", ability="Inteligencia", id="Religion" },
-    { name="Sigilo", ability="Destreza", id="Sigilo" },
-    { name="Supervivencia", ability="Sabiduria", id="Supervivencia" },
-    { name="Trato con Animales", ability="Sabiduria", id="Animales" },
-}
-
-local WEAPONS = {
-    { key="Desarmado", cat="Especial", mode="Melee", dmgN=1, dmgS=4, dmgType="contundente", addAbi=true, props={} },
-    { key="Arco corto", cat="Simple", mode="Ranged", dmgN=1, dmgS=6, dmgType="perforante", addAbi=true, props={"Munición (80/320)","Dos manos"} },
-    { key="Ballesta ligera", cat="Simple", mode="Ranged", dmgN=1, dmgS=8, dmgType="perforante", addAbi=true, props={"Munición (80/320)","Recarga","Dos manos"} },
-    { key="Bastón", cat="Simple", mode="Melee", dmgN=1, dmgS=6, dmgType="contundente", addAbi=true, props={"Versátil (1d8)"} },
-    { key="Clava", cat="Simple", mode="Melee", dmgN=1, dmgS=4, dmgType="contundente", addAbi=true, props={"Ligera"} },
-    { key="Daga", cat="Simple", mode="Melee", dmgN=1, dmgS=4, dmgType="perforante", addAbi=true, props={"Ligera","Sutil","Arrojadiza (20/60)"} },
-    { key="Dardo", cat="Simple", mode="Ranged", dmgN=1, dmgS=4, dmgType="perforante", addAbi=true, props={"Sutil","Arrojadiza (20/60)"} },
-    { key="Gran clava", cat="Simple", mode="Melee", dmgN=1, dmgS=8, dmgType="contundente", addAbi=true, props={"Dos manos"} },
-    { key="Hacha de mano", cat="Simple", mode="Melee", dmgN=1, dmgS=6, dmgType="cortante", addAbi=true, props={"Ligera","Arrojadiza (20/60)"} },
-    { key="Honda", cat="Simple", mode="Ranged", dmgN=1, dmgS=4, dmgType="contundente", addAbi=true, props={"Munición (30/120)"} },
-    { key="Hoz", cat="Simple", mode="Melee", dmgN=1, dmgS=6, dmgType="cortante", addAbi=true, props={"Ligera"} },
-    { key="Jabalina", cat="Simple", mode="Melee", dmgN=1, dmgS=6, dmgType="perforante", addAbi=true, props={"Arrojadiza (30/120)"} },
-    { key="Lanza", cat="Simple", mode="Melee", dmgN=1, dmgS=6, dmgType="perforante", addAbi=true, props={"Versátil (1d8)","Arrojadiza (20/60)"} },
-    { key="Martillo ligero", cat="Simple", mode="Melee", dmgN=1, dmgS=4, dmgType="contundente", addAbi=true, props={"Ligera","Arrojadiza (20/60)"} },
-    { key="Maza", cat="Simple", mode="Melee", dmgN=1, dmgS=6, dmgType="contundente", addAbi=true, props={} },
-    { key="Alabarda", cat="Marcial", mode="Melee", dmgN=1, dmgS=10, dmgType="cortante", addAbi=true, props={"Alcance","Dos manos","Pesada"} },
-    { key="Arco largo", cat="Marcial", mode="Ranged", dmgN=1, dmgS=8, dmgType="perforante", addAbi=true, props={"Munición (150/600)","Pesada","Dos manos"} },
-    { key="Ballesta de mano", cat="Marcial", mode="Ranged", dmgN=1, dmgS=6, dmgType="perforante", addAbi=true, props={"Munición (30/120)","Ligera","Recarga"} },
-    { key="Ballesta pesada", cat="Marcial", mode="Ranged", dmgN=1, dmgS=10, dmgType="perforante", addAbi=true, props={"Munición (100/400)","Pesada","Recarga","Dos manos"} },
-    { key="Cerbatana", cat="Marcial", mode="Ranged", dmgN=1, dmgS=1, dmgType="perforante", addAbi=false, props={"Munición (25/100)","Recarga"} },
-    { key="Cimitarra", cat="Marcial", mode="Melee", dmgN=1, dmgS=6, dmgType="cortante", addAbi=true, props={"Sutil","Ligera"} },
-    { key="Espada corta", cat="Marcial", mode="Melee", dmgN=1, dmgS=6, dmgType="perforante", addAbi=true, props={"Sutil","Ligera"} },
-    { key="Espada larga", cat="Marcial", mode="Melee", dmgN=1, dmgS=8, dmgType="cortante", addAbi=true, props={"Versátil (1d10)"} },
-    { key="Espadón", cat="Marcial", mode="Melee", dmgN=2, dmgS=6, dmgType="cortante", addAbi=true, props={"Dos manos","Pesada"} },
-    { key="Estoque", cat="Marcial", mode="Melee", dmgN=1, dmgS=8, dmgType="perforante", addAbi=true, props={"Sutil"} },
-    { key="Flagelo", cat="Marcial", mode="Melee", dmgN=1, dmgS=8, dmgType="contundente", addAbi=true, props={} },
-    { key="Gran hacha", cat="Marcial", mode="Melee", dmgN=1, dmgS=12, dmgType="cortante", addAbi=true, props={"Dos manos","Pesada"} },
-    { key="Guja", cat="Marcial", mode="Melee", dmgN=1, dmgS=10, dmgType="cortante", addAbi=true, props={"Alcance","Dos manos","Pesada"} },
-    { key="Hacha de batalla", cat="Marcial", mode="Melee", dmgN=1, dmgS=8, dmgType="cortante", addAbi=true, props={"Versátil (1d10)"} },
-    { key="Lanza de caballería", cat="Marcial", mode="Melee", dmgN=1, dmgS=12, dmgType="perforante", addAbi=true, props={"Alcance","Especial"} },
-    { key="Látigo", cat="Marcial", mode="Melee", dmgN=1, dmgS=4, dmgType="cortante", addAbi=true, props={"Sutil","Alcance"} },
-    { key="Lucero del alba", cat="Marcial", mode="Melee", dmgN=1, dmgS=8, dmgType="perforante", addAbi=true, props={} },
-    { key="Martillo de guerra", cat="Marcial", mode="Melee", dmgN=1, dmgS=8, dmgType="contundente", addAbi=true, props={"Versátil (1d10)"} },
-    { key="Mazo de guerra", cat="Marcial", mode="Melee", dmgN=2, dmgS=6, dmgType="contundente", addAbi=true, props={"Dos manos","Pesada"} },
-    { key="Pica", cat="Marcial", mode="Melee", dmgN=1, dmgS=10, dmgType="perforante", addAbi=true, props={"Alcance","Dos manos","Pesada"} },
-    { key="Pico de guerra", cat="Marcial", mode="Melee", dmgN=1, dmgS=8, dmgType="perforante", addAbi=true, props={} },
-    { key="Red", cat="Marcial", mode="Ranged", dmgN=0, dmgS=0, dmgType="", addAbi=false, props={"Especial","Arrojadiza (5/15)"} },
-    { key="Tridente", cat="Marcial", mode="Melee", dmgN=1, dmgS=6, dmgType="perforante", addAbi=true, props={"Versátil (1d8)","Arrojadiza (20/60)"} },
-	{ key="Pistola", cat="De fuego", mode="Ranged", dmgN=1, dmgS=8, dmgType="perforante", addAbi=true, props={"Munición (30/120)", "Retumbante", "Recarga", "Ligera"} },
-	{ key="Rifle", cat="De fuego", mode="Ranged", dmgN=1, dmgS=12, dmgType="perforante", addAbi=true, props={"Munición (60/240)", "Retumbante", "Recarga", "Pesada", "Dos manos"} },
-	{ key="Escopeta", cat="De fuego", mode="Ranged", dmgN=2, dmgS=8, dmgType="perforante", addAbi=true, props={"Munición (15/60)", "Retumbante", "Recarga", "Dos manos"} },
-	{ key="Martillo arrojadizo enano", cat="Racial", mode="Melee", dmgN=1, dmgS=8, dmgType="contundente", addAbi=true, props={"Arrojadiza (20/60)"} },
-	{ key="Espada quel'dorei", cat="Racial", mode="Melee", dmgN=1, dmgS=8, dmgType="cortante", addAbi=true, props={"Sutil","Versátil (1d10)"} },
-	{ key="Espada lunar kal'dorei", cat="Racial", mode="Melee", dmgN=1, dmgS=8, dmgType="cortante", addAbi=true, props={"Sutil","Versátil (1d10)"} },
-	{ key="Guja lunar kal'dorei", cat="Racial", mode="Melee", dmgN=1, dmgS=6, dmgType="cortante", addAbi=true, props={"Sutil","Ligera","Arrojadiza (60/120)"} },
-	{ key="Doble hoja sin'dorei", cat="Racial", mode="Melee", dmgN=1, dmgS=10, dmgType="cortante", addAbi=true, props={"Sutil","Dos manos"} },
-	{ key="Alabarda tauren", cat="Racial", mode="Melee", dmgN=1, dmgS=10, dmgType="cortante", addAbi=true, props={"Pesada","Alcance","Dos manos"} },
-	{ key="Totem de guerra tauren", cat="Racial", mode="Melee", dmgN=2, dmgS=8, dmgType="contundente", addAbi=true, props={"Pesada","Dos manos"} },
-	{ key="Garra de guerra orca", cat="Racial", mode="Melee", dmgN=1, dmgS=6, dmgType="cortante", addAbi=true, props={"Sutil","Ligera"} },
-	{ key="Guja de guerra", cat="Especial", mode="Melee", dmgN=1, dmgS=8, dmgType="cortante", addAbi=true, props={"Arrojadiza (20/60)","Versátil (1d10)"} },
-	{ key="Aquajet", cat="Especial", mode="Ranged", dmgN=1, dmgS=4, dmgType="perforante", addAbi=true, props={"Municion (20/60)","Recarga", "Especial"} },
-}
-
-local function GetWeaponMenuGroups()
-    local groupOrder = {
-        "Simple",
-        "Marcial",
-        "De fuego",
-        "Racial",
-        "Otros",
-    }
-
-    local groupLabels = {
-        ["Simple"] = "Armas simples",
-        ["Marcial"] = "Armas marciales",
-        ["De fuego"] = "Armas de fuego",
-        ["Racial"] = "Armas raciales",
-        ["Otros"] = "Otros",
-    }
-
-    local groupsByKey = {}
-    local groups = {}
-
-    for _, key in ipairs(groupOrder) do
-        local group = {
-            key = key,
-            text = groupLabels[key] or key,
-            items = {},
-        }
-        groupsByKey[key] = group
-        table.insert(groups, group)
+    -- TRP3 usa este sound kit al resolver dados; reproducirlo solo en la emision
+    -- local evita duplicar sonido al recibir tiradas Harford del grupo.
+    if rollData.type ~= "info" and rollData.dice and rollData.dice ~= "" and rollData.dice ~= "-" then
+        if TRP3_API and TRP3_API.ui and TRP3_API.ui.misc and TRP3_API.ui.misc.playSoundKit then
+            TRP3_API.ui.misc.playSoundKit(36629, "SFX")
+        elseif PlaySound then
+            PlaySound(36629, "SFX")
+        end
     end
-
-    for _, w in ipairs(WEAPONS) do
-        local cat = w.cat or "Otros"
-        local group = groupsByKey[cat] or groupsByKey["Otros"]
-        table.insert(group.items, w)
-    end
-
-    for _, group in ipairs(groups) do
-        table.sort(group.items, function(a, b)
-            return tostring(a.key) < tostring(b.key)
-        end)
-    end
-
-    return groups
 end
 
+-- AbilityMod, RollDie, RollD20 viven en HarfordDnDCalc.
+
+-- ABIL/SKILLS viven en HarfordDnDData; WEAPONS y helpers de arma en HarfordDnDWeapons.
+-- Se referencian directamente como HarfordDnDData.* / HarfordDnDWeapons.* (no aliases locales).
 
 local RESOURCE_DEFS = HarfordDnDResources.DEFS
 local RESOURCE_PROFILE_KEYS = HarfordDnDResources.PROFILE_KEYS
@@ -492,6 +378,7 @@ EnsureDefaults = function()
     if ARCGET("ArmaSeleccionada", nil) == nil then ARCSET("ArmaSeleccionada", "Desarmado") end
     if ARCGET("ModArma", nil) == nil then ARCSET("ModArma", "0") end
     if ARCGET("Versatil", nil) == nil then ARCSET("Versatil", "0") end
+    if ARCGET("Offhand", nil) == nil then ARCSET("Offhand", "0") end
 	if ARCGET(ResourceCurKey("health"), nil) == nil then ARCSET(ResourceCurKey("health"), "0") end
     if ARCGET(ResourceMaxKey("health"), nil) == nil then ARCSET(ResourceMaxKey("health"), "0") end
 
@@ -506,20 +393,19 @@ EnsureDefaults = function()
 		if ARCGET(ResourceMaxKey(key), nil) == nil then ARCSET(ResourceMaxKey(key), "0") end
 	end
 
-    for _, a in ipairs(ABIL) do
+    for _, a in ipairs(HarfordDnDData.ABIL) do
         if ARCGET(a.key, nil) == nil then ARCSET(a.key, "10") end
         if ARCGET("Salv_" .. a.key, nil) == nil then ARCSET("Salv_" .. a.key, "0") end
     end
 
-    for _, s in ipairs(SKILLS) do
+    for _, s in ipairs(HarfordDnDData.SKILLS) do
         if ARCGET("Hab_" .. s.id .. "_Prof", nil) == nil then ARCSET("Hab_" .. s.id .. "_Prof", "0") end
         if ARCGET("Hab_" .. s.id .. "_Exp", nil) == nil then ARCSET("Hab_" .. s.id .. "_Exp", "0") end
     end
 end
 
-local function GetPB() return toN(ARCGET("BonusCompetencia", "2"), 2) end
-local function GetMode() return ARCGET("ModoTirada", "normal") end
-local function GetMiscBonus() return toN(ARCGET("BonoSituacional", "0"), 0) end
+-- GetPB, GetSpellPB, GetMode, GetMiscBonus, GetAbilityScore, GetAbilityMod,
+-- GetSaveProf, GetWeaponMod, GetVersatileActive viven en HarfordDnDCalc.
 
 -- true cuando el modo ventaja/desventaja se activó sin shift: se consume tras la próxima tirada.
 local _modoTiradaSingleUse = false
@@ -527,7 +413,7 @@ local _modoTiradaSingleUse = false
 -- más abajo. Sin esta declaración previa, la referencia dentro de ConsumeMode sería global nil.
 local RefreshTopInfo
 
--- Llamar al final de CADA tirada que lee GetMode(). Si el modo era de un solo uso, lo resetea.
+-- Llamar al final de CADA tirada que lee HarfordDnDCalc.GetMode(). Si el modo era de un solo uso, lo resetea.
 local function ConsumeMode()
     if _modoTiradaSingleUse then
         _modoTiradaSingleUse = false
@@ -536,11 +422,32 @@ local function ConsumeMode()
     end
 end
 function HarfordDnDGetInitiativeMod() return toN(ARCGET("ModIniciativa", "0"), 0) end
-local function GetAbilityScore(key) return toN(ARCGET(key, "10"), 10) end
-local function GetAbilityMod(key) return AbilityMod(GetAbilityScore(key)) end
-local function GetSaveProf(abilityKey) return toN(ARCGET("Salv_" .. abilityKey, "0"), 0) == 1 end
-local function GetWeaponMod() return toN(ARCGET("ModArma", "0"), 0) end
-local function GetVersatileActive() return toN(ARCGET("Versatil", "0"), 0) == 1 end
+
+HarfordDnDStore.HasWeaponProp = function(def, name)
+    if not def or type(def.props) ~= "table" then return false end
+    for _, prop in ipairs(def.props) do
+        if tostring(prop or ""):find(name, 1, true) then
+            return true
+        end
+    end
+    return false
+end
+
+HarfordDnDStore.IsOffhandAvailable = function(def)
+    return def ~= nil
+        and def.key ~= "Desarmado"
+        and def.mode == "Melee"
+        and not HarfordDnDCalc.GetVersatileActive()
+        and not HarfordDnDStore.HasWeaponProp(def, "Dos manos")
+end
+
+HarfordDnDStore.GetOffhandActive = function(def)
+    return HarfordDnDStore.IsOffhandAvailable(def) and toN(ARCGET("Offhand", "0"), 0) == 1
+end
+
+HarfordDnDStore.AreAnimationsEnabled = function()
+    return HarfordDnDStore.animsEnabled ~= false
+end
 
 local function GetResourceCurrent(key)
     return toN(ARCGET(ResourceCurKey(key), "0"), 0)
@@ -571,92 +478,9 @@ local function ResourceExists(key)
     return HarfordDnDResources.Exists(key, GetResourceCurrent(key), GetResourceMax(key))
 end
 
-local function BuildActiveResourcePayload(readValueFn, options)
-    return HarfordDnDResources.BuildPayloadFromRuntime(readValueFn, options)
-end
-
-local function ExportCurrentResources()
-    EnsurePersist()
-    local out = BuildActiveResourcePayload(function(key)
-        return ARCGET(key, "0")
-    end)
-    return out
-end
-
-local function GetRemoteResourceValue(tbl, key)
-    if not tbl then return 0 end
-    return toN(tbl[key], 0)
-end
-
-local function RemoteResourceExists(tbl, resourceKey)
-    if not tbl then return false end
-    local cur = GetRemoteResourceValue(tbl, ResourceCurKey(resourceKey))
-    local max = GetRemoteResourceValue(tbl, ResourceMaxKey(resourceKey))
-    return HarfordDnDResources.Exists(resourceKey, cur, max)
-end
-
-local function SendResourceResponseTo(targetName)
-    if not targetName or targetName == "" then
-        return false
-    end
-
-    local profileName = tostring(HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
-
-    local tbl, keysToSend = BuildActiveResourcePayload(function(key)
-        return ARCGET(key, "0")
-    end)
-
-    return HarfordSync.SendResourceResponse(
-        ADDON_PREFIX,
-        profileName,
-        tbl,
-        targetName,
-        keysToSend
-    )
-end
-
-local function SendResourceResponseForProfileTo(profileName, targetName)
-    if not targetName or targetName == "" then
-        return false
-    end
-
-    local resolvedProfile = tostring(profileName or HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
-    EnsurePersist(resolvedProfile)
-
-    local profile = HarfordDnDPersistStore.profiles and HarfordDnDPersistStore.profiles[resolvedProfile]
-    if type(profile) ~= "table" then
-        profile = {}
-    end
-
-    local tbl, keysToSend = BuildActiveResourcePayload(function(key)
-        return profile[key] or "0"
-    end)
-
-    return HarfordSync.SendResourceResponse(
-        ADDON_PREFIX,
-        resolvedProfile,
-        tbl,
-        targetName,
-        keysToSend
-    )
-end
-
-local _resourceRequestTimes = {}
-local RESOURCE_REQUEST_COOLDOWN = 12  -- segundos mínimos entre requests al mismo jugador
-
-local function RequestResourcesFromPlayer(targetName)
-    if not targetName or targetName == "" then return false end
-    local now = GetTime and GetTime() or 0
-    local last = _resourceRequestTimes[targetName] or 0
-    if (now - last) < RESOURCE_REQUEST_COOLDOWN then return false end
-    _resourceRequestTimes[targetName] = now
-    local requester = GetUnitName and GetUnitName("player", true) or UnitName("player") or "default"
-    return HarfordSync.SendResourceRequest(ADDON_PREFIX, requester, targetName)
-end
-
-local function SendResourceAdjustToPlayer(targetName, resourceKey, delta)
-    return HarfordSync.SendResourceAdjust(ADDON_PREFIX, resourceKey, delta, targetName)
-end
+-- BuildActiveResourcePayload, ExportCurrentResources, GetRemoteResourceValue,
+-- RemoteResourceExists, SendResourceResponseTo, SendResourceResponseForProfileTo,
+-- RequestResourcesFromPlayer y SendResourceAdjustToPlayer viven en HarfordDnDNet.
 
 ScheduleMyResourceBroadcast = function()
     if HarfordUnitFrames and HarfordUnitFrames.Refresh then
@@ -673,7 +497,7 @@ ScheduleMyResourceBroadcast = function()
             return tostring(HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
         end,
         function()
-            return BuildActiveResourcePayload(function(key)
+            return HarfordDnDNet.BuildActiveResourcePayload(function(key)
                 return ARCGET(key, "0")
             end)
         end,
@@ -684,61 +508,21 @@ ScheduleMyResourceBroadcast = function()
     )
 end
 
-local function GetSkillProfBonus(skill)
-    local pb = GetPB()
-    local profFlag = toN(ARCGET("Hab_"..skill.id.."_Prof", "0"), 0)
-    local expFlag  = toN(ARCGET("Hab_"..skill.id.."_Exp", "0"), 0)
-    if expFlag == 1 then return 2 * pb end
-    if profFlag == 1 then return pb end
-    return 0
-end
-
-local function RollTextWithMode(mode, a, b)
-    if mode == "adv" then
-        return math.max(a, b), a, b, "(V) "
-    elseif mode == "dis" then
-        return math.min(a, b), a, b, "(D) "
-    else
-        return a, a, nil, ""
-    end
-end
-
-local function GetCritTag(mode, a, b)
-    if mode == "dis" then
-        if a == 20 and b == 20 then return "CRÍTICO" end
-        if a == 1 or b == 1 then return "PIFIA" end
-        return ""
-    end
-    if mode == "adv" then
-        if a == 20 or b == 20 then return "CRÍTICO" end
-        if a == 1 and b == 1 then return "PIFIA" end
-        return ""
-    end
-    if a == 20 then return "CRÍTICO" end
-    if a == 1 then return "PIFIA" end
-    return ""
-end
-
-local function BonusConcat(base, prof, misc)
-    local parts = {}
-    if base ~= 0 then parts[#parts+1] = fmtSigned(base) end
-    if prof ~= 0 then parts[#parts+1] = fmtSigned(prof) end
-    if misc ~= 0 then parts[#parts+1] = fmtSigned(misc) end
-    return table.concat(parts, "")
-end
+-- GetSkillProfBonus, GetSkillRollBonuses, GetSaveRollBonuses, RollTextWithMode,
+-- GetCritTag, BonusConcat viven en HarfordDnDCalc.
 
 local function DoRoll(label, baseBonus, profBonus)
     baseBonus = toN(baseBonus, 0)
     profBonus = toN(profBonus, 0)
-    local miscBonus = GetMiscBonus()
+    local miscBonus = HarfordDnDCalc.GetMiscBonus()
 
-    local mode = GetMode()
-    local _, a, b = RollD20(mode)
-    local chosen, ra, rb = RollTextWithMode(mode, a, b)
-    local critTag = GetCritTag(mode, a, b)
+    local mode = HarfordDnDCalc.GetMode()
+    local _, a, b = HarfordDnDCalc.RollD20(mode)
+    local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
+    local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
     local totalBonus = baseBonus + profBonus + miscBonus
     local total = chosen + totalBonus
-    local bonusTxt = BonusConcat(baseBonus, profBonus, miscBonus)
+    local bonusTxt = HarfordDnDCalc.BonusConcat(baseBonus, profBonus, miscBonus)
 
     local diceStr
     if rb then
@@ -758,9 +542,10 @@ local function DoRoll(label, baseBonus, profBonus)
         miscBonus = miscBonus,
     })
     ConsumeMode()
+    return critTag
 end
 
-local function RollWeaponDamage(def, abilKey)
+local function RollWeaponDamage(def, abilKey, maximizeDice)
     if not def or not def.dmgN or not def.dmgS or def.dmgN == 0 or def.dmgS == 0 then
         BroadcastRoll({
             type = "damage",
@@ -771,11 +556,11 @@ local function RollWeaponDamage(def, abilKey)
             critical = "",
             mode = ""
         })
-        return
+        return 0
     end
 
-    local diceStr = WeaponBaseDice(def)
-    local n, sides = ParseDice(diceStr)
+    local diceStr = HarfordDnDWeapons.WeaponBaseDice(def)
+    local n, sides = HarfordDnDWeapons.ParseDice(diceStr)
     if not n or not sides then
         BroadcastRoll({
             type = "damage",
@@ -786,15 +571,19 @@ local function RollWeaponDamage(def, abilKey)
             critical = "",
             mode = ""
         })
-        return
+        return 0
     end
 
-    local abiMod = (def.addAbi and abilKey) and GetAbilityMod(abilKey) or 0
-    local wmod = GetWeaponMod()
+    local offhand = HarfordDnDStore.GetOffhandActive and HarfordDnDStore.GetOffhandActive(def)
+    local abiMod = (def.addAbi and abilKey) and HarfordDnDCalc.GetAbilityMod(abilKey) or 0
+    if offhand and abiMod > 0 then
+        abiMod = 0
+    end
+    local wmod = HarfordDnDCalc.GetWeaponMod()
 
     local rolls, sum = {}, 0
     for i=1,n do
-        local r = RollDie(sides)
+        local r = maximizeDice and sides or HarfordDnDCalc.RollDie(sides)
         rolls[#rolls+1] = r
         sum = sum + r
     end
@@ -807,26 +596,37 @@ local function RollWeaponDamage(def, abilKey)
     local bonusTxt = table.concat(parts, "")
     local dtype = def.dmgType or ""
 
+    -- Defensas del objetivo (solo si es NPC): la tirada muestra el dano ya
+    -- mitigado y un marcador coloreado R/V/I junto al tipo.
+    local marker = ""
+    if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+        local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", dtype, total)
+        total, marker = applied, mk
+    end
+    local modifiersTxt = dtype
+    if marker ~= "" then modifiersTxt = dtype .. " " .. marker end
+
     BroadcastRoll({
         type = "damage",
-        label = "Daño " .. def.key,
+        label = (offhand and "Daño Offhand " or "Daño ") .. def.key,
         total = total,
         dice = n .. "d" .. sides .. ": " .. rollList .. bonusTxt,
-        modifiers = dtype,
-        critical = "",
+        modifiers = modifiersTxt,
+        critical = maximizeDice and "CRÍTICO" or "",
         mode = ""
     })
+    return total
 end
 
 local function GetSpellDC()
     local abil = ARCGET("AtributoConjuro", "Carisma")
-    local mod = GetAbilityMod(abil)
-    return 8 + GetPB() + mod, abil
+    local mod = HarfordDnDCalc.GetAbilityMod(abil)
+    return 8 + HarfordDnDCalc.GetSpellPB() + mod, abil
 end
 
 local function GetSpellAbilityKey()
     local v = ARCGET("AtributoConjuro", "Inteligencia")
-    for _, a in ipairs(ABIL) do
+    for _, a in ipairs(HarfordDnDData.ABIL) do
         if a.key == v then return v end
     end
     return "Inteligencia"
@@ -834,10 +634,10 @@ end
 
 local function SendSpellDC()
     local dc, abil = GetSpellDC()
-    local pb = GetPB()
-    local mod = GetAbilityMod(abil)
+    local pb = HarfordDnDCalc.GetSpellPB()
+    local mod = HarfordDnDCalc.GetAbilityMod(abil)
     local short = ""
-    for _, a in ipairs(ABIL) do if a.key == abil then short = a.short break end end
+    for _, a in ipairs(HarfordDnDData.ABIL) do if a.key == abil then short = a.short break end end
     local parts = {"8"}
     if pb ~= 0 then parts[#parts+1] = fmtSigned(pb) end
     if mod ~= 0 then parts[#parts+1] = fmtSigned(mod) end
@@ -854,21 +654,19 @@ local function SendSpellDC()
 end
 
 local function FormatAbilityButtonText(short, abilityKey)
-    local score = GetAbilityScore(abilityKey)
-    local mod = GetAbilityMod(abilityKey)
+    local score = HarfordDnDCalc.GetAbilityScore(abilityKey)
+    local mod = HarfordDnDCalc.GetAbilityMod(abilityKey)
     return ("%s %d %s"):format(short, score, ColorSigned(mod))
 end
 
 local function FormatSaveButtonText(short, abilityKey)
-    local base = GetAbilityMod(abilityKey)
-    local prof = GetSaveProf(abilityKey) and GetPB() or 0
+    local base, prof = HarfordDnDCalc.GetSaveRollBonuses(abilityKey)
     local total = base + prof
     return ("Salv %s %s"):format(short, ColorSigned(total))
 end
 
 local function FormatSkillButtonText(skill)
-    local base = GetAbilityMod(skill.ability)
-    local prof = GetSkillProfBonus(skill)
+    local base, prof = HarfordDnDCalc.GetSkillRollBonuses(skill)
     local total = base + prof
     return ("%s %s"):format(skill.name, ColorSigned(total))
 end
@@ -1067,143 +865,10 @@ local function ResetAllFramePositions()
     end
 end
 
-local function EnsureMinimapState()
-    HarfordDnDMinimapSettings = HarfordDnDMinimapSettings or {}
-    if HarfordDnDMinimapSettings.angle == nil then HarfordDnDMinimapSettings.angle = 220 end
-    if HarfordDnDMinimapSettings.hide == nil then HarfordDnDMinimapSettings.hide = false end
-end
+-- El boton de minimapa vive en HarfordDnDMinimap. Registramos el handler de
+-- reinicio de posiciones (click derecho), que sigue siendo logica de esta ficha.
+HarfordDnDMinimap.SetResetHandler(ResetAllFramePositions)
 
-local function UpdateMinimapButtonPosition(btn)
-    EnsureMinimapState()
-
-    local angle = math.rad(HarfordDnDMinimapSettings.angle or 220)
-
-    -- radio más conservador para que no se salga del anillo
-    local radius = 76
-
-    local x = math.cos(angle) * radius
-    local y = math.sin(angle) * radius
-
-    btn:ClearAllPoints()
-    btn:SetPoint("CENTER", Minimap, "CENTER", x, y)
-end
-
-local function CreateDnDMinimapButton()
-    EnsureMinimapState()
-
-    if _G.HarfordDnDMinimapButton then
-        _G.HarfordDnDMinimapButton:SetShown(not HarfordDnDMinimapSettings.hide)
-        UpdateMinimapButtonPosition(_G.HarfordDnDMinimapButton)
-        return
-    end
-
-    local btn = CreateFrame("Button", "HarfordDnDMinimapButton", Minimap)
-    btn:SetSize(32, 32)
-    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    btn:RegisterForDrag("LeftButton")
-    btn:EnableMouse(true)
-    btn:SetFrameStrata("MEDIUM")
-
-    local background = btn:CreateTexture(nil, "BACKGROUND")
-    background:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
-    background:SetSize(20, 20)
-    background:SetPoint("CENTER", 0, 1)
-    btn.background = background
-
-    local icon = btn:CreateTexture(nil, "ARTWORK")
-    icon:SetTexture("Interface\\Icons\\Inv_tabard_duelersguild")
-    icon:SetSize(17, 17)
-    icon:SetPoint("CENTER", 0, 1)
-    icon:SetTexCoord(0.18, 0.82, 0.18, 0.82)
-    btn.icon = icon
-
-    local innerHighlight = btn:CreateTexture(nil, "HIGHLIGHT")
-    innerHighlight:SetTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
-    innerHighlight:SetBlendMode("ADD")
-    innerHighlight:SetAlpha(0.75)
-    innerHighlight:SetSize(22, 22)
-    innerHighlight:SetPoint("CENTER", 0, 1)
-    btn.innerHighlight = innerHighlight
-
-    local overlay = btn:CreateTexture(nil, "OVERLAY")
-    overlay:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
-    overlay:SetSize(53, 53)
-    overlay:SetPoint("TOPLEFT", 0, 0)
-    btn.overlay = overlay
-
-    local function SetIconPressed(self, pressed)
-        if not self.icon then return end
-        self.icon:ClearAllPoints()
-        if pressed then
-            self.icon:SetPoint("CENTER", 1, 0)
-        else
-            self.icon:SetPoint("CENTER", 0, 1)
-        end
-    end
-
-    local function UpdateAngleFromCursor(self)
-        local mx, my = Minimap:GetCenter()
-        local px, py = GetCursorPosition()
-        local scale = UIParent:GetEffectiveScale()
-        px = px / scale
-        py = py / scale
-
-        local angle = math.deg(math.atan2(py - my, px - mx))
-        HarfordDnDMinimapSettings.angle = angle
-        UpdateMinimapButtonPosition(self)
-    end
-
-    btn:SetScript("OnEnter", function(self)
-		GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-		GameTooltip:SetText("Ficha Harford", 1, 0.82, 0)
-		GameTooltip:AddLine("Click izquierdo: abrir/cerrar ficha", 1, 1, 1)
-		GameTooltip:AddLine("Click derecho: reiniciar posiciones de los marcos", 1, 1, 1)
-		GameTooltip:AddLine("Arrastrar: mover botón", 0.8, 0.8, 0.8)
-		GameTooltip:AddLine("/FichaHarford minimap show", 0.7, 0.9, 0.7)
-		GameTooltip:AddLine("/FichaHarford minimap hide", 0.7, 0.9, 0.7)
-		GameTooltip:Show()
-	end)
-
-    btn:SetScript("OnLeave", function(self)
-        GameTooltip:Hide()
-        SetIconPressed(self, false)
-    end)
-
-    btn:SetScript("OnMouseDown", function(self, button)
-        if button == "LeftButton" then
-            SetIconPressed(self, true)
-        end
-    end)
-
-    btn:SetScript("OnMouseUp", function(self)
-        SetIconPressed(self, false)
-    end)
-
-	btn:SetScript("OnClick", function(_, button)
-		if button == "LeftButton" then
-			if _G.DND5E_ARC_API and _G.DND5E_ARC_API.Toggle then
-				_G.DND5E_ARC_API.Toggle()
-			end
-		elseif button == "RightButton" then
-			ResetAllFramePositions()
-			DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[HarfordDnD]|r Posiciones de los marcos reiniciadas.")
-		end
-	end)
-
-    btn:SetScript("OnDragStart", function(self)
-        SetIconPressed(self, false)
-        self:SetScript("OnUpdate", UpdateAngleFromCursor)
-    end)
-
-    btn:SetScript("OnDragStop", function(self)
-        self:SetScript("OnUpdate", nil)
-        SetIconPressed(self, false)
-        UpdateAngleFromCursor(self)
-    end)
-
-    UpdateMinimapButtonPosition(btn)
-    btn:SetShown(not HarfordDnDMinimapSettings.hide)
-end
 
 do
 local initialProfile = UnitName("player") or "default"
@@ -1228,9 +893,9 @@ mainBorder:SetAllPoints(F)
 mainBorder:SetFrameStrata(F:GetFrameStrata())
 mainBorder:SetFrameLevel(F:GetFrameLevel() + 5)
 
-local title = F:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-title:SetPoint("TOP", 0, -15)
-title:SetText("Harford DnD 5ª - Ficha")
+FrameTitle = F:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+FrameTitle:SetPoint("TOP", 0, -15)
+FrameTitle:SetText("Harford DnD 5ª - Ficha")
 
 local restButton = CreateFrame("Button", nil, F)
 restButton:SetSize(20, 20)
@@ -1411,8 +1076,6 @@ targetResourceBorder:SetFrameStrata(TargetResourceFrame:GetFrameStrata())
 targetResourceBorder:SetFrameLevel(TargetResourceFrame:GetFrameLevel() + 5)
 
 TargetResourceFrame.rows = {}
-TargetResourceFrame.editMode = false
-TargetResourceFrame._lastEditMode = false
 end
 
 local function CreateResourceRow(parent, index)
@@ -1506,51 +1169,6 @@ local function CreateTargetResourceRow(parent, index)
     return row
 end
 
--- Fila para modo edición: igual que CreateResourceRow pero sin posición hardcodeada.
--- El llamador fija la posición con ClearAllPoints/SetPoint en cada refresh.
-local function CreateTargetEditRow(parent)
-    local row = CreateFrame("Frame", nil, parent)
-    row:SetSize(220, 24)
-    row._editRow = true
-
-    row.minus = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
-    row.minus:SetSize(20, 20)
-    row.minus:SetPoint("LEFT", 0, 0)
-    row.minus:SetText("-")
-
-    row.plus = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
-    row.plus:SetSize(20, 20)
-    row.plus:SetPoint("RIGHT", 0, 0)
-    row.plus:SetText("+")
-
-    row.bar = CreateFrame("StatusBar", nil, row)
-    row.bar:SetPoint("TOPLEFT", row.minus, "TOPRIGHT", 4, 2)
-    row.bar:SetPoint("BOTTOMRIGHT", row.plus, "BOTTOMLEFT", -4, -2)
-    row.bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-    row.bar:SetMinMaxValues(0, 1)
-    row.bar:SetValue(0)
-
-    row.bg = row.bar:CreateTexture(nil, "BACKGROUND")
-    row.bg:SetAllPoints()
-    row.bg:SetTexture(TEX.WHITE)
-    row.bg:SetVertexColor(0.08, 0.08, 0.08, 0.95)
-
-    row.border = row.bar:CreateTexture(nil, "BORDER")
-    row.border:SetAllPoints()
-    row.border:SetTexture(TEX.WHITE)
-    row.border:SetVertexColor(0.28, 0.28, 0.28, 0.80)
-
-    row.label = row.bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.label:SetPoint("LEFT", 4, 0)
-    row.label:SetJustifyH("LEFT")
-
-    row.value = row.bar:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    row.value:SetPoint("RIGHT", -4, 0)
-    row.value:SetJustifyH("RIGHT")
-
-    return row
-end
-
 AnchorTargetResourceFrame = function()
     if not TargetFrame or not TargetFrame:IsShown() then
         TargetResourceFrame:Hide()
@@ -1589,6 +1207,30 @@ local function AdjustResourceCurrent(key, delta)
     end
 
     SetResourceCurrent(key, cur)
+
+    if key == "health" then
+        if cur <= 0 and not HarfordDnDStore.deathAuraActive then
+            -- Salud llega a 0: si el jugador tiene animaciones activas, aplicar aura de muerte.
+            if HarfordDnDStore.animsEnabled ~= false and HarfordAuras then
+                local ok = HarfordAuras.Apply("death")
+                if ok then HarfordDnDStore.deathAuraActive = true end
+            end
+        elseif cur > 0 and (HarfordDnDStore.deathAuraActive
+            or (HarfordDnDStore.deathSaveActive and HarfordDnDStore.animsEnabled ~= false)) then
+            -- Al levantarse del estado moribundo, la retirada es autoritativa aunque
+            -- se haya perdido la marca local de la aura durante un reload/sync.
+            HarfordDnDStore.deathAuraActive = false
+            if HarfordAuras then HarfordAuras.Remove("death") end
+        end
+
+        -- Notificar al sistema de moribundo.
+        if RefreshDyingState then RefreshDyingState() end
+    end
+
+    if RefreshResourceFrame and ResourceFrame and ResourceFrame:IsShown() then
+        RefreshResourceFrame()
+    end
+
     return cur
 end
 
@@ -1628,7 +1270,7 @@ local function ApplyResourceDeltaFromRemote(resourceKey, delta, sender)
         RefreshTargetResourceFrame()
     end
     if sender and sender ~= "" then
-        SendResourceResponseTo(sender)
+        HarfordDnDNet.SendResourceResponseTo(sender)
     end
     return true
 end
@@ -1856,7 +1498,7 @@ RefreshTargetResourceFrame = function()
 
     local tbl
     if targetName == myName then
-        tbl = ExportCurrentResources()
+        tbl = HarfordDnDNet.ExportCurrentResources()
     else
         tbl = HarfordDnDResources.RemoteCache and HarfordDnDResources.RemoteCache[targetName]
 
@@ -1869,26 +1511,16 @@ RefreshTargetResourceFrame = function()
     end
 
     AnchorTargetResourceFrame()
-
-    -- Detectar cambio de modo edición → limpiar filas para recrearlas con la estructura correcta
-    local editMode = TargetResourceFrame.editMode
-    if TargetResourceFrame._lastEditMode ~= editMode then
-        TargetResourceFrame._lastEditMode = editMode
-        for _, r in ipairs(TargetResourceFrame.rows) do r:Hide() end
-        TargetResourceFrame.rows = {}
-        TargetResourceFrame:SetWidth(editMode and 256 or 200)
-    end
-
-    local shortTarget = UnitName and UnitName("target")
+    TargetResourceFrame:SetWidth(200)
     local visibleIndex = 0
 
     for _, key in ipairs(RESOURCE_ORDER) do
-        if RemoteResourceExists(tbl, key) then
+        if HarfordDnDNet.RemoteResourceExists(tbl, key) then
             visibleIndex = visibleIndex + 1
 
             local def = RESOURCE_DEFS[key]
-            local cur = GetRemoteResourceValue(tbl, ResourceCurKey(key))
-            local max = GetRemoteResourceValue(tbl, ResourceMaxKey(key))
+            local cur = HarfordDnDNet.GetRemoteResourceValue(tbl, ResourceCurKey(key))
+            local max = HarfordDnDNet.GetRemoteResourceValue(tbl, ResourceMaxKey(key))
 
             if key == "temp_health" then
                 max = math.max(cur, max, 1)
@@ -1897,64 +1529,35 @@ RefreshTargetResourceFrame = function()
                 if cur > max then cur = max end
             end
 
-            local row
-            if editMode then
-                -- Modo edición: filas con botones +/-
-                row = TargetResourceFrame.rows[visibleIndex]
-                if not row then
-                    row = CreateTargetEditRow(TargetResourceFrame)
-                    TargetResourceFrame.rows[visibleIndex] = row
-                end
-                row:ClearAllPoints()
-                row:SetPoint("TOPLEFT", 17, -(8 + (visibleIndex - 1) * 28))
+            local row = TargetResourceFrame.rows[visibleIndex]
+            if not row then
+                row = CreateTargetResourceRow(TargetResourceFrame, visibleIndex)
+                TargetResourceFrame.rows[visibleIndex] = row
+            end
 
-                -- Reconectar botones al target y recurso actuales
-                local capturedKey   = key
-                local capturedShort = shortTarget
-                row.minus:SetScript("OnClick", function()
-                    if capturedShort and HarfordDnDAPI and HarfordDnDAPI.AdjustResourceForName then
-                        HarfordDnDAPI.AdjustResourceForName(capturedShort, ResourceCurKey(capturedKey), -1)
-                    end
-                end)
-                row.plus:SetScript("OnClick", function()
-                    if capturedShort and HarfordDnDAPI and HarfordDnDAPI.AdjustResourceForName then
-                        HarfordDnDAPI.AdjustResourceForName(capturedShort, ResourceCurKey(capturedKey), 1)
-                    end
-                end)
-            else
-                -- Modo visualización: filas normales sin botones
-                row = TargetResourceFrame.rows[visibleIndex]
-                if not row then
-                    row = CreateTargetResourceRow(TargetResourceFrame, visibleIndex)
-                    TargetResourceFrame.rows[visibleIndex] = row
-                end
-
-                -- tempFill solo en modo visualización (filas view tienen tempFill)
-                if key == "health" and row.tempFill then
-                    local temp = GetRemoteResourceValue(tbl, ResourceCurKey("temp_health"))
-                    local barWidth = row.bar:GetWidth() or 0
-                    if temp > 0 and max > 0 and barWidth > 0 then
-                        local tempWidth = math.min(math.max(math.floor(barWidth * (temp / max)), 0), barWidth)
-                        row.tempFill:ClearAllPoints()
-                        row.tempFill:SetPoint("TOPLEFT",  row.bar, "TOPLEFT",  0, 0)
-                        row.tempFill:SetPoint("BOTTOMLEFT", row.bar, "BOTTOMLEFT", 0, 0)
-                        row.tempFill:SetWidth(tempWidth)
-                        row.tempFill:SetVertexColor(0.45, 0.75, 1.00, 0.95)
-                        row.tempFill:Show()
-                    else
-                        row.tempFill:SetWidth(0)
-                        row.tempFill:Hide()
-                    end
-                elseif row.tempFill then
+            if key == "health" and row.tempFill then
+                local temp = HarfordDnDNet.GetRemoteResourceValue(tbl, ResourceCurKey("temp_health"))
+                local barWidth = row.bar:GetWidth() or 0
+                if temp > 0 and max > 0 and barWidth > 0 then
+                    local tempWidth = math.min(math.max(math.floor(barWidth * (temp / max)), 0), barWidth)
+                    row.tempFill:ClearAllPoints()
+                    row.tempFill:SetPoint("TOPLEFT", row.bar, "TOPLEFT", 0, 0)
+                    row.tempFill:SetPoint("BOTTOMLEFT", row.bar, "BOTTOMLEFT", 0, 0)
+                    row.tempFill:SetWidth(tempWidth)
+                    row.tempFill:SetVertexColor(0.45, 0.75, 1.00, 0.95)
+                    row.tempFill:Show()
+                else
                     row.tempFill:SetWidth(0)
                     row.tempFill:Hide()
                 end
+            elseif row.tempFill then
+                row.tempFill:SetWidth(0)
+                row.tempFill:Hide()
             end
 
-            -- Actualizar barra y texto (igual en ambos modos)
             row.label:SetText(def.label)
             if key == "health" then
-                local temp = GetRemoteResourceValue(tbl, ResourceCurKey("temp_health"))
+                local temp = HarfordDnDNet.GetRemoteResourceValue(tbl, ResourceCurKey("temp_health"))
                 row.value:SetText(temp > 0
                     and (tostring(cur) .. " (+" .. tostring(temp) .. ")/" .. tostring(max))
                     or  (tostring(cur) .. "/" .. tostring(max)))
@@ -1978,9 +1581,7 @@ RefreshTargetResourceFrame = function()
         return
     end
 
-    TargetResourceFrame:SetHeight(editMode
-        and (16 + visibleIndex * 28)
-        or  (20 + visibleIndex * 18))
+    TargetResourceFrame:SetHeight(20 + visibleIndex * 18)
     TargetResourceFrame:Show()
 end
 
@@ -2088,7 +1689,7 @@ modeLabel:SetText("Modo activo: Normal")
 local pbText = SEC_TOP:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 pbText:SetPoint("TOPRIGHT", -6, -34)
 pbText:SetJustifyH("RIGHT")
-pbText:SetText("Bonus competencia: " .. GREEN .. fmtSigned(GetPB()) .. ENDCLR)
+pbText:SetText("Bonus competencia: " .. GREEN .. fmtSigned(HarfordDnDCalc.GetPB()) .. ENDCLR)
 
 MakeButton(SEC_TOP, "Normal", 72, 20, 10, -48, function()
     _modoTiradaSingleUse = false
@@ -2108,6 +1709,9 @@ local function RefreshModeButtonLabels()
     local shift = IsAnyShiftDown()
     if _btnVentaja    then _btnVentaja:SetText(shift    and "Modo V" or "Ventaja")    end
     if _btnDesventaja then _btnDesventaja:SetText(shift and "Modo D" or "Desventaja") end
+    if HarfordDnDStore.RefreshWeaponDamageButton then
+        HarfordDnDStore.RefreshWeaponDamageButton()
+    end
 end
 
 -- MODIFIER_STATE_CHANGED no dispara para shift izquierdo en Epsilon.
@@ -2153,7 +1757,7 @@ end
 
 UIDropDownMenu_Initialize(scDrop, function(self, level)
     local current = GetSpellAbilityKey()
-    for _, a in ipairs(ABIL) do
+    for _, a in ipairs(HarfordDnDData.ABIL) do
         local info = UIDropDownMenu_CreateInfo()
         info.text = a.key
         info.value = a.key
@@ -2195,73 +1799,45 @@ weaponDrop:SetPoint("TOPLEFT", -7, -64)
 
 local versBtn = MakeButton(SEC_ATK, "Versátil", 70, 22, 175, -66, function()
     local def = GetWeaponDef(GetWeaponKey())
-    if not GetVersatileDice(def) then return end
-    ARCSET("Versatil", GetVersatileActive() and 0 or 1)
+    if not HarfordDnDWeapons.GetVersatileDice(def) then return end
+    ARCSET("Versatil", HarfordDnDCalc.GetVersatileActive() and 0 or 1)
     UpdateWeaponInfoUI()
 end)
 
 local dmgInfoText = SEC_ATK:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 dmgInfoText:SetPoint("TOPLEFT", 10, -98)
+dmgInfoText:SetWidth(158)
 dmgInfoText:SetJustifyH("LEFT")
 dmgInfoText:SetText("")
 
+HarfordDnDStore.offhandCheckbox = CreateFrame("CheckButton", nil, SEC_ATK, "UICheckButtonTemplate")
+HarfordDnDStore.offhandCheckbox:SetPoint("TOPLEFT", SEC_ATK, "TOPLEFT", 170, -88)
+HarfordDnDStore.offhandCheckbox:SetSize(22, 22)
+HarfordDnDStore.offhandCheckbox:SetScript("OnClick", function(self)
+    ARCSET("Offhand", self:GetChecked() and 1 or 0)
+    UpdateWeaponInfoUI()
+end)
+
+HarfordDnDStore.offhandCheckboxLabel = SEC_ATK:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+HarfordDnDStore.offhandCheckboxLabel:SetPoint("LEFT", HarfordDnDStore.offhandCheckbox, "RIGHT", -1, 0)
+HarfordDnDStore.offhandCheckboxLabel:SetText("Offhand")
+
 GetWeaponKey = function()
     local v = ARCGET("ArmaSeleccionada", "Desarmado")
-    for _, w in ipairs(WEAPONS) do
+    for _, w in ipairs(HarfordDnDWeapons.WEAPONS) do
         if w.key == v then return v end
     end
     return "Desarmado"
 end
 
 GetWeaponDef = function(key)
-    for _, w in ipairs(WEAPONS) do
+    for _, w in ipairs(HarfordDnDWeapons.WEAPONS) do
         if w.key == key then return w end
     end
-    return WEAPONS[1]
+    return HarfordDnDWeapons.WEAPONS[1]
 end
 
-ParseDice = function(diceStr)
-    if not diceStr then return nil, nil end
-    local n, s = diceStr:match("^(%d+)d(%d+)$")
-    n, s = tonumber(n), tonumber(s)
-    return n, s
-end
-
-GetVersatileDice = function(def)
-    if not def or not def.props then return nil end
-    for _, p in ipairs(def.props) do
-        local d = p:match("Versátil %((%d+d%d+)%)")
-        if d then return d end
-    end
-    return nil
-end
-
-WeaponBaseDice = function(def)
-    if not def or not def.dmgN or not def.dmgS or def.dmgN == 0 or def.dmgS == 0 then return "-" end
-    local use = tostring(def.dmgN) .. "d" .. tostring(def.dmgS)
-    local v = GetVersatileDice(def)
-    if v and GetVersatileActive() then use = v end
-    return use
-end
-
-local function WeaponPropsLabel(def)
-    if not def or not def.props or #def.props == 0 then return "" end
-    local out = {}
-    local v = GetVersatileDice(def)
-    local vOn = v and GetVersatileActive()
-    for _, p in ipairs(def.props) do
-        if v and p:find("Versátil") then
-            if vOn then
-                out[#out+1] = GREEN .. p .. ENDCLR
-            else
-                out[#out+1] = "|cff999999" .. p .. ENDCLR
-            end
-        else
-            out[#out+1] = p
-        end
-    end
-    return table.concat(out, ", ")
-end
+-- ParseDice, GetVersatileDice, WeaponBaseDice y WeaponPropsLabel viven en HarfordDnDWeapons.
 
 local function GetWeaponAttackAbility(def)
     local hasFinesse = false
@@ -2272,18 +1848,57 @@ local function GetWeaponAttackAbility(def)
     end
     if def and def.mode == "Ranged" then return "Destreza" end
     if hasFinesse then
-        local mStr = GetAbilityMod("Fuerza")
-        local mDex = GetAbilityMod("Destreza")
+        local mStr = HarfordDnDCalc.GetAbilityMod("Fuerza")
+        local mDex = HarfordDnDCalc.GetAbilityMod("Destreza")
         return (mDex >= mStr) and "Destreza" or "Fuerza"
     end
     return "Fuerza"
 end
 
+HarfordDnDStore.GetWeaponAttackEmoteId = function(def, offhand, critTag)
+    if not def then return nil end
+    if critTag == "CRÍTICO" and def.critEmoteId then return def.critEmoteId end
+    if def.emoteId then return def.emoteId end
+    if not (HarfordEmotes and HarfordEmotes.Get) then return nil end
+
+    local emoteKey
+    if offhand then
+        if def.key == "Desarmado" then
+            emoteKey = "unarmed_offhand"
+        elseif def.dmgType == "perforante" or HarfordDnDStore.HasWeaponProp(def, "Sutil") then
+            emoteKey = "thrust_offhand"
+        else
+            emoteKey = "offhand"
+        end
+    elseif def.key == "Desarmado" then
+        emoteKey = "unarmed"
+    elseif def.mode == "Ranged" then
+        if HarfordDnDStore.HasWeaponProp(def, "Arrojadiza") then
+            emoteKey = "throw"
+        elseif def.key:find("Arco") then
+            emoteKey = "bow"
+        else
+            emoteKey = "rifle"
+        end
+    elseif HarfordDnDStore.HasWeaponProp(def, "Alcance") and HarfordDnDStore.HasWeaponProp(def, "Dos manos") then
+        emoteKey = "polearm"
+    elseif HarfordDnDCalc.GetVersatileActive() or HarfordDnDStore.HasWeaponProp(def, "Dos manos") then
+        emoteKey = "two_hand"
+    elseif def.dmgType == "perforante" or HarfordDnDStore.HasWeaponProp(def, "Sutil") then
+        emoteKey = "thrust"
+    else
+        emoteKey = "one_hand"
+    end
+
+    local emote = HarfordEmotes.Get(emoteKey)
+    return emote and emote.id or nil
+end
+
 UpdateWeaponInfoUI = function()
     local def = GetWeaponDef(GetWeaponKey())
-    weaponInfoText:SetText(WeaponPropsLabel(def))
+    weaponInfoText:SetText(HarfordDnDWeapons.WeaponPropsLabel(def))
 
-    local vDice = GetVersatileDice(def)
+    local vDice = HarfordDnDWeapons.GetVersatileDice(def)
     if vDice then
         versBtn:Enable()
         versBtn:SetText("Versátil")
@@ -2293,10 +1908,25 @@ UpdateWeaponInfoUI = function()
         versBtn:SetText("Versátil")
     end
 
+    local offhandAvailable = HarfordDnDStore.IsOffhandAvailable(def)
+    if not offhandAvailable then
+        ARCSET("Offhand", 0)
+    end
+    if HarfordDnDStore.offhandCheckbox then
+        HarfordDnDStore.offhandCheckbox:SetShown(offhandAvailable)
+        HarfordDnDStore.offhandCheckbox:SetChecked(offhandAvailable and HarfordDnDStore.GetOffhandActive(def))
+    end
+    if HarfordDnDStore.offhandCheckboxLabel then
+        HarfordDnDStore.offhandCheckboxLabel:SetShown(offhandAvailable)
+    end
+
     local abil = GetWeaponAttackAbility(def)
-    local abiMod = (def.addAbi and abil) and GetAbilityMod(abil) or 0
-    local wmod = GetWeaponMod()
-    local dice = WeaponBaseDice(def)
+    local abiMod = (def.addAbi and abil) and HarfordDnDCalc.GetAbilityMod(abil) or 0
+    if HarfordDnDStore.GetOffhandActive(def) and abiMod > 0 then
+        abiMod = 0
+    end
+    local wmod = HarfordDnDCalc.GetWeaponMod()
+    local dice = HarfordDnDWeapons.WeaponBaseDice(def)
 
     local parts = {}
     if abiMod ~= 0 then parts[#parts+1] = fmtSigned(abiMod) end
@@ -2306,6 +1936,9 @@ UpdateWeaponInfoUI = function()
     local dtype = def.dmgType or ""
     local dtypeTxt = (dtype ~= "") and (" " .. dtype) or ""
     dmgInfoText:SetText(("Daño: %s%s%s"):format(dice, bonusTxt, dtypeTxt))
+    if HarfordDnDStore.RefreshWeaponDamageButton then
+        HarfordDnDStore.RefreshWeaponDamageButton()
+    end
 end
 
 local function SyncWeaponDrop()
@@ -2320,7 +1953,7 @@ end
 
 UIDropDownMenu_Initialize(weaponDrop, function(self, level, menuList)
     local current = GetWeaponKey()
-    local groups = GetWeaponMenuGroups()
+    local groups = HarfordDnDWeapons.GetWeaponMenuGroups()
 
     if level == 1 then
         for _, group in ipairs(groups) do
@@ -2360,16 +1993,17 @@ UpdateWeaponInfoUI()
 
 local function DoWeaponAttack()
     local def = GetWeaponDef(GetWeaponKey())
+    local offhand = HarfordDnDStore.GetOffhandActive and HarfordDnDStore.GetOffhandActive(def)
     local abil = GetWeaponAttackAbility(def)
-    local base = GetAbilityMod(abil)
-    local prof = GetPB()
-    local wmod = GetWeaponMod()
-    local misc = GetMiscBonus()
+    local base = HarfordDnDCalc.GetAbilityMod(abil)
+    local prof = HarfordDnDCalc.GetPB()
+    local wmod = HarfordDnDCalc.GetWeaponMod()
+    local misc = HarfordDnDCalc.GetMiscBonus()
 
-    local mode = GetMode()
-    local _, a, b = RollD20(mode)
-    local chosen, ra, rb = RollTextWithMode(mode, a, b)
-    local critTag = GetCritTag(mode, a, b)
+    local mode = HarfordDnDCalc.GetMode()
+    local _, a, b = HarfordDnDCalc.RollD20(mode)
+    local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
+    local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
     local totalBonus = base + prof + wmod + misc
     local total = chosen + totalBonus
 
@@ -2392,27 +2026,429 @@ local function DoWeaponAttack()
 
     BroadcastRoll({
         type = "attack",
-        label = "Ataque " .. def.key .. wmodLabel,
+        label = (offhand and "Ataque Offhand " or "Ataque ") .. def.key .. wmodLabel,
         total = total,
         dice = diceStr,
         modifiers = bonusTxt,
         critical = critTag,
         mode = (mode == "adv" and "V") or (mode == "dis" and "D") or ""
     })
+    HarfordDnDStore.pendingWeaponCriticalKey = critTag == "CRÍTICO" and def.key or nil
+    -- Animacion del jugador atacante: .mod anim sobre el propio personaje.
+    -- Aplica a cualquier jugador (no requiere oficial). Si el arma no declara
+    -- emoteId propio, se deriva desde tipo/propiedades para evitar ataques mudos.
+    if HarfordDnDStore.AreAnimationsEnabled and HarfordDnDStore.AreAnimationsEnabled()
+        and HarfordServerActions and HarfordServerActions.ModAnim then
+        local eid = HarfordDnDStore.GetWeaponAttackEmoteId
+            and HarfordDnDStore.GetWeaponAttackEmoteId(def, offhand, critTag)
+        if eid then
+            HarfordServerActions.ModAnim(eid)
+        end
+    end
     ConsumeMode()
 end
 
-MakeButton(SEC_ATK, "Ataque Arma", 110, 22, 266, -66, function()
+-- Checkbox: activar/desactivar animaciones (emotes, auras) al atacar/dañar
+-- Flag en HarfordDnDStore para no añadir un local de chunk (límite 200 Lua 5.1)
+do
+    HarfordDnDStore.animsEnabled = true
+
+    local chk = CreateFrame("CheckButton", nil, SEC_ATK, "UICheckButtonTemplate")
+    chk:SetPoint("TOPLEFT", SEC_ATK, "TOPLEFT", 266, -6)
+    chk:SetSize(24, 24)
+    chk:SetChecked(true)
+
+    local chkLabel = SEC_ATK:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    chkLabel:SetPoint("LEFT", chk, "RIGHT", 2, 0)
+    chkLabel:SetText("Animaciones")
+
+    chk:SetScript("OnClick", function(self)
+        HarfordDnDStore.animsEnabled = self:GetChecked() == true or self:GetChecked() == 1
+        if not HarfordDnDStore.AreAnimationsEnabled() and HarfordDnDStore.deathAuraActive and HarfordAuras then
+            HarfordDnDStore.deathAuraActive = false
+            HarfordAuras.Remove("death")
+        end
+        -- El botón de modo combate solo existe con animaciones activas.
+        if HarfordDnDStore.combatModeButton then
+            HarfordDnDStore.combatModeButton:SetShown(
+                HarfordDnDStore.AreAnimationsEnabled() and not SheetContext.showActionPanel)
+        end
+        -- Informar al resto (DMs) del nuevo estado
+        if HarfordSync and HarfordSync.SendAnimFlag then
+            local ch = HarfordSync.BestChannel and HarfordSync.BestChannel()
+            if ch then
+                HarfordSync.SendAnimFlag(ADDON_PREFIX, HarfordDnDStore.animsEnabled, nil)
+            end
+        end
+    end)
+
+    HarfordDnDStore.animsCheckbox = chk
+    HarfordDnDStore.animsCheckboxLabel = chkLabel
+end
+
+-- Botón "Modo combate" (jugador): postura de combate vía `mod anim` según el
+-- arma equipada. Solo visible con animaciones activas y fuera de la ficha NPC.
+-- Pulsar de nuevo SIN cambiar de arma vuelve a Stand (emote 26).
+-- do...end para no consumir un local de chunk (límite 200 Lua 5.1).
+do
+    -- Mapea el arma equipada a la clave de emote de combate.
+    -- Versátil activo en un arma versátil → siempre la postura a dos manos.
+    local function GetCombatEmoteKeyForWeapon(def)
+        if not def or def.key == "Desarmado" then return "unarmed" end
+
+        local vDice = HarfordDnDWeapons.GetVersatileDice(def)
+        if vDice and HarfordDnDCalc.GetVersatileActive() then return "two_hand" end
+
+        local props = def.props or {}
+        local function hasProp(name)
+            for _, p in ipairs(props) do
+                if p:find(name) then return true end
+            end
+            return false
+        end
+
+        if def.mode == "Ranged" then
+            if def.key:find("Arco") then return "bow" end
+            if def.key:find("Ballesta") or def.cat == "De fuego" or def.key == "Cerbatana" then
+                return "rifle"
+            end
+            -- Hondas, dardos, redes y demás a distancia: postura arrojadiza.
+            return "thrown"
+        end
+
+        -- Cuerpo a cuerpo: asta (alcance + dos manos), dos manos, o una mano.
+        if hasProp("Alcance") and hasProp("Dos manos") then return "polearm" end
+        if hasProp("Dos manos") then return "two_hand" end
+        return "one_hand"
+    end
+
+    local btn = MakeButton(SEC_ATK, "Modo combate", 110, 22, 150, -6, function()
+        if not (HarfordDnDStore.AreAnimationsEnabled and HarfordDnDStore.AreAnimationsEnabled()) then return end
+        if not (HarfordServerActions and HarfordServerActions.ModAnim) then return end
+        -- No se limpia el target aqui: ClearTarget() es una funcion protegida de WoW
+        -- (solo Blizzard UI / codigo seguro) y un addon no puede llamarla. La animacion
+        -- de combate se aplica al propio personaje sin necesidad de deseleccionar.
+
+        local def = GetWeaponDef(GetWeaponKey())
+        local key = (def and def.key) or "Desarmado"
+        local stand = HarfordEmotes and HarfordEmotes.GetCombat and HarfordEmotes.GetCombat("stand")
+        local standId = (stand and stand.id) or 26
+
+        if HarfordDnDStore.combatModeWeaponKey == key then
+            -- Mismo arma sin cambio previo: salir del modo combate.
+            HarfordServerActions.ModAnim(standId)
+            HarfordDnDStore.combatModeWeaponKey = nil
+        else
+            local cdef = HarfordEmotes and HarfordEmotes.GetCombat
+                and HarfordEmotes.GetCombat(GetCombatEmoteKeyForWeapon(def))
+            if cdef and cdef.id then
+                HarfordServerActions.ModAnim(cdef.id)
+            end
+            HarfordDnDStore.combatModeWeaponKey = key
+        end
+    end)
+
+    HarfordDnDStore.combatModeButton = btn
+    btn:SetShown(HarfordDnDStore.AreAnimationsEnabled())
+end
+
+local weaponAttackButton = MakeButton(SEC_ATK, "Ataque Arma", 110, 22, 266, -66, function()
     DoWeaponAttack()
 end)
 
-MakeButton(SEC_ATK, "Daño Arma", 110, 22, 266, -94, function()
+local weaponDamageButton = MakeButton(SEC_ATK, "Daño Arma", 110, 22, 266, -94, function()
+    if HarfordDnDStore.RefreshWeaponDamageButton
+        and not HarfordDnDStore.RefreshWeaponDamageButton() then
+        return
+    end
+
+    if IsAnyShiftDown() and HarfordDnDStore.OpenCustomDamageFrame then
+        HarfordDnDStore.OpenCustomDamageFrame()
+        return
+    end
+
     local def = GetWeaponDef(GetWeaponKey())
     local abil = GetWeaponAttackAbility(def)
-    RollWeaponDamage(def, abil)
+    local isCritical = HarfordDnDStore.pendingWeaponCriticalKey ~= nil
+        and HarfordDnDStore.pendingWeaponCriticalKey == def.key
+    HarfordDnDStore.pendingWeaponCriticalKey = nil
+    local total = RollWeaponDamage(def, abil, isCritical)
+    -- Ruta oficial/admin: aplica el dano al NPC target si el jugador tiene rango de oficial.
+    -- SetNpcHealthDelta dispara automaticamente el emote de herida (33 normal / 34 critico).
+    -- Sin HarfordAdmin no hay checks de resistencias; el dano se aplica en bruto.
+    if total and total > 0
+        and HarfordAuthority and HarfordAuthority.IsOfficerPlus and HarfordAuthority.IsOfficerPlus()
+        and UnitExists and UnitExists("target")
+        and not (UnitIsPlayer and UnitIsPlayer("target"))
+        and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
+        HarfordServerActions.SetNpcHealthDelta(-total, {
+            isCritical = isCritical,
+            addonName  = "Harford",
+        })
+    end
 end)
 
-MakeButton(SEC_ATK, "Ataque Conjuro", 110, 22, 266, -122, function()
+HarfordDnDStore.RefreshWeaponDamageButton = function()
+    local enabled = UnitExists and UnitExists("target")
+        and not (UnitIsUnit and UnitIsUnit("target", "player"))
+    if weaponDamageButton then
+        weaponDamageButton:SetText(IsAnyShiftDown() and "Daño Custom" or "Daño Arma")
+        if enabled then
+            weaponDamageButton:Enable()
+        else
+            weaponDamageButton:Disable()
+        end
+    end
+    return enabled
+end
+HarfordDnDStore.RefreshWeaponDamageButton()
+
+do
+    local function ParseCustomDamageInput(text)
+        text = tostring(text or ""):lower():gsub("%s+", "")
+        if text == "" then return nil, "Introduce dados" end
+
+        local n, sides, bonus = text:match("^(%d*)d(%d+)([+-]%d+)$")
+        if not sides then
+            n, sides = text:match("^(%d*)d(%d+)$")
+        end
+        if not sides then
+            n, sides = "1", text:match("^(%d+)$")
+        end
+
+        n = (n ~= "" and tonumber(n)) or 1
+        sides = tonumber(sides)
+        bonus = tonumber(bonus) or 0
+        if not n or not sides or n <= 0 or sides <= 0 then
+            return nil, "Formato de dados invalido"
+        end
+        return { count = n, sides = sides, bonus = bonus }
+    end
+
+    local function PrintCustomDamageError(message)
+        if DEFAULT_CHAT_FRAME then
+            DEFAULT_CHAT_FRAME:AddMessage("|cffff5555[Harford]|r " .. tostring(message))
+        end
+    end
+
+    local function RollCustomDamage(expr, abilityKey, damageKey, maximizeDice)
+        local parsed, err = ParseCustomDamageInput(expr)
+        if not parsed then
+            PrintCustomDamageError(err)
+            return 0
+        end
+
+        local rolls, sum = {}, 0
+        for i = 1, parsed.count do
+            local r = maximizeDice and parsed.sides or HarfordDnDCalc.RollDie(parsed.sides)
+            rolls[#rolls + 1] = r
+            sum = sum + r
+        end
+
+        local abilityMod = abilityKey and HarfordDnDCalc.GetAbilityMod(abilityKey) or 0
+        local total = sum + (parsed.bonus or 0) + abilityMod
+        if total < 0 then total = 0 end
+
+        local dtype = HarfordDamageTypes and HarfordDamageTypes.GetLabel
+            and HarfordDamageTypes.GetLabel(damageKey)
+            or tostring(damageKey or "")
+        dtype = tostring(dtype or ""):lower()
+
+        local marker = ""
+        if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+            local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", dtype, total)
+            total, marker = applied, mk
+        end
+
+        local parts = {}
+        if parsed.bonus and parsed.bonus ~= 0 then parts[#parts + 1] = fmtSigned(parsed.bonus) end
+        if abilityMod ~= 0 then parts[#parts + 1] = fmtSigned(abilityMod) end
+        local bonusTxt = table.concat(parts, "")
+
+        local diceText
+        diceText = parsed.count .. "d" .. parsed.sides .. ": " .. table.concat(rolls, "+") .. bonusTxt
+
+        local modifiersTxt = dtype
+        if marker ~= "" then modifiersTxt = dtype .. " " .. marker end
+
+        BroadcastRoll({
+            type = "damage",
+            label = "Daño",
+            total = total,
+            dice = diceText,
+            modifiers = modifiersTxt,
+            critical = maximizeDice and "CRÍTICO" or "",
+            mode = "",
+        })
+        return total
+    end
+
+    local function ApplyCustomDamage()
+        if not (UnitExists and UnitExists("target"))
+            or (UnitIsUnit and UnitIsUnit("target", "player")) then
+            PrintCustomDamageError("Selecciona otro jugador o NPC para tirar daño custom")
+            return
+        end
+
+        local frame = HarfordDnDStore.customDamageFrame
+        if not frame then return end
+        local isCritical = HarfordDnDStore.pendingWeaponCriticalKey ~= nil
+        HarfordDnDStore.pendingWeaponCriticalKey = nil
+
+        local total = RollCustomDamage(
+            frame.diceBox and frame.diceBox:GetText(),
+            frame.abilityKey,
+            frame.damageKey or "slashing",
+            isCritical
+        )
+
+        if total and total > 0
+            and HarfordAuthority and HarfordAuthority.IsOfficerPlus and HarfordAuthority.IsOfficerPlus()
+            and UnitExists and UnitExists("target")
+            and not (UnitIsPlayer and UnitIsPlayer("target"))
+            and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
+            HarfordServerActions.SetNpcHealthDelta(-total, {
+                isCritical = isCritical,
+                addonName = "Harford",
+            })
+        end
+    end
+
+    local function EnsureCustomDamageFrame()
+        if HarfordDnDStore.customDamageFrame then
+            return HarfordDnDStore.customDamageFrame
+        end
+
+        local frame = CreateFrame("Frame", "HarfordCustomDamageFrame", UIParent, "BackdropTemplate")
+        frame:SetSize(300, 154)
+        frame:SetPoint("CENTER")
+        frame:SetFrameStrata("DIALOG")
+        if F and F.GetFrameLevel then
+            frame:SetFrameLevel(F:GetFrameLevel() + 200)
+        else
+            frame:SetFrameLevel(200)
+        end
+        frame:SetMovable(true)
+        frame:EnableMouse(true)
+        frame:RegisterForDrag("LeftButton")
+        frame:SetScript("OnDragStart", frame.StartMoving)
+        frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
+        if frame.SetBackdrop then
+            frame:SetBackdrop({
+                bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
+                edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
+                tile = true,
+                tileSize = 16,
+                edgeSize = 12,
+                insets = { left = 3, right = 3, top = 3, bottom = 3 },
+            })
+            frame:SetBackdropColor(0.02, 0.02, 0.02, 0.92)
+            frame:SetBackdropBorderColor(0.75, 0.65, 0.35, 1)
+        end
+
+        local title = frame:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        title:SetPoint("TOP", 0, -10)
+        title:SetText("Daño")
+        frame.title = title
+
+        local close = CreateFrame("Button", nil, frame, "UIPanelCloseButton")
+        close:SetPoint("TOPRIGHT", 2, 2)
+        close:SetScript("OnClick", function() frame:Hide() end)
+
+        local diceLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        diceLabel:SetPoint("TOPLEFT", 18, -38)
+        diceLabel:SetText("Dados")
+
+        frame.diceBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
+        frame.diceBox:SetSize(100, 20)
+        frame.diceBox:SetPoint("LEFT", diceLabel, "RIGHT", 48, 0)
+        frame.diceBox:SetAutoFocus(false)
+        frame.diceBox:SetText("1d6")
+
+        local abilLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        abilLabel:SetPoint("TOPLEFT", 18, -68)
+        abilLabel:SetText("Característica")
+
+        frame.abilityDrop = CreateFrame("Frame", nil, frame, "UIDropDownMenuTemplate")
+        UIDropDownMenu_SetWidth(frame.abilityDrop, 120)
+        frame.abilityDrop:SetPoint("TOPLEFT", 112, -50)
+        frame.abilityKey = nil
+
+        UIDropDownMenu_Initialize(frame.abilityDrop, function(_, level)
+            if level ~= 1 then return end
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = "Ninguno"
+            info.checked = frame.abilityKey == nil
+            info.func = function()
+                frame.abilityKey = nil
+                UIDropDownMenu_SetText(frame.abilityDrop, "Ninguno")
+            end
+            UIDropDownMenu_AddButton(info, level)
+            for _, abil in ipairs(HarfordDnDData.ABIL) do
+                local abilKey = abil.key
+                info = UIDropDownMenu_CreateInfo()
+                info.text = abilKey
+                info.checked = frame.abilityKey == abilKey
+                info.func = function()
+                    frame.abilityKey = abilKey
+                    UIDropDownMenu_SetText(frame.abilityDrop, abilKey)
+                end
+                UIDropDownMenu_AddButton(info, level)
+            end
+        end)
+        UIDropDownMenu_SetText(frame.abilityDrop, "Ninguno")
+
+        local typeLabel = frame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        typeLabel:SetPoint("TOPLEFT", 18, -98)
+        typeLabel:SetText("Tipo de daño")
+
+        frame.damageDrop = CreateFrame("Frame", nil, frame, "UIDropDownMenuTemplate")
+        UIDropDownMenu_SetWidth(frame.damageDrop, 120)
+        frame.damageDrop:SetPoint("TOPLEFT", 112, -80)
+        frame.damageKey = "slashing"
+
+        UIDropDownMenu_Initialize(frame.damageDrop, function(_, level)
+            if level ~= 1 then return end
+            local list = HarfordDamageTypes and HarfordDamageTypes.GetOrderedList
+                and HarfordDamageTypes.GetOrderedList()
+                or {}
+            for _, opt in ipairs(list) do
+                local damageKey = opt.key
+                local damageLabel = opt.label
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = damageLabel
+                info.checked = frame.damageKey == damageKey
+                info.func = function()
+                    frame.damageKey = damageKey
+                    UIDropDownMenu_SetText(frame.damageDrop, damageLabel)
+                end
+                UIDropDownMenu_AddButton(info, level)
+            end
+        end)
+        UIDropDownMenu_SetText(frame.damageDrop,
+            HarfordDamageTypes and HarfordDamageTypes.GetLabel and HarfordDamageTypes.GetLabel("slashing") or "Cortante")
+
+        MakeButton(frame, "Lanzar", 112, 22, 94, -122, ApplyCustomDamage)
+
+        HarfordDnDStore.customDamageFrame = frame
+        return frame
+    end
+
+    HarfordDnDStore.OpenCustomDamageFrame = function()
+        local frame = EnsureCustomDamageFrame()
+        if F and F.GetFrameLevel then
+            frame:SetFrameLevel(F:GetFrameLevel() + 200)
+        end
+        if frame.title then
+            frame.title:SetText("Daño")
+        end
+        frame:Show()
+        frame:Raise()
+        if frame.diceBox then frame.diceBox:SetFocus() end
+    end
+end
+
+local spellAttackButton = MakeButton(SEC_ATK, "Ataque Conjuro", 110, 22, 266, -122, function()
     DoSpellAttack()
 end)
 
@@ -2420,9 +2456,26 @@ HarfordDnDInitLabel, HarfordDnDInitBox, HarfordDnDSetInitBoxFromARC = MakeSigned
     SEC_ATK, "Mod Ini:", -240, -146, "ModIniciativa", 0
 )
 
-MakeButton(SEC_ATK, "Iniciativa", 110, 22, 266, -150, function()
-    DoRoll("Iniciativa", GetAbilityMod("Destreza"), HarfordDnDGetInitiativeMod())
+local initiativeButton = MakeButton(SEC_ATK, "Iniciativa", 110, 22, 266, -150, function()
+    DoRoll("Iniciativa", HarfordDnDCalc.GetAbilityMod("Destreza"), HarfordDnDGetInitiativeMod())
 end)
+
+HarfordDnDStore.playerAttackControls = {
+    weaponInfoText = weaponInfoText,
+    weaponDrop = weaponDrop,
+    versBtn = versBtn,
+    dmgInfoText = dmgInfoText,
+    offhandCheckbox = HarfordDnDStore.offhandCheckbox,
+    offhandCheckboxLabel = HarfordDnDStore.offhandCheckboxLabel,
+    modArmaLabel = modArmaLabel,
+    modArmaBox = modArmaBox,
+    initLabel = HarfordDnDInitLabel,
+    initBox = HarfordDnDInitBox,
+    weaponAttackButton = weaponAttackButton,
+    weaponDamageButton = weaponDamageButton,
+    spellAttackButton = spellAttackButton,
+    initiativeButton = initiativeButton,
+}
 
 -- ─── Tracker de movimiento ──────────────────────────────────────────────────
 do
@@ -2434,12 +2487,15 @@ do
     local _lastX, _lastY, _lastZ
     local _elapsed     = 0
 
-    local movBtn = MakeButton(SEC_ATK, "Movimiento", 110, 22, 266, -178, function() end)
-    local movLabel = SEC_ATK:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    movLabel:SetPoint("TOPLEFT", SEC_ATK, "TOPLEFT", 266, -202)
-    movLabel:SetSize(110, 14)
-    movLabel:SetJustifyH("CENTER")
-    movLabel:SetText("")
+	local movLabel = SEC_ATK:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	movLabel:SetPoint("TOPLEFT", SEC_ATK, "TOPLEFT", 166, -134)
+	movLabel:SetSize(90, 14)
+	movLabel:SetJustifyH("CENTER")
+	movLabel:SetText("")
+
+	local movBtn = MakeButton(SEC_ATK, "Movimiento", 90, 22, 166, -150, function() end)
+    HarfordDnDStore.playerAttackControls.movementLabel = movLabel
+    HarfordDnDStore.playerAttackControls.movementButton = movBtn
 
     -- Detecta qué API de posición está disponible en este cliente
     local function GetPos()
@@ -2510,14 +2566,14 @@ end
 
 DoSpellAttack = function()
     local abil = GetSpellAbilityKey()
-    local base = GetAbilityMod(abil)
-    local prof = GetPB()
-    local misc = GetMiscBonus()
+    local base = HarfordDnDCalc.GetAbilityMod(abil)
+    local prof = HarfordDnDCalc.GetSpellPB()
+    local misc = HarfordDnDCalc.GetMiscBonus()
 
-    local mode = GetMode()
-    local _, a, b = RollD20(mode)
-    local chosen, ra, rb = RollTextWithMode(mode, a, b)
-    local critTag = GetCritTag(mode, a, b)
+    local mode = HarfordDnDCalc.GetMode()
+    local _, a, b = HarfordDnDCalc.RollD20(mode)
+    local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
+    local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
     local totalBonus = base + prof + misc
     local total = chosen + totalBonus
 
@@ -2546,6 +2602,385 @@ DoSpellAttack = function()
     ConsumeMode()
 end
 
+-- Panel de acciones externas para contextos de ficha (por ejemplo NPC desde Admin).
+-- La extension proporciona los datos ya parseados; este modulo solo renderiza y tira.
+-- IIFE para no consumir locales del chunk principal (límite 200 Lua 5.1).
+;(function()
+    local panel = CreateFrame("Frame", nil, SEC_ATK)
+    panel:SetPoint("TOPLEFT", SEC_ATK, "TOPLEFT", 4, -29)
+    panel:SetPoint("BOTTOMRIGHT", SEC_ATK, "BOTTOMRIGHT", -4, 4)
+    panel:SetFrameLevel(SEC_ATK:GetFrameLevel() + 100)
+    panel:EnableMouse(true)
+    if panel.SetPropagateMouseClicks then panel:SetPropagateMouseClicks(false) end
+    panel:SetScript("OnMouseDown", function() end)
+    panel:Hide()
+
+    local bg = panel:CreateTexture(nil, "BACKGROUND")
+    bg:SetAllPoints()
+    bg:SetTexture(TEX_SEC_ATK)
+    bg:SetAlpha(0.98)
+
+    local label = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    label:SetPoint("TOPLEFT", 9, -11)
+    label:SetText("Accion:")
+
+    local drop = CreateFrame("Frame", nil, panel, "UIDropDownMenuTemplate")
+    UIDropDownMenu_SetWidth(drop, 155)
+    drop:SetPoint("TOPLEFT", 47, 4)
+
+    -- Dropdown de emote de animación NPC (solo visible en modo DM).
+    -- Lista canónica en HarfordEmotes; aquí solo se consume.
+    local EMOTE_OPTIONS = (HarfordEmotes and HarfordEmotes.GetOrderedList()) or {}
+    local selectedEmoteIndex = 1
+
+    local emoteDrop = CreateFrame("Frame", nil, panel, "UIDropDownMenuTemplate")
+    UIDropDownMenu_SetWidth(emoteDrop, 104)
+    emoteDrop:SetPoint("TOPLEFT", 47, -86)
+
+    UIDropDownMenu_Initialize(emoteDrop, function(_, level)
+        if level ~= 1 then return end
+        for i, opt in ipairs(EMOTE_OPTIONS) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text    = opt.label
+            info.checked = (i == selectedEmoteIndex)
+            info.func    = function()
+                selectedEmoteIndex = i
+                UIDropDownMenu_SetText(emoteDrop, opt.label)
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end)
+    UIDropDownMenu_SetText(emoteDrop, (EMOTE_OPTIONS[1] and EMOTE_OPTIONS[1].label) or "Ninguno")
+
+    -- Dropdown "Modo combate": postura persistente del NPC ficha vía npc emote
+    -- (Stand 26 + 4254..4337). Empieza en "Stand"; al seleccionar ejecuta el emote.
+    local COMBAT_OPTIONS = (HarfordEmotes and HarfordEmotes.GetCombatList()) or {}
+    local selectedCombatIndex = 1
+
+    local combatDrop = CreateFrame("Frame", nil, panel, "UIDropDownMenuTemplate")
+    UIDropDownMenu_SetWidth(combatDrop, 104)
+    combatDrop:SetPoint("TOPLEFT", 173, -86)
+
+    UIDropDownMenu_Initialize(combatDrop, function(_, level)
+        if level ~= 1 then return end
+        for i, opt in ipairs(COMBAT_OPTIONS) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text    = opt.label
+            info.checked = (i == selectedCombatIndex)
+            info.func    = function()
+                selectedCombatIndex = i
+                UIDropDownMenu_SetText(combatDrop, opt.label)
+                -- Todas las posturas del dropdown de combate van en bucle (repeat).
+                -- En NPC se usa npcId (Stand = 0, salir de combate); el resto = id.
+                if opt.npcId and HarfordServerActions and HarfordServerActions.SetNpcEmoteRepeat then
+                    HarfordServerActions.SetNpcEmoteRepeat(opt.npcId)
+                end
+            end
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end)
+    UIDropDownMenu_SetText(combatDrop, (COMBAT_OPTIONS[1] and COMBAT_OPTIONS[1].label) or "Stand")
+
+    local function MakeDropLabel(text, centerX)
+        local holder = CreateFrame("Frame", nil, panel)
+        holder:SetFrameLevel(panel:GetFrameLevel() + 40)
+        holder:SetPoint("TOPLEFT", panel, "TOPLEFT", centerX - 58, -72)
+        holder:SetSize(116, 14)
+        local fs = holder:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        fs:SetAllPoints()
+        fs:SetJustifyH("CENTER")
+        fs:SetJustifyV("MIDDLE")
+        fs:SetText(text)
+        return holder, fs
+    end
+
+    MakeDropLabel("Anim Ataque", 128)
+    MakeDropLabel("Modo Combate", 254)
+
+    -- Solo se muestra el resumen de tirada (bonus de ataque + daño); la
+    -- descripcion completa del estado TRP3 no se renderiza en la ficha NPC.
+    local parsedText = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    parsedText:SetPoint("TOPLEFT", 14, -56)
+    parsedText:SetPoint("RIGHT", panel, "RIGHT", -14, 0)
+    parsedText:SetJustifyH("LEFT")
+    parsedText:SetWordWrap(true)
+
+    local selectedIndex = 1
+    local selectedAction
+    local attackButton
+    local damageButton
+    local pendingCriticalAction
+
+    local function GetAction(index)
+        return SheetContext.actions and SheetContext.actions[index] or nil
+    end
+
+    -- Una accion es "de ataque utilizable" si el NPC puede tirar ataque o daño.
+    local function IsAttackAction(action)
+        return action ~= nil
+            and (action.attackBonus ~= nil or action.damageDice ~= nil)
+    end
+
+    local function GetActionChatName(action)
+        if not action then return "Accion" end
+        return action.hyperlink or action.title or "Accion"
+    end
+
+    local function RollActionDamage(action, maximizeDice)
+        if not action or not action.damageDice then return nil end
+        local components = action.damageComponents
+        if type(components) ~= "table" or #components == 0 then
+            components = {
+                {
+                    damageDice = action.damageDice,
+                    damageBonus = action.damageBonus,
+                    damageType = action.damageType,
+                },
+            }
+        end
+        local total, rolledComponents, details = 0, {}, {}
+        for _, component in ipairs(components) do
+            local n, sides = HarfordDnDWeapons.ParseDice(component.damageDice)
+            if n and sides then
+                local values, componentTotal = {}, tonumber(component.damageBonus) or 0
+                for i = 1, n do
+                    local value = maximizeDice and sides or HarfordDnDCalc.RollDie(sides)
+                    values[#values + 1] = value
+                    componentTotal = componentTotal + value
+                end
+                -- Defensas del objetivo (solo NPC): mitiga este componente y
+                -- añade el marcador coloreado R/V/I junto al tipo de daño.
+                local appliedTotal, marker = componentTotal, ""
+                if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+                    local applied, _status, mk = HarfordDamageMitigation.ForTarget(
+                        "target", component.damageType, componentTotal)
+                    appliedTotal, marker = applied, mk
+                end
+                local suffix = component.damageBonus and component.damageBonus ~= 0
+                    and fmtSigned(component.damageBonus) or ""
+                local typeSuffix = component.damageType and (" " .. component.damageType) or ""
+                if marker ~= "" then typeSuffix = typeSuffix .. " " .. marker end
+                details[#details + 1] = component.damageDice .. ": "
+                    .. table.concat(values, "+") .. suffix .. typeSuffix
+                rolledComponents[#rolledComponents + 1] = {
+                    total = appliedTotal,
+                    damageType = component.damageType,
+                }
+                total = total + appliedTotal
+            end
+        end
+        if #rolledComponents == 0 then return nil end
+        BroadcastRoll({
+            type = "damage",
+            label = "Daño " .. tostring(action.title or "Accion"),
+            total = total,
+            dice = table.concat(details, " + "),
+            modifiers = "",
+            critical = maximizeDice and "CRÍTICO" or "",
+            mode = "",
+        })
+        return total, rolledComponents
+    end
+
+    local function RefreshSelectedAction()
+        selectedAction = GetAction(selectedIndex)
+        if not selectedAction then
+            UIDropDownMenu_SetText(drop, "Sin ataques")
+            parsedText:SetText("No se detectaron habilidades de ataque del NPC.")
+            attackButton:Disable()
+            damageButton:Disable()
+            return
+        end
+
+        UIDropDownMenu_SetText(drop, selectedAction.title or ("Estado " .. tostring(selectedIndex)))
+
+        local summary = {}
+        if selectedAction.attackBonus ~= nil then
+            summary[#summary + 1] = "Ataque " .. fmtSigned(selectedAction.attackBonus)
+        end
+        if selectedAction.damageDice then
+            local damageParts = {}
+            local components = selectedAction.damageComponents
+            if type(components) ~= "table" or #components == 0 then
+                components = { selectedAction }
+            end
+            for _, component in ipairs(components) do
+                local bonus = component.damageBonus and component.damageBonus ~= 0
+                    and fmtSigned(component.damageBonus) or ""
+                damageParts[#damageParts + 1] = component.damageDice .. bonus
+                    .. (component.damageType and (" " .. component.damageType) or "")
+            end
+            summary[#summary + 1] = "Daño " .. table.concat(damageParts, " + ")
+        end
+        parsedText:SetText(#summary > 0 and table.concat(summary, "   ") or "No se pudo interpretar una tirada automatica.")
+        local canAttack = selectedAction.attackBonus ~= nil
+        local canDamage = selectedAction.damageDice ~= nil
+        if canAttack and SheetContext.canAttack then
+            canAttack = SheetContext.canAttack() == true
+        end
+        if canDamage and SheetContext.canDamage then
+            canDamage = SheetContext.canDamage() == true
+        end
+        attackButton:SetEnabled(canAttack)
+        damageButton:SetEnabled(canDamage)
+    end
+
+    UIDropDownMenu_Initialize(drop, function(_, level)
+        if level ~= 1 then return end
+        -- Solo se ofrecen las habilidades detectadas como ataque utilizable.
+        for i, action in ipairs(SheetContext.actions or {}) do
+            if IsAttackAction(action) then
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = action.title or ("Estado " .. tostring(i))
+                info.checked = (i == selectedIndex)
+                info.func = function()
+                    selectedIndex = i
+                    RefreshSelectedAction()
+                end
+                UIDropDownMenu_AddButton(info, level)
+            end
+        end
+    end)
+
+    attackButton = MakeButton(panel, "Atacar", 112, 22, 72, -122, function()
+        if selectedAction and selectedAction.attackBonus ~= nil then
+            -- Admin valida que el NPC de la ficha siga siendo el target exacto.
+            local critTag = DoRoll("Ataque " .. GetActionChatName(selectedAction), selectedAction.attackBonus, 0)
+            pendingCriticalAction = critTag == "CRÍTICO" and selectedAction or nil
+            -- Animacion: se dispara DESPUES del roll para poder elegir el emote correcto.
+            -- Critico → critEmoteId si existe, fallback al emote del dropdown.
+            -- Normal  → emote del dropdown.
+            local emoteOpt = EMOTE_OPTIONS[selectedEmoteIndex]
+            local normalId = emoteOpt and emoteOpt.id
+            local isCrit   = critTag == "CRÍTICO"
+            local eid = (isCrit and selectedAction.critEmoteId) or normalId
+            if eid then
+                if SheetContext.onAttackAnimation then
+                    SheetContext.onAttackAnimation(eid)
+                elseif HarfordServerActions and HarfordServerActions.SetNpcEmote then
+                    HarfordServerActions.SetNpcEmote(eid)
+                end
+            end
+        end
+    end)
+
+    damageButton = MakeButton(panel, "Daño", 112, 22, 198, -122, function()
+        local isCritical = pendingCriticalAction ~= nil and pendingCriticalAction == selectedAction
+        pendingCriticalAction = nil
+        local total, rolledComponents = RollActionDamage(selectedAction, isCritical)
+        if total and total > 0 and SheetContext.onDamageRolled
+            and UnitExists and UnitExists("target")
+            and not (UnitIsPlayer and UnitIsPlayer("target")) then
+            SheetContext.onDamageRolled(total, selectedAction, rolledComponents, isCritical)
+        end
+        -- La animacion del tipo de ataque pertenece solo a la tirada de "Atacar".
+        -- "Daño" no debe reproducir ningun emote de ataque del NPC: solo aplica
+        -- el dano (la reaccion de herida la gestiona SetNpcHealthDelta sobre la victima).
+
+        -- Si el target es un jugador: bajar HP y animaciones según el flag del target
+        if total and total > 0
+            and UnitExists and UnitExists("target")
+            and UnitIsPlayer and UnitIsPlayer("target") then
+
+            local targetName = UnitName("target")
+            local shortName  = Ambiguate and Ambiguate(targetName, "short") or targetName
+
+            -- Flag de animaciones del TARGET (nil = desconocido → tratar como activo)
+            local targetAnims = HarfordDnDResources.AnimFlagCache[shortName]
+            if targetAnims == nil then targetAnims = true end
+
+            -- Animación de impacto (mod anim) solo si el target quiere animaciones
+            if targetAnims and HarfordServerActions and HarfordServerActions.ModAnim then
+                HarfordServerActions.ModAnim(33)
+            end
+
+            -- Aplicar daño: temp_health primero, luego health
+            local cache = shortName and HarfordDnDResources.RemoteCache[shortName]
+            if cache then
+                local tempCur   = math.max(0, tonumber(cache[HarfordDnDResources.CurKey("temp_health")]) or 0)
+                local healthCur = math.max(0, tonumber(cache[HarfordDnDResources.CurKey("health")])      or 0)
+                local tempDmg   = math.min(total, tempCur)
+                local healthDmg = total - tempDmg
+
+                if tempDmg > 0 then
+                    HarfordSync.SendResourceAdjust(ADDON_PREFIX, "temp_health", -tempDmg, targetName)
+                end
+                if healthDmg > 0 then
+                    HarfordSync.SendResourceAdjust(ADDON_PREFIX, "health", -healthDmg, targetName)
+                end
+                -- El cliente del jugador detecta hp=0 en AdjustResourceCurrent y aplica
+                -- su propia aura de muerte según su flag de animaciones. El DM no la envía.
+            end
+        end
+    end)
+
+    local function SetPlayerControlShown(control, shown)
+        if not control then return end
+
+        if shown then
+            if control.Show then control:Show() end
+            if control._harfordNpcModeWasEnabled ~= nil and control.Enable and control.Disable then
+                if control._harfordNpcModeWasEnabled then
+                    control:Enable()
+                else
+                    control:Disable()
+                end
+                control._harfordNpcModeWasEnabled = nil
+            end
+            return
+        end
+
+        if control._harfordNpcModeWasEnabled == nil and control.IsEnabled then
+            control._harfordNpcModeWasEnabled = control:IsEnabled() and true or false
+        end
+        if control.Disable then control:Disable() end
+        if control.Hide then control:Hide() end
+    end
+
+    RefreshSheetActionPanel = function(resetSelection)
+        local inNpcMode = SheetContext.showActionPanel
+        for _, control in pairs(HarfordDnDStore.playerAttackControls or {}) do
+            SetPlayerControlShown(control, not inNpcMode)
+        end
+        -- El checkbox de animaciones no tiene sentido en la ficha NPC
+        local chk   = HarfordDnDStore.animsCheckbox
+        local label = HarfordDnDStore.animsCheckboxLabel
+        if chk   then chk:SetShown(not inNpcMode) end
+        if label then label:SetShown(not inNpcMode) end
+        -- El botón de modo combate del jugador es exclusivo del modo jugador.
+        local combatBtn = HarfordDnDStore.combatModeButton
+        if combatBtn then
+            combatBtn:SetShown((not inNpcMode) and HarfordDnDStore.AreAnimationsEnabled())
+        end
+        if inNpcMode and HarfordDnDStore.customDamageFrame then
+            HarfordDnDStore.customDamageFrame:Hide()
+        end
+
+        if not inNpcMode then
+            if HarfordDnDStore.RefreshWeaponDamageButton then
+                HarfordDnDStore.RefreshWeaponDamageButton()
+            end
+            panel:Hide()
+            return
+        end
+        if resetSelection ~= false then
+            -- Por defecto, el ultimo ataque utilizable: los ataques principales
+            -- suelen estar al final de la lista de estados TRP3.
+            local actions = SheetContext.actions or {}
+            selectedIndex = 1
+            for i = #actions, 1, -1 do
+                if IsAttackAction(actions[i]) then
+                    selectedIndex = i
+                    break
+                end
+            end
+        end
+        panel:Show()
+        panel:Raise()
+        RefreshSelectedAction()
+    end
+end)()
+
 local scAtkText = SEC_TOP:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 scAtkText:SetPoint("TOPRIGHT", -6, -52)
 scAtkText:SetJustifyH("RIGHT")
@@ -2573,8 +3008,16 @@ MakeButton(SEC_TOP, "Recursos", 96, 22, 286, -6, function()
     end
 end)
 
+-- El titulo de la ficha solo cambia al representar un contexto NPC externo.
+local function RefreshSheetTitle()
+    if not FrameTitle then return end
+    if SheetContext.active and SheetContext.kind == "npc" then return end
+    FrameTitle:SetText("Harford DnD 5\194\170 - Ficha")
+    FrameTitle:SetTextColor(1, 0.82, 0)
+end
+
 RefreshTopInfo = function()
-    local mode = GetMode()
+    local mode = HarfordDnDCalc.GetMode()
     local modeName
     if mode == "adv" then
         modeName = _modoTiradaSingleUse and "Ventaja" or "Ventaja Perm."
@@ -2585,227 +3028,414 @@ RefreshTopInfo = function()
     end
     modeLabel:SetText("Modo activo: " .. modeName)
 
-    local pb = GetPB()
-    pbText:SetText("Bonus competencia: " .. GREEN .. fmtSigned(pb) .. ENDCLR)
+    local spellPB = HarfordDnDCalc.GetSpellPB()
+    pbText:SetText("Bonus competencia: " .. GREEN .. fmtSigned(spellPB) .. ENDCLR)
 
     local abil = GetSpellAbilityKey()
-    local m = GetAbilityMod(abil)
+    local m = HarfordDnDCalc.GetAbilityMod(abil)
     local short = ""
-    for _, a in ipairs(ABIL) do if a.key == abil then short = a.short break end end
+    for _, a in ipairs(HarfordDnDData.ABIL) do if a.key == abil then short = a.short break end end
 
     scModLabel:SetText("Mod Conjuro (" .. short .. "): " .. ColorSigned(m))
-    scAtkText:SetText("Ataque Conjuro: " .. GREEN .. fmtSigned(pb + m) .. ENDCLR)
-    dcText:SetText(GREEN .. tostring(8 + pb + m) .. ENDCLR)
+    scAtkText:SetText("Ataque Conjuro: " .. GREEN .. fmtSigned(spellPB + m) .. ENDCLR)
+    dcText:SetText(GREEN .. tostring(8 + spellPB + m) .. ENDCLR)
 
     SyncSpellDrop()
 end
 
 local abiKeys, savKeys = {}, {}
 local Layout3Col
+local RefreshSkillLayout
 
-local function MeasureButtonTextWidth(btn)
-    local fs = btn and btn.GetFontString and btn:GetFontString()
-    if not fs then return 0 end
-    return fs:GetStringWidth() or 0
-end
+-- IIFE: los locales de creación de botones de atributos, salvaciones y habilidades
+-- viven en su propio scope de función para no consumir el cupo de 200 del chunk.
+-- Layout3Col y RefreshSkillLayout se asignan a upvalues del chunk declarados arriba.
+;(function()
+    local function MeasureButtonTextWidth(btn)
+        local fs = btn and btn.GetFontString and btn:GetFontString()
+        if not fs then return 0 end
+        return fs:GetStringWidth() or 0
+    end
 
-local function Clamp(v, lo, hi)
-    if v < lo then return lo end
-    if v > hi then return hi end
-    return v
-end
+    local function Clamp(v, lo, hi)
+        if v < lo then return lo end
+        if v > hi then return hi end
+        return v
+    end
 
-Layout3Col = function(section, buttons, keys, topY)
-    local BTN_H = 22
-    local PAD_X = 10
-    local COL_GAP = 16
-    local ROW_GAP = 4
-
-    local sw = (section and section.GetWidth and section:GetWidth()) or 412
-    local avail = sw - PAD_X * 2 - 10
-    local cap = math.floor((avail - 2 * COL_GAP) / 3)
-    local minW = 110
-
-    local maxW = {minW, minW, minW}
-    for i, k in ipairs(keys) do
-        local b = buttons[k]
-        if b then
-            local w = MeasureButtonTextWidth(b) + 28
-            local col = ((i - 1) % 3) + 1
-            if w > maxW[col] then
-                maxW[col] = w
+    Layout3Col = function(section, buttons, keys, topY)
+        local BH = 22
+        local PX = 10
+        local CG = 16
+        local RG = 4
+        local sw = (section and section.GetWidth and section:GetWidth()) or 412
+        local avail = sw - PX * 2 - 10
+        local cap = math.floor((avail - 2 * CG) / 3)
+        local minW = 110
+        local maxW = {minW, minW, minW}
+        for i, k in ipairs(keys) do
+            local b = buttons[k]
+            if b then
+                local w = MeasureButtonTextWidth(b) + 28
+                local col = ((i - 1) % 3) + 1
+                if w > maxW[col] then maxW[col] = w end
+            end
+        end
+        for c = 1, 3 do
+            if maxW[c] < minW then maxW[c] = minW end
+            if maxW[c] > cap then maxW[c] = cap end
+        end
+        local totalW = maxW[1] + maxW[2] + maxW[3] + 2 * CG
+        if totalW > avail then
+            local over = totalW - avail
+            for _ = 1, 3 do
+                local biggest = 1
+                if maxW[2] > maxW[biggest] then biggest = 2 end
+                if maxW[3] > maxW[biggest] then biggest = 3 end
+                local can = maxW[biggest] - minW
+                if can <= 0 then break end
+                local cut = math.min(over, can)
+                maxW[biggest] = maxW[biggest] - cut
+                over = over - cut
+                if over <= 0 then break end
+            end
+        end
+        local totalContentW = maxW[1] + maxW[2] + maxW[3] + 2 * CG
+        local startX = math.floor((sw - totalContentW) / 2)
+        local x1 = startX
+        local x2 = x1 + maxW[1] + CG
+        local x3 = x2 + maxW[2] + CG
+        for i, k in ipairs(keys) do
+            local b = buttons[k]
+            if b then
+                local col = (i - 1) % 3
+                local row = math.floor((i - 1) / 3)
+                local x = (col == 0 and x1) or (col == 1 and x2) or x3
+                local w = (col == 0 and maxW[1]) or (col == 1 and maxW[2]) or maxW[3]
+                local y = -(topY + row * (BH + RG))
+                b:ClearAllPoints()
+                b:SetPoint("TOPLEFT", x, y)
+                b:SetSize(w, BH)
             end
         end
     end
 
-    for c = 1, 3 do
-        if maxW[c] < minW then maxW[c] = minW end
-        if maxW[c] > cap then maxW[c] = cap end
+    -- Botones de características
+    for i, a in ipairs(HarfordDnDData.ABIL) do
+        local col = ((i-1) % 3)
+        local row = math.floor((i-1)/3)
+        local b = MakeButton(SEC_ABI, "…", 140, 22, 10 + col*160, -36 - row*26, function()
+            DoRoll(a.short, HarfordDnDCalc.GetAbilityMod(a.key), 0)
+        end)
+        AbilityButtons[a.key] = b
+        abiKeys[#abiKeys+1] = a.key
     end
 
-    local totalW = maxW[1] + maxW[2] + maxW[3] + 2 * COL_GAP
-    if totalW > avail then
-        local over = totalW - avail
-        for _ = 1, 3 do
-            local biggest = 1
-            if maxW[2] > maxW[biggest] then biggest = 2 end
-            if maxW[3] > maxW[biggest] then biggest = 3 end
-            local can = maxW[biggest] - minW
-            if can <= 0 then break end
-            local cut = math.min(over, can)
-            maxW[biggest] = maxW[biggest] - cut
-            over = over - cut
-            if over <= 0 then break end
+    -- Botones de tiradas de salvación
+    for i, a in ipairs(HarfordDnDData.ABIL) do
+        local col = ((i-1) % 3)
+        local row = math.floor((i-1)/3)
+        local b = MakeButton(SEC_SAV, "…", 140, 22, 10 + col*160, -36 - row*26, function()
+            local base, prof = HarfordDnDCalc.GetSaveRollBonuses(a.key)
+            DoRoll("Salv " .. a.short, base, prof)
+        end)
+        SaveButtons[a.key] = b
+        savKeys[#savKeys+1] = a.key
+    end
+
+    -- Sección de habilidades con scroll
+    local scroll = CreateFrame("ScrollFrame", nil, SEC_SKL, "UIPanelScrollFrameTemplate")
+    scroll:SetPoint("TOPLEFT", 6, -32)
+    scroll:SetPoint("BOTTOMRIGHT", -28, 6)
+
+    local scrollChild = CreateFrame("Frame", nil, scroll)
+    scrollChild:SetSize(1, 1)
+    scroll:SetScrollChild(scrollChild)
+
+    local BTN_H = 22
+    local PAD_X, PAD_Y = 8, 6
+    local GAP_Y, COL_GAP = 4, 16
+
+    RefreshSkillLayout = function()
+        local sw = (scroll and scroll.GetWidth and scroll:GetWidth())
+            or ((SEC_SKL and SEC_SKL.GetWidth and SEC_SKL:GetWidth()) or 412) - 34
+        local avail = sw - PAD_X * 2
+        local cap = math.floor((avail - COL_GAP) / 2)
+        local maxW1, maxW2 = 160, 160
+        for i, s in ipairs(HarfordDnDData.SKILLS) do
+            local b = SkillButtons[s.id]
+            if b then
+                local w = MeasureButtonTextWidth(b) + 28
+                if ((i-1) % 2) == 0 then
+                    if w > maxW1 then maxW1 = w end
+                else
+                    if w > maxW2 then maxW2 = w end
+                end
+            end
+        end
+        maxW1 = Clamp(maxW1, 160, cap)
+        maxW2 = Clamp(maxW2, 160, cap)
+        if (maxW1 + COL_GAP + maxW2) > avail then
+            local over = (maxW1 + COL_GAP + maxW2) - avail
+            if maxW1 >= maxW2 then
+                maxW1 = Clamp(maxW1 - over, 160, cap)
+            else
+                maxW2 = Clamp(maxW2 - over, 160, cap)
+            end
+        end
+        for i, s in ipairs(HarfordDnDData.SKILLS) do
+            local b = SkillButtons[s.id]
+            if b then
+                local col = ((i-1) % 2)
+                local row = math.floor((i-1) / 2)
+                local w = (col == 0) and maxW1 or maxW2
+                local x = PAD_X + (col == 0 and 0 or (maxW1 + COL_GAP))
+                local y = -(PAD_Y + row * (BTN_H + GAP_Y))
+                b:ClearAllPoints()
+                b:SetPoint("TOPLEFT", x, y)
+                b:SetSize(w, BTN_H)
+            end
+        end
+        scrollChild:SetWidth(PAD_X + maxW1 + COL_GAP + maxW2 + 6)
+    end
+
+    for i, s in ipairs(HarfordDnDData.SKILLS) do
+        local col = ((i-1) % 2)
+        local row = math.floor((i-1) / 2)
+        local x = PAD_X + col * (200 + COL_GAP)
+        local y = -(PAD_Y + row * (BTN_H + GAP_Y))
+        local b = MakeButton(scrollChild, "…", 200, BTN_H, x, y, function()
+            local base, prof = HarfordDnDCalc.GetSkillRollBonuses(s)
+            DoRoll(s.name, base, prof)
+        end)
+        SkillButtons[s.id] = b
+    end
+
+    scrollChild:SetHeight(PAD_Y + math.ceil(#HarfordDnDData.SKILLS / 2) * (BTN_H + GAP_Y) + 8)
+end)()
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- SISTEMA MORIBUNDO (Salvación Muerte)
+-- Cuando salud = 0 en modo jugador (no contexto NPC), todos los botones de la
+-- ficha se desactivan salvo Salv CON, que pasa a ser "Salv Muerte". El jugador
+-- tira una salvacion de CON normal, pero contabiliza fallos/exitos de muerte:
+--   Éxito (≥10): +1  |  Crítico (20): +2
+--   Fallo (<10): -1  |  Pifia (1): -2
+--   Alcanzar +3 → recupera 1 PV y sale del estado.
+--   Alcanzar -3 → incapacitado, el botón se deshabilita.
+-- ─────────────────────────────────────────────────────────────────────────────
+do
+    -- Estado persistido en HarfordDnDStore para no gastar locales de file-scope.
+    HarfordDnDStore.deathSaveActive    = false
+    HarfordDnDStore.deathSaveSuccesses = 0
+    HarfordDnDStore.deathSaveFailures  = 0
+
+    -- Label de contador en SEC_SAV (oculto por defecto).
+    local _dsLabel = SEC_SAV:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    _dsLabel:SetPoint("BOTTOM", SEC_SAV, "BOTTOM", 0, 10)
+    _dsLabel:SetJustifyH("CENTER")
+    _dsLabel:Hide()
+
+    local function FormatDeathCounter()
+        local failures = HarfordDnDStore.deathSaveFailures or 0
+        local successes = HarfordDnDStore.deathSaveSuccesses or 0
+        return "|cffff3333" .. failures .. "|r|cffd9d9d9|||r|cff00cc00" .. successes .. "|r"
+    end
+
+    local function UpdateDyingUI()
+        local f = HarfordDnDStore.deathSaveFailures  or 0
+        _dsLabel:SetText(FormatDeathCounter())
+        _dsLabel:Show()
+
+        local conBtn = SaveButtons["Constitucion"]
+        if conBtn then
+            -- RefreshButtons/Layout3Col puede restaurar su celda original tras entrar en moribundo.
+            conBtn:ClearAllPoints()
+            conBtn:SetPoint("TOP", SEC_SAV, "TOP", 0, -36)
+            if f >= 3 then
+                conBtn:SetText("Incapacitado")
+                conBtn:Disable()
+            else
+                conBtn:SetText("Salv Muerte")
+                conBtn:Enable()
+            end
         end
     end
 
-    local totalContentW = maxW[1] + maxW[2] + maxW[3] + 2 * COL_GAP
-    local startX = math.floor((sw - totalContentW) / 2)
+    -- Solo afecta widgets, no toca HarfordDnDStore.deathSave*: idempotente.
+    -- Usado tanto al entrar en estado moribundo como al volver de modo NPC
+    -- mientras el jugador sigue muerto.
+    local function ApplyDyingVisualState()
+        ShowDnDTab("BASE")
+        if TabButtons["ATK"] then TabButtons["ATK"]:Disable() end
+        if TabButtons["SKL"] then TabButtons["SKL"]:Disable() end
 
-    local x1 = startX
-    local x2 = x1 + maxW[1] + COL_GAP
-    local x3 = x2 + maxW[2] + COL_GAP
+        for _, b in pairs(AbilityButtons) do b:Disable() end
 
-    for i, k in ipairs(keys) do
-        local b = buttons[k]
-        if b then
-            local col = (i - 1) % 3
-            local row = math.floor((i - 1) / 3)
-            local x = (col == 0 and x1) or (col == 1 and x2) or x3
-            local w = (col == 0 and maxW[1]) or (col == 1 and maxW[2]) or maxW[3]
-            local y = -(topY + row * (BTN_H + ROW_GAP))
-            b:ClearAllPoints()
-            b:SetPoint("TOPLEFT", x, y)
-            b:SetSize(w, BTN_H)
+        for key, b in pairs(SaveButtons) do
+            if key == "Constitucion" then
+                b:ClearAllPoints()
+                b:SetPoint("TOP", SEC_SAV, "TOP", 0, -36)
+                b:Enable()
+                b:Show()
+            else
+                b:Hide()
+            end
+        end
+
+        UpdateDyingUI()
+    end
+
+    -- Restaura la UI normal sin tocar contadores. Usado al salir de moribundo
+    -- y tambien al entrar en modo NPC para "esconder" la UI de muerte temporalmente.
+    local function ClearDyingVisualState()
+        for _, b in pairs(AbilityButtons) do b:Enable() end
+        for _, b in pairs(SaveButtons) do
+            b:Show()
+            b:Enable()
+        end
+
+        local conBtn = SaveButtons["Constitucion"]
+        if conBtn then conBtn:SetText(FormatSaveButtonText("CON", "Constitucion")) end
+        if Layout3Col then Layout3Col(SEC_SAV, SaveButtons, savKeys, 36) end
+
+        ShowDnDTab(ActiveTab or "BASE")
+        _dsLabel:Hide()
+    end
+
+    local function EnterDyingState()
+        HarfordDnDStore.deathSaveActive    = true
+        HarfordDnDStore.deathSaveSuccesses = 0
+        HarfordDnDStore.deathSaveFailures  = 0
+        ApplyDyingVisualState()
+    end
+
+    local function ExitDyingState()
+        HarfordDnDStore.deathSaveActive    = false
+        HarfordDnDStore.deathSaveSuccesses = 0
+        HarfordDnDStore.deathSaveFailures  = 0
+        ClearDyingVisualState()
+    end
+
+    -- Funcion publica asignada al forward-declare: se llama al cambiar la salud
+    -- y al activar/desactivar contexto NPC (ApplySheetContext/ClearSheetContext).
+    RefreshDyingState = function()
+        local hp = GetResourceCurrent("health")
+        local dying = HarfordDnDStore.deathSaveActive
+
+        -- Modo NPC del DM: la ficha debe verse normal aunque el jugador siga
+        -- moribundo. Ocultar la UI de muerte sin resetear contadores; el estado
+        -- persistido se recupera al volver al modo jugador.
+        if SheetContext.active then
+            if dying then ClearDyingVisualState() end
+            return
+        end
+
+        if hp <= 0 and not dying then
+            EnterDyingState()
+        elseif hp <= 0 and dying then
+            -- Cubre tanto refresh post-tirada como retorno de modo NPC con HP=0.
+            ApplyDyingVisualState()
+        elseif hp > 0 and dying then
+            ExitDyingState()
         end
     end
-end
+
+    -- Tirada especial: usa los mismos bonus/modo que Salv CON, pero computa muerte.
+    local function DoDeathSave()
+        local base, prof = HarfordDnDCalc.GetSaveRollBonuses("Constitucion")
+        local misc = HarfordDnDCalc.GetMiscBonus()
+        local mode = HarfordDnDCalc.GetMode()
+        local _, a, b = HarfordDnDCalc.RollD20(mode)
+        local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
+        local total = chosen + base + prof + misc
+        local diceStr = rb and (tostring(ra) .. "/" .. tostring(rb) .. "→" .. tostring(chosen)) or tostring(chosen)
+        local bonusTxt = HarfordDnDCalc.BonusConcat(base, prof, misc)
+        local resultText
+
+        if chosen == 20 then
+            resultText = "CRÍTICO"
+            HarfordDnDStore.deathSaveSuccesses = (HarfordDnDStore.deathSaveSuccesses or 0) + 2
+        elseif chosen == 1 then
+            resultText = "PIFIA"
+            HarfordDnDStore.deathSaveFailures = (HarfordDnDStore.deathSaveFailures or 0) + 2
+        elseif total >= 10 then
+            resultText = "Éxito"
+            HarfordDnDStore.deathSaveSuccesses = (HarfordDnDStore.deathSaveSuccesses or 0) + 1
+        else
+            resultText = "Fallo"
+            HarfordDnDStore.deathSaveFailures = (HarfordDnDStore.deathSaveFailures or 0) + 1
+        end
+
+        -- El marcador acumulado distingue este resultado de una salvacion CON normal.
+        BroadcastRoll({
+            type     = "roll",
+            label    = "Salv Muerte " .. FormatDeathCounter(),
+            total    = total,
+            dice     = diceStr,
+            modifiers = bonusTxt,
+            critical = resultText,
+            mode     = (mode == "adv" and "V") or (mode == "dis" and "D") or "",
+            miscBonus = misc,
+        })
+        ConsumeMode()
+
+        local successes = HarfordDnDStore.deathSaveSuccesses or 0
+        local failures  = HarfordDnDStore.deathSaveFailures  or 0
+
+        if successes >= 3 then
+            -- AdjustResourceCurrent llamará RefreshDyingState → ExitDyingState,
+            -- y también quitará la aura de muerte si estaba activa.
+            AdjustResourceCurrent("health", 1)
+            DEFAULT_CHAT_FRAME:AddMessage(
+                "|cff00cc00[Harford]|r ¡Salvación con éxito! Recuperas 1 punto de vida."
+            )
+        elseif failures >= 3 then
+            UpdateDyingUI()  -- muestra "Incapacitado" y deshabilita el botón
+            DEFAULT_CHAT_FRAME:AddMessage(
+                "|cffff3333[Harford]|r El personaje queda incapacitado."
+            )
+        else
+            UpdateDyingUI()
+        end
+    end
+
+    -- Sobreescribir el script del botón CON para manejar el estado moribundo.
+    local conBtn = SaveButtons["Constitucion"]
+    if conBtn then
+        conBtn:SetScript("OnClick", function()
+            if HarfordDnDStore.deathSaveActive then
+                DoDeathSave()
+            else
+                local base, prof = HarfordDnDCalc.GetSaveRollBonuses("Constitucion")
+                DoRoll("Salv CON", base, prof)
+            end
+        end)
+    end
+end  -- fin bloque moribundo
 
 local function RefreshButtons()
-    for _, a in ipairs(ABIL) do
+    for _, a in ipairs(HarfordDnDData.ABIL) do
         local b = AbilityButtons[a.key]
         if b then b:SetText(FormatAbilityButtonText(a.short, a.key)) end
     end
-    for _, a in ipairs(ABIL) do
+    for _, a in ipairs(HarfordDnDData.ABIL) do
         local b = SaveButtons[a.key]
         if b then b:SetText(FormatSaveButtonText(a.short, a.key)) end
     end
-    for _, s in ipairs(SKILLS) do
+    for _, s in ipairs(HarfordDnDData.SKILLS) do
         local b = SkillButtons[s.id]
         if b then b:SetText(FormatSkillButtonText(s)) end
     end
-
     Layout3Col(SEC_ABI, AbilityButtons, abiKeys, 36)
     Layout3Col(SEC_SAV, SaveButtons, savKeys, 36)
 end
-
-local y0 = -36
-for i, a in ipairs(ABIL) do
-    local col = ((i-1) % 3)
-    local row = math.floor((i-1)/3)
-    local b = MakeButton(SEC_ABI, "…", 140, 22, 10 + col*160, y0 - row*26, function()
-        DoRoll(a.short, GetAbilityMod(a.key), 0)
-    end)
-    AbilityButtons[a.key] = b
-    abiKeys[#abiKeys+1] = a.key
-end
-
-local y1 = -36
-for i, a in ipairs(ABIL) do
-    local col = ((i-1) % 3)
-    local row = math.floor((i-1)/3)
-    local b = MakeButton(SEC_SAV, "…", 140, 22, 10 + col*160, y1 - row*26, function()
-        local base = GetAbilityMod(a.key)
-        local prof = GetSaveProf(a.key) and GetPB() or 0
-        DoRoll("Salv " .. a.short, base, prof)
-    end)
-    SaveButtons[a.key] = b
-    savKeys[#savKeys+1] = a.key
-end
-
-local scroll = CreateFrame("ScrollFrame", nil, SEC_SKL, "UIPanelScrollFrameTemplate")
-scroll:SetPoint("TOPLEFT", 6, -32)
-scroll:SetPoint("BOTTOMRIGHT", -28, 6)
-
-local scrollChild = CreateFrame("Frame", nil, scroll)
-scrollChild:SetSize(1, 1)
-scroll:SetScrollChild(scrollChild)
-
-local BTN_H = 22
-local PAD_X, PAD_Y = 8, 6
-local GAP_Y, COL_GAP = 4, 16
-
-local function RefreshSkillLayout()
-    local sw = (scroll and scroll.GetWidth and scroll:GetWidth()) or ((SEC_SKL and SEC_SKL.GetWidth and SEC_SKL:GetWidth()) or 412) - 34
-    local avail = sw - PAD_X*2
-    local cap = math.floor((avail - COL_GAP) / 2)
-
-    local maxW1, maxW2 = 160, 160
-    for i, s in ipairs(SKILLS) do
-        local b = SkillButtons[s.id]
-        if b then
-            local w = MeasureButtonTextWidth(b) + 28
-            if ((i-1) % 2) == 0 then
-                if w > maxW1 then maxW1 = w end
-            else
-                if w > maxW2 then maxW2 = w end
-            end
-        end
-    end
-
-    maxW1 = Clamp(maxW1, 160, cap)
-    maxW2 = Clamp(maxW2, 160, cap)
-
-    if (maxW1 + COL_GAP + maxW2) > avail then
-        local over = (maxW1 + COL_GAP + maxW2) - avail
-        if maxW1 >= maxW2 then
-            maxW1 = Clamp(maxW1 - over, 160, cap)
-        else
-            maxW2 = Clamp(maxW2 - over, 160, cap)
-        end
-    end
-
-    for i, s in ipairs(SKILLS) do
-        local b = SkillButtons[s.id]
-        if b then
-            local col = ((i-1) % 2)
-            local row = math.floor((i-1) / 2)
-            local w = (col == 0) and maxW1 or maxW2
-            local x = PAD_X + (col == 0 and 0 or (maxW1 + COL_GAP))
-            local y = -(PAD_Y + row * (BTN_H + GAP_Y))
-            b:ClearAllPoints()
-            b:SetPoint("TOPLEFT", x, y)
-            b:SetSize(w, BTN_H)
-        end
-    end
-
-    scrollChild:SetWidth(PAD_X + maxW1 + COL_GAP + maxW2 + 6)
-end
-
-for i, s in ipairs(SKILLS) do
-    local col = ((i-1) % 2)
-    local row = math.floor((i-1) / 2)
-    local x = PAD_X + col * (200 + COL_GAP)
-    local y = -(PAD_Y + row * (BTN_H + GAP_Y))
-
-    local b = MakeButton(scrollChild, "…", 200, BTN_H, x, y, function()
-        local base = GetAbilityMod(s.ability)
-        local prof = GetSkillProfBonus(s)
-        DoRoll(s.name, base, prof)
-    end)
-
-    SkillButtons[s.id] = b
-end
-
-local totalRows = math.ceil(#SKILLS / 2)
-local contentH = PAD_Y + totalRows * (BTN_H + GAP_Y) + 8
-scrollChild:SetHeight(contentH)
 
 RefreshButtons()
 RefreshSkillLayout()
 RefreshTopInfo()
 ShowDnDTab("BASE")
-CreateDnDMinimapButton()
+HarfordDnDMinimap.Create()
 
 _G.DND5E_ARC_LOADED = true
 _G.DND5E_ARC_API = _G.DND5E_ARC_API or {}
@@ -2825,14 +3455,17 @@ _G.DND5E_ARC_API.Refresh = function()
     if SetModArmaFromARC then SetModArmaFromARC() end
     if RefreshButtons then RefreshButtons() end
     if RefreshSkillLayout then RefreshSkillLayout() end
+    if RefreshSheetTitle then RefreshSheetTitle() end
     if RefreshTopInfo then RefreshTopInfo() end
     if SyncWeaponDrop then SyncWeaponDrop() end
     if UpdateWeaponInfoUI then UpdateWeaponInfoUI() end
     if RefreshResourceFrame and ResourceFrame and ResourceFrame:IsShown() then RefreshResourceFrame() end
     if RefreshTargetResourceFrame then RefreshTargetResourceFrame() end
     if HarfordUnitFrames and HarfordUnitFrames.Refresh then HarfordUnitFrames.Refresh() end
-    if CreateDnDMinimapButton then CreateDnDMinimapButton() end
+    if HarfordDnDMinimap and HarfordDnDMinimap.Create then HarfordDnDMinimap.Create() end
     if ShowDnDTab then ShowDnDTab(ActiveTab or "BASE") end
+    -- Tras refrescar botones y pestañas, aplicar estado moribundo si corresponde.
+    if RefreshDyingState then RefreshDyingState() end
 end
 
 _G.DND5E_ARC_API.Toggle = function()
@@ -2895,22 +3528,7 @@ function HarfordDnDAPI.BroadcastConfig(channel, target)
     return true
 end
 
-local function ExportProfileResourcesFromBank(profileName)
-    local tbl = HarfordDnDProfileBank and HarfordDnDProfileBank[profileName]
-    if type(tbl) ~= "table" then
-        return nil
-    end
-
-    local out = HarfordDnDResources.BuildPayloadFromTable(tbl, {
-        includeCurrent = false,
-        includeMax = true,
-        activityMode = "max",
-    })
-    if next(out) == nil then
-        return nil
-    end
-    return out
-end
+-- ExportProfileResourcesFromBank vive en HarfordDnDNet.
 
 function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
     characterName = tostring(characterName or "")
@@ -2941,7 +3559,7 @@ function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
         ApplyProfileTable(tbl, characterName)
         MergeProfFlagsTable(tbl, characterName)
 
-        local resourceTblLocal = ExportProfileResourcesFromBank(characterName)
+        local resourceTblLocal = HarfordDnDNet.ExportProfileResourcesFromBank(characterName)
         if resourceTblLocal then
             ApplyResourceConfigTable(resourceTblLocal, characterName)
         end
@@ -2966,7 +3584,7 @@ function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
     -- Se envía siempre aunque todos sean "0" para garantizar un estado limpio en el cliente.
     HarfordSync.SendDnDProfFlags(ADDON_PREFIX, characterName, tbl, channel, resolvedTarget)
 
-    local resourceTbl = ExportProfileResourcesFromBank(characterName)
+    local resourceTbl = HarfordDnDNet.ExportProfileResourcesFromBank(characterName)
     if resourceTbl then
         local okRes, errRes = HarfordSync.SendResourceConfig(
             ADDON_PREFIX,
@@ -3000,7 +3618,7 @@ function HarfordDnDAPI.BroadcastAll(channel, target)
 end
 
 function HarfordDnDAPI.GetCurrentResources()
-    return ExportCurrentResources()
+    return HarfordDnDNet.ExportCurrentResources()
 end
 
 function HarfordDnDAPI.GetResourcesForName(characterName)
@@ -3013,7 +3631,7 @@ function HarfordDnDAPI.GetResourcesForName(characterName)
     local myFullName = GetUnitName and GetUnitName("player", true)
 
     if characterName == myShortName or (myFullName and characterName == myFullName) then
-        return ExportCurrentResources()
+        return HarfordDnDNet.ExportCurrentResources()
     end
 
     if HarfordDnDResources and HarfordDnDResources.RemoteCache then
@@ -3042,9 +3660,11 @@ function HarfordDnDAPI.RequestResourcesForName(characterName)
         return true
     end
 
-    return RequestResourcesFromPlayer(characterName)
+    return HarfordDnDNet.RequestResourcesFromPlayer(characterName)
 end
 
+-- Puente de sync aun requerido por HarfordTurns. Cuando los controles DM de
+-- turnos migren a HarfordAdmin, esta emision remota debe moverse con ellos.
 function HarfordDnDAPI.AdjustResourceForName(characterName, resourceKey, delta)
     characterName = tostring(characterName or "")
     resourceKey = tostring(resourceKey or "")
@@ -3056,24 +3676,85 @@ function HarfordDnDAPI.AdjustResourceForName(characterName, resourceKey, delta)
     local myShortName = UnitName("player")
     local myFullName = GetUnitName and GetUnitName("player", true)
     if characterName == myShortName or (myFullName and characterName == myFullName) then
-        return SendResourceAdjustToPlayer(myFullName or myShortName, resourceKey, delta)
+        return HarfordDnDNet.SendResourceAdjustToPlayer(myFullName or myShortName, resourceKey, delta)
     end
 
-    return SendResourceAdjustToPlayer(characterName, resourceKey, delta)
+    return HarfordDnDNet.SendResourceAdjustToPlayer(characterName, resourceKey, delta)
 end
 
--- Activa/desactiva edición inline en TargetResourceFrame (modo "frame separado").
--- Solo disponible con HarfordAdmin activo.
-function HarfordDnDAPI.ToggleTargetResourceEditMode()
-    if not (HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true) then return false end
-    TargetResourceFrame.editMode = not (TargetResourceFrame.editMode or false)
-    if RefreshTargetResourceFrame then RefreshTargetResourceFrame() end
-    return TargetResourceFrame.editMode
+-- ─── API de contexto temporal de ficha ────────────────────────────────────────
+-- HarfordAdmin puede proporcionar una ficha alternativa para render/tiradas.
+-- Este core no busca NPCs, no consulta permisos DM y no crea herramientas admin.
+
+function HarfordDnDAPI.GetPlayerFrame()
+    return F
 end
 
-function HarfordDnDAPI.GetTargetResourceEditMode()
-    return TargetResourceFrame.editMode or false
+function HarfordDnDAPI.HasSheetContext()
+    return SheetContext.active
 end
+
+function HarfordDnDAPI.ApplySheetContext(context)
+    if type(context) ~= "table" then
+        return false, "contexto de ficha invalido"
+    end
+
+    SheetContext.active = true
+    SheetContext.overrides = type(context.overrides) == "table" and context.overrides or {}
+    SheetContext.rollName = context.rollName
+    SheetContext.rollColor = context.rollColor
+    SheetContext.actions = type(context.actions) == "table" and context.actions or {}
+    SheetContext.showActionPanel = context.showActionPanel == true
+    SheetContext.kind = context.kind
+    SheetContext.lockedSource = context.lockedSource == true
+    SheetContext.canAttack = type(context.canAttack) == "function" and context.canAttack or nil
+    SheetContext.canDamage = type(context.canDamage) == "function" and context.canDamage or nil
+    SheetContext.onAttackAnimation = type(context.onAttackAnimation) == "function" and context.onAttackAnimation or nil
+    SheetContext.onDamageRolled = type(context.onDamageRolled) == "function" and context.onDamageRolled or nil
+    SheetContext.spellProficiencyBonus = SheetContext.kind == "npc" and tonumber(context.spellProficiencyBonus) or nil
+    if FrameTitle and SheetContext.kind == "npc" then
+        FrameTitle:SetText(context.titleText or SheetContext.rollName or "Harford DnD 5\194\170 - Ficha")
+        local color = context.titleColor or { 1, 0.82, 0 }
+        FrameTitle:SetTextColor(color[1] or 1, color[2] or 0.82, color[3] or 0)
+    elseif FrameTitle then
+        FrameTitle:SetText("Harford DnD 5\194\170 - Ficha")
+        FrameTitle:SetTextColor(1, 0.82, 0)
+    end
+    RefreshMainUI()
+    if RefreshSheetActionPanel then RefreshSheetActionPanel() end
+    -- Si el jugador estaba moribundo, oculta visualmente la UI de muerte
+    -- sin tocar contadores (el estado persiste hasta que vuelva al modo jugador).
+    if RefreshDyingState then RefreshDyingState() end
+    return true
+end
+
+function HarfordDnDAPI.ClearSheetContext()
+    SheetContext.active = false
+    SheetContext.overrides = nil
+    SheetContext.rollName = nil
+    SheetContext.rollColor = nil
+    SheetContext.actions = nil
+    SheetContext.showActionPanel = false
+    SheetContext.spellProficiencyBonus = nil
+    SheetContext.kind = nil
+    SheetContext.lockedSource = false
+    SheetContext.canAttack = nil
+    SheetContext.canDamage = nil
+    SheetContext.onAttackAnimation = nil
+    SheetContext.onDamageRolled = nil
+    if RefreshSheetTitle then RefreshSheetTitle() end
+    RefreshMainUI()
+    if RefreshSheetActionPanel then RefreshSheetActionPanel() end
+    -- Si el jugador sigue moribundo al volver al modo jugador, re-aplicar la UI.
+    if RefreshDyingState then RefreshDyingState() end
+end
+
+function HarfordDnDAPI.RefreshSheetActionAvailability()
+    if RefreshSheetActionPanel then
+        RefreshSheetActionPanel(false)
+    end
+end
+-- ─── Fin API de contexto temporal de ficha ────────────────────────────────────
 
 local listener = CreateFrame("Frame")
 listener:RegisterEvent("PLAYER_LOGIN")
@@ -3085,13 +3766,13 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
     EnsurePersist = EnsurePersist,
     LoadPersistToRuntime = LoadPersistToRuntime,
     EnsureTargetResourceFrameState = EnsureTargetResourceFrameState,
-    CreateDnDMinimapButton = CreateDnDMinimapButton,
+    CreateDnDMinimapButton = HarfordDnDMinimap.Create,
     PlayerFrame = F,
     TargetResourceFrame = TargetResourceFrame,
     RefreshTargetResourceFrame = RefreshTargetResourceFrame,
-    RequestResourcesFromPlayer = RequestResourcesFromPlayer,
-    SendResourceResponseTo = SendResourceResponseTo,
-    SendResourceResponseForProfileTo = SendResourceResponseForProfileTo,
+    RequestResourcesFromPlayer = HarfordDnDNet.RequestResourcesFromPlayer,
+    SendResourceResponseTo = HarfordDnDNet.SendResourceResponseTo,
+    SendResourceResponseForProfileTo = HarfordDnDNet.SendResourceResponseForProfileTo,
     ApplyResourceDelta = ApplyResourceDeltaFromRemote,
     ApplyProfileTable = ApplyProfileTable,
     MergeProfFlagsTable = MergeProfFlagsTable,
@@ -3102,6 +3783,19 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
         local data = DeserializeRoll(message)
         if data then
             DisplayRollInChat(data)
+        end
+    end,
+    -- El DM nos ordena aplicarnos una aura a nosotros mismos
+    HandleApplyAuraSelf = function(spellId)
+        if HarfordDnDStore.AreAnimationsEnabled and not HarfordDnDStore.AreAnimationsEnabled() then
+            return
+        end
+        if HarfordAuras then
+            HarfordAuras.ApplyById(spellId, "self")
+            -- Si es la aura de muerte conocida, recordarlo para quitarla al subir HP.
+            if spellId == HarfordAuras.GetId("death") then
+                HarfordDnDStore.deathAuraActive = true
+            end
         end
     end,
     RefreshAPI = function()
@@ -3117,9 +3811,10 @@ listener:SetScript("OnEvent", function(_, event, ...)
         return
     end
     if event == "PLAYER_TARGET_CHANGED" then
-        -- Resetear edición inline al cambiar de target para no quedarse con botones del target anterior
-        if TargetResourceFrame then TargetResourceFrame.editMode = false end
         AddonHandlers.HandlePlayerTargetChanged()
+        if HarfordDnDStore.RefreshWeaponDamageButton then
+            HarfordDnDStore.RefreshWeaponDamageButton()
+        end
         return
     end
     local prefix, message, _, sender = ...

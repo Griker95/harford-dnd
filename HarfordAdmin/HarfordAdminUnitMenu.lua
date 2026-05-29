@@ -16,13 +16,9 @@ local function Print(message)
 end
 
 local function IsAllowed()
-    if not (HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true) then
-        return false
-    end
-    if HarfordAuthority and HarfordAuthority.IsDMMode then
-        return HarfordAuthority.IsDMMode() == true
-    end
-    return false
+    return HarfordAuthority
+        and HarfordAuthority.CanUseDMTools
+        and HarfordAuthority.CanUseDMTools() == true
 end
 
 local function UnitExistsSafe(unit)
@@ -36,11 +32,15 @@ end
 
 local function GetUnitSnapshot(unit)
     if not UnitExistsSafe(unit) then return nil end
+    local isPlayer = UnitIsPlayer and UnitIsPlayer(unit) == true
+    -- isSelf: true si la unidad es el propio jugador local (player frame o target propio)
+    local isSelf = UnitIsUnit and UnitIsUnit(unit, "player") == true
     return {
-        unit = unit,
-        guid = UnitGUID and UnitGUID(unit) or "",
-        name = GetUnitNameSafe(unit) or "",
-        isPlayer = UnitIsPlayer and UnitIsPlayer(unit) == true,
+        unit     = unit,
+        guid     = UnitGUID and UnitGUID(unit) or "",
+        name     = GetUnitNameSafe(unit) or "",
+        isPlayer = isPlayer,
+        isSelf   = isSelf,
     }
 end
 
@@ -65,12 +65,6 @@ local function EnsureSameUnit(snapshot, actionName)
     return false
 end
 
-local function TargetForAura(snapshot)
-    if snapshot and snapshot.unit == "player" then
-        return "self"
-    end
-    return "target"
-end
 
 local function PromptNumber(dialogName, text, callback)
     StaticPopupDialogs[dialogName] = StaticPopupDialogs[dialogName] or {
@@ -130,79 +124,6 @@ local function OpenTurns()
     end
 end
 
-local function PrintNpcTRP3(snapshot)
-    if not EnsureSameUnit(snapshot, "TRP3 NPC") then return end
-    if not HarfordTRP3 then
-        Print("HarfordTRP3 no disponible.")
-        return
-    end
-
-    local profileID, profileIDErr, fullID, npcID, phaseID = HarfordTRP3.GetEpsilonNpcProfileID(snapshot.unit)
-    Print("NPC: " .. tostring(snapshot.name or "target"))
-    Print("fullID: " .. tostring(fullID or "desconocido"))
-    Print("npcID: " .. tostring(npcID or "desconocido"))
-    Print("phaseID: " .. tostring(phaseID or "desconocida"))
-    Print("profileID: " .. tostring(profileID or "nil"))
-    if profileIDErr then Print(profileIDErr) end
-end
-
-local function OpenNpcTRP3(snapshot)
-    if not EnsureSameUnit(snapshot, "abrir ficha TRP3 NPC") then return end
-    if not (TRP3_API and TRP3_API.companions and TRP3_API.companions.register and TRP3_API.companions.register.openPage) then
-        Print("TRP3 no puede abrir pagina de companion/NPC.")
-        return
-    end
-    if not HarfordTRP3 or not HarfordTRP3.GetEpsilonNpcProfileID then
-        Print("HarfordTRP3 no disponible.")
-        return
-    end
-
-    local profileID, err = HarfordTRP3.GetEpsilonNpcProfileID(snapshot.unit)
-    if not profileID or profileID == "" then
-        Print(err or "profileID TRP3 NPC no disponible.")
-        return
-    end
-    local profiles = TRP3_API.companions.register.getProfiles and TRP3_API.companions.register.getProfiles()
-    if type(profiles) == "table" and not profiles[profileID] then
-        Print("La ficha TRP3 NPC no esta en el registro local.")
-        return
-    end
-
-    TRP3_API.companions.register.openPage(profileID)
-end
-
-local function PrintPlayerTRP3(snapshot)
-    if not EnsureSameUnit(snapshot, "TRP3 jugador") then return end
-    if not HarfordTRP3 then
-        Print("HarfordTRP3 no disponible.")
-        return
-    end
-
-    local unitID = HarfordTRP3.BuildUnitID and HarfordTRP3.BuildUnitID(snapshot.unit)
-    Print("Jugador: " .. tostring(snapshot.name or snapshot.unit))
-    Print("unitID: " .. tostring(unitID or "desconocido"))
-end
-
-local function OpenPlayerTRP3(snapshot)
-    if not EnsureSameUnit(snapshot, "abrir ficha TRP3 jugador") then return end
-    if not (TRP3_API and TRP3_API.register and TRP3_API.register.openPageByUnitID) then
-        Print("TRP3 no puede abrir pagina de jugador.")
-        return
-    end
-    if not HarfordTRP3 or not HarfordTRP3.BuildUnitID then
-        Print("HarfordTRP3 no disponible.")
-        return
-    end
-
-    local unitID = HarfordTRP3.BuildUnitID(snapshot.unit)
-    if not unitID or unitID == "" then
-        Print("unitID TRP3 no disponible.")
-        return
-    end
-
-    TRP3_API.register.openPageByUnitID(unitID)
-end
-
 local function SendSheetToTarget(snapshot)
     if not EnsureSameUnit(snapshot, "enviar ficha al target") then return end
     if snapshot.unit ~= "target" or not snapshot.isPlayer then
@@ -237,23 +158,29 @@ local function SendSheetToTarget(snapshot)
     end
 end
 
-local function RequestResources(snapshot)
-    if not EnsureSameUnit(snapshot, "refrescar recursos") then return end
-    if not HarfordDnDAPI or not HarfordDnDAPI.RequestResourcesForName then
-        Print("HarfordDnDAPI no disponible.")
-        return
+local function AdjustResourceForName(characterName, resourceKey, delta)
+    characterName = tostring(characterName or "")
+    resourceKey = tostring(resourceKey or "")
+    delta = tonumber(delta) or 0
+    if characterName == "" or resourceKey == "" or delta == 0 then
+        return false, "ajuste invalido"
     end
-    local ok = HarfordDnDAPI.RequestResourcesForName(snapshot.name)
-    Print(ok and "Recursos solicitados." or "No se pudieron solicitar recursos.")
+    if not (HarfordSync and HarfordSync.SendResourceAdjust) then
+        return false, "HarfordSync.SendResourceAdjust no disponible"
+    end
+
+    local myShortName = UnitName("player")
+    local myFullName = GetUnitName and GetUnitName("player", true)
+    if characterName == myShortName or (myFullName and characterName == myFullName) then
+        characterName = myFullName or myShortName
+    end
+    return HarfordSync.SendResourceAdjust("DND5EARC", resourceKey, delta, characterName)
 end
+
 
 local function AdjustPlayerHealth(snapshot, delta)
     if not EnsureSameUnit(snapshot, "ajustar vida jugador") then return end
-    if not HarfordDnDAPI or not HarfordDnDAPI.AdjustResourceForName then
-        Print("HarfordDnDAPI no disponible.")
-        return
-    end
-    local ok, err = HarfordDnDAPI.AdjustResourceForName(snapshot.name, "health", delta)
+    local ok, err = AdjustResourceForName(snapshot.name, "health", delta)
     if not ok then
         Print("No se pudo ajustar vida: " .. tostring(err or "error desconocido"))
     end
@@ -272,6 +199,45 @@ local function AdjustNpcHealth(snapshot, delta)
     local ok, err = HarfordServerActions.SetNpcHealthDelta(delta, { addonName = "HarfordAdmin" })
     if not ok then
         Print("No se pudo ajustar vida NPC: " .. tostring(err or "error desconocido"))
+    end
+end
+
+-- GUID del ultimo NPC poseido con Ctrl+Click.
+-- nil = ningun NPC poseido desde esta sesion.
+-- Si el target al hacer Ctrl+Click coincide con este GUID → solo .unposs.
+-- Si es distinto → .unposs + .poss y se guarda el nuevo GUID.
+local _lastPossessedGuid = nil
+
+local function RepossessNpc(snapshot)
+    if not EnsureSameUnit(snapshot, "reposeer NPC") then return end
+    if snapshot.unit ~= "target" or snapshot.isPlayer then
+        Print("Ctrl + click solo esta disponible sobre un NPC target.")
+        return
+    end
+    if not HarfordServerActions or not HarfordServerActions.RepossessCurrentNpc then
+        Print("HarfordServerActions.RepossessCurrentNpc no disponible.")
+        return
+    end
+
+    _lastPossessedGuid = snapshot.guid
+    local ok, err = HarfordServerActions.RepossessCurrentNpc({ addonName = "HarfordAdmin" })
+    if not ok then
+        _lastPossessedGuid = nil
+        Print("No se pudo actualizar la posesion del NPC: " .. tostring(err or "error desconocido"))
+    end
+end
+
+local function UnpossessNpc()
+    if not EnsureAllowed("soltar posesion NPC") then return end
+    if not HarfordServerActions or not HarfordServerActions.UnpossessCurrentNpc then
+        Print("HarfordServerActions.UnpossessCurrentNpc no disponible.")
+        return
+    end
+
+    _lastPossessedGuid = nil
+    local ok, err = HarfordServerActions.UnpossessCurrentNpc({ addonName = "HarfordAdmin" })
+    if not ok then
+        Print("No se pudo soltar la posesion: " .. tostring(err or "error desconocido"))
     end
 end
 
@@ -299,21 +265,35 @@ local function ApplyAura(snapshot, applying)
             return
         end
 
-        local target = TargetForAura(snapshot)
         local ok, err
-        if snapshot.unit == "target" and HarfordAdminNPC then
+        if snapshot.isSelf then
+            -- Jugador propio: ApplyAura/RemoveAuraSelf añaden "self" automáticamente.
+            if applying then
+                if HarfordServerActions and HarfordServerActions.ApplyAura then
+                    ok, err = HarfordServerActions.ApplyAura(spellId, { addonName = "HarfordAdmin" })
+                end
+            else
+                if HarfordServerActions and HarfordServerActions.RemoveAuraSelf then
+                    ok, err = HarfordServerActions.RemoveAuraSelf(spellId, { addonName = "HarfordAdmin" })
+                end
+            end
+        elseif snapshot.unit == "target" and HarfordAdminNPC then
+            -- NPC seleccionado: HarfordAdminNPC usa "npc set aura/unaura" internamente.
             if applying and HarfordAdminNPC.ApplyAuraToTarget then
                 ok, err = HarfordAdminNPC.ApplyAuraToTarget(spellId)
             elseif not applying and HarfordAdminNPC.RemoveAuraFromTarget then
                 ok, err = HarfordAdminNPC.RemoveAuraFromTarget(spellId)
             end
-        elseif applying then
-            if HarfordServerActions and HarfordServerActions.ApplyAura then
-                ok, err = HarfordServerActions.ApplyAura(spellId, target, { addonName = "HarfordAdmin" })
-            end
         else
-            if HarfordServerActions and HarfordServerActions.RemoveAura then
-                ok, err = HarfordServerActions.RemoveAura(spellId, target, { addonName = "HarfordAdmin" })
+            -- Jugador en target (no propio): .aura/.unaura sin sufijo (target actual del servidor).
+            if applying then
+                if HarfordServerActions and HarfordServerActions.ApplyAuraToCurrentTarget then
+                    ok, err = HarfordServerActions.ApplyAuraToCurrentTarget(spellId, { addonName = "HarfordAdmin" })
+                end
+            else
+                if HarfordServerActions and HarfordServerActions.RemoveAura then
+                    ok, err = HarfordServerActions.RemoveAura(spellId, { addonName = "HarfordAdmin" })
+                end
             end
         end
 
@@ -359,6 +339,96 @@ local function ApplyNpcLootAura(snapshot)
     SetNpcAura(snapshot, 140172)
 end
 
+-- Envía un comando Epsilon usando la API disponible (EpsilonCommands → ARC)
+local function SendCmd(cmd)
+    if HarfordEpsilonCommands and HarfordEpsilonCommands.SendCommand then
+        HarfordEpsilonCommands.SendCommand(cmd)
+    elseif ARC and ARC.CMD then
+        ARC.CMD(cmd)
+    else
+        Print("No hay API para enviar: " .. cmd)
+    end
+end
+
+-- .unaura all self (isSelf) o .unaura all (jugador ajeno en target)
+local function RemoveAuraAll(snapshot)
+    if not EnsureSameUnit(snapshot, "unaura all") then return end
+    SendCmd(snapshot.isSelf and ".unaura all self" or ".unaura all")
+end
+
+-- .npc set unaura all (sobre el target NPC actual)
+local function RemoveNpcAuraAll(snapshot)
+    if not EnsureSameUnit(snapshot, "unaura all NPC") then return end
+    if snapshot.unit ~= "target" then
+        Print("Unaura all NPC solo disponible desde TargetFrame.")
+        return
+    end
+    SendCmd(".npc set unaura all")
+end
+
+-- Devuelve true si la unidad tiene el aura (buff o debuff) por spell ID
+local function HasAura(unit, spellId)
+    if not unit or not (UnitExists and UnitExists(unit)) then return false end
+    for _, filter in ipairs({ "HELPFUL", "HARMFUL" }) do
+        for i = 1, 40 do
+            local _, _, _, _, _, _, _, _, _, id = UnitAura(unit, i, filter)
+            if not id then break end
+            if id == spellId then return true end
+        end
+    end
+    return false
+end
+
+-- Aplica un aura con ID fijo según contexto (sin prompt)
+local function ApplyFixedAura(snapshot, spellId)
+    if not EnsureSameUnit(snapshot, "aplicar aura") then return end
+    local ok, err
+    if snapshot.isSelf then
+        if HarfordServerActions and HarfordServerActions.ApplyAura then
+            ok, err = HarfordServerActions.ApplyAura(spellId, { addonName = "HarfordAdmin" })
+        end
+        if not ok then Print(tostring(err or "No se pudo aplicar aura.")) end
+    elseif not snapshot.isPlayer then
+        SetNpcAura(snapshot, spellId)  -- NPC: tiene sus propias guardas internas
+    else
+        -- Jugador en target: aura sin sufijo (Epsilon usa el unit seleccionado).
+        if HarfordServerActions and HarfordServerActions.ApplyAuraToCurrentTarget then
+            ok, err = HarfordServerActions.ApplyAuraToCurrentTarget(spellId, { addonName = "HarfordAdmin" })
+        end
+        if not ok then Print(tostring(err or "No se pudo aplicar aura.")) end
+    end
+end
+
+-- Quita un aura con ID fijo según contexto (sin prompt)
+local function RemoveFixedAura(snapshot, spellId)
+    if not EnsureSameUnit(snapshot, "quitar aura") then return end
+    local ok, err
+    if snapshot.isSelf then
+        if HarfordServerActions and HarfordServerActions.RemoveAuraSelf then
+            ok, err = HarfordServerActions.RemoveAuraSelf(spellId, { addonName = "HarfordAdmin" })
+        end
+        if not ok then Print(tostring(err or "No se pudo quitar aura.")) end
+    elseif not snapshot.isPlayer then
+        -- NPC: usar RemoveNpcAura para no construir strings sueltos.
+        if HarfordServerActions and HarfordServerActions.RemoveNpcAura then
+            ok, err = HarfordServerActions.RemoveNpcAura(spellId, { addonName = "HarfordAdmin" })
+        end
+        if not ok then Print(tostring(err or "No se pudo quitar aura NPC.")) end
+    else
+        -- Jugador en target: unaura sin sufijo.
+        if HarfordServerActions and HarfordServerActions.RemoveAura then
+            ok, err = HarfordServerActions.RemoveAura(spellId, { addonName = "HarfordAdmin" })
+        end
+        if not ok then Print(tostring(err or "No se pudo quitar aura.")) end
+    end
+end
+
+local ESTADOS = {
+    { label = "Asustado",  spellId = 167026 },
+    { label = "Derribado", spellId = 267937 },
+    { label = "Ardiendo",  spellId = 279489 },
+}
+
 local function OpenLootEditor(snapshot)
     if not EnsureSameUnit(snapshot, "abrir editor de loot") then return end
     if not HarfordAdminLoot or not HarfordAdminLoot.OpenEditor then
@@ -393,6 +463,23 @@ local function AddSubmenu(text, menuList, level)
     UIDropDownMenu_AddButton(info, level)
 end
 
+local function BuildEstadosSubmenu(snapshot, level)
+    for _, estado in ipairs(ESTADOS) do
+        local sid    = estado.spellId
+        local activo = HasAura(snapshot.unit, sid)
+        -- Prefijo visual: [x] si activo (quitar), [ ] si no (poner)
+        local label  = (activo and "[x] " or "[ ] ") .. estado.label
+        AddAction(label, function()
+            -- Re-comprobar en el momento del click por si cambio entre abrir y pulsar
+            if HasAura(snapshot.unit, sid) then
+                RemoveFixedAura(snapshot, sid)
+            else
+                ApplyFixedAura(snapshot, sid)
+            end
+        end, level)
+    end
+end
+
 local function AddHealthPresets(snapshot, isPlayer, level)
     local values = { 1, -1, 5, -5, 10, -10 }
     for _, amount in ipairs(values) do
@@ -410,19 +497,22 @@ end
 
 local function BuildNpcSubmenu(menuList, level)
     local snapshot = current.snapshot
-    if menuList == "TRP3" then
-        AddAction("Abrir ficha TRP3", function() OpenNpcTRP3(snapshot) end, level)
-        AddAction("Mostrar IDs TRP3", function() PrintNpcTRP3(snapshot) end, level)
-    elseif menuList == "TURNOS" then
+    if menuList == "TURNOS" then
         AddAction("Anadir a turnos", function() AddToTurns(snapshot) end, level)
         AddAction("Abrir turnos", OpenTurns, level)
-    elseif menuList == "VIDA" then
-        AddHealthPresets(snapshot, false, level)
+    elseif menuList == "RECURSOS" then
+        -- Mod. Recursos: sin implementacion para NPC de momento
+        AddAction("Mod. Salud",    function() PromptHealth(snapshot, false) end, level)
+        AddAction("Mod. Recursos", function() end, level)
     elseif menuList == "AURAS" then
-        AddAction("Aplicar aura NPC...", function() PromptNpcAura(snapshot) end, level)
-        AddAction("Loot Aura", function() ApplyNpcLootAura(snapshot) end, level)
-        AddAction("Quitar aura...", function() ApplyAura(snapshot, false) end, level)
+        AddAction("Aura",       function() PromptNpcAura(snapshot) end, level)
+        AddAction("Unaura",     function() ApplyAura(snapshot, false) end, level)
+        AddAction("Unaura all", function() RemoveNpcAuraAll(snapshot) end, level)
+        AddSubmenu("Estados",   "ESTADOS", level)
+    elseif menuList == "ESTADOS" then
+        BuildEstadosSubmenu(snapshot, level)
     elseif menuList == "LOOT" then
+        AddAction("Loot Aura", function() ApplyNpcLootAura(snapshot) end, level)
         AddAction("Cargar loot...", function() OpenLootEditor(snapshot) end, level)
     end
 end
@@ -593,10 +683,6 @@ local function CreateResourceEditorFrame()
     btnApply:SetText("Aplicar")
     btnApply:SetScript("OnClick", function()
         if not resourceEditorName then return end
-        if not (HarfordDnDAPI and HarfordDnDAPI.AdjustResourceForName) then
-            Print("HarfordDnDAPI no disponible.")
-            return
-        end
         local sent = 0
         for _, key in ipairs(RES_ORDER) do
             local row = f.rows[key]
@@ -606,12 +692,12 @@ local function CreateResourceEditorFrame()
                 local dCur = newCur - row.baseCur
                 local dMax = newMax - row.baseMax
                 if dCur ~= 0 then
-                    HarfordDnDAPI.AdjustResourceForName(resourceEditorName, "Res_" .. key .. "_Cur", dCur)
+                    AdjustResourceForName(resourceEditorName, "Res_" .. key .. "_Cur", dCur)
                     row.baseCur = newCur
                     sent = sent + 1
                 end
                 if dMax ~= 0 then
-                    HarfordDnDAPI.AdjustResourceForName(resourceEditorName, "Res_" .. key .. "_Max", dMax)
+                    AdjustResourceForName(resourceEditorName, "Res_" .. key .. "_Max", dMax)
                     row.baseMax = newMax
                     sent = sent + 1
                 end
@@ -634,15 +720,16 @@ end
 
 local function OpenResourceEditor(snapshot)
     if not EnsureSameUnit(snapshot, "editar recursos") then return end
-    if snapshot.unit ~= "target" or not snapshot.isPlayer then
-        Print("Editar recursos solo disponible desde el TargetFrame de un jugador.")
+    -- Permitir jugador propio (isSelf) o target jugador; bloquear NPC sin isPlayer
+    if not snapshot.isPlayer then
+        Print("Editar recursos solo disponible para jugadores.")
         return
     end
 
     resourceEditorFrame = resourceEditorFrame or CreateResourceEditorFrame()
     local f = resourceEditorFrame
 
-    local shortName = UnitName and UnitName("target")
+    local shortName = UnitName and UnitName(snapshot.unit)
     local newName = shortName or snapshot.name
 
     -- Toggle: si el frame ya está abierto para este mismo target, cerrarlo
@@ -682,40 +769,42 @@ end
 
 -- ─── Fin editor de recursos ─────────────────────────────────────────────────
 
+-- Submenú para jugador ajeno (target jugador, no el propio)
 local function BuildPlayerSubmenu(menuList, level)
     local snapshot = current.snapshot
-    if menuList == "FICHA" then
-        AddAction("Abrir ficha TRP3", function() OpenPlayerTRP3(snapshot) end, level)
-        AddAction("Mostrar TRP3", function() PrintPlayerTRP3(snapshot) end, level)
-        if snapshot and snapshot.unit == "target" then
-            AddAction("Enviar ficha al target", function() SendSheetToTarget(snapshot) end, level)
-        end
-    elseif menuList == "TURNOS" then
+    if menuList == "TURNOS" then
         AddAction("Anadir a turnos", function() AddToTurns(snapshot) end, level)
         AddAction("Abrir turnos", OpenTurns, level)
     elseif menuList == "RECURSOS" then
-        local resMode = HarfordConfig and HarfordConfig.Get("resources") or "frame"
-        if resMode == "frame" then
-            -- Frame separado: "Cambiar recursos" activa/desactiva los botones +/- en el frame del target
-            local isEdit = HarfordDnDAPI and HarfordDnDAPI.GetTargetResourceEditMode and HarfordDnDAPI.GetTargetResourceEditMode()
-            AddAction(isEdit and "Desactivar edición" or "Cambiar recursos", function()
-                if HarfordDnDAPI and HarfordDnDAPI.ToggleTargetResourceEditMode then
-                    HarfordDnDAPI.ToggleTargetResourceEditMode()
-                end
-            end, level)
-        else
-            -- Unitframe integrado: "Cambiar recursos" abre/cierra el editor flotante
-            AddAction("Cambiar recursos", function() OpenResourceEditor(snapshot) end, level)
-        end
-        AddAction("Editar recursos...", function() OpenResourceEditor(snapshot) end, level)
-        AddAction("Pedir recursos", function() RequestResources(snapshot) end, level)
-    elseif menuList == "VIDA" then
-        AddHealthPresets(snapshot, true, level)
+        AddAction("Mod. Salud", function() PromptHealth(snapshot, true) end, level)
+        AddAction("Mod. Recursos", function() OpenResourceEditor(snapshot) end, level)
     elseif menuList == "AURAS" then
-        AddAction("Aplicar aura...", function() ApplyAura(snapshot, true) end, level)
-        AddAction("Quitar aura...", function() ApplyAura(snapshot, false) end, level)
-    elseif menuList == "LOOT" then
-        AddAction("Cargar loot...", function() OpenLootEditor(snapshot) end, level)
+        AddAction("Aura",       function() ApplyAura(snapshot, true) end, level)
+        AddAction("Unaura",     function() ApplyAura(snapshot, false) end, level)
+        AddAction("Unaura all", function() RemoveAuraAll(snapshot) end, level)
+        AddSubmenu("Estados",   "ESTADOS", level)
+    elseif menuList == "ESTADOS" then
+        BuildEstadosSubmenu(snapshot, level)
+    end
+    -- Loot no aplica a jugadores: solo aparece en el menu de NPC
+end
+
+-- Submenú para el jugador propio (player frame)
+local function BuildSelfSubmenu(menuList, level)
+    local snapshot = current.snapshot
+    if menuList == "TURNOS" then
+        AddAction("Anadir a turnos", function() AddToTurns(snapshot) end, level)
+        AddAction("Abrir turnos", OpenTurns, level)
+    elseif menuList == "RECURSOS" then
+        AddAction("Mod. Salud", function() PromptHealth(snapshot, true) end, level)
+        AddAction("Mod. Recursos", function() OpenResourceEditor(snapshot) end, level)
+    elseif menuList == "AURAS" then
+        AddAction("Aura",       function() ApplyAura(snapshot, true) end, level)
+        AddAction("Unaura",     function() ApplyAura(snapshot, false) end, level)
+        AddAction("Unaura all", function() RemoveAuraAll(snapshot) end, level)
+        AddSubmenu("Estados",   "ESTADOS", level)
+    elseif menuList == "ESTADOS" then
+        BuildEstadosSubmenu(snapshot, level)
     end
 end
 
@@ -731,30 +820,62 @@ function API.BuildPlayerMenu(unit)
     return snapshot
 end
 
+-- Devuelve el tipo de unidad para la lógica de menu.
+-- "self"   → jugador propio (player frame o target = player)
+-- "player" → jugador ajeno seleccionado como target
+-- "npc"    → NPC / criatura / no jugador
+local function GetUnitContext(snapshot)
+    if not snapshot then return "npc" end
+    if snapshot.isSelf then return "self" end
+    if snapshot.isPlayer then return "player" end
+    return "npc"
+end
+
 local function InitializeMenu(_, level, menuList)
     level = level or 1
+    local snapshot = current.snapshot
+    if not snapshot then return end
+    local ctx = GetUnitContext(snapshot)
+
     if level == 1 then
-        local snapshot = current.snapshot
-        if not snapshot then return end
-        AddTitle(snapshot.name ~= "" and snapshot.name or snapshot.unit, level)
-        if snapshot.isPlayer then
-            AddSubmenu("Ficha", "FICHA", level)
+        local title = snapshot.name ~= "" and snapshot.name or snapshot.unit
+        AddTitle(title, level)
+
+        if ctx == "self" then
+            -- Jugador propio: TRP3 propio, turnos, recursos (mod.recursos+mod.salud), auras.
+            AddAction("Abrir mi TRP3", function()
+                if TRP3_API and TRP3_API.navigation and TRP3_API.navigation.openMainFrame then
+                    TRP3_API.navigation.openMainFrame()
+                end
+                local pid = TRP3_API and TRP3_API.globals and TRP3_API.globals.player_id
+                if pid and TRP3_API.register and TRP3_API.register.openPageByUnitID then
+                    TRP3_API.register.openPageByUnitID(pid)
+                end
+            end, level)
             AddSubmenu("Turnos", "TURNOS", level)
             AddSubmenu("Recursos", "RECURSOS", level)
-            AddSubmenu("Vida", "VIDA", level)
             AddSubmenu("Auras", "AURAS", level)
-            AddSubmenu("Loot", "LOOT", level)
-        else
-            AddSubmenu("TRP3", "TRP3", level)
+
+        elseif ctx == "player" then
+            -- Jugador ajeno: turnos, recursos (mod.recursos+mod.salud), auras. Sin TRP3, sin loot.
             AddSubmenu("Turnos", "TURNOS", level)
-            AddSubmenu("Vida", "VIDA", level)
+            AddSubmenu("Recursos", "RECURSOS", level)
+            AddSubmenu("Auras", "AURAS", level)
+
+        else -- npc
+            -- NPC / criatura: turnos, recursos (mod.recursos+mod.salud), auras, loot. Sin TRP3.
+            AddSubmenu("Turnos", "TURNOS", level)
+            AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Auras", "AURAS", level)
             AddSubmenu("Loot", "LOOT", level)
         end
         return
     end
 
-    if current.snapshot and current.snapshot.isPlayer then
+    -- Submenús (level > 1): despachar según contexto
+    if ctx == "self" then
+        BuildSelfSubmenu(menuList, level)
+    elseif ctx == "player" then
         BuildPlayerSubmenu(menuList, level)
     else
         BuildNpcSubmenu(menuList, level)
@@ -993,3 +1114,168 @@ if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
         API.RefreshVisibility()
     end)
 end
+
+-- ─── Botón Modo NPC en la ficha D&D ──────────────────────────────────────────
+-- Visible solo con HarfordAdmin activo + modo DM.
+-- HarfordAdmin construye el contexto NPC; HarfordDnD solo representa/tira el contexto.
+do
+    local npcBtn, npcBtnIcon
+
+    local function IsDMAdmin()
+        return IsAllowed()
+    end
+
+    local function RefreshNpcButtonVisibility()
+        if not npcBtn then return end
+        if IsDMAdmin() then
+            npcBtn:Show()
+        else
+            npcBtn:Hide()
+            if HarfordDnDAPI and HarfordDnDAPI.HasSheetContext and HarfordDnDAPI.HasSheetContext() then
+                if npcBtnIcon then npcBtnIcon:SetVertexColor(1, 1, 1) end
+                if HarfordAdminNPC and HarfordAdminNPC.ClearDnDSheetContext then
+                    HarfordAdminNPC.ClearDnDSheetContext()
+                end
+            end
+        end
+    end
+
+    local function CreateNpcButton()
+        if npcBtn then return end
+        local dndAPI = HarfordDnDAPI
+        if not (dndAPI and dndAPI.GetPlayerFrame) then return end
+        local parentFrame = dndAPI.GetPlayerFrame()
+        local anchorFrame = _G.HarfordDnDTurnButton
+        if not parentFrame or not anchorFrame then return end
+
+        npcBtn = CreateFrame("Button", nil, parentFrame)
+        npcBtn:SetSize(20, 20)
+        npcBtn:SetPoint("LEFT", anchorFrame, "RIGHT", 5, 0)
+        npcBtn:Hide()
+
+        npcBtnIcon = npcBtn:CreateTexture(nil, "ARTWORK")
+        npcBtnIcon:SetAllPoints()
+        npcBtnIcon:SetTexture("Interface\\Icons\\Spell_Shadow_Possession")
+        npcBtnIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+        local npcBtnHL = npcBtn:CreateTexture(nil, "HIGHLIGHT")
+        npcBtnHL:SetAllPoints()
+        npcBtnHL:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
+        npcBtnHL:SetBlendMode("ADD")
+
+        npcBtn:SetScript("OnClick", function()
+            if not HarfordDnDAPI or not HarfordAdminNPC then return end
+            if IsControlKeyDown and IsControlKeyDown() then
+                local snapshot = GetUnitSnapshot("target")
+                local targetGuid = snapshot and snapshot.guid
+                local isNpc = snapshot and not snapshot.isPlayer and not snapshot.isSelf
+                if isNpc and targetGuid and targetGuid ~= "" then
+                    if targetGuid == _lastPossessedGuid then
+                        -- Mismo NPC que ya poseemos: solo soltar.
+                        UnpossessNpc()
+                    else
+                        -- NPC diferente: soltar el actual y poseer el nuevo.
+                        RepossessNpc(snapshot)
+                    end
+                else
+                    -- Sin target, target jugador, o target propio: solo soltar.
+                    UnpossessNpc()
+                end
+                return
+            end
+            local lockRequested = IsShiftKeyDown and IsShiftKeyDown()
+            local unit = "target"
+            if lockRequested and UnitExists(unit) and not UnitIsPlayer(unit) then
+                local ok, err = HarfordAdminNPC.ApplyDnDSheetContext(unit, { locked = true })
+                if ok then
+                    npcBtnIcon:SetVertexColor(1, 0.45, 0)
+                else
+                    Print(err)
+                end
+            elseif HarfordDnDAPI.HasSheetContext and HarfordDnDAPI.HasSheetContext() then
+                npcBtnIcon:SetVertexColor(1, 1, 1)
+                HarfordAdminNPC.ClearDnDSheetContext()
+            else
+                if UnitExists(unit) and not UnitIsPlayer(unit) then
+                    local ok, err = HarfordAdminNPC.ApplyDnDSheetContext(unit)
+                    if ok then
+                        npcBtnIcon:SetVertexColor(1, 0.7, 0)
+                    else
+                        Print(err)
+                    end
+                end
+            end
+        end)
+
+        npcBtn:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText("Modo NPC", 1, 0.82, 0)
+            GameTooltip:AddLine("Ctrl + Click en NPC nuevo: Unposs + Poss", 0.75, 0.9, 1)
+            GameTooltip:AddLine("Ctrl + Click en NPC poseido: solo Unposs", 0.75, 0.9, 1)
+            GameTooltip:AddLine("Ctrl + Click sin NPC / player: solo Unposs", 0.75, 0.9, 1)
+            if HarfordDnDAPI and HarfordDnDAPI.HasSheetContext and HarfordDnDAPI.HasSheetContext() then
+                if HarfordAdminNPC and HarfordAdminNPC.IsDnDSheetContextLocked
+                    and HarfordAdminNPC.IsDnDSheetContextLocked() then
+                    GameTooltip:AddLine("Bloqueado — atacante marcado en ficha", 1, 0.55, 0)
+                else
+                    GameTooltip:AddLine("Activo — selecciona atacante o victima", 0, 1, 0)
+                end
+                GameTooltip:AddLine("Click: desactivar", 1, 1, 1)
+            else
+                GameTooltip:AddLine("Click: activar con el NPC seleccionado", 1, 1, 1)
+                GameTooltip:AddLine("Shift + Click: bloquear atacante", 0.75, 0.9, 1)
+            end
+            GameTooltip:Show()
+        end)
+
+        npcBtn:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+
+        RefreshNpcButtonVisibility()
+    end
+
+    -- Actualizar al cambiar de target si el modo NPC está activo
+    local function OnTargetChanged()
+        if not (HarfordDnDAPI and HarfordDnDAPI.HasSheetContext) then return end
+        if not HarfordDnDAPI.HasSheetContext() then return end
+        if HarfordAdminNPC and HarfordAdminNPC.IsDnDSheetContextLocked
+            and HarfordAdminNPC.IsDnDSheetContextLocked() then
+            if HarfordDnDAPI.RefreshSheetActionAvailability then
+                HarfordDnDAPI.RefreshSheetActionAvailability()
+            end
+            return
+        end
+        local unit = "target"
+        -- Solo recargamos la ficha al seleccionar otro NPC.
+        -- Si no hay target o es un jugador, la ficha del NPC anterior se mantiene
+        -- hasta que el DM desactive el modo NPC manualmente.
+        if UnitExists(unit) and not UnitIsPlayer(unit) then
+            if HarfordAdminNPC and HarfordAdminNPC.ApplyDnDSheetContext then
+                local ok, err = HarfordAdminNPC.ApplyDnDSheetContext(unit)
+                if not ok then Print(err) end
+            end
+        elseif HarfordDnDAPI.RefreshSheetActionAvailability then
+            -- En modo normal conservamos la ultima ficha NPC al seleccionar
+            -- un jugador para aplicar daño; sin target quedan ambos botones apagados.
+            HarfordDnDAPI.RefreshSheetActionAvailability()
+        end
+    end
+
+    -- Reutilizar el frame de eventos existente si es posible; si no, crear uno propio
+    local npcEvtFrame = CreateFrame("Frame")
+    npcEvtFrame:RegisterEvent("PLAYER_LOGIN")
+    npcEvtFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    npcEvtFrame:SetScript("OnEvent", function(_, event)
+        if event == "PLAYER_LOGIN" then
+            CreateNpcButton()
+        elseif event == "PLAYER_TARGET_CHANGED" then
+            OnTargetChanged()
+        end
+    end)
+
+    if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
+        HarfordAuthority.RegisterChangeListener("HarfordDnDNpcMode", RefreshNpcButtonVisibility)
+    end
+end
+-- ─── Fin Botón Modo NPC ────────────────────────────────────────────────────────

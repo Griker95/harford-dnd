@@ -156,7 +156,8 @@ local function StandingIdFromRankName(rankName)
 end
 
 local function GetPlayerKeyForDisplay()
-    local hasAdminAddon = (HarfordReputationAdmin ~= nil) or (HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true)
+    local hasAdminAddon = (HarfordReputationAdmin ~= nil)
+        or (HarfordAuthority and HarfordAuthority.HasAdminAddon and HarfordAuthority.HasAdminAddon() == true)
     if HarfordReputation and HarfordReputation.CanEdit and HarfordReputation.CanEdit()
         and hasAdminAddon
         and UnitExists and UnitExists("target")
@@ -263,7 +264,8 @@ local function GetDisplayFactions(includeHidden)
 end
 
 local function CanShowAdminActions()
-    local hasAdminAddon = (HarfordReputationAdmin ~= nil) or (HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true)
+    local hasAdminAddon = (HarfordReputationAdmin ~= nil)
+        or (HarfordAuthority and HarfordAuthority.HasAdminAddon and HarfordAuthority.HasAdminAddon() == true)
     return hasAdminAddon and HarfordReputation and HarfordReputation.CanEdit and HarfordReputation.CanEdit()
 end
 
@@ -919,7 +921,7 @@ end
 local function RefreshAdminButton()
     if not panel or not panel.adminButton then return end
     local haAdmin = (HarfordReputationAdmin and HarfordReputationAdmin.Toggle ~= nil)
-        or (HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true)
+        or (HarfordAuthority and HarfordAuthority.HasAdminAddon and HarfordAuthority.HasAdminAddon() == true)
     local isDM = HarfordReputation and HarfordReputation.CanEdit and HarfordReputation.CanEdit()
     panel.adminButton:SetShown(haAdmin == true and isDM == true)
 end

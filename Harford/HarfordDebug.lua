@@ -229,6 +229,101 @@ API.RegisterCommand("raw", function(args)
     end)
 end, "envia comando raw solo con debug activo")
 
+do
+    local function GetLastTRP3LinkInfo()
+        if not HarfordTRP3 or not HarfordTRP3.GetLastGlanceLinkInfo then
+            Print("HarfordTRP3.GetLastGlanceLinkInfo no disponible")
+            return nil
+        end
+
+        local info = HarfordTRP3.GetLastGlanceLinkInfo()
+        if not info then
+            Print("No hay link de estado Harford creado. Haz shift-click en un estado ajeno primero.")
+            return nil
+        end
+        if not info.hyperlink then
+            Print("El link no tiene hyperlink local; no se pudo resolver el emisor TRP3.")
+            return nil
+        end
+        return info
+    end
+
+    local function RequireNpcTarget()
+        if not UnitExists or not UnitExists("target") then
+            Print("Selecciona un NPC target antes de enviar la prueba.")
+            return false
+        end
+        if UnitIsPlayer and UnitIsPlayer("target") then
+            Print("El target es un jugador; la prueba npc te requiere un NPC.")
+            return false
+        end
+        return true
+    end
+
+    local function PrintCommandResult(label)
+        return function(success, messages)
+            Print(label .. ": " .. (success and "OK" or "ERROR"))
+            for _, line in ipairs(messages or {}) do
+                Print(line)
+            end
+        end
+    end
+
+    API.RegisterCommand("trp3link", function()
+        local info = GetLastTRP3LinkInfo()
+        if not info then return end
+        Print("TRP3 identifier: " .. tostring(info.identifier))
+        Print("TRP3 sender: " .. tostring(info.sender))
+        Print("TRP3 marker (" .. tostring(#info.marker) .. "): " .. tostring(info.marker))
+        Print("TRP3 hyperlink (" .. tostring(#info.hyperlink) .. "):")
+        Print(info.hyperlink)
+        Print("npc te hyperlink bytes: " .. tostring(#("npc te " .. info.hyperlink)) .. " / limite <250")
+    end, "muestra marker/hyperlink del ultimo estado ajeno Harford")
+
+    API.RegisterCommand("trp3npctest", function(args)
+        local mode = tostring(args or ""):lower():match("^%s*(%S+)")
+        if mode ~= "marker" and mode ~= "hyperlink" and mode ~= "chat" then
+            Print("uso: /harforddebug run trp3npctest marker|hyperlink|chat")
+            return
+        end
+        if not RequireNpcTarget() then return end
+        local info = GetLastTRP3LinkInfo()
+        if not info then return end
+
+        if mode == "marker" then
+            if not HarfordServerActions or not HarfordServerActions.SendRawDebug then
+                Print("HarfordServerActions.SendRawDebug no disponible")
+                return
+            end
+            HarfordServerActions.SendRawDebug(
+                "npc te " .. info.marker,
+                PrintCommandResult("npc te marker via EpsilonLib"),
+                { addonName = "HarfordDebug" })
+        elseif mode == "hyperlink" then
+            if not HarfordServerActions or not HarfordServerActions.SendRawDebug then
+                Print("HarfordServerActions.SendRawDebug no disponible")
+                return
+            end
+            local command = "npc te " .. info.hyperlink
+            if #command >= 250 then
+                Print("npc te hyperlink supera el limite <250 de EpsilonLib: " .. tostring(#command))
+                return
+            end
+            HarfordServerActions.SendRawDebug(
+                command,
+                PrintCommandResult("npc te hyperlink via EpsilonLib"),
+                { addonName = "HarfordDebug" })
+        else
+            if not SendChatMessage then
+                Print("SendChatMessage no disponible")
+                return
+            end
+            Print("Enviando .npc te hyperlink por ruta de comando chat; EpsilonLib puede interceptarla segun configuracion.")
+            SendChatMessage(".npc te " .. info.hyperlink, "GUILD")
+        end
+    end, "prueba npc te marker|hyperlink|chat con ultimo link Harford")
+end
+
 API.RegisterCommand("trp3icons", function()
     if not HarfordTRP3 or not HarfordTRP3.GetEpsilonNpcProfile then
         Print("HarfordTRP3 no disponible")
@@ -993,6 +1088,66 @@ API.RegisterCommand("totportrait", function()
     end
 end, "diagnostica portrait overlay del ToT y estado TRP3")
 
+-- Solicita recursos al target actual por WHISPER (DND5EARC REQ).
+-- Útil para forzar una actualización cuando el cache de recursos está vacío o desactualizado.
+-- Uso: /harforddebug run reqres
+API.RegisterCommand("reqres", function()
+    local unit = "target"
+    if not UnitExists or not UnitExists(unit) then
+        Print("reqres: sin target.")
+        return
+    end
+    if not (UnitIsPlayer and UnitIsPlayer(unit)) then
+        Print("reqres: el target no es un jugador.")
+        return
+    end
+    if not (HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName) then
+        Print("reqres: HarfordDnDAPI.RequestResourcesForName no disponible.")
+        return
+    end
+    local name = UnitName and UnitName(unit) or ""
+    local ok = HarfordDnDAPI.RequestResourcesForName(name)
+    Print("reqres: " .. tostring(name) .. " → " .. (ok and "solicitud enviada" or "fallo (throttle o sin nombre)"))
+end, "fuerza solicitud de recursos al target: reqres")
+
+-- Diagnóstico de TRP3 para el jugador target (unitID, profileID, perfil conocido, player_id propio).
+-- Uso: /harforddebug run trp3player
+API.RegisterCommand("trp3player", function()
+    Print("=== TRP3 jugador target ===")
+    local unit = UnitExists and UnitExists("target") and "target" or "player"
+    Print("unit=" .. unit)
+
+    -- globals.player_id
+    local selfID = TRP3_API and TRP3_API.globals and TRP3_API.globals.player_id
+    Print("globals.player_id=" .. tostring(selfID))
+
+    -- unitID via HarfordTRP3
+    if HarfordTRP3 and HarfordTRP3.BuildUnitID then
+        local uid = HarfordTRP3.BuildUnitID(unit)
+        Print("BuildUnitID(" .. unit .. ")=" .. tostring(uid))
+
+        if uid and TRP3_API and TRP3_API.register then
+            local reg = TRP3_API.register
+            local known = reg.isUnitIDKnown and reg.isUnitIDKnown(uid)
+            Print("isUnitIDKnown=" .. tostring(known))
+            if known then
+                local pid = reg.hasProfile and reg.hasProfile(uid)
+                Print("hasProfile(profileID)=" .. tostring(pid))
+                local profile = pid and reg.getProfile and reg.getProfile(pid)
+                Print("getProfile=" .. tostring(profile ~= nil))
+            end
+        end
+    else
+        Print("HarfordTRP3.BuildUnitID: NO DISPONIBLE")
+    end
+
+    -- Verificar openPageByUnitID
+    local canOpen = TRP3_API and TRP3_API.register and TRP3_API.register.openPageByUnitID
+    Print("openPageByUnitID=" .. tostring(canOpen ~= nil))
+    local canOpenFrame = TRP3_API and TRP3_API.navigation and TRP3_API.navigation.openMainFrame
+    Print("openMainFrame=" .. tostring(canOpenFrame ~= nil))
+end, "diagnóstico TRP3 del target: unitID, profileID y si puede abrir ficha")
+
 -- Diagnóstico de APIs de posición disponibles en Epsilon.
 -- Uso: /harforddebug run testpos
 API.RegisterCommand("testpos", function()
@@ -1505,5 +1660,270 @@ API.RegisterCommand("absorbdbg", function()
     end
     if count == 0 then print("[AbsorbDbg] No hay group overlays activos") end
 end, "inspecciona absorb en overlays de raid/party activos")
+
+-- ─── Diagnóstico ParseSections ───────────────────────────────────────────────
+API.RegisterCommand("trpsections", function(args)
+    local unit = (args and args ~= "") and args or "target"
+    Print("=== trpsections: " .. unit .. " ===")
+    if not HarfordTRP3 then Print("HarfordTRP3 no disponible") return end
+
+    -- Texto raw
+    local function tryProfile()
+        if HarfordTRP3.GetEpsilonNpcProfile then
+            local p = HarfordTRP3.GetEpsilonNpcProfile(unit)
+            if p then return p, "NPC companion" end
+        end
+        if HarfordTRP3.GetPlayerProfile then
+            local p = HarfordTRP3.GetPlayerProfile(unit)
+            if p then return p, "player" end
+        end
+        return nil, "no encontrado"
+    end
+
+    local profile, kind = tryProfile()
+    if not profile then Print("Perfil: " .. kind) return end
+    Print("Perfil tipo: " .. kind)
+
+    local rawText = HarfordTRP3.GetProfileMainText and HarfordTRP3.GetProfileMainText(profile) or nil
+    if not rawText or rawText == "" then
+        rawText = HarfordTRP3.GetPlayerAboutText and HarfordTRP3.GetPlayerAboutText(profile) or nil
+    end
+
+    -- Estructura about si es jugador
+    local character = profile.player or profile
+    if type(character) == "table" and type(character.about) == "table" then
+        local about = character.about
+        local template = tonumber(about.TE) or 1
+        Print("Template: " .. template)
+        if template == 2 then
+            local frames = about.T2 or {}
+            Print("T2 frames: " .. #frames)
+            for i, frame in ipairs(frames) do
+                if type(frame) == "table" then
+                    Print(string.format("  [%d] TI=%s  TX=%d chars", i,
+                        frame.TI and ('"'..tostring(frame.TI)..'"') or "nil",
+                        #(frame.TX or "")))
+                end
+            end
+        elseif template == 3 then
+            local data = about.T3 or {}
+            for _, key in ipairs({"PH","PS","HI"}) do
+                local sec = data[key]
+                if type(sec) == "table" then
+                    Print(string.format("  T3.%s TX=%d chars", key, #(sec.TX or "")))
+                end
+            end
+        elseif template == 1 then
+            local tx = about.T1 and about.T1.TX or ""
+            Print("T1 TX: " .. #tx .. " chars")
+        end
+    else
+        -- NPC companion
+        local rawText = profile.data and profile.data.TX
+        if not rawText or rawText == "" then
+            Print("TX: vacío")
+        else
+            Print("TX primeros 400 chars:")
+            print(rawText:sub(1, 400))
+            local nh1 = select(2, rawText:gsub("{h1}", ""))
+            Print(string.format("{h1}=%d", nh1))
+        end
+    end
+
+    -- ParseSections
+    if HarfordTRP3.ParseSections then
+        local sections = HarfordTRP3.ParseSections(profile)
+        if not sections then
+            Print("ParseSections: nil (sin secciones)")
+        else
+            Print("ParseSections: " .. #sections .. " sección(es)")
+            for i, sec in ipairs(sections) do
+                Print(string.format("  [%d] title=%s  body=%d chars",
+                    i,
+                    sec.title and ('"' .. sec.title .. '"') or "nil",
+                    #(sec.body or "")))
+            end
+        end
+    else
+        Print("ParseSections: función no disponible")
+    end
+end, "diagnóstico de secciones TRP3 del target (o unit dado)")
+
+-- ─── Diagnóstico Modo NPC ────────────────────────────────────────────────────
+API.RegisterCommand("npcblock", function(args)
+    local unit = (args and args ~= "") and args or "target"
+    Print("=== npcblock: " .. unit .. " ===")
+
+    -- 1. ¿Existe el unit?
+    if not UnitExists(unit) then
+        Print("Unit '" .. unit .. "' no existe")
+        return
+    end
+    Print("UnitName: " .. tostring(UnitName(unit)))
+    Print("UnitIsPlayer: " .. tostring(UnitIsPlayer(unit)))
+
+    -- 2. Intentar companion profile (NPC real Epsilon)
+    if HarfordTRP3 and HarfordTRP3.GetEpsilonNpcProfile then
+        local prof, err = HarfordTRP3.GetEpsilonNpcProfile(unit)
+        if prof then
+            local tx = prof.data and prof.data.TX
+            Print("CompanionProfile OK — data.TX length: " .. tostring(tx and #tx or 0))
+            if tx and #tx > 0 then
+                Print("--- primeros 300 chars de data.TX ---")
+                print(tx:sub(1, 300))
+            else
+                Print("data.TX vacio o nil")
+            end
+        else
+            Print("GetEpsilonNpcProfile fallo: " .. tostring(err))
+        end
+    else
+        Print("HarfordTRP3.GetEpsilonNpcProfile no disponible")
+    end
+
+    -- 3. Intentar player profile (NPC interpretado por jugador)
+    if HarfordTRP3 and HarfordTRP3.GetPlayerProfile then
+        local prof2 = HarfordTRP3.GetPlayerProfile(unit)
+        if prof2 then
+            Print("PlayerProfile OK")
+            if HarfordTRP3.GetPlayerAboutText then
+                local txt, err2 = HarfordTRP3.GetPlayerAboutText(prof2)
+                Print("AboutText length: " .. tostring(txt and #txt or 0) .. " err=" .. tostring(err2))
+                if txt and #txt > 0 then
+                    Print("--- primeros 300 chars de AboutText ---")
+                    print(txt:sub(1, 300))
+                end
+            end
+        else
+            Print("GetPlayerProfile nil")
+        end
+    end
+
+    -- 4. Resultado final del parser
+    if HarfordTRP3 and HarfordTRP3.GetNPCStatBlock then
+        local parsed, perr = HarfordTRP3.GetNPCStatBlock(unit)
+        if not parsed then
+            Print("GetNPCStatBlock FALLO: " .. tostring(perr))
+            return
+        end
+        Print("GetNPCStatBlock OK")
+        Print("  rawHeader: " .. tostring(parsed.rawHeader))
+        Print("  ac: " .. tostring(parsed.ac) .. " acDesc: " .. tostring(parsed.acDesc))
+        local statNames = {"strength","dexterity","constitution","intelligence","wisdom","charisma"}
+        for _, k in ipairs(statNames) do
+            local s = parsed.stats and parsed.stats[k]
+            if s then
+                Print("  " .. k .. " = score:" .. tostring(s.score) .. " mod:" .. tostring(s.mod))
+            else
+                Print("  " .. k .. " = MISSING")
+            end
+        end
+        if next(parsed.savingThrows) then
+            Print("  savingThrows:")
+            for k, v in pairs(parsed.savingThrows) do
+                Print("    " .. k .. " = " .. tostring(v))
+            end
+        else
+            Print("  savingThrows: (ninguna)")
+        end
+        if parsed.skills and #parsed.skills > 0 then
+            Print("  skills:")
+            for _, skill in ipairs(parsed.skills) do
+                Print("    " .. tostring(skill.name) .. " = " .. tostring(skill.bonus))
+            end
+        else
+            Print("  skills: (ninguna)")
+        end
+    end
+
+    -- 5. Estado actual del contexto externo de ficha en la API
+    if HarfordDnDAPI then
+        Print("HasSheetContext: " .. tostring(HarfordDnDAPI.HasSheetContext and HarfordDnDAPI.HasSheetContext()))
+    end
+end, "diagnóstico completo del stat block NPC del target (arg: unit, default=target)")
+
+-- ─── Interceptor npc info ────────────────────────────────────────────────────
+-- Engancha todos los canales de salida de comandos y vuelca la pila cuando
+-- detecta "npc info". Activar con: /harforddebug run npcinfotrap on
+-- Desactivar con:                  /harforddebug run npcinfotrap off
+do
+    local _trapActive = false
+    local _hooked = false
+
+    local function Dump(channel, cmd)
+        Print("|cffff5555[npcinfotrap]|r canal=" .. tostring(channel) .. " cmd=" .. tostring(cmd))
+        Print(debugstack(2, 20, 5))
+    end
+
+    local function IsNpcInfo(text)
+        if type(text) ~= "string" then return false end
+        local t = text:lower():gsub("^%.", ""):gsub("^%s+", "")
+        return t == "npc info" or t:sub(1, 9) == "npc info "
+    end
+
+    local function InstallHooks()
+        if _hooked then return end
+        _hooked = true
+
+        -- 1. SendChatMessage (comandos por chat, .npc info)
+        if SendChatMessage then
+            hooksecurefunc("SendChatMessage", function(text, ...)
+                if _trapActive and IsNpcInfo(text) then
+                    Dump("SendChatMessage", text)
+                end
+            end)
+        end
+
+        -- 2. ARC.CMD / ARC.COMM
+        if ARC then
+            for _, key in ipairs({ "CMD", "COMM" }) do
+                if type(ARC[key]) == "function" then
+                    hooksecurefunc(ARC, key, function(text)
+                        if _trapActive and IsNpcInfo(text) then
+                            Dump("ARC." .. key, text)
+                        end
+                    end)
+                end
+            end
+        end
+
+        -- 3. EpsilonLib.AddonCommands — hooks sobre los senders ya registrados
+        --    y sobre futuros registros via EnsureAddonCommands
+        if HarfordEpsilonCommands then
+            local orig = HarfordEpsilonCommands.Send
+            if type(orig) == "function" then
+                HarfordEpsilonCommands.Send = function(command, opts)
+                    if _trapActive and IsNpcInfo(command) then
+                        Dump("HarfordEpsilonCommands.Send", command)
+                    end
+                    return orig(command, opts)
+                end
+            end
+        end
+
+        -- 4. C_ChatInfo.SendAddonMessage / SendAddonMessage por si alguien
+        --    serializa el comando como mensaje addon
+        if C_ChatInfo and C_ChatInfo.SendAddonMessage then
+            hooksecurefunc(C_ChatInfo, "SendAddonMessage", function(_, text)
+                if _trapActive and IsNpcInfo(text) then
+                    Dump("C_ChatInfo.SendAddonMessage", text)
+                end
+            end)
+        end
+    end
+
+    API.RegisterCommand("npcinfotrap", function(args)
+        local arg = tostring(args or ""):lower():match("^%s*(%S*)")
+        if arg == "off" then
+            _trapActive = false
+            Print("npcinfotrap desactivado")
+            return
+        end
+        InstallHooks()
+        _trapActive = true
+        Print("npcinfotrap activado — reportara cada vez que algo envie 'npc info'")
+    end, "intercepta cualquier envio de 'npc info' y vuelca la pila (arg: on|off)")
+end
+-- ─── Fin Interceptor npc info ─────────────────────────────────────────────────
 
 SetEnabled(HarfordDebugSettings.enabled == true, true)

@@ -99,6 +99,26 @@ function HarfordDnDComm.CreateHandlers(deps)
             return true  -- caché de config actualizada → refrescar overlays
         end
 
+        -- ANIMFLG: el emisor nos informa de su flag de animaciones → cachear
+        local animEnabled = HarfordSync.DeserializeAnimFlag(message)
+        if animEnabled ~= nil then
+            local short = sender and (Ambiguate and Ambiguate(sender, "short") or sender:match("^[^%-]+") or sender)
+            if short and short ~= "" then
+                HarfordDnDResources.AnimFlagCache[sender] = animEnabled
+                HarfordDnDResources.AnimFlagCache[short]  = animEnabled
+            end
+            return false
+        end
+
+        -- DOAPPLYAURA: el DM nos pide que nos apliquemos una aura a nosotros mismos
+        local selfAuraId = HarfordSync.DeserializeApplyAuraSelf(message)
+        if selfAuraId and selfAuraId > 0 then
+            if deps.HandleApplyAuraSelf then
+                deps.HandleApplyAuraSelf(selfAuraId)
+            end
+            return false
+        end
+
         deps.HandleRollSync(message)
         return false
     end

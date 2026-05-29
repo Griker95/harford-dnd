@@ -19,6 +19,9 @@ local TurnFrame
 local SheetFrame
 local SheetScrollChild
 local SheetText
+local SheetSectionPool    = {}
+local SheetActiveSections = {}
+local RefreshSheetLayout  -- forward declaration (definida más abajo)
 local StatusText
 local RefreshFrame
 local MarkChanged
@@ -77,67 +80,12 @@ local function GetReactionColor(reaction)
     return 0.10, 1.0, 0.10, "friendly"
 end
 
-local WOW_CLASS_ALIASES = {
-    { "guerrero", "WARRIOR" }, { "warrior", "WARRIOR" },
-    { "paladin", "PALADIN" },
-    { "cazador de demonios", "DEMONHUNTER" }, { "demon hunter", "DEMONHUNTER" }, { "demonhunter", "DEMONHUNTER" },
-    { "cazador", "HUNTER" }, { "hunter", "HUNTER" },
-    { "picaro", "ROGUE" }, { "picar", "ROGUE" }, { "rogue", "ROGUE" },
-    { "sacerdote", "PRIEST" }, { "priest", "PRIEST" },
-    { "caballero de la muerte", "DEATHKNIGHT" }, { "death knight", "DEATHKNIGHT" }, { "deathknight", "DEATHKNIGHT" },
-    { "chaman", "SHAMAN" }, { "shaman", "SHAMAN" },
-    { "mago", "MAGE" }, { "mage", "MAGE" },
-    { "brujo", "WARLOCK" }, { "warlock", "WARLOCK" },
-    { "monje", "MONK" }, { "monk", "MONK" },
-    { "druida", "DRUID" }, { "druid", "DRUID" },
-    { "evocador", "EVOKER" }, { "evoker", "EVOKER" },
-}
-
-local function NormalizeClassKey(value)
-    value = tostring(value or ""):lower()
-    value = value:gsub("[_%-]+", " ")
-    value = value:gsub("[áàäâÁÀÄÂ]", "a")
-    value = value:gsub("[éèëêÉÈËÊ]", "e")
-    value = value:gsub("[íìïîÍÌÏÎ]", "i")
-    value = value:gsub("[óòöôÓÒÖÔ]", "o")
-    value = value:gsub("[úùüûÚÙÜÛ]", "u")
-    value = value:gsub("[ñÑ]", "n")
-    return value
-end
-
-local function RGBToHex(r, g, b)
-    if not r or not g or not b then return nil end
-    r = math.max(0, math.min(255, math.floor((tonumber(r) or 1) * 255 + 0.5)))
-    g = math.max(0, math.min(255, math.floor((tonumber(g) or 1) * 255 + 0.5)))
-    b = math.max(0, math.min(255, math.floor((tonumber(b) or 1) * 255 + 0.5)))
-    return string.format("%02x%02x%02x", r, g, b)
-end
-
-local function GetProfileClassColorHex(profile)
-    if not (profile and HarfordTRP3 and HarfordTRP3.GetProfilePrimaryClass and RAID_CLASS_COLORS) then return nil end
-    local classText = NormalizeClassKey(HarfordTRP3.GetProfilePrimaryClass(profile))
-    if classText == "" then return nil end
-    for _, entry in ipairs(WOW_CLASS_ALIASES) do
-        if classText:find(entry[1], 1, true) then
-            local color = RAID_CLASS_COLORS[entry[2]]
-            if color then return RGBToHex(color.r, color.g, color.b) end
-        end
-    end
-    return nil
-end
-
-local function GetNativeClassColorHex(unit)
-    if not (unit and UnitClass and RAID_CLASS_COLORS) then return nil end
-    local _, classFile = UnitClass(unit)
-    local color = classFile and RAID_CLASS_COLORS[classFile]
-    return color and RGBToHex(color.r, color.g, color.b) or nil
-end
-
 local function GetPlayerTurnNameColorHex(profile, unit)
     local manual = profile and HarfordTRP3 and HarfordTRP3.GetProfileNameColor and HarfordTRP3.GetProfileNameColor(profile)
     manual = NormalizeColorHex(manual)
     if manual then return manual end
-    return GetProfileClassColorHex(profile) or GetNativeClassColorHex(unit)
+    -- Alias/resolucion de clase viven en HarfordClassColors.
+    return HarfordClassColors.ProfileColorHex(profile) or HarfordClassColors.UnitColorHex(unit)
 end
 
 local function EntryIconMarkup(entry, size)
@@ -172,6 +120,18 @@ local function GetMyName()
     return UnitName("player") or "Jugador"
 end
 
+-- Devuelve el calificativo de reacción ("aliado"/"neutral"/"enemigo") y el markup de color.
+local function GetNPCReactionLabel(entry)
+    local reaction = tonumber(entry and entry.reaction) or 0
+    if reaction >= 5 then
+        return "aliado",   "|cff33ff33"   -- verde
+    elseif reaction == 4 then
+        return "neutral",  "|cffffff00"   -- amarillo
+    else
+        return "enemigo",  "|cffff3333"   -- rojo (hostil, desconocido o 0)
+    end
+end
+
 local function GetEntryNameForChat(entry)
     local name = tostring(entry and entry.name or "?")
     if entry and entry.kind == "round" then
@@ -180,19 +140,21 @@ local function GetEntryNameForChat(entry)
     if entry and entry.kind == "player" then
         return "|cff00ff00" .. name .. "|r"
     end
-    return "|cffff3333D&D (" .. name .. ")|r"
+    local _, colorMarkup = GetNPCReactionLabel(entry)
+    return colorMarkup .. name .. "|r"
 end
 
 local function PrintTurn(entry)
     if not entry then return end
     if entry.kind == "round" then
-        Print("|cffffff00" .. tostring(entry.name or "Inicio del turno - Estados") .. "|r")
+        Print("|cffffff00" .. tostring(entry.name or "Inicio de turno") .. "|r")
         return
     end
     if entry.kind == "player" then
-        Print("Turno de " .. GetEntryNameForChat(entry) .. ".")
+        Print("Turno de " .. GetEntryNameForChat(entry))
     else
-        Print("Turno enemigo: " .. GetEntryNameForChat(entry) .. ".")
+        local qualifier, _ = GetNPCReactionLabel(entry)
+        Print("Turno " .. qualifier .. ": " .. GetEntryNameForChat(entry))
     end
 end
 
@@ -276,7 +238,7 @@ local function AlertRoundStates(entry, activeIndex, turnSerial)
     if PlaySound and SOUNDKIT and SOUNDKIT.RAID_WARNING then
         PlaySound(SOUNDKIT.RAID_WARNING, "Master")
     end
-    Print("|cffffff00" .. text .. "|r: " .. tostring(entry.name or "Inicio del turno - Estados"))
+    Print("|cffffff00" .. text .. "|r")
 end
 
 local function EnsureStore()
@@ -295,33 +257,13 @@ local function AdvanceTurnSerial()
     return store.turnSerial
 end
 
+-- Permiso de edicion del tracker: la senal de autoridad esta centralizada en
+-- HarfordAuthority. CanUseDMTools() == HarfordAdmin cargado Y .ph dm activo
+-- (los mismos dos ejes que combinaba el codigo anterior).
 local function IsTurnAdmin()
-    local hasAdmin = false
-    local dmMode = false
-
-    if HarfordAuthority then
-        if HarfordAuthority.HasAdminAddon then
-            hasAdmin = HarfordAuthority.HasAdminAddon() == true
-        end
-        if HarfordAuthority.IsDMMode then
-            dmMode = HarfordAuthority.IsDMMode() == true
-        end
-    else
-        hasAdmin = HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true
-        if ARC and ARC.PHASE and type(ARC.PHASE.IsDM) == "function" then
-            local ok, value = pcall(ARC.PHASE.IsDM)
-            dmMode = ok and value == true
-        elseif C_Epsilon then
-            if C_Epsilon.IsDM == true then
-                dmMode = true
-            elseif type(C_Epsilon.IsDM) == "function" then
-                local ok, value = pcall(C_Epsilon.IsDM)
-                dmMode = ok and value == true
-            end
-        end
-    end
-
-    return hasAdmin and dmMode
+    return HarfordAuthority
+        and HarfordAuthority.CanUseDMTools
+        and HarfordAuthority.CanUseDMTools() == true
 end
 
 local function ClaimAdminIfNeeded()
@@ -487,7 +429,7 @@ local function EnsureRoundMarker()
         local entry = store.entries[i]
         if entry and entry.kind == "round" then
             entry.id = ROUND_MARKER_ID
-            entry.name = "Inicio del turno - Estados"
+            entry.name = "Inicio de turno"
             entry.initiative = tonumber(entry.initiative) or 999
             entry.hp = 0
             entry.maxHp = 0
@@ -499,7 +441,7 @@ local function EnsureRoundMarker()
 
     local marker = {
         id = ROUND_MARKER_ID,
-        name = "Inicio del turno - Estados",
+        name = "Inicio de turno",
         kind = "round",
         initiative = 999,
         hp = 0,
@@ -570,6 +512,12 @@ NormalizeEntryLinks = function(entry)
     entry.nameColor = NormalizeColorHex(entry.nameColor)
 
     if entry.kind == "player" then
+        -- Una entrada jugador nunca debe conservar rutas companion/NPC.
+        -- Pueden llegar de estados antiguos o de un sync previo y resolver
+        -- la ficha equivocada si se reutilizan como identidad TRP3.
+        entry.npcId = ""
+        entry.phaseId = ""
+        entry.trpFullID = ""
         if entry.trpUnitID == "" then
             entry.trpUnitID = NormalizePlayerUnitID(entry.unitName ~= "" and entry.unitName or entry.name)
         end
@@ -704,8 +652,28 @@ local function PrintTurnNotice(entry, activeIndex, count, turnSerial)
     if noticeKey == lastTurnNoticeKey then return end
     lastTurnNoticeKey = noticeKey
 
+    if entry.kind == "round" then
+        Print("|cffffff00" .. tostring(entry.name or "Inicio de turno") .. "|r")
+        return
+    end
     if count and count > 0 then
-        Print("Turno " .. tostring(activeIndex or 0) .. " / " .. tostring(count) .. ": " .. GetEntryNameForChat(entry) .. ".")
+        -- Calcular índice y total excluyendo marcadores de ronda (cuentan como posición 0)
+        local store = EnsureStore()
+        local displayCount = 0
+        local displayIndex = 0
+        for i, e in ipairs(store.entries or {}) do
+            if e and e.kind ~= "round" then
+                displayCount = displayCount + 1
+                if i <= (activeIndex or 0) then
+                    displayIndex = displayIndex + 1
+                end
+            end
+        end
+        if displayCount > 0 then
+            Print("Turno " .. tostring(displayIndex) .. "/" .. tostring(displayCount) .. ": " .. GetEntryNameForChat(entry))
+        else
+            PrintTurn(entry)
+        end
     else
         PrintTurn(entry)
     end
@@ -1074,21 +1042,267 @@ local function CreateSheetFrame()
     SheetText:SetText("")
 end
 
+-- ── Secciones colapsables ────────────────────────────────────────────────────
+local SHEET_CONTENT_W  = 382
+local SECTION_BODY_PAD = 8
+local SECTION_GAP      = 6
+
+-- Lee fuente de un objeto FontObject de WoW en tiempo de ejecución.
+-- Así no hardcodeamos rutas ni tamaños — si TRP3 cambia su fuente, nosotros también.
+local function GetTRP3BodyFont()
+    -- TRP3 usa GameFontNormal para el cuerpo de su panel About
+    if GameFontNormal and GameFontNormal.GetFont then
+        local f, s, fl = GameFontNormal:GetFont()
+        if f and s and s > 0 then return f, s, fl or "" end
+    end
+    return "Fonts\\FRIZQT__.TTF", 12, ""
+end
+
+local function GetTRP3HeaderFont()
+    -- Un punto más que el cuerpo — igual que el título de sección TRP3
+    local f, s, fl = GetTRP3BodyFont()
+    return f, s + 2, fl
+end
+
+local SECTION_HDR_H  -- calculada tras leer la fuente
+do
+    local _, bodySize = GetTRP3BodyFont()
+    SECTION_HDR_H = math.max(28, math.ceil(bodySize * 2.4))
+end
+
+local function GetOrCreateSectionWidget(i)
+    if SheetSectionPool[i] then return SheetSectionPool[i] end
+
+    local w = {}
+    local bodyFont, bodySize, bodyFlags   = GetTRP3BodyFont()
+    local hdrFont,  hdrSize,  hdrFlags    = GetTRP3HeaderFont()
+
+    -- Cabecera (clickable)
+    w.header = CreateFrame("Frame", nil, SheetScrollChild)
+    w.header:SetHeight(SECTION_HDR_H)
+    w.header:EnableMouse(true)
+
+    local hBg = w.header:CreateTexture(nil, "BACKGROUND")
+    hBg:SetAllPoints()
+    hBg:SetTexture(TEX_WHITE)
+    hBg:SetVertexColor(0.18, 0.10, 0.05, 0.6)
+
+    w.arrow = w.header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    w.arrow:SetPoint("LEFT", w.header, "LEFT", 6, 0)
+    w.arrow:SetWidth(hdrSize + 2)
+    w.arrow:SetJustifyH("CENTER")
+    w.arrow:SetFont(hdrFont, hdrSize, hdrFlags)
+    w.arrow:SetTextColor(0.85, 0.65, 0.25)
+
+    w.label = w.header:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    w.label:SetPoint("LEFT", w.arrow, "RIGHT", 4, 0)
+    w.label:SetPoint("RIGHT", w.header, "RIGHT", -6, 0)
+    w.label:SetJustifyH("LEFT")
+    w.label:SetFont(hdrFont, hdrSize, hdrFlags)
+    -- Sin SetTextColor: el color lo dicta el markup |cff...| del título, igual que TRP3
+
+    w.header:SetScript("OnEnter", function() hBg:SetVertexColor(0.28, 0.16, 0.07, 0.75) end)
+    w.header:SetScript("OnLeave", function() hBg:SetVertexColor(0.18, 0.10, 0.05, 0.60) end)
+    w.header:SetScript("OnMouseDown", function()
+        w.expanded = not w.expanded
+        w.arrow:SetText(w.expanded and "-" or "+")
+        RefreshSheetLayout()
+    end)
+
+    -- Cuerpo
+    w.body = CreateFrame("Frame", nil, SheetScrollChild)
+    w.body:SetWidth(SHEET_CONTENT_W)
+
+    w.bodyText = w.body:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    w.bodyText:SetPoint("TOPLEFT", w.body, "TOPLEFT", 4, -SECTION_BODY_PAD)
+    w.bodyText:SetWidth(SHEET_CONTENT_W - 8)
+    w.bodyText:SetJustifyH("LEFT")
+    w.bodyText:SetJustifyV("TOP")
+    w.bodyText:SetFont(bodyFont, bodySize, bodyFlags)
+    w.bodyText:SetTextColor(1, 1, 1)
+    w.bodyText:SetSpacing(0)
+
+    w.expanded = true
+    w.bodyH    = 0
+    w.hasTitle = false
+
+    SheetSectionPool[i] = w
+    return w
+end
+
+RefreshSheetLayout = function()
+    local totalY = 0
+    for _, w in ipairs(SheetActiveSections) do
+        if w.hasTitle then
+            w.header:ClearAllPoints()
+            w.header:SetPoint("TOPLEFT", SheetScrollChild, "TOPLEFT", 0, -totalY)
+            w.header:SetWidth(SHEET_CONTENT_W)
+            w.header:Show()
+            totalY = totalY + SECTION_HDR_H + 2
+        else
+            w.header:Hide()
+        end
+
+        if w.expanded or not w.hasTitle then
+            local bh = w.bodyH + SECTION_BODY_PAD * 2
+            w.body:ClearAllPoints()
+            w.body:SetPoint("TOPLEFT", SheetScrollChild, "TOPLEFT", 0, -totalY)
+            w.body:SetHeight(bh)
+            w.body:Show()
+            totalY = totalY + bh + SECTION_GAP
+        else
+            w.body:Hide()
+            totalY = totalY + SECTION_GAP
+        end
+    end
+    SheetScrollChild:SetHeight(math.max(416, totalY + 12))
+end
+
+-- (BuildStateRows y STATE_ROW_H eliminados: la sección de rasgos usa bodyText igual que el resto)
+
+local function PopulateSections(sections)
+    for i, w in ipairs(SheetSectionPool) do
+        if i > #sections then
+            w.header:Hide()
+            w.body:Hide()
+        end
+    end
+    SheetActiveSections = {}
+
+    for i, sec in ipairs(sections) do
+        local w = GetOrCreateSectionWidget(i)
+        w.hasTitle = sec.title and sec.title ~= ""
+        w.expanded = false
+
+        if w.hasTitle then
+            local iconMarkup = ""
+            if sec.icon and sec.icon ~= "" and HarfordTRP3 and HarfordTRP3.IconMarkup then
+                iconMarkup = HarfordTRP3.IconMarkup(sec.icon, 24) .. " "
+            end
+            w.label:SetText(iconMarkup .. sec.title)
+            w.arrow:SetText("+")
+        end
+
+        -- Todas las secciones (incluyendo rasgos) se muestran como texto formateado.
+        w.bodyText:SetText(sec.body or "")
+        w.bodyText:Show()
+        w.bodyH = 0  -- se mide tras show
+
+        SheetActiveSections[#SheetActiveSections + 1] = w
+    end
+end
+
+local function MeasureAndLayout()
+    local offsetY = 0
+    for _, w in ipairs(SheetActiveSections) do
+        if w.hasTitle then offsetY = offsetY + SECTION_HDR_H + 2 end
+        w.body:ClearAllPoints()
+        w.body:SetPoint("TOPLEFT", SheetScrollChild, "TOPLEFT", 0, -offsetY)
+        w.body:SetHeight(400)
+        w.body:Show()
+        offsetY = offsetY + 400 + SECTION_GAP
+    end
+    C_Timer.After(0, function()
+        for _, w in ipairs(SheetActiveSections) do
+            local bh = w.bodyText:GetStringHeight() or 0
+            w.bodyH = bh > 0 and bh or 60
+        end
+        RefreshSheetLayout()
+    end)
+end
+
+-- ── Popup de estado (se abre al clicar un link harfordstate:) ─────────────────
+local StatePopup
+
+local function EnsureStatePopup()
+    if StatePopup then return end
+    StatePopup = CreateFrame("Frame", "HarfordStatePopup", UIParent, "BackdropTemplate")
+    StatePopup:SetSize(340, 280)
+    StatePopup:SetPoint("CENTER")
+    StatePopup:SetFrameStrata("DIALOG")
+    StatePopup:SetFrameLevel(600)
+    StatePopup:SetMovable(true)
+    StatePopup:EnableMouse(true)
+    StatePopup:RegisterForDrag("LeftButton")
+    StatePopup:SetScript("OnDragStart", StatePopup.StartMoving)
+    StatePopup:SetScript("OnDragStop",  StatePopup.StopMovingOrSizing)
+    StatePopup:Hide()
+    local bg = StatePopup:CreateTexture(nil, "BACKGROUND")
+    bg:SetPoint("TOPLEFT",     StatePopup, "TOPLEFT",     7, -13)
+    bg:SetPoint("BOTTOMRIGHT", StatePopup, "BOTTOMRIGHT", -7, 7)
+    bg:SetTexture(TEX_WHITE)
+    bg:SetVertexColor(0.06, 0.015, 0.012, 0.97)
+    local border = CreateFrame("Frame", nil, StatePopup, "DialogBorderTemplate")
+    border:SetAllPoints(StatePopup)
+    border:SetFrameLevel(StatePopup:GetFrameLevel() + 2)
+    local close = CreateFrame("Button", nil, StatePopup, "UIPanelCloseButton")
+    close:SetPoint("TOPRIGHT", -6, -6)
+    StatePopup.titleStr = StatePopup:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
+    StatePopup.titleStr:SetPoint("TOPLEFT", 16, -16)
+    StatePopup.titleStr:SetPoint("TOPRIGHT", -36, -16)
+    StatePopup.titleStr:SetJustifyH("LEFT")
+    local bodyFont, bodySize = GetTRP3BodyFont()
+    local scroll = CreateFrame("ScrollFrame", nil, StatePopup, "UIPanelScrollFrameTemplate")
+    scroll:SetPoint("TOPLEFT",     StatePopup, "TOPLEFT",     16, -52)
+    scroll:SetPoint("BOTTOMRIGHT", StatePopup, "BOTTOMRIGHT", -28, 16)
+    local child = CreateFrame("Frame", nil, scroll)
+    child:SetSize(280, 1)
+    scroll:SetScrollChild(child)
+    StatePopup.bodyText = child:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    StatePopup.bodyText:SetPoint("TOPLEFT", 0, 0)
+    StatePopup.bodyText:SetWidth(280)
+    StatePopup.bodyText:SetJustifyH("LEFT")
+    StatePopup.bodyText:SetJustifyV("TOP")
+    StatePopup.bodyText:SetFont(bodyFont, bodySize, "")
+    StatePopup.bodyText:SetTextColor(1, 1, 1)
+    StatePopup.bodyText:SetSpacing(1)
+    StatePopup._child = child
+end
+
+local function ShowStatePopup(state)
+    EnsureStatePopup()
+    local iconMk = ""
+    if state.icon and state.icon ~= "" and HarfordTRP3 and HarfordTRP3.IconMarkup then
+        iconMk = HarfordTRP3.IconMarkup(state.icon, 22) .. " "
+    end
+    StatePopup.titleStr:SetText(iconMk .. (state.title or "Estado"))
+    local body = (state.text and state.text ~= "") and state.text or "(sin descripción)"
+    if HarfordTRP3 and HarfordTRP3.ConvertTRP3Markup then
+        body = HarfordTRP3.ConvertTRP3Markup(body)
+    end
+    StatePopup.bodyText:SetText(body)
+    C_Timer.After(0, function()
+        local bh = StatePopup.bodyText:GetStringHeight() or 0
+        StatePopup._child:SetHeight(math.max(200, bh + 16))
+    end)
+    StatePopup:Show()
+    StatePopup:Raise()
+end
+
+-- ── Hook SetItemRef para links harfordstate: ──────────────────────────────────
+do
+    local function OnItemRef(link)
+        if not link or not link:find("^harfordstate:") then return end
+        if not HarfordTRP3 or not HarfordTRP3.GetStateFromLink then return end
+        local state, err = HarfordTRP3.GetStateFromLink(link)
+        if state then
+            ShowStatePopup(state)
+        else
+            print("|cffff4444[Harford]|r Estado no disponible: " .. tostring(err))
+        end
+    end
+    hooksecurefunc("SetItemRef", function(link) OnItemRef(link) end)
+end
+-- ── Fin secciones colapsables ────────────────────────────────────────────────
+
 local function GetEntryTRP3Profile(entry)
     if not entry or not HarfordTRP3 then
         return nil, "HarfordTRP3 no disponible"
     end
 
-    if entry.kind == "player" then
-        local profileID = tostring(entry.trpProfileID or "")
-        if profileID ~= "" and HarfordTRP3.GetPlayerProfileByProfileID then
-            local profile = HarfordTRP3.GetPlayerProfileByProfileID(profileID)
-            if profile then
-                entry.nameColor = GetPlayerTurnNameColorHex(profile) or entry.nameColor
-                return profile, nil, profileID
-            end
-        end
+    NormalizeEntryLinks(entry)
 
+    if entry.kind == "player" then
         local tried = {}
         local function TryUnitID(value)
             value = tostring(value or "")
@@ -1176,28 +1390,45 @@ local function GetEntryTRP3Profile(entry)
 end
 
 local function ShowEntrySheet(entry)
-    if not entry or entry.kind == "round" then return end
+    if not entry or entry.kind == "round" or entry.kind == "generic" then return end
 
     CreateSheetFrame()
     SheetFrame.title:SetText(EntryIconMarkup(entry, 26) .. tostring(entry.name or "Ficha"))
     SheetFrame.title:SetTextColor(GetEntryNameColor(entry))
 
     local profile, err = GetEntryTRP3Profile(entry)
-    local text
-    if profile and HarfordTRP3 and HarfordTRP3.BuildDisplayText then
-        text = HarfordTRP3.BuildDisplayText(profile)
-    elseif profile and HarfordTRP3 and HarfordTRP3.GetProfileMainText then
-        text = HarfordTRP3.GetProfileMainText(profile)
-    end
 
-    if not text or text == "" then
-        text = tostring(err or "No hay ficha TRP3 disponible para esta entrada.")
-    end
+    -- Intentar modo secciones colapsables
+    local sections = profile and HarfordTRP3 and HarfordTRP3.ParseSections
+                     and HarfordTRP3.ParseSections(profile)
 
-    SheetText:SetText(text)
-    SheetScrollChild:SetHeight(math.max(416, (SheetText:GetStringHeight() or 0) + 24))
-    SheetFrame:Show()
-    SheetFrame:Raise()
+    if sections then
+        SheetText:Hide()
+        PopulateSections(sections)
+        SheetFrame:Show()
+        SheetFrame:Raise()
+        -- Medir alturas un frame después de que WoW renderice los FontStrings
+        C_Timer.After(0, MeasureAndLayout)
+    else
+        -- Fallback: texto plano
+        for _, w in ipairs(SheetSectionPool) do w.header:Hide() w.body:Hide() end
+        SheetActiveSections = {}
+
+        local text
+        if profile and HarfordTRP3 and HarfordTRP3.BuildDisplayText then
+            text = HarfordTRP3.BuildDisplayText(profile)
+        elseif profile and HarfordTRP3 and HarfordTRP3.GetProfileMainText then
+            text = HarfordTRP3.GetProfileMainText(profile)
+        end
+        if not text or text == "" then
+            text = tostring(err or "No hay ficha TRP3 disponible para esta entrada.")
+        end
+        SheetText:SetText(text)
+        SheetText:Show()
+        SheetScrollChild:SetHeight(math.max(416, (SheetText:GetStringHeight() or 0) + 24))
+        SheetFrame:Show()
+        SheetFrame:Raise()
+    end
 end
 
 local function GetPortraitTexture(kind)
@@ -1590,6 +1821,12 @@ RefreshFrame = function()
                 card.init:SetText("ESTADOS")
                 card.init:Show()
                 card.hp:Hide()
+            elseif entry.kind == "generic" then
+                -- Marcadores de fase (Aliado/Neutral/Enemigo): sin barra de vida ni texto extra
+                card.name:SetTextColor(GetEntryNameColor(entry))
+                card.init:SetText("")
+                card.init:Hide()
+                card.hp:Hide()
             else
                 card.name:SetTextColor(GetEntryNameColor(entry))
                 card.init:SetText("")
@@ -1607,8 +1844,9 @@ RefreshFrame = function()
                 card.active:Hide()
                 card.turn:SetText("")
             end
-            card.minus:SetShown(isAdmin and entry.kind ~= "round")
-            card.plus:SetShown(isAdmin and entry.kind ~= "round")
+            local isSystem = entry.kind == "round" or entry.kind == "generic"
+            card.minus:SetShown(isAdmin and not isSystem)
+            card.plus:SetShown(isAdmin and not isSystem)
             card.remove:SetShown(isAdmin and entry.kind ~= "round")
             card.moveLeft:SetShown(isAdmin and editMode)
             card.moveRight:SetShown(isAdmin and editMode)
@@ -1791,7 +2029,7 @@ local function PromptAdjustHp(index, direction)
 
     local store = EnsureStore()
     local entry = store.entries[index]
-    if not entry or entry.kind == "round" then return end
+    if not entry or entry.kind == "round" or entry.kind == "generic" then return end
 
     local dialogName = "HARFORD_TURN_ADJUST_HP"
     StaticPopupDialogs[dialogName] = StaticPopupDialogs[dialogName] or {
@@ -1849,7 +2087,7 @@ local function NextTurn()
     EnsureActiveVisible()
     local turnSerial = AdvanceTurnSerial()
     MarkChanged()
-    PrintTurn(store.entries[store.activeIndex])
+    PrintTurnNotice(store.entries[store.activeIndex], store.activeIndex, #store.entries, turnSerial)
     AlertRoundStates(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     AlertMyTurn(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     SendTurnNotice()
@@ -1866,7 +2104,7 @@ local function PrevTurn()
     EnsureActiveVisible()
     local turnSerial = AdvanceTurnSerial()
     MarkChanged()
-    PrintTurn(store.entries[store.activeIndex])
+    PrintTurnNotice(store.entries[store.activeIndex], store.activeIndex, #store.entries, turnSerial)
     AlertRoundStates(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     AlertMyTurn(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     SendTurnNotice()
@@ -2041,9 +2279,27 @@ local function CreateTurnFrame()
     TurnFrame.adminControls = {}
 
     local targetButton = MakeButton(TurnFrame, "Objetivo", 62, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 16, -51, function() AddUnit("target", "target") end)
+
+    -- Botones de turno genérico: añaden una entrada NPC con la reacción fija
+    local GENERIC_TURN_ICON = "Interface\\Icons\\INV_Misc_PocketWatch_01"
+    local function AddGenericTurn(name, reaction)
+        AddEntry(name, 0, 0, 0, "generic", NewId(), 0, 0, name, GENERIC_TURN_ICON, 0, { reaction = reaction })
+    end
+
+    local btnAliado  = MakeButton(TurnFrame, "Aliado",  54, 22, "TOPLEFT", TurnFrame, "TOPLEFT",  82, -51, function() AddGenericTurn("Aliado",  8) end)
+    local btnNeutral = MakeButton(TurnFrame, "Neutral", 60, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 140, -51, function() AddGenericTurn("Neutral", 4) end)
+    local btnEnemigo = MakeButton(TurnFrame, "Enemigo", 64, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 204, -51, function() AddGenericTurn("Enemigo", 1) end)
+
+    btnAliado:GetFontString():SetTextColor(0.2, 1.0, 0.2)
+    btnNeutral:GetFontString():SetTextColor(1.0, 1.0, 0.0)
+    btnEnemigo:GetFontString():SetTextColor(1.0, 0.2, 0.2)
+
     local editButton = MakeButton(TurnFrame, "Editar", 58, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 16, -206, ToggleEditMode)
     TurnFrame.editButton = editButton
     tinsert(TurnFrame.adminControls, targetButton)
+    tinsert(TurnFrame.adminControls, btnAliado)
+    tinsert(TurnFrame.adminControls, btnNeutral)
+    tinsert(TurnFrame.adminControls, btnEnemigo)
     tinsert(TurnFrame.adminControls, editButton)
 
     local prevButton = MakeButton(TurnFrame, "Anterior", 68, 22, "BOTTOMLEFT", TurnFrame, "BOTTOMLEFT", 80, 10, PrevTurn)

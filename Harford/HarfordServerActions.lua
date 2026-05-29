@@ -2,7 +2,12 @@ HarfordServerActions = HarfordServerActions or {}
 
 local API = HarfordServerActions
 
-local DEFAULT_TARGET = "self"
+-- Validaciones, plantillas y constantes de emote viven en sus respectivos modulos:
+--   * HarfordCommandTemplates.* + Build(template, args) -> string
+--   * HarfordEmotes.NPC_WOUND.id                        -> emote 33 (ONESHOT_WOUND)
+--
+-- Este modulo se encarga solo de validar los inputs y delegar a la capa de
+-- transporte (HarfordEpsilonCommands). No construye strings literales.
 
 local function ToPositiveInteger(value, name)
     local numberValue = tonumber(value)
@@ -18,18 +23,20 @@ local function ToPositiveInteger(value, name)
     return numberValue
 end
 
-local function NormalizeTarget(target)
-    target = tostring(target or DEFAULT_TARGET)
-    target = target:gsub("^%s+", ""):gsub("%s+$", "")
-    if target == "" then
-        target = DEFAULT_TARGET
+-- Variante que admite 0: la postura "Stand" del modo combate NPC se envia como
+-- `npc emote 0 repeat`, por lo que el emote 0 es valido en ese contexto.
+local function ToNonNegativeInteger(value, name)
+    local numberValue = tonumber(value)
+    if not numberValue then
+        return nil, tostring(name or "valor") .. " debe ser numerico"
     end
 
-    if not target:match("^[%w_%-]+$") then
-        return nil, "target invalido"
+    numberValue = math.floor(numberValue)
+    if numberValue < 0 then
+        return nil, tostring(name or "valor") .. " no puede ser negativo"
     end
 
-    return target
+    return numberValue
 end
 
 local function SendCommand(command, opts)
@@ -38,6 +45,25 @@ local function SendCommand(command, opts)
     end
 
     return HarfordEpsilonCommands.Send(command, opts)
+end
+
+local function BuildAndSend(templateKey, args, opts)
+    local template = HarfordCommandTemplates and HarfordCommandTemplates[templateKey]
+    if not template then
+        return false, "template desconocida: " .. tostring(templateKey)
+    end
+    local command, err = HarfordCommandTemplates.Build(template, args)
+    if not command then
+        return false, err
+    end
+    return SendCommand(command, opts)
+end
+
+local function GetNpcWoundEmoteId(isCritical)
+    if isCritical then
+        return (HarfordEmotes and HarfordEmotes.NPC_WOUND_CRIT and HarfordEmotes.NPC_WOUND_CRIT.id) or 34
+    end
+    return (HarfordEmotes and HarfordEmotes.NPC_WOUND and HarfordEmotes.NPC_WOUND.id) or 33
 end
 
 function API.GiveItem(itemId, quantity, opts)
@@ -51,42 +77,54 @@ function API.GiveItem(itemId, quantity, opts)
         return false, quantityErr
     end
 
-    return SendCommand("additem " .. tostring(safeItemId) .. " " .. tostring(safeQuantity), opts)
+    return BuildAndSend("ADD_ITEM", { id = safeItemId, qty = safeQuantity }, opts)
 end
 
-function API.ApplyAura(spellId, target, opts)
+-- Aplica un aura al propio personaje: envia "aura ID self".
+function API.ApplyAura(spellId, opts)
     local safeSpellId, spellErr = ToPositiveInteger(spellId, "spellId")
     if not safeSpellId then
         return false, spellErr
     end
 
-    local safeTarget, targetErr = NormalizeTarget(target)
-    if not safeTarget then
-        return false, targetErr
-    end
-
-    return SendCommand("aura " .. tostring(safeSpellId) .. " " .. safeTarget, opts)
+    return BuildAndSend("AURA_SELF", { id = safeSpellId }, opts)
 end
 
-function API.RemoveAura(spellId, target, opts)
+-- Aplica un aura al unit actualmente seleccionado en el cliente (sin sufijo).
+function API.ApplyAuraToCurrentTarget(spellId, opts)
     local safeSpellId, spellErr = ToPositiveInteger(spellId, "spellId")
     if not safeSpellId then
         return false, spellErr
     end
 
-    local safeTarget, targetErr = NormalizeTarget(target)
-    if not safeTarget then
-        return false, targetErr
+    return BuildAndSend("AURA_TARGET", { id = safeSpellId }, opts)
+end
+
+-- Quita un aura del propio personaje: envia "unaura ID self".
+function API.RemoveAuraSelf(spellId, opts)
+    local safeSpellId, spellErr = ToPositiveInteger(spellId, "spellId")
+    if not safeSpellId then
+        return false, spellErr
     end
 
-    return SendCommand("unaura " .. tostring(safeSpellId) .. " " .. safeTarget, opts)
+    return BuildAndSend("UNAURA_SELF", { id = safeSpellId }, opts)
+end
+
+-- Quita un aura del unit actualmente seleccionado en el cliente (sin sufijo).
+function API.RemoveAura(spellId, opts)
+    local safeSpellId, spellErr = ToPositiveInteger(spellId, "spellId")
+    if not safeSpellId then
+        return false, spellErr
+    end
+
+    return BuildAndSend("UNAURA_TARGET", { id = safeSpellId }, opts)
 end
 
 function API.GetPhaseInfo(callback, opts)
     opts = opts or {}
     opts.callback = callback
     opts.forceEpsilon = true
-    return SendCommand("phase info addon", opts)
+    return BuildAndSend("PHASE_INFO", {}, opts)
 end
 
 function API.SetNpcHealthDelta(delta, opts)
@@ -100,8 +138,78 @@ function API.SetNpcHealthDelta(delta, opts)
         return false, "delta NPC demasiado grande"
     end
 
-    local sign = amount > 0 and ("+" .. tostring(amount)) or tostring(amount)
-    return SendCommand("npc set health " .. sign, opts)
+    local sign = amount > 0 and "+" or "-"
+    local absAmount = math.abs(amount)
+    local ok, err = BuildAndSend("NPC_SET_HEALTH", { sign = sign, amount = absAmount }, opts)
+    if ok and amount < -1 then
+        -- ONESHOT_WOUND: reaccion breve del NPC al recibir dano real.
+        -- No reutilizar callback: pertenece al cambio de salud, no al emote.
+        -- opts.isCritical controla si se usa la variante critica (emote 34).
+        local emoteOpts = {}
+        for key, value in pairs(opts or {}) do
+            if key ~= "callback" then
+                emoteOpts[key] = value
+            end
+        end
+        API.SetNpcEmote(GetNpcWoundEmoteId(opts and opts.isCritical), emoteOpts)
+    end
+    return ok, err
+end
+
+function API.ModAnim(animId, opts)
+    local safeAnimId, animErr = ToPositiveInteger(animId, "animId")
+    if not safeAnimId then
+        return false, animErr
+    end
+
+    return BuildAndSend("MOD_ANIM", { id = safeAnimId }, opts)
+end
+
+function API.SetNpcEmote(emoteId, opts)
+    local safeEmoteId, emoteErr = ToPositiveInteger(emoteId, "emoteId")
+    if not safeEmoteId then
+        return false, emoteErr
+    end
+
+    -- Canal silencioso de EpsilonLib: ARC.CMD dejaria visible la confirmacion
+    -- del servidor ("... is now ... emote N") en el chat.
+    opts = opts or {}
+    opts.forceEpsilon = true
+    if opts.showMessages == nil then opts.showMessages = false end
+    return BuildAndSend("NPC_EMOTE", { id = safeEmoteId }, opts)
+end
+
+-- Postura de combate persistente: "npc emote ID repeat" (bucle hasta otro emote).
+-- Admite emote 0 (Stand: salir del modo combate).
+function API.SetNpcEmoteRepeat(emoteId, opts)
+    local safeEmoteId, emoteErr = ToNonNegativeInteger(emoteId, "emoteId")
+    if not safeEmoteId then
+        return false, emoteErr
+    end
+
+    -- Mismo motivo que SetNpcEmote: forzar EpsilonLib y ocultar la respuesta.
+    opts = opts or {}
+    opts.forceEpsilon = true
+    if opts.showMessages == nil then opts.showMessages = false end
+    return BuildAndSend("NPC_EMOTE_REPEAT", { id = safeEmoteId }, opts)
+end
+
+function API.RepossessCurrentNpc(opts)
+    if not HarfordEpsilonCommands or not HarfordEpsilonCommands.SendChain then
+        return false, "HarfordEpsilonCommands.SendChain no disponible"
+    end
+
+    opts = opts or {}
+    opts.forceEpsilon = true
+    local unposs = HarfordCommandTemplates and HarfordCommandTemplates.UNPOSS or "unposs"
+    local poss   = HarfordCommandTemplates and HarfordCommandTemplates.POSS   or "poss"
+    return HarfordEpsilonCommands.SendChain({ unposs, poss }, opts.callback, opts)
+end
+
+function API.UnpossessCurrentNpc(opts)
+    opts = opts or {}
+    opts.forceEpsilon = true
+    return BuildAndSend("UNPOSS", {}, opts)
 end
 
 function API.SetNpcAura(spellId, opts)
@@ -110,7 +218,36 @@ function API.SetNpcAura(spellId, opts)
         return false, spellErr
     end
 
-    return SendCommand("npc set aura " .. tostring(safeSpellId), opts)
+    return BuildAndSend("NPC_SET_AURA", { id = safeSpellId }, opts)
+end
+
+function API.RemoveNpcAura(spellId, opts)
+    local safeSpellId, spellErr = ToPositiveInteger(spellId, "spellId")
+    if not safeSpellId then
+        return false, spellErr
+    end
+
+    return BuildAndSend("NPC_SET_UNAURA", { id = safeSpellId }, opts)
+end
+
+function API.SendNpcTRP3Hyperlink(hyperlink, opts)
+    local text = tostring(hyperlink or "")
+    if not HarfordTRP3 or not HarfordTRP3.IsKnownGlanceHyperlink
+        or not HarfordTRP3.IsKnownGlanceHyperlink(text) then
+        return false, "hyperlink TRP3 no generado por Harford"
+    end
+
+    -- opts.textPrefix: texto libre que aparece ANTES del hyperlink en el textemote.
+    local prefix = (opts and opts.textPrefix and #opts.textPrefix > 0)
+        and (opts.textPrefix .. " ") or ""
+    local command = "npc te " .. prefix .. text
+    if #command >= 250 then
+        return false, "hyperlink TRP3 demasiado largo para EpsilonLib.AddonCommands"
+    end
+
+    opts = opts or {}
+    opts.forceEpsilon = true
+    return SendCommand(command, opts)
 end
 
 function API.SetPhaseNpcFaction(factionId, opts)
@@ -121,7 +258,7 @@ function API.SetPhaseNpcFaction(factionId, opts)
 
     opts = opts or {}
     opts.forceEpsilon = true
-    return SendCommand("ph f n fac " .. tostring(safeFactionId), opts)
+    return BuildAndSend("PH_F_N_FAC", { factionId = safeFactionId }, opts)
 end
 
 function API.SendRawDebug(command, callback, opts)

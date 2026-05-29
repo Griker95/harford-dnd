@@ -591,14 +591,10 @@ HarfordLootFrame:SetScript("OnShow", function(self)
     end
     self.page = 1
     HarfordLootFrame_Update()
-    if HarfordServerActions and HarfordServerActions.ApplyAura then
-        HarfordServerActions.ApplyAura(224063, "self")
-    end
+    if HarfordAuras then HarfordAuras.Apply("loot") end
 end)
 HarfordLootFrame:SetScript("OnHide", function(self)
-    if HarfordServerActions and HarfordServerActions.RemoveAura then
-        HarfordServerActions.RemoveAura(224063, "self")
-    end
+    if HarfordAuras then HarfordAuras.Remove("loot") end
 end)
 function HarfordLootFrame_UpdateButton(index)
     local numLootItems = #HarfordLootFrame.lootTable or 0

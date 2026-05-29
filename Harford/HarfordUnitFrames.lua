@@ -52,13 +52,8 @@ local BarBackgroundInfo
 local StatusBarTextureInfo
 local SetTextureFromInfo
 
-local function Clamp(value, minValue, maxValue)
-    value = tonumber(value) or minValue
-    if value < minValue then return minValue end
-    if value > maxValue then return maxValue end
-    return value
-end
-
+-- Clamp/FieldPath/FirstExisting/FindStatusBars/StatusBarScore/PickStatusBar/
+-- ScaleBox/IsSaneBox viven en HarfordUIGeom.
 local function NativeFrameForUnit(unit)
     if unit == "player" then return _G.PlayerFrame end
     if unit == "target" then return _G.TargetFrame end
@@ -70,74 +65,6 @@ local function NativeFrameForUnit(unit)
             or (_G.TargetFrame and _G.TargetFrame.TargetFrameToT)
     end
     return nil
-end
-
-local function FieldPath(root, ...)
-    local value = root
-    for i = 1, select("#", ...) do
-        local key = select(i, ...)
-        value = value and value[key]
-    end
-    return value
-end
-
-local function FirstExisting(...)
-    for i = 1, select("#", ...) do
-        local value = select(i, ...)
-        if value then return value end
-    end
-    return nil
-end
-
-local function FindStatusBars(root, out, seen)
-    out = out or {}
-    seen = seen or {}
-    if not root or seen[root] then return out end
-    seen[root] = true
-
-    if root.GetObjectType and root:GetObjectType() == "StatusBar" then
-        out[#out + 1] = root
-    end
-
-    if root.GetChildren then
-        for _, child in ipairs({ root:GetChildren() }) do
-            FindStatusBars(child, out, seen)
-        end
-    end
-
-    return out
-end
-
-local function StatusBarScore(bar, hints)
-    if not bar then return -1000 end
-    hints = hints or {}
-    local score = 0
-    local name = bar.GetName and tostring(bar:GetName() or ""):lower() or ""
-    for _, hint in ipairs(hints) do
-        if name:find(tostring(hint):lower(), 1, true) then
-            score = score + 100
-        end
-    end
-    local w = bar.GetWidth and (bar:GetWidth() or 0) or 0
-    local h = bar.GetHeight and (bar:GetHeight() or 0) or 0
-    if w > h and w >= 30 then score = score + 10 end
-    if bar.IsShown and bar:IsShown() then score = score + 3 end
-    return score
-end
-
-local function PickStatusBar(root, hints, exclude)
-    local best, bestScore
-    exclude = exclude or {}
-    for _, bar in ipairs(FindStatusBars(root)) do
-        if not exclude[bar] then
-            local score = StatusBarScore(bar, hints)
-            if not best or score > bestScore then
-                best = bar
-                bestScore = score
-            end
-        end
-    end
-    return best
 end
 
 local function DebugName(frameOrRegion)
@@ -154,12 +81,12 @@ end
 local function NativePiecesForUnit(unit)
     if unit == "player" then
         local root = _G.PlayerFrame
-        local modernMain = FieldPath(root, "PlayerFrameContent", "PlayerFrameContentMain")
+        local modernMain = HarfordUIGeom.FieldPath(root, "PlayerFrameContent", "PlayerFrameContentMain")
         return {
             root = root,
             portrait = _G.PlayerPortrait,
-            health = FirstExisting(FieldPath(modernMain, "HealthBarArea", "HealthBar"), _G.PlayerFrameHealthBar),
-            power = FirstExisting(FieldPath(modernMain, "ManaBarArea", "ManaBar"), FieldPath(modernMain, "ManaBar"), _G.PlayerFrameManaBar),
+            health = HarfordUIGeom.FirstExisting(HarfordUIGeom.FieldPath(modernMain, "HealthBarArea", "HealthBar"), _G.PlayerFrameHealthBar),
+            power = HarfordUIGeom.FirstExisting(HarfordUIGeom.FieldPath(modernMain, "ManaBarArea", "ManaBar"), HarfordUIGeom.FieldPath(modernMain, "ManaBar"), _G.PlayerFrameManaBar),
             level = _G.PlayerFrameTextureFrameLevelText or _G.PlayerLevelText,
             name = _G.PlayerName,
             texture = _G.PlayerFrameTexture,
@@ -170,25 +97,25 @@ local function NativePiecesForUnit(unit)
         or unit == "targettarget" and NativeFrameForUnit("targettarget")
         or unit == "focustarget" and _G["FocusFrameToT"]
         or _G.TargetFrame
-    local modernMain = FieldPath(root, "TargetFrameContent", "TargetFrameContentMain")
+    local modernMain = HarfordUIGeom.FieldPath(root, "TargetFrameContent", "TargetFrameContentMain")
     local prefix = unit == "focus" and "FocusFrame"
         or unit == "targettarget" and "TargetFrameToT"
         or unit == "focustarget" and "FocusFrameToT"
         or "TargetFrame"
-    local health = FirstExisting(FieldPath(modernMain, "HealthBar"), _G[prefix .. "HealthBar"], FieldPath(root, "healthbar"), FieldPath(root, "HealthBar"))
-    local power = FirstExisting(FieldPath(modernMain, "ManaBar"), _G[prefix .. "ManaBar"], FieldPath(root, "manabar"), FieldPath(root, "ManaBar"))
+    local health = HarfordUIGeom.FirstExisting(HarfordUIGeom.FieldPath(modernMain, "HealthBar"), _G[prefix .. "HealthBar"], HarfordUIGeom.FieldPath(root, "healthbar"), HarfordUIGeom.FieldPath(root, "HealthBar"))
+    local power = HarfordUIGeom.FirstExisting(HarfordUIGeom.FieldPath(modernMain, "ManaBar"), _G[prefix .. "ManaBar"], HarfordUIGeom.FieldPath(root, "manabar"), HarfordUIGeom.FieldPath(root, "ManaBar"))
     if unit == "targettarget" or unit == "focustarget" then
-        health = health or PickStatusBar(root, { "health" })
-        power = power or PickStatusBar(root, { "mana", "power" }, health and { [health] = true } or nil)
+        health = health or HarfordUIGeom.PickStatusBar(root, { "health" })
+        power = power or HarfordUIGeom.PickStatusBar(root, { "mana", "power" }, health and { [health] = true } or nil)
     end
     return {
         root = root,
-        portrait = FirstExisting(_G[prefix .. "Portrait"], FieldPath(root, "portrait"), FieldPath(root, "Portrait")),
+        portrait = HarfordUIGeom.FirstExisting(_G[prefix .. "Portrait"], HarfordUIGeom.FieldPath(root, "portrait"), HarfordUIGeom.FieldPath(root, "Portrait")),
         health = health,
         power = power,
-        level = FirstExisting(_G[prefix .. "TextureFrameLevelText"], _G[prefix .. "LevelText"], FieldPath(root, "levelText"), FieldPath(root, "LevelText")),
-        name = FirstExisting(_G[prefix .. "TextureFrameName"], FieldPath(root, "name"), FieldPath(root, "Name")),
-        texture = FirstExisting(_G[prefix .. "TextureFrameTexture"], FieldPath(root, "texture"), FieldPath(root, "Texture")),
+        level = HarfordUIGeom.FirstExisting(_G[prefix .. "TextureFrameLevelText"], _G[prefix .. "LevelText"], HarfordUIGeom.FieldPath(root, "levelText"), HarfordUIGeom.FieldPath(root, "LevelText")),
+        name = HarfordUIGeom.FirstExisting(_G[prefix .. "TextureFrameName"], HarfordUIGeom.FieldPath(root, "name"), HarfordUIGeom.FieldPath(root, "Name")),
+        texture = HarfordUIGeom.FirstExisting(_G[prefix .. "TextureFrameTexture"], HarfordUIGeom.FieldPath(root, "texture"), HarfordUIGeom.FieldPath(root, "Texture")),
     }
 end
 
@@ -269,43 +196,17 @@ local function FallbackLayout(unit)
     }
 end
 
-local function ScaleBox(box, sx, sy)
-    if not box then return nil end
-    local out = {}
-    for key, value in pairs(box) do
-        out[key] = value
-    end
-    if out.x then out.x = out.x * sx end
-    if out.y then out.y = out.y * sy end
-    if out.width then out.width = out.width * sx end
-    if out.height then out.height = out.height * sy end
-    if out.cx then out.cx = out.cx * sx end
-    if out.cy then out.cy = out.cy * sy end
-    return out
-end
-
 local function DerivedLayout(unit, rootWidth, rootHeight)
     local fallback = FallbackLayout(unit)
     local sx = (rootWidth or API.C.DEFAULT_FRAME_W) / API.C.DEFAULT_FRAME_W
     local sy = (rootHeight or API.C.DEFAULT_FRAME_H) / API.C.DEFAULT_FRAME_H
     fallback.root = { width = rootWidth or API.C.DEFAULT_FRAME_W, height = rootHeight or API.C.DEFAULT_FRAME_H }
-    fallback.portrait = ScaleBox(fallback.portrait, sx, sy)
-    fallback.health = ScaleBox(fallback.health, sx, sy)
-    fallback.power = ScaleBox(fallback.power, sx, sy)
-    fallback.level = ScaleBox(fallback.level, sx, sy)
-    fallback.name = ScaleBox(fallback.name, sx, sy)
+    fallback.portrait = HarfordUIGeom.ScaleBox(fallback.portrait, sx, sy)
+    fallback.health = HarfordUIGeom.ScaleBox(fallback.health, sx, sy)
+    fallback.power = HarfordUIGeom.ScaleBox(fallback.power, sx, sy)
+    fallback.level = HarfordUIGeom.ScaleBox(fallback.level, sx, sy)
+    fallback.name = HarfordUIGeom.ScaleBox(fallback.name, sx, sy)
     return fallback
-end
-
-local function IsSaneBox(box, rootWidth, rootHeight, minW, minH, maxW, maxH)
-    if not box then return false end
-    local width = tonumber(box.width) or 0
-    local height = tonumber(box.height) or 0
-    if width < minW or height < minH then return false end
-    if width > maxW or height > maxH then return false end
-    if box.x and (box.x < -4 or box.x > rootWidth + 4) then return false end
-    if box.y and (box.y < -4 or box.y > rootHeight + 4) then return false end
-    return true
 end
 
 local function NormalizeMeasuredLayout(layout)
@@ -313,22 +214,22 @@ local function NormalizeMeasuredLayout(layout)
     local rootH = layout.root and layout.root.height or API.C.DEFAULT_FRAME_H
     local derived = DerivedLayout(layout.unit, rootW, rootH)
 
-    if not IsSaneBox(layout.portrait, rootW, rootH, 28, 28, 90, 90) then
+    if not HarfordUIGeom.IsSaneBox(layout.portrait, rootW, rootH, 28, 28, 90, 90) then
         layout.portrait = derived.portrait
     else
         local size = math.min(layout.portrait.width, layout.portrait.height)
-        size = Clamp(size, 36, 72)
+        size = HarfordUIGeom.Clamp(size, 36, 72)
         layout.portrait.width = size
         layout.portrait.height = size
     end
 
-    if not IsSaneBox(layout.health, rootW, rootH, 50, 4, 180, 24) then
+    if not HarfordUIGeom.IsSaneBox(layout.health, rootW, rootH, 50, 4, 180, 24) then
         layout.health = derived.health
     end
-    if not IsSaneBox(layout.power, rootW, rootH, 50, 4, 180, 24) then
+    if not HarfordUIGeom.IsSaneBox(layout.power, rootW, rootH, 50, 4, 180, 24) then
         layout.power = derived.power
     end
-    if not IsSaneBox(layout.name, rootW, rootH, 40, 4, 180, 24) then
+    if not HarfordUIGeom.IsSaneBox(layout.name, rootW, rootH, 40, 4, 180, 24) then
         layout.name = derived.name
     end
 
@@ -452,61 +353,8 @@ local function ResourceColor(key)
     return 0.7, 0.7, 0.7
 end
 
-local WOW_CLASS_ALIASES = {
-    { "guerrero", "WARRIOR" }, { "warrior", "WARRIOR" },
-    { "paladin", "PALADIN" },
-    { "cazador de demonios", "DEMONHUNTER" }, { "demon hunter", "DEMONHUNTER" }, { "demonhunter", "DEMONHUNTER" },
-    { "cazador", "HUNTER" }, { "hunter", "HUNTER" },
-    { "picaro", "ROGUE" }, { "picar", "ROGUE" }, { "rogue", "ROGUE" },
-    { "sacerdote", "PRIEST" }, { "priest", "PRIEST" },
-    { "caballero de la muerte", "DEATHKNIGHT" }, { "death knight", "DEATHKNIGHT" }, { "deathknight", "DEATHKNIGHT" },
-    { "chaman", "SHAMAN" }, { "shaman", "SHAMAN" },
-    { "mago", "MAGE" }, { "mage", "MAGE" },
-    { "brujo", "WARLOCK" }, { "warlock", "WARLOCK" },
-    { "monje", "MONK" }, { "monk", "MONK" },
-    { "druida", "DRUID" }, { "druid", "DRUID" },
-    { "evocador", "EVOKER" }, { "evoker", "EVOKER" },
-}
-
-local function NormalizeClassKey(value)
-    value = tostring(value or ""):lower()
-    value = value:gsub("[_%-]+", " ")
-    value = value:gsub("[Ã¡Ã Ã¤Ã¢ÃÃ€Ã„Ã‚]", "a")
-    value = value:gsub("[Ã©Ã¨Ã«ÃªÃ‰ÃˆÃ‹ÃŠ]", "e")
-    value = value:gsub("[Ã­Ã¬Ã¯Ã®ÃÃŒÃÃŽ]", "i")
-    value = value:gsub("[Ã³Ã²Ã¶Ã´Ã“Ã’Ã–Ã”]", "o")
-    value = value:gsub("[ÃºÃ¹Ã¼Ã»ÃšÃ™ÃœÃ›]", "u")
-    value = value:gsub("[Ã±Ã‘]", "n")
-    return value
-end
-
-local function GetProfileClassColor(profile)
-    if not profile or not HarfordTRP3 or not HarfordTRP3.GetProfilePrimaryClass then return nil end
-    local classText = NormalizeClassKey(HarfordTRP3.GetProfilePrimaryClass(profile))
-    if classText == "" then return nil end
-    for _, entry in ipairs(WOW_CLASS_ALIASES) do
-        local token, classFile = entry[1], entry[2]
-        if classText:find(token, 1, true) then
-            local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
-            if color then
-                return color.r, color.g, color.b, classFile
-            end
-            return nil
-        end
-    end
-    return nil
-end
-
-local function GetUnitClassColor(unit)
-    if not UnitClass then return nil end
-    local _, classFile = UnitClass(unit)
-    local color = classFile and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
-    if color then
-        return color.r, color.g, color.b, classFile
-    end
-    return nil
-end
-
+-- Color de clase (alias, normalizacion y resolucion) vive en HarfordClassColors.
+-- Aqui solo se conserva el cache por nombre (estado propio de UnitFrames).
 local function CacheClassColorForName(unitName, r, g, b, classKey)
     if not unitName or not r then return end
     API.S.classColorCache[unitName] = { r, g, b, classKey }
@@ -565,7 +413,7 @@ end
 
 local function LearnClassColor(unit, profile)
     local unitName = SafeUnitName(unit)
-    local r, g, b, classKey = GetProfileClassColor(profile)
+    local r, g, b, classKey = HarfordClassColors.ProfileColorRGB(profile)
     if r then
         CacheClassColorForName(unitName, r, g, b, classKey)
         return r, g, b, classKey
@@ -574,7 +422,7 @@ local function LearnClassColor(unit, profile)
     if r then
         return r, g, b, classKey
     end
-    return GetUnitClassColor(unit)
+    return HarfordClassColors.UnitColorRGB(unit)
 end
 
 local function RequestResourcesIfNeeded(unit, unitName, resources)
@@ -1123,7 +971,7 @@ local function EnsureToTBarsOverlay()
 
         local ptex = pf:CreateTexture(nil, "ARTWORK", nil, 1)
         ptex:SetAllPoints(pf)
-        ptex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        ptex:SetTexCoord(0, 1, 0, 1)
         pf.icon = ptex
 
         if ptex.AddMaskTexture and pf.CreateMaskTexture then
@@ -1168,6 +1016,7 @@ local function UpdateToTPortraitOverlay(profile)
     -- Solo mostramos/ocultamos nuestro overlay; no tocamos el alpha nativo.
     if icon then
         ov.portraitFrame.icon:SetTexture(icon)
+        ov.portraitFrame.icon:SetTexCoord(0, 1, 0, 1)
         ov.portraitFrame:Show()
     else
         ov.portraitFrame:Hide()
@@ -1539,7 +1388,7 @@ local function CreateUnitFrame(key, unit)
     frame.portraitBg = portraitBg
 
     local portrait = portraitLayer:CreateTexture(nil, "ARTWORK")
-    portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    portrait:SetTexCoord(0, 1, 0, 1)
     frame.portrait = portrait
 
     local nameBg = visual:CreateTexture(nil, "ARTWORK")
@@ -2292,7 +2141,7 @@ local function EnsureFocusTotBarsOverlay()
         pf.bg = pbg
         local ptex = pf:CreateTexture(nil, "ARTWORK", nil, 1)
         ptex:SetAllPoints(pf)
-        ptex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        ptex:SetTexCoord(0, 1, 0, 1)
         pf.icon = ptex
         if ptex.AddMaskTexture and pf.CreateMaskTexture then
             local mask = pf:CreateMaskTexture(nil, "ARTWORK")
@@ -2344,6 +2193,7 @@ local function UpdateFocusTotPortraitOverlay(profile)
     local icon = useTRP3 and profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
     if icon then
         ov.portraitFrame.icon:SetTexture(icon)
+        ov.portraitFrame.icon:SetTexCoord(0, 1, 0, 1)
         ov.portraitFrame:Show()
     else
         ov.portraitFrame:Hide()
@@ -2574,7 +2424,7 @@ local function ApplyUnitVisuals(frame, unit, pieces, profile, unitName)
         if icon and pieces.portrait.SetTexture then
             pieces.portrait:SetTexture(icon)
             if pieces.portrait.SetTexCoord then
-                pieces.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                pieces.portrait:SetTexCoord(0, 1, 0, 1)
             end
         elseif SetPortraitTexture then
             SetPortraitTexture(pieces.portrait, unit)
@@ -2628,7 +2478,7 @@ local function ApplyNativeUnitVisuals(unit, pieces, profile, unitName)
         if icon and pieces.portrait.SetTexture then
             pieces.portrait:SetTexture(icon)
             if pieces.portrait.SetTexCoord then
-                pieces.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                pieces.portrait:SetTexCoord(0, 1, 0, 1)
             end
         elseif SetPortraitTexture then
             SetPortraitTexture(pieces.portrait, unit)
@@ -2673,7 +2523,7 @@ local function ApplyNativePortraitOption(unit)
 
     if icon and portrait.SetTexture then
         portrait:SetTexture(icon)
-        if portrait.SetTexCoord then portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92) end
+        if portrait.SetTexCoord then portrait:SetTexCoord(0, 1, 0, 1) end
         if portrait.SetDrawLayer then portrait:SetDrawLayer("ARTWORK", 0) end
         RefreshNativePortraitMask(portrait)
     elseif SetPortraitTexture then
@@ -3076,7 +2926,7 @@ local function RefreshNpcUnitPortrait(unit)
 
     if icon and portrait.SetTexture then
         portrait:SetTexture(icon)
-        if portrait.SetTexCoord then portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92) end
+        if portrait.SetTexCoord then portrait:SetTexCoord(0, 1, 0, 1) end
         if portrait.SetDrawLayer then portrait:SetDrawLayer("ARTWORK", 0) end
         RefreshNativePortraitMask(portrait)
         if portrait.SetAlpha then portrait:SetAlpha(1) end
@@ -3158,9 +3008,58 @@ local function RefreshFrame(key, unit, forceMeasure)
         return
     end
     local supported = UnitIsSupportedPlayer(unit)
-    local frameMode = HarfordConfig and HarfordConfig.Get("resources") == "frame"
+	local frameMode = HarfordConfig and HarfordConfig.Get("resources") == "frame"
 
-    if not supported or frameMode then
+	-- NPC target: no usar recursos Harford ni overlays de jugador.
+	-- Venimos posiblemente de un target jugador, así que hay que limpiar inmediatamente
+	-- las marcas Harford de las barras nativas y dejar que el TargetFrame muestre la vida real.
+	if unit == "target" and UnitExists("target") and not UnitIsPlayer("target") then
+		RestoreNativeUnitFrame("target")
+		RestoreNativeFrameContents("target")
+		RestoreTargetAuras()
+		RestoreTargetOfTargetFrame()
+		ApplyNativePortraitOption("target")
+		HideToTBarsOverlay()
+
+		if frame.portraitLayer then frame.portraitLayer:Hide() end
+		if frame.overlayFrame then frame.overlayFrame:Hide() end
+		if frame.portraitBg then frame.portraitBg:Hide() end
+		if frame.portrait then frame.portrait:Hide() end
+		if frame.level then frame.level:Hide() end
+		if frame.levelBg then frame.levelBg:Hide() end
+		if frame.nameBg then frame.nameBg:Hide() end
+		if frame.name then frame.name:Hide() end
+		if frame.fallback then frame.fallback:Hide() end
+		if frame.nativeTexts then
+			for _, textFrame in pairs(frame.nativeTexts) do
+				textFrame:Hide()
+			end
+		end
+		for i = 1, frame.maxBarIndex or 0 do
+			local bar = frame.bars and frame.bars[i]
+			if bar then
+				if bar.container then bar.container:Hide() end
+				bar:Hide()
+			end
+		end
+
+		frame:Hide()
+
+		if C_Timer and C_Timer.After then
+			C_Timer.After(0, function()
+				if UnitExists("target") and not UnitIsPlayer("target") then
+					RestoreNativeUnitFrame("target")
+					RestoreNativeFrameContents("target")
+					ApplyNativePortraitOption("target")
+					HideToTBarsOverlay()
+				end
+			end)
+		end
+
+		return
+	end
+
+	if not supported or frameMode then
         RestoreNativeUnitFrame(unit)
         RestoreNativeFrameContents(unit)
         if frameMode then
@@ -3266,7 +3165,7 @@ local function FindGroupHealthBar(frame)
         or frame.HealthBar
         or frame.healthbar
         or frame.Health
-        or FieldPath(frame, "unitFrame", "healthBar")
+        or HarfordUIGeom.FieldPath(frame, "unitFrame", "healthBar")
         or (name and _G[name .. "HealthBar"])
         or (name and _G[name .. "Health"])
 end
@@ -3279,7 +3178,7 @@ local function FindGroupPowerBar(frame)
         or frame.powerbar
         or frame.Power
         or frame.manaBar
-        or FieldPath(frame, "unitFrame", "powerBar")
+        or HarfordUIGeom.FieldPath(frame, "unitFrame", "powerBar")
         or (name and _G[name .. "ManaBar"])
         or (name and _G[name .. "PowerBar"])
         or (name and _G[name .. "Power"])
@@ -3294,8 +3193,8 @@ local function FindGroupNameText(frame)
         or frame.NameText
         or frame.unitName
         or frame.UnitName
-        or FieldPath(frame, "unitFrame", "name")
-        or FieldPath(frame, "unitFrame", "nameText")
+        or HarfordUIGeom.FieldPath(frame, "unitFrame", "name")
+        or HarfordUIGeom.FieldPath(frame, "unitFrame", "nameText")
         or (name and _G[name .. "Name"])
         or (name and _G[name .. "NameText"])
 end
@@ -3312,7 +3211,7 @@ local function FindGroupPortrait(frame)
         or frame.Portrait
         or frame.icon
         or frame.Icon
-        or FieldPath(frame, "unitFrame", "portrait")
+        or HarfordUIGeom.FieldPath(frame, "unitFrame", "portrait")
         or (name and _G[name .. "Portrait"])
         or (name and _G[name .. "Icon"])
 end
@@ -3919,7 +3818,7 @@ local function ApplyHarfordCompactUnitFrame(frame)
         if icon and portrait.SetTexture then
             portrait:SetTexture(icon)
             if portrait.SetTexCoord then
-                portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                portrait:SetTexCoord(0, 1, 0, 1)
             end
         elseif SetPortraitTexture then
             SetPortraitTexture(portrait, unit)
@@ -4391,11 +4290,11 @@ API.GetClassColor = function(unit)
         and TRP3_API.register.getUnitIDCurrentProfile then
             local profile = TRP3_API.register.getUnitIDCurrentProfile(unitID)
             if profile then
-                r, g, b = GetProfileClassColor(profile)
+                r, g, b = HarfordClassColors.ProfileColorRGB(profile)
                 if r then CacheClassColorForName(unitName, r, g, b) ; return r, g, b end
             end
         end
     end
     -- 3. Clase WoW nativa (fallback para jugadores sin perfil TRP3)
-    return GetUnitClassColor(unit)
+    return HarfordClassColors.UnitColorRGB(unit)
 end

@@ -1017,18 +1017,18 @@ ApplyLongRest = function()
     end
 end
 
-local function AttachHealthButtonTooltip(button, delta)
+local function AttachResourceButtonTooltip(button, key, delta)
     if not button then return end
 
     button:SetScript("OnEnter", function(self)
+        local def = RESOURCE_DEFS[key]
+        local label = (def and def.label) or key
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        if delta and delta > 0 then
-            GameTooltip:SetText("Añadir salud", 1, 0.82, 0)
-        else
-            GameTooltip:SetText("Quitar salud", 1, 0.82, 0)
+        GameTooltip:SetText((delta and delta > 0 and "Añadir " or "Quitar ") .. label, 1, 0.82, 0)
+        GameTooltip:AddLine("Click: modifica " .. label, 1, 1, 1)
+        if key == "health" then
+            GameTooltip:AddLine("Shift + Click: modifica Vida temporal", 0.75, 0.9, 1)
         end
-        GameTooltip:AddLine("Click: modifica Salud", 1, 1, 1)
-        GameTooltip:AddLine("Shift + Click: modifica Vida temporal", 0.75, 0.9, 1)
         GameTooltip:AddLine("Ctrl + Click: cantidad personalizada", 0.75, 0.9, 1)
         GameTooltip:Show()
     end)
@@ -1188,15 +1188,8 @@ RefreshResourceFrame = function()
 				RefreshResourceFrame()
 			end)
 
-			if key == "health" then
-				AttachHealthButtonTooltip(row.minus, -1)
-				AttachHealthButtonTooltip(row.plus, 1)
-			else
-				row.minus:SetScript("OnEnter", nil)
-				row.minus:SetScript("OnLeave", nil)
-				row.plus:SetScript("OnEnter", nil)
-				row.plus:SetScript("OnLeave", nil)
-			end
+			AttachResourceButtonTooltip(row.minus, key, -1)
+			AttachResourceButtonTooltip(row.plus, key, 1)
 
             row:Show()
         end

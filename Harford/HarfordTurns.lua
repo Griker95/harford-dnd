@@ -2402,6 +2402,10 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     end
 end)
 
+-- Superficie de control publica del tracker. Las mutaciones estan gateadas
+-- internamente por IsTurnAdmin() (= CanUseDMTools): inertes sin HarfordAdmin + .ph dm.
+-- HarfordAdmin las invoca por aqui (p.ej. HarfordAdminUnitMenu usa AddUnit/Toggle);
+-- no debe tocar internals del core (store/broadcast). Render/sync/recepcion viven en el core.
 HarfordTurnOrderAPI = HarfordTurnOrderAPI or {}
 HarfordTurnOrderAPI.Toggle = ToggleFrame
 HarfordTurnOrderAPI.Refresh = RefreshFrame
@@ -2410,6 +2414,11 @@ HarfordTurnOrderAPI.AddEntry = AddEntry
 HarfordTurnOrderAPI.AddUnit = AddUnit
 HarfordTurnOrderAPI.NextTurn = NextTurn
 HarfordTurnOrderAPI.PrevTurn = PrevTurn
+HarfordTurnOrderAPI.RemoveEntry = RemoveEntry
+HarfordTurnOrderAPI.AdjustHp = AdjustHp
+HarfordTurnOrderAPI.MoveEntry = MoveEntry
+HarfordTurnOrderAPI.ToggleEditMode = ToggleEditMode
+HarfordTurnOrderAPI.IsAdmin = IsTurnAdmin
 
 SLASH_HARFORDTURNOS1 = "/TurnosHarford"
 SLASH_HARFORDTURNOS2 = "/turnos"

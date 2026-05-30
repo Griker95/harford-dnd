@@ -142,8 +142,11 @@ end
 -- Acepta cualquier numero de componentes (varargs); el orden se respeta tal cual.
 function HarfordDnDCalc.BonusConcat(...)
     local parts = {}
-    for i = 1, select("#", ...) do
-        local v = tonumber(select(i, ...)) or 0
+    local n = select("#", ...)
+    for i = 1, n do
+        -- Parentesis: truncar select() a UN valor; sin ellos, el (i+1)-esimo
+        -- vararg se pasaria como 'base' a tonumber -> "base out of range".
+        local v = tonumber((select(i, ...))) or 0
         if v ~= 0 then parts[#parts + 1] = fmtSigned(v) end
     end
     return table.concat(parts, "")

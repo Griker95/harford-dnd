@@ -857,7 +857,8 @@ local function InitializeMenu(_, level, menuList)
             AddSubmenu("Auras", "AURAS", level)
 
         elseif ctx == "player" then
-            -- Jugador ajeno: turnos, recursos (mod.recursos+mod.salud), auras. Sin TRP3, sin loot.
+            -- Jugador ajeno: enviar ficha (primera opcion), turnos, recursos, auras. Sin TRP3, sin loot.
+            AddAction("Enviar ficha", function() SendSheetToTarget(snapshot) end, level)
             AddSubmenu("Turnos", "TURNOS", level)
             AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Auras", "AURAS", level)

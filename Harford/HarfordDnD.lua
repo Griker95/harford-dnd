@@ -131,6 +131,7 @@ EnsureDefaults = function()
     if ARCGET("BonusCompetencia", nil) == nil then ARCSET("BonusCompetencia", "2") end
     if ARCGET("ModoTirada", nil) == nil then ARCSET("ModoTirada", "normal") end
     if ARCGET("BonoSituacional", nil) == nil then ARCSET("BonoSituacional", "0") end
+    if ARCGET("ArmorClass", nil) == nil then ARCSET("ArmorClass", "10") end
     if ARCGET("ModIniciativa", nil) == nil then ARCSET("ModIniciativa", "0") end
     if ARCGET("AtributoConjuro", nil) == nil then ARCSET("AtributoConjuro", "Inteligencia") end
     if ARCGET("ArmaSeleccionada", nil) == nil then ARCSET("ArmaSeleccionada", "Desarmado") end
@@ -470,6 +471,100 @@ local function MakeSignedEditBox(parent, labelText, xRight, yTop, arcKey, defaul
 
     setBoxFromARC()
     return label, box, setBoxFromARC, commitBox
+end
+
+local armorClassBoxSetters = {}
+
+local function GetActiveArmorClassUnit()
+    if SheetContext.active and SheetContext.kind == "npc"
+        and UnitExists and UnitExists("focus") then
+        return "focus"
+    end
+    if UnitExists and UnitExists("target") then
+        return "target"
+    end
+    return nil
+end
+
+local function GetArmorClassValue()
+    local unit = GetActiveArmorClassUnit()
+    if unit and HarfordDnDCombat and HarfordDnDCombat.GetArmorClassForUnit then
+        local unitArmorClass = HarfordDnDCombat.GetArmorClassForUnit(unit)
+        if unitArmorClass then
+            return unitArmorClass
+        end
+        if unit == "focus" then
+            return 0
+        end
+    end
+    if SheetContext.active and SheetContext.kind == "npc" and SheetContext.armorClass ~= nil then
+        return toN(SheetContext.armorClass, 0)
+    end
+    return toN(ARCGET("ArmorClass", "10"), 10)
+end
+
+local function SetArmorClassValue(value)
+    local n = math.floor(tonumber(value) or 0)
+    if n < 0 then n = 0 end
+
+    local unit = GetActiveArmorClassUnit()
+    if unit and HarfordDnDCombat and HarfordDnDCombat.SetArmorClassForUnit then
+        local ok = HarfordDnDCombat.SetArmorClassForUnit(unit, n)
+        if ok and UnitIsUnit and UnitIsUnit(unit, "player") then
+            ScheduleMyResourceBroadcast()
+        end
+        return
+    end
+
+    if SheetContext.active and SheetContext.kind == "npc" then
+        SheetContext.armorClass = n
+        if SheetContext.onArmorClassChanged then
+            SheetContext.onArmorClassChanged(n, SheetContext.npcSourceGuid)
+        end
+    else
+        ARCSET("ArmorClass", n)
+        ScheduleMyResourceBroadcast()
+    end
+end
+
+local function RefreshArmorClassBoxes()
+    local text = tostring(GetArmorClassValue())
+    for _, setter in ipairs(armorClassBoxSetters) do
+        setter(text)
+    end
+end
+
+local function MakeArmorClassEditBox(parent, xRight, yTop)
+    local label = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+    label:SetText("CA:")
+
+    local box = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
+    box:SetSize(44, 20)
+    box:SetPoint("TOPRIGHT", xRight, yTop)
+    box:SetAutoFocus(false)
+    box:SetNumeric(true)
+
+    label:SetPoint("RIGHT", box, "LEFT", -6, 0)
+    label:SetJustifyH("RIGHT")
+
+    local function setText(text)
+        box:SetText(tostring(text or GetArmorClassValue()))
+    end
+
+    local function commitBox()
+        SetArmorClassValue(box:GetText())
+        RefreshArmorClassBoxes()
+    end
+
+    box:SetScript("OnEnterPressed", function(self)
+        self:ClearFocus()
+        commitBox()
+    end)
+    box:SetScript("OnEditFocusLost", commitBox)
+
+    armorClassBoxSetters[#armorClassBoxSetters + 1] = setText
+    setText()
+    return label, box, setText
 end
 
 local function EnsureTargetResourceFrameState()
@@ -1516,9 +1611,11 @@ local modArmaLabel, modArmaBox, SetModArmaFromARC = MakeSignedEditBox(
     SEC_ATK, "Mod Arma:", -240, -118, "ModArma", 0
 )
 
+local armorClassLabel, armorClassBox, SetArmorClassBoxFromARC = MakeArmorClassEditBox(SEC_ATK, -18, -34)
+
 local weaponInfoText = SEC_ATK:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 weaponInfoText:SetPoint("TOPLEFT", 10, -34)
-weaponInfoText:SetWidth(350)
+weaponInfoText:SetWidth(280)
 weaponInfoText:SetJustifyH("LEFT")
 weaponInfoText:SetJustifyV("TOP")
 weaponInfoText:SetWordWrap(true)
@@ -1736,6 +1833,10 @@ local function DoWeaponAttack()
     local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
     local total = chosen + base + prof + wmod + misc
     local bonusTxt = HarfordDnDCalc.BonusConcat(base, prof, wmod, misc)
+    local armorClass, hit, armorText = HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, "target")
+    if armorText and armorText ~= "" then
+        bonusTxt = bonusTxt .. armorText
+    end
 
     local wmodLabel = ""
     if wmod ~= 0 then wmodLabel = " " .. fmtSigned(wmod) end
@@ -1749,7 +1850,15 @@ local function DoWeaponAttack()
         critical = critTag,
         mode = modeTag
     })
-    HarfordDnDStore.pendingWeaponCriticalKey = critTag == "CRÍTICO" and def.key or nil
+    local isCritical = HarfordDnDCombat.IsCriticalRollTag(critTag)
+    HarfordDnDStore.pendingWeaponCriticalKey = isCritical and def.key or nil
+    if armorClass and hit then
+        local damageTotal = RollWeaponDamage(def, abil, isCritical)
+        HarfordDnDStore.pendingWeaponCriticalKey = nil
+        HarfordDnDCombat.ApplyWeaponDamageToTarget(damageTotal, isCritical)
+    elseif armorClass and not hit then
+        HarfordDnDStore.pendingWeaponCriticalKey = nil
+    end
     -- Animacion del jugador atacante: .mod anim sobre el propio personaje.
     -- Aplica a cualquier jugador (no requiere oficial). Si el arma no declara
     -- emoteId propio, se deriva desde tipo/propiedades para evitar ataques mudos.
@@ -1889,19 +1998,9 @@ local weaponDamageButton = HarfordDnDUI.MakeButton(SEC_ATK, "Daño Arma", 110, 2
         and HarfordDnDStore.pendingWeaponCriticalKey == def.key
     HarfordDnDStore.pendingWeaponCriticalKey = nil
     local total = RollWeaponDamage(def, abil, isCritical)
-    -- Ruta oficial/admin: aplica el dano al NPC target si el jugador tiene rango de oficial.
+    -- Aplica el daño al objetivo: NPC (ruta oficial, en bruto) o jugador ajeno (RADJ).
     -- SetNpcHealthDelta dispara automaticamente el emote de herida (33 normal / 34 critico).
-    -- Sin HarfordAdmin no hay checks de resistencias; el dano se aplica en bruto.
-    if total and total > 0
-        and HarfordAuthority and HarfordAuthority.IsOfficerPlus and HarfordAuthority.IsOfficerPlus()
-        and UnitExists and UnitExists("target")
-        and not (UnitIsPlayer and UnitIsPlayer("target"))
-        and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
-        HarfordServerActions.SetNpcHealthDelta(-total, {
-            isCritical = isCritical,
-            addonName  = "Harford",
-        })
-    end
+    HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical)
 end)
 
 HarfordDnDStore.RefreshWeaponDamageButton = function()
@@ -2037,16 +2136,8 @@ do
             isCritical
         )
 
-        if total and total > 0
-            and HarfordAuthority and HarfordAuthority.IsOfficerPlus and HarfordAuthority.IsOfficerPlus()
-            and UnitExists and UnitExists("target")
-            and not (UnitIsPlayer and UnitIsPlayer("target"))
-            and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
-            HarfordServerActions.SetNpcHealthDelta(-total, {
-                isCritical = isCritical,
-                addonName = "Harford",
-            })
-        end
+        -- Aplica el daño al objetivo: NPC (ruta oficial) o jugador ajeno (RADJ).
+        HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical)
     end
 
     local function EnsureCustomDamageFrame()
@@ -2206,6 +2297,8 @@ HarfordDnDStore.playerAttackControls = {
     offhandCheckboxLabel = HarfordDnDStore.offhandCheckboxLabel,
     modArmaLabel = modArmaLabel,
     modArmaBox = modArmaBox,
+    armorClassLabel = armorClassLabel,
+    armorClassBox = armorClassBox,
     initLabel = HarfordDnDInitLabel,
     initBox = HarfordDnDInitBox,
     weaponAttackButton = weaponAttackButton,
@@ -2349,6 +2442,8 @@ end
     UIDropDownMenu_SetWidth(drop, 155)
     drop:SetPoint("TOPLEFT", 47, 4)
 
+    local npcArmorClassLabel, npcArmorClassBox, SetNpcArmorClassBox = MakeArmorClassEditBox(panel, -14, -8)
+
     -- Dropdown de emote de animación NPC (solo visible en modo DM).
     -- Lista canónica en HarfordEmotes; aquí solo se consume.
     local EMOTE_OPTIONS = (HarfordEmotes and HarfordEmotes.GetOrderedList()) or {}
@@ -2445,6 +2540,35 @@ end
     local function GetActionChatName(action)
         if not action then return "Accion" end
         return action.hyperlink or action.title or "Accion"
+    end
+
+    local function RollActionAttack(action)
+        if not (UnitExists and UnitExists("focus")) then
+            return DoRoll("Ataque " .. GetActionChatName(action), action.attackBonus, 0)
+        end
+
+        local base = toN(action.attackBonus, 0)
+        local misc = HarfordDnDCalc.GetMiscBonus()
+        local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
+        local total = chosen + base + misc
+        local bonusTxt = HarfordDnDCalc.BonusConcat(base, 0, misc)
+        local _armorClass, _hit, armorText = HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, "focus")
+        if armorText and armorText ~= "" then
+            bonusTxt = bonusTxt .. armorText
+        end
+
+        HarfordDnDRolls.Broadcast({
+            type = "roll",
+            label = "Ataque " .. GetActionChatName(action),
+            total = total,
+            dice = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb),
+            modifiers = bonusTxt,
+            critical = critTag,
+            mode = modeTag,
+            miscBonus = misc,
+        })
+        ConsumeMode()
+        return critTag
     end
 
     local function RollActionDamage(action, maximizeDice)
@@ -2566,7 +2690,7 @@ end
     attackButton = HarfordDnDUI.MakeButton(panel, "Atacar", 112, 22, 72, -122, function()
         if selectedAction and selectedAction.attackBonus ~= nil then
             -- Admin valida que el NPC de la ficha siga siendo el target exacto.
-            local critTag = DoRoll("Ataque " .. GetActionChatName(selectedAction), selectedAction.attackBonus, 0)
+            local critTag = RollActionAttack(selectedAction)
             pendingCriticalAction = critTag == "CRÍTICO" and selectedAction or nil
             -- Animacion: se dispara DESPUES del roll para poder elegir el emote correcto.
             -- Critico → critEmoteId si existe, fallback al emote del dropdown.
@@ -2603,8 +2727,10 @@ end
             and UnitExists and UnitExists("target")
             and UnitIsPlayer and UnitIsPlayer("target") then
 
-            local targetName = UnitName("target")
-            local shortName  = Ambiguate and Ambiguate(targetName, "short") or targetName
+            local targetName = (GetUnitName and GetUnitName("target", true)) or UnitName("target")
+            local shortName  = UnitName("target")
+            if not targetName or targetName == "" then targetName = shortName end
+            if not shortName or shortName == "" then shortName = targetName end
 
             -- Flag de animaciones del TARGET (nil = desconocido → tratar como activo)
             local targetAnims = HarfordDnDResources.AnimFlagCache[shortName]
@@ -2616,8 +2742,25 @@ end
             end
 
             -- Aplicar daño: temp_health primero, luego health
-            local cache = shortName and HarfordDnDResources.RemoteCache[shortName]
-            if cache then
+            if UnitIsUnit and UnitIsUnit("target", "player") then
+                local tempCur = math.max(0, GetResourceCurrent("temp_health"))
+                local tempDmg = math.min(total, tempCur)
+                local healthDmg = total - tempDmg
+
+                if tempDmg > 0 then
+                    AdjustResourceCurrent("temp_health", -tempDmg)
+                end
+                if healthDmg > 0 then
+                    AdjustResourceCurrent("health", -healthDmg)
+                end
+            else
+                local cache = targetName and HarfordDnDResources.RemoteCache[targetName]
+                    or (shortName and HarfordDnDResources.RemoteCache[shortName])
+                if not cache and HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
+                    HarfordDnDAPI.RequestResourcesForName(targetName)
+                end
+                if not cache then return end
+
                 local tempCur   = math.max(0, tonumber(cache[HarfordDnDResources.CurKey("temp_health")]) or 0)
                 local healthCur = math.max(0, tonumber(cache[HarfordDnDResources.CurKey("health")])      or 0)
                 local tempDmg   = math.min(total, tempCur)
@@ -2678,6 +2821,7 @@ end
         end
 
         if not inNpcMode then
+            RefreshArmorClassBoxes()
             if HarfordDnDStore.RefreshWeaponDamageButton then
                 HarfordDnDStore.RefreshWeaponDamageButton()
             end
@@ -2698,6 +2842,7 @@ end
         end
         panel:Show()
         panel:Raise()
+        RefreshArmorClassBoxes()
         RefreshSelectedAction()
     end
 end)()
@@ -3173,6 +3318,7 @@ _G.DND5E_ARC_API.Refresh = function()
     if SetMiscBoxFromARC then SetMiscBoxFromARC() end
     if HarfordDnDSetInitBoxFromARC then HarfordDnDSetInitBoxFromARC() end
     if SetModArmaFromARC then SetModArmaFromARC() end
+    if SetArmorClassBoxFromARC then RefreshArmorClassBoxes() end
     if RefreshButtons then RefreshButtons() end
     if RefreshSkillLayout then RefreshSkillLayout() end
     if RefreshSheetTitle then RefreshSheetTitle() end
@@ -3423,6 +3569,8 @@ function HarfordDnDAPI.ApplySheetContext(context)
     SheetContext.overrides = type(context.overrides) == "table" and context.overrides or {}
     SheetContext.rollName = context.rollName
     SheetContext.rollColor = context.rollColor
+    SheetContext.npcSourceGuid = context.npcSourceGuid
+    SheetContext.armorClass = tonumber(context.armorClass)
     SheetContext.actions = type(context.actions) == "table" and context.actions or {}
     SheetContext.showActionPanel = context.showActionPanel == true
     SheetContext.kind = context.kind
@@ -3431,6 +3579,7 @@ function HarfordDnDAPI.ApplySheetContext(context)
     SheetContext.canDamage = type(context.canDamage) == "function" and context.canDamage or nil
     SheetContext.onAttackAnimation = type(context.onAttackAnimation) == "function" and context.onAttackAnimation or nil
     SheetContext.onDamageRolled = type(context.onDamageRolled) == "function" and context.onDamageRolled or nil
+    SheetContext.onArmorClassChanged = type(context.onArmorClassChanged) == "function" and context.onArmorClassChanged or nil
     SheetContext.spellProficiencyBonus = SheetContext.kind == "npc" and tonumber(context.spellProficiencyBonus) or nil
     if FrameTitle and SheetContext.kind == "npc" then
         FrameTitle:SetText(context.titleText or SheetContext.rollName or "Harford DnD 5\194\170 - Ficha")
@@ -3441,6 +3590,7 @@ function HarfordDnDAPI.ApplySheetContext(context)
         FrameTitle:SetTextColor(1, 0.82, 0)
     end
     RefreshMainUI()
+    RefreshArmorClassBoxes()
     if RefreshSheetActionPanel then RefreshSheetActionPanel() end
     -- Si el jugador estaba moribundo, oculta visualmente la UI de muerte
     -- sin tocar contadores (el estado persiste hasta que vuelva al modo jugador).
@@ -3453,6 +3603,8 @@ function HarfordDnDAPI.ClearSheetContext()
     SheetContext.overrides = nil
     SheetContext.rollName = nil
     SheetContext.rollColor = nil
+    SheetContext.npcSourceGuid = nil
+    SheetContext.armorClass = nil
     SheetContext.actions = nil
     SheetContext.showActionPanel = false
     SheetContext.spellProficiencyBonus = nil
@@ -3462,8 +3614,10 @@ function HarfordDnDAPI.ClearSheetContext()
     SheetContext.canDamage = nil
     SheetContext.onAttackAnimation = nil
     SheetContext.onDamageRolled = nil
+    SheetContext.onArmorClassChanged = nil
     if RefreshSheetTitle then RefreshSheetTitle() end
     RefreshMainUI()
+    RefreshArmorClassBoxes()
     if RefreshSheetActionPanel then RefreshSheetActionPanel() end
     -- Si el jugador sigue moribundo al volver al modo jugador, re-aplicar la UI.
     if RefreshDyingState then RefreshDyingState() end
@@ -3474,12 +3628,24 @@ function HarfordDnDAPI.RefreshSheetActionAvailability()
         RefreshSheetActionPanel(false)
     end
 end
+
+function HarfordDnDAPI.UpdateSheetArmorClassForGuid(guid, armorClass)
+    if not (SheetContext.active and SheetContext.kind == "npc") then return false end
+    guid = tostring(guid or "")
+    if guid ~= "" and SheetContext.npcSourceGuid and guid ~= SheetContext.npcSourceGuid then
+        return false
+    end
+    SheetContext.armorClass = math.max(0, math.floor(tonumber(armorClass) or 0))
+    RefreshArmorClassBoxes()
+    return true
+end
 -- ─── Fin API de contexto temporal de ficha ────────────────────────────────────
 
 local listener = CreateFrame("Frame")
 listener:RegisterEvent("PLAYER_LOGIN")
 listener:RegisterEvent("CHAT_MSG_ADDON")
 listener:RegisterEvent("PLAYER_TARGET_CHANGED")
+listener:RegisterEvent("PLAYER_FOCUS_CHANGED")
 
 local AddonHandlers = HarfordDnDComm.CreateHandlers({
     ADDON_PREFIX = ADDON_PREFIX,
@@ -3532,9 +3698,24 @@ listener:SetScript("OnEvent", function(_, event, ...)
     end
     if event == "PLAYER_TARGET_CHANGED" then
         AddonHandlers.HandlePlayerTargetChanged()
+        RefreshArmorClassBoxes()
         if HarfordDnDStore.RefreshWeaponDamageButton then
             HarfordDnDStore.RefreshWeaponDamageButton()
         end
+        return
+    end
+    if event == "PLAYER_FOCUS_CHANGED" then
+        -- Pedir los recursos del focus (jugador ajeno) para cachear su ArmorClass;
+        -- al llegar el RES, la rama de resourcesChanged refresca la CA de nuevo.
+        if UnitExists and UnitExists("focus") and UnitIsPlayer and UnitIsPlayer("focus")
+            and not (UnitIsUnit and UnitIsUnit("focus", "player"))
+            and HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
+            local focusName = (GetUnitName and GetUnitName("focus", true)) or UnitName("focus")
+            if focusName and focusName ~= "" then
+                HarfordDnDAPI.RequestResourcesForName(focusName)
+            end
+        end
+        RefreshArmorClassBoxes()
         return
     end
     local prefix, message, _, sender = ...
@@ -3543,6 +3724,9 @@ listener:SetScript("OnEvent", function(_, event, ...)
     -- Evita un Refresh completo en cada mensaje de turnos, loot, reputaciones, tiradas.
     if resourcesChanged and HarfordUnitFrames and HarfordUnitFrames.Refresh then
         HarfordUnitFrames.Refresh()
+    end
+    if resourcesChanged then
+        RefreshArmorClassBoxes()
     end
 end)
 

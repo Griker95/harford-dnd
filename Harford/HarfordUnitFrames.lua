@@ -4258,13 +4258,18 @@ end)
 
 if C_Timer and C_Timer.After then
     C_Timer.After(1, function() API.Refresh(true) end)
+    -- En login, TRP3 puede no tener listo el perfil propio cuando corre el refresh
+    -- inicial, asi que el retrato/icono del player no se aplica. Estos refrescos
+    -- diferidos (one-shot) lo re-aplican cuando TRP3 ya cargo. No es un ticker.
     C_Timer.After(3, function()
         InstallCompactUnitFrameHooks()
         RefreshGroupOverlays()
+        API.Refresh(false)
     end)
     C_Timer.After(6, function()
         InstallCompactUnitFrameHooks()
         RefreshGroupOverlays()
+        API.Refresh(false)
     end)
 end
 

@@ -278,29 +278,18 @@ local function DoRoll(label, baseBonus, profBonus)
     profBonus = toN(profBonus, 0)
     local miscBonus = HarfordDnDCalc.GetMiscBonus()
 
-    local mode = HarfordDnDCalc.GetMode()
-    local _, a, b = HarfordDnDCalc.RollD20(mode)
-    local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
-    local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
-    local totalBonus = baseBonus + profBonus + miscBonus
-    local total = chosen + totalBonus
+    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
+    local total = chosen + baseBonus + profBonus + miscBonus
     local bonusTxt = HarfordDnDCalc.BonusConcat(baseBonus, profBonus, miscBonus)
-
-    local diceStr
-    if rb then
-        diceStr = tostring(ra) .. "/" .. tostring(rb) .. "→" .. tostring(chosen)
-    else
-        diceStr = tostring(chosen)
-    end
 
     HarfordDnDRolls.Broadcast({
         type = "roll",
         label = label,
         total = total,
-        dice = diceStr,
+        dice = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb),
         modifiers = bonusTxt,
         critical = critTag,
-        mode = (mode == "adv" and "V") or (mode == "dis" and "D") or "",
+        mode = modeTag,
         miscBonus = miscBonus,
     })
     ConsumeMode()
@@ -1700,26 +1689,9 @@ local function DoWeaponAttack()
     local wmod = HarfordDnDCalc.GetWeaponMod()
     local misc = HarfordDnDCalc.GetMiscBonus()
 
-    local mode = HarfordDnDCalc.GetMode()
-    local _, a, b = HarfordDnDCalc.RollD20(mode)
-    local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
-    local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
-    local totalBonus = base + prof + wmod + misc
-    local total = chosen + totalBonus
-
-    local parts = {}
-    if base ~= 0 then parts[#parts+1] = fmtSigned(base) end
-    if prof ~= 0 then parts[#parts+1] = fmtSigned(prof) end
-    if wmod ~= 0 then parts[#parts+1] = fmtSigned(wmod) end
-    if misc ~= 0 then parts[#parts+1] = fmtSigned(misc) end
-    local bonusTxt = table.concat(parts, "")
-
-    local diceStr
-    if rb then
-        diceStr = tostring(ra) .. "/" .. tostring(rb) .. "→" .. tostring(chosen)
-    else
-        diceStr = tostring(chosen)
-    end
+    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
+    local total = chosen + base + prof + wmod + misc
+    local bonusTxt = HarfordDnDCalc.BonusConcat(base, prof, wmod, misc)
 
     local wmodLabel = ""
     if wmod ~= 0 then wmodLabel = " " .. fmtSigned(wmod) end
@@ -1728,10 +1700,10 @@ local function DoWeaponAttack()
         type = "attack",
         label = (offhand and "Ataque Offhand " or "Ataque ") .. def.key .. wmodLabel,
         total = total,
-        dice = diceStr,
+        dice = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb),
         modifiers = bonusTxt,
         critical = critTag,
-        mode = (mode == "adv" and "V") or (mode == "dis" and "D") or ""
+        mode = modeTag
     })
     HarfordDnDStore.pendingWeaponCriticalKey = critTag == "CRÍTICO" and def.key or nil
     -- Animacion del jugador atacante: .mod anim sobre el propio personaje.
@@ -2291,34 +2263,18 @@ DoSpellAttack = function()
     local prof = HarfordDnDCalc.GetSpellPB()
     local misc = HarfordDnDCalc.GetMiscBonus()
 
-    local mode = HarfordDnDCalc.GetMode()
-    local _, a, b = HarfordDnDCalc.RollD20(mode)
-    local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
-    local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
-    local totalBonus = base + prof + misc
-    local total = chosen + totalBonus
-
-    local parts = {}
-    if base ~= 0 then parts[#parts+1] = fmtSigned(base) end
-    if prof ~= 0 then parts[#parts+1] = fmtSigned(prof) end
-    if misc ~= 0 then parts[#parts+1] = fmtSigned(misc) end
-    local bonusTxt = table.concat(parts, "")
-
-    local diceStr
-    if rb then
-        diceStr = tostring(ra) .. "/" .. tostring(rb) .. "→" .. tostring(chosen)
-    else
-        diceStr = tostring(chosen)
-    end
+    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
+    local total = chosen + base + prof + misc
+    local bonusTxt = HarfordDnDCalc.BonusConcat(base, prof, misc)
 
     HarfordDnDRolls.Broadcast({
         type = "spell",
         label = "Ataque Conjuro",
         total = total,
-        dice = diceStr,
+        dice = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb),
         modifiers = bonusTxt,
         critical = critTag,
-        mode = (mode == "adv" and "V") or (mode == "dis" and "D") or ""
+        mode = modeTag
     })
     ConsumeMode()
 end

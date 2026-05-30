@@ -138,10 +138,35 @@ function HarfordDnDCalc.GetCritTag(mode, a, b)
     return ""
 end
 
-function HarfordDnDCalc.BonusConcat(base, prof, misc)
+-- Concatena los componentes de bonus no-cero como texto con signo ("+3-1").
+-- Acepta cualquier numero de componentes (varargs); el orden se respeta tal cual.
+function HarfordDnDCalc.BonusConcat(...)
     local parts = {}
-    if base ~= 0 then parts[#parts+1] = fmtSigned(base) end
-    if prof ~= 0 then parts[#parts+1] = fmtSigned(prof) end
-    if misc ~= 0 then parts[#parts+1] = fmtSigned(misc) end
+    for i = 1, select("#", ...) do
+        local v = tonumber(select(i, ...)) or 0
+        if v ~= 0 then parts[#parts + 1] = fmtSigned(v) end
+    end
     return table.concat(parts, "")
+end
+
+-- Tirada d20 completa con el modo actual de la ficha. Devuelve:
+--   chosen  -> el d20 elegido (alto en ventaja, bajo en desventaja)
+--   ra, rb  -> los dos dados (rb = nil si no hay ventaja/desventaja)
+--   critTag -> "CRÍTICO" | "PIFIA" | ""
+--   modeTag -> "V" | "D" | "" (para el campo mode de la tirada difundida)
+function HarfordDnDCalc.RollD20Full()
+    local mode = HarfordDnDCalc.GetMode()
+    local _, a, b = HarfordDnDCalc.RollD20(mode)
+    local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
+    local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
+    local modeTag = (mode == "adv" and "V") or (mode == "dis" and "D") or ""
+    return chosen, ra, rb, critTag, modeTag
+end
+
+-- Texto del/los dado(s) d20: "ra/rb→chosen" con ventaja/desventaja, o "chosen".
+function HarfordDnDCalc.FormatD20Dice(chosen, ra, rb)
+    if rb then
+        return tostring(ra) .. "/" .. tostring(rb) .. "→" .. tostring(chosen)
+    end
+    return tostring(chosen)
 end

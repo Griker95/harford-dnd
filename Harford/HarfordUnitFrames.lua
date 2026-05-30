@@ -4256,17 +4256,43 @@ events:SetScript("OnEvent", function(_, event, ...)
     API.Refresh(forceMeasure)
 end)
 
+-- En login TRP3 puede no tener listo el perfil propio cuando corre el refresh
+-- inicial, asi que el icono del retrato del player no se aplica (aparecia al
+-- cambiar de target). Nos enganchamos a los eventos de TRP3 para re-aplicar en
+-- cuanto carga o cuando el perfil propio cambia. Guard de una sola instalacion;
+-- si TRP3 aun no expone events, se reintenta desde los timers diferidos.
+local function EnsureTRP3Hooks()
+    if API.S._trp3Hooked then return end
+    if not (TRP3_API and TRP3_API.events and TRP3_API.events.registerCallback) then return end
+    API.S._trp3Hooked = true
+
+    local playerId = TRP3_API.globals and TRP3_API.globals.player_id
+
+    -- TRP3 termino su carga: el perfil propio ya esta disponible.
+    pcall(TRP3_API.events.registerCallback, "WORKFLOW_ON_LOADED", function()
+        API.Refresh(false)
+    end)
+
+    -- Datos de perfil actualizados. Solo refrescamos para el jugador local (o
+    -- unitID nil) para no dispararnos con cada update de perfiles remotos (MSP).
+    pcall(TRP3_API.events.registerCallback, "REGISTER_DATA_UPDATED", function(unitID)
+        if (not unitID) or (playerId and unitID == playerId) then
+            API.Refresh(false)
+        end
+    end)
+end
+
 if C_Timer and C_Timer.After then
-    C_Timer.After(1, function() API.Refresh(true) end)
-    -- En login, TRP3 puede no tener listo el perfil propio cuando corre el refresh
-    -- inicial, asi que el retrato/icono del player no se aplica. Estos refrescos
-    -- diferidos (one-shot) lo re-aplican cuando TRP3 ya cargo. No es un ticker.
+    C_Timer.After(1, function() EnsureTRP3Hooks(); API.Refresh(true) end)
+    -- Refrescos diferidos (one-shot, no ticker) como respaldo del hook TRP3.
     C_Timer.After(3, function()
+        EnsureTRP3Hooks()
         InstallCompactUnitFrameHooks()
         RefreshGroupOverlays()
         API.Refresh(false)
     end)
     C_Timer.After(6, function()
+        EnsureTRP3Hooks()
         InstallCompactUnitFrameHooks()
         RefreshGroupOverlays()
         API.Refresh(false)

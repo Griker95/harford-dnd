@@ -1029,12 +1029,53 @@ local function AttachHealthButtonTooltip(button, delta)
         end
         GameTooltip:AddLine("Click: modifica Salud", 1, 1, 1)
         GameTooltip:AddLine("Shift + Click: modifica Vida temporal", 0.75, 0.9, 1)
+        GameTooltip:AddLine("Ctrl + Click: cantidad personalizada", 0.75, 0.9, 1)
         GameTooltip:Show()
     end)
 
     button:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
+end
+
+-- Prompt de Ctrl+click en los botones del frame de recursos: pide una cantidad y
+-- la suma (boton +) o resta (boton -) al recurso. Registrado una sola vez.
+if not StaticPopupDialogs["HARFORD_RESOURCE_ADJUST"] then
+    StaticPopupDialogs["HARFORD_RESOURCE_ADJUST"] = {
+        text = "Cantidad a %s en %s:",
+        button1 = ACCEPT or "Aceptar",
+        button2 = CANCEL or "Cancelar",
+        hasEditBox = true,
+        maxLetters = 6,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        preferredIndex = 3,
+        OnShow = function(self)
+            self.editBox:SetText("")
+            self.editBox:SetFocus()
+        end,
+        OnAccept = function(self)
+            local data = self.data or {}
+            local amount = math.abs(math.floor(tonumber(self.editBox:GetText()) or 0))
+            if amount == 0 or not data.key then return end
+            AdjustResourceCurrent(data.key, (data.sign or 1) * amount)
+            if RefreshResourceFrame then RefreshResourceFrame() end
+        end,
+        EditBoxOnEnterPressed = function(self)
+            local parent = self:GetParent()
+            StaticPopupDialogs["HARFORD_RESOURCE_ADJUST"].OnAccept(parent)
+            parent:Hide()
+        end,
+        EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+    }
+end
+
+local function PromptResourceAdjust(key, sign)
+    local def = RESOURCE_DEFS[key]
+    local label = (def and def.label) or key
+    local dialog = StaticPopup_Show("HARFORD_RESOURCE_ADJUST", sign < 0 and "restar" or "sumar", label)
+    if dialog then dialog.data = { key = key, sign = sign } end
 end
 
 local function UpdateResourceRow(row, key)
@@ -1120,6 +1161,11 @@ RefreshResourceFrame = function()
 					targetKey = "temp_health"
 				end
 
+				if IsControlKeyDown and IsControlKeyDown() then
+					PromptResourceAdjust(targetKey, -1)
+					return
+				end
+
 				AdjustResourceCurrent(targetKey, -1)
 				UpdateResourceRow(row, key)
 				RefreshResourceFrame()
@@ -1130,6 +1176,11 @@ RefreshResourceFrame = function()
 
 				if key == "health" and IsShiftClickDown() then
 					targetKey = "temp_health"
+				end
+
+				if IsControlKeyDown and IsControlKeyDown() then
+					PromptResourceAdjust(targetKey, 1)
+					return
 				end
 
 				AdjustResourceCurrent(targetKey, 1)

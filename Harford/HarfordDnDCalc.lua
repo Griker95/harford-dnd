@@ -39,6 +39,10 @@ end
 
 -- ─── Bonos base (leen ARC via HarfordDnDContext) ─────────────────────────────
 function HarfordDnDCalc.GetPB()
+    local derived = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetProficiencyBonus
+        and HarfordDnDFeatureEffects.GetProficiencyBonus()
+    if derived then return derived end
     return toN(HarfordDnDContext.Get("BonusCompetencia", "2"), 2)
 end
 
@@ -61,7 +65,12 @@ function HarfordDnDCalc.GetMiscBonus()
 end
 
 function HarfordDnDCalc.GetAbilityScore(key)
-    return toN(HarfordDnDContext.Get(key, "10"), 10)
+    local base = toN(HarfordDnDContext.Get(key, "10"), 10)
+    local bonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("ability", key)
+        or 0
+    return base + bonus
 end
 
 function HarfordDnDCalc.GetAbilityMod(key)
@@ -70,10 +79,29 @@ end
 
 function HarfordDnDCalc.GetSaveProf(abilityKey)
     return toN(HarfordDnDContext.Get("Salv_" .. abilityKey, "0"), 0) == 1
+        or (HarfordDnDFeatureEffects
+            and HarfordDnDFeatureEffects.HasSaveProf
+            and HarfordDnDFeatureEffects.HasSaveProf(abilityKey) == true)
 end
 
 function HarfordDnDCalc.GetWeaponMod()
     return toN(HarfordDnDContext.Get("ModArma", "0"), 0)
+end
+
+function HarfordDnDCalc.GetWeaponAttackBonus()
+    local bonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("weaponAttack")
+        or 0
+    return HarfordDnDCalc.GetWeaponMod() + bonus
+end
+
+function HarfordDnDCalc.GetWeaponDamageBonus()
+    local bonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("weaponDamage")
+        or 0
+    return HarfordDnDCalc.GetWeaponMod() + bonus
 end
 
 function HarfordDnDCalc.GetVersatileActive()
@@ -85,8 +113,12 @@ function HarfordDnDCalc.GetSkillProfBonus(skill)
     local pb = HarfordDnDCalc.GetPB()
     local profFlag = toN(HarfordDnDContext.Get("Hab_" .. skill.id .. "_Prof", "0"), 0)
     local expFlag  = toN(HarfordDnDContext.Get("Hab_" .. skill.id .. "_Exp", "0"), 0)
-    if expFlag == 1 then return 2 * pb end
-    if profFlag == 1 then return pb end
+    local featureRank = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetSkillRank
+        and HarfordDnDFeatureEffects.GetSkillRank(skill.id)
+        or 0
+    if expFlag == 1 or featureRank >= 2 then return 2 * pb end
+    if profFlag == 1 or featureRank >= 1 then return pb end
     return 0
 end
 
@@ -97,7 +129,11 @@ function HarfordDnDCalc.GetSkillRollBonuses(skill)
     if type(explicit) == "number" then
         return explicit, 0
     end
-    return HarfordDnDCalc.GetAbilityMod(skill.ability), HarfordDnDCalc.GetSkillProfBonus(skill)
+    local bonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("skill", skill.id)
+        or 0
+    return HarfordDnDCalc.GetAbilityMod(skill.ability) + bonus, HarfordDnDCalc.GetSkillProfBonus(skill)
 end
 
 function HarfordDnDCalc.GetSaveRollBonuses(abilityKey)
@@ -107,7 +143,11 @@ function HarfordDnDCalc.GetSaveRollBonuses(abilityKey)
     if type(explicit) == "number" then
         return explicit, 0
     end
-    return HarfordDnDCalc.GetAbilityMod(abilityKey),
+    local bonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("save", abilityKey)
+        or 0
+    return HarfordDnDCalc.GetAbilityMod(abilityKey) + bonus,
         HarfordDnDCalc.GetSaveProf(abilityKey) and HarfordDnDCalc.GetPB() or 0
 end
 

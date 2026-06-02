@@ -1,10 +1,12 @@
 -- Serializacion, render y emision de tiradas Harford DnD.
--- Mantiene el formato de red historico DND5EARC: 10 campos separados por "^".
+-- Mantiene el formato de red historico DND5EARC: 10 campos separados por "^",
+-- escapando separadores dentro de campos de texto.
 
 HarfordDnDRolls = HarfordDnDRolls or {}
 
 local ADDON_PREFIX = "DND5EARC"
 local ROLL_SOUND_KIT = 36629
+local MAX_SAFE_PAYLOAD_BYTES = 240
 
 local GREEN = "|cff00ff00"
 local RED   = "|cffff3333"
@@ -28,6 +30,25 @@ local function ColorSigned(n)
     return GREEN .. fmtSigned(n) .. ENDCLR
 end
 
+local function EscapeRollField(value)
+    value = tostring(value or "")
+    value = value:gsub("%%", "%%25")
+    value = value:gsub("%^", "%%5E")
+    value = value:gsub("\r", "%%0D")
+    value = value:gsub("\n", "%%0A")
+    return value
+end
+
+local function UnescapeRollField(value)
+    if value == nil then return nil end
+    value = tostring(value)
+    value = value:gsub("%%0A", "\n")
+    value = value:gsub("%%0D", "\r")
+    value = value:gsub("%%5E", "^")
+    value = value:gsub("%%25", "%%")
+    return value
+end
+
 function HarfordDnDRolls.GetDisplayName()
     local state = HarfordDnDContext and HarfordDnDContext.State
     if state and state.rollName and state.rollName ~= "" then
@@ -45,33 +66,33 @@ end
 function HarfordDnDRolls.Serialize(data)
     data = data or {}
     return string.format("%s^%s^%s^%d^%s^%s^%s^%s^%s^%s",
-        data.type or "roll",
-        HarfordDnDRolls.GetDisplayName(),
-        data.label or "",
+        EscapeRollField(data.type or "roll"),
+        EscapeRollField(HarfordDnDRolls.GetDisplayName()),
+        EscapeRollField(data.label or ""),
         data.total or 0,
-        data.dice or "",
-        data.modifiers or "",
-        data.critical or "",
-        data.mode or "",
-        tostring(data.miscBonus or ""),
-        tostring(data.nameColor or "")
+        EscapeRollField(data.dice or ""),
+        EscapeRollField(data.modifiers or ""),
+        EscapeRollField(data.critical or ""),
+        EscapeRollField(data.mode or ""),
+        EscapeRollField(data.miscBonus or ""),
+        EscapeRollField(data.nameColor or "")
     )
 end
 
 function HarfordDnDRolls.Deserialize(msg)
     local parts = {strsplit("^", msg)}
     if #parts < 8 then return nil end
-    local color = parts[10]
+    local color = UnescapeRollField(parts[10])
     return {
-        type      = parts[1],
-        player    = parts[2],
-        label     = parts[3],
+        type      = UnescapeRollField(parts[1]),
+        player    = UnescapeRollField(parts[2]),
+        label     = UnescapeRollField(parts[3]),
         total     = tonumber(parts[4]) or 0,
-        dice      = parts[5],
-        modifiers = parts[6],
-        critical  = parts[7],
-        mode      = parts[8],
-        miscBonus = parts[9],
+        dice      = UnescapeRollField(parts[5]),
+        modifiers = UnescapeRollField(parts[6]),
+        critical  = UnescapeRollField(parts[7]),
+        mode      = UnescapeRollField(parts[8]),
+        miscBonus = UnescapeRollField(parts[9]),
         nameColor = (color and color ~= "") and color or nil,
     }
 end
@@ -166,8 +187,14 @@ function HarfordDnDRolls.Broadcast(rollData)
     rollData.nameColor = displayColor
 
     local channel = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+    local payload = HarfordDnDRolls.Serialize(rollData)
     if channel and HarfordSync and HarfordSync.Send then
-        HarfordSync.Send(ADDON_PREFIX, HarfordDnDRolls.Serialize(rollData), channel)
+        local ok, err = HarfordSync.Send(ADDON_PREFIX, payload, channel)
+        if HarfordDebug and HarfordDebug.Log and (not ok or string.len(payload) > MAX_SAFE_PAYLOAD_BYTES) then
+            HarfordDebug.Log("roll send", tostring(rollData.type or "roll"), "bytes=" .. tostring(string.len(payload)), ok and "OK" or tostring(err))
+        end
+    elseif HarfordDebug and HarfordDebug.Log then
+        HarfordDebug.Log("roll send", tostring(rollData.type or "roll"), "sin canal")
     end
 
     HarfordDnDRolls.DisplayInChat({

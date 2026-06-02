@@ -17,7 +17,12 @@ end
 
 -- ─── Construccion de payloads ────────────────────────────────────────────────
 function HarfordDnDNet.BuildActiveResourcePayload(readValueFn, options)
-    return HarfordDnDResources.BuildPayloadFromRuntime(readValueFn, options)
+    local out, keysToSend = HarfordDnDResources.BuildPayloadFromRuntime(readValueFn, options)
+    if options == nil or options.includeArmorClass ~= false then
+        out.ArmorClass = tostring((readValueFn and readValueFn("ArmorClass")) or "10")
+        keysToSend[#keysToSend + 1] = "ArmorClass"
+    end
+    return out, keysToSend
 end
 
 function HarfordDnDNet.ExportCurrentResources()

@@ -40,6 +40,7 @@ local detailUserClosed = false
 local shiftAdjustDown = false
 local lastTargetSnapshotKey
 local lastTargetSnapshotRequest = 0
+local embeddedParent
 
 local function Print(message)
     DEFAULT_CHAT_FRAME:AddMessage("|cffffd000[HarfordRep]|r " .. tostring(message or ""))
@@ -64,6 +65,7 @@ end
 
 local function SavePanelPosition()
     if not panel then return end
+    if panel._harfordEmbedded then return end
     local ui = EnsureUiStore()
     local point, _, relativePoint, x, y = panel:GetPoint(1)
     ui.point = point or "CENTER"
@@ -74,6 +76,7 @@ end
 
 local function RestorePanelPosition()
     if not panel then return end
+    if panel._harfordEmbedded then return end
     local ui = EnsureUiStore()
     panel:ClearAllPoints()
     panel:SetPoint(ui.point or "CENTER", UIParent, ui.relativePoint or "CENTER", tonumber(ui.x) or 0, tonumber(ui.y) or 0)
@@ -1358,10 +1361,23 @@ local function CreatePanel()
     panel:SetMovable(true)
     panel:EnableMouse(true)
     panel:RegisterForDrag("LeftButton")
-    panel:SetScript("OnDragStart", panel.StartMoving)
+    panel:SetScript("OnDragStart", function(self)
+        if self._harfordEmbedded then
+            -- Embebido: arrastrar mueve el contenedor padre (el panel no es movible).
+            local p = self:GetParent()
+            if p and p.StartMoving and p:IsMovable() then p:StartMoving() end
+        elseif self:IsMovable() then
+            self:StartMoving()
+        end
+    end)
     panel:SetScript("OnDragStop", function(self)
-        self:StopMovingOrSizing()
-        SavePanelPosition()
+        if self._harfordEmbedded then
+            local p = self:GetParent()
+            if p and p.StopMovingOrSizing then p:StopMovingOrSizing() end
+        else
+            self:StopMovingOrSizing()
+            SavePanelPosition()
+        end
     end)
     panel:SetFrameStrata("HIGH")
     panel:SetFrameLevel(60)
@@ -1451,8 +1467,80 @@ local function CreatePanel()
     return panel
 end
 
+local function GetPanelCloseButton()
+    if not panel then return nil end
+    return panel.CloseButton
+        or panel.closeButton
+        or _G[(panel:GetName() or "") .. "CloseButton"]
+end
+
+local function RaiseEmbeddedSiblings()
+    if not embeddedParent then return end
+    local base = embeddedParent.GetFrameLevel and embeddedParent:GetFrameLevel() or 1
+    for _, child in ipairs({ embeddedParent:GetChildren() }) do
+        if child and child ~= panel and child.SetFrameLevel then
+            child:SetFrameLevel(base + 80)
+        end
+    end
+    local close = embeddedParent.CloseButton
+        or embeddedParent.closeButton
+        or _G[(embeddedParent:GetName() or "") .. "CloseButton"]
+    if close and close.SetFrameLevel then close:SetFrameLevel(base + 90) end
+end
+
+local function ApplyEmbeddedParent()
+    if not (panel and embeddedParent) then return end
+    panel._harfordEmbedded = true
+    panel:SetParent(embeddedParent)
+    panel:ClearAllPoints()
+    panel:SetPoint("TOPLEFT", embeddedParent, "TOPLEFT", 0, 0)
+    panel:SetSize(PANEL_W, PANEL_H)
+    panel:SetMovable(false)
+    -- Embebido: el arrastre sigue activo pero mueve el CONTENEDOR padre (no el propio
+    -- panel, que no es movible). La logica de OnDragStart/Stop distingue por _harfordEmbedded.
+    panel:RegisterForDrag("LeftButton")
+    panel:SetFrameStrata(embeddedParent:GetFrameStrata())
+    panel:SetFrameLevel((embeddedParent:GetFrameLevel() or 1) + 2)
+    local close = GetPanelCloseButton()
+    if close then close:Hide() end
+    RaiseEmbeddedSiblings()
+end
+
+function API.EmbedInto(parent)
+    if not parent then return nil end
+    CreatePanel()
+    embeddedParent = parent
+    ApplyEmbeddedParent()
+    panel:Show()
+    lastTargetSnapshotKey = nil
+    RefreshRows()
+    return panel
+end
+
+function API.DetachEmbedded(hide)
+    if not (panel and panel._harfordEmbedded) then return end
+    panel._harfordEmbedded = nil
+    embeddedParent = nil
+    panel:SetParent(UIParent)
+    panel:SetMovable(true)
+    panel:RegisterForDrag("LeftButton")
+    panel:SetFrameStrata("HIGH")
+    panel:SetFrameLevel(60)
+    local close = GetPanelCloseButton()
+    if close then close:Show() end
+    RestorePanelPosition()
+    if hide ~= false then
+        panel:Hide()
+    else
+        panel:Show()
+        lastTargetSnapshotKey = nil
+        RefreshRows()
+    end
+end
+
 function API.Toggle()
     CreatePanel()
+    if panel._harfordEmbedded then API.DetachEmbedded(true) end
     panel:SetShown(not panel:IsShown())
     if panel:IsShown() then
         -- Forzar nuevo request aunque sea el mismo target (puede haber pasado tiempo).
@@ -1463,12 +1551,17 @@ end
 
 function API.Open()
     CreatePanel()
+    if panel._harfordEmbedded then API.DetachEmbedded(false) end
     panel:Show()
     lastTargetSnapshotKey = nil
     RefreshRows()
 end
 
 function API.Close()
+    if panel and panel._harfordEmbedded then
+        API.DetachEmbedded(true)
+        return
+    end
     if panel then panel:Hide() end
 end
 

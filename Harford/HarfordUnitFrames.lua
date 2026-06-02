@@ -31,6 +31,7 @@ API.S.layouts = API.S.layouts or {}
 API.S.resourceRequests = API.S.resourceRequests or {}
 API.S.nativeState = API.S.nativeState or {}
 API.S.auraAnchors = API.S.auraAnchors or {}
+API.S.auraAnchorsByUnit = API.S.auraAnchorsByUnit or { target = {}, focus = {} }
 API.S.focusTot = API.S.focusTot or { overlay=nil, lastGUID=nil, hooksInstalled=false }
 API.S.nativePortraitMasks = API.S.nativePortraitMasks or {}
 API.S.groupOverlays = API.S.groupOverlays or {}
@@ -625,21 +626,27 @@ function BarBackgroundInfo(bar, unit)
     return info
 end
 
-local function SaveAuraPoints(frame)
-    if not frame or API.S.auraAnchors[frame] then return end
+local function SaveAuraPoints(frame, unit)
+    if not frame then return end
+    unit = unit == "focus" and "focus" or "target"
+    API.S.auraAnchorsByUnit[unit] = API.S.auraAnchorsByUnit[unit] or {}
+    local anchors = API.S.auraAnchorsByUnit[unit]
+    if anchors[frame] then return end
     local points = {}
     for i = 1, frame:GetNumPoints() do
         local point, relativeTo, relativePoint, x, y = frame:GetPoint(i)
         points[#points + 1] = { point, relativeTo, relativePoint, x or 0, y or 0 }
     end
-    API.S.auraAnchors[frame] = {
+    anchors[frame] = {
         parent = frame.GetParent and frame:GetParent() or nil,
         points = points,
     }
 end
 
-local function RestoreTargetAuras()
-    for frame, data in pairs(API.S.auraAnchors) do
+local function RestoreUnitAuras(unit)
+    unit = unit == "focus" and "focus" or "target"
+    API.S.auraAnchorsByUnit[unit] = API.S.auraAnchorsByUnit[unit] or {}
+    for frame, data in pairs(API.S.auraAnchorsByUnit[unit]) do
         if frame then
             if data.parent and frame.SetParent then frame:SetParent(data.parent) end
             frame:ClearAllPoints()
@@ -648,17 +655,30 @@ local function RestoreTargetAuras()
             end
         end
     end
-    API.S.auraAnchors = {}
+    API.S.auraAnchorsByUnit[unit] = {}
+    if unit == "target" then
+        API.S.auraAnchors = {}
+    end
+end
+
+local function RestoreTargetAuras()
+    RestoreUnitAuras("target")
+end
+
+local function RestoreFocusAuras()
+    RestoreUnitAuras("focus")
 end
 
 local function ClearTargetAuraAnchorCache()
-    API.S.auraAnchors = {}
+    RestoreTargetAuras()
 end
 
-local function ShiftAuraFrame(auraFrame, verticalOffset)
+local function ShiftAuraFrame(auraFrame, verticalOffset, unit)
     if not auraFrame then return end
-    SaveAuraPoints(auraFrame)
-    local data = API.S.auraAnchors[auraFrame]
+    SaveAuraPoints(auraFrame, unit)
+    unit = unit == "focus" and "focus" or "target"
+    local anchors = API.S.auraAnchorsByUnit[unit] or {}
+    local data = anchors[auraFrame]
     local points = data and data.points
     if not points or #points == 0 then return end
 
@@ -668,15 +688,18 @@ local function ShiftAuraFrame(auraFrame, verticalOffset)
     end
 end
 
-local function AuraDependsOnBuffFrame(auraFrame, relativeFrame)
+local function AuraDependsOnBuffFrame(auraFrame, relativeFrame, unit)
     if not auraFrame or not relativeFrame then return false end
-    SaveAuraPoints(auraFrame)
-    local data = API.S.auraAnchors[auraFrame]
+    SaveAuraPoints(auraFrame, unit)
+    unit = unit == "focus" and "focus" or "target"
+    local anchors = API.S.auraAnchorsByUnit[unit] or {}
+    local data = anchors[auraFrame]
+    local prefix = unit == "focus" and "^FocusFrameBuff%d+$" or "^TargetFrameBuff%d+$"
     for _, point in ipairs((data and data.points) or {}) do
         local relativeTo = point[2]
         local relativeName = relativeTo and relativeTo.GetName and relativeTo:GetName()
         if relativeTo == relativeFrame
-            or (type(relativeName) == "string" and relativeName:match("^TargetFrameBuff%d+$"))
+            or (type(relativeName) == "string" and relativeName:match(prefix))
         then
             return true
         end
@@ -717,35 +740,46 @@ local function NormalizeDebuffGap(buffFrame, debuffFrame, desiredGap)
     NudgeAuraFrame(debuffFrame, currentGap - desiredGap)
 end
 
-local function FindTargetAuraFrames()
+local function FindUnitAuraFrames(unit)
+    if unit == "focus" then
+        local buffs = _G.FocusFrameBuff1 or (_G.FocusFrame and _G.FocusFrame.BuffFrame)
+        local debuffs = _G.FocusFrameDebuff1 or (_G.FocusFrame and _G.FocusFrame.DebuffFrame)
+        return buffs, debuffs
+    end
     local buffs = _G.TargetFrameBuff1 or (_G.TargetFrame and _G.TargetFrame.BuffFrame)
     local debuffs = _G.TargetFrameDebuff1 or (_G.TargetFrame and _G.TargetFrame.DebuffFrame)
     return buffs, debuffs
 end
 
-local function AdjustTargetAuras(frame, resourceCount, extraHeight)
-    if frame.unit ~= "target" then return end
+local function AdjustUnitAuras(frame, resourceCount, extraHeight)
+    local unit = frame and frame.unit
+    if unit ~= "target" and unit ~= "focus" then return end
     resourceCount = tonumber(resourceCount) or 0
     extraHeight = tonumber(extraHeight) or 0
-    local guid = UnitGUID and UnitGUID("target") or nil
-    if API.S.auraTargetGUID ~= guid then
-        RestoreTargetAuras()  -- restaurar antes de limpiar al cambiar target
-        API.S.auraTargetGUID = guid
+    local guid = UnitGUID and UnitGUID(unit) or nil
+    local guidKey = unit == "focus" and "auraFocusGUID" or "auraTargetGUID"
+    if API.S[guidKey] ~= guid then
+        RestoreUnitAuras(unit)  -- restaurar antes de limpiar al cambiar unidad
+        API.S[guidKey] = guid
     end
     if resourceCount <= 2 or extraHeight <= 0 then
-        RestoreTargetAuras()
+        RestoreUnitAuras(unit)
         return
     end
 
     local verticalOffset = extraHeight
 
-    local buffFrame, debuffFrame = FindTargetAuraFrames()
+    local buffFrame, debuffFrame = FindUnitAuraFrames(unit)
     local nativeDebuffGap = MeasureAuraGap(buffFrame, debuffFrame)
-    ShiftAuraFrame(buffFrame, verticalOffset)
+    ShiftAuraFrame(buffFrame, verticalOffset, unit)
     -- Si los debuffs ya dependen de los buffs en el layout nativo, mover ambos
     -- aplica el offset dos veces y rompe la separación entre filas.
-    ShiftAuraFrame(debuffFrame, AuraDependsOnBuffFrame(debuffFrame, buffFrame) and 0 or verticalOffset)
+    ShiftAuraFrame(debuffFrame, AuraDependsOnBuffFrame(debuffFrame, buffFrame, unit) and 0 or verticalOffset, unit)
     NormalizeDebuffGap(buffFrame, debuffFrame, nativeDebuffGap)
+end
+
+local function AdjustTargetAuras(frame, resourceCount, extraHeight)
+    AdjustUnitAuras(frame, resourceCount, extraHeight)
 end
 
 local function FindTargetOfTargetFrame()
@@ -3011,6 +3045,7 @@ local function RefreshFrame(key, unit, forceMeasure)
     local frame = CreateUnitFrame(key, unit)
     if not frame then return end
     if unit == "focus" and not NativeFrameForUnit("focus") then
+        RestoreFocusAuras()
         frame:Hide()
         return
     end
@@ -3080,6 +3115,7 @@ local function RefreshFrame(key, unit, forceMeasure)
             ApplyNativePortraitOption("target")
             RefreshTargetOfTargetBars()
         elseif unit == "focus" then
+            RestoreFocusAuras()
             ApplyNativePortraitOption("focus")
             API.S.focusTot.refresh()
         elseif unit == "player" and frameMode then
@@ -3134,6 +3170,7 @@ local function RefreshFrame(key, unit, forceMeasure)
         AdjustTargetOfTargetFrame(frame, frame.resourceCount or 0, frame.extraResourceHeight or 0)
         RefreshTargetOfTargetBars()
     elseif unit == "focus" then
+        AdjustUnitAuras(frame, frame.resourceCount or 0, frame.extraResourceHeight or 0)
         API.S.focusTot.ensureHooks()
         API.S.focusTot.refresh()
     end
@@ -4201,13 +4238,12 @@ events:SetScript("OnEvent", function(_, event, ...)
             end
             return
         end
-        if event == "UNIT_AURA" and unit == "target" then
-            -- RestoreTargetAuras devuelve los aura frames a su posición nativa ANTES de
+        if event == "UNIT_AURA" and (unit == "target" or unit == "focus") then
+            -- RestoreUnitAuras devuelve los aura frames a su posición nativa ANTES de
             -- limpiar el caché. Sin esto, SaveAuraPoints guarda la posición ya desplazada
             -- como base y cada UNIT_AURA acumula un desplazamiento extra hasta que los
-            -- buff frames salen de pantalla ("congelados"). Con focus activo llegan el
-            -- doble de eventos UNIT_AURA, lo que duplica la velocidad de deriva.
-            RestoreTargetAuras()
+            -- buff frames salen de pantalla ("congelados").
+            RestoreUnitAuras(unit)
         end
         if unit ~= "player" and unit ~= "target" and unit ~= "focus" then
             if IsGroupUnit(unit) then

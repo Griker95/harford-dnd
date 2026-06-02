@@ -1,8 +1,8 @@
 # Harford DnD 5e
 
-Addon de World of Warcraft para el servidor Epsilon RP de la **Compañía Harford**. Implementa un sistema de **D&D 5e** dentro del juego: ficha de personaje, recursos, reputaciones, combate por turnos, loot, sincronización entre jugadores y herramientas DM opcionales.
+Addon de World of Warcraft para el servidor Epsilon RP de la Compania Harford. Implementa un sistema de D&D 5e dentro del juego: ficha de personaje, recursos, reputaciones, combate por turnos, loot, sincronizacion entre jugadores y herramientas DM opcionales.
 
-> Addon privado. Requiere acceso al servidor Epsilon de la Compañía Harford.
+> Addon privado. Requiere acceso al servidor Epsilon de la Compania Harford.
 
 ---
 
@@ -12,13 +12,13 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 
 | Addon | Rol |
 |---|---|
-| **EpsilonLib** | Capa de comunicación con el servidor Epsilon |
+| **EpsilonLib** | Capa de comunicacion con el servidor Epsilon |
 | **TotalRP3** | Perfiles de roleplay (iconos, colores, estados) |
 | **ARC** (SpellCreator) | Comandos de servidor fire-and-forget |
 
 ---
 
-## Instalación
+## Instalacion
 
 1. Clonar o descargar este repositorio.
 2. Copiar las carpetas **`Harford/`** y **`HarfordAdmin/`** a:
@@ -30,72 +30,76 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 
 ---
 
-## Slash commands
+## Slash Commands
 
-| Comando | Descripción |
+| Comando | Descripcion |
 |---|---|
 | `/FichaHarford` | Abre la ficha de personaje D&D 5e |
-| `/harfordrep` | Abre/cierra el panel de reputaciones (también accesible desde el icono de tabardo en la ficha) |
-| `/harforddebug` | Sistema de debug (on/off/toggle/status/list) |
+| `/harfordchar` / `/hchar` | Abre el panel de personaje: Ficha, Creacion, Subida y acceso a Reputacion |
+| `/harfordrep` | Abre/cierra el panel de reputaciones |
+| `/harforddebug` | Sistema de debug: on/off/toggle/status/list |
 | `/hdebug` | Alias de `/harforddebug` |
-| `/harfordadmin` | Herramientas de DM/Admin (loot, reputaciones, fichas NPC, acciones sobre NPCs) |
-| `/hconfig` | Panel de configuración del addon |
+| `/harfordadmin` | Herramientas de DM/Admin: loot, reputaciones, fichas NPC y acciones sobre NPCs |
+| `/hconfig` | Panel de configuracion del addon |
 
 ---
 
-## Estructura del proyecto
+## Estructura Del Proyecto
 
-```
-Harford/            ← Addon principal: jugadores y DM
-HarfordAdmin/       ← Addon admin: herramientas DM, editores y comandos protegidos
-AGENTS.md           ← Arquitectura, contratos de módulos y enfoques fallidos
-CLAUDE.md           ← Instrucciones para Claude Code
+```text
+Harford/            <- Addon principal: jugadores y DM
+HarfordAdmin/       <- Addon admin: herramientas DM, editores y comandos protegidos
+AGENTS.md           <- Arquitectura, contratos de modulos y enfoques fallidos
+CLAUDE.md           <- Instrucciones para Claude Code
 .github/
-  copilot-instructions.md  ← Instrucciones para GitHub Copilot
-.cursorrules        ← Instrucciones para Cursor AI
+  copilot-instructions.md  <- Instrucciones para GitHub Copilot
+.cursorrules        <- Instrucciones para Cursor AI
 ```
 
 ---
 
-## Arquitectura resumida
+## Arquitectura Resumida
 
-- **Harford** contiene el core compartido: ficha D&D, recursos, turnos, reputaciones, loot visible/usable, unitframes, nameplates, sync addon y acciones servidor validadas que también pueden necesitar jugadores.
-- **HarfordAdmin** contiene la capa DM: menú contextual, ficha Modo NPC, editores de loot/reputación, compartir datos, ajustar recursos/reputación y comandos protegidos.
+- **Harford** contiene el core compartido: ficha D&D, recursos, turnos, reputaciones, loot visible/usable, unitframes, nameplates, sync addon y acciones servidor validadas que tambien pueden necesitar jugadores.
+- **HarfordAdmin** contiene la capa DM: menu contextual, ficha Modo NPC, editores de loot/reputacion, compartir datos, ajustar recursos/reputacion y comandos protegidos.
+- El icono de tabardo de la ficha abre el **Panel de Personaje**. La ficha compacta queda para tiradas; el panel unificado contiene Ficha, Creacion, Subida y acceso al panel de Reputacion.
+- La progresion usa datos hardcodeados por clase/subclase, raza, trasfondo y dotes, con efectos declarativos que se suman sobre valores manuales. Los rasgos se aplican internamente; el usuario solo elige cuando existe una eleccion real (`choice`). Se sincroniza con `DNDCLASS` dentro de `DND5EARC`.
 - Los comandos Epsilon se construyen desde plantillas y acciones validadas (`HarfordCommandTemplates` + `HarfordServerActions`), nunca desde texto arbitrario recibido de otros clientes.
-- La mitigación de daño (`resistente`, `inmune`, `vulnerable`) se calcula en core con el stat block TRP3 del target y se muestra en la tirada con marcadores `R`/`I`/`V`. Admin solo aplica el total ya calculado.
-- La herida visual de NPC al perder vida se centraliza en `HarfordServerActions.SetNpcHealthDelta`: emote `33` para daño normal y `34` para daño crítico.
+- La mitigacion de dano (`resistente`, `inmune`, `vulnerable`) se calcula en core con el stat block TRP3 del target y se muestra en la tirada con marcadores `R`/`I`/`V`. Admin solo aplica el total ya calculado.
+- La herida visual de NPC al perder vida se centraliza en `HarfordServerActions.SetNpcHealthDelta`: emote `33` para dano normal y `34` para dano critico.
 
 ---
 
-## Para colaboradores
+## Para Colaboradores
 
-**Antes de modificar cualquier módulo**, leer [`AGENTS.md`](AGENTS.md). Contiene:
-- Contratos de cada módulo (qué hace, qué expone, qué no debe tocar)
-- Limitaciones conocidas del cliente Epsilon (strata, hooks, frames)
-- Enfoques que ya se probaron y fallaron (no reintentar)
-- Patrones de código establecidos
+**Antes de modificar cualquier modulo**, leer [`AGENTS.md`](AGENTS.md). Contiene:
 
-Documentación auxiliar:
+- Contratos de cada modulo: que hace, que expone y que no debe tocar.
+- Limitaciones conocidas del cliente Epsilon: strata, hooks, frames.
+- Enfoques que ya se probaron y fallaron.
+- Patrones de codigo establecidos.
+
+Documentacion auxiliar:
 
 - [`CLAUDE.md`](CLAUDE.md): resumen compacto para Claude Code.
 - [`.github/copilot-instructions.md`](.github/copilot-instructions.md): resumen compacto para GitHub Copilot.
 
-### Flujo de trabajo
+### Flujo De Trabajo
 
-- **Rama de trabajo**: `dev` — nunca hacer commits directos a `main`
-- **`main`** = versión estable, probada en el servidor
-- **`dev`** = desarrollo activo
-- Para una feature nueva: branch `feature/nombre` desde `dev`, PR a `dev`
-- Para pasar a producción: PR de `dev` → `main` (requiere review)
+- **Rama de trabajo**: `dev`; nunca hacer commits directos a `main`.
+- **`main`**: version estable, probada en el servidor.
+- **`dev`**: desarrollo activo.
+- Para una feature nueva: branch `feature/nombre` desde `dev`, PR a `dev`.
+- Para pasar a produccion: PR de `dev` a `main` con review.
 
-### Diagnósticos temporales
+### Diagnosticos Temporales
 
-No añadir código de debug en módulos de gameplay. Usar siempre:
+No anadir codigo de debug en modulos de gameplay. Usar siempre:
 
 ```lua
 HarfordDebug.RegisterCommand("micomando", function(args)
-    -- diagnóstico aquí
-end, "Descripción breve")
+    -- diagnostico aqui
+end, "Descripcion breve")
 ```
 
 Y ejecutar en juego con `/hdebug run micomando`.

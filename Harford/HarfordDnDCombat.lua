@@ -19,7 +19,11 @@ end
 
 local function GetSelfArmorClass()
     if HarfordDnDContext and HarfordDnDContext.Get then
-        return math.floor(toN(HarfordDnDContext.Get("ArmorClass", "10"), 10))
+        local bonus = HarfordDnDFeatureEffects
+            and HarfordDnDFeatureEffects.GetBonus
+            and HarfordDnDFeatureEffects.GetBonus("armorClass")
+            or 0
+        return math.floor(toN(HarfordDnDContext.Get("ArmorClass", "10"), 10) + bonus)
     end
     return 10
 end
@@ -104,13 +108,17 @@ function HarfordDnDCombat.GetArmorClassForUnit(unit)
     end
 
     if UnitIsPlayer and UnitIsPlayer(unit) then
+        -- La CA de "Currently" (TRP3) tiene prioridad SIEMPRE, incluso para uno mismo,
+        -- por encima de la CA local de la ficha Harford.
+        local trp3ArmorClass = HarfordTRP3 and HarfordTRP3.GetPlayerArmorClass
+            and HarfordTRP3.GetPlayerArmorClass(unit)
+        if trp3ArmorClass then
+            return trp3ArmorClass
+        end
         if UnitIsUnit and UnitIsUnit(unit, "player") then
             return GetSelfArmorClass()
         end
-        local trp3ArmorClass = HarfordTRP3 and HarfordTRP3.GetPlayerArmorClass
-            and HarfordTRP3.GetPlayerArmorClass(unit)
-        return trp3ArmorClass
-            or HarfordDnDCombat.GetRemoteArmorClassForUnit(unit)
+        return HarfordDnDCombat.GetRemoteArmorClassForUnit(unit)
             or GetOverrideArmorClassForUnit(unit)
             or HarfordDnDCombat.GetProfileArmorClassForUnit(unit)
     end
@@ -207,36 +215,242 @@ function HarfordDnDCombat.ApplyWeaponDamageToNpc(total, isCritical)
     return false
 end
 
--- Aplica daño a un jugador objetivo (no a uno mismo) por RADJ: consume primero
--- temp_health (segun la cache remota) y el resto a health. Si no hay cache, manda
--- todo a health y solicita recursos para futuras tiradas. El cliente receptor
--- aplica el delta (y su propia aura de muerte segun su flag de animaciones).
-local function ApplyWeaponDamageToPlayer(total)
-    local targetName = (GetUnitName and GetUnitName("target", true)) or (UnitName and UnitName("target"))
-    if not targetName or targetName == "" then return false end
+-- Aplica daño a un jugador (unit token) por RADJ: consume primero temp_health
+-- (segun la cache remota) y el resto a health. Si no hay cache, manda todo a health
+-- y solicita recursos para futuras tiradas. El cliente receptor aplica el delta (y
+-- su propia aura de muerte segun su flag de animaciones).
+local function ApplyDamageToPlayerUnit(unit, total)
+    local name = (GetUnitName and GetUnitName(unit, true)) or (UnitName and UnitName(unit))
+    if not name or name == "" then return false end
     if not (HarfordSync and HarfordSync.SendResourceAdjust) then return false end
 
     local tempCur = 0
     local cache = HarfordDnDResources and HarfordDnDResources.RemoteCache
     if cache then
-        local short = Ambiguate and Ambiguate(targetName, "short") or targetName
-        cache = cache[targetName] or cache[short]
+        local short = Ambiguate and Ambiguate(name, "short") or name
+        cache = cache[name] or cache[short]
     end
     if cache then
         tempCur = math.max(0, tonumber(cache[HarfordDnDResources.CurKey("temp_health")]) or 0)
     elseif HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
-        HarfordDnDAPI.RequestResourcesForName(targetName)
+        HarfordDnDAPI.RequestResourcesForName(name)
     end
 
     local tempDmg = math.min(total, tempCur)
     local healthDmg = total - tempDmg
     if tempDmg > 0 then
-        HarfordSync.SendResourceAdjust(ADDON_PREFIX, "temp_health", -tempDmg, targetName)
+        HarfordSync.SendResourceAdjust(ADDON_PREFIX, "temp_health", -tempDmg, name)
     end
     if healthDmg > 0 then
-        HarfordSync.SendResourceAdjust(ADDON_PREFIX, "health", -healthDmg, targetName)
+        HarfordSync.SendResourceAdjust(ADDON_PREFIX, "health", -healthDmg, name)
     end
     return true
+end
+
+local function ApplyWeaponDamageToPlayer(total)
+    return ApplyDamageToPlayerUnit("target", total)
+end
+
+-- Aplica daño de una accion NPC al jugador en FOCUS (no a uno mismo ni a un NPC).
+-- Lo usa el ataque NPC de la ficha para dañar al focus en el impacto sin tirada
+-- manual. El focus NPC no se daña por esta via (los `.npc` actuan sobre el target).
+function HarfordDnDCombat.ApplyActionDamageToFocus(total)
+    if not (total and total > 0 and UnitExists and UnitExists("focus")) then return false end
+    -- Focus = mi propio PJ: el NPC ataca a mi personaje -> daño local directo.
+    if UnitIsUnit and UnitIsUnit("focus", "player") then
+        if HarfordDnDStore and HarfordDnDStore.ApplyLocalResourceDamage then
+            HarfordDnDStore.ApplyLocalResourceDamage(total)
+            return true
+        end
+        return false
+    end
+    if not (UnitIsPlayer and UnitIsPlayer("focus")) then return false end
+    return ApplyDamageToPlayerUnit("focus", total)
+end
+
+-- ─── Reaccion defensiva al fallar el ataque (parry/dodge) ─────────────────────
+-- Registro RUNTIME (no persistente) del modo de combate elegido para cada NPC por
+-- su GUID. Se rellena cuando el dropdown de modo de combate de la ficha NPC fija
+-- una postura para el NPC cargado; se consulta cuando ese GUID es el defensor.
+HarfordDnDCombat.NpcCombatModeByGuid = HarfordDnDCombat.NpcCombatModeByGuid or {}
+
+function HarfordDnDCombat.SetNpcCombatMode(guid, modeKey)
+    if guid and guid ~= "" then
+        HarfordDnDCombat.NpcCombatModeByGuid[guid] = modeKey
+    end
+end
+
+function HarfordDnDCombat.GetCombatModeForGuid(guid)
+    return guid and guid ~= "" and HarfordDnDCombat.NpcCombatModeByGuid[guid] or nil
+end
+
+-- Detecta si el JUGADOR LOCAL lleva un escudo en la mano secundaria (slot 17).
+-- Clase 4 (Armadura) / subclase 6 (Escudos) en GetItemInfoInstant.
+local function LocalPlayerHasShield()
+    if not (GetInventoryItemID and GetItemInfoInstant) then return false end
+    local slot = (type(INVSLOT_OFFHAND) == "number" and INVSLOT_OFFHAND) or 17
+    local id = GetInventoryItemID("player", slot)
+    if not id then return false end
+    local _, _, _, _, _, classID, subClassID = GetItemInfoInstant(id)
+    return classID == 4 and subClassID == 6
+end
+
+-- Ejecuta la defensa del JUGADOR LOCAL (al recibir DODEFENSE o defenderse uno
+-- mismo): con escudo equipado -> block; si no, parry/dodge segun su modo de combate
+-- activo. Corre la secuencia en su propio cliente (`mod anim` sobre uno mismo, no
+-- requiere oficial). Respeta el flag de animaciones del jugador.
+function HarfordDnDCombat.PlayLocalDefense()
+    if HarfordDnDStore and HarfordDnDStore.AreAnimationsEnabled
+        and not HarfordDnDStore.AreAnimationsEnabled() then
+        return false
+    end
+    local modeKey = HarfordDnDStore and HarfordDnDStore.combatModeKey or nil
+    local seq = HarfordEmotes and HarfordEmotes.PickDefenseSeq
+        and HarfordEmotes.PickDefenseSeq(modeKey, LocalPlayerHasShield())
+    if not (seq and HarfordActionSequence and HarfordActionSequence.RunByName) then
+        return false
+    end
+    return HarfordActionSequence.RunByName(seq) or false
+end
+
+-- Dispara la reaccion defensiva del defensor cuando el ataque falla.
+--   NPC defensor: solo si el atacante es oficial (los no-oficiales no emiten
+--     comandos a NPC) -> `.npc emote <id>` one-shot segun el modo recordado del
+--     GUID (o dodge por defecto). Actua sobre el NPC seleccionado por el servidor.
+--   Jugador ajeno: se le envia DODEFENSE; su cliente ejecuta su propia defensa.
+--   Uno mismo: defensa local directa.
+function HarfordDnDCombat.TriggerDefenseOnMiss(defenderUnit)
+    if not (defenderUnit and UnitExists and UnitExists(defenderUnit)) then return end
+
+    if UnitIsUnit and UnitIsUnit(defenderUnit, "player") then
+        HarfordDnDCombat.PlayLocalDefense()
+        return
+    end
+
+    if UnitIsPlayer and UnitIsPlayer(defenderUnit) then
+        local name = (GetUnitName and GetUnitName(defenderUnit, true)) or (UnitName and UnitName(defenderUnit))
+        if name and name ~= "" and HarfordSync and HarfordSync.SendDefense then
+            HarfordSync.SendDefense(ADDON_PREFIX, name)
+        end
+        return
+    end
+
+    -- NPC: el atacante (origen) ejecuta el `npc emote` en su propio cliente; requiere
+    -- su flag de animaciones activo Y ser oficial+ (los no-oficiales no emiten a NPC).
+    if HarfordDnDStore and HarfordDnDStore.AreAnimationsEnabled
+        and not HarfordDnDStore.AreAnimationsEnabled() then
+        return
+    end
+    if not (HarfordAuthority and HarfordAuthority.IsOfficerPlus and HarfordAuthority.IsOfficerPlus()) then
+        return
+    end
+    -- `.npc emote` actua sobre el NPC seleccionado (target) del servidor. Solo se
+    -- ejecuta si el defensor ES ese target; si no (p.ej. defensor "focus" mientras el
+    -- target es el NPC atacante de la ficha), animaria al NPC equivocado -> se omite.
+    if not (UnitIsUnit and UnitIsUnit(defenderUnit, "target")) then
+        return
+    end
+    local guid = UnitGUID and UnitGUID(defenderUnit) or nil
+    local modeKey = HarfordDnDCombat.GetCombatModeForGuid(guid)
+    local seq = HarfordEmotes and HarfordEmotes.PickDefenseSeq
+        and HarfordEmotes.PickDefenseSeq(modeKey, false)
+    -- Misma secuencia que el jugador, pero con npcAnim: los pasos `anim` salen como
+    -- `.npc emote` sobre el NPC objetivo (no poseido) y el sonido se reproduce local.
+    if seq and HarfordActionSequence and HarfordActionSequence.RunByName then
+        HarfordActionSequence.RunByName(seq, { npcAnim = true, addonName = "Harford" })
+    end
+end
+
+-- IDs de herida (compartidos con NPC_WOUND/CRIT de HarfordEmotes).
+local function WoundAnimId(isCritical)
+    local key = isCritical and "NPC_WOUND_CRIT" or "NPC_WOUND"
+    local def = HarfordEmotes and HarfordEmotes[key]
+    return (def and def.id) or (isCritical and 34 or 33)
+end
+
+local function AttackerAnimsOn()
+    return not (HarfordDnDStore and HarfordDnDStore.AreAnimationsEnabled
+        and not HarfordDnDStore.AreAnimationsEnabled())
+end
+
+-- Herida del JUGADOR LOCAL (al recibir DOWOUND o herirse uno mismo): `mod anim`
+-- 33/34 sobre uno mismo. Respeta el flag de animaciones del jugador.
+function HarfordDnDCombat.PlayLocalWound(isCritical)
+    if not AttackerAnimsOn() then return false end
+    if HarfordServerActions and HarfordServerActions.ModAnim then
+        HarfordServerActions.ModAnim(WoundAnimId(isCritical))
+        return true
+    end
+    return false
+end
+
+-- Dispara la herida del defensor al impactar.
+--   Uno mismo / jugador ajeno: su cliente anima (`mod anim 33/34`) -> DOWOUND.
+--   NPC: la herida ya la emite SetNpcHealthDelta al aplicar el daño (npc emote
+--        33/34). No se duplica aqui.
+function HarfordDnDCombat.TriggerWoundOnHit(defenderUnit, isCritical)
+    if not (defenderUnit and UnitExists and UnitExists(defenderUnit)) then return end
+    if UnitIsUnit and UnitIsUnit(defenderUnit, "player") then
+        HarfordDnDCombat.PlayLocalWound(isCritical)
+        return
+    end
+    if UnitIsPlayer and UnitIsPlayer(defenderUnit) then
+        local name = (GetUnitName and GetUnitName(defenderUnit, true)) or (UnitName and UnitName(defenderUnit))
+        if name and name ~= "" and HarfordSync and HarfordSync.SendWound then
+            HarfordSync.SendWound(ADDON_PREFIX, name, isCritical)
+        end
+        return
+    end
+    -- NPC: herida via SetNpcHealthDelta al aplicar el daño; no duplicar.
+end
+
+-- Orquesta la animacion de ataque del ORIGEN y sincroniza la reaccion del objetivo
+-- con el momento de impacto del preset.
+--   opts.family    : familia de animacion (HarfordDnDWeapons.GetAnimFamily) o nil.
+--   opts.critical  : golpe critico (elige preset pesado).
+--   opts.offhand   : ataque con mano secundaria.
+--   opts.hit       : true=impacto, false=fallo, nil=desconocido (sin reaccion).
+--   opts.defenderUnit : unit del objetivo ("target"/"focus").
+--   opts.npcAttacker  : true si el atacante es un NPC (anim via npc emote).
+--   opts.onImpactOnce : callback de daño (mecanico), se ejecuta UNA vez en el impacto.
+-- El daño (onImpactOnce) es mecanico y se aplica siempre; el swing/reaccion son
+-- animaciones y van detras del flag de animaciones.
+function HarfordDnDCombat.RunAttackSequence(opts)
+    opts = opts or {}
+    local fired = false
+    local function impact()
+        if fired then return end
+        fired = true
+        if opts.onImpactOnce then opts.onImpactOnce() end
+        if opts.hit == true then
+            HarfordDnDCombat.TriggerWoundOnHit(opts.defenderUnit, opts.critical)
+        elseif opts.hit == false then
+            HarfordDnDCombat.TriggerDefenseOnMiss(opts.defenderUnit)
+        end
+    end
+
+    local seqName
+    if AttackerAnimsOn() and opts.family then
+        seqName = HarfordEmotes and HarfordEmotes.GetAttackSequence
+            and HarfordEmotes.GetAttackSequence(opts.family, { critical = opts.critical, offhand = opts.offhand })
+    end
+
+    if seqName and HarfordActionSequence and HarfordActionSequence.RunByName then
+        HarfordActionSequence.RunByName(seqName, {
+            npcAnim         = opts.npcAttacker or nil,
+            addonName       = "Harford",
+            interceptImpact = true,
+            onImpact        = impact,
+        })
+    elseif AttackerAnimsOn() and opts.family == nil and opts.hit ~= nil
+        and C_Timer and C_Timer.After then
+        -- Sin preset (arco/rifle/conjuro): el swing lo mantiene el emote actual del
+        -- llamador; aqui solo se sincroniza la reaccion con un pequeño delay de viaje.
+        C_Timer.After(0.4, impact)
+    else
+        -- Animaciones off o sin reaccion a sincronizar: aplicar impacto ya.
+        impact()
+    end
 end
 
 -- Aplica el daño al objetivo actual segun su tipo: NPC (ruta oficial, en bruto) o

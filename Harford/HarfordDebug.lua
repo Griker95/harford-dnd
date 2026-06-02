@@ -137,6 +137,81 @@ API.RegisterCommand("deps", function()
     Print("ARC.CMD/ARC.COMM: " .. (status.arc and "OK" or "NO"))
 end, "estado de EpsilonLib/ARC")
 
+-- Volcado profundo de un frame (por defecto CharacterFrame) a la SavedVariable
+-- HarfordFrameProbe, para replicar UI nativa. Captura atlas (que el FrameDump externo
+-- NO guarda), textura, texCoord, tamaño, anclajes, capa, color y texto. Uso:
+--   /harforddebug probeframe            -> vuelca CharacterFrame
+--   /harforddebug probeframe NombreFrame
+-- Luego /reload para que se escriba al disco, y se lee SavedVariables\Harford.lua.
+API.RegisterCommand("probeframe", function(args)
+    local frameName = tostring(args or ""):match("^%s*(%S+)") or ""
+    if frameName == "" then frameName = "CharacterFrame" end
+    local root = _G[frameName]
+    if not root then
+        Print("frame no encontrado: " .. frameName)
+        return
+    end
+
+    local function pack(...)
+        local n = select("#", ...)
+        local t = {}
+        for i = 1, n do t[i] = select(i, ...) end
+        return t
+    end
+    local function getPoints(obj)
+        local out = {}
+        local n = (obj.GetNumPoints and obj:GetNumPoints()) or 0
+        for i = 1, n do
+            local p, rel, rp, x, y = obj:GetPoint(i)
+            local relName = rel and rel.GetName and rel:GetName() or nil
+            out[i] = { point = p, relativeTo = relName, relativePoint = rp, x = x, y = y }
+        end
+        return out
+    end
+    local function dumpRegions(frame)
+        local regions = {}
+        for _, r in ipairs({ frame:GetRegions() }) do
+            local ot = r.GetObjectType and r:GetObjectType()
+            local e = { objectType = ot, name = r.GetName and r:GetName() or nil, points = getPoints(r) }
+            if r.GetSize then e.width, e.height = r:GetSize() end
+            if r.GetDrawLayer then e.drawLayer = pack(r:GetDrawLayer()) end
+            if ot == "Texture" then
+                if r.GetAtlas then e.atlas = r:GetAtlas() end
+                if r.GetTextureFileID then e.textureFileID = r:GetTextureFileID() end
+                if r.GetTexture then e.texture = r:GetTexture() end
+                if r.GetTexCoord then e.texCoord = pack(r:GetTexCoord()) end
+                if r.GetVertexColor then e.vertexColor = pack(r:GetVertexColor()) end
+            elseif ot == "FontString" then
+                if r.GetText then e.text = r:GetText() end
+                if r.GetFont then e.font = pack(r:GetFont()) end
+                if r.GetTextColor then e.textColor = pack(r:GetTextColor()) end
+            end
+            regions[#regions + 1] = e
+        end
+        return regions
+    end
+    local function dumpFrame(frame, depth)
+        local node = {
+            name = frame.GetName and frame:GetName() or nil,
+            objectType = frame.GetObjectType and frame:GetObjectType() or nil,
+            shown = frame.IsShown and frame:IsShown() or nil,
+            points = getPoints(frame),
+            regions = dumpRegions(frame),
+            children = {},
+        }
+        if frame.GetSize then node.width, node.height = frame:GetSize() end
+        if depth < 8 and frame.GetChildren then
+            for _, c in ipairs({ frame:GetChildren() }) do
+                node.children[#node.children + 1] = dumpFrame(c, depth + 1)
+            end
+        end
+        return node
+    end
+
+    HarfordFrameProbe = { frame = frameName, tree = dumpFrame(root, 0) }
+    Print("volcado de '" .. frameName .. "' a HarfordFrameProbe. Haz /reload y avisa.")
+end, "vuelca un frame (def. CharacterFrame) a HarfordFrameProbe")
+
 API.RegisterCommand("sync", function()
     if not HarfordSync then
         Print("HarfordSync no disponible")
@@ -2026,5 +2101,78 @@ do
     end, "diagnostica que repinta el retrato del player (auras llamas/asustado). arg: [segundos]|off")
 end
 -- ─── Fin diagnostico retrato player ───────────────────────────────────────────
+
+-- Prueba del motor de secuencias (HarfordActionSequence). Replica el ejemplo de
+-- ArcSpell: anim + sonido nearby + .npc cast repetidos. Util como regresion.
+API.RegisterCommand("seqtest", function()
+    if not (HarfordActionSequence and HarfordActionSequence.Run) then
+        Print("seqtest: HarfordActionSequence no disponible.")
+        return
+    end
+    Print("seqtest: lanzando secuencia (comandos EpsilonLib + sonido TRP3e).")
+    HarfordActionSequence.Run({
+        { delay = 0,   actionType = "Anim", vars = "3322" },
+        { delay = 0.1, actionType = "TRP3e_Sound_playLocalSoundID", vars = "69044, SFX, 20" },
+        { delay = 0.1, actionType = "Command", vars = ".npc cast 78960" },
+        { delay = 0.6, actionType = "TRP3e_Sound_playLocalSoundID", vars = "69044, SFX, 20" },
+        { delay = 0.6, actionType = "Command", vars = ".npc cast 78960" },
+        { delay = 1,   actionType = "Anim", vars = "333" },
+    }, { addonName = "HarfordAdmin" })
+end, "ejecuta una secuencia de ejemplo via HarfordActionSequence")
+
+-- Verifica la intercepcion de impacto: corre OnehandAttack con interceptImpact;
+-- los `.npc cast` no se envian, sino que imprimen el momento del impacto.
+API.RegisterCommand("seqimpact", function()
+    if not (HarfordActionSequence and HarfordActionSequence.RunByName) then
+        Print("seqimpact: HarfordActionSequence no disponible.")
+        return
+    end
+    Print("seqimpact: OnehandAttack con interceptImpact (los impactos se imprimen, no se castean).")
+    local n = 0
+    HarfordActionSequence.RunByName("OnehandAttack", {
+        addonName = "HarfordAdmin",
+        interceptImpact = true,
+        onImpact = function()
+            n = n + 1
+            Print("seqimpact: IMPACTO #" .. n .. " (aqui iria herida/defensa al objetivo).")
+        end,
+    })
+end, "prueba la intercepcion de impacto (onImpact) de un preset de ataque")
+
+-- Envia `.npc emote <id>` (one-shot) sobre el NPC target actual. Sirve para probar
+-- que ID renderiza un parry visible (p.ej. 441) frente al dodge (2030).
+API.RegisterCommand("npcemote", function(args)
+    local id = tonumber((tostring(args or ""):match("(%d+)")))
+    if not id then
+        Print("uso: /harforddebug run npcemote <id>  (target = NPC). Ej: 441 (parry), 2030 (dodge)")
+        return
+    end
+    if not (HarfordServerActions and HarfordServerActions.SetNpcEmote) then
+        Print("npcemote: HarfordServerActions.SetNpcEmote no disponible.")
+        return
+    end
+    Print("npcemote: .npc emote " .. id .. " sobre el target.")
+    HarfordServerActions.SetNpcEmote(id, { addonName = "HarfordAdmin" })
+end, "envia .npc emote <id> al NPC target (probar parry/dodge)")
+
+-- Muestra la distribucion de PickDefenseSeq (sin modo = default one_hand) en 20 tiradas
+-- para comprobar que alterna parry/dodge (no que siempre sale lo mismo).
+API.RegisterCommand("defrand", function()
+    if not (HarfordEmotes and HarfordEmotes.PickDefenseSeq) then
+        Print("defrand: HarfordEmotes.PickDefenseSeq no disponible.")
+        return
+    end
+    local counts = {}
+    local line = {}
+    for _ = 1, 20 do
+        local seq = HarfordEmotes.PickDefenseSeq(nil, false) or "nil"
+        counts[seq] = (counts[seq] or 0) + 1
+        line[#line + 1] = seq
+    end
+    Print("defrand: " .. table.concat(line, ", "))
+    for seq, n in pairs(counts) do
+        Print("  " .. seq .. ": " .. n)
+    end
+end, "distribucion de PickDefenseSeq en 20 tiradas (parry/dodge)")
 
 SetEnabled(HarfordDebugSettings.enabled == true, true)

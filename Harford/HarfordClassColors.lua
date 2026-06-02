@@ -56,10 +56,30 @@ function HarfordClassColors.RGBToHex(r, g, b)
     return string.format("%02x%02x%02x", r, g, b)
 end
 
--- classFile -> r,g,b (o nil).
+-- Paleta de respaldo (RGB 0-1) por si RAID_CLASS_COLORS no tiene la clave en el cliente.
+HarfordClassColors.FALLBACK_RGB = {
+    WARRIOR     = { 0.78, 0.61, 0.43 },
+    PALADIN     = { 0.96, 0.55, 0.73 },
+    HUNTER      = { 0.67, 0.83, 0.45 },
+    ROGUE       = { 1.00, 0.96, 0.41 },
+    PRIEST      = { 1.00, 1.00, 1.00 },
+    DEATHKNIGHT = { 0.77, 0.12, 0.23 },
+    SHAMAN      = { 0.00, 0.44, 0.87 },
+    MAGE        = { 0.41, 0.80, 0.94 },
+    WARLOCK     = { 0.58, 0.51, 0.79 },
+    MONK        = { 0.00, 1.00, 0.59 },
+    DRUID       = { 1.00, 0.49, 0.04 },
+    DEMONHUNTER = { 0.64, 0.19, 0.79 },
+    EVOKER      = { 0.20, 0.58, 0.50 },
+}
+
+-- classFile -> r,g,b (o nil). Usa RAID_CLASS_COLORS y cae al respaldo si falta.
 function HarfordClassColors.ColorRGBForClassFile(classFile)
-    local color = classFile and RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
+    if not classFile then return nil end
+    local color = RAID_CLASS_COLORS and RAID_CLASS_COLORS[classFile]
     if color then return color.r, color.g, color.b end
+    local fb = HarfordClassColors.FALLBACK_RGB[classFile]
+    if fb then return fb[1], fb[2], fb[3] end
     return nil
 end
 

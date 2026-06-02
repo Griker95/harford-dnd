@@ -23,6 +23,7 @@ HarfordDnDUI.SECTION_TEX = {
     SAV = HarfordDnDUI.TEX.ROCK,
     ATK = HarfordDnDUI.TEX.PARCH,
     SKL = HarfordDnDUI.TEX.PARCH,
+    CLS = HarfordDnDUI.TEX.PARCH,
 }
 
 HarfordDnDUI.LAYOUT = {

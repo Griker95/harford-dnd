@@ -87,6 +87,29 @@ function HarfordDnDWeapons.GetVersatileDice(def)
     return nil
 end
 
+-- Familia de animacion de ataque (presets de HarfordActionSequence) segun el arma.
+-- Devuelve: "unarmed" | "one_hand" | "two_hand" | "polearm" | "shield", o nil para
+-- armas a distancia/conjuro (sin preset cuerpo a cuerpo: mantienen el emote actual).
+-- Las arrojadizas cuerpo a cuerpo (mode "Melee") animan como su familia melee.
+function HarfordDnDWeapons.GetAnimFamily(def, versatileActive)
+    if not def then return nil end
+    if def.key == "Escudo" then return "shield" end
+    if def.key == "Desarmado" then return "unarmed" end
+    if def.mode == "Ranged" then return nil end
+
+    local function hasProp(name)
+        for _, p in ipairs(def.props or {}) do
+            if p == name or p:find(name, 1, true) then return true end
+        end
+        return false
+    end
+
+    if hasProp("Alcance") and hasProp("Dos manos") then return "polearm" end
+    local vDice = HarfordDnDWeapons.GetVersatileDice(def)
+    if (vDice and versatileActive) or hasProp("Dos manos") then return "two_hand" end
+    return "one_hand"
+end
+
 function HarfordDnDWeapons.WeaponBaseDice(def)
     if not def or not def.dmgN or not def.dmgS or def.dmgN == 0 or def.dmgS == 0 then return "-" end
     local use = tostring(def.dmgN) .. "d" .. tostring(def.dmgS)

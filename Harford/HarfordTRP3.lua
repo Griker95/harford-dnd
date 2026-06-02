@@ -73,6 +73,87 @@ local function StripInlineMarkup(text)
     return text
 end
 
+local function NormalizeBuildText(value)
+    value = tostring(value or ""):lower()
+    value = value:gsub("[_%-]+", " ")
+    value = value:gsub("[áàäâÁÀÄÂ]", "a")
+    value = value:gsub("[éèëêÉÈËÊ]", "e")
+    value = value:gsub("[íìïîÍÌÏÎ]", "i")
+    value = value:gsub("[óòöôÓÒÖÔ]", "o")
+    value = value:gsub("[úùüûÚÙÜÛ]", "u")
+    value = value:gsub("[ñÑ]", "n")
+    return value:gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+local function CleanAboutLines(text)
+    local lines = {}
+    for line in tostring(text or ""):gmatch("[^\r\n]+") do
+        local clean = StripInlineMarkup(line)
+        if clean and clean ~= "" then
+            lines[#lines + 1] = clean
+        end
+    end
+    return lines
+end
+
+local function ExtractLabeledAboutValue(lines, labels)
+    if type(lines) ~= "table" then return nil end
+    for i, line in ipairs(lines) do
+        local clean = NormalizeBuildText(line)
+        for _, label in ipairs(labels or {}) do
+            local normalizedLabel = NormalizeBuildText(label)
+            if clean == normalizedLabel then
+                return lines[i + 1]
+            end
+            local value = clean:match("^" .. normalizedLabel .. "%s*[:%-]%s*(.+)$")
+                or clean:match("^" .. normalizedLabel .. "%s+(.+)$")
+            if value and value ~= "" and value ~= normalizedLabel then
+                return value
+            end
+        end
+    end
+    return nil
+end
+
+local function ReadStringField(tbl, fields)
+    if type(tbl) ~= "table" then return nil end
+    for _, field in ipairs(fields or {}) do
+        local value = tbl[field]
+        if type(value) == "string" and value ~= "" then
+            return value
+        end
+        if type(value) == "number" then
+            return tostring(value)
+        end
+    end
+    return nil
+end
+
+local CollectRawAboutText
+
+local function ReadProfileBuildField(profile, fields)
+    if type(profile) ~= "table" then return nil end
+    local character = type(profile.player) == "table" and profile.player or profile
+    local sources = {
+        character and character.characteristics,
+        character and character.character,
+        character and character.misc,
+        character,
+        profile.characteristics,
+        profile.character,
+        profile.misc,
+        profile.data,
+        profile,
+    }
+    for _, source in ipairs(sources) do
+        local value = ReadStringField(source, fields)
+        if value and value ~= "" then
+            return StripInlineMarkup(value)
+        end
+    end
+    return nil
+end
+
 local function SumMulticlassLevels(text)
     text = tostring(text or "")
     local total = 0
@@ -111,6 +192,249 @@ local function PrimaryClassFromAbout(text)
         end
     end
     return bestClass
+end
+
+local CLASS_ICON_TO_HARFORD = {
+    deathknight = "caballero_muerte",
+    demonhunter = "cazador_demonios",
+    druid = "druida",
+    hunter = "cazador",
+    mage = "mago",
+    monk = "monje",
+    paladin = "paladin",
+    priest = "sacerdote",
+    rogue = "picaro",
+    shaman = "chaman",
+    warlock = "brujo",
+    warrior = "guerrero",
+}
+
+local function ResolveClassIdFromText(text, iconClass)
+    if iconClass and CLASS_ICON_TO_HARFORD[iconClass] then
+        return CLASS_ICON_TO_HARFORD[iconClass]
+    end
+    if HarfordDnDBook and HarfordDnDBook.FindClassIdByText then
+        return HarfordDnDBook.FindClassIdByText(text)
+    end
+    return nil
+end
+
+local function ClassEntriesFromAbout(text)
+    text = tostring(text or "")
+    local entries = {}
+    local seen = {}
+    if not (HarfordDnDBook and HarfordDnDBook.FindClassIdByText) then
+        return entries
+    end
+
+    for line in text:gmatch("[^\r\n]+") do
+        local iconClass = line:match("{icon:classicon_([%w_]+)")
+        local clean = StripInlineMarkup(line)
+        local classText, levelText = clean:match("^(.-)%s*%((%d+)%)%s*$")
+        classText = tostring(classText or ""):gsub("^%s+", ""):gsub("%s+$", "")
+        local level = tonumber(levelText)
+        if level and level > 0 and (classText ~= "" or iconClass) then
+            local classId = ResolveClassIdFromText(classText, iconClass)
+            if classId and not seen[classId] then
+                local subclassId = HarfordDnDBook.FindSubclassIdByText
+                    and HarfordDnDBook.FindSubclassIdByText(classId, classText)
+                    or nil
+                if not subclassId and HarfordDnDBook.GetSubclassUnlockLevel then
+                    local unlockLevel = HarfordDnDBook.GetSubclassUnlockLevel(classId)
+                    if unlockLevel and level >= unlockLevel then
+                        subclassId = HarfordDnDBook.GetDefaultSubclassId and HarfordDnDBook.GetDefaultSubclassId(classId) or ""
+                    end
+                end
+                entries[#entries + 1] = {
+                    classId = classId,
+                    subclassId = subclassId or "",
+                    level = level,
+                    raw = classText,
+                }
+                seen[classId] = true
+            end
+        end
+    end
+
+    return entries
+end
+
+local function RaceEntryFromAbout(text)
+    if not (HarfordDnDRaces and HarfordDnDRaces.FindRaceIdByText) then
+        return nil
+    end
+    local lines = CleanAboutLines(text)
+    local raceText = ExtractLabeledAboutValue(lines, { "raza", "race", "linaje", "especie" })
+    if not raceText or raceText == "" then return nil end
+    local raceId = HarfordDnDRaces.FindRaceIdByText(raceText) or raceText
+    local subraceText = ExtractLabeledAboutValue(lines, { "subraza", "subrace" }) or raceText
+    local subraceId = HarfordDnDRaces.FindSubraceIdByText
+        and HarfordDnDRaces.FindSubraceIdByText(raceId, subraceText)
+        or nil
+    return {
+        raceId = raceId,
+        subraceId = subraceId or "",
+        raw = raceText,
+    }
+end
+
+local function RaceEntryFromProfile(profile)
+    local value = ReadProfileBuildField(profile, { "RA", "Ra", "race", "Race", "RACE", "raza", "Raza", "RAZA" })
+    if value and value ~= "" then
+        local raceId = HarfordDnDRaces and HarfordDnDRaces.FindRaceIdByText and HarfordDnDRaces.FindRaceIdByText(value) or nil
+        raceId = raceId or value
+        local subValue = ReadProfileBuildField(profile, { "subrace", "Subrace", "subraza", "Subraza", "SUBRAZA" }) or value
+        local subraceId = HarfordDnDRaces and HarfordDnDRaces.FindSubraceIdByText
+            and HarfordDnDRaces.FindSubraceIdByText(raceId, subValue)
+            or nil
+        return { raceId = raceId, subraceId = subraceId or "", raw = value }
+    end
+    return RaceEntryFromAbout(CollectRawAboutText(profile))
+end
+
+local function BackgroundIdFromAbout(text)
+    local lines = CleanAboutLines(text)
+    local backgroundText = ExtractLabeledAboutValue(lines, { "trasfondo", "background", "origen" })
+    if not backgroundText or backgroundText == "" then return nil end
+    local backgroundId = HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundIdByText
+        and HarfordDnDBackgrounds.FindBackgroundIdByText(backgroundText)
+        or nil
+    return backgroundId or backgroundText, backgroundText
+end
+
+local function BackgroundIdFromProfile(profile)
+    local value = ReadProfileBuildField(profile, {
+        "BG", "Bg", "background", "Background", "BACKGROUND",
+        "trasfondo", "Trasfondo", "TRASFONDO", "origen", "Origen",
+    })
+    if value and value ~= "" then
+        local backgroundId = HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundIdByText
+            and HarfordDnDBackgrounds.FindBackgroundIdByText(value)
+            or nil
+        return backgroundId or value, value
+    end
+    return BackgroundIdFromAbout(CollectRawAboutText(profile))
+end
+
+local CleanFeatureLine
+
+local function IsFeatureSectionHeading(line)
+    local clean = NormalizeBuildText(line)
+    if clean == "" then return false end
+    return clean == "rasgos de clase"
+        or clean == "rasgos de clase y subclase"
+        or clean == "rasgos destacables de clase"
+end
+
+local function IsMagicSectionHeading(line)
+    local clean = NormalizeBuildText(line)
+    if clean == "" then return false end
+    return clean == "magia"
+        or clean == "conjuros"
+        or clean == "hechizos"
+        or clean == "trucos"
+        or clean == "lista de conjuros"
+        or clean == "ranuras de conjuro"
+        or clean == "espacios de conjuro"
+end
+
+local function IsClassInfoHeading(line)
+    local clean = CleanFeatureLine(line)
+    if not clean or clean == "" then return false end
+
+    local classText, levelText = clean:match("^(.-)%s*%((%d+)%)%s*$")
+    if levelText and ResolveClassIdFromText(classText) then
+        return true
+    end
+
+    if HarfordDnDBook and HarfordDnDBook.FindClassIdByText then
+        if HarfordDnDBook.FindClassIdByText(clean) then
+            return true
+        end
+        for _, classDef in ipairs(HarfordDnDBook.GetClasses and HarfordDnDBook.GetClasses() or {}) do
+            if classDef and classDef.id then
+                local subclassId = HarfordDnDBook.FindSubclassIdByText
+                    and HarfordDnDBook.FindSubclassIdByText(classDef.id, clean)
+                    or nil
+                if subclassId then
+                    return true
+                end
+            end
+        end
+    end
+
+    return false
+end
+
+local function IsFeatureStopHeading(line)
+    local clean = NormalizeBuildText(line)
+    if clean == "" then return false end
+    return clean == "ataque"
+        or clean == "ataques"
+        or clean == "armas"
+        or clean == "equipo"
+        or clean == "inventario"
+        or clean == "habilidades"
+        or clean == "tiradas de salvacion"
+        or clean == "salvaciones"
+        or clean == "idiomas"
+        or clean == "competencia"
+        or clean == "competencias"
+        or clean == "recursos"
+        or clean == "conjuros"
+        or clean == "notas"
+        or clean == "historia"
+end
+
+local function IsSheetStatLine(line)
+    local clean = NormalizeBuildText(line)
+    return clean:match("^fuerza%s+%d")
+        or clean:match("^destreza%s+%d")
+        or clean:match("^constitucion%s+%d")
+        or clean:match("^inteligencia%s+%d")
+        or clean:match("^sabiduria%s+%d")
+        or clean:match("^carisma%s+%d")
+        or clean:match("^fue%s+%d")
+        or clean:match("^des%s+%d")
+        or clean:match("^con%s+%d")
+        or clean:match("^int%s+%d")
+        or clean:match("^sab%s+%d")
+        or clean:match("^car%s+%d")
+        or clean:match("^pg%s+%d")
+        or clean:match("^pm%s+%d")
+        or clean:match("^ca%s+%d")
+end
+
+CleanFeatureLine = function(line)
+    line = StripInlineMarkup(line)
+    line = line:gsub("^%s*[-•*]+%s*", "")
+    line = line:gsub("^%s*%d+[%.)]%s*", "")
+    line = line:gsub("^%s+", ""):gsub("%s+$", "")
+    if line == "" then return nil end
+    if line:match("^%.+$") then return nil end
+    return line
+end
+
+local function FeatureLinesFromAbout(text, limit)
+    local out = {}
+    local inSection = false
+    limit = tonumber(limit) or 12
+    for rawLine in tostring(text or ""):gmatch("[^\r\n]+") do
+        local clean = CleanFeatureLine(rawLine)
+        if clean and IsClassInfoHeading(rawLine) then
+            inSection = true
+        elseif clean and IsMagicSectionHeading(clean) then
+            inSection = false
+        elseif clean and IsFeatureSectionHeading(clean) then
+            inSection = true
+        elseif clean and inSection and (IsFeatureStopHeading(clean) or IsSheetStatLine(clean)) then
+            inSection = false
+        elseif clean and inSection then
+            out[#out + 1] = clean
+            if #out >= limit then break end
+        end
+    end
+    return out
 end
 
 local function IndentDisplayText(text, indent)
@@ -363,7 +687,7 @@ local function GetAboutSectionText(section)
     return BuildWrappedSection(nil, icon, API.ConvertTRP3Markup(text))
 end
 
-local function CollectRawAboutText(profile)
+CollectRawAboutText = function(profile)
     local character = GetCharacterProfileData(profile)
     if type(character) ~= "table" or type(character.about) ~= "table" then
         return nil
@@ -561,6 +885,26 @@ function API.GetProfileLevel(profile)
     return nil
 end
 
+function API.GetProfileClassEntries(profile)
+    if type(profile) ~= "table" then return {} end
+    return ClassEntriesFromAbout(CollectRawAboutText(profile))
+end
+
+function API.GetProfileRaceEntry(profile)
+    if type(profile) ~= "table" then return nil end
+    return RaceEntryFromProfile(profile)
+end
+
+function API.GetProfileBackgroundId(profile)
+    if type(profile) ~= "table" then return nil end
+    return BackgroundIdFromProfile(profile)
+end
+
+function API.GetProfileFeatureLines(profile, limit)
+    if type(profile) ~= "table" then return {} end
+    return FeatureLinesFromAbout(CollectRawAboutText(profile), limit)
+end
+
 function API.GetProfilePrimaryClass(profile)
     if type(profile) ~= "table" then return nil end
 
@@ -592,6 +936,134 @@ function API.GetProfilePrimaryClass(profile)
     end
 
     return nil
+end
+
+local function ReadArmorClassField(tbl)
+    if type(tbl) ~= "table" then return nil end
+
+    local fields = { "ArmorClass", "armorClass", "AC", "ac", "CA", "ca", "Armadura", "armadura" }
+    for _, field in ipairs(fields) do
+        local value = tonumber(tbl[field])
+        if value and value > 0 and value <= 60 then
+            return math.floor(value)
+        end
+    end
+
+    return nil
+end
+
+local function ParseArmorClassLine(line)
+    local clean = StripInlineMarkup(line)
+    clean = clean:gsub("|T.-|t", "")
+    clean = clean:gsub("|c%x%x%x%x%x%x%x%x", "")
+    clean = clean:gsub("|r", "")
+    clean = clean:gsub("^%s+", ""):gsub("%s+$", "")
+    if clean == "" then return nil end
+
+    local value = clean:match("[Cc][Aa]%s*:%s*(%d+)")
+        or clean:match("^%s*[Cc][Aa]%s+(%d+)")
+        or clean:match("[Cc]lase%s+de%s+[Aa]rmadura%s*[:%-]?%s*(%d+)")
+        or clean:match("[Aa]rmor%s+[Cc]lass%s*[:%-]?%s*(%d+)")
+    value = tonumber(value)
+    if value and value > 0 and value <= 60 then
+        return math.floor(value)
+    end
+
+    local lower = clean:lower()
+    if lower:find("armadura", 1, true) or lower:find("armor", 1, true) then
+        local last
+        for number in clean:gmatch("(%d+)") do
+            last = tonumber(number)
+        end
+        if last and last > 0 and last <= 60 then
+            return math.floor(last)
+        end
+    end
+
+    return nil
+end
+
+function API.ParseArmorClassText(text)
+    if type(text) ~= "string" or text == "" then return nil end
+
+    for line in (text .. "\n"):gmatch("([^\n]*)\n") do
+        local armorClass = ParseArmorClassLine(line)
+        if armorClass then
+            return armorClass
+        end
+    end
+
+    return nil
+end
+
+local function CollectStringsForArmorClass(value, depth, seen, out)
+    if depth <= 0 then return end
+    local kind = type(value)
+    if kind == "string" then
+        out[#out + 1] = value
+    elseif kind == "table" then
+        if seen[value] then return end
+        seen[value] = true
+        for _, child in pairs(value) do
+            CollectStringsForArmorClass(child, depth - 1, seen, out)
+        end
+    end
+end
+
+function API.GetProfileArmorClass(profile)
+    if type(profile) ~= "table" then return nil end
+
+    local character = GetCharacterProfileData(profile)
+
+    -- PRIORIDAD: el texto "Currently" (CU) — el jugador escribe alli su CA actual y
+    -- debe ganar sobre el campo estructurado de la ficha TRP3 o cualquier otro.
+    local charData = character and character.character
+    local currentlyText = type(charData) == "table" and charData.CU
+    if type(currentlyText) == "string" and currentlyText ~= "" then
+        local fromCurrently = API.ParseArmorClassText(currentlyText)
+        if fromCurrently then return fromCurrently end
+    end
+
+    local sources = {
+        character and character.characteristics,
+        character and character.character,
+        character and character.misc,
+        profile.characteristics,
+        profile.character,
+        profile.misc,
+        profile.data,
+        profile,
+    }
+
+    for _, source in ipairs(sources) do
+        local armorClass = ReadArmorClassField(source)
+        if armorClass then return armorClass end
+    end
+
+    local rawAboutText = CollectRawAboutText(profile)
+    local armorClass = API.ParseArmorClassText(rawAboutText)
+    if armorClass then return armorClass end
+
+    local mainText = API.GetProfileMainText(profile)
+    armorClass = API.ParseArmorClassText(mainText)
+    if armorClass then return armorClass end
+
+    local strings = {}
+    for _, source in ipairs(sources) do
+        CollectStringsForArmorClass(source, 3, {}, strings)
+    end
+    for _, text in ipairs(strings) do
+        armorClass = API.ParseArmorClassText(text)
+        if armorClass then return armorClass end
+    end
+
+    return nil
+end
+
+function API.GetPlayerArmorClass(unit)
+    local profile = API.GetPlayerProfile(unit or "target")
+    if not profile then return nil end
+    return API.GetProfileArmorClass(profile)
 end
 
 function API.GetNpcIdFromGUID(guid)

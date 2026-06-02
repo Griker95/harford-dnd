@@ -84,6 +84,24 @@ function HarfordDnDComm.CreateHandlers(deps)
             return false
         end
 
+        local classProfileName, classData = HarfordSync.DeserializeDnDClassProgression(message)
+        if classProfileName and classData then
+            if deps.ApplyClassProgression then
+                deps.ApplyClassProgression(classProfileName, classData)
+            end
+            return false
+        end
+
+        if HarfordSync.ReceiveDnDClassProgressionChunk then
+            local chunkProfileName, chunkClassData = HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
+            if chunkProfileName and chunkClassData then
+                if deps.ApplyClassProgression then
+                    deps.ApplyClassProgression(chunkProfileName, chunkClassData)
+                end
+                return false
+            end
+        end
+
         local resourceProfileNameCfg, resourceCfgTbl = HarfordSync.ReceiveResourceConfig(message)
         if resourceProfileNameCfg and resourceCfgTbl then
             deps.ApplyResourceConfigTable(resourceCfgTbl, resourceProfileNameCfg)
@@ -117,6 +135,21 @@ function HarfordDnDComm.CreateHandlers(deps)
                 deps.HandleApplyAuraSelf(selfAuraId)
             end
             return false
+        end
+
+        -- DODEFENSE: el atacante fallo contra nosotros -> ejecutar nuestra defensa
+        if HarfordSync.IsDefenseMessage and HarfordSync.IsDefenseMessage(message) then
+            if deps.HandleDefense then deps.HandleDefense() end
+            return false
+        end
+
+        -- DOWOUND: el atacante nos golpeo -> animacion de herida (33/34)
+        if HarfordSync.DeserializeWound then
+            local isWound, woundCrit = HarfordSync.DeserializeWound(message)
+            if isWound then
+                if deps.HandleWound then deps.HandleWound(woundCrit) end
+                return false
+            end
         end
 
         deps.HandleRollSync(message)

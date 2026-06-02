@@ -559,11 +559,12 @@ local function SerializeEntry(entry)
         tostring(entry.reaction or 0),
         EscapeText(entry.nameColor),
         EscapeText(entry.trpProfileID),
+        tostring(entry.armorClass or 0),
     }, ",")
 end
 
 local function DeserializeEntry(raw)
-    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID = strsplit(",", raw or "")
+    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID, armorClass = strsplit(",", raw or "")
     if not name or name == "" then return nil end
     return NormalizeEntryLinks({
         id = UnescapeText(id),
@@ -585,6 +586,7 @@ local function DeserializeEntry(raw)
         reaction = SafeNumber(reaction, 0),
         nameColor = NormalizeColorHex(UnescapeText(nameColor)),
         trpProfileID = UnescapeText(trpProfileID),
+        armorClass = SafeNumber(armorClass, 0),
     })
 end
 
@@ -1820,17 +1822,25 @@ RefreshFrame = function()
                 card.name:SetTextColor(GetEntryNameColor(entry))
                 card.init:SetText("ESTADOS")
                 card.init:Show()
+                card.armorClass:Hide()
                 card.hp:Hide()
             elseif entry.kind == "generic" then
                 -- Marcadores de fase (Aliado/Neutral/Enemigo): sin barra de vida ni texto extra
                 card.name:SetTextColor(GetEntryNameColor(entry))
                 card.init:SetText("")
                 card.init:Hide()
+                card.armorClass:Hide()
                 card.hp:Hide()
             else
                 card.name:SetTextColor(GetEntryNameColor(entry))
                 card.init:SetText("")
                 card.init:Hide()
+                local showArmor = entry.kind ~= "player"
+                card.armorClass:SetShown(showArmor)
+                if showArmor then
+                    card.armorClass:SetText("CA " .. tostring(SafeNumber(entry.armorClass, 0)))
+                    card.armorClass:SetEnabled(isAdmin)
+                end
                 local hp, maxHp, tempHp = GetEntryResourceValues(entry)
                 card.hp:Show()
                 UpdateSmallBar(card.hp, card.hpText, hp, maxHp, 0.78, 0.05, 0.08, tempHp)
@@ -1857,6 +1867,7 @@ RefreshFrame = function()
             card.entryIndex = nil
             SetCardTargetState(card, false)
             card.reorder:Hide()
+            card.armorClass:Hide()
             card:Hide()
         end
     end
@@ -1889,6 +1900,7 @@ local function AddEntry(name, initiative, hp, maxHp, kind, id, mana, maxMana, un
         trpProfileID = meta and meta.trpProfileID or "",
         reaction = meta and SafeNumber(meta.reaction, 0) or 0,
         nameColor = meta and NormalizeColorHex(meta.nameColor) or nil,
+        armorClass = meta and SafeNumber(meta.armorClass, 0) or 0,
     }
     NormalizeEntryLinks(entry)
     local duplicate = FindDuplicateEntry(entry)
@@ -1923,6 +1935,11 @@ local function AddUnit(unit, kind)
     if UnitReaction and not (UnitIsPlayer and UnitIsPlayer(unit)) then
         reaction = UnitReaction(unit, "player") or 0
     end
+    local armorClass = 0
+    if not (UnitIsPlayer and UnitIsPlayer(unit)) and HarfordTRP3 and HarfordTRP3.GetNPCStatBlock then
+        local parsed = HarfordTRP3.GetNPCStatBlock(unit)
+        armorClass = SafeNumber(parsed and parsed.ac, 0)
+    end
 
     AddEntry(name, 0, hp, maxHp, entryKind, guid, mana, maxMana, fullName, trp.icon or GetFallbackCreatureIcon(unit), displayId, {
         npcId = trp.npcId,
@@ -1932,6 +1949,7 @@ local function AddUnit(unit, kind)
         trpProfileID = trp.trpProfileID,
         reaction = reaction,
         nameColor = trp.nameColor,
+        armorClass = armorClass,
     })
     if HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName and UnitIsPlayer and UnitIsPlayer(unit) then
         HarfordDnDAPI.RequestResourcesForName(fullName)
@@ -2076,6 +2094,61 @@ local function PromptAdjustHp(index, direction)
     StaticPopup_Show(dialogName, nil, nil, { index = index, direction = direction })
 end
 
+local function SetEntryArmorClass(index, armorClass)
+    if not IsTurnAdmin() then Print("Solo el admin puede modificar CA.") return false end
+    local store = EnsureStore()
+    local entry = store.entries[index]
+    if not entry or entry.kind == "round" or entry.kind == "generic" or entry.kind == "player" then
+        return false
+    end
+    armorClass = math.floor(tonumber(armorClass) or 0)
+    if armorClass < 0 then armorClass = 0 end
+    if SafeNumber(entry.armorClass, 0) == armorClass then return true end
+    entry.armorClass = armorClass
+    if HarfordDnDAPI and HarfordDnDAPI.UpdateSheetArmorClassForGuid then
+        HarfordDnDAPI.UpdateSheetArmorClassForGuid(entry.id, armorClass)
+    end
+    MarkChanged()
+    return true
+end
+
+local function PromptSetArmorClass(index)
+    local store = EnsureStore()
+    local entry = store.entries[index]
+    if not entry or entry.kind == "round" or entry.kind == "generic" or entry.kind == "player" then return end
+
+    local dialogName = "HARFORD_TURN_SET_ARMOR_CLASS"
+    StaticPopupDialogs[dialogName] = StaticPopupDialogs[dialogName] or {
+        text = "CA:",
+        button1 = ACCEPT,
+        button2 = CANCEL,
+        hasEditBox = true,
+        editBoxWidth = 80,
+        timeout = 0,
+        whileDead = true,
+        hideOnEscape = true,
+        OnShow = function(self, data)
+            local value = data and data.value or 0
+            self.editBox:SetText(tostring(value))
+            self.editBox:HighlightText()
+            self.editBox:SetFocus()
+        end,
+        OnAccept = function(self, data)
+            SetEntryArmorClass(data.index, self.editBox:GetText())
+        end,
+        EditBoxOnEnterPressed = function(self, data)
+            SetEntryArmorClass(data.index, self:GetText())
+            self:GetParent():Hide()
+        end,
+        EditBoxOnEscapePressed = function(self)
+            self:GetParent():Hide()
+        end,
+    }
+
+    StaticPopupDialogs[dialogName].text = "CA de " .. tostring(entry.name or "NPC") .. ":"
+    StaticPopup_Show(dialogName, nil, nil, { index = index, value = SafeNumber(entry.armorClass, 0) })
+end
+
 local function NextTurn()
     if not IsTurnAdmin() then Print("Solo el admin puede avanzar turnos.") return end
     ClaimAdminIfNeeded()
@@ -2189,6 +2262,11 @@ local function CreateCard(parent, index)
 
     card.init = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     card.init:SetPoint("TOP", 0, -65)
+
+    card.armorClass = MakeButton(card, "CA --", 48, 16, "TOP", card, "TOP", 0, -63, function()
+        PromptSetArmorClass(card.entryIndex or index)
+    end)
+    card.armorClass:Hide()
 
     card.hp = CreateFrame("StatusBar", nil, card)
     card.hp:SetSize(58, 10)
@@ -2416,9 +2494,32 @@ HarfordTurnOrderAPI.NextTurn = NextTurn
 HarfordTurnOrderAPI.PrevTurn = PrevTurn
 HarfordTurnOrderAPI.RemoveEntry = RemoveEntry
 HarfordTurnOrderAPI.AdjustHp = AdjustHp
+HarfordTurnOrderAPI.SetArmorClass = SetEntryArmorClass
 HarfordTurnOrderAPI.MoveEntry = MoveEntry
 HarfordTurnOrderAPI.ToggleEditMode = ToggleEditMode
 HarfordTurnOrderAPI.IsAdmin = IsTurnAdmin
+function HarfordTurnOrderAPI.GetArmorClassForGuid(guid)
+    guid = tostring(guid or "")
+    if guid == "" then return nil end
+    local store = EnsureStore()
+    for _, entry in ipairs(store.entries or {}) do
+        if entry and tostring(entry.id or "") == guid then
+            return SafeNumber(entry.armorClass, 0), entry
+        end
+    end
+end
+
+function HarfordTurnOrderAPI.SetArmorClassForGuid(guid, armorClass)
+    guid = tostring(guid or "")
+    if guid == "" then return false end
+    local store = EnsureStore()
+    for index, entry in ipairs(store.entries or {}) do
+        if entry and tostring(entry.id or "") == guid then
+            return SetEntryArmorClass(index, armorClass)
+        end
+    end
+    return false
+end
 
 SLASH_HARFORDTURNOS1 = "/TurnosHarford"
 SLASH_HARFORDTURNOS2 = "/turnos"

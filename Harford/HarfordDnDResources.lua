@@ -65,6 +65,7 @@ HarfordDnDResources.RUNTIME_KEYS = {
     "Res_focus_Cur", "Res_focus_Max", "Res_holy_power_Cur", "Res_holy_power_Max", "Res_light_point_Cur", "Res_light_point_Max",
     "Res_mage_point_Cur", "Res_mage_point_Max", "Res_rage_Cur", "Res_rage_Max", "Res_runic_power_Cur", "Res_runic_power_Max",
     "Res_soul_shard_Cur", "Res_soul_shard_Max", "Res_astral_power_Cur", "Res_astral_power_Max", "Res_living_seeds_Cur", "Res_living_seeds_Max",
+    "ArmorClass",
 }
 
 HarfordDnDResources.RemoteCache    = HarfordDnDResources.RemoteCache    or {}

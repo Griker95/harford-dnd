@@ -18,6 +18,7 @@ HarfordSync.PROF_SKILL_IDS = {
 -- Claves base del perfil DnD (sin Hab_): caben holgadamente en un mensaje de red.
 HarfordSync.ProfileKeys.DnDBase = {
     "BonusCompetencia",
+    "ArmorClass",
     "AtributoConjuro",
     "ModIniciativa",
     "Fuerza",
@@ -38,6 +39,7 @@ HarfordSync.ProfileKeys.DnDBase = {
 -- NO usar para envío de red — supera el límite de SendAddonMessage.
 HarfordSync.ProfileKeys.DnD = {
     "BonusCompetencia",
+    "ArmorClass",
     "AtributoConjuro",
     "ModIniciativa",
 
@@ -81,6 +83,7 @@ HarfordSync.ResourceKeys.Runtime = HarfordSync.ResourceKeys.Runtime or {
     "Res_focus_Cur", "Res_focus_Max", "Res_holy_power_Cur", "Res_holy_power_Max", "Res_light_point_Cur", "Res_light_point_Max",
     "Res_mage_point_Cur", "Res_mage_point_Max", "Res_rage_Cur", "Res_rage_Max", "Res_runic_power_Cur", "Res_runic_power_Max",
     "Res_soul_shard_Cur", "Res_soul_shard_Max", "Res_astral_power_Cur", "Res_astral_power_Max", "Res_living_seeds_Cur", "Res_living_seeds_Max",
+    "ArmorClass",
 }
 
 HarfordSync.ResourceKeys.Config = HarfordSync.ResourceKeys.Config or {
@@ -437,6 +440,205 @@ function HarfordSync.SendDnDProfFlags(prefix, profileName, tbl, channel, target)
     return HarfordSync.Send(prefix, payload, ch, target)
 end
 
+-- ---------------------------------------------------------------------------
+-- DNDCLASS: progresion de clases/subclases/rasgos. Separado de DNDCFG para no
+-- mezclar tablas anidadas con las claves planas historicas de ficha.
+-- ---------------------------------------------------------------------------
+
+local CLASS_CHUNK_BYTES = 180
+local classProgressionChunkBuffers = {}
+
+local function EscapeProgressionText(value)
+    value = tostring(value or "")
+    value = value:gsub("%%", "%%25")
+    value = value:gsub("|", "%%7C")
+    value = value:gsub(";", "%%3B")
+    value = value:gsub(",", "%%2C")
+    value = value:gsub(":", "%%3A")
+    value = value:gsub("=", "%%3D")
+    return value
+end
+
+local function UnescapeProgressionText(value)
+    value = tostring(value or "")
+    value = value:gsub("%%7C", "|")
+    value = value:gsub("%%3B", ";")
+    value = value:gsub("%%2C", ",")
+    value = value:gsub("%%3A", ":")
+    value = value:gsub("%%3D", "=")
+    value = value:gsub("%%25", "%%")
+    return value
+end
+
+function HarfordSync.SerializeDnDClassProgression(profileName, data)
+    profileName = tostring(profileName or "default")
+    data = data or {}
+
+    local classParts = {}
+    for _, entry in ipairs(data.classLevels or {}) do
+        classParts[#classParts + 1] = table.concat({
+            EscapeProgressionText(entry.classId),
+            EscapeProgressionText(entry.subclassId),
+            tostring(tonumber(entry.level) or 1),
+        }, ",")
+    end
+
+    local featureParts = {}
+    for featureId, enabled in pairs(data.featureStates or {}) do
+        featureParts[#featureParts + 1] = EscapeProgressionText(featureId) .. ":" .. (enabled and "1" or "0")
+    end
+    table.sort(featureParts)
+
+    -- Elecciones (choices): featureId : opt1~opt2~...  (slots por "~", entradas por ",")
+    local choiceParts = {}
+    for featureId, slots in pairs(data.choices or {}) do
+        if type(slots) == "table" and #slots > 0 then
+            local slotParts = {}
+            for _, optionId in ipairs(slots) do
+                slotParts[#slotParts + 1] = EscapeProgressionText(optionId)
+            end
+            choiceParts[#choiceParts + 1] = EscapeProgressionText(featureId) .. ":" .. table.concat(slotParts, "~")
+        end
+    end
+    table.sort(choiceParts)
+
+    -- Dotes: lista de featId separados por "~".
+    local featParts = {}
+    for _, featId in ipairs(data.feats or {}) do
+        if tostring(featId or "") ~= "" then
+            featParts[#featParts + 1] = EscapeProgressionText(featId)
+        end
+    end
+
+    local race = type(data.race) == "table" and data.race or {}
+    local raw = table.concat({
+        "v=" .. tostring(tonumber(data.schema) or 1),
+        "c=" .. table.concat(classParts, "~"),
+        "f=" .. table.concat(featureParts, ","),
+        "h=" .. table.concat(choiceParts, ","),
+        "r=" .. EscapeProgressionText(race.id or "") .. "~" .. EscapeProgressionText(race.subraceId or ""),
+        "b=" .. EscapeProgressionText(data.background or ""),
+        "d=" .. table.concat(featParts, "~"),
+        "m=" .. (data.useMana and "1" or "0"),
+    }, ";")
+
+    return "DNDCLASS|" .. profileName .. "|" .. raw
+end
+
+function HarfordSync.DeserializeDnDClassProgression(message)
+    if type(message) ~= "string" then return nil, nil end
+    local opcode, profileName, raw = message:match("^([^|]+)|([^|]+)|(.*)$")
+    if opcode ~= "DNDCLASS" or not profileName or profileName == "" then
+        return nil, nil
+    end
+
+    local data = { schema = 1, classLevels = {}, featureStates = {}, choices = {}, race = { id = "", subraceId = "" }, background = "", feats = {}, useMana = false }
+    for part in tostring(raw or ""):gmatch("([^;]+)") do
+        local key, value = part:match("^([^=]+)=(.*)$")
+        if key == "v" then
+            data.schema = tonumber(value) or 1
+        elseif key == "c" and value ~= "" then
+            for entryText in value:gmatch("([^~]+)") do
+                local classId, subclassId, level = entryText:match("^([^,]*),([^,]*),([^,]*)$")
+                if classId and classId ~= "" then
+                    data.classLevels[#data.classLevels + 1] = {
+                        classId = UnescapeProgressionText(classId),
+                        subclassId = UnescapeProgressionText(subclassId),
+                        level = tonumber(level) or 1,
+                    }
+                end
+            end
+        elseif key == "f" and value ~= "" then
+            for featureText in value:gmatch("([^,]+)") do
+                local featureId, enabled = featureText:match("^([^:]+):([^:]*)$")
+                if featureId and featureId ~= "" then
+                    data.featureStates[UnescapeProgressionText(featureId)] = enabled == "1"
+                end
+            end
+        elseif key == "h" and value ~= "" then
+            for choiceText in value:gmatch("([^,]+)") do
+                local featureId, slotsText = choiceText:match("^([^:]+):(.*)$")
+                if featureId and featureId ~= "" then
+                    local slots = {}
+                    for optionId in tostring(slotsText or ""):gmatch("([^~]+)") do
+                        slots[#slots + 1] = UnescapeProgressionText(optionId)
+                    end
+                    data.choices[UnescapeProgressionText(featureId)] = slots
+                end
+            end
+        elseif key == "r" and value ~= "" then
+            local raceId, subraceId = value:match("^([^~]*)~?(.*)$")
+            data.race.id = UnescapeProgressionText(raceId or "")
+            data.race.subraceId = UnescapeProgressionText(subraceId or "")
+        elseif key == "b" and value ~= "" then
+            data.background = UnescapeProgressionText(value)
+        elseif key == "d" and value ~= "" then
+            for featId in value:gmatch("([^~]+)") do
+                data.feats[#data.feats + 1] = UnescapeProgressionText(featId)
+            end
+        elseif key == "m" then
+            data.useMana = value == "1"
+        end
+    end
+
+    return profileName, data
+end
+
+function HarfordSync.SendDnDClassProgression(prefix, profileName, data, channel, target)
+    local ch = channel
+    if (not ch or ch == "") and (target and target ~= "") then
+        ch = "WHISPER"
+    end
+    ch = ch or HarfordSync.BestChannel()
+    if not ch or ch == "" then
+        return false, "Sin canal disponible"
+    end
+
+    local payload = HarfordSync.SerializeDnDClassProgression(profileName, data)
+    if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
+        return HarfordSync.Send(prefix, payload, ch, target)
+    end
+
+    local transferId = tostring((GetServerTime and GetServerTime()) or time() or 0) .. tostring(math.random(1000, 9999))
+    local total = math.max(1, math.ceil(#payload / CLASS_CHUNK_BYTES))
+    for i = 1, total do
+        local chunk = payload:sub(((i - 1) * CLASS_CHUNK_BYTES) + 1, i * CLASS_CHUNK_BYTES)
+        local ok, err = HarfordSync.Send(prefix, table.concat({ "DNDCLASSC", transferId, tostring(i), tostring(total), chunk }, "|"), ch, target)
+        if not ok then return false, err end
+    end
+    return true
+end
+
+function HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
+    local transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^DNDCLASSC|([^|]+)|([^|]+)|([^|]+)|(.*)$")
+    if not transferId then return nil, nil end
+    local index = tonumber(indexRaw)
+    local total = tonumber(totalRaw)
+    if not index or not total or index < 1 or index > total or total > 50 then
+        return nil, nil
+    end
+
+    local key = tostring(sender or "") .. ":" .. transferId
+    local buffer = classProgressionChunkBuffers[key]
+    if not buffer or buffer.total ~= total then
+        buffer = { total = total, received = 0, chunks = {} }
+        classProgressionChunkBuffers[key] = buffer
+    end
+    if not buffer.chunks[index] then
+        buffer.chunks[index] = chunk
+        buffer.received = buffer.received + 1
+    end
+    if buffer.received < total then return nil, nil end
+
+    local parts = {}
+    for i = 1, total do
+        if not buffer.chunks[i] then return nil, nil end
+        parts[i] = buffer.chunks[i]
+    end
+    classProgressionChunkBuffers[key] = nil
+    return HarfordSync.DeserializeDnDClassProgression(table.concat(parts))
+end
+
 
 function HarfordSync.BroadcastProfiles(prefix, opcode, bank, keys, channel, target)
     local ch = channel or HarfordSync.BestChannel()
@@ -755,6 +957,43 @@ function HarfordSync.SendApplyAuraSelf(prefix, spellId, target)
     local id = math.floor(tonumber(spellId) or 0)
     if id <= 0 then return false end
     HarfordSync.Send(prefix, HarfordSync.SerializeApplyAuraSelf(id), "WHISPER", target)
+    return true
+end
+
+-- ─── Instrucción de defensa al fallar un ataque (DODEFENSE) ───────────────────
+-- Sin payload: el cliente receptor elige parry/dodge segun SU propio modo de
+-- combate. Se envia por WHISPER al jugador objetivo cuando el atacante falla.
+function HarfordSync.SerializeDefense()
+    return "DODEFENSE"
+end
+
+function HarfordSync.IsDefenseMessage(message)
+    local opcode = strsplit("|", tostring(message or ""))
+    return opcode == "DODEFENSE"
+end
+
+function HarfordSync.SendDefense(prefix, target)
+    if not target or target == "" then return false end
+    HarfordSync.Send(prefix, HarfordSync.SerializeDefense(), "WHISPER", target)
+    return true
+end
+
+-- ─── Instrucción de herida al impactar (DOWOUND) ──────────────────────────────
+-- El atacante avisa al jugador objetivo de que lo ha golpeado; su cliente
+-- reproduce la animacion de herida (mod anim 33 normal / 34 critico).
+function HarfordSync.SerializeWound(isCritical)
+    return "DOWOUND|" .. (isCritical and "1" or "0")
+end
+
+function HarfordSync.DeserializeWound(message)
+    local opcode, crit = strsplit("|", tostring(message or ""))
+    if opcode ~= "DOWOUND" then return nil end
+    return true, crit == "1"
+end
+
+function HarfordSync.SendWound(prefix, target, isCritical)
+    if not target or target == "" then return false end
+    HarfordSync.Send(prefix, HarfordSync.SerializeWound(isCritical), "WHISPER", target)
     return true
 end
 
@@ -1141,6 +1380,9 @@ HarfordSync.DnD = HarfordSync.DnD or {
     ScheduleResourceBroadcast = HarfordSync.ScheduleResourceBroadcast,
     SendDnDProfFlags         = HarfordSync.SendDnDProfFlags,
     DeserializeDnDProfFlags  = HarfordSync.DeserializeDnDProfFlags,
+    SendDnDClassProgression  = HarfordSync.SendDnDClassProgression,
+    DeserializeDnDClassProgression = HarfordSync.DeserializeDnDClassProgression,
+    ReceiveDnDClassProgressionChunk = HarfordSync.ReceiveDnDClassProgressionChunk,
 }
 
 HarfordSync.Loot = HarfordSync.Loot or {

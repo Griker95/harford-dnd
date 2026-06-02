@@ -434,6 +434,22 @@ local function BuildNpcActions(unit)
     return actions
 end
 
+local function GetTurnArmorClassForGuid(guid)
+    if guid and HarfordTurnOrderAPI and HarfordTurnOrderAPI.GetArmorClassForGuid then
+        local armorClass = HarfordTurnOrderAPI.GetArmorClassForGuid(guid)
+        if armorClass and armorClass > 0 then return armorClass end
+    end
+end
+
+function API.UpdateNpcSheetArmorClass(armorClass, guid)
+    guid = tostring(guid or (UnitGUID and UnitGUID("target")) or "")
+    if guid == "" then return false end
+    if HarfordTurnOrderAPI and HarfordTurnOrderAPI.SetArmorClassForGuid then
+        return HarfordTurnOrderAPI.SetArmorClassForGuid(guid, armorClass)
+    end
+    return false, "HarfordTurnOrderAPI.SetArmorClassForGuid no disponible"
+end
+
 function API.BuildDnDSheetContext(unit, opts)
     unit = unit or "target"
     opts = opts or {}
@@ -477,6 +493,8 @@ function API.BuildDnDSheetContext(unit, opts)
     end
 
     local npcName = name or "NPC"
+    local sourceGuid = UnitGUID(unit)
+    local armorClass = GetTurnArmorClassForGuid(sourceGuid) or (parsed and parsed.ac) or 0
     local locked = opts.locked == true
     local rollName = prefix .. npcName
     local titleText = prefix .. (locked and ("[" .. npcName .. "]") or npcName)
@@ -484,8 +502,9 @@ function API.BuildDnDSheetContext(unit, opts)
     return {
         kind = "npc",
         lockedSource = locked,
-        npcSourceGuid = UnitGUID(unit),
+        npcSourceGuid = sourceGuid,
         overrides = overrides,
+        armorClass = armorClass,
         rollName = rollName,
         rollColor = nameColorHex,
         titleText = titleText,
@@ -497,6 +516,7 @@ function API.BuildDnDSheetContext(unit, opts)
         canDamage = API.CanNpcSheetDamage,
         onAttackAnimation = API.ApplyNpcSheetAttackAnimation,
         onDamageRolled = API.ApplyNpcSheetDamage,
+        onArmorClassChanged = API.UpdateNpcSheetArmorClass,
     }
 end
 

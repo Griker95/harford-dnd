@@ -217,7 +217,12 @@ local function GetResourceCurrent(key)
 end
 
 local function GetResourceMax(key)
-    return toN(ARCGET(ResourceMaxKey(key), "0"), 0)
+    local base = toN(ARCGET(ResourceMaxKey(key), "0"), 0)
+    local bonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetResourceMaxBonus
+        and HarfordDnDFeatureEffects.GetResourceMaxBonus(key)
+        or 0
+    return base + bonus
 end
 
 local function SetResourceCurrent(key, value)
@@ -331,7 +336,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice)
     if offhand and abiMod > 0 then
         abiMod = 0
     end
-    local wmod = HarfordDnDCalc.GetWeaponMod()
+    local wmod = HarfordDnDCalc.GetWeaponDamageBonus and HarfordDnDCalc.GetWeaponDamageBonus() or HarfordDnDCalc.GetWeaponMod()
 
     local rolls, sum = {}, 0
     for i=1,n do
@@ -790,15 +795,18 @@ do
     repHL:SetBlendMode("ADD")
 
     repBtn:SetScript("OnClick", function()
-        if HarfordReputationUI and HarfordReputationUI.Toggle then
+        if HarfordCharacterPanel and HarfordCharacterPanel.Toggle then
+            HarfordCharacterPanel.Toggle("sheet")
+        elseif HarfordReputationUI and HarfordReputationUI.Toggle then
             HarfordReputationUI.Toggle()
         end
     end)
     repBtn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText("Reputaciones", 1, 0.82, 0)
-        GameTooltip:AddLine("Abre o cierra el panel de reputaciones.", 1, 1, 1)
-        GameTooltip:AddLine("/harfordrep — acceso directo", 0.7, 0.9, 0.7)
+        GameTooltip:SetText("Personaje", 1, 0.82, 0)
+        GameTooltip:AddLine("Abre el panel de personaje.", 1, 1, 1)
+        GameTooltip:AddLine("Ficha, creacion, subida y acceso a reputacion.", 1, 1, 1)
+        GameTooltip:AddLine("/harfordchar - acceso directo", 0.7, 0.9, 0.7)
         GameTooltip:Show()
     end)
     repBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -1016,6 +1024,18 @@ local function AdjustResourceCurrent(key, delta)
     end
 
     return cur
+end
+
+-- Aplica daño al PROPIO jugador en local (temp_health primero, luego health). Lo usa
+-- el ataque NPC cuando el focus victima es uno mismo (el DM ataca a su propio PJ).
+HarfordDnDStore.ApplyLocalResourceDamage = function(total)
+    total = tonumber(total) or 0
+    if total <= 0 then return end
+    local tempCur = math.max(0, GetResourceCurrent("temp_health"))
+    local tempDmg = math.min(total, tempCur)
+    local healthDmg = total - tempDmg
+    if tempDmg > 0 then AdjustResourceCurrent("temp_health", -tempDmg) end
+    if healthDmg > 0 then AdjustResourceCurrent("health", -healthDmg) end
 end
 
 local function ApplyResourceDeltaFromRemote(resourceKey, delta, sender)
@@ -1499,14 +1519,15 @@ local function CreateTabButton(parent, key, text, x, w)
     return b
 end
 
-local TAB_W        = 124   -- (SEC_W 392 - 8px margen - 12px gaps) / 3
+local TAB_W        = 118
 local TAB_GAP      = 6
-local TOTAL_TABS_W = TAB_W * 3 + TAB_GAP * 2  -- 384px de 392 disponibles
-local TAB_START_X  = math.floor((HarfordDnDUI.LAYOUT.SEC_W - TOTAL_TABS_W) / 2)  -- 4px margen
+local TOTAL_TABS_W = TAB_W * 3 + TAB_GAP * 2
+local TAB_START_X  = math.floor((HarfordDnDUI.LAYOUT.SEC_W - TOTAL_TABS_W) / 2)
 
 CreateTabButton(TabBar, "BASE", "Características", TAB_START_X, TAB_W)
 CreateTabButton(TabBar, "ATK", "Ataque", TAB_START_X + (TAB_W + TAB_GAP), TAB_W)
 CreateTabButton(TabBar, "SKL", "Habilidades", TAB_START_X + (TAB_W + TAB_GAP) * 2, TAB_W)
+if TabButtons["BASE"] then TabButtons["BASE"]:SetText("Caracteristicas") end
 
 
 local AbilityButtons, SaveButtons, SkillButtons = {}, {}, {}
@@ -1755,7 +1776,7 @@ UpdateWeaponInfoUI = function()
     if HarfordDnDStore.GetOffhandActive(def) and abiMod > 0 then
         abiMod = 0
     end
-    local wmod = HarfordDnDCalc.GetWeaponMod()
+    local wmod = HarfordDnDCalc.GetWeaponDamageBonus and HarfordDnDCalc.GetWeaponDamageBonus() or HarfordDnDCalc.GetWeaponMod()
     local dice = HarfordDnDWeapons.WeaponBaseDice(def)
 
     local parts = {}
@@ -1822,12 +1843,17 @@ SyncWeaponDrop()
 UpdateWeaponInfoUI()
 
 local function DoWeaponAttack()
+    -- Requiere target valido (no uno mismo).
+    if not (UnitExists and UnitExists("target"))
+        or (UnitIsUnit and UnitIsUnit("target", "player")) then
+        return
+    end
     local def = GetWeaponDef(GetWeaponKey())
     local offhand = HarfordDnDStore.GetOffhandActive and HarfordDnDStore.GetOffhandActive(def)
     local abil = GetWeaponAttackAbility(def)
     local base = HarfordDnDCalc.GetAbilityMod(abil)
     local prof = HarfordDnDCalc.GetPB()
-    local wmod = HarfordDnDCalc.GetWeaponMod()
+    local wmod = HarfordDnDCalc.GetWeaponAttackBonus and HarfordDnDCalc.GetWeaponAttackBonus() or HarfordDnDCalc.GetWeaponMod()
     local misc = HarfordDnDCalc.GetMiscBonus()
 
     local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
@@ -1852,17 +1878,43 @@ local function DoWeaponAttack()
     })
     local isCritical = HarfordDnDCombat.IsCriticalRollTag(critTag)
     HarfordDnDStore.pendingWeaponCriticalKey = isCritical and def.key or nil
-    if armorClass and hit then
-        local damageTotal = RollWeaponDamage(def, abil, isCritical)
-        HarfordDnDStore.pendingWeaponCriticalKey = nil
-        HarfordDnDCombat.ApplyWeaponDamageToTarget(damageTotal, isCritical)
-    elseif armorClass and not hit then
-        HarfordDnDStore.pendingWeaponCriticalKey = nil
+
+    -- Familia de animacion del arma (nil = arco/rifle/conjuro: sin preset melee).
+    local family = HarfordDnDWeapons.GetAnimFamily
+        and HarfordDnDWeapons.GetAnimFamily(def, HarfordDnDCalc.GetVersatileActive())
+
+    -- Reaccion sincronizada con el impacto del preset solo si la CA esta resuelta
+    -- (hit/miss conocido). El daño (onImpactOnce) es mecanico y se aplica siempre.
+    local hitFlag, onImpactOnce
+    if armorClass then
+        hitFlag = hit == true
+        if hit then
+            onImpactOnce = function()
+                local damageTotal = RollWeaponDamage(def, abil, isCritical)
+                HarfordDnDStore.pendingWeaponCriticalKey = nil
+                HarfordDnDCombat.ApplyWeaponDamageToTarget(damageTotal, isCritical)
+            end
+        else
+            HarfordDnDStore.pendingWeaponCriticalKey = nil
+        end
     end
-    -- Animacion del jugador atacante: .mod anim sobre el propio personaje.
-    -- Aplica a cualquier jugador (no requiere oficial). Si el arma no declara
-    -- emoteId propio, se deriva desde tipo/propiedades para evitar ataques mudos.
-    if HarfordDnDStore.AreAnimationsEnabled and HarfordDnDStore.AreAnimationsEnabled()
+
+    -- Atacante: corre el preset de ataque (swing) y despacha herida/defensa al
+    -- objetivo en el instante de impacto. Para armas sin preset (ranged/conjuro) la
+    -- secuencia solo sincroniza la reaccion; el swing lo da el emote actual de abajo.
+    HarfordDnDCombat.RunAttackSequence({
+        family       = family,
+        critical     = isCritical,
+        offhand      = offhand,
+        hit          = hitFlag,
+        defenderUnit = "target",
+        npcAttacker  = false,
+        onImpactOnce = onImpactOnce,
+    })
+
+    -- Swing del atacante SOLO para armas sin preset melee (arco/rifle/conjuro):
+    -- mantiene el emote actual. Las familias melee ya animan con el preset.
+    if family == nil and HarfordDnDStore.AreAnimationsEnabled and HarfordDnDStore.AreAnimationsEnabled()
         and HarfordServerActions and HarfordServerActions.ModAnim then
         local eid = HarfordDnDStore.GetWeaponAttackEmoteId
             and HarfordDnDStore.GetWeaponAttackEmoteId(def, offhand, critTag)
@@ -1963,13 +2015,17 @@ do
             -- Mismo arma sin cambio previo: salir del modo combate.
             HarfordServerActions.ModAnim(standId)
             HarfordDnDStore.combatModeWeaponKey = nil
+            HarfordDnDStore.combatModeKey = nil
         else
+            local combatKey = GetCombatEmoteKeyForWeapon(def)
             local cdef = HarfordEmotes and HarfordEmotes.GetCombat
-                and HarfordEmotes.GetCombat(GetCombatEmoteKeyForWeapon(def))
+                and HarfordEmotes.GetCombat(combatKey)
             if cdef and cdef.id then
                 HarfordServerActions.ModAnim(cdef.id)
             end
             HarfordDnDStore.combatModeWeaponKey = key
+            -- Postura activa (one_hand/two_hand/...) para elegir parry/dodge si nos atacan.
+            HarfordDnDStore.combatModeKey = combatKey
         end
     end)
 
@@ -1981,38 +2037,37 @@ local weaponAttackButton = HarfordDnDUI.MakeButton(SEC_ATK, "Ataque Arma", 110, 
     DoWeaponAttack()
 end)
 
-local weaponDamageButton = HarfordDnDUI.MakeButton(SEC_ATK, "Daño Arma", 110, 22, 266, -94, function()
+-- El daño de arma al impactar esta automatizado en `DoWeaponAttack`; este boton
+-- queda como activador del frame de Daño Custom (sin Shift) sobre el target.
+local weaponDamageButton = HarfordDnDUI.MakeButton(SEC_ATK, "Daño Custom", 110, 22, 266, -94, function()
     if HarfordDnDStore.RefreshWeaponDamageButton
         and not HarfordDnDStore.RefreshWeaponDamageButton() then
         return
     end
-
-    if IsAnyShiftDown() and HarfordDnDStore.OpenCustomDamageFrame then
-        HarfordDnDStore.OpenCustomDamageFrame()
-        return
+    if HarfordDnDStore.OpenCustomDamageFrame then
+        HarfordDnDStore.OpenCustomDamageFrame("target")
     end
-
-    local def = GetWeaponDef(GetWeaponKey())
-    local abil = GetWeaponAttackAbility(def)
-    local isCritical = HarfordDnDStore.pendingWeaponCriticalKey ~= nil
-        and HarfordDnDStore.pendingWeaponCriticalKey == def.key
-    HarfordDnDStore.pendingWeaponCriticalKey = nil
-    local total = RollWeaponDamage(def, abil, isCritical)
-    -- Aplica el daño al objetivo: NPC (ruta oficial, en bruto) o jugador ajeno (RADJ).
-    -- SetNpcHealthDelta dispara automaticamente el emote de herida (33 normal / 34 critico).
-    HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical)
 end)
 
 HarfordDnDStore.RefreshWeaponDamageButton = function()
     local enabled = UnitExists and UnitExists("target")
         and not (UnitIsUnit and UnitIsUnit("target", "player"))
     if weaponDamageButton then
-        weaponDamageButton:SetText(IsAnyShiftDown() and "Daño Custom" or "Daño Arma")
+        weaponDamageButton:SetText("Daño Custom")
         if enabled then
             weaponDamageButton:Enable()
         else
             weaponDamageButton:Disable()
         end
+    end
+    -- Ataque Arma y Ataque Conjuro tambien requieren target valido (no propio).
+    if weaponAttackButton then
+        if enabled then weaponAttackButton:Enable() else weaponAttackButton:Disable() end
+    end
+    local spellBtn = HarfordDnDStore.playerAttackControls
+        and HarfordDnDStore.playerAttackControls.spellAttackButton
+    if spellBtn then
+        if enabled then spellBtn:Enable() else spellBtn:Disable() end
     end
     return enabled
 end
@@ -2053,7 +2108,8 @@ do
         end
     end
 
-    local function RollCustomDamage(expr, abilityKey, damageKey, maximizeDice)
+    local function RollCustomDamage(expr, abilityKey, damageKey, maximizeDice, mitigationUnit)
+        mitigationUnit = mitigationUnit or "target"
         local parsed, err = ParseCustomDamageInput(expr)
         if not parsed then
             PrintCustomDamageError(err)
@@ -2084,7 +2140,7 @@ do
 
         local marker = ""
         if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
-            local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", dtype, total)
+            local applied, _status, mk = HarfordDamageMitigation.ForTarget(mitigationUnit, dtype, total)
             total, marker = applied, mk
         end
 
@@ -2118,14 +2174,18 @@ do
     end
 
     local function ApplyCustomDamage()
-        if not (UnitExists and UnitExists("target"))
-            or (UnitIsUnit and UnitIsUnit("target", "player")) then
-            PrintCustomDamageError("Selecciona otro jugador o NPC para tirar daño custom")
+        local frame = HarfordDnDStore.customDamageFrame
+        if not frame then return end
+        -- applyUnit: "target" (panel jugador) o "focus" (panel NPC, daño en nombre del NPC).
+        -- En "focus" SI se permite que sea uno mismo (el NPC ataca a mi propio PJ).
+        local applyUnit = frame.applyUnit or "target"
+        local blockSelf = applyUnit ~= "focus"
+        if not (UnitExists and UnitExists(applyUnit))
+            or (blockSelf and UnitIsUnit and UnitIsUnit(applyUnit, "player")) then
+            PrintCustomDamageError("Selecciona un objetivo valido para tirar daño custom")
             return
         end
 
-        local frame = HarfordDnDStore.customDamageFrame
-        if not frame then return end
         local isCritical = HarfordDnDStore.pendingWeaponCriticalKey ~= nil
         HarfordDnDStore.pendingWeaponCriticalKey = nil
 
@@ -2133,11 +2193,16 @@ do
             frame.diceBox and frame.diceBox:GetText(),
             frame.abilityKey,
             frame.damageKey or "slashing",
-            isCritical
+            isCritical,
+            applyUnit
         )
 
-        -- Aplica el daño al objetivo: NPC (ruta oficial) o jugador ajeno (RADJ).
-        HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical)
+        -- Aplica el daño: focus (jugador, en nombre del NPC, RADJ) o target (NPC oficial / jugador ajeno).
+        if applyUnit == "focus" then
+            HarfordDnDCombat.ApplyActionDamageToFocus(total)
+        else
+            HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical)
+        end
     end
 
     local function EnsureCustomDamageFrame()
@@ -2262,13 +2327,14 @@ do
         return frame
     end
 
-    HarfordDnDStore.OpenCustomDamageFrame = function()
+    HarfordDnDStore.OpenCustomDamageFrame = function(applyUnit)
         local frame = EnsureCustomDamageFrame()
+        frame.applyUnit = applyUnit or "target"
         if F and F.GetFrameLevel then
             frame:SetFrameLevel(F:GetFrameLevel() + 200)
         end
         if frame.title then
-            frame.title:SetText("Daño")
+            frame.title:SetText(frame.applyUnit == "focus" and "Daño Custom (focus)" or "Daño")
         end
         frame:Show()
         frame:Raise()
@@ -2395,14 +2461,29 @@ end
 -- ─── Fin tracker movimiento ─────────────────────────────────────────────────
 
 DoSpellAttack = function()
+    -- Requiere target valido (no uno mismo): igual que Ataque Arma.
+    if not (UnitExists and UnitExists("target"))
+        or (UnitIsUnit and UnitIsUnit("target", "player")) then
+        return
+    end
+
     local abil = GetSpellAbilityKey()
     local base = HarfordDnDCalc.GetAbilityMod(abil)
     local prof = HarfordDnDCalc.GetSpellPB()
     local misc = HarfordDnDCalc.GetMiscBonus()
+    local spellAttackBonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("spellAttack")
+        or 0
 
     local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
-    local total = chosen + base + prof + misc
-    local bonusTxt = HarfordDnDCalc.BonusConcat(base, prof, misc)
+    local total = chosen + base + prof + spellAttackBonus + misc
+    local bonusTxt = HarfordDnDCalc.BonusConcat(base, prof, spellAttackBonus, misc)
+    -- Ataque Conjuro se resuelve contra la CA del target (como Ataque Arma).
+    local _armorClass, _hit, armorText = HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, "target")
+    if armorText and armorText ~= "" then
+        bonusTxt = bonusTxt .. armorText
+    end
 
     HarfordDnDRolls.Broadcast({
         type = "spell",
@@ -2491,6 +2572,16 @@ end
                 if opt.npcId and HarfordServerActions and HarfordServerActions.SetNpcEmoteRepeat then
                     HarfordServerActions.SetNpcEmoteRepeat(opt.npcId)
                 end
+                -- Recordar el modo de combate de ESTE NPC por GUID (runtime) para que,
+                -- si luego es el defensor de un ataque, su parry/dodge use esta postura.
+                -- El `npc emote repeat` actua sobre el NPC seleccionado (target); se usa
+                -- ese GUID, con fallback al GUID de la fuente fijada de la ficha.
+                if HarfordDnDCombat and HarfordDnDCombat.SetNpcCombatMode then
+                    local g = (UnitExists and UnitExists("target")
+                        and not (UnitIsPlayer and UnitIsPlayer("target"))
+                        and UnitGUID and UnitGUID("target")) or SheetContext.npcSourceGuid
+                    HarfordDnDCombat.SetNpcCombatMode(g, opt.key)
+                end
             end
             UIDropDownMenu_AddButton(info, level)
         end
@@ -2526,6 +2617,7 @@ end
     local attackButton
     local damageButton
     local pendingCriticalAction
+    local RollActionDamage  -- forward decl: RollActionAttack auto-tira daño al focus
 
     local function GetAction(index)
         return SheetContext.actions and SheetContext.actions[index] or nil
@@ -2542,6 +2634,32 @@ end
         return action.hyperlink or action.title or "Accion"
     end
 
+    -- Nombre del focus con la logica habitual de nombre/color: nombre RP TRP3 (o de
+    -- WoW como fallback) coloreado por el color de nombre TRP3 (companion NH / player
+    -- CH) y, si no hay, por color de clase.
+    local function GetFocusColoredName()
+        if not (UnitExists and UnitExists("focus")) then return nil end
+        local name = HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("focus")
+        if not name or name == "" then
+            name = (GetUnitName and GetUnitName("focus", true)) or (UnitName and UnitName("focus"))
+        end
+        if not name or name == "" then return nil end
+
+        local hex = HarfordTRP3 and HarfordTRP3.GetUnitNameColor and HarfordTRP3.GetUnitNameColor("focus")
+        if not (type(hex) == "string" and #hex == 6 and hex:match("^%x+$")) then
+            hex = nil
+            if HarfordUnitFrames and HarfordUnitFrames.GetClassColor then
+                local r, g, b = HarfordUnitFrames.GetClassColor("focus")
+                if r then
+                    hex = string.format("%02x%02x%02x",
+                        math.floor(r * 255 + 0.5), math.floor(g * 255 + 0.5), math.floor(b * 255 + 0.5))
+                end
+            end
+        end
+        if hex then return "|cff" .. hex .. name .. "|r" end
+        return name
+    end
+
     local function RollActionAttack(action)
         if not (UnitExists and UnitExists("focus")) then
             return DoRoll("Ataque " .. GetActionChatName(action), action.attackBonus, 0)
@@ -2552,14 +2670,16 @@ end
         local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
         local total = chosen + base + misc
         local bonusTxt = HarfordDnDCalc.BonusConcat(base, 0, misc)
-        local _armorClass, _hit, armorText = HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, "focus")
+        local armorClass, hit, armorText = HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, "focus")
         if armorText and armorText ~= "" then
             bonusTxt = bonusTxt .. armorText
         end
 
+        -- "Ataque <NOMBREFOCUS coloreado> <link de la accion>".
+        local focusName = GetFocusColoredName()
         HarfordDnDRolls.Broadcast({
             type = "roll",
-            label = "Ataque " .. GetActionChatName(action),
+            label = "Ataque " .. (focusName and (focusName .. " ") or "") .. GetActionChatName(action),
             total = total,
             dice = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb),
             modifiers = bonusTxt,
@@ -2567,12 +2687,42 @@ end
             mode = modeTag,
             miscBonus = misc,
         })
+        local isCritical = HarfordDnDCombat.IsCriticalRollTag(critTag)
+        -- Focus jugador (incluye mi propio PJ: el NPC puede atacar a mi personaje).
+        local focusPlayer = UnitIsPlayer and UnitIsPlayer("focus")
+
+        if armorClass and focusPlayer then
+            -- Focus jugador: en el impacto se aplica el daño de la accion (sin tirada
+            -- manual) y se despacha herida/defensa al focus, sincronizado.
+            local onImpactOnce
+            if hit and action.damageDice then
+                onImpactOnce = function()
+                    -- mitigationUnit "focus": jugador → sin mitigacion (no NPC).
+                    local damageTotal = RollActionDamage(action, isCritical, "focus")
+                    if damageTotal and damageTotal > 0 then
+                        HarfordDnDCombat.ApplyActionDamageToFocus(damageTotal)
+                    end
+                end
+            end
+            HarfordDnDCombat.RunAttackSequence({
+                family       = nil,  -- el swing del NPC lo da onAttackAnimation (boton Atacar)
+                critical     = isCritical,
+                hit          = hit == true,
+                defenderUnit = "focus",
+                npcAttacker  = true,
+                onImpactOnce = onImpactOnce,
+            })
+        elseif armorClass and not hit then
+            -- Focus NPC u otros: solo reaccion defensiva (sin auto-daño por esta via).
+            HarfordDnDCombat.TriggerDefenseOnMiss("focus")
+        end
         ConsumeMode()
         return critTag
     end
 
-    local function RollActionDamage(action, maximizeDice)
+    RollActionDamage = function(action, maximizeDice, mitigationUnit)
         if not action or not action.damageDice then return nil end
+        mitigationUnit = mitigationUnit or "target"
         local components = action.damageComponents
         if type(components) ~= "table" or #components == 0 then
             components = {
@@ -2598,7 +2748,7 @@ end
                 local appliedTotal, marker = componentTotal, ""
                 if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
                     local applied, _status, mk = HarfordDamageMitigation.ForTarget(
-                        "target", component.damageType, componentTotal)
+                        mitigationUnit, component.damageType, componentTotal)
                     appliedTotal, marker = applied, mk
                 end
                 local suffix = component.damageBonus and component.damageBonus ~= 0
@@ -2625,6 +2775,13 @@ end
             mode = "",
         })
         return total, rolledComponents
+    end
+
+    -- Hay un focus victima valido: existe y no es el propio NPC (target). SI se
+    -- permite que el focus sea mi propio PJ (el NPC puede atacar a mi personaje).
+    local function HasFocusVictim()
+        return UnitExists and UnitExists("focus")
+            and not (UnitIsUnit and UnitIsUnit("focus", "target"))
     end
 
     local function RefreshSelectedAction()
@@ -2658,8 +2815,10 @@ end
             summary[#summary + 1] = "Daño " .. table.concat(damageParts, " + ")
         end
         parsedText:SetText(#summary > 0 and table.concat(summary, "   ") or "No se pudo interpretar una tirada automatica.")
-        local canAttack = selectedAction.attackBonus ~= nil
-        local canDamage = selectedAction.damageDice ~= nil
+        -- Atacar y Daño Custom requieren un focus victima valido (no yo, no el NPC).
+        local hasFocus = HasFocusVictim()
+        local canAttack = selectedAction.attackBonus ~= nil and hasFocus
+        local canDamage = hasFocus  -- daño custom: no depende de que la accion tenga dados
         if canAttack and SheetContext.canAttack then
             canAttack = SheetContext.canAttack() == true
         end
@@ -2709,72 +2868,12 @@ end
         end
     end)
 
-    damageButton = HarfordDnDUI.MakeButton(panel, "Daño", 112, 22, 198, -122, function()
-        local isCritical = pendingCriticalAction ~= nil and pendingCriticalAction == selectedAction
-        pendingCriticalAction = nil
-        local total, rolledComponents = RollActionDamage(selectedAction, isCritical)
-        if total and total > 0 and SheetContext.onDamageRolled
-            and UnitExists and UnitExists("target")
-            and not (UnitIsPlayer and UnitIsPlayer("target")) then
-            SheetContext.onDamageRolled(total, selectedAction, rolledComponents, isCritical)
-        end
-        -- La animacion del tipo de ataque pertenece solo a la tirada de "Atacar".
-        -- "Daño" no debe reproducir ningun emote de ataque del NPC: solo aplica
-        -- el dano (la reaccion de herida la gestiona SetNpcHealthDelta sobre la victima).
-
-        -- Si el target es un jugador: bajar HP y animaciones según el flag del target
-        if total and total > 0
-            and UnitExists and UnitExists("target")
-            and UnitIsPlayer and UnitIsPlayer("target") then
-
-            local targetName = (GetUnitName and GetUnitName("target", true)) or UnitName("target")
-            local shortName  = UnitName("target")
-            if not targetName or targetName == "" then targetName = shortName end
-            if not shortName or shortName == "" then shortName = targetName end
-
-            -- Flag de animaciones del TARGET (nil = desconocido → tratar como activo)
-            local targetAnims = HarfordDnDResources.AnimFlagCache[shortName]
-            if targetAnims == nil then targetAnims = true end
-
-            -- Animación de impacto (mod anim) solo si el target quiere animaciones
-            if targetAnims and HarfordServerActions and HarfordServerActions.ModAnim then
-                HarfordServerActions.ModAnim(33)
-            end
-
-            -- Aplicar daño: temp_health primero, luego health
-            if UnitIsUnit and UnitIsUnit("target", "player") then
-                local tempCur = math.max(0, GetResourceCurrent("temp_health"))
-                local tempDmg = math.min(total, tempCur)
-                local healthDmg = total - tempDmg
-
-                if tempDmg > 0 then
-                    AdjustResourceCurrent("temp_health", -tempDmg)
-                end
-                if healthDmg > 0 then
-                    AdjustResourceCurrent("health", -healthDmg)
-                end
-            else
-                local cache = targetName and HarfordDnDResources.RemoteCache[targetName]
-                    or (shortName and HarfordDnDResources.RemoteCache[shortName])
-                if not cache and HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
-                    HarfordDnDAPI.RequestResourcesForName(targetName)
-                end
-                if not cache then return end
-
-                local tempCur   = math.max(0, tonumber(cache[HarfordDnDResources.CurKey("temp_health")]) or 0)
-                local healthCur = math.max(0, tonumber(cache[HarfordDnDResources.CurKey("health")])      or 0)
-                local tempDmg   = math.min(total, tempCur)
-                local healthDmg = total - tempDmg
-
-                if tempDmg > 0 then
-                    HarfordSync.SendResourceAdjust(ADDON_PREFIX, "temp_health", -tempDmg, targetName)
-                end
-                if healthDmg > 0 then
-                    HarfordSync.SendResourceAdjust(ADDON_PREFIX, "health", -healthDmg, targetName)
-                end
-                -- El cliente del jugador detecta hp=0 en AdjustResourceCurrent y aplica
-                -- su propia aura de muerte según su flag de animaciones. El DM no la envía.
-            end
+    -- "Daño Custom": abre el frame de daño custom aplicado al FOCUS, en nombre del
+    -- NPC (la tirada usa el contexto NPC activo → nombre/color del NPC). El daño de
+    -- ataque al impactar ya esta automatizado en RollActionAttack.
+    damageButton = HarfordDnDUI.MakeButton(panel, "Daño Custom", 112, 22, 198, -122, function()
+        if HarfordDnDStore.OpenCustomDamageFrame then
+            HarfordDnDStore.OpenCustomDamageFrame("focus")
         end
     end)
 
@@ -2899,12 +2998,20 @@ RefreshTopInfo = function()
 
     local abil = GetSpellAbilityKey()
     local m = HarfordDnDCalc.GetAbilityMod(abil)
+    local spellAttackBonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("spellAttack")
+        or 0
+    local spellDCBonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("spellDC")
+        or 0
     local short = ""
     for _, a in ipairs(HarfordDnDData.ABIL) do if a.key == abil then short = a.short break end end
 
     scModLabel:SetText("Mod Conjuro (" .. short .. "): " .. ColorSigned(m))
-    scAtkText:SetText("Ataque Conjuro: " .. GREEN .. fmtSigned(spellPB + m) .. ENDCLR)
-    dcText:SetText(GREEN .. tostring(8 + spellPB + m) .. ENDCLR)
+    scAtkText:SetText("Ataque Conjuro: " .. GREEN .. fmtSigned(spellPB + m + spellAttackBonus) .. ENDCLR)
+    dcText:SetText(GREEN .. tostring(8 + spellPB + m + spellDCBonus) .. ENDCLR)
 
     SyncSpellDrop()
 end
@@ -3164,6 +3271,8 @@ do
         local conBtn = SaveButtons["Constitucion"]
         if conBtn then conBtn:SetText(FormatSaveButtonText("CON", "Constitucion")) end
         if Layout3Col then Layout3Col(SEC_SAV, SaveButtons, savKeys, 36) end
+        if TabButtons["ATK"] then TabButtons["ATK"]:Enable() end
+        if TabButtons["SKL"] then TabButtons["SKL"]:Enable() end
 
         ShowDnDTab(ActiveTab or "BASE")
         _dsLabel:Hide()
@@ -3297,6 +3406,7 @@ local function RefreshButtons()
     Layout3Col(SEC_SAV, SaveButtons, savKeys, 36)
 end
 
+-- La preparacion de clases/progresion vive ahora en HarfordCharacterPanel.
 RefreshButtons()
 RefreshSkillLayout()
 RefreshTopInfo()
@@ -3310,6 +3420,9 @@ _G.DND5E_ARC_API.Refresh = function()
     local playerProfile = UnitName("player") or "default"
 
     HarfordDnDStore.LoadPersistToRuntime(playerProfile)
+    if HarfordDnDProgression and HarfordDnDProgression.SeedFromTRP3 then
+        HarfordDnDProgression.SeedFromTRP3(playerProfile)
+    end
 
 	_G.HarfordDnDHydratingFromPersist = true
 	EnsureDefaults()
@@ -3329,6 +3442,7 @@ _G.DND5E_ARC_API.Refresh = function()
     if RefreshTargetResourceFrame then RefreshTargetResourceFrame() end
     if HarfordUnitFrames and HarfordUnitFrames.Refresh then HarfordUnitFrames.Refresh() end
     if HarfordDnDMinimap and HarfordDnDMinimap.Create then HarfordDnDMinimap.Create() end
+    if HarfordCharacterPanel and HarfordCharacterPanel.Refresh then HarfordCharacterPanel.Refresh() end
     if ShowDnDTab then ShowDnDTab(ActiveTab or "BASE") end
     -- Tras refrescar botones y pestañas, aplicar estado moribundo si corresponde.
     if RefreshDyingState then RefreshDyingState() end
@@ -3391,6 +3505,9 @@ function HarfordDnDAPI.BroadcastConfig(channel, target)
     )
     if not ok then return false, err end
     HarfordSync.SendDnDProfFlags(ADDON_PREFIX, profileName, tbl, channel, target)
+    if HarfordDnDProgression and HarfordSync.SendDnDClassProgression then
+        HarfordSync.SendDnDClassProgression(ADDON_PREFIX, profileName, HarfordDnDProgression.Export(profileName), channel, target)
+    end
     return true
 end
 
@@ -3449,6 +3566,18 @@ function HarfordDnDAPI.BroadcastConfigForPlayer(characterName, channel, target)
     -- Mensaje 2: DNDPROF — flags prof/exp de las 18 habilidades (compacto, ~60 bytes).
     -- Se envía siempre aunque todos sean "0" para garantizar un estado limpio en el cliente.
     HarfordSync.SendDnDProfFlags(ADDON_PREFIX, characterName, tbl, channel, resolvedTarget)
+    if HarfordDnDProgression and HarfordSync.SendDnDClassProgression then
+        local okClass, errClass = HarfordSync.SendDnDClassProgression(
+            ADDON_PREFIX,
+            characterName,
+            HarfordDnDProgression.Export(characterName),
+            channel,
+            resolvedTarget
+        )
+        if not okClass then
+            return false, errClass
+        end
+    end
 
     local resourceTbl = HarfordDnDNet.ExportProfileResourcesFromBank(characterName)
     if resourceTbl then
@@ -3479,6 +3608,9 @@ function HarfordDnDAPI.BroadcastAll(channel, target)
     -- DNDPROF masivo: un mensaje compacto por perfil en el banco
     for name, tbl in pairs(HarfordDnDProfileBank or {}) do
         HarfordSync.SendDnDProfFlags(ADDON_PREFIX, name, tbl, channel, target)
+        if HarfordDnDProgression and HarfordSync.SendDnDClassProgression then
+            HarfordSync.SendDnDClassProgression(ADDON_PREFIX, name, HarfordDnDProgression.Export(name), channel, target)
+        end
     end
     return ok, count
 end
@@ -3662,6 +3794,17 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
     ApplyResourceDelta = ApplyResourceDeltaFromRemote,
     ApplyProfileTable = HarfordDnDProfile.Apply,
     MergeProfFlagsTable = HarfordDnDProfile.MergeProfFlags,
+    ApplyClassProgression = function(profileName, data)
+        if HarfordDnDProgression and HarfordDnDProgression.Import then
+            HarfordDnDProgression.Import(profileName, data)
+            if HarfordCharacterPanel and HarfordCharacterPanel.Refresh then HarfordCharacterPanel.Refresh() end
+            if RefreshTopInfo then RefreshTopInfo() end
+            if RefreshButtons then RefreshButtons() end
+            if UpdateWeaponInfoUI then UpdateWeaponInfoUI() end
+            return true
+        end
+        return false
+    end,
     ApplyResourceConfigTable = HarfordDnDProfile.ApplyResourceConfig,
     BuildRuntimeFromConfig = HarfordDnDResources.BuildRuntimeFromConfig,
     CacheRemoteResources = HarfordDnDResources.CacheRemoteResources,
@@ -3684,6 +3827,18 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
             end
         end
     end,
+    -- Un atacante fallo contra nosotros -> reaccion defensiva local (parry/dodge)
+    HandleDefense = function()
+        if HarfordDnDCombat and HarfordDnDCombat.PlayLocalDefense then
+            HarfordDnDCombat.PlayLocalDefense()
+        end
+    end,
+    -- Un atacante nos golpeo -> animacion de herida local (mod anim 33/34)
+    HandleWound = function(isCritical)
+        if HarfordDnDCombat and HarfordDnDCombat.PlayLocalWound then
+            HarfordDnDCombat.PlayLocalWound(isCritical)
+        end
+    end,
     RefreshAPI = function()
         if _G.DND5E_ARC_API and _G.DND5E_ARC_API.Refresh then
             _G.DND5E_ARC_API.Refresh()
@@ -3702,6 +3857,8 @@ listener:SetScript("OnEvent", function(_, event, ...)
         if HarfordDnDStore.RefreshWeaponDamageButton then
             HarfordDnDStore.RefreshWeaponDamageButton()
         end
+        -- El panel NPC depende del target (focus debe diferir del NPC).
+        if RefreshSheetActionPanel then RefreshSheetActionPanel(false) end
         return
     end
     if event == "PLAYER_FOCUS_CHANGED" then
@@ -3716,6 +3873,8 @@ listener:SetScript("OnEvent", function(_, event, ...)
             end
         end
         RefreshArmorClassBoxes()
+        -- El panel NPC depende del focus (Atacar/Daño Custom contra el focus victima).
+        if RefreshSheetActionPanel then RefreshSheetActionPanel(false) end
         return
     end
     local prefix, message, _, sender = ...

@@ -38,6 +38,7 @@ local function EmptyProgression()
         choices = {},
         race = { id = "", subraceId = "" },
         background = "",
+        backgroundDesc = "",  -- descripcion (1er parrafo) de un trasfondo PERSONALIZADO; vacio si es del libro
         feats = {},
         useMana = false,
     }
@@ -53,6 +54,7 @@ local function Migrate(data)
     data.race.id = tostring(data.race.id or "")
     data.race.subraceId = tostring(data.race.subraceId or "")
     data.background = tostring(data.background or "")
+    data.backgroundDesc = tostring(data.backgroundDesc or "")
     if type(data.feats) ~= "table" then data.feats = {} end
     data.useMana = data.useMana == true
     return data
@@ -208,6 +210,22 @@ function API.SetBackground(backgroundId, profileName)
     local bgDef = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
         and HarfordDnDBackgrounds.GetBackground(backgroundId)
     data.background = bgDef and bgDef.id or backgroundId
+    -- Al fijar un trasfondo (del libro o ninguno) se limpia la desc personalizada;
+    -- SeedFromTRP3 la re-asigna despues si el trasfondo cargado es personalizado.
+    data.backgroundDesc = ""
+    return true
+end
+
+-- Descripcion (1er parrafo) de un trasfondo personalizado. Solo se usa para el tooltip
+-- cuando el trasfondo no esta en el libro (los del libro usan su propia desc).
+function API.GetBackgroundDesc(profileName)
+    local data = API.Get(profileName)
+    return data.backgroundDesc or ""
+end
+
+function API.SetBackgroundDesc(desc, profileName)
+    local data = API.Get(profileName)
+    data.backgroundDesc = tostring(desc or "")
     return true
 end
 
@@ -320,10 +338,12 @@ function API.SeedFromTRP3(profileName)
         end
     end
 
-    if tostring(data.background or "") == "" and HarfordTRP3.GetProfileBackgroundId then
-        local backgroundId = HarfordTRP3.GetProfileBackgroundId(profile)
-        if backgroundId and backgroundId ~= "" then
-            importedAny = API.SetBackground(backgroundId, profileName) or importedAny
+    if tostring(data.background or "") == "" and HarfordTRP3.GetProfileBackgroundEntry then
+        local bgId, _, bgDesc = HarfordTRP3.GetProfileBackgroundEntry(profile)
+        if bgId and bgId ~= "" then
+            API.SetBackground(bgId, profileName)
+            if bgDesc and bgDesc ~= "" then API.SetBackgroundDesc(bgDesc, profileName) end
+            importedAny = true
         end
     end
 

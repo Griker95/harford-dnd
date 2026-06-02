@@ -96,6 +96,13 @@ local function CleanAboutLines(text)
     return lines
 end
 
+local function TrimText(value)
+    return tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
+end
+
+-- Extrae el valor de una linea "Etiqueta: Valor". El matching de la etiqueta se hace
+-- sobre texto normalizado (minusculas/sin acentos) pero el valor se devuelve con su
+-- CASING ORIGINAL: los trasfondos/razas personalizados conservan sus mayusculas.
 local function ExtractLabeledAboutValue(lines, labels)
     if type(lines) ~= "table" then return nil end
     for i, line in ipairs(lines) do
@@ -103,12 +110,20 @@ local function ExtractLabeledAboutValue(lines, labels)
         for _, label in ipairs(labels or {}) do
             local normalizedLabel = NormalizeBuildText(label)
             if clean == normalizedLabel then
-                return lines[i + 1]
+                return lines[i + 1]  -- valor en la linea siguiente: ya viene con casing original
             end
-            local value = clean:match("^" .. normalizedLabel .. "%s*[:%-]%s*(.+)$")
-                or clean:match("^" .. normalizedLabel .. "%s+(.+)$")
-            if value and value ~= "" and value ~= normalizedLabel then
-                return value
+            -- Forma "Etiqueta: Valor" / "Etiqueta - Valor".
+            local sepValue = clean:match("^" .. normalizedLabel .. "%s*[:%-]%s*(.+)$")
+            if sepValue and sepValue ~= "" and sepValue ~= normalizedLabel then
+                local raw = line:match("[:%-]%s*(.+)$")  -- tras el primer separador, casing original
+                return TrimText(raw or sepValue)
+            end
+            -- Forma "Etiqueta Valor" (sin separador): quita las palabras de la etiqueta.
+            local spaceValue = clean:match("^" .. normalizedLabel .. "%s+(.+)$")
+            if spaceValue and spaceValue ~= "" and spaceValue ~= normalizedLabel then
+                local _, wordCount = normalizedLabel:gsub("%S+", "")
+                local raw = line:match("^%s*" .. string.rep("%S+%s+", wordCount) .. "(.+)$")
+                return TrimText(raw or spaceValue)
             end
         end
     end
@@ -292,14 +307,49 @@ local function RaceEntryFromProfile(profile)
     return RaceEntryFromAbout(CollectRawAboutText(profile))
 end
 
+-- Separa el texto crudo del trasfondo en nombre (1a linea) y primer parrafo (resto
+-- hasta linea en blanco, colapsado a una sola linea y acotado). Los trasfondos
+-- personalizados de TRP3 guardan en el campo BG el titulo seguido de su descripcion.
+local function SplitBackgroundRaw(raw)
+    raw = tostring(raw or "")
+    local name, rest = raw:match("^%s*([^\r\n]+)[\r\n]+(.*)$")
+    if not name then
+        return TrimText(raw), ""
+    end
+    name = TrimText(name)
+    local para = rest:match("^(.-)\r?\n%s*\r?\n") or rest
+    para = TrimText(para):gsub("[\r\n]+", " ")
+    if #para > 400 then para = para:sub(1, 400) .. "..." end
+    return name, para
+end
+
+-- Resuelve id/nombre/desc del trasfondo. Si el nombre coincide con uno del libro,
+-- usa su id (el libro aporta su propia descripcion, desc = ""). Si es personalizado,
+-- id = nombre corto (con casing original) y desc = primer parrafo del campo TRP3.
+local function ResolveBackgroundFields(rawValue, fromBuildField)
+    rawValue = tostring(rawValue or "")
+    if rawValue == "" then return nil end
+    local name, desc
+    if fromBuildField then
+        name, desc = SplitBackgroundRaw(rawValue)
+    else
+        name, desc = TrimText(rawValue), ""
+    end
+    if name == "" then return nil end
+    local bookId = HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundIdByText
+        and HarfordDnDBackgrounds.FindBackgroundIdByText(name)
+        or nil
+    if bookId then
+        return bookId, nil, ""
+    end
+    return name, name, desc
+end
+
 local function BackgroundIdFromAbout(text)
     local lines = CleanAboutLines(text)
     local backgroundText = ExtractLabeledAboutValue(lines, { "trasfondo", "background", "origen" })
     if not backgroundText or backgroundText == "" then return nil end
-    local backgroundId = HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundIdByText
-        and HarfordDnDBackgrounds.FindBackgroundIdByText(backgroundText)
-        or nil
-    return backgroundId or backgroundText, backgroundText
+    return ResolveBackgroundFields(backgroundText, false)
 end
 
 local function BackgroundIdFromProfile(profile)
@@ -308,10 +358,7 @@ local function BackgroundIdFromProfile(profile)
         "trasfondo", "Trasfondo", "TRASFONDO", "origen", "Origen",
     })
     if value and value ~= "" then
-        local backgroundId = HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundIdByText
-            and HarfordDnDBackgrounds.FindBackgroundIdByText(value)
-            or nil
-        return backgroundId or value, value
+        return ResolveBackgroundFields(value, true)
     end
     return BackgroundIdFromAbout(CollectRawAboutText(profile))
 end
@@ -896,6 +943,14 @@ function API.GetProfileRaceEntry(profile)
 end
 
 function API.GetProfileBackgroundId(profile)
+    if type(profile) ~= "table" then return nil end
+    return (BackgroundIdFromProfile(profile))  -- solo el id (compat)
+end
+
+-- Devuelve id, nombre y descripcion (primer parrafo) del trasfondo. Para trasfondos
+-- del libro: id resuelto, name = nil, desc = "" (el libro aporta su descripcion).
+-- Para personalizados: id = name = titulo corto (casing original), desc = parrafo TRP3.
+function API.GetProfileBackgroundEntry(profile)
     if type(profile) ~= "table" then return nil end
     return BackgroundIdFromProfile(profile)
 end

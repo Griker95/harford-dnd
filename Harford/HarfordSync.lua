@@ -456,6 +456,7 @@ local function EscapeProgressionText(value)
     value = value:gsub(",", "%%2C")
     value = value:gsub(":", "%%3A")
     value = value:gsub("=", "%%3D")
+    value = value:gsub("~", "%%7E")  -- delimitador de tokens; debe escaparse en texto libre (desc)
     return value
 end
 
@@ -466,6 +467,7 @@ local function UnescapeProgressionText(value)
     value = value:gsub("%%2C", ",")
     value = value:gsub("%%3A", ":")
     value = value:gsub("%%3D", "=")
+    value = value:gsub("%%7E", "~")
     value = value:gsub("%%25", "%%")
     return value
 end
@@ -517,7 +519,7 @@ function HarfordSync.SerializeDnDClassProgression(profileName, data)
         "f=" .. table.concat(featureParts, ","),
         "h=" .. table.concat(choiceParts, ","),
         "r=" .. EscapeProgressionText(race.id or "") .. "~" .. EscapeProgressionText(race.subraceId or ""),
-        "b=" .. EscapeProgressionText(data.background or ""),
+        "b=" .. EscapeProgressionText(data.background or "") .. "~" .. EscapeProgressionText(data.backgroundDesc or ""),
         "d=" .. table.concat(featParts, "~"),
         "m=" .. (data.useMana and "1" or "0"),
     }, ";")
@@ -532,7 +534,7 @@ function HarfordSync.DeserializeDnDClassProgression(message)
         return nil, nil
     end
 
-    local data = { schema = 1, classLevels = {}, featureStates = {}, choices = {}, race = { id = "", subraceId = "" }, background = "", feats = {}, useMana = false }
+    local data = { schema = 1, classLevels = {}, featureStates = {}, choices = {}, race = { id = "", subraceId = "" }, background = "", backgroundDesc = "", feats = {}, useMana = false }
     for part in tostring(raw or ""):gmatch("([^;]+)") do
         local key, value = part:match("^([^=]+)=(.*)$")
         if key == "v" then
@@ -571,7 +573,10 @@ function HarfordSync.DeserializeDnDClassProgression(message)
             data.race.id = UnescapeProgressionText(raceId or "")
             data.race.subraceId = UnescapeProgressionText(subraceId or "")
         elseif key == "b" and value ~= "" then
-            data.background = UnescapeProgressionText(value)
+            -- Formato nuevo "id~desc"; mensajes antiguos sin "~" -> solo id, desc vacio.
+            local bgId, bgDesc = value:match("^([^~]*)~?(.*)$")
+            data.background = UnescapeProgressionText(bgId or "")
+            data.backgroundDesc = UnescapeProgressionText(bgDesc or "")
         elseif key == "d" and value ~= "" then
             for featId in value:gmatch("([^~]+)") do
                 data.feats[#data.feats + 1] = UnescapeProgressionText(featId)

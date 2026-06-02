@@ -2661,6 +2661,8 @@ end
     end
 
     local function RollActionAttack(action)
+        -- Cada nuevo ataque descarta el pendiente NPC vs NPC anterior (no consumido).
+        HarfordDnDStore.pendingNpcAttack = nil
         if not (UnitExists and UnitExists("focus")) then
             return DoRoll("Ataque " .. GetActionChatName(action), action.attackBonus, 0)
         end
@@ -2712,9 +2714,23 @@ end
                 npcAttacker  = true,
                 onImpactOnce = onImpactOnce,
             })
-        elseif armorClass and not hit then
-            -- Focus NPC u otros: solo reaccion defensiva (sin auto-daño por esta via).
-            HarfordDnDCombat.TriggerDefenseOnMiss("focus")
+        elseif armorClass and not focusPlayer then
+            -- Focus NPC: combate NPC vs NPC ASINCRONO. Los comandos `.npc` (daño/herida/
+            -- esquiva) solo actuan sobre el TARGET, y aqui la victima es el focus, no el
+            -- target. Guardamos un "ataque pendiente" ligado al GUID de la victima; el
+            -- daño (acierto) o la esquiva/parry (fallo) se aplican en la fase 2, cuando el
+            -- DM targetea a ese NPC victima (ver HarfordDnDStore.ResolvePendingNpcAttack).
+            -- El swing del atacante lo dispara el boton "Atacar" tras este roll.
+            HarfordDnDStore.pendingNpcAttack = {
+                guid = UnitGUID and UnitGUID("focus") or nil,
+                action = action,
+                isCritical = isCritical,
+                hit = hit == true,
+            }
+            if DEFAULT_CHAT_FRAME then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff33ccff[Harford]|r Ataque pendiente: targetea al NPC victima para aplicar el "
+                    .. (hit and "daño" or "esquiva/parry") .. ".")
+            end
         end
         ConsumeMode()
         return critTag
@@ -2775,6 +2791,29 @@ end
             mode = "",
         })
         return total, rolledComponents
+    end
+
+    -- Fase 2 del combate NPC vs NPC: cuando el DM targetea al NPC victima cuyo GUID
+    -- coincide con el ataque pendiente (guardado en RollActionAttack), se ejecuta
+    -- automaticamente. Acierto → tirada de daño (mitigada contra el target/victima) +
+    -- SetNpcHealthDelta (con su herida). Fallo → esquiva/parry del NPC victima. El
+    -- pendiente se consume siempre. La aplicacion a NPC va gateada por la propia
+    -- HarfordDnDCombat (eje Oficial / IsOfficerPlus); el core no comprueba modo DM.
+    HarfordDnDStore.ResolvePendingNpcAttack = function()
+        local p = HarfordDnDStore.pendingNpcAttack
+        if not p then return end
+        if not (UnitExists and UnitExists("target")) then return end
+        if UnitIsPlayer and UnitIsPlayer("target") then return end
+        if not (UnitGUID and UnitGUID("target") == p.guid) then return end
+        HarfordDnDStore.pendingNpcAttack = nil   -- consumir el pendiente
+        if p.hit then
+            local total = RollActionDamage(p.action, p.isCritical, "target")
+            if total and total > 0 and HarfordDnDCombat and HarfordDnDCombat.ApplyWeaponDamageToNpc then
+                HarfordDnDCombat.ApplyWeaponDamageToNpc(total, p.isCritical)
+            end
+        elseif HarfordDnDCombat and HarfordDnDCombat.TriggerDefenseOnMiss then
+            HarfordDnDCombat.TriggerDefenseOnMiss("target")
+        end
     end
 
     -- Hay un focus victima valido: existe y no es el propio NPC (target). SI se
@@ -3856,6 +3895,11 @@ listener:SetScript("OnEvent", function(_, event, ...)
         RefreshArmorClassBoxes()
         if HarfordDnDStore.RefreshWeaponDamageButton then
             HarfordDnDStore.RefreshWeaponDamageButton()
+        end
+        -- Fase 2 NPC vs NPC: si hay ataque pendiente y el nuevo target es la victima,
+        -- aplicar daño (acierto) o esquiva/parry (fallo) automaticamente.
+        if HarfordDnDStore.ResolvePendingNpcAttack then
+            HarfordDnDStore.ResolvePendingNpcAttack()
         end
         -- El panel NPC depende del target (focus debe diferir del NPC).
         if RefreshSheetActionPanel then RefreshSheetActionPanel(false) end

@@ -22,20 +22,20 @@ end
 
 API.CLASSES = {
     {
-        id = "caballero_muerte", name = "Caballero de la Muerte", hitDie = 10, casterType = "half",
+        id = "caballero_muerte", name = "Caballero de la Muerte", desc = "Antiguo campeon caido y resucitado que empuna poder runico y magia profana, de escarcha y de sangre para dominar el campo de batalla.", hitDie = 10, casterType = "half",
         saves = { "Constitucion", "Carisma" },
         armorProfs = { "ligera", "media", "pesada" },
         weaponProfs = { "sencillas", "marciales" },
         subclasses = {
-            { id = "sangre", name = "Presencia de Sangre", features = {
+            { id = "sangre", name = "Presencia de Sangre", desc = "Tanque no-muerto que se sostiene drenando la vida de sus enemigos.", features = {
                 { id = "cdm_comando_oscuro", level = 3, name = "Comando Oscuro", type = "informativo", description = "Al dañar con Poder Runico, la criatura tiene desventaja en ataques contra otros que no seas tu hasta el final de tu proximo turno.", effects = {} },
                 { id = "cdm_escudo_sangre", level = 3, name = "Escudo de Sangre", type = "informativo", description = "Al lanzar un conjuro de 1er nivel o superior creas un escudo de sangre (PG = 2x nivel CdM + Mod. Carisma) que absorbe daño. 1 uso por descanso largo.", effects = {} },
             } },
-            { id = "escarcha", name = "Presencia de Escarcha", features = {
+            { id = "escarcha", name = "Presencia de Escarcha", desc = "Doble empunadura y magia de hielo para ralentizar y despedazar.", features = {
                 { id = "cdm_golpe_escarcha", level = 3, name = "Golpe de Escarcha", type = "informativo", description = "Los dados de Poder Runico gastados en un golpe runico pasan a d8 e infligen daño por frio en vez de necrotico.", effects = {} },
                 { id = "cdm_maquina_matar", level = 3, name = "Maquina de Matar", type = "informativo", description = "Critico con armas cuerpo a cuerpo con 19-20. Puedes combatir con dos armas aunque no sean ligeras (si no son pesadas ni a dos manos).", effects = {} },
             } },
-            { id = "profana", name = "Presencia Profana", features = {
+            { id = "profana", name = "Presencia Profana", desc = "Enfermedades y magia profana que corroen y debilitan al enemigo.", features = {
                 { id = "cdm_portador_plagas", level = 3, name = "Portador de Plagas", type = "informativo", description = "Eliges Brotes (infligir enfermedades profanas con Poder Runico) o Levantar a los Muertos (esbirro no-muerto). Detalle en el manual.", effects = {} },
             } },
         },
@@ -62,26 +62,26 @@ API.CLASSES = {
         },
     },
     {
-        id = "cazador_demonios", name = "Cazador de Demonios", hitDie = 8,
+        id = "cazador_demonios", name = "Cazador de Demonios", desc = "Illidari que sacrifico su humanidad absorbiendo esencia demoniaca; agil cazador de gran movilidad y metamorfosis demoniaca.", hitDie = 8,
         saves = { "Destreza", "Carisma" },
         armorProfs = { "ligera" },
         weaponProfs = { "sencillas", "marciales", "gujas" },
         subclasses = {
-            { id = "devastacion", name = "Marca de Devastacion", features = {
+            { id = "devastacion", name = "Marca de Devastacion", desc = "Agresion implacable de gran movilidad y dano demoniaco.", features = {
                 { id = "dh_dev_competencia", level = 3, name = "Competencia Adicional (Acrobacias)", type = "pasivo", description = "Pericia en Acrobacias (competencia y bonus de competencia duplicado).", effects = {
                     { kind = "skillExpertise", skill = "Acrobacias" },
                 } },
                 { id = "dh_dev_embestida", level = 3, name = "Embestida Vil", type = "informativo", description = "Al gastar un punto de vil en Momentum, obtienes Esquivar y Desenganchar hasta el final de tu turno.", effects = {} },
                 { id = "dh_dev_momentum_vengativo", level = 6, name = "Momentum Vengativo", type = "informativo", description = "Al usar Momentum, ventaja en el siguiente ataque con arma antes del final de tu proximo turno.", effects = {} },
             } },
-            { id = "venganza", name = "Marca de Venganza", features = {
+            { id = "venganza", name = "Marca de Venganza", desc = "Defensa demoniaca que absorbe el castigo y lo devuelve.", features = {
                 { id = "dh_ven_competencia", level = 3, name = "Competencia Adicional (Intimidacion)", type = "pasivo", description = "Pericia en Intimidacion (competencia y bonus de competencia duplicado).", effects = {
                     { kind = "skillExpertise", skill = "Intimidacion" },
                 } },
                 { id = "dh_ven_tormento", level = 3, name = "Tormento", type = "informativo", description = "Accion: una criatura a 30 pies con salvacion de Sabiduria o desventaja en ataques contra otros que no seas tu durante 1 minuto.", effects = {} },
                 { id = "dh_ven_puas", level = 6, name = "Puas Demoniacas", type = "informativo", description = "En metamorfosis: resistencia a contundente/perforante/cortante y ventaja en pruebas y salvaciones de Fuerza y Destreza.", effects = {} },
             } },
-            { id = "ira", name = "Marca de Ira", features = {
+            { id = "ira", name = "Marca de Ira", desc = "Furia desatada que crece con el frenesi del combate.", features = {
                 { id = "dh_ira_competencia", level = 3, name = "Competencia Adicional (Arcano)", type = "pasivo", description = "Pericia en Conocimiento Arcano (competencia y bonus de competencia duplicado).", effects = {
                     { kind = "skillExpertise", skill = "Arcano" },
                 } },
@@ -102,17 +102,17 @@ API.CLASSES = {
         },
     },
     {
-        id = "druida", name = "Druida", hitDie = 8, casterType = "full",
+        id = "druida", name = "Druida", desc = "Guardian de la naturaleza capaz de adoptar formas animales y lanzar magia primigenia de equilibrio, fiereza o restauracion.", hitDie = 8, casterType = "full",
         saves = { "Inteligencia", "Sabiduria" },
         armorProfs = { "ligera" },
         weaponProfs = { "sencillas" },
         subclasses = {
-            { id = "equilibrio", name = "Camino del Equilibrio", features = {
+            { id = "equilibrio", name = "Camino del Equilibrio", desc = "Magia lunar y solar que castiga al enemigo a distancia.", features = {
                 { id = "dru_eq_conjuros_camino", level = 2, name = "Conjuros del Camino", type = "informativo", description = "Obtienes conjuros del camino (Elune) a niveles 3/5/7/9; siempre preparados y no cuentan en tu limite.", effects = {} },
                 { id = "dru_eq_invocar", level = 2, name = "Invocar", type = "informativo", description = "En un descanso corto recuperas espacios de conjuro (nivel combinado <= mitad de tu nivel de druida, ninguno de 6+). 1 uso por descanso largo.", effects = {} },
                 { id = "dru_eq_fuerza_naturaleza", level = 6, name = "Fuerza de la Naturaleza", type = "informativo", description = "Al lanzar un conjuro de un solo objetivo, infliges daño extra o curas igual a tu nivel de druida. 2 usos por descanso largo.", effects = {} },
             } },
-            { id = "feral", name = "Camino Feral", features = {
+            { id = "feral", name = "Camino Feral", desc = "Forma de fiera con garras y sigilo depredador.", features = {
                 { id = "dru_fer_adaptacion", level = 2, name = "Adaptacion Salvaje", type = "choice", description = "Ganas competencia en salvaciones de Destreza o Constitucion (ademas de las del druida). Cuentas como medio lanzador (tabla Feral).", effects = {}, choice = {
                     slots = 1,
                     options = {
@@ -138,7 +138,7 @@ API.CLASSES = {
                     },
                 } },
             } },
-            { id = "restauracion", name = "Camino de la Restauracion", features = {
+            { id = "restauracion", name = "Camino de la Restauracion", desc = "Sanacion sostenida con magia de la naturaleza.", features = {
                 { id = "dru_res_conjuros_camino", level = 2, name = "Hechizos del Camino", type = "informativo", description = "Obtienes hechizos del camino a niveles 3/5/7/9; siempre preparados y no cuentan en tu limite.", effects = {} },
                 { id = "dru_res_rejuvenecimiento", level = 2, name = "Rejuvenecimiento", type = "recurso", description = "Reserva de d6 (= nivel de druida). Accion adicional: cura a un objetivo a 120 pies (gastas hasta mitad de tu nivel en dados) + 1 PG temporal por dado. Recarga en descanso largo.", effects = {} },
                 { id = "dru_res_corteza_hierro", level = 6, name = "Corteza de Hierro", type = "informativo", description = "Reaccion: otorgas resistencia a acido/frio/fuego/relampago/trueno a ti o a un aliado a 30 pies contra esa instancia de daño.", effects = {} },
@@ -155,23 +155,23 @@ API.CLASSES = {
         },
     },
     {
-        id = "cazador", name = "Cazador", hitDie = 10,
+        id = "cazador", name = "Cazador", desc = "Experto rastreador y tirador que combate junto a una bestia companera y domina las armas a distancia.", hitDie = 10,
         saves = { "Fuerza", "Destreza" },
         armorProfs = { "ligera", "media" },
         weaponProfs = { "sencillas", "marciales", "armas de fuego" },
         subclasses = {
-            { id = "bestias", name = "Maestro de Bestias", features = {
+            { id = "bestias", name = "Maestro de Bestias", desc = "Vinculo profundo con una poderosa bestia companera.", features = {
                 { id = "caz_bes_domador", level = 3, name = "Domador de Bestias", type = "informativo", description = "Puedes domar bestias Grandes o menores con valor de desafio 1 o menor.", effects = {} },
                 { id = "caz_bes_aspecto", level = 3, name = "Aspecto de la Bestia", type = "informativo", description = "Lanzas sentido de la bestia como ritual, solo en tu mascota.", effects = {} },
                 { id = "caz_bes_comando", level = 5, name = "Comando de Matar", type = "informativo", description = "Accion adicional + dado de enfoque: tu mascota Ataca con ventaja; añades el dado al daño del primer impacto.", effects = {} },
             } },
-            { id = "punteria", name = "Punteria", features = {
+            { id = "punteria", name = "Punteria", desc = "Tiros precisos y devastadores a larga distancia.", features = {
                 { id = "caz_pun_disparo_arcano", level = 3, name = "Disparo Arcano", type = "informativo", description = "Tus ataques a distancia contra tu marcado ignoran cobertura e infligen +(2 + mitad de nivel) de fuerza. Usos = Mod. Sabiduria.", effects = {} },
                 { id = "caz_pun_lobo_apuntado", level = 3, name = "Lobo Solitario: Ataque Apuntado", type = "informativo", description = "Sin compañero bestial, accion adicional para dar ventaja a tu proximo ataque con arma.", effects = {} },
                 { id = "caz_pun_disparo_conmocionante", level = 5, name = "Disparo Conmocionante", type = "informativo", description = "Gasta un dado de enfoque para sumarlo a la CD de concentracion que provoque tu ataque.", effects = {} },
                 { id = "caz_pun_lobo_ataque", level = 5, name = "Lobo Solitario: Ataque Adicional", type = "pasivo", description = "Sin compañero bestial, atacas dos veces al realizar la accion de Atacar.", effects = {} },
             } },
-            { id = "supervivencia", name = "Supervivencia", features = {
+            { id = "supervivencia", name = "Supervivencia", desc = "Trampas, cuerpo a cuerpo y dominio del terreno.", features = {
                 { id = "caz_sup_trampero", level = 3, name = "Trampero Experto", type = "informativo", description = "Aprendes y colocas trampas (2 conocidas; mas a niveles superiores). CD de Trampa = 8 + comp + Mod. Sabiduria.", effects = {} },
                 { id = "caz_sup_estudiante", level = 3, name = "Estudiante de lo Salvaje", type = "pasivo", description = "Pericia en Supervivencia (competencia y bonus de competencia duplicado).", effects = {
                     { kind = "skillExpertise", skill = "Supervivencia" },
@@ -201,12 +201,12 @@ API.CLASSES = {
         },
     },
     {
-        id = "mago", name = "Mago", hitDie = 6, casterType = "full",
+        id = "mago", name = "Mago", desc = "Estudioso de las artes arcanas que moldea fuego, escarcha y energia pura mediante conjuros aprendidos.", hitDie = 6, casterType = "full",
         saves = { "Inteligencia", "Sabiduria" },
         armorProfs = {},
         weaponProfs = { "sencillas" },
         subclasses = {
-            { id = "arcano", name = "Estudio del Arcano", features = {
+            { id = "arcano", name = "Estudio del Arcano", desc = "Manipulacion de energia arcana pura y gran eficiencia magica.", features = {
                 { id = "mago_arc_truco", level = 2, name = "Truco Adicional (prestidigitacion)", type = "informativo", description = "Aprendes prestidigitacion (u otro truco de mago); no cuenta en tu limite.", effects = {} },
                 { id = "mago_arc_cargas", level = 2, name = "Cargas Arcanas", type = "informativo", description = "Al lanzar un conjuro de 1er nivel o superior ganas una carga arcana (= nivel, max 5) que gastas para sumar bonus a ataque/daño o salvaciones.", effects = {} },
                 { id = "mago_arc_desplazamiento", level = 2, name = "Desplazamiento Temporal", type = "informativo", description = "Tras tirar iniciativa, intercambias tu resultado con el de otra criatura visible. 1 uso por descanso largo.", effects = {} },
@@ -214,12 +214,12 @@ API.CLASSES = {
                     { kind = "skillExpertise", skill = "Arcano" },
                 } },
             } },
-            { id = "fuego", name = "Estudio del Fuego", features = {
+            { id = "fuego", name = "Estudio del Fuego", desc = "Conjuros incendiarios de alto dano y combustion.", features = {
                 { id = "mago_fue_truco", level = 2, name = "Truco Adicional (controlar llamas)", type = "informativo", description = "Aprendes controlar llamas (u otro truco de mago); no cuenta en tu limite.", effects = {} },
                 { id = "mago_fue_racha", level = 2, name = "Racha de Calor", type = "informativo", description = "Al sacar el maximo en un dado de daño de conjuro, relanza ese dado y suma el resultado. 1 vez por turno.", effects = {} },
                 { id = "mago_fue_cauterizar", level = 6, name = "Cauterizar", type = "informativo", description = "Reaccion al caer a 0 PG: quedas a 1 PG y las criaturas a 10 pies reciben fuego = mitad de nivel + Mod. Inteligencia. 1 uso por descanso largo.", effects = {} },
             } },
-            { id = "escarcha", name = "Estudio de la Escarcha", features = {
+            { id = "escarcha", name = "Estudio de la Escarcha", desc = "Control, ralentizacion y dano de hielo.", features = {
                 { id = "mago_esc_truco", level = 2, name = "Truco Adicional (moldear agua)", type = "informativo", description = "Aprendes moldear agua (u otro truco de mago); no cuenta en tu limite.", effects = {} },
                 { id = "mago_esc_dedos", level = 2, name = "Dedos de Escarcha", type = "choice", description = "Elige Barrera de Hielo (escudo de PG temporal con conjuros de frio) o Elemental de Agua (compañero).", effects = {}, choice = {
                     slots = 1,
@@ -242,22 +242,22 @@ API.CLASSES = {
         },
     },
     {
-        id = "monje", name = "Monje", hitDie = 8,
+        id = "monje", name = "Monje", desc = "Artista marcial que canaliza el chi para golpear con rapidez, sanar con nieblas o resistir como un muro.", hitDie = 8,
         saves = { "Fuerza", "Destreza" },
         armorProfs = { "ligera" },
         weaponProfs = { "sencillas", "espadas cortas" },
         subclasses = {
-            { id = "cervecero", name = "Camino del Maestro Cervecero", features = {
+            { id = "cervecero", name = "Camino del Maestro Cervecero", desc = "Muro resistente que aguanta y dispersa el dano.", features = {
                 { id = "monje_cer_competencia", level = 3, name = "Competencia Adicional (cervecero)", type = "informativo", description = "Competencia con herramientas de cervecero (bonus de competencia duplicado en sus pruebas).", effects = {} },
                 { id = "monje_cer_brebajes", level = 3, name = "Cervecero Elusivo", type = "informativo", description = "Conoces brebajes (Buey Negro + uno a elegir; mas a niveles superiores) que gastan chi para diversos efectos.", effects = {} },
                 { id = "monje_cer_tambaleo", level = 6, name = "Tambaleo", type = "informativo", description = "Reaccion al recibir daño: resistencia a todo el daño del ataque salvo psiquico. 2 usos por descanso.", effects = {} },
             } },
-            { id = "tejedor", name = "Camino del Tejedor de Niebla", features = {
+            { id = "tejedor", name = "Camino del Tejedor de Niebla", desc = "Sanacion y apoyo mediante nieblas restauradoras.", features = {
                 { id = "monje_tej_niebla_calmante", level = 3, name = "Niebla Calmante", type = "recurso", description = "Reserva de chi sanador (= nivel x 10 PG). Accion: rayo a 30 pies que cura; o gasta 5 para curar enfermedad/veneno. Recarga en descanso largo.", effects = {} },
                 { id = "monje_tej_palma_chiji", level = 3, name = "Palma de Chi-Ji", type = "informativo", description = "Al usar Niebla Calmante, golpe desarmado como accion adicional usando tu Mod. Sabiduria al ataque y daño.", effects = {} },
                 { id = "monje_tej_caminante", level = 6, name = "Caminante de la Niebla", type = "informativo", description = "Accion + 1 punto de chi: te teletransportas 60 pies y puedes usar Niebla Calmante desde la nueva posicion.", effects = {} },
             } },
-            { id = "caminavientos", name = "Camino del Caminavientos", features = {
+            { id = "caminavientos", name = "Camino del Caminavientos", desc = "Dano agil y veloz con golpes encadenados.", features = {
                 { id = "monje_cam_golpes_lanza", level = 3, name = "Golpes de Mano de Lanza", type = "informativo", description = "Al golpear con Puños de Furia, impones un efecto (derribar, empujar 15 pies o impedir reacciones).", effects = {} },
                 { id = "monje_cam_reflejos", level = 3, name = "Reflejos del Tigre", type = "informativo", description = "Sumas tu Mod. Sabiduria a la iniciativa.", effects = {} },
                 { id = "monje_cam_caminavientos", level = 6, name = "Caminavientos", type = "informativo", description = "Al usar Paso del Viento ganas velocidad de vuelo (mitad de tu velocidad) hasta el final del turno; reduces daño por caida.", effects = {} },
@@ -277,20 +277,20 @@ API.CLASSES = {
         },
     },
     {
-        id = "paladin", name = "Paladin", hitDie = 10, casterType = "half",
+        id = "paladin", name = "Paladin", desc = "Cruzado sagrado que une fuerza marcial y Luz Sagrada para proteger, castigar y sanar.", hitDie = 10, casterType = "half",
         saves = { "Sabiduria", "Carisma" },
         armorProfs = { "ligera", "media", "pesada", "escudo" },
         weaponProfs = { "sencillas", "marciales" },
         subclasses = {
-            { id = "sagrado", name = "Camino de lo Sagrado", features = {
+            { id = "sagrado", name = "Camino de lo Sagrado", desc = "Luz sanadora y apoyo para los aliados.", features = {
                 { id = "pal_sag_canalizar", level = 3, name = "Canalizar Divinidad (Sagrado)", type = "informativo", description = "Opciones: Luz del Amanecer (disipa oscuridad y cura) y Martillo de Luz (estallido de luz, salvacion de Constitucion).", effects = {} },
                 { id = "pal_sag_destello", level = 3, name = "Destello de Luz", type = "informativo", description = "Accion adicional + ranura de conjuro: curas a un objetivo a 20 pies (2d6 por ranura de 1er nivel, +1d6 por nivel superior, max 6d6).", effects = {} },
             } },
-            { id = "proteccion", name = "Camino de la Proteccion", features = {
+            { id = "proteccion", name = "Camino de la Proteccion", desc = "Guardian acorazado que protege a los suyos.", features = {
                 { id = "pal_pro_canalizar", level = 3, name = "Canalizar Divinidad (Proteccion)", type = "informativo", description = "Opciones: Consagracion (radio 30 pies, daño radiante + PG temporal a aliados) y Escudo Sagrado (desventaja a atacantes; daño al fallar contra ti).", effects = {} },
                 { id = "pal_pro_bastion", level = 3, name = "Bastion Divino", type = "informativo", description = "Al golpear, gasta ranura de conjuro: daño radiante (2d6+) y el objetivo con desventaja en ataques contra otros. No se combina con Golpe del Cruzado.", effects = {} },
             } },
-            { id = "retribucion", name = "Camino de la Retribucion", features = {
+            { id = "retribucion", name = "Camino de la Retribucion", desc = "Castigo sagrado que aniquila al impio.", features = {
                 { id = "pal_ret_canalizar", level = 3, name = "Canalizar Divinidad (Retribucion)", type = "informativo", description = "Opciones: Veredicto del Templario (ventaja en ataques contra una criatura 1 minuto) y Rechazar lo Profano (apartar demonios/no-muertos).", effects = {} },
                 { id = "pal_ret_tormenta", level = 3, name = "Tormenta Divina", type = "informativo", description = "Al golpear, gasta ranura de conjuro: daño radiante a la criatura y a todo a 5 pies (salvacion de Destreza por mitad). No se combina con Golpe del Cruzado.", effects = {} },
             } },
@@ -317,23 +317,23 @@ API.CLASSES = {
         },
     },
     {
-        id = "sacerdote", name = "Sacerdote", hitDie = 6, casterType = "full",
+        id = "sacerdote", name = "Sacerdote", desc = "Servidor devoto que canaliza la fe para sanar, proteger o castigar con poder sagrado y sombrio.", hitDie = 6, casterType = "full",
         saves = { "Sabiduria", "Carisma" },
         armorProfs = {},
         weaponProfs = { "sencillas" },
         subclasses = {
-            { id = "disciplina", name = "Disciplina", features = {
+            { id = "disciplina", name = "Disciplina", desc = "Escudos y prevencion que sanan mitigando el dano.", features = {
                 { id = "sac_dis_truco", level = 1, name = "Truco de Bonificacion", type = "informativo", description = "Aprendes un truco adicional de sacerdote; no cuenta en tu limite.", effects = {} },
                 { id = "sac_dis_supresion", level = 6, name = "Supresion del Dolor", type = "informativo", description = "Accion adicional: barrera invisible a un aliado a 60 pies que reduce daño fisico en 2 + tu bonus de competencia durante 1 minuto.", effects = {} },
             } },
-            { id = "sagrado", name = "Sagrado", features = {
+            { id = "sagrado", name = "Sagrado", desc = "Sanacion pura y restauradora con la Luz.", features = {
                 { id = "sac_sag_competencia", level = 1, name = "Competencia Adicional (Religion)", type = "pasivo", description = "Pericia en Religion (competencia y bonus de competencia duplicado).", effects = {
                     { kind = "skillExpertise", skill = "Religion" },
                 } },
                 { id = "sac_sag_himno", level = 1, name = "Himno Divino", type = "informativo", description = "Accion: curacion (= nivel x5 PG) repartida entre criaturas a 30 pies (no por encima de la mitad de su maximo). 1 uso por descanso.", effects = {} },
                 { id = "sac_sag_oracion", level = 6, name = "Oracion de Curacion", type = "informativo", description = "Gasta 1 punto de fe para volver a tirar dados de curacion (tuya o de un aliado a 5 pies). 1 vez por turno.", effects = {} },
             } },
-            { id = "sombra", name = "Sombra", features = {
+            { id = "sombra", name = "Sombra", desc = "Magia de la mente y energia sombria para destruir.", features = {
                 { id = "sac_som_voz", level = 1, name = "Voz Psiquica", type = "informativo", description = "Telepatia con cualquier criatura visible a 30 pies (no necesitais compartir idioma, pero debe entender alguno).", effects = {} },
                 { id = "sac_som_legado", level = 1, name = "Legado del Vacio", type = "informativo", description = "Al dañar con un truco, daño psiquico extra = Mod. Carisma (con salvacion de Sabiduria para seguir usandolo).", effects = {} },
                 { id = "sac_som_forma", level = 6, name = "Forma de Sombra", type = "informativo", description = "Accion adicional 1 minuto: si vas sin armadura sumas Mod. Carisma a la CA; daño necrotico a quien te golpee; tus conjuros ignoran resistencia necrotica/psiquica. 1 uso por descanso.", effects = {} },
@@ -349,20 +349,20 @@ API.CLASSES = {
         },
     },
     {
-        id = "picaro", name = "Picaro", hitDie = 8,
+        id = "picaro", name = "Picaro", desc = "Maestro del sigilo, las trampas y el ataque furtivo que prospera con astucia y precision.", hitDie = 8,
         saves = { "Destreza", "Inteligencia" },
         armorProfs = { "ligera" },
         weaponProfs = { "sencillas", "ballestas de mano", "espadas largas", "floretes", "espadas cortas" },
         subclasses = {
-            { id = "asesino", name = "Asesino", features = {
+            { id = "asesino", name = "Asesino", desc = "Golpes letales, venenos y muerte desde las sombras.", features = {
                 { id = "pic_ase_competencia", level = 3, name = "Competencia Adicional (envenenador)", type = "informativo", description = "Competencia con el equipo de envenenador.", effects = {} },
                 { id = "pic_ase_intuicion", level = 3, name = "Intuicion del Asesino", type = "informativo", description = "Ventaja en ataques contra criaturas que aun no han actuado; tu primer impacto del combate inflige daño extra = tu nivel de picaro.", effects = {} },
             } },
-            { id = "forajido", name = "Forajido", features = {
+            { id = "forajido", name = "Forajido", desc = "Combate audaz con armas de fuego y trucos sucios.", features = {
                 { id = "pic_for_competencia", level = 3, name = "Competencia Adicional (pistolas/rifles)", type = "informativo", description = "Competencia con pistolas y rifles.", effects = {} },
                 { id = "pic_for_alacridad", level = 3, name = "Alacridad", type = "informativo", description = "Sumas tu Mod. Carisma a la iniciativa; al atacar cuerpo a cuerpo, ese objetivo no puede hacerte ataques de oportunidad el resto del turno.", effects = {} },
             } },
-            { id = "sutileza", name = "Sutileza", features = {
+            { id = "sutileza", name = "Sutileza", desc = "Sigilo extremo y ataques furtivos precisos.", features = {
                 { id = "pic_sut_conjuracion", level = 3, name = "Conjuracion", type = "informativo", description = "Aprendes magia de sombras (trucos + hechizos). Inteligencia es tu habilidad de conjuro: CD = 8 + comp + Mod. Inteligencia.", effects = {} },
                 { id = "pic_sut_vista", level = 3, name = "Vista de Penumbra", type = "informativo", description = "Vision en la oscuridad 60 pies (o +30 si ya la tienes por raza).", effects = {} },
             } },
@@ -384,23 +384,23 @@ API.CLASSES = {
         },
     },
     {
-        id = "chaman", name = "Chaman", hitDie = 8, casterType = "full",
+        id = "chaman", name = "Chaman", desc = "Mediador de los elementos y los espiritus ancestrales; desata furia elemental, potencia armas o restaura con totems.", hitDie = 8, casterType = "full",
         saves = { "Fuerza", "Sabiduria" },
         armorProfs = { "ligera", "media", "escudo" },
         weaponProfs = { "sencillas" },
         subclasses = {
-            { id = "elemental", name = "Elemental", features = {
+            { id = "elemental", name = "Elemental", desc = "Desata rayos, fuego y tierra contra el enemigo a distancia.", features = {
                 { id = "cha_ele_poder", level = 3, name = "Poder Totemico: Mente Tranquila", type = "informativo", description = "Tu totem da ventaja en salvaciones de Constitucion para concentracion a criaturas a 15 pies.", effects = {} },
                 { id = "cha_ele_furia", level = 3, name = "Furia Elemental", type = "informativo", description = "Al lanzar un conjuro de daño elemental (acido/frio/fuego/rayo/trueno) puedes cambiar su tipo por otro de la lista.", effects = {} },
                 { id = "cha_ele_eco", level = 6, name = "Eco de los Elementos", type = "informativo", description = "Al lanzar un conjuro de daño, repite hasta Mod. Sabiduria dados y usa el resultado que quieras. Usos = Mod. Sabiduria por descanso largo.", effects = {} },
             } },
-            { id = "mejora", name = "Mejora", features = {
+            { id = "mejora", name = "Mejora", desc = "Imbuye sus armas con los elementos para el cuerpo a cuerpo.", features = {
                 { id = "cha_mej_poder", level = 3, name = "Poder Totemico: Furia del Viento", type = "informativo", description = "Tu totem permite repetir un ataque cuerpo a cuerpo fallado a una criatura a 15 pies.", effects = {} },
                 { id = "cha_mej_competencia", level = 3, name = "Competencia Adicional (armas marciales)", type = "pasivo", description = "Competencia con armas marciales; puedes usar un arma como foco de conjuro. Cuentas como medio lanzador.", effects = {} },
                 { id = "cha_mej_torbellino", level = 3, name = "Torbellino", type = "recurso", description = "Puntos de torbellino (mitad de tu nivel) para ataques con armas elementales (Golpe de Roca, Latigo Elemental, etc.). Recargan en descanso.", effects = {} },
                 { id = "cha_mej_ataque_adicional", level = 6, name = "Ataque Adicional", type = "pasivo", description = "Atacas dos veces, en lugar de una, al realizar la accion de Atacar.", effects = {} },
             } },
-            { id = "restauracion", name = "Restauracion", features = {
+            { id = "restauracion", name = "Restauracion", desc = "Sanacion y apoyo mediante totems y aguas curativas.", features = {
                 { id = "cha_res_poder", level = 3, name = "Poder Totemico: Marea Viva", type = "informativo", description = "Cuando una criatura a 15 pies del totem cura, el totem cura a otra criatura a 15 pies (= Mod. Sabiduria).", effects = {} },
                 { id = "cha_res_guia", level = 3, name = "Guia Ancestral", type = "informativo", description = "Al curar con un conjuro de 1er nivel o superior y sacar 1 o 2 en un dado, repites el dado (usas el nuevo resultado).", effects = {} },
                 { id = "cha_res_fuerzas", level = 6, name = "Fuerzas Anuladoras", type = "informativo", description = "Al lanzar un conjuro sobre un aliado, intentas terminar un efecto de conjuro que lo afecte (segun nivel de ranura). 2 usos por descanso largo.", effects = {} },
@@ -425,24 +425,24 @@ API.CLASSES = {
         },
     },
     {
-        id = "brujo", name = "Brujo", hitDie = 8,
+        id = "brujo", name = "Brujo", desc = "Invocador que pacta con entidades oscuras para lanzar maldiciones, dominar demonios y desatar fuego vil.", hitDie = 8,
         saves = { "Constitucion", "Inteligencia" },
         armorProfs = {},
         weaponProfs = { "sencillas" },
         subclasses = {
-            { id = "afliccion", name = "Afliccion", features = {
+            { id = "afliccion", name = "Afliccion", desc = "Maldiciones y enfermedades que consumen poco a poco.", features = {
                 { id = "bru_afl_lista", level = 2, name = "Lista Ampliada de Conjuros (Afliccion)", type = "informativo", description = "Añade conjuros de sombra/tormento a tu lista de brujo.", effects = {} },
                 { id = "bru_afl_corrupcion", level = 2, name = "Corrupcion", type = "informativo", description = "Lanzas Maldiciones (aprendes una; mas a niveles superiores) que puedes amplificar gastando un fragmento de alma. CD = tu CD de conjuros.", effects = {} },
                 { id = "bru_afl_acechar", level = 2, name = "Acechar", type = "informativo", description = "Reaccion: una criatura a 60 pies con salvacion de Sabiduria o falla su prueba de habilidad (mente nublada).", effects = {} },
                 { id = "bru_afl_maestro_maldiciones", level = 6, name = "Maestro de Maldiciones", type = "informativo", description = "Aprendes conceder maldicion y quitar maldicion (no cuentan); puedes apuntar a dos criaturas en lugar de una.", effects = {} },
             } },
-            { id = "demonologia", name = "Demonologia", features = {
+            { id = "demonologia", name = "Demonologia", desc = "Dominio e invocacion de demonios al servicio del brujo.", features = {
                 { id = "bru_dem_lista", level = 2, name = "Lista Ampliada de Conjuros (Demonologia)", type = "informativo", description = "Añade conjuros de invocacion/proteccion demoniaca a tu lista de brujo.", effects = {} },
                 { id = "bru_dem_conducto", level = 2, name = "Conducto de Almas", type = "informativo", description = "Telepatia con tu esbirro demoniaco; puedes ver/oir por sus sentidos y entregar conjuros de toque a traves de el.", effects = {} },
                 { id = "bru_dem_sentir", level = 2, name = "Sentir Demonios", type = "informativo", description = "Accion: detectas demonios a 60 pies. Usos = Mod. Inteligencia por descanso largo.", effects = {} },
                 { id = "bru_dem_vinculo_almas", level = 6, name = "Vinculo de Almas", type = "informativo", description = "Con tu demonio a 60 pies, la mitad del daño que recibes se transfiere a el; tu demonio puede generar fragmentos de alma con su reaccion.", effects = {} },
             } },
-            { id = "destruccion", name = "Destruccion", features = {
+            { id = "destruccion", name = "Destruccion", desc = "Fuego vil explosivo y dano directo abrasador.", features = {
                 { id = "bru_des_lista", level = 2, name = "Lista Ampliada de Conjuros (Destruccion)", type = "informativo", description = "Añade conjuros de fuego/destruccion a tu lista de brujo.", effects = {} },
                 { id = "bru_des_piromaniaco", level = 2, name = "Piromaniaco", type = "informativo", description = "Aprendes producir llama (no cuenta) y puedes encender objetos inflamables al tocarlos.", effects = {} },
                 { id = "bru_des_canalizar", level = 2, name = "Canalizar Fuego Demoniaco", type = "informativo", description = "Al dañar con un conjuro, puedes recibir hasta tu nivel en fuego para que el objetivo reciba el doble de ese daño por fuego.", effects = {} },
@@ -461,14 +461,14 @@ API.CLASSES = {
         },
     },
     {
-        id = "guerrero", name = "Guerrero", hitDie = 10,
+        id = "guerrero", name = "Guerrero", desc = "Maestro de las armas y la armadura, versatil en el combate cuerpo a cuerpo y a distancia, puro musculo y tecnica.", hitDie = 10,
         saves = { "Fuerza", "Constitucion" },
         armorProfs = { "ligera", "media", "pesada", "escudo" },
         weaponProfs = { "sencillas", "marciales", "armas de fuego" },
         subclasses = {
-            { id = "armas",      name = "Armas" },
-            { id = "furia",      name = "Furia" },
-            { id = "proteccion", name = "Proteccion" },
+            { id = "armas",      name = "Armas", desc = "Maestria tecnica con armas pesadas y golpes precisos." },
+            { id = "furia",      name = "Furia", desc = "Berserker de doble empunadura que ataca con ira incontenible." },
+            { id = "proteccion", name = "Proteccion", desc = "Tanque con escudo que protege a sus aliados." },
         },
         features = {
             { id = "guerrero_estilo_combate", level = 1, name = "Estilo de Combate", type = "choice", description = "Adoptas un estilo de combate como especialidad. Elige una opcion.", effects = {}, choice = {

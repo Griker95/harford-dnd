@@ -14,7 +14,7 @@ local API = HarfordDnDRaces
 -- faction: "alianza" | "horda" | "aliada"
 API.RACES = {
     {
-        id = "humano", name = "Humano", faction = "alianza", size = "Mediano", speed = 9,
+        id = "humano", name = "Humano", desc = "Versatiles y ambiciosos; sus vidas breves los empujan a grandes logros y han forjado los mayores reinos de Azeroth.", faction = "alianza", size = "Mediano", speed = 9,
         traits = {
             { id = "hum_inc_2", name = "Incremento de Caracteristica (+2)", type = "choice", description = "Una caracteristica de tu eleccion aumenta en 2.", effects = {}, choice = { slots = 1, optionsFrom = "ability+2" } },
             { id = "hum_inc_1", name = "Incremento de Caracteristica (+1)", type = "choice", description = "Otra caracteristica de tu eleccion aumenta en 1.", effects = {}, choice = { slots = 1, optionsFrom = "ability+1" } },
@@ -25,20 +25,20 @@ API.RACES = {
         },
     },
     {
-        id = "enano", name = "Enano", faction = "alianza", size = "Mediano", speed = 7.5,
+        id = "enano", name = "Enano", desc = "Pueblo de las montanas de Khaz Modan, ligado al clan y la tradicion, maestro de la piedra, la forja y la mineria.", faction = "alianza", size = "Mediano", speed = 7.5,
         subraces = {
-            { id = "forjaz", name = "Enano de Forjaz", traits = {
+            { id = "forjaz", name = "Enano de Forjaz", desc = "Robustos y tradicionales enanos de Forjaz, firmes como la piedra y maestros de la forja y la mineria.", traits = {
                 { id = "ena_forjaz_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Fuerza +1.", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
                 { id = "ena_forjaz_dureza", name = "Dureza Enana", type = "informativo", description = "Tus PG maximos aumentan en 1, y +1 cada vez que subes de nivel.", effects = {} },
                 { id = "ena_forjaz_piedra", name = "Forma de Piedra", type = "informativo", description = "Reaccion al recibir un ataque cuerpo a cuerpo: resistencia a fisico hasta tu proximo turno. 1 uso por descanso largo.", effects = {} },
             } },
-            { id = "martillo_salvaje", name = "Enano Martillo Salvaje", traits = {
+            { id = "martillo_salvaje", name = "Enano Martillo Salvaje", desc = "Enanos libres de las alturas, jinetes de grifos de espiritu salvaje y vinculo con la naturaleza.", traits = {
                 { id = "ena_mart_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Sabiduria +1.", effects = { { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 } } },
                 { id = "ena_mart_altura", name = "Residencia en Altura", type = "informativo", description = "Acostumbrado a grandes altitudes y al frio.", effects = {} },
                 { id = "ena_mart_valentia", name = "Valentia Irrazonable", type = "informativo", description = "Ventaja en tiradas de salvacion contra el miedo.", effects = {} },
                 { id = "ena_mart_domador", name = "Domador Natural", type = "pasivo", description = "Competencia en Trato con Animales y en tiradas hacia grifos.", effects = { { kind = "skillProf", skill = "Animales" } } },
             } },
-            { id = "hierro_negro", name = "Enano Hierro Negro", traits = {
+            { id = "hierro_negro", name = "Enano Hierro Negro", desc = "Enanos oscuros ligados al fuego y la magia, antano siervos de Ragnaros en las profundidades.", traits = {
                 { id = "ena_hn_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Inteligencia +1.", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
                 { id = "ena_hn_sangre", name = "Sangre de Fuego", type = "informativo", description = "Lanzas restauracion menor en ti mismo una vez al dia.", effects = {} },
                 { id = "ena_hn_forjado", name = "Forjado en Llamas", type = "informativo", description = "Resistencia al daño por fuego.", effects = {} },
@@ -54,7 +54,7 @@ API.RACES = {
         },
     },
     {
-        id = "elfo_noche", name = "Elfo de la Noche", faction = "alianza", size = "Mediano", speed = 10.5,
+        id = "elfo_noche", name = "Elfo de la Noche", desc = "Kaldorei antiguos y orgullosos, primeros estudiosos de la magia; hoy guardianes de la naturaleza y devotos de Elune.", faction = "alianza", size = "Mediano", speed = 10.5,
         traits = {
             { id = "eln_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Destreza +2 y Sabiduria +1.", effects = {
                 { kind = "bonus", target = "ability", ability = "Destreza", value = 2 },
@@ -69,14 +69,14 @@ API.RACES = {
         },
     },
     {
-        id = "gnomo", name = "Gnomo", faction = "alianza", size = "Pequeño", speed = 7.5,
+        id = "gnomo", name = "Gnomo", desc = "Raza diminuta de ingenieros e inventores subterraneos, celebres por su ingenio mecanico y su curiosidad insaciable.", faction = "alianza", size = "Pequeño", speed = 7.5,
         subraces = {
-            { id = "gnomeregan", name = "Gnomo de Gnomeregan", traits = {
+            { id = "gnomeregan", name = "Gnomo de Gnomeregan", desc = "Los brillantes ingenieros e inventores clasicos, mentes inquietas de Gnomeregan.", traits = {
                 { id = "gno_gnom_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Carisma +1.", effects = { { kind = "bonus", target = "ability", ability = "Carisma", value = 1 } } },
                 { id = "gno_gnom_mente", name = "Mente Expansiva", type = "informativo", description = "Sumas la mitad de tu bono de competencia en pruebas de Inteligencia sin competencia.", effects = {} },
                 { id = "gno_gnom_ingenieria", name = "Ingenieria Gnomica", type = "informativo", description = "Competencia con herramientas de artesano; creas pequeños dispositivos con efectos simples.", effects = {} },
             } },
-            { id = "mecagnomo", name = "Mecagnomo", traits = {
+            { id = "mecagnomo", name = "Mecagnomo", desc = "Gnomos parcialmente mecanizados, con miembros y mejoras de metal integrados en su cuerpo.", traits = {
                 { id = "gno_mec_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Constitucion +1.", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
                 { id = "gno_mec_mejoras", name = "Mejoras Mecanicas", type = "choice", description = "Elige una mejora (otra al nivel 5).", effects = {}, choice = {
                     slots = 1,
@@ -98,21 +98,21 @@ API.RACES = {
         },
     },
     {
-        id = "draenei", name = "Draenei", faction = "alianza", size = "Mediano", speed = 9,
+        id = "draenei", name = "Draenei", desc = "Eredar que huyeron de la Legion guiados por la Luz Sagrada; viajeros de mundo en mundo, sabios y devotos.", faction = "alianza", size = "Mediano", speed = 9,
         subraces = {
-            { id = "exodar", name = "Draenei del Exodar", traits = {
+            { id = "exodar", name = "Draenei del Exodar", desc = "Draenei devotos portadores del don de los Naaru y de la Luz Sagrada.", traits = {
                 { id = "dra_exo_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Fuerza +1.", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
                 { id = "dra_exo_gemas", name = "Tallado de Gemas", type = "informativo", description = "Competencia con herramientas de joyero.", effects = {} },
                 { id = "dra_exo_naaru", name = "Don de los Naaru", type = "informativo", description = "Accion: tocas y curas (= tu nivel). 1 uso por descanso largo.", effects = {} },
                 { id = "dra_exo_heroica", name = "Presencia Heroica", type = "informativo", description = "Lanzas heroismo y favor divino usando Sabiduria. 1 uso por descanso largo.", effects = {} },
             } },
-            { id = "forjado_luz", name = "Draenei Forjado por la Luz", traits = {
+            { id = "forjado_luz", name = "Draenei Forjado por la Luz", desc = "Cruzados imbuidos de Luz Sagrada, forjados como arma viviente contra la Legion Ardiente.", traits = {
                 { id = "dra_fl_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Constitucion +1.", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
                 { id = "dra_fl_forjado", name = "Forjado en Luz", type = "informativo", description = "Sin armadura, tu CA es 12 + Mod. Destreza.", effects = {} },
                 { id = "dra_fl_resistencia", name = "Resistencia Sagrada", type = "informativo", description = "Resistencia al daño radiante.", effects = {} },
                 { id = "dra_fl_juicio", name = "Juicio de la Luz", type = "informativo", description = "Conoces luz; a niveles 3/5 lanzas rayo guiador / golpe de marca (Sabiduria).", effects = {} },
             } },
-            { id = "tabido", name = "Draenei Tabido", traits = {
+            { id = "tabido", name = "Draenei Tabido", desc = "Draenei rotos por la energia vil; marginados pero resistentes y perseverantes.", traits = {
                 { id = "dra_tab_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Sabiduria +1.", effects = { { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 } } },
                 { id = "dra_tab_vision", name = "Vision en la Oscuridad", type = "informativo", description = "Vision en la oscuridad a 18 metros (tonos de gris).", effects = {} },
                 { id = "dra_tab_elemental", name = "Vinculo Elemental", type = "informativo", description = "Conoces escarcha; a niveles 3/5 lanzas temblor de tierra / rafaga de viento (Sabiduria).", effects = {} },
@@ -126,7 +126,7 @@ API.RACES = {
         },
     },
     {
-        id = "huargen", name = "Huargen", faction = "alianza", size = "Mediano", speed = 9,
+        id = "huargen", name = "Huargen", desc = "Lobos humanoides nacidos de una maldicion druidica; conservan su humanidad bajo una ferocidad salvaje.", faction = "alianza", size = "Mediano", speed = 9,
         traits = {
             { id = "hua_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Fuerza +2 y Destreza +1.", effects = {
                 { kind = "bonus", target = "ability", ability = "Fuerza", value = 2 },
@@ -151,14 +151,14 @@ API.RACES = {
         },
     },
     {
-        id = "orco", name = "Orco", faction = "horda", size = "Mediano", speed = 9,
+        id = "orco", name = "Orco", desc = "Guerreros de honor y fuerza que rompieron el ansia de sangre de la Legion y reconstruyeron la Horda con el chamanismo.", faction = "horda", size = "Mediano", speed = 9,
         subraces = {
-            { id = "cazadores", name = "Clanes Cazadores", traits = {
+            { id = "cazadores", name = "Clanes Cazadores", desc = "Orcos de los clanes cazadores: emboscadores agiles y rastreadores letales.", traits = {
                 { id = "orc_caz_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Destreza +1.", effects = { { kind = "bonus", target = "ability", ability = "Destreza", value = 1 } } },
                 { id = "orc_caz_emboscador", name = "Emboscador", type = "pasivo", description = "Competencia en Sigilo.", effects = { { kind = "skillProf", skill = "Sigilo" } } },
                 { id = "orc_caz_sorpresa", name = "Ataque Sorpresa", type = "informativo", description = "Si sorprendes y atacas en tu primer turno, +1d6 de daño (sube con nivel).", effects = {} },
             } },
-            { id = "misticos", name = "Clanes Misticos", traits = {
+            { id = "misticos", name = "Clanes Misticos", desc = "Orcos de los clanes misticos: videntes y chamanes en contacto con los ancestros y los elementos.", traits = {
                 { id = "orc_mis_inc", name = "Incremento de Caracteristica", type = "choice", description = "Inteligencia o Sabiduria +1.", effects = {}, choice = {
                     slots = 1,
                     options = {
@@ -177,7 +177,7 @@ API.RACES = {
                     },
                 } },
             } },
-            { id = "guerreros", name = "Clanes Guerreros", traits = {
+            { id = "guerreros", name = "Clanes Guerreros", desc = "Orcos de los clanes guerreros: brutales y agresivos en la primera linea de batalla.", traits = {
                 { id = "orc_gue_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Fuerza +1.", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
                 { id = "orc_gue_agresivo", name = "Agresivo", type = "informativo", description = "Accion adicional: muevete hasta tu velocidad hacia un enemigo visible.", effects = {} },
                 { id = "orc_gue_salvajes", name = "Ataques Salvajes", type = "informativo", description = "Al hacer un golpe critico, tira un dado de daño adicional del arma.", effects = {} },
@@ -195,14 +195,14 @@ API.RACES = {
         },
     },
     {
-        id = "renegado", name = "Renegado", faction = "horda", size = "Mediano", speed = 9,
+        id = "renegado", name = "Renegado", desc = "Humanos y elfos no-muertos liberados del Rey Exanime; una fuerza oscura de Entranas, aliada de la Horda por conveniencia.", faction = "horda", size = "Mediano", speed = 9,
         subraces = {
-            { id = "humano", name = "Renegado Humano", traits = {
+            { id = "humano", name = "Renegado Humano", desc = "La mayoria de los Renegados: humanos no-muertos, decididos y versatiles tras su muerte.", traits = {
                 { id = "ren_hum_inc", name = "Incremento de Caracteristica", type = "choice", description = "Una caracteristica de tu eleccion +1.", effects = {}, choice = { slots = 1, optionsFrom = "ability+1" } },
                 { id = "ren_hum_determinacion", name = "Determinacion", type = "informativo", description = "Repites una tirada de ataque/prueba/salvacion con ventaja. 1 uso por descanso.", effects = {} },
                 { id = "ren_hum_versatilidad", name = "Versatilidad", type = "choice", description = "Competencia en una habilidad de tu eleccion.", effects = {}, choice = { slots = 1, optionsFrom = "skillProf" } },
             } },
-            { id = "elfo", name = "Renegado Elfo", traits = {
+            { id = "elfo", name = "Renegado Elfo", desc = "Renegados de origen elfico, agiles y afilados, que conservan parte de su gracia en la no-muerte.", traits = {
                 { id = "ren_elf_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Inteligencia +1.", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
                 { id = "ren_elf_arcano", name = "Conocimiento Arcano", type = "pasivo", description = "Competencia en Arcano; lanzas detectar magia (Inteligencia) 1 vez por descanso.", effects = { { kind = "skillProf", skill = "Arcano" } } },
                 { id = "ren_elf_idioma", name = "Idioma Extra", type = "informativo", description = "Hablas, lees y escribes Thalassiano.", effects = {} },
@@ -218,19 +218,19 @@ API.RACES = {
         },
     },
     {
-        id = "tauren", name = "Tauren", faction = "horda", size = "Mediano", speed = 9,
+        id = "tauren", name = "Tauren", desc = "Pueblo espiritual y nomada de las llanuras de Kalimdor; chamanes, cazadores y guerreros en comunion con la naturaleza.", faction = "horda", size = "Mediano", speed = 9,
         subraces = {
-            { id = "mulgore", name = "Tauren de Mulgore", traits = {
+            { id = "mulgore", name = "Tauren de Mulgore", desc = "Los tauren clasicos de las llanuras de Mulgore: espirituales, pacificos pero formidables.", traits = {
                 { id = "tau_mul_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Sabiduria +1.", effects = { { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 } } },
                 { id = "tau_mul_resistencia", name = "Resistencia", type = "informativo", description = "Tus PG maximos aumentan en 1 y +1 cada nivel.", effects = {} },
                 { id = "tau_mul_pisoton", name = "Pisoton de Guerra", type = "informativo", description = "Lanzas temblor de tierra 1 vez por descanso largo (Fuerza).", effects = {} },
             } },
-            { id = "monte_alto", name = "Tauren de Monte Alto", traits = {
+            { id = "monte_alto", name = "Tauren de Monte Alto", desc = "Tauren astados de Monte Alto, fuertes vinculados a la tierra y herederos del legado de Huln.", traits = {
                 { id = "tau_ma_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Sabiduria +1.", effects = { { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 } } },
                 { id = "tau_ma_montanes", name = "Montanes", type = "informativo", description = "Adaptado a grandes altitudes y climas frios.", effects = {} },
                 { id = "tau_ma_tenacidad", name = "Tenacidad Rugosa", type = "informativo", description = "Reaccion: reduces el daño en 1d12 + mitad de tu nivel. Recarga con descanso.", effects = {} },
             } },
-            { id = "taunka", name = "Taunka", traits = {
+            { id = "taunka", name = "Taunka", desc = "Tauren curtidos de Rasganorte, pragmaticos supervivientes de climas implacables.", traits = {
                 { id = "tau_tau_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Constitucion +1.", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
                 { id = "tau_tau_frio", name = "Resistencia al Frio", type = "informativo", description = "Resistencia al daño por frio.", effects = {} },
                 { id = "tau_tau_atleta", name = "Atleta Natural", type = "pasivo", description = "Competencia en Atletismo.", effects = { { kind = "skillProf", skill = "Atletismo" } } },
@@ -246,9 +246,9 @@ API.RACES = {
         },
     },
     {
-        id = "trol", name = "Trol", faction = "horda", size = "Mediano", speed = 9,
+        id = "trol", name = "Trol", desc = "Pueblo antiguo, supersticioso y resistente, de rapida regeneracion; tribus dispersas de jungla, hielo y desierto.", faction = "horda", size = "Mediano", speed = 9,
         subraces = {
-            { id = "jungla", name = "Troll de la Jungla", traits = {
+            { id = "jungla", name = "Troll de la Jungla", desc = "Trolls Lanza Negra: vudu, astucia y resistencia, aliados leales de la Horda.", traits = {
                 { id = "tro_jun_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Constitucion +1 y Sabiduria +1.", effects = {
                     { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 },
                     { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 },
@@ -257,13 +257,13 @@ API.RACES = {
                 { id = "tro_jun_voodoo", name = "Da Voodoo Shuffle", type = "informativo", description = "Te mueves por terreno dificil no magico sin coste adicional.", effects = {} },
                 { id = "tro_jun_armas", name = "Entrenamiento con Armas Troll", type = "informativo", description = "Competencia con hachas de mano, hachas de batalla, dagas y jabalinas.", effects = {} },
             } },
-            { id = "zandalari", name = "Troll Zandalari", traits = {
+            { id = "zandalari", name = "Troll Zandalari", desc = "Trolls del antiguo imperio, orgullosos y devotos de los loa, herederos de una civilizacion milenaria.", traits = {
                 { id = "tro_zan_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Sabiduria +2.", effects = { { kind = "bonus", target = "ability", ability = "Sabiduria", value = 2 } } },
                 { id = "tro_zan_conocimiento", name = "Conocimiento Antiguo", type = "pasivo", description = "Competencia en Historia.", effects = { { kind = "skillProf", skill = "Historia" } } },
                 { id = "tro_zan_loa", name = "Abrazo de los Loa", type = "informativo", description = "Conoces guia; a nivel 3 lanzas habilidad mejorada 1 vez al dia (Sabiduria).", effects = {} },
                 { id = "tro_zan_armas", name = "Entrenamiento con Armas Zandalari", type = "informativo", description = "Competencia con hachas de mano, hachas de batalla, espadas largas y espadas grandes.", effects = {} },
             } },
-            { id = "bosque", name = "Trol de Bosque", traits = {
+            { id = "bosque", name = "Trol de Bosque", desc = "Trolls de bosque amani, feroces y territoriales, ligados a las profundidades arboladas.", traits = {
                 { id = "tro_bos_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Destreza +1 y Constitucion +1.", effects = {
                     { kind = "bonus", target = "ability", ability = "Destreza", value = 1 },
                     { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 },
@@ -279,7 +279,7 @@ API.RACES = {
                 { id = "tro_bos_mascara", name = "Mascara de lo Salvaje", type = "informativo", description = "Puedes esconderte ligeramente cubierto por follaje, lluvia, nieve, niebla, etc.", effects = {} },
                 { id = "tro_bos_armas", name = "Entrenamiento con Armas Troll", type = "informativo", description = "Competencia con hachas de mano, hachas de batalla, dagas y jabalinas.", effects = {} },
             } },
-            { id = "hielo", name = "Troll de Hielo", traits = {
+            { id = "hielo", name = "Troll de Hielo", desc = "Trolls drakkari de Rasganorte, brutales supervivientes de las tierras heladas.", traits = {
                 { id = "tro_hie_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Fuerza +2.", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 2 } } },
                 { id = "tro_hie_piel", name = "Piel de Nacido del Hielo", type = "informativo", description = "Resistencia al daño por frio.", effects = {} },
                 { id = "tro_hie_constitucion", name = "Constitucion Poderosa", type = "informativo", description = "Cuentas como una criatura de un tamaño mayor para carga/empujar/arrastrar/levantar.", effects = {} },
@@ -294,7 +294,7 @@ API.RACES = {
         },
     },
     {
-        id = "elfo_sangre", name = "Elfo de Sangre", faction = "horda", size = "Mediano", speed = 9,
+        id = "elfo_sangre", name = "Elfo de Sangre", desc = "Sin'dorei de Quel'Thalas, sedientos de magia tras la caida del Pozo del Sol; elegantes, arcanos y orgullosos.", faction = "horda", size = "Mediano", speed = 9,
         traits = {
             { id = "esa_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Destreza +2 e Inteligencia +1.", effects = {
                 { kind = "bonus", target = "ability", ability = "Destreza", value = 2 },
@@ -315,7 +315,7 @@ API.RACES = {
         },
     },
     {
-        id = "goblin", name = "Goblin", faction = "horda", size = "Pequeño", speed = 7.5,
+        id = "goblin", name = "Goblin", desc = "Mercaderes e ingenieros codiciosos potenciados por la kaja'mita; astutos, explosivos y siempre buscando un trato.", faction = "horda", size = "Pequeño", speed = 7.5,
         traits = {
             { id = "gob_inc", name = "Incremento de Caracteristica", type = "pasivo", description = "Inteligencia +1 y Carisma +2.", effects = {
                 { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 },

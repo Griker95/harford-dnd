@@ -324,9 +324,13 @@ local function RawSigned(n)
 end
 
 local function AbilityTooltipTitle(key)
+    -- `bonus` es solo el bono/penalizacion LIVE (estado/objeto): los modificadores de
+    -- raza/trasfondo ya estan horneados en la puntuacion de la ficha cargada y no se
+    -- muestran aqui. Se colorea verde (positivo) / rojo (negativo).
     local base, bonus = AbilityBaseAndBonus(key)
     if bonus ~= 0 then
-        return key .. " (" .. tostring(base) .. RawSigned(bonus) .. ")"
+        local color = bonus > 0 and "ff40ff40" or "ffff4040"
+        return key .. " (" .. tostring(base) .. "|c" .. color .. RawSigned(bonus) .. "|r)"
     end
     return key .. " (" .. tostring(base) .. ")"
 end
@@ -357,14 +361,11 @@ local function ColorSignedAligned(n)
     return "|c" .. color .. text .. "|r"
 end
 
-local ABILITY_TOOLTIP_TEXT = {
-    Fuerza = "Aumenta la magnitud de tus ataques y pruebas de fuerza.",
-    Destreza = "Aumenta tu precision, reflejos y pruebas de destreza.",
-    Constitucion = "Aumenta tu resistencia, salud y aguante fisico.",
-    Inteligencia = "Aumenta tu conocimiento, memoria y razonamiento.",
-    Sabiduria = "Aumenta tu percepcion, intuicion y fuerza de voluntad.",
-    Carisma = "Aumenta tu presencia, liderazgo e influencia social.",
-}
+-- Descripciones de caracteristicas: fuente unica en HarfordDnDData.ABIL[].desc.
+local ABILITY_TOOLTIP_TEXT = {}
+for _, a in ipairs((HarfordDnDData and HarfordDnDData.ABIL) or {}) do
+    if a.key and a.desc then ABILITY_TOOLTIP_TEXT[a.key] = a.desc end
+end
 
 local function TooltipLines(owner, title, text, opts)
     if not (GameTooltip and owner and title) then return end
@@ -1446,6 +1447,33 @@ local function SetSheetRow(row, y, label, value, tooltipTitle, tooltipText, opts
     return rowHeight
 end
 
+-- Tooltip de clase para la fila multiclase: una entrada por clase con su color y su
+-- descripcion (subclase si esta elegida, si no la clase). El bloque coloreado de la
+-- fila no admite el OnEnter de SetSheetRow, asi que lo gestionamos aqui directamente.
+local function ShowClassTooltip(owner, data)
+    if not (GameTooltip and owner and data and data.classLevels and HarfordDnDBook) then return end
+    if #data.classLevels == 0 then return end
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Clase", 1, 0.82, 0, true)
+    for _, entry in ipairs(data.classLevels) do
+        local className = (HarfordDnDBook.GetClassName and HarfordDnDBook.GetClassName(entry.classId)) or entry.classId
+        local subName = (HarfordDnDBook.GetSubclassName and HarfordDnDBook.GetSubclassName(entry.classId, entry.subclassId)) or ""
+        local classDef = HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(entry.classId)
+        local subDef = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
+        local r, g, b = GetClassColorParts(entry, className, className)
+        local head = tostring(className or "")
+        if subName ~= "" then head = head .. " " .. subName end
+        head = head .. " (" .. tostring(entry.level or 1) .. ")"
+        GameTooltip:AddLine(" ")
+        GameTooltip:AddLine(head, r or 1, g or 0.82, b or 0, true)
+        local desc = (subDef and subDef.desc) or (classDef and classDef.desc)
+        if desc and desc ~= "" then
+            GameTooltip:AddLine(desc, 1, 1, 1, true)
+        end
+    end
+    GameTooltip:Show()
+end
+
 local function SetClassSheetRow(row, y, data)
     SetSheetRow(row, y, "Clase", "")
     if not row then return 14 end
@@ -1475,6 +1503,12 @@ local function SetClassSheetRow(row, y, data)
     end
     local rowHeight = math.max(14, yOffset)
     row.f:SetHeight(rowHeight)
+    -- Tooltip multiclase (SetSheetRow desactivo el mouse al no pasar tooltip).
+    if data and data.classLevels and #data.classLevels > 0 then
+        row.f:EnableMouse(true)
+        row.f:SetScript("OnEnter", function(self) ShowClassTooltip(self, data) end)
+        row.f:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    end
     return rowHeight
 end
 
@@ -1569,7 +1603,7 @@ local function RefreshSheet()
                 for _, skill in ipairs(group) do
                     if SH.sheetRows[index] then
                         SetSheetRow(SH.sheetRows[index], y, "   " .. skill.name, ColorSigned(SkillTotal(skill)),
-                            skill.name, "Caracteristica: " .. abil.key .. ".",
+                            skill.name, skill.desc or ("Caracteristica: " .. abil.key .. "."),
                             { labelWidth = 140, valueWidth = 32 })
                         y = y - 13; index = index + 1
                     end
@@ -1578,12 +1612,29 @@ local function RefreshSheet()
         end
     elseif view == "details" then
         SetSheetBar(SH.levelBar, "Atributos", -2, true)
+        -- Tooltips de raza/trasfondo: subraza si existe, si no la raza.
+        local raceTipTitle, raceTipText, bgTipTitle, bgTipText
+        if data and data.race and HarfordDnDRaces and HarfordDnDRaces.GetRace then
+            local rd = HarfordDnDRaces.GetRace(data.race.id)
+            local sd = HarfordDnDRaces.GetSubrace and HarfordDnDRaces.GetSubrace(data.race.id, data.race.subraceId)
+            local txt = (sd and sd.desc) or (rd and rd.desc)
+            if txt and txt ~= "" then raceTipTitle, raceTipText = GetRaceLabel(data), txt end
+        end
+        if data and data.background and data.background ~= "" and HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground then
+            local bd = HarfordDnDBackgrounds.GetBackground(data.background)
+            local txt = bd and (bd.desc or bd.description)
+            -- Trasfondo personalizado (no esta en el libro): usa el 1er parrafo cargado del TRP3.
+            if (not txt or txt == "") and data.backgroundDesc and data.backgroundDesc ~= "" then
+                txt = data.backgroundDesc
+            end
+            if txt and txt ~= "" then bgTipTitle, bgTipText = (bd and bd.name) or GetBackgroundLabel(data), txt end
+        end
         local rows = {
             { "Puntos de Golpe", hpMax > 0 and (tostring(hpCur) .. " / " .. tostring(hpMax)) or "-" },
             { "Clase de Armadura", tostring(ca) },
             { "Clase", GetClassSummary(data, "\n") },
-            { "Raza", GetRaceLabel(data) },
-            { "Trasfondo", GetBackgroundLabel(data) },
+            { "Raza", GetRaceLabel(data), raceTipTitle, raceTipText },
+            { "Trasfondo", GetBackgroundLabel(data), bgTipTitle, bgTipText },
             { "Iniciativa", Signed(dexMod + initBonus) },
             { "Velocidad", speed and (tostring(speed) .. " m") or "-" },
             { "Competencia", pb and Signed(pb) or "-" },
@@ -1600,12 +1651,12 @@ local function RefreshSheet()
                 y = y - SetClassSheetRow(SH.sheetRows[i], y, data)
             else
                 local opts = r[1] == "Trasfondo" and { wrapValue = true, labelWidth = 70, valueWidth = 104 } or nil
-                y = y - SetSheetRow(SH.sheetRows[i], y, r[1], "|cffffffff" .. tostring(r[2] or "") .. "|r", nil, nil, opts)
+                y = y - SetSheetRow(SH.sheetRows[i], y, r[1], "|cffffffff" .. tostring(r[2] or "") .. "|r", r[3], r[4], opts)
             end
         end
         SetSheetBar(SH.abilBar, "Salvaciones", -206, true)
         for i, abil in ipairs(list) do
-            SetSheetRow(SH.sheetRows[#rows + i], -244 - (i - 1) * 14, abil.key, ColorSigned(SaveTotal(abil.key)), "Salvacion de " .. abil.key, "Tirada de salvacion de " .. abil.key .. ".")
+            SetSheetRow(SH.sheetRows[#rows + i], -244 - (i - 1) * 14, abil.key, ColorSigned(SaveTotal(abil.key)), "Salvacion de " .. abil.key, abil.saveDesc or abil.desc or ("Tirada de salvacion de " .. abil.key .. "."))
         end
     else
         SetSheetBar(SH.levelBar, "Nivel", -2, true)
@@ -1768,6 +1819,11 @@ local function RefreshSubraceDrop()
             local subChoice = subDef
             local info = UIDropDownMenu_CreateInfo()
             info.text = subChoice.name
+            if subChoice.desc and subChoice.desc ~= "" then
+                info.tooltipTitle = subChoice.name
+                info.tooltipText = subChoice.desc
+                info.tooltipOnButton = true
+            end
             info.checked = race.subraceId == subChoice.id
             info.func = function()
                 HarfordDnDProgression.SetRace(race.id, subChoice.id, GetProfileName())
@@ -1874,6 +1930,11 @@ local function CreateLevelingPage()
             local raceChoice = raceDef
             local info = UIDropDownMenu_CreateInfo()
             info.text = raceChoice.name
+            if raceChoice.desc and raceChoice.desc ~= "" then
+                info.tooltipTitle = raceChoice.name
+                info.tooltipText = raceChoice.desc
+                info.tooltipOnButton = true
+            end
             info.func = function()
                 local sub = HarfordDnDRaces.GetDefaultSubraceId(raceChoice.id) or ""
                 HarfordDnDProgression.SetRace(raceChoice.id, sub, GetProfileName())
@@ -1903,6 +1964,12 @@ local function CreateLevelingPage()
             local bgChoice = bgDef
             local info = UIDropDownMenu_CreateInfo()
             info.text = bgChoice.name
+            local bgDesc = bgChoice.desc or bgChoice.description
+            if bgDesc and bgDesc ~= "" then
+                info.tooltipTitle = bgChoice.name
+                info.tooltipText = bgDesc
+                info.tooltipOnButton = true
+            end
             info.func = function()
                 HarfordDnDProgression.SetBackground(bgChoice.id, GetProfileName())
                 RefreshGameUI()
@@ -1920,6 +1987,12 @@ local function CreateLevelingPage()
             local featChoice = featDef
             local info = UIDropDownMenu_CreateInfo()
             info.text = featChoice.name
+            local featDesc = featChoice.desc or featChoice.description
+            if featDesc and featDesc ~= "" then
+                info.tooltipTitle = featChoice.name
+                info.tooltipText = featDesc
+                info.tooltipOnButton = true
+            end
             info.keepShownOnClick = true
             info.isNotRadio = true
             info.checked = HarfordDnDProgression and HarfordDnDProgression.HasFeat and HarfordDnDProgression.HasFeat(featChoice.id, GetProfileName()) or false
@@ -1950,6 +2023,11 @@ local function CreateLevelingPage()
             local classChoice = classDef
             local info = UIDropDownMenu_CreateInfo()
             info.text = classChoice.name
+            if classChoice.desc and classChoice.desc ~= "" then
+                info.tooltipTitle = classChoice.name
+                info.tooltipText = classChoice.desc
+                info.tooltipOnButton = true
+            end
             info.func = function()
                 S.classId = classChoice.id
                 S.subclassId = HarfordDnDBook.GetDefaultSubclassId(classChoice.id) or ""
@@ -2034,6 +2112,11 @@ local function RefreshLeveling()
             local subChoice = sub
             local info = UIDropDownMenu_CreateInfo()
             info.text = subChoice.name
+            if subChoice.desc and subChoice.desc ~= "" then
+                info.tooltipTitle = subChoice.name
+                info.tooltipText = subChoice.desc
+                info.tooltipOnButton = true
+            end
             info.checked = S.subclassId == subChoice.id
             info.func = function()
                 S.subclassId = subChoice.id

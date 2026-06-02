@@ -22,6 +22,12 @@ local function Empty()
             spellAttack = 0,
             spellDC = 0,
         },
+        -- Modificadores de caracteristica de CREACION (raza/trasfondo/dote). La ficha
+        -- cargada ya los incluye horneados en la puntuacion nativa, asi que NO se suman
+        -- en vivo (ni aparecen en el tooltip). Solo los usa el pipeline de creacion de
+        -- ficha dentro del addon para calcular la puntuacion final. El bucket live
+        -- `bonus.ability` queda reservado para bonos/penalizaciones de estado/objeto.
+        creationBonus = { ability = {} },
         saveProf = {},
         skillRank = {},
         resourceMax = {},
@@ -38,7 +44,9 @@ local function ApplyEffect(resolved, effect)
         local target = tostring(effect.target or "")
         local value = tonumber(effect.value) or 0
         if target == "ability" then
-            Add(resolved.bonus.ability, effect.ability, value)
+            -- Modificador de caracteristica de creacion (raza/trasfondo/dote): va al
+            -- bucket de creacion, no al live. La ficha cargada ya lo trae horneado.
+            Add(resolved.creationBonus.ability, effect.ability, value)
         elseif target == "save" then
             Add(resolved.bonus.save, effect.ability, value)
         elseif target == "skill" then
@@ -124,10 +132,17 @@ end
 function API.GetBonus(target, key, profileName)
     local resolved = API.Resolve(profileName)
     target = tostring(target or "")
-    if target == "ability" then return tonumber(resolved.bonus.ability[key]) or 0 end
+    if target == "ability" then return tonumber(resolved.bonus.ability[key]) or 0 end  -- live: estado/objeto
     if target == "save" then return tonumber(resolved.bonus.save[key]) or 0 end
     if target == "skill" then return tonumber(resolved.bonus.skill[key]) or 0 end
     return tonumber(resolved.bonus[target]) or 0
+end
+
+-- Modificador de caracteristica de CREACION (raza/trasfondo/dote) para una clave.
+-- NO se aplica al score en vivo (la ficha cargada ya lo incluye). Lo usara el
+-- pipeline de creacion de ficha dentro del addon para calcular la puntuacion final.
+function API.GetCreationAbilityBonus(key, profileName)
+    return tonumber(API.Resolve(profileName).creationBonus.ability[key]) or 0
 end
 
 function API.HasSaveProf(abilityKey, profileName)

@@ -3,11 +3,25 @@ HarfordReputationSync = HarfordReputationSync or {}
 local API = HarfordReputationSync
 local PREFIX = HarfordReputation and HarfordReputation.PREFIX or "HARFORDREP"
 local SNAPSHOT_CHUNK_BYTES = 190
+local SNAPSHOT_BUFFER_TTL = 60
 
 local suppress = false
 local snapshotBuffers = {}
 local remoteSnapshotBuffers = {}
 local remoteViews = {}
+
+local function Now()
+    return (GetTime and GetTime()) or (time and time()) or 0
+end
+
+local function PruneSnapshotBuffers(buffers)
+    local now = Now()
+    for key, buffer in pairs(buffers or {}) do
+        if (now - (tonumber(buffer.createdAt) or now)) > SNAPSHOT_BUFFER_TTL then
+            buffers[key] = nil
+        end
+    end
+end
 
 local function Escape(value)
     value = tostring(value or "")
@@ -107,9 +121,6 @@ function API.BroadcastChange(kind, ...)
         local playerKey, factionId = ...
         local points = HarfordReputation.GetPlayerPoints(playerKey, factionId)
         return Send(table.concat({ "REP", Escape(playerKey), Escape(factionId), tostring(points or 0) }, "|"))
-    elseif kind == "NPC" then
-        local key, factionId = ...
-        return Send(table.concat({ "NPC", Escape(key), Escape(factionId) }, "|"))
     elseif kind == "LOG" then
         local text = ...
         return Send(table.concat({ "LOG", Escape(text) }, "|"))
@@ -155,9 +166,6 @@ function API.BroadcastAll()
         for factionId, rep in pairs((player and player.reps) or {}) do
             HarfordSync.Send(PREFIX, table.concat({ "REP", Escape(playerKey), Escape(factionId), tostring(rep.points or 0) }, "|"), channel)
         end
-    end
-    for key, factionId in pairs(store.npcLinks or {}) do
-        HarfordSync.Send(PREFIX, table.concat({ "NPC", Escape(key), Escape(factionId) }, "|"), channel)
     end
     return true
 end
@@ -221,23 +229,9 @@ local function SerializeSnapshot(scope, selectedFactionId)
         for playerKey, player in pairs(store.players or {}) do
             for factionId, rep in pairs((player and player.reps) or {}) do
                 if IncludeFaction(factionId) then
-                    lines[#lines + 1] = table.concat({ "REP", Escape(playerKey), Escape(factionId), tostring(rep.points or 0), Escape(player.guild or "") }, "|")
+                    lines[#lines + 1] = table.concat({ "REP", Escape(playerKey), Escape(factionId), tostring(rep.points or 0) }, "|")
                 end
             end
-        end
-
-        for guildName, guild in pairs(store.guilds or {}) do
-            for factionId, rep in pairs((guild and guild.reps) or {}) do
-                if IncludeFaction(factionId) then
-                    lines[#lines + 1] = table.concat({ "GREP", Escape(guildName), Escape(factionId), tostring(rep.points or 0) }, "|")
-                end
-            end
-        end
-    end
-
-    for key, factionId in pairs(store.npcLinks or {}) do
-        if IncludeFaction(factionId) then
-            lines[#lines + 1] = table.concat({ "NPC", Escape(key), Escape(factionId) }, "|")
         end
     end
 
@@ -254,14 +248,13 @@ local function RefreshReputationViews()
     C_Timer.After(0.1, function()
         _refreshViewsPending = false
         if HarfordReputationUI and HarfordReputationUI.Refresh then HarfordReputationUI.Refresh() end
-        if HarfordReputationTooltip and HarfordReputationTooltip.Refresh then HarfordReputationTooltip.Refresh() end
         if HarfordReputationAdmin and HarfordReputationAdmin.Refresh then HarfordReputationAdmin.Refresh() end
     end)
 end
 
 local function ParseSnapshot(raw)
     if type(raw) ~= "string" or raw == "" then return nil end
-    local parsed = { scope = "ALL", selectedFactionId = "", groups = {}, factions = {}, players = {}, guilds = {}, npcLinks = {}, selfReps = {} }
+    local parsed = { scope = "ALL", selectedFactionId = "", groups = {}, factions = {}, players = {}, selfReps = {} }
 
     for line in string.gmatch(raw, "([^\n]+)") do
         local opcode = tostring(line or ""):match("^([^|]+)")
@@ -293,11 +286,10 @@ local function ParseSnapshot(raw)
             local faction = DeserializeFaction(line)
             if faction and faction.id then parsed.factions[faction.id] = faction end
         elseif opcode == "REP" then
-            local _, playerKey, factionId, points, guildName = strsplit("|", line)
+            local _, playerKey, factionId, points = strsplit("|", line)
             playerKey, factionId = Unescape(playerKey), Unescape(factionId)
             if playerKey ~= "" and factionId ~= "" then
                 parsed.players[playerKey] = parsed.players[playerKey] or { reps = {} }
-                parsed.players[playerKey].guild = Unescape(guildName)
                 local repPoints = tonumber(points) or 0
                 parsed.players[playerKey].reps[factionId] = { points = repPoints, visible = true, atWar = IsAtWarPoints(repPoints) }
             end
@@ -307,18 +299,6 @@ local function ParseSnapshot(raw)
             if factionId ~= "" then
                 parsed.selfReps[factionId] = tonumber(points) or 0
             end
-        elseif opcode == "GREP" then
-            local _, guildName, factionId, points = strsplit("|", line)
-            guildName, factionId = Unescape(guildName), Unescape(factionId)
-            if guildName ~= "" and factionId ~= "" then
-                parsed.guilds[guildName] = parsed.guilds[guildName] or { reps = {} }
-                local repPoints = tonumber(points) or 0
-                parsed.guilds[guildName].reps[factionId] = { points = repPoints, visible = true, atWar = IsAtWarPoints(repPoints) }
-            end
-        elseif opcode == "NPC" then
-            local _, key, factionId = strsplit("|", line)
-            key, factionId = Unescape(key), Unescape(factionId)
-            if key ~= "" and factionId ~= "" then parsed.npcLinks[key] = factionId end
         end
     end
     return parsed
@@ -345,8 +325,6 @@ local function StoreRemoteView(playerKey, parsed)
         scope = parsed.scope or "ALL",
         groups = parsed.groups or {},
         factions = parsed.factions or {},
-        npcLinks = parsed.npcLinks or {},
-        guilds = parsed.guilds or {},
         points = {},
         receivedAt = GetTime and GetTime() or time(),
     }
@@ -391,21 +369,7 @@ local function ApplySnapshot(raw)
         end
         if parsed.players[localKey] then
             store.players[localKey] = store.players[localKey] or { reps = {} }
-            store.players[localKey].guild = parsed.players[localKey].guild
             store.players[localKey].reps[factionId] = parsed.players[localKey].reps[factionId]
-        end
-        for _, guild in pairs(store.guilds or {}) do
-            if guild.reps then guild.reps[factionId] = nil end
-        end
-        for guildName, guild in pairs(parsed.guilds or {}) do
-            store.guilds[guildName] = store.guilds[guildName] or { reps = {} }
-            store.guilds[guildName].reps[factionId] = guild.reps[factionId]
-        end
-        for key, linkedFactionId in pairs(store.npcLinks or {}) do
-            if linkedFactionId == factionId then store.npcLinks[key] = nil end
-        end
-        for key, linkedFactionId in pairs(parsed.npcLinks or {}) do
-            store.npcLinks[key] = linkedFactionId
         end
         store.players[localKey] = store.players[localKey] or { reps = {} }
         store.players[localKey].reps = store.players[localKey].reps or {}
@@ -415,24 +379,14 @@ local function ApplySnapshot(raw)
         end
     elseif parsed.scope == "STRUCTURE" then
         local preservedPlayers = store.players or {}
-        local preservedGuilds = store.guilds or {}
         store.factions = parsed.factions
-        store.npcLinks = parsed.npcLinks
+        store.npcLinks = nil
         store.groups = parsed.groups
         for _, player in pairs(preservedPlayers) do
             if player and player.reps then
                 for factionId in pairs(player.reps) do
                     if not parsed.factions[factionId] then
                         player.reps[factionId] = nil
-                    end
-                end
-            end
-        end
-        for _, guild in pairs(preservedGuilds) do
-            if guild and guild.reps then
-                for factionId in pairs(guild.reps) do
-                    if not parsed.factions[factionId] then
-                        guild.reps[factionId] = nil
                     end
                 end
             end
@@ -444,12 +398,12 @@ local function ApplySnapshot(raw)
             preservedPlayers[localKey].reps[factionId] = preservedPlayers[localKey].reps[factionId] or { points = 0, visible = true, atWar = false }
         end
         store.players = preservedPlayers
-        store.guilds = preservedGuilds
+        store.guilds = nil
     else
         store.factions = parsed.factions
-        store.npcLinks = parsed.npcLinks
+        store.npcLinks = nil
         store.groups   = parsed.groups
-        store.guilds   = parsed.guilds
+        store.guilds   = nil
         -- players: solo conservar el jugador local; descartar el resto para no
         -- acumular datos de otros jugadores en las SavedVariables de cada cliente.
         local localKey = GetLocalPlayerKey()
@@ -555,8 +509,9 @@ local function HandleMessage(message, sender)
     if opcode == "RVIEWC" then
         local transferId, index, total, chunk = tostring(message or ""):match("^RVIEWC|([^|]+)|(%d+)|(%d+)|(.*)$")
         if transferId and index and total and chunk then
+            PruneSnapshotBuffers(remoteSnapshotBuffers)
             local key = tostring(sender or "?") .. ":" .. transferId
-            local buffer = remoteSnapshotBuffers[key] or { chunks = {}, total = tonumber(total) or 0 }
+            local buffer = remoteSnapshotBuffers[key] or { chunks = {}, total = tonumber(total) or 0, createdAt = Now() }
             buffer.chunks[tonumber(index)] = chunk
             remoteSnapshotBuffers[key] = buffer
             local ready = true
@@ -619,8 +574,9 @@ local function HandleMessage(message, sender)
     if opcode == "SNAPC" then
         local transferId, mode, index, total, chunk = tostring(message or ""):match("^SNAPC|([^|]+)|([^|]+)|(%d+)|(%d+)|(.*)$")
         if transferId and index and total and chunk then
+            PruneSnapshotBuffers(snapshotBuffers)
             local key = tostring(sender or "?") .. ":" .. transferId
-            local buffer = snapshotBuffers[key] or { chunks = {}, mode = mode, total = tonumber(total) or 0 }
+            local buffer = snapshotBuffers[key] or { chunks = {}, mode = mode, total = tonumber(total) or 0, createdAt = Now() }
             buffer.chunks[tonumber(index)] = chunk
             snapshotBuffers[key] = buffer
             local ready = true

@@ -20,6 +20,11 @@ local function fmtSigned(n)
     return tostring(n)
 end
 
+local function IsNpcContext()
+    local State = HarfordDnDContext and HarfordDnDContext.State
+    return State and State.active and State.kind == "npc"
+end
+
 -- ─── Dados y modificador de caracteristica ───────────────────────────────────
 function HarfordDnDCalc.AbilityMod(score)
     score = toN(score, 10)
@@ -39,6 +44,9 @@ end
 
 -- ─── Bonos base (leen ARC via HarfordDnDContext) ─────────────────────────────
 function HarfordDnDCalc.GetPB()
+    if IsNpcContext() then
+        return toN(HarfordDnDContext.Get("BonusCompetencia", "0"), 0)
+    end
     local derived = HarfordDnDFeatureEffects
         and HarfordDnDFeatureEffects.GetProficiencyBonus
         and HarfordDnDFeatureEffects.GetProficiencyBonus()
@@ -66,6 +74,7 @@ end
 
 function HarfordDnDCalc.GetAbilityScore(key)
     local base = toN(HarfordDnDContext.Get(key, "10"), 10)
+    if IsNpcContext() then return base end
     local bonus = HarfordDnDFeatureEffects
         and HarfordDnDFeatureEffects.GetBonus
         and HarfordDnDFeatureEffects.GetBonus("ability", key)
@@ -78,6 +87,9 @@ function HarfordDnDCalc.GetAbilityMod(key)
 end
 
 function HarfordDnDCalc.GetSaveProf(abilityKey)
+    if IsNpcContext() then
+        return toN(HarfordDnDContext.Get("Salv_" .. abilityKey, "0"), 0) == 1
+    end
     return toN(HarfordDnDContext.Get("Salv_" .. abilityKey, "0"), 0) == 1
         or (HarfordDnDFeatureEffects
             and HarfordDnDFeatureEffects.HasSaveProf
@@ -85,23 +97,50 @@ function HarfordDnDCalc.GetSaveProf(abilityKey)
 end
 
 function HarfordDnDCalc.GetWeaponMod()
-    return toN(HarfordDnDContext.Get("ModArma", "0"), 0)
+    -- Legacy: el campo manual ModArma se retiro de la ficha. Los bonos de arma
+    -- globales vienen de rasgos/items no-arma via GetWeaponAttackBonus/GetWeaponDamageBonus.
+    -- Los bonuses del item equipado como arma son por slot y los suma HarfordDnD.lua.
+    return 0
 end
 
 function HarfordDnDCalc.GetWeaponAttackBonus()
+    if IsNpcContext() then return 0 end
     local bonus = HarfordDnDFeatureEffects
         and HarfordDnDFeatureEffects.GetBonus
         and HarfordDnDFeatureEffects.GetBonus("weaponAttack")
         or 0
-    return HarfordDnDCalc.GetWeaponMod() + bonus
+    return bonus
 end
 
 function HarfordDnDCalc.GetWeaponDamageBonus()
+    if IsNpcContext() then return 0 end
     local bonus = HarfordDnDFeatureEffects
         and HarfordDnDFeatureEffects.GetBonus
         and HarfordDnDFeatureEffects.GetBonus("weaponDamage")
         or 0
-    return HarfordDnDCalc.GetWeaponMod() + bonus
+    return bonus
+end
+
+function HarfordDnDCalc.GetInitiativeBonus()
+    if IsNpcContext() then
+        return toN(HarfordDnDContext.Get("ModIniciativa", "0"), 0)
+    end
+    local bonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("initiative")
+        or 0
+    -- Caracteristicas que suman su Mod. a la iniciativa (ej. Picaro Forajido "Alacridad": Carisma).
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetInitiativeAbilities then
+        for _, ability in ipairs(HarfordDnDFeatureEffects.GetInitiativeAbilities()) do
+            bonus = bonus + HarfordDnDCalc.GetAbilityMod(ability)
+        end
+    end
+    -- Rasgos que suman el bonus de COMPETENCIA a la iniciativa (ej. Chaman Afinidad Aire).
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("initiativeProfBonus") then
+        bonus = bonus + HarfordDnDCalc.GetPB()
+    end
+    return bonus
 end
 
 function HarfordDnDCalc.GetVersatileActive()
@@ -110,6 +149,14 @@ end
 
 -- ─── Bonos compuestos ────────────────────────────────────────────────────────
 function HarfordDnDCalc.GetSkillProfBonus(skill)
+    if IsNpcContext() then
+        local profFlag = toN(HarfordDnDContext.Get("Hab_" .. skill.id .. "_Prof", "0"), 0)
+        local expFlag  = toN(HarfordDnDContext.Get("Hab_" .. skill.id .. "_Exp", "0"), 0)
+        local pb = HarfordDnDCalc.GetPB()
+        if expFlag == 1 then return 2 * pb end
+        if profFlag == 1 then return pb end
+        return 0
+    end
     local pb = HarfordDnDCalc.GetPB()
     local profFlag = toN(HarfordDnDContext.Get("Hab_" .. skill.id .. "_Prof", "0"), 0)
     local expFlag  = toN(HarfordDnDContext.Get("Hab_" .. skill.id .. "_Exp", "0"), 0)
@@ -129,6 +176,9 @@ function HarfordDnDCalc.GetSkillRollBonuses(skill)
     if type(explicit) == "number" then
         return explicit, 0
     end
+    if IsNpcContext() then
+        return HarfordDnDCalc.GetAbilityMod(skill.ability), HarfordDnDCalc.GetSkillProfBonus(skill)
+    end
     local bonus = HarfordDnDFeatureEffects
         and HarfordDnDFeatureEffects.GetBonus
         and HarfordDnDFeatureEffects.GetBonus("skill", skill.id)
@@ -143,10 +193,22 @@ function HarfordDnDCalc.GetSaveRollBonuses(abilityKey)
     if type(explicit) == "number" then
         return explicit, 0
     end
+    if IsNpcContext() then
+        return HarfordDnDCalc.GetAbilityMod(abilityKey),
+            HarfordDnDCalc.GetSaveProf(abilityKey) and HarfordDnDCalc.GetPB() or 0
+    end
     local bonus = HarfordDnDFeatureEffects
         and HarfordDnDFeatureEffects.GetBonus
         and HarfordDnDFeatureEffects.GetBonus("save", abilityKey)
         or 0
+    -- Bonus a TODAS las salvaciones por rasgos (ej. Paladin "Aura de Proteccion": +max(1, Mod. Carisma)).
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetAllSavesAbilities then
+        for _, entry in ipairs(HarfordDnDFeatureEffects.GetAllSavesAbilities()) do
+            local mod = HarfordDnDCalc.GetAbilityMod(entry.ability)
+            local minVal = tonumber(entry.min) or 0
+            bonus = bonus + math.max(minVal, mod)
+        end
+    end
     return HarfordDnDCalc.GetAbilityMod(abilityKey) + bonus,
         HarfordDnDCalc.GetSaveProf(abilityKey) and HarfordDnDCalc.GetPB() or 0
 end
@@ -162,18 +224,22 @@ function HarfordDnDCalc.RollTextWithMode(mode, a, b)
     end
 end
 
-function HarfordDnDCalc.GetCritTag(mode, a, b)
+-- critThreshold: tirada minima del d20 que cuenta como critico (20 por defecto; 19 con
+-- rasgos de critico ampliado como "Maquina de Matar"). Ventaja/desventaja se aplican
+-- igual con el umbral generalizado (a>=20 equivale a a==20, asi que es compatible).
+function HarfordDnDCalc.GetCritTag(mode, a, b, critThreshold)
+    critThreshold = tonumber(critThreshold) or 20
     if mode == "dis" then
-        if a == 20 and b == 20 then return "CRÍTICO" end
+        if a >= critThreshold and b >= critThreshold then return "CRÍTICO" end
         if a == 1 or b == 1 then return "PIFIA" end
         return ""
     end
     if mode == "adv" then
-        if a == 20 or b == 20 then return "CRÍTICO" end
+        if a >= critThreshold or b >= critThreshold then return "CRÍTICO" end
         if a == 1 and b == 1 then return "PIFIA" end
         return ""
     end
-    if a == 20 then return "CRÍTICO" end
+    if a >= critThreshold then return "CRÍTICO" end
     if a == 1 then return "PIFIA" end
     return ""
 end

@@ -238,9 +238,12 @@ function API.SendNpcTRP3Hyperlink(hyperlink, opts)
     end
 
     -- opts.textPrefix: texto libre que aparece ANTES del hyperlink en el textemote.
+    -- opts.textSuffix: texto libre que aparece DESPUES del hyperlink (p.ej. nombre del focus).
     local prefix = (opts and opts.textPrefix and #opts.textPrefix > 0)
         and (opts.textPrefix .. " ") or ""
-    local command = "npc te " .. prefix .. text
+    local suffix = (opts and opts.textSuffix and #opts.textSuffix > 0)
+        and (" " .. opts.textSuffix) or ""
+    local command = "npc te " .. prefix .. text .. suffix
     if #command >= 250 then
         return false, "hyperlink TRP3 demasiado largo para EpsilonLib.AddonCommands"
     end

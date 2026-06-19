@@ -3,7 +3,8 @@
 ## Notes: Sistema de Loot y Fichas DnD 5e de |cff3536CCCompañía Harford|r
 ## Author: Griker
 ## Version: 1.0.0
-## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordLootConfigStore, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordDebugSettings, HarfordConfigStore, HarfordReputationStore, HarfordFrameProbe
+## OptionalDeps: totalRP3, totalRP3_Extended
+## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordDebugSettings, HarfordConfigStore, HarfordReputationStore, HarfordFrameProbe
 
 HarfordSync.lua
 HarfordDebug.lua
@@ -26,6 +27,8 @@ HarfordDnDStore.lua
 HarfordDnDContext.lua
 HarfordDnDProfile.lua
 HarfordDnDUI.lua
+HarfordDnDAttackUI.lua
+HarfordDnDCustomDamage.lua
 HarfordDnDRolls.lua
 HarfordDnDData.lua
 HarfordDnDBook.lua
@@ -33,7 +36,10 @@ HarfordDnDRaces.lua
 HarfordDnDBackgrounds.lua
 HarfordDnDFeats.lua
 HarfordDnDMana.lua
+HarfordDnDConditionalDamage.lua
 HarfordDnDProgression.lua
+HarfordDnDItems.lua
+HarfordCharacterInspect.lua
 HarfordDnDFeatureEffects.lua
 HarfordDnDWeapons.lua
 HarfordDnDCalc.lua
@@ -45,9 +51,9 @@ HarfordLoot.lua
 HarfordDnD.lua
 HarfordReputation.lua
 HarfordReputationSync.lua
-HarfordReputationTooltip.lua
 HarfordReputationUI.lua
 HarfordCharacterPanel.lua
+HarfordActionBars.lua
 HarfordUnitFrames.lua
 HarfordNamePlates.lua
 HarfordTurns.lua

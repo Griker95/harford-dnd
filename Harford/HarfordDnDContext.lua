@@ -42,6 +42,11 @@ end
 -- Escribe un valor de la ficha. Durante la hidratacion desde persistencia
 -- escribe directo al runtime para no disparar broadcasts intermedios.
 function HarfordDnDContext.Set(k, v)
+    local State = HarfordDnDContext.State
+    if State.active and State.overrides and State.overrides[k] ~= nil then
+        State.overrides[k] = tostring(v)
+        return
+    end
     if _G.HarfordDnDHydratingFromPersist then
         HarfordDnDStore.state.runtime[k] = tostring(v)
     else

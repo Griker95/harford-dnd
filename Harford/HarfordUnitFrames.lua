@@ -24,6 +24,7 @@ API.C.TOT_ART_LEVEL = 82
 API.C.TOT_BAR_FRAME_LEVEL = 83
 API.C.TOT_BAR_LEVEL = 84
 API.C.TOT_PORTRAIT_LEVEL = 85
+API.C.CLASS_COLOR_CACHE_MAX = 100
 
 API.S = API.S or {}
 API.S.frames = API.S.frames or {}
@@ -35,12 +36,14 @@ API.S.auraAnchorsByUnit = API.S.auraAnchorsByUnit or { target = {}, focus = {} }
 API.S.focusTot = API.S.focusTot or { overlay=nil, lastGUID=nil, hooksInstalled=false }
 API.S.nativePortraitMasks = API.S.nativePortraitMasks or {}
 API.S.groupOverlays = API.S.groupOverlays or {}
+API.S.groupFramesByUnit = API.S.groupFramesByUnit or {}
 API.S.groupResourceRequests = API.S.groupResourceRequests or {}
 API.S.compactUnitFrameHooksInstalled = API.S.compactUnitFrameHooksInstalled or {}
 API.S.compactBarState = API.S.compactBarState or {}
 API.S.compactPortraitState = API.S.compactPortraitState or {}
 API.S.compactFramesTouched = API.S.compactFramesTouched or {}
 API.S.classColorCache = API.S.classColorCache or {}
+API.S.classColorCacheOrder = API.S.classColorCacheOrder or {}
 -- API.S.focusTot.refresh/hide/ensureHooks se asignan dentro del do-block sin consumir slots de local.
 local RefreshTargetOfTargetNative
 local RefreshTargetOfTargetBars
@@ -358,10 +361,26 @@ end
 -- Aqui solo se conserva el cache por nombre (estado propio de UnitFrames).
 local function CacheClassColorForName(unitName, r, g, b, classKey)
     if not unitName or not r then return end
-    API.S.classColorCache[unitName] = { r, g, b, classKey }
+    local entry = API.S.classColorCache[unitName]
+    if not entry then
+        entry = { r, g, b, classKey }
+        API.S.classColorCacheOrder[#API.S.classColorCacheOrder + 1] = unitName
+    else
+        entry[1], entry[2], entry[3], entry[4] = r, g, b, classKey
+    end
+    API.S.classColorCache[unitName] = entry
     local short = Ambiguate and Ambiguate(unitName, "short") or unitName
     if short and short ~= "" then
-        API.S.classColorCache[short] = API.S.classColorCache[unitName]
+        API.S.classColorCache[short] = entry
+    end
+    while #API.S.classColorCacheOrder > API.C.CLASS_COLOR_CACHE_MAX do
+        local oldName = table.remove(API.S.classColorCacheOrder, 1)
+        local oldEntry = API.S.classColorCache[oldName]
+        API.S.classColorCache[oldName] = nil
+        local oldShort = Ambiguate and Ambiguate(oldName, "short") or oldName
+        if oldShort and API.S.classColorCache[oldShort] == oldEntry then
+            API.S.classColorCache[oldShort] = nil
+        end
     end
 end
 
@@ -399,6 +418,22 @@ local function BuildResourceList(resources)
         end
     end
     return out
+end
+
+local function BuildCompactOverlaySignature(unit, unitName, icon, list, classColor)
+    local sig = tostring(unitName or "") .. "#" .. tostring(UnitGUID and UnitGUID(unit) or "")
+        .. "#" .. tostring(icon or "")
+    if classColor then
+        sig = sig .. string.format("#c:%.3f,%.3f,%.3f", classColor[1] or 0, classColor[2] or 0, classColor[3] or 0)
+    else
+        sig = sig .. "#c:"
+    end
+    for i = 1, #list do
+        local data = list[i]
+        sig = sig .. "#" .. tostring(data.key or "") .. ":" .. tostring(data.cur or 0)
+            .. "/" .. tostring(data.max or 0) .. "+" .. tostring(data.tempCur or 0)
+    end
+    return sig
 end
 
 local function GetLevelText(unit, profile)
@@ -475,13 +510,6 @@ local function RestoreFrame(frame)
     API.S.nativeState[frame] = nil
 end
 
-local function HideNativeUnitFrame(unit)
-    local native = NativeFrameForUnit(unit)
-    if not native then return end
-    SaveFrameState(native)
-    SetFrameAlpha(native, 0)
-    if native.EnableMouse then native:EnableMouse(false) end
-end
 
 local function RestoreNativeUnitFrame(unit)
     RestoreFrame(NativeFrameForUnit(unit))
@@ -639,6 +667,7 @@ local function SaveAuraPoints(frame, unit)
     end
     anchors[frame] = {
         parent = frame.GetParent and frame:GetParent() or nil,
+        level = frame.GetFrameLevel and frame:GetFrameLevel() or nil,
         points = points,
     }
 end
@@ -649,6 +678,7 @@ local function RestoreUnitAuras(unit)
     for frame, data in pairs(API.S.auraAnchorsByUnit[unit]) do
         if frame then
             if data.parent and frame.SetParent then frame:SetParent(data.parent) end
+            if data.level and frame.SetFrameLevel then frame:SetFrameLevel(data.level) end
             frame:ClearAllPoints()
             for _, point in ipairs(data.points or {}) do
                 frame:SetPoint(point[1], point[2], point[3], point[4], point[5])
@@ -669,113 +699,125 @@ local function RestoreFocusAuras()
     RestoreUnitAuras("focus")
 end
 
-local function ClearTargetAuraAnchorCache()
-    RestoreTargetAuras()
+
+-- Coloca las auras del unit bajo la ultima barra de recurso, en orden buffs -> debuffs.
+-- En este cliente el orden nativo es el inverso (Debuff1 cuelga del TargetFrame y Buff1
+-- del contenedor de debuffs); aqui invertimos: la 1a fila de buffs se ancla bajo la ultima
+-- barra y los debuffs bajo TODO el bloque de buffs (su contenedor). Idempotente: fija anclas
+-- absolutas (ultima barra / contenedor de buffs), asi que reaplicarla NO acumula offset (sin
+-- drift). La usan RefreshFrame y el hook de TargetFrame_UpdateAuras (para sobrevivir a Blizzard).
+local AURA_BAR_GAP = 3
+
+local function ConsiderAuraAnchorBounds(bounds, region)
+    if not (bounds and region and region.GetLeft and region.GetBottom) then return end
+    if region.IsShown and not region:IsShown() then return end
+    local left = region:GetLeft()
+    local bottom = region:GetBottom()
+    if not (left and bottom) then return end
+    bounds.left = bounds.left and math.min(bounds.left, left) or left
+    bounds.bottom = bounds.bottom and math.min(bounds.bottom, bottom) or bottom
 end
 
-local function ShiftAuraFrame(auraFrame, verticalOffset, unit)
-    if not auraFrame then return end
-    SaveAuraPoints(auraFrame, unit)
-    unit = unit == "focus" and "focus" or "target"
-    local anchors = API.S.auraAnchorsByUnit[unit] or {}
-    local data = anchors[auraFrame]
-    local points = data and data.points
-    if not points or #points == 0 then return end
+local function GetResourceAuraAnchorBounds(frame)
+    local n = tonumber(frame and frame.resourceCount) or 0
+    if n <= 0 then return nil end
 
-    auraFrame:ClearAllPoints()
-    for _, point in ipairs(points) do
-        auraFrame:SetPoint(point[1], point[2], point[3], point[4], (point[5] or 0) - verticalOffset)
-    end
-end
-
-local function AuraDependsOnBuffFrame(auraFrame, relativeFrame, unit)
-    if not auraFrame or not relativeFrame then return false end
-    SaveAuraPoints(auraFrame, unit)
-    unit = unit == "focus" and "focus" or "target"
-    local anchors = API.S.auraAnchorsByUnit[unit] or {}
-    local data = anchors[auraFrame]
-    local prefix = unit == "focus" and "^FocusFrameBuff%d+$" or "^TargetFrameBuff%d+$"
-    for _, point in ipairs((data and data.points) or {}) do
-        local relativeTo = point[2]
-        local relativeName = relativeTo and relativeTo.GetName and relativeTo:GetName()
-        if relativeTo == relativeFrame
-            or (type(relativeName) == "string" and relativeName:match(prefix))
-        then
-            return true
+    local bounds = {}
+    for i = 1, n do
+        local bar = frame.bars and frame.bars[i]
+        if bar then
+            ConsiderAuraAnchorBounds(bounds, bar.container or bar)
+            ConsiderAuraAnchorBounds(bounds, bar.innerContainer)
+            ConsiderAuraAnchorBounds(bounds, bar)
+        end
+        if i > 2 and frame.barSlotOverlays then
+            ConsiderAuraAnchorBounds(bounds, frame.barSlotOverlays[i - 2])
         end
     end
-    return false
-end
 
-local function MeasureAuraGap(upperFrame, lowerFrame)
-    if not upperFrame or not lowerFrame then return nil end
-    if upperFrame.IsShown and not upperFrame:IsShown() then return nil end
-    if lowerFrame.IsShown and not lowerFrame:IsShown() then return nil end
-    local upperBottom = upperFrame.GetBottom and upperFrame:GetBottom()
-    local lowerTop = lowerFrame.GetTop and lowerFrame:GetTop()
-    if not upperBottom or not lowerTop then return nil end
-    return upperBottom - lowerTop
-end
-
-local function NudgeAuraFrame(auraFrame, yDelta)
-    if not auraFrame or not yDelta or math.abs(yDelta) < 0.5 then return end
-    local points = {}
-    for i = 1, auraFrame:GetNumPoints() do
-        local point, relativeTo, relativePoint, x, y = auraFrame:GetPoint(i)
-        points[#points + 1] = { point, relativeTo, relativePoint, x or 0, (y or 0) + yDelta }
+    if bounds.left and bounds.bottom then
+        return bounds
     end
-    if #points == 0 then return end
-    auraFrame:ClearAllPoints()
-    for _, point in ipairs(points) do
-        auraFrame:SetPoint(point[1], point[2], point[3], point[4], point[5])
+    return nil
+end
+
+local function RaiseAuraFrameLevel(frame, unit)
+    unit = unit == "focus" and "focus" or "target"
+    local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
+    local baseLevel = frame and frame.barSlotsFrame and frame.barSlotsFrame.GetFrameLevel
+        and frame.barSlotsFrame:GetFrameLevel()
+        or frame and frame.GetFrameLevel and frame:GetFrameLevel()
+        or nil
+    if not baseLevel then return end
+    local level = baseLevel + 20
+    for _, name in ipairs({
+        prefix .. "Buffs",
+        prefix .. "Debuffs",
+        prefix .. "Buff1",
+        prefix .. "Debuff1",
+    }) do
+        local auraFrame = _G[name]
+        if auraFrame and auraFrame.SetFrameLevel then
+            auraFrame:SetFrameLevel(level)
+        end
     end
 end
 
-local function NormalizeDebuffGap(buffFrame, debuffFrame, desiredGap)
-    if not desiredGap then return end
-    local currentGap = MeasureAuraGap(buffFrame, debuffFrame)
-    if not currentGap then return end
-    -- Mantener la separacion nativa entre la primera fila de buffs y debuffs.
-    -- Esto corrige tanto el doble-offset hacia abajo como el solape hacia arriba.
-    NudgeAuraFrame(debuffFrame, currentGap - desiredGap)
-end
+local function ReanchorAurasBelowBars(frame, unit)
+    if not frame then return false end
+    unit = unit == "focus" and "focus" or "target"
+    local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
+    local buff1 = _G[prefix .. "Buff1"]
+    local debuff1 = _G[prefix .. "Debuff1"]
+    if not (buff1 and debuff1) then return false end
+    local n = tonumber(frame.resourceCount) or 0
+    local lastBar = frame.bars and frame.bars[n]
+    local barAnchor = lastBar and (lastBar.container or lastBar)
+    if not barAnchor then return false end
 
-local function FindUnitAuraFrames(unit)
-    if unit == "focus" then
-        local buffs = _G.FocusFrameBuff1 or (_G.FocusFrame and _G.FocusFrame.BuffFrame)
-        local debuffs = _G.FocusFrameDebuff1 or (_G.FocusFrame and _G.FocusFrame.DebuffFrame)
-        return buffs, debuffs
+    RaiseAuraFrameLevel(frame, unit)
+
+    -- Buffs: primera fila justo bajo la ultima barra de recurso.
+    buff1:ClearAllPoints()
+    local bounds = GetResourceAuraAnchorBounds(frame)
+    if bounds and UIParent then
+        buff1:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", bounds.left, bounds.bottom - AURA_BAR_GAP)
+    else
+        buff1:SetPoint("TOPLEFT", barAnchor, "BOTTOMLEFT", 0, -AURA_BAR_GAP)
     end
-    local buffs = _G.TargetFrameBuff1 or (_G.TargetFrame and _G.TargetFrame.BuffFrame)
-    local debuffs = _G.TargetFrameDebuff1 or (_G.TargetFrame and _G.TargetFrame.DebuffFrame)
-    return buffs, debuffs
+
+    -- Debuffs: bajo todo el bloque de buffs (su contenedor) o, si no existe, bajo la 1a fila.
+    local buffsCont = _G[prefix .. "Buffs"]
+    debuff1:ClearAllPoints()
+    if buffsCont then
+        debuff1:SetPoint("TOPLEFT", buffsCont, "BOTTOMLEFT", 0, -AURA_BAR_GAP)
+    else
+        debuff1:SetPoint("TOPLEFT", buff1, "BOTTOMLEFT", 0, -((buff1:GetHeight() or 17) + AURA_BAR_GAP))
+    end
+    return true
 end
 
 local function AdjustUnitAuras(frame, resourceCount, extraHeight)
     local unit = frame and frame.unit
     if unit ~= "target" and unit ~= "focus" then return end
     resourceCount = tonumber(resourceCount) or 0
-    extraHeight = tonumber(extraHeight) or 0
     local guid = UnitGUID and UnitGUID(unit) or nil
     local guidKey = unit == "focus" and "auraFocusGUID" or "auraTargetGUID"
     if API.S[guidKey] ~= guid then
         RestoreUnitAuras(unit)  -- restaurar antes de limpiar al cambiar unidad
         API.S[guidKey] = guid
     end
-    if resourceCount <= 2 or extraHeight <= 0 then
-        RestoreUnitAuras(unit)
+    if resourceCount <= 2 then
+        RestoreUnitAuras(unit)  -- sin barras extra: orden/posicion nativos
         return
     end
-
-    local verticalOffset = extraHeight
-
-    local buffFrame, debuffFrame = FindUnitAuraFrames(unit)
-    local nativeDebuffGap = MeasureAuraGap(buffFrame, debuffFrame)
-    ShiftAuraFrame(buffFrame, verticalOffset, unit)
-    -- Si los debuffs ya dependen de los buffs en el layout nativo, mover ambos
-    -- aplica el offset dos veces y rompe la separación entre filas.
-    ShiftAuraFrame(debuffFrame, AuraDependsOnBuffFrame(debuffFrame, buffFrame, unit) and 0 or verticalOffset, unit)
-    NormalizeDebuffGap(buffFrame, debuffFrame, nativeDebuffGap)
+    -- Con barras extra: guardamos la base nativa (para restaurar al cambiar unidad o bajar a
+    -- <=2 barras) y re-anclamos. SaveAuraPoints captura SIEMPRE la posicion nativa porque solo
+    -- se vacia el cache via RestoreUnitAuras (que tambien deja las auras en nativo).
+    local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
+    SaveAuraPoints(_G[prefix .. "Buff1"], unit)
+    SaveAuraPoints(_G[prefix .. "Debuff1"], unit)
+    ReanchorAurasBelowBars(frame, unit)
 end
 
 local function AdjustTargetAuras(frame, resourceCount, extraHeight)
@@ -806,14 +848,11 @@ local function ApplyTargetOfTargetLayer()
     end
 end
 
-local function DeferTargetOfTargetLayer()
-    ApplyTargetOfTargetLayer()
-end
 
 -- Construye un frame StatusBar overlay sobre una barra nativa del ToT.
 -- Se parenta a UIParent con strata HIGH para quedar encima de barSlotOverlays
 -- sin tapar ventanas DIALOG de otros addons.
--- independientemente de la jerarquÃ­a de frames de TargetFrame en Epsilon.
+-- independientemente de la jerarquía de frames de TargetFrame en Epsilon.
 local function MakeToTBarOverlayFrame(nativeBar)
     local f = CreateFrame("Frame", nil, UIParent)
     f:SetFrameStrata(API.C.TOT_OVERLAY_STRATA)
@@ -840,7 +879,7 @@ end
 
 -- Recoge las texturas de arte/borde de un frame ToT para replicarlas en el overlay.
 -- Excluye por nombre los hijos que son barras/portrait (ya cubiertos por overlays Harford).
--- No filtra por atlas/path porque los nombres varÃ­an entre versiones de Epsilon.
+-- No filtra por atlas/path porque los nombres varían entre versiones de Epsilon.
 local function CollectToTArtRegions(root)
     local rootBounds = Bounds(root)
     if not root or not rootBounds then return {} end
@@ -864,7 +903,7 @@ local function CollectToTArtRegions(root)
         seen[region] = true
         if not region.GetObjectType or region:GetObjectType() ~= "Texture" then return end
         -- Solo texturas con contenido real. TextureInfo devuelve un fallback TEX_FRAME
-        -- para texturas sin textura/atlas cargados; usarlo aquÃ­ crearÃ­a cuadrados vacÃ­os.
+        -- para texturas sin textura/atlas cargados; usarlo aquí crearía cuadrados vacíos.
         local hasTex = (region.GetTexture and region:GetTexture()) or (region.GetAtlas and region:GetAtlas())
         if not hasTex then return end
         local info = TextureInfo(region, "targettarget")
@@ -902,7 +941,7 @@ local function MakeToTArtOverlayFrame(tot)
 end
 
 -- Actualiza el artFrame de un overlay ToT con las texturas de arte/borde del frame nativo.
--- GenÃ©rico: funciona para TargetFrameToT y FocusFrameToT.
+-- Genérico: funciona para TargetFrameToT y FocusFrameToT.
 local function UpdateToTArtOverlay(tot, ov)
     if not ov or not ov.artFrame then return end
     if not tot or not (tot.IsShown and tot:IsShown()) then
@@ -937,7 +976,7 @@ local function UpdateToTArtOverlay(tot, ov)
 end
 
 -- Oculta los hijos del frame ToT que no son barras ni portrait.
--- En Epsilon aparecen como cuadrados vacÃ­os (buff/debuff slots nativos de WoW).
+-- En Epsilon aparecen como cuadrados vacíos (buff/debuff slots nativos de WoW).
 local function HideToTNativeExtras(tot)
     if not tot or not tot.GetChildren then return end
     local rootName = tot.GetName and tot:GetName() or ""
@@ -945,7 +984,7 @@ local function HideToTNativeExtras(tot)
         local n = child.GetName and child:GetName() or ""
         if n:match("^" .. rootName .. "Buff%d+$")
         or n:match("^" .. rootName .. "Debuff%d+$") then
-            -- HookScript("OnShow", hide): patrÃ³n oUF/ElvUI para que el frame
+            -- HookScript("OnShow", hide): patrón oUF/ElvUI para que el frame
             -- nunca vuelva a mostrarse aunque TargetofTarget_Update lo intente.
             pcall(function()
                 child:HookScript("OnShow", function(self) self:Hide() end)
@@ -1021,7 +1060,7 @@ local function EnsureToTBarsOverlay()
         ov.portraitFrame = pf
     end
 
-    -- Ocultar hijos extra del ToT nativo (buff/debuff slots vacÃ­os)
+    -- Ocultar hijos extra del ToT nativo (buff/debuff slots vacíos)
     HideToTNativeExtras(tot)
 
     API.S.totBarsOverlay = ov
@@ -1040,13 +1079,13 @@ local function UpdateToTPortraitOverlay(profile)
         return
     end
 
-    -- GetPortraitCfgKey estÃ¡ definida mÃ¡s abajo; inlineamos la lÃ³gica para evitar forward reference
+    -- GetPortraitCfgKey está definida más abajo; inlineamos la lógica para evitar forward reference
     local isPlayer = UnitIsPlayer and UnitIsPlayer("targettarget")
     local cfgKey = isPlayer and "portrait_target_player" or "portrait_target_npc"
     local useTRP3 = not HarfordConfig or HarfordConfig.Get(cfgKey) ~= "wow"
     local icon = useTRP3 and profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
 
-    -- El portrait nativo estÃ¡ permanentemente oculto via HookScript (en EnsureToTBarsOverlay).
+    -- El portrait nativo está permanentemente oculto via HookScript (en EnsureToTBarsOverlay).
     -- Solo mostramos/ocultamos nuestro overlay; no tocamos el alpha nativo.
     if icon then
         ov.portraitFrame.icon:SetTexture(icon)
@@ -1095,7 +1134,7 @@ local function UpdateToTBarsOverlay(healthData, resourceData)
         ov.manaFrame.bar:SetValue(cur)
         ov.manaFrame.bar:SetStatusBarColor(r, g, b, 0.95)
     else
-        -- Sin datos aÃºn: barra vacÃ­a (fondo oscuro cubre el mana WoW)
+        -- Sin datos aún: barra vacía (fondo oscuro cubre el mana WoW)
         ov.manaFrame.bar:SetValue(0)
     end
 end
@@ -1199,14 +1238,20 @@ local function InstallNativePowerHooks()
         end
         if type(_G.TextStatusBar_UpdateTextStringWithValues) == "function" then
             hooksecurefunc("TextStatusBar_UpdateTextStringWithValues", function(statusFrame)
-                if statusFrame == NativePiecesForUnit("target").power then
+                -- Compara contra el power bar cacheado (`targetPower`) + el global estable, NO
+                -- `NativePiecesForUnit("target").power` (que aloca tabla + escanea en CADA update
+                -- de texto de barra de TODA la UI — path muy caliente).
+                if statusFrame == targetPower or statusFrame == _G.TargetFrameManaBar then
                     QueueTargetNativeReapply()
                 end
             end)
         end
         if type(_G.TextStatusBar_UpdateTextString) == "function" then
             hooksecurefunc("TextStatusBar_UpdateTextString", function(statusFrame)
-                if statusFrame == NativePiecesForUnit("target").power then
+                -- Compara contra el power bar cacheado (`targetPower`) + el global estable, NO
+                -- `NativePiecesForUnit("target").power` (que aloca tabla + escanea en CADA update
+                -- de texto de barra de TODA la UI — path muy caliente).
+                if statusFrame == targetPower or statusFrame == _G.TargetFrameManaBar then
                     QueueTargetNativeReapply()
                 end
             end)
@@ -1495,7 +1540,7 @@ end
 local function GetStatusTextMode()
     if not GetCVar then return "NUMERIC" end
     local val = GetCVar("statusTextDisplay")
-    if not val or val == "" then return "NUMERIC" end  -- Epsilon: CVar desconocido â†’ numÃ©rico
+    if not val or val == "" then return "NUMERIC" end  -- Epsilon: CVar desconocido → numérico
     return val:upper()
 end
 
@@ -1779,15 +1824,15 @@ local function EnsureBar(frame, index)
     frame.bars = frame.bars or {}
     if frame.bars[index] then return frame.bars[index] end
 
-    -- Frame contenedor para posicionamiento y propagaciÃ³n de Show/Hide.
+    -- Frame contenedor para posicionamiento y propagación de Show/Hide.
     -- Sin borde de color propio: el overlay de barSlotsFrame (textura del frame
-    -- nativo) provee el borde visual igual que en las barras de vida/manÃ¡.
+    -- nativo) provee el borde visual igual que en las barras de vida/maná.
     local borderFrame = CreateFrame("Frame", nil, frame.visual)
     borderFrame:SetFrameLevel(frame.visual:GetFrameLevel() + 4)
     borderFrame:EnableMouse(false)
 
     -- Contenedor interior: llena borderFrame completamente.
-    -- El overlay de textura cubre esta Ã¡rea y su "agujero" transparente deja ver la barra.
+    -- El overlay de textura cubre esta área y su "agujero" transparente deja ver la barra.
     local container = CreateFrame("Frame", nil, borderFrame)
     container:SetAllPoints(borderFrame)
     container:SetFrameLevel(borderFrame:GetFrameLevel() + 1)
@@ -1821,7 +1866,7 @@ local function EnsureBar(frame, index)
 
     -- bar.container = borderFrame (para posicionamiento y show/hide externo).
     -- bar.innerContainer = container (para acceder a .bg, .textFrame, mouse events).
-    -- Los shortcuts permiten que el cÃ³digo externo siga usando bar.container.bg etc.
+    -- Los shortcuts permiten que el código externo siga usando bar.container.bg etc.
     bar.container = borderFrame
     bar.innerContainer = container
     borderFrame.bg = bg                        -- bar.container.bg sigue funcionando
@@ -2107,7 +2152,7 @@ local function ApplyNativeResourceBars(unit, maxBars, showText)
     local resources = HarfordDnDAPI and HarfordDnDAPI.GetResourcesForName and HarfordDnDAPI.GetResourcesForName(unitName or "")
     local list = BuildResourceList(resources)
 
-    -- Contadores para /harforddebug run totrate
+    -- Contadores para /harford debug run totrate
     local _rateCtx = _G._HarfordTotRateActive
     if _rateCtx and unit == "targettarget" then
         _rateCtx.refreshBars = _rateCtx.refreshBars + 1
@@ -2136,12 +2181,12 @@ local function ApplyNativeResourceBars(unit, maxBars, showText)
     return list, resources, unitName
 end
 
--- â”€â”€ FOCUS TARGET OF TARGET OVERLAY â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ── FOCUS TARGET OF TARGET OVERLAY ─────────────────────────────────────────
 -- Sistema paralelo al totBarsOverlay para FocusFrameToT / unit "focustarget".
 -- Encapsulado en do...end para no consumir slots de local del scope global
--- (el archivo ya roza el lÃ­mite de 200 locales de Lua 5.1).
--- Las funciones pÃºblicas se exponen via focusTot.hide / .refresh / .ensureHooks.
--- IMPORTANTE: este bloque debe estar DESPUÃ‰S de ApplyNativeResourceBars (local).
+-- (el archivo ya roza el límite de 200 locales de Lua 5.1).
+-- Las funciones públicas se exponen via focusTot.hide / .refresh / .ensureHooks.
+-- IMPORTANTE: este bloque debe estar DESPUÉS de ApplyNativeResourceBars (local).
 do
 
 local function EnsureFocusTotBarsOverlay()
@@ -2189,7 +2234,7 @@ local function EnsureFocusTotBarsOverlay()
         ov.portraitFrame = pf
     end
 
-    -- Ocultar hijos extra del ToT nativo (buff/debuff slots vacÃ­os)
+    -- Ocultar hijos extra del ToT nativo (buff/debuff slots vacíos)
     HideToTNativeExtras(tot)
 
     API.S.focusTot.overlay = ov
@@ -2200,9 +2245,9 @@ end
 local function HideFocusTotBarsOverlay()
     local ov = API.S.focusTot.overlay
     if not ov then return end
-    -- Resetear lastGUID para que la prÃ³xima llamada a RefreshFocusTargetOfTargetBars
-    -- re-evalÃºe el portrait. Sin esto, si Hide se llama desde UpdateFocusTotBarsOverlay
-    -- (tot:IsShown() transitoriamente false), el portrait jamÃ¡s se re-muestra porque
+    -- Resetear lastGUID para que la próxima llamada a RefreshFocusTargetOfTargetBars
+    -- re-evalúe el portrait. Sin esto, si Hide se llama desde UpdateFocusTotBarsOverlay
+    -- (tot:IsShown() transitoriamente false), el portrait jamás se re-muestra porque
     -- el GUID sigue igual y el branch de portrait-update queda skipped.
     API.S.focusTot.lastGUID = nil
     ov.healthFrame:Hide()
@@ -2316,7 +2361,7 @@ local function EnsureFocusTargetOfTargetHooks()
         end)
     end
     if hooksecurefunc then
-        -- FocusofTarget_Update: anÃ¡logo a TargetofTarget_Update para el focus frame
+        -- FocusofTarget_Update: análogo a TargetofTarget_Update para el focus frame
         if type(_G.FocusofTarget_Update) == "function" then
             hooksecurefunc("FocusofTarget_Update", function()
                 if RefreshFocusTargetOfTargetBars then RefreshFocusTargetOfTargetBars() end
@@ -2327,13 +2372,13 @@ local function EnsureFocusTargetOfTargetHooks()
     end
 end
 
--- Exponer funciones pÃºblicas via tabla (accesibles desde fuera del do-block)
+-- Exponer funciones públicas via tabla (accesibles desde fuera del do-block)
 API.S.focusTot.hide       = HideFocusTotBarsOverlay
 API.S.focusTot.refresh    = RefreshFocusTargetOfTargetBars
 API.S.focusTot.ensureHooks = EnsureFocusTargetOfTargetHooks
 
 end  -- do-block focus ToT
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ────────────────────────────────────────────────────────────────────────────
 
 local function ApplyLevelBackdrop(frame, layout)
     if not frame or not frame.levelBg or not layout or not layout.level then return end
@@ -2368,7 +2413,7 @@ local function RefreshNativePortraitMask(texture)
     end
 end
 
--- Deshace lo que Harford escribiÃ³ en el frame nativo: texto de barras, retrato y nivel.
+-- Deshace lo que Harford escribió en el frame nativo: texto de barras, retrato y nivel.
 -- Llamar al entrar en frameMode o cuando la unidad deja de ser soportada.
 local function ForceNativeUnitFrameRepaint(unit)
     if unit == "targettarget" then return end
@@ -2574,10 +2619,10 @@ end
 -- Se probó un hook defensivo sobre UnitFramePortrait_Update + SetPortraitTexture y
 -- NO lo arregla (el repintado de Blizzard persiste). Revertido por no aportar y por el
 -- coste del hook global. Se deja documentado en AGENTS.md para no reintentar lo mismo.
--- Diagnostico disponible: /harforddebug run portraitwatch.
+-- Diagnostico disponible: /harford debug run portraitwatch.
 
 local function SetBarBox(bar, relativeTo, point, x, y, width, height)
-    local container = bar.container or bar          -- borde exterior (para posiciÃ³n)
+    local container = bar.container or bar          -- borde exterior (para posición)
     local inner = bar.innerContainer or container   -- contenedor interior (para fill)
     container:ClearAllPoints()
     container:SetPoint(point or "TOPLEFT", relativeTo, point or "TOPLEFT", x or 0, y or 0)
@@ -2619,18 +2664,18 @@ local function PlaceBar(frame, bar, index, lastBar)
     end
 end
 
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
--- Slot overlays para barras extra (Ã­ndice 3+)
+-- ─────────────────────────────────────────────────────────────────────────────
+-- Slot overlays para barras extra (índice 3+)
 -- Cada barra extra recibe una textura hermana de frame.overlay que usa la franja
--- UV del slot de la power bar nativa. Esa franja tiene pÃ­xeles opacos en el borde
+-- UV del slot de la power bar nativa. Esa franja tiene píxeles opacos en el borde
 -- (el marco dorado de WoW) y transparentes en el interior (deja ver la barra).
 -- El resultado es que cada barra extra aparece visualmente dentro del mismo marco.
--- â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+-- ─────────────────────────────────────────────────────────────────────────────
 
 local function GetOrCreateBarSlotOverlay(frame, slotIndex)
     if not frame.barSlotOverlays[slotIndex] then
         -- barSlotsFrame es hijo directo de visual (no de overlayFrame),
-        -- asÃ­ nunca queda oculto por el reset flow de RefreshUnitFrame.
+        -- así nunca queda oculto por el reset flow de RefreshUnitFrame.
         local host = frame.barSlotsFrame or frame.overlayFrame
         local ov = host:CreateTexture(nil, "OVERLAY", nil, 7)
         ov:Hide()
@@ -2678,26 +2723,26 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     local hRange = tcR - tcL   -- puede ser negativo (frame espejado como player)
     local vRange = tcB - tcT
 
-    -- â”€â”€ UV HORIZONTAL: solo el slot de la barra (excluye Ã¡rea de retrato) â”€â”€â”€â”€â”€
+    -- â”€â”€ UV HORIZONTAL: solo el slot de la barra (excluye área de retrato) â”€â”€â”€â”€â”€
     -- Usamos power.x/power.width para el rango horizontal real de la barra.
-    -- Esto evita los pÃ­xeles opacos del retrato que antes causaban el fondo amarillo.
+    -- Esto evita los píxeles opacos del retrato que antes causaban el fondo amarillo.
     local barX    = (power.x or health.x) - rel.x
     local barW    = power.width or health.width
     local relW    = rel.width
     local ovTcL   = tcL + (barX          / relW) * hRange
     local ovTcR   = tcL + ((barX + barW) / relW) * hRange
 
-    -- â”€â”€ UV VERTICAL: slot de la power bar + expansiÃ³n de borde â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    -- Los pÃ­xeles de borde (marco dorado) estÃ¡n en las filas FUERA del rango
-    -- power.y â€¦ power.y+barH en la textura:
-    --   Â· borde superior:  power.y - BPV   ..  power.y        (opaco, marco)
-    --   Â· agujero:         power.y          ..  power.y+barH   (transparente)
-    --   Â· borde inferior:  power.y+barH    ..  power.y+barH+BPV (opaco, marco)
-    -- Sin expansiÃ³n el overlay muestra solo el agujero â†’ invisible sobre la barra.
+    -- â”€â”€ UV VERTICAL: slot de la power bar + expansión de borde â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    -- Los píxeles de borde (marco dorado) están en las filas FUERA del rango
+    -- power.y … power.y+barH en la textura:
+    --   · borde superior:  power.y - BPV   ..  power.y        (opaco, marco)
+    --   · agujero:         power.y          ..  power.y+barH   (transparente)
+    --   · borde inferior:  power.y+barH    ..  power.y+barH+BPV (opaco, marco)
+    -- Sin expansión el overlay muestra solo el agujero → invisible sobre la barra.
     --
-    -- BPV (border pixels vertical): cuÃ¡ntos pÃ­xeles de pantalla expandir arriba/abajo.
+    -- BPV (border pixels vertical): cuántos píxeles de pantalla expandir arriba/abajo.
     -- Con BAR_GAP=2 y BPV=1, los overlays adyacentes se tocan sin solaparse.
-    -- Subir BPV captura mÃ¡s borde pero puede solapar overlays si BPV > BAR_GAP/2.
+    -- Subir BPV captura más borde pero puede solapar overlays si BPV > BAR_GAP/2.
     local BPV          = 1
     local barH         = power.height or health.height
     local relH         = rel.height
@@ -2709,14 +2754,14 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     local ovTcT        = tcT + slotTopRel * vRange
     local ovTcB        = tcT + slotBotRel * vRange
 
-    -- â”€â”€ UV HORIZONTAL: expansiÃ³n asimÃ©trica izquierda/derecha â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    -- El borde IZQUIERDO del slot de barra proviene de los pÃ­xeles del borde
+    -- â”€â”€ UV HORIZONTAL: expansión asimétrica izquierda/derecha â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    -- El borde IZQUIERDO del slot de barra proviene de los píxeles del borde
     -- derecho del portrait ring. El borde DERECHO proviene de los elementos
     -- decorativos a la derecha de la barra. Para el player frame (textura espejada,
-    -- hRange < 0) el cÃ¡lculo UV invierte automÃ¡ticamente via hRange, asÃ­ que los
+    -- hRange < 0) el cálculo UV invierte automáticamente via hRange, así que los
     -- mismos valores funcionan para ambos frames sin tratamiento especial.
-    -- Capturar solo el pequeÃ±o remate/rombo del lado del portrait. Si se amplÃ­a
-    -- igual que el lado exterior, se arrastran pÃ­xeles del aro del retrato.
+    -- Capturar solo el pequeño remate/rombo del lado del portrait. Si se amplía
+    -- igual que el lado exterior, se arrastran píxeles del aro del retrato.
     local BPH_PORTRAIT = 3
     local BPH_OUTER    = 5
     local isLeftPortrait = frame.unit == "player"
@@ -2729,8 +2774,8 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     local texPath  = (tex and tex.path) or API.C.TEX_FRAME
     local texAtlas = tex and tex.atlas
 
-    -- Overlay con expansiÃ³n por lado. El lado del portrait solo conserva el
-    -- remate/rombo del slot; el lado exterior puede capturar mÃ¡s marco.
+    -- Overlay con expansión por lado. El lado del portrait solo conserva el
+    -- remate/rombo del slot; el lado exterior puede capturar más marco.
     -- Arriba/Abajo: BPV px para capturar borde vertical del slot.
     local ovW       = math.max(1, barW + BPH_L + BPH_R)
     local ovH       = math.max(1, barH + BPV * 2)
@@ -2764,89 +2809,6 @@ local function ApplyBarSlotOverlays(frame, layout, list)
     end
 end
 
--- (obsoleto â€” reemplazado por ApplyBarSlotOverlays; se mantiene como stub
---  por si algo lo llama, para no romper llamadas antiguas durante transiciÃ³n)
-local function ApplyExtensionOverlay(frame, layout, extraHeight)
-    local ext = frame.extensionOverlay
-    if not ext then return end
-
-    if not extraHeight or extraHeight <= 0 then
-        ext:Hide()
-        return
-    end
-
-    local tex    = layout and layout.texture
-    local tc     = tex and tex.texCoord
-    local health = layout and layout.health
-    local power  = layout and (layout.power or layout.health)
-
-    if not tc or #tc < 4 or not health or not power then
-        ext:Hide()
-        return
-    end
-
-    -- â”€â”€ rel: posiciÃ³n del overlay dentro del frame â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    -- Si no fue medido (layout de fallback), usamos el frame completo como Ã¡rea.
-    local rel = (tex and tex.rel)
-    if not rel or rel.height <= 0 then
-        local rootW = (layout.root and layout.root.width)  or API.C.DEFAULT_FRAME_W
-        local rootH = (layout.root and layout.root.height) or API.C.DEFAULT_FRAME_H
-        rel = { x = 0, y = 0, width = rootW, height = rootH }
-    end
-
-    -- â”€â”€ Extraer L/R/T/B segÃºn formato de texcoord (4 Ã³ 8 valores) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    local tcL, tcR, tcT, tcB
-    if #tc == 4 then
-        tcL, tcR, tcT, tcB = tc[1], tc[2], tc[3], tc[4]
-    else
-        -- 8 valores: ULx,ULy, LLx,LLy, URx,URy, LRx,LRy
-        tcL, tcR = tc[1], tc[5]
-        tcT, tcB = tc[2], tc[4]
-    end
-
-    -- â”€â”€ Franja UV: top de health â†’ bottom de power â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    -- La franja captura los bordes laterales del marco + el interior de las barras.
-    -- Al estirarla verticalmente sobre las barras extra repite el patrÃ³n de marco.
-    local relH       = rel.height
-    local topRel     = math.max(0, math.min(1, (health.y               - rel.y) / relH))
-    local bottomRel  = math.max(0, math.min(1, (power.y + power.height - rel.y) / relH))
-
-    -- Si la franja es demasiado delgada (< 5% del rango), ampliarla un poco para
-    -- evitar artefactos por UV demasiado apretados.
-    if (bottomRel - topRel) < 0.05 then
-        local mid = (topRel + bottomRel) * 0.5
-        topRel    = math.max(0, mid - 0.05)
-        bottomRel = math.min(1, mid + 0.05)
-    end
-
-    local vRange = tcB - tcT
-    local stripT = tcT + topRel    * vRange
-    local stripB = tcT + bottomRel * vRange
-
-    -- â”€â”€ Textura y color: idÃ©nticos al overlay principal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    if tex.atlas and ext.SetAtlas then
-        ext:SetAtlas(tex.atlas)
-    else
-        ext:SetTexture(tex.path or API.C.TEX_FRAME)
-    end
-    ext:SetTexCoord(tcL, tcR, stripT, stripB)
-    local col = tex.color
-    if col then
-        ext:SetVertexColor(col[1] or 1, col[2] or 1, col[3] or 1, col[4] or 1)
-    else
-        ext:SetVertexColor(1, 1, 1, 1)
-    end
-
-    -- â”€â”€ PosiciÃ³n: empieza justo al fondo del overlay nativo â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-    -- overlayFrame es SetAllPoints de frame.visual, por tanto sus coordenadas
-    -- locales coinciden con las de frame. rel.y + rel.height = borde inferior del
-    -- artwork actual â†’ la extensiÃ³n empieza ahÃ­ sin gap.
-    ext:ClearAllPoints()
-    ext:SetPoint("TOPLEFT", frame.overlayFrame, "TOPLEFT",
-                 rel.x, -(rel.y + rel.height))
-    ext:SetSize(math.max(1, rel.width), math.max(1, extraHeight))
-    ext:Show()
-end
 
 local function RefreshResourceBars(frame, resources)
     local list = BuildResourceList(resources)
@@ -2948,34 +2910,6 @@ local function RefreshResourceBars(frame, resources)
     ApplyBarSlotOverlays(frame, layout, list)
 end
 
-local function RefreshNpcUnitPortrait(unit)
-    unit = unit == "focus" and "focus" or "target"
-    if not (UnitExists and UnitExists(unit)) then return end
-    if UnitIsPlayer and UnitIsPlayer(unit) then return end
-
-    local portrait = NativePiecesForUnit(unit).portrait
-    if not portrait then return end
-
-    local useTRP3 = not HarfordConfig or HarfordConfig.Get("portrait_target_npc") ~= "wow"
-    local icon = nil
-    if useTRP3 and HarfordTRP3 and HarfordTRP3.GetEpsilonNpcProfile and HarfordTRP3.GetProfileIcon then
-        local profile = HarfordTRP3.GetEpsilonNpcProfile(unit)
-        if profile then
-            icon = HarfordTRP3.GetProfileIcon(profile)
-        end
-    end
-
-    if icon and portrait.SetTexture then
-        portrait:SetTexture(icon)
-        if portrait.SetTexCoord then portrait:SetTexCoord(0, 1, 0, 1) end
-        if portrait.SetDrawLayer then portrait:SetDrawLayer("ARTWORK", 0) end
-        RefreshNativePortraitMask(portrait)
-        if portrait.SetAlpha then portrait:SetAlpha(1) end
-    elseif SetPortraitTexture then
-        SetPortraitTexture(portrait, unit)
-        if portrait.SetTexCoord then portrait:SetTexCoord(0, 1, 0, 1) end
-    end
-end
 
 RefreshTargetOfTargetNative = function(forceVisual)
     local unit = "targettarget"
@@ -3267,6 +3201,25 @@ end
 
 local function IsGroupUnit(unit)
     return type(unit) == "string" and (unit:match("^party%d+$") or unit:match("^raid%d+$"))
+end
+
+local function CacheGroupFrameUnit(frame, unit)
+    if not frame or not unit then return end
+    local previous = frame._harfordCachedGroupUnit
+    if previous and previous ~= unit then
+        local oldSet = API.S.groupFramesByUnit[previous]
+        if oldSet then
+            oldSet[frame] = nil
+            if not next(oldSet) then API.S.groupFramesByUnit[previous] = nil end
+        end
+    end
+    frame._harfordCachedGroupUnit = unit
+    local set = API.S.groupFramesByUnit[unit]
+    if not set then
+        set = {}
+        API.S.groupFramesByUnit[unit] = set
+    end
+    set[frame] = true
 end
 
 local function IsRaidUnit(unit)
@@ -3838,9 +3791,12 @@ local function ApplyCompactHealthClassColor(frame)
     end
 end
 
+local ApplyCompactStateAlpha
+
 local function ApplyHarfordCompactUnitFrame(frame)
     if not ShouldHandleCompactUnitFrame(frame) then return end
     local unit = GetCompactFrameUnit(frame)
+    CacheGroupFrameUnit(frame, unit)
     -- Desconectado o fuera de phase: ocultar overlay y dejar que el frame nativo muestre
     -- el icono de estado (calavera de desconexion, etc.).
     if UnitIsConnected and UnitIsConnected(unit) == false then
@@ -3854,11 +3810,11 @@ local function ApplyHarfordCompactUnitFrame(frame)
     HookCompactFrameForHover(frame)
     local unitName = SafeUnitName(unit)
     local profile = GetProfile(unit)
+    local useTRP3Portrait = not HarfordConfig or HarfordConfig.Get("portrait_target_player") ~= "wow"
+    local icon = useTRP3Portrait and profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
     local portrait = FindGroupPortrait(frame)
     if portrait then
         SaveCompactPortraitState(portrait)
-        local useTRP3Portrait = not HarfordConfig or HarfordConfig.Get("portrait_target_player") ~= "wow"
-        local icon = useTRP3Portrait and profile and HarfordTRP3 and HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
         if icon and portrait.SetTexture then
             portrait:SetTexture(icon)
             if portrait.SetTexCoord then
@@ -3879,7 +3835,14 @@ local function ApplyHarfordCompactUnitFrame(frame)
     local list = BuildResourceList(resources)
     RequestGroupResourcesIfNeeded(unitName, resources)
 
-    if #list == 0 then return end
+    if #list == 0 then
+        local overlay = API.S.groupOverlays[GetGroupFrameName(frame)]
+        if overlay then
+            overlay._harfordSignature = nil
+            overlay:Hide()
+        end
+        return
+    end
 
     -- Inyectar vida temporal en el slot de salud para que ApplyGroupOverlayBar la lea
     if list[1] and list[1].key == "health" and type(resources) == "table" then
@@ -3891,6 +3854,7 @@ local function ApplyHarfordCompactUnitFrame(frame)
         local r, g, b = LearnClassColor(unit, profile)
         if r then classColor = { r, g, b } end
     end
+    local signature = BuildCompactOverlaySignature(unit, unitName, icon, list, classColor)
     local healthBar = FindGroupHealthBar(frame)
     local powerBar = FindGroupPowerBar(frame)
     -- Marcar las barras nativas para que el hook global de TextStatusBar las suprima
@@ -3899,6 +3863,15 @@ local function ApplyHarfordCompactUnitFrame(frame)
     if powerBar  then powerBar._harfordCompactManaged  = true end
     local overlay = GetOrCreateGroupOverlay(frame)
     if overlay then
+        if overlay._harfordSignature == signature and overlay:IsShown() then
+            ApplyCompactStateAlpha(frame)
+            HideNativeStatusBarText(healthBar)
+            HideNativeStatusBarText(powerBar)
+            HookCompactHoverTarget(healthBar, frame)
+            HookCompactHoverTarget(powerBar, frame)
+            return
+        end
+        overlay._harfordSignature = signature
         overlay.healthData = list[1]
         overlay.powerData = list[2]
         RefreshGroupOverlayName(overlay, frame, unit)
@@ -3932,7 +3905,7 @@ end
 -- (~1/s) y es donde Blizzard aplica SetAlpha(~0.55). Hookearlo garantiza que
 -- el stateAlpha de nuestras barras se actualiza en el mismo tick que el frame
 -- nativo, sin esperar al siguiente evento de salud/poder.
-local function ApplyCompactStateAlpha(frame)
+ApplyCompactStateAlpha = function(frame)
     local overlay = frame and API.S.groupOverlays[GetGroupFrameName(frame)]
     if not overlay or not overlay:IsShown() then return end
     local stateAlpha = (frame.GetAlpha and frame:GetAlpha()) or 1
@@ -4006,9 +3979,81 @@ end
 
 local function RefreshGroupFrameOverlay(frame)
     if not GroupFrameIsUsable(frame) then return end
+    CacheGroupFrameUnit(frame, GetCompactFrameUnit(frame))
     local overlay = API.S.groupOverlays[GetGroupFrameName(frame)]
     if overlay then overlay:Hide() end
     ApplyHarfordCompactUnitFrame(frame)
+end
+
+local function RefreshGroupOverlayForUnit(unit)
+    if not IsGroupUnit(unit) then return false end
+    if HarfordConfig and HarfordConfig.Get("resources") == "frame" then return false end
+
+    local refreshed = false
+    local frames = API.S.groupFramesByUnit[unit]
+    if frames then
+        for frame in pairs(frames) do
+            if GetCompactFrameUnit(frame) ~= unit then
+                frames[frame] = nil
+            elseif frame.IsShown and frame:IsShown() and GroupFrameIsUsable(frame) then
+                RefreshGroupFrameOverlay(frame)
+                refreshed = true
+            end
+        end
+        if not next(frames) then API.S.groupFramesByUnit[unit] = nil end
+    end
+
+    if refreshed then return true end
+    for frame in pairs(CollectAllGroupFrames()) do
+        local frameUnit = GetCompactFrameUnit(frame)
+        if frameUnit then CacheGroupFrameUnit(frame, frameUnit) end
+        if frameUnit == unit and frame.IsShown and frame:IsShown() and GroupFrameIsUsable(frame) then
+            RefreshGroupFrameOverlay(frame)
+            refreshed = true
+        end
+    end
+    return refreshed
+end
+
+local function UnitMatchesProfileName(unit, profileName)
+    if not unit or not profileName or profileName == "" then return false end
+    if not (UnitExists and UnitExists(unit)) then return false end
+    local full = (GetUnitName and GetUnitName(unit, true)) or (UnitName and UnitName(unit))
+    local short = UnitName and UnitName(unit)
+    local wantedShort = Ambiguate and Ambiguate(profileName, "short")
+        or tostring(profileName):match("^[^%-]+") or profileName
+    return full == profileName or short == profileName or short == wantedShort
+end
+
+local function RefreshResourceOverlaysForName(profileName)
+    profileName = tostring(profileName or "")
+    if profileName == "" then return false end
+    local refreshed = false
+    local primary = { player = "Player", target = "Target", focus = "Focus" }
+    for unit, key in pairs(primary) do
+        if UnitMatchesProfileName(unit, profileName) then
+            RefreshFrame(key, unit, false)
+            refreshed = true
+        end
+    end
+    if IsInRaid and IsInRaid() then
+        for i = 1, 40 do
+            local unit = "raid" .. tostring(i)
+            if UnitMatchesProfileName(unit, profileName) then
+                RefreshGroupOverlayForUnit(unit)
+                refreshed = true
+            end
+        end
+    else
+        for i = 1, 4 do
+            local unit = "party" .. tostring(i)
+            if UnitMatchesProfileName(unit, profileName) then
+                RefreshGroupOverlayForUnit(unit)
+                refreshed = true
+            end
+        end
+    end
+    return refreshed
 end
 
 local function RepaintNativeCompactFrames()
@@ -4032,6 +4077,19 @@ local function RestoreClassicPartyVisibility()
             pcall(frame.Hide, frame)
         end
     end
+end
+
+local function QueueCompactRestorePasses()
+    if API.S.compactRestorePassesQueued then return end
+    if not (C_Timer and C_Timer.After) then return end
+    API.S.compactRestorePassesQueued = true
+    C_Timer.After(0.05, RestoreClassicPartyVisibility)
+    C_Timer.After(0.1, RepaintNativeCompactFrames)
+    C_Timer.After(0.25, RestoreClassicPartyVisibility)
+    C_Timer.After(0.5, function()
+        RepaintNativeCompactFrames()
+        API.S.compactRestorePassesQueued = false
+    end)
 end
 
 local function HideGroupOverlays()
@@ -4069,12 +4127,7 @@ local function HideGroupOverlays()
     API.S.restoringCompactFrames = false
     RestoreClassicPartyVisibility()
     RepaintNativeCompactFrames()
-    if C_Timer and C_Timer.After then
-        C_Timer.After(0.05, RestoreClassicPartyVisibility)
-        C_Timer.After(0.1, RepaintNativeCompactFrames)
-        C_Timer.After(0.25, RestoreClassicPartyVisibility)
-        C_Timer.After(0.5, RepaintNativeCompactFrames)
-    end
+    QueueCompactRestorePasses()
 end
 
 function RefreshGroupOverlays()
@@ -4086,6 +4139,7 @@ function RefreshGroupOverlays()
     local active = {}
     for frame in pairs(CollectAllGroupFrames()) do
         if GroupFrameIsUsable(frame) and frame.IsShown and frame:IsShown() then
+            CacheGroupFrameUnit(frame, GetCompactFrameUnit(frame))
             local name = GetGroupFrameName(frame)
             active[name] = true
             RefreshGroupFrameOverlay(frame)
@@ -4099,6 +4153,19 @@ function RefreshGroupOverlays()
     end
 end
 
+local function QueueGroupOverlayRefresh(delay)
+    if API.S.groupOverlayRefreshQueued then return end
+    if not (C_Timer and C_Timer.After) then
+        RefreshGroupOverlays()
+        return
+    end
+    API.S.groupOverlayRefreshQueued = true
+    C_Timer.After(tonumber(delay) or 0.25, function()
+        API.S.groupOverlayRefreshQueued = false
+        RefreshGroupOverlays()
+    end)
+end
+
 function API.GetFrame(unit)
     return API.S.frames[unit]
 end
@@ -4108,9 +4175,29 @@ function API.GetMeasuredLayout(unit, force)
     return GetOrMeasureLayout(unit, force)
 end
 
+-- Reaplica el re-anclaje de auras DESPUES de que Blizzard recoloque buffs/debuffs.
+-- TargetFrame_UpdateAuras es generico (vale para TargetFrame y FocusFrame); sin esto, cada
+-- actualizacion nativa de auras devolvia los iconos a su sitio nativo (el "se actualiza al
+-- refrescar"). Solo re-ancla cuando hay barras extra (resourceCount > 2).
+local function InstallAuraReanchorHooks()
+    if API.S.auraReanchorHooksInstalled or not hooksecurefunc then return end
+    if type(_G.TargetFrame_UpdateAuras) ~= "function" then return end
+    API.S.auraReanchorHooksInstalled = true
+    hooksecurefunc("TargetFrame_UpdateAuras", function(self)
+        local unit = (self == _G.FocusFrame) and "focus"
+            or (self == _G.TargetFrame) and "target" or nil
+        if not unit then return end
+        local frame = API.S.frames[unit]
+        if frame and (tonumber(frame.resourceCount) or 0) > 2 then
+            ReanchorAurasBelowBars(frame, unit)
+        end
+    end)
+end
+
 function API.Attach()
     InstallCompactUnitFrameHooks()
     InstallNativePowerHooks()
+    InstallAuraReanchorHooks()
     CreateUnitFrame("Player", "player")
     CreateUnitFrame("Target", "target")
     CreateUnitFrame("Focus", "focus")
@@ -4183,6 +4270,8 @@ ReapplyNativeBars = function(unit)
     end
 end
 
+local EnsureTRP3Hooks
+
 local events = CreateFrame("Frame")
 events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("ADDON_LOADED")
@@ -4204,6 +4293,7 @@ events:RegisterEvent("CVAR_UPDATE")
 events:RegisterEvent("UNIT_CONNECTION")
 events:SetScript("OnEvent", function(_, event, ...)
     if event == "ADDON_LOADED" then
+        if EnsureTRP3Hooks then EnsureTRP3Hooks() end
         InstallCompactUnitFrameHooks()
         return
     end
@@ -4219,7 +4309,7 @@ events:SetScript("OnEvent", function(_, event, ...)
         elseif unit == "player" or unit == "target" or unit == "focus" then
             ReapplyNativeBars(unit)
         elseif IsGroupUnit(unit) then
-            RefreshGroupOverlays()
+            RefreshGroupOverlayForUnit(unit)
         end
         return
     end
@@ -4247,15 +4337,44 @@ events:SetScript("OnEvent", function(_, event, ...)
         end
         if unit ~= "player" and unit ~= "target" and unit ~= "focus" then
             if IsGroupUnit(unit) then
-                RefreshGroupOverlays()
+                RefreshGroupOverlayForUnit(unit)
             end
             return
         end
     elseif event == "CHAT_MSG_ADDON" then
-        local prefix = ...
+        local prefix, message = ...
         if prefix ~= API.C.ADDON_PREFIX then return end
-        -- Datos de sync llegaron: refrescar overlays de nameplates
-        if HarfordNamePlates and HarfordNamePlates.RefreshAll then HarfordNamePlates.RefreshAll() end
+        local opcode = strsplit and strsplit("|", tostring(message or "")) or ""
+        if opcode ~= "DNDRES" and opcode ~= "DNDRESCFG" and opcode ~= "RADJ" then return end
+        local resourceProfileName
+        -- Solo datos de recursos: no refrescar nameplates por tiradas, inspeccion, clases o equipo.
+        if HarfordNamePlates then
+            if HarfordNamePlates.RefreshName and opcode == "DNDRES" and HarfordSync and HarfordSync.ReceiveResourceMessage then
+                local _, profileName = HarfordSync.ReceiveResourceMessage(message)
+                resourceProfileName = profileName
+                if profileName then HarfordNamePlates.RefreshName(profileName) end
+            elseif HarfordNamePlates.RefreshName and opcode == "DNDRESCFG" and HarfordSync and HarfordSync.ReceiveResourceConfig then
+                local profileName = HarfordSync.ReceiveResourceConfig(message)
+                resourceProfileName = profileName
+                if profileName then HarfordNamePlates.RefreshName(profileName) end
+            elseif HarfordNamePlates.RefreshName and opcode == "RADJ" then
+                local playerName = (GetUnitName and GetUnitName("player", true)) or (UnitName and UnitName("player"))
+                resourceProfileName = playerName
+                HarfordNamePlates.RefreshName(playerName)
+            elseif HarfordNamePlates.RefreshAll then
+                HarfordNamePlates.RefreshAll()
+            end
+        end
+        if not resourceProfileName and opcode == "RADJ" then
+            resourceProfileName = (GetUnitName and GetUnitName("player", true)) or (UnitName and UnitName("player"))
+        elseif not resourceProfileName and opcode == "DNDRES" and HarfordSync and HarfordSync.ReceiveResourceMessage then
+            local _, profileName = HarfordSync.ReceiveResourceMessage(message)
+            resourceProfileName = profileName
+        elseif not resourceProfileName and opcode == "DNDRESCFG" and HarfordSync and HarfordSync.ReceiveResourceConfig then
+            resourceProfileName = HarfordSync.ReceiveResourceConfig(message)
+        end
+        if resourceProfileName then RefreshResourceOverlaysForName(resourceProfileName) end
+        return
     elseif event == "PLAYER_TARGET_CHANGED" then
         forceMeasure = true
     elseif event == "PLAYER_FOCUS_CHANGED" then
@@ -4272,21 +4391,27 @@ events:SetScript("OnEvent", function(_, event, ...)
         local cvarName = ...
         if cvarName ~= "statusTextDisplay" then return end
     elseif event == "GROUP_ROSTER_UPDATE" then
+        wipe(API.S.groupResourceRequests)
+        wipe(API.S.resourceRequests)
         RefreshGroupOverlays()
-        if C_Timer and C_Timer.After then
-            C_Timer.After(0.25, RefreshGroupOverlays)
-        end
+        QueueGroupOverlayRefresh(0.25)
         return
     elseif event == "UNIT_CONNECTION" then
         local unit = ...
         -- Conexion/desconexion de un miembro del grupo: refrescar overlays de raid
         if IsGroupUnit(unit) then
-            RefreshGroupOverlays()
+            RefreshGroupOverlayForUnit(unit)
         elseif unit == "player" or unit == "target" or unit == "focus" then
             -- Conexion/desconexion del target (jugador en otro grupo/mundo): forzar refresh
             API.Refresh(false)
         end
         return
+    end
+
+    if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
+        if EnsureTRP3Hooks then EnsureTRP3Hooks() end
+        InstallCompactUnitFrameHooks()
+        RefreshGroupOverlays()
     end
 
     API.Refresh(forceMeasure)
@@ -4296,8 +4421,9 @@ end)
 -- inicial, asi que el icono del retrato del player no se aplica (aparecia al
 -- cambiar de target). Nos enganchamos a los eventos de TRP3 para re-aplicar en
 -- cuanto carga o cuando el perfil propio cambia. Guard de una sola instalacion;
--- si TRP3 aun no expone events, se reintenta desde los timers diferidos.
-local function EnsureTRP3Hooks()
+-- si TRP3 aun no expone events, se volvera a intentar en los eventos reales
+-- de carga/mundo, sin timers de reintento.
+EnsureTRP3Hooks = function()
     if API.S._trp3Hooked then return end
     if not (TRP3_API and TRP3_API.events and TRP3_API.events.registerCallback) then return end
     API.S._trp3Hooked = true
@@ -4318,24 +4444,7 @@ local function EnsureTRP3Hooks()
     end)
 end
 
-if C_Timer and C_Timer.After then
-    C_Timer.After(1, function() EnsureTRP3Hooks(); API.Refresh(true) end)
-    -- Refrescos diferidos (one-shot, no ticker) como respaldo del hook TRP3.
-    C_Timer.After(3, function()
-        EnsureTRP3Hooks()
-        InstallCompactUnitFrameHooks()
-        RefreshGroupOverlays()
-        API.Refresh(false)
-    end)
-    C_Timer.After(6, function()
-        EnsureTRP3Hooks()
-        InstallCompactUnitFrameHooks()
-        RefreshGroupOverlays()
-        API.Refresh(false)
-    end)
-end
-
--- Refresh inmediato al cambiar cualquier opciÃ³n de HarfordConfig
+-- Refresh inmediato al cambiar cualquier opción de HarfordConfig
 if HarfordConfig and HarfordConfig.RegisterChangeListener then
     HarfordConfig.RegisterChangeListener(function()
         API.Refresh(false)

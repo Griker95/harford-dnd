@@ -969,15 +969,15 @@ end
 local function AdjustOwnSelected(delta)
     local faction = GetSelectedFaction()
     if not faction or not HarfordReputation then return end
-    local playerKey, guildName
-    if HarfordReputation.RememberPlayerGuild then
-        playerKey, guildName = HarfordReputation.RememberPlayerGuild("player")
+    local playerKey
+    if HarfordReputation.RememberPlayer then
+        playerKey = HarfordReputation.RememberPlayer("player")
     end
     if not playerKey and HarfordReputation.GetPlayerKey then
         playerKey = HarfordReputation.GetPlayerKey("player")
     end
     if not playerKey then Print("Jugador propio invalido."); return end
-    local ok, err = HarfordReputation.AdjustPlayerPoints(playerKey, faction.id, delta, { guildName = guildName })
+    local ok, err = HarfordReputation.AdjustPlayerPoints(playerKey, faction.id, delta)
     if not ok then Print(err) end
     RefreshRows()
 end
@@ -1047,36 +1047,8 @@ local function AssignFactionToTargetNpc()
     end
 end
 
-local function ResetSelected()
-    local faction = GetSelectedFaction()
-    if not faction then return end
-    local ok, err = HarfordReputation.ResetTarget(faction.id)
-    if not ok then Print(err) end
-    RefreshRows()
-end
 
-local function LinkSelectedNpc()
-    local faction = GetSelectedFaction()
-    if not faction then return end
-    local ok, err = HarfordReputation.LinkFactionToUnit("target", faction.id)
-    if ok then Print("NPC vinculado a " .. tostring(faction.name or faction.id) .. ".") else Print(err) end
-end
 
-local function ToggleSelectedHidden()
-    local faction = GetSelectedFaction()
-    if not faction then return end
-    local ok, err = HarfordReputation.SetFactionHidden(faction.id, not faction.hidden)
-    if not ok then Print(err) end
-    RefreshRows()
-end
-
-local function DeleteSelectedFaction()
-    local faction = GetSelectedFaction()
-    if not faction then return end
-    local ok, err = HarfordReputation.DeleteFaction(faction.id)
-    if ok then selectedFactionId = nil else Print(err) end
-    RefreshRows()
-end
 
 local function OpenFactionEditor()
     if HarfordReputationAdmin and HarfordReputationAdmin.Open then
@@ -1565,7 +1537,7 @@ function API.Close()
     if panel then panel:Hide() end
 end
 
-SLASH_HARFORDREP1 = "/harfordrep"
+-- Comando suelto retirado: usar `/harford rep`.
 SlashCmdList["HARFORDREP"] = function()
     API.Toggle()
 end

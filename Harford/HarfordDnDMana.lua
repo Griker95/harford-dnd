@@ -4,9 +4,9 @@
 -- progression.useMana). Cuando esta activo, HarfordDnDFeatureEffects suma el pool como
 -- bonus al maximo del recurso "mana" existente (no se crea recurso nuevo).
 --
--- Tipo de lanzador (manual): Completos (nivel completo) druida, mago, sacerdote, chaman.
--- Mitad (nivel/2 redondeado abajo) caballero de la muerte, paladin y druida FERAL.
--- Brujo (magia de pacto) y no-lanzadores quedan fuera del mana.
+-- Tipo de lanzador (manual): Completos (nivel completo) druida, mago, sacerdote, chaman y brujo.
+-- Mitad (nivel/2 redondeado ARRIBA) caballero de la muerte, paladin y druida FERAL.
+-- No-lanzadores quedan fuera del mana.
 
 HarfordDnDMana = HarfordDnDMana or {}
 
@@ -60,7 +60,9 @@ local function CasterContribution(entry)
     if casterType == "full" then
         return level
     elseif casterType == "half" then
-        return math.floor(level / 2)
+        -- Medio lanzador: nivel de lanzador = nivel/2 redondeado HACIA ARRIBA (decision de
+        -- mesa). Asi nivel 1 ya aporta lanzador 1 (3 mana), nivel 2 = 1, nivel 3 = 2 (6 mana).
+        return math.ceil(level / 2)
     end
     return 0
 end

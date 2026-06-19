@@ -6,6 +6,7 @@ local DEFAULTS = {
     portrait_target_npc    = "trp3",       -- "trp3" | "wow"
     resources              = "unitframe",  -- "unitframe" | "frame"
     nameplates             = "on",         -- "on" | "off"
+    actionbar              = "off",        -- "on" | "off": barra de accion de madera del Libro
 }
 
 local listeners = {}
@@ -173,6 +174,14 @@ local function BuildPanel()
         { value = "off", label = "Desactivado" },
     }, 32, 312)
 
+    -- ── Sección: Barra de acción ─────────────────────────────────────────────
+    MakeLabel(panel, "Barra de acción (Libro)", "GameFontNormal", 280, 270)
+    MakeLabel(panel, "Mostrar barra de madera:", "GameFontHighlight", 288, 292)
+    local _, refreshActionBar = MakeDropDown(panel, "actionbar", {
+        { value = "on",  label = "Activada" },
+        { value = "off", label = "Desactivada" },
+    }, 296, 312)
+
     -- Botón de reset
     local resetBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     resetBtn:SetSize(140, 22)
@@ -185,6 +194,7 @@ local function BuildPanel()
         refreshPortraitTargetNPC()
         refreshResources()
         refreshNameplates()
+        refreshActionBar()
     end)
 
     local function RefreshAll()
@@ -193,6 +203,7 @@ local function BuildPanel()
         refreshPortraitTargetNPC()
         refreshResources()
         refreshNameplates()
+        refreshActionBar()
     end
 
     -- Refrescar estado al abrir el panel
@@ -238,7 +249,7 @@ initFrame:SetScript("OnEvent", function(self)
     local panel = BuildPanel()
     RegisterPanel(panel)
 
-    SLASH_HARFORDCONFIG1 = "/hconfig"
+    -- Comando suelto retirado: usar `/harford config`.
     SlashCmdList["HARFORDCONFIG"] = function()
         OpenPanel(panel)
     end

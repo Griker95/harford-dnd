@@ -15,6 +15,12 @@ HarfordDnDResources.ORDER = {
     "soul_shard",
     "astral_power",
     "living_seeds",
+    "lay_on_hands",
+    "channel_divinity",
+    "totem",
+    "maelstrom",
+    "healing_mist",
+    "metamorphosis",
 }
 
 HarfordDnDResources.ALL_KEYS = {
@@ -33,30 +39,56 @@ HarfordDnDResources.ALL_KEYS = {
     "soul_shard",
     "astral_power",
     "living_seeds",
+    "lay_on_hands",
+    "channel_divinity",
+    "totem",
+    "maelstrom",
+    "healing_mist",
+    "metamorphosis",
 }
 
+-- recharge: "short" = se recupera al maximo en descanso corto (y tambien en el largo);
+--           "long"  = se recupera al maximo solo en descanso largo;
+--           "reset" = pool de combate que se ACUMULA desde 0 (ej. Furia): el descanso lo
+--                     vacia a 0 en vez de rellenarlo;
+--           "none"  = no se toca con descansos (gestion manual; ej. vida temporal).
+-- Fuente: manual Warcraft 5DnD (ver AGENTS.md, contrato de recursos/descansos).
 HarfordDnDResources.DEFS = {
-    health       = { label = "Salud",               color = {0.78, 0.16, 0.16} },
-    mana         = { label = "Maná",                color = {0.18, 0.35, 0.95} },
-    temp_health  = { label = "Vida temporal",       color = {0.45, 0.75, 1.00} },
-    chi          = { label = "Chi",                 color = {0.35, 0.90, 0.70} },
-    energy       = { label = "Energía",             color = {0.95, 0.85, 0.20} },
-    fel_point    = { label = "Vil",    				color = {0.55, 0.15, 0.70} },
-    focus        = { label = "Enfoque",             color = {0.95, 0.55, 0.10} },
-    holy_power   = { label = "Poder sagrado",       color = {0.95, 0.90, 0.55} },
-    light_point  = { label = "Puntos de Fe",       	color = {1.00, 0.95, 0.72} },
-    mage_point 	 = { label = "Puntos de Hechicería",   color = {0.35, 0.80, 1.00} },
-    rage         = { label = "Ira",                 color = {0.85, 0.18, 0.18} },
-    runic_power  = { label = "Poder rúnico",        color = {0.10, 0.80, 0.95} },
-    soul_shard   = { label = "Fragmentos de alma",  color = {0.55, 0.30, 0.90} },
-    astral_power = { label = "Poder astral",        color = {0.48, 0.62, 1.00} },
-    living_seeds = { label = "Semillas vivas",      color = {0.30, 0.85, 0.35} },
+    health       = { label = "Salud",               color = {0.78, 0.16, 0.16}, recharge = "long" },
+    mana         = { label = "Maná",                color = {0.18, 0.35, 0.95}, recharge = "long" },
+    temp_health  = { label = "Vida temporal",       color = {0.45, 0.75, 1.00}, recharge = "none" },
+    chi          = { label = "Chi",                 color = {0.35, 0.90, 0.70}, recharge = "short" },
+    energy       = { label = "Energía",             color = {0.95, 0.85, 0.20}, recharge = "short" },
+    fel_point    = { label = "Vil",    				color = {0.55, 0.15, 0.70}, recharge = "short" },
+    focus        = { label = "Enfoque",             color = {0.95, 0.55, 0.10}, recharge = "short" },
+    holy_power   = { label = "Poder sagrado",       color = {0.95, 0.90, 0.55}, recharge = "long" },
+    light_point  = { label = "Puntos de Fe",       	color = {1.00, 0.95, 0.72}, recharge = "long" },
+    mage_point 	 = { label = "Puntos de Hechicería",   color = {0.35, 0.80, 1.00}, recharge = "long" },
+    rage         = { label = "Ira",                 color = {0.85, 0.18, 0.18}, recharge = "reset" },
+    runic_power  = { label = "Poder rúnico",        color = {0.10, 0.80, 0.95}, recharge = "long" },
+    soul_shard   = { label = "Fragmentos de alma",  color = {0.55, 0.30, 0.90}, recharge = "long" },
+    astral_power = { label = "Poder astral",        color = {0.48, 0.62, 1.00}, recharge = "long" },
+    living_seeds = { label = "Rejuvenecimiento",     color = {0.30, 0.85, 0.35}, recharge = "long" },
+    lay_on_hands = { label = "Impo. Manos",          color = {0.95, 0.85, 0.45}, recharge = "long" },
+    channel_divinity = { label = "Canalizar Divinidad", color = {1.00, 0.82, 0.30}, recharge = "short" },
+    totem        = { label = "Tótem",               color = {0.55, 0.40, 0.20}, recharge = "short" },
+    maelstrom    = { label = "Torbellino",          color = {0.20, 0.70, 0.85}, recharge = "short" },
+    healing_mist = { label = "Chi sanador",          color = {0.40, 0.90, 0.75}, recharge = "long" },
+    metamorphosis = { label = "Metamorfosis",        color = {0.50, 0.85, 0.20}, recharge = "long" },
 }
+
+-- Devuelve la regla de recarga ("short"/"long"/"none") de un recurso (default "long").
+function HarfordDnDResources.GetRecharge(key)
+    local def = HarfordDnDResources.DEFS[key]
+    return (def and def.recharge) or "long"
+end
 
 HarfordDnDResources.PROFILE_KEYS = {
     "Res_health_Max", "Res_mana_Max", "Res_temp_health_Max", "Res_chi_Max", "Res_energy_Max",
     "Res_fel_point_Max", "Res_focus_Max", "Res_holy_power_Max", "Res_light_point_Max", "Res_mage_point_Max",
     "Res_rage_Max", "Res_runic_power_Max", "Res_soul_shard_Max", "Res_astral_power_Max", "Res_living_seeds_Max",
+    "Res_lay_on_hands_Max", "Res_channel_divinity_Max",
+    "Res_totem_Max", "Res_maelstrom_Max", "Res_healing_mist_Max", "Res_metamorphosis_Max",
 }
 
 HarfordDnDResources.RUNTIME_KEYS = {
@@ -65,6 +97,11 @@ HarfordDnDResources.RUNTIME_KEYS = {
     "Res_focus_Cur", "Res_focus_Max", "Res_holy_power_Cur", "Res_holy_power_Max", "Res_light_point_Cur", "Res_light_point_Max",
     "Res_mage_point_Cur", "Res_mage_point_Max", "Res_rage_Cur", "Res_rage_Max", "Res_runic_power_Cur", "Res_runic_power_Max",
     "Res_soul_shard_Cur", "Res_soul_shard_Max", "Res_astral_power_Cur", "Res_astral_power_Max", "Res_living_seeds_Cur", "Res_living_seeds_Max",
+    "Res_lay_on_hands_Cur", "Res_lay_on_hands_Max",
+    "Res_channel_divinity_Cur", "Res_channel_divinity_Max",
+    "Res_totem_Cur", "Res_totem_Max", "Res_maelstrom_Cur", "Res_maelstrom_Max",
+    "Res_healing_mist_Cur", "Res_healing_mist_Max",
+    "Res_metamorphosis_Cur", "Res_metamorphosis_Max",
     "ArmorClass",
 }
 
@@ -133,4 +170,62 @@ function HarfordDnDResources.CacheRemoteResources(senderName, profileName, tbl)
 
     cacheName(senderName)
     cacheName(profileName)
+end
+
+function HarfordDnDResources.PruneRemoteCache()
+    local keep = {}
+    local function keepName(name)
+        if not name or name == "" then return end
+        keep[name] = true
+        local short = Ambiguate and Ambiguate(name, "short") or name:match("^[^%-]+") or name
+        if short and short ~= "" then keep[short] = true end
+    end
+
+    for _, unit in ipairs({ "player", "target", "focus" }) do
+        if UnitExists and UnitExists(unit) then
+            keepName((GetUnitName and GetUnitName(unit, true)) or UnitName(unit))
+        end
+    end
+    if IsInRaid and IsInRaid() then
+        for i = 1, 40 do
+            local unit = "raid" .. i
+            if UnitExists and UnitExists(unit) then
+                keepName((GetUnitName and GetUnitName(unit, true)) or UnitName(unit))
+            end
+        end
+    else
+        for i = 1, 4 do
+            local unit = "party" .. i
+            if UnitExists and UnitExists(unit) then
+                keepName((GetUnitName and GetUnitName(unit, true)) or UnitName(unit))
+            end
+        end
+    end
+
+    local removed = 0
+    for name in pairs(HarfordDnDResources.RemoteCache or {}) do
+        if not keep[name] then
+            HarfordDnDResources.RemoteCache[name] = nil
+            removed = removed + 1
+        end
+    end
+    -- AnimFlagCache tiene el mismo ciclo de vida (cache por jugador remoto). Se poda con el
+    -- mismo set `keep` para que no crezca sin limite (antes solo se escribia, nunca se limpiaba).
+    for name in pairs(HarfordDnDResources.AnimFlagCache or {}) do
+        if not keep[name] then
+            HarfordDnDResources.AnimFlagCache[name] = nil
+        end
+    end
+    return removed
+end
+
+if CreateFrame then
+    local pruneFrame = CreateFrame("Frame")
+    pruneFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
+    pruneFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    pruneFrame:SetScript("OnEvent", function()
+        if HarfordDnDResources.PruneRemoteCache then
+            HarfordDnDResources.PruneRemoteCache()
+        end
+    end)
 end

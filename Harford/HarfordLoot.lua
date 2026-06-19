@@ -3,6 +3,11 @@ HarfordLootLootRegistry = HarfordLootLootRegistry or {}
 HarfordLootGlobalLootRegistry = HarfordLootGlobalLootRegistry or {}
 
 HarfordLootTaggedCreatureRegistry = HarfordLootTaggedCreatureRegistry or {}
+-- RUNTIME-ONLY (ya NO esta en SavedVariables): solo es un cache de serializacion
+-- (`registry`/`global`) de HarfordLootLootRegistry/HarfordLootGlobalLootRegistry, que SON
+-- la forma persistida real. Persistirlo aqui tambien duplicaba esos datos en disco. En
+-- carga, LoadLootConfigTables ve este store vacio y cae a las tablas vivas (fallback);
+-- SaveConfig lo rellena en runtime para el sync LOOTCFG. No volver a declararlo como SV.
 HarfordLootConfigStore = HarfordLootConfigStore or {}
 
 local COMM_PREFIX = "HARFORDLOOT"
@@ -11,6 +16,18 @@ local LOOT_CFG_PREFIX = "HARFORDCFG"
 local SendLootSync
 local SendLootClearRemote
 local RefreshLootFrameIfTargetMatches
+
+local function LootTableContainsItem(lootTable, itemID)
+    itemID = tonumber(itemID)
+    if not itemID or type(lootTable) ~= "table" then return false end
+    for i = 1, #lootTable do
+        local entry = lootTable[i]
+        if entry and tonumber(entry[1]) == itemID then
+            return true
+        end
+    end
+    return false
+end
 
 HarfordLootAPI = HarfordLootAPI or {}
 
@@ -470,7 +487,8 @@ HarfordLootFrame:SetScript("OnEvent", function(self, event, ...)
     end
 
     if event == "GET_ITEM_INFO_RECEIVED" then
-        if self:IsShown() then
+        local itemID = ...
+        if self:IsShown() and LootTableContainsItem(self.lootTable, itemID) then
             HarfordLootFrame_Update()
         end
         return

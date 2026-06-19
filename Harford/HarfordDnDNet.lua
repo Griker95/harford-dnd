@@ -15,6 +15,14 @@ local function toN(x, d)
     return n
 end
 
+-- Antes sumaba en vivo el bonus de rasgos a las claves "_Max". Ya NO: los maximos se
+-- CALCULAN y se hornean en SavedVariables al ejecutar `/harford cargarficha`, asi que el
+-- valor leido (base SV) ya es el efectivo. Sumar aqui el bonus derivado lo duplicaria.
+-- Se conserva la firma como passthrough para no tocar los llamadores.
+local function WrapDerivedMax(baseReader, profileName, allowDerived)
+    return baseReader
+end
+
 -- ─── Construccion de payloads ────────────────────────────────────────────────
 function HarfordDnDNet.BuildActiveResourcePayload(readValueFn, options)
     local out, keysToSend = HarfordDnDResources.BuildPayloadFromRuntime(readValueFn, options)
@@ -27,9 +35,11 @@ end
 
 function HarfordDnDNet.ExportCurrentResources()
     HarfordDnDStore.EnsurePersist()
-    local out = HarfordDnDNet.BuildActiveResourcePayload(function(key)
+    -- En contexto NPC aplicado no se inyecta el bonus de rasgos del jugador.
+    local allowDerived = not (HarfordDnDContext.State and HarfordDnDContext.State.active)
+    local out = HarfordDnDNet.BuildActiveResourcePayload(WrapDerivedMax(function(key)
         return HarfordDnDContext.Get(key, "0")
-    end)
+    end, nil, allowDerived))
     return out
 end
 
@@ -69,11 +79,12 @@ function HarfordDnDNet.SendResourceResponseTo(targetName)
         return false
     end
 
-    local profileName = tostring(HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
+    local profileName = tostring((UnitName and UnitName("player")) or "default")
 
-    local tbl, keysToSend = HarfordDnDNet.BuildActiveResourcePayload(function(key)
+    local allowDerived = not (HarfordDnDContext.State and HarfordDnDContext.State.active)
+    local tbl, keysToSend = HarfordDnDNet.BuildActiveResourcePayload(WrapDerivedMax(function(key)
         return HarfordDnDContext.Get(key, "0")
-    end)
+    end, nil, allowDerived))
 
     -- Junto con los recursos, informamos de nuestro flag de animaciones
     HarfordSync.SendAnimFlag(ADDON_PREFIX, HarfordDnDStore.animsEnabled ~= false, targetName)
@@ -92,7 +103,7 @@ function HarfordDnDNet.SendResourceResponseForProfileTo(profileName, targetName)
         return false
     end
 
-    local resolvedProfile = tostring(profileName or HarfordDnDPersistStore.activeProfile or UnitName("player") or "default")
+    local resolvedProfile = tostring(profileName or (UnitName and UnitName("player")) or "default")
     HarfordDnDStore.EnsurePersist(resolvedProfile)
 
     local profile = HarfordDnDPersistStore.profiles and HarfordDnDPersistStore.profiles[resolvedProfile]
@@ -100,9 +111,9 @@ function HarfordDnDNet.SendResourceResponseForProfileTo(profileName, targetName)
         profile = {}
     end
 
-    local tbl, keysToSend = HarfordDnDNet.BuildActiveResourcePayload(function(key)
+    local tbl, keysToSend = HarfordDnDNet.BuildActiveResourcePayload(WrapDerivedMax(function(key)
         return profile[key] or "0"
-    end)
+    end, resolvedProfile, true))
 
     return HarfordSync.SendResourceResponse(
         ADDON_PREFIX,
@@ -129,4 +140,10 @@ end
 
 function HarfordDnDNet.SendResourceAdjustToPlayer(targetName, resourceKey, delta)
     return HarfordSync.SendResourceAdjust(ADDON_PREFIX, resourceKey, delta, targetName)
+end
+
+-- Pide a OTRO jugador que se aplique un aura (Desarme): el receptor ejecuta `.au <id> self`.
+function HarfordDnDNet.SendAuraToPlayer(targetName, spellId)
+    if not targetName or targetName == "" then return false end
+    return HarfordSync.SendAuraSignal(ADDON_PREFIX, spellId, targetName)
 end

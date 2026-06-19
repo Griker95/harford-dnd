@@ -77,6 +77,11 @@ HarfordSync.ProfileKeys.DnD = {
     "Hab_Animales_Prof", "Hab_Animales_Exp",
 }
 
+-- NOTA: HarfordSync carga ANTES que HarfordDnDResources (orden del .toc), por eso estas
+-- listas son copias hardcodeadas y no se pueden derivar de HarfordDnDResources aqui.
+-- Determinan el codigo base36 de cada recurso en la serializacion de red: deben incluir
+-- TODA clave de HarfordDnDResources.RUNTIME_KEYS/PROFILE_KEYS. Al anadir un recurso nuevo,
+-- APENDARLO AL FINAL (nunca reordenar) para no desplazar los codigos de clientes antiguos.
 HarfordSync.ResourceKeys.Runtime = HarfordSync.ResourceKeys.Runtime or {
     "Res_health_Cur", "Res_health_Max", "Res_mana_Cur", "Res_mana_Max", "Res_temp_health_Cur", "Res_temp_health_Max",
     "Res_chi_Cur", "Res_chi_Max", "Res_energy_Cur", "Res_energy_Max", "Res_fel_point_Cur", "Res_fel_point_Max",
@@ -84,12 +89,19 @@ HarfordSync.ResourceKeys.Runtime = HarfordSync.ResourceKeys.Runtime or {
     "Res_mage_point_Cur", "Res_mage_point_Max", "Res_rage_Cur", "Res_rage_Max", "Res_runic_power_Cur", "Res_runic_power_Max",
     "Res_soul_shard_Cur", "Res_soul_shard_Max", "Res_astral_power_Cur", "Res_astral_power_Max", "Res_living_seeds_Cur", "Res_living_seeds_Max",
     "ArmorClass",
+    -- Recursos de clase anadidos despues (apendar al final, no reordenar):
+    "Res_lay_on_hands_Cur", "Res_lay_on_hands_Max", "Res_channel_divinity_Cur", "Res_channel_divinity_Max",
+    "Res_totem_Cur", "Res_totem_Max", "Res_maelstrom_Cur", "Res_maelstrom_Max",
+    "Res_healing_mist_Cur", "Res_healing_mist_Max", "Res_metamorphosis_Cur", "Res_metamorphosis_Max",
 }
 
 HarfordSync.ResourceKeys.Config = HarfordSync.ResourceKeys.Config or {
     "Res_health_Max", "Res_mana_Max", "Res_temp_health_Max", "Res_chi_Max", "Res_energy_Max",
     "Res_fel_point_Max", "Res_focus_Max", "Res_holy_power_Max", "Res_light_point_Max", "Res_mage_point_Max",
     "Res_rage_Max", "Res_runic_power_Max", "Res_soul_shard_Max", "Res_astral_power_Max", "Res_living_seeds_Max",
+    -- Recursos de clase anadidos despues (apendar al final, no reordenar):
+    "Res_lay_on_hands_Max", "Res_channel_divinity_Max",
+    "Res_totem_Max", "Res_maelstrom_Max", "Res_healing_mist_Max", "Res_metamorphosis_Max",
 }
 
 local function ToBase36(n)
@@ -161,50 +173,24 @@ function HarfordSync.CopyTableShallow(src)
     return out
 end
 
-local function DebugLog(...)
-    if HarfordDebug and HarfordDebug.Log then
-        HarfordDebug.Log(...)
-    end
-end
 
-local function CountKeys(tbl)
-    local n = 0
-    for _ in pairs(tbl or {}) do
-        n = n + 1
-    end
-    return n
-end
 
-local function CountProfiles(store)
-    return CountKeys(store and store.profiles)
-end
 
-local function NormalizeProfileName(profileName)
-    local raw = tostring(profileName or "")
-    if raw == "" then
-        return "default"
-    end
-
-    local short = raw:match("^[^-]+")
-    if short and short ~= "" then
-        return short
-    end
-
-    return raw
-end
 
 function HarfordSync.EnsureStore(store, activeProfileName)
     if type(store) ~= "table" then
         store = {}
     end
 
-    local resolvedProfile = tostring(activeProfileName or store.activeProfile or (UnitName and UnitName("player")) or "default")
+    local resolvedProfile = tostring(activeProfileName or (UnitName and UnitName("player")) or "default")
 
     if type(store.profiles) ~= "table" then
         store.profiles = {}
     end
 
-    store.activeProfile = resolvedProfile
+    -- `activeProfile` ya no se persiste: el perfil es SIEMPRE el personaje actual
+    -- (UnitName). Se limpia cualquier valor heredado de versiones previas.
+    store.activeProfile = nil
 
     if type(store.profiles[resolvedProfile]) ~= "table" then
         store.profiles[resolvedProfile] = {}
@@ -220,8 +206,6 @@ function HarfordSync.LoadStoreRuntime(store, activeProfileName)
 
     store = HarfordSync.EnsureStore(store, resolvedProfile)
 
-    store.activeProfile = resolvedProfile
-
     if type(store.profiles[resolvedProfile]) ~= "table" then
         store.profiles[resolvedProfile] = {}
     end
@@ -232,7 +216,7 @@ end
 function HarfordSync.GetValue(store, key, default)
     store = HarfordSync.EnsureStore(store)
 
-    local active = tostring(store.activeProfile or (UnitName and UnitName("player")) or "default")
+    local active = tostring((UnitName and UnitName("player")) or "default")
     local profile = (store.profiles and store.profiles[active]) or {}
     local v = profile[key]
 
@@ -243,9 +227,9 @@ function HarfordSync.GetValue(store, key, default)
 end
 
 function HarfordSync.SetValue(store, key, value)
-    store = HarfordSync.EnsureStore(store, store and store.activeProfile)
+    store = HarfordSync.EnsureStore(store)
 
-    local active = tostring(store.activeProfile or (UnitName and UnitName("player")) or "default")
+    local active = tostring((UnitName and UnitName("player")) or "default")
 
     if type(store.profiles) ~= "table" then
         store.profiles = {}
@@ -446,7 +430,22 @@ end
 -- ---------------------------------------------------------------------------
 
 local CLASS_CHUNK_BYTES = 180
+local CLASS_CHUNK_BUFFER_TTL = 60
 local classProgressionChunkBuffers = {}
+local equipChunkBuffers = {}
+
+local function Now()
+    return (GetTime and GetTime()) or (time and time()) or 0
+end
+
+local function PruneChunkBuffers(buffers)
+    local now = Now()
+    for key, buffer in pairs(buffers or {}) do
+        if (now - (tonumber(buffer.createdAt) or now)) > CLASS_CHUNK_BUFFER_TTL then
+            buffers[key] = nil
+        end
+    end
+end
 
 local function EscapeProgressionText(value)
     value = tostring(value or "")
@@ -472,8 +471,57 @@ local function UnescapeProgressionText(value)
     return value
 end
 
-function HarfordSync.SerializeDnDClassProgression(profileName, data)
+local function SortedMapParts(map, valueFormatter)
+    local parts = {}
+    for key, value in pairs(map or {}) do
+        if value then
+            if valueFormatter then
+                parts[#parts + 1] = EscapeProgressionText(key) .. ":" .. valueFormatter(value)
+            else
+                parts[#parts + 1] = EscapeProgressionText(key)
+            end
+        end
+    end
+    table.sort(parts)
+    return table.concat(parts, ",")
+end
+
+local function SerializeImportedProficiencies(imported)
+    imported = imported or {}
+    return table.concat({
+        SortedMapParts(imported.skillRank, function(value) return tostring(tonumber(value) or 1) end),
+        SortedMapParts(imported.saveProf),
+        SortedMapParts(imported.armorProf),
+        SortedMapParts(imported.weaponProf),
+        SortedMapParts(imported.toolProf),
+    }, "~")
+end
+
+local function ReadFlagList(raw, out)
+    for token in tostring(raw or ""):gmatch("([^,]+)") do
+        local key = UnescapeProgressionText(token)
+        if key ~= "" then out[key] = true end
+    end
+end
+
+local function DeserializeImportedProficiencies(raw)
+    local imported = { skillRank = {}, saveProf = {}, armorProf = {}, weaponProf = {}, toolProf = {} }
+    local skillRaw, saveRaw, armorRaw, weaponRaw, toolRaw = tostring(raw or ""):match("^([^~]*)~?([^~]*)~?([^~]*)~?([^~]*)~?(.*)$")
+    for token in tostring(skillRaw or ""):gmatch("([^,]+)") do
+        local key, rank = token:match("^([^:]+):?([^:]*)$")
+        key = UnescapeProgressionText(key or "")
+        if key ~= "" then imported.skillRank[key] = tonumber(rank) or 1 end
+    end
+    ReadFlagList(saveRaw, imported.saveProf)
+    ReadFlagList(armorRaw, imported.armorProf)
+    ReadFlagList(weaponRaw, imported.weaponProf)
+    ReadFlagList(toolRaw, imported.toolProf)
+    return imported
+end
+
+function HarfordSync.SerializeDnDClassProgression(profileName, data, opcode)
     profileName = tostring(profileName or "default")
+    opcode = tostring(opcode or "DNDCLASS")
     data = data or {}
 
     local classParts = {}
@@ -512,6 +560,14 @@ function HarfordSync.SerializeDnDClassProgression(profileName, data)
         end
     end
 
+    local stateParts = {}
+    for stateId, enabled in pairs(data.activeStates or {}) do
+        if enabled then
+            stateParts[#stateParts + 1] = EscapeProgressionText(stateId)
+        end
+    end
+    table.sort(stateParts)
+
     local race = type(data.race) == "table" and data.race or {}
     local raw = table.concat({
         "v=" .. tostring(tonumber(data.schema) or 1),
@@ -521,20 +577,25 @@ function HarfordSync.SerializeDnDClassProgression(profileName, data)
         "r=" .. EscapeProgressionText(race.id or "") .. "~" .. EscapeProgressionText(race.subraceId or ""),
         "b=" .. EscapeProgressionText(data.background or "") .. "~" .. EscapeProgressionText(data.backgroundDesc or ""),
         "d=" .. table.concat(featParts, "~"),
-        "m=" .. (data.useMana and "1" or "0"),
+        "m=" .. ((data.useMana == false) and "0" or "1"),  -- ausente/true = "1" (default ON)
+        "s=" .. table.concat(stateParts, "~"),
+        "p=" .. SerializeImportedProficiencies(data.importedProficiencies),
     }, ";")
 
-    return "DNDCLASS|" .. profileName .. "|" .. raw
+    return opcode .. "|" .. profileName .. "|" .. raw
 end
 
+-- Devuelve profileName, data, isInspect. isInspect = true cuando el opcode es el de
+-- inspeccion (DNDINSCLASS): el receptor NO debe importarlo a persistencia, solo cachearlo.
 function HarfordSync.DeserializeDnDClassProgression(message)
     if type(message) ~= "string" then return nil, nil end
     local opcode, profileName, raw = message:match("^([^|]+)|([^|]+)|(.*)$")
-    if opcode ~= "DNDCLASS" or not profileName or profileName == "" then
+    if (opcode ~= "DNDCLASS" and opcode ~= "DNDINSCLASS") or not profileName or profileName == "" then
         return nil, nil
     end
+    local isInspect = (opcode == "DNDINSCLASS")
 
-    local data = { schema = 1, classLevels = {}, featureStates = {}, choices = {}, race = { id = "", subraceId = "" }, background = "", backgroundDesc = "", feats = {}, useMana = false }
+    local data = { schema = 1, classLevels = {}, featureStates = {}, choices = {}, race = { id = "", subraceId = "" }, background = "", backgroundDesc = "", feats = {}, activeStates = {}, importedProficiencies = { skillRank = {}, saveProf = {}, armorProf = {}, weaponProf = {}, toolProf = {} } }
     for part in tostring(raw or ""):gmatch("([^;]+)") do
         local key, value = part:match("^([^=]+)=(.*)$")
         if key == "v" then
@@ -582,14 +643,24 @@ function HarfordSync.DeserializeDnDClassProgression(message)
                 data.feats[#data.feats + 1] = UnescapeProgressionText(featId)
             end
         elseif key == "m" then
-            data.useMana = value == "1"
+            -- "0" = opt-out explicito; "1"/ausente = default true (no se guarda).
+            -- if/else explicito: `(v=="0") and false or nil` colapsaria a nil (pitfall Lua).
+            if value == "0" then data.useMana = false else data.useMana = nil end
+        elseif key == "s" and value ~= "" then
+            for stateId in value:gmatch("([^~]+)") do
+                stateId = UnescapeProgressionText(stateId)
+                if stateId ~= "" then data.activeStates[stateId] = true end
+            end
+        elseif key == "p" then
+            data.importedProficiencies = DeserializeImportedProficiencies(value)
         end
     end
 
-    return profileName, data
+    return profileName, data, isInspect
 end
 
-function HarfordSync.SendDnDClassProgression(prefix, profileName, data, channel, target)
+-- opcode: "DNDCLASS" (sync normal -> import) o "DNDINSCLASS" (inspeccion -> solo cache).
+function HarfordSync.SendDnDClassProgression(prefix, profileName, data, channel, target, opcode)
     local ch = channel
     if (not ch or ch == "") and (target and target ~= "") then
         ch = "WHISPER"
@@ -599,7 +670,8 @@ function HarfordSync.SendDnDClassProgression(prefix, profileName, data, channel,
         return false, "Sin canal disponible"
     end
 
-    local payload = HarfordSync.SerializeDnDClassProgression(profileName, data)
+    opcode = tostring(opcode or "DNDCLASS")
+    local payload = HarfordSync.SerializeDnDClassProgression(profileName, data, opcode)
     if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
         return HarfordSync.Send(prefix, payload, ch, target)
     end
@@ -608,14 +680,15 @@ function HarfordSync.SendDnDClassProgression(prefix, profileName, data, channel,
     local total = math.max(1, math.ceil(#payload / CLASS_CHUNK_BYTES))
     for i = 1, total do
         local chunk = payload:sub(((i - 1) * CLASS_CHUNK_BYTES) + 1, i * CLASS_CHUNK_BYTES)
-        local ok, err = HarfordSync.Send(prefix, table.concat({ "DNDCLASSC", transferId, tostring(i), tostring(total), chunk }, "|"), ch, target)
+        local ok, err = HarfordSync.Send(prefix, table.concat({ opcode .. "C", transferId, tostring(i), tostring(total), chunk }, "|"), ch, target)
         if not ok then return false, err end
     end
     return true
 end
 
 function HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
-    local transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^DNDCLASSC|([^|]+)|([^|]+)|([^|]+)|(.*)$")
+    local opcode, transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^([^|]+)|([^|]+)|([^|]+)|([^|]+)|(.*)$")
+    if opcode ~= "DNDCLASSC" and opcode ~= "DNDINSCLASSC" then return nil, nil end
     if not transferId then return nil, nil end
     local index = tonumber(indexRaw)
     local total = tonumber(totalRaw)
@@ -624,9 +697,10 @@ function HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
     end
 
     local key = tostring(sender or "") .. ":" .. transferId
+    PruneChunkBuffers(classProgressionChunkBuffers)
     local buffer = classProgressionChunkBuffers[key]
     if not buffer or buffer.total ~= total then
-        buffer = { total = total, received = 0, chunks = {} }
+        buffer = { total = total, received = 0, chunks = {}, createdAt = Now() }
         classProgressionChunkBuffers[key] = buffer
     end
     if not buffer.chunks[index] then
@@ -642,6 +716,130 @@ function HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
     end
     classProgressionChunkBuffers[key] = nil
     return HarfordSync.DeserializeDnDClassProgression(table.concat(parts))
+end
+
+-- ---------------------------------------------------------------------------
+-- DNDEQUIP: equipo virtual Harford. slot -> itemLink + seleccion basica opcional.
+-- ---------------------------------------------------------------------------
+
+function HarfordSync.SerializeDnDEquipment(profileName, equipment, opcode)
+    profileName = tostring(profileName or "default")
+    opcode = tostring(opcode or "DNDEQUIP")
+    local parts = {}
+    for slotKey, entry in pairs(equipment or {}) do
+        local itemLink = type(entry) == "table" and entry.itemLink or entry
+        local basicWeaponKey = type(entry) == "table" and entry.basicWeaponKey or nil
+        local basicArmorKey = type(entry) == "table" and entry.basicArmorKey or nil
+        if tostring(slotKey or "") ~= "" and (tostring(itemLink or "") ~= "" or tostring(basicWeaponKey or "") ~= "" or tostring(basicArmorKey or "") ~= "") then
+            local fields = {}
+            if tostring(itemLink or "") ~= "" then fields[#fields + 1] = "i:" .. EscapeProgressionText(itemLink) end
+            if tostring(basicWeaponKey or "") ~= "" then fields[#fields + 1] = "w:" .. EscapeProgressionText(basicWeaponKey) end
+            if tostring(basicArmorKey or "") ~= "" then fields[#fields + 1] = "a:" .. EscapeProgressionText(basicArmorKey) end
+            parts[#parts + 1] = EscapeProgressionText(slotKey) .. "=" .. table.concat(fields, ",")
+        end
+    end
+    table.sort(parts)
+    return opcode .. "|" .. profileName .. "|" .. table.concat(parts, ";")
+end
+
+-- Devuelve profileName, equipment, isInspect (igual semantica que la progresion).
+function HarfordSync.DeserializeDnDEquipment(message)
+    if type(message) ~= "string" then return nil, nil end
+    local opcode, profileName, raw = message:match("^([^|]+)|([^|]+)|(.*)$")
+    if (opcode ~= "DNDEQUIP" and opcode ~= "DNDINSEQUIP") or not profileName or profileName == "" then
+        return nil, nil
+    end
+    local isInspect = (opcode == "DNDINSEQUIP")
+    local equipment = {}
+    for part in tostring(raw or ""):gmatch("([^;]+)") do
+        local slotKey, value = part:match("^([^=]+)=(.*)$")
+        slotKey = UnescapeProgressionText(slotKey or "")
+        value = tostring(value or "")
+        if slotKey ~= "" and value ~= "" then
+            local entry = {}
+            if value:find("^i:") or value:find("^w:") or value:find("^a:") or value:find(",i:") or value:find(",w:") or value:find(",a:") then
+                for field in value:gmatch("([^,]+)") do
+                    local fieldKey, fieldValue = field:match("^([^:]+):(.*)$")
+                    fieldValue = UnescapeProgressionText(fieldValue or "")
+                    if fieldKey == "i" and fieldValue ~= "" then
+                        entry.itemLink = fieldValue
+                        entry.itemId = tostring(fieldValue):match("item:(%d+)") or fieldValue
+                    elseif fieldKey == "w" and fieldValue ~= "" then
+                        entry.basicWeaponKey = fieldValue
+                    elseif fieldKey == "a" and fieldValue ~= "" then
+                        entry.basicArmorKey = fieldValue
+                    end
+                end
+            else
+                local itemLink = UnescapeProgressionText(value)
+                entry.itemLink = itemLink
+                entry.itemId = tostring(itemLink):match("item:(%d+)") or itemLink
+            end
+            if entry.itemLink or entry.basicWeaponKey or entry.basicArmorKey then
+                equipment[slotKey] = entry
+            end
+        end
+    end
+    return profileName, equipment, isInspect
+end
+
+-- opcode: "DNDEQUIP" (sync normal -> import) o "DNDINSEQUIP" (inspeccion -> solo cache).
+function HarfordSync.SendDnDEquipment(prefix, profileName, equipment, channel, target, opcode)
+    local ch = channel
+    if (not ch or ch == "") and (target and target ~= "") then
+        ch = "WHISPER"
+    end
+    ch = ch or HarfordSync.BestChannel()
+    if not ch or ch == "" then
+        return false, "Sin canal disponible"
+    end
+
+    opcode = tostring(opcode or "DNDEQUIP")
+    local payload = HarfordSync.SerializeDnDEquipment(profileName, equipment, opcode)
+    if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
+        return HarfordSync.Send(prefix, payload, ch, target)
+    end
+
+    local transferId = tostring((GetServerTime and GetServerTime()) or time() or 0) .. tostring(math.random(1000, 9999))
+    local total = math.max(1, math.ceil(#payload / CLASS_CHUNK_BYTES))
+    for i = 1, total do
+        local chunk = payload:sub(((i - 1) * CLASS_CHUNK_BYTES) + 1, i * CLASS_CHUNK_BYTES)
+        local ok, err = HarfordSync.Send(prefix, table.concat({ opcode .. "C", transferId, tostring(i), tostring(total), chunk }, "|"), ch, target)
+        if not ok then return false, err end
+    end
+    return true
+end
+
+function HarfordSync.ReceiveDnDEquipmentChunk(message, sender)
+    local opcode, transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^([^|]+)|([^|]+)|([^|]+)|([^|]+)|(.*)$")
+    if opcode ~= "DNDEQUIPC" and opcode ~= "DNDINSEQUIPC" then return nil, nil end
+    if not transferId then return nil, nil end
+    local index = tonumber(indexRaw)
+    local total = tonumber(totalRaw)
+    if not index or not total or index < 1 or index > total or total > 50 then
+        return nil, nil
+    end
+
+    local key = tostring(sender or "") .. ":" .. transferId
+    PruneChunkBuffers(equipChunkBuffers)
+    local buffer = equipChunkBuffers[key]
+    if not buffer or buffer.total ~= total then
+        buffer = { total = total, received = 0, chunks = {}, createdAt = Now() }
+        equipChunkBuffers[key] = buffer
+    end
+    if not buffer.chunks[index] then
+        buffer.chunks[index] = chunk
+        buffer.received = buffer.received + 1
+    end
+    if buffer.received < total then return nil, nil end
+
+    local parts = {}
+    for i = 1, total do
+        if not buffer.chunks[i] then return nil, nil end
+        parts[i] = buffer.chunks[i]
+    end
+    equipChunkBuffers[key] = nil
+    return HarfordSync.DeserializeDnDEquipment(table.concat(parts))
 end
 
 
@@ -925,6 +1123,31 @@ function HarfordSync.DeserializeResourceAdjustMessage(message)
     return key, math.floor(delta)
 end
 
+-- ─── Señal de aura a otro jugador (AURASIG) ──────────────────────────────────
+-- El atacante pide al jugador objetivo que se aplique un aura (ej. Desarme): el receptor
+-- ejecuta `.au <id> self` en su cliente.
+function HarfordSync.SerializeAuraSignal(spellId)
+    spellId = math.floor(tonumber(spellId) or 0)
+    if spellId <= 0 then return nil end
+    return "AURASIG|" .. tostring(spellId)
+end
+
+function HarfordSync.DeserializeAuraSignal(message)
+    local opcode, id = strsplit("|", tostring(message or ""))
+    if opcode ~= "AURASIG" then return nil end
+    id = tonumber(id)
+    if not id or id <= 0 then return nil end
+    return math.floor(id)
+end
+
+function HarfordSync.SendAuraSignal(prefix, spellId, target)
+    if not target or target == "" then return false, "Target invalido" end
+    local payload = HarfordSync.SerializeAuraSignal(spellId)
+    if not payload then return false, "Aura invalida" end
+    HarfordSync.Send(prefix, payload, "WHISPER", target)
+    return true
+end
+
 -- ─── Flag de animaciones (ANIMFLG) ───────────────────────────────────────────
 function HarfordSync.SerializeAnimFlag(enabled)
     return "ANIMFLG|" .. (enabled and "1" or "0")
@@ -1002,14 +1225,53 @@ function HarfordSync.SendWound(prefix, target, isCritical)
     return true
 end
 
+-- Instruccion de salvacion al objetivo jugador (DOSAVE)
+-- El atacante solo envia la CD y el efecto; el receptor calcula sus bonos, tira y
+-- publica la linea desde su propio cliente. NPCs no usan este mensaje.
+local function SaveRequestField(value)
+    value = tostring(value or "")
+    value = value:gsub("%%", "%%25")
+    value = value:gsub("|", "%%7C")
+    return value
+end
+
+local function LoadSaveRequestField(value)
+    value = tostring(value or "")
+    value = value:gsub("%%7C", "|")
+    value = value:gsub("%%25", "%%")
+    return value
+end
+
+function HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId)
+    ability = SaveRequestField(ability)
+    outcome = SaveRequestField(outcome)
+    dc = math.floor(tonumber(dc) or 0)
+    auraId = math.floor(tonumber(auraId) or 0)
+    return table.concat({ "DOSAVE", ability, tostring(dc), outcome, tostring(auraId) }, "|")
+end
+
+function HarfordSync.DeserializeRequestedSave(message)
+    local opcode, ability, dc, outcome, auraId = strsplit("|", tostring(message or ""))
+    if opcode ~= "DOSAVE" then return nil end
+    ability = LoadSaveRequestField(ability)
+    outcome = LoadSaveRequestField(outcome)
+    return ability, tonumber(dc) or 0, outcome, tonumber(auraId) or 0
+end
+
+function HarfordSync.SendRequestedSave(prefix, target, ability, dc, outcome, auraId)
+    if not target or target == "" then return false end
+    HarfordSync.Send(prefix, HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId), "WHISPER", target)
+    return true
+end
+
 function HarfordSync.SendResourceAdjust(prefix, resourceKey, delta, target)
     if not target or target == "" then
-        return false, "Target invÃ¡lido"
+        return false, "Target inválido"
     end
 
     local payload = HarfordSync.SerializeResourceAdjustMessage(resourceKey, delta)
     if not payload then
-        return false, "Ajuste de recurso invÃ¡lido"
+        return false, "Ajuste de recurso inválido"
     end
 
     HarfordSync.Send(prefix, payload, "WHISPER", target)
@@ -1388,6 +1650,9 @@ HarfordSync.DnD = HarfordSync.DnD or {
     SendDnDClassProgression  = HarfordSync.SendDnDClassProgression,
     DeserializeDnDClassProgression = HarfordSync.DeserializeDnDClassProgression,
     ReceiveDnDClassProgressionChunk = HarfordSync.ReceiveDnDClassProgressionChunk,
+    SendDnDEquipment = HarfordSync.SendDnDEquipment,
+    DeserializeDnDEquipment = HarfordSync.DeserializeDnDEquipment,
+    ReceiveDnDEquipmentChunk = HarfordSync.ReceiveDnDEquipmentChunk,
 }
 
 HarfordSync.Loot = HarfordSync.Loot or {

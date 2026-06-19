@@ -45,14 +45,6 @@ local function ParsePositiveInteger(raw, label)
     return value
 end
 
-local function PrintCallback(prefix)
-    return function(success, messages)
-        Print(prefix .. ": " .. (success and "OK" or "ERROR"))
-        for _, line in ipairs(messages or {}) do
-            Print(line)
-        end
-    end
-end
 
 function API.GetTargetSnapshot()
     local name = GetTargetName()
@@ -239,10 +231,11 @@ local function CreateEmptyNpcSheetOverrides()
         BonusCompetencia = "0",
         BonoSituacional = "0",
         ModIniciativa = "0",
+        AtributoConjuro = "Inteligencia",
     }
 
     for _, sheetKey in pairs(NPC_STAT_TO_SHEET) do
-        overrides[sheetKey] = "0"
+        overrides[sheetKey] = "10"
         overrides["Salv_" .. sheetKey] = "0"
     end
 
@@ -750,6 +743,7 @@ if not StaticPopupDialogs["HARFORD_NPC_TEXTEMOTE_PREFIX"] then
                 addonName    = "HarfordAdmin",
                 forceEpsilon = true,
                 textPrefix   = prefixText,
+                textSuffix   = stored.textSuffix,
                 callback     = stored.callback,
             })
             if not ok then
@@ -770,6 +764,18 @@ end
 
 do
     local _origInsertGlanceLink
+
+    -- Nombre plano del focus para el textemote del servidor (RP TRP3 o nombre de WoW).
+    -- Se anexa DESPUES del hyperlink: ".npc te [estado] <Focus>".
+    local function GetFocusEmoteName()
+        if not (UnitExists and UnitExists("focus")) then return nil end
+        local name = HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("focus")
+        if not name or name == "" then
+            name = (GetUnitName and GetUnitName("focus", true)) or (UnitName and UnitName("focus"))
+        end
+        if not name or name == "" then return nil end
+        return name
+    end
 
     local function PrintLocalHyperlink(link)
         local sender = TRP3_API and TRP3_API.globals and TRP3_API.globals.player_id
@@ -843,6 +849,7 @@ do
                     addonName    = "HarfordAdmin",
                     forceEpsilon = true,
                     textPrefix   = prefixText,
+                    textSuffix   = GetFocusEmoteName(),
                     callback     = function(success)
                         if not success then
                             ShowFallback("El servidor rechazo el estado; dejo el enlace en chat.")
@@ -859,8 +866,9 @@ do
                 local dialog = StaticPopup_Show("HARFORD_NPC_TEXTEMOTE_PREFIX")
                 if dialog then
                     dialog.data = {
-                        hyperlink = info.hyperlink,
-                        callback  = function(success)
+                        hyperlink  = info.hyperlink,
+                        textSuffix = GetFocusEmoteName(),
+                        callback   = function(success)
                             if not success then
                                 ShowFallback("El servidor rechazo el estado; dejo el enlace en chat.")
                             end

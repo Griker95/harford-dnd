@@ -99,9 +99,9 @@ local function EnsureStore()
     local store = HarfordReputationStore
     if type(store.factions) ~= "table" then store.factions = {} end
     if type(store.players) ~= "table" then store.players = {} end
-    if type(store.guilds) ~= "table" then store.guilds = {} end
-    if type(store.npcLinks) ~= "table" then store.npcLinks = {} end
-    if type(store.logs) ~= "table" then store.logs = {} end
+    store.guilds = nil
+    store.npcLinks = nil
+    store.logs = nil
     if type(store.groups) ~= "table" then store.groups = {} end
 
     return store
@@ -168,53 +168,23 @@ local function BuildUnitKey(unit)
     return name
 end
 
-local function BuildNpcKeys(unit)
-    if not UnitExists or not UnitExists(unit) or not UnitGUID then return nil, nil end
-    local guid = UnitGUID(unit)
-    local npcId = HarfordTRP3 and HarfordTRP3.GetUnitNpcId and HarfordTRP3.GetUnitNpcId(unit)
-    return guid, npcId
-end
-
-local function GetGuildName(unit)
-    if GetGuildInfo and UnitExists and UnitExists(unit) then
-        local guild = GetGuildInfo(unit)
-        return guild and guild ~= "" and guild or nil
-    end
-    return nil
-end
-
 local function EnsurePlayerEntry(playerKey)
     local store = EnsureStore()
     playerKey = tostring(playerKey or "")
     if playerKey == "" then return nil end
     if type(store.players[playerKey]) ~= "table" then
-        store.players[playerKey] = { reps = {}, guild = nil }
+        store.players[playerKey] = { reps = {} }
     end
+    store.players[playerKey].guild = nil
     if type(store.players[playerKey].reps) ~= "table" then
         store.players[playerKey].reps = {}
     end
     return store.players[playerKey]
 end
 
-local function EnsureGuildEntry(guildName)
-    local store = EnsureStore()
-    guildName = tostring(guildName or "")
-    if guildName == "" then return nil end
-    if type(store.guilds[guildName]) ~= "table" then
-        store.guilds[guildName] = { reps = {} }
-    end
-    if type(store.guilds[guildName].reps) ~= "table" then
-        store.guilds[guildName].reps = {}
-    end
-    return store.guilds[guildName]
-end
-
 local function FireChanged(kind, ...)
     if HarfordReputationUI and HarfordReputationUI.Refresh then
         HarfordReputationUI.Refresh()
-    end
-    if HarfordReputationTooltip and HarfordReputationTooltip.Refresh then
-        HarfordReputationTooltip.Refresh()
     end
 end
 
@@ -720,17 +690,6 @@ function API.DeleteFaction(factionId)
             player.reps[factionId] = nil
         end
     end
-    for _, guild in pairs(store.guilds or {}) do
-        if guild and guild.reps then
-            guild.reps[factionId] = nil
-        end
-    end
-    for key, linkedFactionId in pairs(store.npcLinks or {}) do
-        if linkedFactionId == factionId then
-            store.npcLinks[key] = nil
-        end
-    end
-
     API.AddLog("GM borro la reputacion " .. tostring(faction.name or factionId) .. ".")
     FireChanged("DELETE", factionId)
     return true
@@ -744,17 +703,13 @@ function API.GetPlayerKey(unitOrName)
     return raw ~= "" and raw or nil
 end
 
-function API.RememberPlayerGuild(unit)
+function API.RememberPlayer(unit)
     local playerKey = BuildUnitKey(unit)
     if not playerKey then return nil end
     local entry = EnsurePlayerEntry(playerKey)
     if not entry then return nil end
-    local guild = GetGuildName(unit)
-    if guild then
-        entry.guild = guild
-        EnsureGuildEntry(guild)
-    end
-    return playerKey, guild
+    entry.guild = nil
+    return playerKey
 end
 
 function API.GetPlayerPoints(playerKey, factionId)
@@ -764,12 +719,6 @@ function API.GetPlayerPoints(playerKey, factionId)
     local player = store.players[playerKey]
     if player and player.reps and player.reps[factionId] then
         return Clamp(player.reps[factionId].points, API.MIN_POINTS, API.MAX_POINTS), player.reps[factionId]
-    end
-
-    local guildName = player and player.guild
-    local guild = guildName and store.guilds[guildName]
-    if guild and guild.reps and guild.reps[factionId] then
-        return Clamp(guild.reps[factionId].points, API.MIN_POINTS, API.MAX_POINTS), guild.reps[factionId]
     end
 
     return 0, nil
@@ -794,17 +743,7 @@ function API.SetPlayerPoints(playerKey, factionId, points, opts)
     entry.reps[factionId].points = points
     entry.reps[factionId].visible = entry.reps[factionId].visible ~= false
     entry.reps[factionId].atWar = API.IsAtWarPoints(points)
-
-    if opts and opts.guildName and opts.guildName ~= "" then
-        entry.guild = opts.guildName
-        local guild = EnsureGuildEntry(opts.guildName)
-        if guild then
-            guild.reps[factionId] = guild.reps[factionId] or {}
-            guild.reps[factionId].points = points
-            guild.reps[factionId].visible = true
-            guild.reps[factionId].atWar = API.IsAtWarPoints(points)
-        end
-    end
+    entry.guild = nil
 
     if not (opts and opts.silent) then
         FireChanged("REP", playerKey, factionId)
@@ -825,7 +764,7 @@ function API.AdjustTarget(factionId, delta)
     if not UnitExists or not UnitExists("target") or not UnitIsPlayer or not UnitIsPlayer("target") then
         return false, "Selecciona un jugador objetivo."
     end
-    local playerKey = API.RememberPlayerGuild("target")
+    local playerKey = API.RememberPlayer("target")
     if not playerKey then return false, "Jugador invalido." end
     if not HarfordReputationSync or not HarfordReputationSync.BroadcastRepPoints then
         return false, "Sync no disponible."
@@ -848,7 +787,7 @@ function API.ResetTarget(factionId)
     if not UnitExists or not UnitExists("target") or not UnitIsPlayer or not UnitIsPlayer("target") then
         return false, "Selecciona un jugador objetivo."
     end
-    local playerKey = API.RememberPlayerGuild("target")
+    local playerKey = API.RememberPlayer("target")
     if not playerKey then return false, "Jugador invalido." end
     if not HarfordReputationSync or not HarfordReputationSync.BroadcastRepPoints then
         return false, "Sync no disponible."
@@ -866,7 +805,7 @@ function API.SetTargetPoints(factionId, points)
     if not UnitExists or not UnitExists("target") or not UnitIsPlayer or not UnitIsPlayer("target") then
         return false, "Selecciona un jugador objetivo."
     end
-    local playerKey = API.RememberPlayerGuild("target")
+    local playerKey = API.RememberPlayer("target")
     if not playerKey then return false, "Jugador invalido." end
     if not HarfordReputationSync or not HarfordReputationSync.BroadcastRepPoints then
         return false, "Sync no disponible."
@@ -883,61 +822,15 @@ end
 
 function API.GetCurrentPlayerPoints(factionId)
     local playerKey = BuildUnitKey("player") or UnitName("player") or "player"
-    API.RememberPlayerGuild("player")
+    API.RememberPlayer("player")
     return API.GetPlayerPoints(playerKey, factionId)
 end
 
-function API.LinkFactionToUnit(unit, factionId)
-    if not API.CanEdit() then return false, "Solo DM." end
-    local faction = API.GetFaction(factionId)
-    if not faction then return false, "Reputacion no encontrada." end
-    if not UnitExists or not UnitExists(unit) then return false, "Unidad invalida." end
-
-    local guid, npcId = BuildNpcKeys(unit)
-    if not guid or guid == "" then return false, "GUID no disponible." end
-
-    local store = EnsureStore()
-    store.npcLinks[guid] = factionId
-    if npcId and npcId ~= "" then
-        store.npcLinks["npc:" .. npcId] = factionId
-    end
-    FireChanged("NPC", guid, factionId)
-    return true
-end
-
-function API.GetLinkedFactionForUnit(unit)
-    local store = EnsureStore()
-    local guid, npcId = BuildNpcKeys(unit)
-    if guid and store.npcLinks[guid] then
-        return store.npcLinks[guid]
-    end
-    if npcId and store.npcLinks["npc:" .. npcId] then
-        return store.npcLinks["npc:" .. npcId]
-    end
-    return nil
-end
-
-function API.GetUnitFactionRelationship(unit)
-    local factionId = API.GetLinkedFactionForUnit(unit)
-    if not factionId then return nil end
-    local points = API.GetCurrentPlayerPoints(factionId)
-    local rank, rankColor = API.GetRank(points)
-    return factionId, points, rank, rankColor
-end
-
 function API.AddLog(text, opts)
-    local store = EnsureStore()
-    local row = {
-        time = time and time() or 0,
-        text = tostring(text or ""),
-    }
-    store.logs[#store.logs + 1] = row
-    while #store.logs > 100 do
-        table.remove(store.logs, 1)
-    end
-    Print(row.text)
+    local rowText = tostring(text or "")
+    Print(rowText)
     if not (opts and opts.fromSync) then
-        FireChanged("LOG", row.text)
+        FireChanged("LOG", rowText)
     end
 end
 
@@ -951,16 +844,6 @@ end
 
 function API.ApplyRepFromSync(playerKey, factionId, points)
     return API.SetPlayerPoints(playerKey, factionId, points, { fromSync = true, silent = true })
-end
-
-function API.ApplyNpcLinkFromSync(key, factionId)
-    local store = EnsureStore()
-    if key and key ~= "" and factionId and factionId ~= "" then
-        store.npcLinks[key] = factionId
-        FireChanged(nil)
-        return true
-    end
-    return false
 end
 
 EnsureStore()

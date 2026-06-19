@@ -67,6 +67,87 @@ local function ListMatchesType(list, words)
     return false
 end
 
+local function AddCandidate(out, seen, value)
+    value = tostring(value or "")
+    if value == "" or seen[value] then return end
+    seen[value] = true
+    out[#out + 1] = value
+end
+
+local function GetUnitProfileCandidates(unit)
+    local out, seen = {}, {}
+    local full = GetUnitName and GetUnitName(unit, true)
+    AddCandidate(out, seen, full)
+    if Ambiguate then AddCandidate(out, seen, Ambiguate(full or "", "short")) end
+
+    if UnitName then
+        local name, realm = UnitName(unit)
+        AddCandidate(out, seen, name)
+        realm = tostring(realm or "")
+        if name and name ~= "" and realm ~= "" then
+            AddCandidate(out, seen, name .. "-" .. realm:gsub("%s+", ""))
+        end
+    end
+    return out
+end
+
+local trp3ProgressionChecked = {}
+
+local function EnsureUnitInspectProgression(unit, profileName)
+    if not (HarfordTRP3 and HarfordTRP3.GetPlayerProfile and HarfordTRP3.ParsePlayerSheet) then
+        return false
+    end
+    if not (HarfordDnDProgression and HarfordDnDProgression.SetInspectDataFromTRP3Sheet) then
+        return false
+    end
+
+    local key = tostring(profileName or "")
+    if key == "" and UnitGUID then key = tostring(UnitGUID(unit) or "") end
+    if key == "" or trp3ProgressionChecked[key] then return false end
+
+    local profile = HarfordTRP3.GetPlayerProfile(unit)
+    if not profile then return false end
+
+    trp3ProgressionChecked[key] = true
+    local sheet = HarfordTRP3.ParsePlayerSheet(profile)
+    if type(sheet) ~= "table" then return false end
+    return HarfordDnDProgression.SetInspectDataFromTRP3Sheet(profileName, sheet)
+end
+
+local function ResolvePlayerFeatureStatus(unit, typeText)
+    if not (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetCachedDamageStatus) then
+        return nil
+    end
+
+    if UnitIsUnit and UnitIsUnit(unit, "player") then
+        local name = UnitName and UnitName("player")
+        local status = HarfordDnDFeatureEffects.GetCachedDamageStatus(typeText, name)
+        if not status and HarfordDnDFeatureEffects.Prime then
+            HarfordDnDFeatureEffects.Prime(name)
+            status = HarfordDnDFeatureEffects.GetCachedDamageStatus(typeText, name)
+        end
+        return status
+    end
+
+    if not (HarfordDnDProgression and HarfordDnDProgression.HasProgression) then
+        return nil
+    end
+    for _, profileName in ipairs(GetUnitProfileCandidates(unit)) do
+        if not HarfordDnDProgression.HasProgression(profileName) then
+            EnsureUnitInspectProgression(unit, profileName)
+        end
+        if HarfordDnDProgression.HasProgression(profileName) then
+            local status = HarfordDnDFeatureEffects.GetCachedDamageStatus(typeText, profileName)
+            if not status and HarfordDnDFeatureEffects.Prime then
+                HarfordDnDFeatureEffects.Prime(profileName)
+                status = HarfordDnDFeatureEffects.GetCachedDamageStatus(typeText, profileName)
+            end
+            if status then return status end
+        end
+    end
+    return nil
+end
+
 -- Resuelve el status de mitigacion de `unit` frente a `damageKey`.
 -- Devuelve uno de: "immune" | "resistant" | "vulnerable" | "normal".
 -- Si no hay stat block disponible, asume "normal" (sin mitigacion).
@@ -158,9 +239,25 @@ function HarfordDamageMitigation.ForTarget(unit, typeText, amount)
     if not unit or not (UnitExists and UnitExists(unit)) then
         return amount, STATUS_NORMAL, ""
     end
+
     if UnitIsPlayer and UnitIsPlayer(unit) then
+        -- Rasgos Harford del jugador (ej. CdM: Constitucion No-Muerta -> veneno).
+        local featureStatus = ResolvePlayerFeatureStatus(unit, typeText)
+        if featureStatus then
+            return HarfordDamageMitigation.ApplyMultiplier(amount, featureStatus), featureStatus,
+                HarfordDamageMitigation.Marker(featureStatus)
+        end
+
+        -- Fallback: si el about TRP3 del jugador trae un stat block con resistencias.
+        local status = HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
+        if status ~= STATUS_NORMAL then
+            return HarfordDamageMitigation.ApplyMultiplier(amount, status), status,
+                HarfordDamageMitigation.Marker(status)
+        end
+
         return amount, STATUS_NORMAL, ""
     end
+
     local status = HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
     return HarfordDamageMitigation.ApplyMultiplier(amount, status), status,
         HarfordDamageMitigation.Marker(status)

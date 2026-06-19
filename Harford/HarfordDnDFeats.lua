@@ -329,6 +329,24 @@ API.FEATS = {
         },
     },
     {
+        id = "maestro_escudero", name = "Maestro Escudero", source = "PHB",
+        traits = {
+            { id = "feat_mesc_defensa", name = "Defensa con Escudo", type = "informativo", description = "Mientras portes un escudo y no estes incapacitado: sumas la CA del escudo a tus salvaciones de Destreza contra ataques o efectos que te tengan a TI de objetivo; y si superas una salvacion de Destreza contra un efecto que aun asi inflige daño, lo ignoras por completo.", effects = {} },
+            { id = "feat_mesc_embate", name = "Embate con Escudo", type = "pasivo", description = "Al usar la accion de Ataque en tu turno, puedes usar tu accion adicional para embatir con el escudo a una criatura a tu alcance cuerpo a cuerpo: 1d4 + Mod. Fuerza contundente. Activa 'Offhand' con un escudo en la mano secundaria y ataca para tirarlo.", effects = {
+                { kind = "flag", flag = "shieldBash" },
+            } },
+        },
+    },
+    {
+        id = "gran_maestro_armas", name = "Gran Maestro de Armas", source = "PHB",
+        traits = {
+            { id = "feat_gma_adicional", name = "Ataque Adicional", type = "informativo", description = "En tu turno, al hacer un golpe critico con un arma cuerpo a cuerpo o reducir a una criatura a 0 PG con ella, puedes hacer un ataque cuerpo a cuerpo como accion adicional.", effects = {} },
+            { id = "feat_gma_potente", name = "Golpe Potente", type = "recurso", description = "Toggle: antes de atacar c/c con un arma a dos manos competente, -5 a la tirada de ataque y +10 al daño si impacta. Actívalo en 'Daño extra'.", effects = {
+                { kind = "conditionalWeaponDamage", id = "gwm_potente", label = "Golpe Potente (-5/+10)", flatBonus = 10, attackPenalty = 5 },
+            } },
+        },
+    },
+    {
         id = "maestro_armaduras_medias", name = "Maestro en Armaduras Medias", requires = "Competente con armaduras medias", source = "PHB",
         traits = {
             { id = "feat_phb_amedias", name = "Beneficios", type = "informativo", description = "La armadura media no te da desventaja en Sigilo. Con Destreza 16+ sumas 3 (en vez de 2) a la CA con armadura media.", effects = {} },

@@ -424,9 +424,20 @@ local function RemoveFixedAura(snapshot, spellId)
 end
 
 local ESTADOS = {
-    { label = "Asustado",  spellId = 167026 },
-    { label = "Derribado", spellId = 267937 },
-    { label = "Ardiendo",  spellId = 279489 },
+    { label = "Asustado",     spellId = 167026 },
+    { label = "Derribado",    spellId = 267937 },
+    { label = "Silenciado",   spellId = 30900 },
+    { label = "Exponer armadura", spellId = 11971 },
+    { label = "Ardiendo",     spellId = 279489 },
+    { label = "Incapacitado", spellId = 30980 },
+    { label = "Petrificado",  spellId = 210138 },
+    { label = "Envenenado",   spellId = 167407 },
+    { label = "Bendito",      spellId = 232365 },
+    { label = "Congelado",    spellId = 153574 },
+    { label = "Enfriado",     spellId = 287295 },
+    { label = "Bioluminescencia", spellId = 292133 },
+    { label = "Luces danzantes", spellId = 128987 },
+    { label = "Enrraizado",   spellId = 263196 },
 }
 
 local function OpenLootEditor(snapshot)
@@ -480,20 +491,6 @@ local function BuildEstadosSubmenu(snapshot, level)
     end
 end
 
-local function AddHealthPresets(snapshot, isPlayer, level)
-    local values = { 1, -1, 5, -5, 10, -10 }
-    for _, amount in ipairs(values) do
-        local label = amount > 0 and ("+" .. tostring(amount)) or tostring(amount)
-        AddAction(label, function()
-            if isPlayer then
-                AdjustPlayerHealth(snapshot, amount)
-            else
-                AdjustNpcHealth(snapshot, amount)
-            end
-        end, level)
-    end
-    AddAction("Personalizado...", function() PromptHealth(snapshot, isPlayer) end, level)
-end
 
 local function BuildNpcSubmenu(menuList, level)
     local snapshot = current.snapshot
@@ -521,6 +518,7 @@ end
 
 local resourceEditorFrame = nil
 local resourceEditorName  = nil
+local resourceEditorRefreshToken = 0
 
 -- ORDER completo con temp_health insertada después de health
 local function GetResOrderFull()
@@ -545,6 +543,23 @@ local function GetResourcesSnapshot(name)
         snap[key] = { cur = cur, max = max }
     end
     return snap
+end
+
+local function QueueResourceEditorPopulate(frame, expectedName)
+    if not (C_Timer and C_Timer.After) then
+        local snap = GetResourcesSnapshot(expectedName)
+        if snap and frame and frame.PopulateRows then frame:PopulateRows(snap) end
+        return
+    end
+    resourceEditorRefreshToken = resourceEditorRefreshToken + 1
+    local token = resourceEditorRefreshToken
+    expectedName = tostring(expectedName or "")
+    C_Timer.After(1.5, function()
+        if token ~= resourceEditorRefreshToken then return end
+        if not (frame and frame:IsShown() and resourceEditorName == expectedName) then return end
+        local snap = GetResourcesSnapshot(expectedName)
+        if snap then frame:PopulateRows(snap) end
+    end)
 end
 
 local function CreateResourceEditorFrame()
@@ -669,12 +684,7 @@ local function CreateResourceEditorFrame()
             HarfordDnDAPI.RequestResourcesForName(resourceEditorName)
         end
         -- Repoblar ~1.5s después para dar tiempo a que llegue la respuesta de red
-        C_Timer.After(1.5, function()
-            if f:IsShown() and resourceEditorName then
-                local s = GetResourcesSnapshot(resourceEditorName)
-                if s then f:PopulateRows(s) end
-            end
-        end)
+        QueueResourceEditorPopulate(f, resourceEditorName)
     end)
 
     local btnApply = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
@@ -757,12 +767,7 @@ local function OpenResourceEditor(snapshot)
             end
         end
         f:PopulateRows(empty)
-        C_Timer.After(1.5, function()
-            if f:IsShown() and resourceEditorName then
-                local s = GetResourcesSnapshot(resourceEditorName)
-                if s then f:PopulateRows(s) end
-            end
-        end)
+        QueueResourceEditorPopulate(f, resourceEditorName)
     end
     f:Show()
 end

@@ -18,6 +18,9 @@ local API = HarfordNamePlates
 
 local npState    = {}   -- [unitToken] = { ov, kuiFrame }
 local npRequests = {}   -- throttle sync: [unitName] = timestamp
+local npRequestOrder = {}
+local NP_REQUEST_CACHE_MAX = 100
+local npPendingApply = {}
 local kuiPluginRegistered
 local kuiClassPowersWasEnabled
 
@@ -29,6 +32,23 @@ end
 
 local function IsKuiActive()
     return type(KuiNameplates) == "table"
+end
+
+local function ScheduleApplyUnit(unit)
+    if not unit or not NpEnabled() then return end
+    if npPendingApply[unit] then return end
+    npPendingApply[unit] = true
+    local function run()
+        npPendingApply[unit] = nil
+        if NpEnabled() and API.ApplyUnit then
+            API.ApplyUnit(unit)
+        end
+    end
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, run)
+    else
+        run()
+    end
 end
 
 local function GetTex()
@@ -195,11 +215,39 @@ local function BuildResourceList(resources)
     return fn and fn(resources) or {}
 end
 
+local function BuildNameplateSignature(unit, mode, hpData, resData, healthBar)
+    local guid = UnitGUID and UnitGUID(unit) or ""
+    local w = healthBar and healthBar.GetWidth and math.floor((healthBar:GetWidth() or 0) * 10 + 0.5) or 0
+    local h = healthBar and healthBar.GetHeight and math.floor((healthBar:GetHeight() or 0) * 10 + 0.5) or 0
+    local hp = hpData or {}
+    local res = resData or {}
+    return table.concat({
+        tostring(guid or ""),
+        tostring(mode or ""),
+        tostring(hp.key or ""),
+        tostring(hp.cur or 0),
+        tostring(hp.max or 0),
+        tostring(hp.tempCur or 0),
+        tostring(res.key or ""),
+        tostring(res.cur or 0),
+        tostring(res.max or 0),
+        tostring(w),
+        tostring(h),
+    }, "|")
+end
+
 local function RequestIfNeeded(unitName)
     if not HarfordDnDAPI or not HarfordDnDAPI.RequestResourcesForName then return end
     local now = GetTime and GetTime() or time()
     if (now - (npRequests[unitName] or 0)) < 5 then return end
     npRequests[unitName] = now
+    npRequestOrder[#npRequestOrder + 1] = { name = unitName, at = now }
+    while #npRequestOrder > NP_REQUEST_CACHE_MAX do
+        local old = table.remove(npRequestOrder, 1)
+        if old and npRequests[old.name] == old.at then
+            npRequests[old.name] = nil
+        end
+    end
     HarfordDnDAPI.RequestResourcesForName(unitName)
 end
 
@@ -624,13 +672,13 @@ local function SetupKuiHooks(kuiFrame, healthBar)
         if type(kuiFrame.UpdateNameText) == "function" then
             hooksecurefunc(kuiFrame, "UpdateNameText", function(frame)
                 local unit = frame and frame.unit
-                if unit and NpEnabled() and not API._applying then API.ApplyUnit(unit) end
+                if unit and NpEnabled() and not API._applying then ScheduleApplyUnit(unit) end
             end)
         end
         if type(kuiFrame.UpdateNameTextPosition) == "function" then
             hooksecurefunc(kuiFrame, "UpdateNameTextPosition", function(frame)
                 local unit = frame and frame.unit
-                if unit and NpEnabled() and not API._applying then API.ApplyUnit(unit) end
+                if unit and NpEnabled() and not API._applying then ScheduleApplyUnit(unit) end
             end)
         end
     end
@@ -638,14 +686,14 @@ local function SetupKuiHooks(kuiFrame, healthBar)
     -- HealthBar:Show → Kui salió de name-only
     healthBar:HookScript("OnShow", function()
         local unit = kuiFrame.unit
-        if unit and NpEnabled() then API.ApplyUnit(unit) end
+        if unit and NpEnabled() then ScheduleApplyUnit(unit) end
     end)
 
     -- HealthBar:Hide → Kui entró en name-only
     healthBar:HookScript("OnHide", function()
         local unit = kuiFrame.unit
         if unit and NpEnabled() and kuiFrame.IN_NAMEONLY then
-            API.ApplyUnit(unit)
+            ScheduleApplyUnit(unit)
         end
     end)
 
@@ -654,7 +702,7 @@ local function SetupKuiHooks(kuiFrame, healthBar)
     -- hay que recalcular ApplyAbsorbTexture con el nuevo ancho.
     healthBar:HookScript("OnSizeChanged", function()
         local unit = kuiFrame.unit
-        if unit and NpEnabled() then API.ApplyUnit(unit) end
+        if unit and NpEnabled() then ScheduleApplyUnit(unit) end
     end)
 end
 
@@ -727,6 +775,7 @@ function API.ApplyUnit(unit)
         if not healthBar then return end
 
         if not st then st = {} ; npState[unit] = st end
+        st.unitName = unitName
         -- Recrear si el overlay fue creado en modo nativo (modo incompatible)
         if st.ov and not st.isKui then
             st.ov:Hide()
@@ -746,11 +795,19 @@ function API.ApplyUnit(unit)
 
         API._applying = true
         if kui.IN_NAMEONLY then
+            st._harfordSignature = nil
             ApplyNameOnlyMode(st.ov, kui, hpData)
         else
             if healthBar:IsShown() then
+                local signature = BuildNameplateSignature(unit, "kui-normal", hpData, list[2], healthBar)
+                if st._harfordSignature == signature and st.ov and st.ov:IsShown() then
+                    API._applying = nil
+                    return
+                end
+                st._harfordSignature = signature
                 ApplyNormalMode(st.ov, kui, healthBar, hpData, list[2])
             else
+                st._harfordSignature = nil
                 RestoreKuiNameText(st)
                 st.ov:Hide()
             end
@@ -764,6 +821,7 @@ function API.ApplyUnit(unit)
     if not healthBar then return end
 
     if not st then st = {} ; npState[unit] = st end
+    st.unitName = unitName
     -- Recrear si el overlay fue creado en modo Kui (modo incompatible)
     if st.ov and st.isKui then
         st.ov:Hide()
@@ -786,7 +844,7 @@ function API.ApplyUnit(unit)
             healthBar._harfordNativeHooked = true
             healthBar:HookScript("OnSizeChanged", function()
                 if unit and NpEnabled() and npState[unit] then
-                    API.ApplyUnit(unit)
+                    ScheduleApplyUnit(unit)
                 end
             end)
         end
@@ -828,13 +886,19 @@ function API.ApplyUnit(unit)
 
     local maxHp = math.max(tonumber(hpData.max) or 0, 0)
     local curHp = math.min(math.max(tonumber(hpData.cur) or 0, 0), maxHp > 0 and maxHp or 1)
+    local resData = list[2]
+    local signature = BuildNameplateSignature(unit, "native", hpData, resData, healthBar)
+    if st._harfordSignature == signature and st.ov and st.ov:IsShown() then
+        return
+    end
+    st._harfordSignature = signature
+
     st.ov.hpBar:SetMinMaxValues(0, maxHp > 0 and maxHp or 1)
     st.ov.hpBar:SetValue(curHp)
     -- Color de clase TRP3 → clase WoW nativa → verde salud (NPC).
     local hpR, hpG, hpB = GetNpClassColor(unit)
     st.ov.hpBar:SetStatusBarColor(hpR, hpG, hpB)
 
-    local resData = list[2]
     if resData then
         local maxRes = math.max(tonumber(resData.max) or 0, 0)
         local curRes = math.min(math.max(tonumber(resData.cur) or 0, 0), maxRes > 0 and maxRes or 1)
@@ -861,16 +925,35 @@ local function HideUnit(unit)
         -- Restaurar NameText de Kui antes de ocultar; puede estar reparentado al overlay.
         RestoreKuiNameText(st)
         if st.ov then st.ov:Hide() end
+        if st.unitName then npRequests[st.unitName] = nil end
         npState[unit] = nil
     end
+    npPendingApply[unit] = nil
 end
 
 local function RefreshAll()
     if not C_NamePlate or not C_NamePlate.GetNamePlates then return end
     for _, np in ipairs(C_NamePlate.GetNamePlates()) do
         local unit = np.namePlateUnitToken
-        if unit then API.ApplyUnit(unit) end
+        if unit then ScheduleApplyUnit(unit) end
     end
+end
+
+local function RefreshName(name)
+    if not name or name == "" then return false end
+    if not C_NamePlate or not C_NamePlate.GetNamePlates then return false end
+    local shortName = Ambiguate and Ambiguate(name, "short") or tostring(name):match("^[^%-]+") or name
+    local refreshed = false
+    for _, np in ipairs(C_NamePlate.GetNamePlates()) do
+        local unit = np.namePlateUnitToken
+        local unitName = unit and UnitName and UnitName(unit)
+        local unitFull = unit and GetUnitName and GetUnitName(unit, true)
+        if unit and (unitName == name or unitFull == name or unitName == shortName or unitFull == shortName) then
+            ScheduleApplyUnit(unit)
+            refreshed = true
+        end
+    end
+    return refreshed
 end
 
 -- ── Plugin API de Kui ──────────────────────────────────────────────────────────
@@ -896,7 +979,7 @@ local function TryRegisterKuiPlugin()
     end
     local function RefreshFrame(f)
         local unit = f and f.unit
-        if unit and NpEnabled() then API.ApplyUnit(unit) end
+        if unit and NpEnabled() then ScheduleApplyUnit(unit) end
     end
     function mod:Show(f)
         RefreshFrame(f)
@@ -922,6 +1005,7 @@ end
 -- ── API pública ────────────────────────────────────────────────────────────────
 
 API.RefreshAll = RefreshAll
+API.RefreshName = RefreshName
 
 -- ── Eventos ────────────────────────────────────────────────────────────────────
 
@@ -931,7 +1015,7 @@ npEvents:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 npEvents:RegisterEvent("PLAYER_LOGIN")
 npEvents:SetScript("OnEvent", function(_, event, unit)
     if event == "NAME_PLATE_UNIT_ADDED" then
-        API.ApplyUnit(unit)
+        ScheduleApplyUnit(unit)
     elseif event == "NAME_PLATE_UNIT_REMOVED" then
         HideUnit(unit)
     elseif event == "PLAYER_LOGIN" then

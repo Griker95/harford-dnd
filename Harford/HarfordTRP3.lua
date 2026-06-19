@@ -76,12 +76,13 @@ end
 local function NormalizeBuildText(value)
     value = tostring(value or ""):lower()
     value = value:gsub("[_%-]+", " ")
-    value = value:gsub("[áàäâÁÀÄÂ]", "a")
-    value = value:gsub("[éèëêÉÈËÊ]", "e")
-    value = value:gsub("[íìïîÍÌÏÎ]", "i")
-    value = value:gsub("[óòöôÓÒÖÔ]", "o")
-    value = value:gsub("[úùüûÚÙÜÛ]", "u")
-    value = value:gsub("[ñÑ]", "n")
+    -- Acentos por SECUENCIA UTF-8 (lider \195); NO clases de bytes (corrompen multibyte).
+    value = value:gsub("\195[\129\161\128\160\132\164\130\162]", "a")
+    value = value:gsub("\195[\137\169\136\168\139\171\138\170]", "e")
+    value = value:gsub("\195[\141\173\140\172\143\175\142\174]", "i")
+    value = value:gsub("\195[\147\179\146\178\150\182\148\180]", "o")
+    value = value:gsub("\195[\154\186\153\185\156\188\155\187]", "u")
+    value = value:gsub("\195[\145\177]", "n")
     return value:gsub("^%s+", ""):gsub("%s+$", "")
 end
 
@@ -124,6 +125,62 @@ local function ExtractLabeledAboutValue(lines, labels)
                 local _, wordCount = normalizedLabel:gsub("%S+", "")
                 local raw = line:match("^%s*" .. string.rep("%S+%s+", wordCount) .. "(.+)$")
                 return TrimText(raw or spaceValue)
+            end
+        end
+    end
+    return nil
+end
+
+local ABOUT_VALUE_BOUNDARY = {
+    clase = true, clases = true, class = true, raza = true, race = true,
+    subraza = true, subrace = true, trasfondo = true, background = true, origen = true,
+    caracteristicas = true, atributos = true, habilidades = true, skills = true,
+    salvaciones = true, ["tiradas de salvacion"] = true, ataques = true, ataque = true,
+    magia = true, conjuros = true, rasgos = true, idiomas = true, competencias = true,
+    equipo = true, armas = true, armadura = true, recursos = true,
+}
+
+local function IsAboutValueBoundary(line)
+    local clean = NormalizeBuildText(line):gsub("[:%-].*$", "")
+    clean = clean:gsub("^%s+", ""):gsub("%s+$", "")
+    return ABOUT_VALUE_BOUNDARY[clean] == true
+end
+
+local function ExtractLabeledAboutValueAndParagraph(lines, labels)
+    if type(lines) ~= "table" then return nil end
+    for i, line in ipairs(lines) do
+        local clean = NormalizeBuildText(line)
+        for _, label in ipairs(labels or {}) do
+            local normalizedLabel = NormalizeBuildText(label)
+            local value, valueIndex
+            if clean == normalizedLabel then
+                value, valueIndex = lines[i + 1], i + 1
+            else
+                local sepValue = clean:match("^" .. normalizedLabel .. "%s*[:%-]%s*(.+)$")
+                if sepValue and sepValue ~= "" and sepValue ~= normalizedLabel then
+                    local raw = line:match("[:%-]%s*(.+)$")
+                    value, valueIndex = TrimText(raw or sepValue), i
+                else
+                    local spaceValue = clean:match("^" .. normalizedLabel .. "%s+(.+)$")
+                    if spaceValue and spaceValue ~= "" and spaceValue ~= normalizedLabel then
+                        local _, wordCount = normalizedLabel:gsub("%S+", "")
+                        local raw = line:match("^%s*" .. string.rep("%S+%s+", wordCount) .. "(.+)$")
+                        value, valueIndex = TrimText(raw or spaceValue), i
+                    end
+                end
+            end
+            value = TrimText(value or "")
+            if value ~= "" then
+                local desc = {}
+                for j = (valueIndex or i) + 1, #lines do
+                    local nextLine = TrimText(lines[j])
+                    if nextLine == "" or IsAboutValueBoundary(nextLine) then break end
+                    desc[#desc + 1] = nextLine
+                    if #table.concat(desc, " ") > 400 then break end
+                end
+                local paragraph = table.concat(desc, " ")
+                if #paragraph > 400 then paragraph = paragraph:sub(1, 400) .. "..." end
+                return value, paragraph
             end
         end
     end
@@ -347,20 +404,29 @@ end
 
 local function BackgroundIdFromAbout(text)
     local lines = CleanAboutLines(text)
-    local backgroundText = ExtractLabeledAboutValue(lines, { "trasfondo", "background", "origen" })
+    local backgroundText, backgroundDesc = ExtractLabeledAboutValueAndParagraph(lines, { "trasfondo", "background", "origen" })
     if not backgroundText or backgroundText == "" then return nil end
+    if backgroundDesc and backgroundDesc ~= "" then
+        return ResolveBackgroundFields(backgroundText .. "\n" .. backgroundDesc, true)
+    end
     return ResolveBackgroundFields(backgroundText, false)
 end
 
 local function BackgroundIdFromProfile(profile)
+    local aboutId, aboutRaw, aboutDesc = BackgroundIdFromAbout(CollectRawAboutText(profile))
     local value = ReadProfileBuildField(profile, {
         "BG", "Bg", "background", "Background", "BACKGROUND",
         "trasfondo", "Trasfondo", "TRASFONDO", "origen", "Origen",
     })
     if value and value ~= "" then
-        return ResolveBackgroundFields(value, true)
+        local bgId, raw, desc = ResolveBackgroundFields(value, true)
+        if (not desc or desc == "") and aboutDesc and aboutDesc ~= ""
+            and NormalizeBuildText(bgId or raw or "") == NormalizeBuildText(aboutId or aboutRaw or "") then
+            desc = aboutDesc
+        end
+        return bgId, raw, desc
     end
-    return BackgroundIdFromAbout(CollectRawAboutText(profile))
+    return aboutId, aboutRaw, aboutDesc
 end
 
 local CleanFeatureLine
@@ -942,6 +1008,118 @@ function API.GetProfileRaceEntry(profile)
     return RaceEntryFromProfile(profile)
 end
 
+-- ── Carga de ficha completa desde el About TRP3 (formato "Ficha" de la mesa) ──────
+-- Devuelve los DATOS MINIMOS para construir la ficha del jugador, leyendo SIEMPRE del
+-- About: clases (multiclase, por classicon + nivel + subclase), 6 caracteristicas,
+-- raza/subraza y trasfondo (cabeceras {h1}), descripcion de armadura (+escudo) y armas.
+-- NO lee PG/PM/CA: la vida y los recursos los CALCULA el addon; la CA sale del equipo /
+-- Other Information. Devuelve nil si no hay About.
+do
+    local ABIL_NAMES = {
+        fuerza = "Fuerza", destreza = "Destreza", constitucion = "Constitucion",
+        inteligencia = "Inteligencia", sabiduria = "Sabiduria", carisma = "Carisma",
+    }
+
+    -- Las vocales acentuadas y ñ son 2 bytes en UTF-8 (0xC3 0x..). Hay que reemplazar la
+    -- SECUENCIA, no clases de bytes (una clase partiria "ó" en dos -> "oo" y rompe el match).
+    local function NormAccents(s)
+        s = tostring(s or "")
+        s = s:gsub("\195[\161\160\164\162\129\128\132\130]", "a")  -- á à ä â Á À Ä Â
+        s = s:gsub("\195[\169\168\171\170\137\136\139\138]", "e")  -- é è ë ê É ...
+        s = s:gsub("\195[\173\172\175\174\141\140\143\142]", "i")  -- í ì ï î Í ...
+        s = s:gsub("\195[\179\178\182\180\147\146\150\148]", "o")  -- ó ò ö ô Ó ...
+        s = s:gsub("\195[\186\185\188\187\154\153\156\155]", "u")  -- ú ù ü û Ú ...
+        s = s:gsub("\195[\177\145]", "n")                          -- ñ Ñ
+        s = s:lower()
+        return s:gsub("^%s+", ""):gsub("%s+$", "")
+    end
+
+    function API.ParsePlayerSheet(profile)
+        if type(profile) ~= "table" then return nil end
+        local raw = CollectRawAboutText(profile)
+        if not raw or raw == "" then return nil end
+
+        local sheet = {
+            classes = ClassEntriesFromAbout(raw) or {},
+            abilities = {}, weapons = {},
+            armorDesc = nil, hasShield = false,
+            raceId = nil, subraceId = "", raceRaw = nil,
+            background = nil, backgroundRaw = nil, backgroundDesc = nil,
+            aboutLines = {},  -- lineas limpias (sin markup) para resolver choices por texto
+        }
+
+        local h1s, armasMode = {}, false
+        local captureBackgroundDesc, backgroundDescLines = false, {}
+        for line in (raw .. "\n"):gmatch("([^\n]*)\n") do
+            local h1 = line:match("{h1[^}]*}(.-){/h1}")
+            local hLevel = line:match("{h([123])[^}]*}")
+            if h1 then
+                local h1Text = StripInlineMarkup(h1)
+                h1s[#h1s + 1] = h1Text
+                armasMode = false
+                captureBackgroundDesc = NormAccents(h1Text):match("^trasfondo") ~= nil
+            elseif hLevel and captureBackgroundDesc then
+                captureBackgroundDesc = false
+            end
+
+            local clean = StripInlineMarkup(line)
+            if clean ~= "" then sheet.aboutLines[#sheet.aboutLines + 1] = clean end
+            if captureBackgroundDesc and not hLevel and clean ~= "" and #backgroundDescLines < 8 then
+                backgroundDescLines[#backgroundDescLines + 1] = clean
+            end
+            local cn = NormAccents(clean)
+            local firstWord = cn:match("^(%a+)")
+
+            if firstWord and ABIL_NAMES[firstWord] then
+                local score = cn:match("^%a+%s+(%-?%d+)")
+                if score then sheet.abilities[ABIL_NAMES[firstWord]] = tonumber(score) end
+            elseif cn:match("^armadura") then
+                -- Solo la PRIMERA "Armadura ..." (la del bloque de stats); las posteriores son
+                -- conjuros ("Armadura de Agathys"). "Armadura <desc> <CA>": el numero CA se ignora.
+                if not sheet.armorDesc then
+                    local desc = clean:gsub("^%s*[Aa]rmadura%s*", ""):gsub("%s*%+?%d+%s*$", "")
+                    desc = desc:gsub("^%s+", ""):gsub("%s+$", "")
+                    sheet.armorDesc = desc
+                    if NormAccents(desc):find("escudo", 1, true) then sheet.hasShield = true end
+                end
+            elseif cn:match("^arma") then  -- "Arma" o "Armas" (armadura ya consumida arriba)
+                armasMode = true
+                local rest = clean:gsub("^%s*[Aa]rmas?%s*", "")
+                if rest:find("%dd%d") then sheet.weapons[#sheet.weapons + 1] = rest end  -- arma en la misma linea
+            elseif armasMode and clean:match("^%s*%-") then
+                local w = clean:gsub("^%s*%-%s*", "")
+                if w ~= "" and w:find("%dd%d") then sheet.weapons[#sheet.weapons + 1] = w end
+            end
+        end
+
+        -- Raza y trasfondo desde cabeceras {h1} (se salta la primera, "Ficha").
+        for i = 2, #h1s do
+            local hn = NormAccents(h1s[i])
+            if hn:match("^trasfondo") then
+                if not sheet.background and not sheet.backgroundRaw then
+                    local bgText = h1s[i]:gsub("^%s*[Tt]rasfondo%s*", ""):gsub("^%s+", ""):gsub("%s+$", "")
+                    sheet.backgroundRaw = bgText
+                    sheet.backgroundDesc = table.concat(backgroundDescLines, " ")
+                    sheet.background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundIdByText
+                        and HarfordDnDBackgrounds.FindBackgroundIdByText(bgText) or nil
+                end
+            elseif not sheet.raceId then
+                -- Primera cabecera (no-Ficha, no-Trasfondo) que resuelva a una raza conocida.
+                local rid = HarfordDnDRaces and HarfordDnDRaces.FindRaceIdByText
+                    and HarfordDnDRaces.FindRaceIdByText(h1s[i])
+                if rid then
+                    sheet.raceId = rid
+                    sheet.subraceId = HarfordDnDRaces.FindSubraceIdByText
+                        and HarfordDnDRaces.FindSubraceIdByText(rid, h1s[i]) or ""
+                    sheet.raceRaw = h1s[i]
+                end
+            end
+        end
+
+        return sheet
+    end
+end
+
 function API.GetProfileBackgroundId(profile)
     if type(profile) ~= "table" then return nil end
     return (BackgroundIdFromProfile(profile))  -- solo el id (compat)
@@ -1070,13 +1248,18 @@ function API.GetProfileArmorClass(profile)
 
     local character = GetCharacterProfileData(profile)
 
-    -- PRIORIDAD: el texto "Currently" (CU) — el jugador escribe alli su CA actual y
-    -- debe ganar sobre el campo estructurado de la ficha TRP3 o cualquier otro.
+    -- PRIORIDAD: el jugador escribe su CA en los textos libres de TRP3. Se leen primero
+    -- "Other Information" (CO) y luego "Currently" (CU); cualquiera de los dos gana sobre
+    -- el campo estructurado de la ficha o la armadura equipada.
     local charData = character and character.character
-    local currentlyText = type(charData) == "table" and charData.CU
-    if type(currentlyText) == "string" and currentlyText ~= "" then
-        local fromCurrently = API.ParseArmorClassText(currentlyText)
-        if fromCurrently then return fromCurrently end
+    if type(charData) == "table" then
+        for _, fieldKey in ipairs({ "CO", "CU" }) do
+            local txt = charData[fieldKey]
+            if type(txt) == "string" and txt ~= "" then
+                local fromField = API.ParseArmorClassText(txt)
+                if fromField then return fromField end
+            end
+        end
     end
 
     local sources = {
@@ -1639,6 +1822,50 @@ do
         carisma="charisma",  charisma="charisma",
     }
 
+    local DEFAULT_NPC_STATS = {
+        strength = { score = 10, mod = 0 },
+        dexterity = { score = 10, mod = 0 },
+        constitution = { score = 10, mod = 0 },
+        intelligence = { score = 10, mod = 0 },
+        wisdom = { score = 10, mod = 0 },
+        charisma = { score = 10, mod = 0 },
+    }
+
+    local function CopyDefaultStats()
+        local out = {}
+        for key, stat in pairs(DEFAULT_NPC_STATS) do
+            out[key] = { score = stat.score, mod = stat.mod }
+        end
+        return out
+    end
+
+    local function NewNPCStatBlock(reason)
+        return {
+            rawHeader = nil, ac = 10, acDesc = nil,
+            stats = CopyDefaultStats(),
+            savingThrows = {}, skills = {},
+            resistances = {}, vulnerabilities = {}, immunities = {},
+            senses = {}, speed = nil,
+            isDefault = reason or false,
+        }
+    end
+
+    local STAT_LABELS = {
+        fue = "strength", fuerza = "strength", str = "strength", strength = "strength",
+        des = "dexterity", dex = "dexterity", destreza = "dexterity", dexterity = "dexterity",
+        con = "constitution", cons = "constitution", constitucion = "constitution", constitution = "constitution",
+        int = "intelligence", inteligencia = "intelligence", intelligence = "intelligence",
+        sab = "wisdom", sabiduria = "wisdom", wis = "wisdom", wisdom = "wisdom",
+        car = "charisma", carisma = "charisma", cha = "charisma", charisma = "charisma",
+    }
+
+    local STAT_LABEL_ORDER = {
+        "constitucion", "constitution", "inteligencia", "intelligence",
+        "sabiduria", "destreza", "dexterity", "charisma", "carisma",
+        "strength", "fuerza", "wisdom", "cons", "fue", "str",
+        "des", "dex", "con", "int", "sab", "wis", "car", "cha",
+    }
+
     -- Títulos de sección normalizados → clave de resultado
     local SECTION_TYPE = {
         vulnerabilidad="vulnerabilities", vulnerabilidades="vulnerabilities",
@@ -1650,12 +1877,19 @@ do
         ["tiradas de salvacion"]="savingThrows",
         ts="savingThrows",
         habilidades="skills",
+        caracteristicas="stats", atributos="stats", stats="stats",
         rasgos="traits",
     }
 
     -- Normaliza a minúsculas sin tildes para comparar claves
     local function NormKey(s)
         s = tostring(s or ""):lower()
+        s = s:gsub("\195[\161\160\164\162\129\128\132\130]", "a")
+        s = s:gsub("\195[\169\168\171\170\137\136\139\138]", "e")
+        s = s:gsub("\195[\173\172\175\174\141\140\143\142]", "i")
+        s = s:gsub("\195[\179\178\182\180\147\146\150\148]", "o")
+        s = s:gsub("\195[\186\185\188\187\154\153\156\155]", "u")
+        s = s:gsub("\195[\177\145]", "n")
         s = s:gsub("á","a"):gsub("é","e"):gsub("í","i"):gsub("ó","o"):gsub("ú","u"):gsub("ü","u")
         s = s:gsub("Á","a"):gsub("É","e"):gsub("Í","i"):gsub("Ó","o"):gsub("Ú","u")
         s = s:gsub("ñ","n"):gsub("Ñ","n")
@@ -1663,29 +1897,62 @@ do
     end
 
     -- Parsea "FUE 20 (+5)" o "STR 20 +5" → key, score, mod
-    local function ParseStatLine(clean)
-        local ab, sc, md = clean:match("^([A-Za-z]+)%s+(%d+)%s*%(([+-]%d+)%)")
-        if not ab then
-            ab, sc, md = clean:match("^([A-Za-z]+)%s+(%d+)%s+([+-]%d+)")
+    local function CleanStatText(clean)
+        local text = NormKey(clean)
+        text = text:gsub("{[^}]*}", "")
+        text = text:gsub("^%s*[-%*]+%s*", "")
+        text = text:gsub("^%s*[â€¢Â·]+%s*", "")
+        text = text:gsub(",", " ")
+        text = text:gsub("%s+", " ")
+        return text:gsub("^%s+", ""):gsub("%s+$", "")
+    end
+
+    local function ParseStatAtStart(text)
+        text = CleanStatText(text)
+        for _, label in ipairs(STAT_LABEL_ORDER) do
+            local key = STAT_LABELS[label]
+            local sc, md, rest = text:match("^" .. label .. "%s*[:=]?%s*(%d+)%s*%(?%s*([+-]%s*%d+)%s*%)?%s*(.*)$")
+            if not sc then
+                sc, rest = text:match("^" .. label .. "%s*[:=]?%s*(%d+)%s*(.*)$")
+            end
+            if sc then
+                md = tostring(md or ""):gsub("%s+", "")
+                local score = tonumber(sc)
+                local mod = tonumber(md)
+                if not mod and score then mod = math.floor((score - 10) / 2) end
+                return key, score, mod, rest
+            end
         end
-        if not ab then return end
-        local key = STAT_ABBREV[ab:upper()]
-        return key, tonumber(sc), tonumber(md)
+    end
+
+
+    local function ParseStatsInto(stats, clean)
+        local text = CleanStatText(clean)
+        local found = false
+        while text and text ~= "" do
+            local key, score, mod, rest = ParseStatAtStart(text)
+            if not key then break end
+            stats[key] = { score = score or 10, mod = mod or 0 }
+            found = true
+            text = CleanStatText(rest or "")
+        end
+        return found
     end
 
     -- Parsea "Nombre +N" (habilidad o tirada de salvación)
     -- Para saving throws intenta mapear el nombre a una stat key.
     local function ParseBonusLine(clean)
-        -- Abreviatura de 3 letras: "CON +8"
-        local ab, bs = clean:match("^([A-Za-z][A-Za-z][A-Za-z])%s+([+-]%d+)%s*$")
-        if ab then
-            local key = STAT_ABBREV[ab:upper()]
-            if key then return key, tonumber(bs) end
+        -- Abreviatura o nombre de caracteristica: "CON +8", "Cons +3", "Constitucion +8".
+        local norm = CleanStatText(clean)
+        local ab, bs = norm:match("^([%a]+)%s+([+-]%s*%d+)%s*$")
+        if ab and bs then
+            local key = STAT_LABELS[NormKey(ab)]
+            if key then return key, tonumber((bs:gsub("%s+", ""))) end
         end
         -- Nombre completo: "Constitución +8" / "Intimidación +3"
         local name, bonus = clean:match("^(.-)%s+([+-]%d+)%s*$")
         if name and bonus then
-            local statKey = STAT_FULL[NormKey(name)]
+            local statKey = STAT_LABELS[CleanStatText(name)]
             return statKey or name, tonumber(bonus)
         end
     end
@@ -1698,15 +1965,9 @@ do
     -- Devuelve tabla con: rawHeader, ac, acDesc, stats{}, savingThrows{},
     -- skills{}, resistances{}, vulnerabilities{}, immunities{}, senses{}, speed.
     function API.ParseNPCStatBlock(rawText)
-        if not rawText or rawText == "" then return nil end
+        if not rawText or rawText == "" then return NewNPCStatBlock("empty") end
 
-        local result = {
-            rawHeader = nil, ac = nil, acDesc = nil,
-            stats = {},
-            savingThrows = {}, skills = {},
-            resistances = {}, vulnerabilities = {}, immunities = {},
-            senses = {}, speed = nil,
-        }
+        local result = NewNPCStatBlock(false)
 
         local inHeader = true   -- true hasta el primer {h3}
         local section  = nil    -- sección activa
@@ -1734,16 +1995,17 @@ do
                         if acv then
                             result.ac = tonumber(acv)
                             result.acDesc = acd
-                        elseif not result.ac then
+                        else
                             local acv2 = clean:match("^C[Aa]%s+(%d+)")
                             if acv2 then result.ac = tonumber(acv2) end
                         end
-                        -- Stats de habilidad
-                        local k, sc, md = ParseStatLine(clean)
-                        if k then result.stats[k] = { score = sc, mod = md } end
+                        -- Stats de habilidad (acepta una o varias por linea).
+                        ParseStatsInto(result.stats, clean)
 
                     elseif section then
-                        if section == "savingThrows" then
+                        if section == "stats" then
+                            ParseStatsInto(result.stats, clean)
+                        elseif section == "savingThrows" then
                             local k, b = ParseBonusLine(clean)
                             if k and b then result.savingThrows[k] = b end
                         elseif section == "skills" then
@@ -1783,7 +2045,7 @@ do
                 return API.ParseNPCStatBlock(tx)
             end
         end
-        return nil, "No se encontro stat block para la unidad"
+        return NewNPCStatBlock("missing")
     end
 
     -- Devuelve (name, raidIconMarkup) para el unit.
@@ -1813,6 +2075,7 @@ end
 -- Esta ruta solo existe para estados ajenos: los links propios y los clicks
 -- sobre hyperlinks visibles se dejan al comportamiento nativo de TRP3.
 do
+    local GLANCE_LINK_CACHE_MAX = 160
     local glanceLinkCache = {}
     local knownGlanceHyperlinks = {}
     local lastGlanceLinkInfo
@@ -1866,6 +2129,12 @@ do
             link = link,
             info = info,
         }
+        while #glanceLinkCache > GLANCE_LINK_CACHE_MAX do
+            local old = table.remove(glanceLinkCache, 1)
+            if old and old.info and old.info.hyperlink then
+                knownGlanceHyperlinks[old.info.hyperlink] = nil
+            end
+        end
         lastGlanceLinkInfo = info
         return link
     end
@@ -1932,4 +2201,70 @@ do
         end)
         _glanceHookFrame:UnregisterAllEvents()
     end)
+end
+
+-- ─── Enlaces de habilidad clicables via TRP3 ChatLinks ───────────────────────
+-- Los enlaces de tipo propio no son clicables en este cliente (no disparan SetItemRef) y no
+-- podemos enganchar ChatFrame_OnHyperlinkShow. TRP3 SI hace clicables sus enlaces `totalrp3:`
+-- (engancha OnHyperlinkShow internamente) y al clicar pide los datos al emisor por addon-comm.
+-- Reutilizamos ese sistema: registramos un ChatLinkModule y generamos el hyperlink `totalrp3`.
+do
+    local _abilModule  -- nil = no intentado; false = no disponible; tabla = modulo TRP3
+
+    local function EnsureAbilModule()
+        if _abilModule ~= nil then return _abilModule end
+        _abilModule = false
+        if not (TRP3_API and TRP3_API.ChatLinks and TRP3_API.ChatLinks.InstantiateModule
+            and TRP3_API.ChatLink and TRP3_API.ChatLinkTooltipLines) then
+            return false
+        end
+        local ok, mod = pcall(function()
+            -- Si ya existe (recarga del modulo), reutilizar en vez de reinstanciar (lanza assert).
+            local existing = TRP3_API.ChatLinks.GetModuleByID
+                and TRP3_API.ChatLinks:GetModuleByID("harford_ability")
+            local m = existing or TRP3_API.ChatLinks:InstantiateModule("Harford - Habilidad", "harford_ability")
+            function m:GetLinkData(feature)
+                local nm = tostring((feature and feature.name) or "Habilidad")
+                local icon = HarfordDnDData and HarfordDnDData.GetIcon and HarfordDnDData.GetIcon(nm)
+                return nm, { name = nm, desc = (feature and feature.description) or "", icon = icon }
+            end
+            function m:GetTooltipLines(data)
+                local nm = tostring((data and data.name) or "?")
+                -- TRP3 fija el color base del titulo a blanco y no pinta icono; embebemos ambos en
+                -- el propio texto del titulo (textura inline |T...|t + color |c..|r).
+                local iconTag = (data and data.icon) and ("|T" .. tostring(data.icon) .. ":22:22|t ") or ""
+                local lines = TRP3_API.ChatLinkTooltipLines(iconTag .. "|cffffd100" .. nm .. "|r")
+                if data and data.desc and data.desc ~= "" then
+                    lines:AddLine(tostring(data.desc))
+                end
+                return lines
+            end
+            return m
+        end)
+        if ok and mod then _abilModule = mod end
+        return _abilModule
+    end
+
+    -- Devuelve el texto de un enlace de habilidad clicable (hyperlink totalrp3 de TRP3). Si TRP3
+    -- no esta disponible, cae a texto de color no clicable. Nunca lanza error.
+    function API.GetAbilityChatLink(feature)
+        if not feature then return "" end
+        local nm = tostring(feature.name or "?")
+        local mod = EnsureAbilModule()
+        if mod then
+            local ok, text = pcall(function()
+                local name, data = mod:GetLinkData(feature)
+                local link = TRP3_API.ChatLink(name, data, mod:GetID())  -- almacena el enlace
+                local id = link:GetIdentifier()
+                local player = (TRP3_API.globals and TRP3_API.globals.player_id)
+                    or (GetUnitName and GetUnitName("player", true))
+                    or UnitName("player") or "?"
+                -- Formato nativo de TRP3: |Htotalrp3:<jugador>:<identificador>|h[<nombre>]|h en amarillo.
+                return "|cffffd100|Htotalrp3:" .. player .. ":" .. id .. "|h[" .. name .. "]|h|r"
+            end)
+            if ok and type(text) == "string" then return text end
+        end
+        -- Fallback no clicable.
+        return "|cff66bbff[" .. nm .. "]|r"
+    end
 end

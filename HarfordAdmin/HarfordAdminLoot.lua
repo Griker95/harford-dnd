@@ -97,6 +97,24 @@ local function GetEntries(scope, create)
     return nil
 end
 
+local function EditorContainsItem(frame, itemID)
+    itemID = tonumber(itemID)
+    if not itemID or not frame then return false end
+
+    local entries = GetEntries(GetEditorScope(frame))
+    if type(entries) == "table" then
+        for i = 1, #entries do
+            local entry = entries[i]
+            if entry and tonumber(entry[1]) == itemID then
+                return true
+            end
+        end
+    end
+
+    local boxItemID = ExtractItemId(frame.itemBox and frame.itemBox:GetText())
+    return boxItemID == itemID
+end
+
 local function AddOrUpdateLootEntry(scope, itemId, chance, minAmount, maxAmount, index)
     local entry, err = NormalizeLootEntry(itemId, chance, minAmount, maxAmount)
     if not entry then return false, err end
@@ -586,11 +604,13 @@ end
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("GET_ITEM_INFO_RECEIVED")
 eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-eventFrame:SetScript("OnEvent", function(_, event)
+eventFrame:SetScript("OnEvent", function(_, event, ...)
     if not lootEditor or not lootEditor:IsShown() then return end
     if event == "PLAYER_TARGET_CHANGED" then
         API.RefreshFromTarget(lootEditor)
     else
+        local itemID = ...
+        if not EditorContainsItem(lootEditor, itemID) then return end
         API.Refresh(lootEditor)
     end
 end)

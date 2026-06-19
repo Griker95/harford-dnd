@@ -34,13 +34,16 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 
 | Comando | Descripcion |
 |---|---|
-| `/FichaHarford` | Abre la ficha de personaje D&D 5e |
-| `/harfordchar` / `/hchar` | Abre el panel de personaje: Ficha, Creacion, Subida y acceso a Reputacion |
-| `/harfordrep` | Abre/cierra el panel de reputaciones |
-| `/harforddebug` | Sistema de debug: on/off/toggle/status/list |
-| `/hdebug` | Alias de `/harforddebug` |
+| `/harford ficha` | Abre la ficha compacta de personaje D&D 5e |
+| `/harford char` | Abre el panel de personaje: Ficha, Libro, Creacion, Subida y acceso a Reputacion |
+| `/harford inspect` | Inspecciona en modo ligero/read-only el panel de personaje del target jugador o del nombre indicado |
+| `/harford rep` | Abre/cierra el panel de reputaciones |
+| `/harford turnos` | Abre/cierra el tracker de turnos |
+| `/harford config` | Panel de configuracion del addon |
+| `/harford debug` | Sistema de debug: on/off/toggle/status/list/run |
+| `/FichaHarford`, `/hchar`, `/harfordrep`, `/hconfig`, `/hdebug` | Retirados; usar `/harford <subcomando>` |
 | `/harfordadmin` | Herramientas de DM/Admin: loot, reputaciones, fichas NPC y acciones sobre NPCs |
-| `/hconfig` | Panel de configuracion del addon |
+| `/harfordloot` / `/hloot` | Editor admin de loot; requiere `HarfordAdmin` |
 
 ---
 
@@ -62,8 +65,14 @@ CLAUDE.md           <- Instrucciones para Claude Code
 
 - **Harford** contiene el core compartido: ficha D&D, recursos, turnos, reputaciones, loot visible/usable, unitframes, nameplates, sync addon y acciones servidor validadas que tambien pueden necesitar jugadores.
 - **HarfordAdmin** contiene la capa DM: menu contextual, ficha Modo NPC, editores de loot/reputacion, compartir datos, ajustar recursos/reputacion y comandos protegidos.
-- El icono de tabardo de la ficha abre el **Panel de Personaje**. La ficha compacta queda para tiradas; el panel unificado contiene Ficha, Creacion, Subida y acceso al panel de Reputacion.
-- La progresion usa datos hardcodeados por clase/subclase, raza, trasfondo y dotes, con efectos declarativos que se suman sobre valores manuales. Los rasgos se aplican internamente; el usuario solo elige cuando existe una eleccion real (`choice`). Se sincroniza con `DNDCLASS` dentro de `DND5EARC`.
+- El icono de tabardo de la ficha abre el **Panel de Personaje**. La ficha compacta queda para tiradas; el panel unificado contiene Ficha, **Libro**, Creacion, Subida y acceso al panel de Reputacion.
+- La pestaña **Libro** replica el libro de hechizos nativo y lista las habilidades del personaje por categoria (pasiva / activable al atacar / reaccion / directa). Las activables al atacar comparten estado con el control `Daño extra` de la ficha. Hay una **barra de accion** opcional (activable en config) para colocar habilidades del Libro.
+- La progresion usa datos hardcodeados por clase/subclase, raza, trasfondo y dotes, con efectos declarativos que se suman sobre valores manuales. Los rasgos se aplican internamente; el usuario solo elige cuando existe una eleccion real (`choice`) o cuando un rasgo declara un estado activable (`toggleState`, por ejemplo Metamorfosis/Transformado/Lobo Solitario). Se sincroniza con `DNDCLASS` dentro de `DND5EARC`.
+- El equipo del panel es virtual: se arrastran objetos reales del juego a los slots de Harford, se guardan como item links, se muestran con su icono/tooltip y se sincronizan con `DNDEQUIP`; no se equipa ni se desequipa el personaje real de WoW.
+- Los objetos custom de Epsilon pueden llevar descripcion narrativa normal y, aparte, lineas mecanicas claras que Harford parsea, por ejemplo `Naturaleza +1`, `Fuerza +2`, `Salvacion Destreza +1`, `CA +1`, `Armadura 14`, `Ataque +1`, `Dano +1`, `Ataque conjuro +1`, `CD conjuro +1` o `Dano extra 1d6 fuego`. Lo que no siga ese formato queda solo como descripcion.
+- Los slots de arma y pecho tienen selector basico por flecha. Si hay objeto equipado, el objeto tiene prioridad y la seleccion basica queda guardada como fallback.
+- Si el arma activa viene de un objeto equipado, las tiradas de ataque y dano muestran el link del arma en el chat.
+- Los daños condicionales de clase usan el mismo control `Daño extra` (y ahora tambien el boton de la habilidad en el **Libro**): pueden sumar dados o valores planos (`PB`, nivel de clase o modificador) y se consumen al tirar daño.
 - Los comandos Epsilon se construyen desde plantillas y acciones validadas (`HarfordCommandTemplates` + `HarfordServerActions`), nunca desde texto arbitrario recibido de otros clientes.
 - La mitigacion de dano (`resistente`, `inmune`, `vulnerable`) se calcula en core con el stat block TRP3 del target y se muestra en la tirada con marcadores `R`/`I`/`V`. Admin solo aplica el total ya calculado.
 - La herida visual de NPC al perder vida se centraliza en `HarfordServerActions.SetNpcHealthDelta`: emote `33` para dano normal y `34` para dano critico.
@@ -102,4 +111,4 @@ HarfordDebug.RegisterCommand("micomando", function(args)
 end, "Descripcion breve")
 ```
 
-Y ejecutar en juego con `/hdebug run micomando`.
+Y ejecutar en juego con `/harford debug run micomando`.

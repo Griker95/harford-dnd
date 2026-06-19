@@ -13,10 +13,11 @@ end
 API.Print = Print
 
 local function IsEnabled()
-    return HarfordDebugSettings.enabled == true
+    return type(HarfordDebugSettings) == "table" and HarfordDebugSettings.enabled == true
 end
 
 local function SetEnabled(enabled, silent)
+    HarfordDebugSettings = HarfordDebugSettings or {}
     HarfordDebugSettings.enabled = enabled == true
     API.enabled = HarfordDebugSettings.enabled
 
@@ -33,12 +34,12 @@ end
 
 local function ShowHelp()
     Print("comandos:")
-    Print("/harforddebug on - activa logs y comandos debug")
-    Print("/harforddebug off - desactiva debug")
-    Print("/harforddebug toggle - alterna debug")
-    Print("/harforddebug status - muestra estado")
-    Print("/harforddebug run <comando> - ejecuta un comando debug registrado")
-    Print("/harforddebug list - lista comandos debug registrados")
+    Print("/harford debug on - activa logs y comandos debug")
+    Print("/harford debug off - desactiva debug")
+    Print("/harford debug toggle - alterna debug")
+    Print("/harford debug status - muestra estado")
+    Print("/harford debug run <comando> - ejecuta un comando debug registrado")
+    Print("/harford debug list - lista comandos debug registrados")
 end
 
 local function ShowStatus()
@@ -96,7 +97,7 @@ function API.RunCommand(name, args)
     end
 
     if not IsEnabled() then
-        Print("debug esta desactivado. Usa /harforddebug on")
+        Print("debug esta desactivado. Usa /harford debug on")
         return false
     end
 
@@ -140,8 +141,8 @@ end, "estado de EpsilonLib/ARC")
 -- Volcado profundo de un frame (por defecto CharacterFrame) a la SavedVariable
 -- HarfordFrameProbe, para replicar UI nativa. Captura atlas (que el FrameDump externo
 -- NO guarda), textura, texCoord, tamaño, anclajes, capa, color y texto. Uso:
---   /harforddebug probeframe            -> vuelca CharacterFrame
---   /harforddebug probeframe NombreFrame
+--   /harford debug probeframe            -> vuelca CharacterFrame
+--   /harford debug probeframe NombreFrame
 -- Luego /reload para que se escriba al disco, y se lee SavedVariables\Harford.lua.
 API.RegisterCommand("probeframe", function(args)
     local frameName = tostring(args or ""):match("^%s*(%S+)") or ""
@@ -211,6 +212,160 @@ API.RegisterCommand("probeframe", function(args)
     HarfordFrameProbe = { frame = frameName, tree = dumpFrame(root, 0) }
     Print("volcado de '" .. frameName .. "' a HarfordFrameProbe. Haz /reload y avisa.")
 end, "vuelca un frame (def. CharacterFrame) a HarfordFrameProbe")
+
+API.RegisterCommand("booktab", function(args)
+    if not (HarfordCharacterPanel and HarfordCharacterPanel.ApplyTabSkin) then
+        Print("HarfordCharacterPanel no disponible")
+        return
+    end
+    local w, h, x, y, is = tostring(args or ""):match("^%s*(%-?%d+)%s+(%-?%d+)%s+(%-?%d+)%s+(%-?%d+)%s*(%-?%d*)")
+    local ts = HarfordCharacterPanel.ApplyTabSkin(tonumber(w), tonumber(h), tonumber(x), tonumber(y), tonumber(is))
+    Print(("tab skin: w=%d h=%d x=%d y=%d icon=%d (uso: booktab w h x y [iconsize])"):format(ts.w, ts.h, ts.x, ts.y, ts.is))
+end, "ajusta en vivo el marco SpellBook-SkillLineTab de los tabs del Libro")
+
+API.RegisterCommand("bookframe", function(args)
+    if not (HarfordCharacterPanel and HarfordCharacterPanel.ApplyBookFrame) then
+        Print("HarfordCharacterPanel no disponible")
+        return
+    end
+    local kind, x1, y1, x2, y2 = tostring(args or ""):match("^%s*(%a+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")
+    if not kind then
+        Print("uso: bookframe <pasivo|activo|reaccion> <x1> <y1> <x2> <y2>  (caja en pixeles del sheet 256x256)")
+        return
+    end
+    local fr = HarfordCharacterPanel.ApplyBookFrame(kind, tonumber(x1), tonumber(y1), tonumber(x2), tonumber(y2))
+    if not fr then
+        Print("categoria desconocida: " .. tostring(kind))
+        return
+    end
+    Print(("bookframe %s: tc=%.4f,%.4f,%.4f,%.4f size=%dx%d"):format(kind, fr.tc[1], fr.tc[2], fr.tc[3], fr.tc[4], fr.w, fr.h))
+end, "ajusta en vivo el marco (texCoord/size) de los botones del Libro por categoria")
+
+-- ─── Barra de accion (HarfordActionBars) ─────────────────────────────────────
+API.RegisterCommand("actionbar", function()
+    if not (HarfordActionBars and HarfordActionBars.Toggle) then
+        Print("HarfordActionBars no disponible")
+        return
+    end
+    Print("barra de accion: " .. (HarfordActionBars.Toggle() and "visible" or "oculta"))
+end, "muestra/oculta la barra de accion de prueba")
+
+API.RegisterCommand("actionbarsize", function(args)
+    if not (HarfordActionBars and HarfordActionBars.SetGeometry) then
+        Print("HarfordActionBars no disponible")
+        return
+    end
+    local h, capW, slot, gap, count = tostring(args or ""):match("^%s*(%d+)%s+(%d+)%s+(%d+)%s+(%d+)%s+(%d+)")
+    local c = HarfordActionBars.SetGeometry(tonumber(h), tonumber(capW), tonumber(slot), tonumber(gap), tonumber(count))
+    Print(("actionbarsize: h=%d capW=%d slot=%d gap=%d count=%d"):format(c.h, c.capW, c.slot, c.gap, c.count))
+end, "ajusta altura/tapa/slot/hueco/nº de slots de la barra de accion")
+
+API.RegisterCommand("actionbarset", function(args)
+    if not (HarfordActionBars and HarfordActionBars.SetTestTexture) then
+        Print("HarfordActionBars no disponible")
+        return
+    end
+    local path = tostring(args or ""):match("^%s*(%S.-)%s*$")
+    if not path then Print("uso: actionbarset <ruta de textura>") return end
+    HarfordActionBars.SetTestTexture(path)
+    Print("barra -> " .. path .. "  (si sale verde, esa textura NO existe en tu cliente)")
+end, "prueba una ruta de textura en la barra de accion (verifica si carga)")
+
+API.RegisterCommand("actionbarscan", function(args)
+    if not GetFileIDFromPath then
+        Print("GetFileIDFromPath no disponible en este cliente.")
+        return
+    end
+    local one = tostring(args or ""):match("^%s*(%S.-)%s*$")
+    if one then
+        local id = GetFileIDFromPath(one)
+        Print((id and id > 0) and ("EXISTE: " .. one .. " (id " .. id .. ")") or ("NO existe: " .. one))
+        return
+    end
+    local candidates = {
+        "Interface\\PlayerActionBarAlt\\spellbar-wood_center",
+        "Interface\\ExtraButton\\ExtraButtonGeneric",
+        "Interface\\ExtraButton\\Default",
+        "Interface\\AchievementFrame\\UI-Achievement-WoodBorder-Corner",
+        "Interface\\AchievementFrame\\UI-Achievement-WoodBorder-TopLeft",
+        "Interface\\AchievementFrame\\UI-Achievement-Parchment-Horizontal",
+        "Interface\\AchievementFrame\\UI-Achievement-Parchment",
+        "Interface\\PetBattles\\Pet-Loadout-Frame",
+        "Interface\\PetBattles\\PetBattleHUD",
+        "Interface\\Garrison\\GarrisonUITiles",
+        "Interface\\Archeology\\Arch-ProgressBar",
+        "Interface\\QuestFrame\\QuestBG",
+        "Interface\\BankFrame\\Bank-Background",
+        "Interface\\FrameGeneral\\UI-Background-Rock",
+        "Interface\\Spellbook\\Spellbook-Page-1",
+    }
+    Print("Texturas candidatas que EXISTEN en tu cliente:")
+    local any = false
+    for _, p in ipairs(candidates) do
+        local id = GetFileIDFromPath(p)
+        if id and id > 0 then Print("  |cff66ff66OK|r  " .. p); any = true end
+    end
+    if not any then Print("  (ninguna de la lista). Prueba rutas sueltas: actionbarscan <ruta>") end
+end, "escanea que texturas de madera/barra existen en tu cliente (o comprueba una ruta)")
+
+-- ─── Panel de personaje / inspeccion / items ─────────────────────────────────
+API.RegisterCommand("trp3build", function()
+    if HarfordCharacterPanel and HarfordCharacterPanel.RunTRP3BuildDiagnostic then
+        HarfordCharacterPanel.RunTRP3BuildDiagnostic()
+    else
+        Print("HarfordCharacterPanel no disponible")
+    end
+end, "diagnostica clase/raza/trasfondo/rasgos TRP3 del panel de personaje")
+
+API.RegisterCommand("inspecttarget", function()
+    if HarfordCharacterPanel and HarfordCharacterPanel.OpenInspect then
+        HarfordCharacterPanel.OpenInspect("target")
+    elseif HarfordCharacterInspect and HarfordCharacterInspect.Request then
+        HarfordCharacterInspect.Request("target")
+    else
+        Print("HarfordCharacterPanel/Inspect no disponible")
+    end
+end, "solicita e inspecciona el panel Harford del target jugador")
+
+API.RegisterCommand("itemrules", function(args)
+    if not (HarfordDnDItems and HarfordDnDItems.ResolveSlot) then
+        Print("HarfordDnDItems no disponible")
+        return
+    end
+    local slotKey = tostring(args or "")
+    if slotKey == "" then slotKey = "MainHand" end
+    local resolved = HarfordDnDItems.ResolveSlot(slotKey)
+    if not resolved then
+        Print("sin item equipado en " .. slotKey)
+        return
+    end
+    Print("item " .. slotKey .. ": " .. tostring(resolved.name or resolved.itemLink or "-"))
+    for _, rule in ipairs((resolved.rules and resolved.rules.list) or {}) do
+        if rule.kind == "extraDamageDice" then
+            Print(string.format("  regla: dano extra %s %s", tostring(rule.dice or "-"), tostring(rule.damageType or "")))
+        else
+            Print(string.format("  regla: %s %s %s", tostring(rule.kind or "-"), tostring(rule.key or ""), tostring(rule.value or 0)))
+        end
+    end
+    for _, line in ipairs(resolved.descriptionLines or {}) do
+        Print("  desc: " .. tostring(line))
+    end
+end, "muestra reglas parseadas desde la descripcion del item equipado en un slot")
+
+API.RegisterCommand("perfitems", function(args)
+    if not (HarfordDnDItems and HarfordDnDItems.GetPerfItems) then
+        Print("HarfordDnDItems.GetPerfItems no disponible")
+        return
+    end
+    local reset = tostring(args or ""):lower():match("reset") ~= nil
+    local p = HarfordDnDItems.GetPerfItems(reset)
+    Print("items: eventos=" .. tostring(p.events)
+        .. " procesados=" .. tostring(p.processed)
+        .. " ignorados=" .. tostring(p.ignored)
+        .. " cache=" .. tostring(p.cache) .. "/" .. tostring(p.max)
+        .. " expulsados=" .. tostring(p.evicted))
+    if reset then Print("contadores de items reiniciados.") end
+end, "mide eventos GET_ITEM_INFO_RECEIVED procesados/ignorados por Harford")
 
 API.RegisterCommand("sync", function()
     if not HarfordSync then
@@ -292,7 +447,7 @@ API.RegisterCommand("raw", function(args)
     end
 
     if tostring(args or "") == "" then
-        Print("uso: /harforddebug run raw <comando>")
+        Print("uso: /harford debug run raw <comando>")
         return
     end
 
@@ -358,7 +513,7 @@ do
     API.RegisterCommand("trp3npctest", function(args)
         local mode = tostring(args or ""):lower():match("^%s*(%S+)")
         if mode ~= "marker" and mode ~= "hyperlink" and mode ~= "chat" then
-            Print("uso: /harforddebug run trp3npctest marker|hyperlink|chat")
+            Print("uso: /harford debug run trp3npctest marker|hyperlink|chat")
             return
         end
         if not RequireNpcTarget() then return end
@@ -659,6 +814,53 @@ API.RegisterCommand("barslot", function(args)
     end
 end, "debug UV y posicion de barSlotOverlays: barslot player|target|focus")
 
+API.RegisterCommand("aurageom", function(args)
+    if not (HarfordUnitFrames and HarfordUnitFrames.GetFrame) then
+        Print("HarfordUnitFrames no disponible"); return
+    end
+    local unit = NormalizeUnitArg(args)
+    if unit ~= "target" and unit ~= "focus" then unit = "target" end
+    local frame = HarfordUnitFrames.GetFrame(unit)
+    if not frame then Print("sin frame para " .. unit); return end
+
+    Print("=== aurageom " .. unit .. " ===")
+    Print(string.format("resourceCount=%s extraResourceHeight=%s",
+        tostring(frame.resourceCount), tostring(frame.extraResourceHeight)))
+    Print(string.format("frame height=%.1f top=%s bottom=%s",
+        frame:GetHeight() or 0,
+        frame:GetTop() and string.format("%.1f", frame:GetTop()) or "nil",
+        frame:GetBottom() and string.format("%.1f", frame:GetBottom()) or "nil"))
+    local n = tonumber(frame.resourceCount) or 0
+    local lastBar = frame.bars and frame.bars[n]
+    if lastBar and lastBar.GetBottom then
+        Print(string.format("ultima barra[%d] top=%s bottom=%s", n,
+            lastBar:GetTop() and string.format("%.1f", lastBar:GetTop()) or "nil",
+            lastBar:GetBottom() and string.format("%.1f", lastBar:GetBottom()) or "nil"))
+    end
+
+    local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
+    local function dumpFrame(label, f)
+        if not f then Print(label .. ": nil"); return end
+        local shown = (f.IsShown and f:IsShown()) and "shown" or "hidden"
+        Print(string.format("%s [%s] name=%s top=%s bottom=%s", label, shown,
+            (f.GetName and f:GetName()) or "?",
+            f.GetTop and f:GetTop() and string.format("%.1f", f:GetTop()) or "nil",
+            f.GetBottom and f:GetBottom() and string.format("%.1f", f:GetBottom()) or "nil"))
+        local num = (f.GetNumPoints and f:GetNumPoints()) or 0
+        for i = 1, num do
+            local p, rel, rp, x, y = f:GetPoint(i)
+            Print(string.format("  point%d: %s -> %s %s x=%.1f y=%.1f", i, tostring(p),
+                (rel and rel.GetName and rel:GetName()) or tostring(rel), tostring(rp), x or 0, y or 0))
+        end
+    end
+    dumpFrame("Buffs(cont)", _G[prefix .. "Buffs"] or (_G[prefix] and _G[prefix].BuffFrame))
+    dumpFrame("Debuffs(cont)", _G[prefix .. "Debuffs"] or (_G[prefix] and _G[prefix].DebuffFrame))
+    dumpFrame("Buff1", _G[prefix .. "Buff1"])
+    dumpFrame("Buff2", _G[prefix .. "Buff2"])
+    dumpFrame("Debuff1", _G[prefix .. "Debuff1"])
+    dumpFrame("Debuff2", _G[prefix .. "Debuff2"])
+end, "geometria de auras vs barras de recurso: aurageom target|focus")
+
 API.RegisterCommand("totlayer", function()
     local function SafeName(frame)
         if not frame then return "nil" end
@@ -919,7 +1121,7 @@ API.RegisterCommand("totwatch", function(args)
 end, "observa eventos/update y valores reales del TargetFrameToT durante unos segundos")
 
 -- Espía los métodos de TargetFrameToTManaBar para ver quién los llama y con qué valores.
--- Uso: /harforddebug run totspy [segundos]   (por defecto 5s)
+-- Uso: /harford debug run totspy [segundos]   (por defecto 5s)
 -- IMPORTANTE: usa hooksecurefunc — no puede desinstalarse. Úsalo solo para diagnóstico puntual.
 API.RegisterCommand("totspy", function(args)
     local seconds = tonumber(args) or 5
@@ -1017,7 +1219,7 @@ API.RegisterCommand("totscripts", function()
 end, "lista scripts en barras del ToT (busca OnUpdate/OnValueChanged)")
 
 -- Mide cuántas veces por segundo disparan las funciones clave del ToT y desde qué origen.
--- Uso: /harforddebug run totrate [segundos]   (por defecto 5s)
+-- Uso: /harford debug run totrate [segundos]   (por defecto 5s)
 API.RegisterCommand("totrate", function(args)
     local seconds = tonumber(args) or 5
     seconds = math.max(2, math.min(30, seconds))
@@ -1165,7 +1367,7 @@ end, "diagnostica portrait overlay del ToT y estado TRP3")
 
 -- Solicita recursos al target actual por WHISPER (DND5EARC REQ).
 -- Útil para forzar una actualización cuando el cache de recursos está vacío o desactualizado.
--- Uso: /harforddebug run reqres
+-- Uso: /harford debug run reqres
 API.RegisterCommand("reqres", function()
     local unit = "target"
     if not UnitExists or not UnitExists(unit) then
@@ -1186,7 +1388,7 @@ API.RegisterCommand("reqres", function()
 end, "fuerza solicitud de recursos al target: reqres")
 
 -- Diagnóstico de TRP3 para el jugador target (unitID, profileID, perfil conocido, player_id propio).
--- Uso: /harforddebug run trp3player
+-- Uso: /harford debug run trp3player
 API.RegisterCommand("trp3player", function()
     Print("=== TRP3 jugador target ===")
     local unit = UnitExists and UnitExists("target") and "target" or "player"
@@ -1224,7 +1426,7 @@ API.RegisterCommand("trp3player", function()
 end, "diagnóstico TRP3 del target: unitID, profileID y si puede abrir ficha")
 
 -- Diagnóstico de APIs de posición disponibles en Epsilon.
--- Uso: /harforddebug run testpos
+-- Uso: /harford debug run testpos
 API.RegisterCommand("testpos", function()
     Print("=== APIs de posición ===")
 
@@ -1262,7 +1464,7 @@ end, "diagnóstico de APIs de posición disponibles en Epsilon")
 
 -- Observa la posición del jugador durante N segundos y muestra si cambia.
 -- Útil para confirmar que UnitPosition actualiza mientras el jugador se mueve.
--- Uso: /harforddebug run poswatch [segundos]   (por defecto 8s)
+-- Uso: /harford debug run poswatch [segundos]   (por defecto 8s)
 do
     local _posWatchFrame
     API.RegisterCommand("poswatch", function(args)
@@ -1343,8 +1545,7 @@ do
     end, "observa posición del jugador N segundos para verificar que UnitPosition actualiza: poswatch [segundos]")
 end
 
-SLASH_HARFORDDEBUG1 = "/harforddebug"
-SLASH_HARFORDDEBUG2 = "/hdebug"
+-- Comandos sueltos retirados: usar `/harford debug <args>`.
 SlashCmdList["HARFORDDEBUG"] = function(msg)
     local command, rest = SplitCommand(msg)
 
@@ -1363,7 +1564,7 @@ SlashCmdList["HARFORDDEBUG"] = function(msg)
     elseif command == "run" then
         local debugCommand, args = SplitCommand(rest)
         if debugCommand == "" then
-            Print("uso: /harforddebug run <comando>")
+            Print("uso: /harford debug run <comando>")
             return
         end
         API.RunCommand(debugCommand, args)
@@ -1374,7 +1575,7 @@ SlashCmdList["HARFORDDEBUG"] = function(msg)
 end
 
 -- ── INSPECCIÓN DE FRAME TOT / FOCUS ────────────────────────────────────────
--- Uso: /harforddebug run totframe [tot|focustot]
+-- Uso: /harford debug run totframe [tot|focustot]
 -- Vuelca jerarquía completa del frame para diagnosticar overlays y niveles.
 API.RegisterCommand("totframe", function(args)
     local which = tostring(args or ""):match("^%s*(%S*)")
@@ -1709,7 +1910,7 @@ API.RegisterCommand("absorbdbg", function()
     -- Inspecciona el estado del absorb en todos los overlays de grupo activos
     local HUF = HarfordUnitFrames
     if not (HUF and HUF.API and HUF.API.S and HUF.API.S.groupOverlays) then
-        print("[AbsorbDbg] HarfordUnitFrames.API.S.groupOverlays no disponible")
+        Print("[AbsorbDbg] HarfordUnitFrames.API.S.groupOverlays no disponible")
         return
     end
     local count = 0
@@ -1729,11 +1930,11 @@ API.RegisterCommand("absorbdbg", function()
             local tmp  = data and data.tempCur or "?"
             local fvis = fill and fill:IsShown() and "SHOW" or "HIDE"
             local evis = edge and edge:IsShown() and "SHOW" or "HIDE"
-            print(string.format("[AbsorbDbg] %s bar=%.0fx%.0f cur=%s max=%s tmp=%s fill=%s edge=%s",
+            Print(string.format("[AbsorbDbg] %s bar=%sx%s cur=%s max=%s tmp=%s fill=%s edge=%s",
                 name, bw, bh, tostring(cur), tostring(max), tostring(tmp), fvis, evis))
         end
     end
-    if count == 0 then print("[AbsorbDbg] No hay group overlays activos") end
+    if count == 0 then Print("[AbsorbDbg] No hay group overlays activos") end
 end, "inspecciona absorb en overlays de raid/party activos")
 
 -- ─── Diagnóstico ParseSections ───────────────────────────────────────────────
@@ -1799,7 +2000,7 @@ API.RegisterCommand("trpsections", function(args)
             Print("TX: vacío")
         else
             Print("TX primeros 400 chars:")
-            print(rawText:sub(1, 400))
+            Print(rawText:sub(1, 400))
             local nh1 = select(2, rawText:gsub("{h1}", ""))
             Print(string.format("{h1}=%d", nh1))
         end
@@ -1845,7 +2046,7 @@ API.RegisterCommand("npcblock", function(args)
             Print("CompanionProfile OK — data.TX length: " .. tostring(tx and #tx or 0))
             if tx and #tx > 0 then
                 Print("--- primeros 300 chars de data.TX ---")
-                print(tx:sub(1, 300))
+                Print(tx:sub(1, 300))
             else
                 Print("data.TX vacio o nil")
             end
@@ -1866,7 +2067,7 @@ API.RegisterCommand("npcblock", function(args)
                 Print("AboutText length: " .. tostring(txt and #txt or 0) .. " err=" .. tostring(err2))
                 if txt and #txt > 0 then
                     Print("--- primeros 300 chars de AboutText ---")
-                    print(txt:sub(1, 300))
+                    Print(txt:sub(1, 300))
                 end
             end
         else
@@ -1916,90 +2117,6 @@ API.RegisterCommand("npcblock", function(args)
         Print("HasSheetContext: " .. tostring(HarfordDnDAPI.HasSheetContext and HarfordDnDAPI.HasSheetContext()))
     end
 end, "diagnóstico completo del stat block NPC del target (arg: unit, default=target)")
-
--- ─── Interceptor npc info ────────────────────────────────────────────────────
--- Engancha todos los canales de salida de comandos y vuelca la pila cuando
--- detecta "npc info". Activar con: /harforddebug run npcinfotrap on
--- Desactivar con:                  /harforddebug run npcinfotrap off
-do
-    local _trapActive = false
-    local _hooked = false
-
-    local function Dump(channel, cmd)
-        Print("|cffff5555[npcinfotrap]|r canal=" .. tostring(channel) .. " cmd=" .. tostring(cmd))
-        Print(debugstack(2, 20, 5))
-    end
-
-    local function IsNpcInfo(text)
-        if type(text) ~= "string" then return false end
-        local t = text:lower():gsub("^%.", ""):gsub("^%s+", "")
-        return t == "npc info" or t:sub(1, 9) == "npc info "
-    end
-
-    local function InstallHooks()
-        if _hooked then return end
-        _hooked = true
-
-        -- 1. SendChatMessage (comandos por chat, .npc info)
-        if SendChatMessage then
-            hooksecurefunc("SendChatMessage", function(text, ...)
-                if _trapActive and IsNpcInfo(text) then
-                    Dump("SendChatMessage", text)
-                end
-            end)
-        end
-
-        -- 2. ARC.CMD / ARC.COMM
-        if ARC then
-            for _, key in ipairs({ "CMD", "COMM" }) do
-                if type(ARC[key]) == "function" then
-                    hooksecurefunc(ARC, key, function(text)
-                        if _trapActive and IsNpcInfo(text) then
-                            Dump("ARC." .. key, text)
-                        end
-                    end)
-                end
-            end
-        end
-
-        -- 3. EpsilonLib.AddonCommands — hooks sobre los senders ya registrados
-        --    y sobre futuros registros via EnsureAddonCommands
-        if HarfordEpsilonCommands then
-            local orig = HarfordEpsilonCommands.Send
-            if type(orig) == "function" then
-                HarfordEpsilonCommands.Send = function(command, opts)
-                    if _trapActive and IsNpcInfo(command) then
-                        Dump("HarfordEpsilonCommands.Send", command)
-                    end
-                    return orig(command, opts)
-                end
-            end
-        end
-
-        -- 4. C_ChatInfo.SendAddonMessage / SendAddonMessage por si alguien
-        --    serializa el comando como mensaje addon
-        if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-            hooksecurefunc(C_ChatInfo, "SendAddonMessage", function(_, text)
-                if _trapActive and IsNpcInfo(text) then
-                    Dump("C_ChatInfo.SendAddonMessage", text)
-                end
-            end)
-        end
-    end
-
-    API.RegisterCommand("npcinfotrap", function(args)
-        local arg = tostring(args or ""):lower():match("^%s*(%S*)")
-        if arg == "off" then
-            _trapActive = false
-            Print("npcinfotrap desactivado")
-            return
-        end
-        InstallHooks()
-        _trapActive = true
-        Print("npcinfotrap activado — reportara cada vez que algo envie 'npc info'")
-    end, "intercepta cualquier envio de 'npc info' y vuelca la pila (arg: on|off)")
-end
--- ─── Fin Interceptor npc info ─────────────────────────────────────────────────
 
 -- ─── Diagnostico: retrato del PlayerFrame que revierte a 3D ───────────────────
 -- Caso a investigar: con icono TRP3 en el retrato del player (modo "frame"), al
@@ -2144,7 +2261,7 @@ end, "prueba la intercepcion de impacto (onImpact) de un preset de ataque")
 API.RegisterCommand("npcemote", function(args)
     local id = tonumber((tostring(args or ""):match("(%d+)")))
     if not id then
-        Print("uso: /harforddebug run npcemote <id>  (target = NPC). Ej: 441 (parry), 2030 (dodge)")
+        Print("uso: /harford debug run npcemote <id>  (target = NPC). Ej: 441 (parry), 2030 (dodge)")
         return
     end
     if not (HarfordServerActions and HarfordServerActions.SetNpcEmote) then
@@ -2175,4 +2292,208 @@ API.RegisterCommand("defrand", function()
     end
 end, "distribucion de PickDefenseSeq en 20 tiradas (parry/dodge)")
 
-SetEnabled(HarfordDebugSettings.enabled == true, true)
+local function CountTable(tbl)
+    local count = 0
+    if type(tbl) ~= "table" then return 0 end
+    for _ in pairs(tbl) do count = count + 1 end
+    return count
+end
+
+local function RefreshAfterSavedVariableClean()
+    if HarfordReputationUI and HarfordReputationUI.Refresh then HarfordReputationUI.Refresh() end
+    if HarfordReputationAdmin and HarfordReputationAdmin.Refresh then HarfordReputationAdmin.Refresh() end
+end
+
+local SAVED_VARIABLES = {
+    "HarfordLootTaggedCreatureRegistry",
+    "HarfordLootLootRegistry",
+    "HarfordLootGlobalLootRegistry",
+    "HarfordDnDMinimapSettings",
+    "HarfordDnDPersistStore",
+    "HarfordDnDTargetResourceSettings",
+    "HarfordTurnOrderStore",
+    "HarfordDebugSettings",
+    "HarfordConfigStore",
+    "HarfordReputationStore",
+    "HarfordFrameProbe",
+}
+
+local function PurgeAllSavedVariables()
+    local purged = 0
+    for _, name in ipairs(SAVED_VARIABLES) do
+        if _G[name] ~= nil then
+            _G[name] = nil
+            purged = purged + 1
+            Print("SV purgada: " .. name)
+        end
+    end
+
+    if HarfordDnDStore and HarfordDnDStore.state then
+        HarfordDnDStore.state.persist = {}
+        HarfordDnDStore.state.runtime = {}
+    end
+
+    Print("Purgadas " .. tostring(purged) .. " SavedVariables de Harford. Haz /reload para reconstruir desde cero.")
+    return purged
+end
+
+API.RegisterCommand("svclean", function(args)
+    args = tostring(args or ""):lower()
+    local action = args:match("^%s*(%S+)") or "status"
+
+    local function CleanReputationLogs()
+        if type(HarfordReputationStore) == "table" then
+            local count = CountTable(HarfordReputationStore.logs)
+            HarfordReputationStore.logs = nil
+            Print("logs de reputacion eliminados: " .. tostring(count))
+            return count
+        end
+        Print("HarfordReputationStore no existe.")
+        return 0
+    end
+
+    local function CleanNpcLinks()
+        if type(HarfordReputationStore) == "table" then
+            local count = CountTable(HarfordReputationStore.npcLinks)
+            HarfordReputationStore.npcLinks = nil
+            Print("npcLinks eliminados: " .. tostring(count))
+            RefreshAfterSavedVariableClean()
+            return count
+        end
+        Print("HarfordReputationStore no existe.")
+        return 0
+    end
+
+    local function CleanGuilds()
+        if type(HarfordReputationStore) == "table" then
+            local count = CountTable(HarfordReputationStore.guilds)
+            HarfordReputationStore.guilds = nil
+            Print("guilds obsoleto eliminado: " .. tostring(count))
+            RefreshAfterSavedVariableClean()
+            return count
+        end
+        Print("HarfordReputationStore no existe.")
+        return 0
+    end
+
+    local function CleanTargetResourceSettings(force)
+        local settings = HarfordDnDTargetResourceSettings
+        if type(settings) ~= "table" then
+            Print("target resource settings: nada que limpiar.")
+            return 0
+        end
+
+        if settings.userPlaced == true and not force then
+            Print("target resource settings conserva posicion manual. Usa 'targetpos force' para borrarla.")
+            return 0
+        end
+
+        HarfordDnDTargetResourceSettings = nil
+        Print("target resource settings eliminado.")
+        return 1
+    end
+
+    local function CleanFrameProbe()
+        local count = CountTable(HarfordFrameProbe)
+        HarfordFrameProbe = nil
+        Print("HarfordFrameProbe eliminado: " .. tostring(count) .. " claves. Haz /reload para descargarlo de SavedVariables.")
+        return count
+    end
+
+    local function CleanDnDDefaults()
+        if HarfordDnDStore and HarfordDnDStore.PrunePersistedProfiles then
+            local removed = HarfordDnDStore.PrunePersistedProfiles()
+            Print("defaults de perfiles DnD eliminados: " .. tostring(removed or 0))
+            return removed or 0
+        end
+        Print("HarfordDnDStore.PrunePersistedProfiles no disponible.")
+        return 0
+    end
+
+    if action == "status" or action == "" then
+        local rep = type(HarfordReputationStore) == "table" and HarfordReputationStore or {}
+        Print("HarfordReputation.logs: " .. tostring(CountTable(rep.logs)))
+        Print("HarfordReputation.npcLinks: " .. tostring(CountTable(rep.npcLinks)) .. " (obsoleto; usar svclean npclinks)")
+        Print("HarfordReputation.guilds: " .. tostring(CountTable(rep.guilds)) .. " (obsoleto; la reputacion es por PJ)")
+        local settings = HarfordDnDTargetResourceSettings
+        if type(settings) == "table" then
+            Print("TargetResourceSettings: userPlaced=" .. tostring(settings.userPlaced) .. " x=" .. tostring(settings.x) .. " y=" .. tostring(settings.y))
+        else
+            Print("TargetResourceSettings: nil")
+        end
+        Print("HarfordFrameProbe: " .. tostring(CountTable(HarfordFrameProbe)) .. " claves (debug; usar svclean frameprobe tras probeframe)")
+        local ps = type(HarfordDnDPersistStore) == "table" and HarfordDnDPersistStore or {}
+        -- Progresion/equipo/dados/usos ahora viven anidados en profiles[name]._x; contamos
+        -- cuantos perfiles tienen cada uno. (Las top-level antiguas se migran y quedan nil.)
+        local nProg, nEquip, nHit, nUses = 0, 0, 0, 0
+        for _, p in pairs(type(ps.profiles) == "table" and ps.profiles or {}) do
+            if type(p) == "table" then
+                if type(p._progression) == "table" then nProg = nProg + 1 end
+                if type(p._equipment) == "table" then nEquip = nEquip + 1 end
+                if type(p._hitDice) == "table" then nHit = nHit + 1 end
+                if type(p._featureUses) == "table" then nUses = nUses + 1 end
+            end
+        end
+        Print("DnD persist: profiles=" .. tostring(CountTable(ps.profiles))
+            .. " (_progression=" .. nProg .. " _equipment=" .. nEquip
+            .. " _hitDice=" .. nHit .. " _featureUses=" .. nUses .. ")")
+        local legacy = CountTable(ps.equipment) + CountTable(ps.classProgression) + CountTable(ps.hitDice) + CountTable(ps.featureUses)
+        if legacy > 0 then Print("  top-level antiguas sin migrar: " .. legacy .. " (se migran al cargar)") end
+        if HarfordDnDStore and HarfordDnDStore.PrunePersistedProfiles then
+            Print("DnD profile pruning: disponible ('svclean dnd' poda defaults + contadores a 0)")
+        end
+        Print("Purgado total: /harford debug run svclean purge confirm")
+        return
+    end
+
+    if action == "safe" then
+        CleanDnDDefaults()
+        CleanReputationLogs()
+        CleanTargetResourceSettings(false)
+        CleanFrameProbe()
+        return
+    end
+
+    if action == "logs" then CleanReputationLogs(); return end
+    if action == "npclinks" then CleanNpcLinks(); return end
+    if action == "guilds" then CleanGuilds(); return end
+    if action == "dnd" then CleanDnDDefaults(); return end
+    if action == "frameprobe" then CleanFrameProbe(); return end
+    if action == "targetpos" then
+        local force = args:match("%s+force%s*$") ~= nil
+        CleanTargetResourceSettings(force)
+        return
+    end
+    if action == "all" then
+        CleanDnDDefaults()
+        CleanReputationLogs()
+        CleanNpcLinks()
+        CleanGuilds()
+        CleanTargetResourceSettings(true)
+        CleanFrameProbe()
+        return
+    end
+    if action == "purge" then
+        if not args:match("%s+confirm%s*$") then
+            Print("PELIGRO: borra TODAS las SavedVariables de Harford declaradas en el .toc.")
+            Print("Uso confirmado: /harford debug run svclean purge confirm")
+            return
+        end
+        PurgeAllSavedVariables()
+        return
+    end
+
+    Print("uso: /harford debug run svclean status|safe|dnd|logs|npclinks|guilds|frameprobe|targetpos [force]|all|purge confirm")
+end, "limpia SavedVariables obsoletas/controladas")
+
+-- Diagnostico en vivo del fondo del modelo 3D del panel de personaje. Abre antes el panel
+-- con /harford char (pestana Ficha). Permite probar tokens de DressUpBackground y contraste.
+API.RegisterCommand("modelbg", function(args)
+    if not (HarfordCharacterPanel and HarfordCharacterPanel.DebugModelBg) then
+        Print("HarfordCharacterPanel.DebugModelBg no disponible")
+        return
+    end
+    Print(tostring(HarfordCharacterPanel.DebugModelBg(args)))
+end, "fondo modelo 3D: modelbg [info|reset|<Token>|desat 0/1|dark 0..1|bright 0..1]")
+
+SetEnabled(type(HarfordDebugSettings) == "table" and HarfordDebugSettings.enabled == true, true)

@@ -34,7 +34,7 @@ Estas limitaciones están confirmadas. **No intentar alternativas** — ya se pr
 - **SetAlpha en barras ToT**: `TargetofTarget_Update` y `OnValueChanged` restauran el alpha. No usar `SetAlpha` para ocultar barras nativas del ToT.
 - **PlayerFrameTexture**: `SetAlpha(0)` no funciona en Epsilon para el player frame.
 - **Reposicionar TargetFrameToT**: `TargetofTarget_Update` resetea los anchors entre ticks. No mover el frame nativo.
-- **`ClearTargetAuraAnchorCache()` directamente**: provoca drift infinito de buff frames. Siempre usar `RestoreTargetAuras()` (restaura Y limpia). Con focus activo, `UNIT_AURA focus` también dispara `RefreshFrame("Target")`, duplicando la deriva.
+- **Vaciar el cache de anclas de auras sin restaurar antes**: provoca drift infinito de buff frames. Siempre usar `RestoreTargetAuras()`/`RestoreUnitAuras(unit)` (restauran Y limpian). Con focus activo, `UNIT_AURA focus` también dispara `RefreshFrame("Target")`, duplicando la deriva.
 - **`CHAT_MSG_SYSTEM` para estado DM**: dispara en cualquier mensaje de sistema. Usar `HarfordAuthority.RegisterChangeListener` para cambios de modo DM.
 
 ## Patrones de código establecidos
@@ -53,7 +53,7 @@ f:SetAllPoints(nativeBar)  -- anclaje cross-tree OK para posicionamiento
 
 -- Buff frames: SIEMPRE restaurar antes de limpiar el cache de anclas
 RestoreTargetAuras()  -- OK: restaura posición nativa Y limpia cache
--- ClearTargetAuraAnchorCache()  -- MAL: limpia sin restaurar → drift infinito
+-- Vaciar el cache sin restaurar antes  -- MAL: deja frames desplazados → drift infinito
 
 -- HandleAddonMessage retorna boolean; usar para condicionar refreshes costosos
 local changed = AddonHandlers.HandleAddonMessage(prefix, message, sender)
@@ -95,11 +95,12 @@ end, "Descripción breve")
 | `Harford/HarfordUnitFrames.lua` | Overlays TRP3/recursos sobre frames nativos (~4300 líneas) |
 | `Harford/HarfordNamePlates.lua` | Overlays DnD sobre nameplates (KuiNameplates o nativo WoW) |
 | `Harford/HarfordDnD.lua` | Ficha D&D 5e, UI principal `/FichaHarford`. 3 tabs (Características/Ataque/Habilidades, 124px c/u). Icono tabardo en la esquina superior derecha abre el panel de reputación |
+| `Harford/HarfordCharacterPanel.lua` | Panel de personaje: Ficha, **Libro** (réplica 1:1 del spellbook nativo, categorías pasivo/al_accion/reaccion/directo), Creación, Subida, Reputación |
+| `Harford/HarfordActionBars.lua` | Barra de acción propia (config-gated `actionbar`) para habilidades del Libro. Texturas `PlayerActionBarAlt\spellbar-wood*` NO existen en el cliente Epsilon |
 | `Harford/HarfordTurns.lua` | Tracker visual de turnos de combate |
 | `Harford/HarfordReputation.lua` | Core de reputaciones: facciones, rangos, jugadores, NPCs |
 | `Harford/HarfordReputationUI.lua` | Panel flotante `/harfordrep`. Filas con `ReputationBarTemplate`; caps (`_barLeftTex`/`_barRightTex`) gestionados explícitamente |
 | `Harford/HarfordReputationSync.lua` | Sync de red, prefix `HARFORDREP` |
-| `Harford/HarfordReputationTooltip.lua` | Hook GameTooltip NPCs con facción vinculada |
 | `Harford/HarfordDebug.lua` | Sistema de debug — diagnósticos temporales aquí |
 | `Harford/HarfordSync.lua` | Transporte addon messages |
 | `Harford/HarfordTRP3.lua` | Lectura segura de perfiles TRP3 |

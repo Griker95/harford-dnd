@@ -11,21 +11,42 @@ local GREEN = "|cff00ff00"
 local RED = "|cffff3333"
 local ENDCLR = "|r"
 
-local function toN(x, d)
-    local n = tonumber(x)
-    if n == nil then return d or 0 end
-    return n
-end
 
 local function GetSelfArmorClass()
-    if HarfordDnDContext and HarfordDnDContext.Get then
-        local bonus = HarfordDnDFeatureEffects
-            and HarfordDnDFeatureEffects.GetBonus
-            and HarfordDnDFeatureEffects.GetBonus("armorClass")
-            or 0
-        return math.floor(toN(HarfordDnDContext.Get("ArmorClass", "10"), 10) + bonus)
+    local bonus = HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("armorClass")
+        or 0
+    -- La CA manual de la ficha quedo OBSOLETA: se usa la CA de la armadura EQUIPADA
+    -- (que ya incluye Destreza por categoria y escudo). La CA de TRP3 "Currently"/"Other
+    -- Information" tiene aun mas prioridad y se resuelve antes en GetArmorClassForUnit.
+    local equipped = HarfordDnDItems and HarfordDnDItems.GetEquippedArmorClass
+        and HarfordDnDItems.GetEquippedArmorClass()
+        or nil
+    if equipped then
+        return math.floor(equipped + bonus)
     end
-    return 10
+    -- Sin armadura ni escudo equipados: desarmado 10 + Mod. Destreza. Los rasgos de
+    -- "Defensa sin Armadura" (Monje: Sabiduria) suman aqui el Mod. de su caracteristica,
+    -- y SOLO aqui: con armadura o escudo equipados se cae a la rama anterior y no aplican.
+    local dex = (HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod and HarfordDnDCalc.GetAbilityMod("Destreza")) or 0
+    local unarmored = 0
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetUnarmoredDefenseAbilities and HarfordDnDCalc then
+        for _, ability in ipairs(HarfordDnDFeatureEffects.GetUnarmoredDefenseAbilities()) do
+            unarmored = unarmored + (HarfordDnDCalc.GetAbilityMod(ability) or 0)
+        end
+    end
+    return math.floor(10 + dex + unarmored + bonus)
+end
+
+-- CA efectiva del jugador para PERSISTIR/ENVIAR a otros clientes: TRP3 "Other Information"
+-- (CO) / "Currently" (CU) si hay un valor escrito ahi; si no, la CA de la armadura equipada.
+-- Asi otros ven tu CA de equipo sin que la pongas en TRP3, pero un valor en TRP3 manda.
+function HarfordDnDCombat.ComputeSelfArmorClass()
+    local trp3 = HarfordTRP3 and HarfordTRP3.GetPlayerArmorClass
+        and HarfordTRP3.GetPlayerArmorClass("player")
+    if trp3 then return math.floor(trp3) end
+    return GetSelfArmorClass()
 end
 
 local function GetUnitKeys(unit)
@@ -193,11 +214,64 @@ function HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, unit)
     elseif critTag == "PIFIA" then
         hit = false
     else
-        hit = (tonumber(total) or 0) >= armorClass
+        hit = (tonumber(total) or 0) > armorClass  -- empate = fallo para el atacante (el defensor gana los empates)
     end
 
     local status = hit and (GREEN .. "Superada" .. ENDCLR) or (RED .. "No superada" .. ENDCLR)
     return armorClass, hit, " vs CA " .. tostring(armorClass) .. " " .. status
+end
+
+-- Caracteristica ES -> clave del stat block TRP3 (ingles), para resolver salvaciones.
+local SAVE_STAT_KEY = {
+    Fuerza = "strength", Destreza = "dexterity", Constitucion = "constitution",
+    Inteligencia = "intelligence", Sabiduria = "wisdom", Carisma = "charisma",
+}
+
+-- Bonus de tirada de salvacion del objetivo para una caracteristica (nombre ES).
+-- NPC companion o jugador interpretado via TRP3: usa la salvacion del stat block si
+-- existe; si no, el modificador de la caracteristica; si no hay dato fiable, +0.
+function HarfordDnDCombat.GetSaveBonusForUnit(unit, abilityES)
+    local statKey = SAVE_STAT_KEY[abilityES]
+    if not (statKey and unit and UnitExists and UnitExists(unit)) then return 0 end
+    if HarfordTRP3 and HarfordTRP3.GetNPCStatBlock then
+        local sb = HarfordTRP3.GetNPCStatBlock(unit)
+        if sb then
+            local sv = sb.savingThrows and tonumber(sb.savingThrows[statKey])
+            if sv then return sv end
+            local st = sb.stats and sb.stats[statKey]
+            if st and tonumber(st.mod) then return tonumber(st.mod) end
+        end
+    end
+    return 0
+end
+
+-- Vida efectiva ACTUAL del objetivo, para "parar al morir" (no gastar/dañar de mas):
+--   NPC     -> UnitHealth("target") (= vida D&D, porque Harford la modifica en el servidor).
+--   Jugador -> cache remota (health + temp_health; su barra de WoW NO es la vida D&D).
+-- Devuelve numero o nil (desconocida -> no se capa, comportamiento de siempre).
+function HarfordDnDCombat.GetTargetEffectiveHP()
+    if not (UnitExists and UnitExists("target")) then return nil end
+    if UnitIsPlayer and UnitIsPlayer("target") then
+        local name = (GetUnitName and GetUnitName("target", true)) or (UnitName and UnitName("target"))
+        local cache = HarfordDnDResources and HarfordDnDResources.RemoteCache
+        if name and cache and HarfordDnDResources.CurKey then
+            local short = Ambiguate and Ambiguate(name, "short") or name
+            local tbl = cache[name] or cache[short]
+            if tbl then
+                local hp = tonumber(tbl[HarfordDnDResources.CurKey("health")])
+                if hp then
+                    local temp = math.max(0, tonumber(tbl[HarfordDnDResources.CurKey("temp_health")]) or 0)
+                    return hp + temp
+                end
+            end
+        end
+        return nil
+    end
+    if UnitHealth then
+        local hp = tonumber(UnitHealth("target"))
+        if hp and hp > 0 then return hp end
+    end
+    return nil
 end
 
 function HarfordDnDCombat.ApplyWeaponDamageToNpc(total, isCritical)

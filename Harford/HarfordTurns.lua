@@ -1,4 +1,4 @@
--- Visual initiative tracker for Harford.
+﻿-- Visual initiative tracker for Harford.
 
 HarfordTurnOrderStore = HarfordTurnOrderStore or {}
 
@@ -6,6 +6,7 @@ local COMM_PREFIX = "HARFORDTURN"
 local TURN_SINGLE_MESSAGE_LIMIT = 230
 local TURN_CHUNK_ENCODED_LIMIT = 170
 local TURN_MAX_CHUNKS = 80
+local TURN_SERIAL_MAX = 999999
 local MAX_CARDS = 6
 local CARD_W = 70
 local CARD_GAP = 6
@@ -21,7 +22,7 @@ local SheetScrollChild
 local SheetText
 local SheetSectionPool    = {}
 local SheetActiveSections = {}
-local RefreshSheetLayout  -- forward declaration (definida más abajo)
+local RefreshSheetLayout  -- forward declaration (definida mas abajo)
 local StatusText
 local RefreshFrame
 local MarkChanged
@@ -34,6 +35,7 @@ local lastTurnAlertKey = ""
 local lastTurnNoticeKey = ""
 local lastRoundAlertKey = ""
 local turnChunkBuffers = {}
+local turnSerial = 0
 local NormalizeIconPath
 local NormalizePlayerUnitID
 local NormalizeEntryLinks
@@ -114,13 +116,8 @@ local function Print(msg)
     DEFAULT_CHAT_FRAME:AddMessage("|cff00ccff[D&D]|r " .. tostring(msg or ""))
 end
 
-local function GetMyName()
-    local fullName = GetUnitName and GetUnitName("player", true)
-    if fullName and fullName ~= "" then return fullName end
-    return UnitName("player") or "Jugador"
-end
 
--- Devuelve el calificativo de reacción ("aliado"/"neutral"/"enemigo") y el markup de color.
+-- Devuelve el calificativo de reaccion ("aliado"/"neutral"/"enemigo") y el markup de color.
 local function GetNPCReactionLabel(entry)
     local reaction = tonumber(entry and entry.reaction) or 0
     if reaction >= 5 then
@@ -196,7 +193,7 @@ end
 local function AlertMyTurn(entry, activeIndex, turnSerial)
     if not EntryBelongsToMe(entry) then return end
 
-    local serial = tonumber(turnSerial) or (HarfordTurnOrderStore and tonumber(HarfordTurnOrderStore.turnSerial)) or 0
+    local serial = tonumber(turnSerial) or 0
     local key
     if serial > 0 then
         key = "serial:" .. tostring(serial) .. ":" .. tostring(entry.id or "") .. ":" .. tostring(entry.name or "")
@@ -215,12 +212,19 @@ local function AlertMyTurn(entry, activeIndex, turnSerial)
         PlaySound(SOUNDKIT.RAID_WARNING, "Master")
     end
     Print(text .. ": " .. tostring(entry.name or "Jugador"))
+
+    -- Avisa a los listeners registrados (p. ej. el Libro apaga las reacciones preparadas).
+    if HarfordTurnOrderAPI and HarfordTurnOrderAPI._myTurnListeners then
+        for _, fn in ipairs(HarfordTurnOrderAPI._myTurnListeners) do
+            pcall(fn, entry)
+        end
+    end
 end
 
 local function AlertRoundStates(entry, activeIndex, turnSerial)
     if not entry or entry.kind ~= "round" then return end
 
-    local serial = tonumber(turnSerial) or (HarfordTurnOrderStore and tonumber(HarfordTurnOrderStore.turnSerial)) or 0
+    local serial = tonumber(turnSerial) or 0
     local key
     if serial > 0 then
         key = "round:" .. tostring(serial)
@@ -245,16 +249,16 @@ local function EnsureStore()
     if type(HarfordTurnOrderStore) ~= "table" then HarfordTurnOrderStore = {} end
     if type(HarfordTurnOrderStore.entries) ~= "table" then HarfordTurnOrderStore.entries = {} end
     HarfordTurnOrderStore.activeIndex = tonumber(HarfordTurnOrderStore.activeIndex) or 1
-    HarfordTurnOrderStore.adminName = tostring(HarfordTurnOrderStore.adminName or "")
-    HarfordTurnOrderStore.turnSerial = tonumber(HarfordTurnOrderStore.turnSerial) or 0
+    HarfordTurnOrderStore.adminName = nil
+    HarfordTurnOrderStore.turnSerial = nil
     if HarfordTurnOrderStore.activeIndex < 1 then HarfordTurnOrderStore.activeIndex = 1 end
     return HarfordTurnOrderStore
 end
 
 local function AdvanceTurnSerial()
-    local store = EnsureStore()
-    store.turnSerial = (tonumber(store.turnSerial) or 0) + 1
-    return store.turnSerial
+    EnsureStore()
+    turnSerial = ((tonumber(turnSerial) or 0) % TURN_SERIAL_MAX) + 1
+    return turnSerial
 end
 
 -- Permiso de edicion del tracker: la senal de autoridad esta centralizada en
@@ -267,12 +271,7 @@ local function IsTurnAdmin()
 end
 
 local function ClaimAdminIfNeeded()
-    local store = EnsureStore()
-    if tostring(store.adminName or "") == "" then
-        -- Nombre corto sin realm, igual que la clave del banco de fichas.
-        local name = GetMyName()
-        store.adminName = Ambiguate and Ambiguate(name, "short") or name:match("^[^%-]+") or name
-    end
+    EnsureStore()
 end
 
 local function ClampActiveIndex()
@@ -597,7 +596,7 @@ local function SerializeState()
         NormalizeEntryLinks(store.entries[i])
         parts[#parts + 1] = SerializeEntry(store.entries[i])
     end
-    return "STATE|" .. tostring(store.activeIndex or 1) .. "|" .. EscapeText(store.adminName or "") .. "|" .. table.concat(parts, ";")
+    return "STATE|" .. tostring(store.activeIndex or 1) .. "||" .. table.concat(parts, ";")
 end
 
 local function SerializeTurnNoticeEntry(entry)
@@ -639,10 +638,10 @@ local function SerializeTurnNotice()
 
     return table.concat({
         "TURN",
-        tostring(store.turnSerial or 0),
+        tostring(turnSerial or 0),
         tostring(index),
         tostring(#store.entries),
-        EscapeText(store.adminName or ""),
+        "",
         SerializeTurnNoticeEntry(entry),
     }, "|")
 end
@@ -659,7 +658,7 @@ local function PrintTurnNotice(entry, activeIndex, count, turnSerial)
         return
     end
     if count and count > 0 then
-        -- Calcular índice y total excluyendo marcadores de ronda (cuentan como posición 0)
+        -- Calcular indice y total excluyendo marcadores de ronda (cuentan como posicion 0)
         local store = EnsureStore()
         local displayCount = 0
         local displayIndex = 0
@@ -692,16 +691,7 @@ local function ApplyTurnNotice(message)
     if not noticeEntry then return false end
 
     local store = EnsureStore()
-    if adminRaw ~= nil then
-        local adminName = UnescapeText(adminRaw)
-        -- Normalizar a nombre corto por compatibilidad con mensajes antiguos que incluían realm.
-        if adminName ~= "" then
-            store.adminName = Ambiguate and Ambiguate(adminName, "short") or adminName:match("^[^%-]+") or adminName
-        end
-    end
-    if serial > (tonumber(store.turnSerial) or 0) then
-        store.turnSerial = serial
-    end
+    turnSerial = serial
 
     local entry = noticeEntry
     if activeIndex >= 1 and activeIndex <= #store.entries then
@@ -726,11 +716,6 @@ local function ApplySerializedState(message)
     local store = EnsureStore()
     store.entries = {}
     store.activeIndex = SafeNumber(activeRaw, 1)
-    if fourth ~= nil then
-        local adminName = UnescapeText(third)
-        store.adminName = Ambiguate and Ambiguate(adminName, "short") or adminName:match("^[^%-]+") or adminName
-    end
-
     local entriesRaw = fourth or third
     if entriesRaw and entriesRaw ~= "" then
         for token in string.gmatch(entriesRaw, "[^;]+") do
@@ -1044,13 +1029,13 @@ local function CreateSheetFrame()
     SheetText:SetText("")
 end
 
--- ── Secciones colapsables ────────────────────────────────────────────────────
+-- Secciones colapsables -----------------------------------------------------
 local SHEET_CONTENT_W  = 382
 local SECTION_BODY_PAD = 8
 local SECTION_GAP      = 6
 
--- Lee fuente de un objeto FontObject de WoW en tiempo de ejecución.
--- Así no hardcodeamos rutas ni tamaños — si TRP3 cambia su fuente, nosotros también.
+-- Lee fuente de un objeto FontObject de WoW en tiempo de ejecucion.
+-- Asi no hardcodeamos rutas ni tamanos - si TRP3 cambia su fuente, nosotros tambien.
 local function GetTRP3BodyFont()
     -- TRP3 usa GameFontNormal para el cuerpo de su panel About
     if GameFontNormal and GameFontNormal.GetFont then
@@ -1061,7 +1046,7 @@ local function GetTRP3BodyFont()
 end
 
 local function GetTRP3HeaderFont()
-    -- Un punto más que el cuerpo — igual que el título de sección TRP3
+    -- Un punto mas que el cuerpo - igual que el titulo de seccion TRP3
     local f, s, fl = GetTRP3BodyFont()
     return f, s + 2, fl
 end
@@ -1101,7 +1086,7 @@ local function GetOrCreateSectionWidget(i)
     w.label:SetPoint("RIGHT", w.header, "RIGHT", -6, 0)
     w.label:SetJustifyH("LEFT")
     w.label:SetFont(hdrFont, hdrSize, hdrFlags)
-    -- Sin SetTextColor: el color lo dicta el markup |cff...| del título, igual que TRP3
+    -- Sin SetTextColor: el color lo dicta el markup |cff...| del titulo, igual que TRP3
 
     w.header:SetScript("OnEnter", function() hBg:SetVertexColor(0.28, 0.16, 0.07, 0.75) end)
     w.header:SetScript("OnLeave", function() hBg:SetVertexColor(0.18, 0.10, 0.05, 0.60) end)
@@ -1160,7 +1145,7 @@ RefreshSheetLayout = function()
     SheetScrollChild:SetHeight(math.max(416, totalY + 12))
 end
 
--- (BuildStateRows y STATE_ROW_H eliminados: la sección de rasgos usa bodyText igual que el resto)
+-- (BuildStateRows y STATE_ROW_H eliminados: la seccion de rasgos usa bodyText igual que el resto)
 
 local function PopulateSections(sections)
     for i, w in ipairs(SheetSectionPool) do
@@ -1213,7 +1198,7 @@ local function MeasureAndLayout()
     end)
 end
 
--- ── Popup de estado (se abre al clicar un link harfordstate:) ─────────────────
+-- Popup de estado (se abre al clicar un link harfordstate:) ----------------
 local StatePopup
 
 local function EnsureStatePopup()
@@ -1281,7 +1266,7 @@ local function ShowStatePopup(state)
     StatePopup:Raise()
 end
 
--- ── Hook SetItemRef para links harfordstate: ──────────────────────────────────
+-- Hook SetItemRef para links harfordstate: --------------------------------
 do
     local function OnItemRef(link)
         if not link or not link:find("^harfordstate:") then return end
@@ -1295,7 +1280,7 @@ do
     end
     hooksecurefunc("SetItemRef", function(link) OnItemRef(link) end)
 end
--- ── Fin secciones colapsables ────────────────────────────────────────────────
+-- Fin secciones colapsables -----------------------------------------------
 
 local function GetEntryTRP3Profile(entry)
     if not entry or not HarfordTRP3 then
@@ -1409,7 +1394,7 @@ local function ShowEntrySheet(entry)
         PopulateSections(sections)
         SheetFrame:Show()
         SheetFrame:Raise()
-        -- Medir alturas un frame después de que WoW renderice los FontStrings
+        -- Medir alturas un frame despues de que WoW renderice los FontStrings
         C_Timer.After(0, MeasureAndLayout)
     else
         -- Fallback: texto plano
@@ -1589,10 +1574,10 @@ end
 local function RefreshPlayerEntryTRP3Meta(entry)
     if not entry or entry.kind ~= "player" or not HarfordTRP3 then return end
 
-    -- Solo volver a buscar si no se encontró perfil antes, o si pasaron más de 30s
-    -- (cubre cambios de perfil TRP3 en sesión sin buscar en cada RefreshFrame).
-    -- El sweep sobre raid1-40 puede ser 47 llamadas por entrada × 6 tarjetas × 2 RefreshFrame
-    -- por turno → ~564 llamadas API WoW por tecla "Siguiente". Con el cache, es 0 si ya se encontró.
+    -- Solo volver a buscar si no se encontro perfil antes, o si pasaron mas de 30s
+    -- (cubre cambios de perfil TRP3 en sesion sin buscar en cada RefreshFrame).
+    -- El sweep sobre raid1-40 puede ser 47 llamadas por entrada x 6 tarjetas x 2 RefreshFrame
+    -- por turno -> ~564 llamadas API WoW por tecla "Siguiente". Con el cache, es 0 si ya se encontro.
     local now = GetTime and GetTime() or 0
     if entry._trpMetaCached and (now - (entry._trpMetaCachedAt or 0)) < 30 then return end
 
@@ -1622,7 +1607,7 @@ local function RefreshPlayerEntryTRP3Meta(entry)
 
     entry.nameColor = GetPlayerTurnNameColorHex(profile, matchedUnit) or entry.nameColor
     -- Marcar como cacheado para no repetir el sweep en cada RefreshFrame.
-    -- Se invalida automáticamente a los 30s o cuando ApplySerializedState reconstruye entries.
+    -- Se invalida automaticamente a los 30s o cuando ApplySerializedState reconstruye entries.
     entry._trpMetaCached = true
     entry._trpMetaCachedAt = now
 end
@@ -1772,6 +1757,7 @@ end
 
 RefreshFrame = function()
     if not TurnFrame then return end
+    if not TurnFrame:IsShown() then return end
     local store = EnsureStore()
     EnsureRoundMarker()
     ClampActiveIndex()
@@ -1789,12 +1775,7 @@ RefreshFrame = function()
     end
     UpdateEditButton()
 
-    local adminName = tostring(store.adminName or "")
-    if adminName ~= "" and not isAdmin then
-        StatusText:SetText("Turno " .. tostring(count > 0 and store.activeIndex or 0) .. " / " .. tostring(count) .. " - Vista")
-    else
-        StatusText:SetText("Turno " .. tostring(count > 0 and store.activeIndex or 0) .. " / " .. tostring(count))
-    end
+    StatusText:SetText("Turno " .. tostring(count > 0 and store.activeIndex or 0) .. " / " .. tostring(count))
 
     if TurnFrame.adminControls then
         for _, control in ipairs(TurnFrame.adminControls) do
@@ -2358,7 +2339,7 @@ local function CreateTurnFrame()
 
     local targetButton = MakeButton(TurnFrame, "Objetivo", 62, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 16, -51, function() AddUnit("target", "target") end)
 
-    -- Botones de turno genérico: añaden una entrada NPC con la reacción fija
+    -- Botones de turno generico: anaden una entrada NPC con la reaccion fija
     local GENERIC_TURN_ICON = "Interface\\Icons\\INV_Misc_PocketWatch_01"
     local function AddGenericTurn(name, reaction)
         AddEntry(name, 0, 0, 0, "generic", NewId(), 0, 0, name, GENERIC_TURN_ICON, 0, { reaction = reaction })
@@ -2436,7 +2417,6 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         elseif RegisterAddonMessagePrefix then
             RegisterAddonMessagePrefix(COMM_PREFIX)
         end
-        CreateTurnFrame()
         return
     end
 
@@ -2452,7 +2432,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "UNIT_HEALTH" or event == "UNIT_MAXHEALTH" then
         local unit = ...
         -- Solo interesa el HP del target (NPC trackeado). Cambios de HP de otras
-        -- unidades no modifican el estado de los turnos → no hacer RefreshFrame.
+        -- unidades no modifican el estado de los turnos -> no hacer RefreshFrame.
         if unit == "target" and RefreshTargetNpcHealthFromUnit("target") then
             MarkChanged()
         end
@@ -2470,11 +2450,9 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     if applied then
         local store = EnsureStore()
         if opcode ~= "TURN" then
-            -- Pasar store.turnSerial para que la clave de dedup coincida con la ya
-            -- grabada por ApplyTurnNotice (TURN llegó primero, serial > 0).
-            -- Sin esto, STATE llega 150ms después con serial=nil → clave "0:id:name"
-            -- diferente → AlertMyTurn dispara por segunda vez → doble sonido/animación.
-            AlertMyTurn(store.entries[store.activeIndex], store.activeIndex, store.turnSerial)
+            -- TURN y STATE pueden llegar en orden distinto. El serial de sesion
+            -- mantiene la clave de deduplicacion alineada sin persistir nada.
+            AlertMyTurn(store.entries[store.activeIndex], store.activeIndex, turnSerial)
         end
         RefreshFrame()
     end
@@ -2485,6 +2463,13 @@ end)
 -- HarfordAdmin las invoca por aqui (p.ej. HarfordAdminUnitMenu usa AddUnit/Toggle);
 -- no debe tocar internals del core (store/broadcast). Render/sync/recepcion viven en el core.
 HarfordTurnOrderAPI = HarfordTurnOrderAPI or {}
+-- Listeners notificados cuando empieza TU turno (los invoca AlertMyTurn). Uso: reacciones del Libro.
+HarfordTurnOrderAPI._myTurnListeners = HarfordTurnOrderAPI._myTurnListeners or {}
+function HarfordTurnOrderAPI.RegisterMyTurnListener(fn)
+    if type(fn) == "function" then
+        table.insert(HarfordTurnOrderAPI._myTurnListeners, fn)
+    end
+end
 HarfordTurnOrderAPI.Toggle = ToggleFrame
 HarfordTurnOrderAPI.Refresh = RefreshFrame
 HarfordTurnOrderAPI.SendState = SendState
@@ -2521,9 +2506,7 @@ function HarfordTurnOrderAPI.SetArmorClassForGuid(guid, armorClass)
     return false
 end
 
-SLASH_HARFORDTURNOS1 = "/TurnosHarford"
-SLASH_HARFORDTURNOS2 = "/turnos"
-SLASH_HARFORDTURNOS3 = "/th"
+-- Comandos sueltos retirados: usar `/harford turnos <args>`.
 SlashCmdList["HARFORDTURNOS"] = function(msg)
     msg = tostring(msg or "")
     local cmd, rest = msg:match("^(%S*)%s*(.-)$")
@@ -2537,7 +2520,7 @@ SlashCmdList["HARFORDTURNOS"] = function(msg)
     elseif cmd == "move" or cmd == "mover" then
         local fromIndex, toIndex = rest:match("^(%d+)%s+(%d+)$")
         if not fromIndex or not toIndex then
-            Print("Uso: /turnos mover <origen> <destino>")
+            Print("Uso: /harford turnos mover <origen> <destino>")
             return
         end
         MoveEntryToIndex(tonumber(fromIndex), tonumber(toIndex))

@@ -51,6 +51,8 @@ HarfordDebug.RegisterCommand("nombre", function(args) end, "descripcion")
 | `Harford/HarfordUnitFrames.lua` | Overlays sobre frames WoW |
 | `Harford/HarfordNamePlates.lua` | Overlays DnD sobre nameplates nativos/Kui |
 | `Harford/HarfordDnD.lua` | Ficha D&D 5e |
+| `Harford/HarfordCharacterPanel.lua` | Panel: Ficha, Libro (replica spellbook), Creacion, Subida, Reputacion |
+| `Harford/HarfordActionBars.lua` | Barra de accion (config-gated) para habilidades del Libro |
 | `Harford/HarfordTurns.lua` | Tracker de turnos |
 | `Harford/HarfordDebug.lua` | Debug; diagnosticos temporales aqui |
 | `Harford/HarfordSync.lua` | Addon messages |

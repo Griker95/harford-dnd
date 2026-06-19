@@ -45,6 +45,12 @@ function HarfordDnDComm.CreateHandlers(deps)
     handlers.HandleAddonMessage = function(prefix, message, sender)
         if prefix ~= deps.ADDON_PREFIX then return false end
 
+        if HarfordCharacterInspect and HarfordCharacterInspect.HandleAddonMessage
+            and HarfordCharacterInspect.HandleAddonMessage(prefix, message, sender)
+        then
+            return false
+        end
+
         local resKind, resourceProfileName, resourceTbl = HarfordSync.ReceiveResourceMessage(message)
         if resKind == "REQ" then
             if sender and sender ~= "" and not handlers.IsSelfSender(sender) then
@@ -55,6 +61,9 @@ function HarfordDnDComm.CreateHandlers(deps)
 
         if resKind == "RES" and resourceTbl then
             deps.CacheRemoteResources(sender, resourceProfileName, resourceTbl)
+            if HarfordCharacterInspect and HarfordCharacterInspect.NoteResources then
+                HarfordCharacterInspect.NoteResources(sender, resourceProfileName, resourceTbl)
+            end
             deps.RefreshTargetResourceFrame()
             if HarfordTurnOrderAPI and HarfordTurnOrderAPI.Refresh then
                 HarfordTurnOrderAPI.Refresh()
@@ -68,6 +77,13 @@ function HarfordDnDComm.CreateHandlers(deps)
                 deps.ApplyResourceDelta(adjustKey, adjustDelta, sender)
             end
             return true  -- recurso ajustado → refrescar overlays
+        end
+
+        -- Señal de aura (Desarme u otra maniobra): el objetivo se aplica `.au <id> self`.
+        local auraSignalId = HarfordSync.DeserializeAuraSignal and HarfordSync.DeserializeAuraSignal(message)
+        if auraSignalId then
+            if deps.ApplyAuraSelf then deps.ApplyAuraSelf(auraSignalId, sender) end
+            return false
         end
 
         local profileName, profileTbl = HarfordSync.ReceiveDnDProfile(message)
@@ -84,19 +100,57 @@ function HarfordDnDComm.CreateHandlers(deps)
             return false
         end
 
-        local classProfileName, classData = HarfordSync.DeserializeDnDClassProgression(message)
+        -- DNDCLASS (sync normal): import a persistencia. La inspeccion usa DNDINSCLASS
+        -- y la consume HarfordCharacterInspect ANTES de llegar aqui; el flag isInspect
+        -- es defensa por si ese modulo no estuviera cargado: nunca importar inspeccion.
+        local classProfileName, classData, classInspect = HarfordSync.DeserializeDnDClassProgression(message)
         if classProfileName and classData then
-            if deps.ApplyClassProgression then
+            if classInspect then
+                if HarfordCharacterInspect and HarfordCharacterInspect.NoteProgression then
+                    HarfordCharacterInspect.NoteProgression(classProfileName, classData)
+                end
+            elseif deps.ApplyClassProgression then
                 deps.ApplyClassProgression(classProfileName, classData)
             end
             return false
         end
 
         if HarfordSync.ReceiveDnDClassProgressionChunk then
-            local chunkProfileName, chunkClassData = HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
-            if chunkProfileName and chunkClassData then
-                if deps.ApplyClassProgression then
-                    deps.ApplyClassProgression(chunkProfileName, chunkClassData)
+            local cpn, ccd, cInspect = HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
+            if cpn and ccd then
+                if cInspect then
+                    if HarfordCharacterInspect and HarfordCharacterInspect.NoteProgression then
+                        HarfordCharacterInspect.NoteProgression(cpn, ccd)
+                    end
+                elseif deps.ApplyClassProgression then
+                    deps.ApplyClassProgression(cpn, ccd)
+                end
+                return false
+            end
+        end
+
+        local equipmentProfileName, equipmentData, equipInspect = HarfordSync.DeserializeDnDEquipment
+            and HarfordSync.DeserializeDnDEquipment(message)
+        if equipmentProfileName and equipmentData then
+            if equipInspect then
+                if HarfordCharacterInspect and HarfordCharacterInspect.NoteEquipment then
+                    HarfordCharacterInspect.NoteEquipment(equipmentProfileName, equipmentData)
+                end
+            elseif deps.ApplyEquipment then
+                deps.ApplyEquipment(equipmentProfileName, equipmentData)
+            end
+            return false
+        end
+
+        if HarfordSync.ReceiveDnDEquipmentChunk then
+            local epn, ecd, eInspect = HarfordSync.ReceiveDnDEquipmentChunk(message, sender)
+            if epn and ecd then
+                if eInspect then
+                    if HarfordCharacterInspect and HarfordCharacterInspect.NoteEquipment then
+                        HarfordCharacterInspect.NoteEquipment(epn, ecd)
+                    end
+                elseif deps.ApplyEquipment then
+                    deps.ApplyEquipment(epn, ecd)
                 end
                 return false
             end
@@ -148,6 +202,18 @@ function HarfordDnDComm.CreateHandlers(deps)
             local isWound, woundCrit = HarfordSync.DeserializeWound(message)
             if isWound then
                 if deps.HandleWound then deps.HandleWound(woundCrit) end
+                return false
+            end
+        end
+
+        -- DOSAVE: el atacante solicita una salvacion, pero la tira y anuncia el
+        -- propio cliente defensor para usar sus datos reales de ficha.
+        if HarfordSync.DeserializeRequestedSave then
+            local saveAbility, saveDC, saveOutcome, saveAura = HarfordSync.DeserializeRequestedSave(message)
+            if saveAbility then
+                if deps.HandleRequestedSave then
+                    deps.HandleRequestedSave(saveAbility, saveDC, saveOutcome, saveAura, sender)
+                end
                 return false
             end
         end

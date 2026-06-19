@@ -63,20 +63,62 @@ function HarfordDnDRolls.GetDisplayName()
     return UnitName("player") or "Unknown"
 end
 
+-- Compacta los item links para la RED: el link completo lleva una larga cadena de stats
+-- (`|Hitem:18832:0:0:...:80:::::|h`) que puede desbordar el limite de ~255 bytes del addon
+-- message. Lo reducimos a su forma minima `|Hitem:<id>|h[<nombre>]|h|r`: SIGUE SIENDO
+-- CLICABLE en el cliente ajeno (WoW reconstruye el tooltip desde el ID) y ocupa pocos
+-- bytes. Se conservan color (`|c..|r`), nombre visible y pipes escapados para que la
+-- tirada salga IGUAL en origen y destino (incluido el contador coloreado de Salv Muerte).
+local function CompactItemLinks(text)
+    text = tostring(text or "")
+    text = text:gsub("(|Hitem:%d+)[^|]-|h", "%1|h")  -- deja solo el ID dentro del enlace
+    return text
+end
+
+-- Label para la red: item links compactados (clicables) y acotada por seguridad.
+local function NetworkLabel(label)
+    label = CompactItemLinks(label or "")
+    if #label > 200 then label = label:sub(1, 200) end
+    return label
+end
+
+-- Tras recortar la label, cierra/elimina codigos de color partidos para que no "sangre" color.
+local function SanitizeLabelTail(label)
+    label = label:gsub("|$", "")
+    label = label:gsub("|c%x?%x?%x?%x?%x?%x?%x?$", "")  -- |c... incompleto al final
+    local _, opens = label:gsub("|c%x%x%x%x%x%x%x%x", "")
+    local _, closes = label:gsub("|r", "")
+    if opens > closes then label = label .. "|r" end
+    return label
+end
+
 function HarfordDnDRolls.Serialize(data)
     data = data or {}
-    return string.format("%s^%s^%s^%d^%s^%s^%s^%s^%s^%s",
-        EscapeRollField(data.type or "roll"),
-        EscapeRollField(HarfordDnDRolls.GetDisplayName()),
-        EscapeRollField(data.label or ""),
-        data.total or 0,
-        EscapeRollField(data.dice or ""),
-        EscapeRollField(data.modifiers or ""),
-        EscapeRollField(data.critical or ""),
-        EscapeRollField(data.mode or ""),
-        EscapeRollField(data.miscBonus or ""),
-        EscapeRollField(data.nameColor or "")
-    )
+    local label = NetworkLabel(data.label)
+    local function build(lbl)
+        return string.format("%s^%s^%s^%d^%s^%s^%s^%s^%s^%s",
+            EscapeRollField(data.type or "roll"),
+            EscapeRollField(HarfordDnDRolls.GetDisplayName()),
+            EscapeRollField(lbl),
+            data.total or 0,
+            EscapeRollField(data.dice or ""),
+            EscapeRollField(data.modifiers or ""),
+            EscapeRollField(data.critical or ""),
+            EscapeRollField(data.mode or ""),
+            EscapeRollField(data.miscBonus or ""),
+            EscapeRollField(data.nameColor or "")
+        )
+    end
+    local payload = build(label)
+    -- Recorta SOLO la label (la parte variable larga: notas/maniobras) hasta que el payload
+    -- completo quepa en un addon message (~255 bytes; HarfordSync.Send NO trocea tiradas, asi que
+    -- un payload mas largo se descarta y la tirada NO llega al target). Usa el mismo umbral seguro
+    -- que el aviso de log. La tirada SIEMPRE llega, aunque pierda el flavor del final de la label.
+    while #payload > MAX_SAFE_PAYLOAD_BYTES and #label > 0 do
+        label = SanitizeLabelTail(label:sub(1, math.max(0, #label - 12)))
+        payload = build(label)
+    end
+    return payload
 end
 
 function HarfordDnDRolls.Deserialize(msg)
@@ -110,6 +152,14 @@ function HarfordDnDRolls.DisplayInChat(data)
     local playerName = data.player or UnitName("player") or "Unknown"
     local nameColor = data.nameColor and ("|cff" .. data.nameColor) or "|cffffcc00"
     table.insert(parts, COLOR_HEADER .. "[D&D]" .. ENDCLR .. " " .. nameColor .. playerName .. ENDCLR)
+
+    -- Mensajes informativos de estado (no son tirada): "[D&D] Nombre <texto>", sin ": total".
+    if data.type == "info" then
+        local out = parts[1] .. " " .. (data.label or "")
+        DEFAULT_CHAT_FRAME:AddMessage(out)
+        if ChatFrame2 then ChatFrame2:AddMessage(out) end
+        return
+    end
 
     local modeStr = ""
     if data.mode == "V" then
@@ -167,7 +217,9 @@ function HarfordDnDRolls.DisplayInChat(data)
 end
 
 local function PlayRollSound(rollData)
-    if not rollData or rollData.type == "info" then return end
+    -- "info" = mensaje de estado (sin total); "static" = valor calculado sin tirada
+    -- (ej. CD Conjuro): se muestra con su total pero NO suena como un dado.
+    if not rollData or rollData.type == "info" or rollData.type == "static" then return end
     if not rollData.dice or rollData.dice == "" or rollData.dice == "-" then return end
 
     if TRP3_API and TRP3_API.ui and TRP3_API.ui.misc and TRP3_API.ui.misc.playSoundKit then
@@ -195,6 +247,22 @@ function HarfordDnDRolls.Broadcast(rollData)
         end
     elseif HarfordDebug and HarfordDebug.Log then
         HarfordDebug.Log("roll send", tostring(rollData.type or "roll"), "sin canal")
+    end
+
+    -- Ataques contra otro jugador: ademas del canal de grupo, susurra la tirada al objetivo
+    -- si NO esta en tu grupo (asi la ve aunque no compartais raid/grupo, o estes solo). Si SI
+    -- esta en el grupo, ya la recibe por RAID/PARTY y no se duplica.
+    local tUnit = rollData.targetUnit
+    if tUnit and UnitExists and UnitExists(tUnit) and UnitIsPlayer and UnitIsPlayer(tUnit)
+        and not (UnitIsUnit and UnitIsUnit(tUnit, "player")) and HarfordSync and HarfordSync.Send then
+        local inGroup = (channel == "RAID" and UnitInRaid and UnitInRaid(tUnit))
+            or (channel == "PARTY" and UnitInParty and UnitInParty(tUnit))
+        if not inGroup then
+            local name = (GetUnitName and GetUnitName(tUnit, true)) or (UnitName and UnitName(tUnit))
+            if name and name ~= "" then
+                HarfordSync.Send(ADDON_PREFIX, payload, "WHISPER", name)
+            end
+        end
     end
 
     HarfordDnDRolls.DisplayInChat({

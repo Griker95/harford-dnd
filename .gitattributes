@@ -1,15 +1,25 @@
-# Normalizar line endings: LF en el repo, conversión automática al checkout
+# Normalizar line endings: LF en el repo, conversion automatica al checkout
 * text=auto
 
-# Lua y documentación: siempre LF
-*.lua text eol=lf
-*.md  text eol=lf
-*.toc text eol=lf
-*.txt text eol=lf
-*.json text eol=lf
+# Lua y documentacion: UTF-8 sin BOM, siempre LF
+*.lua text eol=lf working-tree-encoding=UTF-8
+*.md  text eol=lf working-tree-encoding=UTF-8
+*.toc text eol=lf working-tree-encoding=UTF-8
+*.txt text eol=lf working-tree-encoding=UTF-8
+*.xml text eol=lf working-tree-encoding=UTF-8
+*.json text eol=lf working-tree-encoding=UTF-8
+.gitattributes text eol=lf
 
-# Archivos binarios: sin conversión
+# Archivos binarios: sin conversion
 *.zip binary
 *.rar binary
 *.png binary
 *.jpg binary
+*.jpeg binary
+*.blp binary
+*.tga binary
+*.ttf binary
+*.otf binary
+*.mp3 binary
+*.ogg binary
+*.wav binary

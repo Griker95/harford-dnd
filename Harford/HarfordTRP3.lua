@@ -74,15 +74,8 @@ local function StripInlineMarkup(text)
 end
 
 local function NormalizeBuildText(value)
-    value = tostring(value or ""):lower()
+    value = HarfordClassColors.StripAccents(value):lower()
     value = value:gsub("[_%-]+", " ")
-    -- Acentos por SECUENCIA UTF-8 (lider \195); NO clases de bytes (corrompen multibyte).
-    value = value:gsub("\195[\129\161\128\160\132\164\130\162]", "a")
-    value = value:gsub("\195[\137\169\136\168\139\171\138\170]", "e")
-    value = value:gsub("\195[\141\173\140\172\143\175\142\174]", "i")
-    value = value:gsub("\195[\147\179\146\178\150\182\148\180]", "o")
-    value = value:gsub("\195[\154\186\153\185\156\188\155\187]", "u")
-    value = value:gsub("\195[\145\177]", "n")
     return value:gsub("^%s+", ""):gsub("%s+$", "")
 end
 
@@ -1023,14 +1016,7 @@ do
     -- Las vocales acentuadas y ñ son 2 bytes en UTF-8 (0xC3 0x..). Hay que reemplazar la
     -- SECUENCIA, no clases de bytes (una clase partiria "ó" en dos -> "oo" y rompe el match).
     local function NormAccents(s)
-        s = tostring(s or "")
-        s = s:gsub("\195[\161\160\164\162\129\128\132\130]", "a")  -- á à ä â Á À Ä Â
-        s = s:gsub("\195[\169\168\171\170\137\136\139\138]", "e")  -- é è ë ê É ...
-        s = s:gsub("\195[\173\172\175\174\141\140\143\142]", "i")  -- í ì ï î Í ...
-        s = s:gsub("\195[\179\178\182\180\147\146\150\148]", "o")  -- ó ò ö ô Ó ...
-        s = s:gsub("\195[\186\185\188\187\154\153\156\155]", "u")  -- ú ù ü û Ú ...
-        s = s:gsub("\195[\177\145]", "n")                          -- ñ Ñ
-        s = s:lower()
+        s = HarfordClassColors.StripAccents(s):lower()
         return s:gsub("^%s+", ""):gsub("%s+$", "")
     end
 
@@ -1883,16 +1869,7 @@ do
 
     -- Normaliza a minúsculas sin tildes para comparar claves
     local function NormKey(s)
-        s = tostring(s or ""):lower()
-        s = s:gsub("\195[\161\160\164\162\129\128\132\130]", "a")
-        s = s:gsub("\195[\169\168\171\170\137\136\139\138]", "e")
-        s = s:gsub("\195[\173\172\175\174\141\140\143\142]", "i")
-        s = s:gsub("\195[\179\178\182\180\147\146\150\148]", "o")
-        s = s:gsub("\195[\186\185\188\187\154\153\156\155]", "u")
-        s = s:gsub("\195[\177\145]", "n")
-        s = s:gsub("á","a"):gsub("é","e"):gsub("í","i"):gsub("ó","o"):gsub("ú","u"):gsub("ü","u")
-        s = s:gsub("Á","a"):gsub("É","e"):gsub("Í","i"):gsub("Ó","o"):gsub("Ú","u")
-        s = s:gsub("ñ","n"):gsub("Ñ","n")
+        s = HarfordClassColors.StripAccents(s):lower()
         return s:gsub("^%s+",""):gsub("%s+$","")
     end
 

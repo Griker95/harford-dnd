@@ -27,7 +27,7 @@ end
 
 local function GetUnitNameSafe(unit)
     if not UnitExistsSafe(unit) then return nil end
-    return (GetUnitName and GetUnitName(unit, true)) or UnitName(unit)
+    return HarfordClassColors.UnitFullName(unit)
 end
 
 local function GetUnitSnapshot(unit)

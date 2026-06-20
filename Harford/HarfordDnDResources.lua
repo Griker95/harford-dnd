@@ -183,21 +183,21 @@ function HarfordDnDResources.PruneRemoteCache()
 
     for _, unit in ipairs({ "player", "target", "focus" }) do
         if UnitExists and UnitExists(unit) then
-            keepName((GetUnitName and GetUnitName(unit, true)) or UnitName(unit))
+            keepName(HarfordClassColors.UnitFullName(unit))
         end
     end
     if IsInRaid and IsInRaid() then
         for i = 1, 40 do
             local unit = "raid" .. i
             if UnitExists and UnitExists(unit) then
-                keepName((GetUnitName and GetUnitName(unit, true)) or UnitName(unit))
+                keepName(HarfordClassColors.UnitFullName(unit))
             end
         end
     else
         for i = 1, 4 do
             local unit = "party" .. i
             if UnitExists and UnitExists(unit) then
-                keepName((GetUnitName and GetUnitName(unit, true)) or UnitName(unit))
+                keepName(HarfordClassColors.UnitFullName(unit))
             end
         end
     end

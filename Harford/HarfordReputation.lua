@@ -163,7 +163,7 @@ end
 
 local function BuildUnitKey(unit)
     if not UnitExists or not UnitExists(unit) then return nil end
-    local name = (GetUnitName and GetUnitName(unit, true)) or UnitName(unit)
+    local name = HarfordClassColors.UnitFullName(unit)
     if not name or name == "" then return nil end
     return name
 end

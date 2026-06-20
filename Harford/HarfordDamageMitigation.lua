@@ -43,9 +43,7 @@ HarfordDamageMitigation.MITIGATION_MAP = {
 
 -- Normaliza una cadena (minusculas, sin tildes, sin marcado TRP3 residual).
 local function Normalize(s)
-    s = tostring(s or ""):lower()
-    s = s:gsub("á","a"):gsub("é","e"):gsub("í","i"):gsub("ó","o"):gsub("ú","u"):gsub("ü","u")
-    s = s:gsub("ñ","n")
+    s = HarfordClassColors.StripAccents(s):lower()
     s = s:gsub("{[^}]*}", "")
     return s
 end

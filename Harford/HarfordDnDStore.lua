@@ -8,6 +8,12 @@ HarfordDnDStore.state = HarfordDnDStore.state or {
 HarfordDnDStore.state.persist = HarfordDnDPersistStore or HarfordDnDStore.state.persist or {}
 HarfordDnDStore.state.runtime = HarfordDnDStore.state.runtime or {}
 
+function HarfordDnDStore.ToNumber(value, default)
+    local number = tonumber(value)
+    if number == nil then return default or 0 end
+    return number
+end
+
 local function ResolveProfileName(profileName, persist)
     return tostring(profileName or (UnitName and UnitName("player")) or "default")
 end

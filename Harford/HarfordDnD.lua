@@ -89,11 +89,7 @@ local GREEN = "|cff00ff00"
 local RED   = "|cffff3333"
 local ENDCLR = "|r"
 
-local function toN(x, d)
-    local n = tonumber(x)
-    if n == nil then return d or 0 end
-    return n
-end
+local toN = HarfordDnDStore.ToNumber
 
 local function fmtSigned(n)
     n = toN(n, 0)
@@ -513,7 +509,7 @@ local function ApplyConditionalHitAura(spellId)
     if not (UnitExists and UnitExists("target")) then return end
     if UnitIsPlayer and UnitIsPlayer("target") then
         if UnitIsUnit and UnitIsUnit("target", "player") then return end  -- no te atacas a ti mismo
-        local name = (GetUnitName and GetUnitName("target", true)) or (UnitName and UnitName("target"))
+        local name = HarfordClassColors.UnitFullName("target")
         if name and name ~= "" and HarfordDnDNet and HarfordDnDNet.SendAuraToPlayer then
             HarfordDnDNet.SendAuraToPlayer(name, spellId)
         end
@@ -2404,7 +2400,7 @@ local function RequestPlayerTargetSave(ability, dc, outcome, auraId)
         RollRequestedSaveForSelf(ability, dc, outcome, auraId)
         return true
     end
-    local name = (GetUnitName and GetUnitName("target", true)) or (UnitName and UnitName("target"))
+    local name = HarfordClassColors.UnitFullName("target")
     if name and name ~= "" and HarfordSync and HarfordSync.SendRequestedSave then
         HarfordSync.SendRequestedSave(ADDON_PREFIX, name, ability, dc, outcome, auraId)
         return true
@@ -2426,7 +2422,7 @@ local function ResolveWeaponManeuverAfterHitSave(data)
     local dc = tonumber(data.dc) or 10
     local saved = saveTotal >= dc
     local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
-        or (GetUnitName and GetUnitName("target", true)) or (UnitName and UnitName("target")) or "el objetivo"
+        or HarfordClassColors.UnitFullName("target") or "el objetivo"
     local outcome = FormatSaveOutcome(saved, data.outcome)
     if (not saved) and data.onFailAura then
         ApplyConditionalHitAura(data.onFailAura)
@@ -2516,7 +2512,7 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
     local link = (HarfordTRP3 and HarfordTRP3.GetAbilityChatLink and HarfordTRP3.GetAbilityChatLink(feature))
         or (feature.name or "Maniobra")
     local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
-        or (GetUnitName and GetUnitName("target", true)) or (UnitName and UnitName("target")) or "el objetivo"
+        or HarfordClassColors.UnitFullName("target") or "el objetivo"
     local damageText = ""
     if (not saved) and man.damageDie then
         local die = math.max(1, math.floor(tonumber(man.damageDie) or 6))
@@ -2679,7 +2675,7 @@ local function ColoredUnitName(unit)
     if not (UnitExists and UnitExists(unit)) then return "" end
     local name = HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName(unit)
     if not name or name == "" then
-        name = (GetUnitName and GetUnitName(unit, true)) or (UnitName and UnitName(unit))
+        name = HarfordClassColors.UnitFullName(unit)
     end
     if not name or name == "" then return "" end
     local hex = HarfordTRP3 and HarfordTRP3.GetUnitNameColor and HarfordTRP3.GetUnitNameColor(unit)
@@ -4471,7 +4467,7 @@ listener:SetScript("OnEvent", function(_, event, ...)
         if UnitExists and UnitExists("focus") and UnitIsPlayer and UnitIsPlayer("focus")
             and not (UnitIsUnit and UnitIsUnit("focus", "player"))
             and HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
-            local focusName = (GetUnitName and GetUnitName("focus", true)) or UnitName("focus")
+            local focusName = HarfordClassColors.UnitFullName("focus")
             if focusName and focusName ~= "" then
                 HarfordDnDAPI.RequestResourcesForName(focusName)
             end

@@ -40,8 +40,7 @@ function API.GetUnmechanizedReason(feature)
         return nil  -- mecanizado: efecto, contador de usos o eleccion
     end
     if feature.type ~= "informativo" then return nil end
-    local d = tostring(feature.description or ""):lower()
-    d = d:gsub("[áàä]", "a"):gsub("[éèë]", "e"):gsub("[íìï]", "i"):gsub("[óòö]", "o"):gsub("[úùü]", "u"):gsub("ñ", "n")
+    local d = HarfordClassColors.StripAccents(feature.description):lower()
     local function has(...)
         for i = 1, select("#", ...) do if d:find((select(i, ...)), 1, true) then return true end end
         return false
@@ -679,20 +678,6 @@ API.CLASSES = {
 
 local classById, classOrder
 
-local UTF8_ACCENT_MAP = {
-    ["\195\129"] = "a", ["\195\161"] = "a", ["\195\128"] = "a", ["\195\160"] = "a",
-    ["\195\132"] = "a", ["\195\164"] = "a", ["\195\130"] = "a", ["\195\162"] = "a",
-    ["\195\137"] = "e", ["\195\169"] = "e", ["\195\136"] = "e", ["\195\168"] = "e",
-    ["\195\139"] = "e", ["\195\171"] = "e", ["\195\138"] = "e", ["\195\170"] = "e",
-    ["\195\141"] = "i", ["\195\173"] = "i", ["\195\140"] = "i", ["\195\172"] = "i",
-    ["\195\143"] = "i", ["\195\175"] = "i", ["\195\142"] = "i", ["\195\174"] = "i",
-    ["\195\147"] = "o", ["\195\179"] = "o", ["\195\146"] = "o", ["\195\178"] = "o",
-    ["\195\150"] = "o", ["\195\182"] = "o", ["\195\148"] = "o", ["\195\180"] = "o",
-    ["\195\154"] = "u", ["\195\186"] = "u", ["\195\153"] = "u", ["\195\185"] = "u",
-    ["\195\156"] = "u", ["\195\188"] = "u", ["\195\155"] = "u", ["\195\187"] = "u",
-    ["\195\145"] = "n", ["\195\177"] = "n",
-}
-
 local SUBCLASS_ID_ALIASES = {
     paladin = {
         retribucion = "represion",
@@ -708,12 +693,8 @@ local SUBCLASS_TEXT_ALIASES = {
 }
 
 local function Normalize(value)
-    value = tostring(value or ""):lower()
+    value = HarfordClassColors.StripAccents(value):lower()
     value = value:gsub("[_%-]+", " ")
-    -- Acentos por SECUENCIA UTF-8 (2 bytes, lider \195). NO usar clases de bytes [áàä]:
-    -- en UTF-8 cada vocal acentuada son 2 bytes y la clase corrompe el texto (la "o" de
-    -- "Restauracion" se partia en "ao"), rompiendo el match de subclases/razas acentuadas.
-    value = value:gsub("\195.", UTF8_ACCENT_MAP)
     return value:gsub("^%s+", ""):gsub("%s+$", "")
 end
 

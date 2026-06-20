@@ -260,10 +260,7 @@ HarfordDnDData.ICONS = {
 }
 
 local function NormIconKey(v)
-    v = tostring(v or ""):lower():gsub("[_%-]+", " ")
-    v = v:gsub("\195[\129\161\128\160\132\164\130\162]", "a"):gsub("\195[\137\169\136\168\139\171\138\170]", "e")
-    v = v:gsub("\195[\141\173\140\172\143\175\142\174]", "i"):gsub("\195[\147\179\146\178\150\182\148\180]", "o")
-    v = v:gsub("\195[\154\186\153\185\156\188\155\187]", "u"):gsub("\195[\145\177]", "n")
+    v = HarfordClassColors.StripAccents(v):lower():gsub("[_%-]+", " ")
     return (v:gsub("^%s+", ""):gsub("%s+$", ""))
 end
 

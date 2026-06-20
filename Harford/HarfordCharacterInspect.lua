@@ -47,7 +47,7 @@ local function FullPlayerName(unit)
     if unit and UnitExists and UnitExists(unit)
         and ((not UnitIsPlayer) or UnitIsPlayer(unit))
     then
-        return (GetUnitName and GetUnitName(unit, true)) or UnitName(unit)
+        return HarfordClassColors.UnitFullName(unit)
     end
     return nil
 end
@@ -223,7 +223,7 @@ function API.Request(unitOrName)
         Print("No hay jugador para inspeccionar.")
         return false
     end
-    local myName = (GetUnitName and GetUnitName("player", true)) or (UnitName and UnitName("player")) or ""
+    local myName = HarfordClassColors.UnitFullName("player") or ""
     if targetName == myName or ShortName(targetName) == ShortName(myName) then
         return false, "No hace falta inspeccionar tu propio panel."
     end

@@ -12,11 +12,7 @@ local GREEN = "|cff00ff00"
 local RED   = "|cffff3333"
 local ENDCLR = "|r"
 
-local function toN(x, d)
-    local n = tonumber(x)
-    if n == nil then return d or 0 end
-    return n
-end
+local toN = HarfordDnDStore.ToNumber
 
 local function fmtSigned(n)
     n = toN(n, 0)
@@ -258,7 +254,7 @@ function HarfordDnDRolls.Broadcast(rollData)
         local inGroup = (channel == "RAID" and UnitInRaid and UnitInRaid(tUnit))
             or (channel == "PARTY" and UnitInParty and UnitInParty(tUnit))
         if not inGroup then
-            local name = (GetUnitName and GetUnitName(tUnit, true)) or (UnitName and UnitName(tUnit))
+            local name = HarfordClassColors.UnitFullName(tUnit)
             if name and name ~= "" then
                 HarfordSync.Send(ADDON_PREFIX, payload, "WHISPER", name)
             end

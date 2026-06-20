@@ -183,7 +183,7 @@ end
 local function GetDisplayTitle()
     local _, isTarget = GetPlayerKeyForDisplay()
     if isTarget and UnitExists and UnitExists("target") then
-        local name = (GetUnitName and GetUnitName("target", true)) or UnitName("target")
+        local name = HarfordClassColors.UnitFullName("target")
         if name and name ~= "" then
             return "Reputacion: " .. name
         end

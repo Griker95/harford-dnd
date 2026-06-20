@@ -85,7 +85,7 @@ function HarfordDnDCombat.GetRemoteArmorClassForUnit(unit)
         return nil
     end
 
-    local name = GetUnitName and GetUnitName(unit, true) or UnitName(unit)
+    local name = HarfordClassColors.UnitFullName(unit)
     local short = name and Ambiguate and Ambiguate(name, "short") or name
     local cache = (name and HarfordDnDResources.RemoteCache[name])
         or (short and HarfordDnDResources.RemoteCache[short])
@@ -252,7 +252,7 @@ end
 function HarfordDnDCombat.GetTargetEffectiveHP()
     if not (UnitExists and UnitExists("target")) then return nil end
     if UnitIsPlayer and UnitIsPlayer("target") then
-        local name = (GetUnitName and GetUnitName("target", true)) or (UnitName and UnitName("target"))
+        local name = HarfordClassColors.UnitFullName("target")
         local cache = HarfordDnDResources and HarfordDnDResources.RemoteCache
         if name and cache and HarfordDnDResources.CurKey then
             local short = Ambiguate and Ambiguate(name, "short") or name
@@ -294,7 +294,7 @@ end
 -- y solicita recursos para futuras tiradas. El cliente receptor aplica el delta (y
 -- su propia aura de muerte segun su flag de animaciones).
 local function ApplyDamageToPlayerUnit(unit, total)
-    local name = (GetUnitName and GetUnitName(unit, true)) or (UnitName and UnitName(unit))
+    local name = HarfordClassColors.UnitFullName(unit)
     if not name or name == "" then return false end
     if not (HarfordSync and HarfordSync.SendResourceAdjust) then return false end
 
@@ -402,7 +402,7 @@ function HarfordDnDCombat.TriggerDefenseOnMiss(defenderUnit)
     end
 
     if UnitIsPlayer and UnitIsPlayer(defenderUnit) then
-        local name = (GetUnitName and GetUnitName(defenderUnit, true)) or (UnitName and UnitName(defenderUnit))
+        local name = HarfordClassColors.UnitFullName(defenderUnit)
         if name and name ~= "" and HarfordSync and HarfordSync.SendDefense then
             HarfordSync.SendDefense(ADDON_PREFIX, name)
         end
@@ -469,7 +469,7 @@ function HarfordDnDCombat.TriggerWoundOnHit(defenderUnit, isCritical)
         return
     end
     if UnitIsPlayer and UnitIsPlayer(defenderUnit) then
-        local name = (GetUnitName and GetUnitName(defenderUnit, true)) or (UnitName and UnitName(defenderUnit))
+        local name = HarfordClassColors.UnitFullName(defenderUnit)
         if name and name ~= "" and HarfordSync and HarfordSync.SendWound then
             HarfordSync.SendWound(ADDON_PREFIX, name, isCritical)
         end

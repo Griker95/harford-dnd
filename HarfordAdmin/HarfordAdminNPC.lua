@@ -11,7 +11,7 @@ local function GetTargetName()
         return nil
     end
 
-    return (GetUnitName and GetUnitName("target", true)) or UnitName("target")
+    return HarfordClassColors.UnitFullName("target")
 end
 
 local function GetTargetGuid()
@@ -248,11 +248,7 @@ local function CreateEmptyNpcSheetOverrides()
 end
 
 local function NormalizeNpcSkillName(value)
-    value = tostring(value or ""):lower()
-    value = value:gsub("\195\161", "a"):gsub("\195\169", "e")
-    value = value:gsub("\195\173", "i"):gsub("\195\179", "o")
-    value = value:gsub("\195\186", "u"):gsub("\195\188", "u")
-    value = value:gsub("\195\177", "n")
+    value = HarfordClassColors.StripAccents(value):lower()
     return value:gsub("[^%w]", "")
 end
 
@@ -326,12 +322,7 @@ end
 
 local function NormalizeAttackText(text)
     text = tostring(text or ""):gsub("{[^}]-}", ""):gsub("\r", "")
-    text = text:lower()
-    text = text:gsub("\195\161", "a"):gsub("\195\169", "e")
-    text = text:gsub("\195\173", "i"):gsub("\195\179", "o")
-    text = text:gsub("\195\186", "u"):gsub("\195\188", "u")
-    text = text:gsub("\195\177", "n")
-    return text
+    return HarfordClassColors.StripAccents(text):lower()
 end
 
 local function GetNpcActionHyperlink(state)
@@ -771,7 +762,7 @@ do
         if not (UnitExists and UnitExists("focus")) then return nil end
         local name = HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("focus")
         if not name or name == "" then
-            name = (GetUnitName and GetUnitName("focus", true)) or (UnitName and UnitName("focus"))
+            name = HarfordClassColors.UnitFullName("focus")
         end
         if not name or name == "" then return nil end
         return name

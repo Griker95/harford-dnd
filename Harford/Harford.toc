@@ -17,8 +17,8 @@ HarfordServerActions.lua
 HarfordActionSequence.lua
 HarfordActionSequencePresets.lua
 HarfordAuras.lua
-HarfordTRP3.lua
 HarfordClassColors.lua
+HarfordTRP3.lua
 HarfordUIGeom.lua
 HarfordDamageTypes.lua
 HarfordDamageMitigation.lua

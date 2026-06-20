@@ -26,10 +26,10 @@ function HarfordDnDComm.CreateHandlers(deps)
         deps.RefreshTargetResourceFrame()
 
         if not UnitExists("target") or not UnitIsPlayer("target") then return end
-        local targetName = (GetUnitName and GetUnitName("target", true)) or UnitName("target")
+        local targetName = HarfordClassColors.UnitFullName("target")
         if not targetName or targetName == "" then return end
 
-        local myName = (GetUnitName and GetUnitName("player", true)) or UnitName("player")
+        local myName = HarfordClassColors.UnitFullName("player")
         if targetName == myName then
             deps.RefreshTargetResourceFrame()
             return

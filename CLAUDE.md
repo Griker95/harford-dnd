@@ -11,6 +11,7 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 - No agregar comentarios genéricos — solo el WHY no obvio.
 - Al confirmar una limitación, patrón o bug nuevo, actualizar `AGENTS.md` en la sección correspondiente.
 - **ENCODING: todos los `.lua` son UTF-8 SIN BOM.** WoW/Epsilon renderiza UTF-8; si un `.lua` se guarda como Windows-1252/Latin-1 y se re-guarda como UTF-8 se produce mojibake que sale roto en juego. Ya pasó una vez (HarfordDnD/Progression/UnitFrames/Sync quedaron doble/triple-codificados y se repararon con un colapso de pares mojibake `[0xC2|0xC3]+[0x80-0xBF]` + mapa CP1252, preservando los `─` de 3 bytes). Editar SIEMPRE con herramientas que conserven UTF-8; tras editar, buscar patrones compuestos como `\u00C3\u0192`, `\u00C3\u201A`, `\u00C3\u00A2`, `\u00E2\u20AC` y `\uFFFD`. No buscar `Ã`/`Â` sueltos: pueden aparecer legítimamente en tablas de normalización de acentos.
+- **Normalizacion de acentos**: usar exclusivamente `HarfordClassColors.StripAccents(value)`. Es UTF-8 byte-segura, preserva mayusculas/minusculas y no limpia markup ni separadores. Cada consumidor aplica despues su `lower`/trim/markup. `HarfordClassColors.lua` carga antes de `HarfordTRP3.lua`; no duplicar mapas UTF-8 ni usar clases de bytes como `gsub("[áàä]", "a")`.
 - Los diagnósticos temporales van en `HarfordDebug.lua` con `RegisterCommand`, nunca en módulos de gameplay.
 - **Todo comportamiento exclusivo de modo DM va en `HarfordAdmin/`**, nunca en el core `Harford/`. El core puede exponer callbacks sobrescribibles (patron `HarfordTRP3.InsertGlanceLink(glance)`); HarfordAdmin los reemplaza en su `PLAYER_LOGIN`. No poner `if HarfordAuthority.IsDMMode()` en modulos core para cambiar comportamiento de UI o acciones: eso es responsabilidad de HarfordAdmin.
 - **`ClearTarget()` es protegida**: no llamarla desde addon (core ni Admin) — dispara "blocked from an action only available to the Blizzard UI". No hay equivalente inseguro (`RunMacroText("/cleartarget")`/`TargetUnit` tambien protegidas). El "Modo combate" no deselecciona el target.
@@ -60,11 +61,12 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 | Archivo | Rol | Tamaño aprox |
 |---|---|---|
 | `Harford/HarfordUnitFrames.lua` | Overlays TRP3/DnD sobre frames nativos WoW | ~4400 líneas (~169 locales) |
-| `Harford/HarfordClassColors.lua` | Fuente única de color de clase WoW (alias es/en, normalización, RGB/hex). Consumido por UnitFrames/NamePlates/Turns | pequeño |
+| `Harford/HarfordClassColors.lua` | Fuente única de color de clase WoW y de `StripAccents` UTF-8 para todos los parsers. Carga antes de TRP3/libros | pequeño |
 | `Harford/HarfordUIGeom.lua` | Helpers puros de geometría/búsqueda de StatusBars para overlays | pequeño |
 | `Harford/HarfordDnD.lua` | Ficha D&D 5e — UI principal `/harford ficha`. 3 tabs compactos de tirada (Caract./Ataque/Habilidades); icono tabardo abre `HarfordCharacterPanel` | grande (~139 locales) |
 | `Harford/HarfordCharacterPanel.lua` | Panel de personaje de usuario final: Ficha, **Libro** (replica 1:1 del spellbook nativo), Creacion, Subida y acceso a Reputacion; usa los modulos DnD* y no sustituye HarfordReputationUI | mediano |
 | `Harford/HarfordActionBars.lua` | Barra de accion propia (config-gated `actionbar`) para colocar habilidades del Libro; no secuestra los ActionButton de Blizzard | pequeño |
+| `Harford/HarfordDnDStore.lua` | Persistencia compacta y helper numérico compartido `ToNumber(value, default)` | pequeño |
 | `Harford/HarfordDnDContext.lua` | Estado de contexto de ficha (`SheetContext`) + accesores `Get`/`Set` (ARCGET/ARCSET). Bisagra que desacopla los helpers del chunk de DnD | pequeño |
 | `Harford/HarfordDnDProfile.lua` | Aplica tablas de perfil/recursos sobre `HarfordDnDStore` (hooks EnsureDefaults/RefreshMainUI inyectados) | pequeño |
 | `Harford/HarfordDnDUI.lua` | Constantes visuales/layout y fábricas UI pequeñas de la ficha (`SetFrameBackground`, `CreateSection`, `MakeButton`) | pequeño |

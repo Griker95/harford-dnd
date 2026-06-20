@@ -6,6 +6,40 @@
 
 HarfordClassColors = HarfordClassColors or {}
 
+local UTF8_ACCENT_MAP = {
+    ["\195\129"] = "A", ["\195\161"] = "a", ["\195\128"] = "A", ["\195\160"] = "a",
+    ["\195\132"] = "A", ["\195\164"] = "a", ["\195\130"] = "A", ["\195\162"] = "a",
+    ["\195\137"] = "E", ["\195\169"] = "e", ["\195\136"] = "E", ["\195\168"] = "e",
+    ["\195\139"] = "E", ["\195\171"] = "e", ["\195\138"] = "E", ["\195\170"] = "e",
+    ["\195\141"] = "I", ["\195\173"] = "i", ["\195\140"] = "I", ["\195\172"] = "i",
+    ["\195\143"] = "I", ["\195\175"] = "i", ["\195\142"] = "I", ["\195\174"] = "i",
+    ["\195\147"] = "O", ["\195\179"] = "o", ["\195\146"] = "O", ["\195\178"] = "o",
+    ["\195\150"] = "O", ["\195\182"] = "o", ["\195\148"] = "O", ["\195\180"] = "o",
+    ["\195\154"] = "U", ["\195\186"] = "u", ["\195\153"] = "U", ["\195\185"] = "u",
+    ["\195\156"] = "U", ["\195\188"] = "u", ["\195\155"] = "U", ["\195\187"] = "u",
+    ["\195\145"] = "N", ["\195\177"] = "n",
+}
+
+-- Elimina acentos sustituyendo secuencias UTF-8 completas. No cambia mayusculas,
+-- espacios, puntuacion ni separadores; cada consumidor conserva esas decisiones.
+function HarfordClassColors.StripAccents(value)
+    return (tostring(value or ""):gsub("\195.", UTF8_ACCENT_MAP))
+end
+
+-- Nombre completo de una unidad (con realm) o nil. Unifica el idiom repetido
+-- `(GetUnitName and GetUnitName(unit, true)) or (UnitName and UnitName(unit))`.
+-- El caller conserva su propio fallback: `UnitFullName(u) or "..."`.
+function HarfordClassColors.UnitFullName(unit)
+    return (GetUnitName and GetUnitName(unit, true)) or (UnitName and UnitName(unit)) or nil
+end
+
+-- Nombre corto (sin realm) de un NOMBRE ya resuelto. Unifica
+-- `Ambiguate(name, "short") or name:match("^[^%-]+")`.
+function HarfordClassColors.ShortName(name)
+    if not name or name == "" then return name end
+    return (Ambiguate and Ambiguate(name, "short")) or name:match("^[^%-]+") or name
+end
+
 -- token (sin tildes, minusculas) -> classFile de RAID_CLASS_COLORS.
 HarfordClassColors.ALIASES = {
     { "guerrero", "WARRIOR" }, { "warrior", "WARRIOR" },
@@ -25,14 +59,8 @@ HarfordClassColors.ALIASES = {
 
 -- Normaliza a minusculas sin tildes y con separadores como espacio.
 function HarfordClassColors.NormalizeKey(value)
-    value = tostring(value or ""):lower()
+    value = HarfordClassColors.StripAccents(value):lower()
     value = value:gsub("[_%-]+", " ")
-    value = value:gsub("[áàäâÁÀÄÂ]", "a")
-    value = value:gsub("[éèëêÉÈËÊ]", "e")
-    value = value:gsub("[íìïîÍÌÏÎ]", "i")
-    value = value:gsub("[óòöôÓÒÖÔ]", "o")
-    value = value:gsub("[úùüûÚÙÜÛ]", "u")
-    value = value:gsub("[ñÑ]", "n")
     return value
 end
 

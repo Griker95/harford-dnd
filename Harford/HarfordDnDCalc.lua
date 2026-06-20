@@ -7,12 +7,7 @@
 
 HarfordDnDCalc = HarfordDnDCalc or {}
 
--- Utiles privados (duplicados triviales de los de HarfordDnD.lua para no acoplar).
-local function toN(x, d)
-    local n = tonumber(x)
-    if n == nil then return d or 0 end
-    return n
-end
+local toN = HarfordDnDStore.ToNumber
 
 local function fmtSigned(n)
     n = toN(n, 0)

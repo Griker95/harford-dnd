@@ -82,7 +82,9 @@ local function DebugName(frameOrRegion)
     return tostring(frameOrRegion)
 end
 
-local function NativePiecesForUnit(unit)
+-- Resuelve (alocando una tabla + lookups FieldPath) los frames nativos de un unit. Lo envuelve
+-- NativePiecesForUnit con cache; NO llamar a BuildNativePieces directamente.
+local function BuildNativePieces(unit)
     if unit == "player" then
         local root = _G.PlayerFrame
         local modernMain = HarfordUIGeom.FieldPath(root, "PlayerFrameContent", "PlayerFrameContentMain")
@@ -123,9 +125,30 @@ local function NativePiecesForUnit(unit)
     }
 end
 
+-- Cache de pieces nativos para player/target/focus (sus frames y barras nativas son ESTABLES
+-- durante la sesion: cambiar de target reusa TargetFrame). Evita alocar tabla + escanear FieldPath
+-- en cada llamada (ReapplyNativeBars corre por cada UNIT_HEALTH/POWER, los hooks aun mas). Los
+-- callers solo LEEN la tabla. Se invalida en PLAYER_ENTERING_WORLD (recreacion de frames / reload).
+-- targettarget/focustarget NO se cachean: sus barras se resuelven de forma mas dinamica.
+local nativePiecesCache = {}
+local function NativePiecesForUnit(unit)
+    if unit == "player" or unit == "target" or unit == "focus" then
+        local cached = nativePiecesCache[unit]
+        if cached then return cached end
+        cached = BuildNativePieces(unit)
+        nativePiecesCache[unit] = cached
+        return cached
+    end
+    return BuildNativePieces(unit)
+end
+
+local function InvalidateNativePiecesCache()
+    if wipe then wipe(nativePiecesCache) else nativePiecesCache = {} end
+end
+
 local function SafeUnitName(unit)
     if not UnitExists or not UnitExists(unit) then return nil end
-    return (GetUnitName and GetUnitName(unit, true)) or UnitName(unit)
+    return HarfordClassColors.UnitFullName(unit)
 end
 
 local function UnitIsSupportedPlayer(unit)
@@ -4018,7 +4041,7 @@ end
 local function UnitMatchesProfileName(unit, profileName)
     if not unit or not profileName or profileName == "" then return false end
     if not (UnitExists and UnitExists(unit)) then return false end
-    local full = (GetUnitName and GetUnitName(unit, true)) or (UnitName and UnitName(unit))
+    local full = HarfordClassColors.UnitFullName(unit)
     local short = UnitName and UnitName(unit)
     local wantedShort = Ambiguate and Ambiguate(profileName, "short")
         or tostring(profileName):match("^[^%-]+") or profileName
@@ -4315,6 +4338,9 @@ events:SetScript("OnEvent", function(_, event, ...)
     end
 
     local forceMeasure = event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" or event == "UI_SCALE_CHANGED" or event == "DISPLAY_SIZE_CHANGED"
+    if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_LOGIN" then
+        InvalidateNativePiecesCache()  -- los frames nativos pueden recrearse tras reload/zona
+    end
     if event == "UNIT_PORTRAIT_UPDATE" or event == "UNIT_NAME_UPDATE" or event == "UNIT_AURA" then
         local unit = ...
         if unit == "targettarget" then
@@ -4358,7 +4384,7 @@ events:SetScript("OnEvent", function(_, event, ...)
                 resourceProfileName = profileName
                 if profileName then HarfordNamePlates.RefreshName(profileName) end
             elseif HarfordNamePlates.RefreshName and opcode == "RADJ" then
-                local playerName = (GetUnitName and GetUnitName("player", true)) or (UnitName and UnitName("player"))
+                local playerName = HarfordClassColors.UnitFullName("player")
                 resourceProfileName = playerName
                 HarfordNamePlates.RefreshName(playerName)
             elseif HarfordNamePlates.RefreshAll then
@@ -4366,7 +4392,7 @@ events:SetScript("OnEvent", function(_, event, ...)
             end
         end
         if not resourceProfileName and opcode == "RADJ" then
-            resourceProfileName = (GetUnitName and GetUnitName("player", true)) or (UnitName and UnitName("player"))
+            resourceProfileName = HarfordClassColors.UnitFullName("player")
         elseif not resourceProfileName and opcode == "DNDRES" and HarfordSync and HarfordSync.ReceiveResourceMessage then
             local _, profileName = HarfordSync.ReceiveResourceMessage(message)
             resourceProfileName = profileName

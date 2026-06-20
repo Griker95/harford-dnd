@@ -22,15 +22,8 @@ local function ResolveProfileName(profileName)
 end
 
 local function NormalizeText(value)
-    value = tostring(value or ""):lower()
+    value = HarfordClassColors.StripAccents(value):lower()
     value = value:gsub("[_%-]+", " ")
-    -- Acentos por SECUENCIA UTF-8 (lider \195); NO clases de bytes (corrompen multibyte).
-    value = value:gsub("\195[\129\161\128\160\132\164\130\162]", "a")
-    value = value:gsub("\195[\137\169\136\168\139\171\138\170]", "e")
-    value = value:gsub("\195[\141\173\140\172\143\175\142\174]", "i")
-    value = value:gsub("\195[\147\179\146\178\150\182\148\180]", "o")
-    value = value:gsub("\195[\154\186\153\185\156\188\155\187]", "u")
-    value = value:gsub("\195[\145\177]", "n")
     -- Asignar y devolver UN solo valor: `gsub` devuelve (string, count) y si ese count se
     -- propaga como ultimo retorno (p.ej. OptionMatchName -> tabla) se cuela un numero.
     value = value:gsub("^%s+", ""):gsub("%s+$", "")

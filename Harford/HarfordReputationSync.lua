@@ -64,7 +64,7 @@ local function GetLocalPlayerKey()
         local key = HarfordReputation.GetPlayerKey("player")
         if key and key ~= "" then return key end
     end
-    return (GetUnitName and GetUnitName("player", true)) or (UnitName and UnitName("player")) or "player"
+    return HarfordClassColors.UnitFullName("player") or "player"
 end
 
 local function IsAtWarPoints(points)
@@ -612,7 +612,7 @@ events:SetScript("OnEvent", function(_, event, ...)
 
     local prefix, message, _, sender = ...
     if prefix ~= PREFIX then return end
-    local myName = (GetUnitName and GetUnitName("player", true)) or UnitName("player")
+    local myName = HarfordClassColors.UnitFullName("player")
     if sender and myName and sender == myName then return end
     HandleMessage(message, sender)
 end)

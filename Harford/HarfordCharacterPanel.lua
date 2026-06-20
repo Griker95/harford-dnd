@@ -247,7 +247,7 @@ local function GetPortraitUnit()
         local unit = S.inspectUnit
         if unit and UnitExists and UnitExists(unit) then return unit end
         if UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target") then
-            local targetName = (GetUnitName and GetUnitName("target", true)) or UnitName("target")
+            local targetName = HarfordClassColors.UnitFullName("target")
             local short = Ambiguate and Ambiguate(targetName or "", "short") or tostring(targetName or ""):match("^[^%-]+")
             local inspectShort = Ambiguate and Ambiguate(S.inspectName, "short") or tostring(S.inspectName):match("^[^%-]+")
             if targetName == S.inspectName or (short and inspectShort and short == inspectShort) then
@@ -755,9 +755,7 @@ local function GetTRP3FeatureRows(limit)
 end
 
 local function IsMagicLikeFeature(feature)
-    local name = tostring(feature and feature.name or ""):lower()
-    name = name:gsub("[áàäâ]", "a"):gsub("[éèëê]", "e"):gsub("[íìïî]", "i")
-    name = name:gsub("[óòöô]", "o"):gsub("[úùüû]", "u"):gsub("ñ", "n")
+    local name = HarfordClassColors.StripAccents(feature and feature.name):lower()
     return name:find("conjuro", 1, true)
         or name:find("hechizo", 1, true)
         or name:find("truco", 1, true)
@@ -767,15 +765,14 @@ local function IsMagicLikeFeature(feature)
 end
 
 local function NormalizeFeatureText(value)
-    local text = tostring(value or ""):lower()
-    text = text:gsub("\195[\161\160\164\162\129\128\132\130]", "a")
-    text = text:gsub("\195[\169\168\171\170\137\136\139\138]", "e")
-    text = text:gsub("\195[\173\172\175\174\141\140\143\142]", "i")
-    text = text:gsub("\195[\179\178\182\180\147\146\150\148]", "o")
-    text = text:gsub("\195[\186\185\188\187\154\153\156\155]", "u")
-    text = text:gsub("\195[\177\145]", "n")
-    text = text:gsub("[Ã¡Ã Ã¤Ã¢]", "a"):gsub("[Ã©Ã¨Ã«Ãª]", "e"):gsub("[Ã­Ã¬Ã¯Ã®]", "i")
-    text = text:gsub("[Ã³Ã²Ã¶Ã´]", "o"):gsub("[ÃºÃ¹Ã¼Ã»]", "u"):gsub("Ã±", "n")
+    local text = HarfordClassColors.StripAccents(value):lower()
+    -- Compatibilidad con texto legacy que ya llego doble-codificado.
+    text = text:gsub("Ã¡", "a"):gsub("Ã ", "a"):gsub("Ã¤", "a"):gsub("Ã¢", "a")
+    text = text:gsub("Ã©", "e"):gsub("Ã¨", "e"):gsub("Ã«", "e"):gsub("Ãª", "e")
+    text = text:gsub("Ã­", "i"):gsub("Ã¬", "i"):gsub("Ã¯", "i"):gsub("Ã®", "i")
+    text = text:gsub("Ã³", "o"):gsub("Ã²", "o"):gsub("Ã¶", "o"):gsub("Ã´", "o")
+    text = text:gsub("Ãº", "u"):gsub("Ã¹", "u"):gsub("Ã¼", "u"):gsub("Ã»", "u")
+    text = text:gsub("Ã±", "n")
     return text:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
 end
 
@@ -3809,10 +3806,10 @@ function API.OpenInspect(unitOrName)
         and UnitExists and UnitExists(unitOrName)
         and ((not UnitIsPlayer) or UnitIsPlayer(unitOrName)))
         and unitOrName or nil
-    local name = unit and ((GetUnitName and GetUnitName(unit, true)) or UnitName(unit)) or tostring(unitOrName or "")
+    local name = unit and (HarfordClassColors.UnitFullName(unit)) or tostring(unitOrName or "")
     if (not name or name == "") and UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target") then
         unit = "target"
-        name = (GetUnitName and GetUnitName("target", true)) or UnitName("target")
+        name = HarfordClassColors.UnitFullName("target")
     end
     if (not unit) and isUnitToken(unitOrName) then
         name = ""

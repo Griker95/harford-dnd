@@ -9,11 +9,7 @@ HarfordDnDNet = HarfordDnDNet or {}
 
 local ADDON_PREFIX = "DND5EARC"
 
-local function toN(x, d)
-    local n = tonumber(x)
-    if n == nil then return d or 0 end
-    return n
-end
+local toN = HarfordDnDStore.ToNumber
 
 -- Antes sumaba en vivo el bonus de rasgos a las claves "_Max". Ya NO: los maximos se
 -- CALCULAN y se hornean en SavedVariables al ejecutar `/harford cargarficha`, asi que el
@@ -134,7 +130,7 @@ function HarfordDnDNet.RequestResourcesFromPlayer(targetName)
     local last = _resourceRequestTimes[targetName] or 0
     if (now - last) < RESOURCE_REQUEST_COOLDOWN then return false end
     _resourceRequestTimes[targetName] = now
-    local requester = GetUnitName and GetUnitName("player", true) or UnitName("player") or "default"
+    local requester = HarfordClassColors.UnitFullName("player") or "default"
     return HarfordSync.SendResourceRequest(ADDON_PREFIX, requester, targetName)
 end
 

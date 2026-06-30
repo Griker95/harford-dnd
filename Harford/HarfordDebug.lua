@@ -377,6 +377,57 @@ API.RegisterCommand("sync", function()
     Print("MAX_RESOURCE_MESSAGE_BYTES: " .. tostring(HarfordSync.MAX_RESOURCE_MESSAGE_BYTES))
 end, "estado basico del transporte Harford")
 
+API.RegisterCommand("areatest", function(args)
+    local mode = tostring(args or ""):lower():match("^%s*(%S+)")
+    mode = mode == "attack" and "attack" or "save"
+    local withState = tostring(args or ""):lower():find("state", 1, true) ~= nil
+    if not (HarfordDnDArea and HarfordDnDArea.Open) then
+        Print("HarfordDnDArea no disponible")
+        return
+    end
+    local definition = {
+        title = "Prueba de area",
+        area = {
+            shape = "sphere",
+            sizeText = "6 m",
+            resolution = mode,
+            saveAbility = "Destreza",
+            dc = 13,
+            success = "half",
+            attackBonus = 5,
+            damageComponents = {
+                { damageDice = "2d6", damageBonus = 0, damageType = "fuego" },
+                { damageDice = "1d4", damageBonus = 0, damageType = "necrotico" },
+            },
+            conditionId = withState and "burning" or nil,
+            conditionDuration = withState and "save_at_turn_end" or nil,
+            conditionSaveAbility = withState and "Constitucion" or nil,
+            conditionSaveDC = withState and 13 or nil,
+        },
+    }
+    local ok, err = HarfordDnDArea.Open(definition, { sourceKind = "debug" })
+    Print(ok and ("selector de area abierto: " .. mode .. (withState and " + estado" or ""))
+        or ("error: " .. tostring(err)))
+end, "abre selector de prueba: areatest save|attack [state]")
+
+API.RegisterCommand("conditiontest", function(args)
+    if not HarfordDnDConditions then Print("HarfordDnDConditions no disponible"); return end
+    local action, id = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
+    action = action ~= "" and action:lower() or "list"
+    if action == "apply" and id ~= "" then
+        local ok, err = HarfordDnDConditions.ApplyOwned(id, { persist = false })
+        Print(ok and ("aplicada: " .. id) or ("error: " .. tostring(err)))
+    elseif action == "remove" and id ~= "" then
+        local ok, err = HarfordDnDConditions.RemoveOwned(id)
+        Print(ok and ("retirada: " .. id) or ("error: " .. tostring(err)))
+    else
+        local active = HarfordDnDConditions.GetActive("player")
+        local labels = {}
+        for _, entry in ipairs(active) do labels[#labels + 1] = entry.id end
+        Print("condiciones propias: " .. (#labels > 0 and table.concat(labels, ", ") or "ninguna"))
+    end
+end, "lista/aplica/retira condiciones propias: conditiontest list|apply ID|remove ID")
+
 API.RegisterCommand("auth", function()
     if not HarfordAuthority or not HarfordAuthority.GetStatus then
         Print("HarfordAuthority no disponible")

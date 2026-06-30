@@ -245,6 +245,14 @@ local function AlertRoundStates(entry, activeIndex, turnSerial)
     Print("|cffffff00" .. text .. "|r")
 end
 
+local function AlertTurnChanged(entry, activeIndex, turnSerial)
+    if HarfordTurnOrderAPI and HarfordTurnOrderAPI._turnChangedListeners then
+        for _, fn in ipairs(HarfordTurnOrderAPI._turnChangedListeners) do
+            pcall(fn, entry, turnSerial, activeIndex)
+        end
+    end
+end
+
 local function EnsureStore()
     if type(HarfordTurnOrderStore) ~= "table" then HarfordTurnOrderStore = {} end
     if type(HarfordTurnOrderStore.entries) ~= "table" then HarfordTurnOrderStore.entries = {} end
@@ -705,6 +713,7 @@ local function ApplyTurnNotice(message)
 
     PrintTurnNotice(entry, activeIndex, count, serial)
     AlertRoundStates(entry, activeIndex, serial)
+    AlertTurnChanged(entry, activeIndex, serial)
     AlertMyTurn(entry, activeIndex, serial)
     return true
 end
@@ -2143,6 +2152,7 @@ local function NextTurn()
     MarkChanged()
     PrintTurnNotice(store.entries[store.activeIndex], store.activeIndex, #store.entries, turnSerial)
     AlertRoundStates(store.entries[store.activeIndex], store.activeIndex, turnSerial)
+    AlertTurnChanged(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     AlertMyTurn(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     SendTurnNotice()
 end
@@ -2160,6 +2170,7 @@ local function PrevTurn()
     MarkChanged()
     PrintTurnNotice(store.entries[store.activeIndex], store.activeIndex, #store.entries, turnSerial)
     AlertRoundStates(store.entries[store.activeIndex], store.activeIndex, turnSerial)
+    AlertTurnChanged(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     AlertMyTurn(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     SendTurnNotice()
 end
@@ -2452,6 +2463,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         if opcode ~= "TURN" then
             -- TURN y STATE pueden llegar en orden distinto. El serial de sesion
             -- mantiene la clave de deduplicacion alineada sin persistir nada.
+            AlertTurnChanged(store.entries[store.activeIndex], store.activeIndex, turnSerial)
             AlertMyTurn(store.entries[store.activeIndex], store.activeIndex, turnSerial)
         end
         RefreshFrame()
@@ -2465,9 +2477,15 @@ end)
 HarfordTurnOrderAPI = HarfordTurnOrderAPI or {}
 -- Listeners notificados cuando empieza TU turno (los invoca AlertMyTurn). Uso: reacciones del Libro.
 HarfordTurnOrderAPI._myTurnListeners = HarfordTurnOrderAPI._myTurnListeners or {}
+HarfordTurnOrderAPI._turnChangedListeners = HarfordTurnOrderAPI._turnChangedListeners or {}
 function HarfordTurnOrderAPI.RegisterMyTurnListener(fn)
     if type(fn) == "function" then
         table.insert(HarfordTurnOrderAPI._myTurnListeners, fn)
+    end
+end
+function HarfordTurnOrderAPI.RegisterTurnChangedListener(fn)
+    if type(fn) == "function" then
+        table.insert(HarfordTurnOrderAPI._turnChangedListeners, fn)
     end
 end
 HarfordTurnOrderAPI.Toggle = ToggleFrame

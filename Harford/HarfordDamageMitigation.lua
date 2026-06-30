@@ -237,26 +237,25 @@ function HarfordDamageMitigation.ForTarget(unit, typeText, amount)
     if not unit or not (UnitExists and UnitExists(unit)) then
         return amount, STATUS_NORMAL, ""
     end
-
+    local status = STATUS_NORMAL
     if UnitIsPlayer and UnitIsPlayer(unit) then
-        -- Rasgos Harford del jugador (ej. CdM: Constitucion No-Muerta -> veneno).
-        local featureStatus = ResolvePlayerFeatureStatus(unit, typeText)
-        if featureStatus then
-            return HarfordDamageMitigation.ApplyMultiplier(amount, featureStatus), featureStatus,
-                HarfordDamageMitigation.Marker(featureStatus)
-        end
-
-        -- Fallback: si el about TRP3 del jugador trae un stat block con resistencias.
-        local status = HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
-        if status ~= STATUS_NORMAL then
-            return HarfordDamageMitigation.ApplyMultiplier(amount, status), status,
-                HarfordDamageMitigation.Marker(status)
-        end
-
-        return amount, STATUS_NORMAL, ""
+        status = ResolvePlayerFeatureStatus(unit, typeText)
+            or HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
+            or STATUS_NORMAL
+    else
+        status = HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
     end
 
-    local status = HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
+    local conditionStatus = HarfordDnDConditions and HarfordDnDConditions.GetDamageStatus
+        and HarfordDnDConditions.GetDamageStatus(unit)
+    if conditionStatus == STATUS_IMMUNE or status == STATUS_IMMUNE then
+        status = STATUS_IMMUNE
+    elseif (conditionStatus == STATUS_RESISTANT and status == STATUS_VULNERABLE)
+        or (conditionStatus == STATUS_VULNERABLE and status == STATUS_RESISTANT) then
+        status = STATUS_NORMAL
+    elseif status == STATUS_NORMAL and conditionStatus then
+        status = conditionStatus
+    end
     return HarfordDamageMitigation.ApplyMultiplier(amount, status), status,
         HarfordDamageMitigation.Marker(status)
 end

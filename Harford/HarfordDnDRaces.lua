@@ -272,6 +272,8 @@ API.RACES = {
             { id = "ren_descanso", name = "Descanso de la Tumba", type = "informativo", description = "Para un descanso largo, basta con 6 horas de actividad ligera (no duermes).", effects = {} },
             { id = "ren_naturaleza", name = "Naturaleza No-Muerta", type = "pasivo", description = "Eres no-muerto (cuentas como humanoide para lo que no afecta a no-muertos); ventaja y resistencia a veneno; no necesitas comer/beber/respirar/dormir.", effects = {
                 { kind = "resist", damage = "veneno" },
+                { kind = "conditionImmunity", condition = "poisoned" },
+                { kind = "conditionImmunity", condition = "sleeping" },
             } },
             { id = "ren_voluntad", name = "Voluntad de los Renegados", type = "informativo", description = "Ventaja en salvaciones contra encantamiento y efectos que vuelven a los no-muertos.", effects = {} },
             { id = "ren_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Guturasico.", effects = {} },

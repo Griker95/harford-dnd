@@ -1242,26 +1242,342 @@ local function LoadSaveRequestField(value)
     return value
 end
 
-function HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId)
+function HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns, sourceGuid)
     ability = SaveRequestField(ability)
     outcome = SaveRequestField(outcome)
     dc = math.floor(tonumber(dc) or 0)
     auraId = math.floor(tonumber(auraId) or 0)
-    return table.concat({ "DOSAVE", ability, tostring(dc), outcome, tostring(auraId) }, "|")
+    conditionId = tostring(conditionId or ""):match("^[%w_%-]+$") or ""
+    if #conditionId > 40 then conditionId = "" end
+    conditionDuration = SaveRequestField(tostring(conditionDuration or "manual"):sub(1, 24))
+    conditionTurns = math.max(0, math.min(99, math.floor(tonumber(conditionTurns) or 0)))
+    return table.concat({ "DOSAVE", ability, tostring(dc), outcome, tostring(auraId), conditionId,
+        conditionDuration, conditionTurns, SaveRequestField(tostring(sourceGuid or ""):sub(1, 64)) }, "|")
 end
 
 function HarfordSync.DeserializeRequestedSave(message)
-    local opcode, ability, dc, outcome, auraId = strsplit("|", tostring(message or ""))
+    local opcode, ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns, sourceGuid =
+        strsplit("|", tostring(message or ""))
     if opcode ~= "DOSAVE" then return nil end
     ability = LoadSaveRequestField(ability)
     outcome = LoadSaveRequestField(outcome)
-    return ability, tonumber(dc) or 0, outcome, tonumber(auraId) or 0
+    conditionId = tostring(conditionId or ""):match("^[%w_%-]+$") or ""
+    conditionDuration = LoadSaveRequestField(conditionDuration or "manual"):sub(1, 24)
+    conditionTurns = math.max(0, math.min(99, math.floor(tonumber(conditionTurns) or 0)))
+    return ability, tonumber(dc) or 0, outcome, tonumber(auraId) or 0, conditionId,
+        conditionDuration, conditionTurns, LoadSaveRequestField(sourceGuid or ""):sub(1, 64)
 end
 
-function HarfordSync.SendRequestedSave(prefix, target, ability, dc, outcome, auraId)
+function HarfordSync.SendRequestedSave(prefix, target, ability, dc, outcome, auraId, conditionId,
+    conditionDuration, conditionTurns, sourceGuid)
     if not target or target == "" then return false end
-    HarfordSync.Send(prefix, HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId), "WHISPER", target)
+    HarfordSync.Send(prefix, HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId, conditionId,
+        conditionDuration, conditionTurns, sourceGuid), "WHISPER", target)
     return true
+end
+
+-- Ataques de area: una peticion se envia individualmente al jugador defensor. Solo
+-- transporta resultados mecanicos ya tirados; el receptor resuelve su CA/salvacion,
+-- mitigacion y recursos. Nunca contiene comandos de servidor.
+local function AreaField(value)
+    value = tostring(value or ""):gsub("[\r\n]", " ")
+    value = value:gsub("%%", "%%25"):gsub("|", "%%7C")
+    value = value:gsub(";", "%%3B"):gsub(",", "%%2C")
+    return value
+end
+
+local function LoadAreaField(value)
+    value = tostring(value or "")
+    value = value:gsub("%%2C", ","):gsub("%%3B", ";")
+    value = value:gsub("%%7C", "|"):gsub("%%25", "%%")
+    return value
+end
+
+local function SerializeAreaComponents(components)
+    local parts = {}
+    for i, component in ipairs(components or {}) do
+        if i > 8 then break end
+        local amount = math.max(0, math.floor(tonumber(component.amount) or 0))
+        local maximum = math.max(0, math.floor(tonumber(component.maximum) or amount))
+        local damageType = tostring(component.damageType or ""):match("^[%w_]+$")
+        if not damageType then return nil end
+        parts[#parts + 1] = table.concat({ amount, maximum, damageType }, ",")
+    end
+    -- "" (vacio) es valido para conjuros de condicion pura; nil solo si un componente es invalido.
+    return table.concat(parts, ";")
+end
+
+local function DeserializeAreaComponents(value)
+    local out = {}
+    for token in tostring(value or ""):gmatch("[^;]+") do
+        if #out >= 8 then return nil end
+        local amount, maximum, damageType = token:match("^(%d+),(%d+),([%w_]+)$")
+        amount, maximum = tonumber(amount), tonumber(maximum)
+        if not amount or not maximum or amount > 10000 or maximum > 10000 then return nil end
+        out[#out + 1] = { amount = amount, maximum = maximum, damageType = damageType }
+    end
+    return out  -- {} (vacio) valido para condicion pura
+end
+
+local AREA_CONDITION_DURATION = {
+    manual = "M", target_turn_start = "TS", source_turn_start = "SS",
+    target_turn_end = "TE", source_turn_end = "SE", rounds = "R",
+    save_at_turn_end = "SV",
+}
+local AREA_CONDITION_DURATION_LOAD = {}
+for key, code in pairs(AREA_CONDITION_DURATION) do AREA_CONDITION_DURATION_LOAD[code] = key end
+local AREA_ABILITY = {
+    Fuerza = "F", Destreza = "D", Constitucion = "C",
+    Inteligencia = "I", Sabiduria = "S", Carisma = "A",
+}
+local AREA_ABILITY_LOAD = {}
+for key, code in pairs(AREA_ABILITY) do AREA_ABILITY_LOAD[code] = key end
+
+local function TrimAreaLabel(value)
+    local limit = math.max(0, #value - 8)
+    while limit > 0 do
+        local nextByte = value:byte(limit + 1)
+        if not nextByte or nextByte < 128 or nextByte >= 192 then break end
+        limit = limit - 1
+    end
+    return value:sub(1, limit)
+end
+
+function HarfordSync.SerializeAreaRequest(request)
+    request = request or {}
+    local id = tostring(request.id or ""):match("^[%w%._%-]+$")
+    local mode = request.mode == "attack" and "A" or request.mode == "save" and "S"
+        or request.mode == "auto" and "U" or nil
+    local components = SerializeAreaComponents(request.components)
+    if not id or #id > 40 or not mode or not components then return nil end
+
+    local ability = AreaField(tostring(request.ability or ""):sub(1, 24))
+    local dc = math.max(0, math.min(99, math.floor(tonumber(request.dc) or 0)))
+    local success = request.success == "half" and "H" or "N"
+    local attackTotal = math.max(-999, math.min(999, math.floor(tonumber(request.attackTotal) or 0)))
+    local critical = request.critical == "critical" and "C" or request.critical == "fumble" and "F" or "N"
+    local auraId = math.max(0, math.floor(tonumber(request.auraId) or 0))
+    local rawConditionId = tostring(request.conditionId or "")
+    local conditionId = rawConditionId:match("^[%w_%-]+$")
+    if rawConditionId ~= "" and (not conditionId or #conditionId > 40) then return nil end
+    local durationCode, turns, saveCode, conditionSaveDC, persist, sourceGuid = "", 0, "", 0, "", ""
+    if conditionId and conditionId ~= "" then
+        durationCode = AREA_CONDITION_DURATION[tostring(request.conditionDuration or "manual")]
+        if not durationCode then return nil end
+        turns = math.max(0, math.min(99, math.floor(tonumber(request.conditionTurns) or 0)))
+        saveCode = AREA_ABILITY[tostring(request.conditionSaveAbility or "")] or ""
+        conditionSaveDC = math.max(0, math.min(99, math.floor(tonumber(request.conditionSaveDC) or 0)))
+        if durationCode == "R" and turns <= 0 then return nil end
+        if durationCode == "SV" and (saveCode == "" or conditionSaveDC <= 0) then return nil end
+        persist = request.conditionPersist == true and "P" or ""
+        sourceGuid = AreaField(tostring(request.sourceGuid or ""):sub(1, 64))
+    end
+    local labelText = tostring(request.label or "Ataque de area"):sub(1, 80)
+    local function BuildPayload()
+        return table.concat({ "DNDAREAREQ", id, mode, ability, dc, success,
+            attackTotal, critical, auraId, AreaField(labelText), components, conditionId or "",
+            durationCode, turns, saveCode, conditionSaveDC, persist, sourceGuid }, "|")
+    end
+    local payload = BuildPayload()
+    while #payload > 240 and labelText ~= "" do
+        labelText = TrimAreaLabel(labelText)
+        payload = BuildPayload()
+    end
+    if #payload > 240 then return nil end
+    return payload
+end
+
+function HarfordSync.DeserializeAreaRequest(message)
+    local opcode, id, mode, ability, dc, success, attackTotal, critical, auraId, label, components, conditionId,
+        durationCode, conditionTurns, conditionSaveAbility, conditionSaveDC, conditionPersist, sourceGuid =
+        strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDAREAREQ" or not id or not id:match("^[%w%._%-]+$") or #id > 40 then return nil end
+    mode = mode == "A" and "attack" or mode == "S" and "save" or mode == "U" and "auto" or nil
+    components = DeserializeAreaComponents(components)
+    if not mode or not components then return nil end
+    conditionId = tostring(conditionId or ""):match("^[%w_%-]+$") or ""
+    local conditionDuration = conditionId ~= ""
+        and ((not durationCode or durationCode == "") and "manual" or AREA_CONDITION_DURATION_LOAD[durationCode])
+        or "manual"
+    if conditionId ~= "" and not conditionDuration then return nil end
+    conditionTurns = math.max(0, math.min(99, math.floor(tonumber(conditionTurns) or 0)))
+    conditionSaveAbility = AREA_ABILITY_LOAD[conditionSaveAbility or ""]
+    conditionSaveDC = math.max(0, math.min(99, math.floor(tonumber(conditionSaveDC) or 0)))
+    if conditionDuration == "rounds" and conditionTurns <= 0 then return nil end
+    if conditionDuration == "save_at_turn_end" and (not conditionSaveAbility or conditionSaveDC <= 0) then return nil end
+    return {
+        id = id,
+        mode = mode,
+        ability = LoadAreaField(ability),
+        dc = math.max(0, math.min(99, math.floor(tonumber(dc) or 0))),
+        success = success == "H" and "half" or "none",
+        attackTotal = math.max(-999, math.min(999, math.floor(tonumber(attackTotal) or 0))),
+        critical = critical == "C" and "critical" or critical == "F" and "fumble" or "normal",
+        auraId = math.max(0, math.floor(tonumber(auraId) or 0)),
+        label = LoadAreaField(label):sub(1, 80),
+        components = components,
+        conditionId = conditionId,
+        conditionDuration = conditionDuration,
+        conditionTurns = conditionTurns,
+        conditionSaveAbility = conditionSaveAbility,
+        conditionSaveDC = conditionSaveDC,
+        conditionPersist = conditionPersist == "P",
+        sourceGuid = LoadAreaField(sourceGuid):sub(1, 64),
+    }
+end
+
+function HarfordSync.SendAreaRequest(prefix, target, request)
+    local payload = HarfordSync.SerializeAreaRequest(request)
+    if not payload then return false, "Peticion de area invalida o demasiado grande" end
+    return HarfordSync.Send(prefix, payload, "WHISPER", target)
+end
+
+function HarfordSync.SerializeAreaResult(result)
+    result = result or {}
+    local id = tostring(result.id or ""):match("^[%w%._%-]+$")
+    local status = tostring(result.status or "invalid"):match("^[%a_]+$")
+    if not id or #id > 40 or not status or #status > 16 then return nil end
+    local applied = math.max(0, math.min(10000, math.floor(tonumber(result.applied) or 0)))
+    local label = AreaField(tostring(result.label or ""):sub(1, 100))
+    local payload = table.concat({ "DNDAREARES", id, status, applied, label }, "|")
+    return #payload <= 240 and payload or nil
+end
+
+function HarfordSync.DeserializeAreaResult(message)
+    local opcode, id, status, applied, label = strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDAREARES" or not id or not id:match("^[%w%._%-]+$") or #id > 40 then return nil end
+    if not status or not status:match("^[%a_]+$") or #status > 16 then return nil end
+    return { id = id, status = status, applied = math.max(0, math.floor(tonumber(applied) or 0)), label = LoadAreaField(label):sub(1, 100) }
+end
+
+function HarfordSync.SendAreaResult(prefix, target, result)
+    local payload = HarfordSync.SerializeAreaResult(result)
+    if not payload then return false, "Resultado de area invalido" end
+    return HarfordSync.Send(prefix, payload, "WHISPER", target)
+end
+
+-- Condiciones: solo se transmiten IDs conocidos y metadatos mecanicos acotados.
+-- Las definiciones/efectos viven en HarfordDnDConditions y nunca viajan por red.
+local function ConditionField(value, maxLen)
+    value = tostring(value or ""):gsub("[\r\n]", " "):sub(1, maxLen or 48)
+    return value:gsub("%%", "%%25"):gsub("|", "%%7C")
+end
+
+local function LoadConditionField(value, maxLen)
+    value = tostring(value or ""):gsub("%%7C", "|"):gsub("%%25", "%%")
+    return value:sub(1, maxLen or 48)
+end
+
+local function ConditionId(value)
+    value = tostring(value or "")
+    return #value <= 40 and value:match("^[%w_%-]+$") or nil
+end
+
+local function ConditionOperation(value)
+    return value == "apply" and "A" or value == "remove" and "R" or nil
+end
+
+local function LoadConditionOperation(value)
+    return value == "A" and "apply" or value == "R" and "remove" or nil
+end
+
+
+function HarfordSync.SerializeConditionRequest(data)
+    data = data or {}
+    local id = tostring(data.id or ""):match("^[%w%._%-]+$")
+    local op, conditionId = ConditionOperation(data.op), ConditionId(data.conditionId)
+    if not id or #id > 40 or not op or not conditionId then return nil end
+    local payload = table.concat({
+        "DNDCOND", id, op, conditionId,
+        ConditionField(data.sourceGuid, 64), ConditionField(data.sourceName, 48),
+        ConditionField(data.duration or "manual", 24),
+        math.max(0, math.min(99, math.floor(tonumber(data.turns) or 0))),
+        ConditionField(data.saveAbility, 20),
+        math.max(0, math.min(99, math.floor(tonumber(data.saveDC) or 0))),
+        data.persist == true and "P" or "",
+    }, "|")
+    return #payload <= 240 and payload or nil
+end
+
+function HarfordSync.DeserializeConditionRequest(message)
+    local opcode, id, op, conditionId, sourceGuid, sourceName, duration, turns, saveAbility, saveDC, persist =
+        strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDCOND" or not id or not id:match("^[%w%._%-]+$") or #id > 40 then return nil end
+    op, conditionId = LoadConditionOperation(op), ConditionId(conditionId)
+    if not op or not conditionId then return nil end
+    return {
+        id = id, op = op, conditionId = conditionId,
+        sourceGuid = LoadConditionField(sourceGuid, 64), sourceName = LoadConditionField(sourceName, 48),
+        duration = LoadConditionField(duration, 24), turns = math.max(0, math.min(99, math.floor(tonumber(turns) or 0))),
+        saveAbility = LoadConditionField(saveAbility, 20), saveDC = math.max(0, math.min(99, math.floor(tonumber(saveDC) or 0))),
+        persist = persist == "P",
+    }
+end
+
+function HarfordSync.SendConditionRequest(prefix, target, data)
+    local payload = HarfordSync.SerializeConditionRequest(data)
+    if not payload then return false, "Peticion de condicion invalida" end
+    return HarfordSync.Send(prefix, payload, "WHISPER", target)
+end
+
+function HarfordSync.SerializeConditionResult(data)
+    data = data or {}
+    local id = tostring(data.id or ""):match("^[%w%._%-]+$")
+    local conditionId = ConditionId(data.conditionId)
+    local status = tostring(data.status or "error"):match("^[%a_]+$")
+    if not id or #id > 40 or not conditionId or not status or #status > 16 then return nil end
+    return table.concat({ "DNDCONDRES", id, conditionId, status }, "|")
+end
+
+function HarfordSync.DeserializeConditionResult(message)
+    local opcode, id, conditionId, status = strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDCONDRES" or not id or not id:match("^[%w%._%-]+$") or #id > 40 then return nil end
+    conditionId, status = ConditionId(conditionId), tostring(status or ""):match("^[%a_]+$")
+    if not conditionId or not status or #status > 16 then return nil end
+    return { id = id, conditionId = conditionId, status = status }
+end
+
+function HarfordSync.SendConditionResult(prefix, target, data)
+    local payload = HarfordSync.SerializeConditionResult(data)
+    if not payload then return false, "Resultado de condicion invalido" end
+    return HarfordSync.Send(prefix, payload, "WHISPER", target)
+end
+
+function HarfordSync.SerializeConditionState(data)
+    data = data or {}
+    local op, conditionId = ConditionOperation(data.op), ConditionId(data.conditionId)
+    if not op or not conditionId then return nil end
+    local payload = table.concat({
+        "DNDCONDSTATE", op, conditionId,
+        ConditionField(data.targetGuid, 64), ConditionField(data.targetName, 48),
+        ConditionField(data.sourceGuid, 64), ConditionField(data.sourceName, 48),
+        ConditionField(data.duration or "manual", 24),
+        math.max(0, math.min(99, math.floor(tonumber(data.turns) or 0))),
+        ConditionField(data.saveAbility, 20),
+        math.max(0, math.min(99, math.floor(tonumber(data.saveDC) or 0))),
+    }, "|")
+    return #payload <= 240 and payload or nil
+end
+
+function HarfordSync.DeserializeConditionState(message)
+    local opcode, op, conditionId, targetGuid, targetName, sourceGuid, sourceName, duration, turns, saveAbility, saveDC =
+        strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDCONDSTATE" then return nil end
+    op, conditionId = LoadConditionOperation(op), ConditionId(conditionId)
+    if not op or not conditionId then return nil end
+    return {
+        op = op, conditionId = conditionId,
+        targetGuid = LoadConditionField(targetGuid, 64), targetName = LoadConditionField(targetName, 48),
+        sourceGuid = LoadConditionField(sourceGuid, 64), sourceName = LoadConditionField(sourceName, 48),
+        duration = LoadConditionField(duration, 24), turns = math.max(0, math.min(99, math.floor(tonumber(turns) or 0))),
+        saveAbility = LoadConditionField(saveAbility, 20), saveDC = math.max(0, math.min(99, math.floor(tonumber(saveDC) or 0))),
+    }
+end
+
+function HarfordSync.SendConditionState(prefix, channel, data)
+    local payload = HarfordSync.SerializeConditionState(data)
+    if not payload then return false, "Estado de condicion invalido" end
+    return HarfordSync.Send(prefix, payload, channel)
 end
 
 function HarfordSync.SendResourceAdjust(prefix, resourceKey, delta, target)

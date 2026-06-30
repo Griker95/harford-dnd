@@ -258,13 +258,16 @@ end
 --   ra, rb  -> los dos dados (rb = nil si no hay ventaja/desventaja)
 --   critTag -> "CRÍTICO" | "PIFIA" | ""
 --   modeTag -> "V" | "D" | "" (para el campo mode de la tirada difundida)
-function HarfordDnDCalc.RollD20Full()
+function HarfordDnDCalc.RollD20Full(rollType, context)
     local mode = HarfordDnDCalc.GetMode()
+    if rollType and HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode then
+        mode = HarfordDnDConditions.ResolveRollMode(mode, rollType, context)
+    end
     local _, a, b = HarfordDnDCalc.RollD20(mode)
     local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
     local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
     local modeTag = (mode == "adv" and "V") or (mode == "dis" and "D") or ""
-    return chosen, ra, rb, critTag, modeTag
+    return chosen, ra, rb, critTag, modeTag, mode
 end
 
 -- Texto del/los dado(s) d20: "ra/rb→chosen" con ventaja/desventaja, o "chosen".

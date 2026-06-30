@@ -385,12 +385,95 @@ local function ParseDamageComponents(impactText)
     return components
 end
 
+local CONDITION_ABILITY = {
+    fue = "Fuerza", fuerza = "Fuerza", des = "Destreza", destreza = "Destreza",
+    con = "Constitucion", cons = "Constitucion", constitucion = "Constitucion",
+    int = "Inteligencia", inteligencia = "Inteligencia", sab = "Sabiduria", sabiduria = "Sabiduria",
+    car = "Carisma", carisma = "Carisma",
+}
+
+local function ParseConditionMetadata(clean, conditionId)
+    if not conditionId then return "manual", 0, nil, 0, false end
+    local persist = clean:match("persistencia:%s*(si)") == "si"
+    local finalAbility, finalDC = clean:match("salvacion final:%s*([%a]+)%s+cd%s*(%d+)")
+    if finalAbility and finalDC then
+        local ability = CONDITION_ABILITY[finalAbility]
+        if not ability then return "invalid", 0, nil, 0, persist end
+        return "save_at_turn_end", 0, ability, tonumber(finalDC) or 0, persist
+    end
+
+    local text = clean:match("duracion:%s*([^%.\n]+)")
+    if not text then return "manual", 0, nil, 0, persist end
+    text = text:gsub("^%s+", ""):gsub("%s+$", "")
+    local rounds = tonumber(text:match("^(%d+)%s+rondas?$"))
+    if rounds then return "rounds", rounds, nil, 0, persist end
+    if text == "manual" then return "manual", 0, nil, 0, persist end
+
+    local nextTurn = text:find("siguiente turno", 1, true) and 2 or 1
+    if text:find("fin", 1, true) and text:find("fuente", 1, true) then
+        return "source_turn_end", nextTurn, nil, 0, persist
+    elseif text:find("inicio", 1, true) and text:find("fuente", 1, true) then
+        return "source_turn_start", nextTurn, nil, 0, persist
+    elseif text:find("fin", 1, true) and text:find("objetivo", 1, true) then
+        return "target_turn_end", nextTurn, nil, 0, persist
+    elseif text:find("inicio", 1, true) and text:find("objetivo", 1, true) then
+        return "target_turn_start", nextTurn, nil, 0, persist
+    end
+    return "invalid", 0, nil, 0, persist
+end
+
 local function ParseNpcActionState(state)
     local clean = NormalizeAttackText(state.text)
     local bonusText = clean:match("([+-]%s*%d+)%s+al%s+ataque")
     local impactText = clean:match("impacto:%s*([^%.]+)")
     local damageComponents = ParseDamageComponents(impactText)
     local firstDamage = damageComponents[1]
+    local attackRange = clean:find("ataque cuerpo a cuerpo", 1, true) and "melee" or "ranged"
+    local conditionText = clean:match("estado:%s*([^%.\n]+)")
+    local conditionId = conditionText and HarfordDnDConditions and HarfordDnDConditions.FindIdByText
+        and HarfordDnDConditions.FindIdByText(conditionText:gsub("^%s+", ""):gsub("%s+$", "")) or nil
+    local conditionDuration, conditionTurns, conditionSaveAbility, conditionSaveDC, conditionPersist =
+        ParseConditionMetadata(clean, conditionId)
+
+    local area
+    local areaText = clean:match("area:%s*([^%.\n]+)")
+    if areaText then
+        areaText = areaText:gsub("^%s+", ""):gsub("%s+$", "")
+        local shape = areaText:match("^cono%s+") and "cone"
+            or (areaText:match("^radio%s+") or areaText:match("^esfera%s+")) and "sphere"
+            or areaText:match("^linea%s+") and "line"
+            or "other"
+        local sizeText = areaText
+        for _, prefix in ipairs({ "cono", "radio", "esfera", "linea" }) do
+            if sizeText:find(prefix .. " ", 1, true) == 1 then
+                sizeText = sizeText:sub(#prefix + 2)
+                break
+            end
+        end
+        local saveAbility, saveDC = clean:match("salvacion:%s*([%a]+)%s+cd%s*(%d+)")
+        saveAbility = CONDITION_ABILITY[saveAbility]
+        local successText = clean:match("exito:%s*(mitad)") or clean:match("exito:%s*(niega)")
+        local resolution = saveAbility and saveDC and successText and "save" or bonusText and "attack" or nil
+        if resolution and firstDamage then
+            area = {
+                shape = shape,
+                sizeText = sizeText,
+                resolution = resolution,
+                saveAbility = saveAbility,
+                dc = tonumber(saveDC),
+                success = successText == "mitad" and "half" or "none",
+                attackBonus = bonusText and tonumber((bonusText:gsub("%s", ""))) or nil,
+                attackRange = attackRange,
+                damageComponents = damageComponents,
+                conditionId = conditionId,
+                conditionDuration = conditionDuration,
+                conditionTurns = conditionTurns,
+                conditionSaveAbility = conditionSaveAbility,
+                conditionSaveDC = conditionSaveDC,
+                conditionPersist = conditionPersist,
+            }
+        end
+    end
 
     return {
         title = state.title ~= "" and state.title or ("Estado " .. tostring(state.index)),
@@ -401,6 +484,14 @@ local function ParseNpcActionState(state)
         damageBonus = firstDamage and firstDamage.damageBonus or 0,
         damageType = firstDamage and firstDamage.damageType or nil,
         damageComponents = damageComponents,
+        conditionId = conditionId,
+        conditionDuration = conditionDuration,
+        conditionTurns = conditionTurns,
+        conditionSaveAbility = conditionSaveAbility,
+        conditionSaveDC = conditionSaveDC,
+        conditionPersist = conditionPersist,
+        attackRange = attackRange,
+        area = area,
         sourceIndex = state.index,
         hyperlink = GetNpcActionHyperlink(state),
     }

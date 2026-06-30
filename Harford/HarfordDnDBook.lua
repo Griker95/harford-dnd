@@ -119,6 +119,7 @@ API.CLASSES = {
             { id = "cdm_lanzamiento_conjuros", level = 2, name = "Lanzamiento de Conjuros", type = "informativo", description = "Lanzas conjuros de caballero de la muerte usando Carisma. CD = 8 + comp + Mod. Carisma; ataque = comp + Mod. Carisma. Foco: tu arma runica.", effects = {} },
             { id = "cdm_constitucion_nomuerta", level = 3, name = "Constitucion No-Muerta", type = "pasivo", description = "Inmune a enfermedades y a la condicion envenenado; resistente al daño por veneno.", effects = {
                 { kind = "resist", damage = "veneno" },
+                { kind = "conditionImmunity", condition = "poisoned" },
             } },
             { id = "cdm_presencia_maligna", level = 3, name = "Presencia Maligna", type = "informativo", description = "Eliges tu presencia (Sangre, Escarcha o Profana). Concede rasgos en niveles 3, 7, 11, 15 y 20.", effects = {} },
             ASI("cdm", 4),
@@ -521,13 +522,13 @@ API.CLASSES = {
                   values = { 0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10 } },
             } },
             { id = "pic_mutilar", level = 2, name = "Mutilar", type = "maniobra", description = "Tras impactar a una criatura con la accion de Ataque, gastas 1 punto de energia: el objetivo supera una salvacion de Fuerza (CD de Energia) o queda derribado.", effects = {
-                { kind = "energyManeuver", resource = "energy", cost = 1, spendOnHit = true, attack = true, save = "Fuerza", outcome = "Derribado", dcAbility = "Destreza", onFailAura = 267937 },
+                { kind = "energyManeuver", resource = "energy", cost = 1, spendOnHit = true, attack = true, save = "Fuerza", outcome = "Derribado", dcAbility = "Destreza", onFailAura = 267937, conditionId = "prone" },
             } },
             { id = "pic_exponer_armadura", level = 2, name = "Exponer Armadura", type = "maniobra", description = "Accion: gastas 1 punto de energia y haces un ataque especial con arma. Si aciertas, infliges daño normal y expones fallos en su defensa: cada otra criatura tiene ventaja en su primera tirada de ataque con arma contra el objetivo antes del final de tu siguiente turno.", effects = {
-                { kind = "energyManeuver", resource = "energy", cost = 1, spendOnHit = true, attack = true, onHitAura = 11971 },
+                { kind = "energyManeuver", resource = "energy", cost = 1, spendOnHit = true, attack = true, onHitAura = 11971, conditionId = "exposed_armor", conditionDuration = "source_turn_end", conditionTurns = 2 },
             } },
             { id = "pic_garrote", level = 2, name = "Garrote", type = "maniobra", description = "Tras impactar a una criatura con un ataque cuerpo a cuerpo, gastas 1 punto de energia: el objetivo supera una salvacion de Constitucion (CD de Energia) o no puede hablar hasta el final de tu siguiente turno.", effects = {
-                { kind = "energyManeuver", resource = "energy", cost = 1, spendOnHit = true, attack = true, save = "Constitucion", outcome = "Silenciado", dcAbility = "Destreza", onFailAura = 30900 },
+                { kind = "energyManeuver", resource = "energy", cost = 1, spendOnHit = true, attack = true, save = "Constitucion", outcome = "Silenciado", dcAbility = "Destreza", onFailAura = 30900, conditionId = "silenced", conditionDuration = "source_turn_end", conditionTurns = 2 },
             } },
             { id = "pic_accion_astuta", level = 2, name = "Accion Astuta", type = "informativo", description = "Accion adicional cada turno solo para Correr, Desengancharse o Esconderse.", effects = {} },
             { id = "pic_arquetipo", level = 3, name = "Arquetipo de Picaro", type = "informativo", description = "Eliges tu arquetipo (Asesino, Forajido o Sutileza). Concede rasgos en niveles 3, 9, 13 y 17.", effects = {} },
@@ -661,7 +662,7 @@ API.CLASSES = {
                 { kind = "conditionalWeaponDamage", id = "war_golpe_heroico", label = "Golpe Heroico", flatAbility = "Fuerza", resourceCost = "rage", costPerLevel = 1, minLevel = 1, maxLevel = 1 },
             } },
             { id = "guerrero_man_desarme", level = 2, name = "Desarme", type = "recurso", description = "Gasta 2 puntos de Furia en una tirada de ataque; si impacta, daño normal y el objetivo suelta un objeto a tu eleccion. Activalo en 'Daño extra'.", effects = {
-                { kind = "conditionalWeaponDamage", id = "war_desarme", label = "Desarme (suelta objeto)", resourceCost = "rage", costPerLevel = 2, minLevel = 1, maxLevel = 1, onHitAura = 177714 },
+                { kind = "conditionalWeaponDamage", id = "war_desarme", label = "Desarme (suelta objeto)", resourceCost = "rage", costPerLevel = 2, minLevel = 1, maxLevel = 1, onHitAura = 177714, conditionId = "disarmed" },
             } },
             { id = "guerrero_man_carga", level = 2, name = "Carga", type = "maniobra", description = "Gasta 1 punto de Furia para realizar una carga contra el objetivo y resolver un ataque especial con arma.", effects = {
                 { kind = "energyManeuver", resource = "rage", cost = 1, spendOnHit = true, attack = true },

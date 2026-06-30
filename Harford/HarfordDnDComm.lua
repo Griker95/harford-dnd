@@ -51,6 +51,23 @@ function HarfordDnDComm.CreateHandlers(deps)
             return false
         end
 
+        if HarfordDnDConditions and HarfordDnDConditions.HandleMessage
+            and HarfordDnDConditions.HandleMessage(message, sender)
+        then
+            return false
+        end
+
+        if HarfordDnDArea and HarfordDnDArea.HandleRequest
+            and HarfordDnDArea.HandleRequest(message, sender)
+        then
+            return false
+        end
+        if HarfordDnDArea and HarfordDnDArea.HandleResult
+            and HarfordDnDArea.HandleResult(message, sender)
+        then
+            return false
+        end
+
         local resKind, resourceProfileName, resourceTbl = HarfordSync.ReceiveResourceMessage(message)
         if resKind == "REQ" then
             if sender and sender ~= "" and not handlers.IsSelfSender(sender) then
@@ -209,10 +226,12 @@ function HarfordDnDComm.CreateHandlers(deps)
         -- DOSAVE: el atacante solicita una salvacion, pero la tira y anuncia el
         -- propio cliente defensor para usar sus datos reales de ficha.
         if HarfordSync.DeserializeRequestedSave then
-            local saveAbility, saveDC, saveOutcome, saveAura = HarfordSync.DeserializeRequestedSave(message)
+            local saveAbility, saveDC, saveOutcome, saveAura, saveCondition, saveDuration, saveTurns, saveSourceGuid =
+                HarfordSync.DeserializeRequestedSave(message)
             if saveAbility then
                 if deps.HandleRequestedSave then
-                    deps.HandleRequestedSave(saveAbility, saveDC, saveOutcome, saveAura, sender)
+                        deps.HandleRequestedSave(saveAbility, saveDC, saveOutcome, saveAura, sender,
+                        saveCondition, saveDuration, saveTurns, saveSourceGuid)
                 end
                 return false
             end

@@ -4,7 +4,6 @@ local API = HarfordReputationUI
 
 local TEX_MARBLE = "Interface\\FrameGeneral\\UI-Background-Marble"
 local TEX_PARCH = "Interface\\AchievementFrame\\UI-Achievement-Parchment-Horizontal"
-local TEX_WHITE = "Interface\\Buttons\\WHITE8x8"
 local TEX_REP_BAR = "Interface\\PaperDollInfoFrame\\UI-Character-ReputationBar"
 local TEX_SKILLS_BAR = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar"
 local TEX_REP_HIGHLIGHT = "Interface\\PaperDollInfoFrame\\UI-Character-ReputationBar-Highlight"
@@ -12,7 +11,6 @@ local TEX_REP_STAR = "Interface\\Common\\ReputationStar"
 local TEX_BTN_PLUS = "Interface\\Buttons\\UI-PlusButton-Up"
 local TEX_BTN_MINUS = "Interface\\Buttons\\UI-MinusButton-UP"
 local TEX_BTN_HILITE = "Interface\\Buttons\\UI-PlusButton-Hilight"
-local TEX_STATUS = "Interface\\TargetingFrame\\UI-StatusBar"
 local TEX_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 
 local PANEL_W = 390

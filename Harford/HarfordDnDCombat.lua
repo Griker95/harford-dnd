@@ -284,6 +284,9 @@ function HarfordDnDCombat.ApplyWeaponDamageToNpc(total, isCritical)
             isCritical = isCritical,
             addonName  = "Harford",
         })
+        if HarfordDnDConditions and HarfordDnDConditions.OnDamageTaken then
+            HarfordDnDConditions.OnDamageTaken("target", total)
+        end
         return true
     end
     return false

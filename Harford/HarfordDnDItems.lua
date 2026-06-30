@@ -941,6 +941,26 @@ function API.GetBasicArmors()
     return CopyTable(BASIC_ARMOR)
 end
 
+function API.GetArmorMenuGroups()
+    local order = { "ligera", "media", "pesada" }
+    local labels = {
+        ligera = "Armaduras ligeras",
+        media = "Armaduras medias",
+        pesada = "Armaduras pesadas",
+    }
+    local byKey, groups = {}, {}
+    for _, key in ipairs(order) do
+        local group = { key = key, text = labels[key], items = {} }
+        byKey[key] = group
+        groups[#groups + 1] = group
+    end
+    for _, armor in ipairs(BASIC_ARMOR) do
+        local group = byKey[armor.cat]
+        if group then group.items[#group.items + 1] = CopyTable(armor) end
+    end
+    return groups
+end
+
 function API.SetBasicWeapon(slotKey, weaponKey, profileName)
     local profile = EnsureProfile(profileName)
     slotKey = tostring(slotKey or "")

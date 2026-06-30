@@ -121,6 +121,7 @@ local function Empty()
         critThreshold = { any = 20, melee = 20 },  -- tirada minima de critico (rasgos de critico ampliado)
         flags = {},       -- flags booleanos de rasgo (ej. offhandDamageMod, greatWeaponFighting, extraAttack)
         damageStatus = {},-- resistencia/inmunidad/vulnerabilidad por tipo de dano (clave normalizada -> status)
+        conditionImmunity = {}, -- inmunidades mecanicas por conditionId canonico
         conditionalDamage = {}, -- dados de daño condicional conmutables (Ataque Furtivo, Golpe Runico...)
         toggleStates = {},
         initiativeAbilities = {}, -- caracteristicas cuyo Mod. se suma a la iniciativa (ej. Alacridad: Carisma)
@@ -248,6 +249,7 @@ local function ApplyEffect(resolved, effect, profileName)
                 attackPenalty = tonumber(effect.attackPenalty) or nil,  -- penalizacion a la tirada de ataque (Gran Maestro de Armas: -5/+10)
                 flatAbility = effect.flatAbility,  -- +Mod de caracteristica resuelto EN LA TIRADA (no aqui: GetAbilityMod dentro de Resolve recurre)
                 onHitAura = tonumber(effect.onHitAura) or nil,  -- aura a aplicar al objetivo al impactar (Desarme)
+                conditionId = effect.conditionId,
             }
         end
     elseif (kind == "resist" or kind == "immune" or kind == "vuln") and (effect.damage or effect.damageType) then
@@ -262,6 +264,8 @@ local function ApplyEffect(resolved, effect, profileName)
                 resolved.damageStatus[key] = "vulnerable"
             end
         end
+    elseif kind == "conditionImmunity" and effect.condition then
+        resolved.conditionImmunity[tostring(effect.condition)] = true
     elseif kind == "critRange" then
         -- Critico ampliado: la tirada minima que cuenta como critico baja a effect.value
         -- (p.ej. 19). `effect.melee = true` lo restringe a armas cuerpo a cuerpo.
@@ -466,6 +470,19 @@ end
 function API.GetDamageStatusMap(profileName)
     local out = {}
     for k, v in pairs(API.Resolve(profileName).damageStatus) do out[k] = v end
+    return out
+end
+
+function API.HasConditionImmunity(conditionId, profileName)
+    return API.Resolve(profileName).conditionImmunity[tostring(conditionId or "")] == true
+end
+
+function API.GetConditionImmunities(profileName)
+    local out = {}
+    for id, enabled in pairs(API.Resolve(profileName).conditionImmunity or {}) do
+        if enabled then out[#out + 1] = id end
+    end
+    table.sort(out)
     return out
 end
 

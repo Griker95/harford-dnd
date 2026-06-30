@@ -94,7 +94,7 @@ function HarfordDnDRolls.Serialize(data)
     local function build(lbl)
         return string.format("%s^%s^%s^%d^%s^%s^%s^%s^%s^%s",
             EscapeRollField(data.type or "roll"),
-            EscapeRollField(HarfordDnDRolls.GetDisplayName()),
+            EscapeRollField(data.player or HarfordDnDRolls.GetDisplayName()),
             EscapeRollField(lbl),
             data.total or 0,
             EscapeRollField(data.dice or ""),
@@ -232,7 +232,7 @@ function HarfordDnDRolls.Broadcast(rollData)
         and state.rollColor
         or (HarfordTRP3 and HarfordTRP3.GetUnitNameColor and HarfordTRP3.GetUnitNameColor("player") or nil)
 
-    rollData.nameColor = displayColor
+    rollData.nameColor = rollData.nameColor or displayColor
 
     local channel = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
     local payload = HarfordDnDRolls.Serialize(rollData)
@@ -263,8 +263,8 @@ function HarfordDnDRolls.Broadcast(rollData)
 
     HarfordDnDRolls.DisplayInChat({
         type      = rollData.type,
-        player    = HarfordDnDRolls.GetDisplayName(),
-        nameColor = displayColor,
+        player    = rollData.player or HarfordDnDRolls.GetDisplayName(),
+        nameColor = rollData.nameColor or displayColor,
         label     = rollData.label,
         total     = rollData.total,
         dice      = rollData.dice,

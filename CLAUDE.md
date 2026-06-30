@@ -65,7 +65,9 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 | `Harford/HarfordUIGeom.lua` | Helpers puros de geometría/búsqueda de StatusBars para overlays | pequeño |
 | `Harford/HarfordDnD.lua` | Ficha D&D 5e — UI principal `/harford ficha`. 3 tabs compactos de tirada (Caract./Ataque/Habilidades); icono tabardo abre `HarfordCharacterPanel` | grande (~139 locales) |
 | `Harford/HarfordCharacterPanel.lua` | Panel de personaje de usuario final: Ficha, **Libro** (replica 1:1 del spellbook nativo), Creacion, Subida y acceso a Reputacion; usa los modulos DnD* y no sustituye HarfordReputationUI | mediano |
+| `Harford/HarfordCharacterBook.lua` | Clasificacion y datos de PRESENTACION del Libro (categoria de habilidad, etiquetas/colores/iconos por categoria, disparadores/efectos de reaccion). Logica pura SIN estado del panel; carga antes que HarfordCharacterPanel, que la usa via alias locales | pequeño |
 | `Harford/HarfordActionBars.lua` | Barra de accion propia (config-gated `actionbar`) para colocar habilidades del Libro; no secuestra los ActionButton de Blizzard | pequeño |
+| `Harford/HarfordCompendio*.lua` | Modulo core de compendio de conjuros: API `_G.HarfordCompendioAPI`, datos `_G.HarfordCompendioSpells`, SV propias en `Harford.toc`; abrir con `/harford compendio` o `/harford magia`; `ResolveCast` lanza por ataque de conjuro normal, por `HarfordDnDArea` si detecta area estricta o salvacion directa (`Objetivo`), o por anuncio informativo; el mana se gasta en core via `HarfordDnDStore.AdjustResourceCurrent` | mediano |
 | `Harford/HarfordDnDStore.lua` | Persistencia compacta y helper numérico compartido `ToNumber(value, default)` | pequeño |
 | `Harford/HarfordDnDContext.lua` | Estado de contexto de ficha (`SheetContext`) + accesores `Get`/`Set` (ARCGET/ARCSET). Bisagra que desacopla los helpers del chunk de DnD | pequeño |
 | `Harford/HarfordDnDProfile.lua` | Aplica tablas de perfil/recursos sobre `HarfordDnDStore` (hooks EnsureDefaults/RefreshMainUI inyectados) | pequeño |
@@ -84,6 +86,9 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 | `Harford/HarfordDnDCalc.lua` | Cálculo puro: modificadores, dados, bonos. Lee vía `HarfordDnDContext` | pequeño |
 | `Harford/HarfordDnDNet.lua` | Recursos/red: export/request/adjust vía HarfordSync. `HarfordDnDAPI` delega aquí | pequeño |
 | `Harford/HarfordDnDCombat.lua` | Reglas de combate con contexto de unidad: CA, impacto y aplicación segura de daño de arma a NPC | pequeño |
+| `Harford/HarfordDnDArea.lua` | Motor efímero de ataques de área: marcado manual, resolución receptor-side, cola NPC por GUID y metadatos compactos de condición/duración | mediano |
+| `Harford/HarfordDnDConditions.lua` | Catálogo y motor híbrido de condiciones: auras como fuente cuando bastan y promoción dinámica a estado solo al necesitar metadatos; tirada/acción/movimiento/turno y red DNDCOND | mediano |
+| `HarfordAdmin/HarfordAdminConditions.lua` | Adaptador DM de condiciones; valida GUID/autoridad y ejecuta las auras NPC delegadas por core | pequeño |
 | `Harford/HarfordDnDMinimap.lua` | Botón de minimapa de la ficha (toggle + reset de posiciones inyectado) | pequeño |
 | `Harford/HarfordTurns.lua` | Tracker visual de turnos de combate | grande |
 | `Harford/HarfordReputation.lua` | Core de reputaciones: facciones, reputacion por PJ y rangos. Sin DEFAULT_FACTIONS; todo en SavedVariables | mediano |
@@ -124,7 +129,7 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 ```lua
 -- Dependencias opcionales: siempre comprobar en runtime
 if TRP3_API and TRP3_API.register then ... end
-if ARC and ARC.CMD then ... end
+if HarfordEpsilonCommands and HarfordEpsilonCommands.Send then ... end
 
 -- Overlay UIParent/MEDIUM para ToT/unitframe (no tapa otros addons)
 local f = CreateFrame("Frame", nil, UIParent)
@@ -289,3 +294,7 @@ end
 2. ¿El módulo tiene contrato documentado en AGENTS.md? → Respetar el contrato.
 3. ¿Estoy añadiendo diagnóstico temporal? → Va en `HarfordDebug.RegisterCommand`.
 4. ¿Estoy creando un overlay de ToT/unitframe? → UIParent/MEDIUM (niveles 82-85). ¿Es un panel/ventana? → UIParent/DIALOG (500+).
+## Nota de arquitectura actual
+
+- No usar `ARC.CMD` directo desde gameplay/Admin. Usar `HarfordServerActions` si existe una accion validada; si no, `HarfordEpsilonCommands.Send(command, { addonName = "...", forceEpsilon = true })` con comando sin punto inicial. `ARC.CMD` solo vive como fallback interno del wrapper o en debug documentado.
+- `HarfordDnD.lua`, `HarfordCharacterPanel.lua` y `HarfordUnitFrames.lua` siguen altos de locals/lineas; cualquier funcionalidad nueva grande debe extraerse a modulos `HarfordDnD*`/paneles auxiliares antes que crecer esos chunks.

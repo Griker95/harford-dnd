@@ -306,7 +306,7 @@ local function GetPanelTitle()
     return name or GetProfileName()
 end
 
-local TAB_ORDER = { "sheet", "book", "reputation", "professions", "creation", "leveling" }
+local TAB_ORDER = { "sheet", "book", "spells", "reputation", "professions", "creation", "leveling" }
 
 -- Pestañas OCULTAS para el despliegue (Creacion/Subida aun no listas). No se crean sus
 -- botones (ver tabData) y cualquier intento de activarlas cae a "sheet". Las paginas siguen
@@ -336,12 +336,14 @@ local function ApplyFrameLayout()
     if not S.frame then return end
     local isRep = S.activeTab == "reputation"
     local isBook = S.activeTab == "book"
-    local w = isRep and REPUTATION_W or (isBook and BOOK_W or NORMAL_W)
-    local h = isRep and REPUTATION_H or (isBook and BOOK_H or NORMAL_H)
+    local isSpells = S.activeTab == "spells"
+    local isBookLike = isBook or isSpells  -- Habilidades y Conjuros comparten el marco de libro
+    local w = isRep and REPUTATION_W or (isBookLike and BOOK_W or NORMAL_W)
+    local h = isRep and REPUTATION_H or (isBookLike and BOOK_H or NORMAL_H)
     S.frame:SetSize(w, h)
     if S.content then
         S.content:ClearAllPoints()
-        if isBook then
+        if isBookLike then
             -- El cuerpo lo dibujan regiones del frame con offsets nativos; el contenido solo
             -- contiene botones/nav anclados al frame, asi que cubre todo el cuerpo.
             S.content:SetPoint("TOPLEFT", S.frame, "TOPLEFT", 0, -21)
@@ -352,16 +354,21 @@ local function ApplyFrameLayout()
         end
     end
     -- El Bg/Inset propios del ButtonFrameTemplate tapan el cuerpo nativo del libro y lo hacen
-    -- parecer "incrustado"; se ocultan en la pestaña Libro para que se vea 374155 + pergamino.
+    -- parecer "incrustado"; se ocultan en las pestañas de libro para que se vea 374155 + pergamino.
     local inset = S.frame.Inset or _G["HarfordCharacterPanelFrameInset"]
-    if inset then inset:SetShown(not isBook) end
+    if inset then inset:SetShown(not isBookLike) end
     local tplBg = S.frame.Bg or _G["HarfordCharacterPanelFrameBg"]
-    if tplBg then tplBg:SetShown(not isBook) end
-    if S.frameBg then S.frameBg:SetShown(not isBook) end
+    if tplBg then tplBg:SetShown(not isBookLike) end
+    if S.frameBg then S.frameBg:SetShown(not isBookLike) end
     if S.book then
         if S.book.body then S.book.body:SetShown(isBook) end
         if S.book.page1 then S.book.page1:SetShown(isBook) end
         if S.book.page2 then S.book.page2:SetShown(isBook) end
+    end
+    if S.spellBook then
+        if S.spellBook.body then S.spellBook.body:SetShown(isSpells) end
+        if S.spellBook.page1 then S.spellBook.page1:SetShown(isSpells) end
+        if S.spellBook.page2 then S.spellBook.page2:SetShown(isSpells) end
     end
     if S.title then
         S.title:SetText(GetPanelTitle())
@@ -754,48 +761,9 @@ local function GetTRP3FeatureRows(limit)
     return rows
 end
 
-local function IsMagicLikeFeature(feature)
-    local name = HarfordClassColors.StripAccents(feature and feature.name):lower()
-    return name:find("conjuro", 1, true)
-        or name:find("hechizo", 1, true)
-        or name:find("truco", 1, true)
-        or name:find("metamagia", 1, true)
-        or name:find("fuente de magia", 1, true)
-        or name:find("mana", 1, true)
-end
-
-local function NormalizeFeatureText(value)
-    local text = HarfordClassColors.StripAccents(value):lower()
-    -- Compatibilidad con texto legacy que ya llego doble-codificado.
-    text = text:gsub("Ã¡", "a"):gsub("Ã ", "a"):gsub("Ã¤", "a"):gsub("Ã¢", "a")
-    text = text:gsub("Ã©", "e"):gsub("Ã¨", "e"):gsub("Ã«", "e"):gsub("Ãª", "e")
-    text = text:gsub("Ã­", "i"):gsub("Ã¬", "i"):gsub("Ã¯", "i"):gsub("Ã®", "i")
-    text = text:gsub("Ã³", "o"):gsub("Ã²", "o"):gsub("Ã¶", "o"):gsub("Ã´", "o")
-    text = text:gsub("Ãº", "u"):gsub("Ã¹", "u"):gsub("Ã¼", "u"):gsub("Ã»", "u")
-    text = text:gsub("Ã±", "n")
-    return text:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
-end
-
-local function IsSubclassMarkerFeature(feature)
-    if type(feature) ~= "table" then return false end
-    local desc = NormalizeFeatureText(feature.description)
-    if not desc:find("concede rasgos", 1, true) then return false end
-    if desc:find("eliges tu", 1, true) then return true end
-    local name = NormalizeFeatureText(feature.name)
-    return name:find("arquetipo", 1, true)
-        or name:find("presencia", 1, true)
-        or name:find("marca", 1, true)
-        or name:find("senda", 1, true)
-        or name:find("estudio", 1, true)
-        or name:find("tradicion", 1, true)
-        or name:find("camino", 1, true)
-        or name:find("llamado", 1, true)
-        or name:find("vinculo", 1, true)
-end
-
-local function IsVisibleBookFeature(feature)
-    return feature and not IsSubclassMarkerFeature(feature)
-end
+-- Clasificadores de feature del Libro -> HarfordCharacterBook (modulo). Alias locales.
+local IsMagicLikeFeature   = HarfordCharacterBook.IsMagicLike
+local IsVisibleBookFeature = HarfordCharacterBook.IsVisible
 
 local function FormatFeatureChoiceLabels(labels)
     if type(labels) ~= "table" or #labels == 0 then return nil end
@@ -1515,20 +1483,50 @@ local function CreateSheetPage()
                 if IsInspecting() then return end
                 level = level or 1
                 if isArmorSlot then
-                    if level ~= 1 then return end
-                    for _, armor in ipairs((HarfordDnDItems and HarfordDnDItems.GetBasicArmors and HarfordDnDItems.GetBasicArmors()) or {}) do
-                        local armorKey = armor.key
+                    local groups = HarfordDnDItems and HarfordDnDItems.GetArmorMenuGroups
+                        and HarfordDnDItems.GetArmorMenuGroups() or {}
+                    local currentArmor = HarfordDnDItems and HarfordDnDItems.GetBasicArmor
+                        and HarfordDnDItems.GetBasicArmor(key, GetProfileName())
+                    if level == 1 then
                         local info = UIDropDownMenu_CreateInfo()
-                        info.text = armor.label .. " (CA " .. tostring(armor.caText or armor.base or 10) .. ")"
-                        local currentArmor = HarfordDnDItems and HarfordDnDItems.GetBasicArmor and HarfordDnDItems.GetBasicArmor(key, GetProfileName())
-                        info.checked = (currentArmor == armorKey) or (armorKey == "none" and not currentArmor)
+                        info.text = "Sin armadura (CA 10 + Des)"
+                        info.checked = not currentArmor or currentArmor == "none"
                         info.func = function()
                             if HarfordDnDItems and HarfordDnDItems.SetBasicArmor then
-                                HarfordDnDItems.SetBasicArmor(key, armorKey, GetProfileName())
+                                HarfordDnDItems.SetBasicArmor(key, nil, GetProfileName())
                             end
                             refreshAfterChoice()
                         end
                         UIDropDownMenu_AddButton(info, level)
+                        for _, group in ipairs(groups) do
+                            if #(group.items or {}) > 0 then
+                                info = UIDropDownMenu_CreateInfo()
+                                info.text = group.text or group.key
+                                info.hasArrow = true
+                                info.notCheckable = true
+                                info.menuList = group.key
+                                UIDropDownMenu_AddButton(info, level)
+                            end
+                        end
+                    elseif level == 2 then
+                        for _, group in ipairs(groups) do
+                            if group.key == menuList then
+                                for _, armor in ipairs(group.items or {}) do
+                                    local armorKey = armor.key
+                                    local info = UIDropDownMenu_CreateInfo()
+                                    info.text = armor.label .. " (CA " .. tostring(armor.caText or armor.base or 10) .. ")"
+                                    info.checked = currentArmor == armorKey
+                                    info.func = function()
+                                        if HarfordDnDItems and HarfordDnDItems.SetBasicArmor then
+                                            HarfordDnDItems.SetBasicArmor(key, armorKey, GetProfileName())
+                                        end
+                                        refreshAfterChoice()
+                                    end
+                                    UIDropDownMenu_AddButton(info, level)
+                                end
+                                return
+                            end
+                        end
                     end
                     return
                 end
@@ -2303,6 +2301,18 @@ local function RefreshSheet()
             { "Velocidad", speed and (tostring(speed) .. " m") or "-" },
             { "Competencia", pb and Signed(pb) or "-" },
         }
+        if HarfordDnDConditions and HarfordDnDConditions.GetActive then
+            local conditionRef = IsInspecting() and S.inspectUnit or "player"
+            if conditionRef then
+                local labels = {}
+                for _, active in ipairs(HarfordDnDConditions.GetActive(conditionRef)) do
+                    labels[#labels + 1] = active.definition.label
+                end
+                if #labels > 0 then
+                    rows[#rows + 1] = { "Estados", table.concat(labels, ", "), "Estados activos", table.concat(labels, "\n") }
+                end
+            end
+        end
         if HarfordDnDHitDice and HarfordDnDHitDice.GetTotalMax and HarfordDnDHitDice.GetTotalMax(name) > 0 then
             rows[#rows + 1] = { "Dados de Golpe", HarfordDnDHitDice.GetSummaryText(name) }
         end
@@ -2892,112 +2902,16 @@ end
 -- ===========================================================================
 local BOOK_COLS, BOOK_ROWS = 2, 6
 local BOOK_PER_PAGE = BOOK_COLS * BOOK_ROWS
-local BOOK_ICON = {
-    activo   = "Interface\\Icons\\Ability_Warrior_BattleShout",
-    reaccion = "Interface\\Icons\\Ability_Warrior_Revenge",
-    pasivo   = "Interface\\Icons\\INV_Misc_Book_09",
-    maniobra = "Interface\\Icons\\Ability_Warrior_Trauma",
-}
-
--- Id del daño condicional (conditionalWeaponDamage) declarado por una habilidad, si lo tiene.
--- Estas son las habilidades "al_accion": se preparan en el Libro y las consume el ataque.
-local function FeatureCondDamageId(feature)
-    if not (feature and type(feature.effects) == "table") then return nil end
-    for _, e in ipairs(feature.effects) do
-        if type(e) == "table" and e.kind == "conditionalWeaponDamage" and e.id then
-            return tostring(e.id)
-        end
-    end
-    return nil
-end
-
--- ¿La habilidad es una maniobra de energia (Mutilar/Garrote/Exponer Armadura)? Se ejecuta
--- al instante contra el objetivo gastando el recurso; la resuelve HarfordDnDStore.UseEnergyManeuver.
-local function FeatureIsEnergyManeuver(feature)
-    if not (feature and type(feature.effects) == "table") then return false end
-    for _, e in ipairs(feature.effects) do
-        if type(e) == "table" and e.kind == "energyManeuver" then return true end
-    end
-    return false
-end
-
-local function BookCategory(feature)
-    if not feature then return "pasivo" end
-    if feature.cast == "reaccion" then return "reaccion" end
-    if FeatureIsEnergyManeuver(feature) then return "maniobra" end  -- ejecuta contra el objetivo
-    if FeatureCondDamageId(feature) then return "al_accion" end  -- daño condicional preparable
-    if feature.type == "accion" or feature.type == "recurso" then return "activo" end
-    return "pasivo"
-end
-
-local REACTION_TRIGGER_TEXT = {
-    damage_taken = "Daño recibido",
-    drop_to_zero = "Caer a 0 PG",
-    incoming_melee_attack = "Ataque cuerpo a cuerpo recibido",
-    dex_save_damage = "Daño por salvación de Destreza",
-}
-
-local function FeatureReactionTrigger(feature)
-    if not feature then return nil end
-    if feature.reactionTrigger then return tostring(feature.reactionTrigger) end
-    if type(feature.reaction) == "table" and feature.reaction.trigger then
-        return tostring(feature.reaction.trigger)
-    end
-    return nil
-end
-
-local function FeatureReactionEffect(feature)
-    if not feature then return nil end
-    if feature.reactionEffect then return tostring(feature.reactionEffect) end
-    if type(feature.reaction) == "table" and feature.reaction.effect then
-        return tostring(feature.reaction.effect)
-    end
-    return nil
-end
+-- Clasificacion y datos de presentacion del Libro -> extraidos a HarfordCharacterBook (modulo
+-- puro, sin `S`). Alias locales para no tocar los call-sites de la UI del Libro de abajo.
+local BOOK_ICON               = HarfordCharacterBook.ICON
+local FeatureCondDamageId     = HarfordCharacterBook.CondDamageId
+local BookCategory            = HarfordCharacterBook.Category
+local REACTION_TRIGGER_TEXT   = HarfordCharacterBook.REACTION_TRIGGER_TEXT
+local FeatureReactionTrigger  = HarfordCharacterBook.ReactionTrigger
+local FeatureReactionEffect   = HarfordCharacterBook.ReactionEffect
 
 -- Construye las secciones (pestañas laterales) del libro para el perfil actual.
-local function BuildBookSections()
-    local data = GetProgression() or {}
-    local sections = {}
-
-    local general = {}
-    local function addList(list, src)
-        for _, it in ipairs(list or {}) do
-            if it.feature and IsVisibleBookFeature(it.feature) then
-                general[#general + 1] = { feature = it.feature, level = it.level or 0, source = src }
-            end
-        end
-    end
-    if HarfordDnDRaces and HarfordDnDRaces.GetRaceTraits and type(data.race) == "table" and data.race.id ~= "" then
-        addList(HarfordDnDRaces.GetRaceTraits(data.race.id, data.race.subraceId), "race")
-    end
-    if HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackgroundTraits and data.background and data.background ~= "" then
-        addList(HarfordDnDBackgrounds.GetBackgroundTraits(data.background), "bg")
-    end
-    if HarfordDnDFeats and HarfordDnDFeats.GetFeatTraits and type(data.feats) == "table" and #data.feats > 0 then
-        addList(HarfordDnDFeats.GetFeatTraits(data.feats), "feat")
-    end
-    sections[#sections + 1] = { label = "General", short = "Gen.", features = general, isGeneral = true }
-
-    for i, entry in ipairs(data.classLevels or {}) do
-        local clsName = (HarfordDnDBook.GetClassName and HarfordDnDBook.GetClassName(entry.classId)) or entry.classId
-        local clsF, subF = {}, {}
-        for _, it in ipairs((HarfordDnDBook.GetUnlockedFeatures and HarfordDnDBook.GetUnlockedFeatures({ entry })) or {}) do
-            if IsVisibleBookFeature(it.feature) then
-                local isSub = type(it.className) == "string" and it.className:find(" / ", 1, true)
-                local bucket = isSub and subF or clsF
-                bucket[#bucket + 1] = { feature = it.feature, level = it.level or 0, source = "class" }
-            end
-        end
-        sections[#sections + 1] = { label = tostring(clsName), short = tostring(clsName), features = clsF, classId = entry.classId }
-        if #subF > 0 then
-            local subName = (HarfordDnDBook.GetSubclassName and HarfordDnDBook.GetSubclassName(entry.classId, entry.subclassId)) or ""
-            sections[#sections + 1] = { label = tostring(clsName) .. " - " .. tostring(subName), short = tostring(subName), features = subF, classId = entry.classId }
-        end
-    end
-    return sections
-end
-
 -- Busca un rasgo por id en TODOS los libros (clase/subclase/raza/trasfondo/dote) para
 -- resolver el enlace clicable de habilidad en cualquier cliente con Harford.
 local function ResolveBookFeatureById(id)
@@ -3026,7 +2940,8 @@ local function AbilityChatLink(feature)
     return "|cff66bbff|Hharford:abil:" .. tostring(id) .. "|h[" .. nm .. "]|h|r"
 end
 
-local RefreshBook  -- forward (los handlers lo llaman)
+local RefreshBook   -- forward (los handlers lo llaman)
+local RefreshSpells  -- forward (pestaña Conjuros)
 
 local function GetFeatureUseState(feature)
     if not (feature and feature.uses and HarfordDnDFeatureUses and HarfordDnDFeatureUses.GetTracked) then
@@ -3083,37 +2998,9 @@ local function AnnounceAbility(feature)
     return true
 end
 
--- Etiqueta de categoria visible en el boton (subtexto) y color asociado.
-local BOOK_CAT_LABEL = {
-    pasivo    = "Pasiva",
-    activo    = "Activa",
-    reaccion  = "Reacción",
-    al_accion = "Al atacar",   -- daño/efecto extra que preparas; lo consume tu ataque con arma
-    maniobra  = "Maniobra",    -- se ejecuta al instante contra el objetivo gastando recurso
-}
--- Colores de categoria. El subtexto del boton lleva CONTORNO negro (OUTLINE) para leerse sobre
--- el pergamino con textura, asi que usamos tonos VIVOS (un color apagado con contorno se ve sucio).
--- El tooltip (fondo oscuro) usa esta misma tabla.
-local BOOK_CAT_COLOR = {
-    pasivo    = { 0.92, 0.92, 0.92 },
-    activo    = { 0.55, 1.00, 0.62 },
-    reaccion  = { 0.64, 0.84, 1.00 },
-    al_accion = { 1.00, 0.84, 0.52 },
-    maniobra  = { 1.00, 0.62, 0.62 },
-}
-
--- Etiqueta visible de la categoria. "activo" se desglosa en "Accion" o "Adicional" segun el
--- coste de accion: el libro indica "Accion adicional" en la descripcion de las de bonus action.
-local function BookCategoryLabel(cat, feature)
-    if cat == "activo" then
-        local d = ((feature and feature.description) or ""):lower()
-        if d:find("accion adicional", 1, true) or d:find("acción adicional", 1, true) then
-            return "Adicional"
-        end
-        return "Accion"
-    end
-    return BOOK_CAT_LABEL[cat] or "Pasiva"
-end
+-- Colores/label de categoria -> HarfordCharacterBook (modulo). Alias locales.
+local BOOK_CAT_COLOR    = HarfordCharacterBook.CAT_COLOR
+local BookCategoryLabel = HarfordCharacterBook.CategoryLabel
 
 local function BookButtonOnEnter(self)
     if not (self.feature and GameTooltip) then return end
@@ -3164,7 +3051,55 @@ end
 local function BookButtonOnClick(self)
     if not self.feature then return end
     local cat = BookCategory(self.feature)
-    if cat == "al_accion" then
+    if cat ~= "pasivo" and HarfordDnDConditions and HarfordDnDConditions.CanPerform then
+        local actionType = cat == "reaccion" and "reaction" or "action"
+        local allowed, condition = HarfordDnDConditions.CanPerform(actionType, { actorUnit = "player", targetUnit = "target" })
+        if not allowed then
+            if DEFAULT_CHAT_FRAME then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff33ccff[Harford]|r No puedes usar esa habilidad: " .. tostring(condition or "condicion activa") .. ".")
+            end
+            return
+        end
+    end
+    if cat == "area" then
+        if self.feature.uses and not FeatureUseAvailable(self.feature) then
+            WarnFeatureWithoutUses(self.feature)
+            return
+        end
+        local definition, err
+        if HarfordDnDArea and HarfordDnDArea.DefinitionFromFeature then
+            definition, err = HarfordDnDArea.DefinitionFromFeature(self.feature)
+        end
+        if not definition then
+            if DEFAULT_CHAT_FRAME then
+                DEFAULT_CHAT_FRAME:AddMessage("|cff33ccff[Harford]|r " .. tostring(err or "Definicion de area incompleta."))
+            end
+            return
+        end
+        HarfordDnDArea.Open(definition, {
+            sourceKind = "player",
+            sourceGuid = UnitGUID and UnitGUID("player") or nil,
+            onCommit = function()
+                if self.feature.uses and not FeatureUseAvailable(self.feature) then return false, "No quedan usos." end
+                local resourceKey, resourceCost = definition.resourceKey, tonumber(definition.resourceCost) or 0
+                if resourceKey ~= "" and resourceCost > 0 then
+                    if not (HarfordDnDStore.GetResourceCurrent and HarfordDnDStore.AdjustResourceCurrent) then
+                        return false, "Sistema de recursos no disponible."
+                    end
+                    if HarfordDnDStore.GetResourceCurrent(resourceKey) < resourceCost then
+                        return false, "No hay recurso suficiente."
+                    end
+                end
+                if self.feature.uses and HarfordDnDFeatureUses and HarfordDnDFeatureUses.Spend
+                    and not HarfordDnDFeatureUses.Spend(self.feature.id, GetProfileName()) then
+                    return false, "No quedan usos."
+                end
+                if resourceKey ~= "" and resourceCost > 0 then HarfordDnDStore.AdjustResourceCurrent(resourceKey, -resourceCost) end
+                if RefreshBook then RefreshBook() end
+                return true
+            end,
+        })
+    elseif cat == "al_accion" then
         if self.feature.uses and not FeatureUseAvailable(self.feature) then
             WarnFeatureWithoutUses(self.feature)
             return
@@ -3189,6 +3124,22 @@ local function BookButtonOnClick(self)
         if RefreshBook then RefreshBook() end
     elseif cat == "activo" then
         AnnounceAbility(self.feature)
+        for _, effect in ipairs(self.feature.effects or {}) do
+            if effect.kind == "applyCondition" and effect.condition and HarfordDnDConditions
+                and HarfordDnDConditions.ApplyToUnit then
+                local unit = effect.target == "self" and "player" or "target"
+                local ok, err = HarfordDnDConditions.ApplyToUnit(unit, effect.condition, {
+                    duration = effect.duration or "manual", turns = effect.turns,
+                    saveAbility = effect.saveAbility, saveDC = effect.saveDC,
+                    sourceGuid = UnitGUID and UnitGUID("player") or "",
+                    sourceName = HarfordClassColors.UnitFullName("player"),
+                    persist = effect.persist == true,
+                })
+                if not ok and DEFAULT_CHAT_FRAME then
+                    DEFAULT_CHAT_FRAME:AddMessage("|cff33ccff[Harford]|r " .. tostring(err or "No se pudo aplicar el estado."))
+                end
+            end
+        end
     elseif cat == "reaccion" then
         -- Toggle por id de rasgo (persiste aunque RefreshBook reconstruya los botones). Se queda
         -- activa hasta volver a clicarla o hasta que empiece tu turno (HarfordTurns la limpia).
@@ -3256,6 +3207,10 @@ function API.TriggerPreparedReaction(trigger, context)
     trigger = tostring(trigger or "")
     context = context or {}
     local damage = tonumber(context.damage) or 0
+    if HarfordDnDConditions and HarfordDnDConditions.CanPerform then
+        local allowed = HarfordDnDConditions.CanPerform("reaction", { actorUnit = "player" })
+        if not allowed then return damage, false end
+    end
     if trigger == "" or not (S.activeReactions and next(S.activeReactions)) then
         return damage, false
     end
@@ -3456,7 +3411,7 @@ end
 
 RefreshBook = function()
     if not (S.book and S.book.page) then return end
-    local sections = BuildBookSections()
+    local sections = HarfordCharacterBook.BuildSections(GetProgression())
     if S.book.section > #sections or S.book.section < 1 then S.book.section = 1 end
 
     -- Pestañas laterales (skill-line tabs nativas), apiladas verticalmente a la derecha.
@@ -3601,6 +3556,347 @@ RefreshBook = function()
     if S.book.pageNum < pages then S.book.nxt:Enable() else S.book.nxt:Disable() end
 end
 
+-- ════════════════════════════════════════════════════════════════════════════════════════
+-- PESTAÑA CONJUROS: replica del libro de hechizos nativo, poblada por el compendio
+-- (HarfordCompendioAPI). Reutiliza la misma maquinaria visual que el Libro de Habilidades.
+-- ════════════════════════════════════════════════════════════════════════════════════════
+
+-- Texturas del libro de Conjuros. PUNTO UNICO para cambiarlas: por ahora identicas a las de
+-- Habilidades, pero separadas para poder divergir luego sin tocar el Libro de Habilidades.
+local SPELLS_SKIN = {
+    body   = 374155,
+    bodyTC = { 0, 0.533203125, 0, 0.4902344048 },
+    page1  = "Interface\\Spellbook\\Spellbook-Page-1",
+    page2  = "Interface\\Spellbook\\Spellbook-Page-2",
+    parts  = "Interface\\Spellbook\\Spellbook-Parts",
+}
+
+local function CompendioAPI()
+    return _G.HarfordCompendioAPI
+end
+
+local function SpellLevelText(level)
+    level = tonumber(level) or 0
+    return level <= 0 and "Truco" or ("Nivel " .. level)
+end
+
+-- Dimensiones del dropdown unico de filtros secundarios (las claves coinciden con FilterSpells).
+local SPELL_FILTER_DIMS = {
+    { key = "school",      label = "Escuela" },
+    { key = "className",   label = "Clase" },
+    { key = "category",    label = "Categoria" },
+    { key = "affinity",    label = "Afinidad" },
+    { key = "sourceGroup", label = "Fuente" },
+}
+
+-- Valores distintos por dimension, derivados de los datos del compendio (cache por referencia).
+local spellFilterValues, spellFilterValuesSource
+local function CollectSpellFilterValues()
+    local api = CompendioAPI()
+    local all = (api and api.GetAllSpells and api.GetAllSpells()) or {}
+    if spellFilterValues and spellFilterValuesSource == all then return spellFilterValues end
+    local sets = { school = {}, className = {}, category = {}, affinity = {}, sourceGroup = {} }
+    for _, sp in ipairs(all) do
+        if sp.school and sp.school ~= "" then sets.school[sp.school] = true end
+        if sp.affinity and sp.affinity ~= "" then sets.affinity[sp.affinity] = true end
+        if sp.sourceGroup and sp.sourceGroup ~= "" then sets.sourceGroup[sp.sourceGroup] = true end
+        for _, c in ipairs(sp.classes or {}) do sets.className[c] = true end
+        for _, c in ipairs(sp.categories or {}) do sets.category[c] = true end
+    end
+    local out = {}
+    for dim, set in pairs(sets) do
+        local list = {}
+        for v in pairs(set) do list[#list + 1] = v end
+        table.sort(list)
+        out[dim] = list
+    end
+    spellFilterValues, spellFilterValuesSource = out, all
+    return out
+end
+
+-- Init del dropdown unico de filtros: nivel 1 = una entrada por dimension (con submenu) +
+-- "Limpiar"; nivel 2 = "Todas" + los valores distintos de esa dimension.
+local function SpellFilterMenu_Init(_, level)
+    local sb = S.spellBook
+    if not sb then return end
+    level = level or 1
+    if level == 1 then
+        local title = UIDropDownMenu_CreateInfo()
+        title.text, title.isTitle, title.notCheckable = "Filtros", true, true
+        UIDropDownMenu_AddButton(title, level)
+        for _, dim in ipairs(SPELL_FILTER_DIMS) do
+            local info = UIDropDownMenu_CreateInfo()
+            local cur = sb.filters[dim.key]
+            info.text = (cur and cur ~= "Todas") and (dim.label .. ": " .. cur) or dim.label
+            info.notCheckable, info.hasArrow, info.value = true, true, dim.key
+            UIDropDownMenu_AddButton(info, level)
+        end
+        local clear = UIDropDownMenu_CreateInfo()
+        clear.text, clear.notCheckable = "Limpiar filtros", true
+        clear.func = function() wipe(sb.filters); sb.pageNum = 1; CloseDropDownMenus(); RefreshSpells() end
+        UIDropDownMenu_AddButton(clear, level)
+    elseif level == 2 then
+        local dimKey = UIDROPDOWNMENU_MENU_VALUE
+        local all = UIDropDownMenu_CreateInfo()
+        all.text = "Todas"
+        all.checked = (sb.filters[dimKey] == nil or sb.filters[dimKey] == "Todas")
+        all.func = function() sb.filters[dimKey] = nil; sb.pageNum = 1; CloseDropDownMenus(); RefreshSpells() end
+        UIDropDownMenu_AddButton(all, level)
+        for _, v in ipairs(CollectSpellFilterValues()[dimKey] or {}) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text, info.checked = v, (sb.filters[dimKey] == v)
+            info.func = function() sb.filters[dimKey] = v; sb.pageNum = 1; CloseDropDownMenus(); RefreshSpells() end
+            UIDropDownMenu_AddButton(info, level)
+        end
+    end
+end
+
+local function CreateSpellsPage()
+    local page = CreatePage("spells")
+    local area = CreateFrame("Frame", nil, page)
+    area:SetAllPoints(page)
+
+    -- Fondo + pergamino como regiones del FRAME (igual que el Libro de Habilidades).
+    local body = S.frame:CreateTexture(nil, "BACKGROUND", nil, -7)
+    body:SetTexture(SPELLS_SKIN.body)
+    body:SetTexCoord(unpack(SPELLS_SKIN.bodyTC))
+    body:SetAllPoints(S.frame)
+    body:Hide()
+    local lpage = S.frame:CreateTexture(nil, "BACKGROUND", nil, -6)
+    lpage:SetTexture(SPELLS_SKIN.page1)
+    lpage:SetPoint("TOPLEFT", S.frame, "TOPLEFT", 0, -25)
+    lpage:SetPoint("BOTTOMRIGHT", S.frame, "BOTTOMRIGHT", -31, -15)
+    lpage:Hide()
+    local rpage = S.frame:CreateTexture(nil, "BACKGROUND", nil, -5)
+    rpage:SetTexture(SPELLS_SKIN.page2)
+    rpage:SetPoint("TOPLEFT", lpage, "TOPRIGHT", 0, 0)
+    rpage:SetPoint("BOTTOMLEFT", lpage, "BOTTOMRIGHT", 0, 0)
+    rpage:SetWidth(41)
+    rpage:Hide()
+
+    -- Busqueda + UN solo boton de Filtros (dropdown con submenus por dimension).
+    local search = CreateFrame("EditBox", nil, area, "InputBoxTemplate")
+    search:SetAutoFocus(false); search:SetSize(150, 20)
+    search:SetPoint("TOPLEFT", S.frame, "TOPLEFT", 100, -46)
+    search:SetScript("OnTextChanged", function(self)
+        S.spellBook.query = self:GetText() or ""
+        S.spellBook.pageNum = 1
+        RefreshSpells()
+    end)
+    search:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    local searchLabel = area:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    searchLabel:SetPoint("BOTTOMLEFT", search, "TOPLEFT", -2, 2)
+    searchLabel:SetText("Buscar conjuro")
+
+    S.spellFilterDropdown = CreateFrame("Frame", "HarfordSpellFilterDropdown", UIParent, "UIDropDownMenuTemplate")
+    UIDropDownMenu_Initialize(S.spellFilterDropdown, SpellFilterMenu_Init, "MENU")
+    local filterBtn = CreateFrame("Button", nil, area, "UIPanelButtonTemplate")
+    filterBtn:SetSize(80, 22)
+    filterBtn:SetPoint("LEFT", search, "RIGHT", 10, 0)
+    filterBtn:SetText("Filtros")
+    filterBtn:SetScript("OnClick", function(self)
+        ToggleDropDownMenu(1, nil, S.spellFilterDropdown, self, 0, 0)
+    end)
+
+    -- Grimorio (libro de clase) y Master DM como popups del compendio, accesibles desde la pestaña.
+    local grimoireBtn = CreateFrame("Button", nil, area, "UIPanelButtonTemplate")
+    grimoireBtn:SetSize(80, 22)
+    grimoireBtn:SetPoint("LEFT", filterBtn, "RIGHT", 8, 0)
+    grimoireBtn:SetText("Grimorio")
+    grimoireBtn:SetScript("OnClick", function()
+        local api = CompendioAPI()
+        if api and api.OpenGrimoire then api.OpenGrimoire() end
+    end)
+    local masterBtn = CreateFrame("Button", nil, area, "UIPanelButtonTemplate")
+    masterBtn:SetSize(72, 22)
+    masterBtn:SetPoint("LEFT", grimoireBtn, "RIGHT", 8, 0)
+    masterBtn:SetText("Master")
+    masterBtn:SetScript("OnClick", function()
+        local api = CompendioAPI()
+        if api and api.OpenMaster then api.OpenMaster() end
+    end)
+    masterBtn:Hide()  -- visible solo en modo DM (lo conmuta RefreshSpells)
+
+    -- Botones de conjuro: mismo pool/estilo que el Libro de Habilidades.
+    local PARTS = SPELLS_SKIN.parts
+    local buttons = {}
+    for i = 1, BOOK_PER_PAGE do
+        local b = CreateFrame("Button", nil, area)
+        b:SetSize(BOOK_BTN, BOOK_BTN)
+        local col = (i <= BOOK_ROWS) and 0 or 1
+        local row = (i <= BOOK_ROWS) and (i - 1) or (i - 1 - BOOK_ROWS)
+        b:SetPoint("TOPLEFT", S.frame, "TOPLEFT", BOOK_COL_X[col + 1], BOOK_ROW_Y0 - row * BOOK_ROW_PITCH)
+        b.ring = b:CreateTexture(nil, "BACKGROUND")
+        b.ring:SetTexture(PARTS)
+        b.ring:SetSize(43, 43)
+        b.ring:SetPoint("CENTER", b, "CENTER", 0, 0)
+        b.bar = b:CreateTexture(nil, "BACKGROUND")
+        b.bar:SetTexture(PARTS)
+        b.bar:SetTexCoord(0.3125, 0.96484375, 0.37109375, 0.5234375)
+        b.bar:SetSize(167, 39)
+        b.bar:SetPoint("TOPLEFT", b, "TOPLEFT", 36, -2)
+        b.bar2 = b:CreateTexture(nil, "BACKGROUND")
+        b.bar2:SetTexture(PARTS)
+        b.bar2:SetTexCoord(0.3125, 0.96484375, 0.37109375, 0.5234375)
+        b.bar2:SetAllPoints(b.bar)
+        b.icon = b:CreateTexture(nil, "ARTWORK")
+        b.icon:SetAllPoints(b); b.icon:SetTexCoord(0.06, 0.94, 0.06, 0.94)
+        b.name = b:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+        b.name:SetPoint("LEFT", b, "RIGHT", 8, 4)
+        b.name:SetWidth(145); b.name:SetJustifyH("LEFT")
+        b.sub = b:CreateFontString(nil, "ARTWORK")
+        b.sub:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+        b.sub:SetPoint("TOPLEFT", b.name, "BOTTOMLEFT", 0, -1)
+        b.sub:SetWidth(145); b.sub:SetJustifyH("LEFT")
+        b.sub:SetTextColor(0.96, 0.90, 0.72)  -- crema claro: legible sobre el pergamino con OUTLINE
+        b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        b:SetScript("OnEnter", function(self)
+            if not (self.spell and GameTooltip) then return end
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(self.spell.name or "?", 1, 0.82, 0)
+            GameTooltip:AddLine(SpellLevelText(self.spell.level) .. "  -  " .. (self.spell.school or "-"), 0.8, 0.8, 0.8)
+            if self.spell.description and self.spell.description ~= "" then
+                GameTooltip:AddLine(self.spell.description, 1, 1, 1, true)
+            end
+            GameTooltip:Show()
+        end)
+        b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+        b:SetScript("OnClick", function(self)
+            local api = CompendioAPI()
+            if self.spell and api and api.OpenSpellById then api.OpenSpellById(self.spell.id) end
+        end)
+        b:Hide()
+        buttons[i] = b
+    end
+
+    local nxt = CreateFrame("Button", nil, area)
+    nxt:SetSize(32, 32); nxt:SetPoint("BOTTOMRIGHT", S.frame, "BOTTOMRIGHT", -31, 26)
+    nxt:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    nxt:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Down")
+    nxt:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Disabled")
+    nxt:SetScript("OnClick", function() S.spellBook.pageNum = S.spellBook.pageNum + 1; RefreshSpells() end)
+    local prev = CreateFrame("Button", nil, area)
+    prev:SetSize(32, 32); prev:SetPoint("BOTTOMRIGHT", S.frame, "BOTTOMRIGHT", -66, 26)
+    prev:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up")
+    prev:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Down")
+    prev:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Disabled")
+    prev:SetScript("OnClick", function() S.spellBook.pageNum = math.max(1, S.spellBook.pageNum - 1); RefreshSpells() end)
+    local pageText = area:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    pageText:SetPoint("BOTTOMRIGHT", S.frame, "BOTTOMRIGHT", -110, 38)
+
+    S.spellBook = { page = page, area = area, body = body, page1 = lpage, page2 = rpage,
+                    buttons = buttons, sideTabs = {}, prev = prev, nxt = nxt, pageText = pageText,
+                    search = search, filterBtn = filterBtn, masterBtn = masterBtn,
+                    filters = {}, tabKey = "all", query = "", pageNum = 1 }
+end
+
+RefreshSpells = function()
+    if not (S.spellBook and S.spellBook.page) then return end
+    local api = CompendioAPI()
+    if not api then return end
+    local sb = S.spellBook
+    -- Boton Master solo para DM: senal canonica HarfordAuthority, con fallback al gate del compendio.
+    if sb.masterBtn then
+        local isDM = (HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools())
+            or (api.IsDMModeActive and api.IsDMModeActive()) or false
+        sb.masterBtn:SetShown(isDM and true or false)
+    end
+    local tabs = (api.GetFilterTabs and api.GetFilterTabs()) or {}
+
+    -- Pestañas laterales (filtros nivel/favoritos/mis conjuros) estilo SkillLineTab, como Habilidades.
+    for i, t in ipairs(tabs) do
+        local tab = sb.sideTabs[i]
+        if not tab then
+            tab = CreateFrame("Button", nil, sb.page)
+            tab:SetSize(32, 32)
+            tab:SetPoint("TOPLEFT", S.frame, "TOPRIGHT", -2, -36 - (i - 1) * 49)
+            local ts = HarfordCharacterPanel._tabSkin
+            tab.skin = tab:CreateTexture(nil, "BACKGROUND")
+            tab.skin:SetTexture("Interface\\Spellbook\\SpellBook-SkillLineTab")
+            tab.skin:SetSize(ts.w, ts.h)
+            tab.skin:SetPoint("TOPLEFT", tab, "TOPLEFT", ts.x, ts.y)
+            tab.icon = tab:CreateTexture(nil, "ARTWORK", nil, 0)
+            tab.icon:SetSize(32, 32)
+            tab.icon:SetPoint("CENTER", tab, "CENTER", 3, -1)
+            tab.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            tab.iconFrame = tab:CreateTexture(nil, "ARTWORK", nil, 2)
+            tab.iconFrame:SetTexture("Interface\\Spellbook\\GuildSpellbooktabIconFrame")
+            tab.iconFrame:SetAllPoints(tab.icon)
+            tab.checked = tab:CreateTexture(nil, "OVERLAY")
+            tab.checked:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+            tab.checked:SetBlendMode("ADD"); tab.checked:SetAllPoints(tab.icon)
+            tab:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+            local hl = tab:GetHighlightTexture()
+            if hl then hl:ClearAllPoints(); hl:SetAllPoints(tab.icon) end
+            tab:SetScript("OnEnter", BookSideTabOnEnter)
+            tab:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+            tab:SetScript("OnClick", function(self) sb.tabKey = self._key; sb.pageNum = 1; RefreshSpells() end)
+            sb.sideTabs[i] = tab
+        end
+        tab._key, tab._label = t.key, (t.label or t.key)
+        -- iconName (ej. favoritos "eps_rumble_starpoints") se resuelve via LibRPMedia como en la
+        -- ventana suelta; t.icon es solo el fallback si no resuelve.
+        tab.icon:SetTexture((t.iconName and api.ResolveRP3IconName and api.ResolveRP3IconName(t.iconName, t.icon))
+            or t.icon or BOOK_GENERAL_ICON)
+        tab.checked:SetShown(t.key == sb.tabKey)
+        tab:Show()
+    end
+    for i = #tabs + 1, #sb.sideTabs do sb.sideTabs[i]:Hide() end
+
+    -- Filtro = side tab activa + busqueda + dropdown de filtros secundarios.
+    local active
+    for _, t in ipairs(tabs) do if t.key == sb.tabKey then active = t; break end end
+    active = active or {}
+    local filter = { query = sb.query or "" }
+    if active.level ~= nil then filter.level = active.level end
+    if active.favoritesOnly then filter.favoritesOnly = true end
+    if active.mineOnly then filter.mineOnly = true end
+    for k, v in pairs(sb.filters) do if v and v ~= "Todas" then filter[k] = v end end
+    local results = (api.FilterSpells and api.FilterSpells(filter)) or {}
+
+    local pages = math.max(1, math.ceil(#results / BOOK_PER_PAGE))
+    if sb.pageNum > pages then sb.pageNum = pages end
+    if sb.pageNum < 1 then sb.pageNum = 1 end
+    local startI = (sb.pageNum - 1) * BOOK_PER_PAGE
+    local frA = HarfordCharacterPanel._bookFrame.activo or HarfordCharacterPanel._bookFrame.pasivo
+    local frP = HarfordCharacterPanel._bookFrame.pasivo
+    for i = 1, BOOK_PER_PAGE do
+        local b = sb.buttons[i]
+        local spell = results[startI + i]
+        if spell then
+            b.spell = spell
+            b.icon:SetTexture((api.GetSpellIcon and api.GetSpellIcon(spell)) or spell.icon)
+            b.icon:SetTexCoord(0.06, 0.94, 0.06, 0.94); b.icon:Show()
+            -- Marco dorado (activo) si el conjuro es "mio"/preparado; marron (pasivo) si no.
+            local known = (api.IsMySpell and api.IsMySpell(spell.id))
+                or (api.IsPreparedSpell and api.IsPreparedSpell(spell.id))
+            local fr = known and frA or frP
+            b.ring:SetTexCoord(fr.tc[1], fr.tc[2], fr.tc[3], fr.tc[4])
+            b.ring:SetSize(fr.w, fr.h)
+            b.ring:ClearAllPoints(); b.ring:SetPoint("CENTER", b, "CENTER", fr.ox or 0, fr.oy or 0)
+            b.ring:SetDrawLayer(known and "OVERLAY" or "BACKGROUND")
+            b.name:SetText(spell.name or "?")
+            local sub = SpellLevelText(spell.level) .. "  ·  " .. (spell.school or "-")
+            if spell.affinity and spell.affinity ~= "" then sub = sub .. "  ·  " .. spell.affinity end
+            if api.IsFavorite and api.IsFavorite(spell.id) then sub = sub .. "  ·  *" end
+            b.sub:SetText(sub); b.sub:SetTextColor(0.96, 0.90, 0.72)
+            b:EnableMouse(true); b:Show()
+        else
+            b.spell = nil
+            b.icon:Hide()
+            b.ring:SetTexCoord(frP.tc[1], frP.tc[2], frP.tc[3], frP.tc[4])
+            b.ring:SetSize(frP.w, frP.h)
+            b.ring:ClearAllPoints(); b.ring:SetPoint("CENTER", b, "CENTER", frP.ox or 0, frP.oy or 0)
+            b.ring:SetDrawLayer("BACKGROUND")
+            b.name:SetText(""); b.sub:SetText("")
+            b:EnableMouse(false); b:Show()
+        end
+    end
+    sb.pageText:SetText("Pagina " .. sb.pageNum .. " / " .. pages .. "  -  " .. #results .. " conjuros")
+    if sb.pageNum > 1 then sb.prev:Enable() else sb.prev:Disable() end
+    if sb.pageNum < pages then sb.nxt:Enable() else sb.nxt:Disable() end
+end
+
 -- Ajusta en vivo el marco de una categoria a partir de la CAJA EN PIXELES (esquina sup-izq
 -- x1,y1 e inf-der x2,y2) sobre el sheet Spellbook-Parts; calcula texCoord y tamaño y refresca.
 -- Refresca el Libro si el panel esta visible (lo llama HarfordDnD tras elegir nivel/cantidad de
@@ -3725,7 +4021,8 @@ local function CreateFrameIfNeeded()
 
     local tabData = {
         { "sheet", "Personaje" },
-        { "book", "Libro" },
+        { "book", "Habilidades" },
+        { "spells", "Conjuros" },
         { "reputation", "Reputacion" },
         -- Creacion/Subida ocultas para el despliegue (ver HIDDEN_TABS).
     }
@@ -3744,6 +4041,7 @@ local function CreateFrameIfNeeded()
     CreateReputationPage()
     CreateProfessionsPage()
     CreateBookPage()
+    CreateSpellsPage()
 
     S.refreshers.sheet = RefreshSheet
     S.refreshers.creation = RefreshCreation
@@ -3751,6 +4049,7 @@ local function CreateFrameIfNeeded()
     S.refreshers.reputation = function() end
     S.refreshers.professions = RefreshProfessions
     S.refreshers.book = RefreshBook
+    S.refreshers.spells = RefreshSpells
     -- Al empezar TU turno, las reacciones preparadas se apagan solas (se quedan activas solo hasta
     -- tu siguiente turno o hasta volver a clicarlas).
     if not S._turnListenerHooked and HarfordTurnOrderAPI and HarfordTurnOrderAPI.RegisterMyTurnListener then

@@ -44,6 +44,7 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 | `/FichaHarford`, `/hchar`, `/harfordrep`, `/hconfig`, `/hdebug` | Retirados; usar `/harford <subcomando>` |
 | `/harfordadmin` | Herramientas de DM/Admin: loot, reputaciones, fichas NPC y acciones sobre NPCs |
 | `/harfordloot` / `/hloot` | Editor admin de loot; requiere `HarfordAdmin` |
+| `/harford compendio` / `/harford magia` | Abre el compendio de conjuros Harford |
 
 ---
 
@@ -65,6 +66,7 @@ CLAUDE.md           <- Instrucciones para Claude Code
 
 - **Harford** contiene el core compartido: ficha D&D, recursos, turnos, reputaciones, loot visible/usable, unitframes, nameplates, sync addon y acciones servidor validadas que tambien pueden necesitar jugadores.
 - **HarfordAdmin** contiene la capa DM: menu contextual, ficha Modo NPC, editores de loot/reputacion, compartir datos, ajustar recursos/reputacion y comandos protegidos.
+- **HarfordCompendio** vive como modulo dentro de `Harford`: compendio de conjuros con SavedVariables propias y API `_G.HarfordCompendioAPI`.
 - El icono de tabardo de la ficha abre el **Panel de Personaje**. La ficha compacta queda para tiradas; el panel unificado contiene Ficha, **Libro**, Creacion, Subida y acceso al panel de Reputacion.
 - La pestaña **Libro** replica el libro de hechizos nativo y lista las habilidades del personaje por categoria (pasiva / activable al atacar / reaccion / directa). Las activables al atacar comparten estado con el control `Daño extra` de la ficha. Hay una **barra de accion** opcional (activable en config) para colocar habilidades del Libro.
 - La progresion usa datos hardcodeados por clase/subclase, raza, trasfondo y dotes, con efectos declarativos que se suman sobre valores manuales. Los rasgos se aplican internamente; el usuario solo elige cuando existe una eleccion real (`choice`) o cuando un rasgo declara un estado activable (`toggleState`, por ejemplo Metamorfosis/Transformado/Lobo Solitario). Se sincroniza con `DNDCLASS` dentro de `DND5EARC`.
@@ -76,6 +78,7 @@ CLAUDE.md           <- Instrucciones para Claude Code
 - Los comandos Epsilon se construyen desde plantillas y acciones validadas (`HarfordCommandTemplates` + `HarfordServerActions`), nunca desde texto arbitrario recibido de otros clientes.
 - La mitigacion de dano (`resistente`, `inmune`, `vulnerable`) se calcula en core con el stat block TRP3 del target y se muestra en la tirada con marcadores `R`/`I`/`V`. Admin solo aplica el total ya calculado.
 - La herida visual de NPC al perder vida se centraliza en `HarfordServerActions.SetNpcHealthDelta`: emote `33` para dano normal y `34` para dano critico.
+- El compendio de conjuros se abre con `/harford compendio`; al confirmar un lanzamiento con exito consume el recurso `mana` de la ficha. Si el conjuro declara ataque de conjuro, salvacion directa o area reconocible, usa las mismas rutas de tirada/area de Harford; si no, se anuncia como lanzamiento informativo. Los rituales no consumen mana.
 
 ---
 

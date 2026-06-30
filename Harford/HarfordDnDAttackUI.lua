@@ -332,12 +332,36 @@ function API.AttachMovementTracker(opts)
         lastX, lastY, lastZ = x, y, z
     end
 
+    local function StopTracking()
+        if not tracking then return end
+        tracking = false
+        button:SetScript("OnUpdate", nil)
+        button:SetText("Movimiento")
+        label:SetText(totalMeters > 0 and FormatMeters(totalMeters) or "")
+    end
+
+    local function RefreshConditionState()
+        local speedZero = HarfordDnDConditions and HarfordDnDConditions.IsSpeedZero
+            and HarfordDnDConditions.IsSpeedZero("player")
+        if speedZero then
+            StopTracking()
+            button:Disable()
+            label:SetText("Velocidad 0")
+        else
+            button:Enable()
+            if not tracking and label:GetText() == "Velocidad 0" then label:SetText("") end
+        end
+    end
+
     button:SetScript("OnClick", function()
         if tracking then
-            tracking = false
-            button:SetScript("OnUpdate", nil)
-            button:SetText("Movimiento")
-            label:SetText(totalMeters > 0 and FormatMeters(totalMeters) or "")
+            StopTracking()
+            return
+        end
+
+        if HarfordDnDConditions and HarfordDnDConditions.IsSpeedZero
+            and HarfordDnDConditions.IsSpeedZero("player") then
+            RefreshConditionState()
             return
         end
 
@@ -353,4 +377,9 @@ function API.AttachMovementTracker(opts)
         label:SetText("0.0 m")
         button:SetScript("OnUpdate", OnUpdate)
     end)
+
+    if HarfordDnDConditions and HarfordDnDConditions.RegisterListener then
+        HarfordDnDConditions.RegisterListener(RefreshConditionState)
+    end
+    RefreshConditionState()
 end

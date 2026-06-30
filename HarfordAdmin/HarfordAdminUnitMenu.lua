@@ -341,19 +341,28 @@ end
 
 -- Envía un comando Epsilon usando la API disponible (EpsilonCommands → ARC)
 local function SendCmd(cmd)
-    if HarfordEpsilonCommands and HarfordEpsilonCommands.SendCommand then
-        HarfordEpsilonCommands.SendCommand(cmd)
-    elseif ARC and ARC.CMD then
-        ARC.CMD(cmd)
-    else
-        Print("No hay API para enviar: " .. cmd)
+    if not (HarfordEpsilonCommands and HarfordEpsilonCommands.Send) then
+        Print("No hay API para enviar: " .. tostring(cmd or ""))
+        return false
     end
+    local ok, err = HarfordEpsilonCommands.Send(cmd, {
+        addonName = "HarfordAdmin",
+        forceEpsilon = true,
+        showMessages = false,
+    })
+    if not ok then
+        Print("No se pudo enviar comando: " .. tostring(err or "error desconocido"))
+    end
+    return ok
 end
 
 -- .unaura all self (isSelf) o .unaura all (jugador ajeno en target)
 local function RemoveAuraAll(snapshot)
     if not EnsureSameUnit(snapshot, "unaura all") then return end
-    SendCmd(snapshot.isSelf and ".unaura all self" or ".unaura all")
+    SendCmd(snapshot.isSelf and "unaura all self" or "unaura all")
+    if HarfordDnDConditions and HarfordDnDConditions.RemoveAllFromUnit then
+        HarfordDnDConditions.RemoveAllFromUnit(snapshot.unit)
+    end
 end
 
 -- .npc set unaura all (sobre el target NPC actual)
@@ -363,83 +372,15 @@ local function RemoveNpcAuraAll(snapshot)
         Print("Unaura all NPC solo disponible desde TargetFrame.")
         return
     end
-    SendCmd(".npc set unaura all")
+    SendCmd("npc set unaura all")
+    if HarfordDnDConditions and HarfordDnDConditions.ClearUnitStateRecords then
+        HarfordDnDConditions.ClearUnitStateRecords(snapshot.unit)
+    end
 end
 
 -- Devuelve true si la unidad tiene el aura (buff o debuff) por spell ID
-local function HasAura(unit, spellId)
-    if not unit or not (UnitExists and UnitExists(unit)) then return false end
-    for _, filter in ipairs({ "HELPFUL", "HARMFUL" }) do
-        for i = 1, 40 do
-            local _, _, _, _, _, _, _, _, _, id = UnitAura(unit, i, filter)
-            if not id then break end
-            if id == spellId then return true end
-        end
-    end
-    return false
-end
-
 -- Aplica un aura con ID fijo según contexto (sin prompt)
-local function ApplyFixedAura(snapshot, spellId)
-    if not EnsureSameUnit(snapshot, "aplicar aura") then return end
-    local ok, err
-    if snapshot.isSelf then
-        if HarfordServerActions and HarfordServerActions.ApplyAura then
-            ok, err = HarfordServerActions.ApplyAura(spellId, { addonName = "HarfordAdmin" })
-        end
-        if not ok then Print(tostring(err or "No se pudo aplicar aura.")) end
-    elseif not snapshot.isPlayer then
-        SetNpcAura(snapshot, spellId)  -- NPC: tiene sus propias guardas internas
-    else
-        -- Jugador en target: aura sin sufijo (Epsilon usa el unit seleccionado).
-        if HarfordServerActions and HarfordServerActions.ApplyAuraToCurrentTarget then
-            ok, err = HarfordServerActions.ApplyAuraToCurrentTarget(spellId, { addonName = "HarfordAdmin" })
-        end
-        if not ok then Print(tostring(err or "No se pudo aplicar aura.")) end
-    end
-end
-
 -- Quita un aura con ID fijo según contexto (sin prompt)
-local function RemoveFixedAura(snapshot, spellId)
-    if not EnsureSameUnit(snapshot, "quitar aura") then return end
-    local ok, err
-    if snapshot.isSelf then
-        if HarfordServerActions and HarfordServerActions.RemoveAuraSelf then
-            ok, err = HarfordServerActions.RemoveAuraSelf(spellId, { addonName = "HarfordAdmin" })
-        end
-        if not ok then Print(tostring(err or "No se pudo quitar aura.")) end
-    elseif not snapshot.isPlayer then
-        -- NPC: usar RemoveNpcAura para no construir strings sueltos.
-        if HarfordServerActions and HarfordServerActions.RemoveNpcAura then
-            ok, err = HarfordServerActions.RemoveNpcAura(spellId, { addonName = "HarfordAdmin" })
-        end
-        if not ok then Print(tostring(err or "No se pudo quitar aura NPC.")) end
-    else
-        -- Jugador en target: unaura sin sufijo.
-        if HarfordServerActions and HarfordServerActions.RemoveAura then
-            ok, err = HarfordServerActions.RemoveAura(spellId, { addonName = "HarfordAdmin" })
-        end
-        if not ok then Print(tostring(err or "No se pudo quitar aura.")) end
-    end
-end
-
-local ESTADOS = {
-    { label = "Asustado",     spellId = 167026 },
-    { label = "Derribado",    spellId = 267937 },
-    { label = "Silenciado",   spellId = 30900 },
-    { label = "Exponer armadura", spellId = 11971 },
-    { label = "Ardiendo",     spellId = 279489 },
-    { label = "Incapacitado", spellId = 30980 },
-    { label = "Petrificado",  spellId = 210138 },
-    { label = "Envenenado",   spellId = 167407 },
-    { label = "Bendito",      spellId = 232365 },
-    { label = "Congelado",    spellId = 153574 },
-    { label = "Enfriado",     spellId = 287295 },
-    { label = "Bioluminescencia", spellId = 292133 },
-    { label = "Luces danzantes", spellId = 128987 },
-    { label = "Enrraizado",   spellId = 263196 },
-}
-
 local function OpenLootEditor(snapshot)
     if not EnsureSameUnit(snapshot, "abrir editor de loot") then return end
     if not HarfordAdminLoot or not HarfordAdminLoot.OpenEditor then
@@ -457,11 +398,13 @@ local function AddTitle(text, level)
     UIDropDownMenu_AddButton(info, level)
 end
 
-local function AddAction(text, func, level)
+local function AddAction(text, func, level, tooltipTitle, tooltipText)
     local info = UIDropDownMenu_CreateInfo()
     info.text = text
     info.notCheckable = true
     info.func = func
+    info.tooltipTitle = tooltipTitle
+    info.tooltipText = tooltipText
     UIDropDownMenu_AddButton(info, level)
 end
 
@@ -475,19 +418,16 @@ local function AddSubmenu(text, menuList, level)
 end
 
 local function BuildEstadosSubmenu(snapshot, level)
-    for _, estado in ipairs(ESTADOS) do
-        local sid    = estado.spellId
-        local activo = HasAura(snapshot.unit, sid)
-        -- Prefijo visual: [x] si activo (quitar), [ ] si no (poner)
-        local label  = (activo and "[x] " or "[ ] ") .. estado.label
+    local definitions = HarfordDnDConditions and HarfordDnDConditions.GetDefinitions
+        and HarfordDnDConditions.GetDefinitions() or {}
+    for _, estado in ipairs(definitions) do
+        local activo = HarfordAdminConditions and HarfordAdminConditions.Has
+            and HarfordAdminConditions.Has(snapshot, estado.id)
+        local label = (activo and "[x] " or "[ ] ") .. estado.label
         AddAction(label, function()
-            -- Re-comprobar en el momento del click por si cambio entre abrir y pulsar
-            if HasAura(snapshot.unit, sid) then
-                RemoveFixedAura(snapshot, sid)
-            else
-                ApplyFixedAura(snapshot, sid)
-            end
-        end, level)
+            if not HarfordAdminConditions then Print("HarfordAdminConditions no disponible."); return end
+            HarfordAdminConditions.Toggle(snapshot, estado.id)
+        end, level, estado.label, estado.description)
     end
 end
 

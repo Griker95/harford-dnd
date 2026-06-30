@@ -12,7 +12,6 @@ if _G.DND5E_ARC_LOADED and _G.DND5E_PlayerFrame then
 end
 
 local ADDON_PREFIX = "DND5EARC"
-local ADDON_VERSION = "1.0"
 
 HarfordDnDPersistStore = HarfordDnDPersistStore or {}
 HarfordDnDStore = HarfordDnDStore or {}
@@ -169,6 +168,7 @@ local function ConsumeMode()
         if RefreshTopInfo then RefreshTopInfo() end
     end
 end
+HarfordDnDStore.ConsumeRollMode = ConsumeMode
 function HarfordDnDGetInitiativeMod()
     return HarfordDnDCalc.GetInitiativeBonus and HarfordDnDCalc.GetInitiativeBonus() or 0
 end
@@ -451,12 +451,20 @@ end
 -- GetSkillProfBonus, GetSkillRollBonuses, GetSaveRollBonuses, RollTextWithMode,
 -- GetCritTag, BonusConcat viven en HarfordDnDCalc.
 
-local function DoRoll(label, baseBonus, profBonus)
+local function DoRoll(label, baseBonus, profBonus, rollType, rollContext)
     baseBonus = toN(baseBonus, 0)
     profBonus = toN(profBonus, 0)
     local miscBonus = HarfordDnDCalc.GetMiscBonus()
 
-    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
+    if rollType == "save" and HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+        and HarfordDnDConditions.IsSaveAutoFailed((rollContext and rollContext.actorUnit) or "player",
+            rollContext and rollContext.ability) then
+        HarfordDnDRolls.Broadcast({ type = "roll", label = label, total = 0, dice = "Fallo automatico", modifiers = "", critical = "FALLO" })
+        ConsumeMode()
+        return "FALLO"
+    end
+
+    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full(rollType, rollContext)
     local total = chosen + baseBonus + profBonus + miscBonus
     local bonusTxt = HarfordDnDCalc.BonusConcat(baseBonus, profBonus, miscBonus)
 
@@ -516,6 +524,24 @@ local function ApplyConditionalHitAura(spellId)
     elseif HarfordServerActions and HarfordServerActions.SetNpcAura then
         HarfordServerActions.SetNpcAura(spellId)  -- NPC target: `.npc set aura <id>`
     end
+end
+
+local function ApplyConditionalHitEffect(conditionId, spellId, options)
+    conditionId = tostring(conditionId or "")
+    if conditionId ~= "" and HarfordDnDConditions and HarfordDnDConditions.GetDefinition
+        and HarfordDnDConditions.GetDefinition(conditionId) then
+        options = options or {}
+        options.sourceGuid = options.sourceGuid or (UnitGUID and UnitGUID("player") or "")
+        options.sourceName = options.sourceName or HarfordClassColors.UnitFullName("player")
+        local ok, err = HarfordDnDConditions.ApplyToUnit("target", conditionId, options)
+        if not ok and DEFAULT_CHAT_FRAME then
+            local text = err == "immune" and "El objetivo es inmune a esa condicion." or tostring(err)
+            DEFAULT_CHAT_FRAME:AddMessage("|cff33ccff[Harford]|r " .. text)
+        end
+        return ok
+    end
+    ApplyConditionalHitAura(spellId)
+    return spellId ~= nil
 end
 
 local function RollWeaponDamage(def, abilKey, maximizeDice)
@@ -717,7 +743,9 @@ local function RollWeaponDamage(def, abilKey, maximizeDice)
                 HarfordDnDStore.condDamageLevel[cd.id] = nil
                 consumedAny = true
             elseif #cdRolls > 0 or cdFlat ~= 0 then
-            if cd.onHitAura then ApplyConditionalHitAura(cd.onHitAura) end  -- impacto confirmado
+            if cd.conditionId or cd.onHitAura then
+                ApplyConditionalHitEffect(cd.conditionId, cd.onHitAura)
+            end
             local cdTotal = rawSum + cdFlat
             local cdMarker = ""
             if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
@@ -743,7 +771,9 @@ local function RollWeaponDamage(def, abilKey, maximizeDice)
             consumedAny = true
             else
                 -- Maniobra SIN daño extra (ej. Desarme): solo gasta el coste; deja una nota.
-                if cd.onHitAura then ApplyConditionalHitAura(cd.onHitAura) end  -- impacto confirmado
+                if cd.conditionId or cd.onHitAura then
+                    ApplyConditionalHitEffect(cd.conditionId, cd.onHitAura)
+                end
                 local manLabel = cd.label
                 if costText and costText ~= "" then manLabel = manLabel .. " (" .. costText .. ")" end
                 diceParts[#diceParts + 1] = manLabel
@@ -1151,13 +1181,13 @@ restBorder:SetFrameLevel(RestMenu:GetFrameLevel() + 5)
 
 -- El descanso corto solo recupera recursos de descanso; mantiene el menu abierto
 -- para poder gastar dados de golpe a continuacion (curacion 5e).
-local shortRestBtn = HarfordDnDUI.MakeButton(RestMenu, "Descanso corto", 130, 22, 15, -12, function()
+HarfordDnDUI.MakeButton(RestMenu, "Descanso corto", 130, 22, 15, -12, function()
     ApplyShortRest()
     if RefreshRestMenu then RefreshRestMenu() end
     DEFAULT_CHAT_FRAME:AddMessage("|cff00ff00[HarfordDnD]|r Descanso corto (recursos)")
 end)
 
-local longRestBtn = HarfordDnDUI.MakeButton(RestMenu, "Descanso largo", 130, 22, 15, -38, function()
+HarfordDnDUI.MakeButton(RestMenu, "Descanso largo", 130, 22, 15, -38, function()
     ApplyLongRest()
     if RefreshRestMenu then RefreshRestMenu() end
     RestMenu:Hide()
@@ -1483,6 +1513,11 @@ AdjustResourceCurrent = function(key, delta)
     return cur
 end
 
+-- Puente estrecho para consumidores core que deben validar/gastar recursos una sola vez
+-- (p.ej. HarfordDnDArea). La regla y los refrescos siguen centralizados aqui.
+HarfordDnDStore.GetResourceCurrent = GetResourceCurrent
+HarfordDnDStore.AdjustResourceCurrent = AdjustResourceCurrent
+
 -- Aplica daño al PROPIO jugador en local (temp_health primero, luego health). Lo usa
 -- el ataque NPC cuando el focus victima es uno mismo (el DM ataca a su propio PJ).
 local function TriggerPreparedDamageReaction(total, context)
@@ -1510,6 +1545,9 @@ HarfordDnDStore.ApplyLocalResourceDamage = function(total)
     local healthDmg = total - tempDmg
     if tempDmg > 0 then AdjustResourceCurrent("temp_health", -tempDmg) end
     if healthDmg > 0 then AdjustResourceCurrent("health", -healthDmg) end
+    if HarfordDnDConditions and HarfordDnDConditions.OnDamageTaken then
+        HarfordDnDConditions.OnDamageTaken("player", total)
+    end
 end
 
 local function ApplyResourceDeltaFromRemote(resourceKey, delta, sender)
@@ -1554,6 +1592,10 @@ local function ApplyResourceDeltaFromRemote(resourceKey, delta, sender)
             end
         end
         AdjustResourceCurrent(baseKey, delta)
+        if delta < 0 and (baseKey == "health" or baseKey == "temp_health")
+            and HarfordDnDConditions and HarfordDnDConditions.OnDamageTaken then
+            HarfordDnDConditions.OnDamageTaken("player", -delta)
+        end
     end
 
     if RefreshResourceFrame and ResourceFrame and ResourceFrame:IsShown() then
@@ -2365,18 +2407,40 @@ local function ApplyRequestedSaveAuraSelf(spellId)
     end
 end
 
-local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTarget)
+local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTarget,
+    conditionId, conditionDuration, conditionTurns, sourceGuid)
     ability = tostring(ability or "")
     if ability == "" then return end
     local base, prof = HarfordDnDCalc.GetSaveRollBonuses(ability)
     local bonus = (tonumber(base) or 0) + (tonumber(prof) or 0)
-    local d = math.random(1, 20)
+    local autoFail = HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+        and HarfordDnDConditions.IsSaveAutoFailed("player", ability)
+    local mode = HarfordDnDCalc.GetMode()
+    if HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode then
+        mode = HarfordDnDConditions.ResolveRollMode(mode, "save", { actorUnit = "player", ability = ability })
+    end
+    local d = 0
+    if not autoFail then d = select(1, HarfordDnDCalc.RollD20(mode)) end
     local total = d + bonus
     dc = tonumber(dc) or 10
-    local saved = total >= dc
+    local saved = not autoFail and total >= dc
     local result = FormatSaveOutcome(saved, outcome)
-    if (not saved) and auraId and tonumber(auraId) and tonumber(auraId) > 0 then
-        ApplyRequestedSaveAuraSelf(auraId)
+    if not saved then
+        local def = HarfordDnDConditions and HarfordDnDConditions.GetDefinition
+            and HarfordDnDConditions.GetDefinition(conditionId)
+        if def then
+            local applied = HarfordDnDConditions.ApplyOwned(conditionId, {
+                sourceGuid = sourceGuid,
+                sourceName = responseTarget,
+                duration = conditionDuration or "manual",
+                turns = conditionTurns,
+            })
+            if applied and HarfordDnDConditions.PublishOwnedCondition then
+                HarfordDnDConditions.PublishOwnedCondition(conditionId, "apply")
+            end
+        elseif auraId and tonumber(auraId) and tonumber(auraId) > 0 then
+            ApplyRequestedSaveAuraSelf(auraId)
+        end
     end
     local rollData = {
         type = "info",
@@ -2392,17 +2456,18 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
     end
 end
 
-local function RequestPlayerTargetSave(ability, dc, outcome, auraId)
+local function RequestPlayerTargetSave(ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns)
     if not (UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target")) then
         return false
     end
     if UnitIsUnit and UnitIsUnit("target", "player") then
-        RollRequestedSaveForSelf(ability, dc, outcome, auraId)
+        RollRequestedSaveForSelf(ability, dc, outcome, auraId, nil, conditionId, conditionDuration, conditionTurns)
         return true
     end
     local name = HarfordClassColors.UnitFullName("target")
     if name and name ~= "" and HarfordSync and HarfordSync.SendRequestedSave then
-        HarfordSync.SendRequestedSave(ADDON_PREFIX, name, ability, dc, outcome, auraId)
+        HarfordSync.SendRequestedSave(ADDON_PREFIX, name, ability, dc, outcome, auraId,
+            conditionId, conditionDuration, conditionTurns, UnitGUID and UnitGUID("player") or "")
         return true
     end
     return false
@@ -2412,20 +2477,28 @@ local function ResolveWeaponManeuverAfterHitSave(data)
     if not data or not data.save then return end
     if not (UnitExists and UnitExists("target")) then return end
     if UnitIsPlayer and UnitIsPlayer("target") then
-        RequestPlayerTargetSave(data.save, data.dc, data.outcome, data.onFailAura)
+        RequestPlayerTargetSave(data.save, data.dc, data.outcome, data.onFailAura,
+            data.conditionId, data.conditionDuration, data.conditionTurns)
         return
     end
     local saveBonus = HarfordDnDCombat and HarfordDnDCombat.GetSaveBonusForUnit
         and HarfordDnDCombat.GetSaveBonusForUnit("target", data.save) or 0
-    local d = math.random(1, 20)
+    local autoFail = HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+        and HarfordDnDConditions.IsSaveAutoFailed("target", data.save)
+    local saveMode = HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode
+        and HarfordDnDConditions.ResolveRollMode("normal", "save", { actorUnit = "target", ability = data.save }) or "normal"
+    local d = autoFail and 0 or select(1, HarfordDnDCalc.RollD20(saveMode))
     local saveTotal = d + saveBonus
     local dc = tonumber(data.dc) or 10
-    local saved = saveTotal >= dc
+    local saved = not autoFail and saveTotal >= dc
     local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
         or HarfordClassColors.UnitFullName("target") or "el objetivo"
     local outcome = FormatSaveOutcome(saved, data.outcome)
-    if (not saved) and data.onFailAura then
-        ApplyConditionalHitAura(data.onFailAura)
+    if not saved and (data.conditionId or data.onFailAura) then
+        ApplyConditionalHitEffect(data.conditionId, data.onFailAura, {
+            duration = data.conditionDuration,
+            turns = data.conditionTurns,
+        })
     end
     HarfordDnDRolls.Broadcast({
         type = "info",
@@ -2489,12 +2562,18 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
             cost = cost,
             spendOnHit = man.spendOnHit and true or false,
             onHitAura = (not man.save) and tonumber(man.onHitAura) or nil,
+            conditionId = (not man.save) and man.conditionId or nil,
+            conditionDuration = man.conditionDuration,
+            conditionTurns = man.conditionTurns,
             afterHitSave = man.save and {
                 featureName = feature.name or "Maniobra",
                 save = man.save,
                 dc = dc,
                 outcome = man.outcome,
                 onFailAura = tonumber(man.onFailAura) or nil,
+                conditionId = man.conditionId,
+                conditionDuration = man.conditionDuration,
+                conditionTurns = man.conditionTurns,
             } or nil,
         }
         if DoWeaponAttack then DoWeaponAttack() end
@@ -2505,9 +2584,13 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
     AdjustResourceCurrent(resource, -cost)
     local saveBonus = HarfordDnDCombat and HarfordDnDCombat.GetSaveBonusForUnit
         and HarfordDnDCombat.GetSaveBonusForUnit("target", man.save) or 0
-    local d = math.random(1, 20)
+    local autoFail = HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+        and HarfordDnDConditions.IsSaveAutoFailed("target", man.save)
+    local saveMode = HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode
+        and HarfordDnDConditions.ResolveRollMode("normal", "save", { actorUnit = "target", ability = man.save }) or "normal"
+    local d = autoFail and 0 or select(1, HarfordDnDCalc.RollD20(saveMode))
     local saveTotal = d + saveBonus
-    local saved = saveTotal >= dc  -- el objetivo (defensor) gana los empates
+    local saved = not autoFail and saveTotal >= dc  -- el objetivo (defensor) gana los empates
 
     local link = (HarfordTRP3 and HarfordTRP3.GetAbilityChatLink and HarfordTRP3.GetAbilityChatLink(feature))
         or (feature.name or "Maniobra")
@@ -2545,8 +2628,11 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
     else
         outcome = FormatSaveOutcome(false, man.outcome or "afectado")
     end
-    if (not saved) and man.onFailAura then
-        ApplyConditionalHitAura(man.onFailAura)
+    if not saved and (man.conditionId or man.onFailAura) then
+        ApplyConditionalHitEffect(man.conditionId, man.onFailAura, {
+            duration = man.conditionDuration,
+            turns = man.conditionTurns,
+        })
     end
 
     HarfordDnDRolls.Broadcast({
@@ -2695,6 +2781,10 @@ end
 
 DoWeaponAttack = function()
     if SheetContext and SheetContext.active then return end
+    if HarfordDnDConditions and HarfordDnDConditions.CanPerform then
+        local allowed, condition = HarfordDnDConditions.CanPerform("weapon_attack", { actorUnit = "player", targetUnit = "target" })
+        if not allowed then Print("No puedes atacar: " .. tostring(condition or "condicion activa") .. "."); return end
+    end
     -- Requiere target valido (no uno mismo).
     if not (UnitExists and UnitExists("target"))
         or (UnitIsUnit and UnitIsUnit("target", "player")) then
@@ -2710,13 +2800,16 @@ DoWeaponAttack = function()
     local misc = HarfordDnDCalc.GetMiscBonus()
     local condPenalty = GetActiveConditionalAttackPenalty()
 
-    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
+    local attackRange = def and def.mode == "Melee" and "melee" or "ranged"
+    local chosen, ra, rb, critTag, modeTag, resolvedMode = HarfordDnDCalc.RollD20Full("attack", {
+        actorUnit = "player", targetUnit = "target", attackRange = attackRange,
+    })
     -- Critico ampliado (p.ej. "Maquina de Matar" 19-20) en armas cuerpo a cuerpo: recalcula
     -- el critTag con el umbral del rasgo usando los dados crudos (respeta ventaja/desventaja).
     if def and def.mode == "Melee" and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetWeaponCritThreshold then
         local threshold = HarfordDnDFeatureEffects.GetWeaponCritThreshold(true)
         if threshold < 20 then
-            critTag = HarfordDnDCalc.GetCritTag(HarfordDnDCalc.GetMode(), ra, rb, threshold)
+            critTag = HarfordDnDCalc.GetCritTag(resolvedMode, ra, rb, threshold)
         end
     end
     local total = chosen + base + prof + wmod + misc - condPenalty
@@ -2790,9 +2883,12 @@ DoWeaponAttack = function()
                     end
                     if man.afterHitSave then
                         ResolveWeaponManeuverAfterHitSave(man.afterHitSave)
-                    elseif man.onHitAura then
+                    elseif man.conditionId or man.onHitAura then
                         -- Maniobra sin salvacion (Exponer Armadura): aplica el estado al impactar.
-                        ApplyConditionalHitAura(man.onHitAura)
+                        ApplyConditionalHitEffect(man.conditionId, man.onHitAura, {
+                            duration = man.conditionDuration,
+                            turns = man.conditionTurns,
+                        })
                     end
                 end
             end
@@ -2950,7 +3046,7 @@ HarfordDnDAttackUI.CreateActionButtons({
     end,
     onSpellAttack = function() DoSpellAttack() end,
     onInitiative = function()
-        DoRoll("Iniciativa", HarfordDnDCalc.GetAbilityMod("Destreza"), HarfordDnDGetInitiativeMod())
+        DoRoll("Iniciativa", HarfordDnDCalc.GetAbilityMod("Destreza"), HarfordDnDGetInitiativeMod(), "ability", { actorUnit = "player", ability = "Destreza" })
     end,
 })
 HarfordDnDStore.playerAttackControls = HarfordDnDAttackUI.Controls
@@ -2959,6 +3055,10 @@ HarfordDnDAttackUI.AttachMovementTracker({ parent = SEC_ATK })
 
 DoSpellAttack = function()
     if SheetContext and SheetContext.active then return end
+    if HarfordDnDConditions and HarfordDnDConditions.CanPerform then
+        local allowed, condition = HarfordDnDConditions.CanPerform("verbal_spell", { actorUnit = "player", targetUnit = "target" })
+        if not allowed then Print("No puedes lanzar el conjuro: " .. tostring(condition or "condicion activa") .. "."); return end
+    end
     -- Requiere target valido (no uno mismo): igual que Ataque Arma.
     if not (UnitExists and UnitExists("target"))
         or (UnitIsUnit and UnitIsUnit("target", "player")) then
@@ -2974,7 +3074,9 @@ DoSpellAttack = function()
         and HarfordDnDFeatureEffects.GetBonus("spellAttack")
         or 0
 
-    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
+    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full("attack", {
+        actorUnit = "player", targetUnit = "target", attackRange = "ranged",
+    })
     local total = chosen + base + prof + spellAttackBonus + misc
     local bonusTxt = HarfordDnDCalc.BonusConcat(base, prof, spellAttackBonus, misc)
     -- Ataque Conjuro se resuelve contra la CA del target (como Ataque Arma).
@@ -3146,13 +3248,24 @@ end
     local function RollActionAttack(action)
         -- Cada nuevo ataque descarta el pendiente NPC vs NPC anterior (no consumido).
         HarfordDnDStore.pendingNpcAttack = nil
-        if not (UnitExists and UnitExists("focus")) then
-            return DoRoll("Ataque " .. GetActionChatName(action), action.attackBonus, 0)
+        local actorRef = SheetContext.npcSourceGuid or "target"
+        local focusExists = UnitExists and UnitExists("focus")
+        if HarfordDnDConditions and HarfordDnDConditions.CanPerform then
+            local allowed, condition = HarfordDnDConditions.CanPerform("action", {
+                actorUnit = UnitGUID and UnitGUID("target") == SheetContext.npcSourceGuid and "target" or nil,
+                actorGuid = actorRef, targetUnit = focusExists and "focus" or nil,
+            })
+            if not allowed then Print("El NPC no puede atacar: " .. tostring(condition or "condicion activa") .. "."); return nil end
+        end
+        if not focusExists then
+            return DoRoll("Ataque " .. GetActionChatName(action), action.attackBonus, 0, "attack", { actorGuid = actorRef })
         end
 
         local base = toN(action.attackBonus, 0)
         local misc = HarfordDnDCalc.GetMiscBonus()
-        local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full()
+        local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full("attack", {
+            actorGuid = actorRef, targetUnit = "focus", attackRange = action.attackRange or "melee",
+        })
         local total = chosen + base + misc
         local bonusTxt = HarfordDnDCalc.BonusConcat(base, 0, misc)
         local armorClass, hit, armorText = HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, "focus")
@@ -3181,12 +3294,23 @@ end
             -- Focus jugador: en el impacto se aplica el daño de la accion (sin tirada
             -- manual) y se despacha herida/defensa al focus, sincronizado.
             local onImpactOnce
-            if hit and action.damageDice then
+            if hit and (action.damageDice or action.conditionId) then
                 onImpactOnce = function()
                     -- mitigationUnit "focus": jugador → sin mitigacion (no NPC).
-                    local damageTotal = RollActionDamage(action, isCritical, "focus")
+                    local damageTotal = action.damageDice and RollActionDamage(action, isCritical, "focus") or 0
                     if damageTotal and damageTotal > 0 then
                         HarfordDnDCombat.ApplyActionDamageToFocus(damageTotal)
+                    end
+                    if action.conditionId and HarfordDnDConditions and HarfordDnDConditions.ApplyToUnit then
+                        HarfordDnDConditions.ApplyToUnit("focus", action.conditionId, {
+                            sourceGuid = SheetContext.npcSourceGuid,
+                            sourceName = SheetContext.rollName,
+                            duration = action.conditionDuration,
+                            turns = action.conditionTurns,
+                            saveAbility = action.conditionSaveAbility,
+                            saveDC = action.conditionSaveDC,
+                            persist = action.conditionPersist == true,
+                        })
                     end
                 end
             end
@@ -3318,6 +3442,17 @@ end
             if total and total > 0 and HarfordDnDCombat and HarfordDnDCombat.ApplyWeaponDamageToNpc then
                 HarfordDnDCombat.ApplyWeaponDamageToNpc(total, p.isCritical)
             end
+            if p.action and p.action.conditionId and HarfordDnDConditions and HarfordDnDConditions.ApplyToUnit then
+                HarfordDnDConditions.ApplyToUnit("target", p.action.conditionId, {
+                    sourceGuid = SheetContext.npcSourceGuid,
+                    sourceName = SheetContext.rollName,
+                    duration = p.action.conditionDuration,
+                    turns = p.action.conditionTurns,
+                    saveAbility = p.action.conditionSaveAbility,
+                    saveDC = p.action.conditionSaveDC,
+                    persist = p.action.conditionPersist == true,
+                })
+            end
         elseif HarfordDnDCombat and HarfordDnDCombat.TriggerDefenseOnMiss then
             HarfordDnDCombat.TriggerDefenseOnMiss("target")
         end
@@ -3360,11 +3495,16 @@ end
             end
             summary[#summary + 1] = "Daño " .. table.concat(damageParts, " + ")
         end
+        if selectedAction.area then
+            local shape = ({ cone = "Cono", sphere = "Radio", line = "Linea", other = "Area" })[selectedAction.area.shape] or "Area"
+            summary[#summary + 1] = shape .. (selectedAction.area.sizeText and (" " .. selectedAction.area.sizeText) or "")
+        end
         parsedText:SetText(#summary > 0 and table.concat(summary, "   ") or "No se pudo interpretar una tirada automatica.")
         -- Atacar y Daño Custom requieren un focus victima valido (no yo, no el NPC).
         local hasFocus = HasFocusVictim()
-        local canAttack = selectedAction.attackBonus ~= nil and hasFocus
-        local canDamage = hasFocus  -- daño custom: no depende de que la accion tenga dados
+        local isArea = type(selectedAction.area) == "table"
+        local canAttack = isArea or (selectedAction.attackBonus ~= nil and hasFocus)
+        local canDamage = (not isArea) and hasFocus  -- daño custom: no depende de que la accion tenga dados
         if canAttack and SheetContext.canAttack then
             canAttack = SheetContext.canAttack() == true
         end
@@ -3373,6 +3513,7 @@ end
         end
         attackButton:SetEnabled(canAttack)
         damageButton:SetEnabled(canDamage)
+        attackButton:SetText(isArea and "Marcar area" or "Atacar")
     end
 
     UIDropDownMenu_Initialize(drop, function(_, level)
@@ -3393,7 +3534,34 @@ end
     end)
 
     attackButton = HarfordDnDUI.MakeButton(panel, "Atacar", 112, 22, 72, -122, function()
-        if selectedAction and selectedAction.attackBonus ~= nil then
+        if selectedAction and selectedAction.area then
+            if HarfordDnDConditions and HarfordDnDConditions.CanPerform then
+                local allowed, condition = HarfordDnDConditions.CanPerform("action", {
+                    actorUnit = UnitGUID and UnitGUID("target") == SheetContext.npcSourceGuid and "target" or nil,
+                    actorGuid = SheetContext.npcSourceGuid,
+                })
+                if not allowed then Print("El NPC no puede actuar: " .. tostring(condition or "condicion activa") .. "."); return end
+            end
+            local definition, err
+            if HarfordDnDArea and HarfordDnDArea.DefinitionFromAction then
+                definition, err = HarfordDnDArea.DefinitionFromAction(selectedAction)
+            end
+            if not definition then
+                if DEFAULT_CHAT_FRAME then
+                    DEFAULT_CHAT_FRAME:AddMessage("|cff33ccff[Harford]|r " .. tostring(err or "Definicion de area incompleta."))
+                end
+                return
+            end
+            local emoteOpt = EMOTE_OPTIONS[selectedEmoteIndex]
+            local emoteId = emoteOpt and emoteOpt.id
+            HarfordDnDArea.Open(definition, {
+                sourceKind = "npc",
+                sourceGuid = SheetContext.npcSourceGuid,
+                onBegin = function()
+                    if emoteId and SheetContext.onAttackAnimation then SheetContext.onAttackAnimation(emoteId) end
+                end,
+            })
+        elseif selectedAction and selectedAction.attackBonus ~= nil then
             -- Admin valida que el NPC de la ficha siga siendo el target exacto.
             local critTag = RollActionAttack(selectedAction)
             pendingCriticalAction = critTag == "CRÍTICO" and selectedAction or nil
@@ -3643,7 +3811,7 @@ local RefreshSkillLayout
         local col = ((i-1) % 3)
         local row = math.floor((i-1)/3)
         local b = HarfordDnDUI.MakeButton(SEC_ABI, "…", 140, 22, 10 + col*160, -36 - row*26, function()
-            DoRoll(a.short, HarfordDnDCalc.GetAbilityMod(a.key), 0)
+            DoRoll(a.short, HarfordDnDCalc.GetAbilityMod(a.key), 0, "ability", { actorUnit = "player", ability = a.key })
         end)
         AbilityButtons[a.key] = b
         abiKeys[#abiKeys+1] = a.key
@@ -3655,7 +3823,7 @@ local RefreshSkillLayout
         local row = math.floor((i-1)/3)
         local b = HarfordDnDUI.MakeButton(SEC_SAV, "…", 140, 22, 10 + col*160, -36 - row*26, function()
             local base, prof = HarfordDnDCalc.GetSaveRollBonuses(a.key)
-            DoRoll("Salv " .. a.short, base, prof)
+            DoRoll("Salv " .. a.short, base, prof, "save", { actorUnit = "player", ability = a.key })
         end)
         SaveButtons[a.key] = b
         savKeys[#savKeys+1] = a.key
@@ -3724,7 +3892,7 @@ local RefreshSkillLayout
         local y = -(PAD_Y + row * (BTN_H + GAP_Y))
         local b = HarfordDnDUI.MakeButton(scrollChild, "…", 200, BTN_H, x, y, function()
             local base, prof = HarfordDnDCalc.GetSkillRollBonuses(s)
-            DoRoll(s.name, base, prof)
+            DoRoll(s.name, base, prof, "ability", { actorUnit = "player", ability = s.ability, skill = s.id })
         end)
         SkillButtons[s.id] = b
     end
@@ -3925,7 +4093,7 @@ do
                 DoDeathSave()
             else
                 local base, prof = HarfordDnDCalc.GetSaveRollBonuses("Constitucion")
-                DoRoll("Salv CON", base, prof)
+                DoRoll("Salv CON", base, prof, "save", { actorUnit = "player", ability = "Constitucion" })
             end
         end)
     end
@@ -4433,8 +4601,10 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
     end,
     -- Un atacante nos pide una salvacion post-impacto: se tira con NUESTRA ficha
     -- local y se anuncia desde nuestro cliente.
-    HandleRequestedSave = function(ability, dc, outcome, auraId, sender)
-        RollRequestedSaveForSelf(ability, dc, outcome, auraId, sender)
+    HandleRequestedSave = function(ability, dc, outcome, auraId, sender, conditionId,
+        conditionDuration, conditionTurns, sourceGuid)
+        RollRequestedSaveForSelf(ability, dc, outcome, auraId, sender,
+            conditionId, conditionDuration, conditionTurns, sourceGuid)
     end,
     RefreshAPI = function()
         if _G.DND5E_ARC_API and _G.DND5E_ARC_API.Refresh then
@@ -4523,9 +4693,11 @@ SlashCmdList["HARFORDMAIN"] = function(msg)
     elseif sub == "turnos" then route("HARFORDTURNOS")
     elseif sub == "config" then route("HARFORDCONFIG")
     elseif sub == "inspect" then route("HARFORDCHARACTERINSPECT")
+    elseif sub == "compendio" or sub == "magia" then
+        if HarfordCharacterPanel and HarfordCharacterPanel.Open then HarfordCharacterPanel.Open("spells") end
     elseif sub == "debug" then route("HARFORDDEBUG")
     else
-        DEFAULT_CHAT_FRAME:AddMessage("|cff00ccff[Harford]|r /harford: cargarficha | ficha | char | rep | turnos | config | inspect | debug")
+        DEFAULT_CHAT_FRAME:AddMessage("|cff00ccff[Harford]|r /harford: cargarficha | ficha | char | rep | turnos | config | inspect | compendio/magia | debug")
     end
 end
 

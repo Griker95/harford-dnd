@@ -4,7 +4,8 @@
 ## Author: Griker
 ## Version: 1.0.0
 ## OptionalDeps: totalRP3, totalRP3_Extended
-## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordDebugSettings, HarfordConfigStore, HarfordReputationStore, HarfordFrameProbe
+## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordDebugSettings, HarfordConfigStore, HarfordReputationStore, HarfordFrameProbe, HarfordCompendioDB
+## SavedVariablesPerCharacter: HarfordCompendioCharacterDB
 
 HarfordSync.lua
 HarfordDebug.lua
@@ -18,7 +19,11 @@ HarfordActionSequence.lua
 HarfordActionSequencePresets.lua
 HarfordAuras.lua
 HarfordClassColors.lua
+HarfordCompendioCore.lua
+HarfordCompendioData.lua
+HarfordCompendioIconMap.lua
 HarfordTRP3.lua
+HarfordCompendioUI.lua
 HarfordUIGeom.lua
 HarfordDamageTypes.lua
 HarfordDamageMitigation.lua
@@ -41,10 +46,12 @@ HarfordDnDProgression.lua
 HarfordDnDItems.lua
 HarfordCharacterInspect.lua
 HarfordDnDFeatureEffects.lua
+HarfordDnDConditions.lua
 HarfordDnDWeapons.lua
 HarfordDnDCalc.lua
 HarfordDnDNet.lua
 HarfordDnDCombat.lua
+HarfordDnDArea.lua
 HarfordDnDMinimap.lua
 HarfordDnDComm.lua
 HarfordLoot.lua
@@ -52,6 +59,7 @@ HarfordDnD.lua
 HarfordReputation.lua
 HarfordReputationSync.lua
 HarfordReputationUI.lua
+HarfordCharacterBook.lua
 HarfordCharacterPanel.lua
 HarfordActionBars.lua
 HarfordUnitFrames.lua

@@ -60,6 +60,7 @@ HarfordReputation.lua
 HarfordReputationSync.lua
 HarfordReputationUI.lua
 HarfordCharacterBook.lua
+HarfordCharacterSpellbook.lua
 HarfordCharacterPanel.lua
 HarfordActionBars.lua
 HarfordUnitFrames.lua

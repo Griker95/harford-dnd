@@ -628,8 +628,22 @@ function API.Apply(draft)
     -- y de forma atomica: progresion + caracteristicas. Si esto falla, no se toca nada mas.
     local created, createErr = HarfordDnDProgression.ReplaceCreation(draft, profileName)
     if not created then return false, createErr or "No se pudo crear la progresion de la ficha." end
+    -- Las caracteristicas se guardan HORNEADAS (base asignada + incrementos de creacion), igual
+    -- que las que llegan del About en `/harford cargarficha`. El draft trae SOLO la base: los
+    -- incrementos de raza/subraza/trasfondo/dote y las Mejoras de Caracteristica elegidas van al
+    -- bucket `creationBonus` de HarfordDnDFeatureEffects y NO se suman en vivo, asi que hay que
+    -- aplicarlos aqui o el personaje perderia su bono racial (el asistente ya lo mostraba sumado).
+    -- Se hace DESPUES de ReplaceCreation: raza, trasfondo, dotes y choices ya estan fijados, de
+    -- modo que el motor puede resolverlos.
     for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
-        HarfordDnDStore.SetValue(ability.key, math.floor(tonumber(draft.abilities[ability.key]) or 0))
+        local base = math.floor(tonumber(draft.abilities[ability.key]) or 0)
+        local creationBonus = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetCreationAbilityBonus
+            and HarfordDnDFeatureEffects.GetCreationAbilityBonus(ability.key, profileName)) or 0
+        local baked = base + (tonumber(creationBonus) or 0)
+        HarfordDnDStore.SetValue(ability.key, baked)
+        -- El About se construye con este mismo draft: dejarlo horneado para que el perfil TRP3
+        -- muestre exactamente la misma puntuacion que la ficha (antes rendia la base sin bono).
+        draft.abilities[ability.key] = baked
     end
     if HarfordDnDStore.ReconcileDerivedResources then
         HarfordDnDStore.ReconcileDerivedResources(profileName, "creation")

@@ -628,8 +628,11 @@ local function BuildCreationDraft()
     for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
         local assigned = S.attributeAssignments[ability.key]
         local base = array and assigned and array.values[assigned] or 0
-        -- Guardar SOLO la base asignada. El bono racial lo aplica HarfordDnDCalc en vivo (rasgos de
-        -- raza via FeatureEffects); sumarlo aqui lo contaba DOS veces. Igual que importa cargarficha.
+        -- Guardar SOLO la base asignada: sumar aqui el bono racial lo contaba DOS veces, porque el
+        -- asistente ya lo muestra sumado (`RaceAbilityBonus`). Quien lo hornea es
+        -- `HarfordCharacterCreation.Apply`, con `GetCreationAbilityBonus` y tras fijar la
+        -- progresion. OJO: los `bonus ability` NO se aplican en vivo (van al bucket
+        -- `creationBonus` de FeatureEffects), asi que el draft por si solo no basta.
         abilities[ability.key] = base
     end
     local classes = {

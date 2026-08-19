@@ -2432,10 +2432,37 @@ local function RefreshSheet()
         if HarfordDnDHitDice and HarfordDnDHitDice.GetTotalMax and HarfordDnDHitDice.GetTotalMax(name) > 0 then
             rows[#rows + 1] = { "Dados de Golpe", HarfordDnDHitDice.GetSummaryText(name) }
         end
-        if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetToolProfs then
-            local tools = HarfordDnDFeatureEffects.GetToolProfs(name)
-            if tools and #tools > 0 then
-                rows[#rows + 1] = { "Herramientas", table.concat(tools, ", ") }
+        -- Competencias (armadura / arma / herramienta) en UNA sola fila: la lista de filas de
+        -- detalle comparte espacio con la barra de "Salvaciones" (fija en -206), asi que una
+        -- fila por categoria desbordaria. El desglose completo va en el tooltip.
+        if HarfordDnDFeatureEffects then
+            local function ProfList(getter)
+                if not getter then return nil end
+                local list = getter(name)
+                if not (list and #list > 0) then return nil end
+                local pretty = {}
+                for i, key in ipairs(list) do
+                    local k = tostring(key)
+                    pretty[i] = k:sub(1, 1):upper() .. k:sub(2)
+                end
+                return table.concat(pretty, ", ")
+            end
+            local armor = ProfList(HarfordDnDFeatureEffects.GetArmorProfs)
+            local weapon = ProfList(HarfordDnDFeatureEffects.GetWeaponProfs)
+            local tools = ProfList(HarfordDnDFeatureEffects.GetToolProfs)
+            if armor or weapon or tools then
+                local short, detail = {}, {}
+                if armor then
+                    short[#short + 1] = armor
+                    detail[#detail + 1] = "|cffffd100Armadura:|r " .. armor
+                end
+                if weapon then
+                    short[#short + 1] = weapon
+                    detail[#detail + 1] = "|cffffd100Armas:|r " .. weapon
+                end
+                if tools then detail[#detail + 1] = "|cffffd100Herramientas:|r " .. tools end
+                rows[#rows + 1] = { "Competencias", table.concat(short, " · "),
+                    "Competencias", table.concat(detail, "\n") }
             end
         end
         if HarfordDnDMana and HarfordDnDMana.IsEnabled and HarfordDnDMana.IsEnabled(name) then
@@ -2733,18 +2760,34 @@ local function RefreshFeatureList()
                     drop:SetPoint("TOPLEFT", 0, y)
                     local opt = HarfordDnDBook.GetChoiceOption and HarfordDnDBook.GetChoiceOption(feature, chosen[slotNo])
                     SetDropText(drop, opt and opt.label or ("Eleccion " .. tostring(slotNo)))
+                    -- Las mejoras de caracteristica (`ability+N`) SI admiten repetir la misma
+                    -- opcion en dos slots (es el "+2 a una caracteristica" del manual). El resto
+                    -- (metamagia, estilos, habilidades) no: se ocultan las ya elegidas en OTRO
+                    -- slot para no poder gastar dos slots en la misma opcion.
+                    local stackable = tostring(feature.choice.optionsFrom or ""):match("^ability%+%d+$") ~= nil
                     UIDropDownMenu_Initialize(drop, function()
                         for _, option in ipairs(HarfordDnDBook.GetChoiceOptions(feature) or {}) do
                             local optionChoice = option
-                            local info = UIDropDownMenu_CreateInfo()
-                            info.text = optionChoice.label
-                            info.checked = chosen[slotNo] == optionChoice.id
-                            info.func = function()
-                                HarfordDnDProgression.SetChoiceSlot(feature.id, slotNo, optionChoice.id, GetProfileName())
-                                RefreshGameUI()
-                                RefreshPanel()
+                            local takenElsewhere = false
+                            if not stackable then
+                                for otherSlot, takenId in pairs(chosen) do
+                                    if otherSlot ~= slotNo and takenId == optionChoice.id then
+                                        takenElsewhere = true
+                                        break
+                                    end
+                                end
                             end
-                            UIDropDownMenu_AddButton(info)
+                            if not takenElsewhere then
+                                local info = UIDropDownMenu_CreateInfo()
+                                info.text = optionChoice.label
+                                info.checked = chosen[slotNo] == optionChoice.id
+                                info.func = function()
+                                    HarfordDnDProgression.SetChoiceSlot(feature.id, slotNo, optionChoice.id, GetProfileName())
+                                    RefreshGameUI()
+                                    RefreshPanel()
+                                end
+                                UIDropDownMenu_AddButton(info)
+                            end
                         end
                     end)
                     y = y - 30

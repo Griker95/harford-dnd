@@ -73,6 +73,23 @@ local function ContainsChoice(selections, optionId)
     return nil
 end
 
+-- Nº de veces que una opcion esta elegida (las mejoras de caracteristica pueden repetirse).
+local function CountChoice(selections, optionId)
+    local n = 0
+    for _, selectedId in ipairs(selections or {}) do
+        if selectedId == optionId then n = n + 1 end
+    end
+    return n
+end
+
+-- ¿La eleccion admite repetir la misma opcion? Solo las mejoras de caracteristica
+-- (`optionsFrom = "ability+N"`): elegir dos veces la misma es el "+2 a una caracteristica" del
+-- manual. Metamagia, estilos de combate, habilidades, etc. NO se pueden duplicar.
+local function IsStackableChoice(feature)
+    local choice = feature and feature.choice
+    return type(choice) == "table" and tostring(choice.optionsFrom or ""):match("^ability%+%d+$") ~= nil
+end
+
 local function GetBookFeatureDescription(feature, source)
     if not (feature and HarfordDnDBookText and HarfordDnDBookText.GetFeatureDescription) then
         return feature and feature.description or "Sin descripcion."
@@ -848,18 +865,36 @@ local function RefreshChoiceDialog()
     dialog.status:SetText("Seleccionadas: " .. tostring(#selected) .. "/" .. tostring(slots))
     dialog.status:SetTextColor(#selected == slots and 0.22 or 1, #selected == slots and 0.82 or 0.78, #selected == slots and 0.42 or 0.2)
     dialog.confirm:SetEnabled(#selected == slots)
+    local stackable = IsStackableChoice(feature)
     local y = 0
     for _, option in ipairs(options) do
         local choice = option
-        local row = MakeButton(dialog.treeChild, (ContainsChoice(selected, choice.id) and "[X] " or "[ ] ") .. tostring(choice.label or choice.id), 350, 25, function()
-            local index = ContainsChoice(selected, choice.id)
-            if index then
-                table.remove(selected, index)
-            elseif #selected < slots then
-                selected[#selected + 1] = choice.id
+        local count = CountChoice(selected, choice.id)
+        local mark = (count == 0 and "[ ] ") or (count == 1 and "[X] ") or ("[X" .. count .. "] ")
+        local row = MakeButton(dialog.treeChild, mark .. tostring(choice.label or choice.id), 350, 25, function()
+            if stackable then
+                -- Repetible: cada click suma una copia; sin slots libres, un click sobre una ya
+                -- elegida la libera entera (asi se puede pasar de "+2 a una" a "+1 y +1").
+                if #selected < slots then
+                    selected[#selected + 1] = choice.id
+                elseif count > 0 then
+                    for i = #selected, 1, -1 do
+                        if selected[i] == choice.id then table.remove(selected, i) end
+                    end
+                else
+                    dialog.status:SetText("Ya has elegido el maximo de opciones.")
+                    return
+                end
             else
-                dialog.status:SetText("Ya has elegido el maximo de opciones.")
-                return
+                local index = ContainsChoice(selected, choice.id)
+                if index then
+                    table.remove(selected, index)
+                elseif #selected < slots then
+                    selected[#selected + 1] = choice.id
+                else
+                    dialog.status:SetText("Ya has elegido el maximo de opciones.")
+                    return
+                end
             end
             RefreshChoiceDialog()
         end)

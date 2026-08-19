@@ -47,13 +47,24 @@ local RACE_FRAME_ICONS = {
     pandaren    = { "w3reforgedpandarenbrewmaster",        "w3reforgedpandarenbrewmaster" },
     vulpera     = { "vulpera_m",                           "vulpera_m" },
 }
--- Color de spec por subclase (clave normalizada sin tildes), extraido de los perfiles reales.
+-- Color de spec por subclase (clave normalizada sin tildes), extraido de los perfiles TRP3
+-- reales: son los tonos que ya usan las fichas, no una paleta inventada. Las subclases que no
+-- aparecen en ningun perfil se quedan fuera a proposito y caen al color de su clase.
 local SUBCLASS_SPEC_COLORS = {
-    armas = "b3743a", proteccion = "cc9900",
-    asesinato = "83bd3e", forajido = "cc9900",
+    -- Guerrero / Paladin / Picaro
+    armas = "b3743a", proteccion = "cc9900", represion = "d17f69",
+    asesinato = "83bd3e", forajido = "cc9900", sutileza = "7f38b5",
+    -- Cazador / Druida
     punteria = "ff7f3f", supervivencia = "ffb954",
     feral = "ff9c00", restauracion = "4bb3ff",
+    -- Brujo / Mago
     destruccion = "c72811", fuego = "c93c27",
+    -- Caballero de la Muerte (escarcha lo comparte el Mago)
+    sangre = "cd0000", escarcha = "00d1ff",
+    -- Cazador de Demonios
+    ira = "ff0000",
+    -- Sacerdote (las tres specs y Elune comparten el dorado palido de los perfiles)
+    disciplina = "e5cc7f", sagrado = "e5cc7f", ["sacerdocio de elune"] = "e5cc7f",
 }
 -- Raza/trasfondo sin icono -> generico (no inventar iconos por raza).
 local ICON_GENERIC = "inv_misc_note_01"

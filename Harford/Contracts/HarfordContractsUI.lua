@@ -276,13 +276,20 @@ local function CreateEditBox(parent, width)
   return box
 end
 
+-- Oculta lo pintado en el refresco anterior y VACIA la lista. Sin el vaciado, `children` crecia
+-- sin limite (cada refresco añadia sus filas y ninguna salia), asi que cada refresco tenia que
+-- recorrer tambien todas las filas de todos los refrescos previos: coste que se dispara en una
+-- sesion larga. Los frames ocultos siguen existiendo -- WoW no permite destruirlos -- pero ya no
+-- se vuelven a recorrer.
 local function ClearChildren(container)
   if not container.children then
     container.children = {}
+    return
   end
   for _, child in ipairs(container.children) do
     child:Hide()
   end
+  wipe(container.children)
 end
 
 local function TrackChild(container, child)

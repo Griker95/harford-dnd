@@ -12,3 +12,6 @@ desktop.ini
 
 # Claude Code — configuración local personal
 .claude/settings.local.json
+
+# Biblioteca de iconos extraidos de Epsilon (181MB, regenerable con EpsilonIcons/extract_icons.py)
+EpsilonIcons/

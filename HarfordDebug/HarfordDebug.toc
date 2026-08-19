@@ -1,0 +1,10 @@
+## Interface: 45745
+## Title: |cff88ccffHarfordDebug|r
+## Notes: Herramientas opcionales de diagnostico para Harford
+## Author: Griker
+## Version: 1.0.0
+## RequiredDeps: Harford
+## OptionalDeps: HarfordAdmin
+## SavedVariables: HarfordDebugSettings, HarfordFrameProbe
+
+HarfordDebug.lua

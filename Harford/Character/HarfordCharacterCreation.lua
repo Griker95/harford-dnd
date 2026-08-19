@@ -47,24 +47,58 @@ local RACE_FRAME_ICONS = {
     pandaren    = { "w3reforgedpandarenbrewmaster",        "w3reforgedpandarenbrewmaster" },
     vulpera     = { "vulpera_m",                           "vulpera_m" },
 }
--- Color de spec por subclase (clave normalizada sin tildes), extraido de los perfiles TRP3
--- reales: son los tonos que ya usan las fichas, no una paleta inventada. Las subclases que no
--- aparecen en ningun perfil se quedan fuera a proposito y caen al color de su clase.
+-- Color de spec por subclase (clave normalizada sin tildes).
+--
+-- Los marcados como PERFIL salen de los perfiles TRP3 reales: son los tonos que ya usan las
+-- fichas. Los marcados como TEMA son propuestos a partir de la identidad visual de esa spec en
+-- WoW, porque no aparecen en ningun perfil todavia; se eligieron para contrastar con el color de
+-- su clase y que el nombre de la subclase no se pierda. Si algun dia existe una ficha con esa
+-- spec, sustituye el valor por el del perfil: manda siempre el perfil real.
 local SUBCLASS_SPEC_COLORS = {
-    -- Guerrero / Paladin / Picaro
-    armas = "b3743a", proteccion = "cc9900", represion = "d17f69",
-    asesinato = "83bd3e", forajido = "cc9900", sutileza = "7f38b5",
-    -- Cazador / Druida
-    punteria = "ff7f3f", supervivencia = "ffb954",
-    feral = "ff9c00", restauracion = "4bb3ff",
-    -- Brujo / Mago
-    destruccion = "c72811", fuego = "c93c27",
+    -- Guerrero
+    armas = "b3743a",            -- PERFIL
+    proteccion = "cc9900",       -- PERFIL (lo comparte Paladin)
+    furia = "c0392b",            -- TEMA: rojo ira
+    -- Paladin
+    represion = "d17f69",        -- PERFIL
+    -- Picaro
+    asesinato = "83bd3e",        -- PERFIL
+    forajido = "cc9900",         -- PERFIL
+    sutileza = "7f38b5",         -- PERFIL
+    -- Cazador
+    punteria = "ff7f3f",         -- PERFIL
+    supervivencia = "ffb954",    -- PERFIL
+    bestias = "9c6b3f",          -- TEMA: marron bestia (las otras dos specs son naranjas)
+    -- Druida
+    feral = "ff9c00",            -- PERFIL
+    restauracion = "4bb3ff",     -- PERFIL
+    equilibrio = "8a6fe8",       -- TEMA: morado lunar (Restauracion ya ocupa el azul)
+    -- Mago / Brujo
+    fuego = "c93c27",            -- PERFIL
+    destruccion = "c72811",      -- PERFIL
+    arcano = "b06ee8",           -- TEMA: morado arcano (la clase ya es cian)
+    afliccion = "6cbf5a",        -- TEMA: verde afliccion
+    demonologia = "9b59d0",      -- TEMA: morado demoniaco
     -- Caballero de la Muerte (escarcha lo comparte el Mago)
-    sangre = "cd0000", escarcha = "00d1ff",
+    sangre = "cd0000",           -- PERFIL
+    escarcha = "00d1ff",         -- PERFIL
+    profano = "5aa832",          -- TEMA: verde plaga
     -- Cazador de Demonios
-    ira = "ff0000",
+    ira = "ff0000",              -- PERFIL
+    devastacion = "8fd13f",      -- TEMA: verde vil
+    venganza = "3c9a6e",         -- TEMA: verde oscuro demoniaco
     -- Sacerdote (las tres specs y Elune comparten el dorado palido de los perfiles)
-    disciplina = "e5cc7f", sagrado = "e5cc7f", ["sacerdocio de elune"] = "e5cc7f",
+    disciplina = "e5cc7f",       -- PERFIL
+    sagrado = "e5cc7f",          -- PERFIL
+    ["sacerdocio de elune"] = "e5cc7f",  -- PERFIL
+    sombra = "8b5cd6",           -- TEMA: morado sombra
+    -- Chaman
+    elemental = "f2c14e",        -- TEMA: amarillo rayo
+    mejora = "e07b39",           -- TEMA: naranja forja
+    -- Monje
+    ["maestro cervecero"] = "c8873c",    -- TEMA: ambar cerveza
+    ["tejedor de niebla"] = "4fd6b0",    -- TEMA: verde niebla
+    ["viajero del viento"] = "2ec4b6",   -- TEMA: turquesa viento
 }
 -- Raza/trasfondo sin icono -> generico (no inventar iconos por raza).
 local ICON_GENERIC = "inv_misc_note_01"

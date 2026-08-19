@@ -598,6 +598,43 @@ local function GenerateAttributeArrays()
     S.selectedArray, S.attributeAssignments, S.pendingScore = nil, {}, nil
 end
 
+-- Habilidades en las que el BORRADOR ya es competente: rasgos de raza/subraza, de trasfondo y de
+-- clase/subclase, mas las opciones de otras elecciones ya marcadas. Durante la creacion el PJ aun
+-- no existe como perfil, asi que no se puede preguntar a HarfordDnDFeatureEffects.GetSkillRank:
+-- hay que derivarlo de lo elegido en el asistente.
+local function DraftSkillProficiencies()
+    local prof = {}
+    local function ApplyEffects(effects)
+        for _, effect in ipairs(effects or {}) do
+            if effect.kind == "skillProf" and effect.skill then prof[effect.skill] = true end
+        end
+    end
+    local function ApplyFeature(feature)
+        if type(feature) ~= "table" then return end
+        ApplyEffects(feature.effects)
+        -- Una eleccion ya resuelta (p.ej. las dos habilidades del trasfondo) tambien da competencia.
+        for _, optionId in ipairs(S.choiceSelections[feature.id] or {}) do
+            local option = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
+                and HarfordDnDBook.GetChoiceOption(feature, optionId)
+            ApplyEffects(option and option.effects)
+        end
+    end
+    local race = HarfordDnDRaces and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(S.raceId)
+    for _, feature in ipairs((race and race.traits) or {}) do ApplyFeature(feature) end
+    local subrace = HarfordDnDRaces and HarfordDnDRaces.GetSubrace
+        and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
+    for _, feature in ipairs((subrace and subrace.traits) or {}) do ApplyFeature(feature) end
+    local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
+        and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+    for _, feature in ipairs((background and background.traits) or {}) do ApplyFeature(feature) end
+    for _, classId in ipairs({ S.classId, S.secondaryClassId }) do
+        local classDef = classId and HarfordDnDBook and HarfordDnDBook.GetClass
+            and HarfordDnDBook.GetClass(classId)
+        for _, feature in ipairs((classDef and classDef.features) or {}) do ApplyFeature(feature) end
+    end
+    return prof
+end
+
 RaceAbilityBonus = function(ability)
     local total = 0
     local function Apply(feature)
@@ -860,6 +897,18 @@ local function RefreshChoiceDialog()
     S.choiceDialogRows = {}
     local feature = dialog.feature
     local options = HarfordDnDBook.GetChoiceOptions(feature) or {}
+    -- Pericia: por regla 5e solo puede recaer sobre habilidades en las que YA se es competente.
+    -- Aqui la competencia sale del borrador (el PJ todavia no existe como perfil). Si aun no hay
+    -- ninguna -- p.ej. se elige la dote antes que raza/trasfondo -- se muestran todas antes que
+    -- dejar la lista vacia y bloquear la creacion.
+    if tostring(feature.choice and feature.choice.optionsFrom or "") == "skillExpertise" then
+        local prof = DraftSkillProficiencies()
+        local eligible = {}
+        for _, option in ipairs(options) do
+            if prof[option.id] then eligible[#eligible + 1] = option end
+        end
+        if #eligible > 0 then options = eligible end
+    end
     local slots = HarfordDnDBook.GetChoiceSlots(feature)
     local selected = S.choiceSelections[feature.id] or {}
     S.choiceSelections[feature.id] = selected

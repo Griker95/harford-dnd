@@ -7,24 +7,26 @@ para el mapa de modulos, **`ESTRUCTURA.md`**.
 Convenio de los mensajes: `feat` nuevo, `fix` arreglo, `refactor` reorganizacion sin cambio de
 comportamiento, `docs` documentacion y `chore` mantenimiento.
 
-- Commits: **44** · del **2026-05-18** al **2026-08-19**
+Regeneralo con `python tools/gen_changelog.py`.
+
+- Commits: **45** - del **2026-05-18** al **2026-08-19**
 
 ## Agosto de 2026
 
 **Nuevo**
 
-- **panel** — fila de Competencias y arreglo de las elecciones repetibles `54a8bfb`
-- **trasfondos** — descripcion completa en el About de TRP3 `ff91228`
+- **panel** - fila de Competencias y arreglo de las elecciones repetibles `54a8bfb`
+- **trasfondos** - descripcion completa en el About de TRP3 `ff91228`
 
 **Arreglos**
 
-- **creacion** — las fichas creadas perdian los incrementos de caracteristica `4a68ae7`
-- **progresion** — evita huecos en classLevels al fijar una entrada de clase `a78b72a`
-- **loot** — valida el remitente de HARFORDLOOT y HARFORDCFG `c044433`
-- **turnos** — valida el remitente de los mensajes HARFORDTURN `7da4ee6`
-- **competencias** — pericia solo sobre habilidades competentes y quita HasToolProf duplicada `bacbd17`
-- **docs** — repara el mojibake de AGENTS.md `1c646d7`
-- **admin** — unifica salida de chat y mejora NPC/condiciones/misiones `b05254d`
+- **creacion** - las fichas creadas perdian los incrementos de caracteristica `4a68ae7`
+- **progresion** - evita huecos en classLevels al fijar una entrada de clase `a78b72a`
+- **loot** - valida el remitente de HARFORDLOOT y HARFORDCFG `c044433`
+- **turnos** - valida el remitente de los mensajes HARFORDTURN `7da4ee6`
+- **competencias** - pericia solo sobre habilidades competentes y quita HasToolProf duplicada `bacbd17`
+- **docs** - repara el mojibake de AGENTS.md `1c646d7`
+- **admin** - unifica salida de chat y mejora NPC/condiciones/misiones `b05254d`
 
 **Refactor**
 
@@ -32,6 +34,7 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 **Documentacion**
 
+- organigrama de modulos (ESTRUCTURA.md) e historial (CHANGELOG.md) `e5e4137`
 - actualiza el README (HarfordDebug y subcomandos /harford) `108184f`
 
 **Mantenimiento**

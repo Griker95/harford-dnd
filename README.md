@@ -56,15 +56,39 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 ## Estructura Del Proyecto
 
 ```text
-Harford/            <- Addon principal: jugadores y DM
+Harford/            <- Addon principal: jugadores y DM (84 modulos en 16 carpetas)
+  Core/               Transporte, chat, configuracion, autoridad y utilidades puras
+  Server/             Comandos validados hacia el servidor Epsilon
+  TRP3/               Lectura y escritura de perfiles de TotalRP3
+  Compendium/         Compendio de conjuros (catalogo + lanzamiento)
+  DnD/
+    Data/             Libros: clases, razas, trasfondos, dotes, armas
+    State/            Ficha, progresion, equipo y formas (SavedVariables)
+    Engine/           Reglas: calculo, tiradas, combate, condiciones, area y red
+    UI/               Ficha de personaje y controles de tirada
+  Character/          Creacion, subida de nivel, libro, conjuros e inspeccion
+  Frames/             Overlays de unitframes y nameplates + tracker de turnos
+  Reputation/         Facciones y rangos por personaje
+  Quests/             Misiones: catalogo, estado, registro y tracker
+  Contracts/          Tablon de contratos con autoridad DM
+  Professions/        Profesiones y recetas
+  Communicator/       Mensajeria RP y bandeja de herramientas
+  Loot/               Loot resuelto y configuracion compartida
 HarfordAdmin/       <- Addon admin: herramientas DM, editores y comandos protegidos
 HarfordDebug/       <- Addon opcional: diagnostico, probes y limpieza de SavedVariables
+
+ESTRUCTURA.md       <- Organigrama de modulos: que hace cada archivo y como fluyen los datos
+CHANGELOG.md        <- Historial de cambios del proyecto
 AGENTS.md           <- Arquitectura, contratos de modulos y enfoques fallidos
 CLAUDE.md           <- Instrucciones para Claude Code
 .github/
   copilot-instructions.md  <- Instrucciones para GitHub Copilot
 .cursorrules        <- Instrucciones para Cursor AI
 ```
+
+> Los archivos se cargan **en el orden del `.toc`** y comparten el namespace global: no hay
+> `require` ni rutas entre archivos. Mover un modulo de carpeta es seguro siempre que su
+> dependencia siga cargando antes. Detalle completo en [`ESTRUCTURA.md`](ESTRUCTURA.md).
 
 ---
 

@@ -62,6 +62,9 @@ Addon de WoW (Lua, Interface 45745, servidor Epsilon RP) que implementa D&D 5e c
 
 ## Módulos principales
 
+> Mapa completo de los 84 módulos (carpeta, rol, tamaño, flujo de datos y prefijos de red) en
+> [`ESTRUCTURA.md`](ESTRUCTURA.md). La tabla de abajo es el subconjunto que se toca a menudo.
+
 | Archivo | Rol | Tamaño aprox |
 |---|---|---|
 | `Harford/Frames/HarfordUnitFrames.lua` | Overlays TRP3/DnD sobre frames nativos WoW | ~4400 líneas (~169 locales) |

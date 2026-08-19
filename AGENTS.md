@@ -2,6 +2,8 @@
 
 Este archivo documenta el contexto tecnico que debe recordar cualquier agente que trabaje en este repo. Es una guia viva: actualizala cuando se confirme nueva informacion del entorno Epsilon/Shadowlands o cambie la arquitectura de los addons.
 
+Documentos hermanos: **`ESTRUCTURA.md`** es el organigrama de modulos (que hace cada archivo, orden de carga, flujo de datos y prefijos de red) y **`CHANGELOG.md`** el historial de cambios. Este archivo (`AGENTS.md`) manda en los **contratos**: reglas de modulo, limitaciones de Epsilon y enfoques ya descartados.
+
 ## Repositorio Y Colaboracion
 
 - Repo privado: `harford-dnd`.

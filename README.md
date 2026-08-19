@@ -27,6 +27,7 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
    ```
 3. Iniciar el cliente Epsilon y activar **`Harford`** en el selector de addons.
 4. Activar **`HarfordAdmin`** solo en cuentas con permisos de DM/Admin. Las herramientas DM requieren `HarfordAdmin` cargado y `.ph dm` activo.
+5. Activar **`HarfordDebug`** solo durante una investigacion tecnica. Es opcional, depende de `Harford` y guarda sus capturas/debug en SavedVariables propias.
 
 ---
 
@@ -39,11 +40,15 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 | `/harford inspect` | Inspecciona en modo ligero/read-only el panel de personaje del target jugador o del nombre indicado |
 | `/harford rep` | Abre/cierra el panel de reputaciones |
 | `/harford turnos` | Abre/cierra el tracker de turnos |
+| `/harford comunicador` | Abre el comunicador normal |
+| `/harford radio` | Abre el comunicador sin aplicar su aura visual |
+| `/harford contratos` | Abre el tablón de contratos como ventana independiente |
+| `/harford misiones` | Abre el registro de misiones Harford |
 | `/harford config` | Panel de configuracion del addon |
-| `/harford debug` | Sistema de debug: on/off/toggle/status/list/run |
+| `/harford debug` | Sistema de debug opcional: on/off/toggle/status/list/run; requiere `HarfordDebug` |
 | `/FichaHarford`, `/hchar`, `/harfordrep`, `/hconfig`, `/hdebug` | Retirados; usar `/harford <subcomando>` |
 | `/harfordadmin` | Herramientas de DM/Admin: loot, reputaciones, fichas NPC y acciones sobre NPCs |
-| `/harfordloot` / `/hloot` | Editor admin de loot; requiere `HarfordAdmin` |
+| `/harford loot` / `/harford cargarloot` | Editor admin de loot; requiere `HarfordAdmin` |
 | `/harford compendio` / `/harford magia` | Abre el compendio de conjuros Harford |
 
 ---
@@ -53,6 +58,7 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 ```text
 Harford/            <- Addon principal: jugadores y DM
 HarfordAdmin/       <- Addon admin: herramientas DM, editores y comandos protegidos
+HarfordDebug/       <- Addon opcional: diagnostico, probes y limpieza de SavedVariables
 AGENTS.md           <- Arquitectura, contratos de modulos y enfoques fallidos
 CLAUDE.md           <- Instrucciones para Claude Code
 .github/

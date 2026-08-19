@@ -137,7 +137,7 @@ end
 -- Normaliza una palabra de tipo de dano (minusculas, sin acentos) para usarla como clave.
 local function NormDamageKey(value)
     value = HarfordClassColors.StripAccents(value):lower()
-    return value:gsub("%s+", "")
+    return (value:gsub("%s+", ""))  -- parentesis: gsub devuelve 2 valores
 end
 API.NormDamageKey = NormDamageKey
 

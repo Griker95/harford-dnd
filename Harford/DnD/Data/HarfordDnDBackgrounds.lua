@@ -29,7 +29,7 @@ API.BACKGROUNDS = {
                 { kind = "skillProf", skill = "Arcano" },
                 { kind = "skillProf", skill = "Investigacion" },
             } },
-            { id = "bg_bot_herramientas", name = "Competencia con Herramientas", type = "informativo", description = "Suministros de alquimista y equipo de venenos.", effects = {} },
+            { id = "bg_bot_herramientas", name = "Competencia con herramientas", type = "informativo", description = "Suministros de alquimista y equipo de venenos.", effects = {} },
             { id = "bg_bot_caract", name = "Caracteristica: Agente de la S.R.B.", type = "informativo", description = "Tienes acceso a una red de simpatizantes y operativos bajo el respaldo de Lady Sylvanas. Donde haya Renegados, puedes encontrar Boticarios Oscuros dispuestos a ofrecer refugio, informacion, hierbas o ingredientes alquimicos; a cambio pueden pedirte una o mas tareas.", effects = {} },
             { id = "bg_bot_equipo", name = "Equipo", type = "informativo", description = "Suministros de alquimista o equipo de venenos, un brazalete con frasco y corona bordados, un cuaderno, un conjunto de tunicas de terciopelo negro y una bolsa con 15 po.", effects = {} },
         },
@@ -42,9 +42,9 @@ API.BACKGROUNDS = {
                 { kind = "skillProf", skill = "Engano" },
                 { kind = "skillProf", skill = "Perspicacia" },
             } },
-            { id = "bg_dob_herramientas", name = "Competencia con Herramientas", type = "informativo", description = "Kit de falsificacion.", effects = {} },
+            { id = "bg_dob_herramientas", name = "Competencia con herramientas", type = "informativo", description = "Kit de falsificacion.", effects = {} },
             { id = "bg_dob_idiomas", name = "Idiomas", type = "informativo", description = "Puedes hablar Darnassiano, Draenei, Enano o Gnomico.", effects = {} },
-            { id = "bg_dob_caract", name = "Caracteristica: Dos Caras de Una Moneda", type = "informativo", description = "Tienes contactos en ambas organizaciones a las que proporcionas informacion. Suelen permitirte cometer delitos menores sin temor a castigo o manejar un negocio sin pagar todos los impuestos, y puedes obtener audiencias con funcionarios de ambas.", effects = {} },
+            { id = "bg_dob_caract", name = "Caracteristica: Dos caras de una moneda", type = "informativo", description = "Tienes contactos en ambas organizaciones a las que proporcionas informacion. Suelen permitirte cometer delitos menores sin temor a castigo o manejar un negocio sin pagar todos los impuestos, y puedes obtener audiencias con funcionarios de ambas.", effects = {} },
             { id = "bg_dob_equipo", name = "Equipo", type = "informativo", description = "Kit de falsificacion, daga, dos piezas de tiza, 4 hojas de pergamino, una botella de tinta, una pluma, un conjunto de ropa de viajero y una bolsa de cinturon con 15 po.", effects = {} },
         },
     },
@@ -57,7 +57,7 @@ API.BACKGROUNDS = {
                 { kind = "skillProf", skill = "Percepcion" },
             } },
             { id = "bg_cri_idiomas", name = "Idiomas", type = "informativo", description = "Puedes hablar Darnassiano, Draenei, Enano o Gnomico.", effects = {} },
-            { id = "bg_cri_caract", name = "Caracteristica: Lealtad Falsa", type = "informativo", description = "Tu raza y apariencia te permiten ingresar y pasar desapercibido en aldeas y ciudades de ambas facciones; aunque recibas miradas, nadie te detendra ni interrogara, ni levantara armas contra ti.", effects = {} },
+            { id = "bg_cri_caract", name = "Caracteristica: Lealtad falsa", type = "informativo", description = "Tu raza y apariencia te permiten ingresar y pasar desapercibido en aldeas y ciudades de ambas facciones; aunque recibas miradas, nadie te detendra ni interrogara, ni levantara armas contra ti.", effects = {} },
             { id = "bg_cri_equipo", name = "Equipo", type = "informativo", description = "Un conjunto de ropa comun, capa con capucha, un amuleto de tu faccion, un libro, una botella de tinta, una pluma y una bolsa con 10 po.", effects = {} },
         },
     },
@@ -68,9 +68,9 @@ API.BACKGROUNDS = {
                 { kind = "skillProf", skill = "Arcano" },
                 { kind = "skillProf", skill = "Historia" },
             } },
-            { id = "bg_kir_herramientas", name = "Competencia con Herramientas", type = "informativo", description = "Un tipo de herramientas de artesano.", effects = {} },
+            { id = "bg_kir_herramientas", name = "Competencia con herramientas", type = "informativo", description = "Un tipo de herramientas de artesano.", effects = {} },
             { id = "bg_kir_idiomas", name = "Idiomas", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
-            { id = "bg_kir_caract", name = "Caracteristica: Mentor Prominente", type = "informativo", description = "Conoces a un mago prominente del Kirin Tor al que puedes recurrir en busca de respuestas e informacion. A discrecion del DM, la informacion del mentor puede ser falsa, incompleta o tardia.", effects = {} },
+            { id = "bg_kir_caract", name = "Caracteristica: Mentor prominente", type = "informativo", description = "Conoces a un mago prominente del Kirin Tor al que puedes recurrir en busca de respuestas e informacion. A discrecion del DM, la informacion del mentor puede ser falsa, incompleta o tardia.", effects = {} },
             { id = "bg_kir_equipo", name = "Equipo", type = "informativo", description = "Una botella de tinta de alta calidad, una pluma, tiza, un estuche para pergaminos con 5 hojas, tunicas, una vela, caja de yesca y una bolsa con 15 po.", effects = {} },
         },
     },
@@ -83,7 +83,7 @@ API.BACKGROUNDS = {
                 { kind = "skillProf", skill = "Perspicacia" }, { kind = "skillProf", skill = "Religion" },
             } },
             { id = "bg_aco_idiomas", name = "Idiomas", type = "informativo", description = "Dos idiomas de tu eleccion.", effects = {} },
-            { id = "bg_aco_caract", name = "Caracteristica: Refugio del Fiel", type = "informativo", description = "Tu y tus companeros podeis recibir sanacion y cuidados gratuitos en templos y lugares consagrados a tu fe (aportando los componentes materiales). Los fieles de tu religion te mantienen con un nivel de vida modesto.", effects = {} },
+            { id = "bg_aco_caract", name = "Caracteristica: Refugio del fiel", type = "informativo", description = "Tu y tus companeros podeis recibir sanacion y cuidados gratuitos en templos y lugares consagrados a tu fe (aportando los componentes materiales). Los fieles de tu religion te mantienen con un nivel de vida modesto.", effects = {} },
             { id = "bg_aco_equipo", name = "Equipo", type = "informativo", description = "Simbolo sagrado, devocionario o rueda de oraciones, 5 varas de incienso, vestiduras, ropas comunes y una bolsa con 15 po.", effects = {} },
         },
     },
@@ -93,20 +93,20 @@ API.BACKGROUNDS = {
             { id = "bg_ani_comp", name = "Competencias", type = "pasivo", description = "Competencia en Acrobacias e Interpretacion.", effects = {
                 { kind = "skillProf", skill = "Acrobacias" }, { kind = "skillProf", skill = "Interpretacion" },
             } },
-            { id = "bg_ani_herr", name = "Competencia con Herramientas", type = "informativo", description = "Utiles para disfrazarse y un tipo de instrumento musical.", effects = {} },
-            { id = "bg_ani_caract", name = "Caracteristica: Por Peticion Popular", type = "informativo", description = "Siempre encuentras un sitio donde actuar (posada, taberna, circo, teatro, corte) y consigues comida y alojamiento modesto o comodo si actuas cada noche. La gente te reconoce alli donde has actuado.", effects = {} },
+            { id = "bg_ani_herr", name = "Competencia con herramientas", type = "informativo", description = "Utiles para disfrazarse y un tipo de instrumento musical.", effects = {} },
+            { id = "bg_ani_caract", name = "Caracteristica: Por peticion popular", type = "informativo", description = "Siempre encuentras un sitio donde actuar (posada, taberna, circo, teatro, corte) y consigues comida y alojamiento modesto o comodo si actuas cada noche. La gente te reconoce alli donde has actuado.", effects = {} },
             { id = "bg_ani_equipo", name = "Equipo", type = "informativo", description = "Instrumento musical, el favor de un admirador, disfraz y una bolsa con 15 po.", effects = {} },
         },
     },
     {
-        id = "artesano_gremial", name = "Artesano Gremial", source = "PHB",
+        id = "artesano_gremial", name = "Artesano gremial", source = "PHB",
         traits = {
             { id = "bg_art_comp", name = "Competencias", type = "pasivo", description = "Competencia en Perspicacia y Persuasion.", effects = {
                 { kind = "skillProf", skill = "Perspicacia" }, { kind = "skillProf", skill = "Persuasion" },
             } },
-            { id = "bg_art_herr", name = "Competencia con Herramientas", type = "informativo", description = "Un tipo de herramientas de artesano.", effects = {} },
+            { id = "bg_art_herr", name = "Competencia con herramientas", type = "informativo", description = "Un tipo de herramientas de artesano.", effects = {} },
             { id = "bg_art_idiomas", name = "Idiomas", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
-            { id = "bg_art_caract", name = "Caracteristica: Miembro de un Gremio", type = "informativo", description = "Tu gremio te da comida y alojamiento si lo necesitas, contactos comerciales y apoyo politico/legal. Debes pagar una cuota mensual de 5 po para mantener los beneficios.", effects = {} },
+            { id = "bg_art_caract", name = "Caracteristica: Miembro de un gremio", type = "informativo", description = "Tu gremio te da comida y alojamiento si lo necesitas, contactos comerciales y apoyo politico/legal. Debes pagar una cuota mensual de 5 po para mantener los beneficios.", effects = {} },
             { id = "bg_art_equipo", name = "Equipo", type = "informativo", description = "Herramientas de artesano (un tipo), carta de presentacion de tu gremio, ropas de viaje y una bolsa con 15 po.", effects = {} },
         },
     },
@@ -117,8 +117,8 @@ API.BACKGROUNDS = {
             { id = "bg_cha_comp", name = "Competencias", type = "pasivo", description = "Competencia en Engaño y Juego de Manos.", effects = {
                 { kind = "skillProf", skill = "Engano" }, { kind = "skillProf", skill = "JuegoManos" },
             } },
-            { id = "bg_cha_herr", name = "Competencia con Herramientas", type = "informativo", description = "Utiles para disfrazarse y utiles para falsificar.", effects = {} },
-            { id = "bg_cha_caract", name = "Caracteristica: Identidad Falsa", type = "informativo", description = "Tienes una segunda identidad con documentacion, disfraces y conocidos que responden por ella. Puedes falsificar cualquier documento cuyo formato o caligrafia hayas visto antes.", effects = {} },
+            { id = "bg_cha_herr", name = "Competencia con herramientas", type = "informativo", description = "Utiles para disfrazarse y utiles para falsificar.", effects = {} },
+            { id = "bg_cha_caract", name = "Caracteristica: Identidad falsa", type = "informativo", description = "Tienes una segunda identidad con documentacion, disfraces y conocidos que responden por ella. Puedes falsificar cualquier documento cuyo formato o caligrafia hayas visto antes.", effects = {} },
             { id = "bg_cha_equipo", name = "Equipo", type = "informativo", description = "Ropas de calidad, utiles para disfrazarse, herramientas de un timo a tu eleccion y una bolsa con 15 po.", effects = {} },
         },
     },
@@ -128,8 +128,8 @@ API.BACKGROUNDS = {
             { id = "bg_cri_comp", name = "Competencias", type = "pasivo", description = "Competencia en Engaño y Sigilo.", effects = {
                 { kind = "skillProf", skill = "Engano" }, { kind = "skillProf", skill = "Sigilo" },
             } },
-            { id = "bg_cri_herr", name = "Competencia con Herramientas", type = "informativo", description = "Un tipo de juego y herramientas de ladron.", effects = {} },
-            { id = "bg_cri_caract", name = "Caracteristica: Contacto Criminal", type = "informativo", description = "Tienes un contacto de confianza que enlaza con una red de criminales. Sabes enviar y recibir mensajes a traves de mensajeros, caravaneros corruptos y marineros incluso a distancia.", effects = {} },
+            { id = "bg_cri_herr", name = "Competencia con herramientas", type = "informativo", description = "Un tipo de juego y herramientas de ladron.", effects = {} },
+            { id = "bg_cri_caract", name = "Caracteristica: Contacto criminal", type = "informativo", description = "Tienes un contacto de confianza que enlaza con una red de criminales. Sabes enviar y recibir mensajes a traves de mensajeros, caravaneros corruptos y marineros incluso a distancia.", effects = {} },
             { id = "bg_cri_equipo", name = "Equipo", type = "informativo", description = "Palanqueta, ropas oscuras con capucha y una bolsa con 15 po.", effects = {} },
         },
     },
@@ -141,7 +141,7 @@ API.BACKGROUNDS = {
             { id = "bg_erm_comp", name = "Competencias", type = "pasivo", description = "Competencia en Medicina y Religion.", effects = {
                 { kind = "skillProf", skill = "Medicina" }, { kind = "skillProf", skill = "Religion" },
             } },
-            { id = "bg_erm_herr", name = "Competencia con Herramientas", type = "informativo", description = "Utiles de herborista.", effects = {} },
+            { id = "bg_erm_herr", name = "Competencia con herramientas", type = "informativo", description = "Utiles de herborista.", effects = {} },
             { id = "bg_erm_idiomas", name = "Idiomas", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
             { id = "bg_erm_caract", name = "Caracteristica: Descubrimiento", type = "informativo", description = "Tu retiro te hizo participe de un descubrimiento unico y poderoso: una gran revelacion sobre el cosmos, un lugar ignoto, un hecho olvidado o una reliquia capaz de reescribir la historia.", effects = {} },
             { id = "bg_erm_equipo", name = "Equipo", type = "informativo", description = "Estuche con notas de tus estudios u oraciones, manta de invierno, ropas comunes, utiles de herborista y 5 po.", effects = {} },
@@ -159,14 +159,14 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "heroe_pueblo", name = "Heroe del Pueblo", source = "PHB",
+        id = "heroe_pueblo", name = "Heroe del pueblo", source = "PHB",
         aliases = { "h_roe del pueblo", "h_roe_del_pueblo" },
         traits = {
             { id = "bg_her_comp", name = "Competencias", type = "pasivo", description = "Competencia en Supervivencia y Trato con Animales.", effects = {
                 { kind = "skillProf", skill = "Supervivencia" }, { kind = "skillProf", skill = "Animales" },
             } },
-            { id = "bg_her_herr", name = "Competencia con Herramientas", type = "informativo", description = "Un tipo de herramientas de artesano y vehiculos terrestres.", effects = {} },
-            { id = "bg_her_caract", name = "Caracteristica: Hospitalidad Rural", type = "informativo", description = "Por tu origen humilde te relacionas con facilidad con el pueblo llano, que te ofrece un lugar donde esconderte, descansar o recuperarte, y te oculta de quien te persiga (sin arriesgar sus vidas).", effects = {} },
+            { id = "bg_her_herr", name = "Competencia con herramientas", type = "informativo", description = "Un tipo de herramientas de artesano y vehiculos terrestres.", effects = {} },
+            { id = "bg_her_caract", name = "Caracteristica: Hospitalidad rural", type = "informativo", description = "Por tu origen humilde te relacionas con facilidad con el pueblo llano, que te ofrece un lugar donde esconderte, descansar o recuperarte, y te oculta de quien te persiga (sin arriesgar sus vidas).", effects = {} },
             { id = "bg_her_equipo", name = "Equipo", type = "informativo", description = "Herramientas de artesano (un tipo), pala, olla de hierro, ropas comunes y una bolsa con 10 po.", effects = {} },
         },
     },
@@ -177,8 +177,8 @@ API.BACKGROUNDS = {
             { id = "bg_hue_comp", name = "Competencias", type = "pasivo", description = "Competencia en Juego de Manos y Sigilo.", effects = {
                 { kind = "skillProf", skill = "JuegoManos" }, { kind = "skillProf", skill = "Sigilo" },
             } },
-            { id = "bg_hue_herr", name = "Competencia con Herramientas", type = "informativo", description = "Herramientas de ladron y utiles para disfrazarse.", effects = {} },
-            { id = "bg_hue_caract", name = "Caracteristica: Secretos de la Ciudad", type = "informativo", description = "Conoces los pasadizos y patrones secretos de toda ciudad. Fuera de combate, tu y los companeros a los que guies viajais entre dos puntos de una ciudad al doble de velocidad.", effects = {} },
+            { id = "bg_hue_herr", name = "Competencia con herramientas", type = "informativo", description = "Herramientas de ladron y utiles para disfrazarse.", effects = {} },
+            { id = "bg_hue_caract", name = "Caracteristica: Secretos de la ciudad", type = "informativo", description = "Conoces los pasadizos y patrones secretos de toda ciudad. Fuera de combate, tu y los companeros a los que guies viajais entre dos puntos de una ciudad al doble de velocidad.", effects = {} },
             { id = "bg_hue_equipo", name = "Equipo", type = "informativo", description = "Cuchillo pequeño, mapa de la ciudad en la que creciste, raton mascota, recuerdo de tus padres, ropas comunes y una bolsa con 10 po.", effects = {} },
         },
     },
@@ -188,8 +188,8 @@ API.BACKGROUNDS = {
             { id = "bg_mar_comp", name = "Competencias", type = "pasivo", description = "Competencia en Atletismo y Percepcion.", effects = {
                 { kind = "skillProf", skill = "Atletismo" }, { kind = "skillProf", skill = "Percepcion" },
             } },
-            { id = "bg_mar_herr", name = "Competencia con Herramientas", type = "informativo", description = "Herramientas de navegante y vehiculos acuaticos.", effects = {} },
-            { id = "bg_mar_caract", name = "Caracteristica: Pasaje en un Barco", type = "informativo", description = "Puedes conseguir pasaje gratuito en un velero para ti y tus companeros (a cambio de ayudar a la tripulacion). El DM decide la ruta y el tiempo de viaje.", effects = {} },
+            { id = "bg_mar_herr", name = "Competencia con herramientas", type = "informativo", description = "Herramientas de navegante y vehiculos acuaticos.", effects = {} },
+            { id = "bg_mar_caract", name = "Caracteristica: Pasaje en un barco", type = "informativo", description = "Puedes conseguir pasaje gratuito en un velero para ti y tus companeros (a cambio de ayudar a la tripulacion). El DM decide la ruta y el tiempo de viaje.", effects = {} },
             { id = "bg_mar_equipo", name = "Equipo", type = "informativo", description = "Cabilla (garrote), 50 pies de cuerda de seda, amuleto de la suerte, ropas comunes y una bolsa con 10 po.", effects = {} },
         },
     },
@@ -199,9 +199,9 @@ API.BACKGROUNDS = {
             { id = "bg_nob_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia y Persuasion.", effects = {
                 { kind = "skillProf", skill = "Historia" }, { kind = "skillProf", skill = "Persuasion" },
             } },
-            { id = "bg_nob_herr", name = "Competencia con Herramientas", type = "informativo", description = "Un tipo de juego a tu eleccion.", effects = {} },
+            { id = "bg_nob_herr", name = "Competencia con herramientas", type = "informativo", description = "Un tipo de juego a tu eleccion.", effects = {} },
             { id = "bg_nob_idiomas", name = "Idiomas", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
-            { id = "bg_nob_caract", name = "Caracteristica: Posicion de Privilegio", type = "informativo", description = "Por tu alcurnia, la gente piensa lo mejor de ti. Eres bienvenido en la alta sociedad y el pueblo llano evita tu desaprobacion; puedes conseguir audiencia con un noble local.", effects = {} },
+            { id = "bg_nob_caract", name = "Caracteristica: Posicion de privilegio", type = "informativo", description = "Por tu alcurnia, la gente piensa lo mejor de ti. Eres bienvenido en la alta sociedad y el pueblo llano evita tu desaprobacion; puedes conseguir audiencia con un noble local.", effects = {} },
             { id = "bg_nob_equipo", name = "Equipo", type = "informativo", description = "Ropas de calidad, anillo de sellar, documento que acredita el linaje y un monedero con 25 po.", effects = {} },
         },
     },
@@ -211,7 +211,7 @@ API.BACKGROUNDS = {
             { id = "bg_sal_comp", name = "Competencias", type = "pasivo", description = "Competencia en Atletismo y Supervivencia.", effects = {
                 { kind = "skillProf", skill = "Atletismo" }, { kind = "skillProf", skill = "Supervivencia" },
             } },
-            { id = "bg_sal_herr", name = "Competencia con Herramientas", type = "informativo", description = "Un tipo de instrumento musical.", effects = {} },
+            { id = "bg_sal_herr", name = "Competencia con herramientas", type = "informativo", description = "Un tipo de instrumento musical.", effects = {} },
             { id = "bg_sal_idiomas", name = "Idiomas", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
             { id = "bg_sal_caract", name = "Caracteristica: Vagabundo", type = "informativo", description = "Tienes memoria excelente para geografia y mapas (recuerdas terreno y asentamientos cercanos) y puedes conseguir agua y comida para hasta seis personas al dia en territorio con caza, bayas y agua.", effects = {} },
             { id = "bg_sal_equipo", name = "Equipo", type = "informativo", description = "Baston, trampa para cazar, trofeo de un animal que mataste, ropas de viaje y una bolsa con 10 po.", effects = {} },
@@ -223,28 +223,28 @@ API.BACKGROUNDS = {
             { id = "bg_sol_comp", name = "Competencias", type = "pasivo", description = "Competencia en Atletismo e Intimidacion.", effects = {
                 { kind = "skillProf", skill = "Atletismo" }, { kind = "skillProf", skill = "Intimidacion" },
             } },
-            { id = "bg_sol_herr", name = "Competencia con Herramientas", type = "informativo", description = "Un tipo de juego y vehiculos terrestres.", effects = {} },
-            { id = "bg_sol_caract", name = "Caracteristica: Rango Militar", type = "informativo", description = "Conservas un rango militar: los leales a tu antigua organizacion reconocen tu autoridad, obedecen ordenes de rango inferior y puedes solicitar equipo y caballos temporales o acceder a campamentos y fortalezas.", effects = {} },
+            { id = "bg_sol_herr", name = "Competencia con herramientas", type = "informativo", description = "Un tipo de juego y vehiculos terrestres.", effects = {} },
+            { id = "bg_sol_caract", name = "Caracteristica: Rango militar", type = "informativo", description = "Conservas un rango militar: los leales a tu antigua organizacion reconocen tu autoridad, obedecen ordenes de rango inferior y puedes solicitar equipo y caballos temporales o acceder a campamentos y fortalezas.", effects = {} },
             { id = "bg_sol_equipo", name = "Equipo", type = "informativo", description = "Insignia de rango, trofeo de un enemigo muerto, juego de dados o baraja, ropas comunes y una bolsa con 10 po.", effects = {} },
         },
     },
     -- ===== Trasfondos de mesa / suplementos usados en perfiles Harford =====
     {
-        id = "capitan_veterano_harford", name = "Capitan Veterano Harford", source = "Harford",
+        id = "capitan_veterano_harford", name = "Capitan veterano harford", source = "Harford",
         aliases = { "capitan", "capitan harford", "veterano harford" },
         desc = "Fuiste mas que un simple mercenario: diste ordenes que salvaron vidas y lideraste cuando otros habrian huido. Tu reputacion como Capitan de la Compania Harford te precede en muchos rincones del mundo.",
         traits = {
-            { id = "bg_har_cap_autoridad", name = "Autoridad del Capitan Harford", type = "informativo", description = "Fuiste mas que un simple mercenario: diste ordenes que salvaron vidas y lideraste cuando otros habrian huido. Tu reputacion como Capitan de la Compania Harford te precede en muchos rincones del mundo. Cuando busques ayuda, refugio o informacion en zonas bajo control de la Alianza o entre enclaves mercenarios independientes, puedes invocar tu antiguo rango para obtener apoyo de antiguos subordinados, simpatizantes o contactos respetuosos. Esta ayuda puede manifestarse como alojamiento seguro, acceso a recursos limitados, reclutas dispuestos a seguirte temporalmente o informacion vital. Ademas, tienes ventaja en tiradas de Persuasion, Engano o Intimidacion al tratar con otros mercenarios, criminales reformados, soldados veteranos o desertores, oficiales retirados o cualquiera que haya servido en estructuras militares neutrales o de la Alianza. Tu rango en la compania te permite hablar en calidad de oficial de la misma y ser su portavoz publico. Ademas, una vez por descanso largo tienes ventaja en una tirada de Persuasion a los mercenarios bajo tu mando.", effects = {} },
+            { id = "bg_har_cap_autoridad", name = "Autoridad del capitan harford", type = "informativo", description = "Fuiste mas que un simple mercenario: diste ordenes que salvaron vidas y lideraste cuando otros habrian huido. Tu reputacion como Capitan de la Compania Harford te precede en muchos rincones del mundo. Cuando busques ayuda, refugio o informacion en zonas bajo control de la Alianza o entre enclaves mercenarios independientes, puedes invocar tu antiguo rango para obtener apoyo de antiguos subordinados, simpatizantes o contactos respetuosos. Esta ayuda puede manifestarse como alojamiento seguro, acceso a recursos limitados, reclutas dispuestos a seguirte temporalmente o informacion vital. Ademas, tienes ventaja en tiradas de Persuasion, Engano o Intimidacion al tratar con otros mercenarios, criminales reformados, soldados veteranos o desertores, oficiales retirados o cualquiera que haya servido en estructuras militares neutrales o de la Alianza. Tu rango en la compania te permite hablar en calidad de oficial de la misma y ser su portavoz publico. Ademas, una vez por descanso largo tienes ventaja en una tirada de Persuasion a los mercenarios bajo tu mando.", effects = {} },
         },
     },
     {
-        id = "el_loco", name = "El Loco", source = "Harford",
+        id = "el_loco", name = "El loco", source = "Harford",
         aliases = { "loco" },
         desc = "Tu paso por la Compania Harford, la Espada de Ebano y una antigua herida runica te han dejado una reputacion irregular, util y dificil de ignorar.",
         traits = {
-            { id = "bg_loco_espiritu", name = "Espiritu Harford", type = "informativo", description = "Cuando trates de obtener ayuda, refugio o informacion en zonas controladas por la Alianza o por enclaves mercenarios independientes, puedes encontrar a antiguos miembros, simpatizantes o beneficiarios de la Compania Harford dispuestos a asistirte, aunque de forma irregular o inesperada. Esta ayuda puede tomar la forma de un escondite, un informante, una tarea pagada o incluso un trago gratis y una advertencia a tiempo. Ademas, tienes ventaja en tiradas de Persuasion o Engano al tratar con otros mercenarios, criminales reformados, soldados veteranos o desertores.", effects = {} },
-            { id = "bg_loco_autoridad_ebano", name = "Autoridad de la Orden: Espada de Ebano", type = "informativo", description = "Llevas contigo la reputacion de tu orden alla donde vayas. Al tratar con figuras de fe, fuerzas armadas o la ley, tu rango o aura de disciplina a menudo inspiran deferencia o respeto. Una vez por descanso largo, puedes invocar el nombre o el legado de tu orden para obtener ventaja en una prueba de Persuasion o Intimidacion.", effects = {} },
-            { id = "bg_loco_impotencia_runica", name = "Impotencia Runica", type = "informativo", description = "Una antigua herida espiritual te ha hecho olvidar parte de tu entrenamiento en el uso de runas, impidiendote utilizar ciertos hechizos propios de un caballero de la muerte. No puedes canalizar Agarre de la muerte, Orden Imperiosa ni lanzar tu Espiral de la muerte a distancia.", effects = {} },
+            { id = "bg_loco_espiritu", name = "Espiritu harford", type = "informativo", description = "Cuando trates de obtener ayuda, refugio o informacion en zonas controladas por la Alianza o por enclaves mercenarios independientes, puedes encontrar a antiguos miembros, simpatizantes o beneficiarios de la Compania Harford dispuestos a asistirte, aunque de forma irregular o inesperada. Esta ayuda puede tomar la forma de un escondite, un informante, una tarea pagada o incluso un trago gratis y una advertencia a tiempo. Ademas, tienes ventaja en tiradas de Persuasion o Engano al tratar con otros mercenarios, criminales reformados, soldados veteranos o desertores.", effects = {} },
+            { id = "bg_loco_autoridad_ebano", name = "Autoridad de la orden: Espada de ebano", type = "informativo", description = "Llevas contigo la reputacion de tu orden alla donde vayas. Al tratar con figuras de fe, fuerzas armadas o la ley, tu rango o aura de disciplina a menudo inspiran deferencia o respeto. Una vez por descanso largo, puedes invocar el nombre o el legado de tu orden para obtener ventaja en una prueba de Persuasion o Intimidacion.", effects = {} },
+            { id = "bg_loco_impotencia_runica", name = "Impotencia runica", type = "informativo", description = "Una antigua herida espiritual te ha hecho olvidar parte de tu entrenamiento en el uso de runas, impidiendote utilizar ciertos hechizos propios de un caballero de la muerte. No puedes canalizar Agarre de la muerte, Orden Imperiosa ni lanzar tu Espiral de la muerte a distancia.", effects = {} },
         },
     },
     {
@@ -252,14 +252,14 @@ API.BACKGROUNDS = {
         aliases = { "veterano harford", "mercenario veterano", "mercenario harford" },
         desc = "Has combatido bajo una bandera que pocos recordarían con honor, pero que tú llevas con orgullo. Fuiste parte de la Compañía Harford, un grupo caótico, desigual y extremadamente ruidoso de mercenarios cuya fama procede más de su terquedad y supervivencia que de su disciplina o precisión militar. Leal no al mando, sino al emblema de la compañía y a sus camaradas, tu vida ha sido un desfile de asedios imposibles, retiradas gloriosas, saqueos improvisados y victorias ganadas por pura testarudez.\n\nQuizá empuñaste una espada junto a desertores, navegaste en una bañera flotante apodada \"barco\", o luchaste codo con codo con magos descalzos, guerreros sin armadura y gentes extrañas. En Harford no importaba tu raza, pasado o linaje, sino si sabías mantenerte en pie tras una emboscada. Allí aprendiste a sobrevivir más que a guerrear, y a confiar en la fuerza de la costumbre, el ingenio callejero y la suerte de los insensatos.\n\nNumerosas compañías de mercenarios trabajan por todo lo ancho y largo de Azeroth. La mayoría son grupos a pequeña escala que dan trabajo a entre una docena y cien individuos que ofrecen seguridad, persiguen monstruos o bandoleros, o participan en la guerra a cambio de oro. Ciertas organizaciones poseen cientos o miles de miembros y pueden entregar auténticos ejércitos privados a quienes tienen dinero suficiente para pagarlos.\n\nComo mercenario que lucha en contiendas a cambio de dinero, estás muy acostumbrado a jugarte la vida por la oportunidad de ganar parte de un tesoro. Ahora estás dispuesto a matar a enemigos y a conseguir incluso mejores recompensas como aventurero. Tu experiencia te familiariza con los pormenores de la vida del mercenario y es posible que tengas relatos desgarradores de lo acontecido en el campo de batalla.",
         traits = {
-            { id = "bg_merc_hab", name = "Competencia en Habilidad", type = "choice", description = "Escoge una competencia entre Atletismo, Persuasion, Engaño, Supervivencia y Perspicacia.", choice = { slots = 1, options = {
+            { id = "bg_merc_hab", name = "Competencia en habilidad", type = "choice", description = "Escoge una competencia entre Atletismo, Persuasion, Engaño, Supervivencia y Perspicacia.", choice = { slots = 1, options = {
                 { id = "atletismo", label = "Atletismo", effects = { { kind = "skillProf", skill = "Atletismo" } } },
                 { id = "persuasion", label = "Persuasion", effects = { { kind = "skillProf", skill = "Persuasion" } } },
                 { id = "engano", label = "Engaño", effects = { { kind = "skillProf", skill = "Engano" } } },
                 { id = "supervivencia", label = "Supervivencia", effects = { { kind = "skillProf", skill = "Supervivencia" } } },
                 { id = "perspicacia", label = "Perspicacia", effects = { { kind = "skillProf", skill = "Perspicacia" } } },
             } }, effects = {} },
-            { id = "bg_merc_armas", name = "Competencia con Armas", type = "pasivo", description = "Competencia con armas marciales.", effects = {
+            { id = "bg_merc_armas", name = "Competencia con armas", type = "pasivo", description = "Competencia con armas marciales.", effects = {
                 { kind = "weaponProf", weapon = "armas marciales" },
             } },
             { id = "bg_merc_herr_juego", name = "Juego", type = "pasivo", description = "Competencia con un juego.", effects = {
@@ -271,7 +271,7 @@ API.BACKGROUNDS = {
                 { id = "vehiculos_acuaticos", label = "Vehiculos acuaticos", effects = { { kind = "toolProf", tool = "Vehiculos acuaticos" } } },
                 { id = "instrumento", label = "Instrumento musical", effects = { { kind = "toolProf", tool = "Instrumento musical" } } },
             } }, effects = {} },
-            { id = "bg_merc_espiritu", name = "Espiritu Harford", type = "informativo", description = "Puedes encontrar antiguos miembros, simpatizantes o beneficiarios de la Compania Harford dispuestos a asistirte de forma irregular. Ademas, tienes ventaja en tiradas de Carisma (Persuasion o Engaño) al tratar con mercenarios, criminales reformados, soldados veteranos o desertores.", effects = {} },
+            { id = "bg_merc_espiritu", name = "Espiritu harford", type = "informativo", description = "Puedes encontrar antiguos miembros, simpatizantes o beneficiarios de la Compania Harford dispuestos a asistirte de forma irregular. Ademas, tienes ventaja en tiradas de Carisma (Persuasion o Engaño) al tratar con mercenarios, criminales reformados, soldados veteranos o desertores.", effects = {} },
             { id = "bg_merc_equipo", name = "Equipo", type = "informativo", description = "Un recuerdo cochambroso de tu tiempo en Harford, un juego de campamento, un tabardo Harford remendado y una bolsa con 8 po.", effects = {} },
         },
     },
@@ -283,7 +283,7 @@ API.BACKGROUNDS = {
             { id = "bg_alt_comp", name = "Competencias", type = "pasivo", description = "Competencia en Engaño e Historia.", effects = {
                 { kind = "skillProf", skill = "Engano" }, { kind = "skillProf", skill = "Historia" },
             } },
-            { id = "bg_alt_herr", name = "Competencia con Herramientas", type = "choice", description = "Elige una competencia entre herramientas de falsificacion o kit de disfraz.", choice = { slots = 1, options = {
+            { id = "bg_alt_herr", name = "Competencia con herramientas", type = "choice", description = "Elige una competencia entre herramientas de falsificacion o kit de disfraz.", choice = { slots = 1, options = {
                 { id = "falsificacion", label = "Herramientas de falsificacion", effects = { { kind = "toolProf", tool = "Herramientas de falsificacion" } } },
                 { id = "disfraz", label = "Kit de disfraz", effects = { { kind = "toolProf", tool = "Kit de disfraz" } } },
             } }, effects = {} },
@@ -293,12 +293,12 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "acolito_luz_abisal", name = "Acolito de la Luz Abisal", source = "Harford",
+        id = "acolito_luz_abisal", name = "Acolito de la Luz abisal", source = "Harford",
         aliases = { "luz abisal", "acolito luz abisal" },
         desc = "Has aprendido a equilibrar devocion, oscuridad y disciplina espiritual en una fe marcada por fuerzas opuestas.",
         traits = {
             { id = "bg_luz_abisal_comp", name = "Competencias", type = "pasivo", description = "Competencia en Religion y Perspicacia.", effects = { Skill("Religion"), Skill("Perspicacia") } },
-            { id = "bg_luz_abisal_herr", name = "Competencia con Herramientas", type = "pasivo", description = "Competencia con utiles de caligrafo.", effects = { Tool("Utiles de caligrafo") } },
+            { id = "bg_luz_abisal_herr", name = "Competencia con herramientas", type = "pasivo", description = "Competencia con utiles de caligrafo.", effects = { Tool("Utiles de caligrafo") } },
             { id = "bg_luz_abisal_idioma", name = "Idioma", type = "informativo", description = "Un idioma de tu eleccion, normalmente eredun o shath'yar.", effects = {} },
             { id = "bg_luz_abisal_rasgo", name = "Equilibrio de fuerzas", type = "informativo", description = "Tu conocimiento de doctrinas contradictorias puede darte acceso, refugio o interpretacion religiosa en comunidades marcadas por Luz, Sombra o fuerzas abisales, a discrecion del DM.", effects = {} },
         },
@@ -308,27 +308,27 @@ API.BACKGROUNDS = {
         aliases = { "anima errante" },
         desc = "Eras un eco, una chispa de esencia perdida entre la vida y la muerte, hasta que encontraste un cuerpo vacio y lo ocupaste. Ahora exploras el mundo de los vivos como algo casi humano.",
         traits = {
-            { id = "bg_anima_visitante", name = "Visitante del Mas Alla", type = "informativo", description = "Puedes percibir presencias no corporeas ocultas (fantasmas, almas, animas) en un radio de 9 m (30 pies), y ellas tambien pueden percibirte a ti. Obtienes ventaja en pruebas de Sigilo realizadas en lugares oscuros, silenciosos o cargados de energia magica o espiritual, como cementerios, templos antiguos o ruinas. Los efectos que detectarian vida o muerte, como Detectar el Bien y el Mal o Sentido Divino, te perciben de forma confusa: ni viva ni muerta, apenas un eco. Una vez por descanso largo, puedes alterar levemente tu forma corporal (ojos apagados, silueta desvanecida, voz hueca) para obtener ventaja en una prueba de Intimidacion o Engano segun la situacion.", effects = {} },
+            { id = "bg_anima_visitante", name = "Visitante del mas alla", type = "informativo", description = "Puedes percibir presencias no corporeas ocultas (fantasmas, almas, animas) en un radio de 9 m (30 pies), y ellas tambien pueden percibirte a ti. Obtienes ventaja en pruebas de Sigilo realizadas en lugares oscuros, silenciosos o cargados de energia magica o espiritual, como cementerios, templos antiguos o ruinas. Los efectos que detectarian vida o muerte, como Detectar el Bien y el Mal o Sentido Divino, te perciben de forma confusa: ni viva ni muerta, apenas un eco. Una vez por descanso largo, puedes alterar levemente tu forma corporal (ojos apagados, silueta desvanecida, voz hueca) para obtener ventaja en una prueba de Intimidacion o Engano segun la situacion.", effects = {} },
         },
     },
     {
-        id = "adepto_cosecha_oscura", name = "Adepto de la Cosecha Oscura", source = "Harford",
+        id = "adepto_cosecha_oscura", name = "Adepto de la cosecha oscura", source = "Harford",
         aliases = { "cosecha oscura", "adepto cosecha oscura" },
         desc = "Has seguido codigos y secretos de quienes buscan, estudian o atan poderes demoniacos con disciplina peligrosa.",
         traits = {
             { id = "bg_cosecha_comp", name = "Competencias", type = "pasivo", description = "Competencia en Conocimiento Arcano y Engaño.", effects = { Skill("Arcano"), Skill("Engano") } },
-            { id = "bg_cosecha_herr", name = "Competencia con Herramientas", type = "pasivo", description = "Competencia con utiles de caligrafo.", effects = { Tool("Utiles de caligrafo") } },
+            { id = "bg_cosecha_herr", name = "Competencia con herramientas", type = "pasivo", description = "Competencia con utiles de caligrafo.", effects = { Tool("Utiles de caligrafo") } },
             { id = "bg_cosecha_idioma", name = "Idioma", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
-            { id = "bg_cosecha_codigo", name = "Codigo del Buscador de Demonios", type = "informativo", description = "Conoces signos, pactos y protocolos ocultistas utiles para tratar con otros buscadores de secretos demoniacos, a discrecion del DM.", effects = {} },
+            { id = "bg_cosecha_codigo", name = "Codigo del buscador de Demonios", type = "informativo", description = "Conoces signos, pactos y protocolos ocultistas utiles para tratar con otros buscadores de secretos demoniacos, a discrecion del DM.", effects = {} },
         },
     },
     {
-        id = "agente_principe_mercante", name = "Agente de Principe Mercante", source = "Harford",
+        id = "agente_principe_mercante", name = "Agente de principe mercante", source = "Harford",
         aliases = { "agente de principe mercante", "agente_de_pr_ncipe_mercante", "principe mercante", "agente mercante" },
         desc = "Los agentes de príncipes mercantes son comerciantes astutos, expertos en cerrar tratos y aprovechar oportunidades en su constante búsqueda de riqueza e influencia.\n\nEres un servidor a merced de un príncipe mercante —ya sea astuto, despiadado, o simplemente codicioso hasta lo enfermizo— y eso te convierte en alguien digno de atención. Como Agente de príncipe mercante, representas los intereses de su cártel en Azeroth y más allá, cerrando tratos, asegurando recursos y expandiendo su influencia por cualquier medio necesario.\n\nEres parte emprendedor, parte matón, parte embaucador de lengua de plata, con un talento innato para convertir riesgos en ganancias. Desde Gadgetzan hasta Trinquete, de salas de juntas goblin hasta yacimientos en la jungla, tu trabajo es simple: hacer más rico a tu jefe... y asegurarte de obtener tu parte.",
         traits = {
             { id = "bg_principe_comp", name = "Competencias", type = "pasivo", description = "Competencia en Persuasion y Perspicacia.", effects = { Skill("Persuasion"), Skill("Perspicacia") } },
-            { id = "bg_principe_herr", name = "Competencias con Herramientas", type = "pasivo", description = "Competencia con herramientas de navegador y un tipo de herramientas de artesano.", effects = { Tool("Herramientas de navegador"), Tool("Herramientas de artesano") } },
+            { id = "bg_principe_herr", name = "Competencias con herramientas", type = "pasivo", description = "Competencia con herramientas de navegador y un tipo de herramientas de artesano.", effects = { Tool("Herramientas de navegador"), Tool("Herramientas de artesano") } },
             { id = "bg_principe_idioma", name = "Idioma", type = "informativo", description = "Goblin.", effects = {} },
             { id = "bg_principe_conexiones", name = "Conexiones del cartel", type = "informativo", description = "Puedes recurrir a contactos, intermediarios y favores comerciales del cartel en puertos, mercados y enclaves goblin, a discrecion del DM.", effects = {} },
         },
@@ -338,20 +338,20 @@ API.BACKGROUNDS = {
         desc = "Los Bucaneros Velasangre comparten un oscuro pasado de piratería y anarquía. A menudo se definen por su crueldad despiadada, astucia marinera y una inclinación por buscar tesoros y poder a través del saqueo en alta mar.\n\nFuiste en su día un temido miembro de una tripulación notoria, sembrando el terror por los mares con tus hazañas piratas.\n\nSin embargo, has dejado atrás tu pasado criminal. Ahora recorres el mundo, buscando demostrar tu valía más allá de la piratería. Ya sea que hayas pertenecido a los Bucaneros Velasangre, los Asaltantes Aguasnegras, las Ratas de Pantoque o cualquier otra tripulación, el mundo te percibe del mismo modo.",
         traits = {
             { id = "bg_buc_comp", name = "Competencias", type = "pasivo", description = "Competencia en Engaño y Atletismo.", effects = { Skill("Engano"), Skill("Atletismo") } },
-            { id = "bg_buc_herr", name = "Competencias con Herramientas", type = "pasivo", description = "Competencia con herramientas de navegacion y una herramienta de artesano a tu eleccion.", effects = { Tool("Herramientas de navegacion"), Tool("Herramientas de artesano") } },
+            { id = "bg_buc_herr", name = "Competencias con herramientas", type = "pasivo", description = "Competencia con herramientas de navegacion y una herramienta de artesano a tu eleccion.", effects = { Tool("Herramientas de navegacion"), Tool("Herramientas de artesano") } },
             { id = "bg_buc_canalla", name = "Canalla veterano", type = "informativo", description = "Reconoces codigos, deudas y costumbres de marineros, piratas y contrabandistas, y puedes encontrar ayuda entre ellos si el DM lo permite.", effects = {} },
         },
     },
     {
-        id = "buscador_sombrio", name = "Buscador Sombrio", source = "Harford",
+        id = "buscador_sombrio", name = "Buscador sombrio", source = "Harford",
         aliases = { "buscador sombrio" },
         desc = "Nunca has tenido un gran proposito heroico. Te mueven impulsos mas pequenos pero intensos: proteger lo que importa y encontrar tu lugar en un mundo que nunca te lo puso facil.",
         traits = {
-            { id = "bg_sombrio_sintonia_vil", name = "Sintonia Vil", type = "informativo", description = "Tu relacion con los demonios no es teorica ni lejana: sabes de sacrificios, muerte y decisiones irreversibles. Tienes ventaja en tiradas de salvacion contra miedo causadas por demonios, no muertos y efectos de corrupcion vil o necrotica. Ademas, una vez por descanso largo, cuando reduzcas a una criatura a 0 PG con un conjuro necrotico, recuperas mana igual a tu modificador de Inteligencia.", effects = {} },
+            { id = "bg_sombrio_sintonia_vil", name = "Sintonia vil", type = "informativo", description = "Tu relacion con los demonios no es teorica ni lejana: sabes de sacrificios, muerte y decisiones irreversibles. Tienes ventaja en tiradas de salvacion contra miedo causadas por demonios, no muertos y efectos de corrupcion vil o necrotica. Ademas, una vez por descanso largo, cuando reduzcas a una criatura a 0 PG con un conjuro necrotico, recuperas mana igual a tu modificador de Inteligencia.", effects = {} },
         },
     },
     {
-        id = "caballero_orden", name = "Caballero de la Orden", source = "Harford",
+        id = "caballero_orden", name = "Caballero de la orden", source = "Harford",
         aliases = { "caballero de la orden" },
         desc = "Los miembros de las órdenes sagradas —ya sean de la Luz u otras— se distinguen por su convicción inquebrantable. La Mano de Plata enseña humildad y sacrificio; los Caballeros de Sangre predican la fuerza a través del dominio; los Caminasol buscan equilibrio entre lo espiritual y lo marcial; la Cruzada Escarlata demanda celo absoluto; y la Espada de Ébano enseña que incluso la muerte puede redimirse. Sin importar el camino, todos los caballeros de tales órdenes cargan con el peso de sus votos en cada decisión.\n\nFuiste entrenado por una orden marcial estructurada como la Mano de Plata, los Caballeros de Sangre, los Caminasol, la Cruzada Escarlata o la Espada de Ébano, todos ellos devotos de un ideal superior al de ellos mismos.\n\nYa sea que hayas sido un acólito de la Luz, un sacerdote de An’she, o un soldado templado en las sombras, tu disciplina y sentido del deber te distinguen. Algunos aún portan el símbolo de su orden con orgullo; otros recorren un camino solitario, comprometidos con causas que otros han abandonado o repudiado. Ya fuera que tus votos se juraran bajo el sol o se grabaran en la no-muerte, estos continúan moldeando tus convicciones... y tu poder.",
         traits = {
@@ -361,7 +361,7 @@ API.BACKGROUNDS = {
                 { id = "caligrafo", label = "Utiles de caligrafo", effects = { Tool("Utiles de caligrafo") } },
             } }, effects = {} },
             { id = "bg_ord_idioma", name = "Idioma", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
-            { id = "bg_ord_autoridad", name = "Autoridad de la Orden", type = "informativo", description = "Tu afiliacion puede abrir puertas entre miembros, aliados o instituciones que respeten a la orden, a discrecion del DM.", effects = {} },
+            { id = "bg_ord_autoridad", name = "Autoridad de la orden", type = "informativo", description = "Tu afiliacion puede abrir puertas entre miembros, aliados o instituciones que respeten a la orden, a discrecion del DM.", effects = {} },
         },
     },
     {
@@ -371,7 +371,7 @@ API.BACKGROUNDS = {
         traits = {
             { id = "bg_arg_comp", name = "Competencias", type = "pasivo", description = "Competencia en Religion y Atletismo.", effects = { Skill("Religion"), Skill("Atletismo") } },
             { id = "bg_arg_juego", name = "Juego", type = "pasivo", description = "Competencia con un juego de azar.", effects = { Tool("Un juego de azar") } },
-            { id = "bg_arg_determinacion", name = "Determinacion Inquebrantable", type = "informativo", description = "Tu reputacion como cruzado puede darte reconocimiento, ayuda o confianza frente a amenazas no-muertas, corruptas o apocalipticas, a discrecion del DM.", effects = {} },
+            { id = "bg_arg_determinacion", name = "Determinacion inquebrantable", type = "informativo", description = "Tu reputacion como cruzado puede darte reconocimiento, ayuda o confianza frente a amenazas no-muertas, corruptas o apocalipticas, a discrecion del DM.", effects = {} },
         },
     },
     {
@@ -398,7 +398,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "feriante_luna_negra", name = "Feriante de la Luna Negra", source = "Harford",
+        id = "feriante_luna_negra", name = "Feriante de la luna negra", source = "Harford",
         aliases = { "luna negra", "feriante" },
         desc = "Eres un artista cautivador dentro del enigmático reino de la Feria de la Luna Negra. Con tus hipnotizantes actos de magia, arte o hazañas audaces, atraes multitudes que acuden a presenciar tus maravillosas exhibiciones. Como artista de la Feria, ofreces un escape muy necesario de las penas del mundo, brindando sonrisas y asombro a quienes se congregan bajo las coloridas carpas del carnaval.\n\nSin embargo, entre tanto encanto, percibes un misterio más profundo que envuelve los orígenes de la Feria, y navegas sus secretos con la misma destreza con la que ejecutas tus actuaciones.",
         traits = {
@@ -424,7 +424,7 @@ API.BACKGROUNDS = {
                 Tool("Kit de herborista"),
             } },
             { id = "bg_elu_idioma", name = "Idioma", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
-            { id = "bg_elu_luz_sanadora", name = "Luz Sanadora", type = "informativo", description = "En asentamientos con templos, santuarios o comunidades dedicadas a la curacion, la naturaleza o una divinidad benevola, puedes solicitar alojamiento, comida y asistencia medica basica para ti y quienes esten bajo tu cuidado. Tu reputacion puede abrir hospitales, templos, casas de sanadores y comunidades, a discrecion del DM.", effects = {} },
+            { id = "bg_elu_luz_sanadora", name = "Luz sanadora", type = "informativo", description = "En asentamientos con templos, santuarios o comunidades dedicadas a la curacion, la naturaleza o una divinidad benevola, puedes solicitar alojamiento, comida y asistencia medica basica para ti y quienes esten bajo tu cuidado. Tu reputacion puede abrir hospitales, templos, casas de sanadores y comunidades, a discrecion del DM.", effects = {} },
             { id = "bg_elu_equipo", name = "Equipo", type = "informativo", description = "Simbolo sagrado de Elune, kit de herborista, libro de plegarias, recipiente con hierbas medicinales y ungüentos, manto blanco y azul oscuro, y una bolsa con 15 po.", effects = {} },
         },
     },
@@ -443,18 +443,18 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "forjador_torio", name = "Forjador de la Hermandad del Torio", source = "Harford",
+        id = "forjador_torio", name = "Forjador de la hermandad del torio", source = "Harford",
         aliases = { "hermandad del torio", "forjador de torio", "forjador torio" },
         desc = "Los miembros de la Hermandad del Torio son perfeccionistas incansables, curtidos por el calor de las forjas y la presión de estar siempre un paso por delante de sus rivales. Muchos son toscos, silenciosos, incluso paranoicos, pero todos ellos comparten un respeto absoluto por el arte de su trabajo y una ética inquebrantable respecto a la calidad. La desconfianza hacia otros gremios o clanes, y el secretismo con que guardan sus técnicas, son también comunes entre ellos.\n\nEl fuego, el metal y la tradición te forjaron tanto como el yunque. Has dedicado años de tu vida a trabajar bajo la tutela de un maestro herrero de la Hermandad del Torio, soportando un aprendizaje áspero, vigilado por las brasas del Puesto del Torio y las exigencias despiadadas de los enanos Hierro Negro que renunciaron a Ragnaros.\n\nPerteneces a una casta de artesanos que anteponen la perfección a cualquier otra virtud. La Hermandad no acepta mediocridad: solo aquellos que soportan el calor y la presión de sus hornos pueden ganarse un nombre entre los suyos. Has aprendido los secretos de la forja encantada, de la runomagia práctica, y sabes que el valor de un objeto está en su equilibrio entre utilidad y arte.\n\nPuede que seas enano, pero no necesariamente. Aunque raros, se conocen casos de orcos, elfos o humanos que han sido aceptados como aprendices si demostraban una maestría sin igual y un respeto absoluto por el oficio. En cualquier caso, el orgullo de tu trabajo habla antes que tu raza.",
         traits = {
             { id = "bg_torio_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia y Perspicacia.", effects = { Skill("Historia"), Skill("Perspicacia") } },
             { id = "bg_torio_herr", name = "Herramientas de forja", type = "pasivo", description = "Competencia con herramientas de forja.", effects = { Tool("Herramientas de forja") } },
             { id = "bg_torio_idioma", name = "Idioma", type = "informativo", description = "Enano y un idioma adicional si ya hablas enano.", effects = {} },
-            { id = "bg_torio_prestigio", name = "Prestigio de la Hermandad del Torio", type = "informativo", description = "Tu relacion con la Hermandad del Torio puede darte acceso a artesanos, talleres, materiales o informacion de forja, a discrecion del DM.", effects = {} },
+            { id = "bg_torio_prestigio", name = "Prestigio de la hermandad del torio", type = "informativo", description = "Tu relacion con la Hermandad del Torio puede darte acceso a artesanos, talleres, materiales o informacion de forja, a discrecion del DM.", effects = {} },
         },
     },
     {
-        id = "guardian_salvaje", name = "Guardian de lo Salvaje", source = "Harford",
+        id = "guardian_salvaje", name = "Guardian de lo salvaje", source = "Harford",
         aliases = { "guardian de lo salvaje", "guardiana de lo salvaje", "guardian salvaje" },
         desc = "Los guardianes de lo salvaje se definen por la soledad, el instinto y un profundo respeto por el poder de la naturaleza. Ya sean cazadores, chamanes o exploradores, su rol no es conquistar la naturaleza, sino comprenderla y defenderla.\n\nFuiste entrenado por un enclave primitivo, una sociedad de supervivencia o un grupo de sabiduría salvaje vinculados a organizaciones como el Refugio Alblanco, la Senda Oculta, los Errantes, las Centinelas, las expediciones de Hemet Nesingwary o círculos locales en la naturaleza a lo largo de Azeroth.\n\nDesde las brumosas alturas de las Colinas Pardas hasta las enredadas raíces de Val’sharah y los cañones de Nagrand, los parajes salvajes de Azeroth perduran solo bajo la custodia de quienes conocen sus ritmos. Aprendiste no solo a sobrevivir en tierras indómitas, sino a leer sus señales, proteger sus secretos y restaurar su equilibrio cuando se ve amenazado.",
         traits = {
@@ -519,7 +519,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "miembro_anillo_tierra", name = "Miembro del Anillo de la Tierra", source = "Harford",
+        id = "miembro_anillo_tierra", name = "Miembro del anillo de la tierra", source = "Harford",
         aliases = { "anillo de la tierra", "miembro del anillo de la tierra" },
         desc = "Los chamanes del Anillo de la Tierra comparten un profundo respeto por el equilibrio elemental, un compromiso inquebrantable con la sanación y la protección, y una conexión profunda con el mundo natural.\n\nComo miembro reverenciado del Anillo de la Tierra, canalizas las fuerzas primigenias de los elementos para restaurar el equilibrio en Azeroth. Guiado por antiguas tradiciones y una profunda conexión con la naturaleza, has dominado el arte del chamanismo, canalizando los poderes de la tierra, el aire, el fuego y el agua.\n\nCon una devoción inquebrantable por la sanación, la protección y el dominio elemental, te eriges como un guardián del orden natural, encargado de mantener la armonía entre los elementos y el mundo que moldean.",
         traits = {
@@ -540,7 +540,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "novato_liga_expedicionarios", name = "Novato de la Liga de Expedicionarios", source = "Harford",
+        id = "novato_liga_expedicionarios", name = "Novato de la liga de expedicionarios", source = "Harford",
         aliases = { "liga de expedicionarios", "novato expedicionarios" },
         desc = "Los miembros de la Liga de Expedicionarios comparten universalmente una curiosidad insaciable por lo desconocido, una camaradería firme que trasciende fronteras y una sed incontenible de descubrimiento.\n\nEres un orgulloso miembro de la renombrada Liga de Expedicionarios, una estimada organización dedicada a descubrir tesoros ocultos, artefactos ancestrales y los misterios del pasado de Azeroth. Con una sed de aventuras y pasión por el conocimiento, has recorrido territorios inexplorados, enfrentado desafíos peligrosos y desentrañado acertijos en tu búsqueda por la verdad.\n\nComo miembro de la Liga de Expedicionarios, encarnas el espíritu de la curiosidad, el coraje y la camaradería, siempre dispuesto a revelar los secretos del mundo y compartirlos con mentes ansiosas por aprender.",
         traits = {
@@ -551,13 +551,13 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "operativo_ravenholdt", name = "Operativo de Ravenholdt", source = "Harford",
+        id = "operativo_ravenholdt", name = "Operativo de ravenholdt", source = "Harford",
         aliases = { "ravenholdt" },
         desc = "Estos personajes son infiltradores habilidosos y agentes de la secreta organización Ravenholdt, expertos en espionaje y subterfugio mientras persiguen agendas ocultas y verdades encubiertas.\n\nLos miembros del trasfondo Operativo de Ravenholdt son infiltradores expertos y agentes encubiertos dentro de la enigmática organización Ravenholdt. Con talento para el espionaje y el subterfugio, destacan en la obtención de información crítica, la ejecución de misiones sigilosas y el uso de verdades ocultas. Estos operativos navegan con destreza el mundo del secreto, guiados por motivaciones o lealtades propias, manipulando las sombras para cumplir sus objetivos clandestinos.",
         traits = {
             { id = "bg_raven_comp", name = "Competencias", type = "pasivo", description = "Competencia en Sigilo e Investigacion.", effects = { Skill("Sigilo"), Skill("Investigacion") } },
             { id = "bg_raven_herr", name = "Herramientas", type = "pasivo", description = "Competencia con kit de venenos y kit de disfraces.", effects = { Tool("Kit de venenos"), Tool("Kit de disfraces") } },
-            { id = "bg_raven_red", name = "Red de Sombras", type = "informativo", description = "Puedes reconocer contactos, codigos o refugios de redes clandestinas y pedir ayuda discreta, a discrecion del DM.", effects = {} },
+            { id = "bg_raven_red", name = "Red de sombras", type = "informativo", description = "Puedes reconocer contactos, codigos o refugios de redes clandestinas y pedir ayuda discreta, a discrecion del DM.", effects = {} },
         },
     },
     {
@@ -567,7 +567,7 @@ API.BACKGROUNDS = {
         traits = {
             { id = "bg_cen_comp", name = "Competencias", type = "pasivo", description = "Competencia en Naturaleza y Medicina.", effects = { Skill("Naturaleza"), Skill("Medicina") } },
             { id = "bg_cen_herr", name = "Herramientas", type = "pasivo", description = "Competencia con kit de herboristeria y una herramienta artesanal.", effects = { Tool("Kit de herboristeria"), Tool("Herramientas de artesano") } },
-            { id = "bg_cen_guardian", name = "Guardian de la Naturaleza", type = "informativo", description = "Puedes pedir ayuda o reconocimiento entre druidas, guardianes y comunidades cercanas al Circulo Cenarion, a discrecion del DM.", effects = {} },
+            { id = "bg_cen_guardian", name = "Guardian de la naturaleza", type = "informativo", description = "Puedes pedir ayuda o reconocimiento entre druidas, guardianes y comunidades cercanas al Circulo Cenarion, a discrecion del DM.", effects = {} },
         },
     },
     {
@@ -629,11 +629,11 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "senda_sangre_barro", name = "Senda de Sangre y Barro", source = "Harford",
+        id = "senda_sangre_barro", name = "Senda de Sangre y barro", source = "Harford",
         aliases = { "senda de sangre y barro", "sangre y barro" },
         desc = "Siempre esperas lo peor, porque la experiencia te ha demostrado que casi siempre llega. Has sobrevivido a cosas que rompieron a otros porque no supiste, o no quisiste, rendirte.",
         traits = {
-            { id = "bg_senda_lobo_tuerto", name = "Suerte del Lobo Tuerto", type = "informativo", description = "Una vez por descanso largo, cuando realizas una tirada, puedes decidir torcer tu suerte. Hasta tu proximo descanso largo, la primera pifia (1 natural) que saques se trata como un 20 natural, y el primer 20 natural que saques se trata como una pifia (1 natural). Este efecto se aplica a tiradas de ataque, pruebas de habilidad y tiradas de salvacion. Una vez que ambos efectos se hayan activado, la suerte vuelve a la normalidad hasta que la vuelvas a torcer.", effects = {} },
+            { id = "bg_senda_lobo_tuerto", name = "Suerte del lobo tuerto", type = "informativo", description = "Una vez por descanso largo, cuando realizas una tirada, puedes decidir torcer tu suerte. Hasta tu proximo descanso largo, la primera pifia (1 natural) que saques se trata como un 20 natural, y el primer 20 natural que saques se trata como una pifia (1 natural). Este efecto se aplica a tiradas de ataque, pruebas de habilidad y tiradas de salvacion. Una vez que ambos efectos se hayan activado, la suerte vuelve a la normalidad hasta que la vuelvas a torcer.", effects = {} },
         },
     },
     {
@@ -652,7 +652,7 @@ local bgById, bgOrder
 local function Normalize(value)
     value = HarfordClassColors.StripAccents(value):lower()
     value = value:gsub("[_%-]+", " ")
-    return value:gsub("^%s+", ""):gsub("%s+$", "")
+    return (value:gsub("^%s+", ""):gsub("%s+$", ""))  -- parentesis: gsub devuelve 2 valores
 end
 
 local function EnsureIndex()

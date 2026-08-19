@@ -1616,7 +1616,7 @@ end
 -- Las definiciones/efectos viven en HarfordDnDConditions y nunca viajan por red.
 local function ConditionField(value, maxLen)
     value = tostring(value or ""):gsub("[\r\n]", " "):sub(1, maxLen or 48)
-    return value:gsub("%%", "%%25"):gsub("|", "%%7C")
+    return (value:gsub("%%", "%%25"):gsub("|", "%%7C"))  -- parentesis: gsub devuelve 2 valores
 end
 
 local function LoadConditionField(value, maxLen)

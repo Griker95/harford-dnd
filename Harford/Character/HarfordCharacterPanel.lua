@@ -733,7 +733,7 @@ local function PrettyCustomLabel(text)
             or lower == "el" or lower == "los" or lower == "y" then
             return lower
         end
-        return lower:gsub("^%l", string.upper)
+        return (lower:gsub("^%l", string.upper))  -- parentesis: gsub devuelve 2 valores
     end):gsub("^%l", string.upper))
 end
 

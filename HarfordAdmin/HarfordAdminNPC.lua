@@ -317,7 +317,7 @@ end
 
 local function NormalizeNpcSkillName(value)
     value = HarfordClassColors.StripAccents(value):lower()
-    return value:gsub("[^%w]", "")
+    return (value:gsub("[^%w]", ""))  -- parentesis: gsub devuelve 2 valores
 end
 
 local function GetReactionTitleColor(unit)

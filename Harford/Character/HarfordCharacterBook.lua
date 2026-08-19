@@ -148,7 +148,7 @@ end
 
 local function NormalizeFeatureText(value)
     local text = HarfordClassColors.StripAccents(value):lower()
-    return text:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+    return (text:gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))  -- parentesis: gsub devuelve 2 valores
 end
 
 -- Marcador de eleccion de subclase (no es un rasgo real): el Libro lo oculta y el resumen

@@ -233,6 +233,9 @@ function API.SetClassEntry(index, classId, subclassId, level, profileName)
     local data = API.Get(profileName)
     index = math.floor(tonumber(index) or (#data.classLevels + 1))
     if index < 1 then index = 1 end
+    -- Nunca dejar huecos: `classLevels` se recorre con ipairs (nivel total, PG, sync), y un
+    -- indice salteado cortaria el recorrido en el hueco y falsearia esos calculos en silencio.
+    if index > #data.classLevels + 1 then index = #data.classLevels + 1 end
 
     local classDef = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(classId)
     if not classDef then return false, "Clase invalida" end

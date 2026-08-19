@@ -73,10 +73,14 @@ local function StripInlineMarkup(text)
     return text
 end
 
+-- OJO: devolver `x:gsub(...)` directamente propaga DOS valores (texto + nº de sustituciones).
+-- Si el resultado cae como ULTIMO elemento de una tabla o lista de argumentos, el contador se
+-- cuela como elemento extra (ya provoco un crash al cargar una ficha). Asignar y devolver UNO.
 local function NormalizeBuildText(value)
     value = HarfordClassColors.StripAccents(value):lower()
     value = value:gsub("[_%-]+", " ")
-    return value:gsub("^%s+", ""):gsub("%s+$", "")
+    value = value:gsub("^%s+", ""):gsub("%s+$", "")
+    return value
 end
 
 local function CleanAboutLines(text)
@@ -91,7 +95,8 @@ local function CleanAboutLines(text)
 end
 
 local function TrimText(value)
-    return tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    local text = tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    return text  -- un solo valor: ver la nota de multi-retorno en NormalizeBuildText
 end
 
 -- Extrae el valor de una linea "Etiqueta: Valor". El matching de la etiqueta se hace
@@ -1128,7 +1133,8 @@ do
     -- SECUENCIA, no clases de bytes (una clase partiria "ó" en dos -> "oo" y rompe el match).
     local function NormAccents(s)
         s = HarfordClassColors.StripAccents(s):lower()
-        return s:gsub("^%s+", ""):gsub("%s+$", "")
+        s = s:gsub("^%s+", ""):gsub("%s+$", "")
+        return s  -- un solo valor (ver nota de multi-retorno arriba)
     end
 
     function API.ParsePlayerSheet(profile)
@@ -1981,7 +1987,8 @@ do
     -- Normaliza a minúsculas sin tildes para comparar claves
     local function NormKey(s)
         s = HarfordClassColors.StripAccents(s):lower()
-        return s:gsub("^%s+",""):gsub("%s+$","")
+        s = s:gsub("^%s+",""):gsub("%s+$","")
+        return s  -- un solo valor (ver nota de multi-retorno arriba)
     end
 
     -- Parsea "FUE 20 (+5)" o "STR 20 +5" -> key, score, mod.
@@ -1994,7 +2001,8 @@ do
         text = text:gsub("^%s*\195\130\194\183%s*", "")
         text = text:gsub(",", " ")
         text = text:gsub("%s+", " ")
-        return text:gsub("^%s+", ""):gsub("%s+$", "")
+        text = text:gsub("^%s+", ""):gsub("%s+$", "")
+        return text  -- un solo valor (ver nota de multi-retorno arriba)
     end
 
     local function ParseStatAtStart(text)

@@ -4,65 +4,121 @@
 ## Author: Griker
 ## Version: 1.0.0
 ## OptionalDeps: totalRP3, totalRP3_Extended
-## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordDebugSettings, HarfordConfigStore, HarfordReputationStore, HarfordFrameProbe, HarfordCompendioDB
-## SavedVariablesPerCharacter: HarfordCompendioCharacterDB
+## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordConfigStore, HarfordReputationStore, HarfordCompendioDB, HarfordContractsDB, HarfordQuestsStore, HarfordCommunicatorStore
+## SavedVariablesPerCharacter: HarfordCompendioCharacterDB, HarfordCourierStore, HarfordProfessionsStore
 
-HarfordSync.lua
-HarfordDebug.lua
-HarfordConfig.lua
-HarfordAuthority.lua
-HarfordEpsilonCommands.lua
-HarfordCommandTemplates.lua
-HarfordEmotes.lua
-HarfordServerActions.lua
-HarfordActionSequence.lua
-HarfordActionSequencePresets.lua
-HarfordAuras.lua
-HarfordClassColors.lua
-HarfordCompendioCore.lua
-HarfordCompendioData.lua
-HarfordCompendioIconMap.lua
-HarfordTRP3.lua
-HarfordCompendioUI.lua
-HarfordUIGeom.lua
-HarfordDamageTypes.lua
-HarfordDamageMitigation.lua
-HarfordDnDResources.lua
-HarfordDnDStore.lua
-HarfordDnDContext.lua
-HarfordDnDProfile.lua
-HarfordDnDUI.lua
-HarfordDnDAttackUI.lua
-HarfordDnDCustomDamage.lua
-HarfordDnDRolls.lua
-HarfordDnDData.lua
-HarfordDnDBook.lua
-HarfordDnDRaces.lua
-HarfordDnDBackgrounds.lua
-HarfordDnDFeats.lua
-HarfordDnDMana.lua
-HarfordDnDConditionalDamage.lua
-HarfordDnDProgression.lua
-HarfordDnDItems.lua
-HarfordCharacterInspect.lua
-HarfordDnDFeatureEffects.lua
-HarfordDnDConditions.lua
-HarfordDnDWeapons.lua
-HarfordDnDCalc.lua
-HarfordDnDNet.lua
-HarfordDnDCombat.lua
-HarfordDnDArea.lua
-HarfordDnDMinimap.lua
-HarfordDnDComm.lua
-HarfordLoot.lua
-HarfordDnD.lua
-HarfordReputation.lua
-HarfordReputationSync.lua
-HarfordReputationUI.lua
-HarfordCharacterBook.lua
-HarfordCharacterSpellbook.lua
-HarfordCharacterPanel.lua
-HarfordActionBars.lua
-HarfordUnitFrames.lua
-HarfordNamePlates.lua
-HarfordTurns.lua
+# --- Core ---
+Core\HarfordSync.lua
+Core\HarfordChat.lua
+Core\HarfordUISounds.lua
+Core\HarfordConfig.lua
+Core\HarfordAuthority.lua
+Core\HarfordClassColors.lua
+Core\HarfordUIGeom.lua
+Core\HarfordDamageTypes.lua
+
+# --- Server ---
+Server\HarfordEpsilonCommands.lua
+Server\HarfordCommandTemplates.lua
+Server\HarfordEmotes.lua
+Server\HarfordServerActions.lua
+Server\HarfordActionSequence.lua
+Server\HarfordActionSequencePresets.lua
+Server\HarfordAuras.lua
+
+# --- TRP3 ---
+TRP3\HarfordTRP3.lua
+
+# --- Compendium ---
+Compendium\HarfordIconCatalog.lua
+Compendium\HarfordCompendioCore.lua
+Compendium\HarfordCompendioData.lua
+Compendium\HarfordCompendioIconMap.lua
+Compendium\HarfordCompendioUI.lua
+
+# --- DnD/Data ---
+DnD\Data\HarfordDamageMitigation.lua
+DnD\Data\HarfordDnDData.lua
+DnD\Data\HarfordDnDBook.lua
+DnD\Data\HarfordDnDBookText.lua
+DnD\Data\HarfordDnDRaces.lua
+DnD\Data\HarfordDnDBackgrounds.lua
+DnD\Data\HarfordDnDFeats.lua
+DnD\Data\HarfordDnDWeapons.lua
+
+# --- DnD/State ---
+DnD\State\HarfordDnDResources.lua
+DnD\State\HarfordDnDStore.lua
+DnD\State\HarfordDnDContext.lua
+DnD\State\HarfordDnDProfile.lua
+DnD\State\HarfordDnDMana.lua
+DnD\State\HarfordDnDProgression.lua
+DnD\State\HarfordDnDItems.lua
+DnD\State\HarfordDnDForms.lua
+
+# --- DnD/Engine ---
+DnD\Engine\HarfordDnDCustomDamage.lua
+DnD\Engine\HarfordDnDRolls.lua
+DnD\Engine\HarfordDnDConditionalDamage.lua
+DnD\Engine\HarfordDnDFeatureEffects.lua
+DnD\Engine\HarfordDnDConditions.lua
+DnD\Engine\HarfordDnDCalc.lua
+DnD\Engine\HarfordDnDNet.lua
+DnD\Engine\HarfordDnDCombat.lua
+DnD\Engine\HarfordDnDArea.lua
+DnD\Engine\HarfordDnDComm.lua
+
+# --- DnD/UI ---
+DnD\UI\HarfordDnDUI.lua
+DnD\UI\HarfordDnDAttackUI.lua
+DnD\UI\HarfordDnDMinimap.lua
+DnD\UI\HarfordDnD.lua
+DnD\UI\HarfordActionBars.lua
+
+# --- Character ---
+Character\HarfordCharacterInspect.lua
+Character\HarfordCharacterBook.lua
+Character\HarfordCharacterSpellbook.lua
+Character\HarfordCharacterCreation.lua
+Character\HarfordCharacterAdvancement.lua
+Character\HarfordCharacterPanel.lua
+
+# --- Frames ---
+Frames\HarfordUnitFrames.lua
+Frames\HarfordNamePlates.lua
+Frames\HarfordTurns.lua
+
+# --- Reputation ---
+Reputation\HarfordReputation.lua
+Reputation\HarfordReputationSync.lua
+Reputation\HarfordReputationUI.lua
+
+# --- Quests ---
+Quests\HarfordQuestCatalog.lua
+Quests\HarfordQuests.lua
+Quests\HarfordQuestLog.lua
+Quests\HarfordQuestTracker.lua
+Quests\HarfordWorldQuests.lua
+
+# --- Contracts ---
+Contracts\HarfordContractsCore.lua
+Contracts\HarfordContractsData.lua
+Contracts\HarfordContractsRewards.lua
+Contracts\HarfordContractsUtil.lua
+Contracts\HarfordContractsUI.lua
+Contracts\HarfordContractsDM.lua
+Contracts\HarfordContractsComm.lua
+Contracts\HarfordContractsMinimap.lua
+
+# --- Professions ---
+Professions\HarfordProfessionsItems.lua
+Professions\HarfordProfessionsData.lua
+Professions\HarfordProfessions.lua
+
+# --- Communicator ---
+Communicator\HarfordCourier.lua
+Communicator\HarfordToolTray.lua
+Communicator\HarfordCommunicator.lua
+
+# --- Loot ---
+Loot\HarfordLoot.lua

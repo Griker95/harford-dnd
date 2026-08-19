@@ -1,0 +1,107 @@
+<Ui>
+    <!-- Jerarquia de ClassicQuestLog 2.1.0 para Shadowlands. Los scrolls son
+         hijos directos de UIParent con parent HarfordQuestLogFrame, como en
+         el addon de referencia; no anidarlos dentro de la carcasa. -->
+    <Frame name="HarfordQuestLogFrame" parent="UIParent" toplevel="true" clampedToScreen="true" enableMouse="true" movable="true" resizable="true" inherits="ButtonFrameTemplate,BackdropTemplate" hidden="true">
+        <Size x="667" y="496"/>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Layers>
+            <Layer level="ARTWORK" textureSubLevel="-1">
+                <Texture parentKey="BookPortrait" file="Interface\QuestFrame\UI-QuestLog-BookIcon">
+                    <Size x="64" y="64"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="-9" y="9"/>
+                    </Anchors>
+                </Texture>
+            </Layer>
+        </Layers>
+    </Frame>
+
+    <ScrollFrame parentKey="ListScroll" name="HarfordQuestLogListScroll" parent="HarfordQuestLogFrame" inherits="HybridScrollFrameTemplate">
+        <Size x="305" y="700"/>
+        <Anchors>
+            <Anchor point="TOPLEFT" x="6" y="-64"/>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="top" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                    <Size x="29" y="102"/>
+                    <Anchors>
+                        <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="-6" y="5"/>
+                    </Anchors>
+                    <TexCoords left="0" right="0.445" top="0" bottom="0.4"/>
+                </Texture>
+                <Texture parentKey="bottom" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                    <Size x="29" y="106"/>
+                    <Anchors>
+                        <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-6" y="-2"/>
+                    </Anchors>
+                    <TexCoords left="0.515625" right="0.960625" top="0" bottom="0.4140625"/>
+                </Texture>
+                <Texture parentKey="middle" file="Interface\PaperDollInfoFrame\UI-Character-ScrollBar">
+                    <Size x="29" y="1"/>
+                    <Anchors>
+                        <Anchor point="TOP" relativeKey="$parent.top" relativePoint="BOTTOM"/>
+                        <Anchor point="BOTTOM" relativeKey="$parent.bottom" relativePoint="TOP"/>
+                    </Anchors>
+                    <TexCoords left="0" right="0.445" top="0.75" bottom="1.0"/>
+                </Texture>
+            </Layer>
+            <Layer level="BORDER">
+                <Texture parentKey="background" file="Interface\QuestFrame\QuestMapLogAtlas">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="0" y="1"/>
+                        <Anchor point="BOTTOMRIGHT" x="-2" y="-2"/>
+                    </Anchors>
+                    <!-- Mitad inferior: mapa oscuro del listado con misiones.
+                         Lua puede alternarlo por la telarana vacia, pero el
+                         XML nunca debe mostrar la hoja de sprites completa. -->
+                    <TexCoords left="0" right="0.28125" top="0.5" bottom="1"/>
+                </Texture>
+            </Layer>
+        </Layers>
+        <Frames>
+            <Slider name="$parentScrollBar" inherits="HybridScrollBarTemplate" parentKey="scrollBar">
+                <Anchors>
+                    <Anchor point="TOPLEFT" relativePoint="TOPRIGHT" x="0" y="-13"/>
+                    <Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="0" y="14"/>
+                </Anchors>
+                <Scripts>
+                    <OnLoad>
+                        local name = self:GetName();
+                        _G[name.."BG"]:Hide();
+                        _G[name.."Top"]:Hide();
+                        _G[name.."Bottom"]:Hide();
+                        _G[name.."Middle"]:Hide();
+                        self.doNotHide = true;
+                    </OnLoad>
+                </Scripts>
+            </Slider>
+        </Frames>
+    </ScrollFrame>
+
+    <ScrollFrame parentKey="DetailScroll" name="HarfordQuestLogDetailScroll" parent="HarfordQuestLogFrame" inherits="QuestScrollFrameTemplate">
+        <Size x="300" y="403"/>
+        <Anchors>
+            <Anchor point="TOPLEFT" relativePoint="TOP" x="2" y="-64"/>
+        </Anchors>
+        <Layers>
+            <Layer level="BACKGROUND">
+                <Texture parentKey="DetailBG" file="Interface\QuestFrame\QuestBG">
+                    <Anchors>
+                        <Anchor point="TOPLEFT" x="-2" y="1"/>
+                        <Anchor point="BOTTOMRIGHT" x="1" y="-1"/>
+                    </Anchors>
+                    <TexCoords left="0" right="0.5859375" top="0" bottom="0.65625"/>
+                </Texture>
+            </Layer>
+        </Layers>
+        <ScrollChild>
+            <Frame parentKey="Content">
+                <Size x="300" y="200"/>
+            </Frame>
+        </ScrollChild>
+    </ScrollFrame>
+</Ui>

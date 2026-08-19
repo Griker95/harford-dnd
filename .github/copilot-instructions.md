@@ -92,24 +92,24 @@ end, "Descripción breve")
 
 | Archivo | Rol |
 |---|---|
-| `Harford/HarfordUnitFrames.lua` | Overlays TRP3/recursos sobre frames nativos (~4300 líneas) |
-| `Harford/HarfordNamePlates.lua` | Overlays DnD sobre nameplates (KuiNameplates o nativo WoW) |
-| `Harford/HarfordDnD.lua` | Ficha D&D 5e, UI principal `/FichaHarford`. 3 tabs (Características/Ataque/Habilidades, 124px c/u). Icono tabardo en la esquina superior derecha abre el panel de reputación |
-| `Harford/HarfordCharacterPanel.lua` | Panel de personaje: Ficha, **Libro** (réplica 1:1 del spellbook nativo, categorías pasivo/al_accion/reaccion/directo), Creación, Subida, Reputación |
-| `Harford/HarfordActionBars.lua` | Barra de acción propia (config-gated `actionbar`) para habilidades del Libro. Texturas `PlayerActionBarAlt\spellbar-wood*` NO existen en el cliente Epsilon |
-| `Harford/HarfordTurns.lua` | Tracker visual de turnos de combate |
-| `Harford/HarfordReputation.lua` | Core de reputaciones: facciones, rangos, jugadores, NPCs |
-| `Harford/HarfordReputationUI.lua` | Panel flotante `/harfordrep`. Filas con `ReputationBarTemplate`; caps (`_barLeftTex`/`_barRightTex`) gestionados explícitamente |
-| `Harford/HarfordReputationSync.lua` | Sync de red, prefix `HARFORDREP` |
-| `Harford/HarfordDebug.lua` | Sistema de debug — diagnósticos temporales aquí |
-| `Harford/HarfordSync.lua` | Transporte addon messages |
-| `Harford/HarfordTRP3.lua` | Lectura segura de perfiles TRP3 |
-| `Harford/HarfordCommandTemplates.lua` | Plantillas de comandos Epsilon con placeholders |
-| `Harford/HarfordEmotes.lua` | Datos de emotes, heridas y posturas de combate |
-| `Harford/HarfordAuras.lua` | Datos/helpers para auras conocidas por scope |
-| `Harford/HarfordDamageTypes.lua` | Tipos de daño D&D 5e y normalización de palabras |
-| `Harford/HarfordDamageMitigation.lua` | Resistencias, inmunidades y vulnerabilidades por stat block TRP3 |
-| `Harford/HarfordServerActions.lua` | Comandos Epsilon validados (additem, auras, npc health/emotes, npc te) |
+| `Harford/Frames/HarfordUnitFrames.lua` | Overlays TRP3/recursos sobre frames nativos (~4300 líneas) |
+| `Harford/Frames/HarfordNamePlates.lua` | Overlays DnD sobre nameplates (KuiNameplates o nativo WoW) |
+| `Harford/DnD/UI/HarfordDnD.lua` | Ficha D&D 5e, UI principal `/FichaHarford`. 3 tabs (Características/Ataque/Habilidades, 124px c/u). Icono tabardo en la esquina superior derecha abre el panel de reputación |
+| `Harford/Character/HarfordCharacterPanel.lua` | Panel de personaje: Ficha, **Libro** (réplica 1:1 del spellbook nativo, categorías pasivo/al_accion/reaccion/directo), Creación, Subida, Reputación |
+| `Harford/DnD/UI/HarfordActionBars.lua` | Barra de acción propia (config-gated `actionbar`) para habilidades del Libro. Texturas `PlayerActionBarAlt\spellbar-wood*` NO existen en el cliente Epsilon |
+| `Harford/Frames/HarfordTurns.lua` | Tracker visual de turnos de combate |
+| `Harford/Reputation/HarfordReputation.lua` | Core de reputaciones: facciones, rangos, jugadores, NPCs |
+| `Harford/Reputation/HarfordReputationUI.lua` | Panel flotante `/harfordrep`. Filas con `ReputationBarTemplate`; caps (`_barLeftTex`/`_barRightTex`) gestionados explícitamente |
+| `Harford/Reputation/HarfordReputationSync.lua` | Sync de red, prefix `HARFORDREP` |
+| `HarfordDebug/HarfordDebug.lua` | Sistema de debug — diagnósticos temporales aquí |
+| `Harford/Core/HarfordSync.lua` | Transporte addon messages |
+| `Harford/TRP3/HarfordTRP3.lua` | Lectura segura de perfiles TRP3 |
+| `Harford/Server/HarfordCommandTemplates.lua` | Plantillas de comandos Epsilon con placeholders |
+| `Harford/Server/HarfordEmotes.lua` | Datos de emotes, heridas y posturas de combate |
+| `Harford/Server/HarfordAuras.lua` | Datos/helpers para auras conocidas por scope |
+| `Harford/Core/HarfordDamageTypes.lua` | Tipos de daño D&D 5e y normalización de palabras |
+| `Harford/DnD/Data/HarfordDamageMitigation.lua` | Resistencias, inmunidades y vulnerabilidades por stat block TRP3 |
+| `Harford/Server/HarfordServerActions.lua` | Comandos Epsilon validados (additem, auras, npc health/emotes, npc te) |
 | `HarfordAdmin/HarfordAdminUnitMenu.lua` | Menú contextual DM en unitframes |
 
 ## Seguridad

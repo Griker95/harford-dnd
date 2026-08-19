@@ -132,7 +132,7 @@ local function SetDetail(feature, level, source)
             local choose = MakeButton(S.frame, "Elegir opciones", 204, 24, function()
                 OpenChoiceDialog(feature, level, source)
             end)
-            choose:SetPoint("TOPLEFT", 786, -258)
+            choose:SetPoint("TOPLEFT", 1034, -258)
             S.choiceRows[#S.choiceRows + 1] = choose
         else
             S.detailChoices:SetText("Confirma primero esta opcion para realizar la eleccion.")
@@ -416,6 +416,19 @@ end
 
 local RefreshOrigin
 
+-- Rejilla de seleccion (raza/trasfondo): 4 tarjetas por fila dentro de la columna de 400px.
+local GRID_COLUMNS, GRID_CELL_W, GRID_CELL_H, GRID_GAP, GRID_ICON = 4, 94, 82, 4, 40
+
+-- Icono de una tarjeta. Las razas tienen arte propio (por sexo) en HarfordCharacterCreation, que
+-- es la unica fuente; los trasfondos no tienen y usan el generico.
+local function GridIconFor(isRace, id)
+    local C = HarfordCharacterCreation
+    local icon = isRace and C and C.GetRaceIcon and C.GetRaceIcon(id)
+        or (C and C.GetGenericIcon and C.GetGenericIcon())
+    local sep = string.char(92)  -- backslash: la ruta de textura de WoW lo exige
+    return "Interface" .. sep .. "Icons" .. sep .. tostring(icon or "INV_Misc_QuestionMark")
+end
+
 local function RefreshOriginList()
     if RefreshSteps then RefreshSteps() end
     for _, button in ipairs(S.originButtons or {}) do button:Hide() end
@@ -426,13 +439,15 @@ local function RefreshOriginList()
     S.originSlider:SetShown(false)
     if S.stage == "race_choices" or S.stage == "background_choices" then return end
     local entries = S.stage == "race" and HarfordDnDRaces.GetRaces() or HarfordDnDBackgrounds.GetBackgrounds()
-    local y = -4
+    -- Rejilla de tarjetas con icono, al estilo de la creacion de BG3: 4 por fila, icono arriba y
+    -- nombre debajo. Los trasfondos no tienen arte propio y usan el icono generico (no inventar).
+    local isRace = S.stage == "race"
+    local column, row = 0, 0
     for _, entry in ipairs(entries or {}) do
         local choice = entry
-        local label = tostring(choice.name or "")
-        local height = #label > 36 and 52 or (#label > 20 and 38 or 24)
-        local button = MakeButton(S.originChild, label, 150, height, function()
-            if S.stage == "race" then
+        local selected = (isRace and choice.id == S.raceId) or (not isRace and choice.id == S.backgroundId)
+        local card = MakeButton(S.originChild, "", GRID_CELL_W, GRID_CELL_H, function()
+            if isRace then
                 S.raceId = choice.id
                 -- La raza base es una opcion valida: las subrazas nunca se eligen por defecto.
                 S.subraceId = ""
@@ -442,21 +457,32 @@ local function RefreshOriginList()
             RefreshOriginList()
             RefreshOrigin()
         end)
-        local text = button.GetFontString and button:GetFontString()
-        if text then
-            text:SetWidth(140)
-            text:SetJustifyH("CENTER")
-            text:SetJustifyV("MIDDLE")
-            text:SetWordWrap(true)
+        card:SetPoint("TOPLEFT", 4 + column * (GRID_CELL_W + GRID_GAP), -4 - row * (GRID_CELL_H + GRID_GAP))
+        -- El texto del boton se vacia: el nombre va en su propia fontstring bajo el icono.
+        local buttonText = card.GetFontString and card:GetFontString()
+        if buttonText then buttonText:SetText("") end
+        if not card.harfordIcon then
+            card.harfordIcon = card:CreateTexture(nil, "ARTWORK")
+            card.harfordIcon:SetSize(GRID_ICON, GRID_ICON)
+            card.harfordIcon:SetPoint("TOP", card, "TOP", 0, -6)
+            card.harfordIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+            card.harfordName = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+            card.harfordName:SetPoint("TOPLEFT", card, "TOPLEFT", 3, -(GRID_ICON + 10))
+            card.harfordName:SetPoint("TOPRIGHT", card, "TOPRIGHT", -3, -(GRID_ICON + 10))
+            card.harfordName:SetJustifyH("CENTER")
+            card.harfordName:SetWordWrap(true)
         end
-        button:SetPoint("TOPLEFT", 2, y)
-        if (S.stage == "race" and choice.id == S.raceId) or (S.stage == "background" and choice.id == S.backgroundId) then
-            button:LockHighlight()
-        end
-        S.originButtons[#S.originButtons + 1] = button
-        y = y - height - 3
+        card.harfordIcon:SetTexture(GridIconFor(isRace, choice.id))
+        card.harfordName:SetText(tostring(choice.name or ""))
+        card.harfordName:SetTextColor(selected and 1 or 0.85, selected and 0.82 or 0.85, selected and 0 or 0.85)
+        card.harfordIcon:SetDesaturated(not selected)
+        if selected then card:LockHighlight() else card:UnlockHighlight() end
+        S.originButtons[#S.originButtons + 1] = card
+        column = column + 1
+        if column >= GRID_COLUMNS then column, row = 0, row + 1 end
     end
-    S.originChild:SetHeight(math.max(430, -y + 4))
+    local usedRows = row + (column > 0 and 1 or 0)
+    S.originChild:SetHeight(math.max(430, usedRows * (GRID_CELL_H + GRID_GAP) + 12))
     local range = math.max(0, S.originChild:GetHeight() - 494)
     SetManualScroll(S.originScroll, S.originChild, 0)
     S.originSlider:SetMinMaxValues(0, range)
@@ -1258,7 +1284,7 @@ end
 local function CreateFrameIfNeeded()
     if S.frame then return end
     local frame = CreateFrame("Frame", "HarfordCharacterAdvancementFrame", UIParent, "BasicFrameTemplateWithInset")
-    frame:SetSize(1046, 620)
+    frame:SetSize(1294, 620)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("FULLSCREEN_DIALOG")
     frame:SetMovable(true)
@@ -1319,16 +1345,16 @@ local function CreateFrameIfNeeded()
     S.listTitle = leftTitle
     local originScroll = CreateFrame("ScrollFrame", "HarfordCharacterAdvancementOriginScroll", frame)
     originScroll:SetPoint("TOPLEFT", 160, -76)
-    originScroll:SetSize(152, 494)
+    originScroll:SetSize(400, 494)
     originScroll:EnableMouseWheel(true)
     local originChild = CreateFrame("Frame", nil, originScroll)
-    originChild:SetSize(150, 430)
+    originChild:SetSize(398, 430)
     originScroll:SetScrollChild(originChild)
     SetManualScroll(originScroll, originChild, 0)
     local originSlider = CreateFrame("Slider", nil, frame)
     originSlider:SetOrientation("VERTICAL")
     originSlider:SetSize(10, 486)
-    originSlider:SetPoint("TOPLEFT", 312, -78)
+    originSlider:SetPoint("TOPLEFT", 560, -78)
     originSlider:SetThumbTexture("Interface\\Buttons\\UI-ScrollBar-Knob")
     originSlider:SetMinMaxValues(0, 0)
     originSlider:SetValueStep(24)
@@ -1342,29 +1368,29 @@ local function CreateFrameIfNeeded()
     end)
     S.originScroll, S.originChild, S.originSlider = originScroll, originChild, originSlider
     local dividerA = frame:CreateTexture(nil, "BORDER")
-    dividerA:SetPoint("TOPLEFT", 324, -50)
-    dividerA:SetPoint("BOTTOMLEFT", 324, 46)
+    dividerA:SetPoint("TOPLEFT", 572, -50)
+    dividerA:SetPoint("BOTTOMLEFT", 572, 46)
     dividerA:SetWidth(1)
     dividerA:SetColorTexture(0.45, 0.34, 0.14, 0.8)
 
     S.classTitle = MakeText(frame, "GameFontNormalLarge", "")
-    S.classTitle:SetPoint("TOPLEFT", 344, -58)
+    S.classTitle:SetPoint("TOPLEFT", 592, -58)
     S.classTitle:SetTextColor(1, 0.82, 0)
     S.classSummary = MakeText(frame, "GameFontDisableSmall", "")
-    S.classSummary:SetPoint("TOPLEFT", 344, -82)
+    S.classSummary:SetPoint("TOPLEFT", 592, -82)
     S.classSummary:SetWidth(390)
     S.classSummary:SetJustifyH("LEFT")
     S.classSummary:SetNonSpaceWrap(false)
     local subclassLabel = MakeText(frame, "GameFontDisableSmall", "Subraza")
-    subclassLabel:SetPoint("TOPLEFT", 344, -106)
+    subclassLabel:SetPoint("TOPLEFT", 592, -106)
     S.selectorLabel = subclassLabel
     local subclassDrop = CreateFrame("Frame", nil, frame, "UIDropDownMenuTemplate")
-    subclassDrop:SetPoint("TOPLEFT", 331, -117)
+    subclassDrop:SetPoint("TOPLEFT", 579, -117)
     UIDropDownMenu_SetWidth(subclassDrop, 150)
     S.subclassDrop = subclassDrop
 
     local tree = CreateFrame("ScrollFrame", nil, frame)
-    tree:SetPoint("TOPLEFT", 340, -146)
+    tree:SetPoint("TOPLEFT", 588, -146)
     tree:SetPoint("BOTTOMRIGHT", 602, 48)
     tree:EnableMouseWheel(true)
     local child = CreateFrame("Frame", nil, tree)
@@ -1378,25 +1404,25 @@ local function CreateFrameIfNeeded()
     S.tree, S.treeChild, S.treeScroll = child, child, tree
 
     local dividerB = frame:CreateTexture(nil, "BORDER")
-    dividerB:SetPoint("TOPLEFT", 768, -50)
-    dividerB:SetPoint("BOTTOMLEFT", 768, 46)
+    dividerB:SetPoint("TOPLEFT", 1016, -50)
+    dividerB:SetPoint("BOTTOMLEFT", 1016, 46)
     dividerB:SetWidth(1)
     dividerB:SetColorTexture(0.45, 0.34, 0.14, 0.8)
     local detailHeader = MakeText(frame, "GameFontNormal", "DETALLE")
-    detailHeader:SetPoint("TOPLEFT", 786, -58)
+    detailHeader:SetPoint("TOPLEFT", 1034, -58)
     detailHeader:SetTextColor(1, 0.82, 0)
     S.detailTitle = MakeText(frame, "GameFontHighlight", "Selecciona un nodo")
-    S.detailTitle:SetPoint("TOPLEFT", 786, -86)
+    S.detailTitle:SetPoint("TOPLEFT", 1034, -86)
     S.detailTitle:SetWidth(214)
     S.detailTitle:SetJustifyH("LEFT")
     S.detailTitle:SetNonSpaceWrap(false)
     S.detailText = MakeText(frame, "GameFontHighlightSmall", "")
-    S.detailText:SetPoint("TOPLEFT", 786, -120)
+    S.detailText:SetPoint("TOPLEFT", 1034, -120)
     S.detailText:SetWidth(214)
     S.detailText:SetJustifyH("LEFT")
     S.detailText:SetNonSpaceWrap(false)
     S.detailChoices = MakeText(frame, "GameFontDisableSmall", "")
-    S.detailChoices:SetPoint("TOPLEFT", 786, -292)
+    S.detailChoices:SetPoint("TOPLEFT", 1034, -292)
     S.detailChoices:SetWidth(214)
     S.detailChoices:SetJustifyH("LEFT")
     S.detailChoices:SetNonSpaceWrap(false)

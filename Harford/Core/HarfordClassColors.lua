@@ -112,24 +112,20 @@ function HarfordClassColors.RGBToHex(r, g, b)
 end
 
 -- Paleta de respaldo (RGB 0-1) por si RAID_CLASS_COLORS no tiene la clave en el cliente.
--- Valores EXACTOS del color canonico de cada clase, escritos como n/255 para que
--- `RGBToHex` devuelva justo ese hex. Antes eran floats de dos decimales y el hex salia
--- desviado: Mago daba `69ccf0` (el tono pre-Legion) en vez de `3fc7eb`, y Guerrero o
--- Caballero de la Muerte fallaban por 1 en algun canal. Eso se veia en el About generado.
 HarfordClassColors.FALLBACK_RGB = {
-    WARRIOR     = { 198/255, 155/255, 109/255 },  -- c69b6d
-    PALADIN     = { 244/255, 140/255, 186/255 },  -- f48cba
-    HUNTER      = { 170/255, 211/255, 114/255 },  -- aad372
-    ROGUE       = { 255/255, 244/255, 104/255 },  -- fff468
-    PRIEST      = { 255/255, 255/255, 255/255 },  -- ffffff
-    DEATHKNIGHT = { 196/255,  30/255,  58/255 },  -- c41e3a
-    SHAMAN      = {   0/255, 112/255, 221/255 },  -- 0070dd
-    MAGE        = {  63/255, 199/255, 235/255 },  -- 3fc7eb
-    WARLOCK     = { 135/255, 136/255, 238/255 },  -- 8788ee
-    MONK        = {   0/255, 255/255, 152/255 },  -- 00ff98
-    DRUID       = { 255/255, 124/255,  10/255 },  -- ff7c0a
-    DEMONHUNTER = { 163/255,  48/255, 201/255 },  -- a330c9
-    EVOKER      = {  51/255, 147/255, 127/255 },  -- 33937f
+    WARRIOR     = { 0.78, 0.61, 0.43 },
+    PALADIN     = { 0.96, 0.55, 0.73 },
+    HUNTER      = { 0.67, 0.83, 0.45 },
+    ROGUE       = { 1.00, 0.96, 0.41 },
+    PRIEST      = { 1.00, 1.00, 1.00 },
+    DEATHKNIGHT = { 0.77, 0.12, 0.23 },
+    SHAMAN      = { 0.00, 0.44, 0.87 },
+    MAGE        = { 0.41, 0.80, 0.94 },
+    WARLOCK     = { 0.58, 0.51, 0.79 },
+    MONK        = { 0.00, 1.00, 0.59 },
+    DRUID       = { 1.00, 0.49, 0.04 },
+    DEMONHUNTER = { 0.64, 0.19, 0.79 },
+    EVOKER      = { 0.20, 0.58, 0.50 },
 }
 
 -- classFile -> r,g,b (o nil). Usa RAID_CLASS_COLORS y cae al respaldo si falta.

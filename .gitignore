@@ -15,3 +15,12 @@ desktop.ini
 
 # Biblioteca de iconos extraidos de Epsilon (181MB, regenerable con EpsilonIcons/extract_icons.py)
 EpsilonIcons/
+
+# Manuales extraidos a texto/MD/OCR (~10MB, regenerables desde los PDF de origen)
+RuleSource/
+
+# Codice Harford (consultor navegable, regenerable desde los scripts de extraccion)
+Codice_Harford.html
+
+# Otros proyectos/addons que no forman parte de Harford (deben vivir en su propio repo)
+AddonsIndependientes/

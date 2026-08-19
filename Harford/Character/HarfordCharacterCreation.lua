@@ -112,6 +112,18 @@ local function RaceFrameIcon(raceId)
     return entry[female and 2 or 1] or entry[1]
 end
 
+-- Icono de raza para la UI (rejilla del asistente de creacion). Se expone desde aqui para no
+-- duplicar RACE_FRAME_ICONS: esta tabla es la unica fuente y ya resuelve el sexo del jugador.
+-- Las razas sin entrada devuelven el icono generico, nunca uno inventado.
+function API.GetRaceIcon(raceId)
+    return RaceFrameIcon(raceId)
+end
+
+-- Icono generico para elementos sin arte propio (p.ej. trasfondos).
+function API.GetGenericIcon()
+    return ICON_GENERIC
+end
+
 -- Color de spec de una subclase; si no hay dato, cae al color de la clase.
 local function SubclassColor(subName, classHex)
     local key = HarfordClassColors and HarfordClassColors.StripAccents

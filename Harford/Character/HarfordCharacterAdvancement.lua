@@ -98,6 +98,7 @@ local function GetBookFeatureDescription(feature, source)
 end
 
 local OpenChoiceDialog
+local RefreshSteps   -- forward: se asigna junto al frame; lo llaman los refrescos de cada etapa
 local RaceAbilityBonus     -- forward: se asigna mas abajo; el picker de conjuros lo usa antes de su def
 local AppendSpellPickers   -- forward: definido tras OpenSpellDialog; lo llama RefreshPendingLevelFeatures
 
@@ -131,7 +132,7 @@ local function SetDetail(feature, level, source)
             local choose = MakeButton(S.frame, "Elegir opciones", 204, 24, function()
                 OpenChoiceDialog(feature, level, source)
             end)
-            choose:SetPoint("TOPLEFT", 640, -258)
+            choose:SetPoint("TOPLEFT", 786, -258)
             S.choiceRows[#S.choiceRows + 1] = choose
         else
             S.detailChoices:SetText("Confirma primero esta opcion para realizar la eleccion.")
@@ -205,7 +206,7 @@ local function RefreshClassList()
             S.pendingClassId = chosen.id
             RefreshClassStage()
         end)
-        button:SetPoint("TOPLEFT", 18, y)
+        button:SetPoint("TOPLEFT", 164, y)
         if S.pendingClassId == chosen.id then button:LockHighlight() end
         if S.classSelectionMode == "add" and chosen.id == S.classId then button:SetEnabled(false) end
         S.classButtons[#S.classButtons + 1] = button
@@ -302,6 +303,7 @@ local function ConfigureSubclassChoice(classDef, classLevel)
 end
 
 RefreshClassStage = function()
+    if RefreshSteps then RefreshSteps() end
     ClearRows()
     S.originScroll:Hide()
     S.originSlider:Hide()
@@ -364,7 +366,7 @@ RefreshClassStage = function()
     RefreshPendingLevelFeatures(pending, pendingLevel)
     local function AddClassControl(text, y, onClick)
         local button = MakeButton(S.frame, text, 150, 24, onClick)
-        button:SetPoint("TOPLEFT", 18, y)
+        button:SetPoint("TOPLEFT", 164, y)
         S.classMetaButtons[#S.classMetaButtons + 1] = button
         return button
     end
@@ -415,6 +417,7 @@ end
 local RefreshOrigin
 
 local function RefreshOriginList()
+    if RefreshSteps then RefreshSteps() end
     for _, button in ipairs(S.originButtons or {}) do button:Hide() end
     for _, button in ipairs(S.classButtons or {}) do button:Hide() end
     for _, button in ipairs(S.classMetaButtons or {}) do button:Hide() end
@@ -462,6 +465,7 @@ local function RefreshOriginList()
 end
 
 RefreshOrigin = function()
+    if RefreshSteps then RefreshSteps() end
     if not S.frame then return end
     ClearRows()
     local isRace = S.stage == "race" or S.stage == "race_choices"
@@ -738,6 +742,7 @@ local function FinishCreation()
 end
 
 local function RefreshAttributes()
+    if RefreshSteps then RefreshSteps() end
     ClearRows()
     S.originScroll:Hide()
     S.originSlider:Hide()
@@ -1194,10 +1199,66 @@ AppendSpellPickers = function(classDef, classLevel, y)
     return y
 end
 
+-- Pasos del asistente en su orden REAL de ejecucion. `stages` son las etapas internas que
+-- cubre cada paso; `value` resuelve el texto de lo ya elegido (o "" si aun no toca).
+local CREATION_STEPS = {
+    { label = "Raza",            stages = { race = true, race_choices = true } },
+    { label = "Trasfondo",       stages = { background = true, background_choices = true } },
+    { label = "Caracteristicas", stages = { attributes = true } },
+    { label = "Clase",           stages = { class = true } },
+}
+
+local function StepValue(index)
+    if index == 1 then
+        local race = S.raceId and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(S.raceId)
+        if not race then return "" end
+        local sub = S.subraceId ~= "" and HarfordDnDRaces.GetSubrace
+            and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
+        if not sub then return tostring(race.name or "") end
+        return tostring(race.name or "") .. string.char(10) .. tostring(sub.name or "")
+    elseif index == 2 then
+        local bg = S.backgroundId and HarfordDnDBackgrounds.GetBackground
+            and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+        return bg and tostring(bg.name or "") or ""
+    elseif index == 3 then
+        if not S.selectedArray then return "" end
+        local assigned = 0
+        for _ in pairs(S.attributeAssignments or {}) do assigned = assigned + 1 end
+        return string.format("%d/6 asignadas", assigned)
+    end
+    local class = S.classId and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(S.classId)
+    if not class then return "" end
+    return string.format("%s (%d)", tostring(class.name or ""), S.primaryLevel or 0)
+end
+
+-- Pinta la barra: el paso actual en dorado, los ya cerrados con marca y su eleccion.
+RefreshSteps = function()
+    if not S.stepRows then return end
+    local currentIndex
+    for index, step in ipairs(CREATION_STEPS) do
+        if step.stages[S.stage] then currentIndex = index break end
+    end
+    for index, row in ipairs(S.stepRows) do
+        local isCurrent = index == currentIndex
+        local isDone = currentIndex and index < currentIndex
+        row.mark:SetText(isDone and "|cff38d26a*|r" or (isCurrent and "|cffffd100>|r" or "|cff6a6a6a-|r"))
+        if isCurrent then
+            row.name:SetTextColor(1, 0.82, 0)
+        elseif isDone then
+            row.name:SetTextColor(0.75, 0.75, 0.75)
+        else
+            row.name:SetTextColor(0.45, 0.45, 0.45)
+        end
+        local value = StepValue(index)
+        row.value:SetText(value)
+        row.value:SetTextColor(0.85, 0.72, 0.35)
+    end
+end
+
 local function CreateFrameIfNeeded()
     if S.frame then return end
     local frame = CreateFrame("Frame", "HarfordCharacterAdvancementFrame", UIParent, "BasicFrameTemplateWithInset")
-    frame:SetSize(900, 620)
+    frame:SetSize(1046, 620)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("FULLSCREEN_DIALOG")
     frame:SetMovable(true)
@@ -1221,15 +1282,43 @@ local function CreateFrameIfNeeded()
         }
     end
 
+    -- ─── Barra de pasos (columna izquierda) ─────────────────────────────────────
+    -- Cada paso muestra su estado y la eleccion hecha, como en la creacion de BG3, para no
+    -- perder de vista lo ya decidido. El orden es el REAL del asistente, no el de BG3.
+    local stepsTitle = MakeText(frame, "GameFontNormal", "CREACION")
+    stepsTitle:SetPoint("TOPLEFT", 18, -38)
+    stepsTitle:SetTextColor(1, 0.82, 0)
+    S.stepRows = {}
+    for index = 1, #CREATION_STEPS do
+        local row = CreateFrame("Frame", nil, frame)
+        row:SetSize(126, 40)
+        row:SetPoint("TOPLEFT", 16, -62 - (index - 1) * 46)
+        row.mark = MakeText(row, "GameFontNormalLarge", "")
+        row.mark:SetPoint("TOPLEFT", 0, -2)
+        row.name = MakeText(row, "GameFontHighlightSmall", CREATION_STEPS[index].label)
+        row.name:SetPoint("TOPLEFT", 18, -2)
+        row.value = MakeText(row, "GameFontDisableSmall", "")
+        row.value:SetPoint("TOPLEFT", 18, -18)
+        row.value:SetWidth(106)
+        row.value:SetJustifyH("LEFT")
+        row.value:SetWordWrap(true)
+        S.stepRows[index] = row
+    end
+    local dividerSteps = frame:CreateTexture(nil, "BORDER")
+    dividerSteps:SetPoint("TOPLEFT", 150, -50)
+    dividerSteps:SetPoint("BOTTOMLEFT", 150, 46)
+    dividerSteps:SetWidth(1)
+    dividerSteps:SetColorTexture(0.45, 0.34, 0.14, 0.8)
+
     local header = MakeText(frame, "GameFontHighlightSmall", "La ficha se aplica al finalizar y genera el About de Total RP 3.")
-    header:SetPoint("TOPLEFT", 18, -38)
+    header:SetPoint("TOPLEFT", 164, -38)
     header:SetTextColor(0.65, 0.85, 0.7)
     local leftTitle = MakeText(frame, "GameFontNormal", "RAZAS")
-    leftTitle:SetPoint("TOPLEFT", 18, -58)
+    leftTitle:SetPoint("TOPLEFT", 164, -58)
     leftTitle:SetTextColor(1, 0.82, 0)
     S.listTitle = leftTitle
     local originScroll = CreateFrame("ScrollFrame", "HarfordCharacterAdvancementOriginScroll", frame)
-    originScroll:SetPoint("TOPLEFT", 14, -76)
+    originScroll:SetPoint("TOPLEFT", 160, -76)
     originScroll:SetSize(152, 494)
     originScroll:EnableMouseWheel(true)
     local originChild = CreateFrame("Frame", nil, originScroll)
@@ -1239,7 +1328,7 @@ local function CreateFrameIfNeeded()
     local originSlider = CreateFrame("Slider", nil, frame)
     originSlider:SetOrientation("VERTICAL")
     originSlider:SetSize(10, 486)
-    originSlider:SetPoint("TOPLEFT", 166, -78)
+    originSlider:SetPoint("TOPLEFT", 312, -78)
     originSlider:SetThumbTexture("Interface\\Buttons\\UI-ScrollBar-Knob")
     originSlider:SetMinMaxValues(0, 0)
     originSlider:SetValueStep(24)
@@ -1253,29 +1342,29 @@ local function CreateFrameIfNeeded()
     end)
     S.originScroll, S.originChild, S.originSlider = originScroll, originChild, originSlider
     local dividerA = frame:CreateTexture(nil, "BORDER")
-    dividerA:SetPoint("TOPLEFT", 178, -50)
-    dividerA:SetPoint("BOTTOMLEFT", 178, 46)
+    dividerA:SetPoint("TOPLEFT", 324, -50)
+    dividerA:SetPoint("BOTTOMLEFT", 324, 46)
     dividerA:SetWidth(1)
     dividerA:SetColorTexture(0.45, 0.34, 0.14, 0.8)
 
     S.classTitle = MakeText(frame, "GameFontNormalLarge", "")
-    S.classTitle:SetPoint("TOPLEFT", 198, -58)
+    S.classTitle:SetPoint("TOPLEFT", 344, -58)
     S.classTitle:SetTextColor(1, 0.82, 0)
     S.classSummary = MakeText(frame, "GameFontDisableSmall", "")
-    S.classSummary:SetPoint("TOPLEFT", 198, -82)
+    S.classSummary:SetPoint("TOPLEFT", 344, -82)
     S.classSummary:SetWidth(390)
     S.classSummary:SetJustifyH("LEFT")
     S.classSummary:SetNonSpaceWrap(false)
     local subclassLabel = MakeText(frame, "GameFontDisableSmall", "Subraza")
-    subclassLabel:SetPoint("TOPLEFT", 198, -106)
+    subclassLabel:SetPoint("TOPLEFT", 344, -106)
     S.selectorLabel = subclassLabel
     local subclassDrop = CreateFrame("Frame", nil, frame, "UIDropDownMenuTemplate")
-    subclassDrop:SetPoint("TOPLEFT", 185, -117)
+    subclassDrop:SetPoint("TOPLEFT", 331, -117)
     UIDropDownMenu_SetWidth(subclassDrop, 150)
     S.subclassDrop = subclassDrop
 
     local tree = CreateFrame("ScrollFrame", nil, frame)
-    tree:SetPoint("TOPLEFT", 194, -146)
+    tree:SetPoint("TOPLEFT", 340, -146)
     tree:SetPoint("BOTTOMRIGHT", 602, 48)
     tree:EnableMouseWheel(true)
     local child = CreateFrame("Frame", nil, tree)
@@ -1289,25 +1378,25 @@ local function CreateFrameIfNeeded()
     S.tree, S.treeChild, S.treeScroll = child, child, tree
 
     local dividerB = frame:CreateTexture(nil, "BORDER")
-    dividerB:SetPoint("TOPLEFT", 622, -50)
-    dividerB:SetPoint("BOTTOMLEFT", 622, 46)
+    dividerB:SetPoint("TOPLEFT", 768, -50)
+    dividerB:SetPoint("BOTTOMLEFT", 768, 46)
     dividerB:SetWidth(1)
     dividerB:SetColorTexture(0.45, 0.34, 0.14, 0.8)
     local detailHeader = MakeText(frame, "GameFontNormal", "DETALLE")
-    detailHeader:SetPoint("TOPLEFT", 640, -58)
+    detailHeader:SetPoint("TOPLEFT", 786, -58)
     detailHeader:SetTextColor(1, 0.82, 0)
     S.detailTitle = MakeText(frame, "GameFontHighlight", "Selecciona un nodo")
-    S.detailTitle:SetPoint("TOPLEFT", 640, -86)
+    S.detailTitle:SetPoint("TOPLEFT", 786, -86)
     S.detailTitle:SetWidth(214)
     S.detailTitle:SetJustifyH("LEFT")
     S.detailTitle:SetNonSpaceWrap(false)
     S.detailText = MakeText(frame, "GameFontHighlightSmall", "")
-    S.detailText:SetPoint("TOPLEFT", 640, -120)
+    S.detailText:SetPoint("TOPLEFT", 786, -120)
     S.detailText:SetWidth(214)
     S.detailText:SetJustifyH("LEFT")
     S.detailText:SetNonSpaceWrap(false)
     S.detailChoices = MakeText(frame, "GameFontDisableSmall", "")
-    S.detailChoices:SetPoint("TOPLEFT", 640, -292)
+    S.detailChoices:SetPoint("TOPLEFT", 786, -292)
     S.detailChoices:SetWidth(214)
     S.detailChoices:SetJustifyH("LEFT")
     S.detailChoices:SetNonSpaceWrap(false)

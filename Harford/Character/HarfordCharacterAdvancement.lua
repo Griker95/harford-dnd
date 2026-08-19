@@ -132,7 +132,7 @@ local function SetDetail(feature, level, source)
             local choose = MakeButton(S.frame, "Elegir opciones", 204, 24, function()
                 OpenChoiceDialog(feature, level, source)
             end)
-            choose:SetPoint("TOPLEFT", 1034, -258)
+            choose:SetPoint("TOPLEFT", 1034, -434)
             S.choiceRows[#S.choiceRows + 1] = choose
         else
             S.detailChoices:SetText("Confirma primero esta opcion para realizar la eleccion.")
@@ -1258,7 +1258,47 @@ local function StepValue(index)
 end
 
 -- Pinta la barra: el paso actual en dorado, los ya cerrados con marca y su eleccion.
+-- Rellena el panel derecho con lo elegido hasta ahora. Las caracteristicas muestran la
+-- puntuacion asignada mas el bono racial ya sumado, igual que la pantalla de reparto, para que
+-- el numero coincida con el que acabara horneado en la ficha.
+local function RefreshSummary()
+    if not S.sumClass then return end
+    local class = S.classId and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(S.classId)
+    S.sumClass:SetText(class
+        and string.format("Nivel %d  %s", S.primaryLevel or 0, tostring(class.name or ""))
+        or "Clase sin elegir")
+    local race = S.raceId and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(S.raceId)
+    local sub = S.subraceId ~= "" and HarfordDnDRaces.GetSubrace
+        and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
+    local bg = S.backgroundId and HarfordDnDBackgrounds.GetBackground
+        and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+    local origin = race and tostring(race.name or "") or "Sin raza"
+    if sub then origin = origin .. " (" .. tostring(sub.name or "") .. ")" end
+    if bg then origin = origin .. "  |cffcccccc" .. tostring(bg.name or "") .. "|r" end
+    S.sumOrigin:SetText(origin)
+
+    local array = S.attributeArrays and S.selectedArray and S.attributeArrays[S.selectedArray]
+    for index, ability in ipairs(HarfordDnDData.ABIL or {}) do
+        local text = S.sumAbilities[index]
+        if text then
+            local assignedIndex = S.attributeAssignments and S.attributeAssignments[ability.key]
+            local base = array and assignedIndex and array.values[assignedIndex]
+            local total = base and (base + RaceAbilityBonus(ability.key))
+            text:SetText(string.format("|cffcccccc%s|r %s", tostring(ability.key),
+                total and ("|cffffd100" .. tostring(total) .. "|r") or "-"))
+        end
+    end
+
+    local skills = {}
+    for skillId in pairs(DraftSkillProficiencies()) do skills[#skills + 1] = skillId end
+    table.sort(skills)
+    S.sumSkills:SetText(#skills > 0
+        and ("|cffffd100Competencias|r  " .. table.concat(skills, ", "))
+        or "|cffffd100Competencias|r  -")
+end
+
 RefreshSteps = function()
+    RefreshSummary()
     if not S.stepRows then return end
     local currentIndex
     for index, step in ipairs(CREATION_STEPS) do
@@ -1330,6 +1370,34 @@ local function CreateFrameIfNeeded()
         row.value:SetWordWrap(true)
         S.stepRows[index] = row
     end
+    -- ─── Resumen del personaje (columna derecha) ────────────────────────────────
+    -- Como el panel derecho de BG3: lo elegido hasta ahora, siempre visible. Solo muestra datos
+    -- que EXISTEN durante la creacion; PG y CA no, porque dependen de clase y equipo aun sin fijar.
+    local sumTitle = MakeText(frame, "GameFontNormal", "PERSONAJE")
+    sumTitle:SetPoint("TOPLEFT", 1034, -58)
+    sumTitle:SetTextColor(1, 0.82, 0)
+    S.sumClass = MakeText(frame, "GameFontHighlight", "")
+    S.sumClass:SetPoint("TOPLEFT", 1034, -80)
+    S.sumOrigin = MakeText(frame, "GameFontHighlightSmall", "")
+    S.sumOrigin:SetPoint("TOPLEFT", 1034, -98)
+    S.sumOrigin:SetWidth(214)
+    S.sumOrigin:SetJustifyH("LEFT")
+    S.sumAbilities = {}
+    for index = 1, 6 do
+        local column = (index - 1) % 3
+        local rowIndex = math.floor((index - 1) / 3)
+        local text = MakeText(frame, "GameFontHighlightSmall", "")
+        text:SetPoint("TOPLEFT", 1034 + column * 72, -132 - rowIndex * 18)
+        text:SetWidth(70)
+        text:SetJustifyH("LEFT")
+        S.sumAbilities[index] = text
+    end
+    S.sumSkills = MakeText(frame, "GameFontDisableSmall", "")
+    S.sumSkills:SetPoint("TOPLEFT", 1034, -174)
+    S.sumSkills:SetWidth(214)
+    S.sumSkills:SetJustifyH("LEFT")
+    S.sumSkills:SetWordWrap(true)
+
     local dividerSteps = frame:CreateTexture(nil, "BORDER")
     dividerSteps:SetPoint("TOPLEFT", 150, -50)
     dividerSteps:SetPoint("BOTTOMLEFT", 150, 46)
@@ -1409,20 +1477,20 @@ local function CreateFrameIfNeeded()
     dividerB:SetWidth(1)
     dividerB:SetColorTexture(0.45, 0.34, 0.14, 0.8)
     local detailHeader = MakeText(frame, "GameFontNormal", "DETALLE")
-    detailHeader:SetPoint("TOPLEFT", 1034, -58)
+    detailHeader:SetPoint("TOPLEFT", 1034, -234)
     detailHeader:SetTextColor(1, 0.82, 0)
     S.detailTitle = MakeText(frame, "GameFontHighlight", "Selecciona un nodo")
-    S.detailTitle:SetPoint("TOPLEFT", 1034, -86)
+    S.detailTitle:SetPoint("TOPLEFT", 1034, -262)
     S.detailTitle:SetWidth(214)
     S.detailTitle:SetJustifyH("LEFT")
     S.detailTitle:SetNonSpaceWrap(false)
     S.detailText = MakeText(frame, "GameFontHighlightSmall", "")
-    S.detailText:SetPoint("TOPLEFT", 1034, -120)
+    S.detailText:SetPoint("TOPLEFT", 1034, -296)
     S.detailText:SetWidth(214)
     S.detailText:SetJustifyH("LEFT")
     S.detailText:SetNonSpaceWrap(false)
     S.detailChoices = MakeText(frame, "GameFontDisableSmall", "")
-    S.detailChoices:SetPoint("TOPLEFT", 1034, -292)
+    S.detailChoices:SetPoint("TOPLEFT", 1034, -468)
     S.detailChoices:SetWidth(214)
     S.detailChoices:SetJustifyH("LEFT")
     S.detailChoices:SetNonSpaceWrap(false)

@@ -9,15 +9,15 @@ local lootEditor
 local lootLinkHooked
 
 local function Print(msg)
-    print("|cff00ff00[HarfordAdminLoot]|r " .. tostring(msg or ""))
+    HarfordChat.Print(msg)
 end
 
 local function CanEditLoot()
     if not (HarfordAdminAPI and HarfordAdminAPI.IS_ADMIN == true) then
         return false
     end
-    if HarfordAuthority and HarfordAuthority.IsDMMode then
-        return HarfordAuthority.IsDMMode() == true
+    if HarfordAuthority and HarfordAuthority.CanUseDMTools then
+        return HarfordAuthority.CanUseDMTools() == true
     end
     return false
 end
@@ -595,8 +595,6 @@ function API.ToggleEditor()
     end
 end
 
-SLASH_HARFORDLOOTEDITOR1 = "/harfordloot"
-SLASH_HARFORDLOOTEDITOR2 = "/hloot"
 SlashCmdList["HARFORDLOOTEDITOR"] = function()
     API.ToggleEditor()
 end

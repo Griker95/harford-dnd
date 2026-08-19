@@ -2,6 +2,12 @@
 HarfordAdminAPI = HarfordAdminAPI or {}
 HarfordAdminAPI.IS_ADMIN = true
 
+local function print(...)
+    local parts = {}
+    for i = 1, select("#", ...) do parts[i] = tostring(select(i, ...)) end
+    HarfordChat.Print(table.concat(parts, " "))
+end
+
 local ADMIN_COMMANDS = {
     "/harfordadmin help",
     "/harfordadmin status",

@@ -4,15 +4,27 @@
 HarfordAdminConditions = HarfordAdminConditions or {}
 local API = HarfordAdminConditions
 local pendingRemovals = {}
+local PENDING_REMOVAL_TTL = 60
 
 local function Print(message)
-    if DEFAULT_CHAT_FRAME then
-        DEFAULT_CHAT_FRAME:AddMessage("|cffffff00[HarfordAdmin]|r " .. tostring(message or ""))
-    end
+    HarfordChat.Print(message)
 end
 
 local function IsAllowed()
     return HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools() == true
+end
+
+local function Now()
+    return time and time() or 0
+end
+
+local function PrunePendingRemovals()
+    local now = Now()
+    for guid, bucket in pairs(pendingRemovals) do
+        if type(bucket) ~= "table" or ((tonumber(bucket.__expires) or 0) > 0 and bucket.__expires <= now) then
+            pendingRemovals[guid] = nil
+        end
+    end
 end
 
 local function SameUnit(snapshot)
@@ -103,7 +115,9 @@ if HarfordDnDConditions and HarfordDnDConditions.SetAdminHooks then
             if not (def and def.auraId) then return true end
             if not IsAllowed() then return false, "Requiere HarfordAdmin y .ph dm activo" end
             if not (UnitExists and UnitExists("target") and UnitGUID and UnitGUID("target") == guid) then
+                PrunePendingRemovals()
                 pendingRemovals[guid] = pendingRemovals[guid] or {}
+                pendingRemovals[guid].__expires = Now() + PENDING_REMOVAL_TTL
                 pendingRemovals[guid][conditionId] = true
                 return true
             end
@@ -115,6 +129,7 @@ end
 local events = CreateFrame("Frame")
 events:RegisterEvent("PLAYER_TARGET_CHANGED")
 events:SetScript("OnEvent", function()
+    PrunePendingRemovals()
     local guid = UnitExists and UnitExists("target") and UnitGUID and UnitGUID("target") or nil
     if guid and not (UnitIsPlayer and UnitIsPlayer("target"))
         and HarfordDnDConditions and HarfordDnDConditions.ResolvePendingForUnit then
@@ -123,8 +138,10 @@ events:SetScript("OnEvent", function()
     local bucket = guid and pendingRemovals[guid]
     if not bucket or (UnitIsPlayer and UnitIsPlayer("target")) then return end
     for conditionId in pairs(bucket) do
-        local def = HarfordDnDConditions.GetDefinition(conditionId)
-        if def and def.auraId then HarfordAuras.RemoveById(def.auraId, "npc", { addonName = "HarfordAdmin" }) end
+        if conditionId ~= "__expires" then
+            local def = HarfordDnDConditions.GetDefinition(conditionId)
+            if def and def.auraId then HarfordAuras.RemoveById(def.auraId, "npc", { addonName = "HarfordAdmin" }) end
+        end
     end
     pendingRemovals[guid] = nil
 end)

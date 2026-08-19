@@ -12,7 +12,7 @@ local buttons = {}
 local current = {}
 
 local function Print(message)
-    DEFAULT_CHAT_FRAME:AddMessage("|cffffff00[HarfordAdmin]|r " .. tostring(message or ""))
+    HarfordChat.Print(message)
 end
 
 local function IsAllowed()
@@ -339,6 +339,31 @@ local function ApplyNpcLootAura(snapshot)
     SetNpcAura(snapshot, 140172)
 end
 
+-- ─── Auras de estado de MISION de mundo (fuente unica: HarfordWorldQuests) ──────────────────
+-- Las 3 auras codifican el estado de la mision del NPC; solo una debe estar activa a la vez.
+local function QuestAuraList()
+    local wq = _G.HarfordWorldQuests
+    return {
+        { label = "Disponible", spell = (wq and wq.AURA_AVAILABLE)  or 155096 },
+        { label = "Incompleta", spell = (wq and wq.AURA_INCOMPLETE) or 245633 },
+        { label = "Completada", spell = (wq and wq.AURA_COMPLETE)   or 252527 },
+    }
+end
+
+-- Fija el estado de mision del NPC: quita las OTRAS dos auras de estado y aplica la elegida,
+-- para que el NPC nunca quede con dos estados de mision a la vez.
+local function SetNpcQuestAura(snapshot, spellId)
+    -- Guard: si el DM cambio de target tras abrir el menu, los `RemoveAuraFromTarget` (que usan el
+    -- target ACTUAL) borrarian auras del NPC equivocado. Abortar si ya no es el mismo NPC.
+    if not EnsureSameUnit(snapshot, "cambiar aura de mision") then return end
+    if HarfordAdminNPC and HarfordAdminNPC.RemoveAuraFromTarget then
+        for _, a in ipairs(QuestAuraList()) do
+            if a.spell ~= spellId then HarfordAdminNPC.RemoveAuraFromTarget(a.spell) end
+        end
+    end
+    SetNpcAura(snapshot, spellId)
+end
+
 -- Envía un comando Epsilon usando la API disponible (EpsilonCommands → ARC)
 local function SendCmd(cmd)
     if not (HarfordEpsilonCommands and HarfordEpsilonCommands.Send) then
@@ -378,9 +403,7 @@ local function RemoveNpcAuraAll(snapshot)
     end
 end
 
--- Devuelve true si la unidad tiene el aura (buff o debuff) por spell ID
--- Aplica un aura con ID fijo según contexto (sin prompt)
--- Quita un aura con ID fijo según contexto (sin prompt)
+-- Abre el editor de loot para el NPC del snapshot.
 local function OpenLootEditor(snapshot)
     if not EnsureSameUnit(snapshot, "abrir editor de loot") then return end
     if not HarfordAdminLoot or not HarfordAdminLoot.OpenEditor then
@@ -451,6 +474,11 @@ local function BuildNpcSubmenu(menuList, level)
     elseif menuList == "LOOT" then
         AddAction("Loot Aura", function() ApplyNpcLootAura(snapshot) end, level)
         AddAction("Cargar loot...", function() OpenLootEditor(snapshot) end, level)
+    elseif menuList == "MISIONES" then
+        -- Elegir el estado de mision del NPC (aura). Solo una activa; fija la elegida y quita las otras.
+        for _, a in ipairs(QuestAuraList()) do
+            AddAction(a.label, function() SetNpcQuestAura(snapshot, a.spell) end, level)
+        end
     end
 end
 
@@ -809,11 +837,12 @@ local function InitializeMenu(_, level, menuList)
             AddSubmenu("Auras", "AURAS", level)
 
         else -- npc
-            -- NPC / criatura: turnos, recursos (mod.recursos+mod.salud), auras, loot. Sin TRP3.
+            -- NPC / criatura: turnos, recursos (mod.recursos+mod.salud), auras, loot, misiones. Sin TRP3.
             AddSubmenu("Turnos", "TURNOS", level)
             AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Auras", "AURAS", level)
             AddSubmenu("Loot", "LOOT", level)
+            AddSubmenu("Misiones", "MISIONES", level)
         end
         return
     end

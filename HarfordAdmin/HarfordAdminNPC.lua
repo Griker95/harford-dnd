@@ -3,7 +3,7 @@ HarfordAdminNPC = HarfordAdminNPC or {}
 local API = HarfordAdminNPC
 
 local function Print(message)
-    print("|cffffff00[HarfordAdminNPC]|r " .. tostring(message or ""))
+    HarfordChat.Print(message)
 end
 
 local function GetTargetName()
@@ -43,6 +43,74 @@ local function ParsePositiveInteger(raw, label)
     end
 
     return value
+end
+
+local function ParseNpcInfoPosition(messages)
+    local text = table.concat(messages or {}, "\n")
+    text = tostring(text or ""):gsub(",", ".")
+    -- Separador entre coordenadas: `[^%d%-]+` (NO `%D+`), para que un `-` inicial de la siguiente
+    -- coordenada lo capture su propio `-?` y no se pierda el signo negativo.
+    local x, y, z = text:match("[Xx]%s*[:=]%s*(-?%d+%.?%d*)[^%d%-]+[Yy]%s*[:=]%s*(-?%d+%.?%d*)[^%d%-]+[Zz]%s*[:=]%s*(-?%d+%.?%d*)")
+    if not x then
+        x, y, z = text:match("[Pp]os[^%d%-]*(-?%d+%.?%d*)[^%d%-]+(-?%d+%.?%d*)[^%d%-]+(-?%d+%.?%d*)")
+    end
+    if not x then
+        x, y, z = text:match("(-?%d+%.%d+)[^%d%-]+(-?%d+%.%d+)[^%d%-]+(-?%d+%.%d+)")
+    end
+    -- Fallback a solo X/Y: Epsilon puede omitir Z (documentado: z=nil). Se asume z=0.
+    if not x then
+        x, y = text:match("[Xx]%s*[:=]%s*(-?%d+%.?%d*)[^%d%-]+[Yy]%s*[:=]%s*(-?%d+%.?%d*)")
+    end
+    if not x then
+        x, y = text:match("(-?%d+%.%d+)[^%d%-]+(-?%d+%.%d+)")
+    end
+    x, y, z = tonumber(x), tonumber(y), tonumber(z)
+    if not x or not y then return nil end   -- Z opcional
+    z = z or 0
+    return { x = x, y = y, z = z, contextId = "" }
+end
+
+local function RequestNpcInfoPosition(expectedGuid, callback)
+    if not (expectedGuid and expectedGuid ~= "") then
+        if callback then callback(false, nil, "GUID NPC invalido") end
+        return false, "GUID NPC invalido"
+    end
+    if not UnitExists or not UnitExists("target") or (UnitIsPlayer and UnitIsPlayer("target")) then
+        if callback then callback(false, nil, "Selecciona el NPC origen del area") end
+        return false, "Selecciona el NPC origen del area"
+    end
+    if UnitGUID and UnitGUID("target") ~= expectedGuid then
+        if callback then callback(false, nil, "El target ya no coincide con el NPC origen") end
+        return false, "El target ya no coincide con el NPC origen"
+    end
+    if not (HarfordEpsilonCommands and HarfordEpsilonCommands.Send) then
+        if callback then callback(false, nil, "HarfordEpsilonCommands no disponible") end
+        return false, "HarfordEpsilonCommands no disponible"
+    end
+    return HarfordEpsilonCommands.Send("npc info", {
+        addonName = "HarfordAdmin",
+        forceEpsilon = true,
+        showMessages = false,
+        callback = function(success, messages)
+            if not success then
+                if callback then callback(false, nil, "npc info no respondio correctamente") end
+                return
+            end
+            if UnitGUID and UnitGUID("target") ~= expectedGuid then
+                if callback then callback(false, nil, "El target cambio antes de leer la posicion NPC") end
+                return
+            end
+            local pos = ParseNpcInfoPosition(messages)
+            if not pos then
+                if callback then callback(false, nil, "No se pudo parsear posicion de npc info") end
+                return
+            end
+            pos.guid = expectedGuid
+            pos.name = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
+                or GetTargetName() or "NPC"
+            if callback then callback(true, pos) end
+        end,
+    })
 end
 
 
@@ -442,19 +510,29 @@ local function ParseNpcActionState(state)
         local shape = areaText:match("^cono%s+") and "cone"
             or (areaText:match("^radio%s+") or areaText:match("^esfera%s+")) and "sphere"
             or areaText:match("^linea%s+") and "line"
+            or (areaText:match("^cubo%s+") or areaText:match("^cuadrado%s+")) and "square"
+            or areaText:match("^rectangulo%s+") and "rectangle"
             or "other"
         local sizeText = areaText
-        for _, prefix in ipairs({ "cono", "radio", "esfera", "linea" }) do
+        for _, prefix in ipairs({ "cono", "radio", "esfera", "linea", "cubo", "cuadrado", "rectangulo" }) do
             if sizeText:find(prefix .. " ", 1, true) == 1 then
                 sizeText = sizeText:sub(#prefix + 2)
                 break
             end
         end
-        local saveAbility, saveDC = clean:match("salvacion:%s*([%a]+)%s+cd%s*(%d+)")
-        saveAbility = CONDITION_ABILITY[saveAbility]
+        local rawSaveAbility, saveDC = clean:match("salvacion:%s*([%a]+)%s+cd%s*(%d+)")
+        local saveAbility = rawSaveAbility and CONDITION_ABILITY[rawSaveAbility] or nil
+        if rawSaveAbility and not saveAbility and HarfordChat and HarfordChat.Print then
+            HarfordChat.Print("Aviso: caracteristica de salvacion '" .. tostring(rawSaveAbility)
+                .. "' no reconocida en el estado del NPC; el area no se resolvera como salvacion.")
+        end
         local successText = clean:match("exito:%s*(mitad)") or clean:match("exito:%s*(niega)")
-        local resolution = saveAbility and saveDC and successText and "save" or bonusText and "attack" or nil
-        if resolution and firstDamage then
+        -- Si hay clausula de salvacion (aunque la caracteristica no se reconozca) NO degradar a
+        -- ataque en silencio: un AoE de salvacion mal escrito no debe convertirse en tirada de ataque.
+        local resolution = (saveAbility and saveDC and successText and "save")
+            or (not rawSaveAbility and bonusText and "attack")
+            or nil
+        if resolution and (firstDamage or conditionId) then
             area = {
                 shape = shape,
                 sizeText = sizeText,
@@ -464,7 +542,7 @@ local function ParseNpcActionState(state)
                 success = successText == "mitad" and "half" or "none",
                 attackBonus = bonusText and tonumber((bonusText:gsub("%s", ""))) or nil,
                 attackRange = attackRange,
-                damageComponents = damageComponents,
+                damageComponents = firstDamage and damageComponents or {},
                 conditionId = conditionId,
                 conditionDuration = conditionDuration,
                 conditionTurns = conditionTurns,
@@ -711,9 +789,17 @@ end
 end
 
 function API.GetTargetInfo(callback)
-    local err = "Diagnostico npc info retirado: Harford lee TRP3 localmente y no debe enviar este comando."
-    if callback then callback(false, { err }) end
-    return false, err
+    if not (HarfordEpsilonCommands and HarfordEpsilonCommands.Send) then
+        local err = "HarfordEpsilonCommands no disponible"
+        if callback then callback(false, { err }) end
+        return false, err
+    end
+    return HarfordEpsilonCommands.Send("npc info", {
+        addonName = "HarfordAdmin",
+        forceEpsilon = true,
+        showMessages = false,
+        callback = callback,
+    })
 end
 
 local function ShowHelp()
@@ -785,7 +871,14 @@ function API.HandleSlash(tokens)
     end
 
     if mode == "info" then
-        Print("Diagnostico npc info retirado: no se envia ningun comando al servidor.")
+        API.GetTargetInfo(function(success, messages)
+            if not success then
+                Print("npc info fallo")
+                for _, line in ipairs(messages or {}) do Print(line) end
+                return
+            end
+            for _, line in ipairs(messages or {}) do Print(line) end
+        end)
         return true
     end
 
@@ -844,6 +937,12 @@ if not StaticPopupDialogs["HARFORD_NPC_TEXTEMOTE_PREFIX"] then
     }
 end
 
+if HarfordDnDArea and HarfordDnDArea.SetNpcPositionProvider then
+    HarfordDnDArea.SetNpcPositionProvider(function(context, callback)
+        RequestNpcInfoPosition(context and context.sourceGuid, callback)
+    end)
+end
+
 do
     local _origInsertGlanceLink
 
@@ -863,8 +962,8 @@ do
         local sender = TRP3_API and TRP3_API.globals and TRP3_API.globals.player_id
         local id = link and link.GetIdentifier and link:GetIdentifier()
         if sender and id and DEFAULT_CHAT_FRAME then
-            DEFAULT_CHAT_FRAME:AddMessage(string.format(
-                "|cffffd100|Htotalrp3:%s:%s|h[%s]|h|r", sender, id, id))
+            DEFAULT_CHAT_FRAME:AddMessage(HarfordChat.Format(string.format(
+                "|cffffd100|Htotalrp3:%s:%s|h[%s]|h|r", sender, id, id)))
             return true
         end
         return false

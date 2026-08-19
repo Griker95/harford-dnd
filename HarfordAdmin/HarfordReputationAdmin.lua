@@ -66,7 +66,7 @@ local editingId   = nil  -- nil = creando nueva facción
 
 -- ─── Helpers ──────────────────────────────────────────────────────────────────
 local function Print(msg)
-    DEFAULT_CHAT_FRAME:AddMessage("|cffffd000[HarfordRepAdmin]|r " .. tostring(msg or ""))
+    HarfordChat.Print(msg)
 end
 
 local function CanEdit()

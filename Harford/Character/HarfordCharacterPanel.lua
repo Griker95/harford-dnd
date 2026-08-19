@@ -2765,8 +2765,26 @@ local function RefreshFeatureList()
                     -- (metamagia, estilos, habilidades) no: se ocultan las ya elegidas en OTRO
                     -- slot para no poder gastar dos slots en la misma opcion.
                     local stackable = tostring(feature.choice.optionsFrom or ""):match("^ability%+%d+$") ~= nil
+                    local isExpertise = tostring(feature.choice.optionsFrom or "") == "skillExpertise"
                     UIDropDownMenu_Initialize(drop, function()
-                        for _, option in ipairs(HarfordDnDBook.GetChoiceOptions(feature) or {}) do
+                        -- Pericia: solo habilidades en las que YA se es competente (regla 5e). Se
+                        -- filtra aqui, en la UI, y no en `GetChoiceOptions`: el Libro es capa de
+                        -- datos y `HarfordDnDProgression` la llama durante la importacion TRP3,
+                        -- asi que no debe depender del motor de efectos.
+                        local available = HarfordDnDBook.GetChoiceOptions(feature) or {}
+                        if isExpertise and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetSkillRank then
+                            local profName = GetProfileName()
+                            local eligible = {}
+                            for _, option in ipairs(available) do
+                                local rank = HarfordDnDFeatureEffects.GetSkillRank(option.id, profName) or 0
+                                if rank >= 1 or chosen[slotNo] == option.id then
+                                    eligible[#eligible + 1] = option
+                                end
+                            end
+                            -- Si no hay ninguna competente aun, mostrar todas antes que un menu vacio.
+                            if #eligible > 0 then available = eligible end
+                        end
+                        for _, option in ipairs(available) do
                             local optionChoice = option
                             local takenElsewhere = false
                             if not stackable then

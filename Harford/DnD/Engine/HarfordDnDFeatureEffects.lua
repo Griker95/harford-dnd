@@ -433,13 +433,6 @@ function API.Prime(profileName)
     API.Resolve(profileName)
 end
 
--- ¿El perfil tiene competencia con una herramienta concreta? (por nombre exacto, como se declara en
--- el efecto toolProf). Lo usan las profesiones: tener la competencia = conocer la profesion.
-function API.HasToolProf(toolName, profileName)
-    local resolved = API.Resolve(profileName)
-    return (resolved and resolved.toolProf and resolved.toolProf[tostring(toolName or "")] == true) or false
-end
-
 function API.GetBonus(target, key, profileName)
     local resolved = API.Resolve(profileName)
     target = tostring(target or "")
@@ -637,6 +630,8 @@ function API.HasWeaponProf(key, profileName)
     return API.Resolve(profileName).weaponProf[tostring(key)] == true
 end
 
+-- Clave libre, por nombre exacto como se declara en el efecto `toolProf` (ej. "Herramientas de
+-- cervecero"). Lo usan las profesiones: tener la competencia = conocer la profesion.
 function API.HasToolProf(key, profileName)
     return API.Resolve(profileName).toolProf[tostring(key)] == true
 end

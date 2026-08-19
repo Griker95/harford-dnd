@@ -9,17 +9,28 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 Regeneralo con `python tools/gen_changelog.py`.
 
-- Commits: **45** - del **2026-05-18** al **2026-08-19**
+- Commits: **58** - del **2026-05-18** al **2026-08-19**
 
 ## Agosto de 2026
 
 **Nuevo**
 
+- **creacion** - compra por puntos ademas de la tirada, con +/- `47227ce`
+- **creacion** - panel de resumen del personaje `622d960`
+- **creacion** - rejilla de iconos para raza y trasfondo `56d977e`
+- **creacion** - barra de pasos lateral al estilo BG3 `28895fc`
+- **colores** - color propio para las 36 subclases en el About `9c15337`
 - **panel** - fila de Competencias y arreglo de las elecciones repetibles `54a8bfb`
 - **trasfondos** - descripcion completa en el About de TRP3 `ff91228`
 
 **Arreglos**
 
+- elimina el multi-retorno de gsub en los 8 normalizadores restantes `8cb678e`
+- **creacion** - la Pericia ofrecia todas las habilidades en el asistente `b14f5af`
+- **colores** - paleta de clase exacta y colores de subclase de los perfiles `41fb05f`
+- **contratos** - la lista del tablon acumulaba filas de todos los refrescos `5389abc`
+- **trp3** - normalizadores que devolvian dos valores por el gsub final `358bf74`
+- **servidor** - filtra saltos de linea al normalizar un comando Epsilon `6d57100`
 - **creacion** - las fichas creadas perdian los incrementos de caracteristica `4a68ae7`
 - **progresion** - evita huecos en classLevels al fijar una entrada de clase `a78b72a`
 - **loot** - valida el remitente de HARFORDLOOT y HARFORDCFG `c044433`
@@ -39,8 +50,13 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Mantenimiento**
 
+- **tools** - generadores de ESTRUCTURA.md y CHANGELOG.md `331fd2e`
 - ignora RuleSource/, Codice_Harford.html y AddonsIndependientes/ `1b65b2a`
 - añade el addon opcional HarfordDebug e ignora EpsilonIcons/ `582d403`
+
+**Otros**
+
+- revert(colores): deja la paleta de clase como estaba `6cc7032`
 
 ## Julio de 2026
 

@@ -13,7 +13,7 @@ regeneralo cuando muevas o añadas un modulo.
 | | |
 |---|---|
 | Modulos (`Harford/`) | **84** en **16** carpetas |
-| Lineas de codigo | ~84 984 |
+| Lineas de codigo | ~85 412 |
 | Addons hermanos | `HarfordAdmin/` (herramientas DM) - `HarfordDebug/` (diagnostico, opcional) |
 
 ## Capas y orden de carga
@@ -53,7 +53,7 @@ Comandos validados hacia el servidor. Solo se entra por aqui.
 
 | Archivo | Lineas | Rol |
 |---|--:|---|
-| `HarfordEpsilonCommands.lua` | 189 | Wrapper de bajo nivel sobre EpsilonLib/ARC para enviar comandos al servidor. |
+| `HarfordEpsilonCommands.lua` | 197 | Wrapper de bajo nivel sobre EpsilonLib/ARC para enviar comandos al servidor. |
 | `HarfordCommandTemplates.lua` | 60 | Plantillas de comandos Epsilon con placeholders {clave}. |
 | `HarfordEmotes.lua` | 208 | Tabla de datos de emotes/animaciones servidor que el addon usa. |
 | `HarfordServerActions.lua` | 306 | Acciones de servidor validadas (dar item, auras, vida y emotes de NPC). Unica puerta desde gameplay. |
@@ -67,7 +67,7 @@ Lectura/escritura de perfiles de TotalRP3.
 
 | Archivo | Lineas | Rol |
 |---|--:|---|
-| `HarfordTRP3.lua` | 2465 | Lectura segura de perfiles TRP3: ficha de jugador, stat block de NPC, enlaces y escritura del About. |
+| `HarfordTRP3.lua` | 2473 | Lectura segura de perfiles TRP3: ficha de jugador, stat block de NPC, enlaces y escritura del About. |
 
 ## `Compendium/` - Compendio de conjuros
 
@@ -149,8 +149,8 @@ Creacion, subida de nivel, libro, conjuros e inspeccion.
 | `HarfordCharacterInspect.lua` | 335 | Inspeccion ligera del panel de personaje de otro jugador. |
 | `HarfordCharacterBook.lua` | 270 | Clasificacion y datos de PRESENTACION del Libro (pestaña tipo spellbook de HarfordCharacterPanel). |
 | `HarfordCharacterSpellbook.lua` | 364 | Pestaña Conjuros (replica del libro de hechizos poblada por el compendio). |
-| `HarfordCharacterCreation.lua` | 683 | Valida y aplica el borrador del creador, incluido el About de TRP3. |
-| `HarfordCharacterAdvancement.lua` | 1331 | Prototipo visual de creacion y progresion. |
+| `HarfordCharacterCreation.lua` | 740 | Valida y aplica el borrador del creador, incluido el About de TRP3. |
+| `HarfordCharacterAdvancement.lua` | 1679 | Prototipo visual de creacion y progresion. |
 | `HarfordCharacterPanel.lua` | 5003 | Panel de personaje unificado. No sustituye el panel de reputaciones; lo usa como modulo externo desde una pestana. La primera vista siempre es la ficha/resumen del PJ. |
 
 ## `Frames/` - Frames del juego
@@ -195,7 +195,7 @@ Tablon de contratos con autoridad DM.
 | `HarfordContractsData.lua` | 451 | Modelo de contratos: alta, edicion, borrado, dificultad y orden. |
 | `HarfordContractsRewards.lua` | 68 | Capa de recompensas compartidas (XP/rep) sobre los contratos. |
 | `HarfordContractsUtil.lua` | 174 | Helpers de presentacion del tablon (iconos, color por dificultad, metadatos). |
-| `HarfordContractsUI.lua` | 1658 | Tablon de contratos: lista, detalle y reclamacion de recompensas. |
+| `HarfordContractsUI.lua` | 1665 | Tablon de contratos: lista, detalle y reclamacion de recompensas. |
 | `HarfordContractsDM.lua` | 1724 | Editor DM de contratos (crear, publicar, resetear). |
 | `HarfordContractsComm.lua` | 871 | Sync del tablon: snapshots fragmentados y autoridad de sesion del DM. |
 | `HarfordContractsMinimap.lua` | 185 | Boton/hub de minimapa del tablon. |

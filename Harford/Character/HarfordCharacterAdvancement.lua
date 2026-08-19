@@ -1660,6 +1660,9 @@ function API.OpenPrototype(classId)
     end
     S.subraceId = ""
     S.attributeArrays, S.selectedArray, S.attributeAssignments, S.pendingScore = nil, nil, {}, nil
+    -- La compra por puntos tambien se reinicia: es estado del PJ en curso, igual que los arrays.
+    -- `S.abilityMode` se conserva a proposito, como preferencia de sistema del usuario.
+    S.pointBuy = nil
     S.choiceSelections, S.pendingFeatures = {}, {}
     S.classConfirmed = false
     S.classId, S.subclassId, S.secondaryClassId, S.secondarySubclassId = nil, "", nil, ""

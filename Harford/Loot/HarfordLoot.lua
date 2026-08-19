@@ -23,6 +23,31 @@ local SendLootSync
 local SendLootClearRemote
 local RefreshLootFrameIfTargetMatches
 
+-- ¿El mensaje viene de mi propio personaje? (el sender puede llegar como "Nombre" o "Nombre-Reino").
+local function IsSelfSender(sender)
+    sender = tostring(sender or "")
+    if sender == "" then return false end
+    local short = Ambiguate and Ambiguate(sender, "short") or sender:match("^[^%-]+") or sender
+    local myShort = UnitName and UnitName("player")
+    local myFull = GetUnitName and GetUnitName("player", true)
+    return (myFull and sender == myFull) or (myShort and (sender == myShort or short == myShort)) or false
+end
+
+-- Los mensajes de loot MUTAN estado compartido y persistido (tabla de loot por GUID, borrado
+-- masivo `LOOTCLEAR` y la configuracion global, que va a SavedVariables). El loot usa WHISPER de
+-- forma legitima, asi que el filtro no puede ser por canal: se aceptan solo de un remitente que el
+-- cliente reconozca (propio, unidad visible o miembro de grupo/raid), igual que el resto de
+-- opcodes con efecto. No es una firma de DM, pero evita aplicar loot de desconocidos.
+local function IsTrustedLootSender(sender)
+    sender = tostring(sender or "")
+    if sender == "" then return false end
+    if IsSelfSender(sender) then return true end
+    if HarfordClassColors and HarfordClassColors.FindUnitByName then
+        return HarfordClassColors.FindUnitByName(sender) ~= nil
+    end
+    return false
+end
+
 local function LootTableContainsItem(lootTable, itemID)
     itemID = tonumber(itemID)
     if not itemID or type(lootTable) ~= "table" then return false end
@@ -304,9 +329,8 @@ commFrame:SetScript("OnEvent", function(_, event, ...)
         end
     elseif event == "CHAT_MSG_ADDON" then
         local prefix, message, _, sender = ...
-        if sender == UnitName("player") then
-            return
-        end
+        if IsSelfSender(sender) then return end
+        if not IsTrustedLootSender(sender) then return end
 		if prefix == COMM_PREFIX then
 			if type(message) == "string" and message ~= "" then
 				local opcode, arg = strsplit("|", message)

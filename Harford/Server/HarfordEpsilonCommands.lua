@@ -16,6 +16,14 @@ local function NormalizeCommand(command)
     if text == "" then
         return nil, "Comando vacio"
     end
+    -- Un comando es SIEMPRE de una linea. Se eliminan saltos y caracteres de control porque
+    -- algunos comandos incrustan texto libre (p.ej. el prefijo del prompt en `npc te`): un `\n`
+    -- pegado por accidente convertiria el resto de la cadena en un segundo comando.
+    text = text:gsub("[%c]+", " ")
+    text = Trim(text)
+    if text == "" then
+        return nil, "Comando vacio"
+    end
     text = text:gsub("^%.", "")
     return text
 end

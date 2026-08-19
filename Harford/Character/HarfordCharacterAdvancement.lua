@@ -689,12 +689,42 @@ RaceAbilityBonus = function(ability)
     return total
 end
 
+-- ─── Compra por puntos (sistema estandar de 5e) ─────────────────────────────────
+-- Coste acumulado por puntuacion: de 8 a 13 cuesta 1 punto cada subida y de 14 a 15 cuesta 2.
+-- El bono racial NO se compra: se suma despues, por eso el tope de compra es 15.
+local POINT_BUY_BUDGET, POINT_MIN, POINT_MAX = 27, 8, 15
+local POINT_COST = { [8]=0, [9]=1, [10]=2, [11]=3, [12]=4, [13]=5, [14]=7, [15]=9 }
+
+local function EnsurePointBuy()
+    if type(S.pointBuy) ~= "table" then
+        S.pointBuy = {}
+        for _, ability in ipairs(HarfordDnDData.ABIL or {}) do S.pointBuy[ability.key] = POINT_MIN end
+    end
+    return S.pointBuy
+end
+
+local function PointsSpent()
+    local spent = 0
+    for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
+        spent = spent + (POINT_COST[EnsurePointBuy()[ability.key] or POINT_MIN] or 0)
+    end
+    return spent
+end
+
+-- Puntuacion base elegida por el jugador, sea cual sea el sistema. Sin bono racial: ese lo
+-- hornea HarfordCharacterCreation.Apply al aplicar el borrador.
+local function BaseScoreFor(abilityKey)
+    if S.abilityMode == "points" then return EnsurePointBuy()[abilityKey] or POINT_MIN end
+    local array = S.attributeArrays and S.selectedArray and S.attributeArrays[S.selectedArray]
+    local assignedIndex = S.attributeAssignments and S.attributeAssignments[abilityKey]
+    return (array and assignedIndex and array.values[assignedIndex]) or nil
+end
+
 local function BuildCreationDraft()
     local abilities = {}
     local array = S.attributeArrays and S.attributeArrays[S.selectedArray]
     for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
-        local assigned = S.attributeAssignments[ability.key]
-        local base = array and assigned and array.values[assigned] or 0
+        local base = BaseScoreFor(ability.key) or 0
         -- Guardar SOLO la base asignada: sumar aqui el bono racial lo contaba DOS veces, porque el
         -- asistente ya lo muestra sumado (`RaceAbilityBonus`). Quien lo hornea es
         -- `HarfordCharacterCreation.Apply`, con `GetCreationAbilityBonus` y tras fijar la
@@ -778,6 +808,88 @@ local function RefreshAttributes()
     S.classTitle:SetText("Caracteristicas")
     S.classSummary:SetText("Tres arrays de 4d6, descartando el dado menor de cada caracteristica.")
     SetDetail(nil)
+    S.abilityMode = S.abilityMode or "points"
+    S.classSummary:SetText(S.abilityMode == "points"
+        and "Compra por puntos: 27 a repartir. De 8 a 13 cuesta 1 por subida; 14 y 15 cuestan 2."
+        or "Tres arrays de 4d6, descartando el dado menor de cada caracteristica.")
+
+    -- Selector de sistema. Cambiarlo no borra lo del otro: cada uno conserva su estado.
+    for index, mode in ipairs({ { "points", "Compra por puntos" }, { "roll", "Tirada 4d6" } }) do
+        local modeId, modeLabel = mode[1], mode[2]
+        local tab = MakeButton(S.tree, modeLabel, 168, 22, function()
+            S.abilityMode = modeId
+            RefreshAttributes()
+        end)
+        tab:SetPoint("TOPLEFT", 24 + (index - 1) * 174, -2)
+        if S.abilityMode == modeId then tab:LockHighlight() else tab:UnlockHighlight() end
+        S.nodeRows[#S.nodeRows + 1] = tab
+    end
+
+    if S.abilityMode == "points" then
+        EnsurePointBuy()
+        local spent = PointsSpent()
+        local remaining = POINT_BUY_BUDGET - spent
+        local py = -34
+        for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
+            local key = ability.key
+            local score = S.pointBuy[key] or POINT_MIN
+            local bonus = RaceAbilityBonus(key)
+            local name = MakeText(S.tree, "GameFontHighlight", key)
+            name:SetPoint("TOPLEFT", 24, py - 4)
+            S.nodeRows[#S.nodeRows + 1] = name
+
+            local down = MakeButton(S.tree, "-", 24, 22, function()
+                if (S.pointBuy[key] or POINT_MIN) > POINT_MIN then
+                    S.pointBuy[key] = S.pointBuy[key] - 1
+                    RefreshAttributes()
+                end
+            end)
+            down:SetPoint("TOPLEFT", 86, py)
+            down:SetEnabled(score > POINT_MIN)
+            S.nodeRows[#S.nodeRows + 1] = down
+
+            local value = MakeText(S.tree, "GameFontNormalLarge", tostring(score))
+            value:SetPoint("TOPLEFT", 118, py - 2)
+            S.nodeRows[#S.nodeRows + 1] = value
+
+            -- Solo se puede subir si queda presupuesto para el SIGUIENTE escalon (14 y 15 cuestan 2).
+            local nextCost = (POINT_COST[score + 1] or 99) - (POINT_COST[score] or 0)
+            local canRaise = score < POINT_MAX and nextCost <= remaining
+            local up = MakeButton(S.tree, "+", 24, 22, function()
+                S.pointBuy[key] = math.min(POINT_MAX, (S.pointBuy[key] or POINT_MIN) + 1)
+                RefreshAttributes()
+            end)
+            up:SetPoint("TOPLEFT", 146, py)
+            up:SetEnabled(canRaise)
+            S.nodeRows[#S.nodeRows + 1] = up
+
+            local total = MakeText(S.tree, "GameFontHighlightSmall", bonus ~= 0
+                and string.format("|cff38d26a+%d|r = |cffffd100%d|r", bonus, score + bonus)
+                or string.format("= |cffffd100%d|r", score))
+            total:SetPoint("TOPLEFT", 182, py - 4)
+            S.nodeRows[#S.nodeRows + 1] = total
+            py = py - 30
+        end
+        local counter = MakeText(S.tree, "GameFontNormal", string.format("Puntos: %d/%d", spent, POINT_BUY_BUDGET))
+        counter:SetPoint("TOPLEFT", 24, py - 6)
+        counter:SetTextColor(remaining == 0 and 0.22 or 1, remaining == 0 and 0.82 or 0.82, remaining == 0 and 0.42 or 0)
+        S.nodeRows[#S.nodeRows + 1] = counter
+        local reset = MakeButton(S.tree, "Reiniciar", 100, 22, function()
+            S.pointBuy = nil
+            RefreshAttributes()
+        end)
+        reset:SetPoint("TOPLEFT", 182, py - 8)
+        S.nodeRows[#S.nodeRows + 1] = reset
+
+        S.nextButton:SetText(remaining == 0 and "Confirmar caracteristicas"
+            or string.format("Reparte %d puntos", remaining))
+        S.nextButton:SetEnabled(remaining == 0)
+        S.nextButton:SetShown(true)
+        S.treeChild:SetHeight(math.max(420, -py + 60))
+        SetManualScroll(S.treeScroll, S.treeChild, 0)
+        return
+    end
+
     if not S.attributeArrays then
         local intro = MakeText(S.tree, "GameFontHighlight", "Genera tres arrays y elige uno. El recomendado tiene mayor total; en empate, menos valores impares.")
         intro:SetPoint("TOPLEFT", 24, -34)
@@ -1247,6 +1359,9 @@ local function StepValue(index)
             and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
         return bg and tostring(bg.name or "") or ""
     elseif index == 3 then
+        if S.abilityMode == "points" then
+            return string.format("%d/%d puntos", PointsSpent(), POINT_BUY_BUDGET)
+        end
         if not S.selectedArray then return "" end
         local assigned = 0
         for _ in pairs(S.attributeAssignments or {}) do assigned = assigned + 1 end
@@ -1277,12 +1392,10 @@ local function RefreshSummary()
     if bg then origin = origin .. "  |cffcccccc" .. tostring(bg.name or "") .. "|r" end
     S.sumOrigin:SetText(origin)
 
-    local array = S.attributeArrays and S.selectedArray and S.attributeArrays[S.selectedArray]
     for index, ability in ipairs(HarfordDnDData.ABIL or {}) do
         local text = S.sumAbilities[index]
         if text then
-            local assignedIndex = S.attributeAssignments and S.attributeAssignments[ability.key]
-            local base = array and assignedIndex and array.values[assignedIndex]
+            local base = BaseScoreFor(ability.key)
             local total = base and (base + RaceAbilityBonus(ability.key))
             text:SetText(string.format("|cffcccccc%s|r %s", tostring(ability.key),
                 total and ("|cffffd100" .. tostring(total) .. "|r") or "-"))

@@ -190,6 +190,20 @@ local function IsSenderSelf(sender)
         or (myShort and (sender == myShort or senderShort == myShort))
 end
 
+-- Los mensajes de turnos REESCRIBEN el estado compartido del tracker (entradas, turno activo,
+-- vida de los NPC). El emisor difunde por RAID/PARTY, pero `CHAT_MSG_ADDON` entrega tambien
+-- WHISPER de cualquiera, asi que se aplica el mismo filtro que el resto de opcodes con efecto:
+-- solo se aceptan de un remitente que el cliente reconozca (unidad visible o grupo/raid).
+local function IsTrustedTurnSender(sender)
+    sender = tostring(sender or "")
+    if sender == "" then return false end
+    if IsSenderSelf(sender) then return true end
+    if HarfordClassColors and HarfordClassColors.FindUnitByName then
+        return HarfordClassColors.FindUnitByName(sender) ~= nil
+    end
+    return false
+end
+
 local function AlertMyTurn(entry, activeIndex, turnSerial)
     if not EntryBelongsToMe(entry) then return end
 
@@ -2453,6 +2467,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     local prefix, message, _, sender = ...
     if prefix ~= COMM_PREFIX then return end
     if IsSenderSelf(sender) then return end
+    if not IsTrustedTurnSender(sender) then return end
 
     local opcode = tostring(message or ""):match("^([^|]+)")
     suppressBroadcast = true

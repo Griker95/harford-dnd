@@ -136,6 +136,7 @@ API.BACKGROUNDS = {
     {
         id = "ermitano", name = "Ermitaño", source = "PHB",
         aliases = { "ermita_o" },
+        desc = "Los Eremitas, como colectivo, comparten una sed insaciable por el conocimiento, una curiosidad inagotable por los misterios del mundo y una devoción inquebrantable por preservar y compartir las historias del pasado, presente y futuro de Azeroth.\n\nComo devoto miembro de los Eremitas, eres un ávido buscador de conocimiento, impulsado por una pasión por desentrañar el rico tapiz de historia, leyenda y cultura que recorre todo Azeroth. Tu insaciable curiosidad y meticulosa atención al detalle te convierten en un hábil historiador y narrador, encargado de preservar las historias más preciadas del mundo. Con reverencia por el pasado y el deseo de compartir sus enseñanzas, te embarcas en misiones en busca de conocimientos olvidados y verdades ocultas, asegurándote de que el legado de Azeroth perdure para las generaciones futuras.",
         traits = {
             { id = "bg_erm_comp", name = "Competencias", type = "pasivo", description = "Competencia en Medicina y Religion.", effects = {
                 { kind = "skillProf", skill = "Medicina" }, { kind = "skillProf", skill = "Religion" },
@@ -249,7 +250,7 @@ API.BACKGROUNDS = {
     {
         id = "mercenario_veterano_harford", name = "Mercenario veterano", source = "Harford",
         aliases = { "veterano harford", "mercenario veterano", "mercenario harford" },
-        desc = "Has combatido bajo una bandera caotica, desigual y ruidosa: la Compania Harford. Alli aprendiste a sobrevivir mas que a guerrear, confiando en camaradas, ingenio callejero y suerte de los insensatos.",
+        desc = "Has combatido bajo una bandera que pocos recordarían con honor, pero que tú llevas con orgullo. Fuiste parte de la Compañía Harford, un grupo caótico, desigual y extremadamente ruidoso de mercenarios cuya fama procede más de su terquedad y supervivencia que de su disciplina o precisión militar. Leal no al mando, sino al emblema de la compañía y a sus camaradas, tu vida ha sido un desfile de asedios imposibles, retiradas gloriosas, saqueos improvisados y victorias ganadas por pura testarudez.\n\nQuizá empuñaste una espada junto a desertores, navegaste en una bañera flotante apodada \"barco\", o luchaste codo con codo con magos descalzos, guerreros sin armadura y gentes extrañas. En Harford no importaba tu raza, pasado o linaje, sino si sabías mantenerte en pie tras una emboscada. Allí aprendiste a sobrevivir más que a guerrear, y a confiar en la fuerza de la costumbre, el ingenio callejero y la suerte de los insensatos.\n\nNumerosas compañías de mercenarios trabajan por todo lo ancho y largo de Azeroth. La mayoría son grupos a pequeña escala que dan trabajo a entre una docena y cien individuos que ofrecen seguridad, persiguen monstruos o bandoleros, o participan en la guerra a cambio de oro. Ciertas organizaciones poseen cientos o miles de miembros y pueden entregar auténticos ejércitos privados a quienes tienen dinero suficiente para pagarlos.\n\nComo mercenario que lucha en contiendas a cambio de dinero, estás muy acostumbrado a jugarte la vida por la oportunidad de ganar parte de un tesoro. Ahora estás dispuesto a matar a enemigos y a conseguir incluso mejores recompensas como aventurero. Tu experiencia te familiariza con los pormenores de la vida del mercenario y es posible que tengas relatos desgarradores de lo acontecido en el campo de batalla.",
         traits = {
             { id = "bg_merc_hab", name = "Competencia en Habilidad", type = "choice", description = "Escoge una competencia entre Atletismo, Persuasion, Engaño, Supervivencia y Perspicacia.", choice = { slots = 1, options = {
                 { id = "atletismo", label = "Atletismo", effects = { { kind = "skillProf", skill = "Atletismo" } } },
@@ -277,7 +278,7 @@ API.BACKGROUNDS = {
     {
         id = "exiliado_alterac", name = "Exiliado de Alterac", source = "Harford",
         aliases = { "alterac", "exiliado alterac", "exiliado de alterac" },
-        desc = "Fuiste criado entre los restos de un reino traicionado y borrado del mapa. Alterac esta en ruinas, pero su identidad sigue viva en exiliados marcados por la historia, la perdida y un legado que no desaparece.",
+        desc = "Fuiste criado entre los restos de un reino traicionado y borrado del mapa. Tu familia fue leal al trono de Alterac, o quizás solo fue arrastrada por la caída del rey Perenolde y la humillación pública de tu pueblo. Tras la Segunda Guerra, mientras los reinos humanos reescribían la historia, tú creciste escuchando una versión distinta: una de abandono, de culpa compartida, de dignidad pisoteada.\n\nAlgunos de los tuyos se unieron al Sindicato, otros huyeron al exilio, muchos vivieron décadas como ciudadanos de segunda. Pero los exiliados de Alterac no olvidan, y aunque su reino esté en ruinas, su identidad sigue viva. Tú eres uno de ellos: marcado por la historia, endurecido por la pérdida, y con un legado que no desaparece.",
         traits = {
             { id = "bg_alt_comp", name = "Competencias", type = "pasivo", description = "Competencia en Engaño e Historia.", effects = {
                 { kind = "skillProf", skill = "Engano" }, { kind = "skillProf", skill = "Historia" },
@@ -324,7 +325,7 @@ API.BACKGROUNDS = {
     {
         id = "agente_principe_mercante", name = "Agente de Principe Mercante", source = "Harford",
         aliases = { "agente de principe mercante", "agente_de_pr_ncipe_mercante", "principe mercante", "agente mercante" },
-        desc = "Trabajas bajo la sombra de un cartel goblin, moviendote entre contratos, favores, sobornos y negocios demasiado utiles para ser limpios.",
+        desc = "Los agentes de príncipes mercantes son comerciantes astutos, expertos en cerrar tratos y aprovechar oportunidades en su constante búsqueda de riqueza e influencia.\n\nEres un servidor a merced de un príncipe mercante —ya sea astuto, despiadado, o simplemente codicioso hasta lo enfermizo— y eso te convierte en alguien digno de atención. Como Agente de príncipe mercante, representas los intereses de su cártel en Azeroth y más allá, cerrando tratos, asegurando recursos y expandiendo su influencia por cualquier medio necesario.\n\nEres parte emprendedor, parte matón, parte embaucador de lengua de plata, con un talento innato para convertir riesgos en ganancias. Desde Gadgetzan hasta Trinquete, de salas de juntas goblin hasta yacimientos en la jungla, tu trabajo es simple: hacer más rico a tu jefe... y asegurarte de obtener tu parte.",
         traits = {
             { id = "bg_principe_comp", name = "Competencias", type = "pasivo", description = "Competencia en Persuasion y Perspicacia.", effects = { Skill("Persuasion"), Skill("Perspicacia") } },
             { id = "bg_principe_herr", name = "Competencias con Herramientas", type = "pasivo", description = "Competencia con herramientas de navegador y un tipo de herramientas de artesano.", effects = { Tool("Herramientas de navegador"), Tool("Herramientas de artesano") } },
@@ -334,7 +335,7 @@ API.BACKGROUNDS = {
     },
     {
         id = "bucanero_retirado", name = "Bucanero retirado", source = "Harford",
-        desc = "Tu pasado en cubierta dejo cicatrices, deudas, historias y una habilidad poco elegante para sobrevivir a golpes, tabernas y abordajes.",
+        desc = "Los Bucaneros Velasangre comparten un oscuro pasado de piratería y anarquía. A menudo se definen por su crueldad despiadada, astucia marinera y una inclinación por buscar tesoros y poder a través del saqueo en alta mar.\n\nFuiste en su día un temido miembro de una tripulación notoria, sembrando el terror por los mares con tus hazañas piratas.\n\nSin embargo, has dejado atrás tu pasado criminal. Ahora recorres el mundo, buscando demostrar tu valía más allá de la piratería. Ya sea que hayas pertenecido a los Bucaneros Velasangre, los Asaltantes Aguasnegras, las Ratas de Pantoque o cualquier otra tripulación, el mundo te percibe del mismo modo.",
         traits = {
             { id = "bg_buc_comp", name = "Competencias", type = "pasivo", description = "Competencia en Engaño y Atletismo.", effects = { Skill("Engano"), Skill("Atletismo") } },
             { id = "bg_buc_herr", name = "Competencias con Herramientas", type = "pasivo", description = "Competencia con herramientas de navegacion y una herramienta de artesano a tu eleccion.", effects = { Tool("Herramientas de navegacion"), Tool("Herramientas de artesano") } },
@@ -352,7 +353,7 @@ API.BACKGROUNDS = {
     {
         id = "caballero_orden", name = "Caballero de la Orden", source = "Harford",
         aliases = { "caballero de la orden" },
-        desc = "Perteneces o perteneciste a una orden con autoridad, juramentos y deberes reconocibles por aliados, fieles o instituciones cercanas.",
+        desc = "Los miembros de las órdenes sagradas —ya sean de la Luz u otras— se distinguen por su convicción inquebrantable. La Mano de Plata enseña humildad y sacrificio; los Caballeros de Sangre predican la fuerza a través del dominio; los Caminasol buscan equilibrio entre lo espiritual y lo marcial; la Cruzada Escarlata demanda celo absoluto; y la Espada de Ébano enseña que incluso la muerte puede redimirse. Sin importar el camino, todos los caballeros de tales órdenes cargan con el peso de sus votos en cada decisión.\n\nFuiste entrenado por una orden marcial estructurada como la Mano de Plata, los Caballeros de Sangre, los Caminasol, la Cruzada Escarlata o la Espada de Ébano, todos ellos devotos de un ideal superior al de ellos mismos.\n\nYa sea que hayas sido un acólito de la Luz, un sacerdote de An’she, o un soldado templado en las sombras, tu disciplina y sentido del deber te distinguen. Algunos aún portan el símbolo de su orden con orgullo; otros recorren un camino solitario, comprometidos con causas que otros han abandonado o repudiado. Ya fuera que tus votos se juraran bajo el sol o se grabaran en la no-muerte, estos continúan moldeando tus convicciones... y tu poder.",
         traits = {
             { id = "bg_ord_comp", name = "Competencias", type = "pasivo", description = "Competencia en Religion y Persuasion.", effects = { Skill("Religion"), Skill("Persuasion") } },
             { id = "bg_ord_herr", name = "Herramienta", type = "choice", description = "Elige herramientas de herrero o utiles de caligrafo.", choice = { slots = 1, options = {
@@ -376,7 +377,7 @@ API.BACKGROUNDS = {
     {
         id = "desertor_errante", name = "Desertor errante", source = "Harford",
         aliases = { "desertor" },
-        desc = "Dejaste atras una guerra, una bandera o una causa. Desde entonces sobrevives moviendote entre sospechas, rutas secundarias y viejos habitos militares.",
+        desc = "Los desertores errantes son individuos que han escapado del dominio de su facción, guiados por el deseo de autonomía personal y la oportunidad de reescribir su destino bajo sus propios términos.\n\nLos desertores errantes son individuos que han dejado atrás las ataduras de su facción anterior, impulsados por una sed de libertad personal y el deseo de forjar su propio destino. Desencantados con las ideologías que antes los definían, siguen ahora un camino incierto como agentes independientes, guiados por un renovado sentido de autonomía y su propio código moral.\n\nEstos desertores están unidos por su valentía para romper con el pasado, abrazando una vida de incertidumbre mientras forjan alianzas, desafían normas y buscan su lugar en el turbulento mundo de Azeroth.",
         traits = {
             { id = "bg_des_comp", name = "Competencias", type = "pasivo", description = "Competencia en Perspicacia y Supervivencia.", effects = { Skill("Perspicacia"), Skill("Supervivencia") } },
             { id = "bg_des_herr", name = "Herramienta", type = "choice", description = "Elige un juego de azar o un instrumento musical.", choice = { slots = 1, options = {
@@ -389,7 +390,7 @@ API.BACKGROUNDS = {
     {
         id = "eremita", name = "Eremita", source = "Harford",
         aliases = { "eremita erudito" },
-        desc = "Te apartaste del mundo para estudiar, meditar o custodiar una verdad que pocos conocen, y tu aislamiento te dio una mirada poco comun.",
+        desc = "Los Eremitas, como colectivo, comparten una sed insaciable por el conocimiento, una curiosidad inagotable por los misterios del mundo y una devoción inquebrantable por preservar y compartir las historias del pasado, presente y futuro de Azeroth.\n\nComo devoto miembro de los Eremitas, eres un ávido buscador de conocimiento, impulsado por una pasión por desentrañar el rico tapiz de historia, leyenda y cultura que recorre todo Azeroth. Tu insaciable curiosidad y meticulosa atención al detalle te convierten en un hábil historiador y narrador, encargado de preservar las historias más preciadas del mundo. Con reverencia por el pasado y el deseo de compartir sus enseñanzas, te embarcas en misiones en busca de conocimientos olvidados y verdades ocultas, asegurándote de que el legado de Azeroth perdure para las generaciones futuras.",
         traits = {
             { id = "bg_ere_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia y Perspicacia.", effects = { Skill("Historia"), Skill("Perspicacia") } },
             { id = "bg_ere_herr", name = "Herramientas", type = "pasivo", description = "Competencia con suministros de caligrafo y un instrumento musical.", effects = { Tool("Suministros de caligrafo"), Tool("Instrumento musical") } },
@@ -399,7 +400,7 @@ API.BACKGROUNDS = {
     {
         id = "feriante_luna_negra", name = "Feriante de la Luna Negra", source = "Harford",
         aliases = { "luna negra", "feriante" },
-        desc = "Has trabajado entre trucos, musica, luces y secretos de la Feria de la Luna Negra, donde todo puede ser espectaculo o amenaza.",
+        desc = "Eres un artista cautivador dentro del enigmático reino de la Feria de la Luna Negra. Con tus hipnotizantes actos de magia, arte o hazañas audaces, atraes multitudes que acuden a presenciar tus maravillosas exhibiciones. Como artista de la Feria, ofreces un escape muy necesario de las penas del mundo, brindando sonrisas y asombro a quienes se congregan bajo las coloridas carpas del carnaval.\n\nSin embargo, entre tanto encanto, percibes un misterio más profundo que envuelve los orígenes de la Feria, y navegas sus secretos con la misma destreza con la que ejecutas tus actuaciones.",
         traits = {
             { id = "bg_luna_comp", name = "Competencias", type = "pasivo", description = "Competencia en Interpretacion y Juego de Manos.", effects = { Skill("Interpretacion"), Skill("JuegoManos") } },
             { id = "bg_luna_herr1", name = "Kit de disfraces", type = "pasivo", description = "Competencia con kit de disfraces.", effects = { Tool("Kit de disfraces") } },
@@ -430,7 +431,7 @@ API.BACKGROUNDS = {
     {
         id = "forastero", name = "Forastero", source = "Harford",
         aliases = { "extranjero" },
-        desc = "Vienes de una tierra, cultura o mundo que llama la atencion alli donde vas; la mirada ajena es parte de tu vida.",
+        desc = "La mayoría de los habitantes de Azeroth jamás abandonan su tierra natal. Ya sea un campesino de los Reinos del Este, un tabernero en Kalimdor o un comerciante en Zandalar, muchos viven y mueren sin alejarse más que unas pocas millas de donde nacieron. Tú no eres como ellos.\n\nVienes de una región lejana, exótica o directamente desconocida para la mayoría. Quizá naciste en los valles ocultos de Pandaria, entre las ruinas susurrantes de Uldum, o en alguna aldea perdida de Rasganorte. Tal vez incluso tu patria se halle más allá del Gran Mar o en una isla apenas registrada en los mapas de la Horda o la Alianza. Sea como sea, tu historia es inusual, y las razones que te han traído hasta aquí pueden ser personales, políticas, místicas... o un misterio que prefieres no revelar.\n\nAl llegar a estas tierras, muchas costumbres te resultan extrañas, incluso ridículas; pero también hay maravillas que nunca imaginaste: ciudades suspendidas en el aire, mercados infestados de goblins y criaturas que solo habías oído en viejas canciones. De igual forma, tú eres un enigma andante para los demás: alguien con acento raro, hábitos desconcertantes o apariencia única. Donde vayas, despertarás curiosidad, respeto o desconfianza... o las tres cosas a la vez.",
         traits = {
             { id = "bg_for_comp", name = "Competencias", type = "pasivo", description = "Competencia en Percepcion y Perspicacia.", effects = { Skill("Percepcion"), Skill("Perspicacia") } },
             { id = "bg_for_herr", name = "Juego o instrumento", type = "choice", description = "Elige un instrumento o juego de tu patria.", choice = { slots = 1, options = {
@@ -444,7 +445,7 @@ API.BACKGROUNDS = {
     {
         id = "forjador_torio", name = "Forjador de la Hermandad del Torio", source = "Harford",
         aliases = { "hermandad del torio", "forjador de torio", "forjador torio" },
-        desc = "Tu nombre esta ligado a la Hermandad del Torio y a secretos de forja, metalurgia y prestigio entre artesanos excepcionales.",
+        desc = "Los miembros de la Hermandad del Torio son perfeccionistas incansables, curtidos por el calor de las forjas y la presión de estar siempre un paso por delante de sus rivales. Muchos son toscos, silenciosos, incluso paranoicos, pero todos ellos comparten un respeto absoluto por el arte de su trabajo y una ética inquebrantable respecto a la calidad. La desconfianza hacia otros gremios o clanes, y el secretismo con que guardan sus técnicas, son también comunes entre ellos.\n\nEl fuego, el metal y la tradición te forjaron tanto como el yunque. Has dedicado años de tu vida a trabajar bajo la tutela de un maestro herrero de la Hermandad del Torio, soportando un aprendizaje áspero, vigilado por las brasas del Puesto del Torio y las exigencias despiadadas de los enanos Hierro Negro que renunciaron a Ragnaros.\n\nPerteneces a una casta de artesanos que anteponen la perfección a cualquier otra virtud. La Hermandad no acepta mediocridad: solo aquellos que soportan el calor y la presión de sus hornos pueden ganarse un nombre entre los suyos. Has aprendido los secretos de la forja encantada, de la runomagia práctica, y sabes que el valor de un objeto está en su equilibrio entre utilidad y arte.\n\nPuede que seas enano, pero no necesariamente. Aunque raros, se conocen casos de orcos, elfos o humanos que han sido aceptados como aprendices si demostraban una maestría sin igual y un respeto absoluto por el oficio. En cualquier caso, el orgullo de tu trabajo habla antes que tu raza.",
         traits = {
             { id = "bg_torio_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia y Perspicacia.", effects = { Skill("Historia"), Skill("Perspicacia") } },
             { id = "bg_torio_herr", name = "Herramientas de forja", type = "pasivo", description = "Competencia con herramientas de forja.", effects = { Tool("Herramientas de forja") } },
@@ -455,7 +456,7 @@ API.BACKGROUNDS = {
     {
         id = "guardian_salvaje", name = "Guardian de lo Salvaje", source = "Harford",
         aliases = { "guardian de lo salvaje", "guardiana de lo salvaje", "guardian salvaje" },
-        desc = "Custodias lugares, bestias o equilibrios naturales, y has aprendido a escuchar los signos del entorno antes que las ordenes de la civilizacion.",
+        desc = "Los guardianes de lo salvaje se definen por la soledad, el instinto y un profundo respeto por el poder de la naturaleza. Ya sean cazadores, chamanes o exploradores, su rol no es conquistar la naturaleza, sino comprenderla y defenderla.\n\nFuiste entrenado por un enclave primitivo, una sociedad de supervivencia o un grupo de sabiduría salvaje vinculados a organizaciones como el Refugio Alblanco, la Senda Oculta, los Errantes, las Centinelas, las expediciones de Hemet Nesingwary o círculos locales en la naturaleza a lo largo de Azeroth.\n\nDesde las brumosas alturas de las Colinas Pardas hasta las enredadas raíces de Val’sharah y los cañones de Nagrand, los parajes salvajes de Azeroth perduran solo bajo la custodia de quienes conocen sus ritmos. Aprendiste no solo a sobrevivir en tierras indómitas, sino a leer sus señales, proteger sus secretos y restaurar su equilibrio cuando se ve amenazado.",
         traits = {
             { id = "bg_gsal_comp", name = "Competencias", type = "pasivo", description = "Competencia en Naturaleza y Supervivencia.", effects = { Skill("Naturaleza"), Skill("Supervivencia") } },
             { id = "bg_gsal_herr", name = "Herramienta", type = "choice", description = "Elige kit de herboristeria o herramientas de tallador de madera.", choice = { slots = 1, options = {
@@ -468,7 +469,7 @@ API.BACKGROUNDS = {
     {
         id = "guardia_ciudad", name = "Guardia de ciudad", source = "Harford",
         aliases = { "guardia urbano", "guardia de ciudad" },
-        desc = "Has servido entre callejones, puertas, patrullas y barrios donde conocer a la gente importa tanto como saber blandir un arma.",
+        desc = "Los detectives de una comunidad, menos numerosos que los guardias o los miembros de una patrulla, poseen el deber de resolver crímenes en base a hechos. Aunque raramente se da este tipo de persona en zonas rurales, casi cualquier asentamiento de tamaño decente tiene como mínimo a uno o dos miembros de la guardia con la habilidad de investigar los lugares en los que se ha cometido un crimen y perseguir a los malhechores. Si tienes experiencia previa como investigador, posees competencia en Investigación en vez de en Atletismo.\n\nTrabajas para la comunidad en la que has crecido y eres su primera línea de defensa contra el crimen. No eres un soldado, sino alguien que dirige su mirada a posibles enemigos. En vez de eso, tu servicio a tu ciudad natal consistió en ayudar a controlar su población y proteger a sus ciudadanos de delincuentes y maleantes de toda clase.\n\nPuede que hayas formado parte de la Guardia de Ventormenta, la fuerza policial armada con porras de Tol Barad, que defiende al pueblo llano tanto de ladrones como de la nobleza pendenciera. O puedes haber sido uno de los valientes defensores de Lunargenta, miembro de la Guardia Gris o incluso miembro de la Guardia de Dalaran, portador de magia. Quizá provienes de Kul Tiras y has sido uno de los guardias de Boralus.\n\nAunque no hayas nacido ni te hayas criado en una ciudad, este trasfondo puede describir tus primeros años como miembro de un cuerpo policial. La mayoría de asentamientos de cualquier tamaño tienen agentes y fuerzas policiales. Incluso las comunidades pequeñas cuentan con sheriffs y alguaciles preparados para proteger su comunidad.",
         traits = {
             { id = "bg_guardia_comp", name = "Competencias", type = "pasivo", description = "Competencia en Atletismo y Perspicacia.", effects = { Skill("Atletismo"), Skill("Perspicacia") } },
             { id = "bg_guardia_idioma", name = "Idioma", type = "informativo", description = "Un idioma de tu eleccion.", effects = {} },
@@ -477,7 +478,7 @@ API.BACKGROUNDS = {
     },
     {
         id = "heredero", name = "Heredero", source = "Harford",
-        desc = "Conservas una herencia importante: un objeto, derecho, secreto, nombre o deuda que te sigue y define como te miran otros.",
+        desc = "7. Un relato, una canción, un poema o un secreto puesto por escrito\n\n11. Un colgante con un retrato en miniatura de alguien a quien jamás has conocido.\n\n12. Una urna sellada que no puede abrirse por medios convencionales.\n\n13. Una semilla petrificada o una flor congelada que no debería existir en Azeroth.\n\n14. Una varilla, bastón o fragmento arcano que alguna vez formó parte de un artefacto mayor.\n\n15. Una herramienta artesanal con el sello de un gremio desaparecido.\n\nHas heredado algo de gran valor; no solo dinero o fortuna, sino un objeto que se te ha confiado a ti y solo a ti. Puede que esta herencia te la haya legado directamente un miembro de tu familia por derecho de nacimiento, o bien que te la haya dejado un amigo, mentor, profesor o alguien importante. La revelación de esta herencia te cambió la vida, y quizá te condujo al camino de la aventura. Sin embargo, también puede estar cargada de peligros, incluyendo a quienes codician tu tesoro y te lo quieren arrebatar, si hace falta, por la fuerza.",
         traits = {
             { id = "bg_hered_superv", name = "Supervivencia", type = "pasivo", description = "Competencia en Supervivencia.", effects = { Skill("Supervivencia") } },
             { id = "bg_hered_hab", name = "Habilidad adicional", type = "choice", description = "Elige Conocimiento Arcano, Historia o Religion.", choice = { slots = 1, options = {
@@ -496,7 +497,7 @@ API.BACKGROUNDS = {
     {
         id = "miembro_organizacion", name = "Miembro de organizacion", source = "Harford",
         aliases = { "miembro de organizacion", "miembro_de_organizaci_n" },
-        desc = "Formas parte de una organizacion con recursos, jerarquias, obligaciones y refugios que pueden ayudarte o reclamarte.",
+        desc = "Los miembros de organizaciones han sido moldeados por sus años de servicio dentro de una organizacion que trasciende naciones y gobiernos. Piensa en cómo esa afiliación ha marcado tu forma de ver el mundo: tu manera de hablar, decidir y confiar puede estar profundamente influenciada por los principios, jerarquías o secretos de tu grupo. Tu vínculo puede ser una lealtad férrea, una carga imposible de soltar o una convicción que guía cada acción. Incluso un ideal noble puede volverse una obsesión peligrosa si se lleva al extremo.\n\nMuchas organizaciones activas en Azeroth y más allá no se ven limitadas por las fronteras nacionales. Estas facciones siguen sus propias prioridades, ajenas a los reinos y gobiernos, y sus miembros actúan cuando la causa lo requiere. Se cuentan entre sus filas fisgones, contrabandistas, mercenarios, alquimistas, chismosos, custodios de archivos arcanos, guardianes de santuarios, vigilantes del Vacío, portadores de la Luz y emisarios sombríos. En el corazón de cada facción hay quienes no solo cumplen con una tarea específica, sino que son su cerebro y su alma.\n\nComo preámbulo de tu carrera como aventurero (o para prepararla), fuiste un agente de una facción específica del mundo. Podrías haber trabajado en público o en secreto, dependiendo de la organización y sus objetivos, así como del grado en que sus ideales coincidieran con los tuyos. Convertirte en aventurero no significa necesariamente que hayas abandonado tu lealtad a la facción (si es que podías hacerlo), y puede que sigas en contacto con ella o incluso que hayas ascendido en su jerarquía.",
         traits = {
             { id = "bg_org_perspicacia", name = "Perspicacia", type = "pasivo", description = "Competencia en Perspicacia.", effects = { Skill("Perspicacia") } },
             { id = "bg_org_hab", name = "Habilidad de faccion", type = "choice", description = "Elige una habilidad de Inteligencia, Sabiduria o Carisma apropiada para la faccion.", choice = { slots = 1, options = {
@@ -520,7 +521,7 @@ API.BACKGROUNDS = {
     {
         id = "miembro_anillo_tierra", name = "Miembro del Anillo de la Tierra", source = "Harford",
         aliases = { "anillo de la tierra", "miembro del anillo de la tierra" },
-        desc = "Tu vida esta vinculada al Anillo de la Tierra y al deber de escuchar, sanar o apaciguar los elementos.",
+        desc = "Los chamanes del Anillo de la Tierra comparten un profundo respeto por el equilibrio elemental, un compromiso inquebrantable con la sanación y la protección, y una conexión profunda con el mundo natural.\n\nComo miembro reverenciado del Anillo de la Tierra, canalizas las fuerzas primigenias de los elementos para restaurar el equilibrio en Azeroth. Guiado por antiguas tradiciones y una profunda conexión con la naturaleza, has dominado el arte del chamanismo, canalizando los poderes de la tierra, el aire, el fuego y el agua.\n\nCon una devoción inquebrantable por la sanación, la protección y el dominio elemental, te eriges como un guardián del orden natural, encargado de mantener la armonía entre los elementos y el mundo que moldean.",
         traits = {
             { id = "bg_anillo_comp", name = "Competencias", type = "pasivo", description = "Competencia en Naturaleza y Medicina.", effects = { Skill("Naturaleza"), Skill("Medicina") } },
             { id = "bg_anillo_herr", name = "Herramientas", type = "pasivo", description = "Competencia con kit de herboristeria y un instrumento musical.", effects = { Tool("Kit de herboristeria"), Tool("Instrumento musical") } },
@@ -531,7 +532,7 @@ API.BACKGROUNDS = {
     {
         id = "miembro_tribal", name = "Miembro tribal", source = "Harford",
         aliases = { "tribal" },
-        desc = "Perteneces a una comunidad tribal donde supervivencia, tradicion y relacion con la tierra son parte del dia a dia.",
+        desc = "Como miembro de una tribu, lo que más importa es la comunidad. Todos deben colaborar y cumplir su papel para que la tribu funcione. Nadie debe quedarse atrás ni dejar que otros carguen con su parte.\n\nNaciste y creciste en las tierras de tu tribu. Tu tribu posee un territorio propio. Puede que procedas de uno de los muchos clanes menores de tauren que habitan Kalimdor, o de una de las vastas tribus de los trols. Tal vez seas miembro de uno de los clanes prominentes. Quizá provengas de una tribu que vive en aislamiento, con poco contacto con el mundo exterior, o de una que comercia activamente con las sociedades civilizadas.",
         traits = {
             { id = "bg_tribal_comp", name = "Competencias", type = "pasivo", description = "Competencia en Naturaleza y Supervivencia.", effects = { Skill("Naturaleza"), Skill("Supervivencia") } },
             { id = "bg_tribal_herr", name = "Herramientas", type = "pasivo", description = "Competencia con una herramienta de artesano y un instrumento musical.", effects = { Tool("Herramientas de artesano"), Tool("Instrumento musical") } },
@@ -541,7 +542,7 @@ API.BACKGROUNDS = {
     {
         id = "novato_liga_expedicionarios", name = "Novato de la Liga de Expedicionarios", source = "Harford",
         aliases = { "liga de expedicionarios", "novato expedicionarios" },
-        desc = "Te has iniciado en la Liga de Expedicionarios, entre mapas, ruinas, excavaciones y una mezcla peligrosa de curiosidad y mala preparacion.",
+        desc = "Los miembros de la Liga de Expedicionarios comparten universalmente una curiosidad insaciable por lo desconocido, una camaradería firme que trasciende fronteras y una sed incontenible de descubrimiento.\n\nEres un orgulloso miembro de la renombrada Liga de Expedicionarios, una estimada organización dedicada a descubrir tesoros ocultos, artefactos ancestrales y los misterios del pasado de Azeroth. Con una sed de aventuras y pasión por el conocimiento, has recorrido territorios inexplorados, enfrentado desafíos peligrosos y desentrañado acertijos en tu búsqueda por la verdad.\n\nComo miembro de la Liga de Expedicionarios, encarnas el espíritu de la curiosidad, el coraje y la camaradería, siempre dispuesto a revelar los secretos del mundo y compartirlos con mentes ansiosas por aprender.",
         traits = {
             { id = "bg_liga_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia e Investigacion.", effects = { Skill("Historia"), Skill("Investigacion") } },
             { id = "bg_liga_herr", name = "Herramientas", type = "pasivo", description = "Competencia con herramientas de cartografo y una herramienta de artesano.", effects = { Tool("Herramientas de cartografo"), Tool("Herramientas de artesano") } },
@@ -552,7 +553,7 @@ API.BACKGROUNDS = {
     {
         id = "operativo_ravenholdt", name = "Operativo de Ravenholdt", source = "Harford",
         aliases = { "ravenholdt" },
-        desc = "Has servido a Ravenholdt o a redes similares, donde informacion, venenos, disfraz y silencio tienen mas valor que la gloria.",
+        desc = "Estos personajes son infiltradores habilidosos y agentes de la secreta organización Ravenholdt, expertos en espionaje y subterfugio mientras persiguen agendas ocultas y verdades encubiertas.\n\nLos miembros del trasfondo Operativo de Ravenholdt son infiltradores expertos y agentes encubiertos dentro de la enigmática organización Ravenholdt. Con talento para el espionaje y el subterfugio, destacan en la obtención de información crítica, la ejecución de misiones sigilosas y el uso de verdades ocultas. Estos operativos navegan con destreza el mundo del secreto, guiados por motivaciones o lealtades propias, manipulando las sombras para cumplir sus objetivos clandestinos.",
         traits = {
             { id = "bg_raven_comp", name = "Competencias", type = "pasivo", description = "Competencia en Sigilo e Investigacion.", effects = { Skill("Sigilo"), Skill("Investigacion") } },
             { id = "bg_raven_herr", name = "Herramientas", type = "pasivo", description = "Competencia con kit de venenos y kit de disfraces.", effects = { Tool("Kit de venenos"), Tool("Kit de disfraces") } },
@@ -572,7 +573,7 @@ API.BACKGROUNDS = {
     {
         id = "superviviente_catastrofe", name = "Superviviente de catastrofe", source = "Harford",
         aliases = { "superviviente de catastrofe", "superviviente_de_cat_strofe", "catastrofe" },
-        desc = "Sobreviviste a un desastre que marco tu cuerpo, memoria o reputacion. Desde entonces sigues en pie donde otros quedaron atras.",
+        desc = "Estás marcado por la guerra, la catástrofe y el dolor de la supervivencia. Algunos se vuelven guerreros endurecidos. Otros recurren a la sabiduría, el aislamiento o la venganza. Pero todos recuerdan.\n\nHas vivido una de las grandes calamidades de Azeroth —ya sea la invasión de la Plaga, el regreso de la Legión Ardiente, el Cataclismo, o la brutal Cuarta Guerra. Estos eventos transformaron el mundo… y también te transformaron a ti.\n\nLlevas cicatrices que nunca sanaron del todo. Ya sea que defendieras la Costa Quebrada, presenciaras el incendio de Teldrassil, sobrevivieras a la caída de Lordaeron o vieras a Alamuerte desgarrar el cielo, sabes de lo que este mundo es realmente capaz. Los horrores de aquella era te endurecieron… pero también te enseñaron a resistir.",
         traits = {
             { id = "bg_cat_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia e Intimidacion.", effects = { Skill("Historia"), Skill("Intimidacion") } },
             { id = "bg_cat_herr", name = "Herramienta", type = "choice", description = "Elige un juego o kit de herboristeria.", choice = { slots = 1, options = {
@@ -595,7 +596,7 @@ API.BACKGROUNDS = {
     {
         id = "cazarrecompensas_urbano", name = "Cazarrecompensas urbano", source = "SCAG",
         aliases = { "cazarrecompensas", "cazador de recompensas urbano" },
-        desc = "Antes de aventurarte, ganabas dinero persiguiendo personas dentro de una red urbana de contactos, informantes y ambientes criminales.",
+        desc = "Los cazarrecompensas urbanos han aprendido a sobrevivir en un entorno en el que la información vale tanto como la fuerza. Tu experiencia previa puede haber forjado tu carácter en callejones oscuros, tabernas ruidosas o salones aristocráticos donde las máscaras importan más que las armas. Piensa en cómo tu entorno y tus contactos afectan tus reacciones: puede que sientas una afinidad instintiva hacia ciertas clases sociales, o un desprecio absoluto por ellas. Tal vez tu vínculo más fuerte esté ligado a una presa que nunca atrapaste, o a un código profesional que te impide matar sin contrato. Tus ideales pueden girar en torno a la justicia, la reputación, la supervivencia… o simplemente al oro.\n\nAntes de convertirte en aventurero, tu vida ya estaba llena de conflictos y emoción, pues te ganabas el sustento persiguiendo a personas a cambio de dinero. Pero, a diferencia de quienes recogen recompensas, no eres un salvaje que sigue a una presa cruzando la naturaleza. Estás relacionado con un comercio lucrativo en el lugar en el que resides, trabajo que a diario pone a prueba tus habilidades e instintos de supervivencia. Además, no estás solo como lo estaría un cazarrecompensas en la naturaleza. Habitualmente interactúas tanto con la subcultura criminal como con otros cazadores de recompensas y conservas contactos en ambos ambientes que te permiten triunfar.\n\nQuizá seas un cazador de ladrones astuto, que acecha en los tejados para capturar a uno de los muchísimos rateros de la ciudad. Puede que sigas alguien con los oídos abiertos en la calle, un individuo que sabe qué se traen entre manos los gremios de ladrones y las bandas callejeras.",
         traits = {
             { id = "bg_caz_comp", name = "Competencias", type = "choice", description = "Elige dos competencias entre Engaño, Perspicacia, Persuasion y Sigilo.", choice = { slots = 2, options = {
                 { id = "engano", label = "Engaño", effects = { { kind = "skillProf", skill = "Engano" } } },
@@ -638,7 +639,7 @@ API.BACKGROUNDS = {
     {
         id = "veterano_campo_batalla", name = "Veterano del campo de batalla", source = "Harford",
         aliases = { "veterano de campo de batalla", "veterano" },
-        desc = "Eres un combatiente endurecido por conflictos feroces, marcado por victorias, derrotas y camaradas que aprendieron a sobrevivir entre el caos.",
+        desc = "Los veteranos de los campos de batalla son guerreros endurecidos con destrezas tácticas, un fuerte sentido de camaradería y un espíritu inquebrantable, definidos por su adaptabilidad, coraje y naturaleza competitiva en el fragor del conflicto.\n\nLos veteranos del campo de batalla son guerreros endurecidos por la guerra, con amplia experiencia en los feroces conflictos de los campos de batalla más emblemáticos de Azeroth. Estos veteranos poseen una mezcla de adaptabilidad, camaradería y espíritu competitivo que se ha forjado a lo largo de incontables enfrentamientos.\n\nViven la emoción de la victoria, encarnan el honor del campo de batalla y llevan las cicatrices de sus triunfos y derrotas pasadas. Los veteranos inspiran a otros, forjan lazos inquebrantables y persiguen la gloria con determinación, mientras enfrentan sus propios demonios internos nacidos del caos de la guerra.",
         traits = {
             { id = "bg_vet_endurecido", name = "Endurecido por la guerra", type = "informativo", description = "Tu experiencia en campos de batalla te permite reconocer tacticas, amenazas y cadenas de mando con rapidez. El DM decide cuando esa experiencia aporta ventaja narrativa.", effects = {} },
             { id = "bg_vet_comp", name = "Competencias", type = "informativo", description = "Las competencias concretas se leen de la ficha TRP3 cuando aparecen marcadas como Trasfondo.", effects = {} },

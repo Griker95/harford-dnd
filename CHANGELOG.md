@@ -9,12 +9,15 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 Regeneralo con `python tools/gen_changelog.py`.
 
-- Commits: **58** - del **2026-05-18** al **2026-08-19**
+- Commits: **62** - del **2026-05-18** al **2026-08-20**
 
 ## Agosto de 2026
 
 **Nuevo**
 
+- **profesiones** - nodos de recoleccion en el mundo (GatherNode) `20f0b4a`
+- **debug** - merchantdump vuelca los items del mercader abierto `0642999`
+- **profesiones** - cadenas completas 1-300 para las 14 profesiones de WoW `ad22a7b`
 - **creacion** - compra por puntos ademas de la tirada, con +/- `47227ce`
 - **creacion** - panel de resumen del personaje `622d960`
 - **creacion** - rejilla de iconos para raza y trasfondo `56d977e`
@@ -25,6 +28,7 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Arreglos**
 
+- **creacion** - reinicia la compra por puntos al reabrir el asistente `ee6daa3`
 - elimina el multi-retorno de gsub en los 8 normalizadores restantes `8cb678e`
 - **creacion** - la Pericia ofrecia todas las habilidades en el asistente `b14f5af`
 - **colores** - paleta de clase exacta y colores de subclase de los perfiles `41fb05f`

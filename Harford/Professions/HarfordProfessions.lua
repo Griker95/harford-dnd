@@ -317,3 +317,84 @@ function API.GatherNode(recipeId, cooldownSeconds)
     local ok = API.Craft(recipeId)
     return ok and true or false
 end
+
+------------------------------------------------------------
+-- Enseñar recetas `worldLearned` (los remates a skill 300: planos, formulas, tomos).
+--
+-- El DM (HarfordAdmin + .ph dm) targetea al jugador y usa el menu de unidad
+-- ("Profesiones > Enseñar receta") o llama `HarfordProfessions.TeachRecipe(nombre, recipeId)`.
+-- Viaja como `TEACH|recipeId` por el prefix propio HARFORDPROF (WHISPER). El receptor solo
+-- concede un beneficio (marcar la receta como aprendida), asi que basta el filtro estandar de
+-- remitente reconocido; el gate de DM esta en el EMISOR, como en QDONE de las misiones.
+------------------------------------------------------------
+local COMM_PREFIX = "HARFORDPROF"
+
+-- Recetas que se pueden enseñar (las marcadas worldLearned), para el menu del DM.
+function API.GetTeachableRecipes()
+    local out = {}
+    for _, recipe in ipairs((Data() and Data().RECIPES) or {}) do
+        if recipe.worldLearned then out[#out + 1] = recipe end
+    end
+    table.sort(out, function(a, b) return tostring(a.name) < tostring(b.name) end)
+    return out
+end
+
+function API.TeachRecipe(targetName, recipeId)
+    if not (HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools()) then
+        print("|cffff5555Enseñar recetas requiere HarfordAdmin y .ph dm activo.|r")
+        return false
+    end
+    local recipe = API.GetRecipe(recipeId)
+    if not recipe then print("|cffff5555Receta desconocida: " .. tostring(recipeId) .. "|r") return false end
+    if not recipe.worldLearned then
+        print("|cffff5555Esa receta se aprende sola por skill; solo se enseñan las worldLearned.|r")
+        return false
+    end
+    targetName = tostring(targetName or "")
+    if targetName == "" then print("|cffff5555Falta el nombre del jugador.|r") return false end
+    if not (HarfordSync and HarfordSync.Send) then print("|cffff5555HarfordSync no disponible.|r") return false end
+    local ok, err = HarfordSync.Send(COMM_PREFIX, "TEACH|" .. tostring(recipe.id), "WHISPER", targetName)
+    if ok then
+        print(string.format("Receta |cffffd100%s|r enseñada a |cffffcc00%s|r.", tostring(recipe.name), targetName))
+    else
+        print("|cffff5555No se pudo enviar: " .. tostring(err) .. "|r")
+    end
+    return ok and true or false
+end
+
+local function IsTrustedSender(sender)
+    sender = tostring(sender or "")
+    if sender == "" then return false end
+    if HarfordClassColors and HarfordClassColors.FindUnitByName then
+        return HarfordClassColors.FindUnitByName(sender) ~= nil
+    end
+    return false
+end
+
+local comm = CreateFrame("Frame")
+comm:RegisterEvent("PLAYER_LOGIN")
+comm:RegisterEvent("CHAT_MSG_ADDON")
+comm:SetScript("OnEvent", function(_, event, prefix, message, _, sender)
+    if event == "PLAYER_LOGIN" then
+        if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
+            C_ChatInfo.RegisterAddonMessagePrefix(COMM_PREFIX)
+        elseif RegisterAddonMessagePrefix then
+            RegisterAddonMessagePrefix(COMM_PREFIX)
+        end
+        return
+    end
+    if prefix ~= COMM_PREFIX then return end
+    if not IsTrustedSender(sender) then return end
+    local recipeId = tostring(message or ""):match("^TEACH|([a-z_0-9]+)$")
+    if not recipeId then return end
+    local recipe = API.GetRecipe(recipeId)
+    if not (recipe and recipe.worldLearned) then return end
+    if Store().learned[recipeId] then
+        print(string.format("Ya conocias la receta |cffffd100%s|r.", tostring(recipe.name)))
+        return
+    end
+    API.LearnRecipe(recipeId)
+    local short = (Ambiguate and Ambiguate(tostring(sender), "short")) or tostring(sender)
+    print(string.format("|cff38d26aHas aprendido la receta:|r |cffffd100%s|r (enseñada por %s).",
+        tostring(recipe.name), short))
+end)

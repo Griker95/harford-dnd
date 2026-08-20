@@ -745,7 +745,22 @@ end
 -- Submenú para jugador ajeno (target jugador, no el propio)
 local function BuildPlayerSubmenu(menuList, level)
     local snapshot = current.snapshot
-    if menuList == "TURNOS" then
+    if menuList == "PROFESIONES" then
+        -- Enseñar una receta worldLearned (los remates a skill 300). El gate de DM lo aplica
+        -- HarfordProfessions.TeachRecipe; aqui solo se listan y se revalida la unidad.
+        local teachables = HarfordProfessions and HarfordProfessions.GetTeachableRecipes
+            and HarfordProfessions.GetTeachableRecipes() or {}
+        if #teachables == 0 then
+            AddAction("(sin recetas enseñables)", function() end, level)
+        end
+        for _, recipe in ipairs(teachables) do
+            local recipeId, recipeName = recipe.id, recipe.name
+            AddAction("Enseñar: " .. tostring(recipeName), function()
+                if not EnsureSameUnit(snapshot, "enseñar receta") then return end
+                HarfordProfessions.TeachRecipe(snapshot.name, recipeId)
+            end, level)
+        end
+    elseif menuList == "TURNOS" then
         AddAction("Anadir a turnos", function() AddToTurns(snapshot) end, level)
         AddAction("Abrir turnos", OpenTurns, level)
     elseif menuList == "RECURSOS" then
@@ -832,6 +847,7 @@ local function InitializeMenu(_, level, menuList)
         elseif ctx == "player" then
             -- Jugador ajeno: enviar ficha (primera opcion), turnos, recursos, auras. Sin TRP3, sin loot.
             AddAction("Enviar ficha", function() SendSheetToTarget(snapshot) end, level)
+            AddSubmenu("Profesiones", "PROFESIONES", level)
             AddSubmenu("Turnos", "TURNOS", level)
             AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Auras", "AURAS", level)

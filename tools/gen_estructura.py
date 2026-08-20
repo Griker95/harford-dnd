@@ -204,6 +204,7 @@ def build(rows):
     add("| `HARFORDREP` | `Reputation/HarfordReputationSync.lua` | Reputaciones y snapshots |")
     add("| `HARFORDQUEST` | `Quests/HarfordQuests.lua` | Estado de misiones y cierre por el DM |")
     add("| `HARFCOM` | `Communicator/HarfordCommunicator.lua` | Mensajeria RP (solo texto) |")
+    add("| `HARFORDPROF` | `Professions/HarfordProfessions.lua` | Enseñar recetas worldLearned (DM -> jugador) |")
     add("| Tablon | `Contracts/HarfordContractsComm.lua` | Snapshots de contratos con autoridad de sesion |")
     add("")
     add("## Donde toco cada cosa")

@@ -13,7 +13,7 @@ regeneralo cuando muevas o añadas un modulo.
 | | |
 |---|---|
 | Modulos (`Harford/`) | **84** en **16** carpetas |
-| Lineas de codigo | ~85 412 |
+| Lineas de codigo | ~85 782 |
 | Addons hermanos | `HarfordAdmin/` (herramientas DM) - `HarfordDebug/` (diagnostico, opcional) |
 
 ## Capas y orden de carga
@@ -206,9 +206,9 @@ Profesiones D&D/WoW y sus recetas.
 
 | Archivo | Lineas | Rol |
 |---|--:|---|
-| `HarfordProfessionsItems.lua` | 141 | Registro CENTRAL de items de profesiones (materiales y resultados). |
-| `HarfordProfessionsData.lua` | 107 | Catalogo hardcodeado de profesiones + recetas (como HarfordDnDBook). |
-| `HarfordProfessions.lua` | 261 | Core del sistema de profesiones D&D (unifica profesiones WoW + herramientas D&D). |
+| `HarfordProfessionsItems.lua` | 242 | Registro CENTRAL de items de profesiones (materiales y resultados). |
+| `HarfordProfessionsData.lua` | 236 | Catalogo hardcodeado de profesiones + recetas (como HarfordDnDBook). |
+| `HarfordProfessions.lua` | 401 | Core del sistema de profesiones D&D (unifica profesiones WoW + herramientas D&D). |
 
 ## `Communicator/` - Comunicador
 
@@ -260,6 +260,7 @@ siempre el remitente** (propio, unidad visible o miembro de grupo/raid).
 | `HARFORDREP` | `Reputation/HarfordReputationSync.lua` | Reputaciones y snapshots |
 | `HARFORDQUEST` | `Quests/HarfordQuests.lua` | Estado de misiones y cierre por el DM |
 | `HARFCOM` | `Communicator/HarfordCommunicator.lua` | Mensajeria RP (solo texto) |
+| `HARFORDPROF` | `Professions/HarfordProfessions.lua` | Enseñar recetas worldLearned (DM -> jugador) |
 | Tablon | `Contracts/HarfordContractsComm.lua` | Snapshots de contratos con autoridad de sesion |
 
 ## Donde toco cada cosa

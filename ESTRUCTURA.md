@@ -13,7 +13,7 @@ regeneralo cuando muevas o añadas un modulo.
 | | |
 |---|---|
 | Modulos (`Harford/`) | **84** en **16** carpetas |
-| Lineas de codigo | ~85 782 |
+| Lineas de codigo | ~85 810 |
 | Addons hermanos | `HarfordAdmin/` (herramientas DM) - `HarfordDebug/` (diagnostico, opcional) |
 
 ## Capas y orden de carga
@@ -149,7 +149,7 @@ Creacion, subida de nivel, libro, conjuros e inspeccion.
 | `HarfordCharacterInspect.lua` | 335 | Inspeccion ligera del panel de personaje de otro jugador. |
 | `HarfordCharacterBook.lua` | 270 | Clasificacion y datos de PRESENTACION del Libro (pestaña tipo spellbook de HarfordCharacterPanel). |
 | `HarfordCharacterSpellbook.lua` | 364 | Pestaña Conjuros (replica del libro de hechizos poblada por el compendio). |
-| `HarfordCharacterCreation.lua` | 740 | Valida y aplica el borrador del creador, incluido el About de TRP3. |
+| `HarfordCharacterCreation.lua` | 768 | Valida y aplica el borrador del creador, incluido el About de TRP3. |
 | `HarfordCharacterAdvancement.lua` | 1679 | Prototipo visual de creacion y progresion. |
 | `HarfordCharacterPanel.lua` | 5003 | Panel de personaje unificado. No sustituye el panel de reputaciones; lo usa como modulo externo desde una pestana. La primera vista siempre es la ficha/resumen del PJ. |
 

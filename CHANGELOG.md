@@ -9,12 +9,14 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 Regeneralo con `python tools/gen_changelog.py`.
 
-- Commits: **62** - del **2026-05-18** al **2026-08-20**
+- Commits: **66** - del **2026-05-18** al **2026-08-20**
 
 ## Agosto de 2026
 
 **Nuevo**
 
+- **about** - frame de Profesiones en el About generado de TRP3 `8d39639`
+- **profesiones** - el DM puede enseñar recetas worldLearned (TEACH) `7240769`
 - **profesiones** - nodos de recoleccion en el mundo (GatherNode) `20f0b4a`
 - **debug** - merchantdump vuelca los items del mercader abierto `0642999`
 - **profesiones** - cadenas completas 1-300 para las 14 profesiones de WoW `ad22a7b`
@@ -49,11 +51,13 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Documentacion**
 
+- regenera el historial de cambios `9d7b568`
 - organigrama de modulos (ESTRUCTURA.md) e historial (CHANGELOG.md) `e5e4137`
 - actualiza el README (HarfordDebug y subcomandos /harford) `108184f`
 
 **Mantenimiento**
 
+- **tools** - pipeline de extraccion del conocimiento y comando profitems `d228f9a`
 - **tools** - generadores de ESTRUCTURA.md y CHANGELOG.md `331fd2e`
 - ignora RuleSource/, Codice_Harford.html y AddonsIndependientes/ `1b65b2a`
 - añade el addon opcional HarfordDebug e ignora EpsilonIcons/ `582d403`

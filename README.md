@@ -4,6 +4,10 @@ Addon de World of Warcraft para el servidor Epsilon RP de la Compania Harford. I
 
 > Addon privado. Requiere acceso al servidor Epsilon de la Compania Harford.
 
+**Consultor web (canonico)**: <https://harfordweb.marcos-pazos-95.workers.dev/> - reglas del
+sistema (clases, razas, trasfondos, conjuros y profesiones) navegables fuera del juego. Los
+datos se extraen del addon con `tools/codice/build_codice.py` (`kb_icons.json`).
+
 ---
 
 ## Dependencias externas
@@ -21,7 +25,7 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 ## Instalacion
 
 1. Clonar o descargar este repositorio.
-2. Copiar las carpetas **`Harford/`** y **`HarfordAdmin/`** a:
+2. Copiar las carpetas **`Harford/`**, **`HarfordAdmin/`** y (opcional) **`HarfordDebug/`** a:
    ```
    [Cliente Epsilon]\_retail_\Interface\AddOns\
    ```
@@ -36,14 +40,17 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 | Comando | Descripcion |
 |---|---|
 | `/harford ficha` | Abre la ficha compacta de personaje D&D 5e |
-| `/harford char` | Abre el panel de personaje: Ficha, Libro, Creacion, Subida y acceso a Reputacion |
+| `/harford cargarficha` | Carga DESTRUCTIVA de la ficha desde el perfil TRP3 activo (unica via de importar TRP3) |
+| `/harford char` (`personaje`) | Abre el panel de personaje: Ficha, Libro, Creacion, Subida y acceso a Reputacion |
 | `/harford inspect` | Inspecciona en modo ligero/read-only el panel de personaje del target jugador o del nombre indicado |
-| `/harford rep` | Abre/cierra el panel de reputaciones |
+| `/harford rep` (`reputacion`) | Abre/cierra el panel de reputaciones |
 | `/harford turnos` | Abre/cierra el tracker de turnos |
 | `/harford comunicador` | Abre el comunicador normal |
 | `/harford radio` | Abre el comunicador sin aplicar su aura visual |
-| `/harford contratos` | Abre el tablón de contratos como ventana independiente |
-| `/harford misiones` | Abre el registro de misiones Harford |
+| `/harford contratos` (`tablon`) | Abre el tablon de contratos como ventana independiente |
+| `/harford misiones` (`quests`) | Abre el registro de misiones Harford |
+| `/harford herramientas` (`tools`) | Abre/cierra la bandeja de herramientas |
+| `/harford reparto [id]` (`questreward`) | DM: reparte rep/xp de una mision de mundo al grupo (requiere modo DM) |
 | `/harford config` | Panel de configuracion del addon |
 | `/harford debug` | Sistema de debug opcional: on/off/toggle/status/list/run; requiere `HarfordDebug` |
 | `/FichaHarford`, `/hchar`, `/harfordrep`, `/hconfig`, `/hdebug` | Retirados; usar `/harford <subcomando>` |

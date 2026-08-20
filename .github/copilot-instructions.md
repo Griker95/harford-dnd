@@ -6,6 +6,7 @@ Este proyecto es un addon de **World of Warcraft** escrito en **Lua** (Interface
 
 - **Idioma**: Responde siempre al usuario en **español**. El código y los comentarios van en español.
 - **Fuente de verdad**: Lee `AGENTS.md` antes de modificar cualquier módulo. Contiene arquitectura, contratos y enfoques fallidos documentados.
+- **Mapa de módulos**: `ESTRUCTURA.md` describe las 16 carpetas de `Harford/`, el rol de cada archivo, el orden de carga y los prefijos de red. `CHANGELOG.md` lleva el historial. Se regeneran con `python tools/gen_estructura.py` y `python tools/gen_changelog.py`.
 - **No crear archivos nuevos** salvo petición explícita. Preferir editar los existentes.
 - **No agregar comentarios genéricos** — solo el WHY no obvio.
 - **No reintentar** enfoques marcados como FALLIDOS en `AGENTS.md`.

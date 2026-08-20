@@ -486,6 +486,27 @@ end
 
 -- Frame "Magia Racial <Raza>" (titulo teal) con cabecera Ataque/DC de la caracteristica racial y los
 -- conjuros concedidos por la raza. Devuelve nil si la raza no concede conjuros.
+-- Frame "Profesiones" del About: una linea por profesion conocida, con icono, tier y skill.
+-- Mismo formato visual que el resto de frames (h1 centrado + lineas con {icon}).
+local function BuildProfessionsFrame()
+    local P = _G.HarfordProfessions
+    if not (P and P.GetProfessions and P.KnowsProfession and P.EffectiveSkill and P.GetTierName) then
+        return nil
+    end
+    local lines = {}
+    for _, def in ipairs(P.GetProfessions() or {}) do
+        if P.KnowsProfession(def.id) then
+            local skill = P.EffectiveSkill(def.id)
+            local icon = tostring(def.icon or "inv_misc_note_01"):lower()
+            lines[#lines + 1] = string.format("{icon:%s:20} %s {col:%s}%s (%d){/col}",
+                icon, tostring(def.name), COL_TAG, P.GetTierName(skill), skill)
+        end
+    end
+    if #lines == 0 then return nil end
+    table.insert(lines, 1, "{h1:c}Profesiones{/h1}")
+    return { IC = "trade_blacksmithing", TX = table.concat(lines, string.char(10)) }
+end
+
 local function BuildRacialMagicFrame(draft)
     local spells, ability = CollectRacialSpells(draft)
     if #spells == 0 then return nil end
@@ -645,6 +666,13 @@ function API.BuildAbout(draft, profileName)
     -- ===== Frame de MAGIA RACIAL (si la raza concede conjuros, p.ej. Detectar magia) =====
     local racialFrame = BuildRacialMagicFrame(draft)
     if racialFrame then frames[#frames + 1] = racialFrame end
+
+    -- ===== Frame de PROFESIONES (solo si conoce alguna) =====
+    -- Lista las profesiones conocidas (competencia de herramienta o skill > 0) con su tier y
+    -- skill. Al CREAR un PJ suele salir por las competencias de dote/trasfondo (skill 1 = base);
+    -- al regenerar el About (`/harford debug run abouttrp3`) refleja el skill real acumulado.
+    local profFrame = BuildProfessionsFrame()
+    if profFrame then frames[#frames + 1] = profFrame end
 
     return frames
 end

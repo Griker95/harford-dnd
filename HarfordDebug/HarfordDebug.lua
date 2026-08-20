@@ -3773,6 +3773,26 @@ API.RegisterCommand("preparar", function()
     end
 end, "abre el menu de reelegir conjuros preparados (como tras un descanso largo)")
 
+API.RegisterCommand("profitems", function()
+    -- Lista las claves del registro de profesiones SIN itemId, con su nombre visible: es la
+    -- lista de la compra para el phase vault. Complementa a merchantdump (que los cosecha).
+    local reg = HarfordProfessionsItems and HarfordProfessionsItems.REGISTRY
+    if not reg then Print("HarfordProfessionsItems no disponible") return end
+    local pending, total = {}, 0
+    for key, entry in pairs(reg) do
+        total = total + 1
+        if type(entry) == "table" and not entry.id then
+            pending[#pending + 1] = { key = key, name = tostring(entry.name or key) }
+        end
+    end
+    table.sort(pending, function(a, b) return a.key < b.key end)
+    for _, e in ipairs(pending) do
+        Print(string.format("|cffffd100%s|r  %s", e.key, e.name))
+    end
+    Print(string.format("Pendientes de ID: |cffffcc00%d|r de %d claves. Cosechalos con merchantdump.",
+        #pending, total))
+end, "lista las claves de items de profesiones sin itemId (lo que falta crear en el phase vault)")
+
 API.RegisterCommand("merchantdump", function(args)
     -- Vuelca los items del MERCADER ABIERTO. Pensado para cosechar itemIds de Epsilon y
     -- rellenar el registro de profesiones (HarfordProfessionsItems, claves con id=nil).

@@ -6,6 +6,8 @@ Documentos hermanos: **`ESTRUCTURA.md`** es el organigrama de modulos (que hace 
 
 ## Repositorio Y Colaboracion
 
+- **Pipeline de extraccion del conocimiento**: vive en `tools/codice/` (`build_codice.py`). Su producto principal es `kb_icons.json` (clases/razas/trasfondos/conjuros/profesiones con textos e iconos), pensado para alimentar LA WEB, que es el consultor canonico; el HTML local `Codice_Harford.html` queda como fallback offline y no se mantiene por duplicado. Las copias del scratchpad de sesion quedan OBSOLETAS: editar solo las de `tools/codice/`. `bgs_source.json` es FUENTE (extraccion de Discord, no regenerable); `kb*.json`/`icons_data.json` son intermedios gitignored. Requiere en disco `EpsilonIcons/png` y `RuleSource/` (ambos fuera de git).
+
 - Repo privado: `harford-dnd`.
 - Ramas:
   - `main`: version estable. No hacer push directo; solo via PR desde `dev`.

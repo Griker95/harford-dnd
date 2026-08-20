@@ -1,0 +1,425 @@
+<title>Códice Harford</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,600;1,500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --bg:#f3efe4; --panel:#fbf8f1; --panel2:#f6f1e6; --edge:#e2d9c6; --edge2:#d3c8b0;
+  --ink:#2a2531; --muted:#6d6577; --faint:#9b9385;
+  --gold:#a97b23; --gold-soft:#c79a3f; --arcane:#6d4bb0;
+  --shadow:0 1px 2px rgba(40,30,10,.06),0 8px 24px rgba(40,30,10,.08);
+  --radius:14px;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#141019; --panel:#1d1826; --panel2:#231d2e; --edge:#332a42; --edge2:#463a5a;
+    --ink:#ece6f4; --muted:#a397b6; --faint:#6f6483;
+    --gold:#d9a441; --gold-soft:#e9be6a; --arcane:#b79bff;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.45);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#141019; --panel:#1d1826; --panel2:#231d2e; --edge:#332a42; --edge2:#463a5a;
+  --ink:#ece6f4; --muted:#a397b6; --faint:#6f6483;
+  --gold:#d9a441; --gold-soft:#e9be6a; --arcane:#b79bff;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--bg); color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif; font-size:15px; line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1180px; margin:0 auto; padding:0 20px}
+
+/* ---- header ---- */
+header.top{
+  position:sticky; top:0; z-index:20; background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px); border-bottom:1px solid var(--edge);
+}
+.top .wrap{display:flex; flex-wrap:wrap; align-items:center; gap:14px 22px; padding-top:14px; padding-bottom:14px}
+.brand{display:flex; align-items:baseline; gap:12px; margin-right:auto}
+.brand h1{
+  font-family:"Spectral",Georgia,serif; font-weight:600; font-size:26px; letter-spacing:.3px;
+  margin:0; color:var(--ink);
+}
+.brand h1 .g{color:var(--gold)}
+.brand .sub{font-size:12.5px; color:var(--muted); font-style:italic; font-family:"Spectral",serif}
+.tabs{display:flex; gap:4px; background:var(--panel2); border:1px solid var(--edge); border-radius:11px; padding:4px}
+.tab{
+  appearance:none; border:0; background:transparent; color:var(--muted); cursor:pointer;
+  font-family:inherit; font-size:13.5px; font-weight:600; padding:7px 15px; border-radius:8px;
+  letter-spacing:.2px; transition:color .15s, background .15s;
+}
+.tab:hover{color:var(--ink)}
+.tab[aria-selected="true"]{background:var(--panel); color:var(--ink); box-shadow:var(--shadow)}
+.search{position:relative; flex:1 1 220px; min-width:180px; max-width:340px}
+.search input{
+  width:100%; font-family:inherit; font-size:14px; color:var(--ink);
+  background:var(--panel); border:1px solid var(--edge2); border-radius:10px;
+  padding:9px 12px 9px 34px; outline:none;
+}
+.search input:focus{border-color:var(--gold-soft); box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 22%,transparent)}
+.search svg{position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--faint)}
+.count{font-size:12px; color:var(--faint); font-family:"IBM Plex Mono",monospace; white-space:nowrap}
+
+/* ---- grid ---- */
+main{padding:26px 0 80px}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(268px,1fr)); gap:16px}
+.card{
+  --c:var(--gold);
+  position:relative; text-align:left; cursor:pointer; overflow:hidden;
+  background:var(--panel); border:1px solid var(--edge); border-radius:var(--radius);
+  padding:16px 16px 14px 19px; box-shadow:var(--shadow);
+  transition:transform .14s ease, border-color .14s, box-shadow .14s; color:inherit; font:inherit;
+  display:flex; flex-direction:column; gap:8px;
+}
+.card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--c)}
+.card:hover{transform:translateY(-2px); border-color:color-mix(in srgb,var(--c) 55%,var(--edge))}
+.card:focus-visible{outline:2px solid var(--gold); outline-offset:2px}
+.card .chead{display:flex; align-items:center; gap:11px}
+.card-icon{width:38px; height:38px; border-radius:8px; flex:0 0 auto; border:1px solid var(--edge2);
+  box-shadow:0 1px 3px rgba(0,0,0,.25); background:var(--panel2)}
+.card .cname{font-family:"Spectral",serif; font-weight:600; font-size:19px; line-height:1.15; text-wrap:balance; margin:0; color:var(--ink)}
+.card .cname b{color:var(--c); font-weight:600}
+.ficon{width:26px; height:26px; border-radius:5px; flex:0 0 auto; vertical-align:middle;
+  border:1px solid var(--edge2); box-shadow:0 1px 2px rgba(0,0,0,.2)}
+.hicon{width:44px; height:44px; border-radius:9px; flex:0 0 auto; border:1px solid var(--edge2); box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.chips{display:flex; flex-wrap:wrap; gap:6px}
+.chip{
+  font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:500; letter-spacing:.2px;
+  color:var(--muted); background:var(--panel2); border:1px solid var(--edge); border-radius:999px; padding:2px 9px;
+}
+.chip.accent{color:var(--c); border-color:color-mix(in srgb,var(--c) 45%,var(--edge))}
+.card .cdesc{font-size:13.5px; color:var(--muted); line-height:1.5; margin:0;
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden}
+.card .meta{margin-top:auto; font-size:11.5px; color:var(--faint); font-family:"IBM Plex Mono",monospace; letter-spacing:.2px}
+.empty{color:var(--muted); font-style:italic; padding:40px 4px; font-family:"Spectral",serif; font-size:16px}
+
+/* ---- detail overlay ---- */
+.scrim{position:fixed; inset:0; z-index:40; background:rgba(15,10,20,.55); backdrop-filter:blur(3px);
+  opacity:0; pointer-events:none; transition:opacity .18s}
+.scrim.on{opacity:1; pointer-events:auto}
+.sheet{
+  position:fixed; z-index:41; top:0; right:0; height:100%; width:min(680px,100%);
+  background:var(--panel); border-left:1px solid var(--edge); box-shadow:-16px 0 40px rgba(0,0,0,.28);
+  transform:translateX(100%); transition:transform .24s cubic-bezier(.4,0,.2,1); display:flex; flex-direction:column;
+}
+.sheet.on{transform:none}
+.sheet header{
+  --c:var(--gold); display:flex; align-items:flex-start; gap:14px; padding:22px 24px 16px;
+  border-bottom:1px solid var(--edge); position:relative;
+}
+.sheet header::before{content:""; position:absolute; left:0; top:0; bottom:0; width:5px; background:var(--c)}
+.sheet h2{font-family:"Spectral",serif; font-weight:600; font-size:27px; margin:0; line-height:1.1; text-wrap:balance; color:var(--c)}
+.sheet .hmeta{font-size:12px; color:var(--muted); font-family:"IBM Plex Mono",monospace; margin-top:4px}
+.xclose{
+  margin-left:auto; appearance:none; border:1px solid var(--edge2); background:var(--panel2); color:var(--muted);
+  width:34px; height:34px; border-radius:9px; cursor:pointer; font-size:18px; line-height:1; flex:0 0 auto;
+}
+.xclose:hover{color:var(--ink); border-color:var(--gold-soft)}
+.sheet .body{overflow-y:auto; padding:20px 24px 60px}
+.lead{font-size:14.5px; color:var(--ink); line-height:1.6; margin:0 0 22px}
+.sec-h{font-family:"Spectral",serif; font-size:12px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--gold); margin:26px 0 12px; display:flex; align-items:center; gap:10px}
+.sec-h::after{content:""; flex:1; height:1px; background:linear-gradient(90deg,var(--edge2),transparent)}
+.sec-h:first-child{margin-top:4px}
+.feat{border-left:2px solid var(--edge2); padding:2px 0 2px 14px; margin:0 0 15px}
+.feat .fn{font-weight:600; font-size:14.5px; color:var(--ink); display:flex; flex-wrap:wrap; align-items:center; gap:8px}
+.feat .lv{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:500; color:var(--gold);
+  border:1px solid color-mix(in srgb,var(--gold) 40%,var(--edge)); border-radius:5px; padding:1px 6px}
+.feat .ty{font-family:"IBM Plex Mono",monospace; font-size:10.5px; color:var(--faint); text-transform:lowercase}
+.feat .fd{font-size:13.5px; color:var(--muted); line-height:1.55; margin:5px 0 0; white-space:pre-line}
+.sub{background:var(--panel2); border:1px solid var(--edge); border-radius:11px; padding:14px 16px; margin:0 0 12px}
+.sub .subname{font-family:"Spectral",serif; font-weight:600; font-size:17px; color:var(--ink); margin:0 0 3px; display:flex; align-items:center; gap:9px}
+.sub .subdesc{font-size:13px; color:var(--muted); margin:0 0 12px; font-style:italic}
+.sub .feat:last-child{margin-bottom:0}
+.lead p, .feat .fd p, .sub .subdesc p{margin:0 0 9px}
+.lead p:last-child, .feat .fd p:last-child, .sub .subdesc p:last-child{margin-bottom:0}
+.lead.muted{font-size:13.5px; color:var(--muted)}
+/* opciones de eleccion */
+.feat .opts{list-style:none; margin:8px 0 0; padding:0; display:flex; flex-direction:column; gap:5px}
+.feat .opts li{font-size:13px; color:var(--ink); background:var(--panel2); border:1px solid var(--edge);
+  border-left:2px solid color-mix(in srgb,var(--gold) 55%,var(--edge)); border-radius:7px; padding:6px 10px}
+/* conjuros */
+.lvlbadge{font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600; color:var(--c,var(--gold));
+  border:1px solid color-mix(in srgb,var(--c,var(--gold)) 45%,var(--edge)); border-radius:6px; padding:2px 7px; white-space:nowrap;
+  background:color-mix(in srgb,var(--c,var(--gold)) 12%,transparent)}
+.lvlbadge.big{font-size:13px; padding:6px 11px}
+.card.spell .chead{gap:9px}
+.chip.school{color:var(--c,var(--gold)); border-color:color-mix(in srgb,var(--c,var(--gold)) 45%,var(--edge)); font-weight:600}
+.chip.mini{font-size:10px; opacity:.85; padding:1px 7px}
+.spellgrid{display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:8px; margin:0 0 6px}
+.sg{background:var(--panel2); border:1px solid var(--edge); border-radius:8px; padding:7px 10px; display:flex; flex-direction:column; gap:2px}
+.sg .sgk{font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.5px; text-transform:uppercase; color:var(--faint)}
+.sg .sgv{font-size:13px; color:var(--ink)}
+.spelllvl{display:flex; gap:9px; align-items:flex-start; margin:0 0 9px}
+.spelllvl .spwrap{display:flex; flex-wrap:wrap; gap:5px}
+.spellchip{font-family:inherit; font-size:12.5px; color:var(--ink); cursor:pointer;
+  background:color-mix(in srgb,var(--c,var(--gold)) 10%,var(--panel2)); border:1px solid color-mix(in srgb,var(--c,var(--gold)) 35%,var(--edge));
+  border-radius:20px; padding:3px 11px; transition:background .12s}
+.spellchip:hover{background:color-mix(in srgb,var(--c,var(--gold)) 24%,var(--panel2))}
+/* tablas del manual */
+.tablewrap{overflow-x:auto; margin:10px 0; border:1px solid var(--edge); border-radius:9px}
+.tablewrap table{border-collapse:collapse; width:100%; font-size:13px; min-width:min-content}
+.tablewrap th, .tablewrap td{padding:6px 11px; text-align:left; border-bottom:1px solid var(--edge); white-space:nowrap}
+.tablewrap thead th{background:var(--panel2); color:var(--gold); font-family:"Spectral",serif; font-weight:600;
+  font-size:11.5px; letter-spacing:.4px; text-transform:uppercase; position:sticky; top:0}
+.tablewrap tbody tr:nth-child(even){background:color-mix(in srgb,var(--panel2) 55%,transparent)}
+.tablewrap tbody tr:last-child td{border-bottom:none}
+.tablewrap td{color:var(--muted)}
+/* citas de sabor */
+.lead blockquote, .feat .fd blockquote{margin:4px 0 16px; padding:2px 0 2px 16px; border-left:3px solid color-mix(in srgb,var(--gold) 55%,var(--edge))}
+.lead blockquote p, .feat .fd blockquote p{font-family:"Spectral",serif; font-style:italic; font-size:15px; color:var(--ink); line-height:1.55; margin:0 0 6px}
+.lead blockquote cite, .feat .fd blockquote cite{display:block; font-style:normal; font-size:12.5px; color:var(--gold); letter-spacing:.3px}
+footer.foot{border-top:1px solid var(--edge); color:var(--faint); font-size:12px; padding:20px 0 40px; text-align:center;
+  font-family:"IBM Plex Mono",monospace}
+@media (max-width:560px){
+  .brand h1{font-size:22px} .sheet h2{font-size:23px} body{font-size:14.5px}
+  .top .wrap{gap:10px 14px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Códice <span class="g">Harford</span></h1>
+    </div>
+    <div class="tabs" role="tablist" id="tabs">
+      <button class="tab" role="tab" data-k="classes" aria-selected="true">Clases</button>
+      <button class="tab" role="tab" data-k="races" aria-selected="false">Razas</button>
+      <button class="tab" role="tab" data-k="backgrounds" aria-selected="false">Trasfondos</button>
+      <button class="tab" role="tab" data-k="spells" aria-selected="false">Conjuros</button>
+      <button class="tab" role="tab" data-k="professions" aria-selected="false">Profesiones</button>
+    </div>
+    <label class="search">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="q" type="search" placeholder="Buscar nombre, rasgo…" autocomplete="off" aria-label="Buscar">
+    </label>
+    <span class="count" id="count"></span>
+  </div>
+</header>
+
+<main class="wrap"><div class="grid" id="grid"></div></main>
+<footer class="foot wrap">Datos canónicos del addon Harford · Clases · Razas · Trasfondos</footer>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></aside>
+
+<script id="kb" type="application/json">/*KBDATA*/</script>
+<script id="icons" type="application/json">/*ICONDATA*/</script>
+<script>
+const KB = JSON.parse(document.getElementById('kb').textContent);
+const ICONS = JSON.parse(document.getElementById('icons').textContent);
+function iconHTML(name, cls){ return (name && ICONS[name]) ? '<img class="'+(cls||'ficon')+'" src="'+ICONS[name]+'" alt="" loading="lazy">' : ''; }
+// color de clase WoW por id Harford
+const CLASSC = {
+  guerrero:'#c69b6d', paladin:'#f48cba', cazador_demonios:'#a330c9', cazador:'#aad372',
+  picaro:'#fff468', sacerdote:'#c9c9cf', caballero_muerte:'#c41e3a', chaman:'#3b7fe0',
+  mago:'#3fc7eb', brujo:'#9a8cf0', monje:'#00c886', druida:'#ff9d33'
+};
+const CLASST = {
+  guerrero:'Guerrero', paladin:'Paladín', cazador_demonios:'Cazador de Demonios', cazador:'Cazador',
+  picaro:'Pícaro', sacerdote:'Sacerdote', caballero_muerte:'Caballero de la Muerte', chaman:'Chamán',
+  mago:'Mago', brujo:'Brujo', monje:'Monje', druida:'Druida'
+};
+const esc = s => (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm = s => (s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+// desc del libro trae parrafos con \n\n -> parrafos reales y tablas markdown -> <table>
+const isSepRow = l => /-/.test(l) && /^\s*\|?[\s:|-]+\|?\s*$/.test(l);
+function renderTable(lines){
+  const cells = r => r.replace(/^\s*\|/,'').replace(/\|\s*$/,'').split('|').map(c=>esc(c.trim()));
+  const rows = lines.filter(l=>!isSepRow(l));
+  if(!rows.length) return '';
+  const head = cells(rows[0]), body = rows.slice(1).map(cells);
+  return `<div class="tablewrap"><table><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`
+    + (body.length?`<tbody>${body.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>`:'')
+    + `</table></div>`;
+}
+// tabla de progresion generada desde los rasgos por nivel (el manual la trae destrozada)
+function progTable(it){
+  const feats=it.features||[]; const byL={};
+  feats.forEach(f=>{const l=f.level||1;(byL[l]=byL[l]||[]).push(f.name)});
+  const maxL=Math.max(...feats.map(f=>f.level||1), 1);
+  let rows='';
+  for(let l=1;l<=maxL;l++){
+    rows+=`<tr><td>${l}</td><td>+${Math.ceil(l/4)+1}</td><td>${byL[l]?esc(byL[l].join(', ')):'—'}</td></tr>`;
+  }
+  return `<div class="tablewrap"><table><thead><tr><th>Nivel</th><th>Comp.</th><th>Rasgos de clase</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function mdBlock(block){
+  const lines = block.split('\n'); let out='', buf=[], tbl=[];
+  const flushP = ()=>{ if(buf.join('').trim()){ out+=`<p>${esc(buf.join('\n').trim()).replace(/\n/g,'<br>')}</p>`; } buf=[]; };
+  const flushT = ()=>{ if(tbl.length){ out+=renderTable(tbl); } tbl=[]; };
+  for(const l of lines){
+    if(l.trim().startsWith('|')){ flushP(); tbl.push(l); }
+    else { flushT(); buf.push(l); }
+  }
+  flushP(); flushT();
+  return out;
+}
+const isAttrib = b => /^[—–]\s*\S/.test(b) && b.length < 90 && !b.includes('|');
+function paras(t){
+  const blocks=(t||'').split(/\n{2,}/).map(b=>b.trim()).filter(Boolean);
+  let html='';
+  for(let i=0;i<blocks.length;i++){
+    const b=blocks[i], next=blocks[i+1]||'';
+    if(isAttrib(b)){ html+=`<blockquote><cite>${esc(b.replace(/^[—–]\s*/,'— '))}</cite></blockquote>`; continue; }
+    if(isAttrib(next)){ html+=`<blockquote>${mdBlock(b)}<cite>${esc(next.replace(/^[—–]\s*/,'— '))}</cite></blockquote>`; i++; continue; }
+    html+=mdBlock(b);
+  }
+  return html;
+}
+const excerpt = (t,n=180) => { t=(t||'').replace(/\s+/g,' ').trim(); return t.length>n ? esc(t.slice(0,n).replace(/\s+\S*$/,''))+'…' : esc(t); };
+// escuelas de magia -> color; nivel -> etiqueta
+const SCHOOLC = {abjuracion:'#5b9bd5', adivinacion:'#d4a12a', conjuracion:'#68c47a', encantamiento:'#e07bc4',
+  evocacion:'#e0553b', ilusion:'#a77bff', nigromancia:'#6aae6a', transmutacion:'#4ec9c9'};
+const schoolColor = s => SCHOOLC[norm(s)] || 'var(--gold)';
+const lvlLabel = l => l===0 ? 'Truco' : ('Nv '+l);
+
+let tab='classes', query='';
+const grid=document.getElementById('grid'), countEl=document.getElementById('count');
+
+function itemColor(it){ return tab==='classes' ? (CLASSC[it.id]||'var(--gold)') : (tab==='spells' ? schoolColor(it.school) : 'var(--gold)'); }
+function hay(it){
+  if(tab==='professions'){
+    let s=it.name+' '+(it.tool||'')+' '+(it.ability||'');
+    (it.recipes||[]).forEach(r=>{s+=' '+r.name+' '+r.out; (r.mats||[]).forEach(m=>s+=' '+m.name)});
+    return norm(s);
+  }
+  if(tab==='spells') return norm([it.name,it.school,it.description,it.mechanics,it.roleNotes,(it.classes||[]).join(' '),(it.categories||[]).join(' '),lvlLabel(it.level)].join(' '));
+  let s=it.name+' '+(it.desc||'');
+  const fs=(it.features||[]).concat(it.traits||[]);
+  fs.forEach(f=>{s+=' '+f.name+' '+(f.desc||''); (f.options||[]).forEach(o=>s+=' '+o.label)});
+  (it.subclasses||[]).forEach(sc=>{s+=' '+sc.name+' '+(sc.desc||''); (sc.features||[]).forEach(f=>s+=' '+f.name+' '+(f.desc||''))});
+  return norm(s);
+}
+function featCount(it){
+  let n=(it.features||it.traits||[]).length;
+  (it.subclasses||[]).forEach(s=>n+=(s.features||[]).length);
+  return n;
+}
+function render(){
+  const list=KB[tab].filter(it=> !query || hay(it).includes(query));
+  countEl.textContent = list.length + (list.length===1?' entrada':' entradas');
+  if(!list.length){ grid.innerHTML='<p class="empty">Sin resultados para “'+esc(query)+'”.</p>'; return; }
+  grid.innerHTML = list.map((it,i)=>{
+    const c=itemColor(it);
+    const idx=KB[tab].indexOf(it);
+    if(tab==='spells'){
+      return `<button class="card spell" style="--c:${c}" data-i="${idx}">
+        <div class="chead">${iconHTML(it.icon,'card-icon')}<span class="lvlbadge">${lvlLabel(it.level)}</span><h3 class="cname"><b>${esc(it.name)}</b></h3></div>
+        <div class="chips"><span class="chip school">${esc(it.school||'')}</span>${it.concentration?'<span class="chip">Concentración</span>':''}${it.ritual?'<span class="chip">Ritual</span>':''}</div>
+        <div class="chips">${(it.classes||[]).map(x=>`<span class="chip mini">${esc(x)}</span>`).join('')}</div>
+        ${it.description?`<p class="cdesc">${excerpt(it.description)}</p>`:''}
+        <div class="meta">${esc((it.categories||[]).join(' · ')||it.id)}</div>
+      </button>`;
+    }
+    if(tab==='professions'){
+      const kindLabel=it.kind==='gather'?'Recoleccion':'Fabricacion';
+      const wl=(it.recipes||[]).filter(r=>r.wl).length;
+      return `<button class="card" style="--c:${c}" data-i="${idx}">
+        <div class="chead">${iconHTML(it.icon,'card-icon')}<h3 class="cname"><b>${esc(it.name)}</b></h3></div>
+        <div class="chips"><span class="chip accent">${kindLabel}</span><span class="chip">${(it.recipes||[]).length} recetas</span>${wl?`<span class="chip">${wl} de DM</span>`:''}</div>
+        <p class="cdesc">${esc(it.tool?('Herramienta: '+it.tool):'Sin herramienta (se aprende practicando)')}. Caracteristica: ${esc(it.ability)}.</p>
+        <div class="meta">${esc(it.id)}</div>
+      </button>`;
+    }
+    let chips='';
+    if(tab==='classes') chips=`<span class="chip accent">d${it.hitDie}</span><span class="chip">${it.subclasses.length} subclases</span><span class="chip">${it.features.length} rasgos</span>`+(it.spellClasses?`<span class="chip">conjuros</span>`:'');
+    else chips=`<span class="chip accent">${it.traits.length} rasgos</span>`;
+    return `<button class="card" style="--c:${c}" data-i="${idx}">
+      <div class="chead">${iconHTML(it.icon,'card-icon')}<h3 class="cname"><b>${esc(it.name)}</b></h3></div>
+      <div class="chips">${chips}</div>
+      ${it.desc?`<p class="cdesc">${excerpt(it.desc)}</p>`:'<p class="cdesc" style="font-style:italic;opacity:.7">— sin descripción —</p>'}
+      <div class="meta">${esc(it.id)}</div>
+    </button>`;
+  }).join('');
+}
+function featHTML(f){
+  const lv = f.level!=null ? `<span class="lv">Nv ${f.level}</span>` : '';
+  const ty = f.type ? `<span class="ty">${esc(f.type)}</span>` : '';
+  const opts = f.options ? `<ul class="opts">${f.options.map(o=>`<li>${esc(o.label)}</li>`).join('')}</ul>` : '';
+  return `<div class="feat"><div class="fn">${iconHTML(f.icon)}<span>${esc(f.name)}</span> ${lv} ${ty}</div>${f.desc?`<div class="fd">${paras(f.desc)}</div>`:''}${opts}</div>`;
+}
+const sheet=document.getElementById('sheet'), scrim=document.getElementById('scrim');
+function spellSheetHTML(it){
+  const c=schoolColor(it.school);
+  const rows=[['Nivel',lvlLabel(it.level)],['Escuela',it.school],['Tiempo de lanzamiento',it.castingTime],['Alcance',it.range],['Componentes',it.components],['Duración',it.duration],['Concentración',it.concentration?'Sí':(it.duration?'No':'')],['Ritual',it.ritual?'Sí':''],['Salvación',it.savingThrow],['Ataque',it.attack],['Daño',it.damage]].filter(r=>r[1]);
+  let inner=`<header style="--c:${c}">${iconHTML(it.icon,'hicon')}<div class="lvlbadge big">${lvlLabel(it.level)}</div><div><h2 id="sheetTitle">${esc(it.name)}</h2><div class="hmeta">${esc(it.school||'')}${(it.classes||[]).length?' · '+esc(it.classes.join(', ')):''}</div></div><button class="xclose" id="xclose" aria-label="Cerrar">✕</button></header><div class="body">`;
+  inner+=`<div class="spellgrid">${rows.map(r=>`<div class="sg"><span class="sgk">${r[0]}</span><span class="sgv">${esc(r[1])}</span></div>`).join('')}</div>`;
+  if((it.categories||[]).length) inner+=`<div class="chips" style="margin:0 0 4px">${it.categories.map(x=>`<span class="chip mini">${esc(x)}</span>`).join('')}</div>`;
+  if(it.description){ inner+=`<div class="sec-h">Descripción</div><div class="lead">${paras(it.description)}</div>`; }
+  if(it.mechanics){ inner+=`<div class="sec-h">Mecánica</div><div class="lead muted">${paras(it.mechanics)}</div>`; }
+  if(it.roleNotes){ inner+=`<div class="sec-h">Notas de rol</div><div class="lead muted" style="font-style:italic">${paras(it.roleNotes)}</div>`; }
+  return inner+'</div>';
+}
+const TIERS=[["Aprendiz",1],["Oficial",75],["Experto",150],["Artesano",225],["Maestro",300]];
+function profSheetHTML(it){
+  const c=itemColor(it);
+  let inner=`<header style="--c:${c}">${iconHTML(it.icon,'hicon')}<div><h2 id="sheetTitle">${esc(it.name)}</h2><div class="hmeta">${esc(it.kind==='gather'?'Recoleccion':'Fabricacion')} - ${esc(it.ability)}${it.tool?' - '+esc(it.tool):''}</div></div><button class="xclose" id="xclose" aria-label="Cerrar">✕</button></header><div class="body">`;
+  for(let t=0;t<TIERS.length;t++){
+    const tname=TIERS[t][0], tmin=TIERS[t][1];
+    const tmax=t+1<TIERS.length?TIERS[t+1][1]-1:999;
+    const recs=(it.recipes||[]).filter(r=>r.skill>=tmin&&r.skill<=tmax);
+    if(!recs.length) continue;
+    inner+=`<div class="sec-h">${tname} (${tmin}${tmax<999?'-'+tmax:'+'})</div>`;
+    recs.forEach(r=>{
+      const mats=(r.mats||[]).map(m=>`${m.qty}x ${esc(m.name)}`).join(', ');
+      inner+=`<div class="feat"><div class="fn">${iconHTML(r.icon)}<span>${esc(r.name)}</span> <span class="lv">skill ${r.skill}</span> <span class="lv">CD ${r.dc}</span>${r.wl?' <span class="ty">plano del DM</span>':''}</div><div class="fd"><p>${mats?mats+' → ':''}${r.qty>1?r.qty+'x ':''}${esc(r.out)}</p></div></div>`;
+    });
+  }
+  return inner+'</div>';
+}
+function itemSheetHTML(it){
+  const c=itemColor(it);
+  let inner=`<header style="--c:${c}">${iconHTML(it.icon,'hicon')}<div><h2 id="sheetTitle">${esc(it.name)}</h2><div class="hmeta">${esc(it.id)}${tab==='classes'?' · dado de golpe d'+it.hitDie:''}</div></div><button class="xclose" id="xclose" aria-label="Cerrar">✕</button></header><div class="body">`;
+  if(it.desc) inner+=`<div class="lead">${paras(it.desc)}</div>`;
+  if(tab==='classes' && (it.features||[]).length){
+    inner+=`<div class="sec-h">Progresión</div>`+progTable(it);
+  }
+  const main=it.features||it.traits||[];
+  if(main.length){
+    inner+=`<div class="sec-h">${tab==='classes'?'Rasgos de clase':(tab==='races'?'Rasgos':'Rasgos y competencias')}</div>`;
+    inner+=main.map(featHTML).join('');
+  }
+  if(it.subclasses && it.subclasses.length){
+    inner+=`<div class="sec-h">Subclases · ${it.subclasses.length}</div>`;
+    inner+=it.subclasses.map(sc=>`<div class="sub"><div class="subname">${iconHTML(sc.icon)}<span>${esc(sc.name)}</span></div>${sc.desc?`<div class="subdesc">${paras(sc.desc)}</div>`:''}${(sc.features||[]).map(featHTML).join('')}</div>`).join('');
+  }
+  if(it.spellClasses){
+    const set=new Set(it.spellClasses);
+    const sp=KB.spells.filter(s=>(s.classes||[]).some(x=>set.has(x)));
+    if(sp.length){
+      inner+=`<div class="sec-h">Conjuros de clase · ${sp.length}</div>`;
+      const byL={}; sp.forEach(s=>{(byL[s.level]=byL[s.level]||[]).push(s)});
+      Object.keys(byL).sort((a,b)=>a-b).forEach(l=>{
+        inner+=`<div class="spelllvl"><span class="lvlbadge">${lvlLabel(+l)}</span><div class="spwrap">${byL[l].map(s=>`<button class="spellchip" data-sid="${esc(s.id)}" style="--c:${schoolColor(s.school)}">${esc(s.name)}</button>`).join('')}</div></div>`;
+      });
+    }
+  }
+  return inner+'</div>';
+}
+function showSheet(inner){
+  sheet.innerHTML=inner;
+  sheet.classList.add('on'); scrim.classList.add('on');
+  document.getElementById('xclose').onclick=closeDetail;
+  sheet.querySelectorAll('.spellchip').forEach(b=>b.onclick=()=>{ const s=KB.spells.find(x=>x.id===b.dataset.sid); if(s) showSheet(spellSheetHTML(s)); });
+  sheet.querySelector('.body').scrollTop=0;
+}
+function openDetail(idx){ const it=KB[tab][idx]; showSheet(tab==='spells'?spellSheetHTML(it):(tab==='professions'?profSheetHTML(it):itemSheetHTML(it))); }
+function closeDetail(){ sheet.classList.remove('on'); scrim.classList.remove('on'); }
+scrim.onclick=closeDetail;
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeDetail(); });
+grid.addEventListener('click',e=>{ const b=e.target.closest('.card'); if(b) openDetail(+b.dataset.i); });
+document.getElementById('tabs').addEventListener('click',e=>{
+  const b=e.target.closest('.tab'); if(!b) return;
+  document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected', t===b));
+  tab=b.dataset.k; render();
+});
+document.getElementById('q').addEventListener('input',e=>{ query=norm(e.target.value.trim()); render(); });
+render();
+</script>

@@ -1,0 +1,4 @@
+# intermedios regenerables del pipeline (build_codice.py los rehace)
+kb.json
+kb_icons.json
+icons_data.json

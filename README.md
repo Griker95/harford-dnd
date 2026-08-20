@@ -77,6 +77,7 @@ Harford/            <- Addon principal: jugadores y DM (84 modulos en 16 carpeta
 HarfordAdmin/       <- Addon admin: herramientas DM, editores y comandos protegidos
 HarfordDebug/       <- Addon opcional: diagnostico, probes y limpieza de SavedVariables
 
+tools/              <- Generadores: ESTRUCTURA.md, CHANGELOG.md y la extraccion de datos para la web (tools/codice/)
 ESTRUCTURA.md       <- Organigrama de modulos: que hace cada archivo y como fluyen los datos
 CHANGELOG.md        <- Historial de cambios del proyecto
 AGENTS.md           <- Arquitectura, contratos de modulos y enfoques fallidos

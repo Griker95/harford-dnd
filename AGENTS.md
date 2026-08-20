@@ -305,6 +305,7 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   - Los rasgos `choice` (p.ej. `Estilo de Combate`, `Pericia`, afinidades) deben mostrar la opcion elegida tanto en el resumen `Rasgos` como en el boton del `Libro`. Si no hay opcion resuelta/importada, mostrar `Eleccion: pendiente` en vez de ocultar el dato; el tooltip lista opciones posibles cuando el choice esta pendiente.
   - El resumen `Rasgos` NO muestra contadores `[X/Y]` de usos por descanso. Esos usos pertenecen al Libro/accion del rasgo; el boton del Libro muestra `Usos X/Y · Descanso corto|Descanso largo`, bloquea la preparacion/uso si no quedan usos y refresca el contador al gastar. Meterlos en el resumen duplica filas como `Conocimiento Arcano`.
   - **Enlace de habilidad clicable**: los enlaces de tipo propio (`harford:abil:`) NO son clicables en este cliente (no disparan `SetItemRef`) y `ChatFrame_OnHyperlinkShow` esta vetado; por eso se usa **TRP3 ChatLinks** via `HarfordTRP3.GetAbilityChatLink(feature)` (modulo `harford_ability`, hyperlink `totalrp3`). Fallback a texto de color si TRP3 no esta.
+- Contrato `HarfordProfessions` (`Harford/Professions/`): profesiones D&D+WoW en tres capas de solo-datos + core. `HarfordProfessionsData` define profesiones (herramienta, caracteristica, `kind` craft/gather/utility) y las RECETAS; `HarfordProfessionsItems.REGISTRY` mapea cada CLAVE estable (`mena_cobre`) a su itemId real de Epsilon — una clave con `id = nil` es valida: su receta sale "pendiente" (visible, no crafteable) y nada se rompe. **Conocer una profesion = tener la competencia de su herramienta** (`HarfordDnDFeatureEffects.HasToolProf`). Craftear = d20 + PB (si herramienta) + Mod vs CD, critico 20 = salida x2, consume materiales REALES (`RemoveItem`) y entrega items REALES (`GiveItem`); skill 1-300 con subida estilo WoW (umbral gris = skillReq+100) y tiers Aprendiz/Oficial/Experto/Artesano/Maestro (1/75/150/225/300). **Cadenas completas 1-300 para las 14 profesiones de WoW** (2026-08): inspiradas en Classic, CD 8-18, cruzadas entre si (mineria->herreria/joyeria, herboristeria->alquimia/inscripcion, desollar->peleteria, pesca->cocina; encantamiento produce las esencias de los remates); el remate a skill 300 de cada una es `worldLearned` (lo concede el DM via `LearnRecipe`, no se aprende solo). **No renombrar ids de receta ni claves de item**: la SV per-character `HarfordProfessionsStore` (`skills`/`learned`/`nodeCooldowns`) los referencia. **Nodos de mundo**: `HarfordProfessions.GatherNode(recipeId, cooldownSeconds)` es la puerta para vetas/plantas/bancos de peces colocados por el DM — el gossip del NPC/objeto ejecuta un ArcSpell que la llama (mismo patron que `HarfordQuestAPI` en WorldQuests). Solo acepta recetas de profesiones `gather`; la identidad del nodo es el GUID de la unidad del gossip (`npc`/`target`); el cooldown (300s por defecto, minimo 30) es por nodo y por personaje, persiste en `nodeCooldowns` con poda de expirados, y se aplica AL INTENTO (exito o fallo) — pero SOLO si `CanCraft` pasa: quien no conoce la profesion o tiene la receta pendiente de ID no consume el nodo. ArcSpell de ejemplo (accion Script del gossip): `HarfordProfessions.GatherNode("min_cobre", 300)`. Para cosechar itemIds: `/harford debug run merchantdump [match|apply]` con un mercader abierto vuelca id+nombre, casa por nombre normalizado contra las claves pendientes y acumula todo en `HarfordDebugSettings.merchantDump` (leible del fichero SV tras /reload); `apply` rellena en caliente con `HarfordProfessionsItems.Set` (solo sesion: la persistencia real se hornea en el .lua).
 - Contrato `HarfordActionBars` (`Harford/DnD/UI/HarfordActionBars.lua`): barra de accion propia (frame movible, NO secuestra los ActionButton de Blizzard) para colocar habilidades del Libro. Gate por `HarfordConfig` (`actionbar` on/off; opcion en el panel de config). Expone API publica (`Toggle`/`SetShown`/`SetTestTexture`/`SetGeometry`/`Layout`); los diagnosticos viven en `HarfordDebug` (`actionbar`/`actionbarsize`/`actionbarset`/`actionbarscan`). **Limitacion Epsilon confirmada**: las texturas de madera retail `Interface\PlayerActionBarAlt\spellbar-wood*` (y `wood`) **NO existen en el cliente Epsilon** (salen verde); usar solo texturas que el cliente tiene (Spellbook/Buttons/Icons/Achievement…). `GetFileIDFromPath(ruta)` permite comprobar si una textura existe antes de usarla (`/harford debug run actionbarscan [ruta]`). FASE 2 pendiente: arrastrar habilidades del Libro a los slots (patron Arcanum: SecureActionButton con `type` custom + `_<type>` handler) y persistencia.
   - Fuentes confirmadas para replicar el `CharacterFrame` nativo sin ajustes a ojo:
     - `G:\Epsilon\_retail_\WTF\Account\MORTYN\SavedVariables\FrameDump.lua`: arbol completo del frame vivo (`CharacterFrame`, `PaperDollFrame`, `CharacterFrameInset`, `CharacterFrameInsetRight`, `CharacterStatsPane`, slots y modelo).
@@ -1723,6 +1724,45 @@ end
   `sme_arcano`/`esa_arcano`/`ren_elf_arcano` conceden `detectar_magia`) generan un frame "Magia <Raza>".
 - **Debug**: `wipesheet [confirm]` (deja el PJ sin ficha), `abouttrp3` (regenera About), `preparar`
   (abre el menu de preparados).
+
+## Compendio: Convenciones De Datos Y Pipeline RuleSource (2026-08)
+
+- **Nombres normalizados**: conjuros, rasgos (clase/subclase/raza/subraza), dotes y trasfondos usan
+  mayuscula SOLO inicial ("Descarga de relampago", "Artesano gremial"). Se preservan nombres propios
+  (Tasha, Mordenkainen, Leomund, Elune...), siglas (S.R.B.) y la mayuscula tras dos puntos
+  ("Caracteristica: Refugio del fiel"). NO tocar clases, subclases ni razas ("Caballero de la Muerte",
+  "Elfo de la Noche"): los libros las escriben asi y ademas `SPELL_PROGRESSION`/`classes = {...}`
+  cruzan conjuros POR NOMBRE de clase; renombrarlas rompe el sistema de conjuros.
+- **Sistema metrico**: todas las medidas van en metros/kg/g con la equivalencia REAL a 1 decimal
+  (1 pie = 0,3048 m; 1 libra = 0,4536 kg; 1 milla = 1,609 km). 60 pies -> 18,3 m. Conviven "18 metros"
+  (texto nativo del libro Warcraft) y "18,3 metros" (convertido del PHB): ambos correctos. La
+  conversion vive en `RuleSource/metrico.py` y es idempotente.
+- **Descripciones de conjuro**: 276/384 llevan el texto del manual, volcado con
+  `RuleSource/volcar_conjuros.py`, que SOLO escribe si coinciden nombre (o su forma sin espacios,
+  por titulos partidos por OCR) + nivel + escuela. Los manuales se extraen con
+  `RuleSource/extraer_conjuros.py` POR COLUMNAS (aplanar la pagina mezcla columnas y parte palabras:
+  "su rge", texto de otro conjuro). El extractor repara guiones de silaba ("des- bloquea") y digitos
+  OCR ("ld8" -> "1d8", "2dl0" -> "2d10"). Tasha trae los titulos DENTRO de la imagen de fondo: se
+  recuperan del OCR (`RuleSource/ocr_libro.ps1`, motor Windows es-ES) y se emparejan por escuela+nivel.
+  La Costa de la Espada es un escaneo sin capa de texto: solo OCR.
+- **`Catalog.spells` de HarfordIconCatalog es una LISTA de candidatos por conjuro**: el addon usa el
+  primero que resuelve y el ultimo suele ser un `Interface\Icons\...` base garantizado. Al leerla
+  desde fuera hay que recorrer la lista, no quedarse con el primero. Los iconos `wh_*` (Warhammer) ya
+  no existen en el cliente: esos conjuros llevan un segundo candidato anadido (eps_bg3/spell_holy...).
+  Erratas conocidas del catalogo: `eps_bg3_fiends` -> el PNG real es `eps_bg3_friends`;
+  `fotunesfavor` -> `fortunesfavor`; `wc3_blink` -> `w3reforgedblink`.
+- **Web publica (harfordweb)**: el compendio de la web se regenera desde el addon con el pipeline del
+  scratchpad (extract_kb -> add_icons_kb -> add_full_desc -> deploy_compendium); el addon es la fuente
+  de verdad. No editar `js/compendium-*.js` a mano.
+- **Fuentes curadas en `RuleSource/Export/*.json`**: cuando un libro trae los TITULOS dentro de la
+  imagen (Tasha) o el OCR los rompe, el cuerpo se cura una vez a mano y se guarda como JSON durable
+  que el pipeline consume: `dotes_tasha.json` (12 dotes del Caldero, clave = nombre normalizado),
+  `rasgos_tasha.json` (rasgos de clase, p.ej. Formulas de trucos del Mago), `variantes_phb.json`
+  (5 variantes de trasfondo: Gladiador, Espia, Pirata, Caballero, Comerciante Gremial) y
+  `trasfondos_phb.json`(+`_rasgos`). Erratas OCR de titulos: el PHB lee "OBSERVADOR" como
+  "UBSERVADOR" (alias en el extractor de dotes). Los rasgos cortos restantes ("Ataque extra",
+  "Incremento de caracteristica", "Guardas demoniacas" = Defensa sin Armadura renombrada) son reglas
+  de una linea tambien en el libro: no forzar textos mas largos.
 
 ## Verificacion
 

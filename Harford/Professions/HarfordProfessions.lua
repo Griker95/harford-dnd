@@ -42,6 +42,7 @@ local function Store()
     HarfordProfessionsStore = HarfordProfessionsStore or {}
     HarfordProfessionsStore.skills = HarfordProfessionsStore.skills or {}   -- [profId] = skill (num)
     HarfordProfessionsStore.learned = HarfordProfessionsStore.learned or {} -- [recipeId] = true (worldLearned)
+    HarfordProfessionsStore.nodeCooldowns = HarfordProfessionsStore.nodeCooldowns or {} -- [nodeGuid] = expiraEpoch
     return HarfordProfessionsStore
 end
 
@@ -257,4 +258,62 @@ function API.Craft(recipeId)
         HarfordDnDRolls.BroadcastAbility({ name = "Crafteo: " .. (r.name or outName) })
     end
     return true
+end
+
+------------------------------------------------------------
+-- Nodos de recoleccion en el mundo (vetas, plantas, bancos de peces).
+--
+-- El DM coloca un NPC/objeto de fase y su gossip ejecuta un ArcSpell que llama:
+--     HarfordProfessions.GatherNode("min_cobre", 300)
+-- (recipeId de una profesion de RECOLECCION + cooldown en segundos, opcional, 300 por defecto).
+--
+-- Mismo patron que HarfordWorldQuests: la identidad del nodo es el GUID de la unidad del gossip,
+-- asi que hace falta tener el nodo como unidad activa (npc/target). El cooldown es POR NODO Y POR
+-- PERSONAJE, persiste en HarfordProfessionsStore.nodeCooldowns y se aplica AL INTENTO (exito o
+-- fallo): la tirada ya se hizo, el nodo queda "trabajado" y no se puede reintentar en bucle.
+-- La tirada, materiales, entrega y anuncio son los de Craft(); esto solo añade la puerta de nodo.
+------------------------------------------------------------
+local function PruneNodeCooldowns()
+    local cooldowns = Store().nodeCooldowns
+    local now = time and time() or 0
+    for guid, expira in pairs(cooldowns) do
+        if (tonumber(expira) or 0) <= now then cooldowns[guid] = nil end
+    end
+end
+
+function API.GatherNode(recipeId, cooldownSeconds)
+    local r = API.GetRecipe(recipeId)
+    if not r then print("|cffff5555Nodo mal configurado: receta desconocida (" .. tostring(recipeId) .. ").|r") return false end
+    local def = API.GetDefinition(r.profession)
+    if not (def and def.kind == "gather") then
+        print("|cffff5555Los nodos de mundo son solo de recoleccion (" .. tostring(r.profession) .. " no lo es).|r")
+        return false
+    end
+    local guid = (UnitExists and UnitExists("npc") and UnitGUID and UnitGUID("npc"))
+        or (UnitExists and UnitExists("target") and UnitGUID and UnitGUID("target"))
+    if not guid then
+        print("|cffff5555No se detecta el nodo: interactua con la veta/planta (gossip o target).|r")
+        return false
+    end
+    PruneNodeCooldowns()
+    local cooldowns = Store().nodeCooldowns
+    local now = time and time() or 0
+    local expira = tonumber(cooldowns[guid]) or 0
+    if expira > now then
+        local resta = expira - now
+        print(string.format("|cffffcc00Este nodo ya esta trabajado. Vuelve en %d min %d s.|r",
+            math.floor(resta / 60), resta % 60))
+        return false
+    end
+    -- Validar ANTES de consumir el nodo: si el personaje no puede ni intentarlo (no conoce la
+    -- profesion, skill corto, item pendiente de ID), Craft avisara pero el nodo no debe gastarse.
+    local puede, motivo = API.CanCraft(recipeId)
+    if not puede then
+        print("|cffff5555" .. tostring(motivo) .. "|r")
+        return false
+    end
+    -- El INTENTO consume el nodo aunque la tirada falle: sin reintentos en bucle.
+    cooldowns[guid] = now + math.max(30, math.floor(tonumber(cooldownSeconds) or 300))
+    local ok = API.Craft(recipeId)
+    return ok and true or false
 end

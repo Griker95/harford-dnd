@@ -3773,4 +3773,80 @@ API.RegisterCommand("preparar", function()
     end
 end, "abre el menu de reelegir conjuros preparados (como tras un descanso largo)")
 
+API.RegisterCommand("merchantdump", function(args)
+    -- Vuelca los items del MERCADER ABIERTO. Pensado para cosechar itemIds de Epsilon y
+    -- rellenar el registro de profesiones (HarfordProfessionsItems, claves con id=nil).
+    --   merchantdump         -> lista id + nombre + precio de todo el inventario del vendedor
+    --   merchantdump match   -> solo los que casan por NOMBRE con una clave pendiente del
+    --                           registro, en formato listo para hornear (clave -> id)
+    --   merchantdump apply   -> como match, y ademas aplica el id EN CALIENTE con
+    --                           HarfordProfessionsItems.Set (solo esta sesion: el registro es
+    --                           codigo; para que persista hay que hornearlo en el .lua)
+    -- Todo lo listado se acumula ademas en HarfordDebugSettings.merchantDump (SavedVariable),
+    -- deduplicado por itemId: tras /reload se puede leer del fichero SV sin copiar del chat.
+    args = tostring(args or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
+    local total = (GetMerchantNumItems and GetMerchantNumItems()) or 0
+    if total <= 0 then
+        Print("Abre primero la ventana de un mercader (no hay items de vendedor visibles).")
+        return
+    end
+    HarfordDebugSettings = type(HarfordDebugSettings) == "table" and HarfordDebugSettings or {}
+    HarfordDebugSettings.merchantDump = type(HarfordDebugSettings.merchantDump) == "table"
+        and HarfordDebugSettings.merchantDump or {}
+    local dump = HarfordDebugSettings.merchantDump
+
+    local function Norm(text)
+        text = tostring(text or "")
+        if HarfordClassColors and HarfordClassColors.StripAccents then
+            text = HarfordClassColors.StripAccents(text)
+        end
+        text = text:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+        return text
+    end
+
+    -- Claves del registro de profesiones aun sin id, indexadas por nombre normalizado.
+    local pendingByName = {}
+    local registry = HarfordProfessionsItems and HarfordProfessionsItems.REGISTRY
+    for key, entry in pairs(registry or {}) do
+        if type(entry) == "table" and not entry.id then
+            pendingByName[Norm(entry.name or key)] = key
+        end
+    end
+
+    local vendorName = (UnitExists and UnitExists("npc") and UnitName and UnitName("npc"))
+        or (UnitExists and UnitExists("target") and UnitName and UnitName("target")) or "?"
+    local listed, matched = 0, 0
+    for index = 1, total do
+        local link = GetMerchantItemLink and GetMerchantItemLink(index)
+        local itemId = link and tonumber(link:match("item:(%d+)"))
+        local name = link and link:match("%[(.-)%]")
+        local infoName, _, price = GetMerchantItemInfo and GetMerchantItemInfo(index)
+        name = name or infoName or ("item " .. tostring(itemId or index))
+        if itemId then
+            dump[tostring(itemId)] = name
+            listed = listed + 1
+            local key = pendingByName[Norm(name)]
+            if args == "match" or args == "apply" then
+                if key then
+                    matched = matched + 1
+                    Print(string.format("|cff38d26a%s|r = %d  -- %s", key, itemId, tostring(name)))
+                    if args == "apply" and HarfordProfessionsItems and HarfordProfessionsItems.Set then
+                        HarfordProfessionsItems.Set(key, itemId)
+                    end
+                end
+            else
+                local coins = price and price > 0
+                    and (GetCoinTextureString and GetCoinTextureString(price) or tostring(price) .. "c") or "-"
+                Print(string.format("%2d) |cffffd100%d|r  %s  (%s)", index, itemId, tostring(name), coins))
+            end
+        end
+    end
+    Print(string.format("Mercader |cffffcc00%s|r: %d items listados de %d.", tostring(vendorName), listed, total))
+    if args == "match" or args == "apply" then
+        Print(string.format("Coinciden con claves pendientes del registro: %d.%s", matched,
+            args == "apply" and (matched > 0 and " Aplicados EN CALIENTE (esta sesion); hornear en el .lua para persistir." or "") or ""))
+    end
+    Print("Volcado acumulado en HarfordDebugSettings.merchantDump (persiste al hacer /reload).")
+end, "vuelca los items del mercader abierto (match/apply casan con el registro de profesiones). Uso: merchantdump [match|apply]")
+
 SetEnabled(type(HarfordDebugSettings) == "table" and HarfordDebugSettings.enabled == true, true)

@@ -30,38 +30,40 @@ end
 
 local RefreshUI  -- forward
 
--- TEXTURAS: SIEMPRE por RUTA y verificadas, nunca por fileID numerico.
+-- TEXTURAS: los fileID NUMERICOS de la sonda son la fuente correcta.
 --
--- La sonda del frame nativo devuelve numeros porque `GetTexture()` sobre una textura YA CARGADA
--- resuelve a su fileID. Epsilon pinta esas texturas cuando las carga Blizzard por ruta, pero un
--- addon que las pide por NUMERO no las resuelve: salen en verde (o en blanco liso). Por eso aqui
--- se traduce cada fileID de la sonda a su ruta real y se comprueba con GetFileIDFromPath.
--- Lo que no exista queda REGISTRADO en API._textureIssues y se oculta, en vez de ensuciar la
--- ventana con cuadrados de color. Diagnostico: `/harford debug run crafttex`.
+-- Comprobado con el diff entre la captura del TradeSkillFrame nativo y la nuestra: el frame
+-- nativo usa EXACTAMENTE estos numeros (136569 riel del scroll, 136571 borde de la barra,
+-- 132086/132085 pestanas...), asi que el cliente los resuelve perfectamente. Sustituirlos por
+-- rutas "equivalentes" fue un error: esas rutas NO existen y la ventana se quedo sin esas
+-- piezas. Regla: copiar el fileID tal cual de la sonda; solo usar ruta cuando la sonda
+-- devuelva una ruta. Lo que no cargue se registra en API._textureIssues (`crafttex`).
 API._textureIssues = {}
 
-local function SafeTexture(texture, path, label)
+local function SafeTexture(texture, source, label)
     if not texture then return false end
-    if GetFileIDFromPath and not GetFileIDFromPath(path) then
-        API._textureIssues[#API._textureIssues + 1] = (label or "?") .. " -> " .. path
+    if type(source) == "number" then
+        texture:SetTexture(source)   -- fileID tomado del nativo: no se inventa nada
+        return true
+    end
+    if GetFileIDFromPath and not GetFileIDFromPath(source) then
+        API._textureIssues[#API._textureIssues + 1] = (label or "?") .. " -> " .. tostring(source)
         texture:Hide()
         return false
     end
-    texture:SetTexture(path)
+    texture:SetTexture(source)
     return true
 end
 
--- Rutas reales de las texturas que la sonda reporto como fileID en el TradeSkillFrame nativo.
+-- fileID EXACTOS del TradeSkillFrame nativo (captura nativo2).
 local TEX = {
-    barBorder  = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-BarBorder",
-    barFill    = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar",
-    scrollRail = "Interface\\PaperDollInfoFrame\\UI-Character-ScrollBar",
-    scrollKnob = "Interface\\Buttons\\UI-ScrollBar-Knob",
-    tabActive  = "Interface\\HelpFrame\\HelpFrameTab-Active",
-    tabInactive = "Interface\\HelpFrame\\HelpFrameTab-Inactive",
-    tabHighlight = "Interface\\PaperDollInfoFrame\\UI-Character-Tab-Highlight",
-    rowHighlight = "Interface\\Buttons\\UI-Listbox-Highlight2",
-    nameFrame  = "Interface\\QuestFrame\\UI-QuestItemNameFrame",
+    barBorder = 136571,
+    scrollRail = 136569,
+    scrollKnob = 130849,
+    tabActive = 132086,
+    tabInactive = 132085,
+    tabHighlight = 136580,
+    nameFrame = 136796,
 }
 
 -- Algunos nombres de icono del catalogo NO existen en el cliente Epsilon (se renderizan
@@ -191,7 +193,7 @@ local function CreateFrameIfNeeded()
     local bar = CreateFrame("StatusBar", nil, frame)
     bar:SetSize(447, 14)
     bar:SetPoint("TOP", frame, "TOP", 0, -33)
-    bar:SetStatusBarTexture("Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar")
+    bar:SetStatusBarTexture(136570)   -- mismo fileID que la barra nativa
     -- Nativo (dato crudo de la sonda): el relleno va con alpha 0.5 y SIN fondo negro debajo;
     -- con alpha 1 y una banda negra la barra se ve como una franja dura y desencajada.
     bar:SetStatusBarColor(0, 0, 1, 0.5)
@@ -456,9 +458,7 @@ local function CreateFrameIfNeeded()
     local castBar = CreateFrame("StatusBar", nil, frame)
     castBar:SetSize(220, 18)
     castBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 10)
-    local castFill = "Interface\\CastingBar\\UI-CastingBar-Fill"
-    castBar:SetStatusBarTexture(
-        (GetFileIDFromPath and not GetFileIDFromPath(castFill)) and "Interface\\TargetingFrame\\UI-StatusBar" or castFill)
+    castBar:SetStatusBarTexture(136570)
     castBar:SetStatusBarColor(1, 0.7, 0)
     castBar:SetMinMaxValues(0, 1)
     local castBg = castBar:CreateTexture(nil, "BACKGROUND")

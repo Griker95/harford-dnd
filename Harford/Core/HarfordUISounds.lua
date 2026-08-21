@@ -26,17 +26,32 @@ API.SOUNDS = API.SOUNDS or {
     skills_panel_opened = { id = 567440, kind = "file" },
     skills_panel_tab_changed = { id = 567440, kind = "file" },
     reputation_tracking_changed = { id = 856, kind = "soundkit" },
-    -- Crafteo. IDs PROVISIONALES: suenan, pero no son los del TradeSkillFrame nativo.
-    -- Para cambiarlos por los reales: `/harford debug run nativeprobe sound on`, craftear
-    -- en el frame nativo y mirar `HarfordDebugSettings.soundLog`.
-    craft_started = { id = 567504, kind = "file" },
-    craft_succeeded = { id = 567439, kind = "file" },
-    craft_failed = { id = 567459, kind = "file" },
+    -- Crafteo. NO reutilizar aqui los ids de mision: fabricar sonaria igual que completar
+    -- una mision. Se resuelven por NOMBRE contra la tabla SOUNDKIT del cliente (el primero
+    -- que exista gana) y, si ninguno existe, el evento queda MUDO en vez de sonar a otra cosa.
+    -- Los del TradeSkillFrame nativo se capturan con `nativeprobe sound on` y se pegan aqui
+    -- como `{ id = N, kind = "soundkit" }`.
+    craft_started = { names = { "UI_PROFESSIONS_CRAFT_START", "TRADESKILL_CREATE" } },
+    craft_succeeded = { names = { "UI_PROFESSIONS_CRAFT_COMPLETE", "TRADESKILL_CREATE" } },
+    craft_failed = { names = { "UI_PROFESSIONS_CRAFT_FAIL", "IG_QUEST_FAILED" } },
 }
 
 local function PlayEntry(entry, channel)
     if type(entry) == "number" then entry = { id = entry, kind = "file" } end
-    if type(entry) ~= "table" or not entry.id then return false end
+    if type(entry) ~= "table" then return false end
+    -- Entrada por NOMBRE de SOUNDKIT: se resuelve contra el cliente, sin numeros inventados.
+    -- Si el cliente no conoce ninguno, se queda muda a proposito.
+    if not entry.id and type(entry.names) == "table" then
+        if type(SOUNDKIT) ~= "table" then return false end
+        for _, name in ipairs(entry.names) do
+            local kit = SOUNDKIT[name]
+            if kit then
+                entry = { id = kit, kind = "soundkit" }
+                break
+            end
+        end
+    end
+    if not entry.id then return false end
 
     local kind = tostring(entry.kind or "file"):lower()
     local ok, willPlay, handle

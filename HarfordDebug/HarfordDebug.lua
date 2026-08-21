@@ -138,6 +138,98 @@ API.RegisterCommand("deps", function()
     Print("ARC.CMD/ARC.COMM: " .. (status.arc and "OK" or "NO"))
 end, "estado de EpsilonLib/ARC")
 
+-- Atajos de prueba para la progresion propia. Permanecen en HarfordDebug: no son
+-- comandos de juego ni una alternativa al flujo normal de recompensas/subida.
+API.RegisterCommand("xp", function(args)
+    local amount = tonumber(tostring(args or ""):match("%-?%d+"))
+    if not amount or amount == 0 then
+        Print("Uso: xp <cantidad>. Ejemplo: xp 300")
+        return
+    end
+    if not (HarfordCharacterXP and HarfordCharacterXP.AddXP) then
+        Print("HarfordCharacterXP no disponible")
+        return
+    end
+    if not HarfordCharacterXP.AddXP(amount, "debug") then
+        Print("No se pudo ajustar la XP")
+    end
+end, "suma/resta XP propia: xp <cantidad>")
+
+API.RegisterCommand("rep", function(args)
+    local factionId, amount = tostring(args or ""):match("^%s*(%S+)%s+([%-]?%d+)%s*$")
+    amount = tonumber(amount)
+    if not factionId or not amount or amount == 0 then
+        Print("Uso: rep <faccionId> <cantidad>. Ejemplo: rep compania_harford 100")
+        return
+    end
+    if not (HarfordReputation and HarfordReputation.RememberPlayer and HarfordReputation.AdjustPlayerPoints) then
+        Print("HarfordReputation no disponible")
+        return
+    end
+    if not HarfordReputation.GetFaction or not HarfordReputation.GetFaction(factionId) then
+        Print("Faccion no encontrada: " .. tostring(factionId))
+        return
+    end
+    local playerKey = HarfordReputation.RememberPlayer("player")
+    if not playerKey then
+        Print("No se pudo identificar al jugador")
+        return
+    end
+    local ok, err = HarfordReputation.AdjustPlayerPoints(playerKey, factionId, amount, { fromSync = true })
+    if not ok then
+        Print("No se pudo ajustar reputacion: " .. tostring(err or "error desconocido"))
+        return
+    end
+    local current = HarfordReputation.GetPlayerPoints(playerKey, factionId)
+    Print(string.format("Reputacion %s: %s%d -> %d", tostring(factionId), amount >= 0 and "+" or "", amount, tonumber(current) or 0))
+end, "suma/resta reputacion propia: rep <faccionId> <cantidad>")
+
+API.RegisterCommand("nivel", function(args)
+    local requested, classIndex = tostring(args or ""):match("^%s*(%d+)%s*(%d*)%s*$")
+    requested = tonumber(requested)
+    classIndex = tonumber(classIndex)
+    if not requested or requested < 1 or requested > 20 then
+        Print("Uso: nivel <1-20> [indiceClase]. Ejemplo: nivel 4 1")
+        return
+    end
+    if not (HarfordDnDProgression and HarfordDnDProgression.Get and HarfordDnDProgression.SetClassEntry) then
+        Print("HarfordDnDProgression no disponible")
+        return
+    end
+    local data = HarfordDnDProgression.Get()
+    local classes = data and data.classLevels or {}
+    if #classes == 0 then
+        Print("No hay clase configurada en la ficha")
+        return
+    end
+    if not classIndex and #classes > 1 then
+        Print("Ficha multiclase. Indica el indice: nivel <1-20> <indiceClase>")
+        for i, entry in ipairs(classes) do
+            Print(string.format("  %d: %s nivel %d", i, tostring(entry.classId or "?"), tonumber(entry.level) or 0))
+        end
+        return
+    end
+    classIndex = classIndex or 1
+    local entry = classes[classIndex]
+    if not entry then
+        Print("Indice de clase invalido: " .. tostring(classIndex))
+        return
+    end
+    local ok, updated = HarfordDnDProgression.SetClassEntry(classIndex, entry.classId, entry.subclassId, requested)
+    if not ok then
+        Print("No se pudo ajustar el nivel: " .. tostring(updated or "error desconocido"))
+        return
+    end
+    -- La XP no sustituye la subida manual, pero nunca debe quedar por debajo del
+    -- nivel que el propio comando de prueba acaba de fijar.
+    local total = HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel() or requested
+    local threshold = HarfordCharacterXP and HarfordCharacterXP.XP_TABLE and HarfordCharacterXP.XP_TABLE[total]
+    if threshold and HarfordCharacterXP.GetXP and HarfordCharacterXP.SetXP and HarfordCharacterXP.GetXP() < threshold then
+        HarfordCharacterXP.SetXP(threshold)
+    end
+    Print(string.format("Clase %d (%s) fijada a nivel %d. Nivel total: %d", classIndex, tostring(updated.classId), tonumber(updated.level) or requested, total))
+end, "fija nivel de clase: nivel <1-20> [indiceClase]")
+
 API.RegisterCommand("qsharedebug", function()
     _G.HARFORD_QSHARE_DEBUG = not _G.HARFORD_QSHARE_DEBUG
     Print("Diagnostico de compartir misiones: " .. (_G.HARFORD_QSHARE_DEBUG and "ON" or "OFF"))
@@ -257,11 +349,369 @@ API.RegisterCommand("profskill", function(args)
     Print(string.format("%s skill -> %d", profId, HarfordProfessions.GetSkill(profId)))
 end, "fija tu skill en una profesion (test)")
 
+API.RegisterCommand("profrecipes", function(args)
+    local profId = tostring(args or ""):match("^(%S+)")
+    if not profId or profId == "" then Print("Uso: profrecipes <profesionId>"); return end
+    if not HarfordProfessions then Print("HarfordProfessions no disponible"); return end
+    local def = HarfordProfessions.GetDefinition(profId)
+    if not def then Print("Profesion desconocida: " .. profId); return end
+    local recipes = HarfordProfessions.GetRecipes(profId)
+    Print(string.format("%s: %d recetas | skill %d", def.name or profId, #recipes,
+        HarfordProfessions.EffectiveSkill(profId)))
+    for _, recipe in ipairs(recipes) do
+        local ok, reason = HarfordProfessions.CanCraft(recipe.id)
+        Print(string.format("%s | req %d | CD %d | %s%s", recipe.id,
+            tonumber(recipe.skillReq) or 1, tonumber(recipe.dc) or 10,
+            ok and "|cff38d26aLISTA|r" or "|cffff5555" .. tostring(reason) .. "|r",
+            recipe.worldLearned and " | mundo" or ""))
+    end
+end, "lista recetas y requisitos: profrecipes <profesionId>")
+
+API.RegisterCommand("profcheck", function(args)
+    local recipeId = tostring(args or ""):match("^(%S+)")
+    if not recipeId or recipeId == "" then Print("Uso: profcheck <recipeId>"); return end
+    if not HarfordProfessions then Print("HarfordProfessions no disponible"); return end
+    local recipe = HarfordProfessions.GetRecipe(recipeId)
+    if not recipe then Print("Receta desconocida: " .. recipeId); return end
+    local ok, reason, materials = HarfordProfessions.CanCraft(recipeId)
+    local output = HarfordProfessionsItems and HarfordProfessionsItems.Get and HarfordProfessionsItems.Get(recipe.output and recipe.output.key)
+    Print(string.format("%s (%s) | req %d | CD %d | %s", recipe.name or recipeId,
+        recipe.profession or "?", tonumber(recipe.skillReq) or 1, tonumber(recipe.dc) or 10,
+        ok and "|cff38d26aLISTA|r" or "|cffff5555" .. tostring(reason) .. "|r"))
+    Print(string.format("Resultado: %s x%d | id=%s", output and output.name or tostring(recipe.output and recipe.output.key),
+        tonumber(recipe.output and recipe.output.qty) or 1, tostring(output and output.id or "PENDIENTE")))
+    for _, material in ipairs(materials or {}) do
+        Print(string.format("  %s: %d/%d | id=%s", material.name or material.key,
+            tonumber(material.have) or 0, tonumber(material.need) or 0, tostring(material.id or "PENDIENTE")))
+    end
+end, "muestra materiales y puerta real: profcheck <recipeId>")
+
+API.RegisterCommand("profitem", function(args)
+    local key, qty = tostring(args or ""):match("^(%S+)%s*(%d*)")
+    if not key or key == "" then Print("Uso: profitem <claveItem> [cantidad]"); return end
+    local entry = HarfordProfessionsItems and HarfordProfessionsItems.Get and HarfordProfessionsItems.Get(key)
+    if not (entry and entry.id) then Print("Item sin ID valido: " .. key); return end
+    if not (HarfordServerActions and HarfordServerActions.GiveItem) then Print("HarfordServerActions no disponible"); return end
+    local amount = math.max(1, math.floor(tonumber(qty) or 1))
+    local ok, err = HarfordServerActions.GiveItem(entry.id, amount)
+    Print(ok and ("Entregado: " .. tostring(entry.name) .. " x" .. amount) or ("No se pudo entregar: " .. tostring(err)))
+end, "entrega un material registrado para pruebas: profitem <clave> [cantidad]")
+
+API.RegisterCommand("profgather", function(args)
+    local recipeId, seconds = tostring(args or ""):match("^(%S+)%s*(%d*)")
+    if not recipeId or recipeId == "" then Print("Uso: profgather <recipeId> [segundosCooldown]"); return end
+    if not HarfordProfessions then Print("HarfordProfessions no disponible"); return end
+    HarfordProfessions.GatherNode(recipeId, tonumber(seconds) or 30)
+end, "prueba un nodo sobre el objetivo actual: profgather <recipeId> [segundos]")
+
+API.RegisterCommand("proflearn", function(args)
+    local recipeId = tostring(args or ""):match("^(%S+)")
+    if not recipeId or recipeId == "" then Print("Uso: proflearn <recipeId>"); return end
+    if not HarfordProfessions then Print("HarfordProfessions no disponible"); return end
+    local recipe = HarfordProfessions.GetRecipe(recipeId)
+    if not (recipe and recipe.worldLearned) then Print("Solo se pueden probar recetas worldLearned."); return end
+    HarfordProfessions.LearnRecipe(recipeId)
+    Print("Receta aprendida para pruebas: " .. tostring(recipe.name))
+end, "aprende localmente una receta worldLearned para pruebas")
+
+API.RegisterCommand("profskill", function(args)
+    local profId, value = tostring(args or ""):match("^%s*(%S+)%s*(%-?%d*)")
+    if not profId or profId == "" then
+        Print("Uso: profskill <profesionId> [skill 0-300]. Ej: profskill herreria 1")
+        Print("Con skill > 0 el PJ CONOCE la profesion (via de pruebas; lo normal es la competencia de herramienta).")
+        return
+    end
+    if not (HarfordProfessions and HarfordProfessions.GetDefinition and HarfordProfessions.GetDefinition(profId)) then
+        Print("Profesion desconocida: " .. tostring(profId))
+        return
+    end
+    HarfordProfessions.SetSkill(profId, tonumber(value) or 1)
+    local skill = HarfordProfessions.EffectiveSkill(profId)
+    Print(string.format("%s: skill %d (%s)%s", profId, skill,
+        HarfordProfessions.GetTierName(skill),
+        HarfordProfessions.KnowsProfession(profId) and " — conocida" or ""))
+end, "fija el skill de una profesion para pruebas (skill > 0 = conocida): profskill <id> [valor]")
+
+API.RegisterCommand("profreset", function(args)
+    if tostring(args or ""):lower():gsub("%s+", "") ~= "confirm" then
+        Print("Reinicia profesiones de ESTE personaje. Confirma: profreset confirm")
+        return
+    end
+    HarfordProfessionsStore = HarfordProfessionsStore or {}
+    HarfordProfessionsStore.skills = {}
+    HarfordProfessionsStore.learned = {}
+    HarfordProfessionsStore.nodeCooldowns = {}
+    Print("Estado de profesiones reiniciado para este personaje.")
+end, "reinicia skills, recetas aprendidas y cooldowns: profreset confirm")
+
 API.RegisterCommand("profmissing", function()
     if not (HarfordProfessionsItems and HarfordProfessionsItems.Missing) then Print("registro no disponible"); return end
     local miss = HarfordProfessionsItems.Missing()
     Print(string.format("Items sin ID (%d): %s", #miss, table.concat(miss, ", ")))
 end, "lista claves de item sin ID registrado")
+
+-- ─── Profesiones nativas (solo investigacion; no abre ni altera la UI Blizzard) ──
+local NATIVE_PROF_EVENTS = {
+    "TRADE_SKILL_SHOW", "TRADE_SKILL_CLOSE", "TRADE_SKILL_UPDATE", "TRADE_SKILL_LIST_UPDATE",
+    "TRADE_SKILL_ITEM_CRAFTED", "TRADE_SKILL_ITEM_UPDATE",
+}
+
+local nativeProfEvents = CreateFrame("Frame")
+nativeProfEvents:SetScript("OnEvent", function(_, event, ...)
+    if not _G.HARFORD_NATIVE_PROF_EVENTS then return end
+    local args = { ... }
+    local text = {}
+    for i = 1, math.min(#args, 4) do text[#text + 1] = tostring(args[i]) end
+    Print("Nativo " .. event .. (#text > 0 and (": " .. table.concat(text, ", ")) or ""))
+end)
+
+local function NativeProfFrameInfo(frame)
+    if not frame then return nil end
+    local point, relativeTo, relativePoint, x, y = frame:GetPoint(1)
+    return {
+        shown = frame:IsShown() == true,
+        width = frame:GetWidth(), height = frame:GetHeight(),
+        scale = frame:GetScale(), strata = frame:GetFrameStrata(), level = frame:GetFrameLevel(),
+        point = point, relativeTo = relativeTo and relativeTo:GetName() or nil,
+        relativePoint = relativePoint, x = x, y = y,
+    }
+end
+
+local function NativeCall(name, ...)
+    local fn = _G[name]
+    if type(fn) ~= "function" then return nil end
+    local ok, a, b, c, d, e = pcall(fn, ...)
+    if not ok then return { error = tostring(a) } end
+    return { a, b, c, d, e }
+end
+
+local function CaptureNativeProfession(label)
+    HarfordDebugSettings.nativeProfessionProbes = HarfordDebugSettings.nativeProfessionProbes or {}
+    label = tostring(label or "ultima"):gsub("[^%w_%-]", "_")
+    if label == "" then label = "ultima" end
+
+    local line = NativeCall("GetTradeSkillLine")
+    local total = NativeCall("GetNumTradeSkills")
+    local count = tonumber(total and total[1]) or 0
+    local probe = {
+        timestamp = time and time() or 0,
+        line = line,
+        count = count,
+        api = {
+            legacy = type(GetNumTradeSkills) == "function",
+            cTradeSkillUI = type(C_TradeSkillUI) == "table",
+        },
+        frames = {
+            TradeSkillFrame = NativeProfFrameInfo(_G.TradeSkillFrame),
+            TradeSkillListScrollFrame = NativeProfFrameInfo(_G.TradeSkillListScrollFrame),
+            TradeSkillCreateButton = NativeProfFrameInfo(_G.TradeSkillCreateButton),
+        },
+        entries = {},
+    }
+
+    for index = 1, math.min(count, 250) do
+        local info = NativeCall("GetTradeSkillInfo", index) or {}
+        local reagents = {}
+        local reagentCount = tonumber((NativeCall("GetTradeSkillNumReagents", index) or {})[1]) or 0
+        for reagentIndex = 1, math.min(reagentCount, 12) do
+            reagents[#reagents + 1] = {
+                info = NativeCall("GetTradeSkillReagentInfo", index, reagentIndex),
+                link = NativeCall("GetTradeSkillReagentItemLink", index, reagentIndex),
+            }
+        end
+        probe.entries[#probe.entries + 1] = {
+            index = index,
+            info = info,
+            icon = NativeCall("GetTradeSkillIcon", index),
+            link = NativeCall("GetTradeSkillItemLink", index),
+            description = NativeCall("GetTradeSkillDescription", index),
+            cooldown = NativeCall("GetTradeSkillCooldown", index),
+            made = NativeCall("GetTradeSkillNumMade", index),
+            reagents = reagents,
+        }
+    end
+
+    -- La API moderna se guarda como disponibilidad y metodos, sin invocar funciones cuyo
+    -- contrato puede variar entre builds de Epsilon.
+    if type(C_TradeSkillUI) == "table" then
+        probe.api.modernMethods = {}
+        for name, value in pairs(C_TradeSkillUI) do
+            if type(value) == "function" then probe.api.modernMethods[#probe.api.modernMethods + 1] = name end
+        end
+        table.sort(probe.api.modernMethods)
+    end
+
+    HarfordDebugSettings.nativeProfessionProbes[label] = probe
+    Print(string.format("Profesion nativa capturada '%s': linea=%s entradas=%d frame=%s. Haz /reload para guardar.",
+        label, tostring(line and line[1] or "(sin linea)"), count,
+        probe.frames.TradeSkillFrame and tostring(probe.frames.TradeSkillFrame.shown) or "no existe"))
+end
+
+-- ─── nativeprobe: herramienta UNICA de investigacion de frames nativos ───
+-- Une en un solo comando la captura de profesiones (antes `nativeprof`), la captura
+-- de skin/geometria via probeframe y el registro de soundkits. Todo con subopciones.
+do
+    local soundHooked = false
+    local function LogSound(entry)
+        local store = HarfordDebugSettings
+        store.soundLog = store.soundLog or {}
+        table.insert(store.soundLog, entry)
+        if #store.soundLog > 400 then table.remove(store.soundLog, 1) end
+        Print("|cff99ff99[sound]|r " .. entry)
+    end
+    local function EnsureSoundHooks()
+        if soundHooked then return end
+        soundHooked = true
+        -- hooksecurefunc no se puede quitar: el flag decide si se anota o no.
+        -- Se anota el frame bajo el raton para saber QUE control disparo el sonido.
+        local function MouseFocusName()
+            local f = GetMouseFocus and GetMouseFocus()
+            if not f then return "?" end
+            local name = f.GetName and f:GetName()
+            if name then return name end
+            local parent = f.GetParent and f:GetParent()
+            local pname = parent and parent.GetName and parent:GetName()
+            return pname and ("(anon hijo de " .. pname .. ")") or "(anon)"
+        end
+        hooksecurefunc("PlaySound", function(kit, channel)
+            if _G.HARFORD_SOUNDLOG then
+                LogSound(string.format("%.1f kit=%s ch=%s sobre=%s", GetTime() % 10000, tostring(kit), tostring(channel or "SFX"), MouseFocusName()))
+            end
+        end)
+        if type(PlaySoundFile) == "function" then
+            hooksecurefunc("PlaySoundFile", function(file, channel)
+                if _G.HARFORD_SOUNDLOG then
+                    LogSound(string.format("%.1f file=%s ch=%s sobre=%s", GetTime() % 10000, tostring(file), tostring(channel or "SFX"), MouseFocusName()))
+                end
+            end)
+        end
+    end
+    -- Frames candidatos de la UI de profesiones segun cliente (clasica, moderna, artesania)
+    local PROF_FRAMES = { "TradeSkillFrame", "ProfessionsFrame", "CraftFrame" }
+    local function VisibleProfFrame()
+        for _, name in ipairs(PROF_FRAMES) do
+            local f = _G[name]
+            if f and f.IsShown and f:IsShown() then return name end
+        end
+        return nil
+    end
+
+    API.RegisterCommand("nativeprobe", function(args)
+        local action, label = tostring(args or ""):match("^%s*(%S*)%s*(.-)%s*$")
+        action = action:lower()
+
+        if action == "" or action == "status" then
+            Print("ReputationFrame: " .. (_G.ReputationFrame and (_G.ReputationFrame:IsShown() and "visible" or "oculto") or "no existe"))
+            for _, name in ipairs(PROF_FRAMES) do
+                local f = _G[name]
+                Print(name .. ": " .. (f and (f:IsShown() and "visible" or "oculto") or "no existe"))
+            end
+            local line = NativeCall("GetTradeSkillLine")
+            local count = NativeCall("GetNumTradeSkills")
+            Print("API clasica: " .. (type(GetNumTradeSkills) == "function" and "SI" or "NO")
+                .. " | C_TradeSkillUI: " .. (type(C_TradeSkillUI) == "table" and "SI" or "NO"))
+            Print("Linea: " .. tostring(line and line[1] or "(ninguna)")
+                .. " | entradas: " .. tostring(count and count[1] or 0))
+            Print("soundlog: " .. (_G.HARFORD_SOUNDLOG and "ON" or "OFF")
+                .. " (" .. #(HarfordDebugSettings.soundLog or {}) .. " entradas)")
+            return
+        end
+
+        if action == "rep" then
+            local tag = label ~= "" and label or "base"
+            API.RunCommand("probeframecapture", "ReputationFrame rep_" .. tag)
+            if _G.ReputationDetailFrame and _G.ReputationDetailFrame:IsShown() then
+                API.RunCommand("probeframecapture", "ReputationDetailFrame repdetalle_" .. tag)
+            end
+            return
+        end
+
+        if action == "prof" then
+            local tag = label ~= "" and label or "ultima"
+            CaptureNativeProfession(tag)
+            local frameName = VisibleProfFrame()
+            if frameName then
+                API.RunCommand("probeframecapture", frameName .. " prof_" .. tag)
+            else
+                Print("Sin frame de profesion visible: solo se guardo la captura de datos (nativeProfessionProbes)")
+            end
+            return
+        end
+
+        if action == "sound" then
+            local sub = label:lower()
+            if sub == "on" then
+                EnsureSoundHooks()
+                _G.HARFORD_SOUNDLOG = true
+                Print("soundlog ON: cada PlaySound se imprime y se guarda en HarfordDebugSettings.soundLog (max 400)")
+            elseif sub == "off" then
+                _G.HARFORD_SOUNDLOG = nil
+                Print("soundlog OFF")
+            elseif sub == "clear" then
+                HarfordDebugSettings.soundLog = nil
+                Print("soundlog limpiado")
+            else
+                local log = HarfordDebugSettings.soundLog or {}
+                Print("soundlog: " .. #log .. " entradas (ultimas 20):")
+                for i = math.max(1, #log - 19), #log do Print("  " .. log[i]) end
+            end
+            return
+        end
+
+        if action == "events" then
+            local enabled = label:lower() ~= "off"
+            _G.HARFORD_NATIVE_PROF_EVENTS = enabled
+            for _, event in ipairs(NATIVE_PROF_EVENTS) do
+                if enabled then nativeProfEvents:RegisterEvent(event) else nativeProfEvents:UnregisterEvent(event) end
+            end
+            Print("Eventos de profesion nativa: " .. (enabled and "ON" or "OFF"))
+            return
+        end
+
+        if action == "stbm" then
+            -- Sonda del StatusTrackingBarManager: para integrar la barra de XP Harford
+            -- en el gestor nativo (que recoloca la UI al aparecer/desaparecer barras).
+            local mgr = _G.StatusTrackingBarManager
+            if not mgr then Print("StatusTrackingBarManager: NO existe") return end
+            Print("StatusTrackingBarManager existe; shown=" .. tostring(mgr:IsShown()) .. " h=" .. tostring(math.floor((mgr:GetHeight() or 0) + 0.5)))
+            Print("parent=" .. tostring(mgr:GetParent() and mgr:GetParent():GetName()))
+            for _, k in ipairs({ "AddBarFromTemplate", "UpdateBarsShown", "LayoutBars", "SetBarSize", "GetNumberVisibleBars", "HideStatusBars", "SetTextLocked" }) do
+                Print("  mgr." .. k .. " = " .. type(mgr[k]))
+            end
+            local bars = mgr.bars
+            Print("mgr.bars = " .. type(bars) .. (type(bars) == "table" and (" (" .. #bars .. ")") or ""))
+            if type(bars) == "table" then
+                for i, b in ipairs(bars) do
+                    Print(string.format("  bar%d: %s prio=%s visible=%s", i, tostring(b:GetName() or "(anon)"),
+                        tostring(b.GetPriority and b:GetPriority() or "?"), tostring(b.ShouldBeVisible and b:ShouldBeVisible())))
+                    for _, k in ipairs({ "ShouldBeVisible", "GetPriority", "Update", "SetBarText", "SetBarValues", "ShowText", "HideText", "StatusBar" }) do
+                        if b[k] ~= nil then Print("    ." .. k .. " = " .. type(b[k])) end
+                    end
+                end
+            end
+            for _, tpl in ipairs({ "StatusTrackingBarTemplate", "ExpStatusBarTemplate", "ReputationStatusBarTemplate", "HonorStatusBarTemplate" }) do
+                local ok = pcall(CreateFrame, "FRAME", nil, UIParent, tpl)
+                Print("template " .. tpl .. ": " .. (ok and "OK" or "NO"))
+            end
+            -- `stbm update`: fuerza UpdateBarsShown SIN tragarse el error, para ver que
+            -- metodo/paso exacto falla al maquetar la barra Harford.
+            if label:lower() == "update" then
+                local ok, err = pcall(mgr.UpdateBarsShown, mgr)
+                Print("UpdateBarsShown -> " .. (ok and "OK" or ("|cffff5555ERROR:|r " .. tostring(err))))
+                Print("mgr shown=" .. tostring(mgr:IsShown()) .. " h=" .. tostring(mgr:GetHeight()))
+                if type(mgr.bars) == "table" then
+                    local last = mgr.bars[#mgr.bars]
+                    if last then
+                        Print(string.format("ultima barra: metodos SVB=%s prio=%s Update=%s shown=%s",
+                            type(last.ShouldBeVisible), type(last.GetPriority), type(last.Update), tostring(last:IsShown())))
+                    end
+                end
+            end
+            return
+        end
+        Print("Uso: nativeprobe status | rep [etiqueta] | prof [etiqueta] | stbm | sound on|off|show|clear | events on|off")
+    end, "investigacion de frames nativos (reps/profesiones): status | rep | prof | sound | events")
+end
 
 API.RegisterCommand("courier", function()
     local st = HarfordCourier and HarfordCourier.GetStatus and HarfordCourier.GetStatus()
@@ -3794,8 +4244,10 @@ API.RegisterCommand("profitems", function()
 end, "lista las claves de items de profesiones sin itemId (lo que falta crear en el phase vault)")
 
 API.RegisterCommand("merchantdump", function(args)
-    -- Vuelca los items del MERCADER ABIERTO. Pensado para cosechar itemIds de Epsilon y
-    -- rellenar el registro de profesiones (HarfordProfessionsItems, claves con id=nil).
+    -- Vuelca los items del mercader abierto. Soporta tanto el MerchantFrame nativo como
+    -- Epsilon_Merchant, cuyo inventario vive en EPSILON_VENDOR_DATA y no usa la API nativa.
+    -- Pensado para cosechar itemIds de Epsilon y rellenar el registro de profesiones
+    -- (HarfordProfessionsItems, claves con id=nil).
     --   merchantdump         -> lista id + nombre + precio de todo el inventario del vendedor
     --   merchantdump match   -> solo los que casan por NOMBRE con una clave pendiente del
     --                           registro, en formato listo para hornear (clave -> id)
@@ -3805,7 +4257,12 @@ API.RegisterCommand("merchantdump", function(args)
     -- Todo lo listado se acumula ademas en HarfordDebugSettings.merchantDump (SavedVariable),
     -- deduplicado por itemId: tras /reload se puede leer del fichero SV sin copiar del chat.
     args = tostring(args or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
-    local total = (GetMerchantNumItems and GetMerchantNumItems()) or 0
+    local epsilonFrame = _G.Epsilon_MerchantFrame
+    local epsilonData = _G.EPSILON_VENDOR_DATA
+    local epsilonItems = epsilonFrame and epsilonFrame.merchantID and epsilonData
+        and epsilonData[epsilonFrame.merchantID]
+    local isEpsilonMerchant = type(epsilonItems) == "table"
+    local total = isEpsilonMerchant and #epsilonItems or ((GetMerchantNumItems and GetMerchantNumItems()) or 0)
     if total <= 0 then
         Print("Abre primero la ventana de un mercader (no hay items de vendedor visibles).")
         return
@@ -3837,11 +4294,23 @@ API.RegisterCommand("merchantdump", function(args)
         or (UnitExists and UnitExists("target") and UnitName and UnitName("target")) or "?"
     local listed, matched = 0, 0
     for index = 1, total do
-        local link = GetMerchantItemLink and GetMerchantItemLink(index)
-        local itemId = link and tonumber(link:match("item:(%d+)"))
-        local name = link and link:match("%[(.-)%]")
-        local infoName, _, price = GetMerchantItemInfo and GetMerchantItemInfo(index)
-        name = name or infoName or ("item " .. tostring(itemId or index))
+        local itemId, name, price
+        if isEpsilonMerchant then
+            -- Epsilon_Merchant almacena { itemId, precio, pila, moneda, cantidad }.
+            itemId = tonumber(epsilonItems[index] and epsilonItems[index][1])
+            price = tonumber(epsilonItems[index] and epsilonItems[index][2])
+            if itemId and GetItemInfo then
+                name = GetItemInfo(itemId)
+            end
+        else
+            local link = GetMerchantItemLink and GetMerchantItemLink(index)
+            itemId = link and tonumber(link:match("item:(%d+)"))
+            name = link and link:match("%[(.-)%]")
+            local infoName
+            infoName, _, price = GetMerchantItemInfo and GetMerchantItemInfo(index)
+            name = name or infoName
+        end
+        name = name or ("item " .. tostring(itemId or index))
         if itemId then
             dump[tostring(itemId)] = name
             listed = listed + 1

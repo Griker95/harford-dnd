@@ -186,7 +186,63 @@ end
 
 ------------------------------------------------------------
 -- Materiales (registro de items)
+--
+-- RESERVA DE MATERIAL EN VUELO. `RemoveItem` es un comando de servidor ASINCRONO: entre que se
+-- craftea y que el servidor descuenta, `GetItemCount` sigue devolviendo el valor viejo. Sin esto,
+-- craftear en rafaga (o repulsar "Crear todo") permitiria fabricar mas de lo que los materiales
+-- dan de si, porque cada comprobacion leeria bolsas sin actualizar.
+--
+-- Solucion: al craftear se APUNTA lo consumido como reservado y `InspectMaterials` lo resta del
+-- `have`. La reserva de una clave se libera cuando las bolsas confirman el descuento (BAG_UPDATE
+-- con recuento ya por debajo del esperado) o, como red de seguridad si el comando se perdio, al
+-- expirar RESERVE_TTL. No es un tick: son eventos + un one-shot.
 ------------------------------------------------------------
+local RESERVE_TTL = 15
+local reserved = {}  -- key -> { qty = <en vuelo>, expected = <recuento objetivo>, at = <time> }
+
+local function ReservedQty(key)
+    local r = reserved[key]
+    return r and r.qty or 0
+end
+
+local function ReleaseSettledReservations()
+    local items = Items()
+    if not items then return end
+    local now = time()
+    for key, r in pairs(reserved) do
+        local have = items.GetOwnedCount(key) or 0
+        if have <= (r.expected or 0) or (now - (r.at or now)) >= RESERVE_TTL then
+            reserved[key] = nil
+        end
+    end
+end
+
+do
+    local watcher = CreateFrame("Frame")
+    watcher:RegisterEvent("BAG_UPDATE_DELAYED")
+    watcher:RegisterEvent("BAG_UPDATE")
+    watcher:SetScript("OnEvent", ReleaseSettledReservations)
+end
+
+-- Apunta como en vuelo lo que acaba de gastar un crafteo.
+local function ReserveMaterials(recipe)
+    local items = Items()
+    if not items then return end
+    for _, m in ipairs((recipe and recipe.materials) or {}) do
+        local qty = tonumber(m.qty) or 1
+        local prev = reserved[m.key]
+        local have = items.GetOwnedCount(m.key) or 0
+        reserved[m.key] = {
+            qty = (prev and prev.qty or 0) + qty,
+            expected = math.max(0, have - qty),
+            at = time(),
+        }
+    end
+    if C_Timer and C_Timer.After then
+        C_Timer.After(RESERVE_TTL + 1, ReleaseSettledReservations)
+    end
+end
+
 -- Devuelve: resolvable(bool, todos los materiales tienen ID), enough(bool, hay cantidad suficiente),
 -- y una lista detallada por material { key, name, need, have, id, missingId }.
 local function InspectMaterials(recipe)
@@ -194,7 +250,8 @@ local function InspectMaterials(recipe)
     local detail, resolvable, enough = {}, true, true
     for _, m in ipairs((recipe and recipe.materials) or {}) do
         local id = items and items.GetId(m.key)
-        local have = (items and items.GetOwnedCount(m.key)) or 0
+        -- El material ya comprometido por un crafteo anterior no vuelve a contar como disponible.
+        local have = math.max(0, ((items and items.GetOwnedCount(m.key)) or 0) - ReservedQty(m.key))
         local need = tonumber(m.qty) or 1
         if not id then resolvable = false end
         if have < need then enough = false end
@@ -233,6 +290,16 @@ function API.IsRecipeLearned(recipeId)
     if not r then return false end
     if not r.worldLearned then return true end
     return Store().learned[tostring(recipeId)] == true
+end
+
+-- Copia del material en vuelo (solo diagnostico: no exponer la tabla interna).
+function API.GetReservedMaterials()
+    ReleaseSettledReservations()
+    local out = {}
+    for key, r in pairs(reserved) do
+        out[key] = { qty = r.qty, expected = r.expected, at = r.at }
+    end
+    return out
 end
 
 -- Item id del resultado de una receta (para iconos/tooltips de UI).
@@ -289,7 +356,9 @@ function API.Craft(recipeId)
         return false, "fallo"
     end
 
-    -- Consumir materiales reales.
+    -- Consumir materiales reales. Se reservan ANTES de emitir los comandos: hasta que el servidor
+    -- confirme el descuento, esa cantidad deja de contar como disponible para el siguiente crafteo.
+    ReserveMaterials(r)
     for _, m in ipairs(r.materials or {}) do
         local id = items.GetId(m.key)
         if id and server and server.RemoveItem then server.RemoveItem(id, tonumber(m.qty) or 1) end

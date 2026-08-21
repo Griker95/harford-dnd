@@ -1,9 +1,7 @@
 -- HarfordProfessionsCraftUI: ventana de recetas de una profesion Harford, replica del
--- TradeSkillFrame moderno (sonda nativeprobe prof 2026-08-21): ButtonFrameTemplate 670x496,
--- barra de skill superior (UI-Character-Skills-Bar + caps 136571), lista izquierda de filas
--- 300x16 con highlight UI-Listbox-Highlight2 y colores de dificultad, y panel derecho de
--- detalle (tradeskills-iconborder + slots de reactivos UI-QuestItemNameFrame 128x64 con
--- iconos 39 y borde auctionhouse-itemicon-border-white) con boton Crear.
+-- TradeSkillFrame moderno. Toda la geometria sale de la sonda `nativeprobe prof` diffeada
+-- contra `nativeprobe harford` (nuestra propia captura); los valores exactos y el porque de
+-- cada uno estan en el contrato de AGENTS.md.
 -- Solo UI: todos los datos/acciones pasan por HarfordProfessions (CanCraft/Craft).
 
 HarfordProfessionsCraftUI = HarfordProfessionsCraftUI or {}
@@ -46,9 +44,6 @@ local function RecipeIconTexture(rec)
 end
 
 -- ── Construccion ─────────────────────────────────────────────────────────────
--- Slot de reactivo con la geometria NATIVA exacta (estudio 2026-08-21): icono 39x39 con el
--- borde blanco DEL MISMO tamaño encima, y el UI-QuestItemNameFrame 128x64 anclado a
--- icono.RIGHT -10 (el marco abraza al icono, no flota separado).
 local function CreateReagentSlot(parent, index)
     -- Geometria nativa exacta: boton 147x41 en dos columnas encadenadas (col2 a la derecha
     -- de col1 sin hueco) y filas a -2. El icono va SIN recorte y el borde blanco del nativo
@@ -74,6 +69,20 @@ local function CreateReagentSlot(parent, index)
     slot.name:SetSize(90, 36)
     slot.name:SetJustifyH("LEFT")
     slot.name:SetWordWrap(true)
+    -- Tooltip del material (como el nativo). Si la clave aun no tiene itemId real,
+    -- se muestra el nombre del catalogo para que la receta siga siendo legible.
+    slot:EnableMouse(true)
+    slot:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        if self.itemId then
+            GameTooltip:SetHyperlink("item:" .. self.itemId)
+        else
+            GameTooltip:SetText(self.itemName or "?", 1, 1, 1)
+            GameTooltip:AddLine("Pendiente de crear en el vault", 1, 0.35, 0.35)
+        end
+        GameTooltip:Show()
+    end)
+    slot:SetScript("OnLeave", function() GameTooltip:Hide() end)
     return slot
 end
 
@@ -375,6 +384,17 @@ local function CreateFrameIfNeeded()
     else
         detail.iconBorder:Hide()
     end
+    -- Zona de raton sobre el icono para el tooltip del objeto resultante (el nativo lo tiene)
+    detail.iconHit = CreateFrame("Frame", nil, detail)
+    detail.iconHit:SetAllPoints(detail.icon)
+    detail.iconHit:EnableMouse(true)
+    detail.iconHit:SetScript("OnEnter", function(self)
+        if not self.itemId then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetHyperlink("item:" .. self.itemId)
+        GameTooltip:Show()
+    end)
+    detail.iconHit:SetScript("OnLeave", function() GameTooltip:Hide() end)
     detail.name = detail:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
     detail.name:SetPoint("TOPLEFT", detail.icon, "TOPRIGHT", 10, -2)
     detail.name:SetWidth(220)
@@ -387,14 +407,63 @@ local function CreateFrameIfNeeded()
     detail.reagentsTitle:SetText("Materiales")
 
     -- Botonera nativa: [Crear todo] ... [cantidad] [Crear] [Salir], todos 80x22
-    local function CraftTimes(n)
-        if not (state.selected and HarfordProfessions and HarfordProfessions.Craft) then return end
-        n = math.max(1, math.min(tonumber(n) or 1, 20))  -- tope prudente de comandos de servidor
-        for _ = 1, n do
-            if not HarfordProfessions.Craft(state.selected) then break end
+    --
+    -- EL CRAFTEO ES UNO POR UNO: nunca hay dos en vuelo. Pedir varias unidades encola, no dispara
+    -- una rafaga. Cada pieza espera a que las bolsas CONFIRMEN el gasto de la anterior antes de
+    -- empezar la siguiente, porque `RemoveItem` es un comando de servidor asincrono y encadenar a
+    -- ciegas dejaria craftear con material ya gastado (ademas de reventar el servidor a comandos).
+    local MAX_QUEUE = 20
+    local queue = { left = 0, timeout = nil }
+    local bagWatcher = CreateFrame("Frame")
+
+    local function StopQueue(reason)
+        queue.left = 0
+        bagWatcher:UnregisterAllEvents()
+        if queue.timeout then queue.timeout = nil end
+        if reason then HarfordChat.Print(reason) end
+        RefreshUI()
+    end
+
+    local CraftNext
+    CraftNext = function()
+        if queue.left <= 0 then return StopQueue() end
+        if not (state.selected and HarfordProfessions and HarfordProfessions.Craft) then
+            return StopQueue()
+        end
+        queue.left = queue.left - 1
+        -- Craft revalida CanCraft por su cuenta y descuenta el material reservado, asi que una
+        -- pieza que ya no se puede hacer corta la cola en vez de seguir intentandolo.
+        if not HarfordProfessions.Craft(state.selected) then
+            return StopQueue()
+        end
+        if queue.left <= 0 then return StopQueue() end
+        -- Encadenar solo cuando el servidor confirme el gasto (o rendirse si no llega).
+        bagWatcher:RegisterEvent("BAG_UPDATE_DELAYED")
+        local token = {}
+        queue.timeout = token
+        if C_Timer and C_Timer.After then
+            C_Timer.After(6, function()
+                if queue.timeout == token and queue.left > 0 then
+                    StopQueue("Crafteo interrumpido: el servidor no confirmo el gasto de materiales.")
+                end
+            end)
         end
         RefreshUI()
     end
+
+    bagWatcher:SetScript("OnEvent", function()
+        bagWatcher:UnregisterAllEvents()
+        queue.timeout = nil
+        if queue.left > 0 then CraftNext() end
+    end)
+
+    local function CraftTimes(n)
+        if queue.left > 0 then return end  -- ya hay una cola en marcha: no solapar
+        n = math.max(1, math.min(math.floor(tonumber(n) or 1), MAX_QUEUE))
+        queue.left = n
+        CraftNext()
+    end
+    state.IsCrafting = function() return queue.left > 0 end
     local exitBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
     exitBtn:SetSize(80, 22)
     exitBtn:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 8)
@@ -570,6 +639,10 @@ RefreshUI = function()
         return
     end
     d.icon:SetTexture(RecipeIconTexture(sel))
+    if d.iconHit then
+        d.iconHit.itemId = HarfordProfessions.GetOutputItemId
+            and HarfordProfessions.GetOutputItemId(sel.id) or nil
+    end
     d.name:SetText(sel.name or sel.id)
     local ok, reason, detailMats = HarfordProfessions.CanCraft(sel.id)
     d.req:SetText(string.format("Requiere skill %d%s", tonumber(sel.skillReq) or 1,
@@ -597,6 +670,7 @@ RefreshUI = function()
         slot.count:SetTextColor(1, 1, 1)
         slot.name:SetText(m.name or "?")
         slot.name:SetTextColor(tint, tint, tint)
+        slot.itemId, slot.itemName = m.id, m.name
         slot:Show()
     end
     for i = #mats + 1, #state.reagents do state.reagents[i]:Hide() end

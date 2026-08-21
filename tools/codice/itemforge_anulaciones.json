@@ -5130,6 +5130,10 @@
     "calidad": 2,
     "apilable": 10
   },
+  "pigmento_esmeralda": {
+    "calidad": 1,
+    "apilable": 20
+  },
   "pila_de_madera": {
     "calidad": 1,
     "apilable": 10

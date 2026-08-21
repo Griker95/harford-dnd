@@ -2202,6 +2202,21 @@ Clasifica por PROFESION de la receta, luego por PAPEL (resultado o materia prima
 final por nombre. Cotejar contra `kb.json` es parte del generador: avisa de cualquier objeto
 publicado en la web que no tenga clave en el registro.
 
+**Regenerar cuando cambian las fuentes**: `tools/codice/actualizar_itemforge.py [--aplicar]`
+encadena las cinco etapas en el orden correcto: (1) VUELTA, lee los ids forjados de las
+SavedVariables del juego y prepara las lineas para el registro; (2) WOWHEAD, vuelca calidad,
+pila y efectos de `cotejo/objetos_wowhead.json`, que ya esta en disco (84% de cobertura);
+(3) GENERAR; (4) DUPLICADOS; (5) COMPROBAR con el Lua 5.1 real. Es lo que hay que lanzar
+cuando el otro chat toca el registro o las recetas -- en una sola sesion paso de 2099 a 2866
+claves. Como descripcion se toma SOLO el efecto de uso de Wowhead: el resto del tooltip
+(nivel de objeto, precio, requisitos) lo calcula el servidor y meterlo daria texto falso.
+
+**Comprobar que no existan ya**: `tools/codice/itemforge_ya_creados.py`. Un duplicado en
+Epsilon no se deshace y el servidor no busca por nombre, pero cada objeto custom que paso por
+el chat dejo su enlace en las SavedVariables de Elephant. Rastreando el WTF salen 298 objetos
+custom y 13 de los pendientes que YA existen. Solo ve lo que paso por el chat: no es prueba
+concluyente, asi que la primera tanda corta y `/hforge revisar`.
+
 **Reimportacion desde la web**: lo que el generador no puede deducir vive en
 `tools/codice/itemforge_anulaciones.json`, que se aplica ENCIMA de lo deducido y es lo unico
 que sobrevive a una regeneracion. Se rellena con `tools/codice/importar_itemforge.py`, que

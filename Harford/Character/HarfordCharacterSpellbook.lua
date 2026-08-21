@@ -346,7 +346,11 @@ RefreshSpells = function()
             if hl then hl:ClearAllPoints(); hl:SetAllPoints(tab.icon) end
             tab:SetScript("OnEnter", BookSideTabOnEnter)
             tab:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-            tab:SetScript("OnClick", function(self) sb.tabKey = self._key; sb.pageNum = 1; RefreshSpells() end)
+            -- Solo suena si la pestana CAMBIA: repicar sobre la ya activa seria ruido.
+            tab:SetScript("OnClick", function(self)
+                if sb.tabKey ~= self._key then if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_side_tab_changed") end end
+                sb.tabKey = self._key; sb.pageNum = 1; RefreshSpells()
+            end)
             sb.sideTabs[i] = tab
         end
         tab._key, tab._label = t.key, (t.label or t.key)

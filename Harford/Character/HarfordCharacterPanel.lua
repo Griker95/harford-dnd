@@ -5074,7 +5074,10 @@ RefreshBook = function()
             if hl then hl:ClearAllPoints(); hl:SetAllPoints(tab.icon) end
             tab:SetScript("OnEnter", BookSideTabOnEnter)
             tab:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-            tab:SetScript("OnClick", function(self) S.book.section = self._idx; S.book.pageNum = 1; RefreshBook() end)
+            tab:SetScript("OnClick", function(self)
+                if S.book.section ~= self._idx then if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_side_tab_changed") end end
+                S.book.section = self._idx; S.book.pageNum = 1; RefreshBook()
+            end)
             S.book.sideTabs[i] = tab
         end
         tab._idx = i

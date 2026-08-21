@@ -34,6 +34,16 @@ API.SOUNDS = API.SOUNDS or {
     craft_started = { names = { "UI_PROFESSIONS_CRAFT_START", "TRADESKILL_CREATE" } },
     craft_succeeded = { names = { "UI_PROFESSIONS_CRAFT_COMPLETE", "TRADESKILL_CREATE" } },
     craft_failed = { names = { "UI_PROFESSIONS_CRAFT_FAIL", "IG_QUEST_FAILED" } },
+    -- Abrir y cerrar la ventana de recetas. Capturados del libro de profesiones NATIVO con
+    -- `nativeprobe sound on` sobre su boton de profesion: 73917 al abrir, 73918 al cerrar.
+    -- Van por ID y no por nombre porque no aparecen en la tabla SOUNDKIT del cliente.
+    craft_window_opened = { id = 73917, kind = "soundkit" },
+    craft_window_closed = { id = 73918, kind = "soundkit" },
+    -- Seleccionar una receta de la lista (capturado sobre una fila del TradeSkillFrame nativo).
+    craft_recipe_selected = { id = 173752, kind = "soundkit" },
+    -- Cambio de pestana LATERAL del libro (capturado sobre SpellBookSkillLineTab del nativo).
+    -- Ojo: no es el 856 de la reputacion, aunque se parezcan.
+    book_side_tab_changed = { id = 836, kind = "soundkit" },
 }
 
 local function PlayEntry(entry, channel)

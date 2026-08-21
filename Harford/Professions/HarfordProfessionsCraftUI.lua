@@ -215,6 +215,10 @@ local function CreateRow(parent, index)
     row.count:SetTextColor(1, 0.82, 0)
     row:SetScript("OnClick", function(self)
         if self.recipeId then
+            -- Solo al CAMBIAR de receta: repicar sobre la ya seleccionada seria ruido.
+            if state.selected ~= self.recipeId and HarfordUISounds and HarfordUISounds.Play then
+                HarfordUISounds.Play("craft_recipe_selected")
+            end
             state.selected = self.recipeId
             RefreshUI()
         end
@@ -238,6 +242,15 @@ local function CreateFrameIfNeeded()
     frame:SetScript("OnDragStart", frame.StartMoving)
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
     frame:Hide()
+    -- El sonido de cierre va en OnHide y no en API.Close: la ventana esta en UISpecialFrames,
+    -- asi que ESC la oculta sin pasar por Close. La bandera evita que suene con este Hide de
+    -- construccion, que si dispara OnHide porque un frame recien creado nace visible.
+    frame:HookScript("OnHide", function(self)
+        if self._harfordSonidoListo and HarfordUISounds and HarfordUISounds.Play then
+            HarfordUISounds.Play("craft_window_closed")
+        end
+    end)
+    frame._harfordSonidoListo = true
     table.insert(UISpecialFrames, "HarfordProfessionsCraftFrame")
 
     -- ARMAZON GENERADO desde la captura del frame nativo.
@@ -636,7 +649,8 @@ local function CreateFrameIfNeeded()
     exitBtn:SetSize(80, 22)
     exitBtn:SetPoint("TOPRIGHT", detailScroll, "BOTTOMRIGHT", 22, -3)
     exitBtn:SetText("Salir")
-    exitBtn:SetScript("OnClick", function() frame:Hide() end)
+    -- Por API.Close y no `frame:Hide()`: si no, Salir se saltaria el sonido de cierre.
+    exitBtn:SetScript("OnClick", function() API.Close() end)
     frame.craftBtn = CreateFrame("Button", nil, frame, "MagicButtonTemplate")
     frame.craftBtn:SetSize(80, 22)
     -- XML: CreateButton se ancla TOPRIGHT>ExitButton.TOPLEFT SIN desplazamiento.
@@ -961,6 +975,9 @@ function API.Open(profId)
         state.selected, state.offset = nil, 0
     end
     state.profId = profId
+    -- Suena tambien al cambiar de profesion con la ventana ya abierta: para el jugador es la
+    -- ventana de esa profesion la que se abre, aunque el frame ya estuviera visible.
+    if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("craft_window_opened") end
     frame:Show()
     local okRefresh, refreshErr = pcall(RefreshUI)
     if not okRefresh then
@@ -970,6 +987,7 @@ function API.Open(profId)
 end
 
 function API.Close()
+    -- El sonido lo pone el OnHide del frame, para que suene igual cerrando con ESC.
     if frame then frame:Hide() end
 end
 

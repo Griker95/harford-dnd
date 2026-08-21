@@ -1262,6 +1262,22 @@ F:SetFrameStrata("DIALOG")
 F:SetFrameLevel(100)
 F:Hide()
 
+-- Abrir y cerrar la ficha suenan como el registro de misiones nativo. Va en OnShow/OnHide y no
+-- en el boton de cerrar, para que suene tambien con ESC, con el boton de minimapa o desde
+-- cualquier otra via. La bandera evita que el Hide de arriba lo dispare al cargar: un frame
+-- recien creado nace visible, asi que ese Hide SI pasa por OnHide.
+F:HookScript("OnShow", function(self)
+    if self._harfordSonidoListo and HarfordUISounds and HarfordUISounds.Play then
+        HarfordUISounds.Play("quest_log_opened")
+    end
+end)
+F:HookScript("OnHide", function(self)
+    if self._harfordSonidoListo and HarfordUISounds and HarfordUISounds.Play then
+        HarfordUISounds.Play("quest_log_closed")
+    end
+end)
+F._harfordSonidoListo = true
+
 HarfordDnDUI.SetFrameBackground(F, HarfordDnDUI.TEX.MARBLE, 0.95)
 
 local mainBorder = CreateFrame("Frame", nil, F, "DialogBorderTemplate")

@@ -773,6 +773,49 @@ do
     end, "investigacion de frames nativos (reps/profesiones): status | rep | prof | sound | events")
 end
 
+-- Busca sonidos en la tabla SOUNDKIT del PROPIO cliente: es la fuente autoritativa para
+-- Epsilon (Wowhead lista los de retail y no coinciden necesariamente). Sin patron busca los
+-- de profesion/crafteo. `play <NOMBRE|id>` los audiciona para elegir por oido.
+API.RegisterCommand("soundkits", function(args)
+    local action, rest = tostring(args or ""):match("^%s*(%S*)%s*(.-)%s*$")
+    if type(SOUNDKIT) ~= "table" then
+        Print("SOUNDKIT no existe en este cliente")
+        return
+    end
+
+    if action:lower() == "play" then
+        local kit = tonumber(rest) or SOUNDKIT[rest] or SOUNDKIT[rest:upper()]
+        if not kit then Print("No encuentro el sonido: " .. tostring(rest)); return end
+        local ok = PlaySound and select(1, pcall(PlaySound, kit, "Master"))
+        Print(string.format("Reproduciendo %s (%d): %s", tostring(rest), kit, ok and "OK" or "fallo"))
+        return
+    end
+
+    local patterns = action ~= "" and { action:upper() }
+        or { "TRADESKILL", "PROFESSION", "CRAFT", "FORGE", "ANVIL", "ALCHEMY", "ENCHANT" }
+    local found = {}
+    for name, id in pairs(SOUNDKIT) do
+        if type(name) == "string" and type(id) == "number" then
+            for _, p in ipairs(patterns) do
+                if name:upper():find(p, 1, true) then
+                    found[#found + 1] = { name = name, id = id }
+                    break
+                end
+            end
+        end
+    end
+    table.sort(found, function(a, b) return a.name < b.name end)
+    Print(string.format("SOUNDKIT: %d coincidencias para %s", #found, table.concat(patterns, "/")))
+    for _, e in ipairs(found) do
+        Print(string.format("  %-46s = %d", e.name, e.id))
+    end
+    if #found == 0 then
+        Print("Prueba con otro patron, p.ej.: soundkits UI")
+    else
+        Print("Audiciona uno con: soundkits play <NOMBRE>")
+    end
+end, "lista los SOUNDKIT del cliente por patron (crafteo por defecto) y los audiciona")
+
 API.RegisterCommand("courier", function()
     local st = HarfordCourier and HarfordCourier.GetStatus and HarfordCourier.GetStatus()
     if not st then Print("HarfordCourier no disponible"); return end
@@ -858,12 +901,24 @@ do
         local function objectName(obj)
             return obj and obj.GetName and safe(obj, "GetName") or nil
         end
+        -- IDENTIDAD DE CADA OBJETO. Casi ninguna region de Blizzard tiene nombre, asi que un
+        -- anclaje "TOPLEFT > None.TOPLEFT" era irreconstruible: no se sabia a QUE apuntaba.
+        -- Aqui cada objeto capturado recibe un uid ("f3.r2") y los anclajes guardan el uid del
+        -- objetivo, de modo que el arbol se puede recrear mecanicamente sin adivinar nada.
+        local uidOf = {}
+        local function assignUid(obj, uid)
+            if obj and uid then uidOf[obj] = uid end
+        end
         local function getPoints(obj)
             local out = {}
             local n = safe(obj, "GetNumPoints") or 0
             for i = 1, n do
                 local p, rel, rp, x, y = safe(obj, "GetPoint", i)
-                out[i] = { point = p, relativeTo = objectName(rel), relativePoint = rp, x = x, y = y }
+                out[i] = {
+                    point = p, relativeTo = objectName(rel), relativePoint = rp, x = x, y = y,
+                    relativeUid = rel and uidOf[rel] or nil,
+                    relativeType = rel and safe(rel, "GetObjectType") or nil,
+                }
             end
             return out
         end
@@ -944,6 +999,7 @@ do
                     tostring(point.x or 0),
                     tostring(point.y or 0),
                 }, ":")
+                entry.uid = uidOf[region]
                 regions[#regions + 1] = entry
             end
             return regions
@@ -985,8 +1041,28 @@ do
                 verticalRange = frame.GetVerticalScrollRange and safe(frame, "GetVerticalScrollRange") or nil,
             }
         end
-        local function dumpFrame(frame, depth)
+        -- Primera pasada: registrar la identidad de todo el arbol. Sin esto, un anclaje a un
+        -- objeto que aun no se ha visitado no se podria resolver.
+        local function indexTree(frame, uid, depth)
+            assignUid(frame, uid)
+            local okR, regions = pcall(function() return { frame:GetRegions() } end)
+            if okR then
+                for i, region in ipairs(regions) do assignUid(region, uid .. ".r" .. i) end
+            end
+            if depth < 8 and frame.GetChildren then
+                local okC, children = pcall(function() return { frame:GetChildren() } end)
+                if okC then
+                    for i, child in ipairs(children) do
+                        indexTree(child, uid .. ".f" .. i, depth + 1)
+                    end
+                end
+            end
+        end
+        indexTree(root, "root", 0)
+
+        local function dumpFrame(frame, depth, uid)
             local node = addCommon({ children = {} }, frame)
+            node.uid = uid or uidOf[frame]
             node.enabled = frame.IsEnabled and safe(frame, "IsEnabled") or nil
             node.mouseEnabled = frame.IsMouseEnabled and safe(frame, "IsMouseEnabled") or nil
             node.movable = frame.IsMovable and safe(frame, "IsMovable") or nil
@@ -997,15 +1073,15 @@ do
             if depth < 8 and frame.GetChildren then
                 local ok, children = pcall(function() return { frame:GetChildren() } end)
                 if ok then
-                    for _, child in ipairs(children) do
-                        node.children[#node.children + 1] = dumpFrame(child, depth + 1)
+                    for i, child in ipairs(children) do
+                        node.children[#node.children + 1] = dumpFrame(child, depth + 1, (uid or "root") .. ".f" .. i)
                     end
                 end
             end
             return node
         end
 
-        local snapshot = { frame = frameName, capturedAt = time and time() or 0, tree = dumpFrame(root, 0) }
+        local snapshot = { frame = frameName, capturedAt = time and time() or 0, tree = dumpFrame(root, 0, "root") }
         captureLabel = tostring(captureLabel or ""):match("^%s*(.-)%s*$")
         if captureLabel ~= "" then
             HarfordFrameProbe = type(HarfordFrameProbe) == "table" and HarfordFrameProbe or {}
@@ -4399,3 +4475,22 @@ API.RegisterCommand("merchantdump", function(args)
 end, "vuelca los items del mercader abierto (match/apply casan con el registro de profesiones). Uso: merchantdump [match|apply]")
 
 SetEnabled(type(HarfordDebugSettings) == "table" and HarfordDebugSettings.enabled == true, true)
+
+-- Que texturas de la ventana de recetas NO existen en este cliente. La ventana ya las oculta
+-- (nunca pinta cuadrados verdes), pero aqui se ven por nombre para poder sustituirlas.
+API.RegisterCommand("crafttex", function()
+    local ui = _G.HarfordProfessionsCraftUI
+    if not ui then Print("HarfordProfessionsCraftUI no cargado"); return end
+    if not _G.HarfordProfessionsCraftFrame then
+        Print("Abriendo la ventana para poder comprobar sus texturas...")
+        if ui.Open and HarfordProfessions then
+            for _, def in ipairs(HarfordProfessions.GetProfessions() or {}) do
+                if HarfordProfessions.KnowsProfession(def.id) then ui.Open(def.id) break end
+            end
+        end
+    end
+    local issues = ui._textureIssues or {}
+    Print(string.format("Texturas que faltan en este cliente: %d", #issues))
+    for _, line in ipairs(issues) do Print("  " .. line) end
+    if #issues == 0 then Print("Todas las texturas de la ventana existen.") end
+end, "texturas de la ventana de recetas que no existen en este cliente")

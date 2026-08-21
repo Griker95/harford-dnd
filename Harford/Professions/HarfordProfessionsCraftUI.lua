@@ -30,6 +30,40 @@ end
 
 local RefreshUI  -- forward
 
+-- TEXTURAS: SIEMPRE por RUTA y verificadas, nunca por fileID numerico.
+--
+-- La sonda del frame nativo devuelve numeros porque `GetTexture()` sobre una textura YA CARGADA
+-- resuelve a su fileID. Epsilon pinta esas texturas cuando las carga Blizzard por ruta, pero un
+-- addon que las pide por NUMERO no las resuelve: salen en verde (o en blanco liso). Por eso aqui
+-- se traduce cada fileID de la sonda a su ruta real y se comprueba con GetFileIDFromPath.
+-- Lo que no exista queda REGISTRADO en API._textureIssues y se oculta, en vez de ensuciar la
+-- ventana con cuadrados de color. Diagnostico: `/harford debug run crafttex`.
+API._textureIssues = {}
+
+local function SafeTexture(texture, path, label)
+    if not texture then return false end
+    if GetFileIDFromPath and not GetFileIDFromPath(path) then
+        API._textureIssues[#API._textureIssues + 1] = (label or "?") .. " -> " .. path
+        texture:Hide()
+        return false
+    end
+    texture:SetTexture(path)
+    return true
+end
+
+-- Rutas reales de las texturas que la sonda reporto como fileID en el TradeSkillFrame nativo.
+local TEX = {
+    barBorder  = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-BarBorder",
+    barFill    = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar",
+    scrollRail = "Interface\\PaperDollInfoFrame\\UI-Character-ScrollBar",
+    scrollKnob = "Interface\\Buttons\\UI-ScrollBar-Knob",
+    tabActive  = "Interface\\HelpFrame\\HelpFrameTab-Active",
+    tabInactive = "Interface\\HelpFrame\\HelpFrameTab-Inactive",
+    tabHighlight = "Interface\\PaperDollInfoFrame\\UI-Character-Tab-Highlight",
+    rowHighlight = "Interface\\Buttons\\UI-Listbox-Highlight2",
+    nameFrame  = "Interface\\QuestFrame\\UI-QuestItemNameFrame",
+}
+
 -- Algunos nombres de icono del catalogo NO existen en el cliente Epsilon (se renderizan
 -- como cuadrado verde): validar la ruta contra el cliente y caer al icono del item resultante.
 local function RecipeIconTexture(rec)
@@ -165,15 +199,15 @@ local function CreateFrameIfNeeded()
     if fill then fill:SetAlpha(0.5); fill:SetDrawLayer("BACKGROUND") end
     bar:SetMinMaxValues(0, 300)
     local capL = bar:CreateTexture(nil, "OVERLAY")
-    capL:SetTexture(136571)
+    SafeTexture(capL, TEX.barBorder, "barra: cap izq")
     capL:SetTexCoord(0.0078429999, 0.0431369990, 0.1935479939, 0.7741929889)
     capL:SetSize(9, 20); capL:SetPoint("LEFT", bar, "LEFT", -3, 0)
     local capR = bar:CreateTexture(nil, "OVERLAY")
-    capR:SetTexture(136571)
+    SafeTexture(capR, TEX.barBorder, "barra: cap der")
     capR:SetTexCoord(0.0431369990, 0.0078429999, 0.1935479939, 0.7741929889)
     capR:SetSize(9, 20); capR:SetPoint("RIGHT", bar, "RIGHT", 3, 0)
     local barMid = bar:CreateTexture(nil, "OVERLAY")
-    barMid:SetTexture(136571)
+    SafeTexture(barMid, TEX.barBorder, "barra: centro")
     barMid:SetTexCoord(0.1137259975, 0.1490195989, 0.1935479938, 0.7741929888)
     barMid:SetPoint("TOPLEFT", capL, "TOPRIGHT", 0, 0)
     barMid:SetPoint("BOTTOMRIGHT", capR, "BOTTOMLEFT", 0, 0)
@@ -205,21 +239,21 @@ local function CreateFrameIfNeeded()
     slider:SetPoint("TOPLEFT", list, "TOPRIGHT", 1, -14)
     slider:SetPoint("BOTTOMLEFT", list, "BOTTOMRIGHT", 1, 12)  -- nativo: doble anclaje
     local railTop = slider:CreateTexture(nil, "ARTWORK")
-    railTop:SetTexture(136569)
+    SafeTexture(railTop, TEX.scrollRail, "scroll: riel arriba")
     railTop:SetTexCoord(0, 0.484375, 0, 0.2)
     railTop:SetSize(27, 48)
     railTop:SetPoint("TOPLEFT", slider, "TOPLEFT", -4, 17)
     local railBottom = slider:CreateTexture(nil, "ARTWORK")
-    railBottom:SetTexture(136569)
+    SafeTexture(railBottom, TEX.scrollRail, "scroll: riel abajo")
     railBottom:SetTexCoord(0.515625, 1, 0.1440625, 0.4140625)
     railBottom:SetSize(27, 64)
     railBottom:SetPoint("BOTTOMLEFT", slider, "BOTTOMLEFT", -4, -15)
     local railMid = slider:CreateTexture(nil, "ARTWORK")
-    railMid:SetTexture(136569)
+    SafeTexture(railMid, TEX.scrollRail, "scroll: riel centro")
     railMid:SetTexCoord(0, 0.484375, 0.1640625, 1)
     railMid:SetPoint("TOPLEFT", railTop, "BOTTOMLEFT", 0, 0)
     railMid:SetPoint("BOTTOMRIGHT", railBottom, "TOPRIGHT", 0, 0)
-    slider:SetThumbTexture(130849)
+    slider:SetThumbTexture(TEX.scrollKnob)
     local thumb = slider:GetThumbTexture()
     thumb:SetSize(18, 24)
     thumb:SetTexCoord(0.2, 0.8, 0.125, 0.875)
@@ -282,12 +316,12 @@ local function CreateFrameIfNeeded()
         tab.text:SetPoint("CENTER", tab, "CENTER", 0, 2)
         tab.text:SetText(label)
         local hl = tab:CreateTexture(nil, "HIGHLIGHT")
-        hl:SetTexture(136580)
+        SafeTexture(hl, TEX.tabHighlight, "pestana: highlight")
         hl:SetPoint("BOTTOM", tab, "BOTTOM", 2, -8)
         hl:SetSize(width, 32)
         function tab:SetActiveLook(active)
             for _, t in ipairs(self.pieces) do
-                t:SetTexture(active and 132086 or 132085)
+                SafeTexture(t, active and TEX.tabActive or TEX.tabInactive, "pestana")
                 -- La inactiva queda 3px hundida (nativo)
             end
             self.pieces[1]:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, active and 0 or -3)
@@ -296,12 +330,12 @@ local function CreateFrameIfNeeded()
         end
         return tab
     end
-    frame.tabLearned = CreateListTab(90, "Aprendidas")
+    frame.tabLearned = CreateListTab(78, "Aprendidas")
     frame.tabLearned:SetPoint("BOTTOMLEFT", list, "TOPLEFT", 10, 3)
     frame.tabLearned:SetScript("OnClick", function()
         state.tab = "learned"; state.offset = 0; state.selected = nil; RefreshUI()
     end)
-    frame.tabUnlearned = CreateListTab(110, "No aprendidas")
+    frame.tabUnlearned = CreateListTab(96, "No aprendidas")
     frame.tabUnlearned:SetPoint("LEFT", frame.tabLearned, "RIGHT", 0, 0)
     frame.tabUnlearned:SetScript("OnClick", function()
         state.tab = "unlearned"; state.offset = 0; state.selected = nil; RefreshUI()
@@ -311,7 +345,7 @@ local function CreateFrameIfNeeded()
     -- Caja de busqueda nativa (112x20 en +220,-54, bordes common-search + lupa); filtra la lista
     local search = CreateFrame("EditBox", nil, frame)
     search:SetSize(112, 20)
-    search:SetPoint("TOPLEFT", frame, "TOPLEFT", 220, -54)
+    search:SetPoint("TOPLEFT", frame, "TOPLEFT", 350, -56)
     search:SetAutoFocus(false)
     search:SetMaxLetters(40)
     search:SetFont("Fonts\\FRIZQT__.TTF", 10)
@@ -725,7 +759,9 @@ RefreshUI = function()
         local enough = (m.have or 0) >= (m.need or 1)
         -- Detalle de CanCraft: { key, name, need, have, id, missingId }
         if m.id and GetItemIcon then
-            slot.icon:SetTexture(GetItemIcon(m.id) or "Interface\\Icons\\INV_Misc_QuestionMark")
+            local ico = GetItemIcon(m.id)
+            if not ico then API.NoteMissingIcon(m.id) end
+            slot.icon:SetTexture(ico or "Interface\\Icons\\INV_Misc_QuestionMark")
         else
             slot.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
         end
@@ -774,6 +810,26 @@ end
 
 function API.Close()
     if frame then frame:Hide() end
+end
+
+-- El icono de un item custom de Epsilon llega vacio hasta que el cliente cachea el item.
+-- Se solicita y se repinta al recibirlo, en vez de dejar una interrogacion fija.
+do
+    local waiting = false
+    local f = CreateFrame("Frame")
+    f:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+    f:SetScript("OnEvent", function()
+        if waiting and frame and frame:IsShown() then
+            waiting = false
+            RefreshUI()
+        end
+    end)
+    API.NoteMissingIcon = function(itemId)
+        if itemId and GetItemInfo then
+            waiting = true
+            GetItemInfo(itemId)
+        end
+    end
 end
 
 function API.Refresh()

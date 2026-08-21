@@ -3204,6 +3204,18 @@ end
 -- Sello de profesion (pool, pagina completa): el marco ornamentado de la pestaña
 -- Profesiones nativa (recorte de 383588) como envoltorio, con icono+borde nativo (383591),
 -- nombre en MORPHEUS y la barra de skill nativa (ProfessionsBook + Professions-Progress-Fill).
+-- Icono redondo real para los sellos: SetPortraitToTexture recorta en circulo de verdad; si no
+-- existe, se deja cuadrado recortado a mano (mejor cuadrado limpio que un circulo a medias).
+local function SetProfIcon(texture, iconName)
+    local path = "Interface\\Icons\\" .. (iconName or "INV_Misc_QuestionMark")
+    if SetPortraitToTexture then
+        SetPortraitToTexture(texture, path)
+    else
+        texture:SetTexture(path)
+        texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    end
+end
+
 local function ProfButton(i)
     local P = S.professions
     if P.profButtons[i] then return P.profButtons[i] end
@@ -3228,11 +3240,8 @@ local function ProfButton(i)
     b.icon:SetPoint("TOPLEFT", b.iconBorder, "TOPLEFT", 1, -1)
     b.icon:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
     b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    local iconMask = b:CreateMaskTexture(nil, "ARTWORK")
-    iconMask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-    iconMask:SetPoint("TOPLEFT", b.iconBorder, "TOPLEFT", 1, -1)
-    iconMask:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
-    b.icon:AddMaskTexture(iconMask)
+    -- El recorte circular lo hace SetPortraitToTexture (ver SetProfIcon): la mascara de
+    -- retrato no recorta de forma fiable aqui, igual que fallo en las tarjetas de creacion.
     b.name = b:CreateFontString(nil, "OVERLAY")
     b.name:SetFont("Fonts\\MORPHEUS.ttf", 18)  -- tamano nativo (sonda profbook)
     b.name:SetPoint("TOPLEFT", 110, -12); b.name:SetJustifyH("LEFT")  -- nativo: +100,-2 de contenido
@@ -3277,21 +3286,23 @@ local function ProfButton(i)
     -- de modo que una profesion con herramienta puede ofrecer ademas la tirada suelta.
     local function SpellButton(index)
         local sb = CreateFrame("Button", nil, b)
-        sb:SetSize(150, 38)
-        sb:SetPoint("TOPLEFT", 236, -14 - (index - 1) * 42)
+        sb:SetSize(196, 34)
+        sb:SetPoint("TOPLEFT", 232, -16 - (index - 1) * 40)
         sb.icon = sb:CreateTexture(nil, "ARTWORK")
         sb.icon:SetSize(32, 32)
         sb.icon:SetPoint("LEFT", sb, "LEFT", 0, 0)
         sb.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         sb.border = sb:CreateTexture(nil, "OVERLAY")
         sb.border:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-        sb.border:SetSize(56, 56)
+        sb.border:SetSize(42, 42)
         sb.border:SetPoint("CENTER", sb.icon, "CENTER", 0, -1)
         sb.label = sb:CreateFontString(nil, "OVERLAY")
         sb.label:SetFont("Fonts\\FRIZQT__.TTF", 11)
         sb.label:SetPoint("LEFT", sb.icon, "RIGHT", 8, 0)
-        sb.label:SetWidth(104)
+        sb.label:SetWidth(150)
         sb.label:SetJustifyH("LEFT")
+        sb.label:SetWordWrap(false)
+        sb.label:SetMaxLines(1)
         sb.label:SetTextColor(0.16, 0.08, 0.03)
         sb:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
         sb:Hide()
@@ -3358,7 +3369,7 @@ local function RefreshProfessions()
             if def then
                 local profId = def.id
                 local skill = HarfordProfessions.EffectiveSkill(profId)
-                b.icon:SetTexture("Interface\\Icons\\" .. (def.icon or "INV_Misc_QuestionMark"))
+                SetProfIcon(b.icon, def.icon)
                 b.icon:Show()
                 b.name:SetText(def.name)
                 b.name:SetTextColor(1, 0.82, 0)
@@ -3369,7 +3380,7 @@ local function RefreshProfessions()
                 -- El sello es el envoltorio: no abre nada por si mismo (como el libro nativo,
                 -- donde se pulsa el boton de hechizo). Abrir la profesion es `spellOpen`.
                 b:SetScript("OnClick", nil)
-                b.spellOpen.icon:SetTexture("Interface\\Icons\\" .. (def.icon or "INV_Misc_QuestionMark"))
+                SetProfIcon(b.spellOpen.icon, def.icon)
                 b.spellOpen.label:SetText(def.name)
                 b.spellOpen:SetScript("OnClick", function()
                     P.selected = profId
@@ -3384,7 +3395,7 @@ local function RefreshProfessions()
                 b.spellOpen:Show()
                 -- Segundo boton solo si la profesion tiene herramienta: tirada suelta de uso.
                 if def.tool and HarfordProfessions.RollTool then
-                    b.spellTool.icon:SetTexture("Interface\\Icons\\Trade_Engineering")
+                    SetProfIcon(b.spellTool.icon, def.icon)
                     b.spellTool.label:SetText(def.tool)
                     b.spellTool:SetScript("OnClick", function()
                         HarfordProfessions.RollTool(profId)

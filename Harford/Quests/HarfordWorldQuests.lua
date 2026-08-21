@@ -246,16 +246,27 @@ function API.TurnInCurrent(unit)
         end
     end
 
-    -- Compartido: rep + xp (una vez por PJ). Soporta VARIAS reputaciones (`reps`, lista). Las world
-    -- quests de contrato construyen `rewards.reps` (sin `rewards.rep`), asi que leer solo `r.rep`
-    -- no concedia ninguna reputacion al entregar.
-    if (r.reps or r.rep or r.xp) and HarfordQuests.ClaimRewards then
-        HarfordQuests.ClaimRewards({ id = def.id, reward = { reps = r.reps, rep = r.rep, xp = r.xp } })
+    -- Parte compartida y cierre local: rep/XP para cada miembro, nunca oro ni items. No usar
+    -- Abandon: una entrega no debe reproducir el sonido de abandono ni dejar estado intermedio.
+    if HarfordQuests.FinalizeSharedTurnIn then
+        HarfordQuests.FinalizeSharedTurnIn(def.id, r)
+    else
+        -- Compatibilidad con una version antigua del core durante una actualizacion parcial.
+        if (r.reps or r.rep or r.xp) and HarfordQuests.ClaimRewards then
+            HarfordQuests.ClaimRewards({ id = def.id, reward = { reps = r.reps, rep = r.rep, xp = r.xp } })
+        end
+        if HarfordQuests.MarkClaimed then HarfordQuests.MarkClaimed(def.id) end
+        if HarfordQuests.IsAccepted and HarfordQuests.IsAccepted(def.id) and HarfordQuests.Abandon then
+            HarfordQuests.Abandon(def.id)
+        end
     end
-    -- Marcar SIEMPRE como entregada por este PJ (tambien money-only) y sacarla del log activo.
-    if HarfordQuests.MarkClaimed then HarfordQuests.MarkClaimed(def.id) end
-    if HarfordQuests.IsAccepted and HarfordQuests.IsAccepted(def.id) and HarfordQuests.Abandon then
-        HarfordQuests.Abandon(def.id)
+
+    -- Entrega compartida: cada receptor usa su recompensa persistida para reclamar SOLO rep/XP
+    -- y retira la misma mision. El paquete no incluye importes ni objetos, asi que no puede
+    -- duplicar la recompensa individual del gossip.
+    if HarfordSync and HarfordSync.Send then
+        local channel = HarfordSync.BestChannel and HarfordSync.BestChannel()
+        if channel then HarfordSync.Send(COMM_PREFIX, "QTURNIN^" .. Esc(def.id), channel) end
     end
 
     -- Oficial: quita el aura de completada (cierra el NPC).
@@ -507,6 +518,16 @@ do
                 and not (HarfordQuests.IsComplete and HarfordQuests.IsComplete(id)) then
                 sharedComplete[id] = true  -- evita re-difundir cuando dispare el listener local
                 if HarfordQuests.MarkComplete then HarfordQuests.MarkComplete(id, "shared") end
+            end
+
+        elseif message:sub(1, 8) == "QTURNIN^" then
+            -- Entrega de una mision de mundo por otro miembro: usa el reward local persistido
+            -- para conceder solo rep/XP y retirar la quest, nunca dinero ni objetos.
+            local _, id = strsplit("^", message)
+            id = Unesc(id)
+            if id ~= "" and HarfordQuests and HarfordQuests.IsAccepted and HarfordQuests.IsAccepted(id)
+                and HarfordQuests.FinalizeSharedTurnIn then
+                HarfordQuests.FinalizeSharedTurnIn(id)
             end
 
         elseif message:sub(1, 8) == "QREWARD^" then
@@ -850,14 +871,14 @@ RenderGossip = function()
         p.button:SetText("Aceptar"); p.button:Show()
         p.button:SetScript("OnClick", function()
             local ok = API.AcceptCurrent("npc")
-            print(ok and "|cff33ff99[Harford]|r Mision aceptada." or "|cffff5555[Harford]|r No se pudo aceptar (def no registrada para este NPC).")
+            print(ok and "|cff33ff99Mision aceptada.|r" or "|cffff5555No se pudo aceptar (def no registrada para este NPC).|r")
             if RenderGossip then RenderGossip() end
         end)
     elseif state == "completed" then
         p.button:SetText("Completar"); p.button:Show()
         p.button:SetScript("OnClick", function()
             local ok = API.TurnInCurrent("npc")
-            print(ok and "|cff33ff99[Harford]|r Mision entregada." or "|cffff5555[Harford]|r No se pudo entregar (¿ya cobrada, o def no registrada?).")
+            print(ok and "|cff33ff99Mision entregada.|r" or "|cffff5555No se pudo entregar (¿ya cobrada, o def no registrada?).|r")
             if GossipFrame then GossipFrame:Hide() end
         end)
     else
@@ -975,16 +996,16 @@ SlashCmdList["HARFORDQUESTREWARD"] = function(rest)
         id = d and d.id
     end
     if not id then
-        print("|cffff5555[Harford]|r Reparto: targetea el NPC de la mision (o pasa el id).")
+        print("|cffff5555Reparto: targetea el NPC de la mision (o pasa el id).|r")
         return
     end
     if not (HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools()) then
-        print("|cffff5555[Harford]|r Reparto: requiere modo DM (HarfordAdmin + .ph dm).")
+        print("|cffff5555Reparto: requiere modo DM (HarfordAdmin + .ph dm).|r")
         return
     end
     if API.DmSendReward(id) then
-        print("|cff33ff99[Harford]|r Reparto de rep/xp enviado al grupo para: " .. id)
+        print("|cff33ff99Reparto de rep/xp enviado al grupo para: " .. id .. ".|r")
     else
-        print("|cffff5555[Harford]|r No se pudo repartir (¿mision registrada/target correcto?).")
+        print("|cffff5555No se pudo repartir (¿mision registrada/target correcto?).|r")
     end
 end

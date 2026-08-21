@@ -593,9 +593,9 @@ local function BuildFrame()
         if not selectedId then return end
         local api = _G.HarfordQuestAPI
         if api and api.ShareQuest and api.ShareQuest(selectedId) then
-            print("|cff33ff99[Harford]|r Mision compartida al grupo.")
+            print("|cff33ff99Mision compartida al grupo.|r")
         else
-            print("|cffff5555[Harford]|r No se pudo compartir (¿estas en grupo/raid?).")
+            print("|cffff5555No se pudo compartir (¿estas en grupo/raid?).|r")
         end
     end)
     footer.share:Disable()
@@ -935,7 +935,7 @@ if HarfordQuests and HarfordQuests.RegisterCompletionListener then
         for _, q in ipairs((HarfordQuests.GetAccepted and HarfordQuests.GetAccepted()) or {}) do
             if q.id == id then title = q.title; break end
         end
-        print("|cff33ff99[Harford]|r Mision completada" .. (title and (": " .. title) or "") .. ".")
+        print("|cff33ff99Mision completada" .. (title and (": " .. title) or "") .. ".|r")
     end)
 end
 

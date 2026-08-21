@@ -5,7 +5,7 @@
 -- por jugador; el ArcSpell del tablon (por fase) habla con esta API. Reparto de recompensas:
 --   * item / oro  -> se entregan UNA vez en el turn-in del NPC (NO aqui).
 --   * reputacion  -> compartida: cada cliente reclama SU parte una vez (modelo pull).
---   * XP          -> INFORMATIVA: se muestra, pero no hay comando fiable de XP en Epsilon.
+--   * XP          -> compartida: cada cliente concede su parte mediante HarfordCharacterXP.
 -- La lista de COMPLETADAS vive en el Lua compartido del tablon (unica persistencia global
 -- posible al no haber vault de fase global); aqui solo se guarda que YO ya reclame (anti-doble).
 ------------------------------------------------------------
@@ -857,7 +857,10 @@ end
 
 function API.IsSharedRewardsClaimed(id)
     local store = GetStore(false)
-    return store and (store.sharedClaimed or {})[tostring(id or "")] == true or false
+    local receipt = store and (store.sharedClaimed or {})[tostring(id or "")]
+    -- `true` es el formato heredado (toda la recompensa cobrada). Las misiones nuevas
+    -- guardan un recibo por componente para poder reintentar solo la faccion/XP pendiente.
+    return receipt == true or (type(receipt) == "table" and receipt.complete == true) or false
 end
 
 -- Retira la marca de reclamada (para pruebas/re-concesion controlada; p.ej. debug de contratos).
@@ -873,8 +876,17 @@ local function MarkClaimed(id)
     EnsureStore().claimed[tostring(id or "")] = true
 end
 
-local function MarkSharedRewardsClaimed(id)
-    EnsureStore().sharedClaimed[tostring(id or "")] = true
+local function SharedRewardReceipt(id)
+    local store = EnsureStore()
+    local key = tostring(id or "")
+    local receipt = store.sharedClaimed[key]
+    if receipt == true then return receipt end
+    if type(receipt) ~= "table" then
+        receipt = { reps = {} }
+        store.sharedClaimed[key] = receipt
+    end
+    if type(receipt.reps) ~= "table" then receipt.reps = {} end
+    return receipt
 end
 
 -- Marca la mision como entregada/cobrada por este PJ (flag "Recompensa"). Idempotente. Lo usa el
@@ -910,7 +922,7 @@ end
 
 -- Concede al PROPIO PJ su parte de las recompensas compartidas de una mision y la marca
 -- reclamada. Idempotente: si ya estaba reclamada, no hace nada. Devuelve true si concedio ahora.
--- item/oro NO se tocan aqui (son turn-in unico); XP queda pendiente de sistema.
+-- item/oro NO se tocan aqui (son turn-in unico); reputacion y XP son por-PJ.
 function API.ClaimRewards(mission)
     if type(mission) ~= "table" or not mission.id then return false end
     local id = tostring(mission.id)
@@ -922,12 +934,25 @@ function API.ClaimRewards(mission)
     local repList = {}
     if type(reward.reps) == "table" and #reward.reps > 0 then repList = reward.reps
     elseif type(reward.rep) == "table" then repList = { reward.rep } end
+    local receipt = SharedRewardReceipt(id)
+    -- Un recibo antiguo completo sigue siendo valido y no se migra a ciegas: no hay datos
+    -- para saber que componente exacto habia cobrado ya ese personaje.
+    if receipt == true then return false end
+
     local grantedAny = false
     local repResolved, repTotal = 0, 0
-    for _, rp in ipairs(repList) do
+    for index, rp in ipairs(repList) do
         if (rp.faction or rp.factionId) and tonumber(rp.amount) then
             repTotal = repTotal + 1
-            if GrantSelfReputation(rp.factionId or rp.faction, tonumber(rp.amount)) then
+            local componentId = table.concat({
+                tostring(index), tostring(rp.factionId or rp.faction), tostring(tonumber(rp.amount)),
+            }, "|")
+            if receipt.reps[componentId] then
+                repResolved = repResolved + 1
+            elseif GrantSelfReputation(rp.factionId or rp.faction, tonumber(rp.amount)) then
+                -- Se persiste enseguida: si otra faccion sigue pendiente, el siguiente
+                -- Reconcile no puede volver a conceder esta misma reputacion.
+                receipt.reps[componentId] = true
                 repResolved = repResolved + 1
                 grantedAny = true
                 if DEFAULT_CHAT_FRAME then
@@ -938,18 +963,53 @@ function API.ClaimRewards(mission)
             end
         end
     end
-    -- Si habia reps declaradas y NINGUNA resolvio (facciones aun no sincronizadas), no marcar
-    -- reclamada: deja que un Reconcile posterior lo reintente cuando lleguen las facciones.
-    if repTotal > 0 and repResolved == 0 then
-        return false
+    -- reward.xp: se concede via el sistema de XP propio de Harford (HarfordCharacterXP,
+    -- guardada en la progresion del perfil). Epsilon no tiene comando de XP real.
+    local hasXP = tonumber(reward.xp) and tonumber(reward.xp) > 0
+    local xpResolved = not hasXP or receipt.xp == true
+    if hasXP and not xpResolved and HarfordCharacterXP and HarfordCharacterXP.AddXP then
+        if HarfordCharacterXP.AddXP(tonumber(reward.xp), "mision") then
+            receipt.xp = true
+            xpResolved = true
+            grantedAny = true
+        end
     end
-    -- reward.xp: INFORMATIVA. No hay comando fiable de XP en Epsilon (`.mod xp`/`.modify xp` no
-    -- disponible), asi que la XP se MUESTRA en la recompensa pero no se concede. Pendiente de metodo real.
+    local complete = repResolved == repTotal and xpResolved and (repTotal > 0 or hasXP)
+    if complete then receipt.complete = true end
     if not grantedAny then
         return false
     end
 
-    MarkSharedRewardsClaimed(id)
+    FireChanged()
+    return true
+end
+
+-- Cierra localmente una entrega que ya fue confirmada en el mundo. La recompensa individual
+-- (oro/objetos) pertenece solo a quien uso el gossip; aqui solo se reclama la parte compartida
+-- (reputacion/XP), se marca el recibo individual y se retira la mision sin reproducir el sonido
+-- de abandono. La misma ruta sirve al emisor y a los demas miembros del grupo.
+function API.FinalizeSharedTurnIn(id, reward)
+    id = tostring(id or "")
+    if id == "" or not API.IsAccepted(id) then return false end
+
+    local resolvedReward = type(reward) == "table" and reward or API.GetRewards(id) or {}
+    if (resolvedReward.reps or resolvedReward.rep or resolvedReward.xp) then
+        API.ClaimRewards({
+            id = id,
+            reward = {
+                reps = resolvedReward.reps,
+                rep = resolvedReward.rep,
+                xp = resolvedReward.xp,
+            },
+        })
+    end
+
+    MarkClaimed(id)
+    local store = GetStore(false)
+    if store then
+        store.accepted[id] = nil
+        store.tracked[id] = nil
+    end
     FireChanged()
     return true
 end
@@ -964,7 +1024,10 @@ function API.GrantSharedRewardsForGroup(id)
     local rewards = API.GetRewards(id)
     if type(rewards) ~= "table" then return false end
     local hasReputation = (type(rewards.reps) == "table" and #rewards.reps > 0) or type(rewards.rep) == "table"
-    if not hasReputation then return false end
+    local hasXP = (tonumber(rewards.xp) or 0) > 0
+    -- Reputacion y XP se conceden individualmente en cada cliente. Dinero e items
+    -- no viajan por QREWARD: siguen ligados al personaje que entrega la mision.
+    if not hasReputation and not hasXP then return false end
 
     local alreadyClaimed = API.IsSharedRewardsClaimed(id)
     if not alreadyClaimed then API.ClaimRewards({ id = id, reward = rewards }) end
@@ -1038,6 +1101,7 @@ do
     ext.AdvanceObjective    = API.AdvanceObjective
     ext.CompleteObjective   = API.CompleteObjective
     ext.SetTracked          = API.SetTracked
+    ext.FinalizeSharedTurnIn = API.FinalizeSharedTurnIn
     ext.CompleteForGroup    = API.CompleteForGroup  -- auto-gateado por CanUseDMTools()
     ext.SetObjectiveProgressForGroup = API.SetObjectiveProgressForGroup  -- DM: progreso a la raid
     ext.CompleteObjectiveForGroup = API.CompleteObjectiveForGroup

@@ -140,6 +140,40 @@ end, "estado de EpsilonLib/ARC")
 
 -- Atajos de prueba para la progresion propia. Permanecen en HarfordDebug: no son
 -- comandos de juego ni una alternativa al flujo normal de recompensas/subida.
+-- Estado de las barras Harford de XP/reputacion: cuanto ha subido la barra de accion y con
+-- que marco se estan pintando. El nativo sube MainMenuBar 14 px con una barra y 19 con dos.
+API.RegisterCommand("xpbar", function()
+    local X = _G.HarfordCharacterXP
+    if not (X and X.GetBarPlacement) then Print("HarfordCharacterXP no cargado"); return end
+    local p = X.GetBarPlacement()
+    if not p then
+        Print("Las barras no estan creadas (config |cffffd100xpbar|r desactivada o sin progresion).")
+        return
+    end
+
+    local propias = p.visible and (p.repVisible and 2 or 1) or 0
+    local esperado = (math.min(2, propias + (p.nativas or 0)) == 2 and 19)
+        or (math.min(2, propias + (p.nativas or 0)) == 1 and 14) or 0
+    local real = tonumber(p.hostOffset)
+
+    Print(string.format("Barras Harford: |cffffd100%d|r visible(s)   nativas: %d", propias, p.nativas or 0))
+    Print(string.format("MainMenuBar subida: %s%s|r   esperado %d",
+        (real == esperado) and "|cff38d26a" or "|cffff5555", tostring(real), esperado))
+    if real ~= esperado then
+        Print("   |cffff9900No coincide.|r Si estabas en combate se reaplica al salir;")
+        Print("   si MainMenuBar esta recolocada a mano, el nativo tampoco la movería.")
+    end
+    Print(string.format("Marco: |cffffd100%s|r   ancho %s", tostring(p.atlas), tostring(math.floor(p.ancho or 0))))
+
+    local host = _G.MainMenuBar
+    if host and host.IsUserPlaced then
+        Print("MainMenuBar recolocada a mano: " .. (host:IsUserPlaced() and "|cffff5555si|r" or "no"))
+    end
+    local right = _G.MultiBarBottomRight
+    Print("MultiBarBottomRight visible: " ..
+        ((right and right.IsShown and right:IsShown()) and "si (marco pequeno)" or "no (marco grande)"))
+end, "Estado de las barras Harford de XP/reputacion y del desplazamiento de la barra de accion")
+
 API.RegisterCommand("xp", function(args)
     local amount = tonumber(tostring(args or ""):match("%-?%d+"))
     if not amount or amount == 0 then
@@ -341,14 +375,6 @@ API.RegisterCommand("profcraft", function(args)
     HarfordProfessions.Craft(recipeId)
 end, "intenta craftear una receta por id")
 
-API.RegisterCommand("profskill", function(args)
-    local profId, val = tostring(args or ""):match("^(%S+)%s+(%d+)")
-    if not profId then Print("Uso: profskill <profesionId> <skill>"); return end
-    if not HarfordProfessions then Print("HarfordProfessions no disponible"); return end
-    HarfordProfessions.SetSkill(profId, tonumber(val))
-    Print(string.format("%s skill -> %d", profId, HarfordProfessions.GetSkill(profId)))
-end, "fija tu skill en una profesion (test)")
-
 API.RegisterCommand("profrecipes", function(args)
     local profId = tostring(args or ""):match("^(%S+)")
     if not profId or profId == "" then Print("Uso: profrecipes <profesionId>"); return end
@@ -414,15 +440,52 @@ API.RegisterCommand("proflearn", function(args)
     Print("Receta aprendida para pruebas: " .. tostring(recipe.name))
 end, "aprende localmente una receta worldLearned para pruebas")
 
+-- Resuelve una profesion por id EXACTO o por su nombre visible, tolerando tildes, mayusculas y
+-- espacios ("Herreria", "herrería", "Primeros Auxilios"). Escribir el id crudo era un requisito
+-- innecesario para un comando de pruebas.
+local function ResolveProfession(texto)
+    if not (HarfordProfessions and HarfordProfessions.GetDefinition) then return nil end
+    texto = tostring(texto or "")
+    local exacta = HarfordProfessions.GetDefinition(texto)
+    if exacta then return texto, exacta end
+    local function Normaliza(v)
+        v = tostring(v or "")
+        if HarfordClassColors and HarfordClassColors.StripAccents then
+            v = HarfordClassColors.StripAccents(v)
+        end
+        return v:lower():gsub("[%s_]", "")
+    end
+    local buscado = Normaliza(texto)
+    for _, def in ipairs(HarfordProfessions.GetProfessions and HarfordProfessions.GetProfessions() or {}) do
+        if Normaliza(def.id) == buscado or Normaliza(def.name) == buscado then
+            return def.id, def
+        end
+    end
+    return nil
+end
+
+local function ListProfessions()
+    local ids = {}
+    for _, def in ipairs(HarfordProfessions and HarfordProfessions.GetProfessions
+        and HarfordProfessions.GetProfessions() or {}) do
+        ids[#ids + 1] = def.id
+    end
+    table.sort(ids)
+    return table.concat(ids, ", ")
+end
+
 API.RegisterCommand("profskill", function(args)
-    local profId, value = tostring(args or ""):match("^%s*(%S+)%s*(%-?%d*)")
-    if not profId or profId == "" then
-        Print("Uso: profskill <profesionId> [skill 0-300]. Ej: profskill herreria 1")
+    local texto, value = tostring(args or ""):match("^%s*(.-)%s*(%-?%d*)%s*$")
+    if not texto or texto == "" then
+        Print("Uso: profskill <profesion> [skill 0-300]. Ej: profskill herreria 150")
         Print("Con skill > 0 el PJ CONOCE la profesion (via de pruebas; lo normal es la competencia de herramienta).")
+        Print("|cff808080" .. ListProfessions() .. "|r")
         return
     end
-    if not (HarfordProfessions and HarfordProfessions.GetDefinition and HarfordProfessions.GetDefinition(profId)) then
-        Print("Profesion desconocida: " .. tostring(profId))
+    local profId = ResolveProfession(texto)
+    if not profId then
+        Print("Profesion desconocida: |cffffd100" .. tostring(texto) .. "|r")
+        Print("Validas: |cff808080" .. ListProfessions() .. "|r")
         return
     end
     HarfordProfessions.SetSkill(profId, tonumber(value) or 1)
@@ -4581,3 +4644,371 @@ API.RegisterCommand("customrecipe", function(args)
             r.learned and "|cff44dd44aprendida|r" or "|cffffcc00sin aprender|r"))
     end
 end, "recetas dinamicas: list | demo | forget <id>")
+
+-- Sistemas nuevos de reglas: cansancio, concentracion, puntos de heroe, maniobras y carga.
+-- Sirve para probarlos sin depender de que la UI los exponga todavia.
+-- Auditoria del compendio: cuenta lo que el motor SI puede resolver y lo que se queda en
+-- anuncio, para ver de un vistazo que falta por mecanizar sin abrir los datos.
+-- ¿Existen en ESTE cliente las texturas del libro de profesiones nativo? La pestana Profesiones
+-- sustituye las dos paginas enteras por Professions-Book-Left/Right (SpellBookFrame.lua,
+-- bgFileL/bgFileR); si el build de Epsilon no las trae, hay que caer a los fileID.
+-- Sintonizacion y carga: estado y pruebas. `peso <itemId> <libras>` declara el peso de un
+-- objeto, que el cliente de WoW NO expone y por eso hay que darselo a mano.
+API.RegisterCommand("carga", function(args)
+    local B = _G.HarfordDnDBurden
+    if not B then Print("HarfordDnDBurden no cargado"); return end
+    local cmd, a, b = tostring(args or ""):match("^%s*(%S*)%s*(%S*)%s*(%S*)")
+
+    if cmd == "peso" then
+        local id, libras = tonumber(a), tonumber(b)
+        if not (id and libras) then Print("uso: carga peso <itemId> <libras>"); return end
+        B.SetWeight(id, libras)
+        Print(string.format("Peso declarado: objeto %d = %d libras.", id, libras))
+        return
+    elseif cmd == "romper" then
+        local id = tonumber(a)
+        if not id then Print("uso: carga romper <itemId>"); return end
+        local ok, err = B.Unattune(id)
+        if not ok then Print("|cffff5555" .. tostring(err) .. "|r") end
+        return
+    end
+
+    local e = B.GetStatus()
+    Print(string.format("Sintonizacion: |cffffd100%d/%d|r", e.attuned, e.maxAttuned))
+    for _, entrada in ipairs(B.GetAttuned()) do
+        Print(string.format("   %s |cff808080(id %s)|r", tostring(entrada.name), tostring(entrada.itemId)))
+    end
+    Print(string.format("Carga: %s%d|r / %d libras (Fuerza x %d)",
+        e.overloaded and "|cffff5555" or "|cffffffff",
+        e.carried, e.capacity, B.CARRY_PER_STRENGTH))
+    if e.unknownWeights > 0 then
+        Print(string.format("   |cffff9900%d objeto(s) sin peso declarado|r no cuentan; usa 'carga peso <itemId> <libras>'.",
+            e.unknownWeights))
+    end
+    if e.overloaded then Print("   |cffff5555Sobrecargado.|r") end
+    Print("   |cff888888Ctrl+click en un hueco de la ficha sintoniza o rompe la sintonizacion.|r")
+end, "Estado de sintonizacion y carga (carga peso <id> <libras> | carga romper <id>)")
+
+-- Ajuste EN VIVO del skin de profesiones. Excepcion consciente a la norma de no crear comandos
+-- de ajuste visual: es tooling temporal para cuadrar la superposicion mirandola, y lo que salga
+-- se fija despues en PROF_BOOKMARK / PROF_FRAME_OFFSET dentro de HarfordCharacterPanel.
+--   marcapaginas <ancho>        ancho de la ventana de recorte
+--   marcapaginas mover <dx> <dy>   mueve la VENTANA sobre el libro
+--   marcapaginas tex <dx> <dy>     mueve la TEXTURA dentro de la ventana
+--   marco <dx> <dy>             mueve el recorte de los cuatro marcos
+--   raton                       arrastrar el marcapaginas con el boton izquierdo
+--   dump                        imprime los valores listos para fijar en el codigo
+API.RegisterCommand("profskin", function(args)
+    local panel = _G.HarfordCharacterPanel
+    local V = panel and panel._ProfSkinValues
+    local Apply = panel and panel._ApplyProfSkin
+    local P = panel and panel._professionsState
+    if not (V and Apply and P) then
+        Print("Abre la pestana |cffffd100Profesiones|r primero.")
+        return
+    end
+    local cmd, a, b, c = tostring(args or ""):lower():match("^%s*(%S*)%s*(%-?%S*)%s*(%-?%S*)%s*(%-?%S*)")
+
+    local function Dump()
+        Print("Valores actuales, para fijarlos en HarfordCharacterPanel:")
+        Print(string.format("  |cffffd100local PROF_BOOKMARK = { w = %d, tx = %d, ty = %d }|r",
+            V.bookmark.w, V.bookmark.tx, V.bookmark.ty))
+        Print(string.format("  |cffffd100local PROF_FRAME_OFFSET = { x = %d, y = %d }|r",
+            V.frame.x, V.frame.y))
+    end
+
+    if cmd == "dump" then Dump(); return end
+
+    if cmd == "marcapaginas" then
+        if a == "mover" then
+            -- La franja va pegada al borde y con el alto de la pagina; lo unico que se mueve es
+            -- la TEXTURA dentro de ella, que es lo que elige que trozo asoma.
+            V.bookmark.tx = V.bookmark.tx + (tonumber(b) or 0)
+            V.bookmark.ty = V.bookmark.ty + (tonumber(c) or 0)
+        elseif a == "tex" then
+            V.bookmark.tx = V.bookmark.tx + (tonumber(b) or 0)
+            V.bookmark.ty = V.bookmark.ty + (tonumber(c) or 0)
+        elseif tonumber(a) then
+            V.bookmark.w = math.max(1, tonumber(a))
+        else
+            Print("uso: profskin marcapaginas <ancho> | mover <dx> <dy> | tex <dx> <dy>")
+            return
+        end
+        Apply()
+        Print(string.format("Marcapaginas: ancho %d, textura desplazada (%d, %d)",
+            V.bookmark.w, V.bookmark.tx, V.bookmark.ty))
+        return
+    end
+
+    if cmd == "marco" then
+        V.frame.x = V.frame.x + (tonumber(a) or 0)
+        V.frame.y = V.frame.y + (tonumber(b) or 0)
+        Apply()
+        Print(string.format("Marcos: recorte en (%d, %d)", V.frame.x, V.frame.y))
+        return
+    end
+
+    -- Composicion del icono: el XML nativo pone el aro en OVERLAY y el icono en BORDER con
+    -- alphaMode="ADD", y al no haber profesion lo deja desaturado al 60%. Sobre el pergamino del
+    -- libro de habilidades ese ADD puede quedar casi invisible bajo el orbe del aro, que es lo
+    -- que se ve como "fondo negro". Aqui se compara con la alternativa sin ADD.
+    if cmd == "icono" then
+        local b = (P.profButtons or {})[1]
+        if not (b and b.icon) then Print("El primer hueco aun no existe"); return end
+        if a == "normal" then
+            for _, boton in ipairs(P.profButtons or {}) do
+                if boton.icon then
+                    boton.icon:SetBlendMode("BLEND")
+                    boton.icon:SetAlpha(1)
+                    if SetDesaturation then SetDesaturation(boton.icon, false) end
+                end
+            end
+            Print("Icono en |cff38d26aBLEND, alpha 1, sin desaturar|r (alternativa).")
+            return
+        elseif a == "nativo" then
+            for _, boton in ipairs(P.profButtons or {}) do
+                if boton.icon then
+                    boton.icon:SetBlendMode("ADD")
+                    boton.icon:SetAlpha(0.6)
+                    if SetDesaturation then SetDesaturation(boton.icon, true) end
+                end
+            end
+            Print("Icono en |cffffd100ADD, alpha 0.6, desaturado|r (como el XML nativo).")
+            return
+        elseif a == "aro" then
+            for _, boton in ipairs(P.profButtons or {}) do
+                if boton.iconBorder then
+                    boton.iconBorder:SetShown(not boton.iconBorder:IsShown())
+                end
+            end
+            Print("Aro alternado: si el icono aparece al ocultarlo, es el aro quien lo tapa.")
+            return
+        end
+        Print("Composicion del hueco 1:")
+        local function dump(nombre, region)
+            if not region then Print("   " .. nombre .. ": no existe"); return end
+            local capa, sub = region:GetDrawLayer()
+            Print(string.format("   %-10s capa %s/%s  alpha %.2f  mezcla %s  visible %s",
+                nombre, tostring(capa), tostring(sub), region:GetAlpha() or 1,
+                tostring(region.GetBlendMode and region:GetBlendMode() or "-"),
+                tostring(region:IsShown())))
+        end
+        dump("icono", b.icon)
+        dump("aro", b.iconBorder)
+        Print(string.format("   nivel del hueco %d, de la lista %d, del marco %d",
+            b:GetFrameLevel() or 0,
+            P.profList and P.profList:GetFrameLevel() or 0,
+            (P.frameCovers or {})[1] and P.frameCovers[1]:GetFrameLevel() or 0))
+        Print("  |cffffd100profskin icono normal|r / |cffffd100nativo|r / |cffffd100aro|r para comparar en vivo")
+        return
+    end
+
+    Print("|cffffd100profskin|r — ajuste en vivo del skin de profesiones:")
+    Print("  |cffffd100marcapaginas <ancho>|r           ancho de la franja (ahora 65)")
+    Print("  |cffffd100marcapaginas mover <dx> <dy>|r   desplaza la textura dentro de la franja")
+    Print("  |cffffd100marco <dx> <dy>|r                mueve el recorte de los 4 marcos")
+    Print("  |cffffd100icono|r                          composicion del icono y su aro")
+    Print("  |cffffd100dump|r                           imprime los valores para fijarlos")
+    Dump()
+end, "Ajuste en vivo del skin de la pestana Profesiones (marcapaginas y marcos)")
+
+API.RegisterCommand("proftex", function()
+    -- El chat scrollea: el VEREDICTO va al final, que es lo unico que queda a la vista.
+    -- `GetFileNameFromID` no existe en este cliente, asi que no se usa: la unica prueba fiable
+    -- de que una ruta resuelve es que `GetFileIDFromPath` devuelva un id.
+    local rutas = {
+        { ruta = "Interface\\Spellbook\\Professions-Book-Left",     clave = true },
+        { ruta = "Interface\\Spellbook\\Professions-Book-Right",    clave = true },
+        { ruta = "Interface\\Spellbook\\ProfessionsBook",           clave = false },
+        { ruta = "Interface\\Spellbook\\Professions-Progress-Fill", clave = false },
+        { ruta = "Interface\\Spellbook\\Spellbook-Page-1",          clave = false },
+        { ruta = "Interface\\Spellbook\\Spellbook-Page-2",          clave = false },
+    }
+    if not GetFileIDFromPath then
+        Print("|cffff5555Este cliente no expone GetFileIDFromPath: no se puede comprobar.|r")
+        return
+    end
+
+    local faltanClave = {}
+    for _, entrada in ipairs(rutas) do
+        local id = GetFileIDFromPath(entrada.ruta)
+        Print(string.format("  %-28s %s",
+            entrada.ruta:match("([^\\]+)$") or entrada.ruta,
+            id and ("|cff38d26aOK|r  fileID " .. tostring(id)) or "|cffff5555NO EXISTE|r"))
+        if not id and entrada.clave then faltanClave[#faltanClave + 1] = entrada.ruta end
+    end
+
+    Print(" ")
+    if #faltanClave == 0 then
+        Print("|cff38d26aVEREDICTO: las dos paginas de profesiones existen.|r La pestana debe pintarse")
+        Print("igual que el libro nativo. Si aun se ve mal, es colocacion, no textura.")
+    else
+        Print("|cffff5555VEREDICTO: faltan " .. #faltanClave .. " pagina(s) de profesiones en este build.|r")
+        Print("Hay que quedarse con los fileID (383588/383589) o recortar de otra textura.")
+    end
+    -- Alto REAL de la pagina: de el depende hasta donde llegan los marcos de profesion.
+    local P = _G.HarfordCharacterPanel and _G.HarfordCharacterPanel._professionsState
+    local page1 = P and P.profPage1
+    if page1 and page1.GetHeight then
+        local h = page1:GetHeight() or 0
+        Print(string.format("Pagina de profesiones: alto %d  ->  borde inferior en -%d",
+            math.floor(h), math.floor(25 + h)))
+        for i = 3, 5 do
+            local arriba = 67 + (i - 1) * 93
+            Print(string.format("   marco %d: arriba -%d, cabe %d de 81",
+                i, arriba, math.max(0, math.min(81, math.floor(25 + h - arriba)))))
+        end
+    else
+        Print("|cff808080Abre la pestana Profesiones para poder medir la pagina.|r")
+    end
+    Print("Para capturar el frame nativo: abre el libro de hechizos en Profesiones y ejecuta")
+    Print("  |cffffd100/harford debug run probeframecapture SpellBookProfessionFrame profbook|r")
+    Print("  |cffffd100/harford debug run probeframecapture SpellBookFrame profpagina|r")
+    Print("y despues |cffffd100/harford debug run probeframeexport|r")
+end, "Comprueba las texturas del libro de profesiones nativo y dice como capturarlo")
+
+API.RegisterCommand("compendio", function(args)
+    local api = _G.HarfordCompendioAPI
+    local all = api and api.GetAllSpells and api.GetAllSpells() or {}
+    if #all == 0 then Print("Compendio no cargado"); return end
+    local filtro = tostring(args or ""):lower():match("^%s*(%S*)")
+
+    local total, conc, concDeclarada, ataque, salvacion, area, curacion, informativos = 0, 0, 0, 0, 0, 0, 0, 0
+    local pendientes = {}
+    for _, spell in ipairs(all) do
+        total = total + 1
+        if spell.concentration == true then concDeclarada = concDeclarada + 1 end
+        if api.RequiresConcentration and api.RequiresConcentration(spell) then conc = conc + 1 end
+        if spell.attack and spell.attack ~= "" then ataque = ataque + 1 end
+        if spell.savingThrow and spell.savingThrow ~= "" then salvacion = salvacion + 1 end
+        local def = api.BuildAreaDefinition and api.BuildAreaDefinition(spell)
+        if def then
+            local res = def.area and def.area.resolution
+            if res == "heal" then curacion = curacion + 1 else area = area + 1 end
+        else
+            informativos = informativos + 1
+            if spell.damage and spell.damage ~= "" then
+                pendientes[#pendientes + 1] = spell
+            end
+        end
+    end
+
+    Print(string.format("Conjuros: |cffffd100%d|r", total))
+    Print(string.format("  Concentracion efectiva %d (declarada en el campo: %d)", conc, concDeclarada))
+    Print(string.format("  Campo ataque %d   salvacion %d", ataque, salvacion))
+    Print(string.format("  Resuelve el motor: area/ataque %d   curacion %d", area, curacion))
+    Print(string.format("  Solo anuncio: |cffff9900%d|r  (con dano declarado sin via: %d)",
+        informativos, #pendientes))
+    if filtro == "pendientes" then
+        for i = 1, math.min(#pendientes, 40) do
+            local s = pendientes[i]
+            Print(string.format("   |cffcccccc%s|r  %s", tostring(s.id), tostring(s.damage)))
+        end
+    else
+        Print("  |cff888888/harford debug run compendio pendientes|r para el listado")
+        Print("  |cff888888/harford debug run compendio <id>|r para ver como lo resuelve el motor")
+    end
+end, "Auditoria del compendio de conjuros (que resuelve el motor y que no)")
+
+-- Que produce el motor para UN conjuro concreto: sirve para comprobar en vivo el escalado de
+-- trucos por nivel de personaje y la subida por espacio superior, que antes no se aplicaban.
+API.RegisterCommand("conjuro", function(args)
+    local id = tostring(args or ""):match("^%s*(%S+)")
+    if not id then Print("Uso: /harford debug run conjuro <id>  (p.ej. descarga_de_fuego)"); return end
+    local api = _G.HarfordCompendioAPI
+    local spell = api and api.GetSpellById and api.GetSpellById(id)
+    if not spell then Print("No existe el conjuro |cffffd100" .. id .. "|r"); return end
+
+    local nivelPJ = HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel
+        and HarfordDnDProgression.GetTotalLevel() or 0
+    Print(string.format("|cffffd100%s|r  nivel %s   (personaje nivel %d)",
+        tostring(spell.name), tostring(spell.level), nivelPJ))
+    Print(string.format("  duracion: %s", tostring(spell.duration)))
+    Print(string.format("  concentracion: campo=%s  |cff00ccffefectiva=%s|r",
+        tostring(spell.concentration == true),
+        tostring(api.RequiresConcentration and api.RequiresConcentration(spell))))
+    Print(string.format("  dano declarado: %s", tostring(spell.damage ~= "" and spell.damage or "-")))
+
+    local def = api.BuildAreaDefinition and api.BuildAreaDefinition(spell)
+    if not def or not def.area then
+        Print("  |cffff9900El motor NO lo resuelve|r: se queda en anuncio informativo.")
+        return
+    end
+    local area = def.area
+    Print(string.format("  resolucion: |cff00ff00%s|r   forma: %s %s",
+        tostring(area.resolution), tostring(area.shape), tostring(area.sizeText)))
+    if area.dc then Print("  CD: " .. tostring(area.dc) .. "  salvacion: " .. tostring(area.saveAbility)) end
+    if area.attackBonus then Print("  bonus de ataque: " .. tostring(area.attackBonus)) end
+    for _, c in ipairs(area.damageComponents or area.healingComponents or {}) do
+        Print(string.format("   -> |cff66ccff%s%s|r %s",
+            tostring(c.damageDice or c.fixedAmount),
+            (c.damageBonus and c.damageBonus ~= 0) and string.format("%+d", c.damageBonus) or "",
+            tostring(c.damageType or "")))
+    end
+end, "Volcado de como el motor resuelve un conjuro concreto del compendio")
+
+API.RegisterCommand("reglas", function(args)
+    local cmd, rest = tostring(args or ""):match("^%s*(%S*)%s*(.-)%s*$")
+    cmd = cmd:lower()
+
+    if cmd == "cansancio" then
+        local C = _G.HarfordDnDConditions
+        if not C then Print("Condiciones no cargadas"); return end
+        if rest ~= "" then C.SetExhaustion("player", tonumber(rest) or 0) end
+        local nivel = C.GetExhaustion("player")
+        Print("Cansancio: nivel " .. nivel)
+        for _, efecto in ipairs(C.GetExhaustionEffects(nivel)) do Print("   - " .. efecto) end
+        return
+    end
+
+    if cmd == "concentracion" then
+        local K = _G.HarfordDnDConcentration
+        if not K then Print("Concentracion no cargada"); return end
+        if rest == "" then
+            Print("Concentrado en: " .. tostring(K.GetSpellName() or "nada"))
+        elseif rest:lower() == "romper" then
+            K.Break("prueba de debug")
+        elseif tonumber(rest) then
+            K.OnDamage(tonumber(rest), "debug")
+        else
+            K.Begin(rest)
+        end
+        return
+    end
+
+    if cmd == "heroe" then
+        local H = _G.HarfordDnDHeroPoints
+        if not H then Print("Puntos de heroe no cargados"); return end
+        if rest:lower() == "gastar" then H.Spend() return end
+        local st = H.GetStatus()
+        Print(string.format("Puntos de heroe: %d/%d (nivel %d)", st.current, st.max, st.level))
+        return
+    end
+
+    if cmd == "carga" then
+        local B = _G.HarfordDnDBurden
+        if not B then Print("Carga no cargada"); return end
+        local st = B.GetStatus()
+        Print(string.format("Carga: %d de %d libras%s", st.carried, st.capacity,
+            st.overloaded and " |cffff5555(sobrecargado)|r" or ""))
+        Print(string.format("Sintonizados: %d de %d", st.attuned, st.maxAttuned))
+        for _, o in ipairs(B.GetAttuned()) do Print("   - " .. tostring(o.name)) end
+        if st.unknownWeights > 0 then
+            Print(string.format("|cffffcc00%d objetos sin peso declarado|r (el cliente no expone el peso).",
+                st.unknownWeights))
+        end
+        return
+    end
+
+    if cmd == "cobertura" then
+        local M = _G.HarfordDnDManeuvers
+        if not M then Print("Maniobras no cargadas"); return end
+        if rest ~= "" then M.SetCover(rest) end
+        local nivel, def = M.GetCover()
+        Print(string.format("Cobertura: %s (%s)", def and def.label or nivel,
+            def and def.ac and ("+" .. def.ac .. " CA y salv. Destreza") or "no se puede elegir como objetivo"))
+        return
+    end
+
+    Print("Uso: reglas cansancio [0-6] | concentracion [nombre|romper|<dano>] | heroe [gastar] | carga | cobertura [none|half|three|total]")
+end, "prueba los sistemas de reglas nuevos")

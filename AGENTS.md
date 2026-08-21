@@ -179,6 +179,16 @@ Contrato `HarfordCompendio`:
 - Campo `condition` de conjuro (estructurado, opcional; con `autohit` son los DOS campos mecanicos no-texto): `spell.condition = "restrained"` o `{ id, duration, persist, turns }`. `id` DEBE existir en `HarfordDnDConditions.DEFS` (lo valida `SpellCondition`; ids invalidos se ignoran). `BuildAreaDefinition` lo anexa al `area`: por defecto una condicion de salvacion repite salvacion al final del turno del objetivo (`save_at_turn_end`), o `manual` (la retira el DM / al romperse / al recibir daño). Habilita **control puro sin daño**: el motor de area acepta `damageComponents` vacio si hay `conditionId` (`NormalizeDefinition`/`ValidateIncomingRequest`) y la red lo transmite vacio (`HarfordSync`: componentes "" -> {}). Solo mapear conjuros cuyo efecto coincida EXACTAMENTE con una condicion del catalogo y verificar UNO A UNO (falsos positivos tipicos: conjuros que RETIRAN estados, efectos sobre el lanzador, ralentizaciones de zona sin salvacion). Auditar con el clasificador de `/harforddebug` o replicando los parsers.
 - El panel `Master` de `HarfordCompendioUI` es solo informativo mientras viva en core, pero aun asi se abre exclusivamente con `HarfordAuthority.CanUseDMTools()` (HarfordAdmin cargado + `.ph dm`). No usar `C_Epsilon.IsDM`/`ARC.PHASE.IsDM` directamente aqui. Si en el futuro obtiene botones que ejecuten cambios reales de DM (descansos forzados, preparacion ajena, auditoria aplicada, etc.), esas acciones deben moverse a `HarfordAdmin` o pasar por APIs core validadas con la misma puerta.
 - **Estado de datos del Compendio (2026-08-20)**: `HarfordCompendioData.lua` conserva texto completo en unidades metricas y requiere una auditoria OCR controlada por entradas. Ya se han corregido errores que afectan a dados de dano (`ldlO` -> `1d10`, `ldl2` -> `1d12`) en los conjuros detectados, pero siguen existiendo cabeceras de pagina y fragmentos OCR en otras descripciones; no declarar la pasada cerrada hasta completar el barrido comparado con la fuente canonica. `respirar_bajo_el_agua` traia incrustado el conjuro completo `Restablecimiento mayor` y se recorto; **`Restablecimiento mayor` NO existe aun como entrada propia** (solo `restablecimiento_menor`) y queda pendiente de alta con datos canonicos. Antes de editar descripciones, comprobar `ldl`, `PITULO`, `JUROS`, `PARTE N | HECHIZOS` y cabeceras corruptas; preservar los cambios validos de formato y no hacer sustituciones globales ciegas.
+- **Auditoria de mecanizacion del Compendio (2026-08-21)**: 384 conjuros, niveles 0-4 (nv0 55, nv1 91, nv2 97, nv3 80, nv4 61); **no hay ningun conjuro de nivel 5-9** aunque `HarfordDnDMana` reparte espacios hasta nivel 9 (lanzador 9 ya crea espacios de nivel 5), asi que un lanzador de nivel de personaje 9+ se queda sin nada que lanzar en sus espacios altos. Estado de resolucion: 179 con campo `attack`, 95 con `savingThrow`, 157 con `damage`, y **181 puramente informativos** (se anuncian, no los resuelve ningun motor). Cosas confirmadas que faltan y por que:
+  - **Concentracion declarada vs escrita**: 62 conjuros llevan la concentracion en el texto de `duration` ("Concentracion, hasta 1 minuto") con `concentration = false`, y otros 7 al reves (`concentration = true` con `duration = "manual"`). Se resuelve en el CORE con `HarfordCompendioAPI.RequiresConcentration(spell)` (campo booleano O texto de duracion), que es lo que usan `ConfirmCast` y la UI de detalle/tooltip. **No arreglar esto en `HarfordCompendioData.lua`**: ese fichero lo regenera el pipeline del codice desde otro chat y el arreglo se perderia.
+  - **`duration = "manual"` en 19 entradas** (`encantar_animal`, `grasa`, `hechizar_persona`, `encantar_persona`, `golpe_trueno`, `rayo_de_enfermedad`, `temblor_de_tierra`, `fuerza_brillante`, `patron_hipnotico`, `tormenta_de_aguanieve`, `pua_terrestre`, `dominar_bestia`, `encantar_monstruo`, `lanza_psiquica_de_raulothim`, `pirotecnia`, `amigos_rapidos`, `golpe_cegador`, `ola_de_marea`, `sueno_profundo`) es un marcador de relleno, no una duracion. Es dato, lo decide el chat del codice.
+  - **Campo `attack` sobrecargado**: mezcla cuatro cosas distintas — tipo de ataque real (`Ataque de conjuro a distancia`), copia de la salvacion (`Salvacion de Destreza`, `Contra salvacion`), etiqueta de categoria (`Area`, `Aura`, `Invocacion`, `Proteccion`, `Mejora de ataque`) y ataque+dano fundidos (`A distancia 1d8 fuego`). El core lo tolera por `find` de subcadenas, pero las cinco etiquetas de categoria no resuelven a nada y caen en informativo.
+  - **24 conjuros con `damage` y sin ataque ni salvacion**, que el motor no puede aplicar. No son un solo problema: (a) **riders de dano de arma** (`favor_divino`, `marca_del_cazador`, `favor_aterrador`, `maldicion`, `manto_del_cruzado_caido`) cuyo sitio correcto es `conditionalWeaponDamage` de `HarfordDnDConditionalDamage`, no el motor de area; (b) **dano reactivo / PG temporales** (`armadura_de_agathys`, `escudo_de_fuego`, `escudo_de_relampagos`, `bloque_de_hielo`, `absorber_elementos`, `discurso_motivador`, `barrera_luminosa`), que necesitan una capa de reaccion que aun no existe; (c) **dos errores de dato reales**: `bendicion` (`damage = "1d4 y"`) y `perdicion` (`damage = "1d4 y"`) NO hacen dano — son bonus/penalizador de 1d4 a tiradas —, y `rociada_de_color` (`damage = "2d10 por"`) tampoco: ciega por total de PG. Si alguna vez se les diera via de aplicacion, harian dano inventado.
+  - **Escalado de trucos (RESUELTO en codigo)**: el dano de un truco sube un dado a nivel de PERSONAJE 5, 11 y 17. Es regla general del manual, no dato por conjuro, asi que la aplica `ApplyCantripScaling` en `HarfordCompendioCore` sobre los componentes ya parseados, usando `HarfordDnDProgression.GetTotalLevel()`. Cubre los 31 trucos con dano, incluidos los 7 que no lo declaran en su texto (`mordedura_helada`, `retumbo`, `llamada_de_relampago`, `palabra_de_radiancia`, `salvajismo_primitivo`, `hoja_retumbante`, `hoja_verdeante`). **Excepcion**: los trucos que escalan sumando PROYECTILES en vez de dados (Descarga Sobrenatural: de un rayo a cuatro, cada uno 1d10) se detectan por texto (`CantripScalesByProjectiles`) y se dejan intactos, porque multiplicarles el dado los doblaria. El numero de rayos en si sigue sin automatizarse. `ApplyUpcastDamage` (espacios superiores) solo escala lo que el texto declara: 72 de los 126 conjuros de nivel 1-4 con dano no traen la formula.
+  - **Modificador de lanzamiento en curaciones**: el texto lo escribe de cinco formas distintas (`modificador de conjuro` 16 usos, `por aptitud magica` 4, `de lanzamiento de conjuros` 3, `de aptitud magica` 1) y `HealingDefinition` solo reconocia una, asi que curaciones como `cadena_de_curacion` sanaban los dados SIN modificador. Ahora se reconocen todas via `MentionsCastingModifier`. La puerta de texto `recuper` NO se relaja a `cura`: `restablecimiento_menor` (cura enfermedades) se convertiria en curacion falsa.
+  - **`"Picaro Sutileza"` aparece como valor de `classes`** en 20 conjuros; es una subclase, no una clase, y los filtros de la pestana Conjuros derivan sus opciones directamente de esos valores, asi que sale como una clase mas en el desplegable.
+  - **Nombres duplicados por diseno**: `explosion_arcana`/`explosion_arcana_nivel_3` y `toque_helado`/`toque_helado_nivel_1` comparten nombre visible; en la lista no hay forma de distinguirlos salvo por el nivel.
+  - Diagnostico en juego: `/harford debug run compendio` (resumen) y `compendio pendientes` (listado de los que declaran dano sin via de aplicacion).
 - **Consultor web canonico** (<https://harfordweb.marcos-pazos-95.workers.dev/>, la mantiene el usuario desde OTRO chat de Claude; la copia en `D:/Azerothcore/harfordweb` esta desactualizada y no es su arbol de trabajo): sus datos viven en `js/compendium-data.js` (classes/races/backgrounds/spells), `compendium-dotes.js`, `compendium-equipment.js`, `compendium-professions.js` (`window.HARFORD_COMPENDIUM`). Cruce web<->addon COMPLETADO en las 4 secciones (2026-08-20): CONJUROS mismos 384 ids (se entrego `compendium-data.js` corregido: 19 duraciones `"manual"` reales + limpieza OCR); DOTES mismos 77 ids, la web tenia sangrado OCR en 39 (se entrego `compendium-dotes.js` corregido; `combatiente_dos_armas` arrastraba 26 dotes duplicadas y 30 dotes acababan con el titulo del siguiente) y el addon esta limpio; EQUIPO 147 items y 52 armas alineadas; PROFESIONES 30 profesiones/121 recetas con ids identicos. Discrepancias abiertas que decide el usuario: icono de `parpadeo` (web `spell_holy_powerwordshield` vs addon `wc3_blink`) y daño de `Desarmado` (web `1` contundente RAW vs addon `1d4`).
 
 Coste y cobertura de conjuros:
@@ -529,6 +539,34 @@ Contrato `HarfordReputation` (core):
 - `HarfordReputation.SetPlayerPoints(playerKey, factionId, points, opts)` → solo si `CanEdit()` o `opts.fromSync=true`.
 - `HarfordReputation.IsAtWarPoints(points)` -> `true` desde `Hostil` hacia abajo (`points <= -3001`: Hostil/Odiado). Al subir por encima de Hostil (`Adverso`, `Neutral` o mejor) debe quitarse. `SetPlayerPoints` actualiza automaticamente `repEntry.atWar` en reputacion de jugador; sync tambien lo reconstruye al recibir puntos.
 - Contrato `HarfordCharacterXP` (`Harford/Character/HarfordCharacterXP.lua`, 2026-08-20): sistema de experiencia PROPIO (Epsilon no tiene comando de XP real; el antiguo "reward.xp informativa" de HarfordQuests quedo retirado). La XP vive en `progression.xp` del perfil activo (`HarfordDnDProgression.Get()`, persiste con la ficha); tabla oficial 5e niveles 1-20 en `API.XP_TABLE`. API: `GetXP`/`SetXP`/`AddXP(amount, reason)`/`LevelForXP`/`Progress`/`PendingLevelUp`/`Refresh`. `SetXP` delega en `HarfordDnDProgression.SetXP`, que normaliza el valor e invalida los derivados del perfil. El campo se serializa como `x=<xp>` dentro de `DNDCLASS`/`DNDINSCLASS`; clientes antiguos lo ignoran y los nuevos conservan la XP al compartir o inspeccionar una ficha. `AddXP` imprime la ganancia y anuncia "Nivel N disponible" al cruzar umbral, pero NUNCA aplica niveles: la subida sigue siendo manual con `/harford char subir` (no hay pestaña inferior de Subida). El nivel total esta limitado a 20, incluida multiclase, importacion y avance manual. Barras visuales propias (XP morado + reputacion seguida opcional) ancladas en `UIParent/MEDIUM` nivel 85: no registrar ni modificar `StatusTrackingBarManager`, cuyos contratos privados fallan en Epsilon antes de que un addon pueda completar la barra. Gate `HarfordConfig` clave `xpbar` (default on); texto fijo con `statusTextDisplay`, si no al hover. `HarfordQuests.ClaimRewards` concede `reward.xp` via `AddXP`. **Barra de reputacion seguida** (mismo modulo, misma opcion `xpbar`): solo visible si hay faccion seguida (`Ctrl+click` en una fila de faccion del panel togglea `HarfordReputationStore.ui.watchedByChar[nombreCorto]`; API `Get/Set/ToggleWatchedFaction`); color nativo por rango (`FACTION_BAR_COLORS`), texto `Faccion: cur / max (Rango)`, rango tope lleno. `HarfordReputation.FireChanged` refresca tambien esta barra.
+- **Barras de XP/reputacion: por que no subian la barra de accion ni tenian marco (2026-08-21)**.
+  El commit que introdujo el sistema (`a059050`) tiene un mensaje que describe barras REGISTRADAS
+  en `StatusTrackingBarManager` ("el gestor recoloca la UI solo"), pero el codigo que entro en ese
+  mismo commit ya era la version suelta con `barHolder` en `UIParent BOTTOM 0,0`. El mensaje nunca
+  se actualizo, asi que parecia que debia funcionar. **Nunca funciono en `dev`.**
+  Lo que el gestor daba gratis al estar registradas eran dos cosas:
+  1. **Subir la barra de accion.** Cadena nativa: `StatusTrackingBarManager:LayoutBars()` ->
+     `MainMenuBar:OnStatusBarsUpdated()` -> `MainMenuBar:SetPositionForStatusBars()` ->
+     `SetYOffset(0|14|19)` + `UIParent_ManageFramePositions()` -> `UIParent.lua` ancla
+     `MainMenuBar:SetPoint("BOTTOM", UIParent, 0, GetYOffset())`. El offset sale de
+     `GetNumberVisibleBars()`, que recorre `mgr.bars`; sin registrar, devuelve 0.
+  2. **El marco.** NO esta en `StatusTrackingBarTemplate` (solo StatusBar + fondo negro 0.9 +
+     texto): son cuatro texturas de atlas del MANAGER, `hidden="true"`, mostradas por `LayoutBar`.
+  **Solucion adoptada**: replicarlo a mano SIN registrar (los contratos privados del gestor
+  siguen fallando en Epsilon). Geometria nativa exacta, verificada con el interprete Lua:
+  - una barra: `BOTTOM MainMenuBar 0,-14`; marco a `CENTER` de la barra `0,0`, alto natural.
+  - dos barras: superior `0,-10`, inferior `0,-19`; marco `Upper` a `CENTER+4` y base a
+    `CENTER-9` **sobre la barra SUPERIOR** (ambas piezas se anclan a la misma), alto natural - 4.
+  - StatusBar mide `ancho - endCapWidth*2` (`endCapWidth = 4`), no el ancho completo.
+  - atlas `hud-MainMenuBar-experiencebar-large-single` o `-small-single` segun
+    `MultiBarBottomRight:IsShown()` (`MainMenuBar.lua`: `isLargeSize = rightMultiBarShowing`).
+  - `MainMenuBar:SetYOffset(14|19|0)` + end caps a `-98,-offset` + `UIParent_ManageFramePositions()`.
+  **Cuidado**: `UIParent_ManageFramePositions` recoloca frames protegidos -> guardar con
+  `InCombatLockdown()` y reintentar en `PLAYER_REGEN_ENABLED`; y respetar `IsUserPlaced()`, que el
+  propio nativo comprueba antes de mover nada. El nativo reescribe `yOffset` cada vez que recalcula
+  sus barras, asi que hay `hooksecurefunc` sobre `SetPositionForStatusBars` para reaplicarlo.
+  `ClearAllPoints` en AMBAS ramas del marco: `SetPoint` acumula y al pasar de una barra a dos
+  arrastraria los anclajes anteriores. Diagnostico: `/harford debug run xpbar`.
 - **Ventana standalone de reputacion RETIRADA (2026-08-20)**: `HarfordReputationUI.Toggle`/`Open` delegan en `HarfordCharacterPanel.Toggle/Open("reputation")`; `/harford rep`, la bandeja de herramientas y el boton de la ficha abren esa pestaña. El flujo de ventana flotante (CreatePanel standalone + DetachEmbedded) se conserva SOLO como fallback si el panel de personaje no esta cargado y como soporte del embebido; no re-exponer la ventana suelta como via principal.
 - Sonidos del panel de reputacion (confirmado con `nativeprobe` + observacion en juego 2026-08-20): el frame nativo suena `856 igMainMenuOptionCheckBoxOn` SOLO al seleccionar una faccion; **expandir/colapsar cabeceras es silencioso** (no reproducir 856/857 ahi). `HarfordReputationUI` reproduce 856 en el click de fila de faccion. La apertura/cierre del panel ya la cubren los kits propios del CharacterPanel (567422/567440). Version previa al ajuste guardada en `HarfordReputationUI.lua.pre-sonda.bak` (no carga en toc; borrar cuando el cambio quede validado).
 - Visual `At War` en `HarfordReputationUI`: no basta con guardar `repEntry.atWar`. La fila debe mostrar dos texturas nativas `AtWarHighlight1/2` con `Interface\\PaperDollInfoFrame\\UI-Character-ReputationBar`, alpha ~0.20, replicando `ReputationBarXReputationBarAtWarHighlight1/2` del `FrameDump`. Deben ir embebidas en el marco de la fila: `AtWarHighlight1` empieza en `indent+3` (donde empieza el marco de esa fila) y se une a `AtWarHighlight2`, que cierra en `TOPRIGHT row -1,-2`. Usar capa `OVERLAY -2`: `ARTWORK -1` queda tapado por el marco/fondo, mientras `OVERLAY -2` sigue por debajo del texto (`Name`/`FactionStanding`) y no flota por encima de la seleccion. Se muestran solo en filas de faccion con `atWar=true`; headers las ocultan.
@@ -1560,6 +1598,202 @@ end
   - `HarfordTRP3.InsertGlanceLink(glance)`: extension exclusiva de estados ajenos. Por defecto crea una copia no importable registrada e inserta su marcador plano TRP3 enviable; `HarfordAdminNPC` lo sobrescribe en modo DM para enviar al NPC target un hyperlink validado y caer a impresion local si no puede emitirlo. Los links nativos de TRP3 no se interceptan.
   - `HarfordReputation.CanEdit()` comprueba addon `HarfordAdmin` cargado e `IsDMMode()` porque la edicion de reputaciones es un contrato protegido del core.
 - Excepción aceptada: comprobaciones de permisos DM que bloquean acciones destructivas en el core (`CanEdit`, `Require`, etc.) pueden vivir en `HarfordAuthority` referenciados desde el core. Lo que no puede estar en el core es **comportamiento de UI o acción específica del DM**.
+
+- **Espacios de conjuro visibles (2026-08-21)**: el sistema de espacios ya existia y se APLICA
+  (`HarfordDnDMana.SLOT_COUNT` con la tabla 5e 1-20, `CanSpendSpellSlot` bloquea el lanzamiento y
+  `SpendSpellSlot` lo consume en `ConfirmCast`; los gastados viven en `_progression.spellSlots` y
+  se restauran en descanso largo), pero solo estaba activo si `HarfordConfig.spell_cost_mode` vale
+  `"slots"` (por defecto es `"mana"`) y **solo se veia de uno en uno** dentro del detalle de un
+  conjuro. `HarfordCharacterSpellbook.CastingResourceText` anade una linea en la esquina inferior
+  IZQUIERDA de la pestana Conjuros que enumera todos los niveles (`I 4/4  II 3/3  III 2/2`) en
+  modo espacios, o `Mana 19/27` en modo mana, y queda VACIA para un no lanzador en vez de mentir
+  con ceros. Color por estado: dorado intacto, blanco a medias, rojo agotado. Va anclada por
+  BOTTOMLEFT y con `SetMaxLines(2)` porque un lanzador de nivel 20 tiene nueve niveles y la
+  segunda linea debe crecer hacia arriba sin invadir el pasapaginas. Se recalcula en cada
+  `RefreshSpells`. El mana actual se lee de `HarfordDnDStore.GetResourceCurrent("mana")`, que es la
+  via canonica (`HarfordDnDAPI` NO expone `GetResourceCurrent`).
+
+- **Sintonizacion y carga en la UI (2026-08-21)**: `HarfordDnDBurden` tenia motor pero ninguna
+  via de uso. Ahora: (1) dos filas en la vista **Detalles** de la ficha de personaje —
+  `Sintonizacion 2/3` con la lista de objetos en el tooltip, y `Carga 45/210` con la capacidad
+  (Fuerza x 15) explicada; (2) gesto **Ctrl+click** en un hueco del paperdoll para sintonizar o
+  romper la sintonizacion (los demas gestos ya estaban cogidos: shift linkea, click derecho/alt
+  desequipa, click izquierdo equipa); (3) el tooltip del hueco solo menciona la sintonizacion si
+  el objeto la pide o ya la tiene, para no ensuciar el de cada pieza corriente.
+  Reglas verificadas con el interprete Lua real: maximo 3 objetos, no dos copias del mismo (ni
+  por itemId ni por nombre), capacidad = Fuerza x 15, y sobrecarga.
+  **Las dos filas se ocultan en INSPECCION**: `HarfordDnDBurden.GetCapacity` resuelve la Fuerza
+  con `HarfordDnDCalc`, que es el del jugador LOCAL, asi que en inspeccion daria los numeros de
+  uno bajo el nombre de otro (mismo contrato que habilidades/salvaciones remotas).
+  **El peso no viene del juego**: el cliente de WoW no expone el peso de un objeto, asi que
+  `API.WEIGHTS` solo tiene lo DECLARADO y `GetCarried` devuelve tambien cuantos objetos no lo
+  traen. La UI lo muestra como `45/210 (+3?)` en vez de dar una cifra que mentiria por defecto.
+  Diagnostico: `/harford debug run carga`, `carga peso <itemId> <libras>`, `carga romper <id>`.
+
+## Pestana Profesiones: Como Lo Hace El Libro Nativo (2026-08-21)
+
+El libro de hechizos nativo **no recorta ornamentos por hueco de profesion**. Al entrar en la
+pestana Profesiones sustituye las DOS paginas enteras (`SpellBookFrame.lua`, `SpellBookInfo`):
+
+```lua
+SpellBookInfo[BOOKTYPE_PROFESSION] = {
+    bgFileL = "Interface\\Spellbook\\Professions-Book-Left",
+    bgFileR = "Interface\\Spellbook\\Professions-Book-Right",
+}
+```
+
+El marco ornamentado de cada profesion, el marcapaginas verde y el resto del adorno vienen
+HORNEADOS en esas dos texturas. `PrimaryProfessionTemplate` no tiene fondo propio: su unica
+textura de fondo esta comentada en el XML.
+
+De ahi salio el fallo que se arrastraba: se conservaban las paginas de conjuros
+(`Spellbook-Page-1/-2`), se recortaba un trozo de `383588` por boton como sello y se estiraba
+449x101 texeles dentro de un frame de 437x81 (deformacion no uniforme, 0,973x horizontal y
+0,802x vertical), mas un parche `ribbonCover` para tapar la cinta AZUL de la pagina de conjuros
+que asomaba por debajo. Con las paginas correctas no hay cinta azul que tapar y el parche sobra.
+
+**Nuestro libro mide 550x525, exactamente igual que `SpellBookFrame`**, asi que las coordenadas
+nativas valen 1:1 y no hay que escalar nada:
+
+| Elemento | Anclaje nativo | Tamano |
+|---|---|---|
+| `SpellBookPage1` | TOPLEFT +7,-25, **tamano natural** (sin Size ni 2o anclaje) | natural |
+| `SpellBookPage2` | `SpellBookPage1`.TOPRIGHT, tamano natural | natural |
+| `PrimaryProfession1` | TOPLEFT +80,-67 | 437x81 |
+| `PrimaryProfession2` | P1.BOTTOMLEFT +0,-12 (y = -160) | 437x81 |
+| `SecondaryProfession1` | P2.BOTTOMLEFT +0,-40 (y = -281) | 437x46 |
+| `SecondaryProfession2` | S1.BOTTOMLEFT +0,-30 (y = -357) | 437x46 |
+| `SecondaryProfession3` | S2.BOTTOMLEFT +0,-30 (y = -433) | 437x46 |
+
+Son CINCO huecos fijos de DOS tipos distintos, no cinco iguales apilados con un paso fijo:
+
+- **Primary** (437x81): aro de icono 72x72 en TOPLEFT **+7,-7**; `professionName`
+  `QuestTitleFontBlackShadow` en +100,-2; `rank` `GameFontHighlightSmall` a
+  `professionName`.BOTTOMLEFT +0,-33; `statusBar` a `rank`.BOTTOMLEFT +14,-5.
+- **Secondary** (437x46): **sin aro de icono**; se monta de abajo arriba — `statusBar` en
+  BOTTOMLEFT +16,-1, `rank` sobre ella (+(-14),+4 / +25,+4) y `professionName`
+  `QuestFont_Shadow_Small` sobre el rank (+0,+2). El segundo boton de hechizo va a la IZQUIERDA
+  del primero (`TOPRIGHT` > `TOPLEFT` -109,0), no debajo: solo hay 46 de alto.
+
+**Estado "sin profesion"**: el XML declara DOS FontStrings PROPIAS, no reutiliza las de la
+profesion aprendida, y ese era el otro fallo visible (texto en oro y descolocado):
+
+- Primary: `missingHeader` `QuestTitleFontBlackShadow` en TOPLEFT **+120,-13**, color
+  `0.85/0.7/0.6`; `missingText` `SubSpellFont` ancho **305** a su BOTTOMLEFT +0,-1, color
+  `0.1/0.05/0.05`. `OnLoad` deja el icono con `SetAlpha(0.6)` + `SetDesaturation(true)`.
+- Secondary: `missingHeader` `QuestFont_Large` en TOPLEFT +4,-15, color `0.15/0.1/0.1`;
+  `missingText` `SubSpellFont` ancho 250 anclado a RIGHT del hueco -5,0.
+
+**El manifiesto de atlas comentado al principio de `SpellBookFrame.xml` da los tamanos REALES de
+cada pieza**, y dividiendo tamano entre delta de texcoord se saca la dimension de la textura:
+`Professions-MajorRing-Normal` 74x74 con Δx=0.2890625 y Δy=0.578125 => `ProfessionsBook` es de
+**256x128**. Cuadra con `Professions-Item-Border` (108x41), `Progress-BgLeft` (16x16) y los
+remates de 12x12. Ojo: el aro mide **74x74 reales** pero el XML lo mete en `<Size x="72" y="72"/>`
+— ese encogimiento de 2 px es intencionado y hay que conservarlo.
+
+`ProfessionStatusBarTemplate` esta replicado 1:1 y verificado contra el XML. El remate DERECHO
+(`$parentRight`) va `hidden="true"` **en el propio XML**: ocultarlo no es un apano nuestro.
+
+**`S.pages` mezcla paginas de DOS ventanas.** `CreatePage` cuelga `book`/`spells`/`professions`
+de `S.skillsContent` (la ventana de Habilidades) y el resto del panel de personaje, pero todas
+acaban en la misma tabla `S.pages`. El bucle de `RefreshPanel` que oculta paginas excluia solo
+`book` y `spells`: cuando Profesiones se mudo a esa ventana nadie actualizo la exclusion, asi que
+**abrir el panel de personaje ocultaba la pagina de Profesiones** (se perdian los marcos; el
+marcapaginas dejo de perderse al pasarlo a textura de `host`). Ahora hay una fuente unica,
+`SKILLS_WINDOW_PAGES`, que usan tanto `CreatePage` como ese bucle, y **debe declararse antes de
+`RefreshPanel`**: si queda por debajo, en el bucle es un global `nil` y se ocultan todas.
+
+**TRAMPA DE ORIGEN: `skillsContent` empieza 21 px mas abajo que el libro.** Las coordenadas
+nativas (huecos en `(80,-67)`, pagina en `(7,-25)`) son respecto al FRAME de 550x525. Pero
+`CreatePage` cuelga la pagina de `S.skillsContent`, que esta anclado a `TOPLEFT sf, 0, -21`.
+Anclar los huecos a `page` los bajaba 21 px (el aro del icono salia visiblemente bajo) mientras
+la textura de pagina, colgada de `host` directamente, quedaba en su sitio. `profList`, los marcos
+recortados y `recipePanel` se anclan al LIBRO (`host`), no a `page`; siguen siendo hijos de `page`
+para mostrarse/ocultarse con la pestana, que el anclaje cruzado no lo impide.
+
+**Reparto Harford: CINCO huecos iguales, no 2+3.** El nativo tiene dos huecos grandes (437x81)
+y tres pequenos (437x46) con el arte de cocina/pesca/arqueologia HORNEADO en la pagina. En
+Harford todas las profesiones son equivalentes, asi que se usan cinco huecos GRANDES con el paso
+nativo de 93: `67 + 5*93 = 520` sobre 525 de alto, caben justos (un sexto se saldria).
+
+Los huecos 3, 4 y 5 caen sobre el arte de secundarias y hay que taparlo. **Se tapa con el marco
+del hueco 1 recortado de la PROPIA pagina**, sin texCoords calculadas ni arte inventado: un frame
+con `SetClipsChildren(true)` que contiene otra copia de `Professions-Book-Left`/`-Right`
+desplazada `(-73, +42)`. Ese desplazamiento sale de la geometria nativa: la pagina izquierda se
+ancla en `(7,-25)` y el hueco 1 en `(80,-67)`, luego `7-80 = -73` y `-25+67 = +42`. El frame de
+recorte va a `nivel del hueco - 1` para que el marco quede DETRAS del icono, el texto y la barra.
+
+La rama `secondary` de `ProfButton` queda sin usar con este reparto; se conserva por ser la
+transcripcion fiel de `SecondaryProfessionTemplate` y por si se adopta el reparto nativo 2+3.
+
+**Sonda `profbook` (capturada 2026-08-21, cuenta GRIKER)**: valida TODO lo deducido del XML. Se
+midio contra el frame nativo vivo y coincide punto por punto — tamanos 437x81 / 437x46, aro
+72x72 en TOPLEFT +7,-7, icono 70x70 con +1,-1 / -1,+1, `professionName` +100,-2, `rank` a
+`professionName`.BOTTOMLEFT +0,-33, `missing` +120,-13, barra 95x16 con remates 12x12 y fondos
+16x16 en RIGHT>LEFT +0,+2, `BGMiddle` entre los dos fondos, texto de barra en CENTER +0,+2,
+botones 40x40, NameFrame 108x41 en LEFT>icono.RIGHT +1,0, nombre de 100 de ancho en
+LEFT>boton.RIGHT +5,+7, subtitulo 95x28 debajo; y en el hueco pequeno `rank` de 134 de ancho en
+BOTTOMLEFT>barra.TOPLEFT -14,+4 / BOTTOMRIGHT>barra.TOPRIGHT +25,+4, nombre sobre el rank +0,+2
+y `missing` en +4,-15. **Una sola discrepancia**: `PrimaryProfession1IconBorder` va en capa
+**OVERLAY/0**, no en ARTWORK; corregido.
+
+Dato util de la sonda: `Interface\\Spellbook\\ProfessionsBook` **es el fileID 383591**. Las
+texturas puestas por XML (`file=`) vuelven de la sonda como fileID numerico, y las puestas por
+Lua con cadena vuelven como cadena; ambas formas funcionan. **383588 NO es ProfessionsBook**, es
+otra textura (probablemente `Professions-Book-Left`, de donde salia la cinta verde del apano
+anterior).
+
+Lo unico SIN confirmar es que `Professions-Book-Left/Right` existan en el build de Epsilon: la
+sonda de `SpellBookProfessionFrame` no las incluye porque cuelgan de `SpellBookFrame`
+(`SpellBookPage1/2`), no del frame de profesiones. `/harford debug run proftex` lo dice, o
+`probeframecapture SpellBookFrame profpagina`. No hace falta esperar a eso para trabajar:
+`ProfTexture` usa la ruta, cae al fileID si `GetFileIDFromPath` devuelve nil y **avisa por chat
+una sola vez** cuando eso pasa, de modo que un id equivocado no se queda en una pagina verde
+silenciosa.
+
+## Trampa De Lua: Cadenas `and` Que Truncan Retornos Multiples
+
+**NUNCA** asignar varios valores desde una cadena `and` con la guarda dentro de la expresion:
+
+```lua
+-- MAL: `a and b and f(x)` se queda SOLO con el primer valor devuelto por f.
+local count, sides = HarfordDnDWeapons and HarfordDnDWeapons.ParseDice
+    and HarfordDnDWeapons.ParseDice(dice)     -- sides == nil SIEMPRE
+
+-- BIEN: la guarda va en un `if`, la asignacion multiple aparte.
+local count, sides
+if HarfordDnDWeapons and HarfordDnDWeapons.ParseDice then
+    count, sides = HarfordDnDWeapons.ParseDice(dice)
+end
+```
+
+Lo mismo con `local ok, err = cond and F() or G()`: ambas ramas se truncan y `err` queda nil.
+
+No es teorico: en 2026-08-21 se encontro el patron en **diez sitios** y tres eran fallos de juego
+silenciosos, sin error ni mensaje, que llevaban vivos desde que se escribio el codigo:
+
+- `HarfordDnDArea.NormalizeDefinition` rechazaba **TODA curacion** con "Componente de curacion
+  invalido", porque `sides` era nil y la validacion siempre fallaba. Ninguna curacion del compendio
+  llegaba a resolverse.
+- `HarfordCompendioCore.ApplyUpcastDamage` **nunca escalaba ningun conjuro** al lanzarlo con un
+  espacio superior: `componentSides` era nil, asi que `componentSides == sides` nunca se cumplia.
+  Afectaba a los 54 conjuros que declaran la formula en su texto (Bola de Fuego a espacio 5 seguia
+  haciendo 8d6).
+- `HarfordDnD.lua` (maniobra Carga) comprobaba `if motion and tx and ty and ...` con `ty` siempre
+  nil, asi que la validacion de "acercarte directamente al objetivo" no se ejecutaba nunca.
+
+Los otros siete perdian solo el texto de error o falseaban un volcado de diagnostico
+(`HarfordUnitFrames.DebugGroupFrames` informaba nil en casi todo lo que decia inspeccionar).
+Al tocar cualquier modulo, barrer con:
+
+```bash
+grep -rnE "local +[A-Za-z_][A-Za-z0-9_]*, *[A-Za-z_][A-Za-z0-9_]* *=.* and +[A-Za-z_][A-Za-z0-9_.]*\(" Harford/ HarfordAdmin/ --include=*.lua
+```
+
+Hay un intérprete Lua real en `C:/Users/marco/AppData/Local/Programs/Lua/bin/lua.exe`: para logica
+pura (parsers, escalados, formulas) se puede extraer el trozo del modulo con `load()` y stubs de
+los globales y probarlo de verdad, en vez de deducir el comportamiento leyendo. Asi se encontro
+esto. `luac -p` solo valida sintaxis y no habria detectado ninguno de los tres fallos.
 
 ## Reglas De Seguridad
 

@@ -238,7 +238,10 @@ def main():
     args = ap.parse_args()
 
     data = json.load(io.open(args.json_file, encoding='utf-8'))
-    node = data[args.key]
+    # La clave admite "Frame/etiqueta" (volcado de export_probe.lua) o una clave suelta.
+    node = data
+    for part in args.key.split('/'):
+        node = node[part]
     tree = node.get('tree') if isinstance(node, dict) and 'tree' in node else node
 
     em = Emitter(only_visible=args.only_visible)

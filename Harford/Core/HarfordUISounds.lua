@@ -25,6 +25,7 @@ API.SOUNDS = API.SOUNDS or {
     character_sidebar_tab_changed = { id = 567407, kind = "file" },
     skills_panel_opened = { id = 567440, kind = "file" },
     skills_panel_tab_changed = { id = 567440, kind = "file" },
+    reputation_tracking_changed = { id = 856, kind = "soundkit" },
 }
 
 local function PlayEntry(entry, channel)

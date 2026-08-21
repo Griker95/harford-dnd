@@ -1,7 +1,7 @@
 -- HarfordDnDMana: regla adicional de Maná (World of Warcraft D&D 5ª Ed. ES, Parte 3 Reglas Variantes).
 -- Solo datos + calculo puro. NO toca recursos ni UI: expone el pool de mana y el nivel
--- maximo de espacio segun el nivel de lanzador. La activacion es por perfil (toggle
--- progression.useMana). Cuando esta activo, HarfordDnDFeatureEffects suma el pool como
+-- maximo de espacio segun el nivel de lanzador. La activacion es GLOBAL mediante
+-- HarfordConfig.spell_cost_mode. Cuando esta activo, HarfordDnDFeatureEffects suma el pool como
 -- bonus al maximo del recurso "mana" existente (no se crea recurso nuevo).
 --
 -- Tipo de lanzador (manual): Completos (nivel completo) druida, mago, sacerdote, chaman y brujo.
@@ -140,7 +140,7 @@ function API.SpendSpellSlot(spellLevel, profileName)
     return true, currentOrErr - 1, maximum
 end
 
--- ¿El perfil usa la variante de mana? (toggle por perfil).
+-- ¿La mesa usa la variante de mana? La eleccion es global, no viaja con la ficha.
 function API.IsEnabled(profileName)
     return not (HarfordConfig and HarfordConfig.Get and HarfordConfig.Get("spell_cost_mode") == "slots")
 end

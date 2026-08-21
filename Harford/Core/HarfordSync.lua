@@ -578,7 +578,7 @@ function HarfordSync.SerializeDnDClassProgression(profileName, data, opcode)
         "r=" .. EscapeProgressionText(race.id or "") .. "~" .. EscapeProgressionText(race.subraceId or ""),
         "b=" .. EscapeProgressionText(data.background or "") .. "~" .. EscapeProgressionText(data.backgroundDesc or ""),
         "d=" .. table.concat(featParts, "~"),
-        "m=" .. ((data.useMana == false) and "0" or "1"),  -- ausente/true = "1" (default ON)
+        "x=" .. tostring(math.max(0, math.floor(tonumber(data.xp) or 0))),
         "s=" .. table.concat(stateParts, "~"),
         "p=" .. SerializeImportedProficiencies(data.importedProficiencies),
     }, ";")
@@ -596,7 +596,7 @@ function HarfordSync.DeserializeDnDClassProgression(message)
     end
     local isInspect = (opcode == "DNDINSCLASS")
 
-    local data = { schema = 1, classLevels = {}, featureStates = {}, choices = {}, race = { id = "", subraceId = "" }, background = "", backgroundDesc = "", feats = {}, activeStates = {}, importedProficiencies = { skillRank = {}, saveProf = {}, armorProf = {}, weaponProf = {}, toolProf = {} } }
+    local data = { schema = 1, classLevels = {}, featureStates = {}, choices = {}, race = { id = "", subraceId = "" }, background = "", backgroundDesc = "", feats = {}, xp = 0, activeStates = {}, importedProficiencies = { skillRank = {}, saveProf = {}, armorProf = {}, weaponProf = {}, toolProf = {} } }
     for part in tostring(raw or ""):gmatch("([^;]+)") do
         local key, value = part:match("^([^=]+)=(.*)$")
         if key == "v" then
@@ -643,10 +643,8 @@ function HarfordSync.DeserializeDnDClassProgression(message)
             for featId in value:gmatch("([^~]+)") do
                 data.feats[#data.feats + 1] = UnescapeProgressionText(featId)
             end
-        elseif key == "m" then
-            -- "0" = opt-out explicito; "1"/ausente = default true (no se guarda).
-            -- if/else explicito: `(v=="0") and false or nil` colapsaria a nil (pitfall Lua).
-            if value == "0" then data.useMana = false else data.useMana = nil end
+        elseif key == "x" then
+            data.xp = math.max(0, math.floor(tonumber(value) or 0))
         elseif key == "s" and value ~= "" then
             for stateId in value:gmatch("([^~]+)") do
                 stateId = UnescapeProgressionText(stateId)

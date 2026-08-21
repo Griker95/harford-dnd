@@ -4,6 +4,8 @@ HarfordDnDProgression = HarfordDnDProgression or {}
 
 local API = HarfordDnDProgression
 local SCHEMA_VERSION = 2
+local MAX_TOTAL_LEVEL = 20
+API.MAX_TOTAL_LEVEL = MAX_TOTAL_LEVEL
 
 local function CopyTable(src)
     local out = {}
@@ -50,6 +52,7 @@ local function EmptyProgression()
         background = "",
         backgroundDesc = "",  -- descripcion (1er parrafo) de un trasfondo PERSONALIZADO; vacio si es del libro
         feats = {},
+        xp = 0, -- experiencia acumulada D&D 5e de Harford; la subida sigue siendo manual.
         spellSlots = {}, -- espacios de conjuro gastados por nivel; se restauran en descanso largo.
         activeStates = {},
         activeForm = "", -- forma druidica activa; vacio = forma normal.
@@ -61,6 +64,21 @@ local function Migrate(data)
     if type(data) ~= "table" then data = EmptyProgression() end
     local oldSchema = tonumber(data.schema) or 0
     if type(data.classLevels) ~= "table" then data.classLevels = {} end
+    -- El progreso de jugador esta limitado a nivel total 20. Normalizar tambien perfiles
+    -- antiguos/importados para que no sobreviva una multiclase invalida al nuevo contrato.
+    do
+        local normalized, total = {}, 0
+        for _, entry in ipairs(data.classLevels) do
+            if type(entry) == "table" and total < MAX_TOTAL_LEVEL then
+                local level = math.floor(tonumber(entry.level) or 1)
+                level = math.max(1, math.min(20, level, MAX_TOTAL_LEVEL - total))
+                entry.level = level
+                normalized[#normalized + 1] = entry
+                total = total + level
+            end
+        end
+        data.classLevels = normalized
+    end
     if type(data.featureStates) ~= "table" then data.featureStates = {} end
     if type(data.choices) ~= "table" then data.choices = {} end
     if type(data.importedProficiencies) ~= "table" then data.importedProficiencies = {} end
@@ -76,6 +94,7 @@ local function Migrate(data)
     data.background = tostring(data.background or "")
     data.backgroundDesc = tostring(data.backgroundDesc or "")
     if type(data.feats) ~= "table" then data.feats = {} end
+    data.xp = math.max(0, math.floor(tonumber(data.xp) or 0))
     -- `useMana` fue una eleccion por ficha en versiones anteriores. El modo de coste es
     -- ahora global (HarfordConfig.spell_cost_mode), asi que se descarta al migrar.
     data.useMana = nil
@@ -133,6 +152,11 @@ local function Touch(profileName)
     if HarfordDnDStore and HarfordDnDStore.ReconcileDerivedResources then
         HarfordDnDStore.ReconcileDerivedResources(resolvedName, "progression")
     end
+    -- El texto de la barra de XP depende tambien del nivel total (aviso de subida
+    -- disponible), no solo de `xp`. Refrescarla al editar clases, raza o elecciones.
+    if HarfordCharacterXP and HarfordCharacterXP.Refresh then
+        HarfordCharacterXP.Refresh()
+    end
 end
 
 function API.SetInspectData(name, data)
@@ -174,6 +198,16 @@ function API.Set(profileName, data)
     slot._progression = Migrate(CopyTable(data))
     Touch(name)
     return slot._progression, name
+end
+
+-- XP acumulada de Harford. Se centraliza aqui para conservar la invalidacion y la
+-- persistencia del perfil aunque la UI que la modifica no este abierta.
+function API.SetXP(amount, profileName)
+    local data, name = API.Get(profileName)
+    if not data then return false end
+    data.xp = math.max(0, math.floor(tonumber(amount) or 0))
+    Touch(name)
+    return true, data.xp
 end
 
 function API.HasProgression(profileName)
@@ -240,11 +274,19 @@ function API.SetClassEntry(index, classId, subclassId, level, profileName)
     local classDef = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(classId)
     if not classDef then return false, "Clase invalida" end
 
+    local requestedLevel = ClampLevel(level)
+    local previous = data.classLevels[index]
+    local previousLevel = previous and math.max(0, math.floor(tonumber(previous.level) or 0)) or 0
+    local currentTotal = API.GetTotalLevel(profileName)
+    if currentTotal - previousLevel + requestedLevel > MAX_TOTAL_LEVEL then
+        return false, "El nivel total maximo es " .. tostring(MAX_TOTAL_LEVEL)
+    end
+
     local entry = {
         classId = classDef.id,
         subclassId = subclassId == nil and (HarfordDnDBook.GetDefaultSubclassId(classDef.id) or "")
             or ((HarfordDnDBook.NormalizeSubclassId and HarfordDnDBook.NormalizeSubclassId(classDef.id, subclassId)) or tostring(subclassId or "")),
-        level = ClampLevel(level),
+        level = requestedLevel,
     }
     data.classLevels[index] = entry
     Touch(profileName)

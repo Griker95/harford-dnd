@@ -7,6 +7,7 @@ local DEFAULTS = {
     resources              = "unitframe",  -- "unitframe" | "frame"
     nameplates             = "on",         -- "on" | "off"
     actionbar              = "off",        -- "on" | "off": barra de accion de madera del Libro
+    xpbar                  = "on",         -- "on" | "off": barra de experiencia Harford (posicion de la barra de exp nativa)
     spell_cost_mode        = "mana",       -- "mana" | "slots": coste global de lanzamiento
 }
 
@@ -190,6 +191,13 @@ local function BuildPanel()
         { value = "slots", label = "Espacios de conjuro" },
     }, 296, 374)
 
+    -- Barra de experiencia Harford (en la posicion de la barra de exp nativa)
+    MakeLabel(panel, "Barra de experiencia:", "GameFontHighlight", 24, 354)
+    local _, refreshXpBar = MakeDropDown(panel, "xpbar", {
+        { value = "on",  label = "Activada" },
+        { value = "off", label = "Desactivada" },
+    }, 32, 374)
+
     -- Botón de reset
     local resetBtn = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
     resetBtn:SetSize(140, 22)
@@ -204,6 +212,7 @@ local function BuildPanel()
         refreshNameplates()
         refreshActionBar()
         refreshSpellCostMode()
+        refreshXpBar()
     end)
 
     local function RefreshAll()
@@ -214,6 +223,7 @@ local function BuildPanel()
         refreshNameplates()
         refreshActionBar()
         refreshSpellCostMode()
+        refreshXpBar()
     end
 
     -- Refrescar estado al abrir el panel

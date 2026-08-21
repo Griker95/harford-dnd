@@ -81,6 +81,7 @@ Character\HarfordCharacterBook.lua
 Character\HarfordCharacterSpellbook.lua
 Character\HarfordCharacterCreation.lua
 Character\HarfordCharacterAdvancement.lua
+Character\HarfordCharacterXP.lua
 Character\HarfordCharacterPanel.lua
 
 # --- Frames ---

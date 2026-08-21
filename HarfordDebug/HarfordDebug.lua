@@ -4719,6 +4719,40 @@ API.RegisterCommand("phasetc", function(args)
         return
     end
 
+    if cmd == "huerfanos" then
+        -- Compara el indice que HAY en la fase contra los publicos locales. Lo que sobra
+        -- son bloques que quedaron colgados al borrar contratos.
+        P.PruneOrphans(function(ok, lista)
+            if not ok then Print("|cffff5555" .. tostring(lista) .. "|r"); return end
+            if #lista == 0 then Print("|cff55ff55Sin huerfanos|r - la fase esta limpia."); return end
+            Print("Bloques huerfanos limpiados: |cffffd100" .. #lista .. "|r")
+            for _, id in ipairs(lista) do Print("   |cff808080" .. tostring(id) .. "|r") end
+        end)
+        return
+    end
+
+    if cmd == "publicar-limpio" then
+        P.PublishClean(false, function(ok, n, limpiados)
+            Print(string.format("Publicados |cffffd100%s|r, huerfanos limpiados |cffffd100%d|r",
+                tostring(n), limpiados and #limpiados or 0))
+        end)
+        return
+    end
+
+    if cmd == "purgar" then
+        if a ~= "confirmar" then
+            Print("|cffff5555Esto borra TODO el tablon de la fase.|r")
+            Print("Escribe: |cffffd100phasetc purgar confirmar|r")
+            return
+        end
+        P.Purge(function(ok, borrados, err)
+            Print(string.format("Purgado: |cffffd100%d|r bloques + el indice%s",
+                tonumber(borrados) or 0, err and (" |cff808080(" .. tostring(err) .. ")|r") or ""))
+            Print("|cff808080Lo que no estuviera en el indice no se pudo alcanzar.|r")
+        end)
+        return
+    end
+
     local claveIndice, prefijo = P.GetKeys()
     Print("|cffffd100Tablon de contratos en la fase|r")
     Print("  Disponible: " .. (P.IsAvailable() and "|cff55ff55si|r" or "|cffff5555no|r") ..
@@ -4736,7 +4770,10 @@ API.RegisterCommand("phasetc", function(args)
     Print("  |cffffd100phasetc cargar|r    lee el indice y pinta el tablon")
     Print("  |cffffd100phasetc indice|r    vuelca el indice tal cual")
     Print("  |cffffd100phasetc leer <id>|r baja un contrato completo")
-    Print("  |cffffd100phasetc borrar <id>|r")
+    Print("  |cffffd100phasetc borrar <id>|r  vacia un bloque suelto")
+    Print("  |cffffd100phasetc huerfanos|r  limpia bloques que el tablon ya no usa")
+    Print("  |cffffd100phasetc publicar-limpio|r  limpia huerfanos y publica")
+    Print("  |cffffd100phasetc purgar confirmar|r  |cffff5555borra el tablon entero de la fase|r")
 end, "Tablon de contratos guardado en la fase")
 
 -- Sonda del almacen de fase de Epsilon (C_Epsilon.Get/SetPhaseAddonData via EpsilonLib).
@@ -4890,6 +4927,81 @@ do
             return
         end
 
+        if cmd == "integridad" then
+            -- La pregunta que decide el diseno: sobrevive un contrato largo con texto real
+            -- (tildes, egnes, pipes de color, item links, saltos de linea) al viaje de ida
+            -- y vuelta, incluso cuando pasa de un segmento?
+            if not L then Print("EpsilonLib.PhaseAddonData no disponible"); return end
+
+            local SUCIO = "Contrato de la Guardia: |cffffd100[Espada rota]|r "
+                .. "\195\161\195\169\195\173\195\179\195\186 \195\177\195\145 \194\161\194\191 "
+                .. "|Hitem:6948:0:0:0:0:0:0:0:60|h[Piedra de hogar]|h|r "
+                .. "separador || pipe suelto | y salto\nde linea\ty tabulador"
+
+            local veces = tonumber(a) or 1
+            local relleno = {}
+            for i = 1, math.max(1, veces) * 12 do
+                relleno[#relleno + 1] = i .. ") " .. SUCIO
+            end
+            local original = {
+                id = "TEST_integridad",
+                title = "Prueba \195\161\195\169\195\173 |cffff0000roja|r",
+                description = table.concat(relleno, "\n"),
+                objectives = { { text = SUCIO, required = 3, current = 0, done = false } },
+                rewardMoney = { gold = 12, silver = 34, copper = 56 },
+                anidado = { a = { b = { c = SUCIO } } },
+                numeros = { 0, -1, 1.5, 2^31, 0.1 + 0.2 },
+                booleanos = { verdadero = true, falso = false },
+            }
+
+            -- Cuanto ocupa esto de verdad, y en cuantos segmentos cae.
+            local codificado = Medir(original, "carga de prueba")
+            if not codificado then return end
+
+            local function Comparar(a1, b1, ruta)
+                ruta = ruta or ""
+                if type(a1) ~= type(b1) then
+                    return false, ruta .. " tipo " .. type(a1) .. " -> " .. type(b1)
+                end
+                if type(a1) ~= "table" then
+                    if a1 ~= b1 then
+                        return false, ruta .. " valor distinto"
+                    end
+                    return true
+                end
+                for k, v in pairs(a1) do
+                    local ok, err = Comparar(v, b1[k], ruta .. "." .. tostring(k))
+                    if not ok then return false, err end
+                end
+                for k in pairs(b1) do
+                    if a1[k] == nil then return false, ruta .. "." .. tostring(k) .. " sobra al volver" end
+                end
+                return true
+            end
+
+            if not Escribir(L.SaveTable, CLAVE, original) then return end
+            Print("Escrito. Releyendo para comparar byte a byte...")
+
+            C_Timer.After(1.5, function()
+                L.LoadTable(CLAVE, function(vuelta)
+                    if type(vuelta) ~= "table" then
+                        Print("|cffff5555No volvio una tabla|r: " .. tostring(vuelta))
+                        return
+                    end
+                    local ok, err = Comparar(original, vuelta)
+                    if ok then
+                        Print("|cff55ff55INTEGRO|r - identico campo por campo")
+                        Print(string.format("   descripcion: |cffffd100%d|r caracteres, %d segmento(s)",
+                            #original.description, math.ceil(#codificado / 3000)))
+                        Print("   tildes, egnes, pipes, item links, saltos de linea y anidamiento: intactos")
+                    else
+                        Print("|cffff5555CORRUPTO|r en " .. tostring(err))
+                    end
+                end)
+            end)
+            return
+        end
+
         if cmd == "escribir" then
             if not L then Print("EpsilonLib.PhaseAddonData no disponible"); return end
             -- Viaje redondo con marca de tiempo, para distinguir un dato nuevo de uno viejo.
@@ -4946,9 +5058,12 @@ do
         if cmd == "borrar" then
             if not L then Print("EpsilonLib.PhaseAddonData no disponible"); return end
             -- Borrar es escribir vacio; no hay borrado real.
-            Escribir(C_Epsilon.SetPhaseAddonData, CLAVE, "")
-            for i = 2, 8 do Escribir(C_Epsilon.SetPhaseAddonData, CLAVE .. "_" .. i, "") end
-            Print("Claves de sonda vaciadas (incluidos segmentos 2..8).")
+            -- Sin argumento limpia la sonda; con argumento, CUALQUIER clave de la fase.
+            local objetivo = (a ~= "" and a) or CLAVE
+            Escribir(C_Epsilon.SetPhaseAddonData, objetivo, "")
+            for i = 2, 8 do Escribir(C_Epsilon.SetPhaseAddonData, objetivo .. "_" .. i, "") end
+            Print("Vaciada |cffffd100" .. objetivo .. "|r y sus segmentos 2..8.")
+            Print("|cff808080Comprueba con: phasedata leer " .. objetivo .. "|r")
             return
         end
 
@@ -4969,9 +5084,10 @@ do
             "   LibDeflate " .. (LD and "|cff55ff55si|r" or "|cffff5555no|r"))
         Print("  |cffffd100phasedata medir|r    mide el tablon real, sin tocar el servidor")
         Print("  |cffffd100phasedata escribir|r prueba el viaje redondo (y si tienes permiso)")
+        Print("  |cffffd100phasedata integridad [n]|r  texto hostil de ida y vuelta (n = multiplicador)")
         Print("  |cffffd100phasedata leer [clave]|r")
         Print("  |cffffd100phasedata clave <n>|r  prueba una clave de n caracteres (tope conocido: 100)")
-        Print("  |cffffd100phasedata borrar|r    limpia las claves de sonda")
+        Print("  |cffffd100phasedata borrar [clave]|r  vacia la sonda, o CUALQUIER clave que le des")
     end, "Sonda del almacen de fase de Epsilon (cuota, claves, permisos)")
 end
 
@@ -5078,13 +5194,43 @@ API.RegisterCommand("entrenador", function(args)
         return
     end
 
+    -- El catalogo son 75 entrenadores: sin filtro se resume por profesion y con el nombre de una
+    -- profesion se desglosan sus rangos. Volcar los 75 llenaria el chat sin decir nada.
     local todos = T.GetAll()
-    Print(string.format("Entrenadores conocidos: |cffffd100%d|r", #todos))
-    for _, def in ipairs(todos) do
-        Print(string.format("  %-22s %-26s %s  %d receta(s)%s",
-            tostring(def.id), tostring(def.name), tostring(def.zone or "-"),
-            #(def.recipes or {}), def.npc and (" NPC " .. def.npc) or " |cff808080sin NPC|r"))
+    local filtro = cmd ~= "" and ResolveProfession and ResolveProfession(cmd) or nil
+
+    if filtro then
+        Print(string.format("Entrenadores de |cffffd100%s|r", tostring(filtro.name or filtro.id)))
+        for _, def in ipairs(todos) do
+            if def.profession == filtro.id then
+                local n = #T.GetRecipesFor(def)
+                Print(string.format("  %-10s %-28s %-16s %3d receta(s)  %s",
+                    tostring(def.tier or "-"), tostring(def.name), tostring(def.zone or "-"), n,
+                    def.npc and ("|cff55ff55NPC " .. def.npc .. "|r")
+                        or "|cff808080sin colocar: rango abierto|r"))
+            end
+        end
+        return
     end
+
+    local orden, porProf = {}, {}
+    for _, def in ipairs(todos) do
+        local prof = tostring(def.profession or "-")
+        if not porProf[prof] then porProf[prof] = { rangos = 0, puestos = 0, recetas = 0 } end
+        local acc = porProf[prof]
+        if acc.rangos == 0 then orden[#orden + 1] = prof end
+        acc.rangos = acc.rangos + 1
+        acc.recetas = acc.recetas + #T.GetRecipesFor(def)
+        if def.npc then acc.puestos = acc.puestos + 1 end
+    end
+    table.sort(orden)
+    Print(string.format("Entrenadores conocidos: |cffffd100%d|r", #todos))
+    for _, prof in ipairs(orden) do
+        local acc = porProf[prof]
+        Print(string.format("  %-16s %d/%d colocados   %3d receta(s) cubiertas", prof,
+            acc.puestos, acc.rangos, acc.recetas))
+    end
+    Print("  |cffffd100entrenador <profesion>|r   desglose por rango")
     Print("  |cffffd100entrenador receta <recipeId>|r   quien la ensena")
     Print("  |cffffd100entrenador definir <npc> <rango> <profesion>|r  ej: definir 4001 Aprendiz herreria")
     Print("  |cffffd100entrenador definir <npc> <recipeId>|r  o atado a una receta suelta")

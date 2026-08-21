@@ -9,12 +9,13 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 Regeneralo con `python tools/gen_changelog.py`.
 
-- Commits: **76** - del **2026-05-18** al **2026-08-21**
+- Commits: **78** - del **2026-05-18** al **2026-08-21**
 
 ## Agosto de 2026
 
 **Nuevo**
 
+- **profesiones** - ventana de recetas replica del TradeSkillFrame `7b2831f`
 - **profesiones** - cadena de ingenieria, hierbas reales de Epsilon y estaciones `c8d4210`
 - **misiones** - XP real en recompensas y sync de objetivos endurecido `57da639`
 - **creacion** - nivel 1 + subidas encadenadas, pasos navegables y layout adaptativo `b6bf15e`
@@ -56,6 +57,7 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Documentacion**
 
+- flujo de creacion encadenado, contratos de XP/reputacion y regeneracion `b957d51`
 - **agents** - la pasada de textos del compendio es del chat de la web, no de Codex `fa9b448`
 - pasada completa de actualizacion `d3aeef1`
 - regenera el historial de cambios `9d7b568`

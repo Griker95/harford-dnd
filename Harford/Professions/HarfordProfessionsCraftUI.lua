@@ -7,10 +7,16 @@
 HarfordProfessionsCraftUI = HarfordProfessionsCraftUI or {}
 local API = HarfordProfessionsCraftUI
 
-local frame            -- ventana (creada bajo demanda)
-local state = { profId = nil, selected = nil, offset = 0, rows = {}, reagents = {}, search = "" }
+-- Marca de compilacion: permite comprobar QUE version esta corriendo el cliente, en vez de
+-- suponer que lo copiado a disco es lo que se ejecuta. Ver `/harford debug run craftver`.
+API.BUILD = "20260821-123157"
 
-local ROWS_VISIBLE = 23
+
+local frame            -- ventana (creada bajo demanda)
+local state = { profId = nil, selected = nil, offset = 0, rows = {}, reagents = {}, search = "",
+                collapsed = {} }
+
+local ROWS_VISIBLE = 25   -- nativo: lista de 405 de alto = 25 filas de 16
 local ROW_H = 16
 
 -- Color de dificultad por margen de skill (aproximacion de los colores nativos)
@@ -30,23 +36,21 @@ end
 
 local RefreshUI  -- forward
 
--- TEXTURAS: los fileID NUMERICOS de la sonda son la fuente correcta.
+-- TEXTURAS: SIEMPRE por RUTA. Los fileID numericos NO se resuelven para addons en Epsilon.
 --
--- Comprobado con el diff entre la captura del TradeSkillFrame nativo y la nuestra: el frame
--- nativo usa EXACTAMENTE estos numeros (136569 riel del scroll, 136571 borde de la barra,
--- 132086/132085 pestanas...), asi que el cliente los resuelve perfectamente. Sustituirlos por
--- rutas "equivalentes" fue un error: esas rutas NO existen y la ventana se quedo sin esas
--- piezas. Regla: copiar el fileID tal cual de la sonda; solo usar ruta cuando la sonda
--- devuelva una ruta. Lo que no cargue se registra en API._textureIssues (`crafttex`).
+-- Medido con `/harford debug run texpath`, que pregunta al cliente a que fileID resuelve cada
+-- ruta y lo contrasta con el que la sonda leyo del frame nativo: todas estas rutas COINCIDEN
+-- con el numero del nativo, luego son el mismo arte. Pero pasar ese numero a SetTexture desde
+-- un addon pinta verde o una caja blanca: el nativo lo carga por ruta desde su XML.
+--
+-- OJO con las pestañas: los ficheros estan INVERTIDOS respecto a su nombre. La ruta
+-- "HelpFrameTab-Active" resuelve a 132085, y el nativo usa 132086 para la pestaña ACTIVA,
+-- que es el fichero llamado "-Inactive". No fiarse del nombre, fiarse del fileID.
 API._textureIssues = {}
 
 local function SafeTexture(texture, source, label)
     if not texture then return false end
-    if type(source) == "number" then
-        texture:SetTexture(source)   -- fileID tomado del nativo: no se inventa nada
-        return true
-    end
-    if GetFileIDFromPath and not GetFileIDFromPath(source) then
+    if GetFileIDFromPath and type(source) == "string" and not GetFileIDFromPath(source) then
         API._textureIssues[#API._textureIssues + 1] = (label or "?") .. " -> " .. tostring(source)
         texture:Hide()
         return false
@@ -55,16 +59,19 @@ local function SafeTexture(texture, source, label)
     return true
 end
 
--- fileID EXACTOS del TradeSkillFrame nativo (captura nativo2).
+-- Rutas VERIFICADAS contra el fileID que usa el frame nativo (ver texpath).
 local TEX = {
-    barBorder = 136571,
-    scrollRail = 136569,
-    scrollKnob = 130849,
-    tabActive = 132086,
-    tabInactive = 132085,
-    tabHighlight = 136580,
-    nameFrame = 136796,
+    barFill      = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar",        -- 136570
+    barBorder    = "Interface\\PaperDollInfoFrame\\UI-Character-Skills-BarBorder",  -- 136571
+    scrollRail   = "Interface\\PaperDollInfoFrame\\UI-Character-ScrollBar",         -- 136569
+    scrollKnob   = "Interface\\Buttons\\UI-ScrollBar-Knob",                         -- 130849
+    tabActive    = "Interface\\HelpFrame\\HelpFrameTab-Inactive",                   -- 132086 (si, invertido)
+    tabInactive  = "Interface\\HelpFrame\\HelpFrameTab-Active",                     -- 132085
+    tabHighlight = "Interface\\PaperDollInfoFrame\\UI-Character-Tab-Highlight",     -- 136580
+    nameFrame    = "Interface\\QuestFrame\\UI-QuestItemNameFrame",                  -- 136796
+    rowHighlight = "Interface\\Buttons\\UI-Listbox-Highlight2",                     -- 130783
 }
+
 
 -- Algunos nombres de icono del catalogo NO existen en el cliente Epsilon (se renderizan
 -- como cuadrado verde): validar la ruta contra el cliente y caer al icono del item resultante.
@@ -84,33 +91,21 @@ end
 
 -- ── Construccion ─────────────────────────────────────────────────────────────
 local function CreateReagentSlot(parent, index)
-    -- Geometria nativa exacta: boton 147x41 en dos columnas encadenadas (col2 a la derecha
-    -- de col1 sin hueco) y filas a -2. El icono va SIN recorte y el borde blanco del nativo
-    -- esta OCULTO (vis=None en la sonda): mostrarlo es lo que dibujaba "marcos raros".
-    local slot = CreateFrame("Frame", nil, parent)
-    slot:SetSize(147, 41)
+    -- El XML declara TradeSkillReagentTemplate como `inherits="LargeItemButtonTemplate"`:
+    -- 147x41, icono 39x39, NameFrame UI-QuestItemNameFrame 128x64 a icono.RIGHT -10,
+    -- nombre 90x36 a NameFrame.LEFT +15 y el borde blanco del icono OCULTO por defecto.
+    local ok, slot = pcall(CreateFrame, "Button", nil, parent, "LargeItemButtonTemplate")
+    if not ok or not slot then return nil end
     local column = (index - 1) % 2
     local rowIndex = math.floor((index - 1) / 2)
     slot:SetPoint("TOPLEFT", parent, "TOPLEFT", 5 + column * 147, -120 - rowIndex * 43)
-    slot.icon = slot:CreateTexture(nil, "BACKGROUND")
-    slot.icon:SetSize(39, 39)
-    slot.icon:SetPoint("TOPLEFT", slot, "TOPLEFT", 0, 0)
-    local bg = slot:CreateTexture(nil, "BACKGROUND")
-    bg:SetTexture("Interface\\QuestFrame\\UI-QuestItemNameFrame")
-    bg:SetSize(128, 64)
-    bg:SetPoint("LEFT", slot.icon, "RIGHT", -10, 0)
-    slot.count = slot:CreateFontString(nil, "OVERLAY")
-    slot.count:SetFont("Fonts\\ARIALN.TTF", 14, "OUTLINE")
-    slot.count:SetPoint("BOTTOMRIGHT", slot.icon, "BOTTOMRIGHT", -1, 1)
-    slot.name = slot:CreateFontString(nil, "BORDER")
-    slot.name:SetFont("Fonts\\FRIZQT__.TTF", 12)
-    slot.name:SetPoint("LEFT", bg, "LEFT", 15, 0)
-    slot.name:SetSize(92, 12)
-    slot.name:SetJustifyH("LEFT")
-    slot.name:SetWordWrap(false)   -- el nombre partido se salia del marco
-    -- Tooltip del material (como el nativo). Si la clave aun no tiene itemId real,
-    -- se muestra el nombre del catalogo para que la receta siga siendo legible.
-    slot:EnableMouse(true)
+    slot.icon = slot.Icon or slot.icon
+    slot.name = slot.Name or slot.name
+    if not slot.count then
+        slot.count = slot:CreateFontString(nil, "OVERLAY")
+        slot.count:SetFont("Fonts\\ARIALN.TTF", 14, "OUTLINE")
+        slot.count:SetPoint("BOTTOMRIGHT", slot.icon, "BOTTOMRIGHT", -1, 1)
+    end
     slot:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         if self.itemId then
@@ -126,25 +121,30 @@ local function CreateReagentSlot(parent, index)
 end
 
 local function CreateRow(parent, index)
+    -- XML TradeSkillRowButtonTemplate: boton 300x16; el icono de plegar es 16x16 en LEFT +3
+    -- (no +23, deduccion mia equivocada), el texto va a su RIGHT +2,+1 con 270x13 y fuente
+    -- GameFontHighlightLeft, la seleccion es UI-Listbox-Highlight2 y el hueco de la derecha
+    -- (SkillUps) ocupa 26x16 en RIGHT -2.
     local row = CreateFrame("Button", nil, parent)
     row:SetSize(300, ROW_H)
     row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -((index - 1) * ROW_H))
-    row:SetHighlightTexture("Interface\\Buttons\\UI-Listbox-Highlight2", "ADD")
+    row:SetHighlightTexture(TEX.rowHighlight, "ADD")
     row.sel = row:CreateTexture(nil, "BACKGROUND")
-    row.sel:SetTexture("Interface\\Buttons\\UI-Listbox-Highlight2")
+    row.sel:SetTexture(TEX.rowHighlight)
     row.sel:SetAllPoints(row)
-    row.sel:SetAlpha(0.6)
+    row.sel:SetAlpha(0.35)
     row.sel:Hide()
-    row.text = row:CreateFontString(nil, "ARTWORK")
-    row.text:SetFont("Fonts\\FRIZQT__.TTF", 12)
-    row.text:SetPoint("LEFT", row, "LEFT", 6, 0)
+    row.expander = CreateFrame("Button", nil, row)
+    row.expander:SetSize(16, 16)
+    row.expander:SetPoint("LEFT", row, "LEFT", 3, 0)
+    row.expander:Hide()
+    row.text = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightLeft")
+    row.text:SetPoint("LEFT", row.expander, "RIGHT", 2, 1)
     row.text:SetJustifyH("LEFT")
-    row.text:SetWidth(288)
+    row.text:SetSize(270, 13)
     row.text:SetWordWrap(false)
-    -- Contador de recetas del grupo (solo cabeceras, en oro a la derecha como el nativo)
-    row.count = row:CreateFontString(nil, "ARTWORK")
-    row.count:SetFont("Fonts\\FRIZQT__.TTF", 12)
-    row.count:SetPoint("RIGHT", row, "RIGHT", -6, 0)
+    row.count = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+    row.count:SetPoint("RIGHT", row, "RIGHT", -2, 1)
     row.count:SetTextColor(1, 0.82, 0)
     row:SetScript("OnClick", function(self)
         if self.recipeId then
@@ -157,7 +157,10 @@ end
 
 local function CreateFrameIfNeeded()
     if frame then return frame end
-    frame = CreateFrame("Frame", "HarfordProfessionsCraftFrame", UIParent, "ButtonFrameTemplate")
+    -- El XML declara TradeSkillFrame como `inherits="PortraitFrameTemplate"`. Con
+    -- ButtonFrameTemplate se añadia ademas la barra de botones inferior, que el nativo no tiene.
+    frame = CreateFrame("Frame", "HarfordProfessionsCraftFrame", UIParent, "PortraitFrameTemplate")
+        or CreateFrame("Frame", "HarfordProfessionsCraftFrame", UIParent, "ButtonFrameTemplate")
     frame:SetSize(670, 496)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("DIALOG")
@@ -170,49 +173,31 @@ local function CreateFrameIfNeeded()
     frame:Hide()
     table.insert(UISpecialFrames, "HarfordProfessionsCraftFrame")
 
-    -- DOS insets nativos (sonda prof_seleccion): el TradeSkillFrame no usa el inset unico
-    -- del template sino dos paneles con marco propio; ocultamos el del ButtonFrameTemplate.
+    -- ARMAZON GENERADO desde la captura del frame nativo.
+    -- HarfordCraftSkin.lua lo escribe tools/codice/gen_frame_from_probe.py a partir de
+    -- `nativeprobe prof`: insets con su nine-slice, barra de skill con su marco de tres
+    -- piezas... con las medidas, texCoords y colores EXACTOS del nativo. No editarlo a mano:
+    -- se regenera. Aqui solo se recogen las piezas por su uid para colgarles la logica.
     if frame.Inset then frame.Inset:Hide() end
-    local okL, insetLeft = pcall(CreateFrame, "Frame", nil, frame, "InsetFrameTemplate")
-    if not okL then
-        insetLeft = CreateFrame("Frame", nil, frame)
-        local bg = insetLeft:CreateTexture(nil, "BACKGROUND", nil, -5)
-        bg:SetTexture(374154); bg:SetAllPoints(insetLeft)
+    local skin = HarfordCraftSkin and HarfordCraftSkin.Build and HarfordCraftSkin.Build(frame)
+    local byUid = skin and skin.byUid or {}
+    local insetLeft, insetRight = byUid["root.f3"], byUid["root.f4"]
+    local bar = byUid["root.f7"]
+    if not (insetLeft and insetRight and bar) then
+        HarfordChat.Print("|cffff5555No se pudo construir el armazon de la ventana de recetas|r")
+        return frame
     end
-    insetLeft:SetSize(325, 410)
-    insetLeft:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -80)
-    local okR, insetRight = pcall(CreateFrame, "Frame", nil, frame, "InsetFrameTemplate")
-    if not okR then
-        insetRight = CreateFrame("Frame", nil, frame)
-        local bg = insetRight:CreateTexture(nil, "BACKGROUND", nil, -5)
-        bg:SetTexture(374154); bg:SetAllPoints(insetRight)
+    -- El XML declara InsetFrameTemplate con useParentLevel="true": el inset comparte nivel con
+    -- su padre para no dibujarse por encima de los hermanos.
+    for _, inset in ipairs({ insetLeft, insetRight }) do
+        if inset.SetFrameLevel and frame.GetFrameLevel then
+            inset:SetFrameLevel(frame:GetFrameLevel())
+        end
     end
-    insetRight:SetSize(335, 390)
-    insetRight:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -6, -80)
     frame.insetLeft, frame.insetRight = insetLeft, insetRight
-
-    -- Barra de skill superior nativa: 447x14 CENTRADA (TOP +0,-33), fill 136570 azul puro y
-    -- borde en TRES piezas de 136571 (caps 9x20 a -3/+3 + centro estirado), texto FRIZQT 10.
-    local bar = CreateFrame("StatusBar", nil, frame)
-    bar:SetSize(447, 14)
-    bar:SetPoint("TOP", frame, "TOP", 0, -33)
-    bar:SetStatusBarTexture(136570)   -- mismo fileID que la barra nativa
-    -- Nativo (dato crudo de la sonda): el relleno va con alpha 0.5 y SIN fondo negro debajo;
-    -- con alpha 1 y una banda negra la barra se ve como una franja dura y desencajada.
-    bar:SetStatusBarColor(0, 0, 1, 0.5)
-    local fill = bar:GetStatusBarTexture()
-    if fill then fill:SetAlpha(0.5); fill:SetDrawLayer("BACKGROUND") end
-    bar:SetMinMaxValues(0, 300)
-    -- Sin marco: los fileID del borde nativo (136571) salen como una CAJA BLANCA en este
-    -- cliente. Mejor una barra limpia con fondo oscuro que un rectangulo blanco encima.
-    local barBg = bar:CreateTexture(nil, "BACKGROUND")
-    barBg:SetColorTexture(0, 0, 0, 0.55)
-    barBg:SetPoint("TOPLEFT", bar, "TOPLEFT", -2, 2)
-    barBg:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 2, -2)
     frame.skillBar = bar
-    frame.skillText = bar:CreateFontString(nil, "OVERLAY")
-    frame.skillText:SetFont("Fonts\\FRIZQT__.TTF", 10)
-    frame.skillText:SetTextColor(1, 1, 1)
+    -- XML: RankText inherits="WhiteNormalNumberFont", justifyH="CENTER"
+    frame.skillText = bar:CreateFontString(nil, "OVERLAY", "WhiteNormalNumberFont")
     frame.skillText:SetPoint("CENTER", bar, "CENTER", 0, 0)
 
     -- Panel izquierdo: lista de recetas (Inset del template hace de marco)
@@ -229,14 +214,13 @@ local function CreateFrameIfNeeded()
         state.rows[i] = CreateRow(list, i)
     end
 
-    -- SCROLLBAR por PLANTILLA de Blizzard.
-    -- Montarlo a mano con los fileID del nativo (136569 riel, 130849 pomo) sale VERDE en este
-    -- cliente: son fileID de arte Classic y Epsilon no los traduce para addons, aunque su propio
-    -- XML si los cargue. La plantilla la construye el cliente, asi que su arte carga siempre.
-    local slider = CreateFrame("Slider", nil, frame, "UIPanelScrollBarTemplate")
-    slider:SetWidth(16)
-    slider:SetPoint("TOPLEFT", list, "TOPRIGHT", 4, -16)
-    slider:SetPoint("BOTTOMLEFT", list, "BOTTOMRIGHT", 4, 16)
+    -- SCROLL: el XML declara `Slider inherits="HybridScrollBarTemplate"` anclado
+    -- TOPLEFT>lista.TOPRIGHT +1,-14 y BOTTOMLEFT>lista.BOTTOMRIGHT +1,+12. La plantilla trae
+    -- riel, pomo y flechas; montarlo a mano con los fileID del nativo salia en verde.
+    local slider = CreateFrame("Slider", nil, frame, "HybridScrollBarTemplate")
+    if not slider then slider = CreateFrame("Slider", nil, frame, "UIPanelScrollBarTemplate") end
+    slider:SetPoint("TOPLEFT", list, "TOPRIGHT", 1, -14)
+    slider:SetPoint("BOTTOMLEFT", list, "BOTTOMRIGHT", 1, 12)
     slider:SetMinMaxValues(0, 0)
     slider:SetValueStep(1)
     if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
@@ -247,103 +231,126 @@ local function CreateFrameIfNeeded()
         RefreshUI()
     end)
     frame.scrollSlider = slider
-    -- PESTAÑAS por plantilla nativa. Con los fileID de HelpFrameTab (132086/132085) salian
-    -- rectangulos grises lisos: mismo problema que el riel del scroll.
+    -- PESTAÑAS: el XML del cliente (Blizzard_TradeSkillRecipeList.xml, build 45745) las
+    -- declara como `inherits="TabButtonTemplate"` ancladas BOTTOMLEFT>lista.TOPLEFT +10,+3 y
+    -- la segunda LEFT>primera.RIGHT. Montarlas a mano con piezas de HelpFrameTab era el error:
+    -- la plantilla ya trae el arte, el ancho segun el texto y los estados de seleccion.
     local function CreateListTab(label)
-        local ok, tab = pcall(CreateFrame, "Button", nil, frame, "CharacterFrameTabButtonTemplate")
+        local ok, tab = pcall(CreateFrame, "Button", nil, frame, "TabButtonTemplate")
         if not ok or not tab then
             ok, tab = pcall(CreateFrame, "Button", nil, frame, "UIPanelButtonTemplate")
         end
         if not ok or not tab then return nil end
         tab:SetText(label)
-        if tab.GetTextWidth and tab.SetWidth then tab:SetWidth(tab:GetTextWidth() + 34) end
+        if PanelTemplates_TabResize then pcall(PanelTemplates_TabResize, tab, 0) end
         function tab:SetActiveLook(active)
-            -- La plantilla de pestaña trae Disable/Enable como estado activo/inactivo.
-            if self.SetDisabledFontObject and self.Disable and self.Enable then
-                if active then self:Disable() else self:Enable() end
-            elseif self.SetAlpha then
-                self:SetAlpha(active and 1 or 0.7)
+            if PanelTemplates_SelectTab and PanelTemplates_DeselectTab then
+                if active then PanelTemplates_SelectTab(self) else PanelTemplates_DeselectTab(self) end
             end
         end
         return tab
     end
     frame.tabLearned = CreateListTab("Aprendidas")
     if frame.tabLearned then
-        frame.tabLearned:SetPoint("BOTTOMLEFT", list, "TOPLEFT", 6, 2)
+        frame.tabLearned:SetPoint("BOTTOMLEFT", list, "TOPLEFT", 10, 3)
         frame.tabLearned:SetScript("OnClick", function()
             state.tab = "learned"; state.offset = 0; state.selected = nil; RefreshUI()
         end)
     end
     frame.tabUnlearned = CreateListTab("No aprendidas")
-    if frame.tabUnlearned then
-        frame.tabUnlearned:SetPoint("LEFT", frame.tabLearned, "RIGHT", -4, 0)
+    if frame.tabUnlearned and frame.tabLearned then
+        frame.tabUnlearned:SetPoint("LEFT", frame.tabLearned, "RIGHT", 0, 0)
         frame.tabUnlearned:SetScript("OnClick", function()
             state.tab = "unlearned"; state.offset = 0; state.selected = nil; RefreshUI()
         end)
     end
     state.tab = "learned"
 
-    -- Caja de busqueda nativa (112x20 en +220,-54, bordes common-search + lupa); filtra la lista
-    local search = CreateFrame("EditBox", nil, frame)
-    search:SetSize(112, 20)
-    search:SetPoint("TOPLEFT", frame, "TOPLEFT", 350, -56)
-    search:SetAutoFocus(false)
-    search:SetMaxLetters(40)
-    search:SetFont("Fonts\\FRIZQT__.TTF", 10)
-    search:SetTextInsets(16, 4, 0, 0)
-    local hasSearch = C_Texture and C_Texture.GetAtlasInfo
-        and C_Texture.GetAtlasInfo("common-search-border-middle")
-    if hasSearch then
-        local sL = search:CreateTexture(nil, "BACKGROUND")
-        sL:SetAtlas("common-search-border-left"); sL:SetSize(8, 20)
-        sL:SetPoint("LEFT", search, "LEFT", -5, 0)
-        local sR = search:CreateTexture(nil, "BACKGROUND")
-        sR:SetAtlas("common-search-border-right"); sR:SetSize(8, 20)
-        sR:SetPoint("RIGHT", search, "RIGHT", 0, 0)
-        local sM = search:CreateTexture(nil, "BACKGROUND")
-        sM:SetAtlas("common-search-border-middle")
-        sM:SetPoint("LEFT", sL, "RIGHT", 0, 0)
-        sM:SetPoint("RIGHT", sR, "LEFT", 0, 0)
-        local lupa = search:CreateTexture(nil, "OVERLAY")
-        lupa:SetAtlas("common-search-magnifyingglass"); lupa:SetSize(10, 10)
-        lupa:SetVertexColor(0.6, 0.6, 0.6)
-        lupa:SetPoint("LEFT", search, "LEFT", 1, -1)
-    else
-        local sBg = search:CreateTexture(nil, "BACKGROUND")
-        sBg:SetColorTexture(0, 0, 0, 0.5); sBg:SetAllPoints(search)
+    -- Buscador: el XML lo declara `inherits="SearchBoxTemplate"` 112x20 en +220,-54.
+    -- La plantilla ya trae borde, lupa, texto de sugerencia y boton de limpiar.
+    local okS, search = pcall(CreateFrame, "EditBox", nil, frame, "SearchBoxTemplate")
+    if not okS or not search then
+        search = CreateFrame("EditBox", nil, frame)
+        search:SetAutoFocus(false)
+        search:SetFont("Fonts\\FRIZQT__.TTF", 10)
     end
-    search.placeholder = search:CreateFontString(nil, "ARTWORK")
-    search.placeholder:SetFont("Fonts\\FRIZQT__.TTF", 10)
-    search.placeholder:SetTextColor(0.35, 0.35, 0.35)
-    search.placeholder:SetPoint("LEFT", search, "LEFT", 16, 0)
-    search.placeholder:SetText("Buscar")
-    search:SetScript("OnEscapePressed", function(self) self:SetText(""); self:ClearFocus() end)
-    search:SetScript("OnEnterPressed", search.ClearFocus)
+    search:SetSize(112, 20)
+    search:SetPoint("TOPLEFT", frame, "TOPLEFT", 220, -54)
     search:SetScript("OnTextChanged", function(self)
-        self.placeholder:SetShown(self:GetText() == "")
+        if SearchBoxTemplate_OnTextChanged then pcall(SearchBoxTemplate_OnTextChanged, self) end
         state.search = self:GetText() or ""
         state.offset = 0
         RefreshUI()
     end)
+    search:SetScript("OnEscapePressed", function(self) self:SetText(""); self:ClearFocus() end)
+    search:SetScript("OnEnterPressed", search.ClearFocus)
     frame.searchBox = search
 
+
+    -- Boton de filtro del nativo (70x22 en TOPRIGHT -12,-55). El nativo filtra por
+    -- categorias de receta; aqui filtra por lo que tiene sentido en Harford.
+    local filterBtn = CreateFrame("Button", nil, frame, "UIMenuButtonStretchTemplate")
+    filterBtn:SetSize(70, 22)
+    filterBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -55)
+    filterBtn:SetText("Filtro")
+    filterBtn:SetScript("OnClick", function(self)
+        local menu = {
+            { text = "Filtrar recetas", isTitle = true, notCheckable = true },
+            { text = "Todas", checked = not state.onlyCraftable, notCheckable = false,
+              func = function() state.onlyCraftable = nil; state.offset = 0; RefreshUI() end },
+            { text = "Solo las que puedo fabricar", checked = state.onlyCraftable == true,
+              notCheckable = false,
+              func = function() state.onlyCraftable = true; state.offset = 0; RefreshUI() end },
+        }
+        if EasyMenu and CreateFrame then
+            frame._filterMenu = frame._filterMenu or CreateFrame("Frame", "HarfordCraftFilterMenu", UIParent, "UIDropDownMenuTemplate")
+            EasyMenu(menu, frame._filterMenu, self, 0, 0, "MENU")
+        end
+    end)
+    frame.filterBtn = filterBtn
+
     -- Panel derecho: detalle de la receta, dentro del inset derecho nativo
-    local detail = CreateFrame("Frame", nil, frame)
-    detail:SetPoint("TOPLEFT", insetRight, "TOPLEFT", 3, -3)
-    detail:SetPoint("BOTTOMRIGHT", insetRight, "BOTTOMRIGHT", -3, 3)
-    frame.detail = detail
-    -- Fondo del detalle: tamaño FIJO 310x383 en TOPLEFT -5,0 (estirarlo a todo el panel
-    -- deformaba el pergamino), capa BACKGROUND -1 como el nativo.
-    local detailBg = detail:CreateTexture(nil, "BACKGROUND", nil, -1)
+    -- En el nativo el detalle NO es un panel fijo: es un ScrollFrame 300x385 en TOPRIGHT
+    -- -32,-83 con su propio slider (20x351 a +6,-17 / +6,+17). Sin el, una receta con muchos
+    -- materiales se desborda por abajo.
+    local detailScroll = CreateFrame("ScrollFrame", nil, frame)
+    detailScroll:SetSize(300, 385)
+    detailScroll:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -32, -83)
+    local detail = CreateFrame("Frame", nil, detailScroll)
+    detail:SetSize(300, 385)
+    detailScroll:SetScrollChild(detail)
+    frame.detail, frame.detailScroll = detail, detailScroll
+
+    -- El XML del detalle declara `Slider inherits="UIPanelStretchableArtScrollBarTemplate"`.
+    local detailSlider = CreateFrame("Slider", nil, detailScroll, "UIPanelStretchableArtScrollBarTemplate")
+        or CreateFrame("Slider", nil, detailScroll, "UIPanelScrollBarTemplate")
+    detailSlider:SetPoint("TOPLEFT", detailScroll, "TOPRIGHT", 6, -17)
+    detailSlider:SetPoint("BOTTOMLEFT", detailScroll, "BOTTOMRIGHT", 6, 17)
+    detailSlider:SetMinMaxValues(0, 0)
+    detailSlider:SetValueStep(10)
+    detailSlider:SetScript("OnValueChanged", function(_, value)
+        detailScroll:SetVerticalScroll(value)
+    end)
+    detailScroll:EnableMouseWheel(true)
+    detailScroll:SetScript("OnMouseWheel", function(_, delta)
+        local mx = select(2, detailSlider:GetMinMaxValues())
+        detailSlider:SetValue(math.max(0, math.min(mx, detailSlider:GetValue() - delta * 20)))
+    end)
+    frame.detailSlider = detailSlider
+    -- Fondo del detalle: en el XML pertenece al ScrollFrame, NO al contenido que scrollea
+    -- (`Texture parentKey="Background" atlas="tradeskill-background-recipe"` 310x383 en
+    -- TOPLEFT -5). Colgado del hijo se desplazaba con el scroll y se perdia al seleccionar.
+    local detailBg = detailScroll:CreateTexture(nil, "BACKGROUND", nil, -1)
     if detailBg.SetAtlas and C_Texture and C_Texture.GetAtlasInfo
         and C_Texture.GetAtlasInfo("tradeskill-background-recipe") then
         detailBg:SetAtlas("tradeskill-background-recipe")
         detailBg:SetSize(310, 383)
-        detailBg:SetPoint("TOPLEFT", detail, "TOPLEFT", -5, 0)
+        detailBg:SetPoint("TOPLEFT", detailScroll, "TOPLEFT", -5, 0)
     else
         detailBg:SetColorTexture(0.08, 0.07, 0.06, 0.92)
-        detailBg:SetAllPoints(detail)
+        detailBg:SetAllPoints(detailScroll)
     end
+    frame.detailBg = detailBg
 
     -- Icono de la receta: 47x47 en +10,-20 con el borde 51x51 CENTRADO (el nativo usa un
     -- marco MAS GRANDE centrado, no uno del mismo tamaño pegado al icono).
@@ -370,15 +377,39 @@ local function CreateFrameIfNeeded()
         GameTooltip:Show()
     end)
     detail.iconHit:SetScript("OnLeave", function() GameTooltip:Hide() end)
-    detail.name = detail:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    detail.name:SetPoint("TOPLEFT", detail.icon, "TOPRIGHT", 10, -2)
-    detail.name:SetWidth(220)
+    -- Contador del resultado sobre el icono (XML: Count inherits="NumberFontNormal" en
+    -- BOTTOMRIGHT -2,+3). Sin el no se ve que una receta produce mas de una unidad.
+    detail.resultCount = detail:CreateFontString(nil, "ARTWORK", "NumberFontNormal")
+    detail.resultCount:SetPoint("BOTTOMRIGHT", detail.icon, "BOTTOMRIGHT", -2, 3)
+    detail.resultCount:SetJustifyH("RIGHT")
+
+    -- XML: RecipeName GameFontNormalMed2, 230 de ancho, en TOPLEFT +65,-20
+    detail.name = detail:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
+    detail.name:SetPoint("TOPLEFT", detail, "TOPLEFT", 65, -20)
+    detail.name:SetWidth(230)
     detail.name:SetJustifyH("LEFT")
+
+    -- XML: Description GameFontHighlightSmall2, 290 de ancho, en TOPLEFT +8,-85. Es lo que
+    -- llena la mitad del panel en el nativo; sin ella el detalle se ve medio vacio.
+    detail.desc = detail:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall2")
+    detail.desc:SetPoint("TOPLEFT", detail, "TOPLEFT", 8, -85)
+    detail.desc:SetWidth(290)
+    detail.desc:SetJustifyH("LEFT")
+    detail.desc:SetJustifyV("TOP")
+
+    -- XML: RequirementLabel/RequirementText debajo de la descripcion
+    detail.reqLabel = detail:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    detail.reqLabel:SetPoint("TOPLEFT", detail.desc, "BOTTOMLEFT", 0, -6)
+    detail.reqLabel:SetText("Requiere:")
     detail.req = detail:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    detail.req:SetPoint("TOPLEFT", detail.icon, "TOPRIGHT", 10, -26)
+    detail.req:SetPoint("TOPLEFT", detail.reqLabel, "BOTTOMLEFT", 0, -2)
+    detail.req:SetWidth(290)
     detail.req:SetJustifyH("LEFT")
-    detail.reagentsTitle = detail:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    detail.reagentsTitle:SetPoint("TOPLEFT", detail, "TOPLEFT", 8, -96)
+    detail.req:SetJustifyV("TOP")
+
+    -- XML: ReagentLabel GameFontNormalSmall, encadenado bajo lo anterior
+    detail.reagentsTitle = detail:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    detail.reagentsTitle:SetPoint("TOPLEFT", detail.req, "BOTTOMLEFT", 0, -8)
     detail.reagentsTitle:SetText("Materiales")
 
     -- Botonera nativa: [Crear todo] ... [cantidad] [Crear] [Salir], todos 80x22
@@ -389,7 +420,9 @@ local function CreateFrameIfNeeded()
     -- ciegas dejaria craftear con material ya gastado (ademas de reventar el servidor a comandos).
     local MAX_QUEUE = 20
     local CRAFT_TIME = 3.0   -- fundicion visible, al estilo del lanzamiento nativo
-    local queue = { left = 0, timeout = nil }
+    -- `recipeId` se fija al arrancar la cola: si se leyera `state.selected` en cada pieza,
+    -- cambiar de receta a mitad haria que se fabricase otra cosa distinta.
+    local queue = { left = 0, timeout = nil, recipeId = nil }
     local bagWatcher = CreateFrame("Frame")
 
     -- Barra de fundicion con el arte de la barra de lanzamiento nativa. El OnUpdate solo vive
@@ -397,7 +430,7 @@ local function CreateFrameIfNeeded()
     local castBar = CreateFrame("StatusBar", nil, frame)
     castBar:SetSize(220, 18)
     castBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 10)
-    castBar:SetStatusBarTexture(136570)
+    castBar:SetStatusBarTexture(TEX.barFill)
     castBar:SetStatusBarColor(1, 0.7, 0)
     castBar:SetMinMaxValues(0, 1)
     local castBg = castBar:CreateTexture(nil, "BACKGROUND")
@@ -425,6 +458,7 @@ local function CreateFrameIfNeeded()
 
     local function StopQueue(reason)
         queue.left = 0
+        queue.recipeId = nil
         bagWatcher:UnregisterAllEvents()
         if queue.timeout then queue.timeout = nil end
         CancelCast()
@@ -458,12 +492,12 @@ local function CreateFrameIfNeeded()
 
     local CraftNext
     ResolveCraft = function()
-        if not (state.selected and HarfordProfessions and HarfordProfessions.Craft) then
+        if not (queue.recipeId and HarfordProfessions and HarfordProfessions.Craft) then
             return StopQueue()
         end
         -- Craft revalida CanCraft por su cuenta y descuenta el material reservado, asi que una
         -- pieza que ya no se puede hacer corta la cola en vez de seguir intentandolo.
-        local ok = HarfordProfessions.Craft(state.selected)
+        local ok = HarfordProfessions.Craft(queue.recipeId)
         if HarfordUISounds and HarfordUISounds.Play then
             HarfordUISounds.Play(ok and "craft_succeeded" or "craft_failed")
         end
@@ -485,10 +519,10 @@ local function CreateFrameIfNeeded()
 
     CraftNext = function()
         if queue.left <= 0 then return StopQueue() end
-        if not state.selected then return StopQueue() end
+        if not queue.recipeId then return StopQueue() end
         queue.left = queue.left - 1
         local rec = HarfordProfessions and HarfordProfessions.GetRecipe
-            and HarfordProfessions.GetRecipe(state.selected)
+            and HarfordProfessions.GetRecipe(queue.recipeId)
         BeginCast(rec and (rec.name or rec.id) or "")
     end
 
@@ -500,60 +534,50 @@ local function CreateFrameIfNeeded()
 
     local function CraftTimes(n)
         if queue.left > 0 then return end  -- ya hay una cola en marcha: no solapar
+        if not state.selected then return end
         n = math.max(1, math.min(math.floor(tonumber(n) or 1), MAX_QUEUE))
+        queue.recipeId = state.selected
         queue.left = n
         CraftNext()
     end
     state.IsCrafting = function() return queue.left > 0 end
-    local exitBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    local exitBtn = CreateFrame("Button", nil, frame, "MagicButtonTemplate")
     exitBtn:SetSize(80, 22)
-    exitBtn:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -10, 8)
+    exitBtn:SetPoint("TOPRIGHT", insetRight, "BOTTOMRIGHT", 22, -3)
     exitBtn:SetText("Salir")
     exitBtn:SetScript("OnClick", function() frame:Hide() end)
-    frame.craftBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    frame.craftBtn = CreateFrame("Button", nil, frame, "MagicButtonTemplate")
     frame.craftBtn:SetSize(80, 22)
     frame.craftBtn:SetPoint("TOPRIGHT", exitBtn, "TOPLEFT", -1, 0)
     frame.craftBtn:SetText("Crear")
     frame.craftBtn:SetScript("OnClick", function()
         CraftTimes(frame.qtyBox and frame.qtyBox:GetNumber() or 1)
     end)
-    -- Caja de cantidad nativa: EditBox 31x20 con bordes common-search y ARIALN 14
-    local qty = CreateFrame("EditBox", nil, frame)
-    qty:SetSize(31, 20)
-    qty:SetPoint("RIGHT", frame.craftBtn, "LEFT", -8, 0)
-    qty:SetAutoFocus(false)
-    qty:SetNumeric(true)
-    qty:SetMaxLetters(3)
-    qty:SetFont("Fonts\\ARIALN.TTF", 14)
-    qty:SetJustifyH("CENTER")
-    qty:SetText("1")
-    qty:SetScript("OnEscapePressed", qty.ClearFocus)
-    qty:SetScript("OnEnterPressed", qty.ClearFocus)
-    local hasSearchAtlas = C_Texture and C_Texture.GetAtlasInfo
-        and C_Texture.GetAtlasInfo("common-search-border-middle")
-    if hasSearchAtlas then
-        local qL = qty:CreateTexture(nil, "BACKGROUND")
-        qL:SetAtlas("common-search-border-left"); qL:SetSize(8, 20)
-        qL:SetPoint("LEFT", qty, "LEFT", -5, 0)
-        local qR = qty:CreateTexture(nil, "BACKGROUND")
-        qR:SetAtlas("common-search-border-right"); qR:SetSize(8, 20)
-        qR:SetPoint("RIGHT", qty, "RIGHT", 0, 0)
-        local qM = qty:CreateTexture(nil, "BACKGROUND")
-        qM:SetAtlas("common-search-border-middle")
-        qM:SetPoint("LEFT", qL, "RIGHT", 0, 0)
-        qM:SetPoint("RIGHT", qR, "LEFT", 0, 0)
-    else
+    -- El XML declara CreateMultipleInputBox como `inherits="NumericInputSpinnerTemplate"`
+    -- anclado LEFT>CrearTodo.RIGHT +31: es el que trae las flechas del nativo.
+    local okQ, qty = pcall(CreateFrame, "EditBox", nil, frame, "NumericInputSpinnerTemplate")
+    if not okQ or not qty then
+        qty = CreateFrame("EditBox", nil, frame)
+        qty:SetAutoFocus(false); qty:SetNumeric(true); qty:SetMaxLetters(3)
+        qty:SetFont("Fonts\\ARIALN.TTF", 14); qty:SetJustifyH("CENTER")
         local qBg = qty:CreateTexture(nil, "BACKGROUND")
         qBg:SetColorTexture(0, 0, 0, 0.5); qBg:SetAllPoints(qty)
     end
+    qty:SetSize(31, 20)
+    qty:SetText("1")
+    if qty.SetMinMaxValues then qty:SetMinMaxValues(1, 20) end   -- tope de la cola
     frame.qtyBox = qty
-    frame.craftAllBtn = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
+    frame.craftAllBtn = CreateFrame("Button", nil, frame, "MagicButtonTemplate")
     frame.craftAllBtn:SetSize(80, 22)
-    frame.craftAllBtn:SetPoint("RIGHT", qty, "LEFT", -13, 0)
+    frame.craftAllBtn:SetPoint("TOPLEFT", insetRight, "BOTTOMLEFT", -5, -3)
     frame.craftAllBtn:SetText("Crear todo")
+    -- XML: CreateMultipleInputBox se ancla LEFT>CreateAllButton.RIGHT +31,0. Se hace aqui
+    -- porque el boton se crea despues que la caja.
+    qty:SetPoint("LEFT", frame.craftAllBtn, "RIGHT", 31, 0)
     frame.craftAllBtn:SetScript("OnClick", function()
         CraftTimes(frame.craftAllBtn.craftableCount or 1)
     end)
+    frame._buildComplete = true
     return frame
 end
 
@@ -593,7 +617,10 @@ RefreshUI = function()
         local learned = not HarfordProfessions.IsRecipeLearned
             or HarfordProfessions.IsRecipeLearned(r.id)
         if (state.tab == "unlearned") ~= (learned and true or false) then
-            if not needle or Strip(tostring(r.name or r.id)):lower():find(needle, 1, true) then
+            local passSearch = not needle or Strip(tostring(r.name or r.id)):lower():find(needle, 1, true)
+            local passFilter = true
+            if state.onlyCraftable then passFilter = HarfordProfessions.CanCraft(r.id) == true end
+            if passSearch and passFilter then
                 recipes[#recipes + 1] = r
             end
         end
@@ -619,7 +646,7 @@ RefreshUI = function()
             lastTier = tier
         end
         display[headerIdx].count = display[headerIdx].count + 1
-        display[#display + 1] = r
+        if not state.collapsed[tier] then display[#display + 1] = r end
     end
 
     local maxOffset = math.max(0, #display - ROWS_VISIBLE)
@@ -637,9 +664,21 @@ RefreshUI = function()
         if entry and entry.header then
             -- Cabecera de grupo: rango en ORO con el contador de recetas a la derecha
             row.recipeId = nil
+            local tier = entry.header
+            row.expander:SetNormalTexture(state.collapsed[tier]
+                and "Interface\\Buttons\\UI-PlusButton-Up"
+                or "Interface\\Buttons\\UI-MinusButton-Up")
+            row.expander:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD")
+            row.expander:SetScript("OnClick", function()
+                state.collapsed[tier] = not state.collapsed[tier] or nil
+                state.offset = 0
+                RefreshUI()
+            end)
+            row.expander:Show()
             row.text:SetText(entry.header)
             row.text:SetTextColor(1, 0.82, 0)
             row.count:SetText(tostring(entry.count))
+            row.count:SetTextColor(1, 0.82, 0)
             row.sel:Hide()
             row:Show()
         elseif entry then
@@ -656,10 +695,14 @@ RefreshUI = function()
                     craftable = craftable and math.min(craftable, possible) or possible
                 end
             end
-            row.text:SetText((rec.name or rec.id)
-                .. ((craftable and craftable > 0) and (" [" .. craftable .. "]") or ""))
+            -- Como el nativo: el nombre va limpio y la CANTIDAD FABRICABLE va suelta a la
+            -- derecha, con el mismo color de dificultad de la fila.
+            row.expander:Hide()
+            row.text:SetText(rec.name or rec.id)
             row.text:SetTextColor(r, g, b)
-            row.count:SetText("")
+            row.count:SetText((craftable and craftable > 0) and tostring(craftable) or "")
+            row.count:SetTextColor(r, g, b)
+            row.sel:SetVertexColor(r, g, b)   -- nativo: la seleccion toma el color de la fila
             row.sel:SetShown(rec.id == state.selected)
             row:Show()
         else
@@ -675,6 +718,9 @@ RefreshUI = function()
     if not sel then
         d.name:SetText("")
         d.req:SetText("")
+        d.desc:SetText("")
+        d.reqLabel:Hide()
+        d.resultCount:SetText("")
         for _, slot in ipairs(state.reagents) do slot:Hide() end
         frame.craftBtn:SetEnabled(false)
         if frame.craftAllBtn then
@@ -690,8 +736,22 @@ RefreshUI = function()
     end
     d.name:SetText(sel.name or sel.id)
     local ok, reason, detailMats = HarfordProfessions.CanCraft(sel.id)
-    d.req:SetText(string.format("Requiere skill %d%s", tonumber(sel.skillReq) or 1,
-        ok and "" or ("  |cffff5555" .. tostring(reason or "") .. "|r")))
+    -- Cantidad producida sobre el icono (solo si es mas de una, como el nativo)
+    local outQty = (sel.output and tonumber(sel.output.qty)) or 1
+    d.resultCount:SetText(outQty > 1 and tostring(outQty) or "")
+
+    -- Descripcion: la de la receta si la declara; si no, de que profesion y rango es. Antes
+    -- este medio panel quedaba vacio porque no pintabamos nada de esto.
+    local tierName = HarfordProfessions.GetTierName(tonumber(sel.skillReq) or 1)
+    d.desc:SetText(sel.description or string.format("Receta de %s del rango %s.",
+        (def.name or ""):lower(), tierName))
+
+    d.reqLabel:Show()
+    local reqLines = { string.format("Nivel de %s: %d", (def.name or ""):lower(),
+        tonumber(sel.skillReq) or 1) }
+    if def.tool then reqLines[#reqLines + 1] = def.tool end
+    if not ok and reason then reqLines[#reqLines + 1] = "|cffff5555" .. tostring(reason) .. "|r" end
+    d.req:SetText(table.concat(reqLines, "\n"))
     local mats = detailMats or {}
     for i, m in ipairs(mats) do
         local slot = state.reagents[i]
@@ -699,6 +759,7 @@ RefreshUI = function()
             slot = CreateReagentSlot(d, i)
             state.reagents[i] = slot
         end
+        if not slot then break end
         local enough = (m.have or 0) >= (m.need or 1)
         -- Detalle de CanCraft: { key, name, need, have, id, missingId }
         if m.id and GetItemIcon then
@@ -721,6 +782,14 @@ RefreshUI = function()
         slot:Show()
     end
     for i = #mats + 1, #state.reagents do state.reagents[i]:Hide() end
+    if frame.detailSlider then
+        -- Alto real del contenido: cabecera (120) + filas de materiales de 43.
+        local needed = 120 + math.ceil(#mats / 2) * 43
+        local over = math.max(0, needed - 385)
+        frame.detailSlider:SetMinMaxValues(0, over)
+        if frame.detailSlider:GetValue() > over then frame.detailSlider:SetValue(over) end
+        frame.detailSlider:SetShown(over > 0)
+    end
     frame.craftBtn:SetEnabled(ok and true or false)
     if frame.craftAllBtn then
         -- "Crear todo" fabrica tantas veces como permitan los materiales actuales
@@ -741,13 +810,22 @@ function API.Open(profId)
     if not (HarfordProfessions and HarfordProfessions.GetDefinition and HarfordProfessions.GetDefinition(profId)) then
         return false, "Profesion desconocida: " .. profId
     end
-    CreateFrameIfNeeded()
+    -- Si la construccion o el refresco fallan a media, la ventana se queda a medias y desde
+    -- fuera parece "igual que antes". Se reporta el error en vez de morir en silencio.
+    local built, buildErr = pcall(CreateFrameIfNeeded)
+    if not built then
+        HarfordChat.Print("|cffff5555Error construyendo la ventana:|r " .. tostring(buildErr))
+        return false, buildErr
+    end
     if state.profId ~= profId then
         state.selected, state.offset = nil, 0
     end
     state.profId = profId
     frame:Show()
-    RefreshUI()
+    local okRefresh, refreshErr = pcall(RefreshUI)
+    if not okRefresh then
+        HarfordChat.Print("|cffff5555Error refrescando la ventana:|r " .. tostring(refreshErr))
+    end
     return true
 end
 

@@ -113,6 +113,7 @@ Contracts\HarfordContractsMinimap.lua
 
 # --- Professions ---
 Professions\HarfordProfessionsItems.lua
+Professions\HarfordCraftSkin.lua
 Professions\HarfordProfessionsCraftUI.lua
 Professions\HarfordProfessionsData.lua
 Professions\HarfordProfessions.lua

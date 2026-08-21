@@ -2156,6 +2156,13 @@ esto. `luac -p` solo valida sintaxis y no habria detectado ninguno de los tres f
 Addon **independiente**, en `AddonsIndependientes/HarfordItemForge/`. No es parte de Harford
 ni de HarfordAdmin y no se despliega con ellos.
 
+**Limite del trabajo: crear y categorizar, nada mas.** `HarfordProfessionsItems.lua`,
+`HarfordProfessionsData.lua` y `Harford/Compendium/`+`Harford/DnD/Data/` los mantiene otro
+agente. El utillaje de ItemForge los LEE como fuente y no escribe en ellos nunca: la etapa de
+vuelta deja las lineas preparadas en `tools/codice/_itemforge_forjados.txt` para que las
+pegue quien corresponda. No anadir una opcion que parchee el registro: con dos agentes sobre
+el mismo archivo, el que no lo posee no escribe.
+
 - **El servidor no devuelve el id del objeto creado.** `.forge item create` lo deja en la
   bolsa y ya. El id se DEDUCE fotografiando el inventario antes y despues; de ahi sale el
   item link con el que se encadenan los `.forge item set ...`. Es el flujo que PhaseToolkit

@@ -4,10 +4,25 @@
 HarfordCharacterAdvancement = HarfordCharacterAdvancement or {}
 
 local API = HarfordCharacterAdvancement
-local S = { frame = nil, stage = "race", raceId = "humano", subraceId = "", backgroundId = nil, selected = nil, nodeRows = {}, choiceSelections = {}, choiceRows = {}, attributeArrays = nil, selectedArray = nil, attributeAssignments = {}, pendingScore = nil, classConfirmed = false, secondaryClassId = nil, secondarySubclassId = "", primaryLevel = 0, secondaryLevel = 0, levelPlan = {}, pendingClassId = nil, pendingFeatures = {}, classSelectionOpen = true, classSelectionMode = "base" }
+local S = { frame = nil, mode = "creation", targetTotal = nil, stage = "race", raceId = "humano", subraceId = "", backgroundId = nil, selected = nil, nodeRows = {}, choiceSelections = {}, choiceRows = {}, attributeArrays = nil, selectedArray = nil, attributeAssignments = {}, pendingScore = nil, classConfirmed = false, secondaryClassId = nil, secondarySubclassId = "", primaryLevel = 0, secondaryLevel = 0, levelPlan = {}, pendingClassId = nil, pendingFeatures = {}, classSelectionOpen = true, classSelectionMode = "base" }
 
-local CREATION_LEVEL = 4
+local CREATION_LEVEL = 1  -- la creacion confirma SOLO el nivel 1; los niveles 2 y 3 se encadenan como subidas
 local MAX_PREVIEW_LEVEL = CREATION_LEVEL
+
+local function CopyTable(source)
+    if type(source) ~= "table" then return source end
+    local out = {}
+    for key, value in pairs(source) do out[key] = CopyTable(value) end
+    return out
+end
+
+local function RequiredTotal()
+    return tonumber(S.targetTotal) or CREATION_LEVEL
+end
+
+local function IsLevelUpMode()
+    return S.mode == "levelup"
+end
 local BASE_RACE_IDS = { elfo_noche = true }
 
 local function MakeText(parent, template, text)
@@ -132,7 +147,8 @@ local function SetDetail(feature, level, source)
             local choose = MakeButton(S.frame, "Elegir opciones", 204, 24, function()
                 OpenChoiceDialog(feature, level, source)
             end)
-            choose:SetPoint("TOPLEFT", 1034, -434)
+            -- Anclado al bloque de elecciones (que ApplyModeLayout recoloca), no a una x absoluta
+            choose:SetPoint("BOTTOMLEFT", S.detailChoices, "TOPLEFT", 0, 10)
             S.choiceRows[#S.choiceRows + 1] = choose
         else
             S.detailChoices:SetText("Confirma primero esta opcion para realizar la eleccion.")
@@ -147,7 +163,9 @@ end
 local function CreateNode(parent, x, y, level, feature, source)
     local kind = NodeKind(feature)
     local r, g, b = NodeColor(kind)
-    local width = source == "Subclase" and 322 or 340
+    -- Ancho relativo a la x de entrada: todas las filas cierran en el mismo borde derecho
+    -- (348 en coords del child = 16px antes del divisor), tengan la sangria que tengan.
+    local width = 348 - (tonumber(x) or 26)
 
     S.nodePool = S.nodePool or {}
     S.nodePoolUsed = (S.nodePoolUsed or 0) + 1
@@ -200,17 +218,53 @@ local function RefreshClassList()
     for _, button in ipairs(S.classButtons or {}) do button:Hide() end
     S.classButtons = {}
     local y = -76
+    -- Tope de 2 clases: si la ficha ya es multiclase, en subida solo se listan ESAS dos
+    -- clases (no se puede añadir una tercera).
+    local lockToOwned = S.mode == "levelup" and S.secondaryClassId ~= nil and S.secondaryClassId ~= ""
     for _, classDef in ipairs(HarfordDnDBook.GetClasses() or {}) do
         local chosen = classDef
-        local button = MakeButton(S.frame, chosen.name, 150, 24, function()
-            S.pendingClassId = chosen.id
-            RefreshClassStage()
-        end)
-        button:SetPoint("TOPLEFT", 164, y)
-        if S.pendingClassId == chosen.id then button:LockHighlight() end
-        if S.classSelectionMode == "add" and chosen.id == S.classId then button:SetEnabled(false) end
-        S.classButtons[#S.classButtons + 1] = button
-        y = y - 27
+        local owned = chosen.id == S.classId or chosen.id == S.secondaryClassId
+        if not lockToOwned or owned then
+            -- En subida, cada clase muestra el nivel que recibiria: "Chaman (6)" si ya tienes
+            -- Chaman 5, "Guerrero (1)" si seria multiclase nueva. En creacion, solo el nombre.
+            local label = tostring(chosen.name or "")
+            if S.mode == "levelup" then
+                local current = 0
+                if chosen.id == S.classId then current = tonumber(S.primaryLevel) or 0
+                elseif chosen.id == S.secondaryClassId then current = tonumber(S.secondaryLevel) or 0 end
+                label = label .. " (" .. (current + 1) .. ")"
+            end
+            local button = MakeButton(S.frame, label, 210, 28, function()
+                S.pendingClassId = chosen.id
+                RefreshClassStage()
+            end)
+            button:SetPoint("TOPLEFT", 154, y)
+            -- Icono y color de clase (misma fuente que el resto del addon/web: classicon_<token>
+            -- via ClassFileFromText y color unico de HarfordClassColors).
+            local classFile = HarfordClassColors and HarfordClassColors.ClassFileFromText
+                and HarfordClassColors.ClassFileFromText(chosen.name)
+            if classFile then
+                local icon = button:CreateTexture(nil, "ARTWORK")
+                icon:SetSize(20, 20)
+                icon:SetPoint("LEFT", button, "LEFT", 5, 0)
+                icon:SetTexture("Interface\\Icons\\classicon_" .. classFile:lower())
+                icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                local fs = button.GetFontString and button:GetFontString()
+                if fs then
+                    -- Texto centrado en el area libre a la derecha del icono
+                    fs:ClearAllPoints()
+                    fs:SetPoint("LEFT", icon, "RIGHT", 2, 0)
+                    fs:SetPoint("RIGHT", button, "RIGHT", -4, 0)
+                    fs:SetJustifyH("CENTER")
+                    local r, g, b = HarfordClassColors.ColorRGBForClassFile(classFile)
+                    if r then fs:SetTextColor(r, g, b) end
+                end
+            end
+            if S.pendingClassId == chosen.id then button:LockHighlight() end
+            if S.classSelectionMode == "add" and chosen.id == S.classId then button:SetEnabled(false) end
+            S.classButtons[#S.classButtons + 1] = button
+            y = y - 31
+        end
     end
 end
 
@@ -308,11 +362,13 @@ RefreshClassStage = function()
     S.originScroll:Hide()
     S.originSlider:Hide()
     local assigned = S.primaryLevel + S.secondaryLevel
+    local requiredTotal = RequiredTotal()
     local nextLevel = assigned + 1
     for _, button in ipairs(S.classMetaButtons or {}) do button:Hide() end
     S.classMetaButtons = {}
     if S.classSelectionOpen then
-        S.listTitle:SetText("ELIGE CLASE: NIVEL " .. tostring(nextLevel) .. " DE " .. tostring(CREATION_LEVEL))
+        -- En subida el rotulo sobra (el panel derecho ya dice el nivel); en creacion se conserva.
+        S.listTitle:SetText(IsLevelUpMode() and "" or ("ELIGE CLASE: NIVEL " .. tostring(nextLevel) .. " DE " .. tostring(requiredTotal)))
         RefreshClassList()
         local preview = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(S.pendingClassId)
         S.classTitle:SetText(preview and tostring(preview.name) or "Elige la clase que recibira este nivel")
@@ -330,24 +386,26 @@ RefreshClassStage = function()
         else
             SetDetail(nil)
         end
-        S.nextButton:SetText(preview and ("Elegir " .. tostring(preview.name) .. " para nivel " .. tostring(nextLevel)) or "Selecciona una clase")
+        S.nextButton:SetText(preview and ("Elegir " .. tostring(preview.name)) or "Selecciona una clase")
         if not preview then S.nextButton:SetEnabled(false) end
         S.nextButton:SetShown(true)
         return
     end
     for _, button in ipairs(S.classButtons or {}) do button:Hide() end
-    if assigned >= CREATION_LEVEL then
+    if assigned >= requiredTotal then
         local first = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(S.classId)
         local second = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(S.secondaryClassId)
-        S.listTitle:SetText("NIVELES ASIGNADOS")
-        S.classTitle:SetText("Creacion preparada a nivel " .. tostring(CREATION_LEVEL))
+        S.listTitle:SetText(IsLevelUpMode() and "SUBIDA PREPARADA" or "NIVELES ASIGNADOS")
+        S.classTitle:SetText((IsLevelUpMode() and "Subida preparada a nivel " or "Creacion preparada a nivel ") .. tostring(requiredTotal))
         S.classSummary:SetText(tostring(first and first.name or "") .. " nivel " .. tostring(S.primaryLevel)
             .. (second and (" / " .. tostring(second.name) .. " nivel " .. tostring(S.secondaryLevel)) or "")
-            .. "\nTodo esta listo para crear la ficha y generar el About de TRP3.")
+            .. (IsLevelUpMode()
+                and "\nTodo esta listo para aplicar el nivel y actualizar el About de TRP3."
+                or "\nTodo esta listo para crear la ficha y generar el About de TRP3."))
         S.subclassDrop:Hide()
         S.selectorLabel:Hide()
         SetDetail(nil)
-        S.nextButton:SetText("Crear ficha y generar About TRP3")
+        S.nextButton:SetText(IsLevelUpMode() and "Aplicar subida de nivel" or "Crear ficha y generar About TRP3")
         S.nextButton:SetEnabled(true)
         S.nextButton:Show()
         return
@@ -359,7 +417,7 @@ RefreshClassStage = function()
         return
     end
     local pendingLevel = pending.id == S.classId and S.primaryLevel + 1 or (pending.id == S.secondaryClassId and S.secondaryLevel + 1 or 1)
-    S.listTitle:SetText("NIVEL " .. tostring(nextLevel) .. " DE " .. tostring(CREATION_LEVEL))
+    S.listTitle:SetText("NIVEL " .. tostring(nextLevel) .. " DE " .. tostring(requiredTotal))
     S.classTitle:SetText(tostring(pending.name) .. " recibira nivel " .. tostring(pendingLevel))
     S.classSummary:SetText("Esta es la unica clase que sube en este paso. Confirma el nivel para aplicar sus rasgos y elecciones.")
     local subclassReady = ConfigureSubclassChoice(pending, pendingLevel)
@@ -385,13 +443,13 @@ RefreshClassStage = function()
         end)
     end
     S.nextButton:SetText("Confirmar nivel " .. tostring(nextLevel))
-    S.nextButton:SetEnabled(assigned < CREATION_LEVEL and subclassReady and PendingChoicesComplete())
+    S.nextButton:SetEnabled(assigned < requiredTotal and subclassReady and PendingChoicesComplete())
     S.nextButton:SetShown(true)
 end
 
 CommitClassLevel = function()
     local assigned = S.primaryLevel + S.secondaryLevel
-    if assigned >= CREATION_LEVEL then return end
+    if assigned >= RequiredTotal() then return end
     local id = S.pendingClassId
     if id == S.classId then
         S.primaryLevel = S.primaryLevel + 1
@@ -409,7 +467,7 @@ CommitClassLevel = function()
         return
     end
     S.levelPlan[#S.levelPlan + 1] = id
-    S.classConfirmed = S.primaryLevel + S.secondaryLevel == CREATION_LEVEL
+    S.classConfirmed = S.primaryLevel + S.secondaryLevel == RequiredTotal()
     S.classSelectionOpen, S.classSelectionMode = false, "advance"
     RefreshClassStage()
 end
@@ -429,6 +487,43 @@ local function GridIconFor(isRace, id)
     return "Interface" .. sep .. "Icons" .. sep .. tostring(icon or "INV_Misc_QuestionMark")
 end
 
+-- raceId Harford -> token del atlas nativo del selector de razas (raceicon-<token>-<genero>).
+-- Semielfo no es raza de WoW: no tiene atlas y cae al icono del libro con mascara circular.
+local RACE_ATLAS_TOKEN = {
+    humano = "human", enano = "dwarf", elfo_noche = "nightelf", gnomo = "gnome",
+    draenei = "draenei", huargen = "worgen", orco = "orc", renegado = "undead",
+    tauren = "tauren", trol = "troll", elfo_sangre = "bloodelf", goblin = "goblin",
+    pandaren = "pandaren", nocheterna = "nightborne", elfo_vacio = "voidelf",
+    vulpera = "vulpera",
+}
+
+-- Pinta el icono de una tarjeta de raza segun el genero del PJ (UnitSex: 3 = mujer).
+-- Devuelve true si el arte ya es circular de fabrica (atlas raceicon con anillo);
+-- false si es un icono cuadrado y necesita mascara circular.
+local function SetRaceCardIcon(tex, raceId)
+    local gender = (UnitSex and UnitSex("player") == 3) and "female" or "male"
+    local token = RACE_ATLAS_TOKEN[raceId]
+    if token and C_Texture and C_Texture.GetAtlasInfo and tex.SetAtlas then
+        local atlas = "raceicon-" .. token .. "-" .. gender
+        if C_Texture.GetAtlasInfo(atlas) then
+            tex:SetTexCoord(0, 1, 0, 1)
+            tex:SetAtlas(atlas)
+            return true
+        end
+    end
+    tex:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    if token and GetFileIDFromPath then
+        local sep = string.char(92)
+        local path = "Interface" .. sep .. "Icons" .. sep .. "Achievement_Character_" .. token .. "_" .. gender
+        if GetFileIDFromPath(path) then
+            tex:SetTexture(path)
+            return false
+        end
+    end
+    tex:SetTexture(GridIconFor(true, raceId))
+    return false
+end
+
 local function RefreshOriginList()
     if RefreshSteps then RefreshSteps() end
     for _, button in ipairs(S.originButtons or {}) do button:Hide() end
@@ -446,7 +541,12 @@ local function RefreshOriginList()
     for _, entry in ipairs(entries or {}) do
         local choice = entry
         local selected = (isRace and choice.id == S.raceId) or (not isRace and choice.id == S.backgroundId)
-        local card = MakeButton(S.originChild, "", GRID_CELL_W, GRID_CELL_H, function()
+        -- Tarjeta propia (sin plantilla azul de UIPanelButton): el boton cubre toda la celda,
+        -- icono circular arriba (atlas raceicon nativo con genero del PJ, o icono con mascara
+        -- circular) y nombre debajo.
+        local card = CreateFrame("Button", nil, S.originChild)
+        card:SetSize(GRID_CELL_W, GRID_CELL_H)
+        card:SetScript("OnClick", function()
             if isRace then
                 S.raceId = choice.id
                 -- La raza base es una opcion valida: las subrazas nunca se eligen por defecto.
@@ -458,25 +558,40 @@ local function RefreshOriginList()
             RefreshOrigin()
         end)
         card:SetPoint("TOPLEFT", 4 + column * (GRID_CELL_W + GRID_GAP), -4 - row * (GRID_CELL_H + GRID_GAP))
-        -- El texto del boton se vacia: el nombre va en su propia fontstring bajo el icono.
-        local buttonText = card.GetFontString and card:GetFontString()
-        if buttonText then buttonText:SetText("") end
-        if not card.harfordIcon then
-            card.harfordIcon = card:CreateTexture(nil, "ARTWORK")
-            card.harfordIcon:SetSize(GRID_ICON, GRID_ICON)
-            card.harfordIcon:SetPoint("TOP", card, "TOP", 0, -6)
+        card.harfordBg = card:CreateTexture(nil, "BACKGROUND")
+        card.harfordBg:SetAllPoints(card)
+        card.harfordBg:SetColorTexture(0, 0, 0, 0.35)
+        card.harfordIcon = card:CreateTexture(nil, "ARTWORK")
+        card.harfordIcon:SetSize(GRID_ICON, GRID_ICON)
+        card.harfordIcon:SetPoint("TOP", card, "TOP", 0, -6)
+        -- Hover: aclarado sutil de toda la tarjeta (sin arte circular: los iconos son cuadrados)
+        local hl = card:CreateTexture(nil, "HIGHLIGHT")
+        hl:SetAllPoints(card)
+        hl:SetColorTexture(1, 1, 1, 0.08)
+        -- Seleccion: tinte dorado de fondo en toda la tarjeta
+        card.harfordSel = card:CreateTexture(nil, "BACKGROUND", nil, 1)
+        card.harfordSel:SetAllPoints(card)
+        card.harfordSel:SetColorTexture(0.55, 0.42, 0.1, 0.30)
+        card.harfordName = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        card.harfordName:SetPoint("TOPLEFT", card, "TOPLEFT", 3, -(GRID_ICON + 10))
+        card.harfordName:SetPoint("TOPRIGHT", card, "TOPRIGHT", -3, -(GRID_ICON + 10))
+        card.harfordName:SetJustifyH("CENTER")
+        card.harfordName:SetWordWrap(true)
+
+        local circular = false
+        if isRace then
+            circular = SetRaceCardIcon(card.harfordIcon, choice.id)
+        else
             card.harfordIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-            card.harfordName = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            card.harfordName:SetPoint("TOPLEFT", card, "TOPLEFT", 3, -(GRID_ICON + 10))
-            card.harfordName:SetPoint("TOPRIGHT", card, "TOPRIGHT", -3, -(GRID_ICON + 10))
-            card.harfordName:SetJustifyH("CENTER")
-            card.harfordName:SetWordWrap(true)
+            card.harfordIcon:SetTexture(GridIconFor(false, choice.id))
         end
-        card.harfordIcon:SetTexture(GridIconFor(isRace, choice.id))
+        -- Sin marco circular ni mascara: los atlas raceicon ya son redondos de fabrica y el
+        -- resto de iconos se muestran tal cual (decision 2026-08-20; el recorte por mascara
+        -- no funciono de forma fiable en Epsilon para estas tarjetas).
         card.harfordName:SetText(tostring(choice.name or ""))
         card.harfordName:SetTextColor(selected and 1 or 0.85, selected and 0.82 or 0.85, selected and 0 or 0.85)
         card.harfordIcon:SetDesaturated(not selected)
-        if selected then card:LockHighlight() else card:UnlockHighlight() end
+        card.harfordSel:SetShown(selected)
         S.originButtons[#S.originButtons + 1] = card
         column = column + 1
         if column >= GRID_COLUMNS then column, row = 0, row + 1 end
@@ -500,7 +615,9 @@ RefreshOrigin = function()
     S.listTitle:SetText(S.stage == "race_choices" and "RAZA CONFIRMADA"
         or (S.stage == "background_choices" and "TRASFONDO CONFIRMADO" or (isRace and "RAZAS" or "TRASFONDOS")))
     S.classTitle:SetText((isRace and "Raza: " or "Trasfondo: ") .. tostring(def.name or ""))
-    S.classSummary:SetText(tostring(def.desc or ""))
+    -- La descripcion larga va DENTRO del scroll (ver mas abajo): con el texto fijo en el
+    -- frame y los rasgos a altura fija, las descripciones largas de trasfondo se solapaban.
+    S.classSummary:SetText("")
     S.selectorLabel:SetText(isRace and "Subraza" or "Origen")
 
     if S.subclassDrop then
@@ -554,11 +671,22 @@ RefreshOrigin = function()
     else
         for _, feature in ipairs(def.traits or {}) do traits[#traits + 1] = { feature = feature, source = "Trasfondo" } end
     end
+    -- Descripcion dentro del scroll: los rasgos arrancan justo debajo de donde termina,
+    -- y descripcion + rasgos se desplazan juntos con la rueda.
+    local desc = MakeText(S.tree, "GameFontHighlightSmall", tostring(def.desc or ""))
+    desc:SetPoint("TOPLEFT", 46, -8)
+    desc:SetWidth(322)
+    desc:SetJustifyH("LEFT")
+    desc:SetWordWrap(true)
+    desc:SetTextColor(0.82, 0.82, 0.82)
+    S.nodeRows[#S.nodeRows + 1] = desc
+    local descBottom = 8 + math.ceil(desc:GetStringHeight() or 0)
+
     local heading = MakeText(S.tree, "GameFontNormal", isRace and "RASGOS DE RAZA" or "RASGOS DE TRASFONDO")
-    heading:SetPoint("TOPLEFT", 46, -154)
+    heading:SetPoint("TOPLEFT", 46, -(descBottom + 20))
     heading:SetTextColor(1, 0.82, 0)
     S.nodeRows[#S.nodeRows + 1] = heading
-    local y = -182
+    local y = -(descBottom + 48)
     for _, entry in ipairs(traits) do
         CreateNode(S.tree, entry.source == "Subraza" and 64 or 46, y, nil, entry.feature, entry.source)
         y = y - 44
@@ -792,9 +920,70 @@ local function FinishCreation()
         return
     end
     if HarfordChat and HarfordChat.Print then
-        HarfordChat.Print("|cff38d26aFicha creada a nivel 4 y About de TRP3 generado.|r")
+        HarfordChat.Print("|cff38d26aFicha creada a nivel 1 y About de TRP3 generado.|r")
     end
     S.frame:Hide()
+    -- Encadenar las subidas de creacion: nivel 2 y nivel 3 pasan por el asistente de
+    -- subida normal, uno a uno, abriendose solos hasta alcanzar el objetivo.
+    S.autoLevelTarget = 3
+    if API.OpenLevelUp then API.OpenLevelUp() end
+end
+
+-- Aplica SOLO el nivel preparado por el asistente. A diferencia de la creacion,
+-- conserva raza, trasfondo, caracteristicas, equipo y elecciones ya existentes.
+local function FinishLevelUp()
+    if not (HarfordDnDProgression and HarfordDnDProgression.SetClassEntry) then
+        if HarfordChat and HarfordChat.Print then HarfordChat.Print("No se puede aplicar la subida: progresion no disponible.") end
+        return
+    end
+    if S.primaryLevel + S.secondaryLevel ~= RequiredTotal() then return end
+
+    local entries = {
+        { classId = S.classId, subclassId = S.subclassId, level = S.primaryLevel },
+    }
+    if S.secondaryClassId then
+        entries[#entries + 1] = { classId = S.secondaryClassId, subclassId = S.secondarySubclassId, level = S.secondaryLevel }
+    end
+    for index, entry in ipairs(entries) do
+        local ok, err = HarfordDnDProgression.SetClassEntry(index, entry.classId, entry.subclassId, entry.level)
+        if not ok then
+            if HarfordChat and HarfordChat.Print then HarfordChat.Print("No se pudo aplicar la subida: " .. tostring(err)) end
+            return
+        end
+    end
+    for _, feature in ipairs(S.pendingFeatures or {}) do
+        for slot, optionId in ipairs(S.choiceSelections[feature.id] or {}) do
+            HarfordDnDProgression.SetChoiceSlot(feature.id, slot, optionId)
+        end
+    end
+    PersistSpellPicks({ classes = entries })
+    if HarfordCharacterCreation and HarfordCharacterCreation.RewriteAbout then
+        HarfordCharacterCreation.RewriteAbout()
+    end
+    if HarfordCharacterPanel and HarfordCharacterPanel.Refresh then HarfordCharacterPanel.Refresh() end
+    if HarfordChat and HarfordChat.Print then
+        HarfordChat.Print("|cff38d26aSubida de nivel aplicada.|r")
+    end
+    S.frame:Hide()
+    -- Cadena de creacion: si venimos del asistente de creacion, seguir subiendo
+    -- automaticamente hasta el nivel objetivo (3), un nivel por pasada.
+    if S.autoLevelTarget then
+        local total = HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel() or 0
+        if total < S.autoLevelTarget then
+            if API.OpenLevelUp then API.OpenLevelUp() end
+            return
+        end
+        S.autoLevelTarget = nil
+        if HarfordChat and HarfordChat.Print then
+            HarfordChat.Print("|cff38d26aCreacion completada: ficha a nivel " .. total .. ".|r")
+        end
+    end
+end
+
+-- Modificador D&D coloreado: verde si es bonificador, rojo si es penalizador, gris en 0.
+local function ModifierText(mod)
+    local color = mod > 0 and "38d26a" or (mod < 0 and "ff5555" or "aaaaaa")
+    return string.format("|cff%s(%+d)|r", color, mod)
 end
 
 local function RefreshAttributes()
@@ -802,6 +991,9 @@ local function RefreshAttributes()
     ClearRows()
     S.originScroll:Hide()
     S.originSlider:Hide()
+    -- Venir desde la seccion Clase dejaba sus botones pintados encima
+    for _, button in ipairs(S.classButtons or {}) do button:Hide() end
+    for _, button in ipairs(S.classMetaButtons or {}) do button:Hide() end
     S.subclassDrop:Hide()
     S.selectorLabel:Hide()
     S.listTitle:SetText("CARACTERISTICAS")
@@ -820,7 +1012,7 @@ local function RefreshAttributes()
             S.abilityMode = modeId
             RefreshAttributes()
         end)
-        tab:SetPoint("TOPLEFT", 24 + (index - 1) * 174, -2)
+        tab:SetPoint("TOPLEFT", 6 + (index - 1) * 174, -2)
         if S.abilityMode == modeId then tab:LockHighlight() else tab:UnlockHighlight() end
         S.nodeRows[#S.nodeRows + 1] = tab
     end
@@ -834,8 +1026,10 @@ local function RefreshAttributes()
             local key = ability.key
             local score = S.pointBuy[key] or POINT_MIN
             local bonus = RaceAbilityBonus(key)
+            -- Columna de nombres a la izquierda del todo con sitio completo (Inteligencia
+            -- y Constitucion se cortaban con los botones encima)
             local name = MakeText(S.tree, "GameFontHighlight", key)
-            name:SetPoint("TOPLEFT", 24, py - 4)
+            name:SetPoint("TOPLEFT", 6, py - 4)
             S.nodeRows[#S.nodeRows + 1] = name
 
             local down = MakeButton(S.tree, "-", 24, 22, function()
@@ -844,12 +1038,12 @@ local function RefreshAttributes()
                     RefreshAttributes()
                 end
             end)
-            down:SetPoint("TOPLEFT", 86, py)
+            down:SetPoint("TOPLEFT", 100, py)
             down:SetEnabled(score > POINT_MIN)
             S.nodeRows[#S.nodeRows + 1] = down
 
             local value = MakeText(S.tree, "GameFontNormalLarge", tostring(score))
-            value:SetPoint("TOPLEFT", 118, py - 2)
+            value:SetPoint("TOPLEFT", 132, py - 2)
             S.nodeRows[#S.nodeRows + 1] = value
 
             -- Solo se puede subir si queda presupuesto para el SIGUIENTE escalon (14 y 15 cuestan 2).
@@ -859,19 +1053,26 @@ local function RefreshAttributes()
                 S.pointBuy[key] = math.min(POINT_MAX, (S.pointBuy[key] or POINT_MIN) + 1)
                 RefreshAttributes()
             end)
-            up:SetPoint("TOPLEFT", 146, py)
+            up:SetPoint("TOPLEFT", 162, py)
             up:SetEnabled(canRaise)
             S.nodeRows[#S.nodeRows + 1] = up
 
-            local total = MakeText(S.tree, "GameFontHighlightSmall", bonus ~= 0
-                and string.format("|cff38d26a+%d|r = |cffffd100%d|r", bonus, score + bonus)
-                or string.format("= |cffffd100%d|r", score))
-            total:SetPoint("TOPLEFT", 182, py - 4)
+            -- Racial en blanco (no verde) + total en oro + bonificador/penalizador D&D
+            local final = score + bonus
+            local mod = math.floor((final - 10) / 2)
+            local totalText
+            if bonus ~= 0 then
+                totalText = string.format("|cffffffff%+d|r = |cffffd100%d|r ", bonus, final) .. ModifierText(mod)
+            else
+                totalText = string.format("= |cffffd100%d|r ", final) .. ModifierText(mod)
+            end
+            local total = MakeText(S.tree, "GameFontHighlightSmall", totalText)
+            total:SetPoint("TOPLEFT", 196, py - 4)
             S.nodeRows[#S.nodeRows + 1] = total
             py = py - 30
         end
         local counter = MakeText(S.tree, "GameFontNormal", string.format("Puntos: %d/%d", spent, POINT_BUY_BUDGET))
-        counter:SetPoint("TOPLEFT", 24, py - 6)
+        counter:SetPoint("TOPLEFT", 6, py - 6)
         counter:SetTextColor(remaining == 0 and 0.22 or 1, remaining == 0 and 0.82 or 0.82, remaining == 0 and 0.42 or 0)
         S.nodeRows[#S.nodeRows + 1] = counter
         local reset = MakeButton(S.tree, "Reiniciar", 100, 22, function()
@@ -956,14 +1157,19 @@ local function RefreshAttributes()
             S.nodeRows[#S.nodeRows + 1] = score
         end
         y = y - 42
+        -- Filas compactas con el MISMO layout que la compra por puntos: nombre a la
+        -- izquierda, hueco de valor clicable (asigna el dado activo) y racial/total/mod.
         for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
             local key = ability.key
             local assignedIndex = S.attributeAssignments[key]
             local base = assignedIndex and array.values[assignedIndex] or nil
             local bonus = RaceAbilityBonus(key)
-            local label = key .. ": " .. (base and tostring(base) or "-")
-            if base and bonus ~= 0 then label = label .. "  |cff38d26a+" .. tostring(bonus) .. " = " .. tostring(base + bonus) .. "|r" end
-            local row = MakeButton(S.tree, label, 260, 25, function()
+
+            local name = MakeText(S.tree, "GameFontHighlight", key)
+            name:SetPoint("TOPLEFT", 6, y - 4)
+            S.nodeRows[#S.nodeRows + 1] = name
+
+            local slot = MakeButton(S.tree, base and tostring(base) or "-", 48, 22, function()
                 if S.pendingScore then
                     for otherKey, scoreIndex in pairs(S.attributeAssignments) do
                         if scoreIndex == S.pendingScore then S.attributeAssignments[otherKey] = nil end
@@ -973,10 +1179,37 @@ local function RefreshAttributes()
                     RefreshAttributes()
                 end
             end)
-            row:SetPoint("TOPLEFT", 22, y)
-            S.nodeRows[#S.nodeRows + 1] = row
-            y = y - 29
+            slot:SetPoint("TOPLEFT", 108, y)
+            S.nodeRows[#S.nodeRows + 1] = slot
+
+            local info
+            if base then
+                local final = base + bonus
+                local mod = math.floor((final - 10) / 2)
+                if bonus ~= 0 then
+                    info = string.format("|cffffffff%+d|r = |cffffd100%d|r ", bonus, final) .. ModifierText(mod)
+                else
+                    info = string.format("= |cffffd100%d|r ", final) .. ModifierText(mod)
+                end
+            elseif bonus ~= 0 then
+                -- Sin dado asignado: el incremento racial se anuncia "por fuera", en verde
+                info = string.format("|cff38d26a%+d|r", bonus)
+            end
+            if info then
+                local total = MakeText(S.tree, "GameFontHighlightSmall", info)
+                total:SetPoint("TOPLEFT", 196, y - 4)
+                S.nodeRows[#S.nodeRows + 1] = total
+            end
+            y = y - 30
         end
+        -- Reiniciar la colocacion: devuelve todos los dados al pool (conserva el array elegido)
+        local resetAssign = MakeButton(S.tree, "Reiniciar", 100, 22, function()
+            S.attributeAssignments, S.pendingScore = {}, nil
+            RefreshAttributes()
+        end)
+        resetAssign:SetPoint("TOPLEFT", 108, y - 6)
+        S.nodeRows[#S.nodeRows + 1] = resetAssign
+        y = y - 34
         local assigned = 0
         for _ in pairs(S.attributeAssignments) do assigned = assigned + 1 end
         S.nextButton:SetText(assigned == 6 and "Confirmar caracteristicas" or "Asigna " .. tostring(6 - assigned) .. " valores")
@@ -1410,7 +1643,54 @@ local function RefreshSummary()
         or "|cffffd100Competencias|r  -")
 end
 
+-- Elecciones completas de un conjunto de rasgos (raza/trasfondo)
+local function TraitListChoicesComplete(traits)
+    for _, feature in ipairs(traits or {}) do
+        if feature.choice then
+            local selected = S.choiceSelections[feature.id] or {}
+            local slots = HarfordDnDBook.GetChoiceSlots and HarfordDnDBook.GetChoiceSlots(feature) or 1
+            if #selected < slots then return false end
+        end
+    end
+    return true
+end
+
+-- Un paso esta COMPLETO por sus datos reales, no por haber pasado de largo:
+-- raza/trasfondo con elecciones resueltas, puntos repartidos, niveles asignados.
+local function StepDone(index)
+    local confirmed = S.confirmedSteps or {}
+    if index == 1 and not IsLevelUpMode() and not confirmed.race then return false end
+    if index == 2 and not IsLevelUpMode() and not confirmed.background then return false end
+    if index == 3 and not IsLevelUpMode() and not confirmed.attributes then return false end
+    if index == 1 then
+        local race = S.raceId and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(S.raceId)
+        if not race then return false end
+        if HasSubraces(race) and not AllowsBaseRace(race) and (not S.subraceId or S.subraceId == "") then return false end
+        local traits = {}
+        for _, f in ipairs(race.traits or {}) do traits[#traits + 1] = f end
+        local sub = HarfordDnDRaces.GetSubrace and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
+        for _, f in ipairs((sub and sub.traits) or {}) do traits[#traits + 1] = f end
+        return TraitListChoicesComplete(traits)
+    elseif index == 2 then
+        local bg = S.backgroundId and HarfordDnDBackgrounds.GetBackground and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+        if not bg then return false end
+        return TraitListChoicesComplete(bg.traits)
+    elseif index == 3 then
+        if S.abilityMode == "roll" then
+            if not S.selectedArray then return false end
+            local assigned = 0
+            for _ in pairs(S.attributeAssignments or {}) do assigned = assigned + 1 end
+            return assigned == 6
+        end
+        return PointsSpent() >= POINT_BUY_BUDGET
+    end
+    return (S.primaryLevel + S.secondaryLevel) >= RequiredTotal()
+end
+
+local ApplyModeLayout  -- forward: el ancho del frame depende de la seccion activa
+
 RefreshSteps = function()
+    if ApplyModeLayout then ApplyModeLayout() end
     RefreshSummary()
     if not S.stepRows then return end
     local currentIndex
@@ -1419,7 +1699,8 @@ RefreshSteps = function()
     end
     for index, row in ipairs(S.stepRows) do
         local isCurrent = index == currentIndex
-        local isDone = currentIndex and index < currentIndex
+        -- Estrella solo con el paso realmente COMPLETO (datos), no por navegar mas alla
+        local isDone = StepDone(index)
         row.mark:SetText(isDone and "|cff38d26a*|r" or (isCurrent and "|cffffd100>|r" or "|cff6a6a6a-|r"))
         if isCurrent then
             row.name:SetTextColor(1, 0.82, 0)
@@ -1430,14 +1711,53 @@ RefreshSteps = function()
         end
         local value = StepValue(index)
         row.value:SetText(value)
-        row.value:SetTextColor(0.85, 0.72, 0.35)
+        -- Dorado SOLO en el paso seleccionado; confirmado (estrella) en claro; el resto apagado
+        if isCurrent then
+            row.value:SetTextColor(0.85, 0.72, 0.35)
+        elseif isDone then
+            row.value:SetTextColor(0.75, 0.75, 0.75)
+        else
+            row.value:SetTextColor(0.45, 0.45, 0.45)
+        end
+    end
+end
+
+-- Navegacion libre entre secciones desde la barra de pasos (solo creacion): cada paso
+-- es un boton que salta a su seccion sin perder lo elegido en las demas.
+local function GoToStep(index)
+    if IsLevelUpMode() or not S.frame then return end
+    if index == 1 then
+        S.stage = "race"
+        RefreshOriginList()
+        RefreshOrigin()
+    elseif index == 2 then
+        S.stage = "background"
+        if not S.backgroundId then
+            local first = HarfordDnDBackgrounds.GetBackgrounds and HarfordDnDBackgrounds.GetBackgrounds()[1]
+            S.backgroundId = first and first.id or nil
+        end
+        RefreshOriginList()
+        RefreshOrigin()
+    elseif index == 3 then
+        S.stage = "attributes"
+        RefreshAttributes()
+    elseif index == 4 then
+        S.stage = "class"
+        -- Inicializar el plan de clases solo la PRIMERA vez: volver a esta seccion no
+        -- debe borrar los niveles ya asignados.
+        if (S.primaryLevel or 0) == 0 and not S.pendingClassId then
+            S.classId, S.subclassId, S.secondaryClassId, S.secondarySubclassId = nil, "", nil, ""
+            S.primaryLevel, S.secondaryLevel, S.levelPlan, S.classConfirmed = 0, 0, {}, false
+            S.pendingClassId, S.classSelectionOpen, S.classSelectionMode = nil, true, "base"
+        end
+        RefreshClassStage()
     end
 end
 
 local function CreateFrameIfNeeded()
     if S.frame then return end
     local frame = CreateFrame("Frame", "HarfordCharacterAdvancementFrame", UIParent, "BasicFrameTemplateWithInset")
-    frame:SetSize(1294, 620)
+    frame:SetSize(1200, 620)
     frame:SetPoint("CENTER")
     frame:SetFrameStrata("FULLSCREEN_DIALOG")
     frame:SetMovable(true)
@@ -1445,12 +1765,12 @@ local function CreateFrameIfNeeded()
     frame:RegisterForDrag("LeftButton")
     frame:SetScript("OnDragStart", frame.StartMoving)
     frame:SetScript("OnDragStop", frame.StopMovingOrSizing)
-    frame.TitleText:SetText("Harford - Creacion y progresion")
+    frame.TitleText:SetText("Harford - Creacion de personaje")
     S.frame = frame
 
     if not StaticPopupDialogs["HARFORD_CONFIRM_CHARACTER_CREATION"] then
         StaticPopupDialogs["HARFORD_CONFIRM_CHARACTER_CREATION"] = {
-            text = "Se creara la ficha de Harford a nivel 4 y se reemplazara el About del perfil activo de Total RP 3. El resto del perfil no se modifica.",
+            text = "Se creara la ficha de Harford a nivel 1 (reemplazando el About del perfil activo de Total RP 3) y a continuacion se encadenaran las subidas a nivel 2 y 3.",
             button1 = "Crear ficha",
             button2 = "Cancelar",
             OnAccept = FinishCreation,
@@ -1469,9 +1789,14 @@ local function CreateFrameIfNeeded()
     stepsTitle:SetTextColor(1, 0.82, 0)
     S.stepRows = {}
     for index = 1, #CREATION_STEPS do
-        local row = CreateFrame("Frame", nil, frame)
+        -- Boton: en creacion permite saltar libremente a esa seccion (en subida no hace nada)
+        local row = CreateFrame("Button", nil, frame)
         row:SetSize(126, 40)
         row:SetPoint("TOPLEFT", 16, -62 - (index - 1) * 46)
+        row:SetScript("OnClick", function() GoToStep(index) end)
+        local rowHl = row:CreateTexture(nil, "HIGHLIGHT")
+        rowHl:SetAllPoints(row)
+        rowHl:SetColorTexture(1, 1, 1, 0.06)
         row.mark = MakeText(row, "GameFontNormalLarge", "")
         row.mark:SetPoint("TOPLEFT", 0, -2)
         row.name = MakeText(row, "GameFontHighlightSmall", CREATION_STEPS[index].label)
@@ -1483,16 +1808,18 @@ local function CreateFrameIfNeeded()
         row.value:SetWordWrap(true)
         S.stepRows[index] = row
     end
+    S.stepsTitle = stepsTitle
     -- ─── Resumen del personaje (columna derecha) ────────────────────────────────
     -- Como el panel derecho de BG3: lo elegido hasta ahora, siempre visible. Solo muestra datos
     -- que EXISTEN durante la creacion; PG y CA no, porque dependen de clase y equipo aun sin fijar.
     local sumTitle = MakeText(frame, "GameFontNormal", "PERSONAJE")
-    sumTitle:SetPoint("TOPLEFT", 1034, -58)
+    S.sumTitle = sumTitle
+    sumTitle:SetPoint("TOPLEFT", 970, -58)
     sumTitle:SetTextColor(1, 0.82, 0)
     S.sumClass = MakeText(frame, "GameFontHighlight", "")
-    S.sumClass:SetPoint("TOPLEFT", 1034, -80)
+    S.sumClass:SetPoint("TOPLEFT", 970, -80)
     S.sumOrigin = MakeText(frame, "GameFontHighlightSmall", "")
-    S.sumOrigin:SetPoint("TOPLEFT", 1034, -98)
+    S.sumOrigin:SetPoint("TOPLEFT", 970, -98)
     S.sumOrigin:SetWidth(214)
     S.sumOrigin:SetJustifyH("LEFT")
     S.sumAbilities = {}
@@ -1500,13 +1827,13 @@ local function CreateFrameIfNeeded()
         local column = (index - 1) % 3
         local rowIndex = math.floor((index - 1) / 3)
         local text = MakeText(frame, "GameFontHighlightSmall", "")
-        text:SetPoint("TOPLEFT", 1034 + column * 72, -132 - rowIndex * 18)
+        text:SetPoint("TOPLEFT", 970 + column * 72, -132 - rowIndex * 18)
         text:SetWidth(70)
         text:SetJustifyH("LEFT")
         S.sumAbilities[index] = text
     end
     S.sumSkills = MakeText(frame, "GameFontDisableSmall", "")
-    S.sumSkills:SetPoint("TOPLEFT", 1034, -174)
+    S.sumSkills:SetPoint("TOPLEFT", 970, -174)
     S.sumSkills:SetWidth(214)
     S.sumSkills:SetJustifyH("LEFT")
     S.sumSkills:SetWordWrap(true)
@@ -1517,9 +1844,6 @@ local function CreateFrameIfNeeded()
     dividerSteps:SetWidth(1)
     dividerSteps:SetColorTexture(0.45, 0.34, 0.14, 0.8)
 
-    local header = MakeText(frame, "GameFontHighlightSmall", "La ficha se aplica al finalizar y genera el About de Total RP 3.")
-    header:SetPoint("TOPLEFT", 164, -38)
-    header:SetTextColor(0.65, 0.85, 0.7)
     local leftTitle = MakeText(frame, "GameFontNormal", "RAZAS")
     leftTitle:SetPoint("TOPLEFT", 164, -58)
     leftTitle:SetTextColor(1, 0.82, 0)
@@ -1549,6 +1873,7 @@ local function CreateFrameIfNeeded()
     end)
     S.originScroll, S.originChild, S.originSlider = originScroll, originChild, originSlider
     local dividerA = frame:CreateTexture(nil, "BORDER")
+    S.dividerA = dividerA
     dividerA:SetPoint("TOPLEFT", 572, -50)
     dividerA:SetPoint("BOTTOMLEFT", 572, 46)
     dividerA:SetWidth(1)
@@ -1559,10 +1884,11 @@ local function CreateFrameIfNeeded()
     S.classTitle:SetTextColor(1, 0.82, 0)
     S.classSummary = MakeText(frame, "GameFontDisableSmall", "")
     S.classSummary:SetPoint("TOPLEFT", 592, -82)
-    S.classSummary:SetWidth(390)
+    S.classSummary:SetWidth(350)
     S.classSummary:SetJustifyH("LEFT")
     S.classSummary:SetNonSpaceWrap(false)
     local subclassLabel = MakeText(frame, "GameFontDisableSmall", "Subraza")
+    S.subclassLabel = subclassLabel
     subclassLabel:SetPoint("TOPLEFT", 592, -106)
     S.selectorLabel = subclassLabel
     local subclassDrop = CreateFrame("Frame", nil, frame, "UIDropDownMenuTemplate")
@@ -1575,7 +1901,7 @@ local function CreateFrameIfNeeded()
     tree:SetPoint("BOTTOMRIGHT", 602, 48)
     tree:EnableMouseWheel(true)
     local child = CreateFrame("Frame", nil, tree)
-    child:SetSize(390, 420)
+    child:SetSize(350, 420)
     tree:SetScrollChild(child)
     SetManualScroll(tree, child, 0)
     tree:SetScript("OnMouseWheel", function(self, delta)
@@ -1585,25 +1911,27 @@ local function CreateFrameIfNeeded()
     S.tree, S.treeChild, S.treeScroll = child, child, tree
 
     local dividerB = frame:CreateTexture(nil, "BORDER")
-    dividerB:SetPoint("TOPLEFT", 1016, -50)
-    dividerB:SetPoint("BOTTOMLEFT", 1016, 46)
+    S.dividerB = dividerB
+    dividerB:SetPoint("TOPLEFT", 952, -50)
+    dividerB:SetPoint("BOTTOMLEFT", 952, 46)
     dividerB:SetWidth(1)
     dividerB:SetColorTexture(0.45, 0.34, 0.14, 0.8)
     local detailHeader = MakeText(frame, "GameFontNormal", "DETALLE")
-    detailHeader:SetPoint("TOPLEFT", 1034, -234)
+    S.detailHeader = detailHeader
+    detailHeader:SetPoint("TOPLEFT", 970, -234)
     detailHeader:SetTextColor(1, 0.82, 0)
     S.detailTitle = MakeText(frame, "GameFontHighlight", "Selecciona un nodo")
-    S.detailTitle:SetPoint("TOPLEFT", 1034, -262)
+    S.detailTitle:SetPoint("TOPLEFT", 970, -262)
     S.detailTitle:SetWidth(214)
     S.detailTitle:SetJustifyH("LEFT")
     S.detailTitle:SetNonSpaceWrap(false)
     S.detailText = MakeText(frame, "GameFontHighlightSmall", "")
-    S.detailText:SetPoint("TOPLEFT", 1034, -296)
+    S.detailText:SetPoint("TOPLEFT", 970, -296)
     S.detailText:SetWidth(214)
     S.detailText:SetJustifyH("LEFT")
     S.detailText:SetNonSpaceWrap(false)
     S.detailChoices = MakeText(frame, "GameFontDisableSmall", "")
-    S.detailChoices:SetPoint("TOPLEFT", 1034, -468)
+    S.detailChoices:SetPoint("TOPLEFT", 970, -468)
     S.detailChoices:SetWidth(214)
     S.detailChoices:SetJustifyH("LEFT")
     S.detailChoices:SetNonSpaceWrap(false)
@@ -1616,6 +1944,8 @@ local function CreateFrameIfNeeded()
             RefreshOriginList()
             RefreshOrigin()
         elseif S.stage == "race_choices" then
+            S.confirmedSteps = S.confirmedSteps or {}
+            S.confirmedSteps.race = true
             S.stage = "background"
             if not S.backgroundId then
                 local first = HarfordDnDBackgrounds.GetBackgrounds and HarfordDnDBackgrounds.GetBackgrounds()[1]
@@ -1628,17 +1958,25 @@ local function CreateFrameIfNeeded()
             RefreshOriginList()
             RefreshOrigin()
         elseif S.stage == "background_choices" then
+            S.confirmedSteps = S.confirmedSteps or {}
+            S.confirmedSteps.background = true
             S.stage = "attributes"
             RefreshAttributes()
         elseif S.stage == "attributes" then
+            S.confirmedSteps = S.confirmedSteps or {}
+            S.confirmedSteps.attributes = true
             S.stage = "class"
             S.classId, S.subclassId, S.secondaryClassId, S.secondarySubclassId = nil, "", nil, ""
             S.primaryLevel, S.secondaryLevel, S.levelPlan, S.classConfirmed = 0, 0, {}, false
             S.pendingClassId, S.classSelectionOpen, S.classSelectionMode = nil, true, "base"
             RefreshClassStage()
         elseif S.stage == "class" then
-            if S.primaryLevel + S.secondaryLevel >= CREATION_LEVEL then
-                StaticPopup_Show("HARFORD_CONFIRM_CHARACTER_CREATION")
+            if S.primaryLevel + S.secondaryLevel >= RequiredTotal() then
+                if IsLevelUpMode() then
+                    FinishLevelUp()
+                else
+                    StaticPopup_Show("HARFORD_CONFIRM_CHARACTER_CREATION")
+                end
             else
                 CommitClassLevel()
             end
@@ -1648,11 +1986,90 @@ local function CreateFrameIfNeeded()
     S.nextButton = nextButton
 end
 
+-- Recoloca columnas segun la SECCION activa: el frame se hace mas o menos ancho para
+-- acomodar solo lo necesario.
+--   "grid": raza/trasfondo (rejilla de 400px)        -> dx 0    (frame 1200)
+--   "list": clase y toda la subida (lista de botones) -> dx -204 (frame 996; divisor en 368,
+--           pegado a los botones: x154 + 210 de boton + 4)
+--   "none": caracteristicas y vistas de elecciones (sin columna de seleccion)
+--           -> dx -424 (frame 776; el contenido arranca junto a la barra de pasos)
+ApplyModeLayout = function()
+    if not S.frame then return end
+    local layout
+    if IsLevelUpMode() then
+        layout = "list"
+    elseif S.stage == "attributes" or S.stage == "race_choices" or S.stage == "background_choices" then
+        layout = "none"
+    elseif S.stage == "class" then
+        layout = "list"
+    else
+        layout = "grid"
+    end
+    local dx = layout == "list" and -204 or (layout == "none" and -424 or 0)
+    local newWidth = 1200 + dx
+    if math.abs((S.frame:GetWidth() or 0) - newWidth) > 0.5 then
+        -- Conservar la esquina superior izquierda al cambiar de ancho: la barra de pasos
+        -- y los botones quedan donde estaban y el cursor no tiene que perseguirlos.
+        local left, top = S.frame:GetLeft(), S.frame:GetTop()
+        S.frame:SetWidth(newWidth)
+        if left and top then
+            S.frame:ClearAllPoints()
+            S.frame:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+        end
+    else
+        S.frame:SetWidth(newWidth)
+    end
+    if S.dividerA then S.dividerA:SetShown(layout ~= "none") end
+    if S.listTitle then S.listTitle:SetShown(layout ~= "none") end
+    local function put(obj, x, y)
+        if obj then
+            obj:ClearAllPoints()
+            obj:SetPoint("TOPLEFT", x, y)
+        end
+    end
+    if S.dividerA then
+        S.dividerA:ClearAllPoints()
+        S.dividerA:SetPoint("TOPLEFT", 572 + dx, -50)
+        S.dividerA:SetPoint("BOTTOMLEFT", 572 + dx, 46)
+    end
+    put(S.classTitle, 592 + dx, -58)
+    put(S.classSummary, 592 + dx, -82)
+    put(S.subclassLabel, 592 + dx, -106)
+    put(S.subclassDrop, 579 + dx, -117)
+    if S.treeScroll then
+        S.treeScroll:ClearAllPoints()
+        S.treeScroll:SetPoint("TOPLEFT", 588 + dx, -146)
+        S.treeScroll:SetPoint("BOTTOMRIGHT", 602 + dx, 48)
+    end
+    if S.dividerB then
+        S.dividerB:ClearAllPoints()
+        S.dividerB:SetPoint("TOPLEFT", 952 + dx, -50)
+        S.dividerB:SetPoint("BOTTOMLEFT", 952 + dx, 46)
+    end
+    put(S.sumTitle, 970 + dx, -58)
+    put(S.sumClass, 970 + dx, -80)
+    put(S.sumOrigin, 970 + dx, -98)
+    for index, text in ipairs(S.sumAbilities or {}) do
+        local column = (index - 1) % 3
+        local rowIndex = math.floor((index - 1) / 3)
+        put(text, 970 + dx + column * 72, -132 - rowIndex * 18)
+    end
+    put(S.sumSkills, 970 + dx, -174)
+    put(S.detailHeader, 970 + dx, -234)
+    put(S.detailTitle, 970 + dx, -262)
+    put(S.detailText, 970 + dx, -296)
+    put(S.detailChoices, 970 + dx, -468)
+end
+
 function API.OpenPrototype(classId)
     if not (HarfordDnDRaces and HarfordDnDRaces.GetRaces and HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackgrounds) then
         return false, "Las opciones de origen no estan disponibles."
     end
     CreateFrameIfNeeded()
+    S.mode, S.targetTotal = "creation", CREATION_LEVEL
+    ApplyModeLayout()
+    S.frame.TitleText:SetText("Harford - Creacion de personaje")
+    S.stepsTitle:SetText("CREACION")
     S.stage = "race"
     if not S.raceId or not HarfordDnDRaces.GetRace(S.raceId) then
         local first = HarfordDnDRaces.GetRaces()[1]
@@ -1663,6 +2080,8 @@ function API.OpenPrototype(classId)
     -- La compra por puntos tambien se reinicia: es estado del PJ en curso, igual que los arrays.
     -- `S.abilityMode` se conserva a proposito, como preferencia de sistema del usuario.
     S.pointBuy = nil
+    S.autoLevelTarget = nil
+    S.confirmedSteps = {}
     S.choiceSelections, S.pendingFeatures = {}, {}
     S.classConfirmed = false
     S.classId, S.subclassId, S.secondaryClassId, S.secondarySubclassId = nil, "", nil, ""
@@ -1673,6 +2092,53 @@ function API.OpenPrototype(classId)
     if HarfordCharacterPanel and HarfordCharacterPanel.Close then HarfordCharacterPanel.Close() end
     RefreshOriginList()
     RefreshOrigin()
+    S.frame:Show()
+    return true
+end
+
+-- Entrada de subida moderna. Parte de la ficha actual y avanza exactamente un
+-- nivel total; no vuelve a mostrar ni puede modificar las etapas de origen.
+function API.OpenLevelUp()
+    if not (HarfordDnDProgression and HarfordDnDProgression.Get and HarfordDnDBook and HarfordDnDBook.GetClass) then
+        return false, "La progresion o el Libro no estan disponibles."
+    end
+    local data = HarfordDnDProgression.Get()
+    local classes = data and data.classLevels or {}
+    if #classes == 0 or #classes > 2 then
+        return false, "La subida moderna requiere una ficha con una o dos clases."
+    end
+    local currentTotal = HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel() or 0
+    local maxTotal = tonumber(HarfordDnDProgression.MAX_TOTAL_LEVEL) or 20
+    if currentTotal >= maxTotal then
+        return false, "La ficha ya ha alcanzado el nivel maximo (" .. tostring(maxTotal) .. ")."
+    end
+    CreateFrameIfNeeded()
+    S.mode = "levelup"
+    ApplyModeLayout()
+    S.targetTotal = currentTotal + 1
+    S.stage = "class"
+    S.raceId = tostring(data.race and data.race.id or "")
+    S.subraceId = tostring(data.race and data.race.subraceId or "")
+    S.backgroundId = tostring(data.background or "")
+    S.choiceSelections = CopyTable(data.choices or {})
+    S.pendingFeatures = {}
+    S.classId, S.subclassId = classes[1].classId, classes[1].subclassId or ""
+    S.primaryLevel = tonumber(classes[1].level) or 1
+    S.secondaryClassId, S.secondarySubclassId, S.secondaryLevel = nil, "", 0
+    if classes[2] then
+        S.secondaryClassId, S.secondarySubclassId = classes[2].classId, classes[2].subclassId or ""
+        S.secondaryLevel = tonumber(classes[2].level) or 1
+    end
+    S.levelPlan = {}
+    S.classSelectionOpen, S.classSelectionMode = true, "advance"
+    S.pendingClassId = S.classId
+    S.spellPicks = nil
+    S.frame.TitleText:SetText("Harford - Subida de nivel")
+    S.stepsTitle:SetText("SUBIDA")
+    S.frame:ClearAllPoints()
+    S.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    if HarfordCharacterPanel and HarfordCharacterPanel.Close then HarfordCharacterPanel.Close() end
+    RefreshClassStage()
     S.frame:Show()
     return true
 end

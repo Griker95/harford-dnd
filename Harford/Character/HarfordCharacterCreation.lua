@@ -354,7 +354,9 @@ function API.Validate(draft)
             return false, "Falta elegir una subclase."
         end
     end
-    if total ~= 4 then return false, "La ficha inicial debe sumar nivel 4." end
+    -- La creacion confirma SOLO el nivel 1; los niveles 2 y 3 se encadenan despues como
+    -- subidas automaticas desde el asistente (HarfordCharacterAdvancement).
+    if total ~= 1 then return false, "La ficha inicial debe sumar nivel 1." end
     for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
         -- BuildCreationDraft rellena con base 0 las no asignadas; `tonumber(0)` pasaria el guard.
         -- Una puntuacion base valida siempre es > 0 (los arrays empiezan en 8), asi que exigimos > 0.

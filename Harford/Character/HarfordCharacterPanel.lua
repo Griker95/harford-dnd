@@ -316,6 +316,13 @@ local SKILLS_TAB_ORDER = { "book", "spells" }
 -- construyendose para no romper refrescos; solo no son accesibles desde la UI.
 local HIDDEN_TABS = { creation = true, leveling = true }
 
+-- Creacion y Subida no forman parte de la navegacion inferior. La subida sigue
+-- accesible de forma explicita desde `/harford char subir`, sin reintroducir una
+-- pestaña visual que compita con Personaje/Reputacion/Profesiones.
+local function IsExplicitHiddenTab(tab)
+    return HIDDEN_TABS[tab] and S.explicitHiddenTab == tab
+end
+
 local function PositionTabs()
     if not S.frame then return end
     -- Anclaje nativo: primera pestaña a BOTTOMLEFT(11,2), las siguientes solapadas a la
@@ -1005,7 +1012,9 @@ end
 
 local function RefreshPanel()
     if not S.frame or not S.frame:IsShown() then return end
-    if HIDDEN_TABS[S.activeTab] then S.activeTab = "sheet" end  -- Creacion/Subida ocultas
+    if HIDDEN_TABS[S.activeTab] and not IsExplicitHiddenTab(S.activeTab) then
+        S.activeTab = "sheet"
+    end
     if S.activeTab == "book" or S.activeTab == "spells" then
         S.activeTab = "sheet"
     end
@@ -1928,6 +1937,29 @@ local function CreateSheetPage()
     SH.levelText:SetPoint("CENTER", SH.levelValueFrame, "CENTER", 0, -1)
     SH.levelText:SetTextColor(1, 0.82, 0)
 
+    -- Acceso visual a la subida: el probe de ReputationBar confirma que el
+    -- expand/collapse nativo usa estos FileDataID, no una ruta de textura.
+    local levelUp = CreateFrame("Button", nil, SH.levelValueFrame)
+    levelUp:SetSize(13, 13)
+    levelUp:SetPoint("LEFT", SH.levelText, "RIGHT", 3, 0)
+    levelUp:SetNormalTexture(130821)
+    levelUp:SetPushedTexture(130821)
+    levelUp:SetHighlightTexture(130837, "ADD")
+    levelUp:SetScript("OnClick", function()
+        if not IsInspecting() and HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenLevelUp then
+            HarfordCharacterAdvancement.OpenLevelUp()
+        end
+    end)
+    levelUp:SetScript("OnEnter", function(self)
+        if not GameTooltip then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Subir de nivel", 1, 0.82, 0)
+        GameTooltip:AddLine("Abre la subida moderna para elegir clase, subclase y rasgos.", 1, 1, 1, true)
+        GameTooltip:Show()
+    end)
+    levelUp:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    SH.levelUpButton = levelUp
+
     SH.abilBar = CatBar("Caracteristicas", -70)
     SH.abilRows = {}
     for i = 1, 6 do
@@ -2331,6 +2363,7 @@ local function RefreshSheet()
     end
 
     HideSheetRows(SH)
+    if SH.levelUpButton then SH.levelUpButton:Hide() end
 
     local list = (HarfordDnDData and HarfordDnDData.ABIL) or ABIL_KEYS
     local pb = HarfordDnDProgression and HarfordDnDProgression.GetProficiencyBonus and HarfordDnDProgression.GetProficiencyBonus(name) or nil
@@ -2489,6 +2522,8 @@ local function RefreshSheet()
         end
     else
         SetSheetBar(SH.levelBar, "Nivel", -2, true)
+        local maxTotal = tonumber(HarfordDnDProgression and HarfordDnDProgression.MAX_TOTAL_LEVEL) or 20
+        if SH.levelUpButton and not IsInspecting() and total < maxTotal then SH.levelUpButton:Show() end
         if SH.levelValueFrame then SH.levelValueFrame:Show() end
         if SH.levelText then
             SH.levelText:SetText(tostring(total))
@@ -3086,7 +3121,7 @@ local function CreateProfessionsPage()
 
     S.professions = { page = page, title = title, empty = empty, profList = profList,
         recipePanel = recipePanel, recipeHeader = recipeHeader,
-        profButtons = {}, recipeRows = {}, selected = nil }
+        profButtons = {}, recipeRows = {}, selected = nil, forcedProfession = nil }
 end
 
 -- Boton de profesion (pool, columna izquierda): icono + nombre + skill/tier.
@@ -3122,10 +3157,16 @@ local function RefreshProfessions()
     local P = S.professions
     if not P or not HarfordProfessions then return end
     local known = {}
-    for _, def in ipairs(HarfordProfessions.GetProfessions()) do
-        if HarfordProfessions.KnowsProfession(def.id) then known[#known + 1] = def end
+    local forced = P.forcedProfession and HarfordProfessions.GetDefinition(P.forcedProfession)
+    if forced then
+        -- Una estacion del mundo abre su profesion aunque el PJ aun no la conozca.
+        known[1] = forced
+    else
+        for _, def in ipairs(HarfordProfessions.GetProfessions()) do
+            if HarfordProfessions.KnowsProfession(def.id) then known[#known + 1] = def end
+        end
     end
-    P.empty:SetShown(#known == 0)
+    P.empty:SetShown(#known == 0 and not forced)
 
     -- Mantener seleccion valida.
     local selValid = false
@@ -4680,6 +4721,7 @@ local function CreateFrameIfNeeded()
                 HarfordUISounds.Play("character_panel_tab_changed")
             end
             SetPanelMode("character")
+            S.explicitHiddenTab = nil
             S.activeTab = key
             RefreshPanel()
         end)
@@ -4781,7 +4823,7 @@ local function CreateFrameIfNeeded()
     end)
 end
 
-function API.Open(tab)
+function API.Open(tab, opts)
     if tab == "book" or tab == "spells" then
         return API.OpenSkills(tab)
     end
@@ -4793,9 +4835,29 @@ function API.Open(tab)
     end
     SetPanelMode()
     S.activeTab = tab or "sheet"
-    if HIDDEN_TABS[S.activeTab] then S.activeTab = "sheet" end
+    S.explicitHiddenTab = (opts and opts.allowHidden and HIDDEN_TABS[S.activeTab]) and S.activeTab or nil
+    if HIDDEN_TABS[S.activeTab] and not IsExplicitHiddenTab(S.activeTab) then
+        S.activeTab = "sheet"
+    end
+    if S.activeTab == "professions" and S.professions and not (opts and opts.keepProfessionFilter) then
+        S.professions.forcedProfession = nil
+    end
     S.frame:Show()
     RefreshPanel()
+end
+
+-- Abre una estacion concreta (Spark/Arcanum). No concede la profesion: solo muestra
+-- sus recetas y deja que CanCraft explique por que una receta no esta disponible.
+function API.OpenProfession(profId)
+    profId = tostring(profId or ""):lower()
+    if not (HarfordProfessions and HarfordProfessions.GetDefinition and HarfordProfessions.GetDefinition(profId)) then
+        return false, "Profesion desconocida: " .. profId
+    end
+    CreateFrameIfNeeded()
+    S.professions.forcedProfession = profId
+    S.professions.selected = profId
+    API.Open("professions", { keepProfessionFilter = true })
+    return true
 end
 
 function API.OpenSkills(tab)
@@ -4841,6 +4903,7 @@ function API.OpenInspect(unitOrName)
     end
     S.inspectName = name
     S.inspectUnit = unit
+    S.explicitHiddenTab = nil
     S.activeTab = "sheet"
     if HarfordCharacterInspect and HarfordCharacterInspect.ClearInspectStores then
         HarfordCharacterInspect.ClearInspectStores()  -- descarta el snapshot anterior antes de pedir el nuevo
@@ -4985,7 +5048,11 @@ SlashCmdList.HARFORDCHARACTERPANEL = function(msg)
             API.Toggle("sheet")
         end
     elseif msg == "subir" or msg == "clases" then
-        API.Toggle("leveling")
+        if HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenLevelUp then
+            HarfordCharacterAdvancement.OpenLevelUp()
+        else
+            API.Open("leveling", { allowHidden = true })
+        end
     else
         API.Toggle("sheet")
     end

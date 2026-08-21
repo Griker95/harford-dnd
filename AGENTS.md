@@ -2172,6 +2172,21 @@ ni de HarfordAdmin y no se despliega con ellos.
 - **EpsilonLib lanza `error()` a partir de 250 caracteres por comando**, no falla en
   silencio: un comando largo aborta la tanda entera. `Comandos()` recorta y avisa. El peor
   caso actual son 150, pero las descripciones aun estan vacias.
+- **EpsilonLib NO tiene tiempo limite**: `sendAddonCommandChain` avanza solo cuando el
+  servidor responde a cada comando y, si una respuesta se pierde, espera para siempre y en
+  silencio. Con miles de idas y vueltas pasa antes o despues, asi que `Rellenar()` monta su
+  propio vigilante. No asumir que un callback de EpsilonLib siempre llega.
+- **Registrar en `AddonCommands` SIN el segundo argumento.** Con `showMessages = false`
+  EpsilonLib silencia TODO, incluidos los mensajes de fallo del servidor, que son lo unico
+  que permite diagnosticar. Sin argumento imprime solo los fallos.
+- **El id se deduce del inventario, y solo vale si aparecio UN objeto.** Si aparecen dos
+  (correo, botin, intercambio en la ventana justa) no hay forma de saber cual es el forjado
+  y elegir a ciegas es destructivo: los `set` reescriben nombre y datos del que no toca.
+  `IdNuevo` devuelve tambien cuantos apareceron y la maquina se para.
+- **Las SavedVariables solo se escriben al salir o al recargar.** Un cuelgue a mitad pierde
+  el registro mientras los objetos ya existen en el servidor, y NO hay comando de busqueda
+  por nombre para recuperarlos (`.forge item info` pide el id que has perdido). Lotes por
+  profesion y `/reload` entre ellos.
 
 **`Data.lua` se genera, no se escribe a mano** (`tools/codice/gen_itemforge_data.py`).
 Clasifica por PROFESION de la receta, luego por PAPEL (resultado o materia prima) y solo al

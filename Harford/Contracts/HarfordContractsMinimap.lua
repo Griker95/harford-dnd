@@ -156,13 +156,13 @@ function Minimap.Initialize()
 
   local launcher = LDB:NewDataObject("HarfordContracts", {
     type = "launcher",
-    text = "Herramientas de Rol",
+    text = "Harford DnD 5e",
     icon = TC.Util.ResolveIcon(TC.icon),
     OnClick = function()
       Minimap.ToggleHub()
     end,
     OnTooltipShow = function(tooltip)
-      tooltip:AddLine("Herramientas de Rol")
+      tooltip:AddLine("Harford DnD 5e")
       tooltip:AddLine("Click: abrir panel de addons", 1, 1, 1)
     end,
   })

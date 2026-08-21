@@ -105,7 +105,7 @@ function HarfordDnDMinimap.Create()
 
     btn:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-        GameTooltip:SetText("Herramientas de Rol", 1, 0.82, 0)
+        GameTooltip:SetText("Harford DnD 5e", 1, 0.82, 0)
         GameTooltip:AddLine("Click izquierdo: abrir/cerrar herramientas", 1, 1, 1)
         GameTooltip:AddLine("Click derecho: reiniciar posiciones de los marcos", 1, 1, 1)
         GameTooltip:AddLine("Arrastrar: mover botón", 0.8, 0.8, 0.8)

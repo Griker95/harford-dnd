@@ -237,10 +237,66 @@ local function CreateSpellsPage()
     local pageText = area:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     pageText:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -110, 38)
 
+    -- Espacios de conjuro (o mana) DE UN VISTAZO. Hasta ahora solo se veian de uno en uno al
+    -- abrir el detalle de un conjuro concreto, asi que no habia forma de saber con que cuentas
+    -- antes de elegir. Va abajo a la izquierda: la fila de arriba (buscar + filtros + Grimorio
+    -- + Master) ocupa de 100 a 508 sobre 550, y abajo a la derecha esta el pasapaginas.
+    local slotsText = area:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    -- Anclada por BOTTOMLEFT a proposito: un lanzador de nivel 20 tiene NUEVE niveles de
+    -- espacio y no caben en una linea, asi que la segunda crece hacia ARRIBA y no invade el
+    -- pasapaginas. El ancho se corta antes del texto de pagina (que acaba hacia x=360).
+    slotsText:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT", 60, 38)
+    slotsText:SetWidth(295)
+    slotsText:SetJustifyH("LEFT")
+    slotsText:SetWordWrap(true)
+    if slotsText.SetMaxLines then slotsText:SetMaxLines(2) end
+
     S.spellBook = { page = page, area = area, body = body, page1 = lpage, page2 = rpage,
                     buttons = buttons, sideTabs = {}, prev = prev, nxt = nxt, pageText = pageText,
                     search = search, filterBtn = filterBtn, masterBtn = masterBtn,
+                    slotsText = slotsText,
                     filters = {}, tabKey = "all", query = "", pageNum = 1 }
+end
+
+-- Numeracion romana de 1 a 9, que es hasta donde llegan los espacios de conjuro.
+local ROMANOS = { "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX" }
+
+-- Linea de recursos de lanzamiento. Respeta el modo GLOBAL (HarfordConfig.spell_cost_mode):
+-- con "slots" enumera los espacios por nivel y con "mana" ensena el pool. Un no lanzador no
+-- tiene ninguno de los dos y la linea queda vacia en vez de mentir con ceros.
+local function CastingResourceText()
+    local mana = _G.HarfordDnDMana
+    if not mana then return "" end
+
+    local usaEspacios = HarfordConfig and HarfordConfig.Get
+        and HarfordConfig.Get("spell_cost_mode") == "slots"
+
+    if not usaEspacios then
+        local pool = mana.GetManaPool and mana.GetManaPool() or 0
+        if pool <= 0 then return "" end
+        local actual = pool
+        -- La via canonica del mana actual es el store (es la que usa el propio compendio);
+        -- HarfordDnDAPI no expone GetResourceCurrent.
+        if HarfordDnDStore and HarfordDnDStore.GetResourceCurrent then
+            actual = tonumber(HarfordDnDStore.GetResourceCurrent("mana")) or pool
+        end
+        return string.format("|cffffd100Mana|r %d/%d", actual, pool)
+    end
+
+    local maxLevel = mana.GetMaxSpellLevel and mana.GetMaxSpellLevel() or 0
+    if maxLevel <= 0 then return "" end
+    local partes = {}
+    for nivel = 1, maxLevel do
+        local actual, maximo = mana.GetSpellSlotCurrent(nivel)
+        if (maximo or 0) > 0 then
+            -- Agotado en rojo, gastado a medias en blanco, intacto en dorado: se lee sin contar.
+            local color = (actual == 0 and "|cffff5555")
+                or (actual < maximo and "|cffffffff")
+                or "|cffffd100"
+            partes[#partes + 1] = string.format("%s%s %d/%d|r", color, ROMANOS[nivel] or nivel, actual, maximo)
+        end
+    end
+    return table.concat(partes, "  ")
 end
 
 RefreshSpells = function()
@@ -248,6 +304,13 @@ RefreshSpells = function()
     local api = CompendioAPI()
     if not api then return end
     local sb = S.spellBook
+    -- Recursos de lanzamiento: se recalculan en cada refresco porque gastar un espacio o
+    -- descansar tiene que verse aqui sin reabrir el libro.
+    if sb.slotsText then
+        local linea = CastingResourceText()
+        sb.slotsText:SetText(linea)
+        sb.slotsText:SetShown(linea ~= "")
+    end
     -- Boton Master solo para DM: senal canonica HarfordAuthority, con fallback al gate del compendio.
     if sb.masterBtn then
         local isDM = (HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools())

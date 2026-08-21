@@ -1010,6 +1010,11 @@ local function RefreshSubtitleClasses(SH, data)
     end
 end
 
+-- Paginas que viven en la VENTANA DE HABILIDADES, no en el panel de personaje. Es una sola
+-- fuente a proposito: el bucle que oculta paginas del panel usa esta misma tabla, y cuando
+-- Profesiones se mudo aqui pero no alli, abrir el panel de personaje ocultaba sus marcos.
+local SKILLS_WINDOW_PAGES = { book = true, spells = true, professions = true }
+
 local function RefreshPanel()
     if not S.frame or not S.frame:IsShown() then return end
     if HIDDEN_TABS[S.activeTab] and not IsExplicitHiddenTab(S.activeTab) then
@@ -1037,7 +1042,8 @@ local function RefreshPanel()
         if S.content then S.content:Show() end
     end
     for key, page in pairs(S.pages) do
-        if key ~= "book" and key ~= "spells" then
+        -- Las paginas del libro de habilidades las gobierna SU ventana, no esta.
+        if not SKILLS_WINDOW_PAGES[key] then
             page:SetShown((not isReputation) and key == S.activeTab)
         end
     end
@@ -1087,8 +1093,7 @@ RefreshSkillsPanel = function()
         if P.profBody then P.profBody:SetShown(isProf) end
         if P.profPage1 then P.profPage1:SetShown(isProf) end
         if P.profPage2 then P.profPage2:SetShown(isProf) end
-        if P.profBookmark then P.profBookmark:SetShown(isProf) end
-        if P.ribbonCover then P.ribbonCover:SetShown(isProf) end
+        if P.bookmark then P.bookmark:SetShown(isProf) end
     end
     for key, button in pairs(S.skillsTabs or {}) do
         if button.SetSelectedLook then button:SetSelectedLook(key == S.skillsActiveTab) end
@@ -1103,7 +1108,7 @@ RefreshSkillsPanel = function()
 end
 
 local function CreatePage(key)
-    local parent = ((key == "book" or key == "spells" or key == "professions") and S.skillsContent) or S.content or S.frame
+    local parent = (SKILLS_WINDOW_PAGES[key] and S.skillsContent) or S.content or S.frame
     local page = CreateFrame("Frame", nil, parent)
     page:SetAllPoints(parent)
     S.pages[key] = page
@@ -1750,6 +1755,29 @@ local function CreateSheetPage()
                 return
             end
             if IsInspecting() then return end
+            -- Ctrl+click: sintonizar o romper la sintonizacion. Es el unico gesto libre del
+            -- slot (shift linkea, click derecho/alt desequipa, click izquierdo equipa) y hasta
+            -- ahora la sintonizacion solo existia como API, sin forma de usarla desde la ficha.
+            if IsControlKeyDown and IsControlKeyDown() and HarfordDnDBurden then
+                local link = slotEntry and slotEntry.itemLink
+                local itemId = tonumber(tostring(link or ""):match("item:(%d+)"))
+                if not itemId then
+                    Print("|cffffcc00Ese hueco no tiene un objeto real que sintonizar.|r")
+                    return
+                end
+                if HarfordDnDBurden.IsAttuned(itemId) then
+                    HarfordDnDBurden.Unattune(itemId)
+                elseif not HarfordDnDBurden.RequiresAttunement(link) then
+                    Print("|cffffcc00Ese objeto no pide sintonizacion.|r")
+                    return
+                else
+                    local nombre = tostring(link):match("%[(.-)%]") or ("Objeto " .. itemId)
+                    local ok, err = HarfordDnDBurden.Attune(itemId, nombre)
+                    if not ok then Print("|cffff5555" .. tostring(err) .. ".|r") end
+                end
+                RefreshPanel()
+                return
+            end
             if button == "RightButton" or (IsAltKeyDown and IsAltKeyDown()) then
                 if HarfordDnDItems and HarfordDnDItems.UnequipSlot then
                     HarfordDnDItems.UnequipSlot(key, GetProfileName())
@@ -1778,6 +1806,18 @@ local function CreateSheetPage()
                 end
                 if not IsInspecting() then
                     GameTooltip:AddLine("Click derecho para desequipar", 0.4, 1, 0.4, true)
+                    -- Sintonizacion: solo se menciona si el objeto la pide o ya la tiene, para
+                    -- no llenar de ruido el tooltip de cada pieza corriente.
+                    if HarfordDnDBurden then
+                        local itemId = tonumber(tostring(entry.itemLink):match("item:(%d+)"))
+                        if itemId and HarfordDnDBurden.IsAttuned(itemId) then
+                            GameTooltip:AddLine(string.format("Sintonizado (%d/%d) - Ctrl+click para romperla",
+                                HarfordDnDBurden.CountAttuned(), HarfordDnDBurden.MAX_ATTUNED), 0.4, 1, 0.4, true)
+                        elseif itemId and HarfordDnDBurden.RequiresAttunement(entry.itemLink) then
+                            GameTooltip:AddLine(string.format("Requiere sintonizacion (%d/%d usadas) - Ctrl+click",
+                                HarfordDnDBurden.CountAttuned(), HarfordDnDBurden.MAX_ATTUNED), 1, 0.82, 0, true)
+                        end
+                    end
                 end
             else
                 GameTooltip:SetText(SlotLabelES(key), 1, 0.82, 0, true)
@@ -2509,6 +2549,49 @@ local function RefreshSheet()
                     "Competencias", table.concat(detail, "\n") }
             end
         end
+        -- Sintonizacion y carga. Solo del personaje PROPIO: `HarfordDnDBurden` resuelve la
+        -- Fuerza con `HarfordDnDCalc`, que es el del jugador local, asi que en inspeccion daria
+        -- los numeros de uno bajo el nombre de otro. Mejor no ensenar la fila que mentir.
+        if HarfordDnDBurden and not IsInspecting() then
+            local estado = HarfordDnDBurden.GetStatus()
+            if estado then
+                local sintonizados = HarfordDnDBurden.GetAttuned()
+                local detalle = {}
+                for _, entrada in ipairs(sintonizados) do
+                    detalle[#detalle + 1] = "|cffffd100" .. tostring(entrada.name) .. "|r"
+                end
+                if #detalle == 0 then detalle[1] = "Ningun objeto sintonizado." end
+                detalle[#detalle + 1] = " "
+                detalle[#detalle + 1] = "Un objeto solo se sintoniza con una criatura a la vez, y"
+                detalle[#detalle + 1] = "no puedes llevar mas de " .. estado.maxAttuned .. " ni dos copias del mismo."
+                rows[#rows + 1] = { "Sintonizacion",
+                    string.format("%d / %d", estado.attuned, estado.maxAttuned),
+                    "Objetos sintonizados", table.concat(detalle, "\n") }
+
+                -- La carga solo se muestra si hay algun peso DECLARADO: el cliente de WoW no
+                -- expone el peso de un objeto, asi que sin datos la cifra seria siempre 0 y
+                -- pareceria que no llevas nada encima.
+                if estado.carried > 0 or estado.capacity > 0 then
+                    local texto = string.format("%d / %d", estado.carried, estado.capacity)
+                    if estado.overloaded then texto = "|cffff5555" .. texto .. "|r" end
+                    local tip = {
+                        "Capacidad = Fuerza x " .. HarfordDnDBurden.CARRY_PER_STRENGTH .. " libras.",
+                    }
+                    if estado.unknownWeights > 0 then
+                        texto = texto .. " |cff808080(+" .. estado.unknownWeights .. "?)|r"
+                        tip[#tip + 1] = " "
+                        tip[#tip + 1] = "|cffff9900" .. estado.unknownWeights ..
+                            " objeto(s) sin peso declarado|r no cuentan en el total:"
+                        tip[#tip + 1] = "el peso no viene del juego, lo declara el objeto o el DM."
+                    end
+                    if estado.overloaded then
+                        tip[#tip + 1] = " "
+                        tip[#tip + 1] = "|cffff5555Sobrecargado.|r"
+                    end
+                    rows[#rows + 1] = { "Carga", texto, "Carga", table.concat(tip, "\n") }
+                end
+            end
+        end
         if HarfordDnDMana and HarfordDnDMana.IsEnabled and HarfordDnDMana.IsEnabled(name) then
             local pool = HarfordDnDMana.GetManaPool and HarfordDnDMana.GetManaPool(name) or 0
             -- La variante ya esta ON por defecto; la fila solo tiene sentido para lanzadores
@@ -3114,50 +3197,152 @@ local function CreateReputationPage()
     CreatePage("reputation")
 end
 
+-- El nativo reparte la pagina en DOS huecos grandes de profesion principal (437x81, paso 93)
+-- y TRES pequenos (437x46) con el arte de cocina/pesca/arqueologia HORNEADO en la textura.
+-- En Harford todas las profesiones son iguales, asi que se usan CINCO huecos grandes con el
+-- mismo paso nativo: 67 + 5*93 = 520 sobre 525 de alto, caben justos. Los tres ultimos caen
+-- encima del arte de secundarias, que se tapa con el marco recortado de la propia pagina
+-- (ver PROF_FRAME_OFFSET).
+-- CUATRO huecos: el quinto (que acabaria en -520) se sale del area visible del libro.
+-- 67 + 3*93 + 81 = 427, con margen de sobra hasta el borde inferior de la pagina.
+local PROF_SLOTS = {}
+for i = 1, 4 do
+    PROF_SLOTS[i] = { kind = "primary", x = 80, y = -(67 + (i - 1) * 93), w = 437, h = 81 }
+end
+
+-- Para tapar el arte de secundarias se recorta el marco del PRIMER hueco de la propia pagina.
+-- No hacen falta texCoords ni saber el tamano del fichero: basta con volver a dibujar la pagina
+-- dentro de un frame que recorta, desplazada de modo que el hueco 1 caiga sobre el hueco actual.
+-- Pagina izquierda anclada en (7,-25) y hueco 1 en (80,-67) => desplazamiento (-73, +42).
+local PROF_FRAME_OFFSET = { x = -73, y = 42 }
+
+-- Franja izquierda de la pagina de profesiones que se recorta para quedarse solo con el
+-- marcapaginas VERDE, superpuesto sobre el borde del libro de habilidades (que lleva el suyo
+-- azul). `x/top/bottom` situan la ventana de recorte sobre el libro; `w` es su ancho y `tx/ty`
+-- desplazan la textura DENTRO de la ventana (para elegir que trozo de la pagina asoma).
+-- Rectangulo EXACTO en el que el libro de habilidades dibuja su pagina (Habilidades/Conjuros).
+-- Vive aqui una sola vez porque lo usan dos cosas: la pagina base de Profesiones y la textura
+-- del marcapaginas, que debe estirarse al MISMO rectangulo para que el marcapaginas verde caiga
+-- justo sobre el azul al que sustituye. A tamano natural la escala no coincidiria.
+local SKILLS_PAGE_RECT = { left = 0, top = -25, right = -31, bottom = -15, rightWidth = 41 }
+
+-- Ventana de recorte del marcapaginas: mismo alto que la pagina y `w` de ancho por la izquierda.
+-- `tx/ty` solo estan para afinar; con 0 la textura queda exactamente donde la pagina base.
+local PROF_BOOKMARK = { w = 65, tx = 0, ty = 0 }
+
+-- El cliente de Epsilon resuelve rutas con fiabilidad y los fileID sueltos no siempre; se usa la
+-- ruta y solo se cae al id numerico si esa ruta no existe en este build.
+local function ProfTexture(path, fileId)
+    if GetFileIDFromPath and GetFileIDFromPath(path) then return path end
+    -- Si la ruta no existe en este build se cae al fileID, pero se AVISA una vez: sin aviso, un
+    -- id equivocado deja la pagina en verde y no hay forma de saber por que.
+    if not ProfTexture.avisado then
+        ProfTexture.avisado = true
+        if HarfordChat and HarfordChat.Print then
+            HarfordChat.Print(string.format(
+                "|cffff9900Profesiones:|r la textura |cffffd100%s|r no existe en este cliente; se usa el fileID %s.",
+                tostring(path), tostring(fileId)))
+        end
+    end
+    return fileId or path
+end
+
 local function CreateProfessionsPage()
     local page = CreatePage("professions")
-    -- Skin del LIBRO DE HABILIDADES como base (mismo trio body+paginas que la ventana de
-    -- Habilidades/Conjuros), y encima SOLO dos piezas de la textura de profesiones nativa
-    -- (383588, sonda profbook): la franja izquierda con el marcapaginas VERDE y el marco
-    -- ornamentado recortado como sello por profesion.
+    -- El libro NATIVO no recorta ornamentos por hueco: al entrar en la pestana Profesiones
+    -- sustituye las DOS paginas enteras (SpellBookFrame.lua: bgFileL/bgFileR ->
+    -- Professions-Book-Left / Professions-Book-Right). El marco ornamentado de cada profesion,
+    -- el marcapaginas verde y el resto del adorno vienen horneados en esas dos texturas.
+    -- Por eso aqui ya no hay ni `stamp` por boton ni parche para tapar la cinta azul: no hay
+    -- cinta azul que tapar, porque la pagina de conjuros no llega a dibujarse.
     local host = S.skillsFrame or S.frame
     local profBody = host:CreateTexture(nil, "BACKGROUND", nil, -7)
     profBody:SetTexture(374155)
     profBody:SetTexCoord(0, 0.533203125, 0, 0.4902344048)
     profBody:SetAllPoints(host)
     profBody:Hide()
+    -- Base: las MISMAS paginas del libro de habilidades (Habilidades/Conjuros), para que las
+    -- tres pestanas sean el mismo libro. La pagina de profesiones nativa NO se dibuja: de ella
+    -- solo se recorta el marco ornamentado de cada hueco (ver los `frameCovers` de abajo), que
+    -- es justo lo que la diferencia. Anclaje identico al de la pestana Conjuros.
     local profPage1 = host:CreateTexture(nil, "BACKGROUND", nil, -6)
     profPage1:SetTexture("Interface\\Spellbook\\Spellbook-Page-1")
-    profPage1:SetPoint("TOPLEFT", host, "TOPLEFT", 0, -25)
-    profPage1:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -31, -15)
+    profPage1:SetPoint("TOPLEFT", host, "TOPLEFT", SKILLS_PAGE_RECT.left, SKILLS_PAGE_RECT.top)
+    profPage1:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", SKILLS_PAGE_RECT.right, SKILLS_PAGE_RECT.bottom)
     profPage1:Hide()
+    -- Identica a la del libro de habilidades, incluidos el sublevel -5 (por ENCIMA de la
+    -- pagina izquierda, que va en -6) y el ancho de 41. Sin ese ancho la textura de cierre
+    -- no tiene medida propia y no cierra igual que en Habilidades/Conjuros.
     local profPage2 = host:CreateTexture(nil, "BACKGROUND", nil, -5)
     profPage2:SetTexture("Interface\\Spellbook\\Spellbook-Page-2")
     profPage2:SetPoint("TOPLEFT", profPage1, "TOPRIGHT", 0, 0)
     profPage2:SetPoint("BOTTOMLEFT", profPage1, "BOTTOMRIGHT", 0, 0)
-    profPage2:SetWidth(41)
+    profPage2:SetWidth(SKILLS_PAGE_RECT.rightWidth)
     profPage2:Hide()
-    -- Parche de pergamino limpio que tapa la cinta AZUL de la pagina base: la zona baja
-    -- de la franja de profesiones tiene alpha y dejaba asomar el azul por debajo del verde.
-    local ribbonCover = host:CreateTexture(nil, "BACKGROUND", nil, -5)
-    ribbonCover:SetTexture("Interface\\Spellbook\\Spellbook-Page-1")
-    ribbonCover:SetTexCoord(0.35, 0.45, 0.06, 0.94)
-    ribbonCover:SetPoint("TOPLEFT", profPage1, "TOPLEFT", 4, -10)
-    ribbonCover:SetPoint("BOTTOMLEFT", profPage1, "BOTTOMLEFT", 4, 10)
-    ribbonCover:SetWidth(58)
-    ribbonCover:Hide()
-    -- Marcapaginas verde: franja izquierda de 383588, solo hasta el final de la cinta
-    local profBookmark = host:CreateTexture(nil, "BACKGROUND", nil, -4)
-    profBookmark:SetTexture(383588)
-    -- Empieza tras el borde con alpha de la textura (si no, la cinta azul de la pagina base
-    -- asoma a traves) y llega hasta pasada la cinta verde
-    -- A escala 1:1 el ancho en pantalla DEBE igualar los pixeles del recorte (si no,
-    -- la cinta se comprime y queda desplazada respecto a la azul que debe tapar)
-    profBookmark:SetTexCoord(0.004, 0.1388, 0, 1)
-    profBookmark:SetPoint("TOPLEFT", profPage1, "TOPLEFT", 0, 0)
-    profBookmark:SetPoint("BOTTOMLEFT", profPage1, "BOTTOMLEFT", 0, 0)
-    profBookmark:SetWidth(69)
-    profBookmark:Hide()
+
+    -- Marco ornamentado de cada hueco, recortado de la pagina de profesiones NATIVA aunque el
+    -- fondo sea el del libro de habilidades: un frame que recorta (`SetClipsChildren`) con la
+    -- pagina de profesiones dentro, desplazada PROF_FRAME_OFFSET, de modo que en la ventana de
+    -- 437x81 caiga exactamente el marco del hueco 1. Asi el marco es el nativo de verdad, sin
+    -- texCoords calculadas ni arte inventado, y de paso tapa el arte de profesion secundaria.
+    -- Van colgados de la PAGINA y no del boton: los botones solo se crean para los huecos con
+    -- contenido (con cero profesiones conocidas solo se crean dos), asi que dentro del boton el
+    -- marco no llegaba a existir nunca.
+    -- MARCAPAGINAS VERDE. Es una TEXTURA del libro, no un frame que recorta: el retrato de la
+    -- ventana (58x58 en -4,+4) cae justo sobre esta franja, y un frame hijo dibuja SIEMPRE por
+    -- encima de las texturas de su padre, asi que tapaba el retrato con el lomo negro de la
+    -- pagina de profesiones. Como textura en BACKGROUND -4 queda encima de las dos paginas
+    -- (-6 y -5) y por debajo del retrato (ARTWORK 2), que es donde debe estar.
+    -- El recorte se hace con texCoord en vez de con SetClipsChildren, que solo existe en frames.
+    local bookmarkPage = host:CreateTexture(nil, "BACKGROUND", nil, -4)
+    bookmarkPage:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Left", 383588))
+    bookmarkPage:Hide()
+
+    local frameCovers = {}
+    for i = 1, #PROF_SLOTS do
+        local slot = PROF_SLOTS[i]
+        local cover = CreateFrame("Frame", nil, page)
+        cover:SetSize(slot.w, slot.h)
+        -- Anclado al LIBRO, no a la pagina de contenido: `skillsContent` empieza 21 px mas
+        -- abajo que el frame, y las coordenadas nativas son respecto al frame (ahi se ancla
+        -- tambien la textura de pagina). Colgarlos de `page` los bajaba 21 px.
+        cover:SetPoint("TOPLEFT", host, "TOPLEFT", slot.x, slot.y)
+        if cover.SetClipsChildren then cover:SetClipsChildren(true) end
+        local left = cover:CreateTexture(nil, "BACKGROUND")
+        left:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Left", 383588))
+        left:SetPoint("TOPLEFT", cover, "TOPLEFT", PROF_FRAME_OFFSET.x, PROF_FRAME_OFFSET.y)
+        cover.pageLeft = left
+        local right = cover:CreateTexture(nil, "BACKGROUND")
+        right:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Right", 383589))
+        right:SetPoint("TOPLEFT", left, "TOPRIGHT", 0, 0)
+        frameCovers[#frameCovers + 1] = cover
+    end
+
+    -- Toda la geometria ajustable se aplica desde aqui, para que el ajuste en vivo use el mismo
+    -- camino que el arranque y no haya dos verdades.
+    local function ApplyProfSkin()
+        -- La pagina base se dibuja estirada en un ancho de `host - 31`. El marcapaginas ocupa
+        -- los `w` primeros pixeles de esa misma pagina, asi que su texCoord es esa fraccion:
+        -- se recorta lo mismo que veria un frame que recortase, pero sin frame.
+        local anchoPagina = (host:GetWidth() or 550) + SKILLS_PAGE_RECT.right - SKILLS_PAGE_RECT.left
+        if anchoPagina < 1 then anchoPagina = 519 end
+        local fraccion = math.min(1, PROF_BOOKMARK.w / anchoPagina)
+        bookmarkPage:SetTexCoord(0, fraccion, 0, 1)
+        bookmarkPage:ClearAllPoints()
+        bookmarkPage:SetPoint("TOPLEFT", host, "TOPLEFT",
+            SKILLS_PAGE_RECT.left + PROF_BOOKMARK.tx, SKILLS_PAGE_RECT.top + PROF_BOOKMARK.ty)
+        bookmarkPage:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT",
+            SKILLS_PAGE_RECT.left + PROF_BOOKMARK.tx, SKILLS_PAGE_RECT.bottom + PROF_BOOKMARK.ty)
+        bookmarkPage:SetWidth(PROF_BOOKMARK.w)
+        for _, cover in ipairs(frameCovers) do
+            cover.pageLeft:ClearAllPoints()
+            cover.pageLeft:SetPoint("TOPLEFT", cover, "TOPLEFT", PROF_FRAME_OFFSET.x, PROF_FRAME_OFFSET.y)
+        end
+    end
+    ApplyProfSkin()
+    HarfordCharacterPanel._ApplyProfSkin = ApplyProfSkin
+    HarfordCharacterPanel._ProfSkinValues = { bookmark = PROF_BOOKMARK, frame = PROF_FRAME_OFFSET }
+
     local title = CreateFS(page, "GameFontNormalLarge", "Profesiones")
     title:SetPoint("TOPLEFT", 14, -10)
     title:Hide()  -- el retrato lo pisa y la pestaña ya se llama Profesiones
@@ -3165,18 +3350,52 @@ local function CreateProfessionsPage()
         "No conoces ninguna profesion todavia (llegan con competencias de herramienta o el DM).")
     empty:SetPoint("TOPLEFT", 16, -44); empty:SetWidth(380); empty:SetJustifyH("LEFT"); empty:Hide()
 
-    -- Vista LISTA: sellos de profesion a pagina completa. Vista RECETAS: panel de crafteo
+    -- Vista LISTA: los cinco huecos nativos sobre la pagina. Vista RECETAS: panel de crafteo
     -- con boton de volver. Se alternan (P.view), como el libro nativo al abrir una profesion.
+    -- Los huecos se anclan a la PAGINA con coordenadas nativas, asi que profList cubre el frame.
     local profList = CreateFrame("Frame", nil, page)
-    profList:SetPoint("TOPLEFT", 63, -36); profList:SetSize(449, 430)
+    -- Cubre el LIBRO entero (no la pagina de contenido, 21 px mas baja): los huecos se anclan
+    -- dentro con las coordenadas nativas, que son respecto al frame de 550x525.
+    profList:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
+    profList:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", 0, 0)
+    -- Por encima de los marcos: si no, el marco recortado taparia icono, nombre y barra.
+    profList:SetFrameLevel((page:GetFrameLevel() or 1) + 3)
     profList:EnableMouseWheel(true)
     profList:SetScript("OnMouseWheel", function(_, delta)
         local P = S.professions
-        P.listOffset = math.max(0, (P.listOffset or 0) - delta)
+        P.pageNum = math.max(1, (P.pageNum or 1) - delta)
         if S.RefreshProfessions then S.RefreshProfessions() end
     end)
+    -- Pasapaginas: mismas texturas, medidas y anclajes que en Habilidades/Conjuros, para que
+    -- las tres pestanas del libro se pasen igual. Anclados al LIBRO, no a la pagina de
+    -- contenido (que empieza 21 px mas abajo).
+    local nxt = CreateFrame("Button", nil, page)
+    nxt:SetSize(32, 32)
+    nxt:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -31, 26)
+    nxt:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
+    nxt:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Down")
+    nxt:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Disabled")
+    nxt:SetScript("OnClick", function()
+        local P = S.professions
+        P.pageNum = (P.pageNum or 1) + 1
+        if S.RefreshProfessions then S.RefreshProfessions() end
+    end)
+    local prev = CreateFrame("Button", nil, page)
+    prev:SetSize(32, 32)
+    prev:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -66, 26)
+    prev:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up")
+    prev:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Down")
+    prev:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Disabled")
+    prev:SetScript("OnClick", function()
+        local P = S.professions
+        P.pageNum = math.max(1, (P.pageNum or 1) - 1)
+        if S.RefreshProfessions then S.RefreshProfessions() end
+    end)
+    local pageText = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    pageText:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -110, 38)
+
     local recipePanel = CreateFrame("Frame", nil, page)
-    recipePanel:SetPoint("TOPLEFT", 63, -36); recipePanel:SetSize(449, 430)
+    recipePanel:SetPoint("TOPLEFT", host, "TOPLEFT", 80, -67); recipePanel:SetSize(437, 430)
     recipePanel:Hide()
     recipePanel:EnableMouseWheel(true)
     recipePanel:SetScript("OnMouseWheel", function(_, delta)
@@ -3197,15 +3416,22 @@ local function CreateProfessionsPage()
     S.professions = { page = page, title = title, empty = empty, profList = profList,
         recipePanel = recipePanel, recipeHeader = recipeHeader, backBtn = backBtn,
         profBody = profBody, profPage1 = profPage1, profPage2 = profPage2,
-        profBookmark = profBookmark, ribbonCover = ribbonCover, profButtons = {}, recipeRows = {},
-        selected = nil, forcedProfession = nil, view = "list", listOffset = 0 }
+        frameCovers = frameCovers, bookmark = bookmarkPage,
+        profButtons = {}, recipeRows = {},
+        prev = prev, nxt = nxt, pageText = pageText,
+        selected = nil, forcedProfession = nil, view = "list", pageNum = 1 }
+    -- Solo para diagnostico (`/harford debug run proftex`): medir el alto real de la pagina,
+    -- del que depende hasta donde llegan los marcos.
+    HarfordCharacterPanel._professionsState = S.professions
 end
 
 -- Sello de profesion (pool, pagina completa): el marco ornamentado de la pestaña
 -- Profesiones nativa (recorte de 383588) como envoltorio, con icono+borde nativo (383591),
 -- nombre en MORPHEUS y la barra de skill nativa (ProfessionsBook + Professions-Progress-Fill).
--- Icono redondo real para los sellos: SetPortraitToTexture recorta en circulo de verdad; si no
--- existe, se deja cuadrado recortado a mano (mejor cuadrado limpio que un circulo a medias).
+-- Icono GRANDE del hueco: recorte CIRCULAR, como hace `FormatProfession` en SpellBookFrame.lua
+-- para una profesion aprendida (`SetPortraitToTexture(frame.icon, texture)`). La sonda muestra
+-- ese icono con texCoord 0,0,1,1 solo porque se capturo SIN profesiones aprendidas: nunca llego
+-- a formatearse. Sin el recorte, las esquinas del icono asoman por fuera del aro.
 local function SetProfIcon(texture, iconName)
     local path = "Interface\\Icons\\" .. (iconName or "INV_Misc_QuestionMark")
     if SetPortraitToTexture then
@@ -3216,53 +3442,27 @@ local function SetProfIcon(texture, iconName)
     end
 end
 
-local function ProfButton(i)
-    local P = S.professions
-    if P.profButtons[i] then return P.profButtons[i] end
-    local b = CreateFrame("Button", nil, P.profList)
-    -- Escala NATIVA 1:1 (con BOOK_W el pergamino pinta a tamano real)
-    -- Tamano NATIVO del hueco de profesion (sonda PrimaryProfession1): 437x81.
-    b:SetSize(437, 81); b:SetPoint("TOPLEFT", 0, -((i - 1) * 93))   -- XML: 81 de alto + 12 de hueco
-    -- Marco ornamentado horneado en la textura del pergamino de profesiones
-    b.stamp = b:CreateTexture(nil, "BACKGROUND")
-    b.stamp:SetTexture(383588)
-    -- Region de arte del marco: x 63..512, y 32..133 de la textura 512 (sonda profbook)
-    b.stamp:SetTexCoord(0.123, 1.0, 0.0625, 0.2598)
-    b.stamp:SetAllPoints(b)
-    b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-    b.iconBorder = b:CreateTexture(nil, "ARTWORK", nil, 1)
-    b.iconBorder:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-    b.iconBorder:SetTexCoord(0.43359375, 0.72265625, 0.1484375, 0.7265625)
-    b.iconBorder:SetSize(72, 72); b.iconBorder:SetPoint("TOPLEFT", 17, -17)
-    b.icon = b:CreateTexture(nil, "BORDER")
-    b.icon:SetBlendMode("ADD")   -- XML: alphaMode="ADD"
-    -- El hueco del aro es redondo (el nativo usa retratos circulares): icono cuadrado
-    -- recortado con la mascara circular de retratos (patron probado de UnitFrames)
-    -- Nativo: icono 70x70 dentro del aro de 72 (solo 1px de margen)
-    b.icon:SetPoint("TOPLEFT", b.iconBorder, "TOPLEFT", 1, -1)
-    b.icon:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
-    -- El recorte circular lo hace SetPortraitToTexture (ver SetProfIcon): la mascara de
-    -- retrato no recorta de forma fiable aqui, igual que fallo en las tarjetas de creacion.
-    -- XML: professionName inherits="QuestTitleFontBlackShadow" en TOPLEFT +100,-2
-    b.name = b:CreateFontString(nil, "OVERLAY", "QuestTitleFontBlackShadow")
-    b.name:SetPoint("TOPLEFT", 100, -2); b.name:SetJustifyH("LEFT")   -- XML: TOPLEFT +100,-2
-    b.name:SetTextColor(1, 0.82, 0)
-    -- XML: rank inherits="GameFontHighlightSmall" en professionName.BOTTOMLEFT +0,-33
-    b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    -- Posicion del Rank nativo: name.BOTTOM -33 => -63 en el sello; color blanco
-    b.sub:SetPoint("TOPLEFT", b.name, "BOTTOMLEFT", 0, -33)   -- XML: rank a name.BOTTOMLEFT -33
-    b.sub:SetWidth(300); b.sub:SetJustifyH("LEFT")
-    b.sub:SetTextColor(1, 1, 1)
-    -- Barra de skill nativa (piezas de la sonda profbook)
-    local bar = CreateFrame("StatusBar", nil, b)
+-- Icono de los BOTONES de hechizo: cuadrado y a pelo. Aqui el nativo NO recorta —
+-- `ProfessionButtonTemplate` declara `$parentIconTexture` con `setAllPoints` y sin texCoord, y
+-- la sonda lo confirma (40x40, capa BORDER, mezcla BLEND, sin texCoord).
+local function SetProfButtonIcon(texture, iconName)
+    texture:SetTexture("Interface\\Icons\\" .. (iconName or "INV_Misc_QuestionMark"))
+    texture:SetTexCoord(0, 1, 0, 1)
+end
+
+-- Barra de progreso de profesion, 1:1 con ProfessionStatusBarTemplate del XML nativo:
+-- 95x16, relleno Professions-Progress-Fill, dos fondos de extremo de 16x16 y dos remates de
+-- 12x12 (el DERECHO va hidden=true en el propio XML, no es un apano nuestro), y el fondo
+-- central anclado ENTRE los dos fondos de extremo, de donde hereda altura y el desplazamiento
+-- de +2. Texto TextStatusBarText centrado con +2 en vertical.
+local function ProfStatusBar(parent)
+    local bar = CreateFrame("StatusBar", nil, parent)
     bar:SetSize(95, 16)
-    bar:SetPoint("TOPLEFT", b.sub, "BOTTOMLEFT", 14, -5)   -- XML: rank.BOTTOMLEFT +14,-5
     bar:SetStatusBarTexture("Interface\\Spellbook\\Professions-Progress-Fill")
     bar:SetMinMaxValues(0, 300)
     local barBg = bar:CreateTexture(nil, "BACKGROUND")
     barBg:SetTexture("Interface\\Spellbook\\ProfessionsBook")
     barBg:SetTexCoord(0, 1, 0.0078125, 0.1328125)
-    -- Fondos de extremo nativos (BGLeft/BGRight 16x16), bajo los remates de 12x12
     local bgCapL = bar:CreateTexture(nil, "BACKGROUND")
     bgCapL:SetTexture("Interface\\Spellbook\\ProfessionsBook")
     bgCapL:SetTexCoord(0.00390625, 0.06640625, 0.484375, 0.609375)
@@ -3271,68 +3471,148 @@ local function ProfButton(i)
     bgCapR:SetTexture("Interface\\Spellbook\\ProfessionsBook")
     bgCapR:SetTexCoord(0.00390625, 0.06640625, 0.625, 0.75)
     bgCapR:SetSize(16, 16); bgCapR:SetPoint("LEFT", bar, "RIGHT", 0, 2)
+    barBg:SetPoint("TOPLEFT", bgCapL, "TOPRIGHT", 0, 0)
+    barBg:SetPoint("BOTTOMRIGHT", bgCapR, "BOTTOMLEFT", 0, 0)
     local capL = bar:CreateTexture(nil, "OVERLAY")
     capL:SetTexture("Interface\\Spellbook\\ProfessionsBook")
     capL:SetTexCoord(0.00390625, 0.05078125, 0.875, 0.96875)
     capL:SetSize(12, 12); capL:SetPoint("RIGHT", bar, "LEFT", 0, 2)
-    local capR = bar:CreateTexture(nil, "OVERLAY")
-    capR:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-    capR:SetTexCoord(0.00390625, 0.05078125, 0.765625, 0.859375)
-    capR:SetSize(12, 12); capR:SetPoint("LEFT", bar, "RIGHT", 0, 2)
-    -- XML: BGMiddle se ancla ENTRE los dos fondos de extremo (BGLeft.TOPRIGHT ->
-    -- BGRight.BOTTOMLEFT), no al cuerpo de la barra: asi hereda su altura de 16 y el +2.
-    barBg:SetPoint("TOPLEFT", bgCapL, "TOPRIGHT", 0, 0)
-    barBg:SetPoint("BOTTOMRIGHT", bgCapR, "BOTTOMLEFT", 0, 0)
-    -- El nativo mantiene OCULTO el remate derecho (StatusBarRight vis=None en la sonda):
-    -- dibujarlo mete un artefacto en el extremo de la barra.
-    capR:Hide()
-    -- XML: rankText inherits="TextStatusBarText" en CENTER +0,+2
-    b.barText = bar:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
-    b.barText:SetPoint("CENTER", bar, "CENTER", 0, 2)
-    b.bar = bar
-    -- Botones de "hechizo" del sello, como en el libro nativo: icono cuadrado con marco y
-    -- nombre al lado. El sello en si NO abre nada; abrir la profesion es uno de estos botones,
-    -- de modo que una profesion con herramienta puede ofrecer ademas la tirada suelta.
-    -- Boton de hechizo NATIVO (sonda PrimaryProfession1/nuevo): boton 40x40 con el icono a
-    -- tamano completo, el NameFrame 108x41 recortado de 383591 pegado a su derecha y el
-    -- nombre en FRIZQT 12 ORO. El primero a TOPRIGHT -109,-3; el segundo una fila mas abajo.
-    -- XML ProfessionButtonTemplate: CheckButton 40x40, icono setAllPoints en capa BORDER,
-    -- nombre GameFontNormal de 2 lineas 100x0 a LEFT>boton.RIGHT +5,+7, subtitulo 95x28
-    -- debajo, y NameFrame 108x41 de ProfessionsBook con alpha 0.8. El primer boton va a
-    -- TOPRIGHT -109,-3 y el segundo al BOTTOMLEFT del primero.
-    local function SpellButton(index, previous)
-        local sb = CreateFrame("Button", nil, b)
-        sb:SetSize(40, 40)
-        if previous then
-            sb:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0)
+    bar.text = bar:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
+    bar.text:SetPoint("CENTER", bar, "CENTER", 0, 2)
+    return bar
+end
+
+-- Boton de "hechizo" del hueco, 1:1 con ProfessionButtonTemplate: 40x40, icono a todo el boton
+-- en capa BORDER, NameFrame de 108x41 (Professions-Item-Border, alpha 0.8) pegado a su derecha,
+-- nombre GameFontNormal de 100 de ancho y 2 lineas a LEFT>boton.RIGHT +5,+7 y subtitulo de
+-- 95x28 debajo. El primero va a TOPRIGHT -109,-3.
+local function ProfSpellButton(parent, previous, secondary)
+    local sb = CreateFrame("Button", nil, parent)
+    sb:SetSize(40, 40)
+    if previous then
+        -- XML: en el hueco grande el segundo boton cae DEBAJO del primero; en el pequeno va a
+        -- su IZQUIERDA, porque solo hay 46 de alto.
+        if secondary then
+            sb:SetPoint("TOPRIGHT", previous, "TOPLEFT", -109, 0)
         else
-            sb:SetPoint("TOPRIGHT", b, "TOPRIGHT", -109, -3)
+            sb:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0)
         end
-        sb.icon = sb:CreateTexture(nil, "BORDER")
-        sb.icon:SetAllPoints(sb)
-        sb.nameFrame = sb:CreateTexture(nil, "BACKGROUND")
-        sb.nameFrame:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-        sb.nameFrame:SetTexCoord(0.00390625, 0.42578125, 0.1484375, 0.46875)
-        sb.nameFrame:SetSize(108, 41)
-        sb.nameFrame:SetVertexColor(1, 1, 1, 0.8)
-        sb.nameFrame:SetPoint("LEFT", sb.icon, "RIGHT", 1, 0)
-        sb.label = sb:CreateFontString(nil, "BORDER", "GameFontNormal")
-        sb.label:SetPoint("LEFT", sb, "RIGHT", 5, 7)
-        sb.label:SetSize(100, 0)
-        sb.label:SetJustifyH("LEFT")
-        if sb.label.SetMaxLines then sb.label:SetMaxLines(2) end
-        sb.sub = sb:CreateFontString(nil, "BORDER", "GameFontDisableSmall")
-        sb.sub:SetPoint("TOPLEFT", sb.label, "BOTTOMLEFT", 0, -1)
-        sb.sub:SetSize(95, 28)
-        sb.sub:SetJustifyH("LEFT")
-        sb.sub:SetJustifyV("TOP")
-        sb:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-        sb:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
-        sb:Hide()
-        return sb
+    else
+        sb:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -109, -3)
     end
-    b.spellOpen = SpellButton(1)   -- abre la ventana de recetas
-    b.spellTool = SpellButton(2, b.spellOpen)   -- tirada suelta de la herramienta
+    -- Sonda: 40x40, capa BORDER, mezcla BLEND, sin texCoord. Icono cuadrado y a pelo.
+    sb.icon = sb:CreateTexture(nil, "BORDER")
+    sb.icon:SetAllPoints(sb)
+    sb.icon:SetBlendMode("BLEND")
+    sb.nameFrame = sb:CreateTexture(nil, "BACKGROUND")
+    sb.nameFrame:SetTexture("Interface\\Spellbook\\ProfessionsBook")
+    sb.nameFrame:SetTexCoord(0.00390625, 0.42578125, 0.1484375, 0.46875)
+    sb.nameFrame:SetSize(108, 41)
+    sb.nameFrame:SetVertexColor(1, 1, 1, 0.8)
+    sb.nameFrame:SetPoint("LEFT", sb.icon, "RIGHT", 1, 0)
+    sb.label = sb:CreateFontString(nil, "BORDER", "GameFontNormal")
+    sb.label:SetPoint("LEFT", sb, "RIGHT", 5, 7)
+    sb.label:SetSize(100, 0)
+    sb.label:SetJustifyH("LEFT")
+    if sb.label.SetMaxLines then sb.label:SetMaxLines(2) end
+    sb.sub = sb:CreateFontString(nil, "BORDER", "GameFontDisableSmall")
+    sb.sub:SetPoint("TOPLEFT", sb.label, "BOTTOMLEFT", 0, -1)
+    sb.sub:SetSize(95, 28)
+    sb.sub:SetJustifyH("LEFT")
+    sb.sub:SetJustifyV("TOP")
+    sb:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+    sb:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+    sb:Hide()
+    return sb
+end
+
+local function ProfButton(i)
+    local P = S.professions
+    if P.profButtons[i] then return P.profButtons[i] end
+    -- Cada hueco va en SU sitio nativo (PROF_SLOTS) sobre la pagina, no apilados con un paso
+    -- fijo: el nativo tiene DOS huecos grandes (con aro de icono) y TRES pequenos (sin aro), y
+    -- el ornamento de todos ellos esta horneado en la textura de la pagina. El boton no dibuja
+    -- marco propio.
+    local slotDef = PROF_SLOTS[i] or PROF_SLOTS[#PROF_SLOTS]
+    local secondary = slotDef.kind == "secondary"
+    local b = CreateFrame("Button", nil, P.profList)
+    b.slotKind = slotDef.kind
+    b:SetSize(slotDef.w, slotDef.h)
+    b:SetPoint("TOPLEFT", P.profList, "TOPLEFT", slotDef.x, slotDef.y)
+    -- Sin resaltado al pasar el raton: el hueco NO es clicable (como en el libro nativo, donde
+    -- se pulsa el boton de hechizo), asi que iluminarlo entero prometia una interaccion que
+    -- no existe. El resaltado lo ponen `spellOpen`/`spellTool`, que si lo son.
+    b:EnableMouse(false)
+
+    b.bar = ProfStatusBar(b)
+    b.barText = b.bar.text
+
+    if not secondary then
+        -- XML PrimaryProfessionTemplate ------------------------------------------------
+        -- iconBorder 72x72 en TOPLEFT +7,-7. La region recortada de ProfessionsBook mide 74x74
+        -- reales (manifiesto de atlas del propio XML: Professions-MajorRing-Normal), y el
+        -- nativo la mete en 72: se conserva ese encogimiento de 2 px.
+        -- Capa OVERLAY/0, no ARTWORK: es lo que devuelve la sonda del frame nativo
+        -- (PrimaryProfession1IconBorder drawLayer = OVERLAY/0), coherente con el
+        -- <Layer level="OVERLAY"> del XML. El icono va en BORDER y queda debajo.
+        b.iconBorder = b:CreateTexture(nil, "OVERLAY")
+        b.iconBorder:SetTexture("Interface\\Spellbook\\ProfessionsBook")
+        b.iconBorder:SetTexCoord(0.43359375, 0.72265625, 0.1484375, 0.7265625)
+        b.iconBorder:SetSize(72, 72); b.iconBorder:SetPoint("TOPLEFT", 7, -7)
+        b.icon = b:CreateTexture(nil, "BORDER")
+        b.icon:SetBlendMode("ADD")   -- XML: alphaMode="ADD"
+        b.icon:SetPoint("TOPLEFT", b.iconBorder, "TOPLEFT", 1, -1)
+        b.icon:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
+
+        b.name = b:CreateFontString(nil, "OVERLAY", "QuestTitleFontBlackShadow")
+        b.name:SetPoint("TOPLEFT", 100, -2); b.name:SetJustifyH("LEFT")
+        b.name:SetTextColor(1, 0.82, 0)
+        b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        b.sub:SetPoint("TOPLEFT", b.name, "BOTTOMLEFT", 0, -33)   -- XML: rank
+        b.sub:SetWidth(300); b.sub:SetJustifyH("LEFT")
+        b.sub:SetTextColor(1, 1, 1)
+        b.bar:SetPoint("TOPLEFT", b.sub, "BOTTOMLEFT", 14, -5)    -- XML: rank.BOTTOMLEFT +14,-5
+
+        b.missingHeader = b:CreateFontString(nil, "OVERLAY", "QuestTitleFontBlackShadow")
+        b.missingHeader:SetPoint("TOPLEFT", 120, -13)
+        b.missingHeader:SetJustifyH("LEFT")
+        b.missingHeader:SetTextColor(0.85, 0.7, 0.6)
+        b.missingText = b:CreateFontString(nil, "OVERLAY", "SubSpellFont")
+        b.missingText:SetPoint("TOPLEFT", b.missingHeader, "BOTTOMLEFT", 0, -1)
+        b.missingText:SetWidth(305); b.missingText:SetJustifyH("LEFT")
+        b.missingText:SetTextColor(0.1, 0.05, 0.05)
+    else
+        -- XML SecondaryProfessionTemplate ----------------------------------------------
+        -- NO se usa con el reparto actual de cinco huecos iguales: se conserva porque es la
+        -- transcripcion fiel del hueco pequeno nativo y volveria a hacer falta si algun dia se
+        -- adopta el reparto 2 principales + 3 secundarias.
+        -- El hueco pequeno NO tiene aro de icono: solo barra, rango y nombre, montados de abajo
+        -- hacia arriba (statusBar en BOTTOMLEFT +16,-1 y el resto anclado sobre ella).
+        b.bar:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", 16, -1)
+        b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        b.sub:SetPoint("BOTTOMLEFT", b.bar, "TOPLEFT", -14, 4)
+        b.sub:SetPoint("BOTTOMRIGHT", b.bar, "TOPRIGHT", 25, 4)
+        b.sub:SetJustifyH("LEFT")
+        b.name = b:CreateFontString(nil, "OVERLAY", "QuestFont_Shadow_Small")
+        b.name:SetPoint("BOTTOMLEFT", b.sub, "TOPLEFT", 0, 2)
+        b.name:SetPoint("BOTTOMRIGHT", b.sub, "TOPRIGHT", 0, 2)
+        b.name:SetJustifyH("LEFT")
+        b.name:SetTextColor(1, 0.82, 0)
+
+        b.missingHeader = b:CreateFontString(nil, "OVERLAY", "QuestFont_Large")
+        b.missingHeader:SetPoint("TOPLEFT", 4, -15)
+        b.missingHeader:SetJustifyH("LEFT")
+        b.missingHeader:SetTextColor(0.15, 0.1, 0.1)
+        b.missingText = b:CreateFontString(nil, "OVERLAY", "SubSpellFont")
+        b.missingText:SetPoint("RIGHT", b, "RIGHT", -5, 0)
+        b.missingText:SetWidth(250); b.missingText:SetJustifyH("LEFT")
+        b.missingText:SetTextColor(0.1, 0.05, 0.05)
+    end
+
+    -- El hueco en si NO abre nada (como el libro nativo, donde se pulsa el boton de hechizo):
+    -- abrir la profesion es `spellOpen`, y `spellTool` es la tirada suelta de su herramienta.
+    b.spellOpen = ProfSpellButton(b, nil, secondary)
+    b.spellTool = ProfSpellButton(b, b.spellOpen, secondary)
     P.profButtons[i] = b
     return b
 end
@@ -3376,15 +3656,32 @@ local function RefreshProfessions()
     local isList = P.view == "list"
     P.profList:SetShown(isList)
     P.recipePanel:SetShown(not isList)
+    if P.prev then P.prev:SetShown(isList) end
+    if P.nxt then P.nxt:SetShown(isList) end
+    if P.pageText then P.pageText:SetShown(isList) end
 
-    -- Lista con desplazamiento por rueda (4 sellos visibles). Sin profesiones se pintan
-    -- envoltorios VACIOS (como los "First/Second Profession" del nativo): el marco sigue ahi.
-    local VISIBLE = 5  -- el sello nativo mide 81 de alto, cabe uno mas por pagina
-    local totalSlots = math.max(#known, 2)
-    local maxOffset = math.max(0, totalSlots - VISIBLE)
-    P.listOffset = math.max(0, math.min(P.listOffset or 0, maxOffset))
-    for i = 1, math.max(VISIBLE, #P.profButtons) do
-        local slot = P.listOffset + i
+    -- Los marcos CRECEN con las profesiones: uno por cada una conocida, y un unico hueco vacio
+    -- cuando no hay ninguna (a modo de invitacion). El nativo enseña siempre dos porque solo
+    -- admite dos principales; aqui todas son equivalentes y no hay numero fijo que reservar.
+    local VISIBLE = #PROF_SLOTS
+    local totalSlots = math.max(#known, 1)
+    local maxPage = math.max(1, math.ceil(totalSlots / VISIBLE))
+    P.pageNum = math.max(1, math.min(P.pageNum or 1, maxPage))
+    local offset = (P.pageNum - 1) * VISIBLE
+    -- Marcos visibles en ESTA pagina: los que tengan hueco detras. Un marco suelto sobre
+    -- pergamino vacio se leeria como una profesion que no esta.
+    local enEstaPagina = math.max(0, math.min(VISIBLE, totalSlots - offset))
+    for i, cover in ipairs(P.frameCovers or {}) do
+        cover:SetShown(isList and i <= enEstaPagina)
+    end
+    if P.pageText then
+        -- Con una sola pagina no se anuncia el numero: el libro nativo tampoco lo hace.
+        P.pageText:SetText(maxPage > 1 and ("Pagina " .. P.pageNum) or "")
+    end
+    if P.prev then if P.pageNum > 1 then P.prev:Enable() else P.prev:Disable() end end
+    if P.nxt then if P.pageNum < maxPage then P.nxt:Enable() else P.nxt:Disable() end end
+    for i = 1, VISIBLE do
+        local slot = offset + i
         local def = isList and known[slot] or nil
         local emptySlot = isList and not def and slot <= totalSlots
         local b = P.profButtons[i] or ((def or emptySlot) and ProfButton(i))
@@ -3392,8 +3689,20 @@ local function RefreshProfessions()
             if def then
                 local profId = def.id
                 local skill = HarfordProfessions.EffectiveSkill(profId)
-                SetProfIcon(b.icon, def.icon)
-                b.icon:Show()
+                -- Solo los huecos GRANDES tienen aro de icono (SecondaryProfessionTemplate no
+                -- declara ninguno), asi que cada acceso al icono va guardado.
+                if b.icon then
+                    SetProfIcon(b.icon, def.icon)
+                    -- El XML deja el icono desaturado y al 60% en el hueco vacio; una profesion
+                    -- aprendida lo devuelve a color pleno.
+                    b.icon:SetAlpha(1)
+                    if SetDesaturation then SetDesaturation(b.icon, false) end
+                    b.icon:Show()
+                end
+                b.missingHeader:Hide()
+                b.missingText:Hide()
+                b.name:Show()
+                b.sub:Show()
                 b.name:SetText(def.name)
                 b.name:SetTextColor(1, 0.82, 0)
                 b.sub:SetText(HarfordProfessions.GetTierName(skill))
@@ -3403,7 +3712,7 @@ local function RefreshProfessions()
                 -- El sello es el envoltorio: no abre nada por si mismo (como el libro nativo,
                 -- donde se pulsa el boton de hechizo). Abrir la profesion es `spellOpen`.
                 b:SetScript("OnClick", nil)
-                SetProfIcon(b.spellOpen.icon, def.icon)
+                SetProfButtonIcon(b.spellOpen.icon, def.icon)
                 b.spellOpen.label:SetText(def.name)
                 b.spellOpen:SetScript("OnClick", function()
                     P.selected = profId
@@ -3418,7 +3727,7 @@ local function RefreshProfessions()
                 b.spellOpen:Show()
                 -- Segundo boton solo si la profesion tiene herramienta: tirada suelta de uso.
                 if def.tool and HarfordProfessions.RollTool then
-                    SetProfIcon(b.spellTool.icon, def.icon)
+                    SetProfButtonIcon(b.spellTool.icon, def.icon)
                     b.spellTool.label:SetText(def.tool)
                     b.spellTool:SetScript("OnClick", function()
                         HarfordProfessions.RollTool(profId)
@@ -3429,11 +3738,23 @@ local function RefreshProfessions()
                 end
                 b:Show()
             elseif emptySlot then
-                -- Envoltorio vacio: marco + hueco de icono, sin barra ni click
-                b.icon:Hide()
-                b.name:SetText("Profesion")
-                b.name:SetTextColor(0.8, 0.7, 0.5)
-                b.sub:SetText("Se aprende con la competencia de su herramienta o del DM.")
+                -- Hueco VACIO, tal y como lo declara el XML: se ocultan professionName, rank y
+                -- barra, y se muestran missingHeader/missingText en SU posicion (+120,-13), que
+                -- no es la del nombre de una profesion aprendida.
+                -- El aro sigue ahi con el icono desaturado al 60% (OnLoad del template nativo).
+                b.name:Hide()
+                b.sub:Hide()
+                b.missingHeader:SetText("Sin profesiones")
+                b.missingHeader:Show()
+                b.missingText:SetText("Se aprende con la competencia de su herramienta o por decision del DM.")
+                b.missingText:Show()
+                if b.icon then
+                    b.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+                    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+                    b.icon:SetAlpha(0.6)
+                    if SetDesaturation then SetDesaturation(b.icon, true) end
+                    b.icon:Show()
+                end
                 b.bar:Hide()
                 b:SetScript("OnClick", nil)
                 b.spellOpen:Hide()

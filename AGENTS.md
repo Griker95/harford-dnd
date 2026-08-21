@@ -2270,6 +2270,14 @@ recetas al catalogo no obliga a tocar entrenadores. `recipes` queda para casos s
 El nivel de habilidad del jugador sigue subiendo libre hasta 300: el rango solo decide de quien
 se aprende, no hasta donde se puede subir.
 
+**El nombre de catalogo lleva la informacion dentro.** `herreria_experto` son la profesion y el
+rango, y `API.SplitId` los deduce de ahi, asi que una entrada del catalogo es `{ id, name }` y
+nada mas. Se parte por el ULTIMO guion bajo porque hay profesiones con guion dentro
+(`primeros_auxilios`), y solo se acepta si el sufijo es un rango real, de modo que un entrenador
+con nombre propio (`thorgas_yunquegris`) no se malinterpreta: ese si declara `profession`/`tier`.
+La resolucion es perezosa (`ResolverCatalogo` al primer `GetAll`), no al cargar, para no depender
+del orden del toc. No volver a escribir profesion y rango en cada linea del catalogo.
+
 **La identidad es el nombre de catalogo (`id`), no el NPC.** Un entrenador NO apunta a un template
 id: es el NPC quien declara en su gossip que nombre encarna, con
 `HarfordTrainerAPI.BindTrainer("herreria_experto", { name?, zone? })`. Asi puede haber varios NPCs
@@ -2287,6 +2295,10 @@ el Lua al colocar el NPC, o en vivo via `Bind`. `Unbind` deshace solo lo registr
 
 `API.Define` sigue existiendo para un entrenador que NO este en el catalogo, y rechaza rango
 desconocido, profesion ajena y cobertura vacia (un NPC mudo no se registra).
+
+**Nada de esto toca SavedVariables**: el catalogo vive en el Lua y el registro en vivo (`vivos`)
+muere con el `/reload`. Lo unico que persiste al aprender es `HarfordProfessionsStore.learned[id]
+= true`, un booleano por receta realmente aprendida.
 
 Pruebas: `/harford debug run entrenador` resume por profesion, `entrenador <profesion>` desglosa
 sus cinco rangos, y `colocar`/`quitar`/`ensenar` recorren el flujo entero sin NPCs puestos.

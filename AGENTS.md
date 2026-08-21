@@ -2212,6 +2212,26 @@ descripciones dentro de `Data.lua`: se pierden en la siguiente regeneracion.
 (`botas_zarzal` / `botas_zarzal_2`). Parecen duplicados del pipeline, no variantes. Forjarlos
 crearia 55 objetos redundantes; conviene resolverlos antes de una tanda larga.
 
+## Comprobar Lua contra el 5.1 REAL, no contra el interprete local (2026-08-21)
+
+El interprete instalado en la maquina es **Lua 5.4**, asi que `luac -p` sirve como detector
+de sintaxis pero NO dice nada sobre los limites de 5.1, que es el que corre WoW.
+
+`tools/codice/lua51.py` carga `lua51.dll` por ctypes y expone `compila(ruta)` y
+`ejecuta(ruta)` con el compilador de 5.1 de verdad. Esta calibrado: reproduce los mensajes
+exactos de "more than 200 local variables" y "more than 60 upvalues".
+
+```
+python -c "import sys; sys.path.insert(0,'tools/codice'); import lua51; print(lua51.compila('Harford/DnD/UI/HarfordDnD.lua'))"
+```
+
+**Limite medido para tablas de datos grandes** (probado, no deducido): una tabla con la forma
+de `Data.lua` (registros anidados con campos con nombre) aguanta hasta **~65.000 entradas**;
+a partir de ahi el compilador corta con `main function has more than 65536 constants`. Un
+array plano de cadenas no tiene ese techo (300.000 pasan). NO fiarse del calculo teorico
+sobre `MAXARG_Bx` (2^18): la barrera real que salta primero esta en 2^16 y va por entradas
+del constructor, no por cadenas distintas.
+
 ## Verificacion
 
 Para esta documentacion:

@@ -265,7 +265,13 @@ local function NormalizeDefinition(definition)
                 }
             else
                 local dice = tostring(component.damageDice or component.dice or "")
-                local count, sides = HarfordDnDWeapons and HarfordDnDWeapons.ParseDice and HarfordDnDWeapons.ParseDice(dice)
+                -- Asignacion separada de la guarda: en una cadena `and` solo sobrevive el primer
+                -- retorno, y `sides` quedaba nil, de modo que esta validacion rechazaba TODAS las
+                -- curaciones.
+                local count, sides
+                if HarfordDnDWeapons and HarfordDnDWeapons.ParseDice then
+                    count, sides = HarfordDnDWeapons.ParseDice(dice)
+                end
                 if not count or not sides or count < 1 or count > 100 or sides < 2 or sides > 1000 then
                     return nil, "Componente de curacion invalido"
                 end

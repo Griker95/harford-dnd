@@ -3560,16 +3560,22 @@ function API.DebugGroupFrames()
         local profile = unit ~= "nil" and GetProfile(unit) or nil
         local unitID = unit ~= "nil" and HarfordTRP3 and HarfordTRP3.BuildUnitID and HarfordTRP3.BuildUnitID(unit) or nil
         local className = profile and HarfordTRP3 and HarfordTRP3.GetProfilePrimaryClass and HarfordTRP3.GetProfilePrimaryClass(profile) or nil
-        local cr, cg, cb, classKey = unit ~= "nil" and LearnClassColor(unit, profile) or nil
-        local _, unitClassKey = unit ~= "nil" and UnitClass and UnitClass(unit)
-        local br, bg, bb, ba = health and health.GetStatusBarColor and health:GetStatusBarColor()
+        -- Cada asignacion multiple va en su propio `if`: en una cadena `and` solo sobrevive el
+        -- primer valor devuelto, y este volcado reportaba nil en todo menos el primer campo.
+        local cr, cg, cb, classKey
+        if unit ~= "nil" then cr, cg, cb, classKey = LearnClassColor(unit, profile) end
+        local unitClassKey
+        if unit ~= "nil" and UnitClass then local _; _, unitClassKey = UnitClass(unit) end
+        local br, bg, bb, ba
+        if health and health.GetStatusBarColor then br, bg, bb, ba = health:GetStatusBarColor() end
         local hMin, hMax = nil, nil
         if health and health.GetMinMaxValues then
             hMin, hMax = health:GetMinMaxValues()
         end
         local hValue = health and health.GetValue and health:GetValue() or nil
         local hTex = health and health.GetStatusBarTexture and health:GetStatusBarTexture() or nil
-        local tvr, tvg, tvb, tva = hTex and hTex.GetVertexColor and hTex:GetVertexColor()
+        local tvr, tvg, tvb, tva
+        if hTex and hTex.GetVertexColor then tvr, tvg, tvb, tva = hTex:GetVertexColor() end
         local useClassColors = frame.optionTable and frame.optionTable.useClassColors
         local displayClassColor = frame.optionTable and frame.optionTable.displayClassColor
         local exists = unit ~= "nil" and UnitExists and UnitExists(unit) and "exists" or "noexists"

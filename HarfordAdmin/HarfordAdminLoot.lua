@@ -521,7 +521,8 @@ local function CreateLootEditor()
         if HarfordLootAPI and HarfordLootAPI.SaveConfig then
             HarfordLootAPI.SaveConfig()
         end
-        local ok, err = HarfordLootAPI and HarfordLootAPI.BroadcastConfig and HarfordLootAPI.BroadcastConfig()
+        local ok, err
+        if HarfordLootAPI and HarfordLootAPI.BroadcastConfig then ok, err = HarfordLootAPI.BroadcastConfig() end
         if ok then
             Print("Configuracion de loot compartida.")
         else

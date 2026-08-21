@@ -1143,7 +1143,8 @@ local function RefreshList()
                     local adj = FindAdjacentFaction(dataIndex, -1)
                     if HarfordReputation then
                         NormalizeVisibleFactionOrder(faction.group, faction.subgroup)
-                        local ok, err = adj and HarfordReputation.SwapFactionOrder(faction.id, adj.id)
+                        local ok, err
+                        if adj then ok, err = HarfordReputation.SwapFactionOrder(faction.id, adj.id) end
                         if not ok and err then Print(err) end
                         RefreshList()
                     end
@@ -1155,7 +1156,8 @@ local function RefreshList()
                     local adj = FindAdjacentFaction(dataIndex, 1)
                     if HarfordReputation then
                         NormalizeVisibleFactionOrder(faction.group, faction.subgroup)
-                        local ok, err = adj and HarfordReputation.SwapFactionOrder(faction.id, adj.id)
+                        local ok, err
+                        if adj then ok, err = HarfordReputation.SwapFactionOrder(faction.id, adj.id) end
                         if not ok and err then Print(err) end
                         RefreshList()
                     end

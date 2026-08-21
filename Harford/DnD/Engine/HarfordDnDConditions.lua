@@ -409,6 +409,10 @@ local function StoreRecord(key, id, options)
         created = Now(), appliedTurnSerial = tonumber(options.turnSerial) or 0,
         expiresAt = tonumber(options.expiresAt), persist = options.persist == true,
         authority = options.authority == true or key == "player",
+        -- El nivel es parte del estado en las condiciones con niveles (cansancio). Sin
+        -- guardarlo aqui se perdia al aplicarlo y GetExhaustion caia siempre a 1: ningun
+        -- efecto de nivel 2 o superior llegaba a activarse.
+        level = options.level and math.max(1, math.floor(tonumber(options.level) or 1)) or nil,
     }
     if key == "player" then SaveOwned() end
     Notify()

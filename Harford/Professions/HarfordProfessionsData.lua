@@ -256,4 +256,124 @@ D.RECIPES = {
     { id = "pa_vendaje_magico", profession = "primeros_auxilios", skillReq = 225, name = "Vendaje de tejido magico", icon = "INV_Misc_Bandage_12", dc = 16, materials = { { key = "retal_tejido_magico", qty = 1 } }, output = { key = "vendaje_tejido_magico", qty = 1 } },
     { id = "pa_botiquin", profession = "primeros_auxilios", skillReq = 300, name = "Botiquin de maestro", icon = "INV_Misc_Bag_11", dc = 18, materials = { { key = "vendaje_tejido_magico", qty = 4 }, { key = "antiveneno", qty = 2 } }, output = { key = "botiquin_maestro", qty = 1 }, worldLearned = true },
 
+
+    -- ================================================================
+    -- Cadenas al estilo Classic (1-300, la misma escala que Vanilla).
+    -- Joyeria usa la progresion de TBC comprimida x0.8 (375 -> 300) e
+    -- Inscripcion la de Lich comprimida x2/3 (450 -> 300), incluida su
+    -- fase de TINTA (hierba -> pigmento -> tinta -> glifo), que faltaba.
+    -- Generado por tools/codice/gen_profesiones_classic.py
+    -- ================================================================
+
+    -- ===== alquimia =====
+    { id = "alq_pocion_mana_menor", profession = "alquimia", skillReq = 55, name = "Pocion de mana menor", icon = "INV_Potion_70", dc = 9, materials = { { key = "hojaplata", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "pocion_mana_menor", qty = 1 } },
+    { id = "alq_elixir_defensa", profession = "alquimia", skillReq = 105, name = "Elixir de defensa", icon = "INV_Potion_67", dc = 11, materials = { { key = "cardopresto", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "elixir_defensa", qty = 1 } },
+    { id = "alq_elixir_giganteza", profession = "alquimia", skillReq = 145, name = "Elixir de giganteza", icon = "INV_Potion_62", dc = 12, materials = { { key = "hierba_cardenal", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "elixir_giganteza", qty = 1 } },
+    { id = "alq_pocion_mana", profession = "alquimia", skillReq = 165, name = "Pocion de mana", icon = "INV_Potion_73", dc = 13, materials = { { key = "musgo_tumba", qty = 1 }, { key = "sangrerreal", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "pocion_mana", qty = 1 } },
+    { id = "alq_transmutar_oro", profession = "alquimia", skillReq = 175, name = "Transmutar hierro en oro", icon = "INV_Ingot_02", dc = 13, materials = { { key = "lingote_hierro", qty = 1 }, { key = "esencia_menor", qty = 1 } }, output = { key = "lingote_oro", qty = 1 } },
+    { id = "alq_pocion_invisibilidad", profession = "alquimia", skillReq = 200, name = "Pocion de invisibilidad", icon = "INV_Potion_18", dc = 14, materials = { { key = "espinodorada", qty = 1 }, { key = "matasuenos", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "pocion_invisibilidad", qty = 1 } },
+    { id = "alq_elixir_mente", profession = "alquimia", skillReq = 230, name = "Elixir de mente aguda", icon = "INV_Potion_92", dc = 15, materials = { { key = "lotopurpura", qty = 1 }, { key = "raizvida", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "elixir_mente", qty = 1 } },
+    { id = "alq_frasco_titanes", profession = "alquimia", skillReq = 290, name = "Frasco de los titanes", icon = "INV_Potion_62", dc = 17, materials = { { key = "lotonegro", qty = 1 }, { key = "espinodorada", qty = 2 }, { key = "vial_vacio", qty = 1 } }, output = { key = "frasco_titanes", qty = 1 } },
+
+    -- ===== cocina =====
+    { id = "coc_sopa_verduras", profession = "cocina", skillReq = 40, name = "Sopa de verduras", icon = "INV_Drink_16", dc = 9, materials = { { key = "paciflor", qty = 1 }, { key = "harina", qty = 1 } }, output = { key = "sopa_verduras", qty = 1 } },
+    { id = "coc_carne_especiada", profession = "cocina", skillReq = 90, name = "Carne especiada", icon = "INV_Misc_Food_60", dc = 11, materials = { { key = "carne_cruda", qty = 1 }, { key = "marregal", qty = 1 } }, output = { key = "carne_especiada", qty = 1 } },
+    { id = "coc_pastel_carne", profession = "cocina", skillReq = 170, name = "Pastel de carne", icon = "INV_Misc_Food_44", dc = 13, materials = { { key = "carne_cruda", qty = 2 }, { key = "harina", qty = 1 } }, output = { key = "pastel_carne", qty = 1 } },
+    { id = "coc_guiso_cazador", profession = "cocina", skillReq = 245, name = "Guiso del cazador", icon = "INV_Misc_Food_15", dc = 16, materials = { { key = "carne_cruda", qty = 3 }, { key = "pez_aceitoso", qty = 1 }, { key = "musgo_tumba", qty = 1 } }, output = { key = "guiso_cazador", qty = 1 } },
+
+    -- ===== encantamiento =====
+    { id = "enc_capa", profession = "encantamiento", skillReq = 80, name = "Encantar capa", icon = "INV_Scroll_02", dc = 10, materials = { { key = "polvo_extrano", qty = 2 }, { key = "pergamino", qty = 1 } }, output = { key = "pergamino_enc_capa", qty = 1 } },
+    { id = "enc_varita_menor", profession = "encantamiento", skillReq = 110, name = "Varita magica menor", icon = "INV_Wand_01", dc = 11, materials = { { key = "polvo_extrano", qty = 3 }, { key = "lingote_cobre", qty = 1 } }, output = { key = "varita_menor", qty = 1 } },
+    { id = "enc_polvo_iluminado", profession = "encantamiento", skillReq = 125, name = "Desencantar (polvo iluminado)", icon = "INV_Enchant_DustIllusion", dc = 12, materials = {  }, output = { key = "polvo_iluminado", qty = 1 } },
+    { id = "enc_botas", profession = "encantamiento", skillReq = 130, name = "Encantar botas", icon = "INV_Scroll_03", dc = 12, materials = { { key = "polvo_iluminado", qty = 2 }, { key = "pergamino", qty = 1 } }, output = { key = "pergamino_enc_botas", qty = 1 } },
+    { id = "enc_escudo", profession = "encantamiento", skillReq = 200, name = "Encantar escudo", icon = "INV_Scroll_05", dc = 14, materials = { { key = "polvo_iluminado", qty = 3 }, { key = "esencia_menor", qty = 1 }, { key = "pergamino", qty = 1 } }, output = { key = "pergamino_enc_escudo", qty = 1 } },
+    { id = "enc_esencia_eterea", profession = "encantamiento", skillReq = 275, name = "Destilar esencia eterea", icon = "INV_Enchant_EssenceEtherealLarge", dc = 17, materials = { { key = "esencia_mayor", qty = 2 }, { key = "fragmento_brillante", qty = 1 } }, output = { key = "esencia_etérea", qty = 1 } },
+
+    -- ===== envenenador =====
+    { id = "env_esencia_veneno", profession = "envenenador", skillReq = 60, name = "Destilar esencia de veneno", icon = "INV_Potion_19", dc = 10, materials = { { key = "glandula_veneno", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "esencia_veneno", qty = 1 } },
+    { id = "env_debilitante", profession = "envenenador", skillReq = 110, name = "Veneno debilitante", icon = "INV_Potion_20", dc = 11, materials = { { key = "esencia_veneno", qty = 1 }, { key = "zarzaespina", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "veneno_debilitante", qty = 1 } },
+    { id = "env_paralizante", profession = "envenenador", skillReq = 175, name = "Veneno paralizante", icon = "INV_Potion_21", dc = 13, materials = { { key = "esencia_veneno", qty = 1 }, { key = "musgo_tumba", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "veneno_paralizante", qty = 1 } },
+    { id = "env_mortal", profession = "envenenador", skillReq = 240, name = "Veneno mortal", icon = "INV_Potion_22", dc = 16, materials = { { key = "esencia_veneno", qty = 2 }, { key = "matasuenos", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "veneno_mortal", qty = 1 } },
+    { id = "env_sombrio", profession = "envenenador", skillReq = 300, name = "Veneno de las sombras", icon = "INV_Potion_24", dc = 18, materials = { { key = "esencia_veneno", qty = 3 }, { key = "lotonegro", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "veneno_sombrio", qty = 1 }, worldLearned = true },
+
+    -- ===== herreria =====
+    { id = "herr_afilar_tosca", profession = "herreria", skillReq = 1, name = "Piedra de afilar tosca", icon = "INV_Stone_SharpeningStone_01", dc = 8, materials = { { key = "piedra_aspera", qty = 1 } }, output = { key = "piedra_afilar_tosca", qty = 1 } },
+    { id = "herr_brazales_cobre", profession = "herreria", skillReq = 20, name = "Brazales de cobre", icon = "INV_Bracer_02", dc = 8, materials = { { key = "lingote_cobre", qty = 3 } }, output = { key = "brazales_cobre", qty = 1 } },
+    { id = "herr_yelmo_cobre", profession = "herreria", skillReq = 45, name = "Casco de cobre", icon = "INV_Helmet_09", dc = 9, materials = { { key = "lingote_cobre", qty = 4 } }, output = { key = "yelmo_cobre", qty = 1 } },
+    { id = "herr_guanteletes_bronce", profession = "herreria", skillReq = 95, name = "Guanteletes de bronce", icon = "INV_Gauntlets_04", dc = 11, materials = { { key = "lingote_bronce", qty = 4 } }, output = { key = "guanteletes_bronce", qty = 1 } },
+    { id = "herr_afilar_pesada", profession = "herreria", skillReq = 110, name = "Piedra de afilar pesada", icon = "INV_Stone_SharpeningStone_03", dc = 11, materials = { { key = "piedra_pesada", qty = 1 } }, output = { key = "piedra_afilar_pesada", qty = 1 } },
+    { id = "herr_grebas_bronce", profession = "herreria", skillReq = 115, name = "Grebas de bronce", icon = "INV_Boots_05", dc = 11, materials = { { key = "lingote_bronce", qty = 5 } }, output = { key = "grebas_bronce", qty = 1 } },
+    { id = "herr_maza_hierro", profession = "herreria", skillReq = 155, name = "Maza de hierro", icon = "INV_Mace_02", dc = 13, materials = { { key = "lingote_hierro", qty = 4 } }, output = { key = "maza_hierro", qty = 1 } },
+    { id = "herr_lingote_oro", profession = "herreria", skillReq = 160, name = "Fundir oro", icon = "INV_Ingot_02", dc = 13, materials = { { key = "mena_oro", qty = 1 } }, output = { key = "lingote_oro", qty = 1 } },
+    { id = "herr_yelmo_hierro", profession = "herreria", skillReq = 165, name = "Yelmo de hierro", icon = "INV_Helmet_10", dc = 13, materials = { { key = "lingote_hierro", qty = 5 } }, output = { key = "yelmo_hierro", qty = 1 } },
+    { id = "herr_espada_bastarda", profession = "herreria", skillReq = 190, name = "Espada bastarda de acero", icon = "INV_Sword_20", dc = 14, materials = { { key = "lingote_acero", qty = 6 } }, output = { key = "espada_bastarda_acero", qty = 1 } },
+    { id = "herr_hombreras_acero", profession = "herreria", skillReq = 205, name = "Hombreras de acero", icon = "INV_Shoulder_21", dc = 14, materials = { { key = "lingote_acero", qty = 6 } }, output = { key = "hombreras_acero", qty = 1 } },
+    { id = "herr_lingote_verdadero", profession = "herreria", skillReq = 235, name = "Fundir plata verdadera", icon = "INV_Ingot_Mithril", dc = 15, materials = { { key = "veta_verdadera", qty = 1 } }, output = { key = "lingote_verdadero", qty = 1 } },
+    { id = "herr_escudo_mithril", profession = "herreria", skillReq = 240, name = "Escudo de mithril", icon = "INV_Shield_10", dc = 16, materials = { { key = "lingote_mithril", qty = 6 } }, output = { key = "escudo_mithril", qty = 1 } },
+    { id = "herr_yelmo_mithril", profession = "herreria", skillReq = 255, name = "Yelmo de mithril", icon = "INV_Helmet_22", dc = 16, materials = { { key = "lingote_mithril", qty = 5 } }, output = { key = "yelmo_mithril", qty = 1 } },
+    { id = "herr_espada_torio", profession = "herreria", skillReq = 290, name = "Espada de torio", icon = "INV_Sword_29", dc = 17, materials = { { key = "lingote_torio", qty = 6 } }, output = { key = "espada_torio", qty = 1 } },
+    { id = "herr_coraza_torio", profession = "herreria", skillReq = 295, name = "Coraza de torio", icon = "INV_Chest_Plate03", dc = 17, materials = { { key = "lingote_torio", qty = 10 }, { key = "lingote_verdadero", qty = 2 } }, output = { key = "coraza_torio", qty = 1 } },
+
+    -- ===== ingenieria =====
+    { id = "ing_piedra_afilada", profession = "ingenieria", skillReq = 20, name = "Perno de arco", icon = "INV_Ammo_Bullet_01", dc = 8, materials = { { key = "piedra_aspera", qty = 1 }, { key = "lingote_cobre", qty = 1 } }, output = { key = "pernos_cobre", qty = 2 } },
+    { id = "ing_bomba_hierro", profession = "ingenieria", skillReq = 165, name = "Granada de hierro", icon = "INV_Misc_Bomb_08", dc = 13, materials = { { key = "lingote_hierro", qty = 1 }, { key = "polvo_tosco", qty = 3 } }, output = { key = "dinamita_tosca", qty = 2 } },
+
+    -- ===== inscripcion =====
+    { id = "ins_tinta_tenue", profession = "inscripcion", skillReq = 1, name = "Tinta tenue", icon = "INV_Inscription_INK_01", dc = 8, materials = { { key = "pigmento_tenue", qty = 1 } }, output = { key = "tinta_tenue", qty = 2 } },
+    { id = "ins_glifo_menor", profession = "inscripcion", skillReq = 50, name = "Glifo menor", icon = "INV_Inscription_MinorGlyph01", dc = 9, materials = { { key = "tinta_tenue", qty = 1 }, { key = "pergamino", qty = 1 } }, output = { key = "glifo_menor", qty = 1 } },
+    { id = "ins_tinta_ambar", profession = "inscripcion", skillReq = 70, name = "Tinta ambar", icon = "INV_Inscription_INK_04", dc = 10, materials = { { key = "pigmento_ambar", qty = 1 } }, output = { key = "tinta_ambar", qty = 2 } },
+    { id = "ins_tinta_esmeralda", profession = "inscripcion", skillReq = 150, name = "Tinta esmeralda", icon = "INV_Inscription_INK_07", dc = 13, materials = { { key = "pigmento_esmeralda", qty = 1 } }, output = { key = "tinta_esmeralda", qty = 2 } },
+    { id = "ins_moler_umbrio", profession = "inscripcion", skillReq = 183, name = "Moler pigmento umbrio", icon = "INV_Inscription_Pigment_09", dc = 14, materials = { { key = "lotopurpura", qty = 2 } }, output = { key = "pigmento_umbrio", qty = 1 } },
+    { id = "ins_tinta_umbria", profession = "inscripcion", skillReq = 200, name = "Tinta umbria", icon = "INV_Inscription_INK_09", dc = 14, materials = { { key = "pigmento_umbrio", qty = 1 } }, output = { key = "tinta_umbria", qty = 2 } },
+    { id = "ins_glifo_mayor", profession = "inscripcion", skillReq = 233, name = "Glifo mayor", icon = "INV_Inscription_MajorGlyph01", dc = 15, materials = { { key = "tinta_esmeralda", qty = 2 }, { key = "pergamino", qty = 1 } }, output = { key = "glifo_mayor", qty = 1 } },
+    { id = "ins_carta_destino", profession = "inscripcion", skillReq = 253, name = "Carta del destino", icon = "INV_Inscription_Card_Sun", dc = 16, materials = { { key = "tinta_umbria", qty = 1 }, { key = "pergamino", qty = 2 } }, output = { key = "carta_destino", qty = 1 } },
+    { id = "ins_baraja_presagios", profession = "inscripcion", skillReq = 283, name = "Baraja de presagios", icon = "INV_Misc_Ticket_Tarot_Madness", dc = 17, materials = { { key = "carta_destino", qty = 4 } }, output = { key = "baraja_presagios", qty = 1 } },
+
+    -- ===== joyeria =====
+    { id = "joy_alambre_cobre", profession = "joyeria", skillReq = 16, name = "Alambre de cobre delicado", icon = "INV_Misc_Wire_01", dc = 8, materials = { { key = "lingote_cobre", qty = 1 } }, output = { key = "alambre_cobre", qty = 2 } },
+    { id = "joy_gema_ojotigre", profession = "joyeria", skillReq = 16, name = "Tallar ojo de tigre", icon = "INV_Misc_Gem_Opal_02", dc = 8, materials = { { key = "gema_malaquita", qty = 1 } }, output = { key = "gema_ojotigre", qty = 1 } },
+    { id = "joy_anillo_ojotigre", profession = "joyeria", skillReq = 24, name = "Anillo de ojo de tigre", icon = "INV_Jewelry_Ring_08", dc = 8, materials = { { key = "gema_ojotigre", qty = 1 }, { key = "alambre_cobre", qty = 1 } }, output = { key = "anillo_ojotigre", qty = 1 } },
+    { id = "joy_engaste_bronce", profession = "joyeria", skillReq = 40, name = "Engaste de bronce", icon = "INV_Misc_EngGizmos_20", dc = 9, materials = { { key = "lingote_bronce", qty = 1 } }, output = { key = "engaste_bronce", qty = 1 } },
+    { id = "joy_gema_citrina", profession = "joyeria", skillReq = 88, name = "Tallar citrina", icon = "INV_Misc_Gem_Opal_01", dc = 10, materials = { { key = "gema_jade", qty = 1 } }, output = { key = "gema_citrina", qty = 1 } },
+    { id = "joy_pendiente_citrina", profession = "joyeria", skillReq = 104, name = "Pendiente de citrina", icon = "INV_Jewelry_Necklace_11", dc = 11, materials = { { key = "gema_citrina", qty = 1 }, { key = "engaste_bronce", qty = 1 } }, output = { key = "pendiente_citrina", qty = 1 } },
+    { id = "joy_engaste_plata", profession = "joyeria", skillReq = 120, name = "Engaste de plata", icon = "INV_Misc_EngGizmos_19", dc = 12, materials = { { key = "lingote_plata", qty = 1 } }, output = { key = "engaste_plata", qty = 1 } },
+    { id = "joy_gema_zafiro", profession = "joyeria", skillReq = 200, name = "Tallar zafiro estrella", icon = "INV_Misc_Gem_Sapphire_01", dc = 14, materials = { { key = "gema_aguamarina", qty = 1 } }, output = { key = "gema_zafiro", qty = 1 } },
+    { id = "joy_brazalete_zafiro", profession = "joyeria", skillReq = 216, name = "Brazalete de zafiro", icon = "INV_Bracer_15", dc = 15, materials = { { key = "gema_zafiro", qty = 1 }, { key = "engaste_plata", qty = 1 } }, output = { key = "brazalete_zafiro", qty = 1 } },
+    { id = "joy_engaste_oro", profession = "joyeria", skillReq = 240, name = "Engaste de oro", icon = "INV_Misc_EngGizmos_18", dc = 16, materials = { { key = "lingote_oro", qty = 1 } }, output = { key = "engaste_oro", qty = 1 } },
+    { id = "joy_gema_rubi", profession = "joyeria", skillReq = 272, name = "Tallar rubi carmesi", icon = "INV_Misc_Gem_Ruby_02", dc = 17, materials = { { key = "gema_aguamarina", qty = 2 } }, output = { key = "gema_rubi", qty = 1 } },
+    { id = "joy_estatuilla_rubi", profession = "joyeria", skillReq = 288, name = "Estatuilla de rubi", icon = "INV_Misc_Statue_04", dc = 17, materials = { { key = "gema_rubi", qty = 1 }, { key = "engaste_oro", qty = 1 } }, output = { key = "estatuilla_rubi", qty = 1 } },
+
+    -- ===== mineria =====
+    { id = "min_piedra_gruesa", profession = "mineria", skillReq = 65, name = "Extraer piedra gruesa", icon = "INV_Stone_09", dc = 10, materials = {  }, output = { key = "piedra_gruesa", qty = 1 } },
+    { id = "min_piedra_pesada", profession = "mineria", skillReq = 125, name = "Extraer piedra pesada", icon = "INV_Stone_10", dc = 12, materials = {  }, output = { key = "piedra_pesada", qty = 1 } },
+    { id = "min_oro", profession = "mineria", skillReq = 155, name = "Extraer oro", icon = "INV_Ore_Gold_01", dc = 13, materials = {  }, output = { key = "mena_oro", qty = 1 } },
+    { id = "min_piedra_solida", profession = "mineria", skillReq = 190, name = "Extraer piedra solida", icon = "INV_Stone_11", dc = 14, materials = {  }, output = { key = "piedra_solida", qty = 1 } },
+    { id = "min_veta_verdadera", profession = "mineria", skillReq = 230, name = "Extraer veta verdadera", icon = "INV_Ore_TrueSilver_01", dc = 15, materials = {  }, output = { key = "veta_verdadera", qty = 1 } },
+    { id = "min_piedra_densa", profession = "mineria", skillReq = 245, name = "Extraer piedra densa", icon = "INV_Stone_13", dc = 16, materials = {  }, output = { key = "piedra_densa", qty = 1 } },
+
+    -- ===== peleteria =====
+    { id = "pel_brazales_ligero", profession = "peleteria", skillReq = 20, name = "Brazales de cuero", icon = "INV_Bracer_03", dc = 8, materials = { { key = "cuero_ligero", qty = 2 } }, output = { key = "brazales_cuero", qty = 1 } },
+    { id = "pel_hombreras_medio", profession = "peleteria", skillReq = 105, name = "Hombreras de cuero", icon = "INV_Shoulder_10", dc = 11, materials = { { key = "cuero_medio", qty = 4 } }, output = { key = "hombreras_cuero", qty = 1 } },
+    { id = "pel_guantes_pesado", profession = "peleteria", skillReq = 190, name = "Guantes de cuero pesado", icon = "INV_Gauntlets_17", dc = 14, materials = { { key = "cuero_pesado", qty = 4 } }, output = { key = "guantes_cuero_pesado", qty = 1 } },
+    { id = "pel_curtir_curtido", profession = "peleteria", skillReq = 205, name = "Curtir cuero curtido", icon = "INV_Misc_LeatherScrap_11", dc = 14, materials = { { key = "cuero_pesado", qty = 2 }, { key = "piedra_solida", qty = 1 } }, output = { key = "cuero_curtido", qty = 1 } },
+    { id = "pel_botas_curtido", profession = "peleteria", skillReq = 240, name = "Botas de cuero curtido", icon = "INV_Boots_08", dc = 16, materials = { { key = "cuero_curtido", qty = 4 } }, output = { key = "botas_cuero_curtido", qty = 1 } },
+    { id = "pel_capa_gruesa", profession = "peleteria", skillReq = 280, name = "Capa de cuero grueso", icon = "INV_Misc_Cape_08", dc = 17, materials = { { key = "cuero_grueso", qty = 5 } }, output = { key = "capa_cuero_grueso", qty = 1 } },
+
+    -- ===== primeros_auxilios =====
+    { id = "pa_unguento", profession = "primeros_auxilios", skillReq = 45, name = "Unguento curativo", icon = "INV_Potion_16", dc = 9, materials = { { key = "paciflor", qty = 1 }, { key = "vial_vacio", qty = 1 } }, output = { key = "ungüento_curativo", qty = 1 } },
+    { id = "pa_vendaje_runico", profession = "primeros_auxilios", skillReq = 260, name = "Vendaje de tela runica", icon = "INV_Misc_Bandage_15", dc = 16, materials = { { key = "retal_runico", qty = 1 } }, output = { key = "vendaje_runico", qty = 1 } },
+
+    -- ===== sastreria =====
+    { id = "sas_pantalones_lino", profession = "sastreria", skillReq = 30, name = "Pantalones de lino", icon = "INV_Pants_11", dc = 9, materials = { { key = "retal_lino", qty = 3 } }, output = { key = "pantalones_lino", qty = 1 } },
+    { id = "sas_brazales_lana", profession = "sastreria", skillReq = 85, name = "Brazales de lana", icon = "INV_Bracer_07", dc = 10, materials = { { key = "retal_lana", qty = 2 } }, output = { key = "brazales_lana", qty = 1 } },
+    { id = "sas_capa_lana", profession = "sastreria", skillReq = 110, name = "Capa de lana", icon = "INV_Misc_Cape_04", dc = 11, materials = { { key = "retal_lana", qty = 3 } }, output = { key = "capa_lana", qty = 1 } },
+    { id = "sas_botas_lana", profession = "sastreria", skillReq = 125, name = "Botas de lana", icon = "INV_Boots_09", dc = 12, materials = { { key = "retal_lana", qty = 3 } }, output = { key = "botas_lana", qty = 1 } },
+    { id = "sas_pantalones_seda", profession = "sastreria", skillReq = 160, name = "Pantalones de seda", icon = "INV_Pants_08", dc = 13, materials = { { key = "retal_seda", qty = 3 } }, output = { key = "pantalones_seda", qty = 1 } },
+    { id = "sas_guantes_seda", profession = "sastreria", skillReq = 170, name = "Guantes de seda", icon = "INV_Gauntlets_17", dc = 13, materials = { { key = "retal_seda", qty = 2 } }, output = { key = "guantes_seda", qty = 1 } },
+    { id = "sas_capa_seda", profession = "sastreria", skillReq = 200, name = "Capa de seda", icon = "INV_Misc_Cape_07", dc = 14, materials = { { key = "retal_seda", qty = 4 } }, output = { key = "capa_seda", qty = 1 } },
+    { id = "sas_pantalones_magico", profession = "sastreria", skillReq = 240, name = "Pantalones de tejido magico", icon = "INV_Pants_07", dc = 16, materials = { { key = "retal_tejido_magico", qty = 4 } }, output = { key = "pantalones_magico", qty = 1 } },
+    { id = "sas_retal_runico", profession = "sastreria", skillReq = 250, name = "Retal de tela runica", icon = "INV_Fabric_Purple_01", dc = 16, materials = { { key = "tela_runica", qty = 2 } }, output = { key = "retal_runico", qty = 1 } },
+    { id = "sas_capucha_magica", profession = "sastreria", skillReq = 265, name = "Capucha de tejido magico", icon = "INV_Helmet_20", dc = 16, materials = { { key = "retal_tejido_magico", qty = 3 } }, output = { key = "capucha_magica", qty = 1 } },
+    { id = "sas_bolsa_runica", profession = "sastreria", skillReq = 275, name = "Bolsa runica", icon = "INV_Misc_Bag_11", dc = 17, materials = { { key = "retal_runico", qty = 4 } }, output = { key = "bolsa_runica", qty = 1 } },
+    { id = "sas_tunica_runica", profession = "sastreria", skillReq = 285, name = "Tunica runica", icon = "INV_Chest_Cloth_18", dc = 17, materials = { { key = "retal_runico", qty = 5 } }, output = { key = "tunica_runica", qty = 1 } },
 }

@@ -21,7 +21,7 @@ local ADMIN_COMMANDS = {
 }
 
 local function PrintAdminCommands()
-    print("|cffffff00[HarfordAdmin] Comandos disponibles:|r")
+    print("|cffffff00Comandos de administracion disponibles:|r")
     for _, line in ipairs(ADMIN_COMMANDS) do
         print("|cffffff00 - " .. line .. "|r")
     end
@@ -29,7 +29,7 @@ end
 
 local function PrintAdminStatus()
     if not HarfordEpsilonCommands or not HarfordEpsilonCommands.GetStatus then
-        print("|cffff3333[HarfordAdmin]|r HarfordEpsilonCommands no disponible.")
+        print("|cffff3333HarfordEpsilonCommands no disponible.|r")
         return
     end
 
@@ -38,7 +38,7 @@ local function PrintAdminStatus()
         return value and "|cff00ff00OK|r" or "|cffff3333NO|r"
     end
 
-    print("|cffffff00[HarfordAdmin] Estado de dependencias:|r")
+    print("|cffffff00Estado de dependencias de administracion:|r")
     print("|cffffff00 - EpsilonLib.AddonCommands:|r " .. yesno(status.epsilonLib))
     print("|cffffff00 - Registro AddonCommands:|r " .. yesno(status.addonCommands))
     if status.addonCommandsError then
@@ -158,16 +158,16 @@ end
 local function HandleListProfCommand(tokens)
     local characterName = tokens[2]
     if not characterName or characterName == "" then
-        print("|cffff3333[HarfordAdmin]|r Uso: /harfordadmin listprof <Personaje>")
+        print("|cffff3333Uso: /harfordadmin listprof <Personaje>|r")
         return
     end
     local bank = _G.HarfordDnDProfileBank
     if not bank or not bank[characterName] then
-        print("|cffff3333[HarfordAdmin]|r No existe ficha '" .. characterName .. "' en HarfordDnDProfileBank.")
+        print("|cffff3333No existe ficha '" .. characterName .. "' en HarfordDnDProfileBank.|r")
         return
     end
     local tbl = bank[characterName]
-    print("|cffffff00[HarfordAdmin]|r Prof/Exp de habilidades para '" .. characterName .. "':")
+    print("|cffffff00Prof/Exp de habilidades para '" .. characterName .. "':|r")
     for _, id in ipairs(SKILL_IDS) do
         local p = tbl["Hab_" .. id .. "_Prof"] or "0"
         local e = tbl["Hab_" .. id .. "_Exp"]  or "0"
@@ -187,20 +187,20 @@ local function HandleSetProfCommand(tokens)
     local valor         = tokens[5]
 
     if not characterName or characterName == "" or not habInput or habInput == "" then
-        print("|cffff3333[HarfordAdmin]|r Uso: /harfordadmin setprof <Personaje> <Habilidad> prof|exp|ambos 1|0")
+        print("|cffff3333Uso: /harfordadmin setprof <Personaje> <Habilidad> prof|exp|ambos 1|0|r")
         print("|cffffff00 Habilidades:|r " .. table.concat(SKILL_IDS, ", "))
         return
     end
 
     local skillID = ResolveSkillID(habInput)
     if not skillID then
-        print("|cffff3333[HarfordAdmin]|r Habilidad no reconocida: '" .. habInput .. "'")
+        print("|cffff3333Habilidad no reconocida: '" .. habInput .. "'|r")
         print("|cffffff00 Válidas:|r " .. table.concat(SKILL_IDS, ", "))
         return
     end
 
     if tipo ~= "prof" and tipo ~= "exp" and tipo ~= "ambos" then
-        print("|cffff3333[HarfordAdmin]|r Tipo debe ser 'prof', 'exp' o 'ambos'.")
+        print("|cffff3333Tipo debe ser 'prof', 'exp' o 'ambos'.|r")
         return
     end
 
@@ -213,7 +213,7 @@ local function HandleSetProfCommand(tokens)
     end
     if not bank[characterName] then
         bank[characterName] = {}
-        print("|cffffff00[HarfordAdmin]|r Perfil nuevo creado para '" .. characterName .. "'.")
+        print("|cffffff00Perfil nuevo creado para '" .. characterName .. "'.|r")
     end
 
     local tbl = bank[characterName]
@@ -227,7 +227,7 @@ local function HandleSetProfCommand(tokens)
     end
 
     local tag = (v == "1") and "|cff00ff00activado|r" or "|cffff8800desactivado|r"
-    print("|cff00ff00[HarfordAdmin]|r " .. skillID .. " " .. tipo .. " " .. tag .. " para '" .. characterName .. "' en el banco.")
+    print("|cff00ff00" .. skillID .. " " .. tipo .. " " .. tag .. " para '" .. characterName .. "' en el banco.|r")
     print("|cffffff00 Recuerda enviar la ficha con /harfordadmin enviarficha " .. characterName .. " para que surta efecto.|r")
 end
 
@@ -246,22 +246,22 @@ local function HandleSendProfileCommand(tokens)
 
     local bank = _G.HarfordDnDProfileBank or {}
     if not bank[characterName] then
-        print("|cffff3333[HarfordAdmin]|r No existe ficha '" .. tostring(characterName) .. "' en HarfordDnDProfileBank.")
+        print("|cffff3333No existe ficha '" .. tostring(characterName) .. "' en HarfordDnDProfileBank.|r")
         return
     end
 
     if not IsCharacterOnline(characterName) then
-        print("|cffff3333[HarfordAdmin]|r " .. tostring(characterName) .. " no está conectado o no es localizable para whisper.")
+        print("|cffff3333" .. tostring(characterName) .. " no está conectado o no es localizable para whisper.|r")
         return
     end
 
     local ok, err = SendDnDForCharacter(characterName, channel, target)
     if not ok then
-        print("|cffff3333[HarfordAdmin]|r " .. tostring(err))
+        print("|cffff3333" .. tostring(err) .. "|r")
         return
     end
 
-    print("|cff00ff00[HarfordAdmin]|r Ficha enviada para " .. characterName .. " via WHISPER a " .. tostring(target))
+    print("|cff00ff00Ficha enviada para " .. characterName .. " via WHISPER a " .. tostring(target) .. "|r")
 end
 
 SLASH_HARFORDADMIN1 = "/harfordadmin"
@@ -282,7 +282,7 @@ SlashCmdList["HARFORDADMIN"] = function(msg)
 
     if mode == "enviarficha" or mode == "sendpj" then
         if mode == "sendpj" then
-            print("|cffffff00[HarfordAdmin]|r 'sendpj' está deprecado. Usa '/harfordadmin enviarficha'.")
+            print("|cffffff00'sendpj' está deprecado. Usa '/harfordadmin enviarficha'.|r")
         end
         HandleSendProfileCommand(t)
         return
@@ -292,7 +292,7 @@ SlashCmdList["HARFORDADMIN"] = function(msg)
         if HarfordReputationAdmin and HarfordReputationAdmin.Toggle then
             HarfordReputationAdmin.Toggle()
         else
-            print("|cffff3333[HarfordAdmin]|r HarfordReputationAdmin no disponible.")
+            print("|cffff3333HarfordReputationAdmin no disponible.|r")
         end
         return
     end
@@ -301,7 +301,7 @@ SlashCmdList["HARFORDADMIN"] = function(msg)
         if HarfordAdminNPC and HarfordAdminNPC.HandleSlash then
             HarfordAdminNPC.HandleSlash(t)
         else
-            print("|cffff3333[HarfordAdmin]|r HarfordAdminNPC no disponible.")
+            print("|cffff3333HarfordAdminNPC no disponible.|r")
         end
         return
     end
@@ -325,17 +325,17 @@ SlashCmdList["HARFORDADMIN"] = function(msg)
 
 	if mode == "loot" then
 		SendLoot(channel, target)
-		print("|cff00ff00[HarfordAdmin]|r Configuración de loot enviada via " .. channel)
+		print("|cff00ff00Configuración de loot enviada via " .. channel .. "|r")
 		return
 	end
 
 	if mode == "lootclear" then
 		local ok, err = SendLootClear(channel, target)
 		if not ok then
-			print("|cffff3333[HarfordAdmin]|r " .. tostring(err))
+			print("|cffff3333" .. tostring(err) .. "|r")
 			return
 		end
-		print("|cff00ff00[HarfordAdmin]|r Limpieza remota de loot enviada via " .. channel)
+		print("|cff00ff00Limpieza remota de loot enviada via " .. channel .. "|r")
 		return
 	end
 

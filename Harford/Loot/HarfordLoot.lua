@@ -313,7 +313,7 @@ commFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
         local loadedFromSync = HarfordLootAPI.LoadConfig and HarfordLootAPI.LoadConfig()
 		if loadedFromSync then
-			print("|cff00ff00[HarfordLoot]|r Configuración de loot cargada automáticamente desde Sync.")
+			print("|cff00ff00Configuración de loot cargada automáticamente desde Sync.|r")
 		end
         if HarfordSync and HarfordSync.RegisterPrefix then
 			HarfordSync.RegisterPrefix(COMM_PREFIX)
@@ -362,14 +362,14 @@ commFrame:SetScript("OnEvent", function(_, event, ...)
 			if message and message:find("^LOOTCFG|") then
 				local ok = HarfordLootAPI.ApplyConfig(message)
 				if ok then
-					print("|cff00ff00[HarfordLoot]|r Configuración de loot recibida de " .. (sender or "otro cliente") .. ".")
+					print("|cff00ff00Configuración de loot recibida de " .. (sender or "otro cliente") .. ".|r")
 				end
 			elseif message and message:find("^LOOTCFGC|") then
 				local payload = HarfordSync.ReceiveLootConfigChunk(message, sender)
 				if payload then
 					local ok = HarfordLootAPI.ApplyConfig(payload)
 					if ok then
-						print("|cff00ff00[HarfordLoot]|r Configuración de loot recibida de " .. (sender or "otro cliente") .. ".")
+						print("|cff00ff00Configuración de loot recibida de " .. (sender or "otro cliente") .. ".|r")
 					end
 				end
 			end
@@ -430,7 +430,7 @@ local function LootItem(slot, entry, quantity)
                 return
             end
             if not (HarfordServerActions and HarfordServerActions.GiveItem) then
-                print("|cffff3333[HarfordLoot]|r No se pudo entregar el objeto: HarfordServerActions no disponible.")
+                print("|cffff3333No se pudo entregar el objeto: HarfordServerActions no disponible.|r")
                 return
             end
 
@@ -455,7 +455,7 @@ local function LootItem(slot, entry, quantity)
                     button._harfordLootPending = nil
                     if not success then
                         local msg = messages and messages[1] or "el servidor no confirmó la entrega"
-                        print("|cffff3333[HarfordLoot]|r No se pudo entregar el objeto: " .. tostring(msg))
+                        print("|cffff3333No se pudo entregar el objeto: " .. tostring(msg) .. ".|r")
                         return
                     end
 
@@ -475,7 +475,7 @@ local function LootItem(slot, entry, quantity)
             })
             if not ok then
                 button._harfordLootPending = nil
-                print("|cffff3333[HarfordLoot]|r No se pudo entregar el objeto: " .. tostring(err or "error desconocido"))
+                print("|cffff3333No se pudo entregar el objeto: " .. tostring(err or "error desconocido") .. ".|r")
             end
         end
     end

@@ -58,7 +58,7 @@ D.PROFESSIONS = {
 D.RECIPES = {
     -- ===== Mineria (gather: sin materiales, tirada -> mena) =====
     { id = "min_cobre",   profession = "mineria", skillReq = 1,   name = "Extraer cobre",   icon = "INV_Ore_Copper_01", dc = 10, materials = {}, output = { key = "mena_cobre",   qty = 1 } },
-    { id = "min_estano",  profession = "mineria", skillReq = 65,  name = "Extraer estano",  icon = "INV_Ore_Tin_01",    dc = 13, materials = {}, output = { key = "mena_estano",  qty = 1 } },
+    { id = "min_estano",  profession = "mineria", skillReq = 65,  name = "Extraer estaño",  icon = "INV_Ore_Tin_01",    dc = 13, materials = {}, output = { key = "mena_estano",  qty = 1 } },
     { id = "min_hierro",  profession = "mineria", skillReq = 125, name = "Extraer hierro",  icon = "INV_Ore_Iron",      dc = 15, materials = {}, output = { key = "mena_hierro",  qty = 1 } },
 
     -- ===== Herboristeria (gather) =====
@@ -112,18 +112,26 @@ D.RECIPES = {
     -- ===== Mineria (ampliacion) =====
     { id = "min_piedra", profession = "mineria", skillReq = 10, name = "Extraer piedra aspera", icon = "INV_Stone_12", dc = 10, materials = {}, output = { key = "piedra_aspera", qty = 1 } },
     { id = "min_carbon", profession = "mineria", skillReq = 75, name = "Extraer carbon", icon = "INV_Stone_16", dc = 13, materials = {}, output = { key = "carbon", qty = 1 } },
+    { id = "min_plata", profession = "mineria", skillReq = 100, name = "Extraer plata", icon = "INV_Ore_Silver_Nugget", dc = 14, materials = {}, output = { key = "mena_plata", qty = 1 } },
     { id = "min_mithril", profession = "mineria", skillReq = 175, name = "Extraer mithril", icon = "INV_Ore_Mithril_02", dc = 16, materials = {}, output = { key = "mena_mithril", qty = 1 } },
     { id = "min_torio", profession = "mineria", skillReq = 250, name = "Extraer torio", icon = "INV_Ore_Thorium_02", dc = 17, materials = {}, output = { key = "mena_torio", qty = 1 } },
     { id = "min_roca_oscura", profession = "mineria", skillReq = 300, name = "Extraer roca oscura", icon = "INV_Ore_Arcanite_01", dc = 18, materials = {}, output = { key = "mena_roca_oscura", qty = 1 }, worldLearned = true },
 
     -- ===== Herboristeria (ampliacion) =====
-    { id = "herb_zarzaespina", profession = "herboristeria", skillReq = 50, name = "Recoger zarzaespina", icon = "INV_Misc_Root_01", dc = 12, materials = {}, output = { key = "zarzaespina", qty = 1 } },
+    -- Hierbas confirmadas como items reales de Epsilon via merchantdump (2026-08-20).
+    { id = "herb_hojaplata", profession = "herboristeria", skillReq = 1, name = "Recoger hojaplata", icon = "INV_Misc_Herb_02", dc = 10, materials = {}, output = { key = "hojaplata", qty = 1 } },
+    { id = "herb_marregal", profession = "herboristeria", skillReq = 35, name = "Recoger marregal", icon = "INV_Misc_Herb_08", dc = 11, materials = {}, output = { key = "marregal", qty = 1 } },
+    { id = "herb_zarzaespina", profession = "herboristeria", skillReq = 50, name = "Recoger brezospina", icon = "INV_Misc_Root_01", dc = 12, materials = {}, output = { key = "zarzaespina", qty = 1 } },
+    { id = "herb_cardopresto", profession = "herboristeria", skillReq = 60, name = "Recoger cardopresto", icon = "INV_Misc_Herb_04", dc = 12, materials = {}, output = { key = "cardopresto", qty = 1 } },
+    { id = "herb_alga", profession = "herboristeria", skillReq = 70, name = "Recoger alga estranguladora", icon = "INV_Misc_Herb_03", dc = 13, materials = {}, output = { key = "alga_estranguladora", qty = 1 } },
+    { id = "herb_cardenal", profession = "herboristeria", skillReq = 100, name = "Recoger hierba cardenal", icon = "INV_Misc_Herb_16", dc = 13, materials = {}, output = { key = "hierba_cardenal", qty = 1 } },
+    { id = "herb_musgo_tumba", profession = "herboristeria", skillReq = 115, name = "Recoger musgo de tumba", icon = "INV_Misc_Herb_05", dc = 14, materials = {}, output = { key = "musgo_tumba", qty = 1 } },
     { id = "herb_aceroflor", profession = "herboristeria", skillReq = 85, name = "Recoger aceroflor", icon = "INV_Misc_Flower_02", dc = 13, materials = {}, output = { key = "aceroflor", qty = 1 } },
     { id = "herb_sangrerreal", profession = "herboristeria", skillReq = 125, name = "Recoger sangrerreal", icon = "INV_Misc_Herb_15", dc = 14, materials = {}, output = { key = "sangrerreal", qty = 1 } },
     { id = "herb_raizvida", profession = "herboristeria", skillReq = 150, name = "Recoger raiz de vida", icon = "INV_Misc_Root_02", dc = 15, materials = {}, output = { key = "raizvida", qty = 1 } },
     { id = "herb_espinodorada", profession = "herboristeria", skillReq = 175, name = "Recoger espina dorada", icon = "INV_Misc_Flower_01", dc = 15, materials = {}, output = { key = "espinodorada", qty = 1 } },
     { id = "herb_lotopurpura", profession = "herboristeria", skillReq = 210, name = "Recoger loto purpura", icon = "INV_Misc_Flower_04", dc = 16, materials = {}, output = { key = "lotopurpura", qty = 1 } },
-    { id = "herb_matasuenos", profession = "herboristeria", skillReq = 255, name = "Recoger matasuenos", icon = "INV_Misc_Herb_10", dc = 17, materials = {}, output = { key = "matasuenos", qty = 1 } },
+    { id = "herb_matasuenos", profession = "herboristeria", skillReq = 255, name = "Recoger matasueños", icon = "INV_Misc_Herb_10", dc = 17, materials = {}, output = { key = "matasuenos", qty = 1 } },
     { id = "herb_lotonegro", profession = "herboristeria", skillReq = 300, name = "Recoger loto negro", icon = "INV_Misc_Herb_BlackLotus", dc = 18, materials = {}, output = { key = "lotonegro", qty = 1 }, worldLearned = true },
 
     -- ===== Desollar (ampliacion) =====
@@ -142,7 +150,9 @@ D.RECIPES = {
     { id = "pes_legendario", profession = "pesca", skillReq = 300, name = "Pescar pez legendario", icon = "INV_Misc_Fish_24", dc = 18, materials = {}, output = { key = "pez_legendario", qty = 1 }, worldLearned = true },
 
     -- ===== Herreria (ampliacion) =====
+    { id = "herr_lingote_estano", profession = "herreria", skillReq = 15, name = "Fundir estaño", icon = "INV_Ingot_05", dc = 9, materials = { { key = "mena_estano", qty = 1 } }, output = { key = "lingote_estano", qty = 1 } },
     { id = "herr_maza_bronce", profession = "herreria", skillReq = 75, name = "Maza de bronce", icon = "INV_Mace_01", dc = 13, materials = { { key = "lingote_bronce", qty = 3 } }, output = { key = "maza_bronce", qty = 1 } },
+    { id = "herr_lingote_plata", profession = "herreria", skillReq = 100, name = "Fundir plata", icon = "INV_Ingot_01", dc = 13, materials = { { key = "mena_plata", qty = 1 } }, output = { key = "lingote_plata", qty = 1 } },
     { id = "herr_lingote_hierro", profession = "herreria", skillReq = 125, name = "Fundir hierro", icon = "INV_Ingot_Iron", dc = 13, materials = { { key = "mena_hierro", qty = 1 } }, output = { key = "lingote_hierro", qty = 1 } },
     { id = "herr_cota_hierro", profession = "herreria", skillReq = 140, name = "Cota de escamas de hierro", icon = "INV_Chest_Chain_05", dc = 15, materials = { { key = "lingote_hierro", qty = 6 } }, output = { key = "cota_escamas_hierro", qty = 1 } },
     { id = "herr_lingote_acero", profession = "herreria", skillReq = 150, name = "Fundir acero", icon = "INV_Ingot_Steel", dc = 14, materials = { { key = "lingote_hierro", qty = 1 }, { key = "carbon", qty = 1 } }, output = { key = "lingote_acero", qty = 1 } },
@@ -155,6 +165,7 @@ D.RECIPES = {
     { id = "herr_espada_runica", profession = "herreria", skillReq = 300, name = "Espada runica de torio", icon = "INV_Sword_41", dc = 18, materials = { { key = "lingote_torio", qty = 8 }, { key = "esencia_mayor", qty = 2 } }, output = { key = "espada_runica_torio", qty = 1 }, worldLearned = true },
 
     -- ===== Peleteria (ampliacion) =====
+    { id = "pel_remendar_restos", profession = "peleteria", skillReq = 1, name = "Remendar restos de cuero", icon = "INV_Misc_LeatherScrap_03", dc = 8, materials = { { key = "restos_cuero", qty = 3 } }, output = { key = "cuero_ligero", qty = 1 } },
     { id = "pel_capa_ligera", profession = "peleteria", skillReq = 60, name = "Capa de cuero", icon = "INV_Misc_Cape_11", dc = 12, materials = { { key = "cuero_ligero", qty = 3 } }, output = { key = "capa_cuero", qty = 1 } },
     { id = "pel_curtir_medio", profession = "peleteria", skillReq = 75, name = "Curtir cuero medio", icon = "INV_Misc_LeatherScrap_05", dc = 13, materials = { { key = "cuero_crudo_medio", qty = 1 } }, output = { key = "cuero_medio", qty = 1 } },
     { id = "pel_botas_medio", profession = "peleteria", skillReq = 90, name = "Botas de cuero", icon = "INV_Boots_05", dc = 13, materials = { { key = "cuero_medio", qty = 3 } }, output = { key = "botas_cuero", qty = 1 } },
@@ -164,6 +175,19 @@ D.RECIPES = {
     { id = "pel_curtir_grueso", profession = "peleteria", skillReq = 225, name = "Curtir cuero grueso", icon = "INV_Misc_LeatherScrap_08", dc = 15, materials = { { key = "cuero_crudo_grueso", qty = 1 } }, output = { key = "cuero_grueso", qty = 1 } },
     { id = "pel_armadura_gruesa", profession = "peleteria", skillReq = 260, name = "Armadura de cuero grueso", icon = "INV_Chest_Leather_08", dc = 16, materials = { { key = "cuero_grueso", qty = 8 } }, output = { key = "armadura_cuero_grueso", qty = 1 } },
     { id = "pel_armadura_dragon", profession = "peleteria", skillReq = 300, name = "Armadura de escamas de dragon", icon = "INV_Chest_Leather_06", dc = 18, materials = { { key = "escama_dragon", qty = 6 }, { key = "cuero_grueso", qty = 4 } }, output = { key = "armadura_escamas_dragon", qty = 1 }, worldLearned = true },
+
+    -- ===== Ingenieria (cadena 1-300; cruza mineria/herreria/sastreria/encantamiento) =====
+    { id = "ing_polvo_tosco", profession = "ingenieria", skillReq = 1, name = "Pólvora tosca", icon = "INV_Misc_Ammo_Gunpowder_01", dc = 9, materials = { { key = "piedra_aspera", qty = 1 } }, output = { key = "polvo_tosco", qty = 1 } },
+    { id = "ing_pernos_cobre", profession = "ingenieria", skillReq = 1, name = "Puñado de pernos de cobre", icon = "INV_Misc_Gear_02", dc = 10, materials = { { key = "lingote_cobre", qty = 1 } }, output = { key = "pernos_cobre", qty = 1 } },
+    { id = "ing_dinamita_tosca", profession = "ingenieria", skillReq = 30, name = "Dinamita tosca", icon = "INV_Misc_Bomb_05", dc = 12, materials = { { key = "polvo_tosco", qty = 2 }, { key = "retal_lino", qty = 1 } }, output = { key = "dinamita_tosca", qty = 1 } },
+    { id = "ing_trabuco_tosco", profession = "ingenieria", skillReq = 50, name = "Trabuco tosco", icon = "INV_Musket_01", dc = 13, materials = { { key = "lingote_cobre", qty = 2 }, { key = "polvo_tosco", qty = 1 } }, output = { key = "trabuco_tosco", qty = 1 } },
+    { id = "ing_tubo_bronce", profession = "ingenieria", skillReq = 105, name = "Tubo de bronce", icon = "INV_Gizmo_Pipe_04", dc = 14, materials = { { key = "lingote_bronce", qty = 2 } }, output = { key = "tubo_bronce", qty = 1 } },
+    { id = "ing_catalejo_bronce", profession = "ingenieria", skillReq = 125, name = "Catalejo de bronce", icon = "INV_Misc_Spyglass_02", dc = 14, materials = { { key = "tubo_bronce", qty = 1 }, { key = "pernos_cobre", qty = 1 } }, output = { key = "catalejo_bronce", qty = 1 } },
+    { id = "ing_soporte_hierro", profession = "ingenieria", skillReq = 150, name = "Soporte de hierro", icon = "INV_Misc_Gear_01", dc = 15, materials = { { key = "lingote_hierro", qty = 2 } }, output = { key = "soporte_hierro", qty = 1 } },
+    { id = "ing_rifle_hierro", profession = "ingenieria", skillReq = 190, name = "Rifle de hierro", icon = "INV_Musket_03", dc = 15, materials = { { key = "soporte_hierro", qty = 1 }, { key = "tubo_bronce", qty = 1 }, { key = "polvo_tosco", qty = 2 } }, output = { key = "rifle_hierro", qty = 1 } },
+    { id = "ing_carcasa_mithril", profession = "ingenieria", skillReq = 225, name = "Carcasa de mithril", icon = "INV_Gizmo_03", dc = 16, materials = { { key = "lingote_mithril", qty = 3 } }, output = { key = "carcasa_mithril", qty = 1 } },
+    { id = "ing_girocronatomo", profession = "ingenieria", skillReq = 275, name = "Girocronatomo", icon = "INV_Gizmo_02", dc = 17, materials = { { key = "lingote_mithril", qty = 1 }, { key = "esencia_menor", qty = 1 } }, output = { key = "girocronatomo", qty = 1 } },
+    { id = "ing_detonador_goblin", profession = "ingenieria", skillReq = 300, name = "Detonador goblin", icon = "INV_Gizmo_04", dc = 18, materials = { { key = "carcasa_mithril", qty = 1 }, { key = "polvo_tosco", qty = 4 }, { key = "esencia_mayor", qty = 1 } }, output = { key = "detonador_goblin", qty = 1 }, worldLearned = true },
 
     -- ===== Sastreria (ampliacion) =====
     { id = "sas_capa_lino", profession = "sastreria", skillReq = 40, name = "Capa de lino", icon = "INV_Misc_Cape_02", dc = 12, materials = { { key = "retal_lino", qty = 3 } }, output = { key = "capa_lino", qty = 1 } },
@@ -196,7 +220,7 @@ D.RECIPES = {
     { id = "coc_banquete", profession = "cocina", skillReq = 300, name = "Banquete de maestro", icon = "INV_Misc_Food_101", dc = 18, materials = { { key = "pez_legendario", qty = 1 }, { key = "carne_cruda", qty = 4 }, { key = "harina", qty = 2 } }, output = { key = "banquete_maestro", qty = 1 }, worldLearned = true },
 
     -- ===== Encantamiento (ampliacion) =====
-    { id = "enc_desencantar", profession = "encantamiento", skillReq = 1, name = "Desencantar (polvo extrano)", icon = "INV_Enchant_DustStrange", dc = 10, materials = {}, output = { key = "polvo_extrano", qty = 1 } },
+    { id = "enc_desencantar", profession = "encantamiento", skillReq = 1, name = "Desencantar (polvo extraño)", icon = "INV_Enchant_DustStrange", dc = 10, materials = {}, output = { key = "polvo_extrano", qty = 1 } },
     { id = "enc_arma_menor", profession = "encantamiento", skillReq = 50, name = "Encantar arma menor", icon = "INV_Scroll_02", dc = 12, materials = { { key = "polvo_extrano", qty = 3 }, { key = "pergamino", qty = 1 } }, output = { key = "pergamino_enc_arma_menor", qty = 1 } },
     { id = "enc_esencia_menor", profession = "encantamiento", skillReq = 75, name = "Desencantar (esencia menor)", icon = "INV_Enchant_EssenceMagicSmall", dc = 13, materials = {}, output = { key = "esencia_menor", qty = 1 } },
     { id = "enc_armadura", profession = "encantamiento", skillReq = 100, name = "Encantar armadura", icon = "INV_Scroll_06", dc = 13, materials = { { key = "polvo_extrano", qty = 4 }, { key = "esencia_menor", qty = 1 }, { key = "pergamino", qty = 1 } }, output = { key = "pergamino_enc_armadura", qty = 1 } },

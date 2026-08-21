@@ -132,6 +132,38 @@ function API.GetTierName(skill)
     return name
 end
 
+-- Instantanea segura para UI externa/Arcanum. No devuelve la persistencia interna.
+function API.GetStationInfo(profId)
+    profId = tostring(profId or ""):lower()
+    local def = API.GetDefinition(profId)
+    if not def then return nil end
+    local skill = API.EffectiveSkill(profId)
+    return {
+        id = def.id,
+        name = def.name,
+        kind = def.kind,
+        known = API.KnowsProfession(profId),
+        skill = skill,
+        tier = API.GetTierName(skill),
+    }
+end
+
+-- Entrada publica para un Spark/ArcSpell de estacion. El argumento es SIEMPRE el id
+-- de profesion ("herreria", "alquimia"...), nunca un tipo de objeto como "forja".
+function API.OpenStation(profId)
+    profId = tostring(profId or ""):lower()
+    local info = API.GetStationInfo(profId)
+    if not info then
+        print("|cffff5555Estacion mal configurada: profesion desconocida (" .. profId .. ").|r")
+        return false, "Profesion desconocida: " .. profId
+    end
+    if not (HarfordCharacterPanel and HarfordCharacterPanel.OpenProfession) then
+        print("|cffff5555No se pudo abrir la estacion: panel de profesiones no disponible.|r")
+        return false, "Panel de profesiones no disponible"
+    end
+    return HarfordCharacterPanel.OpenProfession(profId)
+end
+
 ------------------------------------------------------------
 -- Tirada de la profesion (competencia herramienta + caracteristica)
 ------------------------------------------------------------

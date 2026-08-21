@@ -254,6 +254,13 @@ function API.Toggle()
     if tray:IsShown() then API.Close() else API.Open() end
 end
 
+-- HarfordDnDMinimap se carga antes que este modulo. El primer Attach que intenta hacer el
+-- boton ocurre demasiado pronto, asi que la bandeja debe recuperar ese boton al inicializarse.
+-- Sin esto la flecha solo se crea al primer click que abre la bandeja.
+if _G.HarfordDnDMinimapButton then
+    API.Attach(_G.HarfordDnDMinimapButton)
+end
+
 ------------------------------------------------------------
 -- Herramientas Harford registradas
 ------------------------------------------------------------

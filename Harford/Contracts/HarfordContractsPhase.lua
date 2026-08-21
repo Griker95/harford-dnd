@@ -782,3 +782,79 @@ end
 function Phase.GetManifestKey()
   return CLAVE_MANIFIESTO
 end
+
+------------------------------------------------------------
+-- Completar una mision
+------------------------------------------------------------
+
+-- Escribir en la fase es de OFICIAL, no de DM: quien termina una mision suele ser un jugador
+-- normal, y marcarla no deberia exigir herramientas de maestro.
+function Phase.CanWrite()
+  return HarfordAuthority and HarfordAuthority.IsOfficerPlus
+    and HarfordAuthority.IsOfficerPlus() == true
+end
+
+-- Marca UN contrato como completado sin republicar el tablon entero: se reescribe su bloque
+-- y se cambia su fila del indice. Asi un oficial puede cerrarla sin ser DM ni tener el
+-- tablon local al dia.
+function Phase.CompleteContract(contractId, callback)
+  contractId = tostring(contractId or "")
+  if contractId == "" then
+    if callback then callback(false, nil, "sin id") end
+    return
+  end
+  if not (Phase.IsAvailable() and Phase.CanWrite()) then
+    if callback then callback(false, nil, "sin permiso de escritura en la fase") end
+    return
+  end
+
+  local clave = ClaveBloque(contractId)
+  if not clave then
+    if callback then callback(false, nil, "id demasiado largo") end
+    return
+  end
+
+  Phase.LoadIndex(function(indice, err)
+    if not indice then
+      if callback then callback(false, nil, err or "sin indice") end
+      return
+    end
+
+    local fila
+    for _, f in ipairs(indice) do
+      if f and tostring(f.id) == contractId then fila = f break end
+    end
+    if not fila then
+      if callback then callback(false, nil, "esa mision no esta en el tablon") end
+      return
+    end
+    if tostring(fila.status) == "completed" then
+      if callback then callback(true, "ya estaba") end
+      return
+    end
+
+    fila.status = "completed"
+
+    -- El bloque tambien, para que quien lo abra vea el estado correcto. Se lee, se toca solo
+    -- el estado y se devuelve: reescribirlo desde el contrato local perderia los cambios de
+    -- otro DM que este cliente no tenga.
+    Phase.LoadContract(contractId, function(bloque)
+      if type(bloque) == "table" then
+        bloque.status = "completed"
+        Escribir(clave, bloque)
+      end
+
+      indice.meta = { by = (UnitName and UnitName("player")) or "?", at = (time and time()) or 0 }
+      local ok, werr = Escribir(CLAVE_INDICE, indice)
+      if not ok then
+        if callback then callback(false, nil, werr) end
+        return
+      end
+
+      local local_ = TC.Data and TC.Data.GetContractById and TC.Data.GetContractById(contractId)
+      if local_ then local_.status = "completed" end
+      if TC.UI and TC.UI.Refresh then TC.UI.Refresh() end
+      if callback then callback(true, contractId) end
+    end)
+  end)
+end

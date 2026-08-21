@@ -228,7 +228,7 @@ local function GetChannel()
   return nil
 end
 
-local function SendAddonMessage(message, channel)
+local function SendAddonMessage(message, channel, target)
   channel = channel or GetChannel()
   if not channel then
     TC.Print("No estas en grupo, banda o hermandad para sincronizar.")
@@ -245,12 +245,12 @@ local function SendAddonMessage(message, channel)
     TC.Print("[TCBOARD] TX ch=" .. tostring(channel) .. " ctl=" .. tostring(CTL ~= nil) .. " m=" .. string.sub(message or "", 1, 20))
   end
   if CTL and CTL.SendAddonMessage then
-    local ok = pcall(CTL.SendAddonMessage, CTL, "BULK", PREFIX, message, channel)
+    local ok = pcall(CTL.SendAddonMessage, CTL, "BULK", PREFIX, message, channel, target)
     if ok then return true end
   end
 
   if HarfordSync and HarfordSync.Send then
-    local ok, err = HarfordSync.Send(PREFIX, message, channel)
+    local ok, err = HarfordSync.Send(PREFIX, message, channel, target)
     if not ok then
       TC.Print("No se pudo sincronizar el tablon: " .. tostring(err or "error desconocido"))
     end
@@ -258,7 +258,7 @@ local function SendAddonMessage(message, channel)
   end
 
   if C_ChatInfo and C_ChatInfo.SendAddonMessage then
-    local ok, err = pcall(C_ChatInfo.SendAddonMessage, PREFIX, message, channel)
+    local ok, err = pcall(C_ChatInfo.SendAddonMessage, PREFIX, message, channel, target)
     if not ok then
       TC.Print("No se pudo sincronizar el tablon: " .. tostring(err))
       return false
@@ -779,6 +779,78 @@ function Comm.PublishMoneyClaim(contractId)
   }, "|"))
 end
 
+-- Nombre del lider de la banda/grupo, o nil si no hay grupo.
+local function GroupLeaderName()
+  if not (IsInGroup and IsInGroup()) then return nil end
+  if UnitIsGroupLeader and UnitIsGroupLeader("player") then
+    return UnitName("player")
+  end
+  local enBanda = IsInRaid and IsInRaid()
+  local prefijo = enBanda and "raid" or "party"
+  local total = (GetNumGroupMembers and GetNumGroupMembers()) or 0
+  for i = 1, total do
+    local unit = prefijo .. i
+    if UnitExists(unit) and UnitIsGroupLeader and UnitIsGroupLeader(unit) then
+      return UnitName(unit)
+    end
+  end
+  return nil
+end
+
+-- Alguien ha terminado una mision del tablon.
+--
+-- Si puede escribir en la fase (oficial), la cierra el mismo y no molesta a nadie. Si no,
+-- avisa: susurro al lider del grupo, y si no hay lider identificable, al canal, donde
+-- cualquier oficial la cerrara. Cerrar es idempotente, asi que dos avisos no hacen dano.
+function Comm.ReportCompletion(contractId)
+  contractId = tostring(contractId or "")
+  if contractId == "" then return false end
+
+  if TC.Phase and TC.Phase.CanWrite and TC.Phase.CanWrite() then
+    TC.Phase.CompleteContract(contractId, function(ok, _, err)
+      if ok then
+        TC.Print("Mision marcada como completada en el tablon.")
+      else
+        TC.SetSyncStatus("No se pudo cerrar en la fase: " .. tostring(err))
+      end
+    end)
+    return true
+  end
+
+  local mensaje = "TCDONE|" .. SafeField(contractId)
+  local lider = GroupLeaderName()
+  if lider and lider ~= UnitName("player") then
+    if SendAddonMessage(mensaje, "WHISPER", lider) then
+      TC.Print("Aviso enviado a |cffffd100" .. lider .. "|r para cerrar la mision en el tablon.")
+      return true
+    end
+  end
+  if SendAddonMessage(mensaje) then
+    TC.Print("Aviso enviado al grupo para cerrar la mision en el tablon.")
+    return true
+  end
+  TC.Print("No hay nadie a quien avisar; la mision quedara abierta en el tablon.")
+  return false
+end
+
+-- Recibido de quien completo la mision pero no podia escribir en la fase.
+local function HandleCompletionReport(message, sender)
+  local parts = SplitPipe(message)
+  if parts[1] ~= "TCDONE" then return end
+  local contractId = Unescape(parts[2] or "")
+  if contractId == "" then return end
+  if not IsValidRemoteSender(sender) then return end
+  if not (TC.Phase and TC.Phase.CanWrite and TC.Phase.CanWrite()) then return end
+
+  TC.Phase.CompleteContract(contractId, function(ok, _, err)
+    if ok then
+      TC.Print("|cffffd100" .. SenderKey(sender) .. "|r completo una mision; cerrada en el tablon.")
+    else
+      TC.SetSyncStatus("Aviso de " .. SenderKey(sender) .. " sin cerrar: " .. tostring(err))
+    end
+  end)
+end
+
 function Comm.PublishStatus(contractId, status)
   if not TC.IsDMMode() then
     TC.Print("Activa el modo DM con .ph dm on para sincronizar estados.")
@@ -873,6 +945,10 @@ function Comm.Initialize()
     end
     if string.sub(message or "", 1, 7) == "STATUS|" then
       HandleStatusMessage(message, sender)
+      return
+    end
+    if string.sub(message or "", 1, 7) == "TCDONE|" then
+      HandleCompletionReport(message, sender)
       return
     end
     HandleChunk(message, sender)

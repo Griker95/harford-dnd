@@ -273,6 +273,14 @@ function API.TurnInCurrent(unit)
     if IsOfficer() and HarfordServerActions and HarfordServerActions.RemoveNpcAura then
         HarfordServerActions.RemoveNpcAura(API.AURA_COMPLETE)
     end
+
+    -- La mision del tablon pasa a "completada". Si este jugador es oficial la cierra el mismo
+    -- en la fase; si no, avisa al lider del grupo para que la cierre por el. `def.id` ES el id
+    -- del contrato (TC.BuildWorldQuestDef lo copia tal cual).
+    if HarfordContracts and HarfordContracts.Comm and HarfordContracts.Comm.ReportCompletion then
+        HarfordContracts.Comm.ReportCompletion(def.id)
+    end
+
     return true
 end
 

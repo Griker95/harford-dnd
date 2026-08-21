@@ -11,6 +11,9 @@ local listPage = 1
 local listStatusFilter = "available"
 local CONTRACTS_PER_PAGE = 5
 local ALL_CATEGORY_KEY = "__all"
+-- Las misiones terminadas salen de las categorias normales y tienen su propia seccion, para
+-- que el tablon siga mostrando lo que se puede coger sin mezclarlo con lo ya cerrado.
+local COMPLETED_CATEGORY_KEY = "__completed"
 local helpPage = 1
 local pendingRewardClaims = {}
 
@@ -342,6 +345,14 @@ end
 
 local function CountAvailableContractsByCategory(categoryKey)
   local count = 0
+  if categoryKey == COMPLETED_CATEGORY_KEY then
+    for _, contractType in ipairs(TC.Data.ContractTypes) do
+      for _, contract in ipairs(TC.Data.GetContractsByCategory(contractType.key)) do
+        if contract.status == "completed" then count = count + 1 end
+      end
+    end
+    return count
+  end
   if categoryKey == ALL_CATEGORY_KEY then
     for _, contractType in ipairs(TC.Data.ContractTypes) do
       for _, contract in ipairs(TC.Data.GetContractsByCategory(contractType.key)) do
@@ -364,7 +375,14 @@ local function IsAllContractsCategory(category)
   return category == ALL_CATEGORY_KEY
 end
 
+local function IsCompletedCategory(category)
+  return category == COMPLETED_CATEGORY_KEY
+end
+
 local function GetCategoryTitle(category)
+  if IsCompletedCategory(category) then
+    return "Misiones completadas"
+  end
   if IsAllContractsCategory(category) then
     return "Todos los contratos"
   end
@@ -408,17 +426,36 @@ end
 
 local function GetVisibleContractsByCategory(category)
   local visible = {}
+  if IsCompletedCategory(category) then
+    for _, contractType in ipairs(TC.Data.ContractTypes) do
+      for _, contract in ipairs(TC.Data.GetContractsByCategory(contractType.key)) do
+        if contract.status == "completed" and ContractPassesListStatus(contract) then
+          table.insert(visible, contract)
+        end
+      end
+    end
+    table.sort(visible, TC.Data.CompareByDifficulty)
+    return visible
+  end
+  -- Una completada ya tiene su seccion; mostrarla tambien aqui la duplicaria. Excepcion: el
+  -- DM que filtra explicitamente por "completed" quiere verlas donde este mirando.
+  local function Cabe(contract)
+    if not ContractPassesListStatus(contract) then return false end
+    if contract.status == "completed" and listStatusFilter ~= "completed" then return false end
+    return true
+  end
+
   if IsAllContractsCategory(category) then
     for _, contractType in ipairs(TC.Data.ContractTypes) do
       for _, contract in ipairs(TC.Data.GetContractsByCategory(contractType.key)) do
-        if ContractPassesListStatus(contract) then
+        if Cabe(contract) then
           table.insert(visible, contract)
         end
       end
     end
   else
     for _, contract in ipairs(TC.Data.GetContractsByCategory(category)) do
-      if ContractPassesListStatus(contract) then
+      if Cabe(contract) then
         table.insert(visible, contract)
       end
     end
@@ -1180,6 +1217,12 @@ function UI.RefreshCategories()
     key = ALL_CATEGORY_KEY,
     label = "Todos",
     icon = TC.icon,
+  }, { skipHoverPreview = true })
+
+  CreateCategoryButton(15, {
+    key = COMPLETED_CATEGORY_KEY,
+    label = "Completadas",
+    icon = "Interface\\Icons\\Achievement_Quests_Completed_08",
   }, { skipHoverPreview = true })
 end
 

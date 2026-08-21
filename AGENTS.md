@@ -2165,7 +2165,16 @@ ni de HarfordAdmin y no se despliega con ellos.
   addon se para solo al llenarse y reanuda con `/hforge crear`.
 - Si el objeto se crea pero fallan sus campos, la clave **queda apuntada igual**: el objeto
   ya existe en el servidor y reintentar crearia un duplicado.
-- El registro vive en `HarfordItemForgeDB` (SavedVariables), nunca en `Data.lua`.
+- El registro vive en `HarfordItemForgeDB` (SavedVariables), nunca en `Data.lua`. **Guarda
+  la ficha completa** (`id`, `nombre`, `prof`, `papel`, `cuando`), no un id suelto: ESA es la
+  lista, y `/hforge exportar` la saca agrupada por profesion y papel en el formato de
+  `HarfordProfessionsItems.REGISTRY`. Se admite el formato viejo (numero suelto) al leer.
+  Tambien persiste `estado.ultimo` y `estado.tanda` para saber por donde se iba.
+- **El borrado de bolsa es del cliente y es destructivo**: Epsilon no tiene comando de
+  servidor para quitar objetos, asi que `BorrarDeBolsa` usa `PickupContainerItem` +
+  `DeleteCursorItem`. Solo borra ids que constan en el registro (`EsNuestro`), comprueba el
+  hueco antes y confirma despues. No relajar esos cerrojos. Va apagado por defecto
+  (`/hforge autolimpiar`); encendido es lo unico que permite pasar de la capacidad de bolsa.
 - **Un objeto forjado nace cerrado**: solo su creador puede `.additem`. Como son objetos de
   profesion, el addon envia `forge item set property additem anyone <link> on` para todos.
   Se cierra por objeto con `"additem": false` en las anulaciones.

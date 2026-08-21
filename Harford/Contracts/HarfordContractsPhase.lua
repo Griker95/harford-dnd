@@ -544,15 +544,21 @@ local function EspejoLocal(fase)
   return db.phaseKeys[fase], db.phaseKeys, fase
 end
 
+-- Solo la lista. EspejoLocal devuelve ademas la tabla contenedora y la fase, que son
+-- detalles internos y expandirlos aqui rompe a cualquiera que haga ipairs{...} con esto.
 function Phase.GetLocalManifest()
-  return EspejoLocal()
+  return (EspejoLocal())
 end
 
 -- Devuelve la UNION de lo que declara la fase y lo que recuerda el espejo local.
 function Phase.LoadManifest(callback)
   LeerTabla(CLAVE_MANIFIESTO, function(lista, err)
     local unidas, vistas = {}, {}
-    for _, origen in ipairs({ type(lista) == "table" and lista or {}, EspejoLocal() }) do
+    -- (EspejoLocal()) ENTRE PARENTESIS: devuelve 3 valores y, como ultimo elemento de un
+    -- constructor de tabla, Lua los expande todos. Sin los parentesis la tabla acababa con
+    -- el id de fase (una cadena) dentro y el ipairs de abajo reventaba.
+    local espejo = (EspejoLocal())
+    for _, origen in ipairs({ type(lista) == "table" and lista or {}, espejo }) do
       for _, clave in ipairs(origen) do
         local k = tostring(clave)
         if k ~= "" and not vistas[k] then

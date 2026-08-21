@@ -160,6 +160,9 @@ end
 -- HarfordDnDProfile aplica tablas de perfil/recursos; le inyectamos los callbacks
 -- de la ficha (defaults + refresh) una vez definidos.
 HarfordDnDProfile.SetHooks(EnsureDefaults, RefreshMainUI)
+-- Los modulos de reglas (concentracion, puntos de heroe, cansancio, carga) avisan por aqui
+-- cuando cambian de estado, sin conocer la UI.
+HarfordDnDStore.RefreshMainUI = RefreshMainUI
 
 -- GetPB, GetSpellPB, GetMode, GetMiscBonus, GetAbilityScore, GetAbilityMod,
 -- GetSaveProf, GetWeaponMod, GetVersatileActive viven en HarfordDnDCalc.
@@ -231,7 +234,16 @@ end
 -- ejecutar /harford cargarficha (ver LoadPlayerSheetFromTRP3). Asi los recursos se cargan
 -- exclusivamente de SV; subir de nivel = re-ejecutar el comando.
 local function GetResourceMax(key)
-    return toN(ARCGET(ResourceMaxKey(key), "0"), 0)
+    local value = toN(ARCGET(ResourceMaxKey(key), "0"), 0)
+    -- CANSANCIO nivel 4: "puntos de golpe maximos reducidos a la mitad". Se aplica al LEER el
+    -- maximo, no al guardarlo: el valor persistido debe seguir siendo el real, para que al
+    -- bajar de nivel de cansancio se recupere solo sin recalcular nada.
+    if key == "health" and value > 0 and HarfordDnDConditions
+        and HarfordDnDConditions.IsMaxHealthHalved
+        and HarfordDnDConditions.IsMaxHealthHalved("player") then
+        value = math.floor(value / 2)
+    end
+    return value
 end
 
 -- Maximo DERIVADO (calculado) de un recurso, para hornear en SV al cargar la ficha:
@@ -1578,6 +1590,19 @@ AdjustResourceCurrent = function(key, delta)
     SetResourceCurrent(key, cur)
 
     if key == "health" then
+        -- CONCENTRACION: recibir dano obliga a una salvacion de Constitucion (CD 10 o la mitad
+        -- del dano, lo que sea mayor). Se dispara aqui porque este es el unico punto por el que
+        -- pasa TODO el dano al jugador, venga de un NPC, de un area o de un ajuste remoto.
+        local recibido = -toN(delta, 0)
+        if recibido > 0 and HarfordDnDConcentration and HarfordDnDConcentration.IsActive
+            and HarfordDnDConcentration.IsActive() then
+            HarfordDnDConcentration.OnDamage(recibido)
+        end
+        -- A 0 puntos de golpe se cae inconsciente y se pierde la concentracion.
+        if cur <= 0 and HarfordDnDConcentration and HarfordDnDConcentration.OnHealthChanged then
+            HarfordDnDConcentration.OnHealthChanged(cur)
+        end
+
         -- Las formas de Baird conservan los PG del personaje, pero terminan al caer a 0.
         if HarfordDnDForms and HarfordDnDForms.RevertIfDefeated
             and HarfordDnDForms.RevertIfDefeated(cur) then
@@ -2266,6 +2291,80 @@ modeLabel:SetText("Modo activo: Normal")
 local pbText = SEC_TOP:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 pbText:SetPoint("TOPRIGHT", -6, -34)
 pbText:SetJustifyH("RIGHT")
+
+-- Estado que condiciona cualquier tirada: concentracion, cansancio y puntos de heroe.
+-- Va en la FILA DEL TITULO de la seccion, entre el titulo (acaba hacia x=110) y el boton
+-- "Recursos" (empieza en x=286). Es el unico hueco libre de SEC_TOP: la fila -34 la ocupan
+-- "Modo activo" y "Bonus competencia", la -48 los botones de modo, la -74 la caracteristica de
+-- conjuro, la -90 su desplegable y la -96 el Mod Global. Es boton y no etiqueta porque los tres
+-- estados se consultan y se tocan desde el mismo sitio.
+local stateBtn = CreateFrame("Button", nil, SEC_TOP)
+stateBtn:SetSize(162, 16)
+stateBtn:SetPoint("TOPLEFT", SEC_TOP, "TOPLEFT", 120, -8)
+local stateLabel = stateBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+stateLabel:SetAllPoints(stateBtn)
+stateLabel:SetJustifyH("LEFT")
+stateBtn:SetHighlightTexture("Interface\\Buttons\\UI-Panel-Button-Highlight", "ADD")
+
+stateBtn:SetScript("OnClick", function(self)
+    local menu = { { text = "Estado", isTitle = true, notCheckable = true } }
+
+    -- Soltar la concentracion: el manual permite hacerlo cuando quieras, sin gastar accion.
+    if HarfordDnDConcentration and HarfordDnDConcentration.IsActive
+        and HarfordDnDConcentration.IsActive() then
+        menu[#menu + 1] = {
+            text = "Soltar " .. tostring(HarfordDnDConcentration.GetSpellName() or "la concentracion"),
+            notCheckable = true,
+            func = function() HarfordDnDConcentration.Break() end,
+        }
+    end
+
+    -- Gastar un punto de heroe sobre la ULTIMA tirada: el manual lo permite despues de tirar.
+    local hp = HarfordDnDHeroPoints and HarfordDnDHeroPoints.GetStatus and HarfordDnDHeroPoints.GetStatus()
+    if hp and hp.current > 0 then
+        menu[#menu + 1] = {
+            text = string.format("Gastar punto de heroe (+1d6)  %d/%d", hp.current, hp.max),
+            notCheckable = true,
+            func = function() HarfordDnDHeroPoints.Spend() end,
+        }
+    end
+
+    -- Cansancio: lo fija el DM o el propio jugador segun lo que pase en mesa; no hay forma de
+    -- que el cliente lo deduzca (viaje forzado, hambre, hechizos), asi que se declara.
+    local C = HarfordDnDConditions
+    if C and C.SetExhaustion then
+        local actual = C.GetExhaustion("player")
+        local niveles = {}
+        for nivel = 0, 6 do
+            local etiqueta = (C.GetExhaustionLevelLabel and C.GetExhaustionLevelLabel(nivel)) or ""
+            niveles[#niveles + 1] = {
+                text = nivel == 0 and "0 - Sin cansancio"
+                    or string.format("%d - %s", nivel, etiqueta),
+                checked = actual == nivel,
+                func = function()
+                    C.SetExhaustion("player", nivel)
+                    if RefreshTopInfo then RefreshTopInfo() end
+                end,
+            }
+        end
+        menu[#menu + 1] = { text = "Cansancio", notCheckable = true, hasArrow = true, menuList = niveles }
+    end
+
+    if EasyMenu then
+        SEC_TOP._stateMenu = SEC_TOP._stateMenu
+            or CreateFrame("Frame", "HarfordStateMenu", UIParent, "UIDropDownMenuTemplate")
+        EasyMenu(menu, SEC_TOP._stateMenu, self, 0, 0, "MENU")
+    end
+end)
+
+stateBtn:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Estado", 1, 0.82, 0)
+    GameTooltip:AddLine("Concentracion, cansancio y puntos de heroe. Pulsa para soltar la concentracion, gastar un punto sobre la ultima tirada o fijar el nivel de cansancio.", 1, 1, 1, true)
+    GameTooltip:Show()
+end)
+stateBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 pbText:SetText("Bonus competencia: " .. GREEN .. fmtSigned(HarfordDnDCalc.GetPB()) .. ENDCLR)
 
 HarfordDnDUI.MakeButton(SEC_TOP, "Normal", 72, 20, 10, -48, function()
@@ -2943,7 +3042,8 @@ HarfordDnDAttackUI.ConfigureWeaponInfo({
                     return
                 end
                 local motion = HarfordDnDAttackUI.GetRecordedMovementInfo and HarfordDnDAttackUI.GetRecordedMovementInfo()
-                local tx, ty = UnitPosition and UnitPosition("target")
+                local tx, ty
+                if UnitPosition then tx, ty = UnitPosition("target") end
                 if motion and tx and ty and motion.startX and motion.endX then
                     local function dist(x1, y1, x2, y2)
                         local dx, dy = x1 - x2, y1 - y2
@@ -4269,6 +4369,32 @@ RefreshTopInfo = function()
         modeName = "Normal"
     end
     modeLabel:SetText("Modo activo: " .. modeName)
+
+    -- Linea compacta: cabe en 162 px, asi que el nombre del conjuro se recorta. El detalle
+    -- completo esta en el menu del propio boton y en el tooltip.
+    local partes = {}
+    if HarfordDnDConcentration and HarfordDnDConcentration.GetSpellName then
+        local conjuro = HarfordDnDConcentration.GetSpellName()
+        if conjuro then
+            if #conjuro > 12 then conjuro = conjuro:sub(1, 11) .. "..." end
+            partes[#partes + 1] = "|cff66ccff" .. conjuro .. "|r"
+        end
+    end
+    if HarfordDnDConditions and HarfordDnDConditions.GetExhaustion then
+        local nivel = HarfordDnDConditions.GetExhaustion("player")
+        if nivel > 0 then
+            partes[#partes + 1] = string.format("|cffff5555Cans %d|r", nivel)
+        end
+    end
+    if HarfordDnDHeroPoints and HarfordDnDHeroPoints.GetStatus then
+        local hp = HarfordDnDHeroPoints.GetStatus()
+        if hp and hp.max > 0 then
+            partes[#partes + 1] = string.format("|cffffd100H %d/%d|r", hp.current, hp.max)
+        end
+    end
+    -- Sin nada activo sigue mostrando "Estado" en gris: si no, el boton seria invisible y no
+    -- habria forma de llegar al control de cansancio.
+    stateLabel:SetText(#partes > 0 and table.concat(partes, " ") or "|cff808080Estado|r")
 
     local spellPB = HarfordDnDCalc.GetSpellPB()
     pbText:SetText("Bonus competencia: " .. GREEN .. fmtSigned(spellPB) .. ENDCLR)

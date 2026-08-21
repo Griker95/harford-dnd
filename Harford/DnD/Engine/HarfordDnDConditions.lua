@@ -17,7 +17,7 @@ API.ORDER = {
     "incapacitated", "invisible", "paralyzed", "petrified", "poisoned",
     "prone", "restrained", "stunned", "sleeping", "silenced", "rooted", "slowed",
     "disarmed", "exposed_armor", "burning", "frozen", "chilled", "blessed",
-    "bioluminescence", "dancing_lights", "elunes_grace",
+    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion",
 }
 
 API.DEFS = {
@@ -33,6 +33,37 @@ API.DEFS = {
         label = "Hechizado", tracking = "state",
         description = "No puede atacar a la fuente que lo hechizo.",
         effects = { { kind = "blockAttackSource" } },
+    },
+    -- CANSANCIO (PHB, "Estados"). Es la unica condicion con NIVELES: del 1 al 6, y cada uno
+    -- arrastra los efectos de los inferiores. El nivel vive en el registro de estado
+    -- (`record.level`), y `EffectsFor` expande los efectos hasta ese nivel.
+    --   1 Desventaja en pruebas de caracteristica
+    --   2 Velocidad reducida a la mitad
+    --   3 Desventaja en tiradas de ataque y de salvacion
+    --   4 Puntos de golpe maximos reducidos a la mitad
+    --   5 Velocidad reducida a 0
+    --   6 Muerte
+    -- Un descanso largo lo reduce en 1 si la criatura comio y bebio.
+    exhaustion = {
+        label = "Cansancio", tracking = "state", leveled = true, maxLevel = 6,
+        description = "Seis niveles acumulativos; el descanso largo reduce uno.",
+        levelEffects = {
+            [1] = { { kind = "rollMode", rolls = { ability = true }, mode = "dis" } },
+            [2] = { { kind = "speedHalved" } },
+            [3] = { { kind = "rollMode", rolls = { attack = true, save = true }, mode = "dis" } },
+            [4] = { { kind = "maxHealthHalved" } },
+            [5] = { { kind = "speedZero" } },
+            [6] = { { kind = "dead" } },
+        },
+        levelLabels = {
+            "Desventaja en pruebas de caracteristica",
+            "Velocidad reducida a la mitad",
+            "Desventaja en tiradas de ataque y de salvacion",
+            "Puntos de golpe maximos reducidos a la mitad",
+            "Velocidad reducida a 0",
+            "Muerte",
+        },
+        effects = {},
     },
     elunes_grace = {
         label = "Gracia de Elune", tracking = "state",
@@ -622,6 +653,16 @@ local function EffectsFor(ref)
     local out = {}
     for _, active in ipairs(API.GetActive(ref)) do
         for _, effect in ipairs(active.definition.effects or {}) do out[#out + 1] = effect end
+        -- Condiciones con niveles (cansancio): se acumulan los efectos de todos los niveles
+        -- hasta el actual, como manda el manual.
+        local levels = active.definition.levelEffects
+        if levels then
+            local level = math.min(active.record and tonumber(active.record.level) or 1,
+                                   active.definition.maxLevel or 6)
+            for i = 1, level do
+                for _, effect in ipairs(levels[i] or {}) do out[#out + 1] = effect end
+            end
+        end
     end
     return out
 end
@@ -682,8 +723,80 @@ function API.IsSaveAutoFailed(ref, ability)
     return false
 end
 
+-- ── Cansancio: nivel, subida y bajada ───────────────────────────────────────
+-- Es la unica condicion con nivel, asi que tiene su propio acceso en vez de obligar a los
+-- llamantes a hurgar en el registro de estado.
+
+function API.GetExhaustion(ref)
+    for _, active in ipairs(API.GetActive(ref or "player")) do
+        if active.id == "exhaustion" then
+            return math.max(1, math.min(6, tonumber(active.record and active.record.level) or 1))
+        end
+    end
+    return 0
+end
+
+-- Fija el nivel exacto. 0 lo retira; 6 significa muerte y se anuncia como tal.
+function API.SetExhaustion(ref, level)
+    ref = ref or "player"
+    level = math.max(0, math.min(6, math.floor(tonumber(level) or 0)))
+    if level == 0 then
+        if ref == "player" then API.RemoveOwned("exhaustion") else API.RemoveUnitState(ref, "exhaustion") end
+        return 0
+    end
+    local options = { level = level }
+    if ref == "player" then
+        API.ApplyOwned("exhaustion", options)
+    else
+        API.SetUnitState(ref, "exhaustion", options)
+    end
+    return level
+end
+
+-- Suma o resta niveles. Devuelve el nivel resultante.
+function API.AddExhaustion(ref, delta)
+    ref = ref or "player"
+    local current = API.GetExhaustion(ref)
+    return API.SetExhaustion(ref, current + (tonumber(delta) or 1))
+end
+
+-- Texto de los efectos activos, para tooltips y para el aviso al cambiar de nivel.
+function API.GetExhaustionEffects(level)
+    level = math.max(0, math.min(6, math.floor(tonumber(level) or 0)))
+    local def = API.DEFS.exhaustion
+    local out = {}
+    for i = 1, level do out[#out + 1] = (def.levelLabels or {})[i] end
+    return out
+end
+
+-- Etiqueta del efecto que APARECE en un nivel concreto (no los acumulados). La usa el menu de
+-- estado de la ficha para que elegir el nivel diga que implica.
+function API.GetExhaustionLevelLabel(level)
+    level = math.floor(tonumber(level) or 0)
+    if level < 1 or level > 6 then return nil end
+    return (API.DEFS.exhaustion.levelLabels or {})[level]
+end
+
+-- ¿La velocidad esta a la mitad? (nivel 2 de cansancio, y cualquier efecto equivalente)
+function API.IsSpeedHalved(ref)
+    for _, effect in ipairs(EffectsFor(ref or "player")) do
+        if effect.kind == "speedHalved" then return true end
+    end
+    return false
+end
+
+-- ¿Los puntos de golpe maximos estan a la mitad? (nivel 4 de cansancio)
+function API.IsMaxHealthHalved(ref)
+    for _, effect in ipairs(EffectsFor(ref or "player")) do
+        if effect.kind == "maxHealthHalved" then return true end
+    end
+    return false
+end
+
 function API.IsSpeedZero(ref)
-    for _, effect in ipairs(EffectsFor(ref or "player")) do if effect.kind == "speedZero" then return true end end
+    for _, effect in ipairs(EffectsFor(ref or "player")) do
+        if effect.kind == "speedZero" or effect.kind == "dead" then return true end
+    end
     return false
 end
 
@@ -903,7 +1016,9 @@ function API.RequestPlayer(unit, conditionId, apply, options)
         return false, "Objetivo jugador invalido"
     end
     if UnitIsUnit and UnitIsUnit(unit, "player") then
-        local ok, err = apply and API.ApplyOwned(conditionId, options) or API.RemoveOwned(conditionId)
+        local ok, err
+        if apply then ok, err = API.ApplyOwned(conditionId, options)
+        else ok, err = API.RemoveOwned(conditionId) end
         if ok and (not apply or (S.units.player and S.units.player[conditionId])) then
             PublishState(apply and "apply" or "remove", conditionId,
                 apply and S.units.player and S.units.player[conditionId] or nil)

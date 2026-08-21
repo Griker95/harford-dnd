@@ -54,6 +54,7 @@ DnD\State\HarfordDnDProfile.lua
 DnD\State\HarfordDnDMana.lua
 DnD\State\HarfordDnDProgression.lua
 DnD\State\HarfordDnDItems.lua
+DnD\State\HarfordDnDBurden.lua
 DnD\State\HarfordDnDForms.lua
 
 # --- DnD/Engine ---
@@ -62,6 +63,9 @@ DnD\Engine\HarfordDnDRolls.lua
 DnD\Engine\HarfordDnDConditionalDamage.lua
 DnD\Engine\HarfordDnDFeatureEffects.lua
 DnD\Engine\HarfordDnDConditions.lua
+DnD\Engine\HarfordDnDConcentration.lua
+DnD\Engine\HarfordDnDHeroPoints.lua
+DnD\Engine\HarfordDnDManeuvers.lua
 DnD\Engine\HarfordDnDCalc.lua
 DnD\Engine\HarfordDnDNet.lua
 DnD\Engine\HarfordDnDCombat.lua

@@ -248,6 +248,20 @@ function HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, unit)
         return nil, nil, ""
     end
 
+    -- COBERTURA declarada del objetivo: media +2 y tres cuartos +5 a su CA; total significa que
+    -- no puede ser elegido como objetivo, asi que el ataque ni se resuelve.
+    local coverText = ""
+    if HarfordDnDManeuvers and HarfordDnDManeuvers.GetCover then
+        local level, def = HarfordDnDManeuvers.GetCover()
+        if level and level ~= "none" then
+            if def and def.ac == nil then
+                return armorClass, false, " |cffff5555cobertura total: no puedes elegirlo como objetivo|r"
+            end
+            armorClass = armorClass + (def and def.ac or 0)
+            coverText = string.format(" (cobertura %s)", (def and def.label or level):lower())
+        end
+    end
+
     local hit
     if HarfordDnDCombat.IsCriticalRollTag(critTag) then
         hit = true
@@ -258,7 +272,7 @@ function HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, unit)
     end
 
     local status = hit and (GREEN .. "Superada" .. ENDCLR) or (RED .. "No superada" .. ENDCLR)
-    return armorClass, hit, " vs CA " .. tostring(armorClass) .. " " .. status
+    return armorClass, hit, " vs CA " .. tostring(armorClass) .. coverText .. " " .. status
 end
 
 -- Caracteristica ES -> clave del stat block TRP3 (ingles), para resolver salvaciones.

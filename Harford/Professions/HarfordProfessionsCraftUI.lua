@@ -71,10 +71,13 @@ local TEX = {
 local function RecipeIconTexture(rec)
     local path = rec and rec.icon and ("Interface\\Icons\\" .. rec.icon) or nil
     if path and GetFileIDFromPath and GetFileIDFromPath(path) then return path end
+    -- Si el icono declarado no existe, se usa el del OBJETO RESULTANTE, que es lo que la
+    -- receta fabrica. Si tampoco lo hay, interrogacion: mejor eso que un icono de otra cosa.
     local outId = rec and HarfordProfessions and HarfordProfessions.GetOutputItemId
         and HarfordProfessions.GetOutputItemId(rec.id)
     local tex = outId and GetItemIcon and GetItemIcon(outId)
     if tex then return tex end
+    if outId then API.NoteMissingIcon(outId) end
     if path and not GetFileIDFromPath then return path end
     return "Interface\\Icons\\INV_Misc_QuestionMark"
 end
@@ -102,9 +105,9 @@ local function CreateReagentSlot(parent, index)
     slot.name = slot:CreateFontString(nil, "BORDER")
     slot.name:SetFont("Fonts\\FRIZQT__.TTF", 12)
     slot.name:SetPoint("LEFT", bg, "LEFT", 15, 0)
-    slot.name:SetSize(90, 36)
+    slot.name:SetSize(92, 12)
     slot.name:SetJustifyH("LEFT")
-    slot.name:SetWordWrap(true)
+    slot.name:SetWordWrap(false)   -- el nombre partido se salia del marco
     -- Tooltip del material (como el nativo). Si la clave aun no tiene itemId real,
     -- se muestra el nombre del catalogo para que la receta siga siendo legible.
     slot:EnableMouse(true)
@@ -200,19 +203,12 @@ local function CreateFrameIfNeeded()
     local fill = bar:GetStatusBarTexture()
     if fill then fill:SetAlpha(0.5); fill:SetDrawLayer("BACKGROUND") end
     bar:SetMinMaxValues(0, 300)
-    local capL = bar:CreateTexture(nil, "OVERLAY")
-    SafeTexture(capL, TEX.barBorder, "barra: cap izq")
-    capL:SetTexCoord(0.0078429999, 0.0431369990, 0.1935479939, 0.7741929889)
-    capL:SetSize(9, 20); capL:SetPoint("LEFT", bar, "LEFT", -3, 0)
-    local capR = bar:CreateTexture(nil, "OVERLAY")
-    SafeTexture(capR, TEX.barBorder, "barra: cap der")
-    capR:SetTexCoord(0.0431369990, 0.0078429999, 0.1935479939, 0.7741929889)
-    capR:SetSize(9, 20); capR:SetPoint("RIGHT", bar, "RIGHT", 3, 0)
-    local barMid = bar:CreateTexture(nil, "OVERLAY")
-    SafeTexture(barMid, TEX.barBorder, "barra: centro")
-    barMid:SetTexCoord(0.1137259975, 0.1490195989, 0.1935479938, 0.7741929888)
-    barMid:SetPoint("TOPLEFT", capL, "TOPRIGHT", 0, 0)
-    barMid:SetPoint("BOTTOMRIGHT", capR, "BOTTOMLEFT", 0, 0)
+    -- Sin marco: los fileID del borde nativo (136571) salen como una CAJA BLANCA en este
+    -- cliente. Mejor una barra limpia con fondo oscuro que un rectangulo blanco encima.
+    local barBg = bar:CreateTexture(nil, "BACKGROUND")
+    barBg:SetColorTexture(0, 0, 0, 0.55)
+    barBg:SetPoint("TOPLEFT", bar, "TOPLEFT", -2, 2)
+    barBg:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 2, -2)
     frame.skillBar = bar
     frame.skillText = bar:CreateFontString(nil, "OVERLAY")
     frame.skillText:SetFont("Fonts\\FRIZQT__.TTF", 10)
@@ -233,35 +229,17 @@ local function CreateFrameIfNeeded()
         state.rows[i] = CreateRow(list, i)
     end
 
-    -- Scrollbar con el arte nativo (estudio: Slider 20 ancho en lista.TOPRIGHT +1,-14;
-    -- riel 136569 en 3 piezas, thumb 130849 18x24, botones 18x16)
-    local slider = CreateFrame("Slider", nil, frame)
-    slider:SetOrientation("VERTICAL")
-    slider:SetWidth(20)
-    slider:SetPoint("TOPLEFT", list, "TOPRIGHT", 1, -14)
-    slider:SetPoint("BOTTOMLEFT", list, "BOTTOMRIGHT", 1, 12)  -- nativo: doble anclaje
-    local railTop = slider:CreateTexture(nil, "ARTWORK")
-    SafeTexture(railTop, TEX.scrollRail, "scroll: riel arriba")
-    railTop:SetTexCoord(0, 0.484375, 0, 0.2)
-    railTop:SetSize(27, 48)
-    railTop:SetPoint("TOPLEFT", slider, "TOPLEFT", -4, 17)
-    local railBottom = slider:CreateTexture(nil, "ARTWORK")
-    SafeTexture(railBottom, TEX.scrollRail, "scroll: riel abajo")
-    railBottom:SetTexCoord(0.515625, 1, 0.1440625, 0.4140625)
-    railBottom:SetSize(27, 64)
-    railBottom:SetPoint("BOTTOMLEFT", slider, "BOTTOMLEFT", -4, -15)
-    local railMid = slider:CreateTexture(nil, "ARTWORK")
-    SafeTexture(railMid, TEX.scrollRail, "scroll: riel centro")
-    railMid:SetTexCoord(0, 0.484375, 0.1640625, 1)
-    railMid:SetPoint("TOPLEFT", railTop, "BOTTOMLEFT", 0, 0)
-    railMid:SetPoint("BOTTOMRIGHT", railBottom, "TOPRIGHT", 0, 0)
-    slider:SetThumbTexture(TEX.scrollKnob)
-    local thumb = slider:GetThumbTexture()
-    thumb:SetSize(18, 24)
-    thumb:SetTexCoord(0.2, 0.8, 0.125, 0.875)
+    -- SCROLLBAR por PLANTILLA de Blizzard.
+    -- Montarlo a mano con los fileID del nativo (136569 riel, 130849 pomo) sale VERDE en este
+    -- cliente: son fileID de arte Classic y Epsilon no los traduce para addons, aunque su propio
+    -- XML si los cargue. La plantilla la construye el cliente, asi que su arte carga siempre.
+    local slider = CreateFrame("Slider", nil, frame, "UIPanelScrollBarTemplate")
+    slider:SetWidth(16)
+    slider:SetPoint("TOPLEFT", list, "TOPRIGHT", 4, -16)
+    slider:SetPoint("BOTTOMLEFT", list, "BOTTOMRIGHT", 4, 16)
     slider:SetMinMaxValues(0, 0)
     slider:SetValueStep(1)
-    slider:SetObeyStepOnDrag(true)
+    if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
     slider._updating = false
     slider:SetScript("OnValueChanged", function(self, value)
         if self._updating then return end
@@ -269,79 +247,40 @@ local function CreateFrameIfNeeded()
         RefreshUI()
     end)
     frame.scrollSlider = slider
-    local upBtn = CreateFrame("Button", nil, slider)
-    upBtn:SetSize(18, 16)
-    upBtn:SetPoint("BOTTOM", slider, "TOP", 0, -2)
-    upBtn:SetNormalTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Up")
-    upBtn:SetPushedTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Down")
-    upBtn:SetDisabledTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Disabled")
-    upBtn:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollUpButton-Highlight", "ADD")
-    upBtn:SetScript("OnClick", function()
-        state.offset = math.max(0, state.offset - 1)
-        RefreshUI()
-    end)
-    local downBtn = CreateFrame("Button", nil, slider)
-    downBtn:SetSize(18, 16)
-    downBtn:SetPoint("TOP", slider, "BOTTOM", 0, 2)
-    downBtn:SetNormalTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Up")
-    downBtn:SetPushedTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Down")
-    downBtn:SetDisabledTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Disabled")
-    downBtn:SetHighlightTexture("Interface\\Buttons\\UI-ScrollBar-ScrollDownButton-Highlight", "ADD")
-    downBtn:SetScript("OnClick", function()
-        local mx = select(2, frame.scrollSlider:GetMinMaxValues())
-        state.offset = math.min(mx, state.offset + 1)
-        RefreshUI()
-    end)
-
-    -- Pestañas Aprendidas/No aprendidas sobre la lista (arte nativo HelpFrameTab en 3
-    -- piezas: activa 132086 al ras, inactiva 132085 hundida -3; texto oro/blanco FRIZQT 10)
-    local function CreateListTab(width, label)
-        local tab = CreateFrame("Button", nil, frame)
-        tab:SetSize(width, 32)
-        local mid = width - 32
-        tab.pieces = {}
-        local coords = { { 0, 0.25 }, { 0.25, 0.75 }, { 0.75, 1 } }
-        local widths = { 16, mid, 16 }
-        for i = 1, 3 do
-            local t = tab:CreateTexture(nil, "BACKGROUND")
-            t:SetTexCoord(coords[i][1], coords[i][2], 0, 1)
-            t:SetSize(widths[i], 32)
-            if i == 1 then
-                t:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 0, 0)
-            else
-                t:SetPoint("LEFT", tab.pieces[i - 1], "RIGHT", 0, 0)
-            end
-            tab.pieces[i] = t
+    -- PESTAÑAS por plantilla nativa. Con los fileID de HelpFrameTab (132086/132085) salian
+    -- rectangulos grises lisos: mismo problema que el riel del scroll.
+    local function CreateListTab(label)
+        local ok, tab = pcall(CreateFrame, "Button", nil, frame, "CharacterFrameTabButtonTemplate")
+        if not ok or not tab then
+            ok, tab = pcall(CreateFrame, "Button", nil, frame, "UIPanelButtonTemplate")
         end
-        tab.text = tab:CreateFontString(nil, "ARTWORK")
-        tab.text:SetFont("Fonts\\FRIZQT__.TTF", 10)
-        tab.text:SetPoint("CENTER", tab, "CENTER", 0, 2)
-        tab.text:SetText(label)
-        local hl = tab:CreateTexture(nil, "HIGHLIGHT")
-        SafeTexture(hl, TEX.tabHighlight, "pestana: highlight")
-        hl:SetPoint("BOTTOM", tab, "BOTTOM", 2, -8)
-        hl:SetSize(width, 32)
+        if not ok or not tab then return nil end
+        tab:SetText(label)
+        if tab.GetTextWidth and tab.SetWidth then tab:SetWidth(tab:GetTextWidth() + 34) end
         function tab:SetActiveLook(active)
-            for _, t in ipairs(self.pieces) do
-                SafeTexture(t, active and TEX.tabActive or TEX.tabInactive, "pestana")
-                -- La inactiva queda 3px hundida (nativo)
+            -- La plantilla de pestaña trae Disable/Enable como estado activo/inactivo.
+            if self.SetDisabledFontObject and self.Disable and self.Enable then
+                if active then self:Disable() else self:Enable() end
+            elseif self.SetAlpha then
+                self:SetAlpha(active and 1 or 0.7)
             end
-            self.pieces[1]:SetPoint("BOTTOMLEFT", self, "BOTTOMLEFT", 0, active and 0 or -3)
-            self.text:SetTextColor(active and 1 or 1, active and 0.82 or 1, active and 0 or 1)
-            self.text:SetPoint("CENTER", self, "CENTER", 0, active and 2 or -3)
         end
         return tab
     end
-    frame.tabLearned = CreateListTab(78, "Aprendidas")
-    frame.tabLearned:SetPoint("BOTTOMLEFT", list, "TOPLEFT", 10, 3)
-    frame.tabLearned:SetScript("OnClick", function()
-        state.tab = "learned"; state.offset = 0; state.selected = nil; RefreshUI()
-    end)
-    frame.tabUnlearned = CreateListTab(96, "No aprendidas")
-    frame.tabUnlearned:SetPoint("LEFT", frame.tabLearned, "RIGHT", 0, 0)
-    frame.tabUnlearned:SetScript("OnClick", function()
-        state.tab = "unlearned"; state.offset = 0; state.selected = nil; RefreshUI()
-    end)
+    frame.tabLearned = CreateListTab("Aprendidas")
+    if frame.tabLearned then
+        frame.tabLearned:SetPoint("BOTTOMLEFT", list, "TOPLEFT", 6, 2)
+        frame.tabLearned:SetScript("OnClick", function()
+            state.tab = "learned"; state.offset = 0; state.selected = nil; RefreshUI()
+        end)
+    end
+    frame.tabUnlearned = CreateListTab("No aprendidas")
+    if frame.tabUnlearned then
+        frame.tabUnlearned:SetPoint("LEFT", frame.tabLearned, "RIGHT", -4, 0)
+        frame.tabUnlearned:SetScript("OnClick", function()
+            state.tab = "unlearned"; state.offset = 0; state.selected = nil; RefreshUI()
+        end)
+    end
     state.tab = "learned"
 
     -- Caja de busqueda nativa (112x20 en +220,-54, bordes common-search + lupa); filtra la lista
@@ -625,7 +564,11 @@ RefreshUI = function()
     if not (def and HarfordProfessions) then return end
     local skill = HarfordProfessions.EffectiveSkill(def.id)
 
-    if frame.TitleText then frame.TitleText:SetText(def.name) end
+    if frame.TitleText then
+        -- El titulo salia cortado ("Herreri"): el TitleText del template viene estrecho.
+        frame.TitleText:SetWidth(0)
+        frame.TitleText:SetText(def.name)
+    end
     if frame.portrait then
         -- SetPortraitToTexture recorta en circulo (evita el cuadrado con esquinas oscuras)
         if SetPortraitToTexture then
@@ -635,8 +578,8 @@ RefreshUI = function()
             frame.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
         end
     end
-    if frame.tabLearned then frame.tabLearned:SetActiveLook(state.tab ~= "unlearned") end
-    if frame.tabUnlearned then frame.tabUnlearned:SetActiveLook(state.tab == "unlearned") end
+    if frame.tabLearned and frame.tabLearned.SetActiveLook then frame.tabLearned:SetActiveLook(state.tab ~= "unlearned") end
+    if frame.tabUnlearned and frame.tabUnlearned.SetActiveLook then frame.tabUnlearned:SetActiveLook(state.tab == "unlearned") end
     frame.skillBar:SetValue(skill)
     -- Formato nativo de la barra: "Herreria 50/300" (el rango va en las cabeceras de grupo)
     frame.skillText:SetText(string.format("%s %d/%d", def.name, skill, HarfordProfessions.MAX_SKILL))

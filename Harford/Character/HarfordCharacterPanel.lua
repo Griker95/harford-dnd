@@ -3304,7 +3304,7 @@ local function ProfButton(i)
         sb.label = sb:CreateFontString(nil, "BORDER")
         sb.label:SetFont("Fonts\\FRIZQT__.TTF", 12)
         sb.label:SetPoint("LEFT", sb, "RIGHT", 5, 7)
-        sb.label:SetWidth(100)
+        sb.label:SetWidth(150)   -- 100 truncaba 'Herramientas de herrero'
         sb.label:SetJustifyH("LEFT")
         sb.label:SetWordWrap(false)
         sb.label:SetTextColor(1, 0.82, 0)

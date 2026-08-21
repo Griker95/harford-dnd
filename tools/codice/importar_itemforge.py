@@ -30,7 +30,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 ANULACIONES = 'tools/codice/itemforge_anulaciones.json'
 DATOS = 'AddonsIndependientes/HarfordItemForge/Data.lua'
 CAMPOS = {'nombre', 'icono', 'calidad', 'clase', 'subclase', 'hueco', 'apilable',
-          'vinculacion', 'desc'}
+          'vinculacion', 'desc', 'additem'}
 
 
 def sinTildes(t):

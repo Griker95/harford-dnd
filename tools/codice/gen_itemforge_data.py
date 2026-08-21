@@ -250,6 +250,7 @@ out = ["-- GENERADO por tools/codice/gen_itemforge_data.py. Regenerable: no edit
        "-- solo despues por nombre, para afinar tipo de arma y hueco de armadura.",
        "--",
        "-- clase/subclase/hueco son los enums de WoW; hueco 0 = no equipable.",
+       "-- Todos se abren para que cualquiera pueda .additem salvo los marcados additem = false.",
        "",
        "HarfordItemForgeData = HarfordItemForgeData or {}",
        "HarfordItemForgeData.ITEMS = {"]
@@ -273,6 +274,7 @@ def escapa(t):
 reparto = collections.Counter()
 porProf = collections.Counter()
 anuladas = collections.Counter()
+cerrados = []
 profPrevia = None
 for e in sorted(pendientes, key=orden):
     prof = profesionDe.get(e['clave'], '')
@@ -286,7 +288,7 @@ for e in sorted(pendientes, key=orden):
         profPrevia = prof
     campos = {'nombre': e['nombre'], 'icono': e['icono'], 'calidad': calidad,
               'clase': clase, 'subclase': subclase, 'hueco': hueco,
-              'apilable': apilable, 'vinculacion': 0, 'desc': ''}
+              'apilable': apilable, 'vinculacion': 0, 'desc': '', 'additem': True}
     # Lo escrito a mano o traido de la web pisa lo deducido, nunca al reves.
     for campo, valor in (anulaciones.get(e['clave']) or {}).items():
         if campo in campos:
@@ -302,6 +304,9 @@ for e in sorted(pendientes, key=orden):
                   campos['hueco']))
     out.append('      apilable = %d, vinculacion = %d, desc = %s,'
                % (campos['apilable'], campos['vinculacion'], escapa(campos['desc'])))
+    if campos['additem'] is False:
+        out.append('      additem = false,   -- cerrado: solo su creador puede .additem')
+        cerrados.append(e['clave'])
     out.append('    },')
 out.append("}")
 out.append("")
@@ -324,4 +329,7 @@ if anuladas:
 sinDesc = sum(1 for e in pendientes
               if not (anulaciones.get(e['clave']) or {}).get('desc'))
 print()
+if cerrados:
+    print()
+    print("Cerrados a .additem (%d): %s" % (len(cerrados), ", ".join(cerrados[:8])))
 print("Sin descripcion: %d de %d. Se rellenan en %s." % (sinDesc, len(pendientes), ANULACIONES))

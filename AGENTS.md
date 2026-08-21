@@ -1427,6 +1427,114 @@ end
 
 `messages` contiene las lineas devueltas por el servidor y deben parsearse segun el comando.
 
+## Almacen De Fase Epsilon (PhaseAddonData) (2026-08-21)
+
+Almacen clave -> valor **guardado en el servidor y ligado a la fase**. Es la unica via conocida
+para que un dato escrito por el DM lo lea otro jugador **sin que el DM este conectado**. Harford
+todavia no lo usa: hoy todo se reparte por addon messages y exige un emisor vivo.
+
+### API
+
+```lua
+EpsilonLib.PhaseAddonData.SaveTable(clave, tabla)           -- escribir (serializa+comprime+trocea)
+EpsilonLib.PhaseAddonData.LoadTable(clave, function(t) end) -- leer (ASINCRONO, reensambla)
+EpsilonLib.PhaseAddonData.Set/Get                           -- las mismas con cadenas crudas
+```
+
+Por debajo: `C_Epsilon.SetPhaseAddonData(clave, str)` y `C_Epsilon.GetPhaseAddonData(clave, faseId?)`.
+`Get` **devuelve un ticket, no el dato**: la respuesta llega por `CHAT_MSG_ADDON` usando ese ticket
+como prefijo. Por eso todo es asincrono. El `faseId` opcional permite leer de OTRA fase.
+
+**Usar siempre EpsilonLib, nunca `C_Epsilon` directo.** Epsilon_Merchant se guiso el mismo protocolo
+a mano y su reensamblado multi-parte esta ROTO (`Epsilon_Merchant.lua:830` hace aritmetica sobre el
+ticket para construir la clave siguiente, y registra `type = prefix` en vez de `prefixType`): un
+vendedor de mas de 3000 caracteres no carga bien.
+
+### Limites CONFIRMADOS en vivo (`/harford debug run phasedata`)
+
+- **Clave <= 100 caracteres.** Lo valida el SERVIDOR y **lanza error Lua duro**
+  (`key should have length <= 100`), no falla en silencio. Envolver toda escritura en `pcall`.
+  El troceado ANADE `_2`, `_3`... a la clave, asi que el presupuesto real es ~96.
+- **3000 caracteres por segmento**, troceado y reensamblado automaticos con caracteres de control
+  (`\001` primero, `\002` medio, `\003` ultimo).
+- **Throttle 45 llamadas / 1,5 s** con cola propia. Pasarse desconecta del servidor.
+- **`EncodeForPrint` expande +33 %** (3 bytes -> 4 caracteres): el dato viaja por chat y no admite
+  bytes crudos.
+- **Escribir funciona con permiso de miembro de fase** (comprobado con viaje redondo). Los filtros
+  `IsOfficer`/`IsMember` que aplican SpellCreator y TRP3 son **politica de cada addon**, no el
+  mecanismo. Qué rechaza el servidor exactamente sigue sin mapearse.
+
+### Trampas
+
+- **No hay ruta de error en la lectura.** Si el servidor calla, el callback **no se llama jamas** y
+  la entrada se queda en `_queue` para siempre. Toda lectura necesita su propio plazo.
+- **Borrar es escribir cadena vacia.** No hay borrado real; leer una clave inexistente devuelve `""`.
+- **Sobrescribir no limpia.** Pasar de 5 segmentos a 2 deja `_3.._5` colgando. Leer no se rompe
+  (para en el `\003`) pero se acumula basura.
+- **No se pueden listar las claves.** El servidor solo responde "dame X". Hay que mantener un
+  **indice propio** si se necesita enumerar.
+- **Cambiar de fase con lecturas en vuelo**: comparar `C_Epsilon.GetPhaseId()` dentro del callback
+  contra el que habia al pedir, y descartar si no coincide (lo hace SpellCreator).
+- **Cuota total por fase: DESCONOCIDA.** No aparece ningun tope agregado en el codigo del addon.
+
+### Los tres patrones existentes
+
+1. **Indice + bloques** (SpellCreator): `SCFORGE_KEYS` lista los ids, `SCFORGE_S_<id>` cada hechizo.
+   Obligado cuando hay que enumerar. **Orden de escritura: primero el bloque, DESPUES el indice** —
+   asi un corte a medias deja un huerfano invisible, nunca un indice apuntando a la nada. Borrar es
+   quitar del indice, reguardar el indice y escribir `""` en el bloque.
+2. **Direccionado por identidad, sin indice** (Epsilon_Merchant, TRP3): `VENDOR_DATA_<merchantID>`,
+   `TOTALRP_PROFILE_<npcID>`. Sirve cuando ya sabes que clave quieres. El merchant ademas **parte
+   por campo**: siete claves por vendedor (`VENDOR_TEXT_`, `GREET_SOUND_`...), de forma que cambiar
+   un sonido no reescribe la lista de objetos.
+3. **Cerrojo cooperativo para el indice** (SpellCreator): el indice es un lee-modifica-escribe
+   ASINCRONO, asi que dos DMs escribiendo a la vez pierden datos. Se difunde `_PLOCK`/`_PUNLOCK`
+   con el phaseID por canal de addon; los demas clientes se marcan ocupados y recargan al soltarse.
+   **Caduca solo a los 5 s** para que un DM que se cae no bloquee la fase. No es un cerrojo del
+   servidor: quien no lleve el addon no lo respeta.
+
+### Medidas reales del tablon de contratos (17 contratos, 2026-08-21)
+
+| Que | Crudo | Deflate | Encode | Segmentos |
+|---|---|---|---|---|
+| Tablon entero | 43389 | 16610 | 22147 | 8 |
+| Tablon sin `prep`/`privateNotes` | 42479 | 16254 | 21672 | 8 |
+| Solo el indice de ids | 366 | 120 | 160 | 1 |
+| **Indice RICO** (8 campos de la fila) | 1460 | 739 | **986** | **1** |
+| Contrato mas gordo | 4637 | 2230 | 2974 | 1 |
+
+Conclusiones que NO se adivinan:
+
+- **Quitar `prep`/`privateNotes` no ahorra espacio** (2 %). Hay que excluirlos igualmente por
+  privacidad — lo que no se escribe no se puede filtrar — pero no como argumento de tamano.
+- **Los contratos sueltos comprimen peor que el tablon junto** (48 % contra 38 %): deflate aprovecha
+  la repeticion entre contratos. Guardar por separado gasta ~25 % mas bytes totales.
+- **El contrato mas gordo esta al 99 % de un segmento** con `prep` vacio. Un contrato por clave es
+  el grano correcto; en un blob unico ese crecimiento arrastra a los ocho segmentos.
+- **El indice rico cabe de sobra en UN segmento**: 986 de 3000 para 17 contratos, con margen para
+  ~34 mas (unos 51 en total) antes de trocearse. Los 8 campos son exactamente los que pinta la fila
+  (`HarfordContractsUI.lua:1216-1246` + `FormatContractMeta`): `id`, `title`, `difficulty`,
+  `status`, `duration`, `rewardText`, `category`, `icon`.
+
+### Forma decidida para el tablon de contratos
+
+```
+HARFORD_TC_INDEX   -> indice rico: una fila por contrato (8 campos)   1 segmento hasta ~51
+HARFORD_TC_<id>    -> el contrato publico completo                     ~1 segmento cada uno
+```
+
+Coste de lectura medido, contra el throttle de 45/1,5 s:
+
+| Estrategia | Llamadas para ver la lista |
+|---|---|
+| Blob unico del tablon | 8 |
+| Una clave por contrato, todo de golpe | 18 |
+| **Indice rico + carga perezosa** | **1** (+1 por contrato que se abra) |
+
+`prep` y `privateNotes` **no se suben nunca**, y los borradores (`status == "draft"`) tampoco.
+El unico punto disputado es el indice: necesita cerrojo cooperativo tipo `_PLOCK`/`_PUNLOCK`
+con caducidad, porque su lee-modifica-escribe es asincrono y dos DMs simultaneos se pisan.
+
 ## Mapa Vivo De Permisos Y Comandos Epsilon
 
 Este mapa queda preparado para rellenarlo cuando confirmemos comandos reales del servidor Epsilon. No inventar comandos ni permisos: documentar aqui cada comando cuando se pruebe o se confirme.
@@ -2058,6 +2166,12 @@ ni de HarfordAdmin y no se despliega con ellos.
 - Si el objeto se crea pero fallan sus campos, la clave **queda apuntada igual**: el objeto
   ya existe en el servidor y reintentar crearia un duplicado.
 - El registro vive en `HarfordItemForgeDB` (SavedVariables), nunca en `Data.lua`.
+- **Un objeto forjado nace cerrado**: solo su creador puede `.additem`. Como son objetos de
+  profesion, el addon envia `forge item set property additem anyone <link> on` para todos.
+  Se cierra por objeto con `"additem": false` en las anulaciones.
+- **EpsilonLib lanza `error()` a partir de 250 caracteres por comando**, no falla en
+  silencio: un comando largo aborta la tanda entera. `Comandos()` recorta y avisa. El peor
+  caso actual son 150, pero las descripciones aun estan vacias.
 
 **`Data.lua` se genera, no se escribe a mano** (`tools/codice/gen_itemforge_data.py`).
 Clasifica por PROFESION de la receta, luego por PAPEL (resultado o materia prima) y solo al

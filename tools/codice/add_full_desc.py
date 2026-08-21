@@ -20,7 +20,9 @@ for m in re.finditer(r"\n(#{1,6})\s*([^\n]+)", src):
     heads.append((len(m.group(1)), txt, nk(txt), m.start(), m.end()))
 
 def clean_body(t):
-    t = re.sub(r"\n#{1,6}\s*", "\n", t)           # quitar marcadores de heading internos
+    # los titulos internos se conservan con un marcador uniforme "### " para que la
+    # web los renderice como encabezados con su propia tipografia
+    t = re.sub(r"\n#{1,6}\s*", "\n### ", t)
     t = re.sub(r"\n{3,}", "\n\n", t)
     return t.strip()
 
@@ -44,8 +46,9 @@ CLASS_MD = {"guerrero":"Guerrero","paladin":"Paladín","cazador_demonios":"Cazad
 CLASSNAMES = set(nk(v) for v in CLASS_MD.values())
 RACE_MD = {"humano":"Humano","enano":"Enano","elfo_noche":"Elfo de la Noche","elfo_sangre":"Elfo de Sangre",
   "semielfo":"Semielfo","gnomo":"Gnomo","draenei":"Draenei","huargen":"Huargen","orco":"Orco",
-  "renegado":"Renegado","tauren":"Tauren","trol":"Trol","goblin":"Goblin","pandaren":"Pandaren",
-  "nocheterna":"Nocheterna","elfo_vacio":"Elfos del Vacío"}
+  "renegado":"Renegados","tauren":"Tauren","trol":"Troll","goblin":"Goblin","pandaren":"Pandaren",
+  "nocheterna":"Nocheterna","elfo_vacio":"Elfos del Vacío","vulpera":"Vulpera"}
+# (el Semielfo no existe en el libro Warcraft: es raza del PHB y conserva su texto propio)
 
 def chapter(className):
     wc = nk(className); start = end = None
@@ -133,6 +136,49 @@ if _os.path.exists(_tr):
 
 # ----- CLASES: intro del capitulo + rasgos (como titulo o en negrita dentro del capitulo) -----
 cf = ct = 0
+# ----- recuadros con marco ('>' del markdown = sidebars del PDF): sacarlos TODOS -----
+def cajas_de(rango):
+    """Bloques '>' del capitulo, fusionando los que solo separa una linea en blanco
+    (en el libro son un mismo recuadro, p.ej. titulo + stat block)."""
+    if not rango: return []
+    if isinstance(rango, tuple): rango = src[rango[0]:rango[1]]
+    lineas = rango.split("\n")
+    grupos, actual, i = [], [], 0
+    while i < len(lineas):
+        l = lineas[i]
+        if l.lstrip().startswith(">"):
+            actual.append(l); i += 1; continue
+        if actual and not l.strip():
+            j = i
+            while j < len(lineas) and not lineas[j].strip(): j += 1
+            if j < len(lineas) and lineas[j].lstrip().startswith(">"):
+                actual.append(">"); i = j; continue
+        if actual: grupos.append("\n".join(actual)); actual = []
+        i += 1
+    if actual: grupos.append("\n".join(actual))
+    return [g for g in grupos if len(re.sub(r"[>\s]", "", g)) > 40]
+
+def anexar_cajas(obj, rango):
+    """Recoge los recuadros del capitulo que no esten ya en el desc del objeto ni en el
+    de sus rasgos/subclases/subrazas y los guarda en `extras`: la ficha de la web los
+    muestra AL FINAL del todo, no pegados a la introduccion."""
+    cajas = cajas_de(rango)
+    if not cajas: return 0
+    textos = [obj.get("desc") or "", obj.get("extras") or ""]
+    for f in obj.get("features", []) + obj.get("traits", []): textos.append(f.get("desc") or "")
+    for s in obj.get("subclasses", []) + obj.get("subraces", []):
+        textos.append(s.get("desc") or "")
+        for f in s.get("features", []) + s.get("traits", []): textos.append(f.get("desc") or "")
+    todo = nk(" ".join(textos))
+    n = 0
+    for caja in cajas:
+        clave = nk(re.sub(r"[>#*|]", "", caja))[:70]
+        if clave and clave not in todo:
+            obj["extras"] = ((obj.get("extras") or "").rstrip() + "\n\n" + caja.strip()).strip()
+            todo += " " + clave; n += 1
+    return n
+
+ncajas = 0
 for c in kb["classes"]:
     cn = CLASS_MD.get(c["id"], c["name"])
     intro = section(cn, 2, stop_at_names={"rasgos de clase"})
@@ -144,6 +190,41 @@ for c in kb["classes"]:
                 or negritas_c.get(nk(f["name"])) or negritas_c.get(nkbase(f["name"]))
                 or _TASHA_R.get(nk(f["name"])))
         if full and len(full) > len(f.get("desc", "")): f["desc"] = full; cf += 1
+    feats_all = c["features"] + [x for s in c["subclasses"] for x in s["features"]]
+    nombres_f = {nk(f["name"]) for f in feats_all}
+    for f in feats_all:
+        d0 = f.get("desc") or ""
+        # los recuadros '>' que cayeron dentro de un rasgo no son suyos: se retiran y
+        # anexar_cajas los recogera despues en los extras de la clase
+        d0 = re.sub(r"(?:^>.*\n?)+\n?", "", d0, flags=re.M)
+        # si el texto capturo la seccion del rasgo SIGUIENTE (heading mas profundo), se
+        # trunca ahi: el otro rasgo ya tiene su propia tarjeta
+        for m2 in re.finditer(r"^#{1,6}\s+(.+)$", d0, re.M):
+            if nk(m2.group(1)) in nombres_f and nk(m2.group(1)) != nk(f["name"]):
+                d0 = d0[:m2.start()].rstrip(); break
+        # rasgos de eleccion: las secciones internas que coinciden con una opcion
+        # (Defensa, Duelos...) se reparten a esa opcion, no quedan como titulos sueltos
+        opts = f.get("options") or (f.get("choice") or {}).get("options") or []
+        if opts:
+            por_nombre = {}
+            for o in opts:
+                et = o.get("label") or o.get("id") or ""
+                por_nombre.setdefault(nk(et), o)
+                por_nombre.setdefault(nk(re.sub(r"\s*\(.*\)\s*$", "", et)), o)
+            secciones = list(re.finditer(r"^#{1,6}\s+(.+)$", d0, re.M))
+            recortes = []
+            for idx2, m2 in enumerate(secciones):
+                o = por_nombre.get(nk(m2.group(1)))
+                if not o: continue
+                fin2 = secciones[idx2+1].start() if idx2+1 < len(secciones) else len(d0)
+                cuerpo2 = d0[m2.end():fin2].strip()
+                if cuerpo2 and len(cuerpo2) > len(o.get("desc") or ""):
+                    o["desc"] = cuerpo2
+                recortes.append((m2.start(), fin2))
+            for a2, b2 in reversed(recortes):
+                d0 = (d0[:a2] + d0[b2:])
+        f["desc"] = re.sub(r"\n{3,}", "\n\n", d0).strip()
+    ncajas += anexar_cajas(c, chapter(cn))
 
 # ----- RAZAS: intro + rasgos propios y de subraza, buscados dentro del capitulo de la raza -----
 rf = rt = rtok = 0
@@ -159,6 +240,7 @@ for r in kb["races"]:
         full = (feature_in(rango, f["name"]) or negritas.get(nk(f["name"]))
                 or negritas.get(nkbase(f["name"])))
         if full and len(full) > len(f.get("desc", "")): f["desc"] = full; rtok += 1
+    ncajas += anexar_cajas(r, rango)
 
 # ----- TRASFONDOS: Discord export con matcheo fuzzy -----
 bgs = json.load(io.open(os.path.join(SP, "bgs_source.json"), encoding="utf-8"))
@@ -249,10 +331,36 @@ def strip_progression(text):
             continue
         out.append(lines[i]); i += 1
     return "\n".join(out)
+# --- normalizacion de titulos internos: solo primera mayuscula, conservando nombres
+# --- de clase/raza y propios ("Creando un Caballero de la Muerte", "Gracia de Elune")
+_PROTEGIDOS = sorted(set(list(CLASS_MD.values()) + list(RACE_MD.values()) +
+                         ["Elune", "Azeroth", "Illidari", "Rey Exánime", "Cenarion",
+                          "Alexstrasza", "Ysera", "Kalimdor", "Rasganorte"]),
+                     key=len, reverse=True)
+def norm_titulo(t):
+    # a minusculas todo menos la primera letra y la primera tras ":" o "."
+    def frase(s):
+        s = s.strip()
+        if not s: return s
+        s = s[0] + s[1:].lower()
+        return s
+    partes = re.split(r"(\s*[:.]\s*)", t.strip())
+    t2 = "".join(frase(p) if i % 2 == 0 else p for i, p in enumerate(partes))
+    # restaurar nombres protegidos con su capitalizacion canonica
+    for p in _PROTEGIDOS:
+        t2 = re.sub(re.escape(p), p, t2, flags=re.I)
+    return t2
+
 def prose(t):
     if not t: return t
     t = t.replace("\r", "")
     t = strip_progression(t)
+    # titulos internos (### y > #####): normalizar su capitalizacion
+    t = re.sub(r"^(\s*(?:>\s*)?#{1,6}\s+)(.+)$",
+               lambda m: m.group(1) + norm_titulo(m.group(2)), t, flags=re.M)
+    # cabeceras en linea del libro ("***Caracteristica Minima.*** texto"): misma norma
+    t = re.sub(r"(?m)^((?:>\s*)?)\*\*\*([^*\n]{2,45}?)(\.?)\*\*\*",
+               lambda m: m.group(1) + "***" + norm_titulo(m.group(2)) + m.group(3) + "***", t)
     out = []
     for line in t.split("\n"):
         if is_table_line(line):
@@ -261,12 +369,15 @@ def prose(t):
             out.append(re.sub(r"[ \t]{2,}", " ", line).rstrip())
             continue
         l = re.sub(r"\\[a-zA-Z]+", "", line)
-        l = re.sub(r"\*\*([^*]+)\*\*", r"\1", l)
-        l = re.sub(r"\*([^*]+)\*", r"\1", l)
-        l = l.replace("*", "")
+        # las negritas/cursivas del markdown se conservan: la web las renderiza
+        l = re.sub(r"(?<![*\w])\*(?![*\w])", "", l)   # solo asteriscos sueltos
         l = re.sub(r"(?<![A-Za-z0-9])_([^_\n]+)_(?![A-Za-z0-9])", r"\1", l)
-        l = re.sub(r"^\s*>\s?", "", l)
-        l = l.replace("`", "").replace("|", "")
+        # los bloques '>' son los recuadros con marco del PDF (reglas adicionales,
+        # formas druidicas, stat blocks): se conservan para que la web los enmarque
+        es_caja = bool(re.match(r"^\s*>", l))
+        if es_caja: l = re.sub(r"^\s*>\s?", "> ", l)
+        l = l.replace("`", "")
+        if not es_caja: l = l.replace("|", "")
         l = re.sub(r"^\s*[-" + BULLET + r"]\s+", BULLET + " ", l)
         l = re.sub(r"[ \t]+", " ", l)
         out.append(l)
@@ -276,6 +387,7 @@ def prose(t):
 def walk(o):
     if isinstance(o, dict):
         if isinstance(o.get("desc"), str): o["desc"] = a_metrico(prose(o["desc"]))
+        if isinstance(o.get("extras"), str): o["extras"] = a_metrico(prose(o["extras"]))
         for v in o.values(): walk(v)
     elif isinstance(o, list):
         for v in o: walk(v)
@@ -288,4 +400,5 @@ print("Trasfondos: %d Discord + %d por Caracteristica = %d/%d con desc" % (
     bf, cff, sum(1 for b in kb["backgrounds"] if b.get("desc")), len(kb["backgrounds"])))
 print("Trasfondos PHB: %d intros + %d rasgos" % (bphb, brasgos))
 print("Variantes PHB anadidas: %d" % nvar)
+print("Recuadros del libro anexados: %d" % ncajas)
 print("Conjuros: %d (pasan sin tocar)" % len(kb.get("spells", [])))

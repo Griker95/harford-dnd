@@ -41,9 +41,11 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 |---|---|
 | `/harford ficha` | Abre la ficha compacta de personaje D&D 5e |
 | `/harford cargarficha` | Carga DESTRUCTIVA de la ficha desde el perfil TRP3 activo (unica via de importar TRP3) |
-| `/harford char` (`personaje`) | Abre el panel de personaje: Ficha, Libro, Creacion, Subida y acceso a Reputacion |
+| `/harford char` (`personaje`) | Abre el panel de personaje: Personaje, Reputacion y Profesiones. Habilidades y Conjuros se abren en una ventana independiente. |
+| `/harford char crear` | Abre el creador de personaje. |
+| `/harford char subir` | Abre el asistente moderno de subida de nivel. Tambien se accede desde la flecha junto al nivel en el panel de personaje. |
 | `/harford inspect` | Inspecciona en modo ligero/read-only el panel de personaje del target jugador o del nombre indicado |
-| `/harford rep` (`reputacion`) | Abre/cierra el panel de reputaciones |
+| `/harford rep` (`reputacion`) | Abre/cierra el panel de personaje en la pestaña Reputacion |
 | `/harford turnos` | Abre/cierra el tracker de turnos |
 | `/harford comunicador` | Abre el comunicador normal |
 | `/harford radio` | Abre el comunicador sin aplicar su aura visual |
@@ -63,7 +65,7 @@ Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
 ## Estructura Del Proyecto
 
 ```text
-Harford/            <- Addon principal: jugadores y DM (84 modulos en 16 carpetas)
+Harford/            <- Addon principal: jugadores y DM (85 modulos en 16 carpetas)
   Core/               Transporte, chat, configuracion, autoridad y utilidades puras
   Server/             Comandos validados hacia el servidor Epsilon
   TRP3/               Lectura y escritura de perfiles de TotalRP3
@@ -105,8 +107,8 @@ CLAUDE.md           <- Instrucciones para Claude Code
 - **Harford** contiene el core compartido: ficha D&D, recursos, turnos, reputaciones, loot visible/usable, unitframes, nameplates, sync addon y acciones servidor validadas que tambien pueden necesitar jugadores.
 - **HarfordAdmin** contiene la capa DM: menu contextual, ficha Modo NPC, editores de loot/reputacion, compartir datos, ajustar recursos/reputacion y comandos protegidos.
 - **HarfordCompendio** vive como modulo dentro de `Harford`: compendio de conjuros con SavedVariables propias y API `_G.HarfordCompendioAPI`.
-- El icono de tabardo de la ficha abre el **Panel de Personaje**. La ficha compacta queda para tiradas; el panel unificado contiene Ficha, **Libro**, Creacion, Subida y acceso al panel de Reputacion.
-- La pestaña **Libro** replica el libro de hechizos nativo y lista las habilidades del personaje por categoria (pasiva / activable al atacar / reaccion / directa). Las activables al atacar comparten estado con el control `Daño extra` de la ficha. Hay una **barra de accion** opcional (activable en config) para colocar habilidades del Libro.
+- El icono de tabardo de la ficha abre el **Panel de Personaje**. La ficha compacta queda para tiradas; el panel unificado contiene Personaje, Reputacion y Profesiones. **Habilidades** y **Conjuros** se muestran en una ventana independiente, que puede permanecer abierta junto al panel de personaje.
+- El panel de **Habilidades** replica el libro nativo y lista las habilidades por categoria (pasiva / activable al atacar / reaccion / directa). Las activables al atacar comparten estado con el control `Daño extra` de la ficha. Hay una **barra de accion** opcional (activable en config) para colocar habilidades del Libro.
 - La progresion usa datos hardcodeados por clase/subclase, raza, trasfondo y dotes, con efectos declarativos que se suman sobre valores manuales. Los rasgos se aplican internamente; el usuario solo elige cuando existe una eleccion real (`choice`) o cuando un rasgo declara un estado activable (`toggleState`, por ejemplo Metamorfosis/Transformado/Lobo Solitario). Se sincroniza con `DNDCLASS` dentro de `DND5EARC`.
 - El equipo del panel es virtual: se arrastran objetos reales del juego a los slots de Harford, se guardan como item links, se muestran con su icono/tooltip y se sincronizan con `DNDEQUIP`; no se equipa ni se desequipa el personaje real de WoW.
 - Los objetos custom de Epsilon pueden llevar descripcion narrativa normal y, aparte, lineas mecanicas claras que Harford parsea, por ejemplo `Naturaleza +1`, `Fuerza +2`, `Salvacion Destreza +1`, `CA +1`, `Armadura 14`, `Ataque +1`, `Dano +1`, `Ataque conjuro +1`, `CD conjuro +1` o `Dano extra 1d6 fuego`. Lo que no siga ese formato queda solo como descripcion.
@@ -116,7 +118,8 @@ CLAUDE.md           <- Instrucciones para Claude Code
 - Los comandos Epsilon se construyen desde plantillas y acciones validadas (`HarfordCommandTemplates` + `HarfordServerActions`), nunca desde texto arbitrario recibido de otros clientes.
 - La mitigacion de dano (`resistente`, `inmune`, `vulnerable`) se calcula en core con el stat block TRP3 del target y se muestra en la tirada con marcadores `R`/`I`/`V`. Admin solo aplica el total ya calculado.
 - La herida visual de NPC al perder vida se centraliza en `HarfordServerActions.SetNpcHealthDelta`: emote `33` para dano normal y `34` para dano critico.
-- El compendio de conjuros se abre con `/harford compendio`; al confirmar un lanzamiento con exito consume el recurso `mana` de la ficha. Si el conjuro declara ataque de conjuro, salvacion directa o area reconocible, usa las mismas rutas de tirada/area de Harford; si no, se anuncia como lanzamiento informativo. Los rituales no consumen mana.
+- El compendio de conjuros se abre con `/harford compendio`; al confirmar un lanzamiento con exito consume mana o un espacio de conjuro segun el modo global configurado. Si el conjuro declara ataque de conjuro, salvacion directa o area reconocible, usa las mismas rutas de tirada/area de Harford; si no, se anuncia como lanzamiento informativo. Los rituales no consumen coste.
+- **Sistema de experiencia propio** (Epsilon no tiene XP real): la XP vive en la ficha, usa la tabla oficial 5e y se muestra en una barra propia y estable en el borde inferior. Las misiones conceden su XP real; al alcanzar el umbral se anuncia que hay nivel disponible y la flecha junto al nivel, o `/harford char subir`, abre el asistente moderno para aplicarlo. El nivel total esta limitado a 20, incluida la multiclase y las rutas de importacion. Con `Ctrl+click` en una faccion del panel de Reputacion se la sigue en una segunda barra; `Shift+click` inserta un enlace TRP3 clicable de la faccion en el chat. Todo se activa/desactiva con la opcion "Barra de experiencia" del panel de configuracion.
 
 ---
 

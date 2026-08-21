@@ -40,6 +40,11 @@ FEATS = {}
 mfe = re.search(r"Catalog\.features\s*=\s*\{(.*?)\n\}", cat, re.S)
 for m in re.finditer(r'(?:\["([a-z0-9_]+)"\]|([a-z0-9_]+))\s*=\s*"([a-z0-9_]+)"', mfe.group(1)):
     FEATS[m.group(1) or m.group(2)] = m.group(3)
+# rasgos sin entrada en el catalogo del addon: iconos elegidos a mano (iconos_rasgos.json)
+_ir = os.path.join(SP, "iconos_rasgos.json")
+if os.path.exists(_ir):
+    for k, v in json.load(io.open(_ir, encoding="utf-8")).items():
+        if not k.startswith("_"): FEATS.setdefault(k, v)
 
 # Catalog.subclasses[classid][subid] -> icono
 SUBS = {}

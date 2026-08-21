@@ -9,12 +9,17 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 Regeneralo con `python tools/gen_changelog.py`.
 
-- Commits: **66** - del **2026-05-18** al **2026-08-20**
+- Commits: **76** - del **2026-05-18** al **2026-08-21**
 
 ## Agosto de 2026
 
 **Nuevo**
 
+- **profesiones** - cadena de ingenieria, hierbas reales de Epsilon y estaciones `c8d4210`
+- **misiones** - XP real en recompensas y sync de objetivos endurecido `57da639`
+- **creacion** - nivel 1 + subidas encadenadas, pasos navegables y layout adaptativo `b6bf15e`
+- **xp** - sistema de experiencia propio con barras integradas en el gestor nativo `a059050`
+- **reputacion** - skin 1:1 de la sonda nativa, pestaña unica y enlaces TRP3 de faccion `8f65a40`
 - **about** - frame de Profesiones en el About generado de TRP3 `8d39639`
 - **profesiones** - el DM puede enseñar recetas worldLearned (TEACH) `7240769`
 - **profesiones** - nodos de recoleccion en el mundo (GatherNode) `20f0b4a`
@@ -51,12 +56,16 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Documentacion**
 
+- **agents** - la pasada de textos del compendio es del chat de la web, no de Codex `fa9b448`
+- pasada completa de actualizacion `d3aeef1`
 - regenera el historial de cambios `9d7b568`
 - organigrama de modulos (ESTRUCTURA.md) e historial (CHANGELOG.md) `e5e4137`
 - actualiza el README (HarfordDebug y subcomandos /harford) `108184f`
 
 **Mantenimiento**
 
+- **debug** - nativeprobe unificado, soundlog, profskill y suite de profesiones `98978fe`
+- **chat+compendio** - prefijos unicos sin duplicar y parrafos markdown en conjuros `de10b41`
 - **tools** - pipeline de extraccion del conocimiento y comando profitems `d228f9a`
 - **tools** - generadores de ESTRUCTURA.md y CHANGELOG.md `331fd2e`
 - ignora RuleSource/, Codice_Harford.html y AddonsIndependientes/ `1b65b2a`
@@ -64,6 +73,7 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Otros**
 
+- data(compendio): textos completos metricos, limpieza OCR y nombres normalizados `5b7715c`
 - revert(colores): deja la paleta de clase como estaba `6cc7032`
 
 ## Julio de 2026

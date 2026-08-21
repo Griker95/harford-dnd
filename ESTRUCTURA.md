@@ -12,8 +12,8 @@ regeneralo cuando muevas o añadas un modulo.
 
 | | |
 |---|---|
-| Modulos (`Harford/`) | **84** en **16** carpetas |
-| Lineas de codigo | ~85 810 |
+| Modulos (`Harford/`) | **85** en **16** carpetas |
+| Lineas de codigo | ~87 027 |
 | Addons hermanos | `HarfordAdmin/` (herramientas DM) - `HarfordDebug/` (diagnostico, opcional) |
 
 ## Capas y orden de carga
@@ -38,10 +38,10 @@ Transporte, chat, configuracion, autoridad y utilidades puras. No depende de nad
 
 | Archivo | Lineas | Rol |
 |---|--:|---|
-| `HarfordSync.lua` | 2251 | Transporte de addon messages: serializacion, troceo en chunks, canales y reensamblado con TTL. |
+| `HarfordSync.lua` | 2249 | Transporte de addon messages: serializacion, troceo en chunks, canales y reensamblado con TTL. |
 | `HarfordChat.lua` | 32 | Salida comun para mensajes visibles de Harford. |
-| `HarfordUISounds.lua` | 77 | Sonidos de interfaz centralizados. |
-| `HarfordConfig.lua` | 267 | Ajustes del addon con listeners de cambio (gates tipo `actionbar`, modo de coste de conjuros). |
+| `HarfordUISounds.lua` | 78 | Sonidos de interfaz centralizados. |
+| `HarfordConfig.lua` | 277 | Ajustes del addon con listeners de cambio (gates tipo `actionbar`, modo de coste de conjuros). |
 | `HarfordAuthority.lua` | 270 | Fuente unica de autoridad: rango de phase, modo DM y permisos (`IsOfficerPlus`, `CanUseDMTools`). |
 | `HarfordClassColors.lua` | 169 | Fuente unica de verdad para el color de clase WoW. |
 | `HarfordUIGeom.lua` | 114 | Helpers puros de geometria y busqueda de StatusBars usados por los overlays de HarfordUnitFrames. |
@@ -67,7 +67,7 @@ Lectura/escritura de perfiles de TotalRP3.
 
 | Archivo | Lineas | Rol |
 |---|--:|---|
-| `HarfordTRP3.lua` | 2473 | Lectura segura de perfiles TRP3: ficha de jugador, stat block de NPC, enlaces y escritura del About. |
+| `HarfordTRP3.lua` | 2575 | Lectura segura de perfiles TRP3: ficha de jugador, stat block de NPC, enlaces y escritura del About. |
 
 ## `Compendium/` - Compendio de conjuros
 
@@ -107,7 +107,7 @@ Persistencia y estado por perfil: ficha, progresion, equipo, formas.
 | `HarfordDnDContext.lua` | 56 | Estado de contexto de ficha + accesores de valores ARC. |
 | `HarfordDnDProfile.lua` | 50 | Aplicacion de tablas de perfil/recursos sobre HarfordDnDStore. |
 | `HarfordDnDMana.lua` | 147 | Regla adicional de Maná (World of Warcraft D&D 5ª Ed. |
-| `HarfordDnDProgression.lua` | 1523 | Estado de clase/subclase/rasgos por perfil. |
+| `HarfordDnDProgression.lua` | 1565 | Estado de clase/subclase/rasgos por perfil. |
 | `HarfordDnDItems.lua` | 1322 | Equipo virtual de ficha usando objetos reales del cliente. |
 | `HarfordDnDForms.lua` | 620 | Lectura y estado de las formas druídicas declaradas en TRP3. |
 
@@ -149,9 +149,10 @@ Creacion, subida de nivel, libro, conjuros e inspeccion.
 | `HarfordCharacterInspect.lua` | 335 | Inspeccion ligera del panel de personaje de otro jugador. |
 | `HarfordCharacterBook.lua` | 270 | Clasificacion y datos de PRESENTACION del Libro (pestaña tipo spellbook de HarfordCharacterPanel). |
 | `HarfordCharacterSpellbook.lua` | 364 | Pestaña Conjuros (replica del libro de hechizos poblada por el compendio). |
-| `HarfordCharacterCreation.lua` | 768 | Valida y aplica el borrador del creador, incluido el About de TRP3. |
-| `HarfordCharacterAdvancement.lua` | 1679 | Prototipo visual de creacion y progresion. |
-| `HarfordCharacterPanel.lua` | 5003 | Panel de personaje unificado. No sustituye el panel de reputaciones; lo usa como modulo externo desde una pestana. La primera vista siempre es la ficha/resumen del PJ. |
+| `HarfordCharacterCreation.lua` | 770 | Valida y aplica el borrador del creador, incluido el About de TRP3. |
+| `HarfordCharacterAdvancement.lua` | 2145 | Prototipo visual de creacion y progresion. |
+| `HarfordCharacterXP.lua` | 303 | Sistema de experiencia propio de Harford (D&D 5e). |
+| `HarfordCharacterPanel.lua` | 5070 | Panel de personaje unificado. No sustituye el panel de reputaciones; lo usa como modulo externo desde una pestana. La primera vista siempre es la ficha/resumen del PJ. |
 
 ## `Frames/` - Frames del juego
 
@@ -169,9 +170,9 @@ Facciones y rangos por personaje.
 
 | Archivo | Lineas | Rol |
 |---|--:|---|
-| `HarfordReputation.lua` | 848 | Nucleo de reputaciones: facciones, puntos por PJ y rangos. |
+| `HarfordReputation.lua` | 852 | Nucleo de reputaciones: facciones, puntos por PJ y rangos. |
 | `HarfordReputationSync.lua` | 676 | Sync de reputacion (`HARFORDREP`) con snapshots troceados y TTL. |
-| `HarfordReputationUI.lua` | 1563 | Panel de reputaciones, standalone o embebido en el panel de personaje. |
+| `HarfordReputationUI.lua` | 1611 | Panel de reputaciones, standalone o embebido en el panel de personaje. |
 
 ## `Quests/` - Misiones
 
@@ -180,10 +181,10 @@ Catalogo, estado por PJ, registro, tracker y quests de mundo.
 | Archivo | Lineas | Rol |
 |---|--:|---|
 | `HarfordQuestCatalog.lua` | 65 | Catalogo de misiones canonicas reutilizables (patron "indice + libro"). |
-| `HarfordQuests.lua` | 1046 | Estado per-PJ de misiones (quest log Harford) Capa de SISTEMA (addon), cross-fase, per-personaje. |
+| `HarfordQuests.lua` | 1110 | Estado per-PJ de misiones (quest log Harford) Capa de SISTEMA (addon), cross-fase, per-personaje. |
 | `HarfordQuestLog.lua` | 1257 | Registro de misiones Harford. Replica la composicion de ClassicQuestLog 2.1.0 para Shadowlands: ButtonFrameTemplate, HybridScrollFrameTemplate y QuestScrollFrameTemplate. El estado de las... |
 | `HarfordQuestTracker.lua` | 222 | Misiones Harford como modulo real del ObjectiveTracker de Shadowlands. |
-| `HarfordWorldQuests.lua` | 991 | Capa de quests de MUNDO (NPC de fase) sobre el nucleo HarfordQuests. |
+| `HarfordWorldQuests.lua` | 1012 | Capa de quests de MUNDO (NPC de fase) sobre el nucleo HarfordQuests. |
 
 ## `Contracts/` - Contratos
 
@@ -206,9 +207,9 @@ Profesiones D&D/WoW y sus recetas.
 
 | Archivo | Lineas | Rol |
 |---|--:|---|
-| `HarfordProfessionsItems.lua` | 242 | Registro CENTRAL de items de profesiones (materiales y resultados). |
-| `HarfordProfessionsData.lua` | 236 | Catalogo hardcodeado de profesiones + recetas (como HarfordDnDBook). |
-| `HarfordProfessions.lua` | 401 | Core del sistema de profesiones D&D (unifica profesiones WoW + herramientas D&D). |
+| `HarfordProfessionsItems.lua` | 268 | Registro CENTRAL de items de profesiones (materiales y resultados). |
+| `HarfordProfessionsData.lua` | 260 | Catalogo hardcodeado de profesiones + recetas (como HarfordDnDBook). |
+| `HarfordProfessions.lua` | 433 | Core del sistema de profesiones D&D (unifica profesiones WoW + herramientas D&D). |
 
 ## `Communicator/` - Comunicador
 
@@ -217,7 +218,7 @@ Mensajeria RP fiable y bandeja de herramientas.
 | Archivo | Lineas | Rol |
 |---|--:|---|
 | `HarfordCourier.lua` | 371 | Capa de mensajeria FIABLE (store-and-forward) sobre un CANAL de addon propio. |
-| `HarfordToolTray.lua` | 293 | "Herramientas de Rol": bandeja propia de Harford, replica FIEL del Epsilon AddOn Tray (Epsilon_Launcher): mismo panel, misma flecha, misma animacion (scale+alpha con easeOutCubic), mismo... |
+| `HarfordToolTray.lua` | 300 | "Herramientas de Rol": bandeja propia de Harford, replica FIEL del Epsilon AddOn Tray (Epsilon_Launcher): mismo panel, misma flecha, misma animacion (scale+alpha con easeOutCubic), mismo... |
 | `HarfordCommunicator.lua` | 1210 | Comunicador Harford: version segura inspirada en Noumenon Index. |
 
 ## `Loot/` - Loot

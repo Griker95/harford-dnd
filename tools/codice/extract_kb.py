@@ -23,7 +23,9 @@ def balanced(text, open_pos):
 
 def field(blk, key):
     m = re.search(r'\b' + key + r' = "((?:[^"\\]|\\.)*)"', blk)
-    return m.group(1).replace('\\"', '"') if m else None
+    if not m: return None
+    # des-escapado Lua completo: \n -> salto real, \" -> comilla, \\ -> barra
+    return re.sub(r'\\(.)', lambda e: "\n" if e.group(1) == "n" else e.group(1), m.group(1))
 
 def strlist(blk, key):
     m = re.search(r'\b' + key + r' = \{([^}]*)\}', blk)

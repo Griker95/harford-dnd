@@ -9,12 +9,17 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 Regeneralo con `python tools/gen_changelog.py`.
 
-- Commits: **78** - del **2026-05-18** al **2026-08-21**
+- Commits: **93** - del **2026-05-18** al **2026-08-21**
 
 ## Agosto de 2026
 
 **Nuevo**
 
+- **profesiones** - recetas dinamicas y crafteo verificado contra el servidor `3f881b2`
+- **profesiones** - ventana de recetas reconstruida desde el XML del cliente `1072cf5`
+- **debug** - sonda con identidad de objetos y generador de skin desde captura `b94a542`
+- **profesiones** - fundicion con animacion, tirada en mesa y botones de hechizo `df1553a`
+- **profesiones** - cadenas Classic completas, joyeria TBC e inscripcion Lich `d8f892a`
 - **profesiones** - ventana de recetas replica del TradeSkillFrame `7b2831f`
 - **profesiones** - cadena de ingenieria, hierbas reales de Epsilon y estaciones `c8d4210`
 - **misiones** - XP real en recompensas y sync de objetivos endurecido `57da639`
@@ -36,6 +41,12 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Arreglos**
 
+- **profesiones** - sello del libro segun SpellBookFrame.xml 9.2.7 `44b709b`
+- **profesiones** - plantillas de Blizzard donde el arte Classic no carga `bd2765d`
+- **profesiones** - usar los fileID reales del frame nativo, no rutas inventadas `4b8e711`
+- **profesiones** - sello del libro con la geometria real de la sonda `c743a7a`
+- **sonido** - el crafteo no reutiliza los sonidos de mision `3ccfa6f`
+- **profesiones** - crafteo uno por uno y reserva de material en vuelo `a7167c8`
 - **creacion** - reinicia la compra por puntos al reabrir el asistente `ee6daa3`
 - elimina el multi-retorno de gsub en los 8 normalizadores restantes `8cb678e`
 - **creacion** - la Pericia ofrecia todas las habilidades en el asistente `b14f5af`
@@ -57,6 +68,7 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Documentacion**
 
+- ventana de recetas, pestaña Profesiones movida y sonda comparada `fab6f86`
 - flujo de creacion encadenado, contratos de XP/reputacion y regeneracion `b957d51`
 - **agents** - la pasada de textos del compendio es del chat de la web, no de Codex `fa9b448`
 - pasada completa de actualizacion `d3aeef1`
@@ -66,6 +78,9 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Mantenimiento**
 
+- **debug** - herramientas para replicar UI nativa sin adivinar `816208c`
+- **debug** - exportador de capturas y claves Frame/etiqueta en el generador `e500661`
+- **profesiones** - auditoria de integridad + corrige el contrato de misiones `b0466a7`
 - **debug** - nativeprobe unificado, soundlog, profskill y suite de profesiones `98978fe`
 - **chat+compendio** - prefijos unicos sin duplicar y parrafos markdown en conjuros `de10b41`
 - **tools** - pipeline de extraccion del conocimiento y comando profitems `d228f9a`

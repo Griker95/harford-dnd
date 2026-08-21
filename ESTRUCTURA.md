@@ -12,8 +12,8 @@ regeneralo cuando muevas o añadas un modulo.
 
 | | |
 |---|---|
-| Modulos (`Harford/`) | **86** en **16** carpetas |
-| Lineas de codigo | ~87 944 |
+| Modulos (`Harford/`) | **87** en **16** carpetas |
+| Lineas de codigo | ~89 105 |
 | Addons hermanos | `HarfordAdmin/` (herramientas DM) - `HarfordDebug/` (diagnostico, opcional) |
 
 ## Capas y orden de carga
@@ -40,7 +40,7 @@ Transporte, chat, configuracion, autoridad y utilidades puras. No depende de nad
 |---|--:|---|
 | `HarfordSync.lua` | 2249 | Transporte de addon messages: serializacion, troceo en chunks, canales y reensamblado con TTL. |
 | `HarfordChat.lua` | 32 | Salida comun para mensajes visibles de Harford. |
-| `HarfordUISounds.lua` | 78 | Sonidos de interfaz centralizados. |
+| `HarfordUISounds.lua` | 99 | Sonidos de interfaz centralizados. |
 | `HarfordConfig.lua` | 277 | Ajustes del addon con listeners de cambio (gates tipo `actionbar`, modo de coste de conjuros). |
 | `HarfordAuthority.lua` | 270 | Fuente unica de autoridad: rango de phase, modo DM y permisos (`IsOfficerPlus`, `CanUseDMTools`). |
 | `HarfordClassColors.lua` | 169 | Fuente unica de verdad para el color de clase WoW. |
@@ -152,7 +152,7 @@ Creacion, subida de nivel, libro, conjuros e inspeccion.
 | `HarfordCharacterCreation.lua` | 770 | Valida y aplica el borrador del creador, incluido el About de TRP3. |
 | `HarfordCharacterAdvancement.lua` | 2145 | Prototipo visual de creacion y progresion. |
 | `HarfordCharacterXP.lua` | 303 | Sistema de experiencia propio de Harford (D&D 5e). |
-| `HarfordCharacterPanel.lua` | 5266 | Panel de personaje unificado. No sustituye el panel de reputaciones; lo usa como modulo externo desde una pestana. La primera vista siempre es la ficha/resumen del PJ. |
+| `HarfordCharacterPanel.lua` | 5346 | Panel de personaje unificado. No sustituye el panel de reputaciones; lo usa como modulo externo desde una pestana. La primera vista siempre es la ficha/resumen del PJ. |
 
 ## `Frames/` - Frames del juego
 
@@ -207,10 +207,11 @@ Profesiones D&D/WoW y sus recetas.
 
 | Archivo | Lineas | Rol |
 |---|--:|---|
-| `HarfordProfessionsItems.lua` | 268 | Registro CENTRAL de items de profesiones (materiales y resultados). |
-| `HarfordProfessionsCraftUI.lua` | 640 | Ventana de recetas de una profesion Harford, replica del TradeSkillFrame moderno (sonda nativeprobe prof 2026-08-21): ButtonFrameTemplate 670x496, barra de skill superior... |
-| `HarfordProfessionsData.lua` | 260 | Catalogo hardcodeado de profesiones + recetas (como HarfordDnDBook). |
-| `HarfordProfessions.lua` | 450 | Core del sistema de profesiones D&D (unifica profesiones WoW + herramientas D&D). |
+| `HarfordProfessionsItems.lua` | 356 | Registro CENTRAL de items de profesiones (materiales y resultados). |
+| `HarfordCraftSkin.lua` | 201 | GENERADO por tools/codice/gen_frame_from_probe.py a partir de una captura de HarfordFrameProbe. |
+| `HarfordProfessionsCraftUI.lua` | 859 | Ventana de recetas de una profesion Harford, replica del TradeSkillFrame moderno. |
+| `HarfordProfessionsData.lua` | 380 | Catalogo hardcodeado de profesiones + recetas (como HarfordDnDBook). |
+| `HarfordProfessions.lua` | 882 | Core del sistema de profesiones D&D (unifica profesiones WoW + herramientas D&D). |
 
 ## `Communicator/` - Comunicador
 

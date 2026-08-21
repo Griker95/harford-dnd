@@ -668,6 +668,66 @@ do
             return
         end
 
+        if action == "profbook" then
+            -- Captura la pestaña Profesiones del LIBRO DE HECHIZOS nativo (pergamino con los
+            -- dos marcos primarios arriba y filas de secundarias abajo), para replicar su
+            -- arte en Harford. Abrir el libro (P) en la pestaña Profesiones antes de capturar.
+            local tag = label ~= "" and label or "profbook"
+            local frame = _G.SpellBookProfessionFrame
+            if not frame then
+                Print("SpellBookProfessionFrame no existe en este cliente. Abre el libro de hechizos (P), pestaña Profesiones.")
+                return
+            end
+            if not frame:IsShown() then
+                Print("AVISO: SpellBookProfessionFrame esta oculto; abre la pestaña Profesiones para capturar estados reales.")
+            end
+            -- El pergamino/fondo lo pinta SpellBookFrame (paginas); los marcos, el frame de profesiones.
+            API.RunCommand("probeframecapture", "SpellBookFrame libro_" .. tag)
+            API.RunCommand("probeframecapture", "SpellBookProfessionFrame " .. tag)
+            for _, name in ipairs({ "PrimaryProfession1", "PrimaryProfession2", "SecondaryProfession1", "SecondaryProfession2", "SecondaryProfession3" }) do
+                if _G[name] then
+                    API.RunCommand("probeframecapture", name .. " " .. tag)
+                end
+            end
+            Print("Capturas de la pestaña Profesiones guardadas con etiqueta '" .. tag .. "'. Haz /reload para persistirlas.")
+            return
+        end
+
+        if action == "harford" then
+            -- Captura NUESTRA UI de profesiones (ventana de recetas + pagina del libro)
+            -- con la misma sonda que el nativo, para diffear ambas capturas fuera del juego.
+            local tag = label ~= "" and label or "nuestro"
+            -- Si la ventana de recetas aun no existe, abrirla con la primera profesion
+            -- conocida (o la primera del catalogo) para poder capturarla sin pasos previos.
+            if not _G.HarfordProfessionsCraftFrame and HarfordProfessions and HarfordProfessionsCraftUI
+                and HarfordProfessionsCraftUI.Open then
+                local pick
+                for _, def in ipairs(HarfordProfessions.GetProfessions() or {}) do
+                    pick = pick or def.id
+                    if HarfordProfessions.KnowsProfession and HarfordProfessions.KnowsProfession(def.id) then
+                        pick = def.id
+                        break
+                    end
+                end
+                if pick then HarfordProfessionsCraftUI.Open(pick) end
+            end
+            local any = false
+            if _G.HarfordProfessionsCraftFrame then
+                API.RunCommand("probeframecapture", "HarfordProfessionsCraftFrame craft_" .. tag)
+                any = true
+            end
+            if _G.HarfordSkillsPanelFrame then
+                API.RunCommand("probeframecapture", "HarfordSkillsPanelFrame skills_" .. tag)
+                any = true
+            end
+            if any then
+                Print("Capturas Harford guardadas ('" .. tag .. "'). Haz /reload para persistirlas.")
+            else
+                Print("No se pudo crear la ventana de recetas (¿HarfordProfessions cargado?).")
+            end
+            return
+        end
+
         if action == "stbm" then
             -- Sonda del StatusTrackingBarManager: para integrar la barra de XP Harford
             -- en el gestor nativo (que recoloca la UI al aparecer/desaparecer barras).
@@ -709,7 +769,7 @@ do
             end
             return
         end
-        Print("Uso: nativeprobe status | rep [etiqueta] | prof [etiqueta] | stbm | sound on|off|show|clear | events on|off")
+        Print("Uso: nativeprobe status | rep [etiqueta] | prof [etiqueta] | profbook [etiqueta] | harford [etiqueta] | stbm [update] | sound on|off|show|clear | events on|off")
     end, "investigacion de frames nativos (reps/profesiones): status | rep | prof | sound | events")
 end
 

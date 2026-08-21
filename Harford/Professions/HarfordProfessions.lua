@@ -226,6 +226,23 @@ function API.CanCraft(recipeId)
 end
 
 -- Marca una receta worldLearned como aprendida (DM / hallazgo).
+-- ¿Esta aprendida? Las recetas normales van con la profesion; las worldLearned requieren
+-- que el DM las haya enseñado (LearnRecipe/TEACH).
+function API.IsRecipeLearned(recipeId)
+    local r = API.GetRecipe(recipeId)
+    if not r then return false end
+    if not r.worldLearned then return true end
+    return Store().learned[tostring(recipeId)] == true
+end
+
+-- Item id del resultado de una receta (para iconos/tooltips de UI).
+function API.GetOutputItemId(recipeId)
+    local r = API.GetRecipe(recipeId)
+    local items = Items()
+    if r and items and r.output then return items.GetId(r.output.key) end
+    return nil
+end
+
 function API.LearnRecipe(recipeId)
     recipeId = tostring(recipeId or "")
     if API.GetRecipe(recipeId) then Store().learned[recipeId] = true; return true end

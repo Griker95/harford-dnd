@@ -308,8 +308,8 @@ local function GetPanelTitle()
     return name or GetProfileName()
 end
 
-local TAB_ORDER = { "sheet", "reputation", "professions", "creation", "leveling" }
-local SKILLS_TAB_ORDER = { "book", "spells" }
+local TAB_ORDER = { "sheet", "reputation", "creation", "leveling" }
+local SKILLS_TAB_ORDER = { "book", "spells", "professions" }
 
 -- Pestañas OCULTAS para el despliegue (Creacion/Subida aun no listas). No se crean sus
 -- botones (ver tabData) y cualquier intento de activarlas cae a "sheet". Las paginas siguen
@@ -1067,6 +1067,8 @@ RefreshSkillsPanel = function()
         S.skillsContent:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", 0, 0)
     end
     local isBook = S.skillsActiveTab == "book"
+    local isSpells = S.skillsActiveTab == "spells"
+    local isProf = S.skillsActiveTab == "professions"
     if S.book then
         if S.book.page then S.book.page:SetShown(isBook) end
         if S.book.body then S.book.body:SetShown(isBook) end
@@ -1074,17 +1076,26 @@ RefreshSkillsPanel = function()
         if S.book.page2 then S.book.page2:SetShown(isBook) end
     end
     if S.spellBook then
-        local isSpells = not isBook
         if S.spellBook.page then S.spellBook.page:SetShown(isSpells) end
         if S.spellBook.body then S.spellBook.body:SetShown(isSpells) end
         if S.spellBook.page1 then S.spellBook.page1:SetShown(isSpells) end
         if S.spellBook.page2 then S.spellBook.page2:SetShown(isSpells) end
     end
+    if S.professions then
+        local P = S.professions
+        if P.page then P.page:SetShown(isProf) end
+        if P.profBody then P.profBody:SetShown(isProf) end
+        if P.profPage1 then P.profPage1:SetShown(isProf) end
+        if P.profPage2 then P.profPage2:SetShown(isProf) end
+        if P.profBookmark then P.profBookmark:SetShown(isProf) end
+        if P.ribbonCover then P.ribbonCover:SetShown(isProf) end
+    end
     for key, button in pairs(S.skillsTabs or {}) do
         if button.SetSelectedLook then button:SetSelectedLook(key == S.skillsActiveTab) end
     end
     if f.TitleText then
-        f.TitleText:SetText(S.skillsActiveTab == "spells" and "Conjuros" or "Habilidades")
+        f.TitleText:SetText(S.skillsActiveTab == "spells" and "Conjuros"
+            or (S.skillsActiveTab == "professions" and "Profesiones" or "Habilidades"))
     end
     PositionSkillsTabs()
     local refresh = S.refreshers and S.refreshers[S.skillsActiveTab]
@@ -1092,7 +1103,7 @@ RefreshSkillsPanel = function()
 end
 
 local function CreatePage(key)
-    local parent = ((key == "book" or key == "spells") and S.skillsContent) or S.content or S.frame
+    local parent = ((key == "book" or key == "spells" or key == "professions") and S.skillsContent) or S.content or S.frame
     local page = CreateFrame("Frame", nil, parent)
     page:SetAllPoints(parent)
     S.pages[key] = page
@@ -3105,36 +3116,162 @@ end
 
 local function CreateProfessionsPage()
     local page = CreatePage("professions")
+    -- Skin del LIBRO DE HABILIDADES como base (mismo trio body+paginas que la ventana de
+    -- Habilidades/Conjuros), y encima SOLO dos piezas de la textura de profesiones nativa
+    -- (383588, sonda profbook): la franja izquierda con el marcapaginas VERDE y el marco
+    -- ornamentado recortado como sello por profesion.
+    local host = S.skillsFrame or S.frame
+    local profBody = host:CreateTexture(nil, "BACKGROUND", nil, -7)
+    profBody:SetTexture(374155)
+    profBody:SetTexCoord(0, 0.533203125, 0, 0.4902344048)
+    profBody:SetAllPoints(host)
+    profBody:Hide()
+    local profPage1 = host:CreateTexture(nil, "BACKGROUND", nil, -6)
+    profPage1:SetTexture("Interface\\Spellbook\\Spellbook-Page-1")
+    profPage1:SetPoint("TOPLEFT", host, "TOPLEFT", 0, -25)
+    profPage1:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -31, -15)
+    profPage1:Hide()
+    local profPage2 = host:CreateTexture(nil, "BACKGROUND", nil, -5)
+    profPage2:SetTexture("Interface\\Spellbook\\Spellbook-Page-2")
+    profPage2:SetPoint("TOPLEFT", profPage1, "TOPRIGHT", 0, 0)
+    profPage2:SetPoint("BOTTOMLEFT", profPage1, "BOTTOMRIGHT", 0, 0)
+    profPage2:SetWidth(41)
+    profPage2:Hide()
+    -- Parche de pergamino limpio que tapa la cinta AZUL de la pagina base: la zona baja
+    -- de la franja de profesiones tiene alpha y dejaba asomar el azul por debajo del verde.
+    local ribbonCover = host:CreateTexture(nil, "BACKGROUND", nil, -5)
+    ribbonCover:SetTexture("Interface\\Spellbook\\Spellbook-Page-1")
+    ribbonCover:SetTexCoord(0.35, 0.45, 0.06, 0.94)
+    ribbonCover:SetPoint("TOPLEFT", profPage1, "TOPLEFT", 4, -10)
+    ribbonCover:SetPoint("BOTTOMLEFT", profPage1, "BOTTOMLEFT", 4, 10)
+    ribbonCover:SetWidth(58)
+    ribbonCover:Hide()
+    -- Marcapaginas verde: franja izquierda de 383588, solo hasta el final de la cinta
+    local profBookmark = host:CreateTexture(nil, "BACKGROUND", nil, -4)
+    profBookmark:SetTexture(383588)
+    -- Empieza tras el borde con alpha de la textura (si no, la cinta azul de la pagina base
+    -- asoma a traves) y llega hasta pasada la cinta verde
+    -- A escala 1:1 el ancho en pantalla DEBE igualar los pixeles del recorte (si no,
+    -- la cinta se comprime y queda desplazada respecto a la azul que debe tapar)
+    profBookmark:SetTexCoord(0.004, 0.1388, 0, 1)
+    profBookmark:SetPoint("TOPLEFT", profPage1, "TOPLEFT", 0, 0)
+    profBookmark:SetPoint("BOTTOMLEFT", profPage1, "BOTTOMLEFT", 0, 0)
+    profBookmark:SetWidth(69)
+    profBookmark:Hide()
     local title = CreateFS(page, "GameFontNormalLarge", "Profesiones")
     title:SetPoint("TOPLEFT", 14, -10)
+    title:Hide()  -- el retrato lo pisa y la pestaña ya se llama Profesiones
     local empty = CreateFS(page, "GameFontDisable",
         "No conoces ninguna profesion todavia (llegan con competencias de herramienta o el DM).")
     empty:SetPoint("TOPLEFT", 16, -44); empty:SetWidth(380); empty:SetJustifyH("LEFT"); empty:Hide()
 
-    -- Columna izquierda: profesiones conocidas. Derecha: recetas de la seleccionada.
+    -- Vista LISTA: sellos de profesion a pagina completa. Vista RECETAS: panel de crafteo
+    -- con boton de volver. Se alternan (P.view), como el libro nativo al abrir una profesion.
     local profList = CreateFrame("Frame", nil, page)
-    profList:SetPoint("TOPLEFT", 12, -40); profList:SetSize(150, 380)
+    profList:SetPoint("TOPLEFT", 63, -36); profList:SetSize(449, 430)
+    profList:EnableMouseWheel(true)
+    profList:SetScript("OnMouseWheel", function(_, delta)
+        local P = S.professions
+        P.listOffset = math.max(0, (P.listOffset or 0) - delta)
+        if S.RefreshProfessions then S.RefreshProfessions() end
+    end)
     local recipePanel = CreateFrame("Frame", nil, page)
-    recipePanel:SetPoint("TOPLEFT", profList, "TOPRIGHT", 12, 0); recipePanel:SetSize(238, 380)
+    recipePanel:SetPoint("TOPLEFT", 63, -36); recipePanel:SetSize(449, 430)
+    recipePanel:Hide()
+    recipePanel:EnableMouseWheel(true)
+    recipePanel:SetScript("OnMouseWheel", function(_, delta)
+        local P = S.professions
+        P.recipeOffset = math.max(0, (P.recipeOffset or 0) - delta)
+        if S.RefreshProfessions then S.RefreshProfessions() end
+    end)
+    local backBtn = CreateFrame("Button", nil, recipePanel, "UIPanelButtonTemplate")
+    backBtn:SetSize(92, 20); backBtn:SetPoint("TOPLEFT", 0, 0); backBtn:SetText("< Volver")
+    backBtn:SetScript("OnClick", function()
+        S.professions.view = "list"
+        if S.RefreshProfessions then S.RefreshProfessions() end
+    end)
     local recipeHeader = CreateFS(recipePanel, "GameFontNormal", "")
-    recipeHeader:SetPoint("TOPLEFT", 0, -2); recipeHeader:SetWidth(238); recipeHeader:SetJustifyH("LEFT")
+    recipeHeader:SetPoint("TOPLEFT", 100, -4); recipeHeader:SetWidth(278); recipeHeader:SetJustifyH("LEFT")
+    recipeHeader:SetTextColor(0.25, 0.13, 0.05)
 
     S.professions = { page = page, title = title, empty = empty, profList = profList,
-        recipePanel = recipePanel, recipeHeader = recipeHeader,
-        profButtons = {}, recipeRows = {}, selected = nil, forcedProfession = nil }
+        recipePanel = recipePanel, recipeHeader = recipeHeader, backBtn = backBtn,
+        profBody = profBody, profPage1 = profPage1, profPage2 = profPage2,
+        profBookmark = profBookmark, ribbonCover = ribbonCover, profButtons = {}, recipeRows = {},
+        selected = nil, forcedProfession = nil, view = "list", listOffset = 0 }
 end
 
--- Boton de profesion (pool, columna izquierda): icono + nombre + skill/tier.
+-- Sello de profesion (pool, pagina completa): el marco ornamentado de la pestaña
+-- Profesiones nativa (recorte de 383588) como envoltorio, con icono+borde nativo (383591),
+-- nombre en MORPHEUS y la barra de skill nativa (ProfessionsBook + Professions-Progress-Fill).
 local function ProfButton(i)
     local P = S.professions
     if P.profButtons[i] then return P.profButtons[i] end
     local b = CreateFrame("Button", nil, P.profList)
-    b:SetSize(150, 32); b:SetPoint("TOPLEFT", 0, -((i - 1) * 34))
-    b.bg = b:CreateTexture(nil, "BACKGROUND"); b.bg:SetAllPoints()
+    -- Escala NATIVA 1:1 (con BOOK_W el pergamino pinta a tamano real)
+    b:SetSize(449, 101); b:SetPoint("TOPLEFT", 0, -((i - 1) * 110))
+    -- Marco ornamentado horneado en la textura del pergamino de profesiones
+    b.stamp = b:CreateTexture(nil, "BACKGROUND")
+    b.stamp:SetTexture(383588)
+    -- Region de arte del marco: x 63..512, y 32..133 de la textura 512 (sonda profbook)
+    b.stamp:SetTexCoord(0.123, 1.0, 0.0625, 0.2598)
+    b.stamp:SetAllPoints(b)
     b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
-    b.icon = b:CreateTexture(nil, "ARTWORK"); b.icon:SetSize(24, 24); b.icon:SetPoint("LEFT", 4, 0); b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    b.name = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); b.name:SetPoint("TOPLEFT", 34, -4); b.name:SetJustifyH("LEFT")
-    b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall"); b.sub:SetPoint("BOTTOMLEFT", 34, 4); b.sub:SetJustifyH("LEFT")
+    b.iconBorder = b:CreateTexture(nil, "ARTWORK", nil, 1)
+    b.iconBorder:SetTexture(383591)
+    b.iconBorder:SetTexCoord(0.43359375, 0.72265625, 0.1484375, 0.7265625)
+    b.iconBorder:SetSize(72, 72); b.iconBorder:SetPoint("TOPLEFT", 17, -17)
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    -- El hueco del aro es redondo (el nativo usa retratos circulares): icono cuadrado
+    -- recortado con la mascara circular de retratos (patron probado de UnitFrames)
+    -- Nativo: icono 70x70 dentro del aro de 72 (solo 1px de margen)
+    b.icon:SetPoint("TOPLEFT", b.iconBorder, "TOPLEFT", 1, -1)
+    b.icon:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
+    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    local iconMask = b:CreateMaskTexture(nil, "ARTWORK")
+    iconMask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+    iconMask:SetPoint("TOPLEFT", b.iconBorder, "TOPLEFT", 1, -1)
+    iconMask:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
+    b.icon:AddMaskTexture(iconMask)
+    b.name = b:CreateFontString(nil, "OVERLAY")
+    b.name:SetFont("Fonts\\MORPHEUS.ttf", 18)  -- tamano nativo (sonda profbook)
+    b.name:SetPoint("TOPLEFT", 110, -12); b.name:SetJustifyH("LEFT")  -- nativo: +100,-2 de contenido
+    b.name:SetTextColor(1, 0.82, 0)
+    b.sub = b:CreateFontString(nil, "OVERLAY")
+    b.sub:SetFont("Fonts\\FRIZQT__.TTF", 10)
+    -- Posicion del Rank nativo: name.BOTTOM -33 => -63 en el sello; color blanco
+    b.sub:SetPoint("TOPLEFT", 110, -63); b.sub:SetWidth(300); b.sub:SetJustifyH("LEFT")
+    b.sub:SetTextColor(1, 1, 1)
+    -- Barra de skill nativa (piezas de la sonda profbook)
+    local bar = CreateFrame("StatusBar", nil, b)
+    bar:SetSize(95, 16); bar:SetPoint("TOPLEFT", 124, -78)  -- nativo: Rank.BOTTOM +14,-5
+    bar:SetStatusBarTexture("Interface\\Spellbook\\Professions-Progress-Fill")
+    bar:SetMinMaxValues(0, 300)
+    local barBg = bar:CreateTexture(nil, "BACKGROUND")
+    barBg:SetTexture("Interface\\Spellbook\\ProfessionsBook")
+    barBg:SetTexCoord(0, 1, 0.0078125, 0.1328125)
+    barBg:SetAllPoints(bar)
+    -- Fondos de extremo nativos (BGLeft/BGRight 16x16), bajo los remates de 12x12
+    local bgCapL = bar:CreateTexture(nil, "BACKGROUND")
+    bgCapL:SetTexture("Interface\\Spellbook\\ProfessionsBook")
+    bgCapL:SetTexCoord(0.00390625, 0.06640625, 0.484375, 0.609375)
+    bgCapL:SetSize(16, 16); bgCapL:SetPoint("RIGHT", bar, "LEFT", 0, 2)
+    local bgCapR = bar:CreateTexture(nil, "BACKGROUND")
+    bgCapR:SetTexture("Interface\\Spellbook\\ProfessionsBook")
+    bgCapR:SetTexCoord(0.00390625, 0.06640625, 0.625, 0.75)
+    bgCapR:SetSize(16, 16); bgCapR:SetPoint("LEFT", bar, "RIGHT", 0, 2)
+    local capL = bar:CreateTexture(nil, "OVERLAY")
+    capL:SetTexture("Interface\\Spellbook\\ProfessionsBook")
+    capL:SetTexCoord(0.00390625, 0.05078125, 0.875, 0.96875)
+    capL:SetSize(12, 12); capL:SetPoint("RIGHT", bar, "LEFT", 0, 2)
+    local capR = bar:CreateTexture(nil, "OVERLAY")
+    capR:SetTexture("Interface\\Spellbook\\ProfessionsBook")
+    capR:SetTexCoord(0.00390625, 0.05078125, 0.765625, 0.859375)
+    capR:SetSize(12, 12); capR:SetPoint("LEFT", bar, "RIGHT", 0, 2)
+    b.barText = bar:CreateFontString(nil, "OVERLAY")
+    b.barText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    b.barText:SetPoint("CENTER", bar, "CENTER", 0, 2)
+    b.bar = bar
     P.profButtons[i] = b
     return b
 end
@@ -3144,10 +3281,10 @@ local function RecipeRow(i)
     local P = S.professions
     if P.recipeRows[i] then return P.recipeRows[i] end
     local r = CreateFrame("Frame", nil, P.recipePanel)
-    r:SetSize(238, 40); r:SetPoint("TOPLEFT", 0, -22 - ((i - 1) * 42))
+    r:SetSize(449, 40); r:SetPoint("TOPLEFT", 0, -26 - ((i - 1) * 42))
     r.icon = r:CreateTexture(nil, "ARTWORK"); r.icon:SetSize(26, 26); r.icon:SetPoint("TOPLEFT", 0, -2); r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    r.name = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); r.name:SetPoint("TOPLEFT", 32, -2); r.name:SetWidth(130); r.name:SetJustifyH("LEFT")
-    r.mats = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall"); r.mats:SetPoint("TOPLEFT", 32, -18); r.mats:SetWidth(200); r.mats:SetJustifyH("LEFT")
+    r.name = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); r.name:SetPoint("TOPLEFT", 32, -2); r.name:SetWidth(300); r.name:SetJustifyH("LEFT"); r.name:SetTextColor(0.25, 0.13, 0.05)
+    r.mats = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall"); r.mats:SetPoint("TOPLEFT", 32, -18); r.mats:SetWidth(360); r.mats:SetJustifyH("LEFT")
     r.craft = CreateFrame("Button", nil, r, "UIPanelButtonTemplate"); r.craft:SetSize(58, 20); r.craft:SetPoint("TOPRIGHT", 0, -2); r.craft:SetText("Craftear")
     P.recipeRows[i] = r
     return r
@@ -3166,35 +3303,88 @@ local function RefreshProfessions()
             if HarfordProfessions.KnowsProfession(def.id) then known[#known + 1] = def end
         end
     end
-    P.empty:SetShown(#known == 0 and not forced)
+    P.empty:Hide()  -- los envoltorios vacios ya explican como se aprende una profesion
 
     -- Mantener seleccion valida.
     local selValid = false
     for _, d in ipairs(known) do if d.id == P.selected then selValid = true break end end
     if not selValid then P.selected = known[1] and known[1].id or nil end
 
-    for i, def in ipairs(known) do
-        local b = ProfButton(i)
-        local profId = def.id
-        local profName = def.name
-        local profIcon = def.icon
-        local skill = HarfordProfessions.EffectiveSkill(profId)
-        local selected = (profId == P.selected)
-        b.icon:SetTexture("Interface\\Icons\\" .. (profIcon or "INV_Misc_QuestionMark"))
-        b.name:SetText(profName)
-        b.sub:SetText(string.format("%d/%d  %s", skill, HarfordProfessions.MAX_SKILL, HarfordProfessions.GetTierName(skill)))
-        b.bg:SetColorTexture(1, 1, 1, selected and 0.16 or 0.05)
-        b:SetScript("OnClick", function()
-            P.selected = profId
-            RefreshProfessions()
-        end)
-        b:Show()
+    -- Dos vistas alternadas: LISTA de sellos <-> RECETAS de la seleccionada
+    if P.view ~= "recipes" or not P.selected then P.view = "list" end
+    local isList = P.view == "list"
+    P.profList:SetShown(isList)
+    P.recipePanel:SetShown(not isList)
+
+    -- Lista con desplazamiento por rueda (4 sellos visibles). Sin profesiones se pintan
+    -- envoltorios VACIOS (como los "First/Second Profession" del nativo): el marco sigue ahi.
+    local VISIBLE = 4
+    local totalSlots = math.max(#known, 2)
+    local maxOffset = math.max(0, totalSlots - VISIBLE)
+    P.listOffset = math.max(0, math.min(P.listOffset or 0, maxOffset))
+    for i = 1, math.max(VISIBLE, #P.profButtons) do
+        local slot = P.listOffset + i
+        local def = isList and known[slot] or nil
+        local emptySlot = isList and not def and slot <= totalSlots
+        local b = P.profButtons[i] or ((def or emptySlot) and ProfButton(i))
+        if b then
+            if def then
+                local profId = def.id
+                local skill = HarfordProfessions.EffectiveSkill(profId)
+                b.icon:SetTexture("Interface\\Icons\\" .. (def.icon or "INV_Misc_QuestionMark"))
+                b.icon:Show()
+                b.name:SetText(def.name)
+                b.name:SetTextColor(1, 0.82, 0)
+                b.sub:SetText(HarfordProfessions.GetTierName(skill))
+                b.bar:Show()
+                b.bar:SetValue(skill)
+                b.barText:SetText(string.format("%d/%d", skill, HarfordProfessions.MAX_SKILL))
+                b:SetScript("OnClick", function()
+                    P.selected = profId
+                    if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Open then
+                        HarfordProfessionsCraftUI.Open(profId)
+                    else
+                        P.view = "recipes"
+                        P.recipeOffset = 0
+                        RefreshProfessions()
+                    end
+                end)
+                b:Show()
+            elseif emptySlot then
+                -- Envoltorio vacio: marco + hueco de icono, sin barra ni click
+                b.icon:Hide()
+                b.name:SetText("Profesion")
+                b.name:SetTextColor(0.8, 0.7, 0.5)
+                b.sub:SetText("Se aprende con la competencia de su herramienta o del DM.")
+                b.bar:Hide()
+                b:SetScript("OnClick", nil)
+                b:Show()
+            else
+                b:Hide()
+            end
+        end
     end
-    for i = #known + 1, #P.profButtons do P.profButtons[i]:Hide() end
 
     local sel = P.selected and HarfordProfessions.GetDefinition(P.selected)
-    P.recipeHeader:SetText(sel and ("Recetas de " .. sel.name) or "")
-    local recipes = sel and HarfordProfessions.GetRecipes(sel.id) or {}
+    if sel then
+        local skill = HarfordProfessions.EffectiveSkill(sel.id)
+        P.recipeHeader:SetText(string.format("%s  |cff6b4a2a%d/%d %s|r", sel.name, skill,
+            HarfordProfessions.MAX_SKILL, HarfordProfessions.GetTierName(skill)))
+    else
+        P.recipeHeader:SetText("")
+    end
+    local recipes = (not isList and sel) and HarfordProfessions.GetRecipes(sel.id) or {}
+    -- Ventana deslizante: 9 filas visibles, rueda para desplazar (parche hasta tener la
+    -- ventana nativa de recetas replicada; ver sonda nativeprobe prof)
+    local RECIPES_VISIBLE = 9
+    local recipeMax = math.max(0, #recipes - RECIPES_VISIBLE)
+    P.recipeOffset = math.max(0, math.min(P.recipeOffset or 0, recipeMax))
+    local visibleRecipes = {}
+    for i = 1, RECIPES_VISIBLE do
+        local rec = recipes[P.recipeOffset + i]
+        if rec then visibleRecipes[#visibleRecipes + 1] = rec end
+    end
+    recipes = visibleRecipes
     for i, rec in ipairs(recipes) do
         local row = RecipeRow(i)
         local recipeId = rec.id
@@ -3229,6 +3419,7 @@ local function RefreshProfessions()
     end
     for i = #recipes + 1, #P.recipeRows do P.recipeRows[i]:Hide() end
 end
+S.RefreshProfessions = RefreshProfessions
 
 -- ===========================================================================
 -- Pestaña LIBRO: libro de habilidades con look spellbook VANILLA. Lista los rasgos
@@ -4729,6 +4920,7 @@ local function CreateFrameIfNeeded()
     local skillTabData = {
         { "book", "Habilidades" },
         { "spells", "Conjuros" },
+        { "professions", "Profesiones" },
     }
     for i, t in ipairs(skillTabData) do
         local key = t[1]
@@ -4824,7 +5016,10 @@ local function CreateFrameIfNeeded()
 end
 
 function API.Open(tab, opts)
-    if tab == "book" or tab == "spells" then
+    if tab == "book" or tab == "spells" or tab == "professions" then
+        if tab == "professions" and S.professions and not (opts and opts.keepProfessionFilter) then
+            S.professions.forcedProfession = nil
+        end
         return API.OpenSkills(tab)
     end
     CreateFrameIfNeeded()
@@ -4839,9 +5034,6 @@ function API.Open(tab, opts)
     if HIDDEN_TABS[S.activeTab] and not IsExplicitHiddenTab(S.activeTab) then
         S.activeTab = "sheet"
     end
-    if S.activeTab == "professions" and S.professions and not (opts and opts.keepProfessionFilter) then
-        S.professions.forcedProfession = nil
-    end
     S.frame:Show()
     RefreshPanel()
 end
@@ -4853,16 +5045,20 @@ function API.OpenProfession(profId)
     if not (HarfordProfessions and HarfordProfessions.GetDefinition and HarfordProfessions.GetDefinition(profId)) then
         return false, "Profesion desconocida: " .. profId
     end
+    if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Open then
+        return HarfordProfessionsCraftUI.Open(profId)
+    end
     CreateFrameIfNeeded()
     S.professions.forcedProfession = profId
     S.professions.selected = profId
+    S.professions.view = "recipes"
     API.Open("professions", { keepProfessionFilter = true })
     return true
 end
 
 function API.OpenSkills(tab)
     CreateFrameIfNeeded()
-    local targetTab = tab == "spells" and "spells" or "book"
+    local targetTab = (tab == "spells" or tab == "professions") and tab or "book"
     local wasShown = S.skillsFrame:IsShown()
     local changedTab = S.skillsActiveTab ~= targetTab
     S.inspectName = nil
@@ -4925,7 +5121,7 @@ function API.Close()
 end
 
 function API.Toggle(tab)
-    if tab == "book" or tab == "spells" then
+    if tab == "book" or tab == "spells" or tab == "professions" then
         CreateFrameIfNeeded()
         if S.skillsFrame:IsShown() and S.skillsActiveTab == tab then
             S.skillsFrame:Hide()

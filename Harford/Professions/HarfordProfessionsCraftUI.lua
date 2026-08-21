@@ -973,6 +973,26 @@ function API.Close()
     if frame then frame:Hide() end
 end
 
+-- Alternar desde el sello de una profesion:
+--   ventana abierta con ESA profesion  -> se cierra
+--   ventana abierta con OTRA           -> cambia a esta, sin cerrarse
+--   ventana cerrada                    -> se abre con esta
+function API.Toggle(profId)
+    profId = tostring(profId or ""):lower()
+    if frame and frame:IsShown() and state.profId == profId then
+        API.Close()
+        return false
+    end
+    local ok, err = API.Open(profId)
+    return ok and true or false, err
+end
+
+-- ¿Que profesion se esta mostrando? nil si la ventana esta cerrada.
+function API.GetOpenProfession()
+    if not (frame and frame:IsShown()) then return nil end
+    return state.profId
+end
+
 -- El icono de un item custom de Epsilon llega vacio hasta que el cliente cachea el item.
 -- Se solicita y se repinta al recibirlo, en vez de dejar una interrogacion fija.
 do

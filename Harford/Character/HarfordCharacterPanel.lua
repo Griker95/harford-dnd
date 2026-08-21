@@ -3521,7 +3521,10 @@ local function SetProfTooltip(button, profId, modo)
             GameTooltip:AddDoubleLine("Recetas", string.format("%d de %d a tu alcance",
                 alAlcance, #recetas), 0.7, 0.7, 0.7, 1, 1, 1)
             GameTooltip:AddLine(" ")
-            GameTooltip:AddLine("Click para abrir las recetas.", 0.4, 1, 0.4, true)
+            local abierta = HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.GetOpenProfession
+                and HarfordProfessionsCraftUI.GetOpenProfession() == profId
+            GameTooltip:AddLine(abierta and "Click para cerrar las recetas."
+                or "Click para abrir las recetas.", 0.4, 1, 0.4, true)
         end
         GameTooltip:Show()
     end)
@@ -3793,8 +3796,11 @@ local function RefreshProfessions()
                 SetProfTooltip(b.spellOpen, profId, "open")
                 b.spellOpen:SetScript("OnClick", function()
                     P.selected = profId
-                    if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Open then
-                        HarfordProfessionsCraftUI.Open(profId)
+                    -- Alterna: si ya esta abierta CON ESTA profesion se cierra; si esta abierta
+                    -- con otra, cambia a esta sin cerrarse. La estacion del mundo no usa esto:
+                    -- ahi siempre se abre.
+                    if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Toggle then
+                        HarfordProfessionsCraftUI.Toggle(profId)
                     else
                         P.view = "recipes"
                         P.recipeOffset = 0

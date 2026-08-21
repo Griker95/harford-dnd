@@ -2227,6 +2227,14 @@ Clasifica por PROFESION de la receta, luego por PAPEL (resultado o materia prima
 final por nombre. Cotejar contra `kb.json` es parte del generador: avisa de cualquier objeto
 publicado en la web que no tenga clave en el registro.
 
+**El icono no es el modelo.** El `icono` es lo que se ve en la bolsa; el `display` es el
+modelo 3D sobre el personaje, y sin el un arma forjada no se parece a un arma.
+`.forge item set display $item-link $item-link2` acepta el ID DE OTRO OBJETO y le copia
+modelo y textura, y `cotejo/objetos_wowhead.json` esta indexado justamente por el id real de
+WoW: de ahi salen 2498 displays. Lo que sigue SIN enviarse es `sheath` (100 armas): el enum
+0..7 no esta verificado y equivocarlo solo afecta a donde se envaina, asi que se deja hasta
+poder comprobarlo en juego.
+
 **Regenerar cuando cambian las fuentes**: `tools/codice/actualizar_itemforge.py [--aplicar]`
 encadena las cinco etapas en el orden correcto: (1) VUELTA, lee los ids forjados de las
 SavedVariables del juego y prepara las lineas para el registro; (2) WOWHEAD, vuelca calidad,

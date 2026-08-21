@@ -288,7 +288,8 @@ for e in sorted(pendientes, key=orden):
         profPrevia = prof
     campos = {'nombre': e['nombre'], 'icono': e['icono'], 'calidad': calidad,
               'clase': clase, 'subclase': subclase, 'hueco': hueco,
-              'apilable': apilable, 'vinculacion': 0, 'desc': '', 'additem': True}
+              'apilable': apilable, 'vinculacion': 0, 'desc': '', 'additem': True,
+              'display': None}
     # Lo escrito a mano o traido de la web pisa lo deducido, nunca al reves.
     for campo, valor in (anulaciones.get(e['clave']) or {}).items():
         if campo in campos:
@@ -304,6 +305,9 @@ for e in sorted(pendientes, key=orden):
                   campos['hueco']))
     out.append('      apilable = %d, vinculacion = %d, desc = %s,'
                % (campos['apilable'], campos['vinculacion'], escapa(campos['desc'])))
+    if campos['display']:
+        out.append('      display = %d,   -- modelo del objeto original de WoW'
+                   % int(campos['display']))
     if campos['additem'] is False:
         out.append('      additem = false,   -- cerrado: solo su creador puede .additem')
         cerrados.append(e['clave'])

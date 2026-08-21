@@ -7,6 +7,8 @@ HarfordItemForge por NOMBRE y se escribe lo aprovechable en la capa de anulacion
 
 Que se toma y que no:
 
+  display   el id del objeto original de WoW. `.forge item set display` copia de ahi
+            modelo y textura, que es lo que hace que un arma forjada se VEA como un arma.
   calidad   la de Wowhead, que es la real del objeto original.
   apilable  el `Carga max` de la ficha; si no lo dice, no se toca lo deducido.
   desc      SOLO el efecto de uso. El resto de lineas del tooltip son ruido que el propio
@@ -71,7 +73,9 @@ def main():
         return 1
     wh = json.load(io.open(WOWHEAD, encoding='utf-8'))
     porNombre = {}
-    for ficha in wh.values():
+    for idOriginal, ficha in wh.items():
+        # El id de WoW es la CLAVE del json, y sirve para copiarle el modelo al forjado.
+        ficha = dict(ficha, _id=int(idOriginal))
         for campo in ('name', 'classicName'):
             if ficha.get(campo):
                 porNombre.setdefault(sinTildes(ficha[campo]), ficha)
@@ -80,13 +84,17 @@ def main():
     items = re.findall(r'clave = "([^"]+)", nombre = "([^"]+)"', texto)
 
     salida = {}
-    sinFicha, conDesc, conCalidad, conPila = [], 0, 0, 0
+    sinFicha, conDesc, conCalidad, conPila, conDisplay = [], 0, 0, 0, 0
     for clave, nombre in items:
         ficha = porNombre.get(sinTildes(nombre))
         if not ficha:
             sinFicha.append(nombre)
             continue
         campos = {}
+        if ficha.get('_id'):
+            # `.forge item set display <enlace> <id>` copia modelo y textura del original.
+            campos['display'] = ficha['_id']
+            conDisplay += 1
         if ficha.get('quality') is not None:
             campos['calidad'] = int(ficha['quality'])
             conCalidad += 1
@@ -107,6 +115,7 @@ def main():
     print("Se puede rellenar:")
     print("   calidad:      %d" % conCalidad)
     print("   apilable:     %d" % conPila)
+    print("   display:      %d   (modelo 3D del objeto original)" % conDisplay)
     print("   descripcion:  %d   (solo los que tienen efecto de uso)" % conDesc)
     print()
     print("Sin ficha, quedan a mano:   %d" % len(sinFicha))

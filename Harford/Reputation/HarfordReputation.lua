@@ -186,6 +186,10 @@ local function FireChanged(kind, ...)
     if HarfordReputationUI and HarfordReputationUI.Refresh then
         HarfordReputationUI.Refresh()
     end
+    -- La barra de estado inferior muestra la faccion seguida: refrescarla al cambiar rep
+    if HarfordCharacterXP and HarfordCharacterXP.Refresh then
+        HarfordCharacterXP.Refresh()
+    end
 end
 
 function API.EnsureStore()

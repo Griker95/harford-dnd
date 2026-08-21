@@ -2380,6 +2380,108 @@ do
     end
 end
 
+-- ─── Enlaces de FACCION clicables via TRP3 ChatLinks ─────────────────────────
+-- Mismo mecanismo que las habilidades: hyperlink `totalrp3` clicable; el tooltip muestra
+-- icono + nombre coloreado, el rango del emisor y la descripcion de la faccion.
+do
+    local _factionModule
+
+    local function EnsureFactionModule()
+        if _factionModule ~= nil then return _factionModule end
+        if not (TRP3_API and TRP3_API.ChatLinks and TRP3_API.ChatLinks.InstantiateModule
+            and TRP3_API.ChatLink and TRP3_API.ChatLinkTooltipLines) then
+            return nil
+        end
+        local ok, mod = pcall(function()
+            local existing = TRP3_API.ChatLinks.GetModuleByID
+                and TRP3_API.ChatLinks:GetModuleByID("harford_faction")
+            local m = existing or TRP3_API.ChatLinks:InstantiateModule("Harford - Faccion", "harford_faction")
+            function m:GetLinkData(faction, standingText, standingColor)
+                local nm = tostring((faction and faction.name) or "Faccion")
+                local icon
+                if HarfordReputation and HarfordReputation.ResolveIconTexture then
+                    icon = HarfordReputation.ResolveIconTexture(faction and faction.icon)
+                end
+                return nm, {
+                    name = nm,
+                    desc = (faction and faction.description) or "",
+                    icon = icon,
+                    color = faction and faction.color,
+                    standing = standingText and tostring(standingText) or nil,
+                    standingColor = standingColor and tostring(standingColor) or nil,
+                }
+            end
+            function m:GetTooltipLines(data)
+                local nm = tostring((data and data.name) or "?")
+                local iconTag = (data and data.icon) and ("|T" .. tostring(data.icon) .. ":22:22|t ") or ""
+                -- Color del titulo: el color propio de la faccion; oro si no tiene.
+                local colorHex = "ffd100"
+                if data and type(data.color) == "string" then
+                    local hex = data.color:match("(%x%x%x%x%x%x)$")
+                    if hex then colorHex = hex end
+                end
+                local lines = TRP3_API.ChatLinkTooltipLines(iconTag .. "|cff" .. colorHex .. nm .. "|r")
+                if data and data.standing and data.standing ~= "" then
+                    -- Solo el rango, con el color NATIVO de standing (FACTION_BAR_COLORS):
+                    -- rojo Odiado/Hostil, naranja Adverso, amarillo Neutral, verde Amistoso+.
+                    local STANDING_BY_NAME = {
+                        odiado = 1, hostil = 2, adverso = 3, neutral = 4,
+                        amistoso = 5, honorable = 6, reverenciado = 7, exaltado = 8,
+                    }
+                    local sHex = "ffffff"
+                    local id = STANDING_BY_NAME[tostring(data.standing):lower()]
+                    local c = id and FACTION_BAR_COLORS and FACTION_BAR_COLORS[id]
+                    if c then
+                        sHex = string.format("%02x%02x%02x",
+                            math.floor((c.r or 1) * 255), math.floor((c.g or 1) * 255), math.floor((c.b or 1) * 255))
+                    end
+                    lines:AddLine("|cff" .. sHex .. data.standing .. "|r")
+                end
+                if data and data.desc and data.desc ~= "" then
+                    lines:AddLine(tostring(data.desc))
+                end
+                return lines
+            end
+            return m
+        end)
+        if ok and mod then _factionModule = mod end
+        return _factionModule
+    end
+
+    -- Enlace clicable de faccion (hyperlink totalrp3). `standingText` es el rango que se
+    -- congela en el enlace (el que mostraba la fila al compartirlo). Nunca lanza error.
+    function API.GetFactionChatLink(faction, standingText)
+        if not faction then return "" end
+        local nm = tostring(faction.name or "?")
+        local mod = EnsureFactionModule()
+        if mod then
+            local ok, text = pcall(function()
+                local name, data = mod:GetLinkData(faction, standingText)
+                local link = TRP3_API.ChatLink(name, data, mod:GetID())
+                local id = link:GetIdentifier()
+                local player = (TRP3_API.globals and TRP3_API.globals.player_id)
+                    or (GetUnitName and GetUnitName("player", true))
+                    or UnitName("player") or "?"
+                return "|cffffd100|Htotalrp3:" .. player .. ":" .. id .. "|h[" .. name .. "]|h|r"
+            end)
+            if ok and type(text) == "string" then return text end
+        end
+        return "|cff66bbff[" .. nm .. "]|r"
+    end
+
+    -- Inserta la faccion en el editbox usando el InsertLink del propio modulo TRP3: mete el
+    -- marcador de texto plano `[TRP3:id]` (lo UNICO que el chat real deja enviar; el filtro
+    -- de TRP3 lo convierte en enlace clicable al RECIBIR en cada cliente). GetFactionChatLink
+    -- queda para render local (AddMessage/tiradas), donde el hyperlink si funciona.
+    function API.InsertFactionChatLink(faction, standingText, standingColor)
+        if not faction then return false end
+        local mod = EnsureFactionModule()
+        if not mod or not mod.InsertLink then return false end
+        local ok = pcall(mod.InsertLink, mod, faction, standingText, standingColor)
+        return ok
+    end
+end
+
 -- ─── Enlaces de MISION clicables via TRP3 ChatLinks (imita el link de quest nativo) ──────────
 -- Mismo mecanismo que las habilidades: el clicante recibe los datos por addon-comm y ve un tooltip
 -- con titulo (amarillo quest), objetivos y recompensa. El color del link es el amarillo de quest.

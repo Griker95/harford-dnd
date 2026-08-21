@@ -15,11 +15,13 @@ local TEX_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
 
 local PANEL_W = 390
 local PANEL_H = 460
-local ROW_H = 24
-local LIST_W = 336
+local ROW_H = 20     -- sonda nativa 2026-08-20: ReputationBarN = 278x20
+local ROW_PITCH = 23 -- 20 de fila + 3 de hueco (nativo: TOPRIGHT→prev.BOTTOMRIGHT 0,-3)
+local LIST_X = 4     -- borde izq de la lista: tocando el arte del marco (~4px de borde interior)
+local LIST_W = 348
 local LIST_H = 360
 local BAR_W = 101   -- confirmado FrameDump: ReputationBar2ReputationBar width=101
-local BAR_H = 13    -- confirmado FrameDump: height=13; caps=BAR_H+8=21
+local BAR_H = 13    -- confirmado FrameDump: height=13
 -- BAR_RIGHT eliminado: nativo es RIGHT row RIGHT 0,0 (sin offset)
 local HEADER_Y = -62
 local LIST_TOP_Y = -86
@@ -552,36 +554,33 @@ local function CreateRow(parent)
     -- StatusBar: RIGHT→row RIGHT 0,0 | 101×13 | fill=UI-Character-Skills-Bar BACKGROUND 0
     local bar = CreateFrame("StatusBar", nil, row)
     bar:SetSize(BAR_W, BAR_H)
-    bar:SetPoint("RIGHT", row, "RIGHT", 0, 0)
+    -- -4: el cap derecho del marco sobresale 3px de la barra (voladizo nativo); si la barra
+    -- acaba a ras del row, el ScrollBox recorta ese cierre y la barra se ve cortada.
+    bar:SetPoint("RIGHT", row, "RIGHT", -4, 0)
     bar:SetStatusBarTexture(TEX_SKILLS_BAR)
     bar:SetMinMaxValues(0, 1)
     bar:SetValue(0)
     bar:EnableMouse(false)
     row.ReputationBar = bar
 
-    -- LeftTexture: OVERLAY -1 en StatusBar, 62×21px, LEFT→bar LEFT 0,0
-    -- Sublevel -1: por encima del fill del StatusBar (que en Epsilon renderiza en ARTWORK o
-    -- superior, cubriendo los caps si se dejan en ARTWORK). Por debajo de hl1/hl2 (sublevel 0).
-    -- texCoord 8→4: {0.7578125,0, 0.7578125,0.328125, 1,0, 1,0.328125}
-    --              → SetTexCoord(0.7578125, 1, 0, 0.328125)
+    -- Sonda nativa: las filas de FACCION usan caps 62×21 y 42×21 encadenados (los 60×15
+    -- de la sonda son de las filas CABECERA, que no muestran barra). 62+42=104 sobre barra
+    -- de 101: el cap derecho sobresale 3px y cierra el marco por encima del relleno lleno.
+    -- Sublevel -1: por encima del fill del StatusBar, por debajo de hl1/hl2 (sublevel 0).
     local leftTex = bar:CreateTexture(nil, "OVERLAY", nil, -1)
     leftTex:SetTexture(TEX_REP_BAR)
     leftTex:SetTexCoord(0.7578125, 1, 0, 0.328125)
-    leftTex:SetSize(62, BAR_H + 8)
+    leftTex:SetSize(62, 21)
     leftTex:SetPoint("LEFT", bar, "LEFT", 0, 0)
     row.ReputationBarLeftTexture = leftTex
 
-    -- RightTexture: OVERLAY -1 en StatusBar, 42×21px
-    -- Anclado RIGHT→bar RIGHT: el cap cierra visualmente el borde derecho de la barra.
-    -- En native WoW la barra es ~258px y leftTex solo cubre el 24% izquierdo; en nuestra
-    -- barra de 101px, leftTex ya cubre el 61% → el cap derecho debe nacer desde bar.RIGHT,
-    -- no desde leftTex.RIGHT (que quedaría fuera del área visible).
-    -- texCoord: {0, 0.1640625, 0.34375, 0.671875}
+    -- RightTexture: 42×21, encadenado LEFT→leftTex RIGHT (anclaje nativo exacto)
+    -- texCoord nativo: {0,0.34375, 0,0.671875, 0.164,0.34375, 0.164,0.671875}
     local rightTex = bar:CreateTexture(nil, "OVERLAY", nil, -1)
     rightTex:SetTexture(TEX_REP_BAR)
     rightTex:SetTexCoord(0, 0.1640625, 0.34375, 0.671875)
-    rightTex:SetSize(42, BAR_H + 8)
-    rightTex:SetPoint("RIGHT", bar, "RIGHT", 0, 0)
+    rightTex:SetSize(42, 21)
+    rightTex:SetPoint("LEFT", leftTex, "RIGHT", 0, 0)
     row.ReputationBarRightTexture = rightTex
 
     -- Background del área de nombre: ARTWORK en el Button, altura=21px
@@ -618,24 +617,23 @@ local function CreateRow(parent)
     hlFrame:SetFrameLevel(bar:GetFrameLevel() + 1)
     hlFrame:EnableMouse(false)
 
-    -- Highlight cuerpo: texCoord 0→0.9609375 (sin el cap nativo del spritesheet).
+    -- Highlight cuerpo: tira superior COMPLETA del spritesheet (sonda: coord 0→1 × 0→0.4375).
     -- Anchors en InitializeRow (dependen del indent de cada fila).
     local hl = hlFrame:CreateTexture(nil, "OVERLAY", nil, 0)
     hl:SetTexture(TEX_REP_HIGHLIGHT)
-    hl:SetTexCoord(0, 0.9609375, 0, 0.4375)
+    hl:SetTexCoord(0, 1, 0, 0.4375)
     hl:SetBlendMode("ADD")
     hl:Hide()
     row.Highlight1 = hl
 
-    -- Highlight cap derecho: texCoord 0.9609375→1 (porción cap del spritesheet).
-    -- Tamaño fijo 24×(ROW_H+8), anclado a TOPRIGHT de hlFrame; siempre en el borde derecho del row.
-    -- 24px = ROW_H para que el cierre visual sea proporcional a la altura de la fila.
+    -- Highlight cap derecho: SEGUNDA franja del spritesheet (sonda: 0→0.0664 × 0.4375→0.875),
+    -- 17×28, RIGHT→bar RIGHT +4 (el nativo lo cuelga de la barra, no del row).
     local hlCap = hlFrame:CreateTexture(nil, "OVERLAY", nil, 0)
     hlCap:SetTexture(TEX_REP_HIGHLIGHT)
-    hlCap:SetTexCoord(0.9609375, 1, 0, 0.4375)
+    hlCap:SetTexCoord(0, 0.06640625, 0.4375, 0.875)
     hlCap:SetBlendMode("ADD")
-    hlCap:SetSize(24, ROW_H + 8)
-    hlCap:SetPoint("TOPRIGHT", hlFrame, "TOPRIGHT", 0, 4)
+    hlCap:SetSize(17, 28)
+    hlCap:SetPoint("RIGHT", bar, "RIGHT", 4, 0)
     hlCap:Hide()
     row.Highlight2 = hlCap
 
@@ -646,6 +644,14 @@ local function CreateRow(parent)
     expand:SetNormalTexture(TEX_BTN_MINUS)
     expand:SetPushedTexture(TEX_BTN_MINUS)
     expand:SetHighlightTexture(TEX_BTN_HILITE, "ADD")
+    -- Sonda nativa: el icono es 16×16 anclado LEFT→boton LEFT +3 (sobresale del boton 13×13).
+    for _, tex in ipairs({ expand:GetNormalTexture(), expand:GetPushedTexture(), expand:GetHighlightTexture() }) do
+        if tex then
+            tex:ClearAllPoints()
+            tex:SetSize(16, 16)
+            tex:SetPoint("LEFT", expand, "LEFT", 3, 0)
+        end
+    end
     -- expand es Button hijo: captura el click antes de que llegue al row padre.
     -- Delegamos explícitamente al mismo handler de colapso del row.
     expand:SetScript("OnClick", function(self)
@@ -730,8 +736,34 @@ local function CreateRow(parent)
             return
         end
         if data.factionId then
+            -- Shift+click: inserta un enlace TRP3 clicable de la faccion en el chat
+            -- (icono + nombre coloreado + rango + descripcion en el tooltip del receptor).
+            -- Usa el InsertLink del modulo TRP3: envia el marcador [TRP3:id], que es lo unico
+            -- que el chat real transmite; el receptor lo ve como enlace clicable.
+            if IsShiftKeyDown and IsShiftKeyDown() then
+                local inserted = false
+                if HarfordTRP3 and HarfordTRP3.InsertFactionChatLink and data.faction then
+                    inserted = HarfordTRP3.InsertFactionChatLink(data.faction, data.standingText, data.rankColor)
+                end
+                if not inserted then
+                    local txt = "[" .. tostring(data.name or data.factionId) .. "]"
+                    local eb = ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow()
+                    if eb then eb:Insert(txt) elseif ChatFrame_OpenChat then ChatFrame_OpenChat(txt) end
+                end
+                return
+            end
+            -- Ctrl+click: seguir/dejar de seguir la faccion en la barra de estado inferior
+            -- (equivalente nativo de "Mostrar como barra de experiencia"; misma opcion xpbar)
+            if IsControlKeyDown and IsControlKeyDown()
+                and HarfordCharacterXP and HarfordCharacterXP.ToggleWatchedFaction then
+                HarfordCharacterXP.ToggleWatchedFaction(data.factionId, data.name)
+                return
+            end
             selectedFactionId = data.factionId
             detailUserClosed = false
+            -- Sonda del frame nativo (2026-08-20): 856 igMainMenuOptionCheckBoxOn suena
+            -- SOLO al seleccionar una faccion; expandir/colapsar cabeceras es silencioso.
+            if PlaySound then pcall(PlaySound, 856) end
             API.Refresh()
         end
     end)
@@ -788,7 +820,7 @@ local function InitializeRow(row, elementData)
     row.Name:ClearAllPoints()
     row.Name:SetPoint("LEFT", row, "LEFT", indent + 10, 0)
     row.Name:SetPoint("RIGHT", row.ReputationBar, "LEFT", -3, 0)
-    row.Name:SetFont("Fonts\\FRIZQT__.TTF", 11)
+    row.Name:SetFont("Fonts\\FRIZQT__.TTF", 10)  -- sonda nativa: faccion 10pt (cabecera 12pt)
     row.Name:SetText(elementData.name or "")
     -- Color del nombre = color asignado a la facción (fallback blanco si no tiene color propio)
     local nr, ng, nb = ColorToRGB(elementData.faction and elementData.faction.color or "ffe0e0e0")
@@ -801,7 +833,7 @@ local function InitializeRow(row, elementData)
     row.ReputationBarBackground:Show()
 
     row.AtWarHighlight2:ClearAllPoints()
-    row.AtWarHighlight2:SetPoint("TOPRIGHT", row, "TOPRIGHT", -1, -2)
+    row.AtWarHighlight2:SetPoint("TOPRIGHT", row, "TOPRIGHT", -5, -2)  -- -1 nativo -4 del retiro de barra
     row.AtWarHighlight2:SetSize(BAR_W + 2, 17)
     row.AtWarHighlight1:ClearAllPoints()
     row.AtWarHighlight1:SetPoint("TOPLEFT", row, "TOPLEFT", indent + 3, -2)
@@ -813,7 +845,7 @@ local function InitializeRow(row, elementData)
     -- de anchors cruzados entre texturas en Epsilon.
     row.Highlight1:ClearAllPoints()
     row.Highlight1:SetPoint("TOPLEFT",     row, "TOPLEFT",     indent - 2,  4)
-    row.Highlight1:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -24,        -4)
+    row.Highlight1:SetPoint("BOTTOMRIGHT", row, "BOTTOMRIGHT", -17,        -4)  -- cierra contra el cap (bar.RIGHT+4-17)
     row.Highlight1:SetShown(isSelected)
     row.Highlight2:SetShown(isSelected)
 
@@ -1106,7 +1138,7 @@ local function BuildScrollBox(parent)
     local okBox, scrollBox = pcall(CreateFrame, "Frame", "HarfordReputationScrollBox", parent, "WowScrollBoxList")
     local okBar, scrollBar = pcall(CreateFrame, "EventFrame", "HarfordReputationScrollBar", parent, "WowTrimScrollBar")
     if not okBox or not okBar or not scrollBox or not scrollBar then return false end
-    scrollBox:SetPoint("TOPLEFT", parent, "TOPLEFT", 18, LIST_TOP_Y)
+    scrollBox:SetPoint("TOPLEFT", parent, "TOPLEFT", LIST_X, LIST_TOP_Y)
     scrollBox:SetSize(LIST_W, LIST_H)
     -- Scrollbar pegado al borde interior derecho del panel (no al scrollbox) para evitar el hueco
     scrollBar:SetPoint("TOPRIGHT",    parent, "TOPRIGHT", -9, LIST_TOP_Y - 2)
@@ -1114,11 +1146,15 @@ local function BuildScrollBox(parent)
 
     if ScrollUtil and CreateScrollBoxListLinearView then
         local view = CreateScrollBoxListLinearView()
-        view:SetElementExtent(ROW_H)
+        view:SetElementExtent(ROW_PITCH)
         view:SetElementInitializer("Button", nil, function(row, elementData)
             if not row._harfordBuilt then
                 local built = CreateRow(row)
-                built:SetAllPoints(row)
+                -- El elemento mide ROW_PITCH (fila + hueco nativo de 3px): la fila real
+                -- se ancla arriba con su altura de 20 y el hueco queda debajo.
+                built:SetPoint("TOPLEFT", row, "TOPLEFT", 0, 0)
+                built:SetPoint("TOPRIGHT", row, "TOPRIGHT", 0, 0)
+                built:SetHeight(ROW_H)
                 row._harfordBuilt = built
             end
             InitializeRow(row._harfordBuilt, elementData)
@@ -1144,12 +1180,12 @@ end
 
 local function BuildManualList(parent)
     local holder = CreateFrame("Frame", nil, parent)
-    holder:SetPoint("TOPLEFT", parent, "TOPLEFT", 18, LIST_TOP_Y)
+    holder:SetPoint("TOPLEFT", parent, "TOPLEFT", LIST_X, LIST_TOP_Y)
     holder:SetSize(LIST_W, LIST_H)
     manualRows = {}
-    for i = 1, math.floor(LIST_H / ROW_H) do
+    for i = 1, math.floor(LIST_H / ROW_PITCH) do
         local row = CreateRow(holder)
-        row:SetPoint("TOPLEFT", holder, "TOPLEFT", 0, -((i - 1) * ROW_H))
+        row:SetPoint("TOPLEFT", holder, "TOPLEFT", 0, -((i - 1) * ROW_PITCH))
         manualRows[#manualRows + 1] = row
     end
     panel.scrollUp = MakeButton(parent, "▲", 18, 18, "TOPLEFT", holder, "TOPRIGHT", 3, 0, function()
@@ -1374,7 +1410,8 @@ local function CreatePanel()
 
     local search = CreateFrame("EditBox", nil, panel, "InputBoxTemplate")
     search:SetSize(120, 18)
-    search:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -44, -38)
+    -- Pegado justo debajo de la barra de titulo, al borde derecho del marco (~8px de arte)
+    search:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -8, -26)
     search:SetAutoFocus(false)
     search:SetScript("OnTextChanged", function(self)
         searchText = tostring(self:GetText() or ""):lower()
@@ -1383,7 +1420,7 @@ local function CreatePanel()
     end)
     panel.search = search
     local searchLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    searchLabel:SetPoint("RIGHT", search, "LEFT", -4, 0)
+    searchLabel:SetPoint("RIGHT", search, "LEFT", -6, 0)
     searchLabel:SetText("Buscar")
 
     -- Boton admin visible solo si HarfordAdmin esta cargado y el jugador esta en modo DM.
@@ -1406,16 +1443,16 @@ local function CreatePanel()
         end)
     end
 
-    -- Columna "Faccion": alineada con el inicio del contenido de las filas
+    -- Columna "Faccion": sonda nativa = TOPLEFT +70 con filas a +10 (60px dentro de la fila).
+    -- Mapeado a nuestras filas en LIST_X: x = LIST_X + 60.
     local factionHeader = panel:CreateFontString(nil, "OVERLAY")
     factionHeader:SetFont("Fonts\\FRIZQT__.TTF", 12)
-    factionHeader:SetPoint("TOPLEFT", panel, "TOPLEFT", 44, HEADER_Y)
+    factionHeader:SetPoint("TOPLEFT", panel, "TOPLEFT", LIST_X + 60, HEADER_Y)
     factionHeader:SetTextColor(1, 1, 1, 1)
     factionHeader:SetText("Faccion")
 
-    -- Columna "Prestigio": centrada sobre el StatusBar (LIST_LEFT + LIST_W - BAR_W)
-    -- list_left=18, BAR_W=101 → barra empieza en 18+(LIST_W-BAR_W) desde el izq del panel
-    local barColX = 18 + LIST_W - BAR_W  -- x del borde izquierdo del StatusBar respecto al panel
+    -- Columna "Prestigio": centrada sobre el StatusBar real (la barra va retirada 4px del borde)
+    local barColX = LIST_X + LIST_W - 4 - BAR_W  -- x del borde izquierdo del StatusBar respecto al panel
     local standingHeader = panel:CreateFontString(nil, "OVERLAY")
     standingHeader:SetFont("Fonts\\FRIZQT__.TTF", 12)
     standingHeader:SetPoint("TOPLEFT", panel, "TOPLEFT", barColX, HEADER_Y)
@@ -1426,7 +1463,7 @@ local function CreatePanel()
 
     -- Línea separadora entre los encabezados de columna y el listado
     local separator = panel:CreateTexture(nil, "ARTWORK")
-    separator:SetPoint("TOPLEFT", panel, "TOPLEFT", 18, LIST_TOP_Y + 2)
+    separator:SetPoint("TOPLEFT", panel, "TOPLEFT", LIST_X, LIST_TOP_Y + 2)
     separator:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -18, LIST_TOP_Y + 2)
     separator:SetHeight(1)
     separator:SetColorTexture(0.55, 0.44, 0.22, 0.65)
@@ -1508,7 +1545,14 @@ function API.DetachEmbedded(hide)
     end
 end
 
+-- Ventana standalone RETIRADA (2026-08-20): la reputacion vive como pestaña del panel
+-- de personaje. Toggle/Open delegan en el tab "reputation"; el flujo antiguo de ventana
+-- flotante queda solo como fallback si HarfordCharacterPanel no estuviera cargado.
 function API.Toggle()
+    if HarfordCharacterPanel and HarfordCharacterPanel.Toggle then
+        HarfordCharacterPanel.Toggle("reputation")
+        return
+    end
     CreatePanel()
     if panel._harfordEmbedded then API.DetachEmbedded(true) end
     panel:SetShown(not panel:IsShown())
@@ -1520,6 +1564,10 @@ function API.Toggle()
 end
 
 function API.Open()
+    if HarfordCharacterPanel and HarfordCharacterPanel.Open then
+        HarfordCharacterPanel.Open("reputation")
+        return
+    end
     CreatePanel()
     if panel._harfordEmbedded then API.DetachEmbedded(false) end
     panel:Show()

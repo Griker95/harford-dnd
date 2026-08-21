@@ -308,10 +308,57 @@ local function ApplyUpcastDamage(spell, components, castLevel)
     -- Cuando hay varios tipos de dano, la formula se aplica a cada componente que comparte ese dado.
     -- Es el caso comun "fuego y frio aumentan en 1d6". Si el dado no coincide, no lo inventamos.
     for _, component in ipairs(components) do
-        local count, componentSides = HarfordDnDWeapons and HarfordDnDWeapons.ParseDice
-            and HarfordDnDWeapons.ParseDice(component.damageDice)
+        -- La asignacion va SEPARADA de la guarda: `a and b and f(x)` se queda con el PRIMER
+        -- retorno de f y descarta el resto, asi que `componentSides` salia siempre nil y esta
+        -- comparacion nunca se cumplia (ningun conjuro escalaba al subirlo de nivel).
+        local count, componentSides
+        if HarfordDnDWeapons and HarfordDnDWeapons.ParseDice then
+            count, componentSides = HarfordDnDWeapons.ParseDice(component.damageDice)
+        end
         if count and componentSides == sides then
             component.damageDice = tostring(count + addCount * extraLevels) .. "d" .. tostring(componentSides)
+        end
+    end
+    return components
+end
+
+-- ESCALADO DE TRUCOS (Manual del Jugador, "Trucos"): el dano de un truco aumenta en un dado al
+-- alcanzar el nivel de PERSONAJE 5, 11 y 17. Es una regla general, no un dato por conjuro: por eso
+-- se aplica aqui y no se espera a que cada entrada la escriba. De los 31 trucos con dano del
+-- compendio, 7 no la declaran en su texto y hasta ahora se quedaban en 1 dado a cualquier nivel;
+-- `ApplyUpcastDamage` tampoco los tocaba, porque un truco no gasta espacio y su `extraLevels` es 0.
+local function CantripDamageTier(characterLevel)
+    characterLevel = math.floor(tonumber(characterLevel) or 1)
+    if characterLevel >= 17 then return 4 end
+    if characterLevel >= 11 then return 3 end
+    if characterLevel >= 5 then return 2 end
+    return 1
+end
+
+-- Trucos que NO escalan multiplicando dados: los que suman proyectiles (Descarga Sobrenatural
+-- pasa de un rayo a cuatro, cada uno de 1d10). Multiplicarles el dado los dispararia al doble.
+local function CantripScalesByProjectiles(spell)
+    local text = NormalizeText((spell and spell.mechanics or "") .. " " .. (spell and spell.description or ""))
+    return text:find("numero de rayos", 1, true) ~= nil
+        or text:find("numero de dardos", 1, true) ~= nil
+        or text:find("numero de proyectiles", 1, true) ~= nil
+end
+
+local function ApplyCantripScaling(spell, components)
+    if not components then return components end
+    if math.floor(tonumber(spell and spell.level) or 0) ~= 0 then return components end
+    if CantripScalesByProjectiles(spell) then return components end
+    local level = HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel
+        and HarfordDnDProgression.GetTotalLevel() or 1
+    local tier = CantripDamageTier(level > 0 and level or 1)
+    if tier <= 1 then return components end
+    for _, component in ipairs(components) do
+        local count, sides
+        if HarfordDnDWeapons and HarfordDnDWeapons.ParseDice then
+            count, sides = HarfordDnDWeapons.ParseDice(component.damageDice)
+        end
+        if count and sides then
+            component.damageDice = tostring(count * tier) .. "d" .. tostring(sides)
         end
     end
     return components
@@ -586,6 +633,26 @@ local function NeedsStagedResolution(spell)
     return false
 end
 
+-- El modificador por caracteristica de lanzamiento se escribe de varias formas en las fuentes
+-- ("modificador de conjuro", "por aptitud magica", "de lanzamiento de conjuros"...). Reconocer
+-- solo una dejaba curaciones como Cadena de Curacion sanando los dados SIN el modificador.
+local CASTING_MODIFIER_PHRASES = {
+    "modificador por caracteristica para lanzar conjuros",
+    "modificador de caracteristica para lanzar conjuros",
+    "modificador de lanzamiento de conjuros",
+    "modificador por aptitud magica",
+    "modificador de aptitud magica",
+    "modificador de conjuro",
+}
+
+local function MentionsCastingModifier(text)
+    text = NormalizeText(text)
+    for _, phrase in ipairs(CASTING_MODIFIER_PHRASES) do
+        if text:find(phrase, 1, true) then return true end
+    end
+    return false
+end
+
 local function HealingDefinition(spell, options)
     local categories = spell and spell.categories or {}
     local isHealing = false
@@ -607,7 +674,7 @@ local function HealingDefinition(spell, options)
     end
     targetCount = math.max(1, math.min(40, targetCount or 1))
     local bonus = 0
-    if text:find("modificador por caracteristica para lanzar conjuros", 1, true) then
+    if MentionsCastingModifier(text) then
         local ability = SpellAbilityKey()
         bonus = HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod and HarfordDnDCalc.GetAbilityMod(ability) or 0
     end
@@ -657,6 +724,7 @@ function API.BuildAreaDefinition(spell, options)
     local area = ParseAreaMeta(spell)
     local damageComponents = ParseDamageComponents(spell.damage or SpellText(spell))
     damageComponents = ApplyUpcastDamage(spell, damageComponents, API.GetCastLevel(spell, options))
+    damageComponents = ApplyCantripScaling(spell, damageComponents)
     local condition = SpellCondition(spell)
     if not damageComponents and not condition then return nil end
     local saveAbility = ParseSaveAbility(spell)
@@ -931,6 +999,19 @@ function API.ToggleMySpell(spellId)
     return HarfordCompendioCharacterDB.mySpells[spellId]
 end
 
+-- CONCENTRACION DECLARADA CONTRA DURACION: muchas entradas traen la concentracion escrita en
+-- `duration` ("Concentracion, hasta 1 minuto") pero con `concentration = false`. La duracion es
+-- el texto copiado del manual, asi que manda: si lo dice ahi, el conjuro exige concentracion
+-- aunque el campo booleano no lo declare. Se resuelve aqui y no en los datos porque
+-- HarfordCompendioData lo mantiene el pipeline del codice y se regenera.
+function API.RequiresConcentration(spell)
+    if type(spell) ~= "table" then return false end
+    if spell.concentration == true then return true end
+    -- "concentraci" y no "concentracion": asi acierta con o sin tilde aunque NormalizeText
+    -- caiga al `lower` simple porque HarfordClassColors no estuviera cargado.
+    return NormalizeText(spell.duration):find("concentraci", 1, true) ~= nil
+end
+
 function API.GetAllSpells()
     return _G.HarfordCompendioSpells or {}
 end
@@ -1089,6 +1170,11 @@ function API.ConfirmCast(spellId, options)
     if not spell then return false, "Conjuro no encontrado" end
     local ok, costOrErr, current, maxValue = API.SpendSpellMana(spell, options)
     if not ok then return false, costOrErr end
+    -- CONCENTRACION: el conjuro declara si la exige. Empezar sustituye a la anterior, porque el
+    -- manual no permite concentrarse en dos a la vez; el modulo se encarga de anunciarlo.
+    if API.RequiresConcentration(spell) and HarfordDnDConcentration and HarfordDnDConcentration.Begin then
+        HarfordDnDConcentration.Begin(spell.name or tostring(spellId), spellId)
+    end
     if options and options.silent then return true, costOrErr, current, maxValue end
     local cost = tonumber(costOrErr) or 0
     -- Anuncio limpio: solo lanzador (lo antepone el render) + link del conjuro + target si hay.

@@ -206,6 +206,14 @@ local function LevelLabel(level)
     return "Nivel " .. tostring(level or 0)
 end
 
+-- La concentracion efectiva la decide el core (el campo booleano y el texto de duracion no
+-- siempre coinciden); la ficha debe ensenar lo mismo que luego aplica el motor.
+local function RequiresConcentration(spell)
+    local api = _G.HarfordCompendioAPI
+    if api and api.RequiresConcentration then return api.RequiresConcentration(spell) end
+    return spell and spell.concentration == true or false
+end
+
 local function BoolLabel(value)
     return value and "Si" or "No"
 end
@@ -381,7 +389,7 @@ local function ShowDetail(spell)
     DetailFrame.range:SetText("Alcance: " .. (spell.range or "-"))
     DetailFrame.components:SetText("Componentes: " .. ((spell.components and spell.components ~= "" and spell.components) or "-"))
     DetailFrame.duration:SetText("Duracion: " .. (spell.duration or "-"))
-    DetailFrame.flags:SetText("Concentracion: " .. BoolLabel(spell.concentration) .. "    Ritual: " .. BoolLabel(spell.ritual))
+    DetailFrame.flags:SetText("Concentracion: " .. BoolLabel(RequiresConcentration(spell)) .. "    Ritual: " .. BoolLabel(spell.ritual))
     DetailFrame.classes:SetText("Clases: " .. JoinClassList(spell.classes))
     DetailFrame.categories:SetText("Categorias: " .. JoinList(spell.categories))
     DetailFrame.attack:SetText("Ataque/Salvacion: " .. ((spell.attack and spell.attack ~= "" and spell.attack) or (spell.savingThrow and spell.savingThrow ~= "" and spell.savingThrow) or "-"))
@@ -442,7 +450,8 @@ local function ShowCastFrame(spell, requestedLevel)
     local cost = API.GetSpellCost and API.GetSpellCost(spell, options) or API.GetManaCost(castLevel)
     local manaCur = API.GetManaCurrent and API.GetManaCurrent() or 0
     local manaMax = API.GetManaMax and API.GetManaMax() or 0
-    local canCast, reason = API.CanCast and API.CanCast(spell.id, options)
+    local canCast, reason
+    if API.CanCast then canCast, reason = API.CanCast(spell.id, options) end
     if canCast == nil then canCast = true end
     local costText
     if API.GetSpellCostMode and API.GetSpellCostMode() == "slots" then
@@ -511,7 +520,7 @@ local function BuildTRP3SpellTooltipData(spell)
         range = spell.range or "-",
         components = (spell.components and spell.components ~= "" and spell.components) or "-",
         duration = spell.duration or "-",
-        concentration = BoolLabel(spell.concentration == true),
+        concentration = BoolLabel(RequiresConcentration(spell)),
         ritual = BoolLabel(spell.ritual == true),
         classes = JoinList(spell.classes),
         categories = JoinList(spell.categories),

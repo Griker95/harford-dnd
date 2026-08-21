@@ -2,7 +2,7 @@
 -- Epsilon no tiene comando fiable de XP (`.mod xp` no existe), asi que la XP es
 -- enteramente de addon: vive en la progresion del perfil activo (campo `xp` de
 -- HarfordDnDProgression, persiste y viaja con la ficha) y se muestra en una barra
--- anclada en el borde inferior, sin modificar el gestor privado de barras nativas.
+-- anclada donde vive la barra de experiencia nativa (StatusTrackingBarManager).
 -- La subida de nivel sigue siendo MANUAL y se abre con `/harford char subir`:
 -- la XP solo informa de cuando hay nivel disponible, nunca aplica niveles por si sola.
 -- Preparado para que en el futuro la misma barra pueda alternar a reputacion seguida.
@@ -104,15 +104,14 @@ function API.AddXP(amount, reason)
     return true
 end
 
--- ── Barras de XP y reputacion seguidas ──────────────────────────────────────
--- No se registran dentro de StatusTrackingBarManager. Ese gestor llama a sus
--- contratos privados durante AddBarFromTemplate y, en este cliente, lo hace antes
--- de que un addon pueda instalar ShouldBeVisible/Update. Una barra Harford propia
--- evita errores silenciosos y no modifica las barras nativas del jugador.
+-- ── Barra de XP en el gestor nativo (StatusTrackingBarManager) ───────────────
+-- El personaje es nivel maximo de WoW, asi que el gestor no muestra ninguna barra
+-- nativa: registramos la nuestra como si fuera la barra de rep seguida, y es el
+-- propio gestor quien recoloca el arte/la UI al aparecer o desaparecer (igual que
+-- nativamente). Si este cliente no expone el gestor, cae a una barra propia.
 do
-    local barHolder
-    local xpBar
-    local repBar
+    local xpBar, repBar      -- barras registradas en el gestor (false = intento fallido)
+    local fallbackBar
 
     -- ── Faccion seguida (per-PJ, en HarfordReputationStore.ui.watchedByChar) ──
     local function WatchedMap()
@@ -216,10 +215,106 @@ do
         return v ~= nil and v ~= "NONE"
     end
 
-    local function CreateBar(name, parent)
-        local bar = CreateFrame("StatusBar", name, parent)
+    -- Crea una barra en el gestor nativo con su contrato (visibilidad/prioridad/pintado).
+    local function CreateManagedBar(priority, shouldBeVisible, paint)
+        local mgr = _G.StatusTrackingBarManager
+        if not (mgr and mgr.AddBarFromTemplate and mgr.UpdateBarsShown) then return nil end
+        if type(mgr.bars) ~= "table" then return nil end
+        local before = #mgr.bars
+        -- AddBarFromTemplate inserta la barra y llama UpdateBarsShown ANTES de que podamos
+        -- asignarle metodos: ese primer UpdateBarsShown SIEMPRE lanza error (ShouldBeVisible
+        -- nil) y ademas no devuelve la barra. Se ignora el error y se recupera la barra de
+        -- mgr.bars: es OBLIGATORIO asignarle los metodos aunque el pcall falle, o queda una
+        -- barra huerfana que rompe todos los GetNumberVisibleBars posteriores.
+        pcall(mgr.AddBarFromTemplate, mgr, "FRAME", "StatusTrackingBarTemplate")
+        if #mgr.bars <= before then return nil end
+        local b = mgr.bars[#mgr.bars]
+        b.ShouldBeVisible = shouldBeVisible
+        b.GetPriority = function() return priority end
+        b.Update = paint
+        -- La plantilla base no trae mixin de texto (las nativas lo heredan de sus plantillas
+        -- derivadas): crear FontString propio y las funciones que el gestor/hover esperan.
+        if not b.SetBarText then
+            local host = b.OverlayFrame or b
+            local fs = host:CreateFontString(nil, "OVERLAY")
+            fs:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+            fs:SetPoint("CENTER", b, "CENTER", 0, 0)
+            fs:Hide()
+            b._harfordText = fs
+            b.SetBarText = function(_, txt) fs:SetText(txt or "") end
+            b.ShowText = function() fs:Show() end
+            b.HideText = function() fs:Hide() end
+            b:EnableMouse(true)
+            b:SetScript("OnEnter", function(self) self:ShowText() end)
+            b:SetScript("OnLeave", function(self)
+                if self.UpdateTextVisibility then self:UpdateTextVisibility() end
+            end)
+        end
+        -- El gestor llama UpdateTextVisibility en cada barra (p.ej. SetTextLocked al abrir
+        -- el panel de personaje): visible si el gestor lo bloquea, si la opcion nativa de
+        -- Texto de estado esta activa, o si el raton esta encima.
+        b.UpdateTextVisibility = b.UpdateTextVisibility or function(self)
+            local m = _G.StatusTrackingBarManager
+            local locked = m and m.IsTextLocked and m:IsTextLocked()
+            if locked or AlwaysShowText() or (self.IsMouseOver and self:IsMouseOver()) then
+                if self.ShowText then self:ShowText() end
+            else
+                if self.HideText then self:HideText() end
+            end
+        end
+        -- Algunas rutas del gestor llaman UpdateTick/OnStatusBarsUpdated en cada barra
+        b.UpdateTick = b.UpdateTick or function() end
+        b.OnStatusBarsUpdated = b.OnStatusBarsUpdated or function(self) self:Update() end
+        return b
+    end
+
+    local function PaintBar(bar, cur, size, r, g, b, text)
+        local sb = bar.StatusBar
+        if sb then
+            sb:SetMinMaxValues(0, math.max(1, size))
+            sb:SetValue(math.min(cur, size))
+            if sb.SetStatusBarColor then sb:SetStatusBarColor(r, g, b, 1) end
+        end
+        if bar.SetBarText then pcall(bar.SetBarText, bar, text) end
+        -- La visibilidad del texto la decide UpdateTextVisibility (bloqueo del gestor +
+        -- opcion nativa de Texto de estado + hover)
+        if bar.UpdateTextVisibility then pcall(bar.UpdateTextVisibility, bar) end
+    end
+
+    local function EnsureManagedBars()
+        if xpBar == nil then
+            xpBar = CreateManagedBar(5,
+                function() return Enabled() and Progression() ~= nil end,
+                function(self)
+                    local _, cur, size = API.Progress()
+                    PaintBar(self, cur, size, BAR_COLOR.r, BAR_COLOR.g, BAR_COLOR.b, XpText())
+                end) or false
+        end
+        if repBar == nil then
+            -- Reputacion seguida: MISMA opcion de config que la XP (Enabled). Solo visible
+            -- si ademas hay una faccion seguida; con ambas, el gestor usa el layout doble.
+            repBar = CreateManagedBar(6,
+                function() return Enabled() and WatchedRepData() ~= nil end,
+                function(self)
+                    local d = WatchedRepData()
+                    if not d then return end
+                    PaintBar(self, d.cur, d.size, d.r, d.g, d.b,
+                        string.format("%s: %d / %d (%s)", d.name, d.cur, d.size, d.standing))
+                end) or false
+        end
+        return xpBar
+    end
+
+    local function EnsureFallbackBar()
+        if fallbackBar then return fallbackBar end
+        local bar = CreateFrame("StatusBar", "HarfordXPBar", UIParent)
+        -- Overlay de zona nativa: UIParent/MEDIUM (regla del proyecto)
+        bar:SetFrameStrata("MEDIUM")
+        bar:SetFrameLevel(85)
         bar:SetSize(570, 11)
+        bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
         bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        bar:SetStatusBarColor(BAR_COLOR.r, BAR_COLOR.g, BAR_COLOR.b, 1)
         bar:SetMinMaxValues(0, 1)
         local bg = bar:CreateTexture(nil, "BACKGROUND")
         bg:SetAllPoints(bar)
@@ -234,52 +329,32 @@ do
         bar:SetScript("OnLeave", function(self)
             if not AlwaysShowText() then self.Text:Hide() end
         end)
+        fallbackBar = bar
         return bar
     end
 
-    local function EnsureBars()
-        if barHolder then return end
-        barHolder = CreateFrame("Frame", "HarfordStatusBars", UIParent)
-        barHolder:SetFrameStrata("MEDIUM")
-        barHolder:SetFrameLevel(85)
-        barHolder:SetSize(570, 24)
-        barHolder:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
-        xpBar = CreateBar("HarfordXPBar", barHolder)
-        repBar = CreateBar("HarfordReputationBar", barHolder)
-    end
-
-    local function PaintBar(bar, cur, size, r, g, b, text)
-        bar:SetMinMaxValues(0, math.max(1, size))
-        bar:SetValue(math.min(cur, size))
-        bar:SetStatusBarColor(r, g, b, 1)
-        bar.Text:SetText(text or "")
-        bar.Text:SetShown(AlwaysShowText() or (bar.IsMouseOver and bar:IsMouseOver()) or false)
-    end
-
     function API.Refresh()
-        if not Enabled() or not Progression() then
-            if barHolder then barHolder:Hide() end
+        -- Via nativa: el gestor decide mostrar/ocultar y recoloca la UI
+        if EnsureManagedBars() then
+            local mgr = _G.StatusTrackingBarManager
+            if xpBar then pcall(xpBar.Update, xpBar) end
+            if repBar then pcall(repBar.Update, repBar) end
+            if mgr and mgr.UpdateBarsShown then pcall(mgr.UpdateBarsShown, mgr) end
+            if fallbackBar then fallbackBar:Hide() end
             return
         end
-        EnsureBars()
-        local _, cur, size = API.Progress()
-        local rep = WatchedRepData()
-        if rep then
-            xpBar:ClearAllPoints()
-            xpBar:SetPoint("BOTTOM", barHolder, "BOTTOM", 0, 0)
-            repBar:ClearAllPoints()
-            repBar:SetPoint("BOTTOM", xpBar, "TOP", 0, 1)
-            PaintBar(repBar, rep.cur, rep.size, rep.r, rep.g, rep.b,
-                string.format("%s: %d / %d (%s)", rep.name, rep.cur, rep.size, rep.standing))
-            repBar:Show()
-        else
-            repBar:Hide()
-            xpBar:ClearAllPoints()
-            xpBar:SetPoint("BOTTOM", barHolder, "BOTTOM", 0, 0)
+        -- Fallback sin gestor: barra propia en el borde inferior
+        if not Enabled() or not Progression() then
+            if fallbackBar then fallbackBar:Hide() end
+            return
         end
-        PaintBar(xpBar, cur, size, BAR_COLOR.r, BAR_COLOR.g, BAR_COLOR.b, XpText())
-        xpBar:Show()
-        barHolder:Show()
+        local b = EnsureFallbackBar()
+        local _, cur, size = API.Progress()
+        b:SetMinMaxValues(0, math.max(1, size))
+        b:SetValue(math.min(cur, size))
+        b.Text:SetText(XpText())
+        b.Text:SetShown(AlwaysShowText() or (b.IsMouseOver and b:IsMouseOver()) or false)
+        b:Show()
     end
 
     local events = CreateFrame("Frame")

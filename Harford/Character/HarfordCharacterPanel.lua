@@ -3222,7 +3222,7 @@ local function ProfButton(i)
     local b = CreateFrame("Button", nil, P.profList)
     -- Escala NATIVA 1:1 (con BOOK_W el pergamino pinta a tamano real)
     -- Tamano NATIVO del hueco de profesion (sonda PrimaryProfession1): 437x81.
-    b:SetSize(437, 81); b:SetPoint("TOPLEFT", 0, -((i - 1) * 92))
+    b:SetSize(437, 81); b:SetPoint("TOPLEFT", 0, -((i - 1) * 93))   -- XML: 81 de alto + 12 de hueco
     -- Marco ornamentado horneado en la textura del pergamino de profesiones
     b.stamp = b:CreateTexture(nil, "BACKGROUND")
     b.stamp:SetTexture(383588)
@@ -3231,10 +3231,11 @@ local function ProfButton(i)
     b.stamp:SetAllPoints(b)
     b:SetHighlightTexture("Interface\\QuestFrame\\UI-QuestTitleHighlight", "ADD")
     b.iconBorder = b:CreateTexture(nil, "ARTWORK", nil, 1)
-    b.iconBorder:SetTexture(383591)
+    b.iconBorder:SetTexture("Interface\\Spellbook\\ProfessionsBook")
     b.iconBorder:SetTexCoord(0.43359375, 0.72265625, 0.1484375, 0.7265625)
     b.iconBorder:SetSize(72, 72); b.iconBorder:SetPoint("TOPLEFT", 17, -17)
     b.icon = b:CreateTexture(nil, "BORDER")
+    b.icon:SetBlendMode("ADD")   -- XML: alphaMode="ADD"
     -- El hueco del aro es redondo (el nativo usa retratos circulares): icono cuadrado
     -- recortado con la mascara circular de retratos (patron probado de UnitFrames)
     -- Nativo: icono 70x70 dentro del aro de 72 (solo 1px de margen)
@@ -3242,24 +3243,25 @@ local function ProfButton(i)
     b.icon:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
     -- El recorte circular lo hace SetPortraitToTexture (ver SetProfIcon): la mascara de
     -- retrato no recorta de forma fiable aqui, igual que fallo en las tarjetas de creacion.
-    b.name = b:CreateFontString(nil, "OVERLAY")
-    b.name:SetFont("Fonts\\MORPHEUS.ttf", 18)  -- tamano nativo (sonda profbook)
-    b.name:SetPoint("TOPLEFT", 110, -12); b.name:SetJustifyH("LEFT")  -- nativo: +100,-2 de contenido
+    -- XML: professionName inherits="QuestTitleFontBlackShadow" en TOPLEFT +100,-2
+    b.name = b:CreateFontString(nil, "OVERLAY", "QuestTitleFontBlackShadow")
+    b.name:SetPoint("TOPLEFT", 100, -2); b.name:SetJustifyH("LEFT")   -- XML: TOPLEFT +100,-2
     b.name:SetTextColor(1, 0.82, 0)
-    b.sub = b:CreateFontString(nil, "OVERLAY")
-    b.sub:SetFont("Fonts\\FRIZQT__.TTF", 10)
+    -- XML: rank inherits="GameFontHighlightSmall" en professionName.BOTTOMLEFT +0,-33
+    b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     -- Posicion del Rank nativo: name.BOTTOM -33 => -63 en el sello; color blanco
-    b.sub:SetPoint("TOPLEFT", 110, -63); b.sub:SetWidth(300); b.sub:SetJustifyH("LEFT")
+    b.sub:SetPoint("TOPLEFT", b.name, "BOTTOMLEFT", 0, -33)   -- XML: rank a name.BOTTOMLEFT -33
+    b.sub:SetWidth(300); b.sub:SetJustifyH("LEFT")
     b.sub:SetTextColor(1, 1, 1)
     -- Barra de skill nativa (piezas de la sonda profbook)
     local bar = CreateFrame("StatusBar", nil, b)
-    bar:SetSize(95, 16); bar:SetPoint("TOPLEFT", 124, -78)  -- nativo: Rank.BOTTOM +14,-5
+    bar:SetSize(95, 16)
+    bar:SetPoint("TOPLEFT", b.sub, "BOTTOMLEFT", 14, -5)   -- XML: rank.BOTTOMLEFT +14,-5
     bar:SetStatusBarTexture("Interface\\Spellbook\\Professions-Progress-Fill")
     bar:SetMinMaxValues(0, 300)
     local barBg = bar:CreateTexture(nil, "BACKGROUND")
     barBg:SetTexture("Interface\\Spellbook\\ProfessionsBook")
     barBg:SetTexCoord(0, 1, 0.0078125, 0.1328125)
-    barBg:SetAllPoints(bar)
     -- Fondos de extremo nativos (BGLeft/BGRight 16x16), bajo los remates de 12x12
     local bgCapL = bar:CreateTexture(nil, "BACKGROUND")
     bgCapL:SetTexture("Interface\\Spellbook\\ProfessionsBook")
@@ -3277,11 +3279,15 @@ local function ProfButton(i)
     capR:SetTexture("Interface\\Spellbook\\ProfessionsBook")
     capR:SetTexCoord(0.00390625, 0.05078125, 0.765625, 0.859375)
     capR:SetSize(12, 12); capR:SetPoint("LEFT", bar, "RIGHT", 0, 2)
+    -- XML: BGMiddle se ancla ENTRE los dos fondos de extremo (BGLeft.TOPRIGHT ->
+    -- BGRight.BOTTOMLEFT), no al cuerpo de la barra: asi hereda su altura de 16 y el +2.
+    barBg:SetPoint("TOPLEFT", bgCapL, "TOPRIGHT", 0, 0)
+    barBg:SetPoint("BOTTOMRIGHT", bgCapR, "BOTTOMLEFT", 0, 0)
     -- El nativo mantiene OCULTO el remate derecho (StatusBarRight vis=None en la sonda):
     -- dibujarlo mete un artefacto en el extremo de la barra.
     capR:Hide()
-    b.barText = bar:CreateFontString(nil, "OVERLAY")
-    b.barText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    -- XML: rankText inherits="TextStatusBarText" en CENTER +0,+2
+    b.barText = bar:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
     b.barText:SetPoint("CENTER", bar, "CENTER", 0, 2)
     b.bar = bar
     -- Botones de "hechizo" del sello, como en el libro nativo: icono cuadrado con marco y
@@ -3290,31 +3296,43 @@ local function ProfButton(i)
     -- Boton de hechizo NATIVO (sonda PrimaryProfession1/nuevo): boton 40x40 con el icono a
     -- tamano completo, el NameFrame 108x41 recortado de 383591 pegado a su derecha y el
     -- nombre en FRIZQT 12 ORO. El primero a TOPRIGHT -109,-3; el segundo una fila mas abajo.
-    local function SpellButton(index)
+    -- XML ProfessionButtonTemplate: CheckButton 40x40, icono setAllPoints en capa BORDER,
+    -- nombre GameFontNormal de 2 lineas 100x0 a LEFT>boton.RIGHT +5,+7, subtitulo 95x28
+    -- debajo, y NameFrame 108x41 de ProfessionsBook con alpha 0.8. El primer boton va a
+    -- TOPRIGHT -109,-3 y el segundo al BOTTOMLEFT del primero.
+    local function SpellButton(index, previous)
         local sb = CreateFrame("Button", nil, b)
         sb:SetSize(40, 40)
-        sb:SetPoint("TOPRIGHT", b, "TOPRIGHT", -109, -3 - (index - 1) * 41)
-        sb.nameFrame = sb:CreateTexture(nil, "BACKGROUND")
-        sb.nameFrame:SetTexture(383591)
-        sb.nameFrame:SetTexCoord(0.00390625, 0.42578125, 0.1484375, 0.46875)
-        sb.nameFrame:SetSize(108, 41)
-        sb.nameFrame:SetPoint("LEFT", sb, "RIGHT", 1, 0)
+        if previous then
+            sb:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0)
+        else
+            sb:SetPoint("TOPRIGHT", b, "TOPRIGHT", -109, -3)
+        end
         sb.icon = sb:CreateTexture(nil, "BORDER")
         sb.icon:SetAllPoints(sb)
-        sb.label = sb:CreateFontString(nil, "BORDER")
-        sb.label:SetFont("Fonts\\FRIZQT__.TTF", 12)
+        sb.nameFrame = sb:CreateTexture(nil, "BACKGROUND")
+        sb.nameFrame:SetTexture("Interface\\Spellbook\\ProfessionsBook")
+        sb.nameFrame:SetTexCoord(0.00390625, 0.42578125, 0.1484375, 0.46875)
+        sb.nameFrame:SetSize(108, 41)
+        sb.nameFrame:SetVertexColor(1, 1, 1, 0.8)
+        sb.nameFrame:SetPoint("LEFT", sb.icon, "RIGHT", 1, 0)
+        sb.label = sb:CreateFontString(nil, "BORDER", "GameFontNormal")
         sb.label:SetPoint("LEFT", sb, "RIGHT", 5, 7)
-        sb.label:SetWidth(150)   -- 100 truncaba 'Herramientas de herrero'
+        sb.label:SetSize(100, 0)
         sb.label:SetJustifyH("LEFT")
-        sb.label:SetWordWrap(false)
-        sb.label:SetTextColor(1, 0.82, 0)
+        if sb.label.SetMaxLines then sb.label:SetMaxLines(2) end
+        sb.sub = sb:CreateFontString(nil, "BORDER", "GameFontDisableSmall")
+        sb.sub:SetPoint("TOPLEFT", sb.label, "BOTTOMLEFT", 0, -1)
+        sb.sub:SetSize(95, 28)
+        sb.sub:SetJustifyH("LEFT")
+        sb.sub:SetJustifyV("TOP")
         sb:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
         sb:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
         sb:Hide()
         return sb
     end
     b.spellOpen = SpellButton(1)   -- abre la ventana de recetas
-    b.spellTool = SpellButton(2)   -- tirada suelta de la herramienta
+    b.spellTool = SpellButton(2, b.spellOpen)   -- tirada suelta de la herramienta
     P.profButtons[i] = b
     return b
 end

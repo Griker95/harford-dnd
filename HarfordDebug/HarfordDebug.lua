@@ -4669,12 +4669,12 @@ API.RegisterCommand("phasetc", function(args)
 
     if cmd == "cargar" then
         Print("Pidiendo el indice a la fase...")
-        P.LoadBoard(function(ok, info)
+        P.LoadBoard(function(ok, info, err)
             if ok then
                 Print("|cff55ff55Tablon cargado|r: |cffffd100" .. tostring(info) .. "|r contratos (esbozos).")
                 Print("Abre uno con |cffffd100phasetc leer <id>|r para bajar el bloque completo.")
             else
-                Print("|cffff5555No se pudo cargar|r: " .. tostring(info))
+                Print("|cffff5555No se pudo cargar|r: " .. tostring(err))
             end
         end)
         return

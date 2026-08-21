@@ -16,9 +16,14 @@ local Phase = TC.Phase
 --   HARFORD_TC_<id>   -> el contrato publico completo, ~1 segmento cada uno. Solo se baja
 --                        cuando alguien abre ese contrato.
 --
--- CONTRATO DE LOS CALLBACKS: siempre callback(ok, datos, error). El mensaje de error va en
--- el TERCER hueco, nunca en el de los datos: devolver una cadena donde se espera una lista
--- hace que `#datos` cuente sus letras y que `ipairs` reviente.
+-- CONTRATO DE LOS CALLBACKS: hay DOS formas, y el error NUNCA ocupa el hueco de los datos.
+-- Devolver una cadena donde se espera una lista hace que `#datos` cuente sus letras y que
+-- `ipairs` reviente.
+--   * Las lecturas puras (`LoadIndex`, `LoadContract`, `LoadManifest`) son callback(datos, error):
+--     no hay un `ok` aparte porque `datos` nil YA significa que fallo.
+--   * Todo lo que ademas escribe o mantiene (`LoadBoard`, `PruneOrphans`, `PublishClean`,
+--     `PublishTracked`, `Purge`, `PurgeAll`) es callback(ok, datos, extra), donde `extra` es el
+--     error si fallo y informacion suelta si no.
 --
 -- El indice se REGENERA ENTERO desde la BD local en cada publicacion; nunca se lee para
 -- modificarlo. Eso evita el lee-modifica-escribe asincrono que obligaria a un cerrojo entre
@@ -203,10 +208,11 @@ function Phase.DeleteContract(contractId)
   end
   local clave = ClaveBloque(contractId)
   if not clave then return false end
-  local ok = pcall(C_Epsilon.SetPhaseAddonData, clave, "")
-  -- Los segmentos sobrantes no se limpian solos al encoger; se vacian a mano.
-  for i = 2, 4 do pcall(C_Epsilon.SetPhaseAddonData, clave .. "_" .. i, "") end
-  return ok
+  -- Los segmentos sobrantes no se limpian solos al encoger; se vacian a mano. Se delega en
+  -- WipeKey para que borrar cubra los mismos que la limpieza (8): este bucle iba a 4, y
+  -- EpsilonLib añade "_2", "_3"... sin tope, asi que un bloque de 5 segmentos dejaba huerfanos
+  -- justo lo que el manifiesto existe para poder encontrar.
+  return Phase.WipeKey(clave)
 end
 
 ------------------------------------------------------------
@@ -333,7 +339,9 @@ function Phase.LoadBoard(callback)
   Phase.LoadIndex(function(indice, err)
     if not indice then
       TC.SetSyncStatus("Fase: " .. tostring(err))
-      if callback then callback(false, err) end
+      -- El error al TERCER hueco: en el segundo va el numero de contratos, y quien lea
+      -- `datos` esperando eso se encontraba con una cadena.
+      if callback then callback(false, nil, err) end
       return
     end
     local n = Phase.ApplyIndex(indice)

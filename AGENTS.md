@@ -2199,6 +2199,16 @@ el mismo archivo, el que no lo posee no escribe.
   (correo, botin, intercambio en la ventana justa) no hay forma de saber cual es el forjado
   y elegir a ciegas es destructivo: los `set` reescriben nombre y datos del que no toca.
   `IdNuevo` devuelve tambien cuantos apareceron y la maquina se para.
+- **El borrado NO se verifica en el momento.** El contenedor no se actualiza al instante:
+  la noticia llega por `BAG_UPDATE`. Comprobar el hueco justo despues de `DeleteCursorItem`
+  daria siempre "no se pudo" aunque el borrado fuera bien. Por lo mismo, con `autolimpiar`
+  el hueco liberado tarda en constar y `Siguiente` concede UNA segunda oportunidad de 1,5s
+  antes de dar la tanda por terminada, o pararia justo despues de haber hecho sitio.
+- **Nada se toca con el cursor ocupado**: `PickupContainerItem` con el cursor lleno intenta
+  COLOCAR lo que lleva, y el objeto del usuario acabaria movido. Se comprueba `GetCursorInfo`.
+- **Lo que va al chat esta acotado**: `exportar` corta en 60 lineas (el bufer no aguanta
+  miles y no se pueden copiar) y remite a las SavedVariables; `revisar` corta en 12
+  problemas. El vertido completo se saca con `actualizar_itemforge.py`.
 - **Las SavedVariables solo se escriben al salir o al recargar.** Un cuelgue a mitad pierde
   el registro mientras los objetos ya existen en el servidor, y NO hay comando de busqueda
   por nombre para recuperarlos (`.forge item info` pide el id que has perdido). Lotes por

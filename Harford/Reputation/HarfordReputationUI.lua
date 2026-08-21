@@ -759,11 +759,16 @@ local function CreateRow(parent)
                 HarfordCharacterXP.ToggleWatchedFaction(data.factionId, data.name)
                 return
             end
+            -- Sonda del frame nativo: 856 al SELECCIONAR una faccion, y ademas 839 cuando
+            -- con ello se abre el detalle (840 al cerrarlo, en su boton). Expandir o colapsar
+            -- una CABECERA de grupo sigue siendo silencioso.
+            local abriaDetalle = detailUserClosed or selectedFactionId ~= data.factionId
             selectedFactionId = data.factionId
             detailUserClosed = false
-            -- Sonda del frame nativo (2026-08-20): 856 igMainMenuOptionCheckBoxOn suena
-            -- SOLO al seleccionar una faccion; expandir/colapsar cabeceras es silencioso.
             if PlaySound then pcall(PlaySound, 856) end
+            if abriaDetalle and HarfordUISounds and HarfordUISounds.Play then
+                HarfordUISounds.Play("reputation_detail_opened")
+            end
             API.Refresh()
         end
     end)
@@ -1324,6 +1329,9 @@ local function CreateDetailPanel()
     detail.closeButton:SetScript("OnClick", function()
         detailUserClosed = true
         if adjustPrompt then adjustPrompt:Hide() end
+        if HarfordUISounds and HarfordUISounds.Play then
+            HarfordUISounds.Play("reputation_detail_closed")
+        end
         detail:Hide()
     end)
 

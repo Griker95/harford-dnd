@@ -50,6 +50,10 @@ API.SOUNDS = API.SOUNDS or {
     -- Abrir el desplegable de filtros. Comparte kit con reputation_tracking_changed (856), que
     -- es el sonido generico de marcar en la interfaz de Blizzard.
     filter_menu_opened = { id = 856, kind = "soundkit" },
+    -- Abrir y cerrar el DETALLE de una faccion. Capturados sobre ReputationBar del panel
+    -- nativo. No confundir con expandir/colapsar una CABECERA de grupo, que es silencioso.
+    reputation_detail_opened = { id = 839, kind = "soundkit" },
+    reputation_detail_closed = { id = 840, kind = "soundkit" },
 }
 
 local function PlayEntry(entry, channel)

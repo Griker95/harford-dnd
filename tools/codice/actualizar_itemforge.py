@@ -6,14 +6,15 @@ por su cuenta -- el registro de objetos y las recetas (que mantiene el otro chat
 consume la web, la captura de Wowhead y lo forjado en el juego. Este script las recorre en el
 orden correcto y deja `Data.lua` al dia.
 
-Las cinco etapas:
+Las seis etapas:
 
   1. VUELTA     lee los ids ya forjados de las SavedVariables del juego. Es el camino de
                 regreso: lo que se creo anoche tiene que salir de la lista de pendientes.
   2. WOWHEAD    vuelca calidad, pila y efectos de la captura que ya esta en disco.
-  3. GENERAR    rehace Data.lua desde el registro + recetas + KB, con las anulaciones encima.
-  4. DUPLICADOS rastrea el WTF por objetos que ya existan, para no crearlos dos veces.
-  5. COMPROBAR  compila el resultado con el Lua 5.1 REAL, no con el interprete local.
+  3. DISPLAYID  extrae los displayid de la cache de HTML, como via alternativa del modelo.
+  4. GENERAR    rehace Data.lua desde el registro + recetas + KB, con las anulaciones encima.
+  5. DUPLICADOS rastrea el WTF por objetos que ya existan, para no crearlos dos veces.
+  6. COMPROBAR  compila el resultado con el Lua 5.1 REAL, no con el interprete local.
 
 Sin --aplicar solo informa de lo que haria.
 
@@ -143,16 +144,19 @@ def main():
     titulo(2, "Wowhead: calidad, pila y efectos")
     corre('itemforge_desde_wowhead.py', *(['--aplicar'] if aplicar else []))
 
-    titulo(3, "Generar Data.lua")
+    titulo(3, "Displayid: la via alternativa del modelo")
+    corre('itemforge_displayids.py', *(['--aplicar'] if aplicar else []))
+
+    titulo(4, "Generar Data.lua")
     if aplicar:
         corre('gen_itemforge_data.py')
     else:
         print("   (se saltaria; con --aplicar rehace Data.lua)")
 
-    titulo(4, "Duplicados: objetos que ya existan")
+    titulo(5, "Duplicados: objetos que ya existan")
     corre('itemforge_ya_creados.py')
 
-    titulo(5, "Comprobar con el Lua 5.1 real")
+    titulo(6, "Comprobar con el Lua 5.1 real")
     sys.path.insert(0, BASE)
     import lua51
     ok, msg = lua51.ejecuta(DATOS)

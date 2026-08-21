@@ -289,7 +289,7 @@ for e in sorted(pendientes, key=orden):
     campos = {'nombre': e['nombre'], 'icono': e['icono'], 'calidad': calidad,
               'clase': clase, 'subclase': subclase, 'hueco': hueco,
               'apilable': apilable, 'vinculacion': 0, 'desc': '', 'additem': True,
-              'display': None}
+              'display': None, 'displayid': None}
     # Lo escrito a mano o traido de la web pisa lo deducido, nunca al reves.
     for campo, valor in (anulaciones.get(e['clave']) or {}).items():
         if campo in campos:
@@ -308,6 +308,9 @@ for e in sorted(pendientes, key=orden):
     if campos['display']:
         out.append('      display = %d,   -- modelo del objeto original de WoW'
                    % int(campos['display']))
+    if campos['displayid']:
+        # Via alternativa: el displayid real, por si el servidor lo quisiera suelto.
+        out.append('      displayid = %d,' % int(campos['displayid']))
     if campos['additem'] is False:
         out.append('      additem = false,   -- cerrado: solo su creador puede .additem')
         cerrados.append(e['clave'])

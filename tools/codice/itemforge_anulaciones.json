@@ -7,7 +7,8 @@
   },
   "abrazo_de_gaia": {
     "calidad": 3,
-    "display": 22660
+    "display": 22660,
+    "displayid": 27752
   },
   "abrazo_del_alba": {
     "display": 24117,
@@ -246,24 +247,29 @@
   "almofar_de_cazador_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238280
+    "display": 238280,
+    "displayid": 698551
   },
   "almofar_de_escamas_doradas": {
     "calidad": 2,
-    "display": 3837
+    "display": 3837,
+    "displayid": 15301
   },
   "almofar_de_escamas_doradas_2": {
     "calidad": 2,
-    "display": 3837
+    "display": 3837,
+    "displayid": 15301
   },
   "almofar_de_escamas_hiperconductoras_bril": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
-    "display": 215114
+    "display": 215114,
+    "displayid": 35095
   },
   "almofar_de_mitril": {
     "calidad": 2,
-    "display": 7931
+    "display": 7931,
+    "displayid": 15288
   },
   "amatista_cantosombrio": {
     "display": 32230,
@@ -313,7 +319,8 @@
   "amnistia_negra": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Reduce tu amenaza frente al objetivo actual haciendo que sea menos probable que te ataque.",
-    "display": 19166
+    "display": 19166,
+    "displayid": 20291
   },
   "amplificador_de_mundo": {
     "calidad": 2,
@@ -489,7 +496,8 @@
   "aniquiladora": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Reduce la armadura de un enemigo en 200 p. Se puede acumular hasta 3 veces.",
-    "display": 12798
+    "display": 12798,
+    "displayid": 28504
   },
   "antidoto": {
     "calidad": 1,
@@ -500,7 +508,8 @@
   "anublo": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Enferma a un objetivo, causando 50 p. de daño de Naturaleza y 180 p. de daño extra durante 1 min.",
-    "display": 7959
+    "display": 7959,
+    "displayid": 22234
   },
   "aparato_de_invisibilidad_gnomico": {
     "calidad": 1,
@@ -509,7 +518,8 @@
   },
   "apisonadoras_de_soldado_escarlata": {
     "calidad": 3,
-    "display": 238295
+    "display": 238295,
+    "displayid": 698099
   },
   "arbusto_desplegable": {
     "calidad": 1,
@@ -520,88 +530,108 @@
   "armadura_de_cria_verde": {
     "calidad": 2,
     "desc": "Equipar: Al recibir un golpe cuerpo a cuerpo, el atacante tiene un 5% de probabilidad de caer dormido durante 10 s. Solo afecta a los enemigos de niveles inferiores a 50.",
-    "display": 7375
+    "display": 7375,
+    "displayid": 12965
   },
   "armadura_de_cuero_fortalecido": {
     "calidad": 1,
-    "display": 2314
+    "display": 2314,
+    "displayid": 5655
   },
   "armadura_de_cuero_maligno": {
     "calidad": 2,
-    "display": 15085
+    "display": 15085,
+    "displayid": 1080
   },
   "armadura_de_cuero_oscurecido": {
     "calidad": 2,
-    "display": 7374
+    "display": 7374,
+    "displayid": 8071
   },
   "armadura_de_cuero_runico": {
     "calidad": 2,
-    "display": 15090
+    "display": 15090,
+    "displayid": 25731
   },
   "armadura_de_cuero_verde": {
     "calidad": 2,
-    "display": 4255
+    "display": 4255,
+    "displayid": 8359
   },
   "armadura_de_embozo_de_tormenta": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 2%.",
-    "display": 15056
+    "display": 15056,
+    "displayid": 4320
   },
   "armadura_de_guardian": {
     "calidad": 2,
-    "display": 4256
+    "display": 4256,
+    "displayid": 8414
   },
   "armadura_de_seda_verde": {
     "calidad": 2,
-    "display": 7065
+    "display": 7065,
+    "displayid": 13684
   },
   "armadura_de_torio": {
     "calidad": 2,
-    "display": 12405
+    "display": 12405,
+    "displayid": 21305
   },
   "armadura_murloc_gruesa": {
     "calidad": 2,
-    "display": 5782
+    "display": 5782,
+    "displayid": 22393
   },
   "arnes_barbarico": {
     "calidad": 1,
-    "display": 5739
+    "display": 5739,
+    "displayid": 10883
   },
   "arnes_de_oso_de_guerra": {
     "calidad": 3,
-    "display": 15064
+    "display": 15064,
+    "displayid": 10883
   },
   "arnes_de_pellejo_de_raptor": {
     "calidad": 2,
-    "display": 4455
+    "display": 4455,
+    "displayid": 7708
   },
   "aro_de_poderio_arcano": {
     "display": 24123,
     "calidad": 4,
-    "desc": "Equipar: 2% de probabilidad de que un hechizo que alcance al objetivo aumente tu daño con hechizos hasta en 120 p. durante 15 s. (Probabilidad de que accione: 2%)"
+    "desc": "Equipar: 2% de probabilidad de que un hechizo que alcance al objetivo aumente tu daño con hechizos hasta en 120 p. durante 15 s. (Probabilidad de que accione: 2%)",
+    "displayid": 26680
   },
   "aro_de_tela_lunar": {
     "calidad": 3,
-    "display": 14140
+    "display": 14140,
+    "displayid": 28414
   },
   "aro_de_tela_lunar_incandescente": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 48 p.",
-    "display": 227863
+    "display": 227863,
+    "displayid": 28414
   },
   "aro_radiante": {
     "calidad": 2,
-    "display": 12417
+    "display": 12417,
+    "displayid": 25826
   },
   "ataduras_de_fenix": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 13 p.",
-    "display": 210781
+    "display": 210781,
+    "displayid": 14867
   },
   "atracador_de_obsidiana": {
     "calidad": 4,
     "desc": "Equipar: Al infligir daño con un hechizo directo o con un ataque cuerpo a cuerpo, hay una probabilidad de infligir 325 al 500 p. de daño de Fuego a tu objetivo.",
-    "display": 233491
+    "display": 233491,
+    "displayid": 695005
   },
   "atraepeces_acuadinamico": {
     "calidad": 1,
@@ -644,7 +674,8 @@
   "avambrazos_de_vuelo_presto": {
     "calidad": 3,
     "desc": "Equipar: +41 p. de poder de ataque a distancia.",
-    "display": 227883
+    "display": 227883,
+    "displayid": 11603
   },
   "avambrazos_potenciados_por_el_vacio": {
     "calidad": 3,
@@ -666,12 +697,14 @@
   "balas_de_mitril_de_gran_impacto": {
     "calidad": 2,
     "apilable": 200,
-    "display": 10512
+    "display": 10512,
+    "displayid": 2418
   },
   "bandana_de_infiltrado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238272
+    "display": 238272,
+    "displayid": 698550
   },
   "barra_de_acero_vil": {
     "display": 23448,
@@ -741,7 +774,8 @@
   "bastion_de_veraplata_giratorio": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la probabilidad de bloquear ataques con un escudo en un 1%.",
-    "display": 213390
+    "display": 213390,
+    "displayid": 674317
   },
   "bilis_de_gusano_de_arena_antiguo": {
     "calidad": 1,
@@ -755,11 +789,13 @@
   },
   "bocarda_fabricada_con_amor": {
     "calidad": 2,
-    "display": 4372
+    "display": 4372,
+    "displayid": 2409
   },
   "bocarda_ferrea": {
     "calidad": 2,
-    "display": 4362
+    "display": 4362,
+    "displayid": 1136
   },
   "bola_de_cuero_pesado": {
     "calidad": 1,
@@ -929,7 +965,8 @@
   },
   "bombachos_de_seda_carmesies": {
     "calidad": 1,
-    "display": 7062
+    "display": 7062,
+    "displayid": 4310
   },
   "bombita": {
     "calidad": 1,
@@ -938,244 +975,300 @@
   },
   "botas_argenta": {
     "calidad": 3,
-    "display": 19056
+    "display": 19056,
+    "displayid": 31557
   },
   "botas_barbaricas_de_hierro": {
     "calidad": 2,
-    "display": 7916
+    "display": 7916,
+    "displayid": 11408
   },
   "botas_cohete_gnomicas": {
     "calidad": 2,
     "desc": "Uso: Estas botas aumentan mucho tu velocidad de carrera durante 20 s. ADVERTENCIA: ni la fuente de alimentación ni los giros funcionan siempre como deberían. (30 Min Reutilización)",
-    "display": 10724
+    "display": 10724,
+    "displayid": 4630
   },
   "botas_cohete_goblin": {
     "calidad": 2,
     "desc": "Uso: Estas botas de aspecto peligroso aumentan mucho tu velocidad de carrera durante 20 s. Tienen tendencia a explotar, así que úsalas con cuidado. (5 Min Reutilización)",
-    "display": 7189
+    "display": 7189,
+    "displayid": 14763
   },
   "botas_de_acero_pulido": {
     "calidad": 2,
-    "display": 3846
+    "display": 3846,
+    "displayid": 16640
   },
   "botas_de_anillas_de_cobre": {
     "calidad": 1,
-    "display": 3469
+    "display": 3469,
+    "displayid": 23528
   },
   "botas_de_bronce_banadas_en_plata": {
     "calidad": 2,
-    "display": 3482
+    "display": 3482,
+    "displayid": 4343
   },
   "botas_de_bronce_ferreas": {
     "calidad": 1,
-    "display": 6350
+    "display": 6350,
+    "displayid": 4330
   },
   "botas_de_can_del_nucleo": {
     "calidad": 4,
-    "display": 16982
+    "display": 16982,
+    "displayid": 5489
   },
   "botas_de_cazador_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 238287
+    "display": 238287,
+    "displayid": 698538
   },
   "botas_de_cuero_cosidas_a_mano": {
     "calidad": 1,
-    "display": 2302
+    "display": 2302,
+    "displayid": 3713
   },
   "botas_de_cuero_estampado": {
     "calidad": 2,
-    "display": 2309
+    "display": 2309,
+    "displayid": 5853
   },
   "botas_de_cuero_oscuro": {
     "calidad": 1,
-    "display": 2315
+    "display": 2315,
+    "displayid": 4956
   },
   "botas_de_cuero_refinado": {
     "calidad": 1,
-    "display": 2307
+    "display": 2307,
+    "displayid": 9512
   },
   "botas_de_cuero_salvaje": {
     "calidad": 2,
-    "display": 8213
+    "display": 8213,
+    "displayid": 4389
   },
   "botas_de_dragontina_negra": {
     "calidad": 4,
     "desc": "Equipar: +28 p. de poder de ataque.",
-    "display": 16984
+    "display": 16984,
+    "displayid": 28760
   },
   "botas_de_escamas_doradas": {
     "calidad": 2,
-    "display": 3847
+    "display": 3847,
+    "displayid": 4153
   },
   "botas_de_escamas_doradas_2": {
     "calidad": 2,
-    "display": 3847
+    "display": 3847,
+    "displayid": 4153
   },
   "botas_de_escorpido_resistentes": {
     "calidad": 2,
-    "display": 8209
+    "display": 8209,
+    "displayid": 11832
   },
   "botas_de_hierro_verdes": {
     "calidad": 2,
-    "display": 3484
+    "display": 3484,
+    "displayid": 9412
   },
   "botas_de_lana_roja": {
     "calidad": 2,
-    "display": 4313
+    "display": 4313,
+    "displayid": 4615
   },
   "botas_de_lino": {
     "calidad": 1,
-    "display": 2569
+    "display": 2569,
+    "displayid": 15682
   },
   "botas_de_lino_de_suela_suave": {
     "calidad": 2,
-    "display": 4312
+    "display": 4312,
+    "displayid": 5840
   },
   "botas_de_lino_sencillas": {
     "calidad": 1,
-    "display": 10046
+    "display": 10046,
+    "displayid": 15621
   },
   "botas_de_mangosta": {
     "calidad": 3,
-    "display": 18506
+    "display": 18506,
+    "displayid": 9080
   },
   "botas_de_mitril_ornamentado": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 7936
+    "display": 7936,
+    "displayid": 16118
   },
   "botas_de_mitril_pesado": {
     "calidad": 2,
-    "display": 7933
+    "display": 7933,
+    "displayid": 5615
   },
   "botas_de_oscuridad": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 7 p.",
-    "display": 7027
+    "display": 7027,
+    "displayid": 10095
   },
   "botas_de_pano_cenizo": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 21 p.",
-    "display": 10044
+    "display": 10044,
+    "displayid": 18933
   },
   "botas_de_pano_runico": {
     "calidad": 2,
-    "display": 13864
+    "display": 13864,
+    "displayid": 25233
   },
   "botas_de_pano_tormentoso": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Naturaleza y los efectos hasta en 16 p.",
-    "display": 10039
+    "display": 10039,
+    "displayid": 5875
   },
   "botas_de_placas_imperiales": {
     "calidad": 2,
-    "display": 12426
+    "display": 12426,
+    "displayid": 24513
   },
   "botas_de_sable_de_hielo": {
     "calidad": 2,
-    "display": 15071
+    "display": 15071,
+    "displayid": 5823
   },
   "botas_de_seda_de_arana": {
     "calidad": 3,
-    "display": 4320
+    "display": 4320,
+    "displayid": 4301
   },
   "botas_de_seda_de_arana_extrabidimensiona": {
     "calidad": 4,
     "desc": "Uso: Cambia momentáneamente a otro plano de existencia, lo que reduce al instante la amenaza, todo el daño recibido y el daño causado un 30% durante 6 s. (10 Min Reutilización)",
-    "display": 210795
+    "display": 210795,
+    "displayid": 23708
   },
   "botas_de_tejido_de_sombra": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 14 p.",
-    "display": 10031
+    "display": 10031,
+    "displayid": 9048
   },
   "botas_de_tejido_magico_negras": {
     "calidad": 2,
-    "display": 10026
+    "display": 10026,
+    "displayid": 21154
   },
   "botas_de_tela_lunar": {
     "calidad": 3,
-    "display": 15802
+    "display": 15802,
+    "displayid": 9675
   },
   "botas_de_tela_vil": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 17 p.",
-    "display": 14108
+    "display": 14108,
+    "displayid": 8959
   },
   "botas_de_torio": {
     "calidad": 2,
-    "display": 12409
+    "display": 12409,
+    "displayid": 14883
   },
   "botas_del_encantador": {
     "calidad": 2,
-    "display": 4325
+    "display": 4325,
+    "displayid": 4631
   },
   "botas_del_encantador_2": {
     "calidad": 2,
-    "display": 4325
+    "display": 4325,
+    "displayid": 4631
   },
   "botas_fauces_de_madera_pesadas": {
     "calidad": 3,
     "desc": "Equipar: +20 p. de poder de ataque.",
-    "display": 19048
+    "display": 19048,
+    "displayid": 31536
   },
   "botas_hierro_negro": {
     "calidad": 4,
-    "display": 20039
+    "display": 20039,
+    "displayid": 32599
   },
   "botas_lana": {
     "calidad": 2,
-    "display": 2583
+    "display": 2583,
+    "displayid": 5380
   },
   "botas_nochefugaz": {
     "calidad": 2,
     "desc": "Equipar: Aumenta tu nivel efectivo de sigilo en 1 p.",
-    "display": 8197
+    "display": 8197,
+    "displayid": 5470
   },
   "botas_oscurecidas": {
     "calidad": 2,
-    "display": 7390
+    "display": 7390,
+    "displayid": 8074
   },
   "botas_prestas": {
     "calidad": 2,
     "desc": "Uso: Aumenta la velocidad de carrera en un 40% durante 15 s. (1 Hora Reutilización)",
-    "display": 7391
+    "display": 7391,
+    "displayid": 9750
   },
   "botas_quimericas": {
     "calidad": 2,
-    "display": 15073
+    "display": 15073,
+    "displayid": 5480
   },
   "botas_radiantes": {
     "calidad": 2,
-    "display": 12419
+    "display": 12419,
+    "displayid": 21181
   },
   "botas_runicas_de_placas": {
     "calidad": 2,
-    "display": 12611
+    "display": 12611,
+    "displayid": 23486
   },
   "botas_runicas_estigias": {
     "calidad": 3,
     "desc": "Equipar: Restaura 4 p. de maná cada 5 s.",
-    "display": 20537
+    "display": 20537,
+    "displayid": 5871
   },
   "botas_vid_de_sangre": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo con hechizos en un 1%.",
-    "display": 19684
+    "display": 19684,
+    "displayid": 32156
   },
   "botas_zarzal": {
     "calidad": 3,
-    "display": 22760
+    "display": 22760,
+    "displayid": 35214
   },
   "botas_zarzal_2": {
     "calidad": 3,
-    "display": 22760
+    "display": 22760,
+    "displayid": 35214
   },
   "botines_del_alba": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 19052
+    "display": 19052,
+    "displayid": 31552
   },
   "branquirrojo_ahumado": {
     "calidad": 1,
@@ -1191,174 +1284,214 @@
   },
   "brazales_acecharenas": {
     "calidad": 3,
-    "display": 20476
+    "display": 20476,
+    "displayid": 26793
   },
   "brazales_acecharenas_2": {
     "calidad": 3,
-    "display": 20476
+    "display": 20476,
+    "displayid": 26793
   },
   "brazales_barbaricos": {
     "calidad": 3,
-    "display": 18948
+    "display": 18948,
+    "displayid": 11617
   },
   "brazales_cobre": {
     "calidad": 1,
-    "display": 2853
+    "display": 2853,
+    "displayid": 4331
   },
   "brazales_de_bronce_estampados": {
     "calidad": 2,
-    "display": 2868
+    "display": 2868,
+    "displayid": 19677
   },
   "brazales_de_bronce_ferreos": {
     "calidad": 2,
-    "display": 2867
+    "display": 2867,
+    "displayid": 4331
   },
   "brazales_de_cria_verde": {
     "calidad": 2,
-    "display": 7386
+    "display": 7386,
+    "displayid": 12844
   },
   "brazales_de_cuero_cosidos_a_mano": {
     "calidad": 1,
-    "display": 7277
+    "display": 7277,
+    "displayid": 5333
   },
   "brazales_de_cuero_de_guardian": {
     "calidad": 2,
-    "display": 4260
+    "display": 4260,
+    "displayid": 9550
   },
   "brazales_de_cuero_de_guardian_2": {
     "calidad": 2,
-    "display": 4260
+    "display": 4260,
+    "displayid": 9550
   },
   "brazales_de_cuero_ligero": {
     "calidad": 1,
-    "display": 7281
+    "display": 7281,
+    "displayid": 14002
   },
   "brazales_de_cuero_maligno": {
     "calidad": 2,
-    "display": 15084
+    "display": 15084,
+    "displayid": 2881
   },
   "brazales_de_cuero_runico": {
     "calidad": 2,
-    "display": 15092
+    "display": 15092,
+    "displayid": 7116
   },
   "brazales_de_cuero_verdes": {
     "calidad": 2,
-    "display": 4259
+    "display": 4259,
+    "displayid": 9546
   },
   "brazales_de_escamas_de_mitril": {
     "calidad": 2,
-    "display": 7924
+    "display": 7924,
+    "displayid": 2980
   },
   "brazales_de_escamas_de_murloc": {
     "calidad": 2,
-    "display": 5783
+    "display": 5783,
+    "displayid": 4337
   },
   "brazales_de_escamas_de_tortuga": {
     "calidad": 2,
-    "display": 8198
+    "display": 8198,
+    "displayid": 16506
   },
   "brazales_de_escamas_doradas": {
     "calidad": 1,
-    "display": 6040
+    "display": 6040,
+    "displayid": 9634
   },
   "brazales_de_escamas_heladas": {
     "calidad": 4,
     "desc": "Equipar: +32 p. de poder de ataque.",
-    "display": 22665
+    "display": 22665,
+    "displayid": 35292
   },
   "brazales_de_escamas_heladas_2": {
     "calidad": 4,
     "desc": "Equipar: +32 p. de poder de ataque.",
-    "display": 22665
+    "display": 22665,
+    "displayid": 35292
   },
   "brazales_de_escamas_oniricas": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 22 p.",
-    "display": 234484
+    "display": 234484,
+    "displayid": 16636
   },
   "brazales_de_escorpido_pesados": {
     "calidad": 2,
-    "display": 15077
+    "display": 15077,
+    "displayid": 18978
   },
   "brazales_de_escorpido_resistentes": {
     "calidad": 2,
-    "display": 8205
+    "display": 8205,
+    "displayid": 8197
   },
   "brazales_de_hierro_verdes": {
     "calidad": 1,
-    "display": 3835
+    "display": 3835,
+    "displayid": 9417
   },
   "brazales_de_infiltrado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238275
+    "display": 238275,
+    "displayid": 698082
   },
   "brazales_de_lino_verdes": {
     "calidad": 1,
-    "display": 4308
+    "display": 4308,
+    "displayid": 3041
   },
   "brazales_de_piel_de_murcielago_primigeni": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo en un 1%.",
-    "display": 19687
+    "display": 19687,
+    "displayid": 22500
   },
   "brazales_de_placas_imperiales": {
     "calidad": 2,
-    "display": 12425
+    "display": 12425,
+    "displayid": 24511
   },
   "brazales_de_torio": {
     "calidad": 2,
-    "display": 12408
+    "display": 12408,
+    "displayid": 19760
   },
   "brazales_de_vuelo_presto": {
     "calidad": 3,
     "desc": "Equipar: +41 p. de poder de ataque a distancia.",
-    "display": 18508
+    "display": 18508,
+    "displayid": 11603
   },
   "brazales_deliriohelado": {
     "calidad": 4,
     "desc": "Equipar: Defensa aumentada +5.",
-    "display": 22671
+    "display": 22671,
+    "displayid": 35275
   },
   "brazales_deliriohelado_2": {
     "calidad": 4,
     "desc": "Equipar: Defensa aumentada +5.",
-    "display": 22671
+    "display": 22671,
+    "displayid": 35275
   },
   "brazales_escupefuego": {
     "calidad": 3,
     "desc": "Equipar: Restaura 4 p. de maná cada 5 s.",
-    "display": 20481
+    "display": 20481,
+    "displayid": 16395
   },
   "brazales_escupefuego_2": {
     "calidad": 3,
     "desc": "Equipar: Restaura 4 p. de maná cada 5 s.",
-    "display": 20481
+    "display": 20481,
+    "displayid": 16395
   },
   "brazales_hierro_negro": {
     "calidad": 4,
-    "display": 17014
+    "display": 17014,
+    "displayid": 17679
   },
   "brazales_oscurecidos": {
     "calidad": 2,
-    "display": 7378
+    "display": 7378,
+    "displayid": 14802
   },
   "brazales_polares": {
     "calidad": 4,
-    "display": 22663
+    "display": 22663,
+    "displayid": 35287
   },
   "brazales_polares_2": {
     "calidad": 4,
-    "display": 22663
+    "display": 22663,
+    "displayid": 35287
   },
   "brazales_runicos_de_cobre": {
     "calidad": 1,
-    "display": 2854
+    "display": 2854,
+    "displayid": 17518
   },
   "brazaletes_bengala_del_nucleo": {
     "calidad": 4,
     "desc": "Equipar: Restaura 9 p. de maná cada 5 s.",
-    "display": 18263
+    "display": 18263,
+    "displayid": 8171
   },
   "broche_incrustado_de_rubies": {
     "calidad": 4,
@@ -1368,32 +1501,38 @@
   "bufanda_de_seda_qiraji": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 233956
+    "display": 233956,
+    "displayid": 694907
   },
   "bufas_chillonas": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 220742
+    "display": 220742,
+    "displayid": 680033
   },
   "bufas_de_soldado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238289
+    "display": 238289,
+    "displayid": 700412
   },
   "buscacorazones": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 12783
+    "display": 12783,
+    "displayid": 20299
   },
   "buscacorazones_de_obsidiana": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 234428
+    "display": 234428,
+    "displayid": 695009
   },
   "buscacorazones_letal": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 227884
+    "display": 227884,
+    "displayid": 20299
   },
   "caballa_de_piel_escurridiza": {
     "calidad": 1,
@@ -1426,7 +1565,8 @@
   "cadena_de_cazador_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238282
+    "display": 238282,
+    "displayid": 698086
   },
   "cadena_de_eternio_trenzada": {
     "display": 24114,
@@ -1489,239 +1629,294 @@
   },
   "calzones_de_lino_cosidos_a_mano": {
     "calidad": 2,
-    "display": 4309
+    "display": 4309,
+    "displayid": 2656
   },
   "camisa_amarillo_brillante": {
     "calidad": 1,
-    "display": 4332
+    "display": 4332,
+    "displayid": 3685
   },
   "camisa_azul_con_estilo": {
     "calidad": 1,
-    "display": 6384
+    "display": 6384,
+    "displayid": 11518
   },
   "camisa_blanca_formal": {
     "calidad": 1,
-    "display": 4334
+    "display": 4334,
+    "displayid": 4638
   },
   "camisa_de_esmoquin": {
     "calidad": 1,
-    "display": 10034
+    "display": 10034,
+    "displayid": 11307
   },
   "camisa_de_espadachin_blanca": {
     "calidad": 1,
-    "display": 6795
+    "display": 6795,
+    "displayid": 4640
   },
   "camisa_de_espadachin_negra": {
     "calidad": 1,
-    "display": 4336
+    "display": 4336,
+    "displayid": 12969
   },
   "camisa_de_espadachin_roja": {
     "calidad": 1,
-    "display": 6796
+    "display": 6796,
+    "displayid": 12786
   },
   "camisa_de_lana_gris": {
     "calidad": 1,
-    "display": 2587
+    "display": 2587,
+    "displayid": 10798
   },
   "camisa_de_lino_azul": {
     "calidad": 1,
-    "display": 2577
+    "display": 2577,
+    "displayid": 10667
   },
   "camisa_de_lino_blanca": {
     "calidad": 1,
-    "display": 2576
+    "display": 2576,
+    "displayid": 10705
   },
   "camisa_de_lino_marron": {
     "calidad": 1,
-    "display": 4344
+    "display": 4344,
+    "displayid": 10837
   },
   "camisa_de_lino_roja": {
     "calidad": 1,
-    "display": 2575
+    "display": 2575,
+    "displayid": 10840
   },
   "camisa_de_lino_verde": {
     "calidad": 1,
-    "display": 2579
+    "display": 2579,
+    "displayid": 10861
   },
   "camisa_de_seda_morada_viva": {
     "calidad": 1,
-    "display": 4335
+    "display": 4335,
+    "displayid": 4639
   },
   "camisa_de_seda_oscura": {
     "calidad": 1,
-    "display": 4333
+    "display": 4333,
+    "displayid": 4637
   },
   "camisa_de_tejido_magico_lavanda": {
     "calidad": 1,
-    "display": 10054
+    "display": 10054,
+    "displayid": 11977
   },
   "camisa_de_tejido_magico_naranja": {
     "calidad": 1,
-    "display": 10056
+    "display": 10056,
+    "displayid": 18348
   },
   "camisa_de_tejido_magico_rosa": {
     "calidad": 1,
-    "display": 10055
+    "display": 10055,
+    "displayid": 18923
   },
   "camisa_festiva_verde": {
     "calidad": 1,
-    "display": 17723
+    "display": 17723,
+    "displayid": 18123
   },
   "camisa_marcial_naranja": {
     "calidad": 1,
-    "display": 10052
+    "display": 10052,
+    "displayid": 18916
   },
   "camisa_roja_con_estilo": {
     "calidad": 1,
-    "display": 4330
+    "display": 4330,
+    "displayid": 4635
   },
   "camisa_verde_con_estilo": {
     "calidad": 1,
-    "display": 6385
+    "display": 6385,
+    "displayid": 5781
   },
   "camisote_de_hierro_verde": {
     "calidad": 3,
-    "display": 3844
+    "display": 3844,
+    "displayid": 70731
   },
   "campeon_de_obsidiana": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Te cura en 270 al 450 p. y aumenta tu fuerza en 120 p. durante 30 s.",
-    "display": 233490
+    "display": 233490,
+    "displayid": 695006
   },
   "campeon_de_veraplata": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Protege al taumaturgo con un Escudo Sagrado.",
-    "display": 7960
+    "display": 7960,
+    "displayid": 5105
   },
   "campeona_de_arcanita": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Te cura en 270 al 450 p. y aumenta tu fuerza en 120 p. durante 30 s.",
-    "display": 12790
+    "display": 12790,
+    "displayid": 24813
   },
   "campeona_de_arcanita_refinada": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Te cura en 270 al 450 p. y aumenta tu fuerza en 120 p. durante 30 s.",
-    "display": 228125
+    "display": 228125,
+    "displayid": 685161
   },
   "capa_cambiante_magistral": {
     "calidad": 4,
     "desc": "Equipar: Defensa aumentada +8.",
-    "display": 227854
+    "display": 227854,
+    "displayid": 30851
   },
   "capa_con_broche_de_perlas": {
     "calidad": 2,
-    "display": 5542
+    "display": 5542,
+    "displayid": 23131
   },
   "capa_cromatica": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1% con los hechizos.",
-    "display": 18509
+    "display": 18509,
+    "displayid": 28299
   },
   "capa_cromatica_brillante": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 227869
+    "display": 227869,
+    "displayid": 28299
   },
   "capa_de_amparo": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +5.",
-    "display": 18413
+    "display": 18413,
+    "displayid": 30783
   },
   "capa_de_cria_negra": {
     "calidad": 2,
-    "display": 7283
+    "display": 7283,
+    "displayid": 23010
   },
   "capa_de_cuero_cosida_a_mano": {
     "calidad": 1,
-    "display": 7276
+    "display": 7276,
+    "displayid": 23008
   },
   "capa_de_cuero_de_escarcha": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 11 p.",
-    "display": 7377
+    "display": 7377,
+    "displayid": 23030
   },
   "capa_de_cuero_estampado": {
     "calidad": 1,
-    "display": 2310
+    "display": 2310,
+    "displayid": 23010
   },
   "capa_de_cuero_oscuro": {
     "calidad": 1,
-    "display": 2316
+    "display": 2316,
+    "displayid": 23021
   },
   "capa_de_cuero_refinado": {
     "calidad": 2,
-    "display": 2308
+    "display": 2308,
+    "displayid": 23028
   },
   "capa_de_cuero_salvaje": {
     "calidad": 2,
-    "display": 8215
+    "display": 8215,
+    "displayid": 23057
   },
   "capa_de_escamas_de_onyxia": {
     "calidad": 3,
     "desc": "Equipar: Protege al portador de ser engullido por Llama de las Sombras.",
-    "display": 15138
+    "display": 15138,
+    "displayid": 24174
   },
   "capa_de_escamas_descarriadas": {
     "calidad": 2,
-    "display": 6466
+    "display": 6466,
+    "displayid": 23010
   },
   "capa_de_fiera": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 42 p.",
-    "display": 18510
+    "display": 18510,
+    "displayid": 29720
   },
   "capa_de_fuego": {
     "calidad": 3,
     "desc": "Uso: Causa 25 p. de daño de Fuego cada 5 s a todos los enemigos cercanos durante 15 s. (2 Min Reutilización)",
-    "display": 14134
+    "display": 14134,
+    "displayid": 24928
   },
   "capa_de_gran_vudu": {
     "calidad": 2,
-    "display": 8216
+    "display": 8216,
+    "displayid": 24297
   },
   "capa_de_guardian": {
     "calidad": 2,
-    "display": 5965
+    "display": 5965,
+    "displayid": 23033
   },
   "capa_de_lana_gruesa": {
     "calidad": 2,
-    "display": 4311
+    "display": 4311,
+    "displayid": 23093
   },
   "capa_de_montanero": {
     "calidad": 1,
-    "display": 3719
+    "display": 3719,
+    "displayid": 23040
   },
   "capa_de_pano_brillante": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 10 p.",
-    "display": 14103
+    "display": 14103,
+    "displayid": 24928
   },
   "capa_de_pano_cenizo": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 13 p.",
-    "display": 14044
+    "display": 14044,
+    "displayid": 23422
   },
   "capa_de_pano_runico": {
     "calidad": 2,
-    "display": 13860
+    "display": 13860,
+    "displayid": 25232
   },
   "capa_de_seda_azur": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 10 p.",
-    "display": 7053
+    "display": 7053,
+    "displayid": 23092
   },
   "capa_de_seda_carmesi": {
     "calidad": 2,
-    "display": 7056
+    "display": 7056,
+    "displayid": 15102
   },
   "capa_de_seda_qiraji": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 233959
+    "display": 233959,
+    "displayid": 694909
   },
   "capa_glacial": {
     "calidad": 4,
-    "display": 22658
+    "display": 22658,
+    "displayid": 23125
   },
   "capa_glacial_2": {
     "calidad": 4,
@@ -1729,33 +1924,43 @@
   },
   "capa_helada": {
     "calidad": 3,
-    "display": 4327
+    "display": 4327,
+    "displayid": 15063
   },
   "capa_larga_de_seda": {
     "calidad": 2,
-    "display": 4326
+    "display": 4326,
+    "displayid": 15076
   },
   "capa_larga_de_seda_2": {
     "calidad": 2,
-    "display": 4326
+    "display": 4326,
+    "displayid": 15076
   },
   "capa_lino": {
     "calidad": 1,
-    "display": 2570
+    "display": 2570,
+    "displayid": 23095
   },
   "capa_nochefugaz": {
     "calidad": 2,
-    "display": 8195
+    "display": 8195,
+    "displayid": 23019
   },
   "capa_ondeante": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 18511
+    "display": 18511,
+    "displayid": 30851
   },
   "capa_paracaidas": {
     "calidad": 2,
     "desc": "Uso: Reduce tu velocidad de caída durante 10 s. (30 Min Reutilización)",
-    "display": 10518
+    "display": 10518,
+    "displayid": 23129
+  },
+  "capa_seda": {
+    "displayid": 23125
   },
   "caparazon_de_silitido_ligero": {
     "calidad": 1,
@@ -1770,54 +1975,65 @@
   "caperuza_de_augur_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 238264
+    "display": 238264,
+    "displayid": 698549
   },
   "caperuza_de_canalizador_gneuroconductora": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
-    "display": 215381
+    "display": 215381,
+    "displayid": 35095
   },
   "caperuza_de_escamas_resistente_a_la_radi": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 215382
+    "display": 215382,
+    "displayid": 35095
   },
   "caperuza_de_las_sombras": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 7 p.",
-    "display": 4323
+    "display": 4323,
+    "displayid": 15319
   },
   "caperuza_de_seda_azur": {
     "calidad": 1,
-    "display": 7048
+    "display": 7048,
+    "displayid": 15283
   },
   "caperuza_de_tela_vil": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 30 p.",
-    "display": 14111
+    "display": 14111,
+    "displayid": 15391
   },
   "capucha_de_encantador": {
     "calidad": 2,
-    "display": 4322
+    "display": 4322,
+    "displayid": 15024
   },
   "capucha_de_encantador_2": {
     "calidad": 2,
-    "display": 4322
+    "display": 4322,
+    "displayid": 15024
   },
   "capucha_de_filozarza": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate inflige 100 p. de daño de Naturaleza al atacante. Inflige el doble de amenaza respecto al daño infligido.",
-    "display": 233808
+    "display": 233808,
+    "displayid": 694066
   },
   "capucha_gneurovinculada_brillante": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 215166
+    "display": 215166,
+    "displayid": 35095
   },
   "capucha_vampirica": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate hay un 20% de probabilidad de robar 50 p. de vida al objetivo. (Probabilidad de que accione: 20%)",
-    "display": 233826
+    "display": 233826,
+    "displayid": 694068
   },
   "carbon": {
     "calidad": 1,
@@ -1827,7 +2043,8 @@
   "carcaj_de_cuero_ligero": {
     "calidad": 1,
     "desc": "Equipar: Aumenta la velocidad de ataque en un 10%.",
-    "display": 7278
+    "display": 7278,
+    "displayid": 21330
   },
   "carcaj_escarlata": {
     "calidad": 4,
@@ -1837,12 +2054,14 @@
   "carcaj_pesado": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la velocidad de ataque en un 12%.",
-    "display": 7371
+    "display": 7371,
+    "displayid": 21322
   },
   "carcaj_rapido": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la velocidad de ataque en un 13%.",
-    "display": 8217
+    "display": 8217,
+    "displayid": 21331
   },
   "cardo_de_la_colmena": {
     "calidad": 1,
@@ -2060,36 +2279,43 @@
   "casco_antiinterferencias_templado": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 215161
+    "display": 215161,
+    "displayid": 23166
   },
   "casco_de_albanil_goblin": {
     "calidad": 2,
     "desc": "Uso: Amortigua 300 al 500 p. de daño de Fuego. Dura 1 min. (1 Hora Reutilización)",
-    "display": 10543
+    "display": 10543,
+    "displayid": 15368
   },
   "casco_de_cohete_goblin": {
     "calidad": 2,
     "desc": "Uso: Embiste a un enemigo, dejándolo atontado durante 30 s. También te derriba a ti y te aturde durante un período corto de tiempo. Cualquier daño causado reanimará al objetivo.",
-    "display": 10588
+    "display": 10588,
+    "displayid": 23166
   },
   "casco_de_cuero_salvaje": {
     "calidad": 2,
-    "display": 8214
+    "display": 8214,
+    "displayid": 15307
   },
   "casco_de_inmersion": {
     "calidad": 2,
     "desc": "Equipar: Permite respirar bajo el agua.",
-    "display": 10506
+    "display": 10506,
+    "displayid": 23161
   },
   "casco_de_minero_goblin": {
     "calidad": 2,
     "desc": "Equipar: Minería +5 p.",
-    "display": 10542
+    "display": 10542,
+    "displayid": 17729
   },
   "casco_de_soldado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 238288
+    "display": 238288,
+    "displayid": 700413
   },
   "catalejo_ornamentado": {
     "calidad": 1,
@@ -2104,21 +2330,25 @@
   },
   "chafarote_de_ebano": {
     "calidad": 2,
-    "display": 7947
+    "display": 7947,
+    "displayid": 16130
   },
   "chal_vampirico": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate hay un 20% de probabilidad de robar 40 p. de vida al objetivo. (Probabilidad de que accione: 20%)",
-    "display": 233833
+    "display": 233833,
+    "displayid": 696269
   },
   "chaleco_de_cuero_blanco": {
     "calidad": 1,
-    "display": 2311
+    "display": 2311,
+    "displayid": 6026
   },
   "chaleco_de_piel_de_murcielago_primigenio": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo en un 1%.",
-    "display": 19685
+    "display": 19685,
+    "displayid": 17930
   },
   "champinon_fantasma": {
     "calidad": 1,
@@ -2128,7 +2358,8 @@
   "chaqueta_de_esmoquin": {
     "calidad": 1,
     "desc": "Equipar: Impresiona a los demás con tu sentido de la moda.",
-    "display": 10036
+    "display": 10036,
+    "displayid": 11646
   },
   "chatarra_reflectante": {
     "calidad": 2,
@@ -2167,261 +2398,320 @@
   "cimera_del_gran_jefe": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 46 p.",
-    "display": 227872
+    "display": 227872,
+    "displayid": 15378
   },
   "cinta_de_cuero_maligno": {
     "calidad": 2,
-    "display": 15086
+    "display": 15086,
+    "displayid": 18860
   },
   "cinta_de_cuero_runico": {
     "calidad": 2,
-    "display": 15094
+    "display": 15094,
+    "displayid": 25739
   },
   "cinta_de_pano_runico": {
     "calidad": 2,
-    "display": 13866
+    "display": 13866,
+    "displayid": 25230
   },
   "cinta_de_pano_tormentoso": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Naturaleza y los efectos hasta en 14 p.",
-    "display": 10032
+    "display": 10032,
+    "displayid": 18877
   },
   "cinta_de_seda": {
     "calidad": 1,
-    "display": 7050
+    "display": 7050,
+    "displayid": 15863
   },
   "cinta_de_tejido_magico_negra": {
     "calidad": 2,
-    "display": 10024
+    "display": 10024,
+    "displayid": 18860
   },
   "cinta_de_tejido_magico_roja": {
     "calidad": 2,
-    "display": 10033
+    "display": 10033,
+    "displayid": 16396
   },
   "cinta_nochefugaz": {
     "calidad": 2,
-    "display": 8176
+    "display": 8176,
+    "displayid": 15321
   },
   "cinto_de_cazador_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238285
+    "display": 238285,
+    "displayid": 698540
   },
   "cinturon_barbarico": {
     "calidad": 2,
     "desc": "Uso: Aumenta la ira en 30 p. (1 Hora Reutilización)",
-    "display": 4264
+    "display": 4264,
+    "displayid": 7766
   },
   "cinturon_bordado_del_archimago": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 228476
+    "display": 228476,
+    "displayid": 5788
   },
   "cinturon_de_anillas_de_cobre": {
     "calidad": 1,
-    "display": 2851
+    "display": 2851,
+    "displayid": 23529
   },
   "cinturon_de_arana": {
     "calidad": 2,
     "desc": "Uso: Quita todos los efectos inmovilizadores existentes y te vuelve inmune a los efectos inmovilizadores durante 5 s. (30 Min Reutilización)",
-    "display": 4328
+    "display": 4328,
+    "displayid": 5764
   },
   "cinturon_de_arrabio": {
     "calidad": 4,
-    "display": 19163
+    "display": 19163,
+    "displayid": 31682
   },
   "cinturon_de_can_del_nucleo": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 62 p.",
-    "display": 19162
+    "display": 19162,
+    "displayid": 31681
   },
   "cinturon_de_cuero_con_gemas_incrustadas": {
     "calidad": 3,
     "desc": "Uso: Te cura en 225 al 375 p. (1 Hora Reutilización)",
-    "display": 4262
+    "display": 4262,
+    "displayid": 9715
   },
   "cinturon_de_cuero_cosido_a_mano": {
     "calidad": 1,
-    "display": 4237
+    "display": 4237,
+    "displayid": 3253
   },
   "cinturon_de_cuero_maligno": {
     "calidad": 2,
-    "display": 15088
+    "display": 15088,
+    "displayid": 8151
   },
   "cinturon_de_cuero_oscuro": {
     "calidad": 2,
-    "display": 4249
+    "display": 4249,
+    "displayid": 4591
   },
   "cinturon_de_cuero_refinado": {
     "calidad": 1,
-    "display": 4246
+    "display": 4246,
+    "displayid": 4099
   },
   "cinturon_de_cuero_runico": {
     "calidad": 2,
-    "display": 15093
+    "display": 15093,
+    "displayid": 4460
   },
   "cinturon_de_cuero_verde": {
     "calidad": 2,
-    "display": 4257
+    "display": 4257,
+    "displayid": 8350
   },
   "cinturon_de_escamas_de_murloc": {
     "calidad": 2,
-    "display": 5780
+    "display": 5780,
+    "displayid": 3335
   },
   "cinturon_de_escamas_descarriadas": {
     "calidad": 3,
-    "display": 6468
+    "display": 6468,
+    "displayid": 9748
   },
   "cinturon_de_escorpido_pesado": {
     "calidad": 2,
-    "display": 15082
+    "display": 15082,
+    "displayid": 7728
   },
   "cinturon_de_estrella": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 13 p.",
-    "display": 4329
+    "display": 4329,
+    "displayid": 4634
   },
   "cinturon_de_guardian": {
     "calidad": 2,
-    "display": 4258
+    "display": 4258,
+    "displayid": 8606
   },
   "cinturon_de_guardian_2": {
     "calidad": 2,
-    "display": 4258
+    "display": 4258,
+    "displayid": 8606
   },
   "cinturon_de_infiltrado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238277
+    "display": 238277,
+    "displayid": 698079
   },
   "cinturon_de_lava": {
     "calidad": 4,
-    "display": 19149
+    "display": 19149,
+    "displayid": 31672
   },
   "cinturon_de_lino": {
     "calidad": 1,
-    "display": 7026
+    "display": 7026,
+    "displayid": 5457
   },
   "cinturon_de_montanero": {
     "calidad": 2,
-    "display": 4250
+    "display": 4250,
+    "displayid": 6049
   },
   "cinturon_de_obsidiana_ligero": {
     "calidad": 3,
     "desc": "Equipar: +32 p. de poder de ataque.",
-    "display": 22195
+    "display": 22195,
+    "displayid": 23364
   },
   "cinturon_de_obsidiana_ligero_2": {
     "calidad": 3,
     "desc": "Equipar: +32 p. de poder de ataque.",
-    "display": 22195
+    "display": 22195,
+    "displayid": 23364
   },
   "cinturon_de_obsidiana_pesado": {
     "calidad": 3,
     "desc": "Equipar: +5 p. de todas las resistencias.",
-    "display": 22197
+    "display": 22197,
+    "displayid": 23364
   },
   "cinturon_de_obsidiana_pesado_2": {
     "calidad": 3,
     "desc": "Equipar: +5 p. de todas las resistencias.",
-    "display": 22197
+    "display": 22197,
+    "displayid": 23364
   },
   "cinturon_de_pano_runico": {
     "calidad": 2,
-    "display": 13856
+    "display": 13856,
+    "displayid": 25235
   },
   "cinturon_de_pellejo_de_raptor": {
     "calidad": 2,
-    "display": 4456
+    "display": 4456,
+    "displayid": 6182
   },
   "cinturon_de_placas_imperiales": {
     "calidad": 2,
-    "display": 12424
+    "display": 12424,
+    "displayid": 5679
   },
   "cinturon_de_prevencion_de_dano_gnomico": {
     "calidad": 2,
     "desc": "Uso: Un escudo de fuerza te protege de los siguientes 500 p. de daño durante los próximos 10 min.",
-    "display": 10721
+    "display": 10721,
+    "displayid": 8072
   },
   "cinturon_de_seda_azur": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la velocidad de natación en un 15%.",
-    "display": 7052
+    "display": 7052,
+    "displayid": 7700
   },
   "cinturon_de_seda_carmesi": {
     "calidad": 2,
-    "display": 7055
+    "display": 7055,
+    "displayid": 5804
   },
   "cinturon_de_seda_carmesi_2": {
     "calidad": 2,
-    "display": 7055
+    "display": 7055,
+    "displayid": 5804
   },
   "cinturon_de_seda_terranea": {
     "calidad": 2,
-    "display": 7061
+    "display": 7061,
+    "displayid": 4905
   },
   "cinturon_de_seda_terranea_2": {
     "calidad": 2,
-    "display": 7061
+    "display": 7061,
+    "displayid": 4905
   },
   "cinturon_de_tejido_fantasmal": {
     "calidad": 2,
     "desc": "Equipar: Restaura 6 p. de maná cada 5 s.",
-    "display": 14143
+    "display": 14143,
+    "displayid": 10087
   },
   "cinturon_de_torio": {
     "calidad": 2,
-    "display": 12406
+    "display": 12406,
+    "displayid": 16460
   },
   "cinturon_del_archimago": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1% con los hechizos.",
-    "display": 18405
+    "display": 18405,
+    "displayid": 5788
   },
   "cinturon_dorado_hiperconductor": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 215115
+    "display": 215115,
+    "displayid": 4634
   },
   "cinturon_fauces_de_madera_pesado": {
     "calidad": 3,
     "desc": "Equipar: +42 p. de poder de ataque.",
-    "display": 19043
+    "display": 19043,
+    "displayid": 24404
   },
   "cinturon_oscurecido": {
     "calidad": 2,
-    "display": 7387
+    "display": 7387,
+    "displayid": 8072
   },
   "cinturon_parraferrea": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +3.",
-    "display": 22764
+    "display": 22764,
+    "displayid": 35218
   },
   "cinturon_parraferrea_2": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +3.",
-    "display": 22764
+    "display": 22764,
+    "displayid": 35218
   },
   "cinturon_radiante": {
     "calidad": 2,
-    "display": 12416
+    "display": 12416,
+    "displayid": 21180
   },
   "cinturon_runico_de_cobre": {
     "calidad": 1,
-    "display": 2857
+    "display": 2857,
+    "displayid": 19499
   },
   "cinturon_runico_estigio": {
     "calidad": 3,
     "desc": "Equipar: Restaura 3 p. de maná cada 5 s.",
-    "display": 20539
+    "display": 20539,
+    "displayid": 30555
   },
   "cinturon_zarzal": {
     "calidad": 3,
-    "display": 22761
+    "display": 22761,
+    "displayid": 35213
   },
   "cinturon_zarzal_2": {
     "calidad": 3,
-    "display": 22761
+    "display": 22761,
+    "displayid": 35213
   },
   "citrino": {
     "calidad": 2,
@@ -2680,207 +2970,252 @@
   },
   "coraza_acecharenas": {
     "calidad": 3,
-    "display": 20478
+    "display": 20478,
+    "displayid": 32872
   },
   "coraza_almanegra": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo en un 1%.",
-    "display": 19693
+    "display": 19693,
+    "displayid": 30786
   },
   "coraza_barbarica_de_hierro": {
     "calidad": 2,
-    "display": 7914
+    "display": 7914,
+    "displayid": 11407
   },
   "coraza_de_acero": {
     "calidad": 2,
-    "display": 7963
+    "display": 7963,
+    "displayid": 5386
   },
   "coraza_de_alma_de_sangre": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 2%.",
-    "display": 19690
+    "display": 19690,
+    "displayid": 30518
   },
   "coraza_de_bronce_banada_en_plata": {
     "calidad": 2,
-    "display": 2869
+    "display": 2869,
+    "displayid": 4412
   },
   "coraza_de_demonio_forjada": {
     "calidad": 3,
     "desc": "Equipar: Al recibir el golpe tiene un 3% de probabilidad de robar 120 p. de vida al atacante durante 4 s. (Probabilidad de que accione: 3%)",
-    "display": 12628
+    "display": 12628,
+    "displayid": 13174
   },
   "coraza_de_dragontina": {
     "calidad": 3,
     "desc": "Uso: Amortigua 600 p. de daño mágico. Dura 2 min. (1 Hora Reutilización)",
-    "display": 8367
+    "display": 8367,
+    "displayid": 12295
   },
   "coraza_de_dragontina_azul": {
     "calidad": 3,
-    "display": 15048
+    "display": 15048,
+    "displayid": 25676
   },
   "coraza_de_dragontina_negra": {
     "calidad": 3,
     "desc": "Equipar: +50 p. de poder de ataque.",
-    "display": 15050
+    "display": 15050,
+    "displayid": 26912
   },
   "coraza_de_dragontina_roja": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 66 p.",
-    "display": 15047
+    "display": 15047,
+    "displayid": 17862
   },
   "coraza_de_dragontina_verde": {
     "calidad": 3,
-    "display": 15045
+    "display": 15045,
+    "displayid": 12837
   },
   "coraza_de_escamas_de_dragon_azul_pulida": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 33 p.",
-    "display": 227875
+    "display": 227875,
+    "displayid": 25676
   },
   "coraza_de_escamas_de_dragon_negro_endure": {
     "calidad": 3,
     "desc": "Equipar: +56 p. de poder de ataque.",
-    "display": 227851
+    "display": 227851,
+    "displayid": 26912
   },
   "coraza_de_escamas_de_dragon_verde_vivien": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 31 p.",
-    "display": 227879
+    "display": 227879,
+    "displayid": 12837
   },
   "coraza_de_escamas_de_murloc": {
     "calidad": 2,
-    "display": 5781
+    "display": 5781,
+    "displayid": 8908
   },
   "coraza_de_escamas_de_onyxia": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 15141
+    "display": 15141,
+    "displayid": 26912
   },
   "coraza_de_escamas_de_tortuga": {
     "calidad": 2,
-    "display": 8189
+    "display": 8189,
+    "displayid": 11598
   },
   "coraza_de_escamas_de_tortuga_2": {
     "calidad": 2,
-    "display": 8189
+    "display": 8189,
+    "displayid": 11598
   },
   "coraza_de_escamas_heladas": {
     "calidad": 4,
     "desc": "Equipar: +40 p. de poder de ataque.",
-    "display": 22664
+    "display": 22664,
+    "displayid": 35293
   },
   "coraza_de_escamas_heladas_2": {
     "calidad": 4,
     "desc": "Equipar: +40 p. de poder de ataque.",
-    "display": 22664
+    "display": 22664,
+    "displayid": 35293
   },
   "coraza_de_escamas_oniricas": {
     "calidad": 4,
     "desc": "Equipar: Restaura 4 p. de maná cada 5 s.",
-    "display": 20380
+    "display": 20380,
+    "displayid": 25238
   },
   "coraza_de_escorpido_resistente": {
     "calidad": 2,
-    "display": 8203
+    "display": 8203,
+    "displayid": 14689
   },
   "coraza_de_forjaz": {
     "calidad": 2,
-    "display": 6731
+    "display": 6731,
+    "displayid": 10441
   },
   "coraza_de_mitril_ornamentado": {
     "calidad": 2,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 7935
+    "display": 7935,
+    "displayid": 14945
   },
   "coraza_de_mitril_pesado": {
     "calidad": 2,
-    "display": 7930
+    "display": 7930,
+    "displayid": 4151
   },
   "coraza_de_plata_cambiante": {
     "calidad": 4,
     "desc": "Equipar: Este objeto está imbuido del poder en bruto del Vacío.",
-    "display": 210794
+    "display": 210794,
+    "displayid": 21578
   },
   "coraza_de_plata_resplandeciente": {
     "calidad": 3,
-    "display": 2870
+    "display": 2870,
+    "displayid": 9695
   },
   "coraza_de_plumas": {
     "calidad": 3,
-    "display": 8349
+    "display": 8349,
+    "displayid": 4492
   },
   "coraza_de_tigre_de_sangre": {
     "calidad": 3,
-    "display": 19688
+    "display": 19688,
+    "displayid": 13803
   },
   "coraza_de_torio_encantado": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +9.",
-    "display": 12618
+    "display": 12618,
+    "displayid": 13380
   },
   "coraza_de_veraplata": {
     "calidad": 3,
     "desc": "Equipar: Al recibir un golpe en combate hay un 3% de probabilidad de curarte en 60 al 100. (Probabilidad de que accione: 3%)",
-    "display": 7939
+    "display": 7939,
+    "displayid": 23666
   },
   "coraza_deliriohelado": {
     "calidad": 4,
     "desc": "Equipar: Defensa aumentada +8.",
-    "display": 22669
+    "display": 22669,
+    "displayid": 35276
   },
   "coraza_deliriohelado_2": {
     "calidad": 4,
     "desc": "Equipar: Defensa aumentada +8.",
-    "display": 22669
+    "display": 22669,
+    "displayid": 35276
   },
   "coraza_escupefuego": {
     "calidad": 3,
     "desc": "Equipar: Restaura 6 p. de maná cada 5 s.",
-    "display": 20479
+    "display": 20479,
+    "displayid": 16391
   },
   "coraza_gruesa_de_obsidiana": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un hechizo de daño tienes el 30% de probabilidad de conseguir un hechizo escudo 6 s que absorbe 300 al 500 de ese tipo de daño.",
-    "display": 22196
+    "display": 22196,
+    "displayid": 29253
   },
   "coraza_parraferrea": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +7.",
-    "display": 22762
+    "display": 22762,
+    "displayid": 13204
   },
   "coraza_plumahierro": {
     "calidad": 3,
-    "display": 15066
+    "display": 15066,
+    "displayid": 25699
   },
   "coraza_radiante": {
     "calidad": 2,
-    "display": 12415
+    "display": 12415,
+    "displayid": 21179
   },
   "coraza_runaoscura": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 20550
+    "display": 20550,
+    "displayid": 32943
   },
   "coraza_runica": {
     "calidad": 2,
-    "display": 12613
+    "display": 12613,
+    "displayid": 13138
   },
   "coraza_runica_de_cobre": {
     "calidad": 2,
-    "display": 2864
+    "display": 2864,
+    "displayid": 22458
   },
   "coraza_viva": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 26 p.",
-    "display": 15059
+    "display": 15059,
+    "displayid": 25082
   },
   "coraza_volcanica": {
     "calidad": 2,
-    "display": 15053
+    "display": 15053,
+    "displayid": 13803
   },
   "coraza_volcanica_magistral": {
     "calidad": 3,
-    "display": 227868
+    "display": 227868,
+    "displayid": 13803
   },
   "corazon_de_bestia_descolorido": {
     "calidad": 1,
@@ -2913,51 +3248,61 @@
   "cordon_de_invocador": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p.",
-    "display": 215366
+    "display": 215366,
+    "displayid": 6121
   },
   "corona_alma_lunar": {
     "display": 20832,
     "calidad": 3,
-    "desc": "Equipar: Restaura 6 p. de maná cada 5 s."
+    "desc": "Equipar: Restaura 6 p. de maná cada 5 s.",
+    "displayid": 19920
   },
   "corona_de_esmeralda_de_destruccion": {
     "display": 21774,
     "calidad": 3,
-    "desc": "Equipar: Aumenta el daño y la sanación de los hechizos mágicos y los efectos hasta en 30 p."
+    "desc": "Equipar: Aumenta el daño y la sanación de los hechizos mágicos y los efectos hasta en 30 p.",
+    "displayid": 27606
   },
   "corona_de_la_bruja_del_mar": {
     "display": 32776,
     "calidad": 3,
-    "desc": "Equipar: Aumenta el daño y la sanación de los hechizos mágicos y los efectos hasta en 23 p."
+    "desc": "Equipar: Aumenta el daño y la sanación de los hechizos mágicos y los efectos hasta en 23 p.",
+    "displayid": 26680
   },
   "corona_de_rubi_de_restauracion": {
     "display": 20969,
     "calidad": 3,
-    "desc": "Equipar: Aumenta la sanación que haces hasta 48 p. y el daño que infliges hasta 16 p. con todos los hechizos mágicos y efectos."
+    "desc": "Equipar: Aumenta la sanación que haces hasta 48 p. y el daño que infliges hasta 16 p. con todos los hechizos mágicos y efectos.",
+    "displayid": 18728
   },
   "corona_de_sangre": {
     "display": 21780,
     "calidad": 3,
-    "desc": "Equipar: Aumenta tu índice de golpe crítico en 28 p."
+    "desc": "Equipar: Aumenta tu índice de golpe crítico en 28 p.",
+    "displayid": 25826
   },
   "corona_nemorosa": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p.",
-    "display": 22757
+    "display": 22757,
+    "displayid": 35206
   },
   "corona_nemorosa_2": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p.",
-    "display": 22757
+    "display": 22757,
+    "displayid": 35206
   },
   "correa_de_augur_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 33 p.",
-    "display": 238269
+    "display": 238269,
+    "displayid": 700411
   },
   "corrupcion": {
     "calidad": 3,
-    "display": 12782
+    "display": 12782,
+    "displayid": 24255
   },
   "costilla_de_jabali_del_risco": {
     "calidad": 1,
@@ -3005,7 +3350,8 @@
   },
   "cota_de_malla_de_forjaz": {
     "calidad": 2,
-    "display": 6730
+    "display": 6730,
+    "displayid": 12559
   },
   "cristal_arcano": {
     "calidad": 2,
@@ -3048,7 +3394,8 @@
   },
   "cuchillo_de_bronce_grande": {
     "calidad": 2,
-    "display": 3848
+    "display": 3848,
+    "displayid": 4154
   },
   "cuero_de_demosaurio": {
     "calidad": 1,
@@ -3058,7 +3405,8 @@
   "cuero_de_filozarza": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate inflige 100 p. de daño de Naturaleza al atacante. Inflige el doble de amenaza respecto al daño infligido.",
-    "display": 233813
+    "display": 233813,
+    "displayid": 694067
   },
   "cuero_de_murcielago_primigenio": {
     "calidad": 1,
@@ -3107,21 +3455,25 @@
   },
   "daga_cobre": {
     "calidad": 1,
-    "display": 7166
+    "display": 7166,
+    "displayid": 13848
   },
   "daga_con_empunadura_de_perla": {
     "calidad": 2,
-    "display": 5540
+    "display": 5540,
+    "displayid": 2733
   },
   "daga_de_acero_destellante": {
     "calidad": 2,
     "desc": "Equipar: +12 p. de poder de ataque.",
-    "display": 12259
+    "display": 12259,
+    "displayid": 2711
   },
   "defensor_obsidiano": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 233801
+    "display": 233801,
+    "displayid": 695008
   },
   "deflector_de_hielo": {
     "calidad": 1,
@@ -3169,20 +3521,24 @@
   "destructor_obsidiano": {
     "calidad": 4,
     "desc": "Equipar: +260 p. de poder de ataque solo en las formas de oso, oso temible y felina.",
-    "display": 233796
+    "display": 233796,
+    "displayid": 694061
   },
   "destructora_de_hierro_dorado": {
     "calidad": 2,
-    "display": 3852
+    "display": 3852,
+    "displayid": 15468
   },
   "destructora_hierro_negro": {
     "calidad": 3,
-    "display": 17016
+    "display": 17016,
+    "displayid": 23276
   },
   "diadema_de_tejido_onirico": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
-    "display": 10041
+    "display": 10041,
+    "displayid": 19000
   },
   "diamante_de_azeroth": {
     "calidad": 2,
@@ -3315,12 +3671,14 @@
   "disco_reactivo_a_la_fuerza": {
     "calidad": 4,
     "desc": "Equipar: Al ser bloqueado por el escudo libera una carga eléctrica que causa daño a los enemigos cercanos. También hay una probabilidad de dañar el escudo. (1s de reutilización)",
-    "display": 18168
+    "display": 18168,
+    "displayid": 20987
   },
   "disco_reactivo_de_potencia_afinado": {
     "calidad": 4,
     "desc": "Equipar: Defensa aumentada +7.",
-    "display": 233988
+    "display": 233988,
+    "displayid": 694082
   },
   "diseno_cilindro_de_mitril_taraceado": {
     "calidad": 1,
@@ -3444,7 +3802,8 @@
   "el_despedazador": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Desactiva el arma de un objetivo durante 10 s.",
-    "display": 7954
+    "display": 7954,
+    "displayid": 1022
   },
   "el_fumigador": {
     "calidad": 1,
@@ -3848,57 +4207,68 @@
   },
   "escopeta_de_chapa_de_plata": {
     "calidad": 2,
-    "display": 4379
+    "display": 4379,
+    "displayid": 15835
   },
   "escopeta_de_obsidiana": {
     "calidad": 4,
     "desc": "Equipar: +31 p. de poder de ataque a distancia.",
-    "display": 234434
+    "display": 234434,
+    "displayid": 695010
   },
   "escrito_crepuscular": {
     "display": 45849,
     "calidad": 3,
-    "desc": "Equipar: Mejora el índice de celeridad en 25 p."
+    "desc": "Equipar: Mejora el índice de celeridad en 25 p.",
+    "displayid": 55265
   },
   "escrito_de_fuego_infernal": {
     "display": 43666,
     "calidad": 3,
-    "desc": "Equipar: Aumenta el poder con hechizos 25 p."
+    "desc": "Equipar: Aumenta el poder con hechizos 25 p.",
+    "displayid": 55264
   },
   "escrito_de_reyes": {
     "display": 43656,
     "calidad": 3,
-    "desc": "Equipar: Mejora el índice de golpe crítico en 6 p."
+    "desc": "Equipar: Mejora el índice de golpe crítico en 6 p.",
+    "displayid": 55265
   },
   "escrito_del_alba": {
     "display": 43654,
     "calidad": 3,
-    "desc": "Equipar: Aumenta el poder con hechizos 6 p."
+    "desc": "Equipar: Aumenta el poder con hechizos 6 p.",
+    "displayid": 55787
   },
   "escrito_encuadernado_en_hierro": {
     "display": 38322,
     "calidad": 4,
-    "desc": "Equipar: Mejora el índice de golpe crítico en 33 p."
+    "desc": "Equipar: Mejora el índice de golpe crítico en 33 p.",
+    "displayid": 23171
   },
   "escrito_mistico": {
     "display": 43515,
     "calidad": 3,
-    "desc": "Equipar: Aumenta el poder con hechizos 8 p."
+    "desc": "Equipar: Aumenta el poder con hechizos 8 p.",
+    "displayid": 54807
   },
   "escrito_vinculado_a_la_tormenta": {
     "display": 43663,
     "calidad": 3,
-    "desc": "Equipar: Mejora el índice de golpe crítico en 9 p."
+    "desc": "Equipar: Mejora el índice de golpe crítico en 9 p.",
+    "displayid": 55981
   },
   "escudo_de_obsidiana_dentado": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la probabilidad de bloquear ataques con un escudo en un 2%.",
-    "display": 22198
+    "display": 22198,
+    "displayid": 34533
   },
   "escudo_dentado_de_obsidiana": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la probabilidad de bloquear ataques con un escudo en un 2%.",
-    "display": 234459
+    "display": 234459,
+    "displayid": 34533
   },
   "esencia_abisal_inferior": {
     "calidad": 2,
@@ -4022,59 +4392,72 @@
   },
   "espada_ancha_de_acero_lunar": {
     "calidad": 2,
-    "display": 3853
+    "display": 3853,
+    "displayid": 5105
   },
   "espada_ancha_de_acero_lunar_2": {
     "calidad": 2,
-    "display": 3853
+    "display": 3853,
+    "displayid": 5105
   },
   "espada_ancha_de_cobre_pesada": {
     "calidad": 2,
-    "display": 3487
+    "display": 3487,
+    "displayid": 20196
   },
   "espada_corta_de_bronce": {
     "calidad": 1,
-    "display": 2850
+    "display": 2850,
+    "displayid": 1546
   },
   "espada_corta_de_cobre": {
     "calidad": 1,
-    "display": 2847
+    "display": 2847,
+    "displayid": 4805
   },
   "espada_corta_de_hierro_endurecido": {
     "calidad": 2,
-    "display": 3849
+    "display": 3849,
+    "displayid": 5129
   },
   "espada_de_mitril_maligna": {
     "calidad": 2,
-    "display": 7943
+    "display": 7943,
+    "displayid": 16128
   },
   "espada_magna_de_bronce": {
     "calidad": 1,
-    "display": 7957
+    "display": 7957,
+    "displayid": 16147
   },
   "espada_magna_de_torio": {
     "calidad": 2,
-    "display": 12764
+    "display": 12764,
+    "displayid": 5190
   },
   "espaldares_aciagos": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 31 p.",
-    "display": 220739
+    "display": 220739,
+    "displayid": 680042
   },
   "espaldares_de_anillas_aulladoras": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 20 p.",
-    "display": 220741
+    "display": 220741,
+    "displayid": 679939
   },
   "espaldares_de_cazador_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238281
+    "display": 238281,
+    "displayid": 698085
   },
   "espaldares_de_mente_fracturada": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p.",
-    "display": 220750
+    "display": 220750,
+    "displayid": 680018
   },
   "especias_calmantes": {
     "calidad": 1,
@@ -4124,7 +4507,8 @@
   },
   "espetadora_hierro_negro": {
     "calidad": 3,
-    "display": 17015
+    "display": 17015,
+    "displayid": 24452
   },
   "espina_de_oro": {
     "calidad": 1,
@@ -4261,12 +4645,14 @@
   },
   "estoque_de_mitril_deslumbrante": {
     "calidad": 2,
-    "display": 7944
+    "display": 7944,
+    "displayid": 4911
   },
   "estoque_llameante": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Quema al enemigo, causando 100 p. de daño durante 30 s.",
-    "display": 12777
+    "display": 12777,
+    "displayid": 23241
   },
   "estrella_de_elune": {
     "display": 23438,
@@ -4313,33 +4699,40 @@
   },
   "faja_de_anillas_igneas": {
     "calidad": 4,
-    "display": 16989
+    "display": 16989,
+    "displayid": 13135
   },
   "faja_de_perspicacia": {
     "calidad": 3,
-    "display": 18504
+    "display": 18504,
+    "displayid": 10433
   },
   "faja_de_perspicacia_arcana": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 227882
+    "display": 227882,
+    "displayid": 10433
   },
   "faja_del_alba": {
     "calidad": 3,
-    "display": 19051
+    "display": 19051,
+    "displayid": 21199
   },
   "falda_de_colores": {
     "calidad": 2,
-    "display": 10048
+    "display": 10048,
+    "displayid": 10636
   },
   "falda_de_escamas_oniricas": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 2% tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques.",
-    "display": 234482
+    "display": 234482,
+    "displayid": 26238
   },
   "falda_sencilla": {
     "calidad": 1,
-    "display": 10047
+    "display": 10047,
+    "displayid": 10199
   },
   "faltriquera_de_almas": {
     "calidad": 2,
@@ -4542,26 +4935,31 @@
   "filo_del_alba": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 12774
+    "display": 12774,
+    "displayid": 23236
   },
   "filo_del_invierno": {
     "calidad": 2,
     "desc": "Probabilidad al acertar: Carga contra un objetivo, causando 30 p. de daño de Escarcha.",
-    "display": 17704
+    "display": 17704,
+    "displayid": 29759
   },
   "filo_runico": {
     "calidad": 2,
-    "display": 12779
+    "display": 12779,
+    "displayid": 19126
   },
   "flecha_explosiva": {
     "calidad": 3,
     "apilable": 200,
-    "display": 10579
+    "display": 10579,
+    "displayid": 2414
   },
   "flecha_navaja": {
     "calidad": 1,
     "apilable": 200,
-    "display": 3030
+    "display": 3030,
+    "displayid": 2414
   },
   "flor_de_fuego": {
     "calidad": 1,
@@ -4765,54 +5163,66 @@
   "furianegra": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 19167
+    "display": 19167,
+    "displayid": 31720
   },
   "gafas_de_fuego": {
     "calidad": 2,
-    "display": 10500
+    "display": 10500,
+    "displayid": 11700
   },
   "gafas_de_las_sombras": {
     "calidad": 2,
-    "display": 4373
+    "display": 4373,
+    "displayid": 17597
   },
   "gafas_de_maestro_ingeniero": {
     "calidad": 2,
-    "display": 16008
+    "display": 16008,
+    "displayid": 11665
   },
   "gafas_de_poder_con_hechizos_xtremo": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
-    "display": 10502
+    "display": 10502,
+    "displayid": 19409
   },
   "gafas_de_poder_con_hechizos_xtremo_plus": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 27 p.",
-    "display": 15999
+    "display": 15999,
+    "displayid": 12139
   },
   "gafas_de_tigre_volador": {
     "calidad": 2,
-    "display": 4368
+    "display": 4368,
+    "displayid": 4651
   },
   "gafas_gnomicas": {
     "calidad": 2,
-    "display": 10545
+    "display": 10545,
+    "displayid": 18138
   },
   "gafas_ojo_brillante": {
     "calidad": 2,
-    "display": 10499
+    "display": 10499,
+    "displayid": 17718
   },
   "gafas_tintadas_de_rosa": {
     "calidad": 2,
-    "display": 10503
+    "display": 10503,
+    "displayid": 22423
   },
   "gafas_tintadas_de_verde": {
     "calidad": 2,
-    "display": 4385
+    "display": 4385,
+    "displayid": 13374
   },
   "gafas_vid_de_sangre": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo con hechizos en un 2%.",
-    "display": 19999
+    "display": 19999,
+    "displayid": 12139
   },
   "galleta_de_jengibre": {
     "calidad": 1,
@@ -4828,7 +5238,8 @@
   "garfa_sangrienta": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Hiere al objetivo y lo hace sangrar con 100 p. de daño durante 30 s.",
-    "display": 12795
+    "display": 12795,
+    "displayid": 23271
   },
   "gargantilla_de_korio_duro": {
     "display": 34358,
@@ -4853,12 +5264,14 @@
   "garra_negra_del_destructor": {
     "calidad": 4,
     "desc": "Equipar: +28 p. de poder de ataque.",
-    "display": 22194
+    "display": 22194,
+    "displayid": 27041
   },
   "garras_negras_del_destructor": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 234086
+    "display": 234086,
+    "displayid": 27041
   },
   "gema_aguamarina": {
     "calidad": 2,
@@ -4898,7 +5311,8 @@
   "girotiro_de_mitril": {
     "calidad": 2,
     "apilable": 200,
-    "display": 10513
+    "display": 10513,
+    "displayid": 2418
   },
   "glandula_de_llamas_pequena": {
     "calidad": 1,
@@ -7021,7 +7435,8 @@
   "gorro_de_control_mental_gnomico": {
     "calidad": 2,
     "desc": "Uso: Inicia un combate mental con un objetivo humanoide para intentar controlar su mente. Si todo sale bien, te harás con el control de su mente durante 20 s...",
-    "display": 10726
+    "display": 10726,
+    "displayid": 19667
   },
   "gran_festin_de_langostas": {
     "calidad": 2,
@@ -7031,15 +7446,18 @@
   },
   "gran_hacha_de_guerra": {
     "calidad": 2,
-    "display": 3489
+    "display": 3489,
+    "displayid": 8474
   },
   "gran_maza_de_cobre_pesada": {
     "calidad": 1,
-    "display": 6214
+    "display": 6214,
+    "displayid": 10642
   },
   "gran_maza_de_hierro_solido": {
     "calidad": 2,
-    "display": 3851
+    "display": 3851,
+    "displayid": 2775
   },
   "granada_de_hierro": {
     "calidad": 1,
@@ -7089,573 +7507,699 @@
   },
   "guanteletes_acecharenas": {
     "calidad": 3,
-    "display": 20477
+    "display": 20477,
+    "displayid": 26798
   },
   "guanteletes_acecharenas_2": {
     "calidad": 3,
-    "display": 20477
+    "display": 20477,
+    "displayid": 26798
   },
   "guanteletes_bastion": {
     "calidad": 4,
     "desc": "Equipar: Inmune a la desactivación.",
-    "display": 12639
+    "display": 12639,
+    "displayid": 22917
   },
   "guanteletes_cromaticos": {
     "calidad": 4,
     "desc": "Equipar: +44 p. de poder de ataque.",
-    "display": 19157
+    "display": 19157,
+    "displayid": 31680
   },
   "guanteletes_de_alma_de_sangre": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 19692
+    "display": 19692,
+    "displayid": 27901
   },
   "guanteletes_de_bastion_recios": {
     "calidad": 4,
     "desc": "Equipar: Inmune a la desactivación.",
-    "display": 227885
+    "display": 227885,
+    "displayid": 22917
   },
   "guanteletes_de_bronce_banados_en_plata": {
     "calidad": 2,
-    "display": 3483
+    "display": 3483,
+    "displayid": 4413
   },
   "guanteletes_de_cobre_con_gemas": {
     "calidad": 2,
-    "display": 3474
+    "display": 3474,
+    "displayid": 3518
   },
   "guanteletes_de_cuero_maligno": {
     "calidad": 2,
-    "display": 15083
+    "display": 15083,
+    "displayid": 2375
   },
   "guanteletes_de_cuero_runico": {
     "calidad": 2,
-    "display": 15091
+    "display": 15091,
+    "displayid": 25735
   },
   "guanteletes_de_cuero_tocados_por_el_vaci": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 211502
+    "display": 211502,
+    "displayid": 8614
   },
   "guanteletes_de_demosaurio": {
     "calidad": 3,
     "desc": "Equipar: +28 p. de poder de ataque.",
-    "display": 15063
+    "display": 15063,
+    "displayid": 9543
   },
   "guanteletes_de_dragontina": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 8347
+    "display": 8347,
+    "displayid": 12296
   },
   "guanteletes_de_dragontina_verde": {
     "calidad": 3,
-    "display": 20296
+    "display": 20296,
+    "displayid": 32762
   },
   "guanteletes_de_escamas_de_dragon_verde_v": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 31 p.",
-    "display": 227878
+    "display": 227878,
+    "displayid": 32762
   },
   "guanteletes_de_escamas_doradas": {
     "calidad": 2,
-    "display": 9366
+    "display": 9366,
+    "displayid": 18256
   },
   "guanteletes_de_escamas_doradas_2": {
     "calidad": 2,
-    "display": 9366
+    "display": 9366,
+    "displayid": 18256
   },
   "guanteletes_de_escamas_heladas": {
     "calidad": 4,
     "desc": "Equipar: +22 p. de poder de ataque.",
-    "display": 22666
+    "display": 22666,
+    "displayid": 35294
   },
   "guanteletes_de_escamas_heladas_2": {
     "calidad": 4,
     "desc": "Equipar: +22 p. de poder de ataque.",
-    "display": 22666
+    "display": 22666,
+    "displayid": 35294
   },
   "guanteletes_de_escorpido_pesados": {
     "calidad": 2,
-    "display": 15078
+    "display": 15078,
+    "displayid": 7731
   },
   "guanteletes_de_forjaz": {
     "calidad": 2,
     "desc": "Equipar: +12 p. de poder de ataque.",
-    "display": 6733
+    "display": 6733,
+    "displayid": 12948
   },
   "guanteletes_de_hierro_verdes": {
     "calidad": 2,
-    "display": 3485
+    "display": 3485,
+    "displayid": 9414
   },
   "guanteletes_de_mitril_pesado": {
     "calidad": 2,
-    "display": 7919
+    "display": 7919,
+    "displayid": 3983
   },
   "guanteletes_de_nucleo_demoniaco": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 227848
+    "display": 227848,
+    "displayid": 9543
   },
   "guanteletes_de_placas_igneas": {
     "calidad": 3,
     "desc": "Equipar: Añade 4 p. de daño de Fuego a tu ataque con arma.",
-    "display": 12631
+    "display": 12631,
+    "displayid": 19753
   },
   "guanteletes_de_placas_igneas_de_la_tecni": {
     "calidad": 3,
     "desc": "Equipar: Añade 4 p. de daño de Fuego a tu ataque con arma.",
-    "display": 227865
+    "display": 227865,
+    "displayid": 19753
   },
   "guanteletes_de_tempestad": {
     "calidad": 3,
     "desc": "Equipar: Añade 3 p. de daño de relámpago a tus ataques cuerpo a cuerpo.",
-    "display": 227870
+    "display": 227870,
+    "displayid": 22897
   },
   "guanteletes_de_tormenta": {
     "calidad": 3,
     "desc": "Equipar: Añade 3 p. de daño de relámpago a tus ataques cuerpo a cuerpo.",
-    "display": 12632
+    "display": 12632,
+    "displayid": 22897
   },
   "guanteletes_de_veraplata": {
     "calidad": 3,
-    "display": 7938
+    "display": 7938,
+    "displayid": 13172
   },
   "guanteletes_del_mar": {
     "calidad": 3,
     "desc": "Uso: Cura al que lanza el hechizo en 300 al 500 p. (30 Min Reutilización)",
-    "display": 8346
+    "display": 8346,
+    "displayid": 10513
   },
   "guanteletes_deliriohelado": {
     "calidad": 4,
     "desc": "Equipar: Defensa aumentada +5.",
-    "display": 22670
+    "display": 22670,
+    "displayid": 35277
   },
   "guanteletes_deliriohelado_2": {
     "calidad": 4,
     "desc": "Equipar: Defensa aumentada +5.",
-    "display": 22670
+    "display": 22670,
+    "displayid": 35277
   },
   "guanteletes_escupefuego": {
     "calidad": 3,
     "desc": "Equipar: Restaura 5 p. de maná cada 5 s.",
-    "display": 20480
+    "display": 20480,
+    "displayid": 17416
   },
   "guanteletes_escupefuego_2": {
     "calidad": 3,
     "desc": "Equipar: Restaura 5 p. de maná cada 5 s.",
-    "display": 20480
+    "display": 20480,
+    "displayid": 17416
   },
   "guanteletes_hierro_negro": {
     "calidad": 4,
-    "display": 19164
+    "display": 19164,
+    "displayid": 31683
   },
   "guanteletes_runaoscura": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la probabilidad de bloquear ataques con un escudo en un 2%.",
-    "display": 20549
+    "display": 20549,
+    "displayid": 32944
   },
   "guanteletes_runicos_de_cobre": {
     "calidad": 1,
-    "display": 3472
+    "display": 3472,
+    "displayid": 25850
   },
   "guantes_barbaricos": {
     "calidad": 2,
-    "display": 4254
+    "display": 4254,
+    "displayid": 9543
   },
   "guantes_barbaricos_de_hierro": {
     "calidad": 2,
-    "display": 7917
+    "display": 7917,
+    "displayid": 11537
   },
   "guantes_bengala_del_nucleo": {
     "calidad": 4,
-    "display": 16979
+    "display": 16979,
+    "displayid": 28754
   },
   "guantes_de_cria_roja": {
     "calidad": 2,
     "desc": "Equipar: Da un a 5% de probabilidad de alcanzar al enemigo con 15 al 25 p. de daño de Fuego. (Probabilidad de que accione: 5%)",
-    "display": 7284
+    "display": 7284,
+    "displayid": 3992
   },
   "guantes_de_cuero_de_montanero": {
     "calidad": 2,
-    "display": 4247
+    "display": 4247,
+    "displayid": 2362
   },
   "guantes_de_cuero_estampado": {
     "calidad": 1,
-    "display": 4239
+    "display": 4239,
+    "displayid": 9503
   },
   "guantes_de_cuero_fauces_de_madera": {
     "calidad": 3,
-    "display": 19049
+    "display": 19049,
+    "displayid": 31541
   },
   "guantes_de_cuero_fortalecido": {
     "calidad": 3,
-    "display": 4253
+    "display": 4253,
+    "displayid": 2361
   },
   "guantes_de_cuero_livianos": {
     "calidad": 2,
-    "display": 7285
+    "display": 7285,
+    "displayid": 4685
   },
   "guantes_de_cuero_oscuro": {
     "calidad": 2,
     "desc": "Equipar: Aumenta habilidad de forzar cerraduras ligeramente.",
-    "display": 4248
+    "display": 4248,
+    "displayid": 9526
   },
   "guantes_de_cuero_refinado": {
     "calidad": 2,
-    "display": 2312
+    "display": 2312,
+    "displayid": 5406
   },
   "guantes_de_cuero_tocados_por_el_vacio": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 211423
+    "display": 211423,
+    "displayid": 8614
   },
   "guantes_de_embozo_de_tormenta": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 21278
+    "display": 21278,
+    "displayid": 3839
   },
   "guantes_de_escamas_de_mitril": {
     "calidad": 2,
-    "display": 7925
+    "display": 7925,
+    "displayid": 2951
   },
   "guantes_de_escamas_de_tortuga": {
     "calidad": 2,
-    "display": 8187
+    "display": 8187,
+    "displayid": 16488
   },
   "guantes_de_escamas_de_tortuga_2": {
     "calidad": 2,
-    "display": 8187
+    "display": 8187,
+    "displayid": 16488
   },
   "guantes_de_escamas_descarriadas": {
     "calidad": 2,
-    "display": 6467
+    "display": 6467,
+    "displayid": 11952
   },
   "guantes_de_escorpido_resistentes": {
     "calidad": 2,
-    "display": 8204
+    "display": 8204,
+    "displayid": 11833
   },
   "guantes_de_fe_verdadera": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 15 p.",
-    "display": 7049
+    "display": 7049,
+    "displayid": 11097
   },
   "guantes_de_flechero": {
     "calidad": 2,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1% con los misiles.",
-    "display": 7348
+    "display": 7348,
+    "displayid": 2361
   },
   "guantes_de_guardian": {
     "calidad": 1,
-    "display": 5966
+    "display": 5966,
+    "displayid": 8608
   },
   "guantes_de_herborista": {
     "calidad": 2,
     "desc": "Equipar: Botánica +5.",
-    "display": 7349
+    "display": 7349,
+    "displayid": 7816
   },
   "guantes_de_infiltrado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 238276
+    "display": 238276,
+    "displayid": 698078
   },
   "guantes_de_lana_gruesos": {
     "calidad": 2,
-    "display": 4310
+    "display": 4310,
+    "displayid": 11036
   },
   "guantes_de_lino_gruesos": {
     "calidad": 1,
-    "display": 4307
+    "display": 4307,
+    "displayid": 2202
   },
   "guantes_de_maestria_en_hechizos": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 2% con los hechizos.",
-    "display": 14146
+    "display": 14146,
+    "displayid": 3839
   },
   "guantes_de_meditacion": {
     "calidad": 2,
-    "display": 4318
+    "display": 4318,
+    "displayid": 4620
   },
   "guantes_de_mitril_ornamentado": {
     "calidad": 2,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 7927
+    "display": 7927,
+    "displayid": 16105
   },
   "guantes_de_pano_brillante": {
     "calidad": 2,
-    "display": 14101
+    "display": 14101,
+    "displayid": 3218
   },
   "guantes_de_pano_cenizo": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 17 p.",
-    "display": 14043
+    "display": 14043,
+    "displayid": 7523
   },
   "guantes_de_pano_runico": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p.",
-    "display": 13863
+    "display": 13863,
+    "displayid": 25231
   },
   "guantes_de_pano_tormentoso": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 16 p.",
-    "display": 10011
+    "display": 10011,
+    "displayid": 11303
   },
   "guantes_de_piel_de_murcielago_primigenio": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo en un 2%.",
-    "display": 19686
+    "display": 19686,
+    "displayid": 32159
   },
   "guantes_de_ratero": {
     "calidad": 2,
-    "display": 7358
+    "display": 7358,
+    "displayid": 2057
   },
   "guantes_de_sable_de_hielo": {
     "calidad": 2,
-    "display": 15070
+    "display": 15070,
+    "displayid": 19017
   },
   "guantes_de_seda_azur": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 10 p.",
-    "display": 4319
+    "display": 4319,
+    "displayid": 11226
   },
   "guantes_de_seda_carmesies": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 14 p.",
-    "display": 7064
+    "display": 7064,
+    "displayid": 11482
   },
   "guantes_de_tejido_de_escarcha": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 21 p.",
-    "display": 13870
+    "display": 13870,
+    "displayid": 11303
   },
   "guantes_de_tejido_de_sombra": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 17 p.",
-    "display": 10023
+    "display": 10023,
+    "displayid": 11126
   },
   "guantes_de_tejido_fantasmal": {
     "calidad": 2,
     "desc": "Equipar: Restaura 6 p. de maná cada 5 s.",
-    "display": 14142
+    "display": 14142,
+    "displayid": 11097
   },
   "guantes_de_tejido_magico_negros": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 15 p.",
-    "display": 10003
+    "display": 10003,
+    "displayid": 8307
   },
   "guantes_de_tejido_magico_rojos": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 11 p.",
-    "display": 10018
+    "display": 10018,
+    "displayid": 19095
   },
   "guantes_de_tejido_onirico": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p.",
-    "display": 10019
+    "display": 10019,
+    "displayid": 9534
   },
   "guantes_de_tela_lunar": {
     "calidad": 3,
-    "display": 18409
+    "display": 18409,
+    "displayid": 25045
   },
   "guantes_de_tela_vil": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 33 p.",
-    "display": 18407
+    "display": 18407,
+    "displayid": 7523
   },
   "guantes_del_alba": {
     "calidad": 3,
-    "display": 19057
+    "display": 19057,
+    "displayid": 31563
   },
   "guantes_del_padre_invierno": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 18 p.",
-    "display": 17721
+    "display": 17721,
+    "displayid": 3515
   },
   "guantes_fenix": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 9 p.",
-    "display": 4331
+    "display": 4331,
+    "displayid": 8876
   },
   "guantes_glaciales": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 15 p.",
-    "display": 22654
+    "display": 22654,
+    "displayid": 35286
   },
   "guantes_glaciales_2": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 15 p.",
-    "display": 22654
+    "display": 22654,
+    "displayid": 35286
   },
   "guantes_helados": {
     "calidad": 4,
     "desc": "Equipar: Aumenta hasta 48 p. la sanación que aplicas y hasta 16 p. el daño que infliges con todos los hechizos y efectos mágicos.",
-    "display": 236705
+    "display": 236705,
+    "displayid": 35286
   },
   "guantes_inferno": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 33 p.",
-    "display": 18408
+    "display": 18408,
+    "displayid": 3828
   },
   "guantes_parraferrea": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +10.",
-    "display": 22763
+    "display": 22763,
+    "displayid": 35217
   },
   "guantes_parraferrea_2": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +10.",
-    "display": 22763
+    "display": 22763,
+    "displayid": 35217
   },
   "guantes_polares": {
     "calidad": 4,
-    "display": 22662
+    "display": 22662,
+    "displayid": 35303
   },
   "guantes_polares_2": {
     "calidad": 4,
-    "display": 22662
+    "display": 22662,
+    "displayid": 35303
   },
   "guantes_quimericos": {
     "calidad": 2,
-    "display": 15074
+    "display": 15074,
+    "displayid": 11175
   },
   "guantes_radiantes": {
     "calidad": 2,
-    "display": 12418
+    "display": 12418,
+    "displayid": 23697
   },
   "guantes_sombradermos": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 18238
+    "display": 18238,
+    "displayid": 7731
   },
   "guantes_terraneos_gruesos": {
     "calidad": 2,
     "desc": "Equipar: +16 p. de poder de ataque.",
-    "display": 7359
+    "display": 7359,
+    "displayid": 10945
   },
   "guardahombros_de_anillas_cacofonicas": {
     "calidad": 4,
     "desc": "Equipar: Existe la posibilidad de que los ataques cuerpo a cuerpo aumenten un 5% tu velocidad de ataque y 50 p. tu poder de ataque durante 10 s.",
-    "display": 220743
+    "display": 220743,
+    "displayid": 680032
   },
   "guardahombros_del_turbador": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 220740
+    "display": 220740,
+    "displayid": 680040
   },
   "guardamunecas_de_cazador_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238283
+    "display": 238283,
+    "displayid": 698087
   },
   "guardanegra": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la probabilidad de parar un ataque en un 1%.",
-    "display": 19168
+    "display": 19168,
+    "displayid": 31692
   },
   "guardarrenes_de_soldado_escarlata": {
     "calidad": 3,
-    "display": 238293
+    "display": 238293,
+    "displayid": 698097
   },
   "guardia_de_escarcha": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: El movimiento del objetivo se ralentiza en un 30% y aumenta el tiempo entre los ataques en un 25% durante 5 s.",
-    "display": 12797
+    "display": 12797,
+    "displayid": 23274
   },
   "guardia_de_escarcha_endurecida": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: El movimiento del objetivo se ralentiza en un 30% y aumenta el tiempo entre los ataques en un 25% durante 5 s.",
-    "display": 227887
+    "display": 227887,
+    "displayid": 23274
   },
   "guerrera_de_cria_negra": {
     "calidad": 2,
-    "display": 20575
+    "display": 20575,
+    "displayid": 2019
   },
   "guerrera_de_cuero_oscuro": {
     "calidad": 2,
-    "display": 2317
+    "display": 2317,
+    "displayid": 9521
   },
   "guerrera_de_cuero_refinado": {
     "calidad": 2,
-    "display": 4243
+    "display": 4243,
+    "displayid": 9511
   },
   "guerrera_de_pano_runico": {
     "calidad": 2,
-    "display": 13857
+    "display": 13857,
+    "displayid": 25207
   },
   "guerrera_de_placas_de_obsidiana": {
     "calidad": 4,
     "desc": "Equipar: +76 p. de poder de ataque.",
-    "display": 22191
+    "display": 22191,
+    "displayid": 23605
   },
   "guerrera_de_sable_de_hielo": {
     "calidad": 2,
-    "display": 15068
+    "display": 15068,
+    "displayid": 6020
   },
   "guerrera_de_tejido_de_escarcha": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 24 p.",
-    "display": 13869
+    "display": 13869,
+    "displayid": 24610
   },
   "guerrera_nochefugaz": {
     "calidad": 2,
-    "display": 8175
+    "display": 8175,
+    "displayid": 8435
   },
   "guerrera_polar": {
     "calidad": 4,
-    "display": 22661
+    "display": 22661,
+    "displayid": 35290
   },
   "guerrera_polar_2": {
     "calidad": 4,
-    "display": 22661
+    "display": 22661,
+    "displayid": 35290
   },
   "guia_de_tragafuegos": {
     "display": 43660,
     "calidad": 3,
-    "desc": "Equipar: Mejora el índice de golpe crítico en 9 p."
+    "desc": "Equipar: Mejora el índice de golpe crítico en 9 p.",
+    "displayid": 55264
   },
   "guia_real_de_rutas_de_escape": {
     "display": 43657,
     "calidad": 3,
-    "desc": "Equipar: Mejora el índice de celeridad en 11 p."
+    "desc": "Equipar: Mejora el índice de celeridad en 11 p.",
+    "displayid": 55787
   },
   "hacha_azul_relumbrante": {
     "calidad": 2,
-    "display": 7942
+    "display": 7942,
+    "displayid": 5639
   },
   "hacha_curva_de_las_sombras": {
     "calidad": 2,
-    "display": 3856
+    "display": 3856,
+    "displayid": 8502
   },
   "hacha_de_batalla_de_bronce": {
     "calidad": 1,
-    "display": 7958
+    "display": 7958,
+    "displayid": 19272
   },
   "hacha_de_batalla_de_cobre": {
     "calidad": 2,
-    "display": 3488
+    "display": 3488,
+    "displayid": 8516
   },
   "hacha_de_batalla_de_torio_enorme": {
     "calidad": 2,
     "desc": "Equipar: Hachas de dos manos aumentadas +10.",
-    "display": 12775
+    "display": 12775,
+    "displayid": 23434
   },
   "hacha_de_bronce": {
     "calidad": 1,
-    "display": 2849
+    "display": 2849,
+    "displayid": 19929
   },
   "hacha_de_cobre": {
     "calidad": 1,
-    "display": 2845
+    "display": 2845,
+    "displayid": 8463
   },
   "hacha_de_hierro_macizo": {
     "calidad": 2,
-    "display": 3855
+    "display": 3855,
+    "displayid": 782
   },
   "hacha_de_mano_de_torio_ornamentada": {
     "calidad": 2,
-    "display": 12773
+    "display": 12773,
+    "displayid": 23234
   },
   "hacha_de_mitril_pesado": {
     "calidad": 2,
-    "display": 7941
+    "display": 7941,
+    "displayid": 16126
   },
   "hebilla_de_hierro": {
     "calidad": 1,
@@ -7705,36 +8249,43 @@
   "hoja_dorada_abrasadora": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 10 p.",
-    "display": 12260
+    "display": 12260,
+    "displayid": 22258
   },
   "hoja_fantasma": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Reduce la armadura del objetivo en 100 p. durante 20 s. Mientras dura su efecto, el objetivo no puede utilizar el sigilo ni hacerse invisible.",
-    "display": 7961
+    "display": 7961,
+    "displayid": 25053
   },
   "hoja_sabia": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 20 p.",
-    "display": 22383
+    "display": 22383,
+    "displayid": 36970
   },
   "hoja_sabia_de_obsidiana": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 60 p.",
-    "display": 233798
+    "display": 233798,
+    "displayid": 695007
   },
   "hoja_sabia_del_archimago": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 41 p.",
-    "display": 227850
+    "display": 227850,
+    "displayid": 36970
   },
   "hoja_serpentina_de_jade": {
     "calidad": 2,
-    "display": 3850
+    "display": 3850,
+    "displayid": 20215
   },
   "hoja_tigre_de_escarcha": {
     "calidad": 2,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 3854
+    "display": 3854,
+    "displayid": 20252
   },
   "hojasueno": {
     "calidad": 1,
@@ -7744,37 +8295,44 @@
   "hombreras_de_filozarza": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate inflige 80 p. de daño de Naturaleza al atacante. Inflige el doble de amenaza respecto al daño infligido.",
-    "display": 233804
+    "display": 233804,
+    "displayid": 694065
   },
   "hombreras_de_infiltrado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238273
+    "display": 238273,
+    "displayid": 698083
   },
   "hombreras_de_obsesion": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 29 p.",
-    "display": 220748
+    "display": 220748,
+    "displayid": 680030
   },
   "hombreras_de_terror": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 220738
+    "display": 220738,
+    "displayid": 680041
   },
   "hombreras_de_zarzapua": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate inflige 80 p. de daño de Naturaleza al atacante. Inflige el doble de amenaza respecto al daño infligido.",
-    "display": 233793
+    "display": 233793,
+    "displayid": 694057
   },
   "hombreras_del_trastornado": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 13 p.",
-    "display": 220751
+    "display": 220751,
+    "displayid": 680019
   },
   "hombreras_nemorosas": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p.",
-    "display": 22758
+    "display": 22758,
+    "displayid": 35209
   },
   "huevo_a_las_finas_hierbas": {
     "calidad": 1,
@@ -7907,161 +8465,197 @@
   "jaula_cerebral_de_veraplata_reflectante": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
-    "display": 215167
+    "display": 215167,
+    "displayid": 23166
   },
   "jaula_de_cabeza_de_zarzapua": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate inflige 100 p. de daño de Naturaleza al atacante. Inflige el doble de amenaza respecto al daño infligido.",
-    "display": 233795
+    "display": 233795,
+    "displayid": 694059
   },
   "jubon_de_anillas_de_cobre": {
     "calidad": 2,
-    "display": 3471
+    "display": 3471,
+    "displayid": 13090
   },
   "jubon_de_cobre_ferreo": {
     "calidad": 1,
-    "display": 10421
+    "display": 10421,
+    "displayid": 977
   },
   "jubon_de_cuero_cosido_a_mano": {
     "calidad": 1,
-    "display": 5957
+    "display": 5957,
+    "displayid": 2104
   },
   "jubon_de_cuero_de_montanero": {
     "calidad": 2,
-    "display": 4244
+    "display": 4244,
+    "displayid": 1975
   },
   "jubon_de_cuero_estampado": {
     "calidad": 2,
-    "display": 2300
+    "display": 2300,
+    "displayid": 9502
   },
   "jubon_de_cuero_salvaje": {
     "calidad": 2,
-    "display": 8211
+    "display": 8211,
+    "displayid": 9563
   },
   "jubon_de_escorpido_pesado": {
     "calidad": 2,
-    "display": 15076
+    "display": 15076,
+    "displayid": 9652
   },
   "jubon_de_infiltrado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 238274
+    "display": 238274,
+    "displayid": 698077
   },
   "jubon_de_lana_verde": {
     "calidad": 1,
-    "display": 2582
+    "display": 2582,
+    "displayid": 10849
   },
   "jubon_de_lino_azul": {
     "calidad": 2,
-    "display": 6240
+    "display": 6240,
+    "displayid": 10843
   },
   "jubon_de_lino_barbarico": {
     "calidad": 2,
-    "display": 2578
+    "display": 2578,
+    "displayid": 7811
   },
   "jubon_de_lino_marron": {
     "calidad": 1,
-    "display": 2568
+    "display": 2568,
+    "displayid": 10708
   },
   "jubon_de_lino_rojo": {
     "calidad": 2,
-    "display": 6239
+    "display": 6239,
+    "displayid": 10706
   },
   "jubon_de_pano_cenizo": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 24 p.",
-    "display": 14042
+    "display": 14042,
+    "displayid": 15986
   },
   "jubon_de_pano_tormentoso": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 29 p.",
-    "display": 10020
+    "display": 10020,
+    "displayid": 8161
   },
   "jubon_de_seda_azur": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 7 p.",
-    "display": 4324
+    "display": 4324,
+    "displayid": 17128
   },
   "jubon_de_seda_carmesi": {
     "calidad": 1,
-    "display": 7058
+    "display": 7058,
+    "displayid": 13671
   },
   "jubon_de_tejido_fantasmal": {
     "calidad": 2,
     "desc": "Equipar: Restaura 8 p. de maná cada 5 s.",
-    "display": 14141
+    "display": 14141,
+    "displayid": 11906
   },
   "jubon_de_tejido_magico_negro": {
     "calidad": 2,
-    "display": 9998
+    "display": 9998,
+    "displayid": 24352
   },
   "jubon_de_tejido_magico_negro_2": {
     "calidad": 2,
-    "display": 9998
+    "display": 9998,
+    "displayid": 24352
   },
   "jubon_de_tejido_magico_rojo": {
     "calidad": 2,
-    "display": 10007
+    "display": 10007,
+    "displayid": 19093
   },
   "jubon_de_tejido_onirico": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p.",
-    "display": 10021
+    "display": 10021,
+    "displayid": 9575
   },
   "jubon_de_tela_lunar": {
     "calidad": 3,
-    "display": 14138
+    "display": 14138,
+    "displayid": 10403
   },
   "jubon_de_tela_lunar_incandescente": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 33 p.",
-    "display": 227860
+    "display": 227860,
+    "displayid": 10403
   },
   "jubon_glacial": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
-    "display": 22652
+    "display": 22652,
+    "displayid": 35302
   },
   "jubon_glacial_2": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
-    "display": 22652
+    "display": 22652,
+    "displayid": 35302
   },
   "jubon_helado": {
     "calidad": 4,
     "desc": "Equipar: Aumenta hasta 70 p. la sanación que aplicas y hasta 24 p. el daño que infliges con todos los hechizos y efectos mágicos.",
-    "display": 236706
+    "display": 236706,
+    "displayid": 35302
   },
   "jubon_nemoroso": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p.",
-    "display": 22756
+    "display": 22756,
+    "displayid": 8388
   },
   "jubon_nemoroso_2": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p.",
-    "display": 22756
+    "display": 22756,
+    "displayid": 8388
   },
   "jubon_quimerico": {
     "calidad": 2,
-    "display": 15075
+    "display": 15075,
+    "displayid": 5477
   },
   "jubon_resplandor_lunar": {
     "calidad": 2,
-    "display": 6709
+    "display": 6709,
+    "displayid": 11487
   },
   "jubon_terraneo": {
     "calidad": 2,
-    "display": 7051
+    "display": 7051,
+    "displayid": 2471
   },
   "jubon_terraneo_2": {
     "calidad": 2,
-    "display": 7051
+    "display": 7051,
+    "displayid": 2471
   },
   "jubon_vid_de_sangre": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo con hechizos en un 2%.",
-    "display": 19682
+    "display": 19682,
+    "displayid": 11481
   },
   "juego_de_segador_de_la_cosecha_compacto": {
     "calidad": 1,
@@ -8121,7 +8715,8 @@
   "lanza_negra": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Aumenta la probabilidad de conseguir un crítico de los miembros del grupo en un 4%. Dura 20 s.",
-    "display": 12802
+    "display": 12802,
+    "displayid": 23283
   },
   "lanzador_de_fuegos_artificiales": {
     "calidad": 1,
@@ -8151,200 +8746,245 @@
   },
   "lente_verde": {
     "calidad": 3,
-    "display": 10504
+    "display": 10504,
+    "displayid": 16098
   },
   "lente_vid_de_sangre": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 2%.",
-    "display": 19998
+    "display": 19998,
+    "displayid": 17725
   },
   "leotardos_almanegra": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo en un 2%.",
-    "display": 19694
+    "display": 19694,
+    "displayid": 25550
   },
   "leotardos_barbaricos": {
     "calidad": 2,
-    "display": 5963
+    "display": 5963,
+    "displayid": 8160
   },
   "leotardos_bengala_del_nucleo": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 43 p.",
-    "display": 19165
+    "display": 19165,
+    "displayid": 31685
   },
   "leotardos_de_augur_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238270
+    "display": 238270,
+    "displayid": 700406
   },
   "leotardos_de_bronce_banados_en_plata": {
     "calidad": 2,
-    "display": 10423
+    "display": 10423,
+    "displayid": 4346
   },
   "leotardos_de_bronce_ferreos": {
     "calidad": 2,
-    "display": 2865
+    "display": 2865,
+    "displayid": 4333
   },
   "leotardos_de_cuero_oscurecido": {
     "calidad": 2,
-    "display": 7373
+    "display": 7373,
+    "displayid": 8073
   },
   "leotardos_de_cuero_salvaje": {
     "calidad": 2,
-    "display": 8212
+    "display": 8212,
+    "displayid": 4388
   },
   "leotardos_de_demosaurio": {
     "calidad": 3,
     "desc": "Equipar: +46 p. de poder de ataque.",
-    "display": 15062
+    "display": 15062,
+    "displayid": 8160
   },
   "leotardos_de_dragontina_azul": {
     "calidad": 3,
-    "display": 20295
+    "display": 20295,
+    "displayid": 28447
   },
   "leotardos_de_dragontina_negra": {
     "calidad": 3,
     "desc": "Equipar: +54 p. de poder de ataque.",
-    "display": 15052
+    "display": 15052,
+    "displayid": 26918
   },
   "leotardos_de_dragontina_verde": {
     "calidad": 3,
-    "display": 15046
+    "display": 15046,
+    "displayid": 12840
   },
   "leotardos_de_escamas_de_dragon_azul_puli": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 26 p.",
-    "display": 227874
+    "display": 227874,
+    "displayid": 28447
   },
   "leotardos_de_escamas_de_dragon_negro_end": {
     "calidad": 3,
     "desc": "Equipar: +56 p. de poder de ataque.",
-    "display": 227852
+    "display": 227852,
+    "displayid": 26918
   },
   "leotardos_de_escamas_de_dragon_verde_viv": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 40 p.",
-    "display": 227877
+    "display": 227877,
+    "displayid": 12840
   },
   "leotardos_de_escamas_de_tortuga": {
     "calidad": 2,
-    "display": 8185
+    "display": 8185,
+    "displayid": 12169
   },
   "leotardos_de_escamas_doradas": {
     "calidad": 2,
-    "display": 3843
+    "display": 3843,
+    "displayid": 4744
   },
   "leotardos_de_escamas_doradas_2": {
     "calidad": 2,
-    "display": 3843
+    "display": 3843,
+    "displayid": 4744
   },
   "leotardos_de_escorpido_pesados": {
     "calidad": 2,
-    "display": 15079
+    "display": 15079,
+    "displayid": 11280
   },
   "leotardos_de_escorpido_resistentes": {
     "calidad": 2,
-    "display": 8206
+    "display": 8206,
+    "displayid": 7765
   },
   "leotardos_de_guerra_orcos": {
     "calidad": 2,
-    "display": 7929
+    "display": 7929,
+    "displayid": 14787
   },
   "leotardos_de_hierro_verdes": {
     "calidad": 2,
-    "display": 3842
+    "display": 3842,
+    "displayid": 9415
   },
   "leotardos_de_nucleo_demoniaco": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 227847
+    "display": 227847,
+    "displayid": 8160
   },
   "leotardos_de_placas_imperiales": {
     "calidad": 2,
-    "display": 12429
+    "display": 12429,
+    "displayid": 24506
   },
   "leotardos_de_placas_runicas": {
     "calidad": 2,
-    "display": 12614
+    "display": 12614,
+    "displayid": 23485
   },
   "leotardos_de_sable_de_hielo": {
     "calidad": 2,
-    "display": 15069
+    "display": 15069,
+    "displayid": 5822
   },
   "leotardos_de_tejido_magico_negros": {
     "calidad": 2,
-    "display": 9999
+    "display": 9999,
+    "displayid": 20405
   },
   "leotardos_de_tejido_magico_negros_2": {
     "calidad": 2,
-    "display": 9999
+    "display": 9999,
+    "displayid": 20405
   },
   "leotardos_de_tejido_zahori": {
     "calidad": 2,
-    "display": 14132
+    "display": 14132,
+    "displayid": 8420
   },
   "leotardos_de_tela_lunar": {
     "calidad": 3,
-    "display": 14137
+    "display": 14137,
+    "displayid": 2318
   },
   "leotardos_de_tela_lunar_incandescente": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 46 p.",
-    "display": 227864
+    "display": 227864,
+    "displayid": 2318
   },
   "leotardos_de_torio": {
     "calidad": 2,
-    "display": 12414
+    "display": 12414,
+    "displayid": 22545
   },
   "leotardos_de_torio_encantado": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +8.",
-    "display": 12619
+    "display": 12619,
+    "displayid": 22882
   },
   "leotardos_hierro_negro": {
     "calidad": 4,
-    "display": 17013
+    "display": 17013,
+    "displayid": 28843
   },
   "leotardos_quimericos": {
     "calidad": 2,
-    "display": 15072
+    "display": 15072,
+    "displayid": 5479
   },
   "leotardos_radiantes": {
     "calidad": 2,
-    "display": 12420
+    "display": 12420,
+    "displayid": 25745
   },
   "leotardos_runicos_estigios": {
     "calidad": 3,
     "desc": "Equipar: Restaura 6 p. de maná cada 5 s.",
-    "display": 20538
+    "display": 20538,
+    "displayid": 20405
   },
   "leotardos_titanicos": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo en un 2%.",
-    "display": 22385
+    "display": 22385,
+    "displayid": 34890
   },
   "leotardos_vid_de_sangre": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo con hechizos en un 1%.",
-    "display": 19683
+    "display": 19683,
+    "displayid": 7939
   },
   "leotardos_vivos": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 26 p.",
-    "display": 15060
+    "display": 15060,
+    "displayid": 8345
   },
   "leotardos_volcanicos": {
     "calidad": 2,
-    "display": 15054
+    "display": 15054,
+    "displayid": 5488
   },
   "leotardos_volcanicos_magistrales": {
     "calidad": 3,
-    "display": 227867
+    "display": 227867,
+    "displayid": 5488
   },
   "libro_de_las_estrellas": {
     "display": 43661,
     "calidad": 3,
-    "desc": "Equipar: Mejora el índice de golpe en 14 p."
+    "desc": "Equipar: Mejora el índice de golpe en 14 p.",
+    "displayid": 55980
   },
   "libro_de_plegarias_encantado": {
     "calidad": 4,
@@ -8354,12 +8994,14 @@
   "libro_de_supervivencia": {
     "display": 43655,
     "calidad": 3,
-    "desc": "Equipar: Restaura 7 p. de salud cada 5 s."
+    "desc": "Equipar: Restaura 7 p. de salud cada 5 s.",
+    "displayid": 54807
   },
   "libro_de_trucos_ingeniosos": {
     "display": 43667,
     "calidad": 3,
-    "desc": "Equipar: Mejora el índice de golpe crítico en 7 p."
+    "desc": "Equipar: Mejora el índice de golpe crítico en 7 p.",
+    "displayid": 55265
   },
   "licor_de_fiestas": {
     "calidad": 1,
@@ -8394,7 +9036,8 @@
   },
   "llave_de_tuerca_arcoluz": {
     "calidad": 1,
-    "display": 6219
+    "display": 6219,
+    "displayid": 7494
   },
   "llave_esqueleto_de_arcanita": {
     "calidad": 2,
@@ -8428,15 +9071,18 @@
   },
   "loriga_de_bronce_ferrea": {
     "calidad": 1,
-    "display": 2866
+    "display": 2866,
+    "displayid": 4407
   },
   "loriga_de_escamas_doradas": {
     "calidad": 2,
-    "display": 3845
+    "display": 3845,
+    "displayid": 9425
   },
   "loriga_de_escamas_doradas_2": {
     "calidad": 2,
-    "display": 3845
+    "display": 3845,
+    "displayid": 9425
   },
   "loto_cardeno": {
     "calidad": 1,
@@ -8508,17 +9154,20 @@
   "malla_espina_salvaje": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Naturaleza y los efectos hasta en 34 p.",
-    "display": 12624
+    "display": 12624,
+    "displayid": 4474
   },
   "malla_invencible": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate hay un 5% de probabilidad de volverte invulnerable al daño cuerpo a cuerpo en durante 3 s. Este efecto solo se produce cada 30 segundos.",
-    "display": 227876
+    "display": 227876,
+    "displayid": 16726
   },
   "malla_invulnerable": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate hay un 5% de probabilidad de volverte invulnerable al daño cuerpo a cuerpo en durante 3 s. Este efecto solo se produce cada 30 segundos.",
-    "display": 12641
+    "display": 12641,
+    "displayid": 16726
   },
   "malta_rapsodica": {
     "calidad": 1,
@@ -8538,7 +9187,8 @@
   },
   "mandiletes_de_soldado_escarlata": {
     "calidad": 3,
-    "display": 238292
+    "display": 238292,
+    "displayid": 700414
   },
   "mando_de_tonque_de_vapor": {
     "calidad": 1,
@@ -8551,74 +9201,89 @@
   },
   "mandoble_de_cobre": {
     "calidad": 1,
-    "display": 7955
+    "display": 7955,
+    "displayid": 20071
   },
   "mano_de_ebano": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Lanza un golpe de Sombras al enemigo causándole 125 al 275 p. de daño de las Sombras.",
-    "display": 19170
+    "display": 19170,
+    "displayid": 31822
   },
   "manoplas_de_cazador_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 238284
+    "display": 238284,
+    "displayid": 698088
   },
   "manos_de_oscuridad": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 9 p.",
-    "display": 7047
+    "display": 7047,
+    "displayid": 12615
   },
   "manteo_de_lana": {
     "calidad": 1,
-    "display": 2584
+    "display": 2584,
+    "displayid": 23144
   },
   "manteo_de_lino_reforzado": {
     "calidad": 1,
-    "display": 2580
+    "display": 2580,
+    "displayid": 23105
   },
   "manteo_de_seda_qiraji": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 233958
+    "display": 233958,
+    "displayid": 694906
   },
   "manto_bengala_del_nucleo": {
     "calidad": 4,
-    "display": 16980
+    "display": 16980,
+    "displayid": 28756
   },
   "manto_de_anillas_gemebundas": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 31 p.",
-    "display": 220744
+    "display": 220744,
+    "displayid": 680036
   },
   "manto_de_augur_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238265
+    "display": 238265,
+    "displayid": 698066
   },
   "manto_de_invocador": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p.",
-    "display": 215365
+    "display": 215365,
+    "displayid": 4904
   },
   "manto_de_la_segunda_guerra": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño causado por los hechizos Sagrados y los efectos hasta en 11 p.",
-    "display": 210773
+    "display": 210773,
+    "displayid": 5384
   },
   "manto_de_locura": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 20 p.",
-    "display": 220749
+    "display": 220749,
+    "displayid": 680021
   },
   "manto_de_los_fauces_de_madera": {
     "calidad": 3,
     "desc": "Equipar: Restaura 6 p. de maná cada 5 s.",
-    "display": 19050
+    "display": 19050,
+    "displayid": 36269
   },
   "manto_de_paranoia": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 220747
+    "display": 220747,
+    "displayid": 680029
   },
   "manto_de_pesadillas_inerte": {
     "calidad": 4,
@@ -8627,17 +9292,20 @@
   "manto_del_alba_dorado": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 19058
+    "display": 19058,
+    "displayid": 31566
   },
   "manton_de_seda_qiraji": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 233960
+    "display": 233960,
+    "displayid": 694908
   },
   "manual_de_nubes": {
     "display": 43664,
     "calidad": 3,
-    "desc": "Equipar: Aumenta el poder con hechizos 12 p."
+    "desc": "Equipar: Aumenta el poder con hechizos 12 p.",
+    "displayid": 55265
   },
   "manzana_roja_lustrosa": {
     "calidad": 1,
@@ -8653,105 +9321,128 @@
   "martillo_de_batalla_encantado": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la probabilidad de parar un ataque en un 1%.",
-    "display": 12776
+    "display": 12776,
+    "displayid": 2466
   },
   "martillo_de_batalla_encantado_con_perici": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +13.",
-    "display": 227880
+    "display": 227880,
+    "displayid": 2466
   },
   "martillo_de_guerra_de_bronce": {
     "calidad": 1,
-    "display": 7956
+    "display": 7956,
+    "displayid": 16146
   },
   "martillo_de_hierro_poderoso": {
     "calidad": 2,
-    "display": 3492
+    "display": 3492,
+    "displayid": 3780
   },
   "martillo_de_los_titanes": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Aturde al objetivo durante 3 s.",
-    "display": 12796
+    "display": 12796,
+    "displayid": 25047
   },
   "martillo_de_los_titanes_refinado": {
     "calidad": 4,
     "desc": "Equipar: +172 p. de poder de ataque solo en las formas de oso, oso temible y felina.",
-    "display": 228230
+    "display": 228230,
+    "displayid": 685160
   },
   "martillo_de_sulfuron": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Lanza una bola abrasadora que causa 83 al 101 p. de daño de Fuego y 16 p. de daño extra durante 8 s.",
-    "display": 17193
+    "display": 17193,
+    "displayid": 29699
   },
   "martillo_de_sulfuron_2": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Lanza una bola abrasadora que causa 83 al 101 p. de daño de Fuego y 16 p. de daño extra durante 8 s.",
-    "display": 17193
+    "display": 17193,
+    "displayid": 29699
   },
   "martillo_de_torio_taraceado": {
     "calidad": 2,
-    "display": 12772
+    "display": 12772,
+    "displayid": 15468
   },
   "martillo_de_tormenta_de_obsidiana": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Golpea a un máximo de 3 objetivos, que reciben 105 al 145 p. de daño de Naturaleza.",
-    "display": 233797
+    "display": 233797,
+    "displayid": 694062
   },
   "martillo_de_tormenta_magistral": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Carga contra un máximo de tres objetivos, causando 105 al 145 p. de daño de Naturaleza.",
-    "display": 12794
+    "display": 12794,
+    "displayid": 1022
   },
   "martillo_de_tormenta_magistral_de_jinete": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Golpea a un máximo de 3 objetivos, que reciben 105 al 145 p. de daño de Naturaleza.",
-    "display": 227886
+    "display": 227886,
+    "displayid": 686016
   },
   "martillo_iridiscente": {
     "calidad": 2,
-    "display": 5541
+    "display": 5541,
+    "displayid": 19801
   },
   "martillo_runico_de_mitril": {
     "calidad": 2,
-    "display": 7946
+    "display": 7946,
+    "displayid": 15887
   },
   "martillo_volcanico": {
     "calidad": 2,
     "desc": "Probabilidad al acertar: Lanza una bola abrasadora que causa 100 al 128 p. de daño de Fuego y 18 p. de daño extra durante 6 s.",
-    "display": 12792
+    "display": 12792,
+    "displayid": 18312
   },
   "mascara_de_bandido_blanca": {
     "calidad": 2,
-    "display": 10008
+    "display": 10008,
+    "displayid": 18861
   },
   "mascara_de_gran_vudu": {
     "calidad": 2,
-    "display": 8201
+    "display": 8201,
+    "displayid": 18689
   },
   "mascara_de_gran_vudu_2": {
     "calidad": 2,
-    "display": 8201
+    "display": 8201,
+    "displayid": 18689
   },
   "mascara_de_tejido_de_sombra": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 24 p.",
-    "display": 10025
+    "display": 10025,
+    "displayid": 19060
   },
   "maza_bronce": {
     "calidad": 1,
-    "display": 2848
+    "display": 2848,
+    "displayid": 5198
   },
   "maza_de_bronce_pesada": {
     "calidad": 2,
-    "display": 3491
+    "display": 3491,
+    "displayid": 5205
   },
   "maza_de_cobre": {
     "calidad": 1,
-    "display": 2844
+    "display": 2844,
+    "displayid": 2861
   },
   "maza_negra_grande": {
     "calidad": 2,
-    "display": 7945
+    "display": 7945,
+    "displayid": 5199
   },
   "megabomba_arcana": {
     "calidad": 1,
@@ -8762,7 +9453,8 @@
   "membrana_de_neurosis_oscura": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 220745
+    "display": 220745,
+    "displayid": 680037
   },
   "mena_de_hierro_negro": {
     "calidad": 1,
@@ -8843,12 +9535,14 @@
   "mitones_de_augur_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 33 p.",
-    "display": 238268
+    "display": 238268,
+    "displayid": 700407
   },
   "mitones_de_escamas_oniricas": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 234485
+    "display": 234485,
+    "displayid": 16633
   },
   "modulador_de_amplificacion_de_voz": {
     "calidad": 2,
@@ -8872,16 +9566,19 @@
   },
   "mono_azul": {
     "calidad": 2,
-    "display": 6263
+    "display": 6263,
+    "displayid": 11037
   },
   "monoculo_de_artesano": {
     "calidad": 2,
-    "display": 4393
+    "display": 4393,
+    "displayid": 4661
   },
   "monoculo_de_filamento_arcano_gneurovincu": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 22 p.",
-    "display": 215111
+    "display": 215111,
+    "displayid": 17725
   },
   "monton_de_engranajes_manchados": {
     "calidad": 2,
@@ -8950,17 +9647,20 @@
   "munequeras_glaciales": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p.",
-    "display": 22655
+    "display": 22655,
+    "displayid": 35283
   },
   "munequeras_glaciales_2": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p.",
-    "display": 22655
+    "display": 22655,
+    "displayid": 35283
   },
   "munequeras_heladas": {
     "calidad": 4,
     "desc": "Equipar: Aumenta hasta 33 p. la sanación que aplicas y hasta 11 p. el daño que infliges con todos los hechizos y efectos mágicos.",
-    "display": 236704
+    "display": 236704,
+    "displayid": 35283
   },
   "musgopena": {
     "calidad": 1,
@@ -8970,7 +9670,8 @@
   "musleras_de_cazador_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238286
+    "display": 238286,
+    "displayid": 698365
   },
   "naipe_de_la_luna_negra": {
     "display": 44316,
@@ -8987,7 +9688,8 @@
   "nimbo_de_la_llama_verdeante": {
     "display": 24122,
     "calidad": 4,
-    "desc": "Equipar: Posibilidad de que un hechizo que haga impacto en el enemigo restaure 90 p. de maná durante 10 s. (Probabilidad de que accione: 75%, 25s de reutilización)"
+    "desc": "Equipar: Posibilidad de que un hechizo que haga impacto en el enemigo restaure 90 p. de maná durante 10 s. (Probabilidad de que accione: 75%, 25s de reutilización)",
+    "displayid": 27606
   },
   "nucleo_de_lava": {
     "calidad": 3,
@@ -9011,12 +9713,14 @@
   },
   "nudillos_de_hierro_pesados": {
     "display": 20954,
-    "calidad": 2
+    "calidad": 2,
+    "displayid": 15720
   },
   "ocaso": {
     "calidad": 4,
     "desc": "Probabilidad al acertar: Aumenta el daño de hechizo infligido al objetivo en un 15% durante 5 s.",
-    "display": 19169
+    "display": 19169,
+    "displayid": 31735
   },
   "odre_de_cerveza_enana": {
     "calidad": 1,
@@ -9163,152 +9867,186 @@
   },
   "pantalones_de_anillas_de_cobre": {
     "calidad": 1,
-    "display": 2852
+    "display": 2852,
+    "displayid": 13095
   },
   "pantalones_de_cuero_basto": {
     "calidad": 2,
-    "display": 7280
+    "display": 7280,
+    "displayid": 15765
   },
   "pantalones_de_cuero_cosidos_a_mano": {
     "calidad": 1,
-    "display": 2303
+    "display": 2303,
+    "displayid": 5441
   },
   "pantalones_de_cuero_estampado": {
     "calidad": 2,
-    "display": 4242
+    "display": 4242,
+    "displayid": 9505
   },
   "pantalones_de_cuero_ligero": {
     "calidad": 2,
-    "display": 7282
+    "display": 7282,
+    "displayid": 3248
   },
   "pantalones_de_cuero_maligno": {
     "calidad": 2,
-    "display": 15087
+    "display": 15087,
+    "displayid": 1512
   },
   "pantalones_de_cuero_oscuro": {
     "calidad": 2,
-    "display": 5961
+    "display": 5961,
+    "displayid": 9018
   },
   "pantalones_de_cuero_refinado": {
     "calidad": 2,
-    "display": 5958
+    "display": 5958,
+    "displayid": 2628
   },
   "pantalones_de_cuero_runico": {
     "calidad": 2,
-    "display": 15095
+    "display": 15095,
+    "displayid": 8389
   },
   "pantalones_de_embozo_de_tormenta": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 2%.",
-    "display": 15057
+    "display": 15057,
+    "displayid": 3833
   },
   "pantalones_de_escamas_de_mitril": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 7920
+    "display": 7920,
+    "displayid": 3409
   },
   "pantalones_de_esmoquin": {
     "calidad": 1,
-    "display": 10035
+    "display": 10035,
+    "displayid": 11308
   },
   "pantalones_de_gran_vudu": {
     "calidad": 2,
-    "display": 8202
+    "display": 8202,
+    "displayid": 11838
   },
   "pantalones_de_guardian": {
     "calidad": 2,
-    "display": 5962
+    "display": 5962,
+    "displayid": 8426
   },
   "pantalones_de_guardian_2": {
     "calidad": 2,
-    "display": 5962
+    "display": 5962,
+    "displayid": 8426
   },
   "pantalones_de_infiltrado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238278
+    "display": 238278,
+    "displayid": 698080
   },
   "pantalones_de_lana_gruesos": {
     "calidad": 2,
-    "display": 4316
+    "display": 4316,
+    "displayid": 4617
   },
   "pantalones_de_lino_marrones": {
     "calidad": 1,
-    "display": 4343
+    "display": 4343,
+    "displayid": 1883
   },
   "pantalones_de_lino_sencillos": {
     "calidad": 1,
-    "display": 10045
+    "display": 10045,
+    "displayid": 2185
   },
   "pantalones_de_mitril_ornamentado": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 7926
+    "display": 7926,
+    "displayid": 16103
   },
   "pantalones_de_mitril_pesado": {
     "calidad": 2,
-    "display": 7921
+    "display": 7921,
+    "displayid": 5611
   },
   "pantalones_de_pano_brillante": {
     "calidad": 2,
-    "display": 14104
+    "display": 14104,
+    "displayid": 12341
   },
   "pantalones_de_pano_cenizo": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 26 p.",
-    "display": 14045
+    "display": 14045,
+    "displayid": 15984
   },
   "pantalones_de_pano_runico": {
     "calidad": 2,
-    "display": 13865
+    "display": 13865,
+    "displayid": 25208
   },
   "pantalones_de_pano_tormentoso": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Naturaleza y los efectos hasta en 10 p.",
-    "display": 10010
+    "display": 10010,
+    "displayid": 5874
   },
   "pantalones_de_seda_azur": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 10 p.",
-    "display": 7046
+    "display": 7046,
+    "displayid": 12360
   },
   "pantalones_de_tejido_de_escarcha": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 26 p.",
-    "display": 13871
+    "display": 13871,
+    "displayid": 8974
   },
   "pantalones_de_tejido_de_sombra": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 21 p.",
-    "display": 10002
+    "display": 10002,
+    "displayid": 8236
   },
   "pantalones_de_tejido_fantasmal": {
     "calidad": 2,
     "desc": "Equipar: Restaura 8 p. de maná cada 5 s.",
-    "display": 14144
+    "display": 14144,
+    "displayid": 10098
   },
   "pantalones_de_tejido_magico_rojos": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 14 p.",
-    "display": 10009
+    "display": 10009,
+    "displayid": 7520
   },
   "pantalones_de_tela_vil": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 26 p.",
-    "display": 14107
+    "display": 14107,
+    "displayid": 4310
   },
   "pantalones_fenix": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 10 p.",
-    "display": 4317
+    "display": 4317,
+    "displayid": 4619
   },
   "pantalones_nochefugaz": {
     "calidad": 2,
-    "display": 8193
+    "display": 8193,
+    "displayid": 5469
   },
   "pantalones_runicos_de_cobre": {
     "calidad": 2,
-    "display": 3473
+    "display": 3473,
+    "displayid": 22459
   },
   "papiro_comun": {
     "calidad": 1,
@@ -9793,40 +10531,48 @@
   "persuasor": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo en un 1%.",
-    "display": 22384
+    "display": 22384,
+    "displayid": 36969
   },
   "peto_acecharenas": {
     "calidad": 3,
-    "display": 20478
+    "display": 20478,
+    "displayid": 32872
   },
   "peto_de_escamas_oniricas": {
     "calidad": 4,
     "desc": "Equipar: Restaura 4 p. de maná cada 5 s.",
-    "display": 20380
+    "display": 20380,
+    "displayid": 25238
   },
   "peto_de_placas_imperiales": {
     "calidad": 2,
-    "display": 12422
+    "display": 12422,
+    "displayid": 24504
   },
   "peto_de_soldado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238290
+    "display": 238290,
+    "displayid": 698094
   },
   "peto_escupefuego": {
     "calidad": 3,
     "desc": "Equipar: Restaura 6 p. de maná cada 5 s.",
-    "display": 20479
+    "display": 20479,
+    "displayid": 16391
   },
   "peto_obsidiano_grueso": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un hechizo de daño tienes el 30% de probabilidad de conseguir un hechizo escudo 6 s que absorbe 300 al 500 de ese tipo de daño.",
-    "display": 22196
+    "display": 22196,
+    "displayid": 29253
   },
   "peto_parraferrea": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +7.",
-    "display": 22762
+    "display": 22762,
+    "displayid": 13204
   },
   "pez_descarriado": {
     "calidad": 1,
@@ -10141,20 +10887,24 @@
   "placa_de_batalla_de_zarzapua": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate inflige 100 p. de daño de Naturaleza al atacante. Inflige el doble de amenaza respecto al daño infligido.",
-    "display": 233492
+    "display": 233492,
+    "displayid": 694056
   },
   "placa_hierro_negro": {
     "calidad": 3,
-    "display": 11604
+    "display": 11604,
+    "displayid": 20992
   },
   "placa_hierro_negro_2": {
     "calidad": 3,
-    "display": 11604
+    "display": 11604,
+    "displayid": 20992
   },
   "placa_hierro_negro_templada": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +9.",
-    "display": 227871
+    "display": 227871,
+    "displayid": 20992
   },
   "placas_de_veraplata_de_fondo_bajo": {
     "calidad": 3,
@@ -10500,7 +11250,8 @@
   },
   "poderio_de_los_fauces_de_madera": {
     "calidad": 3,
-    "display": 19044
+    "display": 19044,
+    "displayid": 9183
   },
   "poderio_primigenio": {
     "display": 23571,
@@ -10577,39 +11328,47 @@
   "prendas_de_augur_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 238266
+    "display": 238266,
+    "displayid": 700404
   },
   "prendas_de_lana_de_oso_de_guerra": {
     "calidad": 3,
-    "display": 15065
+    "display": 15065,
+    "displayid": 11014
   },
   "profanacion": {
     "calidad": 3,
-    "display": 227857
+    "display": 227857,
+    "displayid": 24255
   },
   "protectores_de_soldado_escarlata": {
     "calidad": 3,
-    "display": 238291
+    "display": 238291,
+    "displayid": 698095
   },
   "proyectil_artesanal_ligero": {
     "calidad": 1,
     "apilable": 200,
-    "display": 8067
+    "display": 8067,
+    "displayid": 2418
   },
   "proyectil_artesanal_pesado": {
     "calidad": 1,
     "apilable": 200,
-    "display": 8068
+    "display": 8068,
+    "displayid": 2418
   },
   "proyectil_artesanal_solido": {
     "calidad": 1,
     "apilable": 200,
-    "display": 8069
+    "display": 8069,
+    "displayid": 2418
   },
   "proyectiles_de_torio": {
     "calidad": 2,
     "apilable": 200,
-    "display": 15997
+    "display": 15997,
+    "displayid": 2418
   },
   "proyector_redomatico_gnomico": {
     "calidad": 1,
@@ -10619,7 +11378,8 @@
   "pulverizador_hierro_negro": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Aturde al objetivo durante 8 s.",
-    "display": 11608
+    "display": 11608,
+    "displayid": 25046
   },
   "punado_de_tornillos_de_cobre": {
     "calidad": 1,
@@ -10628,12 +11388,14 @@
   },
   "punal_de_bronce_mortal": {
     "calidad": 2,
-    "display": 3490
+    "display": 3490,
+    "displayid": 2708
   },
   "punos_de_augur_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 25 p.",
-    "display": 238267
+    "display": 238267,
+    "displayid": 700408
   },
   "punta_de_escudo_de_hierro": {
     "calidad": 1,
@@ -10656,7 +11418,8 @@
   "quijotes_de_soldado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238294
+    "display": 238294,
+    "displayid": 698098
   },
   "quitina_de_silitido": {
     "calidad": 1,
@@ -10821,41 +11584,49 @@
   "rifle_de_arcanita_impecable": {
     "calidad": 3,
     "desc": "Equipar: Armas de fuego aumentadas +4.",
-    "display": 16007
+    "display": 16007,
+    "displayid": 24721
   },
   "rifle_de_gran_calibre_de_mitril": {
     "calidad": 2,
     "desc": "Equipar: +14 p. de poder de ataque a distancia.",
-    "display": 10510
+    "display": 10510,
+    "displayid": 20744
   },
   "rifle_de_tirador_certero_de_nucleo_igneo": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 227849
+    "display": 227849,
+    "displayid": 31210
   },
   "rifle_de_tirador_del_nucleo": {
     "calidad": 4,
     "desc": "Equipar: +22 p. de poder de ataque a distancia.",
-    "display": 18282
+    "display": 18282,
+    "displayid": 31210
   },
   "rifle_de_torio": {
     "calidad": 2,
     "desc": "Equipar: +17 p. de poder de ataque a distancia.",
-    "display": 15995
+    "display": 15995,
+    "displayid": 13060
   },
   "rifle_de_vista_lunar": {
     "calidad": 2,
-    "display": 4383
+    "display": 4383,
+    "displayid": 8256
   },
   "rifle_hierro_negro": {
     "calidad": 3,
     "desc": "Equipar: Probabilidad de golpear a tu objetivo a distancia con un Disparo de las Sombras, infligiendo 18 al 26 de daño de las Sombras.",
-    "display": 16004
+    "display": 16004,
+    "displayid": 26737
   },
   "rituales_de_la_luna_nueva": {
     "display": 45854,
     "calidad": 3,
-    "desc": "Equipar: Mejora el índice de golpe crítico en 36 p."
+    "desc": "Equipar: Mejora el índice de golpe crítico en 36 p.",
+    "displayid": 55265
   },
   "roboalarma_gnomico": {
     "calidad": 1,
@@ -10880,7 +11651,8 @@
   "rostros_de_condena": {
     "display": 44210,
     "calidad": 4,
-    "desc": "Equipar: Mejora el índice de golpe crítico en 42 p."
+    "desc": "Equipar: Mejora el índice de golpe crítico en 42 p.",
+    "displayid": 23171
   },
   "rubi_estrella": {
     "calidad": 2,
@@ -10947,7 +11719,8 @@
   "sabiduria_de_los_fauces_de_madera": {
     "calidad": 3,
     "desc": "Equipar: Restaura 4 p. de maná cada 5 s.",
-    "display": 19047
+    "display": 19047,
+    "displayid": 9398
   },
   "sabiola_ahumada": {
     "calidad": 1,
@@ -11084,12 +11857,14 @@
   "segadora_de_arcanita": {
     "calidad": 3,
     "desc": "Equipar: +62 p. de poder de ataque.",
-    "display": 12784
+    "display": 12784,
+    "displayid": 23904
   },
   "segadora_de_arcanita_refinada": {
     "calidad": 4,
     "desc": "Equipar: +84 p. de poder de ataque.",
-    "display": 227845
+    "display": 227845,
+    "displayid": 685172
   },
   "sello_de_aguamarina": {
     "display": 20964,
@@ -11123,12 +11898,14 @@
   "sensores_de_censor_aterradores": {
     "calidad": 3,
     "desc": "Equipar: ¡Incluyen unos sensores de censor aterradores de última generación que te permiten verlo todo!",
-    "display": 236871
+    "display": 236871,
+    "displayid": 697041
   },
   "serenidad": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Elimina un efecto mágico del enemigo actual.",
-    "display": 12781
+    "display": 12781,
+    "displayid": 6795
   },
   "serviola_moteada": {
     "calidad": 1,
@@ -11185,215 +11962,265 @@
   "sobrehombros_albar": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 44 p.",
-    "display": 12625
+    "display": 12625,
+    "displayid": 25827
   },
   "sobrehombros_almanegra": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de alcanzar el objetivo en un 1%.",
-    "display": 19695
+    "display": 19695,
+    "displayid": 30785
   },
   "sobrehombros_argenta": {
     "calidad": 3,
-    "display": 19059
+    "display": 19059,
+    "displayid": 31828
   },
   "sobrehombros_azur": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 13 p.",
-    "display": 7060
+    "display": 7060,
+    "displayid": 16463
   },
   "sobrehombros_barbaricos": {
     "calidad": 2,
-    "display": 5964
+    "display": 5964,
+    "displayid": 9544
   },
   "sobrehombros_barbaricos_de_hierro": {
     "calidad": 2,
-    "display": 7913
+    "display": 7913,
+    "displayid": 10166
   },
   "sobrehombros_de_alma_de_sangre": {
     "calidad": 3,
-    "display": 19691
+    "display": 19691,
+    "displayid": 27904
   },
   "sobrehombros_de_anillas_igneas": {
     "calidad": 4,
-    "display": 16988
+    "display": 16988,
+    "displayid": 23612
   },
   "sobrehombros_de_bronce_banados_en_plata": {
     "calidad": 2,
-    "display": 3481
+    "display": 3481,
+    "displayid": 9038
   },
   "sobrehombros_de_bronce_ferreos": {
     "calidad": 1,
-    "display": 3480
+    "display": 3480,
+    "displayid": 23531
   },
   "sobrehombros_de_cuero_oscuro": {
     "calidad": 2,
-    "display": 4252
+    "display": 4252,
+    "displayid": 9528
   },
   "sobrehombros_de_cuero_runico": {
     "calidad": 2,
-    "display": 15096
+    "display": 15096,
+    "displayid": 8387
   },
   "sobrehombros_de_cuero_salvaje": {
     "calidad": 2,
-    "display": 8210
+    "display": 8210,
+    "displayid": 9562
   },
   "sobrehombros_de_cuero_terraneo": {
     "calidad": 2,
-    "display": 7352
+    "display": 7352,
+    "displayid": 4593
   },
   "sobrehombros_de_dragontina_azul": {
     "calidad": 3,
-    "display": 15049
+    "display": 15049,
+    "displayid": 25677
   },
   "sobrehombros_de_dragontina_negra": {
     "calidad": 3,
     "desc": "Equipar: +40 p. de poder de ataque.",
-    "display": 15051
+    "display": 15051,
+    "displayid": 25545
   },
   "sobrehombros_de_embozo_de_tormenta": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 15058
+    "display": 15058,
+    "displayid": 8022
   },
   "sobrehombros_de_escamas_de_dragon_azul_p": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 25 p.",
-    "display": 227873
+    "display": 227873,
+    "displayid": 25677
   },
   "sobrehombros_de_escamas_de_dragon_negro": {
     "calidad": 3,
     "desc": "Equipar: +42 p. de poder de ataque.",
-    "display": 227853
+    "display": 227853,
+    "displayid": 25545
   },
   "sobrehombros_de_escamas_de_mitril": {
     "calidad": 2,
-    "display": 7932
+    "display": 7932,
+    "displayid": 16111
   },
   "sobrehombros_de_escamas_doradas": {
     "calidad": 2,
-    "display": 3841
+    "display": 3841,
+    "displayid": 9424
   },
   "sobrehombros_de_escamas_doradas_2": {
     "calidad": 2,
-    "display": 3841
+    "display": 3841,
+    "displayid": 9424
   },
   "sobrehombros_de_escorpido_pesados": {
     "calidad": 2,
-    "display": 15081
+    "display": 15081,
+    "displayid": 25713
   },
   "sobrehombros_de_escorpido_resistentes": {
     "calidad": 2,
-    "display": 8207
+    "display": 8207,
+    "displayid": 4491
   },
   "sobrehombros_de_hierro_verdes": {
     "calidad": 2,
-    "display": 3840
+    "display": 3840,
+    "displayid": 9422
   },
   "sobrehombros_de_lana_con_doble_pespunte": {
     "calidad": 1,
-    "display": 4314
+    "display": 4314,
+    "displayid": 5494
   },
   "sobrehombros_de_lana_reforzada": {
     "calidad": 1,
-    "display": 4315
+    "display": 4315,
+    "displayid": 17135
   },
   "sobrehombros_de_mitril_ornamentado": {
     "calidad": 2,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 7928
+    "display": 7928,
+    "displayid": 10495
   },
   "sobrehombros_de_mitril_pesado": {
     "calidad": 2,
-    "display": 7918
+    "display": 7918,
+    "displayid": 6027
   },
   "sobrehombros_de_montanero": {
     "calidad": 2,
-    "display": 4251
+    "display": 4251,
+    "displayid": 11274
   },
   "sobrehombros_de_pano_runico": {
     "calidad": 2,
-    "display": 13867
+    "display": 13867,
+    "displayid": 17746
   },
   "sobrehombros_de_pano_tormentoso": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 21 p.",
-    "display": 10038
+    "display": 10038,
+    "displayid": 11638
   },
   "sobrehombros_de_placas_imperiales": {
     "calidad": 2,
-    "display": 12428
+    "display": 12428,
+    "displayid": 24509
   },
   "sobrehombros_de_seda_carmesies": {
     "calidad": 2,
-    "display": 7059
+    "display": 7059,
+    "displayid": 9574
   },
   "sobrehombros_de_seda_carmesies_2": {
     "calidad": 2,
-    "display": 7059
+    "display": 7059,
+    "displayid": 9574
   },
   "sobrehombros_de_seda_verdes": {
     "calidad": 2,
-    "display": 7057
+    "display": 7057,
+    "displayid": 5762
   },
   "sobrehombros_de_tejido_de_sombra": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 17 p.",
-    "display": 10028
+    "display": 10028,
+    "displayid": 12867
   },
   "sobrehombros_de_tejido_magico_negros": {
     "calidad": 2,
-    "display": 10027
+    "display": 10027,
+    "displayid": 4925
   },
   "sobrehombros_de_tejido_magico_rojos": {
     "calidad": 2,
-    "display": 10029
+    "display": 10029,
+    "displayid": 17703
   },
   "sobrehombros_de_tela_lunar": {
     "calidad": 3,
-    "display": 14139
+    "display": 14139,
+    "displayid": 24966
   },
   "sobrehombros_de_tela_vil": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 26 p.",
-    "display": 14112
+    "display": 14112,
+    "displayid": 4488
   },
   "sobrehombros_de_tigre_de_sangre": {
     "calidad": 3,
-    "display": 19689
+    "display": 19689,
+    "displayid": 23670
   },
   "sobrehombros_hierro_negro": {
     "calidad": 2,
-    "display": 11605
+    "display": 11605,
+    "displayid": 21196
   },
   "sobrehombros_nemorosos": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p.",
-    "display": 22758
+    "display": 22758,
+    "displayid": 35209
   },
   "sobrehombros_nochefugaz": {
     "calidad": 2,
-    "display": 8192
+    "display": 8192,
+    "displayid": 8434
   },
   "sobrehombros_plumahierro": {
     "calidad": 3,
-    "display": 15067
+    "display": 15067,
+    "displayid": 13697
   },
   "sobrehombros_runicos_de_placas": {
     "calidad": 2,
-    "display": 12610
+    "display": 12610,
+    "displayid": 23490
   },
   "sobrehombros_vivos": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 31 p.",
-    "display": 15061
+    "display": 15061,
+    "displayid": 11622
   },
   "sobrehombros_volcanicos": {
     "calidad": 2,
-    "display": 15055
+    "display": 15055,
+    "displayid": 23782
   },
   "sobrehombros_volcanicos_magistrales": {
     "calidad": 3,
-    "display": 227866
+    "display": 227866,
+    "displayid": 23782
   },
   "sol_carmesi": {
     "display": 33131,
@@ -11423,11 +12250,13 @@
   "sombrero_de_almirante": {
     "calidad": 2,
     "desc": "Uso: Da 10 p. de aguante extra a los miembros del grupo en un radio de 30 metros. (1 Min Reutilización)",
-    "display": 10030
+    "display": 10030,
+    "displayid": 18872
   },
   "sombrero_de_cuero_comodo": {
     "calidad": 2,
-    "display": 8174
+    "display": 8174,
+    "displayid": 15921
   },
   "sopa_de_aleta_de_murloc": {
     "calidad": 1,
@@ -11554,7 +12383,8 @@
   "suelas_de_augur_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 33 p.",
-    "display": 238271
+    "display": 238271,
+    "displayid": 700409
   },
   "surtido_pesado": {
     "calidad": 1,
@@ -11564,7 +12394,8 @@
   "taladora_hierro_negro": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Reduce la armadura de un objetivo 300 p. durante 20 s.",
-    "display": 11607
+    "display": 11607,
+    "displayid": 21159
   },
   "talasita": {
     "display": 23437,
@@ -11615,7 +12446,8 @@
   "talladora_de_lenogris": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: El enemigo sufre la maldición leñogris, que reduce sus resistencias a la magia en 25 p. Se puede aplicar un máximo de 3 veces.",
-    "display": 12769
+    "display": 12769,
+    "displayid": 25600
   },
   "tanino_de_ogro": {
     "calidad": 2,
@@ -11808,124 +12640,152 @@
   "toga_bengala_del_nucleo": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 23 p.",
-    "display": 19156
+    "display": 19156,
+    "displayid": 16668
   },
   "toga_de_adepto_superior": {
     "calidad": 2,
-    "display": 6264
+    "display": 6264,
+    "displayid": 12716
   },
   "toga_de_gran_vudu": {
     "calidad": 2,
-    "display": 8200
+    "display": 8200,
+    "displayid": 13666
   },
   "toga_de_gran_vudu_2": {
     "calidad": 2,
-    "display": 8200
+    "display": 8200,
+    "displayid": 13666
   },
   "toga_de_lana_gris": {
     "calidad": 2,
-    "display": 2585
+    "display": 2585,
+    "displayid": 10896
   },
   "toga_de_lana_verde": {
     "calidad": 2,
-    "display": 6243
+    "display": 6243,
+    "displayid": 10894
   },
   "toga_de_lino_azul": {
     "calidad": 2,
-    "display": 6242
+    "display": 6242,
+    "displayid": 8853
   },
   "toga_de_lino_blanca": {
     "calidad": 2,
-    "display": 6241
+    "display": 6241,
+    "displayid": 17123
   },
   "toga_de_lino_marron": {
     "calidad": 2,
-    "display": 6238
+    "display": 6238,
+    "displayid": 10465
   },
   "toga_de_lino_roja": {
     "calidad": 2,
-    "display": 2572
+    "display": 2572,
+    "displayid": 10621
   },
   "toga_de_noche_invernal": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 40 p.",
-    "display": 14136
+    "display": 14136,
+    "displayid": 24612
   },
   "toga_de_pano_brillante": {
     "calidad": 2,
-    "display": 14100
+    "display": 14100,
+    "displayid": 15820
   },
   "toga_de_pano_cenizo": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 27 p.",
-    "display": 10042
+    "display": 10042,
+    "displayid": 14606
   },
   "toga_de_pano_runico": {
     "calidad": 2,
-    "display": 13858
+    "display": 13858,
+    "displayid": 21957
   },
   "toga_de_poder": {
     "calidad": 3,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 14 p.",
-    "display": 7054
+    "display": 7054,
+    "displayid": 17133
   },
   "toga_de_seda_carmesi": {
     "calidad": 2,
-    "display": 7063
+    "display": 7063,
+    "displayid": 5483
   },
   "toga_de_seda_carmesi_2": {
     "calidad": 2,
-    "display": 7063
+    "display": 7063,
+    "displayid": 5483
   },
   "toga_de_tejido_de_escarcha": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Escarcha y los efectos hasta en 24 p.",
-    "display": 13868
+    "display": 13868,
+    "displayid": 24612
   },
   "toga_de_tejido_de_sombra": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 21 p.",
-    "display": 10004
+    "display": 10004,
+    "displayid": 24950
   },
   "toga_de_tejido_magico_negra": {
     "calidad": 2,
-    "display": 10001
+    "display": 10001,
+    "displayid": 4368
   },
   "toga_de_tejido_zahori": {
     "calidad": 2,
-    "display": 14128
+    "display": 14128,
+    "displayid": 17275
   },
   "toga_de_tela_lunar": {
     "calidad": 3,
-    "display": 18486
+    "display": 18486,
+    "displayid": 30823
   },
   "toga_de_tela_lunar_incandescente": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 62 p.",
-    "display": 227861
+    "display": 227861,
+    "displayid": 30823
   },
   "toga_de_tela_vil": {
     "calidad": 2,
     "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 36 p.",
-    "display": 14106
+    "display": 14106,
+    "displayid": 24932
   },
   "toga_de_zahori_inferior": {
     "calidad": 2,
-    "display": 5766
+    "display": 5766,
+    "displayid": 8864
   },
   "toga_del_archimago": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 40 p.",
-    "display": 14152
+    "display": 14152,
+    "displayid": 11634
   },
   "toga_del_vacio": {
     "calidad": 4,
     "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 46 p.",
-    "display": 14153
+    "display": 14153,
+    "displayid": 18834
   },
   "togas_de_arcana": {
     "calidad": 2,
-    "display": 5770
+    "display": 5770,
+    "displayid": 8865
   },
   "topacio_noble": {
     "display": 23439,
@@ -12002,11 +12862,13 @@
   },
   "trabuco_de_mitril": {
     "calidad": 2,
-    "display": 10508
+    "display": 10508,
+    "displayid": 18298
   },
   "trabuco_mortal": {
     "calidad": 2,
-    "display": 4369
+    "display": 4369,
+    "displayid": 20743
   },
   "traca_de_cohetes_azules": {
     "calidad": 1,
@@ -12046,12 +12908,14 @@
   },
   "traje_de_fiesta": {
     "calidad": 1,
-    "display": 21542
+    "display": 21542,
+    "displayid": 34074
   },
   "tranquilidad": {
     "calidad": 3,
     "desc": "Probabilidad al acertar: Elimina un efecto mágico del enemigo actual.",
-    "display": 227881
+    "display": 227881,
+    "displayid": 6795
   },
   "transformador_de_veraplata": {
     "calidad": 1,
@@ -12134,21 +12998,25 @@
   "tunica_de_malla_de_obsidiana": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
-    "display": 234460
+    "display": 234460,
+    "displayid": 23605
   },
   "tunica_vampirica": {
     "calidad": 4,
     "desc": "Equipar: Al recibir un golpe en combate hay un 20% de probabilidad de robar 50 p. de vida al objetivo. (Probabilidad de que accione: 20%)",
-    "display": 233837
+    "display": 233837,
+    "displayid": 694072
   },
   "turbante_de_tejido_zahori": {
     "calidad": 2,
-    "display": 14130
+    "display": 14130,
+    "displayid": 24942
   },
   "ultragafas_ojo_de_gato": {
     "calidad": 2,
     "desc": "Equipar: Aumenta tu detección de sigilo.",
-    "display": 10501
+    "display": 10501,
+    "displayid": 17900
   },
   "unidad_de_autorreciclaje_de_la_triturado": {
     "calidad": 1,
@@ -12198,23 +13066,28 @@
   },
   "varita_magica_inferior": {
     "calidad": 2,
-    "display": 11287
+    "display": 11287,
+    "displayid": 21096
   },
   "varita_magica_superior": {
     "calidad": 2,
-    "display": 11288
+    "display": 11288,
+    "displayid": 21096
   },
   "varita_mistica_inferior": {
     "calidad": 2,
-    "display": 11289
+    "display": 11289,
+    "displayid": 21098
   },
   "varita_mistica_superior": {
     "calidad": 2,
-    "display": 11290
+    "display": 11290,
+    "displayid": 21101
   },
   "varita_mistica_superior_2": {
     "calidad": 2,
-    "display": 11290
+    "display": 11290,
+    "displayid": 21101
   },
   "venado_magro": {
     "calidad": 1,
@@ -12301,28 +13174,34 @@
   },
   "vestido_de_boda_blanco": {
     "calidad": 1,
-    "display": 10040
+    "display": 10040,
+    "displayid": 13119
   },
   "vestido_de_fiesta": {
     "calidad": 1,
-    "display": 21154
+    "display": 21154,
+    "displayid": 33459
   },
   "vestido_de_lana_blanco": {
     "calidad": 1,
-    "display": 6787
+    "display": 6787,
+    "displayid": 13046
   },
   "vestido_negro_sencillo": {
     "calidad": 1,
-    "display": 10053
+    "display": 10053,
+    "displayid": 18917
   },
   "vestido_sencillo": {
     "calidad": 1,
-    "display": 6786
+    "display": 6786,
+    "displayid": 13043
   },
   "vestimentas_de_fe_verdadera": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 73 p.",
-    "display": 14154
+    "display": 14154,
+    "displayid": 25203
   },
   "vial_corrupto": {
     "calidad": 1,
@@ -12391,7 +13270,8 @@
   "visor_de_escamas_oniricas": {
     "calidad": 4,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 234487
+    "display": 234487,
+    "displayid": 31268
   },
   "vitela_de_encantamiento": {
     "display": 38682,
@@ -12431,94 +13311,118 @@
   "yelmo_almablanca": {
     "calidad": 3,
     "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 35 p.",
-    "display": 12633
+    "display": 12633,
+    "displayid": 22901
   },
   "yelmo_barbarico_de_hierro": {
     "calidad": 2,
-    "display": 7915
+    "display": 7915,
+    "displayid": 16084
   },
   "yelmo_cabeza_de_lobo": {
     "calidad": 3,
     "desc": "Equipar: Al Metamorfosis en forma felina el druida gana 20 p. de energía. Al Metamorfosis en forma de oso, gana 5 p. de ira.",
-    "display": 8345
+    "display": 8345,
+    "displayid": 28987
   },
   "yelmo_corazon_de_leon": {
     "calidad": 4,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 2%.",
-    "display": 12640
+    "display": 12640,
+    "displayid": 22855
   },
   "yelmo_de_arrabio": {
     "calidad": 4,
     "desc": "Equipar: Aumenta la probabilidad de esquivar un ataque en un 1%.",
-    "display": 16983
+    "display": 16983,
+    "displayid": 28856
   },
   "yelmo_de_escamas_de_tortuga": {
     "calidad": 2,
-    "display": 8191
+    "display": 8191,
+    "displayid": 15307
   },
   "yelmo_de_escorpido_pesado": {
     "calidad": 2,
-    "display": 15080
+    "display": 15080,
+    "displayid": 28976
   },
   "yelmo_de_escorpido_resistente": {
     "calidad": 2,
-    "display": 8208
+    "display": 8208,
+    "displayid": 16520
   },
   "yelmo_de_fuego": {
     "calidad": 3,
     "desc": "Uso: Lanza una bola abrasadora que causa 286 al 376 p. de daño de Fuego y 40 p. de daño de Fuego extra durante 8 s. (15 Min Reutilización)",
-    "display": 8348
+    "display": 8348,
+    "displayid": 17226
   },
   "yelmo_de_hierro_verde": {
     "calidad": 2,
-    "display": 3836
+    "display": 3836,
+    "displayid": 25658
   },
   "yelmo_de_mitril_ornamentado": {
     "calidad": 2,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 7937
+    "display": 7937,
+    "displayid": 16119
   },
   "yelmo_de_mitril_pesado": {
     "calidad": 2,
-    "display": 7934
+    "display": 7934,
+    "displayid": 16115
   },
   "yelmo_de_placas_de_acero": {
     "calidad": 1,
-    "display": 7922
+    "display": 7922,
+    "displayid": 15380
   },
   "yelmo_de_placas_imperiales": {
     "calidad": 2,
-    "display": 12427
+    "display": 12427,
+    "displayid": 14964
   },
   "yelmo_de_placas_runicas": {
     "calidad": 2,
-    "display": 12612
+    "display": 12612,
+    "displayid": 15562
   },
   "yelmo_de_torio": {
     "calidad": 2,
-    "display": 12410
+    "display": 12410,
+    "displayid": 21257
   },
   "yelmo_de_torio_encantado": {
     "calidad": 3,
     "desc": "Equipar: Defensa aumentada +9.",
-    "display": 12620
+    "display": 12620,
+    "displayid": 22881
   },
   "yelmo_del_gran_jefe": {
     "calidad": 3,
-    "display": 12636
+    "display": 12636,
+    "displayid": 15378
   },
   "yelmo_hierro_negro": {
     "calidad": 4,
-    "display": 19148
+    "display": 19148,
+    "displayid": 31671
+  },
+  "yelmo_mithril": {
+    "displayid": 35211
   },
   "yelmo_runaoscura": {
     "calidad": 3,
     "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
-    "display": 20551
+    "display": 20551,
+    "displayid": 25438
   },
   "yelmo_zarzal": {
     "calidad": 3,
-    "display": 22759
+    "display": 22759,
+    "displayid": 35211
   },
   "yelmo_zarzal_2": {
     "calidad": 3,
@@ -12565,11 +13469,13 @@
   },
   "zapatillas_de_seda_de_arana": {
     "calidad": 2,
-    "display": 4321
+    "display": 4321,
+    "displayid": 4466
   },
   "zapatos_de_infiltrado_escarlata": {
     "calidad": 3,
     "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
-    "display": 238279
+    "display": 238279,
+    "displayid": 698137
   }
 }

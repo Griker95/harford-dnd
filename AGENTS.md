@@ -2177,6 +2177,14 @@ el mismo archivo, el que no lo posee no escribe.
   lista, y `/hforge exportar` la saca agrupada por profesion y papel en el formato de
   `HarfordProfessionsItems.REGISTRY`. Se admite el formato viejo (numero suelto) al leer.
   Tambien persiste `estado.ultimo` y `estado.tanda` para saber por donde se iba.
+- **Los cinco cerrojos del borrado.** En orden, y ninguno es prescindible: (1) el id tiene
+  que constar en el registro; (2) tiene que estar en el rango custom `>= 14000000` -- los
+  objetos de Blizzard andan por debajo de 250.000, asi que aunque un id equivocado se colara
+  en el registro no se borraria nada del jugador; (3) se comprueba el hueco EXACTO antes de
+  tirar; (4) no se toca nada con el cursor ocupado; (5) `limpiar` ensena que borraria y solo
+  actua con `limpiar si`. Ese mismo rango custom se exige ANTES de aceptar un id como
+  forjado: si en la ventana de creacion entra un botin o un correo, se para en seco en vez
+  de reescribirlo y borrarlo. **Solo bolsas 0..4**: el banco (5..11) no se toca nunca.
 - **El borrado de bolsa es del cliente y es destructivo**: Epsilon no tiene comando de
   servidor para quitar objetos, asi que `BorrarDeBolsa` usa `PickupContainerItem` +
   `DeleteCursorItem`. Solo borra ids que constan en el registro (`EsNuestro`), comprueba el

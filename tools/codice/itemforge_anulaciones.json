@@ -1,0 +1,20 @@
+{
+  "_nota": "Capa que se aplica ENCIMA de lo que deduce gen_itemforge_data.py. Es lo unico que sobrevive a una regeneracion, asi que aqui va todo lo escrito a mano y todo lo que llegue de la web. Campos admitidos: nombre, icono, calidad, clase, subclase, hueco, apilable, vinculacion, desc. Solo hace falta poner los campos que se quieran cambiar.",
+  "aceite_de_bocanegra": {
+    "desc": "Aceite espeso destilado de bocanegra. Aplicado al filo, entorpece a quien lo prueba."
+  },
+  "aceite_de_escarcha": {
+    "desc": "Un vial helado al tacto. El arma untada con el muerde con el frio del norte."
+  },
+  "agata_musgosa": {
+    "desc": "Piedra veteada de verde, tibia al sol. Los joyeros la aprecian por su vena viva.",
+    "clase": 7,
+    "subclase": 4
+  },
+  "idolo_bermellon": {
+    "desc": "Talla en piedra roja, del tamano de un puno. Pesa mas de lo que aparenta."
+  },
+  "idolo_de_alabastro": {
+    "desc": "Figura menuda tallada en alabastro palido. Se talla para pedir, no para adornar."
+  }
+}

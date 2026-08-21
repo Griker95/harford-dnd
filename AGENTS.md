@@ -2043,6 +2043,37 @@ esto. `luac -p` solo valida sintaxis y no habria detectado ninguno de los tres f
   "Incremento de caracteristica", "Guardas demoniacas" = Defensa sin Armadura renombrada) son reglas
   de una linea tambien en el libro: no forzar textos mas largos.
 
+## HarfordItemForge: Creacion En Masa De Objetos Custom (2026-08-21)
+
+Addon **independiente**, en `AddonsIndependientes/HarfordItemForge/`. No es parte de Harford
+ni de HarfordAdmin y no se despliega con ellos.
+
+- **El servidor no devuelve el id del objeto creado.** `.forge item create` lo deja en la
+  bolsa y ya. El id se DEDUCE fotografiando el inventario antes y despues; de ahi sale el
+  item link con el que se encadenan los `.forge item set ...`. Es el flujo que PhaseToolkit
+  tiene probado en produccion, incluido enviar el enlace rodeado de espacios.
+- **Se forja de uno en uno, y no es negociable**: dos creaciones solapadas hacen imposible
+  saber que id es de cual. El limite real de una tanda son los huecos de bolsa, asi que el
+  addon se para solo al llenarse y reanuda con `/hforge crear`.
+- Si el objeto se crea pero fallan sus campos, la clave **queda apuntada igual**: el objeto
+  ya existe en el servidor y reintentar crearia un duplicado.
+- El registro vive en `HarfordItemForgeDB` (SavedVariables), nunca en `Data.lua`.
+
+**`Data.lua` se genera, no se escribe a mano** (`tools/codice/gen_itemforge_data.py`).
+Clasifica por PROFESION de la receta, luego por PAPEL (resultado o materia prima) y solo al
+final por nombre. Cotejar contra `kb.json` es parte del generador: avisa de cualquier objeto
+publicado en la web que no tenga clave en el registro.
+
+**Reimportacion desde la web**: lo que el generador no puede deducir vive en
+`tools/codice/itemforge_anulaciones.json`, que se aplica ENCIMA de lo deducido y es lo unico
+que sobrevive a una regeneracion. Se rellena con `tools/codice/importar_itemforge.py`, que
+acepta claves o nombres visibles y NO pisa lo ya afinado salvo con `--pisar`. No hardcodear
+descripciones dentro de `Data.lua`: se pierden en la siguiente regeneracion.
+
+**Aviso pendiente**: el registro trae 55 nombres repetidos con sufijo `_2`
+(`botas_zarzal` / `botas_zarzal_2`). Parecen duplicados del pipeline, no variantes. Forjarlos
+crearia 55 objetos redundantes; conviene resolverlos antes de una tanda larga.
+
 ## Verificacion
 
 Para esta documentacion:

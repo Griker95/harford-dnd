@@ -43,6 +43,7 @@ local function Store()
     HarfordProfessionsStore.skills = HarfordProfessionsStore.skills or {}   -- [profId] = skill (num)
     HarfordProfessionsStore.learned = HarfordProfessionsStore.learned or {} -- [recipeId] = true (worldLearned)
     HarfordProfessionsStore.nodeCooldowns = HarfordProfessionsStore.nodeCooldowns or {} -- [nodeGuid] = expiraEpoch
+    HarfordProfessionsStore.custom = HarfordProfessionsStore.custom or {} -- [recipeId] = definicion dinamica
     return HarfordProfessionsStore
 end
 
@@ -79,16 +80,33 @@ function API.GetRecipes(profId)
     for _, r in ipairs((d and d.RECIPES) or {}) do
         if r.profession == profId then out[#out + 1] = r end
     end
+    -- Recetas DINAMICAS del personaje (ver DefineRecipe): viven en la SavedVariable, no en el
+    -- catalogo, y se comportan igual que cualquier otra a partir de aqui.
+    for _, r in pairs(Store().custom) do
+        if type(r) == "table" and r.profession == profId then out[#out + 1] = r end
+    end
     return out
+end
+
+-- Indice id -> receta del catalogo. Se construye una vez: GetRecipe se llama una vez por fila
+-- visible en cada refresco de la ventana (y el buscador refresca en cada tecla), asi que el
+-- recorrido lineal sobre las 230 recetas se notaba.
+local recipeIndex
+local function RecipeIndex()
+    local d = Data()
+    local list = (d and d.RECIPES) or {}
+    if not recipeIndex or recipeIndex.count ~= #list then
+        recipeIndex = { count = #list, byId = {} }
+        for _, r in ipairs(list) do recipeIndex.byId[r.id] = r end
+    end
+    return recipeIndex.byId
 end
 
 function API.GetRecipe(recipeId)
     recipeId = tostring(recipeId or "")
-    local d = Data()
-    for _, r in ipairs((d and d.RECIPES) or {}) do
-        if r.id == recipeId then return r end
-    end
-    return nil
+    local custom = Store().custom[recipeId]
+    if type(custom) == "table" then return custom end
+    return RecipeIndex()[recipeId]
 end
 
 ------------------------------------------------------------
@@ -224,6 +242,17 @@ do
     watcher:SetScript("OnEvent", ReleaseSettledReservations)
 end
 
+-- Deshace la reserva de una receta (crafteo abortado: el material nunca se gasto).
+local function ReleaseMaterials(recipe)
+    for _, m in ipairs((recipe and recipe.materials) or {}) do
+        local r = reserved[m.key]
+        if r then
+            r.qty = r.qty - (tonumber(m.qty) or 1)
+            if r.qty <= 0 then reserved[m.key] = nil end
+        end
+    end
+end
+
 -- Apunta como en vuelo lo que acaba de gastar un crafteo.
 local function ReserveMaterials(recipe)
     local items = Items()
@@ -314,6 +343,174 @@ function API.RollTool(profId)
     return true, total
 end
 
+------------------------------------------------------------
+-- RECETAS DINAMICAS (fuera del catalogo)
+--
+-- Para contenido puntual que no tiene sentido hornear en HarfordProfessionsData: un plano que
+-- suelta un jefe, una receta de evento, una recompensa de mision. Un ArcSpell/gossip llama a
+-- `TeachCustomRecipe` y la receta queda definida Y aprendida en ese personaje, persistida en su
+-- SavedVariable. A partir de ahi se comporta como cualquier otra: sale en la ventana, comprueba
+-- materiales, tira en mesa y sube skill.
+--
+-- Los materiales y el resultado se pueden dar por ITEM ID directo (lo normal en contenido
+-- suelto) o por clave del registro. Los itemId se registran al vuelo con una clave sintetica,
+-- de modo que el resto del sistema no necesita saber que la receta es dinamica.
+--
+-- Ejemplo para un ArcSpell:
+--   HarfordProfessions.TeachCustomRecipe({
+--       id = "plano_espada_rota", profession = "herreria", name = "Espada rota reforjada",
+--       skillReq = 60, dc = 13, icon = "INV_Sword_04",
+--       materials = { { id = 14074638, qty = 2, name = "Barra de cobre" } },
+--       output = { id = 14074640, qty = 1, name = "Espada reforjada" },
+--   })
+------------------------------------------------------------
+
+-- Convierte { id = N, name = "..." } en una clave del registro, registrandola si hace falta.
+local function ResolveDynamicKey(entry, fallbackName)
+    if type(entry) ~= "table" then return nil end
+    if entry.key and tostring(entry.key) ~= "" then return tostring(entry.key) end
+    local id = tonumber(entry.id)
+    if not id then return nil end
+    local key = "din_" .. id
+    local items = Items()
+    if items and items.Set then
+        items.Set(key, id, entry.name or fallbackName or ("Objeto " .. id), entry.icon)
+    end
+    return key
+end
+
+-- Registra (o actualiza) una receta dinamica. NO la marca como aprendida.
+function API.DefineRecipe(def)
+    if type(def) ~= "table" then return false, "Definicion invalida" end
+    local id = tostring(def.id or "")
+    local profession = tostring(def.profession or "")
+    if id == "" then return false, "Falta el id de la receta" end
+    if not API.GetDefinition(profession) then
+        return false, "Profesion desconocida: " .. profession
+    end
+    -- Un id del catalogo no se puede pisar: romperia las recetas horneadas de todos.
+    local d = Data()
+    for _, r in ipairs((d and d.RECIPES) or {}) do
+        if r.id == id then return false, "Ese id ya existe en el catalogo: " .. id end
+    end
+    local outKey = ResolveDynamicKey(def.output, def.name)
+    if not outKey then return false, "El resultado necesita `key` o `id`" end
+
+    local materials = {}
+    local outQty = math.max(1, math.floor(tonumber(def.output.qty) or 1))
+    for _, m in ipairs(def.materials or {}) do
+        local key = ResolveDynamicKey(m)
+        if not key then return false, "Un material no tiene `key` ni `id`" end
+        local qty = math.max(1, math.floor(tonumber(m.qty) or 1))
+        -- Una receta que devuelve MAS unidades del mismo objeto que consume es dinero infinito.
+        -- Se rechaza aqui porque estas recetas las inyecta contenido del mundo, no el catalogo.
+        if key == outKey and outQty >= qty then
+            return false, "La receta produciria mas de lo que consume del mismo objeto"
+        end
+        materials[#materials + 1] = { key = key, qty = qty }
+    end
+    if #materials == 0 then
+        local prof = API.GetDefinition(profession)
+        if not (prof and prof.kind == "gather") then
+            return false, "Una receta que no es de recoleccion necesita materiales"
+        end
+    end
+
+    Store().custom[id] = {
+        id = id,
+        profession = profession,
+        name = tostring(def.name or id),
+        icon = def.icon,
+        skillReq = math.max(1, math.min(API.MAX_SKILL, math.floor(tonumber(def.skillReq) or 1))),
+        dc = math.max(5, math.min(30, math.floor(tonumber(def.dc) or 12))),
+        ability = def.ability,
+        worldLearned = true,   -- una receta suelta SIEMPRE hay que aprenderla
+        dynamic = true,
+        materials = materials,
+        output = { key = outKey, qty = outQty },
+        definedAt = (time and time()) or 0,
+        description = def.description,
+    }
+    API.PruneCustomRecipes()
+    return true
+end
+
+-- Define y aprende de una vez: es la puerta pensada para ArcSpell/gossip.
+function API.TeachCustomRecipe(def)
+    local ok, err = API.DefineRecipe(def)
+    if not ok then
+        print("|cffff5555No se pudo enseñar la receta:|r " .. tostring(err))
+        return false, err
+    end
+    local id = tostring(def.id)
+    local already = Store().learned[id] == true
+    Store().learned[id] = true
+    local recipe = API.GetRecipe(id)
+    if not already then
+        print(string.format("Has aprendido |cffffd100%s|r (%s).", recipe.name,
+            (API.GetDefinition(recipe.profession) or {}).name or recipe.profession))
+        if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("craft_succeeded") end
+    end
+    if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Refresh then
+        HarfordProfessionsCraftUI.Refresh()
+    end
+    return true
+end
+
+-- Retira una receta dinamica de este personaje (no toca el catalogo).
+function API.ForgetCustomRecipe(recipeId)
+    recipeId = tostring(recipeId or "")
+    if not Store().custom[recipeId] then return false end
+    Store().custom[recipeId] = nil
+    Store().learned[recipeId] = nil
+    if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Refresh then
+        HarfordProfessionsCraftUI.Refresh()
+    end
+    return true
+end
+
+-- Poda de recetas dinamicas: la SavedVariable no puede crecer sin limite con recetas de
+-- evento. Se quitan primero las que ni siquiera llegaron a aprenderse, de la mas antigua a la
+-- mas nueva. Devuelve cuantas se han retirado.
+local MAX_CUSTOM_RECIPES = 100
+function API.PruneCustomRecipes(limit)
+    limit = tonumber(limit) or MAX_CUSTOM_RECIPES
+    local custom = Store().custom
+    local entries = {}
+    for id, r in pairs(custom) do
+        if type(r) == "table" then
+            entries[#entries + 1] = { id = id, at = tonumber(r.definedAt) or 0,
+                                      learned = Store().learned[id] == true }
+        end
+    end
+    if #entries <= limit then return 0 end
+    -- Orden de sacrificio: sin aprender antes que aprendidas, y dentro de cada grupo la mas vieja.
+    table.sort(entries, function(a, b)
+        if a.learned ~= b.learned then return not a.learned end
+        return a.at < b.at
+    end)
+    local removed = 0
+    for i = 1, #entries - limit do
+        custom[entries[i].id] = nil
+        Store().learned[entries[i].id] = nil
+        removed = removed + 1
+    end
+    return removed
+end
+
+-- Lista de recetas dinamicas del personaje (copia, para UI/debug).
+function API.GetCustomRecipes()
+    local out = {}
+    for id, r in pairs(Store().custom) do
+        if type(r) == "table" then
+            out[#out + 1] = { id = id, name = r.name, profession = r.profession,
+                              skillReq = r.skillReq, learned = Store().learned[id] == true }
+        end
+    end
+    table.sort(out, function(a, b) return tostring(a.id) < tostring(b.id) end)
+    return out
+end
+
 -- Copia del material en vuelo (solo diagnostico: no exponer la tabla interna).
 function API.GetReservedMaterials()
     ReleaseSettledReservations()
@@ -358,6 +555,12 @@ function API.Craft(recipeId)
     local def = API.GetDefinition(r.profession)
     local items = Items()
     local server = HarfordServerActions
+    -- Sin canal de servidor no se puede ni descontar ni entregar: se avisa ANTES de tirar, para
+    -- no gastar la tirada ni dejar el crafteo a medias.
+    if not (server and server.RemoveItem and server.GiveItem) then
+        print("|cffff5555No hay canal de servidor: no se puede fabricar ahora.|r")
+        return false, "sin canal de servidor"
+    end
 
     -- Tirada: d20 + competencia (si tiene la herramienta) + mod. caracteristica.
     local ability = r.ability or (def and def.ability) or "Inteligencia"
@@ -401,14 +604,38 @@ function API.Craft(recipeId)
     -- Consumir materiales reales. Se reservan ANTES de emitir los comandos: hasta que el servidor
     -- confirme el descuento, esa cantidad deja de contar como disponible para el siguiente crafteo.
     ReserveMaterials(r)
+    -- Los comandos DEVUELVEN (ok, err) y hay que mirarlos: si el descuento falla y seguimos,
+    -- el personaje se queda el objeto sin pagar los materiales y ademas sube skill.
+    local consumed, failure = {}, nil
     for _, m in ipairs(r.materials or {}) do
         local id = items.GetId(m.key)
-        if id and server and server.RemoveItem then server.RemoveItem(id, tonumber(m.qty) or 1) end
+        local qty = tonumber(m.qty) or 1
+        local okRemove, removeErr = server.RemoveItem(id, qty)
+        if okRemove then
+            consumed[#consumed + 1] = { id = id, qty = qty }
+        else
+            failure = removeErr or "no se pudo descontar " .. tostring(items.GetName(m.key))
+            break
+        end
     end
+    if failure then
+        -- Devolver lo ya descontado para no dejar al personaje a medias, y liberar la reserva.
+        for _, c in ipairs(consumed) do server.GiveItem(c.id, c.qty) end
+        ReleaseMaterials(r)
+        print("|cffff5555Crafteo cancelado: " .. tostring(failure) .. "|r")
+        return false, failure
+    end
+
     -- Entregar output (doble en critico).
     local outId = items.GetId(r.output.key)
     local outQty = (tonumber(r.output.qty) or 1) * (crit and 2 or 1)
-    if outId and server and server.GiveItem then server.GiveItem(outId, outQty) end
+    local okGive, giveErr = server.GiveItem(outId, outQty)
+    if not okGive then
+        -- Los materiales YA se gastaron: se avisa claramente en vez de fingir que salio bien.
+        print("|cffff5555Se gastaron los materiales pero no se pudo entregar " ..
+            tostring(outName) .. ": " .. tostring(giveErr) .. ". Avisa al DM.|r")
+        return false, giveErr
+    end
 
     SkillUp(r.profession, r)
     Announce(string.format("fabrica %s x%d.%s", outName, outQty,
@@ -429,6 +656,16 @@ end
 -- fallo): la tirada ya se hizo, el nodo queda "trabajado" y no se puede reintentar en bucle.
 -- La tirada, materiales, entrega y anuncio son los de Craft(); esto solo añade la puerta de nodo.
 ------------------------------------------------------------
+-- Clave estable de un nodo. El GUID completo lleva servidor/instancia, que pueden cambiar
+-- tras un reinicio y regalarian el cooldown. De "Creature-0-serv-inst-zona-NPCID-spawnUID" nos
+-- quedamos con NPCID y spawnUID, que identifican al nodo y sobreviven al reinicio.
+local function NodeKey(guid)
+    if not guid or guid == "" then return nil end
+    local npcId, spawnUid = tostring(guid):match("^%a+%-%d+%-%d+%-%d+%-%d+%-(%d+)%-(%w+)$")
+    if npcId and spawnUid then return npcId .. ":" .. spawnUid end
+    return guid
+end
+
 local function PruneNodeCooldowns()
     local cooldowns = Store().nodeCooldowns
     local now = time and time() or 0
@@ -447,6 +684,7 @@ function API.GatherNode(recipeId, cooldownSeconds)
     end
     local guid = (UnitExists and UnitExists("npc") and UnitGUID and UnitGUID("npc"))
         or (UnitExists and UnitExists("target") and UnitGUID and UnitGUID("target"))
+    guid = NodeKey(guid)
     if not guid then
         print("|cffff5555No se detecta el nodo: interactua con la veta/planta (gossip o target).|r")
         return false
@@ -491,6 +729,10 @@ function API.GetTeachableRecipes()
     for _, recipe in ipairs((Data() and Data().RECIPES) or {}) do
         if recipe.worldLearned then out[#out + 1] = recipe end
     end
+    -- Las dinamicas tambien se pueden enseñar: viajan con su definicion completa.
+    for _, recipe in pairs(Store().custom) do
+        if type(recipe) == "table" then out[#out + 1] = recipe end
+    end
     table.sort(out, function(a, b) return tostring(a.name) < tostring(b.name) end)
     return out
 end
@@ -509,13 +751,82 @@ function API.TeachRecipe(targetName, recipeId)
     targetName = tostring(targetName or "")
     if targetName == "" then print("|cffff5555Falta el nombre del jugador.|r") return false end
     if not (HarfordSync and HarfordSync.Send) then print("|cffff5555HarfordSync no disponible.|r") return false end
-    local ok, err = HarfordSync.Send(COMM_PREFIX, "TEACH|" .. tostring(recipe.id), "WHISPER", targetName)
+
+    -- Una receta del catalogo viaja por id (el receptor ya la tiene); una DINAMICA tiene que
+    -- viajar entera, porque en el otro cliente no existe.
+    local payload = "TEACH|" .. tostring(recipe.id)
+    if recipe.dynamic then
+        local serialized, serErr = SerializeDynamicRecipe(recipe)
+        if not serialized then
+            print("|cffff5555No se pudo enviar la receta: " .. tostring(serErr) .. "|r")
+            return false, serErr
+        end
+        payload = serialized
+    end
+    local ok, err = HarfordSync.Send(COMM_PREFIX, payload, "WHISPER", targetName)
     if ok then
         print(string.format("Receta |cffffd100%s|r enseñada a |cffffcc00%s|r.", tostring(recipe.name), targetName))
     else
         print("|cffff5555No se pudo enviar: " .. tostring(err) .. "|r")
     end
     return ok and true or false
+end
+
+-- SERIALIZACION DE UNA RECETA DINAMICA
+--
+-- `TEACH|id` no sirve para las dinamicas: el receptor buscaria ese id en SU catalogo y no lo
+-- encontraria, porque la receta solo existe en el cliente que la definio. Para repartirlas se
+-- envia la DEFINICION entera en un solo mensaje:
+--
+--   TEACHDEF|id|profesion|skillReq|dc|icono|outItemId:qty|matId:qty,matId:qty|nombre
+--
+-- El nombre va el ULTIMO para que pueda contener cualquier cosa menos `|`. Si no cabe en el
+-- limite de SendAddonMessage se avisa en vez de mandar un mensaje truncado que el receptor
+-- interpretaria mal.
+local MAX_TEACH_BYTES = 240
+
+local function SerializeDynamicRecipe(recipe)
+    local items = Items()
+    if not items then return nil, "Registro de items no disponible" end
+    local outId = items.GetId(recipe.output.key)
+    if not outId then return nil, "El resultado no tiene itemId real" end
+    local mats = {}
+    for _, m in ipairs(recipe.materials or {}) do
+        local id = items.GetId(m.key)
+        if not id then return nil, "Un material no tiene itemId real" end
+        mats[#mats + 1] = id .. ":" .. tostring(m.qty or 1)
+    end
+    local name = tostring(recipe.name or recipe.id):gsub("|", "/")
+    local payload = table.concat({
+        "TEACHDEF", recipe.id, recipe.profession, recipe.skillReq or 1, recipe.dc or 12,
+        recipe.icon or "", outId .. ":" .. tostring(recipe.output.qty or 1),
+        table.concat(mats, ","), name,
+    }, "|")
+    if #payload > MAX_TEACH_BYTES then
+        return nil, "La receta no cabe en un mensaje (acorta el nombre o los materiales)"
+    end
+    return payload
+end
+
+local function ParseDynamicRecipe(message)
+    local id, prof, skill, dc, icon, out, mats, name =
+        message:match("^TEACHDEF|([^|]+)|([^|]+)|(%d+)|(%d+)|([^|]*)|([^|]+)|([^|]*)|(.+)$")
+    if not (id and prof and out) then return nil end
+    local outId, outQty = out:match("^(%d+):(%d+)$")
+    if not outId then return nil end
+    local materials = {}
+    for entry in tostring(mats):gmatch("[^,]+") do
+        local mid, mqty = entry:match("^(%d+):(%d+)$")
+        if not mid then return nil end
+        materials[#materials + 1] = { id = tonumber(mid), qty = tonumber(mqty) }
+    end
+    return {
+        id = id, profession = prof, name = name,
+        skillReq = tonumber(skill), dc = tonumber(dc),
+        icon = icon ~= "" and icon or nil,
+        materials = materials,
+        output = { id = tonumber(outId), qty = tonumber(outQty) },
+    }
 end
 
 local function IsTrustedSender(sender)
@@ -541,7 +852,21 @@ comm:SetScript("OnEvent", function(_, event, prefix, message, _, sender)
     end
     if prefix ~= COMM_PREFIX then return end
     if not IsTrustedSender(sender) then return end
-    local recipeId = tostring(message or ""):match("^TEACH|([a-z_0-9]+)$")
+    message = tostring(message or "")
+    if message:find("^TEACHDEF|") then
+        -- Receta dinamica completa: se define en este cliente y se aprende. DefineRecipe aplica
+        -- sus propias validaciones (profesion conocida, no pisar el catalogo, nada de dinero
+        -- infinito), asi que un mensaje mal formado no puede colar contenido invalido.
+        local def = ParseDynamicRecipe(message)
+        if not def then return end
+        if Store().learned[def.id] and Store().custom[def.id] then return end
+        if API.TeachCustomRecipe(def) then
+            local who = (Ambiguate and Ambiguate(tostring(sender), "short")) or tostring(sender)
+            print("(enseñada por " .. who .. ")")
+        end
+        return
+    end
+    local recipeId = message:match("^TEACH|([^|]+)$")
     if not recipeId then return end
     local recipe = API.GetRecipe(recipeId)
     if not (recipe and recipe.worldLearned) then return end

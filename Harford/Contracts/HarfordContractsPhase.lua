@@ -291,13 +291,13 @@ local function PreservarCobros(existente, entrante)
   end
 end
 
-function Phase.ApplyContract(contract)
+function Phase.ApplyContract(contract, silencioso)
   if type(contract) ~= "table" or not contract.id then return false end
   local existente = TC.Data.GetContractById(contract.id)
   if not existente then
     contract._phaseStub = nil
     table.insert(TC.GetDB().contracts, contract)
-    TC.Refresh()
+    if not silencioso then TC.Refresh() end
     return true
   end
   PreservarCobros(existente, contract)
@@ -305,8 +305,45 @@ function Phase.ApplyContract(contract)
     if contract[campo] ~= nil then existente[campo] = contract[campo] end
   end
   existente._phaseStub = nil
-  TC.Refresh()
+  if not silencioso then TC.Refresh() end
   return true
+end
+
+-- Baja el bloque COMPLETO de todos los esbozos.
+--
+-- Hace falta porque una mision de mundo la dispara el gossip de un NPC, no abrir el tablon:
+-- cuando el jugador habla con el NPC ya tienen que estar los objetivos, las recompensas y
+-- los tres textos. TC.BuildWorldQuestDef los lee del contrato entero, y el indice solo
+-- lleva los 8 campos de la fila. Con esbozos, la mision de mundo ni se registraria.
+--
+-- El indice sigue pintando el tablon en UNA llamada; esto va detras y completa. Son N
+-- lecturas de golpe, pero EpsilonLib las encola y las espacia por su cuenta.
+function Phase.LoadAllBlocks(callback)
+  local esbozos = {}
+  for _, c in ipairs(TC.GetDB().contracts or {}) do
+    if Phase.IsStub(c) then esbozos[#esbozos + 1] = tostring(c.id) end
+  end
+
+  local function Rematar(traidos)
+    -- Ya con los contratos enteros, las misiones de mundo pueden registrarse.
+    if TC.RegisterAllWorldQuests then TC.RegisterAllWorldQuests() end
+    if TC.UI and TC.UI.Refresh then TC.UI.Refresh() end
+    if callback then callback(true, traidos) end
+  end
+
+  if #esbozos == 0 then Rematar(0); return end
+
+  local restantes, traidos = #esbozos, 0
+  for _, id in ipairs(esbozos) do
+    Phase.LoadContract(id, function(contrato)
+      if contrato then
+        Phase.ApplyContract(contrato, true)
+        traidos = traidos + 1
+      end
+      restantes = restantes - 1
+      if restantes == 0 then Rematar(traidos) end
+    end)
+  end
 end
 
 -- Carga que REEMPLAZA: lo que el indice no nombre y sea publico, se va. Es lo que hace que
@@ -418,6 +455,7 @@ function Phase.EnsureBoard(force)
     -- Jugador (o DM forzando): la fase es la verdad. Los publicos que ya no esten se retiran;
     -- los borradores y el archivo NO se tocan, porque nunca viajan a la fase.
     local aplicados, retirados = Phase.ApplyIndexReplacing(indice)
+    Phase.LoadAllBlocks()
     local ids = {}
     for _, fila in ipairs(indice) do
       if fila and fila.id then ids[#ids + 1] = tostring(fila.id) end
@@ -700,6 +738,7 @@ function Phase.PublishTracked(quiet, callback)
     -- adoptado de otro DM entran como esbozos y se ven al momento. Sin esto publicabas,
     -- adoptabas cosas en la fase y tu propia ventana seguia sin enterarse.
     Phase.ApplyIndex(indice)
+    Phase.LoadAllBlocks()
     if TC.UI and TC.UI.Refresh then TC.UI.Refresh() end
 
     local resumen = string.format("Fase %s: %d contratos", tostring(fase), #indice)

@@ -292,6 +292,28 @@ function API.IsRecipeLearned(recipeId)
     return Store().learned[tostring(recipeId)] == true
 end
 
+-- Tirada suelta de la herramienta de la profesion (sin receta ni CD): d20 + competencia de
+-- herramienta (si la tiene) + modificador de la caracteristica. Es la prueba de "uso de
+-- herramientas" de 5e, independiente de fabricar; la regla vive aqui, no en la UI.
+function API.RollTool(profId)
+    local def = API.GetDefinition(profId)
+    if not def then return false end
+    local d20 = math.random(1, 20)
+    local bonus = ProfBonusIfTool(def) + AbilityMod(def.ability)
+    local total = d20 + bonus
+    if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+        HarfordDnDRolls.Broadcast({
+            type = "roll",
+            label = def.tool or def.name,
+            total = total,
+            dice = "d20: " .. d20,
+            modifiers = bonus ~= 0 and string.format("%s%d", bonus > 0 and "+" or "", bonus) or "",
+            critical = d20 == 20 and "CRITICO" or (d20 == 1 and "FALLO" or nil),
+        })
+    end
+    return true, total
+end
+
 -- Copia del material en vuelo (solo diagnostico: no exponer la tabla interna).
 function API.GetReservedMaterials()
     ReleaseSettledReservations()
@@ -347,12 +369,32 @@ function API.Craft(recipeId)
     local success = crit or (d20 ~= 1 and total >= dc)
 
     local outName = items.GetName(r.output.key)
-    local line = string.format("%s: %d + %d = %d vs CD %d",
-        r.name or outName, d20, bonus, total, dc)
+
+    -- El crafteo es una ACCION REAL: se tira en mesa como cualquier otra prueba, no se
+    -- resuelve en el chat local del artesano. Se emite siempre, salga bien o mal.
+    if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+        HarfordDnDRolls.Broadcast({
+            type = "roll",
+            label = string.format("%s: %s (CD %d)", def and def.name or r.profession,
+                r.name or outName, dc),
+            total = total,
+            dice = "d20: " .. d20,
+            modifiers = bonus ~= 0 and string.format("%s%d", bonus > 0 and "+" or "", bonus) or "",
+            critical = crit and "CRITICO" or (d20 == 1 and "FALLO" or nil),
+        })
+    end
+
+    local function Announce(text)
+        if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+            HarfordDnDRolls.Broadcast({ type = "info", label = text })
+        else
+            HarfordChat.Print(text)
+        end
+    end
 
     if not success then
-        print("|cffff5555Fallo.|r " .. line)
         -- Fallo: por defecto NO gasta materiales (mas amable para RP). Cambiar si se quiere coste.
+        Announce(string.format("falla al fabricar %s.", r.name or outName))
         return false, "fallo"
     end
 
@@ -369,12 +411,8 @@ function API.Craft(recipeId)
     if outId and server and server.GiveItem then server.GiveItem(outId, outQty) end
 
     SkillUp(r.profession, r)
-    print(string.format("|cff33ff99%s x%d.|r %s%s",
-        outName, outQty, line, crit and "  |cffffd100CRITICO (x2)|r" or ""))
-    if HarfordDnDRolls and HarfordDnDRolls.BroadcastAbility then
-        -- Anuncio en mesa como cualquier accion real (norma de activacion).
-        HarfordDnDRolls.BroadcastAbility({ name = "Crafteo: " .. (r.name or outName) })
-    end
+    Announce(string.format("fabrica %s x%d.%s", outName, outQty,
+        crit and " |cffffd100Obra maestra: produccion doble.|r" or ""))
     return true
 end
 

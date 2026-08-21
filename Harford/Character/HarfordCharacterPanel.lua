@@ -3272,6 +3272,33 @@ local function ProfButton(i)
     b.barText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     b.barText:SetPoint("CENTER", bar, "CENTER", 0, 2)
     b.bar = bar
+    -- Botones de "hechizo" del sello, como en el libro nativo: icono cuadrado con marco y
+    -- nombre al lado. El sello en si NO abre nada; abrir la profesion es uno de estos botones,
+    -- de modo que una profesion con herramienta puede ofrecer ademas la tirada suelta.
+    local function SpellButton(index)
+        local sb = CreateFrame("Button", nil, b)
+        sb:SetSize(150, 38)
+        sb:SetPoint("TOPLEFT", 236, -14 - (index - 1) * 42)
+        sb.icon = sb:CreateTexture(nil, "ARTWORK")
+        sb.icon:SetSize(32, 32)
+        sb.icon:SetPoint("LEFT", sb, "LEFT", 0, 0)
+        sb.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        sb.border = sb:CreateTexture(nil, "OVERLAY")
+        sb.border:SetTexture("Interface\\Buttons\\UI-Quickslot2")
+        sb.border:SetSize(56, 56)
+        sb.border:SetPoint("CENTER", sb.icon, "CENTER", 0, -1)
+        sb.label = sb:CreateFontString(nil, "OVERLAY")
+        sb.label:SetFont("Fonts\\FRIZQT__.TTF", 11)
+        sb.label:SetPoint("LEFT", sb.icon, "RIGHT", 8, 0)
+        sb.label:SetWidth(104)
+        sb.label:SetJustifyH("LEFT")
+        sb.label:SetTextColor(0.16, 0.08, 0.03)
+        sb:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        sb:Hide()
+        return sb
+    end
+    b.spellOpen = SpellButton(1)   -- abre la ventana de recetas
+    b.spellTool = SpellButton(2)   -- tirada suelta de la herramienta
     P.profButtons[i] = b
     return b
 end
@@ -3339,7 +3366,12 @@ local function RefreshProfessions()
                 b.bar:Show()
                 b.bar:SetValue(skill)
                 b.barText:SetText(string.format("%d/%d", skill, HarfordProfessions.MAX_SKILL))
-                b:SetScript("OnClick", function()
+                -- El sello es el envoltorio: no abre nada por si mismo (como el libro nativo,
+                -- donde se pulsa el boton de hechizo). Abrir la profesion es `spellOpen`.
+                b:SetScript("OnClick", nil)
+                b.spellOpen.icon:SetTexture("Interface\\Icons\\" .. (def.icon or "INV_Misc_QuestionMark"))
+                b.spellOpen.label:SetText(def.name)
+                b.spellOpen:SetScript("OnClick", function()
                     P.selected = profId
                     if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Open then
                         HarfordProfessionsCraftUI.Open(profId)
@@ -3349,6 +3381,18 @@ local function RefreshProfessions()
                         RefreshProfessions()
                     end
                 end)
+                b.spellOpen:Show()
+                -- Segundo boton solo si la profesion tiene herramienta: tirada suelta de uso.
+                if def.tool and HarfordProfessions.RollTool then
+                    b.spellTool.icon:SetTexture("Interface\\Icons\\Trade_Engineering")
+                    b.spellTool.label:SetText(def.tool)
+                    b.spellTool:SetScript("OnClick", function()
+                        HarfordProfessions.RollTool(profId)
+                    end)
+                    b.spellTool:Show()
+                else
+                    b.spellTool:Hide()
+                end
                 b:Show()
             elseif emptySlot then
                 -- Envoltorio vacio: marco + hueco de icono, sin barra ni click
@@ -3358,6 +3402,8 @@ local function RefreshProfessions()
                 b.sub:SetText("Se aprende con la competencia de su herramienta o del DM.")
                 b.bar:Hide()
                 b:SetScript("OnClick", nil)
+                b.spellOpen:Hide()
+                b.spellTool:Hide()
                 b:Show()
             else
                 b:Hide()

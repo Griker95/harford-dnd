@@ -26,6 +26,12 @@ API.SOUNDS = API.SOUNDS or {
     skills_panel_opened = { id = 567440, kind = "file" },
     skills_panel_tab_changed = { id = 567440, kind = "file" },
     reputation_tracking_changed = { id = 856, kind = "soundkit" },
+    -- Crafteo. IDs PROVISIONALES: suenan, pero no son los del TradeSkillFrame nativo.
+    -- Para cambiarlos por los reales: `/harford debug run nativeprobe sound on`, craftear
+    -- en el frame nativo y mirar `HarfordDebugSettings.soundLog`.
+    craft_started = { id = 567504, kind = "file" },
+    craft_succeeded = { id = 567439, kind = "file" },
+    craft_failed = { id = 567459, kind = "file" },
 }
 
 local function PlayEntry(entry, channel)

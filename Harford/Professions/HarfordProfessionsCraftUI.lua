@@ -413,29 +413,88 @@ local function CreateFrameIfNeeded()
     -- empezar la siguiente, porque `RemoveItem` es un comando de servidor asincrono y encadenar a
     -- ciegas dejaria craftear con material ya gastado (ademas de reventar el servidor a comandos).
     local MAX_QUEUE = 20
+    local CRAFT_TIME = 3.0   -- fundicion visible, al estilo del lanzamiento nativo
     local queue = { left = 0, timeout = nil }
     local bagWatcher = CreateFrame("Frame")
+
+    -- Barra de fundicion con el arte de la barra de lanzamiento nativa. El OnUpdate solo vive
+    -- mientras dura la fundicion y se retira al terminar (no hay ticks permanentes).
+    local castBar = CreateFrame("StatusBar", nil, frame)
+    castBar:SetSize(220, 18)
+    castBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 10)
+    local castFill = "Interface\\CastingBar\\UI-CastingBar-Fill"
+    castBar:SetStatusBarTexture(
+        (GetFileIDFromPath and not GetFileIDFromPath(castFill)) and "Interface\\TargetingFrame\\UI-StatusBar" or castFill)
+    castBar:SetStatusBarColor(1, 0.7, 0)
+    castBar:SetMinMaxValues(0, 1)
+    local castBg = castBar:CreateTexture(nil, "BACKGROUND")
+    castBg:SetColorTexture(0, 0, 0, 0.6)
+    castBg:SetAllPoints(castBar)
+    local castBorder = castBar:CreateTexture(nil, "OVERLAY")
+    local borderPath = "Interface\\CastingBar\\UI-CastingBar-Border"
+    if not GetFileIDFromPath or GetFileIDFromPath(borderPath) then
+        castBorder:SetTexture(borderPath)
+        castBorder:SetPoint("TOPLEFT", castBar, "TOPLEFT", -23, 20)
+        castBorder:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", 23, -20)
+    else
+        castBorder:Hide()
+    end
+    castBar.text = castBar:CreateFontString(nil, "OVERLAY")
+    castBar.text:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+    castBar.text:SetPoint("CENTER", castBar, "CENTER", 0, 0)
+    castBar:Hide()
+    frame.castBar = castBar
+
+    local function CancelCast()
+        castBar:SetScript("OnUpdate", nil)
+        castBar:Hide()
+    end
 
     local function StopQueue(reason)
         queue.left = 0
         bagWatcher:UnregisterAllEvents()
         if queue.timeout then queue.timeout = nil end
-        if reason then HarfordChat.Print(reason) end
+        CancelCast()
+        if reason and HarfordChat and HarfordChat.Print then HarfordChat.Print(reason) end
         RefreshUI()
+    end
+    frame:HookScript("OnHide", function() StopQueue() end)
+
+    local ResolveCraft
+
+    -- Fundicion: animacion de artesano en el personaje + barra + sonido, y la receta se
+    -- resuelve (tirada incluida) SOLO al terminar la barra.
+    local function BeginCast(recipeName)
+        if HarfordServerActions and HarfordServerActions.ModAnim then
+            HarfordServerActions.ModAnim(69, { addonName = "Harford", showMessages = false })
+        end
+        if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("craft_started") end
+        castBar.text:SetText(recipeName or "")
+        castBar:SetValue(0)
+        castBar:Show()
+        local elapsed = 0
+        castBar:SetScript("OnUpdate", function(self, dt)
+            elapsed = elapsed + dt
+            self:SetValue(math.min(1, elapsed / CRAFT_TIME))
+            if elapsed >= CRAFT_TIME then
+                CancelCast()
+                ResolveCraft()
+            end
+        end)
     end
 
     local CraftNext
-    CraftNext = function()
-        if queue.left <= 0 then return StopQueue() end
+    ResolveCraft = function()
         if not (state.selected and HarfordProfessions and HarfordProfessions.Craft) then
             return StopQueue()
         end
-        queue.left = queue.left - 1
         -- Craft revalida CanCraft por su cuenta y descuenta el material reservado, asi que una
         -- pieza que ya no se puede hacer corta la cola en vez de seguir intentandolo.
-        if not HarfordProfessions.Craft(state.selected) then
-            return StopQueue()
+        local ok = HarfordProfessions.Craft(state.selected)
+        if HarfordUISounds and HarfordUISounds.Play then
+            HarfordUISounds.Play(ok and "craft_succeeded" or "craft_failed")
         end
+        if not ok then return StopQueue() end
         if queue.left <= 0 then return StopQueue() end
         -- Encadenar solo cuando el servidor confirme el gasto (o rendirse si no llega).
         bagWatcher:RegisterEvent("BAG_UPDATE_DELAYED")
@@ -449,6 +508,15 @@ local function CreateFrameIfNeeded()
             end)
         end
         RefreshUI()
+    end
+
+    CraftNext = function()
+        if queue.left <= 0 then return StopQueue() end
+        if not state.selected then return StopQueue() end
+        queue.left = queue.left - 1
+        local rec = HarfordProfessions and HarfordProfessions.GetRecipe
+            and HarfordProfessions.GetRecipe(state.selected)
+        BeginCast(rec and (rec.name or rec.id) or "")
     end
 
     bagWatcher:SetScript("OnEvent", function()

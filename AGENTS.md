@@ -2287,13 +2287,18 @@ recetas al catalogo no obliga a tocar entrenadores. `recipes` queda para casos s
 El nivel de habilidad del jugador sigue subiendo libre hasta 300: el rango solo decide de quien
 se aprende, no hasta donde se puede subir.
 
-**El nombre de catalogo lleva la informacion dentro.** `herreria_experto` son la profesion y el
-rango, y `API.SplitId` los deduce de ahi, asi que una entrada del catalogo es `{ id, name }` y
-nada mas. Se parte por el ULTIMO guion bajo porque hay profesiones con guion dentro
-(`primeros_auxilios`), y solo se acepta si el sufijo es un rango real, de modo que un entrenador
-con nombre propio (`thorgas_yunquegris`) no se malinterpreta: ese si declara `profession`/`tier`.
-La resolucion es perezosa (`ResolverCatalogo` al primer `GetAll`), no al cargar, para no depender
-del orden del toc. No volver a escribir profesion y rango en cada linea del catalogo.
+**NO HAY LISTA DE ENTRENADORES.** Existe uno por cada par (profesion, rango) que tenga recetas, y
+`API.Get`/`API.GetAll` los construyen al vuelo. Del nombre `herreria_experto` salen la profesion,
+el rango, las recetas que cubre y el nombre por defecto (`Instructor de <profesion>`), asi que
+escribir el catalogo era escribir 75 veces lo que ya estaba en el nombre. `API.SplitId` parte por
+el ULTIMO guion bajo, porque hay profesiones con guion dentro (`primeros_auxilios`), y solo acepta
+la deduccion si el sufijo es un rango real: un entrenador con nombre propio
+(`thorgas_yunquegris`) no se malinterpreta y solo existe si esta declarado con sus campos.
+
+Lo unico hardcodeado es **`API.PLACED`**, que empieza vacio: los que YA existen en el mundo, con
+su `name` y `zone` reales. Una entrada ahi cierra su rango. Se le deducen `profession`/`tier` en
+`Declarados()` —una entrada escrita a mano es solo `{ id, name, zone }` y sin esos campos no
+cubriria ninguna receta—. No reintroducir una lista de los 75: se derivan.
 
 **La identidad es el nombre de catalogo (`id`), no el NPC.** Un entrenador NO apunta a un template
 id: es el NPC quien declara en su gossip que nombre encarna, con
@@ -2303,18 +2308,24 @@ entrada antes de refinarla: **no muta `API.TRAINERS`**. `Teach(nombreDeCatalogo,
 `Get(nombreDeCatalogo)` van por lo mismo. No reintroducir `npc`, `GetByNpc` ni
 `GetTrainerForNpc`: se retiraron justamente por esto.
 
-**Lo que cierra un rango es `colocado`, no estar en el catalogo.** El catalogo trae los 75
-entrenadores (15 profesiones x 5 rangos) desde el primer dia para que el libro pueda decir quien
-ensenara cada receta antes de que ese NPC exista, pero todos arrancan `colocado = false`. Si la
-mera presencia en el catalogo cerrase el rango, las 1605 recetas quedarian inalcanzables de golpe
-porque ninguno de esos NPCs esta puesto todavia. `IsTaught` exige `colocado`; se pone a `true` en
-el Lua al colocar el NPC, o en vivo via `Bind`. `Unbind` deshace solo lo registrado en vivo.
+**Lo que cierra un rango es estar COLOCADO, no existir.** Los 75 entrenadores (15 profesiones x 5
+rangos) existen deducidos desde el primer dia, para que el libro pueda decir quien ensenara cada
+receta antes de que ese NPC este puesto; pero solo cierran su rango los de `API.PLACED` y los
+registrados en vivo. Si la mera existencia cerrase el rango, las 2309 recetas quedarian
+inalcanzables de golpe. Por eso `IsTaught` recorre SOLO los declarados —son pocos y no construye
+ninguna tabla, que importa porque se llama por cada fila de la lista de recetas—. `Unbind` deshace
+solo lo registrado en vivo.
+
+**`skillReq = 0` es Aprendiz.** 37 recetas reales lo traen, y `tonumber(0) or 1` sigue siendo 0:
+quedaban por debajo del minimo del primer rango y no caian en NINGUNO, asi que se quedaban sin
+entrenador. El helper `SkillReq` lo acota a 1. Verificado contra los datos reales: 2309 de 2309
+recetas tienen entrenador que las cubra.
 
 `API.Define` sigue existiendo para un entrenador que NO este en el catalogo, y rechaza rango
 desconocido, profesion ajena y cobertura vacia (un NPC mudo no se registra).
 
-**Nada de esto toca SavedVariables**: el catalogo vive en el Lua y el registro en vivo (`vivos`)
-muere con el `/reload`. Lo unico que persiste al aprender es `HarfordProfessionsStore.learned[id]
+**Nada de esto toca SavedVariables**: los entrenadores se deducen, `API.PLACED` vive en el Lua y
+el registro en vivo (`vivos`) muere con el `/reload`. Lo unico que persiste al aprender es `HarfordProfessionsStore.learned[id]
 = true`, un booleano por receta realmente aprendida.
 
 Pruebas: `/harford debug run entrenador` resume por profesion, `entrenador <profesion>` desglosa

@@ -148,6 +148,7 @@ local function CreateSpellsPage()
     filterBtn:SetPoint("LEFT", search, "RIGHT", 10, 0)
     filterBtn:SetText("Filtros")
     filterBtn:SetScript("OnClick", function(self)
+        if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("filter_menu_opened") end
         ToggleDropDownMenu(1, nil, S.spellFilterDropdown, self, 0, 0)
     end)
 
@@ -227,13 +228,27 @@ local function CreateSpellsPage()
     nxt:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
     nxt:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Down")
     nxt:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Disabled")
-    nxt:SetScript("OnClick", function() S.spellBook.pageNum = S.spellBook.pageNum + 1; RefreshSpells() end)
+    nxt:SetScript("OnClick", function()
+        -- Aqui no se sabe cual es la ultima pagina: RefreshSpells es quien reajusta. Se
+        -- compara despues, para no sonar al pulsar avanzar en el ultimo pliego.
+        local antes = S.spellBook.pageNum
+        S.spellBook.pageNum = antes + 1
+        RefreshSpells()
+        if S.spellBook.pageNum ~= antes then if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end end
+    end)
     local prev = CreateFrame("Button", nil, area)
     prev:SetSize(32, 32); prev:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -66, 26)
     prev:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up")
     prev:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Down")
     prev:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Disabled")
-    prev:SetScript("OnClick", function() S.spellBook.pageNum = math.max(1, S.spellBook.pageNum - 1); RefreshSpells() end)
+    prev:SetScript("OnClick", function()
+        -- En la primera pagina la flecha no hace nada: tampoco debe sonar.
+        if S.spellBook.pageNum > 1 then
+            S.spellBook.pageNum = S.spellBook.pageNum - 1
+            if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end
+            RefreshSpells()
+        end
+    end)
     local pageText = area:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     pageText:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -110, 38)
 

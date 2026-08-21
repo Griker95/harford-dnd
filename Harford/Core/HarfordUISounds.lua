@@ -44,6 +44,12 @@ API.SOUNDS = API.SOUNDS or {
     -- Cambio de pestana LATERAL del libro (capturado sobre SpellBookSkillLineTab del nativo).
     -- Ojo: no es el 856 de la reputacion, aunque se parezcan.
     book_side_tab_changed = { id = 836, kind = "soundkit" },
+    -- Pasar pagina. Comparte kit con la pestana lateral (asi es en el nativo), pero tiene
+    -- nombre propio: son eventos distintos y uno podria cambiar sin arrastrar al otro.
+    book_page_turned = { id = 836, kind = "soundkit" },
+    -- Abrir el desplegable de filtros. Comparte kit con reputation_tracking_changed (856), que
+    -- es el sonido generico de marcar en la interfaz de Blizzard.
+    filter_menu_opened = { id = 856, kind = "soundkit" },
 }
 
 local function PlayEntry(entry, channel)

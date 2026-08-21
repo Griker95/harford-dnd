@@ -379,6 +379,7 @@ local function CreateFrameIfNeeded()
     filterBtn:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -12, -55)
     filterBtn:SetText("Filtro")
     filterBtn:SetScript("OnClick", function(self)
+        if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("filter_menu_opened") end
         local menu = {
             { text = "Filtrar recetas", isTitle = true, notCheckable = true },
             { text = "Todas", checked = not state.onlyCraftable, notCheckable = false,

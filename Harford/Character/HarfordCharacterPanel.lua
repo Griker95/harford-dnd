@@ -3387,7 +3387,10 @@ local function CreateProfessionsPage()
     profList:EnableMouseWheel(true)
     profList:SetScript("OnMouseWheel", function(_, delta)
         local P = S.professions
-        P.pageNum = math.max(1, (P.pageNum or 1) - delta)
+        local antes = P.pageNum or 1
+        P.pageNum = math.max(1, antes - delta)
+        -- La rueda tambien pasa pagina: suena solo si se ha movido.
+        if P.pageNum ~= antes then if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end end
         if S.RefreshProfessions then S.RefreshProfessions() end
     end)
     -- Pasapaginas: mismas texturas, medidas y anclajes que en Habilidades/Conjuros, para que
@@ -3401,8 +3404,10 @@ local function CreateProfessionsPage()
     nxt:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Disabled")
     nxt:SetScript("OnClick", function()
         local P = S.professions
-        P.pageNum = (P.pageNum or 1) + 1
+        local antes = P.pageNum or 1
+        P.pageNum = antes + 1
         if S.RefreshProfessions then S.RefreshProfessions() end
+        if P.pageNum ~= antes then if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end end
     end)
     local prev = CreateFrame("Button", nil, page)
     prev:SetSize(32, 32)
@@ -3412,7 +3417,10 @@ local function CreateProfessionsPage()
     prev:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Disabled")
     prev:SetScript("OnClick", function()
         local P = S.professions
-        P.pageNum = math.max(1, (P.pageNum or 1) - 1)
+        if (P.pageNum or 1) > 1 then
+            P.pageNum = P.pageNum - 1
+            if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end
+        end
         if S.RefreshProfessions then S.RefreshProfessions() end
     end)
     local pageText = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
@@ -4975,14 +4983,27 @@ local function CreateBookPage()
     nxt:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
     nxt:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Down")
     nxt:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Disabled")
-    nxt:SetScript("OnClick", function() S.book.pageNum = S.book.pageNum + 1; RefreshBook() end)
+    nxt:SetScript("OnClick", function()
+        -- RefreshBook es quien reajusta al maximo: se compara despues de refrescar.
+        local antes = S.book.pageNum
+        S.book.pageNum = antes + 1
+        RefreshBook()
+        if S.book.pageNum ~= antes then if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end end
+    end)
 
     local prev = CreateFrame("Button", nil, area)
     prev:SetSize(32, 32); prev:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -66, 26)
     prev:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up")
     prev:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Down")
     prev:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Disabled")
-    prev:SetScript("OnClick", function() S.book.pageNum = math.max(1, S.book.pageNum - 1); RefreshBook() end)
+    prev:SetScript("OnClick", function()
+        -- En la primera pagina la flecha no hace nada: tampoco debe sonar.
+        if S.book.pageNum > 1 then
+            S.book.pageNum = S.book.pageNum - 1
+            if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end
+            RefreshBook()
+        end
+    end)
 
     local pageText = area:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     pageText:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -110, 38)

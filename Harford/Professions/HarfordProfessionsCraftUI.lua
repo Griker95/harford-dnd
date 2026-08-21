@@ -9,7 +9,7 @@ local API = HarfordProfessionsCraftUI
 
 -- Marca de compilacion: permite comprobar QUE version esta corriendo el cliente, en vez de
 -- suponer que lo copiado a disco es lo que se ejecuta. Ver `/harford debug run craftver`.
-API.BUILD = "20260821-123157"
+API.BUILD = "20260821-124720"
 
 
 local frame            -- ventana (creada bajo demanda)
@@ -70,6 +70,9 @@ local TEX = {
     tabHighlight = "Interface\\PaperDollInfoFrame\\UI-Character-Tab-Highlight",     -- 136580
     nameFrame    = "Interface\\QuestFrame\\UI-QuestItemNameFrame",                  -- 136796
     rowHighlight = "Interface\\Buttons\\UI-Listbox-Highlight2",                     -- 130783
+    -- Resaltado del icono de plegar (16x16), NO de la fila entera: el XML nativo lo declara
+    -- como HighlightTexture del boton con tamano y anclaje propios.
+    expanderHi   = "Interface\\Buttons\\UI-PlusButton-Hilight",
 }
 
 
@@ -98,7 +101,14 @@ local function CreateReagentSlot(parent, index)
     if not ok or not slot then return nil end
     local column = (index - 1) % 2
     local rowIndex = math.floor((index - 1) / 2)
-    slot:SetPoint("TOPLEFT", parent, "TOPLEFT", 5 + column * 147, -120 - rowIndex * 43)
+    -- Anclados a la etiqueta "Materiales", NO a una `y` fija del panel: la descripcion y los
+    -- requisitos crecen con el texto de cada receta, y con un -120 fijo los materiales se les
+    -- montaban encima. El XML nativo hace lo mismo (Reagents -> ReagentLabel.BOTTOMLEFT -5,-6).
+    local ancla = parent.reagentsTitle or parent
+    local relativo = parent.reagentsTitle and "BOTTOMLEFT" or "TOPLEFT"
+    local baseY = parent.reagentsTitle and -6 or -120
+    local baseX = parent.reagentsTitle and -5 or 5
+    slot:SetPoint("TOPLEFT", ancla, relativo, baseX + column * 147, baseY - rowIndex * 43)
     slot.icon = slot.Icon or slot.icon
     slot.name = slot.Name or slot.name
     if not slot.count then
@@ -120,6 +130,36 @@ local function CreateReagentSlot(parent, index)
     return slot
 end
 
+-- Habilita o apaga la caja de cantidad Y sus flechas. `NumericInputSpinnerTemplate` trae su
+-- propio SetEnabled, que es el que pone las flechas en su textura Disabled.
+-- Estado de las flechas de un scroll, con la regla de siempre:
+--   sin recorrido            -> las dos apagadas
+--   arriba del todo          -> la de subir apagada
+--   abajo del todo           -> la de bajar apagada
+--   en medio                 -> las dos encendidas
+-- Un Slider no lo hace por su cuenta: en el nativo lo hace ScrollFrame_OnScrollRangeChanged.
+-- Las plantillas nombran sus flechas de dos formas segun cual sea, asi que se prueban ambas.
+local function UpdateScrollArrows(slider)
+    if not slider then return end
+    local minimo, maximo = slider:GetMinMaxValues()
+    minimo, maximo = minimo or 0, maximo or 0
+    local valor = slider:GetValue() or 0
+    local hayRecorrido = maximo > minimo
+    local arriba = slider.ScrollUpButton or slider.ScrollUp
+    local abajo = slider.ScrollDownButton or slider.ScrollDown
+    if arriba and arriba.SetEnabled then arriba:SetEnabled(hayRecorrido and valor > minimo) end
+    if abajo and abajo.SetEnabled then abajo:SetEnabled(hayRecorrido and valor < maximo) end
+    if slider.SetEnabled then slider:SetEnabled(hayRecorrido) end
+end
+
+local function SetQuantityEnabled(enabled)
+    local qty = frame and frame.qtyBox
+    if not qty then return end
+    if qty.SetEnabled then pcall(qty.SetEnabled, qty, enabled and true or false) end
+    if qty.IncrementButton then qty.IncrementButton:SetEnabled(enabled and true or false) end
+    if qty.DecrementButton then qty.DecrementButton:SetEnabled(enabled and true or false) end
+end
+
 local function CreateRow(parent, index)
     -- XML TradeSkillRowButtonTemplate: boton 300x16; el icono de plegar es 16x16 en LEFT +3
     -- (no +23, deduccion mia equivocada), el texto va a su RIGHT +2,+1 con 270x13 y fuente
@@ -128,11 +168,21 @@ local function CreateRow(parent, index)
     local row = CreateFrame("Button", nil, parent)
     row:SetSize(300, ROW_H)
     row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -((index - 1) * ROW_H))
-    row:SetHighlightTexture(TEX.rowHighlight, "ADD")
-    row.sel = row:CreateTexture(nil, "BACKGROUND")
+    -- XML TradeSkillRowButtonTemplate: el HighlightTexture es UI-PlusButton-Hilight de 16x16 en
+    -- LEFT +3, es decir SOLO sobre el icono de plegar. Sin tamano ni anclaje, WoW lo estira a
+    -- todo el boton y aparece la franja blanca que no tiene el nativo.
+    row:SetHighlightTexture(TEX.expanderHi, "ADD")
+    row.hi = row:GetHighlightTexture()
+    if row.hi then
+        row.hi:SetSize(16, 16)
+        row.hi:ClearAllPoints()
+        row.hi:SetPoint("LEFT", row, "LEFT", 3, 0)
+    end
+    -- XML: SelectedTexture es UI-Listbox-Highlight2 en capa ARTWORK, oculta por defecto. Se crea
+    -- ANTES que el texto para que este quede por encima dentro de la misma capa.
+    row.sel = row:CreateTexture(nil, "ARTWORK")
     row.sel:SetTexture(TEX.rowHighlight)
     row.sel:SetAllPoints(row)
-    row.sel:SetAlpha(0.35)
     row.sel:Hide()
     row.expander = CreateFrame("Button", nil, row)
     row.expander:SetSize(16, 16)
@@ -143,6 +193,23 @@ local function CreateRow(parent, index)
     row.text:SetJustifyH("LEFT")
     row.text:SetSize(270, 13)
     row.text:SetWordWrap(false)
+    -- Lo que el nativo SI cambia al pasar por encima es el color del texto, porque su texto es
+    -- el ButtonText del boton y usa la fuente de resaltado. Aqui el texto es una FontString
+    -- propia (hace falta para colorearlo por dificultad), asi que el cambio se hace a mano
+    -- guardando el color base y devolviendolo al salir.
+    row:SetScript("OnEnter", function(self)
+        self.text:SetTextColor(1, 1, 1)
+    end)
+    row:SetScript("OnLeave", function(self)
+        -- La fila seleccionada se queda en blanco aunque salga el raton, como el nativo.
+        if self.recipeId and self.recipeId == state.selected then
+            self.text:SetTextColor(1, 1, 1)
+            return
+        end
+        local c = self.baseColor
+        if c then self.text:SetTextColor(c[1], c[2], c[3]) else self.text:SetTextColor(1, 0.82, 0) end
+    end)
+
     row.count = row:CreateFontString(nil, "ARTWORK", "GameFontNormal")
     row.count:SetPoint("RIGHT", row, "RIGHT", -2, 1)
     row.count:SetTextColor(1, 0.82, 0)
@@ -226,6 +293,7 @@ local function CreateFrameIfNeeded()
     if slider.SetObeyStepOnDrag then slider:SetObeyStepOnDrag(true) end
     slider._updating = false
     slider:SetScript("OnValueChanged", function(self, value)
+        UpdateScrollArrows(self)
         if self._updating then return end
         state.offset = math.floor(value + 0.5)
         RefreshUI()
@@ -275,7 +343,11 @@ local function CreateFrameIfNeeded()
         search:SetFont("Fonts\\FRIZQT__.TTF", 10)
     end
     search:SetSize(112, 20)
-    search:SetPoint("TOPLEFT", frame, "TOPLEFT", 220, -54)
+    -- 230 y no los 220 del XML: con el ancho de nuestras pestanas el buscador quedaba pegado a
+    -- "No aprendidas".
+    search:SetPoint("TOPLEFT", frame, "TOPLEFT", 230, -54)
+    -- La plantilla pone "Search" en ingles; el texto de sugerencia es suyo, no del EditBox.
+    if search.Instructions then search.Instructions:SetText("Buscar") end
     search:SetScript("OnTextChanged", function(self)
         if SearchBoxTemplate_OnTextChanged then pcall(SearchBoxTemplate_OnTextChanged, self) end
         state.search = self:GetText() or ""
@@ -328,14 +400,16 @@ local function CreateFrameIfNeeded()
     detailSlider:SetPoint("BOTTOMLEFT", detailScroll, "BOTTOMRIGHT", 6, 17)
     detailSlider:SetMinMaxValues(0, 0)
     detailSlider:SetValueStep(10)
-    detailSlider:SetScript("OnValueChanged", function(_, value)
+    detailSlider:SetScript("OnValueChanged", function(self, value)
         detailScroll:SetVerticalScroll(value)
+        UpdateScrollArrows(self)
     end)
     detailScroll:EnableMouseWheel(true)
     detailScroll:SetScript("OnMouseWheel", function(_, delta)
         local mx = select(2, detailSlider:GetMinMaxValues())
         detailSlider:SetValue(math.max(0, math.min(mx, detailSlider:GetValue() - delta * 20)))
     end)
+    detailSlider:Show()
     frame.detailSlider = detailSlider
     -- Fondo del detalle: en el XML pertenece al ScrollFrame, NO al contenido que scrollea
     -- (`Texture parentKey="Background" atlas="tradeskill-background-recipe"` 310x383 en
@@ -351,6 +425,23 @@ local function CreateFrameIfNeeded()
         detailBg:SetAllPoints(detailScroll)
     end
     frame.detailBg = detailBg
+    -- El nativo usa DOS fondos distintos para el panel de detalle: el normal y uno propio para
+    -- recetas NO aprendidas (`tradeskill-background-recipe-unlearned`). Salio del diff entre la
+    -- sonda del frame nativo (capturada en la pestana "No aprendidas") y la nuestra: alli
+    -- aparece el atlas `-unlearned` y no el normal.
+    detailBg.atlasNormal = "tradeskill-background-recipe"
+    detailBg.atlasUnlearned = "tradeskill-background-recipe-unlearned"
+    frame.SetDetailBackground = function(_, aprendida)
+        if not (detailBg.SetAtlas and C_Texture and C_Texture.GetAtlasInfo) then return end
+        local nombre = aprendida and detailBg.atlasNormal or detailBg.atlasUnlearned
+        -- Si el cliente no conoce el atlas de no aprendidas, se queda con el normal antes que
+        -- dejar el panel sin fondo.
+        if not C_Texture.GetAtlasInfo(nombre) then nombre = detailBg.atlasNormal end
+        if not C_Texture.GetAtlasInfo(nombre) then return end
+        detailBg:SetAtlas(nombre)
+        detailBg:SetSize(310, 383)
+        detailBg:SetPoint("TOPLEFT", detailScroll, "TOPLEFT", -5, 0)
+    end
 
     -- Icono de la receta: 47x47 en +10,-20 con el borde 51x51 CENTRADO (el nativo usa un
     -- marco MAS GRANDE centrado, no uno del mismo tamaño pegado al icono).
@@ -543,15 +634,18 @@ local function CreateFrameIfNeeded()
     state.IsCrafting = function() return queue.left > 0 end
     local exitBtn = CreateFrame("Button", nil, frame, "MagicButtonTemplate")
     exitBtn:SetSize(80, 22)
-    exitBtn:SetPoint("TOPRIGHT", insetRight, "BOTTOMRIGHT", 22, -3)
+    exitBtn:SetPoint("TOPRIGHT", detailScroll, "BOTTOMRIGHT", 22, -3)
     exitBtn:SetText("Salir")
     exitBtn:SetScript("OnClick", function() frame:Hide() end)
     frame.craftBtn = CreateFrame("Button", nil, frame, "MagicButtonTemplate")
     frame.craftBtn:SetSize(80, 22)
-    frame.craftBtn:SetPoint("TOPRIGHT", exitBtn, "TOPLEFT", -1, 0)
+    -- XML: CreateButton se ancla TOPRIGHT>ExitButton.TOPLEFT SIN desplazamiento.
+    frame.craftBtn:SetPoint("TOPRIGHT", exitBtn, "TOPLEFT", 0, 0)
     frame.craftBtn:SetText("Crear")
     frame.craftBtn:SetScript("OnClick", function()
-        CraftTimes(frame.qtyBox and frame.qtyBox:GetNumber() or 1)
+        local box = frame.qtyBox
+        local n = box and tonumber(box.GetNumber and box:GetNumber() or box:GetText()) or 1
+        CraftTimes(n)
     end)
     -- El XML declara CreateMultipleInputBox como `inherits="NumericInputSpinnerTemplate"`
     -- anclado LEFT>CrearTodo.RIGHT +31: es el que trae las flechas del nativo.
@@ -569,11 +663,38 @@ local function CreateFrameIfNeeded()
     frame.qtyBox = qty
     frame.craftAllBtn = CreateFrame("Button", nil, frame, "MagicButtonTemplate")
     frame.craftAllBtn:SetSize(80, 22)
-    frame.craftAllBtn:SetPoint("TOPLEFT", insetRight, "BOTTOMLEFT", -5, -3)
+    frame.craftAllBtn:SetPoint("TOPLEFT", detailScroll, "BOTTOMLEFT", -5, -3)
     frame.craftAllBtn:SetText("Crear todo")
     -- XML: CreateMultipleInputBox se ancla LEFT>CreateAllButton.RIGHT +31,0. Se hace aqui
     -- porque el boton se crea despues que la caja.
     qty:SetPoint("LEFT", frame.craftAllBtn, "RIGHT", 31, 0)
+
+    -- Flechas -1 / +1 tal como las declara NumericInputSpinnerTemplate en el XML del cliente:
+    -- botones 23x22, Increment a LEFT>caja.RIGHT +0,0 y Decrement a RIGHT>caja.LEFT -6,0, con
+    -- el arte de paso de pagina del libro de hechizos y el resaltado comun. Solo se crean si
+    -- la plantilla no las trajo ya.
+    if not (qty.DecrementButton and qty.IncrementButton) then
+        local function SpinnerButton(page, point, relPoint, dx, delta)
+            local b = CreateFrame("Button", nil, frame)
+            b:SetSize(23, 22)
+            b:SetPoint(point, qty, relPoint, dx, 0)
+            local base = "Interface\\Buttons\\UI-SpellbookIcon-" .. page .. "Page-"
+            b:SetNormalTexture(base .. "Up")
+            b:SetPushedTexture(base .. "Down")
+            b:SetDisabledTexture(base .. "Disabled")
+            b:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+            b:SetScript("OnClick", function()
+                local current = tonumber(qty.GetNumber and qty:GetNumber() or qty:GetText()) or 1
+                local maximo = frame.craftAllBtn and frame.craftAllBtn.craftableCount or MAX_QUEUE
+                maximo = math.max(1, math.min(MAX_QUEUE, maximo))
+                qty:SetText(tostring(math.max(1, math.min(maximo, current + delta))))
+            end)
+            return b
+        end
+        frame.qtyPlus  = SpinnerButton("Next", "LEFT", "RIGHT", 0, 1)
+        frame.qtyMinus = SpinnerButton("Prev", "RIGHT", "LEFT", -6, -1)
+    end
+
     frame.craftAllBtn:SetScript("OnClick", function()
         CraftTimes(frame.craftAllBtn.craftableCount or 1)
     end)
@@ -637,15 +758,14 @@ RefreshUI = function()
         if sa ~= sb then return sa < sb end
         return tostring(a.name or a.id) < tostring(b.name or b.id)
     end)
-    local display, lastTier, headerIdx = {}, nil, nil
+    local display, lastTier = {}, nil
     for _, r in ipairs(recipes) do
         local tier = HarfordProfessions.GetTierName(tonumber(r.skillReq) or 1)
         if tier ~= lastTier then
-            display[#display + 1] = { header = tier, count = 0 }
-            headerIdx = #display
+            -- Sin contador de recetas por rango: la cabecera solo nombra el rango.
+            display[#display + 1] = { header = tier }
             lastTier = tier
         end
-        display[headerIdx].count = display[headerIdx].count + 1
         if not state.collapsed[tier] then display[#display + 1] = r end
     end
 
@@ -657,6 +777,7 @@ RefreshUI = function()
         s:SetMinMaxValues(0, maxOffset)
         s:SetValue(state.offset)
         s._updating = false
+        UpdateScrollArrows(s)
     end
     for i = 1, ROWS_VISIBLE do
         local row = state.rows[i]
@@ -675,10 +796,12 @@ RefreshUI = function()
                 RefreshUI()
             end)
             row.expander:Show()
+            -- El resaltado es el del icono de plegar: solo tiene sentido donde hay icono.
+            if row.hi then row.hi:SetAlpha(1) end
             row.text:SetText(entry.header)
             row.text:SetTextColor(1, 0.82, 0)
-            row.count:SetText(tostring(entry.count))
-            row.count:SetTextColor(1, 0.82, 0)
+            row.baseColor = { 1, 0.82, 0 }
+            row.count:SetText("")
             row.sel:Hide()
             row:Show()
         elseif entry then
@@ -698,12 +821,19 @@ RefreshUI = function()
             -- Como el nativo: el nombre va limpio y la CANTIDAD FABRICABLE va suelta a la
             -- derecha, con el mismo color de dificultad de la fila.
             row.expander:Hide()
+            -- Sin icono de plegar no hay nada que iluminar: dejarlo encendido pintaba un brillo
+            -- suelto en el margen izquierdo que el nativo no tiene.
+            if row.hi then row.hi:SetAlpha(0) end
             row.text:SetText(rec.name or rec.id)
             row.text:SetTextColor(r, g, b)
+            row.baseColor = { r, g, b }
             row.count:SetText((craftable and craftable > 0) and tostring(craftable) or "")
             row.count:SetTextColor(r, g, b)
             row.sel:SetVertexColor(r, g, b)   -- nativo: la seleccion toma el color de la fila
-            row.sel:SetShown(rec.id == state.selected)
+            local seleccionada = rec.id == state.selected
+            row.sel:SetShown(seleccionada)
+            -- Seleccionada: texto en blanco y ahi se queda (el nativo hace lo mismo).
+            if seleccionada then row.text:SetTextColor(1, 1, 1) end
             row:Show()
         else
             row.recipeId = nil
@@ -727,6 +857,7 @@ RefreshUI = function()
             frame.craftAllBtn.craftableCount = 0
             frame.craftAllBtn:SetEnabled(false)
         end
+        SetQuantityEnabled(false)
         return
     end
     d.icon:SetTexture(RecipeIconTexture(sel))
@@ -782,13 +913,18 @@ RefreshUI = function()
         slot:Show()
     end
     for i = #mats + 1, #state.reagents do state.reagents[i]:Hide() end
+    if frame.SetDetailBackground then
+        frame:SetDetailBackground(state.tab ~= "unlearned")
+    end
     if frame.detailSlider then
         -- Alto real del contenido: cabecera (120) + filas de materiales de 43.
         local needed = 120 + math.ceil(#mats / 2) * 43
         local over = math.max(0, needed - 385)
         frame.detailSlider:SetMinMaxValues(0, over)
         if frame.detailSlider:GetValue() > over then frame.detailSlider:SetValue(over) end
-        frame.detailSlider:SetShown(over > 0)
+        -- SIEMPRE visible, como el nativo: el rail esta ahi aunque la receta quepa entera.
+        -- Ocultarlo dejaba un hueco vacio a la derecha del detalle.
+        UpdateScrollArrows(frame.detailSlider)
     end
     frame.craftBtn:SetEnabled(ok and true or false)
     if frame.craftAllBtn then
@@ -802,6 +938,10 @@ RefreshUI = function()
         frame.craftAllBtn.craftableCount = craftableCount
         frame.craftAllBtn:SetEnabled(craftableCount > 0)
     end
+    -- El nativo apaga los TRES a la vez (TradeSkillDetailsMixin: CreateButton, CreateAllButton y
+    -- CreateMultipleInputBox comparten `effectivelyCraftable`). Sin esto las flechas de cantidad
+    -- se quedaban doradas —habilitadas— sobre una receta que no se puede fabricar.
+    SetQuantityEnabled(ok and true or false)
 end
 
 -- ── API publica ──────────────────────────────────────────────────────────────

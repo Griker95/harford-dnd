@@ -2,6 +2,10 @@
 -- HarfordFrameProbe. NO editar a mano: regenerar desde la captura.
 -- Solo SKIN (piezas, anclajes, texturas, fuentes). La logica va en su propio modulo
 -- y accede a las piezas por su uid en la tabla `parts`.
+--
+-- Los bordes de los insets llevan grosor EXPLICITO: dos anclajes en el mismo borde
+-- (BOTTOMLEFT + BOTTOMRIGHT) fijan el ancho pero no la altura, y la textura tomaba su tamano
+-- natural (128 px en vez de 3). El generador ya emite ese grosor; medidas de la sonda nativa.
 
 HarfordCraftSkin = HarfordCraftSkin or {}
 
@@ -48,28 +52,28 @@ function HarfordCraftSkin.Build(parent)
     p[9] = p[4]:CreateTexture(nil, "BORDER", nil, -5)
     p[9]:SetAtlas("_UI-Frame-InnerTopTile")
     p[9]:SetHorizTile(true)
-    p[9]:SetVertTile(true)
+    p[9]:SetHeight(6)
     p[9]:SetPoint("TOPLEFT", p[5], "TOPRIGHT", 0, 0)
     p[9]:SetPoint("TOPRIGHT", p[6], "TOPLEFT", 0, 0)
 
     p[10] = p[4]:CreateTexture(nil, "BORDER", nil, -5)
     p[10]:SetAtlas("_UI-Frame-InnerBotTile")
     p[10]:SetHorizTile(true)
-    p[10]:SetVertTile(true)
+    p[10]:SetHeight(3)
     p[10]:SetPoint("BOTTOMLEFT", p[7], "BOTTOMRIGHT", 0, 0)
     p[10]:SetPoint("BOTTOMRIGHT", p[8], "BOTTOMLEFT", 0, 0)
 
     p[11] = p[4]:CreateTexture(nil, "BORDER", nil, -5)
     p[11]:SetAtlas("!UI-Frame-InnerLeftTile")
-    p[11]:SetHorizTile(true)
     p[11]:SetVertTile(true)
+    p[11]:SetWidth(3)
     p[11]:SetPoint("TOPLEFT", p[5], "BOTTOMLEFT", 0, 0)
     p[11]:SetPoint("BOTTOMLEFT", p[7], "TOPLEFT", 0, 0)
 
     p[12] = p[4]:CreateTexture(nil, "BORDER", nil, -5)
     p[12]:SetAtlas("!UI-Frame-InnerRightTile")
-    p[12]:SetHorizTile(true)
     p[12]:SetVertTile(true)
+    p[12]:SetWidth(3)
     p[12]:SetPoint("TOPRIGHT", p[6], "BOTTOMRIGHT", 0, 0)
     p[12]:SetPoint("BOTTOMRIGHT", p[8], "TOPRIGHT", 0, 0)
 
@@ -115,28 +119,28 @@ function HarfordCraftSkin.Build(parent)
     p[20] = p[15]:CreateTexture(nil, "BORDER", nil, -5)
     p[20]:SetAtlas("_UI-Frame-InnerTopTile")
     p[20]:SetHorizTile(true)
-    p[20]:SetVertTile(true)
+    p[20]:SetHeight(6)
     p[20]:SetPoint("TOPLEFT", p[16], "TOPRIGHT", 0, 0)
     p[20]:SetPoint("TOPRIGHT", p[17], "TOPLEFT", 0, 0)
 
     p[21] = p[15]:CreateTexture(nil, "BORDER", nil, -5)
     p[21]:SetAtlas("_UI-Frame-InnerBotTile")
     p[21]:SetHorizTile(true)
-    p[21]:SetVertTile(true)
+    p[21]:SetHeight(3)
     p[21]:SetPoint("BOTTOMLEFT", p[18], "BOTTOMRIGHT", 0, 0)
     p[21]:SetPoint("BOTTOMRIGHT", p[19], "BOTTOMLEFT", 0, 0)
 
     p[22] = p[15]:CreateTexture(nil, "BORDER", nil, -5)
     p[22]:SetAtlas("!UI-Frame-InnerLeftTile")
-    p[22]:SetHorizTile(true)
     p[22]:SetVertTile(true)
+    p[22]:SetWidth(3)
     p[22]:SetPoint("TOPLEFT", p[16], "BOTTOMLEFT", 0, 0)
     p[22]:SetPoint("BOTTOMLEFT", p[18], "TOPLEFT", 0, 0)
 
     p[23] = p[15]:CreateTexture(nil, "BORDER", nil, -5)
     p[23]:SetAtlas("!UI-Frame-InnerRightTile")
-    p[23]:SetHorizTile(true)
     p[23]:SetVertTile(true)
+    p[23]:SetWidth(3)
     p[23]:SetPoint("TOPRIGHT", p[17], "BOTTOMRIGHT", 0, 0)
     p[23]:SetPoint("BOTTOMRIGHT", p[19], "TOPRIGHT", 0, 0)
 

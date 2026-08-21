@@ -110,11 +110,35 @@ class Emitter:
                       fmt(p.get('x')), fmt(p.get('y'))))
 
     def emit_size(self, var, node):
+        """Emite solo la dimension que los anclajes NO determinan.
+
+        Contar anclajes no basta: dos anclajes en el MISMO borde (BOTTOMLEFT + BOTTOMRIGHT)
+        fijan el ancho pero dejan la altura al tamano natural de la textura. Eso convertia los
+        bordes de 3 px de los insets en bandas de 64 y 128 px.
+        """
         w, h = node.get('absWidth'), node.get('absHeight')
-        # Con dos o mas anclajes el tamano lo determinan ellos: fijarlo pelearia con el layout.
-        if len([p for p in (node.get('points') or []) if isinstance(p, dict)]) >= 2:
+        puntos = [p for p in (node.get('points') or []) if isinstance(p, dict)]
+        lados = set()
+        for p in puntos:
+            punto = str(p.get('point') or '').upper()
+            for lado in ('TOP', 'BOTTOM', 'LEFT', 'RIGHT'):
+                if lado in punto:
+                    lados.add(lado)
+            if punto == 'CENTER':
+                lados.update(('TOP', 'BOTTOM', 'LEFT', 'RIGHT'))
+        # Un eje queda fijado solo si hay anclaje en sus DOS extremos.
+        fijaAncho = 'LEFT' in lados and 'RIGHT' in lados
+        fijaAlto = 'TOP' in lados and 'BOTTOM' in lados
+
+        tieneW = w is not None and num(w) > 0
+        tieneH = h is not None and num(h) > 0
+        if fijaAncho and fijaAlto:
             return
-        if w and h and num(w) > 0 and num(h) > 0:
+        if fijaAncho and tieneH:
+            self.w('    %s:SetHeight(%s)' % (var, fmt(h)))
+        elif fijaAlto and tieneW:
+            self.w('    %s:SetWidth(%s)' % (var, fmt(w)))
+        elif tieneW and tieneH:
             self.w('    %s:SetSize(%s, %s)' % (var, fmt(w), fmt(h)))
 
     # -- regiones ---------------------------------------------------------
@@ -175,8 +199,15 @@ class Emitter:
             self.w('    %s:SetDesaturated(true)' % var)
 
         if tiled:
-            self.w('    %s:SetHorizTile(true)' % var)
-            self.w('    %s:SetVertTile(true)' % var)
+            # El prefijo del atlas indica el eje: `_` repite en horizontal y `!` en vertical.
+            # Marcar los dos deformaba los bordes de una sola direccion.
+            nombreAtlas = str(r.get('atlas') or '')
+            soloHoriz = nombreAtlas.startswith('_')
+            soloVert = nombreAtlas.startswith('!')
+            if not soloVert:
+                self.w('    %s:SetHorizTile(true)' % var)
+            if not soloHoriz:
+                self.w('    %s:SetVertTile(true)' % var)
         self.emit_size(var, r)
         self.emit_points(var, r, parent_var)
         if r.get('visible') is False or r.get('shown') is False:

@@ -743,6 +743,17 @@ function Comm.SyncPublicContracts(quiet)
   if not quiet then
     TC.Print("Tablon compartido: " .. tostring(#contracts) .. " contratos. Los clientes lo aplican en unos segundos.")
   end
+
+  -- ADEMAS del snapshot en vivo, se deja el tablon escrito en la fase para quien entre
+  -- despues sin el DM conectado. No condiciona el resultado del envio: si la fase falla,
+  -- el snapshot ya salio y los clientes presentes tienen el tablon igualmente.
+  if TC.Phase and TC.Phase.IsAvailable and TC.Phase.IsAvailable() then
+    -- PublishTracked, no Publish: borrar un contrato dejaria su bloque huerfano en la fase
+    -- para siempre. El servidor no deja listar claves ni borrar por prefijo, asi que el
+    -- manifiesto es la unica forma de volver a encontrarlo.
+    TC.Phase.PublishTracked(true)
+  end
+
   return true
 end
 

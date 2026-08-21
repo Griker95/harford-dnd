@@ -300,6 +300,9 @@ end
 
 local function SetSelectedContract(contract)
   selectedContractId = contract and contract.id or nil
+  -- Si el contrato solo esta como esbozo del indice de fase, se baja su bloque completo al
+  -- abrirlo. Llega asincrono: RefreshDetails se repite solo cuando el bloque aterriza.
+  if TC.Phase and TC.Phase.EnsureContract then TC.Phase.EnsureContract(contract) end
   UI.RefreshDetails()
   UI.RefreshList()
 end
@@ -1056,6 +1059,7 @@ function UI.OpenStandalone(onClose)
   UI.standaloneOnClose = onClose
   UI.frame:Show()
   UI.Refresh()
+  if TC.Phase and TC.Phase.EnsureBoard then TC.Phase.EnsureBoard() end
   return UI.frame
 end
 
@@ -1079,6 +1083,7 @@ function UI.OpenEmbedded(parent, onClose)
   board:SetFrameLevel((parent:GetFrameLevel() or 0) + 5)
   board:Show()
   UI.Refresh()
+  if TC.Phase and TC.Phase.EnsureBoard then TC.Phase.EnsureBoard() end
   return true
 end
 

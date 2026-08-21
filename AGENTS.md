@@ -2229,9 +2229,13 @@ publicado en la web que no tenga clave en el registro.
 
 **El icono no es el modelo.** El `icono` es lo que se ve en la bolsa; el `display` es el
 modelo 3D sobre el personaje, y sin el un arma forjada no se parece a un arma.
-`.forge item set display $item-link $item-link2` acepta el ID DE OTRO OBJETO y le copia
-modelo y textura, y `cotejo/objetos_wowhead.json` esta indexado justamente por el id real de
-WoW: de ahi salen 2498 displays. Lo que sigue SIN enviarse es `sheath` (100 armas): el enum
+`.forge item set display $item-link $item-link2` le copia modelo y textura a OTRO objeto, y
+`cotejo/objetos_wowhead.json` esta indexado justamente por el id real de WoW: de ahi salen
+2415 displays sin necesidad de conocer ningun displayid. **Se manda un ENLACE, nunca el
+numero pelado**: la descripcion del catalogo dice "If the $item-link2 is instead a number" y
+se corta ahi, en EpsilonLib mismo, sin aclarar si ese numero seria un id de objeto o un
+displayid. Con el enlace no hay dos lecturas posibles. El comando lleva entonces dos enlaces
+y sigue holgado: el peor caso son 169 caracteres de 249. Lo que sigue SIN enviarse es `sheath` (100 armas): el enum
 0..7 no esta verificado y equivocarlo solo afecta a donde se envaina, asi que se deja hasta
 poder comprobarlo en juego.
 

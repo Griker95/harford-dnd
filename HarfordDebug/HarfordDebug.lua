@@ -4655,6 +4655,326 @@ end, "recetas dinamicas: list | demo | forget <id>")
 -- bgFileL/bgFileR); si el build de Epsilon no las trae, hay que caer a los fileID.
 -- Sintonizacion y carga: estado y pruebas. `peso <itemId> <libras>` declara el peso de un
 -- objeto, que el cliente de WoW NO expone y por eso hay que darselo a mano.
+-- Tablon de contratos en la fase. Conduce HarfordContractsPhase sin depender de la UI.
+API.RegisterCommand("phasetc", function(args)
+    local P = HarfordContracts and HarfordContracts.Phase
+    if not P then Print("HarfordContractsPhase no cargado"); return end
+    local cmd, a = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
+
+    if cmd == "publicar" then
+        local ok, n = P.Publish(false)
+        if ok then Print("Publicados |cffffd100" .. tostring(n) .. "|r contratos en la fase.") end
+        return
+    end
+
+    if cmd == "cargar" then
+        Print("Pidiendo el indice a la fase...")
+        P.LoadBoard(function(ok, info)
+            if ok then
+                Print("|cff55ff55Tablon cargado|r: |cffffd100" .. tostring(info) .. "|r contratos (esbozos).")
+                Print("Abre uno con |cffffd100phasetc leer <id>|r para bajar el bloque completo.")
+            else
+                Print("|cffff5555No se pudo cargar|r: " .. tostring(info))
+            end
+        end)
+        return
+    end
+
+    if cmd == "indice" then
+        P.LoadIndex(function(indice, err)
+            if not indice then Print("|cffff5555" .. tostring(err) .. "|r"); return end
+            Print("Indice: |cffffd100" .. #indice .. "|r filas")
+            for _, fila in ipairs(indice) do
+                Print(string.format("  |cff808080%s|r  %s |cff808080[%s / %s]|r",
+                    tostring(fila.id), tostring(fila.title),
+                    tostring(fila.difficulty), tostring(fila.status)))
+            end
+        end)
+        return
+    end
+
+    if cmd == "leer" then
+        if a == "" then Print("uso: phasetc leer <contractId>"); return end
+        P.LoadContract(a, function(contract, err)
+            if not contract then Print("|cffff5555" .. tostring(err or "vacio") .. "|r"); return end
+            Print("|cffffd100" .. tostring(contract.title) .. "|r")
+            Print("  objetivos: " .. tostring(#(contract.objectives or {})) ..
+                "   descripcion: " .. tostring(#tostring(contract.description or "")) .. " chars")
+            -- Lo que NUNCA debe haber viajado.
+            if contract.prep or contract.privateNotes then
+                Print("  |cffff5555FUGA: viajaron campos privados|r")
+            else
+                Print("  |cff55ff55sin prep ni privateNotes|r")
+            end
+            P.ApplyContract(contract)
+            Print("  aplicado sobre la BD local")
+        end)
+        return
+    end
+
+    if cmd == "borrar" then
+        if a == "" then Print("uso: phasetc borrar <contractId>"); return end
+        Print(P.DeleteContract(a) and "Bloque vaciado. Republica para regenerar el indice."
+            or "|cffff5555No se pudo borrar|r")
+        return
+    end
+
+    local claveIndice, prefijo = P.GetKeys()
+    Print("|cffffd100Tablon de contratos en la fase|r")
+    Print("  Disponible: " .. (P.IsAvailable() and "|cff55ff55si|r" or "|cffff5555no|r") ..
+        "   Fase: |cffffd100" .. tostring(P.GetPhaseId()) .. "|r")
+    Print("  Claves: |cff808080" .. claveIndice .. "|r  y  |cff808080" .. prefijo .. "<id>|r")
+    local db = _G.HarfordContractsDB
+    local total, esbozos = 0, 0
+    for _, c in ipairs((db and db.contracts) or {}) do
+        total = total + 1
+        if P.IsStub(c) then esbozos = esbozos + 1 end
+    end
+    Print(string.format("  BD local: |cffffd100%d|r contratos (|cffffd100%d|r son esbozos de fase)",
+        total, esbozos))
+    Print("  |cffffd100phasetc publicar|r  escribe el tablon en la fase (DM)")
+    Print("  |cffffd100phasetc cargar|r    lee el indice y pinta el tablon")
+    Print("  |cffffd100phasetc indice|r    vuelca el indice tal cual")
+    Print("  |cffffd100phasetc leer <id>|r baja un contrato completo")
+    Print("  |cffffd100phasetc borrar <id>|r")
+end, "Tablon de contratos guardado en la fase")
+
+-- Sonda del almacen de fase de Epsilon (C_Epsilon.Get/SetPhaseAddonData via EpsilonLib).
+-- Responde a las tres preguntas que no se pueden contestar leyendo codigo: si hay cuota,
+-- cuanto admite una clave y que ocurre al escribir sin permiso.
+-- TODA escritura usa claves TEST_* para no rozar jamas datos reales de la fase.
+do
+    local CLAVE = "TEST_SONDA"
+    local ESPERA = 6
+
+    local function Lib()
+        return EpsilonLib and EpsilonLib.PhaseAddonData
+    end
+
+    local function Libs()
+        if not LibStub then return nil, nil end
+        return LibStub:GetLibrary("LibSerialize", true), LibStub:GetLibrary("LibDeflate", true)
+    end
+
+    -- La API no tiene ruta de error: si el servidor calla, el callback no se llama nunca.
+    -- Sin este plazo el comando se quedaria mudo y pareceria colgado.
+    local function LeerConPlazo(clave, alRecibir)
+        local L = Lib()
+        if not L then Print("EpsilonLib.PhaseAddonData no disponible"); return end
+        local contestado = false
+        L.Get(clave, function(texto)
+            contestado = true
+            alRecibir(texto or "")
+        end)
+        C_Timer.After(ESPERA, function()
+            if not contestado then
+                Print("|cffff5555sin respuesta|r tras " .. ESPERA .. "s para |cffffd100" .. clave .. "|r")
+            end
+        end)
+    end
+
+    -- El servidor VALIDA y lanza error Lua (confirmado: "key should have length <= 100").
+    -- Sin pcall, cualquier escritura invalida aborta el comando entero.
+    local function Escribir(fn, ...)
+        local ok, err = pcall(fn, ...)
+        if not ok then
+            Print("|cffff5555El servidor rechazo la escritura|r")
+            Print("   " .. tostring(err):gsub("^.*%.lua:%d+: ", ""))
+        end
+        return ok
+    end
+
+    local function Medir(tab, etiqueta)
+        local LS, LD = Libs()
+        if not (LS and LD) then Print("LibSerialize/LibDeflate no disponibles"); return end
+        local crudo = LS:Serialize(tab)
+        local comprimido = LD:CompressDeflate(crudo)
+        local codificado = LD:EncodeForPrint(comprimido)
+        local segmentos = math.ceil(#codificado / 3000)
+        Print(string.format("%s: crudo |cffffd100%d|r -> deflate |cffffd100%d|r -> encode |cffffd100%d|r  = |cff66ccff%d|r segmento(s)",
+            etiqueta, #crudo, #comprimido, #codificado, segmentos))
+        return codificado
+    end
+
+    API.RegisterCommand("phasedata", function(args)
+        local cmd, a = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
+        local L = Lib()
+
+        if cmd == "medir" then
+            -- Puramente local: no toca el servidor. Mide el tablon real que ya tienes.
+            local db = _G.HarfordContractsDB
+            local contratos = db and db.contracts
+            if not (contratos and #contratos > 0) then
+                Print("No hay contratos en el tablon local para medir.")
+                return
+            end
+            local LS, LD = Libs()
+            if not (LS and LD) then Print("LibSerialize/LibDeflate no disponibles"); return end
+
+            -- Lo que subiria de verdad: sin notas privadas ni preparacion del DM.
+            -- Lo que no se escribe no se puede filtrar.
+            local function SoloPublico(c)
+                local out = {}
+                for k, v in pairs(c) do
+                    if k ~= "prep" and k ~= "privateNotes" then out[k] = v end
+                end
+                return out
+            end
+            local function Tam(t)
+                return #LD:EncodeForPrint(LD:CompressDeflate(LS:Serialize(t)))
+            end
+
+            local publicados, borradores = 0, 0
+            for _, c in ipairs(contratos) do
+                if tostring(c.status) == "draft" then borradores = borradores + 1
+                else publicados = publicados + 1 end
+            end
+            Print(string.format("Contratos: |cffffd100%d|r  (publicados |cffffd100%d|r, borradores |cffffd100%d|r)",
+                #contratos, publicados, borradores))
+
+            Medir(contratos, "tablon entero, tal cual")
+
+            local limpios, indice = {}, {}
+            for _, c in ipairs(contratos) do
+                limpios[#limpios + 1] = SoloPublico(c)
+                indice[#indice + 1] = c.id
+            end
+            Medir(limpios, "tablon sin prep/notas")
+            Medir(indice, "solo el indice de ids")
+
+            -- Indice RICO: exactamente los campos que pinta la fila del tablon
+            -- (HarfordContractsUI: icono, titulo+color por dificultad, meta duracion||estado,
+            -- recompensa) mas los que filtran/buscan. Si esto cabe en un segmento, el tablon
+            -- entero se pinta con UNA llamada y el contrato solo se baja al abrirlo.
+            local CAMPOS_FILA = { "id", "title", "difficulty", "status", "duration",
+                                  "rewardText", "category", "icon" }
+            local rico = {}
+            for _, c in ipairs(contratos) do
+                local fila = {}
+                for _, k in ipairs(CAMPOS_FILA) do fila[k] = c[k] end
+                rico[#rico + 1] = fila
+            end
+            local codRico = Medir(rico, "INDICE RICO (lo que pinta la fila)")
+            if codRico then
+                local margen = 3000 - #codRico
+                if margen > 0 then
+                    local porContrato = #codRico / math.max(1, #contratos)
+                    Print(string.format("   |cff55ff55Cabe en 1 segmento|r - sobran |cffffd100%d|r caracteres, sitio para ~|cffffd100%d|r contratos mas",
+                        margen, math.floor(margen / math.max(1, porContrato))))
+                else
+                    Print("   |cffff5555No cabe en un segmento|r - el indice se troceara")
+                end
+            end
+
+            local mayor, tamMayor = nil, -1
+            for _, c in ipairs(contratos) do
+                local tam = Tam(c)
+                if tam > tamMayor then mayor, tamMayor = c, tam end
+            end
+            if mayor then
+                Print(" ")
+                Medir(mayor, "el mas gordo tal cual (" .. tostring(mayor.title) .. ")")
+                Medir(SoloPublico(mayor), "el mas gordo sin prep/notas")
+            end
+
+            -- Coste de leer el tablon con cada estrategia, contra el throttle de 45/1.5s.
+            local segsBlob = math.ceil(Tam(limpios) / 3000)
+            local llamadasPorContrato = 1
+            for _, c in ipairs(limpios) do
+                llamadasPorContrato = llamadasPorContrato + math.ceil(Tam(c) / 3000)
+            end
+            Print(" ")
+            Print(string.format("Leer todo como un blob unico: |cff66ccff%d|r llamadas", segsBlob))
+            Print(string.format("Leer todo por contrato + indice: |cff66ccff%d|r llamadas (tope por tanda: 45)",
+                llamadasPorContrato))
+            return
+        end
+
+        if cmd == "escribir" then
+            if not L then Print("EpsilonLib.PhaseAddonData no disponible"); return end
+            -- Viaje redondo con marca de tiempo, para distinguir un dato nuevo de uno viejo.
+            local marca = tostring(time())
+            if not Escribir(L.SaveTable, CLAVE, { marca = marca, texto = "sonda Harford", n = 12345 }) then
+                return
+            end
+            Print("Escrito con marca |cffffd100" .. marca .. "|r. Releyendo...")
+            C_Timer.After(1, function()
+                L.LoadTable(CLAVE, function(tab)
+                    if type(tab) ~= "table" then
+                        Print("|cffff5555Volvio algo que no es tabla|r: " .. tostring(tab))
+                        Print("Si no tienes permiso de escritura en la fase, esto es lo que se ve.")
+                        return
+                    end
+                    if tab.marca == marca then
+                        Print("|cff55ff55Viaje redondo correcto|r - la escritura SI cuajo.")
+                    else
+                        Print("|cffff5555Volvio una marca vieja|r (" .. tostring(tab.marca) .. ")")
+                        Print("La escritura fue rechazada en silencio: lo que hay es de antes.")
+                    end
+                end)
+            end)
+            return
+        end
+
+        if cmd == "leer" then
+            LeerConPlazo(a ~= "" and a or CLAVE, function(texto)
+                Print(string.format("Devuelto |cffffd100%d|r caracteres", #texto))
+                if #texto == 0 then Print("Vacio = esa clave no existe en la fase.") end
+            end)
+            return
+        end
+
+        if cmd == "clave" then
+            -- Cuanto admite una clave. Escribe y relee con longitudes crecientes.
+            if not L then Print("EpsilonLib.PhaseAddonData no disponible"); return end
+            local n = tonumber(a) or 60
+            local clave = "TEST_" .. string.rep("K", math.max(1, n - 5))
+            Print(string.format("Probando clave de |cffffd100%d|r caracteres...", #clave))
+            if not Escribir(L.Set, clave, "ok" .. tostring(time())) then
+                Print("   |cff808080El troceado anade _2, _3... asi que el presupuesto real es menor.|r")
+                return
+            end
+            C_Timer.After(1, function()
+                LeerConPlazo(clave, function(texto)
+                    Print(#texto > 0 and ("|cff55ff55Aguanta|r a " .. #clave .. " caracteres")
+                        or ("|cffff5555Escribio pero vuelve vacia|r a " .. #clave))
+                end)
+            end)
+            return
+        end
+
+        if cmd == "borrar" then
+            if not L then Print("EpsilonLib.PhaseAddonData no disponible"); return end
+            -- Borrar es escribir vacio; no hay borrado real.
+            Escribir(C_Epsilon.SetPhaseAddonData, CLAVE, "")
+            for i = 2, 8 do Escribir(C_Epsilon.SetPhaseAddonData, CLAVE .. "_" .. i, "") end
+            Print("Claves de sonda vaciadas (incluidos segmentos 2..8).")
+            return
+        end
+
+        -- Estado por defecto.
+        Print("|cffffd100Sonda del almacen de fase|r")
+        if not C_Epsilon then
+            Print("|cffff5555C_Epsilon no existe|r - esto no es un cliente Epsilon.")
+            return
+        end
+        Print("  Fase actual: |cffffd100" .. tostring(C_Epsilon.GetPhaseId and C_Epsilon.GetPhaseId()) .. "|r")
+        local function Si(f) return (f and f()) and "|cff55ff55si|r" or "|cff808080no|r" end
+        Print(string.format("  Dueno %s   Oficial %s   Miembro %s   DM %s",
+            Si(C_Epsilon.IsOwner), Si(C_Epsilon.IsOfficer), Si(C_Epsilon.IsMember),
+            (C_Epsilon.IsDM and "|cff55ff55si|r" or "|cff808080no|r")))
+        Print("  EpsilonLib.PhaseAddonData: " .. (L and "|cff55ff55cargado|r" or "|cffff5555ausente|r"))
+        local LS, LD = Libs()
+        Print("  LibSerialize " .. (LS and "|cff55ff55si|r" or "|cffff5555no|r") ..
+            "   LibDeflate " .. (LD and "|cff55ff55si|r" or "|cffff5555no|r"))
+        Print("  |cffffd100phasedata medir|r    mide el tablon real, sin tocar el servidor")
+        Print("  |cffffd100phasedata escribir|r prueba el viaje redondo (y si tienes permiso)")
+        Print("  |cffffd100phasedata leer [clave]|r")
+        Print("  |cffffd100phasedata clave <n>|r  prueba una clave de n caracteres (tope conocido: 100)")
+        Print("  |cffffd100phasedata borrar|r    limpia las claves de sonda")
+    end, "Sonda del almacen de fase de Epsilon (cuota, claves, permisos)")
+end
+
 -- Resuelve una receta por id EXACTO o por NOMBRE visible, tolerando tildes y mayusculas.
 -- Con 1661 recetas, obligar a escribir el id de memoria hace la herramienta inservible.
 local function ResolveRecipe(texto)
@@ -4690,7 +5010,7 @@ end
 API.RegisterCommand("entrenador", function(args)
     local T = _G.HarfordProfessionTrainers
     if not T then Print("HarfordProfessionTrainers no cargado"); return end
-    local cmd, a, b = tostring(args or ""):match("^%s*(%S*)%s*(%S*)%s*(%S*)")
+    local cmd, a, b, a2 = tostring(args or ""):match("^%s*(%S*)%s*(%S*)%s*(%S*)%s*(%S*)")
 
     if cmd == "definir" then
         -- definir <npcTemplateId> <recipeId>: registra un entrenador de mentira para ese NPC.
@@ -4700,18 +5020,35 @@ API.RegisterCommand("entrenador", function(args)
             return
         end
         local resuelta, r, parciales = ResolveRecipe(recipeId)
+        if not resuelta and T.GetTierRange and T.GetTierRange(b) then
+            resuelta, r = recipeId, nil   -- es un rango, no una receta
+        end
         if not resuelta then
             Print("Receta desconocida: |cffffd100" .. recipeId .. "|r")
             for _, sug in ipairs(parciales or {}) do Print("   quiza: |cff808080" .. sug .. "|r") end
             return
         end
         recipeId = resuelta
-        local ok, err = T.Define({
-            id = "prueba_" .. npc, name = "Entrenador de pruebas", npc = npc,
-            zone = "En ninguna parte", profession = r.profession, recipes = { recipeId },
-        })
-        Print(ok and string.format("Entrenador de pruebas registrado en el NPC %d para %s", npc, recipeId)
-            or ("|cffff5555" .. tostring(err) .. "|r"))
+        -- El segundo argumento puede ser un RANGO (Aprendiz, Oficial...) en vez de una receta:
+        -- es la forma normal de declarar un entrenador.
+        local rango = T.GetTierRange and select(3, T.GetTierRange(b))
+        local def = { id = "prueba_" .. npc, name = "Entrenador de pruebas", npc = npc,
+                      zone = "En ninguna parte" }
+        if rango then
+            def.profession = (a2 ~= "" and a2) or (r and r.profession)
+            def.tier = rango
+            if not def.profession or def.profession == "" then
+                Print("uso: entrenador definir <npc> <rango> <profesion>")
+                return
+            end
+        else
+            def.profession, def.recipes = r.profession, { recipeId }
+        end
+        local ok, err = T.Define(def)
+        if not ok then Print("|cffff5555" .. tostring(err) .. "|r"); return end
+        local cubre = T.GetRecipesFor(T.GetByNpc(npc))
+        Print(string.format("Entrenador de pruebas en el NPC %d: %s, cubre |cffffd100%d|r receta(s)",
+            npc, rango and (tostring(def.profession) .. " " .. rango) or recipeId, #cubre))
         return
     end
 
@@ -4749,7 +5086,8 @@ API.RegisterCommand("entrenador", function(args)
             #(def.recipes or {}), def.npc and (" NPC " .. def.npc) or " |cff808080sin NPC|r"))
     end
     Print("  |cffffd100entrenador receta <recipeId>|r   quien la ensena")
-    Print("  |cffffd100entrenador definir <npc> <recipeId>|r  registra uno de pruebas")
+    Print("  |cffffd100entrenador definir <npc> <rango> <profesion>|r  ej: definir 4001 Aprendiz herreria")
+    Print("  |cffffd100entrenador definir <npc> <recipeId>|r  o atado a una receta suelta")
     Print("  |cffffd100entrenador ensenar <npc> <recipeId>|r  aprende de el")
 end, "Entrenadores de profesion: consulta y pruebas sin NPC colocado")
 

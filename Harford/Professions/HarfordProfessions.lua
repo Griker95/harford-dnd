@@ -310,7 +310,10 @@ function API.CanCraft(recipeId)
     end
     -- Receta de ENTRENADOR: no viene con el nivel de habilidad, hay que aprenderla de el.
     -- El motivo dice DONDE, que es lo unico accionable para el jugador.
-    if r.trainer and not Store().learned[r.id] then
+    local deEntrenador = r.trainer
+        or (HarfordProfessionTrainers and HarfordProfessionTrainers.IsTaught
+            and HarfordProfessionTrainers.IsTaught(r.id))
+    if deEntrenador and not Store().learned[r.id] then
         local donde = HarfordProfessionTrainers and HarfordProfessionTrainers.DescribeForRecipe
             and HarfordProfessionTrainers.DescribeForRecipe(r.id)
         return false, donde and ("La ensena " .. donde) or "Receta de entrenador (aun no aprendida)"
@@ -329,7 +332,10 @@ end
 function API.IsRecipeLearned(recipeId)
     local r = API.GetRecipe(recipeId)
     if not r then return false end
-    if not (r.worldLearned or r.trainer) then return true end
+    local deEntrenador = r.trainer
+        or (HarfordProfessionTrainers and HarfordProfessionTrainers.IsTaught
+            and HarfordProfessionTrainers.IsTaught(recipeId))
+    if not (r.worldLearned or deEntrenador) then return true end
     return Store().learned[tostring(recipeId)] == true
 end
 

@@ -4494,3 +4494,90 @@ API.RegisterCommand("crafttex", function()
     for _, line in ipairs(issues) do Print("  " .. line) end
     if #issues == 0 then Print("Todas las texturas de la ventana existen.") end
 end, "texturas de la ventana de recetas que no existen en este cliente")
+
+-- Que version del codigo esta corriendo el cliente de verdad. Sirve para distinguir "el cambio
+-- no funciona" de "el cliente sigue con el fichero viejo" sin depender de pantallazos.
+API.RegisterCommand("craftver", function()
+    local ui = _G.HarfordProfessionsCraftUI
+    Print("Ventana de recetas build: " .. tostring(ui and ui.BUILD or "NO CARGADA"))
+    Print("Panel de personaje: " .. (_G.HarfordCharacterPanel and "cargado" or "NO CARGADO"))
+    local issues = ui and ui._textureIssues or {}
+    Print("Texturas no cargadas registradas: " .. #issues)
+    for _, line in ipairs(issues) do Print("   " .. line) end
+    local f = _G.HarfordProfessionsCraftFrame
+    -- Si la construccion murio a media, la ventana existe pero sin esta marca: es la senal de
+    -- que un error corto el montaje y por eso "todo sigue igual".
+    Print("Construccion completa: " .. tostring(f and f._buildComplete == true))
+end, "build de la ventana de recetas que esta corriendo el cliente")
+
+-- Resuelve RUTAS de textura a su fileID en ESTE cliente y las contrasta con el fileID que usa
+-- el frame nativo. Sirve para dejar de adivinar: si una ruta devuelve el mismo numero que la
+-- sonda leyo del nativo, esa es la ruta correcta y se puede usar con garantias.
+API.RegisterCommand("texpath", function(args)
+    local extra = tostring(args or ""):match("^%s*(.-)%s*$")
+    local wanted = {
+        { 136570, "Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar" },
+        { 136571, "Interface\\PaperDollInfoFrame\\UI-Character-Skills-BarBorder" },
+        { 136569, "Interface\\PaperDollInfoFrame\\UI-Character-ScrollBar" },
+        { 130849, "Interface\\Buttons\\UI-ScrollBar-Knob" },
+        { 130783, "Interface\\Buttons\\UI-Listbox-Highlight2" },
+        { 132086, "Interface\\HelpFrame\\HelpFrameTab-Active" },
+        { 132085, "Interface\\HelpFrame\\HelpFrameTab-Inactive" },
+        { 136580, "Interface\\PaperDollInfoFrame\\UI-Character-Tab-Highlight" },
+        { 136580, "Interface\\Buttons\\UI-Panel-Button-Highlight" },
+        { 136796, "Interface\\QuestFrame\\UI-QuestItemNameFrame" },
+        { 374155, "Interface\\FrameGeneral\\UI-Background-Marble" },
+        { 374154, "Interface\\FrameGeneral\\UI-Background-Rock" },
+    }
+    if extra ~= "" then wanted[#wanted + 1] = { 0, extra } end
+    if type(GetFileIDFromPath) ~= "function" then
+        Print("GetFileIDFromPath no existe en este cliente"); return
+    end
+    Print("ruta -> fileID en ESTE cliente (esperado = el que usa el frame nativo):")
+    for _, entry in ipairs(wanted) do
+        local expected, path = entry[1], entry[2]
+        local id = GetFileIDFromPath(path)
+        local mark = "?"
+        if not id then mark = "|cffff5555NO EXISTE|r"
+        elseif expected == 0 then mark = "ok"
+        elseif id == expected then mark = "|cff44dd44COINCIDE|r"
+        else mark = "|cffffcc00distinto (esperado " .. expected .. ")|r" end
+        Print(string.format("  %-58s -> %-10s %s", path, tostring(id), mark))
+    end
+end, "comprueba a que fileID resuelve cada ruta de textura en este cliente")
+
+-- Recetas dinamicas: probar el flujo que usaria un ArcSpell sin depender del servidor.
+--   customrecipe list                       -> las que tiene este personaje
+--   customrecipe demo                       -> ensena una de prueba en Herreria
+--   customrecipe forget <id>                -> la retira
+API.RegisterCommand("customrecipe", function(args)
+    local action, rest = tostring(args or ""):match("^%s*(%S*)%s*(.-)%s*$")
+    action = action:lower()
+    if not HarfordProfessions then Print("HarfordProfessions no cargado"); return end
+
+    if action == "forget" then
+        Print(HarfordProfessions.ForgetCustomRecipe(rest) and ("Retirada: " .. rest)
+            or ("No existe como dinamica: " .. rest))
+        return
+    end
+    if action == "demo" then
+        local ok, err = HarfordProfessions.TeachCustomRecipe({
+            id = "demo_lingote_runico",
+            profession = "herreria",
+            name = "Lingote runico de prueba",
+            skillReq = 1, dc = 10,
+            icon = "INV_Ingot_03",
+            materials = { { id = 14074575, qty = 1, name = "Mena de cobre" } },
+            output = { id = 14074638, qty = 1, name = "Barra de cobre" },
+        })
+        Print(ok and "Receta de prueba ensenada (Herreria)." or ("Fallo: " .. tostring(err)))
+        return
+    end
+
+    local list = HarfordProfessions.GetCustomRecipes()
+    Print("Recetas dinamicas de este personaje: " .. #list)
+    for _, r in ipairs(list) do
+        Print(string.format("  %-28s %-14s skill %-3d %s", r.id, r.profession, r.skillReq or 1,
+            r.learned and "|cff44dd44aprendida|r" or "|cffffcc00sin aprender|r"))
+    end
+end, "recetas dinamicas: list | demo | forget <id>")

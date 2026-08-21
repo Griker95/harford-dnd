@@ -54,6 +54,24 @@ def fmt_coord(value):
     return ('%.9f' % n).rstrip('0').rstrip('.')
 
 
+# fileID -> RUTA, verificado en el cliente con `/harford debug run texpath`.
+# Epsilon NO resuelve fileID numericos pedidos por un addon (salen verdes o en blanco), pero
+# la sonda los reporta asi porque GetTexture() devuelve el id ya resuelto. Se traducen aqui.
+FILEID_TO_PATH = {
+    374155: r'Interface\FrameGeneral\UI-Background-Rock',
+    374154: r'Interface\FrameGeneral\UI-Background-Marble',
+    136570: r'Interface\PaperDollInfoFrame\UI-Character-Skills-Bar',
+    136571: r'Interface\PaperDollInfoFrame\UI-Character-Skills-BarBorder',
+    136569: r'Interface\PaperDollInfoFrame\UI-Character-ScrollBar',
+    130849: r'Interface\Buttons\UI-ScrollBar-Knob',
+    130783: r'Interface\Buttons\UI-Listbox-Highlight2',
+    132085: r'Interface\HelpFrame\HelpFrameTab-Active',
+    132086: r'Interface\HelpFrame\HelpFrameTab-Inactive',
+    136580: r'Interface\PaperDollInfoFrame\UI-Character-Tab-Highlight',
+    136796: r'Interface\QuestFrame\UI-QuestItemNameFrame',
+}
+
+
 class Emitter:
     def __init__(self, only_visible=False):
         self.lines = []
@@ -109,17 +127,36 @@ class Emitter:
         if r.get('uid'):
             self.var_by_uid[r['uid']] = var
 
+        # Un texCoord MAYOR QUE 1 no es un dato de entrada: es lo que el cliente CALCULA cuando
+        # la textura se declara en mosaico. El XML de Blizzard (InsetFrameTemplate) la declara
+        # con horizTile/vertTile y sin texCoord. Copiar esos numeros y no poner el mosaico hace
+        # que la textura se estire: son las bandas palidas. Regla: texCoord>1 -> mosaico, y NO
+        # se emite el texCoord.
+        tc_all = r.get('texCoord') if isinstance(r.get('texCoord'), list) else []
+        tiled = any(num(v) > 1.001 for v in tc_all)
+        # El mosaico necesita AMBAS cosas: el modo de repeticion en SetTexture y los
+        # flags horizTile/vertTile. Solo con los flags la textura no llega a repetirse.
+        wrap = ', "REPEAT", "REPEAT"' if tiled else ''
         if r.get('atlas'):
             self.w('    %s:SetAtlas(%s)' % (var, lua_str(r['atlas'])))
         else:
             tex = r.get('texture')
             fid = r.get('textureFileID')
             if isinstance(tex, str) and not tex.isdigit():
-                self.w('    %s:SetTexture(%s)' % (var, lua_str(tex)))
+                self.w('    %s:SetTexture(%s%s)' % (var, lua_str(tex), wrap))
             elif fid or (isinstance(tex, str) and tex.isdigit()):
-                self.w('    %s:SetTexture(%s)' % (var, int(num(fid or tex))))
+                num_id = int(num(fid or tex))
+                path = FILEID_TO_PATH.get(num_id)
+                if path:
+                    self.w('    %s:SetTexture(%s%s)  -- fileID %d' % (var, lua_str(path), wrap, num_id))
+                else:
+                    self.w('    %s:SetTexture(%s)' % (var, num_id))
 
-        tc = r.get('texCoord')
+        # NUNCA aplicar texCoord sobre un ATLAS: SetAtlas ya fija la region dentro de la lamina
+        # y un SetTexCoord posterior la ANULA, mostrando trozos arbitrarios (bandas palidas).
+        # La sonda reporta ese texCoord porque GetTexCoord() lo devuelve resuelto, pero no se
+        # re-aplica; el tileado de los atlas "_"/"!" lo gestiona el propio cliente.
+        tc = None if (r.get('atlas') or tiled) else r.get('texCoord')
         if isinstance(tc, list) and len(tc) == 8:
             vals = [fmt_coord(v) for v in tc]
             # ULx,ULy,LLx,LLy,URx,URy,LRx,LRy -> si esta alineado, la forma corta de 4
@@ -137,6 +174,9 @@ class Emitter:
         if num(r.get('desaturation')) > 0:
             self.w('    %s:SetDesaturated(true)' % var)
 
+        if tiled:
+            self.w('    %s:SetHorizTile(true)' % var)
+            self.w('    %s:SetVertTile(true)' % var)
         self.emit_size(var, r)
         self.emit_points(var, r, parent_var)
         if r.get('visible') is False or r.get('shown') is False:
@@ -180,6 +220,21 @@ class Emitter:
         var = self.new_var({'Button': 'btn', 'StatusBar': 'bar', 'Slider': 'sld',
                             'ScrollFrame': 'scr', 'EditBox': 'eb'}.get(otype, 'f'))
         self.w('    -- %s %s' % (otype, node.get('name') or node.get('uid') or ''))
+        if depth == 0 and getattr(self, 'root_is_parent', False):
+            # El armazon se aplica sobre el frame que ya existe: no se crea otra ventana ni se
+            # copian su posicion en pantalla ni su strata.
+            self.w('    %s = %s' % (var, parent_var))
+            if node.get('uid'):
+                self.var_by_uid[node['uid']] = var
+            # Las regiones PROPIAS de la raiz (fondo, tira del titulo, retrato, remaches) NO se
+            # re-emiten: el frame de destino ya trae las suyas del template. Pintarlas encima
+            # duplicaba el fondo y colaba el retrato del nativo, que no es una ruta valida y
+            # salia como un circulo verde.
+            for child in node.get('children') or []:
+                if isinstance(child, dict):
+                    self.emit_frame(child, var, depth + 1)
+            self.w('    parts.byUid[%s] = %s' % (lua_str(node.get('uid') or var), var))
+            return var
         self.w('    %s = CreateFrame(%s, nil, %s)' % (var, lua_str(otype), parent_var))
         if node.get('uid'):
             self.var_by_uid[node['uid']] = var
@@ -195,9 +250,14 @@ class Emitter:
                 self.w('    %s:SetStatusBarAtlas(%s)' % (var, lua_str(t['atlas'])))
             elif t.get('texture') is not None:
                 tex = t['texture']
-                self.w('    %s:SetStatusBarTexture(%s)'
-                       % (var, lua_str(tex) if isinstance(tex, str) and not str(tex).isdigit()
-                          else int(num(t.get('textureFileID') or tex))))
+                if isinstance(tex, str) and not str(tex).isdigit():
+                    self.w('    %s:SetStatusBarTexture(%s)' % (var, lua_str(tex)))
+                else:
+                    sb_id = int(num(t.get('textureFileID') or tex))
+                    sb_path = FILEID_TO_PATH.get(sb_id)
+                    self.w('    %s:SetStatusBarTexture(%s)%s'
+                           % (var, lua_str(sb_path) if sb_path else sb_id,
+                              ('  -- fileID %d' % sb_id) if sb_path else ''))
             mm = sb.get('minMax')
             if isinstance(mm, list) and len(mm) >= 2:
                 self.w('    %s:SetMinMaxValues(%s, %s)' % (var, fmt(mm[0]), fmt(mm[1])))
@@ -234,6 +294,10 @@ def main():
     ap.add_argument('key', help='clave dentro del json (p.ej. "sel")')
     ap.add_argument('--out', default=None)
     ap.add_argument('--only-visible', action='store_true')
+    ap.add_argument('--root-is-parent', action='store_true',
+                    help='aplicar el armazon sobre el frame recibido en vez de crear uno nuevo')
+    ap.add_argument('--include', default=None,
+                    help='uids raiz a incluir, separados por coma (p.ej. root.f1,root.f3)')
     ap.add_argument('--module', default='HarfordGeneratedSkin')
     args = ap.parse_args()
 
@@ -244,7 +308,16 @@ def main():
         node = node[part]
     tree = node.get('tree') if isinstance(node, dict) and 'tree' in node else node
 
+    if args.include:
+        # Quedarse solo con las ramas pedidas: el armazon del frame, sin el contenido dinamico
+        # (filas de receta, materiales) que genera la logica.
+        keep = set(args.include.split(','))
+        tree = dict(tree)
+        tree['children'] = [c for c in (tree.get('children') or [])
+                            if isinstance(c, dict) and c.get('uid') in keep]
+
     em = Emitter(only_visible=args.only_visible)
+    em.root_is_parent = args.root_is_parent
     em.w('-- GENERADO por tools/codice/gen_frame_from_probe.py a partir de una captura de')
     em.w('-- HarfordFrameProbe. NO editar a mano: regenerar desde la captura.')
     em.w('-- Solo SKIN (piezas, anclajes, texturas, fuentes). La logica va en su propio modulo')

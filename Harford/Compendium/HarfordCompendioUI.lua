@@ -1,3 +1,7 @@
+-- Declaracion adelantada: sin ella, la referencia de mas arriba compila como acceso a
+-- un GLOBAL, que nunca se asigna y queda nil.
+local RefreshClassBookFrame
+
 local API = _G.HarfordCompendioAPI
 if not API then return end
 
@@ -892,7 +896,7 @@ local function UpdatePreparedLevelButtons()
         end
     end
 end
-local function RefreshClassBookFrame()
+RefreshClassBookFrame = function()
     if not ClassBookFrame then return end
     UpdatePreparedLevelButtons()
     local results = GetClassBookResults()

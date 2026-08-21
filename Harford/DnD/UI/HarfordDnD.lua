@@ -1639,6 +1639,10 @@ end
 -- Puente estrecho para consumidores core que deben validar/gastar recursos una sola vez
 -- (p.ej. HarfordDnDArea). La regla y los refrescos siguen centralizados aqui.
 HarfordDnDStore.GetResourceCurrent = GetResourceCurrent
+-- El maximo tambien se exporta: HarfordDnDArea lo usa para acotar la curacion al hueco que
+-- falta de vida, y sin el `maximum` caia a `current`, la resta daba 0 y NINGUNA curacion
+-- llegaba a aplicarse.
+HarfordDnDStore.GetResourceMax = GetResourceMax
 HarfordDnDStore.AdjustResourceCurrent = AdjustResourceCurrent
 
 -- Aplica daño al PROPIO jugador en local (temp_health primero, luego health). Lo usa
@@ -2237,6 +2241,10 @@ local TabSections = {
 
 local TabButtons = {}
 local ActiveTab = "BASE"
+
+-- Declaracion adelantada en ambito de FICHERO: `ShowDnDTab` la referencia y su asignacion
+-- real vive ~2200 lineas mas abajo. Sin esto compilaria como global y quedaria nil.
+local RefreshSkillLayout
 
 local function ShowDnDTab(tabKey)
     ActiveTab = tabKey
@@ -4422,7 +4430,6 @@ end
 
 local abiKeys, savKeys = {}, {}
 local Layout3Col
-local RefreshSkillLayout
 
 -- IIFE: los locales de creación de botones de atributos, salvaciones y habilidades
 -- viven en su propio scope de función para no consumir el cupo de 200 del chunk.

@@ -1718,7 +1718,8 @@ API.RegisterCommand("trp3icons", function()
         return
     end
 
-    local icon, rawIcon = HarfordTRP3.GetProfileIcon and HarfordTRP3.GetProfileIcon(profile)
+    local icon, rawIcon
+    if HarfordTRP3.GetProfileIcon then icon, rawIcon = HarfordTRP3.GetProfileIcon(profile) end
     Print("TRP3 icon elegido: " .. tostring(rawIcon or icon or "nil"))
 
     if not HarfordTRP3.GetProfileIconCandidates then

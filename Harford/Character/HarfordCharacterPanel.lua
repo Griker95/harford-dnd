@@ -865,7 +865,10 @@ local function GetClassFeatureRows(limit)
         if subName ~= "" and level >= (tonumber(unlockLevel) or 1) then
             local className = HarfordDnDBook.GetClassName and HarfordDnDBook.GetClassName(entry.classId) or entry.classId
             local titleClass = tostring(className)
-            local _, _, _, hex = GetClassColorParts and GetClassColorParts(entry, className, className)
+            -- Sin la guarda `and`: en una cadena asi solo llega el PRIMER valor devuelto y
+            -- `hex` quedaba nil, asi que el nombre de clase nunca llegaba a colorearse.
+            -- `GetClassColorParts` es un upvalue ya asignado cuando esto se ejecuta.
+            local _, _, _, hex = GetClassColorParts(entry, className, className)
             if hex then
                 titleClass = "|cff" .. hex .. titleClass .. "|r"
             end

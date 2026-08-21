@@ -15,6 +15,10 @@
 -- Datos (catalogo de profesiones + recetas) en HarfordProfessionsData.
 ------------------------------------------------------------
 
+-- Declaracion adelantada: sin ella, la referencia de mas arriba compila como acceso a
+-- un GLOBAL, que nunca se asigna y queda nil.
+local SerializeDynamicRecipe
+
 HarfordProfessions = HarfordProfessions or {}
 local API = HarfordProfessions
 
@@ -785,7 +789,7 @@ end
 -- interpretaria mal.
 local MAX_TEACH_BYTES = 240
 
-local function SerializeDynamicRecipe(recipe)
+SerializeDynamicRecipe = function(recipe)
     local items = Items()
     if not items then return nil, "Registro de items no disponible" end
     local outId = items.GetId(recipe.output.key)

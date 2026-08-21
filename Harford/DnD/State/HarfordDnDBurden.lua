@@ -31,10 +31,8 @@ end
 
 local function ProfileName(profileName)
     if profileName and profileName ~= "" then return profileName end
-    if HarfordDnDAPI and HarfordDnDAPI.GetProfileName then
-        local n = HarfordDnDAPI.GetProfileName()
-        if n and n ~= "" then return n end
-    end
+    -- `HarfordDnDAPI.GetProfileName` no existe: `activeProfile` quedo obsoleto y el perfil es
+    -- SIEMPRE el personaje actual. La llamada guardada solo hacia creer que habia otra via.
     return (UnitName and UnitName("player")) or "player"
 end
 

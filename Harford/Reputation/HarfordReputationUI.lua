@@ -759,15 +759,24 @@ local function CreateRow(parent)
                 HarfordCharacterXP.ToggleWatchedFaction(data.factionId, data.name)
                 return
             end
-            -- Sonda del frame nativo: 856 al SELECCIONAR una faccion, y ademas 839 cuando
-            -- con ello se abre el detalle (840 al cerrarlo, en su boton). Expandir o colapsar
-            -- una CABECERA de grupo sigue siendo silencioso.
-            local abriaDetalle = detailUserClosed or selectedFactionId ~= data.factionId
-            selectedFactionId = data.factionId
-            detailUserClosed = false
-            if PlaySound then pcall(PlaySound, 856) end
-            if abriaDetalle and HarfordUISounds and HarfordUISounds.Play then
-                HarfordUISounds.Play("reputation_detail_opened")
+            -- Alterna: pulsar la faccion que YA tiene el detalle abierto lo cierra. Cualquier
+            -- otra lo abre (o cambia a ella).
+            local mismaAbierta = selectedFactionId == data.factionId and not detailUserClosed
+            if mismaAbierta then
+                detailUserClosed = true
+                -- Sin 856: no se esta seleccionando nada, ya estaba seleccionada.
+                if HarfordUISounds and HarfordUISounds.Play then
+                    HarfordUISounds.Play("reputation_detail_closed")
+                end
+            else
+                selectedFactionId = data.factionId
+                detailUserClosed = false
+                -- Sonda del frame nativo: 856 al SELECCIONAR y ademas 839 al abrir el detalle.
+                -- Expandir o colapsar una CABECERA de grupo sigue siendo silencioso.
+                if PlaySound then pcall(PlaySound, 856) end
+                if HarfordUISounds and HarfordUISounds.Play then
+                    HarfordUISounds.Play("reputation_detail_opened")
+                end
             end
             API.Refresh()
         end

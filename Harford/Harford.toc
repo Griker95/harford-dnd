@@ -121,6 +121,7 @@ Professions\HarfordCraftSkin.lua
 Professions\HarfordProfessionsCraftUI.lua
 Professions\HarfordProfessionsData.lua
 Professions\HarfordProfessions.lua
+Professions\HarfordProfessionTrainers.lua
 
 # --- Communicator ---
 Communicator\HarfordCourier.lua

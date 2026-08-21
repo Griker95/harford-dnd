@@ -896,6 +896,12 @@ RefreshUI = function()
     local reqLines = { string.format("Nivel de %s: %d", (def.name or ""):lower(),
         tonumber(sel.skillReq) or 1) }
     if def.tool then reqLines[#reqLines + 1] = def.tool end
+    -- Entrenador, en el mismo sitio que el "Trainer / Zone" del nativo: solo si la receta se
+    -- aprende de alguien y aun no la tienes. Aprendida ya no aporta nada.
+    if sel.trainer and HarfordProfessionTrainers and not HarfordProfessions.IsRecipeLearned(sel.id) then
+        local donde = HarfordProfessionTrainers.DescribeForRecipe(sel.id)
+        reqLines[#reqLines + 1] = "|cffffd100Entrenador:|r " .. (donde or "por localizar")
+    end
     if not ok and reason then reqLines[#reqLines + 1] = "|cffff5555" .. tostring(reason) .. "|r" end
     d.req:SetText(table.concat(reqLines, "\n"))
     local mats = detailMats or {}

@@ -6,7 +6,8 @@
 --  * Skill NUMERICO 1-300; los tiers se derivan del numero (Aprendiz/Oficial/Experto/Artesano/Maestro).
 --  * "Tener la competencia de herramienta = conoces la profesion" (nivel base). Las que no tienen
 --    herramienta D&D (Mineria/Pesca/etc.) se conocen al aprenderlas (skill > 0, via DM o mundo).
---  * Recetas gateadas por tier de skill; algunas `worldLearned` (no auto por nivel, se aprenden fuera).
+--  * Recetas gateadas por tier de skill; algunas `worldLearned` (no auto por nivel, se aprenden
+--    fuera) y otras `trainer = "<id>"` (se compran a un entrenador; ver HarfordProfessionTrainers).
 --  * MATERIALES REALES: se verifican con GetItemCount y se consumen con HarfordServerActions.RemoveItem
 --    (`.additem <id> -<qty>`, verificado). El output se da con GiveItem (`.additem`).
 --  * Los IDs de items viven en HarfordProfessionsItems (registro por clave); receta con material sin
@@ -307,6 +308,13 @@ function API.CanCraft(recipeId)
     if r.worldLearned and not Store().learned[r.id] then
         return false, "Receta no aprendida (se obtiene en el mundo)"
     end
+    -- Receta de ENTRENADOR: no viene con el nivel de habilidad, hay que aprenderla de el.
+    -- El motivo dice DONDE, que es lo unico accionable para el jugador.
+    if r.trainer and not Store().learned[r.id] then
+        local donde = HarfordProfessionTrainers and HarfordProfessionTrainers.DescribeForRecipe
+            and HarfordProfessionTrainers.DescribeForRecipe(r.id)
+        return false, donde and ("La ensena " .. donde) or "Receta de entrenador (aun no aprendida)"
+    end
     local resolvable, enough, detail = InspectMaterials(r)
     if not resolvable then return false, "Materiales pendientes de ID (aun no crafteable)", detail end
     local outId = Items() and Items().GetId(r.output and r.output.key)
@@ -321,7 +329,7 @@ end
 function API.IsRecipeLearned(recipeId)
     local r = API.GetRecipe(recipeId)
     if not r then return false end
-    if not r.worldLearned then return true end
+    if not (r.worldLearned or r.trainer) then return true end
     return Store().learned[tostring(recipeId)] == true
 end
 

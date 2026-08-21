@@ -4655,6 +4655,60 @@ end, "recetas dinamicas: list | demo | forget <id>")
 -- bgFileL/bgFileR); si el build de Epsilon no las trae, hay que caer a los fileID.
 -- Sintonizacion y carga: estado y pruebas. `peso <itemId> <libras>` declara el peso de un
 -- objeto, que el cliente de WoW NO expone y por eso hay que darselo a mano.
+-- Entrenadores de profesion. Sirve para probar el flujo entero sin tener NPCs colocados:
+-- `definir` simula el registro que hara el ArcSpell del gossip.
+API.RegisterCommand("entrenador", function(args)
+    local T = _G.HarfordProfessionTrainers
+    if not T then Print("HarfordProfessionTrainers no cargado"); return end
+    local cmd, a, b = tostring(args or ""):match("^%s*(%S*)%s*(%S*)%s*(%S*)")
+
+    if cmd == "definir" then
+        -- definir <npcTemplateId> <recipeId>: registra un entrenador de mentira para ese NPC.
+        local npc, recipeId = tonumber(a), b
+        if not (npc and recipeId ~= "") then
+            Print("uso: entrenador definir <npcTemplateId> <recipeId>")
+            return
+        end
+        local r = HarfordProfessions and HarfordProfessions.GetRecipe and HarfordProfessions.GetRecipe(recipeId)
+        if not r then Print("Receta desconocida: " .. recipeId); return end
+        local ok, err = T.Define({
+            id = "prueba_" .. npc, name = "Entrenador de pruebas", npc = npc,
+            zone = "En ninguna parte", profession = r.profession, recipes = { recipeId },
+        })
+        Print(ok and string.format("Entrenador de pruebas registrado en el NPC %d para %s", npc, recipeId)
+            or ("|cffff5555" .. tostring(err) .. "|r"))
+        return
+    end
+
+    if cmd == "ensenar" then
+        local npc, recipeId = tonumber(a), b
+        if not (npc and recipeId ~= "") then Print("uso: entrenador ensenar <npcTemplateId> <recipeId>"); return end
+        local ok, err = T.Teach(npc, recipeId)
+        Print(ok and ("Aprendida: " .. recipeId) or ("|cffff5555" .. tostring(err) .. "|r"))
+        return
+    end
+
+    if cmd == "receta" then
+        if a == "" then Print("uso: entrenador receta <recipeId>"); return end
+        local texto, def = T.DescribeForRecipe(a)
+        if not texto then Print("Esa receta no la ensena ningun entrenador conocido."); return end
+        Print(string.format("|cffffd100%s|r la ensena |cffffd100%s|r%s", a, texto,
+            def.npc and (" (NPC " .. def.npc .. ")") or " |cff808080(sin NPC en el mundo)|r"))
+        return
+    end
+
+    local todos = T.GetAll()
+    Print(string.format("Entrenadores conocidos: |cffffd100%d|r", #todos))
+    for _, def in ipairs(todos) do
+        Print(string.format("  %-22s %-26s %s  %d receta(s)%s",
+            tostring(def.id), tostring(def.name), tostring(def.zone or "-"),
+            #(def.recipes or {}), def.npc and (" NPC " .. def.npc) or " |cff808080sin NPC|r"))
+    end
+    Print("  |cffffd100entrenador receta <recipeId>|r   quien la ensena")
+    Print("  |cffffd100entrenador definir <npc> <recipeId>|r  registra uno de pruebas")
+    Print("  |cffffd100entrenador ensenar <npc> <recipeId>|r  aprende de el")
+end, "Entrenadores de profesion: consulta y pruebas sin NPC colocado")
+
 API.RegisterCommand("carga", function(args)
     local B = _G.HarfordDnDBurden
     if not B then Print("HarfordDnDBurden no cargado"); return end

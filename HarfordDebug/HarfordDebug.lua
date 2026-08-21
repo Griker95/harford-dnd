@@ -4715,6 +4715,9 @@ API.RegisterCommand("profskin", function(args)
             V.bookmark.w, V.bookmark.tx, V.bookmark.ty))
         Print(string.format("  |cffffd100local PROF_FRAME_OFFSET = { x = %d, y = %d }|r",
             V.frame.x, V.frame.y))
+        if V.margen then
+            Print(string.format("  |cffffd100local PROF_FRAME_MARGIN = %d|r", V.margen()))
+        end
     end
 
     if cmd == "dump" then Dump(); return end
@@ -4737,6 +4740,18 @@ API.RegisterCommand("profskin", function(args)
         Apply()
         Print(string.format("Marcapaginas: ancho %d, textura desplazada (%d, %d)",
             V.bookmark.w, V.bookmark.tx, V.bookmark.ty))
+        return
+    end
+
+    if cmd == "margen" then
+        if not V.margen then Print("Esta version no expone el margen"); return end
+        if tonumber(a) then V.margen(tonumber(a)) end
+        Apply()
+        local m = V.margen()
+        Print(string.format("Margen del marco: %d  ->  ventana %dx%d por hueco", m, 437 + m * 2, 81 + m * 2))
+        if 81 + m * 2 > 93 then
+            Print("   |cffff9900Ojo:|r con mas de 6 los marcos contiguos se solapan (el paso es 93).")
+        end
         return
     end
 
@@ -4807,6 +4822,7 @@ API.RegisterCommand("profskin", function(args)
     Print("  |cffffd100marcapaginas <ancho>|r           ancho de la franja (ahora 65)")
     Print("  |cffffd100marcapaginas mover <dx> <dy>|r   desplaza la textura dentro de la franja")
     Print("  |cffffd100marco <dx> <dy>|r                mueve el recorte de los 4 marcos")
+    Print("  |cffffd100margen <n>|r                     cuanto ornamento se recoge (ahora 6)")
     Print("  |cffffd100icono|r                          composicion del icono y su aro")
     Print("  |cffffd100dump|r                           imprime los valores para fijarlos")
     Dump()

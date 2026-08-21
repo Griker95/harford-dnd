@@ -3216,6 +3216,13 @@ end
 -- Pagina izquierda anclada en (7,-25) y hueco 1 en (80,-67) => desplazamiento (-73, +42).
 local PROF_FRAME_OFFSET = { x = -73, y = 42 }
 
+-- El hueco de contenido mide 437x81, pero el ornamento de la pagina nativa SOBRESALE de ese
+-- rectangulo: recortando justo el hueco se pierde parte del marco por arriba y por abajo. Este
+-- margen ensancha la ventana de recorte por los cuatro lados (y desplaza la copia de la pagina
+-- otro tanto, para que siga cayendo el mismo trozo). El paso entre huecos es 12, asi que 6 es
+-- justo la mitad del hueco entre marcos: mas que eso y dos marcos contiguos se solaparian.
+local PROF_FRAME_MARGIN = 4
+
 -- Franja izquierda de la pagina de profesiones que se recorta para quedarse solo con el
 -- marcapaginas VERDE, superpuesto sobre el borde del libro de habilidades (que lleva el suyo
 -- azul). `x/top/bottom` situan la ventana de recorte sobre el libro; `w` es su ancho y `tx/ty`
@@ -3301,16 +3308,18 @@ local function CreateProfessionsPage()
     local frameCovers = {}
     for i = 1, #PROF_SLOTS do
         local slot = PROF_SLOTS[i]
+        local m = PROF_FRAME_MARGIN
         local cover = CreateFrame("Frame", nil, page)
-        cover:SetSize(slot.w, slot.h)
+        cover:SetSize(slot.w + m * 2, slot.h + m * 2)
         -- Anclado al LIBRO, no a la pagina de contenido: `skillsContent` empieza 21 px mas
         -- abajo que el frame, y las coordenadas nativas son respecto al frame (ahi se ancla
         -- tambien la textura de pagina). Colgarlos de `page` los bajaba 21 px.
-        cover:SetPoint("TOPLEFT", host, "TOPLEFT", slot.x, slot.y)
+        cover:SetPoint("TOPLEFT", host, "TOPLEFT", slot.x - m, slot.y + m)
         if cover.SetClipsChildren then cover:SetClipsChildren(true) end
         local left = cover:CreateTexture(nil, "BACKGROUND")
         left:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Left", 383588))
-        left:SetPoint("TOPLEFT", cover, "TOPLEFT", PROF_FRAME_OFFSET.x, PROF_FRAME_OFFSET.y)
+        left:SetPoint("TOPLEFT", cover, "TOPLEFT",
+            PROF_FRAME_OFFSET.x + m, PROF_FRAME_OFFSET.y - m)
         cover.pageLeft = left
         local right = cover:CreateTexture(nil, "BACKGROUND")
         right:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Right", 383589))
@@ -3334,14 +3343,26 @@ local function CreateProfessionsPage()
         bookmarkPage:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT",
             SKILLS_PAGE_RECT.left + PROF_BOOKMARK.tx, SKILLS_PAGE_RECT.bottom + PROF_BOOKMARK.ty)
         bookmarkPage:SetWidth(PROF_BOOKMARK.w)
-        for _, cover in ipairs(frameCovers) do
+        for i, cover in ipairs(frameCovers) do
+            local slot = PROF_SLOTS[i]
+            local m = PROF_FRAME_MARGIN
+            cover:SetSize(slot.w + m * 2, slot.h + m * 2)
+            cover:ClearAllPoints()
+            cover:SetPoint("TOPLEFT", host, "TOPLEFT", slot.x - m, slot.y + m)
             cover.pageLeft:ClearAllPoints()
-            cover.pageLeft:SetPoint("TOPLEFT", cover, "TOPLEFT", PROF_FRAME_OFFSET.x, PROF_FRAME_OFFSET.y)
+            cover.pageLeft:SetPoint("TOPLEFT", cover, "TOPLEFT",
+                PROF_FRAME_OFFSET.x + m, PROF_FRAME_OFFSET.y - m)
         end
     end
     ApplyProfSkin()
     HarfordCharacterPanel._ApplyProfSkin = ApplyProfSkin
-    HarfordCharacterPanel._ProfSkinValues = { bookmark = PROF_BOOKMARK, frame = PROF_FRAME_OFFSET }
+    HarfordCharacterPanel._ProfSkinValues = {
+        bookmark = PROF_BOOKMARK, frame = PROF_FRAME_OFFSET,
+        margen = function(v)
+            if v then PROF_FRAME_MARGIN = math.max(0, math.floor(v)) end
+            return PROF_FRAME_MARGIN
+        end,
+    }
 
     local title = CreateFS(page, "GameFontNormalLarge", "Profesiones")
     title:SetPoint("TOPLEFT", 14, -10)

@@ -1282,14 +1282,9 @@ titleIcon:SetAllPoints()
 titleIcon:SetTexture(HarfordDnDUI.TEX.CAMPFIRE)
 titleIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
 
-HarfordDnDTurnButton = CreateFrame("Button", nil, F)
-HarfordDnDTurnButton:SetSize(20, 20)
-HarfordDnDTurnButton:SetPoint("LEFT", restButton, "RIGHT", 5, 0)
-
-HarfordDnDTurnIcon = HarfordDnDTurnButton:CreateTexture(nil, "ARTWORK")
-HarfordDnDTurnIcon:SetAllPoints()
-HarfordDnDTurnIcon:SetTexture(HarfordDnDUI.TEX.HOURGLASS)
-HarfordDnDTurnIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+-- Ultimo boton de la cabecera. Se publica con nombre porque HarfordAdmin cuelga de el su
+-- boton de modo NPC; sin un ancla con nombre ese boton no llegaria a crearse.
+HarfordDnDHeaderAnchor = restButton
 
 local RestMenu = CreateFrame("Frame", "HarfordDnDRestMenu", F, "BackdropTemplate")
 -- En HarfordDnDStore para que RefreshRestMenu (definida mucho mas abajo) lo lea sin
@@ -1362,25 +1357,6 @@ restButton:SetScript("OnLeave", function()
     GameTooltip:Hide()
 end)
 
-HarfordDnDTurnButton:SetScript("OnClick", function()
-    if HarfordTurnOrderAPI and HarfordTurnOrderAPI.Toggle then
-        HarfordTurnOrderAPI.Toggle()
-    else
-        HarfordChat.Print("|cffff3333La ventana de turnos aun no esta disponible.|r")
-    end
-end)
-
-HarfordDnDTurnButton:SetScript("OnEnter", function(self)
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Turnos", 1, 0.82, 0)
-    GameTooltip:AddLine("Click: abrir o cerrar la ventana de turnos", 1, 1, 1)
-    GameTooltip:Show()
-end)
-
-HarfordDnDTurnButton:SetScript("OnLeave", function()
-    GameTooltip:Hide()
-end)
-
 F:HookScript("OnHide", function()
     local menu = HarfordDnDStore.restMenu
     if menu and menu:IsShown() then
@@ -1390,40 +1366,6 @@ end)
 
 local close = CreateFrame("Button", nil, F, "UIPanelCloseButton")
 close:SetPoint("TOPRIGHT", -6, -4)
-
--- Icono de reputacion: a la izquierda del boton cerrar
-do
-    local repBtn = CreateFrame("Button", nil, F)
-    repBtn:SetSize(20, 20)
-    repBtn:SetPoint("TOPRIGHT", close, "TOPLEFT", -2, -11)
-
-    local repIcon = repBtn:CreateTexture(nil, "ARTWORK")
-    repIcon:SetAllPoints()
-    repIcon:SetTexture("Interface\\Icons\\INV_Shirt_GuildTabard_01")
-    repIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-
-    local repHL = repBtn:CreateTexture(nil, "HIGHLIGHT")
-    repHL:SetAllPoints()
-    repHL:SetTexture("Interface\\Buttons\\ButtonHilight-Square")
-    repHL:SetBlendMode("ADD")
-
-    repBtn:SetScript("OnClick", function()
-        if HarfordCharacterPanel and HarfordCharacterPanel.Toggle then
-            HarfordCharacterPanel.Toggle("sheet")
-        elseif HarfordReputationUI and HarfordReputationUI.Toggle then
-            HarfordReputationUI.Toggle()
-        end
-    end)
-    repBtn:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
-        GameTooltip:SetText("Personaje", 1, 0.82, 0)
-        GameTooltip:AddLine("Abre el panel de personaje.", 1, 1, 1)
-        GameTooltip:AddLine("Ficha, creacion, subida y acceso a reputacion.", 1, 1, 1)
-        GameTooltip:AddLine("/harford char - acceso directo", 0.7, 0.9, 0.7)
-        GameTooltip:Show()
-    end)
-    repBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-end
 
 ResourceFrame = CreateFrame("Frame", "HarfordDnDResourceFrame", UIParent, "BackdropTemplate")
 ResourceFrame:SetSize(250, 280)

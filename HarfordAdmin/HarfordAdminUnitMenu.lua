@@ -1136,7 +1136,9 @@ do
         local dndAPI = HarfordDnDAPI
         if not (dndAPI and dndAPI.GetPlayerFrame) then return end
         local parentFrame = dndAPI.GetPlayerFrame()
-        local anchorFrame = _G.HarfordDnDTurnButton
+        -- La ficha ya no tiene boton de turnos; el ultimo de su cabecera se publica como
+        -- `HarfordDnDHeaderAnchor`. Se acepta el nombre antiguo por si carga una version vieja.
+        local anchorFrame = _G.HarfordDnDHeaderAnchor or _G.HarfordDnDTurnButton
         if not parentFrame or not anchorFrame then return end
 
         npcBtn = CreateFrame("Button", nil, parentFrame)

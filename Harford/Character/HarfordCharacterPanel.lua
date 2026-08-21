@@ -3221,7 +3221,8 @@ local function ProfButton(i)
     if P.profButtons[i] then return P.profButtons[i] end
     local b = CreateFrame("Button", nil, P.profList)
     -- Escala NATIVA 1:1 (con BOOK_W el pergamino pinta a tamano real)
-    b:SetSize(449, 101); b:SetPoint("TOPLEFT", 0, -((i - 1) * 110))
+    -- Tamano NATIVO del hueco de profesion (sonda PrimaryProfession1): 437x81.
+    b:SetSize(437, 81); b:SetPoint("TOPLEFT", 0, -((i - 1) * 92))
     -- Marco ornamentado horneado en la textura del pergamino de profesiones
     b.stamp = b:CreateTexture(nil, "BACKGROUND")
     b.stamp:SetTexture(383588)
@@ -3233,13 +3234,12 @@ local function ProfButton(i)
     b.iconBorder:SetTexture(383591)
     b.iconBorder:SetTexCoord(0.43359375, 0.72265625, 0.1484375, 0.7265625)
     b.iconBorder:SetSize(72, 72); b.iconBorder:SetPoint("TOPLEFT", 17, -17)
-    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon = b:CreateTexture(nil, "BORDER")
     -- El hueco del aro es redondo (el nativo usa retratos circulares): icono cuadrado
     -- recortado con la mascara circular de retratos (patron probado de UnitFrames)
     -- Nativo: icono 70x70 dentro del aro de 72 (solo 1px de margen)
     b.icon:SetPoint("TOPLEFT", b.iconBorder, "TOPLEFT", 1, -1)
     b.icon:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
-    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
     -- El recorte circular lo hace SetPortraitToTexture (ver SetProfIcon): la mascara de
     -- retrato no recorta de forma fiable aqui, igual que fallo en las tarjetas de creacion.
     b.name = b:CreateFontString(nil, "OVERLAY")
@@ -3277,6 +3277,9 @@ local function ProfButton(i)
     capR:SetTexture("Interface\\Spellbook\\ProfessionsBook")
     capR:SetTexCoord(0.00390625, 0.05078125, 0.765625, 0.859375)
     capR:SetSize(12, 12); capR:SetPoint("LEFT", bar, "RIGHT", 0, 2)
+    -- El nativo mantiene OCULTO el remate derecho (StatusBarRight vis=None en la sonda):
+    -- dibujarlo mete un artefacto en el extremo de la barra.
+    capR:Hide()
     b.barText = bar:CreateFontString(nil, "OVERLAY")
     b.barText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
     b.barText:SetPoint("CENTER", bar, "CENTER", 0, 2)
@@ -3284,27 +3287,29 @@ local function ProfButton(i)
     -- Botones de "hechizo" del sello, como en el libro nativo: icono cuadrado con marco y
     -- nombre al lado. El sello en si NO abre nada; abrir la profesion es uno de estos botones,
     -- de modo que una profesion con herramienta puede ofrecer ademas la tirada suelta.
+    -- Boton de hechizo NATIVO (sonda PrimaryProfession1/nuevo): boton 40x40 con el icono a
+    -- tamano completo, el NameFrame 108x41 recortado de 383591 pegado a su derecha y el
+    -- nombre en FRIZQT 12 ORO. El primero a TOPRIGHT -109,-3; el segundo una fila mas abajo.
     local function SpellButton(index)
         local sb = CreateFrame("Button", nil, b)
-        sb:SetSize(196, 34)
-        sb:SetPoint("TOPLEFT", 232, -16 - (index - 1) * 40)
-        sb.icon = sb:CreateTexture(nil, "ARTWORK")
-        sb.icon:SetSize(32, 32)
-        sb.icon:SetPoint("LEFT", sb, "LEFT", 0, 0)
-        sb.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        sb.border = sb:CreateTexture(nil, "OVERLAY")
-        sb.border:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-        sb.border:SetSize(42, 42)
-        sb.border:SetPoint("CENTER", sb.icon, "CENTER", 0, -1)
-        sb.label = sb:CreateFontString(nil, "OVERLAY")
-        sb.label:SetFont("Fonts\\FRIZQT__.TTF", 11)
-        sb.label:SetPoint("LEFT", sb.icon, "RIGHT", 8, 0)
-        sb.label:SetWidth(150)
+        sb:SetSize(40, 40)
+        sb:SetPoint("TOPRIGHT", b, "TOPRIGHT", -109, -3 - (index - 1) * 41)
+        sb.nameFrame = sb:CreateTexture(nil, "BACKGROUND")
+        sb.nameFrame:SetTexture(383591)
+        sb.nameFrame:SetTexCoord(0.00390625, 0.42578125, 0.1484375, 0.46875)
+        sb.nameFrame:SetSize(108, 41)
+        sb.nameFrame:SetPoint("LEFT", sb, "RIGHT", 1, 0)
+        sb.icon = sb:CreateTexture(nil, "BORDER")
+        sb.icon:SetAllPoints(sb)
+        sb.label = sb:CreateFontString(nil, "BORDER")
+        sb.label:SetFont("Fonts\\FRIZQT__.TTF", 12)
+        sb.label:SetPoint("LEFT", sb, "RIGHT", 5, 7)
+        sb.label:SetWidth(100)
         sb.label:SetJustifyH("LEFT")
         sb.label:SetWordWrap(false)
-        sb.label:SetMaxLines(1)
-        sb.label:SetTextColor(0.16, 0.08, 0.03)
+        sb.label:SetTextColor(1, 0.82, 0)
         sb:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+        sb:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
         sb:Hide()
         return sb
     end
@@ -3356,7 +3361,7 @@ local function RefreshProfessions()
 
     -- Lista con desplazamiento por rueda (4 sellos visibles). Sin profesiones se pintan
     -- envoltorios VACIOS (como los "First/Second Profession" del nativo): el marco sigue ahi.
-    local VISIBLE = 4
+    local VISIBLE = 5  -- el sello nativo mide 81 de alto, cabe uno mas por pagina
     local totalSlots = math.max(#known, 2)
     local maxOffset = math.max(0, totalSlots - VISIBLE)
     P.listOffset = math.max(0, math.min(P.listOffset or 0, maxOffset))

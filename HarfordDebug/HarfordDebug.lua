@@ -4655,6 +4655,36 @@ end, "recetas dinamicas: list | demo | forget <id>")
 -- bgFileL/bgFileR); si el build de Epsilon no las trae, hay que caer a los fileID.
 -- Sintonizacion y carga: estado y pruebas. `peso <itemId> <libras>` declara el peso de un
 -- objeto, que el cliente de WoW NO expone y por eso hay que darselo a mano.
+-- Resuelve una receta por id EXACTO o por NOMBRE visible, tolerando tildes y mayusculas.
+-- Con 1661 recetas, obligar a escribir el id de memoria hace la herramienta inservible.
+local function ResolveRecipe(texto)
+    if not (HarfordProfessions and HarfordProfessions.GetRecipe) then return nil end
+    texto = tostring(texto or "")
+    if texto == "" then return nil end
+    local exacta = HarfordProfessions.GetRecipe(texto)
+    if exacta then return texto, exacta end
+
+    local function Normaliza(v)
+        v = tostring(v or "")
+        if HarfordClassColors and HarfordClassColors.StripAccents then
+            v = HarfordClassColors.StripAccents(v)
+        end
+        return v:lower():gsub("[%s_]", "")
+    end
+    local buscado = Normaliza(texto)
+    local parciales = {}
+    for _, def in ipairs(HarfordProfessions.GetProfessions and HarfordProfessions.GetProfessions() or {}) do
+        for _, r in ipairs(HarfordProfessions.GetRecipes and HarfordProfessions.GetRecipes(def.id) or {}) do
+            local nid, nname = Normaliza(r.id), Normaliza(r.name)
+            if nid == buscado or nname == buscado then return r.id, r end
+            if #parciales < 8 and (nid:find(buscado, 1, true) or nname:find(buscado, 1, true)) then
+                parciales[#parciales + 1] = string.format("%s (%s)", r.id, tostring(r.name))
+            end
+        end
+    end
+    return nil, nil, parciales
+end
+
 -- Entrenadores de profesion. Sirve para probar el flujo entero sin tener NPCs colocados:
 -- `definir` simula el registro que hara el ArcSpell del gossip.
 API.RegisterCommand("entrenador", function(args)
@@ -4669,8 +4699,13 @@ API.RegisterCommand("entrenador", function(args)
             Print("uso: entrenador definir <npcTemplateId> <recipeId>")
             return
         end
-        local r = HarfordProfessions and HarfordProfessions.GetRecipe and HarfordProfessions.GetRecipe(recipeId)
-        if not r then Print("Receta desconocida: " .. recipeId); return end
+        local resuelta, r, parciales = ResolveRecipe(recipeId)
+        if not resuelta then
+            Print("Receta desconocida: |cffffd100" .. recipeId .. "|r")
+            for _, sug in ipairs(parciales or {}) do Print("   quiza: |cff808080" .. sug .. "|r") end
+            return
+        end
+        recipeId = resuelta
         local ok, err = T.Define({
             id = "prueba_" .. npc, name = "Entrenador de pruebas", npc = npc,
             zone = "En ninguna parte", profession = r.profession, recipes = { recipeId },
@@ -4683,13 +4718,22 @@ API.RegisterCommand("entrenador", function(args)
     if cmd == "ensenar" then
         local npc, recipeId = tonumber(a), b
         if not (npc and recipeId ~= "") then Print("uso: entrenador ensenar <npcTemplateId> <recipeId>"); return end
-        local ok, err = T.Teach(npc, recipeId)
+        local resuelta, _, parciales = ResolveRecipe(recipeId)
+        if not resuelta then
+            Print("Receta desconocida: |cffffd100" .. recipeId .. "|r")
+            for _, sug in ipairs(parciales or {}) do Print("   quiza: |cff808080" .. sug .. "|r") end
+            return
+        end
+        local ok, err = T.Teach(npc, resuelta)
+        recipeId = resuelta
         Print(ok and ("Aprendida: " .. recipeId) or ("|cffff5555" .. tostring(err) .. "|r"))
         return
     end
 
     if cmd == "receta" then
         if a == "" then Print("uso: entrenador receta <recipeId>"); return end
+        local resuelta = ResolveRecipe(a)
+        if resuelta then a = resuelta end
         local texto, def = T.DescribeForRecipe(a)
         if not texto then Print("Esa receta no la ensena ningun entrenador conocido."); return end
         Print(string.format("|cffffd100%s|r la ensena |cffffd100%s|r%s", a, texto,

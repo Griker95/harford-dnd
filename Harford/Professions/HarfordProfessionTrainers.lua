@@ -34,14 +34,18 @@ local API = HarfordProfessionTrainers
 -- profesion, su rango, las recetas que cubre y hasta como se llama por defecto ("Instructor de
 -- Herreria"). Escribir esa lista era escribir 75 veces lo que ya estaba en el nombre.
 --
--- Lo unico que NO se puede deducir es cuales existen ya en el mundo y como se llama de verdad el
--- NPC que los encarna. Eso es esto, y empieza vacio:
+-- Lo unico que NO se puede deducir es cuales existen ya en el mundo. Eso es esto, y empieza
+-- vacio. Una entrada aqui CIERRA ese rango: sus recetas dejan de venir con el nivel de habilidad
+-- y hay que aprenderlas del entrenador. Basta el nombre pelado:
+--
+--   "herreria_experto",
+--
+-- La forma larga solo anade el texto de "donde se aprende", para que el libro pueda mandar al
+-- jugador a un sitio en vez de decirle solo que rango busca:
 --
 --   { id = "herreria_experto", name = "Thorgas Yunquegris", zone = "Forjaz" },
 --
--- Una entrada aqui CIERRA ese rango: sus recetas dejan de venir con el nivel de habilidad y hay
--- que aprenderlas del entrenador. `name` y `zone` son solo el texto de "donde se aprende"; si
--- faltan, se usa el nombre por defecto y no se dice zona. `recipes` ata recetas sueltas de mas.
+-- `recipes` ata ademas recetas sueltas al margen del rango.
 API.PLACED = API.PLACED or {}
 
 local vivos = {}
@@ -140,11 +144,16 @@ local function Declarados()
         out[#out + 1] = def
         vistos[Norm(def.id)] = true
     end
-    for _, def in ipairs(API.PLACED) do
+    for i, def in ipairs(API.PLACED) do
+        -- Basta el nombre pelado para dar un rango por puesto. `name` y `zone` son opcionales y
+        -- solo alimentan el texto de "donde se aprende": sin ellos se dice el rango y punto.
+        if type(def) == "string" then
+            def = { id = def }
+            API.PLACED[i] = def
+        end
         if not vistos[Norm(def.id)] then
-            -- Una entrada escrita a mano es solo { id, name, zone }: sin profesion ni rango no
-            -- cubriria ninguna receta y no cerraria nada. Se deducen del nombre y se dejan
-            -- puestas, que es idempotente y ahorra repetirlo en cada consulta.
+            -- Sin profesion ni rango no cubriria ninguna receta, asi que no cerraria nada. Se
+            -- deducen del nombre y se dejan puestas: es idempotente y ahorra repetirlo.
             if not (def.profession and def.tier) then
                 local prof, tier = API.SplitId(def.id)
                 def.profession = def.profession or prof
@@ -334,11 +343,17 @@ end
 ------------------------------------------------------------
 
 -- Aprender una receta de un entrenador, nombrandolo por su nombre de catalogo: es lo que el
--- gossip del NPC tiene delante, y evita aprender de un entrenador que no esta colocado.
+-- gossip del NPC tiene delante.
+--
+-- NO exige que el entrenador este colocado: si estas hablando con el, lo esta. `colocado` decide
+-- otra cosa distinta —si ese rango deja de venir con el nivel de habilidad para TODO el mundo—,
+-- y atarlas hacia que el gossip abriese la ventana y `Aprender` fallase delante del NPC.
+--
+-- Las condiciones se comprueban AQUI y no en la ventana: la UI las repite para pintar el boton,
+-- pero quien decide es esto, asi que no hay forma de aprender saltandose el requisito.
 function API.Teach(trainerId, recipeId)
     local def = API.Get(trainerId)
     if not def then return false, "Nombre de entrenador desconocido" end
-    if not def.colocado then return false, "Ese entrenador aun no existe en el mundo" end
     recipeId = tostring(recipeId or "")
 
     if not (HarfordProfessions and HarfordProfessions.GetRecipe) then
@@ -349,6 +364,14 @@ function API.Teach(trainerId, recipeId)
     if not API.TrainerTeaches(def, r) then return false, "Ese entrenador no ensena esa receta" end
     if not HarfordProfessions.KnowsProfession(r.profession) then
         return false, "No conoces esa profesion"
+    end
+    -- El requisito de habilidad tambien es cosa del entrenador: no ensena por encima de lo que
+    -- el alumno puede seguir. Faltaba, y se podia aprender una receta de 300 con habilidad 1.
+    local skill = HarfordProfessions.EffectiveSkill
+        and HarfordProfessions.EffectiveSkill(r.profession) or 0
+    local req = SkillReq(r)
+    if skill < req then
+        return false, "Te falta habilidad: requiere " .. req
     end
     if HarfordProfessions.IsRecipeLearned(recipeId) then
         return false, "Ya conoces esa receta"

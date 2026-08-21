@@ -113,6 +113,7 @@ Contracts\HarfordContractsUtil.lua
 Contracts\HarfordContractsUI.lua
 Contracts\HarfordContractsDM.lua
 Contracts\HarfordContractsComm.lua
+Contracts\HarfordContractsPhase.lua
 Contracts\HarfordContractsMinimap.lua
 
 # --- Professions ---
@@ -122,6 +123,7 @@ Professions\HarfordProfessionsCraftUI.lua
 Professions\HarfordProfessionsData.lua
 Professions\HarfordProfessions.lua
 Professions\HarfordProfessionTrainers.lua
+Professions\HarfordProfessionTrainerUI.lua
 
 # --- Communicator ---
 Communicator\HarfordCourier.lua

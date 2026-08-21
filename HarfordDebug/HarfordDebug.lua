@@ -5173,6 +5173,15 @@ API.RegisterCommand("entrenador", function(args)
     if not T then Print("HarfordProfessionTrainers no cargado"); return end
     local cmd, a, b = tostring(args or ""):match("^%s*(%S*)%s*(%S*)%s*(.-)%s*$")
 
+    if cmd == "abrir" then
+        -- Lo mismo que hara la opcion de gossip del NPC, para probarla sin tener el NPC puesto.
+        if a == "" then Print("uso: entrenador abrir <nombreDeCatalogo>"); return end
+        local ok, err = _G.HarfordTrainerAPI and _G.HarfordTrainerAPI.OpenTrainer
+            and _G.HarfordTrainerAPI.OpenTrainer(a)
+        if not ok then Print("|cffff5555" .. tostring(err or "no se pudo abrir") .. "|r") end
+        return
+    end
+
     if cmd == "colocar" or cmd == "quitar" then
         if a == "" then Print("uso: entrenador " .. cmd .. " <nombreDeCatalogo>"); return end
         local def = T.Get(a)
@@ -5261,6 +5270,7 @@ API.RegisterCommand("entrenador", function(args)
             acc.puestos, acc.rangos, acc.recetas))
     end
     Print("  |cffffd100entrenador <profesion>|r   desglose por rango")
+    Print("  |cffffd100entrenador abrir <nombre>|r   abre su ventana, como hara el gossip")
     Print("  |cffffd100entrenador receta <receta>|r   quien la ensena")
     Print("  |cffffd100entrenador colocar <nombre> [zona]|r  lo pone en el mundo y cierra su rango")
     Print("  |cffffd100entrenador quitar <nombre>|r   lo retira")

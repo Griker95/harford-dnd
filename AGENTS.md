@@ -2350,3 +2350,27 @@ el registro en vivo (`vivos`) muere con el `/reload`. Lo unico que persiste al a
 
 Pruebas: `/harford debug run entrenador` resume por profesion, `entrenador <profesion>` desglosa
 sus cinco rangos, y `colocar`/`quitar`/`ensenar` recorren el flujo entero sin NPCs puestos.
+
+## Ventana De Entrenador: La Abre El Gossip Con Solo El ID (2026-08-21)
+
+`HarfordProfessionTrainerUI` es lo que abre el gossip del NPC. Una opcion "lua" del gossip llama a
+`HarfordTrainerAPI.OpenTrainer("herreria_experto")` y esa API monta la ventana entera desde ese
+id: titulo, retrato de la profesion, barra de habilidad, lista de recetas del rango y detalle. El
+NPC NO pasa recetas, precios ni rango: solo dice quien es. Todo lo demas se deduce.
+
+Reutiliza `HarfordCraftSkin.Build` (replica del TradeSkillFrame nativo, generada desde la sonda)
+en vez de inventar arte para un `ClassTrainerFrame` que no esta capturado. Si algun dia se captura
+el nativo, se regenera un skin propio; no meter rutas de textura a ojo mientras tanto.
+
+**Las condiciones las decide `Teach`, no la ventana.** La UI las repite solo para pintar el boton.
+`API.Teach` comprueba cobertura del rango, profesion conocida, **requisito de habilidad** y si ya
+la sabes. Ese requisito faltaba y se podia aprender una receta de 300 con habilidad 1.
+
+**`Teach` NO exige que el entrenador este colocado.** Son cosas distintas: `colocado` decide si ese
+rango deja de venir con el nivel de habilidad para TODO el mundo (viene de `API.PLACED`, va en el
+addon, igual para todos, sin red ni SavedVariables); poder aprender depende de estar delante del
+NPC, que es lo que significa que su gossip te haya abierto la ventana. Atarlas hacia que el gossip
+abriese la ventana y `Aprender` fallase con "ese entrenador aun no existe en el mundo" delante del
+NPC.
+
+Prueba sin NPC: `/harford debug run entrenador abrir herreria_experto`.

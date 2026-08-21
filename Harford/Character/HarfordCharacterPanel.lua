@@ -3476,6 +3476,55 @@ end
 -- 12x12 (el DERECHO va hidden=true en el propio XML, no es un apano nuestro), y el fondo
 -- central anclado ENTRE los dos fondos de extremo, de donde hereda altura y el desplazamiento
 -- de +2. Texto TextStatusBarText centrado con +2 en vertical.
+-- Tooltip de los botones de profesion. El libro nativo muestra uno al pasar por encima y el
+-- nuestro no mostraba nada. Aqui no hay hechizo del que sacar la descripcion, asi que se compone
+-- con lo que si tenemos: tipo, herramienta, caracteristica que la rige, rango y recetas.
+local PROF_KIND_LABEL = {
+    craft = "Profesion de fabricacion",
+    gather = "Profesion de recoleccion",
+    utility = "Competencia de herramienta",
+}
+
+local function SetProfTooltip(button, profId, modo)
+    button:SetScript("OnEnter", function(self)
+        local def = HarfordProfessions and HarfordProfessions.GetDefinition
+            and HarfordProfessions.GetDefinition(profId)
+        if not (def and GameTooltip) then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        if modo == "tool" then
+            GameTooltip:SetText(def.tool or "Herramienta", 1, 0.82, 0)
+            if def.ability then
+                GameTooltip:AddLine("Tirada de " .. def.ability .. " con la herramienta.", 1, 1, 1, true)
+            end
+            GameTooltip:AddLine("Click para tirar.", 0.4, 1, 0.4, true)
+        else
+            local skill = HarfordProfessions.EffectiveSkill(profId)
+            GameTooltip:SetText(def.name or profId, 1, 0.82, 0)
+            GameTooltip:AddLine(PROF_KIND_LABEL[def.kind] or "Profesion", 1, 1, 1, true)
+            if def.ability then
+                GameTooltip:AddDoubleLine("Caracteristica", def.ability, 0.7, 0.7, 0.7, 1, 1, 1)
+            end
+            if def.tool then
+                GameTooltip:AddDoubleLine("Herramienta", def.tool, 0.7, 0.7, 0.7, 1, 1, 1)
+            end
+            GameTooltip:AddDoubleLine("Rango", string.format("%s  %d/%d",
+                HarfordProfessions.GetTierName(skill), skill, HarfordProfessions.MAX_SKILL),
+                0.7, 0.7, 0.7, 1, 1, 1)
+            local recetas = HarfordProfessions.GetRecipes and HarfordProfessions.GetRecipes(profId) or {}
+            local alAlcance = 0
+            for _, r in ipairs(recetas) do
+                if (tonumber(r.skillReq) or 1) <= skill then alAlcance = alAlcance + 1 end
+            end
+            GameTooltip:AddDoubleLine("Recetas", string.format("%d de %d a tu alcance",
+                alAlcance, #recetas), 0.7, 0.7, 0.7, 1, 1, 1)
+            GameTooltip:AddLine(" ")
+            GameTooltip:AddLine("Click para abrir las recetas.", 0.4, 1, 0.4, true)
+        end
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+end
+
 local function ProfStatusBar(parent)
     local bar = CreateFrame("StatusBar", nil, parent)
     bar:SetSize(95, 16)
@@ -3738,6 +3787,7 @@ local function RefreshProfessions()
                 b:SetScript("OnClick", nil)
                 SetProfButtonIcon(b.spellOpen.icon, def.icon)
                 b.spellOpen.label:SetText(def.name)
+                SetProfTooltip(b.spellOpen, profId, "open")
                 b.spellOpen:SetScript("OnClick", function()
                     P.selected = profId
                     if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Open then
@@ -3753,6 +3803,7 @@ local function RefreshProfessions()
                 if def.tool and HarfordProfessions.RollTool then
                     SetProfButtonIcon(b.spellTool.icon, def.icon)
                     b.spellTool.label:SetText(def.tool)
+                    SetProfTooltip(b.spellTool, profId, "tool")
                     b.spellTool:SetScript("OnClick", function()
                         HarfordProfessions.RollTool(profId)
                     end)

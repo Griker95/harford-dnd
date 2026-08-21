@@ -4722,8 +4722,10 @@ API.RegisterCommand("phasetc", function(args)
     if cmd == "huerfanos" then
         -- Compara el indice que HAY en la fase contra los publicos locales. Lo que sobra
         -- son bloques que quedaron colgados al borrar contratos.
-        P.PruneOrphans(function(ok, lista)
-            if not ok then Print("|cffff5555" .. tostring(lista) .. "|r"); return end
+        P.PruneOrphans(function(ok, lista, err)
+            if not ok or type(lista) ~= "table" then
+                Print("|cffff5555" .. tostring(err or "fallo") .. "|r"); return
+            end
             if #lista == 0 then Print("|cff55ff55Sin huerfanos|r - la fase esta limpia."); return end
             Print("Bloques huerfanos limpiados: |cffffd100" .. #lista .. "|r")
             for _, id in ipairs(lista) do Print("   |cff808080" .. tostring(id) .. "|r") end
@@ -4732,23 +4734,45 @@ API.RegisterCommand("phasetc", function(args)
     end
 
     if cmd == "publicar-limpio" then
-        P.PublishClean(false, function(ok, n, limpiados)
-            Print(string.format("Publicados |cffffd100%s|r, huerfanos limpiados |cffffd100%d|r",
-                tostring(n), limpiados and #limpiados or 0))
+        P.PublishTracked(false, function(ok, n, limpiados)
+            if not ok then Print("|cffff5555" .. tostring(limpiados or "fallo") .. "|r"); return end
+            Print(string.format("Publicados |cffffd100%s|r, claves obsoletas vaciadas |cffffd100%d|r",
+                tostring(n), type(limpiados) == "table" and #limpiados or 0))
+        end)
+        return
+    end
+
+    if cmd == "manifiesto" then
+        -- El manifiesto es lo unico que hace alcanzable una clave: el servidor no deja
+        -- listar ni borrar por prefijo.
+        P.LoadManifest(function(claves, err)
+            claves = type(claves) == "table" and claves or {}
+            if #claves == 0 then
+                Print("Manifiesto vacio" .. (err and (" (" .. tostring(err) .. ")") or "") .. ".")
+                Print("|cff808080Publica una vez para crearlo.|r")
+                return
+            end
+            local espejo = P.GetLocalManifest and P.GetLocalManifest() or {}
+            Print(string.format("Claves conocidas: |cffffd100%d|r  (espejo local: |cffffd100%d|r)",
+                #claves, #espejo))
+            if err then Print("   |cffff9900la fase no contesto: " .. tostring(err) .. " - lista del espejo|r") end
+            for _, k in ipairs(claves) do Print("   |cff808080" .. tostring(k) .. "|r") end
         end)
         return
     end
 
     if cmd == "purgar" then
         if a ~= "confirmar" then
-            Print("|cffff5555Esto borra TODO el tablon de la fase.|r")
+            Print("|cffff5555Esto borra TODO lo que Harford tiene escrito en la fase.|r")
             Print("Escribe: |cffffd100phasetc purgar confirmar|r")
             return
         end
-        P.Purge(function(ok, borrados, err)
-            Print(string.format("Purgado: |cffffd100%d|r bloques + el indice%s",
-                tonumber(borrados) or 0, err and (" |cff808080(" .. tostring(err) .. ")|r") or ""))
-            Print("|cff808080Lo que no estuviera en el indice no se pudo alcanzar.|r")
+        P.PurgeAll(function(ok, borradas, err)
+            if not ok then Print("|cffff5555" .. tostring(err or "fallo") .. "|r"); return end
+            borradas = type(borradas) == "table" and borradas or {}
+            Print(string.format("Purgadas |cffffd100%d|r claves + indice + manifiesto.", #borradas))
+            for _, k in ipairs(borradas) do Print("   |cff808080" .. tostring(k) .. "|r") end
+            Print("|cff808080Una clave que nunca se registro sigue siendo inalcanzable.|r")
         end)
         return
     end
@@ -4773,6 +4797,7 @@ API.RegisterCommand("phasetc", function(args)
     Print("  |cffffd100phasetc borrar <id>|r  vacia un bloque suelto")
     Print("  |cffffd100phasetc huerfanos|r  limpia bloques que el tablon ya no usa")
     Print("  |cffffd100phasetc publicar-limpio|r  limpia huerfanos y publica")
+    Print("  |cffffd100phasetc manifiesto|r  que claves tiene Harford escritas en la fase")
     Print("  |cffffd100phasetc purgar confirmar|r  |cffff5555borra el tablon entero de la fase|r")
 end, "Tablon de contratos guardado en la fase")
 
@@ -4938,10 +4963,24 @@ do
                 .. "|Hitem:6948:0:0:0:0:0:0:0:60|h[Piedra de hogar]|h|r "
                 .. "separador || pipe suelto | y salto\nde linea\ty tabulador"
 
-            local veces = tonumber(a) or 1
+            -- OJO: repetir la misma frase NO agranda el dato, deflate la aplasta (medido:
+            -- x72 bajaba de 13577 a 584). Para ejercitar el troceado hace falta texto que no
+            -- se pueda comprimir, asi que se genera variado con un LCG.
+            local veces = math.max(1, tonumber(a) or 1)
+            local semilla = 12345
+            local function Siguiente()
+                semilla = (semilla * 1103515245 + 12345) % 2147483648
+                return semilla
+            end
+            local ALFABETO = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
             local relleno = {}
-            for i = 1, math.max(1, veces) * 12 do
-                relleno[#relleno + 1] = i .. ") " .. SUCIO
+            for i = 1, veces * 12 do
+                local trozo = {}
+                for _ = 1, 120 do
+                    local pos = (Siguiente() % #ALFABETO) + 1
+                    trozo[#trozo + 1] = ALFABETO:sub(pos, pos)
+                end
+                relleno[#relleno + 1] = i .. ") " .. SUCIO .. " " .. table.concat(trozo)
             end
             local original = {
                 id = "TEST_integridad",
@@ -4990,10 +5029,16 @@ do
                     end
                     local ok, err = Comparar(original, vuelta)
                     if ok then
+                        local segs = math.ceil(#codificado / 3000)
                         Print("|cff55ff55INTEGRO|r - identico campo por campo")
-                        Print(string.format("   descripcion: |cffffd100%d|r caracteres, %d segmento(s)",
-                            #original.description, math.ceil(#codificado / 3000)))
+                        Print(string.format("   descripcion: |cffffd100%d|r caracteres, |cff66ccff%d|r segmento(s)",
+                            #original.description, segs))
                         Print("   tildes, egnes, pipes, item links, saltos de linea y anidamiento: intactos")
+                        if segs > 1 then
+                            Print("   |cff55ff55El troceado multi-segmento funciona|r")
+                        else
+                            Print("   |cffff9900Aun en 1 segmento|r - sube el multiplicador para probar el troceado")
+                        end
                     else
                         Print("|cffff5555CORRUPTO|r en " .. tostring(err))
                     end
@@ -5122,62 +5167,46 @@ local function ResolveRecipe(texto)
 end
 
 -- Entrenadores de profesion. Sirve para probar el flujo entero sin tener NPCs colocados:
--- `definir` simula el registro que hara el ArcSpell del gossip.
+-- `colocar` simula lo que hara el ArcSpell del gossip al nombrar su entrada de catalogo.
 API.RegisterCommand("entrenador", function(args)
     local T = _G.HarfordProfessionTrainers
     if not T then Print("HarfordProfessionTrainers no cargado"); return end
-    local cmd, a, b, a2 = tostring(args or ""):match("^%s*(%S*)%s*(%S*)%s*(%S*)%s*(%S*)")
+    local cmd, a, b = tostring(args or ""):match("^%s*(%S*)%s*(%S*)%s*(.-)%s*$")
 
-    if cmd == "definir" then
-        -- definir <npcTemplateId> <recipeId>: registra un entrenador de mentira para ese NPC.
-        local npc, recipeId = tonumber(a), b
-        if not (npc and recipeId ~= "") then
-            Print("uso: entrenador definir <npcTemplateId> <recipeId>")
+    if cmd == "colocar" or cmd == "quitar" then
+        if a == "" then Print("uso: entrenador " .. cmd .. " <nombreDeCatalogo>"); return end
+        local def = T.Get(a)
+        if not def then
+            Print("Nombre de entrenador desconocido: |cffffd100" .. a .. "|r")
+            Print("   mira |cffffd100entrenador <profesion>|r para ver los nombres")
             return
         end
-        local resuelta, r, parciales = ResolveRecipe(recipeId)
-        if not resuelta and T.GetTierRange and T.GetTierRange(b) then
-            resuelta, r = recipeId, nil   -- es un rango, no una receta
-        end
-        if not resuelta then
-            Print("Receta desconocida: |cffffd100" .. recipeId .. "|r")
-            for _, sug in ipairs(parciales or {}) do Print("   quiza: |cff808080" .. sug .. "|r") end
+        if cmd == "quitar" then
+            -- Solo se puede retirar lo registrado en vivo; lo del catalogo se cambia en el Lua.
+            local ok = T.Unbind and T.Unbind(def.id)
+            Print(ok and ("Retirado del mundo: |cffffd100" .. def.id .. "|r")
+                or "|cffff5555Ese entrenador viene colocado desde el catalogo|r")
             return
         end
-        recipeId = resuelta
-        -- El segundo argumento puede ser un RANGO (Aprendiz, Oficial...) en vez de una receta:
-        -- es la forma normal de declarar un entrenador.
-        local rango = T.GetTierRange and select(3, T.GetTierRange(b))
-        local def = { id = "prueba_" .. npc, name = "Entrenador de pruebas", npc = npc,
-                      zone = "En ninguna parte" }
-        if rango then
-            def.profession = (a2 ~= "" and a2) or (r and r.profession)
-            def.tier = rango
-            if not def.profession or def.profession == "" then
-                Print("uso: entrenador definir <npc> <rango> <profesion>")
-                return
-            end
-        else
-            def.profession, def.recipes = r.profession, { recipeId }
-        end
-        local ok, err = T.Define(def)
+        local ok, err = T.Bind(def.id, { zone = b ~= "" and b or nil })
         if not ok then Print("|cffff5555" .. tostring(err) .. "|r"); return end
-        local cubre = T.GetRecipesFor(T.GetByNpc(npc))
-        Print(string.format("Entrenador de pruebas en el NPC %d: %s, cubre |cffffd100%d|r receta(s)",
-            npc, rango and (tostring(def.profession) .. " " .. rango) or recipeId, #cubre))
+        Print(string.format("Colocado |cffffd100%s|r: cierra |cffffd100%d|r receta(s) de %s %s",
+            def.id, #T.GetRecipesFor(def), tostring(def.profession), tostring(def.tier)))
         return
     end
 
     if cmd == "ensenar" then
-        local npc, recipeId = tonumber(a), b
-        if not (npc and recipeId ~= "") then Print("uso: entrenador ensenar <npcTemplateId> <recipeId>"); return end
+        local trainerId, recipeId = a, b
+        if trainerId == "" or recipeId == "" then
+            Print("uso: entrenador ensenar <nombreDeCatalogo> <receta>"); return
+        end
         local resuelta, _, parciales = ResolveRecipe(recipeId)
         if not resuelta then
             Print("Receta desconocida: |cffffd100" .. recipeId .. "|r")
             for _, sug in ipairs(parciales or {}) do Print("   quiza: |cff808080" .. sug .. "|r") end
             return
         end
-        local ok, err = T.Teach(npc, resuelta)
+        local ok, err = T.Teach(trainerId, resuelta)
         recipeId = resuelta
         Print(ok and ("Aprendida: " .. recipeId) or ("|cffff5555" .. tostring(err) .. "|r"))
         return
@@ -5189,8 +5218,9 @@ API.RegisterCommand("entrenador", function(args)
         if resuelta then a = resuelta end
         local texto, def = T.DescribeForRecipe(a)
         if not texto then Print("Esa receta no la ensena ningun entrenador conocido."); return end
-        Print(string.format("|cffffd100%s|r la ensena |cffffd100%s|r%s", a, texto,
-            def.npc and (" (NPC " .. def.npc .. ")") or " |cff808080(sin NPC en el mundo)|r"))
+        Print(string.format("|cffffd100%s|r la ensena |cffffd100%s|r  [%s]%s", a, texto,
+            tostring(def.id),
+            def.colocado and "" or " |cff808080(aun no existe en el mundo)|r"))
         return
     end
 
@@ -5204,9 +5234,9 @@ API.RegisterCommand("entrenador", function(args)
         for _, def in ipairs(todos) do
             if def.profession == filtro.id then
                 local n = #T.GetRecipesFor(def)
-                Print(string.format("  %-10s %-28s %-16s %3d receta(s)  %s",
-                    tostring(def.tier or "-"), tostring(def.name), tostring(def.zone or "-"), n,
-                    def.npc and ("|cff55ff55NPC " .. def.npc .. "|r")
+                Print(string.format("  %-22s %-10s %-16s %3d receta(s)  %s",
+                    tostring(def.id), tostring(def.tier or "-"), tostring(def.zone or "-"), n,
+                    def.colocado and "|cff55ff55colocado|r"
                         or "|cff808080sin colocar: rango abierto|r"))
             end
         end
@@ -5221,7 +5251,7 @@ API.RegisterCommand("entrenador", function(args)
         if acc.rangos == 0 then orden[#orden + 1] = prof end
         acc.rangos = acc.rangos + 1
         acc.recetas = acc.recetas + #T.GetRecipesFor(def)
-        if def.npc then acc.puestos = acc.puestos + 1 end
+        if def.colocado then acc.puestos = acc.puestos + 1 end
     end
     table.sort(orden)
     Print(string.format("Entrenadores conocidos: |cffffd100%d|r", #todos))
@@ -5231,10 +5261,10 @@ API.RegisterCommand("entrenador", function(args)
             acc.puestos, acc.rangos, acc.recetas))
     end
     Print("  |cffffd100entrenador <profesion>|r   desglose por rango")
-    Print("  |cffffd100entrenador receta <recipeId>|r   quien la ensena")
-    Print("  |cffffd100entrenador definir <npc> <rango> <profesion>|r  ej: definir 4001 Aprendiz herreria")
-    Print("  |cffffd100entrenador definir <npc> <recipeId>|r  o atado a una receta suelta")
-    Print("  |cffffd100entrenador ensenar <npc> <recipeId>|r  aprende de el")
+    Print("  |cffffd100entrenador receta <receta>|r   quien la ensena")
+    Print("  |cffffd100entrenador colocar <nombre> [zona]|r  lo pone en el mundo y cierra su rango")
+    Print("  |cffffd100entrenador quitar <nombre>|r   lo retira")
+    Print("  |cffffd100entrenador ensenar <nombre> <receta>|r  aprende de el")
 end, "Entrenadores de profesion: consulta y pruebas sin NPC colocado")
 
 API.RegisterCommand("carga", function(args)

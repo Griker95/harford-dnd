@@ -5,17 +5,22 @@
 -- decision del DM): es una TIENDA DE RECETAS, y cada uno cubre un RANGO de su profesion
 -- (Aprendiz, Oficial, Experto, Artesano, Maestro).
 --
--- COLOCAR EL NPC DE UN RANGO ES LO QUE CIERRA ESE RANGO: mientras el entrenador no tenga `npc`,
--- sus recetas siguen viniendo con el nivel de habilidad como hasta ahora, porque no habria de
--- quien aprenderlas. En cuanto ese entrenador existe en el mundo, hay que aprenderlas de el. Una
--- receta puede ademas traer `trainer = "<id>"` para atarla a uno concreto al margen del rango.
+-- LA IDENTIDAD ES EL NOMBRE DE CATALOGO, NO EL NPC. Un entrenador no apunta a un NPC: es el NPC
+-- el que declara en su gossip que nombre de catalogo encarna (`herreria_experto`). Asi puede
+-- haber varios NPCs para el mismo entrenador —uno en cada ciudad—, o cambiarse el NPC de sitio,
+-- sin tocar nada aqui.
+--
+-- MARCAR UN ENTRENADOR COMO COLOCADO ES LO QUE CIERRA SU RANGO: mientras no lo este, sus recetas
+-- siguen viniendo con el nivel de habilidad como hasta ahora, porque no habria de quien
+-- aprenderlas. Una receta puede ademas traer `trainer = "<id>"` para atarla a uno concreto al
+-- margen del rango.
 --
 -- DOBLE ORIGEN, igual que las misiones (HarfordQuestCatalog + DefineWorldQuest):
 --   * CATALOGO hardcodeado (`API.TRAINERS`): la lista canonica. Sirve para que el libro pueda
 --     decir "esta receta la ensena X en Y" ANTES de haber hablado nunca con ese NPC.
---   * REGISTRO EN VIVO (`API.Define`): un ArcSpell en el gossip del NPC se registra al hablar
---     con el. La identidad es el TEMPLATE ID del NPC, como en las misiones de mundo.
--- Lo registrado en vivo manda sobre el catalogo para ese mismo id: el mundo es la verdad.
+--   * REGISTRO EN VIVO (`API.Bind` / `API.Define`): un ArcSpell en el gossip del NPC dice que
+--     nombre de catalogo encarna al hablar con el, y puede afinar nombre y zona.
+-- Lo registrado en vivo manda sobre el catalogo para ese mismo nombre: el mundo es la verdad.
 --
 -- Este modulo NO ejecuta comandos de servidor ni toca al NPC. Solo responde "quien ensena
 -- esto" y "marcalo como aprendido"; colocar al NPC y darle su gossip es cosa del mundo.
@@ -24,204 +29,204 @@
 HarfordProfessionTrainers = HarfordProfessionTrainers or {}
 local API = HarfordProfessionTrainers
 
--- entrenador: { id, name, npc = <templateId>, zone, profession, tier = "Aprendiz".."Maestro",
+-- entrenador: { id, name, zone, profession, tier = "Aprendiz".."Maestro", colocado,
 --               recipes? = { recipeId, ... } }
+--
+-- `id` es el nombre de catalogo: la identidad. Es lo que el NPC nombra en su gossip.
 --
 -- Lo normal es declarar `tier`: el entrenador ensena TODAS las recetas de su profesion cuyo
 -- `skillReq` cae en ese rango, y la lista se deriva sola. Asi anadir recetas al catalogo no
 -- obliga a tocar entrenadores. `recipes` es para casos sueltos (un plano concreto) y se suma a
 -- lo que cubra el rango.
 --
--- `npc` es opcional: un entrenador puede estar documentado antes de existir en el mundo.
---
 -- CATALOGO: uno por profesion y rango, solo donde hay recetas que ensenar.
--- `npc` y `zone` van a nil a proposito: el entrenador esta DOCUMENTADO pero aun no colocado en
--- el mundo. Asi el libro ya puede decir "esto lo ensena el Instructor de Herreria (Experto)"
--- aunque todavia no exista el NPC; sin `npc` se puede consultar pero no aprender de el.
--- Nombres provisionales: cambialos por los reales segun se vayan colocando.
+-- Empiezan `colocado = false` y sin zona: el entrenador esta DOCUMENTADO pero todavia no existe
+-- en el mundo. Asi el libro ya puede decir "esto lo ensena el Instructor de Herreria (Experto)"
+-- antes de que ese NPC exista. Nombres provisionales: cambialos por los reales.
 --
--- Un entrenador SIN `npc` no cierra nada: sus recetas siguen viniendo con el nivel de habilidad,
--- porque no habria de quien aprenderlas. El rango se cierra el dia que se le pone NPC.
+-- Un entrenador NO colocado no cierra nada: sus recetas siguen viniendo con el nivel de
+-- habilidad, porque no habria de quien aprenderlas. Pon `colocado = true` el dia que exista un
+-- NPC que lo encarne.
 API.TRAINERS = API.TRAINERS or {
     -- Alquimia
     { id = "alquimia_aprendiz", name = "Instructor de Alquimia", profession = "alquimia", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 12 receta(s)
+      zone = nil, colocado = false },   -- 12 receta(s)
     { id = "alquimia_oficial", name = "Instructor de Alquimia", profession = "alquimia", tier = "Oficial",
-      npc = nil, zone = nil },   -- 17 receta(s)
+      zone = nil, colocado = false },   -- 17 receta(s)
     { id = "alquimia_experto", name = "Instructor de Alquimia", profession = "alquimia", tier = "Experto",
-      npc = nil, zone = nil },   -- 28 receta(s)
+      zone = nil, colocado = false },   -- 28 receta(s)
     { id = "alquimia_artesano", name = "Instructor de Alquimia", profession = "alquimia", tier = "Artesano",
-      npc = nil, zone = nil },   -- 54 receta(s)
+      zone = nil, colocado = false },   -- 54 receta(s)
     { id = "alquimia_maestro", name = "Instructor de Alquimia", profession = "alquimia", tier = "Maestro",
-      npc = nil, zone = nil },   -- 17 receta(s)
+      zone = nil, colocado = false },   -- 17 receta(s)
 
     -- Cocina
     { id = "cocina_aprendiz", name = "Instructor de Cocina", profession = "cocina", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 23 receta(s)
+      zone = nil, colocado = false },   -- 23 receta(s)
     { id = "cocina_oficial", name = "Instructor de Cocina", profession = "cocina", tier = "Oficial",
-      npc = nil, zone = nil },   -- 23 receta(s)
+      zone = nil, colocado = false },   -- 23 receta(s)
     { id = "cocina_experto", name = "Instructor de Cocina", profession = "cocina", tier = "Experto",
-      npc = nil, zone = nil },   -- 17 receta(s)
+      zone = nil, colocado = false },   -- 17 receta(s)
     { id = "cocina_artesano", name = "Instructor de Cocina", profession = "cocina", tier = "Artesano",
-      npc = nil, zone = nil },   -- 21 receta(s)
+      zone = nil, colocado = false },   -- 21 receta(s)
     { id = "cocina_maestro", name = "Instructor de Cocina", profession = "cocina", tier = "Maestro",
-      npc = nil, zone = nil },   -- 3 receta(s)
+      zone = nil, colocado = false },   -- 3 receta(s)
 
     -- Desollar
     { id = "desollar_aprendiz", name = "Instructor de Desollar", profession = "desollar", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "desollar_oficial", name = "Instructor de Desollar", profession = "desollar", tier = "Oficial",
-      npc = nil, zone = nil },   -- 2 receta(s)
+      zone = nil, colocado = false },   -- 2 receta(s)
     { id = "desollar_experto", name = "Instructor de Desollar", profession = "desollar", tier = "Experto",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "desollar_artesano", name = "Instructor de Desollar", profession = "desollar", tier = "Artesano",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "desollar_maestro", name = "Instructor de Desollar", profession = "desollar", tier = "Maestro",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
 
     -- Encantamiento
     { id = "encantamiento_aprendiz", name = "Instructor de Encantamiento", profession = "encantamiento", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 13 receta(s)
+      zone = nil, colocado = false },   -- 13 receta(s)
     { id = "encantamiento_oficial", name = "Instructor de Encantamiento", profession = "encantamiento", tier = "Oficial",
-      npc = nil, zone = nil },   -- 32 receta(s)
+      zone = nil, colocado = false },   -- 32 receta(s)
     { id = "encantamiento_experto", name = "Instructor de Encantamiento", profession = "encantamiento", tier = "Experto",
-      npc = nil, zone = nil },   -- 41 receta(s)
+      zone = nil, colocado = false },   -- 41 receta(s)
     { id = "encantamiento_artesano", name = "Instructor de Encantamiento", profession = "encantamiento", tier = "Artesano",
-      npc = nil, zone = nil },   -- 48 receta(s)
+      zone = nil, colocado = false },   -- 48 receta(s)
     { id = "encantamiento_maestro", name = "Instructor de Encantamiento", profession = "encantamiento", tier = "Maestro",
-      npc = nil, zone = nil },   -- 65 receta(s)
+      zone = nil, colocado = false },   -- 65 receta(s)
 
     -- Fabricar venenos
     { id = "envenenador_aprendiz", name = "Instructor de Fabricar venenos", profession = "envenenador", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 2 receta(s)
+      zone = nil, colocado = false },   -- 2 receta(s)
     { id = "envenenador_oficial", name = "Instructor de Fabricar venenos", profession = "envenenador", tier = "Oficial",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "envenenador_experto", name = "Instructor de Fabricar venenos", profession = "envenenador", tier = "Experto",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "envenenador_artesano", name = "Instructor de Fabricar venenos", profession = "envenenador", tier = "Artesano",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "envenenador_maestro", name = "Instructor de Fabricar venenos", profession = "envenenador", tier = "Maestro",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
 
     -- Herboristeria
     { id = "herboristeria_aprendiz", name = "Instructor de Herboristeria", profession = "herboristeria", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 5 receta(s)
+      zone = nil, colocado = false },   -- 5 receta(s)
     { id = "herboristeria_oficial", name = "Instructor de Herboristeria", profession = "herboristeria", tier = "Oficial",
-      npc = nil, zone = nil },   -- 4 receta(s)
+      zone = nil, colocado = false },   -- 4 receta(s)
     { id = "herboristeria_experto", name = "Instructor de Herboristeria", profession = "herboristeria", tier = "Experto",
-      npc = nil, zone = nil },   -- 3 receta(s)
+      zone = nil, colocado = false },   -- 3 receta(s)
     { id = "herboristeria_artesano", name = "Instructor de Herboristeria", profession = "herboristeria", tier = "Artesano",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "herboristeria_maestro", name = "Instructor de Herboristeria", profession = "herboristeria", tier = "Maestro",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
 
     -- Herreria
     { id = "herreria_aprendiz", name = "Instructor de Herreria", profession = "herreria", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 23 receta(s)
+      zone = nil, colocado = false },   -- 23 receta(s)
     { id = "herreria_oficial", name = "Instructor de Herreria", profession = "herreria", tier = "Oficial",
-      npc = nil, zone = nil },   -- 35 receta(s)
+      zone = nil, colocado = false },   -- 35 receta(s)
     { id = "herreria_experto", name = "Instructor de Herreria", profession = "herreria", tier = "Experto",
-      npc = nil, zone = nil },   -- 62 receta(s)
+      zone = nil, colocado = false },   -- 62 receta(s)
     { id = "herreria_artesano", name = "Instructor de Herreria", profession = "herreria", tier = "Artesano",
-      npc = nil, zone = nil },   -- 80 receta(s)
+      zone = nil, colocado = false },   -- 80 receta(s)
     { id = "herreria_maestro", name = "Instructor de Herreria", profession = "herreria", tier = "Maestro",
-      npc = nil, zone = nil },   -- 105 receta(s)
+      zone = nil, colocado = false },   -- 105 receta(s)
 
     -- Ingenieria
     { id = "ingenieria_aprendiz", name = "Instructor de Ingenieria", profession = "ingenieria", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 10 receta(s)
+      zone = nil, colocado = false },   -- 10 receta(s)
     { id = "ingenieria_oficial", name = "Instructor de Ingenieria", profession = "ingenieria", tier = "Oficial",
-      npc = nil, zone = nil },   -- 33 receta(s)
+      zone = nil, colocado = false },   -- 33 receta(s)
     { id = "ingenieria_experto", name = "Instructor de Ingenieria", profession = "ingenieria", tier = "Experto",
-      npc = nil, zone = nil },   -- 58 receta(s)
+      zone = nil, colocado = false },   -- 58 receta(s)
     { id = "ingenieria_artesano", name = "Instructor de Ingenieria", profession = "ingenieria", tier = "Artesano",
-      npc = nil, zone = nil },   -- 72 receta(s)
+      zone = nil, colocado = false },   -- 72 receta(s)
     { id = "ingenieria_maestro", name = "Instructor de Ingenieria", profession = "ingenieria", tier = "Maestro",
-      npc = nil, zone = nil },   -- 20 receta(s)
+      zone = nil, colocado = false },   -- 20 receta(s)
 
     -- Inscripcion
     { id = "inscripcion_aprendiz", name = "Instructor de Inscripcion", profession = "inscripcion", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 5 receta(s)
+      zone = nil, colocado = false },   -- 5 receta(s)
     { id = "inscripcion_oficial", name = "Instructor de Inscripcion", profession = "inscripcion", tier = "Oficial",
-      npc = nil, zone = nil },   -- 2 receta(s)
+      zone = nil, colocado = false },   -- 2 receta(s)
     { id = "inscripcion_experto", name = "Instructor de Inscripcion", profession = "inscripcion", tier = "Experto",
-      npc = nil, zone = nil },   -- 5 receta(s)
+      zone = nil, colocado = false },   -- 5 receta(s)
     { id = "inscripcion_artesano", name = "Instructor de Inscripcion", profession = "inscripcion", tier = "Artesano",
-      npc = nil, zone = nil },   -- 4 receta(s)
+      zone = nil, colocado = false },   -- 4 receta(s)
     { id = "inscripcion_maestro", name = "Instructor de Inscripcion", profession = "inscripcion", tier = "Maestro",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
 
     -- Joyeria
     { id = "joyeria_aprendiz", name = "Instructor de Joyeria", profession = "joyeria", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 7 receta(s)
+      zone = nil, colocado = false },   -- 7 receta(s)
     { id = "joyeria_oficial", name = "Instructor de Joyeria", profession = "joyeria", tier = "Oficial",
-      npc = nil, zone = nil },   -- 5 receta(s)
+      zone = nil, colocado = false },   -- 5 receta(s)
     { id = "joyeria_experto", name = "Instructor de Joyeria", profession = "joyeria", tier = "Experto",
-      npc = nil, zone = nil },   -- 3 receta(s)
+      zone = nil, colocado = false },   -- 3 receta(s)
     { id = "joyeria_artesano", name = "Instructor de Joyeria", profession = "joyeria", tier = "Artesano",
-      npc = nil, zone = nil },   -- 5 receta(s)
+      zone = nil, colocado = false },   -- 5 receta(s)
     { id = "joyeria_maestro", name = "Instructor de Joyeria", profession = "joyeria", tier = "Maestro",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
 
     -- Mineria
     { id = "mineria_aprendiz", name = "Instructor de Mineria", profession = "mineria", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 3 receta(s)
+      zone = nil, colocado = false },   -- 3 receta(s)
     { id = "mineria_oficial", name = "Instructor de Mineria", profession = "mineria", tier = "Oficial",
-      npc = nil, zone = nil },   -- 2 receta(s)
+      zone = nil, colocado = false },   -- 2 receta(s)
     { id = "mineria_experto", name = "Instructor de Mineria", profession = "mineria", tier = "Experto",
-      npc = nil, zone = nil },   -- 3 receta(s)
+      zone = nil, colocado = false },   -- 3 receta(s)
     { id = "mineria_artesano", name = "Instructor de Mineria", profession = "mineria", tier = "Artesano",
-      npc = nil, zone = nil },   -- 3 receta(s)
+      zone = nil, colocado = false },   -- 3 receta(s)
     { id = "mineria_maestro", name = "Instructor de Mineria", profession = "mineria", tier = "Maestro",
-      npc = nil, zone = nil },   -- 2 receta(s)
+      zone = nil, colocado = false },   -- 2 receta(s)
 
     -- Peleteria
     { id = "peleteria_aprendiz", name = "Instructor de Peleteria", profession = "peleteria", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 19 receta(s)
+      zone = nil, colocado = false },   -- 19 receta(s)
     { id = "peleteria_oficial", name = "Instructor de Peleteria", profession = "peleteria", tier = "Oficial",
-      npc = nil, zone = nil },   -- 39 receta(s)
+      zone = nil, colocado = false },   -- 39 receta(s)
     { id = "peleteria_experto", name = "Instructor de Peleteria", profession = "peleteria", tier = "Experto",
-      npc = nil, zone = nil },   -- 60 receta(s)
+      zone = nil, colocado = false },   -- 60 receta(s)
     { id = "peleteria_artesano", name = "Instructor de Peleteria", profession = "peleteria", tier = "Artesano",
-      npc = nil, zone = nil },   -- 106 receta(s)
+      zone = nil, colocado = false },   -- 106 receta(s)
     { id = "peleteria_maestro", name = "Instructor de Peleteria", profession = "peleteria", tier = "Maestro",
-      npc = nil, zone = nil },   -- 89 receta(s)
+      zone = nil, colocado = false },   -- 89 receta(s)
 
     -- Pesca
     { id = "pesca_aprendiz", name = "Instructor de Pesca", profession = "pesca", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "pesca_oficial", name = "Instructor de Pesca", profession = "pesca", tier = "Oficial",
-      npc = nil, zone = nil },   -- 2 receta(s)
+      zone = nil, colocado = false },   -- 2 receta(s)
     { id = "pesca_experto", name = "Instructor de Pesca", profession = "pesca", tier = "Experto",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "pesca_artesano", name = "Instructor de Pesca", profession = "pesca", tier = "Artesano",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
     { id = "pesca_maestro", name = "Instructor de Pesca", profession = "pesca", tier = "Maestro",
-      npc = nil, zone = nil },   -- 1 receta(s)
+      zone = nil, colocado = false },   -- 1 receta(s)
 
     -- Primeros Auxilios
     { id = "primeros_auxilios_aprendiz", name = "Instructor de Primeros Auxilios", profession = "primeros_auxilios", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 2 receta(s)
+      zone = nil, colocado = false },   -- 2 receta(s)
     { id = "primeros_auxilios_oficial", name = "Instructor de Primeros Auxilios", profession = "primeros_auxilios", tier = "Oficial",
-      npc = nil, zone = nil },   -- 4 receta(s)
+      zone = nil, colocado = false },   -- 4 receta(s)
     { id = "primeros_auxilios_experto", name = "Instructor de Primeros Auxilios", profession = "primeros_auxilios", tier = "Experto",
-      npc = nil, zone = nil },   -- 3 receta(s)
+      zone = nil, colocado = false },   -- 3 receta(s)
     { id = "primeros_auxilios_artesano", name = "Instructor de Primeros Auxilios", profession = "primeros_auxilios", tier = "Artesano",
-      npc = nil, zone = nil },   -- 3 receta(s)
+      zone = nil, colocado = false },   -- 3 receta(s)
     { id = "primeros_auxilios_maestro", name = "Instructor de Primeros Auxilios", profession = "primeros_auxilios", tier = "Maestro",
-      npc = nil, zone = nil },   -- 2 receta(s)
+      zone = nil, colocado = false },   -- 2 receta(s)
 
     -- Sastreria
     { id = "sastreria_aprendiz", name = "Instructor de Sastreria", profession = "sastreria", tier = "Aprendiz",
-      npc = nil, zone = nil },   -- 27 receta(s)
+      zone = nil, colocado = false },   -- 27 receta(s)
     { id = "sastreria_oficial", name = "Instructor de Sastreria", profession = "sastreria", tier = "Oficial",
-      npc = nil, zone = nil },   -- 38 receta(s)
+      zone = nil, colocado = false },   -- 38 receta(s)
     { id = "sastreria_experto", name = "Instructor de Sastreria", profession = "sastreria", tier = "Experto",
-      npc = nil, zone = nil },   -- 62 receta(s)
+      zone = nil, colocado = false },   -- 62 receta(s)
     { id = "sastreria_artesano", name = "Instructor de Sastreria", profession = "sastreria", tier = "Artesano",
-      npc = nil, zone = nil },   -- 84 receta(s)
+      zone = nil, colocado = false },   -- 84 receta(s)
     { id = "sastreria_maestro", name = "Instructor de Sastreria", profession = "sastreria", tier = "Maestro",
-      npc = nil, zone = nil },   -- 72 receta(s)
+      zone = nil, colocado = false },   -- 72 receta(s)
 }
 
 -- Registrados en vivo por el gossip del NPC. No se persisten: el mundo los vuelve a declarar.
@@ -302,16 +307,6 @@ function API.Get(trainerId)
     return nil
 end
 
--- Entrenador registrado para un NPC concreto (por template id).
-function API.GetByNpc(templateId)
-    templateId = tonumber(templateId)
-    if not templateId then return nil end
-    for _, def in ipairs(API.GetAll()) do
-        if tonumber(def.npc) == templateId then return def end
-    end
-    return nil
-end
-
 -- ¿Quien ensena esta receta? Es la consulta que usa el libro para decir donde aprenderla.
 function API.GetForRecipe(recipeId)
     if not (HarfordProfessions and HarfordProfessions.GetRecipe) then return nil end
@@ -323,19 +318,19 @@ function API.GetForRecipe(recipeId)
     return nil
 end
 
--- ¿Hay algun entrenador COLOCADO EN EL MUNDO que ensene esta receta? Solo entonces deja de
--- venir con el nivel de habilidad.
+-- ¿Hay algun entrenador COLOCADO que ensene esta receta? Solo entonces deja de venir con el
+-- nivel de habilidad.
 --
--- La condicion es tener `npc`, no estar en el catalogo: un entrenador documentado pero sin NPC
--- no puede ensenar nada, asi que cerrar su rango dejaria esas recetas inalcanzables. Con esto el
--- catalogo entero puede existir desde el primer dia —el libro ya dice quien lo ensenara— y cada
--- rango se cierra el dia que se coloca su NPC.
+-- La condicion es estar colocado, no estar en el catalogo: un entrenador documentado que aun no
+-- existe en el mundo no puede ensenar nada, asi que cerrar su rango dejaria esas recetas
+-- inalcanzables. Con esto el catalogo entero puede existir desde el primer dia —el libro ya dice
+-- quien lo ensenara— y cada rango se cierra el dia que se coloca.
 function API.IsTaught(recipeId)
     if not (HarfordProfessions and HarfordProfessions.GetRecipe) then return false end
     local recipe = HarfordProfessions.GetRecipe(recipeId)
     if not recipe then return false end
     for _, def in ipairs(API.GetAll()) do
-        if def.npc and API.TrainerTeaches(def, recipe) then return true end
+        if def.colocado and API.TrainerTeaches(def, recipe) then return true end
     end
     return false
 end
@@ -363,14 +358,42 @@ end
 -- Registro desde el mundo
 ------------------------------------------------------------
 
--- Lo llama el ArcSpell del gossip del NPC. Idempotente: hablar dos veces no duplica nada.
--- def = { id, name, npc = <templateId>, zone?, profession, tier?, recipes? }
+-- Un NPC declara que nombre de catalogo encarna. Es la via normal del gossip: el entrenador ya
+-- esta descrito aqui, el NPC solo dice cual es y, si acaso, afina nombre y zona.
+-- Idempotente: hablar dos veces no cambia nada.
+function API.Bind(trainerId, opts)
+    local def = API.Get(trainerId)
+    if not def then
+        return false, "Nombre de entrenador desconocido: " .. tostring(trainerId)
+    end
+    opts = type(opts) == "table" and opts or {}
+    -- Se copia el del catalogo para no mutarlo: el catalogo es la version de referencia y el
+    -- registro en vivo solo la refina mientras dura la sesion.
+    local registrado = {}
+    for k, v in pairs(def) do registrado[k] = v end
+    if opts.name and tostring(opts.name) ~= "" then registrado.name = tostring(opts.name) end
+    if opts.zone and tostring(opts.zone) ~= "" then registrado.zone = tostring(opts.zone) end
+    registrado.colocado = true
+    vivos[Norm(def.id)] = registrado
+    return true, registrado
+end
+
+-- Retira el registro en vivo y devuelve el entrenador a lo que diga el catalogo. Solo afecta a
+-- lo registrado en esta sesion: un entrenador colocado desde el catalogo se cambia en el Lua.
+function API.Unbind(trainerId)
+    local id = Norm(trainerId)
+    if id == "" or not vivos[id] then return false end
+    vivos[id] = nil
+    return true
+end
+
+-- Registro completo de un entrenador que NO esta en el catalogo. Para casos sueltos; lo normal
+-- es que el NPC use `Bind` con un nombre ya catalogado.
+-- def = { id, name, zone?, profession, tier?, recipes? }
 function API.Define(def)
     if type(def) ~= "table" then return false, "Definicion invalida" end
     local id = Norm(def.id)
-    if id == "" then return false, "Falta el id del entrenador" end
-    local npc = tonumber(def.npc)
-    if not npc then return false, "Falta el template id del NPC" end
+    if id == "" then return false, "Falta el nombre de catalogo del entrenador" end
     if not def.tier and (type(def.recipes) ~= "table" or #def.recipes == 0) then
         return false, "El entrenador no declara ni rango ni recetas"
     end
@@ -391,7 +414,7 @@ function API.Define(def)
     end
 
     local registrado = {
-        id = id, name = tostring(def.name or id), npc = npc,
+        id = id, name = tostring(def.name or id), colocado = true,
         zone = def.zone and tostring(def.zone) or nil,
         profession = def.profession and Norm(def.profession) or nil,
         tier = def.tier and select(3, API.GetTierRange(def.tier)) or nil,
@@ -409,11 +432,12 @@ end
 -- Ensenar
 ------------------------------------------------------------
 
--- Aprender una receta de un entrenador. `npcTemplateId` identifica al NPC con el que se habla,
--- para que nadie aprenda de un entrenador que no tiene delante.
-function API.Teach(npcTemplateId, recipeId)
-    local def = API.GetByNpc(npcTemplateId)
-    if not def then return false, "Ese NPC no es un entrenador registrado" end
+-- Aprender una receta de un entrenador, nombrandolo por su nombre de catalogo: es lo que el
+-- gossip del NPC tiene delante, y evita aprender de un entrenador que no esta colocado.
+function API.Teach(trainerId, recipeId)
+    local def = API.Get(trainerId)
+    if not def then return false, "Nombre de entrenador desconocido" end
+    if not def.colocado then return false, "Ese entrenador aun no existe en el mundo" end
     recipeId = tostring(recipeId or "")
 
     if not (HarfordProfessions and HarfordProfessions.GetRecipe) then
@@ -434,6 +458,7 @@ end
 
 -- API para el ArcSpell del gossip, con el mismo nombre publico que usan las misiones de mundo.
 _G.HarfordTrainerAPI = _G.HarfordTrainerAPI or {}
+_G.HarfordTrainerAPI.BindTrainer = API.Bind
 _G.HarfordTrainerAPI.DefineTrainer = API.Define
 _G.HarfordTrainerAPI.TeachRecipe = API.Teach
-_G.HarfordTrainerAPI.GetTrainerForNpc = API.GetByNpc
+_G.HarfordTrainerAPI.GetTrainer = API.Get

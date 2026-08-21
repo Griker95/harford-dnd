@@ -2245,3 +2245,33 @@ Para una futura implementacion en juego:
 - Validar que `EpsilonLib.AddonCommands.Register` existe.
 - Validar que un comando simple devuelve callback `success/messages`.
 - Validar que Harford sigue sincronizando por sus prefixes propios sin mezclarse con `"Command"`.
+
+## Entrenadores De Receta: La Identidad Es El Nombre De Catalogo (2026-08-21)
+
+`HarfordProfessionTrainers` no concede profesiones: es una **tienda de recetas**. Cada entrenador
+cubre un **rango** de una profesion (`Aprendiz`/`Oficial`/`Experto`/`Artesano`/`Maestro`) y ensena
+todas las recetas cuyo `skillReq` cae en ese tramo; la lista se deriva sola, asi que anadir
+recetas al catalogo no obliga a tocar entrenadores. `recipes` queda para casos sueltos y se suma.
+El nivel de habilidad del jugador sigue subiendo libre hasta 300: el rango solo decide de quien
+se aprende, no hasta donde se puede subir.
+
+**La identidad es el nombre de catalogo (`id`), no el NPC.** Un entrenador NO apunta a un template
+id: es el NPC quien declara en su gossip que nombre encarna, con
+`HarfordTrainerAPI.BindTrainer("herreria_experto", { name?, zone? })`. Asi puede haber varios NPCs
+para el mismo entrenador —uno por ciudad— o moverlo de sitio sin tocar el catalogo. `Bind` copia la
+entrada antes de refinarla: **no muta `API.TRAINERS`**. `Teach(nombreDeCatalogo, receta)` y
+`Get(nombreDeCatalogo)` van por lo mismo. No reintroducir `npc`, `GetByNpc` ni
+`GetTrainerForNpc`: se retiraron justamente por esto.
+
+**Lo que cierra un rango es `colocado`, no estar en el catalogo.** El catalogo trae los 75
+entrenadores (15 profesiones x 5 rangos) desde el primer dia para que el libro pueda decir quien
+ensenara cada receta antes de que ese NPC exista, pero todos arrancan `colocado = false`. Si la
+mera presencia en el catalogo cerrase el rango, las 1605 recetas quedarian inalcanzables de golpe
+porque ninguno de esos NPCs esta puesto todavia. `IsTaught` exige `colocado`; se pone a `true` en
+el Lua al colocar el NPC, o en vivo via `Bind`. `Unbind` deshace solo lo registrado en vivo.
+
+`API.Define` sigue existiendo para un entrenador que NO este en el catalogo, y rechaza rango
+desconocido, profesion ajena y cobertura vacia (un NPC mudo no se registra).
+
+Pruebas: `/harford debug run entrenador` resume por profesion, `entrenador <profesion>` desglosa
+sus cinco rangos, y `colocar`/`quitar`/`ensenar` recorren el flujo entero sin NPCs puestos.

@@ -3692,11 +3692,14 @@ local function RefreshProfessions()
                 -- Solo los huecos GRANDES tienen aro de icono (SecondaryProfessionTemplate no
                 -- declara ninguno), asi que cada acceso al icono va guardado.
                 if b.icon then
+                    -- El icono del hueco va SIEMPRE al 60% y desaturado, tambien con la
+                    -- profesion aprendida: el `OnLoad` de PrimaryProfessionTemplate lo deja asi
+                    -- y `FormatProfession` nunca lo revierte (solo llama a SetPortraitToTexture).
+                    -- Devolverlo a color pleno, con la mezcla ADD encima, lo dejaba lavado y con
+                    -- tinte. Ese aspecto palido es el normal del nativo, no el de "sin aprender".
                     SetProfIcon(b.icon, def.icon)
-                    -- El XML deja el icono desaturado y al 60% en el hueco vacio; una profesion
-                    -- aprendida lo devuelve a color pleno.
-                    b.icon:SetAlpha(1)
-                    if SetDesaturation then SetDesaturation(b.icon, false) end
+                    b.icon:SetAlpha(0.6)
+                    if SetDesaturation then SetDesaturation(b.icon, true) end
                     b.icon:Show()
                 end
                 b.missingHeader:Hide()

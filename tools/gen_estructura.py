@@ -20,6 +20,10 @@ TOC = os.path.join(ADDON, "Harford.toc")
 
 # Modulos cuya cabecera no declara rol (verificados leyendo el codigo).
 ROLE = {
+ "Core/HarfordPhaseStore.lua": "Transporte comun del almacen de fase de Epsilon: escribir con pcall, leer con plazo y vaciar segmentos. Comparte el como, no la politica.",
+ "Contracts/HarfordContractsPhase.lua": "Tablon guardado EN LA FASE: indice mas un bloque por contrato. No exige que el DM este conectado.",
+ "Loot/HarfordLootPhase.lua": "Loot guardado en la fase, con manifiesto local de las claves escritas para poder limpiarlas.",
+ "Reputation/HarfordReputationPhase.lua": "Facciones guardadas en la fase, con espejo local de ids para no pisar el trabajo de otro DM.",
  "Core/HarfordSync.lua": "Transporte de addon messages: serializacion, troceo en chunks, canales y reensamblado con TTL.",
  "Core/HarfordConfig.lua": "Ajustes del addon con listeners de cambio (gates tipo `actionbar`, modo de coste de conjuros).",
  "Core/HarfordAuthority.lua": "Fuente unica de autoridad: rango de phase, modo DM y permisos (`IsOfficerPlus`, `CanUseDMTools`).",

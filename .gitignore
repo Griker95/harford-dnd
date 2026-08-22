@@ -24,3 +24,15 @@ Codice_Harford.html
 
 # Otros proyectos/addons que no forman parte de Harford (deben vivir en su propio repo)
 AddonsIndependientes/
+
+# Compilados de Python (regenerables)
+__pycache__/
+*.pyc
+
+# Estado de Claude Code, no fuente del proyecto
+.claude/worktrees/
+.claude/snapshots/
+
+# Cache de scraping de Wowhead: 7133 ficheros, 40 MB, regenerable.
+# Los JSON de salida de cotejo/ SI se rastrean; solo se ignora la cache.
+tools/codice/cotejo/wowhead_cache/

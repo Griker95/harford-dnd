@@ -232,6 +232,54 @@ local function MigrateNestedIntoProfiles(persist)
 end
 HarfordDnDStore.MigrateNestedIntoProfiles = MigrateNestedIntoProfiles
 
+-- Tablas de `_progression` que se escriben vacias en cada perfil y no aportan nada en disco.
+--
+-- Es LISTA BLANCA a proposito, no "cualquier tabla vacia": cada una de estas la recrea
+-- `HarfordDnDProgression.Migrate` al leer (`if type(data.X) ~= "table" then data.X = {} end`), de
+-- modo que quitarlas no pierde informacion. Con lista negra, una clave futura en la que vacio
+-- SIGNIFIQUE algo distinto de ausente se podaria sola y en silencio.
+--
+-- No se tocan las de contratos ni las de otros modulos: alli no hay una ruta de recreacion
+-- equivalente que lo garantice.
+local PROGRESSION_RECREADAS = {
+    "classLevels", "featureStates", "choices", "feats", "activeStates", "spellSlots",
+}
+local PROFICIENCIAS_RECREADAS = {
+    "skillRank", "saveProf", "armorProf", "weaponProf", "toolProf", "languages",
+}
+
+local function PruneEmptyProgressionTables(profile)
+    local prog = type(profile) == "table" and profile._progression
+    if type(prog) ~= "table" then return 0 end
+    local removed = 0
+
+    for _, key in ipairs(PROGRESSION_RECREADAS) do
+        if type(prog[key]) == "table" and next(prog[key]) == nil then
+            prog[key] = nil
+            removed = removed + 1
+        end
+    end
+
+    -- Las seis hijas primero; solo si todas caen se puede quitar la madre.
+    local imported = prog.importedProficiencies
+    if type(imported) == "table" then
+        for _, key in ipairs(PROFICIENCIAS_RECREADAS) do
+            if type(imported[key]) == "table" and next(imported[key]) == nil then
+                imported[key] = nil
+                removed = removed + 1
+            end
+        end
+        if next(imported) == nil then
+            prog.importedProficiencies = nil
+            removed = removed + 1
+        end
+    end
+
+    return removed
+end
+
+HarfordDnDStore.PruneEmptyProgressionTables = PruneEmptyProgressionTables
+
 local function PrunePersistedProfiles(persist)
     if type(persist) ~= "table" then return 0 end
 
@@ -248,7 +296,7 @@ local function PrunePersistedProfiles(persist)
     local active = tostring((UnitName and UnitName("player")) or "")
     for profileName, profile in pairs(persist.profiles) do
         local count, empty = PruneProfileTable(profile)
-        removed = removed + count
+        removed = removed + count + PruneEmptyProgressionTables(profile)
         if empty and tostring(profileName) ~= active and not HasRelatedProfileData(persist, profileName) then
             persist.profiles[profileName] = nil
         end
@@ -421,6 +469,18 @@ function HarfordDnDStore.ApplyProfileTable(tbl, profileName, allResourceKeys, cu
 end
 
 HarfordDnDStore.PrunePersistedProfiles()
+
+-- La poda TIENE que repetirse al salir, no basta con hacerla al cargar. `HarfordDnDProgression`
+-- lee con `Get`, que pasa por `Migrate` y vuelve a escribir las tablas vacias EN la tabla
+-- persistida; asi que lo podado al arrancar reaparece en cuanto alguien abre la ficha, y eso es
+-- lo que WoW acaba escribiendo. PLAYER_LOGOUT es lo ultimo que corre antes de serializar.
+do
+    local salida = CreateFrame("Frame")
+    salida:RegisterEvent("PLAYER_LOGOUT")
+    salida:SetScript("OnEvent", function()
+        HarfordDnDStore.PrunePersistedProfiles()
+    end)
+end
 
 -- Fusiona claves específicas en el perfil existente sin reemplazarlo por completo.
 -- Usado para aplicar los flags Hab_X_Prof/Exp llegados via DNDPROF sin destruir

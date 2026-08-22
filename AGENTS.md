@@ -2628,3 +2628,24 @@ Los bancos de prueba de esto tienen que copiar `IsRecipeLearned` TAL CUAL. Un st
 `aprendidas[id]` da verde a las dos rutas rotas.
 
 Prueba sin NPC: `/harford debug run entrenador abrir herreria_experto`.
+
+
+## Poda De Tablas Vacias En La Ficha (2026-08-22)
+
+`_progression` escribia siete tablas vacias por perfil (`classLevels`, `featureStates`, `choices`,
+`feats`, `activeStates`, `spellSlots`, `importedProficiencies` con sus seis hijas). Con 16
+perfiles reales eran 196 tablas y el 5,5% del fichero de SavedVariables.
+
+`HarfordDnDStore.PruneEmptyProgressionTables` las quita, y es **LISTA BLANCA a proposito**: cada
+clave de la lista la recrea `HarfordDnDProgression.Migrate` al leer, asi que quitarla no pierde
+nada. Con lista negra —"cualquier tabla vacia"— una clave futura en la que vacio SIGNIFIQUE algo
+distinto de ausente se podaria sola y en silencio. No ampliar la lista sin comprobar la ruta de
+recreacion de la clave nueva.
+
+**Se poda en `PLAYER_LOGOUT`, no solo al cargar.** Podar al arrancar no sirve de nada: `Get` pasa
+por `Migrate`, que vuelve a escribir las tablas vacias EN la tabla persistida, de modo que
+reaparecen en cuanto alguien abre la ficha y eso es lo que WoW acaba serializando. La poda de
+carga se mantiene porque limpia perfiles fantasma; la de salida es la que llega al disco.
+
+No se podan las tablas vacias de contratos ni de otros modulos: alli no hay una ruta de
+recreacion equivalente que garantice que no se pierde informacion.

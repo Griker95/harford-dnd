@@ -198,18 +198,26 @@ end
 -- Lectura
 ------------------------------------------------------------
 
+-- Los FALLOS tambien se cachean, con su propio plazo mas corto. La mayoria de criaturas de
+-- una zona no tienen tabla propia; sin esto, cada cadaver vacio volveria a preguntar a la
+-- fase y se comeria el cupo de lecturas para nada.
+local TTL_FALLO = 60
+
 local function LeerCacheado(clave, callback)
   local S = Store()
   if not S then callback(nil, "HarfordPhaseStore no disponible"); return end
 
   local guardado = cache[clave]
-  if guardado and (Ahora() - guardado.cuando) < TTL_CACHE then
-    callback(guardado.datos)
-    return
+  if guardado then
+    local plazo = guardado.datos and TTL_CACHE or TTL_FALLO
+    if (Ahora() - guardado.cuando) < plazo then
+      callback(guardado.datos or nil)
+      return
+    end
   end
 
   S.Read(clave, function(tabla, err)
-    if tabla then cache[clave] = { datos = tabla, cuando = Ahora() } end
+    cache[clave] = { datos = tabla or false, cuando = Ahora() }
     callback(tabla, err)
   end)
 end

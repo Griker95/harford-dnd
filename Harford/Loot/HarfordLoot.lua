@@ -631,6 +631,23 @@ HarfordLootFrame:SetScript("OnEvent", function(self, event, ...)
     end
 
     if not HarfordLootLootRegistry[id] then
+        -- La tabla puede estar escrita en la fase aunque este cliente no la tenga (el DM la
+        -- definio y no esta conectado). Se pide y, si llega, se repite la resolucion. Es
+        -- asincrono, asi que de momento el frame se oculta; al volver se reabre solo.
+        -- HarfordLootPhase cachea tambien los fallos, asi que un cadaver sin tabla no
+        -- vuelve a preguntar en un rato.
+        if HarfordLootPhase and HarfordLootPhase.IsAvailable and HarfordLootPhase.IsAvailable() then
+            HarfordLootPhase.LoadCreatureLoot(id, function(tabla)
+                if type(tabla) ~= "table" or #tabla == 0 then return end
+                -- MISMA clave que usa la busqueda de arriba (`id` es cadena, no numero).
+                HarfordLootLootRegistry[id] = tabla
+                -- Solo se reintenta si sigues mirando al mismo cadaver.
+                if UnitGUID("target") == guid then
+                    local handler = HarfordLootFrame:GetScript("OnEvent")
+                    if handler then handler(HarfordLootFrame, event) end
+                end
+            end)
+        end
         self.lootTable = {}
         self:Hide()
         return

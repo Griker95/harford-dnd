@@ -435,3 +435,114 @@ function API.SyncScope(scope)
   C_Timer.After(COALESCE, Volcar)
   return true
 end
+
+------------------------------------------------------------
+-- Historial de saqueo
+------------------------------------------------------------
+
+-- Que se ha cogido ya de cada cadaver. Con NPCs PERMANENTES de fase el estado tiene que ser
+-- permanente tambien: si no, alguien que llega mas tarde vuelve a ver un loot que ya no esta.
+--
+-- La clave guarda la tabla YA RESUELTA (que salio y que queda), o sea lo mismo que
+-- HarfordLootTaggedCreatureRegistry[guid]. Asi se conserva la tirada, no solo el "vacio".
+--
+-- PERMISOS: quien saquea suele ser un jugador normal y NO puede escribir en la fase. Por eso
+-- `SaveTaken` no falla ruidosamente si no hay permiso: el estado sigue viajando por
+-- HARFORDLOOT entre los presentes, como hasta ahora, y lo persiste el primer oficial que
+-- pase por ahi. Degradado, no roto.
+local PREFIJO_SAQUEO = "HARFORD_LOOT_T_"
+
+local function ClaveSaqueo(guid)
+  guid = tostring(guid or "")
+  if guid == "" then return nil end
+  local clave = PREFIJO_SAQUEO .. guid
+  local S = Store()
+  if S and not S.KeyFits(clave) then return nil end
+  return clave
+end
+
+function API.LoadTaken(guid, callback)
+  local clave = ClaveSaqueo(guid)
+  if not clave then callback(nil, "guid invalido"); return end
+  LeerCacheado(clave, callback)
+end
+
+function API.SaveTaken(guid, tabla, callback)
+  local S = Store()
+  local clave = ClaveSaqueo(guid)
+  if not (S and clave) then
+    if callback then callback(false, nil, "guid invalido") end
+    return
+  end
+  if not API.CanWrite() then
+    -- Sin permiso no es un error: lo persistira un oficial. Ver nota de arriba.
+    if callback then callback(false, nil, "sin permiso") end
+    return
+  end
+
+  local ok, err = S.Write(clave, tabla or {})
+  if not ok then
+    if callback then callback(false, nil, err) end
+    return
+  end
+  cache[clave] = { datos = tabla or {}, cuando = Ahora() }
+  RegistrarClave(clave, function()
+    if callback then callback(true, guid) end
+  end)
+end
+
+-- Olvida el saqueo de UN cadaver: vuelve a estar entero.
+function API.ClearTaken(guid, callback)
+  local S = Store()
+  local clave = ClaveSaqueo(guid)
+  if not (S and clave and API.CanWrite()) then
+    if callback then callback(false, nil, "sin permiso o guid invalido") end
+    return
+  end
+  S.WipeKey(clave, 4)
+  cache[clave] = nil
+  OlvidarClave(clave, function()
+    if callback then callback(true, guid) end
+  end)
+end
+
+-- Olvida TODO el historial de saqueo de la fase, dejando intactas las TABLAS de loot.
+-- Es la operacion de "reiniciar el saqueo": todo vuelve a estar por coger.
+function API.ClearAllTaken(callback)
+  local S = Store()
+  if not (S and API.CanWrite()) then
+    if callback then callback(false, nil, "sin permiso de escritura en la fase") end
+    return
+  end
+
+  API.LoadManifest(function(claves, err)
+    if err then
+      if callback then callback(false, nil, err) end
+      return
+    end
+
+    local quedan, borradas = {}, {}
+    for _, k in ipairs(claves) do
+      k = tostring(k)
+      if k:sub(1, #PREFIJO_SAQUEO) == PREFIJO_SAQUEO then
+        S.WipeKey(k, 4)
+        cache[k] = nil
+        borradas[#borradas + 1] = k
+      else
+        quedan[#quedan + 1] = k
+      end
+    end
+
+    -- El manifiesto se reescribe SIN las de saqueo, pero conservando las tablas de loot.
+    EscribirManifiesto(quedan)
+    -- Y en local: lo resuelto de cada cadaver deja de valer.
+    if _G.HarfordLootTaggedCreatureRegistry then
+      wipe(_G.HarfordLootTaggedCreatureRegistry)
+    end
+    if callback then callback(true, borradas) end
+  end)
+end
+
+function API.GetTakenPrefix()
+  return PREFIJO_SAQUEO
+end

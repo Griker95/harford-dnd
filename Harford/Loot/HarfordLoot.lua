@@ -220,6 +220,15 @@ function HarfordLootAPI.SetResolvedLoot(guid, lootTable, syncNow)
         SendLootSync(guid, HarfordLootTaggedCreatureRegistry[guid])
     end
 
+    -- CIERRA EL CIRCULO de los permisos: quien saquea suele ser un jugador normal y no puede
+    -- escribir en la fase. Aqui pasa TODO estado resuelto, propio o recibido por
+    -- HARFORDLOOT, asi que cualquier OFICIAL presente lo persiste por el. Si no hay ninguno,
+    -- el estado sigue viviendo entre los conectados como hasta ahora.
+    if HarfordLootPhase and HarfordLootPhase.SaveTaken and HarfordLootPhase.CanWrite
+        and HarfordLootPhase.CanWrite() then
+        HarfordLootPhase.SaveTaken(guid, HarfordLootTaggedCreatureRegistry[guid])
+    end
+
     RefreshLootFrameIfTargetMatches(guid, HarfordLootTaggedCreatureRegistry[guid])
     return true
 end
@@ -467,6 +476,12 @@ local function LootItem(slot, entry, quantity)
                     local guid = UnitGUID("target")
                     if guid and HarfordLootTaggedCreatureRegistry[guid] ~= nil then
                         HarfordLootAPI.SetResolvedLoot(guid, HarfordLootFrame.lootTable, true)
+                        -- Y en la fase, para que sobreviva a desconexiones. Si este jugador
+                        -- no es oficial no pasa nada: el estado sigue viajando por
+                        -- HARFORDLOOT y lo persiste el primer oficial que pase.
+                        if HarfordLootPhase and HarfordLootPhase.SaveTaken then
+                            HarfordLootPhase.SaveTaken(guid, HarfordLootFrame.lootTable)
+                        end
                     end
 
                     button:Hide()
@@ -621,6 +636,23 @@ HarfordLootFrame:SetScript("OnEvent", function(self, event, ...)
     end
 
     local taggedCreatures = HarfordLootTaggedCreatureRegistry or {}
+
+    -- Con NPCs permanentes de fase, el saqueo es permanente: si la fase recuerda lo que ya
+    -- se cogio de este cadaver, manda eso y NO se vuelve a tirar el loot. Sin esto, quien
+    -- llega despues se encontraria el cadaver entero otra vez.
+    if taggedCreatures[guid] == nil and HarfordLootPhase and HarfordLootPhase.IsAvailable
+        and HarfordLootPhase.IsAvailable() then
+        HarfordLootPhase.LoadTaken(guid, function(resuelto)
+            if type(resuelto) ~= "table" or HarfordLootTaggedCreatureRegistry[guid] ~= nil then
+                return
+            end
+            HarfordLootTaggedCreatureRegistry[guid] = resuelto
+            if UnitGUID("target") == guid then
+                local handler = HarfordLootFrame:GetScript("OnEvent")
+                if handler then handler(HarfordLootFrame, event) end
+            end
+        end)
+    end
 
     if taggedCreatures[guid] ~= nil then
         self.lootTable = taggedCreatures[guid]

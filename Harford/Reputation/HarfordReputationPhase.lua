@@ -131,6 +131,27 @@ function API.EnsureCatalog(force, callback)
       return
     end
 
+    -- SALVAGUARDA: si la fase dice CERO facciones y tu tienes catalogo, es muchisimo mas
+    -- probable que sea una escritura a medias, una purga ajena o un dato corrupto que una
+    -- decision real de borrarlo todo. Aplicar el reemplazo ahi te dejaria sin catalogo y,
+    -- como el tuyo era el ultimo que quedaba, sin forma de recuperarlo.
+    -- Los PUNTOS nunca corren peligro: viven en store.players y no se tocan aqui.
+    local R2 = Rep()
+    local locales = 0
+    if R2 and R2.EnsureStore then
+      for _ in pairs(R2.EnsureStore().factions or {}) do locales = locales + 1 end
+    end
+    local entrantes = 0
+    for _ in pairs(payload.factions or {}) do entrantes = entrantes + 1 end
+    if entrantes == 0 and locales > 0 then
+      if HarfordChat and HarfordChat.Print then
+        HarfordChat.Print("La fase no declara ninguna faccion y tu tienes " .. locales
+          .. ". No se toca nada: usa Compartir estructura para volver a escribirlas.")
+      end
+      if callback then callback(false, nil, "la fase vino vacia") end
+      return
+    end
+
     local aplicadas, retiradas = API.Apply(payload, true)
     -- De que fase es el catalogo que tienes cargado.
     local R = Rep()

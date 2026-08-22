@@ -1,0 +1,459 @@
+{
+ "7418": null,
+ "7420": null,
+ "7421": null,
+ "7426": null,
+ "7428": null,
+ "7443": {
+  "item": 6342,
+  "name": "Fórmula: encantar pechera: maná menor",
+  "quality": 2,
+  "skill": 20,
+  "source": [
+   2,
+   5,
+   21
+  ],
+  "sourcemore": []
+ },
+ "7454": null,
+ "7457": null,
+ "7748": null,
+ "7766": {
+  "item": 6344,
+  "name": "Fórmula: encantar brazal: espíritu menor",
+  "quality": 2,
+  "skill": 60,
+  "source": [
+   2,
+   21
+  ],
+  "sourcemore": []
+ },
+ "7771": {
+  "item": 6345,
+  "name": "Fórmula: imbuir capa: protección",
+  "quality": 2,
+  "skill": 90,
+  "source": [],
+  "sourcemore": []
+ },
+ "7776": {
+  "item": 6346,
+  "name": "Fórmula: encantar pechera: maná inferior",
+  "quality": 2,
+  "skill": 80,
+  "source": [
+   5
+  ],
+  "sourcemore": []
+ },
+ "7779": null,
+ "7782": {
+  "item": 6347,
+  "name": "Fórmula: encantar brazal: fuerza menor",
+  "quality": 2,
+  "skill": 80,
+  "source": [
+   2,
+   21
+  ],
+  "sourcemore": []
+ },
+ "7786": {
+  "item": 6348,
+  "name": "Fórmula: encantar arma: bestiacida menor",
+  "quality": 2,
+  "skill": 90,
+  "source": [
+   2,
+   16,
+   21
+  ],
+  "sourcemore": []
+ },
+ "7788": null,
+ "7745": null,
+ "7793": {
+  "item": 6349,
+  "name": "Fórmula: encantar arma de 2M: intelecto inferior",
+  "quality": 1,
+  "skill": 100,
+  "source": [
+   5
+  ],
+  "sourcemore": []
+ },
+ "7795": null,
+ "7857": null,
+ "7859": {
+  "item": 6375,
+  "name": "Fórmula: encantar brazal: espíritu inferior",
+  "quality": 2,
+  "skill": 120,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "7861": null,
+ "7863": {
+  "item": 6376,
+  "name": "Fórmula: encantar botas: aguante menor",
+  "quality": 2,
+  "skill": 125,
+  "source": [],
+  "sourcemore": []
+ },
+ "7867": {
+  "item": 6377,
+  "name": "Fórmula: encantar botas: agilidad menor",
+  "quality": 2,
+  "skill": 125,
+  "source": [
+   5
+  ],
+  "sourcemore": []
+ },
+ "13378": null,
+ "13380": {
+  "item": 11038,
+  "name": "Fórmula: encantar arma de 2M: espíritu inferior",
+  "quality": 2,
+  "skill": 110,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13419": {
+  "item": 11039,
+  "name": "Fórmula: encantar capa: agilidad menor",
+  "quality": 2,
+  "skill": 110,
+  "source": [
+   2,
+   5
+  ],
+  "sourcemore": []
+ },
+ "13421": null,
+ "13464": {
+  "item": 11081,
+  "name": "Fórmula: encantar escudo: protección inferior",
+  "quality": 2,
+  "skill": 115,
+  "source": [
+   2,
+   16
+  ],
+  "sourcemore": []
+ },
+ "13485": null,
+ "13501": null,
+ "13503": null,
+ "13522": {
+  "item": 11098,
+  "name": "Fórmula: encantar capa: resistencia inferior a las Sombras",
+  "quality": 2,
+  "skill": 135,
+  "source": [
+   2,
+   16
+  ],
+  "sourcemore": []
+ },
+ "13529": null,
+ "13536": {
+  "item": 11101,
+  "name": "Fórmula: encantar brazal: fuerza inferior",
+  "quality": 2,
+  "skill": 140,
+  "source": [
+   5
+  ],
+  "sourcemore": []
+ },
+ "13538": null,
+ "13607": null,
+ "13612": {
+  "item": 11150,
+  "name": "Fórmula: encantar guantes: minería",
+  "quality": 2,
+  "skill": 145,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13617": {
+  "item": 11151,
+  "name": "Fórmula: encantar guantes: herboristería",
+  "quality": 2,
+  "skill": 145,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13620": {
+  "item": 11152,
+  "name": "Fórmula: encantar guantes: pesca",
+  "quality": 2,
+  "skill": 145,
+  "source": [
+   2
+  ],
+  "sourcemore": [
+   {
+    "z": 267
+   }
+  ]
+ },
+ "13622": null,
+ "13626": null,
+ "13628": null,
+ "13631": null,
+ "13635": null,
+ "13637": null,
+ "13640": null,
+ "13642": null,
+ "13644": null,
+ "13646": {
+  "item": 11163,
+  "name": "Fórmula: encantar brazal: desvío inferior",
+  "quality": 2,
+  "skill": 170,
+  "source": [
+   5
+  ],
+  "sourcemore": []
+ },
+ "13648": null,
+ "13653": {
+  "item": 11164,
+  "name": "Fórmula: encantar arma: bestiacida inferior",
+  "quality": 2,
+  "skill": 175,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13655": {
+  "item": 11165,
+  "name": "Fórmula: encantar arma: mataelementales inferior",
+  "quality": 2,
+  "skill": 175,
+  "source": [
+   2,
+   16
+  ],
+  "sourcemore": []
+ },
+ "13657": null,
+ "13659": null,
+ "13661": null,
+ "13663": null,
+ "13687": {
+  "item": 11167,
+  "name": "Fórmula: encantar botas: espíritu inferior",
+  "quality": 2,
+  "skill": 190,
+  "source": [
+   2,
+   16
+  ],
+  "sourcemore": []
+ },
+ "13689": {
+  "item": 11168,
+  "name": "Fórmula: encantar escudo: bloqueo inferior",
+  "quality": 2,
+  "skill": 195,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13693": null,
+ "13695": null,
+ "13698": {
+  "item": 11166,
+  "name": "Fórmula: encantar guantes: desuello",
+  "quality": 2,
+  "skill": 200,
+  "source": [
+   2
+  ],
+  "sourcemore": [
+   {
+    "z": 45
+   }
+  ]
+ },
+ "13700": null,
+ "13702": null,
+ "13746": null,
+ "13794": null,
+ "13815": null,
+ "13817": {
+  "item": 11202,
+  "name": "Fórmula: encantar escudo: aguante",
+  "quality": 2,
+  "skill": 210,
+  "source": [
+   2,
+   16
+  ],
+  "sourcemore": []
+ },
+ "13822": null,
+ "13836": null,
+ "13841": {
+  "item": 11203,
+  "name": "Fórmula: encantar guantes: minería avanzada",
+  "quality": 2,
+  "skill": 215,
+  "source": [
+   2
+  ],
+  "sourcemore": [
+   {
+    "n": "Minero exterior de Ventura y Cía.",
+    "t": 1,
+    "ti": 674,
+    "z": 33
+   }
+  ]
+ },
+ "13846": {
+  "item": 11204,
+  "name": "Fórmula: encantar brazal: espíritu superior",
+  "quality": 2,
+  "skill": 220,
+  "source": [
+   2,
+   16
+  ],
+  "sourcemore": []
+ },
+ "13858": null,
+ "13868": {
+  "item": 11205,
+  "name": "Fórmula: encantar guantes: herboristería avanzada",
+  "quality": 2,
+  "skill": 225,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13882": {
+  "item": 11206,
+  "name": "Fórmula: encantar capa: agilidad inferior",
+  "quality": 2,
+  "skill": 225,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13887": null,
+ "13890": null,
+ "13898": {
+  "item": 11207,
+  "name": "Fórmula: encantar arma: arma ígnea",
+  "quality": 2,
+  "skill": 265,
+  "source": [
+   2
+  ],
+  "sourcemore": [
+   {
+    "bd": 1,
+    "n": "Piromántico Cultugrano",
+    "t": 1,
+    "ti": 9024,
+    "z": 1584
+   }
+  ]
+ },
+ "13905": null,
+ "13915": {
+  "item": 11208,
+  "name": "Fórmula: encantar arma: matanza de demonios",
+  "quality": 2,
+  "skill": 230,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13917": null,
+ "13931": {
+  "item": 11223,
+  "name": "Fórmula: encantar brazal: desvío",
+  "quality": 2,
+  "skill": 235,
+  "source": [
+   5
+  ],
+  "sourcemore": []
+ },
+ "13933": {
+  "item": 11224,
+  "name": "Fórmula: encantar escudo: resistencia a Escarcha",
+  "quality": 2,
+  "skill": 235,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "13935": null,
+ "13937": null,
+ "13939": null,
+ "13941": null,
+ "13943": null,
+ "13945": {
+  "item": 11225,
+  "name": "Fórmula: encantar brazal: aguante superior",
+  "quality": 2,
+  "skill": 245,
+  "source": [
+   2,
+   16
+  ],
+  "sourcemore": []
+ },
+ "13947": {
+  "item": 11226,
+  "name": "Fórmula: encantar guantes: equitación",
+  "quality": 2,
+  "skill": 250,
+  "source": [
+   2
+  ],
+  "sourcemore": []
+ },
+ "20034": {
+  "item": 16252,
+  "name": "Fórmula: encantar arma: cruzado",
+  "quality": 2,
+  "skill": 300,
+  "source": [
+   2
+  ],
+  "sourcemore": [
+   {
+    "n": "Vinculador de hechizos escarlata",
+    "t": 1,
+    "ti": 4494,
+    "z": 28
+   }
+  ]
+ },
+ "3448": null,
+ "25278": null
+}

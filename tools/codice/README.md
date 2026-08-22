@@ -1,10 +1,16 @@
-# tools/codice — pipeline del Compendio (addon → web)
+# tools/codice — pipeline y cotejo del Compendio
 
-El addon es la fuente de verdad; la web (`C:/Users/marco/Documents/harfordweb`, repo
-`Griker95/harfordweb`, despliega Cloudflare desde `main`) se regenera desde aquí.
-**No editar a mano los `js/compendium-*.js` de la web.**
+La web publica (`harfordweb`) es la fuente canonica de contenido curado para clases,
+subclases, razas, trasfondos y conjuros. `Rulebooks/` es la fuente de validacion de reglas,
+traducciones y texto antes de incorporar esos datos al addon. El alcance vigente es nivel de
+personaje 1-6 y conjuros 0-4; la creacion automatica que los consume sigue **en curso**.
 
-## Flujo normal (datos del addon cambiaron)
+Los scripts documentados abajo describen el flujo historico addon -> web. No ejecutarlos para
+sobrescribir la web ni editar `js/compendium-*.js` desde este repositorio sin coordinacion. La
+importacion web -> addon debe ser revisable, cotejada y validada en Epsilon antes de considerarse
+parte del creador de fichas.
+
+## Flujo historico de publicacion (no ejecutar por defecto)
 
 ```
 python extract_kb.py            # addon Lua -> kb.json
@@ -93,14 +99,30 @@ el juego de hoy dice "Vara runica de cobre", "Orbe recto" y "Vial de cristal".
 
 Dos criterios que Wowhead no da y decide el importador:
 
-  - la **CD** sale del nivel de habilidad, `10 + skill//37` acotada a 20. Se eligio porque
-    coincide con las CD que ya tenian las recetas del proyecto (300 -> 18, 275 -> 17,
-    250 -> 16).
+  - la **CD** sale del COLOR que la receta tiene para tu habilidad, que es su dificultad real
+    en el juego: rojo 20, naranja 16, amarillo 12, verde 10 y gris 8, mas la calidad de lo que
+    fabricas (gris -1, blanco 0, verde +1, azul +3, morado +5, legendario +7).
   - un **encantamiento no produce objeto** en WoW: se aplica sobre una pieza. El proyecto ya
     resolvia eso entregando un pergamino y se mantiene ese criterio, porque el motor de
     crafteo desreferencia `r.output.key` sin comprobarlo.
 
-Las recetas de RECOLECCION del proyecto (sin materiales: "Extraer cobre", "Desollar") no
-estan en Wowhead y el importador las conserva. Los materiales se emparejan por nombre sin
-tildes contra el registro que ya existiera, para no duplicar `polvo_extrano` con las
-recetas de Ingenieria que ya lo gastaban.
+Las recetas de RECOLECCION del proyecto ("Extraer cobre", "Desollar") tampoco se conservan:
+la tabla es lo extraido de Wowhead y nada mas, asi que Herboristeria, Pesca, Desollar y
+Fabricar venenos se quedan sin recetas mientras no haya datos suyos.
+
+
+Al importar tambien se PODA: se retira toda receta escrita a mano y todo objeto que ya no use
+ninguna, salvo las entradas que ya tengan su itemId real de Epsilon puestas a mano, que no se
+puede volver a deducir. El emparejado con el registro se hace por `wow = <itemId>`, nunca por
+nombre: renombrar por nombre creaba una clave nueva y dejaba huerfana la vieja, que es justo
+la que lleva ese itemId.
+
+    wowhead_objetos.py --apply   ficha completa de cada objeto (nivel, ranura, armadura o
+                                 dano, caracteristicas, efectos, precio); estadisticas de la
+                                 version del arbol, nombre del WoW actual
+    wowhead_fuentes.py --apply   de donde se aprende cada receta. PENDIENTE: la ficha completa
+                                 de Wowhead da 403 y bloquea la IP a las ~90 peticiones
+
+La terminologia de la casa vive en `nombres_display.casa` y se aplica a los dos lados —el
+registro del addon y la ficha del compendio— para que un material no se llame de dos maneras
+segun donde se mire.

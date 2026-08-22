@@ -62,7 +62,7 @@ HarfordDnDWeapons.WEAPONS = {
     { key="Totem de guerra tauren", cat="Racial", mode="Melee", dmgN=2, dmgS=8, dmgType="contundente", addAbi=true, props={"Pesada","Dos manos"} },
     { key="Garra de guerra orca", cat="Racial", mode="Melee", dmgN=1, dmgS=6, dmgType="cortante", addAbi=true, props={"Sutil","Ligera"} },
     { key="Guja de guerra", cat="Especial", mode="Melee", dmgN=1, dmgS=8, dmgType="cortante", addAbi=true, props={"Arrojadiza (20/60)","Versátil (1d10)"} },
-    { key="Aquajet", cat="Especial", mode="Ranged", dmgN=1, dmgS=4, dmgType="perforante", addAbi=true, props={"Municion (20/60)","Recarga", "Especial"} },
+    { key="Aquajet", cat="Especial", mode="Ranged", dmgN=1, dmgS=4, dmgType="perforante", addAbi=true, props={"Munición (20/60)","Recarga", "Especial"} },
     { key="Escudo", cat="Otros", mode="Melee", dmgN=1, dmgS=4, dmgType="contundente", addAbi=true, emoteId=2059, critEmoteId=2992, props={} },
 }
 

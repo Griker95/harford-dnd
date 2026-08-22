@@ -1,0 +1,2358 @@
+{
+ "features": {
+  "bru_afl_acechar": [
+   "spell_shadow_twilight"
+  ],
+  "bru_afl_lista": [
+   "spell_shadow_curse"
+  ],
+  "bru_capturar_fragmento": [
+   "inv_misc_gem_amethyst_02"
+  ],
+  "bru_conocimiento_demoniaco": [
+   "warlock_sacrificial_pact"
+  ],
+  "bru_dem_lista": [
+   "spell_shadow_summonfelhunter"
+  ],
+  "bru_dem_sentir": [
+   "spell_shadow_mindrot"
+  ],
+  "bru_des_lista": [
+   "spell_shadow_rainoffire"
+  ],
+  "bru_forjado_almas": [
+   "inv_misc_gem_amethyst_02"
+  ],
+  "bru_hechiceria_vil": [
+   "ability_warlock_everlastingaffliction"
+  ],
+  "bru_nucleo_abisario": [
+   "spell_shadow_summonvoidwalker"
+  ],
+  "bru_quemar_alma_extender": [
+   "ability_warlock_coil2"
+  ],
+  "bru_quemar_alma_rebotar": [
+   "spell_priest_shadoworbs"
+  ],
+  "bru_secretos_profanos": [
+   "spell_warlock_demonbolt"
+  ],
+  "caz_arquetipo": [
+   "ability_hunter_snipertraining"
+  ],
+  "caz_bes_comando": [
+   "ability_hunter_pet_assist"
+  ],
+  "caz_bes_domador": [
+   "ability_hunter_beasttaming"
+  ],
+  "caz_pun_lobo_ataque": [
+   "eps_bg3_multiattack"
+  ],
+  "caz_sup_corte_ala": [
+   "ability_rogue_trip"
+  ],
+  "caz_sup_estudiante": [
+   "ability_hunter_onewithnature"
+  ],
+  "cdm_comando_oscuro": [
+   "spell_deathknight_strangulate"
+  ],
+  "cdm_forja_runas": [
+   "spell_deathknight_frozenruneweapon"
+  ],
+  "cdm_presencia_maligna": [
+   "spell_deathknight_unholypresence"
+  ],
+  "cha_ele_eco": [
+   "ability_shaman_echooftheelements"
+  ],
+  "cha_ele_poder": [
+   "spell_nature_tremortotem"
+  ],
+  "cha_mej_ataque_adicional": [
+   "eps_bg3_multiattack"
+  ],
+  "cha_mej_competencia": [
+   "inv_axe_1h_steelwarrior"
+  ],
+  "cha_res_fuerzas": [
+   "spell_nature_groundingtotem"
+  ],
+  "cha_vinculo": [
+   "spell_shaman_astralshift"
+  ],
+  "dh_defensa_sin_armadura": [
+   "inv_leather_raiddemonhunter_q_02helm"
+  ],
+  "dh_dev_competencia": [
+   "ability_demonhunter_doublejump"
+  ],
+  "dh_dev_momentum_vengativo": [
+   "ability_demonhunter_chaosstrike"
+  ],
+  "dh_hambre_instintiva": [
+   "ability_demonhunter_consumemagic"
+  ],
+  "dh_ira_competencia": [
+   "ability_demonhunter_eyebeam"
+  ],
+  "dh_ven_tormento": [
+   "ability_demonhunter_torment"
+  ],
+  "dru_eq_invocar": [
+   "spell_nature_natureblessing"
+  ],
+  "dru_fer_instintos": [
+   "ability_druid_healinginstincts"
+  ],
+  "dru_fer_marca_ursol": [
+   "ability_druid_maul"
+  ],
+  "dru_fer_tacticas": [
+   "ability_druid_catform"
+  ],
+  "dru_res_marca_salvaje": [
+   "spell_nature_regeneration"
+  ],
+  "dru_senda": [
+   "ability_druid_lunarguidance"
+  ],
+  "esa_arcano": [
+   "ability_racial_arcaneaffinity"
+  ],
+  "gue_fur_temible": [
+   "ability_warrior_intensifyrage"
+  ],
+  "guerrero_accion_adicional": [
+   "ability_warrior_offensivestance"
+  ],
+  "guerrero_arquetipo_marcial": [
+   "ability_warrior_savageblow"
+  ],
+  "mago_arc_brillantez": [
+   "spell_arcane_blast"
+  ],
+  "mago_arc_cargas": [
+   "spell_arcane_arcane01"
+  ],
+  "mago_esc_congelacion": [
+   "spell_frost_frostarmor"
+  ],
+  "mago_estudio_magico": [
+   "spell_holy_magicalsentry"
+  ],
+  "mago_fue_cauterizar": [
+   "spell_fire_fire"
+  ],
+  "monje_cam_caminavientos": [
+   "ability_monk_windwalker_spec"
+  ],
+  "monje_cam_golpes_lanza": [
+   "ability_monk_paralysis"
+  ],
+  "monje_cer_brebajes": [
+   "ability_monk_brewmaster"
+  ],
+  "monje_golpes_empoderados_chi": [
+   "ability_monk_jab"
+  ],
+  "monje_tej_niebla_calmante": [
+   "ability_monk_soothingmists"
+  ],
+  "pal_aura_proteccion": [
+   "spell_holy_devotionaura"
+  ],
+  "pal_camino_sagrado": [
+   "spell_holy_devotionaura"
+  ],
+  "pal_ret_canalizar": [
+   "spell_holy_lightsgrace"
+  ],
+  "pal_sag_destello": [
+   "spell_holy_flashheal"
+  ],
+  "pic_ase_competencia": [
+   "ability_rogue_deadenednerves"
+  ],
+  "pic_esquiva_sobrenatural": [
+   "ability_rogue_feint"
+  ],
+  "pic_for_competencia": [
+   "ability_rogue_pistolshot"
+  ],
+  "sac_dis_supresion": [
+   "spell_holy_painsuppression"
+  ],
+  "sac_encadenar_no_muertos": [
+   "spell_nature_slow"
+  ],
+  "sac_lanzamiento_conjuros": [
+   "ability_priest_focusedwill"
+  ],
+  "sac_restauracion_fieles": [
+   "spell_holy_heal"
+  ],
+  "sac_sag_oracion": [
+   "spell_holy_prayerofhealing"
+  ]
+ },
+ "names": {
+  "absolucion encadenar no muertos": [
+   "spell_nature_slow"
+  ],
+  "absorber elementos": [
+   "ability_shaman_echooftheelements"
+  ],
+  "accion astuta": [
+   "ability_rogue_fleetfooted"
+  ],
+  "acuajet": [
+   "inv_weapon_rifle_33"
+  ],
+  "adaptacion salvaje": [
+   "eps_wow_wildstalkr"
+  ],
+  "afinidad arcana": [
+   "ability_racial_arcaneaffinity"
+  ],
+  "afinidad elemental": [
+   "ability_shawaterelemental_reform"
+  ],
+  "afinidad feral frenesi": [
+   "ability_druid_primaltenacity"
+  ],
+  "afinidades salvajes": [
+   "ability_druid_earthandsky"
+  ],
+  "agarre de la muerte": [
+   "spell_deathknight_strangulate"
+  ],
+  "ahuyentar el mal": [
+   "ability_paladin_turnevil"
+  ],
+  "alacridad": [
+   "rogue_burstofspeed"
+  ],
+  "alarma": [
+   "inv_misc_bell_green"
+  ],
+  "antarbol": [
+   "ability_druid_treeoflife"
+  ],
+  "apariencia falsa": [
+   "ability_druid_forceofnature"
+  ],
+  "aprender hechizos": [
+   "spell_mage_presenceofmind"
+  ],
+  "arma espiritual": [
+   "inv_legendary_sword"
+  ],
+  "arrepentimiento": [
+   "spell_holy_prayerofhealing"
+  ],
+  "arrollar": [
+   "ability_warrior_unrelentingassault"
+  ],
+  "artista del escape": [
+   "eps_bg3_sprint"
+  ],
+  "ataque furtivo": [
+   "ability_rogue_bladetwisting"
+  ],
+  "autoridad de la orden: espada de ebano": [
+   "inv_jewelry_talisman_12"
+  ],
+  "autoridad del capitan harford": [
+   "achievement_bg_3flagcap_nodeaths"
+  ],
+  "auxilio": [
+   "eps_bg3_nightsongaidblue"
+  ],
+  "bendicion": [
+   "eps_bg3_bless"
+  ],
+  "brazos de hadar": [
+   "eps_bg3_armsofhadar"
+  ],
+  "caida de pluma": [
+   "inv_feather_04"
+  ],
+  "cambio de forma": [
+   "ability_druid_catform"
+  ],
+  "canalizar divinidad": [
+   "spell_holy_lightsgrace"
+  ],
+  "carga": [
+   "ability_warrior_charge"
+  ],
+  "castigo abrasador": [
+   "ability_paladin_bladeofjustice"
+  ],
+  "ceremonia": [
+   "eps_arc_book_priest1"
+  ],
+  "choque elemental": [
+   "ability_shaman_echooftheelements"
+  ],
+  "conjuracion de hechizos": [
+   "ability_druid_cresentburn"
+  ],
+  "conocimiento antiguo de eldre'thalas": [
+   "achievements_zone_azsuna"
+  ],
+  "conocimientos del artifice": [
+   "inv_misc_enggizmos_12"
+  ],
+  "controlar llamas": [
+   "inv_elemental_mote_fire01"
+  ],
+  "copiar un conjuro al libro": [
+   "inv_inscription_darkmooncard_putrescence"
+  ],
+  "crear fogata": [
+   "inv_magemount_fire"
+  ],
+  "crear o destruir agua": [
+   "icon_petfamily_water"
+  ],
+  "cuchillo de hielo": [
+   "ability_paladin_bladeofjusticeblue"
+  ],
+  "curar heridas": [
+   "eps_bg3_heal"
+  ],
+  "defensa sin armadura": [
+   "inv_leather_raiddemonhunter_q_02helm"
+  ],
+  "desarme": [
+   "ability_warrior_disarm"
+  ],
+  "descarga de fuego": [
+   "spell_fire_flamebolt"
+  ],
+  "descarga relampago": [
+   "ability_vehicle_electrocharge"
+  ],
+  "desgarrar mente": [
+   "spell_shadow_mindflay"
+  ],
+  "detectar magia 1/dia": [
+   "ability_monk_forcesphere_arcane"
+  ],
+  "detectar venenos y enfermedades": [
+   "spell_shadow_detectinvisibility"
+  ],
+  "determinacion": [
+   "ability_warrior_rallyingcry"
+  ],
+  "devocion": [
+   "spell_holy_fanaticism"
+  ],
+  "disco flotante de tenser": [
+   "creatureportrait_nexus_floating_disc"
+  ],
+  "disfrazarse": [
+   "ability_rogue_disguise"
+  ],
+  "dos formas": [
+   "eps_wc3h_worgencurse"
+  ],
+  "dote centinela": [
+   "ability_warrior_revenge"
+  ],
+  "dote observador": [
+   "ability_eyeoftheowl"
+  ],
+  "drenar vida": [
+   "w3reforgedlifedrain"
+  ],
+  "druidico": [
+   "ability_druid_lunarguidance"
+  ],
+  "duelo forzado": [
+   "eps_lol_tft_duelistemblem"
+  ],
+  "ecos de fe": [
+   "hots_anduin_holywordsalvation"
+  ],
+  "embestida": [
+   "ability_druid_mangle"
+  ],
+  "encontrar familiar": [
+   "eps_bg3_callanimals"
+  ],
+  "endurecido por la guerra": [
+   "ability_pvp_hardiness"
+  ],
+  "energia": [
+   "ability_rogue_vigor"
+  ],
+  "enmaranar": [
+   "inv_misc_root_01"
+  ],
+  "entender idiomas": [
+   "inv_misc_note_05"
+  ],
+  "erudito arcano": [
+   "spell_holy_arcaneintellect"
+  ],
+  "escritura magica oculta": [
+   "inv_glyph_primemage"
+  ],
+  "escucha resonante conejil": [
+   "inv_misc_rabbit_ears"
+  ],
+  "escudo": [
+   "eps_lol_sivir_spellshield"
+  ],
+  "escudo de fe": [
+   "eps_bg3_shieldoffaith"
+  ],
+  "escudo de relampagos": [
+   "spell_nature_lightningshield"
+  ],
+  "escudo de sangre": [
+   "artifactability_blooddeathknight_umbilicuseternus"
+  ],
+  "espiral de la muerte": [
+   "spell_shadow_deathcoil"
+  ],
+  "espiritu curativo": [
+   "spell_animaardenweald_orb"
+  ],
+  "espiritu harford": [
+   "inv_tabard_duelersguild"
+  ],
+  "espiritu humano": [
+   "inv_enchant_shardbrilliantsmall"
+  ],
+  "espiritu mestizo": [
+   "inv_enchant_shardbrilliantsmall"
+  ],
+  "estallido de espadas": [
+   "inv_throwingknife_01"
+  ],
+  "estilo de combate combate con dos armas": [
+   "ability_dualwield"
+  ],
+  "estilo de combate defensa": [
+   "ability_defend"
+  ],
+  "estilo de combate duelo": [
+   "eps_lol_tft_duelistemblem"
+  ],
+  "estilo de combate gran arma": [
+   "ability_warrior_savageblow"
+  ],
+  "experto marcial": [
+   "ability_monk_jab"
+  ],
+  "explosion mental": [
+   "spell_shadow_unholyfrenzy"
+  ],
+  "exponer armadura": [
+   "ability_rogue_dismantle"
+  ],
+  "favor divino": [
+   "ability_paladin_selflesshealer"
+  ],
+  "fervor temible": [
+   "ability_deathknight_deathscaress"
+  ],
+  "filo atronador": [
+   "eps_lol_item_sheen"
+  ],
+  "filo de llamas verdes": [
+   "inv_sword_1h_broker2boss_d_01_green"
+  ],
+  "fuente de magia": [
+   "spell_shadow_manafeed"
+  ],
+  "furia": [
+   "ability_warrior_innerrage"
+  ],
+  "fusion con las sombras": [
+   "ability_racial_shadowmeld"
+  ],
+  "garra": [
+   "eps_wc3_eattree"
+  ],
+  "garrote": [
+   "ability_rogue_garrote"
+  ],
+  "gato": [
+   "ability_druid_catform"
+  ],
+  "generador de luz hiperorganica": [
+   "inv_misc_enggizmos_24"
+  ],
+  "golpe de escarcha": [
+   "spell_deathknight_empowerruneblade2"
+  ],
+  "golpe del cruzado": [
+   "inv_sword_08"
+  ],
+  "golpe heroico": [
+   "ability_warrior_punishingblow"
+  ],
+  "golpe runico": [
+   "achievement_dungeon_icecrown_frostmourne"
+  ],
+  "gourmet": [
+   "pandarenracial_gourmand"
+  ],
+  "guardia de cuchillas": [
+   "eps_lol_rk_ahri_ward"
+  ],
+  "guia": [
+   "eps_bg3_combatguidance"
+  ],
+  "guia ancestral": [
+   "ability_shaman_ancestralguidance"
+  ],
+  "hablar con bestias": [
+   "eps_bg3_speakwithanimals"
+  ],
+  "heroismo": [
+   "ability_shaman_heroism"
+  ],
+  "himno divino": [
+   "ability_priest_heavanlyvoice"
+  ],
+  "identificar": [
+   "eps_bg3_identify"
+  ],
+  "ilusion menor": [
+   "spell_magic_lesserinvisibilty"
+  ],
+  "imposicion de manos": [
+   "spell_holy_layonhands"
+  ],
+  "infligir heridas": [
+   "eps_bg3_inflictwounds"
+  ],
+  "iniciacion illidari": [
+   "ability_demonhunter_eyeofleotheras"
+  ],
+  "intrepido": [
+   "ability_warrior_revenge"
+  ],
+  "investigador": [
+   "w3reforgedarcanescroll"
+  ],
+  "ira": [
+   "ability_warrior_innerrage"
+  ],
+  "kalimag": [
+   "eps_lol_taliyah_unraveledearth"
+  ],
+  "lechucico lunar": [
+   "ability_druid_improvedmoonkinform"
+  ],
+  "legado del vacio": [
+   "hots_malzahar_voidshift"
+  ],
+  "legado elficocrear fogata": [
+   "achievement_zone_eversongwoods"
+  ],
+  "legado thalassianoreparar": [
+   "achievement_zone_eversongwoods"
+  ],
+  "libro de conjuros": [
+   "garrison_building_magetower"
+  ],
+  "llama sagrada": [
+   "eps_bg3_sacredflameholy"
+  ],
+  "llama vil": [
+   "eps_bg3_fireballfel"
+  ],
+  "llamado divino sagrado": [
+   "ability_paladin_holyavenger"
+  ],
+  "llamas del caos": [
+   "spell_fire_felfire"
+  ],
+  "localizar objeto": [
+   "inv_misc_spyglass_03"
+  ],
+  "luz": [
+   "eps_lol_leona_sunlightold"
+  ],
+  "magia vil": [
+   "eps_wc3h_felpower"
+  ],
+  "mano de mago": [
+   "eps_bg3_magehand"
+  ],
+  "manos ardientes": [
+   "eps_bg3_flamingfist"
+  ],
+  "maquina de matar": [
+   "inv_sword_122"
+  ],
+  "marca de ursoc": [
+   "eps_lol_volibear_frenzyold"
+  ],
+  "mascara de lo salvaje": [
+   "ability_ambush"
+  ],
+  "mejoras mecanicas": [
+   "inv_mechagon_wrench"
+  ],
+  "mensaje": [
+   "achievement_guildperk_gmail"
+  ],
+  "metamorfosis": [
+   "ability_demonhunter_metamorphasisdps"
+  ],
+  "misivas secretas": [
+   "archaeology_5_0_changkiboard"
+  ],
+  "modo de mantenimiento": [
+   "ability_siege_engineer_automatic_repair_beam"
+  ],
+  "momentum": [
+   "ability_demonhunter_doublejump"
+  ],
+  "mordida": [
+   "inv_misc_monsterfang_02"
+  ],
+  "mordida de demonio": [
+   "ability_demonhunter_torment"
+  ],
+  "mordisco": [
+   "inv_misc_monsterfang_02"
+  ],
+  "multiataque": [
+   "ability_druid_mangle2"
+  ],
+  "mutilar": [
+   "ability_rogue_shadowstrikes"
+  ],
+  "nube de oscurecimiento": [
+   "spell_holiday_tow_spicecloud"
+  ],
+  "oido y olfato agudo": [
+   "ability_shaman_freedomwolf"
+  ],
+  "oidos atentos": [
+   "inv_misc_ear_human_01"
+  ],
+  "olfato agudo": [
+   "ability_hunter_catlikereflexes"
+  ],
+  "omniherramienta": [
+   "inv_axe_1h_mechagnome_c_01"
+  ],
+  "orden imperiosa": [
+   "ability_warrior_rallyingcry"
+  ],
+  "orden oscura": [
+   "spell_nature_shamanrage"
+  ],
+  "oso": [
+   "ability_racial_bearform"
+  ],
+  "palabra de curacion": [
+   "eps_bg3_healingword"
+  ],
+  "palabra de las sombras dolor": [
+   "spell_shadow_shadowwordpain"
+  ],
+  "palabra de las sombras muerte": [
+   "spell_shadow_demonicfortitude"
+  ],
+  "palma fulminante": [
+   "pandarenracial_quiveringpain"
+  ],
+  "paz interior": [
+   "pandarenracial_innerpeace"
+  ],
+  "perdicion": [
+   "ability_creature_cursed_03"
+  ],
+  "pericia": [
+   "ability_rogue_stayofexecution"
+  ],
+  "pico": [
+   "inv_misc_birdbeck_01"
+  ],
+  "piedad con los moribundos": [
+   "ability_pvp_defenderoftheweak"
+  ],
+  "piel demoniaca": [
+   "spell_shadow_ragingscream"
+  ],
+  "plegaria de curacion": [
+   "eps_bg3_prayerofhealing"
+  ],
+  "poder runico": [
+   "spell_shadow_rune"
+  ],
+  "poder totemico corriente purificadora": [
+   "inv_spear_04"
+  ],
+  "poder totemico marea viva": [
+   "spell_nature_riptide"
+  ],
+  "poder totemico resistencia elemental": [
+   "ability_shaman_multitotemactivation"
+  ],
+  "posicion de privilegio": [
+   "eps_wc3h_evilhumanqueen"
+  ],
+  "potenciar protecciones": [
+   "ability_demonhunter_empowerwards"
+  ],
+  "presencia retorcida": [
+   "achievement_explore_argus"
+  ],
+  "prestidigitacion": [
+   "spell_arcane_arcanepotency"
+  ],
+  "proteccion contra el bien y el mal": [
+   "eps_bg3_heavilyarmored"
+  ],
+  "proteccion mental": [
+   "hd_ldaknowledge"
+  ],
+  "protocolo de emergencia": [
+   "inv_misc_enggizmos_27"
+  ],
+  "purificar comida y bebida": [
+   "inv_misc_food_100"
+  ],
+  "racha de calor": [
+   "ability_ironmaidens_grapeshotblast"
+  ],
+  "rapidez feral": [
+   "ability_druid_dash"
+  ],
+  "renacer oscuro": [
+   "eps_wc3_deathknight"
+  ],
+  "reparar": [
+   "ability_repair"
+  ],
+  "reprension infernal": [
+   "ability_warlock_inferno"
+  ],
+  "reserva de furia": [
+   "ability_warrior_focusedrage"
+  ],
+  "resiliencia vil": [
+   "eps_wc3h_felwither"
+  ],
+  "resistencia": [
+   "eps_bg3_resistance"
+  ],
+  "restablecimiento menor": [
+   "spell_holy_renew"
+  ],
+  "reversion de conjuros": [
+   "eps_bg3_counterspell"
+  ],
+  "salto": [
+   "eps_bg3_longjump"
+  ],
+  "salto de pie": [
+   "eps_bg3_jump"
+  ],
+  "secretos profanos": [
+   "spell_warlock_demonbolt"
+  ],
+  "segundo aliento": [
+   "ability_hunter_harass"
+  ],
+  "sentido divino": [
+   "spell_holy_heroism"
+  ],
+  "sentido magico": [
+   "spell_holy_magicalsentry"
+  ],
+  "sentidos agudos": [
+   "eps_wc3_nightelfcharm"
+  ],
+  "sirviente invisible": [
+   "w3reforgedinvisibility"
+  ],
+  "susurro de plantas": [
+   "ability_druid_nourish"
+  ],
+  "taumaturgia": [
+   "ability_mage_incantersabsorbtion"
+  ],
+  "tocar a los muertos": [
+   "eps_bg3_howlofdead"
+  ],
+  "toque de vida": [
+   "ability_warlock_mortalcoil"
+  ],
+  "toque helado": [
+   "spell_deathknight_icetouch"
+  ],
+  "tormenta divina": [
+   "ability_paladin_divinestorm"
+  ],
+  "totemista": [
+   "ability_shaman_totemrelocation"
+  ],
+  "vacio oscuro": [
+   "hots_velkoz_voidrift"
+  ],
+  "veredicto del templario": [
+   "spell_paladin_templarsverdict"
+  ],
+  "vida entre sombras": [
+   "spell_rogue_shadow_reflection"
+  ],
+  "vil": [
+   "eps_wc3h_felpact"
+  ],
+  "vision en la oscuridad": [
+   "eps_bg3_darkvision"
+  ],
+  "vision en la oscuridad superior": [
+   "eps_bg3_darkvision"
+  ],
+  "vision espectral": [
+   "ability_demonhunter_eyebeam"
+  ],
+  "vista aguda": [
+   "ability_druid_healinginstincts"
+  ],
+  "vista de penumbra": [
+   "eps_bg3_darkvision"
+  ],
+  "voz psiquica": [
+   "inv_hivemind"
+  ],
+  "zancada prodigiosa": [
+   "eps_bg3_dash"
+  ]
+ },
+ "presentationNames": {
+  "accion astuta": [
+   "ability_rogue_fleetfooted"
+  ],
+  "adaptacion salvaje": [
+   "eps_wow_wildstalkr"
+  ],
+  "afinidad elemental": [
+   "ability_shawaterelemental_reform"
+  ],
+  "afinidades salvajes": [
+   "ability_druid_earthandsky"
+  ],
+  "alacridad": [
+   "rogue_burstofspeed"
+  ],
+  "armas runicas": [
+   "spell_deathknight_frozenruneweapon"
+  ],
+  "arrollar": [
+   "ability_warrior_challange"
+  ],
+  "artes marciales": [
+   "ability_monk_deadlyreach"
+  ],
+  "ataque adicional": [
+   "eps_bg3_multiattack"
+  ],
+  "ataque furtivo": [
+   "ability_rogue_bladetwisting"
+  ],
+  "bastion divino": [
+   "spell_holy_divineshield"
+  ],
+  "cambio de forma": [
+   "ability_druid_tigersroar"
+  ],
+  "canalizar divinidad": [
+   "spell_holy_lightsgrace"
+  ],
+  "canalizar fuego demoniaco": [
+   "hd_create_emberfel"
+  ],
+  "carga": [
+   "ability_warrior_charge"
+  ],
+  "chi": [
+   "ability_monk_chicocoon"
+  ],
+  "conjuros del sacerdocio de elune": [
+   "spell_nature_starfall"
+  ],
+  "conocimiento demoniaco": [
+   "warlock_sacrificial_pact"
+  ],
+  "constitucion no muerta": [
+   "inv_qirajidol_death"
+  ],
+  "control de ira": [
+   "spell_nature_shamanrage"
+  ],
+  "dedos de escarcha": [
+   "eps_lol_ashe_frostshot2"
+  ],
+  "defensa sin armadura": [
+   "ability_monk_shuffle"
+  ],
+  "desarme": [
+   "ability_warrior_disarm"
+  ],
+  "disparo arcano": [
+   "ability_impalingbolt"
+  ],
+  "domar bestia": [
+   "ability_hunter_beasttaming"
+  ],
+  "druidico": [
+   "ability_druid_lunarguidance"
+  ],
+  "ecos de fe": [
+   "hots_anduin_holywordsalvation"
+  ],
+  "empatia animal": [
+   "ability_hunter_pet_assist"
+  ],
+  "energia": [
+   "ability_rogue_vigor"
+  ],
+  "enfoque": [
+   "ability_hunter_focusfire"
+  ],
+  "entrenamiento de centinela": [
+   "eps_wc3h_ceremoniallocketelune"
+  ],
+  "escudo de sangre": [
+   "artifactability_blooddeathknight_umbilicuseternus"
+  ],
+  "espiral de la muerte": [
+   "spell_shadow_deathcoil"
+  ],
+  "estilo de combate": [
+   "ability_hunter_snipertraining"
+  ],
+  "explorador natural": [
+   "ability_hunter_pathfinding2"
+  ],
+  "exponer armadura": [
+   "ability_rogue_dismantle"
+  ],
+  "formulas de trucos": [
+   "inv_glyph_minormage"
+  ],
+  "fragmentos de alma": [
+   "inv_misc_gem_amethyst_02"
+  ],
+  "fuente de magia": [
+   "spell_shadow_manafeed"
+  ],
+  "furia": [
+   "ability_warrior_innerrage"
+  ],
+  "furia de elune": [
+   "eps_wc3_darkelune"
+  ],
+  "garrote": [
+   "ability_rogue_garrote"
+  ],
+  "golpe de escarcha": [
+   "spell_deathknight_empowerruneblade2"
+  ],
+  "golpe del cruzado": [
+   "inv_sword_08"
+  ],
+  "golpe heroico": [
+   "ability_warrior_punishingblow"
+  ],
+  "golpe runico": [
+   "achievement_dungeon_icecrown_frostmourne"
+  ],
+  "gracia de elune": [
+   "spell_holy_elunesgrace"
+  ],
+  "guia ancestral": [
+   "ability_shaman_ancestralguidance"
+  ],
+  "himno divino": [
+   "ability_priest_heavanlyvoice"
+  ],
+  "imposicion de manos": [
+   "spell_holy_layonhands"
+  ],
+  "iniciacion illidari": [
+   "ability_demonhunter_eyeofleotheras"
+  ],
+  "intrepido": [
+   "ability_warrior_revenge"
+  ],
+  "ira": [
+   "ability_warrior_innerrage"
+  ],
+  "kalimag": [
+   "eps_lol_taliyah_unraveledearth"
+  ],
+  "legado del vacio": [
+   "hots_malzahar_voidshift"
+  ],
+  "llamas del caos": [
+   "spell_fire_felfire"
+  ],
+  "lobo solitario: ataque apuntado": [
+   "ability_hunter_steadyshot"
+  ],
+  "maquina de matar": [
+   "inv_sword_122"
+  ],
+  "marca del cazador": [
+   "ability_hunter_markedfordeath"
+  ],
+  "metamagia": [
+   "ability_monk_counteractmagic"
+  ],
+  "metamorfosis": [
+   "ability_demonhunter_metamorphasisdps"
+  ],
+  "misivas secretas": [
+   "archaeology_5_0_changkiboard"
+  ],
+  "momentum": [
+   "ability_demonhunter_doublejump"
+  ],
+  "mordida de demonio": [
+   "ability_demonhunter_torment"
+  ],
+  "mutilar": [
+   "ability_rogue_shadowstrikes"
+  ],
+  "palma aturdidora": [
+   "ability_monk_paralysis"
+  ],
+  "palma de chi ji": [
+   "ability_monk_cranekick"
+  ],
+  "pericia": [
+   "ability_rogue_stayofexecution"
+  ],
+  "piromaniaco": [
+   "ability_warlock_backdraft"
+  ],
+  "poder runico": [
+   "spell_shadow_rune"
+  ],
+  "provocacion": [
+   "spell_nature_reincarnation"
+  ],
+  "racha de calor": [
+   "ability_ironmaidens_grapeshotblast"
+  ],
+  "rejuvenecimiento": [
+   "spell_nature_rejuvenation"
+  ],
+  "renacer oscuro": [
+   "eps_wc3_deathknight"
+  ],
+  "rodar": [
+   "ability_monk_roll"
+  ],
+  "secretos profanos": [
+   "spell_warlock_demonbolt"
+  ],
+  "segundo aliento": [
+   "ability_hunter_harass"
+  ],
+  "sentido divino": [
+   "spell_holy_heroism"
+  ],
+  "sentido magico": [
+   "spell_holy_magicalsentry"
+  ],
+  "serenidad": [
+   "ability_monk_serenity"
+  ],
+  "toque de vida": [
+   "ability_warlock_mortalcoil"
+  ],
+  "tormenta divina": [
+   "ability_paladin_divinestorm"
+  ],
+  "totemista": [
+   "ability_shaman_totemrelocation"
+  ],
+  "vil": [
+   "eps_wc3h_felpact"
+  ],
+  "vision espectral": [
+   "ability_demonhunter_spectralsight"
+  ],
+  "vista de penumbra": [
+   "eps_bg3_darkvision"
+  ],
+  "voz psiquica": [
+   "inv_hivemind"
+  ]
+ },
+ "spells": {
+  "abrir": [
+   "eps_rumble_picklock"
+  ],
+  "absorber_elementos": [
+   "spell_nature_elementalabsorption"
+  ],
+  "acelerar": [
+   "ability_socererking_arcaneacceleration"
+  ],
+  "adivinacion": [
+   "spell_nature_crystalball"
+  ],
+  "agarre_de_la_muerte": [
+   "spell_deathknight_strangulate"
+  ],
+  "agarre_electrizante": [
+   "eps_bg3_shockingrasp"
+  ],
+  "agrandar_reducir": [
+   "eps_hs_pintsizepotion"
+  ],
+  "aguijon_mental": [
+   "spell_priest_mindspike"
+  ],
+  "alarma": [
+   "inv_misc_bell_01"
+  ],
+  "aliento_de_dragon": [
+   "inv_misc_head_dragon_01"
+  ],
+  "alterar_el_propio_aspecto": [
+   "eps_lol_tft_shapeshifteremblem"
+  ],
+  "amigos": [
+   "eps_bg3_fiends",
+   "eps_bg3_friends",
+   "Interface\\\\Icons\\\\Spell_Holy_MindVision"
+  ],
+  "amigos_rapidos": [
+   "eps_bg3_friends"
+  ],
+  "ampliar_o_disminuir_magia": [
+   "spell_arcane_studentofmagic"
+  ],
+  "animar_a_los_muertos": [
+   "inv_pet_ghoul"
+  ],
+  "apariciones_sombrias": [
+   "spell_shadow_shadesofdarkness"
+  ],
+  "arma_elemental": [
+   "inv_weapon_shortblade_98"
+  ],
+  "arma_espiritual": [
+   "eps_bg3_magicweapon"
+  ],
+  "arma_magica": [
+   "eps_bg3_blessweapon"
+  ],
+  "armadura_de_agathys": [
+   "ability_deathknight_remorselesswinters2"
+  ],
+  "armadura_de_mago": [
+   "spell_magearmor"
+  ],
+  "arrepentimiento": [
+   "spell_holy_prayerofhealing"
+  ],
+  "asesino_fantasmal": [
+   "hd_warlock_fearscream"
+  ],
+  "asfixiar": [
+   "ability_deathknight_asphixiate"
+  ],
+  "augurio": [
+   "spell_monk_zenpilgrimage"
+  ],
+  "aumentar_gravedad": [
+   "hots_kaelthas_gravitylapse_blue"
+  ],
+  "aura_de_pureza": [
+   "wh_purify",
+   "spell_holy_devotionaura"
+  ],
+  "aura_de_vida": [
+   "spell_holy_auramastery"
+  ],
+  "aura_de_vitalidad": [
+   "eps_bg3_auraofvitality"
+  ],
+  "aura_magica_de_nystul": [
+   "wh_corruptingretribution",
+   "spell_holy_magicalsentry"
+  ],
+  "auxilio": [
+   "wh_heartoffire",
+   "eps_bg3_nightsongaidblue"
+  ],
+  "barrera_luminosa": [
+   "eps_lol_spell_barriernew"
+  ],
+  "bendicion": [
+   "eps_bg3_bless"
+  ],
+  "bloque_de_hielo": [
+   "spell_frost_frost"
+  ],
+  "boca_magica": [
+   "inv_relics_runestone"
+  ],
+  "bola_de_fuego": [
+   "spell_fire_fireball02"
+  ],
+  "bolsillo_de_muneca": [
+   "inv_misc_coinbag06"
+  ],
+  "bomba_viva": [
+   "ability_blackhand_attachedslagbombs"
+  ],
+  "brazos_de_hadar": [
+   "d3_shadowpower"
+  ],
+  "brebaje_caustico_de_tasha": [
+   "ability_deathwing_grasping_tendrilsgreen"
+  ],
+  "buenas_bayas": [
+   "inv_misc_food_40"
+  ],
+  "burla_danina": [
+   "eps_bg3_cuttingwords"
+  ],
+  "cadena_de_curacion": [
+   "spell_nature_healingwavegreater"
+  ],
+  "cadenas_de_hielo": [
+   "spell_frost_chainsofice"
+  ],
+  "caida_de_pluma": [
+   "spell_magic_featherfall"
+  ],
+  "calentar_metal": [
+   "eps_bg3_heatmetal"
+  ],
+  "calmar_emociones": [
+   "spell_arcane_focusedpower"
+  ],
+  "cambio_de_vacio": [
+   "spell_priest_voidshift"
+  ],
+  "caminar_sobre_el_agua": [
+   "spell_frost_windwalkon"
+  ],
+  "cascara_antimagica": [
+   "spell_shadow_antimagicshell"
+  ],
+  "castigo_marcador": [
+   "spell_paladin_templarsverdict"
+  ],
+  "causar_miedo": [
+   "spell_shadow_possession"
+  ],
+  "ceremonia": [
+   "spell_holy_testoffaith"
+  ],
+  "cerradura_arcana": [
+   "eps_bg3_arcanelock"
+  ],
+  "choque_elemental": [
+   "spell_nature_elementalprecision_1"
+  ],
+  "ciclon": [
+   "w3reforgedcyclone"
+  ],
+  "circulo_magico": [
+   "spell_arcane_blast"
+  ],
+  "clarividencia": [
+   "hd_ldaeye"
+  ],
+  "codificar_pensamientos": [
+   "dos2_mind"
+  ],
+  "cofre_secreto_de_leomund": [
+   "eps_lol_rk_missfortune_fotunesfavor",
+   "Interface\\\\Icons\\\\INV_Box_01"
+  ],
+  "compulsion": [
+   "ability_hunter_killcommand"
+  ],
+  "confusion": [
+   "d3_massconfusion"
+  ],
+  "conjurar_animales": [
+   "spell_druid_wildcharge"
+  ],
+  "conjurar_criaturas_del_bosque": [
+   "eps_rumble_faeriedragon"
+  ],
+  "conjurar_elementales_menores": [
+   "inv_pet_pandarenelemental"
+  ],
+  "conjurar_no_muertos": [
+   "w3reforgedabomination"
+  ],
+  "contorno_borroso": [
+   "d3_blur"
+  ],
+  "contrahechizo": [
+   "eps_bg3_counterspell"
+  ],
+  "controlar_agua": [
+   "eps_lol_rk_illaoi_crashingtides"
+  ],
+  "controlar_llamas": [
+   "eps_lol_profileicon_deathfiretouchmastery2016"
+  ],
+  "corcel_fantasma": [
+   "inv_mount_spectralhorse"
+  ],
+  "corona_de_locura": [
+   "inv_helmet_01"
+  ],
+  "crear_comida_y_agua": [
+   "hd_create_conjurabletable"
+  ],
+  "crear_fogata": [
+   "inv_summerfest_firedrink"
+  ],
+  "crear_llama": [
+   "eps_bg3_produceflame"
+  ],
+  "crear_o_destruir_agua": [
+   "hots_thebutcher_freshmeat_water"
+  ],
+  "crear_piedra_de_salud": [
+   "hd_create_healstone"
+  ],
+  "crecimiento_espinoso": [
+   "eps_bg3_spikegrowth"
+  ],
+  "crecimiento_vegetal": [
+   "eps_bg3_plantgrowth"
+  ],
+  "cuchillo_de_hielo": [
+   "eps_bg3_iceknife"
+  ],
+  "curar_heridas": [
+   "eps_bg3_curewounds"
+  ],
+  "dedos_de_escarcha": [
+   "eps_lol_ashe_frostshot2"
+  ],
+  "descarga_arcana": [
+   "spell_arcane_arcane01"
+  ],
+  "descarga_de_fuego": [
+   "spell_fire_firebolt02"
+  ],
+  "descarga_de_relampago": [
+   "spell_nature_lightning"
+  ],
+  "descarga_sobrenatural": [
+   "hots_alarak_lightningsurge"
+  ],
+  "descomponer": [
+   "spell_deathknight_necroticplague"
+  ],
+  "desgarrar_mente": [
+   "eps_lol_zilean_mindtwist"
+  ],
+  "deslizamiento_sombrio": [
+   "eps_lol_shen_shadowdashold"
+  ],
+  "desplazamiento": [
+   "spell:1953",
+   "eps_buildershaven_gobinfo"
+  ],
+  "destierro": [
+   "spell_shadow_cripple"
+  ],
+  "desvanecerse": [
+   "spell_magic_lesserinvisibilty"
+  ],
+  "detectar_el_bien_y_el_mal": [
+   "eps_bg3_detectevilandgood"
+  ],
+  "detectar_magia": [
+   "spell_mage_presenceofmind"
+  ],
+  "detectar_pensamientos": [
+   "eps_bg3_detectthoughts"
+  ],
+  "detectar_trampas": [
+   "ability_spy"
+  ],
+  "detectar_veneno_y_enfermedad": [
+   "d3_focusedmind_gold"
+  ],
+  "detectar_venenos_y_enfermedades": [
+   "Interface\\\\Icons\\\\Spell_Fire_FireBolt02",
+   "eps_buildershaven_gobinfo"
+  ],
+  "diablo_de_polvo": [
+   "inv_misc_dust"
+  ],
+  "diabolismo": [
+   "spell_shadow_demonictactics"
+  ],
+  "disco_flotante_de_tenser": [
+   "ability_mount_cloudmount"
+  ],
+  "discurso_motivador": [
+   "eps_lol_spell_rally"
+  ],
+  "disfrazarse": [
+   "ability_rogue_disguise"
+  ],
+  "disipar_magia": [
+   "spell_holy_dispelmagic"
+  ],
+  "dominar_bestia": [
+   "eps_bg3_dominatebeast"
+  ],
+  "dominar_no_muertos": [
+   "inv_misc_bone_skull_01"
+  ],
+  "don_de_la_alacridad": [
+   "rogue_burstofspeed"
+  ],
+  "don_de_la_charla": [
+   "achievement_halloween_smiley_01"
+  ],
+  "don_de_lenguas": [
+   "smite_kumbhakarna_a03"
+  ],
+  "dormir": [
+   "spell_nature_sleep"
+  ],
+  "drenar_vida": [
+   "spell_shadow_lifedrain02"
+  ],
+  "duelo_obligado": [
+   "ability_warrior_challange"
+  ],
+  "dulce_descanso": [
+   "warrior_talent_icon_deadlycalm"
+  ],
+  "embelesar": [
+   "spell_holy_silence"
+  ],
+  "encadenar_no_muertos": [
+   "ability_deathknight_deathchain"
+  ],
+  "encantar_animal": [
+   "eps_bg3_animalfriends"
+  ],
+  "encantar_monstruo": [
+   "hots_sylvanas_mindcontrol"
+  ],
+  "encantar_persona": [
+   "spell_shadow_shadowworddominate"
+  ],
+  "encontrar_corcel_mayor": [
+   "ability_mount_dreadsteed"
+  ],
+  "encontrar_familiar": [
+   "eps_bg3_rangercompanion"
+  ],
+  "enemigos_en_abundancia": [
+   "d3_fetisharmy"
+  ],
+  "enfoque_interior": [
+   "w3reforgedinnerfire"
+  ],
+  "enmaranar": [
+   "eps_lol_zyra_graspingroot",
+   "Interface\\\\Icons\\\\Spell_Nature_StrangleVines"
+  ],
+  "enredar": [
+   "eps_wc3_entanglingroots"
+  ],
+  "entender_idiomas": [
+   "eps_bg3_comprehendlanguages"
+  ],
+  "erupcion_de_lava": [
+   "spell_shaman_lavaburst"
+  ],
+  "escritura_celeste": [
+   "inv_fabric_celestial_cloth"
+  ],
+  "escudo": [
+   "eps_bg3_spellshield"
+  ],
+  "escudo_de_fe": [
+   "eps_bg3_shieldoffaith"
+  ],
+  "escudo_de_fuego": [
+   "dos2_fireshield"
+  ],
+  "escudo_de_relampagos": [
+   "spell_nature_lightningshield"
+  ],
+  "escudo_divino": [
+   "spell_holy_divineshield"
+  ],
+  "esfera_de_agua": [
+   "spell_animaardenweald_orb"
+  ],
+  "esfera_de_llamas": [
+   "inv_misc_orb_05"
+  ],
+  "esfera_de_tormenta": [
+   "spell_broker_orb"
+  ],
+  "esfera_resiliente_de_otiluke": [
+   "ability_racial_forceshield"
+  ],
+  "esfera_vitriolica": [
+   "eps_arc_orbgreen"
+  ],
+  "espiritu_curativo": [
+   "shaman_pvp_ripplingwaters"
+  ],
+  "espiritus_guardianes": [
+   "eps_bg3_spiritguardians"
+  ],
+  "estrella_divina": [
+   "spell_priest_divinestar"
+  ],
+  "exorcismo": [
+   "spell_holy_excorcism_02"
+  ],
+  "explosion_arcana": [
+   "spell_nature_wispsplode"
+  ],
+  "explosion_arcana_nivel_3": [
+   "spell_nature_wispsplode"
+  ],
+  "explosion_aullante": [
+   "spell_frost_arcticwinds"
+  ],
+  "explosion_de_cadaveres": [
+   "ability_creature_disease_02"
+  ],
+  "explosion_lunar": [
+   "eps_lol_aurelionsol_fallingstar"
+  ],
+  "explosion_mental": [
+   "spell_shadow_unholyfrenzy"
+  ],
+  "falsa_vida": [
+   "eps_bg3_falselife"
+  ],
+  "faro_de_luz": [
+   "ability_paladin_beaconoflight"
+  ],
+  "favor_aterrador": [
+   "ability_revendreth_deathknight"
+  ],
+  "favor_de_la_fortuna": [
+   "inv_misc_fortunecookie"
+  ],
+  "favor_divino": [
+   "eps_bg3_divinefavorholy"
+  ],
+  "fingir_muerte": [
+   "ability_rogue_feigndeath"
+  ],
+  "flecha_acida_de_melf": [
+   "spell_hunter_exoticmunitions_poisoned"
+  ],
+  "flechas_igneas": [
+   "ability_searingarrow"
+  ],
+  "forma_gaseosa": [
+   "inv_misc_volatileair"
+  ],
+  "fortaleza_de_hielo": [
+   "spell_deathknight_iceboundfortitude"
+  ],
+  "fortaleza_intelectual": [
+   "wh_focusedmind",
+   "spell_holy_arcaneintellect"
+  ],
+  "fuego_estelar": [
+   "spell_arcane_starfire"
+  ],
+  "fuego_feerico": [
+   "spell_nature_faeriefire"
+  ],
+  "fuego_interior": [
+   "spell_holy_innerfire"
+  ],
+  "fuego_y_azufre": [
+   "ability_warlock_fireandbrimstone"
+  ],
+  "fuerza_brillante": [
+   "eps_bg3_beaconofhope"
+  ],
+  "fuerza_fantasmal": [
+   "spell_shaman_ancestralawakening"
+  ],
+  "fundirse_con_la_piedra": [
+   "spell_shadow_unholystrength"
+  ],
+  "garrote_shillelagh": [
+   "eps_bg3_shilleigh"
+  ],
+  "glifo_custodio": [
+   "inv_misc_rune_03"
+  ],
+  "golpe_ardiente": [
+   "spell_shaman_improvelavalash"
+  ],
+  "golpe_cegador": [
+   "ability_paladin_blindinglight"
+  ],
+  "golpe_devastador": [
+   "ability_warrior_savageblow"
+  ],
+  "golpe_furioso": [
+   "wh_furyofasuryan",
+   "eps_bg3_divinesmite"
+  ],
+  "golpe_justo": [
+   "spell_holy_crusaderstrike"
+  ],
+  "golpe_llameante": [
+   "ability_paladin_divinestorm"
+  ],
+  "golpe_lunar": [
+   "spell_nature_moonglow"
+  ],
+  "golpe_trueno": [
+   "spell_shaman_focusedstrikes"
+  ],
+  "grasa": [
+   "inv_pig"
+  ],
+  "guardia_con_hoja": [
+   "eps_bg3_bladebarrier"
+  ],
+  "guardian_de_la_fe": [
+   "eps_bg3_guardianoffaith"
+  ],
+  "guardian_de_la_naturaleza": [
+   "eps_wc3h_aquaticdruid"
+  ],
+  "guardian_del_rey": [
+   "spell_paladin_clarityofpurpose"
+  ],
+  "guia": [
+   "eps_bg3_combatguidance"
+  ],
+  "hablar_con_las_plantas": [
+   "ability_druid_serenefocus"
+  ],
+  "hablar_con_los_animales": [
+   "eps_bg3_speakwithanimals"
+  ],
+  "hablar_con_los_muertos": [
+   "eps_bg3_speakwithdead"
+  ],
+  "hacer_anicos": [
+   "eps_lol_orianna_commandshockwave"
+  ],
+  "hallar_corcel": [
+   "spell_nature_swiftness"
+  ],
+  "hambre_de_hadar": [
+   "eps_bg3_hungerofhadar"
+  ],
+  "hechizar_persona": [
+   "eps_bg3_charmperson"
+  ],
+  "heroismo": [
+   "eps_bg3_heroism"
+  ],
+  "hervor_de_sangre": [
+   "spell_deathknight_bloodboil"
+  ],
+  "hoja_de_fuego": [
+   "eps_lol_gangplank",
+   "Interface\\\\Icons\\\\Spell_Fire_FlameTounge"
+  ],
+  "hoja_retumbante": [
+   "spell_shaman_primalstrike"
+  ],
+  "hoja_sombria": [
+   "inv_knife_1h_grimbatolraid_d_03"
+  ],
+  "hoja_verdeante": [
+   "inv_knife_1h_felfireraid_d_04"
+  ],
+  "horror_psiquico": [
+   "spell_shadow_psychichorrors"
+  ],
+  "identificar": [
+   "eps_bg3_identify"
+  ],
+  "ilusion_menor": [
+   "eps_bg3_tosscoin"
+  ],
+  "imagen_mayor": [
+   "spell_arcane_arcanetactics"
+  ],
+  "imagen_multiple": [
+   "ability_mage_massinvisibility"
+  ],
+  "imagen_silenciosa": [
+   "d3_mirrorimage"
+  ],
+  "impacto_certero": [
+   "eps_lol_rk_pyke_marktarget"
+  ],
+  "imponer_maldicion": [
+   "ability_creature_cursed_04"
+  ],
+  "indetectable": [
+   "w3reforgedinvisibility"
+  ],
+  "infligir_heridas": [
+   "eps_bg3_inflictwounds"
+  ],
+  "inmovilizar_persona": [
+   "spell_mage_overpowered"
+  ],
+  "invisibilidad": [
+   "ability_mage_invisibility"
+  ],
+  "invisibilidad_mayor": [
+   "ability_mage_greaterinvisibility"
+  ],
+  "invocar_aberracion": [
+   "ability_socererking_summonaberration"
+  ],
+  "invocar_demonio_mayor": [
+   "ability_warlock_demonicpower"
+  ],
+  "invocar_demonios_menores": [
+   "ability_warlock_empoweredimp"
+  ],
+  "invocar_elemental": [
+   "spell_fire_elemental_totem"
+  ],
+  "invocar_elementos": [
+   "ability_shaman_ascendance"
+  ],
+  "invocar_entidad_del_vacio": [
+   "inv_nzothfish_void"
+  ],
+  "invocar_no_muertos": [
+   "spell_shadow_darksummoning"
+  ],
+  "invocar_sombras": [
+   "spell_shadow_summonvoidwalker"
+  ],
+  "ira_sagrada": [
+   "ability_paladin_sanctifiedwrath"
+  ],
+  "ira_solar": [
+   "ability_skyreach_solar_burst"
+  ],
+  "lanza_psiquica_de_raulothim": [
+   "eps_lol_pantheon_spearshot"
+  ],
+  "latigo_de_espinas": [
+   "eps_bg3_thornwhip"
+  ],
+  "latigo_mental_de_tasha": [
+   "ability_warlock_whiplash"
+  ],
+  "levantar_maldicion": [
+   "w3reforgedcurse"
+  ],
+  "levitar": [
+   "eps_bg3_levitate",
+   "Interface\\\\Icons\\\\Spell_Holy_LayOnHands"
+  ],
+  "libertad_de_movimiento": [
+   "rogue_burstofspeed"
+  ],
+  "llama_de_aganazzar": [
+   "eps_lol_brand_pillarofflame"
+  ],
+  "llama_permanente": [
+   "eps_bg3_sacredflameelune"
+  ],
+  "llama_sagrada": [
+   "eps_bg3_sacredflameholy"
+  ],
+  "llama_vil": [
+   "spell_fire_felfire"
+  ],
+  "llamada_de_la_muerte": [
+   "inv_misc_bell_green"
+  ],
+  "llamada_de_relampago": [
+   "eps_bg3_calllightning"
+  ],
+  "llamar_al_relampago": [
+   "eps_bg3_calllightning"
+  ],
+  "localizar_animales_o_plantas": [
+   "ability_druid_healinginstincts"
+  ],
+  "localizar_criatura": [
+   "inv_misc_map02"
+  ],
+  "localizar_objeto": [
+   "w3reforgedpickupitem"
+  ],
+  "luces_danzantes": [
+   "eps_bg3_dancinglights"
+  ],
+  "luz": [
+   "eps_bg3_lightholy"
+  ],
+  "luz_cegadora": [
+   "ability_paladin_blindinglight2"
+  ],
+  "luz_del_dia": [
+   "eps_bg3_daylight"
+  ],
+  "maldicion": [
+   "ability_creature_cursed_03"
+  ],
+  "mano_de_mago": [
+   "eps_bg3_magehand"
+  ],
+  "manos_ardientes": [
+   "spell_fire_soulburn"
+  ],
+  "manto_del_cruzado": [
+   "spell_holy_crusade"
+  ],
+  "manto_del_cruzado_caido": [
+   "spell_holy_retributionaura"
+  ],
+  "marca_del_cazador": [
+   "ability_hunter_snipershot"
+  ],
+  "marchitar": [
+   "inv_misc_herb_12"
+  ],
+  "mensaje": [
+   "d3_focusedmind"
+  ],
+  "mensajero_animal": [
+   "eps_bg3_catattention"
+  ],
+  "mensajero_rapido_de_galder": [
+   "achievement_guildperk_gmail"
+  ],
+  "meteoros_menores_de_melf": [
+   "spell_fire_meteorstorm"
+  ],
+  "moldear_agua": [
+   "eps_lol_item_staffofflowingwater"
+  ],
+  "moldear_piedra": [
+   "inv_stone_sharpeningstone_01"
+  ],
+  "moldear_tierra": [
+   "inv_misc_volatileearth"
+  ],
+  "mordedura_helada": [
+   "ability_mage_frostjaw"
+  ],
+  "muerte_y_decadencia": [
+   "w3reforgeddeathanddecay"
+  ],
+  "muro_de_agua": [
+   "eps_bg3_wallofice"
+  ],
+  "muro_de_fuego": [
+   "eps_bg3_walloffire"
+  ],
+  "muro_de_viento": [
+   "eps_lol_rk_yasuo_windwall"
+  ],
+  "nova_sagrada": [
+   "ability_revendreth_deathknight"
+  ],
+  "nube_apestosa": [
+   "w3reforgedplaguecloud"
+  ],
+  "nube_de_dagas": [
+   "eps_bg3_cloudofdaggers"
+  ],
+  "nube_de_oscurecimiento": [
+   "eps_lol_vex_loomingdarkness"
+  ],
+  "objeto_inamovible": [
+   "inv_stone_weightstone_02"
+  ],
+  "ojo_arcano": [
+   "eps_bg3_arcaneeye"
+  ],
+  "ola_atronadora": [
+   "eps_bg3_thunderwave"
+  ],
+  "ola_de_marea": [
+   "eps_lol_nami_tidalwave"
+  ],
+  "oleada_estelar": [
+   "spell_arcane_arcane03"
+  ],
+  "onda_de_pulso": [
+   "eps_lol_leesin_sonicwave"
+  ],
+  "orbe_cromatico": [
+   "spell_frostfire orb"
+  ],
+  "orden_imperiosa": [
+   "ability_warrior_rallyingcry"
+  ],
+  "oscuridad": [
+   "spell_shadow_auraofdarkness"
+  ],
+  "palabra_de_curacion": [
+   "eps_bg3_healingword"
+  ],
+  "palabra_de_curacion_en_masa": [
+   "eps_bg3_masshealingword"
+  ],
+  "palabra_de_radiancia": [
+   "eps_bg3_divinestrikeattack"
+  ],
+  "parpadeo": [
+   "wc3_blink"
+  ],
+  "parra_atrapante": [
+   "w3reforgedentanglingroots"
+  ],
+  "pasar_sin_rastro": [
+   "eps_bg3_cloakshadows"
+  ],
+  "paso_brumoso": [
+   "eps_bg3_mistystep"
+  ],
+  "paso_de_trueno": [
+   "ability_thunderking_overcharge"
+  ],
+  "paso_sombrio": [
+   "ability_rogue_shadowstep"
+  ],
+  "patron_hipnotico": [
+   "eps_bg3_hypnogaze"
+  ],
+  "pequena_choza_de_leomund": [
+   "eps_lol_blitzcrank_manabarrier"
+  ],
+  "perdicion": [
+   "eps_bg3_bane"
+  ],
+  "perdicion_elemental": [
+   "hd_curseofelements_greenred"
+  ],
+  "picadura_absorbente": [
+   "spell_shadow_contagion"
+  ],
+  "piedad_con_los_moribundos": [
+   "eps_bg3_preservelife"
+  ],
+  "piel_de_piedra": [
+   "w3reforgedresistantskin"
+  ],
+  "piel_demoniaca": [
+   "spell_shadow_ragingscream"
+  ],
+  "piel_robliza": [
+   "spell_nature_skinofearth"
+  ],
+  "pies_ligeros": [
+   "spell_lifegivingspeed"
+  ],
+  "pirotecnia": [
+   "spell_frost_fireresistancetotem"
+  ],
+  "plaga_devoradora": [
+   "spell_shadow_devouringplague"
+  ],
+  "plegaria_de_curacion": [
+   "eps_bg3_prayerofhealing"
+  ],
+  "pluma_angelica": [
+   "ability_priest_angelicfeather"
+  ],
+  "polimorfia": [
+   "ability_mage_improvedpolymorph"
+  ],
+  "potenciar_caracteristica": [
+   "spell_magic_greaterblessingofkings"
+  ],
+  "prestidigitacion": [
+   "ability_mage_incantersabsorbtion"
+  ],
+  "prisma_sagrado": [
+   "spell_paladin_holyprism"
+  ],
+  "proteccion_contra_el_bien_y_el_mal": [
+   "eps_bg3_heavilyarmored"
+  ],
+  "proteccion_contra_energia": [
+   "inv_shield_1h_artifactstormfist_d_06"
+  ],
+  "proteccion_contra_la_muerte": [
+   "spell_holy_guardianspirit"
+  ],
+  "proteccion_contra_veneno": [
+   "hots_thebutcher_freshmeat_poison"
+  ],
+  "proyectil_de_fuego_y_hielo": [
+   "ability_mage_frostfirebolt"
+  ],
+  "proyectil_magico": [
+   "eps_bg3_magicmissile"
+  ],
+  "pua_terrestre": [
+   "ability_earthen_pillar"
+  ],
+  "puerta_dimensional": [
+   "inv_artifact_dimensionalrift"
+  ],
+  "puno_terrestre_de_maximiliano": [
+   "misc_drogbartotem02"
+  ],
+  "purificar_comida_y_bebida": [
+   "hd_create_food"
+  ],
+  "radiancia_enferma": [
+   "spell_animamaldraxxus_orb"
+  ],
+  "rafaga": [
+   "smite_merlin_ice_a01"
+  ],
+  "rafaga_de_viento": [
+   "eps_bg3_gustofwind"
+  ],
+  "ralentizar": [
+   "d3_slowtime"
+  ],
+  "rayo_abrasador": [
+   "eps_bg3_scorchingray"
+  ],
+  "rayo_de_bruja": [
+   "spell_nature_chainlightning"
+  ],
+  "rayo_de_enfermedad": [
+   "eps_bg3_rayofsickness"
+  ],
+  "rayo_de_escarcha": [
+   "ability_mage_rayoffrost"
+  ],
+  "rayo_de_luna": [
+   "eps_bg3_moonbeam"
+  ],
+  "rayo_debilitador": [
+   "warlock_curse_weakness"
+  ],
+  "rayo_sombrio": [
+   "ability_ironmaidens_convulsiveshadows"
+  ],
+  "rebano_de_familiares": [
+   "w3reforgedflyingsheep"
+  ],
+  "recado": [
+   "ability_mage_studentofthemind"
+  ],
+  "relampago": [
+   "eps_bg3_lightningbolt"
+  ],
+  "reparar": [
+   "eps_bg3_repair"
+  ],
+  "replica_infernal": [
+   "spell:80240",
+   "eps_bg3_fireballfel",
+   "eps_buildershaven_gobinfo"
+  ],
+  "reprension_infernal": [
+   "hd_curseofelements_fire"
+  ],
+  "resguardo_de_hoja": [
+   "ability_warrior_shieldreflection"
+  ],
+  "resistencia": [
+   "spell_holy_wordfortitude"
+  ],
+  "respirar_bajo_el_agua": [
+   "spell_shadow_demonbreath"
+  ],
+  "restablecimiento_menor": [
+   "spell_holy_purify"
+  ],
+  "retirada_expeditiva": [
+   "eps_bg3_retreat"
+  ],
+  "retumbo": [
+   "eps_lol_leesin_sonicwaveold"
+  ],
+  "revivir": [
+   "eps_bg3_revivfy"
+  ],
+  "risa_horrible_de_tasha": [
+   "eps_bg3_tashaslaughter"
+  ],
+  "robar_conjuro": [
+   "spell_arcane_arcane02"
+  ],
+  "rociada_de_color": [
+   "hd_fellowshippotions_colormixredorange"
+  ],
+  "rociada_venenosa": [
+   "eps_bg3_poisonspray"
+  ],
+  "saber_druidico": [
+   "eps_bg3_knowledgeowl"
+  ],
+  "sabueso_de_mordenkainen": [
+   "inv_pet_mastiff"
+  ],
+  "saeta_guiada": [
+   "eps_bg3_guidingboltholy"
+  ],
+  "salpicadura_acida": [
+   "ability_creature_poison_06"
+  ],
+  "salto": [
+   "eps_bg3_longjump"
+  ],
+  "salvajismo_primitivo": [
+   "warwick_jawsofthebeast"
+  ],
+  "santuario": [
+   "eps_bg3_sanctuary"
+  ],
+  "santuario_privado_de_mordenkainen": [
+   "spell_arcane_teleportdalaran"
+  ],
+  "senal_de_esperanza": [
+   "ability_priest_rayofhope"
+  ],
+  "sentido_de_bestia": [
+   "eps_wc3h_direwolfacutesenses"
+  ],
+  "silencio": [
+   "eps_bg3_silence"
+  ],
+  "sirviente_invisible": [
+   "spell_shadow_impphaseshift"
+  ],
+  "sirviente_minusculo": [
+   "eps_rumble_npcstonegolem"
+  ],
+  "sombra_de_moil": [
+   "spell_shadow_shadowform"
+  ],
+  "sordera_ceguera": [
+   "spell_shadow_painandsuffering"
+  ],
+  "sueno_profundo": [
+   "smite_kumbhakarna_passive"
+  ],
+  "sugestion": [
+   "spell_shadow_charm"
+  ],
+  "sumidero_gravitacional": [
+   "hots_kaelthas_gravitylapse_purple"
+  ],
+  "susurros_disonantes": [
+   "eps_lol_sona_songofcelerityold"
+  ],
+  "taumaturgia": [
+   "ability_priest_bindingprayers"
+  ],
+  "telarana": [
+   "eps_bg3_conjureweb"
+  ],
+  "temblor_de_tierra": [
+   "spell_shaman_earthquake"
+  ],
+  "tentaculos_negros_de_evard": [
+   "spell_shadow_shadowfury"
+  ],
+  "terreno_ilusorio": [
+   "achievement_zone_arathihighlands_01"
+  ],
+  "terror": [
+   "hd_warlock_fear"
+  ],
+  "texto_ilusorio": [
+   "inv_misc_profession_book_inscription"
+  ],
+  "tierra_en_erupcion": [
+   "w3reforgedvolcano"
+  ],
+  "toque_del_caos": [
+   "ability_warlock_chaosbolt"
+  ],
+  "toque_helado": [
+   "spell_deathknight_icetouch"
+  ],
+  "toque_helado_nivel_1": [
+   "spell_deathknight_icetouch"
+  ],
+  "toque_helado_nivel_2": [
+   "ability_deathknight_icygrip"
+  ],
+  "toque_vampirico": [
+   "spell_shadow_improvedvampiricembrace"
+  ],
+  "tormenta_de_aguanieve": [
+   "spell_frost_ice shards"
+  ],
+  "tormenta_de_bolas_de_nieve_de_snilloc": [
+   "eps_lol_nunu_snowballbarrage"
+  ],
+  "tormenta_de_hielo": [
+   "w3reforgedblizzard"
+  ],
+  "torre_de_galder": [
+   "w3reforgedguardtower"
+  ],
+  "trampa": [
+   "eps_lol_kled_traponarope"
+  ],
+  "transferencia_de_vida": [
+   "spell_shadow_lifedrain"
+  ],
+  "trepar_cual_aracnido": [
+   "achievement_halloween_spider_01"
+  ],
+  "truco_de_la_cuerda": [
+   "inv_misc_rope_01"
+  ],
+  "vacio_oscuro": [
+   "inv_elemental_primal_shadow"
+  ],
+  "ventisca": [
+   "d3_blizzard"
+  ],
+  "ver_invisibilidad": [
+   "spell_shadow_detectinvisibility"
+  ],
+  "vida_falsa": [
+   "spell:20707",
+   "eps_bg3_aid",
+   "eps_buildershaven_gobinfo"
+  ],
+  "viento_guardian": [
+   "wh_windsprotection",
+   "ability_druid_cyclone"
+  ],
+  "vinculo_de_bestia": [
+   "eps_bg3_dominatebeast"
+  ],
+  "vinculo_protector": [
+   "eps_bg3_wardingbond"
+  ],
+  "vision_en_la_oscuridad": [
+   "eps_bg3_darkvision"
+  ],
+  "vision_mental": [
+   "spell_holy_mindvision"
+  ],
+  "volar": [
+   "eps_bg3_fly"
+  ],
+  "voluntad_interior": [
+   "hots_cassia_innerlight"
+  ],
+  "vortice_de_ursol": [
+   "spell_druid_ursolsvortex"
+  ],
+  "zancada_prodigiosa": [
+   "eps_bg3_longstrider"
+  ],
+  "zona_de_verdad": [
+   "smite_aurelionsol_celestialexpansion"
+  ]
+ },
+ "subclasses": {
+  "brujo.destruccion": [
+   "spell_shadow_rainoffire"
+  ],
+  "caballero_muerte.escarcha": [
+   "spell_deathknight_frostpresence"
+  ],
+  "caballero_muerte.sangre": [
+   "spell_deathknight_bloodpresence"
+  ],
+  "cazador.punteria": [
+   "ability_hunter_focusedaim"
+  ],
+  "cazador.supervivencia": [
+   "ability_hunter_camouflage"
+  ],
+  "cazador_demonios.ira": [
+   "ability_demonhunter_chaoticimprint_fire"
+  ],
+  "chaman.restauracion": [
+   "spell_nature_healingwavegreater"
+  ],
+  "druida.feral": [
+   "ability_druid_catform"
+  ],
+  "druida.restauracion": [
+   "spell_nature_healingtouch"
+  ],
+  "guerrero.armas": [
+   "ability_warrior_savageblow"
+  ],
+  "guerrero.proteccion": [
+   "ability_warrior_defensivestance"
+  ],
+  "mago.fuego": [
+   "spell_fire_flamebolt"
+  ],
+  "monje.tejedor": [
+   "spell_monk_mistweaver_spec"
+  ],
+  "paladin.proteccion": [
+   "spell_holy_devotionaura"
+  ],
+  "paladin.represion": [
+   "spell_holy_auraoflight"
+  ],
+  "paladin.sagrado": [
+   "spell_holy_guardianspirit"
+  ],
+  "picaro.asesino": [
+   "ability_rogue_eviscerate"
+  ],
+  "picaro.forajido": [
+   "ability_rogue_waylay"
+  ],
+  "picaro.sutileza": [
+   "ability_stealth"
+  ],
+  "sacerdote.disciplina": [
+   "spell_holy_wordfortitude"
+  ],
+  "sacerdote.elune": [
+   "eps_wc3h_nightelfpriestessofthemoon1"
+  ],
+  "sacerdote.sagrado": [
+   "spell_holy_guardianspirit"
+  ],
+  "sacerdote.sombra": [
+   "spell_shadow_shadowwordpain"
+  ]
+ }
+}

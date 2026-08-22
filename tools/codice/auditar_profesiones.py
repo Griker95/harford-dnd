@@ -1,139 +1,90 @@
 # -*- coding: utf-8 -*-
-"""Auditoria de integridad del sistema de profesiones.
+"""Repaso de las profesiones ya publicadas: cadenas, duplicados y huecos.
 
-Comprueba, contra los .lua de datos:
-  1. claves de material/resultado que no existen en el REGISTRY
-  2. claves declaradas sin itemId real (recetas "pendientes", no crafteables)
-  3. materiales que ninguna receta produce (deben venir de mercader/loot/DM)
-  4. profesiones craft sin recetas
-  5. BLOQUEOS DE PROGRESION: con la regla de subida (gris = skillReq+100), para
-     avanzar de skill X hace falta una receta con X-100 < skillReq <= X. Un hueco
-     mayor de 100 entre recetas consecutivas deja la profesion atascada.
-  6. remates worldLearned por profesion
-  7. claves del registro que ninguna receta usa (huerfanas)
+Mira el fichero que ve el lector, no los intermedios, porque lo que importa es si el arbol
+se sostiene: de donde sale cada material, que profesion depende de cual y si hay recetas
+que sobran o se pisan.
 """
 import io
+import json
+import os
 import re
 import sys
-import collections
+from collections import defaultdict
 
-sys.stdout.reconfigure(encoding='utf-8')
+WEB = r"C:/Users/marco/Documents/harfordweb/js/compendium-professions.js"
 
-BASE = 'Harford/Professions/'
-data = io.open(BASE + 'HarfordProfessionsData.lua', encoding='utf-8').read()
-items = io.open(BASE + 'HarfordProfessionsItems.lua', encoding='utf-8').read()
 
-# --- registro de items: ["clave"] = { id = N | nil, name = "..." }
-registry, pending = {}, set()
-for m in re.finditer(r'\["(\w+)"\]\s*=\s*\{([^}]*)\}', items):
-    key, body = m.group(1), m.group(2)
-    idm = re.search(r'\bid\s*=\s*(nil|\d+)', body)
-    if not idm:
-        continue
-    registry[key] = None if idm.group(1) == 'nil' else int(idm.group(1))
-    if idm.group(1) == 'nil':
-        pending.add(key)
+def cargar():
+    t = io.open(WEB, encoding="utf-8").read()
+    i = t.find("professions = ")
+    prof = json.loads(t[t.find("[", i):t.find("];", i) + 1])
+    j = t.find("professionItems = ")
+    fichas = json.loads(t[t.find("{", j):t.rfind(";")])
+    return prof, fichas
 
-# --- profesiones
-profs = {}
-for m in re.finditer(
-        r'\{\s*id\s*=\s*"(\w+)"\s*,\s*name\s*=\s*"([^"]+)"\s*,\s*tool\s*=\s*(nil|"[^"]*")\s*,\s*kind\s*=\s*"(\w+)"',
-        data):
-    profs[m.group(1)] = {'name': m.group(2), 'tool': m.group(3), 'kind': m.group(4)}
 
-# --- recetas
-recipes = []
-for line in data.splitlines():
-    if 'profession =' not in line or 'skillReq' not in line:
-        continue
-    rid = re.search(r'id\s*=\s*"([\w_]+)"', line)
-    prof = re.search(r'profession\s*=\s*"(\w+)"', line)
-    skill = re.search(r'skillReq\s*=\s*(\d+)', line)
-    if not (rid and prof and skill):
-        continue
-    head, _, tail = line.partition('output =')
-    mats = re.findall(r'\{\s*key\s*=\s*"(\w+)"\s*,\s*qty\s*=\s*(\d+)\s*\}', head)
-    out = re.search(r'\{\s*key\s*=\s*"(\w+)"', tail)
-    nm = re.search(r'name\s*=\s*"([^"]+)"', line)
-    recipes.append({
-        'id': rid.group(1),
-        'prof': prof.group(1),
-        'skill': int(skill.group(1)),
-        'name': nm.group(1) if nm else '?',
-        'materials': [(k, int(q)) for k, q in mats],
-        'output': out.group(1) if out else None,
-        'world': 'worldLearned = true' in line,
-    })
+def main():
+    prof, fichas = cargar()
+    con = [p for p in prof if p.get("recipes")]
+    vacias = [p for p in prof if p.get("wow") and not p.get("recipes")]
 
-print('PROFESIONES: %d   RECETAS: %d   CLAVES EN REGISTRO: %d (sin itemId: %d)'
-      % (len(profs), len(recipes), len(registry), len(pending)))
+    produce = defaultdict(set)
+    for p in con:
+        for r in p["recipes"]:
+            if r.get("output"):
+                produce[r["output"]["name"]].add(p["name"])
 
-# 1. claves inexistentes
-missing = collections.defaultdict(list)
-for r in recipes:
-    for k, _ in r['materials']:
-        if k not in registry:
-            missing[k].append(r['id'])
-    if r['output'] and r['output'] not in registry:
-        missing[r['output']].append(r['id'] + ' (output)')
-print('\n[1] CLAVES USADAS QUE NO EXISTEN EN EL REGISTRO: %d' % len(missing))
-for k, v in sorted(missing.items()):
-    print('    %-28s <- %s' % (k, ', '.join(v[:4])))
+    print("profesiones con recetas: %d   sin recetas: %d (%s)"
+          % (len(con), len(vacias), ", ".join(p["name"] for p in vacias)))
+    print("recetas: %d" % sum(len(p["recipes"]) for p in con))
 
-# 2. recetas bloqueadas por id pendiente
-blocked = [r for r in recipes
-           if (r['output'] in pending) or any(k in pending for k, _ in r['materials'])]
-print('\n[2] RECETAS NO CRAFTEABLES (alguna clave sin itemId real): %d de %d'
-      % (len(blocked), len(recipes)))
-byprof = collections.Counter(r['prof'] for r in blocked)
-for p, n in byprof.most_common():
-    total = sum(1 for r in recipes if r['prof'] == p)
-    print('    %-22s %d/%d' % (profs.get(p, {}).get('name', p), n, total))
+    # --- de donde sale cada material ---
+    usa = defaultdict(set)
+    for p in con:
+        for r in p["recipes"]:
+            for m in (r.get("materials") or []):
+                usa[m["name"]].add(p["name"])
+    delmundo = sorted(m for m in usa if m not in produce)
+    print("\nmateriales distintos: %d   los da otra receta: %d   salen del mundo: %d"
+          % (len(usa), len(usa) - len(delmundo), len(delmundo)))
 
-# 3. materiales que nadie produce
-produced = {r['output'] for r in recipes if r['output']}
-consumed = {k for r in recipes for k, _ in r['materials']}
-external = sorted(consumed - produced)
-print('\n[3] MATERIALES QUE NINGUNA RECETA PRODUCE (mercader/loot/DM): %d' % len(external))
-for k in external:
-    tag = 'SIN ID' if k in pending else ('id %s' % registry.get(k, 'NO REGISTRADO'))
-    print('    %-28s %s' % (k, tag))
+    # --- quien depende de quien ---
+    print("\ncadena entre profesiones")
+    for p in con:
+        dep = defaultdict(int)
+        for r in p["recipes"]:
+            for m in (r.get("materials") or []):
+                for o in produce.get(m["name"], ()):
+                    if o != p["name"]:
+                        dep[o] += 1
+        if dep:
+            print("  %-20s <- %s" % (p["name"], ", ".join(
+                "%s (%d)" % (k, v) for k, v in sorted(dep.items(), key=lambda kv: -kv[1]))))
 
-# 4. profesiones sin recetas
-withr = {r['prof'] for r in recipes}
-print('\n[4] PROFESIONES SIN NINGUNA RECETA:')
-for pid, p in profs.items():
-    if pid not in withr:
-        print('    %-22s (%s)' % (p['name'], p['kind']))
+    # --- recetas que se pisan: mismo nombre y mismo resultado ---
+    print("\nrecetas repetidas (mismo nombre y mismo resultado)")
+    n = 0
+    for p in con:
+        vistas = defaultdict(list)
+        for r in p["recipes"]:
+            if r.get("output"):
+                vistas[(r["name"], r["output"]["name"])].append(r)
+        for (nom, _), v in vistas.items():
+            if len(v) > 1:
+                n += 1
+                det = " | ".join("hab %s, %s" % (x.get("skillReq"), x.get("source")) for x in v)
+                print("  %-16s %-38s %s" % (p["name"], nom[:38], det))
+    if not n:
+        print("  ninguna")
 
-# 5. bloqueos de progresion
-print('\n[5] PROGRESION DE SKILL (hueco > 100 = atasco; tope < 300 = no llega al maximo):')
-for pid in sorted(withr):
-    lv = sorted(r['skill'] for r in recipes if r['prof'] == pid)
-    problems = []
-    if lv[0] > 1:
-        problems.append('empieza en %d' % lv[0])
-    for a, b in zip(lv, lv[1:]):
-        if b - a > 100:
-            problems.append('hueco %d->%d' % (a, b))
-    if lv[-1] + 100 < 300:
-        problems.append('tope real %d/300' % (lv[-1] + 100))
-    name = profs.get(pid, {}).get('name', pid)
-    print('    %-22s %2d recetas  %3d..%3d   %s'
-          % (name, len(lv), lv[0], lv[-1],
-             'OK' if not problems else 'PROBLEMA: ' + '; '.join(problems)))
+    # --- lo que un jugador no podria fabricar nunca: material sin origen conocido ---
+    huerfanos = [m for m in delmundo if m.startswith("Pergamino: ")]
+    if huerfanos:
+        print("\npergaminos de encantamiento que nadie fabrica: %d (correcto: son el"
+              " resultado, no un material)" % len(huerfanos))
 
-# 6. worldLearned
-print('\n[6] REMATES worldLearned (se espera 1 por profesion):')
-wl = collections.Counter(r['prof'] for r in recipes if r['world'])
-for pid in sorted(withr):
-    n = wl.get(pid, 0)
-    print('    %-22s %d%s' % (profs.get(pid, {}).get('name', pid), n,
-                              '' if n == 1 else '   <-- revisar'))
 
-# 7. claves huerfanas del registro
-used = consumed | produced
-orphan = sorted(k for k in registry if k not in used)
-print('\n[7] CLAVES DEL REGISTRO QUE NINGUNA RECETA USA: %d' % len(orphan))
-for k in orphan:
-    print('    %-28s id %s' % (k, registry[k]))
+if __name__ == "__main__":
+    sys.stdout.reconfigure(encoding="utf-8")
+    main()

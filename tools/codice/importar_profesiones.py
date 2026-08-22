@@ -71,6 +71,19 @@ _VERBO = re.compile(r"(?i)^(fundir|transmutar|desencantar|destilar|curtir|extrae
                     r"convertir|encantar|crear|preparar|cocinar|forjar|imbuir)\b")
 
 
+def nombre_objeto(o):
+    """El nombre bueno de un objeto: el de su ficha, que ya resolvio las colisiones.
+
+    `profesiones_wowhead.json` guardo el nombre moderno tal cual, y para los glifos eso
+    colapsaba 324 objetos distintos en "Glifo carbonizado". La ficha ya devuelve el de su
+    version cuando el actual esta compartido, asi que manda ella.
+    """
+    if not o:
+        return ""
+    f = FICHAS.get(str(o.get("id")))
+    return (f or {}).get("name") or o.get("name") or ""
+
+
 def nombre_receta(r):
     """Nombre de la receta con la terminologia del juego actual.
 
@@ -84,9 +97,9 @@ def nombre_receta(r):
     if not c:
         return r["name"]                                  # un encantamiento no produce nada
     if not _VERBO.match(r["name"]):
-        return c["name"]
+        return nombre_objeto(c)
     # el verbo se conserva, pero el producto que nombra si se moderniza
-    viejo, nuevo = c.get("classic") or "", c["name"]
+    viejo, nuevo = c.get("classic") or "", nombre_objeto(c)
     i = r["name"].lower().find(viejo.lower()) if viejo and viejo != nuevo else -1
     if i > 0:
         return r["name"][:i] + nuevo[0].lower() + nuevo[1:] + r["name"][i + len(viejo):]
@@ -105,6 +118,37 @@ CD_COLOR = {"rojo": 20, "naranja": 16, "amarillo": 12, "verde": 10, "gris": 8}
 CD_CALIDAD = {0: -1, 1: 0, 2: 1, 3: 3, 4: 5, 5: 7}
 FICHAS = {}
 
+# De donde se aprende cada receta. Wowhead lo dice en su listado de la profesion con el
+# campo `trainingcost`: si lo trae, la ensena el entrenador y ese es su precio; si no, la
+# ensena un objeto (el patron, el plano, la formula). No hay un tercer caso.
+ENTRENADOR = {}
+
+# Wowhead no declara `learnedat` para unas cuantas recetas de patron raro, pero SI lo dice
+# el objeto que las ensena ("Diseño: filo de runa" pide Herreria 285). Ese requisito se
+# recupera de la ficha del hechizo y se guarda aqui, porque sin el la receta se quedaba
+# sin rango y sin sitio en el arbol.
+PLANO = {}
+
+
+# Las herramientas que exige la receta ("Martillo de herrero, Llave inglesa Arcoluz"). El
+# tooltip las da con su nombre de Classic, asi que se cruzan con las fichas de objeto para
+# darles el del juego actual; las que no aparecen como material ni resultado en ningun sitio
+# se quedan con el suyo, que en esos casos no ha cambiado.
+_HERRAMIENTA = {}
+
+
+def herramientas(r):
+    t = (r.get("herramienta") or "").strip()
+    if not t:
+        return None
+    if not _HERRAMIENTA:
+        for f in FICHAS.values():
+            for n in (f.get("classicName"), f.get("name")):
+                if n:
+                    _HERRAMIENTA.setdefault(sa(n).lower(), f["name"])
+    partes = [x.strip() for x in t.split(",") if x.strip()]
+    return ", ".join(_HERRAMIENTA.get(sa(x).lower(), x) for x in partes)
+
 
 def modificador_calidad(r):
     """Cuanto sube o baja la CD por la calidad del objeto que produce la receta."""
@@ -117,13 +161,79 @@ def modificador_calidad(r):
     return CD_CALIDAD.get(int(f["quality"]), 0)
 
 
+# El sistema llega hasta habilidad 300, que es el techo de Classic. Joyeria e Inscripcion
+# vienen de Burning Crusade y de Wrath, donde el arbol sigue hasta 375 y 450: esa cola se
+# descarta. Una receta sin requisito declarado se conserva; son patrones raros de la epoca
+# clasica, no contenido de expansion.
+TOPE = 300
+
+# Recetas retiradas por decision de mesa, no por el dato. Cada una con su motivo, para que
+# se pueda revertir sabiendo por que entro.
+#   11447 Elixir del caminante acuatico: es de Classic (objeto 8827, nivel 24, parche
+#     1.13.0), pero su producto se llama igual que el elixir de Rasganorte y se queda fuera
+#     hasta que ese tramo entre en el sistema.
+FUERA = {11447: "coincide de nombre con el elixir de Rasganorte"}
+
+# Habilidad asignada a mano a las recetas que Wowhead deja sin declarar. NO es dato de
+# Wowhead y por eso vive aparte, con el porque de cada numero.
+#
+# Las cinco de Ingenieria llevan el MINIMO que imponen sus propios componentes y su
+# herramienta: una receta no puede pedir menos habilidad que las piezas que gasta. La
+# Envoltura de mitril se fabrica a 215, el Activador inestable a 200, el Tubo de mitril a
+# 195 y la Polvora solida a 175, asi que de ahi salen los numeros sin inventar nada.
+#
+# Las tres de la cadena de Onyxia van al tope de rama. Ahi el calculo no basta —la Escama
+# de Onyxia y la Dragontina negra son botin, no se fabrican, y no aportan minimo—, pero el
+# peto es epico de nivel 62 y la cadena es contenido de banda: 300.
+HABILIDAD_A_MANO = {
+    12900: (200, "Tubo de mitril 195 + Activador inestable 200"),
+    12720: (215, "Envoltura de mitril 215"),
+    12904: (215, "Envoltura de mitril 215 + Activador inestable 200"),
+    12722: (215, "Envoltura de mitril 215 + Activador inestable 200"),
+    12719: (175, "Polvora solida 175 + Microajustador giromatico 175"),
+    22430: (300, "cadena de Onyxia, tope de rama"),
+    22434: (300, "cadena de Onyxia, tope de rama"),
+    19106: (300, "cadena de Onyxia, peto epico de nivel 62"),
+}
+
+
+def por_encima_del_tope(r):
+    s = r.get("skill") or ((r.get("colors") or [0])[0]) or 0
+    return s > TOPE
+
+
+def es_de_temporada(r):
+    """La receta fabrica un objeto que solo existe en la Temporada de Descubrimiento.
+
+    Wowhead sirve el arbol de Classic ya mezclado con el de la Temporada, y no todo lo suyo
+    esta por encima de 300: hay piezas de habilidad 100 o 200 que en el Classic original no
+    existen. Se reconocen porque su tooltip trae la etiqueta interna de fase.
+    """
+    c = r.get("creates")
+    return bool(c) and bool((FICHAS.get(str(c["id"])) or {}).get("sod"))
+
+
 def umbrales(r):
-    """(naranja, amarillo, verde, gris): la habilidad a la que la receta cambia de color."""
+    """(naranja, amarillo, verde, gris): la habilidad a la que la receta cambia de color.
+
+    Wowhead escribe 0 en un umbral que coincide con el anterior, y puede haber mas de uno:
+    "Lingote de estano" viene como [0, 0, 65, 75] y "Carne de jabali asada" como [0, 45,...].
+    Rellenar solo el primero dejaba un amarillo en cero, que no significa nada. Se arrastra
+    el valor anterior y se fuerza que la serie no baje.
+    """
     c = r.get("colors")
     if not c or len(c) < 4:
         return None
-    # un 0 en el primero significa que ya es naranja desde que la aprendes
-    return [int(c[0]) or int(r.get("skill") or 0)] + [int(x) for x in c[1:4]]
+    v = [int(x or 0) for x in c[:4]]
+    # de donde parte la serie: el propio umbral, el nivel al que se aprende, o el primero
+    # que traiga un numero de verdad
+    base = v[0] or int(r.get("skill") or 0) or next((x for x in v if x), 0)
+    fuera, ant = [], base
+    for i, x in enumerate(v):
+        x = base if i == 0 else max(x or ant, ant)
+        fuera.append(x)
+        ant = x
+    return fuera
 
 
 def cd_sin_umbrales():
@@ -166,6 +276,12 @@ def main():
     OBJ = os.path.join(BASE, "cotejo", "objetos_wowhead.json")
     if os.path.exists(OBJ):
         FICHAS.update(json.load(io.open(OBJ, encoding="utf-8")))
+    ENT = os.path.join(BASE, "cotejo", "entrenador_wowhead.json")
+    if os.path.exists(ENT):
+        ENTRENADOR.update(json.load(io.open(ENT, encoding="utf-8")))
+    PL = os.path.join(BASE, "cotejo", "habilidad_por_plano.json")
+    if os.path.exists(PL):
+        PLANO.update(json.load(io.open(PL, encoding="utf-8")))
     data = io.open(F_DATA, encoding="utf-8", newline="").read()
     items = io.open(F_ITEMS, encoding="utf-8", newline="").read()
 
@@ -225,10 +341,19 @@ def main():
             por_wid[wid] = k
         return k
 
-    por_prof, ids = {}, set()
+    por_prof, ids, descartadas, de_temporada, retiradas = {}, set(), 0, 0, 0
     for pid, recetas in datos.items():
         lineas = []
         for r in sorted(recetas, key=lambda x: ((x.get("skill") or 0), sa(x["name"]).lower())):
+            if r["spell"] in FUERA:
+                retiradas += 1
+                continue
+            if por_encima_del_tope(r):
+                descartadas += 1
+                continue
+            if es_de_temporada(r):
+                de_temporada += 1
+                continue
             # la receta se llama como su producto, asi que lleva la misma terminologia
             nombre = casa(visible(nombre_receta(r)))
             pre = pid[:3]
@@ -238,23 +363,27 @@ def main():
                 i += 1
             ids.add(rid)
             mats = ", ".join('{ key = "%s", qty = %d }'
-                             % (clave(m["name"], m.get("icon"), m["id"]), m["qty"])
+                             % (clave(nombre_objeto(m), m.get("icon"), m["id"]), m["qty"])
                              for m in r["reagents"])
             c = r.get("creates")
             if c:
-                ok, oq = clave(c["name"], c.get("icon"), c["id"]), c.get("qty") or 1
+                ok, oq = clave(nombre_objeto(c), c.get("icon"), c["id"]), c.get("qty") or 1
             else:
                 ok, oq = clave(pergamino(nombre), "inv_scroll_03"), 1
             # Wowhead no da requisito para 35 recetas (patrones raros sin nivel declarado).
             # Inventarles un 1 las colaba al principio de la lista, con la espada de torio
             # antes que los brazales de cobre: se marcan con 0, "sin requisito conocido".
-            skl = r.get("skill") or ((r.get("colors") or [0])[0]) or 0
+            u_ = umbrales(r)
+            skl = (r.get("skill") or (u_[0] if u_ else 0) or PLANO.get(str(r["spell"]))
+                   or (HABILIDAD_A_MANO.get(r["spell"]) or (0,))[0] or 0)
             desc = (r.get("efecto") or "").replace("\\", "").replace('"', "'")
+            herr = (herramientas(r) or "").replace("\\", "").replace('"', "'")
             # `colors` son los cuatro umbrales de habilidad a los que la receta cambia de
             # color, y de ahi sale la CD real. `dc` se conserva como respaldo para la receta
             # que no los declare y para el codigo que solo lea un numero.
-            u = umbrales(r)
+            u = u_
             qm = modificador_calidad(r)
+            coste = (ENTRENADOR.get(pid) or {}).get(str(r["spell"]))
             lineas.append(
                 '    { id = "%s", profession = "%s", skillReq = %d, name = "%s", icon = "%s", '
                 'dc = %d, %smaterials = { %s }, output = { key = "%s", qty = %d }%s },'
@@ -262,8 +391,12 @@ def main():
                    r.get("icon") or "INV_Misc_QuestionMark",
                    (CD_COLOR["naranja"] if u else cd_sin_umbrales()) + qm,
                    (("colors = { %d, %d, %d, %d }, " % tuple(u)) if u else "")
-                   + (("qmod = %d, " % qm) if qm else ""),
-                   mats, ok, oq, (', desc = "%s"' % desc) if desc else ""))
+                   + (("qmod = %d, " % qm) if qm else "")
+                   + ('source = "entrenador", trainCost = %d, ' % coste
+                      if coste is not None else 'source = "receta", '),
+                   mats, ok, oq,
+                   (', desc = "%s"' % desc if desc else "")
+                   + (', tools = "%s"' % herr if herr else "")))
         por_prof[pid] = lineas
 
     rm = re.search(r"D\.RECIPES\s*=\s*\{", data)
@@ -288,7 +421,10 @@ def main():
         pos = fin
 
     tot = sum(len(v) for v in por_prof.values())
-    print("recetas nuevas: %d" % tot)
+    print("recetas nuevas: %d   (descartadas por pasar de habilidad %d: %d)"
+          % (tot, TOPE, descartadas))
+    print("   descartadas por ser de la Temporada de Descubrimiento: %d" % de_temporada)
+    print("   retiradas por decision de mesa: %d" % retiradas)
     for p in sorted(por_prof):
         print("   %-20s %4d" % (p, len(por_prof[p])))
     print("\nse retiran %d recetas escritas a mano de esas profesiones" % quitadas)

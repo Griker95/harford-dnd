@@ -31,6 +31,14 @@ LIBRO = T.LIBRO
 LUA = r"C:/Users/marco/Documents/New project/Harford/DnD/Data/HarfordDnDBook.lua"
 GENERICO = re.compile(r"(?i)^(mejora de (puntuacion de )?caracteristica|rasgo de |caracteristica de |caracteristica del |—|conjuros? |lanzamiento de )")
 
+# El addon titula algunos rasgos de otra manera que el libro; sin esta tabla, cada pasada
+# del completador los volvia a anadir como si faltaran.
+_EQUIV = {}
+_eq_path = os.path.join(BASE, "equivalencias_rasgos.json")
+if os.path.exists(_eq_path):
+    _EQUIV = {T.nk(k): v for k, v in json.load(io.open(_eq_path, encoding="utf-8")).items()
+              if not k.startswith("_")}
+
 src = io.open(LIBRO, encoding="utf-8", errors="ignore").read()
 lua = io.open(LUA, encoding="utf-8", newline="").read()
 
@@ -139,7 +147,7 @@ def main():
         for lv in sorted(filas):
             for nombre in filas[lv]["rasgos"]:
                 k = T.nk(nombre)
-                if k in tiene or GENERICO.match(k):
+                if T.nk(_EQUIV.get(k, "")) in tiene or k in tiene or GENERICO.match(k):
                     continue
                 tiene.add(k)
                 txt = seccion(rango, nombre)

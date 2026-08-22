@@ -4534,8 +4534,7 @@
   ],
   "slot": "Cabeza",
   "type": "Malla",
-  "name": "Almófar de escamas doradas",
-  "classicName": "Almófar de escamas de oro"
+  "name": "Almófar de escamas de oro"
  },
  "3840": {
   "quality": 2,
@@ -4594,8 +4593,7 @@
   ],
   "slot": "Hombro",
   "type": "Malla",
-  "name": "Sobrehombros de escamas doradas",
-  "classicName": "Hombreras de escamas de oro"
+  "name": "Hombreras de escamas de oro"
  },
  "3842": {
   "quality": 2,
@@ -4654,8 +4652,7 @@
   ],
   "slot": "Piernas",
   "type": "Malla",
-  "name": "Leotardos de escamas doradas",
-  "classicName": "Leotardos de escamas de oro"
+  "name": "Leotardos de escamas de oro"
  },
  "3844": {
   "quality": 3,
@@ -4714,8 +4711,7 @@
   ],
   "slot": "Pecho",
   "type": "Malla",
-  "name": "Loriga de escamas doradas",
-  "classicName": "Coraza de escamas de oro"
+  "name": "Coraza de escamas de oro"
  },
  "3846": {
   "quality": 2,
@@ -4772,8 +4768,7 @@
   ],
   "slot": "Pies",
   "type": "Malla",
-  "name": "Botas de escamas doradas",
-  "classicName": "Botas de escamas de oro"
+  "name": "Botas de escamas de oro"
  },
  "3848": {
   "quality": 2,
@@ -4835,6 +4830,7 @@
   "stats": [
    "+5 aguante"
   ],
+  "sod": true,
   "slot": "Mano principal",
   "type": "Espada",
   "name": "Espada corta de hierro endurecido",
@@ -4870,6 +4866,7 @@
    "+4 fuerza",
    "+4 agilidad"
   ],
+  "sod": true,
   "slot": "Una mano",
   "type": "Espada",
   "name": "Hoja serpentina de jade",
@@ -4903,6 +4900,7 @@
   "stats": [
    "+12 aguante"
   ],
+  "sod": true,
   "slot": "Dos manos",
   "type": "Maza",
   "name": "Gran maza de hierro sólido",
@@ -4938,6 +4936,7 @@
    "+11 fuerza",
    "+4 aguante"
   ],
+  "sod": true,
   "slot": "Dos manos",
   "type": "Maza",
   "name": "Destructora de hierro dorado",
@@ -4973,10 +4972,10 @@
    "+4 aguante",
    "+12 espíritu"
   ],
+  "sod": true,
   "slot": "Dos manos",
   "type": "Espada",
-  "name": "Espada ancha de acero lunar",
-  "classicName": "Sable de acero lunar"
+  "name": "Sable de acero lunar"
  },
  "3854": {
   "quality": 2,
@@ -5008,6 +5007,7 @@
    "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%.",
    "Probabilidad al acertar: Lanza una descarga de Escarcha al enemigo infligiendo 20 al 30 p. de daño de Escarcha y reduciendo su velocidad de movimiento en un 50% durante 5 s."
   ],
+  "sod": true,
   "slot": "Dos manos",
   "type": "Espada",
   "name": "Hoja tigre de Escarcha",
@@ -5043,6 +5043,7 @@
    "+11 fuerza",
    "+7 aguante"
   ],
+  "sod": true,
   "slot": "Dos manos",
   "type": "Hacha",
   "name": "Hacha de hierro macizo",
@@ -5078,6 +5079,7 @@
    "+11 fuerza",
    "+10 aguante"
   ],
+  "sod": true,
   "slot": "Dos manos",
   "type": "Hacha",
   "name": "Hacha curva de las Sombras",
@@ -6602,8 +6604,7 @@
   ],
   "slot": "Pies",
   "type": "Tela",
-  "name": "Botas del encantador",
-  "classicName": "Botas del Encantador"
+  "name": "Botas del Encantador"
  },
  "4326": {
   "quality": 2,
@@ -6628,8 +6629,7 @@
    "+6 espíritu"
   ],
   "slot": "Espalda",
-  "name": "Capa larga de seda",
-  "classicName": "Capa de seda larga"
+  "name": "Capa de seda larga"
  },
  "4327": {
   "quality": 3,
@@ -9538,8 +9538,7 @@
   ],
   "slot": "Piernas",
   "type": "Cuero",
-  "name": "Pantalones de guardián",
-  "classicName": "Pantalones guardián"
+  "name": "Pantalones guardián"
  },
  "5963": {
   "quality": 2,
@@ -11655,8 +11654,7 @@
   ],
   "slot": "Hombro",
   "type": "Tela",
-  "name": "Sobrehombros de seda carmesíes",
-  "classicName": "Hombreras de seda carmesí"
+  "name": "Hombreras de seda carmesí"
  },
  "7060": {
   "quality": 2,
@@ -13748,6 +13746,7 @@
   "stats": [
    "+7 aguante"
   ],
+  "sod": true,
   "slot": "Mano principal",
   "type": "Hacha",
   "name": "Hacha de mitril pesado",
@@ -13781,6 +13780,7 @@
   "stats": [
    "+8 agilidad"
   ],
+  "sod": true,
   "slot": "Una mano",
   "type": "Hacha",
   "name": "Hacha azul relumbrante",
@@ -13816,6 +13816,7 @@
    "+6 fuerza",
    "+4 agilidad"
   ],
+  "sod": true,
   "slot": "Mano principal",
   "type": "Espada",
   "name": "Espada de mitril maligna",
@@ -14794,8 +14795,7 @@
   ],
   "slot": "Pecho",
   "type": "Malla",
-  "name": "Coraza de escamas de tortuga",
-  "classicName": "Peto de escamas de tortuga"
+  "name": "Peto de escamas de tortuga"
  },
  "8191": {
   "quality": 2,
@@ -16458,8 +16458,7 @@
   ],
   "slot": "Manos",
   "type": "Malla",
-  "name": "Guanteletes de escamas doradas",
-  "classicName": "Guanteletes de escamas de oro"
+  "name": "Guanteletes de escamas de oro"
  },
  "9998": {
   "quality": 2,
@@ -16488,8 +16487,7 @@
   ],
   "slot": "Pecho",
   "type": "Tela",
-  "name": "Jubón de tejido mágico negro",
-  "classicName": "Jubón de paño mágico negro"
+  "name": "Jubón de paño mágico negro"
  },
  "9999": {
   "quality": 2,
@@ -16518,8 +16516,7 @@
   ],
   "slot": "Piernas",
   "type": "Tela",
-  "name": "Leotardos de tejido mágico negros",
-  "classicName": "Leotardos de paño mágico negro"
+  "name": "Leotardos de paño mágico negro"
  },
  "10001": {
   "quality": 2,
@@ -16855,6 +16852,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p."
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Tela",
   "name": "Guantes de tejido onírico",
@@ -18180,6 +18178,7 @@
   "stats": [
    "+5 agilidad"
   ],
+  "sod": true,
   "slot": "A distancia",
   "type": "Arma de fuego",
   "name": "Trabuco de mitril",
@@ -18213,6 +18212,7 @@
   "effects": [
    "Equipar: +14 p. de poder de ataque a distancia."
   ],
+  "sod": true,
   "slot": "A distancia",
   "type": "Arma de fuego",
   "name": "Rifle de gran calibre de mitril",
@@ -19574,6 +19574,7 @@
   "durability": 55,
   "req": 26,
   "sell": "35p 81c",
+  "sod": true,
   "slot": "A distancia",
   "type": "Varita",
   "set": "23 - 43 Arcano Daño",
@@ -19603,6 +19604,7 @@
   "durability": 55,
   "req": 30,
   "sell": "52p 63c",
+  "sod": true,
   "slot": "A distancia",
   "type": "Varita",
   "set": "40 - 76 Arcano Daño",
@@ -19773,8 +19775,7 @@
   ],
   "slot": "Pecho",
   "type": "Malla",
-  "name": "Placa Hierro Negro",
-  "classicName": "Malla Hierro Negro"
+  "name": "Malla Hierro Negro"
  },
  "11607": {
   "quality": 3,
@@ -20306,6 +20307,7 @@
   "effects": [
    "Equipar: +12 p. de poder de ataque."
   ],
+  "sod": true,
   "slot": "Una mano",
   "type": "Daga",
   "name": "Daga de acero destellante",
@@ -20339,6 +20341,7 @@
   "effects": [
    "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 10 p."
   ],
+  "sod": true,
   "slot": "Una mano",
   "type": "Daga",
   "name": "Hoja dorada abrasadora",
@@ -28692,6 +28695,7 @@
   "effects": [
    "Probabilidad al acertar: Carga contra un objetivo, causando 30 p. de daño de Escarcha."
   ],
+  "sod": true,
   "slot": "Mano principal",
   "type": "Hacha",
   "name": "Filo del invierno",
@@ -32016,8 +32020,7 @@
   ],
   "slot": "Muñeca",
   "type": "Malla",
-  "name": "Brazales acecharenas",
-  "classicName": "Brazales Acecharenas"
+  "name": "Brazales Acecharenas"
  },
  "20477": {
   "quality": 3,
@@ -32046,8 +32049,7 @@
   ],
   "slot": "Manos",
   "type": "Malla",
-  "name": "Guanteletes acecharenas",
-  "classicName": "Guanteletes Acecharenas"
+  "name": "Guanteletes Acecharenas"
  },
  "20478": {
   "quality": 3,
@@ -35257,8 +35259,7 @@
   ],
   "slot": "Cintura",
   "type": "Malla",
-  "name": "Cinturón de obsidiana ligero",
-  "classicName": "Cinturón obsidiano ligero"
+  "name": "Cinturón obsidiano ligero"
  },
  "22196": {
   "quality": 4,
@@ -35323,8 +35324,7 @@
   ],
   "slot": "Cintura",
   "type": "Placas",
-  "name": "Cinturón de obsidiana pesado",
-  "classicName": "Cinturón obsidiano pesado"
+  "name": "Cinturón obsidiano pesado"
  },
  "22198": {
   "quality": 4,
@@ -35857,8 +35857,7 @@
   ],
   "slot": "Pecho",
   "type": "Cuero",
-  "name": "Guerrera polar",
-  "classicName": "Túnica polar"
+  "name": "Túnica polar"
  },
  "22662": {
   "quality": 4,
@@ -35955,8 +35954,7 @@
   ],
   "slot": "Pecho",
   "type": "Malla",
-  "name": "Coraza de escamas heladas",
-  "classicName": "Peto de escamas heladas"
+  "name": "Peto de escamas heladas"
  },
  "22665": {
   "quality": 4,
@@ -36059,8 +36057,7 @@
   ],
   "slot": "Pecho",
   "type": "Placas",
-  "name": "Coraza Deliriohelado",
-  "classicName": "Peto Deliriohelado"
+  "name": "Peto Deliriohelado"
  },
  "22670": {
   "quality": 4,
@@ -36517,8 +36514,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Granate de sangre luminoso",
-  "classicName": "Lágrima de granate de sangre"
+  "name": "Lágrima de granate de sangre"
  },
  "23095": {
   "quality": 2,
@@ -36561,8 +36557,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Granate de sangre luminoso",
-  "classicName": "Granate de sangre rúnico"
+  "name": "Granate de sangre rúnico"
  },
  "23097": {
   "quality": 2,
@@ -36759,8 +36754,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo o azul.\""
   ],
-  "name": "Draenita de sombras purificada",
-  "classicName": "Peridoto intenso deslumbrante"
+  "name": "Peridoto intenso deslumbrante"
  },
  "23107": {
   "quality": 2,
@@ -36821,8 +36815,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Draenita de sombras purificada",
-  "classicName": "Draenita de Sombras real"
+  "name": "Draenita de Sombras real"
  },
  "23110": {
   "quality": 2,
@@ -36843,8 +36836,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Draenita de sombras cambiante",
-  "classicName": "Draenita de Sombras cambiante"
+  "name": "Draenita de Sombras cambiante"
  },
  "23111": {
   "quality": 2,
@@ -36905,8 +36897,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Granate de sangre luminoso",
-  "classicName": "Draenita dorada luminosa"
+  "name": "Draenita dorada luminosa"
  },
  "23114": {
   "quality": 2,
@@ -36927,8 +36918,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Draenita dorada lisa",
-  "classicName": "Draenita dorada reluciente"
+  "name": "Draenita dorada reluciente"
  },
  "23115": {
   "quality": 2,
@@ -36971,8 +36961,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Piedra lunar azur rígida",
-  "classicName": "Draenita dorada rígida"
+  "name": "Draenita dorada rígida"
  },
  "23117": {
   "quality": 2,
@@ -37077,8 +37066,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color azul.\""
   ],
-  "name": "Piedra lunar azur chispeante",
-  "classicName": "Piedra lunar azur luciente"
+  "name": "Piedra lunar azur luciente"
  },
  "23436": {
   "quality": 3,
@@ -37426,8 +37414,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Rubí vivo luminoso",
-  "classicName": "Lágrima de rubí vivo"
+  "name": "Lágrima de rubí vivo"
  },
  "24030": {
   "quality": 3,
@@ -37448,8 +37435,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Rubí vivo luminoso",
-  "classicName": "Rubí vivo rúnico"
+  "name": "Rubí vivo rúnico"
  },
  "24031": {
   "quality": 3,
@@ -37470,8 +37456,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Rubí vivo delicado",
-  "classicName": "Rubí vivo brillante"
+  "name": "Rubí vivo brillante"
  },
  "24032": {
   "quality": 3,
@@ -37492,8 +37477,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Piedra del alba sutil",
-  "classicName": "Rubí vivo sutil"
+  "name": "Rubí vivo sutil"
  },
  "24033": {
   "quality": 3,
@@ -37580,8 +37564,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color azul.\""
   ],
-  "name": "Estrella de Elune chispeante",
-  "classicName": "Estrella de Elune luciente"
+  "name": "Estrella de Elune luciente"
  },
  "24039": {
   "quality": 3,
@@ -37624,8 +37607,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Rubí vivo luminoso",
-  "classicName": "Piedra del alba luminosa"
+  "name": "Piedra del alba luminosa"
  },
  "24048": {
   "quality": 3,
@@ -37668,8 +37650,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Piedra del alba lisa",
-  "classicName": "Piedra del alba reluciente"
+  "name": "Piedra del alba reluciente"
  },
  "24051": {
   "quality": 3,
@@ -37690,8 +37671,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Estrella de Elune rígida",
-  "classicName": "Piedra del alba rígida"
+  "name": "Piedra del alba rígida"
  },
  "24052": {
   "quality": 3,
@@ -37712,8 +37692,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Piedra del alba sutil",
-  "classicName": "Piedra del alba gruesa"
+  "name": "Piedra del alba gruesa"
  },
  "24053": {
   "quality": 3,
@@ -37822,8 +37801,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Ojo de noche purificado",
-  "classicName": "Ojo de noche real"
+  "name": "Ojo de noche real"
  },
  "24058": {
   "quality": 3,
@@ -37888,8 +37866,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o amarillo.\""
   ],
-  "name": "Topacio noble temerario",
-  "classicName": "Topacio noble luminoso"
+  "name": "Topacio noble luminoso"
  },
  "24061": {
   "quality": 3,
@@ -37910,8 +37887,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o amarillo.\""
   ],
-  "name": "Ojo de noche destellante",
-  "classicName": "Topacio noble destellante"
+  "name": "Topacio noble destellante"
  },
  "24062": {
   "quality": 3,
@@ -37932,8 +37908,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo o azul.\""
   ],
-  "name": "Talasita regia",
-  "classicName": "Talasita duradera"
+  "name": "Talasita duradera"
  },
  "24065": {
   "quality": 3,
@@ -37954,8 +37929,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo o azul.\""
   ],
-  "name": "Ojo de noche purificado",
-  "classicName": "Talasita deslumbrante"
+  "name": "Talasita deslumbrante"
  },
  "24066": {
   "quality": 3,
@@ -39697,8 +39671,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Granate de sangre delicado",
-  "classicName": "Granate de sangre brillante"
+  "name": "Granate de sangre brillante"
  },
  "29157": {
   "quality": 3,
@@ -40133,8 +40106,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Piedra lunar azur rígida",
-  "classicName": "Gran draenita dorada"
+  "name": "Gran draenita dorada"
  },
  "31861": {
   "quality": 3,
@@ -40155,8 +40127,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Estrella de Elune rígida",
-  "classicName": "Gran piedra del alba"
+  "name": "Gran piedra del alba"
  },
  "31862": {
   "quality": 2,
@@ -40177,8 +40148,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Draenita de sombras cambiante",
-  "classicName": "Draenita de Sombras equilibrada"
+  "name": "Draenita de Sombras equilibrada"
  },
  "31863": {
   "quality": 3,
@@ -40199,8 +40169,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Ojo de noche cambiante",
-  "classicName": "Ojo de noche equilibrado"
+  "name": "Ojo de noche equilibrado"
  },
  "31864": {
   "quality": 2,
@@ -40221,8 +40190,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Draenita de sombras cambiante",
-  "classicName": "Draenita de Sombras imbuida"
+  "name": "Draenita de Sombras imbuida"
  },
  "31865": {
   "quality": 3,
@@ -40243,8 +40211,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Ojo de noche destellante",
-  "classicName": "Ojo de noche imbuido"
+  "name": "Ojo de noche imbuido"
  },
  "31866": {
   "quality": 2,
@@ -40397,8 +40364,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Espinela carmesí luminosa",
-  "classicName": "Lágrima de espinela carmesí"
+  "name": "Lágrima de espinela carmesí"
  },
  "32196": {
   "quality": 4,
@@ -40419,8 +40385,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Espinela carmesí luminosa",
-  "classicName": "Espinela carmesí rúnica"
+  "name": "Espinela carmesí rúnica"
  },
  "32197": {
   "quality": 4,
@@ -40441,8 +40406,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Espinela carmesí delicada",
-  "classicName": "Espinela carmesí brillante"
+  "name": "Espinela carmesí brillante"
  },
  "32198": {
   "quality": 4,
@@ -40463,8 +40427,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo.\""
   ],
-  "name": "Ojo de león sutil",
-  "classicName": "Espinela carmesí sutil"
+  "name": "Espinela carmesí sutil"
  },
  "32199": {
   "quality": 4,
@@ -40551,8 +40514,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color azul.\""
   ],
-  "name": "Zafiro empíreo chispeante",
-  "classicName": "Zafiro empíreo luciente"
+  "name": "Zafiro empíreo luciente"
  },
  "32203": {
   "quality": 4,
@@ -40595,8 +40557,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Espinela carmesí luminosa",
-  "classicName": "Ojo de león luminoso"
+  "name": "Ojo de león luminoso"
  },
  "32205": {
   "quality": 4,
@@ -40639,8 +40600,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Zafiro empíreo rígido",
-  "classicName": "Ojo de león rígido"
+  "name": "Ojo de león rígido"
  },
  "32207": {
   "quality": 4,
@@ -40661,8 +40621,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Ojo de león liso",
-  "classicName": "Ojo de león reluciente"
+  "name": "Ojo de león reluciente"
  },
  "32208": {
   "quality": 4,
@@ -40683,8 +40642,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Ojo de león sutil",
-  "classicName": "Ojo de león grueso"
+  "name": "Ojo de león grueso"
  },
  "32209": {
   "quality": 4,
@@ -40727,8 +40685,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color amarillo.\""
   ],
-  "name": "Zafiro empíreo rígido",
-  "classicName": "Gran ojo de león"
+  "name": "Gran ojo de león"
  },
  "32211": {
   "quality": 4,
@@ -40793,8 +40750,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Amatista Cantosombrío cambiante",
-  "classicName": "Amatista Cantosombrío equilibrada"
+  "name": "Amatista Cantosombrío equilibrada"
  },
  "32214": {
   "quality": 4,
@@ -40815,8 +40771,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Amatista Cantosombrío destellante",
-  "classicName": "Amatista Cantosombrío imbuida"
+  "name": "Amatista Cantosombrío imbuida"
  },
  "32215": {
   "quality": 4,
@@ -40859,8 +40814,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Amatista Cantosombrío purificada",
-  "classicName": "Amatista Cantosombrío real"
+  "name": "Amatista Cantosombrío real"
  },
  "32217": {
   "quality": 4,
@@ -40925,8 +40879,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo o amarillo.\""
   ],
-  "name": "Piropiedra temeraria",
-  "classicName": "Piropiedra luminosa"
+  "name": "Piropiedra luminosa"
  },
  "32220": {
   "quality": 4,
@@ -40947,8 +40900,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color rojo o amarillo.\""
   ],
-  "name": "Amatista Cantosombrío destellante",
-  "classicName": "Piropiedra destelleante"
+  "name": "Piropiedra destelleante"
  },
  "32221": {
   "quality": 4,
@@ -41057,8 +41009,7 @@
    "Fase 3",
    "\"Encaja en una ranura de color azul o amarillo.\""
   ],
-  "name": "Amatista Cantosombrío purificada",
-  "classicName": "Esmeralda de espuma marina deslumbrante"
+  "name": "Esmeralda de espuma marina deslumbrante"
  },
  "32226": {
   "quality": 4,
@@ -42414,8 +42365,7 @@
    "Fase 1",
    "\"Encaja en una ranura de color rojo o azul.\""
   ],
-  "name": "Talasita regia",
-  "classicName": "Ojo de noche majestuoso"
+  "name": "Ojo de noche majestuoso"
  },
  "35758": {
   "quality": 4,
@@ -42730,8 +42680,7 @@
   "other": [
    "\"Se puede marcar como el objetivo de varios encantamientos de armadura para almacenar el encantamiento y usarlo más tarde. Solo puede absorber encantamientos con restricciones de nivel 35 o inferior.\""
   ],
-  "name": "Vitela estropeada",
-  "classicName": "Vitela de armadura II"
+  "name": "Vitela de armadura II"
  },
  "38322": {
   "quality": 4,
@@ -42946,8 +42895,7 @@
   "other": [
    "\"Se puede marcar como el objetivo de varios encantamientos de armas para almacenar el encantamiento y usarlo más tarde. Solo puede absorber encantamientos sin restricciones de nivel.\""
   ],
-  "name": "Vitela estropeada",
-  "classicName": "Vitela de arma"
+  "name": "Vitela de arma"
  },
  "39350": {
   "quality": 1,
@@ -42965,8 +42913,7 @@
   "other": [
    "\"Se puede marcar como el objetivo de varios encantamientos de armas para almacenar el encantamiento y usarlo más tarde. Solo puede absorber encantamientos con restricciones de nivel 35 o inferior.\""
   ],
-  "name": "Vitela estropeada",
-  "classicName": "Vitela de arma II"
+  "name": "Vitela de arma II"
  },
  "39354": {
   "quality": 1,
@@ -43063,8 +43010,7 @@
    "Clases: Druida",
    "Mientras Regeneración frenética esté activa, los efectos de sanación sobre ti serán un 20% más potentes."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Regeneración frenética"
+  "name": "Glifo de Regeneración frenética"
  },
  "40897": {
   "quality": 1,
@@ -43091,8 +43037,7 @@
    "Clases: Druida",
    "Tu facultad Magullar ahora golpea a 1 objetivos adicionales."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Magullar"
+  "name": "Glifo de Magullar"
  },
  "40899": {
   "quality": 1,
@@ -43119,8 +43064,7 @@
    "Clases: Druida",
    "Aumenta un 8% la probabilidad de que tu facultad Bramido tenga éxito."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Bramido"
+  "name": "Glifo de Bramido"
  },
  "40900": {
   "quality": 1,
@@ -43147,8 +43091,7 @@
    "Clases: Druida",
    "Aumenta el daño infligido por Destrozar un 10%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Destrozar"
+  "name": "Glifo de Destrozar"
  },
  "40901": {
   "quality": 1,
@@ -43175,8 +43118,7 @@
    "Clases: Druida",
    "Cada vez que lanzas Triturar, la duración de Destripar en el objetivo se extiende 2 s, hasta un máximo de 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Triturar"
+  "name": "Glifo de Triturar"
  },
  "40902": {
   "quality": 1,
@@ -43203,8 +43145,7 @@
    "Clases: Druida",
    "Aumenta la duración de tu facultad Destripar 4 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Destripar"
+  "name": "Glifo de Destripar"
  },
  "40903": {
   "quality": 1,
@@ -43231,8 +43172,7 @@
    "Clases: Druida",
    "Tu facultad Arañazo evita que los objetivos huyan."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Arañazo"
+  "name": "Glifo de Arañazo"
  },
  "40906": {
   "quality": 1,
@@ -43259,8 +43199,7 @@
    "Clases: Druida",
    "Tu facultad Alivio presto ya no consume un efecto de Rejuvenecimiento ni de Recrecimiento del objetivo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Alivio presto"
+  "name": "Glifo de Alivio presto"
  },
  "40908": {
   "quality": 1,
@@ -43287,8 +43226,7 @@
    "Clases: Druida",
    "Estimular ahora otorga al taumaturgo un 45% de su reserva de maná de base durante 10 sec además de los efectos normales de Estimular."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Estimular"
+  "name": "Glifo de Estimular"
  },
  "40909": {
   "quality": 1,
@@ -43315,8 +43253,7 @@
    "Clases: Druida",
    "Los jugadores resucitados con Renacer vuelven a la vida con un 100% de salud."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Renacer"
+  "name": "Glifo de Renacer"
  },
  "40912": {
   "quality": 1,
@@ -43343,8 +43280,7 @@
    "Clases: Druida",
    "Aumenta la sanación de tu hechizo Recrecimiento un 20% si tu efecto Recrecimiento sigue activo sobre el objetivo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Recrecimiento"
+  "name": "Glifo de Recrecimiento"
  },
  "40913": {
   "quality": 1,
@@ -43371,8 +43307,7 @@
    "Clases: Druida",
    "Mientras tus objetivos de Rejuvenecimiento se encuentren por debajo del 50% de salud, les sanarás un 50% adicional de salud."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Rejuvenecimiento"
+  "name": "Glifo de Rejuvenecimiento"
  },
  "40914": {
   "quality": 1,
@@ -43399,8 +43334,7 @@
    "Clases: Druida",
    "Reduce el tiempo de lanzamiento de Toque de sanación 1.5 s, el coste de maná un 25% y la cantidad sanada un 50%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Toque de sanación"
+  "name": "Glifo de Toque de sanación"
  },
  "40915": {
   "quality": 1,
@@ -43427,8 +43361,7 @@
    "Clases: Druida",
    "Aumenta la duración de Flor de vida 1 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Flor de vida"
+  "name": "Glifo de Flor de vida"
  },
  "40916": {
   "quality": 1,
@@ -43455,8 +43388,7 @@
    "Clases: Druida",
    "Tu facultad Fuego estelar aumenta la duración de tu efecto Fuego lunar sobre el objetivo 3 s, hasta un máximo de 9 s extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Fuego estelar"
+  "name": "Glifo de Fuego estelar"
  },
  "40919": {
   "quality": 1,
@@ -43511,8 +43443,7 @@
    "Clases: Druida",
    "Tu facultad Huracán ahora también ralentiza la velocidad de movimiento de sus víctimas un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Huracán"
+  "name": "Glifo de Huracán"
  },
  "40921": {
   "quality": 1,
@@ -43539,8 +43470,7 @@
    "Clases: Druida",
    "Reduce el tiempo de reutilización de Lluvia de estrellas 30 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Lluvia de estrellas"
+  "name": "Glifo de Lluvia de estrellas"
  },
  "40922": {
   "quality": 1,
@@ -43567,8 +43497,7 @@
    "Clases: Druida",
    "Reduce el retroceso sufrido por los ataques dañinos mientras lanzas tu hechizo Cólera un 50%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cólera"
+  "name": "Glifo de Cólera"
  },
  "40923": {
   "quality": 1,
@@ -43595,8 +43524,7 @@
    "Clases: Druida",
    "Aumenta un 75% el daño periódico de tu facultad Fuego lunar, pero el daño inicial se reduce un 90%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Fuego lunar"
+  "name": "Glifo de Fuego lunar"
  },
  "40924": {
   "quality": 1,
@@ -43623,8 +43551,7 @@
    "Clases: Druida",
    "Aumenta un 20% el daño infligido a tus víctimas con tus Raíces enredadoras antes de que las raíces enredadoras se destruyan."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Raíces enredadoras"
+  "name": "Glifo de Raíces enredadoras"
  },
  "41092": {
   "quality": 1,
@@ -43651,8 +43578,7 @@
    "Clases: Paladín",
    "Tus Sentencias infligen un 10% más de daño."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sentencia"
+  "name": "Glifo de Sentencia"
  },
  "41094": {
   "quality": 1,
@@ -43679,8 +43605,7 @@
    "Clases: Paladín",
    "Ganas un 8% de tu maná base cada vez que usas una Sentencia con un Sello de orden activo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sello de orden"
+  "name": "Glifo de Sello de orden"
  },
  "41095": {
   "quality": 1,
@@ -43707,8 +43632,7 @@
    "Clases: Paladín",
    "Aumenta el alcance de tu Martillo de justicia 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Martillo de justicia"
+  "name": "Glifo de Martillo de justicia"
  },
  "41096": {
   "quality": 1,
@@ -43735,8 +43659,7 @@
    "Clases: Paladín",
    "Aumenta la cantidad de maná ganada con tu hechizo Armonización espiritual un 2% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Armonización espiritual"
+  "name": "Glifo de Armonización espiritual"
  },
  "41097": {
   "quality": 1,
@@ -43763,8 +43686,7 @@
    "Clases: Paladín",
    "Reduce el coste de maná de Martillo de cólera un 100%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Martillo de cólera"
+  "name": "Glifo de Martillo de cólera"
  },
  "41098": {
   "quality": 1,
@@ -43791,8 +43713,7 @@
    "Clases: Paladín",
    "Reduce el coste de maná de tu facultad Golpe de cruzado un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe de cruzado"
+  "name": "Glifo de Golpe de cruzado"
  },
  "41099": {
   "quality": 1,
@@ -43819,8 +43740,7 @@
    "Clases: Paladín",
    "Aumenta la duración y el tiempo de reutilización de Consagración 2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Consagración"
+  "name": "Glifo de Consagración"
  },
  "41100": {
   "quality": 1,
@@ -43875,8 +43795,7 @@
    "Clases: Paladín",
    "Tu Escudo de vengador golpea a 2 objetivos menos, pero inflige un 100% más de daño."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Escudo de vengador"
+  "name": "Glifo de Escudo de vengador"
  },
  "41102": {
   "quality": 1,
@@ -43903,8 +43822,7 @@
    "Clases: Paladín",
    "Reduce el tiempo de lanzamiento del hechizo Ahuyentar el mal un 100%, pero aumenta el tiempo de reutilización 8 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ahuyentar el mal"
+  "name": "Glifo de Ahuyentar el mal"
  },
  "41103": {
   "quality": 1,
@@ -43931,8 +43849,7 @@
    "Clases: Paladín",
    "Aumenta el daño infligido por Exorcismo un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Exorcismo"
+  "name": "Glifo de Exorcismo"
  },
  "41104": {
   "quality": 1,
@@ -43959,8 +43876,7 @@
    "Clases: Paladín",
    "Reduce el coste de maná de tus hechizos Limpiar y Purificar un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Limpiar"
+  "name": "Glifo de Limpiar"
  },
  "41105": {
   "quality": 1,
@@ -43987,8 +43903,7 @@
    "Clases: Paladín",
    "Tu Destello de Luz tiene un 5% extra de probabilidad de golpe crítico."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Destello de Luz"
+  "name": "Glifo de Destello de Luz"
  },
  "41106": {
   "quality": 1,
@@ -44011,8 +43926,7 @@
   "other": [
    "Clases: Paladín"
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Luz Sagrada"
+  "name": "Glifo de Luz Sagrada"
  },
  "41107": {
   "quality": 1,
@@ -44039,8 +43953,7 @@
    "Clases: Paladín",
    "Reduce el tiempo de reutilización de tu Martillo de cólera un 50% mientras Cólera vengativa está activa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cólera vengativa"
+  "name": "Glifo de Cólera vengativa"
  },
  "41108": {
   "quality": 1,
@@ -44067,8 +43980,7 @@
    "Clases: Paladín",
    "Tu Imposición de manos otorga el doble de maná normal y te proporciona tanto maná como a tu objetivo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de divinidad"
+  "name": "Glifo de divinidad"
  },
  "41109": {
   "quality": 1,
@@ -44095,8 +44007,7 @@
    "Clases: Paladín",
    "Cuando Sello de sabiduría está activo, el coste de tus hechizos de sanación se reduce un 5%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sello de sabiduría"
+  "name": "Glifo de Sello de sabiduría"
  },
  "41110": {
   "quality": 1,
@@ -44123,8 +44034,7 @@
    "Clases: Paladín",
    "Cuando Sello de Luz está activo, el efecto de tus hechizos de sanación aumenta un 5%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sello de Luz"
+  "name": "Glifo de Sello de Luz"
  },
  "41517": {
   "quality": 1,
@@ -44151,8 +44061,7 @@
    "Clases: Chamán",
    "Tu Sanación en cadena sana a 1 objetivo adicional."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sanación en cadena"
+  "name": "Glifo de Sanación en cadena"
  },
  "41518": {
   "quality": 1,
@@ -44179,8 +44088,7 @@
    "Clases: Chamán",
    "Tu Cadena de relámpagos golpea a 1 objetivo adicional."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cadena de relámpagos"
+  "name": "Glifo de Cadena de relámpagos"
  },
  "41524": {
   "quality": 1,
@@ -44207,8 +44115,7 @@
    "Clases: Chamán",
    "Tu hechizo Ráfaga de lava gana un 10% de tu poder con hechizos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Lava"
+  "name": "Glifo de Lava"
  },
  "41526": {
   "quality": 1,
@@ -44235,8 +44142,7 @@
    "Clases: Chamán",
    "El tiempo de reutilización global al lanzar tus hechizos de Choque se reduce en 0.5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Choque"
+  "name": "Glifo de Choque"
  },
  "41527": {
   "quality": 1,
@@ -44263,8 +44169,7 @@
    "Clases: Chamán",
    "Aumenta la probabilidad de que se active tu Arma de Vida terrestre un 5%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Arma de Vida terrestre"
+  "name": "Glifo de Arma de Vida terrestre"
  },
  "41529": {
   "quality": 1,
@@ -44291,8 +44196,7 @@
    "Clases: Chamán",
    "Reduce el tiempo de reutilización de tu Tótem Elemental de Fuego 5 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tótem Elemental de Fuego"
+  "name": "Glifo de Tótem Elemental de Fuego"
  },
  "41530": {
   "quality": 1,
@@ -44319,8 +44223,7 @@
    "Clases: Chamán",
    "Reduce el tiempo de reutilización de tu hechizo Nova de Fuego 3 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Nova de Fuego"
+  "name": "Glifo de Nova de Fuego"
  },
  "41531": {
   "quality": 1,
@@ -44347,8 +44250,7 @@
    "Clases: Chamán",
    "Aumenta un 60% el bonus de daño por golpe crítico de tu Choque de llamas."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Choque de llamas"
+  "name": "Glifo de Choque de llamas"
  },
  "41532": {
   "quality": 1,
@@ -44375,8 +44277,7 @@
    "Clases: Chamán",
    "Tu probabilidad de golpe crítico con hechizos aumenta un 2% en cada una de tus armas con Arma Lengua de Fuego activa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Arma Lengua de Fuego"
+  "name": "Glifo de Arma Lengua de Fuego"
  },
  "41533": {
   "quality": 1,
@@ -44403,8 +44304,7 @@
    "Clases: Chamán",
    "Tu Tótem Corriente de sanación sana un 20% adicional."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tótem Corriente de sanación"
+  "name": "Glifo de Tótem Corriente de sanación"
  },
  "41534": {
   "quality": 1,
@@ -44431,8 +44331,7 @@
    "Clases: Chamán",
    "Tu hechizo Ola de sanación también te sana un 20% del efecto de sanación cuando sanes a alguien."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ola de sanación"
+  "name": "Glifo de Ola de sanación"
  },
  "41535": {
   "quality": 1,
@@ -44459,8 +44358,7 @@
    "Clases: Chamán",
    "Tu hechizo Ola de sanación inferior sana un 20% más si el objetivo también se encuentra bajo los efectos de Escudo de tierra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ola de sanación inferior"
+  "name": "Glifo de Ola de sanación inferior"
  },
  "41536": {
   "quality": 1,
@@ -44487,8 +44385,7 @@
    "Clases: Chamán",
    "Aumenta el daño infligido por tu Descarga de relámpagos un 4%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Descarga de relámpagos"
+  "name": "Glifo de Descarga de relámpagos"
  },
  "41537": {
   "quality": 1,
@@ -44515,8 +44412,7 @@
    "Clases: Chamán",
    "Aumenta el daño de Escudo de relámpagos un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Escudo de relámpagos"
+  "name": "Glifo de Escudo de relámpagos"
  },
  "41538": {
   "quality": 1,
@@ -44543,8 +44439,7 @@
    "Clases: Chamán",
    "Tu Tótem Marea de maná otorga un 1% extra del maná máximo de cada objetivo cada vez que late."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tótem Marea de maná"
+  "name": "Glifo de Tótem Marea de maná"
  },
  "41539": {
   "quality": 1,
@@ -44571,8 +44466,7 @@
    "Clases: Chamán",
    "Aumenta el bonus de daño de Naturaleza de tu facultad Golpe de tormenta un 8% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe de tormenta"
+  "name": "Glifo de Golpe de tormenta"
  },
  "41540": {
   "quality": 1,
@@ -44599,8 +44493,7 @@
    "Clases: Chamán",
    "El daño de tu Latigazo de lava aumenta un 10% extra si tu arma está encantada con Lengua de Fuego."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Latigazo de lava"
+  "name": "Glifo de Latigazo de lava"
  },
  "41541": {
   "quality": 1,
@@ -44627,8 +44520,7 @@
    "Clases: Chamán",
    "Aumenta la regeneración de maná pasiva de tu Escudo de agua un 30%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Maestría en Agua"
+  "name": "Glifo de Maestría en Agua"
  },
  "41542": {
   "quality": 1,
@@ -44655,8 +44547,7 @@
    "Clases: Chamán",
    "Aumenta la probabilidad de que tu Arma Viento Furioso se active con cada golpe un 2%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Arma Viento Furioso"
+  "name": "Glifo de Arma Viento Furioso"
  },
  "41547": {
   "quality": 1,
@@ -44683,8 +44574,7 @@
    "Clases: Chamán",
    "Aumenta la duración de tu hechizo Choque de Escarcha 2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Choque de Escarcha"
+  "name": "Glifo de Choque de Escarcha"
  },
  "41552": {
   "quality": 1,
@@ -44711,8 +44601,7 @@
    "Clases: Chamán",
    "Reduce el tiempo de reutilización de tu facultad Maestría elemental 30 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Maestría elemental"
+  "name": "Glifo de Maestría elemental"
  },
  "42396": {
   "quality": 1,
@@ -44739,8 +44628,7 @@
    "Clases: Sacerdote",
    "Tu hechizo Círculo de sanación sana a un objetivo adicional."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Círculo de sanación"
+  "name": "Glifo de Círculo de sanación"
  },
  "42397": {
   "quality": 1,
@@ -44767,8 +44655,7 @@
    "Clases: Sacerdote",
    "Tu hechizo Disipar magia también sana a tu objetivo un 3% de su salud máxima."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disipar magia"
+  "name": "Glifo de Disipar magia"
  },
  "42398": {
   "quality": 1,
@@ -44795,8 +44682,7 @@
    "Clases: Sacerdote",
    "Reduce el tiempo de reutilización de tu hechizo Desvanecerse 9 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Desvanecerse"
+  "name": "Glifo de Desvanecerse"
  },
  "42399": {
   "quality": 1,
@@ -44823,8 +44709,7 @@
    "Clases: Sacerdote",
    "Reduce el tiempo de reutilización y la duración de Resguardo de miedo 60 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Resguardo de miedo"
+  "name": "Glifo de Resguardo de miedo"
  },
  "42400": {
   "quality": 1,
@@ -44851,8 +44736,7 @@
    "Clases: Sacerdote",
    "Reduce el coste de maná de tu Sanación relámpago un 10%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sanación relámpago"
+  "name": "Glifo de Sanación relámpago"
  },
  "42401": {
   "quality": 1,
@@ -44879,8 +44763,7 @@
    "Clases: Sacerdote",
    "Aumenta el daño y la sanación de tu hechizo Nova Sagrada un 20% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Nova Sagrada"
+  "name": "Glifo de Nova Sagrada"
  },
  "42402": {
   "quality": 1,
@@ -44907,8 +44790,7 @@
    "Clases: Sacerdote",
    "Aumenta la armadura del hechizo Fuego interno un 50%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Fuego interno"
+  "name": "Glifo de Fuego interno"
  },
  "42403": {
   "quality": 1,
@@ -44935,8 +44817,7 @@
    "Clases: Sacerdote",
    "Aumenta un 20% la cantidad sanada por tu Pozo de Luz."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Pozo de Luz"
+  "name": "Glifo de Pozo de Luz"
  },
  "42404": {
   "quality": 1,
@@ -44963,8 +44844,7 @@
    "Clases: Sacerdote",
    "Reduce un 35% el coste de maná de Disipación en masa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disipación en masa"
+  "name": "Glifo de Disipación en masa"
  },
  "42405": {
   "quality": 1,
@@ -44991,8 +44871,7 @@
    "Clases: Sacerdote",
    "Reduce la probabilidad de tus objetivos de resistir o romper tu hechizo Control mental un 17% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Control mental"
+  "name": "Glifo de Control mental"
  },
  "42406": {
   "quality": 1,
@@ -45019,8 +44898,7 @@
    "Clases: Sacerdote",
    "Los pulsos periódicos de tu hechizo Palabra de las Sombras: dolor restauran un 1% de tu maná base."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Palabra de las Sombras: dolor"
+  "name": "Glifo de Palabra de las Sombras: dolor"
  },
  "42407": {
   "quality": 1,
@@ -45047,8 +44925,7 @@
    "Clases: Sacerdote",
    "Mientras estás bajo Forma de las Sombras, tus golpes críticos con hechizos no periódicos aumentan tu poder con hechizos un 30% de tu espíritu durante 10 sec."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de sombra"
+  "name": "Glifo de sombra"
  },
  "42408": {
   "quality": 1,
@@ -45075,8 +44952,7 @@
    "Clases: Sacerdote",
    "Tu Palabra de poder: escudo también sana al objetivo un 20% de la cantidad absorbida."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Palabra de poder: escudo"
+  "name": "Glifo de Palabra de poder: escudo"
  },
  "42409": {
   "quality": 1,
@@ -45103,8 +44979,7 @@
    "Clases: Sacerdote",
    "Tu hechizo Rezo de sanación también sana un 20% adicional de su sanación inicial durante 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Rezo de sanación"
+  "name": "Glifo de Rezo de sanación"
  },
  "42410": {
   "quality": 1,
@@ -45131,8 +45006,7 @@
    "Clases: Sacerdote",
    "Aumenta la duración de tu hechizo Alarido psíquico 2 s y aumenta su tiempo de reutilización 8 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Alarido psíquico"
+  "name": "Glifo de Alarido psíquico"
  },
  "42411": {
   "quality": 1,
@@ -45159,8 +45033,7 @@
    "Clases: Sacerdote",
    "Reduce la duración de tu hechizo Renovar 3 s, pero aumenta la cantidad sanada con cada pulso un 25%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Renovar"
+  "name": "Glifo de Renovar"
  },
  "42412": {
   "quality": 1,
@@ -45187,8 +45060,7 @@
    "Clases: Sacerdote",
    "Reduce el tiempo de lanzamiento de tu Encadenar no-muerto 1.0 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Encarcelamiento de la Plaga"
+  "name": "Glifo de Encarcelamiento de la Plaga"
  },
  "42414": {
   "quality": 1,
@@ -45215,8 +45087,7 @@
    "Clases: Sacerdote",
    "Los objetivos con menos del 35% de salud reciben un 10% de daño extra de tu hechizo Palabra de las Sombras: muerte."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Palabra de las Sombras: muerte"
+  "name": "Glifo de Palabra de las Sombras: muerte"
  },
  "42415": {
   "quality": 1,
@@ -45243,8 +45114,7 @@
    "Clases: Sacerdote",
    "Aumenta el daño infligido por tu hechizo Tortura mental un 10% cuando tu objetivo está afectado por Palabra de las Sombras: dolor."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tortura mental"
+  "name": "Glifo de Tortura mental"
  },
  "42416": {
   "quality": 1,
@@ -45271,8 +45141,7 @@
    "Clases: Sacerdote",
    "Tu hechizo Punición inflige un 20% de daño extra contra los objetivos afectados por Fuego Sagrado."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Punición"
+  "name": "Glifo de Punición"
  },
  "42417": {
   "quality": 1,
@@ -45299,8 +45168,7 @@
    "Clases: Sacerdote",
    "Aumenta la duración de Espíritu redentor 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Espíritu redentor"
+  "name": "Glifo de Espíritu redentor"
  },
  "42453": {
   "quality": 1,
@@ -45327,8 +45195,7 @@
    "Clases: Brujo",
    "Aumenta el daño infligido por Incinerar un 5%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Incinerar"
+  "name": "Glifo de Incinerar"
  },
  "42454": {
   "quality": 1,
@@ -45355,8 +45222,7 @@
    "Clases: Brujo",
    "Tu hechizo Conflagrar ya no consume tu hechizo Inmolar o Llama de las Sombras del objetivo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Conflagrar"
+  "name": "Glifo de Conflagrar"
  },
  "42455": {
   "quality": 1,
@@ -45383,8 +45249,7 @@
    "Clases: Brujo",
    "Tu hechizo Corrupción tiene un 4% de posibilidad de hacer que entres en un estado de Trance de las Sombras después de causar daño al oponente. El estado Trance de las Sombras reduce el tiempo de lanzamiento de tu siguiente Descarga de las Sombras un 100%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Corrupción"
+  "name": "Glifo de Corrupción"
  },
  "42456": {
   "quality": 1,
@@ -45411,8 +45276,7 @@
    "Clases: Brujo",
    "Aumenta la duración de tu Maldición de agonía 4 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Maldición de agonía"
+  "name": "Glifo de Maldición de agonía"
  },
  "42457": {
   "quality": 1,
@@ -45439,8 +45303,7 @@
    "Clases: Brujo",
    "Aumenta la duración de tu Espiral de la muerte 0.5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Espiral de la muerte"
+  "name": "Glifo de Espiral de la muerte"
  },
  "42458": {
   "quality": 1,
@@ -45467,8 +45330,7 @@
    "Clases: Brujo",
    "Aumenta un 20% el daño que el objetivo de tu hechizo Miedo puede recibir antes de que el efecto de miedo se disipe."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Miedo"
+  "name": "Glifo de Miedo"
  },
  "42459": {
   "quality": 1,
@@ -45523,8 +45385,7 @@
    "Clases: Brujo",
    "Cuando tu manáfago usa Devorar magia, recibirás una sanación de la misma suma."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de manáfago"
+  "name": "Glifo de manáfago"
  },
  "42461": {
   "quality": 1,
@@ -45551,8 +45412,7 @@
    "Clases: Brujo",
    "Reduce un 100% el retroceso sufrido por los ataques dañinos al canalizar tu hechizo Cauce de salud."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cauce de salud"
+  "name": "Glifo de Cauce de salud"
  },
  "42462": {
   "quality": 1,
@@ -45579,8 +45439,7 @@
    "Clases: Brujo",
    "Recibes un 30% más de sanación al usar una piedra de salud."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de piedra de salud"
+  "name": "Glifo de piedra de salud"
  },
  "42463": {
   "quality": 1,
@@ -45607,8 +45466,7 @@
    "Clases: Brujo",
    "Reduce el tiempo de reutilización de tu hechizo Aullido de terror 8 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Aullido de terror"
+  "name": "Glifo de Aullido de terror"
  },
  "42464": {
   "quality": 1,
@@ -45635,8 +45493,7 @@
    "Clases: Brujo",
    "Aumenta el daño periódico de tu hechizo Inmolar un 10%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Inmolar"
+  "name": "Glifo de Inmolar"
  },
  "42465": {
   "quality": 1,
@@ -45663,8 +45520,7 @@
    "Clases: Brujo",
    "Aumenta el daño con hechizos infligido por la Descarga de Fuego de tu diablillo un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de diablillo"
+  "name": "Glifo de diablillo"
  },
  "42466": {
   "quality": 1,
@@ -45691,8 +45547,7 @@
    "Clases: Brujo",
    "Aumenta el bonus de golpe crítico de tu Dolor abrasador un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Dolor abrasador"
+  "name": "Glifo de Dolor abrasador"
  },
  "42467": {
   "quality": 1,
@@ -45719,8 +45574,7 @@
    "Clases: Brujo",
    "Reduce el coste de maná de tu Descarga de las Sombras un 10%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Descarga de las Sombras"
+  "name": "Glifo de Descarga de las Sombras"
  },
  "42468": {
   "quality": 1,
@@ -45747,8 +45601,7 @@
    "Clases: Brujo",
    "Aumenta la probabilidad de golpe crítico de Quemadura de las Sombras un 20% cuando la salud del objetivo se encuentre por debajo del 35%."
   ],
-  "name": "Glifo desvaído",
-  "classicName": "Glifo de Quemadura de las Sombras"
+  "name": "Glifo de Quemadura de las Sombras"
  },
  "42469": {
   "quality": 1,
@@ -45775,8 +45628,7 @@
    "Clases: Brujo",
    "Aumenta un 25% la sanación que recibes de tu hechizo Succionar vida."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Succionar vida"
+  "name": "Glifo de Succionar vida"
  },
  "42470": {
   "quality": 1,
@@ -45803,8 +45655,7 @@
    "Clases: Brujo",
    "Aumenta un 300% la cantidad de salud que ganas al resucitar con una piedra de alma."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de piedra de alma"
+  "name": "Glifo de piedra de alma"
  },
  "42471": {
   "quality": 1,
@@ -45831,8 +45682,7 @@
    "Clases: Brujo",
    "La facultad Seducción de tu súcubo también elimina los efectos de daño en el tiempo del objetivo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de súcubo"
+  "name": "Glifo de súcubo"
  },
  "42472": {
   "quality": 1,
@@ -45859,8 +45709,7 @@
    "Clases: Brujo",
    "Reduce el tiempo de lanzamiento de tu hechizo Aflicción inestable 0.2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Aflicción inestable"
+  "name": "Glifo de Aflicción inestable"
  },
  "42473": {
   "quality": 1,
@@ -45887,8 +45736,7 @@
    "Clases: Brujo",
    "Aumenta el aguante total de tu abisario un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de abisario"
+  "name": "Glifo de abisario"
  },
  "42734": {
   "quality": 1,
@@ -45915,8 +45763,7 @@
    "Clases: Mago",
    "Reduce el coste de maná de Deflagración Arcana un 10%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Deflagración Arcana"
+  "name": "Glifo de Deflagración Arcana"
  },
  "42735": {
   "quality": 1,
@@ -45943,8 +45790,7 @@
    "Clases: Mago",
    "Aumenta el bonus de daño por golpe crítico del hechizo Misiles Arcanos un 25%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Misiles Arcanos"
+  "name": "Glifo de Misiles Arcanos"
  },
  "42736": {
   "quality": 1,
@@ -45971,8 +45817,7 @@
    "Clases: Mago",
    "Aumenta la duración de Poder Arcano 3 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Poder Arcano"
+  "name": "Glifo de Poder Arcano"
  },
  "42737": {
   "quality": 1,
@@ -45999,8 +45844,7 @@
    "Clases: Mago",
    "Aumenta la distancia que te desplazas con el hechizo Traslación 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Traslación"
+  "name": "Glifo de Traslación"
  },
  "42738": {
   "quality": 1,
@@ -46027,8 +45871,7 @@
    "Clases: Mago",
    "Tu facultad Evocación también hace que recuperes un 60% de tu salud mientras esté activa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Evocación"
+  "name": "Glifo de Evocación"
  },
  "42739": {
   "quality": 1,
@@ -46055,8 +45898,7 @@
    "Clases: Mago",
    "Reduce 0.15 s el tiempo de lanzamiento de tu hechizo Bola de Fuego, pero elimina el efecto de daño en el tiempo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Bola de Fuego"
+  "name": "Glifo de Bola de Fuego"
  },
  "42740": {
   "quality": 1,
@@ -46083,8 +45925,7 @@
    "Clases: Mago",
    "Aumenta la probabilidad de golpe crítico de Explosión de Fuego un 50% cuando el objetivo está aturdido o incapacitado."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Explosión de Fuego"
+  "name": "Glifo de Explosión de Fuego"
  },
  "42741": {
   "quality": 1,
@@ -46111,8 +45952,7 @@
    "Clases: Mago",
    "Los objetivos de tu hechizo Nova de Escarcha pueden recibir un 20% de daño adicional antes de que el efecto de Nova de Escarcha se disipe automáticamente."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Nova de Escarcha"
+  "name": "Glifo de Nova de Escarcha"
  },
  "42742": {
   "quality": 1,
@@ -46135,8 +45975,7 @@
   "other": [
    "Clases: Mago"
   ],
-  "name": "Glifo desvaído",
-  "classicName": "Glifo de Descarga de Escarcha"
+  "name": "Glifo de Descarga de Escarcha"
  },
  "42743": {
   "quality": 1,
@@ -46163,8 +46002,7 @@
    "Clases: Mago",
    "Tus hechizos Armadura de hielo y Armadura de Escarcha otorgan un 50% adicional de armadura y resistencia."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Armadura de hielo"
+  "name": "Glifo de Armadura de hielo"
  },
  "42744": {
   "quality": 1,
@@ -46191,8 +46029,7 @@
    "Clases: Mago",
    "El tiempo de reutilización de tu Nova de Escarcha se actualiza cada vez que usas Bloque de hielo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Bloque de hielo"
+  "name": "Glifo de Bloque de hielo"
  },
  "42745": {
   "quality": 1,
@@ -46219,8 +46056,7 @@
    "Clases: Mago",
    "Tu Lanza de hielo ahora inflige 4 veces daño contra objetivos congelados de nivel superior al tuyo en vez del triple de daño."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Lanza de hielo"
+  "name": "Glifo de Lanza de hielo"
  },
  "42746": {
   "quality": 1,
@@ -46247,8 +46083,7 @@
    "Clases: Mago",
    "Tu facultad Venas heladas también elimina todos los efectos de ralentización del movimiento y los efectos de ralentización al lanzar hechizos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Venas heladas"
+  "name": "Glifo de Venas heladas"
  },
  "42747": {
   "quality": 1,
@@ -46275,8 +46110,7 @@
    "Clases: Mago",
    "Aumenta el daño de tu hechizo Agostar un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Agostar"
+  "name": "Glifo de Agostar"
  },
  "42748": {
   "quality": 1,
@@ -46303,8 +46137,7 @@
    "Clases: Mago",
    "Aumenta la duración del efecto de Invisibilidad 10 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Invisibilidad"
+  "name": "Glifo de Invisibilidad"
  },
  "42749": {
   "quality": 1,
@@ -46331,8 +46164,7 @@
    "Clases: Mago",
    "Tu hechizo Armadura de mago otorga un 20% adicional de regeneración de maná mientras lanzas hechizos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Armadura de mago"
+  "name": "Glifo de Armadura de mago"
  },
  "42750": {
   "quality": 1,
@@ -46359,8 +46191,7 @@
    "Clases: Mago",
    "Aumenta el maná recibido por usar una gema de maná un 40%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de gema de maná"
+  "name": "Glifo de gema de maná"
  },
  "42751": {
   "quality": 1,
@@ -46415,8 +46246,7 @@
    "Clases: Mago",
    "Tu hechizo Polimorfia también elimina todos los efectos de daño en el tiempo del objetivo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Polimorfia"
+  "name": "Glifo de Polimorfia"
  },
  "42753": {
   "quality": 1,
@@ -46443,8 +46273,7 @@
    "Clases: Mago",
    "Tu hechizo Eliminar maldición también hace que el objetivo se vuelva inmune a todas las maldiciones durante 4 sec."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Eliminar maldición"
+  "name": "Glifo de Eliminar maldición"
  },
  "42754": {
   "quality": 1,
@@ -46471,8 +46300,7 @@
    "Clases: Mago",
    "Reduce el tiempo de reutilización de tu hechizo Invocar a elemental de agua 30 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Elemental de agua"
+  "name": "Glifo de Elemental de agua"
  },
  "42897": {
   "quality": 1,
@@ -46499,8 +46327,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de tu facultad Disparo de puntería 2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disparo de puntería"
+  "name": "Glifo de Disparo de puntería"
  },
  "42898": {
   "quality": 1,
@@ -46527,8 +46354,7 @@
    "Clases: Cazador",
    "Tu Disparo Arcano devuelve el 20% de su coste de maná si el objetivo tiene una de tus Picaduras activas sobre él."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disparo Arcano"
+  "name": "Glifo de Disparo Arcano"
  },
  "42899": {
   "quality": 1,
@@ -46555,8 +46381,7 @@
    "Clases: Cazador",
    "Aumenta el bonus de poder de ataque de Aspecto de la bestia a ti y a tu bestia un 2% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de la bestia"
+  "name": "Glifo de la bestia"
  },
  "42900": {
   "quality": 1,
@@ -46583,8 +46408,7 @@
    "Clases: Cazador",
    "Aumenta la sanación realizada por la facultad Aliviar mascota un 40%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Aliviar"
+  "name": "Glifo de Aliviar"
  },
  "42901": {
   "quality": 1,
@@ -46611,8 +46435,7 @@
    "Clases: Cazador",
    "Aumenta la cantidad de maná que ganas de los ataques mientras Aspecto de la víbora está activo un 10%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Aspecto de la víbora"
+  "name": "Glifo de Aspecto de la víbora"
  },
  "42902": {
   "quality": 1,
@@ -46639,8 +46462,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de Cólera de las bestias 20 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cólera de las bestias"
+  "name": "Glifo de Cólera de las bestias"
  },
  "42903": {
   "quality": 1,
@@ -46667,8 +46489,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de Disuasión 10 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disuasión"
+  "name": "Glifo de Disuasión"
  },
  "42904": {
   "quality": 1,
@@ -46695,8 +46516,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de Separación 5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Separación"
+  "name": "Glifo de Separación"
  },
  "42905": {
   "quality": 1,
@@ -46723,8 +46543,7 @@
    "Clases: Cazador",
    "Cuando tu Trampa congelante se rompe, la velocidad de movimiento de la víctima se reduce un 30% durante 4 sec."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Trampa congelante"
+  "name": "Glifo de Trampa congelante"
  },
  "42906": {
   "quality": 1,
@@ -46751,8 +46570,7 @@
    "Clases: Cazador",
    "Aumenta el radio del efecto de tu Trampa de Escarcha 2 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Trampa de Escarcha"
+  "name": "Glifo de Trampa de Escarcha"
  },
  "42907": {
   "quality": 1,
@@ -46779,8 +46597,7 @@
    "Clases: Cazador",
    "Aumenta el bonus de poder de ataque de tu Marca del cazador un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Marca del cazador"
+  "name": "Glifo de Marca del cazador"
  },
  "42908": {
   "quality": 1,
@@ -46807,8 +46624,7 @@
    "Clases: Cazador",
    "Reduce la duración del efecto de tu Trampa de inmolación 6 s, pero aumenta el daño mientras está activo un 100%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Trampa de inmolación"
+  "name": "Glifo de Trampa de inmolación"
  },
  "42909": {
   "quality": 1,
@@ -46835,8 +46651,7 @@
    "Clases: Cazador",
    "Aumenta el bonus de celeridad del efecto del Aspecto del Halcón mejorado un 6% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo del halcón"
+  "name": "Glifo del halcón"
  },
  "42910": {
   "quality": 1,
@@ -46863,8 +46678,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de Multidisparo 1 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Multidisparo"
+  "name": "Glifo de Multidisparo"
  },
  "42911": {
   "quality": 1,
@@ -46891,8 +46705,7 @@
    "Clases: Cazador",
    "Aumenta la celeridad de Fuego rápido un 8% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Fuego rápido"
+  "name": "Glifo de Fuego rápido"
  },
  "42912": {
   "quality": 1,
@@ -46919,8 +46732,7 @@
    "Clases: Cazador",
    "Aumenta la duración de tu Picadura de serpiente 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Picadura de serpiente"
+  "name": "Glifo de Picadura de serpiente"
  },
  "42913": {
   "quality": 1,
@@ -46947,8 +46759,7 @@
    "Clases: Cazador",
    "Las culebras que genera tu Trampa con culebras reciben un 90% de daño reducido de los hechizos de área de efecto."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Trampa con culebras"
+  "name": "Glifo de Trampa con culebras"
  },
  "42914": {
   "quality": 1,
@@ -46975,8 +46786,7 @@
    "Clases: Cazador",
    "Aumenta el daño infligido por Disparo firme un 10% cuando tu objetivo está afectado por Picadura de serpiente."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disparo firme"
+  "name": "Glifo de Disparo firme"
  },
  "42915": {
   "quality": 1,
@@ -47003,8 +46813,7 @@
    "Clases: Cazador",
    "Mientras el Aura de Disparo certero está activa, tienes un aumento del 10% de probabilidad de golpe crítico con tu Disparo de puntería."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Aura de disparo certero"
+  "name": "Glifo de Aura de disparo certero"
  },
  "42916": {
   "quality": 1,
@@ -47031,8 +46840,7 @@
    "Clases: Cazador",
    "Reduce el coste de maná de Salva un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Salva"
+  "name": "Glifo de Salva"
  },
  "42917": {
   "quality": 1,
@@ -47059,8 +46867,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de Picadura de dracoleón 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Picadura de dracoleón"
+  "name": "Glifo de Picadura de dracoleón"
  },
  "42954": {
   "quality": 1,
@@ -47083,8 +46890,7 @@
   "other": [
    "Clases: Pícaro"
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Subidón de adrenalina"
+  "name": "Glifo de Subidón de adrenalina"
  },
  "42955": {
   "quality": 1,
@@ -47111,8 +46917,7 @@
    "Clases: Pícaro",
    "Aumenta el alcance de tu Emboscada 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Emboscada"
+  "name": "Glifo de Emboscada"
  },
  "42956": {
   "quality": 1,
@@ -47139,8 +46944,7 @@
    "Clases: Pícaro",
    "Tu Puñalada aumenta la duración de tu efecto Ruptura en el objetivo 2 s, hasta un máximo de 6 s extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Puñalada"
+  "name": "Glifo de Puñalada"
  },
  "42957": {
   "quality": 1,
@@ -47167,8 +46971,7 @@
    "Clases: Pícaro",
    "Reduce el coste de energía de Aluvión de acero un 100%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Aluvión de acero"
+  "name": "Glifo de Aluvión de acero"
  },
  "42958": {
   "quality": 1,
@@ -47195,8 +46998,7 @@
    "Clases: Pícaro",
    "Aumenta la probabilidad de infligir al objetivo Veneno entorpecedor un 20% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Veneno entorpecedor"
+  "name": "Glifo de Veneno entorpecedor"
  },
  "42959": {
   "quality": 1,
@@ -47223,8 +47025,7 @@
    "Clases: Pícaro",
    "Aumenta el efecto de ralentización de tu Lanzamiento mortal un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Lanzamiento mortal"
+  "name": "Glifo de Lanzamiento mortal"
  },
  "42960": {
   "quality": 1,
@@ -47251,8 +47052,7 @@
    "Clases: Pícaro",
    "Aumenta la duración de Evasión 5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Evasión"
+  "name": "Glifo de Evasión"
  },
  "42961": {
   "quality": 1,
@@ -47279,8 +47079,7 @@
    "Clases: Pícaro",
    "Aumenta la probabilidad de golpe crítico de Eviscerar un 10%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Eviscerar"
+  "name": "Glifo de Eviscerar"
  },
  "42962": {
   "quality": 1,
@@ -47307,8 +47106,7 @@
    "Clases: Pícaro",
    "Aumenta la duración de Exponer armadura 12 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Exponer armadura"
+  "name": "Glifo de Exponer armadura"
  },
  "42963": {
   "quality": 1,
@@ -47335,8 +47133,7 @@
    "Clases: Pícaro",
    "Reduce el coste de energía de Amago 20 p."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Amago"
+  "name": "Glifo de Amago"
  },
  "42964": {
   "quality": 1,
@@ -47363,8 +47160,7 @@
    "Clases: Pícaro",
    "Reduce la duración de tu facultad Garrote 3 s y aumenta el daño total que inflige un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Garrote"
+  "name": "Glifo de Garrote"
  },
  "42965": {
   "quality": 1,
@@ -47391,8 +47187,7 @@
    "Clases: Pícaro",
    "Aumenta el daño infligido por tu Golpe fantasmal un 40% y la duración de su efecto 4 s, pero aumenta su tiempo de reutilización 10 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe fantasmal"
+  "name": "Glifo de Golpe fantasmal"
  },
  "42966": {
   "quality": 1,
@@ -47419,8 +47214,7 @@
    "Clases: Pícaro",
    "Reduce el coste de energía de Gubia 15 p."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Gubia"
+  "name": "Glifo de Gubia"
  },
  "42967": {
   "quality": 1,
@@ -47447,8 +47241,7 @@
    "Clases: Pícaro",
    "Aumenta el bonus de daño frente a los objetivos afectados por Hemorragia un 40%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Hemorragia"
+  "name": "Glifo de Hemorragia"
  },
  "42968": {
   "quality": 1,
@@ -47475,8 +47268,7 @@
    "Clases: Pícaro",
    "Tu facultad Preparación también reinicia instantáneamente el tiempo de reutilización de Aluvión de acero, Desguarnecer y Patada."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Preparación"
+  "name": "Glifo de Preparación"
  },
  "42969": {
   "quality": 1,
@@ -47503,8 +47295,7 @@
    "Clases: Pícaro",
    "Aumenta la duración de Ruptura 4 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ruptura"
+  "name": "Glifo de Ruptura"
  },
  "42970": {
   "quality": 1,
@@ -47531,8 +47322,7 @@
    "Clases: Pícaro",
    "Aumenta la duración de Porrazo 20 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Porrazo"
+  "name": "Glifo de Porrazo"
  },
  "42971": {
   "quality": 1,
@@ -47559,8 +47349,7 @@
    "Clases: Pícaro",
    "Vigor otorga 10 p. extra de energía máxima."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de vigor"
+  "name": "Glifo de vigor"
  },
  "42972": {
   "quality": 1,
@@ -47587,8 +47376,7 @@
    "Clases: Pícaro",
    "Los golpes críticos de tu Golpe siniestro tienen un 50% de probabilidad de añadir un punto de combo extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe siniestro"
+  "name": "Glifo de Golpe siniestro"
  },
  "42973": {
   "quality": 1,
@@ -47615,8 +47403,7 @@
    "Clases: Pícaro",
    "Aumenta la duración de Hacer picadillo 3 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Hacer picadillo"
+  "name": "Glifo de Hacer picadillo"
  },
  "42974": {
   "quality": 1,
@@ -47643,8 +47430,7 @@
    "Clases: Pícaro",
    "Aumenta la velocidad de movimiento de tu facultad Sprint un 30% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sprint"
+  "name": "Glifo de Sprint"
  },
  "43102": {
   "quality": 3,
@@ -47988,8 +47774,7 @@
   "other": [
    "\"Se puede marcar como el objetivo de varios encantamientos de armadura para almacenar el encantamiento y usarlo más tarde. Solo puede absorber encantamientos con restricciones de nivel 60 o inferior.\""
   ],
-  "name": "Vitela estropeada",
-  "classicName": "Vitela de armadura III"
+  "name": "Vitela de armadura III"
  },
  "43146": {
   "quality": 1,
@@ -48007,8 +47792,7 @@
   "other": [
    "\"Se puede marcar como el objetivo de varios encantamientos de armas para almacenar el encantamiento y usarlo más tarde. Solo puede absorber encantamientos con restricciones de nivel 60 o inferior.\""
   ],
-  "name": "Vitela estropeada",
-  "classicName": "Vitela de arma III"
+  "name": "Vitela de arma III"
  },
  "43316": {
   "quality": 1,
@@ -48035,8 +47819,7 @@
    "Clases: Druida",
    "Aumenta tu velocidad de nado un 50% mientras estás bajo Forma acuática."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Forma acuática"
+  "name": "Glifo de Forma acuática"
  },
  "43331": {
   "quality": 1,
@@ -48063,8 +47846,7 @@
    "Clases: Druida",
    "Tu hechizo Renacer ya no necesita un componente."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Renacer desahogado"
+  "name": "Glifo de Renacer desahogado"
  },
  "43332": {
   "quality": 1,
@@ -48091,8 +47873,7 @@
    "Clases: Druida",
    "Aumenta la duración de tu facultad Espinas 50 min cuando lo lanzas sobre ti mismo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Espinas"
+  "name": "Glifo de Espinas"
  },
  "43334": {
   "quality": 1,
@@ -48147,8 +47928,7 @@
    "Clases: Druida",
    "Coste de maná de tus hechizos Marca de lo Salvaje y Don de lo Salvaje reducido un 50%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de lo Salvaje"
+  "name": "Glifo de lo Salvaje"
  },
  "43338": {
   "quality": 1,
@@ -48175,8 +47955,7 @@
    "Clases: Cazador",
    "Reduce el retroceso sufrido por los ataques dañinos mientras lanzas Revivir mascota un 100%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Revivir mascota"
+  "name": "Glifo de Revivir mascota"
  },
  "43339": {
   "quality": 1,
@@ -48203,8 +47982,7 @@
    "Clases: Mago",
    "Reduce un 50% el coste de tus hechizos Intelecto Arcano y Luminosidad Arcana."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Intelecto Arcano"
+  "name": "Glifo de Intelecto Arcano"
  },
  "43340": {
   "quality": 1,
@@ -48231,8 +48009,7 @@
    "Clases: Paladín",
    "Aumenta la duración de tu hechizo Bendición de poderío 20 min cuando lo lanzas sobre ti mismo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Bendición de poderío"
+  "name": "Glifo de Bendición de poderío"
  },
  "43342": {
   "quality": 1,
@@ -48259,8 +48036,7 @@
    "Clases: Sacerdote",
    "Reduce el coste de maná de tu hechizo Desvanecerse un 30%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de lo desvaído"
+  "name": "Glifo de lo desvaído"
  },
  "43343": {
   "quality": 1,
@@ -48287,8 +48063,7 @@
    "Clases: Pícaro",
    "Aumenta el alcance de tu facultad Robar en 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Robar"
+  "name": "Glifo de Robar"
  },
  "43344": {
   "quality": 1,
@@ -48315,8 +48090,7 @@
    "Clases: Chamán",
    "Tu hechizo Respiración acuática ya no necesita un componente."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Respiración acuática"
+  "name": "Glifo de Respiración acuática"
  },
  "43350": {
   "quality": 1,
@@ -48371,8 +48145,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de tu hechizo Fingir muerte 5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Fingir muerte"
+  "name": "Glifo de Fingir muerte"
  },
  "43354": {
   "quality": 1,
@@ -48399,8 +48172,7 @@
    "Clases: Cazador",
    "Aumenta un 50% el daño que inflige tu mascota mientras usas Ojos de la bestia."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de fuerza poseída"
+  "name": "Glifo de fuerza poseída"
  },
  "43355": {
   "quality": 1,
@@ -48427,8 +48199,7 @@
    "Clases: Cazador",
    "Aumenta el alcance de tu facultad Aspecto de la manada 15 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de la manada"
+  "name": "Glifo de la manada"
  },
  "43356": {
   "quality": 1,
@@ -48455,8 +48226,7 @@
    "Clases: Cazador",
    "Reduce el retroceso sufrido por los ataques dañinos mientras lanzas Asustar bestia un 75%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Asustar bestia"
+  "name": "Glifo de Asustar bestia"
  },
  "43357": {
   "quality": 1,
@@ -48483,8 +48253,7 @@
    "Clases: Mago",
    "Tienes un 5% extra de probabilidad de devolver los hechizos de Fuego mientras tu Resguardo contra el Fuego está activo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Resguardo contra el Fuego"
+  "name": "Glifo de Resguardo contra el Fuego"
  },
  "43359": {
   "quality": 1,
@@ -48511,8 +48280,7 @@
    "Clases: Mago",
    "Aumenta la duración de tus hechizos Armadura de Escarcha y Armadura de hielo 30 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Armadura de Escarcha"
+  "name": "Glifo de Armadura de Escarcha"
  },
  "43360": {
   "quality": 1,
@@ -48539,8 +48307,7 @@
    "Clases: Mago",
    "Tienes un 5% extra de probabilidad de devolver los hechizos de Escarcha mientras tu Resguardo contra la EScarcha está activo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Resguardo contra la Escarcha"
+  "name": "Glifo de Resguardo contra la Escarcha"
  },
  "43361": {
   "quality": 1,
@@ -48567,8 +48334,7 @@
    "Clases: Mago",
    "Tu hechizo Polimorfia: oveja convierte al objetivo en un pingüino."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo del pingüino"
+  "name": "Glifo del pingüino"
  },
  "43364": {
   "quality": 1,
@@ -48595,8 +48361,7 @@
    "Clases: Mago",
    "Tu hechizo Caída lenta ya no necesita componentes."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Caída lenta"
+  "name": "Glifo de Caída lenta"
  },
  "43365": {
   "quality": 1,
@@ -48623,8 +48388,7 @@
    "Clases: Paladín",
    "Reduce el coste de maná de tus hechizos Bendición de reyes y Bendición de reyes superior un 50%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Bendición de reyes"
+  "name": "Glifo de Bendición de reyes"
  },
  "43366": {
   "quality": 1,
@@ -48679,8 +48443,7 @@
    "Clases: Paladín",
    "Reduce el tiempo de reutilización de tu hechizo Imposición de manos 5 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Imposición de manos"
+  "name": "Glifo de Imposición de manos"
  },
  "43368": {
   "quality": 1,
@@ -48707,8 +48470,7 @@
    "Clases: Paladín",
    "Daño frente a los no-muertos aumentado un 1% mientras tu facultad Captar no-muertos está activa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Captar no-muertos"
+  "name": "Glifo de Captar no-muertos"
  },
  "43369": {
   "quality": 1,
@@ -48763,8 +48525,7 @@
    "Clases: Sacerdote",
    "Tu hechizo Levitar ya no necesita un componente."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Levitar"
+  "name": "Glifo de Levitar"
  },
  "43371": {
   "quality": 1,
@@ -48791,8 +48552,7 @@
    "Clases: Sacerdote",
    "Reduce un 50% el coste de maná de tus hechizos Palabra de poder: entereza y Rezo de Entereza."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Entereza"
+  "name": "Glifo de Entereza"
  },
  "43372": {
   "quality": 1,
@@ -48819,8 +48579,7 @@
    "Clases: Sacerdote",
    "Aumenta la duración de tu hechizo Protección contra las Sombras y Rezo de Protección contra las Sombras 10 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Protección contra las Sombras"
+  "name": "Glifo de Protección contra las Sombras"
  },
  "43373": {
   "quality": 1,
@@ -48875,8 +48634,7 @@
    "Clases: Sacerdote",
    "Recibes un 5% de tu maná máximo si tu maligno de las Sombras muere a causa del daño."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de maligno de las Sombras"
+  "name": "Glifo de maligno de las Sombras"
  },
  "43376": {
   "quality": 1,
@@ -48903,8 +48661,7 @@
    "Clases: Pícaro",
    "Aumenta el alcance de tu facultad Distraer en 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Distraer"
+  "name": "Glifo de Distraer"
  },
  "43377": {
   "quality": 1,
@@ -48931,8 +48688,7 @@
    "Clases: Pícaro",
    "Reduce el tiempo de lanzamiento de tu facultad Forzar cerradura un 100%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Forzar cerradura"
+  "name": "Glifo de Forzar cerradura"
  },
  "43378": {
   "quality": 1,
@@ -48959,8 +48715,7 @@
    "Clases: Pícaro",
    "Aumenta la distancia desde la que tu facultad Caída segura te permite caer sin recibir daño."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Caída segura"
+  "name": "Glifo de Caída segura"
  },
  "43379": {
   "quality": 1,
@@ -48987,8 +48742,7 @@
    "Clases: Pícaro",
    "Te permite caminar sobre el agua mientras tu facultad Sprint está activa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de velocidad borrosa"
+  "name": "Glifo de velocidad borrosa"
  },
  "43380": {
   "quality": 1,
@@ -49015,8 +48769,7 @@
    "Clases: Pícaro",
    "Aumenta tu velocidad de movimiento un 30% mientras el efecto Esfumarse está activo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Esfumarse"
+  "name": "Glifo de Esfumarse"
  },
  "43381": {
   "quality": 1,
@@ -49043,8 +48796,7 @@
    "Clases: Chamán",
    "Tiempo de reutilización de tu hechizo Regreso astral reducido 7.5 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Regreso astral"
+  "name": "Glifo de Regreso astral"
  },
  "43385": {
   "quality": 1,
@@ -49071,8 +48823,7 @@
    "Clases: Chamán",
    "Tu hechizo Reencarnación ya no necesita un componente."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de vida renovada"
+  "name": "Glifo de vida renovada"
  },
  "43386": {
   "quality": 1,
@@ -49127,8 +48878,7 @@
    "Clases: Chamán",
    "Tu hechizo Caminar sobre el agua ya no necesita un componente."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Caminar sobre el agua"
+  "name": "Glifo de Caminar sobre el agua"
  },
  "43389": {
   "quality": 1,
@@ -49155,8 +48905,7 @@
    "Clases: Brujo",
    "Aumenta la velocidad de nado de los objetivos afectados por tu hechizo Aliento inagotable un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Aliento inagotable"
+  "name": "Glifo de Aliento inagotable"
  },
  "43390": {
   "quality": 1,
@@ -49183,8 +48932,7 @@
    "Clases: Brujo",
    "Tu facultad Drenar alma a veces crea un fragmento de alma extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Drenar alma"
+  "name": "Glifo de Drenar alma"
  },
  "43391": {
   "quality": 1,
@@ -49211,8 +48959,7 @@
    "Clases: Brujo",
    "Aumenta un 50% la velocidad de movimiento de tu Ojo de Kilrogg y permite que vuele en las zonas donde están permitidas las monturas voladoras."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Kilrogg"
+  "name": "Glifo de Kilrogg"
  },
  "43392": {
   "quality": 1,
@@ -49235,8 +48982,7 @@
   "other": [
    "Clases: Brujo"
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Maldición de agotamiento"
+  "name": "Glifo de Maldición de agotamiento"
  },
  "43393": {
   "quality": 1,
@@ -49263,8 +49009,7 @@
    "Clases: Brujo",
    "Reduce el tiempo de lanzamiento de tu hechizo Subyugar demonio un 50%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Subyugar demonio"
+  "name": "Glifo de Subyugar demonio"
  },
  "43394": {
   "quality": 1,
@@ -49319,8 +49064,7 @@
    "Clases: Guerrero",
    "Aumenta la duración de tu facultad Grito de batalla en 2 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Batalla"
+  "name": "Glifo de Batalla"
  },
  "43396": {
   "quality": 1,
@@ -49347,8 +49091,7 @@
    "Clases: Guerrero",
    "Reduce un 100% el coste de salud de tu facultad Ira sangrienta."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ira sangrienta"
+  "name": "Glifo de Ira sangrienta"
  },
  "43397": {
   "quality": 1,
@@ -49375,8 +49118,7 @@
    "Clases: Guerrero",
    "Aumenta el alcance de tu facultad Cargar en 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cargar"
+  "name": "Glifo de Cargar"
  },
  "43398": {
   "quality": 1,
@@ -49431,8 +49173,7 @@
    "Clases: Guerrero",
    "Aumenta 2 m el radio de tu facultad Atronar."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Atronar"
+  "name": "Glifo de Atronar"
  },
  "43400": {
   "quality": 1,
@@ -49487,8 +49228,7 @@
    "Clases: Guerrero",
    "Aumenta un 100% la sanación que recibes con tu facultad Sed de sangre."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sed de sangre"
+  "name": "Glifo de Sed de sangre"
  },
  "43413": {
   "quality": 1,
@@ -49515,8 +49255,7 @@
    "Clases: Guerrero",
    "Reduce un 7% el tiempo de reutilización de tu facultad Cargar."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de carga rápida"
+  "name": "Glifo de carga rápida"
  },
  "43414": {
   "quality": 1,
@@ -49543,8 +49282,7 @@
    "Clases: Guerrero",
    "Aumenta en 1 el número de objetivos que golpeas con Rajar."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Rajar"
+  "name": "Glifo de Rajar"
  },
  "43415": {
   "quality": 1,
@@ -49571,8 +49309,7 @@
    "Clases: Guerrero",
    "Tu facultad Devastar ahora acumula dos Hender armadura."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Devastar"
+  "name": "Glifo de Devastar"
  },
  "43416": {
   "quality": 1,
@@ -49599,8 +49336,7 @@
    "Clases: Guerrero",
    "Tu facultad Ejecutar inflige daño como si tuvieras 10 p. de ira extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ejecutar"
+  "name": "Glifo de Ejecutar"
  },
  "43417": {
   "quality": 1,
@@ -49627,8 +49363,7 @@
    "Clases: Guerrero",
    "Da a tu facultad Seccionar un 10% de probabilidad de inmovilizar al objetivo durante 5 sec."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Seccionar"
+  "name": "Glifo de Seccionar"
  },
  "43418": {
   "quality": 1,
@@ -49655,8 +49390,7 @@
    "Clases: Guerrero",
    "Ganas 10 de ira cuando infliges golpe crítico con tu facultad Golpe heroico."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe heroico"
+  "name": "Glifo de Golpe heroico"
  },
  "43419": {
   "quality": 1,
@@ -49683,8 +49417,7 @@
    "Clases: Guerrero",
    "Aumenta en 1 el número de ataques que interceptas con tu facultad Intervenir."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Intervenir"
+  "name": "Glifo de Intervenir"
  },
  "43420": {
   "quality": 1,
@@ -49711,8 +49444,7 @@
    "Clases: Guerrero",
    "Tu facultad Falsa arremetida genera un 100% de amenaza extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de insultos barbáricos"
+  "name": "Glifo de insultos barbáricos"
  },
  "43421": {
   "quality": 1,
@@ -49739,8 +49471,7 @@
    "Clases: Guerrero",
    "Aumenta un 10% el daño de tu facultad Golpe mortal."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe mortal"
+  "name": "Glifo de Golpe mortal"
  },
  "43422": {
   "quality": 1,
@@ -49767,8 +49498,7 @@
    "Clases: Guerrero",
    "Añade un 100% de probabilidad de activar tu hechizo Abrumar cuando el enemigo pare tus ataques."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Abrumar"
+  "name": "Glifo de Abrumar"
  },
  "43423": {
   "quality": 1,
@@ -49795,8 +49525,7 @@
    "Clases: Guerrero",
    "Aumenta la duración de tu facultad Desgarrar en 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Desgarrar"
+  "name": "Glifo de Desgarrar"
  },
  "43424": {
   "quality": 1,
@@ -49823,8 +49552,7 @@
    "Clases: Guerrero",
    "Después de usar Revancha, tu siguiente Golpe heroico no cuesta ira."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Revancha"
+  "name": "Glifo de Revancha"
  },
  "43425": {
   "quality": 1,
@@ -49851,8 +49579,7 @@
    "Clases: Guerrero",
    "Aumenta tu valor de bloqueo un 10% durante 10 sec después de usar tu facultad Embate con escudo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Bloqueo"
+  "name": "Glifo de Bloqueo"
  },
  "43426": {
   "quality": 1,
@@ -49879,8 +49606,7 @@
    "Clases: Guerrero",
    "Reduce el tiempo de reutilización de tu facultad Última carga 1 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Última carga"
+  "name": "Glifo de Última carga"
  },
  "43427": {
   "quality": 1,
@@ -49907,8 +49633,7 @@
    "Clases: Guerrero",
    "Tu facultad Hender armadura afecta a un segundo objetivo cercano."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Hender armadura"
+  "name": "Glifo de Hender armadura"
  },
  "43428": {
   "quality": 1,
@@ -49935,8 +49660,7 @@
    "Clases: Guerrero",
    "Reduce el coste de ira de tu facultad Golpes de barrido un 100%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpes de barrido"
+  "name": "Glifo de Golpes de barrido"
  },
  "43429": {
   "quality": 1,
@@ -49963,8 +49687,7 @@
    "Clases: Guerrero",
    "Aumenta un 8% la probabilidad de que tu facultad Provocar tenga éxito."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Provocar"
+  "name": "Glifo de Provocar"
  },
  "43430": {
   "quality": 1,
@@ -49991,8 +49714,7 @@
    "Clases: Guerrero",
    "Reduce el coste de ira de tu facultad Atronar 5 p."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de poder resonante"
+  "name": "Glifo de poder resonante"
  },
  "43431": {
   "quality": 1,
@@ -50019,8 +49741,7 @@
    "Clases: Guerrero",
    "Tu facultad Ataque de la victoria tiene un 30% más de probabilidad de obtener un golpe crítico."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ataque de la victoria"
+  "name": "Glifo de Ataque de la victoria"
  },
  "43432": {
   "quality": 1,
@@ -50047,8 +49768,7 @@
    "Clases: Guerrero",
    "Reduce el tiempo de reutilización de tu facultad Torbellino 2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Torbellino"
+  "name": "Glifo de Torbellino"
  },
  "43463": {
   "quality": 1,
@@ -50181,8 +49901,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta la duración de tu Caparazón antimagia en 2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Caparazón antimagia"
+  "name": "Glifo de Caparazón antimagia"
  },
  "43534": {
   "quality": 1,
@@ -50209,8 +49928,7 @@
    "Clases: Caballero de la muerte",
    "Tu Golpe en el corazón también reduce la velocidad de movimiento de tu objetivo un 50% durante 10 sec."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe en el corazón"
+  "name": "Glifo de Golpe en el corazón"
  },
  "43535": {
   "quality": 1,
@@ -50265,8 +49983,7 @@
    "Clases: Caballero de la muerte",
    "Añade 1 carga adicional a tu Escudo óseo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Escudo óseo"
+  "name": "Glifo de Escudo óseo"
  },
  "43537": {
   "quality": 1,
@@ -50293,8 +50010,7 @@
    "Clases: Caballero de la muerte",
    "Tu hechizo Cadenas de hielo también inflige 144 to 156 p. de daño de Escarcha, aumentados por tu poder de ataque."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cadenas de hielo"
+  "name": "Glifo de Cadenas de hielo"
  },
  "43538": {
   "quality": 1,
@@ -50321,8 +50037,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta un 8% la probabilidad de que tu facultad Orden oscura tenga éxito."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Orden oscura"
+  "name": "Glifo de Orden oscura"
  },
  "43539": {
   "quality": 1,
@@ -50349,8 +50064,7 @@
    "Clases: Caballero de la muerte",
    "Tu hechizo Espiral de la muerte devuelve 20 p. de poder rúnico cuando lo usas para sanar."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Abrazo de la Muerte"
+  "name": "Glifo de Abrazo de la Muerte"
  },
  "43541": {
   "quality": 1,
@@ -50377,8 +50091,7 @@
    "Clases: Caballero de la muerte",
    "Cuando infliges golpes de gracia, recibes honor o experiencia y el tiempo de reutilización de tu Atracción letal se restablece."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Atracción letal"
+  "name": "Glifo de Atracción letal"
  },
  "43542": {
   "quality": 1,
@@ -50405,8 +50118,7 @@
    "Clases: Caballero de la muerte",
    "Daño de tu hechizo Muerte y descomposición aumentado un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Muerte y descomposición"
+  "name": "Glifo de Muerte y descomposición"
  },
  "43543": {
   "quality": 1,
@@ -50433,8 +50145,7 @@
    "Clases: Caballero de la muerte",
    "Reduce el coste de tu Golpe de Escarcha 8 p. de poder rúnico."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe de Escarcha"
+  "name": "Glifo de Golpe de Escarcha"
  },
  "43544": {
   "quality": 1,
@@ -50461,8 +50172,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta 1 min la duración de tu facultad Cuerno de invierno."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cuerno de invierno"
+  "name": "Glifo de Cuerno de invierno"
  },
  "43545": {
   "quality": 1,
@@ -50489,8 +50199,7 @@
    "Clases: Caballero de la muerte",
    "Tu Entereza ligada ahora otorga siempre al menos un 40% de reducción de daño, independientemente de tu habilidad de defensa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Entereza ligada al hielo"
+  "name": "Glifo de Entereza ligada al hielo"
  },
  "43546": {
   "quality": 1,
@@ -50517,8 +50226,7 @@
    "Clases: Caballero de la muerte",
    "Tu enfermedad Fiebre de Escarcha inflige un 20% extra de daño."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Toque helado"
+  "name": "Glifo de Toque helado"
  },
  "43547": {
   "quality": 1,
@@ -50545,8 +50253,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta el daño de tu facultad Asolar un 25%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Asolar"
+  "name": "Glifo de Asolar"
  },
  "43548": {
   "quality": 1,
@@ -50573,8 +50280,7 @@
    "Clases: Caballero de la muerte",
    "Tu Golpe de peste inflige un 20% de daño extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe de peste"
+  "name": "Glifo de Golpe de peste"
  },
  "43549": {
   "quality": 1,
@@ -50601,8 +50307,7 @@
    "Clases: Caballero de la muerte",
    "Tu necrófago recibe un 40% extra de tu fuerza y un 40% de tu aguante."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo del necrófago"
+  "name": "Glifo del necrófago"
  },
  "43550": {
   "quality": 1,
@@ -50629,8 +50334,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta un 10% la probabilidad de golpe crítico con tu Golpe con runa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe con runa"
+  "name": "Glifo de Golpe con runa"
  },
  "43551": {
   "quality": 1,
@@ -50685,8 +50389,7 @@
    "Clases: Caballero de la muerte",
    "Reduce el tiempo de reutilización de tu Estrangular 20 segundos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Estrangular"
+  "name": "Glifo de Estrangular"
  },
  "43553": {
   "quality": 1,
@@ -50713,8 +50416,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta la armadura total otorgada por Armadura inquebrantable a un 30%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Armadura inquebrantable"
+  "name": "Glifo de Armadura inquebrantable"
  },
  "43554": {
   "quality": 1,
@@ -50741,8 +50443,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta la duración de tu Sangre vampírica 5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sangre vampírica"
+  "name": "Glifo de Sangre vampírica"
  },
  "43654": {
   "quality": 3,
@@ -51081,8 +50782,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta el radio de efecto de Deflagración de cadáver 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Deflagración de cadáver"
+  "name": "Glifo de Deflagración de cadáver"
  },
  "43672": {
   "quality": 1,
@@ -51109,8 +50809,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta el radio del efecto de tu Pestilencia 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Pestilencia"
+  "name": "Glifo de Pestilencia"
  },
  "43673": {
   "quality": 1,
@@ -51137,8 +50836,7 @@
    "Clases: Caballero de la muerte",
    "Tu hechizo Levantar a muerto ya no necesita un componente."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Levantar a muerto"
+  "name": "Glifo de Levantar a muerto"
  },
  "43674": {
   "quality": 1,
@@ -51165,8 +50863,7 @@
    "Clases: Druida",
    "Reduce un 20% el tiempo de reutilización de tu facultad Carrerilla."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Carrerilla"
+  "name": "Glifo de Carrerilla"
  },
  "43725": {
   "quality": 1,
@@ -51193,8 +50890,7 @@
    "Clases: Chamán",
    "Tu forma de lobo fantasmal regenera un 1% extra de tu salud máxima cada 5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Lobo fantasmal"
+  "name": "Glifo de Lobo fantasmal"
  },
  "43825": {
   "quality": 1,
@@ -51221,8 +50917,7 @@
    "Clases: Caballero de la muerte",
    "Ahora Transfusión de runa te sana un 1% extra de tu salud máxima y también sana un 10% de su salud máxima a los miembros de tu grupo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Transfusión de runa"
+  "name": "Glifo de Transfusión de runa"
  },
  "43826": {
   "quality": 1,
@@ -51249,8 +50944,7 @@
    "Clases: Caballero de la muerte",
    "Tu Golpe sangriento inflige un 20% de daño extra a los objetivos frenados."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe sangriento"
+  "name": "Glifo de Golpe sangriento"
  },
  "43827": {
   "quality": 1,
@@ -51277,8 +50971,7 @@
    "Clases: Caballero de la muerte",
    "El daño de tu Golpe letal aumenta un 1% por cada 1 p. de poder rúnico que poseas en ese momento (hasta un máximo de 25%). Este efecto no consume poder rúnico."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe letal"
+  "name": "Glifo de Golpe letal"
  },
  "43850": {
   "quality": 1,
@@ -51329,8 +51022,7 @@
    "Clases: Paladín",
    "Reduce el tiempo de reutilización de tu hechizo Cólera Sagrada 15 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Cólera Sagrada"
+  "name": "Glifo de Cólera Sagrada"
  },
  "43868": {
   "quality": 1,
@@ -51357,8 +51049,7 @@
    "Clases: Paladín",
    "Aumenta el daño infligido por Sello de rectitud un 10%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sello de rectitud"
+  "name": "Glifo de Sello de rectitud"
  },
  "43869": {
   "quality": 1,
@@ -51385,8 +51076,7 @@
    "Clases: Paladín",
    "Tus hechizos Sello de venganza o Sello de corrupción también otorgan 10 p. de pericia mientras están activos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Sello de venganza"
+  "name": "Glifo de Sello de venganza"
  },
  "44142": {
   "quality": 1,
@@ -51583,8 +51273,7 @@
    "Clases: Mago",
    "Aumenta el daño inicial infligido por Descarga de Pirofrío un 2% y su probabilidad de golpe crítico un 2%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Pirofrío"
+  "name": "Glifo de Pirofrío"
  },
  "44920": {
   "quality": 1,
@@ -51611,8 +51300,7 @@
    "Clases: Mago",
    "El coste de maná de tu hechizo Ola explosiva se reduce un 15%, pero ya no repele a los enemigos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ola explosiva"
+  "name": "Glifo de Ola explosiva"
  },
  "44922": {
   "quality": 1,
@@ -51667,8 +51355,7 @@
    "Clases: Chamán",
    "Aumenta la cantidad de maná que recibes de tu hechizo Tormenta de truenos un 2%, pero ya no derriba a los enemigos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tormenta de truenos"
+  "name": "Glifo de Tormenta de truenos"
  },
  "44928": {
   "quality": 1,
@@ -51695,8 +51382,7 @@
    "Clases: Druida",
    "Aumenta un 10% el daño infligido por Lluvia de estrellas pero reduce su radio un 50%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Enfoque"
+  "name": "Glifo de Enfoque"
  },
  "44955": {
   "quality": 1,
@@ -51723,8 +51409,7 @@
    "Clases: Mago",
    "Aumenta el daño infligido por tu beneficio de Explosión Arcana un 3%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Explosión Arcana"
+  "name": "Glifo de Explosión Arcana"
  },
  "45601": {
   "quality": 1,
@@ -51751,8 +51436,7 @@
    "Clases: Druida",
    "Aumenta la duración de Rabia 5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Rabia"
+  "name": "Glifo de Rabia"
  },
  "45602": {
   "quality": 1,
@@ -51779,8 +51463,7 @@
    "Clases: Druida",
    "Crecimiento salvaje puede afectar hasta a 1 objetivo extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Crecimiento salvaje"
+  "name": "Glifo de Crecimiento salvaje"
  },
  "45603": {
   "quality": 1,
@@ -51807,8 +51490,7 @@
    "Clases: Druida",
    "Las sanaciones de tu Nutrir sanan un 6% extra por cada uno de tus efectos de sanación en el tiempo presentes en el objetivo."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Nutrir"
+  "name": "Glifo de Nutrir"
  },
  "45604": {
   "quality": 1,
@@ -51835,8 +51517,7 @@
    "Clases: Druida",
    "Tu facultad Rugido salvaje otorga un 3% de bonus de daño infligido extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Rugido salvaje"
+  "name": "Glifo de Rugido salvaje"
  },
  "45622": {
   "quality": 1,
@@ -51863,8 +51544,7 @@
    "Clases: Druida",
    "Reduce el tiempo de reutilización de tu hechizo Tifón 3 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de monzón"
+  "name": "Glifo de monzón"
  },
  "45623": {
   "quality": 1,
@@ -51891,8 +51571,7 @@
    "Clases: Druida",
    "Reduce un 25% la probabilidad de recibir un golpe crítico mientras esté activo Piel de corteza."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Piel de corteza"
+  "name": "Glifo de Piel de corteza"
  },
  "45625": {
   "quality": 1,
@@ -51919,8 +51598,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de Disparo de quimera 1 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disparo de quimera"
+  "name": "Glifo de Disparo de quimera"
  },
  "45731": {
   "quality": 1,
@@ -51947,8 +51625,7 @@
    "Clases: Cazador",
    "Aumenta la probabilidad de golpe crítico de Disparo explosivo un 4%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disparo explosivo"
+  "name": "Glifo de Disparo explosivo"
  },
  "45732": {
   "quality": 1,
@@ -51975,8 +51652,7 @@
    "Clases: Cazador",
    "Reduce el tiempo de reutilización de Disparo mortal 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disparo mortal"
+  "name": "Glifo de Disparo mortal"
  },
  "45733": {
   "quality": 1,
@@ -52003,8 +51679,7 @@
    "Clases: Cazador",
    "El daño periódico de tu Trampa explosiva ahora puede convertirse en golpes críticos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Trampa explosiva"
+  "name": "Glifo de Trampa explosiva"
  },
  "45734": {
   "quality": 1,
@@ -52031,8 +51706,7 @@
    "Clases: Cazador",
    "Aumenta el alcance de Disparo de dispersión 3 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Disparo de dispersión"
+  "name": "Glifo de Disparo de dispersión"
  },
  "45735": {
   "quality": 1,
@@ -52059,8 +51733,7 @@
    "Clases: Cazador",
    "Reduce el daño recibido un 20% durante 3 sec tras usar Golpe de raptor."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Golpe de raptor"
+  "name": "Glifo de Golpe de raptor"
  },
  "45736": {
   "quality": 1,
@@ -52087,8 +51760,7 @@
    "Clases: Mago",
    "Aumenta el alcance de Congelación profunda 10 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Congelación profunda"
+  "name": "Glifo de Congelación profunda"
  },
  "45737": {
   "quality": 1,
@@ -52115,8 +51787,7 @@
    "Clases: Mago",
    "El daño periódico de tu Bomba viva ahora puede convertirse en golpes críticos."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Bomba viva"
+  "name": "Glifo de Bomba viva"
  },
  "45738": {
   "quality": 1,
@@ -52143,8 +51814,7 @@
    "Clases: Mago",
    "Reduce el coste de maná de tu Tromba Arcana un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tromba Arcana"
+  "name": "Glifo de Tromba Arcana"
  },
  "45739": {
   "quality": 1,
@@ -52171,8 +51841,7 @@
    "Clases: Mago",
    "Tu Reflejo exacto ahora crea una cuarta copia."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Reflejo exacto"
+  "name": "Glifo de Reflejo exacto"
  },
  "45740": {
   "quality": 1,
@@ -52199,8 +51868,7 @@
    "Clases: Mago",
    "Aumenta la amortiguación de daño de tu Barrera de hielo un 30%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Barrera de hielo"
+  "name": "Glifo de Barrera de hielo"
  },
  "45741": {
   "quality": 1,
@@ -52227,8 +51895,7 @@
    "Clases: Paladín",
    "Aumenta la duración de Señal de la Luz 30 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Señal de la Luz"
+  "name": "Glifo de Señal de la Luz"
  },
  "45742": {
   "quality": 1,
@@ -52255,8 +51922,7 @@
    "Clases: Paladín",
    "Tu Martillo del honrado golpea a 1 objetivo extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Martillo del honrado"
+  "name": "Glifo de Martillo del honrado"
  },
  "45743": {
   "quality": 1,
@@ -52283,8 +51949,7 @@
    "Clases: Paladín",
    "Tu Tormenta divina ahora sana un 15% extra del daño que inflige."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tormenta divina"
+  "name": "Glifo de Tormenta divina"
  },
  "45744": {
   "quality": 1,
@@ -52311,8 +51976,7 @@
    "Clases: Paladín",
    "Reduce el coste de maná de Escudo de rectitud un 80%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Escudo de rectitud"
+  "name": "Glifo de Escudo de rectitud"
  },
  "45745": {
   "quality": 1,
@@ -52339,8 +52003,7 @@
    "Clases: Paladín",
    "Cuando Súplica divina está activa, recibes un 3% de daño reducido de todo origen."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Súplica divina"
+  "name": "Glifo de Súplica divina"
  },
  "45746": {
   "quality": 1,
@@ -52367,8 +52030,7 @@
    "Clases: Paladín",
    "Reduce el tiempo de reutilización de Choque Sagrado 1 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Choque Sagrado"
+  "name": "Glifo de Choque Sagrado"
  },
  "45747": {
   "quality": 1,
@@ -52395,8 +52057,7 @@
    "Clases: Paladín",
    "Cuando lanzas Mano de salvación sobre ti, también reduce el daño recibido un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Salvación"
+  "name": "Glifo de Salvación"
  },
  "45753": {
   "quality": 1,
@@ -52423,8 +52084,7 @@
    "Clases: Sacerdote",
    "Reduce el tiempo de reutilización de tu Dispersión 45 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Dispersión"
+  "name": "Glifo de Dispersión"
  },
  "45755": {
   "quality": 1,
@@ -52451,8 +52111,7 @@
    "Clases: Sacerdote",
    "Si tu Espíritu guardián permanece toda su duración sin activarse, el tiempo de reutilización se reinicia a 1 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Espíritu guardián"
+  "name": "Glifo de Espíritu guardián"
  },
  "45756": {
   "quality": 1,
@@ -52479,8 +52138,7 @@
    "Clases: Sacerdote",
    "Reduce el tiempo de reutilización de Penitencia 2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Penitencia"
+  "name": "Glifo de Penitencia"
  },
  "45757": {
   "quality": 1,
@@ -52507,8 +52165,7 @@
    "Clases: Sacerdote",
    "Aumenta el radio de efecto de Abrasamiento mental 5 m."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Abrasamiento mental"
+  "name": "Glifo de Abrasamiento mental"
  },
  "45758": {
   "quality": 1,
@@ -52535,8 +52192,7 @@
    "Clases: Sacerdote",
    "Tu Himno de esperanza dura 2 s extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Himno de esperanza"
+  "name": "Glifo de Himno de esperanza"
  },
  "45760": {
   "quality": 1,
@@ -52563,8 +52219,7 @@
    "Clases: Sacerdote",
    "Permite lanzar Supresión de dolor mientras estás aturdido."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Supresión de dolor"
+  "name": "Glifo de Supresión de dolor"
  },
  "45761": {
   "quality": 1,
@@ -52591,8 +52246,7 @@
    "Clases: Pícaro",
    "Aumenta el daño extra de Hambre de sangre un 3%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Hambre de sangre"
+  "name": "Glifo de Hambre de sangre"
  },
  "45762": {
   "quality": 1,
@@ -52619,8 +52273,7 @@
    "Clases: Pícaro",
    "Reduce el tiempo de reutilización de tu Asesinato múltiple 45 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Asesinato múltiple"
+  "name": "Glifo de Asesinato múltiple"
  },
  "45764": {
   "quality": 1,
@@ -52647,8 +52300,7 @@
    "Clases: Pícaro",
    "Aumenta la duración de Danza de las Sombras 2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Danza de las Sombras"
+  "name": "Glifo de Danza de las Sombras"
  },
  "45766": {
   "quality": 1,
@@ -52675,8 +52327,7 @@
    "Clases: Pícaro",
    "Aumenta el daño infligido por Abanico de cuchillos un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Abanico de cuchillos"
+  "name": "Glifo de Abanico de cuchillos"
  },
  "45767": {
   "quality": 1,
@@ -52703,8 +52354,7 @@
    "Clases: Pícaro",
    "El bonus de daño y el desvío de amenaza que otorga tu facultad Secretos del oficio dura 4 s extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Secretos del oficio"
+  "name": "Glifo de Secretos del oficio"
  },
  "45768": {
   "quality": 1,
@@ -52759,8 +52409,7 @@
    "Clases: Pícaro",
    "Mientras Capa de las Sombras está activo, recibes un 40% menos de daño físico."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Capa de las Sombras"
+  "name": "Glifo de Capa de las Sombras"
  },
  "45770": {
   "quality": 1,
@@ -52787,8 +52436,7 @@
    "Clases: Chamán",
    "Reduce el tiempo de reutilización de Tormenta de truenos 10 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Trueno"
+  "name": "Glifo de Trueno"
  },
  "45771": {
   "quality": 1,
@@ -52815,8 +52463,7 @@
    "Clases: Chamán",
    "Tus espíritus de lobo ganan un 30% extra de tu poder de ataque."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Espíritu feral"
+  "name": "Glifo de Espíritu feral"
  },
  "45772": {
   "quality": 1,
@@ -52843,8 +52490,7 @@
    "Clases: Chamán",
    "Aumenta la duración de Mareas Vivas 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Mareas Vivas"
+  "name": "Glifo de Mareas Vivas"
  },
  "45775": {
   "quality": 1,
@@ -52871,8 +52517,7 @@
    "Clases: Chamán",
    "Aumenta la cantidad sanada por tu Escudo de tierra un 20%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Escudo de tierra"
+  "name": "Glifo de Escudo de tierra"
  },
  "45776": {
   "quality": 1,
@@ -52899,8 +52544,7 @@
    "Clases: Chamán",
    "Cuando lanzas Tótem de cólera, ganas un 30% del bonus de poder con hechizos del tótem durante 5 min."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tótem de cólera"
+  "name": "Glifo de Tótem de cólera"
  },
  "45777": {
   "quality": 1,
@@ -52927,8 +52571,7 @@
    "Clases: Chamán",
    "Aumenta un 20% el daño que el objetivo de tu hechizo Maleficio puede recibir antes de que el efecto se disipe."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Maleficio"
+  "name": "Glifo de Maleficio"
  },
  "45778": {
   "quality": 1,
@@ -52955,8 +52598,7 @@
    "Clases: Chamán",
    "Tu Tótem Garra de piedra también te da un escudo de Amortiguación de daño igual a 4 veces la fuerza del escudo que da a tus tótems."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Tótem Garra de piedra"
+  "name": "Glifo de Tótem Garra de piedra"
  },
  "45779": {
   "quality": 1,
@@ -52983,8 +52625,7 @@
    "Clases: Brujo",
    "El bonus de daño que te otorga tu hechizo Poseer aumenta un 3% extra."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Poseer"
+  "name": "Glifo de Poseer"
  },
  "45780": {
   "quality": 1,
@@ -53011,8 +52652,7 @@
    "Clases: Brujo",
    "Aumenta la duración de tu Metamorfosis 6 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Metamorfosis"
+  "name": "Glifo de Metamorfosis"
  },
  "45781": {
   "quality": 1,
@@ -53039,8 +52679,7 @@
    "Clases: Brujo",
    "Reduce el tiempo de reutilización de tu Descarga de caos 2 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Descarga de caos"
+  "name": "Glifo de Descarga de caos"
  },
  "45782": {
   "quality": 1,
@@ -53067,8 +52706,7 @@
    "Clases: Brujo",
    "Reduce el tiempo de reutilización de tu Círculo demoníaco 4 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Círculo demoníaco"
+  "name": "Glifo de Círculo demoníaco"
  },
  "45783": {
   "quality": 1,
@@ -53095,8 +52733,7 @@
    "Clases: Brujo",
    "Tu Llama de las Sombras también aplica una reducción de movimiento de un 70% a sus víctimas."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Llama de las Sombras"
+  "name": "Glifo de Llama de las Sombras"
  },
  "45785": {
   "quality": 1,
@@ -53123,8 +52760,7 @@
    "Clases: Brujo",
    "Cuando usas Transfusión de vida o Pacto oscuro, ganas un 20% de tu espíritu como poder con hechizos durante 40 sec."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Transfusión de vida"
+  "name": "Glifo de Transfusión de vida"
  },
  "45789": {
   "quality": 1,
@@ -53179,8 +52815,7 @@
    "Clases: Guerrero",
    "Reduce el tiempo de reutilización de tu Filotormenta 15 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Filotormenta"
+  "name": "Glifo de Filotormenta"
  },
  "45792": {
   "quality": 1,
@@ -53207,8 +52842,7 @@
    "Clases: Guerrero",
    "Reduce el tiempo de reutilización de Ola de choque 3 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Ola de choque"
+  "name": "Glifo de Ola de choque"
  },
  "45793": {
   "quality": 1,
@@ -53235,8 +52869,7 @@
    "Clases: Guerrero",
    "Tu facultad Vigilancia transfiere un 5% extra de la amenaza del objetivo hacia ti."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Vigilancia"
+  "name": "Glifo de Vigilancia"
  },
  "45794": {
   "quality": 1,
@@ -53263,8 +52896,7 @@
    "Clases: Guerrero",
    "Tu facultad Regeneración iracunda sana un 10% extra de tu salud mientras esté activa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Regeneración iracunda"
+  "name": "Glifo de Regeneración iracunda"
  },
  "45795": {
   "quality": 1,
@@ -53291,8 +52923,7 @@
    "Clases: Guerrero",
    "Reduce el tiempo de reutilización de Reflejo de hechizos 1 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Reflejo de hechizos"
+  "name": "Glifo de Reflejo de hechizos"
  },
  "45797": {
   "quality": 1,
@@ -53319,8 +52950,7 @@
    "Clases: Guerrero",
    "Reduce el tiempo de reutilización de Muro de escudo 2 min pero ahora Muro de escudo solo reduce el daño recibido un 40%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Muro de escudo"
+  "name": "Glifo de Muro de escudo"
  },
  "45799": {
   "quality": 1,
@@ -53347,8 +52977,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta la duración de Arma de runa danzante 5 s."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Arma de runa danzante"
+  "name": "Glifo de Arma de runa danzante"
  },
  "45800": {
   "quality": 1,
@@ -53375,8 +53004,7 @@
    "Clases: Caballero de la muerte",
    "Reduce el coste de Frío hambriento 40 p. de poder rúnico."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Frío hambriento"
+  "name": "Glifo de Frío hambriento"
  },
  "45803": {
   "quality": 1,
@@ -53403,8 +53031,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta un 40% el daño infligido por Añublo profano."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Añublo profano"
+  "name": "Glifo de Añublo profano"
  },
  "45804": {
   "quality": 1,
@@ -53431,8 +53058,7 @@
    "Clases: Caballero de la muerte",
    "Aumenta el daño infligido o la sanación realizada con Espiral de la muerte un 15%."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de muerte oscura"
+  "name": "Glifo de muerte oscura"
  },
  "45805": {
   "quality": 1,
@@ -53459,8 +53085,7 @@
    "Clases: Caballero de la muerte",
    "Tu facultad Pestilencia ahora reinicia la duración de las enfermedades y de los efectos secundarios de las enfermedades de tu objetivo principal a su duración máxima."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de enfermedad"
+  "name": "Glifo de enfermedad"
  },
  "45806": {
   "quality": 1,
@@ -53487,8 +53112,7 @@
    "Clases: Caballero de la muerte",
    "Tu facultad Explosión aullante ahora infecta a los objetivos con Fiebre de Escarcha."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Explosión aullante"
+  "name": "Glifo de Explosión aullante"
  },
  "45849": {
   "quality": 3,
@@ -53583,8 +53207,7 @@
    "Clases: Druida",
    "Tu facultad Instintos de supervivencia otorga un 15% extra de tu salud máxima."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Instintos de supervivencia"
+  "name": "Glifo de Instintos de supervivencia"
  },
  "48720": {
   "quality": 1,
@@ -53611,8 +53234,7 @@
    "Clases: Druida",
    "Reduce 5 p. el coste de energía de tu facultad Zarpa."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Zarpa"
+  "name": "Glifo de Zarpa"
  },
  "49084": {
   "quality": 1,
@@ -53687,8 +53309,7 @@
    "Clases: Mago",
    "Tu hechizo Invocar elemental de agua ahora dura de manera indefinida, pero tu elemental de agua ya no podrá lanzar el hechizo Congelar."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Agua eterna"
+  "name": "Glifo de Agua eterna"
  },
  "50077": {
   "quality": 1,
@@ -53715,8 +53336,7 @@
    "Clases: Brujo",
    "Tu celeridad ahora reduce el tiempo entre pulsos de daño periódico de tu hechizo Corrupción."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de descomposición presurosa"
+  "name": "Glifo de descomposición presurosa"
  },
  "50125": {
   "quality": 1,
@@ -53743,8 +53363,7 @@
    "Clases: Druida",
    "Tu celeridad ahora reduce el tiempo entre pulsos de sanación periódica de tu hechizo Rejuvenecimiento."
   ],
-  "name": "Glifo carbonizado",
-  "classicName": "Glifo de Rejuvenecimiento rápido"
+  "name": "Glifo de Rejuvenecimiento rápido"
  },
  "204385": {
   "quality": 1,
@@ -53846,6 +53465,7 @@
   "effects": [
    "Uso: Saquea el naufragio en busca de una trituradora para sacar piezas de repuesto."
   ],
+  "sod": true,
   "other": [
    "Botín de: Operador de Ventura y Cía.",
    "Probabilidad de Botín: 0.00%"
@@ -53871,6 +53491,7 @@
   "effects": [
    "Uso: Permite al objetivo hablar con el cadáver de alguien con asuntos pendientes en el mundo de los mortales. También alivia la indigestión. (3 Seg Reutilización)"
   ],
+  "sod": true,
   "name": "Elixir de arrepentimiento fusionado",
   "classicName": "Elixir de arrepentimiento fusionado"
  },
@@ -53902,6 +53523,7 @@
   "effects": [
    "Equipar: Aumenta el daño causado por los hechizos Sagrados y los efectos hasta en 11 p."
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Malla",
   "name": "Manto de la Segunda Guerra",
@@ -53931,6 +53553,7 @@
   "effects": [
    "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 13 p."
   ],
+  "sod": true,
   "slot": "Muñeca",
   "type": "Tela",
   "name": "Ataduras de Fénix",
@@ -53972,6 +53595,7 @@
    "Equipar: Este objeto está imbuido del poder en bruto del Vacío. Cuando el portador sea atacado, el objeto tiene grandes probabilidades de infligir una terrible maldición que hará que el atacante reciba daño extra de todas las fuentes durante 15 s. (Probabilidad de que accione: 25%)",
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Malla",
   "other": [
@@ -54020,6 +53644,7 @@
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p.",
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques."
   ],
+  "sod": true,
   "slot": "Pies",
   "type": "Tela",
   "other": [
@@ -54040,6 +53665,7 @@
   ],
   "ilvl": 25,
   "bind": "Se liga al recogerlo",
+  "sod": true,
   "flags": [
    "Único"
   ],
@@ -54087,6 +53713,7 @@
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
    "Uso: Pierdes la cordura, lo que aumenta tu velocidad de ataque un 10% y la amenaza que generas durante 10 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Cuero",
   "other": [
@@ -54104,6 +53731,7 @@
    "\"Atrapa almas de demonios y las succiona a cambio de poder.\""
   ],
   "ilvl": 1,
+  "sod": true,
   "other": [
    "\"Atrapa almas de demonios y las succiona a cambio de poder.\""
   ],
@@ -54148,6 +53776,7 @@
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
    "Uso: Pierdes la cordura, lo que aumenta tu daño con hechizos un 10% y la amenaza que generas durante 10 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Cuero",
   "other": [
@@ -54173,6 +53802,7 @@
   "effects": [
    "Uso: Cuando se aplica al arma del objetivo, aumenta la probabilidad de golpe un 2% durante 30 minutos. No tiene efecto fuera de las Cavernas de Brazanegra."
   ],
+  "sod": true,
   "other": [
    "\"Estas misteriosas piedras encantadas parecen brillar con mayor intensidad cuanto más te adentras en Brazanegra.\""
   ],
@@ -54196,6 +53826,7 @@
   "effects": [
    "Uso: Cuando se aplica al arma del objetivo, restaura 12 p. de maná cada 5 s y aumenta el índice de golpe con hechizos un 2% durante 5 min. Solo surte efecto en las Cavernas de Brazanegra."
   ],
+  "sod": true,
   "other": [
    "5 cargas"
   ],
@@ -54214,6 +53845,7 @@
   "ilvl": 40,
   "pila": 20,
   "sell": "2p 80c",
+  "sod": true,
   "name": "Cuero de tenue resplandor",
   "classicName": "Cuero de tenue resplandor"
  },
@@ -54230,6 +53862,7 @@
   "ilvl": 40,
   "bind": "Se liga al recogerlo",
   "pila": 20,
+  "sod": true,
   "other": [
    "\"Un peletero habilidoso podría usar esto para crear algo útil.\""
   ],
@@ -54249,6 +53882,7 @@
   "ilvl": 40,
   "bind": "Se liga al recogerlo",
   "pila": 20,
+  "sod": true,
   "other": [
    "\"Un alquimista habilidoso podría usar esto para crear algo útil.\""
   ],
@@ -54265,6 +53899,7 @@
   ],
   "ilvl": 40,
   "pila": 20,
+  "sod": true,
   "name": "Gniodina aislante",
   "classicName": "Gniodina aislante"
  },
@@ -54281,6 +53916,7 @@
   "ilvl": 40,
   "bind": "Se liga al recogerlo",
   "pila": 20,
+  "sod": true,
   "other": [
    "\"Un herrero habilidoso podría usar esto para forjar algo útil.\""
   ],
@@ -54297,6 +53933,7 @@
   ],
   "ilvl": 40,
   "pila": 20,
+  "sod": true,
   "name": "Placas de veraplata de fondo bajo",
   "classicName": "Placas de veraplata de fondo bajo"
  },
@@ -54313,6 +53950,7 @@
   "ilvl": 40,
   "bind": "Se liga al recogerlo",
   "pila": 20,
+  "sod": true,
   "other": [
    "\"Un sastre habilidoso podría usar esto para crear algo útil.\""
   ],
@@ -54331,6 +53969,7 @@
   "ilvl": 40,
   "pila": 20,
   "sell": "2p 80c",
+  "sod": true,
   "name": "Filamento Arcano hiperconductor",
   "classicName": "Filamento Arcano hiperconductor"
  },
@@ -54347,6 +53986,7 @@
   "ilvl": 40,
   "bind": "Se liga al recogerlo",
   "pila": 20,
+  "sod": true,
   "other": [
    "\"Un ingeniero habilidoso podría usar esto para crear algo útil.\""
   ],
@@ -54363,6 +54003,7 @@
   ],
   "ilvl": 40,
   "pila": 20,
+  "sod": true,
   "name": "Engranajes de veraplata pulidos",
   "classicName": "Engranajes de veraplata pulidos"
  },
@@ -54403,6 +54044,7 @@
    "Equipar: Aumenta la probabilidad de bloquear ataques con un escudo en un 1%.",
    "Equipar: Tus bloqueos hacen que los engranajes afiladísimos inflijan 5 al 10 p. de daño físico al atacante y 2 al 10 p. de daño físico al portador."
   ],
+  "sod": true,
   "slot": "Mano secundaria",
   "type": "Escudo",
   "set": "29 bloquear",
@@ -54449,6 +54091,7 @@
    "Equipar: Restaura 4 p. de maná cada 5 s.",
    "Uso: Reúne la energía Arcana latente en el aire para obtener una inspiración energizada que reduce un 50% el coste de maná de todos los hechizos y aumenta hasta 50 p. el daño infligido y la sanación realizada durante 12 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Tela",
   "name": "Monóculo de filamento Arcano gneurovinculado",
@@ -54489,6 +54132,7 @@
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
    "Uso: Lanza una descarga hiperconductora que te inflige instantáneamente 312 al 688 p. de daño, pero aumenta un 20% tu velocidad de lanzamiento de hechizos durante 10 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Malla",
   "name": "Almófar de escamas hiperconductoras brillante",
@@ -54530,6 +54174,7 @@
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
    "Uso: Sacas una moneda hiperconductora de tu cinturón y la lanzas. Cara: aumenta un 3% la probabilidad de golpe crítico con todos los hechizos y ataques durante 30 s. Cruz: aumenta un 10% la velocidad de movimiento durante 30 s. (15 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Cintura",
   "type": "Tela",
   "set": "\"Este cinturón tintinea débilmente cuando te mueves.\"",
@@ -54557,6 +54202,7 @@
   "effects": [
    "Uso: Inflige 150 al 250 p. de daño de Fuego a los que se encuentren en el radio de la explosión y 25 p. de daño de Naturaleza más cada 2 s durante 10 s. También reduce un 25% la velocidad de movimiento de los objetivos afectados durante hasta cancelación. (1 Min Reutilización)"
   ],
+  "sod": true,
   "name": "Bomba de radiación de alto rendimiento",
   "classicName": "Bomba de radiación de alto rendimiento"
  },
@@ -54596,6 +54242,7 @@
    "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
    "Uso: Obtienes Concentración intensa, lo que reduce un 20% la velocidad de movimiento, pero aumenta 50 p. la resistencia a todos los tipos de magia y un 20% la velocidad de ataque cuerpo a cuerpo durante 10 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Placas",
   "set": "\"Protegerá tu cerebro de cualquier amenaza, física o no.\"",
@@ -54621,6 +54268,7 @@
   "effects": [
    "Uso: Restaura 262 al 438 p. de maná y 340 al 460 p. de salud. Aumenta 40 p. el poder de ataque y 35 p. el daño infligido con hechizos durante 20 s. (2 Min Reutilización)"
   ],
+  "sod": true,
   "other": [
    "\"Posibles efectos secundarios: mareos, boca seca, fatiga, pérdida de apetito, intoxicación aguda por radiación, mutación o muerte. Usar como se indica.\""
   ],
@@ -54664,6 +54312,7 @@
    "Equipar: +3 p. de daño con arma.",
    "Uso: Lanza una descarga gneurológica que te inflige instantáneamente 343 al 757 p. de daño, pero aumenta un 20% tu velocidad de ataque a distancia y cuerpo a cuerpo durante 10 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Cuero",
   "name": "Capucha gneurovinculada brillante",
@@ -54704,6 +54353,7 @@
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
    "Uso: Obtienes Voluntad reforzada, que evita los efectos de silencio e interrupción y el rechazo de hechizos durante 10 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Placas",
   "name": "Jaula cerebral de veraplata reflectante",
@@ -54728,6 +54378,7 @@
   "effects": [
    "Uso: Inflige 112 al 188 p. de daño de Fuego a los que se encuentren en el radio de la explosión y 10 p. de daño de Naturaleza más cada 2 s durante 10 s. También reduce un 25% la velocidad de movimiento de los objetivos afectados durante 10 s. (1 Min Reutilización)"
   ],
+  "sod": true,
   "other": [
    "\"Una versión inferior (aunque no menos letal) de su equivalente más complejo para aquellos incompetentes que aún confían en sí mismos.\""
   ],
@@ -54762,6 +54413,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Tela",
   "name": "Manto de invocador",
@@ -54795,6 +54447,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Cintura",
   "type": "Tela",
   "name": "Cordón de invocador",
@@ -54837,6 +54490,7 @@
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 21 p.",
    "Uso: Obtienes Meditación gneuromántica, lo que te permite mantener un 100% de tu regeneración de maná mientras lanzas hechizos y aumenta hasta 50 p. el daño infligido y la sanación realizada con hechizos durante 20 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Cuero",
   "name": "Caperuza de canalizador gneuroconductora",
@@ -54879,6 +54533,7 @@
    "Equipar: +32 p. de poder de ataque.",
    "Uso: Activa los protocolos de mitigación de la radiación del yelmo, lo que elimina inmediatamente todos los efectos de venenos activos y te hace inmune al daño de Naturaleza durante 3 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Malla",
   "name": "Caperuza de escamas resistente a la radiación",
@@ -54896,6 +54551,7 @@
   "ilvl": 40,
   "pila": 20,
   "sell": "2p 50c",
+  "sod": true,
   "name": "Restos radiactivos de Gnomeregan",
   "classicName": "Restos radiactivos de Gnomeregan"
  },
@@ -54927,6 +54583,7 @@
   "effects": [
    "Equipar: Aumenta el daño causado por los hechizos de Fuego y los efectos hasta en 9 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Tela",
   "name": "Toga de seda carmesí",
@@ -54960,6 +54617,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 13 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Tela",
   "name": "Jubón de tejido mágico negro",
@@ -54993,6 +54651,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Tela",
   "name": "Leotardos de tejido mágico negros",
@@ -55026,6 +54685,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 18 p."
   ],
+  "sod": true,
   "slot": "Cintura",
   "type": "Tela",
   "name": "Cinturón de seda terránea",
@@ -55059,6 +54719,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 8 p."
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Tela",
   "name": "Sobrehombros de seda carmesíes",
@@ -55089,6 +54750,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Espalda",
   "name": "Capa larga de seda",
   "classicName": "Capa larga de seda"
@@ -55121,6 +54783,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 6 p."
   ],
+  "sod": true,
   "slot": "Pies",
   "type": "Tela",
   "name": "Botas del encantador",
@@ -55154,6 +54817,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Cintura",
   "type": "Tela",
   "name": "Cinturón de seda carmesí",
@@ -55187,6 +54851,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 13 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Tela",
   "name": "Jubón terráneo",
@@ -55220,6 +54885,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Tela",
   "name": "Capucha de encantador",
@@ -55253,6 +54919,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 11 p."
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Cuero",
   "name": "Máscara de gran vudú",
@@ -55286,6 +54953,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 11 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Cuero",
   "name": "Toga de gran vudú",
@@ -55319,6 +54987,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Muñeca",
   "type": "Cuero",
   "name": "Brazales de cuero de guardián",
@@ -55352,6 +55021,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 8 p."
   ],
+  "sod": true,
   "slot": "Cintura",
   "type": "Cuero",
   "name": "Cinturón de guardián",
@@ -55385,6 +55055,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Cuero",
   "name": "Pantalones de guardián",
@@ -55420,6 +55091,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 11 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Malla",
   "name": "Coraza de escamas de tortuga",
@@ -55455,6 +55127,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Malla",
   "name": "Guantes de escamas de tortuga",
@@ -55488,6 +55161,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 5 p."
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Malla",
   "name": "Guanteletes de escamas doradas",
@@ -55521,6 +55195,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   ],
+  "sod": true,
   "slot": "Pies",
   "type": "Malla",
   "name": "Botas de escamas doradas",
@@ -55554,6 +55229,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Malla",
   "name": "Loriga de escamas doradas",
@@ -55587,6 +55263,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p."
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Malla",
   "name": "Almófar de escamas doradas",
@@ -55624,6 +55301,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 26 p."
   ],
+  "sod": true,
   "slot": "Dos manos",
   "type": "Espada",
   "name": "Espada ancha de acero lunar",
@@ -55657,6 +55335,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Malla",
   "name": "Sobrehombros de escamas doradas",
@@ -55690,6 +55369,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 6 p."
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Malla",
   "name": "Leotardos de escamas doradas",
@@ -55722,6 +55402,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 5 p."
   ],
+  "sod": true,
   "slot": "A distancia",
   "type": "Varita",
   "set": "40 - 76 Arcano Daño",
@@ -55750,6 +55431,7 @@
   "effects": [
    "Uso: Obtienes un sigilo encantado de innovación que te potencia. Aumentas hasta 20 p. más el daño y la sanación con hechizos, e incrementas en 20 p. tu poder de ataque durante 30 min. Solo se puede aplicar cuando no estás en combate. (30 Min Reutilización)"
   ],
+  "sod": true,
   "other": [
    "Único (5)"
   ],
@@ -55774,6 +55456,7 @@
   "effects": [
    "Uso: Aumenta el daño con hechizos con hechizos hasta 14 p. durante 30 min. (3 Seg Reutilización)"
   ],
+  "sod": true,
   "name": "Elixir Arcano inferior",
   "classicName": "Elixir Arcano inferior"
  },
@@ -55789,6 +55472,7 @@
   ],
   "ilvl": 50,
   "bind": "Se liga al recogerlo",
+  "sod": true,
   "flags": [
    "Único"
   ],
@@ -55833,6 +55517,7 @@
   "effects": [
    "Equipar: Ofrece protección contra ciertos tipos de ataques psíquicos."
   ],
+  "sod": true,
   "slot": "Muñeca",
   "type": "Tela",
   "set": "\"Los brazales hacen que se te erice el pelo de la nuca, como si hubiese alguien justo detrás de ti.\"",
@@ -55876,6 +55561,7 @@
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
    "Equipar: Existe la posibilidad de que los ataques cuerpo a cuerpo aumenten un 5% tu velocidad de ataque y 50 p. tu poder de ataque durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Placas",
   "name": "Hombreras de terror",
@@ -55918,6 +55604,7 @@
    "Equipar: Restaura 2 p. de maná cada 5 s.",
    "Equipar: Existe la posibilidad de que los hechizos de sanación aumenten 50 p. tu sanación durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Placas",
   "name": "Espaldares aciagos",
@@ -55958,6 +55645,7 @@
    "Equipar: Aumenta el daño causado por los hechizos Sagrados y los efectos hasta en 24 p.",
    "Equipar: Existe la posibilidad de que los ataques cuerpo a cuerpo y hechizos dañinos aumenten 50 p. tu daño con hechizos durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Placas",
   "name": "Guardahombros del turbador",
@@ -55998,6 +55686,7 @@
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 20 p.",
    "Equipar: Existe la posibilidad de que los hechizos dañinos aumenten un 10% tu velocidad de lanzamiento con hechizos durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Malla",
   "name": "Espaldares de anillas aulladoras",
@@ -56038,6 +55727,7 @@
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
    "Equipar: Existe la posibilidad de que los ataques cuerpo a cuerpo y a distancia aumenten 60 p. tu poder de ataque durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Malla",
   "name": "Bufas chillonas",
@@ -56080,6 +55770,7 @@
   "effects": [
    "Equipar: Existe la posibilidad de que los ataques cuerpo a cuerpo aumenten un 5% tu velocidad de ataque y 50 p. tu poder de ataque durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Malla",
   "name": "Guardahombros de anillas cacofónicas",
@@ -56122,6 +55813,7 @@
    "Equipar: Restaura 4 p. de maná cada 5 s.",
    "Equipar: Existe la posibilidad de que los hechizos de sanación aumenten 50 p. tu sanación durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Malla",
   "name": "Manto de anillas gemebundas",
@@ -56162,6 +55854,7 @@
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 20 p.",
    "Equipar: Existe la posibilidad de que los ataques cuerpo a cuerpo y hechizos dañinos aumenten 50 p. tu daño con hechizos durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Cuero",
   "name": "Membrana de neurosis oscura",
@@ -56202,6 +55895,7 @@
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
    "Equipar: Existe la posibilidad de que los ataques cuerpo a cuerpo aumenten un 5% tu velocidad de ataque y 50 p. tu poder de ataque durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Cuero",
   "name": "Manto de paranoia",
@@ -56242,6 +55936,7 @@
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 29 p.",
    "Equipar: Existe la posibilidad de que los hechizos de sanación aumenten 50 p. tu sanación durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Cuero",
   "name": "Hombreras de obsesión",
@@ -56284,6 +55979,7 @@
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 20 p.",
    "Equipar: Existe la posibilidad de que los hechizos de sanación aumenten 50 p. tu sanación durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Tela",
   "name": "Manto de locura",
@@ -56324,6 +56020,7 @@
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p.",
    "Equipar: Existe la posibilidad de que los hechizos dañinos aumenten un 10% tu velocidad de lanzamiento con hechizos durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Tela",
   "name": "Espaldares de mente fracturada",
@@ -56364,6 +56061,7 @@
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 13 p.",
    "Equipar: Existe la posibilidad de que los hechizos dañinos aumenten 30 p. tu daño con hechizos y un 2% la probabilidad de esquivar durante 10 s. No surte efecto en las áreas que no estén bajo la influencia de la Pesadilla. (Probabilidad de que accione: 30%, 40s de reutilización)"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Tela",
   "name": "Hombreras del trastornado",
@@ -56385,6 +56083,7 @@
   "effects": [
    "Uso: Cierras el portal vil seleccionado. Quizá atraigas atenciones no deseadas del otro lado."
   ],
+  "sod": true,
   "name": "Pergamino de alivio espacial",
   "classicName": "Pergamino de alivio espacial"
  },
@@ -56398,6 +56097,7 @@
   ],
   "ilvl": 1,
   "pila": 20,
+  "sod": true,
   "name": "Semilla de pesadilla",
   "classicName": "Semilla de pesadilla"
  },
@@ -56425,6 +56125,7 @@
   "effects": [
    "Uso: Aumenta el poder de ataque a distancia y cuerpo a cuerpo en 45 p. Los beneficios de este frasco solo se aplican en zonas bajo la influencia de la Pesadilla. (30 Seg Reutilización)"
   ],
+  "sod": true,
   "other": [
    "\"No importa cuánto bebas. El contenido del frasco parece no agotarse nunca.\""
   ],
@@ -56467,6 +56168,7 @@
    "Equipar: Ofrece protección contra ciertos tipos de ataques psíquicos.",
    "Uso: Canaliza el poder del Vacío, lo que otorga inmunidad al miedo durante 15 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Muñeca",
   "type": "Tela",
   "set": "\"Con las mejores piezas del diseño original de Ziri y unas cuantas modificaciones adicionales.\"",
@@ -56509,6 +56211,7 @@
    "Equipar: Ofrece protección contra ciertos tipos de ataques psíquicos.",
    "Uso: Canaliza el poder del Vacío, lo que otorga inmunidad al miedo durante 15 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Muñeca",
   "type": "Cuero",
   "set": "\"Con las mejores piezas del diseño original de Ziri y unas cuantas modificaciones adicionales.\"",
@@ -56551,6 +56254,7 @@
    "Equipar: Ofrece protección contra ciertos tipos de ataques psíquicos.",
    "Uso: Canaliza el poder del Vacío, lo que otorga inmunidad al miedo durante 15 s. (10 Min Reutilización)"
   ],
+  "sod": true,
   "slot": "Muñeca",
   "type": "Placas",
   "set": "\"Con las mejores piezas del diseño original de Ziri y unas cuantas modificaciones adicionales.\"",
@@ -56579,6 +56283,7 @@
   "effects": [
    "Uso: Obtienes un sigilo encantado de sueños vivos que te potencia. Aumentas hasta 30 p. más el daño y la sanación con hechizos, e incrementas en 30 p. tu poder de ataque durante 30 min. Solo se puede aplicar cuando no estás en combate. (30 Min Reutilización)"
   ],
+  "sod": true,
   "other": [
    "Único (5)"
   ],
@@ -56596,6 +56301,7 @@
   ],
   "ilvl": 50,
   "pila": 20,
+  "sod": true,
   "other": [
    "\"El mejor mojo de los trols Atal'ai.\""
   ],
@@ -56613,6 +56319,7 @@
   ],
   "ilvl": 50,
   "pila": 20,
+  "sod": true,
   "other": [
    "\"Un poderoso vudú Atal'ai imbuido de pesadilla gira dentro del vial.\""
   ],
@@ -56643,6 +56350,7 @@
   "effects": [
    "Uso: Aumenta hasta 30 p. el daño infligido con hechizos, hasta 45 p. la sanación realizada y en 12 p. la regeneración de maná cada 5 s durante 1 h. Los beneficios de este frasco solo se aplican en zonas bajo la influencia de la Pesadilla. (30 Seg Reutilización)"
   ],
+  "sod": true,
   "other": [
    "\"No importa cuánto bebas. El contenido del frasco parece no agotarse nunca.\""
   ],
@@ -56804,6 +56512,7 @@
    "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
    "Equipar: +58 p. de poder de ataque."
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Cuero",
   "set": "Armadura de demosaurio (0/2)",
@@ -56853,6 +56562,7 @@
    "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
    "Equipar: +38 p. de poder de ataque."
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Cuero",
   "set": "Armadura de demosaurio (0/2)",
@@ -56977,6 +56687,7 @@
   "effects": [
    "Equipar: +56 p. de poder de ataque."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Malla",
   "set": "Malla de dragón negro (0/4)",
@@ -57030,6 +56741,7 @@
   "effects": [
    "Equipar: +56 p. de poder de ataque."
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Malla",
   "set": "Malla de dragón negro (0/4)",
@@ -57083,6 +56795,7 @@
   "effects": [
    "Equipar: +42 p. de poder de ataque."
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Malla",
   "set": "Malla de dragón negro (0/4)",
@@ -57125,6 +56838,7 @@
   "effects": [
    "Equipar: Defensa aumentada +8."
   ],
+  "sod": true,
   "slot": "Espalda",
   "name": "Capa cambiante magistral",
   "classicName": "Capa cambiante magistral"
@@ -57219,6 +56933,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 33 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Tela",
   "name": "Jubón de tela lunar incandescente",
@@ -57254,6 +56969,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 62 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Tela",
   "name": "Toga de tela lunar incandescente",
@@ -57289,6 +57005,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 48 p."
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Tela",
   "name": "Aro de tela lunar incandescente",
@@ -57324,6 +57041,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 46 p."
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Tela",
   "name": "Leotardos de tela lunar incandescente",
@@ -57359,6 +57077,7 @@
   "effects": [
    "Equipar: Añade 4 p. de daño de Fuego a tu ataque con arma."
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Placas",
   "name": "Guanteletes de placas ígneas de la técnica oculta",
@@ -57394,6 +57113,7 @@
   "stats": [
    "+25 resistencia a Fuego"
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Cuero",
   "set": "Armadura volcánica (0/3)",
@@ -57437,6 +57157,7 @@
   "stats": [
    "+30 resistencia a Fuego"
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Cuero",
   "set": "Armadura volcánica (0/3)",
@@ -57482,6 +57203,7 @@
    "+17 aguante",
    "+25 resistencia a Fuego"
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Cuero",
   "set": "Armadura volcánica (0/3)",
@@ -57526,6 +57248,7 @@
    "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p."
   ],
+  "sod": true,
   "slot": "Espalda",
   "name": "Capa cromática brillante",
   "classicName": "Capa cromática brillante"
@@ -57562,6 +57285,7 @@
    "Equipar: Añade 3 p. de daño de relámpago a tus ataques cuerpo a cuerpo.",
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p."
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Malla",
   "name": "Guanteletes de tempestad",
@@ -57597,6 +57321,7 @@
   "effects": [
    "Equipar: Defensa aumentada +9."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Placas",
   "name": "Placa Hierro Negro templada",
@@ -57632,6 +57357,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 46 p."
   ],
+  "sod": true,
   "slot": "Cabeza",
   "type": "Malla",
   "name": "Cimera del gran jefe",
@@ -57673,6 +57399,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 25 p."
   ],
+  "sod": true,
   "slot": "Hombro",
   "type": "Malla",
   "set": "Malla de dragón azul (0/3)",
@@ -57722,6 +57449,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 26 p."
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Malla",
   "set": "Malla de dragón azul (0/3)",
@@ -57771,6 +57499,7 @@
   "effects": [
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 33 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Malla",
   "set": "Malla de dragón azul (0/3)",
@@ -57814,6 +57543,7 @@
    "Equipar: Al recibir un golpe en combate hay un 5% de probabilidad de volverte invulnerable al daño cuerpo a cuerpo en durante 3 s. Este efecto solo se produce cada 30 segundos. (Probabilidad de que accione: 5%, 30s de reutilización)",
    "Equipar: Defensa aumentada +13."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Malla",
   "name": "Malla invencible",
@@ -57857,6 +57587,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 40 p."
   ],
+  "sod": true,
   "slot": "Piernas",
   "type": "Malla",
   "set": "Malla de dragón verde (0/3)",
@@ -57908,6 +57639,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 31 p."
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Malla",
   "set": "Malla de dragón verde (0/3)",
@@ -57959,6 +57691,7 @@
   "effects": [
    "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 31 p."
   ],
+  "sod": true,
   "slot": "Pecho",
   "type": "Malla",
   "set": "Malla de dragón verde (0/3)",
@@ -58076,6 +57809,7 @@
    "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 22 p."
   ],
+  "sod": true,
   "slot": "Cintura",
   "type": "Cuero",
   "name": "Faja de perspicacia Arcana",
@@ -58109,6 +57843,7 @@
   "effects": [
    "Equipar: +41 p. de poder de ataque a distancia."
   ],
+  "sod": true,
   "slot": "Muñeca",
   "type": "Malla",
   "name": "Avambrazos de vuelo presto",
@@ -58188,6 +57923,7 @@
    "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
    "Equipar: Defensa aumentada +7."
   ],
+  "sod": true,
   "slot": "Manos",
   "type": "Placas",
   "name": "Guanteletes de bastión recios",
@@ -58375,6 +58111,7 @@
    "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
    "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 23 p."
   ],
+  "sod": true,
   "slot": "Cintura",
   "type": "Tela",
   "name": "Cinturón bordado del archimago",

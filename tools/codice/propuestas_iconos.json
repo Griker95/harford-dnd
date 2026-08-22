@@ -1,0 +1,5039 @@
+{
+ "Andar en el viento": {
+  "nivel": 6,
+  "ingles": "windwalk",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_windwalk",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_monk_windwalker_spec",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "ability_shaman_windwalktotem",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_fire_windsofwoe",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_four_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_wind_wall",
+    "motivo": "sinonimo de wind"
+   }
+  ]
+ },
+ "Cadena de relámpagos": {
+  "nivel": 6,
+  "ingles": "chainlightning",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_chainlightning",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_thrall_chainlightning",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "smite_zeus_chainlightning",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_rumble_chainlightning",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_wc3h_chainlightninghuman",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_bg3_lightningarrow",
+    "motivo": "sinonimo de lightning"
+   },
+   {
+    "icono": "eps_bg3_lightningaura",
+    "motivo": "sinonimo de lightning"
+   },
+   {
+    "icono": "eps_bg3_lightningblast",
+    "motivo": "sinonimo de lightning"
+   }
+  ]
+ },
+ "Crear muerto viviente": {
+  "nivel": 6,
+  "ingles": "createundead",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_createundead",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Detener el tiempo": {
+  "nivel": 9,
+  "ingles": "timestop",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_nature_timestop",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_zilean_timestop",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "ability_mage_timewarp",
+    "motivo": "sinonimo de time"
+   },
+   {
+    "icono": "ability_racial_timeismoney",
+    "motivo": "sinonimo de time"
+   },
+   {
+    "icono": "hots_chromie_timetrap",
+    "motivo": "sinonimo de time"
+   },
+   {
+    "icono": "hots_zilean_timebomb",
+    "motivo": "sinonimo de time"
+   },
+   {
+    "icono": "hots_zilean_timewarp",
+    "motivo": "sinonimo de time"
+   },
+   {
+    "icono": "eps_arc_black_time",
+    "motivo": "sinonimo de time"
+   }
+  ]
+ },
+ "Golpe ígneo": {
+  "nivel": 5,
+  "ingles": "flamestrike",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_flamestrike",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_kaelthas_flamestrike_fel",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_kaelthas_flamestrike_fire",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_kaelthas_flamestrike_ice",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_kaelthas_flamestrike_shadow",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_kaelthas_flamestrike_twilight",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_wc3_flamestrike",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_flamestrikefel",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Palabra de muerte": {
+  "nivel": 9,
+  "ingles": "powerwordkill",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_powerwordkill",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_holy_power",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_holy_powerwordbarrier",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_priest_power word",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_monk_powerstrikes",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_vehicle_powertowheels",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_deathknight_empowerruneblade",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_holy_empowerchampion",
+    "motivo": "sinonimo de power"
+   }
+  ]
+ },
+ "Regeneración": {
+  "nivel": 7,
+  "ingles": "regenerate",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_nature_regenerate",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_rumble_regenerate",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Alzar a los muertos": {
+  "nivel": 5,
+  "ingles": "raisedead",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "d3_raisedead",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_raisedeadspores",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_necro_bwonsamdisboon",
+    "motivo": "sinonimo de undeadraise"
+   },
+   {
+    "icono": "spell_necro_chillofdeath",
+    "motivo": "sinonimo de undeadraise"
+   },
+   {
+    "icono": "spell_necro_conclave",
+    "motivo": "sinonimo de undeadraise"
+   },
+   {
+    "icono": "spell_necro_deathall",
+    "motivo": "sinonimo de undeadraise"
+   },
+   {
+    "icono": "spell_necro_deathlyecho",
+    "motivo": "sinonimo de undeadraise"
+   },
+   {
+    "icono": "spell_necro_deathlyslam",
+    "motivo": "sinonimo de undeadraise"
+   }
+  ]
+ },
+ "Sujetar monstruo": {
+  "nivel": 5,
+  "ingles": "holdmonster",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_holdmonster",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Teletransportación": {
+  "nivel": 7,
+  "ingles": "teleport",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_shadow_teleport",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "d3_teleport",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_liming_teleport",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_arc_black_teleport",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_arc_blue_teleport",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_arc_bronze_teleport",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_arc_fire_teleport",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_arc_green_teleport",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Toque de la muerte": {
+  "nivel": 7,
+  "ingles": "fingerofdeath",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "spell_shadow_fingerofdeath",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_shadowascendaid",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowsoakedblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow2",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Curar heridas en masa": {
+  "nivel": 5,
+  "ingles": "masscurewounds",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_masscurewounds",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Deseo": {
+  "nivel": 9,
+  "ingles": "wish",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "eps_lol_soraka_wish",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_soraka_wishold",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_lol_soraka_wishold2",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_lol_profileicon_wishtothemoon",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_bg3_shadowascendaid",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowsoakedblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Lluvia de fuego": {
+  "nivel": 5,
+  "ingles": "rainoffire",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_wc3h_rainoffire",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_argus_withering_fire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fel_firebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_firefrost orb",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fireresistancetotem_01",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluecano",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefirenova",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Sed de sangre y heroísmo": {
+  "nivel": 5,
+  "ingles": "bloodlust",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "spell_nature_bloodlust",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_rehgar_bloodlust",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_tryndamere_bloodlust",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_tryndamere_bloodlustold",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_wc3h_bloodlustamulet",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Resurrección": {
+  "nivel": 7,
+  "ingles": "resurrection",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "spell_holy_resurrection",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_wc3_resurrection",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_sw_resurrectionphial",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "hots_auriel_resurrect",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "spell_holy_revivechampion",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "smite_auriel_resurrect",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "eps_lol_anivia_rebirth",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "eps_lol_anivia_rebirthold",
+    "motivo": "sinonimo de resurrect"
+   }
+  ]
+ },
+ "Amanecer": {
+  "nivel": 5,
+  "ingles": "dawn",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "hd_fellowshiptime_1_dawn",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_senna_dawningshadow",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_lol_senna_dawningshadow2",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_jewelcrafting_dawnstone_01",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_jewelcrafting_dawnstone_02",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_jewelcrafting_dawnstone_03",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_lol_profileicon_dawnblade",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_lol_profileicon_dawnbringer",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Apoteosis": {
+  "nivel": 9,
+  "ingles": "apotheosis",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "eps_lol_nilah_apotheosis",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_holy_absolution",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ardentdefender",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ashestoashes",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_aspiration",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Arcángel": {
+  "nivel": 6,
+  "ingles": "archangel",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "ability_priest_archangel",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_tyrael_archangelswrath",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_priest_angelicbulwark",
+    "motivo": "sinonimo de angel"
+   },
+   {
+    "icono": "ability_priest_angelicbulwark",
+    "motivo": "sinonimo de angel"
+   },
+   {
+    "icono": "hots_auriel_angelicflight",
+    "motivo": "sinonimo de angel"
+   },
+   {
+    "icono": "hots_tyrael_angelicabsorption",
+    "motivo": "sinonimo de angel"
+   },
+   {
+    "icono": "hots_valla_angelic",
+    "motivo": "sinonimo de angel"
+   },
+   {
+    "icono": "smite_auriel_angelicflight",
+    "motivo": "sinonimo de angel"
+   }
+  ]
+ },
+ "Cataclismo": {
+  "nivel": 8,
+  "ingles": "cataclysm",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "ability_deathwing_cataclysm",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_jarvaniv_cataclysm",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "achievement_zone_cataclysm",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_axe_1h_cataclysm_b_01",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_axe_1h_cataclysm_b_02",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_axe_1h_cataclysm_c_01",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_axe_2h_cataclysm_b_01",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_axe_2h_cataclysm_b_02",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Círculo de muerte": {
+  "nivel": 6,
+  "ingles": "circleofdeath",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_circleofdeath",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_shadowascendaid",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowsoakedblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow2",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Cono de frío": {
+  "nivel": 5,
+  "ingles": "coneofcold",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_coneofcold",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_jaina_coneofcold",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_deathknight_frostfever",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_fire_frostresistancetotem",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frostresistancetotem_01",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_coldhearted",
+    "motivo": "sinonimo de cold"
+   }
+  ]
+ },
+ "Crear piedra de alma": {
+  "nivel": 5,
+  "ingles": "soulstone",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "hd_create_soulstone",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_nature_earthbindtotem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthelemental_totem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthquake",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthshock",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_earthlivingweapon",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_deathwing_bloodcorruption_earth",
+    "motivo": "sinonimo de earth"
+   }
+  ]
+ },
+ "Curar": {
+  "nivel": 6,
+  "ingles": "heal",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_heal02",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_spell_heal",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_healingincense",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_holy_healingaura",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_holy_healingfocus",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_nature_healingwavelesser",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_nature_healingway",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "ability_monk_healthsphere",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Dañar": {
+  "nivel": 6,
+  "ingles": "harm",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_harm",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_harmonizing",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_holy_harmundeadaura",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_lol_item_harmonicecho",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_bg3_shadowascendaid",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowsoakedblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Desintegrar": {
+  "nivel": 6,
+  "ingles": "disintegrate",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_disintegrate",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "d3_disintegrate",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_annie_disintegrate",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_liming_disintegrate",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "smite_annie_disintegrate",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_forcedmove",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_nature_forceofnature",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_monk_forcesphere",
+    "motivo": "sinonimo de force"
+   }
+  ]
+ },
+ "Disipar en masa": {
+  "nivel": 6,
+  "ingles": "massdispel",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "spell_arcane_massdispel",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Eclipse": {
+  "nivel": 6,
+  "ingles": "eclipse",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "ability_druid_eclipse",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_leona_eclipse",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_rumble_eclipse",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "ability_druid_eclipseorange",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Ejército de los muertos": {
+  "nivel": 5,
+  "ingles": "armyofthedead",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "spell_deathknight_armyofthedead",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_arthas_armyofthedead",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_rumble_armyofthedead",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Grito psíquico": {
+  "nivel": 9,
+  "ingles": "psychicscream",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "spell_shadow_psychicscream",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_mindtax",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_arcane_mindmastery",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_deathknight_mindfreeze",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindshear",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindsteal",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindtwisting",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_argus_psychic_scarring",
+    "motivo": "sinonimo de psychic"
+   }
+  ]
+ },
+ "Halo": {
+  "nivel": 7,
+  "ingles": "halo",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "ability_priest_halo",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "ability_priest_halo_shadow",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_haloofspores",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_holy_absolution",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ardentdefender",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ashestoashes",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_aspiration",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Inmolación": {
+  "nivel": 5,
+  "ingles": "immolation",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_fire_immolation",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "ability_demonhunter_immolation",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "ability_rhyolith_immolation",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_argus_withering_fire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fel_firebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_firefrost orb",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fireresistancetotem_01",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluecano",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Luz del protector": {
+  "nivel": 5,
+  "ingles": "lightoftheprotector",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "ability_paladin_lightoftheprotector",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_holy_absolution",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ardentdefender",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ashestoashes",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_aspiration",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Muro de espinas": {
+  "nivel": 6,
+  "ingles": "wallofthorns",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_wallofthorns",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_wallofstone",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "ability_skyreach_wind_wall",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "ability_paladin_barrieroffaith",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "d3_wallofzombies",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "eps_lol_gnar_wallop",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "eps_lol_karthus_wallofpain",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "eps_lol_karthus_wallofpainold",
+    "motivo": "sinonimo de wall"
+   }
+  ]
+ },
+ "Muro de piedra": {
+  "nivel": 5,
+  "ingles": "wallofstone",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_wallofstone",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_nature_earthbindtotem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthelemental_totem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthquake",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthshock",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_earthlivingweapon",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_skyreach_wind_wall",
+    "motivo": "sinonimo de wall"
+   }
+  ]
+ },
+ "Nova de hielo": {
+  "nivel": 8,
+  "ingles": "icenova",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_mage_icenova",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_deathknight_frostfever",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_fire_frostresistancetotem",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frostresistancetotem_01",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_coldhearted",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_freezingbreath",
+    "motivo": "sinonimo de cold"
+   }
+  ]
+ },
+ "Pico glacial": {
+  "nivel": 7,
+  "ingles": "glacialspike",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "ability_mage_glacialspike",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_deathknight_frostfever",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_fire_frostresistancetotem",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frostresistancetotem_01",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_coldhearted",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_freezingbreath",
+    "motivo": "sinonimo de cold"
+   }
+  ]
+ },
+ "Piroexplosión": {
+  "nivel": 7,
+  "ingles": "pyroblast",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "hots_kaelthas_pyroblast",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_kaelthas_pyroblast_fel",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_kaelthas_pyroblast_nether",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_rumble_pyroblast",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_argus_withering_fire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fel_firebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_firefrost orb",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fireresistancetotem_01",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Plaga de insectos": {
+  "nivel": 5,
+  "ingles": "insectplague",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_insectplague",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_druid_swarm",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "spell_nature_insect_swarm2",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "ability_skyreach_swarm",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "spell_nature_insectswarm",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "eps_bg3_spiderpoisonbite",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "eps_bg3_spidertinybite",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "d3_locustswarm",
+    "motivo": "sinonimo de swarm"
+   }
+  ]
+ },
+ "Rayo solar": {
+  "nivel": 6,
+  "ingles": "sunbeam",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_sunbeam",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_holy_absolution",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ardentdefender",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ashestoashes",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_aspiration",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Salvación": {
+  "nivel": 9,
+  "ingles": "salvation",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "eps_lol_soraka_salvation",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_lol_soraka_salvationold",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Símbolo": {
+  "nivel": 7,
+  "ingles": "symbol",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "inv_summerfest_symbol_high",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_summerfest_symbol_low",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_summerfest_symbol_medium",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_holy_symbolofhope",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_misc_tournaments_symbol_bloodelf",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_misc_tournaments_symbol_draenei",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_misc_tournaments_symbol_dwarf",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_misc_tournaments_symbol_gnome",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Terremoto": {
+  "nivel": 8,
+  "ingles": "earthquake",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_nature_earthquake",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "d3_earthquake",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_thrall_earthquake",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_nature_earthbindtotem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthelemental_totem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthshock",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_earthlivingweapon",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_earth",
+    "motivo": "sinonimo de earth"
+   }
+  ]
+ },
+ "Torbellino": {
+  "nivel": 7,
+  "ingles": "whirlwind",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "d3_whirlwind",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "hots_sonya_whirlwind",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_veilguard_whirlwind",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "spell_fire_windsofwoe",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "spell_monk_windwalker_spec",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_shaman_windwalktotem",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_four_wind",
+    "motivo": "sinonimo de wind"
+   }
+  ]
+ },
+ "Tormenta de fuego": {
+  "nivel": 7,
+  "ingles": "firestorm",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_wc3h_firestorm",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "eps_bg3_healingincense",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_argus_withering_fire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fel_firebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_firefrost orb",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fireresistancetotem_01",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluecano",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefire",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Tsunami": {
+  "nivel": 8,
+  "ingles": "tsunami",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "inv_misc_dmc_tsunami",
+    "motivo": "nombre exacto"
+   },
+   {
+    "icono": "inv_inscription_tarot_tsunamiace",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_inscription_tarot_tsunamicard",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Resplandor enfermizo": {
+  "nivel": 4,
+  "ingles": "sickeningradiance",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_absolution",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ardentdefender",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ashestoashes",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_aspiration",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedresillience",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Agotamiento": {
+  "nivel": 5,
+  "ingles": "enervation",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_shadowascendaid",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowsoakedblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow2",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_antishadow",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Arma impía": {
+  "nivel": 5,
+  "ingles": "unholyweapon",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_shadowblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "eps_bg3_shadowsoakedblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow2",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_antishadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_blackplague",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Arma sagrada": {
+  "nivel": 5,
+  "ingles": "holyweapon",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_ardentdefender",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_ashestoashes",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_aspiration",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedresillience",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofagility",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Cadena de muerte": {
+  "nivel": 5,
+  "ingles": "deathcoil",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_shadowsoakedblade",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow2",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_antishadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_blackplague",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_bloodboil",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Choque de sombras": {
+  "nivel": 5,
+  "ingles": "shadowshock",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "spell_priest_divinestar_shadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_divinestar_shadow2",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_antishadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_blackplague",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_bloodboil",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_brainwash",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Comunión con la naturaleza": {
+  "nivel": 5,
+  "ingles": "communewithnature",
+  "escuela": "Adivinación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_nature",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_agitatingtotem",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_ancestralguardian",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_astralrecal",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_astralrecalgroup",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_brilliance",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_corrosivebreath",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_cyclone",
+    "motivo": "sinonimo de nature"
+   }
+  ]
+ },
+ "Conjurar elemental": {
+  "nivel": 5,
+  "ingles": "conjureelemental",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_deathknight_summondeathcharger",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_frost_summonwaterelemental",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_frost_summonwaterelemental_2",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_holy_summonchampion",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_holy_summonlightwell",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonfelguard",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonimp",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summoninfernal",
+    "motivo": "sinonimo de summon"
+   }
+  ]
+ },
+ "Controlar vientos": {
+  "nivel": 5,
+  "ingles": "controlwinds",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_fire_windsofwoe",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "spell_monk_windwalker_spec",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_shaman_windwalktotem",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_four_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_wind_wall",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_druid_galewinds",
+    "motivo": "sinonimo de wind"
+   }
+  ]
+ },
+ "Círculo de poder": {
+  "nivel": 5,
+  "ingles": "circleofpower",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "spell_holy_power",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_holy_powerwordbarrier",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_priest_power word",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_monk_powerstrikes",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_vehicle_powertowheels",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_deathknight_empowerruneblade",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_holy_empowerchampion",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_druid_empoweredrejuvination",
+    "motivo": "sinonimo de power"
+   }
+  ]
+ },
+ "Círculo de teletransportación": {
+  "nivel": 5,
+  "ingles": "teleportationcircle",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_arcane_teleportdalaranbrokenisles",
+    "motivo": "sinonimo de teleport"
+   },
+   {
+    "icono": "spell_arcane_teleportdalarancrater",
+    "motivo": "sinonimo de teleport"
+   },
+   {
+    "icono": "spell_arcane_teleportdarnassus",
+    "motivo": "sinonimo de teleport"
+   },
+   {
+    "icono": "spell_arcane_teleportexodar",
+    "motivo": "sinonimo de teleport"
+   },
+   {
+    "icono": "spell_arcane_teleporthalloftheguardian",
+    "motivo": "sinonimo de teleport"
+   },
+   {
+    "icono": "spell_arcane_teleportironforge",
+    "motivo": "sinonimo de teleport"
+   },
+   {
+    "icono": "spell_arcane_teleportkultiras",
+    "motivo": "sinonimo de teleport"
+   },
+   {
+    "icono": "spell_arcane_teleportmoonglade",
+    "motivo": "sinonimo de teleport"
+   }
+  ]
+ },
+ "Despertar": {
+  "nivel": 5,
+  "ingles": "awaken",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "eps_lol_yorick_awakening",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_tabard_a_82awakenedorder",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Dominar persona": {
+  "nivel": 5,
+  "ingles": "dominateperson",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_charmaniplant",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "eps_bg3_enthrall",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune01",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune02",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune03",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune04",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune05",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune06",
+    "motivo": "sinonimo de charm"
+   }
+  ]
+ },
+ "Empoderar habilidad": {
+  "nivel": 5,
+  "ingles": "skillempowerment",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_powerwordbarrier",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_priest_power word",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_monk_powerstrikes",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_vehicle_powertowheels",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_deathknight_empowerruneblade",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_holy_empowerchampion",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_druid_empoweredrejuvination",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_druid_empoweredtouch",
+    "motivo": "sinonimo de power"
+   }
+  ]
+ },
+ "Ensueño": {
+  "nivel": 5,
+  "ingles": "dream",
+  "escuela": "Ilusión",
+  "candidatos": [
+   {
+    "icono": "ability_druid_dreamstate",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "ability_xavius_dreamsimulacrum",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_lol_lilia_dreamladenbough",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_enchant_dreamshard_01",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_enchant_dreamshard_02",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_inscription_ink_dreams",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_legioncircle_cache_dreamweavers",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_legioncircle_faction_dreamweavers",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Furia de la serpiente de la muerte": {
+  "nivel": 5,
+  "ingles": "deathwyrmfury",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_dragondeathbreath",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "eps_bg3_dragonfireaoe",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "eps_bg3_dragonfreezebreath",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "eps_bg3_dragonlightningbreath",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "eps_bg3_dragonpoisonbreath",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "spell_argus_withering_fire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fel_firebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_firefrost orb",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Geas": {
+  "nivel": 5,
+  "ingles": "geas",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_mindtax",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_arcane_mindmastery",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_deathknight_mindfreeze",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindshear",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindsteal",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindtwisting",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_argus_psychic_scarring",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_priest_psychiclink",
+    "motivo": "sinonimo de psychic"
+   }
+  ]
+ },
+ "Golpe de viento de acero": {
+  "nivel": 5,
+  "ingles": "steelwindstrike",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_forcedmove",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_nature_forceofnature",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_monk_windwalker_spec",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_monk_forcesphere",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_monk_forcesphere_pink",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_socererking_forcenova",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_shaman_windwalktotem",
+    "motivo": "sinonimo de wind"
+   }
+  ]
+ },
+ "Golpe desterrador": {
+  "nivel": 5,
+  "ingles": "banishingsmite",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_dispelmagic",
+    "motivo": "sinonimo de banish"
+   },
+   {
+    "icono": "eps_wc3h_banished",
+    "motivo": "sinonimo de banish"
+   },
+   {
+    "icono": "ability_monk_expelharm",
+    "motivo": "sinonimo de banish"
+   },
+   {
+    "icono": "ability_titankeeper_expelcorruption",
+    "motivo": "sinonimo de banish"
+   },
+   {
+    "icono": "ability_racial_dispelillusions",
+    "motivo": "sinonimo de banish"
+   },
+   {
+    "icono": "spell_nature_purge",
+    "motivo": "sinonimo de banish"
+   },
+   {
+    "icono": "ability_shaman_cleansespirit",
+    "motivo": "sinonimo de banish"
+   },
+   {
+    "icono": "ability_titankeeper_cleanse",
+    "motivo": "sinonimo de banish"
+   }
+  ]
+ },
+ "Inundación de energía negativa": {
+  "nivel": 5,
+  "ingles": "negativeenergyflood",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "spell_priest_divinestar_shadow2",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_antishadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_blackplague",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_bloodboil",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_brainwash",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_burningspirit",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Ira de la naturaleza": {
+  "nivel": 5,
+  "ingles": "wrathofnature",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_nature_agitatingtotem",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_ancestralguardian",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_astralrecal",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_astralrecalgroup",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_brilliance",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_corrosivebreath",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_cyclone",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_diseasecleansingtotem",
+    "motivo": "sinonimo de nature"
+   }
+  ]
+ },
+ "Lluvia curativa": {
+  "nivel": 5,
+  "ingles": "healingrain",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_healingincense",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_holy_healingaura",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_holy_healingfocus",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_nature_healingwavelesser",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_nature_healingway",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "ability_monk_healthsphere",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "ability_shaman_healingtide",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_holy_restoration",
+    "motivo": "sinonimo de heal"
+   }
+  ]
+ },
+ "Maelstrom": {
+  "nivel": 5,
+  "ingles": "maelstrom",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_shaman_maelstromweapon",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "inv_misc_ticket_tarot_maelstrom_01",
+    "motivo": "nombre exacto"
+   }
+  ]
+ },
+ "Mano de Bigby": {
+  "nivel": 5,
+  "ingles": "bigbyshand",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_handcommandundead",
+    "motivo": "sinonimo de hand"
+   },
+   {
+    "icono": "spell_nature_forceofnature",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "eps_bg3_graspingthorn",
+    "motivo": "sinonimo de hand"
+   },
+   {
+    "icono": "eps_bg3_graspingvine",
+    "motivo": "sinonimo de hand"
+   },
+   {
+    "icono": "ability_monk_forcesphere",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_monk_forcesphere_pink",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_socererking_forcenova",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_paladin_handofhindrance",
+    "motivo": "sinonimo de hand"
+   }
+  ]
+ },
+ "Modificar memoria": {
+  "nivel": 5,
+  "ingles": "modifymemory",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "spell_arcane_mindmastery",
+    "motivo": "sinonimo de memory"
+   },
+   {
+    "icono": "spell_deathknight_mindfreeze",
+    "motivo": "sinonimo de memory"
+   },
+   {
+    "icono": "spell_shadow_mindshear",
+    "motivo": "sinonimo de memory"
+   },
+   {
+    "icono": "spell_shadow_mindsteal",
+    "motivo": "sinonimo de memory"
+   },
+   {
+    "icono": "spell_shadow_mindtwisting",
+    "motivo": "sinonimo de memory"
+   },
+   {
+    "icono": "hd_mind_control",
+    "motivo": "sinonimo de memory"
+   },
+   {
+    "icono": "ability_priest_thoughtsteal01",
+    "motivo": "sinonimo de memory"
+   },
+   {
+    "icono": "hots_tracer_recall",
+    "motivo": "sinonimo de memory"
+   }
+  ]
+ },
+ "Muro de fuerza": {
+  "nivel": 5,
+  "ingles": "wallofforce",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_nature_forceofnature",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_monk_forcesphere",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_monk_forcesphere_pink",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_socererking_forcenova",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_skyreach_wind_wall",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "spell_arcane_arcane01_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcane04",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanepotency_nightborne",
+    "motivo": "sinonimo de force"
+   }
+  ]
+ },
+ "Muro de luz": {
+  "nivel": 5,
+  "ingles": "walloflight",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_ashestoashes",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_aspiration",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedresillience",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofagility",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofprotection",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Pasamuros": {
+  "nivel": 5,
+  "ingles": "passwall",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "ability_skyreach_wind_wall",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "ability_paladin_barrieroffaith",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "d3_wallofzombies",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "eps_lol_gnar_wallop",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "eps_lol_karthus_wallofpain",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "eps_lol_karthus_wallofpainold",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "eps_arc_barrierblue",
+    "motivo": "sinonimo de wall"
+   },
+   {
+    "icono": "eps_arc_barriergreen",
+    "motivo": "sinonimo de wall"
+   }
+  ]
+ },
+ "Ritual de invocación": {
+  "nivel": 5,
+  "ingles": "ritualofsummoning",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_frost_summonwaterelemental",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_frost_summonwaterelemental_2",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_holy_summonchampion",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_holy_summonlightwell",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonfelguard",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonimp",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summoninfernal",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonsuccubus",
+    "motivo": "sinonimo de summon"
+   }
+  ]
+ },
+ "Sacralizar": {
+  "nivel": 5,
+  "ingles": "hallow",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "eps_arc_halloween_anomaly",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_arc_halloween_armour",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_arc_halloween_barrage",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_arc_halloween_barrier",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_arc_halloween_blade",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_arc_halloween_book",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_arc_halloween_burst",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_arc_halloween_caramel",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Unión planar": {
+  "nivel": 5,
+  "ingles": "planarbinding",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_astralknowledge",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_druid_astralstorm",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_nature_astralrecal",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_nature_astralrecalgroup",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_druid_astralstorm",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_shaman_astralshift",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_racial_etherealconnection",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "d3_astralpresence",
+    "motivo": "sinonimo de planar"
+   }
+  ]
+ },
+ "Aliado planar": {
+  "nivel": 6,
+  "ingles": "planarally",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_druid_astralstorm",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_nature_astralrecal",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_nature_astralrecalgroup",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_druid_astralstorm",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_shaman_astralshift",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_racial_etherealconnection",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "d3_astralpresence",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_priest_void blast",
+    "motivo": "sinonimo de planar"
+   }
+  ]
+ },
+ "Carne a piedra": {
+  "nivel": 6,
+  "ingles": "fleshtostone",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_nature_earthbindtotem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthelemental_totem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthshock",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_earthlivingweapon",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_deathwing_bloodcorruption_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_earthenfury_giftofearth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_gift_of_earth",
+    "motivo": "sinonimo de earth"
+   }
+  ]
+ },
+ "Conjurar hadas": {
+  "nivel": 6,
+  "ingles": "conjurefey",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_frost_summonwaterelemental_2",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_holy_summonchampion",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_holy_summonlightwell",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonfelguard",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonimp",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summoninfernal",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonsuccubus",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_warlock_summonabyssal",
+    "motivo": "sinonimo de summon"
+   }
+  ]
+ },
+ "Dispersar": {
+  "nivel": 6,
+  "ingles": "scatter",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "hots_hanzo_scatterarrow",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "hots_syndra_scattertheweak",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Escisión": {
+  "nivel": 6,
+  "ingles": "schism",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "spell_deathknight_mindfreeze",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindshear",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindsteal",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindtwisting",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_argus_psychic_scarring",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_priest_psychiclink",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_psychicassault",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "hd_mind_control",
+    "motivo": "sinonimo de psychic"
+   }
+  ]
+ },
+ "Esfera congelante de Otiluke": {
+  "nivel": 6,
+  "ingles": "otilukesfreezingsphere",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_deathknight_frostfever",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_fire_frostresistancetotem",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frostresistancetotem_01",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_coldhearted",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_freezingbreath",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostblast",
+    "motivo": "sinonimo de cold"
+   }
+  ]
+ },
+ "Festín de héroes": {
+  "nivel": 6,
+  "ingles": "heroesfeast",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "eps_lol_chogath_feast",
+    "motivo": "sinonimo de food"
+   }
+  ]
+ },
+ "Furia sombría": {
+  "nivel": 6,
+  "ingles": "shadowfury",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "ability_warlock_shadowfurytga",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_antishadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_blackplague",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_bloodboil",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_brainwash",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_burningspirit",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Guardias y barreras": {
+  "nivel": 6,
+  "ingles": "guardsandwards",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "ability_paladin_shieldofthetemplar",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_paladin_shieldofvengeance",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_skyreach_shielded",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldbash",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldbreak",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldguard",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldmastery",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldwall",
+    "motivo": "sinonimo de protect"
+   }
+  ]
+ },
+ "Huesos de la tierra": {
+  "nivel": 6,
+  "ingles": "bonesoftheearth",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_nature_earthelemental_totem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_earthshock",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_earthlivingweapon",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_deathwing_bloodcorruption_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_earthenfury_giftofearth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_gift_of_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_stoneclawtotem",
+    "motivo": "sinonimo de earth"
+   }
+  ]
+ },
+ "Ilusión programada": {
+  "nivel": 6,
+  "ingles": "programmedillusion",
+  "escuela": "Ilusión",
+  "candidatos": [
+   {
+    "icono": "spell_nature_mirrorimage",
+    "motivo": "sinonimo de illusion"
+   },
+   {
+    "icono": "eps_rumble_hellscream_mirrorimage",
+    "motivo": "sinonimo de illusion"
+   },
+   {
+    "icono": "eps_rumble_mirrorimage",
+    "motivo": "sinonimo de illusion"
+   },
+   {
+    "icono": "hots_thrall_frostwolfresilience_phantom",
+    "motivo": "sinonimo de illusion"
+   },
+   {
+    "icono": "hots_thrall_ghostwolf_phantom",
+    "motivo": "sinonimo de illusion"
+   },
+   {
+    "icono": "eps_bg3_tricksterblessing",
+    "motivo": "sinonimo de illusion"
+   },
+   {
+    "icono": "eps_lol_pyke_phantomundertow",
+    "motivo": "sinonimo de illusion"
+   },
+   {
+    "icono": "eps_lol_rk_pyke_phantomundertow",
+    "motivo": "sinonimo de illusion"
+   }
+  ]
+ },
+ "Inversión de viento": {
+  "nivel": 6,
+  "ingles": "investitureofwind",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_monk_windwalker_spec",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_shaman_windwalktotem",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_four_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_skyreach_wind",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "ability_druid_galewinds",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "hots_thrall_windfury",
+    "motivo": "sinonimo de wind"
+   },
+   {
+    "icono": "hots_xinzhao_windbecomeslightning",
+    "motivo": "sinonimo de wind"
+   }
+  ]
+ },
+ "Investidura de hielo": {
+  "nivel": 6,
+  "ingles": "investitureofice",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_fire_frostresistancetotem",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frostresistancetotem_01",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_coldhearted",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_freezingbreath",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostbolt",
+    "motivo": "sinonimo de cold"
+   }
+  ]
+ },
+ "Investidura de llama": {
+  "nivel": 6,
+  "ingles": "investitureofflame",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_argus_withering_fire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fel_firebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_firefrost orb",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fireresistancetotem_01",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluecano",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefirenova",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefireward",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Investidura de piedra": {
+  "nivel": 6,
+  "ingles": "investitureofstone",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_nature_earthshock",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_earthlivingweapon",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_deathwing_bloodcorruption_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_earthenfury_giftofearth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_gift_of_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_stoneclawtotem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_stoneskintotem",
+    "motivo": "sinonimo de earth"
+   }
+  ]
+ },
+ "Invocación instantánea de Drawmij": {
+  "nivel": 6,
+  "ingles": "drawmijsinstantsummons",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_holy_summonchampion",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_holy_summonlightwell",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonfelguard",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonimp",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summoninfernal",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonsuccubus",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_warlock_summonabyssal",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_warlock_summonimpoutland",
+    "motivo": "sinonimo de summon"
+   }
+  ]
+ },
+ "Invocar demonio": {
+  "nivel": 6,
+  "ingles": "summonfiend",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_holy_summonlightwell",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonfelguard",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonimp",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summoninfernal",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_shadow_summonsuccubus",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_warlock_summonabyssal",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_warlock_summonimpoutland",
+    "motivo": "sinonimo de summon"
+   },
+   {
+    "icono": "spell_warlock_summonterrorguard",
+    "motivo": "sinonimo de summon"
+   }
+  ]
+ },
+ "Jaula de almas": {
+  "nivel": 6,
+  "ingles": "soulcage",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "hots_trappreparation",
+    "motivo": "sinonimo de trap"
+   },
+   {
+    "icono": "smite_trappreparation",
+    "motivo": "sinonimo de trap"
+   },
+   {
+    "icono": "eps_rumble_trapdoor",
+    "motivo": "sinonimo de trap"
+   },
+   {
+    "icono": "eps_veilguard_explosive_trap",
+    "motivo": "sinonimo de trap"
+   },
+   {
+    "icono": "spell_shaman_bindelemental",
+    "motivo": "sinonimo de trap"
+   },
+   {
+    "icono": "eps_arc_door_dalaran_prison",
+    "motivo": "sinonimo de trap"
+   },
+   {
+    "icono": "eps_arc_door_prison01",
+    "motivo": "sinonimo de trap"
+   },
+   {
+    "icono": "eps_arc_poster_kultiras_prison",
+    "motivo": "sinonimo de trap"
+   }
+  ]
+ },
+ "Lluvia de estrellas": {
+  "nivel": 6,
+  "ingles": "starfall",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_aspiration",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedresillience",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofagility",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofprotection",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofstamina",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Mordedura de ojo": {
+  "nivel": 6,
+  "ingles": "eyebite",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "eps_lol_hwei_gazeoftheabyss",
+    "motivo": "sinonimo de eye"
+   },
+   {
+    "icono": "eps_lol_lilia_watchout",
+    "motivo": "sinonimo de eye"
+   }
+  ]
+ },
+ "Mover la tierra": {
+  "nivel": 6,
+  "ingles": "moveearth",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_shaman_earthlivingweapon",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_deathwing_bloodcorruption_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_earthenfury_giftofearth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_gift_of_earth",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_stoneclawtotem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "spell_nature_stoneskintotem",
+    "motivo": "sinonimo de earth"
+   },
+   {
+    "icono": "ability_shaman_stonebulwark",
+    "motivo": "sinonimo de earth"
+   }
+  ]
+ },
+ "Muro de hielo": {
+  "nivel": 6,
+  "ingles": "wallofice",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_frostresistancetotem_01",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_coldhearted",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_freezingbreath",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostbrand",
+    "motivo": "sinonimo de cold"
+   }
+  ]
+ },
+ "Portal arcano": {
+  "nivel": 6,
+  "ingles": "arcanegate",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "ability_monk_forcesphere",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_monk_forcesphere_pink",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_socererking_forcenova",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcane01_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcane04",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanepotency_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcaneresilience",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanetorrent",
+    "motivo": "sinonimo de force"
+   }
+  ]
+ },
+ "Prisión mental": {
+  "nivel": 6,
+  "ingles": "mentalprison",
+  "escuela": "Ilusión",
+  "candidatos": [
+   {
+    "icono": "spell_shadow_mindshear",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindsteal",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindtwisting",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_argus_psychic_scarring",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_priest_psychiclink",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_psychicassault",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "hd_mind_control",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_nature_mentalquickness",
+    "motivo": "sinonimo de psychic"
+   }
+  ]
+ },
+ "Protección primordial": {
+  "nivel": 6,
+  "ingles": "primordialward",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "ability_paladin_shieldofvengeance",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_skyreach_shielded",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldbash",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldbreak",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldguard",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldmastery",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "ability_warrior_shieldwall",
+    "motivo": "sinonimo de protect"
+   },
+   {
+    "icono": "spell_totem_wardofdraining",
+    "motivo": "sinonimo de protect"
+   }
+  ]
+ },
+ "Transporte a través de plantas": {
+  "nivel": 6,
+  "ingles": "transportviaplants",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_nature_ancestralguardian",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_astralrecal",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_astralrecalgroup",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_brilliance",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_corrosivebreath",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_cyclone",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_diseasecleansingtotem",
+    "motivo": "sinonimo de nature"
+   },
+   {
+    "icono": "spell_nature_doublepolymorph1",
+    "motivo": "sinonimo de nature"
+   }
+  ]
+ },
+ "Verdad": {
+  "nivel": 6,
+  "ingles": "truesight",
+  "escuela": "Adivinación",
+  "candidatos": [
+   {
+    "icono": "spell_shadow_detectlesserinvisibility",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "eps_lol_leesin_sightunseeing",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "spell_holy_senseundead",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "eps_lol_swain_visionofempire",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "spell_nature_farsight",
+    "motivo": "sinonimo de detect"
+   }
+  ]
+ },
+ "Arcano miraje": {
+  "nivel": 7,
+  "ingles": "miragearcane",
+  "escuela": "Ilusión",
+  "candidatos": [
+   {
+    "icono": "ability_monk_forcesphere_pink",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_socererking_forcenova",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcane01_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcane04",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanepotency_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcaneresilience",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanetorrent",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanetorrent_nightborne",
+    "motivo": "sinonimo de force"
+   }
+  ]
+ },
+ "Bola de fuego retardada": {
+  "nivel": 7,
+  "ingles": "delayedblastfireball",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_fel_firebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_firefrost orb",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fireresistancetotem_01",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluecano",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefirenova",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefireward",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebolt",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Corona de estrellas": {
+  "nivel": 7,
+  "ingles": "crownofstars",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_avenginewrath",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedresillience",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofagility",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofprotection",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofstamina",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofstrength",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Espada de Mordenkainen": {
+  "nivel": 7,
+  "ingles": "mordenkainenssword",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "ability_socererking_forcenova",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_blue",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_green",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_purple",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_red",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_white",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_yellow",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_warrior_swordandboard",
+    "motivo": "sinonimo de weapon"
+   }
+  ]
+ },
+ "Gravedad invertida": {
+  "nivel": 7,
+  "ingles": "reversegravity",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_levitate'",
+    "motivo": "sinonimo de gravity"
+   },
+   {
+    "icono": "hots_kaelthas_gravitylapse_green",
+    "motivo": "sinonimo de gravity"
+   },
+   {
+    "icono": "hots_kaelthas_gravitylapse_red",
+    "motivo": "sinonimo de gravity"
+   },
+   {
+    "icono": "hots_kaelthas_gravitylapse_yellow",
+    "motivo": "sinonimo de gravity"
+   },
+   {
+    "icono": "eps_lol_viktor_gravityfield",
+    "motivo": "sinonimo de gravity"
+   },
+   {
+    "icono": "eps_lol_viktor_gravityfieldold",
+    "motivo": "sinonimo de gravity"
+   },
+   {
+    "icono": "eps_bg3_pullingweb",
+    "motivo": "sinonimo de gravity"
+   },
+   {
+    "icono": "hots_johanna_fallingsword_light",
+    "motivo": "sinonimo de gravity"
+   }
+  ]
+ },
+ "Jaula de fuerza": {
+  "nivel": 7,
+  "ingles": "forcecage",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_arcane_arcane01_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcane04",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanepotency_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcaneresilience",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanetorrent",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_arcanetorrent_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_blast_nightborne",
+    "motivo": "sinonimo de force"
+   },
+   {
+    "icono": "spell_arcane_blink",
+    "motivo": "sinonimo de force"
+   }
+  ]
+ },
+ "Mansión magnífica de Mordenkainen": {
+  "nivel": 7,
+  "ingles": "mordenkainensmagnificentmansion",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_frost_chillingblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_chillingbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_coldhearted",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_freezingbreath",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostblast",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostbolt",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostbrand",
+    "motivo": "sinonimo de cold"
+   },
+   {
+    "icono": "spell_frost_frostnova",
+    "motivo": "sinonimo de cold"
+   }
+  ]
+ },
+ "Rociada prismática": {
+  "nivel": 7,
+  "ingles": "prismaticspray",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_firefrost orb",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fireresistancetotem_01",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluecano",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefirenova",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefireward",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebreath",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Templo de los dioses": {
+  "nivel": 7,
+  "ingles": "templeofthegods",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "achievement_battleground_templeofkotmogu",
+    "motivo": "sinonimo de temple"
+   },
+   {
+    "icono": "achievement_battleground_templeofkotmogu_02",
+    "motivo": "sinonimo de temple"
+   },
+   {
+    "icono": "achievement_battleground_templeofkotmogu_02_cyan",
+    "motivo": "sinonimo de temple"
+   },
+   {
+    "icono": "achievement_battleground_templeofkotmogu_02_green",
+    "motivo": "sinonimo de temple"
+   },
+   {
+    "icono": "achievement_battleground_templeofkotmogu_02_orange",
+    "motivo": "sinonimo de temple"
+   },
+   {
+    "icono": "achievement_battleground_templeofkotmogu_02_purple",
+    "motivo": "sinonimo de temple"
+   },
+   {
+    "icono": "achievement_challengemode_templeofthejadeserpent_bronze",
+    "motivo": "sinonimo de temple"
+   },
+   {
+    "icono": "achievement_challengemode_templeofthejadeserpent_gold",
+    "motivo": "sinonimo de temple"
+   }
+  ]
+ },
+ "Aura sagrada": {
+  "nivel": 8,
+  "ingles": "holyaura",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "spell_holy_blessedlife",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedresillience",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofagility",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofprotection",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofstamina",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofstrength",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blindingheal",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Clonación": {
+  "nivel": 8,
+  "ingles": "clone",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "hots_varian_twinbladesoffury",
+    "motivo": "sinonimo de clone"
+   },
+   {
+    "icono": "eps_lol_cassiopeia_twinfang",
+    "motivo": "sinonimo de clone"
+   },
+   {
+    "icono": "eps_lol_cassiopeia_twinfangold",
+    "motivo": "sinonimo de clone"
+   },
+   {
+    "icono": "eps_lol_shyvana_twinbite",
+    "motivo": "sinonimo de clone"
+   },
+   {
+    "icono": "eps_veilguard_twin_gifts_of_arlathan",
+    "motivo": "sinonimo de clone"
+   },
+   {
+    "icono": "eps_veilguard_twin_gifts_of_arlathan_ultimate",
+    "motivo": "sinonimo de clone"
+   },
+   {
+    "icono": "eps_rumble_hellscream_mirrorimage",
+    "motivo": "sinonimo de clone"
+   },
+   {
+    "icono": "eps_rumble_mirrorimage",
+    "motivo": "sinonimo de clone"
+   }
+  ]
+ },
+ "Debilitamiento mental": {
+  "nivel": 8,
+  "ingles": "feeblemind",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "spell_shadow_mindsteal",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_mindtwisting",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_argus_psychic_scarring",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_priest_psychiclink",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_psychicassault",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "hd_mind_control",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_nature_mentalquickness",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_brainwash",
+    "motivo": "sinonimo de psychic"
+   }
+  ]
+ },
+ "Dominar monstruo": {
+  "nivel": 8,
+  "ingles": "dominatemonster",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_enthrall",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune01",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune02",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune03",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune04",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune05",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune06",
+    "motivo": "sinonimo de charm"
+   },
+   {
+    "icono": "ability_domination_rune07",
+    "motivo": "sinonimo de charm"
+   }
+  ]
+ },
+ "Dragón ilusorio": {
+  "nivel": 8,
+  "ingles": "illusorydragon",
+  "escuela": "Ilusión",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_dragonfireaoe",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "eps_bg3_dragonfreezebreath",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "eps_bg3_dragonlightningbreath",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "eps_bg3_dragonpoisonbreath",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "spell_warrior_dragoncharge",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "ability_monk_dragonkick",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "ability_warrior_dragonroar",
+    "motivo": "sinonimo de dragon"
+   },
+   {
+    "icono": "hots_alexstrasza_dragonqueen",
+    "motivo": "sinonimo de dragon"
+   }
+  ]
+ },
+ "Furia de Alexstrasza": {
+  "nivel": 8,
+  "ingles": "alexstraszasfury",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_fireresistancetotem_01",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluecano",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefirenova",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefireward",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebreath",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamering",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Marchitamiento horrendo de Abi-Dalzim": {
+  "nivel": 8,
+  "ingles": "abidalzimshorridwilting",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "spell_priest_shadow mend",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_animatedead",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_antishadow",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_blackplague",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_bloodboil",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_brainwash",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_burningspirit",
+    "motivo": "sinonimo de necrotic"
+   },
+   {
+    "icono": "spell_shadow_callofbone",
+    "motivo": "sinonimo de necrotic"
+   }
+  ]
+ },
+ "Mente en blanco": {
+  "nivel": 8,
+  "ingles": "mindblank",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "spell_shadow_mindtwisting",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_argus_psychic_scarring",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_priest_psychiclink",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_psychicassault",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "hd_mind_control",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_nature_mentalquickness",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_brainwash",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_mage_brainfreeze",
+    "motivo": "sinonimo de psychic"
+   }
+  ]
+ },
+ "Nube incendiaria": {
+  "nivel": 8,
+  "ingles": "incendiarycloud",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_fire_bluecano",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefirenova",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefireward",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebreath",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamering",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamestrike",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Oscuridad loca": {
+  "nivel": 8,
+  "ingles": "maddeningdarkness",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_argus_psychic_scarring",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_priest_psychiclink",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_psychicassault",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "hd_mind_control",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_nature_mentalquickness",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_brainwash",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_mage_brainfreeze",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_priest_thoughtsteal01",
+    "motivo": "sinonimo de psychic"
+   }
+  ]
+ },
+ "Palabra de aturdimiento": {
+  "nivel": 8,
+  "ingles": "powerwordstun",
+  "escuela": "Encantamiento",
+  "candidatos": [
+   {
+    "icono": "spell_priest_power word",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_monk_powerstrikes",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_vehicle_powertowheels",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_deathknight_empowerruneblade",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_holy_empowerchampion",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_druid_empoweredrejuvination",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_druid_empoweredtouch",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_garrosh_empowered_whirling_corruption",
+    "motivo": "sinonimo de power"
+   }
+  ]
+ },
+ "Ráfaga solar": {
+  "nivel": 8,
+  "ingles": "sunburst",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_blessedrecovery",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessedresillience",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofagility",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofprotection",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofstamina",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blessingofstrength",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_blindingheal",
+    "motivo": "sinonimo de radiant"
+   },
+   {
+    "icono": "spell_holy_borrowedtime",
+    "motivo": "sinonimo de radiant"
+   }
+  ]
+ },
+ "Semiplano": {
+  "nivel": 8,
+  "ingles": "demiplane",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_nature_astralrecal",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_nature_astralrecalgroup",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_druid_astralstorm",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_shaman_astralshift",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "ability_racial_etherealconnection",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "d3_astralpresence",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_priest_void blast",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_priest_void flay",
+    "motivo": "sinonimo de planar"
+   }
+  ]
+ },
+ "Barco volador de Jaina": {
+  "nivel": 9,
+  "ingles": "jainasflyingship",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "ability_druid_flightform",
+    "motivo": "sinonimo de fly"
+   },
+   {
+    "icono": "hots_falstad_flight",
+    "motivo": "sinonimo de fly"
+   },
+   {
+    "icono": "spell_shaman_unleashweapon_wind",
+    "motivo": "sinonimo de fly"
+   },
+   {
+    "icono": "eps_lol_udyr_wingbornestorm",
+    "motivo": "sinonimo de fly"
+   },
+   {
+    "icono": "eps_rumble_wingbuffet",
+    "motivo": "sinonimo de fly"
+   },
+   {
+    "icono": "eps_wc3h_wingprotection",
+    "motivo": "sinonimo de fly"
+   },
+   {
+    "icono": "ability_shaman_windwalktotem",
+    "motivo": "sinonimo de fly"
+   },
+   {
+    "icono": "ability_skyreach_four_wind",
+    "motivo": "sinonimo de fly"
+   }
+  ]
+ },
+ "Curación en masa": {
+  "nivel": 9,
+  "ingles": "massheal",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_healingaura",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_holy_healingfocus",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_nature_healingwavelesser",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_nature_healingway",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "ability_monk_healthsphere",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "ability_shaman_healingtide",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_holy_restoration",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "d3_healthglobes",
+    "motivo": "sinonimo de heal"
+   }
+  ]
+ },
+ "Enjambre de meteoros": {
+  "nivel": 9,
+  "ingles": "meteorswarm",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_druid_swarm",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "spell_nature_insect_swarm2",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "ability_skyreach_swarm",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "spell_nature_insectswarm",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "eps_bg3_spiderpoisonbite",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "eps_bg3_spidertinybite",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "d3_locustswarm",
+    "motivo": "sinonimo de swarm"
+   },
+   {
+    "icono": "hots_anubarak_locustswarm",
+    "motivo": "sinonimo de swarm"
+   }
+  ]
+ },
+ "Extrañeza": {
+  "nivel": 9,
+  "ingles": "weird",
+  "escuela": "Ilusión",
+  "candidatos": [
+   {
+    "icono": "ability_priest_psychiclink",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_psychicassault",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "hd_mind_control",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_nature_mentalquickness",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "spell_shadow_brainwash",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_mage_brainfreeze",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "ability_priest_thoughtsteal01",
+    "motivo": "sinonimo de psychic"
+   },
+   {
+    "icono": "eps_lol_singed_insanitypotion",
+    "motivo": "sinonimo de psychic"
+   }
+  ]
+ },
+ "Hoja de desastre": {
+  "nivel": 9,
+  "ingles": "bladeofdisaster",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "ability_iyyokuk_sword_blue",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_green",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_purple",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_red",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_white",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_iyyokuk_sword_yellow",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "ability_warrior_swordandboard",
+    "motivo": "sinonimo de weapon"
+   },
+   {
+    "icono": "spell_arcane_arcane04",
+    "motivo": "sinonimo de force"
+   }
+  ]
+ },
+ "Muro prismático": {
+  "nivel": 9,
+  "ingles": "prismaticwall",
+  "escuela": "Abjuración",
+  "candidatos": [
+   {
+    "icono": "spell_fire_bluefire",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefirenova",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluefireward",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebolt",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamebreath",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamering",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_blueflamestrike",
+    "motivo": "sinonimo de fire"
+   },
+   {
+    "icono": "spell_fire_bluehellfire",
+    "motivo": "sinonimo de fire"
+   }
+  ]
+ },
+ "Palabra de poder: sanar": {
+  "nivel": 9,
+  "ingles": "powerwordheal",
+  "escuela": "Evocación",
+  "candidatos": [
+   {
+    "icono": "spell_holy_healingfocus",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_nature_healingwavelesser",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "spell_nature_healingway",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "ability_monk_healthsphere",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "ability_shaman_healingtide",
+    "motivo": "sinonimo de heal"
+   },
+   {
+    "icono": "ability_monk_powerstrikes",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "ability_vehicle_powertowheels",
+    "motivo": "sinonimo de power"
+   },
+   {
+    "icono": "spell_holy_restoration",
+    "motivo": "sinonimo de heal"
+   }
+  ]
+ },
+ "Polimorfia en masa": {
+  "nivel": 9,
+  "ingles": "masspolymorph",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "eps_bg3_polymorph",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "spell_magic_polymorphpig",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "spell_magic_polymorphrabbit",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "spell_nature_polymorph_cow",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftbadger",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftbear",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftkitty",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftpanther",
+    "motivo": "sinonimo de polymorph"
+   }
+  ]
+ },
+ "Polimorfia verdadera": {
+  "nivel": 9,
+  "ingles": "truepolymorph",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_magic_polymorphpig",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "spell_magic_polymorphrabbit",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "spell_nature_polymorph_cow",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftbadger",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftbear",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftkitty",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftpanther",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftrat",
+    "motivo": "sinonimo de polymorph"
+   }
+  ]
+ },
+ "Previsión": {
+  "nivel": 9,
+  "ingles": "foresight",
+  "escuela": "Adivinación",
+  "candidatos": [
+   {
+    "icono": "eps_lol_leesin_sightunseeing",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "spell_holy_senseundead",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "eps_lol_swain_visionofempire",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "spell_nature_farsight",
+    "motivo": "sinonimo de detect"
+   }
+  ]
+ },
+ "Puerta": {
+  "nivel": 9,
+  "ingles": "gate",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "eps_lol_twistedfate_gateold",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "achievement_challengemode_gateofthesettingsun_bronze",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "achievement_challengemode_gateofthesettingsun_gold",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "achievement_challengemode_gateofthesettingsun_hourglass",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "achievement_challengemode_gateofthesettingsun_platinum",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "achievement_challengemode_gateofthesettingsun_silver",
+    "motivo": "nombre dentro del icono"
+   },
+   {
+    "icono": "eps_lol_profileicon_gatewaytothespiritrealm",
+    "motivo": "nombre dentro del icono"
+   }
+  ]
+ },
+ "Tormenta de venganza": {
+  "nivel": 9,
+  "ingles": "stormofvengeance",
+  "escuela": "Conjuración",
+  "candidatos": [
+   {
+    "icono": "spell_nature_thunderclap",
+    "motivo": "sinonimo de thunder"
+   },
+   {
+    "icono": "spell_shaman_thunderstorm",
+    "motivo": "sinonimo de thunder"
+   },
+   {
+    "icono": "ability_monk_thunderfocustea",
+    "motivo": "sinonimo de thunder"
+   },
+   {
+    "icono": "ability_thunderbolt",
+    "motivo": "sinonimo de thunder"
+   },
+   {
+    "icono": "ability_thunderclap",
+    "motivo": "sinonimo de thunder"
+   },
+   {
+    "icono": "ability_thunderking_decapitate",
+    "motivo": "sinonimo de thunder"
+   },
+   {
+    "icono": "ability_thunderking_kickshell",
+    "motivo": "sinonimo de thunder"
+   },
+   {
+    "icono": "ability_thunderking_lightningwhip",
+    "motivo": "sinonimo de thunder"
+   }
+  ]
+ },
+ "Verdadera resurrección": {
+  "nivel": 9,
+  "ingles": "trueresurrection",
+  "escuela": "Nigromancia",
+  "candidatos": [
+   {
+    "icono": "hots_auriel_resurrect",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "spell_holy_revivechampion",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "smite_auriel_resurrect",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "eps_sw_resurrectionphial",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "eps_wc3_resurrection",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "eps_lol_anivia_rebirth",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "eps_lol_anivia_rebirthold",
+    "motivo": "sinonimo de resurrect"
+   },
+   {
+    "icono": "d3_revive",
+    "motivo": "sinonimo de resurrect"
+   }
+  ]
+ }
+}

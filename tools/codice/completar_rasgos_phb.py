@@ -51,6 +51,8 @@ def seccion(src, titulo):
 
 def limpio(t):
     t = re.split(r"(?m)^[ \t]*\|", t or "")[0]
+    # el manual abre el parrafo con la inicial en negrita: "**A** nivel 15 has adquirido..."
+    t = re.sub(r"^\s*\*{1,3}([A-ZÁÉÍÓÚÑ])\*{1,3}\s*", r"\1 ", t.strip())
     t = re.sub(r"(?m)^[>\s]*#{1,6}\s*", "", t)
     t = re.sub(r"\s*\n\s*", " ", t)
     return a_metrico(limpiar(re.sub(r"\s{2,}", " ", t).strip()))
@@ -86,8 +88,11 @@ def main():
     lua = io.open(LUA, encoding="utf-8", newline="").read()
     nuevos, sin_texto = {}, []
     for clase, lv, nombre, titulo in RASGOS:
-        if re.search(r'name = "%s"' % re.escape(nombre), lua):
-            continue                     # ya esta
+        # el nombre se busca DENTRO de su clase: "Evasion" existe tambien en el monje y
+        # comprobarlo en todo el fichero hacia que el picaro se quedara sin el suyo
+        _r = bloque_features(lua, clase)
+        if _r and re.search(r'name = "%s"' % re.escape(nombre), lua[_r[0]:_r[1]]):
+            continue
         txt = seccion(src, titulo)
         if not txt or len(txt) < 40:
             sin_texto.append((clase, nombre, titulo))

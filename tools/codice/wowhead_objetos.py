@@ -183,7 +183,9 @@ def ficha(iid, d):
         elif k in _BANDERAS:
             f.setdefault("flags", []).append(l)
         elif _FASE.match(l):
-            continue                    # etiqueta interna de Wowhead, no la ve el jugador
+            # el jugador no ve esta etiqueta, pero delata que el objeto es de la Temporada
+            # de Descubrimiento y no del Classic original: hay que poder descartarlo
+            f["sod"] = True
         elif "set" not in f and "slot" in f:
             f["set"] = l                # el nombre del conjunto va junto a la ranura
         else:
@@ -224,6 +226,25 @@ def main():
             print("   %s: %s" % (iid, ex))
         if n % 200 == 0:
             print("   %4d/%d" % (n, len(ids)))
+    # El nombre moderno no siempre sirve: Blizzard desmantelo los glifos y 324 objetos que
+    # en Wrath tenian nombre propio ("Glifo de Disparo de punteria") hoy se llaman todos
+    # "Glifo carbonizado". Cuando un nombre actual lo comparten varios objetos distintos, el
+    # que distingue es el de su version, asi que ahi manda ese.
+    import collections
+    por = collections.defaultdict(list)
+    for iid, f in fuera.items():
+        por[f["name"]].append(iid)
+    revertidos = 0
+    for nombre, ids in por.items():
+        if len(ids) < 2:
+            continue
+        for iid in ids:
+            f = fuera[iid]
+            if f.get("classicName") and f["classicName"] != f["name"]:
+                f["name"] = f.pop("classicName")
+                revertidos += 1
+    print("objetos que recuperan su nombre de version por colision: %d" % revertidos)
+
     io.open(SALIDA, "w", encoding="utf-8").write(json.dumps(fuera, ensure_ascii=False, indent=1))
     con = lambda k: sum(1 for f in fuera.values() if f.get(k))    # noqa: E731
     print("\nguardados %d objetos en %s   (fallos %d)" % (len(fuera), SALIDA, err))

@@ -1,0 +1,12 @@
+{
+  "_leeme": "Rasgos que el Libro 1 nombra de una manera y el addon de otra. Sin esto, los completadores los vuelven a anadir cada vez que se ejecutan, porque no los reconocen por el nombre. La clave es como lo llama el libro y el valor como lo llama el addon.",
+  "Ataque Extra": "Ataque adicional",
+  "Ataque Extra (2)": "Ataque adicional (2)",
+  "Defensa sin Armadura": "Guardas demoniacas",
+  "Druidismo": "Druidico",
+  "Forja de Almas": "Forjado de almas",
+  "Accion Adicional (un uso)": "Accion adicional",
+  "Acción Adicional (un uso)": "Accion adicional",
+  "Toque de Vida (1/día)": "Toque de vida",
+  "Evasión Sobrenatural": "Esquiva sobrenatural"
+}

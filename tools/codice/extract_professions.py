@@ -77,6 +77,11 @@ while True:
         "colors": [int(x) for x in (re.search(r"colors\s*=\s*\{\s*(\d+),\s*(\d+),\s*(\d+),\s*(\d+)\s*\}", blk).groups()
                                     if re.search(r"colors\s*=\s*\{", blk) else [])] or None,
         "desc": g(blk, "desc") or None,
+        # de donde se aprende: entrenador (con su precio) o un objeto de receta
+        "source": g(blk, "source") or None,
+        # las herramientas que exige la receta (yunque, martillo, vara runica...)
+        "tools": g(blk, "tools") or None,
+        "trainCost": gn(blk, "trainCost"),
         "ability": g(blk, "ability") or None,
         "materials": mats,
         "output": {"name": items.get(om.group(1), om.group(1)), "qty": int(om.group(2)),
@@ -127,6 +132,14 @@ if os.path.exists(TERM):
                        "ability": None, "tool": n, "family": "Vehículos",
                        "icon": icon_v.get(n, ""), "recipes": []})
     data = nuevos
+
+# Las profesiones que existen en WoW. Las artesanias de D&D (carpinteria, alfareria...) son
+# competencias de herramienta, no oficios del juego, y por ahora no entran en Profesiones.
+WOW = {"herreria", "alquimia", "herboristeria", "mineria", "peleteria", "desollar",
+       "sastreria", "encantamiento", "ingenieria", "joyeria", "inscripcion", "cocina",
+       "pesca", "primeros_auxilios"}
+for p in data:
+    p["wow"] = p["id"] in WOW
 
 # nombres de profesion con su tilde (el addon los guarda en ASCII plano)
 ACENTOS = {"Herreria": "Herrería", "Herboristeria": "Herboristería", "Mineria": "Minería",
@@ -188,6 +201,43 @@ for _p in data:
             _r["output"]["name"] = _titulo(_r["output"]["name"])
         for _m in (_r.get("materials") or []):
             if isinstance(_m, dict) and _m.get("name"): _m["name"] = _titulo(_m["name"])
+
+# ---- lo que es la profesion en si (wowhead_profesion_info.py) ----
+# Rangos, especializaciones y habilidades que no son recetas. Sin esto no se entiende el
+# arbol: Inscripcion no tiene ninguna receta por debajo de 15 y se sube con Moler.
+INFO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cotejo", "profesion_info.json")
+if os.path.exists(INFO):
+    _info = json.load(io.open(INFO, encoding="utf-8"))
+    for _p in data:
+        _i = _info.get(_p["id"])
+        if not _i:
+            continue
+        _p["desc"] = _i.get("desc") or None
+        _p["ranks"] = _i.get("ranks") or []
+        _p["specializations"] = _i.get("specializations") or []
+        _p["abilities"] = _i.get("abilities") or []
+        # A que rango pertenece cada receta: se cruza su habilidad con los topes del oficio
+        # (Aprendiz 75, Oficial 150, Experto 225, Artesano 300). No hay que pedirlo a nadie,
+        # sale de dos datos que ya estan.
+        _topes = [(r.get("max") or 0, r.get("rank")) for r in _p["ranks"] if r.get("max")]
+        for _r in (_p.get("recipes") or []):
+            _s = _r.get("skillReq") or 0
+            # sin requisito declarado no hay rango que asignar: darle "Aprendiz" ponia la
+            # espada de torio junto a los brazales de cobre
+            _r["rank"] = (next((n for mx, n in _topes if _s <= mx),
+                               _topes[-1][1] if _topes else None) if _s else None)
+        for _l in (_p["specializations"] + _p["abilities"]):
+            if _l.get("icon"): _l["icon"] = resolver(_l["icon"])
+    for _ic in sorted({_l["icon"] for _p in data
+                       for _l in (_p.get("specializations") or []) + (_p.get("abilities") or [])
+                       if _l.get("icon")}):
+        _fn = _ic + ".png"
+        if os.path.exists(os.path.join(dest, _fn)):
+            continue
+        if os.path.exists(os.path.join(PNG, _fn)):
+            shutil.copyfile(os.path.join(PNG, _fn), os.path.join(dest, _fn)); copiados += 1
+        else:
+            faltan += 1; print("  habilidad sin PNG:", _ic)
 
 # ---- ficha de cada objeto (wowhead_objetos.py): un solo diccionario compartido ----
 # Colgar la ficha de cada receta duplicaria el mismo objeto decenas de veces (la Barra de

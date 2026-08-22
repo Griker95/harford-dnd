@@ -1,0 +1,32 @@
+recetas: 2275
+ya en cache: 3   por bajar: 2272
+   Encantar guantes: velocidad menor (13948): HTTP Error 403: Forbidden
+   Varita mágica inferior (14293): HTTP Error 403: Forbidden
+   Varita mágica superior (14807): HTTP Error 403: Forbidden
+   Varita mística inferior (14809): HTTP Error 403: Forbidden
+   Varita mística superior (14810): HTTP Error 403: Forbidden
+   Corazón fumeante de la montaña (15596): HTTP Error 403: Forbidden
+   Cuero encantado (17181): HTTP Error 403: Forbidden
+    200/2275
+    400/2275
+    600/2275
+    800/2275
+   1000/2275
+   1200/2275
+   1400/2275
+   1600/2275
+   1800/2275
+   2000/2275
+   2200/2275
+
+guardadas 93   (fallos 2182)
+   entrenador       57
+   origen 2         28
+   origen 5          8
+   origen 16         8
+   origen 21         4
+   origen 0          2
+   codigo 2   ej: Fórmula: encantar pechera: maná menor      -> {}
+   codigo 5   ej: Fórmula: encantar pechera: maná menor      -> {}
+   codigo 21  ej: Fórmula: encantar pechera: maná menor      -> {}
+   codigo 16  ej: Fórmula: encantar arma: bestiacida menor   -> {}

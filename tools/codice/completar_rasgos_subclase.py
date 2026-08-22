@@ -89,6 +89,20 @@ def recortar(t, tope=900):
     return (t[:corte + 1] if corte > tope // 2 else t[:tope]).strip()
 
 
+# Algunos rasgos no dicen su nivel en el texto sino en el propio titulo, entre parentesis:
+# los brebajes del Maestro cervecero son "Brebaje Agil (Requiere Nivel 11)".
+_NIVEL_EN_TITULO = re.compile(r"\(\s*requiere\s+nivel\s+(\d{1,2})\s*\)", re.I)
+
+
+def nivel_del_titulo(titulo):
+    m = _NIVEL_EN_TITULO.search(titulo or "")
+    return int(m.group(1)) if m else None
+
+
+def sin_marca_de_nivel(titulo):
+    return _NIVEL_EN_TITULO.sub("", titulo or "").strip()
+
+
 def nivel_de(texto):
     m = _NIVEL_TXT.search(texto)
     if not m:
@@ -143,14 +157,19 @@ def main():
                 k = T.nk(titulo)
                 if k in tiene or NO_RASGO.match(k) or len(cuerpo.strip()) < 40:
                     continue
-                lv = nivel_de(cuerpo)
+                lv = nivel_del_titulo(titulo) or nivel_de(cuerpo)
                 if not lv:
-                    sin_nivel.append((c["name"], s["name"], titulo))
-                    continue
+                    # sin nivel en el titulo ni en el texto: se obtiene al elegir la
+                    # subclase, que es el nivel mas bajo de los rasgos que ya tiene
+                    lv = min([f["level"] for f in s["features"] if f.get("level")] or [0])
+                    if not lv:
+                        sin_nivel.append((c["name"], s["name"], titulo))
+                        continue
                 tiene.add(k)
+                nombre = sin_marca_de_nivel(titulo)
                 nuevos.setdefault((c["id"], s["id"]), []).append(
-                    {"id": "%s_%s" % (s["id"][:14], slug(titulo)), "level": lv,
-                     "name": titulo, "desc": recortar(limpio(cuerpo))})
+                    {"id": "%s_%s" % (s["id"][:14], slug(nombre)), "level": lv,
+                     "name": nombre, "desc": recortar(limpio(cuerpo))})
     tot = sum(len(v) for v in nuevos.values())
     print("rasgos de subclase nuevos: %d en %d subclases" % (tot, len(nuevos)))
     for (cid, sid), v in sorted(nuevos.items()):

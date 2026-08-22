@@ -796,6 +796,18 @@ _CORRIGE = {
     ("Doble Agente", "Idioma"): "Uno de tu elección perteneciente a la facción opuesta.",
     ("Veterano del campo de batalla", "Competencias"): "Atletismo, Percepción.",
 }
+# El equipo y las competencias son la enumeracion que sigue a los dos puntos del manual
+# ("Equipo: un simbolo sagrado, ..."), asi que el texto empieza en minuscula y en la ficha,
+# donde el titulo va aparte, queda como una frase cortada.
+_nmayus = 0
+for b in kb["backgrounds"]:
+    for f in b["traits"]:
+        d = (f.get("desc") or "").strip()
+        if d and d[0].islower():
+            f["desc"] = d[0].upper() + d[1:]
+            _nmayus += 1
+print("Rasgos de trasfondo que empezaban en minuscula: %d" % _nmayus)
+
 for b in kb["backgrounds"]:
     for f in b["traits"]:
         v = _CORRIGE.get((b["name"], f["name"]))

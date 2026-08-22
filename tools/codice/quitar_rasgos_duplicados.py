@@ -19,8 +19,10 @@ solo cuando hay un rasgo que las cubre:
 
 Sin --apply solo informa.
 """
+import collections
 import difflib
 import io
+import json
 import os
 import re
 import subprocess
@@ -58,6 +60,15 @@ def nk(s):
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]+", " ", s.lower())).strip()
 
 
+# Rasgos que el libro titula de una manera y el addon de otra: van en un fichero aparte
+# porque los completadores usan la misma tabla para no volver a anadirlos.
+_EQUIV = {}
+_eq = os.path.join(BASE, "equivalencias_rasgos.json")
+if os.path.exists(_eq):
+    _EQUIV = {nk(k): nk(v) for k, v in json.load(io.open(_eq, encoding="utf-8")).items()
+              if not k.startswith("_")}
+
+
 def _cubre(nombre_viejo, nombre_nuevo):
     """Los dos titulan el mismo rasgo, lleve la precision entre parentesis uno u otro.
 
@@ -67,6 +78,8 @@ def _cubre(nombre_viejo, nombre_nuevo):
     una mejora posterior del mismo rasgo.
     """
     a, b = nk(nombre_viejo), nk(nombre_nuevo)
+    if _EQUIV.get(b) == a or _EQUIV.get(a) == b:
+        return True
     return a == b or a.startswith(b + " ") or b.startswith(a + " ")
 
 
@@ -114,6 +127,18 @@ def main():
             else:
                 break
         return n
+
+    # Un id repetido DENTRO de la misma clase es siempre un error: el addon indexa por id
+    # y la segunda entrada pisa a la primera. Pasa cuando el completador vuelve a generar
+    # un rasgo que ya existia y le sale el mismo id.
+    _porid = collections.defaultdict(list)
+    for e in entradas:
+        _porid[(e[0], bloque(e[4]))].append(e)
+    repetidos = {e[0] for k, v in _porid.items() if len(v) > 1 for e in v if e[0] in borrables}
+
+    if repetidos:
+        print("AVISO: ids repetidos dentro de una misma clase; el addon indexa por id "
+              "y la segunda entrada pisa a la primera: %s" % ", ".join(sorted(repetidos)))
 
     fuera = []
     for i, (rid, lv, nombre, desc, ini, fin) in enumerate(entradas):

@@ -30,7 +30,7 @@ local SOURCE = [====[<style>
   }
   .toc li span:nth-child(2):after {
     font-family: BookSanity;
-    font-size: 0.317cm;
+    font-size: 0,317cm;
     font-weight: normal;
     color: black;
     content:
@@ -43,7 +43,7 @@ local SOURCE = [====[<style>
   .toc li span:first-child {
     float: right;
     font-family: BookSanity;
-    font-size: 0.317cm;
+    font-size: 0,317cm;
     font-weight: normal;
     color: black;
     margin-left: 1px;
@@ -706,7 +706,7 @@ Tienes un temperamento ardiente y determinación feroz. Sirvieron al Señor del 
 
 ***Incremento de caracteristica.*** Inteligencia +1.
 
-***Sangre de Fuego.*** Puedes lanzar el conjuro *restauración menor* en ti mismo una vez al día.
+***Sangre de Fuego.*** Puedes lanzar el conjuro *Restablecimiento menor* en ti mismo una vez al día.
 
 ***Forjado en Llamas.*** Resistencia al daño por fuego.
 
@@ -1621,7 +1621,7 @@ Tienes una conexión sin igual con los loas y antiguas tradiciones más antiguas
 
 ***Conocimiento Antiguo.*** Competencia en Historia.
 
-***Abrazo de los Loa.*** Conoces el truco *guía*. Cuando alcances el nivel 3, puedes lanzar el conjuro *habilidad mejorada* una vez al día usando Sabiduría como habilidad de lanzamiento de conjuros.
+***Abrazo de los Loa.*** Conoces el truco *guía*. Cuando alcances el nivel 3, puedes lanzar el conjuro *Potenciar característica* una vez al día usando Sabiduría como habilidad de lanzamiento de conjuros.
 
 ***Entrenamiento con Armas Zandalari.*** Competencia con hachas de mano, hachas de batalla, espadas largas y espadas grandes.
 
@@ -2363,7 +2363,7 @@ Como caballero de la muerte, caminas entre el mundo de los vivos y los muertos, 
 
  - Eres considerado tanto un humanoide como un no-muerto, lo cual te permite ser afectado por cualquier cosa que afecte a esos tipos de criatura. Por ejemplo, como no-muerto, puedes ser detectado por el Sentido Divino de un paladín, pero como humanoide, puedes ser sanado por su Imposición de Manos.
  - No necesitas dormir. En su lugar, entras en un estado semi-consciente, alimentando tu hambre eterna recordando el sufrimiento causado. Después de 4 horas en este estado, obtienes los mismos beneficios que un humano tras 8 horas de sueño.
- - Ventaja en las tiradas de salvación contra cualquier efecto que afecte exclusivamente a los no-muertos, como el conjuro *encadenar no-muertos* de un sacerdote.
+ - Ventaja en las tiradas de salvación contra cualquier efecto que afecte exclusivamente a los no-muertos, como el conjuro *Encadenar no muertos* de un sacerdote.
 
 ### Armas Rúnicas
 Sabes inscribir runas en armas, dotándolas de poder y uniéndolas a ti. Realizas un ritual de 1 hora para inscribir las runas, que puede completarse durante un descanso corto. Las armas deben estar a tu alcance durante todo el ritual. Solo puedes tener un arma de dos manos unida o dos armas de una mano. Vincular nuevas armas rompe inmediatamente el vínculo con las anteriores.
@@ -2385,7 +2385,7 @@ A partir del nivel 2, adoptas un estilo particular de combate como tu especialid
 \columnbreak
 
 > ##### Caballeros de la Muerte Renegados
-> Las bendiciones oscuras del caballero de la muerte se manifiestan de manera diferente para los Renegados que ya son no-muertos. Los caballeros de la muerte Renegados no necesitan dormir en absoluto y pueden pasar sus descansos realizando actividades ligeras. Además, son inmunes a cualquier efecto que convierta o afecte exclusivamente a los no-muertos, como el conjuro *esposar a los no-muertos* de un sacerdote.
+> Las bendiciones oscuras del caballero de la muerte se manifiestan de manera diferente para los Renegados que ya son no-muertos. Los caballeros de la muerte Renegados no necesitan dormir en absoluto y pueden pasar sus descansos realizando actividades ligeras. Además, son inmunes a cualquier efecto que convierta o afecte exclusivamente a los no-muertos, como el conjuro *Encadenar no muertos* de un sacerdote.
 
 #### Defensa
 Mientras lleves armadura, obtienes un bono de +1 a la CA.
@@ -3423,7 +3423,7 @@ También en el nivel 6, eliges una de las siguientes características. Puedes us
 
 ***Defensor de la Manada.*** Cuando una criatura amiga que puedes ver a 5 pies de ti sea objetivo de una tirada de ataque, puedes usar tu reacción para intercambiar lugares con la criatura y que el ataque te apunte a ti en su lugar.
 
-***Demoledor Pulverizante.*** Cuando golpeas a una criatura con un ataque de arma, la criatura debe hacer una tirada de salvación de Fuerza (DC 8 + tu modificador de Fuerza o Destreza + tu bonificador de competencia). Si falla, la criatura cae derribada. Solo puedes pulverizar una vez por turno.
+***Demoledor Pulverizante.*** Cuando golpeas a una criatura con un ataque de arma, la criatura debe hacer una tirada de salvación de Fuerza (CD 8 + tu modificador de Fuerza o Destreza + tu bonificador de competencia). Si falla, la criatura cae derribada. Solo puedes pulverizar una vez por turno.
 
 #### Mutilación Brutal
 En el nivel 10, cuando golpeas a una criatura con un ataque de arma mientras estás transformado, la criatura golpeada tiene desventaja en la próxima tirada de salvación que haga contra un hechizo de druida que lances antes del final de tu siguiente turno.
@@ -3490,7 +3490,7 @@ Mientras esté activa, puedes usar una acción adicional para elegir cualquier n
 Una vez que usas esta característica, no puedes usarla nuevamente hasta que termines un descanso largo.
 
 #### Guardia Cenarion
-Cuando alcanzas el nivel 14, las criaturas del mundo natural sienten tu conexión con la naturaleza y se vuelven reticentes a atacarte. Cuando una bestia o planta te ataque, la criatura debe hacer una tirada de salvación de Sabiduría contra la DC de salvación de tus hechizos de druida. Si falla, la criatura debe elegir un objetivo diferente o el ataque falla automáticamente. Si tiene éxito, la criatura es inmune a este efecto durante 24 horas.
+Cuando alcanzas el nivel 14, las criaturas del mundo natural sienten tu conexión con la naturaleza y se vuelven reticentes a atacarte. Cuando una bestia o planta te ataque, la criatura debe hacer una tirada de salvación de Sabiduría contra la CD de salvación de tus hechizos de druida. Si falla, la criatura debe elegir un objetivo diferente o el ataque falla automáticamente. Si tiene éxito, la criatura es inmune a este efecto durante 24 horas.
 
 La criatura es consciente de este efecto antes de realizar su ataque contra ti.
 
@@ -3600,7 +3600,7 @@ Mientras estás transformado como oso, puedes gastar un espacio de conjuro para 
 *Requisito: Camino Feral, nivel 5*
 <div style='margin-top:-6px;'></div>
 
-Cuando golpeas a otra criatura con un ataque de arma mientras estás transformado, puedes intentar aturdirla. El objetivo debe superar una tirada de salvación de Constitución contra la DC de salvación de tus hechizos de druida o quedará aturdido hasta el final de tu próximo turno. No puedes hacerlo nuevamente hasta que completes un descanso corto.
+Cuando golpeas a otra criatura con un ataque de arma mientras estás transformado, puedes intentar aturdirla. El objetivo debe superar una tirada de salvación de Constitución contra la CD de salvación de tus hechizos de druida o quedará aturdido hasta el final de tu próximo turno. No puedes hacerlo nuevamente hasta que completes un descanso corto.
 <div style='margin-top:-1px;'></div>
 
 #### Nueve Vidas / Aleteo
@@ -3643,7 +3643,7 @@ Mientras estés transformado, puedes gastar un espacio de conjuro de 1.º nivel 
 *Requisito: nivel 5*
 <div style='margin-top:-6px;'></div>
 
-Mientras estés transformado, puedes lanzar *contraconjuro* una vez usando un espacio de conjuro, pero solo como un hechizo de toque. No puedes hacerlo de nuevo hasta que completes un descanso largo.
+Mientras estés transformado, puedes lanzar *Contrahechizo* una vez usando un espacio de conjuro, pero solo como un hechizo de toque. No puedes hacerlo de nuevo hasta que completes un descanso largo.
 
 #### Deriva Solar
 *Requisito: Camino del Equilibrio, cantrip *ira solar*
@@ -3662,7 +3662,7 @@ Mientras estés transformado, puedes gastar un espacio de conjuro de 1.º nivel 
 *Requisito: Camino del Equilibrio, cantrip *ira solar*
 <div style='margin-top:-6px;'></div>
 
-Cuando golpeas a un objetivo con *ira solar* mientras estás transformado como lechúcico lunar, el objetivo debe tener éxito en una tirada de salvación de Constitución contra la DC de tus hechizos o quedar cegado hasta el comienzo de tu próximo turno.
+Cuando golpeas a un objetivo con *ira solar* mientras estás transformado como lechúcico lunar, el objetivo debe tener éxito en una tirada de salvación de Constitución contra la CD de tus hechizos o quedar cegado hasta el comienzo de tu próximo turno.
 
 #### Instintos de Supervivencia
 *Requisito: Camino Feral*
@@ -3752,7 +3752,7 @@ ___
 >
 > ***Olfato Agudo.*** Tienes ventaja en las pruebas de Sabiduría (Percepción) que dependan del olfato.
 >
-> ***Carga.*** Si te mueves al menos 20 pies directamente hacia un objetivo y luego realizas un ataque con arma en el mismo turno, la criatura sufre 1d8 de daño adicional. Si el objetivo es una criatura, debe tener éxito en una tirada de salvación de Fuerza (DC 8 + modificador de Fuerza + competencia). En una salvación fallida, la criatura es derribada.
+> ***Carga.*** Si te mueves al menos 20 pies directamente hacia un objetivo y luego realizas un ataque con arma en el mismo turno, la criatura sufre 1d8 de daño adicional. Si el objetivo es una criatura, debe tener éxito en una tirada de salvación de Fuerza (CD 8 + modificador de Fuerza + competencia). En una salvación fallida, la criatura es derribada.
 >
 > ### Acciones
 > ***Mordisco.*** *Ataque de arma cuerpo a cuerpo:* Alcance 5 pies, un objetivo. <br> *Impacto:* (1d8 + modificador) de daño perforante.
@@ -3770,7 +3770,7 @@ ___
 >
 > ***Olfato Agudo.*** Tienes ventaja en las pruebas de Sabiduría (Percepción) que dependan del olfato.
 >
-> ***Embestida.*** Si te mueves al menos 20 pies directamente hacia una criatura antes de golpearla con un ataque con arma, la criatura debe tener éxito en una tirada de salvación de Fuerza (DC 8 + modificador de Destreza + competencia). En una salvación fallida, la criatura es derribada y el próximo ataque que realices antes del final de tu turno causa 2d6 de daño adicional.
+> ***Embestida.*** Si te mueves al menos 20 pies directamente hacia una criatura antes de golpearla con un ataque con arma, la criatura debe tener éxito en una tirada de salvación de Fuerza (CD 8 + modificador de Destreza + competencia). En una salvación fallida, la criatura es derribada y el próximo ataque que realices antes del final de tu turno causa 2d6 de daño adicional.
 >
 > ***Multiataque.*** Cuando tomas la acción de Ataque para hacer un ataque con arma, puedes usar una acción adicional para atacar con un arma diferente.
 >
@@ -4105,10 +4105,10 @@ Entre los cazadores dotados, hay quienes se sienten atraídos por las bestias de
 A partir del momento en que eliges este arquetipo en el nivel 3, muestras una habilidad excepcional al tratar con bestias y puedes domar bestias que sean Grandes o más pequeñas con un valor de desafío de 1 o menor.
 
 #### Aspecto de la Bestia
-Al nivel 3, obtienes la habilidad de lanzar el conjuro *sentido de la bestia*, pero solo como un ritual y solo en tu mascota.
+Al nivel 3, obtienes la habilidad de lanzar el conjuro *Sentido de bestia*, pero solo como un ritual y solo en tu mascota.
 
 #### Comando de Matar
-Al nivel 5, tú y tu mascota formais un equipo de combate más efectivo. Puedes usar tu acción adicional y gastar un dado de enfoque para dar una orden de "matar" a tu mascota. La bestia realiza la acción de Atacar, realizando todos los ataques con ventaja. Añades el dado de enfoque a la tirada de daño del primer ataque que acierte.
+Al nivel 5, tú y tu mascota formáis un equipo de combate más efectivo. Puedes usar tu acción adicional y gastar un dado de enfoque para dar una orden de "matar" a tu mascota. La bestia realiza la acción de Atacar, realizando todos los ataques con ventaja. Añades el dado de enfoque a la tirada de daño del primer ataque que acierte.
 
 #### Maniobra Evasiva
 A partir del 7º nivel, cuando tú o tu compañero bestial estén sujetos a un efecto que permita realizar una tirada de salvación de Destreza para recibir solo la mitad del daño, puedes usar tu reacción para que ambos eviten la mayor parte del efecto.
@@ -4177,7 +4177,7 @@ Aprendes una trampa adicional de tu elección en los niveles 7, 11 y 15. Cada ve
 
 ***Colocar una Trampa.*** Puedes usar tu acción y gastar un uso de esta característica para colocar una trampa en un espacio vacío a 30 pies de ti. Una trampa dura 1 hora, hasta que se active o hasta que la recuperes.
 
-Una criatura que se acerque a tu trampa debe superar una prueba de Sabiduría (Percepción) o Inteligencia (Investigación) contra tu DC de salvación de trampa para notarla. Una criatura supera automáticamente la prueba si te vio colocar la trampa.
+Una criatura que se acerque a tu trampa debe superar una prueba de Sabiduría (Percepción) o Inteligencia (Investigación) contra tu CD de salvación de trampa para notarla. Una criatura supera automáticamente la prueba si te vio colocar la trampa.
 
 Puedes colocar dos trampas entre descansos. Recuperas todos los usos de trampa gastados al finalizar un descanso corto o largo. <br> En el nivel 11, puedes colocar tres trampas entre descansos.
 
@@ -4185,11 +4185,11 @@ Puedes colocar dos trampas entre descansos. Recuperas todos los usos de trampa g
 
 ***Desactivar una Trampa.*** Puedes recuperar una trampa colocada que no haya sido activada usando una acción mientras estés a 5 pies de ella, recuperando un uso gastado de esta característica.
 
-***Tiradas de Salvación.*** Tus trampas requieren que el objetivo realice una tirada de salvación para resistir su efecto. La DC de salvación de tus trampas se calcula de la siguiente manera:
+***Tiradas de Salvación.*** Tus trampas requieren que el objetivo realice una tirada de salvación para resistir su efecto. La CD de salvación de tus trampas se calcula de la siguiente manera:
 
 <div style="text-align: Center">
 
-**DC de salvación de Trampa** = <br>8 + Bonus competencia + Mod. Sabiduría
+**CD de salvación de Trampa** = <br>8 + Bonus competencia + Mod. Sabiduría
 </div>
 
 #### Estudiante de lo Salvaje
@@ -4199,7 +4199,7 @@ En el nivel 3, obtienes competencia en supervivencia si aún no la tienes, y tu 
 También en el nivel 3, puedes elegir no domar una bestia y, en cambio, enfocarte en tu propia destreza. Cuando no tienes la lealtad de un compañero bestial, tus ataques con armas marcan un golpe crítico en una tirada de 19 o 20. También puedes realizar la acción de Desengancharte como una acción adicional.
 
 #### Corte de Ala
-A partir del nivel 5, cuando golpeas a un objetivo con un ataque con arma, puedes gastar un dado de enfoque para intentar dificultar su movimiento. El objetivo debe tener éxito en una prueba de Fuerza (Atletismo) (CD igual a tu DC de Trampa + tu dado de enfoque) o su velocidad se reduce a 0 hasta el inicio de tu próximo turno.
+A partir del nivel 5, cuando golpeas a un objetivo con un ataque con arma, puedes gastar un dado de enfoque para intentar dificultar su movimiento. El objetivo debe tener éxito en una prueba de Fuerza (Atletismo) (CD igual a tu CD de Trampa + tu dado de enfoque) o su velocidad se reduce a 0 hasta el inicio de tu próximo turno.
 
 #### Lobo Solitario: Ataque Adicional
 También en el nivel 5, cuando no tienes la lealtad de un compañero bestial, obtienes la característica de Ataque Adicional, y puedes atacar dos veces, en lugar de una, siempre que realices la acción de Ataque en tu turno.
@@ -4231,13 +4231,13 @@ Las trampas se presentan en orden alfabético.
 
 Cualquier criatura invisible que falle esta tirada brilla con luz tenue, haciéndola visible por la duración.
 
-***Trampa Enredadora.*** Cuando se activa la trampa, cada criatura en su alcance debe tener éxito en una tirada de salvación de Fuerza o quedar restringida durante 1 minuto. Una criatura restringida por esta trampa puede usar su acción para realizar una prueba de Fuerza contra tu DC de Trampa. En un éxito, se libera.
+***Trampa Enredadora.*** Cuando se activa la trampa, cada criatura en su alcance debe tener éxito en una tirada de salvación de Fuerza o quedar restringida durante 1 minuto. Una criatura restringida por esta trampa puede usar su acción para realizar una prueba de Fuerza contra tu CD de Trampa. En un éxito, se libera.
 
 ***Trampa Explosiva.*** Cuando se activa la trampa, cada criatura en su alcance debe realizar una tirada de salvación de Destreza, recibiendo daño por fuego igual al doble de tu nivel de cazador en una tirada fallida, o la mitad de ese daño en una exitosa.
 
 \columnbreak
 
-***Trampa de Congelación.*** Cuando se activa la trampa, la criatura que la activó debe realizar una tirada de salvación de Destreza o quedar restringida durante 1 minuto. Mientras esté restringida, la criatura tiene cobertura total y no puede realizar ninguna acción, salvo intentar liberarse realizando una prueba de Fuerza contra tu DC de Trampa. En un éxito, rompe el hielo y se libera. Esta trampa no tiene efecto en criaturas de tamaño Enorme o mayores.
+***Trampa de Congelación.*** Cuando se activa la trampa, la criatura que la activó debe realizar una tirada de salvación de Destreza o quedar restringida durante 1 minuto. Mientras esté restringida, la criatura tiene cobertura total y no puede realizar ninguna acción, salvo intentar liberarse realizando una prueba de Fuerza contra tu CD de Trampa. En un éxito, rompe el hielo y se libera. Esta trampa no tiene efecto en criaturas de tamaño Enorme o mayores.
 
 La criatura está encerrada en hielo; el hielo tiene una CA de 10 y puntos de golpe igual a cuatro veces tu nivel de cazador.
 
@@ -5292,11 +5292,11 @@ Por ejemplo, si eres un paladín de 5º nivel, tienes cuatro ranuras de conjuro 
 Puedes cambiar tu lista de conjuros preparados cuando termines un descanso largo. Preparar una nueva lista de conjuros de paladín requiere tiempo dedicado a la oración y la meditación: al menos 1 minuto por nivel de conjuro para cada conjuro en tu lista.
 
 #### Habilidad para Lanzar Conjuros
-El Carisma es tu habilidad de lanzamiento de conjuros para tus conjuros de paladín, ya que su poder proviene de la fuerza de tus convicciones. Usas tu Carisma siempre que un conjuro se refiera a tu habilidad para lanzarlo. Además, usas tu modificador de Carisma para establecer la DC de salvación contra tus conjuros de paladín y cuando hagas una tirada de ataque con uno.
+El Carisma es tu habilidad de lanzamiento de conjuros para tus conjuros de paladín, ya que su poder proviene de la fuerza de tus convicciones. Usas tu Carisma siempre que un conjuro se refiera a tu habilidad para lanzarlo. Además, usas tu modificador de Carisma para establecer la CD de salvación contra tus conjuros de paladín y cuando hagas una tirada de ataque con uno.
 
 <div style="text-align: Center">
 
-**DC de Salvación de Conjuro** =<br> 8 + Bonus competencia + Mod. Carisma
+**CD de Salvación de Conjuro** =<br> 8 + Bonus competencia + Mod. Carisma
 
 **Modificador de Ataque con Conjuros** =<br> Bonus competencia + Mod. Carisma
 </div>
@@ -5830,7 +5830,7 @@ A partir del 6º nivel, la energía divina de tu fe puede potenciar los conjuros
 \pagebreakNum
 
 ### Nova Sagrada
-A partir del nivel 14, cuando recibas un ataque cuerpo a cuerpo, puedes usar tu reacción para infligir daño radiante al atacante. El daño es igual a tu nivel de sacerdote. El atacante debe realizar una tirada de salvación de Fuerza contra la DC de salvación de conjuros de sacerdote. Si falla, es empujado en línea recta hasta 20 pies lejos de ti.
+A partir del nivel 14, cuando recibas un ataque cuerpo a cuerpo, puedes usar tu reacción para infligir daño radiante al atacante. El daño es igual a tu nivel de sacerdote. El atacante debe realizar una tirada de salvación de Fuerza contra la CD de salvación de conjuros de sacerdote. Si falla, es empujado en línea recta hasta 20 pies lejos de ti.
 
 #### Espíritu Guardián
 En el nivel 20, puedes invocar un espíritu para guiar a un aliado caído de regreso a su cuerpo. Cuando una criatura a 60 pies de ti muere, puedes usar tu reacción para devolverle la vida antes de que su espíritu parta a las Tierras Sombrías. El objetivo regresa a la vida de inmediato y recupera la mitad de su máximo de puntos de golpe. El objetivo también gana inmunidad contra todo daño hasta el comienzo de su siguiente turno.
@@ -5860,7 +5860,7 @@ A partir del nivel 1, puedes penetrar las mentes de otras criaturas. Puedes comu
 #### Legado del Vacío
 También en el nivel 1, cuando infliges daño a una criatura con un cantrip de sacerdote, puedes causar daño psíquico adicional igual a tu modificador de Carisma.
 
-&nbsp;&nbsp;&nbsp; Cuando usas esta característica, debes tener éxito en una tirada de salvación de Sabiduría (DC 10 + 1 por cada uso adicional de esta característica desde tu último descanso largo). Si fallas, no podrás usar esta característica nuevamente hasta que termines un descanso largo.
+&nbsp;&nbsp;&nbsp; Cuando usas esta característica, debes tener éxito en una tirada de salvación de Sabiduría (CD 10 + 1 por cada uso adicional de esta característica desde tu último descanso largo). Si fallas, no podrás usar esta característica nuevamente hasta que termines un descanso largo.
 
 #### Forma de Sombra
 A partir del nivel 6, puedes invocar la corrupción oscura que yace latente en tu interior.
@@ -5882,9 +5882,9 @@ En el nivel 20, puedes abrazar los susurros locos del vacío y dejar que sus pod
 
 Cuando usas tu acción adicional para cubrirte con tu forma de sombra, o como acción adicional mientras está activa, puedes someterte al vacío durante la duración de la forma de sombra y obtener los siguientes beneficios:
  - Cuando normalmente lanzarías uno o más dados de daño por un conjuro de sacerdote de nivel 5 o inferior, en su lugar usas el número más alto posible para cada dado.
- - Puedes usar tu reacción cuando una criatura que puedes ver te ataca o lanza un conjuro contra ti, perforando su mente con los murmullos de los Dioses Antiguos. La criatura debe superar una tirada de salvación de Sabiduría contra tu DC de conjuros o quedar incapacitada hasta el comienzo de tu próximo turno.
+ - Puedes usar tu reacción cuando una criatura que puedes ver te ataca o lanza un conjuro contra ti, perforando su mente con los murmullos de los Dioses Antiguos. La criatura debe superar una tirada de salvación de Sabiduría contra tu CD de conjuros o quedar incapacitada hasta el comienzo de tu próximo turno.
 
-Al final de cada uno de tus turnos mientras Rendición a la Locura está activa, debes tener éxito en una tirada de salvación de Sabiduría (DC 10 + 1 por cada salvación exitosa), o recibirás daño psíquico igual a la mitad de tu máximo de puntos de golpe mientras la locura te consume y termina tu forma de sombra.
+Al final de cada uno de tus turnos mientras Rendición a la Locura está activa, debes tener éxito en una tirada de salvación de Sabiduría (CD 10 + 1 por cada salvación exitosa), o recibirás daño psíquico igual a la mitad de tu máximo de puntos de golpe mientras la locura te consume y termina tu forma de sombra.
 
 Una vez que uses esta característica, no podrás volver a usarla hasta que termines un descanso largo.
 
@@ -5908,7 +5908,7 @@ Cuando una criatura dentro de 30 pies de ti es golpeada por una tirada de ataque
 Puedes usar tu reacción y gastar 2 puntos de fe cuando una criatura aliada dentro de 60 pies de ti se ve obligada a hacer una tirada de salvación para evitar un efecto de área o cae. La criatura es arrastrada a un espacio vacío a 5 pies de ti y no sufre efectos del área si Llamada la sacó de la zona ni recibe daño por caer.
 
 #### Castigo
-Usando tu acción, puedes gastar 2 puntos de fe para castigar a una criatura dentro de 30 pies de ti. La criatura debe tener éxito en una tirada de salvación de Sabiduría contra tu DC de salvación de conjuros de sacerdote o quedar incapacitada hasta el final de su próximo turno.
+Usando tu acción, puedes gastar 2 puntos de fe para castigar a una criatura dentro de 30 pies de ti. La criatura debe tener éxito en una tirada de salvación de Sabiduría contra tu CD de salvación de conjuros de sacerdote o quedar incapacitada hasta el final de su próximo turno.
 
 #### Muerte
 Cuando tires daño para un conjuro de sacerdote, puedes gastar 1 punto de fe para volver a tirar un número de dados de daño igual a tu modificador de Carisma (mínimo uno). Debes usar los nuevos resultados para esos dados.
@@ -5919,10 +5919,10 @@ Puedes usar tu reacción y gastar 2 puntos de fe para otorgar ventaja en una tir
 \columnbreak
 
 #### Resplandor
-Cuando eres golpeado por un ataque cuerpo a cuerpo, puedes gastar 1 punto de fe como reacción y forzar a la criatura a tener éxito en una tirada de salvación de Sabiduría contra tu DC de salvación de conjuros de sacerdote o quedar asustada de ti hasta el final de su próximo turno.
+Cuando eres golpeado por un ataque cuerpo a cuerpo, puedes gastar 1 punto de fe como reacción y forzar a la criatura a tener éxito en una tirada de salvación de Sabiduría contra tu CD de salvación de conjuros de sacerdote o quedar asustada de ti hasta el final de su próximo turno.
 
 #### Dolor
-Como acción adicional, puedes gastar 1 punto de fe y envolver a una criatura dentro de 60 pies de ti en dolor. La criatura debe tener éxito en una tirada de salvación de Constitución contra tu DC de salvación de conjuros de sacerdote o tendrá desventaja en todas las tiradas de ataque hasta el final de su próximo turno.
+Como acción adicional, puedes gastar 1 punto de fe y envolver a una criatura dentro de 60 pies de ti en dolor. La criatura debe tener éxito en una tirada de salvación de Constitución contra tu CD de salvación de conjuros de sacerdote o tendrá desventaja en todas las tiradas de ataque hasta el final de su próximo turno.
 
 #### Escudo
 Puedes tocar a una criatura como acción adicional y gastar 2 puntos de fe, otorgándole puntos de golpe temporales igual a la mitad de tu nivel de sacerdote + tu modificador de Carisma.
@@ -6068,11 +6068,11 @@ Puedes gastar estos puntos para activar diversas maniobras de energía. Comienza
 
 Cuando gastas un punto de energía, este no está disponible hasta que termines un descanso breve o largo, al final del cual recuperas toda tu energía gastada.
 
-Tus características de energía requieren que tu objetivo realice una tirada de salvación para resistir sus efectos. La DC de salvación de energía se calcula de la siguiente manera:
+Tus características de energía requieren que tu objetivo realice una tirada de salvación para resistir sus efectos. La CD de salvación de energía se calcula de la siguiente manera:
 
 <div style="text-align: Center">
 
-**DC de salvación de energía** = <br>8 + Bonus competencia + Mod. Destreza
+**CD de salvación de energía** = <br>8 + Bonus competencia + Mod. Destreza
 </div>
 <div style='margin-top:-5px;'></div>
 
@@ -6149,7 +6149,7 @@ A partir del nivel 13, puedes aprovechar al máximo un momento oportuno. Cuando 
 Además, cada vez que una criatura dentro de 5 pies de ti sea golpeada por un ataque crítico realizado por otra criatura que no seas tú, puedes usar tu reacción para realizar un ataque cuerpo a cuerpo contra esa criatura.
 
 #### Sello del Destino
-En el nivel 17, te conviertes en un maestro de la muerte instantánea. Cuando golpeas a una criatura con un ataque con arma, puedes forzarla a hacer una tirada de salvación de Constitución contra una DC de 8 + tu modificador de Destreza + tu bonificador de competencia. En caso de fallar la salvación, el daño de tu ataque se duplica.
+En el nivel 17, te conviertes en un maestro de la muerte instantánea. Cuando golpeas a una criatura con un ataque con arma, puedes forzarla a hacer una tirada de salvación de Constitución contra una CD de 8 + tu modificador de Destreza + tu bonificador de competencia. En caso de fallar la salvación, el daño de tu ataque se duplica.
 
 Una vez que uses esta característica, no puedes volver a usarla hasta que termines un descanso largo.
 
@@ -7082,7 +7082,7 @@ Puedes forzarte a lanzar conjuros más poderosos un cierto número de veces por 
 
 Cada vez que obtengas una ranura de conjuro mediante Nigromancia del Vacío, también aprendes un solo conjuro de brujo de un nivel que puedas lanzar. Estos se cuentan por separado de tus conjuros normales, como se muestra en la columna de Conjuros Conocidos de la tabla del Brujo.
 
-A niveles superiores, obtienes más ranuras de conjuro: una ranura de conjuro de nivel 7 a nivel 13, una de nivel 8 a nivel 15 y una de nivel 9 a nivel 17.
+A niveles superiores. obtienes más ranuras de conjuro: una ranura de conjuro de nivel 7 a nivel 13, una de nivel 8 a nivel 15 y una de nivel 9 a nivel 17.
 
 Cuando subas de nivel en esta clase, puedes elegir uno de los conjuros de brujo obtenidos mediante Nigromancia del Vacío y reemplazarlo con otro conjuro de la lista de conjuros de brujo.
 
@@ -7139,7 +7139,7 @@ Si tiene éxito en la tirada de salvación, el acecho termina y el chequeo de ha
 
 <div style='margin-top:-4px'></div>
 
-Aprendes los conjuros *conceder maldición* y *quitar maldición*. Estos no cuentan para el número de conjuros conocidos listados en la tabla del Brujo.
+Aprendes los conjuros *Imponer maldición* y *Levantar maldición*. Estos no cuentan para el número de conjuros conocidos listados en la tabla del Brujo.
 
 Cuando lances cualquiera de estos conjuros puedes elegir hasta dos criaturas como objetivo en lugar de una.
 
@@ -7182,7 +7182,7 @@ El guardia apocalíptico actúa en el turno inmediatamente posterior al tuyo y o
 
 La criatura recibe 1d6 puntos de daño psíquico al inicio de su turno. Este daño aumenta en 1d6 cada turno después del primero. La criatura puede intentar una salvación de Sabiduría al final de su turno, terminando el efecto si realiza dos salvaciones exitosas.
 
-Cuando la maldición finaliza, ya sea porque la criatura muera o logre su salvación, un número de criaturas de tu elección a 60 pies de distancia, hasta el número de dados de daño psíquico lanzados por esta maldición, deben realizar una tirada de salvación de Sabiduría contra la CD de tus conjuros de brujo o ganar una maldición de tu elección del conjuro *conceder maldición*. Si el objetivo muere como resultado del daño de esta habilidad, las criaturas tienen desventaja en sus tiradas de salvación.
+Cuando la maldición finaliza, ya sea porque la criatura muera o logre su salvación, un número de criaturas de tu elección a 60 pies de distancia, hasta el número de dados de daño psíquico lanzados por esta maldición, deben realizar una tirada de salvación de Sabiduría contra la CD de tus conjuros de brujo o ganar una maldición de tu elección del conjuro *Imponer maldición*. Si el objetivo muere como resultado del daño de esta habilidad, las criaturas tienen desventaja en sus tiradas de salvación.
 
 La misma maldición debe aplicarse a todas las criaturas afectadas. Esta maldición dura 24 horas, a menos que sea eliminada. Intentar hacerlo requiere un chequeo de habilidad contra la CD de tus conjuros de brujo para tener éxito.
 
@@ -7684,7 +7684,7 @@ ___
 ___
 Manipulas la tela de la realidad alrededor de un objetivo dentro del alcance, extrayendo energías nigrománticas de él y de criaturas de tu elección a 5 pies del mismo. El objetivo debe hacer una tirada de salvación de Constitución, recibiendo 2d4 de daño necrótico si falla, o la mitad del daño si tiene éxito.
 
-***En niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 2 o superior, el daño aumenta en 1d4 por cada nivel de ranura por encima del 1.º.
+***A niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 2 o superior, el daño aumenta en 1d4 por cada nivel de ranura por encima del 1.º.
 
 #### Piel Demoníaca
 *Transmutación de nivel 1*
@@ -7696,7 +7696,7 @@ ___
 ___
 Tu piel se cubre con una capa de energía vil, infundiéndote con vigor demoníaco. Tu Clase de Armadura mínima se vuelve 8 + tu modificador de lanzamiento de conjuros. Tu CA no puede bajar de 10 de esta manera. Además, tu total de puntos de golpe actuales y máximos aumenta en 1.
 
-***En niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 2 o superior, tu CA mínima y tu total de puntos de golpe actuales y máximos aumentan en 1 por cada nivel de ranura por encima del 1.º.
+***A niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 2 o superior, tu CA mínima y tu total de puntos de golpe actuales y máximos aumentan en 1 por cada nivel de ranura por encima del 1.º.
 
 \columnbreak
 
@@ -7735,7 +7735,7 @@ Haz un ataque de conjuro a distancia contra esa criatura. Si impactas, el objeti
 
 El conjuro termina si usas tu acción para hacer otra cosa. También termina si el objetivo se encuentra fuera del alcance del conjuro o si tiene cobertura total de ti. Este conjuro no tiene efecto sobre criaturas que sean constructos o no muertos.
 
-***En niveles superiores:*** Cuando lanzas este conjuro usando una ranura de nivel 2 o superior, el daño inicial aumenta en 1d8 por cada nivel de ranura por encima del 1.º.
+***A niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 2 o superior, el daño inicial aumenta en 1d8 por cada nivel de ranura por encima del 1.º.
 
 #### Llama Vil
 *Truco de Evocación*
@@ -7759,7 +7759,7 @@ ___
 ___
 Formas seis orbes de fuego sobre tu cabeza, que lanzas hacia objetivos dentro de 20 pies de un punto que elijas dentro del alcance. Puedes dirigir los orbes para que golpeen a un objetivo o a varios. Un objetivo recibe 1d10 de daño por fuego por cada orbe que lo impacte y puede intentar una tirada de salvación de Destreza para recibir la mitad del daño. Cada objetivo realiza solo una tirada de salvación, independientemente de cuántos orbes lo impacten.
 
-***En niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 5 o superior, el conjuro crea un orbe adicional por cada nivel de ranura por encima del 4.º.
+***A niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 5 o superior, el conjuro crea un orbe adicional por cada nivel de ranura por encima del 4.º.
 
 \columnbreak
 
@@ -7775,7 +7775,7 @@ Envuelves la mente de una criatura que puedes ver dentro del alcance. El objetiv
 
 Al final de cada uno de sus turnos, el objetivo puede realizar otra tirada de salvación de Sabiduría, terminando el conjuro si tiene éxito.
 
-***En niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 3 o superior, el daño aumenta en 1d6 por cada nivel de ranura por encima del 2.º.
+***A niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 3 o superior, el daño aumenta en 1d6 por cada nivel de ranura por encima del 2.º.
 
 #### Lluvia de Fuego
 *Evocación de nivel 5*
@@ -7789,7 +7789,7 @@ Invocas una nube en un punto dentro del alcance, causando que gotas llameantes c
 
 Como acción adicional, puedes mover la nube hasta 15 pies a un punto que puedas ver. Los objetos inflamables que no estén siendo llevados o usados en el área se encienden.
 
-***En niveles superiores:*** Cuando lanzas este conjuro usando una ranura de nivel 6 o superior, inflige un daño adicional de 1d12 por cada nivel de ranura por encima del 5.º.
+***A niveles superiores.*** Cuando lanzas este conjuro usando una ranura de nivel 6 o superior, inflige un daño adicional de 1d12 por cada nivel de ranura por encima del 5.º.
 
 <div class='footnote'>PARTE 2 | MAGIA</div>
 
@@ -7938,7 +7938,7 @@ ___
 >
 > **Nivel 2:** Mientras lleve un núcleo de cazador vil, el brujo tiene ventaja en chequeos de Inteligencia (Investigación) y Sabiduría (Percepción). Mientras sostenga el núcleo, puede lanzar el conjuro *detectar magia* a voluntad.
 >
-> **Nivel 5:** Mientras sostenga el núcleo, el brujo conoce el conjuro *contraconjuro* y puede lanzarlo sin gastar una ranura de conjuro una vez por descanso largo.
+> **Nivel 5:** Mientras sostenga el núcleo, el brujo conoce el conjuro *Contrahechizo* y puede lanzarlo sin gastar una ranura de conjuro una vez por descanso largo.
 >
 > **Nivel 9:** Mientras sostenga el núcleo, el brujo conoce el conjuro *localizar criatura* y puede lanzarlo sin gastar una ranura de conjuro una vez por descanso largo.
 > 
@@ -8046,7 +8046,7 @@ ___
 > #### Núcleo Demoníaco
 > El núcleo demoníaco de un súcubo parece... ¿un tubo de lápiz labial? Un brujo que lleva el núcleo demoníaco de un súcubo obtiene los siguientes beneficios:
 > 
-> **Nivel 2:** Mientras lleva el núcleo de un súcubo, el brujo tiene ventaja en chequeos de Carisma (Engaño) y Carisma (Persuasión). Mientras sostiene el núcleo, puede lanzar el conjuro *persona encantada* a voluntad.
+> **Nivel 2:** Mientras lleva el núcleo de un súcubo, el brujo tiene ventaja en chequeos de Carisma (Engaño) y Carisma (Persuasión). Mientras sostiene el núcleo, puede lanzar el conjuro *Encantar persona* a voluntad.
 > 
 > **Nivel 5:** Mientras sostiene el núcleo, el brujo conoce el conjuro *sugerencia* y puede lanzarlo sin gastar una ranura de conjuro de brujo una vez por descanso largo.
 >
@@ -8146,8 +8146,8 @@ ___
 > - **Idiomas** Eredun, Común
 > - **Desafío** 7 (2,900 PX)
 > ___
-> ***Maestro del Dolor.*** Cuando el guardián de la perdición golpea a una criatura con su ataque de látigo por primera vez en una ronda, la criatura debe hacer una tirada de salvación de Constitución DC 14 o quedar inmovilizada por el dolor hasta el inicio de su siguiente turno. 
-<br />&nbsp;&nbsp;&nbsp; Su velocidad se reduce a 10 pies y tiene desventaja en las tiradas de ataque. Si intenta lanzar un conjuro, debe hacer una tirada de salvación de Constitución DC 14 o el lanzamiento falla y el conjuro se desperdicia.
+> ***Maestro del Dolor.*** Cuando el guardián de la perdición golpea a una criatura con su ataque de látigo por primera vez en una ronda, la criatura debe hacer una tirada de salvación de Constitución CD 14 o quedar inmovilizada por el dolor hasta el inicio de su siguiente turno. 
+<br />&nbsp;&nbsp;&nbsp; Su velocidad se reduce a 10 pies y tiene desventaja en las tiradas de ataque. Si intenta lanzar un conjuro, debe hacer una tirada de salvación de Constitución CD 14 o el lanzamiento falla y el conjuro se desperdicia.
 >
 > ### Acciones
 > ***Multiataque.*** El guardián de la perdición usa Presencia Aterradora. Luego realiza dos ataques, ya sea con su látigo o su rayo funesto.
@@ -8156,7 +8156,7 @@ ___
 > 
 > ***Rayo Funesto.*** *Ataque de Conjuro a Distancia:* +9 para golpear, alcance 120 pies, un objetivo. *Impacto:* 18 (4d8) de daño necrótico.
 > 
-> ***Presencia Aterradora.*** Cada criatura a elección del guardián de la perdición que esté a 120 pies de él y sea consciente de su presencia debe superar una tirada de salvación de Sabiduría DC 17 o quedar asustada durante 1 minuto. Una criatura puede repetir la tirada de salvación al final de cada uno de sus turnos, terminando el efecto para sí misma con éxito. Si una tirada de salvación de una criatura es exitosa o el efecto termina para ella, es inmune a la Presencia Aterradora del guardián de la perdición durante las siguientes 24 horas.
+> ***Presencia Aterradora.*** Cada criatura a elección del guardián de la perdición que esté a 120 pies de él y sea consciente de su presencia debe superar una tirada de salvación de Sabiduría CD 17 o quedar asustada durante 1 minuto. Una criatura puede repetir la tirada de salvación al final de cada uno de sus turnos, terminando el efecto para sí misma con éxito. Si una tirada de salvación de una criatura es exitosa o el efecto termina para ella, es inmune a la Presencia Aterradora del guardián de la perdición durante las siguientes 24 horas.
 
 \columnbreak
 
@@ -8179,7 +8179,7 @@ ___
 > - **Idiomas** entiende Eredun pero no puede hablar
 > - **Desafío** 7 (2,900 PX)
 > ___
-> ***Muerte Explosiva.*** Cuando el infernal muere, explota, y cada criatura en un radio de 30 pies debe hacer una tirada de salvación de Destreza DC 15, recibiendo 10 (3d6) de daño por fuego si falla la salvación o la mitad si la supera. La explosión enciende objetos inflamables que no estén siendo llevados ni usados. 
+> ***Muerte Explosiva.*** Cuando el infernal muere, explota, y cada criatura en un radio de 30 pies debe hacer una tirada de salvación de Destreza CD 15, recibiendo 10 (3d6) de daño por fuego si falla la salvación o la mitad si la supera. La explosión enciende objetos inflamables que no estén siendo llevados ni usados. 
 > 
 > ***Aura de Fuego.*** Al inicio de cada uno de los turnos del infernal, cada criatura a 5 pies de él recibe 3 (1d6) de daño por fuego, y los objetos inflamables en el aura que no estén siendo llevados ni usados se encienden. Una criatura que toque al infernal o lo golpee con un ataque cuerpo a cuerpo mientras esté a 5 pies recibe 3 (1d6) de daño por fuego.
 > 
@@ -8215,7 +8215,7 @@ Un gladiador lucha por deporte en una arena, maestro con su tridente y red, expe
 ### Práctica Antigua
 Mientras la guerra ha rugido a lo largo de los tiempos, héroes de todas las razas han buscado dominar su arte de la batalla. Los guerreros combinan fuerza, liderazgo y un vasto conocimiento de armas y armaduras para causar estragos en un glorioso combate. Algunos protegen desde las líneas frontales con escudos, reteniendo a los enemigos mientras los aliados apoyan desde atrás con hechizos y arcos. Otros prescinden del escudo y desatan su furia contra la amenaza más cercana con gran variedad de armas.
 
-Los gritos de batalla del guerrero inspiran a sus amigos y dejan a sus enemigos temblando de miedo. Con precisión legendaria, los guerreros apuntan a los espacios más pequeños en la armadura y cortan tendones en un desenfoque de acero. Cada dragón derrotado, tirano corrupto derribado y demonio desterrado de Azeroth ha temblado ante estos señores de la guerra.
+Los gritos de batalla del guerrero inspiran a sus amigos y dejan a sus enemigos temblando de miedo. Con precisión legendaria, los guerreros apuntan a los espacios más pequeños en la armadura y cortantendones en un desenfoque de acero. Cada dragón derrotado, tirano corrupto derribado y demonio desterrado de Azeroth ha temblado ante estos señores de la guerra.
 
 Los guerreros son los luchadores temerarios por excelencia en el campo de batalla, y su destreza marcial pura inspira coraje en los aliados y desesperación en los enemigos. Expertos en todo tipo de armamento cuerpo a cuerpo y con una fuerza física y habilidad excepcionales, los Guerreros son combatientes ideales para servir como línea del frente y comandantes en el campo de batalla.
 
@@ -8839,7 +8839,7 @@ Se describen aquí las nuevas propiedades de armas.
 |&nbsp;&nbsp;&nbsp; Guja lunar       | 25 po || 1d6 cortante    | 1 kg  || Especial, sutil, ligera, arrojadiza (rango 60/120)        |
 |&nbsp;&nbsp;&nbsp; Doble hoja       |100 po || 1d6 cortante    | 2 kg  || Especial, versátil (1d8)                             |
 |&nbsp;&nbsp;&nbsp; Garra de guerra  | 20 po || 1d6 cortante    | 1 kg  || Especial, sutil, ligera                               |
-|&nbsp;&nbsp;&nbsp; Guja de guerra   | 25 po || 1d8 cortante    | 1.5 kg|| Arrojadiza (rango 20/60), versátil (1d10)                |
+|&nbsp;&nbsp;&nbsp; Guja de guerra   | 25 po || 1d8 cortante    | 1,5 kg|| Arrojadiza (rango 20/60), versátil (1d10)                |
 |&nbsp; *Armas a Distancia*         |       ||                 |       ||                                                       |
 |&nbsp;&nbsp;&nbsp; Pistola          | 75 po || 1d8 perforante  | 1 kg  || Munición (rango 30/120), retumbante, recarga, ligera   |
 |&nbsp;&nbsp;&nbsp; Rifle            | 75 po || 1d12 perforante | 3 kg  || Munición (rango 60/240), retumbante, recarga, <br> pesada, dos manos |
@@ -8888,15 +8888,15 @@ Esta sección describe elementos que tienen reglas especiales o requieren más e
 
 ***Bayoneta.*** Esta hoja corta puede acoplarse al extremo de un arma de fuego o ballesta como una acción, permitiendo que el arma se use en un ataque cuerpo a cuerpo. Una bayoneta en un arma a distancia se trata como una lanza en términos de competencia y daño. Cuando se usa sola, se considera una daga.
 
-&nbsp;&nbsp;&nbsp; ***Baliza.*** Una baliza es un invento de los manitas que parece una versión más grande de un farol. Emite luz brillante en un radio de 9 metros y luz tenue por 9 metros adicionales. Como acción, puedes encenderla o apagarla, o puedes bajar la capucha para reducir la luz a tenue en un radio de 1.5 metros.
+&nbsp;&nbsp;&nbsp; ***Baliza.*** Una baliza es un invento de los manitas que parece una versión más grande de un farol. Emite luz brillante en un radio de 9 metros y luz tenue por 9 metros adicionales. Como acción, puedes encenderla o apagarla, o puedes bajar la capucha para reducir la luz a tenue en un radio de 1,5 metros.
 
-***Bomba.*** Como acción, un personaje puede encender esta bomba y lanzarla a un punto hasta 18 metros de distancia. Cada criatura en un radio de 1.5 metros debe superar una tirada de salvación de Destreza CD 12 o recibir 2d6 de daño por fuego.
+***Bomba.*** Como acción, un personaje puede encender esta bomba y lanzarla a un punto hasta 18 metros de distancia. Cada criatura en un radio de 1,5 metros debe superar una tirada de salvación de Destreza CD 12 o recibir 2d6 de daño por fuego.
 
-***Cajabuzz.*** Esta pequeña mochila permite al portador comunicarse con otras cajabuzz dentro de un radio de 8 km. El dispositivo es bloqueado por 30 cm de piedra, 2.5 cm de metal común, una lámina delgada de plomo o 1 metro de madera o tierra.
+***Cajabuzz.*** Esta pequeña mochila permite al portador comunicarse con otras cajabuzz dentro de un radio de 8 km. El dispositivo es bloqueado por 30 cm de piedra, 2,5 cm de metal común, una lámina delgada de plomo o 1 metro de madera o tierra.
 
-***Dinamita.*** Como acción, una criatura puede encender un palo de dinamita y lanzarlo a un punto hasta 18 metros de distancia. Cada criatura en un radio de 1.5 metros debe superar una tirada de salvación de Destreza CD 12 o recibir 4d6 de daño por trueno.
+***Dinamita.*** Como acción, una criatura puede encender un palo de dinamita y lanzarlo a un punto hasta 18 metros de distancia. Cada criatura en un radio de 1,5 metros debe superar una tirada de salvación de Destreza CD 12 o recibir 4d6 de daño por trueno.
 
-***Encendedor.*** Este pequeño contenedor puede producir una llama diminuta que emite luz brillante en un radio de 1.5 metros y luz tenue por 1.5 metros adicionales. Usarlo para encender una antorcha —o cualquier cosa con combustible expuesto— toma una acción.
+***Encendedor.*** Este pequeño contenedor puede producir una llama diminuta que emite luz brillante en un radio de 1,5 metros y luz tenue por 1,5 metros adicionales. Usarlo para encender una antorcha —o cualquier cosa con combustible expuesto— toma una acción.
 
 ***Linterna.*** Una linterna emite luz brillante en un cono de 18 metros y luz tenue por 18 metros adicionales. Como acción, puedes encenderla o apagarla.
 
@@ -8938,30 +8938,30 @@ Las herramientas de armero permiten a un personaje crear armas de fuego y produc
 |---------------------------------------|------:|-|------------:|
 |&nbsp; *Nueva Munición*                |       ||        &nbsp;|
 |&nbsp;&nbsp;&nbsp; Balas (20) |  2 po ||  1 kg &nbsp;|
-|&nbsp; Bayoneta                        |  2 po ||  0.5 kg &nbsp;|
+|&nbsp; Bayoneta                        |  2 po ||  0,5 kg &nbsp;|
 |&nbsp; Bomba                           | 75 po ||  1 kg &nbsp;|
 |&nbsp; Baliza                          | 50 po ||  1 kg &nbsp;|
-|&nbsp; Libro                           | *~~25 po~~* 10 po ||  2.5 kg &nbsp;|
+|&nbsp; Libro                           | *~~25 po~~* 10 po ||  2,5 kg &nbsp;|
 |&nbsp; Botella, vidrio                 | *~~2 po~~* 1 pc ||  1 kg &nbsp;|
 |&nbsp; Cajabuzz                        |2,000 po||  5 kg &nbsp;|
 |&nbsp; Cadena (3 metros)               | *~~5 po~~* 2 po ||  5 kg &nbsp;|
-|&nbsp; Dinamita                        |200 po ||  0.5 kg &nbsp;|
+|&nbsp; Dinamita                        |200 po ||  0,5 kg &nbsp;|
 |&nbsp; Encendedor                      | 25 po ||      — &nbsp;|
 |&nbsp; Linterna                        | 50 po ||  1 kg &nbsp;|
 |&nbsp; Vara de luz                     |  5 pc ||      — &nbsp;|
 |&nbsp; *Nuevos Símbolos Sagrados*      |       ||        &nbsp;|
-|&nbsp;&nbsp;&nbsp; Libram              | 10 po ||  2.5 kg &nbsp;|
-|&nbsp; Reloj de arena                  | *~~25 po~~* 2 po ||  0.5 kg &nbsp;|
+|&nbsp;&nbsp;&nbsp; Libram              | 10 po ||  2,5 kg &nbsp;|
+|&nbsp; Reloj de arena                  | *~~25 po~~* 2 po ||  0,5 kg &nbsp;|
 |&nbsp; Tinta (botella de 1 onza)       | *~~10 po~~* 4 po ||       — &nbsp;|
 |&nbsp; Lupa                            | *~~100 po~~* 5 po ||       — &nbsp;|
-|&nbsp; Espejo, acero                   | *~~5 po~~* 2 pc || 0.25 kg &nbsp;|
+|&nbsp; Espejo, acero                   | *~~5 po~~* 2 pc || 0,25 kg &nbsp;|
 |&nbsp; Papel (una hoja)                | *~~2 pc~~* 1 pc ||       — &nbsp;|
 |&nbsp; Pergamino (una hoja)            | *~~1 pc~~* 5 mc ||       — &nbsp;|
-|&nbsp; Paracaídas                      | 30 po ||  7.5 kg &nbsp;|
-|&nbsp; Mira                            | 60 po ||  0.5 kg &nbsp;|
+|&nbsp; Paracaídas                      | 30 po ||  7,5 kg &nbsp;|
+|&nbsp; Mira                            | 60 po ||  0,5 kg &nbsp;|
 |&nbsp; Anillo con sello                | *~~5 po~~* 2 po ||       — &nbsp;|
 |&nbsp; Catalejo                        | *~~5~~* 2 po ||      — &nbsp;|
-|&nbsp; Kit de sutura                   | 25 po ||  1.5 kg  &nbsp;|
+|&nbsp; Kit de sutura                   | 25 po ||  1,5 kg  &nbsp;|
 |&nbsp; Reloj                           | 25 po ||      — &nbsp;|
 |&nbsp; Vial                            | *~~1 po~~* 5 mc ||       — &nbsp;|
 </div>
@@ -8996,12 +8996,12 @@ Los dotes presentados en este libro son complementos a los presentados en el *Ma
 <div style='margin-top:-7px;'></div>
 
  - Dos trucos extra de la lista de conjuros de mago.
- - Cuando realices un ataque de conjuro a distancia, no sufres desventaja en la tirada de ataque si estás a 1.5 metros de una criatura hostil.
+ - Cuando realices un ataque de conjuro a distancia, no sufres desventaja en la tirada de ataque si estás a 1,5 metros de una criatura hostil.
  - Antes de lanzar un conjuro instantáneo que requiera una tirada de ataque y que no pueda impactar a más de un objetivo, puedes optar por recibir una penalización de -5 a la tirada de ataque del conjuro. Si el conjuro impacta, añades +10 al daño del conjuro.
 
 ### Experto en Armas de Fuego
  - Ignoras la propiedad de recarga de las armas de fuego con las que eres competente.
- - Estar a 1.5 metros de una criatura hostil no impone desventaja en tus tiradas de ataque a distancia.
+ - Estar a 1,5 metros de una criatura hostil no impone desventaja en tus tiradas de ataque a distancia.
  - Cuando usas la acción de Ataque y atacas con un arma de una mano, puedes usar una acción adicional para atacar con un arma de fuego cargada de una mano que estés sosteniendo.
 
 ### Adepto en Armas de Fuego
@@ -9067,7 +9067,7 @@ La causa de una transformación particular depende de ti y de tu DM. Un dote tra
 
  - Inteligencia +1, hasta un máximo de 20.
  - Competencia con suministros de alquimista. Si ya tienes competencia con ellos, tu bonus de competencia se duplica en las pruebas que hagas con ellos.
- - Como acción, puedes identificar una poción que esté a 1.5 metros de ti, como si la hubieras probado. Debes ver el líquido para que este beneficio funcione.
+ - Como acción, puedes identificar una poción que esté a 1,5 metros de ti, como si la hubieras probado. Debes ver el líquido para que este beneficio funcione.
  - Durante un descanso corto, puedes mejorar temporalmente la potencia de una poción de curación de cualquier rareza. Debes tener suministros de alquimista contigo para mejorar la potencia de la poción, y la poción debe estar al alcance. Durante 1 hora después de que termine el descanso corto, una criatura que beba la poción puede optar por no tirar los dados de la poción y recuperar el máximo de puntos de golpe que puede restaurar.
 
 ### Amigo de las Criaturas
@@ -9107,7 +9107,7 @@ La causa de una transformación particular depende de ti y de tu DM. Un dote tra
 
  - Inteligencia, Sabiduría o Carisma +1, hasta un máximo de 20.
  - Cuando tires daño necrótico para un conjuro que lanzas, puedes volver a tirar cualquier resultado de 1 en los dados de daño necrótico, pero debes usar el nuevo resultado, incluso si es otro 1.
- - Cuando lanzas un conjuro que inflige daño necrótico, puedes hacer que el vacío te envuelva hasta el final de tu próximo turno. El vacío no te daña y reduce toda luz en un radio de 9 metros a oscuridad, y la luz dentro de un radio adicional de 9 metros a luz tenue. Mientras el vacío está presente, cualquier criatura que esté a 1.5 metros de ti y te golpee con un ataque cuerpo a cuerpo recibe 1d4 de daño.
+ - Cuando lanzas un conjuro que inflige daño necrótico, puedes hacer que el vacío te envuelva hasta el final de tu próximo turno. El vacío no te daña y reduce toda luz en un radio de 9 metros a oscuridad, y la luz dentro de un radio adicional de 9 metros a luz tenue. Mientras el vacío está presente, cualquier criatura que esté a 1,5 metros de ti y te golpee con un ataque cuerpo a cuerpo recibe 1d4 de daño.
 
 ### Rencor de Facción
 *Requisito: Cualquier raza*
@@ -9162,7 +9162,7 @@ Sientes un profundo odio hacia un miembro particular de la facción opuesta. Eli
 <div style='margin-top:-5px;'></div>
 
  - Fuerza o Destreza +1, hasta un máximo de 20.
- - Aumenta tu velocidad en 1.5 metros.
+ - Aumenta tu velocidad en 1,5 metros.
  - Competencia en Acrobacias o Atletismo (tu elección).
  - Ventaja en cualquier prueba de Fuerza (Atletismo) o Destreza (Acrobacias) que realices para escapar de un agarre.
 
@@ -10696,7 +10696,7 @@ ___
 ___
 Manifiestas tres proyectiles de energía pura y los lanzas hacia un objetivo dentro del alcance. Realiza un ataque de conjuro a distancia por cada proyectil. Si impacta, el objetivo sufre 5d4 de daño de fuerza y es empujado 10 pies directamente lejos de ti.
 
-***En niveles superiores.*** Cuando lanzas este conjuro usando una ranura de conjuro de 5º nivel o superior, crea un proyectil adicional por cada nivel por encima del 4º.
+***A niveles superiores.*** Cuando lanzas este conjuro usando una ranura de conjuro de 5º nivel o superior, crea un proyectil adicional por cada nivel por encima del 4º.
 
 #### Ráfaga Arcana
 *Truco de evocación*
@@ -10724,7 +10724,7 @@ ___
 ___
 Extraes poder arcano fluctuante y lo liberas en una onda de energía. Cada criatura en el área debe hacer una tirada de salvación de Destreza. Con una salvación fallida, el objetivo sufre 6d8 de daño de fuerza y no puede tomar reacciones hasta el inicio de su próximo turno. Si tiene éxito, el objetivo recibe la mitad de daño y puede usar sus reacciones normalmente.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de conjuro de nivel 4 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 3.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de conjuro de nivel 4 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 3.
 
 \columnbreak
 
@@ -10842,7 +10842,7 @@ ___
 Una luz fría emana de tu mano al cielo mientras fragmentos azules caen en un cilindro de 6 metros de radio y 12 metros de altura centrado en un punto dentro del alcance. Hasta que el hechizo termine, fragmentos de hielo caen sobre la zona.
 Cuando una criatura entra en el área por primera vez en un turno o comienza su turno allí, debe hacer una tirada de salvación de Destreza. Si falla, recibe 3d6 de daño por frío o la mitad si tiene éxito.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 3.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 3.
 
 #### Hervor de Sangre
 *Nigromancia de nivel 2*
@@ -10854,7 +10854,7 @@ ___
 ___
 Extiendes tu poder profano, haciendo que la sangre en las venas de las criaturas cercanas hierva. Cada criatura que elijas en un radio de 4,5 metros debe superar una tirada de salvación de Constitución o recibe 2d4 de daño por fuego más 2d4 de daño necrótico. <br> Las criaturas que tengan éxito en su tirada de salvación reciben la mitad de daño. Las criaturas que no tengan sangre o fluidos vitales son inmunes a este hechizo.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño por fuego y necrótico aumenta en 1d4 por cada nivel de espacio por encima del 2.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño por fuego y necrótico aumenta en 1d4 por cada nivel de espacio por encima del 2.
 
 <div class='footnote'>PARTE 2 | HECHIZOS</div>
 
@@ -10898,7 +10898,7 @@ ___
 ___
 Un rayo de energías restauradoras atraviesa a criaturas aliadas. Elige un objetivo que puedas ver dentro del alcance, luego otro objetivo que esté dentro del alcance del primero, y así sucesivamente hasta tres. No puedes elegir el mismo objetivo más de una vez. Cada objetivo recupera un número de puntos de golpe igual a 2d4 + tu modificador de conjuro. Este hechizo no tiene efecto en no muertos ni constructos.
 
-***En niveles superiores.*** Al lanzarlo con un espacio de conjuro de nivel 4 o superior, la sanación alcanza un objetivo adicional por cada nivel de espacio por encima del 3.
+***A niveles superiores.*** Al lanzarlo con un espacio de conjuro de nivel 4 o superior, la sanación alcanza un objetivo adicional por cada nivel de espacio por encima del 3.
 
 \columnbreak
 
@@ -10914,7 +10914,7 @@ Cadenas heladas emergen del suelo bajo un objetivo que puedes ver dentro del alc
 
 El objetivo encadenado debe hacer una tirada de salvación de Fuerza al final de cada uno de sus turnos. Si tiene éxito, las cadenas se rompen y el hechizo termina.
 
-***En niveles superiores.*** Al lanzarlo con un espacio de nivel 2 o superior, puedes seleccionar un objetivo adicional por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Al lanzarlo con un espacio de nivel 2 o superior, puedes seleccionar un objetivo adicional por cada nivel de espacio por encima del 1.
 
 #### Invocar No Muerto
 *Conjuración de nivel 4*
@@ -10930,7 +10930,7 @@ Tira iniciativa para el no muerto, que tiene sus propios turnos. Cuando lo invoc
 
 Si dejas de concentrarte antes de que termine la duración, el no muerto pasará el resto de la duración atacando al ser vivo más cercano.
 
-***En niveles superiores.*** Al lanzarlo con un espacio de nivel 5 o superior, el nivel de desafío aumenta en 1 por cada nivel de espacio por encima del 4.
+***A niveles superiores.*** Al lanzarlo con un espacio de nivel 5 o superior, el nivel de desafío aumenta en 1 por cada nivel de espacio por encima del 4.
 
 <div class='footnote'>PARTE 2 | HECHIZOS</div>
 
@@ -10948,7 +10948,7 @@ El cadáver de una criatura recientemente fallecida se hincha rápidamente bajo 
 
 Un cadáver detonado de esta manera se destruye y no puede ser resucitado mediante habilidades que requieran un cadáver completo. No todas las criaturas dejan un cadáver; los constructos y limos casi nunca lo hacen, tampoco los no muertos incorpóreos.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 2d6 por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 2d6 por cada nivel de espacio por encima del 1.
 
 #### Crear Piedra de Salud
 *Conjuración de nivel 2*
@@ -10960,7 +10960,7 @@ ___
 ___
 Creas una piedra verde resplandeciente del tamaño de un puño en tu mano. Una criatura puede usar su acción para aplastar la piedra, destruyéndola y recuperando puntos de golpe iguales a 1d10 + tu modificador de conjuro. La piedra pierde su poder si no se usa dentro de 24 horas.
 
-**En niveles superiores:** Al lanzarlo con un espacio de nivel 3 o superior, la curación aumenta en 1d10 por cada nivel de espacio por encima del 2.
+**A niveles superiores.** Al lanzarlo con un espacio de nivel 3 o superior, la curación aumenta en 1d10 por cada nivel de espacio por encima del 2.
 
 #### Crear Piedra de Alma
 *Conjuración de nivel 5 (ritual)*
@@ -10986,7 +10986,7 @@ ___
 ___
 Haces aparecer un altar rúnico de piedra en un espacio desocupado dentro del alcance. Una criatura aliada puede usar su acción para sumergir su mano en el líquido que llena el altar y extraer una piedra verde resplandeciente. Cuando el hechizo termina, el altar desaparece, pero las piedras permanecen hasta ser usadas o hasta 24 horas después, lo que ocurra primero. Una criatura puede aplastar la piedra como acción para recuperar puntos de golpe iguales a 4d10 + tu modificador de conjuro.
 
-**En niveles superiores:** Cuando lanzas este hechizo con un espacio de nivel 7 o superior, la curación aumenta en 1d10 por cada nivel de espacio por encima del 6.
+**A niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 7 o superior, la curación aumenta en 1d10 por cada nivel de espacio por encima del 6.
 
 #### Ciclón
 *Conjuración de nivel 2*
@@ -11012,7 +11012,7 @@ ___
 ___
 Tiras del velo que separa la realidad del reino del vacío, creando pequeñas fisuras por donde se filtran energías perturbadoras. Una criatura dentro del alcance y otras criaturas de tu elección a 1,5 metros de ella deben superar una tirada de salvación de Sabiduría o sufrirán 2d4 de daño psíquico si fallan, o la mitad de daño si tienen éxito. Las criaturas que fallen tampoco podrán recuperar puntos de golpe durante 1 asalto.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d4 por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d4 por cada nivel de espacio por encima del 1.
 
 <div class='footnote'>PARTE 2 | HECHIZOS</div>
 
@@ -11030,7 +11030,7 @@ Apuntas a un punto que puedas ver dentro del alcance, creando una esfera de 6 me
 
 Los no muertos en el área no reciben daño y son fortalecidos por el poder necrótico, sumando 1d4 a sus tiradas de ataque y salvación, como si estuvieran bajo el efecto de un hechizo bendición.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 4.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 4.
 
 #### Cadena de Muerte
 *Nigromancia de nivel 5*
@@ -11102,7 +11102,7 @@ Tu piel se cubre de una capa de energía vil, infundiéndote con vigor demoníac
 
 Además, tus puntos de golpe actuales y tu máximo de puntos de golpe aumentan en 2. Si al finalizar el hechizo tus puntos de golpe actuales caen a 0 o menos, quedas a 1 punto de golpe en su lugar.
 
-***En niveles superiores:*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, la CA otorgada aumenta en 1 y tus puntos de golpe actuales y tu máximo de puntos de golpe aumentan en 2 por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, la CA otorgada aumenta en 1 y tus puntos de golpe actuales y tu máximo de puntos de golpe aumentan en 2 por cada nivel de espacio por encima del 1.
 
 #### Plaga Devoradora
 *Nigromancia de nivel 4*
@@ -11118,7 +11118,7 @@ Además, si la criatura afectada es reducida a 0 puntos de golpe, puedes gastar 
 
 Dado que este hechizo induce una enfermedad natural, cualquier efecto que elimine o reduzca los efectos de una enfermedad puede aplicarse.
 
-**En niveles superiores.** Cuando se lanza con un espacio de nivel 3 o superior, el daño necrótico aumenta en 1d8, y el número de Dados de Golpe que pueden gastarse y añadirse a la curación aumenta en uno por cada nivel de espacio por encima del 2.
+**A niveles superiores.** Cuando se lanza con un espacio de nivel 3 o superior, el daño necrótico aumenta en 1d8, y el número de Dados de Golpe que pueden gastarse y añadirse a la curación aumenta en uno por cada nivel de espacio por encima del 2.
 
 \columnbreak
 
@@ -11149,7 +11149,7 @@ ___
 ___
 Una estrella de energía divina avanza en una línea de 9 metros de largo y 1,5 metros de ancho desde ti en una dirección de tu elección. Cada criatura aliada en el camino de la estrella recupera 2d8 puntos de golpe, y cada criatura hostil debe hacer una tirada de salvación de Destreza, recibiendo 3d8 de daño radiante si falla o la mitad si tiene éxito.
 
-**En niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, la curación y el daño del hechizo aumentan en 1d8 por cada nivel de espacio por encima del 3.
+**A niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, la curación y el daño del hechizo aumentan en 1d8 por cada nivel de espacio por encima del 3.
 
 \pagebreakNum
 
@@ -11181,7 +11181,7 @@ Puedes usar tu acción para tomar control total del objetivo. Hasta el final de 
 
 Cada vez que el objetivo recibe daño, hace una nueva tirada de salvación de Sabiduría contra el hechizo. Si tiene éxito, el hechizo termina.
 
-***En niveles superiores.*** Al lanzarlo con un espacio de nivel 5, la duración es concentración, hasta 10 minutos. Con un espacio de nivel 6, hasta 1 hora. Con un espacio de nivel 7 o superior, hasta 8 horas.
+***A niveles superiores.*** Al lanzarlo con un espacio de nivel 5, la duración es concentración, hasta 10 minutos. Con un espacio de nivel 6, hasta 1 hora. Con un espacio de nivel 7 o superior, hasta 8 horas.
 
 \columnbreak
 
@@ -11201,7 +11201,7 @@ Si fallas el ataque, puedes usar tu acción en turnos posteriores dentro de la d
 
 El hechizo también termina si el objetivo está a más de 9 metros de ti o tiene cobertura total al final de tu turno. Este hechizo no tiene efecto en constructos o no muertos.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño inicial aumenta en 1d8 por cada nivel de espacio por encima del 1. El daño infligido como acción adicional también aumenta en 1d8 por cada dos niveles de espacio adicionales por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño inicial aumenta en 1d8 por cada nivel de espacio por encima del 1. El daño infligido como acción adicional también aumenta en 1d8 por cada dos niveles de espacio adicionales por encima del 1.
 
 #### Favor Temible
 *Nigromancia de nivel 1*
@@ -11229,7 +11229,7 @@ Colocas tu mano sobre el suelo y evocas el elemento tierra, haciendo que una esp
 
 La espina permanece mientras dure el hechizo o hasta que pierdas la concentración, momento en el que se derrumba, dejando el área como terreno difícil. Cuando colapsa, cada criatura a 1,5 metros debe hacer una tirada de salvación de Destreza o recibe 1d6 de daño contundente.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 3.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 3.
 
 #### Eclipse
 *Transmutación de nivel 6*
@@ -11253,7 +11253,7 @@ ___
 ___
 Manifiestas una ráfaga de energía elemental alrededor de una criatura dentro del alcance. Elige ácido, frío, fuego, rayo o trueno para el choque. La criatura debe hacer una tirada de salvación de Destreza, recibiendo 3d8 del tipo de daño elegido si falla o la mitad si tiene éxito.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 1.
 
 \columnbreak
 
@@ -11269,7 +11269,7 @@ Invocas fuerzas sagradas para dañar a criaturas impías. Realiza un ataque de c
 
 Si el objetivo está poseído o encantado por una aberración, engendro o no muerto, solo la criatura poseedora o encantadora recibe el daño si está dentro del alcance del hechizo, y el objetivo puede repetir su tirada de salvación contra la posesión o encantamiento con ventaja.
 
-**En niveles superiores.** Al lanzarlo con un espacio de nivel 3 o superior, infliges 1d8 de daño radiante adicional por cada nivel de espacio por encima del 2.
+**A niveles superiores.** Al lanzarlo con un espacio de nivel 3 o superior, infliges 1d8 de daño radiante adicional por cada nivel de espacio por encima del 2.
 
 #### Desvanecerse
 *Ilusión de nivel 2*
@@ -11307,7 +11307,7 @@ ___
 ___
 Una erupción de fuego condenatorio estalla desde un punto que elijas dentro del alcance, enviando seis llamaradas hacia objetivos en un radio de 9 metros. Puedes dirigir las llamas para golpear a un solo objetivo o a varios. Cada objetivo recibe 1d10 de daño por fuego por cada llama que lo golpee y puede hacer una tirada de salvación de Destreza para recibir la mitad de daño. Cada objetivo hace solo una tirada de salvación, independientemente de cuántas llamas lo golpeen.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, crea una llama adicional por cada nivel de espacio por encima del 4.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, crea una llama adicional por cada nivel de espacio por encima del 4.
 
 #### Ráfaga
 *Truco de evocación*
@@ -11343,7 +11343,7 @@ ___
 ___
 Lanzas un rayo de llamas azules hacia una criatura dentro del alcance. Realiza un ataque de conjuro a distancia contra la criatura. Si impactas, el objetivo recibe 2d6 de daño por fuego y 2d6 de daño por frío.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño por fuego y frío aumenta en 1d6 por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño por fuego y frío aumenta en 1d6 por cada nivel de espacio por encima del 1.
 
 #### Pica Glacial
 *Evocación de nivel 7*
@@ -11397,7 +11397,7 @@ ___
 ___
 Invocas una nube en un punto dentro del alcance, cubriendo un área de 4,5 metros de radio con lluvia. Cada criatura aliada que entre en la lluvia por primera vez en su turno, o que comience su turno dentro de la lluvia, recupera 2d6 puntos de golpe. La lluvia sanadora extingue fuegos no mágicos dentro de su área de efecto.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 7 o superior, la sanación aumenta en 1d6 por cada dos niveles de espacio por encima del 5.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 7 o superior, la sanación aumenta en 1d6 por cada dos niveles de espacio por encima del 5.
 
 #### Nova Sagrada
 *Evocación de nivel 3*
@@ -11409,7 +11409,7 @@ ___
 ___
 Libera una ráfaga de energía sagrada en un radio de 4,5 metros a tu alrededor. Todas las criaturas aliadas recuperan 3d6 puntos de golpe, mientras que todas las criaturas hostiles deben hacer una tirada de salvación de Constitución, recibiendo 4d6 de daño radiante si fallan o la mitad si tienen éxito. Las aberraciones, engendros y no muertos hacen esta tirada con desventaja.
 
-**En niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, la curación y el daño aumentan en 1d6 por cada nivel de espacio por encima del 3.
+**A niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, la curación y el daño aumentan en 1d6 por cada nivel de espacio por encima del 3.
 
 \columnbreak
 
@@ -11427,7 +11427,7 @@ Una ráfaga de luz surge desde ti hacia una criatura dentro del alcance y se dis
 
 **Sanar.** La criatura recupera un número de puntos de golpe igual a 1d4 + tu modificador de conjuro.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, puedes aumentar el daño y la curación en 1d4 por cada nivel de espacio por encima del 2, o elegir una criatura adicional dentro de 1,5 metros del objetivo por cada nivel de espacio superior al 2.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, puedes aumentar el daño y la curación en 1d4 por cada nivel de espacio por encima del 2, o elegir una criatura adicional dentro de 1,5 metros del objetivo por cada nivel de espacio superior al 2.
 
 
 #### Ira Sagrada
@@ -11440,7 +11440,7 @@ ___
 ___
 Libera una ráfaga de energía radiante. Cada criatura que elijas dentro de un radio de 6 metros alrededor de ti debe hacer una tirada de salvación de Sabiduría. Un objetivo recibe 6d6 de daño radiante si falla o la mitad si tiene éxito. La explosión se extiende por las esquinas.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 3.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 3.
 
 #### Explosión Aullante
 *Evocación de nivel 2*
@@ -11452,7 +11452,7 @@ ___
 ___
 Una ráfaga helada estalla alrededor de un punto de tu elección dentro del alcance. Cada criatura en una esfera de 4,5 metros de radio centrada en ese punto debe hacer una tirada de salvación de Constitución. Una criatura recibe 3d8 de daño por frío si falla o la mitad si tiene éxito. Una niebla helada permanece en el área, causando que esté fuertemente oscurecida. Dura hasta el final de la duración o hasta que un viento de velocidad moderada o mayor (al menos 16 km/h) la disperse.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 2.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 2.
 
 <div class='footnote'>PARTE 2 | HECHIZOS</div>
 
@@ -11500,7 +11500,7 @@ ___
 ___
 Invocas energía helada para atacar a una criatura que puedas ver dentro del alcance, congelándola con el frío de la tumba. Realiza un ataque de conjuro a distancia contra la criatura. Si impactas, el objetivo recibe 3d8 de daño por frío y no puede recuperar puntos de golpe hasta el inicio de tu próximo turno. Hasta entonces, la piel del objetivo se torna pálida como el hielo. Si impactas a un objetivo celestial, tiene desventaja en sus tiradas de ataque contra ti hasta el final de tu próximo turno.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 1.
 
 #### Fuego Interno
 *Abjuración de nivel 1*
@@ -11580,7 +11580,7 @@ ___
 ___
 Manifiestas piedra fundida y magma en una bola feroz que lanzas hacia un objetivo dentro del alcance. El objetivo debe hacer una tirada de salvación de Destreza. Si falla, recibe 3d6 de daño por fuego y 3d6 de daño contundente; si tiene éxito, recibe la mitad de daño.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño aumenta en 1d6 de daño por fuego y 1d6 de daño contundente por cada nivel de espacio por encima del 2.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño aumenta en 1d6 de daño por fuego y 1d6 de daño contundente por cada nivel de espacio por encima del 2.
 
 #### Luz del Protector
 *Evocación de nivel 5*
@@ -11616,7 +11616,7 @@ ___
 ___
 Llamas al elemento aire y rodeas a un aliado dentro del alcance con un campo de electricidad crepitante. Hasta que el hechizo termine, el objetivo obtiene un bono de +1 a la CA y, cuando una criatura lo golpea con un ataque cuerpo a cuerpo, esa criatura recibe 1d4 de daño por rayo.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d4 por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d4 por cada nivel de espacio por encima del 1.
 
 #### Bomba Viva
 *Evocación de nivel 2*
@@ -11630,7 +11630,7 @@ Manipulas el maná que fluye a través de una criatura dentro del alcance, hacie
 
 Cuando el hechizo termine, el objetivo y cada criatura a 3 metros de él deben hacer una tirada de salvación de Destreza, recibiendo 2d6 de daño por fuego si fallan o la mitad si tienen éxito.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño de la explosión aumenta en 1d6 por cada nivel de espacio por encima del 2.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño de la explosión aumenta en 1d6 por cada nivel de espacio por encima del 2.
 
 <div class='footnote'>PARTE 2 | HECHIZOS</div>
 
@@ -11646,7 +11646,7 @@ ___
 ___
 Manifiestas un domo de luz brillante a tu alrededor para proteger a tus aliados y dificultar a tus enemigos. Hasta que el hechizo termine, el domo se mueve contigo, centrado en ti. Todas las criaturas aliadas dentro del domo ganan un bono de +2 a la CA frente a ataques de hechizos, las tiradas de ataque de hechizos contra ellos que provengan de fuera del domo se hacen con desventaja, y si una criatura recibe daño de un ataque con arma, el daño se reduce en 3 puntos.
 
-**En niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, la reducción de daño aumenta en 1 por cada nivel de espacio por encima del 4.
+**A niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, la reducción de daño aumenta en 1 por cada nivel de espacio por encima del 4.
 
 #### Golpe Lunar
 *Truco de evocación*
@@ -11660,7 +11660,7 @@ Una ráfaga de energía lunar atraviesa el aire. Elige una criatura dentro del a
 
 Si lanzas este hechizo al aire libre con una vista clara de la luna, el hechizo inflige 1d8 de daño de fuerza.
 
-***En niveles superiores.*** El daño del hechizo aumenta en un dado al alcanzar el nivel 5 (2d6 o 2d8), nivel 11 (3d6 o 3d8) y nivel 17 (4d6 o 4d8).
+***A niveles superiores.*** El daño del hechizo aumenta en un dado al alcanzar el nivel 5 (2d6 o 2d8), nivel 11 (3d6 o 3d8) y nivel 17 (4d6 o 4d8).
 
 #### Manto del Cruzado Caído
 *Evocación de nivel 3*
@@ -11684,7 +11684,7 @@ ___
 ___
 Elige una esfera de 4,5 metros de radio dentro del alcance. Cualquier hechizo de nivel 3 o inferior en el objetivo termina. Por cada hechizo de nivel 4 o superior en el objetivo, haz una prueba de habilidad usando tu habilidad de conjuro. La CD es igual a 10 + el nivel del hechizo. Si la prueba tiene éxito, el hechizo termina.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 7 o superior, terminas automáticamente los efectos de un hechizo en el objetivo si el nivel del hechizo es igual o menor al nivel del espacio de conjuro que usaste menos 3.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 7 o superior, terminas automáticamente los efectos de un hechizo en el objetivo si el nivel del hechizo es igual o menor al nivel del espacio de conjuro que usaste menos 3.
 
 #### Explosión Mental
 *Truco de evocación*
@@ -11710,7 +11710,7 @@ Envuelves la mente de una criatura que puedas ver dentro del alcance. El objetiv
 
 Además del daño, una criatura que falle la tirada de salvación tiene desventaja en todas las tiradas de ataque y pruebas de habilidad mientras dure el hechizo. Al final de cada uno de sus turnos, puede repetir la tirada de salvación de Sabiduría, terminando el efecto si tiene éxito.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 2.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 2.
 
 <div class='footnote'>PARTE 2 | HECHIZOS</div>
 
@@ -11748,7 +11748,7 @@ ___
 ___
 Juntas tus manos, conjurando una bola de magma goteante que lanzas hacia una criatura u objeto dentro del alcance. Realiza un ataque de conjuro a distancia contra el objetivo. Si impactas, el objetivo recibe 13d10 de daño por fuego y se prende en llamas. Hasta que una criatura use una acción para apagar el fuego, el objetivo recibe 1d10 de daño por fuego al inicio de cada uno de sus turnos.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 8 o superior, el daño inicial aumenta en 1d10 por cada nivel de espacio por encima del 7.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 8 o superior, el daño inicial aumenta en 1d10 por cada nivel de espacio por encima del 7.
 
 \columnbreak
 
@@ -11764,7 +11764,7 @@ Una lluvia de pequeños meteoritos cae del cielo, explotando al impactar. Causas
 
 Como acción adicional, puedes mover el cilindro hasta 4,5 metros hacia un punto que puedas ver. Los objetos inflamables no atendidos en el área se incendian, y los metales comienzan a fundirse.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 6 o superior, el daño por fuego aumenta en 2d6 por cada nivel de espacio por encima del 5.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 6 o superior, el daño por fuego aumenta en 2d6 por cada nivel de espacio por encima del 5.
 
 #### Reencarnación
 *Nigromancia de nivel 5*
@@ -11808,7 +11808,7 @@ ___
 ___
 La próxima vez que golpees con un ataque cuerpo a cuerpo durante la duración del hechizo, tu ataque inflige 2d6 de daño radiante adicional, y la siguiente tirada de ataque contra este objetivo antes del final de tu próximo turno se realiza con ventaja.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño adicional aumenta en 1d6 por cada nivel de espacio por encima del 2.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, el daño adicional aumenta en 1d6 por cada nivel de espacio por encima del 2.
 
 #### Ritual de Invocación
 *Conjuración de nivel 5 (ritual)*
@@ -11858,7 +11858,7 @@ ___
 ___
 Elige una criatura no muerta que puedas ver dentro del alcance. El objetivo debe hacer una tirada de salvación de Sabiduría. Si falla, queda aturdido durante la duración o hasta que reciba daño. Al final de cada uno de sus turnos, el objetivo puede realizar una nueva tirada de salvación de Sabiduría. Si tiene éxito, el hechizo termina.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, puedes elegir una criatura adicional por cada nivel de espacio por encima del 2. Las criaturas deben estar a 9 metros unas de otras cuando las elijas.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 3 o superior, puedes elegir una criatura adicional por cada nivel de espacio por encima del 2. Las criaturas deben estar a 9 metros unas de otras cuando las elijas.
 
 <div class='footnote'>PARTE 2 | HECHIZOS</div>
 
@@ -11888,7 +11888,7 @@ ___
 ___
 Energía sombría gotea de tu mano mientras la llevas al suelo, envolviendo un punto que puedas ver dentro del alcance en oscuridad. Cada criatura en una esfera de 6 metros de radio centrada en ese punto debe hacer una tirada de salvación de Constitución. Una criatura recibe 4d8 de daño necrótico y 4d8 de daño psíquico si falla, o la mitad de daño si tiene éxito. La oscuridad se extiende por las esquinas y el área del hechizo queda oscurecida por oscuridad mágica hasta el final de tu próximo turno.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 6 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 5.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 6 o superior, el daño aumenta en 1d8 por cada nivel de espacio por encima del 5.
 
 #### Deslizar Sombrío
 *Truco de conjuración*
@@ -11928,7 +11928,7 @@ Cuando una aparición está en el mismo espacio que otra criatura, explota, obli
 
 Después de perder la concentración en este hechizo, todas las apariciones presentes duran 1 asalto.
 
-**En niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, las apariciones infligen 1d6 de daño psíquico adicional por cada nivel de espacio por encima del 4.
+**A niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, las apariciones infligen 1d6 de daño psíquico adicional por cada nivel de espacio por encima del 4.
 
 #### Fuerza Radiante
 *Abjuración de nivel 2*
@@ -11972,7 +11972,7 @@ No puedes cambiar el hechizo robado de cómo fue lanzado originalmente, a menos 
 
 Para robar un efecto de hechizo de nivel 2 o superior, haz una prueba de habilidad usando tu habilidad de conjuro. La CD es igual a 10 + el nivel del hechizo. Si tienes éxito, robas el hechizo.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el nivel de hechizo donde tienes éxito automáticamente en la prueba aumenta en uno por cada nivel de espacio por encima del 3.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el nivel de hechizo donde tienes éxito automáticamente en la prueba aumenta en uno por cada nivel de espacio por encima del 3.
 
 #### Lluvia de Estrellas
 *Evocación de nivel 6*
@@ -11986,7 +11986,7 @@ Incontables destellos de luz pura de luna caen al suelo en un cilindro de 12 met
 
 Si lanzas este hechizo al aire libre con una vista clara de la luna, inflige 2d6 de daño radiante adicional.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 7 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 6.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 7 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 6.
 
 \columnbreak
 
@@ -12002,7 +12002,7 @@ Un destello de luz cae sobre una criatura de tu elección dentro del alcance. Re
 
 Si lanzas este hechizo al aire libre con una vista clara de la luna, inflige 1d6 de daño radiante adicional.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 1.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 2 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 1.
 
 #### Oleada de Estrellas
 *Evocación de nivel 3*
@@ -12016,7 +12016,7 @@ Una ráfaga de intensa luz lunar se proyecta en una línea de 30 metros de largo
 
 Si lanzas este hechizo al aire libre con una vista clara de la luna, inflige 2d6 de daño radiante adicional.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 3.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 4 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 3.
 
 #### Convocar Ser del Vacío
 *Conjuración de nivel 4*
@@ -12030,7 +12030,7 @@ Llamas a una criatura del Vacío que se manifiesta físicamente en un espacio de
 
 La criatura es un aliado para ti y tus compañeros. En combate, comparte tu cuenta de iniciativa, pero toma su turno inmediatamente después del tuyo. Obedece tus comandos verbales (no se requiere acción de tu parte). Si no das ninguna orden, toma la acción Esquivar y usa su movimiento para evitar el peligro.
 
-**En niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, usa el nivel superior donde aparezca el nivel del hechizo en la estadística.
+**A niveles superiores.** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, usa el nivel superior donde aparezca el nivel del hechizo en la estadística.
 
 <div class='footnote'>PARTE 2 | HECHIZOS</div>
 
@@ -12059,9 +12059,9 @@ ___
 > ### Acciones
 > ***Multiataque.*** La aberración hace un número de ataques igual a la mitad del nivel del conjuro.
 >
-> ***Mordisco (Solo Sombraengendro).*** *Ataque de arma cuerpo a cuerpo:* tu modificador de ataque de conjuro para golpear, alcance 1,5 metros, una criatura. *Impacto:* 1d8 + 3 + el nivel del conjuro de daño perforante, y si el objetivo es una criatura, debe superar una tirada de salvación de Constitución contra tu DC de conjuro o quedar envenenado hasta el inicio del siguiente turno de la aberración.
+> ***Mordisco (Solo Sombraengendro).*** *Ataque de arma cuerpo a cuerpo:* tu modificador de ataque de conjuro para golpear, alcance 1,5 metros, una criatura. *Impacto:* 1d8 + 3 + el nivel del conjuro de daño perforante, y si el objetivo es una criatura, debe superar una tirada de salvación de Constitución contra tu CD de conjuro o quedar envenenado hasta el inicio del siguiente turno de la aberración.
 >
-> ***Tentáculo (Solo Manipulador Mental).*** *Ataque de arma cuerpo a cuerpo:* tu modificador de ataque de conjuro para golpear, alcance 1,5 metros, una criatura. *Impacto:* 1d8 + 3 + el nivel del conjuro de daño contundente. Si el objetivo es una criatura Grande o más pequeña, queda apresado (DC 16 para escapar); sin embargo, la velocidad del objetivo no se reduce a 0. Hasta que el apresamiento termine, la aberración comparte el espacio con el objetivo, el objetivo queda cegado y la aberración no puede usar sus tentáculos en otro objetivo sin finalizar el apresamiento.
+> ***Tentáculo (Solo Manipulador Mental).*** *Ataque de arma cuerpo a cuerpo:* tu modificador de ataque de conjuro para golpear, alcance 1,5 metros, una criatura. *Impacto:* 1d8 + 3 + el nivel del conjuro de daño contundente. Si el objetivo es una criatura Grande o más pequeña, queda apresado (CD 16 para escapar); sin embargo, la velocidad del objetivo no se reduce a 0. Hasta que el apresamiento termine, la aberración comparte el espacio con el objetivo, el objetivo queda cegado y la aberración no puede usar sus tentáculos en otro objetivo sin finalizar el apresamiento.
 >
 > ***Desgarrar Psíquico (Solo Psicoengendro).*** *Ataque de conjuro a distancia:* tu modificador de ataque de conjuro para golpear, alcance 9 metros, una criatura. *Impacto:* 1d8 + 3 + el nivel del conjuro de daño psíquico. Si el objetivo es una criatura, no puede recuperar puntos de golpe hasta el inicio del próximo turno de la aberración.
 
@@ -12116,7 +12116,7 @@ El área se considera terreno difícil y cualquier criatura que entre o comience
 
 Como acción adicional, puedes mover el vórtice hasta 9 metros en cualquier dirección.
 
-***En niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 4.
+***A niveles superiores.*** Cuando lanzas este hechizo con un espacio de nivel 5 o superior, el daño aumenta en 1d6 por cada nivel de espacio por encima del 4.
 
 \columnbreak
 
@@ -12128,9 +12128,9 @@ ___
 - **Componentes:** V, S
 - **Duración:** Instantánea
 ___
-Invocas al vacío para intercambiar la salud tuya y de otra criatura. Elige una criatura dispuesta dentro del alcance; tú y la criatura elegida intercambian sus puntos de vida actuales, hasta un máximo de 40 puntos de vida de cada criatura. Este hechizo no tiene efecto en una criatura que esté incapacitada o con 0 puntos de vida.
+Invocas al vacío para intercambiar la salud tuya y de otra criatura. Elige una criatura dispuesta dentro del alcance; tú y la criatura elegida intercambian sus puntos de golpe actuales, hasta un máximo de 40 puntos de golpe de cada criatura. Este hechizo no tiene efecto en una criatura que esté incapacitada o con 0 puntos de golpe.
 
-***En niveles superiores.*** Cuando lanzas este hechizo usando un espacio de conjuro de 5º nivel o superior, el máximo de puntos de vida que puedes intercambiar aumenta en 10 por cada nivel de espacio por encima del 4º.
+***A niveles superiores.*** Cuando lanzas este hechizo usando un espacio de conjuro de 5º nivel o superior, el máximo de puntos de golpe que puedes intercambiar aumenta en 10 por cada nivel de espacio por encima del 4º.
 
 \pagebreakNum
 
@@ -12244,7 +12244,7 @@ Las siguientes razas se detallan en este capítulo:
 
 ***Ataque en Picado.*** Si desciendes al menos 6 metros hacia una criatura y la golpeas con un ataque en tu primer turno de combate, el ataque inflige 2d6 puntos de daño adicional. Solo puedes usar este rasgo una vez por combate.
 
-***Grito Incapacitante.*** Puedes usar tu acción para emitir un chillido horrendo. Cada criatura en un radio de 4,5 metros que pueda oírte debe hacer una tirada de salvación de Constitución (DC 8 + tu bonificación de competencia + tu modificador de Sabiduría), o quedar incapacitada hasta el final de tu próximo turno. No puedes volver a usar esta característica hasta que termines un descanso largo.
+***Grito Incapacitante.*** Puedes usar tu acción para emitir un chillido horrendo. Cada criatura en un radio de 4,5 metros que pueda oírte debe hacer una tirada de salvación de Constitución (CD 8 + tu bonificación de competencia + tu modificador de Sabiduría), o quedar incapacitada hasta el final de tu próximo turno. No puedes volver a usar esta característica hasta que termines un descanso largo.
 
 ***Idiomas.*** Puedes hablar, leer y escribir darnassiano y común básico.
 
@@ -12296,7 +12296,7 @@ Las siguientes razas se detallan en este capítulo:
 
 ***Construccion Poderosa.*** Se te considera una criatura de un tamaño mayor al determinar tu capacidad de carga y el peso que puedes empujar, arrastrar o levantar.
 
-***Resistencia Implacable.*** Cuando te reduzcan a 0 puntos de vida pero no te maten, puedes caer a 1 punto de vida en su lugar. Debes finalizar un descanso largo para usar esta característica nuevamente.
+***Resistencia Implacable.*** Cuando te reduzcan a 0 puntos de golpe pero no te maten, puedes caer a 1 punto de vida en su lugar. Debes finalizar un descanso largo para usar esta característica nuevamente.
 
 ***Idiomas.*** Puedes hablar, leer y escribir Común, Bajo Común y Orco. La mayoría de los mok'nathal son capaces de hablar el idioma de ambos padres, aunque rara vez tengan oportunidad de usarlo.
 
@@ -12389,7 +12389,7 @@ Tu cola serpentina no puede empuñar armas ni escudos, ni <br> realizar tareas q
 
 ***Olfato Agudo.*** Competencia en Percepción y ventaja en las pruebas de Sabiduría (Percepción) que dependan del olfato.
 
-***Puas.*** Cuando te golpeen con un ataque cuerpo a cuerpo, puedes usar tu reacción para lanzar púas al atacante. El objetivo debe realizar una tirada de salvación de Destreza (DC 8 + tu bonificador de competencia + tu modificador de Destreza), recibiendo daño perforante igual a 1d6 + tu nivel si falla la tirada, o la mitad de daño si tiene éxito.
+***Puas.*** Cuando te golpeen con un ataque cuerpo a cuerpo, puedes usar tu reacción para lanzar púas al atacante. El objetivo debe realizar una tirada de salvación de Destreza (CD 8 + tu bonificador de competencia + tu modificador de Destreza), recibiendo daño perforante igual a 1d6 + tu nivel si falla la tirada, o la mitad de daño si tiene éxito.
 
 Una vez que usas este rasgo, no puedes volver a usarlo hasta que termines un descanso corto o largo.
 

@@ -1,0 +1,425 @@
+{
+ "encantamiento": {
+  "desc": "Permite a un encantador encantar objetos básicos. Requiere polvos y esencias obtenidas al desencantar objetos mágicos.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un encantador encantar objetos básicos hasta un máximo de habilidad potencial de 75 p. Requiere polvos y esencias obtenidas al desencantar objetos mágicos.",
+    "icon": "trade_engraving"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un encantador encantar armas y armaduras hasta un máximo de habilidad potencial de 150 p.",
+    "icon": "trade_engraving"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un encantador lanzar encantamientos magistrales sobre armas y armaduras hasta un máximo de habilidad potencial de 225 p.",
+    "icon": "trade_engraving"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un encantador lanzar encantamientos magistrales sobre armas y armaduras hasta un máximo de habilidad potencial de 300 p.",
+    "icon": "trade_engraving"
+   }
+  ],
+  "specializations": [],
+  "abilities": [
+   {
+    "name": "Desencantar",
+    "desc": "Extrae el elemento o elementos mágicos de buena calidad (Verde) o las mejores armas y armaduras. El objeto seleccionado será DESTRUIDO y podrá recuperarse.",
+    "icon": "spell_holy_removecurse"
+   }
+  ]
+ },
+ "ingenieria": {
+  "desc": "Permite a un ingeniero fabricar artilugios básicos. Requiere piedras y metales encontrados con la habilidad minería.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un ingeniero fabricar artilugios básicos hasta un máximo de habilidad potencial de 75 p. Requiere piedras y metales encontrados con la habilidad minería.",
+    "icon": "trade_engineering"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un ingeniero fabricar dispositivos y explosivos más potentes hasta un máximo de habilidad potencial de 150 p.",
+    "icon": "trade_engineering"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un ingeniero fabricar bombas y trastos que son un espectáculo para la vista hasta un máximo de habilidad potencial de 225 p.",
+    "icon": "trade_engineering"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un ingeniero fabricar bombas y trastos realmente asombrosos hasta un máximo de habilidad potencial de 300 p.",
+    "icon": "trade_engineering"
+   }
+  ],
+  "specializations": [
+   {
+    "name": "Ingeniero goblin",
+    "desc": "Permite a un ingeniero fabricar dispositivos de los goblins letales.",
+    "icon": "spell_fire_selfdestruct"
+   },
+   {
+    "name": "Ingeniero gnomo",
+    "desc": "Permite a un ingeniero fabricar dispositivos gnómicos fantásticos pero poco fiables.",
+    "icon": "inv_gizmo_02"
+   }
+  ],
+  "abilities": []
+ },
+ "sastreria": {
+  "desc": "Permite a un sastre fabricar armaduras de tela básicas. Requiere paño obtenido de los humanoides.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un sastre fabricar armaduras de tela básicas hasta un máximo de habilidad potencial de 75 p. Requiere paño obtenido de los humanoides.",
+    "icon": "trade_tailoring"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un sastre confeccionar camisas y armaduras de tela a la moda hasta un máximo de habilidad potencial de 150 p.",
+    "icon": "trade_tailoring"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un sastre confeccionar camisas y armaduras de tela de moda hasta un máximo de habilidad potencial de 225 p.",
+    "icon": "trade_tailoring"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un sastre confeccionar camisas y armaduras de tela de moda hasta un máximo de habilidad potencial de 300 p.",
+    "icon": "trade_tailoring"
+   }
+  ],
+  "specializations": [],
+  "abilities": []
+ },
+ "alquimia": {
+  "desc": "Permite a un alquimista preparar pociones básicas. Requiere hierbas encontradas con la habilidad botánica.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un alquimista preparar pociones básicas hasta un máximo de habilidad potencial de 75 p. Requiere hierbas encontradas con la habilidad botánica.",
+    "icon": "trade_alchemy"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un alquimista preparar pociones convencionales hasta un máximo de habilidad potencial de 150 p.",
+    "icon": "trade_alchemy"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un alquimista preparar pociones asombrosas hasta un máximo de habilidad potencial de 225 p.",
+    "icon": "trade_alchemy"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un alquimista preparar pociones alucinantes hasta un máximo de habilidad potencial de 300 p.",
+    "icon": "trade_alchemy"
+   }
+  ],
+  "specializations": [],
+  "abilities": []
+ },
+ "herreria": {
+  "desc": "Permite a un herrero fabricar armas y armaduras básicas. Requiere piedras y metales encontrados con la habilidad minería.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un herrero fabricar armas y armaduras básicas hasta un máximo de habilidad potencial de 75 p. Requiere piedras y metales encontrados con la habilidad minería.",
+    "icon": "trade_blacksmithing"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un herrero fabricar armas y armaduras elaboradas hasta un máximo de habilidad potencial de 150 p.",
+    "icon": "trade_blacksmithing"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un herrero fabricar armas y armaduras magistrales hasta un máximo de habilidad potencial de 225 p.",
+    "icon": "trade_blacksmithing"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un herrero fabricar armas y armaduras hasta un máximo de habilidad potencial de 300 p.",
+    "icon": "trade_blacksmithing"
+   }
+  ],
+  "specializations": [
+   {
+    "name": "Forjador de armaduras",
+    "desc": "Permite a un herrero fabricar armaduras especiales que no están al alcance de un herrero artesano normal.",
+    "icon": "inv_chest_plate04"
+   },
+   {
+    "name": "Forjador de armas",
+    "desc": "Permite a un herrero fabricar armas especiales que no están al alcance de un herrero artesano normal.",
+    "icon": "inv_sword_25"
+   },
+   {
+    "name": "Maestro invocador",
+    "desc": "Permite a un herrero fabricar espadas especiales que no están al alcance de un forjador de armas artesano normal.",
+    "icon": "inv_sword_41"
+   },
+   {
+    "name": "Maestro forjador de martillos",
+    "desc": "Permite a un herrero fabricar mazas y martillos especiales que no están al alcance de un forjador de armas artesano normal.",
+    "icon": "inv_hammer_23"
+   },
+   {
+    "name": "Maestro forjador de hachas",
+    "desc": "Permite a un herrero fabricar hachas especiales que no están al alcance de un forjador de armas artesano normal.",
+    "icon": "inv_axe_05"
+   }
+  ],
+  "abilities": []
+ },
+ "peleteria": {
+  "desc": "Permite a un peletero fabricar armaduras de cuero. Requiere retales de cuero y pellejos recogidos con la habilidad desuello.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un peletero fabricar armaduras de cuero hasta un máximo de habilidad potencial de 75 p. Requiere retales de cuero y pellejos recogidos con la habilidad desuello.",
+    "icon": "inv_misc_armorkit_17"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un peletero fabricar armaduras de cuero de gran calidad hasta un máximo de habilidad potencial de 150 p.",
+    "icon": "inv_misc_armorkit_17"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un peletero fabricar armaduras de cuero elaboradas hasta un máximo de habilidad potencial de 225 p.",
+    "icon": "inv_misc_armorkit_17"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un peletero fabricar armaduras de cuero de calidad artesana hasta un máximo de habilidad potencial de 300 p.",
+    "icon": "inv_misc_armorkit_17"
+   }
+  ],
+  "specializations": [
+   {
+    "name": "Peletería dragontina",
+    "desc": "Permite a un peletero fabricar armaduras especiales de escamas de dragón que no están al alcance de un peletero normal. La armadura de escamas de dragón es una armadura de malla.",
+    "icon": "inv_misc_monsterscales_03"
+   },
+   {
+    "name": "Peletería tribal",
+    "desc": "Permite a un peletero fabricar armaduras tribales especiales que no están al alcance de un peletero normal.",
+    "icon": "spell_nature_nullward"
+   },
+   {
+    "name": "Peletería elemental",
+    "desc": "Permite a un peletero fabricar armaduras elementales especiales que no están al alcance de un peletero normal.",
+    "icon": "spell_fire_volcano"
+   }
+  ],
+  "abilities": []
+ },
+ "primeros_auxilios": {
+  "desc": "Permite la creación y el uso de vendas. El paño utilizado para la fabricación de las vendas se puede obtener de los humanoides de todo el mundo.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite la creación y el uso de vendas hasta un máximo de habilidad potencial de 75 p. El paño utilizado para la fabricación de las vendas se puede obtener de los humanoides de todo el mundo.",
+    "icon": "spell_holy_sealofsacrifice"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite la creación y el uso de vendas hasta un máximo de habilidad potencial de 150 p. El paño utilizado para la fabricación de las vendas se puede obtener de los humanoides de todo el mundo.",
+    "icon": "spell_holy_sealofsacrifice"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un médico hacer y utilizar vendas hasta un máximo de habilidad potencial de 225 p. El paño utilizado para la fabricación de las vendas se puede obtener de los humanoides de todo el mundo.",
+    "icon": "spell_holy_sealofsacrifice"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un médico hacer y utilizar vendas hasta un máximo de habilidad potencial de 300 p. El paño utilizado para la fabricación de las vendas se puede obtener de los humanoides de todo el mundo.",
+    "icon": "spell_holy_sealofsacrifice"
+   }
+  ],
+  "specializations": [],
+  "abilities": []
+ },
+ "mineria": {
+  "desc": "Cómo extraer minerales y rocas de las vetas de minerales para usarlos en ingeniería y herrería. Requiere un pico de minero.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Cómo extraer minerales y rocas de las vetas de minerales para usarlos en ingeniería y herrería. Da una habilidad en minería potencial de 75. Requiere un pico de minero.",
+    "icon": "trade_mining"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Un nivel más avanzado de minería. Proporciona una habilidad potencial en minería de 150 p.",
+    "icon": "trade_mining"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Un nivel más avanzado de minería. Proporciona una habilidad potencial en minería de 225 p.",
+    "icon": "trade_mining"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Eleva la Minería a un arte. Da una habilidad en minería potencial de 300.",
+    "icon": "trade_mining"
+   }
+  ],
+  "specializations": [],
+  "abilities": [
+   {
+    "name": "Buscar minerales",
+    "desc": "Las vetas de minerales cercanas aparecen en el minimapa. Solo se puede rastrear un tipo de objeto a la vez.",
+    "icon": "spell_nature_earthquake"
+   },
+   {
+    "name": "Fundiendo",
+    "desc": "Permite al minero convertir minerales en lingotes de metal. Esta habilidad requiere una forja.",
+    "icon": "spell_fire_flameblades"
+   }
+  ]
+ },
+ "cocina": {
+  "desc": "Permite a un cocinero preparar recetas básicas. Requiere carne de animales y fuego para preparar la comida.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un cocinero preparar recetas básicas hasta un máximo de habilidad potencial de 75 p. Requiere carne de animales y fuego para preparar la comida.",
+    "icon": "inv_misc_food_15"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un cocinero preparar recetas deliciosas hasta un máximo de habilidad potencial de 150 p.",
+    "icon": "inv_misc_food_15"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un cocinero preparar recetas que hacen la boca agua hasta un máximo de habilidad potencial de 225 p.",
+    "icon": "inv_misc_food_15"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un cocinero preparar recetas asombrosas hasta un máximo de habilidad potencial de 300 p.",
+    "icon": "inv_misc_food_15"
+   }
+  ],
+  "specializations": [],
+  "abilities": []
+ },
+ "joyeria": {
+  "desc": "Permite a un joyero fabricar joyas. Requiere gemas preciosas y metales recogidos con la habilidad minería.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un joyero fabricar joyas hasta un máximo de habilidad potencial de 75 p. Requiere gemas preciosas y metales recogidos con la habilidad minería.",
+    "icon": "inv_misc_gem_01"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un joyero fabricar joyas fantásticas hasta un máximo de habilidad potencial de 150 p.",
+    "icon": "inv_misc_gem_02"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un joyero fabricar joyas fantásticas hasta un máximo de habilidad potencial de 225 p.",
+    "icon": "inv_misc_gem_02"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un joyero fabricar joyas fantásticas hasta un máximo de habilidad potencial de 300 p.",
+    "icon": "inv_misc_gem_02"
+   }
+  ],
+  "specializations": [],
+  "abilities": [
+   {
+    "name": "Prospectar",
+    "desc": "Busca 5 menas de metales básicos para obtener piedras preciosas. Las menas se destruirán durante el proceso.",
+    "icon": "inv_misc_gem_bloodgem_01"
+   }
+  ]
+ },
+ "inscripcion": {
+  "desc": "Permite a un escriba crear escrituras mágicas.",
+  "ranks": [
+   {
+    "rank": "Aprendiz",
+    "max": 75,
+    "desc": "Permite a un escriba crear escrituras mágicas, hasta un potencial máximo de habilidad de 75.",
+    "icon": "inv_inscription_tradeskill01"
+   },
+   {
+    "rank": "Oficial",
+    "max": 150,
+    "desc": "Permite a un escriba crear escrituras mágicas, hasta un potencial máximo de habilidad de 150.",
+    "icon": "inv_inscription_tradeskill01"
+   },
+   {
+    "rank": "Experto",
+    "max": 225,
+    "desc": "Permite a un escriba crear escrituras mágicas, hasta un potencial máximo de habilidad de 225.",
+    "icon": "inv_inscription_tradeskill01"
+   },
+   {
+    "rank": "Artesano",
+    "max": 300,
+    "desc": "Permite a un escriba crear escrituras mágicas, hasta un potencial máximo de habilidad de 300.",
+    "icon": "inv_inscription_tradeskill01"
+   }
+  ],
+  "specializations": [],
+  "abilities": [
+   {
+    "name": "Moler",
+    "desc": "Aplasta 5 hierbas para crear pigmentos para tintas. Este proceso destruirá las hierbas.",
+    "icon": "ability_miling"
+   }
+  ]
+ }
+}

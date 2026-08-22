@@ -934,6 +934,47 @@ end, "estado de red del tablon de contratos")
 --   /harford debug run probeframediff PaperDollSidebarTabs tab1 tab2
 -- Luego /reload para que se escriba al disco, y se lee SavedVariables\Harford.lua.
 do
+    -- Las capturas no caducaban NUNCA y cada una de un frame grande ronda los 2,5 MB: 45 de
+    -- ellas dejaron un HarfordDebug.lua de 27 MB, que WoW parsea entero en cada login. Un tope
+    -- por numero no basta (8 capturas grandes ya son 20 MB), asi que el presupuesto va en nodos,
+    -- que es lo que de verdad se escribe. Se echan las mas viejas por `capturedAt`.
+    local PRESUPUESTO_NODOS = 60000
+    local function PodarCapturas()
+        local store = HarfordFrameProbe
+        if type(store) ~= "table" or type(store.captures) ~= "table" then return end
+        local todas = {}
+        for frameName, porEtiqueta in pairs(store.captures) do
+            if type(porEtiqueta) == "table" then
+                for etiqueta, snap in pairs(porEtiqueta) do
+                    todas[#todas + 1] = {
+                        frame = frameName, etiqueta = etiqueta,
+                        nodos = tonumber(type(snap) == "table" and snap.nodos) or 5000,
+                        at = tonumber(type(snap) == "table" and snap.capturedAt) or 0,
+                    }
+                end
+            end
+        end
+        local total = 0
+        for _, c in ipairs(todas) do total = total + c.nodos end
+        if total <= PRESUPUESTO_NODOS then return end
+
+        table.sort(todas, function(a, b) return a.at < b.at end)
+        local echadas = 0
+        for _, c in ipairs(todas) do
+            if total <= PRESUPUESTO_NODOS then break end
+            store.captures[c.frame][c.etiqueta] = nil
+            if not next(store.captures[c.frame]) then store.captures[c.frame] = nil end
+            total = total - c.nodos
+            echadas = echadas + 1
+            Print(string.format("|cffffcc00Retirada la captura mas vieja:|r %s / %s (%d nodos)",
+                c.frame, c.etiqueta, c.nodos))
+        end
+        if echadas > 0 then
+            Print(string.format("Presupuesto de capturas: %d/%d nodos. Usa |cffffd100svclean frameprobe|r para vaciarlas todas.",
+                total, PRESUPUESTO_NODOS))
+        end
+    end
+
     local function ProbeFrame(frameName, exportMode, captureLabel)
         frameName = tostring(frameName or ""):match("^%s*(%S+)") or ""
         if frameName == "" then frameName = "CharacterFrame" end
@@ -1123,7 +1164,9 @@ do
         end
         indexTree(root, "root", 0)
 
+        local nodosVolcados = 0
         local function dumpFrame(frame, depth, uid)
+            nodosVolcados = nodosVolcados + 1
             local node = addCommon({ children = {} }, frame)
             node.uid = uid or uidOf[frame]
             node.enabled = frame.IsEnabled and safe(frame, "IsEnabled") or nil
@@ -1145,6 +1188,7 @@ do
         end
 
         local snapshot = { frame = frameName, capturedAt = time and time() or 0, tree = dumpFrame(root, 0, "root") }
+        snapshot.nodos = nodosVolcados
         captureLabel = tostring(captureLabel or ""):match("^%s*(.-)%s*$")
         if captureLabel ~= "" then
             HarfordFrameProbe = type(HarfordFrameProbe) == "table" and HarfordFrameProbe or {}
@@ -1152,7 +1196,9 @@ do
             HarfordFrameProbe.captures[frameName] = type(HarfordFrameProbe.captures[frameName]) == "table"
                 and HarfordFrameProbe.captures[frameName] or {}
             HarfordFrameProbe.captures[frameName][captureLabel] = snapshot
-            Print("captura '" .. captureLabel .. "' de " .. frameName .. " guardada. Haz /reload para escribirla.")
+            Print(string.format("captura '%s' de %s guardada (%d nodos). Haz /reload para escribirla.",
+                captureLabel, frameName, nodosVolcados))
+            PodarCapturas()
         elseif exportMode then
             HarfordFrameProbe = type(HarfordFrameProbe) == "table" and HarfordFrameProbe or {}
             HarfordFrameProbe.exports = type(HarfordFrameProbe.exports) == "table" and HarfordFrameProbe.exports or {}
@@ -3557,6 +3603,20 @@ API.RegisterCommand("svclean", function(args)
         return 1
     end
 
+    -- El sistema de votos del tablon se retiro, pero su tabla sigue en las SavedVariables de
+    -- quien la tuviera: no la borra nadie porque ya no hay codigo que la mire.
+    local function CleanContractLeftovers()
+        local db = _G.HarfordContractsDB
+        if type(db) ~= "table" then Print("svclean contratos: no hay tablon guardado."); return end
+        local quitados = 0
+        for _, clave in ipairs({ "votes", "voteResets" }) do
+            if db[clave] ~= nil then db[clave] = nil; quitados = quitados + 1 end
+        end
+        Print(quitados > 0
+            and string.format("svclean contratos: %d resto(s) del sistema de votos retirado(s).", quitados)
+            or "svclean contratos: nada que limpiar.")
+    end
+
     local function CleanFrameProbe()
         local count = CountTable(HarfordFrameProbe)
         HarfordFrameProbe = nil
@@ -3615,6 +3675,7 @@ API.RegisterCommand("svclean", function(args)
         CleanReputationLogs()
         CleanTargetResourceSettings(false)
         CleanFrameProbe()
+        CleanContractLeftovers()
         return
     end
 
@@ -3623,6 +3684,7 @@ API.RegisterCommand("svclean", function(args)
     if action == "guilds" then CleanGuilds(); return end
     if action == "dnd" then CleanDnDDefaults(); return end
     if action == "frameprobe" then CleanFrameProbe(); return end
+    if action == "contratos" then CleanContractLeftovers(); return end
     if action == "targetpos" then
         local force = args:match("%s+force%s*$") ~= nil
         CleanTargetResourceSettings(force)
@@ -3635,6 +3697,7 @@ API.RegisterCommand("svclean", function(args)
         CleanGuilds()
         CleanTargetResourceSettings(true)
         CleanFrameProbe()
+        CleanContractLeftovers()
         return
     end
     if action == "purge" then
@@ -3647,7 +3710,7 @@ API.RegisterCommand("svclean", function(args)
         return
     end
 
-    Print("uso: /harford debug run svclean status|safe|dnd|logs|npclinks|guilds|frameprobe|targetpos [force]|all|purge confirm")
+    Print("uso: /harford debug run svclean status|safe|dnd|logs|npclinks|guilds|frameprobe|contratos|targetpos [force]|all|purge confirm")
 end, "limpia SavedVariables obsoletas/controladas")
 
 -- Diagnostico en vivo del fondo del modelo 3D del panel de personaje. Abre antes el panel
@@ -4832,8 +4895,12 @@ API.RegisterCommand("phasetc", function(args)
     local cmd, a = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
 
     if cmd == "publicar" then
-        local ok, n = P.Publish(false)
-        if ok then Print("Publicados |cffffd100" .. tostring(n) .. "|r contratos en la fase.") end
+        -- PublishTracked, no Publish: la segunda reescribe el indice sin fusionar y borraria
+        -- de la fase lo que este cliente no tenga.
+        P.PublishTracked(false, function(ok, n, extra)
+            if not ok then Print("|cffff5555" .. tostring(extra) .. "|r"); return end
+            Print("Publicados |cffffd100" .. tostring(n) .. "|r contratos en la fase.")
+        end)
         return
     end
 

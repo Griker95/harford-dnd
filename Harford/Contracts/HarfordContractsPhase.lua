@@ -237,7 +237,10 @@ function Phase.LoadIndex(callback)
   end
   LeerTabla(CLAVE_INDICE, function(indice, err)
     if not indice then
-      if callback then callback(nil, err or "indice vacio") end
+      -- `err` nil = el servidor contesto y no habia nada (fase virgen). `err` con valor =
+      -- fallo real (silencio, cambio de fase, dato ilegible). Quien llama NECESITA
+      -- distinguirlos: lo primero permite sembrar, lo segundo obliga a no tocar nada.
+      if callback then callback(nil, err) end
       return
     end
     if callback then callback(indice) end
@@ -705,8 +708,21 @@ function Phase.PublishTracked(quiet, callback)
 
   -- Dos lecturas: el indice (para fusionar) y el manifiesto (para limpiar claves que el
   -- indice ya no nombra). Publicar es una accion puntual del DM, no una ruta caliente.
-  Phase.LoadIndex(function(enFase)
-   enFase = type(enFase) == "table" and enFase or {}
+  Phase.LoadIndex(function(enFase, errIndice)
+   -- Una lectura FALLIDA no es un tablon vacio. Si se confunden, no se adopta nada y la
+   -- limpieza por manifiesto de mas abajo borra los bloques de los demas DM: perdida
+   -- permanente por un fallo transitorio del servidor. Si no se pudo leer, no se publica.
+   if type(enFase) ~= "table" then
+     if errIndice then
+       TC.SetSyncStatus("No se pudo leer el tablon de la fase; no se publica.")
+       TC.Print("No se pudo leer el tablon de la fase (" .. tostring(errIndice)
+         .. "). No se publica, para no borrar lo que haya. Reintenta en un momento.")
+       if callback then callback(false, nil, errIndice) end
+       return
+     end
+     -- Sin error: la fase esta virgen. Sembrar es legitimo.
+     enFase = {}
+   end
    Phase.LoadManifest(function(clavesViejas)
 
     local mios, indice, claves = {}, {}, { CLAVE_INDICE, CLAVE_MANIFIESTO }

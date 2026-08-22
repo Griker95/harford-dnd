@@ -199,8 +199,21 @@ function API.Publish(quiet, callback)
     return
   end
 
-  API.Load(function(enFase)
-    enFase = type(enFase) == "table" and enFase or {}
+  API.Load(function(enFase, errCarga)
+    -- MISMO peligro que en el tablon: una lectura FALLIDA no es un catalogo vacio. Si se
+    -- confunden, no se adopta nada y se publica sin las facciones de los demas DM, que
+    -- desaparecen. `errCarga` nil con payload nil = fase virgen, y ahi sembrar es legitimo.
+    if type(enFase) ~= "table" then
+      if errCarga then
+        if HarfordChat and HarfordChat.Print then
+          HarfordChat.Print("No se pudo leer el catalogo de la fase (" .. tostring(errCarga)
+            .. "). No se publica, para no borrar lo que haya.")
+        end
+        if callback then callback(false, nil, errCarga) end
+        return
+      end
+      enFase = {}
+    end
     local store = R.EnsureStore()
     local estado, _, fase = EstadoLocal()
 

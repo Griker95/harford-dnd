@@ -290,7 +290,13 @@ function API.SyncSoon()
   armado = true
   C_Timer.After(COALESCE, function()
     armado = false
-    API.Publish(true)
+    -- SOLO ACTUALIZA, NO SIEMBRA. Si la fase no tiene catalogo, no se escribe: entrar en la
+    -- fase de otro y tocar una faccion no debe volcarle tu catalogo entero. Sembrar una fase
+    -- es deliberado y va por `Publish` directo (boton/comando).
+    API.Load(function(payload)
+      if type(payload) ~= "table" then return end
+      API.Publish(true)
+    end)
   end)
   return true
 end

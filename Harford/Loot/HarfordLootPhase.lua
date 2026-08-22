@@ -397,10 +397,7 @@ end
 local COALESCE = 1.5
 local pendientesDeEscribir, armado = {}, false
 
-local function Volcar()
-  armado = false
-  local cola = pendientesDeEscribir
-  pendientesDeEscribir = {}
+local function VolcarAmbitos(cola)
   for scope in pairs(cola) do
     if scope == "GLOBAL" then
       API.SetGlobalLoot(_G.HarfordLootGlobalLootRegistry or {})
@@ -413,6 +410,21 @@ local function Volcar()
       end
     end
   end
+end
+
+local function Volcar()
+  armado = false
+  local cola = pendientesDeEscribir
+  pendientesDeEscribir = {}
+  -- SOLO ACTUALIZA, NO SIEMBRA. Si esta fase no tiene manifiesto de loot, no se escribe:
+  -- editar una tabla estando en la fase de otro no debe volcarle nada. Sembrar va por
+  -- `PublishAll` (boton Compartir o comando).
+  local S = Store()
+  if not S then return end
+  S.Read(CLAVE_MANIFIESTO, function(manifiesto)
+    if type(manifiesto) ~= "table" or #manifiesto == 0 then return end
+    VolcarAmbitos(cola)
+  end)
 end
 
 function API.SyncScope(scope)

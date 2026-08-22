@@ -951,11 +951,30 @@ local function BuildFrame(parent, embedded)
         end
         local ok, copper = TC.Data.ClaimMoney(data.contractId)
         if not ok then TC.Print(tostring(copper or "No se pudo cobrar.")); return end
-        if HarfordServerActions and HarfordServerActions.GiveMoney then HarfordServerActions.GiveMoney(copper) end
-        if TC.Comm and TC.Comm.PublishMoneyClaim then TC.Comm.PublishMoneyClaim(data.contractId) end
-        if TC.IsDMMode and TC.IsDMMode() and TC.Comm and TC.Comm.SyncPublicContracts then TC.Comm.SyncPublicContracts(true) end
-        TC.Print("Dinero cobrado y enviado a tu bolsa.")
-        UI.Refresh()
+        if not (HarfordDnDEconomy and HarfordDnDEconomy.Grant) then
+          TC.Data.UnclaimMoney(data.contractId)
+          TC.Print("La economia Harford no esta disponible.")
+          return
+        end
+        local sent, sendErr = HarfordDnDEconomy.Grant(copper, {
+          callback = function(success, messages)
+            if not success then
+              TC.Data.UnclaimMoney(data.contractId)
+              TC.Print(tostring((messages and messages[1]) or "El servidor rechazo el pago."))
+              UI.Refresh()
+              return
+            end
+            if TC.Comm and TC.Comm.PublishMoneyClaim then TC.Comm.PublishMoneyClaim(data.contractId) end
+            if TC.IsDMMode and TC.IsDMMode() and TC.Comm and TC.Comm.SyncPublicContracts then TC.Comm.SyncPublicContracts(true) end
+            TC.Print("Dinero cobrado y enviado a tu bolsa.")
+            UI.Refresh()
+          end,
+        })
+        if not sent then
+          TC.Data.UnclaimMoney(data.contractId)
+          TC.Print(tostring(sendErr or "No se pudo enviar el pago."))
+          UI.Refresh()
+        end
       end,
     }
     StaticPopup_Show("TABLONCONTRATOS_CLAIM_MONEY", nil, nil, { contractId = cid })

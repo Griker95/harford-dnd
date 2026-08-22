@@ -904,8 +904,22 @@ local function PersistSpellPicks(draft)
     for id in pairs(S.spellPicks.prepared or {}) do db.preparedSpells[id] = true end
 end
 
+-- Una creacion desde cero sustituye al personaje anterior. El grimorio es una
+-- SavedVariablePerCharacter independiente de la progresion, asi que vaciarlo
+-- aqui evita que el About mezcle conjuros de una ficha previa con las elecciones
+-- del nuevo borrador. Las subidas de nivel solo anaden elecciones y no pasan por
+-- esta funcion.
+local function ResetCreationSpellState()
+    local db = _G.HarfordCompendioCharacterDB
+    if type(db) ~= "table" then return end
+    db.knownSpells = {}
+    db.wizardBook = {}
+    db.preparedSpells = {}
+end
+
 local function FinishCreation()
     local draft = BuildCreationDraft()
+    ResetCreationSpellState()
     PersistSpellPicks(draft)  -- conjuros al compendio ANTES de generar el About
     -- OJO: `X and Y and Y(draft)` truncaba los 2 retornos de Apply a uno, perdiendo el MOTIVO del
     -- error (siempre salia "nil"). Capturar ambos valores con una llamada directa.
@@ -2087,6 +2101,7 @@ function API.OpenPrototype(classId)
     S.classId, S.subclassId, S.secondaryClassId, S.secondarySubclassId = nil, "", nil, ""
     S.primaryLevel, S.secondaryLevel, S.levelPlan = 0, 0, {}
     S.pendingClassId, S.classSelectionOpen, S.classSelectionMode = nil, true, "base"
+    S.spellPicks = nil
     S.frame:ClearAllPoints()
     S.frame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
     if HarfordCharacterPanel and HarfordCharacterPanel.Close then HarfordCharacterPanel.Close() end

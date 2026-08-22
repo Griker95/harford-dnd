@@ -28,8 +28,9 @@ HarfordCommandTemplates.ADD_ITEM       = "additem {id} {qty}"
 -- Consumir items: `additem <id> -<qty>` con cantidad NEGATIVA quita del inventario. VERIFICADO en
 -- juego (Epsilon/AzerothCore). Lo usan las profesiones para gastar materiales al craftear.
 HarfordCommandTemplates.REMOVE_ITEM    = "additem {id} -{qty}"
--- Dinero en COBRE (1 oro = 100 plata = 10000 cobre). VERIFICADO en juego: entrega oro correctamente.
-HarfordCommandTemplates.MOD_MONEY      = "mod money {copper}"
+-- Dinero en COBRE (1 oro = 100 plata = 10000 cobre). Epsilon usa el subcomando
+-- completo `modify money`; `mod money` no existe y el servidor lo rechaza.
+HarfordCommandTemplates.MOD_MONEY      = "modify money {copper}"
 HarfordCommandTemplates.PH_F_N_FAC     = "ph f n fac {factionId}"
 HarfordCommandTemplates.PHASE_INFO     = "phase info addon"
 HarfordCommandTemplates.UNPOSS         = "unposs"

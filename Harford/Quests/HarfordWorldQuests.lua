@@ -236,9 +236,9 @@ function API.TurnInCurrent(unit)
         or (type(def.rewards) == "table" and def.rewards) or {}
 
     -- Individual: dinero + items al que entrega.
-    if r.money and HarfordServerActions and HarfordServerActions.GiveMoney and HarfordQuests.RewardMoneyCopper then
+    if r.money and HarfordDnDEconomy and HarfordDnDEconomy.Grant and HarfordQuests.RewardMoneyCopper then
         local copper = HarfordQuests.RewardMoneyCopper(r)
-        if copper > 0 then HarfordServerActions.GiveMoney(copper) end
+        if copper > 0 then HarfordDnDEconomy.Grant(copper) end
     end
     if type(r.items) == "table" and HarfordServerActions and HarfordServerActions.GiveItem then
         for _, it in ipairs(r.items) do

@@ -52,6 +52,18 @@ local function Store()
     return HarfordProfessionsStore
 end
 
+-- Reinicio explicito del progreso de profesiones del personaje actual. Se usa al
+-- crear una ficha desde cero y desde la herramienta de diagnostico; una subida
+-- de nivel nunca debe borrar recetas ni cooldowns.
+function API.ResetCharacterState()
+    HarfordProfessionsStore = HarfordProfessionsStore or {}
+    HarfordProfessionsStore.skills = {}
+    HarfordProfessionsStore.learned = {}
+    HarfordProfessionsStore.nodeCooldowns = {}
+    HarfordProfessionsStore.custom = {}
+    return true
+end
+
 local function ProfileName()
     if HarfordDnD and HarfordDnDAPI and HarfordDnDAPI.GetProfileName then
         local n = HarfordDnDAPI.GetProfileName(); if n and n ~= "" then return n end
@@ -114,6 +126,16 @@ function API.GetRecipe(recipeId)
     return RecipeIndex()[recipeId]
 end
 
+-- Las profesiones empiezan solo con sus recetas basicas. El catalogo importado no marca todas
+-- las recetas de instructor de forma consistente, asi que el rango inicial es la regla comun;
+-- `starter` permite excepciones futuras sin tener que volver a inferirlas por el nombre.
+function API.IsStarterRecipe(recipeOrId)
+    local r = type(recipeOrId) == "table" and recipeOrId or API.GetRecipe(recipeOrId)
+    if not r or r.worldLearned then return false end
+    if r.starter ~= nil then return r.starter == true end
+    return (tonumber(r.skillReq) or 1) <= 1
+end
+
 ------------------------------------------------------------
 -- Skill / tiers / conocer
 ------------------------------------------------------------
@@ -126,6 +148,45 @@ function API.SetSkill(profId, value)
     if profId == "" then return end
     value = math.max(0, math.min(API.MAX_SKILL, math.floor(tonumber(value) or 0)))
     Store().skills[profId] = value > 0 and value or nil
+end
+
+-- La herramienta de la profesion como OBJETO que hay que llevar encima.
+--
+-- `def.tool` ya existia, pero solo como nombre de competencia D&D (da bonus a la tirada). Esto
+-- es otra cosa: el martillo, el kit o los suministros tienen que estar en la bolsa para poder
+-- fabricar, igual que en el juego.
+--
+-- La clave del objeto se DEDUCE del nombre de la herramienta ("Herramientas de herrero" ->
+-- "herramientas_de_herrero") en vez de anadir un campo a cada profesion: asi registrar la
+-- herramienta es solo anadir su entrada al registro de objetos, sin tocar el catalogo.
+function API.GetToolKey(profId)
+    local def = API.GetDefinition(profId)
+    if not (def and def.tool and def.tool ~= "") then return nil end
+    local clave = def.tool
+    if HarfordClassColors and HarfordClassColors.StripAccents then
+        clave = HarfordClassColors.StripAccents(clave)
+    end
+    return (clave:lower():gsub("%s+", "_"):gsub("[^a-z0-9_]", ""))
+end
+
+-- ¿Se puede COMPROBAR la herramienta? Solo si su objeto esta registrado con id real.
+--
+-- Lo que no se puede verificar NO bloquea, igual que con los entrenadores: mientras la
+-- herramienta no exista como objeto de Epsilon, fabricar sigue funcionando como hasta ahora.
+function API.ToolIsCheckable(profId)
+    local clave = API.GetToolKey(profId)
+    if not clave then return false end
+    local I = Items()
+    return (I and I.HasId and I.HasId(clave)) == true
+end
+
+-- ¿La lleva encima? Devuelve tambien la clave y el nombre, para poder decirlo en pantalla.
+function API.HasToolItem(profId)
+    local clave = API.GetToolKey(profId)
+    if not clave then return true end
+    local I = Items()
+    if not (I and I.HasId and I.HasId(clave)) then return true end
+    return (I.GetOwnedCount and I.GetOwnedCount(clave) or 0) > 0, clave
 end
 
 -- ¿Conoce la profesion? Por competencia de herramienta (auto) o por skill aprendido (>0).
@@ -144,6 +205,25 @@ function API.EffectiveSkill(profId)
     local s = API.GetSkill(profId)
     if s > 0 then return s end
     return API.KnowsProfession(profId) and 1 or 0
+end
+
+-- Dificultad de una receta para TU nivel de habilidad, en el degradado de WoW.
+--
+-- Vive aqui y no en cada ventana porque es la MISMA regla en las dos (recetas y entrenador) y
+-- duplicarla es como acaban divergiendo. Devuelve r,g,b mas la clave, para que cada ventana
+-- decida que hacer con cada escalon en vez de heredar un color que alli no significa nada.
+--
+-- El rojo es el escalon que faltaba: antes "no llegas al requisito" devolvia gris 0.5 y
+-- "trivial" gris 0.6, dos cosas opuestas con el mismo aspecto.
+function API.DifficultyColor(skill, req)
+    skill = tonumber(skill) or 0
+    req = math.max(1, tonumber(req) or 1)
+    if skill < req then return 0.85, 0.25, 0.25, "imposible" end
+    local margen = skill - req
+    if margen < 20 then return 1.00, 0.50, 0.25, "optimo" end
+    if margen < 45 then return 1.00, 1.00, 0.00, "medio" end
+    if margen < 70 then return 0.25, 0.75, 0.25, "facil" end
+    return 0.60, 0.60, 0.60, "trivial"
 end
 
 function API.GetTierName(skill)
@@ -301,24 +381,31 @@ end
 function API.CanCraft(recipeId)
     local r = API.GetRecipe(recipeId)
     if not r then return false, "Receta desconocida" end
-    if not API.KnowsProfession(r.profession) then return false, "No conoces esa profesion" end
+
+    -- Los materiales se calculan ANTES de los motivos de bloqueo, y viajan en el TERCER valor de
+    -- todas las salidas. El jugador tiene que ver QUE lleva una receta aunque todavia no pueda
+    -- fabricarla: sin esto, la pestana "No aprendidas" mostraba el detalle sin ningun reactivo,
+    -- porque estas tres salidas cortaban antes de mirarlos.
+    local resolvable, enough, detail = InspectMaterials(r)
+
+    if not API.KnowsProfession(r.profession) then
+        return false, "No conoces esa profesion", detail
+    end
+    if not API.HasToolItem(r.profession) then
+        local def = API.GetDefinition(r.profession)
+        return false, "Te falta " .. tostring((def and def.tool) or "la herramienta"), detail
+    end
     if API.EffectiveSkill(r.profession) < (tonumber(r.skillReq) or 1) then
-        return false, "Skill insuficiente (requiere " .. tostring(r.skillReq) .. ")"
+        return false, "Skill insuficiente (requiere " .. tostring(r.skillReq) .. ")", detail
     end
-    if r.worldLearned and not Store().learned[r.id] then
-        return false, "Receta no aprendida (se obtiene en el mundo)"
-    end
-    -- Receta de ENTRENADOR: no viene con el nivel de habilidad, hay que aprenderla de el.
-    -- El motivo dice DONDE, que es lo unico accionable para el jugador.
-    local deEntrenador = r.trainer
-        or (HarfordProfessionTrainers and HarfordProfessionTrainers.IsTaught
-            and HarfordProfessionTrainers.IsTaught(r.id))
-    if deEntrenador and not Store().learned[r.id] then
+    if not API.IsRecipeLearned(r.id) then
         local donde = HarfordProfessionTrainers and HarfordProfessionTrainers.DescribeForRecipe
             and HarfordProfessionTrainers.DescribeForRecipe(r.id)
-        return false, donde and ("La ensena " .. donde) or "Receta de entrenador (aun no aprendida)"
+        if r.worldLearned then
+            return false, "Receta no aprendida (se obtiene en el mundo)", detail
+        end
+        return false, donde and ("Aprendela con " .. donde) or "Receta no aprendida", detail
     end
-    local resolvable, enough, detail = InspectMaterials(r)
     if not resolvable then return false, "Materiales pendientes de ID (aun no crafteable)", detail end
     local outId = Items() and Items().GetId(r.output and r.output.key)
     if not outId then return false, "Resultado pendiente de ID", detail end
@@ -326,13 +413,8 @@ function API.CanCraft(recipeId)
     return true, nil, detail
 end
 
--- Marca una receta worldLearned como aprendida (DM / hallazgo).
--- ¿Esta aprendida? Las recetas normales van con la profesion; las worldLearned requieren
--- que el DM las haya enseñado (LearnRecipe/TEACH).
--- ¿Se ha aprendido EXPLICITAMENTE (de un entrenador o por hallazgo)? Es otra pregunta distinta
--- de `IsRecipeLearned`, que responde "puedes usarla" y por tanto devuelve true SIEMPRE para una
--- receta que no esta restringida. La ventana del entrenador necesita esta: con la otra pintaba
--- "Ya la conoces" en todas las filas y dejaba `Aprender` en gris para siempre.
+-- ¿Se ha aprendido EXPLICITAMENTE (de un entrenador o por hallazgo)?
+-- Las recetas iniciales no se escriben en SavedVariables: se derivan por IsStarterRecipe.
 function API.HasLearnedRecipe(recipeId)
     return Store().learned[tostring(recipeId or "")] == true
 end
@@ -340,11 +422,7 @@ end
 function API.IsRecipeLearned(recipeId)
     local r = API.GetRecipe(recipeId)
     if not r then return false end
-    local deEntrenador = r.trainer
-        or (HarfordProfessionTrainers and HarfordProfessionTrainers.IsTaught
-            and HarfordProfessionTrainers.IsTaught(recipeId))
-    if not (r.worldLearned or deEntrenador) then return true end
-    return Store().learned[tostring(recipeId)] == true
+    return API.IsStarterRecipe(r) or API.HasLearnedRecipe(r.id)
 end
 
 -- Tirada suelta de la herramienta de la profesion (sin receta ni CD): d20 + competencia de

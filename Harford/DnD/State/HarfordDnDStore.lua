@@ -141,6 +141,7 @@ local function HasRelatedProfileData(persist, profileName)
         if HasTableContent(p._equipment) then return true end
         if HasTableContent(p._hitDice) then return true end
         if HasTableContent(p._featureUses) then return true end
+        if HasTableContent(p._economy) then return true end
     end
 
     -- Compat: tablas top-level previas a la migracion (tras migrar suelen ser nil).
@@ -206,6 +207,7 @@ local NESTED_PROFILE_KEYS = {
     equipment        = "_equipment",
     hitDice          = "_hitDice",
     featureUses      = "_featureUses",
+    economy          = "_economy",
 }
 HarfordDnDStore.NESTED_PROFILE_KEYS = NESTED_PROFILE_KEYS
 

@@ -711,6 +711,13 @@ function API.Apply(draft)
     if not ok then return false, err end
     local profileName = tostring((UnitName and UnitName("player")) or "default")
 
+    -- Crear desde cero sustituye la identidad mecanica completa del personaje.
+    -- Las profesiones son SavedVariablesPerCharacter separadas de la progresion
+    -- DnD, por lo que deben reiniciarse aqui de manera explicita.
+    if HarfordProfessions and HarfordProfessions.ResetCharacterState then
+        HarfordProfessions.ResetCharacterState()
+    end
+
     -- La ficha HARFORD es lo esencial (tiene su propio store; no depende de TRP3). Se crea PRIMERO
     -- y de forma atomica: progresion + caracteristicas. Si esto falla, no se toca nada mas.
     local created, createErr = HarfordDnDProgression.ReplaceCreation(draft, profileName)
@@ -734,6 +741,21 @@ function API.Apply(draft)
     end
     if HarfordDnDStore.ReconcileDerivedResources then
         HarfordDnDStore.ReconcileDerivedResources(profileName, "creation")
+    end
+
+    -- El oro se inicia SOLO al terminar la primera creacion valida. No se deduce de
+    -- perfiles importados ni se toca el dinero de un personaje sin ficha Harford.
+    if HarfordDnDEconomy and HarfordDnDEconomy.InitializeFromCreation then
+        local initialized, economyErr = HarfordDnDEconomy.InitializeFromCreation(draft, profileName, function(success, messages)
+            if success or not (HarfordChat and HarfordChat.Print) then return end
+            local detail = type(messages) == "table" and messages[1] or messages
+            HarfordChat.Print("|cffff5555La ficha se creo, pero no se pudo ajustar el oro inicial: "
+                .. tostring(detail or "error desconocido") .. "|r")
+        end)
+        if not initialized and HarfordChat and HarfordChat.Print then
+            HarfordChat.Print("|cffff5555La ficha se creo, pero no se pudo enviar el ajuste de oro inicial: "
+                .. tostring(economyErr or "error desconocido") .. "|r")
+        end
     end
 
     -- About de TRP3: BEST-EFFORT. Si TRP3 no esta disponible o no hay perfil activo, la ficha Harford

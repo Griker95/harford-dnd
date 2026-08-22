@@ -232,7 +232,12 @@ local function SumMulticlassLevels(text)
     for line in text:gmatch("[^\r\n]+") do
         local clean = StripInlineMarkup(line)
         local level = clean:match("%((%d+)%)%s*$")
-        if level and clean:match("%S") then
+        local classText = clean:match("^(.-)%s*%(%d+%)%s*$")
+        local iconClass = line:match("{icon:classicon_([%w_]+)")
+        local isKnownClass = iconClass ~= nil
+            or (classText and HarfordDnDBook and HarfordDnDBook.FindClassIdByText
+                and HarfordDnDBook.FindClassIdByText(classText) ~= nil)
+        if level and isKnownClass then
             total = total + (tonumber(level) or 0)
             count = count + 1
         end
@@ -898,6 +903,40 @@ end
 -- y dispara REGISTER_DATA_UPDATED para refrescar la UI. El antiguo `saveInformation(playerID,
 -- "character", copiaDelPlayer)` era doblemente incorrecto: anidaba TODO el player bajo la clave
 -- "character" y escribia en el nivel equivocado (top-level .about en vez de .player.about).
+--
+-- IMPORTANTE: el editor nativo de TRP3 lee SIEMPRE las tres plantillas antes de decidir cual
+-- mostrar. Por tanto un About de plantilla 1 o 2 tambien debe conservar T1, T2 y T3 (con PH/PS/HI),
+-- aunque solo una de ellas contenga informacion. Omitirlas permite ver el perfil, pero rompe al
+-- abrirlo para editar con "Nil template1 data or not a table".
+local function EnsureAboutSchema(about)
+    if type(about) ~= "table" then return false end
+
+    local changed = false
+    if type(about.T1) ~= "table" then about.T1 = {}; changed = true end
+    if type(about.T2) ~= "table" then about.T2 = {}; changed = true end
+    if type(about.T3) ~= "table" then about.T3 = {}; changed = true end
+    for _, key in ipairs({ "PH", "PS", "HI" }) do
+        if type(about.T3[key]) ~= "table" then
+            about.T3[key] = {}
+            changed = true
+        end
+    end
+    if type(about.TE) ~= "number" then about.TE = 1; changed = true end
+    if type(about.v) ~= "number" then about.v = 1; changed = true end
+    return changed
+end
+
+local function NotifyAboutUpdated()
+    if not (TRP3_API and TRP3_API.events and TRP3_API.events.fireEvent
+        and TRP3_API.events.REGISTER_DATA_UPDATED) then
+        return
+    end
+    local profileID = TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfileID
+        and SafeCall(TRP3_API.profile.getPlayerCurrentProfileID)
+    SafeCall(TRP3_API.events.fireEvent, TRP3_API.events.REGISTER_DATA_UPDATED,
+        GetTRP3PlayerID(), profileID, "about")
+end
+
 function API.WritePlayerAbout(content)
     if not (TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile) then
         return false, "No hay un perfil local de TRP3 activo."
@@ -908,22 +947,24 @@ function API.WritePlayerAbout(content)
     end
     if type(profile.player) ~= "table" then profile.player = {} end
 
-    -- Construir el nuevo About con la MISMA estructura que lee API.GetPlayerAboutText.
-    local newAbout
+    -- Harford siempre genera plantilla 2: la ficha se compone de frames de contenido TRP3.
+    -- Si algun llamador futuro aporta texto plano, se conserva como un unico frame T2.
+    local newAbout = { T1 = {}, T2 = {}, T3 = { PH = {}, PS = {}, HI = {} } }
+    local frames = {}
     if type(content) == "table" then
-        local frames = {}
         for _, fr in ipairs(content) do
             if type(fr) == "table" and fr.TX and tostring(fr.TX) ~= "" then
                 frames[#frames + 1] = { IC = fr.IC, TX = tostring(fr.TX) }
             end
         end
-        if #frames == 0 then return false, "El About no tiene contenido." end
-        newAbout = { TE = 2, T2 = frames }
     else
         local text = tostring(content or "")
         if text == "" then return false, "El About no puede estar vacio." end
-        newAbout = { TE = 1, T1 = { TX = text } }
+        frames[1] = { TX = text }
     end
+    if #frames == 0 then return false, "El About no tiene contenido." end
+    newAbout.TE = 2
+    newAbout.T2 = frames
 
     -- Escritura IN-PLACE sobre profile.player.about (nunca reemplazar la referencia).
     local about = profile.player.about
@@ -932,21 +973,18 @@ function API.WritePlayerAbout(content)
         profile.player.about = about
     end
     local prevVersion = tonumber(about.v) or 0
+    local previousBackground = about.BK
     for key in pairs(about) do about[key] = nil end
     for key, value in pairs(newAbout) do about[key] = value end
-    if about.BK == nil then about.BK = 1 end
+    about.BK = previousBackground or 1
+    EnsureAboutSchema(about)
     if TRP3_API.utils and TRP3_API.utils.math and TRP3_API.utils.math.incrementNumber then
         about.v = SafeCall(TRP3_API.utils.math.incrementNumber, prevVersion, 2) or (prevVersion + 1)
     else
         about.v = prevVersion + 1
     end
 
-    if TRP3_API.events and TRP3_API.events.fireEvent and TRP3_API.events.REGISTER_DATA_UPDATED then
-        local profileID = TRP3_API.profile.getPlayerCurrentProfileID
-            and SafeCall(TRP3_API.profile.getPlayerCurrentProfileID)
-        SafeCall(TRP3_API.events.fireEvent, TRP3_API.events.REGISTER_DATA_UPDATED,
-            GetTRP3PlayerID(), profileID, "about")
-    end
+    NotifyAboutUpdated()
     return true
 end
 

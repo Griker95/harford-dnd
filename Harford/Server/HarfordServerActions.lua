@@ -97,14 +97,23 @@ function API.RemoveItem(itemId, quantity, opts)
 end
 
 -- Entrega dinero al propio personaje en COBRE (1 oro = 100 plata = 10000 cobre). Turn-in
--- individual de recompensa de mision. NOTA: el string exacto del comando Epsilon (MOD_MONEY)
--- esta PENDIENTE de verificar en juego; validar antes de usarlo en entrega automatica.
+-- individual de recompensa de mision. Epsilon acepta `modify money <delta>`.
 function API.GiveMoney(copper, opts)
     local safeCopper, copperErr = ToPositiveInteger(copper, "copper")
     if not safeCopper then
         return false, copperErr
     end
     return BuildAndSend("MOD_MONEY", { copper = safeCopper }, opts)
+end
+
+-- Retira dinero del propio personaje en COBRE. El consumidor debe comprobar antes GetMoney(),
+-- pero la receta solo se marca como aprendida despues de que el servidor confirme el comando.
+function API.TakeMoney(copper, opts)
+    local safeCopper, copperErr = ToPositiveInteger(copper, "copper")
+    if not safeCopper then
+        return false, copperErr
+    end
+    return BuildAndSend("MOD_MONEY", { copper = -safeCopper }, opts)
 end
 
 -- Aplica un aura al propio personaje: envia "aura ID self".

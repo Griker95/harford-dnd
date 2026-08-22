@@ -3,11 +3,12 @@
 --
 -- Es lo que abre el gossip del NPC: una opcion "lua" del gossip llama a
 -- `HarfordTrainerAPI.OpenTrainer("herreria_experto")` y esta API monta la ventana entera a
--- partir de ese id. El NPC no pasa recetas ni precios: solo dice quien es.
+-- partir de ese id. El NPC no pasa recetas ni precios: solo dice quien es; el precio vive en
+-- `recipe.trainCost` y lo cobra el modulo de entrenadores tras confirmacion del servidor.
 --
 -- Solo UI. Que ensena cada entrenador lo decide `HarfordProfessionTrainers` y aprender pasa
--- siempre por su `Teach`, que revalida rango, profesion y si ya la sabes: la ventana no es una
--- via alternativa para aprender nada.
+-- siempre por su `Purchase`/`Teach`, que revalida rango, profesion, dinero y si ya la sabes: la
+-- ventana no es una via alternativa para aprender nada.
 --
 -- Reutiliza `HarfordProfessionsCraftSkin` (replica del TradeSkillFrame nativo, generada desde la sonda) en
 -- vez de inventar arte para un ClassTrainerFrame que no tenemos capturado: misma familia visual
@@ -33,6 +34,28 @@ local function Def()
     return T and T.Get and T.Get(state.trainerId or "")
 end
 
+-- El dinero lo pinta la funcion NATIVA.
+--
+-- El resto del addon (registro de misiones, quests de mundo) ya la usa, asi que el mismo dinero
+-- se veia de dos formas distintas segun la ventana. Y el montaje a mano metia un espacio de
+-- separacion que el nativo no pone.
+--
+-- No se fuerza nada para el modo daltonico: si alguien lo tiene puesto y prefiere las monedas,
+-- lo desactiva. Pelearse con un ajuste del cliente para imponer un aspecto no compensa.
+local function FormatMoney(copper)
+    copper = math.max(0, math.floor(tonumber(copper) or 0))
+    if copper == 0 then return "Gratis" end
+    if GetCoinTextureString then return GetCoinTextureString(copper) end
+    -- Sin la nativa disponible, texto plano: nunca dejar el precio en blanco.
+    local oro, resto = math.floor(copper / 10000), copper % 10000
+    local plata, cobre = math.floor(resto / 100), resto % 100
+    local partes = {}
+    if oro > 0 then partes[#partes + 1] = oro .. "o" end
+    if plata > 0 then partes[#partes + 1] = plata .. "p" end
+    if cobre > 0 then partes[#partes + 1] = cobre .. "c" end
+    return table.concat(partes, " ")
+end
+
 ------------------------------------------------------------
 -- Estado de una receta frente a este entrenador
 ------------------------------------------------------------
@@ -42,20 +65,32 @@ end
 function API.GetRecipeState(recipe)
     local P = Profs()
     if not (P and recipe) then return "no", "No disponible", { 0.5, 0.5, 0.5 } end
-    -- `HasLearnedRecipe`, no `IsRecipeLearned`: la segunda responde "puedes usarla" y para una
-    -- receta cuyo rango no tiene entrenador colocado es true SIEMPRE. Con ella, esta ventana
-    -- daba todas las recetas por sabidas.
-    local sabida = P.HasLearnedRecipe and P.HasLearnedRecipe(recipe.id)
+    local sabida = P.IsRecipeLearned and P.IsRecipeLearned(recipe.id)
     if sabida then return "sabida", "Ya la conoces", { 0.5, 0.5, 0.5 } end
     if P.KnowsProfession and not P.KnowsProfession(recipe.profession) then
         return "sinprof", "No conoces la profesion", { 0.6, 0.2, 0.2 }
     end
+    -- Degradado de dificultad respecto a TU habilidad, la misma regla que la ventana de recetas.
+    -- Aqui el escalon trivial NO baja a gris: el gris es exclusivamente "ya la conoces", y dos
+    -- cosas distintas no pueden compartir color en una lista que muestra ambas.
     local skill = (P.EffectiveSkill and P.EffectiveSkill(recipe.profession)) or 0
     local req = tonumber(recipe.skillReq) or 1
+    local dr, dg, db, escalon = 0.1, 0.9, 0.1, "facil"
+    if P.DifficultyColor then dr, dg, db, escalon = P.DifficultyColor(skill, req) end
+    if escalon == "trivial" then dr, dg, db = 0.25, 0.75, 0.25 end
+
     if skill < req then
-        return "skill", "Requiere " .. req .. " de habilidad", { 0.8, 0.3, 0.3 }
+        return "skill", "Requiere " .. req .. " de habilidad", { dr, dg, db }
     end
-    return "puede", "Puedes aprenderla", { 0.1, 0.9, 0.1 }
+    -- Una economia sin inicializar vale 0, asi que aqui no hay dos casos: o llega el dinero o no.
+    -- El mensaje dice el precio, que es lo unico accionable; antes decia "termina la creacion",
+    -- que para un personaje anterior a la creacion nueva salia en TODAS las recetas.
+    local cost = Trainers() and Trainers().GetRecipeCost and Trainers().GetRecipeCost(recipe.id) or 0
+    if cost > 0 and not (HarfordDnDEconomy and HarfordDnDEconomy.CanAfford
+        and HarfordDnDEconomy.CanAfford(cost)) then
+        return "dinero", "Te falta dinero: cuesta " .. FormatMoney(cost), { 0.8, 0.3, 0.3 }
+    end
+    return "puede", "Puedes aprenderla", { dr, dg, db }
 end
 
 local function RecipeIcon(recipe)
@@ -94,8 +129,13 @@ local function CreateRow(parent, index)
 
     row.text = row:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
     row.text:SetPoint("LEFT", row.icon, "RIGHT", 4, 0)
-    row.text:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+    row.text:SetPoint("RIGHT", row, "RIGHT", -84, 0)
     row.text:SetJustifyH("LEFT")
+
+    row.price = row:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+    row.price:SetPoint("RIGHT", row, "RIGHT", -4, 0)
+    row.price:SetWidth(78)
+    row.price:SetJustifyH("RIGHT")
 
     row.sel = row:CreateTexture(nil, "BACKGROUND")
     row.sel:SetAllPoints(row)
@@ -212,8 +252,12 @@ local function CreateFrameIfNeeded()
     d.req:SetPoint("TOPLEFT", d.title, "BOTTOMLEFT", 0, -4)
     d.req:SetJustifyH("LEFT")
 
+    d.price = d:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+    d.price:SetPoint("TOPLEFT", d.req, "BOTTOMLEFT", 0, -3)
+    d.price:SetJustifyH("LEFT")
+
     d.body = d:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
-    d.body:SetPoint("TOPLEFT", d.icon, "BOTTOMLEFT", 0, -12)
+    d.body:SetPoint("TOPLEFT", d.price, "BOTTOMLEFT", 0, -10)
     d.body:SetPoint("RIGHT", d, "RIGHT", 0, 0)
     d.body:SetJustifyH("LEFT")
     d.body:SetJustifyV("TOP")
@@ -231,16 +275,19 @@ local function CreateFrameIfNeeded()
     frame.learnBtn:SetText("Aprender")
     frame.learnBtn:SetScript("OnClick", function()
         local T, P = Trainers(), Profs()
-        if not (T and T.Teach and state.selected) then return end
-        local ok, err = T.Teach(state.trainerId, state.selected)
-        if ok then
-            local r = P and P.GetRecipe and P.GetRecipe(state.selected)
-            HarfordChat.Print("Has aprendido |cffffd100" ..
-                tostring(r and r.name or state.selected) .. "|r.")
-        else
-            HarfordChat.Print("|cffff5555" .. tostring(err or "No se puede aprender") .. "|r")
-        end
-        RefreshUI()
+        if not (T and T.Purchase and state.selected) or frame._buying then return end
+        frame._buying = true
+        frame.learnBtn:SetEnabled(false)
+        T.Purchase(state.trainerId, state.selected, function(ok, err, recipe)
+            frame._buying = false
+            if ok then
+                HarfordChat.Print("Has aprendido |cffffd100" ..
+                    tostring(recipe and recipe.name or state.selected) .. "|r.")
+            else
+                HarfordChat.Print("|cffff5555" .. tostring(err or "No se puede aprender") .. "|r")
+            end
+            RefreshUI()
+        end)
     end)
 
     return frame
@@ -303,6 +350,8 @@ RefreshUI = function()
             row.icon:SetTexture(RecipeIcon(r))
             row.text:SetText(tostring(r.name or r.id))
             row.text:SetTextColor(color[1], color[2], color[3])
+            local cost = Trainers() and Trainers().GetRecipeCost and Trainers().GetRecipeCost(r.id) or 0
+            row.price:SetText(FormatMoney(cost))
             row.sel:SetShown(state.selected == r.id)
             row:Show()
         end
@@ -315,6 +364,7 @@ RefreshUI = function()
         d.icon:SetTexture(nil)
         d.title:SetText("")
         d.req:SetText("")
+        d.price:SetText("")
         d.body:SetText(total > 0 and "Elige una receta de la lista."
             or "Este entrenador no tiene nada que ensenarte.")
         frame.learnBtn:SetEnabled(false)
@@ -327,6 +377,9 @@ RefreshUI = function()
     d.req:SetText(string.format("Requiere %s %d",
         tostring(profDef and profDef.name or def.profession), tonumber(sel.skillReq) or 1))
 
+    local cost = Trainers() and Trainers().GetRecipeCost and Trainers().GetRecipeCost(sel.id) or 0
+    d.price:SetText("Precio: " .. FormatMoney(cost))
+
     local lineas = { string.format("|cff%02x%02x%02x%s|r",
         color[1] * 255, color[2] * 255, color[3] * 255, etiqueta) }
     if sel.materials and #sel.materials > 0 then
@@ -337,7 +390,7 @@ RefreshUI = function()
         end
     end
     d.body:SetText(table.concat(lineas, "\n"))
-    frame.learnBtn:SetEnabled(clave == "puede")
+    frame.learnBtn:SetEnabled(clave == "puede" and not frame._buying)
 end
 
 ------------------------------------------------------------

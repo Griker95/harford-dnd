@@ -20,13 +20,15 @@ local ROWS_VISIBLE = 25   -- nativo: lista de 405 de alto = 25 filas de 16
 local ROW_H = 16
 
 -- Color de dificultad por margen de skill (aproximacion de los colores nativos)
+-- El degradado vive en HarfordProfessions: es la misma regla que usa la ventana de entrenador y
+-- tenerla dos veces es como divergen. Aqui se conserva el escalon trivial en gris, porque en
+-- esta ventana significa algo real: fabricarla ya no sube habilidad.
 local function DifficultyColor(skill, req)
-    if skill < req then return 0.5, 0.5, 0.5 end          -- aun no disponible (gris oscuro)
-    local margin = skill - req
-    if margin < 20 then return 1.0, 0.5, 0.25 end         -- naranja: sube casi seguro
-    if margin < 45 then return 1.0, 1.0, 0.0 end          -- amarillo
-    if margin < 70 then return 0.25, 0.75, 0.25 end       -- verde
-    return 0.6, 0.6, 0.6                                  -- gris: trivial
+    if not (HarfordProfessions and HarfordProfessions.DifficultyColor) then
+        return 0.8, 0.8, 0.8
+    end
+    local r, g, b = HarfordProfessions.DifficultyColor(skill, req)
+    return r, g, b
 end
 
 local function Prof()
@@ -117,6 +119,10 @@ local function CreateReagentSlot(parent, index)
         slot.count:SetPoint("BOTTOMRIGHT", slot.icon, "BOTTOMRIGHT", -1, 1)
     end
     slot:SetScript("OnEnter", function(self)
+        if self.itemKey and HarfordProfessionsItems and HarfordProfessionsItems.ShowTooltip then
+            HarfordProfessionsItems.ShowTooltip(self, self.itemKey)
+            return
+        end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         if self.itemId then
             GameTooltip:SetHyperlink("item:" .. self.itemId)
@@ -476,6 +482,10 @@ local function CreateFrameIfNeeded()
     detail.iconHit:SetAllPoints(detail.icon)
     detail.iconHit:EnableMouse(true)
     detail.iconHit:SetScript("OnEnter", function(self)
+        if self.itemKey and HarfordProfessionsItems and HarfordProfessionsItems.ShowTooltip then
+            HarfordProfessionsItems.ShowTooltip(self, self.itemKey)
+            return
+        end
         if not self.itemId then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetHyperlink("item:" .. self.itemId)
@@ -744,8 +754,8 @@ RefreshUI = function()
     -- Formato nativo de la barra: "Herreria 50/300" (el rango va en las cabeceras de grupo)
     frame.skillText:SetText(string.format("%s %d/%d", def.name, skill, HarfordProfessions.MAX_SKILL))
 
-    -- Filtro por pestaña: Aprendidas = disponibles (las normales van con la profesion);
-    -- No aprendidas = recetas worldLearned que el DM aun no ha enseñado.
+    -- Filtro por pestaña: Aprendidas = iniciales o aprendidas explicitamente;
+    -- No aprendidas = cualquier receta que aun debe enseñarse o comprarse.
     local Strip = HarfordClassColors and HarfordClassColors.StripAccents or tostring
     local needle = state.search ~= "" and Strip(state.search):lower() or nil
     local recipes = {}
@@ -879,6 +889,7 @@ RefreshUI = function()
     if d.iconHit then
         d.iconHit.itemId = HarfordProfessions.GetOutputItemId
             and HarfordProfessions.GetOutputItemId(sel.id) or nil
+        d.iconHit.itemKey = sel.output and sel.output.key or nil
     end
     d.name:SetText(sel.name or sel.id)
     local ok, reason, detailMats = HarfordProfessions.CanCraft(sel.id)
@@ -893,16 +904,41 @@ RefreshUI = function()
         (def.name or ""):lower(), tierName))
 
     d.reqLabel:Show()
-    local reqLines = { string.format("Nivel de %s: %d", (def.name or ""):lower(),
-        tonumber(sel.skillReq) or 1) }
-    if def.tool then reqLines[#reqLines + 1] = def.tool end
+    -- "Alquimia (15)", no "Nivel de alquimia: 15": el nombre de la profesion tal cual y el
+    -- requisito entre parentesis, que es como lo lee el jugador de un vistazo.
+    local skillReq = tonumber(sel.skillReq) or 1
+    local skillActual = HarfordProfessions.EffectiveSkill(def.id)
+    -- Si no llegas al requisito, la linea entera va en rojo. Sin decir cuanto tienes: el numero
+    -- propio ya esta en la barra de habilidad, y repetirlo aqui solo alarga la linea.
+    local reqSkill = string.format("%s (%d)", def.name or "", skillReq)
+    if skillActual < skillReq then reqSkill = "|cffff5555" .. reqSkill .. "|r" end
+    local reqLines = { reqSkill }
+    -- La herramienta va en rojo si es comprobable y no la llevas encima. Si su objeto aun no
+    -- esta registrado no se puede comprobar, asi que se muestra en gris sin prometer nada.
+    if def.tool then
+        local comprobable = HarfordProfessions.ToolIsCheckable
+            and HarfordProfessions.ToolIsCheckable(def.id)
+        local llevada = not comprobable or (HarfordProfessions.HasToolItem
+            and HarfordProfessions.HasToolItem(def.id))
+        if not comprobable then
+            reqLines[#reqLines + 1] = def.tool
+        elseif llevada then
+            reqLines[#reqLines + 1] = "|cff40c040" .. def.tool .. "|r"
+        else
+            reqLines[#reqLines + 1] = "|cffff5555" .. def.tool .. "|r"
+        end
+    end
     -- Entrenador, en el mismo sitio que el "Trainer / Zone" del nativo: solo si la receta se
     -- aprende de alguien y aun no la tienes. Aprendida ya no aporta nada.
     if sel.trainer and HarfordProfessionTrainers and not HarfordProfessions.IsRecipeLearned(sel.id) then
         local donde = HarfordProfessionTrainers.DescribeForRecipe(sel.id)
         reqLines[#reqLines + 1] = "|cffffd100Entrenador:|r " .. (donde or "por localizar")
     end
-    if not ok and reason then reqLines[#reqLines + 1] = "|cffff5555" .. tostring(reason) .. "|r" end
+    -- El motivo, salvo cuando ya lo dice la propia linea de requisito: repetir "Skill
+    -- insuficiente (requiere 15)" debajo de "Alquimia (15) (tienes 3)" es ruido.
+    if not ok and reason and not tostring(reason):find("Skill insuficiente", 1, true) then
+        reqLines[#reqLines + 1] = "|cffff5555" .. tostring(reason) .. "|r"
+    end
     d.req:SetText(table.concat(reqLines, "\n"))
     local mats = detailMats or {}
     for i, m in ipairs(mats) do
@@ -917,9 +953,15 @@ RefreshUI = function()
         if m.id and GetItemIcon then
             local ico = GetItemIcon(m.id)
             if not ico then API.NoteMissingIcon(m.id) end
-            slot.icon:SetTexture(ico or "Interface\\Icons\\INV_Misc_QuestionMark")
+            local fallback = HarfordProfessionsItems and HarfordProfessionsItems.GetIcon
+                and HarfordProfessionsItems.GetIcon(m.key)
+            slot.icon:SetTexture(ico or (fallback and "Interface\\Icons\\" .. fallback)
+                or "Interface\\Icons\\INV_Misc_QuestionMark")
         else
-            slot.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+            local fallback = HarfordProfessionsItems and HarfordProfessionsItems.GetIcon
+                and HarfordProfessionsItems.GetIcon(m.key)
+            slot.icon:SetTexture((fallback and "Interface\\Icons\\" .. fallback)
+                or "Interface\\Icons\\INV_Misc_QuestionMark")
         end
         slot.icon:SetDesaturated(m.missingId and true or false)
         -- Nativo: icono e info en gris (0.5) cuando faltan materiales, blanco si hay bastante,
@@ -930,7 +972,7 @@ RefreshUI = function()
         slot.count:SetTextColor(1, 1, 1)
         slot.name:SetText(m.name or "?")
         slot.name:SetTextColor(tint, tint, tint)
-        slot.itemId, slot.itemName = m.id, m.name
+        slot.itemId, slot.itemName, slot.itemKey = m.id, m.name, m.key
         slot:Show()
     end
     for i = #mats + 1, #state.reagents do state.reagents[i]:Hide() end

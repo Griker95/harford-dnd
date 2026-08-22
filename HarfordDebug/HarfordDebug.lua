@@ -218,6 +218,126 @@ API.RegisterCommand("rep", function(args)
     Print(string.format("Reputacion %s: %s%d -> %d", tostring(factionId), amount >= 0 and "+" or "", amount, tonumber(current) or 0))
 end, "suma/resta reputacion propia: rep <faccionId> <cantidad>")
 
+local function ParseDebugMoney(text)
+    local amount, unit = tostring(text or ""):lower():match("^%s*(%d+)%s*([gsc]?)%s*$")
+    amount = tonumber(amount)
+    if not amount then return nil end
+    if unit == "c" then return amount end
+    if unit == "s" then return amount * 100 end
+    return amount * 10000 -- sin sufijo = oro, para pruebas rapidas
+end
+
+local function DebugMoneyText(copper)
+    copper = math.max(0, math.floor(tonumber(copper) or 0))
+    local gold = math.floor(copper / 10000)
+    copper = copper % 10000
+    local silver = math.floor(copper / 100)
+    copper = copper % 100
+    return string.format("%dg %ds %dc", gold, silver, copper)
+end
+
+API.RegisterCommand("dinero", function(args)
+    local economy = HarfordDnDEconomy
+    if not (economy and economy.IsInitialized and economy.GetBalance) then
+        Print("HarfordDnDEconomy no disponible")
+        return
+    end
+    local action, value = tostring(args or ""):lower():match("^%s*(%S*)%s*(.-)%s*$")
+    action = action or ""
+    if action == "" or action == "saldo" then
+        local balance = economy.GetBalance()
+        local native = GetMoney and GetMoney() or nil
+        Print("Saldo Harford: " .. (balance and DebugMoneyText(balance) or "sin inicializar")
+            .. " | WoW: " .. (native and DebugMoneyText(native) or "no disponible"))
+        return
+    end
+    if action ~= "set" and action ~= "add" and action ~= "take" then
+        Print("Uso: dinero [saldo|set|add|take] <cantidad>. Ej.: dinero set 10g; dinero add 50s")
+        return
+    end
+    local amount = ParseDebugMoney(value)
+    if not amount then
+        Print("Cantidad invalida. Usa oro (10g), plata (50s) o cobre (25c). Sin sufijo = oro.")
+        return
+    end
+    local balance = economy.GetBalance()
+    if balance == nil then
+        Print("La economia no esta inicializada: termina primero la creacion del personaje.")
+        return
+    end
+    local target = action == "set" and amount or (action == "add" and balance + amount or balance - amount)
+    if target < 0 then
+        Print("No puedes retirar mas de " .. DebugMoneyText(balance) .. ".")
+        return
+    end
+    local change = target - balance
+    if change == 0 then
+        Print("El saldo ya es " .. DebugMoneyText(balance) .. ".")
+        return
+    end
+    local method = change > 0 and economy.Grant or economy.Spend
+    local ok, err = method(math.abs(change), {
+        callback = function(success, messages)
+            if success then
+                Print("Saldo Harford actualizado: " .. DebugMoneyText(target) .. ".")
+            else
+                local detail = type(messages) == "table" and messages[1] or messages
+                Print("No se pudo actualizar el saldo: " .. tostring(detail or "error"))
+            end
+        end,
+    })
+    if not ok then Print("No se pudo enviar el ajuste: " .. tostring(err or "error")) end
+end, "prueba economia: dinero [saldo|set|add|take] <10g|50s|25c>")
+
+-- Sonda temporal para comprobar que notifica el cliente tras `.modify money`.
+-- No pertenece al flujo normal de economia: solo se activa por comando debug y se destruye sola.
+API.RegisterCommand("dineroeventos", function(args)
+    local duration = tonumber(tostring(args or ""):match("%d+")) or 15
+    duration = math.max(5, math.min(60, math.floor(duration)))
+    if not GetMoney then
+        Print("GetMoney no esta disponible en este cliente.")
+        return
+    end
+
+    local startedAt = GetTime and GetTime() or 0
+    local lastMoney = GetMoney()
+    local frame = CreateFrame("Frame")
+    local watched = {
+        PLAYER_MONEY = true,
+        CURRENCY_DISPLAY_UPDATE = true,
+        CHAT_MSG_SYSTEM = true,
+        UI_INFO_MESSAGE = true,
+    }
+    for event in pairs(watched) do frame:RegisterEvent(event) end
+
+    Print("Sonda de dinero activa " .. duration .. " s. Ejecuta .modify money <cobre> ahora.")
+    Print("Inicio: " .. DebugMoneyText(lastMoney))
+
+    frame:SetScript("OnEvent", function(_, event, ...)
+        local current = GetMoney()
+        local suffix = ""
+        if event == "CHAT_MSG_SYSTEM" or event == "UI_INFO_MESSAGE" then
+            suffix = " texto=" .. tostring((...))
+        end
+        Print("evento " .. event .. " | WoW " .. DebugMoneyText(current) .. suffix)
+        lastMoney = current
+    end)
+    frame:SetScript("OnUpdate", function(self)
+        local now = GetTime and GetTime() or startedAt
+        local current = GetMoney()
+        if current ~= lastMoney then
+            Print("GetMoney cambio sin evento observado: " .. DebugMoneyText(lastMoney)
+                .. " -> " .. DebugMoneyText(current))
+            lastMoney = current
+        end
+        if now - startedAt >= duration then
+            self:SetScript("OnUpdate", nil)
+            self:UnregisterAllEvents()
+            Print("Sonda de dinero finalizada. Saldo final: " .. DebugMoneyText(lastMoney))
+        end
+    end)
+end, "sonda temporal: dineroeventos [segundos]; ejecuta .modify money mientras esta activa")
+
 API.RegisterCommand("nivel", function(args)
     local requested, classIndex = tostring(args or ""):match("^%s*(%d+)%s*(%d*)%s*$")
     requested = tonumber(requested)
@@ -404,8 +524,11 @@ API.RegisterCommand("profcheck", function(args)
     Print(string.format("%s (%s) | req %d | CD %d | %s", recipe.name or recipeId,
         recipe.profession or "?", tonumber(recipe.skillReq) or 1, tonumber(recipe.dc) or 10,
         ok and "|cff38d26aLISTA|r" or "|cffff5555" .. tostring(reason) .. "|r"))
-    Print(string.format("Resultado: %s x%d | id=%s", output and output.name or tostring(recipe.output and recipe.output.key),
-        tonumber(recipe.output and recipe.output.qty) or 1, tostring(output and output.id or "PENDIENTE")))
+    local outputKey = recipe.output and recipe.output.key
+    local outputId = HarfordProfessionsItems and HarfordProfessionsItems.GetId
+        and HarfordProfessionsItems.GetId(outputKey)
+    Print(string.format("Resultado: %s x%d | id=%s", output and output.name or tostring(outputKey),
+        tonumber(recipe.output and recipe.output.qty) or 1, tostring(outputId or "PENDIENTE")))
     for _, material in ipairs(materials or {}) do
         Print(string.format("  %s: %d/%d | id=%s", material.name or material.key,
             tonumber(material.have) or 0, tonumber(material.need) or 0, tostring(material.id or "PENDIENTE")))
@@ -415,13 +538,62 @@ end, "muestra materiales y puerta real: profcheck <recipeId>")
 API.RegisterCommand("profitem", function(args)
     local key, qty = tostring(args or ""):match("^(%S+)%s*(%d*)")
     if not key or key == "" then Print("Uso: profitem <claveItem> [cantidad]"); return end
-    local entry = HarfordProfessionsItems and HarfordProfessionsItems.Get and HarfordProfessionsItems.Get(key)
-    if not (entry and entry.id) then Print("Item sin ID valido: " .. key); return end
+    local items = HarfordProfessionsItems
+    local entry = items and items.Get and items.Get(key)
+    local itemId = entry and items.GetId and items.GetId(key)
+    if not itemId then Print("Item sin ID valido: " .. key); return end
     if not (HarfordServerActions and HarfordServerActions.GiveItem) then Print("HarfordServerActions no disponible"); return end
     local amount = math.max(1, math.floor(tonumber(qty) or 1))
-    local ok, err = HarfordServerActions.GiveItem(entry.id, amount)
-    Print(ok and ("Entregado: " .. tostring(entry.name) .. " x" .. amount) or ("No se pudo entregar: " .. tostring(err)))
+    local ok, err = HarfordServerActions.GiveItem(itemId, amount)
+    Print(ok and ("Entregado: " .. tostring(items.GetName(key)) .. " x" .. amount
+        .. " (ID " .. tostring(itemId) .. ")") or ("No se pudo entregar: " .. tostring(err)))
 end, "entrega un material registrado para pruebas: profitem <clave> [cantidad]")
+
+API.RegisterCommand("profcatalog", function(args)
+    local key = tostring(args or ""):match("^(%S+)")
+    local items = HarfordProfessionsItems
+    local entry = key and items and items.Get and items.Get(key)
+    if not entry then Print("Uso: profcatalog <claveItem>"); return end
+    local metadata = items.GetMetadata and items.GetMetadata(key)
+    local operational = items.GetId and items.GetId(key)
+    Print(string.format("%s | Wowhead=%s | operativo=%s | Epsilon fallback=%s",
+        items.GetName(key), tostring(entry.wow or "-"), tostring(operational or "PENDIENTE"),
+        tostring(items.GetEpsilonId and items.GetEpsilonId(key) or "-")))
+    if metadata then
+        Print(string.format("  calidad=%s  ilvl=%s  pila=%s  venta=%s  icono=%s",
+            tostring(metadata.quality or "-"), tostring(metadata.ilvl or "-"), tostring(metadata.pila or "-"),
+            tostring(metadata.sell or "-"), tostring(metadata.icon or "-")))
+    else
+        Print("  Sin metadata Wowhead (objeto custom/dinamico).")
+    end
+end, "muestra la resolucion Wowhead/Epsilon: profcatalog <clave>")
+
+API.RegisterCommand("profmaterials", function(args)
+    local recipeId = tostring(args or ""):match("^(%S+)")
+    if not recipeId or recipeId == "" then Print("Uso: profmaterials <recipeId>"); return end
+    if not (HarfordProfessions and HarfordProfessions.GetRecipe) then
+        Print("HarfordProfessions no disponible")
+        return
+    end
+    local recipe = HarfordProfessions.GetRecipe(recipeId)
+    if not recipe then Print("Receta desconocida: " .. recipeId); return end
+    local items = HarfordProfessionsItems
+    if not (items and items.GetId and HarfordServerActions and HarfordServerActions.GiveItem) then
+        Print("Registro de items o acciones de servidor no disponibles")
+        return
+    end
+    for _, material in ipairs(recipe.materials or {}) do
+        local itemId = items.GetId(material.key)
+        local quantity = math.max(1, math.floor(tonumber(material.qty) or 1))
+        if not itemId then
+            Print("Sin ID para " .. tostring(material.key) .. "; no entregado.")
+        else
+            local ok, err = HarfordServerActions.GiveItem(itemId, quantity)
+            Print(ok and ("Entregado: " .. items.GetName(material.key) .. " x" .. quantity)
+                or ("Fallo al entregar " .. items.GetName(material.key) .. ": " .. tostring(err)))
+        end
+    end
+end, "entrega materiales de una receta: profmaterials <recipeId>")
 
 API.RegisterCommand("profgather", function(args)
     local recipeId, seconds = tostring(args or ""):match("^(%S+)%s*(%d*)")
@@ -500,12 +672,13 @@ API.RegisterCommand("profreset", function(args)
         Print("Reinicia profesiones de ESTE personaje. Confirma: profreset confirm")
         return
     end
-    HarfordProfessionsStore = HarfordProfessionsStore or {}
-    HarfordProfessionsStore.skills = {}
-    HarfordProfessionsStore.learned = {}
-    HarfordProfessionsStore.nodeCooldowns = {}
+    if not (HarfordProfessions and HarfordProfessions.ResetCharacterState) then
+        Print("Sistema de profesiones no disponible.")
+        return
+    end
+    HarfordProfessions.ResetCharacterState()
     Print("Estado de profesiones reiniciado para este personaje.")
-end, "reinicia skills, recetas aprendidas y cooldowns: profreset confirm")
+end, "reinicia skills, recetas, recetas dinamicas y cooldowns: profreset confirm")
 
 API.RegisterCommand("profmissing", function()
     if not (HarfordProfessionsItems and HarfordProfessionsItems.Missing) then Print("registro no disponible"); return end
@@ -4513,14 +4686,14 @@ API.RegisterCommand("preparar", function()
 end, "abre el menu de reelegir conjuros preparados (como tras un descanso largo)")
 
 API.RegisterCommand("profitems", function()
-    -- Lista las claves del registro de profesiones SIN itemId, con su nombre visible: es la
-    -- lista de la compra para el phase vault. Complementa a merchantdump (que los cosecha).
+    -- Lista claves sin ID operativo. Con Wowhead como fuente temporal, solo deben
+    -- aparecer objetos custom/dinamicos o resultados sin equivalente original.
     local reg = HarfordProfessionsItems and HarfordProfessionsItems.REGISTRY
     if not reg then Print("HarfordProfessionsItems no disponible") return end
     local pending, total = {}, 0
     for key, entry in pairs(reg) do
         total = total + 1
-        if type(entry) == "table" and not entry.id then
+        if type(entry) == "table" and not (HarfordProfessionsItems.GetId and HarfordProfessionsItems.GetId(key)) then
             pending[#pending + 1] = { key = key, name = tostring(entry.name or key) }
         end
     end
@@ -4528,9 +4701,9 @@ API.RegisterCommand("profitems", function()
     for _, e in ipairs(pending) do
         Print(string.format("|cffffd100%s|r  %s", e.key, e.name))
     end
-    Print(string.format("Pendientes de ID: |cffffcc00%d|r de %d claves. Cosechalos con merchantdump.",
+    Print(string.format("Pendientes de ID operativo: |cffffcc00%d|r de %d claves.",
         #pending, total))
-end, "lista las claves de items de profesiones sin itemId (lo que falta crear en el phase vault)")
+end, "lista las claves sin ID Wowhead ni fallback custom")
 
 API.RegisterCommand("merchantdump", function(args)
     -- Vuelca los items del mercader abierto. Soporta tanto el MerchantFrame nativo como
@@ -4869,6 +5042,50 @@ API.RegisterCommand("phaseloot", function(args)
         return
     end
 
+    if cmd == "historial" then
+        -- Que cadaveres tienen saqueo registrado en la fase.
+        P.LoadManifest(function(claves, err)
+            claves = type(claves) == "table" and claves or {}
+            local pref = P.GetTakenPrefix and P.GetTakenPrefix() or "HARFORD_LOOT_T_"
+            local n = 0
+            for _, k in ipairs(claves) do
+                if tostring(k):sub(1, #pref) == pref then
+                    n = n + 1
+                    Print("   |cff808080" .. tostring(k):sub(#pref + 1) .. "|r")
+                end
+            end
+            Print("Cadaveres con saqueo registrado: |cffffd100" .. n .. "|r"
+                .. (err and (" |cffff9900(" .. tostring(err) .. ")|r") or ""))
+        end)
+        return
+    end
+
+    if cmd == "limpiar" then
+        if a ~= "confirmar" then
+            Print("|cffff5555Esto reinicia el saqueo: todo vuelve a estar por coger.|r")
+            Print("Las TABLAS de loot no se tocan, solo el historial.")
+            Print("Escribe: |cffffd100phaseloot limpiar confirmar|r")
+            return
+        end
+        P.ClearAllTaken(function(ok, borradas, err)
+            if not ok then Print("|cffff5555" .. tostring(err) .. "|r"); return end
+            Print("Historial de saqueo borrado: |cffffd100" .. #(borradas or {})
+                .. "|r cadaveres. Todo vuelve a estar por coger.")
+        end)
+        return
+    end
+
+    if cmd == "olvidar" then
+        -- Un solo cadaver: el del target, o el guid que se le pase.
+        local guid = (a ~= "" and a) or (UnitGUID and UnitGUID("target"))
+        if not guid then Print("Apunta a un cadaver o pasa su guid."); return end
+        P.ClearTaken(guid, function(ok, _, err)
+            Print(ok and "Ese cadaver vuelve a estar entero."
+                or ("|cffff5555" .. tostring(err) .. "|r"))
+        end)
+        return
+    end
+
     if cmd == "reconstruir" then
         P.RebuildManifest(function(ok, n, err)
             Print(ok and ("Manifiesto rehecho: |cffffd100" .. tostring(n) .. "|r claves")
@@ -4903,6 +5120,9 @@ API.RegisterCommand("phaseloot", function(args)
     Print("  |cffffd100phaseloot criatura <id>|r")
     Print("  |cffffd100phaseloot global|r")
     Print("  |cffffd100phaseloot manifiesto|r")
+    Print("  |cffffd100phaseloot historial|r   que cadaveres estan ya saqueados")
+    Print("  |cffffd100phaseloot olvidar [guid]|r  un cadaver vuelve a estar entero")
+    Print("  |cffffd100phaseloot limpiar confirmar|r  |cffff5555reinicia TODO el saqueo|r")
     Print("  |cffffd100phaseloot reconstruir|r  rehace el manifiesto desde el registro local")
     Print("  |cffffd100phaseloot purgar confirmar|r")
 end, "Tablas de loot guardadas en la fase")
@@ -5908,3 +6128,33 @@ API.RegisterCommand("reglas", function(args)
 
     Print("Uso: reglas cansancio [0-6] | concentracion [nombre|romper|<dano>] | heroe [gastar] | carga | cobertura [none|half|three|total]")
 end, "prueba los sistemas de reglas nuevos")
+
+-- Diagnostico pasivo de la ruta protegida que usa la confirmacion nativa de
+-- intercambio. No inspecciona padres, regiones ni modifica frames: solo pide
+-- al cliente el origen de taint de globals concretos.
+API.RegisterCommand("tainttrade", function()
+    if type(issecurevariable) ~= "function" then
+        Print("El cliente no expone issecurevariable")
+        return
+    end
+
+    Print("Taint de trade/UIParent:")
+    local names = {
+        "TradeFrame",
+        "TradeFrame_OnEvent",
+        "ClickTradeButton",
+        "AcceptTrade",
+        "StaticPopup1",
+        "StaticPopup2",
+        "StaticPopup3",
+        "StaticPopup4",
+        "UIParent_ManageFramePositions",
+        "UIPARENT_MANAGED_FRAME_POSITIONS",
+    }
+    for _, name in ipairs(names) do
+        local secure, source = issecurevariable(name)
+        local state = secure and "seguro" or "CONTAMINADO"
+        local by = source and (" por " .. tostring(source)) or ""
+        Print(string.format("  %s: %s%s", name, state, by))
+    end
+end, "origen de taint en trade/UIParent; ejecutar tras abrir la confirmacion")

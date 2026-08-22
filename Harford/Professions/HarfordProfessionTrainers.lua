@@ -10,10 +10,8 @@
 -- haber varios NPCs para el mismo entrenador —uno en cada ciudad—, o cambiarse el NPC de sitio,
 -- sin tocar nada aqui.
 --
--- COLOCAR UN ENTRENADOR ES LO QUE CIERRA SU RANGO: mientras no lo este, sus recetas
--- siguen viniendo con el nivel de habilidad como hasta ahora, porque no habria de quien
--- aprenderlas. Una receta puede ademas traer `trainer = "<id>"` para atarla a uno concreto al
--- margen del rango.
+-- Todas las recetas no iniciales se aprenden explicitamente. Colocar un entrenador solo anade
+-- su nombre y zona reales al catalogo; los IDs deducidos siguen pudiendo abrirse desde gossip.
 --
 -- DOS SITIOS DONDE UN ENTRENADOR SE DA POR PUESTO:
 --   * `API.PLACED` hardcodeado: los que ya estan en el mundo, con su nombre y zona reales. Sirve
@@ -35,8 +33,7 @@ local API = HarfordProfessionTrainers
 -- Herreria"). Escribir esa lista era escribir 75 veces lo que ya estaba en el nombre.
 --
 -- Lo unico que NO se puede deducir es cuales existen ya en el mundo. Eso es esto, y empieza
--- vacio. Una entrada aqui CIERRA ese rango: sus recetas dejan de venir con el nivel de habilidad
--- y hay que aprenderlas del entrenador. Basta el nombre pelado:
+-- vacio. Una entrada aqui aporta el nombre y la zona reales. Basta el nombre pelado:
 --
 --   "herreria_experto",
 --
@@ -345,13 +342,12 @@ end
 -- Aprender una receta de un entrenador, nombrandolo por su nombre de catalogo: es lo que el
 -- gossip del NPC tiene delante.
 --
--- NO exige que el entrenador este colocado: si estas hablando con el, lo esta. `colocado` decide
--- otra cosa distinta —si ese rango deja de venir con el nivel de habilidad para TODO el mundo—,
--- y atarlas hacia que el gossip abriese la ventana y `Aprender` fallase delante del NPC.
+-- NO exige que el entrenador este colocado: si el gossip abrio esta ventana, ya estas hablando
+-- con su representacion. `colocado` solo aporta metadatos de nombre y zona al catalogo.
 --
--- Las condiciones se comprueban AQUI y no en la ventana: la UI las repite para pintar el boton,
+-- Las condiciones se comprueban aqui y no en la ventana: la UI las repite para pintar el boton,
 -- pero quien decide es esto, asi que no hay forma de aprender saltandose el requisito.
-function API.Teach(trainerId, recipeId)
+local function ValidateTeach(trainerId, recipeId)
     local def = API.Get(trainerId)
     if not def then return false, "Nombre de entrenador desconocido" end
     recipeId = tostring(recipeId or "")
@@ -373,14 +369,97 @@ function API.Teach(trainerId, recipeId)
     if skill < req then
         return false, "Te falta habilidad: requiere " .. req
     end
-    -- `HasLearnedRecipe`, no `IsRecipeLearned`: la segunda responde "puedes usarla", que para una
-    -- receta cuyo rango no tiene entrenador colocado es true SIEMPRE. Con ella, el entrenador se
-    -- negaba a ensenar nada con un "ya conoces esa receta" que era mentira.
-    if HarfordProfessions.HasLearnedRecipe and HarfordProfessions.HasLearnedRecipe(recipeId) then
+    if HarfordProfessions.IsRecipeLearned and HarfordProfessions.IsRecipeLearned(recipeId) then
         return false, "Ya conoces esa receta"
     end
+    return true, nil, recipeId
+end
+
+function API.Teach(trainerId, recipeId)
+    local ok, err, normalizedId = ValidateTeach(trainerId, recipeId)
+    if not ok then return false, err end
     if not HarfordProfessions.LearnRecipe then return false, "No se puede aprender" end
-    return HarfordProfessions.LearnRecipe(recipeId)
+    return HarfordProfessions.LearnRecipe(normalizedId)
+end
+
+-- Precio de aprendizaje en cobre. El catalogo conserva el valor exacto cuando la exportacion lo
+-- trae; las recetas importadas sin precio usan una tarifa por rango para que nunca se aprendan
+-- gratis solo por faltar ese metadato.
+function API.GetRecipeCost(recipeId)
+    local recipe = HarfordProfessions and HarfordProfessions.GetRecipe
+        and HarfordProfessions.GetRecipe(recipeId)
+    if not recipe then return 0 end
+    if recipe.trainCost ~= nil then
+        return math.max(0, math.floor(tonumber(recipe.trainCost) or 0))
+    end
+    if HarfordProfessions.IsStarterRecipe and HarfordProfessions.IsStarterRecipe(recipe) then
+        return 0
+    end
+    local req = SkillReq(recipe)
+    if req < 75 then return 50 end
+    if req < 150 then return 500 end
+    if req < 225 then return 2500 end
+    if req < 300 then return 7500 end
+    return 15000
+end
+
+-- Compra asincrona: primero valida la receta, luego retira el dinero y SOLO entonces aprende.
+-- `callback(ok, err, recipe)` se llama exactamente una vez incluso si el transporte no existe.
+function API.Purchase(trainerId, recipeId, callback)
+    callback = type(callback) == "function" and callback or function() end
+    local callbackDone = false
+    local function Finish(ok, err, recipe)
+        if callbackDone then return end
+        callbackDone = true
+        callback(ok, err, recipe)
+    end
+    local def = API.Get(trainerId)
+    local recipe = HarfordProfessions and HarfordProfessions.GetRecipe
+        and HarfordProfessions.GetRecipe(recipeId)
+    if not def or not recipe then
+        Finish(false, "Receta o entrenador desconocido", recipe)
+        return false, "Receta o entrenador desconocido"
+    end
+
+    -- Para un coste cero no hay comando de servidor que confirmar.
+    local cost = API.GetRecipeCost(recipeId)
+    if cost <= 0 then
+        local ok, err = API.Teach(trainerId, recipeId)
+        Finish(ok, err, recipe)
+        return ok, err
+    end
+    if not (HarfordDnDEconomy and HarfordDnDEconomy.CanAfford and HarfordDnDEconomy.CanAfford(cost)) then
+        local err = "No tienes suficiente dinero"
+        Finish(false, err, recipe)
+        return false, err
+    end
+
+    -- Validar ANTES de cobrar y otra vez tras la confirmacion: el estado podria cambiar mientras
+    -- el comando estaba en cola, pero en ningun momento se escribe la receta antes del cobro.
+    local valid, validErr = ValidateTeach(trainerId, recipeId)
+    if not valid then
+        Finish(false, validErr, recipe)
+        return false, validErr
+    end
+
+    if not (HarfordDnDEconomy and HarfordDnDEconomy.Spend) then
+        Finish(false, "No se puede cobrar el entrenamiento", recipe)
+        return false, "No se puede cobrar el entrenamiento"
+    end
+    local sent, sendErr = HarfordDnDEconomy.Spend(cost, {
+        callback = function(success, messages)
+            if not success then
+                Finish(false, (messages and messages[1]) or "El servidor rechazo el pago", recipe)
+                return
+            end
+            local learned, learnErr = API.Teach(trainerId, recipeId)
+            Finish(learned, learnErr, recipe)
+        end,
+    })
+    if not sent then
+        Finish(false, sendErr or "No se pudo enviar el pago", recipe)
+    end
+    return sent, sendErr
 end
 
 -- API para el ArcSpell del gossip, con el mismo nombre publico que usan las misiones de mundo.
@@ -388,4 +467,5 @@ _G.HarfordTrainerAPI = _G.HarfordTrainerAPI or {}
 _G.HarfordTrainerAPI.BindTrainer = API.Bind
 _G.HarfordTrainerAPI.DefineTrainer = API.Define
 _G.HarfordTrainerAPI.TeachRecipe = API.Teach
+_G.HarfordTrainerAPI.PurchaseRecipe = API.Purchase
 _G.HarfordTrainerAPI.GetTrainer = API.Get

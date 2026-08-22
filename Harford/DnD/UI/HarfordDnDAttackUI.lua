@@ -292,7 +292,7 @@ function API.RefreshWeaponInfo()
     if not (context and context.active)
         and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
         and HarfordDnDFeatureEffects.HasFlag("extraAttack") then
-        infoLabel = infoLabel .. "  |cff88ccff(Ataque Extra: x2)|r"
+        infoLabel = infoLabel .. "  |cff88ccff(Ataque adicional: x2)|r"
     end
     if controls.weaponInfoText then controls.weaponInfoText:SetText(infoLabel) end
     if controls.weaponLinkFrame then

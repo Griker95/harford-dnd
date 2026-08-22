@@ -1,0 +1,1458 @@
+{
+ "casan": [
+  [
+   "Aliado Planar",
+   "ALlADO PLANAR",
+   0.92
+  ],
+  [
+   "Baile Irresistible de Otto",
+   "BAILE IRRESISTIBLE DE ÜTTO",
+   0.96
+  ],
+  [
+   "Cadena de la muerte",
+   "Cadena de Muerte",
+   0.91
+  ],
+  [
+   "Cambio de Forma",
+   "CAMBIAR DE FORMA",
+   0.9
+  ],
+  [
+   "Cambio del vacío",
+   "Cambio de vacio",
+   0.97
+  ],
+  [
+   "Caminar por el agua",
+   "Caminar sobre el agua",
+   0.9
+  ],
+  [
+   "Campo Antimágico",
+   "CAMPO ANTIMAGIA",
+   0.9
+  ],
+  [
+   "Círculo de Teletransporte",
+   "CÍRCULO DE TELETRANSPORTACIÓN",
+   0.89
+  ],
+  [
+   "Conjurar elemental (aire)",
+   "CONJURAR ELEMENTAL",
+   0.88
+  ],
+  [
+   "Controlar vientos ^XGE^",
+   "Controlar Vientos",
+   0.89
+  ],
+  [
+   "Corona de Locura",
+   "Corona de la locura",
+   0.91
+  ],
+  [
+   "Detectar Veneno y Enfermedad",
+   "Detectar venenos y enfermedades",
+   0.95
+  ],
+  [
+   "Disfrazar",
+   "Disfrazarse",
+   0.9
+  ],
+  [
+   "Disipar el Bien y el Mal",
+   "DISIPAR EL BIENY EL MAL",
+   0.98
+  ],
+  [
+   "Duelo forzado",
+   "DUELOF ORZADO",
+   0.92
+  ],
+  [
+   "Empoderar Habilidad",
+   "Empoderar Habilidades",
+   0.95
+  ],
+  [
+   "Enemigos Abundan",
+   "Enemigos Abundantes",
+   0.91
+  ],
+  [
+   "Enfoque Interior",
+   "Enfoque interno",
+   0.9
+  ],
+  [
+   "Escudo de la fe",
+   "Escudo de fe",
+   0.89
+  ],
+  [
+   "Esfera de tormenta ^XGE^",
+   "Esfera de tormenta",
+   0.9
+  ],
+  [
+   "Esfera Helada de Otiluke",
+   "Esfera elastica de Otiluke",
+   0.88
+  ],
+  [
+   "Explosión de Cadáveres",
+   "Explosion de cadaver",
+   0.95
+  ],
+  [
+   "Festín de los Héroes",
+   "FESTÍN DE HÉROES",
+   0.89
+  ],
+  [
+   "Fuego Interior",
+   "Fuego interno",
+   0.89
+  ],
+  [
+   "Fundirse en la Piedra",
+   "Fundirse con la piedra",
+   0.93
+  ],
+  [
+   "Hoja de Desastre",
+   "Hoja Del Desastre",
+   0.97
+  ],
+  [
+   "Investidura de Llama",
+   "Investidura De Liamas",
+   0.93
+  ],
+  [
+   "Invocar Engendro de Sombra",
+   "Invocar Engendro Sombrío",
+   0.88
+  ],
+  [
+   "Jarra Mágica",
+   "Arma magica",
+   0.87
+  ],
+  [
+   "Jaula de Almas",
+   "Jaula de Alma",
+   0.96
+  ],
+  [
+   "Jaula del Alma",
+   "Jaula de Alma",
+   0.96
+  ],
+  [
+   "Latigazo Mental de Tasha",
+   "Latigo mental de Tasha",
+   0.96
+  ],
+  [
+   "Llamada de Relámpagos",
+   "Llamada de relampago",
+   0.98
+  ],
+  [
+   "Mover Tierra",
+   "MOVER LA TIERRA",
+   0.89
+  ],
+  [
+   "Pasar Muros",
+   "PASAMUROS",
+   0.9
+  ],
+  [
+   "Pico Glacial",
+   "Pica Glacial",
+   0.92
+  ],
+  [
+   "Polimorfia",
+   "Polimorfar",
+   0.9
+  ],
+  [
+   "Polimorfia Verdadera",
+   "POLIMORFAR VERDADERO",
+   0.9
+  ],
+  [
+   "Protección contra el Veneno",
+   "Proteccion contra veneno",
+   0.94
+  ],
+  [
+   "Protección contra la Energía",
+   "Proteccion contra energia",
+   0.94
+  ],
+  [
+   "Rociado Prismático",
+   "ROCIADA PRISMÁTICA",
+   0.89
+  ],
+  [
+   "Susurros Disonantes",
+   "Susurros discordantes",
+   0.9
+  ],
+  [
+   "Tormenta de Venganza",
+   "TORMENTA DE LA VENGANZA",
+   0.93
+  ]
+ ],
+ "dudosos": [
+  [
+   "Aceleración",
+   "Enervación",
+   "Manual del Jugador"
+  ],
+  [
+   "Alterar Aspecto",
+   "Alterar el propio aspecto",
+   "Manual del Jugador"
+  ],
+  [
+   "Amistad con los Animales",
+   "Hablar con los animales",
+   "Manual del Jugador"
+  ],
+  [
+   "Andar en el Viento",
+   "VIAJAR CON EL VIENTO",
+   "Manual del Jugador"
+  ],
+  [
+   "Asesino Fantasmagórico",
+   "Asesino fantasmal",
+   "Manual del Jugador"
+  ],
+  [
+   "Azotador de Aganazzar",
+   "Abrasador de Aganazzar",
+   "Xanathar"
+  ],
+  [
+   "Azote de Aganazzar",
+   "Llama de Aganazzar",
+   "Xanathar"
+  ],
+  [
+   "Barco Volador de Jaina",
+   "Nave Voladora de Jaina",
+   "Warcraft 5ª"
+  ],
+  [
+   "Baya Mágica",
+   "Boca magica",
+   "Manual del Jugador"
+  ],
+  [
+   "Bendecir",
+   "Bendicion",
+   "Manual del Jugador"
+  ],
+  [
+   "Bloqueo Arcano",
+   "Ojo arcano",
+   "Manual del Jugador"
+  ],
+  [
+   "Bola de Fuego Retardada",
+   "BOLA DE FUEGO DE EXPLOSIÓN RETARDADA",
+   "Manual del Jugador"
+  ],
+  [
+   "Bola de Fuego Retrasada",
+   "Bola de fuego",
+   "Manual del Jugador"
+  ],
+  [
+   "Bosque Druídico",
+   "Saber druidico",
+   "Xanathar"
+  ],
+  [
+   "Cadena de Relámpagos",
+   "Llamada de relampago",
+   "Manual del Jugador"
+  ],
+  [
+   "Caminar sobre el Viento",
+   "Caminar sobre el agua",
+   "Manual del Jugador"
+  ],
+  [
+   "Carne a Piedra",
+   "DE LA CARNEA LA PIEDRA",
+   "Manual del Jugador"
+  ],
+  [
+   "Cáscara Antimágica",
+   "Caparazon antimagia",
+   "Warcraft 5ª"
+  ],
+  [
+   "Cáscara Antivida",
+   "CAPARAZÓN ANTIVIDA",
+   "Manual del Jugador"
+  ],
+  [
+   "Castigo justo",
+   "Castigo furioso",
+   "Warcraft 5ª"
+  ],
+  [
+   "Choque de Sombras",
+   "Hoja de Sombra",
+   "Warcraft 5ª"
+  ],
+  [
+   "Clonación",
+   "Congelación",
+   "Manual del Jugador"
+  ],
+  [
+   "Cofre Secreto de Leomund",
+   "Cofre oculto de Leomund",
+   "Manual del Jugador"
+  ],
+  [
+   "Comprender Idiomas",
+   "Entender idiomas",
+   "Manual del Jugador"
+  ],
+  [
+   "Comulgar con la naturaleza",
+   "COMUNIÓN CON LA NATURALEZA",
+   "Manual del Jugador"
+  ],
+  [
+   "Conceder Maldición",
+   "Imponer maldicion",
+   "Manual del Jugador"
+  ],
+  [
+   "Concha Antivida",
+   "CAPARAZÓN ANTIVIDA",
+   "Manual del Jugador"
+  ],
+  [
+   "Conjurar Hadas",
+   "Conjurar animales",
+   "Manual del Jugador"
+  ],
+  [
+   "Crear Alimento y Agua",
+   "Crear comida y agua",
+   "Manual del Jugador"
+  ],
+  [
+   "Crear No Muertos",
+   "Conjurar no-muertos",
+   "Manual del Jugador"
+  ],
+  [
+   "Crecimiento de Espinas",
+   "Crecimiento espinoso",
+   "Manual del Jugador"
+  ],
+  [
+   "Crecimiento de Plantas",
+   "Crecimiento vegetal",
+   "Manual del Jugador"
+  ],
+  [
+   "Curación en Masa",
+   "CURAR EN MASA",
+   "Manual del Jugador"
+  ],
+  [
+   "Curar heridas masivas",
+   "CURAR HERIDAS EN MASA",
+   "Manual del Jugador"
+  ],
+  [
+   "Danza Irresistible de Otto",
+   "BAILE IRRESISTIBLE DE ÜTTO",
+   "Manual del Jugador"
+  ],
+  [
+   "Dedos de Escarcha ^IDRotF^",
+   "Dedos de escarcha",
+   "Manual del Jugador"
+  ],
+  [
+   "Descarga mental",
+   "Descarga sobrenatural",
+   "Warcraft 5ª"
+  ],
+  [
+   "Dispersar",
+   "DESPERTAR",
+   "Xanathar"
+  ],
+  [
+   "Eliminar Maldición",
+   "Imponer maldicion",
+   "Manual del Jugador"
+  ],
+  [
+   "Encontrar Corcel",
+   "Encontrar corcel mayor",
+   "Manual del Jugador"
+  ],
+  [
+   "Enjambre de Meteoros",
+   "TORMENTA DE METEORITOS",
+   "Manual del Jugador"
+  ],
+  [
+   "Escrutar",
+   "DESPERTAR",
+   "Manual del Jugador"
+  ],
+  [
+   "Esfera Acuática",
+   "Esfera Acuosa",
+   "Xanathar"
+  ],
+  [
+   "Esfera de Fuego",
+   "DESCARGA DE FUEGO",
+   "Manual del Jugador"
+  ],
+  [
+   "Esfera de Invulnerabilidad",
+   "GLOBO DE INVULNERABILIDAD",
+   "Manual del Jugador"
+  ],
+  [
+   "Esfera Resiliente de Otiluke",
+   "ESFERA CONGELANTE DE ÜTILUKE",
+   "Manual del Jugador"
+  ],
+  [
+   "Estallido estelar",
+   "Estallido de Lava",
+   "Warcraft 5ª"
+  ],
+  [
+   "Explosión de Espadas",
+   "Explosion de cadaver",
+   "Costa de la Espada"
+  ],
+  [
+   "Faro de Esperanza",
+   "Senal de esperanza",
+   "Manual del Jugador"
+  ],
+  [
+   "Farol de esperanza",
+   "Senal de esperanza",
+   "Manual del Jugador"
+  ],
+  [
+   "Fascinación",
+   "Adivinacion",
+   "Manual del Jugador"
+  ],
+  [
+   "Fisura Gravitacional",
+   "Sumidero gravitacional",
+   "Wildemount"
+  ],
+  [
+   "Fuerza Brillante",
+   "Fuerza radiante",
+   "Warcraft 5ª"
+  ],
+  [
+   "Fuerza Fantasmagórica",
+   "Fuerza fantasmal",
+   "Manual del Jugador"
+  ],
+  [
+   "Furia de la Serpiente de la Muerte",
+   "Furia del Dragón de la Muerte",
+   "Warcraft 5ª"
+  ],
+  [
+   "Golpe Cegador",
+   "GOLPE APRESADOR",
+   "Manual del Jugador"
+  ],
+  [
+   "Golpe Desterrador",
+   "Golpe devastador",
+   "Manual del Jugador"
+  ],
+  [
+   "Golpe Furioso",
+   "Castigo furioso",
+   "Manual del Jugador"
+  ],
+  [
+   "Golpe Ígneo",
+   "GOLPE FLAMÍGERO",
+   "Manual del Jugador"
+  ],
+  [
+   "Golpe Justo",
+   "Golpe Justiciero",
+   "Warcraft 5ª"
+  ],
+  [
+   "Guardianes Espirituales",
+   "Arma espiritual",
+   "Manual del Jugador"
+  ],
+  [
+   "Habilidad mejorada",
+   "Invisibilidad mejorada",
+   "Manual del Jugador"
+  ],
+  [
+   "Hervir sangre",
+   "Hervor de sangre",
+   "Warcraft 5ª"
+  ],
+  [
+   "Hoja de Llama",
+   "Hoja de llama verde",
+   "Manual del Jugador"
+  ],
+  [
+   "Hoja Llameante",
+   "Golpe llameante",
+   "Manual del Jugador"
+  ],
+  [
+   "Hoja Verde Llameante",
+   "Hoja de llama verde",
+   "Tasha"
+  ],
+  [
+   "Hoja Verdeante",
+   "Hoja retumbante",
+   "Tasha"
+  ],
+  [
+   "Inversión de Viento",
+   "Investidura De Viento",
+   "Xanathar"
+  ],
+  [
+   "Invisibilidad Mayor",
+   "Invisibilidad mejorada",
+   "Manual del Jugador"
+  ],
+  [
+   "Invocar Demonio",
+   "Invocar demonio mayor",
+   "Tasha"
+  ],
+  [
+   "Invocar relámpagos",
+   "Invocar elementos",
+   "Manual del Jugador"
+  ],
+  [
+   "Levantar a los muertos",
+   "Animar a los muertos",
+   "Manual del Jugador"
+  ],
+  [
+   "Llamada",
+   "Llama sagrada",
+   "Manual del Jugador"
+  ],
+  [
+   "Llamada de la Tumba",
+   "Llamada de relampago",
+   "Xanathar"
+  ],
+  [
+   "Lluvia de Meteoros",
+   "Lluvia de Fuego",
+   "Manual del Jugador"
+  ],
+  [
+   "Maldición",
+   "Maleficio",
+   "Manual del Jugador"
+  ],
+  [
+   "Mano Mágica",
+   "Arma magica",
+   "Manual del Jugador"
+  ],
+  [
+   "Marchitamiento Horrendo de Abi-Dalzim",
+   "ncima de MARCHITAMIENTO HORRIBLE DE ABI-DALZIM",
+   "Xanathar"
+  ],
+  [
+   "Mejora de Habilidad",
+   "Empoderar Habilidades",
+   "Manual del Jugador"
+  ],
+  [
+   "Mejorar Habilidad",
+   "Empoderar Habilidades",
+   "Manual del Jugador"
+  ],
+  [
+   "Meteoritos de Melf",
+   "Meteoros Diminutos de Melf",
+   "Manual del Jugador"
+  ],
+  [
+   "Ola de Trueno",
+   "Paso de trueno",
+   "Manual del Jugador"
+  ],
+  [
+   "Oleada Estelar",
+   "Oleada de estrellas",
+   "Warcraft 5ª"
+  ],
+  [
+   "Oración de Curación",
+   "Cadena de curacion",
+   "Manual del Jugador"
+  ],
+  [
+   "Oscuridad Loca",
+   "Oscuridad",
+   "Xanathar"
+  ],
+  [
+   "Palabra Curativa",
+   "Palabra de curacion",
+   "Manual del Jugador"
+  ],
+  [
+   "Palabra Curativa en Masa",
+   "Palabra de curacion en masa",
+   "Manual del Jugador"
+  ],
+  [
+   "Palabra de Aturdimiento",
+   "PALABRA DE PODER: ATURDIR",
+   "Manual del Jugador"
+  ],
+  [
+   "Palabra de Muerte",
+   "PALABRA DE REGRESO",
+   "Manual del Jugador"
+  ],
+  [
+   "Palabra de Recuerdo",
+   "PALABRA DE REGRESO",
+   "Manual del Jugador"
+  ],
+  [
+   "Palabra de Retiro",
+   "PALABRA DE REGRESO",
+   "Manual del Jugador"
+  ],
+  [
+   "Palabra de Retorno",
+   "PALABRA DE REGRESO",
+   "Manual del Jugador"
+  ],
+  [
+   "Penitencia",
+   "Resistencia",
+   "Warcraft 5ª"
+  ],
+  [
+   "Piel de Piedra",
+   "Piel petrea",
+   "Manual del Jugador"
+  ],
+  [
+   "Polimorfia en Masa",
+   "Polimorfar en Grupo",
+   "Xanathar"
+  ],
+  [
+   "Portal Arcano",
+   "PUERTA ARCANA",
+   "Manual del Jugador"
+  ],
+  [
+   "Previsión",
+   "PRESAGIO",
+   "Manual del Jugador"
+  ],
+  [
+   "Prisión",
+   "Perdicion",
+   "Manual del Jugador"
+  ],
+  [
+   "Protección contra la Muerte",
+   "Proteccion contra veneno",
+   "Manual del Jugador"
+  ],
+  [
+   "Quitar Maldición",
+   "Levantar maldicion",
+   "Manual del Jugador"
+  ],
+  [
+   "Ráfaga Solar",
+   "Ira solar",
+   "Manual del Jugador"
+  ],
+  [
+   "Rayo Ardiente",
+   "Manos ardientes",
+   "Manual del Jugador"
+  ],
+  [
+   "Rayo de Bruja",
+   "Rayo de Sombra",
+   "Manual del Jugador"
+  ],
+  [
+   "Rayo de Debilitamiento",
+   "Rayo debilitador",
+   "Manual del Jugador"
+  ],
+  [
+   "Rayo de Fuego",
+   "Muro de fuego",
+   "Manual del Jugador"
+  ],
+  [
+   "Rayo de la Bruja",
+   "Rayo de luna",
+   "Manual del Jugador"
+  ],
+  [
+   "Rayo Guiador",
+   "Rayo debilitador",
+   "Manual del Jugador"
+  ],
+  [
+   "Regeneración",
+   "Enervación",
+   "Manual del Jugador"
+  ],
+  [
+   "Réplica Infernal",
+   "Represion infernal",
+   "Manual del Jugador"
+  ],
+  [
+   "Respirar Agua",
+   "Respirar bajo el agua",
+   "Manual del Jugador"
+  ],
+  [
+   "Restauración Menor",
+   "Restablecimiento menor",
+   "Manual del Jugador"
+  ],
+  [
+   "Revivificar",
+   "Revivir",
+   "Manual del Jugador"
+  ],
+  [
+   "Risa Histérica de Tasha",
+   "Risa horrible de Tasha",
+   "Manual del Jugador"
+  ],
+  [
+   "Ruptura de Realidad",
+   "Aura de vitalidad",
+   "Wildemount"
+  ],
+  [
+   "Sabueso de Mordenkainen",
+   "ESPADA DE MORDENKAINEN",
+   "Manual del Jugador"
+  ],
+  [
+   "Sabueso Fiel de Mordenkainen",
+   "Mastin fiel de Mordenkainen",
+   "Manual del Jugador"
+  ],
+  [
+   "Sacralizar",
+   "Ralentizar",
+   "Manual del Jugador"
+  ],
+  [
+   "Saltar",
+   "Salto",
+   "Manual del Jugador"
+  ],
+  [
+   "Salvar a los Moribundos",
+   "Piedad con los moribundos",
+   "Manual del Jugador"
+  ],
+  [
+   "Santificar",
+   "Identificar",
+   "Manual del Jugador"
+  ],
+  [
+   "Siervo Invisible",
+   "Sirviente invisible",
+   "Manual del Jugador"
+  ],
+  [
+   "Sirviente Menor",
+   "Sirviente minusculo",
+   "Xanathar"
+  ],
+  [
+   "Sueño",
+   "ENSUEÑO",
+   "Manual del Jugador"
+  ],
+  [
+   "Sujetar Monstruo",
+   "Encantar monstruo",
+   "Manual del Jugador"
+  ],
+  [
+   "Sujetar Persona",
+   "Encantar persona",
+   "Manual del Jugador"
+  ],
+  [
+   "Teletransportación",
+   "TELETRANSPORTE",
+   "Manual del Jugador"
+  ],
+  [
+   "Terreno Ilusorio",
+   "Texto ilusorio",
+   "Manual del Jugador"
+  ],
+  [
+   "Toque de la Muerte",
+   "DEDO DE LA MUERTE",
+   "Manual del Jugador"
+  ],
+  [
+   "Toque gélido",
+   "Toque helado",
+   "Warcraft 5ª"
+  ],
+  [
+   "Tormenta de Bolas de Nieve",
+   "Tormenta de bolas de nieve de Snilloc",
+   "Manual del Jugador"
+  ],
+  [
+   "Tormenta de Granizo",
+   "Tormenta de aguanieve",
+   "Manual del Jugador"
+  ],
+  [
+   "Trampa de Cuerda",
+   "Trampa de Lazo",
+   "Manual del Jugador"
+  ],
+  [
+   "Truco de Druida",
+   "Truco de la cuerda",
+   "Manual del Jugador"
+  ],
+  [
+   "Verdadera Resurrección",
+   "RESURRECCIÓN",
+   "Manual del Jugador"
+  ],
+  [
+   "Viento de Gustar",
+   "Viento De Salvaguardia",
+   "Manual del Jugador"
+  ],
+  [
+   "Viento protector",
+   "Vinculo protector",
+   "Manual del Jugador"
+  ],
+  [
+   "Viento protector ^XGE^",
+   "Vinculo protector",
+   "Manual del Jugador"
+  ],
+  [
+   "Vínculo Telepático de Rary",
+   "ENLACE TELEPÁTICO DE RARY",
+   "Manual del Jugador"
+  ],
+  [
+   "Visión Nocturna",
+   "Vision mental",
+   "Manual del Jugador"
+  ],
+  [
+   "Visión Verdadera",
+   "VISIÓN VERAZ",
+   "Manual del Jugador"
+  ],
+  [
+   "Voluntad Interior",
+   "Voluntad interna",
+   "Warcraft 5ª"
+  ]
+ ],
+ "nada": [
+  [
+   "Agotamiento",
+   "",
+   "Xanathar"
+  ],
+  [
+   "Alterar el Ser",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Alterar el Yo",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Alterar Forma",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Amigos",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Anatema",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Arcano Miraje",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Arma Impía",
+   "",
+   "Warcraft 5ª"
+  ],
+  [
+   "Ayuda",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Bestow Curse",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Caminar por Árboles",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Castigo deslumbrante",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Castigo tambaleante",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Comando",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Concha de Antivida",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Conocer la Intención",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Contraconjuro",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Corteza de árbol",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Criado Invisible",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "de Snilloc",
+   "",
+   "Xanathar"
+  ],
+  [
+   "Debilitamiento Mental",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Demonio de polvo ^XGE^",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Desenfoque",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Detener el Tiempo",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Devastación Temporal",
+   "",
+   "Wildemount"
+  ],
+  [
+   "Disipar el mal y el bien",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Drenaje ^XGE^",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Duelo Compulsivo",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Elocuencia",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Energía Enervante",
+   "",
+   "Xanathar"
+  ],
+  [
+   "Enredadera atrapadora",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Envío",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Erupción de Lava",
+   "",
+   "Warcraft 5ª"
+  ],
+  [
+   "Escisión",
+   "",
+   "Warcraft 5ª"
+  ],
+  [
+   "Escribir en el Cielo",
+   "",
+   "Xanathar"
+  ],
+  [
+   "Escritura Ilusoria",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Escudo de fuego (escudo de frío)",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Esencia Unida",
+   "",
+   "Wildemount"
+  ],
+  [
+   "Estática Sináptica",
+   "",
+   "Xanathar"
+  ],
+  [
+   "Estrella Oscura",
+   "",
+   "Wildemount"
+  ],
+  [
+   "Eterealidad",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Etereidad",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Execrar",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Explosión Retardada de Bola de Fuego",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Extrañeza",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Facilidad de Palabra",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Fascinar",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Formas de Animales",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Glifo de Protección",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Gravedad Invertida",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Guardia con Hoja",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Guardias y Barreras",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Hoja Afilada",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Horrible de Abi-Dalzim",
+   "",
+   "Xanathar"
+  ],
+  [
+   "Imagen Espejo",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Imagen Proyectada",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Lenguas",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Lentitud",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Leyenda",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Llama Continua",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Lluvia Curativa",
+   "",
+   "Warcraft 5ª"
+  ],
+  [
+   "Maelstrom",
+   "",
+   "Xanathar"
+  ],
+  [
+   "Mandato",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Marchitamiento",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Mente Débil",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Mente Decrepita",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Miedo",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Misil Mágico",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Modificar Memoria",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Mordedura de Ojo",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "No Detección",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Nube de Niebla",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Objetos Animados",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Ojo Maligno",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Onda Destructiva",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Orden",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Otra Forma Mundana de Tasha",
+   "",
+   "Tasha"
+  ],
+  [
+   "Picadura Absorbente",
+   "",
+   "Wildemount"
+  ],
+  [
+   "Piel de Corteza",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Producir Llama",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Protección con Cuchilla",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Protección Primordial",
+   "",
+   "Xanathar"
+  ],
+  [
+   "Proyectil de Fuego y Hielo",
+   "",
+   "Warcraft 5ª"
+  ],
+  [
+   "Puerta",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Raro",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Rayo",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Reposo Gentil",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Resguardo de Hoja",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Restauración Mayor",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Resucitar",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Romper",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Ruptura de la Realidad",
+   "",
+   "Wildemount"
+  ],
+  [
+   "Secuestrar",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Segregar",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Sugerencia",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Sugerencia Masiva",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Tarro Mágico",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Transporte a través de Plantas",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Trepar Paredes",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Trepar por Paredes",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Unión Planar",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Vacío Voraz",
+   "",
+   "Wildemount"
+  ],
+  [
+   "Verdad",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Vida Falsa",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Vuelo",
+   "",
+   "Manual del Jugador"
+  ],
+  [
+   "Zancada Desfallecedora",
+   "",
+   "Wildemount"
+  ]
+ ]
+}

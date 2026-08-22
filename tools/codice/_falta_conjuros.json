@@ -1,0 +1,1164 @@
+{
+ "falta": {
+  "aceleracion": {
+   "name": "Aceleración",
+   "src": "Manual del Jugador"
+  },
+  "agotamiento": {
+   "name": "Agotamiento",
+   "src": "Xanathar"
+  },
+  "aliado planar": {
+   "name": "Aliado Planar",
+   "src": "Manual del Jugador"
+  },
+  "alterar aspecto": {
+   "name": "Alterar Aspecto",
+   "src": "Manual del Jugador"
+  },
+  "alterar el ser": {
+   "name": "Alterar el Ser",
+   "src": "Manual del Jugador"
+  },
+  "alterar el yo": {
+   "name": "Alterar el Yo",
+   "src": "Manual del Jugador"
+  },
+  "alterar forma": {
+   "name": "Alterar Forma",
+   "src": "Manual del Jugador"
+  },
+  "amigos": {
+   "name": "Amigos",
+   "src": "Manual del Jugador"
+  },
+  "amistad con los animales": {
+   "name": "Amistad con los Animales",
+   "src": "Manual del Jugador"
+  },
+  "anatema": {
+   "name": "Anatema",
+   "src": "Manual del Jugador"
+  },
+  "andar en el viento": {
+   "name": "Andar en el Viento",
+   "src": "Manual del Jugador"
+  },
+  "arcano miraje": {
+   "name": "Arcano Miraje",
+   "src": "Manual del Jugador"
+  },
+  "arma impia": {
+   "name": "Arma Impía",
+   "src": "Warcraft 5ª"
+  },
+  "asesino fantasmagorico": {
+   "name": "Asesino Fantasmagórico",
+   "src": "Manual del Jugador"
+  },
+  "ayuda": {
+   "name": "Ayuda",
+   "src": "Manual del Jugador"
+  },
+  "azotador de aganazzar": {
+   "name": "Azotador de Aganazzar",
+   "src": "Xanathar"
+  },
+  "azote de aganazzar": {
+   "name": "Azote de Aganazzar",
+   "src": "Xanathar"
+  },
+  "baile irresistible de otto": {
+   "name": "Baile Irresistible de Otto",
+   "src": "Manual del Jugador"
+  },
+  "barco volador de jaina": {
+   "name": "Barco Volador de Jaina",
+   "src": "Warcraft 5ª"
+  },
+  "baya magica": {
+   "name": "Baya Mágica",
+   "src": "Manual del Jugador"
+  },
+  "bendecir": {
+   "name": "Bendecir",
+   "src": "Manual del Jugador"
+  },
+  "bestow curse": {
+   "name": "Bestow Curse",
+   "src": "Manual del Jugador"
+  },
+  "bloqueo arcano": {
+   "name": "Bloqueo Arcano",
+   "src": "Manual del Jugador"
+  },
+  "bola de fuego retardada": {
+   "name": "Bola de Fuego Retardada",
+   "src": "Manual del Jugador"
+  },
+  "bola de fuego retrasada": {
+   "name": "Bola de Fuego Retrasada",
+   "src": "Manual del Jugador"
+  },
+  "bosque druidico": {
+   "name": "Bosque Druídico",
+   "src": "Xanathar"
+  },
+  "cadena de la muerte": {
+   "name": "Cadena de la muerte",
+   "src": "Warcraft 5ª"
+  },
+  "cadena de relampagos": {
+   "name": "Cadena de Relámpagos",
+   "src": "Manual del Jugador"
+  },
+  "cambio de forma": {
+   "name": "Cambio de Forma",
+   "src": "Manual del Jugador"
+  },
+  "cambio del vacio": {
+   "name": "Cambio del vacío",
+   "src": "Warcraft 5ª"
+  },
+  "caminar por arboles": {
+   "name": "Caminar por Árboles",
+   "src": "Manual del Jugador"
+  },
+  "caminar por el agua": {
+   "name": "Caminar por el agua",
+   "src": "Manual del Jugador"
+  },
+  "caminar sobre el viento": {
+   "name": "Caminar sobre el Viento",
+   "src": "Manual del Jugador"
+  },
+  "campo antimagico": {
+   "name": "Campo Antimágico",
+   "src": "Manual del Jugador"
+  },
+  "carne a piedra": {
+   "name": "Carne a Piedra",
+   "src": "Manual del Jugador"
+  },
+  "cascara antimagica": {
+   "name": "Cáscara Antimágica",
+   "src": "Warcraft 5ª"
+  },
+  "cascara antivida": {
+   "name": "Cáscara Antivida",
+   "src": "Manual del Jugador"
+  },
+  "castigo deslumbrante": {
+   "name": "Castigo deslumbrante",
+   "src": "Manual del Jugador"
+  },
+  "castigo justo": {
+   "name": "Castigo justo",
+   "src": "Warcraft 5ª"
+  },
+  "castigo tambaleante": {
+   "name": "Castigo tambaleante",
+   "src": "Manual del Jugador"
+  },
+  "choque de sombras": {
+   "name": "Choque de Sombras",
+   "src": "Warcraft 5ª"
+  },
+  "circulo de teletransporte": {
+   "name": "Círculo de Teletransporte",
+   "src": "Manual del Jugador"
+  },
+  "clonacion": {
+   "name": "Clonación",
+   "src": "Manual del Jugador"
+  },
+  "cofre secreto de leomund": {
+   "name": "Cofre Secreto de Leomund",
+   "src": "Manual del Jugador"
+  },
+  "comando": {
+   "name": "Comando",
+   "src": "Manual del Jugador"
+  },
+  "comprender idiomas": {
+   "name": "Comprender Idiomas",
+   "src": "Manual del Jugador"
+  },
+  "comulgar con la naturaleza": {
+   "name": "Comulgar con la naturaleza",
+   "src": "Manual del Jugador"
+  },
+  "conceder maldicion": {
+   "name": "Conceder Maldición",
+   "src": "Manual del Jugador"
+  },
+  "concha antivida": {
+   "name": "Concha Antivida",
+   "src": "Manual del Jugador"
+  },
+  "concha de antivida": {
+   "name": "Concha de Antivida",
+   "src": "Manual del Jugador"
+  },
+  "conjurar elemental aire": {
+   "name": "Conjurar elemental (aire)",
+   "src": "Manual del Jugador"
+  },
+  "conjurar hadas": {
+   "name": "Conjurar Hadas",
+   "src": "Manual del Jugador"
+  },
+  "conocer la intencion": {
+   "name": "Conocer la Intención",
+   "src": "Manual del Jugador"
+  },
+  "contraconjuro": {
+   "name": "Contraconjuro",
+   "src": "Manual del Jugador"
+  },
+  "controlar vientos xge": {
+   "name": "Controlar vientos ^XGE^",
+   "src": "Manual del Jugador"
+  },
+  "corona de locura": {
+   "name": "Corona de Locura",
+   "src": "Manual del Jugador"
+  },
+  "corteza de arbol": {
+   "name": "Corteza de árbol",
+   "src": "Manual del Jugador"
+  },
+  "crear alimento y agua": {
+   "name": "Crear Alimento y Agua",
+   "src": "Manual del Jugador"
+  },
+  "crear no muertos": {
+   "name": "Crear No Muertos",
+   "src": "Manual del Jugador"
+  },
+  "crecimiento de espinas": {
+   "name": "Crecimiento de Espinas",
+   "src": "Manual del Jugador"
+  },
+  "crecimiento de plantas": {
+   "name": "Crecimiento de Plantas",
+   "src": "Manual del Jugador"
+  },
+  "criado invisible": {
+   "name": "Criado Invisible",
+   "src": "Manual del Jugador"
+  },
+  "curacion en masa": {
+   "name": "Curación en Masa",
+   "src": "Manual del Jugador"
+  },
+  "curar heridas masivas": {
+   "name": "Curar heridas masivas",
+   "src": "Manual del Jugador"
+  },
+  "danza irresistible de otto": {
+   "name": "Danza Irresistible de Otto",
+   "src": "Manual del Jugador"
+  },
+  "de snilloc": {
+   "name": "de Snilloc",
+   "src": "Xanathar"
+  },
+  "debilitamiento mental": {
+   "name": "Debilitamiento Mental",
+   "src": "Manual del Jugador"
+  },
+  "dedos de escarcha idrotf": {
+   "name": "Dedos de Escarcha ^IDRotF^",
+   "src": "Manual del Jugador"
+  },
+  "demonio de polvo xge": {
+   "name": "Demonio de polvo ^XGE^",
+   "src": "Manual del Jugador"
+  },
+  "descarga mental": {
+   "name": "Descarga mental",
+   "src": "Warcraft 5ª"
+  },
+  "desenfoque": {
+   "name": "Desenfoque",
+   "src": "Manual del Jugador"
+  },
+  "detectar veneno y enfermedad": {
+   "name": "Detectar Veneno y Enfermedad",
+   "src": "Manual del Jugador"
+  },
+  "detener el tiempo": {
+   "name": "Detener el Tiempo",
+   "src": "Manual del Jugador"
+  },
+  "devastacion temporal": {
+   "name": "Devastación Temporal",
+   "src": "Wildemount"
+  },
+  "disfrazar": {
+   "name": "Disfrazar",
+   "src": "Manual del Jugador"
+  },
+  "disipar el bien y el mal": {
+   "name": "Disipar el Bien y el Mal",
+   "src": "Manual del Jugador"
+  },
+  "disipar el mal y el bien": {
+   "name": "Disipar el mal y el bien",
+   "src": "Manual del Jugador"
+  },
+  "dispersar": {
+   "name": "Dispersar",
+   "src": "Xanathar"
+  },
+  "drenaje xge": {
+   "name": "Drenaje ^XGE^",
+   "src": "Manual del Jugador"
+  },
+  "duelo compulsivo": {
+   "name": "Duelo Compulsivo",
+   "src": "Manual del Jugador"
+  },
+  "duelo forzado": {
+   "name": "Duelo forzado",
+   "src": "Manual del Jugador"
+  },
+  "eliminar maldicion": {
+   "name": "Eliminar Maldición",
+   "src": "Manual del Jugador"
+  },
+  "elocuencia": {
+   "name": "Elocuencia",
+   "src": "Manual del Jugador"
+  },
+  "empoderar habilidad": {
+   "name": "Empoderar Habilidad",
+   "src": "Xanathar"
+  },
+  "encontrar corcel": {
+   "name": "Encontrar Corcel",
+   "src": "Manual del Jugador"
+  },
+  "enemigos abundan": {
+   "name": "Enemigos Abundan",
+   "src": "Xanathar"
+  },
+  "energia enervante": {
+   "name": "Energía Enervante",
+   "src": "Xanathar"
+  },
+  "enfoque interior": {
+   "name": "Enfoque Interior",
+   "src": "Warcraft 5ª"
+  },
+  "enjambre de meteoros": {
+   "name": "Enjambre de Meteoros",
+   "src": "Manual del Jugador"
+  },
+  "enredadera atrapadora": {
+   "name": "Enredadera atrapadora",
+   "src": "Manual del Jugador"
+  },
+  "envio": {
+   "name": "Envío",
+   "src": "Manual del Jugador"
+  },
+  "erupcion de lava": {
+   "name": "Erupción de Lava",
+   "src": "Warcraft 5ª"
+  },
+  "escision": {
+   "name": "Escisión",
+   "src": "Warcraft 5ª"
+  },
+  "escribir en el cielo": {
+   "name": "Escribir en el Cielo",
+   "src": "Xanathar"
+  },
+  "escritura ilusoria": {
+   "name": "Escritura Ilusoria",
+   "src": "Manual del Jugador"
+  },
+  "escrutar": {
+   "name": "Escrutar",
+   "src": "Manual del Jugador"
+  },
+  "escudo de fuego escudo de frio": {
+   "name": "Escudo de fuego (escudo de frío)",
+   "src": "Manual del Jugador"
+  },
+  "escudo de la fe": {
+   "name": "Escudo de la fe",
+   "src": "Manual del Jugador"
+  },
+  "esencia unida": {
+   "name": "Esencia Unida",
+   "src": "Wildemount"
+  },
+  "esfera acuatica": {
+   "name": "Esfera Acuática",
+   "src": "Xanathar"
+  },
+  "esfera de fuego": {
+   "name": "Esfera de Fuego",
+   "src": "Manual del Jugador"
+  },
+  "esfera de invulnerabilidad": {
+   "name": "Esfera de Invulnerabilidad",
+   "src": "Manual del Jugador"
+  },
+  "esfera de tormenta xge": {
+   "name": "Esfera de tormenta ^XGE^",
+   "src": "Manual del Jugador"
+  },
+  "esfera helada de otiluke": {
+   "name": "Esfera Helada de Otiluke",
+   "src": "Manual del Jugador"
+  },
+  "esfera resiliente de otiluke": {
+   "name": "Esfera Resiliente de Otiluke",
+   "src": "Manual del Jugador"
+  },
+  "estallido estelar": {
+   "name": "Estallido estelar",
+   "src": "Warcraft 5ª"
+  },
+  "estatica sinaptica": {
+   "name": "Estática Sináptica",
+   "src": "Xanathar"
+  },
+  "estrella oscura": {
+   "name": "Estrella Oscura",
+   "src": "Wildemount"
+  },
+  "eterealidad": {
+   "name": "Eterealidad",
+   "src": "Manual del Jugador"
+  },
+  "etereidad": {
+   "name": "Etereidad",
+   "src": "Manual del Jugador"
+  },
+  "execrar": {
+   "name": "Execrar",
+   "src": "Manual del Jugador"
+  },
+  "explosion de cadaveres": {
+   "name": "Explosión de Cadáveres",
+   "src": "Warcraft 5ª"
+  },
+  "explosion de espadas": {
+   "name": "Explosión de Espadas",
+   "src": "Costa de la Espada"
+  },
+  "explosion retardada de bola de fuego": {
+   "name": "Explosión Retardada de Bola de Fuego",
+   "src": "Manual del Jugador"
+  },
+  "extraneza": {
+   "name": "Extrañeza",
+   "src": "Manual del Jugador"
+  },
+  "facilidad de palabra": {
+   "name": "Facilidad de Palabra",
+   "src": "Manual del Jugador"
+  },
+  "faro de esperanza": {
+   "name": "Faro de Esperanza",
+   "src": "Manual del Jugador"
+  },
+  "farol de esperanza": {
+   "name": "Farol de esperanza",
+   "src": "Manual del Jugador"
+  },
+  "fascinacion": {
+   "name": "Fascinación",
+   "src": "Manual del Jugador"
+  },
+  "fascinar": {
+   "name": "Fascinar",
+   "src": "Manual del Jugador"
+  },
+  "festin de los heroes": {
+   "name": "Festín de los Héroes",
+   "src": "Manual del Jugador"
+  },
+  "fisura gravitacional": {
+   "name": "Fisura Gravitacional",
+   "src": "Wildemount"
+  },
+  "formas de animales": {
+   "name": "Formas de Animales",
+   "src": "Manual del Jugador"
+  },
+  "fuego interior": {
+   "name": "Fuego Interior",
+   "src": "Warcraft 5ª"
+  },
+  "fuerza brillante": {
+   "name": "Fuerza Brillante",
+   "src": "Warcraft 5ª"
+  },
+  "fuerza fantasmagorica": {
+   "name": "Fuerza Fantasmagórica",
+   "src": "Manual del Jugador"
+  },
+  "fundirse en la piedra": {
+   "name": "Fundirse en la Piedra",
+   "src": "Manual del Jugador"
+  },
+  "furia de la serpiente de la muerte": {
+   "name": "Furia de la Serpiente de la Muerte",
+   "src": "Warcraft 5ª"
+  },
+  "glifo de proteccion": {
+   "name": "Glifo de Protección",
+   "src": "Manual del Jugador"
+  },
+  "golpe cegador": {
+   "name": "Golpe Cegador",
+   "src": "Manual del Jugador"
+  },
+  "golpe desterrador": {
+   "name": "Golpe Desterrador",
+   "src": "Manual del Jugador"
+  },
+  "golpe furioso": {
+   "name": "Golpe Furioso",
+   "src": "Manual del Jugador"
+  },
+  "golpe igneo": {
+   "name": "Golpe Ígneo",
+   "src": "Manual del Jugador"
+  },
+  "golpe justo": {
+   "name": "Golpe Justo",
+   "src": "Warcraft 5ª"
+  },
+  "gravedad invertida": {
+   "name": "Gravedad Invertida",
+   "src": "Manual del Jugador"
+  },
+  "guardia con hoja": {
+   "name": "Guardia con Hoja",
+   "src": "Manual del Jugador"
+  },
+  "guardianes espirituales": {
+   "name": "Guardianes Espirituales",
+   "src": "Manual del Jugador"
+  },
+  "guardias y barreras": {
+   "name": "Guardias y Barreras",
+   "src": "Manual del Jugador"
+  },
+  "habilidad mejorada": {
+   "name": "Habilidad mejorada",
+   "src": "Manual del Jugador"
+  },
+  "hervir sangre": {
+   "name": "Hervir sangre",
+   "src": "Warcraft 5ª"
+  },
+  "hoja afilada": {
+   "name": "Hoja Afilada",
+   "src": "Manual del Jugador"
+  },
+  "hoja de desastre": {
+   "name": "Hoja de Desastre",
+   "src": "Tasha"
+  },
+  "hoja de llama": {
+   "name": "Hoja de Llama",
+   "src": "Manual del Jugador"
+  },
+  "hoja llameante": {
+   "name": "Hoja Llameante",
+   "src": "Manual del Jugador"
+  },
+  "hoja verde llameante": {
+   "name": "Hoja Verde Llameante",
+   "src": "Tasha"
+  },
+  "hoja verdeante": {
+   "name": "Hoja Verdeante",
+   "src": "Tasha"
+  },
+  "horrible de abi dalzim": {
+   "name": "Horrible de Abi-Dalzim",
+   "src": "Xanathar"
+  },
+  "imagen espejo": {
+   "name": "Imagen Espejo",
+   "src": "Manual del Jugador"
+  },
+  "imagen proyectada": {
+   "name": "Imagen Proyectada",
+   "src": "Manual del Jugador"
+  },
+  "inversion de viento": {
+   "name": "Inversión de Viento",
+   "src": "Xanathar"
+  },
+  "investidura de llama": {
+   "name": "Investidura de Llama",
+   "src": "Xanathar"
+  },
+  "invisibilidad mayor": {
+   "name": "Invisibilidad Mayor",
+   "src": "Manual del Jugador"
+  },
+  "invocar demonio": {
+   "name": "Invocar Demonio",
+   "src": "Tasha"
+  },
+  "invocar engendro de sombra": {
+   "name": "Invocar Engendro de Sombra",
+   "src": "Tasha"
+  },
+  "invocar relampagos": {
+   "name": "Invocar relámpagos",
+   "src": "Manual del Jugador"
+  },
+  "jarra magica": {
+   "name": "Jarra Mágica",
+   "src": "Manual del Jugador"
+  },
+  "jaula de almas": {
+   "name": "Jaula de Almas",
+   "src": "Xanathar"
+  },
+  "jaula del alma": {
+   "name": "Jaula del Alma",
+   "src": "Xanathar"
+  },
+  "latigazo mental de tasha": {
+   "name": "Latigazo Mental de Tasha",
+   "src": "Tasha"
+  },
+  "lenguas": {
+   "name": "Lenguas",
+   "src": "Manual del Jugador"
+  },
+  "lentitud": {
+   "name": "Lentitud",
+   "src": "Manual del Jugador"
+  },
+  "levantar a los muertos": {
+   "name": "Levantar a los muertos",
+   "src": "Manual del Jugador"
+  },
+  "leyenda": {
+   "name": "Leyenda",
+   "src": "Manual del Jugador"
+  },
+  "llama continua": {
+   "name": "Llama Continua",
+   "src": "Manual del Jugador"
+  },
+  "llamada": {
+   "name": "Llamada",
+   "src": "Manual del Jugador"
+  },
+  "llamada de la tumba": {
+   "name": "Llamada de la Tumba",
+   "src": "Xanathar"
+  },
+  "llamada de relampagos": {
+   "name": "Llamada de Relámpagos",
+   "src": "Manual del Jugador"
+  },
+  "lluvia curativa": {
+   "name": "Lluvia Curativa",
+   "src": "Warcraft 5ª"
+  },
+  "lluvia de meteoros": {
+   "name": "Lluvia de Meteoros",
+   "src": "Manual del Jugador"
+  },
+  "maelstrom": {
+   "name": "Maelstrom",
+   "src": "Xanathar"
+  },
+  "maldicion": {
+   "name": "Maldición",
+   "src": "Manual del Jugador"
+  },
+  "mandato": {
+   "name": "Mandato",
+   "src": "Manual del Jugador"
+  },
+  "mano magica": {
+   "name": "Mano Mágica",
+   "src": "Manual del Jugador"
+  },
+  "marchitamiento": {
+   "name": "Marchitamiento",
+   "src": "Manual del Jugador"
+  },
+  "marchitamiento horrendo de abi dalzim": {
+   "name": "Marchitamiento Horrendo de Abi-Dalzim",
+   "src": "Xanathar"
+  },
+  "mejora de habilidad": {
+   "name": "Mejora de Habilidad",
+   "src": "Manual del Jugador"
+  },
+  "mejorar habilidad": {
+   "name": "Mejorar Habilidad",
+   "src": "Manual del Jugador"
+  },
+  "mente debil": {
+   "name": "Mente Débil",
+   "src": "Manual del Jugador"
+  },
+  "mente decrepita": {
+   "name": "Mente Decrepita",
+   "src": "Manual del Jugador"
+  },
+  "meteoritos de melf": {
+   "name": "Meteoritos de Melf",
+   "src": "Manual del Jugador"
+  },
+  "miedo": {
+   "name": "Miedo",
+   "src": "Manual del Jugador"
+  },
+  "misil magico": {
+   "name": "Misil Mágico",
+   "src": "Manual del Jugador"
+  },
+  "modificar memoria": {
+   "name": "Modificar Memoria",
+   "src": "Manual del Jugador"
+  },
+  "mordedura de ojo": {
+   "name": "Mordedura de Ojo",
+   "src": "Manual del Jugador"
+  },
+  "mover tierra": {
+   "name": "Mover Tierra",
+   "src": "Manual del Jugador"
+  },
+  "no deteccion": {
+   "name": "No Detección",
+   "src": "Manual del Jugador"
+  },
+  "nube de niebla": {
+   "name": "Nube de Niebla",
+   "src": "Manual del Jugador"
+  },
+  "objetos animados": {
+   "name": "Objetos Animados",
+   "src": "Manual del Jugador"
+  },
+  "ojo maligno": {
+   "name": "Ojo Maligno",
+   "src": "Manual del Jugador"
+  },
+  "ola de trueno": {
+   "name": "Ola de Trueno",
+   "src": "Manual del Jugador"
+  },
+  "oleada estelar": {
+   "name": "Oleada Estelar",
+   "src": "Warcraft 5ª"
+  },
+  "onda destructiva": {
+   "name": "Onda Destructiva",
+   "src": "Manual del Jugador"
+  },
+  "oracion de curacion": {
+   "name": "Oración de Curación",
+   "src": "Manual del Jugador"
+  },
+  "orden": {
+   "name": "Orden",
+   "src": "Manual del Jugador"
+  },
+  "oscuridad loca": {
+   "name": "Oscuridad Loca",
+   "src": "Xanathar"
+  },
+  "otra forma mundana de tasha": {
+   "name": "Otra Forma Mundana de Tasha",
+   "src": "Tasha"
+  },
+  "palabra curativa": {
+   "name": "Palabra Curativa",
+   "src": "Manual del Jugador"
+  },
+  "palabra curativa en masa": {
+   "name": "Palabra Curativa en Masa",
+   "src": "Manual del Jugador"
+  },
+  "palabra de aturdimiento": {
+   "name": "Palabra de Aturdimiento",
+   "src": "Manual del Jugador"
+  },
+  "palabra de muerte": {
+   "name": "Palabra de Muerte",
+   "src": "Manual del Jugador"
+  },
+  "palabra de recuerdo": {
+   "name": "Palabra de Recuerdo",
+   "src": "Manual del Jugador"
+  },
+  "palabra de retiro": {
+   "name": "Palabra de Retiro",
+   "src": "Manual del Jugador"
+  },
+  "palabra de retorno": {
+   "name": "Palabra de Retorno",
+   "src": "Manual del Jugador"
+  },
+  "pasar muros": {
+   "name": "Pasar Muros",
+   "src": "Manual del Jugador"
+  },
+  "penitencia": {
+   "name": "Penitencia",
+   "src": "Warcraft 5ª"
+  },
+  "picadura absorbente": {
+   "name": "Picadura Absorbente",
+   "src": "Wildemount"
+  },
+  "pico glacial": {
+   "name": "Pico Glacial",
+   "src": "Warcraft 5ª"
+  },
+  "piel de corteza": {
+   "name": "Piel de Corteza",
+   "src": "Manual del Jugador"
+  },
+  "piel de piedra": {
+   "name": "Piel de Piedra",
+   "src": "Manual del Jugador"
+  },
+  "polimorfia": {
+   "name": "Polimorfia",
+   "src": "Manual del Jugador"
+  },
+  "polimorfia en masa": {
+   "name": "Polimorfia en Masa",
+   "src": "Xanathar"
+  },
+  "polimorfia verdadera": {
+   "name": "Polimorfia Verdadera",
+   "src": "Manual del Jugador"
+  },
+  "portal arcano": {
+   "name": "Portal Arcano",
+   "src": "Manual del Jugador"
+  },
+  "prevision": {
+   "name": "Previsión",
+   "src": "Manual del Jugador"
+  },
+  "prision": {
+   "name": "Prisión",
+   "src": "Manual del Jugador"
+  },
+  "producir llama": {
+   "name": "Producir Llama",
+   "src": "Manual del Jugador"
+  },
+  "proteccion con cuchilla": {
+   "name": "Protección con Cuchilla",
+   "src": "Manual del Jugador"
+  },
+  "proteccion contra el veneno": {
+   "name": "Protección contra el Veneno",
+   "src": "Manual del Jugador"
+  },
+  "proteccion contra la energia": {
+   "name": "Protección contra la Energía",
+   "src": "Manual del Jugador"
+  },
+  "proteccion contra la muerte": {
+   "name": "Protección contra la Muerte",
+   "src": "Manual del Jugador"
+  },
+  "proteccion primordial": {
+   "name": "Protección Primordial",
+   "src": "Xanathar"
+  },
+  "proyectil de fuego y hielo": {
+   "name": "Proyectil de Fuego y Hielo",
+   "src": "Warcraft 5ª"
+  },
+  "puerta": {
+   "name": "Puerta",
+   "src": "Manual del Jugador"
+  },
+  "quitar maldicion": {
+   "name": "Quitar Maldición",
+   "src": "Manual del Jugador"
+  },
+  "rafaga solar": {
+   "name": "Ráfaga Solar",
+   "src": "Manual del Jugador"
+  },
+  "raro": {
+   "name": "Raro",
+   "src": "Manual del Jugador"
+  },
+  "rayo": {
+   "name": "Rayo",
+   "src": "Manual del Jugador"
+  },
+  "rayo ardiente": {
+   "name": "Rayo Ardiente",
+   "src": "Manual del Jugador"
+  },
+  "rayo de bruja": {
+   "name": "Rayo de Bruja",
+   "src": "Manual del Jugador"
+  },
+  "rayo de debilitamiento": {
+   "name": "Rayo de Debilitamiento",
+   "src": "Manual del Jugador"
+  },
+  "rayo de fuego": {
+   "name": "Rayo de Fuego",
+   "src": "Manual del Jugador"
+  },
+  "rayo de la bruja": {
+   "name": "Rayo de la Bruja",
+   "src": "Manual del Jugador"
+  },
+  "rayo guiador": {
+   "name": "Rayo Guiador",
+   "src": "Manual del Jugador"
+  },
+  "regeneracion": {
+   "name": "Regeneración",
+   "src": "Manual del Jugador"
+  },
+  "replica infernal": {
+   "name": "Réplica Infernal",
+   "src": "Manual del Jugador"
+  },
+  "reposo gentil": {
+   "name": "Reposo Gentil",
+   "src": "Manual del Jugador"
+  },
+  "resguardo de hoja": {
+   "name": "Resguardo de Hoja",
+   "src": "Manual del Jugador"
+  },
+  "respirar agua": {
+   "name": "Respirar Agua",
+   "src": "Manual del Jugador"
+  },
+  "restauracion mayor": {
+   "name": "Restauración Mayor",
+   "src": "Manual del Jugador"
+  },
+  "restauracion menor": {
+   "name": "Restauración Menor",
+   "src": "Manual del Jugador"
+  },
+  "resucitar": {
+   "name": "Resucitar",
+   "src": "Manual del Jugador"
+  },
+  "revivificar": {
+   "name": "Revivificar",
+   "src": "Manual del Jugador"
+  },
+  "risa histerica de tasha": {
+   "name": "Risa Histérica de Tasha",
+   "src": "Manual del Jugador"
+  },
+  "rociado prismatico": {
+   "name": "Rociado Prismático",
+   "src": "Manual del Jugador"
+  },
+  "romper": {
+   "name": "Romper",
+   "src": "Manual del Jugador"
+  },
+  "ruptura de la realidad": {
+   "name": "Ruptura de la Realidad",
+   "src": "Wildemount"
+  },
+  "ruptura de realidad": {
+   "name": "Ruptura de Realidad",
+   "src": "Wildemount"
+  },
+  "sabueso de mordenkainen": {
+   "name": "Sabueso de Mordenkainen",
+   "src": "Manual del Jugador"
+  },
+  "sabueso fiel de mordenkainen": {
+   "name": "Sabueso Fiel de Mordenkainen",
+   "src": "Manual del Jugador"
+  },
+  "sacralizar": {
+   "name": "Sacralizar",
+   "src": "Manual del Jugador"
+  },
+  "saltar": {
+   "name": "Saltar",
+   "src": "Manual del Jugador"
+  },
+  "salvar a los moribundos": {
+   "name": "Salvar a los Moribundos",
+   "src": "Manual del Jugador"
+  },
+  "santificar": {
+   "name": "Santificar",
+   "src": "Manual del Jugador"
+  },
+  "secuestrar": {
+   "name": "Secuestrar",
+   "src": "Manual del Jugador"
+  },
+  "segregar": {
+   "name": "Segregar",
+   "src": "Manual del Jugador"
+  },
+  "siervo invisible": {
+   "name": "Siervo Invisible",
+   "src": "Manual del Jugador"
+  },
+  "sirviente menor": {
+   "name": "Sirviente Menor",
+   "src": "Xanathar"
+  },
+  "sueno": {
+   "name": "Sueño",
+   "src": "Manual del Jugador"
+  },
+  "sugerencia": {
+   "name": "Sugerencia",
+   "src": "Manual del Jugador"
+  },
+  "sugerencia masiva": {
+   "name": "Sugerencia Masiva",
+   "src": "Manual del Jugador"
+  },
+  "sujetar monstruo": {
+   "name": "Sujetar Monstruo",
+   "src": "Manual del Jugador"
+  },
+  "sujetar persona": {
+   "name": "Sujetar Persona",
+   "src": "Manual del Jugador"
+  },
+  "susurros disonantes": {
+   "name": "Susurros Disonantes",
+   "src": "Manual del Jugador"
+  },
+  "tarro magico": {
+   "name": "Tarro Mágico",
+   "src": "Manual del Jugador"
+  },
+  "teletransportacion": {
+   "name": "Teletransportación",
+   "src": "Manual del Jugador"
+  },
+  "terreno ilusorio": {
+   "name": "Terreno Ilusorio",
+   "src": "Manual del Jugador"
+  },
+  "toque de la muerte": {
+   "name": "Toque de la Muerte",
+   "src": "Manual del Jugador"
+  },
+  "toque gelido": {
+   "name": "Toque gélido",
+   "src": "Warcraft 5ª"
+  },
+  "tormenta de bolas de nieve": {
+   "name": "Tormenta de Bolas de Nieve",
+   "src": "Manual del Jugador"
+  },
+  "tormenta de granizo": {
+   "name": "Tormenta de Granizo",
+   "src": "Manual del Jugador"
+  },
+  "tormenta de venganza": {
+   "name": "Tormenta de Venganza",
+   "src": "Manual del Jugador"
+  },
+  "trampa de cuerda": {
+   "name": "Trampa de Cuerda",
+   "src": "Manual del Jugador"
+  },
+  "transporte a traves de plantas": {
+   "name": "Transporte a través de Plantas",
+   "src": "Manual del Jugador"
+  },
+  "trepar paredes": {
+   "name": "Trepar Paredes",
+   "src": "Manual del Jugador"
+  },
+  "trepar por paredes": {
+   "name": "Trepar por Paredes",
+   "src": "Manual del Jugador"
+  },
+  "truco de druida": {
+   "name": "Truco de Druida",
+   "src": "Manual del Jugador"
+  },
+  "union planar": {
+   "name": "Unión Planar",
+   "src": "Manual del Jugador"
+  },
+  "vacio voraz": {
+   "name": "Vacío Voraz",
+   "src": "Wildemount"
+  },
+  "verdad": {
+   "name": "Verdad",
+   "src": "Manual del Jugador"
+  },
+  "verdadera resurreccion": {
+   "name": "Verdadera Resurrección",
+   "src": "Manual del Jugador"
+  },
+  "vida falsa": {
+   "name": "Vida Falsa",
+   "src": "Manual del Jugador"
+  },
+  "viento de gustar": {
+   "name": "Viento de Gustar",
+   "src": "Manual del Jugador"
+  },
+  "viento protector": {
+   "name": "Viento protector",
+   "src": "Manual del Jugador"
+  },
+  "viento protector xge": {
+   "name": "Viento protector ^XGE^",
+   "src": "Manual del Jugador"
+  },
+  "vinculo telepatico de rary": {
+   "name": "Vínculo Telepático de Rary",
+   "src": "Manual del Jugador"
+  },
+  "vision nocturna": {
+   "name": "Visión Nocturna",
+   "src": "Manual del Jugador"
+  },
+  "vision verdadera": {
+   "name": "Visión Verdadera",
+   "src": "Manual del Jugador"
+  },
+  "voluntad interior": {
+   "name": "Voluntad Interior",
+   "src": "Warcraft 5ª"
+  },
+  "vuelo": {
+   "name": "Vuelo",
+   "src": "Manual del Jugador"
+  },
+  "zancada desfallecedora": {
+   "name": "Zancada Desfallecedora",
+   "src": "Wildemount"
+  }
+ }
+}

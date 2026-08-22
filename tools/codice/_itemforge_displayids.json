@@ -1,0 +1,2708 @@
+{
+ "varita_magica_inferior": {
+  "displayid": 21096
+ },
+ "varita_magica_superior": {
+  "displayid": 21096
+ },
+ "varita_mistica_inferior": {
+  "displayid": 21098
+ },
+ "varita_mistica_superior": {
+  "displayid": 21101
+ },
+ "almofar_de_escamas_doradas": {
+  "displayid": 15301
+ },
+ "almofar_de_mitril": {
+  "displayid": 15288
+ },
+ "amnistia_negra": {
+  "displayid": 20291
+ },
+ "aniquiladora": {
+  "displayid": 28504
+ },
+ "apisonadoras_de_soldado_escarlata": {
+  "displayid": 698099
+ },
+ "armadura_de_torio": {
+  "displayid": 21305
+ },
+ "aro_radiante": {
+  "displayid": 25826
+ },
+ "atracador_de_obsidiana": {
+  "displayid": 695005
+ },
+ "anublo": {
+  "displayid": 22234
+ },
+ "botas_barbaricas_de_hierro": {
+  "displayid": 11408
+ },
+ "botas_de_acero_pulido": {
+  "displayid": 16640
+ },
+ "botas_de_anillas_de_cobre": {
+  "displayid": 23528
+ },
+ "botas_de_bronce_banadas_en_plata": {
+  "displayid": 4343
+ },
+ "botas_de_bronce_ferreas": {
+  "displayid": 4330
+ },
+ "botas_de_escamas_doradas": {
+  "displayid": 4153
+ },
+ "botas_de_hierro_verdes": {
+  "displayid": 9412
+ },
+ "botas_de_mitril_ornamentado": {
+  "displayid": 16118
+ },
+ "botas_de_mitril_pesado": {
+  "displayid": 5615
+ },
+ "botas_de_placas_imperiales": {
+  "displayid": 24513
+ },
+ "botas_de_torio": {
+  "displayid": 14883
+ },
+ "botas_fauces_de_madera_pesadas": {
+  "displayid": 31536
+ },
+ "botas_hierro_negro": {
+  "displayid": 32599
+ },
+ "botas_radiantes": {
+  "displayid": 21181
+ },
+ "botas_runicas_de_placas": {
+  "displayid": 23486
+ },
+ "brazales_de_bronce_estampados": {
+  "displayid": 19677
+ },
+ "brazales_de_bronce_ferreos": {
+  "displayid": 4331
+ },
+ "brazales_cobre": {
+  "displayid": 4331
+ },
+ "brazales_de_escamas_de_mitril": {
+  "displayid": 2980
+ },
+ "brazales_de_escamas_doradas": {
+  "displayid": 9634
+ },
+ "brazales_de_hierro_verdes": {
+  "displayid": 9417
+ },
+ "brazales_de_placas_imperiales": {
+  "displayid": 24511
+ },
+ "brazales_de_torio": {
+  "displayid": 19760
+ },
+ "brazales_deliriohelado": {
+  "displayid": 35275
+ },
+ "brazales_hierro_negro": {
+  "displayid": 17679
+ },
+ "brazales_runicos_de_cobre": {
+  "displayid": 17518
+ },
+ "bufas_de_soldado_escarlata": {
+  "displayid": 700412
+ },
+ "buscacorazones": {
+  "displayid": 20299
+ },
+ "buscacorazones_de_obsidiana": {
+  "displayid": 695009
+ },
+ "buscacorazones_letal": {
+  "displayid": 20299
+ },
+ "camisote_de_hierro_verde": {
+  "displayid": 70731
+ },
+ "campeona_de_arcanita": {
+  "displayid": 24813
+ },
+ "campeona_de_arcanita_refinada": {
+  "displayid": 685161
+ },
+ "campeon_de_obsidiana": {
+  "displayid": 695006
+ },
+ "campeon_de_veraplata": {
+  "displayid": 5105
+ },
+ "casco_antiinterferencias_templado": {
+  "displayid": 23166
+ },
+ "casco_de_soldado_escarlata": {
+  "displayid": 700413
+ },
+ "chafarote_de_ebano": {
+  "displayid": 16130
+ },
+ "cimera_del_gran_jefe": {
+  "displayid": 15378
+ },
+ "cinturon_de_anillas_de_cobre": {
+  "displayid": 23529
+ },
+ "cinturon_de_obsidiana_ligero": {
+  "displayid": 23364
+ },
+ "cinturon_de_obsidiana_pesado": {
+  "displayid": 23364
+ },
+ "cinturon_de_placas_imperiales": {
+  "displayid": 5679
+ },
+ "cinturon_de_torio": {
+  "displayid": 16460
+ },
+ "cinturon_fauces_de_madera_pesado": {
+  "displayid": 24404
+ },
+ "cinturon_parraferrea": {
+  "displayid": 35218
+ },
+ "cinturon_radiante": {
+  "displayid": 21180
+ },
+ "cinturon_runico_de_cobre": {
+  "displayid": 19499
+ },
+ "coraza_almanegra": {
+  "displayid": 30786
+ },
+ "coraza_barbarica_de_hierro": {
+  "displayid": 11407
+ },
+ "coraza_de_acero": {
+  "displayid": 5386
+ },
+ "coraza_de_alma_de_sangre": {
+  "displayid": 30518
+ },
+ "coraza_de_bronce_banada_en_plata": {
+  "displayid": 4412
+ },
+ "coraza_de_demonio_forjada": {
+  "displayid": 13174
+ },
+ "coraza_de_forjaz": {
+  "displayid": 10441
+ },
+ "coraza_de_mitril_ornamentado": {
+  "displayid": 14945
+ },
+ "coraza_de_mitril_pesado": {
+  "displayid": 4151
+ },
+ "coraza_de_plata_cambiante": {
+  "displayid": 21578
+ },
+ "coraza_de_plata_resplandeciente": {
+  "displayid": 9695
+ },
+ "coraza_de_torio_encantado": {
+  "displayid": 13380
+ },
+ "coraza_de_veraplata": {
+  "displayid": 23666
+ },
+ "coraza_deliriohelado": {
+  "displayid": 35276
+ },
+ "coraza_gruesa_de_obsidiana": {
+  "displayid": 29253
+ },
+ "coraza_parraferrea": {
+  "displayid": 13204
+ },
+ "coraza_radiante": {
+  "displayid": 21179
+ },
+ "coraza_runaoscura": {
+  "displayid": 32943
+ },
+ "coraza_runica": {
+  "displayid": 13138
+ },
+ "coraza_runica_de_cobre": {
+  "displayid": 22458
+ },
+ "corrupcion": {
+  "displayid": 24255
+ },
+ "cota_de_malla_de_forjaz": {
+  "displayid": 12559
+ },
+ "cuchillo_de_bronce_grande": {
+  "displayid": 4154
+ },
+ "daga_con_empunadura_de_perla": {
+  "displayid": 2733
+ },
+ "daga_de_acero_destellante": {
+  "displayid": 2711
+ },
+ "daga_cobre": {
+  "displayid": 13848
+ },
+ "defensor_obsidiano": {
+  "displayid": 695008
+ },
+ "destructor_obsidiano": {
+  "displayid": 694061
+ },
+ "destructora_de_hierro_dorado": {
+  "displayid": 15468
+ },
+ "destructora_hierro_negro": {
+  "displayid": 23276
+ },
+ "el_despedazador": {
+  "displayid": 1022
+ },
+ "escudo_de_obsidiana_dentado": {
+  "displayid": 34533
+ },
+ "escudo_dentado_de_obsidiana": {
+  "displayid": 34533
+ },
+ "espada_ancha_de_acero_lunar": {
+  "displayid": 5105
+ },
+ "espada_ancha_de_cobre_pesada": {
+  "displayid": 20196
+ },
+ "espada_corta_de_bronce": {
+  "displayid": 1546
+ },
+ "espada_corta_de_cobre": {
+  "displayid": 4805
+ },
+ "espada_corta_de_hierro_endurecido": {
+  "displayid": 5129
+ },
+ "espada_de_mitril_maligna": {
+  "displayid": 16128
+ },
+ "espada_magna_de_bronce": {
+  "displayid": 16147
+ },
+ "espada_magna_de_torio": {
+  "displayid": 5190
+ },
+ "espaldares_aciagos": {
+  "displayid": 680042
+ },
+ "espetadora_hierro_negro": {
+  "displayid": 24452
+ },
+ "estoque_de_mitril_deslumbrante": {
+  "displayid": 4911
+ },
+ "estoque_llameante": {
+  "displayid": 23241
+ },
+ "faja_de_anillas_igneas": {
+  "displayid": 13135
+ },
+ "faja_del_alba": {
+  "displayid": 21199
+ },
+ "filo_del_alba": {
+  "displayid": 23236
+ },
+ "filo_del_invierno": {
+  "displayid": 29759
+ },
+ "filo_runico": {
+  "displayid": 19126
+ },
+ "furianegra": {
+  "displayid": 31720
+ },
+ "garfa_sangrienta": {
+  "displayid": 23271
+ },
+ "garra_negra_del_destructor": {
+  "displayid": 27041
+ },
+ "garras_negras_del_destructor": {
+  "displayid": 27041
+ },
+ "gran_hacha_de_guerra": {
+  "displayid": 8474
+ },
+ "gran_maza_de_cobre_pesada": {
+  "displayid": 10642
+ },
+ "gran_maza_de_hierro_solido": {
+  "displayid": 2775
+ },
+ "guanteletes_bastion": {
+  "displayid": 22917
+ },
+ "guanteletes_de_alma_de_sangre": {
+  "displayid": 27901
+ },
+ "guanteletes_de_bastion_recios": {
+  "displayid": 22917
+ },
+ "guanteletes_de_bronce_banados_en_plata": {
+  "displayid": 4413
+ },
+ "guanteletes_de_cobre_con_gemas": {
+  "displayid": 3518
+ },
+ "guanteletes_de_escamas_doradas": {
+  "displayid": 18256
+ },
+ "guanteletes_de_forjaz": {
+  "displayid": 12948
+ },
+ "guanteletes_de_hierro_verdes": {
+  "displayid": 9414
+ },
+ "guanteletes_de_mitril_pesado": {
+  "displayid": 3983
+ },
+ "guanteletes_de_placas_igneas": {
+  "displayid": 19753
+ },
+ "guanteletes_de_placas_igneas_de_la_tecni": {
+  "displayid": 19753
+ },
+ "guanteletes_de_tempestad": {
+  "displayid": 22897
+ },
+ "guanteletes_de_tormenta": {
+  "displayid": 22897
+ },
+ "guanteletes_de_veraplata": {
+  "displayid": 13172
+ },
+ "guanteletes_deliriohelado": {
+  "displayid": 35277
+ },
+ "guanteletes_hierro_negro": {
+  "displayid": 31683
+ },
+ "guanteletes_runaoscura": {
+  "displayid": 32944
+ },
+ "guanteletes_runicos_de_cobre": {
+  "displayid": 25850
+ },
+ "guantes_barbaricos_de_hierro": {
+  "displayid": 11537
+ },
+ "guantes_de_escamas_de_mitril": {
+  "displayid": 2951
+ },
+ "guantes_de_mitril_ornamentado": {
+  "displayid": 16105
+ },
+ "guantes_del_alba": {
+  "displayid": 31563
+ },
+ "guantes_parraferrea": {
+  "displayid": 35217
+ },
+ "guantes_radiantes": {
+  "displayid": 23697
+ },
+ "guardahombros_del_turbador": {
+  "displayid": 680040
+ },
+ "guardanegra": {
+  "displayid": 31692
+ },
+ "guardarrenes_de_soldado_escarlata": {
+  "displayid": 698097
+ },
+ "guardia_de_escarcha": {
+  "displayid": 23274
+ },
+ "guardia_de_escarcha_endurecida": {
+  "displayid": 23274
+ },
+ "guerrera_de_placas_de_obsidiana": {
+  "displayid": 23605
+ },
+ "hacha_azul_relumbrante": {
+  "displayid": 5639
+ },
+ "hacha_curva_de_las_sombras": {
+  "displayid": 8502
+ },
+ "hacha_de_batalla_de_bronce": {
+  "displayid": 19272
+ },
+ "hacha_de_batalla_de_cobre": {
+  "displayid": 8516
+ },
+ "hacha_de_batalla_de_torio_enorme": {
+  "displayid": 23434
+ },
+ "hacha_de_bronce": {
+  "displayid": 19929
+ },
+ "hacha_de_cobre": {
+  "displayid": 8463
+ },
+ "hacha_de_hierro_macizo": {
+  "displayid": 782
+ },
+ "hacha_de_mano_de_torio_ornamentada": {
+  "displayid": 23234
+ },
+ "hacha_de_mitril_pesado": {
+  "displayid": 16126
+ },
+ "hoja_dorada_abrasadora": {
+  "displayid": 22258
+ },
+ "hoja_fantasma": {
+  "displayid": 25053
+ },
+ "hoja_sabia": {
+  "displayid": 36970
+ },
+ "hoja_sabia_de_obsidiana": {
+  "displayid": 695007
+ },
+ "hoja_sabia_del_archimago": {
+  "displayid": 36970
+ },
+ "hoja_serpentina_de_jade": {
+  "displayid": 20215
+ },
+ "hoja_tigre_de_escarcha": {
+  "displayid": 20252
+ },
+ "hombreras_de_terror": {
+  "displayid": 680041
+ },
+ "hombreras_de_zarzapua": {
+  "displayid": 694057
+ },
+ "jaula_cerebral_de_veraplata_reflectante": {
+  "displayid": 23166
+ },
+ "jaula_de_cabeza_de_zarzapua": {
+  "displayid": 694059
+ },
+ "jubon_de_anillas_de_cobre": {
+  "displayid": 13090
+ },
+ "jubon_de_cobre_ferreo": {
+  "displayid": 977
+ },
+ "lanza_negra": {
+  "displayid": 23283
+ },
+ "leotardos_almanegra": {
+  "displayid": 25550
+ },
+ "leotardos_de_bronce_banados_en_plata": {
+  "displayid": 4346
+ },
+ "leotardos_de_bronce_ferreos": {
+  "displayid": 4333
+ },
+ "leotardos_de_escamas_doradas": {
+  "displayid": 4744
+ },
+ "leotardos_de_guerra_orcos": {
+  "displayid": 14787
+ },
+ "leotardos_de_hierro_verdes": {
+  "displayid": 9415
+ },
+ "leotardos_de_placas_imperiales": {
+  "displayid": 24506
+ },
+ "leotardos_de_placas_runicas": {
+  "displayid": 23485
+ },
+ "leotardos_de_torio": {
+  "displayid": 22545
+ },
+ "leotardos_de_torio_encantado": {
+  "displayid": 22882
+ },
+ "leotardos_hierro_negro": {
+  "displayid": 28843
+ },
+ "leotardos_radiantes": {
+  "displayid": 25745
+ },
+ "leotardos_titanicos": {
+  "displayid": 34890
+ },
+ "loriga_de_bronce_ferrea": {
+  "displayid": 4407
+ },
+ "loriga_de_escamas_doradas": {
+  "displayid": 9425
+ },
+ "malla_espina_salvaje": {
+  "displayid": 4474
+ },
+ "malla_invencible": {
+  "displayid": 16726
+ },
+ "malla_invulnerable": {
+  "displayid": 16726
+ },
+ "mandiletes_de_soldado_escarlata": {
+  "displayid": 700414
+ },
+ "mandoble_de_cobre": {
+  "displayid": 20071
+ },
+ "mano_de_ebano": {
+  "displayid": 31822
+ },
+ "manto_de_la_segunda_guerra": {
+  "displayid": 5384
+ },
+ "martillo_de_batalla_encantado": {
+  "displayid": 2466
+ },
+ "martillo_de_batalla_encantado_con_perici": {
+  "displayid": 2466
+ },
+ "martillo_de_guerra_de_bronce": {
+  "displayid": 16146
+ },
+ "martillo_de_hierro_poderoso": {
+  "displayid": 3780
+ },
+ "martillo_de_los_titanes": {
+  "displayid": 25047
+ },
+ "martillo_de_los_titanes_refinado": {
+  "displayid": 685160
+ },
+ "martillo_de_sulfuron": {
+  "displayid": 29699
+ },
+ "martillo_de_torio_taraceado": {
+  "displayid": 15468
+ },
+ "martillo_de_tormenta_de_obsidiana": {
+  "displayid": 694062
+ },
+ "martillo_de_tormenta_magistral": {
+  "displayid": 1022
+ },
+ "martillo_de_tormenta_magistral_de_jinete": {
+  "displayid": 686016
+ },
+ "martillo_iridiscente": {
+  "displayid": 19801
+ },
+ "martillo_runico_de_mitril": {
+  "displayid": 15887
+ },
+ "martillo_volcanico": {
+  "displayid": 18312
+ },
+ "maza_bronce": {
+  "displayid": 5198
+ },
+ "maza_de_bronce_pesada": {
+  "displayid": 5205
+ },
+ "maza_de_cobre": {
+  "displayid": 2861
+ },
+ "maza_negra_grande": {
+  "displayid": 5199
+ },
+ "ocaso": {
+  "displayid": 31735
+ },
+ "pantalones_de_anillas_de_cobre": {
+  "displayid": 13095
+ },
+ "pantalones_de_escamas_de_mitril": {
+  "displayid": 3409
+ },
+ "pantalones_de_mitril_ornamentado": {
+  "displayid": 16103
+ },
+ "pantalones_de_mitril_pesado": {
+  "displayid": 5611
+ },
+ "pantalones_runicos_de_cobre": {
+  "displayid": 22459
+ },
+ "persuasor": {
+  "displayid": 36969
+ },
+ "peto_de_placas_imperiales": {
+  "displayid": 24504
+ },
+ "peto_de_soldado_escarlata": {
+  "displayid": 698094
+ },
+ "peto_obsidiano_grueso": {
+  "displayid": 29253
+ },
+ "peto_parraferrea": {
+  "displayid": 13204
+ },
+ "placa_de_batalla_de_zarzapua": {
+  "displayid": 694056
+ },
+ "placa_hierro_negro": {
+  "displayid": 20992
+ },
+ "placa_hierro_negro_templada": {
+  "displayid": 20992
+ },
+ "profanacion": {
+  "displayid": 24255
+ },
+ "protectores_de_soldado_escarlata": {
+  "displayid": 698095
+ },
+ "pulverizador_hierro_negro": {
+  "displayid": 25046
+ },
+ "punal_de_bronce_mortal": {
+  "displayid": 2708
+ },
+ "quijotes_de_soldado_escarlata": {
+  "displayid": 698098
+ },
+ "segadora_de_arcanita": {
+  "displayid": 23904
+ },
+ "segadora_de_arcanita_refinada": {
+  "displayid": 685172
+ },
+ "serenidad": {
+  "displayid": 6795
+ },
+ "sobrehombros_albar": {
+  "displayid": 25827
+ },
+ "sobrehombros_almanegra": {
+  "displayid": 30785
+ },
+ "sobrehombros_barbaricos_de_hierro": {
+  "displayid": 10166
+ },
+ "sobrehombros_de_alma_de_sangre": {
+  "displayid": 27904
+ },
+ "sobrehombros_de_anillas_igneas": {
+  "displayid": 23612
+ },
+ "sobrehombros_de_bronce_banados_en_plata": {
+  "displayid": 9038
+ },
+ "sobrehombros_de_bronce_ferreos": {
+  "displayid": 23531
+ },
+ "sobrehombros_de_escamas_de_mitril": {
+  "displayid": 16111
+ },
+ "sobrehombros_de_escamas_doradas": {
+  "displayid": 9424
+ },
+ "sobrehombros_de_hierro_verdes": {
+  "displayid": 9422
+ },
+ "sobrehombros_de_mitril_ornamentado": {
+  "displayid": 10495
+ },
+ "sobrehombros_de_mitril_pesado": {
+  "displayid": 6027
+ },
+ "sobrehombros_de_placas_imperiales": {
+  "displayid": 24509
+ },
+ "sobrehombros_hierro_negro": {
+  "displayid": 21196
+ },
+ "sobrehombros_runicos_de_placas": {
+  "displayid": 23490
+ },
+ "taladora_hierro_negro": {
+  "displayid": 21159
+ },
+ "talladora_de_lenogris": {
+  "displayid": 25600
+ },
+ "tranquilidad": {
+  "displayid": 6795
+ },
+ "tunica_de_malla_de_obsidiana": {
+  "displayid": 23605
+ },
+ "visor_de_escamas_oniricas": {
+  "displayid": 31268
+ },
+ "yelmo_almablanca": {
+  "displayid": 22901
+ },
+ "yelmo_barbarico_de_hierro": {
+  "displayid": 16084
+ },
+ "yelmo_corazon_de_leon": {
+  "displayid": 22855
+ },
+ "yelmo_de_hierro_verde": {
+  "displayid": 25658
+ },
+ "yelmo_de_mitril_ornamentado": {
+  "displayid": 16119
+ },
+ "yelmo_de_mitril_pesado": {
+  "displayid": 16115
+ },
+ "yelmo_de_placas_de_acero": {
+  "displayid": 15380
+ },
+ "yelmo_de_placas_imperiales": {
+  "displayid": 14964
+ },
+ "yelmo_de_placas_runicas": {
+  "displayid": 15562
+ },
+ "yelmo_de_torio": {
+  "displayid": 21257
+ },
+ "yelmo_de_torio_encantado": {
+  "displayid": 22881
+ },
+ "yelmo_del_gran_jefe": {
+  "displayid": 15378
+ },
+ "yelmo_hierro_negro": {
+  "displayid": 31671
+ },
+ "yelmo_runaoscura": {
+  "displayid": 25438
+ },
+ "balas_de_mitril_de_gran_impacto": {
+  "displayid": 2418
+ },
+ "bastion_de_veraplata_giratorio": {
+  "displayid": 674317
+ },
+ "bocarda_fabricada_con_amor": {
+  "displayid": 2409
+ },
+ "bocarda_ferrea": {
+  "displayid": 1136
+ },
+ "botas_cohete_gnomicas": {
+  "displayid": 4630
+ },
+ "botas_cohete_goblin": {
+  "displayid": 14763
+ },
+ "capa_paracaidas": {
+  "displayid": 23129
+ },
+ "casco_de_albanil_goblin": {
+  "displayid": 15368
+ },
+ "casco_de_cohete_goblin": {
+  "displayid": 23166
+ },
+ "casco_de_inmersion": {
+  "displayid": 23161
+ },
+ "casco_de_minero_goblin": {
+  "displayid": 17729
+ },
+ "cinturon_de_prevencion_de_dano_gnomico": {
+  "displayid": 8072
+ },
+ "cinturon_dorado_hiperconductor": {
+  "displayid": 4634
+ },
+ "disco_reactivo_a_la_fuerza": {
+  "displayid": 20987
+ },
+ "disco_reactivo_de_potencia_afinado": {
+  "displayid": 694082
+ },
+ "escopeta_de_chapa_de_plata": {
+  "displayid": 15835
+ },
+ "escopeta_de_obsidiana": {
+  "displayid": 695010
+ },
+ "flecha_explosiva": {
+  "displayid": 2414
+ },
+ "gafas_de_fuego": {
+  "displayid": 11700
+ },
+ "gafas_de_las_sombras": {
+  "displayid": 17597
+ },
+ "gafas_de_maestro_ingeniero": {
+  "displayid": 11665
+ },
+ "gafas_de_poder_con_hechizos_xtremo": {
+  "displayid": 19409
+ },
+ "gafas_de_poder_con_hechizos_xtremo_plus": {
+  "displayid": 12139
+ },
+ "gafas_de_tigre_volador": {
+  "displayid": 4651
+ },
+ "gafas_gnomicas": {
+  "displayid": 18138
+ },
+ "gafas_ojo_brillante": {
+  "displayid": 17718
+ },
+ "gafas_tintadas_de_rosa": {
+  "displayid": 22423
+ },
+ "gafas_tintadas_de_verde": {
+  "displayid": 13374
+ },
+ "gafas_vid_de_sangre": {
+  "displayid": 12139
+ },
+ "girotiro_de_mitril": {
+  "displayid": 2418
+ },
+ "gorro_de_control_mental_gnomico": {
+  "displayid": 19667
+ },
+ "lente_verde": {
+  "displayid": 16098
+ },
+ "lente_vid_de_sangre": {
+  "displayid": 17725
+ },
+ "llave_de_tuerca_arcoluz": {
+  "displayid": 7494
+ },
+ "monoculo_de_artesano": {
+  "displayid": 4661
+ },
+ "proyectil_artesanal_ligero": {
+  "displayid": 2418
+ },
+ "proyectil_artesanal_pesado": {
+  "displayid": 2418
+ },
+ "proyectil_artesanal_solido": {
+  "displayid": 2418
+ },
+ "proyectiles_de_torio": {
+  "displayid": 2418
+ },
+ "rifle_de_arcanita_impecable": {
+  "displayid": 24721
+ },
+ "rifle_de_gran_calibre_de_mitril": {
+  "displayid": 20744
+ },
+ "rifle_de_tirador_certero_de_nucleo_igneo": {
+  "displayid": 31210
+ },
+ "rifle_de_tirador_del_nucleo": {
+  "displayid": 31210
+ },
+ "rifle_de_torio": {
+  "displayid": 13060
+ },
+ "rifle_de_vista_lunar": {
+  "displayid": 8256
+ },
+ "rifle_hierro_negro": {
+  "displayid": 26737
+ },
+ "sensores_de_censor_aterradores": {
+  "displayid": 697041
+ },
+ "trabuco_de_mitril": {
+  "displayid": 18298
+ },
+ "trabuco_mortal": {
+  "displayid": 20743
+ },
+ "ultragafas_ojo_de_gato": {
+  "displayid": 17900
+ },
+ "flecha_navaja": {
+  "displayid": 2414
+ },
+ "escrito_crepuscular": {
+  "displayid": 55265
+ },
+ "escrito_de_fuego_infernal": {
+  "displayid": 55264
+ },
+ "escrito_de_reyes": {
+  "displayid": 55265
+ },
+ "escrito_del_alba": {
+  "displayid": 55787
+ },
+ "escrito_encuadernado_en_hierro": {
+  "displayid": 23171
+ },
+ "escrito_mistico": {
+  "displayid": 54807
+ },
+ "escrito_vinculado_a_la_tormenta": {
+  "displayid": 55981
+ },
+ "guia_de_tragafuegos": {
+  "displayid": 55264
+ },
+ "guia_real_de_rutas_de_escape": {
+  "displayid": 55787
+ },
+ "libro_de_las_estrellas": {
+  "displayid": 55980
+ },
+ "libro_de_supervivencia": {
+  "displayid": 54807
+ },
+ "libro_de_trucos_ingeniosos": {
+  "displayid": 55265
+ },
+ "manual_de_nubes": {
+  "displayid": 55265
+ },
+ "rituales_de_la_luna_nueva": {
+  "displayid": 55265
+ },
+ "rostros_de_condena": {
+  "displayid": 23171
+ },
+ "aro_de_poderio_arcano": {
+  "displayid": 26680
+ },
+ "corona_alma_lunar": {
+  "displayid": 19920
+ },
+ "corona_de_esmeralda_de_destruccion": {
+  "displayid": 27606
+ },
+ "corona_de_la_bruja_del_mar": {
+  "displayid": 26680
+ },
+ "corona_de_rubi_de_restauracion": {
+  "displayid": 18728
+ },
+ "corona_de_sangre": {
+  "displayid": 25826
+ },
+ "nimbo_de_la_llama_verdeante": {
+  "displayid": 27606
+ },
+ "nudillos_de_hierro_pesados": {
+  "displayid": 15720
+ },
+ "almofar_de_cazador_escarlata": {
+  "displayid": 698551
+ },
+ "almofar_de_escamas_hiperconductoras_bril": {
+  "displayid": 35095
+ },
+ "armadura_de_cria_verde": {
+  "displayid": 12965
+ },
+ "armadura_de_cuero_fortalecido": {
+  "displayid": 5655
+ },
+ "armadura_de_cuero_maligno": {
+  "displayid": 1080
+ },
+ "armadura_de_cuero_oscurecido": {
+  "displayid": 8071
+ },
+ "armadura_de_cuero_runico": {
+  "displayid": 25731
+ },
+ "armadura_de_cuero_verde": {
+  "displayid": 8359
+ },
+ "armadura_de_embozo_de_tormenta": {
+  "displayid": 4320
+ },
+ "armadura_de_guardian": {
+  "displayid": 8414
+ },
+ "armadura_murloc_gruesa": {
+  "displayid": 22393
+ },
+ "arnes_barbarico": {
+  "displayid": 10883
+ },
+ "arnes_de_oso_de_guerra": {
+  "displayid": 10883
+ },
+ "arnes_de_pellejo_de_raptor": {
+  "displayid": 7708
+ },
+ "avambrazos_de_vuelo_presto": {
+  "displayid": 11603
+ },
+ "bandana_de_infiltrado_escarlata": {
+  "displayid": 698550
+ },
+ "botas_de_can_del_nucleo": {
+  "displayid": 5489
+ },
+ "botas_de_cazador_escarlata": {
+  "displayid": 698538
+ },
+ "botas_de_cuero_cosidas_a_mano": {
+  "displayid": 3713
+ },
+ "botas_de_cuero_estampado": {
+  "displayid": 5853
+ },
+ "botas_de_cuero_oscuro": {
+  "displayid": 4956
+ },
+ "botas_de_cuero_refinado": {
+  "displayid": 9512
+ },
+ "botas_de_cuero_salvaje": {
+  "displayid": 4389
+ },
+ "botas_de_dragontina_negra": {
+  "displayid": 28760
+ },
+ "botas_de_escorpido_resistentes": {
+  "displayid": 11832
+ },
+ "botas_de_mangosta": {
+  "displayid": 9080
+ },
+ "botas_de_sable_de_hielo": {
+  "displayid": 5823
+ },
+ "botas_nochefugaz": {
+  "displayid": 5470
+ },
+ "botas_oscurecidas": {
+  "displayid": 8074
+ },
+ "botas_prestas": {
+  "displayid": 9750
+ },
+ "botas_quimericas": {
+  "displayid": 5480
+ },
+ "botas_zarzal": {
+  "displayid": 35214
+ },
+ "botines_del_alba": {
+  "displayid": 31552
+ },
+ "brazales_acecharenas": {
+  "displayid": 26793
+ },
+ "brazales_barbaricos": {
+  "displayid": 11617
+ },
+ "brazales_de_cria_verde": {
+  "displayid": 12844
+ },
+ "brazales_de_cuero_cosidos_a_mano": {
+  "displayid": 5333
+ },
+ "brazales_de_cuero_de_guardian": {
+  "displayid": 9550
+ },
+ "brazales_de_cuero_ligero": {
+  "displayid": 14002
+ },
+ "brazales_de_cuero_maligno": {
+  "displayid": 2881
+ },
+ "brazales_de_cuero_runico": {
+  "displayid": 7116
+ },
+ "brazales_de_cuero_verdes": {
+  "displayid": 9546
+ },
+ "brazales_de_escamas_de_murloc": {
+  "displayid": 4337
+ },
+ "brazales_de_escamas_de_tortuga": {
+  "displayid": 16506
+ },
+ "brazales_de_escamas_heladas": {
+  "displayid": 35292
+ },
+ "brazales_de_escorpido_pesados": {
+  "displayid": 18978
+ },
+ "brazales_de_escorpido_resistentes": {
+  "displayid": 8197
+ },
+ "brazales_de_infiltrado_escarlata": {
+  "displayid": 698082
+ },
+ "brazales_de_piel_de_murcielago_primigeni": {
+  "displayid": 22500
+ },
+ "brazales_de_vuelo_presto": {
+  "displayid": 11603
+ },
+ "brazales_escupefuego": {
+  "displayid": 16395
+ },
+ "brazales_oscurecidos": {
+  "displayid": 14802
+ },
+ "brazales_polares": {
+  "displayid": 35287
+ },
+ "bufas_chillonas": {
+  "displayid": 680033
+ },
+ "cadena_de_cazador_escarlata": {
+  "displayid": 698086
+ },
+ "capa_cambiante_magistral": {
+  "displayid": 30851
+ },
+ "capa_cromatica": {
+  "displayid": 28299
+ },
+ "capa_cromatica_brillante": {
+  "displayid": 28299
+ },
+ "capa_de_cria_negra": {
+  "displayid": 23010
+ },
+ "capa_de_cuero_cosida_a_mano": {
+  "displayid": 23008
+ },
+ "capa_de_cuero_de_escarcha": {
+  "displayid": 23030
+ },
+ "capa_de_cuero_estampado": {
+  "displayid": 23010
+ },
+ "capa_de_cuero_oscuro": {
+  "displayid": 23021
+ },
+ "capa_de_cuero_refinado": {
+  "displayid": 23028
+ },
+ "capa_de_cuero_salvaje": {
+  "displayid": 23057
+ },
+ "capa_de_escamas_de_onyxia": {
+  "displayid": 24174
+ },
+ "capa_de_escamas_descarriadas": {
+  "displayid": 23010
+ },
+ "capa_de_fiera": {
+  "displayid": 29720
+ },
+ "capa_de_gran_vudu": {
+  "displayid": 24297
+ },
+ "capa_de_guardian": {
+  "displayid": 23033
+ },
+ "capa_de_montanero": {
+  "displayid": 23040
+ },
+ "capa_nochefugaz": {
+  "displayid": 23019
+ },
+ "capa_ondeante": {
+  "displayid": 30851
+ },
+ "caperuza_de_canalizador_gneuroconductora": {
+  "displayid": 35095
+ },
+ "caperuza_de_escamas_resistente_a_la_radi": {
+  "displayid": 35095
+ },
+ "capucha_de_filozarza": {
+  "displayid": 694066
+ },
+ "capucha_gneurovinculada_brillante": {
+  "displayid": 35095
+ },
+ "carcaj_de_cuero_ligero": {
+  "displayid": 21330
+ },
+ "carcaj_pesado": {
+  "displayid": 21322
+ },
+ "carcaj_rapido": {
+  "displayid": 21331
+ },
+ "casco_de_cuero_salvaje": {
+  "displayid": 15307
+ },
+ "chaleco_de_cuero_blanco": {
+  "displayid": 6026
+ },
+ "chaleco_de_piel_de_murcielago_primigenio": {
+  "displayid": 17930
+ },
+ "cinta_de_cuero_maligno": {
+  "displayid": 18860
+ },
+ "cinta_de_cuero_runico": {
+  "displayid": 25739
+ },
+ "cinta_nochefugaz": {
+  "displayid": 15321
+ },
+ "cinto_de_cazador_escarlata": {
+  "displayid": 698540
+ },
+ "cinturon_barbarico": {
+  "displayid": 7766
+ },
+ "cinturon_de_arrabio": {
+  "displayid": 31682
+ },
+ "cinturon_de_can_del_nucleo": {
+  "displayid": 31681
+ },
+ "cinturon_de_cuero_con_gemas_incrustadas": {
+  "displayid": 9715
+ },
+ "cinturon_de_cuero_cosido_a_mano": {
+  "displayid": 3253
+ },
+ "cinturon_de_cuero_maligno": {
+  "displayid": 8151
+ },
+ "cinturon_de_cuero_oscuro": {
+  "displayid": 4591
+ },
+ "cinturon_de_cuero_refinado": {
+  "displayid": 4099
+ },
+ "cinturon_de_cuero_runico": {
+  "displayid": 4460
+ },
+ "cinturon_de_cuero_verde": {
+  "displayid": 8350
+ },
+ "cinturon_de_escamas_de_murloc": {
+  "displayid": 3335
+ },
+ "cinturon_de_escamas_descarriadas": {
+  "displayid": 9748
+ },
+ "cinturon_de_escorpido_pesado": {
+  "displayid": 7728
+ },
+ "cinturon_de_guardian": {
+  "displayid": 8606
+ },
+ "cinturon_de_infiltrado_escarlata": {
+  "displayid": 698079
+ },
+ "cinturon_de_lava": {
+  "displayid": 31672
+ },
+ "cinturon_de_montanero": {
+  "displayid": 6049
+ },
+ "cinturon_de_pellejo_de_raptor": {
+  "displayid": 6182
+ },
+ "cinturon_oscurecido": {
+  "displayid": 8072
+ },
+ "cinturon_zarzal": {
+  "displayid": 35213
+ },
+ "coraza_acecharenas": {
+  "displayid": 32872
+ },
+ "coraza_de_dragontina": {
+  "displayid": 12295
+ },
+ "coraza_de_dragontina_azul": {
+  "displayid": 25676
+ },
+ "coraza_de_dragontina_negra": {
+  "displayid": 26912
+ },
+ "coraza_de_dragontina_roja": {
+  "displayid": 17862
+ },
+ "coraza_de_dragontina_verde": {
+  "displayid": 12837
+ },
+ "coraza_de_escamas_de_dragon_azul_pulida": {
+  "displayid": 25676
+ },
+ "coraza_de_escamas_de_dragon_negro_endure": {
+  "displayid": 26912
+ },
+ "coraza_de_escamas_de_dragon_verde_vivien": {
+  "displayid": 12837
+ },
+ "coraza_de_escamas_de_murloc": {
+  "displayid": 8908
+ },
+ "coraza_de_escamas_de_onyxia": {
+  "displayid": 26912
+ },
+ "coraza_de_escamas_de_tortuga": {
+  "displayid": 11598
+ },
+ "coraza_de_escamas_heladas": {
+  "displayid": 35293
+ },
+ "coraza_de_escamas_oniricas": {
+  "displayid": 25238
+ },
+ "coraza_de_escorpido_resistente": {
+  "displayid": 14689
+ },
+ "coraza_de_plumas": {
+  "displayid": 4492
+ },
+ "coraza_de_tigre_de_sangre": {
+  "displayid": 13803
+ },
+ "coraza_escupefuego": {
+  "displayid": 16391
+ },
+ "coraza_plumahierro": {
+  "displayid": 25699
+ },
+ "coraza_viva": {
+  "displayid": 25082
+ },
+ "coraza_volcanica": {
+  "displayid": 13803
+ },
+ "coraza_volcanica_magistral": {
+  "displayid": 13803
+ },
+ "cuero_de_filozarza": {
+  "displayid": 694067
+ },
+ "espaldares_de_anillas_aulladoras": {
+  "displayid": 679939
+ },
+ "espaldares_de_cazador_escarlata": {
+  "displayid": 698085
+ },
+ "faja_de_perspicacia": {
+  "displayid": 10433
+ },
+ "faja_de_perspicacia_arcana": {
+  "displayid": 10433
+ },
+ "falda_de_escamas_oniricas": {
+  "displayid": 26238
+ },
+ "guanteletes_acecharenas": {
+  "displayid": 26798
+ },
+ "guanteletes_cromaticos": {
+  "displayid": 31680
+ },
+ "guanteletes_de_cuero_maligno": {
+  "displayid": 2375
+ },
+ "guanteletes_de_cuero_runico": {
+  "displayid": 25735
+ },
+ "guanteletes_de_cuero_tocados_por_el_vaci": {
+  "displayid": 8614
+ },
+ "guanteletes_de_demosaurio": {
+  "displayid": 9543
+ },
+ "guanteletes_de_dragontina": {
+  "displayid": 12296
+ },
+ "guanteletes_de_dragontina_verde": {
+  "displayid": 32762
+ },
+ "guanteletes_de_escamas_de_dragon_verde_v": {
+  "displayid": 32762
+ },
+ "guanteletes_de_escamas_heladas": {
+  "displayid": 35294
+ },
+ "guanteletes_de_escorpido_pesados": {
+  "displayid": 7731
+ },
+ "guanteletes_de_nucleo_demoniaco": {
+  "displayid": 9543
+ },
+ "guanteletes_del_mar": {
+  "displayid": 10513
+ },
+ "guanteletes_escupefuego": {
+  "displayid": 17416
+ },
+ "guantes_barbaricos": {
+  "displayid": 9543
+ },
+ "guantes_de_cria_roja": {
+  "displayid": 3992
+ },
+ "guantes_de_cuero_de_montanero": {
+  "displayid": 2362
+ },
+ "guantes_de_cuero_estampado": {
+  "displayid": 9503
+ },
+ "guantes_de_cuero_fauces_de_madera": {
+  "displayid": 31541
+ },
+ "guantes_de_cuero_fortalecido": {
+  "displayid": 2361
+ },
+ "guantes_de_cuero_livianos": {
+  "displayid": 4685
+ },
+ "guantes_de_cuero_oscuro": {
+  "displayid": 9526
+ },
+ "guantes_de_cuero_refinado": {
+  "displayid": 5406
+ },
+ "guantes_de_cuero_tocados_por_el_vacio": {
+  "displayid": 8614
+ },
+ "guantes_de_embozo_de_tormenta": {
+  "displayid": 3839
+ },
+ "guantes_de_escamas_de_tortuga": {
+  "displayid": 16488
+ },
+ "guantes_de_escamas_descarriadas": {
+  "displayid": 11952
+ },
+ "guantes_de_escorpido_resistentes": {
+  "displayid": 11833
+ },
+ "guantes_de_flechero": {
+  "displayid": 2361
+ },
+ "guantes_de_guardian": {
+  "displayid": 8608
+ },
+ "guantes_de_herborista": {
+  "displayid": 7816
+ },
+ "guantes_de_infiltrado_escarlata": {
+  "displayid": 698078
+ },
+ "guantes_de_piel_de_murcielago_primigenio": {
+  "displayid": 32159
+ },
+ "guantes_de_ratero": {
+  "displayid": 2057
+ },
+ "guantes_de_sable_de_hielo": {
+  "displayid": 19017
+ },
+ "guantes_del_padre_invierno": {
+  "displayid": 3515
+ },
+ "guantes_polares": {
+  "displayid": 35303
+ },
+ "guantes_quimericos": {
+  "displayid": 11175
+ },
+ "guantes_sombradermos": {
+  "displayid": 7731
+ },
+ "guantes_terraneos_gruesos": {
+  "displayid": 10945
+ },
+ "guardahombros_de_anillas_cacofonicas": {
+  "displayid": 680032
+ },
+ "guardamunecas_de_cazador_escarlata": {
+  "displayid": 698087
+ },
+ "guerrera_de_cria_negra": {
+  "displayid": 2019
+ },
+ "guerrera_de_cuero_oscuro": {
+  "displayid": 9521
+ },
+ "guerrera_de_cuero_refinado": {
+  "displayid": 9511
+ },
+ "guerrera_de_sable_de_hielo": {
+  "displayid": 6020
+ },
+ "guerrera_nochefugaz": {
+  "displayid": 8435
+ },
+ "guerrera_polar": {
+  "displayid": 35290
+ },
+ "hombreras_de_filozarza": {
+  "displayid": 694065
+ },
+ "hombreras_de_infiltrado_escarlata": {
+  "displayid": 698083
+ },
+ "hombreras_de_obsesion": {
+  "displayid": 680030
+ },
+ "jubon_de_cuero_cosido_a_mano": {
+  "displayid": 2104
+ },
+ "jubon_de_cuero_de_montanero": {
+  "displayid": 1975
+ },
+ "jubon_de_cuero_estampado": {
+  "displayid": 9502
+ },
+ "jubon_de_cuero_salvaje": {
+  "displayid": 9563
+ },
+ "jubon_de_escorpido_pesado": {
+  "displayid": 9652
+ },
+ "jubon_de_infiltrado_escarlata": {
+  "displayid": 698077
+ },
+ "jubon_quimerico": {
+  "displayid": 5477
+ },
+ "jubon_resplandor_lunar": {
+  "displayid": 11487
+ },
+ "leotardos_barbaricos": {
+  "displayid": 8160
+ },
+ "leotardos_de_cuero_oscurecido": {
+  "displayid": 8073
+ },
+ "leotardos_de_cuero_salvaje": {
+  "displayid": 4388
+ },
+ "leotardos_de_demosaurio": {
+  "displayid": 8160
+ },
+ "leotardos_de_dragontina_azul": {
+  "displayid": 28447
+ },
+ "leotardos_de_dragontina_negra": {
+  "displayid": 26918
+ },
+ "leotardos_de_dragontina_verde": {
+  "displayid": 12840
+ },
+ "leotardos_de_escamas_de_dragon_azul_puli": {
+  "displayid": 28447
+ },
+ "leotardos_de_escamas_de_dragon_negro_end": {
+  "displayid": 26918
+ },
+ "leotardos_de_escamas_de_dragon_verde_viv": {
+  "displayid": 12840
+ },
+ "leotardos_de_escamas_de_tortuga": {
+  "displayid": 12169
+ },
+ "leotardos_de_escorpido_pesados": {
+  "displayid": 11280
+ },
+ "leotardos_de_escorpido_resistentes": {
+  "displayid": 7765
+ },
+ "leotardos_de_nucleo_demoniaco": {
+  "displayid": 8160
+ },
+ "leotardos_de_sable_de_hielo": {
+  "displayid": 5822
+ },
+ "leotardos_quimericos": {
+  "displayid": 5479
+ },
+ "leotardos_vivos": {
+  "displayid": 8345
+ },
+ "leotardos_volcanicos": {
+  "displayid": 5488
+ },
+ "leotardos_volcanicos_magistrales": {
+  "displayid": 5488
+ },
+ "manoplas_de_cazador_escarlata": {
+  "displayid": 698088
+ },
+ "manto_de_anillas_gemebundas": {
+  "displayid": 680036
+ },
+ "manto_de_paranoia": {
+  "displayid": 680029
+ },
+ "manto_del_alba_dorado": {
+  "displayid": 31566
+ },
+ "membrana_de_neurosis_oscura": {
+  "displayid": 680037
+ },
+ "musleras_de_cazador_escarlata": {
+  "displayid": 698365
+ },
+ "mascara_de_gran_vudu": {
+  "displayid": 18689
+ },
+ "pantalones_de_cuero_basto": {
+  "displayid": 15765
+ },
+ "pantalones_de_cuero_cosidos_a_mano": {
+  "displayid": 5441
+ },
+ "pantalones_de_cuero_estampado": {
+  "displayid": 9505
+ },
+ "pantalones_de_cuero_ligero": {
+  "displayid": 3248
+ },
+ "pantalones_de_cuero_maligno": {
+  "displayid": 1512
+ },
+ "pantalones_de_cuero_oscuro": {
+  "displayid": 9018
+ },
+ "pantalones_de_cuero_refinado": {
+  "displayid": 2628
+ },
+ "pantalones_de_cuero_runico": {
+  "displayid": 8389
+ },
+ "pantalones_de_embozo_de_tormenta": {
+  "displayid": 3833
+ },
+ "pantalones_de_gran_vudu": {
+  "displayid": 11838
+ },
+ "pantalones_de_guardian": {
+  "displayid": 8426
+ },
+ "pantalones_de_infiltrado_escarlata": {
+  "displayid": 698080
+ },
+ "pantalones_nochefugaz": {
+  "displayid": 5469
+ },
+ "peto_acecharenas": {
+  "displayid": 32872
+ },
+ "peto_de_escamas_oniricas": {
+  "displayid": 25238
+ },
+ "peto_escupefuego": {
+  "displayid": 16391
+ },
+ "poderio_de_los_fauces_de_madera": {
+  "displayid": 9183
+ },
+ "prendas_de_lana_de_oso_de_guerra": {
+  "displayid": 11014
+ },
+ "sobrehombros_barbaricos": {
+  "displayid": 9544
+ },
+ "sobrehombros_de_cuero_oscuro": {
+  "displayid": 9528
+ },
+ "sobrehombros_de_cuero_runico": {
+  "displayid": 8387
+ },
+ "sobrehombros_de_cuero_salvaje": {
+  "displayid": 9562
+ },
+ "sobrehombros_de_cuero_terraneo": {
+  "displayid": 4593
+ },
+ "sobrehombros_de_dragontina_azul": {
+  "displayid": 25677
+ },
+ "sobrehombros_de_dragontina_negra": {
+  "displayid": 25545
+ },
+ "sobrehombros_de_embozo_de_tormenta": {
+  "displayid": 8022
+ },
+ "sobrehombros_de_escamas_de_dragon_azul_p": {
+  "displayid": 25677
+ },
+ "sobrehombros_de_escamas_de_dragon_negro": {
+  "displayid": 25545
+ },
+ "sobrehombros_de_escorpido_pesados": {
+  "displayid": 25713
+ },
+ "sobrehombros_de_escorpido_resistentes": {
+  "displayid": 4491
+ },
+ "sobrehombros_de_montanero": {
+  "displayid": 11274
+ },
+ "sobrehombros_de_tigre_de_sangre": {
+  "displayid": 23670
+ },
+ "sobrehombros_nochefugaz": {
+  "displayid": 8434
+ },
+ "sobrehombros_plumahierro": {
+  "displayid": 13697
+ },
+ "sobrehombros_vivos": {
+  "displayid": 11622
+ },
+ "sobrehombros_volcanicos": {
+  "displayid": 23782
+ },
+ "sobrehombros_volcanicos_magistrales": {
+  "displayid": 23782
+ },
+ "sombrero_de_cuero_comodo": {
+  "displayid": 15921
+ },
+ "toga_de_gran_vudu": {
+  "displayid": 13666
+ },
+ "yelmo_cabeza_de_lobo": {
+  "displayid": 28987
+ },
+ "yelmo_de_arrabio": {
+  "displayid": 28856
+ },
+ "yelmo_de_escamas_de_tortuga": {
+  "displayid": 15307
+ },
+ "yelmo_de_escorpido_pesado": {
+  "displayid": 28976
+ },
+ "yelmo_de_escorpido_resistente": {
+  "displayid": 16520
+ },
+ "yelmo_de_fuego": {
+  "displayid": 17226
+ },
+ "yelmo_zarzal": {
+  "displayid": 35211
+ },
+ "zapatos_de_infiltrado_escarlata": {
+  "displayid": 698137
+ },
+ "abrazo_de_gaia": {
+  "displayid": 27752
+ },
+ "armadura_de_seda_verde": {
+  "displayid": 13684
+ },
+ "aro_de_tela_lunar": {
+  "displayid": 28414
+ },
+ "aro_de_tela_lunar_incandescente": {
+  "displayid": 28414
+ },
+ "ataduras_de_fenix": {
+  "displayid": 14867
+ },
+ "bombachos_de_seda_carmesies": {
+  "displayid": 4310
+ },
+ "botas_argenta": {
+  "displayid": 31557
+ },
+ "botas_lana": {
+  "displayid": 5380
+ },
+ "botas_de_lana_roja": {
+  "displayid": 4615
+ },
+ "botas_de_lino": {
+  "displayid": 15682
+ },
+ "botas_de_lino_de_suela_suave": {
+  "displayid": 5840
+ },
+ "botas_de_lino_sencillas": {
+  "displayid": 15621
+ },
+ "botas_de_oscuridad": {
+  "displayid": 10095
+ },
+ "botas_de_pano_cenizo": {
+  "displayid": 18933
+ },
+ "botas_de_pano_runico": {
+  "displayid": 25233
+ },
+ "botas_de_pano_tormentoso": {
+  "displayid": 5875
+ },
+ "botas_de_seda_de_arana": {
+  "displayid": 4301
+ },
+ "botas_de_seda_de_arana_extrabidimensiona": {
+  "displayid": 23708
+ },
+ "botas_de_tejido_de_sombra": {
+  "displayid": 9048
+ },
+ "botas_de_tejido_magico_negras": {
+  "displayid": 21154
+ },
+ "botas_de_tela_lunar": {
+  "displayid": 9675
+ },
+ "botas_de_tela_vil": {
+  "displayid": 8959
+ },
+ "botas_del_encantador": {
+  "displayid": 4631
+ },
+ "botas_runicas_estigias": {
+  "displayid": 5871
+ },
+ "botas_vid_de_sangre": {
+  "displayid": 32156
+ },
+ "brazales_de_escamas_oniricas": {
+  "displayid": 16636
+ },
+ "brazales_de_lino_verdes": {
+  "displayid": 3041
+ },
+ "brazaletes_bengala_del_nucleo": {
+  "displayid": 8171
+ },
+ "bufanda_de_seda_qiraji": {
+  "displayid": 694907
+ },
+ "calzones_de_lino_cosidos_a_mano": {
+  "displayid": 2656
+ },
+ "camisa_amarillo_brillante": {
+  "displayid": 3685
+ },
+ "camisa_azul_con_estilo": {
+  "displayid": 11518
+ },
+ "camisa_blanca_formal": {
+  "displayid": 4638
+ },
+ "camisa_de_esmoquin": {
+  "displayid": 11307
+ },
+ "camisa_de_espadachin_blanca": {
+  "displayid": 4640
+ },
+ "camisa_de_espadachin_negra": {
+  "displayid": 12969
+ },
+ "camisa_de_espadachin_roja": {
+  "displayid": 12786
+ },
+ "camisa_de_lana_gris": {
+  "displayid": 10798
+ },
+ "camisa_de_lino_azul": {
+  "displayid": 10667
+ },
+ "camisa_de_lino_blanca": {
+  "displayid": 10705
+ },
+ "camisa_de_lino_marron": {
+  "displayid": 10837
+ },
+ "camisa_de_lino_roja": {
+  "displayid": 10840
+ },
+ "camisa_de_lino_verde": {
+  "displayid": 10861
+ },
+ "camisa_de_seda_morada_viva": {
+  "displayid": 4639
+ },
+ "camisa_de_seda_oscura": {
+  "displayid": 4637
+ },
+ "camisa_de_tejido_magico_lavanda": {
+  "displayid": 11977
+ },
+ "camisa_de_tejido_magico_naranja": {
+  "displayid": 18348
+ },
+ "camisa_de_tejido_magico_rosa": {
+  "displayid": 18923
+ },
+ "camisa_festiva_verde": {
+  "displayid": 18123
+ },
+ "camisa_marcial_naranja": {
+  "displayid": 18916
+ },
+ "camisa_roja_con_estilo": {
+  "displayid": 4635
+ },
+ "camisa_verde_con_estilo": {
+  "displayid": 5781
+ },
+ "capa_con_broche_de_perlas": {
+  "displayid": 23131
+ },
+ "capa_de_amparo": {
+  "displayid": 30783
+ },
+ "capa_de_fuego": {
+  "displayid": 24928
+ },
+ "capa_de_lana_gruesa": {
+  "displayid": 23093
+ },
+ "capa_lino": {
+  "displayid": 23095
+ },
+ "capa_de_pano_brillante": {
+  "displayid": 24928
+ },
+ "capa_de_pano_cenizo": {
+  "displayid": 23422
+ },
+ "capa_de_pano_runico": {
+  "displayid": 25232
+ },
+ "capa_de_seda_azur": {
+  "displayid": 23092
+ },
+ "capa_de_seda_carmesi": {
+  "displayid": 15102
+ },
+ "capa_de_seda_qiraji": {
+  "displayid": 694909
+ },
+ "capa_glacial": {
+  "displayid": 23125
+ },
+ "capa_helada": {
+  "displayid": 15063
+ },
+ "capa_larga_de_seda": {
+  "displayid": 15076
+ },
+ "caperuza_de_augur_escarlata": {
+  "displayid": 698549
+ },
+ "caperuza_de_las_sombras": {
+  "displayid": 15319
+ },
+ "caperuza_de_seda_azur": {
+  "displayid": 15283
+ },
+ "caperuza_de_tela_vil": {
+  "displayid": 15391
+ },
+ "capucha_de_encantador": {
+  "displayid": 15024
+ },
+ "capucha_vampirica": {
+  "displayid": 694068
+ },
+ "chal_vampirico": {
+  "displayid": 696269
+ },
+ "chaqueta_de_esmoquin": {
+  "displayid": 11646
+ },
+ "cinta_de_pano_runico": {
+  "displayid": 25230
+ },
+ "cinta_de_pano_tormentoso": {
+  "displayid": 18877
+ },
+ "cinta_de_seda": {
+  "displayid": 15863
+ },
+ "cinta_de_tejido_magico_negra": {
+  "displayid": 18860
+ },
+ "cinta_de_tejido_magico_roja": {
+  "displayid": 16396
+ },
+ "cinturon_bordado_del_archimago": {
+  "displayid": 5788
+ },
+ "cinturon_de_arana": {
+  "displayid": 5764
+ },
+ "cinturon_de_estrella": {
+  "displayid": 4634
+ },
+ "cinturon_de_lino": {
+  "displayid": 5457
+ },
+ "cinturon_de_pano_runico": {
+  "displayid": 25235
+ },
+ "cinturon_de_seda_azur": {
+  "displayid": 7700
+ },
+ "cinturon_de_seda_carmesi": {
+  "displayid": 5804
+ },
+ "cinturon_de_seda_terranea": {
+  "displayid": 4905
+ },
+ "cinturon_de_tejido_fantasmal": {
+  "displayid": 10087
+ },
+ "cinturon_del_archimago": {
+  "displayid": 5788
+ },
+ "cinturon_runico_estigio": {
+  "displayid": 30555
+ },
+ "cordon_de_invocador": {
+  "displayid": 6121
+ },
+ "corona_nemorosa": {
+  "displayid": 35206
+ },
+ "correa_de_augur_escarlata": {
+  "displayid": 700411
+ },
+ "diadema_de_tejido_onirico": {
+  "displayid": 19000
+ },
+ "espaldares_de_mente_fracturada": {
+  "displayid": 680018
+ },
+ "falda_de_colores": {
+  "displayid": 10636
+ },
+ "falda_sencilla": {
+  "displayid": 10199
+ },
+ "guantes_bengala_del_nucleo": {
+  "displayid": 28754
+ },
+ "guantes_de_fe_verdadera": {
+  "displayid": 11097
+ },
+ "guantes_de_lana_gruesos": {
+  "displayid": 11036
+ },
+ "guantes_de_lino_gruesos": {
+  "displayid": 2202
+ },
+ "guantes_de_maestria_en_hechizos": {
+  "displayid": 3839
+ },
+ "guantes_de_meditacion": {
+  "displayid": 4620
+ },
+ "guantes_de_pano_brillante": {
+  "displayid": 3218
+ },
+ "guantes_de_pano_cenizo": {
+  "displayid": 7523
+ },
+ "guantes_de_pano_runico": {
+  "displayid": 25231
+ },
+ "guantes_de_pano_tormentoso": {
+  "displayid": 11303
+ },
+ "guantes_de_seda_azur": {
+  "displayid": 11226
+ },
+ "guantes_de_seda_carmesies": {
+  "displayid": 11482
+ },
+ "guantes_de_tejido_de_escarcha": {
+  "displayid": 11303
+ },
+ "guantes_de_tejido_de_sombra": {
+  "displayid": 11126
+ },
+ "guantes_de_tejido_fantasmal": {
+  "displayid": 11097
+ },
+ "guantes_de_tejido_magico_negros": {
+  "displayid": 8307
+ },
+ "guantes_de_tejido_magico_rojos": {
+  "displayid": 19095
+ },
+ "guantes_de_tejido_onirico": {
+  "displayid": 9534
+ },
+ "guantes_de_tela_lunar": {
+  "displayid": 25045
+ },
+ "guantes_de_tela_vil": {
+  "displayid": 7523
+ },
+ "guantes_fenix": {
+  "displayid": 8876
+ },
+ "guantes_glaciales": {
+  "displayid": 35286
+ },
+ "guantes_helados": {
+  "displayid": 35286
+ },
+ "guantes_inferno": {
+  "displayid": 3828
+ },
+ "guerrera_de_pano_runico": {
+  "displayid": 25207
+ },
+ "guerrera_de_tejido_de_escarcha": {
+  "displayid": 24610
+ },
+ "hombreras_del_trastornado": {
+  "displayid": 680019
+ },
+ "hombreras_nemorosas": {
+  "displayid": 35209
+ },
+ "jubon_de_lana_verde": {
+  "displayid": 10849
+ },
+ "jubon_de_lino_azul": {
+  "displayid": 10843
+ },
+ "jubon_de_lino_barbarico": {
+  "displayid": 7811
+ },
+ "jubon_de_lino_marron": {
+  "displayid": 10708
+ },
+ "jubon_de_lino_rojo": {
+  "displayid": 10706
+ },
+ "jubon_de_pano_cenizo": {
+  "displayid": 15986
+ },
+ "jubon_de_pano_tormentoso": {
+  "displayid": 8161
+ },
+ "jubon_de_seda_azur": {
+  "displayid": 17128
+ },
+ "jubon_de_seda_carmesi": {
+  "displayid": 13671
+ },
+ "jubon_de_tejido_fantasmal": {
+  "displayid": 11906
+ },
+ "jubon_de_tejido_magico_negro": {
+  "displayid": 24352
+ },
+ "jubon_de_tejido_magico_rojo": {
+  "displayid": 19093
+ },
+ "jubon_de_tejido_onirico": {
+  "displayid": 9575
+ },
+ "jubon_de_tela_lunar": {
+  "displayid": 10403
+ },
+ "jubon_de_tela_lunar_incandescente": {
+  "displayid": 10403
+ },
+ "jubon_glacial": {
+  "displayid": 35302
+ },
+ "jubon_helado": {
+  "displayid": 35302
+ },
+ "jubon_nemoroso": {
+  "displayid": 8388
+ },
+ "jubon_terraneo": {
+  "displayid": 2471
+ },
+ "jubon_vid_de_sangre": {
+  "displayid": 11481
+ },
+ "leotardos_bengala_del_nucleo": {
+  "displayid": 31685
+ },
+ "leotardos_de_augur_escarlata": {
+  "displayid": 700406
+ },
+ "leotardos_de_tejido_magico_negros": {
+  "displayid": 20405
+ },
+ "leotardos_de_tejido_zahori": {
+  "displayid": 8420
+ },
+ "leotardos_de_tela_lunar": {
+  "displayid": 2318
+ },
+ "leotardos_de_tela_lunar_incandescente": {
+  "displayid": 2318
+ },
+ "leotardos_runicos_estigios": {
+  "displayid": 20405
+ },
+ "leotardos_vid_de_sangre": {
+  "displayid": 7939
+ },
+ "manos_de_oscuridad": {
+  "displayid": 12615
+ },
+ "manteo_de_lana": {
+  "displayid": 23144
+ },
+ "manteo_de_lino_reforzado": {
+  "displayid": 23105
+ },
+ "manteo_de_seda_qiraji": {
+  "displayid": 694906
+ },
+ "manto_bengala_del_nucleo": {
+  "displayid": 28756
+ },
+ "manto_de_augur_escarlata": {
+  "displayid": 698066
+ },
+ "manto_de_invocador": {
+  "displayid": 4904
+ },
+ "manto_de_locura": {
+  "displayid": 680021
+ },
+ "manto_de_los_fauces_de_madera": {
+  "displayid": 36269
+ },
+ "manton_de_seda_qiraji": {
+  "displayid": 694908
+ },
+ "mitones_de_augur_escarlata": {
+  "displayid": 700407
+ },
+ "mitones_de_escamas_oniricas": {
+  "displayid": 16633
+ },
+ "mono_azul": {
+  "displayid": 11037
+ },
+ "monoculo_de_filamento_arcano_gneurovincu": {
+  "displayid": 17725
+ },
+ "munequeras_glaciales": {
+  "displayid": 35283
+ },
+ "munequeras_heladas": {
+  "displayid": 35283
+ },
+ "mascara_de_bandido_blanca": {
+  "displayid": 18861
+ },
+ "mascara_de_tejido_de_sombra": {
+  "displayid": 19060
+ },
+ "pantalones_de_esmoquin": {
+  "displayid": 11308
+ },
+ "pantalones_de_lana_gruesos": {
+  "displayid": 4617
+ },
+ "pantalones_de_lino_marrones": {
+  "displayid": 1883
+ },
+ "pantalones_de_lino_sencillos": {
+  "displayid": 2185
+ },
+ "pantalones_de_pano_brillante": {
+  "displayid": 12341
+ },
+ "pantalones_de_pano_cenizo": {
+  "displayid": 15984
+ },
+ "pantalones_de_pano_runico": {
+  "displayid": 25208
+ },
+ "pantalones_de_pano_tormentoso": {
+  "displayid": 5874
+ },
+ "pantalones_de_seda_azur": {
+  "displayid": 12360
+ },
+ "pantalones_de_tejido_de_escarcha": {
+  "displayid": 8974
+ },
+ "pantalones_de_tejido_de_sombra": {
+  "displayid": 8236
+ },
+ "pantalones_de_tejido_fantasmal": {
+  "displayid": 10098
+ },
+ "pantalones_de_tejido_magico_rojos": {
+  "displayid": 7520
+ },
+ "pantalones_de_tela_vil": {
+  "displayid": 4310
+ },
+ "pantalones_fenix": {
+  "displayid": 4619
+ },
+ "prendas_de_augur_escarlata": {
+  "displayid": 700404
+ },
+ "punos_de_augur_escarlata": {
+  "displayid": 700408
+ },
+ "sabiduria_de_los_fauces_de_madera": {
+  "displayid": 9398
+ },
+ "sobrehombros_argenta": {
+  "displayid": 31828
+ },
+ "sobrehombros_azur": {
+  "displayid": 16463
+ },
+ "sobrehombros_de_lana_con_doble_pespunte": {
+  "displayid": 5494
+ },
+ "sobrehombros_de_lana_reforzada": {
+  "displayid": 17135
+ },
+ "sobrehombros_de_pano_runico": {
+  "displayid": 17746
+ },
+ "sobrehombros_de_pano_tormentoso": {
+  "displayid": 11638
+ },
+ "sobrehombros_de_seda_carmesies": {
+  "displayid": 9574
+ },
+ "sobrehombros_de_seda_verdes": {
+  "displayid": 5762
+ },
+ "sobrehombros_de_tejido_de_sombra": {
+  "displayid": 12867
+ },
+ "sobrehombros_de_tejido_magico_negros": {
+  "displayid": 4925
+ },
+ "sobrehombros_de_tejido_magico_rojos": {
+  "displayid": 17703
+ },
+ "sobrehombros_de_tela_lunar": {
+  "displayid": 24966
+ },
+ "sobrehombros_de_tela_vil": {
+  "displayid": 4488
+ },
+ "sobrehombros_nemorosos": {
+  "displayid": 35209
+ },
+ "sombrero_de_almirante": {
+  "displayid": 18872
+ },
+ "suelas_de_augur_escarlata": {
+  "displayid": 700409
+ },
+ "toga_bengala_del_nucleo": {
+  "displayid": 16668
+ },
+ "toga_de_adepto_superior": {
+  "displayid": 12716
+ },
+ "toga_de_lana_gris": {
+  "displayid": 10896
+ },
+ "toga_de_lana_verde": {
+  "displayid": 10894
+ },
+ "toga_de_lino_azul": {
+  "displayid": 8853
+ },
+ "toga_de_lino_blanca": {
+  "displayid": 17123
+ },
+ "toga_de_lino_marron": {
+  "displayid": 10465
+ },
+ "toga_de_lino_roja": {
+  "displayid": 10621
+ },
+ "toga_de_noche_invernal": {
+  "displayid": 24612
+ },
+ "toga_de_pano_brillante": {
+  "displayid": 15820
+ },
+ "toga_de_pano_cenizo": {
+  "displayid": 14606
+ },
+ "toga_de_pano_runico": {
+  "displayid": 21957
+ },
+ "toga_de_poder": {
+  "displayid": 17133
+ },
+ "toga_de_seda_carmesi": {
+  "displayid": 5483
+ },
+ "toga_de_tejido_de_escarcha": {
+  "displayid": 24612
+ },
+ "toga_de_tejido_de_sombra": {
+  "displayid": 24950
+ },
+ "toga_de_tejido_magico_negra": {
+  "displayid": 4368
+ },
+ "toga_de_tejido_zahori": {
+  "displayid": 17275
+ },
+ "toga_de_tela_lunar": {
+  "displayid": 30823
+ },
+ "toga_de_tela_lunar_incandescente": {
+  "displayid": 30823
+ },
+ "toga_de_tela_vil": {
+  "displayid": 24932
+ },
+ "toga_de_zahori_inferior": {
+  "displayid": 8864
+ },
+ "toga_del_archimago": {
+  "displayid": 11634
+ },
+ "toga_del_vacio": {
+  "displayid": 18834
+ },
+ "togas_de_arcana": {
+  "displayid": 8865
+ },
+ "traje_de_fiesta": {
+  "displayid": 34074
+ },
+ "turbante_de_tejido_zahori": {
+  "displayid": 24942
+ },
+ "tunica_vampirica": {
+  "displayid": 694072
+ },
+ "vestido_de_boda_blanco": {
+  "displayid": 13119
+ },
+ "vestido_de_fiesta": {
+  "displayid": 33459
+ },
+ "vestido_de_lana_blanco": {
+  "displayid": 13046
+ },
+ "vestido_negro_sencillo": {
+  "displayid": 18917
+ },
+ "vestido_sencillo": {
+  "displayid": 13043
+ },
+ "vestimentas_de_fe_verdadera": {
+  "displayid": 25203
+ },
+ "zapatillas_de_seda_de_arana": {
+  "displayid": 4466
+ },
+ "almofar_de_escamas_doradas_2": {
+  "displayid": 15301
+ },
+ "botas_de_escamas_doradas_2": {
+  "displayid": 4153
+ },
+ "botas_del_encantador_2": {
+  "displayid": 4631
+ },
+ "botas_zarzal_2": {
+  "displayid": 35214
+ },
+ "brazales_acecharenas_2": {
+  "displayid": 26793
+ },
+ "brazales_de_cuero_de_guardian_2": {
+  "displayid": 9550
+ },
+ "brazales_de_escamas_heladas_2": {
+  "displayid": 35292
+ },
+ "brazales_deliriohelado_2": {
+  "displayid": 35275
+ },
+ "brazales_escupefuego_2": {
+  "displayid": 16395
+ },
+ "brazales_polares_2": {
+  "displayid": 35287
+ },
+ "capa_seda": {
+  "displayid": 23125
+ },
+ "capa_larga_de_seda_2": {
+  "displayid": 15076
+ },
+ "capucha_de_encantador_2": {
+  "displayid": 15024
+ },
+ "cinturon_de_guardian_2": {
+  "displayid": 8606
+ },
+ "cinturon_de_obsidiana_ligero_2": {
+  "displayid": 23364
+ },
+ "cinturon_de_obsidiana_pesado_2": {
+  "displayid": 23364
+ },
+ "cinturon_de_seda_carmesi_2": {
+  "displayid": 5804
+ },
+ "cinturon_de_seda_terranea_2": {
+  "displayid": 4905
+ },
+ "cinturon_parraferrea_2": {
+  "displayid": 35218
+ },
+ "cinturon_zarzal_2": {
+  "displayid": 35213
+ },
+ "coraza_de_escamas_de_tortuga_2": {
+  "displayid": 11598
+ },
+ "coraza_de_escamas_heladas_2": {
+  "displayid": 35293
+ },
+ "coraza_deliriohelado_2": {
+  "displayid": 35276
+ },
+ "corona_nemorosa_2": {
+  "displayid": 35206
+ },
+ "espada_ancha_de_acero_lunar_2": {
+  "displayid": 5105
+ },
+ "guanteletes_acecharenas_2": {
+  "displayid": 26798
+ },
+ "guanteletes_de_escamas_doradas_2": {
+  "displayid": 18256
+ },
+ "guanteletes_de_escamas_heladas_2": {
+  "displayid": 35294
+ },
+ "guanteletes_deliriohelado_2": {
+  "displayid": 35277
+ },
+ "guanteletes_escupefuego_2": {
+  "displayid": 17416
+ },
+ "guantes_de_escamas_de_tortuga_2": {
+  "displayid": 16488
+ },
+ "guantes_glaciales_2": {
+  "displayid": 35286
+ },
+ "guantes_parraferrea_2": {
+  "displayid": 35217
+ },
+ "guantes_polares_2": {
+  "displayid": 35303
+ },
+ "guerrera_polar_2": {
+  "displayid": 35290
+ },
+ "jubon_de_tejido_magico_negro_2": {
+  "displayid": 24352
+ },
+ "jubon_glacial_2": {
+  "displayid": 35302
+ },
+ "jubon_nemoroso_2": {
+  "displayid": 8388
+ },
+ "jubon_terraneo_2": {
+  "displayid": 2471
+ },
+ "leotardos_de_escamas_doradas_2": {
+  "displayid": 4744
+ },
+ "leotardos_de_tejido_magico_negros_2": {
+  "displayid": 20405
+ },
+ "loriga_de_escamas_doradas_2": {
+  "displayid": 9425
+ },
+ "martillo_de_sulfuron_2": {
+  "displayid": 29699
+ },
+ "munequeras_glaciales_2": {
+  "displayid": 35283
+ },
+ "mascara_de_gran_vudu_2": {
+  "displayid": 18689
+ },
+ "pantalones_de_guardian_2": {
+  "displayid": 8426
+ },
+ "placa_hierro_negro_2": {
+  "displayid": 20992
+ },
+ "sobrehombros_de_escamas_doradas_2": {
+  "displayid": 9424
+ },
+ "sobrehombros_de_seda_carmesies_2": {
+  "displayid": 9574
+ },
+ "toga_de_gran_vudu_2": {
+  "displayid": 13666
+ },
+ "toga_de_seda_carmesi_2": {
+  "displayid": 5483
+ },
+ "varita_mistica_superior_2": {
+  "displayid": 21101
+ },
+ "yelmo_mithril": {
+  "displayid": 35211
+ }
+}

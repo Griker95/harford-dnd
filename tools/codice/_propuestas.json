@@ -1,0 +1,1731 @@
+[
+ {
+  "lib": "Aceleración",
+  "nivel": 3,
+  "exp": "Invocar Feérico",
+  "fuente": "TCE",
+  "score": 0.46
+ },
+ {
+  "lib": "Agotamiento",
+  "nivel": 5,
+  "exp": "GOLPE FLAMÍGERO",
+  "fuente": "PHB",
+  "score": 0.54
+ },
+ {
+  "lib": "Alterar Aspecto",
+  "nivel": 2,
+  "exp": "Desgarrar la Mente",
+  "fuente": "WC",
+  "score": 0.48
+ },
+ {
+  "lib": "Alterar el Ser",
+  "nivel": 2,
+  "exp": "Atar a la Tierra",
+  "fuente": "XGE",
+  "score": 0.6
+ },
+ {
+  "lib": "Alterar el Yo",
+  "nivel": 2,
+  "exp": "Fortaleza de Hielo",
+  "fuente": "WC",
+  "score": 0.52
+ },
+ {
+  "lib": "Alterar Forma",
+  "nivel": 2,
+  "exp": "Atar a la Tierra",
+  "fuente": "XGE",
+  "score": 0.48
+ },
+ {
+  "lib": "Amigos",
+  "nivel": 0,
+  "exp": "Salvajismo Primigenio",
+  "fuente": "XGE",
+  "score": 0.37
+ },
+ {
+  "lib": "Amistad con los Animales",
+  "nivel": 1,
+  "exp": "PROTECCIÓN CONTRA EL BIENY EL MAL",
+  "fuente": "PHB",
+  "score": 0.42
+ },
+ {
+  "lib": "Anatema",
+  "nivel": 1,
+  "exp": "RAYO NAUSEABUNDO",
+  "fuente": "PHB",
+  "score": 0.43
+ },
+ {
+  "lib": "Andar en el Viento",
+  "nivel": 6,
+  "exp": "VIAJAR CON EL VIENTO",
+  "fuente": "PHB",
+  "score": 0.79
+ },
+ {
+  "lib": "Arcano Miraje",
+  "nivel": 7,
+  "exp": "TELETRANSPORTE",
+  "fuente": "PHB",
+  "score": 0.44
+ },
+ {
+  "lib": "Arma Impía",
+  "nivel": 5,
+  "exp": "Arma Profana",
+  "fuente": "WC",
+  "score": 0.64
+ },
+ {
+  "lib": "Asesino Fantasmagórico",
+  "nivel": 4,
+  "exp": "CASTIGO ABRUMADOR",
+  "fuente": "PHB",
+  "score": 0.51
+ },
+ {
+  "lib": "Ayuda",
+  "nivel": 2,
+  "exp": "N UBE DE DAGAS",
+  "fuente": "PHB",
+  "score": 0.32
+ },
+ {
+  "lib": "Azotador de Aganazzar",
+  "nivel": 2,
+  "exp": "Abrasador de Aganazzar",
+  "fuente": "XGE",
+  "score": 0.84
+ },
+ {
+  "lib": "Azote de Aganazzar",
+  "nivel": 2,
+  "exp": "Abrasador de Aganazzar",
+  "fuente": "XGE",
+  "score": 0.75
+ },
+ {
+  "lib": "Barco Volador de Jaina",
+  "nivel": 9,
+  "exp": "Nave Voladora de Jaina",
+  "fuente": "WC",
+  "score": 0.82
+ },
+ {
+  "lib": "Baya Mágica",
+  "nivel": 1,
+  "exp": "CREARO DESTRUIR AGUA",
+  "fuente": "PHB",
+  "score": 0.32
+ },
+ {
+  "lib": "Bendecir",
+  "nivel": null,
+  "exp": "ENREDADERA",
+  "fuente": "PHB",
+  "score": 0.56
+ },
+ {
+  "lib": "Bestow Curse",
+  "nivel": 3,
+  "exp": "N UBE APESTOSA",
+  "fuente": "PHB",
+  "score": 0.46
+ },
+ {
+  "lib": "Bloqueo Arcano",
+  "nivel": 2,
+  "exp": "D U LCE DESCANSO",
+  "fuente": "PHB",
+  "score": 0.47
+ },
+ {
+  "lib": "Bola de Fuego Retardada",
+  "nivel": 7,
+  "exp": "BOLA DE FUEGO DE EXPLOSIÓN RETARDADA",
+  "fuente": "PHB",
+  "score": 0.78
+ },
+ {
+  "lib": "Bola de Fuego Retrasada",
+  "nivel": 7,
+  "exp": "BOLA DE FUEGO DE EXPLOSIÓN RETARDADA",
+  "fuente": "PHB",
+  "score": 0.71
+ },
+ {
+  "lib": "Bosque Druídico",
+  "nivel": 6,
+  "exp": "Arboleda Druida",
+  "fuente": "XGE",
+  "score": 0.6
+ },
+ {
+  "lib": "Cadena de Relámpagos",
+  "nivel": 6,
+  "exp": "Investidura De Liamas",
+  "fuente": "XGE",
+  "score": 0.54
+ },
+ {
+  "lib": "Caminar por Árboles",
+  "nivel": 5,
+  "exp": "ANIMAR OBJETOS",
+  "fuente": "PHB",
+  "score": 0.55
+ },
+ {
+  "lib": "Caminar sobre el Viento",
+  "nivel": 6,
+  "exp": "VIAJAR CON EL VIENTO",
+  "fuente": "PHB",
+  "score": 0.7
+ },
+ {
+  "lib": "Carne a Piedra",
+  "nivel": 6,
+  "exp": "DE LA CARNEA LA PIEDRA",
+  "fuente": "PHB",
+  "score": 0.78
+ },
+ {
+  "lib": "Cáscara Antimágica",
+  "nivel": 2,
+  "exp": "Atar a la Tierra",
+  "fuente": "XGE",
+  "score": 0.53
+ },
+ {
+  "lib": "Cáscara Antivida",
+  "nivel": 5,
+  "exp": "CAPARAZÓN ANTIVIDA",
+  "fuente": "PHB",
+  "score": 0.82
+ },
+ {
+  "lib": "Castigo deslumbrante",
+  "nivel": null,
+  "exp": "CASTIGO DESTERRADOR",
+  "fuente": "PHB",
+  "score": 0.67
+ },
+ {
+  "lib": "Castigo justo",
+  "nivel": null,
+  "exp": "CASTIGO DESTERRADOR",
+  "fuente": "PHB",
+  "score": 0.69
+ },
+ {
+  "lib": "Castigo tambaleante",
+  "nivel": null,
+  "exp": "CASTIGO ABRASADOR",
+  "fuente": "PHB",
+  "score": 0.67
+ },
+ {
+  "lib": "Choque de Sombras",
+  "nivel": 5,
+  "exp": "Choque Sombrío",
+  "fuente": "WC",
+  "score": 0.77
+ },
+ {
+  "lib": "Clonación",
+  "nivel": 8,
+  "exp": "CLON",
+  "fuente": "PHB",
+  "score": 0.62
+ },
+ {
+  "lib": "Cofre Secreto de Leomund",
+  "nivel": 4,
+  "exp": "Convocar Ser del Vacío",
+  "fuente": "WC",
+  "score": 0.52
+ },
+ {
+  "lib": "Comando",
+  "nivel": 1,
+  "exp": "CASTIGO ATRONADOR",
+  "fuente": "PHB",
+  "score": 0.5
+ },
+ {
+  "lib": "Comprender Idiomas",
+  "nivel": 1,
+  "exp": "TORMENTA DE ESPINAS",
+  "fuente": "PHB",
+  "score": 0.54
+ },
+ {
+  "lib": "Comulgar con la naturaleza",
+  "nivel": null,
+  "exp": "COMUNIÓN CON LA NATURALEZA",
+  "fuente": "PHB",
+  "score": 0.85
+ },
+ {
+  "lib": "Conceder Maldición",
+  "nivel": 3,
+  "exp": "Del Día",
+  "fuente": "PHB",
+  "score": 0.4
+ },
+ {
+  "lib": "Concha Antivida",
+  "nivel": 5,
+  "exp": "CAPARAZÓN ANTIVIDA",
+  "fuente": "PHB",
+  "score": 0.73
+ },
+ {
+  "lib": "Concha de Antivida",
+  "nivel": 5,
+  "exp": "CAPARAZÓN ANTIVIDA",
+  "fuente": "PHB",
+  "score": 0.67
+ },
+ {
+  "lib": "Conjurar Hadas",
+  "nivel": 6,
+  "exp": "CONJURAR FEÉRICO",
+  "fuente": "PHB",
+  "score": 0.6
+ },
+ {
+  "lib": "Conocer la Intención",
+  "nivel": 0,
+  "exp": "Congelación",
+  "fuente": "XGE",
+  "score": 0.65
+ },
+ {
+  "lib": "Contraconjuro",
+  "nivel": 3,
+  "exp": "ANIMARA LOS MUERTOS",
+  "fuente": "PHB",
+  "score": 0.44
+ },
+ {
+  "lib": "Corteza de árbol",
+  "nivel": null,
+  "exp": "Fortaleza de Hielo",
+  "fuente": "WC",
+  "score": 0.65
+ },
+ {
+  "lib": "Crear Alimento y Agua",
+  "nivel": 3,
+  "exp": "CREAR COMIDAY AGUA",
+  "fuente": "PHB",
+  "score": 0.67
+ },
+ {
+  "lib": "Crear No Muertos",
+  "nivel": 6,
+  "exp": "CREAR MUERTO VIVIENTE",
+  "fuente": "PHB",
+  "score": 0.65
+ },
+ {
+  "lib": "Crecimiento de Espinas",
+  "nivel": 2,
+  "exp": "RESTA BLECIMIENTO MENOR",
+  "fuente": "PHB",
+  "score": 0.58
+ },
+ {
+  "lib": "Crecimiento de Plantas",
+  "nivel": 3,
+  "exp": "Muro De Arena",
+  "fuente": "XGE",
+  "score": 0.51
+ },
+ {
+  "lib": "Criado Invisible",
+  "nivel": 1,
+  "exp": "Favor Temible",
+  "fuente": "WC",
+  "score": 0.41
+ },
+ {
+  "lib": "Curación en Masa",
+  "nivel": 9,
+  "exp": "CURAR EN MASA",
+  "fuente": "PHB",
+  "score": 0.83
+ },
+ {
+  "lib": "Curar heridas masivas",
+  "nivel": null,
+  "exp": "CURAR HERIDAS EN MASA",
+  "fuente": "PHB",
+  "score": 0.86
+ },
+ {
+  "lib": "Danza Irresistible de Otto",
+  "nivel": 6,
+  "exp": "BAILE IRRESISTIBLE DE ÜTTO",
+  "fuente": "PHB",
+  "score": 0.81
+ },
+ {
+  "lib": "de Snilloc",
+  "nivel": 2,
+  "exp": "Fortaleza de Hielo",
+  "fuente": "WC",
+  "score": 0.43
+ },
+ {
+  "lib": "Debilitamiento Mental",
+  "nivel": 8,
+  "exp": "ncima de MARCHITAMIENTO HORRIBLE DE ABI-DALZIM",
+  "fuente": "XGE",
+  "score": 0.45
+ },
+ {
+  "lib": "Dedos de Escarcha ^IDRotF^",
+  "nivel": 1,
+  "exp": "NU BE DE OSCURECIMIENTO",
+  "fuente": "PHB",
+  "score": 0.47
+ },
+ {
+  "lib": "Demonio de polvo ^XGE^",
+  "nivel": null,
+  "exp": "DEDO DE LA MUERTE",
+  "fuente": "PHB",
+  "score": 0.54
+ },
+ {
+  "lib": "Descarga mental",
+  "nivel": null,
+  "exp": "Desgarrar Mente",
+  "fuente": "WC",
+  "score": 0.73
+ },
+ {
+  "lib": "Desenfoque",
+  "nivel": 2,
+  "exp": "Desgarrar Mente",
+  "fuente": "WC",
+  "score": 0.48
+ },
+ {
+  "lib": "Detener el Tiempo",
+  "nivel": 9,
+  "exp": "PARAR EL TIEMPO",
+  "fuente": "PHB",
+  "score": 0.69
+ },
+ {
+  "lib": "Devastación Temporal",
+  "nivel": 9,
+  "exp": "PROYECCIÓN ASTRAL",
+  "fuente": "PHB",
+  "score": 0.54
+ },
+ {
+  "lib": "Disipar el mal y el bien",
+  "nivel": null,
+  "exp": "DISIPAR EL BIENY EL MAL",
+  "fuente": "PHB",
+  "score": 0.68
+ },
+ {
+  "lib": "Dispersar",
+  "nivel": 6,
+  "exp": "Dispersión",
+  "fuente": "XGE",
+  "score": 0.74
+ },
+ {
+  "lib": "Drenaje ^XGE^",
+  "nivel": null,
+  "exp": "Cadena de Muerte",
+  "fuente": "WC",
+  "score": 0.52
+ },
+ {
+  "lib": "Duelo Compulsivo",
+  "nivel": 1,
+  "exp": "DUELOF ORZADO",
+  "fuente": "PHB",
+  "score": 0.55
+ },
+ {
+  "lib": "Eliminar Maldición",
+  "nivel": 3,
+  "exp": "Invocar Feérico",
+  "fuente": "TCE",
+  "score": 0.48
+ },
+ {
+  "lib": "Elocuencia",
+  "nivel": 8,
+  "exp": "TELEPATÍA",
+  "fuente": "PHB",
+  "score": 0.53
+ },
+ {
+  "lib": "Encontrar Corcel",
+  "nivel": 2,
+  "exp": "Invocar Bestia",
+  "fuente": "TCE",
+  "score": 0.4
+ },
+ {
+  "lib": "Energía Enervante",
+  "nivel": 5,
+  "exp": "Enervación",
+  "fuente": "XGE",
+  "score": 0.52
+ },
+ {
+  "lib": "Enjambre de Meteoros",
+  "nivel": 9,
+  "exp": "TORMENTA DE METEORITOS",
+  "fuente": "PHB",
+  "score": 0.71
+ },
+ {
+  "lib": "Enredadera atrapadora",
+  "nivel": null,
+  "exp": "ENREDADERA",
+  "fuente": "PHB",
+  "score": 0.65
+ },
+ {
+  "lib": "Envío",
+  "nivel": 3,
+  "exp": "Invocar Feérico",
+  "fuente": "TCE",
+  "score": 0.4
+ },
+ {
+  "lib": "Erupción de Lava",
+  "nivel": 2,
+  "exp": "Estallido de Lava",
+  "fuente": "WC",
+  "score": 0.67
+ },
+ {
+  "lib": "Escisión",
+  "nivel": 6,
+  "exp": "Dispersión",
+  "fuente": "XGE",
+  "score": 0.56
+ },
+ {
+  "lib": "Escribir en el Cielo",
+  "nivel": 2,
+  "exp": "RESTA BLECIMIENTO MENOR",
+  "fuente": "PHB",
+  "score": 0.47
+ },
+ {
+  "lib": "Escritura Ilusoria",
+  "nivel": 1,
+  "exp": "CASTIGO ABRASADOR",
+  "fuente": "PHB",
+  "score": 0.4
+ },
+ {
+  "lib": "Escrutar",
+  "nivel": 5,
+  "exp": "DESPERTAR",
+  "fuente": "PHB",
+  "score": 0.71
+ },
+ {
+  "lib": "Escudo de fuego (escudo de frío)",
+  "nivel": null,
+  "exp": "CONO DE FRÍO",
+  "fuente": "PHB",
+  "score": 0.52
+ },
+ {
+  "lib": "Esencia Unida",
+  "nivel": 7,
+  "exp": "RESURRECCIÓN",
+  "fuente": "PHB",
+  "score": 0.48
+ },
+ {
+  "lib": "Esfera Acuática",
+  "nivel": 4,
+  "exp": "Esfera Acuosa",
+  "fuente": "XGE",
+  "score": 0.79
+ },
+ {
+  "lib": "Esfera de Fuego",
+  "nivel": 2,
+  "exp": "SORDERA/ CEGUERA",
+  "fuente": "PHB",
+  "score": 0.53
+ },
+ {
+  "lib": "Esfera de Invulnerabilidad",
+  "nivel": 6,
+  "exp": "GLOBO DE INVULNERABILIDAD",
+  "fuente": "PHB",
+  "score": 0.78
+ },
+ {
+  "lib": "Esfera Resiliente de Otiluke",
+  "nivel": 4,
+  "exp": "ESFERA ELÁSTICA DE ÜTILUKE",
+  "fuente": "PHB",
+  "score": 0.74
+ },
+ {
+  "lib": "Estallido estelar",
+  "nivel": null,
+  "exp": "Estallido de Lava",
+  "fuente": "WC",
+  "score": 0.76
+ },
+ {
+  "lib": "Estática Sináptica",
+  "nivel": 5,
+  "exp": "ESCUDRIÑAR",
+  "fuente": "PHB",
+  "score": 0.43
+ },
+ {
+  "lib": "Estrella Oscura",
+  "nivel": 8,
+  "exp": "TELEPATÍA",
+  "fuente": "PHB",
+  "score": 0.42
+ },
+ {
+  "lib": "Eterealidad",
+  "nivel": 7,
+  "exp": "EXCURSIÓN ETÉREA",
+  "fuente": "PHB",
+  "score": 0.44
+ },
+ {
+  "lib": "Etereidad",
+  "nivel": 7,
+  "exp": "EXCURSIÓN ETÉREA",
+  "fuente": "PHB",
+  "score": 0.48
+ },
+ {
+  "lib": "Execrar",
+  "nivel": 1,
+  "exp": "Golpe de Céfiro",
+  "fuente": "XGE",
+  "score": 0.36
+ },
+ {
+  "lib": "Explosión de Espadas",
+  "nivel": 0,
+  "exp": "Estallido De Espadas",
+  "fuente": "TCE",
+  "score": 0.7
+ },
+ {
+  "lib": "Explosión Retardada de Bola de Fuego",
+  "nivel": 7,
+  "exp": "BOLA DE FUEGO DE EXPLOSIÓN RETARDADA",
+  "fuente": "PHB",
+  "score": 1.0
+ },
+ {
+  "lib": "Extrañeza",
+  "nivel": 9,
+  "exp": "TORMENTA DE LA VENGANZA",
+  "fuente": "PHB",
+  "score": 0.38
+ },
+ {
+  "lib": "Facilidad de Palabra",
+  "nivel": 8,
+  "exp": "Furia de Alexstrasza",
+  "fuente": "WC",
+  "score": 0.5
+ },
+ {
+  "lib": "Faro de Esperanza",
+  "nivel": 3,
+  "exp": "Muro De Arena",
+  "fuente": "XGE",
+  "score": 0.53
+ },
+ {
+  "lib": "Farol de esperanza",
+  "nivel": null,
+  "exp": "Furia de Alexstrasza",
+  "fuente": "WC",
+  "score": 0.63
+ },
+ {
+  "lib": "Fascinación",
+  "nivel": 2,
+  "exp": "Espina Mental",
+  "fuente": "XGE",
+  "score": 0.42
+ },
+ {
+  "lib": "Fascinar",
+  "nivel": 2,
+  "exp": "Espina Mental",
+  "fuente": "XGE",
+  "score": 0.38
+ },
+ {
+  "lib": "Fisura Gravitacional",
+  "nivel": 6,
+  "exp": "Investidura De Viento",
+  "fuente": "XGE",
+  "score": 0.49
+ },
+ {
+  "lib": "Formas de Animales",
+  "nivel": 8,
+  "exp": "ASPECTOS ANIMALES",
+  "fuente": "PHB",
+  "score": 0.69
+ },
+ {
+  "lib": "Fuerza Brillante",
+  "nivel": 2,
+  "exp": "Desgarrar Mente",
+  "fuente": "WC",
+  "score": 0.45
+ },
+ {
+  "lib": "Fuerza Fantasmagórica",
+  "nivel": 2,
+  "exp": "Pluma Angelical",
+  "fuente": "WC",
+  "score": 0.5
+ },
+ {
+  "lib": "Furia de la Serpiente de la Muerte",
+  "nivel": 5,
+  "exp": "Furia del Dragón de la Muerte",
+  "fuente": "WC",
+  "score": 0.76
+ },
+ {
+  "lib": "Glifo de Protección",
+  "nivel": 3,
+  "exp": "Muro De Arena",
+  "fuente": "XGE",
+  "score": 0.5
+ },
+ {
+  "lib": "Golpe Cegador",
+  "nivel": 3,
+  "exp": "EL MANTO DEL CRUZADO",
+  "fuente": "PHB",
+  "score": 0.42
+ },
+ {
+  "lib": "Golpe Desterrador",
+  "nivel": 5,
+  "exp": "CASTIGO DESTERRADOR",
+  "fuente": "PHB",
+  "score": 0.78
+ },
+ {
+  "lib": "Golpe Furioso",
+  "nivel": 1,
+  "exp": "Golpe de Céfiro",
+  "fuente": "XGE",
+  "score": 0.64
+ },
+ {
+  "lib": "Golpe Ígneo",
+  "nivel": 5,
+  "exp": "GOLPE FLAMÍGERO",
+  "fuente": "PHB",
+  "score": 0.77
+ },
+ {
+  "lib": "Golpe Justo",
+  "nivel": 2,
+  "exp": "Golpe Justiciero",
+  "fuente": "WC",
+  "score": 0.81
+ },
+ {
+  "lib": "Gravedad Invertida",
+  "nivel": 7,
+  "exp": "ROCIADA PRISMÁTICA",
+  "fuente": "PHB",
+  "score": 0.5
+ },
+ {
+  "lib": "Guardia con Hoja",
+  "nivel": 0,
+  "exp": "GUARDIA DE CUCHILLAS",
+  "fuente": "PHB",
+  "score": 0.61
+ },
+ {
+  "lib": "Guardianes Espirituales",
+  "nivel": 3,
+  "exp": "Sudario Espiritual",
+  "fuente": "TCE",
+  "score": 0.73
+ },
+ {
+  "lib": "Guardias y Barreras",
+  "nivel": 6,
+  "exp": "GUARDASY GUARDIAS",
+  "fuente": "PHB",
+  "score": 0.44
+ },
+ {
+  "lib": "Habilidad mejorada",
+  "nivel": null,
+  "exp": "Estallido De Espadas",
+  "fuente": "TCE",
+  "score": 0.53
+ },
+ {
+  "lib": "Hervir sangre",
+  "nivel": null,
+  "exp": "INVERTIR LA GRAVEDAD",
+  "fuente": "PHB",
+  "score": 0.55
+ },
+ {
+  "lib": "Hoja Afilada",
+  "nivel": 0,
+  "exp": "Ráfaga Arcana",
+  "fuente": "WC",
+  "score": 0.4
+ },
+ {
+  "lib": "Hoja de Llama",
+  "nivel": 2,
+  "exp": "Hoja de Sombra",
+  "fuente": "XGE",
+  "score": 0.67
+ },
+ {
+  "lib": "Hoja Llameante",
+  "nivel": 2,
+  "exp": "Desgarrar Mente",
+  "fuente": "WC",
+  "score": 0.48
+ },
+ {
+  "lib": "Hoja Verde Llameante",
+  "nivel": 0,
+  "exp": "Filo De Llamas Verdes",
+  "fuente": "TCE",
+  "score": 0.54
+ },
+ {
+  "lib": "Hoja Verdeante",
+  "nivel": 0,
+  "exp": "AGARRE ELECTRIZANTE",
+  "fuente": "PHB",
+  "score": 0.48
+ },
+ {
+  "lib": "Horrible de Abi-Dalzim",
+  "nivel": 8,
+  "exp": "ncima de MARCHITAMIENTO HORRIBLE DE ABI-DALZIM",
+  "fuente": "XGE",
+  "score": 0.65
+ },
+ {
+  "lib": "Imagen Espejo",
+  "nivel": 2,
+  "exp": "RESTA BLECIMIENTO MENOR",
+  "fuente": "PHB",
+  "score": 0.39
+ },
+ {
+  "lib": "Imagen Proyectada",
+  "nivel": 7,
+  "exp": "PROYECTAR IMAGEN",
+  "fuente": "PHB",
+  "score": 0.55
+ },
+ {
+  "lib": "Inversión de Viento",
+  "nivel": 6,
+  "exp": "Investidura De Viento",
+  "fuente": "XGE",
+  "score": 0.75
+ },
+ {
+  "lib": "Invisibilidad Mayor",
+  "nivel": 4,
+  "exp": "Hallar Corcel Mayor",
+  "fuente": "XGE",
+  "score": 0.42
+ },
+ {
+  "lib": "Invocar Demonio",
+  "nivel": 6,
+  "exp": "Invocar Infernal",
+  "fuente": "TCE",
+  "score": 0.65
+ },
+ {
+  "lib": "Invocar relámpagos",
+  "nivel": null,
+  "exp": "FLECHA DE RELÁMPAGO",
+  "fuente": "PHB",
+  "score": 0.65
+ },
+ {
+  "lib": "Lenguas",
+  "nivel": 3,
+  "exp": "Enemigos Abundantes",
+  "fuente": "XGE",
+  "score": 0.46
+ },
+ {
+  "lib": "Lentitud",
+  "nivel": 3,
+  "exp": "Siestecita",
+  "fuente": "XGE",
+  "score": 0.44
+ },
+ {
+  "lib": "Levantar a los muertos",
+  "nivel": null,
+  "exp": "ANIMARA LOS MUERTOS",
+  "fuente": "PHB",
+  "score": 0.83
+ },
+ {
+  "lib": "Leyenda",
+  "nivel": 5,
+  "exp": "CONOCER LAS LEYENDAS",
+  "fuente": "PHB",
+  "score": 0.52
+ },
+ {
+  "lib": "Llama Continua",
+  "nivel": 2,
+  "exp": "Pluma Angelical",
+  "fuente": "WC",
+  "score": 0.41
+ },
+ {
+  "lib": "Llamada",
+  "nivel": 2,
+  "exp": "Pluma Angelical",
+  "fuente": "WC",
+  "score": 0.36
+ },
+ {
+  "lib": "Llamada de la Tumba",
+  "nivel": 0,
+  "exp": "Ráfaga de Relámpago",
+  "fuente": "WC",
+  "score": 0.58
+ },
+ {
+  "lib": "Lluvia Curativa",
+  "nivel": 5,
+  "exp": "Lluvia Sanadora",
+  "fuente": "WC",
+  "score": 0.6
+ },
+ {
+  "lib": "Lluvia de Meteoros",
+  "nivel": 9,
+  "exp": "TORMENTA DE METEORITOS",
+  "fuente": "PHB",
+  "score": 0.65
+ },
+ {
+  "lib": "Maelstrom",
+  "nivel": 5,
+  "exp": "Amanecer",
+  "fuente": "XGE",
+  "score": 0.47
+ },
+ {
+  "lib": "Maldición",
+  "nivel": 1,
+  "exp": "TORMENTA DE ESPINAS",
+  "fuente": "PHB",
+  "score": 0.36
+ },
+ {
+  "lib": "Mandato",
+  "nivel": null,
+  "exp": "Marejada",
+  "fuente": "XGE",
+  "score": 0.53
+ },
+ {
+  "lib": "Mano Mágica",
+  "nivel": 0,
+  "exp": "Piedra Mágica",
+  "fuente": "XGE",
+  "score": 0.67
+ },
+ {
+  "lib": "Marchitamiento",
+  "nivel": 8,
+  "exp": "LABERINTO",
+  "fuente": "PHB",
+  "score": 0.52
+ },
+ {
+  "lib": "Marchitamiento Horrendo de Abi-Dalzim",
+  "nivel": 8,
+  "exp": "ncima de MARCHITAMIENTO HORRIBLE DE ABI-DALZIM",
+  "fuente": "XGE",
+  "score": 0.82
+ },
+ {
+  "lib": "Mejora de Habilidad",
+  "nivel": 2,
+  "exp": "ZONA DE LA VERDAD",
+  "fuente": "PHB",
+  "score": 0.56
+ },
+ {
+  "lib": "Mejorar Habilidad",
+  "nivel": 2,
+  "exp": "Fortaleza de Hielo",
+  "fuente": "WC",
+  "score": 0.4
+ },
+ {
+  "lib": "Mente Débil",
+  "nivel": 8,
+  "exp": "MENTE EN BLANCO",
+  "fuente": "PHB",
+  "score": 0.69
+ },
+ {
+  "lib": "Mente Decrepita",
+  "nivel": 8,
+  "exp": "MENTE EN BLANCO",
+  "fuente": "PHB",
+  "score": 0.53
+ },
+ {
+  "lib": "Meteoritos de Melf",
+  "nivel": 3,
+  "exp": "Meteoros Diminutos de Melf",
+  "fuente": "XGE",
+  "score": 0.82
+ },
+ {
+  "lib": "Miedo",
+  "nivel": 3,
+  "exp": "Marejada",
+  "fuente": "XGE",
+  "score": 0.46
+ },
+ {
+  "lib": "Misil Mágico",
+  "nivel": 1,
+  "exp": "DUELOF ORZADO",
+  "fuente": "PHB",
+  "score": 0.32
+ },
+ {
+  "lib": "Modificar Memoria",
+  "nivel": 5,
+  "exp": "INMOVILIZAR MONSTRUO",
+  "fuente": "PHB",
+  "score": 0.54
+ },
+ {
+  "lib": "Mordedura de Ojo",
+  "nivel": 6,
+  "exp": "MAL DE OJO",
+  "fuente": "PHB",
+  "score": 0.69
+ },
+ {
+  "lib": "No Detección",
+  "nivel": 3,
+  "exp": "IN DETECTABLE",
+  "fuente": "PHB",
+  "score": 0.56
+ },
+ {
+  "lib": "Nube de Niebla",
+  "nivel": 1,
+  "exp": "NU BE DE OSCURECIMIENTO",
+  "fuente": "PHB",
+  "score": 0.54
+ },
+ {
+  "lib": "Objetos Animados",
+  "nivel": 5,
+  "exp": "NUBE ANIQUILADORA",
+  "fuente": "PHB",
+  "score": 0.55
+ },
+ {
+  "lib": "Ojo Maligno",
+  "nivel": 6,
+  "exp": "ENCONTRAR EL CAMINO",
+  "fuente": "PHB",
+  "score": 0.4
+ },
+ {
+  "lib": "Ola de Trueno",
+  "nivel": 1,
+  "exp": "Golpe de Céfiro",
+  "fuente": "XGE",
+  "score": 0.57
+ },
+ {
+  "lib": "Oleada Estelar",
+  "nivel": 3,
+  "exp": "FLECHA DE RELÁMPAGO",
+  "fuente": "PHB",
+  "score": 0.48
+ },
+ {
+  "lib": "Onda Destructiva",
+  "nivel": 5,
+  "exp": "CONO DE FRÍO",
+  "fuente": "PHB",
+  "score": 0.5
+ },
+ {
+  "lib": "Oración de Curación",
+  "nivel": 2,
+  "exp": "CORDÓN DE FLECHAS",
+  "fuente": "PHB",
+  "score": 0.56
+ },
+ {
+  "lib": "Orden",
+  "nivel": 1,
+  "exp": "TORMENTA DE ESPINAS",
+  "fuente": "PHB",
+  "score": 0.42
+ },
+ {
+  "lib": "Oscuridad Loca",
+  "nivel": 8,
+  "exp": "Oscuridad Enloquecedora",
+  "fuente": "XGE",
+  "score": 0.76
+ },
+ {
+  "lib": "Otra Forma Mundana de Tasha",
+  "nivel": 6,
+  "exp": "Transformación de Tenser",
+  "fuente": "XGE",
+  "score": 0.59
+ },
+ {
+  "lib": "Palabra Curativa",
+  "nivel": 1,
+  "exp": "PURIFICAR COMIDAY BEBIDA",
+  "fuente": "PHB",
+  "score": 0.4
+ },
+ {
+  "lib": "Palabra Curativa en Masa",
+  "nivel": 3,
+  "exp": "Sanación en Cadena",
+  "fuente": "WC",
+  "score": 0.48
+ },
+ {
+  "lib": "Palabra de Aturdimiento",
+  "nivel": 8,
+  "exp": "PALABRA DE PODER: ATURDIR",
+  "fuente": "PHB",
+  "score": 0.72
+ },
+ {
+  "lib": "Palabra de Muerte",
+  "nivel": 9,
+  "exp": "PALABRA DE PODER: MATAR",
+  "fuente": "PHB",
+  "score": 0.72
+ },
+ {
+  "lib": "Palabra de Recuerdo",
+  "nivel": 6,
+  "exp": "PALABRA DE REGRESO",
+  "fuente": "PHB",
+  "score": 0.81
+ },
+ {
+  "lib": "Palabra de Retiro",
+  "nivel": 6,
+  "exp": "PALABRA DE REGRESO",
+  "fuente": "PHB",
+  "score": 0.86
+ },
+ {
+  "lib": "Palabra de Retorno",
+  "nivel": 6,
+  "exp": "PALABRA DE REGRESO",
+  "fuente": "PHB",
+  "score": 0.78
+ },
+ {
+  "lib": "Penitencia",
+  "nivel": null,
+  "exp": "APARIENCIA",
+  "fuente": "PHB",
+  "score": 0.7
+ },
+ {
+  "lib": "Picadura Absorbente",
+  "nivel": 0,
+  "exp": "Palmada Atronadora",
+  "fuente": "XGE",
+  "score": 0.43
+ },
+ {
+  "lib": "Piel de Corteza",
+  "nivel": 2,
+  "exp": "Hoja de Sombra",
+  "fuente": "XGE",
+  "score": 0.48
+ },
+ {
+  "lib": "Piel de Piedra",
+  "nivel": 4,
+  "exp": "MOLDEAR LA PIEDRA",
+  "fuente": "PHB",
+  "score": 0.65
+ },
+ {
+  "lib": "Polimorfia en Masa",
+  "nivel": 9,
+  "exp": "Polimorfar en Grupo",
+  "fuente": "XGE",
+  "score": 0.7
+ },
+ {
+  "lib": "Portal Arcano",
+  "nivel": 6,
+  "exp": "PUERTA ARCANA",
+  "fuente": "PHB",
+  "score": 0.77
+ },
+ {
+  "lib": "Previsión",
+  "nivel": 9,
+  "exp": "PRESAGIO",
+  "fuente": "PHB",
+  "score": 0.71
+ },
+ {
+  "lib": "Prisión",
+  "nivel": 9,
+  "exp": "PRESAGIO",
+  "fuente": "PHB",
+  "score": 0.67
+ },
+ {
+  "lib": "Producir Llama",
+  "nivel": 0,
+  "exp": "GUARDIA DE CUCHILLAS",
+  "fuente": "PHB",
+  "score": 0.47
+ },
+ {
+  "lib": "Protección con Cuchilla",
+  "nivel": 0,
+  "exp": "GUARDIA DE CUCHILLAS",
+  "fuente": "PHB",
+  "score": 0.51
+ },
+ {
+  "lib": "Protección contra la Muerte",
+  "nivel": 4,
+  "exp": "Hallar Corcel Mayor",
+  "fuente": "XGE",
+  "score": 0.39
+ },
+ {
+  "lib": "Protección Primordial",
+  "nivel": 6,
+  "exp": "Custodia Primordial",
+  "fuente": "XGE",
+  "score": 0.65
+ },
+ {
+  "lib": "Proyectil de Fuego y Hielo",
+  "nivel": 1,
+  "exp": "PROTECCIÓN CONTRA EL BIENY EL MAL",
+  "fuente": "PHB",
+  "score": 0.44
+ },
+ {
+  "lib": "Puerta",
+  "nivel": 9,
+  "exp": "PORTAL",
+  "fuente": "PHB",
+  "score": 0.67
+ },
+ {
+  "lib": "Quitar Maldición",
+  "nivel": 3,
+  "exp": "Invocar Feérico",
+  "fuente": "TCE",
+  "score": 0.45
+ },
+ {
+  "lib": "Ráfaga Solar",
+  "nivel": 8,
+  "exp": "Dragón Ilusorio",
+  "fuente": "XGE",
+  "score": 0.52
+ },
+ {
+  "lib": "Raro",
+  "nivel": 9,
+  "exp": "PRESAGIO",
+  "fuente": "PHB",
+  "score": 0.5
+ },
+ {
+  "lib": "Rayo",
+  "nivel": 3,
+  "exp": "Irina Nordsol",
+  "fuente": "TCE",
+  "score": 0.35
+ },
+ {
+  "lib": "Rayo Ardiente",
+  "nivel": 2,
+  "exp": "Desgarrar la Mente",
+  "fuente": "WC",
+  "score": 0.52
+ },
+ {
+  "lib": "Rayo de Bruja",
+  "nivel": 1,
+  "exp": "CREARO DESTRUIR AGUA",
+  "fuente": "PHB",
+  "score": 0.55
+ },
+ {
+  "lib": "Rayo de Debilitamiento",
+  "nivel": 2,
+  "exp": "Agarre de Tierra de Maximiliano",
+  "fuente": "XGE",
+  "score": 0.49
+ },
+ {
+  "lib": "Rayo de Fuego",
+  "nivel": 0,
+  "exp": "DESCARGA DE FUEGO",
+  "fuente": "PHB",
+  "score": 0.73
+ },
+ {
+  "lib": "Rayo de la Bruja",
+  "nivel": 1,
+  "exp": "Trampa de Lazo",
+  "fuente": "XGE",
+  "score": 0.53
+ },
+ {
+  "lib": "Rayo Guiador",
+  "nivel": 1,
+  "exp": "RAYO NAUSEABUNDO",
+  "fuente": "PHB",
+  "score": 0.64
+ },
+ {
+  "lib": "Regeneración",
+  "nivel": 7,
+  "exp": "REGENERAR",
+  "fuente": "PHB",
+  "score": 0.76
+ },
+ {
+  "lib": "Réplica Infernal",
+  "nivel": 1,
+  "exp": "REPRENSIÓN INFERNAL",
+  "fuente": "PHB",
+  "score": 0.74
+ },
+ {
+  "lib": "Reposo Gentil",
+  "nivel": 2,
+  "exp": "Espina Mental",
+  "fuente": "XGE",
+  "score": 0.54
+ },
+ {
+  "lib": "Resguardo de Hoja",
+  "nivel": 0,
+  "exp": "GUARDIA DE CUCHILLAS",
+  "fuente": "PHB",
+  "score": 0.59
+ },
+ {
+  "lib": "Respirar Agua",
+  "nivel": 3,
+  "exp": "CREAR COMIDAY AGUA",
+  "fuente": "PHB",
+  "score": 0.58
+ },
+ {
+  "lib": "Restauración Mayor",
+  "nivel": 5,
+  "exp": "Reencarnación",
+  "fuente": "WC",
+  "score": 0.58
+ },
+ {
+  "lib": "Restauración Menor",
+  "nivel": 2,
+  "exp": "RESTA BLECIMIENTO MENOR",
+  "fuente": "PHB",
+  "score": 0.68
+ },
+ {
+  "lib": "Resucitar",
+  "nivel": null,
+  "exp": "ESCUDRIÑAR",
+  "fuente": "PHB",
+  "score": 0.63
+ },
+ {
+  "lib": "Revivificar",
+  "nivel": null,
+  "exp": "FABRICAR",
+  "fuente": "PHB",
+  "score": 0.53
+ },
+ {
+  "lib": "Risa Histérica de Tasha",
+  "nivel": 1,
+  "exp": "DISCO FLOTANTE DE ThNSER",
+  "fuente": "PHB",
+  "score": 0.47
+ },
+ {
+  "lib": "Romper",
+  "nivel": 2,
+  "exp": "RESTA BLECIMIENTO MENOR",
+  "fuente": "PHB",
+  "score": 0.34
+ },
+ {
+  "lib": "Ruptura de la Realidad",
+  "nivel": 8,
+  "exp": "AURA SAGRADA",
+  "fuente": "PHB",
+  "score": 0.53
+ },
+ {
+  "lib": "Ruptura de Realidad",
+  "nivel": 8,
+  "exp": "AURA SAGRADA",
+  "fuente": "PHB",
+  "score": 0.52
+ },
+ {
+  "lib": "Sabueso de Mordenkainen",
+  "nivel": 4,
+  "exp": "DE MORDENKAINEN",
+  "fuente": "PHB",
+  "score": 0.79
+ },
+ {
+  "lib": "Sabueso Fiel de Mordenkainen",
+  "nivel": 4,
+  "exp": "DE MORDENKAINEN",
+  "fuente": "PHB",
+  "score": 0.7
+ },
+ {
+  "lib": "Sacralizar",
+  "nivel": 5,
+  "exp": "ESCUDRIÑAR",
+  "fuente": "PHB",
+  "score": 0.6
+ },
+ {
+  "lib": "Saltar",
+  "nivel": 1,
+  "exp": "Catapulta",
+  "fuente": "XGE",
+  "score": 0.53
+ },
+ {
+  "lib": "Salvar a los Moribundos",
+  "nivel": 0,
+  "exp": "Tocar a los Muertos",
+  "fuente": "XGE",
+  "score": 0.62
+ },
+ {
+  "lib": "Santificar",
+  "nivel": 5,
+  "exp": "ENGAÑAR",
+  "fuente": "PHB",
+  "score": 0.47
+ },
+ {
+  "lib": "Secuestrar",
+  "nivel": 7,
+  "exp": "EXCURSIÓN ETÉREA",
+  "fuente": "PHB",
+  "score": 0.54
+ },
+ {
+  "lib": "Segregar",
+  "nivel": 7,
+  "exp": "REGENERAR",
+  "fuente": "PHB",
+  "score": 0.59
+ },
+ {
+  "lib": "Siervo Invisible",
+  "nivel": 1,
+  "exp": "Favor Temible",
+  "fuente": "WC",
+  "score": 0.48
+ },
+ {
+  "lib": "Sirviente Menor",
+  "nivel": 3,
+  "exp": "Irina Nordsol",
+  "fuente": "TCE",
+  "score": 0.57
+ },
+ {
+  "lib": "Sueño",
+  "nivel": 1,
+  "exp": "RAYO NAUSEABUNDO",
+  "fuente": "PHB",
+  "score": 0.38
+ },
+ {
+  "lib": "Sugerencia",
+  "nivel": 2,
+  "exp": "SORDERA/ CEGUERA",
+  "fuente": "PHB",
+  "score": 0.4
+ },
+ {
+  "lib": "Sugerencia Masiva",
+  "nivel": 6,
+  "exp": "SUGESTIÓN EN MASA",
+  "fuente": "PHB",
+  "score": 0.65
+ },
+ {
+  "lib": "Sujetar Monstruo",
+  "nivel": 5,
+  "exp": "INMOVILIZAR MONSTRUO",
+  "fuente": "PHB",
+  "score": 0.61
+ },
+ {
+  "lib": "Sujetar Persona",
+  "nivel": 2,
+  "exp": "Atar a la Tierra",
+  "fuente": "XGE",
+  "score": 0.45
+ },
+ {
+  "lib": "Tarro Mágico",
+  "nivel": 6,
+  "exp": "URNA MÁGICA",
+  "fuente": "PHB",
+  "score": 0.61
+ },
+ {
+  "lib": "Teletransportación",
+  "nivel": 7,
+  "exp": "TELETRANSPORTE",
+  "fuente": "PHB",
+  "score": 0.81
+ },
+ {
+  "lib": "Terreno Ilusorio",
+  "nivel": 4,
+  "exp": "CASTIGO ABRUMADOR",
+  "fuente": "PHB",
+  "score": 0.36
+ },
+ {
+  "lib": "Toque de la Muerte",
+  "nivel": 7,
+  "exp": "DEDO DE LA MUERTE",
+  "fuente": "PHB",
+  "score": 0.8
+ },
+ {
+  "lib": "Toque gélido",
+  "nivel": null,
+  "exp": "Torbellino",
+  "fuente": "XGE",
+  "score": 0.55
+ },
+ {
+  "lib": "Tormenta de Bolas de Nieve",
+  "nivel": 2,
+  "exp": "ZONA DE LA VERDAD",
+  "fuente": "PHB",
+  "score": 0.56
+ },
+ {
+  "lib": "Tormenta de Granizo",
+  "nivel": 3,
+  "exp": "EL MANTO DEL CRUZADO",
+  "fuente": "PHB",
+  "score": 0.46
+ },
+ {
+  "lib": "Trampa de Cuerda",
+  "nivel": 2,
+  "exp": "ZONA DE LA VERDAD",
+  "fuente": "PHB",
+  "score": 0.55
+ },
+ {
+  "lib": "Transporte a través de Plantas",
+  "nivel": 6,
+  "exp": "Transformación de Tenser",
+  "fuente": "XGE",
+  "score": 0.52
+ },
+ {
+  "lib": "Trepar Paredes",
+  "nivel": 2,
+  "exp": "Desgarrar la Mente",
+  "fuente": "WC",
+  "score": 0.44
+ },
+ {
+  "lib": "Trepar por Paredes",
+  "nivel": 2,
+  "exp": "Desgarrar la Mente",
+  "fuente": "WC",
+  "score": 0.39
+ },
+ {
+  "lib": "Truco de Druida",
+  "nivel": 0,
+  "exp": "Rayo de Sombra",
+  "fuente": "WC",
+  "score": 0.55
+ },
+ {
+  "lib": "Unión Planar",
+  "nivel": 5,
+  "exp": "ATADURA PLANAR",
+  "fuente": "PHB",
+  "score": 0.62
+ },
+ {
+  "lib": "Vacío Voraz",
+  "nivel": 9,
+  "exp": "Salvación",
+  "fuente": "WC",
+  "score": 0.5
+ },
+ {
+  "lib": "Verdad",
+  "nivel": 6,
+  "exp": "VISIÓN VERAZ",
+  "fuente": "PHB",
+  "score": 0.44
+ },
+ {
+  "lib": "Verdadera Resurrección",
+  "nivel": 9,
+  "exp": "RESURRECCIÓN VERDADERA",
+  "fuente": "PHB",
+  "score": 1.0
+ },
+ {
+  "lib": "Vida Falsa",
+  "nivel": 1,
+  "exp": "Catapulta",
+  "fuente": "XGE",
+  "score": 0.42
+ },
+ {
+  "lib": "Viento de Gustar",
+  "nivel": 2,
+  "exp": "Viento De Salvaguardia",
+  "fuente": "XGE",
+  "score": 0.74
+ },
+ {
+  "lib": "Viento protector",
+  "nivel": null,
+  "exp": "Luz del Protector",
+  "fuente": "WC",
+  "score": 0.67
+ },
+ {
+  "lib": "Viento protector ^XGE^",
+  "nivel": null,
+  "exp": "Luz del Protector",
+  "fuente": "WC",
+  "score": 0.59
+ },
+ {
+  "lib": "Vínculo Telepático de Rary",
+  "nivel": 5,
+  "exp": "ENLACE TELEPÁTICO DE RARY",
+  "fuente": "PHB",
+  "score": 0.82
+ },
+ {
+  "lib": "Visión Nocturna",
+  "nivel": 2,
+  "exp": "SORDERA/ CEGUERA",
+  "fuente": "PHB",
+  "score": 0.47
+ },
+ {
+  "lib": "Visión Verdadera",
+  "nivel": 6,
+  "exp": "VISIÓN VERAZ",
+  "fuente": "PHB",
+  "score": 0.79
+ },
+ {
+  "lib": "Voluntad Interior",
+  "nivel": 2,
+  "exp": "Golpe Justiciero",
+  "fuente": "WC",
+  "score": 0.48
+ },
+ {
+  "lib": "Vuelo",
+  "nivel": 3,
+  "exp": "Servidor Minúsculo",
+  "fuente": "XGE",
+  "score": 0.35
+ },
+ {
+  "lib": "Zancada Desfallecedora",
+  "nivel": 0,
+  "exp": "Palabra de Resplandor",
+  "fuente": "XGE",
+  "score": 0.51
+ }
+]

@@ -21,6 +21,24 @@ def balanced(text, open_pos):
             if depth == 0: return j + 1
     return len(text)
 
+def sin_subtablas(blk):
+    """Bloque sin las tablas anidadas: `condition = { duration = "manual" }` tiene su
+    propio `duration`, que NO es la duracion del conjuro. Los campos escalares se leen
+    solo del nivel superior."""
+    ini = blk.find("{")
+    if ini < 0: return blk
+    out, prof, j = [], 0, ini + 1
+    out.append(blk[:ini + 1])
+    while j < len(blk):
+        c = blk[j]
+        if c == "{": prof += 1
+        elif c == "}":
+            if prof == 0: out.append(blk[j:]); break
+            prof -= 1
+        elif prof == 0: out.append(c)
+        j += 1
+    return "".join(out)
+
 def field(blk, key):
     m = re.search(r'\b' + key + r' = "((?:[^"\\]|\\.)*)"', blk)
     if not m: return None
@@ -63,11 +81,21 @@ for i, (pos, cid, cname, cdesc, hd) in enumerate(cstarts):
     class_region = block[m.start():] if m else block
     sub_region = block[:m.start()] if m else ""
     subclasses = []
-    sub_hdrs = list(re.finditer(r'\{ id = "([a-z_]+)", name = "([^"]+)", desc = "((?:[^"\\]|\\.)*)", features =', sub_region))
+    # Entre `desc` y `features` puede haber campos propios de la subclase, como el
+    # `requiredRace` del Sacerdocio de Elune. Sin admitirlos, su cabecera no se reconocia
+    # y sus seis rasgos se quedaban dentro de la subclase anterior (Sombra).
+    sub_hdrs = list(re.finditer(
+        r'\{ id = "([a-z_]+)", name = "([^"]+)", desc = "((?:[^"\\]|\\.)*)"'
+        r'(?:,\s*\w+ = (?:"(?:[^"\\]|\\.)*"|\d+|true|false))*,\s*features =', sub_region))
     for j, sm in enumerate(sub_hdrs):
         s_end = sub_hdrs[j+1].start() if j+1 < len(sub_hdrs) else len(sub_region)
-        subclasses.append({"id": sm.group(1), "name": sm.group(2), "desc": sm.group(3).replace('\\"', '"'),
-                           "features": parse_features(sub_region[sm.end():s_end])})
+        sub = {"id": sm.group(1), "name": sm.group(2), "desc": sm.group(3).replace('\\"', '"'),
+               "features": parse_features(sub_region[sm.end():s_end])}
+        # el Sacerdocio de Elune solo esta abierto a elfos de la noche: sin este dato el
+        # lector no tiene forma de saber que la subclase esta restringida
+        rr = re.search(r'\brequiredRace = "([a-z_]+)"', sm.group(0))
+        if rr: sub["requiredRace"] = rr.group(1)
+        subclasses.append(sub)
     classes.append({"id": cid, "name": cname, "desc": cdesc.replace('\\"', '"'), "hitDie": int(hd),
                     "features": parse_features(class_region), "subclasses": subclasses})
 
@@ -93,19 +121,72 @@ for i, (pos, rid, rname, rdesc) in enumerate(rstarts):
                              "traits": parse_features(sub_region[sm.end():s_end])})
     else:
         rest = block
-    races.append({"id": rid, "name": rname, "desc": rdesc.replace('\\"', '"'),
-                  "traits": parse_features(rest), "subraces": subraces})
+    # tamano, velocidad y faccion los declara el addon en la cabecera de la raza y no se
+    # estaban recogiendo: sin ellos la ficha no dice ni lo que mide ni lo que se mueve
+    _size = re.search(r'size = "([^"]+)"', block[:400])
+    _speed = re.search(r'speed = ([\d.]+)', block[:400])
+    _fac = re.search(r'faction = "([^"]+)"', block[:400])
+    _raza = {"id": rid, "name": rname, "desc": rdesc.replace('\\"', '"'),
+             "traits": parse_features(rest), "subraces": subraces}
+    if _size: _raza["size"] = _size.group(1)
+    if _speed: _raza["speed"] = float(_speed.group(1))
+    if _fac: _raza["faction"] = _fac.group(1)
+    races.append(_raza)
 
 # ---------- TRASFONDOS ----------
 bg_txt = rd("HarfordDnDBackgrounds.lua")
-bg_hdr = re.compile(r'id = "([a-z_]+)", name = "([^"]+)", (?:source|aliases)')
+# El salto de linea cuenta, y no todos declaran lo mismo detras del nombre: cuatro
+# trasfondos ponen sus alias en la linea siguiente y dos van directos a sus rasgos. Se
+# quedaban fuera del compendio, que luego los recreaba desde el libro con peores datos.
+bg_hdr = re.compile(r'id = "([a-z_0-9]+)", name = "([^"]+)",\s*(?:source|aliases|traits)')
+
+# El addon declara que concede cada trasfondo con `Skill("Sigilo")`, `Tool("...")` o su
+# forma larga `{ kind = "skillProf", skill = "..." }`. Se recogen para poder filtrar por
+# habilidad, que es lo que mira quien esta eligiendo trasfondo.
+_SKILL_CANON = {"animales": "Trato con Animales", "arcano": "Conocimiento Arcano",
+                "engano": "Engaño", "interpretacion": "Interpretación",
+                "intimidacion": "Intimidación", "investigacion": "Investigación",
+                "juegomanos": "Juego de Manos", "percepcion": "Percepción",
+                "persuasion": "Persuasión", "religion": "Religión",
+                "atletismo": "Atletismo", "historia": "Historia", "medicina": "Medicina",
+                "naturaleza": "Naturaleza", "perspicacia": "Perspicacia",
+                "sigilo": "Sigilo", "supervivencia": "Supervivencia",
+                "acrobacias": "Acrobacias"}
+
+
+def _nk_sk(s):
+    """Clave sin tildes para reconocer la habilidad tal como la escribe el addon."""
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize("NFD", s or "")
+                   if unicodedata.category(c) != "Mn").lower().strip()
+
+
+def _competencias(block):
+    hab, her = [], []
+    for m in re.finditer(r'Skill\("([^"]+)"\)', block):
+        hab.append(_SKILL_CANON.get(_nk_sk(m.group(1)), m.group(1)))
+    for m in re.finditer(r'kind = "skillProf",\s*skill = "([^"]+)"', block):
+        hab.append(_SKILL_CANON.get(_nk_sk(m.group(1)), m.group(1)))
+    for m in re.finditer(r'Tool\("([^"]+)"\)', block):
+        her.append(m.group(1))
+    for m in re.finditer(r'kind = "toolProf",\s*tool = "([^"]+)"', block):
+        her.append(m.group(1))
+    # sin repetir y conservando el orden en que las declara el addon
+    return list(dict.fromkeys(hab)), list(dict.fromkeys(her))
+
+
 bgs = []
 bstarts = [(m.start(), m.group(1), m.group(2)) for m in bg_hdr.finditer(bg_txt)]
 for i, (pos, bid, bname) in enumerate(bstarts):
     end = bstarts[i+1][0] if i+1 < len(bstarts) else len(bg_txt)
     block = bg_txt[pos:end]
     dm = re.search(r'\bdesc = "((?:[^"\\]|\\.)*)"', block.split("traits =")[0])
+    # de donde sale el trasfondo (PHB, SCAG, Warcraft o propio de Harford): el addon lo
+    # marca y el compendio lo tiraba, asi que el lector no sabia cual era cual
+    sm = re.search(r'\bsource = "([^"]+)"', block.split("traits =")[0])
     bgs.append({"id": bid, "name": bname, "desc": (dm.group(1).replace('\\"', '"') if dm else ""),
+                "source": sm.group(1) if sm else None,
+                "skills": _competencias(block)[0], "tools": _competencias(block)[1],
                 "traits": parse_features(block)})
 
 # ---------- CONJUROS ----------
@@ -118,8 +199,10 @@ for m in re.finditer(r'\n {8}id = "([a-z0-9_]+)",', comp):
     blk = comp[st:balanced(comp, st)]
     if 'level =' not in blk or 'school =' not in blk: continue
     sp = {"id": m.group(1)}
+    plano = sin_subtablas(blk)
     for k in SPELL_KEYS_STR:
-        v = field(blk, k)
+        # `condition` puede ser tabla: ahi si hace falta mirar dentro
+        v = field(blk if k == "condition" else plano, k)
         if v: sp[k] = v
     lv = re.search(r'\blevel = (\d+)', blk); sp["level"] = int(lv.group(1)) if lv else 0
     ic = re.search(r'\bicon = (\d+|"(?:[^"\\]|\\.)*")', blk)
@@ -129,6 +212,29 @@ for m in re.finditer(r'\n {8}id = "([a-z0-9_]+)",', comp):
     for bkey in ("concentration", "ritual"):
         if re.search(r'\b' + bkey + r' = true', blk): sp[bkey] = True
     spells.append(sp)
+# ---- progresion de conjuros: se lee del addon para que la web no la duplique a mano ----
+def _spell_progression():
+    """SPELL_PROGRESSION de HarfordCompendioCore.lua, que es la fuente de verdad en juego.
+    Cada clase ocupa una linea con llaves anidadas, asi que se recorre linea a linea."""
+    ruta = glob.glob(os.path.join(BASE, "**", "HarfordCompendioCore.lua"), recursive=True)
+    if not ruta: return {}
+    src = open(ruta[0], encoding="utf-8", errors="replace").read()
+    m = re.search(r"local SPELL_PROGRESSION = \{(.*?)\n\}", src, re.S)
+    if not m: return {}
+    out = {}
+    for linea in m.group(1).split("\n"):
+        mc = re.match(r'\s*\["([^"]+)"\]\s*=\s*\{(.*)$', linea)
+        if not mc: continue
+        clase, cuerpo = mc.group(1), mc.group(2)
+        d = {}
+        for campo in ("cantrips", "spells"):
+            mm = re.search(campo + r"\s*=\s*\{([^}]*)\}", cuerpo)
+            if mm: d[campo] = [int(x) for x in re.findall(r"\d+", mm.group(1))]
+        mp = re.search(r'prepared\s*=\s*"([a-z]+)"', cuerpo)
+        if mp: d["prepared"] = mp.group(1)
+        if d: out[clase] = d
+    return out
+
 spells.sort(key=lambda s: (s["level"], s.get("name", "")))
 
 # lista de conjuros por clase (nombre de conjuro-clase -> id de clase del codice)
@@ -188,7 +294,8 @@ for d in prof_defs:
         d["recipes"] = recs
         professions.append(d)
 
-data = {"classes": classes, "races": races, "backgrounds": bgs, "spells": spells, "professions": professions}
+data = {
+    "spellProgression": _spell_progression(),"classes": classes, "races": races, "backgrounds": bgs, "spells": spells, "professions": professions}
 HERE = os.path.dirname(os.path.abspath(__file__))
 json.dump(data, open(os.path.join(HERE, "kb.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 nopt = sum(1 for c in classes for f in c["features"] + [x for s in c["subclasses"] for x in s["features"]] if f.get("options"))

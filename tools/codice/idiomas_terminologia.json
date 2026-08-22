@@ -1,0 +1,27 @@
+{
+ "_nota": "Terminologia canonica de idiomas de Azeroth (lista del usuario, 2026-08-20). Publicada en reglas.html seccion 12. Los datos del compendio ya usan estos nombres (Thalassiano, Taur-ahe, Kalimag, Eredun...).",
+ "standard": {
+  "language.common": "Común",
+  "language.darnassian": "Darnassiano",
+  "language.draenei": "Draenei",
+  "language.dwarven": "Enano",
+  "language.goblin": "Goblin",
+  "language.gnomish": "Gnómico",
+  "language.gutterspeak": "Viscerálico",
+  "language.mogu": "Mogu",
+  "language.orcish": "Orco",
+  "language.shalassian": "Shalassiano",
+  "language.taurahe": "Taur-ahe",
+  "language.thalassian": "Thalassiano",
+  "language.zandali": "Zandali"
+ },
+ "exotic": {
+  "language.draconic": "Dracónico",
+  "language.eredun": "Eredun",
+  "language.ogre": "Ogro",
+  "language.kalimag": "Kalimag",
+  "language.shathyar": "Shath'Yar",
+  "language.lowcommon": "Bajo Común",
+  "language.titan": "Titánico"
+ }
+}

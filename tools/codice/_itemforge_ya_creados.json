@@ -1,0 +1,80 @@
+{
+ "pocion_mana": {
+  "nombre": "Pocion de mana",
+  "ids": [
+   14018928
+  ]
+ },
+ "colmillo_grande": {
+  "nombre": "Colmillo grande",
+  "ids": [
+   14037000
+  ]
+ },
+ "dientes_de_dragon": {
+  "nombre": "Dientes de dragón",
+  "ids": [
+   14074725
+  ]
+ },
+ "espina_de_oro": {
+  "nombre": "Espina de oro",
+  "ids": [
+   14074722
+  ]
+ },
+ "gromsanguina": {
+  "nombre": "Gromsanguina",
+  "ids": [
+   14074739
+  ]
+ },
+ "lagrimas_de_arthas": {
+  "nombre": "Lágrimas de Arthas",
+  "ids": [
+   14074735
+  ]
+ },
+ "setelo": {
+  "nombre": "Setelo",
+  "ids": [
+   14074744
+  ]
+ },
+ "glandula_veneno": {
+  "nombre": "Glandula de veneno",
+  "ids": [
+   14065229
+  ]
+ },
+ "garra_maligna": {
+  "nombre": "Garra maligna",
+  "ids": [
+   14036998
+  ]
+ },
+ "piedra_densa": {
+  "nombre": "Piedra densa",
+  "ids": [
+   14074592
+  ]
+ },
+ "seda_de_arana": {
+  "nombre": "Seda de araña",
+  "ids": [
+   14065231
+  ]
+ },
+ "piedra_aspera": {
+  "nombre": "Piedra aspera",
+  "ids": [
+   14074576
+  ]
+ },
+ "piedra_gruesa": {
+  "nombre": "Piedra gruesa",
+  "ids": [
+   14074578
+  ]
+ }
+}

@@ -1,0 +1,12 @@
+objetos distintos en las recetas: 1763
+    200/1763
+    400/1763
+    600/1763
+    800/1763
+   1000/1763
+   1200/1763
+   1400/1763
+   1600/1763
+
+guardados 1763 objetos en C:\Users\marco\Documents\New project\tools\codice\cotejo\objetos_wowhead.json   (fallos 0)
+con estadisticas 698 | con efecto 485 | con armadura 733 | con dano 109 | con nivel 1123

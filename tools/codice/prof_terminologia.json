@@ -1,0 +1,100 @@
+{
+ "_nota": "Terminologia canonica de herramientas/juegos/instrumentos (decisiones del usuario, 2026-08-20). REGLA GENERAL: toda herramienta se llama 'Útiles de ...'. Albañilería se queda (no Cantería); Ingeniería usa 'Útiles de ingeniero'; Primeros Auxilios es profesión propia con 'Útiles de primeros auxilios'; Vehículos es competencia Y profesión; instrumentos y juegos se usan DIFERENCIADOS (cada uno es una competencia y una entrada propia). El addon aún usa los nombres antiguos en HarfordDnDData.TOOLS/Backgrounds/Feats/Professions: migrarlo es tarea aparte (matching por texto exacto de competencias guardadas).",
+ "esquema": "Útiles de ...",
+ "tools": {
+  "prof.tools.alchemist": "Útiles de alquimista",
+  "prof.tools.brewer": "Útiles de cervecero",
+  "prof.tools.calligrapher": "Útiles de calígrafo",
+  "prof.tools.carpenter": "Útiles de carpintero",
+  "prof.tools.cartographer": "Útiles de cartógrafo",
+  "prof.tools.cobbler": "Útiles de zapatero",
+  "prof.tools.cook": "Útiles de cocinero",
+  "prof.tools.disguise": "Útiles de disfraz",
+  "prof.tools.forgery": "Útiles de falsificación",
+  "prof.tools.glassblower": "Útiles de soplador de vidrio",
+  "prof.tools.herbalism": "Útiles de herboristería",
+  "prof.tools.jeweler": "Útiles de joyero",
+  "prof.tools.leatherworker": "Útiles de curtidor",
+  "prof.tools.mason": "Útiles de albañil",
+  "prof.tools.navigator": "Útiles de navegación",
+  "prof.tools.painter": "Útiles de pintor",
+  "prof.tools.poisoner": "Útiles de envenenador",
+  "prof.tools.potter": "Útiles de alfarero",
+  "prof.tools.smith": "Útiles de herrero",
+  "prof.tools.thieves": "Útiles de ladrón",
+  "prof.tools.tinker": "Útiles de ingeniero",
+  "prof.tools.weaver": "Útiles de tejedor",
+  "prof.tools.woodcarver": "Útiles de tallador de madera",
+  "prof.tools.firstaid": "Útiles de primeros auxilios"
+ },
+ "vehicles": {
+  "prof.vehicle.land": "Vehículos (terrestres)",
+  "prof.vehicle.water": "Vehículos (acuáticos)"
+ },
+ "games": {
+  "prof.game.dice": "Dados",
+  "prof.game.chess": "Ajedrez",
+  "prof.game.card": "Cartas",
+  "prof.game.hearthstone": "Hearthstone"
+ },
+ "instruments": {
+  "prof.instrument.bagpipes": "Gaitas",
+  "prof.instrument.drum": "Tambor",
+  "prof.instrument.dulcimer": "Salterio",
+  "prof.instrument.flute": "Flauta",
+  "prof.instrument.horn": "Cuerno",
+  "prof.instrument.lute": "Laúd",
+  "prof.instrument.lyre": "Lira",
+  "prof.instrument.panflute": "Zampoña",
+  "prof.instrument.shawm": "Chirimía",
+  "prof.instrument.viol": "Viola"
+ },
+ "profession_tool_key": {
+  "herreria": "prof.tools.smith",
+  "alquimia": "prof.tools.alchemist",
+  "herboristeria": "prof.tools.herbalism",
+  "peleteria": "prof.tools.leatherworker",
+  "sastreria": "prof.tools.weaver",
+  "ingenieria": "prof.tools.tinker",
+  "joyeria": "prof.tools.jeweler",
+  "inscripcion": "prof.tools.calligrapher",
+  "cocina": "prof.tools.cook",
+  "primeros_auxilios": "prof.tools.firstaid",
+  "carpinteria": "prof.tools.carpenter",
+  "cartografia": "prof.tools.cartographer",
+  "zapateria": "prof.tools.cobbler",
+  "soplavidrio": "prof.tools.glassblower",
+  "albanileria": "prof.tools.mason",
+  "pintura": "prof.tools.painter",
+  "alfareria": "prof.tools.potter",
+  "talla_madera": "prof.tools.woodcarver",
+  "cerveceria": "prof.tools.brewer",
+  "envenenador": "prof.tools.poisoner",
+  "disfraz": "prof.tools.disguise",
+  "falsificacion": "prof.tools.forgery",
+  "ladron": "prof.tools.thieves",
+  "navegante": "prof.tools.navigator"
+ },
+ "instrument_icons": {
+  "Gaitas": "inv_misc_drum_02",
+  "Tambor": "inv_misc_drum_01",
+  "Salterio": "inv_misc_drum_02",
+  "Flauta": "inv_misc_flute_01",
+  "Cuerno": "inv_misc_horn_01",
+  "Laúd": "eps_bg3_itemlute",
+  "Lira": "inv_misc_drum_02",
+  "Zampoña": "8xp_vulperaflute",
+  "Chirimía": "eps_bg3_playflute",
+  "Viola": "eps_bg3_itemviolin"
+ },
+ "game_icons": {
+  "Dados": "inv_misc_dice_01",
+  "Ajedrez": "inv_misc_dice_02",
+  "Cartas": "eps_plunder_playingcard_diamond",
+  "Hearthstone": "inv_hearthstonebronze"
+ },
+ "vehicle_icons": {
+  "Vehículos (terrestres)": "ability_mount_ridinghorse",
+  "Vehículos (acuáticos)": "creatureportrait_darkshoreboat"
+ }
+}

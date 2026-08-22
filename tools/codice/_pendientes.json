@@ -1,0 +1,1237 @@
+[
+ {
+  "nombre": "Aceleración",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Agotamiento",
+  "nivel": 5,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Alterar Aspecto",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Alterar el Ser",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Alterar el Yo",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Alterar Forma",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Amigos",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Amistad con los Animales",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Anatema",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Andar en el Viento",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Arcano Miraje",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Arma Impía",
+  "nivel": 5,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Asesino Fantasmagórico",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Ayuda",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Azotador de Aganazzar",
+  "nivel": 2,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Azote de Aganazzar",
+  "nivel": 2,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Barco Volador de Jaina",
+  "nivel": 9,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Baya Mágica",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Bendecir",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Bestow Curse",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Bloqueo Arcano",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Bola de Fuego Retardada",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Bola de Fuego Retrasada",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Bosque Druídico",
+  "nivel": 6,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Cadena de Relámpagos",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Caminar por Árboles",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Caminar sobre el Viento",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Carne a Piedra",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Cáscara Antimágica",
+  "nivel": 2,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Cáscara Antivida",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Castigo deslumbrante",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Castigo justo",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Castigo tambaleante",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Choque de Sombras",
+  "nivel": 5,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Clonación",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Cofre Secreto de Leomund",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Comando",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Comprender Idiomas",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Comulgar con la naturaleza",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Conceder Maldición",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Concha Antivida",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Concha de Antivida",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Conjurar Hadas",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Conocer la Intención",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Contraconjuro",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Corteza de árbol",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Crear Alimento y Agua",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Crear No Muertos",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Crecimiento de Espinas",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Crecimiento de Plantas",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Criado Invisible",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Curación en Masa",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Curar heridas masivas",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Danza Irresistible de Otto",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "de Snilloc",
+  "nivel": 2,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Debilitamiento Mental",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Dedos de Escarcha ^IDRotF^",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Demonio de polvo ^XGE^",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Descarga mental",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Desenfoque",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Detener el Tiempo",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Devastación Temporal",
+  "nivel": 9,
+  "src": "Wildemount"
+ },
+ {
+  "nombre": "Disipar el mal y el bien",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Dispersar",
+  "nivel": 6,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Drenaje ^XGE^",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Duelo Compulsivo",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Eliminar Maldición",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Elocuencia",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Encontrar Corcel",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Energía Enervante",
+  "nivel": 5,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Enjambre de Meteoros",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Enredadera atrapadora",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Envío",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Erupción de Lava",
+  "nivel": 2,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Escisión",
+  "nivel": 6,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Escribir en el Cielo",
+  "nivel": 2,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Escritura Ilusoria",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Escrutar",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Escudo de fuego (escudo de frío)",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Esencia Unida",
+  "nivel": 7,
+  "src": "Wildemount"
+ },
+ {
+  "nombre": "Esfera Acuática",
+  "nivel": 4,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Esfera de Fuego",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Esfera de Invulnerabilidad",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Esfera Resiliente de Otiluke",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Estallido estelar",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Estática Sináptica",
+  "nivel": 5,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Estrella Oscura",
+  "nivel": 8,
+  "src": "Wildemount"
+ },
+ {
+  "nombre": "Eterealidad",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Etereidad",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Execrar",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Explosión de Espadas",
+  "nivel": 0,
+  "src": "Costa de la Espada"
+ },
+ {
+  "nombre": "Explosión Retardada de Bola de Fuego",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Extrañeza",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Facilidad de Palabra",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Faro de Esperanza",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Farol de esperanza",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Fascinación",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Fascinar",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Fisura Gravitacional",
+  "nivel": 6,
+  "src": "Wildemount"
+ },
+ {
+  "nombre": "Formas de Animales",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Fuerza Brillante",
+  "nivel": 2,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Fuerza Fantasmagórica",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Furia de la Serpiente de la Muerte",
+  "nivel": 5,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Glifo de Protección",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Golpe Cegador",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Golpe Desterrador",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Golpe Furioso",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Golpe Ígneo",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Golpe Justo",
+  "nivel": 2,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Gravedad Invertida",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Guardia con Hoja",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Guardianes Espirituales",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Guardias y Barreras",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Habilidad mejorada",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Hervir sangre",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Hoja Afilada",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Hoja de Llama",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Hoja Llameante",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Hoja Verde Llameante",
+  "nivel": 0,
+  "src": "Tasha"
+ },
+ {
+  "nombre": "Hoja Verdeante",
+  "nivel": 0,
+  "src": "Tasha"
+ },
+ {
+  "nombre": "Horrible de Abi-Dalzim",
+  "nivel": 8,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Imagen Espejo",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Imagen Proyectada",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Inversión de Viento",
+  "nivel": 6,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Invisibilidad Mayor",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Invocar Demonio",
+  "nivel": 6,
+  "src": "Tasha"
+ },
+ {
+  "nombre": "Invocar relámpagos",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Lenguas",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Lentitud",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Levantar a los muertos",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Leyenda",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Llama Continua",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Llamada",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Llamada de la Tumba",
+  "nivel": 0,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Lluvia Curativa",
+  "nivel": 5,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Lluvia de Meteoros",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Maelstrom",
+  "nivel": 5,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Maldición",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Mandato",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Mano Mágica",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Marchitamiento",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Marchitamiento Horrendo de Abi-Dalzim",
+  "nivel": 8,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Mejora de Habilidad",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Mejorar Habilidad",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Mente Débil",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Mente Decrepita",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Meteoritos de Melf",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Miedo",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Misil Mágico",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Modificar Memoria",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Mordedura de Ojo",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "No Detección",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Nube de Niebla",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Objetos Animados",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Ojo Maligno",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Ola de Trueno",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Oleada Estelar",
+  "nivel": 3,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Onda Destructiva",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Oración de Curación",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Orden",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Oscuridad Loca",
+  "nivel": 8,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Otra Forma Mundana de Tasha",
+  "nivel": 6,
+  "src": "Tasha"
+ },
+ {
+  "nombre": "Palabra Curativa",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Palabra Curativa en Masa",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Palabra de Aturdimiento",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Palabra de Muerte",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Palabra de Recuerdo",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Palabra de Retiro",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Palabra de Retorno",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Penitencia",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Picadura Absorbente",
+  "nivel": 0,
+  "src": "Wildemount"
+ },
+ {
+  "nombre": "Piel de Corteza",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Piel de Piedra",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Polimorfia en Masa",
+  "nivel": 9,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Portal Arcano",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Previsión",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Prisión",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Producir Llama",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Protección con Cuchilla",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Protección contra la Muerte",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Protección Primordial",
+  "nivel": 6,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Proyectil de Fuego y Hielo",
+  "nivel": 1,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Puerta",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Quitar Maldición",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Ráfaga Solar",
+  "nivel": 8,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Raro",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Rayo",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Rayo Ardiente",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Rayo de Bruja",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Rayo de Debilitamiento",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Rayo de Fuego",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Rayo de la Bruja",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Rayo Guiador",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Regeneración",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Réplica Infernal",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Reposo Gentil",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Resguardo de Hoja",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Respirar Agua",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Restauración Mayor",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Restauración Menor",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Resucitar",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Revivificar",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Risa Histérica de Tasha",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Romper",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Ruptura de la Realidad",
+  "nivel": 8,
+  "src": "Wildemount"
+ },
+ {
+  "nombre": "Ruptura de Realidad",
+  "nivel": 8,
+  "src": "Wildemount"
+ },
+ {
+  "nombre": "Sabueso de Mordenkainen",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Sabueso Fiel de Mordenkainen",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Sacralizar",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Saltar",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Salvar a los Moribundos",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Santificar",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Secuestrar",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Segregar",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Siervo Invisible",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Sirviente Menor",
+  "nivel": 3,
+  "src": "Xanathar"
+ },
+ {
+  "nombre": "Sueño",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Sugerencia",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Sugerencia Masiva",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Sujetar Monstruo",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Sujetar Persona",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Tarro Mágico",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Teletransportación",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Terreno Ilusorio",
+  "nivel": 4,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Toque de la Muerte",
+  "nivel": 7,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Toque gélido",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Tormenta de Bolas de Nieve",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Tormenta de Granizo",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Trampa de Cuerda",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Transporte a través de Plantas",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Trepar Paredes",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Trepar por Paredes",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Truco de Druida",
+  "nivel": 0,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Unión Planar",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Vacío Voraz",
+  "nivel": 9,
+  "src": "Wildemount"
+ },
+ {
+  "nombre": "Verdad",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Verdadera Resurrección",
+  "nivel": 9,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Vida Falsa",
+  "nivel": 1,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Viento de Gustar",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Viento protector",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Viento protector ^XGE^",
+  "nivel": null,
+  "src": ""
+ },
+ {
+  "nombre": "Vínculo Telepático de Rary",
+  "nivel": 5,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Visión Nocturna",
+  "nivel": 2,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Visión Verdadera",
+  "nivel": 6,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Voluntad Interior",
+  "nivel": 2,
+  "src": "Warcraft 5ª"
+ },
+ {
+  "nombre": "Vuelo",
+  "nivel": 3,
+  "src": "Manual del Jugador"
+ },
+ {
+  "nombre": "Zancada Desfallecedora",
+  "nivel": 0,
+  "src": "Wildemount"
+ }
+]

@@ -1,0 +1,537 @@
+{
+  "_nota": "GLOSARIO PRIVADO de terminologia D&D 5e para Harford. Es la fuente unica: terminologia.py lo lee para normalizar todos los textos del compendio. Cada entrada: 'canon' (lo que debe aparecer), 'variantes' (como lo llaman los distintos manuales) y 'contexto' (cuando sustituir). Ver AGENTS.md para la jerarquia de fuentes: Warcraft 5a manda en ambientacion, el Manual del Jugador en reglas generales de 5e.",
+  "_contextos": {
+    "libre": "sustitucion directa: el termino no es ambiguo en castellano",
+    "habilidad": "solo si se habla de la habilidad (competencia en X, prueba de CAR (X), lista de habilidades)",
+    "accion": "solo si se habla de la accion (accion de X, realizar X, lista de acciones)",
+    "informativo": "NO se sustituye: solo se documenta para poder comparar"
+  },
+  "habilidades": {
+    "_fuente": "HarfordDnDData.SKILLS del addon: es lo que el jugador ve en su ficha",
+    "Acrobacias": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Atletismo": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Conocimiento Arcano": {
+      "variantes": [
+        "Arcano",
+        "Arcanos",
+        "Conocimiento arcano",
+        "Saber Arcano"
+      ],
+      "contexto": "habilidad"
+    },
+    "Engaño": {
+      "variantes": [
+        "Decepcion",
+        "Decepción"
+      ],
+      "contexto": "habilidad"
+    },
+    "Historia": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Interpretación": {
+      "variantes": [
+        "Actuacion",
+        "Actuación"
+      ],
+      "contexto": "habilidad"
+    },
+    "Intimidación": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Investigación": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Juego de Manos": {
+      "variantes": [
+        "Juego de manos",
+        "Prestidigitacion",
+        "Prestidigitación"
+      ],
+      "contexto": "habilidad"
+    },
+    "Medicina": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Naturaleza": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Percepción": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Perspicacia": {
+      "variantes": [
+        "Introspeccion",
+        "Introspección",
+        "Averiguar Intenciones",
+        "Intuicion"
+      ],
+      "contexto": "habilidad"
+    },
+    "Persuasión": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Religión": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Sigilo": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Supervivencia": {
+      "variantes": [],
+      "contexto": "habilidad"
+    },
+    "Trato con Animales": {
+      "variantes": [
+        "Manejo de Animales",
+        "Manejo de animales",
+        "Trato con animales",
+        "Adiestrar Animales",
+        "Domar Animales"
+      ],
+      "contexto": "habilidad"
+    }
+  },
+  "caracteristicas": {
+    "_fuente": "HarfordDnDData.ABIL",
+    "Fuerza": {
+      "variantes": [],
+      "contexto": "informativo"
+    },
+    "Destreza": {
+      "variantes": [],
+      "contexto": "informativo"
+    },
+    "Constitución": {
+      "variantes": [],
+      "contexto": "informativo"
+    },
+    "Inteligencia": {
+      "variantes": [],
+      "contexto": "informativo"
+    },
+    "Sabiduría": {
+      "variantes": [],
+      "contexto": "informativo"
+    },
+    "Carisma": {
+      "variantes": [],
+      "contexto": "informativo"
+    }
+  },
+  "acciones": {
+    "_fuente": "Manual del Jugador (Edge): es la referencia para reglas generales de 5e",
+    "Atacar": {
+      "variantes": [
+        "Attack"
+      ],
+      "contexto": "accion"
+    },
+    "Correr": {
+      "variantes": [
+        "Carrera",
+        "Dash",
+        "Esprintar"
+      ],
+      "contexto": "accion"
+    },
+    "Destrabarse": {
+      "variantes": [
+        "Desengancharse",
+        "Desenganchar",
+        "Desengancharte",
+        "Desenganche",
+        "Disengage",
+        "Retirarse"
+      ],
+      "contexto": "accion",
+      "nota": "el Libro 1 usa 'Desengancharse'; el PHB usa 'Destrabarse' y manda en reglas generales"
+    },
+    "Esconderse": {
+      "variantes": [
+        "Ocultarse",
+        "Hide"
+      ],
+      "contexto": "accion",
+      "nota": "es la ACCION; la habilidad se llama Sigilo y no debe confundirse"
+    },
+    "Esquivar": {
+      "variantes": [
+        "Dodge"
+      ],
+      "contexto": "accion"
+    },
+    "Ayudar": {
+      "variantes": [
+        "Help"
+      ],
+      "contexto": "accion"
+    },
+    "Preparar": {
+      "variantes": [
+        "Ready"
+      ],
+      "contexto": "accion"
+    },
+    "Usar un objeto": {
+      "variantes": [
+        "Use an Object",
+        "Utilizar un objeto"
+      ],
+      "contexto": "accion"
+    },
+    "Buscar": {
+      "variantes": [
+        "Search"
+      ],
+      "contexto": "accion"
+    },
+    "Lanzar un conjuro": {
+      "variantes": [
+        "Cast a Spell"
+      ],
+      "contexto": "accion"
+    }
+  },
+  "mecanica": {
+    "espacio de conjuro": {
+      "variantes": [
+        "ranura de conjuro",
+        "ranura del conjuro",
+        "hueco de conjuro",
+        "spell slot"
+      ],
+      "contexto": "libre",
+      "nota": "cambia de genero: 'una ranura' -> 'un espacio'; el normalizador concuerda determinante, numero y adjetivo"
+    },
+    "puntos de golpe": {
+      "variantes": [
+        "puntos de vida",
+        "PV",
+        "hit points"
+      ],
+      "contexto": "libre"
+    },
+    "bonificador de competencia": {
+      "variantes": [
+        "bonificador por competencia",
+        "bonus de competencia",
+        "bonificacion por competencia"
+      ],
+      "contexto": "libre"
+    },
+    "tirada de salvación": {
+      "variantes": [
+        "tiro de salvacion",
+        "saving throw"
+      ],
+      "contexto": "libre"
+    },
+    "prueba de característica": {
+      "variantes": [
+        "chequeo de caracteristica",
+        "ability check"
+      ],
+      "contexto": "libre"
+    },
+    "clase de armadura": {
+      "variantes": [
+        "clase de armaduras"
+      ],
+      "contexto": "libre"
+    },
+    "acción adicional": {
+      "variantes": [
+        "accion bonus",
+        "bonus action"
+      ],
+      "contexto": "libre"
+    },
+    "descanso corto": {
+      "variantes": [
+        "short rest"
+      ],
+      "contexto": "libre"
+    },
+    "descanso largo": {
+      "variantes": [
+        "long rest"
+      ],
+      "contexto": "libre"
+    },
+    "ventaja": {
+      "variantes": [
+        "advantage"
+      ],
+      "contexto": "libre"
+    },
+    "desventaja": {
+      "variantes": [
+        "disadvantage"
+      ],
+      "contexto": "libre"
+    },
+    "aptitud mágica": {
+      "variantes": [
+        "caracteristica para lanzar conjuros",
+        "spellcasting ability"
+      ],
+      "contexto": "informativo",
+      "nota": "el PHB (Edge) usa 'aptitud magica'; se documenta por si aparece la forma larga"
+    },
+    "concentración": {
+      "variantes": [
+        "concentration"
+      ],
+      "contexto": "libre"
+    },
+    "truco": {
+      "variantes": [
+        "cantrip"
+      ],
+      "contexto": "libre",
+      "nota": "palabra inglesa colada en la traduccion del Libro 1"
+    },
+    "trucos": {
+      "variantes": [
+        "cantrips"
+      ],
+      "contexto": "libre",
+      "nota": "palabra inglesa colada en la traduccion del Libro 1"
+    },
+    "Mejora de Característica": {
+      "variantes": [
+        "Ability Score Improvement",
+        "mejora de característica de habilidad"
+      ],
+      "contexto": "libre",
+      "nota": "el rasgo estandar de 5e; el Libro 1 deja a veces el nombre en ingles"
+    }
+  },
+  "condiciones": {
+    "_fuente": "HarfordDnDConditions del addon; son las 14 condiciones de 5e",
+    "agarrado": {
+      "variantes": [
+        "grappled"
+      ],
+      "contexto": "informativo"
+    },
+    "apresado": {
+      "variantes": [
+        "restrained",
+        "restringido"
+      ],
+      "contexto": "informativo"
+    },
+    "asustado": {
+      "variantes": [
+        "frightened",
+        "atemorizado"
+      ],
+      "contexto": "informativo"
+    },
+    "aturdido": {
+      "variantes": [
+        "stunned"
+      ],
+      "contexto": "informativo"
+    },
+    "cegado": {
+      "variantes": [
+        "blinded",
+        "ciego"
+      ],
+      "contexto": "informativo"
+    },
+    "derribado": {
+      "variantes": [
+        "prone",
+        "tumbado",
+        "postrado"
+      ],
+      "contexto": "informativo"
+    },
+    "ensordecido": {
+      "variantes": [
+        "deafened",
+        "sordo"
+      ],
+      "contexto": "informativo"
+    },
+    "envenenado": {
+      "variantes": [
+        "poisoned"
+      ],
+      "contexto": "informativo"
+    },
+    "hechizado": {
+      "variantes": [
+        "charmed",
+        "encantado",
+        "embelesado"
+      ],
+      "contexto": "informativo"
+    },
+    "incapacitado": {
+      "variantes": [
+        "incapacitated"
+      ],
+      "contexto": "informativo"
+    },
+    "inconsciente": {
+      "variantes": [
+        "unconscious"
+      ],
+      "contexto": "informativo"
+    },
+    "invisible": {
+      "variantes": [
+        "invisible"
+      ],
+      "contexto": "informativo"
+    },
+    "paralizado": {
+      "variantes": [
+        "paralyzed"
+      ],
+      "contexto": "informativo"
+    },
+    "petrificado": {
+      "variantes": [
+        "petrified"
+      ],
+      "contexto": "informativo"
+    }
+  },
+  "tipos_de_dano": {
+    "_fuente": "HarfordDamageTypes del addon; su color se usa en el compendio",
+    "cortante": {
+      "variantes": [
+        "slashing",
+        "de corte"
+      ],
+      "contexto": "informativo"
+    },
+    "perforante": {
+      "variantes": [
+        "piercing",
+        "penetrante"
+      ],
+      "contexto": "informativo"
+    },
+    "contundente": {
+      "variantes": [
+        "bludgeoning",
+        "de golpe",
+        "aplastante"
+      ],
+      "contexto": "informativo"
+    },
+    "fuego": {
+      "variantes": [
+        "fire",
+        "igneo"
+      ],
+      "contexto": "informativo"
+    },
+    "frío": {
+      "variantes": [
+        "cold",
+        "helado"
+      ],
+      "contexto": "informativo"
+    },
+    "rayo": {
+      "variantes": [
+        "lightning",
+        "relampago",
+        "electrico"
+      ],
+      "contexto": "informativo"
+    },
+    "trueno": {
+      "variantes": [
+        "thunder",
+        "atronador"
+      ],
+      "contexto": "informativo"
+    },
+    "ácido": {
+      "variantes": [
+        "acid"
+      ],
+      "contexto": "informativo"
+    },
+    "veneno": {
+      "variantes": [
+        "poison"
+      ],
+      "contexto": "informativo"
+    },
+    "necrótico": {
+      "variantes": [
+        "necrotic"
+      ],
+      "contexto": "informativo"
+    },
+    "radiante": {
+      "variantes": [
+        "radiant"
+      ],
+      "contexto": "informativo"
+    },
+    "psíquico": {
+      "variantes": [
+        "psychic"
+      ],
+      "contexto": "informativo"
+    },
+    "fuerza": {
+      "variantes": [
+        "force"
+      ],
+      "contexto": "informativo"
+    }
+  },
+  "unidades": {
+    "_nota": "el compendio va en metrico con la equivalencia REAL a 1 decimal (RuleSource/metrico.py). Ver AGENTS.md.",
+    "metros": {
+      "variantes": [
+        "pies",
+        "pie"
+      ],
+      "contexto": "informativo",
+      "nota": "1 pie = 0,3048 m; la conversion la hace metrico.py, no el glosario"
+    },
+    "kilos": {
+      "variantes": [
+        "libras",
+        "lb"
+      ],
+      "contexto": "informativo",
+      "nota": "1 libra = 0,4536 kg; por debajo de 1 kg se expresa en gramos"
+    },
+    "kilómetros": {
+      "variantes": [
+        "millas"
+      ],
+      "contexto": "informativo",
+      "nota": "1 milla = 1,609 km"
+    }
+  }
+}

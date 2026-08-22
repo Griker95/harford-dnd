@@ -1,0 +1,6811 @@
+[
+ {
+  "spell": 7418,
+  "name": "Encantar brazal: salud menor",
+  "skill": 70,
+  "colors": [
+   0,
+   70,
+   90,
+   110
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para que aumenten la salud del portador en 5 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar brazal: salud menor"
+ },
+ {
+  "spell": 7420,
+  "name": "Encantar pechera: salud menor",
+  "skill": 15,
+  "colors": [
+   15,
+   70,
+   90,
+   110
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que aumente la salud del portador en 5 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar pechera: salud menor"
+ },
+ {
+  "spell": 7421,
+  "name": "Vara de cobre rúnico",
+  "skill": 1,
+  "colors": [
+   1,
+   5,
+   7,
+   10
+  ],
+  "reagents": [
+   {
+    "id": 6217,
+    "name": "Vara de cobre",
+    "icon": "inv_misc_flute_01",
+    "qty": 1
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 1
+   },
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 6218,
+   "name": "Vara de cobre con runas",
+   "icon": "inv_staff_goldfeathered_01",
+   "qty": 1
+  },
+  "icon": "inv_staff_goldfeathered_01",
+  "efecto": null,
+  "herramienta": null,
+  "nombre_tooltip": "Vara de cobre rúnico"
+ },
+ {
+  "spell": 7426,
+  "name": "Encantar pechera: absorción menor",
+  "skill": 40,
+  "colors": [
+   40,
+   90,
+   110,
+   130
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 2
+   },
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta una parte de la pechera para obtener un 2% de probabilidad por golpe de conseguir 10 p. de daño amortiguados.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar pechera: absorción menor"
+ },
+ {
+  "spell": 7428,
+  "name": "Encantar brazal: desvío menor",
+  "skill": 80,
+  "colors": [
+   0,
+   80,
+   100,
+   120
+  ],
+  "reagents": [
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 1
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para que aumenten la habilidad de defensa del portador en 1 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar brazal: desvío menor"
+ },
+ {
+  "spell": 7443,
+  "name": "Encantar pechera: maná menor",
+  "skill": 20,
+  "colors": [
+   20,
+   80,
+   100,
+   120
+  ],
+  "reagents": [
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que aumente el maná del portador en 5 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar pechera: maná menor"
+ },
+ {
+  "spell": 7454,
+  "name": "Encantar capa: resistencia menor",
+  "skill": 45,
+  "colors": [
+   45,
+   95,
+   115,
+   135
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 1
+   },
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que aumente la resistencia a todos los tipos de magia en 1 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar capa: resistencia menor"
+ },
+ {
+  "spell": 7457,
+  "name": "Encantar brazal: aguante menor",
+  "skill": 50,
+  "colors": [
+   50,
+   100,
+   120,
+   140
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para que aumenten en 1 p. el aguante del portador.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar brazal: aguante menor"
+ },
+ {
+  "spell": 7748,
+  "name": "Encantar pechera: salud inferior",
+  "skill": 60,
+  "colors": [
+   60,
+   105,
+   125,
+   145
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 2
+   },
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que aumente la salud del portador en 15 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar pechera: salud inferior"
+ },
+ {
+  "spell": 7766,
+  "name": "Encantar brazal: espíritu menor",
+  "skill": 60,
+  "colors": [
+   60,
+   105,
+   125,
+   145
+  ],
+  "reagents": [
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para que aumenten en 1 p. el espíritu del portador.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar brazal: espíritu menor"
+ },
+ {
+  "spell": 7771,
+  "name": "Encantar capa: protección menor",
+  "skill": 70,
+  "colors": [
+   70,
+   110,
+   130,
+   150
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 3
+   },
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta una capa para obtener 10 p. extra de armadura.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar capa: protección menor"
+ },
+ {
+  "spell": 7776,
+  "name": "Encantar pechera: maná inferior",
+  "skill": 80,
+  "colors": [
+   80,
+   115,
+   135,
+   155
+  ],
+  "reagents": [
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 1
+   },
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que aumente el maná del portador en 20 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar pechera: maná inferior"
+ },
+ {
+  "spell": 7779,
+  "name": "Encantar brazal: agilidad menor",
+  "skill": 80,
+  "colors": [
+   80,
+   115,
+   135,
+   155
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 2
+   },
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para que aumenten en 1 p. la agilidad del portador.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar brazal: agilidad menor"
+ },
+ {
+  "spell": 7782,
+  "name": "Encantar brazal: fuerza menor",
+  "skill": 80,
+  "colors": [
+   80,
+   115,
+   135,
+   155
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 5
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para que aumenten en 1 p. la fuerza del portador.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar brazal: fuerza menor"
+ },
+ {
+  "spell": 7786,
+  "name": "Encantar arma: bestiacida menor",
+  "skill": 90,
+  "colors": [
+   90,
+   120,
+   140,
+   160
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 4
+   },
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause 2 p. de daño a las bestias.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar arma: bestiacida menor"
+ },
+ {
+  "spell": 7788,
+  "name": "Encantar arma: golpear menor",
+  "skill": 90,
+  "colors": [
+   90,
+   120,
+   140,
+   160
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 2
+   },
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 1
+   },
+   {
+    "id": 10978,
+    "name": "Fragmento de luz trémula pequeño",
+    "icon": "inv_enchant_shardglimmeringsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause 1 p. de daño extra.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar arma: golpear menor"
+ },
+ {
+  "spell": 7745,
+  "name": "Encantar arma 2M: impacto menor",
+  "skill": 100,
+  "colors": [
+   100,
+   130,
+   150,
+   170
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 4
+   },
+   {
+    "id": 10978,
+    "name": "Fragmento de luz trémula pequeño",
+    "icon": "inv_enchant_shardglimmeringsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para que cause 2 p. extra de daño.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar arma 2M: impacto menor"
+ },
+ {
+  "spell": 7793,
+  "name": "Encantar arma 2M: intelecto inferior",
+  "skill": 100,
+  "colors": [
+   100,
+   130,
+   150,
+   170
+  ],
+  "reagents": [
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para añadir 3 p. de intelecto.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar arma 2M: intelecto inferior"
+ },
+ {
+  "spell": 7795,
+  "name": "Vara rúnica plateada",
+  "skill": 100,
+  "colors": [
+   100,
+   130,
+   150,
+   170
+  ],
+  "reagents": [
+   {
+    "id": 6338,
+    "name": "Vara de plata",
+    "icon": "inv_staff_01",
+    "qty": 1
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 6
+   },
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 3
+   },
+   {
+    "id": 1210,
+    "name": "Gema de las Sombras",
+    "icon": "inv_misc_gem_amethyst_01",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 6339,
+   "name": "Vara de plata con runas",
+   "icon": "inv_staff_01",
+   "qty": 1
+  },
+  "icon": "inv_staff_01",
+  "efecto": null,
+  "herramienta": null,
+  "nombre_tooltip": "Vara rúnica plateada"
+ },
+ {
+  "spell": 7857,
+  "name": "Encantar pechera: salud",
+  "skill": 120,
+  "colors": [
+   120,
+   145,
+   165,
+   185
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 4
+   },
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que aumente la salud del portador en 25 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar pechera: salud"
+ },
+ {
+  "spell": 7859,
+  "name": "Encantar brazal: espíritu inferior",
+  "skill": 120,
+  "colors": [
+   120,
+   145,
+   165,
+   185
+  ],
+  "reagents": [
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un brazal para que aumente el espíritu del portador en 3 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar brazal: espíritu inferior"
+ },
+ {
+  "spell": 7861,
+  "name": "Encantar capa: resistencia al Fuego inferior",
+  "skill": 125,
+  "colors": [
+   125,
+   150,
+   170,
+   190
+  ],
+  "reagents": [
+   {
+    "id": 6371,
+    "name": "Aceite de fuego",
+    "icon": "inv_potion_38",
+    "qty": 1
+   },
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que aumente la resistencia al Fuego en 5 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar capa: resistencia al Fuego inferior"
+ },
+ {
+  "spell": 7863,
+  "name": "Encantar botas: aguante menor",
+  "skill": 125,
+  "colors": [
+   125,
+   150,
+   170,
+   190
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 8
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un par de botas para que aumenten en 1 p. el aguante del portador.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar botas: aguante menor"
+ },
+ {
+  "spell": 7867,
+  "name": "Encantar botas: agilidad menor",
+  "skill": 125,
+  "colors": [
+   125,
+   150,
+   170,
+   190
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 6
+   },
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un par de botas para que aumenten en 1 p. la agilidad del portador.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar botas: agilidad menor"
+ },
+ {
+  "spell": 13378,
+  "name": "Encantar escudo: aguante menor",
+  "skill": 105,
+  "colors": [
+   105,
+   130,
+   150,
+   170
+  ],
+  "reagents": [
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 1
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que aumente el aguante del portador en 1 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar escudo: aguante menor"
+ },
+ {
+  "spell": 13380,
+  "name": "Encantar arma 2M: espíritu inferior",
+  "skill": 110,
+  "colors": [
+   110,
+   135,
+   155,
+   175
+  ],
+  "reagents": [
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 1
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 6
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para añadir 3 p. de espíritu.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar arma 2M: espíritu inferior"
+ },
+ {
+  "spell": 13419,
+  "name": "Encantar capa: agilidad menor",
+  "skill": 110,
+  "colors": [
+   110,
+   135,
+   155,
+   175
+  ],
+  "reagents": [
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione +1 p. de agilidad.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar capa: agilidad menor"
+ },
+ {
+  "spell": 13421,
+  "name": "Encantar capa: protección inferior",
+  "skill": 115,
+  "colors": [
+   115,
+   140,
+   160,
+   180
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 6
+   },
+   {
+    "id": 10978,
+    "name": "Fragmento de luz trémula pequeño",
+    "icon": "inv_enchant_shardglimmeringsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que aumente la armadura en 20 p.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Encantar capa: protección inferior"
+ },
+ {
+  "spell": 13464,
+  "name": "Encantar escudo: protección inferior",
+  "skill": 115,
+  "colors": [
+   115,
+   140,
+   160,
+   180
+  ],
+  "reagents": [
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 1
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 1
+   },
+   {
+    "id": 10978,
+    "name": "Fragmento de luz trémula pequeño",
+    "icon": "inv_enchant_shardglimmeringsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para aumentar su armadura en 30 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar escudo: protección inferior"
+ },
+ {
+  "spell": 13485,
+  "name": "Encantar escudo: espíritu inferior",
+  "skill": 130,
+  "colors": [
+   130,
+   155,
+   175,
+   195
+  ],
+  "reagents": [
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 2
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione 3 p. de espíritu.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar escudo: espíritu inferior"
+ },
+ {
+  "spell": 13501,
+  "name": "Encantar brazal: aguante inferior",
+  "skill": 130,
+  "colors": [
+   130,
+   155,
+   175,
+   195
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un brazal para que aumente el aguante del portador en 3 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar brazal: aguante inferior"
+ },
+ {
+  "spell": 13503,
+  "name": "Encantar arma: golpear inferior",
+  "skill": 140,
+  "colors": [
+   140,
+   165,
+   185,
+   205
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 2
+   },
+   {
+    "id": 11084,
+    "name": "Fragmento con luz trémula grande",
+    "icon": "inv_enchant_shardglimmeringlarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause 2 p. extra de daño.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar arma: golpear inferior"
+ },
+ {
+  "spell": 13522,
+  "name": "Encantar capa: resistencia a las sombras inferior",
+  "skill": 135,
+  "colors": [
+   135,
+   160,
+   180,
+   200
+  ],
+  "reagents": [
+   {
+    "id": 11082,
+    "name": "Esencia astral superior",
+    "icon": "inv_enchant_essenceastrallarge",
+    "qty": 1
+   },
+   {
+    "id": 6048,
+    "name": "Poción de protección de las Sombras",
+    "icon": "inv_potion_44",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que aumente la resistencia a las Sombras en 10 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar capa: resistencia a las sombras inferior"
+ },
+ {
+  "spell": 13529,
+  "name": "Encantar arma 2M: impacto inferior",
+  "skill": 145,
+  "colors": [
+   145,
+   170,
+   190,
+   210
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 3
+   },
+   {
+    "id": 11084,
+    "name": "Fragmento con luz trémula grande",
+    "icon": "inv_enchant_shardglimmeringlarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para que cause 3 p. extra de daño.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar arma 2M: impacto inferior"
+ },
+ {
+  "spell": 13536,
+  "name": "Encantar brazal: fuerza inferior",
+  "skill": 140,
+  "colors": [
+   140,
+   165,
+   185,
+   205
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un brazal para que aumente la fuerza del portador en 3 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar brazal: fuerza inferior"
+ },
+ {
+  "spell": 13538,
+  "name": "Encantar pechera: absorción inferior",
+  "skill": 140,
+  "colors": [
+   140,
+   165,
+   185,
+   205
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 2
+   },
+   {
+    "id": 11082,
+    "name": "Esencia astral superior",
+    "icon": "inv_enchant_essenceastrallarge",
+    "qty": 1
+   },
+   {
+    "id": 11084,
+    "name": "Fragmento con luz trémula grande",
+    "icon": "inv_enchant_shardglimmeringlarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta una parte de la pechera para obtener un 5% de probabilidad por golpe de conseguir 25 p. de daño amortiguados.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar pechera: absorción inferior"
+ },
+ {
+  "spell": 13607,
+  "name": "Encantar pechera: maná",
+  "skill": 145,
+  "colors": [
+   145,
+   170,
+   190,
+   210
+  ],
+  "reagents": [
+   {
+    "id": 11082,
+    "name": "Esencia astral superior",
+    "icon": "inv_enchant_essenceastrallarge",
+    "qty": 1
+   },
+   {
+    "id": 10998,
+    "name": "Esencia astral inferior",
+    "icon": "inv_enchant_essenceastralsmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que aumente el maná del portador en 30 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar pechera: maná"
+ },
+ {
+  "spell": 13612,
+  "name": "Encantar guantes: minería",
+  "skill": 145,
+  "colors": [
+   145,
+   170,
+   190,
+   210
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 1
+   },
+   {
+    "id": 2772,
+    "name": "Hierro",
+    "icon": "inv_ore_iron_01",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que concedan +2 de minería.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar guantes: minería"
+ },
+ {
+  "spell": 13617,
+  "name": "Encantar guantes: herboristería",
+  "skill": 145,
+  "colors": [
+   145,
+   170,
+   190,
+   210
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 1
+   },
+   {
+    "id": 3356,
+    "name": "Sangrerregia",
+    "icon": "inv_misc_herb_03",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que concedan +2 de botánica.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar guantes: herboristería"
+ },
+ {
+  "spell": 13620,
+  "name": "Encantar guantes: pesca",
+  "skill": 145,
+  "colors": [
+   145,
+   170,
+   190,
+   210
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 1
+   },
+   {
+    "id": 6370,
+    "name": "Aceite bocanegra",
+    "icon": "inv_drink_12",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que concedan +2 de pesca.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar guantes: pesca"
+ },
+ {
+  "spell": 13622,
+  "name": "Encantar brazal: intelecto inferior",
+  "skill": 150,
+  "colors": [
+   150,
+   175,
+   195,
+   215
+  ],
+  "reagents": [
+   {
+    "id": 11082,
+    "name": "Esencia astral superior",
+    "icon": "inv_enchant_essenceastrallarge",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un brazal para que aumente el intelecto del portador en 3 p.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar brazal: intelecto inferior"
+ },
+ {
+  "spell": 13626,
+  "name": "Encantar pechera: estadísticas menores",
+  "skill": 150,
+  "colors": [
+   150,
+   175,
+   195,
+   215
+  ],
+  "reagents": [
+   {
+    "id": 11082,
+    "name": "Esencia astral superior",
+    "icon": "inv_enchant_essenceastrallarge",
+    "qty": 1
+   },
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 1
+   },
+   {
+    "id": 11084,
+    "name": "Fragmento con luz trémula grande",
+    "icon": "inv_enchant_shardglimmeringlarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +1 de todas las estadísticas.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Encantar pechera: estadísticas menores"
+ },
+ {
+  "spell": 13628,
+  "name": "Vara rúnica dorada",
+  "skill": 150,
+  "colors": [
+   150,
+   175,
+   195,
+   215
+  ],
+  "reagents": [
+   {
+    "id": 11128,
+    "name": "Vara de oro",
+    "icon": "inv_staff_10",
+    "qty": 1
+   },
+   {
+    "id": 5500,
+    "name": "Perla iridiscente",
+    "icon": "inv_misc_gem_pearl_02",
+    "qty": 1
+   },
+   {
+    "id": 11082,
+    "name": "Esencia astral superior",
+    "icon": "inv_enchant_essenceastrallarge",
+    "qty": 2
+   },
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 2
+   }
+  ],
+  "creates": {
+   "id": 11130,
+   "name": "Vara de oro rúnica",
+   "icon": "inv_staff_10",
+   "qty": 1
+  },
+  "icon": "inv_staff_10",
+  "efecto": null,
+  "herramienta": null,
+  "nombre_tooltip": "Vara rúnica dorada"
+ },
+ {
+  "spell": 13631,
+  "name": "Encantar escudo: aguante inferior",
+  "skill": 155,
+  "colors": [
+   155,
+   175,
+   195,
+   215
+  ],
+  "reagents": [
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 1
+   },
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione 3 p. de aguante.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar escudo: aguante inferior"
+ },
+ {
+  "spell": 13635,
+  "name": "Encantar capa: defensa",
+  "skill": 155,
+  "colors": [
+   155,
+   175,
+   195,
+   215
+  ],
+  "reagents": [
+   {
+    "id": 11138,
+    "name": "Fragmento resplandeciente pequeño",
+    "icon": "inv_enchant_shardglowingsmall",
+    "qty": 1
+   },
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 30 p. de armadura extra.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar capa: defensa"
+ },
+ {
+  "spell": 13637,
+  "name": "Encantar botas: agilidad inferior",
+  "skill": 160,
+  "colors": [
+   160,
+   180,
+   200,
+   220
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 1
+   },
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que proporcionen +3 p. de agilidad.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar botas: agilidad inferior"
+ },
+ {
+  "spell": 13640,
+  "name": "Encantar pechera: salud superior",
+  "skill": 160,
+  "colors": [
+   160,
+   180,
+   200,
+   220
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +35 de salud.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar pechera: salud superior"
+ },
+ {
+  "spell": 13642,
+  "name": "Encantar brazal: espíritu",
+  "skill": 165,
+  "colors": [
+   165,
+   185,
+   205,
+   225
+  ],
+  "reagents": [
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +5 de espíritu.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar brazal: espíritu"
+ },
+ {
+  "spell": 13644,
+  "name": "Encantar botas: aguante inferior",
+  "skill": 170,
+  "colors": [
+   170,
+   190,
+   210,
+   230
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que proporcionen +3 p. de aguante.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar botas: aguante inferior"
+ },
+ {
+  "spell": 13646,
+  "name": "Encantar brazal: desvío inferior",
+  "skill": 170,
+  "colors": [
+   170,
+   190,
+   210,
+   230
+  ],
+  "reagents": [
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 1
+   },
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +2 de defensa.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar brazal: desvío inferior"
+ },
+ {
+  "spell": 13648,
+  "name": "Encantar brazal: aguante",
+  "skill": 170,
+  "colors": [
+   170,
+   190,
+   210,
+   230
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 6
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +5 de aguante.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar brazal: aguante"
+ },
+ {
+  "spell": 13653,
+  "name": "Encantar arma: bestiacida inferior",
+  "skill": 175,
+  "colors": [
+   175,
+   195,
+   215,
+   235
+  ],
+  "reagents": [
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 1
+   },
+   {
+    "id": 5637,
+    "name": "Colmillo grande",
+    "icon": "inv_misc_bone_08",
+    "qty": 2
+   },
+   {
+    "id": 11138,
+    "name": "Fragmento resplandeciente pequeño",
+    "icon": "inv_enchant_shardglowingsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause 6 p. extra de daño a las bestias.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar arma: bestiacida inferior"
+ },
+ {
+  "spell": 13655,
+  "name": "Encantar arma: mataelementales inferior",
+  "skill": 175,
+  "colors": [
+   175,
+   195,
+   215,
+   235
+  ],
+  "reagents": [
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 1
+   },
+   {
+    "id": 7067,
+    "name": "Elemental de tierra",
+    "icon": "inv_ore_iron_01",
+    "qty": 1
+   },
+   {
+    "id": 11138,
+    "name": "Fragmento resplandeciente pequeño",
+    "icon": "inv_enchant_shardglowingsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause 6 p. extra de daño contra los elementales.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar arma: mataelementales inferior"
+ },
+ {
+  "spell": 13657,
+  "name": "Encantar capa: resistencia al Fuego",
+  "skill": 175,
+  "colors": [
+   175,
+   195,
+   215,
+   235
+  ],
+  "reagents": [
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 1
+   },
+   {
+    "id": 7068,
+    "name": "Elemental de Fuego",
+    "icon": "spell_fire_fire",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 7 p. de resistencia al Fuego.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar capa: resistencia al Fuego"
+ },
+ {
+  "spell": 13659,
+  "name": "Encantar escudo: espíritu",
+  "skill": 180,
+  "colors": [
+   180,
+   200,
+   220,
+   240
+  ],
+  "reagents": [
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 1
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione 5 p. de espíritu.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar escudo: espíritu"
+ },
+ {
+  "spell": 13661,
+  "name": "Encantar brazal: fuerza",
+  "skill": 180,
+  "colors": [
+   180,
+   200,
+   220,
+   240
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +5 de fuerza.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar brazal: fuerza"
+ },
+ {
+  "spell": 13663,
+  "name": "Encantar pechera: maná superior",
+  "skill": 185,
+  "colors": [
+   185,
+   205,
+   225,
+   245
+  ],
+  "reagents": [
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +50 de maná.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar pechera: maná superior"
+ },
+ {
+  "spell": 13687,
+  "name": "Encantar botas: espíritu inferior",
+  "skill": 190,
+  "colors": [
+   190,
+   210,
+   230,
+   250
+  ],
+  "reagents": [
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 1
+   },
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que proporcionen +3 p. de espíritu.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar botas: espíritu inferior"
+ },
+ {
+  "spell": 13689,
+  "name": "Encantar escudo: bloqueo inferior",
+  "skill": 195,
+  "colors": [
+   195,
+   215,
+   235,
+   255
+  ],
+  "reagents": [
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 2
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 2
+   },
+   {
+    "id": 11139,
+    "name": "Fragmento resplandeciente grande",
+    "icon": "inv_enchant_shardglowinglarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione una probabilidad de bloquear de +2%.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar escudo: bloqueo inferior"
+ },
+ {
+  "spell": 13693,
+  "name": "Encantar arma: golpear",
+  "skill": 195,
+  "colors": [
+   195,
+   215,
+   235,
+   255
+  ],
+  "reagents": [
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 2
+   },
+   {
+    "id": 11139,
+    "name": "Fragmento resplandeciente grande",
+    "icon": "inv_enchant_shardglowinglarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause 3 p. extra de daño.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar arma: golpear"
+ },
+ {
+  "spell": 13695,
+  "name": "Encantar arma 2M: impacto",
+  "skill": 200,
+  "colors": [
+   200,
+   220,
+   240,
+   260
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 4
+   },
+   {
+    "id": 11139,
+    "name": "Fragmento resplandeciente grande",
+    "icon": "inv_enchant_shardglowinglarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para que cause 5 p. extra de daño.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar arma 2M: impacto"
+ },
+ {
+  "spell": 13698,
+  "name": "Encantar guantes: desuello",
+  "skill": 200,
+  "colors": [
+   200,
+   220,
+   240,
+   260
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 1
+   },
+   {
+    "id": 7392,
+    "name": "Escama de cría verde",
+    "icon": "inv_misc_monsterscales_03",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que concedan +5 de desollar.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar guantes: desuello"
+ },
+ {
+  "spell": 13700,
+  "name": "Encantar pechera: estadísticas inferiores",
+  "skill": 200,
+  "colors": [
+   200,
+   220,
+   240,
+   260
+  ],
+  "reagents": [
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 2
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 2
+   },
+   {
+    "id": 11139,
+    "name": "Fragmento resplandeciente grande",
+    "icon": "inv_enchant_shardglowinglarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +2 de todas las estadísticas.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar pechera: estadísticas inferiores"
+ },
+ {
+  "spell": 13702,
+  "name": "Vara rúnica de veraplata",
+  "skill": 200,
+  "colors": [
+   200,
+   220,
+   240,
+   260
+  ],
+  "reagents": [
+   {
+    "id": 11144,
+    "name": "Vara de veraplata",
+    "icon": "inv_staff_11",
+    "qty": 1
+   },
+   {
+    "id": 7971,
+    "name": "Perla negra",
+    "icon": "inv_misc_gem_pearl_01",
+    "qty": 1
+   },
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 2
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 2
+   }
+  ],
+  "creates": {
+   "id": 11145,
+   "name": "Vara de veraplata con runas",
+   "icon": "inv_staff_11",
+   "qty": 1
+  },
+  "icon": "inv_staff_11",
+  "efecto": null,
+  "herramienta": null,
+  "nombre_tooltip": "Vara rúnica de veraplata"
+ },
+ {
+  "spell": 13746,
+  "name": "Encantar capa: defensa superior",
+  "skill": 205,
+  "colors": [
+   205,
+   225,
+   245,
+   265
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 50 p. de armadura extra.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar capa: defensa superior"
+ },
+ {
+  "spell": 13794,
+  "name": "Encantar capa: resistencia",
+  "skill": 205,
+  "colors": [
+   205,
+   225,
+   245,
+   265
+  ],
+  "reagents": [
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 3 p. de resistencia a todo.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar capa: resistencia"
+ },
+ {
+  "spell": 13815,
+  "name": "Encantar guantes: agilidad",
+  "skill": 210,
+  "colors": [
+   210,
+   230,
+   250,
+   270
+  ],
+  "reagents": [
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 1
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que proporcionen +5 p. de agilidad.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar guantes: agilidad"
+ },
+ {
+  "spell": 13817,
+  "name": "Encantar escudo: aguante",
+  "skill": 210,
+  "colors": [
+   210,
+   230,
+   250,
+   270
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 5
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione +5 p. de aguante.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar escudo: aguante"
+ },
+ {
+  "spell": 13822,
+  "name": "Encantar brazal: intelecto",
+  "skill": 210,
+  "colors": [
+   210,
+   230,
+   250,
+   270
+  ],
+  "reagents": [
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +5 de intelecto.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: intelecto"
+ },
+ {
+  "spell": 13836,
+  "name": "Encantar botas: aguante",
+  "skill": 215,
+  "colors": [
+   215,
+   235,
+   255,
+   275
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 5
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que proporcionen +5 p. de aguante.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar botas: aguante"
+ },
+ {
+  "spell": 13841,
+  "name": "Encantar guantes: minería avanzada",
+  "skill": 215,
+  "colors": [
+   215,
+   235,
+   255,
+   275
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 3
+   },
+   {
+    "id": 6037,
+    "name": "Lingote de veraplata",
+    "icon": "inv_ingot_08",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que concedan +5 de minería.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar guantes: minería avanzada"
+ },
+ {
+  "spell": 13846,
+  "name": "Encantar brazal: espíritu superior",
+  "skill": 220,
+  "colors": [
+   220,
+   240,
+   260,
+   280
+  ],
+  "reagents": [
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 3
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +7 de espíritu.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: espíritu superior"
+ },
+ {
+  "spell": 13858,
+  "name": "Encantar pechera: salud excelente",
+  "skill": 220,
+  "colors": [
+   220,
+   240,
+   260,
+   280
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 6
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +50 de salud.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar pechera: salud excelente"
+ },
+ {
+  "spell": 13868,
+  "name": "Encantar guantes: herboristería avanzada",
+  "skill": 225,
+  "colors": [
+   225,
+   245,
+   265,
+   285
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 3
+   },
+   {
+    "id": 8838,
+    "name": "Solea",
+    "icon": "inv_misc_herb_18",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que concedan +5 de botánica.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar guantes: herboristería avanzada"
+ },
+ {
+  "spell": 13882,
+  "name": "Encantar capa: agilidad inferior",
+  "skill": 225,
+  "colors": [
+   225,
+   245,
+   265,
+   285
+  ],
+  "reagents": [
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 3 p. de agilidad.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar capa: agilidad inferior"
+ },
+ {
+  "spell": 13887,
+  "name": "Encantar guantes: fuerza",
+  "skill": 225,
+  "colors": [
+   225,
+   245,
+   265,
+   285
+  ],
+  "reagents": [
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 2
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que proporcionen +5 p. de fuerza.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar guantes: fuerza"
+ },
+ {
+  "spell": 13890,
+  "name": "Encantar botas: velocidad menor",
+  "skill": 225,
+  "colors": [
+   225,
+   245,
+   265,
+   285
+  ],
+  "reagents": [
+   {
+    "id": 11177,
+    "name": "Fragmento radiante pequeño",
+    "icon": "inv_enchant_shardradientsmall",
+    "qty": 1
+   },
+   {
+    "id": 7909,
+    "name": "Aguamarina",
+    "icon": "inv_misc_gem_crystal_02",
+    "qty": 1
+   },
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que aumenten ligeramente la velocidad de movimiento.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar botas: velocidad menor"
+ },
+ {
+  "spell": 13898,
+  "name": "Encantar arma: arma abrasadora",
+  "skill": 265,
+  "colors": [
+   265,
+   285,
+   305,
+   325
+  ],
+  "reagents": [
+   {
+    "id": 11177,
+    "name": "Fragmento radiante pequeño",
+    "icon": "inv_enchant_shardradientsmall",
+    "qty": 4
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause a menudo 40 p. de daño de Fuego extra.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar arma: arma abrasadora"
+ },
+ {
+  "spell": 13905,
+  "name": "Encantar escudo: espíritu superior",
+  "skill": 230,
+  "colors": [
+   230,
+   250,
+   270,
+   290
+  ],
+  "reagents": [
+   {
+    "id": 11175,
+    "name": "Esencia abisal superior",
+    "icon": "inv_enchant_essencenetherlarge",
+    "qty": 1
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione +7 p. de espíritu.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar escudo: espíritu superior"
+ },
+ {
+  "spell": 13915,
+  "name": "Encantar arma: matanza de demonios",
+  "skill": 230,
+  "colors": [
+   230,
+   250,
+   270,
+   290
+  ],
+  "reagents": [
+   {
+    "id": 11177,
+    "name": "Fragmento radiante pequeño",
+    "icon": "inv_enchant_shardradientsmall",
+    "qty": 1
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 2
+   },
+   {
+    "id": 9224,
+    "name": "Elixir de matanza de demonios",
+    "icon": "inv_potion_27",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para ofrecer la probabilidad de aturdir y causar un gran daño a los demonios.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar arma: matanza de demonios"
+ },
+ {
+  "spell": 13917,
+  "name": "Encantar pechera: maná superior",
+  "skill": 230,
+  "colors": [
+   230,
+   250,
+   270,
+   290
+  ],
+  "reagents": [
+   {
+    "id": 11175,
+    "name": "Esencia abisal superior",
+    "icon": "inv_enchant_essencenetherlarge",
+    "qty": 1
+   },
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +65 de maná.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar pechera: maná superior"
+ },
+ {
+  "spell": 13931,
+  "name": "Encantar brazal: desvío",
+  "skill": 235,
+  "colors": [
+   235,
+   255,
+   275,
+   295
+  ],
+  "reagents": [
+   {
+    "id": 11175,
+    "name": "Esencia abisal superior",
+    "icon": "inv_enchant_essencenetherlarge",
+    "qty": 1
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +3 de defensa.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: desvío"
+ },
+ {
+  "spell": 13933,
+  "name": "Encantar escudo: resistencia a la Escarcha",
+  "skill": 235,
+  "colors": [
+   235,
+   255,
+   275,
+   295
+  ],
+  "reagents": [
+   {
+    "id": 11178,
+    "name": "Fragmento radiante grande",
+    "icon": "inv_enchant_shardradientlarge",
+    "qty": 1
+   },
+   {
+    "id": 3829,
+    "name": "Aceite escarchado",
+    "icon": "inv_potion_20",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione +8 p. de resistencia a la Escarcha.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar escudo: resistencia a la Escarcha"
+ },
+ {
+  "spell": 13935,
+  "name": "Encantar botas: agilidad",
+  "skill": 235,
+  "colors": [
+   235,
+   255,
+   275,
+   295
+  ],
+  "reagents": [
+   {
+    "id": 11175,
+    "name": "Esencia abisal superior",
+    "icon": "inv_enchant_essencenetherlarge",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que proporcionen +5 p. de agilidad.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar botas: agilidad"
+ },
+ {
+  "spell": 13937,
+  "name": "Encantar arma 2M: impacto superior",
+  "skill": 240,
+  "colors": [
+   240,
+   260,
+   280,
+   300
+  ],
+  "reagents": [
+   {
+    "id": 11178,
+    "name": "Fragmento radiante grande",
+    "icon": "inv_enchant_shardradientlarge",
+    "qty": 2
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para que cause +7 p. de daño.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar arma 2M: impacto superior"
+ },
+ {
+  "spell": 13939,
+  "name": "Encantar brazal: fuerza superior",
+  "skill": 240,
+  "colors": [
+   240,
+   260,
+   280,
+   300
+  ],
+  "reagents": [
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 2
+   },
+   {
+    "id": 11175,
+    "name": "Esencia abisal superior",
+    "icon": "inv_enchant_essencenetherlarge",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +7 de fuerza.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: fuerza superior"
+ },
+ {
+  "spell": 13941,
+  "name": "Encantar pechera: estadísticas",
+  "skill": 245,
+  "colors": [
+   245,
+   265,
+   285,
+   305
+  ],
+  "reagents": [
+   {
+    "id": 11178,
+    "name": "Fragmento radiante grande",
+    "icon": "inv_enchant_shardradientlarge",
+    "qty": 1
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 3
+   },
+   {
+    "id": 11175,
+    "name": "Esencia abisal superior",
+    "icon": "inv_enchant_essencenetherlarge",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +3 de todas las estadísticas.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar pechera: estadísticas"
+ },
+ {
+  "spell": 13943,
+  "name": "Encantar arma: golpear superior",
+  "skill": 245,
+  "colors": [
+   245,
+   265,
+   285,
+   305
+  ],
+  "reagents": [
+   {
+    "id": 11178,
+    "name": "Fragmento radiante grande",
+    "icon": "inv_enchant_shardradientlarge",
+    "qty": 2
+   },
+   {
+    "id": 11175,
+    "name": "Esencia abisal superior",
+    "icon": "inv_enchant_essencenetherlarge",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause 4 p. extra de daño.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar arma: golpear superior"
+ },
+ {
+  "spell": 13945,
+  "name": "Encantar brazal: aguante superior",
+  "skill": 245,
+  "colors": [
+   245,
+   265,
+   285,
+   305
+  ],
+  "reagents": [
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 5
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +7 de aguante.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: aguante superior"
+ },
+ {
+  "spell": 13947,
+  "name": "Encantar guantes: equitación",
+  "skill": 250,
+  "colors": [
+   250,
+   270,
+   290,
+   310
+  ],
+  "reagents": [
+   {
+    "id": 11178,
+    "name": "Fragmento radiante grande",
+    "icon": "inv_enchant_shardradientlarge",
+    "qty": 2
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que concedan un bonus de velocidad menor cuando el portador vaya montado.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar guantes: equitación"
+ },
+ {
+  "spell": 13948,
+  "name": "Encantar guantes: velocidad menor",
+  "skill": 250,
+  "colors": [
+   250,
+   270,
+   290,
+   310
+  ],
+  "reagents": [
+   {
+    "id": 11178,
+    "name": "Fragmento radiante grande",
+    "icon": "inv_enchant_shardradientlarge",
+    "qty": 2
+   },
+   {
+    "id": 8153,
+    "name": "Atriplex salvaje",
+    "icon": "inv_misc_herb_03",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta permanentemente unos guantes para que concedan un bonus de +1% de velocidad de ataque.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar guantes: velocidad menor"
+ },
+ {
+  "spell": 14293,
+  "name": "Varita mágica inferior",
+  "skill": 10,
+  "colors": [
+   10,
+   75,
+   95,
+   115
+  ],
+  "reagents": [
+   {
+    "id": 4470,
+    "name": "Madera simple",
+    "icon": "inv_tradeskillitem_01",
+    "qty": 1
+   },
+   {
+    "id": 10938,
+    "name": "Esencia mágica inferior",
+    "icon": "inv_enchant_essencemagicsmall",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 11287,
+   "name": "Varita mágica inferior",
+   "icon": "inv_staff_02",
+   "qty": 1
+  },
+  "icon": "inv_staff_02",
+  "efecto": "Crea una varita mágica inferior.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Varita mágica inferior"
+ },
+ {
+  "spell": 14807,
+  "name": "Varita mágica superior",
+  "skill": 70,
+  "colors": [
+   70,
+   110,
+   130,
+   150
+  ],
+  "reagents": [
+   {
+    "id": 4470,
+    "name": "Madera simple",
+    "icon": "inv_tradeskillitem_01",
+    "qty": 1
+   },
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 11288,
+   "name": "Varita mágica superior",
+   "icon": "inv_staff_07",
+   "qty": 1
+  },
+  "icon": "inv_staff_07",
+  "efecto": "Crea una varita mágica superior.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Varita mágica superior"
+ },
+ {
+  "spell": 14809,
+  "name": "Varita mística inferior",
+  "skill": 155,
+  "colors": [
+   155,
+   175,
+   195,
+   215
+  ],
+  "reagents": [
+   {
+    "id": 11291,
+    "name": "Madera de estrella",
+    "icon": "inv_tradeskillitem_03",
+    "qty": 1
+   },
+   {
+    "id": 11134,
+    "name": "Esencia mística inferior",
+    "icon": "inv_enchant_essencemysticalsmall",
+    "qty": 1
+   },
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 11289,
+   "name": "Varita mística inferior",
+   "icon": "inv_staff_02",
+   "qty": 1
+  },
+  "icon": "inv_staff_02",
+  "efecto": "Crea una varita mística inferior.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Varita mística inferior"
+ },
+ {
+  "spell": 14810,
+  "name": "Varita mística superior",
+  "skill": 175,
+  "colors": [
+   175,
+   195,
+   215,
+   235
+  ],
+  "reagents": [
+   {
+    "id": 11291,
+    "name": "Madera de estrella",
+    "icon": "inv_tradeskillitem_03",
+    "qty": 1
+   },
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 1
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 11290,
+   "name": "Varita mística superior",
+   "icon": "inv_wand_07",
+   "qty": 1
+  },
+  "icon": "inv_wand_07",
+  "efecto": "Crea una varita mística superior.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Varita mística superior"
+ },
+ {
+  "spell": 15596,
+  "name": "Corazón fumeante de la montaña",
+  "skill": 265,
+  "colors": [
+   265,
+   285,
+   305,
+   325
+  ],
+  "reagents": [
+   {
+    "id": 11382,
+    "name": "Sangre de la Montaña",
+    "icon": "inv_misc_gem_bloodstone_03",
+    "qty": 1
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 1
+   },
+   {
+    "id": 14343,
+    "name": "Fragmento luminoso pequeño",
+    "icon": "inv_enchant_shardbrilliantsmall",
+    "qty": 3
+   }
+  ],
+  "creates": {
+   "id": 11811,
+   "name": "Corazón de la montaña humeante",
+   "icon": "inv_misc_gem_bloodstone_01",
+   "qty": 1
+  },
+  "icon": "inv_misc_gem_bloodstone_01",
+  "efecto": null,
+  "herramienta": null,
+  "nombre_tooltip": "Corazón fumeante de la montaña"
+ },
+ {
+  "spell": 17181,
+  "name": "Cuero encantado",
+  "skill": 250,
+  "colors": [
+   250,
+   250,
+   255,
+   260
+  ],
+  "reagents": [
+   {
+    "id": 8170,
+    "name": "Cuero basto",
+    "icon": "inv_misc_leatherscrap_02",
+    "qty": 1
+   },
+   {
+    "id": 16202,
+    "name": "Esencia eterna inferior",
+    "icon": "inv_enchant_essenceeternalsmall",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 12810,
+   "name": "Cuero encantado",
+   "icon": "inv_misc_rune_05",
+   "qty": 1
+  },
+  "icon": "inv_misc_rune_05",
+  "efecto": null,
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Cuero encantado"
+ },
+ {
+  "spell": 17180,
+  "name": "Torio encantado",
+  "skill": 250,
+  "colors": [
+   250,
+   250,
+   255,
+   260
+  ],
+  "reagents": [
+   {
+    "id": 12359,
+    "name": "Lingote de torio",
+    "icon": "inv_ingot_07",
+    "qty": 1
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 3
+   }
+  ],
+  "creates": {
+   "id": 12655,
+   "name": "Lingote de torio encantado",
+   "icon": "inv_ingot_eternium",
+   "qty": 1
+  },
+  "icon": "inv_ingot_eternium",
+  "efecto": null,
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Torio encantado"
+ },
+ {
+  "spell": 20008,
+  "name": "Encantar brazal: intelecto superior",
+  "skill": 255,
+  "colors": [
+   255,
+   275,
+   295,
+   315
+  ],
+  "reagents": [
+   {
+    "id": 16202,
+    "name": "Esencia eterna inferior",
+    "icon": "inv_enchant_essenceeternalsmall",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +7 de intelecto.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: intelecto superior"
+ },
+ {
+  "spell": 20020,
+  "name": "Encantar botas: aguante superior",
+  "skill": 260,
+  "colors": [
+   260,
+   280,
+   300,
+   320
+  ],
+  "reagents": [
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 10
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que proporcionen +7 p. de aguante.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar botas: aguante superior"
+ },
+ {
+  "spell": 20014,
+  "name": "Encantar capa: resistencia superior",
+  "skill": 265,
+  "colors": [
+   265,
+   285,
+   305,
+   325
+  ],
+  "reagents": [
+   {
+    "id": 16202,
+    "name": "Esencia eterna inferior",
+    "icon": "inv_enchant_essenceeternalsmall",
+    "qty": 2
+   },
+   {
+    "id": 7077,
+    "name": "Corazón de fuego",
+    "icon": "spell_fire_lavaspawn",
+    "qty": 1
+   },
+   {
+    "id": 7075,
+    "name": "Núcleo de tierra",
+    "icon": "inv_stone_05",
+    "qty": 1
+   },
+   {
+    "id": 7079,
+    "name": "Globo de agua",
+    "icon": "inv_misc_orb_01",
+    "qty": 1
+   },
+   {
+    "id": 7081,
+    "name": "Aliento del Viento",
+    "icon": "spell_nature_cyclone",
+    "qty": 1
+   },
+   {
+    "id": 7972,
+    "name": "Icor de no-muerto",
+    "icon": "inv_misc_slime_01",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 5 p. de resistencia a todo.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar capa: resistencia superior"
+ },
+ {
+  "spell": 20017,
+  "name": "Encantar escudo: aguante superior",
+  "skill": 265,
+  "colors": [
+   265,
+   285,
+   305,
+   325
+  ],
+  "reagents": [
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 10
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione +7 p. de aguante.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar escudo: aguante superior"
+ },
+ {
+  "spell": 20009,
+  "name": "Encantar brazal: espíritu excelente",
+  "skill": 270,
+  "colors": [
+   270,
+   290,
+   310,
+   330
+  ],
+  "reagents": [
+   {
+    "id": 16202,
+    "name": "Esencia eterna inferior",
+    "icon": "inv_enchant_essenceeternalsmall",
+    "qty": 3
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 10
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +9 de espíritu.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: espíritu excelente"
+ },
+ {
+  "spell": 20012,
+  "name": "Encantar guantes: agilidad superior",
+  "skill": 270,
+  "colors": [
+   270,
+   290,
+   310,
+   330
+  ],
+  "reagents": [
+   {
+    "id": 16202,
+    "name": "Esencia eterna inferior",
+    "icon": "inv_enchant_essenceeternalsmall",
+    "qty": 3
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 3
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que proporcionen +7 p. de agilidad.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar guantes: agilidad superior"
+ },
+ {
+  "spell": 20024,
+  "name": "Encantar botas: espíritu",
+  "skill": 275,
+  "colors": [
+   275,
+   295,
+   315,
+   335
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 2
+   },
+   {
+    "id": 16202,
+    "name": "Esencia eterna inferior",
+    "icon": "inv_enchant_essenceeternalsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que proporcionen +5 p. de espíritu.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar botas: espíritu"
+ },
+ {
+  "spell": 20026,
+  "name": "Encantar pechera: salud sublime",
+  "skill": 275,
+  "colors": [
+   275,
+   295,
+   315,
+   335
+  ],
+  "reagents": [
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 6
+   },
+   {
+    "id": 14343,
+    "name": "Fragmento luminoso pequeño",
+    "icon": "inv_enchant_shardbrilliantsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +100 de salud.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar pechera: salud sublime"
+ },
+ {
+  "spell": 20016,
+  "name": "Encantar escudo: espíritu excelente",
+  "skill": 280,
+  "colors": [
+   280,
+   300,
+   320,
+   340
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 2
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para que proporcione +9 p. de espíritu.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar escudo: espíritu excelente"
+ },
+ {
+  "spell": 20029,
+  "name": "Encantar arma: escalofrío gélido",
+  "skill": 285,
+  "colors": [
+   285,
+   305,
+   325,
+   345
+  ],
+  "reagents": [
+   {
+    "id": 14343,
+    "name": "Fragmento luminoso pequeño",
+    "icon": "inv_enchant_shardbrilliantsmall",
+    "qty": 4
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 1
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 1
+   },
+   {
+    "id": 13467,
+    "name": "Setelo",
+    "icon": "inv_misc_herb_icecap",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause a menudo Escalofrío al objetivo reduciendo su velocidad de movimiento y ataque.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar arma: escalofrío gélido"
+ },
+ {
+  "spell": 20015,
+  "name": "Encantar capa: defensa excelente",
+  "skill": 285,
+  "colors": [
+   285,
+   305,
+   325,
+   345
+  ],
+  "reagents": [
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 8
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 70 p. de armadura extra.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar capa: defensa excelente"
+ },
+ {
+  "spell": 20028,
+  "name": "Encantar pechera: maná sublime",
+  "skill": 290,
+  "colors": [
+   290,
+   310,
+   330,
+   350
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 3
+   },
+   {
+    "id": 14343,
+    "name": "Fragmento luminoso pequeño",
+    "icon": "inv_enchant_shardbrilliantsmall",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +100 de maná.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar pechera: maná sublime"
+ },
+ {
+  "spell": 20051,
+  "name": "Vara de arcanita rúnica",
+  "skill": 290,
+  "colors": [
+   290,
+   310,
+   330,
+   350
+  ],
+  "reagents": [
+   {
+    "id": 16206,
+    "name": "Vara de arcanita",
+    "icon": "inv_staff_19",
+    "qty": 1
+   },
+   {
+    "id": 13926,
+    "name": "Perla de oro",
+    "icon": "inv_misc_gem_pearl_04",
+    "qty": 1
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 10
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 4
+   },
+   {
+    "id": 14343,
+    "name": "Fragmento luminoso pequeño",
+    "icon": "inv_enchant_shardbrilliantsmall",
+    "qty": 4
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   }
+  ],
+  "creates": {
+   "id": 16207,
+   "name": "Vara arcanita con runas",
+   "icon": "inv_wand_09",
+   "qty": 1
+  },
+  "icon": "inv_wand_09",
+  "efecto": null,
+  "herramienta": null,
+  "nombre_tooltip": "Vara de arcanita rúnica"
+ },
+ {
+  "spell": 20013,
+  "name": "Encantar guantes: fuerza superior",
+  "skill": 295,
+  "colors": [
+   295,
+   315,
+   335,
+   355
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 4
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para que proporcionen +7 p. de fuerza.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar guantes: fuerza superior"
+ },
+ {
+  "spell": 20023,
+  "name": "Encantar botas: agilidad superior",
+  "skill": 295,
+  "colors": [
+   295,
+   315,
+   335,
+   355
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 8
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unas botas para que proporcionen +7 p. de agilidad.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar botas: agilidad superior"
+ },
+ {
+  "spell": 20010,
+  "name": "Encantar brazal: fuerza excelente",
+  "skill": 295,
+  "colors": [
+   295,
+   315,
+   335,
+   355
+  ],
+  "reagents": [
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 6
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 6
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +9 de fuerza.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: fuerza excelente"
+ },
+ {
+  "spell": 20030,
+  "name": "Encantar arma 2M: impacto excelente",
+  "skill": 295,
+  "colors": [
+   295,
+   315,
+   335,
+   355
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 4
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 10
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para que cause +9 p. de daño.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma 2M: impacto excelente"
+ },
+ {
+  "spell": 20033,
+  "name": "Encantar arma: arma profana",
+  "skill": 295,
+  "colors": [
+   295,
+   315,
+   335,
+   355
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 4
+   },
+   {
+    "id": 12808,
+    "name": "Esencia de no-muerto",
+    "icon": "spell_shadow_shadetruesight",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que inflija a menudo una maldición al objetivo reduciendo su daño cuerpo a cuerpo.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: arma profana"
+ },
+ {
+  "spell": 20036,
+  "name": "Encantar arma 2M: intelecto sublime",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 12
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para añadir 9 p. de intelecto.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma 2M: intelecto sublime"
+ },
+ {
+  "spell": 20031,
+  "name": "Encantar arma: golpear excelente",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 10
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que cause 5 p. extra de daño.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: golpear excelente"
+ },
+ {
+  "spell": 20011,
+  "name": "Encantar brazal: aguante excelente",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 15
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para proporcionar +9 de aguante.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Encantar brazal: aguante excelente"
+ },
+ {
+  "spell": 20034,
+  "name": "Encantar arma: cruzado",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 4
+   },
+   {
+    "id": 12811,
+    "name": "Orbe de rectitud",
+    "icon": "inv_misc_gem_pearl_03",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que, cuando se ataque cuerpo a cuerpo, cure a menudo 75 al 125 p. y aumente la fuerza en 100 p. durante 15 s.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: cruzado"
+ },
+ {
+  "spell": 20025,
+  "name": "Encantar pechera: estadísticas superiores",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 4
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 15
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 10
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una coraza para que proporcione +4 de todas las estadísticas.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar pechera: estadísticas superiores"
+ },
+ {
+  "spell": 20032,
+  "name": "Encantar arma: robo de vida",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 6
+   },
+   {
+    "id": 12808,
+    "name": "Esencia de no-muerto",
+    "icon": "spell_shadow_shadetruesight",
+    "qty": 6
+   },
+   {
+    "id": 12803,
+    "name": "Esencia viva",
+    "icon": "spell_nature_abolishmagic",
+    "qty": 6
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que robe a menudo vida del enemigo y la traspase al portador.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: robo de vida"
+ },
+ {
+  "spell": 20035,
+  "name": "Encantar arma 2M: espíritu sublime",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 12
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para añadir 9 p. de espíritu.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma 2M: espíritu sublime"
+ },
+ {
+  "spell": 21931,
+  "name": "Encantar arma: poderío del invierno",
+  "skill": 190,
+  "colors": [
+   190,
+   210,
+   230,
+   250
+  ],
+  "reagents": [
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 3
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 3
+   },
+   {
+    "id": 11139,
+    "name": "Fragmento resplandeciente grande",
+    "icon": "inv_enchant_shardglowinglarge",
+    "qty": 1
+   },
+   {
+    "id": 3819,
+    "name": "Ivernalia",
+    "icon": "inv_misc_flower_03",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma para que inflija 7 p. extra de daño de Escarcha cuando se lancen hechizos de Escarcha.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar arma: poderío del invierno"
+ },
+ {
+  "spell": 22434,
+  "name": "Escama de Onyxia cargada",
+  "skill": null,
+  "colors": null,
+  "reagents": [
+   {
+    "id": 17967,
+    "name": "Escama refinada de Onyxia",
+    "icon": "inv_misc_monsterscales_07",
+    "qty": 1
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 2
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 2
+   }
+  ],
+  "creates": {
+   "id": 17968,
+   "name": "Escama cargada de Onyxia",
+   "icon": "inv_misc_monsterscales_07",
+   "qty": 1
+  },
+  "icon": "inv_misc_monsterscales_07",
+  "efecto": null,
+  "herramienta": null,
+  "nombre_tooltip": "Escama de Onyxia cargada"
+ },
+ {
+  "spell": 22749,
+  "name": "Encantar arma: poder de hechizo",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 4
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 12
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 4
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 4
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 4
+   },
+   {
+    "id": 13926,
+    "name": "Perla de oro",
+    "icon": "inv_misc_gem_pearl_04",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para añadir 30 p. de daño a los hechizos.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: poder de hechizo"
+ },
+ {
+  "spell": 22750,
+  "name": "Encantar arma: poder de curación",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 4
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 8
+   },
+   {
+    "id": 12803,
+    "name": "Esencia viva",
+    "icon": "spell_nature_abolishmagic",
+    "qty": 6
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 6
+   },
+   {
+    "id": 12811,
+    "name": "Orbe de rectitud",
+    "icon": "inv_misc_gem_pearl_03",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para añadir 55 p. de curación a los hechizos curativos.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: poder de curación"
+ },
+ {
+  "spell": 23799,
+  "name": "Encantar arma: fuerza",
+  "skill": 290,
+  "colors": [
+   290,
+   310,
+   330,
+   350
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 6
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 6
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 4
+   },
+   {
+    "id": 7076,
+    "name": "Esencia de tierra",
+    "icon": "spell_nature_strengthofearthtotem02",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que proporcione +15 p. de fuerza.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: fuerza"
+ },
+ {
+  "spell": 23800,
+  "name": "Encantar arma: agilidad",
+  "skill": 290,
+  "colors": [
+   290,
+   310,
+   330,
+   350
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 6
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 6
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 4
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que proporcione +15 p. de agilidad.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: agilidad"
+ },
+ {
+  "spell": 23801,
+  "name": "Encantar brazal: regeneración de maná",
+  "skill": 290,
+  "colors": [
+   290,
+   310,
+   330,
+   350
+  ],
+  "reagents": [
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 16
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 4
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para que restauren 4 p. de maná cada 5 segundos.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar brazal: regeneración de maná"
+ },
+ {
+  "spell": 23802,
+  "name": "Encantar brazal: poder de curación",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 20
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 4
+   },
+   {
+    "id": 12803,
+    "name": "Esencia viva",
+    "icon": "spell_nature_abolishmagic",
+    "qty": 6
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para aumentar los efectos de tus hechizos curativos en 24 p.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar brazal: poder de curación"
+ },
+ {
+  "spell": 23803,
+  "name": "Encantar arma: espíritu poderoso",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 10
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 8
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 15
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que proporcione +20 p. de espíritu.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: espíritu poderoso"
+ },
+ {
+  "spell": 23804,
+  "name": "Encantar arma: intelecto poderoso",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 15
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 12
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 20
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que proporcione +22 p. de intelecto.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: intelecto poderoso"
+ },
+ {
+  "spell": 25072,
+  "name": "Encantar guantes: amenaza",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 4
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 6
+   },
+   {
+    "id": 18512,
+    "name": "Ácido de larval",
+    "icon": "inv_potion_22",
+    "qty": 8
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para aumentar la amenaza de todos los ataques y hechizos en un 2%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: amenaza"
+ },
+ {
+  "spell": 25073,
+  "name": "Encantar guantes: poder de las Sombras",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 10
+   },
+   {
+    "id": 12808,
+    "name": "Esencia de no-muerto",
+    "icon": "spell_shadow_shadetruesight",
+    "qty": 6
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para aumentar el daño de las Sombras hasta 20 p.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: poder de las Sombras"
+ },
+ {
+  "spell": 25074,
+  "name": "Encantar guantes: poder de Escarcha",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 10
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para aumentar el daño de Escarcha hasta 20 p.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: poder de Escarcha"
+ },
+ {
+  "spell": 25078,
+  "name": "Encantar guantes: poder de Fuego",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 10
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para aumentar el daño de Fuego hasta 20 p.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: poder de Fuego"
+ },
+ {
+  "spell": 25079,
+  "name": "Encantar guantes: poder de curación",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 8
+   },
+   {
+    "id": 12811,
+    "name": "Orbe de rectitud",
+    "icon": "inv_misc_gem_pearl_03",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para aumentar los hechizos curativos del taumaturgo hasta 30 p.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: poder de curación"
+ },
+ {
+  "spell": 25080,
+  "name": "Encantar guantes: agilidad excelente",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 8
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para aumentar 15 p. la agilidad.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: agilidad excelente"
+ },
+ {
+  "spell": 25081,
+  "name": "Encantar capa: resistencia al Fuego superior",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 8
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 15 p. de resistencia al Fuego.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar capa: resistencia al Fuego superior"
+ },
+ {
+  "spell": 25082,
+  "name": "Encantar capa: resistencia a la naturaleza superior",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 8
+   },
+   {
+    "id": 12803,
+    "name": "Esencia viva",
+    "icon": "spell_nature_abolishmagic",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione 15 p. de resistencia a la Naturaleza.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar capa: resistencia a la naturaleza superior"
+ },
+ {
+  "spell": 25083,
+  "name": "Encantar capa: sigilo",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 8
+   },
+   {
+    "id": 13468,
+    "name": "Loto negro",
+    "icon": "inv_misc_herb_blacklotus",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que aumente el sigilo.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar capa: sigilo"
+ },
+ {
+  "spell": 25084,
+  "name": "Encantar capa: sutileza",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 4
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 6
+   },
+   {
+    "id": 11754,
+    "name": "Diamante negro",
+    "icon": "inv_misc_gem_01",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para reducir la amenaza del portador en un 2%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar capa: sutileza"
+ },
+ {
+  "spell": 25086,
+  "name": "Encantar capa: esquivar",
+  "skill": 300,
+  "colors": [
+   300,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 8
+   },
+   {
+    "id": 12809,
+    "name": "Piedra guardián",
+    "icon": "inv_stone_02",
+    "qty": 8
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para que proporcione una probabilidad del 1% de esquivar.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar capa: esquivar"
+ },
+ {
+  "spell": 25124,
+  "name": "Aceite menor de zahorí",
+  "skill": 45,
+  "colors": [
+   45,
+   55,
+   65,
+   75
+  ],
+  "reagents": [
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 2
+   },
+   {
+    "id": 17034,
+    "name": "Semillas de arce",
+    "icon": "inv_misc_food_02",
+    "qty": 1
+   },
+   {
+    "id": 3371,
+    "name": "Vial vacío",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 20744,
+   "name": "Aceite de zahorí menor",
+   "icon": "inv_poison_mindnumbing",
+   "qty": 1
+  },
+  "icon": "inv_poison_mindnumbing",
+  "efecto": "Crea aceite menor de zahorí.",
+  "herramienta": "Vara de cobre con runas",
+  "nombre_tooltip": "Aceite menor de zahorí"
+ },
+ {
+  "spell": 25125,
+  "name": "Aceite menor de maná",
+  "skill": 150,
+  "colors": [
+   150,
+   160,
+   170,
+   180
+  ],
+  "reagents": [
+   {
+    "id": 11083,
+    "name": "Polvo de alma",
+    "icon": "inv_enchant_dustsoul",
+    "qty": 3
+   },
+   {
+    "id": 17034,
+    "name": "Semillas de arce",
+    "icon": "inv_misc_food_02",
+    "qty": 2
+   },
+   {
+    "id": 3372,
+    "name": "Vial con plomo",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 20745,
+   "name": "Aceite de maná menor",
+   "icon": "inv_potion_98",
+   "qty": 1
+  },
+  "icon": "inv_potion_98",
+  "efecto": "Crea aceite menor de maná.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Aceite menor de maná"
+ },
+ {
+  "spell": 25126,
+  "name": "Aceite inferior de zahorí",
+  "skill": 200,
+  "colors": [
+   200,
+   210,
+   220,
+   230
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 3
+   },
+   {
+    "id": 17035,
+    "name": "Semilla Tuercespina",
+    "icon": "inv_misc_food_02",
+    "qty": 2
+   },
+   {
+    "id": 3372,
+    "name": "Vial con plomo",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 20746,
+   "name": "Aceite de zahorí inferior",
+   "icon": "inv_potion_103",
+   "qty": 1
+  },
+  "icon": "inv_potion_103",
+  "efecto": "Crea aceite inferior de zahorí.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Aceite inferior de zahorí"
+ },
+ {
+  "spell": 25127,
+  "name": "Aceite inferior de maná",
+  "skill": 250,
+  "colors": [
+   250,
+   260,
+   270,
+   280
+  ],
+  "reagents": [
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 3
+   },
+   {
+    "id": 8831,
+    "name": "Loto morado",
+    "icon": "inv_misc_herb_17",
+    "qty": 2
+   },
+   {
+    "id": 8925,
+    "name": "Vial de cristal",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 20747,
+   "name": "Aceite de maná inferior",
+   "icon": "inv_potion_99",
+   "qty": 1
+  },
+  "icon": "inv_potion_99",
+  "efecto": "Crea aceite inferior de maná.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Aceite inferior de maná"
+ },
+ {
+  "spell": 25128,
+  "name": "Aceite de zahorí",
+  "skill": 275,
+  "colors": [
+   275,
+   285,
+   295,
+   305
+  ],
+  "reagents": [
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 3
+   },
+   {
+    "id": 4625,
+    "name": "Flor de Fuego",
+    "icon": "inv_misc_herb_19",
+    "qty": 2
+   },
+   {
+    "id": 8925,
+    "name": "Vial de cristal",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 20750,
+   "name": "Aceite zahorí",
+   "icon": "inv_potion_104",
+   "qty": 1
+  },
+  "icon": "inv_potion_104",
+  "efecto": "Crea aceite de zahorí.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Aceite de zahorí"
+ },
+ {
+  "spell": 25129,
+  "name": "Aceite brillante de zahorí",
+  "skill": 300,
+  "colors": [
+   300,
+   310,
+   320,
+   330
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   },
+   {
+    "id": 4625,
+    "name": "Flor de Fuego",
+    "icon": "inv_misc_herb_19",
+    "qty": 3
+   },
+   {
+    "id": 18256,
+    "name": "Vial imbuida",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 20749,
+   "name": "Aceite de zahorí luminoso",
+   "icon": "inv_potion_105",
+   "qty": 1
+  },
+  "icon": "inv_potion_105",
+  "efecto": "Crea aceite brillante de zahorí.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Aceite brillante de zahorí"
+ },
+ {
+  "spell": 25130,
+  "name": "Aceite de maná resplandeciente",
+  "skill": 300,
+  "colors": [
+   300,
+   310,
+   320,
+   330
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   },
+   {
+    "id": 8831,
+    "name": "Loto morado",
+    "icon": "inv_misc_herb_17",
+    "qty": 3
+   },
+   {
+    "id": 18256,
+    "name": "Vial imbuida",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 20748,
+   "name": "Aceite de maná luminoso",
+   "icon": "inv_potion_100",
+   "qty": 1
+  },
+  "icon": "inv_potion_100",
+  "efecto": "Aplicado al arma del objetivo restaura 12 p. de maná al taumaturgo cada 5 segundos y aumenta el efecto de los hechizos curativos en 25. Dura 30 minutos.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Aceite de maná resplandeciente"
+ },
+ {
+  "spell": 27837,
+  "name": "Encantar arma 2M: agilidad",
+  "skill": 290,
+  "colors": [
+   290,
+   310,
+   330,
+   350
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 10
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 6
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 14
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 4
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para que proporcione +25 p. de agilidad.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma 2M: agilidad"
+ },
+ {
+  "spell": 430409,
+  "name": "Aceite de maná Brazanegra",
+  "skill": 100,
+  "colors": [
+   0,
+   100,
+   110,
+   120
+  ],
+  "reagents": [
+   {
+    "id": 3372,
+    "name": "Vial con plomo",
+    "icon": "inv_drink_06",
+    "qty": 1
+   },
+   {
+    "id": 10939,
+    "name": "Esencia mágica superior",
+    "icon": "inv_enchant_essencemagiclarge",
+    "qty": 1
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 5
+   }
+  ],
+  "creates": {
+   "id": 211848,
+   "name": "Aceite de maná Brazanegra",
+   "icon": "inv_potion_99",
+   "qty": 1
+  },
+  "icon": "inv_potion_99",
+  "efecto": "Crea aceite de maná Brazanegra.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Aceite de maná Brazanegra"
+ },
+ {
+  "spell": 435481,
+  "name": "Encantar arma: desmantelar",
+  "skill": 200,
+  "colors": [
+   0,
+   200,
+   217,
+   235
+  ],
+  "reagents": [
+   {
+    "id": 11174,
+    "name": "Esencia abisal inferior",
+    "icon": "inv_enchant_essencenethersmall",
+    "qty": 4
+   },
+   {
+    "id": 5637,
+    "name": "Colmillo grande",
+    "icon": "inv_misc_bone_08",
+    "qty": 2
+   },
+   {
+    "id": 11177,
+    "name": "Fragmento radiante pequeño",
+    "icon": "inv_enchant_shardradientsmall",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma para que, a veces, todos los hechizos y ataques inflijan 60 al 90 p. más de daño contra criaturas mecánicas.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar arma: desmantelar"
+ },
+ {
+  "spell": 435903,
+  "name": "Encantar pechera: Retribucionismo",
+  "skill": 200,
+  "colors": [
+   0,
+   200,
+   220,
+   240
+  ],
+  "reagents": [
+   {
+    "id": 11177,
+    "name": "Fragmento radiante pequeño",
+    "icon": "inv_enchant_shardradientsmall",
+    "qty": 1
+   },
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Te enseña a encantar de forma permanente una pieza de armadura de torso para que refleje 9 p. de daño al atacante cuando el portador recibe un golpe cuerpo a cuerpo.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Encantar pechera: Retribucionismo"
+ },
+ {
+  "spell": 439134,
+  "name": "Varita mística superior",
+  "skill": 175,
+  "colors": [
+   175,
+   195,
+   215,
+   235
+  ],
+  "reagents": [
+   {
+    "id": 11291,
+    "name": "Madera de estrella",
+    "icon": "inv_tradeskillitem_03",
+    "qty": 1
+   },
+   {
+    "id": 11135,
+    "name": "Esencia mística superior",
+    "icon": "inv_enchant_essencemysticallarge",
+    "qty": 1
+   },
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 217287,
+   "name": "Varita mística superior",
+   "icon": "inv_wand_07",
+   "qty": 1
+  },
+  "icon": "inv_wand_07",
+  "efecto": "Crea una varita mística superior.",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Varita mística superior"
+ },
+ {
+  "spell": 439156,
+  "name": "Sigilo de innovación",
+  "skill": 225,
+  "colors": [
+   0,
+   225,
+   227,
+   230
+  ],
+  "reagents": [
+   {
+    "id": 11137,
+    "name": "Polvo de visión",
+    "icon": "inv_enchant_dustvision",
+    "qty": 5
+   }
+  ],
+  "creates": {
+   "id": 217308,
+   "name": "Sigilo encantado: Innovación",
+   "icon": "inv_sigil_mimiron",
+   "qty": 1
+  },
+  "icon": "inv_sigil_mimiron",
+  "efecto": "Uso: Obtienes un sigilo encantado de innovación que te potencia. Aumentas hasta 20 p. más el daño y la sanación con hechizos, e incrementas en 20 p. tu poder de ataque durante 30 min. Solo se puede aplicar cuando no estás en combate. (30 Min Reutilización)",
+  "herramienta": "Vara de oro rúnica",
+  "nombre_tooltip": "Sigilo de innovación"
+ },
+ {
+  "spell": 446243,
+  "name": "Sigilo de sueños vivos",
+  "skill": 250,
+  "colors": [
+   0,
+   250,
+   255,
+   260
+  ],
+  "reagents": [
+   {
+    "id": 11176,
+    "name": "Polvo onírico",
+    "icon": "inv_enchant_dustdream",
+    "qty": 5
+   }
+  ],
+  "creates": {
+   "id": 221028,
+   "name": "Sigilo encantado: Sueños vivos",
+   "icon": "inv_sigil_freya",
+   "qty": 1
+  },
+  "icon": "inv_sigil_freya",
+  "efecto": "Uso: Obtienes un sigilo encantado de sueños vivos que te potencia. Aumentas hasta 30 p. más el daño y la sanación con hechizos, e incrementas en 30 p. tu poder de ataque durante 30 min. Solo se puede aplicar cuando no estás en combate. (30 Min Reutilización)",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Sigilo de sueños vivos"
+ },
+ {
+  "spell": 448624,
+  "name": "Pergamino de alivio espacial",
+  "skill": 120,
+  "colors": [
+   0,
+   120,
+   125,
+   130
+  ],
+  "reagents": [
+   {
+    "id": 4470,
+    "name": "Madera simple",
+    "icon": "inv_tradeskillitem_01",
+    "qty": 1
+   },
+   {
+    "id": 10940,
+    "name": "Polvo extraño",
+    "icon": "inv_enchant_duststrange",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 220792,
+   "name": "Pergamino de alivio espacial",
+   "icon": "inv_scroll_09",
+   "qty": 1
+  },
+  "icon": "inv_scroll_09",
+  "efecto": "Crea un pergamino de alivio espacial.",
+  "herramienta": "Vara de plata con runas",
+  "nombre_tooltip": "Pergamino de alivio espacial"
+ },
+ {
+  "spell": 463871,
+  "name": "Encantar escudo: ley de la naturaleza",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 4
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 12
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 4
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 4
+   },
+   {
+    "id": 7076,
+    "name": "Esencia de tierra",
+    "icon": "spell_nature_strengthofearthtotem02",
+    "qty": 1
+   },
+   {
+    "id": 12811,
+    "name": "Orbe de rectitud",
+    "icon": "inv_misc_gem_pearl_03",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encantas un escudo de forma permanente para añadir hasta 30 p. de daño a los hechizos y hasta 55 p. de sanación a los de sanación.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar escudo: ley de la naturaleza"
+ },
+ {
+  "spell": 463869,
+  "name": "Revestimiento de escudo conductivo",
+  "skill": 285,
+  "colors": [
+   0,
+   285,
+   295,
+   305
+  ],
+  "reagents": [
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 2
+   },
+   {
+    "id": 4625,
+    "name": "Flor de Fuego",
+    "icon": "inv_misc_herb_19",
+    "qty": 1
+   },
+   {
+    "id": 8925,
+    "name": "Vial de cristal",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 228980,
+   "name": "Revestimiento de escudo conductivo",
+   "icon": "inv_potion_100",
+   "qty": 1
+  },
+  "icon": "inv_potion_100",
+  "efecto": "Crea un revestimiento de escudo conductivo.",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Revestimiento de escudo conductivo"
+ },
+ {
+  "spell": 463866,
+  "name": "Sigilo de agua corriente",
+  "skill": 305,
+  "colors": [
+   0,
+   305,
+   312,
+   320
+  ],
+  "reagents": [
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 228978,
+   "name": "Sigilo encantado: Agua corriente",
+   "icon": "inv_sigil_hodir",
+   "qty": 1
+  },
+  "icon": "inv_sigil_hodir",
+  "efecto": "Uso: Obtienes un sigilo de agua corriente encantado que potencia a tu banda. Aumentas hasta 30 p. más el daño y la sanación con hechizos, e incrementas 30 p. tu poder de ataque durante 1 h. (1 Min Reutilización)",
+  "herramienta": "Vara de veraplata con runas",
+  "nombre_tooltip": "Sigilo de agua corriente"
+ },
+ {
+  "spell": 471400,
+  "name": "Abrillantador trol magnífico",
+  "skill": 310,
+  "colors": [
+   0,
+   310,
+   320,
+   330
+  ],
+  "reagents": [
+   {
+    "id": 8151,
+    "name": "Frasco de mojo",
+    "icon": "inv_potion_15",
+    "qty": 3
+   },
+   {
+    "id": 8152,
+    "name": "Frasco de gran mojo",
+    "icon": "inv_potion_12",
+    "qty": 3
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   },
+   {
+    "id": 18256,
+    "name": "Vial imbuida",
+    "icon": "inv_drink_06",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 232611,
+   "name": "Abrillantador trol magnífico",
+   "icon": "inv_potion_96",
+   "qty": 1
+  },
+  "icon": "inv_potion_96",
+  "efecto": "Crea un abrillantador trol magnífico.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Abrillantador trol magnífico"
+ },
+ {
+  "spell": 1213593,
+  "name": "Piedraveloz",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 234006,
+    "name": "Quitina de silítido monstruoso",
+    "icon": "inv_misc_leatherscrap_13",
+    "qty": 10
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 10
+   },
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 6
+   },
+   {
+    "id": 234004,
+    "name": "Piedra de pulir obsidiana",
+    "icon": "inv_stone_sharpeningstone_07",
+    "qty": 6
+   },
+   {
+    "id": 2452,
+    "name": "Cardoveloz",
+    "icon": "inv_misc_herb_04",
+    "qty": 20
+   }
+  ],
+  "creates": {
+   "id": 233990,
+   "name": "Piedraveloz",
+   "icon": "inv_pet_scorchedstone",
+   "qty": 1
+  },
+  "icon": "inv_pet_scorchedstone",
+  "efecto": "Equipar: Mejora un 2% tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Piedraveloz"
+ },
+ {
+  "spell": 1213595,
+  "name": "Lágrima del soñador",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 234006,
+    "name": "Quitina de silítido monstruoso",
+    "icon": "inv_misc_leatherscrap_13",
+    "qty": 10
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 10
+   },
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 4
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 10
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 10
+   }
+  ],
+  "creates": {
+   "id": 233991,
+   "name": "Lágrima de la Soñadora",
+   "icon": "inv_elemental_crystal_life",
+   "qty": 1
+  },
+  "icon": "inv_elemental_crystal_life",
+  "efecto": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Lágrima del soñador"
+ },
+ {
+  "spell": 1213598,
+  "name": "Magnetita de la represalia",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 234007,
+    "name": "Quitina de silítido con pinchos",
+    "icon": "inv_misc_leatherscrap_11",
+    "qty": 10
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 5
+   },
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 4
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 10
+   },
+   {
+    "id": 234011,
+    "name": "Veneno de acechador Qiraji",
+    "icon": "ability_creature_poison_04",
+    "qty": 10
+   }
+  ],
+  "creates": {
+   "id": 233992,
+   "name": "Magnetita de la represalia",
+   "icon": "inv_stone_08",
+   "qty": 1
+  },
+  "icon": "inv_stone_08",
+  "efecto": "Equipar: Reduce un 1% la probabilidad de que tus ataques se esquiven o paren.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Magnetita de la represalia"
+ },
+ {
+  "spell": 1213600,
+  "name": "Cronómetro encantado",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 3
+   },
+   {
+    "id": 234005,
+    "name": "Pólvora obsidiana",
+    "icon": "inv_misc_ammo_gunpowder_06",
+    "qty": 6
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 4
+   },
+   {
+    "id": 2459,
+    "name": "Poción de velocidad",
+    "icon": "inv_potion_95",
+    "qty": 3
+   }
+  ],
+  "creates": {
+   "id": 233993,
+   "name": "Cronómetro encantado",
+   "icon": "inv_misc_pocketwatch_02",
+   "qty": 1
+  },
+  "icon": "inv_misc_pocketwatch_02",
+  "efecto": "Uso: Aumenta la velocidad de carrera un 40% durante 10 s. (2 Min Reutilización)",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Cronómetro encantado"
+ },
+ {
+  "spell": 1213603,
+  "name": "Broche incrustado de rubíes",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 234007,
+    "name": "Quitina de silítido con pinchos",
+    "icon": "inv_misc_leatherscrap_11",
+    "qty": 10
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 5
+   },
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 6
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 10
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 10
+   },
+   {
+    "id": 234011,
+    "name": "Veneno de acechador Qiraji",
+    "icon": "ability_creature_poison_04",
+    "qty": 10
+   }
+  ],
+  "creates": {
+   "id": 233994,
+   "name": "Broche incrustado de rubíes",
+   "icon": "inv_jewelry_necklace_15",
+   "qty": 1
+  },
+  "icon": "inv_jewelry_necklace_15",
+  "efecto": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico con todos los hechizos y ataques un 1%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Broche incrustado de rubíes"
+ },
+ {
+  "spell": 1213607,
+  "name": "Pergamino: cólera del enjambre",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 1
+   },
+   {
+    "id": 14047,
+    "name": "Paño rúnico",
+    "icon": "inv_fabric_purplefire_01",
+    "qty": 1
+   }
+  ],
+  "creates": {
+   "id": 233995,
+   "name": "Pergamino: cólera del enjambre",
+   "icon": "inv_scroll_14",
+   "qty": 1
+  },
+  "icon": "inv_scroll_14",
+  "efecto": "Uso: Lees el pergamino, que evoca la cólera del enjambre, y esto potencia a tu banda. Aumentas hasta 40 p. más el daño y la sanación con hechizos, e incrementas 40 p. tu poder de ataque durante 1 h. (1 Min Reutilización)",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Pergamino: cólera del enjambre"
+ },
+ {
+  "spell": 1213610,
+  "name": "Repelente encantado",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 234011,
+    "name": "Veneno de acechador Qiraji",
+    "icon": "ability_creature_poison_04",
+    "qty": 3
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 3
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 2
+   }
+  ],
+  "creates": {
+   "id": 233996,
+   "name": "Repelente encantado",
+   "icon": "inv_potion_101",
+   "qty": 1
+  },
+  "icon": "inv_potion_101",
+  "efecto": "Crea repelente encantado.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Repelente encantado"
+ },
+ {
+  "spell": 1213616,
+  "name": "Encantar pechera: estadísticas vivientes",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 8
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 5
+   },
+   {
+    "id": 13458,
+    "name": "Poción de protección de Naturaleza superior",
+    "icon": "inv_potion_22",
+    "qty": 10
+   },
+   {
+    "id": 234011,
+    "name": "Veneno de acechador Qiraji",
+    "icon": "ability_creature_poison_04",
+    "qty": 2
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta permanentemente una pieza de protección del pecho para aumentar todas las estadísticas 4 p. y la resistencia a la Naturaleza 15 p.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar pechera: estadísticas vivientes"
+ },
+ {
+  "spell": 1213622,
+  "name": "Encantar guantes: poder sagrado",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 5
+   },
+   {
+    "id": 13180,
+    "name": "Agua bendita de Stratholme",
+    "icon": "inv_potion_75",
+    "qty": 5
+   },
+   {
+    "id": 12735,
+    "name": "Punto de abominación deshilachado",
+    "icon": "inv_misc_pelt_boar_ruin_03",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para aumentar el daño Sagrado hasta 20 p.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: poder sagrado"
+ },
+ {
+  "spell": 1213626,
+  "name": "Encantar guantes: poder Arcano",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 5
+   },
+   {
+    "id": 12753,
+    "name": "Piel de las Sombras",
+    "icon": "inv_misc_shadowegg",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para aumentar el daño Arcano hasta 20 p.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: poder Arcano"
+ },
+ {
+  "spell": 1213628,
+  "name": "Libro de plegarias encantado",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 234008,
+    "name": "Seda Qiraji",
+    "icon": "inv_fabric_purple_01",
+    "qty": 10
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 2
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 234000,
+   "name": "Libro de plegarias encantado",
+   "icon": "inv_relics_libramoftruth",
+   "qty": 1
+  },
+  "icon": "inv_relics_libramoftruth",
+  "efecto": "Equipar: Aumenta un 3% la efectividad de tus hechizos de Luz Sagrada y de Destello de Luz.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Libro de plegarias encantado"
+ },
+ {
+  "spell": 1213633,
+  "name": "Tótem encantado",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 10
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 2
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 3
+   }
+  ],
+  "creates": {
+   "id": 234001,
+   "name": "Tótem encantado",
+   "icon": "inv_relics_totemoflife",
+   "qty": 1
+  },
+  "icon": "inv_relics_totemoflife",
+  "efecto": "Equipar: Aumenta la efectividad sanadora de tus hechizos Sanación en cadena y Onda de curación un 3%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Tótem encantado"
+ },
+ {
+  "spell": 1213635,
+  "name": "Seta encantada",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 20
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 3
+   },
+   {
+    "id": 234011,
+    "name": "Veneno de acechador Qiraji",
+    "icon": "ability_creature_poison_04",
+    "qty": 4
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 234002,
+   "name": "Seta encantada",
+   "icon": "creature_sporemushroom",
+   "qty": 1
+  },
+  "icon": "creature_sporemushroom",
+  "efecto": "Equipar: Aumenta un 3% la efectividad sanadora de tus hechizos Flor de vida, Nutrir y Crecimiento salvaje.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Seta encantada"
+ },
+ {
+  "spell": 1216005,
+  "name": "Tratado sobre Rectitud",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 234008,
+    "name": "Seda Qiraji",
+    "icon": "inv_fabric_purple_01",
+    "qty": 10
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 2
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 234477,
+   "name": "Tratado sobre Rectitud",
+   "icon": "inv_relics_libramofhope",
+   "qty": 1
+  },
+  "icon": "inv_relics_libramofhope",
+  "efecto": "Equipar: Aumenta un 3% el daño de Martillo del honrado y de Escudo de rectitud.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Tratado sobre Rectitud"
+ },
+ {
+  "spell": 1216007,
+  "name": "Tratado del exorcista",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 234008,
+    "name": "Seda Qiraji",
+    "icon": "inv_fabric_purple_01",
+    "qty": 10
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 2
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 234475,
+   "name": "Tratado del exorcista",
+   "icon": "inv_relics_libramoftruth",
+   "qty": 1
+  },
+  "icon": "inv_relics_libramoftruth",
+  "efecto": "Equipar: Aumenta el daño de Exorcismo y Golpe del cruzado un 3%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Tratado del exorcista"
+ },
+ {
+  "spell": 1216010,
+  "name": "Tratado sobre Santidad",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 234008,
+    "name": "Seda Qiraji",
+    "icon": "inv_fabric_purple_01",
+    "qty": 10
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 2
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 234476,
+   "name": "Tratado sobre Santidad",
+   "icon": "inv_relics_libramofgrace",
+   "qty": 1
+  },
+  "icon": "inv_relics_libramofgrace",
+  "efecto": "Equipar: Aumenta el daño de Choque Sagrado un 3%, y tu ventaja de Conmoción y terror también otorga un 10% más de daño Sagrado (este efecto no se puede acumular con Aura de santidad).",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Tratado sobre Santidad"
+ },
+ {
+  "spell": 1216014,
+  "name": "Tótem de trueno piroclástico",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 10
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 2
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 3
+   }
+  ],
+  "creates": {
+   "id": 234480,
+   "name": "Tótem de trueno piroclástico",
+   "icon": "inv_relics_totemofrebirth",
+   "qty": 1
+  },
+  "icon": "inv_relics_totemofrebirth",
+  "efecto": "Equipar: Aumenta el daño de Descarga de relámpagos, Cadena de relámpagos y Ráfaga de lava un 3%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Tótem de trueno piroclástico"
+ },
+ {
+  "spell": 1216016,
+  "name": "Tótem de golpes atronadores",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 10
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 2
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 3
+   }
+  ],
+  "creates": {
+   "id": 234478,
+   "name": "Tótem de golpes atronadores",
+   "icon": "inv_relics_totemofrage",
+   "qty": 1
+  },
+  "icon": "inv_relics_totemofrage",
+  "efecto": "Equipar: Aumenta el daño de Golpe de tormenta y Arma Viento Furioso un 3%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Tótem de golpes atronadores"
+ },
+ {
+  "spell": 1216018,
+  "name": "Tótem de magma fluyente",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 10
+   },
+   {
+    "id": 234003,
+    "name": "Lingote de torio imbuido de obsidiana",
+    "icon": "inv_ingot_titansteel_dark",
+    "qty": 2
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 3
+   }
+  ],
+  "creates": {
+   "id": 234479,
+   "name": "Tótem de magma fluyente",
+   "icon": "inv_relics_totemofrage",
+   "qty": 1
+  },
+  "icon": "inv_relics_totemofrage",
+  "efecto": "Equipar: Aumenta el daño de Choque de llamas y Explosión de arrabio un 3%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Tótem de magma fluyente"
+ },
+ {
+  "spell": 1216020,
+  "name": "Ídolo de cólera sideral",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 20
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 3
+   },
+   {
+    "id": 234011,
+    "name": "Veneno de acechador Qiraji",
+    "icon": "ability_creature_poison_04",
+    "qty": 4
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 234474,
+   "name": "Ídolo de cólera sideral",
+   "icon": "inv_relics_idolofrejuvenation",
+   "qty": 1
+  },
+  "icon": "inv_relics_idolofrejuvenation",
+  "efecto": "Equipar: Aumenta el daño de Fuego lunar y Cólera un 3%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Ídolo de cólera sideral"
+ },
+ {
+  "spell": 1216022,
+  "name": "Ídolo de ferocidad felina",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 20
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 3
+   },
+   {
+    "id": 234011,
+    "name": "Veneno de acechador Qiraji",
+    "icon": "ability_creature_poison_04",
+    "qty": 4
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 234469,
+   "name": "Ídolo de ferocidad felina",
+   "icon": "inv_relics_idolofferocity",
+   "qty": 1
+  },
+  "icon": "inv_relics_idolofferocity",
+  "efecto": "Equipar: Aumenta el daño de Mordedura feroz y Triturar un 3%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Ídolo de ferocidad felina"
+ },
+ {
+  "spell": 1216024,
+  "name": "Ídolo de poder osuno",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 234012,
+    "name": "Cardo de la colmena",
+    "icon": "inv_misc_spineleaf-_01",
+    "qty": 20
+   },
+   {
+    "id": 12810,
+    "name": "Cuero encantado",
+    "icon": "inv_misc_rune_05",
+    "qty": 3
+   },
+   {
+    "id": 234011,
+    "name": "Veneno de acechador Qiraji",
+    "icon": "ability_creature_poison_04",
+    "qty": 4
+   },
+   {
+    "id": 234010,
+    "name": "Bilis de gusano de arena antiguo",
+    "icon": "inv_misc_organ_10",
+    "qty": 4
+   }
+  ],
+  "creates": {
+   "id": 234468,
+   "name": "Ídolo de poder osuno",
+   "icon": "inv_relics_idolofferocity",
+   "qty": 1
+  },
+  "icon": "inv_relics_idolofferocity",
+  "efecto": "Equipar: Aumenta el daño de Flagelo y Destrozar un 3%.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Ídolo de poder osuno"
+ },
+ {
+  "spell": 1217189,
+  "name": "Encantar brazales: poder con hechizos",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 2
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 20
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 4
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 2
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 2
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 2
+   }
+  ],
+  "icon": "inv_enchant_formulasuperior_01",
+  "efecto": "Encanta de forma permanente unos brazales para añadir hasta 12 p. de daño con hechizos.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar brazales: poder con hechizos"
+ },
+ {
+  "spell": 1217203,
+  "name": "Encantar brazales: agilidad",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 10
+   },
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 2
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 2
+   }
+  ],
+  "icon": "inv_enchant_formulasuperior_01",
+  "efecto": "Encanta de forma permanente unos brazales para aumentar 9 p. la agilidad.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar brazales: agilidad"
+ },
+ {
+  "spell": 1219577,
+  "name": "Encantar mano izq.: intelecto excelente",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 18
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma de mano izquierda para añadir 9 p. de intelecto.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar mano izq.: intelecto excelente"
+ },
+ {
+  "spell": 1219578,
+  "name": "Encantar mano izq.: espíritu excelente",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 18
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma de mano izquierda para añadir 12 p. de espíritu.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar mano izq.: espíritu excelente"
+ },
+ {
+  "spell": 1219579,
+  "name": "Encantar mano izq.: sabiduría",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 6
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 18
+   },
+   {
+    "id": 7082,
+    "name": "Esencia de aire",
+    "icon": "spell_nature_earthbind",
+    "qty": 1
+   },
+   {
+    "id": 7080,
+    "name": "Esencia de agua",
+    "icon": "spell_nature_acid_01",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma de mano izquierda para añadir 6 p. de intelecto y 5 p. de espíritu.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar mano izq.: sabiduría"
+ },
+ {
+  "spell": 1219580,
+  "name": "Encantar arma 2M: explosión de hechizos",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 3
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 24
+   },
+   {
+    "id": 12938,
+    "name": "Sangre de héroes",
+    "icon": "inv_potion_33",
+    "qty": 1
+   },
+   {
+    "id": 8831,
+    "name": "Loto morado",
+    "icon": "inv_misc_herb_17",
+    "qty": 6
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un arma de 2 manos para añadir 65 p. de poder con hechizos.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma 2M: explosión de hechizos"
+ },
+ {
+  "spell": 1219581,
+  "name": "Encantar escudo: aguante excelente",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 6
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 18
+   },
+   {
+    "id": 7076,
+    "name": "Esencia de tierra",
+    "icon": "spell_nature_strengthofearthtotem02",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para añadir 12 p. de aguante.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar escudo: aguante excelente"
+ },
+ {
+  "spell": 1220623,
+  "name": "Encantar escudo: golpe crítico",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 5
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 15
+   },
+   {
+    "id": 12938,
+    "name": "Sangre de héroes",
+    "icon": "inv_potion_33",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente un escudo para añadir un 1% de probabilidad de golpe crítico.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar escudo: golpe crítico"
+ },
+ {
+  "spell": 1220624,
+  "name": "Encantar brazales: poder con hechizos superior",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 3
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 9
+   },
+   {
+    "id": 12808,
+    "name": "Esencia de no-muerto",
+    "icon": "spell_shadow_shadetruesight",
+    "qty": 12
+   },
+   {
+    "id": 8831,
+    "name": "Loto morado",
+    "icon": "inv_misc_herb_17",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos brazales para añadirles 16 p. de poder con hechizos.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar brazales: poder con hechizos superior"
+ },
+ {
+  "spell": 1219586,
+  "name": "Encantar guantes: fuerza excelente",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 7
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 21
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 2
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente unos guantes para añadir 15 p. de fuerza.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar guantes: fuerza excelente"
+ },
+ {
+  "spell": 1219587,
+  "name": "Encantar capa: agilidad",
+  "skill": 320,
+  "colors": [
+   0,
+   320,
+   340,
+   360
+  ],
+  "reagents": [
+   {
+    "id": 16203,
+    "name": "Esencia eterna superior",
+    "icon": "inv_enchant_essenceeternallarge",
+    "qty": 3
+   },
+   {
+    "id": 16204,
+    "name": "Polvo de ilusión",
+    "icon": "inv_enchant_dustillusion",
+    "qty": 9
+   },
+   {
+    "id": 7078,
+    "name": "Esencia de Fuego",
+    "icon": "spell_fire_volcano",
+    "qty": 1
+   }
+  ],
+  "icon": "spell_holy_greaterheal",
+  "efecto": "Encanta de forma permanente una capa para añadir 5 p. de agilidad.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar capa: agilidad"
+ },
+ {
+  "spell": 1231128,
+  "name": "Encantar arma: gran cruzado",
+  "skill": 305,
+  "colors": [
+   0,
+   305,
+   307,
+   310
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 5
+   },
+   {
+    "id": 12811,
+    "name": "Orbe de rectitud",
+    "icon": "inv_misc_gem_pearl_03",
+    "qty": 2
+   },
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 12938,
+    "name": "Sangre de héroes",
+    "icon": "inv_potion_33",
+    "qty": 1
+   }
+  ],
+  "icon": "inv_enchant_formulasuperior_01",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que, cuando se ataque cuerpo a cuerpo, cure a menudo 350 al 450 p. y aumente 120 p. la fuerza durante 20 s.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: gran cruzado"
+ },
+ {
+  "spell": 1231139,
+  "name": "Encantar arma 2M: gran arcanista",
+  "skill": 305,
+  "colors": [
+   0,
+   305,
+   307,
+   310
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 10
+   },
+   {
+    "id": 12811,
+    "name": "Orbe de rectitud",
+    "icon": "inv_misc_gem_pearl_03",
+    "qty": 4
+   },
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 4
+   },
+   {
+    "id": 12938,
+    "name": "Sangre de héroes",
+    "icon": "inv_potion_33",
+    "qty": 1
+   }
+  ],
+  "icon": "inv_enchant_formulasuperior_01",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para que, al golpear con un hechizo, restaure a menudo 350 al 450 p. de maná y aumente 140 p. el poder con hechizos durante 20 s.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma 2M: gran arcanista"
+ },
+ {
+  "spell": 1231164,
+  "name": "Encantar arma: gran hechicero",
+  "skill": 305,
+  "colors": [
+   0,
+   305,
+   307,
+   310
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 6
+   },
+   {
+    "id": 12811,
+    "name": "Orbe de rectitud",
+    "icon": "inv_misc_gem_pearl_03",
+    "qty": 3
+   },
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 2
+   },
+   {
+    "id": 12938,
+    "name": "Sangre de héroes",
+    "icon": "inv_potion_33",
+    "qty": 1
+   }
+  ],
+  "icon": "inv_enchant_formulasuperior_01",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo para que, al golpear con un hechizo, restaure a menudo 350 al 450 p. de maná y aumente 70 p. el poder con hechizos en durante 20 s.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma: gran hechicero"
+ },
+ {
+  "spell": 1232172,
+  "name": "Encantar arma 2M: gran inquisidor",
+  "skill": 305,
+  "colors": [
+   0,
+   305,
+   307,
+   310
+  ],
+  "reagents": [
+   {
+    "id": 14344,
+    "name": "Fragmento luminoso grande",
+    "icon": "inv_enchant_shardbrilliantlarge",
+    "qty": 10
+   },
+   {
+    "id": 12811,
+    "name": "Orbe de rectitud",
+    "icon": "inv_misc_gem_pearl_03",
+    "qty": 6
+   },
+   {
+    "id": 20725,
+    "name": "Cristal Nexus",
+    "icon": "inv_enchant_shardnexuslarge",
+    "qty": 4
+   },
+   {
+    "id": 12938,
+    "name": "Sangre de héroes",
+    "icon": "inv_potion_33",
+    "qty": 1
+   }
+  ],
+  "icon": "inv_enchant_formulasuperior_01",
+  "efecto": "Encanta de forma permanente un arma cuerpo a cuerpo de dos manos para que, cuando se ataque cuerpo a cuerpo, cure a menudo 350 al 450 p. y aumente 200 p. la fuerza durante 20 s.",
+  "herramienta": "Vara arcanita con runas",
+  "nombre_tooltip": "Encantar arma 2M: gran inquisidor"
+ }
+]

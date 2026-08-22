@@ -1,0 +1,74 @@
+encantamiento      200 recetas   318 objetos
+      50/200
+     100/200
+     150/200
+     200/200
+ingenieria         198 recetas   478 objetos
+      50/198
+     100/198
+     150/198
+sastreria          291 recetas   674 objetos
+      50/291
+     100/291
+     150/291
+     200/291
+     250/291
+alquimia           133 recetas   347 objetos
+      50/133
+     100/133
+herreria           315 recetas   764 objetos
+      50/315
+     100/315
+     150/315
+     200/315
+     250/315
+     300/315
+peleteria          315 recetas   718 objetos
+      50/315
+     100/315
+     150/315
+     200/315
+     250/315
+     300/315
+primeros_auxilios   15 recetas    47 objetos
+mineria             13 recetas    34 objetos
+cocina              90 recetas   297 objetos
+      50/90
+joyeria            261 recetas   626 objetos
+      50/261
+     100/261
+     150/261
+     200/261
+     250/261
+inscripcion        444 recetas   522 objetos
+      50/444
+     100/444
+     150/444
+     200/444
+     250/444
+     300/444
+     350/444
+     400/444
+
+guardadas 2275 recetas de 11 profesiones en C:\Users\marco\Documents\New project\tools\codice\cotejo\profesiones_wowhead.json
+objetos renombrados en el WoW actual: 1002
+   Abrazo de Gaea                         -> Abrazo de Gaia
+   Aceite bocanegra                       -> Aceite de bocanegra
+   Aceite de Escama Tormentosa            -> Aceite de escama pétrea
+   Aceite de fuego                        -> Aceite de Fuego
+   Aceite de maná luminoso                -> Aceite de maná caducado
+   Aceite de zahorí luminoso              -> Aceite de zahorí caducado
+   Aceite escarchado                      -> Aceite de Escarcha
+   Aceite zahorí                          -> Aceite de zahorí
+   Acurascopio 247x128 Biznicks           -> Acurascopio 247x128 de Biznicks
+   Aguijones de mitril                    -> Espuelas de mitril
+   Alfanje de jade                        -> Hoja serpentina de jade
+   Aliento del Viento                     -> Aliento de viento
+   Almeja gigante chamuscada              -> Almeja gigante a la brasa
+   Almófar de escamas de oro              -> Almófar de escamas doradas
+   Amatista Cantosombrío equilibrada      -> Amatista Cantosombrío cambiante
+   Amatista Cantosombrío imbuida          -> Amatista Cantosombrío destellante
+   Amatista Cantosombrío real             -> Amatista Cantosombrío purificada
+   Amatista Cantosombrío resplandeciente  -> Amatista Cantosombrío intemporal
+   Anguila Escama Tormentosa              -> Anguila escama pétrea
+   Anillo de sombras Crepusculares        -> Anillo de sombras crepusculares

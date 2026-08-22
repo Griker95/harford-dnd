@@ -2123,8 +2123,24 @@ Los otros siete perdian solo el texto de error o falseaban un volcado de diagnos
 Al tocar cualquier modulo, barrer con:
 
 ```bash
-grep -rnE "local +[A-Za-z_][A-Za-z0-9_]*, *[A-Za-z_][A-Za-z0-9_]* *=.* and +[A-Za-z_][A-Za-z0-9_.]*\(" Harford/ HarfordAdmin/ --include=*.lua
+grep -rnE "local +[A-Za-z_][A-Za-z0-9_]*(, *[A-Za-z_][A-Za-z0-9_]*)+ *=.* and +[A-Za-z_][A-Za-z0-9_.:]*\(" Harford/ HarfordAdmin/ HarfordDebug/ --include=*.lua
 ```
+
+Ese patron tenia DOS agujeros, y por ellos se colaron `QOBJ`/`QOBJDONE` de `HarfordQuests`
+durante meses (el DM cerraba un objetivo y ningun cliente hacia nada):
+
+1. **Exigia dos nombres exactos.** `local a, b, c = x and f()` no casaba. Ahora acepta 2 o mas.
+2. **No admitia `:` en la llamada.** El caso mas comun de todos es `rest and rest:match(...)`,
+   y el patron solo aceptaba `.` en el nombre. Ahora acepta `:` tambien.
+
+Le queda un tercer agujero que grep no puede cubrir: **la asignacion partida en dos lineas**.
+
+```lua
+local ok, err = _G.HarfordTrainerAPI and _G.HarfordTrainerAPI.OpenTrainer
+    and _G.HarfordTrainerAPI.OpenTrainer(a)   -- `err` SIEMPRE nil, y grep no lo ve
+```
+
+Para esas, el olor es cualquier `local` con varios nombres cuya parte derecha acabe en `and`.
 
 Hay un intérprete Lua real en `C:/Users/marco/AppData/Local/Programs/Lua/bin/lua.exe`: para logica
 pura (parsers, escalados, formulas) se puede extraer el trozo del modulo con `load()` y stubs de

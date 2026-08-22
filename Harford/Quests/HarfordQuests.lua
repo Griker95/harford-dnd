@@ -818,13 +818,20 @@ do
         elseif op == "QOBJ" then
             -- Cierre directo: QOBJ|<questId>|<objectiveIndex>|completed.
             -- Se conserva la lectura del paquete numerico anterior para clientes previos.
-            local qid, index = rest and rest:match("^(.+)|(%d+)|completed$")
+            -- La guarda NO puede ir dentro de la expresion: `rest and rest:match(...)` se queda
+            -- con la PRIMERA captura y descarta el resto, asi que `index` era siempre nil y
+            -- QOBJ no cerraba nada.
+            local qid, index
+            if rest then qid, index = rest:match("^(.+)|(%d+)|completed$") end
             index = tonumber(index)
             if qid and index then
                 DebugObjectiveSync(string.format("QOBJ core: recibido id=%s indice=%s aceptada=%s", tostring(qid), tostring(index), tostring(API.IsAccepted(qid))))
                 ApplyObjectiveOperation(qid, index, { completed = true }, true)
             else
-                local legacyIndex, current, legacyId = rest and rest:match("^(%d+)|(%-?%d+)|(.+)$")
+                local legacyIndex, current, legacyId
+                if rest then
+                    legacyIndex, current, legacyId = rest:match("^(%d+)|(%-?%d+)|(.+)$")
+                end
                 legacyIndex, current = tonumber(legacyIndex), tonumber(current)
                 if legacyId and legacyIndex and current then
                     ApplyObjectiveOperation(legacyId, legacyIndex, { current = current }, true)
@@ -832,7 +839,8 @@ do
             end
         elseif op == "QOBJDONE" then
             -- Compatibilidad temporal con clientes que aun emiten QOBJDONE.
-            local index, qid = rest and rest:match("^(%d+)|(.+)$")
+            local index, qid
+            if rest then index, qid = rest:match("^(%d+)|(.+)$") end
             index = tonumber(index)
             if qid and index then
                 ApplyObjectiveOperation(qid, index, { completed = true }, true)

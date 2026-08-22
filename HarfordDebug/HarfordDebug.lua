@@ -4181,7 +4181,14 @@ end, "vuelca fuentes de quest nativa y font objects para clavar la tipografia")
 -- Diagnostico de la estructura del GossipFrame (para ajustar el panel de quest de mundo).
 -- Ejecutar con el gossip de un NPC ABIERTO.
 HarfordDebug.RegisterCommand("gossipdump", function()
-    local function fs(f) if not f then return "nil" end local w,h = f.GetSize and f:GetSize(); return string.format("existe (%.0fx%.0f)", w or 0, h or 0) end
+    local function fs(f)
+        if not f then return "nil" end
+        -- Sin el `if`, `f.GetSize and f:GetSize()` devolvia solo el ancho y la sonda
+        -- imprimia siempre alto 0.
+        local w, h
+        if f.GetSize then w, h = f:GetSize() end
+        return string.format("existe (%.0fx%.0f)", w or 0, h or 0)
+    end
     Print("GossipFrame: " .. fs(GossipFrame))
     Print("GossipGreetingScrollChildFrame: " .. fs(_G.GossipGreetingScrollChildFrame))
     Print("GossipGreetingText: " .. (GossipGreetingText and ("existe txt='" .. tostring(GossipGreetingText:GetText()) .. "'") or "nil"))
@@ -4655,6 +4662,169 @@ end, "recetas dinamicas: list | demo | forget <id>")
 -- bgFileL/bgFileR); si el build de Epsilon no las trae, hay que caer a los fileID.
 -- Sintonizacion y carga: estado y pruebas. `peso <itemId> <libras>` declara el peso de un
 -- objeto, que el cliente de WoW NO expone y por eso hay que darselo a mano.
+-- Definiciones de faccion en la fase.
+API.RegisterCommand("phaserep", function(args)
+    local P = _G.HarfordReputationPhase
+    if not P then Print("HarfordReputationPhase no cargado"); return end
+    local cmd, a = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
+
+    if cmd == "publicar" then
+        P.Publish(false, function(ok, n, extra)
+            if not ok then Print("|cffff5555" .. tostring(extra) .. "|r"); return end
+            Print(string.format("Publicadas |cffffd100%s|r facciones%s%s", tostring(n),
+                (extra and extra.adoptadas or 0) > 0 and (", " .. extra.adoptadas .. " de otros DM") or "",
+                (extra and extra.retiradas or 0) > 0 and (", " .. extra.retiradas .. " retiradas") or ""))
+        end)
+        return
+    end
+
+    if cmd == "cargar" then
+        P.EnsureCatalog(true, function(ok, n, r)
+            if not ok then Print("|cffff5555" .. tostring(n) .. "|r"); return end
+            Print(string.format("Aplicadas |cffffd100%s|r facciones%s", tostring(n),
+                (tonumber(r) or 0) > 0 and (", " .. r .. " retiradas") or ""))
+        end)
+        return
+    end
+
+    if cmd == "ver" then
+        P.Load(function(payload, err)
+            if not payload then Print("Nada en la fase" .. (err and (" (" .. err .. ")") or "")); return end
+            local n = 0
+            for id, f in pairs(payload.factions or {}) do
+                n = n + 1
+                Print(string.format("   |cffffd100%s|r  %s", tostring(id), tostring(f.name)))
+            end
+            local m = payload.meta or {}
+            Print(string.format("Facciones en la fase: |cffffd100%d|r  |cff808080(por %s)|r",
+                n, tostring(m.by or "?")))
+            if payload.players then Print("   |cffff5555FUGA: viajaron reputaciones de jugador|r") end
+        end)
+        return
+    end
+
+    if cmd == "purgar" then
+        if a ~= "confirmar" then
+            Print("|cffff5555Borra el catalogo de facciones de la fase.|r")
+            Print("Escribe: |cffffd100phaserep purgar confirmar|r")
+            return
+        end
+        P.Purge(function(ok, n, err)
+            Print(ok and ("Purgadas |cffffd100" .. tostring(n) .. "|r claves.")
+                or ("|cffff5555" .. tostring(err) .. "|r"))
+        end)
+        return
+    end
+
+    local mk, tk = P.GetKeys()
+    local store = _G.HarfordReputation and _G.HarfordReputation.EnsureStore
+        and _G.HarfordReputation.EnsureStore() or {}
+    local n = 0
+    for _ in pairs(store.factions or {}) do n = n + 1 end
+    Print("|cffffd100Facciones en la fase|r")
+    Print("  Disponible: " .. (P.IsAvailable() and "|cff55ff55si|r" or "|cffff5555no|r")
+        .. "   Puedes escribir: " .. (P.CanWrite() and "|cff55ff55si|r" or "|cff808080no|r"))
+    Print("  Claves: |cff808080" .. tk .. "|r, |cff808080" .. mk .. "|r")
+    Print("  Catalogo local: |cffffd100" .. n .. "|r facciones")
+    Print("  |cffffd100phaserep publicar|r  sube el catalogo (fusiona, no pisa)")
+    Print("  |cffffd100phaserep cargar|r    trae el de la fase")
+    Print("  |cffffd100phaserep ver|r       vuelca lo que hay escrito")
+    Print("  |cffffd100phaserep purgar confirmar|r")
+end, "Definiciones de faccion guardadas en la fase")
+
+-- Tablas de loot en la fase.
+API.RegisterCommand("phaseloot", function(args)
+    local P = _G.HarfordLootPhase
+    if not P then Print("HarfordLootPhase no cargado"); return end
+    local cmd, a = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
+
+    if cmd == "publicar" then
+        P.PublishAll(function(ok, escritas, fallos)
+            if not ok and not escritas then Print("|cffff5555" .. tostring(fallos) .. "|r"); return end
+            Print(string.format("Subidas |cffffd100%s|r tablas%s", tostring(escritas),
+                (tonumber(fallos) or 0) > 0 and (" (" .. fallos .. " con error)") or ""))
+        end)
+        return
+    end
+
+    if cmd == "criatura" then
+        local id = tonumber(a)
+        if not id then Print("uso: phaseloot criatura <creatureId>"); return end
+        P.LoadCreatureLoot(id, function(tabla, err)
+            if not tabla then
+                Print("Sin tabla para " .. id .. (err and (" (" .. tostring(err) .. ")") or ""))
+                return
+            end
+            Print(string.format("Criatura |cffffd100%d|r: %d entradas", id, #tabla))
+            for _, e in ipairs(tabla) do
+                Print(string.format("   item |cffffd100%s|r  %s%%  x%s-%s",
+                    tostring(e[1]), tostring(e[2]), tostring(e[3]), tostring(e[4])))
+            end
+        end)
+        return
+    end
+
+    if cmd == "global" then
+        P.LoadGlobalLoot(function(tabla, err)
+            if not tabla then Print("Sin tabla global" .. (err and (" (" .. err .. ")") or "")); return end
+            Print("Tabla global: |cffffd100" .. #tabla .. "|r entradas")
+            for _, e in ipairs(tabla) do
+                Print(string.format("   item |cffffd100%s|r  %s%%", tostring(e[1]), tostring(e[2])))
+            end
+        end)
+        return
+    end
+
+    if cmd == "manifiesto" then
+        P.LoadManifest(function(claves, err)
+            claves = type(claves) == "table" and claves or {}
+            local espejo = P.GetLocalManifest and P.GetLocalManifest() or {}
+            Print(string.format("Claves de loot: |cffffd100%d|r  (espejo local: |cffffd100%d|r)",
+                #claves, #espejo))
+            if err then Print("   |cffff9900la fase no contesto: " .. tostring(err) .. "|r") end
+            for _, k in ipairs(claves) do Print("   |cff808080" .. tostring(k) .. "|r") end
+        end)
+        return
+    end
+
+    if cmd == "reconstruir" then
+        P.RebuildManifest(function(ok, n, err)
+            Print(ok and ("Manifiesto rehecho: |cffffd100" .. tostring(n) .. "|r claves")
+                or ("|cffff5555" .. tostring(err) .. "|r"))
+        end)
+        return
+    end
+
+    if cmd == "purgar" then
+        if a ~= "confirmar" then
+            Print("|cffff5555Esto borra TODAS las tablas de loot de la fase.|r")
+            Print("Escribe: |cffffd100phaseloot purgar confirmar|r")
+            return
+        end
+        P.PurgeAll(function(ok, borradas, err)
+            if not ok then Print("|cffff5555" .. tostring(err) .. "|r"); return end
+            Print("Purgadas |cffffd100" .. #(borradas or {}) .. "|r claves de loot.")
+        end)
+        return
+    end
+
+    local mk, gk, pk = P.GetKeys()
+    Print("|cffffd100Tablas de loot en la fase|r")
+    Print("  Disponible: " .. (P.IsAvailable() and "|cff55ff55si|r" or "|cffff5555no|r")
+        .. "   Puedes escribir: " .. (P.CanWrite() and "|cff55ff55si|r" or "|cff808080no|r"))
+    Print("  Claves: |cff808080" .. mk .. "|r, |cff808080" .. gk .. "|r, |cff808080" .. pk .. "<id>|r")
+    local n = 0
+    for _ in pairs(_G.HarfordLootLootRegistry or {}) do n = n + 1 end
+    Print(string.format("  Registro local: |cffffd100%d|r criaturas, global |cffffd100%d|r entradas",
+        n, #(_G.HarfordLootGlobalLootRegistry or {})))
+    Print("  |cffffd100phaseloot publicar|r     sube el registro local entero")
+    Print("  |cffffd100phaseloot criatura <id>|r")
+    Print("  |cffffd100phaseloot global|r")
+    Print("  |cffffd100phaseloot manifiesto|r")
+    Print("  |cffffd100phaseloot reconstruir|r  rehace el manifiesto desde el registro local")
+    Print("  |cffffd100phaseloot purgar confirmar|r")
+end, "Tablas de loot guardadas en la fase")
+
 -- Tablon de contratos en la fase. Conduce HarfordContractsPhase sin depender de la UI.
 API.RegisterCommand("phasetc", function(args)
     local P = HarfordContracts and HarfordContracts.Phase
@@ -5176,8 +5346,9 @@ API.RegisterCommand("entrenador", function(args)
     if cmd == "abrir" then
         -- Lo mismo que hara la opcion de gossip del NPC, para probarla sin tener el NPC puesto.
         if a == "" then Print("uso: entrenador abrir <nombreDeCatalogo>"); return end
-        local ok, err = _G.HarfordTrainerAPI and _G.HarfordTrainerAPI.OpenTrainer
-            and _G.HarfordTrainerAPI.OpenTrainer(a)
+        local abrir = _G.HarfordTrainerAPI and _G.HarfordTrainerAPI.OpenTrainer
+        local ok, err
+        if abrir then ok, err = abrir(a) end
         if not ok then Print("|cffff5555" .. tostring(err or "no se pudo abrir") .. "|r") end
         return
     end

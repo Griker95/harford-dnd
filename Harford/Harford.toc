@@ -4,7 +4,7 @@
 ## Author: Griker
 ## Version: 1.0.0
 ## OptionalDeps: totalRP3, totalRP3_Extended
-## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordConfigStore, HarfordReputationStore, HarfordCompendioDB, HarfordContractsDB, HarfordQuestsStore, HarfordCommunicatorStore, HarfordLootPhaseStore
+## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordConfigStore, HarfordReputationStore, HarfordCompendioDB, HarfordContractsDB, HarfordQuestsStore, HarfordCommunicatorStore, HarfordLootPhaseStore, HarfordReputationPhaseStore
 ## SavedVariablesPerCharacter: HarfordCompendioCharacterDB, HarfordCourierStore, HarfordProfessionsStore
 
 # --- Core ---
@@ -96,6 +96,7 @@ Frames\HarfordTurns.lua
 
 # --- Reputation ---
 Reputation\HarfordReputation.lua
+Reputation\HarfordReputationPhase.lua
 Reputation\HarfordReputationSync.lua
 Reputation\HarfordReputationUI.lua
 

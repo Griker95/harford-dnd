@@ -4,11 +4,12 @@
 ## Author: Griker
 ## Version: 1.0.0
 ## OptionalDeps: totalRP3, totalRP3_Extended
-## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordConfigStore, HarfordReputationStore, HarfordCompendioDB, HarfordContractsDB, HarfordQuestsStore, HarfordCommunicatorStore
+## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordConfigStore, HarfordReputationStore, HarfordCompendioDB, HarfordContractsDB, HarfordQuestsStore, HarfordCommunicatorStore, HarfordLootPhaseStore
 ## SavedVariablesPerCharacter: HarfordCompendioCharacterDB, HarfordCourierStore, HarfordProfessionsStore
 
 # --- Core ---
 Core\HarfordSync.lua
+Core\HarfordPhaseStore.lua
 Core\HarfordChat.lua
 Core\HarfordUISounds.lua
 Core\HarfordConfig.lua
@@ -132,3 +133,4 @@ Communicator\HarfordCommunicator.lua
 
 # --- Loot ---
 Loot\HarfordLoot.lua
+Loot\HarfordLootPhase.lua

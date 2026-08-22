@@ -469,6 +469,21 @@ function Phase.EnsureBoard(force)
 
     -- Jugador (o DM forzando): la fase es la verdad. Los publicos que ya no esten se retiran;
     -- los borradores y el archivo NO se tocan, porque nunca viajan a la fase.
+    -- SALVAGUARDA AL CARGAR. Un indice vacio con tablon local lleno es casi siempre una
+    -- escritura a medias, una purga ajena o un dato corrupto, no una decision de borrarlo
+    -- todo. Aplicar el reemplazo ahi te vacia el tablon Y, en cuanto hagas cualquier accion
+    -- de DM, republica ese vacio: una cascada que se confirma a si misma.
+    local publicosLocales = 0
+    for _, c in ipairs(TC.GetDB().contracts or {}) do
+      if EsPublico(c) then publicosLocales = publicosLocales + 1 end
+    end
+    if #indice == 0 and publicosLocales > 0 then
+      TC.SetSyncStatus("La fase no declara contratos; el tablon local se conserva.")
+      TC.Print("La fase no declara ningun contrato y tu tienes " .. publicosLocales
+        .. ". No se toca nada: publica para volver a escribirlos.")
+      return
+    end
+
     local aplicados, retirados = Phase.ApplyIndexReplacing(indice)
     Phase.LoadAllBlocks()
     local ids = {}
@@ -714,6 +729,20 @@ function Phase.PublishTracked(quiet, callback)
           end
         end
       end
+    end
+
+    -- SALVAGUARDA AL PUBLICAR. Si tu tablon no tiene NADA publico y la fase si, la fusion
+    -- interpretaria que lo has borrado todo y vaciaria la fase. Un borrado masivo nunca
+    -- deberia salir de "no tengo nada": se exige que quede al menos un contrato.
+    local hayEnFase = #enFase > 0
+    local tengoAlgo = false
+    for _ in pairs(mios) do tengoAlgo = true break end
+    if hayEnFase and not tengoAlgo then
+      TC.SetSyncStatus("Publicacion detenida: tu tablon esta vacio y la fase tiene contratos.")
+      TC.Print("Tu tablon no tiene contratos publicos y la fase tiene " .. #enFase
+        .. ". No se publica para no borrarlos. Carga el tablon primero.")
+      if callback then callback(false, nil, "tablon local vacio") end
+      return
     end
 
     local visto = SelloVisto(fase) or {}

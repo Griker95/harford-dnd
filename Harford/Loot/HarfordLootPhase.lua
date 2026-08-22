@@ -383,3 +383,43 @@ do
     end)
   end
 end
+
+------------------------------------------------------------
+-- Publicacion automatica
+------------------------------------------------------------
+
+-- Escribe en la fase el ambito que se acaba de editar. `scope` es "GLOBAL" o un id de
+-- criatura, igual que lo maneja el editor de loot de HarfordAdmin.
+--
+-- Coalescido: editar varias entradas seguidas de la misma criatura es lo normal, y cada
+-- pulsacion no debe convertirse en una escritura. Un solo `C_Timer.After` por ambito, que NO
+-- es un ticker: se arma al primer cambio y se desarma al disparar.
+local COALESCE = 1.5
+local pendientesDeEscribir, armado = {}, false
+
+local function Volcar()
+  armado = false
+  local cola = pendientesDeEscribir
+  pendientesDeEscribir = {}
+  for scope in pairs(cola) do
+    if scope == "GLOBAL" then
+      API.SetGlobalLoot(_G.HarfordLootGlobalLootRegistry or {})
+    else
+      local tabla = (_G.HarfordLootLootRegistry or {})[scope]
+      if type(tabla) == "table" and #tabla > 0 then
+        API.SetCreatureLoot(scope, tabla)
+      else
+        API.ClearCreatureLoot(scope)
+      end
+    end
+  end
+end
+
+function API.SyncScope(scope)
+  if scope == nil or not API.IsAvailable() or not API.CanWrite() then return false end
+  pendientesDeEscribir[scope] = true
+  if armado then return true end
+  armado = true
+  C_Timer.After(COALESCE, Volcar)
+  return true
+end

@@ -132,6 +132,12 @@ local function AddOrUpdateLootEntry(scope, itemId, chance, minAmount, maxAmount,
     if HarfordLootAPI and HarfordLootAPI.SaveConfig then
         HarfordLootAPI.SaveConfig()
     end
+    -- Ademas de guardar en local, se deja escrito en la fase para quien entre sin DM.
+    -- Coalescido dentro de HarfordLootPhase: editar varias entradas seguidas no son varias
+    -- escrituras.
+    if HarfordLootPhase and HarfordLootPhase.SyncScope then
+        HarfordLootPhase.SyncScope(scope)
+    end
     return true
 end
 
@@ -149,6 +155,9 @@ local function RemoveLootEntry(scope, index)
 
     if HarfordLootAPI and HarfordLootAPI.SaveConfig then
         HarfordLootAPI.SaveConfig()
+    end
+    if HarfordLootPhase and HarfordLootPhase.SyncScope then
+        HarfordLootPhase.SyncScope(scope)
     end
     return true
 end
@@ -520,6 +529,14 @@ local function CreateLootEditor()
         end
         if HarfordLootAPI and HarfordLootAPI.SaveConfig then
             HarfordLootAPI.SaveConfig()
+        end
+        -- El equivalente de "compartir" para la fase: sube el registro entero de una vez.
+        if HarfordLootPhase and HarfordLootPhase.PublishAll then
+            HarfordLootPhase.PublishAll(function(okp, escritas)
+                if escritas and escritas > 0 then
+                    Print("Loot escrito en la fase: " .. tostring(escritas) .. " tablas.")
+                end
+            end)
         end
         local ok, err
         if HarfordLootAPI and HarfordLootAPI.BroadcastConfig then ok, err = HarfordLootAPI.BroadcastConfig() end

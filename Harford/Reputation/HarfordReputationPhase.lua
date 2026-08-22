@@ -271,3 +271,45 @@ do
     end)
   end
 end
+
+------------------------------------------------------------
+-- Publicacion automatica
+------------------------------------------------------------
+
+-- Sin esto el catalogo solo se subia a mano desde debug, asi que en juego normal la fase
+-- nunca se enteraba de una faccion nueva.
+--
+-- Coalescido: crear un grupo, meterle facciones y ordenarlas son muchos cambios seguidos y
+-- una sola publicacion. Un `C_Timer.After` de un disparo, no un ticker.
+local COALESCE = 2
+local armado = false
+
+function API.SyncSoon()
+  if armado then return true end
+  if not (API.IsAvailable() and API.CanWrite()) then return false end
+  armado = true
+  C_Timer.After(COALESCE, function()
+    armado = false
+    API.Publish(true)
+  end)
+  return true
+end
+
+-- Se envuelven los mutadores publicos en vez de tocar `HarfordReputation`: asi el modulo de
+-- reputacion no necesita saber que existe la fase, y si este no carga, todo sigue igual.
+do
+  local R = Rep()
+  for _, nombre in ipairs(R and {
+    "CreateFaction", "UpdateFaction", "DeleteFaction", "SetFactionGroup",
+    "CreateGroup", "CreateSubgroup", "RenameGroup", "RenameSubgroup", "DeleteGroup",
+  } or {}) do
+    local original = R[nombre]
+    if type(original) == "function" then
+      R[nombre] = function(...)
+        local a, b, c = original(...)
+        API.SyncSoon()
+        return a, b, c
+      end
+    end
+  end
+end

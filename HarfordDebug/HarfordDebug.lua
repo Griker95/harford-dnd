@@ -3605,6 +3605,23 @@ API.RegisterCommand("svclean", function(args)
 
     -- El sistema de votos del tablon se retiro, pero su tabla sigue en las SavedVariables de
     -- quien la tuviera: no la borra nadie porque ya no hay codigo que la mire.
+    -- `HarfordDebugSettings` no son solo ajustes: guarda dos acumuladores de diagnostico. El
+    -- soundLog esta acotado a 400 entradas; el merchantDump crece a proposito, porque es el
+    -- catalogo de ids de Epsilon que se va construyendo, y son ~35 bytes por entrada. Lo que
+    -- faltaba era poder vaciarlos cuando ya no hacen falta.
+    local function CleanDebugDumps()
+        local st = _G.HarfordDebugSettings
+        if type(st) ~= "table" then Print("svclean debug: nada guardado."); return end
+        local sonidos = type(st.soundLog) == "table" and #st.soundLog or 0
+        local mercaderes = 0
+        for _ in pairs(type(st.merchantDump) == "table" and st.merchantDump or {}) do
+            mercaderes = mercaderes + 1
+        end
+        st.soundLog, st.merchantDump = nil, nil
+        Print(string.format("svclean debug: %d entrada(s) de sonido y %d id(s) de mercader retirados.",
+            sonidos, mercaderes))
+    end
+
     local function CleanContractLeftovers()
         local db = _G.HarfordContractsDB
         if type(db) ~= "table" then Print("svclean contratos: no hay tablon guardado."); return end
@@ -3685,6 +3702,7 @@ API.RegisterCommand("svclean", function(args)
     if action == "dnd" then CleanDnDDefaults(); return end
     if action == "frameprobe" then CleanFrameProbe(); return end
     if action == "contratos" then CleanContractLeftovers(); return end
+    if action == "debug" then CleanDebugDumps(); return end
     if action == "targetpos" then
         local force = args:match("%s+force%s*$") ~= nil
         CleanTargetResourceSettings(force)
@@ -3698,6 +3716,7 @@ API.RegisterCommand("svclean", function(args)
         CleanTargetResourceSettings(true)
         CleanFrameProbe()
         CleanContractLeftovers()
+        CleanDebugDumps()
         return
     end
     if action == "purge" then
@@ -3710,7 +3729,7 @@ API.RegisterCommand("svclean", function(args)
         return
     end
 
-    Print("uso: /harford debug run svclean status|safe|dnd|logs|npclinks|guilds|frameprobe|contratos|targetpos [force]|all|purge confirm")
+    Print("uso: /harford debug run svclean status|safe|dnd|logs|npclinks|guilds|frameprobe|contratos|debug|targetpos [force]|all|purge confirm")
 end, "limpia SavedVariables obsoletas/controladas")
 
 -- Diagnostico en vivo del fondo del modelo 3D del panel de personaje. Abre antes el panel

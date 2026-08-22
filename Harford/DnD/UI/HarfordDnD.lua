@@ -5606,7 +5606,7 @@ SlashCmdList["HARFORDMAIN"] = function(msg)
             HarfordChat.Print("Las herramientas de diagnostico requieren el addon opcional HarfordDebug.")
         end
     else
-        HarfordChat.Print("/harford: herramientas | comunicador | radio | cargarficha | ficha | char | rep | turnos | contratos | misiones | loot | config | inspect | compendio/magia")
+        HarfordChat.Print("/harford: herramientas | comunicador | radio | cargarficha | ficha | char | rep | turnos | contratos | misiones | reparto | loot | config | inspect | compendio/magia | debug")
     end
 end
 

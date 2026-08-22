@@ -146,9 +146,19 @@ end
 -- Escribe el tablon entero: un bloque por contrato publico, y despues el indice.
 -- ORDEN DELIBERADO: bloques primero, indice al final. Si esto se corta a medias quedan
 -- bloques huerfanos (invisibles, inofensivos) en vez de un indice apuntando a la nada.
+-- ESCRITURA EN BRUTO: reescribe el indice entero SIN fusionar. La ruta normal es
+-- `PublishTracked`, que compara antes. Esta se queda como primitiva y lleva el mismo guard de
+-- fase, para que ninguna via pueda subir a la fase B un tablon que se bajo de la A.
 function Phase.Publish(quiet)
   if not TC.IsDMMode() then
     TC.Print("Activa el modo DM con .ph dm on para publicar en la fase.")
+    return false
+  end
+  local origen = TC.GetDB().phaseOrigin
+  local aqui = Phase.GetPhaseId()
+  if origen and tostring(origen) ~= tostring(aqui) then
+    TC.Print("Tu tablon se cargo de la fase |cffffd100" .. tostring(origen)
+      .. "|r y estas en la |cffffd100" .. tostring(aqui) .. "|r. Recargalo antes de publicar.")
     return false
   end
   if not Phase.IsAvailable() then

@@ -319,7 +319,7 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   - Los rasgos `choice` (p.ej. `Estilo de Combate`, `Pericia`, afinidades) deben mostrar la opcion elegida tanto en el resumen `Rasgos` como en el boton del `Libro`. Si no hay opcion resuelta/importada, mostrar `Eleccion: pendiente` en vez de ocultar el dato; el tooltip lista opciones posibles cuando el choice esta pendiente.
   - El resumen `Rasgos` NO muestra contadores `[X/Y]` de usos por descanso. Esos usos pertenecen al Libro/accion del rasgo; el boton del Libro muestra `Usos X/Y · Descanso corto|Descanso largo`, bloquea la preparacion/uso si no quedan usos y refresca el contador al gastar. Meterlos en el resumen duplica filas como `Conocimiento Arcano`.
   - **Enlace de habilidad clicable**: los enlaces de tipo propio (`harford:abil:`) NO son clicables en este cliente (no disparan `SetItemRef`) y `ChatFrame_OnHyperlinkShow` esta vetado; por eso se usa **TRP3 ChatLinks** via `HarfordTRP3.GetAbilityChatLink(feature)` (modulo `harford_ability`, hyperlink `totalrp3`). Fallback a texto de color si TRP3 no esta.
-- Contrato `HarfordProfessions` (`Harford/Professions/`): profesiones D&D+WoW en tres capas de solo-datos + core. `HarfordProfessionsData` define profesiones (herramienta, caracteristica, `kind` craft/gather/utility) y las RECETAS; `HarfordProfessionsItems.REGISTRY` mapea cada CLAVE estable (`mena_cobre`) a su itemId real de Epsilon — una clave con `id = nil` es valida: su receta sale "pendiente" (visible, no crafteable) y nada se rompe. **Conocer una profesion = tener la competencia de su herramienta** (`HarfordDnDFeatureEffects.HasToolProf`). Craftear = d20 + PB (si herramienta) + Mod vs CD, critico 20 = salida x2, consume materiales REALES (`RemoveItem`) y entrega items REALES (`GiveItem`); skill 1-300 con subida estilo WoW (umbral gris = skillReq+100) y tiers Aprendiz/Oficial/Experto/Artesano/Maestro (1/75/150/225/300). **Cadenas completas 1-300 para las 14 profesiones de WoW** (2026-08): inspiradas en Classic, CD 8-18, cruzadas entre si (mineria->herreria/joyeria, herboristeria->alquimia/inscripcion, desollar->peleteria, pesca->cocina; encantamiento produce las esencias de los remates); el remate a skill 300 de cada una es `worldLearned` (lo concede el DM via `LearnRecipe`, no se aprende solo). **No renombrar ids de receta ni claves de item**: la SV per-character `HarfordProfessionsStore` (`skills`/`learned`/`nodeCooldowns`) los referencia. **Nodos de mundo**: `HarfordProfessions.GatherNode(recipeId, cooldownSeconds)` es la puerta para vetas/plantas/bancos de peces colocados por el DM — el gossip del NPC/objeto ejecuta un ArcSpell que la llama (mismo patron que `HarfordQuestAPI` en WorldQuests). Solo acepta recetas de profesiones `gather`; la identidad del nodo es el GUID de la unidad del gossip (`npc`/`target`); el cooldown (300s por defecto, minimo 30) es por nodo y por personaje, persiste en `nodeCooldowns` con poda de expirados, y se aplica AL INTENTO (exito o fallo) — pero SOLO si `CanCraft` pasa: quien no conoce la profesion o tiene la receta pendiente de ID no consume el nodo. ArcSpell de ejemplo (accion Script del gossip): `HarfordProfessions.GatherNode("min_cobre", 300)`. **Enseñar recetas**: `HarfordProfessions.TeachRecipe(nombreJugador, recipeId)` (menu DM de unidad > Profesiones) envia `TEACH|recipeId` por el prefix propio `HARFORDPROF` (WHISPER); solo acepta recetas `worldLearned`. El receptor concede solo un beneficio (marcar aprendida), asi que aplica el filtro estandar de remitente reconocido y el gate de DM vive en el EMISOR (mismo modelo que `QDONE`); ignora recetas no-worldLearned y avisa si ya se conocia. Para cosechar itemIds: `/harford debug run merchantdump [match|apply]` con un mercader abierto vuelca id+nombre, casa por nombre normalizado contra las claves pendientes y acumula todo en `HarfordDebugSettings.merchantDump` (leible del fichero SV tras /reload); `apply` rellena en caliente con `HarfordProfessionsItems.Set` (solo sesion: la persistencia real se hornea en el .lua). Un item del dump sin nombre (`item NNNN`) es cache fria de `GetItemInfo`: reabrir el mercader mas tarde y re-dumpear lo resuelve. **Cosecha 2026-08-20**: horneados los reales de Epsilon (menas/barras cobre-plata, pellejos/cueros ligero-grueso, restos de cuero, y las hierbas reales Hojaplata/Marregal/Brezospina/Cardopresto/Alga estranguladora/Hierba cardenal/Musgo de tumba/Acérita salvaje) con recetas gather nuevas en herboristeria/mineria y fundiciones de estano/plata; los nombres del registro usan el nombre EXACTO en juego aunque la clave conserve el alias antiguo (`aceroflor` -> "Acérita salvaje", `zarzaespina` -> "Brezospina"). **Ingenieria ya tiene su cadena 1-300** (11 recetas `ing_*`, remate `ing_detonador_goblin` worldLearned) con outputs `id = nil` pendientes de crear en el phase vault. Quedan ~40 ids del dump sin nombre resuelto.
+- Contrato `HarfordProfessions` (`Harford/Professions/`): profesiones D&D+WoW en tres capas de solo-datos + core. `HarfordProfessionsData` define profesiones (herramienta, caracteristica, `kind` craft/gather/utility) y las RECETAS; `HarfordProfessionsItems.REGISTRY` mapea cada CLAVE estable (`mena_cobre`) a su itemId real de Epsilon — una clave con `id = nil` es valida: su receta sale "pendiente" (visible, no crafteable) y nada se rompe. **Conocer una profesion = tener la competencia de su herramienta** (`HarfordDnDFeatureEffects.HasToolProf`). Craftear = d20 + PB (si herramienta) + Mod vs CD, critico 20 = salida x2, consume materiales REALES (`RemoveItem`) y entrega items REALES (`GiveItem`); skill 1-300 con subida estilo WoW (umbral gris = skillReq+100) y tiers Aprendiz/Oficial/Experto/Artesano/Maestro (1/75/150/225/300). **Las recetas salen de Wowhead, no se escriben a mano** (2026-08-22): 2.275 recetas de ONCE profesiones extraidas con `tools/codice/wowhead_profesiones.py` -> `importar_profesiones.py`, que RETIRA cualquier receta escrita a mano; las cadenas 1-300 inventadas anteriores ya no existen. Cada profesion se lee de la version donde su arbol esta completo (Classic, salvo Joyeria en TBC e Inscripcion en Wrath) y los NOMBRES se toman del WoW actual, con dos excepciones deliberadas: los 26 objetos que el retail ya no traduce conservan el nombre espanol de Classic, y la terminologia de la casa dice "Lingote de X" donde el juego dice "Barra de X" (`nombres_display.casa`). Herboristeria, Pesca, Desollar y Fabricar venenos se quedan SIN recetas: son recoleccion y Wowhead no las publica como arbol. **La CD ya no es un numero fijo**: sale del color que la receta tiene para tu habilidad (`colors = { naranja, amarillo, verde, gris }`, umbrales del propio juego) -> rojo 20, naranja 16, amarillo 12, verde 10, gris 8, mas `qmod` por la calidad de lo que se fabrica (gris -1, blanco 0, verde +1, azul +3, morado +5, legendario +7). El campo `dc` se conserva como respaldo (naranja + qmod) para la receta sin umbrales y para el codigo que solo lea un numero; **`HarfordProfessions` todavia usa `dc` y no lee `colors`/`qmod`** — pendiente. **El emparejado del registro es por `wow = <itemId>`, NO por nombre**: cada entrada guarda el itemId de Blizzard, y renombrar por nombre creaba una clave nueva dejando huerfana la vieja, que es justo la que lleva el `id` real de Epsilon puesto a mano. Se poda lo que no usa ninguna receta salvo las entradas que ya tengan ese `id`, que no se puede volver a deducir. **No renombrar ids de receta ni claves de item**: la SV per-character `HarfordProfessionsStore` (`skills`/`learned`/`nodeCooldowns`) los referencia. **Nodos de mundo**: `HarfordProfessions.GatherNode(recipeId, cooldownSeconds)` es la puerta para vetas/plantas/bancos de peces colocados por el DM — el gossip del NPC/objeto ejecuta un ArcSpell que la llama (mismo patron que `HarfordQuestAPI` en WorldQuests). Solo acepta recetas de profesiones `gather`; la identidad del nodo es el GUID de la unidad del gossip (`npc`/`target`); el cooldown (300s por defecto, minimo 30) es por nodo y por personaje, persiste en `nodeCooldowns` con poda de expirados, y se aplica AL INTENTO (exito o fallo) — pero SOLO si `CanCraft` pasa: quien no conoce la profesion o tiene la receta pendiente de ID no consume el nodo. ArcSpell de ejemplo (accion Script del gossip): `HarfordProfessions.GatherNode("min_cobre", 300)`. **Enseñar recetas**: `HarfordProfessions.TeachRecipe(nombreJugador, recipeId)` (menu DM de unidad > Profesiones) envia `TEACH|recipeId` por el prefix propio `HARFORDPROF` (WHISPER); solo acepta recetas `worldLearned`. El receptor concede solo un beneficio (marcar aprendida), asi que aplica el filtro estandar de remitente reconocido y el gate de DM vive en el EMISOR (mismo modelo que `QDONE`); ignora recetas no-worldLearned y avisa si ya se conocia. Para cosechar itemIds: `/harford debug run merchantdump [match|apply]` con un mercader abierto vuelca id+nombre, casa por nombre normalizado contra las claves pendientes y acumula todo en `HarfordDebugSettings.merchantDump` (leible del fichero SV tras /reload); `apply` rellena en caliente con `HarfordProfessionsItems.Set` (solo sesion: la persistencia real se hornea en el .lua). Un item del dump sin nombre (`item NNNN`) es cache fria de `GetItemInfo`: reabrir el mercader mas tarde y re-dumpear lo resuelve. **Cosecha 2026-08-20**: horneados los reales de Epsilon (menas/barras cobre-plata, pellejos/cueros ligero-grueso, restos de cuero, y las hierbas reales Hojaplata/Marregal/Brezospina/Cardopresto/Alga estranguladora/Hierba cardenal/Musgo de tumba/Acérita salvaje) con recetas gather nuevas en herboristeria/mineria y fundiciones de estano/plata; los nombres del registro usan el nombre EXACTO en juego aunque la clave conserve el alias antiguo (`aceroflor` -> "Acérita salvaje", `zarzaespina` -> "Brezospina"). **Ingenieria ya tiene su cadena 1-300** (11 recetas `ing_*`, remate `ing_detonador_goblin` worldLearned) con outputs `id = nil` pendientes de crear en el phase vault. Quedan ~40 ids del dump sin nombre resuelto.
 - Contrato `HarfordActionBars` (`Harford/DnD/UI/HarfordActionBars.lua`): barra de accion propia (frame movible, NO secuestra los ActionButton de Blizzard) para colocar habilidades del Libro. Gate por `HarfordConfig` (`actionbar` on/off; opcion en el panel de config). Expone API publica (`Toggle`/`SetShown`/`SetTestTexture`/`SetGeometry`/`Layout`); los diagnosticos viven en `HarfordDebug` (`actionbar`/`actionbarsize`/`actionbarset`/`actionbarscan`). **Limitacion Epsilon confirmada**: las texturas de madera retail `Interface\PlayerActionBarAlt\spellbar-wood*` (y `wood`) **NO existen en el cliente Epsilon** (salen verde); usar solo texturas que el cliente tiene (Spellbook/Buttons/Icons/Achievement…). `GetFileIDFromPath(ruta)` permite comprobar si una textura existe antes de usarla (`/harford debug run actionbarscan [ruta]`). FASE 2 pendiente: arrastrar habilidades del Libro a los slots (patron Arcanum: SecureActionButton con `type` custom + `_<type>` handler) y persistencia.
   - Fuentes confirmadas para replicar el `CharacterFrame` nativo sin ajustes a ojo:
     - `G:\Epsilon\_retail_\WTF\Account\MORTYN\SavedVariables\FrameDump.lua`: arbol completo del frame vivo (`CharacterFrame`, `PaperDollFrame`, `CharacterFrameInset`, `CharacterFrameInsetRight`, `CharacterStatsPane`, slots y modelo).
@@ -1577,12 +1577,159 @@ Coste de lectura medido, contra el throttle de 45/1,5 s:
 | Estrategia | Llamadas para ver la lista |
 |---|---|
 | Blob unico del tablon | 8 |
-| Una clave por contrato, todo de golpe | 18 |
-| **Indice rico + carga perezosa** | **1** (+1 por contrato que se abra) |
+| **Indice rico** (pintar la lista) | **1** |
+| + un bloque por contrato (completar) | +1 cada uno |
 
-`prep` y `privateNotes` **no se suben nunca**, y los borradores (`status == "draft"`) tampoco.
-El unico punto disputado es el indice: necesita cerrojo cooperativo tipo `_PLOCK`/`_PUNLOCK`
-con caducidad, porque su lee-modifica-escribe es asincrono y dos DMs simultaneos se pisan.
+**CORRECCION (2026-08-21): la carga perezosa NO basta.** El primer diseno bajaba el bloque solo
+al abrir un contrato. No vale, porque una **mision de mundo la dispara el gossip de un NPC**, no
+abrir el tablon: cuando el jugador habla con el NPC ya tienen que estar objetivos, recompensas y
+los tres textos. `TC.BuildWorldQuestDef` los lee del contrato COMPLETO y el indice ni siquiera
+lleva `worldNpc`, asi que con esbozos la mision no se registraba en absoluto. Ahora el indice
+pinta la lista en una llamada y detras `Phase.LoadAllBlocks()` baja todos los bloques y llama a
+`RegisterAllWorldQuests`. Un bloque que no conteste deja ese contrato como esbozo sin bloquear
+a los demas.
+
+`prep` y `privateNotes` **no se suben nunca** (lista BLANCA, no negra: con lista negra un campo
+privado nuevo se filtraria por olvido). Los borradores (`draft`) y el archivo (`archived`)
+tampoco. **Trampa**: por eso la carga que reemplaza retira solo los contratos PUBLICOS ausentes
+del indice; borrar "lo que no este en la fase" a secas se llevaria por delante todo el trabajo
+sin publicar del DM.
+
+**CORRECCION (2026-08-21): no hace falta cerrojo cooperativo.** El plan inicial preveia
+`_PLOCK`/`_PUNLOCK` para el indice. No se necesita: `PublishTracked` lee el indice y fusiona a
+tres bandas antes de escribir (ver mas abajo).
+
+## Patrones Comunes Del Almacen De Fase (2026-08-21)
+
+Tres sistemas lo usan ya -- contratos, loot y facciones -- y comparten estas piezas. Cualquier
+sistema nuevo deberia reutilizarlas en vez de reinventarlas.
+
+### `HarfordPhaseStore` (`Harford/Core/HarfordPhaseStore.lua`)
+
+Transporte comun: `Write` (con `pcall`, porque el servidor lanza error Lua duro), `Read`
+(con plazo y guardia de cambio de fase), `WipeKey` (vacia la clave Y sus segmentos),
+`MergeKeys`, `CanWrite`, `KeyFits`. **Comparte el transporte, NO la politica**: indice,
+manifiesto y fusion los necesita distintos cada sistema. Carga en `.toc` antes que cualquier
+consumidor.
+
+### Manifiesto + espejo local
+
+**Obligatorio en cada sistema.** El servidor no deja listar claves ni borrar por prefijo, asi
+que sin manifiesto una clave huerfana es irrecuperable. Se espeja ademas en SavedVariables
+**por fase**; la fase sigue siendo la autoridad y el espejo solo SUMA. El fallo es asimetrico a
+favor: claves de mas se vacian sin dano (escribir vacio sobre lo que no existe es inocuo),
+claves de menos dejan las cosas como sin espejo. El espejo salva la limpieza si la fase pierde
+su manifiesto.
+
+Precedente de por que hace falta: TRP3 **no** lleva manifiesto y su `unboundNPC` vacia solo el
+primer segmento con `C_Epsilon.SetPhaseAddonData` directo, aunque `boundNPC` escribio con
+`EpsilonLib` (que trocea). Los segmentos `_2`, `_3` de un perfil grande quedan colgados para
+siempre y nadie puede volver a encontrarlos.
+
+### Sello y fusion a tres bandas
+
+El indice/payload lleva `meta = { by, at }` **como campo con NOMBRE dentro de la lista**, asi que
+`ipairs` lo ignora: sin clave aparte y sin cambiar el formato.
+
+Al ABRIR se compara el sello con el ultimo aplicado; si es el mismo no se toca nada, ni un
+refresco. Al DM no se le carga encima por si tiene ediciones sin publicar: se le avisa.
+
+Al PUBLICAR se lee primero y se fusiona:
+
+| Situacion | Que pasa |
+|---|---|
+| En la fase **y** en tu copia | Mandas tu |
+| En la fase, no en la tuya, y **lo viste** la ultima vez | Lo borraste tu -> se retira |
+| En la fase, no en la tuya, y **nunca lo viste** | Lo anadio otro DM -> se **adopta** |
+| Solo en tu copia | Se sube |
+
+Para distinguir las dos de en medio hay que guardar **los ids que se vieron**, no solo la hora.
+Sin esta fusion, un DM con una copia vieja borraba el trabajo de los demas de forma permanente.
+Adoptar es barato: la fila ya la tienes de la lectura y el bloque ajeno ni se toca. Tras
+publicar, la copia local se actualiza con el resultado de la fusion.
+
+### Contrato de los callbacks
+
+Dos formas, y **el error NUNCA ocupa el hueco de los datos**:
+
+- Lecturas puras (`Load*`): `callback(datos, error)`. No hay `ok` aparte porque `datos` nil ya
+  significa que fallo.
+- Lo que ademas escribe (`Publish*`, `Purge*`, `Prune*`): `callback(ok, datos, extra)`, donde
+  `extra` es el error si fallo.
+
+Caso real: `PurgeAll` devolvia la cadena `sin modo DM` en el hueco de la lista, su longitud daba
+11, el comando anuncio "Purgadas 11 claves" y luego reviento en `ipairs`. Los consumidores
+comprueban ademas `type(x) == "table"` antes de contar o iterar.
+
+### Trampa de retornos multiples, variante EXPANSION
+
+Distinta de la ya documentada (cadenas `and` que TRUNCAN a uno). Aqui es lo contrario: una
+llamada multivalor como **ultimo elemento de un constructor de tabla o de una lista de
+argumentos se EXPANDE**. Caso real: `EspejoLocal()` devuelve tres valores (lista, tabla, fase) y
+estaba dentro de `ipairs({ lista, EspejoLocal() })`; la tabla acababa con el id de fase (cadena)
+dentro y el bucle reventaba. Se arregla parentizando: `(EspejoLocal())`.
+
+**Solo aparecia despues de publicar al menos una vez**: con el espejo de esa fase vacio el
+segundo elemento era nil, `ipairs` paraba ahi y nunca alcanzaba la cadena. Por eso ningun test
+lo cazo. El grep documentado para la variante `and` NO detecta esta.
+
+## Loot En La Fase (2026-08-21)
+
+`Harford/Loot/HarfordLootPhase.lua`. Dos diferencias DELIBERADAS con el tablon:
+
+**Sin indice.** Al saquear ya sabes el template id, asi que se pide `HARFORD_LOOT_C_<id>`
+directamente (patron de `Epsilon_Merchant` y de los perfiles de NPC de TRP3). El manifiesto
+existe solo para limpiar y para que el editor del DM liste.
+
+**Escritura incremental.** Una fase puede tener cientos de criaturas; reescribirlas todas al
+tocar una seria absurdo. Editar una son DOS escrituras: su clave y el manifiesto. El precio es
+que el manifiesto SI es lee-modifica-escribe y dos DM pueden pisarse; lo cubren la union al
+escribir, el espejo local y `RebuildManifest`, que lo rehace desde el registro local **sin
+borrar claves ajenas** y saltando las criaturas con tabla vacia (`PublishAll` tampoco las
+escribe, asi que declararlas pondria en el manifiesto claves que no existen).
+
+**Lectura con cache, y los FALLOS tambien se cachean** (60 s frente a 300 s de los aciertos).
+La mayoria de criaturas no tienen tabla propia; sin esto cada cadaver vacio volveria a preguntar
+y se comeria el cupo de lecturas.
+
+Al resolver el loot, si el registro local no conoce la criatura se pide a la fase y se repite la
+resolucion. **La tabla se guarda con la MISMA clave que usa la busqueda**: `id` es CADENA, sale
+de `strsplit` del GUID, no numero. Con clave numerica no habria casado nunca y habria pedido en
+bucle. Se reintenta solo si sigues mirando al mismo GUID.
+
+`HarfordLootTaggedCreatureRegistry` **NO va a la fase**: es el loot YA TIRADO de un cadaver
+concreto, se consume mientras la gente saquea, y sigue por `HARFORDLOOT`.
+
+## Facciones En La Fase (2026-08-21)
+
+`Harford/Reputation/HarfordReputationPhase.lua`. Sube SOLO el catalogo: `factions` y `groups`.
+La reputacion acumulada de cada personaje (`players`) es personal y NO sale de su cliente;
+`guilds`, `npcLinks` y `logs` son restos obsoletos y tampoco viajan.
+
+**UNA sola clave (`HARFORD_REP_ALL`), no una por faccion.** El motivo no es el tamano sino la
+longitud de clave: `HarfordReputation.NormalizeId` construye el id desde el NOMBRE sin truncar,
+asi que con un prefijo por faccion un nombre de mas de ~82 caracteres pasaria del tope de 100 y
+el servidor lanzaria error duro. Son pocas y cambian poco, asi que caben juntas.
+
+Regla general derivada: **bloques por id SOLO si el id esta acotado**. Numerico (criaturas,
+NPCs) lo esta; derivado de texto escrito por una persona, no.
+
+## Cierre De Mision Desde El Tablon (2026-08-21)
+
+Quien termina una mision de mundo la cierra en el tablon. `TurnInCurrent` avisa con `def.id`,
+que ES el id del contrato (`TC.BuildWorldQuestDef` lo copia tal cual).
+
+- **Oficial de fase** -> `Phase.CompleteContract` escribe directamente.
+- **No oficial** -> `Comm.ReportCompletion` manda `TCDONE` por susurro al lider del grupo, o al
+  canal si no hay lider identificable, y quien pueda la cierra. Es idempotente.
+
+**Para esto la escritura es de OFICIAL, no de DM**: quien remata una mision suele ser un jugador
+normal. `CompleteContract` toca SOLO ese contrato -- su bloque y su fila del indice, dos
+escrituras -- en vez de republicar, para que un oficial sin el tablon local al dia no pise nada.
+El bloque se LEE, se le cambia el estado y se devuelve: reescribirlo desde el contrato local
+perderia cambios de otro DM que este cliente no tenga.
+
+El tablon tiene seccion "Completadas" y las terminadas salen de las categorias normales.
 
 ## Mapa Vivo De Permisos Y Comandos Epsilon
 
@@ -1786,6 +1933,38 @@ end
   `API.WEIGHTS` solo tiene lo DECLARADO y `GetCarried` devuelve tambien cuantos objetos no lo
   traen. La UI lo muestra como `45/210 (+3?)` en vez de dar una cifra que mentiria por defecto.
   Diagnostico: `/harford debug run carga`, `carga peso <itemId> <libras>`, `carga romper <id>`.
+
+## Wowhead Como Fuente: Que Aguanta Y Que No (2026-08-22)
+
+Las recetas y los objetos de profesion se bajan de Wowhead. Hay DOS puertas y se portan de
+forma muy distinta:
+
+- **`nether.wowhead.com/.../tooltip/...`** (tooltip de hechizo o de item): respuestas de 1 KB,
+  aguanto **mas de 6.000 peticiones seguidas** a 0,1 s sin una sola queja. Es la puerta buena y
+  de ahi salen nombre, icono, efecto, calidad y todas las caracteristicas del objeto.
+- **`es.wowhead.com/...` (la ficha completa)**: paginas de 60 a 180 KB. A las ~90 peticiones
+  devuelve **403 Forbidden y bloquea la IP para TODO el dominio**, incluido `&xml`. Cambiar el
+  User-Agent no lo levanta. No reintentar en bucle: hay que espaciar mucho o no usarla.
+
+Consecuencia practica: **de donde se aprende cada receta** (entrenador / vendedor / botin /
+mision) solo esta en la ficha completa, en un listview `taught-by-item`, y por eso ese dato
+esta PENDIENTE. Lo que si funciona de ahi, cuando se pueda: la receta sin ese listview es de
+entrenador, y con el trae el item (`Formula: ...`), su `source` y el NPC y la zona.
+
+Detalles de la extraccion que costaron una pasada cada uno:
+
+- La lista de la profesion vive en un `<script>` inline del HTML, en un `Listview` con
+  `id: "recipes"`; los nombres de objeto estan en `WH.Gatherer.addData(3, ...)` bajo
+  `name_eses`. Nada de eso lo ve `WebFetch`, que devuelve solo el armazon de la pagina.
+- El certificado de wowhead no valida contra el almacen local de este equipo: hay que
+  desactivar la verificacion en el contexto SSL.
+- El nombre MODERNO se pide al dominio sin version. Si vuelve entre corchetes
+  (`[Dream Dust]`, `[PH] ... [DEP]`) es que el retail ya no lo traduce: ahi manda Classic.
+- Las CARACTERISTICAS, en cambio, se piden a la version del arbol. El retail reescala cada
+  objeto y hasta le cambia las estadisticas (la Hombrera de arana venenosa pasa de 41 de
+  armadura y espiritu a 10 de armadura y versatilidad).
+- Un objeto puede no existir en la version del arbol donde aparece: hay que probar en cascada
+  classic -> tbc -> wotlk -> retail.
 
 ## Pestana Profesiones: Como Lo Hace El Libro Nativo (2026-08-21)
 

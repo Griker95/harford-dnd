@@ -922,8 +922,12 @@ function Comm.Initialize()
     -- filtros pensados para mensajes con datos. No trae ninguno.
     if TC.Phase and _G.HarfordPhaseStore and _G.HarfordPhaseStore.HandleNotify then
       if _G.HarfordPhaseStore.HandleNotify(message, "contratos", function()
+        -- SIN force. `force` salta tambien la proteccion del DM, y este aviso llega DENTRO de
+        -- tu misma fase, que es justo el caso para el que existe: otro DM ha publicado algo
+        -- mas nuevo y tu puedes tener ediciones sin publicar. Al DM se le avisa; a un jugador
+        -- normal se le carga igual, porque el sello ya no coincide.
         if TC.Phase.SoltarFreno then TC.Phase.SoltarFreno() end
-        TC.Phase.EnsureBoard(true)
+        TC.Phase.EnsureBoard()
       end) then
         return
       end

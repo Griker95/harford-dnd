@@ -107,7 +107,12 @@ end
 -- asincrono, asi que dos DM a la vez pueden pisarse; lo cubren la union, el espejo local y
 -- `RebuildManifest`, que reconstruye el manifiesto desde el registro local del DM.
 local function RegistrarClave(clave, callback)
-  API.LoadManifest(function(claves)
+  API.LoadManifest(function(claves, err)
+    -- NUNCA reescribir el manifiesto desde una lectura fallida: LoadManifest cae al espejo
+    -- local, que solo conoce lo que escribiste TU, y las claves de otros DM desaparecerian
+    -- del manifiesto. No se borran de la fase, pero quedan inalcanzables -- que aqui es casi
+    -- lo mismo, porque el manifiesto es la unica via para volver a encontrarlas.
+    if err then if callback then callback(false, nil, err) end return end
     for _, k in ipairs(claves) do
       if k == clave then
         if callback then callback(true) end
@@ -121,7 +126,8 @@ local function RegistrarClave(clave, callback)
 end
 
 local function OlvidarClave(clave, callback)
-  API.LoadManifest(function(claves)
+  API.LoadManifest(function(claves, err)
+    if err then if callback then callback(false, nil, err) end return end
     local out = {}
     for _, k in ipairs(claves) do
       if k ~= clave then out[#out + 1] = k end
@@ -251,7 +257,11 @@ function API.RebuildManifest(callback)
     return
   end
 
-  API.LoadManifest(function(viejas)
+  API.LoadManifest(function(viejas, err)
+    if err then
+      if callback then callback(false, nil, err) end
+      return
+    end
     local claves = { CLAVE_MANIFIESTO }
     if type(_G.HarfordLootGlobalLootRegistry) == "table"
       and #_G.HarfordLootGlobalLootRegistry > 0 then
@@ -309,7 +319,13 @@ function API.PublishAll(callback)
     end
   end
 
-  API.LoadManifest(function(viejas)
+  API.LoadManifest(function(viejas, err)
+    -- Los bloques YA se escribieron; lo unico en juego es el manifiesto. Si no se pudo leer,
+    -- se deja como estaba antes que reescribirlo sin las claves de los demas.
+    if err then
+      if callback then callback(false, escritas, err) end
+      return
+    end
     EscribirManifiesto(S.MergeKeys(claves, viejas))
     cache = {}
     if callback then callback(fallos == 0, escritas, fallos) end

@@ -655,6 +655,20 @@ HarfordLootFrame:SetScript("OnEvent", function(self, event, ...)
     end
 
     if taggedCreatures[guid] ~= nil then
+        -- REPARACION, y SOLO en esta direccion: yo tengo el estado de este cadaver y la fase
+        -- puede no tenerlo (lo saqueo alguien sin permiso de escritura, o fuera de mi grupo).
+        -- Si soy oficial, lo dejo escrito.
+        --
+        -- Al reves NO se hace nunca: un oficial que llegue a un cadaver ya saqueado SIN tener
+        -- su estado tiraria loot nuevo, y persistirlo dejaria el cadaver lleno otra vez de
+        -- forma permanente. Eso es peor que no tener historial.
+        if HarfordLootPhase and HarfordLootPhase.CanWrite and HarfordLootPhase.CanWrite() then
+            HarfordLootPhase.LoadTaken(guid, function(enFase)
+                if type(enFase) ~= "table" and HarfordLootTaggedCreatureRegistry[guid] then
+                    HarfordLootPhase.SaveTaken(guid, HarfordLootTaggedCreatureRegistry[guid])
+                end
+            end)
+        end
         self.lootTable = taggedCreatures[guid]
         RefreshLootFrameIfTargetMatches(guid, taggedCreatures[guid])
         self:Show()

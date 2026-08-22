@@ -132,6 +132,9 @@ function API.EnsureCatalog(force, callback)
     end
 
     local aplicadas, retiradas = API.Apply(payload, true)
+    -- De que fase es el catalogo que tienes cargado.
+    local R = Rep()
+    if R and R.EnsureStore then R.EnsureStore().phaseOrigin = tostring(fase) end
 
     local ids = {}
     for id in pairs(payload.factions or {}) do ids[#ids + 1] = tostring(id) end
@@ -158,6 +161,20 @@ function API.Publish(quiet, callback)
   end
   if not (R and R.EnsureStore) then
     if callback then callback(false, nil, "HarfordReputation no disponible") end
+    return
+  end
+
+  -- ACOTADO A LA FASE: el catalogo se puede usar en varias, pero el que tienes cargado es de
+  -- UNA. Publicarlo en otra subiria facciones que no son de aqui y, peor, la fusion retiraria
+  -- las de esta fase que la otra no tenia.
+  local faseActual = Store().GetPhaseId()
+  local origenCat = R.EnsureStore().phaseOrigin
+  if origenCat and tostring(origenCat) ~= tostring(faseActual) then
+    if HarfordChat and HarfordChat.Print then
+      HarfordChat.Print("Tu catalogo de facciones se cargo de la fase " .. tostring(origenCat)
+        .. " y estas en la " .. tostring(faseActual) .. ". Recargalo antes de publicar.")
+    end
+    if callback then callback(false, nil, "el catalogo es de otra fase") end
     return
   end
 
@@ -203,6 +220,7 @@ function API.Publish(quiet, callback)
     for id in pairs(salida) do ids[#ids + 1] = id end
     estado.at, estado.by, estado.ids = payload.meta.at, payload.meta.by, ids
     HarfordReputationPhaseStore[fase] = estado
+    store.phaseOrigin = tostring(fase)
 
     -- Lo adoptado tambien entra en el store local, para que el panel lo enseñe al momento.
     if adoptadas > 0 then API.Apply(payload, false) end

@@ -418,6 +418,11 @@ end
 -- veces seguidas. Cambiar de fase siempre fuerza la recarga: el tablon es otro.
 -- Se llama al abrir el tablon. Pide el indice (1 llamada) y compara su sello con el ultimo
 -- que aplicamos: si es el mismo no toca NADA, ni refresca. Si cambio, decide segun quien seas.
+-- Olvida el suelo temporal de 5 s para que el siguiente EnsureBoard consulte de verdad.
+function Phase.SoltarFreno()
+  ultimaCarga, ultimaFase = 0, nil
+end
+
 function Phase.EnsureBoard(force)
   if not Phase.IsAvailable() then return false end
 
@@ -461,6 +466,9 @@ function Phase.EnsureBoard(force)
       if fila and fila.id then ids[#ids + 1] = tostring(fila.id) end
     end
     SelloVisto(fase, { at = meta.at, by = meta.by, ids = ids })
+    -- De que fase es lo que tienes cargado. Sin esto se puede publicar en la fase B un
+    -- tablon que se bajo de la A.
+    TC.GetDB().phaseOrigin = tostring(fase)
     TC.SetSyncStatus(string.format("Fase %s: %d contratos%s", tostring(fase), aplicados,
       retirados > 0 and (", " .. retirados .. " retirados") or ""))
     if TC.UI and TC.UI.Refresh then TC.UI.Refresh() end
@@ -655,6 +663,21 @@ function Phase.PublishTracked(quiet, callback)
 
   local fase = Phase.GetPhaseId()
 
+  -- ACOTADO A LA FASE. El tablon se puede usar en varias fases, pero lo que tienes cargado
+  -- pertenece a UNA: si vino de otra, publicar aqui subiria el tablon equivocado y, peor,
+  -- la fusion retiraria de esta fase todo lo que la otra no tenia. Se exige recargar antes.
+  -- Un tablon escrito a mano que nunca se bajo de ninguna fase no tiene origen y puede
+  -- publicarse donde sea: es la primera publicacion.
+  local origen = TC.GetDB().phaseOrigin
+  if origen and tostring(origen) ~= tostring(fase) then
+    TC.Print("Tu tablon se cargo de la fase |cffffd100" .. tostring(origen)
+      .. "|r y estas en la |cffffd100" .. tostring(fase)
+      .. "|r. Abre el tablon para recargarlo antes de publicar.")
+    TC.SetSyncStatus("Publicacion bloqueada: el tablon es de la fase " .. tostring(origen))
+    if callback then callback(false, nil, "el tablon es de otra fase") end
+    return
+  end
+
   -- Dos lecturas: el indice (para fusionar) y el manifiesto (para limpiar claves que el
   -- indice ya no nombra). Publicar es una accion puntual del DM, no una ruta caliente.
   Phase.LoadIndex(function(enFase)
@@ -733,6 +756,7 @@ function Phase.PublishTracked(quiet, callback)
       if fila and fila.id then ids[#ids + 1] = tostring(fila.id) end
     end
     SelloVisto(fase, { at = indice.meta.at, by = indice.meta.by, ids = ids })
+    TC.GetDB().phaseOrigin = tostring(fase)
 
     -- El tablon local pasa a reflejar el resultado de la fusion: los contratos que se han
     -- adoptado de otro DM entran como esbozos y se ven al momento. Sin esto publicabas,
@@ -870,6 +894,10 @@ do
   local S = _G.HarfordPhaseStore
   if S and S.OnPhaseChanged then
     S.OnPhaseChanged("HarfordContractsPhase", function()
+      -- Al cambiar de fase SI se carga: los datos son otros por completo. El aviso al DM
+      -- (no pisarle ediciones sin publicar) aplica dentro de la MISMA fase, cuando otro
+      -- publica algo mas nuevo que lo que tu ya viste.
+      Phase.SoltarFreno()
       Phase.EnsureBoard(true)
     end)
   end

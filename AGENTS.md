@@ -1509,9 +1509,17 @@ vendedor de mas de 3000 caracteres no carga bien.
 - **Throttle 45 llamadas / 1,5 s** con cola propia. Pasarse desconecta del servidor.
 - **`EncodeForPrint` expande +33 %** (3 bytes -> 4 caracteres): el dato viaja por chat y no admite
   bytes crudos.
-- **Escribir funciona con permiso de miembro de fase** (comprobado con viaje redondo). Los filtros
-  `IsOfficer`/`IsMember` que aplican SpellCreator y TRP3 son **politica de cada addon**, no el
-  mecanismo. Qué rechaza el servidor exactamente sigue sin mapearse.
+- **Escribir exige ser OFICIAL de la fase, y lo aplica el SERVIDOR.** Medido en vivo el
+  2026-08-21 con el mismo personaje en dos fases: en la que era oficial el viaje redondo
+  cuajo; en la que no, la escritura no tuvo efecto. Los filtros `IsOfficer`/`IsMember` que
+  aplican SpellCreator y TRP3 no son solo politica de addon: el servidor tambien filtra.
+- **El rechazo por permiso es SILENCIOSO.** No lanza error Lua -- a diferencia del limite de
+  clave, que si lo lanza --: la escritura simplemente no ocurre y al releer no hay nada. Por
+  eso `pcall` NO detecta un fallo de permiso; la unica forma de saber si cuajo es releer y
+  comparar (por eso `phasedata escribir` escribe una marca de tiempo y la verifica).
+- **Consecuencia de diseno**: un jugador normal NO puede persistir nada por su cuenta. Todo lo
+  que deba quedar escrito lo tiene que escribir un oficial, sea directamente o porque alguien
+  se lo pide por addon message (patron `TCDONE` de los contratos).
 
 ### Trampas
 

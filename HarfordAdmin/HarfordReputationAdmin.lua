@@ -671,6 +671,14 @@ local function ShareAllReputations()
     else
         Print(tostring(info or "No se pudo compartir."))
     end
+
+    -- Compartir es tambien lo que SIEMBRA el catalogo en la fase. A partir de ahi las
+    -- ediciones se publican solas; lo automatico nunca siembra una fase virgen.
+    if HarfordReputationPhase and HarfordReputationPhase.Publish then
+        HarfordReputationPhase.Publish(true, function(okp, n)
+            if okp then Print("Catalogo escrito en la fase: " .. tostring(n) .. " facciones.") end
+        end)
+    end
 end
 
 local function ShareReputationStructure()

@@ -1115,3 +1115,21 @@ do
     ext.CompleteObjectiveForGroup = API.CompleteObjectiveForGroup
     ext.GrantSharedRewardsForGroup = API.GrantSharedRewardsForGroup
 end
+
+-- La parte COMPARTIDA (reputacion y XP) se cobra al completarse la mision, venga de donde venga:
+-- cierre del DM (QDONE), cierre de un objetivo (QOBJ) o el ultimo objetivo marcado hecho.
+--
+-- Antes solo la reclamaba el receptor de QDONE. Una mision que se cerraba por objetivos —que es
+-- el caso normal— dejaba a todo el grupo sin XP ni reputacion: el receptor de QOBJ auto-completa
+-- pero no reclamaba nada, y en el DM la unica ruta que concedia exigia ademas que tuviera la
+-- mision aceptada en su propio personaje.
+--
+-- Va sobre FireCompleted, que es el punto por el que pasan las dos transiciones a completada
+-- (RecomputeCompletion y MarkComplete) y solo dispara una vez. `ClaimRewards` ignora oro y
+-- objetos —son individuales, los cobra quien entrega en el NPC— y lleva su propio recibo por
+-- componente, asi que reclamar de mas no concede de mas.
+API.RegisterCompletionListener(function(id)
+    if not API.IsAccepted(id) then return end
+    local rewards = API.GetRewards(id)
+    if rewards then API.ClaimRewards({ id = id, reward = rewards }) end
+end)

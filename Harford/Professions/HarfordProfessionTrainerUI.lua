@@ -9,7 +9,7 @@
 -- siempre por su `Teach`, que revalida rango, profesion y si ya la sabes: la ventana no es una
 -- via alternativa para aprender nada.
 --
--- Reutiliza `HarfordCraftSkin` (replica del TradeSkillFrame nativo, generada desde la sonda) en
+-- Reutiliza `HarfordProfessionsCraftSkin` (replica del TradeSkillFrame nativo, generada desde la sonda) en
 -- vez de inventar arte para un ClassTrainerFrame que no tenemos capturado: misma familia visual
 -- que la ventana de recetas, y sin rutas de textura a ciegas.
 ------------------------------------------------------------
@@ -148,7 +148,7 @@ local function CreateFrameIfNeeded()
     table.insert(UISpecialFrames, "HarfordProfessionTrainerFrame")
 
     if frame.Inset then frame.Inset:Hide() end
-    local skin = HarfordCraftSkin and HarfordCraftSkin.Build and HarfordCraftSkin.Build(frame)
+    local skin = HarfordProfessionsCraftSkin and HarfordProfessionsCraftSkin.Build and HarfordProfessionsCraftSkin.Build(frame)
     local byUid = skin and skin.byUid or {}
     local insetLeft, insetRight = byUid["root.f3"], byUid["root.f4"]
     local bar = byUid["root.f7"]

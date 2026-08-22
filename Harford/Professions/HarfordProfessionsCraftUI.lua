@@ -254,12 +254,12 @@ local function CreateFrameIfNeeded()
     table.insert(UISpecialFrames, "HarfordProfessionsCraftFrame")
 
     -- ARMAZON GENERADO desde la captura del frame nativo.
-    -- HarfordCraftSkin.lua lo escribe tools/codice/gen_frame_from_probe.py a partir de
+    -- HarfordProfessionsCraftSkin.lua lo escribe tools/codice/gen_frame_from_probe.py a partir de
     -- `nativeprobe prof`: insets con su nine-slice, barra de skill con su marco de tres
     -- piezas... con las medidas, texCoords y colores EXACTOS del nativo. No editarlo a mano:
     -- se regenera. Aqui solo se recogen las piezas por su uid para colgarles la logica.
     if frame.Inset then frame.Inset:Hide() end
-    local skin = HarfordCraftSkin and HarfordCraftSkin.Build and HarfordCraftSkin.Build(frame)
+    local skin = HarfordProfessionsCraftSkin and HarfordProfessionsCraftSkin.Build and HarfordProfessionsCraftSkin.Build(frame)
     local byUid = skin and skin.byUid or {}
     local insetLeft, insetRight = byUid["root.f3"], byUid["root.f4"]
     local bar = byUid["root.f7"]

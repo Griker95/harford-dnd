@@ -208,7 +208,7 @@ Profesiones D&D/WoW y sus recetas.
 | Archivo | Lineas | Rol |
 |---|--:|---|
 | `HarfordProfessionsItems.lua` | 356 | Registro CENTRAL de items de profesiones (materiales y resultados). |
-| `HarfordCraftSkin.lua` | 201 | GENERADO por tools/codice/gen_frame_from_probe.py a partir de una captura de HarfordFrameProbe. |
+| `HarfordProfessionsCraftSkin.lua` | 201 | GENERADO por tools/codice/gen_frame_from_probe.py a partir de una captura de HarfordFrameProbe. |
 | `HarfordProfessionsCraftUI.lua` | 859 | Ventana de recetas de una profesion Harford, replica del TradeSkillFrame moderno. |
 | `HarfordProfessionsData.lua` | 380 | Catalogo hardcodeado de profesiones + recetas (como HarfordDnDBook). |
 | `HarfordProfessions.lua` | 882 | Core del sistema de profesiones D&D (unifica profesiones WoW + herramientas D&D). |

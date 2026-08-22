@@ -2602,7 +2602,7 @@ sus cinco rangos, y `colocar`/`quitar`/`ensenar` recorren el flujo entero sin NP
 id: titulo, retrato de la profesion, barra de habilidad, lista de recetas del rango y detalle. El
 NPC NO pasa recetas, precios ni rango: solo dice quien es. Todo lo demas se deduce.
 
-Reutiliza `HarfordCraftSkin.Build` (replica del TradeSkillFrame nativo, generada desde la sonda)
+Reutiliza `HarfordProfessionsCraftSkin.Build` (replica del TradeSkillFrame nativo, generada desde la sonda)
 en vez de inventar arte para un `ClassTrainerFrame` que no esta capturado. Si algun dia se captura
 el nativo, se regenera un skin propio; no meter rutas de textura a ojo mientras tanto.
 

@@ -7,9 +7,9 @@
 -- (BOTTOMLEFT + BOTTOMRIGHT) fijan el ancho pero no la altura, y la textura tomaba su tamano
 -- natural (128 px en vez de 3). El generador ya emite ese grosor; medidas de la sonda nativa.
 
-HarfordCraftSkin = HarfordCraftSkin or {}
+HarfordProfessionsCraftSkin = HarfordProfessionsCraftSkin or {}
 
-function HarfordCraftSkin.Build(parent)
+function HarfordProfessionsCraftSkin.Build(parent)
     local parts = { byUid = {} }
     local p = parts
     -- Frame TradeSkillFrame

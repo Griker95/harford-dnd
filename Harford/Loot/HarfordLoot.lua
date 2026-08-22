@@ -641,6 +641,9 @@ HarfordLootFrame:SetScript("OnEvent", function(self, event, ...)
                 if type(tabla) ~= "table" or #tabla == 0 then return end
                 -- MISMA clave que usa la busqueda de arriba (`id` es cadena, no numero).
                 HarfordLootLootRegistry[id] = tabla
+                -- El registro es una SavedVariable GLOBAL y esta tabla es de ESTA fase: se
+                -- anota para retirarla al cambiar de fase y no arrastrar loot ajeno.
+                if HarfordLootPhase.NoteInjected then HarfordLootPhase.NoteInjected(id) end
                 -- Solo se reintenta si sigues mirando al mismo cadaver.
                 if UnitGUID("target") == guid then
                     local handler = HarfordLootFrame:GetScript("OnEvent")

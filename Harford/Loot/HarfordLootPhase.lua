@@ -345,3 +345,41 @@ end
 function API.GetKeys()
   return CLAVE_MANIFIESTO, CLAVE_GLOBAL, PREFIJO_CRIATURA
 end
+
+------------------------------------------------------------
+-- Aislamiento entre fases
+------------------------------------------------------------
+
+-- Que ids se han inyectado en HarfordLootLootRegistry desde la fase.
+--
+-- IMPORTA: ese registro es una SavedVariable GLOBAL, pero las tablas vienen de UNA fase. Sin
+-- retirarlas al cambiar, el loot de la fase A se veria en la B y ademas quedaria persistido
+-- en disco. Se recuerda exactamente lo inyectado para poder quitarlo sin tocar lo que el DM
+-- tenga definido a mano.
+local inyectados = {}
+
+function API.NoteInjected(id)
+  if id ~= nil then inyectados[id] = true end
+end
+
+function API.ClearInjected()
+  local n = 0
+  for id in pairs(inyectados) do
+    if _G.HarfordLootLootRegistry then _G.HarfordLootLootRegistry[id] = nil end
+    n = n + 1
+  end
+  inyectados = {}
+  return n
+end
+
+-- Al cambiar de fase, TODO lo que venia de la anterior deja de valer: la cache y lo inyectado
+-- en el registro. Por eventos, nunca por sondeo.
+do
+  local S = _G.HarfordPhaseStore
+  if S and S.OnPhaseChanged then
+    S.OnPhaseChanged("HarfordLootPhase", function()
+      API.ClearInjected()
+      API.ClearCache()
+    end)
+  end
+end

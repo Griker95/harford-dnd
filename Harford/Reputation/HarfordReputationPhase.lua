@@ -238,3 +238,18 @@ end
 function API.GetLocalState()
   return (EstadoLocal())
 end
+
+------------------------------------------------------------
+-- Carga automatica
+------------------------------------------------------------
+
+-- Sin esto el catalogo solo llegaba si alguien lo pedia a mano por debug: un jugador que
+-- entrara en la fase no veia ninguna faccion. Por eventos, nunca por sondeo.
+do
+  local S = _G.HarfordPhaseStore
+  if S and S.OnPhaseChanged then
+    S.OnPhaseChanged("HarfordReputationPhase", function()
+      API.EnsureCatalog(true)
+    end)
+  end
+end

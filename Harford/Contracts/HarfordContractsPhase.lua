@@ -858,3 +858,19 @@ function Phase.CompleteContract(contractId, callback)
     end)
   end)
 end
+
+------------------------------------------------------------
+-- Carga automatica
+------------------------------------------------------------
+
+-- Al entrar o cambiar de fase, el tablon se trae solo. Antes solo se pedia al ABRIR la
+-- ventana, asi que las misiones de mundo de la fase no quedaban registradas hasta que a
+-- alguien se le ocurria mirar el tablon. Por eventos, nunca por sondeo.
+do
+  local S = _G.HarfordPhaseStore
+  if S and S.OnPhaseChanged then
+    S.OnPhaseChanged("HarfordContractsPhase", function()
+      Phase.EnsureBoard(true)
+    end)
+  end
+end

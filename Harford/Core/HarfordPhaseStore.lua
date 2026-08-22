@@ -126,3 +126,27 @@ function API.MergeKeys(...)
   end
   return out
 end
+
+------------------------------------------------------------
+-- Refresco por eventos
+------------------------------------------------------------
+
+-- El proyecto PROHIBE el sondeo (nada de NewTicker, OnUpdate permanente ni polling), asi que
+-- lo unico que puede disparar una recarga es un evento. `HarfordAuthority` ya escucha
+-- EPSILON_PHASE_CHANGE de EpsilonLib mas PLAYER_ENTERING_WORLD y compania; aqui se filtra
+-- para llamar SOLO cuando la fase cambia de verdad, porque ese listener tambien dispara con
+-- CHAT_MSG_SYSTEM y cualquier cambio de permisos.
+local ultimaFaseVista = {}
+
+function API.OnPhaseChanged(owner, callback)
+  if type(owner) ~= "string" or type(callback) ~= "function" then return false end
+  if not (HarfordAuthority and HarfordAuthority.RegisterChangeListener) then return false end
+
+  return HarfordAuthority.RegisterChangeListener(owner, function(status)
+    local fase = status and status.phaseId
+    if fase == nil then return end
+    if ultimaFaseVista[owner] == fase then return end
+    ultimaFaseVista[owner] = fase
+    callback(fase)
+  end) == true
+end

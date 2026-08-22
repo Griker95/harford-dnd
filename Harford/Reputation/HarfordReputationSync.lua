@@ -671,5 +671,14 @@ events:SetScript("OnEvent", function(_, event, ...)
     local myName = HarfordClassColors.UnitFullName("player")
     if sender and myName and sender == myName then return end
     if not IsTrustedSender(sender) then return end
+    -- Alguien publico el catalogo en la fase: releerlo ahora en vez de esperar al cambio de
+    -- fase. El aviso no trae datos; lo que vale es lo escrito en la fase.
+    if HarfordReputationPhase and _G.HarfordPhaseStore and _G.HarfordPhaseStore.HandleNotify then
+        if _G.HarfordPhaseStore.HandleNotify(message, "facciones", function()
+            HarfordReputationPhase.EnsureCatalog(true)
+        end) then
+            return
+        end
+    end
     HandleMessage(message, sender)
 end)

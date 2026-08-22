@@ -818,6 +818,9 @@ function Phase.PublishTracked(quiet, callback)
     -- adoptabas cosas en la fase y tu propia ventana seguia sin enterarse.
     Phase.ApplyIndex(indice)
     Phase.LoadAllBlocks()
+    -- Aviso en caliente: los conectados relean YA en vez de esperar al cambio de fase.
+    local S = _G.HarfordPhaseStore
+    if S and S.NotifyChanged then S.NotifyChanged("TCBOARD", "contratos") end
     if TC.UI and TC.UI.Refresh then TC.UI.Refresh() end
 
     local resumen = string.format("Fase %s: %d contratos", tostring(fase), #indice)

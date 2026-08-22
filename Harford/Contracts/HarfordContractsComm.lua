@@ -951,6 +951,16 @@ function Comm.Initialize()
       HandleCompletionReport(message, sender)
       return
     end
+    -- Alguien publico en la fase: releer ahora. El mensaje no trae datos, solo el aviso;
+    -- lo que vale es lo que haya escrito en la fase.
+    if TC.Phase and _G.HarfordPhaseStore and _G.HarfordPhaseStore.HandleNotify then
+      if _G.HarfordPhaseStore.HandleNotify(message, "contratos", function()
+        if TC.Phase.SoltarFreno then TC.Phase.SoltarFreno() end
+        TC.Phase.EnsureBoard(true)
+      end) then
+        return
+      end
+    end
     HandleChunk(message, sender)
   end)
   Comm.frame = frame

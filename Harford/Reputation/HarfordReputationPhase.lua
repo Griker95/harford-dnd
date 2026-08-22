@@ -256,6 +256,9 @@ function API.Publish(quiet, callback)
     HarfordReputationPhaseStore[fase] = estado
     store.phaseOrigin = tostring(fase)
 
+    local S2 = Store()
+    if S2 and S2.NotifyChanged then S2.NotifyChanged("HARFORDREP", "facciones") end
+
     -- Lo adoptado tambien entra en el store local, para que el panel lo enseñe al momento.
     if adoptadas > 0 then API.Apply(payload, false) end
 

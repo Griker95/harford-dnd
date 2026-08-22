@@ -150,3 +150,48 @@ function API.OnPhaseChanged(owner, callback)
     callback(fase)
   end) == true
 end
+
+------------------------------------------------------------
+-- Aviso de cambio (recarga en caliente)
+------------------------------------------------------------
+
+-- Al publicar, se avisa a los conectados para que relean YA en vez de esperar al siguiente
+-- cambio de fase. Es lo que hace SpellCreator con su `_PUNLOCK`.
+--
+-- El mensaje NO lleva datos, solo "esto cambio, ve a releer". Por eso puede ir por GUILD sin
+-- riesgo, a diferencia de los mensajes que aplican efectos: el receptor no se cree nada de lo
+-- que le digan, va a la fase y lee de la fuente. Y sin GUILD, alguien que no vaya en tu grupo
+-- no se enteraria nunca.
+--
+-- No hay prefijo nuevo: cada sistema pasa el suyo.
+local MARCA = "PHASEUPD"
+
+local function Canal()
+  if IsInRaid and IsInRaid() then return "RAID" end
+  if IsInGroup and IsInGroup() then return "PARTY" end
+  if IsInGuild and IsInGuild() then return "GUILD" end
+  return nil
+end
+
+function API.NotifyChanged(prefix, sistema)
+  if type(prefix) ~= "string" or prefix == "" then return false end
+  local canal = Canal()
+  if not canal then return false end
+  if not (HarfordSync and HarfordSync.Send) then return false end
+  local mensaje = table.concat({ MARCA, tostring(API.GetPhaseId() or "?"), tostring(sistema or "?") }, "|")
+  local ok = HarfordSync.Send(prefix, mensaje, canal)
+  return ok == true
+end
+
+-- Devuelve true si el mensaje era un aviso PARA ESTA fase y este sistema, tras invocar
+-- `alRecargar`. Devuelve false si no era para nosotros, para que el handler siga probando.
+function API.HandleNotify(message, sistema, alRecargar)
+  message = tostring(message or "")
+  if message:sub(1, #MARCA + 1) ~= (MARCA .. "|") then return false end
+  local fase, quien = message:match("^" .. MARCA .. "|([^|]*)|([^|]*)")
+  if quien ~= tostring(sistema) then return false end
+  -- Un aviso de OTRA fase no nos incumbe: al cambiar de fase ya se recarga por evento.
+  if tostring(fase) ~= tostring(API.GetPhaseId() or "?") then return true end
+  if alRecargar then alRecargar() end
+  return true
+end

@@ -659,6 +659,17 @@ local function MoveEditingToDestination()
     end
 end
 
+-- Deja el CATALOGO escrito en la fase. Solo estructura: facciones y grupos. Los puntos de
+-- cada personaje son suyos y NO viajan nunca -- ni aqui ni en el snapshot STRUCTURE.
+-- Compartir es lo que SIEMBRA una fase; a partir de ahi las ediciones se publican solas y
+-- lo automatico nunca siembra una fase virgen.
+local function SembrarEnLaFase()
+    if not (HarfordReputationPhase and HarfordReputationPhase.Publish) then return end
+    HarfordReputationPhase.Publish(true, function(ok, n)
+        if ok then Print("Catalogo escrito en la fase: " .. tostring(n) .. " facciones.") end
+    end)
+end
+
 local function ShareAllReputations()
     if not CanEdit() then Print("Solo DM."); return end
     if not HarfordReputationSync or not HarfordReputationSync.BroadcastSnapshotAll then
@@ -672,13 +683,7 @@ local function ShareAllReputations()
         Print(tostring(info or "No se pudo compartir."))
     end
 
-    -- Compartir es tambien lo que SIEMBRA el catalogo en la fase. A partir de ahi las
-    -- ediciones se publican solas; lo automatico nunca siembra una fase virgen.
-    if HarfordReputationPhase and HarfordReputationPhase.Publish then
-        HarfordReputationPhase.Publish(true, function(okp, n)
-            if okp then Print("Catalogo escrito en la fase: " .. tostring(n) .. " facciones.") end
-        end)
-    end
+    SembrarEnLaFase()
 end
 
 local function ShareReputationStructure()
@@ -687,6 +692,7 @@ local function ShareReputationStructure()
         Print("Sync de reputaciones no disponible.")
         return
     end
+    SembrarEnLaFase()
     local ok, info = HarfordReputationSync.BroadcastSnapshotStructure()
     if ok then
         Print("Estructura de reputaciones compartida (" .. tostring(info or 1) .. " fragmentos).")

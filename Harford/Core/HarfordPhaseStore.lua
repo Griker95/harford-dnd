@@ -166,7 +166,48 @@ end
 -- No hay prefijo nuevo: cada sistema pasa el suyo.
 local MARCA = "PHASEUPD"
 
-local function Canal()
+-- CANAL DE CHAT, como hace SpellCreator con `scforge_comm`. Es la unica forma de que el aviso
+-- llegue a todos los de la fase: RAID/PARTY solo alcanzan a tu grupo y GUILD a tu hermandad,
+-- asi que alguien que ande por ahi sin ir contigo no se enteraria nunca.
+--
+-- Se REUTILIZA `HarfordNet`, el canal que ya abre HarfordCourier. Crear un segundo canal solo
+-- ensuciaria la lista de canales del jugador para lo mismo.
+--
+-- Un canal de chat es de TODO EL SERVIDOR, no de una fase: por eso el mensaje lleva el id de
+-- fase dentro y `HandleNotify` descarta los que no son de la tuya.
+local NOMBRE_CANAL = "HarfordNet"
+local indiceCanal
+
+-- Recorrer los indices comparando nombres, no `GetChannelName(nombre)`: es lo que hace
+-- HarfordCourier y aguanta mejor que el jugador reordene sus canales.
+local function ResolverIndice()
+  if not GetChannelName then return nil end
+  for i = 1, 20 do
+    local id, nombre = GetChannelName(i)
+    if nombre == NOMBRE_CANAL and id and id ~= 0 then return id end
+  end
+  return nil
+end
+
+local function AsegurarCanal()
+  if indiceCanal and indiceCanal > 0 then return indiceCanal end
+  indiceCanal = ResolverIndice()
+  if indiceCanal then return indiceCanal end
+  -- Sin reintentos propios: CHANNEL_UI_UPDATE vuelve a resolverlo cuando el cliente confirma
+  -- la union, y HarfordCourier ya pide unirse por su cuenta.
+  if JoinChannelByName then pcall(JoinChannelByName, NOMBRE_CANAL) end
+  indiceCanal = ResolverIndice()
+  return indiceCanal
+end
+
+API.CHANNEL_NAME = NOMBRE_CANAL
+
+function API.GetChannelIndex()
+  return AsegurarCanal()
+end
+
+-- Fallback si el canal no esta disponible: al menos que se enteren los del grupo.
+local function CanalDeGrupo()
   if IsInRaid and IsInRaid() then return "RAID" end
   if IsInGroup and IsInGroup() then return "PARTY" end
   if IsInGuild and IsInGuild() then return "GUILD" end
@@ -175,16 +216,33 @@ end
 
 function API.NotifyChanged(prefix, sistema)
   if type(prefix) ~= "string" or prefix == "" then return false end
-  local canal = Canal()
-  if not canal then return false end
   if not (HarfordSync and HarfordSync.Send) then return false end
   local mensaje = table.concat({ MARCA, tostring(API.GetPhaseId() or "?"), tostring(sistema or "?") }, "|")
-  local ok = HarfordSync.Send(prefix, mensaje, canal)
-  return ok == true
+
+  local idx = AsegurarCanal()
+  if idx then
+    -- Para CHANNEL, el indice numerico va en el hueco de `target`.
+    if HarfordSync.Send(prefix, mensaje, "CHANNEL", tostring(idx)) == true then return true end
+    indiceCanal = nil -- pudo cambiar de indice; se recalcula la proxima vez
+  end
+
+  local canal = CanalDeGrupo()
+  if not canal then return false end
+  return HarfordSync.Send(prefix, mensaje, canal) == true
 end
 
 -- Devuelve true si el mensaje era un aviso PARA ESTA fase y este sistema, tras invocar
 -- `alRecargar`. Devuelve false si no era para nosotros, para que el handler siga probando.
+-- El canal es de TODO EL SERVIDOR, asi que cualquiera puede mandar un aviso. Se acepta sin
+-- comprobar quien lo manda -- a proposito: el mensaje no lleva datos ni autoridad, solo dice
+-- "ve a mirar", y lo que vale es lo que este escrito en la fase.
+--
+-- Lo que SI hay que acotar es cuantas veces se hace caso: alguien podria spamear el canal y
+-- poner a todo el mundo a releer, reventando el cupo de 45 lecturas por 1,5 s. Con esto, N
+-- avisos seguidos son UNA recarga.
+local ULTIMA_RECARGA = {}
+local ESPERA_RECARGA = 3
+
 function API.HandleNotify(message, sistema, alRecargar)
   message = tostring(message or "")
   if message:sub(1, #MARCA + 1) ~= (MARCA .. "|") then return false end
@@ -192,6 +250,26 @@ function API.HandleNotify(message, sistema, alRecargar)
   if quien ~= tostring(sistema) then return false end
   -- Un aviso de OTRA fase no nos incumbe: al cambiar de fase ya se recarga por evento.
   if tostring(fase) ~= tostring(API.GetPhaseId() or "?") then return true end
+
+  local ahora = (GetTime and GetTime()) or 0
+  local previa = ULTIMA_RECARGA[sistema]
+  if previa and (ahora - previa) < ESPERA_RECARGA then return true end
+  ULTIMA_RECARGA[sistema] = ahora
+
   if alRecargar then alRecargar() end
   return true
+end
+
+-- Unirse al canal en cuanto se pueda, y recalcular el indice si el jugador reordena sus
+-- canales de chat (el indice numerico cambia).
+do
+  local f = CreateFrame and CreateFrame("Frame")
+  if f then
+    f:RegisterEvent("PLAYER_ENTERING_WORLD")
+    f:RegisterEvent("CHANNEL_UI_UPDATE")
+    f:SetScript("OnEvent", function(_, evento)
+      if evento == "CHANNEL_UI_UPDATE" then indiceCanal = nil end
+      AsegurarCanal()
+    end)
+  end
 end

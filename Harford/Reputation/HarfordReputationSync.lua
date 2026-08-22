@@ -670,9 +670,10 @@ events:SetScript("OnEvent", function(_, event, ...)
     if prefix ~= PREFIX then return end
     local myName = HarfordClassColors.UnitFullName("player")
     if sender and myName and sender == myName then return end
-    if not IsTrustedSender(sender) then return end
-    -- Alguien publico el catalogo en la fase: releerlo ahora en vez de esperar al cambio de
-    -- fase. El aviso no trae datos; lo que vale es lo escrito en la fase.
+    -- ANTES del filtro de confianza, a proposito: el aviso llega por un canal de servidor,
+    -- asi que el emisor no sera de tu grupo ni estara a la vista. No importa quien sea porque
+    -- el mensaje no trae datos -- solo dice "ve a releer la fase" -- y HandleNotify ya limita
+    -- cuantas veces se hace caso.
     if HarfordReputationPhase and _G.HarfordPhaseStore and _G.HarfordPhaseStore.HandleNotify then
         if _G.HarfordPhaseStore.HandleNotify(message, "facciones", function()
             HarfordReputationPhase.EnsureCatalog(true)
@@ -680,5 +681,6 @@ events:SetScript("OnEvent", function(_, event, ...)
             return
         end
     end
+    if not IsTrustedSender(sender) then return end
     HandleMessage(message, sender)
 end)

@@ -2657,3 +2657,24 @@ carga se mantiene porque limpia perfiles fantasma; la de salida es la que llega 
 
 No se podan las tablas vacias de contratos ni de otros modulos: alli no hay una ruta de
 recreacion equivalente que garantice que no se pierde informacion.
+
+
+## Recompensas Compartidas De Mision: Se Cobran Al Completar (2026-08-22)
+
+La parte COMPARTIDA (reputacion y XP) se reclama en `FireCompleted`, que es el punto por el que
+pasan las DOS transiciones a completada —`RecomputeCompletion` (ultimo objetivo hecho) y
+`MarkComplete` (cierre del DM)— y dispara una sola vez. El listener vive al final de
+`HarfordQuests.lua`.
+
+Antes solo la reclamaba el receptor de `QDONE`, asi que una mision cerrada POR OBJETIVOS —el caso
+normal— dejaba al grupo entero sin nada: el receptor de `QOBJ` auto-completa pero no reclamaba, y
+en el DM la unica ruta que concedia exigia ademas tener la mision aceptada en su propio personaje,
+que es justo lo que el comentario de al lado advierte que puede no pasar.
+
+Estaba tapado porque `QOBJ` no aplicaba nada (ver la trampa del `and` mas arriba). Al arreglarlo,
+el auto-completado empezo a ocurrir de verdad y esto quedo al descubierto: **arreglar un bug puede
+destapar el siguiente, y conviene volver a mirar lo que dependia de la ruta muerta.**
+
+`ClaimRewards` ignora oro y objetos —son individuales, los cobra quien entrega en el NPC— y lleva
+recibo por componente, asi que reclamar de mas no concede de mas. No anadir reclamaciones sueltas
+en otras rutas: si aparece una nueva forma de completar, que pase por `FireCompleted`.

@@ -1,8 +1,8 @@
-## Interface: 45745
+## Interface: 90207
 ## Title: |cff3536CCHarford|r DnD 5e (Admin)
 ## Notes: Complemento admin para |cff3536CCHarford|r DnD 5e
 ## Author: Griker
-## Version: 1.0.0
+## Version: 2.0.0
 ## RequiredDeps: Harford
 
 HarfordAdminNPC.lua

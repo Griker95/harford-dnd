@@ -1,8 +1,8 @@
-## Interface: 45745
+## Interface: 90207
 ## Title: |cff3536CCHarford|r DnD 5e 
 ## Notes: Sistema de Loot y Fichas DnD 5e de |cff3536CCCompañía Harford|r
 ## Author: Griker
-## Version: 1.0.0
+## Version: 2.0.0
 ## OptionalDeps: totalRP3, totalRP3_Extended
 ## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordConfigStore, HarfordReputationStore, HarfordCompendioDB, HarfordContractsDB, HarfordQuestsStore, HarfordCommunicatorStore, HarfordLootPhaseStore, HarfordReputationPhaseStore
 ## SavedVariablesPerCharacter: HarfordCompendioCharacterDB, HarfordCourierStore, HarfordProfessionsStore
@@ -50,6 +50,7 @@ DnD\Data\HarfordDnDWeapons.lua
 # --- DnD/State ---
 DnD\State\HarfordDnDResources.lua
 DnD\State\HarfordDnDStore.lua
+DnD\State\HarfordDnDEconomy.lua
 DnD\State\HarfordDnDContext.lua
 DnD\State\HarfordDnDProfile.lua
 DnD\State\HarfordDnDMana.lua
@@ -119,6 +120,7 @@ Contracts\HarfordContractsPhase.lua
 Contracts\HarfordContractsMinimap.lua
 
 # --- Professions ---
+Professions\HarfordObjectCatalog.lua
 Professions\HarfordProfessionsItems.lua
 Professions\HarfordProfessionsCraftSkin.lua
 Professions\HarfordProfessionsCraftUI.lua

@@ -39,12 +39,14 @@ end
 
 -- Devuelve clave, etiqueta y color. Es la unica fuente de "que le pasa a esta receta", para que
 -- la fila, el detalle y el boton no puedan contradecirse.
-local function RecipeState(recipe)
+function API.GetRecipeState(recipe)
     local P = Profs()
     if not (P and recipe) then return "no", "No disponible", { 0.5, 0.5, 0.5 } end
-    if P.IsRecipeLearned and P.IsRecipeLearned(recipe.id) then
-        return "sabida", "Ya la conoces", { 0.5, 0.5, 0.5 }
-    end
+    -- `HasLearnedRecipe`, no `IsRecipeLearned`: la segunda responde "puedes usarla" y para una
+    -- receta cuyo rango no tiene entrenador colocado es true SIEMPRE. Con ella, esta ventana
+    -- daba todas las recetas por sabidas.
+    local sabida = P.HasLearnedRecipe and P.HasLearnedRecipe(recipe.id)
+    if sabida then return "sabida", "Ya la conoces", { 0.5, 0.5, 0.5 } end
     if P.KnowsProfession and not P.KnowsProfession(recipe.profession) then
         return "sinprof", "No conoces la profesion", { 0.6, 0.2, 0.2 }
     end
@@ -106,7 +108,7 @@ local function CreateRow(parent, index)
     end)
     row:SetScript("OnLeave", function(self)
         if self.recipe and state.selected ~= self.recipe.id then
-            local _, _, c = RecipeState(self.recipe)
+            local _, _, c = API.GetRecipeState(self.recipe)
             self.text:SetTextColor(c[1], c[2], c[3])
         end
     end)
@@ -297,7 +299,7 @@ RefreshUI = function()
         if not r then
             row:Hide()
         else
-            local _, _, color = RecipeState(r)
+            local _, _, color = API.GetRecipeState(r)
             row.icon:SetTexture(RecipeIcon(r))
             row.text:SetText(tostring(r.name or r.id))
             row.text:SetTextColor(color[1], color[2], color[3])
@@ -319,7 +321,7 @@ RefreshUI = function()
         return
     end
 
-    local clave, etiqueta, color = RecipeState(sel)
+    local clave, etiqueta, color = API.GetRecipeState(sel)
     d.icon:SetTexture(RecipeIcon(sel))
     d.title:SetText(tostring(sel.name or sel.id))
     d.req:SetText(string.format("Requiere %s %d",

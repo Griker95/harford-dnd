@@ -329,6 +329,14 @@ end
 -- Marca una receta worldLearned como aprendida (DM / hallazgo).
 -- ¿Esta aprendida? Las recetas normales van con la profesion; las worldLearned requieren
 -- que el DM las haya enseñado (LearnRecipe/TEACH).
+-- ¿Se ha aprendido EXPLICITAMENTE (de un entrenador o por hallazgo)? Es otra pregunta distinta
+-- de `IsRecipeLearned`, que responde "puedes usarla" y por tanto devuelve true SIEMPRE para una
+-- receta que no esta restringida. La ventana del entrenador necesita esta: con la otra pintaba
+-- "Ya la conoces" en todas las filas y dejaba `Aprender` en gris para siempre.
+function API.HasLearnedRecipe(recipeId)
+    return Store().learned[tostring(recipeId or "")] == true
+end
+
 function API.IsRecipeLearned(recipeId)
     local r = API.GetRecipe(recipeId)
     if not r then return false end

@@ -1371,13 +1371,62 @@ Comandos `/run` validados/utiles:
 
 Harford usa `C_ChatInfo.SendAddonMessage` / `SendAddonMessage` para comunicacion entre clientes. La recepcion entra por el evento `CHAT_MSG_ADDON`.
 
-Prefixes actuales:
+Prefixes actuales (los NUEVE que existen; no anadir mas sin motivo real):
 
-- `DND5EARC`: ficha, tiradas, recursos y configuracion DnD.
-- `HARFORDLOOT`: loot resuelto y limpieza remota (`LOOT` directo o `LOOTC` fragmentado si una tabla por GUID crece demasiado).
-- `HARFORDCFG`: configuracion global de loot (`LOOTCFG` directo o `LOOTCFGC` fragmentado si la tabla es grande).
-- `HARFORDTURN`: estado del tracker de turnos.
-- `HARFORDREP`: reputaciones (facciones y jugadores).
+| Prefijo | Lleva |
+|---|---|
+| `DND5EARC` | Ficha, tiradas, recursos y configuracion DnD |
+| `TCBOARD` | Tablon de contratos |
+| `HARFORDLOOT` | Loot resuelto por cadaver (`LOOT`, o `LOOTC` fragmentado si una tabla por GUID crece) |
+| `HARFORDCFG` | Configuracion global de loot (`LOOTCFG`, o `LOOTCFGC` fragmentado) |
+| `HARFORDREP` | Reputaciones (facciones y jugadores) |
+| `HARFORDQUEST` | Misiones: progreso y cierre para el grupo |
+| `HARFORDPROF` | Profesiones |
+| `HARFORDTURN` | Estado del tracker de turnos |
+| `HARFCOM` | Comunicador (solo texto, por WHISPER) |
+
+Tipos de mensaje dentro de `TCBOARD`: `SNAPBEGIN`, `SNAPEND`, `STATUS`, `CLAIM`, `CLAIMMONEY`,
+`EMPTY`, `TCDONE` (aviso de mision completada por quien no puede escribir en la fase).
+`VOTE`/`VOTES`/`VOTECLEAR`/`VOTERESET` estan RETIRADOS: se ignoran al recibirlos, por
+compatibilidad con clientes viejos.
+
+### Claves de fase (PhaseAddonData)
+
+Esto NO viaja por chat: vive en el servidor, ligado a la fase. No hacen falta prefijos de red
+nuevos para nada que se guarde asi. Convencion:
+
+```
+HARFORD_<SISTEMA>_KEYS     manifiesto: TODAS las claves que Harford escribe en esa fase
+HARFORD_<SISTEMA>_INDEX    indice, SOLO si hay que enumerar
+HARFORD_<SISTEMA>_<id>     bloque, SOLO si el grano de escritura lo pide
+```
+
+| Clave | Contenido |
+|---|---|
+| `HARFORD_TC_KEYS` | Manifiesto del tablon de contratos |
+| `HARFORD_TC_INDEX` | Indice rico (8 campos de la fila) + sello `meta = { by, at }` |
+| `HARFORD_TC_<id>` | Un contrato publico completo |
+| `HARFORD_LOOT_KEYS` | Manifiesto de loot *(previsto)* |
+| `HARFORD_LOOT_GLOBAL` | Tabla de loot global *(previsto)* |
+| `HARFORD_LOOT_C_<creatureId>` | Tabla de loot por criatura *(previsto)* |
+| `HARFORD_REP_KEYS` | Manifiesto de reputacion *(previsto)* |
+| `HARFORD_REP_ALL` | TODAS las definiciones de faccion en una sola clave *(previsto)* |
+
+**El manifiesto es obligatorio en cada sistema.** El servidor no deja listar claves ni borrar
+por prefijo (la API entera son `GetPhaseAddonData`/`SetPhaseAddonData` sobre una clave exacta),
+asi que sin manifiesto una clave huerfana es irrecuperable: nadie puede saber que existe.
+
+**Indice solo si hay que enumerar.** El tablon lo necesita porque muestra una lista. El loot no:
+cuando vas a saquear ya sabes el template id de la criatura y pides su clave directamente
+(patron de `Epsilon_Merchant`/TRP3, direccionado por identidad).
+
+**Regla que decide si un sistema puede usar bloques por id: el id tiene que estar ACOTADO.**
+Los ids numericos (criaturas, NPCs) lo estan. Los derivados de texto escrito por una persona,
+NO: `HarfordReputation.NormalizeId` construye el id de faccion desde el NOMBRE sin truncar,
+asi que con `HARFORD_REP_F_` gastando 14 de los 96 caracteres utiles, una faccion con nombre
+de mas de ~82 caracteres romperia la clave y el servidor lanza error duro. Por eso las
+facciones van TODAS en `HARFORD_REP_ALL` y no una por clave. Si algun sistema necesita bloques
+con id de texto, hay que acotar o hashear el id ANTES, no confiar en que nadie escriba largo.
 
 Canales actuales:
 
@@ -2372,5 +2421,15 @@ addon, igual para todos, sin red ni SavedVariables); poder aprender depende de e
 NPC, que es lo que significa que su gossip te haya abierto la ventana. Atarlas hacia que el gossip
 abriese la ventana y `Aprender` fallase con "ese entrenador aun no existe en el mundo" delante del
 NPC.
+
+**`IsRecipeLearned` NO significa "la aprendiste".** Significa "puedes usarla", y para una receta
+que no esta restringida devuelve `true` SIEMPRE. Quien pregunte "¿ya la sabe?" —la ventana del
+entrenador y `Teach`— tiene que usar `HarfordProfessions.HasLearnedRecipe`, que lee el
+`learned` del store y nada mas. Con la otra, la ventana pintaba "Ya la conoces" en TODAS las filas
+y `Teach` se negaba con un "ya conoces esa receta" que era mentira: el sistema entero era
+inutilizable mientras no hubiera entrenadores colocados, que es justo el estado actual.
+
+Los bancos de prueba de esto tienen que copiar `IsRecipeLearned` TAL CUAL. Un stub simplificado a
+`aprendidas[id]` da verde a las dos rutas rotas.
 
 Prueba sin NPC: `/harford debug run entrenador abrir herreria_experto`.

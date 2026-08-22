@@ -373,7 +373,10 @@ function API.Teach(trainerId, recipeId)
     if skill < req then
         return false, "Te falta habilidad: requiere " .. req
     end
-    if HarfordProfessions.IsRecipeLearned(recipeId) then
+    -- `HasLearnedRecipe`, no `IsRecipeLearned`: la segunda responde "puedes usarla", que para una
+    -- receta cuyo rango no tiene entrenador colocado es true SIEMPRE. Con ella, el entrenador se
+    -- negaba a ensenar nada con un "ya conoces esa receta" que era mentira.
+    if HarfordProfessions.HasLearnedRecipe and HarfordProfessions.HasLearnedRecipe(recipeId) then
         return false, "Ya conoces esa receta"
     end
     if not HarfordProfessions.LearnRecipe then return false, "No se puede aprender" end

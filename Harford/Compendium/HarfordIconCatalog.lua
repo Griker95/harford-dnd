@@ -380,6 +380,12 @@ for name, icon in pairs(Catalog.presentationNames) do
 end
 
 Catalog.features = {
+    cha_totem_aire = "spell_nature_invisibilitytotem",
+    cha_totem_fuego = "spell_nature_guardianward",
+    cha_totem_tierra = "spell_nature_earthbindtotem",
+    monje_cer_buey_negro = "ability_monk_chibrew",
+    pal_sag_luz_amanecer = "ability_paladin_blindinglight2",
+    pal_sag_martillo_luz = "ability_paladin_judgementofthepure",
     caz_enf_ataque_preciso = "eps_lol_ashe_focus",
     caz_enf_llamada = "ability_hunter_huntervswild",
     cha_totem_agua = "inv_spear_04",

@@ -53,6 +53,15 @@ SUBS = {}
 # Hasta el primer cierre de linea, no hasta el final del fichero: el catalogo dejo de
 # terminar en esta tabla y desde entonces SUBS salia vacio sin que nada fallara, asi que
 # las 37 subclases se publicaban sin icono.
+# El icono de los conjuros de cada especializacion, del frame "Magia <X>" del TRP3.
+SUBSPELL = {}
+_mss = re.search(r"Catalog\.subclassSpells\s*=\s*\{(.*?)" + chr(10) + r"\}", cat, re.S)
+if _mss:
+    # la clave es clase/subclase: los ids de subclase se repiten entre clases y sin la
+    # clase delante el Mago se llevaba el icono de escarcha del Caballero de la Muerte
+    for _m in re.finditer(r'\["([a-z0-9_]+/[a-z0-9_]+)"\]\s*=\s*"([A-Za-z0-9_ ]+)"', _mss.group(1)):
+        SUBSPELL[_m.group(1)] = _m.group(2)
+
 msc = re.search(r"Catalog\.subclasses\s*=\s*\{(.*?)\n\}", cat, re.S)
 if msc:
     # las claves van sin corchetes (`caballero_muerte = { sangre = "..." }`), asi que los
@@ -243,6 +252,9 @@ for c in kb["classes"]:
     for f in c["features"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
     for s in c["subclasses"]:
         s["icon"] = use((SUBS.get(c["id"], {}) or {}).get(s["id"]))
+        # los conjuros de la especializacion llevan su propio icono
+        _k = "%s/%s" % (c["id"], s["id"])
+        if SUBSPELL.get(_k): s["spellIcon"] = use(SUBSPELL[_k])
         # las reglas por NOMBRE (incremento de caracteristica, idiomas, competencias)
         # se aplicaban a clases, razas, subrazas y trasfondos pero NO a subclases,
         # asi que sus rasgos se quedaban fuera de todas ellas sin motivo

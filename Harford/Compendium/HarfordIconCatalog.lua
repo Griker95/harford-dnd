@@ -380,6 +380,30 @@ for name, icon in pairs(Catalog.presentationNames) do
 end
 
 Catalog.features = {
+    caz_enf_ataque_preciso = "eps_lol_ashe_focus",
+    caz_enf_llamada = "ability_hunter_huntervswild",
+    cha_totem_agua = "inv_spear_04",
+    cha_totem_resistencia = "ability_shaman_multitotemactivation",
+    disciplina_expiacion = "ability_priest_atonement",
+    feat_de_olfato = "eps_wc3_enchantedbear",
+    feat_gma_adicional = "eps_bg3_multiattack",
+    feat_pr_pericia = "ability_rogue_stayofexecution",
+    feat_tco_exph_exp = "ability_rogue_stayofexecution",
+    gran_maestro_armas = "ability_warrior_unrelentingassault",
+    monje_chi_danza = "ability_monk_uplift",
+    monje_chi_efusion = "ability_monk_vivify",
+    monje_chi_paso = "ability_monk_ridethewind",
+    monje_chi_punos = "monk_ability_fistoffury",
+    bru_forja_alma = "inv_misc_orb_04",
+    bru_forja_conjuro = "inv_misc_gem_sapphire_01",
+    bru_forja_fuego = "inv_ammo_firetar",
+    bru_forja_salud = "inv_stone_04",
+    bru_nucleo_diablillo = "spell_shadow_summonimp",
+    bru_nucleo_guardia_vil = "spell_shadow_summonfelguard",
+    bru_nucleo_manafago = "spell_shadow_summonfelhunter",
+    bru_nucleo_sucubo = "spell_shadow_summonsuccubus",
+    caz_enf_tacticas = "ability_hunter_huntingparty",
+    tau_tau_tundra = "wh_walkbetweenworlds",
     tro_bos_armas = "eps_wc3h_trollishaxe",
     tro_hie_armas = "eps_wc3h_trollishaxe",
     abrazo_vacio = "Malzahar_VoidShift",
@@ -942,6 +966,23 @@ Catalog.spells = {
     tierra_en_erupcion = { "w3reforgedvolcano" },
     torre_de_galder = { "w3reforgedguardtower" },
     transferencia_de_vida = { "spell_shadow_lifedrain" },
+}
+
+-- Icono de los CONJUROS de cada especializacion, sacado del frame "Magia <X>"
+-- de los perfiles TRP3. Es distinto del icono de la especializacion, que sale
+-- del frame "Especializacion <X>" y ya vive en Catalog.subclasses.
+Catalog.subclassSpells = {
+    ["brujo/destruccion"] = "ability_warlock_burningembers",
+    ["caballero_muerte/escarcha"] = "ability_deathknight_heartstopaura",
+    ["caballero_muerte/sangre"] = "ability_deathwing_bloodcorruption_death",
+    ["druida/restauracion"] = "spell_nature_resistnature",
+    ["mago/fuego"] = "eps_lol_rk_ahri_vastayanflames",
+    ["paladin/proteccion"] = "ability_paladin_shieldofthetemplar",
+    ["paladin/represion"] = "ability_paladin_empoweredsealsjustice",
+    ["picaro/sutileza"] = "ability_rogue_shadowstep",
+    ["sacerdote/disciplina"] = "spell_holy_powerwordshield",
+    ["sacerdote/elune"] = "eps_lol_diana_moonsilverblade",
+    ["sacerdote/sagrado"] = "spell_priest_chakra",
 }
 
 Catalog.subclasses = {

@@ -380,6 +380,8 @@ for name, icon in pairs(Catalog.presentationNames) do
 end
 
 Catalog.features = {
+    cha_mej_ataques_3 = "spell_shaman_unleashweapon_wind",
+    cha_mej_llamado_marcial = "spell_shaman_spewlava",
     pal_pro_consagracion = "spell_holy_innerfire",
     pal_sagrado_conjuros_3 = "spell_holy_aspiration",
     cdm_profana_conjuros_3 = "ability_deathknight_deathsiphon2",

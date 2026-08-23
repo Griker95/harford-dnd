@@ -310,6 +310,10 @@ def main():
         _lex = {k: ([v] if isinstance(v, str) else list(v)) for k, v in LEXICO.items()}
         partes.append(BUSCADOR % (len(todos), json.dumps(RUTA_DUMP_REL),
                                   json.dumps(todos), json.dumps(_lex, ensure_ascii=False)))
+    if not LOCAL:
+        # sin buscador no hay panel, pero las columnas hay que cerrarlas igual
+        partes.append('</div>\n<aside class="panel"><p class="vacio">El buscador de iconos '
+                      'solo esta en la hoja local (--local), que lee la carpeta del volcado.</p>')
     partes.append(PLANTILLA_PIE)
     salida = SALIDA.replace(".html", "_plana.html") if plana else (
         SALIDA if not solo else SALIDA.replace(".html", "_%s.html" % solo))
@@ -334,7 +338,7 @@ PLANTILLA_CABECERA = """<title>Iconos de rasgos</title>
  *{box-sizing:border-box}
  body{margin:0;background:var(--papel);color:var(--tinta);
    font:400 16px/1.6 "IBM Plex Sans",system-ui,sans-serif}
- .hoja{max-width:62rem;margin:0 auto;padding:2.5rem 1.2rem 7rem}
+ .hoja{max-width:86rem;margin:0 auto;padding:2.5rem 1.2rem 7rem}
  h1{font:700 2.2rem/1.1 "Bitter",Georgia,serif;margin:0 0 .5rem}
  h2{font:700 1.3rem/1.2 "Bitter",Georgia,serif;margin:2.4rem 0 .6rem;
    padding-bottom:.4rem;border-bottom:2px solid var(--azul)}
@@ -361,6 +365,19 @@ PLANTILLA_CABECERA = """<title>Iconos de rasgos</title>
  .op.nada{width:auto;padding:.5rem .7rem;font-size:.76rem;color:var(--tinta-2)}
  #salida{width:100%%;min-height:11rem;margin-top:.7rem;font:400 .76rem/1.45 "IBM Plex Mono",monospace;
    background:var(--caja);color:var(--tinta);border:1px solid var(--linea);border-radius:3px;padding:.7rem}
+ /* Dos columnas: las filas a la izquierda y el buscador pegado a la derecha. Al final del
+    documento no servia: para asignar un icono hay que ver la fila y el buscador a la vez. */
+ .cols{display:grid;grid-template-columns:minmax(0,1fr) 23rem;gap:1.4rem;align-items:start}
+ .panel{position:sticky;top:4.2rem;max-height:calc(100vh - 5.5rem);display:flex;
+   flex-direction:column;border:1px solid var(--linea);border-radius:5px;
+   background:var(--caja);padding:.8rem .8rem .5rem}
+ .panel h2{margin:0 0 .3rem;font-size:1rem}
+ .panel .sub{margin:0 0 .6rem;font-size:.78rem}
+ .panel #res{overflow:auto;flex:1;align-content:flex-start;padding-right:.2rem}
+ .panel #res .op{width:64px}
+ .panel .vacio{color:var(--tenue);font-size:.8rem;margin:.4rem 0}
+ @media(max-width:980px){.cols{grid-template-columns:1fr}
+   .panel{position:static;max-height:none}}
  .fila.activa{outline:2px solid var(--azul);outline-offset:3px}
  .fila.activa .cab b{color:var(--azul)}
  .cab{cursor:pointer}
@@ -376,12 +393,15 @@ ya en uso.</p>
 <div class="barra"><span class="cuenta" id="cuenta">0</span>
 <button class="acc" id="ver">Ver el resultado</button>
 <button class="acc" id="limpiar">Empezar de cero</button></div>
+<div class="cols">
+<div class="lista">
 """
 
-BUSCADOR = """
-<h2>Buscar cualquier icono</h2>
-<p class="sub">Los %s iconos del volcado. Selecciona antes una fila (su cabecera se pone en
-azul) y luego pulsa el icono que quieras: se asigna a esa fila. Escribe al menos dos letras.</p>
+BUSCADOR = """</div>
+<aside class="panel">
+<h2>Buscar icono</h2>
+<p class="sub">Los %s del volcado. Pulsa el <b>nombre de una fila</b> para activarla y
+luego el icono: se le asigna. Dos letras minimo; busca en espanol.</p>
 <div class="busca">
   <input id="q" type="search" placeholder="fuego, espada, wildhammer, ability_warrior..." autocomplete="off">
   <span id="qn" class="meta"></span>
@@ -425,7 +445,8 @@ azul) y luego pulsa el icono que quieras: se asigna a esa fila. Escribe al menos
 </script>
 """
 
-PLANTILLA_PIE = """
+PLANTILLA_PIE = """</aside>
+</div>
 <h2>El resultado</h2>
 <textarea id="salida" readonly></textarea>
 </div>

@@ -143,9 +143,12 @@ for d in dotes:
     t = libro_txt.get(_nk(d["name"]))
     if t and len(t) > len(d.get("desc", "")):
         d["desc"] = t; enr += 1
-        # el primer rasgo de la dote recibe tambien el texto completo del manual
-        if d["traits"] and len(t) > len(d["traits"][0].get("desc", "")):
-            d["traits"][0]["desc"] = t
+        # El texto del manual se queda en la DOTE y no se copia a su primer rasgo. Copiarlo
+        # hacia que 68 de las 77 tuvieran un primer rasgo que decia llamarse "Trucos de Mago"
+        # y contenia la dote entera -- requisito y todas las vinetas -- mientras el segundo y
+        # el tercero si traian su texto propio del addon, que es correcto y especifico.
+        # No se pierde nada: comprobado que en las 77 ese texto no aporta ni una palabra que
+        # no este ya en `desc` o en los demas rasgos.
 print("dotes con texto del manual:", enr, "de", len(dotes))
 
 dotes = json.loads(normalizar_habilidades(a_metrico(json.dumps(dotes, ensure_ascii=False))))

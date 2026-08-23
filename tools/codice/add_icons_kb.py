@@ -259,6 +259,16 @@ for c in kb["classes"]:
         # se aplicaban a clases, razas, subrazas y trasfondos pero NO a subclases,
         # asi que sus rasgos se quedaban fuera de todas ellas sin motivo
         for f in s["features"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
+        # ...y DESPUES del bucle de arriba, que asigna icono a cada rasgo sin condiciones
+        # y pisaba esto cuando iba delante
+        # Los rasgos que CONCEDEN esos conjuros ("Conjuros de presencia (Sangre)",
+        # "Conjuros del llamado (Sombra)", "Lista ampliada de conjuros") llevan el mismo
+        # icono que la magia de su especializacion: es exactamente de lo que hablan.
+        if s.get("spellIcon"):
+            for _f in s["features"]:
+                if not _f.get("icon") and re.match(
+                        r"(?i)^(conjuros? (de|del)|lista ampliada de conjuros)\b", _f["name"]):
+                    _f["icon"] = s["spellIcon"]
 # Lo mismo por subraza. La clave es "raza/subraza" porque los ids se repiten entre razas
 # (Renegado y Humano tienen los dos una subraza "humano").
 SUBRACE_GENERO = {

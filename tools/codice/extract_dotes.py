@@ -150,6 +150,20 @@ for d in dotes:
         # No se pierde nada: comprobado que en las 77 ese texto no aporta ni una palabra que
         # no este ya en `desc` o en los demas rasgos.
 print("dotes con texto del manual:", enr, "de", len(dotes))
+# El rasgo "Incremento de caracteristica" sale 35 veces y es siempre lo mismo, asi que no
+# es una eleccion de icono: se le pone el mismo signo verde que llevan los incrementos de
+# raza. A diferencia de las razas, aqui casi todos ofrecen ELEGIR entre dos ("Destreza o
+# Inteligencia +1"), asi que no hay un color de caracteristica que lo represente -- solo 9
+# de los 35 nombran una sola -- y va el generico, que es lo que ya se hace en ese caso.
+SIGNO_MEJORA = "hd_plussign_hunter"
+_ninc = 0
+for _d in dotes:
+    for _t in _d.get("traits") or []:
+        if not _t.get("icon") and "incremento de caracteristica" in _nk(_t.get("name", "")):
+            _t["icon"] = SIGNO_MEJORA
+            _ninc += 1
+print("incrementos de caracteristica con signo: %d" % _ninc)
+
 
 dotes = json.loads(normalizar_habilidades(a_metrico(json.dumps(dotes, ensure_ascii=False))))
 dotes = json.loads(decimales(json.dumps(dotes, ensure_ascii=False)))

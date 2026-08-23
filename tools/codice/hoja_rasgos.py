@@ -23,6 +23,7 @@ import unicodedata
 BASE = os.path.dirname(os.path.abspath(__file__))
 DUMP = r"C:/Users/marco/Documents/New project/EpsilonIcons/png"
 WEB = r"C:/Users/marco/Documents/harfordweb/js/compendium-data.js"
+DOTES = r"C:/Users/marco/Documents/harfordweb/js/compendium-dotes.js"
 CAT = r"C:/Users/marco/Documents/New project/Harford/Compendium/HarfordIconCatalog.lua"
 SALIDA = os.path.join(BASE, "hoja_rasgos.html")
 POR_FILA = 5
@@ -30,6 +31,34 @@ POR_FILA = 5
 # Solo las palabras que aparecen de verdad en los 104 nombres. Ampliar segun haga falta.
 LEXICO = {
     "mentor": ("teaching", "apprentice", "mentor"),
+    # palabras corrientes, para que el buscador manual responda en espanol
+    "hierro": "iron", "acero": "steel", "oro": "gold", "plata": "silver", "bronce": "bronze",
+    "agua": "water", "aire": "air", "viento": "wind", "rayo": ("lightning", "shock"),
+    "hielo": ("frost", "ice"), "veneno": "poison", "acido": "acid", "trueno": "thunder",
+    "espada": "sword", "hacha": "axe", "maza": "mace", "arco": "bow", "daga": "dagger",
+    "lanza": "spear", "martillo": "hammer", "escudo": "shield", "armadura": "armor",
+    "casco": "helm", "capa": "cloak", "anillo": "ring", "libro": "book", "llave": "key",
+    "corazon": "heart", "craneo": "skull", "hueso": "bone", "ojo": "eye", "mano": "hand",
+    "ala": "wing", "lobo": "wolf", "oso": "bear", "cuervo": "raven", "serpiente": "snake",
+    "dragon": "dragon", "demonio": "demon", "angel": "angel", "arbol": "tree", "flor": "flower",
+    "estrella": "star", "sol": "sun", "luna": "moon", "corona": "crown", "moneda": "coin",
+    # vocabulario de las DOTES y sus rasgos
+    "beneficios": ("scroll", "book", "note"), "acorazado": ("plate", "armor", "defend"),
+    "maestro": ("master", "expertise"), "experto": ("expertise", "master"),
+    "adepto": ("adept", "expertise"), "iniciado": ("initiate", "apprentice"),
+    "lanzador": ("spellpower", "arcane"), "trucos": ("cantrip", "arcane"),
+    "recarga": ("reload", "shoot"), "tirador": ("marksmanship", "shoot", "aimedshot"),
+    "atacante": ("attack", "warrior"), "combatiente": ("warrior", "combat"),
+    "escudo": ("shield", "defend"), "armaduras": ("armor", "plate"),
+    "pesadas": ("plate", "armor"), "garras": ("claw", "rake"),
+    "pocion": ("potion", "alchemy"), "sanador": ("healing", "heal"),
+    "espiritual": ("spirit", "spiritheal"), "vacio": ("void", "shadow"),
+    "precision": ("precision", "aimedshot"), "versado": ("expertise", "study"),
+    "tocado": ("touch", "blessing"), "durabilidad": ("toughness", "stamina"),
+    "afortunado": ("luck", "fortune"), "observador": ("perception", "eye"),
+    "centinela": ("sentinel", "guard"), "duelista": ("duel", "parry"),
+    "apresador": ("grapple", "grip"), "acechador": ("stealth", "prowl"),
+    "actor": ("disguise", "trickster"), "alerta": ("alertness", "perception"),
     # vocabulario de los TRASFONDOS: muchos tienen icono literal en el volcado
     "argenta": ("argentcrusade", "argent"), "cenarion": "cenarion", "ravenholdt": "ravenholdt",
     "kirin": "kirintor", "tor": "kirintor", "torio": "thorium", "alterac": "alterac",
@@ -158,10 +187,18 @@ def candidatos(nombre, iconos, vetados):
     return [ic for ic, _ in sorted(marcados.items(), key=lambda x: -x[1][0])][:POR_FILA]
 
 
+# En modo LOCAL la hoja no incrusta nada: apunta a los PNG del volcado con una ruta
+# relativa. Asi caben los 36.604 en el buscador, cosa imposible en base64.
+RUTA_DUMP_REL = "../../EpsilonIcons/png"
+LOCAL = False
+
+
 def png(nombre):
     ruta = os.path.join(DUMP, nombre + ".png")
     if not os.path.exists(ruta):
         return None
+    if LOCAL:
+        return RUTA_DUMP_REL + "/" + nombre + ".png"
     return "data:image/png;base64," + base64.b64encode(io.open(ruta, "rb").read()).decode()
 
 
@@ -190,7 +227,10 @@ def main():
     # con argumento se genera solo un bloque: `python hoja_rasgos.py raza`
     # `plana` saca TODO en una sola lista, sin separar por bloques
     plana = "plana" in [x.lower() for x in sys.argv[1:]]
-    solo = nk(sys.argv[1]) if len(sys.argv) > 1 and not plana else ""
+    global LOCAL
+    LOCAL = "--local" in sys.argv[1:]
+    _args = [x for x in sys.argv[1:] if not x.startswith("--")]
+    solo = nk(_args[0]) if _args and not plana else ""
     filas = []
     for r in d["races"]:
         for f in r.get("traits") or []:
@@ -200,6 +240,21 @@ def main():
             for f in s.get("traits") or []:
                 if not f.get("icon"):
                     filas.append(("Subrazas", s["name"], f))
+    # Las dotes van en su propio fichero y no en el kb, asi que hay que cargarlas aparte.
+    # Son las 77 dotes y sus 139 rasgos: ninguna tiene icono, ni en el addon ni en el
+    # catalogo, asi que es el bloque mas grande que queda.
+    try:
+        _dot = json.loads(re.search(r"=\s*(\[[\s\S]*\])\s*;",
+                                    io.open(DOTES, encoding="utf-8").read()).group(1))
+    except Exception:
+        _dot = []
+    for x in _dot:
+        if not x.get("icon"):
+            filas.append(("Iconos de dote", x.get("requires") or "sin requisito", x))
+        for f in x.get("traits") or []:
+            if not f.get("icon"):
+                filas.append(("Rasgos de dote", x["name"], f))
+
     for b in d["backgrounds"]:
         # el icono del trasfondo en si, no el de sus rasgos: es el que se ve en la lista
         if not b.get("icon"):
@@ -244,6 +299,17 @@ def main():
                 partes.append('<button class="op" data-i="%s"><img src="%s" alt=""><small>%s</small></button>'
                               % (c, dato, c))
         partes.append('<button class="op nada" data-i="">Ninguno</button></div></div>')
+    if LOCAL:
+        # la lista de nombres son ~700 KB de texto: aceptable en local, y es lo que permite
+        # buscar entre TODOS y no solo entre los candidatos propuestos
+        # nombre REAL del fichero: 1.991 del volcado llevan mayusculas y la busqueda se
+        # hace aparte en minusculas, para no depender de que el disco las ignore
+        todos = sorted(f[:-4] for f in os.listdir(DUMP) if f.lower().endswith(".png"))
+        # el volcado esta en INGLES: sin traducir la consulta, "fuego" da CERO
+        # resultados. Se envia el mismo lexico que usan los candidatos.
+        _lex = {k: ([v] if isinstance(v, str) else list(v)) for k, v in LEXICO.items()}
+        partes.append(BUSCADOR % (len(todos), json.dumps(RUTA_DUMP_REL),
+                                  json.dumps(todos), json.dumps(_lex, ensure_ascii=False)))
     partes.append(PLANTILLA_PIE)
     salida = SALIDA.replace(".html", "_plana.html") if plana else (
         SALIDA if not solo else SALIDA.replace(".html", "_%s.html" % solo))
@@ -295,6 +361,12 @@ PLANTILLA_CABECERA = """<title>Iconos de rasgos</title>
  .op.nada{width:auto;padding:.5rem .7rem;font-size:.76rem;color:var(--tinta-2)}
  #salida{width:100%%;min-height:11rem;margin-top:.7rem;font:400 .76rem/1.45 "IBM Plex Mono",monospace;
    background:var(--caja);color:var(--tinta);border:1px solid var(--linea);border-radius:3px;padding:.7rem}
+ .fila.activa{outline:2px solid var(--azul);outline-offset:3px}
+ .fila.activa .cab b{color:var(--azul)}
+ .cab{cursor:pointer}
+ .busca{display:flex;gap:10px;align-items:center;margin:6px 0 10px}
+ .busca input{flex:1;padding:8px 10px;font:inherit;border:1px solid var(--linea);
+   border-radius:5px;background:var(--caja);color:var(--tinta)}
 </style>
 <div class="hoja">
 <h1>Iconos de rasgos</h1>
@@ -306,6 +378,53 @@ ya en uso.</p>
 <button class="acc" id="limpiar">Empezar de cero</button></div>
 """
 
+BUSCADOR = """
+<h2>Buscar cualquier icono</h2>
+<p class="sub">Los %s iconos del volcado. Selecciona antes una fila (su cabecera se pone en
+azul) y luego pulsa el icono que quieras: se asigna a esa fila. Escribe al menos dos letras.</p>
+<div class="busca">
+  <input id="q" type="search" placeholder="fuego, espada, wildhammer, ability_warrior..." autocomplete="off">
+  <span id="qn" class="meta"></span>
+</div>
+<div id="res" class="ops"></div>
+<script>
+(function(){
+  var BASE=%s, TODOS=%s, LEX=%s;
+  window.HARFORD_RUTA_ICONOS=BASE;
+  var q=document.getElementById('q'), res=document.getElementById('res'), qn=document.getElementById('qn');
+  var t=null;
+  function pinta(){
+    var v=q.value.trim().toLowerCase();
+    res.innerHTML='';
+    if(v.length<2){ qn.textContent=''; return; }
+    var pal=v.split(/\\s+/);
+    // cada palabra vale por si misma o por su traduccion: "fuego" busca tambien "fire"
+    var alt=pal.map(function(p){ return [p].concat(LEX[p]||[]); });
+    var hit=[];
+    for(var i=0;i<TODOS.length && hit.length<400;i++){
+      var n=TODOS[i], nl=n.toLowerCase(), ok=true;
+      for(var j=0;j<alt.length;j++){
+        var hay=false;
+        for(var k=0;k<alt[j].length;k++) if(nl.indexOf(alt[j][k])>=0){ hay=true; break; }
+        if(!hay){ ok=false; break; }
+      }
+      if(ok) hit.push(n);
+    }
+    qn.textContent=hit.length+(hit.length===400?'+':'')+' resultados';
+    var frag=document.createDocumentFragment();
+    hit.forEach(function(n){
+      var b=document.createElement('button');
+      b.className='op'; b.dataset.i=n;
+      b.innerHTML='<img loading="lazy" src="'+BASE+'/'+n+'.png" alt=""><small>'+n+'</small>';
+      frag.appendChild(b);
+    });
+    res.appendChild(frag);
+  }
+  q.addEventListener('input', function(){ clearTimeout(t); t=setTimeout(pinta,180); });
+})();
+</script>
+"""
+
 PLANTILLA_PIE = """
 <h2>El resultado</h2>
 <textarea id="salida" readonly></textarea>
@@ -313,6 +432,7 @@ PLANTILLA_PIE = """
 <script>
 (function(){
   var CLAVE='harford:rasgos';
+  var RUTA_ICONOS=window.HARFORD_RUTA_ICONOS||'';
   var elegido=JSON.parse(localStorage.getItem(CLAVE)||'{}');
   var filas=[].slice.call(document.querySelectorAll('.fila'));
   function pinta(){
@@ -333,6 +453,42 @@ PLANTILLA_PIE = """
       if(sel){sel.classList.add('sel'); f.classList.add('hecha');}
     }
   });
+  // ---- fila activa y buscador ----
+  // El buscador esta fuera de las filas, asi que necesita saber a cual asignar. Se marca
+  // una pulsando su cabecera; sin fila activa, un icono del buscador no hace nada y se
+  // avisa, que es mejor que asignarlo a la primera y que el usuario no se entere.
+  var activa=null;
+  function marca(f){
+    if(activa) activa.classList.remove('activa');
+    activa=f; if(f) f.classList.add('activa');
+  }
+  filas.forEach(function(f){
+    var cab=f.querySelector('.cab');
+    if(cab) cab.addEventListener('click',function(){ marca(activa===f?null:f); });
+  });
+  function asigna(nombre){
+    if(!activa){ alert('Selecciona antes una fila: pulsa su nombre.'); return; }
+    var k=activa.getAttribute('data-k');
+    elegido[k]=nombre;
+    activa.classList.add('hecha');
+    activa.querySelectorAll('.op').forEach(function(x){
+      x.classList.toggle('sel', x.getAttribute('data-i')===nombre);
+    });
+    // si el icono no estaba entre los candidatos, se anade a esa fila para que se vea
+    if(!activa.querySelector('.op[data-i="'+nombre+'"]')){
+      var ops=activa.querySelector('.ops');
+      var b=document.createElement('button');
+      b.className='op sel'; b.setAttribute('data-i',nombre);
+      b.innerHTML='<img loading="lazy" src="'+RUTA_ICONOS+'/'+nombre+'.png" alt=""><small>'+nombre+'</small>';
+      ops.insertBefore(b, ops.firstChild);
+    }
+    localStorage.setItem(CLAVE,JSON.stringify(elegido)); pinta();
+  }
+  var res=document.getElementById('res');
+  if(res) res.addEventListener('click',function(ev){
+    var b=ev.target.closest('.op'); if(b) asigna(b.getAttribute('data-i'));
+  });
+
   document.getElementById('ver').addEventListener('click',function(){
     var s=document.getElementById('salida'); s.scrollIntoView({behavior:'smooth'}); s.select();
   });

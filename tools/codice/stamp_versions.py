@@ -26,7 +26,7 @@ WEB = r"C:/Users/marco/Documents/harfordweb"
 PAT_CSS = re.compile(r'href="css/([a-z-]+\.css)(\?v=[a-z0-9]+)?"')
 PAT_JS = re.compile(
     r'src="js/(compendium[a-z-]*\.js|search\.js|characters\.js|organizations\.js'
-    r'|contacts\.js|places\.js|assets\.js|intelligence\.js|app\.js)(\?v=[a-z0-9]+)?"')
+    r'|contacts\.js|places\.js|assets\.js|intelligence\.js|app\.js|resaltar\.js)(\?v=[a-z0-9]+)?"')
 
 PAGINAS = ("compendio.html", "buscar.html", "index.html", "historia.html", "personajes.html",
            "intelligence.html", "organizacion.html", "expediente.html", "activos.html",

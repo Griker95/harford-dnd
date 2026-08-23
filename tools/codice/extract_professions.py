@@ -239,6 +239,20 @@ if os.path.exists(INFO):
         else:
             faltan += 1; print("  habilidad sin PNG:", _ic)
 
+# ---- descripcion de lo que no esta en Wowhead ----
+# Las once profesiones de WoW traen la suya del volcado; el resto -- oficios de artesano,
+# instrumentos, juegos y vehiculos -- no la tiene nadie: ni el Libro 1, ni el 2, ni el
+# Manual del Jugador los describen en espanol. Son texto de la casa y viven en
+# prof_terminologia.json, que NO se regenera, y no en cotejo/, que si.
+_DESCS = term.get("descs") or {}
+_ndesc = 0
+for _p in data:
+    if not _p.get("desc") and _DESCS.get(_p["id"]):
+        _p["desc"] = _DESCS[_p["id"]]
+        _ndesc += 1
+print("Descripciones propias puestas: %d" % _ndesc)
+
+
 # ---- ficha de cada objeto (wowhead_objetos.py): un solo diccionario compartido ----
 # Colgar la ficha de cada receta duplicaria el mismo objeto decenas de veces (la Barra de
 # cobre aparece en medio Herreria). Se emite una sola vez y las recetas la referencian por

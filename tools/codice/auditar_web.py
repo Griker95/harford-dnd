@@ -107,7 +107,9 @@ for ruta in PAGINAS:
 for ruta in PAGINAS:
     nombre = os.path.basename(ruta)
     src = io.open(ruta, encoding="utf-8").read()
-    for href in re.findall(r'href="([^"]+)"', src):
+    # `src` tambien: una imagen o un script con el nombre mal escrito no daba ni un aviso.
+    # El <script src="js/resaltar.js"> que se anadio hoy habria pasado en silencio.
+    for href in re.findall(r'(?:href|src)="([^"]+)"', src):
         if href.startswith(("http", "mailto:", "#", "javascript:")):
             if href.startswith("#") and href[1:] and href[1:] not in anclas[nombre]:
                 problemas["ancla inexistente"].append((nombre, href))
@@ -137,6 +139,17 @@ if os.path.isdir(ICONOS):
             corto = re.split(r"[\/]", nombre)[-1].lower()
             if corto and corto not in hay:
                 problemas["icono sin PNG"].append((f, nombre))
+
+# El arte de los trasfondos se convierte a WebP en el despliegue. Si la conversion falla o
+# el original desaparece del export, la ficha se queda con una imagen rota: aqui no hay
+# icono de reserva que disimule.
+ARTE = os.path.join(WEB, "assets", "compendium-art")
+if os.path.isdir(ARTE):
+    hay_arte = set(os.listdir(ARTE))
+    src = io.open(os.path.join(WEB, "js", "compendium-data.js"), encoding="utf-8").read()
+    for nombre in sorted({m.group(1) for m in re.finditer(r'"art"\s*:\s*"([^"]+)"', src)}):
+        if nombre not in hay_arte:
+            problemas["arte sin fichero"].append(("compendium-data.js", nombre))
 
 print("paginas revisadas: %d" % len(PAGINAS))
 print("avisos: %d" % sum(len(v) for v in problemas.values()))

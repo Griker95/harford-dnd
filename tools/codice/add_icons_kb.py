@@ -267,8 +267,23 @@ for c in kb["classes"]:
         if s.get("spellIcon"):
             for _f in s["features"]:
                 if not _f.get("icon") and re.match(
-                        r"(?i)^(conjuros? (de|del)|lista ampliada de conjuros)\b", _f["name"]):
+                        r"(?i)^((conjuros?|hechizos?) (de|del)|lista ampliada de conjuros)\b",
+                        _f["name"]):
                     _f["icon"] = s["spellIcon"]
+# El MISMO rasgo a otro nivel: "Conjuros del camino" existe a nivel 3 y a nivel 5, y solo
+# uno de los dos tenia icono. Si dos rasgos de la misma clase o subclase se llaman igual y
+# uno lleva dibujo, lo llevan los dos.
+_ngem = 0
+for c in kb["classes"]:
+    for grupo in [c] + list(c.get("subclasses") or []):
+        _con = {}
+        for f in grupo.get("features") or []:
+            if f.get("icon"): _con.setdefault(nk(f["name"]), f["icon"])
+        for f in grupo.get("features") or []:
+            if not f.get("icon") and _con.get(nk(f["name"])):
+                f["icon"] = _con[nk(f["name"])]; _ngem += 1
+print("rasgos que heredan el icono de su gemelo de otro nivel: %d" % _ngem)
+
 # Lo mismo por subraza. La clave es "raza/subraza" porque los ids se repiten entre razas
 # (Renegado y Humano tienen los dos una subraza "humano").
 SUBRACE_GENERO = {

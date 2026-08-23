@@ -380,6 +380,20 @@ for name, icon in pairs(Catalog.presentationNames) do
 end
 
 Catalog.features = {
+    cdm_profana_conjuros_3 = "ability_deathknight_deathsiphon2",
+    cdm_profana_conjuros_5 = "ability_deathknight_deathsiphon2",
+    cha_ele_vinculo_agua_3 = "inv_elemental_mote_water01",
+    cha_ele_vinculo_agua_5 = "inv_elemental_mote_water01",
+    cha_ele_vinculo_aire_3 = "inv_elemental_mote_air01",
+    cha_ele_vinculo_aire_5 = "inv_elemental_mote_air01",
+    cha_ele_vinculo_fuego_3 = "inv_elemental_mote_fire01",
+    cha_ele_vinculo_fuego_5 = "inv_elemental_mote_fire01",
+    cha_ele_vinculo_tierra_3 = "inv_elemental_mote_earth01",
+    cha_ele_vinculo_tierra_5 = "inv_elemental_mote_earth01",
+    cha_mej_golpe_elemental = "spell_shaman_improvedstormstrike",
+    pal_pro_escudo_sagrado = "spell_holy_blessingofprotection",
+    pal_ret_rechazar = "ability_paladin_turnevil",
+    pal_ret_veredicto = "spell_paladin_templarsverdict",
     cha_totem_aire = "spell_nature_invisibilitytotem",
     cha_totem_fuego = "spell_nature_guardianward",
     cha_totem_tierra = "spell_nature_earthbindtotem",
@@ -989,6 +1003,7 @@ Catalog.subclassSpells = {
     ["sacerdote/disciplina"] = "spell_holy_powerwordshield",
     ["sacerdote/elune"] = "eps_lol_diana_moonsilverblade",
     ["sacerdote/sagrado"] = "spell_priest_chakra",
+    ["sacerdote/sombra"] = "spell_priest_divinestar_shadow",
 }
 
 Catalog.subclasses = {

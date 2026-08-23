@@ -12,6 +12,30 @@ EIPNG = r"C:/Users/marco/Documents/New project/EpsilonIcons/png"
 # canonico es extract_professions.py (terminologia de prof_terminologia.json), que las
 # escribe en compendium-professions.js; la copia que traiga el kb se descarta.
 kb = json.load(io.open(KB, encoding="utf-8"))
+
+# ---- SEGURO DE VUELCO ----
+# Si una coleccion se desploma respecto a lo ya publicado, casi seguro que el extractor ha
+# dejado de entender su fuente, no que el contenido haya desaparecido de verdad. Sin este
+# seguro se publica el hueco en silencio: hoy el libro de clases se partio en modulos por
+# clase y el extractor paso de 12 clases a 0 sin una sola queja.
+# Se salta con --forzar cuando el recorte es de verdad intencionado.
+def _cuenta(d):
+    return {k: len(v) for k, v in (d or {}).items() if isinstance(v, list)}
+
+_ANTES = os.path.join(WEB, "js", "compendium-data.js")
+if os.path.exists(_ANTES) and "--forzar" not in sys.argv:
+    _t = io.open(_ANTES, encoding="utf-8").read()
+    _m = re.search(r"=\s*(\{[\s\S]*\})", _t)
+    if _m:
+        _viejo, _nuevo = _cuenta(json.loads(_m.group(1))), _cuenta(kb)
+        _caidas = [(k, _viejo[k], _nuevo.get(k, 0)) for k in _viejo
+                   if _viejo[k] >= 5 and _nuevo.get(k, 0) < _viejo[k] * 0.8]
+        if _caidas:
+            print("ABORTADO: hay colecciones que se desploman frente a lo publicado.")
+            for _k, _a, _b in _caidas:
+                print("   %-14s publicado %5d -> ahora %5d" % (_k, _a, _b))
+            print("Si el recorte es intencionado, repite con --forzar.")
+            sys.exit(1)
 # las facetas cortas alimentan los filtros: se unifican tildes/genero antes de escribir
 for _sp in kb.get("spells", []): normalizar_conjuro(_sp)
 # los nombres visibles llevan tilde aunque el addon los guarde sin ella

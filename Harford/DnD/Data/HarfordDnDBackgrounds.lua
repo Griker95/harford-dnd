@@ -561,7 +561,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "operativo_ravenholdt", name = "Operativo de ravenholdt", source = "Warcraft",
+        id = "operativo_ravenholdt", name = "Operativo de Ravenholdt", source = "Warcraft",
         aliases = { "ravenholdt" },
         desc = "Estos personajes son infiltradores habilidosos y agentes de la secreta organización Ravenholdt, expertos en espionaje y subterfugio mientras persiguen agendas ocultas y verdades encubiertas.\n\nLos miembros del trasfondo Operativo de Ravenholdt son infiltradores expertos y agentes encubiertos dentro de la enigmática organización Ravenholdt. Con talento para el espionaje y el subterfugio, destacan en la obtención de información crítica, la ejecución de misiones sigilosas y el uso de verdades ocultas. Estos operativos navegan con destreza el mundo del secreto, guiados por motivaciones o lealtades propias, manipulando las sombras para cumplir sus objetivos clandestinos.",
         traits = {

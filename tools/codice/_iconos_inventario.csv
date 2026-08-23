@@ -1,0 +1,1431 @@
+tipo;id;nombre;icono_addon;icono_web;resultado;estado
+rasgo;abrazo_vacio;Abrazo del Vacio;Malzahar_VoidShift;Malzahar_VoidShift;Malzahar_VoidShift;del addon
+rasgo;acechador;Acechador;ability_druid_prowl;ability_druid_prowl;ability_druid_prowl;del addon
+rasgo;acolito;Acolito;;spell_holy_impholyconcentration;spell_holy_impholyconcentration;nuevo de la web
+rasgo;acolito_luz_abisal;Acolito de la Luz abisal;ability_priest_innerlightandshadow;ability_priest_innerlightandshadow;ability_priest_innerlightandshadow;del addon
+rasgo;actor;Actor;eps_lol_profileicon_songofnunubraum;eps_lol_profileicon_songofnunubraum;eps_lol_profileicon_songofnunubraum;del addon
+rasgo;adepto_armas_fuego;Adepto en armas de fuego;w3reforgedflaregun;w3reforgedflaregun;w3reforgedflaregun;del addon
+rasgo;adepto_cosecha_oscura;Adepto de la cosecha oscura;ability_warlock_infernogreen;ability_warlock_infernogreen;ability_warlock_infernogreen;del addon
+rasgo;adepto_metamagia;Adepto de la metamagia;spell_holy_dispelmagic;spell_holy_dispelmagic;spell_holy_dispelmagic;del addon
+rasgo;adepto_sobrenatural;Adepto sobrenatural;ability_ardenweald_warlock;ability_ardenweald_warlock;ability_ardenweald_warlock;del addon
+rasgo;afliccion;Afliccion;;spell_shadow_deathcoil;spell_shadow_deathcoil;nuevo de la web
+rasgo;afliccion_aflicciones_inestables;Aflicciones Inestables;;;;sin icono
+rasgo;afliccion_aflicciones_potentes;Aflicciones Potentes;;;;sin icono
+rasgo;afliccion_drenar_alma;Drenar Alma;;;;sin icono
+rasgo;afortunado;Afortunado;inv_misc_herb_goldclover;inv_misc_herb_goldclover;inv_misc_herb_goldclover;del addon
+rasgo;agente_principe_mercante;Agente de principe mercante;eps_hs_grimygoblin;eps_hs_grimygoblin;eps_hs_grimygoblin;del addon
+rasgo;agilidad_robusta;Agilidad robusta;ability_rogue_fleetfooted;ability_rogue_fleetfooted;ability_rogue_fleetfooted;del addon
+rasgo;alerta;Alerta;inv_misc_bell_01;inv_misc_bell_01;inv_misc_bell_01;del addon
+rasgo;altonato;Altonato;;eps_wc3h_nightelfmalewarrior;eps_wc3h_nightelfmalewarrior;nuevo de la web
+rasgo;amigo_criaturas;Amigo de las criaturas;Ivern_FriendOfTheForest;Ivern_FriendOfTheForest;Ivern_FriendOfTheForest;del addon
+rasgo;anima_errante;Anima errante;;ability_warlock_soulswap;ability_warlock_soulswap;nuevo de la web
+rasgo;animador;Animador;eps_bg3_playlute;eps_bg3_playlute;eps_bg3_playlute;del addon
+rasgo;aprendiz_kirin_tor;Aprendiz del Kirin Tor;achievement_kirintor_offensive;achievement_kirintor_offensive;achievement_kirintor_offensive;del addon
+rasgo;apresador;Apresador;ability_warrior_titansgrip;ability_warrior_titansgrip;ability_warrior_titansgrip;del addon
+rasgo;arcano;Arcano;;spell_holy_magicalsentry;spell_holy_magicalsentry;nuevo de la web
+rasgo;armas;Armas;;ability_warrior_savageblow;ability_warrior_savageblow;nuevo de la web
+rasgo;armas_calma_mortal;Calma Mortal;;;;sin icono
+rasgo;armas_golpe_colosal;Golpe Colosal;;;;sin icono
+rasgo;armas_golpes_de_oportunidad;Golpes de Oportunidad;;;;sin icono
+rasgo;armas_grito_de_mando;Grito de Mando;;;;sin icono
+rasgo;artesano_gremial;Artesano gremial;;eps_arc_sign_oribos_trade;eps_arc_sign_oribos_trade;nuevo de la web
+rasgo;artillero_dote;Tirador (armas de fuego);inv_misc_ammo_bullet_02;inv_misc_ammo_bullet_02;inv_misc_ammo_bullet_02;del addon
+rasgo;asesino;Asesinato;;ability_rogue_eviscerate;ability_rogue_eviscerate;nuevo de la web
+rasgo;atacante_carga;Atacante a la carga;ability_warrior_charge;ability_warrior_charge;ability_warrior_charge;del addon
+rasgo;atacante_salvaje;Atacante salvaje;warrior_wild_strike;warrior_wild_strike;warrior_wild_strike;del addon
+rasgo;atleta;Atleta;eps_bg3_sprint;eps_bg3_sprint;eps_bg3_sprint;del addon
+rasgo;azote_magos;Azote de magos;ability_demonhunter_consumemagic;ability_demonhunter_consumemagic;ability_demonhunter_consumemagic;del addon
+rasgo;bestias;Bestias;;ability_hunter_bestialdiscipline;ability_hunter_bestialdiscipline;nuevo de la web
+rasgo;bestias_vinculo_del_companero;Vínculo del Compañero;ability_hunter_pet_assist;ability_hunter_pet_assist;ability_hunter_pet_assist;del addon
+rasgo;bg_aco_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_aco_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_alt_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_alt_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_alt_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_alt_peso;Peso de un reino caido;w3reforgedtinycastle;w3reforgedtinycastle;w3reforgedtinycastle;del addon
+rasgo;bg_ani_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_ani_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_ani_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_anillo_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_anillo_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_anillo_sintonia;Sintonia elemental;spell_nature_elementalprecision_2;spell_nature_elementalprecision_2;spell_nature_elementalprecision_2;del addon
+rasgo;bg_arg_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_arg_determinacion;Determinacion inquebrantable;hots_xinzhao_determination;hots_xinzhao_determination;hots_xinzhao_determination;del addon
+rasgo;bg_arg_juego;Juego;;inv_misc_dice_02;inv_misc_dice_02;nuevo de la web
+rasgo;bg_art_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_art_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_art_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_bot_competencias;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_bot_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_bot_herramientas;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_buc_canalla;Canalla veterano;ability_rogue_blackjack;ability_rogue_blackjack;ability_rogue_blackjack;del addon
+rasgo;bg_buc_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_buc_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_busc_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_capharf_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cat_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cat_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cat_marcado;Marcado pero en pie;achievement_zone_cataclysmgreen;achievement_zone_cataclysmgreen;achievement_zone_cataclysmgreen;del addon
+rasgo;bg_caz_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_caz_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cen_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cen_guardian;Guardian de la naturaleza;spell_nature_natureguardian;spell_nature_natureguardian;spell_nature_natureguardian;del addon
+rasgo;bg_cen_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cha_caract;Caracteristica: Identidad falsa;inv_misc_notepicture2c;inv_misc_notepicture2c;inv_misc_notepicture2c;del addon
+rasgo;bg_cha_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cha_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_cha_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cosecha_codigo;Codigo del buscador de Demonios;inv_misc_codexofxerrath_chains;inv_misc_codexofxerrath_chains;inv_misc_codexofxerrath_chains;del addon
+rasgo;bg_cosecha_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cosecha_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cri_caract;Caracteristica: Lealtad falsa;hots_falseheart;hots_falseheart;hots_falseheart;del addon
+rasgo;bg_cri_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cri_competencias;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_cri_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_cri_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_crim_caract;Caracteristica: Contacto criminal;ability_rogue_deadliness;ability_rogue_deadliness;ability_rogue_deadliness;del addon
+rasgo;bg_crim_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_des_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_des_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_dob_caract;Caracteristica: Dos caras de una moneda;inv_misc_coin_19;inv_misc_coin_19;inv_misc_coin_19;del addon
+rasgo;bg_dob_competencias;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_dob_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_dob_herramientas;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_eco_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_elu_competencias;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_elu_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_elu_herborista;Kit de herborista;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_ere_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_ere_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_ere_perspicacia;Perspicacia erudita;achievement_faction_lorewalkers;achievement_faction_lorewalkers;achievement_faction_lorewalkers;del addon
+rasgo;bg_erm_caract;Caracteristica: Descubrimiento;achievement_bg_winsoa;achievement_bg_winsoa;achievement_bg_winsoa;del addon
+rasgo;bg_erm_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_erm_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_erm_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_eru_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_eru_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_for_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_for_herr;Juego o instrumento;;inv_misc_dice_01;inv_misc_dice_01;nuevo de la web
+rasgo;bg_for_mirada;Todos se fijan en ti;achievement_bg_most_damage_killingblow_dieleast;achievement_bg_most_damage_killingblow_dieleast;achievement_bg_most_damage_killingblow_dieleast;del addon
+rasgo;bg_glad_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_gsal_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_gsal_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_guardia_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_her_caract;Caracteristica: Hospitalidad rural;w3reforgedfarm;w3reforgedfarm;w3reforgedfarm;del addon
+rasgo;bg_her_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_her_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_her_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_hered_hab;Habilidad adicional;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_hered_herr;Juego o instrumento;;inv_misc_dice_01;inv_misc_dice_01;nuevo de la web
+rasgo;bg_hered_rasgo;Herencia;inv_icon_heirloomtoken_armor01;inv_icon_heirloomtoken_armor01;inv_icon_heirloomtoken_armor01;del addon
+rasgo;bg_hered_superv;Supervivencia;inv_scroll_11;inv_scroll_11;inv_scroll_11;del addon
+rasgo;bg_hue_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_hue_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_hue_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_kir_caract;Caracteristica: Mentor prominente;eps_wc3h_apprenticewizard;eps_wc3h_apprenticewizard;eps_wc3h_apprenticewizard;del addon
+rasgo;bg_kir_competencias;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_kir_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_kir_herramientas;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_liga_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_liga_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_liga_pionero;Pionero audaz;INV_Helm_Armor_Explorer_D_01;INV_Helm_Armor_Explorer_D_01;INV_Helm_Armor_Explorer_D_01;del addon
+rasgo;bg_loco_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_luna_actuacion;Actuacion hipnotica;inv_darkmoon_vengeance;inv_darkmoon_vengeance;inv_darkmoon_vengeance;del addon
+rasgo;bg_luna_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_luna_herr1;Kit de disfraces;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_luna_herr2;Juego o instrumento;;inv_misc_dice_01;inv_misc_dice_01;nuevo de la web
+rasgo;bg_luz_abisal_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_luz_abisal_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_luz_abisal_rasgo;Equilibrio de fuerzas;WH_BalanceEssence;WH_BalanceEssence;WH_BalanceEssence;del addon
+rasgo;bg_mar_caract;Caracteristica: Pasaje en un barco;w3reforgedship;w3reforgedship;w3reforgedship;del addon
+rasgo;bg_mar_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_mar_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_mar_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_merc_armas;Competencia con armas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_merc_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_merc_hab;Competencia en habilidad;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_merc_herr;Herramienta adicional;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_merc_herr_juego;Juego;;inv_misc_dice_02;inv_misc_dice_02;nuevo de la web
+rasgo;bg_nob_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_nob_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_nob_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_ord_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_ord_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_org_hab;Habilidad de faccion;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_org_perspicacia;Perspicacia;inv_scroll_11;inv_scroll_11;inv_scroll_11;del addon
+rasgo;bg_org_refugio;Refugio;w3reforgedtownhall;w3reforgedtownhall;w3reforgedtownhall;del addon
+rasgo;bg_principe_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_principe_conexiones;Conexiones del cartel;ability_racial_timeismoney;ability_racial_timeismoney;ability_racial_timeismoney;del addon
+rasgo;bg_principe_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_raven_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_raven_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_raven_red;Red de sombras;ability_rogue_honoramongstthieves;ability_rogue_honoramongstthieves;ability_rogue_honoramongstthieves;del addon
+rasgo;bg_rostro_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_sal_caract;Caracteristica: Vagabundo;inv_misc_pelt_bear_ruin_05;inv_misc_pelt_bear_ruin_05;inv_misc_pelt_bear_ruin_05;del addon
+rasgo;bg_sal_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_sal_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_sal_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_senda_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_sol_caract;Caracteristica: Rango militar;ability_wintergrasp_rank1;ability_wintergrasp_rank1;ability_wintergrasp_rank1;del addon
+rasgo;bg_sol_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_sol_equipo;Equipo;;inv_misc_bag_20;inv_misc_bag_20;nuevo de la web
+rasgo;bg_sol_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_torio_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_torio_herr;Herramientas de forja;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_torio_prestigio;Prestigio de la hermandad del torio;inv_ingot_07;inv_ingot_07;inv_ingot_07;del addon
+rasgo;bg_tribal_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_tribal_herr;Competencia con herramientas;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bg_tribal_naturaleza;Uno con la naturaleza;spell_nature_abolishmagic;spell_nature_abolishmagic;spell_nature_abolishmagic;del addon
+rasgo;bg_vet_comp;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;bosque;Troll de Bosque;;eps_wc3_foresttrollpriest;eps_wc3_foresttrollpriest;nuevo de la web
+rasgo;boticario_oscuro;Boticario Oscuro;;ui_darkshore_warfront_horde_alchemist;ui_darkshore_warfront_horde_alchemist;nuevo de la web
+rasgo;bru_afl_acechar;Acechar;spell_shadow_twilight;spell_shadow_twilight;spell_shadow_twilight;del addon
+rasgo;bru_afl_corrupcion;Corrupcion;spell_shadow_abominationexplosion;spell_shadow_abominationexplosion;spell_shadow_abominationexplosion;del addon
+rasgo;bru_afl_lista;Lista ampliada de conjuros (afliccion);spell_shadow_curse;spell_shadow_curse;spell_shadow_curse;del addon
+rasgo;bru_afl_maestro_maldiciones;Maestro de maldiciones;spell_shadow_curseofmannoroth;spell_shadow_curseofmannoroth;spell_shadow_curseofmannoroth;del addon
+rasgo;bru_afl_maldiciones;Maldiciones conocidas;;;;sin icono
+rasgo;bru_afl_maldiciones_6;Maldicion adicional;;;;sin icono
+rasgo;bru_capturar_fragmento;Capturar fragmento de alma;inv_misc_gem_amethyst_02;inv_misc_gem_amethyst_02;inv_misc_gem_amethyst_02;del addon
+rasgo;bru_circulo_demoniaco;Circulo demoniaco;spell_shadow_demoniccircleteleport;spell_shadow_demoniccircleteleport;spell_shadow_demoniccircleteleport;del addon
+rasgo;bru_conocimiento_demoniaco;Conocimiento demoniaco;warlock_sacrificial_pact;warlock_sacrificial_pact;warlock_sacrificial_pact;del addon
+rasgo;bru_dem_conducto;Conducto de almas;spell_shadow_soulleech;spell_shadow_soulleech;spell_shadow_soulleech;del addon
+rasgo;bru_dem_lista;Lista ampliada de conjuros (demonologia);spell_shadow_summonfelhunter;spell_shadow_summonfelhunter;spell_shadow_summonfelhunter;del addon
+rasgo;bru_dem_sentir;Sentir Demonios;spell_shadow_mindrot;spell_shadow_mindrot;spell_shadow_mindrot;del addon
+rasgo;bru_dem_vinculo_almas;Vinculo de almas;spell_shadow_soulleech;spell_shadow_soulleech;spell_shadow_soulleech;del addon
+rasgo;bru_des_canalizar;Canalizar fuego demoniaco;;spell_fire_felflamebreath;spell_fire_felflamebreath;nuevo de la web
+rasgo;bru_des_caos;Caos;spell_fire_fireball;spell_fire_fireball;spell_fire_fireball;del addon
+rasgo;bru_des_lista;Lista ampliada de conjuros (destruccion);spell_shadow_rainoffire;spell_shadow_rainoffire;spell_shadow_rainoffire;del addon
+rasgo;bru_des_piromaniaco;Piromaniaco;;spell_fire_incinerate;spell_fire_incinerate;nuevo de la web
+rasgo;bru_estudio_vil;Estudio vil;spell_warlock_demonbolt;spell_warlock_demonbolt;spell_warlock_demonbolt;del addon
+rasgo;bru_forja_alma;Piedra de Alma;inv_misc_orb_04;inv_misc_orb_04;inv_misc_orb_04;del addon
+rasgo;bru_forja_conjuro;Piedra de Conjuro;inv_misc_gem_sapphire_01;inv_misc_gem_sapphire_01;inv_misc_gem_sapphire_01;del addon
+rasgo;bru_forja_fuego;Piedra de Fuego;inv_ammo_firetar;inv_ammo_firetar;inv_ammo_firetar;del addon
+rasgo;bru_forja_salud;Piedra de Salud;inv_stone_04;inv_stone_04;inv_stone_04;del addon
+rasgo;bru_forjado_almas;Forja de almas;inv_misc_gem_amethyst_02;inv_misc_gem_amethyst_02;inv_misc_gem_amethyst_02;del addon
+rasgo;bru_fragmentos_alma;Fragmentos de alma;inv_misc_gem_amethyst_02;inv_misc_gem_amethyst_02;inv_misc_gem_amethyst_02;del addon
+rasgo;bru_grimorio_sacrificio;Grimorio de sacrificio;warlock_grimoireofsacrifice;warlock_grimoireofsacrifice;warlock_grimoireofsacrifice;del addon
+rasgo;bru_hechiceria_vil;Hechiceria vil;ability_warlock_everlastingaffliction;ability_warlock_everlastingaffliction;ability_warlock_everlastingaffliction;del addon
+rasgo;bru_nucleo_abisario;Nucleo demoniaco: Abisario;spell_shadow_summonvoidwalker;spell_shadow_summonvoidwalker;spell_shadow_summonvoidwalker;del addon
+rasgo;bru_nucleo_diablillo;Nucleo demoniaco: Diablillo;spell_shadow_summonimp;spell_shadow_summonimp;spell_shadow_summonimp;del addon
+rasgo;bru_nucleo_guardia_vil;Nucleo demoniaco: Guardia Vil;spell_shadow_summonfelguard;spell_shadow_summonfelguard;spell_shadow_summonfelguard;del addon
+rasgo;bru_nucleo_manafago;Nucleo demoniaco: Manafago;spell_shadow_summonfelhunter;spell_shadow_summonfelhunter;spell_shadow_summonfelhunter;del addon
+rasgo;bru_nucleo_sucubo;Nucleo demoniaco: Sucubo;spell_shadow_summonsuccubus;spell_shadow_summonsuccubus;spell_shadow_summonsuccubus;del addon
+rasgo;bru_quemar_alma_acelerar;Quemar alma: Acelerar;warlock_spelldrain;warlock_spelldrain;warlock_spelldrain;del addon
+rasgo;bru_quemar_alma_extender;Quemar alma: Extender;ability_warlock_coil2;ability_warlock_coil2;ability_warlock_coil2;del addon
+rasgo;bru_quemar_alma_rebotar;Quemar alma: Rebotar;spell_priest_shadoworbs;spell_priest_shadoworbs;spell_priest_shadoworbs;del addon
+rasgo;bru_ritos_alma;Ritos de alma;spell_warlock_soulburn;spell_warlock_soulburn;spell_warlock_soulburn;del addon
+rasgo;bru_secretos_profanos;Secretos profanos;spell_warlock_demonbolt;spell_warlock_demonbolt;spell_warlock_demonbolt;del addon
+rasgo;bru_toque_vida;Toque de vida;ability_warlock_mortalcoil;ability_warlock_mortalcoil;ability_warlock_mortalcoil;del addon
+rasgo;brujo;Brujo;;classicon_warlock;classicon_warlock;nuevo de la web
+rasgo;brujo_nigromancia_del_vacio_nivel_6;Nigromancia del Vacío (Nivel 6);;;;sin icono
+rasgo;brujo_nigromancia_del_vacio_nivel_7;Nigromancia del Vacío (Nivel 7);;;;sin icono
+rasgo;bucanero_retirado;Bucanero retirado;eps_plunder_armor_bloodsailbuccaneer_01_helm;eps_plunder_armor_bloodsailbuccaneer_01_helm;eps_plunder_armor_bloodsailbuccaneer_01_helm;del addon
+rasgo;buscador_sombrio;Buscador sombrio;;dos2_shadow12;dos2_shadow12;nuevo de la web
+rasgo;caballero_mu_forja_de_runas_superior;Forja de Runas Superior;;;;sin icono
+rasgo;caballero_mu_sin_muerte;Sin Muerte;;;;sin icono
+rasgo;caballero_mu_voluntad_de_la_tumba;Voluntad de la Tumba;;;;sin icono
+rasgo;caballero_muerte;Caballero de la Muerte;;classicon_deathknight;classicon_deathknight;nuevo de la web
+rasgo;caballero_orden;Caballero de la orden;eps_lol_tft_knightemblem;eps_lol_tft_knightemblem;eps_lol_tft_knightemblem;del addon
+rasgo;caminavientos;Viajero del viento;;spell_monk_windwalker_spec;spell_monk_windwalker_spec;nuevo de la web
+rasgo;capitan_veterano_harford;Capitan veterano harford;;inv_tabard_duelersguild;inv_tabard_duelersguild;nuevo de la web
+rasgo;caz_arquetipo;Arquetipo de Cazador;ability_hunter_snipertraining;ability_hunter_snipertraining;ability_hunter_snipertraining;del addon
+rasgo;caz_bes_aspecto;Aspecto de la bestia;ability_hunter_aspectmastery;ability_hunter_aspectmastery;ability_hunter_aspectmastery;del addon
+rasgo;caz_bes_comando;Comando de matar;ability_hunter_pet_assist;ability_hunter_pet_assist;ability_hunter_pet_assist;del addon
+rasgo;caz_bes_domador;Domador de bestias;ability_hunter_beasttaming;ability_hunter_beasttaming;ability_hunter_beasttaming;del addon
+rasgo;caz_bestia_mejora;Mejora de Caracteristica (bestia);;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;caz_domar_bestia;Domar bestia;;ability_hunter_beasttaming;ability_hunter_beasttaming;nuevo de la web
+rasgo;caz_empatia_animal;Empatia animal;;ability_hunter_beastsoothe;ability_hunter_beastsoothe;nuevo de la web
+rasgo;caz_enf_ataque_preciso;Ataque preciso;eps_lol_ashe_focus;eps_lol_ashe_focus;eps_lol_ashe_focus;del addon
+rasgo;caz_enf_llamada;Llamada de lo salvaje;ability_hunter_huntervswild;ability_hunter_huntervswild;ability_hunter_huntervswild;del addon
+rasgo;caz_enf_tacticas;Tacticas de supervivencia;ability_hunter_huntingparty;ability_hunter_huntingparty;ability_hunter_huntingparty;del addon
+rasgo;caz_enfoque;Enfoque;;spell_hunter_aspectofthehawk;spell_hunter_aspectofthehawk;nuevo de la web
+rasgo;caz_estilo_combate;Estilo de combate;;ability_dualwield;ability_dualwield;nuevo de la web
+rasgo;caz_explorador_natural;Explorador natural;;ability_tracking;ability_tracking;nuevo de la web
+rasgo;caz_marca_cazador;Marca del Cazador;;eps_bg3_huntersmark;eps_bg3_huntersmark;nuevo de la web
+rasgo;caz_pun_disparo_arcano;Disparo arcano;;spell_arcane_blast;spell_arcane_blast;nuevo de la web
+rasgo;caz_pun_disparo_conmocionante;Disparo conmocionante;spell_frost_stun;spell_frost_stun;spell_frost_stun;del addon
+rasgo;caz_pun_lobo_apuntado;Lobo solitario: Ataque apuntado;;ability_hunter_snipershot;ability_hunter_snipershot;nuevo de la web
+rasgo;caz_pun_lobo_ataque;Lobo solitario: Ataque adicional;eps_bg3_multiattack;eps_bg3_multiattack;eps_bg3_multiattack;del addon
+rasgo;caz_sup_corte_ala;Corte de ala;ability_rogue_trip;ability_rogue_trip;ability_rogue_trip;del addon
+rasgo;caz_sup_estudiante;Estudiante de lo salvaje;ability_hunter_onewithnature;ability_hunter_onewithnature;ability_hunter_onewithnature;del addon
+rasgo;caz_sup_lobo_ataque;Lobo solitario: Ataque adicional;eps_bg3_multiattack;eps_bg3_multiattack;eps_bg3_multiattack;del addon
+rasgo;caz_sup_lobo_salvaje;Lobo solitario: Nacido para ser salvaje;spell_hunter_lonewolf;spell_hunter_lonewolf;spell_hunter_lonewolf;del addon
+rasgo;caz_sup_trampero;Trampero experto;ability_hunter_traplauncher;ability_hunter_traplauncher;ability_hunter_traplauncher;del addon
+rasgo;cazador;Cazador;;classicon_hunter;classicon_hunter;nuevo de la web
+rasgo;cazador_acechador;Acechador;;;;sin icono
+rasgo;cazador_aspecto_de_lo_salvaje;Aspecto de lo Salvaje;;;;sin icono
+rasgo;cazador_conocimiento_del_depredador;Conocimiento del Depredador;;;;sin icono
+rasgo;cazador_demo_alas_demoniacas;Alas Demoníacas;;;;sin icono
+rasgo;cazador_demo_cuerpo_atemporal;Cuerpo Atemporal;;;;sin icono
+rasgo;cazador_demo_destreza_illidari;Destreza Illidari;;;;sin icono
+rasgo;cazador_demo_evasion;Evasión;;;;sin icono
+rasgo;cazador_demo_mirada_reveladora;Mirada Reveladora;;;;sin icono
+rasgo;cazador_demo_preparado;Preparado;;;;sin icono
+rasgo;cazador_demo_purificado_por_las_llamas;Purificado por las Llamas;;;;sin icono
+rasgo;cazador_demo_resiliencia_abisal;Resiliencia Abisal;;;;sin icono
+rasgo;cazador_demo_un_cazador_por_encima_de_todo;Un Cazador por Encima de Todo;;;;sin icono
+rasgo;cazador_demonios;Cazador de Demonios;;classicon_demonhunter;classicon_demonhunter;nuevo de la web
+rasgo;cazador_sentidos_agudizados;Sentidos Agudizados;;;;sin icono
+rasgo;cazadores;Clanes Cazadores;;eps_wc3_orcwarlock;eps_wc3_orcwarlock;nuevo de la web
+rasgo;cazarrecompensas_urbano;Cazarrecompensas urbano;;inv_bountyhunting;inv_bountyhunting;nuevo de la web
+rasgo;cdm_armas_runicas;Armas runicas;;spell_deathknight_frozenruneweapon;spell_deathknight_frozenruneweapon;nuevo de la web
+rasgo;cdm_ataque_extra;Ataque adicional;ability_warrior_savageblow;ability_warrior_savageblow;ability_warrior_savageblow;del addon
+rasgo;cdm_comando_oscuro;Orden oscura;spell_deathknight_strangulate;spell_deathknight_strangulate;spell_deathknight_strangulate;del addon
+rasgo;cdm_constitucion_nomuerta;Constitucion no-muerta;;spell_shadow_unholystrength;spell_shadow_unholystrength;nuevo de la web
+rasgo;cdm_escarcha_conjuros_3;Conjuros de presencia (Escarcha);;ability_deathknight_heartstopaura;ability_deathknight_heartstopaura;nuevo de la web
+rasgo;cdm_escarcha_conjuros_5;Conjuros de presencia (Escarcha);;ability_deathknight_heartstopaura;ability_deathknight_heartstopaura;nuevo de la web
+rasgo;cdm_escudo_sangre;Escudo de Sangre;;artifactability_blooddeathknight_umbilicuseternus;artifactability_blooddeathknight_umbilicuseternus;nuevo de la web
+rasgo;cdm_espiral_muerte;Espiral de la Muerte;;spell_shadow_deathcoil;spell_shadow_deathcoil;nuevo de la web
+rasgo;cdm_estilo_combate;Estilo de combate;;ability_dualwield;ability_dualwield;nuevo de la web
+rasgo;cdm_forja_runas;Forja de runas;spell_deathknight_frozenruneweapon;spell_deathknight_frozenruneweapon;spell_deathknight_frozenruneweapon;del addon
+rasgo;cdm_golpe_escarcha;Golpe de escarcha;;spell_deathknight_empowerruneblade2;spell_deathknight_empowerruneblade2;nuevo de la web
+rasgo;cdm_golpe_runico;Golpe runico;;achievement_dungeon_icecrown_frostmourne;achievement_dungeon_icecrown_frostmourne;nuevo de la web
+rasgo;cdm_lanzamiento_conjuros;Lanzamiento de conjuros;hots_malthael_death_shroud;hots_malthael_death_shroud;hots_malthael_death_shroud;del addon
+rasgo;cdm_maquina_matar;Maquina de matar;;inv_sword_122;inv_sword_122;nuevo de la web
+rasgo;cdm_poder_runico;Poder runico;;spell_shadow_rune;spell_shadow_rune;nuevo de la web
+rasgo;cdm_portador_plagas;Portador de plagas;spell_deathknight_plaguestrike;spell_deathknight_plaguestrike;spell_deathknight_plaguestrike;del addon
+rasgo;cdm_presencia_maligna;Presencia maligna;spell_deathknight_unholypresence;spell_deathknight_unholypresence;spell_deathknight_unholypresence;del addon
+rasgo;cdm_profana_conjuros_3;Conjuros de presencia (Profana);ability_deathknight_deathsiphon2;ability_deathknight_deathsiphon2;ability_deathknight_deathsiphon2;del addon
+rasgo;cdm_profana_conjuros_5;Conjuros de presencia (Profana);ability_deathknight_deathsiphon2;ability_deathknight_deathsiphon2;ability_deathknight_deathsiphon2;del addon
+rasgo;cdm_renacer_oscuro;Renacer oscuro;;eps_wc3_deathknight;eps_wc3_deathknight;nuevo de la web
+rasgo;cdm_sangre_conjuros_3;Conjuros de presencia (Sangre);;ability_deathwing_bloodcorruption_death;ability_deathwing_bloodcorruption_death;nuevo de la web
+rasgo;cdm_sangre_conjuros_5;Conjuros de presencia (Sangre);;ability_deathwing_bloodcorruption_death;ability_deathwing_bloodcorruption_death;nuevo de la web
+rasgo;centinela;Centinela;ability_warrior_revenge;ability_warrior_revenge;ability_warrior_revenge;del addon
+rasgo;cervecero;Maestro cervecero;;spell_monk_brewmaster_spec;spell_monk_brewmaster_spec;nuevo de la web
+rasgo;cervecero_brebajes_elusivos;Brebajes Elusivos;;;;sin icono
+rasgo;cervecero_elaboracion_ligera;Elaboración Ligera;;;;sin icono
+rasgo;cha_afinidad_elemental;Afinidad elemental;;ability_shawaterelemental_reform;ability_shawaterelemental_reform;nuevo de la web
+rasgo;cha_bestia_espiritual;Bestia espiritual;spell_shaman_feralspirit;spell_shaman_feralspirit;spell_shaman_feralspirit;del addon
+rasgo;cha_ele_eco;Eco de los elementos;ability_shaman_echooftheelements;ability_shaman_echooftheelements;ability_shaman_echooftheelements;del addon
+rasgo;cha_ele_furia;Furia elemental;spell_nature_callstorm;spell_nature_callstorm;spell_nature_callstorm;del addon
+rasgo;cha_ele_poder;Poder totemico: Mente tranquila;spell_nature_tremortotem;spell_nature_tremortotem;spell_nature_tremortotem;del addon
+rasgo;cha_ele_vinculo_agua_3;Conjuros de vinculo (Agua);inv_elemental_mote_water01;inv_elemental_mote_water01;inv_elemental_mote_water01;del addon
+rasgo;cha_ele_vinculo_agua_5;Conjuros de vinculo (Agua);inv_elemental_mote_water01;inv_elemental_mote_water01;inv_elemental_mote_water01;del addon
+rasgo;cha_ele_vinculo_aire_3;Conjuros de vinculo (Aire);inv_elemental_mote_air01;inv_elemental_mote_air01;inv_elemental_mote_air01;del addon
+rasgo;cha_ele_vinculo_aire_5;Conjuros de vinculo (Aire);inv_elemental_mote_air01;inv_elemental_mote_air01;inv_elemental_mote_air01;del addon
+rasgo;cha_ele_vinculo_fuego_3;Conjuros de vinculo (Fuego);inv_elemental_mote_fire01;inv_elemental_mote_fire01;inv_elemental_mote_fire01;del addon
+rasgo;cha_ele_vinculo_fuego_5;Conjuros de vinculo (Fuego);inv_elemental_mote_fire01;inv_elemental_mote_fire01;inv_elemental_mote_fire01;del addon
+rasgo;cha_ele_vinculo_tierra_3;Conjuros de vinculo (Tierra);inv_elemental_mote_earth01;inv_elemental_mote_earth01;inv_elemental_mote_earth01;del addon
+rasgo;cha_ele_vinculo_tierra_5;Conjuros de vinculo (Tierra);inv_elemental_mote_earth01;inv_elemental_mote_earth01;inv_elemental_mote_earth01;del addon
+rasgo;cha_kalimag;Kalimag;;eps_lol_taliyah_unraveledearth;eps_lol_taliyah_unraveledearth;nuevo de la web
+rasgo;cha_lanzamiento_conjuros;Lanzamiento de conjuros;ability_shaman_ascendance;ability_shaman_ascendance;ability_shaman_ascendance;del addon
+rasgo;cha_mej_ataque_adicional;Ataque adicional;eps_bg3_multiattack;eps_bg3_multiattack;eps_bg3_multiattack;del addon
+rasgo;cha_mej_ataques_3;Ataques con armas conocidos;spell_shaman_unleashweapon_wind;spell_shaman_unleashweapon_wind;spell_shaman_unleashweapon_wind;del addon
+rasgo;cha_mej_competencia;Competencia adicional (armas marciales);inv_axe_1h_steelwarrior;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;cha_mej_golpe_elemental;Golpe elemental;spell_shaman_improvedstormstrike;spell_shaman_improvedstormstrike;spell_shaman_improvedstormstrike;del addon
+rasgo;cha_mej_llamado_marcial;Llamado marcial;spell_shaman_spewlava;spell_shaman_spewlava;spell_shaman_spewlava;del addon
+rasgo;cha_mej_poder;Poder totemico: Furia del viento;spell_nature_windfury;spell_nature_windfury;spell_nature_windfury;del addon
+rasgo;cha_mej_torbellino;Torbellino;ability_whirlwind;ability_whirlwind;ability_whirlwind;del addon
+rasgo;cha_res_fuerzas;Fuerzas anuladoras;spell_nature_groundingtotem;spell_nature_groundingtotem;spell_nature_groundingtotem;del addon
+rasgo;cha_res_guia;Guia ancestral;;ability_shaman_ancestralguidance;ability_shaman_ancestralguidance;nuevo de la web
+rasgo;cha_res_poder;Poder totemico: Marea viva;spell_nature_riptide;spell_nature_riptide;spell_nature_riptide;del addon
+rasgo;cha_totem_agua;Poder totemico: Corriente Purificadora;inv_spear_04;inv_spear_04;inv_spear_04;del addon
+rasgo;cha_totem_aire;Poder totemico: Gracia del Aire;spell_nature_invisibilitytotem;spell_nature_invisibilitytotem;spell_nature_invisibilitytotem;del addon
+rasgo;cha_totem_fuego;Poder totemico: Lengua de Fuego;spell_nature_guardianward;spell_nature_guardianward;spell_nature_guardianward;del addon
+rasgo;cha_totem_resistencia;Poder totemico: Resistencia Elemental;ability_shaman_multitotemactivation;ability_shaman_multitotemactivation;ability_shaman_multitotemactivation;del addon
+rasgo;cha_totem_tierra;Poder totemico: Fuerza de la Tierra;spell_nature_earthbindtotem;spell_nature_earthbindtotem;spell_nature_earthbindtotem;del addon
+rasgo;cha_totemista;Totemista;;ability_shaman_totemrelocation;ability_shaman_totemrelocation;nuevo de la web
+rasgo;cha_vinculo;Vinculo chamanico;spell_shaman_astralshift;spell_shaman_astralshift;spell_shaman_astralshift;del addon
+rasgo;chaman;Chaman;;classicon_shaman;classicon_shaman;nuevo de la web
+rasgo;charlatan;Charlatan;achievement_halloween_smiley_01;achievement_halloween_smiley_01;achievement_halloween_smiley_01;del addon
+rasgo;cocinero;Cocinero;achievement_profession_chefhat;achievement_profession_chefhat;achievement_profession_chefhat;del addon
+rasgo;combatiente_dos_armas;Combatiente con dos armas;ability_dualwield;ability_dualwield;ability_dualwield;del addon
+rasgo;combatiente_montado;Combatiente montado;w3reforgedknight;w3reforgedknight;w3reforgedknight;del addon
+rasgo;coneja_elemental;Coneja elemental;;inv_eng_gizmo3;inv_eng_gizmo3;nuevo de la web
+rasgo;cortador;Cortador;ability_revendreth_rogue;ability_revendreth_rogue;ability_revendreth_rogue;del addon
+rasgo;crianza_faccion;Crianza en la Faccion;hd_hordeflag_blue;hd_hordeflag_blue;hd_hordeflag_blue;del addon
+rasgo;criminal;Criminal;ability_rogue_masterofsubtlety;ability_rogue_masterofsubtlety;ability_rogue_masterofsubtlety;del addon
+rasgo;cruzado_argenta;Cruzado Argenta;eps_wc3h_argentshield;eps_wc3h_argentshield;eps_wc3h_argentshield;del addon
+rasgo;demonologia;Demonologia;;spell_shadow_metamorphosis;spell_shadow_metamorphosis;nuevo de la web
+rasgo;demonologia_furia_demoniaca;Furia Demoníaca;;;;sin icono
+rasgo;demonologia_grimorio_de_supremacia;Grimorio de Supremacía;;;;sin icono
+rasgo;demonologia_somos_legion;Somos Legión;;;;sin icono
+rasgo;depredador_endurecido;Depredador endurecido;ability_racial_darkflight;ability_racial_darkflight;ability_racial_darkflight;del addon
+rasgo;desertor_errante;Desertor errante;;achievement_general_classicbattles;achievement_general_classicbattles;nuevo de la web
+rasgo;destruccion;Destruccion;;spell_shadow_rainoffire;spell_shadow_rainoffire;nuevo de la web
+rasgo;destruccion_infierno;Infierno;;;;sin icono
+rasgo;destruccion_llamas_de_xerrath;Llamas de Xerrath;;;;sin icono
+rasgo;destruccion_resolucion_inquebrantable;Resolución Inquebrantable;;;;sin icono
+rasgo;devastacion;Devastacion;;ability_demonhunter_specdps;ability_demonhunter_specdps;nuevo de la web
+rasgo;devoto_elune;Devoto de Elune;;eps_wow_eluneschosen;eps_wow_eluneschosen;nuevo de la web
+rasgo;dh_ataque_adicional;Ataque adicional;;eps_bg3_flurry;eps_bg3_flurry;nuevo de la web
+rasgo;dh_defensa_sin_armadura;Guardas demoniacas;inv_leather_raiddemonhunter_q_02helm;inv_leather_raiddemonhunter_q_02helm;inv_leather_raiddemonhunter_q_02helm;del addon
+rasgo;dh_dev_competencia;Competencia adicional (acrobacias);ability_demonhunter_doublejump;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;dh_dev_embestida;Embestida vil;ability_demonhunter_infernalimpact;ability_demonhunter_infernalstrike1;ability_demonhunter_infernalstrike1;sustituido por la web
+rasgo;dh_dev_momentum_vengativo;Momentum vengativo;ability_demonhunter_chaosstrike;ability_demonhunter_chaosstrike;ability_demonhunter_chaosstrike;del addon
+rasgo;dh_hambre_instintiva;Hambre instintiva;ability_demonhunter_consumemagic;ability_demonhunter_consumemagic;ability_demonhunter_consumemagic;del addon
+rasgo;dh_iniciacion_illidari;Iniciacion Illidari;;ability_demonhunter_eyeofleotheras;ability_demonhunter_eyeofleotheras;nuevo de la web
+rasgo;dh_ira_competencia;Competencia adicional (arcano);ability_demonhunter_eyebeam;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;dh_ira_llamas;Llamas del caos;;spell_fire_felfire;spell_fire_felfire;nuevo de la web
+rasgo;dh_ira_marca_ignea;Marca ignea;ability_demonhunter_immolationaura;eps_rumble_immolationaura;eps_rumble_immolationaura;sustituido por la web
+rasgo;dh_marca_demoniaca;Marca demoniaca;ability_demonhunter_markedfordeath;ability_hunter_markedfordeath;ability_hunter_markedfordeath;sustituido por la web
+rasgo;dh_metamorfosis;Metamorfosis;;ability_demonhunter_metamorphasisdps;ability_demonhunter_metamorphasisdps;nuevo de la web
+rasgo;dh_momentum;Momentum;;ability_demonhunter_doublejump;ability_demonhunter_doublejump;nuevo de la web
+rasgo;dh_mordida_demonio;Mordida de Demonio;;ability_demonhunter_torment;ability_demonhunter_torment;nuevo de la web
+rasgo;dh_potenciar_protecciones;Potenciar protecciones;;ability_demonhunter_empowerwards;ability_demonhunter_empowerwards;nuevo de la web
+rasgo;dh_ven_competencia;Competencia adicional (intimidacion);ability_demonhunter_torment;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;dh_ven_puas;Puas demoniacas;ability_demonhunter_immolationaura;eps_rumble_immolationaura;eps_rumble_immolationaura;sustituido por la web
+rasgo;dh_ven_tormento;Tormento;ability_demonhunter_torment;ability_demonhunter_torment;ability_demonhunter_torment;del addon
+rasgo;dh_vil;Vil;;eps_wc3h_felpact;eps_wc3h_felpact;nuevo de la web
+rasgo;dh_vision_espectral;Vision espectral;;ability_demonhunter_eyebeam;ability_demonhunter_eyebeam;nuevo de la web
+rasgo;disciplina;Disciplina;;spell_holy_wordfortitude;spell_holy_wordfortitude;nuevo de la web
+rasgo;disciplina_absolucion_penitencia;Absolución: Penitencia;;spell_holy_penance;spell_holy_penance;nuevo de la web
+rasgo;disciplina_castigo;Castigo;;ability_paladin_bladeofjustice;ability_paladin_bladeofjustice;nuevo de la web
+rasgo;disciplina_claridad_de_voluntad;Claridad de Voluntad;;;;sin icono
+rasgo;disciplina_expiacion;Expiacion;ability_priest_atonement;ability_priest_atonement;ability_priest_atonement;del addon
+rasgo;doble_agente;Doble Agente;factionchange;factionchange;factionchange;del addon
+rasgo;dra_exo_gemas;Tallado de gemas;inv_jewelcrafting_argusgemcut_purple_miscicons;inv_jewelcrafting_argusgemcut_purple_miscicons;inv_jewelcrafting_argusgemcut_purple_miscicons;del addon
+rasgo;dra_exo_heroica;Presencia heroica;;inv_helmet_21;inv_helmet_21;nuevo de la web
+rasgo;dra_exo_inc;Incremento de caracteristica;;hd_plussign_warrior;hd_plussign_warrior;nuevo de la web
+rasgo;dra_exo_naaru;Don de los Naaru;;spell_holy_holyprotection;spell_holy_holyprotection;nuevo de la web
+rasgo;dra_fl_forjado;Forjado en Luz;spell_holy_auramastery;spell_holy_auramastery;spell_holy_auramastery;del addon
+rasgo;dra_fl_inc;Incremento de caracteristica;;hd_plussign_deathknight;hd_plussign_deathknight;nuevo de la web
+rasgo;dra_fl_juicio;Juicio de la Luz;ability_paladin_toweroflight;ability_paladin_toweroflight;ability_paladin_toweroflight;del addon
+rasgo;dra_fl_resistencia;Resistencia sagrada;ability_racial_holyresistance;ability_racial_holyresistance;ability_racial_holyresistance;del addon
+rasgo;dra_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;dra_inc;Incremento de caracteristica;;hd_plussign_paladin;hd_plussign_paladin;nuevo de la web
+rasgo;dra_man_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;dra_man_magia;Magia vil;;eps_wc3h_felpower;eps_wc3h_felpower;nuevo de la web
+rasgo;dra_man_presencia;Presencia retorcida;;achievement_explore_argus;achievement_explore_argus;nuevo de la web
+rasgo;dra_man_resiliencia;Resiliencia vil;;eps_wc3h_felwither;eps_wc3h_felwither;nuevo de la web
+rasgo;dra_man_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;dra_sombras;Resistencia a las sombras;ability_priest_halo_shadow;ability_priest_halo_shadow;ability_priest_halo_shadow;del addon
+rasgo;dra_tab_elemental;Vinculo elemental;spell_nature_elementalprecision_1;spell_nature_elementalprecision_1;spell_nature_elementalprecision_1;del addon
+rasgo;dra_tab_inc;Incremento de caracteristica;;hd_plussign_monk;hd_plussign_monk;nuevo de la web
+rasgo;dra_tab_paria;Paria;eps_wc3_brokendraenei;eps_wc3_brokendraenei;eps_wc3_brokendraenei;del addon
+rasgo;dra_tab_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;draenei;Draenei;;achievement_character_draenei_male;achievement_character_draenei_male;nuevo de la web
+rasgo;dru_afinidades;Afinidades salvajes;;ability_druid_earthandsky;ability_druid_earthandsky;nuevo de la web
+rasgo;dru_cambio_forma;Cambio de forma;;ability_druid_catform;ability_druid_catform;nuevo de la web
+rasgo;dru_druidico;Druidico;;ability_druid_lunarguidance;ability_druid_lunarguidance;nuevo de la web
+rasgo;dru_eq_conjuros_camino;Conjuros del camino;spell_nature_starfall;spell_nature_starfall;spell_nature_starfall;del addon
+rasgo;dru_eq_conjuros_camino_5;Conjuros del camino;;spell_nature_starfall;spell_nature_starfall;nuevo de la web
+rasgo;dru_eq_fuerza_naturaleza;Fuerza de la naturaleza;ability_druid_forceofnature;ability_druid_forceofnature;ability_druid_forceofnature;del addon
+rasgo;dru_eq_invocar;Invocar;spell_nature_natureblessing;spell_nature_natureblessing;spell_nature_natureblessing;del addon
+rasgo;dru_fer_adaptacion;Adaptacion salvaje;;eps_wow_wildstalkr;eps_wow_wildstalkr;nuevo de la web
+rasgo;dru_fer_afinidad;Afinidad feral o guardiana;ability_druid_primaltenacity;ability_druid_primaltenacity;ability_druid_primaltenacity;del addon
+rasgo;dru_fer_ataque_adicional;Ataque adicional (transformado);eps_bg3_multiattack;eps_bg3_multiattack;eps_bg3_multiattack;del addon
+rasgo;dru_fer_instintos;Instintos primales;ability_druid_healinginstincts;ability_druid_healinginstincts;ability_druid_healinginstincts;del addon
+rasgo;dru_fer_marca_ursol;Marca de ursol;ability_druid_maul;ability_druid_maul;ability_druid_maul;del addon
+rasgo;dru_fer_tacticas;Tacticas ferales;ability_druid_catform;ability_druid_catform;ability_druid_catform;del addon
+rasgo;dru_lanzamiento_conjuros;Lanzamiento de conjuros;ability_druid_manatree;ability_druid_manatree;ability_druid_manatree;del addon
+rasgo;dru_mejora_cambio_forma;Mejora de cambio de forma;ability_druid_tigersroar;ability_druid_tigersroar;ability_druid_tigersroar;del addon
+rasgo;dru_res_conjuros_camino;Hechizos del camino;spell_nature_healingtouch;spell_nature_healingtouch;spell_nature_healingtouch;del addon
+rasgo;dru_res_conjuros_camino_5;Hechizos del camino;;spell_nature_resistnature;spell_nature_resistnature;nuevo de la web
+rasgo;dru_res_marca_salvaje;Marca de lo salvaje;spell_nature_regeneration;spell_nature_regeneration;spell_nature_regeneration;del addon
+rasgo;dru_res_rejuvenecimiento;Alivio presto;;spell_nature_rejuvenation;spell_nature_rejuvenation;nuevo de la web
+rasgo;dru_senda;Senda del Druida;ability_druid_lunarguidance;ability_druid_lunarguidance;ability_druid_lunarguidance;del addon
+rasgo;druida;Druida;;classicon_druid;classicon_druid;nuevo de la web
+rasgo;druida_alma_del_bosque;Alma del Bosque;;;;sin icono
+rasgo;druida_cuerpo_atemporal;Cuerpo Atemporal;;;;sin icono
+rasgo;duelista_defensivo;Duelista defensivo;ability_parry;ability_parry;ability_parry;del addon
+rasgo;duro;Duro;ability_warrior_intensifyrage;ability_warrior_intensifyrage;ability_warrior_intensifyrage;del addon
+rasgo;eco_resurreccion;Eco de resurreccion;;d3_astralpresence;d3_astralpresence;nuevo de la web
+rasgo;el_loco;El loco;;spell_magic_polymorphrabbit;spell_magic_polymorphrabbit;nuevo de la web
+rasgo;elemental;Elemental;;spell_nature_lightning;spell_nature_lightning;nuevo de la web
+rasgo;elfo;Renegado Elfo;;eps_wc3h_forsakenhunter;eps_wc3h_forsakenhunter;nuevo de la web
+rasgo;elfo_noche;Elfo de la Noche;;achievement_character_nightelf_male;achievement_character_nightelf_male;nuevo de la web
+rasgo;elfo_sangre;Elfo de Sangre;;achievement_character_bloodelf_male;achievement_character_bloodelf_male;nuevo de la web
+rasgo;elfo_vacio;Elfo del Vacio;;voidelf_m;voidelf_m;nuevo de la web
+rasgo;eln_alt_conocimiento;Conocimiento antiguo de eldre'thalas;;achievements_zone_azsuna;achievements_zone_azsuna;nuevo de la web
+rasgo;eln_alt_erudito;Erudito arcano;;spell_holy_arcaneintellect;spell_holy_arcaneintellect;nuevo de la web
+rasgo;eln_alt_proteccion;Proteccion mental;;hd_ldaknowledge;hd_ldaknowledge;nuevo de la web
+rasgo;eln_armas;Entrenamiento con armas Kaldorei;inv_sword_1h_warfrontsnightelf_d_01;inv_sword_1h_warfrontsnightelf_d_01;inv_sword_1h_warfrontsnightelf_d_01;del addon
+rasgo;eln_fusion;Fusion con las sombras;;ability_racial_shadowmeld;ability_racial_shadowmeld;nuevo de la web
+rasgo;eln_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;eln_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;eln_mascara;Mascara de lo salvaje;;ability_ambush;ability_ambush;nuevo de la web
+rasgo;eln_sentidos;Sentidos agudos;;eps_wc3_nightelfcharm;eps_wc3_nightelfcharm;nuevo de la web
+rasgo;eln_vision;Vision en la oscuridad superior;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;elune;Sacerdocio de Elune;;eps_wc3h_nightelfpriestessofthemoon1;eps_wc3h_nightelfpriestessofthemoon1;nuevo de la web
+rasgo;elv_frio;Frio de la Noche;ability_racial_chillofnight;ability_racial_chillofnight;ability_racial_chillofnight;del addon
+rasgo;elv_grieta;Grieta espacial;ability_racial_spatialrift;ability_racial_spatialrift;ability_racial_spatialrift;del addon
+rasgo;elv_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;elv_inc;Incremento de caracteristica;;hd_plussign_rogue;hd_plussign_rogue;nuevo de la web
+rasgo;elv_inc_choice;Incremento de caracteristica (eleccion);;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;elv_legado;Legado thalassiano;;achievement_zone_eversongwoods;achievement_zone_eversongwoods;nuevo de la web
+rasgo;elv_sentidos;Sentidos agudos;;eps_wc3_nightelfcharm;eps_wc3_nightelfcharm;nuevo de la web
+rasgo;elv_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;ena_entrenamiento;Entrenamiento de combate Enano;achievement_zone_ironforge;achievement_zone_ironforge;achievement_zone_ironforge;del addon
+rasgo;ena_forjaz_dureza;Dureza enana;ability_toughness;ability_toughness;ability_toughness;del addon
+rasgo;ena_forjaz_inc;Incremento de caracteristica;;hd_plussign_warrior;hd_plussign_warrior;nuevo de la web
+rasgo;ena_forjaz_piedra;Forma de piedra;spell_shadow_unholystrength;spell_shadow_unholystrength;spell_shadow_unholystrength;del addon
+rasgo;ena_hn_forjado;Forjado en llamas;ability_racial_foregedinflames;ability_racial_foregedinflames;ability_racial_foregedinflames;del addon
+rasgo;ena_hn_inc;Incremento de caracteristica;;hd_plussign_mage;hd_plussign_mage;nuevo de la web
+rasgo;ena_hn_sangre;Sangre de fuego;ability_racial_fireblood;ability_racial_fireblood;ability_racial_fireblood;del addon
+rasgo;ena_hn_vision;Vision en la oscuridad superior;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;ena_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;ena_inc;Incremento de caracteristica;;hd_plussign_deathknight;hd_plussign_deathknight;nuevo de la web
+rasgo;ena_mart_altura;Residencia en altura;;trade_archaeology_carved wildhammer gryphon figurine;trade_archaeology_carved wildhammer gryphon figurine;nuevo de la web
+rasgo;ena_mart_domador;Domador natural;ability_druid_naturalperfection;ability_druid_naturalperfection;ability_druid_naturalperfection;del addon
+rasgo;ena_mart_inc;Incremento de caracteristica;;hd_plussign_monk;hd_plussign_monk;nuevo de la web
+rasgo;ena_mart_valentia;Valentia irrazonable;dos2_warrior7;dos2_warrior7;dos2_warrior7;del addon
+rasgo;ena_piedra;Conocimiento de la piedra;trade_archaeology_dwarf_runestone;trade_archaeology_dwarf_runestone;trade_archaeology_dwarf_runestone;del addon
+rasgo;ena_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;enano;Enano;;achievement_character_dwarf_male;achievement_character_dwarf_male;nuevo de la web
+rasgo;envenenador;Envenenador;trade_brewpoison;trade_brewpoison;trade_brewpoison;del addon
+rasgo;equilibrio;Equilibrio;;spell_nature_starfall;spell_nature_starfall;nuevo de la web
+rasgo;equilibrio_bendicion_de_los_ancestros;Bendición de los Ancestros;;;;sin icono
+rasgo;equilibrio_encarnacion_elegido_de_elune;Encarnación: Elegido de Elune;;;;sin icono
+rasgo;equilibrio_influencia_astral;Influencia Astral;;;;sin icono
+rasgo;eremita;Eremita;inv_misc_tabard_lorewalkers;inv_misc_tabard_lorewalkers;inv_misc_tabard_lorewalkers;del addon
+rasgo;ermitano;Ermitaño;spell_nature_naturetouchdecay;spell_nature_naturetouchdecay;spell_nature_naturetouchdecay;del addon
+rasgo;erudito;Erudito;;wh_focusedmind;wh_focusedmind;nuevo de la web
+rasgo;esa_arcano;Conocimiento Arcano;ability_racial_arcaneaffinity;ability_racial_arcaneaffinity;ability_racial_arcaneaffinity;del addon
+rasgo;esa_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;esa_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;esa_legado;Legado thalassiano;;achievement_zone_eversongwoods;achievement_zone_eversongwoods;nuevo de la web
+rasgo;esa_reversion;Reversion de conjuros;;eps_bg3_counterspell;eps_bg3_counterspell;nuevo de la web
+rasgo;esa_sentidos;Sentidos agudos;;eps_wc3_nightelfcharm;eps_wc3_nightelfcharm;nuevo de la web
+rasgo;esa_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;escarcha;Escarcha;;spell_deathknight_frostpresence;spell_deathknight_frostpresence;nuevo de la web
+rasgo;escarcha_anillo_de_escarcha;Anillo de Escarcha;;;;sin icono
+rasgo;escarcha_corazon_congelado;Corazón Congelado;;;;sin icono
+rasgo;escarcha_garras_de_hielo;Garras de Hielo;;;;sin icono
+rasgo;escarcha_invierno_implacable;Invierno Implacable;;;;sin icono
+rasgo;escarcha_manos_de_escarcha;Manos de Escarcha;;;;sin icono
+rasgo;escarcha_pilar_de_escarcha;Pilar de Escarcha;;;;sin icono
+rasgo;exiliado_alterac;Exiliado de Alterac;achievement_zone_alteracmountains_01;achievement_zone_alteracmountains_01;achievement_zone_alteracmountains_01;del addon
+rasgo;exodar;Draenei del Exodar;;draenei_m;draenei_m;nuevo de la web
+rasgo;experto_armas_fuego;Experto en armas de fuego;inv_legendary_gun;inv_legendary_gun;inv_legendary_gun;del addon
+rasgo;experto_ballestas;Experto en ballestas;inv_weapon_crossbow_09;inv_weapon_crossbow_09;inv_weapon_crossbow_09;del addon
+rasgo;experto_habilidades;Experto en habilidades;ability_mage_studentofthemind;ability_mage_studentofthemind;ability_mage_studentofthemind;del addon
+rasgo;explorador_mazmorras;Explorador de mazmorras;inv_enchanting_70_pet_torch;inv_enchanting_70_pet_torch;inv_enchanting_70_pet_torch;del addon
+rasgo;feat_ac_animales;Trato con Animales;eps_bg3_speakwithanimals;eps_bg3_speakwithanimals;eps_bg3_speakwithanimals;del addon
+rasgo;feat_ac_conjuros;Conjuros de bestias;ability_druid_mastershapeshifter;ability_druid_mastershapeshifter;ability_druid_mastershapeshifter;del addon
+rasgo;feat_adf_armas;Competencia con armas de fuego;inv_weapon_rifle_04;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;feat_adf_armero;Competencia con herramientas de armero;inv_misc_profession_book_engineering;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;feat_adf_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_ar_agarre;Escapar de agarres;inv_scroll_11;inv_scroll_11;inv_scroll_11;del addon
+rasgo;feat_ar_competencia;Acrobacias o atletismo;inv_scroll_11;inv_scroll_11;inv_scroll_11;del addon
+rasgo;feat_ar_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_ar_velocidad;Velocidad;ability_rogue_sprint;ability_rogue_sprint;ability_rogue_sprint;del addon
+rasgo;feat_av_aura;Aura del Vacio;inv_enchant_voidsphere;inv_enchant_voidsphere;inv_enchant_voidsphere;del addon
+rasgo;feat_av_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_av_reroll;Daño necrotico;spell_necro_deathrift;spell_necro_deathrift;spell_necro_deathrift;del addon
+rasgo;feat_de_correr;Carrera a cuatro patas;ability_racial_runningwild;ability_racial_runningwild;ability_racial_runningwild;del addon
+rasgo;feat_de_garras;Garras;ability_racial_flayer;ability_racial_flayer;ability_racial_flayer;del addon
+rasgo;feat_de_mordisco;Mordisco y garras;inv_misc_monsterfang_02;inv_misc_monsterfang_02;inv_misc_monsterfang_02;del addon
+rasgo;feat_de_olfato;Olfato agudo;eps_wc3_enchantedbear;eps_wc3_enchantedbear;eps_wc3_enchantedbear;del addon
+rasgo;feat_eaf_cercania;Sin desventaja en cercania;spell_misc_hellifrepvpcombatmorale;spell_misc_hellifrepvpcombatmorale;spell_misc_hellifrepvpcombatmorale;del addon
+rasgo;feat_eaf_extra;Disparo adicional;ability_hunter_rapidregeneration;ability_hunter_rapidregeneration;ability_hunter_rapidregeneration;del addon
+rasgo;feat_eaf_recarga;Sin recarga;ability_hunter_lockandload;ability_hunter_lockandload;ability_hunter_lockandload;del addon
+rasgo;feat_fe_esquivar;Esquivar y curar;XinZhao_Determination;XinZhao_Determination;XinZhao_Determination;del addon
+rasgo;feat_fe_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_fo_dado;Golpe furioso;ability_warrior_deepcuts;ability_warrior_deepcuts;ability_warrior_deepcuts;del addon
+rasgo;feat_fo_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_fo_reaccion;Furia implacable;ability_warrior_warcry;ability_warrior_warcry;ability_warrior_warcry;del addon
+rasgo;feat_ge_conjuro;Espiritu sanador;spell_nature_healingwavelesser;spell_nature_healingwavelesser;spell_nature_healingwavelesser;del addon
+rasgo;feat_ge_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_ge_miedo;Valor espiritual;eps_lol_profileicon_runespirit2;eps_lol_profileicon_runespirit2;eps_lol_profileicon_runespirit2;del addon
+rasgo;feat_gma_adicional;Ataque adicional;eps_bg3_multiattack;eps_bg3_multiattack;eps_bg3_multiattack;del addon
+rasgo;feat_gma_potente;Golpe potente;ability_rogue_sabreslash;ability_rogue_sabreslash;ability_rogue_sabreslash;del addon
+rasgo;feat_hd_espiritu;Espiritu protector;ability_racial_ultravision;ability_racial_ultravision;ability_racial_ultravision;del addon
+rasgo;feat_hd_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_hd_sigilo;Sigilo en penumbra;ability_racial_shadowmeld;ability_racial_shadowmeld;ability_racial_shadowmeld;del addon
+rasgo;feat_mae_armas;Armas exoticas;inv_sword_109;inv_sword_109;inv_sword_109;del addon
+rasgo;feat_mae_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_mb_cercania;Sin desventaja en cercania;spell_misc_hellifrepvpcombatmorale;spell_misc_hellifrepvpcombatmorale;spell_misc_hellifrepvpcombatmorale;del addon
+rasgo;feat_mb_potente;Conjuro potente;ArcaneIntensity;ArcaneIntensity;ArcaneIntensity;del addon
+rasgo;feat_mb_trucos;Trucos de Mago;spell_mage_arcaneorb;spell_mage_arcaneorb;spell_mage_arcaneorb;del addon
+rasgo;feat_mesc_defensa;Defensa con escudo;inv_shield_05;inv_shield_05;inv_shield_05;del addon
+rasgo;feat_mesc_embate;Embate con escudo;ability_warrior_shieldbash;ability_warrior_shieldbash;ability_warrior_shieldbash;del addon
+rasgo;feat_mq_alquimista;Suministros de alquimista;inv_misc_5potionbag_special;inv_misc_5potionbag_special;inv_misc_5potionbag_special;del addon
+rasgo;feat_mq_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_mq_mejora;Mejorar pocion;eps_hs_bloodfurypotion;eps_hs_bloodfurypotion;eps_hs_bloodfurypotion;del addon
+rasgo;feat_mq_pocion;Identificar pocion;eps_bg3_identify;eps_bg3_identify;eps_bg3_identify;del addon
+rasgo;feat_pe_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_pe_reroll;Precision;Tyrande_HuntersMark;Tyrande_HuntersMark;Tyrande_HuntersMark;del addon
+rasgo;feat_phb_2armas;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_acechador;Beneficios;inv_scroll_11;inv_scroll_11;inv_scroll_11;del addon
+rasgo;feat_phb_actor_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_actor_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_afortunado;Suerte;inv_misc_herb_goldclover_leaf;inv_misc_herb_goldclover_leaf;inv_misc_herb_goldclover_leaf;del addon
+rasgo;feat_phb_alerta_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_alerta_ini;Iniciativa;ability_rogue_fleetfooted;ability_rogue_fleetfooted;ability_rogue_fleetfooted;del addon
+rasgo;feat_phb_amedias;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_apes_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_apes_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_apesadas;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_apresador;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_asta;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_atleta_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_atleta_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_azote;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_ballestas;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_carga;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_centinela;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_duelista;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_duro;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_escudos;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_habilidoso;Competencias;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_iniciado;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_lacor_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_lacor_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_lcombate;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_lider;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_ling_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_ling_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_lpreciso;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_lritual;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_macor_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_macor_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_marmas_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_marmas_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_maton_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_maton_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_mazmorras;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_mente_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_mente_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_montado;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_movil;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_muyacor_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_muyacor_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_obs_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_obs_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_resiliente;Caracteristica y salvacion;inv_scroll_11;inv_scroll_11;inv_scroll_11;del addon
+rasgo;feat_phb_resistente_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_resistente_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_phb_salvaje;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_sanador;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_tirador;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_versarmas;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_phb_verselem;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_pr_competencia;Competencia en habilidad;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_pr_extra;Herramienta e idioma;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;feat_pr_pericia;Pericia;ability_rogue_stayofexecution;ability_rogue_stayofexecution;ability_rogue_stayofexecution;del addon
+rasgo;feat_rf_conocimiento;Conocimiento del enemigo;d3_berserkerrage;d3_berserkerrage;d3_berserkerrage;del addon
+rasgo;feat_rf_enemigos;Enemigos jurados;eps_lol_gnar_ragegene;eps_lol_gnar_ragegene;eps_lol_gnar_ragegene;del addon
+rasgo;feat_rf_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_rf_oportunidad;Reflejos contra enemigos;d3_battlerage;d3_battlerage;d3_battlerage;del addon
+rasgo;feat_rt_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_rt_pg;Vitalidad Tauren;eps_wc3h_taurenanger;eps_wc3h_taurenanger;eps_wc3h_taurenanger;del addon
+rasgo;feat_rt_piel;Piel gruesa;inv_misc_nativebeastskin;inv_misc_nativebeastskin;inv_misc_nativebeastskin;del addon
+rasgo;feat_ta_conjuro;Paso brumoso;eps_lol_shen_shadowdashold;eps_lol_shen_shadowdashold;eps_lol_shen_shadowdashold;del addon
+rasgo;feat_ta_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_artif;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_artif_tool;Herramientas de artesano;inv_scroll_11;inv_scroll_11;inv_scroll_11;del addon
+rasgo;feat_tco_cocinero_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_cocinero_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_cort_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_cort_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_envenenador;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_exph_exp;Pericia;ability_rogue_stayofexecution;ability_rogue_stayofexecution;ability_rogue_stayofexecution;del addon
+rasgo;feat_tco_exph_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_exph_prof;Competencia en habilidad;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_gunner_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_gunner_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_hadas_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_hadas_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_inicomb;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_metamagia;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_perf_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_perf_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_sobren;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_sombras_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_sombras_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_telek_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_telek_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_telep_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_telep_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feat_tco_trit_b;Beneficios;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;feat_tco_trit_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;feral;Feral;;ability_druid_catform;ability_druid_catform;nuevo de la web
+rasgo;feral_afinidad_superior_feral_o_guar;Afinidad Superior Feral o Guardiana;;;;sin icono
+rasgo;feral_encarnacion_guardian_de_las_ti;Encarnación: Guardián de las Tierras Salvajes;;;;sin icono
+rasgo;feral_mutilacion_brutal;Mutilación Brutal;;;;sin icono
+rasgo;feriante_luna_negra;Feriante de la luna negra;poster_darkmoon1;poster_darkmoon1;poster_darkmoon1;del addon
+rasgo;forajido;Forajido;;ability_rogue_waylay;ability_rogue_waylay;nuevo de la web
+rasgo;forastero;Forastero;achievement_bg_dg_master_of_the_deepwind_gorge;achievement_bg_dg_master_of_the_deepwind_gorge;achievement_bg_dg_master_of_the_deepwind_gorge;del addon
+rasgo;forjado_luz;Draenei Forjado por la Luz;;lightforged_m;lightforged_m;nuevo de la web
+rasgo;forjador_torio;Forjador de la hermandad del torio;ability_racial_massproduction;ability_racial_massproduction;ability_racial_massproduction;del addon
+rasgo;forjaz;Enano de Forjaz;;dwarf_m;dwarf_m;nuevo de la web
+rasgo;fortaleza_enana;Fortaleza enana;WH_DeadlyDetermination;WH_DeadlyDetermination;WH_DeadlyDetermination;del addon
+rasgo;fuego;Fuego;;spell_fire_flamebolt;spell_fire_flamebolt;nuevo de la web
+rasgo;fuego_combustion;Combustión;;;;sin icono
+rasgo;fuego_prender;Prender;;;;sin icono
+rasgo;furia;Ira;;ability_warrior_innerrage;ability_warrior_innerrage;nuevo de la web
+rasgo;furia_berserker_enloquecido;Berserker Enloquecido;;;;sin icono
+rasgo;furia_critico_devastador;Crítico Devastador;;;;sin icono
+rasgo;furia_furia_focalizada;Ira Focalizada;;;;sin icono
+rasgo;furia_orca;Furia orca;spell_winston_rage;spell_winston_rage;spell_winston_rage;del addon
+rasgo;furia_sed_de_sangre;Sed de Sangre;;;;sin icono
+rasgo;gno_artifice;Conocimientos del artifice;;inv_misc_enggizmos_12;inv_misc_enggizmos_12;nuevo de la web
+rasgo;gno_escapista;Escapista;;eps_bg3_sprint;eps_bg3_sprint;nuevo de la web
+rasgo;gno_gnom_inc;Incremento de caracteristica;;hd_plussign_paladin;hd_plussign_paladin;nuevo de la web
+rasgo;gno_gnom_ingenieria;Ingenieria gnomica;;inv_gizmo_01;inv_gizmo_01;nuevo de la web
+rasgo;gno_gnom_mente;Mente expansiva;;dos2_mind;dos2_mind;nuevo de la web
+rasgo;gno_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;gno_inc;Incremento de caracteristica;;hd_plussign_mage;hd_plussign_mage;nuevo de la web
+rasgo;gno_mec_inc;Incremento de caracteristica;;hd_plussign_deathknight;hd_plussign_deathknight;nuevo de la web
+rasgo;gno_mec_mejoras;Mejoras mecanicas;;inv_mechagon_wrench;inv_mechagon_wrench;nuevo de la web
+rasgo;gnomeregan;Gnomo de Gnomeregan;;achievement_character_gnome_male;achievement_character_gnome_male;nuevo de la web
+rasgo;gnomo;Gnomo;;gnome_m;gnome_m;nuevo de la web
+rasgo;gob_esquivar;Esquivar;ability_racial_timeismoney;ability_racial_timeismoney;ability_racial_timeismoney;del addon
+rasgo;gob_familiaridad;Familiaridad mecanica;inv_eng_gizmo3;inv_eng_gizmo3;inv_eng_gizmo3;del addon
+rasgo;gob_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;gob_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;gob_ingenieria;Ingenieria Goblin;inv_gizmo_rocketlauncher;inv_gizmo_rocketlauncher;inv_gizmo_rocketlauncher;del addon
+rasgo;gob_tratos;Mejores tratos;achievement_guildperk_bartering;achievement_guildperk_bartering;achievement_guildperk_bartering;del addon
+rasgo;goblin;Goblin;;achievement_goblinhead;achievement_goblinhead;nuevo de la web
+rasgo;gran_maestro_armas;Gran maestro de armas;ability_warrior_unrelentingassault;ability_warrior_unrelentingassault;ability_warrior_unrelentingassault;del addon
+rasgo;guardia_ciudad;Guardia de ciudad;;ability_warrior_vigilance;ability_warrior_vigilance;nuevo de la web
+rasgo;guardian_salvaje;Guardian de lo salvaje;;ability_hunter_huntervswild;ability_hunter_huntervswild;nuevo de la web
+rasgo;gue_arm_arrollar;Arrollar;;ability_warrior_unrelentingassault;ability_warrior_unrelentingassault;nuevo de la web
+rasgo;gue_arm_intrepido;Intrepido;;ability_warrior_revenge;ability_warrior_revenge;nuevo de la web
+rasgo;gue_fur_desatada;Ira desatada;ability_warrior_innerrage;ability_warrior_innerrage;ability_warrior_innerrage;del addon
+rasgo;gue_fur_temible;Temible;ability_warrior_intensifyrage;ability_warrior_intensifyrage;ability_warrior_intensifyrage;del addon
+rasgo;gue_pro_control;Control de ira;;ability_warrior_focusedrage;ability_warrior_focusedrage;nuevo de la web
+rasgo;gue_pro_provocacion;Provocacion;;ability_physical_taunt;ability_physical_taunt;nuevo de la web
+rasgo;guerrero;Guerrero;;classicon_warrior;classicon_warrior;nuevo de la web
+rasgo;guerrero_accion_adicional;Accion adicional;ability_warrior_offensivestance;ability_warrior_offensivestance;ability_warrior_offensivestance;del addon
+rasgo;guerrero_arquetipo_marcial;Arquetipo marcial;ability_warrior_savageblow;ability_warrior_savageblow;ability_warrior_savageblow;del addon
+rasgo;guerrero_ataque_extra;Ataque adicional;eps_bg3_multiattack;eps_bg3_multiattack;eps_bg3_multiattack;del addon
+rasgo;guerrero_ataque_extra_2;Ataque adicional (2);;;;sin icono
+rasgo;guerrero_estilo_combate;Estilo de combate;;ability_dualwield;ability_dualwield;nuevo de la web
+rasgo;guerrero_furia_interna;Ira interna;ability_warrior_innerrage;ability_warrior_innerrage;ability_warrior_innerrage;del addon
+rasgo;guerrero_segundo_aliento;Segundo aliento;;ability_hunter_harass;ability_hunter_harass;nuevo de la web
+rasgo;guerreros;Clanes Guerreros;;eps_wc3h_orcwarlord;eps_wc3h_orcwarlord;nuevo de la web
+rasgo;guia_espiritual;Guia espiritual;eps_lol_profileicon_runespirit;eps_lol_profileicon_runespirit;eps_lol_profileicon_runespirit;del addon
+rasgo;habilidoso;Habilidoso;ability_kaztik_dominatemind;ability_kaztik_dominatemind;ability_kaztik_dominatemind;del addon
+rasgo;heredero;Heredero;inv_icon_heirloomtoken_weapon02;inv_icon_heirloomtoken_weapon02;inv_icon_heirloomtoken_weapon02;del addon
+rasgo;herencia_darnassiana;Herencia darnassiana;eps_wc3_nightelfflag;eps_wc3_nightelfflag;eps_wc3_nightelfflag;del addon
+rasgo;heroe_pueblo;Heroe del pueblo;achievement_guild_forgreatjusticerank2;achievement_guild_forgreatjusticerank2;achievement_guild_forgreatjusticerank2;del addon
+rasgo;hielo;Troll de Hielo;;eps_wc3_icetrollshadowpriest;eps_wc3_icetrollshadowpriest;nuevo de la web
+rasgo;hierro_negro;Enano Hierro Negro;;darkiron_m;darkiron_m;nuevo de la web
+rasgo;hua_cazador;Conocimiento del Cazador;hd_book2motif_gilneas;hd_book2motif_gilneas;hd_book2motif_gilneas;del addon
+rasgo;hua_dos_formas;Dos formas;;eps_wc3h_worgencurse;eps_wc3h_worgencurse;nuevo de la web
+rasgo;hua_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;hua_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;hua_mordida;Mordida;;inv_misc_monsterfang_02;inv_misc_monsterfang_02;nuevo de la web
+rasgo;hua_oido;Oido y olfato agudo;;ability_shaman_freedomwolf;ability_shaman_freedomwolf;nuevo de la web
+rasgo;hua_salto;Salto de pie;;eps_bg3_jump;eps_bg3_jump;nuevo de la web
+rasgo;hua_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;huargen;Huargen;;achievement_worganhead;achievement_worganhead;nuevo de la web
+rasgo;huerfano;Huerfano;;eps_lol_profileicon_ezbereal;eps_lol_profileicon_ezbereal;nuevo de la web
+rasgo;hum_determinacion;Determinacion;;ability_warrior_rallyingcry;ability_warrior_rallyingcry;nuevo de la web
+rasgo;hum_espiritu;Espiritu Humano;;inv_enchant_shardbrilliantsmall;inv_enchant_shardbrilliantsmall;nuevo de la web
+rasgo;hum_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;hum_inc_1;Incremento de caracteristica (+1);;hd_plussign_priest;hd_plussign_priest;nuevo de la web
+rasgo;hum_inc_2;Incremento de caracteristica (+2);;hd_plussign_priest;hd_plussign_priest;nuevo de la web
+rasgo;hum_versatilidad;Versatilidad de habilidades;inv_misc_book_08;inv_misc_book_08;inv_misc_book_08;del addon
+rasgo;humano;Humano;;achievement_character_human_male;achievement_character_human_male;nuevo de la web
+rasgo;iniciado_artificiero;Iniciado artificiero;eps_lol_profileicon_elementofmagma;eps_lol_profileicon_elementofmagma;eps_lol_profileicon_elementofmagma;del addon
+rasgo;iniciado_combate;Iniciado en el combate;ability_rogue_combatreadiness;ability_rogue_combatreadiness;ability_rogue_combatreadiness;del addon
+rasgo;iniciado_magia;Iniciado en la magia;spell_mage_presenceofmind;spell_mage_presenceofmind;spell_mage_presenceofmind;del addon
+rasgo;ira;Ira;;ability_demonhunter_chaoticimprint_fire;ability_demonhunter_chaoticimprint_fire;nuevo de la web
+rasgo;jungla;Troll de la Jungla;;achievement_character_troll_male;achievement_character_troll_male;nuevo de la web
+rasgo;lanzador_combate;Lanzador en combate;ability_mage_burnout;ability_mage_burnout;ability_mage_burnout;del addon
+rasgo;lanzador_preciso;Lanzador preciso;eps_lol_profileicon_truedamage;eps_lol_profileicon_truedamage;eps_lol_profileicon_truedamage;del addon
+rasgo;lanzador_ritual;Lanzador ritual;hots_mageprofile;hots_mageprofile;hots_mageprofile;del addon
+rasgo;lider_inspirador;Lider inspirador;achievement_guildperk_everyones a hero;achievement_guildperk_everyones a hero;achievement_guildperk_everyones a hero;del addon
+rasgo;ligeramente_acorazado;Ligeramente acorazado;inv_chest_chain_03;inv_chest_chain_03;inv_chest_chain_03;del addon
+rasgo;linguista;Linguista;trade_archaeology_silverscrollcase;trade_archaeology_silverscrollcase;trade_archaeology_silverscrollcase;del addon
+rasgo;maestro_armaduras_medias;Maestro en armaduras medias;inv_chest_chain_05;inv_chest_chain_05;inv_chest_chain_05;del addon
+rasgo;maestro_armaduras_pesadas;Maestro en armaduras pesadas;inv_chest_plate02;inv_chest_plate02;inv_chest_plate02;del addon
+rasgo;maestro_armas;Maestro de armas;garrison_weaponupgrade;garrison_weaponupgrade;garrison_weaponupgrade;del addon
+rasgo;maestro_armas_asta;Maestro en armas de asta;inv_spear_05;inv_spear_05;inv_spear_05;del addon
+rasgo;maestro_armas_exoticas;Maestro en armas exoticas;inv_legendary_sword;inv_legendary_sword;inv_legendary_sword;del addon
+rasgo;maestro_armas_pesadas;Maestro en armas pesadas;inv_sword_111;inv_sword_111;inv_sword_111;del addon
+rasgo;maestro_escudero;Maestro escudero;ability_warrior_shieldguard;ability_warrior_shieldguard;ability_warrior_shieldguard;del addon
+rasgo;maestro_escudos;Maestro en escudos;inv_shield_06;inv_shield_06;inv_shield_06;del addon
+rasgo;mago;Mago;;classicon_mage;classicon_mage;nuevo de la web
+rasgo;mago_arc_brillantez;Brillantez arcana;spell_arcane_blast;spell_arcane_blast;spell_arcane_blast;del addon
+rasgo;mago_arc_cargas;Cargas arcanas;spell_arcane_arcane01;spell_arcane_arcane01;spell_arcane_arcane01;del addon
+rasgo;mago_arc_desplazamiento;Desplazamiento temporal;spell_arcane_teleportstormwind;spell_arcane_teleportstormwind;spell_arcane_teleportstormwind;del addon
+rasgo;mago_arc_truco;Truco adicional (prestidigitacion);spell_arcane_arcanepotency;spell_arcane_arcanepotency;spell_arcane_arcanepotency;del addon
+rasgo;mago_convertir_espacio;Convertir espacio en puntos;;;;sin icono
+rasgo;mago_crear_espacio;Crear espacio de conjuro;;;;sin icono
+rasgo;mago_de_batalla;Mago de batalla;inv_shoulders_cloth_raidmage_s_01;inv_shoulders_cloth_raidmage_s_01;inv_shoulders_cloth_raidmage_s_01;del addon
+rasgo;mago_esc_congelacion;Congelacion cerebral;spell_frost_frostarmor;spell_frost_frostarmor;spell_frost_frostarmor;del addon
+rasgo;mago_esc_dedos;Dedos de escarcha;;spell_frost_frostarmor;spell_frost_frostarmor;nuevo de la web
+rasgo;mago_esc_truco;Truco adicional (moldear agua);spell_frost_frostbolt02;spell_frost_frostbolt02;spell_frost_frostbolt02;del addon
+rasgo;mago_estudio_magico;Estudio magico;spell_holy_magicalsentry;spell_holy_magicalsentry;spell_holy_magicalsentry;del addon
+rasgo;mago_formulas_cantrips;Formulas de trucos;;inv_misc_book_09;inv_misc_book_09;nuevo de la web
+rasgo;mago_fue_cauterizar;Cauterizar;spell_fire_fire;spell_fire_fire;spell_fire_fire;del addon
+rasgo;mago_fue_racha;Racha de calor;;ability_ironmaidens_grapeshotblast;ability_ironmaidens_grapeshotblast;nuevo de la web
+rasgo;mago_fue_truco;Truco adicional (controlar llamas);inv_elemental_mote_fire01;inv_elemental_mote_fire01;inv_elemental_mote_fire01;del addon
+rasgo;mago_fuente_magia;Fuente de magia;;spell_shadow_manafeed;spell_shadow_manafeed;nuevo de la web
+rasgo;mago_lanzamiento_conjuros;Lanzamiento de conjuros;eps_rumble_arcaneblastpose;eps_rumble_arcaneblastpose;eps_rumble_arcaneblastpose;del addon
+rasgo;mago_metamagia;Metamagia;;spell_mage_presenceofmind;spell_mage_presenceofmind;nuevo de la web
+rasgo;mago_sentido_magico;Sentido magico;;spell_holy_magicalsentry;spell_holy_magicalsentry;nuevo de la web
+rasgo;man_ari;Man'ari;;eps_wc3h_eredardiabolist;eps_wc3h_eredardiabolist;nuevo de la web
+rasgo;marinero;Marinero;ships_ability_boardingpartyalliance;ships_ability_boardingpartyalliance;ships_ability_boardingpartyalliance;del addon
+rasgo;martillo_salvaje;Enano Martillo Salvaje;;eps_wc3h_wildhammermale;eps_wc3h_wildhammermale;nuevo de la web
+rasgo;maton_taberna;Maton de taberna;ability_racial_brushitoff;ability_racial_brushitoff;ability_racial_brushitoff;del addon
+rasgo;mecagnomo;Mecagnomo;;mechagnome_m;mechagnome_m;nuevo de la web
+rasgo;mejor_quimica;Mejor quimica;ability_racial_betterlivingthroughchemistry;ability_racial_betterlivingthroughchemistry;ability_racial_betterlivingthroughchemistry;del addon
+rasgo;mejora;Mejora;;spell_shaman_improvedstormstrike;spell_shaman_improvedstormstrike;nuevo de la web
+rasgo;mente_aguda;Mente aguda;dos2_mind;dos2_mind;dos2_mind;del addon
+rasgo;mercenario_veterano_harford;Mercenario veterano;;w3reforgedbandit;w3reforgedbandit;nuevo de la web
+rasgo;miembro_anillo_tierra;Miembro del anillo de la tierra;inv_misc_tabard_earthenring;inv_misc_tabard_earthenring;inv_misc_tabard_earthenring;del addon
+rasgo;miembro_organizacion;Miembro de organizacion;achievement_guildperk_everybodysfriend;achievement_guildperk_everybodysfriend;achievement_guildperk_everybodysfriend;del addon
+rasgo;miembro_tribal;Miembro tribal;spell_fire_totemofwrath;spell_fire_totemofwrath;spell_fire_totemofwrath;del addon
+rasgo;misticos;Clanes Misticos;;eps_wc3_orcwarlockred;eps_wc3_orcwarlockred;nuevo de la web
+rasgo;moderadamente_acorazado;Moderadamente acorazado;inv_armor_shoulder_plate_naxxramas_raidwarrior_c_01;inv_armor_shoulder_plate_naxxramas_raidwarrior_c_01;inv_armor_shoulder_plate_naxxramas_raidwarrior_c_01;del addon
+rasgo;monje;Monje;;classicon_monk;classicon_monk;nuevo de la web
+rasgo;monje_artes_marciales;Artes marciales;;ability_monk_roundhousekick;ability_monk_roundhousekick;nuevo de la web
+rasgo;monje_ataque_adicional;Ataque adicional;;eps_bg3_flurry;eps_bg3_flurry;nuevo de la web
+rasgo;monje_cam_caminavientos;Caminavientos;ability_monk_windwalker_spec;ability_monk_blackoutstrike;ability_monk_blackoutstrike;sustituido por la web
+rasgo;monje_cam_golpes_lanza;Golpes de mano de lanza;ability_monk_paralysis;ability_monk_paralysis;ability_monk_paralysis;del addon
+rasgo;monje_cam_reflejos;Reflejos del tigre;ability_monk_tigerslust;ability_monk_tigerslust;ability_monk_tigerslust;del addon
+rasgo;monje_cer_brebajes;Cervecero elusivo;ability_monk_brewmaster;achievement_faction_brewmaster;achievement_faction_brewmaster;sustituido por la web
+rasgo;monje_cer_buey_negro;Brebaje del Buey Negro;ability_monk_chibrew;ability_monk_chibrew;ability_monk_chibrew;del addon
+rasgo;monje_cer_competencia;Competencia adicional (cervecero);ability_monk_brewmaster;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;monje_cer_tambaleo;Tambaleo;ability_monk_stagger;ability_monk_ascension;ability_monk_ascension;sustituido por la web
+rasgo;monje_chi;Chi;;ability_monk_chiwave;ability_monk_chiwave;nuevo de la web
+rasgo;monje_chi_danza;Danza Elusiva;ability_monk_uplift;ability_monk_uplift;ability_monk_uplift;del addon
+rasgo;monje_chi_efusion;Efusion;ability_monk_vivify;ability_monk_vivify;ability_monk_vivify;del addon
+rasgo;monje_chi_paso;Paso del Viento;ability_monk_ridethewind;ability_monk_ridethewind;ability_monk_ridethewind;del addon
+rasgo;monje_chi_punos;Punos de Furia;monk_ability_fistoffury;monk_ability_fistoffury;monk_ability_fistoffury;del addon
+rasgo;monje_cuerpo_atemporal;Cuerpo Atemporal;;;;sin icono
+rasgo;monje_defensa_sin_armadura;Defensa sin armadura;;inv_leather_raiddemonhunter_q_02helm;inv_leather_raiddemonhunter_q_02helm;nuevo de la web
+rasgo;monje_desintoxicacion;Desintoxicación;;;;sin icono
+rasgo;monje_evasion;Evasión;;;;sin icono
+rasgo;monje_golpes_empoderados_chi;Golpes empoderados por el chi;ability_monk_jab;ability_monk_jab;ability_monk_jab;del addon
+rasgo;monje_herramientas;Herramientas de artesano;;inv_scroll_11;inv_scroll_11;nuevo de la web
+rasgo;monje_palma_aturdidora;Palma aturdidora;;ability_monk_paralysis;ability_monk_paralysis;nuevo de la web
+rasgo;monje_paz_interior;Paz Interior;;pandarenracial_innerpeace;pandarenracial_innerpeace;nuevo de la web
+rasgo;monje_rodar;Rodar;;ability_monk_roll;ability_monk_roll;nuevo de la web
+rasgo;monje_serenidad;Serenidad;;ability_monk_zenmeditation;ability_monk_zenmeditation;nuevo de la web
+rasgo;monje_tej_caminante;Caminante de la niebla;ability_monk_roll;ability_monk_roll;ability_monk_roll;del addon
+rasgo;monje_tej_niebla_calmante;Niebla reconfortante;ability_monk_soothingmists;ability_monk_soothingmists;ability_monk_soothingmists;del addon
+rasgo;monje_tej_palma_chiji;Palma de chi-ji;;ability_monk_cranekick;ability_monk_cranekick;nuevo de la web
+rasgo;monje_tradicion;Tradicion monastica;ability_monk_wayofthecrane;ability_monk_blackoutkick;ability_monk_blackoutkick;sustituido por la web
+rasgo;monje_trascendencia;Trascendencia;;;;sin icono
+rasgo;monje_zen_perfecto;Zen Perfecto;;;;sin icono
+rasgo;monte_alto;Tauren de Monte Alto;;highmountain_m;highmountain_m;nuevo de la web
+rasgo;movil;Movil;ability_rogue_fleetfooted;ability_rogue_fleetfooted;ability_rogue_fleetfooted;del addon
+rasgo;mulgore;Tauren de Mulgore;;achievement_character_tauren_male;achievement_character_tauren_male;nuevo de la web
+rasgo;muy_acorazado;Muy acorazado;eps_wc3h_platedhelmet;eps_wc3h_platedhelmet;eps_wc3h_platedhelmet;del addon
+rasgo;noble;Noble;;w3reforgedgoldring;w3reforgedgoldring;nuevo de la web
+rasgo;noc_arcano;Conocimiento Arcano;ability_racial_arcaneaffinity;ability_racial_arcaneaffinity;ability_racial_arcaneaffinity;del addon
+rasgo;noc_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;noc_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;noc_magia;Magia Nocheterna;icon_7fx_nightborn_astromancer_blue;icon_7fx_nightborn_astromancer_blue;icon_7fx_nightborn_astromancer_blue;del addon
+rasgo;noc_proteccion;Proteccion mental;;hd_ldaknowledge;hd_ldaknowledge;nuevo de la web
+rasgo;noc_sentidos;Sentidos agudos;;eps_wc3_nightelfcharm;eps_wc3_nightelfcharm;nuevo de la web
+rasgo;noc_solar;Sensibilidad a la Luz solar;sha_ability_rogue_envelopingshadows_nightborne;sha_ability_rogue_envelopingshadows_nightborne;sha_ability_rogue_envelopingshadows_nightborne;del addon
+rasgo;noc_vision;Vision en la oscuridad superior;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;nocheterna;Nocheterna;;nightborne_m;nightborne_m;nuevo de la web
+rasgo;novato_liga_expedicionarios;Novato de la liga de expedicionarios;INV_Cape_Armor_Explorer_D_01_backpack;INV_Cape_Armor_Explorer_D_01_backpack;INV_Cape_Armor_Explorer_D_01_backpack;del addon
+rasgo;observador;Observador;WH_EagleEye;WH_EagleEye;WH_EagleEye;del addon
+rasgo;operativo_ravenholdt;Operativo de ravenholdt;Medivh_RavenForm;Medivh_RavenForm;Medivh_RavenForm;del addon
+rasgo;orc_amenazante;Amenazante;ability_warrior_furiousresolve;ability_warrior_furiousresolve;ability_warrior_furiousresolve;del addon
+rasgo;orc_armas;Entrenamiento con armas orcas;inv_archaeology_orcclans_warsongpike;inv_archaeology_orcclans_warsongpike;inv_archaeology_orcclans_warsongpike;del addon
+rasgo;orc_caz_emboscador;Emboscador;ability_rogue_ambush;ability_rogue_ambush;ability_rogue_ambush;del addon
+rasgo;orc_caz_inc;Incremento de caracteristica;;hd_plussign_rogue;hd_plussign_rogue;nuevo de la web
+rasgo;orc_caz_sorpresa;Ataque sorpresa;eps_lol_rk_pyke_ambush;eps_lol_rk_pyke_ambush;eps_lol_rk_pyke_ambush;del addon
+rasgo;orc_gue_agresivo;Agresivo;ability_racial_bloodrage;ability_racial_bloodrage;ability_racial_bloodrage;del addon
+rasgo;orc_gue_inc;Incremento de caracteristica;;hd_plussign_warrior;hd_plussign_warrior;nuevo de la web
+rasgo;orc_gue_salvajes;Ataques salvajes;warrior_talent_icon_furyintheblood;warrior_talent_icon_furyintheblood;warrior_talent_icon_furyintheblood;del addon
+rasgo;orc_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;orc_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;orc_mis_conocimientos;Conocimientos misticos;ability_racial_ancienthistory;ability_racial_ancienthistory;ability_racial_ancienthistory;del addon
+rasgo;orc_mis_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;orc_mis_llamado;Llamado ancestral;ability_racial_ancestralcall;ability_racial_ancestralcall;ability_racial_ancestralcall;del addon
+rasgo;orc_resistencia;Resistencia implacable;ability_warrior_bloodsurge;ability_warrior_bloodsurge;ability_warrior_bloodsurge;del addon
+rasgo;orco;Orco;;achievement_character_orc_male;achievement_character_orc_male;nuevo de la web
+rasgo;pal_ataque_extra;Ataque adicional;eps_bg3_multiattack;eps_bg3_multiattack;eps_bg3_multiattack;del addon
+rasgo;pal_aura_proteccion;Aura de proteccion;spell_holy_devotionaura;spell_holy_devotionaura;spell_holy_devotionaura;del addon
+rasgo;pal_camino_sagrado;Camino sagrado;spell_holy_devotionaura;spell_holy_devotionaura;spell_holy_devotionaura;del addon
+rasgo;pal_estilo_combate;Estilo de combate;;ability_dualwield;ability_dualwield;nuevo de la web
+rasgo;pal_golpe_cruzado;Golpe del cruzado;;inv_sword_08;inv_sword_08;nuevo de la web
+rasgo;pal_imposicion_manos;Imposicion de manos;;spell_holy_layonhands;spell_holy_layonhands;nuevo de la web
+rasgo;pal_lanzamiento_conjuros;Lanzamiento de conjuros;ability_paladin_blessedmending;ability_paladin_blessedmending;ability_paladin_blessedmending;del addon
+rasgo;pal_pro_bastion;Bastion divino;;spell_holy_avengersshield;spell_holy_avengersshield;nuevo de la web
+rasgo;pal_pro_canalizar;Canalizar divinidad (proteccion);spell_holy_lightsgrace;spell_holy_lightsgrace;spell_holy_lightsgrace;del addon
+rasgo;pal_pro_consagracion;Canalizar: Consagracion;spell_holy_innerfire;spell_holy_innerfire;spell_holy_innerfire;del addon
+rasgo;pal_pro_escudo_sagrado;Canalizar: Escudo Sagrado;spell_holy_blessingofprotection;spell_holy_blessingofprotection;spell_holy_blessingofprotection;del addon
+rasgo;pal_proteccion_conjuros_3;Conjuros de camino (Proteccion);;ability_paladin_shieldofthetemplar;ability_paladin_shieldofthetemplar;nuevo de la web
+rasgo;pal_proteccion_conjuros_5;Conjuros de camino (Proteccion);;ability_paladin_shieldofthetemplar;ability_paladin_shieldofthetemplar;nuevo de la web
+rasgo;pal_represion_conjuros_3;Conjuros de camino (Retribucion);;ability_paladin_empoweredsealsjustice;ability_paladin_empoweredsealsjustice;nuevo de la web
+rasgo;pal_represion_conjuros_5;Conjuros de camino (Retribucion);;ability_paladin_empoweredsealsjustice;ability_paladin_empoweredsealsjustice;nuevo de la web
+rasgo;pal_ret_canalizar;Canalizar divinidad (represion);spell_holy_lightsgrace;spell_holy_lightsgrace;spell_holy_lightsgrace;del addon
+rasgo;pal_ret_rechazar;Canalizar: Rechazar lo Profano;ability_paladin_turnevil;ability_paladin_turnevil;ability_paladin_turnevil;del addon
+rasgo;pal_ret_tormenta;Tormenta divina;;ability_paladin_divinestorm;ability_paladin_divinestorm;nuevo de la web
+rasgo;pal_ret_veredicto;Canalizar: Veredicto del Templario;spell_paladin_templarsverdict;spell_paladin_templarsverdict;spell_paladin_templarsverdict;del addon
+rasgo;pal_sag_canalizar;Canalizar divinidad (sagrado);spell_holy_lightsgrace;spell_holy_lightsgrace;spell_holy_lightsgrace;del addon
+rasgo;pal_sag_destello;Destello de Luz;spell_holy_flashheal;spell_holy_flashheal;spell_holy_flashheal;del addon
+rasgo;pal_sag_luz_amanecer;Canalizar: Luz del Amanecer;ability_paladin_blindinglight2;ability_paladin_blindinglight2;ability_paladin_blindinglight2;del addon
+rasgo;pal_sag_martillo_luz;Canalizar: Martillo de Luz;ability_paladin_judgementofthepure;ability_paladin_judgementofthepure;ability_paladin_judgementofthepure;del addon
+rasgo;pal_sagrado_conjuros_3;Conjuros de camino (Sagrado);spell_holy_aspiration;spell_holy_aspiration;spell_holy_aspiration;del addon
+rasgo;pal_sagrado_conjuros_5;Conjuros de camino (Sagrado);;spell_holy_aspiration;spell_holy_aspiration;nuevo de la web
+rasgo;pal_sentido_divino;Sentido divino;;spell_holy_heroism;spell_holy_heroism;nuevo de la web
+rasgo;paladin;Paladin;;classicon_paladin;classicon_paladin;nuevo de la web
+rasgo;paladin_aura_de_coraje;Aura de Coraje;;;;sin icono
+rasgo;paladin_toque_purificador;Toque Purificador;;;;sin icono
+rasgo;pan_gourmet;Gourmet;;pandarenracial_gourmand;pandarenracial_gourmand;nuevo de la web
+rasgo;pan_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;pan_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;pan_marcial;Experto marcial;;ability_monk_jab;ability_monk_jab;nuevo de la web
+rasgo;pan_palma;Palma temblorosa;pandarenracial_quiveringpain;pandarenracial_quiveringpain;pandarenracial_quiveringpain;del addon
+rasgo;pan_paz;Paz interior;;pandarenracial_innerpeace;pandarenracial_innerpeace;nuevo de la web
+rasgo;pandaren;Pandaren;;w3reforgedpandarenbrewmaster;w3reforgedpandarenbrewmaster;nuevo de la web
+rasgo;perforador;Perforador;ability_warrior_shieldbreak;ability_warrior_shieldbreak;ability_warrior_shieldbreak;del addon
+rasgo;pic_accion_astuta;Accion astuta;;ability_rogue_fleetfooted;ability_rogue_fleetfooted;nuevo de la web
+rasgo;pic_arquetipo;Arquetipo de Picaro;ability_rogue_masterofsubtlety;ability_rogue_masterofsubtlety;ability_rogue_masterofsubtlety;del addon
+rasgo;pic_ase_competencia;Competencia con venenos;ability_rogue_deadenednerves;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;pic_ase_intuicion;Intuicion de asesino;ability_rogue_findweakness;ability_rogue_findweakness;ability_rogue_findweakness;del addon
+rasgo;pic_ataque_furtivo;Ataque furtivo;;ability_rogue_bladetwisting;ability_rogue_bladetwisting;nuevo de la web
+rasgo;pic_energia;Energia;;ability_rogue_vigor;ability_rogue_vigor;nuevo de la web
+rasgo;pic_esquiva_sobrenatural;Esquiva sobrenatural;ability_rogue_feint;ability_rogue_feint;ability_rogue_feint;del addon
+rasgo;pic_exponer_armadura;Exponer armadura;;ability_rogue_dismantle;ability_rogue_dismantle;nuevo de la web
+rasgo;pic_for_alacridad;Alacridad;;rogue_burstofspeed;rogue_burstofspeed;nuevo de la web
+rasgo;pic_for_competencia;Competencia con armas de fuego;ability_rogue_pistolshot;inv_scroll_11;inv_scroll_11;sustituido por la web
+rasgo;pic_garrote;Garrote;;ability_rogue_garrote;ability_rogue_garrote;nuevo de la web
+rasgo;pic_misivas;Misivas secretas;;archaeology_5_0_changkiboard;archaeology_5_0_changkiboard;nuevo de la web
+rasgo;pic_mutilar;Mutilar;;ability_rogue_shadowstrikes;ability_rogue_shadowstrikes;nuevo de la web
+rasgo;pic_pericia;Pericia;;ability_rogue_stayofexecution;ability_rogue_stayofexecution;nuevo de la web
+rasgo;pic_pericia_6;Pericia;ability_rogue_stayofexecution;ability_rogue_stayofexecution;ability_rogue_stayofexecution;del addon
+rasgo;pic_sut_conjuracion;Conjuracion;;ability_druid_cresentburn;ability_druid_cresentburn;nuevo de la web
+rasgo;pic_sut_vista;Vista de penumbra;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;picaro;Picaro;;classicon_rogue;classicon_rogue;nuevo de la web
+rasgo;picaro_anticipacion;Anticipación;;;;sin icono
+rasgo;picaro_esquivo;Esquivo;;;;sin icono
+rasgo;picaro_evasion;Evasión;;;;sin icono
+rasgo;picaro_golpe_de_suerte;Golpe de Suerte;;;;sin icono
+rasgo;precision_elfica;Precision elfica;ability_hunter_aimedshot;ability_hunter_aimedshot;ability_hunter_aimedshot;del addon
+rasgo;prodigio;Prodigio;w3reforgedhumanarcanetower;w3reforgedhumanarcanetower;w3reforgedhumanarcanetower;del addon
+rasgo;profana;Profano;;spell_deathknight_unholypresence;spell_deathknight_unholypresence;nuevo de la web
+rasgo;proteccion;Proteccion;;ability_warrior_defensivestance;ability_warrior_defensivestance;nuevo de la web
+rasgo;proteccion_golpes_atenuados;Golpes Atenuados;;;;sin icono
+rasgo;proteccion_interceptar;Interceptar;;;;sin icono
+rasgo;proteccion_nunca_te_rindas;Nunca Te Rindas;;;;sin icono
+rasgo;proteccion_presencia_inspiradora;Presencia Inspiradora;;;;sin icono
+rasgo;protector_cenarion;Protector Cenarion;achievement_reputation_guardiansofcenarius;achievement_reputation_guardiansofcenarius;achievement_reputation_guardiansofcenarius;del addon
+rasgo;punteria;Punteria;;ability_hunter_focusedaim;ability_hunter_focusedaim;nuevo de la web
+rasgo;punteria_aspecto_del_aguila;Aspecto del Aguila;;;;sin icono
+rasgo;punteria_ataque_multiple;Ataque Múltiple;;;;sin icono
+rasgo;punteria_enfoque_del_tirador;Enfoque del Tirador;;;;sin icono
+rasgo;ren_descanso;Descanso de la tumba;;achievement_bg_xkills_avgraveyard;achievement_bg_xkills_avgraveyard;nuevo de la web
+rasgo;ren_elf_arcano;Conocimiento Arcano;ability_racial_arcaneaffinity;ability_racial_arcaneaffinity;ability_racial_arcaneaffinity;del addon
+rasgo;ren_elf_idioma;Idioma extra;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;ren_elf_inc;Incremento de caracteristica;;hd_plussign_mage;hd_plussign_mage;nuevo de la web
+rasgo;ren_hum_determinacion;Determinacion;;ability_warrior_rallyingcry;ability_warrior_rallyingcry;nuevo de la web
+rasgo;ren_hum_inc;Incremento de caracteristica;;hd_plussign_priest;hd_plussign_priest;nuevo de la web
+rasgo;ren_hum_versatilidad;Versatilidad;ability_rogue_versatility;ability_rogue_versatility;ability_rogue_versatility;del addon
+rasgo;ren_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;ren_inc;Incremento de caracteristica;;hd_plussign_deathknight;hd_plussign_deathknight;nuevo de la web
+rasgo;ren_naturaleza;Naturaleza no-muerta;;inv_qirajidol_death;inv_qirajidol_death;nuevo de la web
+rasgo;ren_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;ren_voluntad;Voluntad de los renegados;;spell_shadow_raisedead;spell_shadow_raisedead;nuevo de la web
+rasgo;rencor_faccion;Rencor de faccion;eps_lol_tryndamere_undyingrage;eps_lol_tryndamere_undyingrage;eps_lol_tryndamere_undyingrage;del addon
+rasgo;renegado;Renegado;;forsaken_m;forsaken_m;nuevo de la web
+rasgo;represion;Represion;;spell_holy_auraoflight;spell_holy_auraoflight;nuevo de la web
+rasgo;resiliente;Resiliente;HotS_ResilientShield;HotS_ResilientShield;HotS_ResilientShield;del addon
+rasgo;resistencia_tauren;Resistencia Tauren;eps_wc3_tauren;eps_wc3_tauren;eps_wc3_tauren;del addon
+rasgo;resistente;Resistente;ability_warrior_strengthofarms;ability_warrior_strengthofarms;ability_warrior_strengthofarms;del addon
+rasgo;restauracion;Restauracion;;spell_nature_healingwavegreater;spell_nature_healingwavegreater;nuevo de la web
+rasgo;restauracion_corteza_de_hierro;Corteza de Hierro;spell_nature_stoneclawtotem;spell_nature_stoneclawtotem;spell_nature_stoneclawtotem;del addon
+rasgo;restauracion_encarnacion_arbol_de_vida;Encarnación: Arbol de Vida;;;;sin icono
+rasgo;restauracion_guardia_cenarion;Guardia Cenarion;;;;sin icono
+rasgo;restauracion_rejuvenecimiento;Rejuvenecimiento;;spell_nature_rejuvenation;spell_nature_rejuvenation;nuevo de la web
+rasgo;restauracion_tranquilidad;Tranquilidad;;;;sin icono
+rasgo;rostro_olvidado;Rostro olvidado;;ability_rogue_disguise;ability_rogue_disguise;nuevo de la web
+rasgo;sac_absolucion;Absolucion;;spell_nature_slow;spell_nature_slow;nuevo de la web
+rasgo;sac_convertir_ranura;Convertir espacio en puntos de fe;;;;sin icono
+rasgo;sac_crear_ranura;Crear espacio de conjuro;;;;sin icono
+rasgo;sac_dis_supresion;Supresion del dolor;spell_holy_painsuppression;spell_holy_powerinfusion;spell_holy_powerinfusion;sustituido por la web
+rasgo;sac_dis_truco;Truco de bonificacion;spell_holy_holysmite;spell_holy_holysmite;spell_holy_holysmite;del addon
+rasgo;sac_disciplina_conjuros_1;Conjuros del llamado (Disciplina);;spell_holy_powerwordshield;spell_holy_powerwordshield;nuevo de la web
+rasgo;sac_disciplina_conjuros_3;Conjuros del llamado (Disciplina);;spell_holy_powerwordshield;spell_holy_powerwordshield;nuevo de la web
+rasgo;sac_disciplina_conjuros_5;Conjuros del llamado (Disciplina);;spell_holy_powerwordshield;spell_holy_powerwordshield;nuevo de la web
+rasgo;sac_ecos_fe;Ecos de fe;;hots_anduin_holywordsalvation;hots_anduin_holywordsalvation;nuevo de la web
+rasgo;sac_elu_asalto_luz_lunar;Asalto de Luz lunar;;ability_druid_starfall;ability_druid_starfall;nuevo de la web
+rasgo;sac_elu_canalizar_divinidad;Canalizar divinidad;;spell_holy_lightsgrace;spell_holy_lightsgrace;nuevo de la web
+rasgo;sac_elu_conjuros;Conjuros del sacerdocio de Elune;eps_lol_diana_moonsilverblade;eps_lol_diana_moonsilverblade;eps_lol_diana_moonsilverblade;del addon
+rasgo;sac_elu_entrenamiento_centinela;Entrenamiento de centinela;;ability_hunter_sentinelowl;ability_hunter_sentinelowl;nuevo de la web
+rasgo;sac_elu_furia;Furia de Elune;;hots_tyrande_starfall;hots_tyrande_starfall;nuevo de la web
+rasgo;sac_elu_gracia;Gracia de Elune;;spell_holy_elunesgrace;spell_holy_elunesgrace;nuevo de la web
+rasgo;sac_encadenar_no_muertos;Encadenar no muertos;spell_nature_slow;spell_nature_slow;spell_nature_slow;del addon
+rasgo;sac_lanzamiento_conjuros;Lanzamiento de conjuros;ability_priest_focusedwill;ability_priest_focusedwill;ability_priest_focusedwill;del addon
+rasgo;sac_llamado_divino;Llamado divino;;ability_paladin_holyavenger;ability_paladin_holyavenger;nuevo de la web
+rasgo;sac_palabra_poder;Palabra de poder;spell_holy_prayerofmendingtga;spell_holy_prayerofmendingtga;spell_holy_prayerofmendingtga;del addon
+rasgo;sac_restauracion_fieles;Restauracion de los fieles;spell_holy_heal;spell_holy_heal;spell_holy_heal;del addon
+rasgo;sac_sag_competencia;Saber divino;spell_holy_mindsooth;spell_holy_mindsooth;spell_holy_mindsooth;del addon
+rasgo;sac_sag_himno;Himno divino;;ability_priest_heavanlyvoice;ability_priest_heavanlyvoice;nuevo de la web
+rasgo;sac_sag_oracion;Oracion de curacion;spell_holy_prayerofhealing;spell_holy_prayerofhealing;spell_holy_prayerofhealing;del addon
+rasgo;sac_sagrado_conjuros_1;Conjuros del llamado (Sagrado);;spell_priest_chakra;spell_priest_chakra;nuevo de la web
+rasgo;sac_sagrado_conjuros_3;Conjuros del llamado (Sagrado);;spell_priest_chakra;spell_priest_chakra;nuevo de la web
+rasgo;sac_sagrado_conjuros_5;Conjuros del llamado (Sagrado);;spell_priest_chakra;spell_priest_chakra;nuevo de la web
+rasgo;sac_som_forma;Forma de Sombra;spell_shadow_shadowform;spell_shadow_shadowform;spell_shadow_shadowform;del addon
+rasgo;sac_som_legado;Legado del Vacio;;hots_malzahar_voidshift;hots_malzahar_voidshift;nuevo de la web
+rasgo;sac_som_voz;Voz psiquica;;inv_hivemind;inv_hivemind;nuevo de la web
+rasgo;sac_sombra_conjuros_1;Conjuros del llamado (Sombra);;spell_priest_divinestar_shadow;spell_priest_divinestar_shadow;nuevo de la web
+rasgo;sac_sombra_conjuros_3;Conjuros del llamado (Sombra);;spell_priest_divinestar_shadow;spell_priest_divinestar_shadow;nuevo de la web
+rasgo;sac_sombra_conjuros_5;Conjuros del llamado (Sombra);;spell_priest_divinestar_shadow;spell_priest_divinestar_shadow;nuevo de la web
+rasgo;sacerdote;Sacerdote;;classicon_priest;classicon_priest;nuevo de la web
+rasgo;sagrado;Sagrado;;spell_holy_holybolt;spell_holy_holybolt;nuevo de la web
+rasgo;salvaje;Salvaje;ability_hunter_beastwithin;ability_hunter_beastwithin;ability_hunter_beastwithin;del addon
+rasgo;sanador;Sanador;eps_rumble_traithealer;eps_rumble_traithealer;eps_rumble_traithealer;del addon
+rasgo;sangre;Sangre;;spell_deathknight_bloodpresence;spell_deathknight_bloodpresence;nuevo de la web
+rasgo;sangre_arma_runica_danza;Arma Rúnica Danza;;;;sin icono
+rasgo;sangre_golpe_al_corazon;Golpe al Corazón;;;;sin icono
+rasgo;sangre_purgatorio;Purgatorio;;;;sin icono
+rasgo;sangre_tormenta_de_huesos;Tormenta de Huesos;;;;sin icono
+rasgo;semielfo;Semielfo;;eps_wc3h_highelfrangermale;eps_wc3h_highelfrangermale;nuevo de la web
+rasgo;senda_sangre_barro;Senda de Sangre y barro;;wh_burnawaylies;wh_burnawaylies;nuevo de la web
+rasgo;sme_arcano;Conocimiento Arcano;ability_racial_arcaneaffinity;ability_racial_arcaneaffinity;ability_racial_arcaneaffinity;del addon
+rasgo;sme_espiritu;Espiritu mestizo;;inv_enchant_shardbrilliantsmall;inv_enchant_shardbrilliantsmall;nuevo de la web
+rasgo;sme_legado;Legado elfico;;achievement_zone_eversongwoods;achievement_zone_eversongwoods;nuevo de la web
+rasgo;sme_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;soldado;Soldado;w3reforgedfootman;w3reforgedfootman;w3reforgedfootman;del addon
+rasgo;sombra;Sombra;;spell_shadow_shadowwordpain;spell_shadow_shadowwordpain;nuevo de la web
+rasgo;sombra_mente_dominante;Mente Dominante;;;;sin icono
+rasgo;sombra_rendicion_a_la_locura;Rendición a la Locura;;;;sin icono
+rasgo;supervivencia;Supervivencia;;ability_hunter_camouflage;ability_hunter_camouflage;nuevo de la web
+rasgo;supervivencia_camuflaje_natural;Camuflaje Natural;;;;sin icono
+rasgo;supervivencia_contraataque_marcado;Contraataque Marcado;;;;sin icono
+rasgo;supervivencia_terminos_de_compromiso;Términos de Compromiso;;;;sin icono
+rasgo;superviviente_catastrofe;Superviviente de catastrofe;achievement_zone_cataclysm;achievement_zone_cataclysm;achievement_zone_cataclysm;del addon
+rasgo;sutileza;Sutileza;;ability_stealth;ability_stealth;nuevo de la web
+rasgo;tabido;Draenei Tabido;;broken;broken;nuevo de la web
+rasgo;tau_armas;Entrenamiento de armas Tauren;inv_archaeology_70_tauren_handsmoothedpyrestone;inv_archaeology_70_tauren_handsmoothedpyrestone;inv_archaeology_70_tauren_handsmoothedpyrestone;del addon
+rasgo;tau_construccion;Construccion poderosa;eps_wc3h_taurenwardrum;eps_wc3h_taurenwardrum;eps_wc3h_taurenwardrum;del addon
+rasgo;tau_cuernos;Cuernos;inv_misc_horn_05;inv_misc_horn_05;inv_misc_horn_05;del addon
+rasgo;tau_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;tau_inc;Incremento de caracteristica;;hd_plussign_warrior;hd_plussign_warrior;nuevo de la web
+rasgo;tau_ma_inc;Incremento de caracteristica;;hd_plussign_monk;hd_plussign_monk;nuevo de la web
+rasgo;tau_ma_montanes;Montanes;ability_racial_mountaineer;ability_racial_mountaineer;ability_racial_mountaineer;del addon
+rasgo;tau_ma_tenacidad;Tenacidad rugosa;ability_racial_bullrush;ability_racial_bullrush;ability_racial_bullrush;del addon
+rasgo;tau_mul_inc;Incremento de caracteristica;;hd_plussign_monk;hd_plussign_monk;nuevo de la web
+rasgo;tau_mul_pisoton;Pisoton de guerra;ability_warstomp;ability_warstomp;ability_warstomp;del addon
+rasgo;tau_mul_resistencia;Resistencia;;eps_bg3_resistance;eps_bg3_resistance;nuevo de la web
+rasgo;tau_tau_atleta;Atleta natural;achievement_zone_dragonblight_03;achievement_zone_dragonblight_03;achievement_zone_dragonblight_03;del addon
+rasgo;tau_tau_frio;Resistencia al frio;eps_wc3_frostarmornogore;eps_wc3_frostarmornogore;eps_wc3_frostarmornogore;del addon
+rasgo;tau_tau_inc;Incremento de caracteristica;;hd_plussign_deathknight;hd_plussign_deathknight;nuevo de la web
+rasgo;tau_tau_tundra;Caminante de la tundra;wh_walkbetweenworlds;wh_walkbetweenworlds;wh_walkbetweenworlds;del addon
+rasgo;taunka;Taunka;;eps_wc3h_taunkachieftain;eps_wc3h_taunkachieftain;nuevo de la web
+rasgo;tauren;Tauren;;tauren_m;tauren_m;nuevo de la web
+rasgo;tejedor;Tejedor de niebla;;spell_monk_mistweaver_spec;spell_monk_mistweaver_spec;nuevo de la web
+rasgo;tejedor_anillo_de_paz;Anillo de Paz;;;;sin icono
+rasgo;tejedor_estatua_del_dragon_de_jade;Estatua del Dragón de Jade;;;;sin icono
+rasgo;telepata;Telepata;spell_arcane_mindmastery;spell_arcane_mindmastery;spell_arcane_mindmastery;del addon
+rasgo;telequinetico;Telequinetico;WH_FocusedMind;WH_FocusedMind;WH_FocusedMind;del addon
+rasgo;teletransporte_arcano;Teletransporte arcano;spell_arcane_arcanepotency_nightborne;spell_arcane_arcanepotency_nightborne;spell_arcane_arcanepotency_nightborne;del addon
+rasgo;tirador_primera;Tirador de primera;ability_marksmanship;ability_marksmanship;ability_marksmanship;del addon
+rasgo;tocado_hadas;Tocado por las hadas;eps_bg3_feyprotectiongreen;eps_bg3_feyprotectiongreen;eps_bg3_feyprotectiongreen;del addon
+rasgo;tocado_sombras;Tocado por las sombras;spell_shadow_shadowembrace;spell_shadow_shadowembrace;spell_shadow_shadowembrace;del addon
+rasgo;triturador;Triturador;ability_smash;ability_smash;ability_smash;del addon
+rasgo;tro_bos_armas;Entrenamiento con armas Troll;eps_wc3h_trollishaxe;eps_wc3h_trollishaxe;eps_wc3h_trollishaxe;del addon
+rasgo;tro_bos_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;tro_bos_instintos;Instintos amani;hots_zuljin_amanirage;hots_zuljin_amanirage;hots_zuljin_amanirage;del addon
+rasgo;tro_bos_mascara;Mascara de lo salvaje;;ability_ambush;ability_ambush;nuevo de la web
+rasgo;tro_hie_armas;Entrenamiento con armas Troll;eps_wc3h_trollishaxe;eps_wc3h_trollishaxe;eps_wc3h_trollishaxe;del addon
+rasgo;tro_hie_constitucion;Constitucion poderosa;w3reforgedicetrollshaman;w3reforgedicetrollshaman;w3reforgedicetrollshaman;del addon
+rasgo;tro_hie_inc;Incremento de caracteristica;;hd_plussign_warrior;hd_plussign_warrior;nuevo de la web
+rasgo;tro_hie_piel;Piel de nacido del hielo;spell_frost_coldhearted;spell_frost_coldhearted;spell_frost_coldhearted;del addon
+rasgo;tro_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;tro_inc;Incremento de caracteristica;;hd_plussign_deathknight;hd_plussign_deathknight;nuevo de la web
+rasgo;tro_jun_armas;Entrenamiento con armas Troll;eps_wc3h_trollishaxe;eps_wc3h_trollishaxe;eps_wc3h_trollishaxe;del addon
+rasgo;tro_jun_berserker;Berserker;racial_troll_berserk;racial_troll_berserk;racial_troll_berserk;del addon
+rasgo;tro_jun_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;tro_jun_voodoo;Da voodoo shuffle;eps_wc3h_voodoohelm;eps_wc3h_voodoohelm;eps_wc3h_voodoohelm;del addon
+rasgo;tro_regeneracion;Regeneracion;ability_racial_regeneratin;ability_racial_regeneratin;ability_racial_regeneratin;del addon
+rasgo;tro_vision;Vision en la oscuridad;;eps_bg3_darkvision;eps_bg3_darkvision;nuevo de la web
+rasgo;tro_zan_armas;Entrenamiento con armas zandalari;inv_polearm_2h_zandalariguard_b_01;inv_polearm_2h_zandalariguard_b_01;inv_polearm_2h_zandalariguard_b_01;del addon
+rasgo;tro_zan_conocimiento;Conocimiento antiguo;;achievements_zone_azsuna;achievements_zone_azsuna;nuevo de la web
+rasgo;tro_zan_inc;Incremento de caracteristica;;hd_plussign_monk;hd_plussign_monk;nuevo de la web
+rasgo;tro_zan_loa;Abrazo de los loa;ability_racial_embraceoftheloa_gonk;ability_racial_embraceoftheloa_gonk;ability_racial_embraceoftheloa_gonk;del addon
+rasgo;trol;Trol;;troll_m;troll_m;nuevo de la web
+rasgo;venganza;Venganza;;ability_demonhunter_spectank;ability_demonhunter_spectank;nuevo de la web
+rasgo;venganza_aura_de_inmolacion;Aura de Inmolación;;;;sin icono
+rasgo;venganza_ultimo_recurso;Último Recurso;;;;sin icono
+rasgo;versado_armas;Versado en las armas;ability_warrior_weaponmastery;ability_warrior_weaponmastery;ability_warrior_weaponmastery;del addon
+rasgo;versado_elemento;Versado en un elemento;LiMing_TalRashasElements;LiMing_TalRashasElements;LiMing_TalRashasElements;del addon
+rasgo;veterano_campo_batalla;Veterano del campo de batalla;;inv_banner_03;inv_banner_03;nuevo de la web
+rasgo;vul_desierto;Nacido del desierto;;inv_tourofdutyvoldun;inv_tourofdutyvoldun;nuevo de la web
+rasgo;vul_explorador;Explorador;;ability_racial_returntocamp;ability_racial_returntocamp;nuevo de la web
+rasgo;vul_furia;Furia del pequeño;;spell_misc_emotionangry;spell_misc_emotionangry;nuevo de la web
+rasgo;vul_idiomas;Idiomas;;inv_misc_note_05;inv_misc_note_05;nuevo de la web
+rasgo;vul_inc;Incremento de caracteristica;;hd_plussign_hunter;hd_plussign_hunter;nuevo de la web
+rasgo;vul_nomada;Conocimiento nomada;;inv_holiday_beerfest_vulpera;inv_holiday_beerfest_vulpera;nuevo de la web
+rasgo;vul_oido;Oido agudo;;inv_misc_ear_human_01;inv_misc_ear_human_01;nuevo de la web
+rasgo;vul_olfato;Olfato para el peligro;;ability_racial_nosefortrouble;ability_racial_nosefortrouble;nuevo de la web
+rasgo;vulpera;Vulpera;;vulpera_m;vulpera_m;nuevo de la web
+rasgo;zandalari;Troll Zandalari;;inv_zandalarimalehead;inv_zandalarimalehead;nuevo de la web
+conjuro;abrir;Abrir;eps_rumble_picklock;eps_rumble_picklock;eps_rumble_picklock;del addon
+conjuro;absorber_elementos;Absorber elementos;spell_nature_elementalabsorption;spell_nature_elementalabsorption;spell_nature_elementalabsorption;del addon
+conjuro;acelerar;Acelerar;ability_socererking_arcaneacceleration;ability_socererking_arcaneacceleration;ability_socererking_arcaneacceleration;del addon
+conjuro;adivinacion;Adivinacion;spell_nature_crystalball;spell_nature_crystalball;spell_nature_crystalball;del addon
+conjuro;agarre_de_la_muerte;Agarre de la muerte;spell_deathknight_strangulate;spell_deathknight_strangulate;spell_deathknight_strangulate;del addon
+conjuro;agarre_electrizante;Toque electrico;eps_bg3_shockingrasp;eps_bg3_shockingrasp;eps_bg3_shockingrasp;del addon
+conjuro;agrandar_reducir;Agrandar/reducir;eps_hs_pintsizepotion;eps_hs_pintsizepotion;eps_hs_pintsizepotion;del addon
+conjuro;aguijon_mental;Aguijon mental;spell_priest_mindspike;spell_priest_mindspike;spell_priest_mindspike;del addon
+conjuro;alarma;Alarma;inv_misc_bell_01;inv_misc_bell_01;inv_misc_bell_01;del addon
+conjuro;aliento_de_dragon;Aliento de dragon;inv_misc_head_dragon_01;inv_misc_head_dragon_01;inv_misc_head_dragon_01;del addon
+conjuro;alterar_el_propio_aspecto;Alterar el propio aspecto;eps_lol_tft_shapeshifteremblem;eps_lol_tft_shapeshifteremblem;eps_lol_tft_shapeshifteremblem;del addon
+conjuro;amigos;Amistad;eps_bg3_friends;eps_bg3_friends;eps_bg3_friends;del addon
+conjuro;amigos_rapidos;Amigos rapidos;achievement_guildperk_everybodysfriend;achievement_guildperk_everybodysfriend;achievement_guildperk_everybodysfriend;del addon
+conjuro;ampliar_o_disminuir_magia;Ampliar o disminuir magia;spell_arcane_studentofmagic;spell_arcane_studentofmagic;spell_arcane_studentofmagic;del addon
+conjuro;animar_a_los_muertos;Animar a los muertos;inv_pet_ghoul;inv_pet_ghoul;inv_pet_ghoul;del addon
+conjuro;apariciones_sombrias;Apariciones sombrias;spell_shadow_shadesofdarkness;spell_shadow_shadesofdarkness;spell_shadow_shadesofdarkness;del addon
+conjuro;arma_elemental;Arma elemental;inv_weapon_shortblade_98;inv_weapon_shortblade_98;inv_weapon_shortblade_98;del addon
+conjuro;arma_espiritual;Arma espiritual;eps_bg3_magicweapon;eps_bg3_magicweapon;eps_bg3_magicweapon;del addon
+conjuro;arma_magica;Arma magica;eps_bg3_blessweapon;eps_bg3_blessweapon;eps_bg3_blessweapon;del addon
+conjuro;armadura_de_agathys;Armadura de Agathys;ability_deathknight_remorselesswinters2;ability_deathknight_remorselesswinters2;ability_deathknight_remorselesswinters2;del addon
+conjuro;armadura_de_mago;Armadura de mago;spell_magearmor;spell_magearmor;spell_magearmor;del addon
+conjuro;arrepentimiento;Arrepentimiento;spell_holy_prayerofhealing;spell_holy_prayerofhealing;spell_holy_prayerofhealing;del addon
+conjuro;asesino_fantasmal;Asesino fantasmal;hd_warlock_fearscream;hd_warlock_fearscream;hd_warlock_fearscream;del addon
+conjuro;asfixiar;Asfixiar;ability_deathknight_asphixiate;ability_deathknight_asphixiate;ability_deathknight_asphixiate;del addon
+conjuro;augurio;Augurio;spell_monk_zenpilgrimage;spell_monk_zenpilgrimage;spell_monk_zenpilgrimage;del addon
+conjuro;aumentar_gravedad;Aumentar gravedad;hots_kaelthas_gravitylapse_blue;hots_kaelthas_gravitylapse_blue;hots_kaelthas_gravitylapse_blue;del addon
+conjuro;aura_de_pureza;Aura de pureza;wh_purify;wh_purify;wh_purify;del addon
+conjuro;aura_de_vida;Aura de vida;spell_holy_auramastery;spell_holy_auramastery;spell_holy_auramastery;del addon
+conjuro;aura_de_vitalidad;Aura de vitalidad;eps_bg3_auraofvitality;eps_bg3_auraofvitality;eps_bg3_auraofvitality;del addon
+conjuro;aura_magica_de_nystul;Aura magica de Nystul;wh_corruptingretribution;wh_corruptingretribution;wh_corruptingretribution;del addon
+conjuro;auxilio;Auxilio;wh_heartoffire;wh_heartoffire;wh_heartoffire;del addon
+conjuro;barrera_luminosa;Barrera luminosa;eps_lol_spell_barriernew;eps_lol_spell_barriernew;eps_lol_spell_barriernew;del addon
+conjuro;bendicion;Bendicion;eps_bg3_bless;eps_bg3_bless;eps_bg3_bless;del addon
+conjuro;bloque_de_hielo;Bloque de hielo;spell_frost_frost;spell_frost_frost;spell_frost_frost;del addon
+conjuro;boca_magica;Boca magica;inv_relics_runestone;inv_relics_runestone;inv_relics_runestone;del addon
+conjuro;bola_de_fuego;Bola de fuego;spell_fire_fireball02;spell_fire_fireball02;spell_fire_fireball02;del addon
+conjuro;bolsillo_de_muneca;Bolsillo de muneca;inv_misc_coinbag06;inv_misc_coinbag06;inv_misc_coinbag06;del addon
+conjuro;bomba_viva;Bomba viva;ability_blackhand_attachedslagbombs;ability_blackhand_attachedslagbombs;ability_blackhand_attachedslagbombs;del addon
+conjuro;brazos_de_hadar;Brazos de Hadar;d3_shadowpower;d3_shadowpower;d3_shadowpower;del addon
+conjuro;brebaje_caustico_de_tasha;Brebaje caustico de Tasha;ability_deathwing_grasping_tendrilsgreen;ability_deathwing_grasping_tendrilsgreen;ability_deathwing_grasping_tendrilsgreen;del addon
+conjuro;buenas_bayas;Buenas bayas;inv_misc_food_40;inv_misc_food_40;inv_misc_food_40;del addon
+conjuro;burla_danina;Burla danina;eps_bg3_cuttingwords;eps_bg3_cuttingwords;eps_bg3_cuttingwords;del addon
+conjuro;cadena_de_curacion;Cadena de curacion;spell_nature_healingwavegreater;spell_nature_healingwavegreater;spell_nature_healingwavegreater;del addon
+conjuro;cadenas_de_hielo;Cadenas de hielo;spell_frost_chainsofice;spell_frost_chainsofice;spell_frost_chainsofice;del addon
+conjuro;caida_de_pluma;Caida de pluma;spell_magic_featherfall;spell_magic_featherfall;spell_magic_featherfall;del addon
+conjuro;calentar_metal;Calentar metal;eps_bg3_heatmetal;eps_bg3_heatmetal;eps_bg3_heatmetal;del addon
+conjuro;calmar_emociones;Calmar emociones;spell_arcane_focusedpower;spell_arcane_focusedpower;spell_arcane_focusedpower;del addon
+conjuro;cambio_de_vacio;Cambio de vacio;spell_priest_voidshift;spell_priest_voidshift;spell_priest_voidshift;del addon
+conjuro;caminar_sobre_el_agua;Caminar sobre el agua;spell_frost_windwalkon;spell_frost_windwalkon;spell_frost_windwalkon;del addon
+conjuro;cascara_antimagica;Caparazon antimagia;spell_shadow_antimagicshell;spell_shadow_antimagicshell;spell_shadow_antimagicshell;del addon
+conjuro;castigo_marcador;Castigo marcador;spell_holy_sealofwrath;spell_holy_sealofwrath;spell_holy_sealofwrath;del addon
+conjuro;causar_miedo;Causar miedo;spell_shadow_possession;spell_shadow_possession;spell_shadow_possession;del addon
+conjuro;ceremonia;Ceremonia;spell_holy_testoffaith;spell_holy_testoffaith;spell_holy_testoffaith;del addon
+conjuro;cerradura_arcana;Cerradura arcana;eps_bg3_arcanelock;eps_bg3_arcanelock;eps_bg3_arcanelock;del addon
+conjuro;choque_elemental;Choque elemental;spell_nature_elementalprecision_1;spell_nature_elementalprecision_1;spell_nature_elementalprecision_1;del addon
+conjuro;ciclon;Ciclon;w3reforgedcyclone;w3reforgedcyclone;w3reforgedcyclone;del addon
+conjuro;circulo_magico;Circulo magico;spell_arcane_blast;spell_arcane_blast;spell_arcane_blast;del addon
+conjuro;clarividencia;Clarividencia;hd_ldaeye;hd_ldaeye;hd_ldaeye;del addon
+conjuro;codificar_pensamientos;Codificar pensamientos;dos2_mind;dos2_mind;dos2_mind;del addon
+conjuro;cofre_secreto_de_leomund;Cofre oculto de Leomund;eps_lol_rk_missfortune_fortunesfavor;eps_lol_rk_missfortune_fortunesfavor;eps_lol_rk_missfortune_fortunesfavor;del addon
+conjuro;compulsion;Compulsion;ability_hunter_killcommand;ability_hunter_killcommand;ability_hunter_killcommand;del addon
+conjuro;confusion;Confusion;d3_massconfusion;d3_massconfusion;d3_massconfusion;del addon
+conjuro;conjurar_animales;Conjurar animales;spell_druid_wildcharge;spell_druid_wildcharge;spell_druid_wildcharge;del addon
+conjuro;conjurar_criaturas_del_bosque;Conjurar criaturas del bosque;eps_rumble_faeriedragon;eps_rumble_faeriedragon;eps_rumble_faeriedragon;del addon
+conjuro;conjurar_elementales_menores;Conjurar elementales menores;inv_pet_pandarenelemental;inv_pet_pandarenelemental;inv_pet_pandarenelemental;del addon
+conjuro;conjurar_no_muertos;Conjurar no-muertos;w3reforgedabomination;w3reforgedabomination;w3reforgedabomination;del addon
+conjuro;contorno_borroso;Contorno borroso;d3_blur;d3_blur;d3_blur;del addon
+conjuro;contrahechizo;Contrahechizo;eps_bg3_counterspell;eps_bg3_counterspell;eps_bg3_counterspell;del addon
+conjuro;controlar_agua;Controlar agua;eps_lol_rk_illaoi_crashingtides;eps_lol_rk_illaoi_crashingtides;eps_lol_rk_illaoi_crashingtides;del addon
+conjuro;controlar_llamas;Controlar llamas;eps_lol_profileicon_deathfiretouchmastery2016;eps_lol_profileicon_deathfiretouchmastery2016;eps_lol_profileicon_deathfiretouchmastery2016;del addon
+conjuro;corcel_fantasma;Corcel fantasma;inv_mount_spectralhorse;inv_mount_spectralhorse;inv_mount_spectralhorse;del addon
+conjuro;corona_de_locura;Corona de la locura;inv_helmet_01;inv_helmet_01;inv_helmet_01;del addon
+conjuro;crear_comida_y_agua;Crear comida y agua;hd_create_conjurabletable;hd_create_conjurabletable;hd_create_conjurabletable;del addon
+conjuro;crear_fogata;Crear fogata;inv_summerfest_firedrink;inv_summerfest_firedrink;inv_summerfest_firedrink;del addon
+conjuro;crear_llama;Crear llama;eps_bg3_produceflame;eps_bg3_produceflame;eps_bg3_produceflame;del addon
+conjuro;crear_o_destruir_agua;Crear o destruir agua;hots_thebutcher_freshmeat_water;hots_thebutcher_freshmeat_water;hots_thebutcher_freshmeat_water;del addon
+conjuro;crear_piedra_de_salud;Crear piedra de salud;hd_create_healstone;hd_create_healstone;hd_create_healstone;del addon
+conjuro;crecimiento_espinoso;Crecimiento espinoso;eps_bg3_spikegrowth;eps_bg3_spikegrowth;eps_bg3_spikegrowth;del addon
+conjuro;crecimiento_vegetal;Crecimiento vegetal;eps_bg3_plantgrowth;eps_bg3_plantgrowth;eps_bg3_plantgrowth;del addon
+conjuro;cuchillo_de_hielo;Cuchillo de hielo;eps_bg3_iceknife;eps_bg3_iceknife;eps_bg3_iceknife;del addon
+conjuro;curar_heridas;Curar heridas;eps_bg3_curewounds;eps_bg3_curewounds;eps_bg3_curewounds;del addon
+conjuro;dedos_de_escarcha;Dedos de escarcha;eps_lol_ashe_frostshot2;eps_lol_ashe_frostshot2;eps_lol_ashe_frostshot2;del addon
+conjuro;descarga_arcana;Descarga arcana;spell_arcane_arcane01;spell_arcane_arcane01;spell_arcane_arcane01;del addon
+conjuro;descarga_de_fuego;Proyectil igneo;spell_fire_firebolt02;spell_fire_firebolt02;spell_fire_firebolt02;del addon
+conjuro;descarga_de_relampago;Descarga de relampago;spell_nature_lightning;spell_nature_lightning;spell_nature_lightning;del addon
+conjuro;descarga_sobrenatural;Descarga sobrenatural;hots_alarak_lightningsurge;hots_alarak_lightningsurge;hots_alarak_lightningsurge;del addon
+conjuro;descomponer;Descomponer;spell_deathknight_necroticplague;spell_deathknight_necroticplague;spell_deathknight_necroticplague;del addon
+conjuro;desgarrar_mente;Tortura mental;eps_lol_zilean_mindtwist;eps_lol_zilean_mindtwist;eps_lol_zilean_mindtwist;del addon
+conjuro;deslizamiento_sombrio;Deslizamiento sombrio;eps_lol_shen_shadowdashold;eps_lol_shen_shadowdashold;eps_lol_shen_shadowdashold;del addon
+conjuro;destierro;Destierro;spell_shadow_cripple;spell_shadow_cripple;spell_shadow_cripple;del addon
+conjuro;desvanecerse;Desvanecerse;spell_magic_lesserinvisibilty;spell_magic_lesserinvisibilty;spell_magic_lesserinvisibilty;del addon
+conjuro;detectar_el_bien_y_el_mal;Detectar el bien y el mal;eps_bg3_detectevilandgood;eps_bg3_detectevilandgood;eps_bg3_detectevilandgood;del addon
+conjuro;detectar_magia;Detectar magia;spell_mage_presenceofmind;spell_mage_presenceofmind;spell_mage_presenceofmind;del addon
+conjuro;detectar_pensamientos;Detectar pensamientos;eps_bg3_detectthoughts;eps_bg3_detectthoughts;eps_bg3_detectthoughts;del addon
+conjuro;detectar_trampas;Detectar trampas;ability_spy;ability_spy;ability_spy;del addon
+conjuro;detectar_veneno_y_enfermedad;Detectar venenos y enfermedades;d3_focusedmind_gold;d3_focusedmind_gold;d3_focusedmind_gold;del addon
+conjuro;diablo_de_polvo;Diablo de polvo;inv_misc_dust;inv_misc_dust;inv_misc_dust;del addon
+conjuro;diabolismo;Diabolismo;spell_shadow_demonictactics;spell_shadow_demonictactics;spell_shadow_demonictactics;del addon
+conjuro;disco_flotante_de_tenser;Disco flotante de Tenser;ability_mount_cloudmount;ability_mount_cloudmount;ability_mount_cloudmount;del addon
+conjuro;discurso_motivador;Discurso motivador;eps_lol_spell_rally;eps_lol_spell_rally;eps_lol_spell_rally;del addon
+conjuro;disfrazarse;Disfrazarse;ability_rogue_disguise;ability_rogue_disguise;ability_rogue_disguise;del addon
+conjuro;disipar_magia;Disipar magia;spell_holy_dispelmagic;spell_holy_dispelmagic;spell_holy_dispelmagic;del addon
+conjuro;dominar_bestia;Dominar bestia;eps_bg3_dominatebeast;eps_bg3_dominatebeast;eps_bg3_dominatebeast;del addon
+conjuro;dominar_no_muertos;Dominar no-muertos;inv_misc_bone_skull_01;inv_misc_bone_skull_01;inv_misc_bone_skull_01;del addon
+conjuro;don_de_la_alacridad;Don de la alacridad;eps_bg3_haste;eps_bg3_haste;eps_bg3_haste;del addon
+conjuro;don_de_la_charla;Don de la charla;achievement_halloween_smiley_01;achievement_halloween_smiley_01;achievement_halloween_smiley_01;del addon
+conjuro;don_de_lenguas;Don de lenguas;smite_kumbhakarna_a03;smite_kumbhakarna_a03;smite_kumbhakarna_a03;del addon
+conjuro;dormir;Dormir;spell_nature_sleep;spell_nature_sleep;spell_nature_sleep;del addon
+conjuro;drenar_vida;Drenar vida;spell_shadow_lifedrain02;spell_shadow_lifedrain02;spell_shadow_lifedrain02;del addon
+conjuro;duelo_obligado;Duelo obligado;ability_warrior_challange;ability_warrior_challange;ability_warrior_challange;del addon
+conjuro;dulce_descanso;Dulce descanso;warrior_talent_icon_deadlycalm;warrior_talent_icon_deadlycalm;warrior_talent_icon_deadlycalm;del addon
+conjuro;embelesar;Embelesar;spell_holy_silence;spell_holy_silence;spell_holy_silence;del addon
+conjuro;encadenar_no_muertos;Encadenar no muertos;ability_deathknight_deathchain;ability_deathknight_deathchain;ability_deathknight_deathchain;del addon
+conjuro;encantar_animal;Encantar animal;eps_bg3_animalfriends;eps_bg3_animalfriends;eps_bg3_animalfriends;del addon
+conjuro;encantar_monstruo;Encantar monstruo;hots_sylvanas_mindcontrol;hots_sylvanas_mindcontrol;hots_sylvanas_mindcontrol;del addon
+conjuro;encantar_persona;Encantar persona;spell_shadow_shadowworddominate;spell_shadow_shadowworddominate;spell_shadow_shadowworddominate;del addon
+conjuro;encontrar_corcel_mayor;Encontrar corcel mayor;ability_mount_dreadsteed;ability_mount_dreadsteed;ability_mount_dreadsteed;del addon
+conjuro;encontrar_familiar;Encontrar familiar;eps_bg3_rangercompanion;eps_bg3_rangercompanion;eps_bg3_rangercompanion;del addon
+conjuro;enemigos_en_abundancia;Enemigos en abundancia;d3_fetisharmy;d3_fetisharmy;d3_fetisharmy;del addon
+conjuro;enfoque_interior;Enfoque interno;w3reforgedinnerfire;w3reforgedinnerfire;w3reforgedinnerfire;del addon
+conjuro;enmaranar;Enmaranar;eps_lol_zyra_graspingroot;eps_lol_zyra_graspingroot;eps_lol_zyra_graspingroot;del addon
+conjuro;enredar;Enredar;eps_wc3_entanglingroots;eps_wc3_entanglingroots;eps_wc3_entanglingroots;del addon
+conjuro;entender_idiomas;Entender idiomas;eps_bg3_comprehendlanguages;eps_bg3_comprehendlanguages;eps_bg3_comprehendlanguages;del addon
+conjuro;erupcion_de_lava;Rafaga de lava;spell_shaman_lavaburst;spell_shaman_lavaburst;spell_shaman_lavaburst;del addon
+conjuro;escritura_celeste;Escritura celeste;inv_fabric_celestial_cloth;inv_fabric_celestial_cloth;inv_fabric_celestial_cloth;del addon
+conjuro;escudo;Escudo;eps_bg3_spellshield;eps_bg3_spellshield;eps_bg3_spellshield;del addon
+conjuro;escudo_de_fe;Escudo de fe;eps_bg3_shieldoffaith;eps_bg3_shieldoffaith;eps_bg3_shieldoffaith;del addon
+conjuro;escudo_de_fuego;Escudo de fuego;dos2_fireshield;dos2_fireshield;dos2_fireshield;del addon
+conjuro;escudo_de_relampagos;Escudo de relampagos;spell_nature_lightningshield;spell_nature_lightningshield;spell_nature_lightningshield;del addon
+conjuro;escudo_divino;Escudo divino;spell_holy_divineshield;spell_holy_divineshield;spell_holy_divineshield;del addon
+conjuro;esfera_de_agua;Esfera de agua;spell_animaardenweald_orb;spell_animaardenweald_orb;spell_animaardenweald_orb;del addon
+conjuro;esfera_de_llamas;Esfera de llamas;inv_misc_orb_05;inv_misc_orb_05;inv_misc_orb_05;del addon
+conjuro;esfera_de_tormenta;Esfera de tormenta;spell_broker_orb;spell_broker_orb;spell_broker_orb;del addon
+conjuro;esfera_resiliente_de_otiluke;Esfera elastica de Otiluke;ability_racial_forceshield;ability_racial_forceshield;ability_racial_forceshield;del addon
+conjuro;esfera_vitriolica;Esfera vitriolica;eps_arc_orbgreen;eps_arc_orbgreen;eps_arc_orbgreen;del addon
+conjuro;espiritu_curativo;Espiritu curativo;shaman_pvp_ripplingwaters;shaman_pvp_ripplingwaters;shaman_pvp_ripplingwaters;del addon
+conjuro;espiritus_guardianes;Espiritus guardianes;eps_bg3_spiritguardians;eps_bg3_spiritguardians;eps_bg3_spiritguardians;del addon
+conjuro;estrella_divina;Estrella divina;spell_priest_divinestar;spell_priest_divinestar;spell_priest_divinestar;del addon
+conjuro;exorcismo;Exorcismo;spell_holy_excorcism_02;spell_holy_excorcism_02;spell_holy_excorcism_02;del addon
+conjuro;explosion_arcana;Explosion arcana;spell_nature_wispsplode;spell_nature_wispsplode;spell_nature_wispsplode;del addon
+conjuro;explosion_arcana_nivel_3;Explosion arcana;ability_monk_forcesphere_pink;ability_monk_forcesphere_pink;ability_monk_forcesphere_pink;del addon
+conjuro;explosion_aullante;Explosion aullante;spell_frost_arcticwinds;spell_frost_arcticwinds;spell_frost_arcticwinds;del addon
+conjuro;explosion_de_cadaveres;Explosion de cadaver;ability_creature_disease_02;ability_creature_disease_02;ability_creature_disease_02;del addon
+conjuro;explosion_lunar;Explosion lunar;eps_lol_aurelionsol_fallingstar;eps_lol_aurelionsol_fallingstar;eps_lol_aurelionsol_fallingstar;del addon
+conjuro;explosion_mental;Explosion mental;spell_shadow_unholyfrenzy;spell_shadow_unholyfrenzy;spell_shadow_unholyfrenzy;del addon
+conjuro;falsa_vida;Falsa vida;eps_bg3_falselife;eps_bg3_falselife;eps_bg3_falselife;del addon
+conjuro;faro_de_luz;Faro de luz;ability_paladin_beaconoflight;ability_paladin_beaconoflight;ability_paladin_beaconoflight;del addon
+conjuro;favor_aterrador;Favor aterrador;ability_revendreth_deathknight;ability_revendreth_deathknight;ability_revendreth_deathknight;del addon
+conjuro;favor_de_la_fortuna;Favor de la fortuna;inv_misc_fortunecookie;inv_misc_fortunecookie;inv_misc_fortunecookie;del addon
+conjuro;favor_divino;Favor divino;eps_bg3_divinefavorholy;eps_bg3_divinefavorholy;eps_bg3_divinefavorholy;del addon
+conjuro;fingir_muerte;Fingir muerte;ability_rogue_feigndeath;ability_rogue_feigndeath;ability_rogue_feigndeath;del addon
+conjuro;flecha_acida_de_melf;Flecha acida de Melf;spell_hunter_exoticmunitions_poisoned;spell_hunter_exoticmunitions_poisoned;spell_hunter_exoticmunitions_poisoned;del addon
+conjuro;flechas_igneas;Flechas igneas;ability_searingarrow;ability_searingarrow;ability_searingarrow;del addon
+conjuro;forma_gaseosa;Forma gaseosa;inv_misc_volatileair;inv_misc_volatileair;inv_misc_volatileair;del addon
+conjuro;fortaleza_de_hielo;Entereza ligada al hielo;spell_deathknight_iceboundfortitude;spell_deathknight_iceboundfortitude;spell_deathknight_iceboundfortitude;del addon
+conjuro;fortaleza_intelectual;Fortaleza intelectual;wh_focusedmind;wh_focusedmind;wh_focusedmind;del addon
+conjuro;fuego_estelar;Fuego estelar;spell_arcane_starfire;spell_arcane_starfire;spell_arcane_starfire;del addon
+conjuro;fuego_feerico;Fuego feerico;spell_nature_faeriefire;spell_nature_faeriefire;spell_nature_faeriefire;del addon
+conjuro;fuego_interior;Fuego interno;spell_holy_innerfire;spell_holy_innerfire;spell_holy_innerfire;del addon
+conjuro;fuego_y_azufre;Fuego y azufre;ability_warlock_fireandbrimstone;ability_warlock_fireandbrimstone;ability_warlock_fireandbrimstone;del addon
+conjuro;fuerza_brillante;Fuerza radiante;eps_bg3_beaconofhope;eps_bg3_beaconofhope;eps_bg3_beaconofhope;del addon
+conjuro;fuerza_fantasmal;Fuerza fantasmal;spell_shaman_ancestralawakening;spell_shaman_ancestralawakening;spell_shaman_ancestralawakening;del addon
+conjuro;fundirse_con_la_piedra;Fundirse con la piedra;spell_shadow_unholystrength;spell_shadow_unholystrength;spell_shadow_unholystrength;del addon
+conjuro;garrote_shillelagh;Palo Shillelagh;eps_bg3_shilleigh;eps_bg3_shilleigh;eps_bg3_shilleigh;del addon
+conjuro;glifo_custodio;Glifo custodio;inv_misc_rune_03;inv_misc_rune_03;inv_misc_rune_03;del addon
+conjuro;golpe_ardiente;Golpe ardiente;spell_shaman_improvelavalash;spell_shaman_improvelavalash;spell_shaman_improvelavalash;del addon
+conjuro;golpe_cegador;Castigo cegador;ability_paladin_blindinglight;ability_paladin_blindinglight;ability_paladin_blindinglight;del addon
+conjuro;golpe_devastador;Golpe devastador;ability_warrior_savageblow;ability_warrior_savageblow;ability_warrior_savageblow;del addon
+conjuro;golpe_furioso;Castigo furioso;wh_furyofasuryan;wh_furyofasuryan;wh_furyofasuryan;del addon
+conjuro;golpe_justo;Golpe de cruzado;spell_holy_crusaderstrike;spell_holy_crusaderstrike;spell_holy_crusaderstrike;del addon
+conjuro;golpe_llameante;Golpe llameante;ability_paladin_divinestorm;ability_paladin_divinestorm;ability_paladin_divinestorm;del addon
+conjuro;golpe_lunar;Golpe lunar;spell_nature_moonglow;spell_nature_moonglow;spell_nature_moonglow;del addon
+conjuro;golpe_trueno;Golpe trueno;spell_shaman_focusedstrikes;spell_shaman_focusedstrikes;spell_shaman_focusedstrikes;del addon
+conjuro;grasa;Grasa;inv_pig;inv_pig;inv_pig;del addon
+conjuro;guardia_con_hoja;Rompante de espadas;eps_bg3_bladebarrier;eps_bg3_bladebarrier;eps_bg3_bladebarrier;del addon
+conjuro;guardian_de_la_fe;Guardian de la fe;eps_bg3_guardianoffaith;eps_bg3_guardianoffaith;eps_bg3_guardianoffaith;del addon
+conjuro;guardian_de_la_naturaleza;Guardian de la naturaleza;eps_wc3h_aquaticdruid;eps_wc3h_aquaticdruid;eps_wc3h_aquaticdruid;del addon
+conjuro;guardian_del_rey;Guardian del rey;spell_paladin_clarityofpurpose;spell_paladin_clarityofpurpose;spell_paladin_clarityofpurpose;del addon
+conjuro;guia;Guia;eps_bg3_combatguidance;eps_bg3_combatguidance;eps_bg3_combatguidance;del addon
+conjuro;hablar_con_las_plantas;Hablar con las plantas;ability_druid_serenefocus;ability_druid_serenefocus;ability_druid_serenefocus;del addon
+conjuro;hablar_con_los_animales;Hablar con los animales;eps_bg3_speakwithanimals;eps_bg3_speakwithanimals;eps_bg3_speakwithanimals;del addon
+conjuro;hablar_con_los_muertos;Hablar con los muertos;eps_bg3_speakwithdead;eps_bg3_speakwithdead;eps_bg3_speakwithdead;del addon
+conjuro;hacer_anicos;Hacer anicos;eps_lol_orianna_commandshockwave;eps_lol_orianna_commandshockwave;eps_lol_orianna_commandshockwave;del addon
+conjuro;hallar_corcel;Hallar corcel;spell_nature_swiftness;spell_nature_swiftness;spell_nature_swiftness;del addon
+conjuro;hambre_de_hadar;Hambre de Hadar;eps_bg3_hungerofhadar;eps_bg3_hungerofhadar;eps_bg3_hungerofhadar;del addon
+conjuro;hechizar_persona;Hechizar persona;eps_bg3_charmperson;eps_bg3_charmperson;eps_bg3_charmperson;del addon
+conjuro;heroismo;Heroismo;eps_bg3_heroism;eps_bg3_heroism;eps_bg3_heroism;del addon
+conjuro;hervor_de_sangre;Hervor de sangre;spell_deathknight_bloodboil;spell_deathknight_bloodboil;spell_deathknight_bloodboil;del addon
+conjuro;hoja_de_fuego;Hoja de fuego;eps_lol_gangplank_trialbyfire;eps_lol_gangplank_trialbyfire;eps_lol_gangplank_trialbyfire;del addon
+conjuro;hoja_retumbante;Hoja retumbante;spell_shaman_primalstrike;spell_shaman_primalstrike;spell_shaman_primalstrike;del addon
+conjuro;hoja_sombria;Hoja sombria;inv_knife_1h_grimbatolraid_d_03;inv_knife_1h_grimbatolraid_d_03;inv_knife_1h_grimbatolraid_d_03;del addon
+conjuro;hoja_verdeante;Hoja de llama verde;inv_knife_1h_felfireraid_d_04;inv_knife_1h_felfireraid_d_04;inv_knife_1h_felfireraid_d_04;del addon
+conjuro;horror_psiquico;Horror psiquico;spell_shadow_psychichorrors;spell_shadow_psychichorrors;spell_shadow_psychichorrors;del addon
+conjuro;identificar;Identificar;eps_bg3_identify;eps_bg3_identify;eps_bg3_identify;del addon
+conjuro;ilusion_menor;Ilusion menor;eps_bg3_tosscoin;eps_bg3_tosscoin;eps_bg3_tosscoin;del addon
+conjuro;imagen_mayor;Imagen mayor;spell_arcane_arcanetactics;spell_arcane_arcanetactics;spell_arcane_arcanetactics;del addon
+conjuro;imagen_multiple;Imagen multiple;ability_mage_massinvisibility;ability_mage_massinvisibility;ability_mage_massinvisibility;del addon
+conjuro;imagen_silenciosa;Imagen silenciosa;d3_mirrorimage;d3_mirrorimage;d3_mirrorimage;del addon
+conjuro;impacto_certero;Impacto certero;eps_lol_rk_pyke_marktarget;eps_lol_rk_pyke_marktarget;eps_lol_rk_pyke_marktarget;del addon
+conjuro;imponer_maldicion;Imponer maldicion;ability_creature_cursed_04;ability_creature_cursed_04;ability_creature_cursed_04;del addon
+conjuro;indetectable;Indetectable;w3reforgedinvisibility;w3reforgedinvisibility;w3reforgedinvisibility;del addon
+conjuro;infligir_heridas;Infligir heridas;eps_bg3_inflictwounds;eps_bg3_inflictwounds;eps_bg3_inflictwounds;del addon
+conjuro;inmovilizar_persona;Inmovilizar persona;spell_mage_overpowered;spell_mage_overpowered;spell_mage_overpowered;del addon
+conjuro;invisibilidad;Invisibilidad;ability_mage_invisibility;ability_mage_invisibility;ability_mage_invisibility;del addon
+conjuro;invisibilidad_mayor;Invisibilidad mejorada;ability_mage_greaterinvisibility;ability_mage_greaterinvisibility;ability_mage_greaterinvisibility;del addon
+conjuro;invocar_aberracion;Invocar aberracion;ability_socererking_summonaberration;ability_socererking_summonaberration;ability_socererking_summonaberration;del addon
+conjuro;invocar_demonio_mayor;Invocar demonio mayor;ability_warlock_demonicpower;ability_warlock_demonicpower;ability_warlock_demonicpower;del addon
+conjuro;invocar_demonios_menores;Invocar demonios menores;ability_warlock_empoweredimp;ability_warlock_empoweredimp;ability_warlock_empoweredimp;del addon
+conjuro;invocar_elemental;Invocar elemental;spell_fire_elemental_totem;spell_fire_elemental_totem;spell_fire_elemental_totem;del addon
+conjuro;invocar_elementos;Invocar elementos;ability_shaman_ascendance;ability_shaman_ascendance;ability_shaman_ascendance;del addon
+conjuro;invocar_entidad_del_vacio;Invocar entidad del vacio;inv_nzothfish_void;inv_nzothfish_void;inv_nzothfish_void;del addon
+conjuro;invocar_no_muertos;Invocar no-muertos;spell_shadow_darksummoning;spell_shadow_darksummoning;spell_shadow_darksummoning;del addon
+conjuro;invocar_sombras;Invocar sombras;spell_shadow_summonvoidwalker;spell_shadow_summonvoidwalker;spell_shadow_summonvoidwalker;del addon
+conjuro;ira_sagrada;Ira sagrada;ability_paladin_sanctifiedwrath;ability_paladin_sanctifiedwrath;ability_paladin_sanctifiedwrath;del addon
+conjuro;ira_solar;Ira solar;ability_skyreach_solar_burst;ability_skyreach_solar_burst;ability_skyreach_solar_burst;del addon
+conjuro;lanza_psiquica_de_raulothim;Lanza psiquica de raulothim;eps_lol_pantheon_spearshot;eps_lol_pantheon_spearshot;eps_lol_pantheon_spearshot;del addon
+conjuro;latigo_de_espinas;Latigo de espinas;eps_bg3_thornwhip;eps_bg3_thornwhip;eps_bg3_thornwhip;del addon
+conjuro;latigo_mental_de_tasha;Latigo mental de Tasha;ability_warlock_whiplash;ability_warlock_whiplash;ability_warlock_whiplash;del addon
+conjuro;levantar_maldicion;Levantar maldicion;w3reforgedcurse;w3reforgedcurse;w3reforgedcurse;del addon
+conjuro;levitar;Levitar;eps_bg3_levitate;eps_bg3_levitate;eps_bg3_levitate;del addon
+conjuro;libertad_de_movimiento;Libertad de movimiento;rogue_burstofspeed;rogue_burstofspeed;rogue_burstofspeed;del addon
+conjuro;llama_de_aganazzar;Llama de Aganazzar;eps_lol_brand_pillarofflame;eps_lol_brand_pillarofflame;eps_lol_brand_pillarofflame;del addon
+conjuro;llama_permanente;Llama permanente;eps_bg3_sacredflameelune;eps_bg3_sacredflameelune;eps_bg3_sacredflameelune;del addon
+conjuro;llama_sagrada;Llama sagrada;eps_bg3_sacredflameholy;eps_bg3_sacredflameholy;eps_bg3_sacredflameholy;del addon
+conjuro;llama_vil;Llama vil;spell_fire_felfire;spell_fire_felfire;spell_fire_felfire;del addon
+conjuro;llamada_de_la_muerte;Llamada de la muerte;inv_misc_bell_green;inv_misc_bell_green;inv_misc_bell_green;del addon
+conjuro;llamada_de_relampago;Llamada de relampago;eps_bg3_calllightning;eps_bg3_calllightning;eps_bg3_calllightning;del addon
+conjuro;llamar_al_relampago;Llamar al relampago;eps_bg3_lightningblast;eps_bg3_lightningblast;eps_bg3_lightningblast;del addon
+conjuro;localizar_animales_o_plantas;Localizar animales o plantas;ability_druid_healinginstincts;ability_druid_healinginstincts;ability_druid_healinginstincts;del addon
+conjuro;localizar_criatura;Localizar criatura;inv_misc_map02;inv_misc_map02;inv_misc_map02;del addon
+conjuro;localizar_objeto;Localizar objeto;w3reforgedpickupitem;w3reforgedpickupitem;w3reforgedpickupitem;del addon
+conjuro;luces_danzantes;Luces danzantes;eps_bg3_dancinglights;eps_bg3_dancinglights;eps_bg3_dancinglights;del addon
+conjuro;luz;Luz;eps_bg3_lightholy;eps_bg3_lightholy;eps_bg3_lightholy;del addon
+conjuro;luz_cegadora;Luz cegadora;ability_paladin_blindinglight2;ability_paladin_blindinglight2;ability_paladin_blindinglight2;del addon
+conjuro;luz_del_dia;Luz del dia;eps_bg3_daylight;eps_bg3_daylight;eps_bg3_daylight;del addon
+conjuro;maldicion;Maleficio;ability_creature_cursed_03;ability_creature_cursed_03;ability_creature_cursed_03;del addon
+conjuro;mano_de_mago;Mano de mago;eps_bg3_magehand;eps_bg3_magehand;eps_bg3_magehand;del addon
+conjuro;manos_ardientes;Manos ardientes;spell_fire_soulburn;spell_fire_soulburn;spell_fire_soulburn;del addon
+conjuro;manto_del_cruzado;Manto del cruzado;spell_holy_crusade;spell_holy_crusade;spell_holy_crusade;del addon
+conjuro;manto_del_cruzado_caido;Manto del cruzado caido;spell_holy_retributionaura;spell_holy_retributionaura;spell_holy_retributionaura;del addon
+conjuro;marca_del_cazador;Marca del cazador;ability_hunter_snipershot;ability_hunter_snipershot;ability_hunter_snipershot;del addon
+conjuro;marchitar;Marchitar;inv_misc_herb_12;inv_misc_herb_12;inv_misc_herb_12;del addon
+conjuro;mensaje;Mensaje;d3_focusedmind;d3_focusedmind;d3_focusedmind;del addon
+conjuro;mensajero_animal;Mensajero animal;eps_bg3_catattention;eps_bg3_catattention;eps_bg3_catattention;del addon
+conjuro;mensajero_rapido_de_galder;Mensajero rapido de Galder;achievement_guildperk_gmail;achievement_guildperk_gmail;achievement_guildperk_gmail;del addon
+conjuro;meteoros_menores_de_melf;Meteoros menores de Melf;spell_fire_meteorstorm;spell_fire_meteorstorm;spell_fire_meteorstorm;del addon
+conjuro;moldear_agua;Moldear agua;eps_lol_item_staffofflowingwater;eps_lol_item_staffofflowingwater;eps_lol_item_staffofflowingwater;del addon
+conjuro;moldear_piedra;Moldear piedra;inv_stone_sharpeningstone_01;inv_stone_sharpeningstone_01;inv_stone_sharpeningstone_01;del addon
+conjuro;moldear_tierra;Moldear tierra;inv_misc_volatileearth;inv_misc_volatileearth;inv_misc_volatileearth;del addon
+conjuro;mordedura_helada;Mordedura helada;ability_mage_frostjaw;ability_mage_frostjaw;ability_mage_frostjaw;del addon
+conjuro;muerte_y_decadencia;Muerte y decadencia;w3reforgeddeathanddecay;w3reforgeddeathanddecay;w3reforgeddeathanddecay;del addon
+conjuro;muro_de_agua;Muro de agua;eps_bg3_wallofice;eps_bg3_wallofice;eps_bg3_wallofice;del addon
+conjuro;muro_de_fuego;Muro de fuego;eps_bg3_walloffire;eps_bg3_walloffire;eps_bg3_walloffire;del addon
+conjuro;muro_de_viento;Muro de viento;eps_lol_rk_yasuo_windwall;eps_lol_rk_yasuo_windwall;eps_lol_rk_yasuo_windwall;del addon
+conjuro;nova_sagrada;Nova sagrada;spell_holy_holynova;spell_holy_holynova;spell_holy_holynova;del addon
+conjuro;nube_apestosa;Nube apestosa;w3reforgedplaguecloud;w3reforgedplaguecloud;w3reforgedplaguecloud;del addon
+conjuro;nube_de_dagas;Nube de dagas;eps_bg3_cloudofdaggers;eps_bg3_cloudofdaggers;eps_bg3_cloudofdaggers;del addon
+conjuro;nube_de_oscurecimiento;Nube de oscurecimiento;eps_lol_vex_loomingdarkness;eps_lol_vex_loomingdarkness;eps_lol_vex_loomingdarkness;del addon
+conjuro;objeto_inamovible;Objeto inamovible;inv_stone_weightstone_02;inv_stone_weightstone_02;inv_stone_weightstone_02;del addon
+conjuro;ojo_arcano;Ojo arcano;eps_bg3_arcaneeye;eps_bg3_arcaneeye;eps_bg3_arcaneeye;del addon
+conjuro;ola_atronadora;Ola atronadora;eps_bg3_thunderwave;eps_bg3_thunderwave;eps_bg3_thunderwave;del addon
+conjuro;ola_de_marea;Ola de marea;eps_lol_nami_tidalwave;eps_lol_nami_tidalwave;eps_lol_nami_tidalwave;del addon
+conjuro;oleada_estelar;Oleada de estrellas;spell_arcane_arcane03;spell_arcane_arcane03;spell_arcane_arcane03;del addon
+conjuro;onda_de_pulso;Onda de pulso;eps_lol_leesin_sonicwave;eps_lol_leesin_sonicwave;eps_lol_leesin_sonicwave;del addon
+conjuro;orbe_cromatico;Orbe cromatico;spell_frostfire orb;spell_frostfire orb;spell_frostfire orb;del addon
+conjuro;orden_imperiosa;Orden imperiosa;ability_warrior_rallyingcry;ability_warrior_rallyingcry;ability_warrior_rallyingcry;del addon
+conjuro;oscuridad;Oscuridad;spell_shadow_auraofdarkness;spell_shadow_auraofdarkness;spell_shadow_auraofdarkness;del addon
+conjuro;palabra_de_curacion;Palabra de curacion;eps_bg3_healingword;eps_bg3_healingword;eps_bg3_healingword;del addon
+conjuro;palabra_de_curacion_en_masa;Palabra de curacion en masa;eps_bg3_masshealingword;eps_bg3_masshealingword;eps_bg3_masshealingword;del addon
+conjuro;palabra_de_radiancia;Palabra de radiancia;eps_bg3_divinestrikeattack;eps_bg3_divinestrikeattack;eps_bg3_divinestrikeattack;del addon
+conjuro;parpadeo;Parpadeo;wc3_blink;wc3_blink;wc3_blink;del addon
+conjuro;parra_atrapante;Parra atrapante;w3reforgedentanglingroots;w3reforgedentanglingroots;w3reforgedentanglingroots;del addon
+conjuro;pasar_sin_rastro;Pasar sin rastro;eps_bg3_cloakshadows;eps_bg3_cloakshadows;eps_bg3_cloakshadows;del addon
+conjuro;paso_brumoso;Paso brumoso;eps_bg3_mistystep;eps_bg3_mistystep;eps_bg3_mistystep;del addon
+conjuro;paso_de_trueno;Paso de trueno;ability_thunderking_overcharge;ability_thunderking_overcharge;ability_thunderking_overcharge;del addon
+conjuro;paso_sombrio;Paso sombrio;ability_rogue_shadowstep;ability_rogue_shadowstep;ability_rogue_shadowstep;del addon
+conjuro;patron_hipnotico;Patron hipnotico;eps_bg3_hypnogaze;eps_bg3_hypnogaze;eps_bg3_hypnogaze;del addon
+conjuro;pequena_choza_de_leomund;Pequena choza de Leomund;eps_lol_blitzcrank_manabarrier;eps_lol_blitzcrank_manabarrier;eps_lol_blitzcrank_manabarrier;del addon
+conjuro;perdicion;Perdicion;eps_bg3_bane;eps_bg3_bane;eps_bg3_bane;del addon
+conjuro;perdicion_elemental;Perdicion elemental;hd_curseofelements_greenred;hd_curseofelements_greenred;hd_curseofelements_greenred;del addon
+conjuro;picadura_absorbente;Infestacion;spell_shadow_contagion;spell_shadow_contagion;spell_shadow_contagion;del addon
+conjuro;piedad_con_los_moribundos;Piedad con los moribundos;eps_bg3_preservelife;eps_bg3_preservelife;eps_bg3_preservelife;del addon
+conjuro;piel_de_piedra;Piel petrea;w3reforgedresistantskin;w3reforgedresistantskin;w3reforgedresistantskin;del addon
+conjuro;piel_demoniaca;Piel demoniaca;spell_shadow_ragingscream;spell_shadow_ragingscream;spell_shadow_ragingscream;del addon
+conjuro;piel_robliza;Piel robliza;spell_nature_skinofearth;spell_nature_skinofearth;spell_nature_skinofearth;del addon
+conjuro;pies_ligeros;Pies ligeros;spell_lifegivingspeed;spell_lifegivingspeed;spell_lifegivingspeed;del addon
+conjuro;pirotecnia;Pirotecnia;spell_frost_fireresistancetotem;spell_frost_fireresistancetotem;spell_frost_fireresistancetotem;del addon
+conjuro;plaga_devoradora;Plaga devoradora;spell_shadow_devouringplague;spell_shadow_devouringplague;spell_shadow_devouringplague;del addon
+conjuro;plegaria_de_curacion;Plegaria de curacion;eps_bg3_prayerofhealing;eps_bg3_prayerofhealing;eps_bg3_prayerofhealing;del addon
+conjuro;pluma_angelica;Pluma angelica;ability_priest_angelicfeather;ability_priest_angelicfeather;ability_priest_angelicfeather;del addon
+conjuro;polimorfia;Polimorfar;ability_mage_improvedpolymorph;ability_mage_improvedpolymorph;ability_mage_improvedpolymorph;del addon
+conjuro;potenciar_caracteristica;Potenciar caracteristica;spell_magic_greaterblessingofkings;spell_magic_greaterblessingofkings;spell_magic_greaterblessingofkings;del addon
+conjuro;prestidigitacion;Prestidigitacion;ability_mage_incantersabsorbtion;ability_mage_incantersabsorbtion;ability_mage_incantersabsorbtion;del addon
+conjuro;prisma_sagrado;Prisma sagrado;spell_paladin_holyprism;spell_paladin_holyprism;spell_paladin_holyprism;del addon
+conjuro;proteccion_contra_el_bien_y_el_mal;Proteccion contra el bien y el mal;eps_bg3_heavilyarmored;eps_bg3_heavilyarmored;eps_bg3_heavilyarmored;del addon
+conjuro;proteccion_contra_energia;Proteccion contra energia;inv_shield_1h_artifactstormfist_d_06;inv_shield_1h_artifactstormfist_d_06;inv_shield_1h_artifactstormfist_d_06;del addon
+conjuro;proteccion_contra_la_muerte;Guarda contra la muerte;spell_holy_guardianspirit;spell_holy_guardianspirit;spell_holy_guardianspirit;del addon
+conjuro;proteccion_contra_veneno;Proteccion contra veneno;hots_thebutcher_freshmeat_poison;hots_thebutcher_freshmeat_poison;hots_thebutcher_freshmeat_poison;del addon
+conjuro;proyectil_de_fuego_y_hielo;Rayo de fuego y escarcha;ability_mage_frostfirebolt;ability_mage_frostfirebolt;ability_mage_frostfirebolt;del addon
+conjuro;proyectil_magico;Proyectil magico;eps_bg3_magicmissile;eps_bg3_magicmissile;eps_bg3_magicmissile;del addon
+conjuro;pua_terrestre;Pua terrestre;ability_earthen_pillar;ability_earthen_pillar;ability_earthen_pillar;del addon
+conjuro;puerta_dimensional;Puerta dimensional;inv_artifact_dimensionalrift;inv_artifact_dimensionalrift;inv_artifact_dimensionalrift;del addon
+conjuro;puno_terrestre_de_maximiliano;Puno terrestre de maximiliano;misc_drogbartotem02;misc_drogbartotem02;misc_drogbartotem02;del addon
+conjuro;purificar_comida_y_bebida;Purificar comida y bebida;hd_create_food;hd_create_food;hd_create_food;del addon
+conjuro;radiancia_enferma;Radiancia enferma;spell_animamaldraxxus_orb;spell_animamaldraxxus_orb;spell_animamaldraxxus_orb;del addon
+conjuro;rafaga;Rafaga;smite_merlin_ice_a01;smite_merlin_ice_a01;smite_merlin_ice_a01;del addon
+conjuro;rafaga_de_viento;Rafaga de viento;eps_bg3_gustofwind;eps_bg3_gustofwind;eps_bg3_gustofwind;del addon
+conjuro;ralentizar;Ralentizar;d3_slowtime;d3_slowtime;d3_slowtime;del addon
+conjuro;rayo_abrasador;Rayo abrasador;eps_bg3_scorchingray;eps_bg3_scorchingray;eps_bg3_scorchingray;del addon
+conjuro;rayo_de_bruja;Rayo de hechiceria;spell_nature_chainlightning;spell_nature_chainlightning;spell_nature_chainlightning;del addon
+conjuro;rayo_de_enfermedad;Rayo de enfermedad;eps_bg3_rayofsickness;eps_bg3_rayofsickness;eps_bg3_rayofsickness;del addon
+conjuro;rayo_de_escarcha;Rayo de escarcha;ability_mage_rayoffrost;ability_mage_rayoffrost;ability_mage_rayoffrost;del addon
+conjuro;rayo_de_luna;Rayo de luna;eps_bg3_moonbeam;eps_bg3_moonbeam;eps_bg3_moonbeam;del addon
+conjuro;rayo_debilitador;Rayo debilitador;warlock_curse_weakness;warlock_curse_weakness;warlock_curse_weakness;del addon
+conjuro;rayo_sombrio;Rayo sombrio;ability_ironmaidens_convulsiveshadows;ability_ironmaidens_convulsiveshadows;ability_ironmaidens_convulsiveshadows;del addon
+conjuro;rebano_de_familiares;Rebano de familiares;w3reforgedflyingsheep;w3reforgedflyingsheep;w3reforgedflyingsheep;del addon
+conjuro;recado;Recado;ability_mage_studentofthemind;ability_mage_studentofthemind;ability_mage_studentofthemind;del addon
+conjuro;relampago;Relampago;eps_bg3_lightningbolt;eps_bg3_lightningbolt;eps_bg3_lightningbolt;del addon
+conjuro;reparar;Reparar;eps_bg3_repair;eps_bg3_repair;eps_bg3_repair;del addon
+conjuro;reprension_infernal;Represion infernal;hd_curseofelements_fire;hd_curseofelements_fire;hd_curseofelements_fire;del addon
+conjuro;resguardo_de_hoja;Resguardo contra las hojas;ability_warrior_shieldreflection;ability_warrior_shieldreflection;ability_warrior_shieldreflection;del addon
+conjuro;resistencia;Resistencia;spell_holy_wordfortitude;spell_holy_wordfortitude;spell_holy_wordfortitude;del addon
+conjuro;respirar_bajo_el_agua;Respirar bajo el agua;spell_shadow_demonbreath;spell_shadow_demonbreath;spell_shadow_demonbreath;del addon
+conjuro;restablecimiento_menor;Restablecimiento menor;spell_holy_purify;spell_holy_purify;spell_holy_purify;del addon
+conjuro;retirada_expeditiva;Retirada expeditiva;eps_bg3_retreat;eps_bg3_retreat;eps_bg3_retreat;del addon
+conjuro;retumbo;Retumbo;eps_lol_leesin_sonicwaveold;eps_lol_leesin_sonicwaveold;eps_lol_leesin_sonicwaveold;del addon
+conjuro;revivir;Revivir;eps_bg3_revivfy;eps_bg3_revivfy;eps_bg3_revivfy;del addon
+conjuro;risa_horrible_de_tasha;Risa horrible de Tasha;eps_bg3_tashaslaughter;eps_bg3_tashaslaughter;eps_bg3_tashaslaughter;del addon
+conjuro;robar_conjuro;Robar conjuro;spell_arcane_arcane02;spell_arcane_arcane02;spell_arcane_arcane02;del addon
+conjuro;rociada_de_color;Rociada de color;hd_fellowshippotions_colormixredorange;hd_fellowshippotions_colormixredorange;hd_fellowshippotions_colormixredorange;del addon
+conjuro;rociada_venenosa;Rociada venenosa;eps_bg3_poisonspray;eps_bg3_poisonspray;eps_bg3_poisonspray;del addon
+conjuro;saber_druidico;Saber druidico;eps_bg3_knowledgeowl;eps_bg3_knowledgeowl;eps_bg3_knowledgeowl;del addon
+conjuro;sabueso_de_mordenkainen;Mastin fiel de Mordenkainen;inv_pet_mastiff;inv_pet_mastiff;inv_pet_mastiff;del addon
+conjuro;saeta_guiada;Saeta guia;eps_bg3_guidingboltholy;eps_bg3_guidingboltholy;eps_bg3_guidingboltholy;del addon
+conjuro;salpicadura_acida;Salpicadura acida;ability_creature_poison_06;ability_creature_poison_06;ability_creature_poison_06;del addon
+conjuro;salto;Salto;eps_bg3_longjump;eps_bg3_longjump;eps_bg3_longjump;del addon
+conjuro;salvajismo_primitivo;Salvajismo primitivo;warwick_jawsofthebeast;warwick_jawsofthebeast;warwick_jawsofthebeast;del addon
+conjuro;santuario;Santuario;eps_bg3_sanctuary;eps_bg3_sanctuary;eps_bg3_sanctuary;del addon
+conjuro;santuario_privado_de_mordenkainen;Santuario privado de Mordenkainen;spell_arcane_teleportdalaran;spell_arcane_teleportdalaran;spell_arcane_teleportdalaran;del addon
+conjuro;senal_de_esperanza;Senal de esperanza;ability_priest_rayofhope;ability_priest_rayofhope;ability_priest_rayofhope;del addon
+conjuro;sentido_de_bestia;Sentido de bestia;eps_wc3h_direwolfacutesenses;eps_wc3h_direwolfacutesenses;eps_wc3h_direwolfacutesenses;del addon
+conjuro;silencio;Silencio;eps_bg3_silence;eps_bg3_silence;eps_bg3_silence;del addon
+conjuro;sirviente_invisible;Sirviente invisible;spell_shadow_impphaseshift;spell_shadow_impphaseshift;spell_shadow_impphaseshift;del addon
+conjuro;sirviente_minusculo;Sirviente minusculo;eps_rumble_npcstonegolem;eps_rumble_npcstonegolem;eps_rumble_npcstonegolem;del addon
+conjuro;sombra_de_moil;Sombra de moil;spell_shadow_shadowform;spell_shadow_shadowform;spell_shadow_shadowform;del addon
+conjuro;sordera_ceguera;Ceguera/sordera;spell_shadow_painandsuffering;spell_shadow_painandsuffering;spell_shadow_painandsuffering;del addon
+conjuro;sueno_profundo;Sueno profundo;smite_kumbhakarna_passive;smite_kumbhakarna_passive;smite_kumbhakarna_passive;del addon
+conjuro;sugestion;Sugestion;spell_shadow_charm;spell_shadow_charm;spell_shadow_charm;del addon
+conjuro;sumidero_gravitacional;Sumidero gravitacional;hots_kaelthas_gravitylapse_purple;hots_kaelthas_gravitylapse_purple;hots_kaelthas_gravitylapse_purple;del addon
+conjuro;susurros_disonantes;Susurros discordantes;eps_lol_sona_songofcelerityold;eps_lol_sona_songofcelerityold;eps_lol_sona_songofcelerityold;del addon
+conjuro;taumaturgia;Taumaturgia;ability_priest_bindingprayers;ability_priest_bindingprayers;ability_priest_bindingprayers;del addon
+conjuro;telarana;Telarana;eps_bg3_conjureweb;eps_bg3_conjureweb;eps_bg3_conjureweb;del addon
+conjuro;temblor_de_tierra;Temblor de tierra;spell_shaman_earthquake;spell_shaman_earthquake;spell_shaman_earthquake;del addon
+conjuro;tentaculos_negros_de_evard;Tentaculos negros de Evard;spell_shadow_shadowfury;spell_shadow_shadowfury;spell_shadow_shadowfury;del addon
+conjuro;terreno_ilusorio;Terreno alucinatorio;achievement_zone_arathihighlands_01;achievement_zone_arathihighlands_01;achievement_zone_arathihighlands_01;del addon
+conjuro;terror;Terror;hd_warlock_fear;hd_warlock_fear;hd_warlock_fear;del addon
+conjuro;texto_ilusorio;Texto ilusorio;inv_misc_profession_book_inscription;inv_misc_profession_book_inscription;inv_misc_profession_book_inscription;del addon
+conjuro;tierra_en_erupcion;Tierra en erupcion;w3reforgedvolcano;w3reforgedvolcano;w3reforgedvolcano;del addon
+conjuro;toque_del_caos;Toque del caos;ability_warlock_chaosbolt;ability_warlock_chaosbolt;ability_warlock_chaosbolt;del addon
+conjuro;toque_helado;Toque helado;spell_deathknight_icetouch;spell_deathknight_icetouch;spell_deathknight_icetouch;del addon
+conjuro;toque_helado_nivel_1;Toque helado;dos2_ghost13;dos2_ghost13;dos2_ghost13;del addon
+conjuro;toque_helado_nivel_2;Toque congelante;ability_deathknight_icygrip;ability_deathknight_icygrip;ability_deathknight_icygrip;del addon
+conjuro;toque_vampirico;Toque vampirico;spell_shadow_improvedvampiricembrace;spell_shadow_improvedvampiricembrace;spell_shadow_improvedvampiricembrace;del addon
+conjuro;tormenta_de_aguanieve;Tormenta de aguanieve;spell_frost_ice shards;spell_frost_ice shards;spell_frost_ice shards;del addon
+conjuro;tormenta_de_bolas_de_nieve_de_snilloc;Tormenta de bolas de nieve de Snilloc;eps_lol_nunu_snowballbarrage;eps_lol_nunu_snowballbarrage;eps_lol_nunu_snowballbarrage;del addon
+conjuro;tormenta_de_hielo;Tormenta de hielo;w3reforgedblizzard;w3reforgedblizzard;w3reforgedblizzard;del addon
+conjuro;torre_de_galder;Torre de Galder;w3reforgedguardtower;w3reforgedguardtower;w3reforgedguardtower;del addon
+conjuro;trampa;Trampa;eps_lol_kled_traponarope;eps_lol_kled_traponarope;eps_lol_kled_traponarope;del addon
+conjuro;transferencia_de_vida;Transferencia de vida;spell_shadow_lifedrain;spell_shadow_lifedrain;spell_shadow_lifedrain;del addon
+conjuro;trepar_cual_aracnido;Trepar cual aracnido;achievement_halloween_spider_01;achievement_halloween_spider_01;achievement_halloween_spider_01;del addon
+conjuro;truco_de_la_cuerda;Truco de la cuerda;inv_misc_rope_01;inv_misc_rope_01;inv_misc_rope_01;del addon
+conjuro;vacio_oscuro;Vacio oscuro;inv_elemental_primal_shadow;inv_elemental_primal_shadow;inv_elemental_primal_shadow;del addon
+conjuro;ventisca;Ventisca;d3_blizzard;d3_blizzard;d3_blizzard;del addon
+conjuro;ver_invisibilidad;Ver invisibilidad;spell_shadow_detectinvisibility;spell_shadow_detectinvisibility;spell_shadow_detectinvisibility;del addon
+conjuro;viento_guardian;Viento guardian;wh_windsprotection;wh_windsprotection;wh_windsprotection;del addon
+conjuro;vinculo_de_bestia;Vinculo de bestia;ability_hunter_pet_assist;ability_hunter_pet_assist;ability_hunter_pet_assist;del addon
+conjuro;vinculo_protector;Vinculo protector;eps_bg3_wardingbond;eps_bg3_wardingbond;eps_bg3_wardingbond;del addon
+conjuro;vision_en_la_oscuridad;Vision en la oscuridad;eps_bg3_darkvision;eps_bg3_darkvision;eps_bg3_darkvision;del addon
+conjuro;vision_mental;Vision mental;spell_holy_mindvision;spell_holy_mindvision;spell_holy_mindvision;del addon
+conjuro;volar;Volar;eps_bg3_fly;eps_bg3_fly;eps_bg3_fly;del addon
+conjuro;voluntad_interior;Voluntad interna;hots_cassia_innerlight;hots_cassia_innerlight;hots_cassia_innerlight;del addon
+conjuro;vortice_de_ursol;Vortice de ursol;spell_druid_ursolsvortex;spell_druid_ursolsvortex;spell_druid_ursolsvortex;del addon
+conjuro;zancada_prodigiosa;Zancada prodigiosa;eps_bg3_longstrider;eps_bg3_longstrider;eps_bg3_longstrider;del addon
+conjuro;zona_de_verdad;Zona de verdad;smite_aurelionsol_celestialexpansion;smite_aurelionsol_celestialexpansion;smite_aurelionsol_celestialexpansion;del addon

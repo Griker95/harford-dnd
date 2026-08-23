@@ -729,6 +729,23 @@ def norm_titulo(t):
         t2 = re.sub(re.escape(p), p, t2, flags=re.I)
     return t2
 
+# Un parrafo CORTO que acaba sin puntuacion casi siempre es una frase que el maquetado del
+# manual partio para esquivar una imagen ("Podras usar el rasgo" / "Por peticion popular
+# para encontrar..."). `unir_lineas` no lo cogia porque lo que sigue empieza en mayuscula.
+# Los titulos de seccion tambien son lineas cortas sin punto, pero abren bloque: se dejan.
+_TITULO_SECCION = re.compile(
+    r"(?i)^\**\s*(caracter[ií]sticas?\s+(recomendadas|sugeridas)|rasgos?\s+de\s+personalidad"
+    r"|ideales?|v[ií]nculos?|defectos?|acciones|equipo|competencias?|idiomas?)\s*\**$")
+_CORTADO = re.compile(r"(?m)^([^\n]{1,80}[a-záéíóúñ0-9,+)\-])\n{2,}(?=[A-ZÁÉÍÓÚÑ])")
+
+
+def _une_parrafo_cortado(t):
+    def rep(m):
+        if _TITULO_SECCION.match(m.group(1).strip()) or _LINEA_PROPIA.match(m.group(1)):
+            return m.group(0)
+        return m.group(1) + " "
+    return _CORTADO.sub(rep, t or "")
+
 def prose(t):
     if not t: return t
     t = t.replace("\r", "")
@@ -769,7 +786,7 @@ def prose(t):
     t = "\n".join(out)
     t = re.sub(r"\n{3,}", "\n\n", t)
     t = re.sub(r"\n\s*-{3,}\s*$", "", t)          # regla horizontal del markdown
-    return referencias(limpiar(normalizar_habilidades(unir_lineas(_sin_cola_de_titulo(t.strip())))), web=True)
+    return referencias(limpiar(normalizar_habilidades(_une_parrafo_cortado(unir_lineas(_sin_cola_de_titulo(t.strip()))))), web=True)
 def walk(o):
     if isinstance(o, dict):
         if isinstance(o.get("desc"), str): o["desc"] = a_metrico(prose(o["desc"]))
@@ -1193,6 +1210,45 @@ for b in kb["backgrounds"]:
             _vcasa += 1
 print("Variantes con texto propio de la casa: %d" % _vcasa)
 
+# ----- el rasgo propio de una variante, fuera de la prosa -----
+# Solo el Pirata tiene uno ("***Rasgo: Mala Reputacion.*** ..."); las demas variantes usan
+# el del trasfondo padre. Empotrado en el texto no tenia ficha ni hueco de icono.
+_RASGO_VAR = re.compile(r"\*{2,3}\s*Rasgo:\s*(.+?)\.?\s*\*{2,3}\s*(.*)$", re.S)
+_nrv = 0
+for _b in kb["backgrounds"]:
+    for _v in _b.get("variants") or []:
+        if _v.get("traits"):
+            continue
+        _partes = (_v.get("desc") or "").split("\n\n")
+        for _i, _p in enumerate(_partes):
+            _m = _RASGO_VAR.match(_p.strip())
+            if not _m:
+                continue
+            _nom = _m.group(1).strip()
+            _v["traits"] = [{"id": "var_" + nk(_nom).replace(" ", "_"),
+                             "level": None, "name": _nom, "type": "informativo",
+                             "desc": _m.group(2).strip()}]
+            _v["desc"] = "\n\n".join(_partes[:_i] + _partes[_i + 1:]).strip()
+            _nrv += 1
+            break
+print("Variantes con su rasgo propio como rasgo: %d" % _nrv)
+
+# ----- rasgo de variante que el export no trae estructurado -----
+# El del Caballero nobiliario vive en un cuadro de texto de la pagina del Noble, con el
+# titulo en versales y partido en parrafos: no hay de donde sacarlo por regla.
+RASGO_VAR_DE_LA_CASA = {
+    "noble_caballero_nobiliario": ("Siervos", 'Tres criados leales a tu familia están a tu servicio. Estos siervos pueden ser asistentes o mensajeros, y uno de ellos podría incluso ser un mayordomo. Los criados son plebeyos que pueden llevar a cabo las tareas mundanas que les pidas, pero no lucharán por ti, no te seguirán a zonas claramente peligrosas (como mazmorras) y te abandonarán si conviertes en una costumbre abusar de ellos o ponerles en peligro.'),
+}
+_nrvc = 0
+for _b in kb["backgrounds"]:
+    for _v in _b.get("variants") or []:
+        _r = RASGO_VAR_DE_LA_CASA.get(_v.get("id"))
+        if _r and not _v.get("traits"):
+            _v["traits"] = [{"id": "var_" + nk(_r[0]).replace(" ", "_"), "level": None,
+                             "name": _r[0], "type": "informativo", "desc": _r[1]}]
+            _nrvc += 1
+print("Rasgos de variante transcritos a mano: %d" % _nrvc)
+
 # ---- icono de cada variante, del catalogo del addon ----
 # Una variante es un trasfondo contado en corto y tiene su propio dibujo. El catalogo es el
 # mismo sitio donde estan los demas iconos: no se le monta una tabla aparte.
@@ -1212,6 +1268,10 @@ for b in kb["backgrounds"]:
         if not v.get("icon") and ICONO_VARIANTE.get(v.get("id")):
             v["icon"] = ICONO_VARIANTE[v["id"]]
             _nvi += 1
+        # y su rasgo propio, que tambien es una entrada del catalogo
+        for f in v.get("traits") or []:
+            if not f.get("icon") and ICONO_VARIANTE.get(f.get("id")):
+                f["icon"] = ICONO_VARIANTE[f["id"]]
 print("Variantes con icono: %d" % _nvi)
 
 # ----- el rasgo propio del trasfondo va con su nombre a secas -----

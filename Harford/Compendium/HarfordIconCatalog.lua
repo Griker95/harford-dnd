@@ -380,6 +380,9 @@ for name, icon in pairs(Catalog.presentationNames) do
 end
 
 Catalog.features = {
+    bg_hered_superv = "inv_scroll_11",
+    bg_org_perspicacia = "inv_scroll_11",
+    animador = "eps_bg3_playlute",
     acolito_luz_abisal = "ability_priest_innerlightandshadow",
     adepto_cosecha_oscura = "ability_warlock_infernogreen",
     agente_principe_mercante = "eps_hs_grimygoblin",

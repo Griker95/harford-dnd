@@ -233,6 +233,13 @@ def signo_incremento(f):
     # PREFIJO y por delante del catalogo, asi que pisa el icono especifico que tuvieran.
     if nombre.startswith("competencia"):
         return ICONO_COMPETENCIA
+    # Conceden competencia aunque no se llamen asi: "Kit de herborista", "Herramientas de
+    # forja", "Habilidad adicional". NO se incluyen los nombres pelados de habilidad
+    # ("Supervivencia", "Perspicacia") porque hay un rasgo de CLASE que se llama igual y
+    # tiene su propio icono; esos dos van por id en el catalogo.
+    if (nombre.startswith(("kit de ", "herramientas de ", "habilidad de "))
+            or nombre in ("herramienta adicional", "habilidad adicional")):
+        return ICONO_COMPETENCIA
     if nombre in ICONO_POR_NOMBRE:
         return ICONO_POR_NOMBRE[nombre]
     if "mejora de caracteristica" in nombre:

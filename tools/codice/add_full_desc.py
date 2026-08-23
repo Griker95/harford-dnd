@@ -1190,6 +1190,27 @@ for b in kb["backgrounds"]:
             _vcasa += 1
 print("Variantes con texto propio de la casa: %d" % _vcasa)
 
+# ---- icono de cada variante, del catalogo del addon ----
+# Una variante es un trasfondo contado en corto y tiene su propio dibujo. El catalogo es el
+# mismo sitio donde estan los demas iconos: no se le monta una tabla aparte.
+ICONO_VARIANTE = {}
+import glob as _glob  # no estaba importado en este modulo
+_cat_v = _glob.glob(os.path.join(r"C:/Users/marco/Documents/New project/Harford", "**",
+                                 "HarfordIconCatalog.lua"), recursive=True)
+if _cat_v:
+    _tv = io.open(_cat_v[0], encoding="utf-8", errors="replace").read()
+    _mv = re.search(r"Catalog\.features\s*=\s*\{(.*?)" + chr(10) + r"\}", _tv, re.S)
+    if _mv:
+        for _e in re.finditer(r'([a-z0-9_]+)\s*=\s*"([A-Za-z0-9_ ]+)"', _mv.group(1)):
+            ICONO_VARIANTE[_e.group(1)] = _e.group(2)
+_nvi = 0
+for b in kb["backgrounds"]:
+    for v in b.get("variants") or []:
+        if not v.get("icon") and ICONO_VARIANTE.get(v.get("id")):
+            v["icon"] = ICONO_VARIANTE[v["id"]]
+            _nvi += 1
+print("Variantes con icono: %d" % _nvi)
+
 json.dump(kb, io.open(os.path.join(SP, "kb_icons.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("Clases: intro + %d/%d rasgos completos" % (cf, ct))
 

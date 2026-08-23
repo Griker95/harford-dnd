@@ -331,7 +331,9 @@ for r in kb["races"]:
             sr["icon"] = use(icon_by_name(sr["name"]))
         for f in sr["traits"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
 for b in kb["backgrounds"]:
-    _bi = BG_ICON.get(b["id"])
+    # BG_ICON son los que se sacaron de los perfiles TRP3; el catalogo del addon manda
+    # igual que para el resto, para no tener dos sitios donde poner un icono
+    _bi = FEATS.get(b["id"]) or BG_ICON.get(b["id"])
     b["icon"] = use(_bi) if _bi else None
     for f in b["traits"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
 SCHOOL_ICON = {

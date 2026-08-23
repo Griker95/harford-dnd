@@ -214,6 +214,11 @@ def signo_incremento(f):
     nombre = nk(f.get("name", ""))
     if nombre in ("idioma", "idiomas") or nombre.startswith(("idioma ", "idiomas ")):
         return ICONO_IDIOMAS
+    # TODA etiqueta de competencia lleva el pergamino, tambien las que nombran algo
+    # concreto ("Competencia con venenos", "Competencia adicional (cervecero)"). Va por
+    # PREFIJO y por delante del catalogo, asi que pisa el icono especifico que tuvieran.
+    if nombre.startswith("competencia"):
+        return ICONO_COMPETENCIA
     if nombre in ICONO_POR_NOMBRE:
         return ICONO_POR_NOMBRE[nombre]
     if "mejora de caracteristica" in nombre:
@@ -235,7 +240,10 @@ for c in kb["classes"]:
     for f in c["features"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
     for s in c["subclasses"]:
         s["icon"] = use((SUBS.get(c["id"], {}) or {}).get(s["id"]))
-        for f in s["features"]: f["icon"] = use(feat_icon(f))
+        # las reglas por NOMBRE (incremento de caracteristica, idiomas, competencias)
+        # se aplicaban a clases, razas, subrazas y trasfondos pero NO a subclases,
+        # asi que sus rasgos se quedaban fuera de todas ellas sin motivo
+        for f in s["features"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
 # Lo mismo por subraza. La clave es "raza/subraza" porque los ids se repiten entre razas
 # (Renegado y Humano tienen los dos una subraza "humano").
 SUBRACE_GENERO = {

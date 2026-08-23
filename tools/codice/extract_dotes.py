@@ -195,12 +195,12 @@ print("iconos de dote leidos del catalogo: %d" % _ncat)
 # repetido, no un rasgo distinto cada vez. Las que nombran algo concreto ya traen su icono
 # del catalogo y no se tocan.
 ICONO_COMPETENCIA = "inv_scroll_11"
-_GENERICAS = {"competencias", "competencia con herramientas", "competencia en habilidad",
-              "competencia con armas", "competencia en habilidades"}
+# Por PREFIJO y pisando lo que hubiera: tambien las que nombran algo concreto
+# ("Competencia con armas de fuego") llevan el pergamino.
 _ncomp = 0
 for _d in dotes:
     for _t in _d.get("traits") or []:
-        if not _t.get("icon") and _nk(_t.get("name", "")) in _GENERICAS:
+        if _nk(_t.get("name", "")).startswith("competencia"):
             _t["icon"] = ICONO_COMPETENCIA
             _ncomp += 1
 print("etiquetas de competencia con pergamino: %d" % _ncomp)

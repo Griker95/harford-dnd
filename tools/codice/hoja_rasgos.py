@@ -230,7 +230,8 @@ def main():
     global LOCAL
     LOCAL = "--local" in sys.argv[1:]
     _args = [x for x in sys.argv[1:] if not x.startswith("--")]
-    solo = nk(_args[0]) if _args and not plana else ""
+    # varios terminos separados por coma: "raza,clase" saca los cuatro bloques de golpe
+    solo = [nk(x) for x in _args[0].split(",")] if _args and not plana else []
     filas = []
     for r in d["races"]:
         for f in r.get("traits") or []:
@@ -240,6 +241,17 @@ def main():
             for f in s.get("traits") or []:
                 if not f.get("icon"):
                     filas.append(("Subrazas", s["name"], f))
+    # Clases y subclases HASTA NIVEL 6, que es el alcance acordado: un rasgo de nivel 12 no
+    # se juega todavia y meterlo aqui seria pedir decisiones que no hacen falta.
+    for c in d.get("classes") or []:
+        for f in c.get("features") or []:
+            if not f.get("icon") and (f.get("level") or 0) <= 6:
+                filas.append(("Clases", c["name"], f))
+        for s in c.get("subclasses") or []:
+            for f in s.get("features") or []:
+                if not f.get("icon") and (f.get("level") or 0) <= 6:
+                    filas.append(("Subclases", c["name"] + " / " + s["name"], f))
+
     # Las dotes van en su propio fichero y no en el kb, asi que hay que cargarlas aparte.
     # Son las 77 dotes y sus 139 rasgos: ninguna tiene icono, ni en el addon ni en el
     # catalogo, asi que es el bloque mas grande que queda.
@@ -264,7 +276,7 @@ def main():
                 filas.append(("Trasfondos", b["name"], f))
 
     if solo:
-        filas = [x for x in filas if solo in nk(x[0])]
+        filas = [x for x in filas if any(s in nk(x[0]) for s in solo)]
     # el mismo rasgo repetido en varias razas es un unico rasgo: una fila, y al aplicarlo
     # va a todos sus ids ("Entrenamiento con armas Troll" esta en las tres subrazas de trol)
     unicas, vistos = [], {}
@@ -316,7 +328,7 @@ def main():
                       'solo esta en la hoja local (--local), que lee la carpeta del volcado.</p>')
     partes.append(PLANTILLA_PIE)
     salida = SALIDA.replace(".html", "_plana.html") if plana else (
-        SALIDA if not solo else SALIDA.replace(".html", "_%s.html" % solo))
+        SALIDA if not solo else SALIDA.replace(".html", "_%s.html" % "-".join(solo)))
     io.open(salida, "w", encoding="utf-8").write("\n".join(partes))
     print("hoja escrita: %s" % salida)
     print("   rasgos: %d | sin ningun candidato: %d | tamano: %.1f MB"

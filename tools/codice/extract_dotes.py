@@ -164,6 +164,47 @@ for _d in dotes:
             _ninc += 1
 print("incrementos de caracteristica con signo: %d" % _ninc)
 
+# ---- iconos elegidos a mano, del catalogo del addon ----
+# Las dotes no tienen icono propio en HarfordDnDFeats.lua y hasta ahora tampoco miraban el
+# catalogo, asi que la pestana entera salia sin un solo dibujo. Se lee de la misma tabla
+# que usan clases, razas y trasfondos: un unico sitio donde poner los iconos.
+# El valor admite MAYUSCULAS y espacios: 1.991 ficheros del volcado llevan mayusculas
+# ("WH_DeadlyDetermination") y 165 llevan espacios en el nombre.
+_CAT = glob.glob(os.path.join(BASE, "Harford", "**", "HarfordIconCatalog.lua"), recursive=True)
+_iconos_cat = {}
+if _CAT:
+    _txt = io.open(_CAT[0], encoding="utf-8", errors="replace").read()
+    _m = re.search(r"Catalog\.features\s*=\s*\{(.*?)" + chr(10) + r"\}", _txt, re.S)
+    if _m:
+        for _e in re.finditer(
+                r'(?:\["([A-Za-z0-9_]+)"\]|([A-Za-z0-9_]+))\s*=\s*"([A-Za-z0-9_ ]+)"',
+                _m.group(1)):
+            _iconos_cat[(_e.group(1) or _e.group(2))] = _e.group(3)
+_ncat = 0
+for _d in dotes:
+    if not _d.get("icon") and _iconos_cat.get(_d["id"]):
+        _d["icon"] = _iconos_cat[_d["id"]]
+        _ncat += 1
+    for _t in _d.get("traits") or []:
+        if not _t.get("icon") and _iconos_cat.get(_t["id"]):
+            _t["icon"] = _iconos_cat[_t["id"]]
+            _ncat += 1
+print("iconos de dote leidos del catalogo: %d" % _ncat)
+
+# El mismo pergamino que en el kb para las etiquetas genericas de competencia: es un rotulo
+# repetido, no un rasgo distinto cada vez. Las que nombran algo concreto ya traen su icono
+# del catalogo y no se tocan.
+ICONO_COMPETENCIA = "inv_scroll_11"
+_GENERICAS = {"competencias", "competencia con herramientas", "competencia en habilidad",
+              "competencia con armas", "competencia en habilidades"}
+_ncomp = 0
+for _d in dotes:
+    for _t in _d.get("traits") or []:
+        if not _t.get("icon") and _nk(_t.get("name", "")) in _GENERICAS:
+            _t["icon"] = ICONO_COMPETENCIA
+            _ncomp += 1
+print("etiquetas de competencia con pergamino: %d" % _ncomp)
+
 
 dotes = json.loads(normalizar_habilidades(a_metrico(json.dumps(dotes, ensure_ascii=False))))
 dotes = json.loads(decimales(json.dumps(dotes, ensure_ascii=False)))

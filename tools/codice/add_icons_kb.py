@@ -40,7 +40,7 @@ FEATS = {}
 mfe = re.search(r"Catalog\.features\s*=\s*\{(.*?)\n\}", cat, re.S)
 # el valor admite espacios: 165 iconos del volcado los llevan en el nombre del fichero
 # ("trade_archaeology_carved wildhammer gryphon figurine") y sin esto eran inalcanzables
-for m in re.finditer(r'(?:\["([a-z0-9_]+)"\]|([a-z0-9_]+))\s*=\s*"([a-z0-9_ ]+)"', mfe.group(1)):
+for m in re.finditer(r'(?:\["([a-z0-9_]+)"\]|([a-z0-9_]+))\s*=\s*"([A-Za-z0-9_ ]+)"', mfe.group(1)):
     FEATS[m.group(1) or m.group(2)] = m.group(3)
 # rasgos sin entrada en el catalogo del addon: iconos elegidos a mano (iconos_rasgos.json)
 _ir = os.path.join(SP, "iconos_rasgos.json")
@@ -192,9 +192,17 @@ ICONO_IDIOMAS = "inv_misc_note_05"
 # Cabeceras de seccion que repiten decenas de trasfondos. No son rasgos propios: llevan un
 # icono por TIPO, no uno cada uno, para que se reconozcan de un vistazo entre los que si lo
 # son. Van por nombre porque estan repartidas por los 52 trasfondos.
+# Las etiquetas genericas de competencia llevan todas el mismo pergamino: son un rotulo
+# repetido decenas de veces, no un rasgo distinto cada vez. Las que SI nombran algo
+# concreto ("Competencia con venenos", "Competencia adicional (cervecero)") conservan su
+# icono propio, que dice mas que un pergamino.
+ICONO_COMPETENCIA = "inv_scroll_11"
 ICONO_POR_NOMBRE = {
-    "competencias": "ability_rogue_combatexpertise",
-    "competencia con herramientas": "trade_engineering",
+    "competencias": ICONO_COMPETENCIA,
+    "competencia con herramientas": ICONO_COMPETENCIA,
+    "competencia en habilidad": ICONO_COMPETENCIA,
+    "competencia con armas": ICONO_COMPETENCIA,
+    "competencia en habilidades": ICONO_COMPETENCIA,
     "equipo": "inv_misc_bag_20",
     "juego o instrumento": "inv_misc_dice_01",
     "juego": "inv_misc_dice_02",

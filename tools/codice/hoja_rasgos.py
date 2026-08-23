@@ -206,6 +206,16 @@ CABECERA = io.open(os.path.join(BASE, "_hoja_estilo.html"), encoding="utf-8").re
     if os.path.exists(os.path.join(BASE, "_hoja_estilo.html")) else ""
 
 
+# Decision del usuario: estos NO llevan icono. Son contabilidad de recursos -- crear y
+# convertir espacios de conjuro, cuantas maldiciones conoces -- y ponerles un dibujo
+# sugeriria una mecanica que no tienen. Se excluyen de la hoja para no volver a preguntar.
+SIN_ICONO_A_PROPOSITO = {
+    "bru_afl_maldiciones", "bru_afl_maldiciones_6",
+    "mago_crear_espacio", "mago_convertir_espacio",
+    "sac_crear_ranura", "sac_convertir_ranura",
+}
+
+
 def main():
     sys.stdout.reconfigure(encoding="utf-8")
     d = json.loads(re.search(r"=\s*(\{[\s\S]*\})", io.open(WEB, encoding="utf-8").read()).group(1))
@@ -288,6 +298,7 @@ def main():
         vistos[clave] = (f, [quien])
         unicas.append((grupo, clave, f))
     filas = [(g, " + ".join(vistos[c][1]), f) for g, c, f in unicas]
+    filas = [x for x in filas if x[2].get("id") not in SIN_ICONO_A_PROPOSITO]
     reservados = set()
     partes = [PLANTILLA_CABECERA % len(filas)]
     sin_nada = []

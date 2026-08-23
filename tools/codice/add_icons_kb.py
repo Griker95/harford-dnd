@@ -212,6 +212,8 @@ ICONO_POR_NOMBRE = {
     "competencia en habilidad": ICONO_COMPETENCIA,
     "competencia con armas": ICONO_COMPETENCIA,
     "competencia en habilidades": ICONO_COMPETENCIA,
+    # es una competencia aunque no se llame asi
+    "herramientas de artesano": ICONO_COMPETENCIA,
     "equipo": "inv_misc_bag_20",
     "juego o instrumento": "inv_misc_dice_01",
     "juego": "inv_misc_dice_02",

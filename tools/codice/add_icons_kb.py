@@ -38,7 +38,9 @@ for block in re.findall(r"HarfordDnDData\.(?:PRESENTATION|TRP3_PRESENTATION)\s*=
 # Catalog.features (por id) -> icono
 FEATS = {}
 mfe = re.search(r"Catalog\.features\s*=\s*\{(.*?)\n\}", cat, re.S)
-for m in re.finditer(r'(?:\["([a-z0-9_]+)"\]|([a-z0-9_]+))\s*=\s*"([a-z0-9_]+)"', mfe.group(1)):
+# el valor admite espacios: 165 iconos del volcado los llevan en el nombre del fichero
+# ("trade_archaeology_carved wildhammer gryphon figurine") y sin esto eran inalcanzables
+for m in re.finditer(r'(?:\["([a-z0-9_]+)"\]|([a-z0-9_]+))\s*=\s*"([a-z0-9_ ]+)"', mfe.group(1)):
     FEATS[m.group(1) or m.group(2)] = m.group(3)
 # rasgos sin entrada en el catalogo del addon: iconos elegidos a mano (iconos_rasgos.json)
 _ir = os.path.join(SP, "iconos_rasgos.json")
@@ -48,12 +50,17 @@ if os.path.exists(_ir):
 
 # Catalog.subclasses[classid][subid] -> icono
 SUBS = {}
-msc = re.search(r"Catalog\.subclasses\s*=\s*\{(.*)\n\}\s*$", cat, re.S)
+# Hasta el primer cierre de linea, no hasta el final del fichero: el catalogo dejo de
+# terminar en esta tabla y desde entonces SUBS salia vacio sin que nada fallara, asi que
+# las 37 subclases se publicaban sin icono.
+msc = re.search(r"Catalog\.subclasses\s*=\s*\{(.*?)\n\}", cat, re.S)
 if msc:
-    for cm in re.finditer(r'(?:\["?([a-z_]+)"?\])\s*=\s*\{([^}]*)\}', msc.group(1)):
-        cid = cm.group(1); SUBS[cid] = {}
-        for sm in re.finditer(r'\["?([a-z_]+)"?\]\s*=\s*"([a-z0-9_]+)"', cm.group(2)):
-            SUBS[cid][sm.group(1)] = sm.group(2)
+    # las claves van sin corchetes (`caballero_muerte = { sangre = "..." }`), asi que los
+    # corchetes son opcionales: exigirlos dejaba SUBS vacio
+    for cm in re.finditer(r'(?:\["?([a-z_]+)"?\]|([a-z_]+))\s*=\s*\{([^}]*)\}', msc.group(1)):
+        cid = cm.group(1) or cm.group(2); SUBS[cid] = {}
+        for sm in re.finditer(r'(?:\["?([a-z_]+)"?\]|([a-z_]+))\s*=\s*"([a-z0-9_]+)"', cm.group(3)):
+            SUBS[cid][sm.group(1) or sm.group(2)] = sm.group(3)
 
 def icon_by_name(name):
     k = nk(name)
@@ -70,9 +77,57 @@ def feat_icon(f):
 CLASS_TOKEN = {"guerrero":"warrior","paladin":"paladin","cazador_demonios":"demonhunter","cazador":"hunter",
   "picaro":"rogue","sacerdote":"priest","caballero_muerte":"deathknight","chaman":"shaman","mago":"mage",
   "brujo":"warlock","monje":"monk","druida":"druid"}
-RACE_ICON = {"humano":"achievement_character_human_male","elfo_noche":"achievement_character_nightelf_male",
-  "elfo_sangre":"achievement_character_bloodelf_male","semielfo":"eps_wc3h_highelfrangermale",
-  "huargen":"achievement_worganhead","pandaren":"w3reforgedpandarenbrewmaster","vulpera":"vulpera_m"}
+# Iconos de trasfondo: son los que el jugador eligio en su propia ficha de TRP3, sacados
+# de las SavedVariables. Los trasfondos no tenian ninguno y salian todos sin dibujo.
+BG_ICON = {
+  "acolito": "spell_holy_impholyconcentration",
+  "anima_errante": "ability_warlock_soulswap",
+  "animador": "achievement_halloween_smiley_01",
+  "artesano_gremial": "eps_arc_sign_oribos_trade",
+  "boticario_oscuro": "ui_darkshore_warfront_horde_alchemist",
+  "buscador_sombrio": "dos2_shadow12",
+  "capitan_veterano_harford": "inv_tabard_duelersguild",
+  "cazarrecompensas_urbano": "inv_bountyhunting",
+  "coneja_elemental": "inv_eng_gizmo3",
+  "desertor_errante": "achievement_general_classicbattles",
+  "devoto_elune": "eps_wow_eluneschosen",
+  "eco_resurreccion": "d3_astralpresence",
+  "el_loco": "spell_magic_polymorphrabbit",
+  "erudito": "wh_focusedmind",
+  "gladiador_goriano": "achievement_dungeon_ogreslagmines",
+  "guardia_ciudad": "ability_warrior_vigilance",
+  "guardian_salvaje": "ability_hunter_huntervswild",
+  "huerfano": "eps_lol_profileicon_ezbereal",
+  "mercenario_veterano_harford": "w3reforgedbandit",
+  "noble": "w3reforgedgoldring",
+  "rostro_olvidado": "ability_rogue_disguise",
+  "senda_sangre_barro": "wh_burnawaylies",
+  "veterano_campo_batalla": "inv_banner_03",
+}
+# Cada raza tiene dos iconos y dos nombres, uno por genero, para el interruptor
+# Hombre/Mujer de la pestana Razas. El femenino se deja vacio hasta que se elija a mano:
+# poner el masculino en los dos lados haria creer que el interruptor no funciona.
+RACE_GENERO = {
+  "humano":      ("achievement_character_human_male", "achievement_character_human_female", "Humana"),
+  "enano":       ("achievement_character_dwarf_male", "achievement_character_dwarf_female", "Enana"),
+  "elfo_noche":  ("achievement_character_nightelf_male", "achievement_character_nightelf_female", "Elfa de la Noche"),
+  "semielfo":    ("eps_wc3h_highelfrangermale", "eps_wc3h_highelfbaddiegirl", "Semielfa"),
+  "gnomo":       ("gnome_m", "gnome_f", "Gnoma"),
+  "draenei":     ("achievement_character_draenei_male", "achievement_character_draenei_female", "Draenei"),
+  "huargen":     ("achievement_worganhead", "ability_worgen_darkflight", "Huargen"),
+  "orco":        ("achievement_character_orc_male", "achievement_character_orc_female", "Orca"),
+  "renegado":    ("forsaken_m", "forsaken_f", "Renegada"),
+  "tauren":      ("tauren_m", "tauren_f", "Tauren"),
+  "trol":        ("troll_m", "troll_f", "Troll"),
+  "elfo_sangre": ("achievement_character_bloodelf_male", "achievement_character_bloodelf_female", "Elfa de Sangre"),
+  "goblin":      ("achievement_goblinhead", "achievement_femalegoblinhead", "Goblin"),
+  "pandaren":    ("w3reforgedpandarenbrewmaster", "achievement_character_pandaren_female", "Pandaren"),
+  # Esta entrada esta nombrada en femenino, al reves que las demas, asi que necesita
+  # tambien el masculino: sin el, el interruptor ensenaba "Nocheterno" al pedir Mujer.
+  "nocheterna":  ("nightborne_m", "nightborne_f", "Elfa Nocheterna", "Elfo Nocheterna"),
+  "elfo_vacio":  ("voidelf_m", "voidelf_f", "Elfa del Vacio"),
+  "vulpera":     ("vulpera_m", "vulpera_f", "Vulpera"),
+}
 
 # mapa fileID -> nombre de icono (para los conjuros, que traen icon numerico)
 FDID = {}
@@ -110,20 +165,117 @@ def use(ic):
     used.add(ic.split("\\")[-1].lower())
     return ic
 
+# Los rasgos de incremento salian todos con el mismo dibujo. El texto dice que
+# caracteristica sube ("Constitucion +2", "Destreza +2 y Sabiduria +1"), asi que cada uno
+# puede llevar el signo del color de SU caracteristica. El color se elige por la clase que
+# encarna esa caracteristica en WoW: el guerrero la Fuerza, el picaro la Destreza, el mago
+# la Inteligencia. Cuando el incremento es a eleccion (Humano) no hay caracteristica que
+# colorear y se queda con el signo neutro.
+SIGNO_CARACTERISTICA = {
+    "fuerza": "hd_plussign_warrior",
+    "destreza": "hd_plussign_rogue",
+    "constitucion": "hd_plussign_deathknight",
+    "inteligencia": "hd_plussign_mage",
+    "sabiduria": "hd_plussign_monk",
+    "carisma": "hd_plussign_paladin",
+}
+# gris: no hay caracteristica que colorear porque todavia no se ha elegido
+SIGNO_NEUTRO = "hd_plussign_priest"
+# verde: la mejora de caracteristica que da la clase al subir de nivel (4, 8, 12...),
+# que no es lo mismo que el incremento fijo que trae la raza
+SIGNO_MEJORA = "hd_plussign_hunter"
+
+
+# El rasgo de idiomas lleva siempre la misma nota, este en una raza, una subraza o un
+# trasfondo. Se decide por nombre y no por id porque son 40 rasgos repartidos por todo.
+ICONO_IDIOMAS = "inv_misc_note_05"
+# Cabeceras de seccion que repiten decenas de trasfondos. No son rasgos propios: llevan un
+# icono por TIPO, no uno cada uno, para que se reconozcan de un vistazo entre los que si lo
+# son. Van por nombre porque estan repartidas por los 52 trasfondos.
+ICONO_POR_NOMBRE = {
+    "competencias": "ability_rogue_combatexpertise",
+    "competencia con herramientas": "trade_engineering",
+    "equipo": "inv_misc_bag_20",
+    "juego o instrumento": "inv_misc_dice_01",
+    "juego": "inv_misc_dice_02",
+}
+
+
+def signo_incremento(f):
+    """Signo del color de la caracteristica que sube este rasgo, si la nombra."""
+    nombre = nk(f.get("name", ""))
+    if nombre in ("idioma", "idiomas") or nombre.startswith(("idioma ", "idiomas ")):
+        return ICONO_IDIOMAS
+    if nombre in ICONO_POR_NOMBRE:
+        return ICONO_POR_NOMBRE[nombre]
+    if "mejora de caracteristica" in nombre:
+        return SIGNO_MEJORA
+    if "incremento de caracteristica" not in nombre:
+        return None
+    texto = nk(f.get("description") or f.get("desc") or "")
+    citadas = sorted(((texto.find(c), ic) for c, ic in SIGNO_CARACTERISTICA.items()
+                      if texto.find(c) >= 0))
+    # "Destreza +2 y Sabiduria +1" sube dos cosas: no hay un color que lo represente,
+    # asi que va el verde de mejora, el mismo que el ASI de clase
+    if len(citadas) > 1:
+        return SIGNO_MEJORA
+    return citadas[0][1] if citadas else SIGNO_NEUTRO
+
+
 for c in kb["classes"]:
     c["icon"] = use("classicon_" + CLASS_TOKEN.get(c["id"], "warrior"))
-    for f in c["features"]: f["icon"] = use(feat_icon(f))
+    for f in c["features"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
     for s in c["subclasses"]:
         s["icon"] = use((SUBS.get(c["id"], {}) or {}).get(s["id"]))
         for f in s["features"]: f["icon"] = use(feat_icon(f))
+# Lo mismo por subraza. La clave es "raza/subraza" porque los ids se repiten entre razas
+# (Renegado y Humano tienen los dos una subraza "humano").
+SUBRACE_GENERO = {
+  "enano/forjaz": ("dwarf_m", "dwarf_f", "Enana de Forjaz"),
+  "enano/martillo_salvaje": ("eps_wc3h_wildhammermale", "eps_hots_dwarfshaman", "Enana Martillo Salvaje"),
+  "enano/hierro_negro": ("darkiron_m", "darkiron_f", "Enana Hierro Negro"),
+  "elfo_noche/altonato": ("eps_wc3h_nightelfmalewarrior", "eps_wc3h_nightelfcharm", "Altonata"),
+  "gnomo/gnomeregan": ("achievement_character_gnome_male", "achievement_character_gnome_female", "Gnoma de Gnomeregan"),
+  "gnomo/mecagnomo": ("mechagnome_m", "mechagnome_f", "Mecagnoma"),
+  "draenei/exodar": ("draenei_m", "draenei_f", "Draenei del Exodar"),
+  "draenei/forjado_luz": ("lightforged_m", "lightforged_f", "Draenei Forjada por la Luz"),
+  "draenei/tabido": ("broken", "eps_wc3_brokendraeneimage", "Draenei Tábida"),
+  "draenei/man_ari": ("eps_wc3h_eredardiabolist", "achievement_boss_argus_femaleeredar", "Man'ari"),
+  "orco/cazadores": ("eps_wc3_orcwarlock", "eps_wc3h_orchuntress", "Clanes Cazadores"),
+  "orco/misticos": ("eps_wc3_orcwarlockred", "eps_wc3h_orcwarden", "Clanes Místicos"),
+  "orco/guerreros": ("eps_wc3h_orcwarlord", "eps_wc3h_orcfemalewarrior", "Clanes Guerreros"),
+  "renegado/humano": ("achievement_character_undead_male", "achievement_character_undead_female", "Renegada Humana"),
+  "renegado/elfo": ("eps_wc3h_forsakenhunter", "eps_wc3h_undeadsanlaynbaddiegirl", "Renegada Elfa"),
+  "tauren/mulgore": ("achievement_character_tauren_male", "achievement_character_tauren_female", "Tauren de Mulgore"),
+  "tauren/monte_alto": ("highmountain_m", "highmountain_f", "Tauren de Monte Alto"),
+  "tauren/taunka": ("eps_wc3h_taunkachieftain", "inv_misc_head_tauren_02", "Taunka"),
+  "trol/jungla": ("achievement_character_troll_male", "achievement_character_troll_female", "Troll de la Jungla"),
+  "trol/zandalari": ("inv_zandalarimalehead", "inv_zandalarifemalehead", "Troll Zandalari"),
+  "trol/bosque": ("eps_wc3_foresttrollpriest", "eps_wc3h_trolltrollpriestessfemale", "Troll de Bosque"),
+  "trol/hielo": ("eps_wc3_icetrollshadowpriest", "eps_wc3h_trollpeasant", "Troll de Hielo"),
+}
+
 for r in kb["races"]:
-    r["icon"] = use(RACE_ICON.get(r["id"]))
-    for f in r["traits"]: f["icon"] = use(feat_icon(f))
+    _g = RACE_GENERO.get(r["id"], ("", "", ""))
+    _m, _f, _nf = _g[0], _g[1], _g[2]
+    r["icon"] = use(_m) if _m else None
+    r["iconF"] = use(_f) if _f else None
+    r["nameF"] = _nf or None
+    r["nameM"] = _g[3] if len(_g) > 3 else None
+    for f in r["traits"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
     for sr in r.get("subraces", []):
-        sr["icon"] = use(icon_by_name(sr["name"]))
-        for f in sr["traits"]: f["icon"] = use(feat_icon(f))
+        _sg = SUBRACE_GENERO.get(r["id"] + "/" + sr["id"])
+        if _sg:
+            sr["icon"] = use(_sg[0])
+            sr["iconF"] = use(_sg[1]) if _sg[1] else None
+            sr["nameF"] = _sg[2] or None
+        else:
+            sr["icon"] = use(icon_by_name(sr["name"]))
+        for f in sr["traits"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
 for b in kb["backgrounds"]:
-    for f in b["traits"]: f["icon"] = use(feat_icon(f))
+    _bi = BG_ICON.get(b["id"])
+    b["icon"] = use(_bi) if _bi else None
+    for f in b["traits"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
 SCHOOL_ICON = {
     "abjuracion": "spell_holy_powerwordbarrier", "adivinacion": "spell_holy_mindvision",
     "conjuracion": "spell_arcane_portalstormwind", "encantamiento": "spell_shadow_charm",

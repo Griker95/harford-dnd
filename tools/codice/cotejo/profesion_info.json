@@ -30,6 +30,7 @@
   "specializations": [],
   "abilities": [
    {
+    "id": 13262,
     "name": "Desencantar",
     "desc": "Extrae el elemento o elementos mágicos de buena calidad (Verde) o las mejores armas y armaduras. El objeto seleccionado será DESTRUIDO y podrá recuperarse.",
     "icon": "spell_holy_removecurse"
@@ -66,12 +67,14 @@
   ],
   "specializations": [
    {
+    "id": 20222,
     "name": "Ingeniero goblin",
     "desc": "Permite a un ingeniero fabricar dispositivos de los goblins letales.",
     "icon": "spell_fire_selfdestruct"
    },
    {
-    "name": "Ingeniero gnomo",
+    "id": 20219,
+    "name": "Ingeniero gnómico",
     "desc": "Permite a un ingeniero fabricar dispositivos gnómicos fantásticos pero poco fiables.",
     "icon": "inv_gizmo_02"
    }
@@ -170,26 +173,31 @@
   ],
   "specializations": [
    {
+    "id": 9788,
     "name": "Forjador de armaduras",
     "desc": "Permite a un herrero fabricar armaduras especiales que no están al alcance de un herrero artesano normal.",
     "icon": "inv_chest_plate04"
    },
    {
+    "id": 9787,
     "name": "Forjador de armas",
     "desc": "Permite a un herrero fabricar armas especiales que no están al alcance de un herrero artesano normal.",
     "icon": "inv_sword_25"
    },
    {
-    "name": "Maestro invocador",
+    "id": 17039,
+    "name": "Maestro forjador de espadas",
     "desc": "Permite a un herrero fabricar espadas especiales que no están al alcance de un forjador de armas artesano normal.",
     "icon": "inv_sword_41"
    },
    {
+    "id": 17040,
     "name": "Maestro forjador de martillos",
     "desc": "Permite a un herrero fabricar mazas y martillos especiales que no están al alcance de un forjador de armas artesano normal.",
     "icon": "inv_hammer_23"
    },
    {
+    "id": 17041,
     "name": "Maestro forjador de hachas",
     "desc": "Permite a un herrero fabricar hachas especiales que no están al alcance de un forjador de armas artesano normal.",
     "icon": "inv_axe_05"
@@ -227,16 +235,19 @@
   ],
   "specializations": [
    {
+    "id": 10656,
     "name": "Peletería dragontina",
     "desc": "Permite a un peletero fabricar armaduras especiales de escamas de dragón que no están al alcance de un peletero normal. La armadura de escamas de dragón es una armadura de malla.",
     "icon": "inv_misc_monsterscales_03"
    },
    {
+    "id": 10660,
     "name": "Peletería tribal",
     "desc": "Permite a un peletero fabricar armaduras tribales especiales que no están al alcance de un peletero normal.",
     "icon": "spell_nature_nullward"
    },
    {
+    "id": 10658,
     "name": "Peletería elemental",
     "desc": "Permite a un peletero fabricar armaduras elementales especiales que no están al alcance de un peletero normal.",
     "icon": "spell_fire_volcano"
@@ -306,12 +317,14 @@
   "specializations": [],
   "abilities": [
    {
+    "id": 2580,
     "name": "Buscar minerales",
     "desc": "Las vetas de minerales cercanas aparecen en el minimapa. Solo se puede rastrear un tipo de objeto a la vez.",
     "icon": "spell_nature_earthquake"
    },
    {
-    "name": "Fundiendo",
+    "id": 2656,
+    "name": "Fundición",
     "desc": "Permite al minero convertir minerales en lingotes de metal. Esta habilidad requiere una forja.",
     "icon": "spell_fire_flameblades"
    }
@@ -379,6 +392,7 @@
   "specializations": [],
   "abilities": [
    {
+    "id": 31252,
     "name": "Prospectar",
     "desc": "Busca 5 menas de metales básicos para obtener piedras preciosas. Las menas se destruirán durante el proceso.",
     "icon": "inv_misc_gem_bloodgem_01"
@@ -416,6 +430,7 @@
   "specializations": [],
   "abilities": [
    {
+    "id": 51005,
     "name": "Moler",
     "desc": "Aplasta 5 hierbas para crear pigmentos para tintas. Este proceso destruirá las hierbas.",
     "icon": "ability_miling"

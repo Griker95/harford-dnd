@@ -122,6 +122,22 @@ for ruta in PAGINAS:
         elif frag and destino and frag not in anclas.get(destino, set()):
             problemas["ancla inexistente"].append((nombre, href))
 
+# Los iconos NO se resuelven por nombre: la pagina los sirve como PNG reales desde
+# assets/compendium-icons/ y, si falta el fichero, el onerror del <img> cae al icono de
+# reserva sin decir nada. Ya paso con nueve armas: el nombre correcto en los datos y un
+# puno dibujado en la web.
+ICONOS = os.path.join(WEB, "assets", "compendium-icons")
+if os.path.isdir(ICONOS):
+    hay = {f[:-4].lower() for f in os.listdir(ICONOS) if f.endswith(".png")}
+    for f in sorted(os.listdir(os.path.join(WEB, "js"))):
+        if not (f.startswith("compendium-") and f.endswith(".js")):
+            continue
+        src = io.open(os.path.join(WEB, "js", f), encoding="utf-8").read()
+        for nombre in sorted({m.group(1) for m in re.finditer(r'"icon[A-Za-z]*"\s*:\s*"([^"]+)"', src)}):
+            corto = re.split(r"[\/]", nombre)[-1].lower()
+            if corto and corto not in hay:
+                problemas["icono sin PNG"].append((f, nombre))
+
 print("paginas revisadas: %d" % len(PAGINAS))
 print("avisos: %d" % sum(len(v) for v in problemas.values()))
 for k in sorted(problemas, key=lambda x: -len(problemas[x])):

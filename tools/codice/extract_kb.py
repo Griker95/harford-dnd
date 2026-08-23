@@ -86,7 +86,7 @@ for i, (pos, cid, cname, cdesc, hd) in enumerate(cstarts):
     # y sus seis rasgos se quedaban dentro de la subclase anterior (Sombra).
     sub_hdrs = list(re.finditer(
         r'\{ id = "([a-z_]+)", name = "([^"]+)", desc = "((?:[^"\\]|\\.)*)"'
-        r'(?:,\s*\w+ = (?:"(?:[^"\\]|\\.)*"|\d+|true|false))*,\s*features =', sub_region))
+        r'(?:,\s*\w+ = (?:"(?:[^"\\]|\\.)*"|\d+|true|false|\{[^{}]*\}))*,\s*features =', sub_region))
     for j, sm in enumerate(sub_hdrs):
         s_end = sub_hdrs[j+1].start() if j+1 < len(sub_hdrs) else len(sub_region)
         sub = {"id": sm.group(1), "name": sm.group(2), "desc": sm.group(3).replace('\\"', '"'),

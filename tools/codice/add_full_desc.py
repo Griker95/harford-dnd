@@ -61,6 +61,31 @@ def _cuerpo_rasgo(t):
     return t[:m.start()] if m else t
 
 
+# Lo que NUNCA se pega a la linea anterior: titulos, vinetas, listas numeradas, filas de
+# tabla, citas y las etiquetas en negrita del bloque de datos (`***Altura:***`).
+_LINEA_PROPIA = re.compile(r"^\s*(?:#{1,6}\s|[-*+]\s|\d+[.)]\s|\||>|\*\*\*)")
+
+
+def unir_lineas(t):
+    """Deshace los saltos de MAQUETA del manual.
+
+    El libro corta las lineas a mano para esquivar las ilustraciones, y esos cortes caian
+    en la web como versos sueltos en medio de un parrafo. El salto de parrafo de verdad es
+    la linea en blanco; un salto suelto dentro de un bloque es maqueta y se convierte en
+    espacio, salvo en lo que tiene que ir en su propia linea."""
+    bloques = []
+    for bloque in t.split("\n\n"):
+        lineas = bloque.split("\n")
+        acc = [lineas[0]]
+        for ln in lineas[1:]:
+            if _LINEA_PROPIA.match(ln) or _LINEA_PROPIA.match(acc[-1]) or not acc[-1].strip():
+                acc.append(ln)
+            else:
+                acc[-1] = acc[-1].rstrip() + " " + ln.strip()
+        bloques.append("\n".join(acc))
+    return "\n\n".join(bloques)
+
+
 def clean_body(t):
     # un marcador de titulo sin texto detras no titula nada: el renderizador solo trata
     # como encabezado la linea que lleva texto, asi que el marcador se quedaba a la vista
@@ -70,7 +95,7 @@ def clean_body(t):
     # web los renderice como encabezados con su propia tipografia
     t = re.sub(r"\n#{1,6}\s*", "\n### ", t)
     t = re.sub(r"\n{3,}", "\n\n", t)
-    return referencias(limpiar(normalizar_habilidades(_sin_cola_de_titulo(t.strip()))), web=True)
+    return referencias(limpiar(normalizar_habilidades(unir_lineas(_sin_cola_de_titulo(t.strip())))), web=True)
 
 def section(name, level=2, stop_at_names=None):
     """Texto desde el heading `name` (nivel dado) hasta el siguiente heading <= level;
@@ -205,17 +230,22 @@ def _raiz(w):
 SUBCLASE_ALIAS = {
     "represion": "retribucion",
     "viajero del viento": "caminavientos",
+    # el recurso y la subclase del guerrero se llaman Ira en la mesa y Furia en el Libro 1.
+    # Va con la clase delante porque el Cazador de Demonios tiene su propia Marca de Ira,
+    # que el libro SI titula asi y no debe irse a buscar "furia".
+    "guerrero/ira": "furia",
 }
 
 
-def subcapitulo(rango_clase, subname):
+def subcapitulo(rango_clase, subname, class_id=None):
     """Tramo del libro correspondiente a UNA subclase, dentro del capitulo de su clase.
 
     Los rasgos de subclase deben buscarse aqui y no en todo el capitulo: si no, las tres
     subclases del Brujo se llevaban la MISMA "Lista Ampliada de Conjuros" (la primera)."""
     if not rango_clase: return None
     a, b = rango_clase
-    wn = SUBCLASE_ALIAS.get(nk(subname), nk(subname))
+    wn = SUBCLASE_ALIAS.get("%s/%s" % (class_id, nk(subname)),
+                            SUBCLASE_ALIAS.get(nk(subname), nk(subname)))
     raices = {_raiz(w) for w in wn.split() if len(w) > 4}
     marcas = [(lvl, k, ha) for lvl, txt, k, ha, he in heads if a <= ha < b and lvl == 3]
     candidatos = []
@@ -226,15 +256,44 @@ def subcapitulo(rango_clase, subname):
         if (k == wn or wn in k.split() or (len(wn) > 5 and wn in k)
                 or (raices and raices & {_raiz(w) for w in k.split() if len(w) > 4})):
             fin = marcas[i+1][2] if i + 1 < len(marcas) else b
-            candidatos.append((fin - ha, ha, fin))
+            candidatos.append((fin - ha, ha, fin, k == wn))
     if not candidatos: return None
     # El nombre de la subclase aparece dos veces: en el rasgo que dice "elige un camino"
     # y en la seccion de la subclase de verdad. La primera es un parrafo suelto y la
     # segunda trae todos sus rasgos, asi que se queda el tramo mas largo. Sin esto, los
     # tres caminos del paladin cogian el texto generico de Canalizar Divinidad en vez de
     # sus propias opciones (Luz del Amanecer, Consagracion...).
-    _largo, ini, fin = max(candidatos)
+    # ...pero un titulo que sea EXACTAMENTE el nombre gana al que solo lo contiene: el
+    # capitulo del guerrero tiene "Furia Interna" (el rasgo de recurso, nivel 2) antes que
+    # "Furia" (la especializacion), y por longitud se llevaba el primero, dejando a la
+    # subclase con una sola frase de presentacion.
+    exactos = [c for c in candidatos if c[3]]
+    _largo, ini, fin, _ex = max(exactos or candidatos)
     return (ini, fin)
+
+def intro_de_subclase(rango):
+    """Parrafos de presentacion de una subclase: lo que va entre su titulo y su primer rasgo.
+
+    El libro los tiene para las 37, pero el bucle de subclases solo importaba los RASGOS y
+    nunca tocaba `desc`, asi que las 37 se quedaban con la frase corta del addon (38-112
+    caracteres) mientras las subrazas si traian su parrafo (150-470)."""
+    if not rango:
+        return None
+    ini, fin = rango
+    cuerpo = None
+    for i, (lvl, txt, k, a, b) in enumerate(heads):
+        if a != ini:
+            continue
+        cuerpo = b
+        for l2, t2, k2, a2, b2 in heads[i+1:]:
+            if a2 >= fin:
+                break
+            fin = a2
+            break
+        break
+    if cuerpo is None:
+        return None
+    return clean_body(src[cuerpo:fin]) or None
 
 # rasgos de clase del Caldero de Tasha (titulos en imagen): cuerpos curados en Export/
 _TASHA_R = {}
@@ -362,6 +421,17 @@ def parrafo_de_su_nivel(texto, nivel):
     return "\n\n".join(propio) if propio else texto
 
 
+# El recurso del guerrero se llama Ira en la mesa; el Libro 1 lo llama Furia. No entra en
+# TERMINOS_DE_LA_CASA porque "furia" es legitimo en otras siete clases -- Punos de Furia
+# del monje, Furia de Elune, Furia Elemental, Furia Demoniaca -- asi que se aplica solo al
+# texto que se importa del capitulo del guerrero.
+def ira_del_guerrero(texto, class_id):
+    if class_id != "guerrero" or not texto:
+        return texto
+    return re.sub(r"\bfuria\b", "ira", re.sub(r"\bFuria\b", "Ira", texto))
+
+
+ci = 0
 for c in kb["classes"]:
     cn = CLASS_MD.get(c["id"], c["name"])
     intro = section(cn, 2, stop_at_names={"rasgos de clase"})
@@ -372,7 +442,7 @@ for c in kb["classes"]:
 
     rango_cl = chapter(cn)
     # cada subclase tiene su propio tramo: sus rasgos se buscan SOLO ahi
-    sub_rango = {s["id"]: subcapitulo(rango_cl, s["name"]) for s in c["subclasses"]}
+    sub_rango = {s["id"]: subcapitulo(rango_cl, s["name"], c["id"]) for s in c["subclasses"]}
     for f in c["features"]:
         ct += 1
         full = (feature_text(cn, f["name"])
@@ -386,6 +456,10 @@ for c in kb["classes"]:
         if full and len(full) > len(f.get("desc", "")): f["desc"] = full; cf += 1
     for s in c["subclasses"]:
         rs = sub_rango.get(s["id"])
+        ins = ira_del_guerrero(intro_de_subclase(rs), c["id"])
+        if ins and len(ins) > len(s.get("desc", "")):
+            s["desc"] = ins
+            ci += 1
         neg_s = bold_entries(rs) if rs else {}
         for f in s["features"]:
             ct += 1
@@ -445,10 +519,16 @@ for c in kb["classes"]:
 
 # ----- RAZAS: intro + rasgos propios y de subraza, buscados dentro del capitulo de la raza -----
 rf = rt = rtok = 0
+# El Semielfo no tiene capitulo en ninguno de los dos libros Warcraft, y el del Manual del
+# Jugador es un OCR malo y de otra ambientacion (Tanis, Krynn), asi que no se puede
+# importar. Este es texto de la casa, con la misma estructura que los capitulos del libro.
+# La cita SI es real: es de Arator, de la historia corta "El hijo de dos mundos".
+CAPITULO_DE_LA_CASA = {"semielfo": "*Toda mi vida he estado dividido. Elfo, humano, madre, padre, oscuridad, Luz. Pero ahora sé que no tengo por qué elegir entre ellos. Soy más que la suma de mis partes. No soy la mitad de nada. Estoy completo.*\n\n*— Arator el Redentor*\n\nLos semielfos nacieron de la alianza más improbable de la Segunda Guerra, cuando los quel'dorei de Quel'Thalas marcharon junto a los reinos humanos contra la Horda y descubrieron que sus vecinos de vida breve valían algo más que un tratado. De aquellos años quedaron unas pocas uniones y, de ellas, unos pocos hijos. Nunca han sido muchos: un elfo puede pasar un siglo entero sin cruzarse con otro semielfo.\n\nHeredan de sus padres elfos el oído fino, la afinidad natural por lo arácano y una vida larga; de sus padres humanos, la ambición, la curiosidad y esa prisa por dejar huella que los elfos nunca han terminado de entender. La mezcla suele dar gente capaz y difícil de encasillar, y casi siempre gente que ha aprendido pronto a caer bien a todo el mundo porque no tenía otro sitio al que ir.\n\n### Dos siluetas en una\nPara un humano, un semielfo parece un elfo; para un elfo, parece un humano. Son más altos que la mayoría de los humanos y menos esbeltos que los quel'dorei, con orejas más cortas que las de un elfo pero inconfundibles bajo el pelo. Los ojos casi siempre delatan el lado élfico, y a los varones les crece barba, cosa que ningún elfo hace: muchos se la dejan precisamente por eso, y otros se afeitan por el motivo contrario.\n\n### Vidas desacompasadas\nEl problema del semielfo no es su cara, sino su reloj. Crece al ritmo de un humano y es adulto a los veinte, pero sigue en pie ciento sesenta años después, cuando ya ha enterrado a sus amigos de infancia y a los hijos de estos. Entre elfos le pasa lo contrario: llega a la madurez cuando sus compañeros de juegos todavía son considerados niños, y le toca esperar un siglo a que le hablen de igual a igual. De ahí que tantos acaben en el camino, en una compañía de aventureros o en una torre de Dalaran, sitios donde a nadie le importa demasiado cuánto piensas durar.\n\n### Afiliación\nCasi todos los semielfos están del lado de la Alianza, y no por elección propia sino por herencia: sus padres elfos eran altos elfos de Quel'Thalas, aliados de los reinos humanos desde la Segunda Guerra. Cuando Quel'Thalas cayó y la mayoría de los quel'dorei se convirtieron en elfos de sangre y buscaron a la Horda, los pocos que permanecieron leales lo hicieron con Ventormenta y con Dalaran, y sus hijos mestizos con ellos. Nada se lo impone: hay semielfos en el Kirin Tor, en las compañías libres de Aguas Termales y alguno, muy pocos, del otro lado de la línea.\n\n### Nombres semielfos\nNo tienen nombres propios. Los criados entre humanos suelen recibir nombre élfico, y los criados entre elfos, nombre humano; en ambos casos, para dejar constancia de la mitad que no está delante. El apellido casi siempre es el del padre humano, porque las casas élficas rara vez inscriben a un mestizo en su linaje.\n\n**Nombres masculinos:** Arator, Giramar, Galadin, Aedan, Kelmar,\n Theron, Halduin, Loryan, Sarien, Belen\n\n**Nombres femeninos:** Aelin, Verissa, Elandra, Nariel, Mirelle,\n Kaelyn, Ithara, Serana, Alys, Ysolde\n\n**Apellidos:** Dawnstrider, Sunwhisper, Halfmoon, Silverbrand,\n Ashfield, Thornwood, Redbrook\n\n***Edad.*** Maduran al mismo ritmo que los humanos y se les considera adultos en torno a los veinte años, pero viven mucho más que ellos y no es raro que superen los ciento ochenta.\n\n***Alineamiento.*** Comparten la vena caótica de su parte élfica. Valoran la libertad y no les gusta ni mandar ni que les manden; la costumbre de no pertenecer a ningún sitio los vuelve poco dóciles y, a ojos de otros, imprevisibles.\n\n***Tamaño.*** Los semielfos miden entre 1,70 y 1,95 metros y pesan entre 60 y 90 kilogramos. Tu tamaño es Mediano. Para determinar tu altura y peso de forma aleatoria, usa el modificador de tamaño:\n\n***Modificador de Tamaño:*** 2d8\n\n***Altura:*** 1,20 metros + 25 cm + Mod. tamaño (cm)\n\n***Peso en Kilogramos:*** 50 + (2d4 x Mod. tamaño)\n\n***Velocidad.*** 9 metros."}
+
 for r in kb["races"]:
     rn = RACE_MD.get(r["id"])
     if not rn: continue
-    intro = section(rn, 2)
+    intro = CAPITULO_DE_LA_CASA.get(r["id"]) or section(rn, 2)
     if intro and len(intro) > len(r.get("desc", "")): r["desc"] = intro; rf += 1
     rango = chapter_generic(rn, RACENAMES)
     negritas = bold_entries(rango)
@@ -505,6 +585,17 @@ for b in kb["backgrounds"]:
     if bestr < 0.62: continue
     d = bgs[best]
     if d.get("desc"): b["desc"] = d["desc"]; bf += 1
+    # La ilustracion viaja como ruta DENTRO del export; `deploy_compendium` la convierte y
+    # deja aqui el nombre del fichero ya servible. La variante lleva la suya, que es otra.
+    if d.get("image"):
+        b["art"] = "%s/media/attachments/%s" % (best, d["image"])
+    if d.get("variants"):
+        b["variants"] = [{
+            "id": "%s_%s" % (b["id"], re.sub(r"[^a-z0-9]+", "_", nk(v["name"])).strip("_")),
+            "name": v["name"],
+            "desc": v.get("desc") or "",
+            "art": ("%s/media/attachments/%s" % (best, v["image"])) if v.get("image") else None,
+        } for v in d["variants"]]
     rn = nk(d.get("rasgoName", ""))
     for f in b["traits"]:
         fn = nk(re.sub(r"^caracteristica:\s*", "", f["name"], flags=re.I))
@@ -678,7 +769,7 @@ def prose(t):
     t = "\n".join(out)
     t = re.sub(r"\n{3,}", "\n\n", t)
     t = re.sub(r"\n\s*-{3,}\s*$", "", t)          # regla horizontal del markdown
-    return referencias(limpiar(normalizar_habilidades(_sin_cola_de_titulo(t.strip()))), web=True)
+    return referencias(limpiar(normalizar_habilidades(unir_lineas(_sin_cola_de_titulo(t.strip())))), web=True)
 def walk(o):
     if isinstance(o, dict):
         if isinstance(o.get("desc"), str): o["desc"] = a_metrico(prose(o["desc"]))
@@ -855,6 +946,8 @@ for c in kb["classes"]:
                         "features": filas[lv].get("rasgos") or []}
                        for lv in sorted(filas)]
     _ntab += 1
+print("Subclases con presentacion del libro: %d de %d"
+      % (ci, sum(len(c["subclasses"]) for c in kb["classes"])))
 print("Clases con tabla de progresion completa: %d" % _ntab)
 
 # ----- lista de conjuros por clase (niveles 0 a 9) -----
@@ -976,8 +1069,130 @@ if _mdudas:
     for _n, _tp, _pl in _mdudas[:8]:
         print("      %-28s %-10s %r" % (_n[:27], _tp, _pl))
 
+# ----- edad y alineamiento en cifras, y el matiz de lore de algunas subrazas -----
+import edad_alineamiento as _ea
+_eap, _easin, _ealore = _ea.aplicar(kb)
+print("Subrazas matizadas con lore (no con los libros): %s" % ", ".join(_ealore))
+print("Razas con edad y alineamiento en cifras: %d%s"
+      % (_eap, (" | sin datos: " + ", ".join(_easin)) if _easin else ""))
+
+# ----- la presentacion de cada raza deja de repetir sus propios rasgos -----
+import rasgos_sin_repetir as _rsr
+_rq, _rc, _rm, _ravisos = _rsr.aplicar(kb)
+print("Rasgos repetidos retirados de la presentacion: %d | conservados: %d | presentaciones de subraza salvadas: %d"
+      % (_rq, _rc, _rm))
+for _rz, _rt, _na, _nb in _ravisos:
+    print("   conservado por si acaso: %s / %s (%d car. frente a %d del rasgo)"
+          % (_rz, _rt, _na, _nb))
+
+# ----- los reinos y etnias de una raza salen del texto y pasan a ser tarjetas -----
+# El capitulo del Humano cierra con siete reinos (Alterac, Dalaran, Gilneas, Kul Tiras,
+# Lordaeron, Ventormenta, Stromgarde), cada uno con su descripcion fisica y su lista de
+# nombres. En prosa seguida no se distinguen; como tarjetas se consultan de un vistazo.
+# El tramo es el que va del titulo de etnias al bloque de datos, asi que no hay que
+# mantener a mano una lista de reinos: si el libro anade uno, entra solo.
+# Va DETRAS de rasgos_sin_repetir: por delante se colaba tambien "Rasgos Humanos", que es
+# la seccion de rasgos repetidos y no una etnia.
+# Ventormenta es `hurlevent`, su nombre en frances, asi que no aparece buscando "stormwind".
+ICONO_ETNIA = {
+    "alterac": "achievement_zone_alteracmountains_01",
+    "dalaran": "inv_legion_faction_kirintor",
+    "gilneas": "hd_book2motif_gilneasold",
+    "kul tiras": "inv__faction_proudmooreadmiralty",
+    "lordaeron": "hd_book2motif_lordaeronlight",
+    "ventormenta": "hd_book2motif_hurlevent",
+    "stromgarde": "hd_book2motif_stromgarde",
+}
+_ANCLA_ETNIAS = re.compile(r"(?m)^### .*\betnias\b.*$")
+_FIN_ETNIAS = re.compile(r"(?m)^\*\*\*Edad[.:]\*\*\*")
+_NOMBRES_DE = re.compile(r"(?m)^\*{0,3}Nombres\b[^:]*:\*{0,3}\s*(.+)$")
+
+_net = 0
+for r in kb["races"]:
+    texto = r.get("desc") or ""
+    anc = _ANCLA_ETNIAS.search(texto)
+    if not anc:
+        continue
+    fin = _FIN_ETNIAS.search(texto)
+    corte = fin.start() if fin else len(texto)
+    tramo = texto[anc.end():corte]
+    primera = tramo.find("\n### ")
+    if primera < 0:
+        continue
+    etnias = []
+    for trozo in tramo[primera:].split("\n### "):
+        if not trozo.strip():
+            continue
+        lineas = trozo.split("\n", 1)
+        nombre = lineas[0].strip()
+        cuerpo = (lineas[1] if len(lineas) > 1 else "").strip()
+        nom = _NOMBRES_DE.search(cuerpo)
+        etnias.append({
+            "id": nk(nombre).replace(" ", "_"),
+            "name": nombre,
+            "desc": (cuerpo[:nom.start()].strip() if nom else cuerpo),
+            "names": nom.group(1).strip() if nom else "",
+            "icon": ICONO_ETNIA.get(nk(nombre)),
+        })
+    if not etnias:
+        continue
+    r["ethnicities"] = etnias
+    # el titulo del libro ("Nombres y etnias humanas") anunciaba las etnias que ya no van
+    # debajo, porque ahora son tarjetas: lo que queda en la prosa son los nombres
+    r["desc"] = texto[:anc.start()] + "### Nombres" + tramo[:primera].rstrip() + "\n\n" + texto[corte:]
+    _net += len(etnias)
+    print("Etnias de %s: %s" % (r["name"], ", ".join(e["name"] for e in etnias)))
+print("Reinos y etnias convertidos en tarjetas: %d" % _net)
+
+# ----- una variante no se cuenta dos veces -----
+# Cinco de las siete ya venian como rasgo ("Variante: Gladiador"). Ahora son tarjeta con su
+# propia ilustracion, asi que el rasgo sobra. Va DESPUES del bloque del Manual del Jugador:
+# hecho antes, ese bloque volvia a anadir el rasgo y el duplicado reaparecia.
+_vdup = 0
+for b in kb["backgrounds"]:
+    if not b.get("variants"):
+        continue
+    quedan = []
+    for f in b["traits"]:
+        if not nk(f["name"]).startswith("variante"):
+            quedan.append(f)
+            continue
+        corto = nk(re.sub(r"^variante\s*:?\s*", "", f["name"], flags=re.I))
+        hermana = next((v for v in b["variants"]
+                        if nk(v["name"]).startswith(corto) or corto.startswith(nk(v["name"]))), None)
+        if hermana is None:
+            quedan.append(f)
+            continue
+        # se conserva el texto mas completo de los dos
+        if len(f.get("desc") or "") > len(hermana.get("desc") or ""):
+            hermana["desc"] = f["desc"]
+        _vdup += 1
+    b["traits"] = quedan
+print("Variantes que dejan de estar tambien como rasgo: %d" % _vdup)
+
+# ----- texto de variante que el export no trae -----
+# El mensaje de "Veterano Harford" en el export es solo el titulo: la imagen va detras y el
+# cuerpo no esta, asi que la tarjeta salia con nombre y dibujo y sin una sola linea. Su
+# rasgo y sus cuatro tablas SI venian, en el trasfondo padre, y no se repiten aqui.
+VARIANTE_DE_LA_CASA = {"mercenario_veterano_harford_veterano_harford": 'Has combatido bajo una bandera que pocos recordarían con honor, pero que tú llevas con orgullo. Fuiste parte de la Compañía Harford, un grupo caótico, desigual y extremadamente ruidoso de mercenarios cuya fama procede más de su terquedad y supervivencia que de su disciplina o precisión militar. Leal no al mando, sino al emblema de la compañía y a sus camaradas, tu vida ha sido un desfile de asedios imposibles, retiradas gloriosas, saqueos improvisados y victorias ganadas por pura testarudez.\n\nQuizá empuñaste una espada junto a desertores, navegaste en una bañera flotante apodada "barco", o luchaste codo con codo con magos descalzos, guerreros sin armadura y gentes extrañas. En Harford no importaba tu raza, pasado o linaje, sino si sabías mantenerte en pie tras una emboscada. Allí aprendiste a sobrevivir más que a guerrear, y a confiar en la fuerza de la costumbre, el ingenio callejero y la suerte de los insensatos.\n\n***Competencias en habilidades.*** Escoge una entre Atletismo, Persuasión, Engaño, Supervivencia y Perspicacia.\n\n***Competencias con armas.*** Armas marciales.\n\n***Competencias con herramientas.*** Un juego y otra herramienta entre herramientas de ladrón, vehículos terrestres o acuáticos o un instrumento musical (cualquier tipo de tambor o flauta popular).\n\n***Equipo.*** Un recuerdo cochambroso de tu tiempo en Harford (un clavo bendito, una petaca vacía, una insignia oxidada...), un juego al que jugabas con tus compañeros de barco o campamento, un tabardo Harford remendado varias veces, y una bolsa con 8 po (2 po se los quedó el capitán al pagaros).',
+                       "marinero_pirata": 'Has pasado tu juventud bajo la influencia de un temible pirata; un asesino despiadado que te enseñó a sobrevivir en un mundo de tiburones y salvajes. Te has dado el gusto de hurtar a otros barcos y has enviado a más de un alma a una tumba salada. El miedo y el derramamiento de sangre no te son extraños, pues te has forjado una despreciable reputación en multitud de puertos.\n\nSi decides que tu carrera como marinero ha incluido la piratería, puedes elegir el rasgo Mala Reputación en lugar de Pasaje en un Barco.\n\n***Rasgo: Mala Reputación.*** Allá donde vayas, tu reputación te precede y la gente te teme. Cuando te encuentres en un asentamiento civilizado poco después de cometer delitos menores, como negarte a pagar la comida en una taberna o romper la puerta de una tienda, la mayoría de la gente no se atreverá a informar sobre ti ni sobre tus aliados.'}
+
+_vcasa = 0
+for b in kb["backgrounds"]:
+    for v in b.get("variants") or []:
+        texto = VARIANTE_DE_LA_CASA.get(v.get("id"))
+        # manda siempre, no "el mas largo": estas entradas existen porque lo del export
+        # falta o esta MAL. La del Pirata continua sin corte con el trasfondo siguiente y
+        # acababa hablando de titulos nobiliarios, y ese texto sucio era mas largo que el
+        # bueno, asi que con la regla de longitud no entraba nunca.
+        if texto and texto != v.get("desc"):
+            v["desc"] = texto
+            _vcasa += 1
+print("Variantes con texto propio de la casa: %d" % _vcasa)
+
 json.dump(kb, io.open(os.path.join(SP, "kb_icons.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("Clases: intro + %d/%d rasgos completos" % (cf, ct))
+
 print("Razas: %d intros | rasgos de raza/subraza con texto: %d/%d" % (rf, rtok, rt))
 print("Trasfondos: %d Discord + %d por Caracteristica = %d/%d con desc" % (
     bf, cff, sum(1 for b in kb["backgrounds"] if b.get("desc")), len(kb["backgrounds"])))

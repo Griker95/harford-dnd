@@ -1,0 +1,464 @@
+{
+  "Capitán Veterano Harford": {
+    "cuenta": "GRIKER",
+    "desc": "",
+    "skills": [
+      "Atletismo"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Autoridad del Capitán Harford",
+        "desc": "Fuiste más que un simple mercenario: diste órdenes que salvaron vidas y lideraste cuando otros habrían huido. Tu reputación como Capitán de la Compañía Harford te precede en muchos rincones del mundo.\n\nCuando busques ayuda, refugio o información en zonas bajo control de la Alianza o entre enclaves mercenarios independientes, puedes invocar tu antiguo rango para obtener apoyo de antiguos subordinados, simpatizantes o contactos respetuosos. Esta ayuda puede manifestarse como alojamiento seguro, acceso a recursos limitados, reclutas dispuestos a seguirte temporalmente o información vital.\n\nAdemás, tienes ventaja en tiradas de Persuasión, Engaño o Intimidación al tratar con otros mercenarios, criminales reformados, soldados veteranos o desertores, oficiales retirados o cualquiera que haya servido en estructuras militares neutrales o de la Alianza.\n\nTu rango en la compañía te permite hablar en calidad de oficial de la misma, y ser su portavoz publico, ademas tambien tienes la capacidad de una vez por descanso largo tener ventaja en una tirada de Persuasión a los mercenarios bajo tu mando.",
+        "icon": "achievement_bg_3flagcap_nodeaths"
+      }
+    ]
+  },
+  "Huerfano": {
+    "cuenta": "GRIKER",
+    "desc": "Creciste solo y en la calle, huérfano y pobre. No había nadie que te cuidara o mantuviera, así que aprendiste a sobrevivir por ti mismo. Luchaste ferozmente por conseguir comida y nunca quitabas la vista del resto de pobres almas, que querían robarte. Dormías en tejados y callejones, a la intemperie, y te sobrepusiste a enfermedades sin la ayuda de la medicina o un lugar en el que recuperarte. Contra todo pronóstico, sobreviviste, y lo hiciste gracias a tu astucia, fuerza, velocidad o una combinación de ellas.",
+    "skills": [
+      "Sigilo",
+      "Juego de Manos"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Secretos de la ciudad",
+        "desc": "Conoces el flujo y los patrones secretos que rigen el movimiento de toda ciudad, y puedes encontrar pasadizos en medio de una urbe que otros pasarían por alto. Cuando no estás combatiendo, tú y aquellos compañeros a los que guíes podéis viajar entre dos localizaciones cualesquiera dentro de una ciudad el doble de rápido de lo que vuestra velocidad lo permitiría.",
+        "icon": "eps_lol_profileicon_theblackroseremembers"
+      }
+    ]
+  },
+  "Noble": {
+    "cuenta": "GRIKER",
+    "desc": "Has sido educado en las riquezas, el poder y los privilegios. Posees un título nobiliario y tu familia es dueña de tierras, recauda impuestos y ostenta una influencia política no desdeñable. Podrías ser un aristócrata consentido, un noble que ha trabajado por su estatus, o incluso alguien que acaba de entrar en la nobleza por méritos propios o herencia inesperada. Sea cual sea tu historia, la nobleza te ha moldeado y te acompaña allá donde vayas.",
+    "skills": [
+      "Historia",
+      "Persuasión"
+    ],
+    "languages": [
+      "Eredun"
+    ],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Posición de privilegio",
+        "desc": "Debido a tu noble alcurnia, la gente se siente inclinada a pensar bien de ti. Eres bienvenido en la alta sociedad local y las personas de clase social elevada te tratarán con deferencia. El pueblo llano hará lo posible para evitar tu desaprobación (o para ganarse tu favor), y puede que llegues a obtener audiencias con nobles y figuras de poder si lo necesitas.",
+        "icon": "eps_wc3h_evilhumanqueen"
+      }
+    ]
+  },
+  "Eco de resurrección": {
+    "cuenta": "GRIKER",
+    "desc": "Tras morir y regresar a la vida, Jenn quedó marcada por el umbral entre ambos mundos. Desde entonces percibe a los seres vivos como sombras rodeadas de maná y puede distinguir las distintas energías mágicas por las auras que emiten. Esta percepción constante resulta agotadora, motivo por el que suele cubrir sus ojos con una venda blanca.",
+    "skills": [
+      "Perspicacia"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Visión espectral",
+        "desc": "Jenn puede percibir las almas y las energías mágicas de los seres vivos. Ve a las criaturas como sombras oscuras con un núcleo brillante que representa su alma, rodeado por el maná y las energías que portan. El uso prolongado de esta percepción fatiga su vista y su mente. Por ello suele cubrir sus ojos con una venda blanca para amortiguar el flujo constante de información espiritual.\n\nPuede identificar de forma aproximada:\n- El tipo de magia predominante de una criatura.\n- Rastros recientes de magia residual.\n- Corrupciones, alteraciones o energías anómalas visibles.",
+        "icon": "wh_rendsoul"
+      }
+    ]
+  },
+  "Acólita": {
+    "cuenta": "GRIKER",
+    "desc": "Has dedicado tu vida al servicio de un templo consagrado a un dios o panteón de dioses. Sirves de intermediario entre el reino de lo sagrado y el mundo mortal, realizando rituales religiosos y ofreciendo sacrificios para que los fieles puedan ser partícipes de la presencia divina. No tienes por qué ser un clérigo; llevar a cabo ritos sagrados no es lo mismo que canalizar el poder divino.",
+    "skills": [
+      "Perspicacia",
+      "Religión"
+    ],
+    "languages": [
+      "Thalassiano",
+      "Enano"
+    ],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Refugio del fiel",
+        "desc": "Como acólito de tu dios, puedes llevar a cabo sus ceremonias y mereces el respeto de aquellos que comparten tu fe. Puedes esperar que tanto tus compañeros de aventuras como tú recibáis sanación y cuidados sin coste alguno en templos, santuarios u otros lugares consagrados a tu fe, aunque debes aportar los componentes materiales necesarios para los conjuros que se lancen. Los que compartan tu religión te mantendrán (pero solo a ti) con un nivel de vida modesto.\n\nTambién podrías poseer lazos con un templo en particular de los dedicados a tu deidad o panteón. Si es el caso, allí podrías residir. Este podría ser el templo en que solías servir o el que aún mantiene una relación amigable con sus acólitos, y en el que encuentres un nuevo hogar. Cuando estés cerca de este templo podrás pedir ayuda a sus sacerdotes, siempre y cuando el favor que solicites no sea peligroso y tu necesidad bien considerada por ellos.",
+        "icon": "achievement_dungeon_ataldazar"
+      }
+    ]
+  },
+  "Buscador Sombrío": {
+    "cuenta": "GRIKER",
+    "desc": "Nunca has tenido un gran propósito heroico.\nTu vida se mueve por impulsos más pequeños pero más intensos: proteger lo que te importa, aunque sea poco, y encontrar tu lugar en un mundo que nunca te lo ha puesto fácil.\nTu relación con los demonios no es teórica ni lejana. Sabes de sacrificios, de muerte y de decisiones irreversibles. No te defines como bueno ni malo; simplemente hiciste lo que creíste necesario. Lo profano no te resulta ajeno: la entiendes, casi lo escuchas.\nLa ciudad donde creciste te marcó profundamente. La amas y la odias a partes iguales. Tu odio no es explosivo, sino constante, y aunque a veces te pierdes en tus pensamientos, sueles confiar en que, al final, siempre saldrás ganando.",
+    "skills": [
+      "Perspicacia",
+      "Engaño"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Sintonía Vil",
+        "desc": "Tienes ventaja en tiradas de salvación contra miedo causadas por:\n- Demonios\n- No muertos\n- Efectos de corrupcion vil o necrotica\n\nAdemás, una vez por descanso largo, cuando reduzcas a una criatura a 0 PG con un conjuro necrótico, recuperas maná igual a tu modificador de Inteligencia 4.",
+        "icon": "eps_wc3h_felpower"
+      }
+    ]
+  },
+  "Desertor Errante": {
+    "cuenta": "GRIKER",
+    "desc": "Los desertores errantes son individuos que han dejado atrás las ataduras de su facción anterior, impulsados por una sed de libertad personal y el deseo de forjar su propio destino. Desencantados con las ideologías que antes los definían, siguen ahora un camino incierto como agentes independientes, guiados por un renovado sentido de autonomía y su propio código moral.",
+    "skills": [
+      "Perspicacia",
+      "Supervivencia"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Saboteador",
+        "desc": "Habiendo sido un miembro de confianza de tu antigua facción, posees conocimientos sobre sus tácticas y estrategias. Puedes usar esa familiaridad a tu favor al tratar con individuos de tu facción anterior. Tienes ventaja en pruebas de Engaño para hacerte pasar por un miembro de tu antigua facción, y puedes usar tu modificador de Inteligencia en lugar de tu modificador de Carisma al hacer pruebas de Engaño.",
+        "icon": "inv_misc_enggizmos_38"
+      }
+    ]
+  },
+  "Ánima errante": {
+    "cuenta": "GRIKER",
+    "desc": "Eras un eco, una chispa de esencia perdida entre la vida y la muerte.\nNo una sombra vengativa, sino algo mucho más ligero: una curiosidad encarnada, un impulso travieso que se negó a desvanecerse.\nEncontraste un cuerpo vacío, sin dueño, y lo ocupaste. No recuerdas quién fue antes, ni te importa demasiado. Lo importante es que ahora puedes sentir y moverte.\n\nTu existencia no tiene un propósito claro. Exploras el mundo como un niño que toca todo por primera vez: la carne, el calor, la risa, la mentira. No comprendes del todo las reglas de los vivos, pero sabes imitarlas lo suficiente como para pasar desapercibida… casi siempre.\n\nTu presencia provoca una sensación incómoda en los demás —una ligera pérdida de calor, un reflejo fuera de lugar, o un parpadeo en el que tu rostro parece otro. A veces, el velo entre el espíritu y la carne parece demasiado delgado.",
+    "skills": [],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Visitante del Más Allá",
+        "desc": "• Puedes percibir presencias no corpóreas ocultas (fantasmas, almas, ánimas) en un radio de 9 m (30 pies), que tambien te pueden percibir a ti.\n• Obtienes ventaja en las pruebas de Sigilo realizadas en lugares oscuros, silenciosos o cargados de energía mágica o espiritual (cementerios, templos antiguos, ruinas, etc.).\n• Los efectos que detectarían “vida” o “muerte” (como Detectar el Bien y el Mal o Sentido Divino) te perciben de forma confusa: ni viva ni muerta, apenas un eco.\n• Una vez por descanso largo, puedes alterar tu forma corporal levemente (ojos apagados, silueta desvanecida, voz hueca), obteniendo ventaja en una prueba de Intimidación o Engaño según la situación.",
+        "icon": "ability_argus_deathfog"
+      }
+    ]
+  },
+  "Desertor errante": {
+    "cuenta": "GRIKER",
+    "desc": "Dejaste atras una guerra, una bandera o una causa. Desde entonces sobrevives moviendote entre sospechas, rutas secundarias y viejos habitos militares.\n0",
+    "skills": [],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Competencias",
+        "desc": "Competencia en Perspicacia y Supervivencia.",
+        "icon": "inv_misc_note_01"
+      },
+      {
+        "name": "Herramienta",
+        "desc": "Elige un juego de azar o un instrumento musical. Eleccion: Instrumento musical.",
+        "icon": "inv_misc_note_01"
+      },
+      {
+        "name": "Saboteador",
+        "desc": "Conoces rutinas militares y puntos debiles de campamentos, patrullas y suministros, a discrecion del DM.",
+        "icon": "inv_misc_note_01"
+      }
+    ]
+  },
+  "Guardia de ciudad": {
+    "cuenta": "GRIKER",
+    "desc": "Trabajas para la comunidad en la que has crecido y eres su primera línea de defensa contra el crimen. No eres un soldado, sino alguien que dirige su mirada a posibles enemigos. En vez de eso, tu servicio a tu ciudad natal consistió en ayudar a controlar su población y proteger a sus ciudadanos de delincuentes y maleantes de toda clase.",
+    "skills": [
+      "Atletismo",
+      "Perspicacia"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Ojo de guardián",
+        "desc": "Debido a tu experiencia haciendo cumplir las leyes y lidiando con malhechores, tienes cierta intuición para entender la legislación y los criminales de una zona. Puedes encontrar sin mayores problemas el puesto fronterizo de la guardia o una organización parecida en cualquier lugar, así como los escondrijos de la actividad criminal de una comunidad con la misma facilidad, aunque es más probable que seas mejor acogido entre los guardias que entre los ladrones.",
+        "icon": "eps_wc3h_mountedfootman"
+      }
+    ]
+  },
+  "Bucanero retirado": {
+    "cuenta": "GRIKER",
+    "desc": "Los Bucaneros Velasangre comparten un oscuro pasado de piratería y anarquía. A menudo se definen por su crueldad despiadada, astucia marinera y una inclinación por buscar tesoros y poder a través del saqueo en alta mar.\n\nFuiste en su día un temido miembro de una tripulación notoria, sembrando el terror por los mares con tus hazañas piratas.\n\nSin embargo, has dejado atrás tu pasado criminal. Ahora recorres el mundo, buscando demostrar tu valía más allá de la piratería. Ya sea que hayas pertenecido a los Bucaneros Velasangre, los Asaltantes Aguasnegras, las Ratas de Pantoque o cualquier otra tripulación, el mundo te percibe del mismo modo.",
+    "skills": [],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Canalla veterano",
+        "desc": "Reconoces códigos, deudas y costumbres de marineros, piratas y contrabandistas, y puedes encontrar ayuda entre ellos si el DM lo permite.",
+        "icon": "inv_misc_note_01"
+      }
+    ]
+  },
+  "Gladiador goriano": {
+    "cuenta": "GRIKER",
+    "desc": "Fuiste forjado en las arenas del Imperio Goriano, donde los débiles desaparecían bajo la arena y los fuertes vivían un combate más. Entre cadenas, gritos y acero, aprendiste a convertir el miedo en furia y el dolor en disciplina. Los ogros creyeron haberte domesticado; solo lograron enseñarte a sobrevivir. Ahora luchas por tu propia voluntad, y ningún amo volverá a decidir tu destino.",
+    "skills": [
+      "Acrobacias",
+      "Intimidación"
+    ],
+    "languages": [
+      "Ogro"
+    ],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Voluntad del yugo",
+        "desc": "Cuando recibes daño que te reduciría a 0 puntos de golpe, puedes quedarte a 1 punto de golpe en su lugar.\nNo puedes usar este rasgo si el daño proviene de un golpe crítico.\nUna vez usas este rasgo, no puedes volver a usarlo hasta finalizar un descanso largo.",
+        "icon": "eps_lol_sylas_chainlash"
+      }
+    ]
+  },
+  "Devota de Elune": {
+    "cuenta": "GRIKER",
+    "desc": "Has dedicado tu vida a servir a Elune, aprendiendo que su luz no solo guía a quienes se pierden en la oscuridad, sino que también protege, consuela y devuelve la esperanza a quienes sufren. \nPara ti, toda vida posee un valor sagrado. Allí donde otros ven una herida, tú ves una vida que todavía puede salvarse. Allí donde otros aceptan la muerte como inevitable, tú buscas un último rayo de esperanza.\n\nHas aprendido los antiguos rituales de Elune, el uso de hierbas y remedios naturales y las plegarias capaces de aliviar el dolor. Viajas por el mundo llevando su luz a quienes la necesitan, ya sea atendiendo a los heridos tras una batalla, curando enfermedades o acompañando a los moribundos durante sus últimos momentos. \n\nNo eres alguien que desprecie la muerte. Sabes que forma parte del ciclo natural. Pero mientras exista una posibilidad de salvar una vida, consideras que merece la pena intentarlo.",
+    "skills": [
+      "Medicina",
+      "Religión"
+    ],
+    "languages": [
+      "Thalassiano"
+    ],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Luz Sanadora",
+        "desc": "Tu reputación como servidor de Elune te permite encontrar ayuda entre aquellos que respetan la vida y las antiguas tradiciones de sanación.\n\nCuando llegas a un asentamiento donde existe un templo, santuario o comunidad dedicada a la curación, la naturaleza o una divinidad benévola, puedes solicitar alojamiento, comida y asistencia médica básica para ti y para aquellos que estén bajo tu cuidado.\n\nAdemás, quienes saben que eres un devoto de Elune suelen confiar en que no abandonarás a un herido que todavía pueda ser salvado. Esto puede abrirte las puertas de hospitales, templos, casas de sanadores y comunidades que normalmente serían poco acogedoras con los aventureros.",
+        "icon": "hots_tyrande_lightofelune"
+      }
+    ]
+  },
+  "Cazarrecompensas urbano": {
+    "cuenta": "GRIKER",
+    "desc": "Antes de convertirte en aventurero, tu vida ya estaba llena de conflictos y emoción, pues te ganabas el sustento persiguiendo a personas a cambio de dinero. Pero, a diferencia de quienes recogen recompensas, no eres un salvaje que sigue a una presa cruzando la naturaleza. Estás relacionado con un comercio lucrativo en el lugar en el que resides, trabajo que a diario pone a prueba tus habilidades e instintos de supervivencia. Además, no estás solo como lo estaría un cazarrecompensas en la naturaleza. Habitualmente interactúas tanto con la subcultura criminal como con otros cazadores de recompensas y conservas contactos en ambos ambientes que te permiten triunfar.",
+    "skills": [
+      "Engaño",
+      "Sigilo"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Oídos atentos",
+        "desc": "Sueles estar en contacto con personas de la clase social en la que se muevan las presas que has elegido. Estos individuos pueden estar asociados con el crimen organizado, pertenecer al pueblo llano o ser miembros de la alta sociedad. Esta conexión se manifiesta en forma de un contacto en cualquier lugar que visites, alguien que te informa sobre las personas y los lugares de la zona.",
+        "icon": "inv_misc_ear_human_01"
+      }
+    ]
+  },
+  "El Loco": {
+    "cuenta": "GRIKER",
+    "desc": "",
+    "skills": [
+      "Persuasión"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Espíritu Harford",
+        "desc": "Cuando trates de obtener ayuda, refugio o información en zonas controladas por la Alianza o por enclaves mercenarios independientes, puedes encontrar a antiguos miembros, simpatizantes o beneficiarios de la Compañía Harford dispuestos a asistirte, aunque de forma irregular o inesperada. Esta ayuda puede tomar la forma de un escondite, un informante, una tarea pagada o incluso un trago gratis y una advertencia a tiempo.\n\nAdemás, tienes ventaja en tiradas de Persuasión o Engaño al tratar con otros mercenarios, criminales reformados, soldados veteranos o desertores.",
+        "icon": "ability_rogue_shadowstrikes"
+      },
+      {
+        "name": "Autoridad de la Orden: Espada de Ébano",
+        "desc": "Llevas contigo la reputación de tu orden allá donde vayas. Al tratar con figuras de fe, fuerzas armadas o la ley, tu rango o aura de disciplina a menudo inspiran deferencia o respeto. Una vez por descanso largo, puedes invocar el nombre o el legado de tu orden para obtener ventaja en una prueba de Persuasión o Intimidación.",
+        "icon": "achievement_reputation_knightsoftheebonblade"
+      },
+      {
+        "name": "Impotencia Rúnica",
+        "desc": "Una antigua herida espiritual te ha hecho olvidar de parte de tu entrenamiento en el uso de runas, impidiéndote utilizar ciertos hechizos propios de un caballero de la muerte.\n\nNo puedes canalizar Agarre de la muerte, Orden Imperiosa ni lanzar tu Espiral de la muerte a distancia.",
+        "icon": "eps_bg3_concussivestrike"
+      }
+    ]
+  },
+  "Erudito": {
+    "cuenta": "GRIKER",
+    "desc": "Has pasado años aprendiendo sobre el universo. Has leído detenidamente manuscritos, estudiado pergaminos y escuchado a los mayores expertos de los temas que te interesan. Tus esfuerzos te han convertido en un maestro de tu campo.",
+    "skills": [
+      "Conocimiento Arcano",
+      "Historia"
+    ],
+    "languages": [
+      "Dracónico",
+      "Thalassiano"
+    ],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Investigador",
+        "desc": "Cuando intentas aprender o recordar algo, incluso aunque no poseas la información exacta, sueles saber dónde encontrarla o quién puede proporcionártela. Lo habitual es que este conocimiento provenga de una biblioteca, scriptorium, universidad u otros eruditos o personas y criaturas instruidas. Tu DM podría decidir que la información que buscas está oculta en un lugar casi inaccesible o que, sencillamente, sea imposible de encontrar. Para desentrañar los secretos más profundos del multiverso puede ser necesaria una aventura o, quizá, una campaña entera.",
+        "icon": "w3reforgedarcanescroll"
+      }
+    ]
+  },
+  "Rostro olvidado": {
+    "cuenta": "GRIKER",
+    "desc": "En un mundo donde el pasado nunca muere del todo, tú lo mataste primero. Fuiste ladrona, marinera, criminal, asesina. Te sumergiste en la oscuridad de los vicios, abrazaste secretos de brujos y traicionaste reinos. Fingiste tu muerte para escapar de la justicia de Ventormenta y Kul Tiras, y ahora vives con un nuevo nombre, un nuevo rostro... pero el eco de tus pecados todavía te sigue.",
+    "skills": [
+      "Engaño",
+      "Perspicacia"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Vida entre sombras",
+        "desc": "Has perfeccionado el arte de vivir sin dejar rastro. Puedes crear identidades falsas con facilidad, y sabes cómo manipular registros, sellos y lenguaje corporal para mantener una fachada convincente.\nPuedes gastar una hora y 5 po para establecer una identidad falsa en una localidad, con documentación y contactos creíbles. Mientras mantengas esta identidad:\n\n- Ganas ventaja en tiradas de Engaño y Sigilo al interactuar con autoridades o figuras públicas que no conozcan tu verdadero rostro.\n- Una vez por descanso largo, puedes evitar ser reconocido mágicamente (como con localizar criatura o videncia), siempre que estés usando tu identidad falsa.\n- En ciudades o asentamientos, puedes encontrar un contacto útil (informante, falsificador, contrabandista) que te ofrezca información o refugio temporal, a discreción del DM.",
+        "icon": "spell_rogue_shadow_reflection"
+      }
+    ]
+  },
+  "Veterano del campo de batalla": {
+    "cuenta": "GRIKER",
+    "desc": "Los veteranos del campo de batalla son guerreros endurecidos por la guerra, con amplia experiencia en los feroces conflictos de los campos de batalla más emblemáticos de Azeroth. Estos veteranos poseen una mezcla de adaptabilidad, camaradería y espíritu competitivo que se ha forjado a lo largo de incontables enfrentamientos.\nViven la emoción de la victoria, encarnan el honor del campo de batalla y llevan las cicatrices de sus triunfos y derrotas pasadas. Los veteranos inspiran a otros, forjan lazos inquebrantables y persiguen la gloria con determinación, mientras enfrentan sus propios demonios internos nacidos del caos de la guerra.",
+    "skills": [],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Endurecido por la guerra",
+        "desc": "Tu vasta experiencia en el fragor del combate ha agudizado tus instintos y habilidades marciales. Si pasas una hora planeando con tu grupo e inspirándolos antes del combate, los miembros del grupo ganan un +1 a las tiradas de iniciativa y 1,5 m (5 pies) de velocidad extra en su primer turno del siguiente combate. El grupo debe seguir el plan que idees o se perderán estas bonificaciones y deben usarse en el siguiente combate que enfrenten.",
+        "icon": "ability_pvp_hardiness"
+      }
+    ]
+  },
+  "Coneja elemental": {
+    "cuenta": "GRIKER",
+    "desc": "Entre los túneles industriales de Mecandria y el eco vibrante de sus máquinas, Ellie Bunny desarrolló un talento único para percibir sonidos que ningún otro gnomo podía captar. Ese don la llevó a crear dos de sus invenciones más emblemáticas",
+    "skills": [],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Escucha resonante conejil",
+        "desc": "- Obtienes ventaja en pruebas de Sabiduría (Percepción) basadas en escuchar.\n- Tienes un comunicador interno de voz que funciona como una radio y te permite escuchar y enviar mensajes a traves de el.\n- Puedes detectar sonidos sutiles como engranajes ocultos, mecanismos tensos, relojería, pasos lejanos, susurros amortiguados y vibraciones metálicas.",
+        "icon": "inv_misc_rabbit_ears"
+      },
+      {
+        "name": "Acuajet",
+        "desc": "Arma exótica requiere sintonización por Ellie Bunny\nUn fusil integrador gnómico con varios modos de funcionamiento.\n- Funciona como foco arcano.\n- Permite lanzar magia curativa o elemental sin componentes materiales.",
+        "icon": "inv_weapon_rifle_33"
+      }
+    ]
+  },
+  "Boticario oscuro": {
+    "cuenta": "GRIKER",
+    "desc": "Has formado parte de la Sociedad Real de Boticarios, una organización alquímica con sede en el Apothecarium de Entrañas. Fue fundada por Lady Sylvanas Brisaveloz para crear una nueva plaga no-muerta destinada a erradicar a la Plaga. Sus miembros son renegados u otros tipos de no-muertos. Trabajan constantemente en nuevas plagas y venenos para desatar sobre sus enemigos.",
+    "skills": [
+      "Conocimiento arcano",
+      "Investigación"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Agente de la S.R.B.",
+        "desc": "Como miembro de la Sociedad Real de Boticarios, tienes acceso a una red de contactos y operativos. Dondequiera que encuentres a los renegados, puedes hallar a los boticarios oscuros, quienes pueden ayudarte con refugios seguros, búsqueda de información, hierbas o ingredientes alquímicos. Sin embargo, esta red funciona en ambos sentidos, y puede que ellos también esperen algo de ti a cambio.",
+        "icon": "w3reforgedundeadtransport"
+      }
+    ]
+  },
+  "Mercenario Veterano": {
+    "cuenta": "GRIKER",
+    "desc": "",
+    "skills": [
+      "Atletismo",
+      "Persuasión"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Vida mercenaria",
+        "desc": "Conocer la vida mercenaria como solo puede hacerlo quien la ha vivido. Eres capaz de identificar a las compañías de mercenarios por sus emblemas y sabes un poco sobre cualquiera de ellas, incluyendo los nombres y la reputación de sus comandantes y líderes, así como los ejércitos en los que han contratado últimamente. Puedes hallar las tabernas y los salones donde moran los mercenarios en cualquier lugar, siempre que hables el idioma local. Te encuentras a gusto. \n\nSi estructuras tu trabajo de mercenario entre aventuras como parte normal de tu vida cotidiana, obtienes un modo de vida cómodo.",
+        "icon": "w3reforgedmercenarycamp"
+      }
+    ]
+  },
+  "Guardian de lo salvaje": {
+    "cuenta": "GRIKER",
+    "desc": "",
+    "skills": [
+      "Naturaleza",
+      "Supervivencia"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Voz de la naturaleza",
+        "desc": "Estás en sintonía con el lenguaje de la tierra y sus ritmos primordiales. En entornos naturales, puedes identificar senderos seguros, notar señales de presencias antinaturales y reconocer marcas territoriales dejadas por bestias o espíritus.\n\nTienes ventaja en pruebas de Supervivencia para rastrear o orientarte en áreas salvajes, y a menudo las bestias salvajes o los espíritus naturales te muestran respeto —incluso cuando atacarían a otros al verte.",
+        "icon": "ability_hunter_onewithnature"
+      }
+    ]
+  },
+  "Comerciante gremial": {
+    "cuenta": "GRIKER",
+    "desc": "Formas parte de un gremio de comerciantes, caravaneros o tenderos. No produces objetos tú mismo, sino que para ganarte la vida compras y vendes el trabajo de los demás (o las materias primas que los artesanos necesitan para hacer su trabajo). Tu gremio podría tratarse de un gran consorcio (o familia) de mercaderes con intereses a lo largo y ancho de la región. Quizás transportabas bienes de un sitio a otro, ya fuera en barco, carro o caravana. O puede que se los compraras a mercaderes itinerantes y los vendieras en tu pequeña tienda. En cierta forma, la vida de un comerciante en tránsito se parece mucho más a la aventura que la de un artesano.",
+    "skills": [
+      "Perspicacia",
+      "Persuasión"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Miembro de un gremio",
+        "desc": "Como miembro consolidado y respetado de un gremio, puedes confiar en que este te prestará su apoyo. Tus compañeros te proporcionarán comida y alojamiento si lo necesitas. Hasta pagarían tu funeral si hiciera falta. En algunas ciudades la casa gremial será un lugar céntrico en el que conocer a otros compañeros de profesión; un lugar ideal para conocer potenciales patrones, aliados o asalariados.\n\nMuchos gremios ostentan un poder político considerable. Si se te acusa de algún crimen, tu gremio te apoyará si existen posibilidades de ganar el juicio o el crimen tiene justificación. Además, si tu situación dentro del gremio es buena, este podrá darte acceso a poderosas personalidades del mundo de la política. Para acceder a estos contactos suele ser imprescindible donar dinero u objetos mágicos a las arcas gremiales.\n\nDebes pagar al gremio una cuota mensual de 5 po. Si no estás al corriente de estos pagos, no disfrutarás de la bendición del gremio y tu situación dentro del mismo será mala.",
+        "icon": "achievement_guildperk_workingovertime"
+      }
+    ]
+  },
+  "Veterano Harford": {
+    "cuenta": "GRIKER",
+    "desc": "",
+    "skills": [
+      "Perspicacia"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Espíritu Harford",
+        "desc": "Has sobrevivido a emboscadas sin plan, a líderes sustituidos por sorteo, y a contratos firmados en servilletas. Tu experiencia en la Compañía Harford te ha enseñado a improvisar con lo que haya a mano y a trabajar codo con codo con individuos de lo más variopintos.\n\nCuando trates de obtener ayuda, refugio o información en zonas controladas por la Alianza o por enclaves mercenarios independientes, puedes encontrar a antiguos miembros, simpatizantes o beneficiarios de la Compañía Harford dispuestos a asistirte, aunque de forma irregular o inesperada. Esta ayuda puede tomar la forma de un escondite, un informante, una tarea pagada o incluso un trago gratis y una advertencia a tiempo.\n\nAdemás, tienes ventaja en tiradas de Persuasión o Engaño al tratar con otros mercenarios, criminales reformados, soldados veteranos o desertores.",
+        "icon": "inv_tabard_duelersguild"
+      }
+    ]
+  },
+  "Animador": {
+    "cuenta": "GRIKER",
+    "desc": "Tu sitio favorito es frente al público. Sabes cómo encandilarlo, entretenerlo e incluso inspirarlo. Tus poemas animan el corazón de quienes te escuchan, despertando en ellos la pena, la alegría, la risa o la furia. Tu música levanta sus ánimos o apresa su melancolía. Tus pasos de baile les cautivan y tus burlas les hieren en el alma. Sean cuales sean las técnicas que emplees, tu arte es tu vida.",
+    "skills": [
+      "Acrobacias",
+      "Interpretación"
+    ],
+    "languages": [],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Por petición popular",
+        "desc": "Siempre eres capaz de encontrar un sitio en el que actuar. Normalmente en una posada o taberna, pero puede que también en un circo, un teatro o incluso la corte de un noble. En cualquier lugar así podrás conseguir comida y alojamiento de nivel modesto o cómodo (en función de la calidad del establecimiento), siempre y cuando actúes cada noche. Además, puedes llegar a convertirte en una especie de famoso local. Cuando pasas por alguna localidad en la que hayas actuado la gente de la calle te reconoce, ya que sueles caer en gracia.",
+        "icon": "eps_bg3_songofrest"
+      }
+    ]
+  },
+  "Senda de Sangre y Barro": {
+    "cuenta": "MORTYN",
+    "desc": "Siempre esperas lo peor, porque la experiencia te ha demostrado que casi siempre llega. Aunque aparentes indiferencia, proteger a los tuyos es lo único que realmente te importa; tu lealtad es silenciosa, pero absoluta. Has sobrevivido a cosas que rompieron a otros, no por fuerza ni por fe, sino porque no supiste, o no quisiste, rendirte.\n\nArrastras recuerdos fragmentados, un pasado mas allá de Tol Barad, y cargas con un medallón roto que simboliza culpas que todavia hoy no te permiten dormir en paz. Desconfías por instinto, mantienes la furia contenida y buscas el peligro más por desgaste que por valentía. A veces sientes atracción por poderes que no terminas de comprender, y otras solo intentas mantener la cordura.\n\nSigues adelante no porque creas merecer redención, sino porque rendirte significaría aceptar todo lo que has hecho… y aún no estás listo para eso.",
+    "skills": [
+      "Supervivencia",
+      "Perspicacia"
+    ],
+    "languages": [
+      "Viscerálico"
+    ],
+    "tools": [],
+    "traits": [
+      {
+        "name": "Suerte del Lobo Tuerto",
+        "desc": "Una vez por descanso largo, cuando realizas una tirada, puedes decidir torcer tu suerte.\n\nHasta tu próximo descanso largo, tu fortuna queda alterada:\n\n- La primera pifia (1 natural) que saques se trata como un 20 natural.\n- El primer 20 natural que saques se trata como una pifia (1 natural).\n\nEste efecto se aplica a tiradas de ataque, pruebas de habilidad y tiradas de salvación.\nUna vez que ambos efectos se hayan activado, la suerte vuelve a la normalidad hasta que la vuelvas a torcer.",
+        "icon": "eps_wc3h_direwolfacutesenses"
+      }
+    ]
+  }
+}

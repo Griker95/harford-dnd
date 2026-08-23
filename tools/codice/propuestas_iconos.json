@@ -184,6 +184,10 @@
     "motivo": "sinonimo de power"
    },
    {
+    "icono": "spell_holy_powerwordshield",
+    "motivo": "sinonimo de power"
+   },
+   {
     "icono": "spell_priest_power word",
     "motivo": "sinonimo de power"
    },
@@ -197,10 +201,6 @@
    },
    {
     "icono": "spell_deathknight_empowerruneblade",
-    "motivo": "sinonimo de power"
-   },
-   {
-    "icono": "spell_holy_empowerchampion",
     "motivo": "sinonimo de power"
    }
   ]
@@ -225,10 +225,6 @@
   "ingles": "raisedead",
   "escuela": "Nigromancia",
   "candidatos": [
-   {
-    "icono": "d3_raisedead",
-    "motivo": "nombre exacto"
-   },
    {
     "icono": "eps_bg3_raisedeadspores",
     "motivo": "nombre dentro del icono"
@@ -255,6 +251,10 @@
    },
    {
     "icono": "spell_necro_deathlyslam",
+    "motivo": "sinonimo de undeadraise"
+   },
+   {
+    "icono": "spell_necro_deathrift",
     "motivo": "sinonimo de undeadraise"
    }
   ]
@@ -408,6 +408,10 @@
     "motivo": "nombre exacto"
    },
    {
+    "icono": "wh_rainoffire",
+    "motivo": "nombre exacto"
+   },
+   {
     "icono": "spell_argus_withering_fire",
     "motivo": "sinonimo de fire"
    },
@@ -429,10 +433,6 @@
    },
    {
     "icono": "spell_fire_bluefire",
-    "motivo": "sinonimo de fire"
-   },
-   {
-    "icono": "spell_fire_bluefirenova",
     "motivo": "sinonimo de fire"
    }
   ]
@@ -1930,6 +1930,10 @@
     "motivo": "sinonimo de power"
    },
    {
+    "icono": "spell_holy_powerwordshield",
+    "motivo": "sinonimo de power"
+   },
+   {
     "icono": "spell_priest_power word",
     "motivo": "sinonimo de power"
    },
@@ -1947,10 +1951,6 @@
    },
    {
     "icono": "spell_holy_empowerchampion",
-    "motivo": "sinonimo de power"
-   },
-   {
-    "icono": "ability_druid_empoweredrejuvination",
     "motivo": "sinonimo de power"
    }
   ]
@@ -2058,6 +2058,10 @@
     "motivo": "sinonimo de power"
    },
    {
+    "icono": "spell_holy_powerwordshield",
+    "motivo": "sinonimo de power"
+   },
+   {
     "icono": "spell_priest_power word",
     "motivo": "sinonimo de power"
    },
@@ -2079,10 +2083,6 @@
    },
    {
     "icono": "ability_druid_empoweredrejuvination",
-    "motivo": "sinonimo de power"
-   },
-   {
-    "icono": "ability_druid_empoweredtouch",
     "motivo": "sinonimo de power"
    }
   ]
@@ -2273,11 +2273,11 @@
     "motivo": "sinonimo de banish"
    },
    {
-    "icono": "ability_shaman_cleansespirit",
+    "icono": "wh_exile",
     "motivo": "sinonimo de banish"
    },
    {
-    "icono": "ability_titankeeper_cleanse",
+    "icono": "ability_shaman_cleansespirit",
     "motivo": "sinonimo de banish"
    }
   ]
@@ -2483,11 +2483,11 @@
     "motivo": "sinonimo de memory"
    },
    {
-    "icono": "ability_priest_thoughtsteal01",
+    "icono": "wh_mindkiller",
     "motivo": "sinonimo de memory"
    },
    {
-    "icono": "hots_tracer_recall",
+    "icono": "ability_priest_thoughtsteal01",
     "motivo": "sinonimo de memory"
    }
   ]
@@ -2721,7 +2721,7 @@
     "motivo": "sinonimo de planar"
    },
    {
-    "icono": "d3_astralpresence",
+    "icono": "spell_priest_void blast",
     "motivo": "sinonimo de planar"
    }
   ]
@@ -2756,11 +2756,11 @@
     "motivo": "sinonimo de planar"
    },
    {
-    "icono": "d3_astralpresence",
+    "icono": "spell_priest_void blast",
     "motivo": "sinonimo de planar"
    },
    {
-    "icono": "spell_priest_void blast",
+    "icono": "spell_priest_void flay",
     "motivo": "sinonimo de planar"
    }
   ]
@@ -3427,6 +3427,10 @@
    {
     "icono": "eps_lol_lilia_watchout",
     "motivo": "sinonimo de eye"
+   },
+   {
+    "icono": "wh_watchanlearn",
+    "motivo": "sinonimo de eye"
    }
   ]
  },
@@ -3683,6 +3687,10 @@
    },
    {
     "icono": "eps_lol_swain_visionofempire",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "wh_visionoftorment",
     "motivo": "sinonimo de detect"
    },
    {
@@ -4087,6 +4095,10 @@
   "escuela": "Nigromancia",
   "candidatos": [
    {
+    "icono": "eps_om_icon_copy",
+    "motivo": "sinonimo de clone"
+   },
+   {
     "icono": "hots_varian_twinbladesoffury",
     "motivo": "sinonimo de clone"
    },
@@ -4112,10 +4124,6 @@
    },
    {
     "icono": "eps_rumble_hellscream_mirrorimage",
-    "motivo": "sinonimo de clone"
-   },
-   {
-    "icono": "eps_rumble_mirrorimage",
     "motivo": "sinonimo de clone"
    }
   ]
@@ -4154,7 +4162,7 @@
     "motivo": "sinonimo de psychic"
    },
    {
-    "icono": "spell_shadow_brainwash",
+    "icono": "wh_mindkiller",
     "motivo": "sinonimo de psychic"
    }
   ]
@@ -4345,11 +4353,11 @@
     "motivo": "sinonimo de psychic"
    },
    {
-    "icono": "spell_shadow_brainwash",
+    "icono": "wh_mindkiller",
     "motivo": "sinonimo de psychic"
    },
    {
-    "icono": "ability_mage_brainfreeze",
+    "icono": "spell_shadow_brainwash",
     "motivo": "sinonimo de psychic"
    }
   ]
@@ -4419,15 +4427,15 @@
     "motivo": "sinonimo de psychic"
    },
    {
+    "icono": "wh_mindkiller",
+    "motivo": "sinonimo de psychic"
+   },
+   {
     "icono": "spell_shadow_brainwash",
     "motivo": "sinonimo de psychic"
    },
    {
     "icono": "ability_mage_brainfreeze",
-    "motivo": "sinonimo de psychic"
-   },
-   {
-    "icono": "ability_priest_thoughtsteal01",
     "motivo": "sinonimo de psychic"
    }
   ]
@@ -4437,6 +4445,10 @@
   "ingles": "powerwordstun",
   "escuela": "Encantamiento",
   "candidatos": [
+   {
+    "icono": "spell_holy_powerwordshield",
+    "motivo": "sinonimo de power"
+   },
    {
     "icono": "spell_priest_power word",
     "motivo": "sinonimo de power"
@@ -4463,10 +4475,6 @@
    },
    {
     "icono": "ability_druid_empoweredtouch",
-    "motivo": "sinonimo de power"
-   },
-   {
-    "icono": "ability_garrosh_empowered_whirling_corruption",
     "motivo": "sinonimo de power"
    }
   ]
@@ -4536,15 +4544,15 @@
     "motivo": "sinonimo de planar"
    },
    {
-    "icono": "d3_astralpresence",
-    "motivo": "sinonimo de planar"
-   },
-   {
     "icono": "spell_priest_void blast",
     "motivo": "sinonimo de planar"
    },
    {
     "icono": "spell_priest_void flay",
+    "motivo": "sinonimo de planar"
+   },
+   {
+    "icono": "spell_priest_voidform",
     "motivo": "sinonimo de planar"
    }
   ]
@@ -4688,6 +4696,10 @@
     "motivo": "sinonimo de psychic"
    },
    {
+    "icono": "wh_mindkiller",
+    "motivo": "sinonimo de psychic"
+   },
+   {
     "icono": "spell_shadow_brainwash",
     "motivo": "sinonimo de psychic"
    },
@@ -4697,10 +4709,6 @@
    },
    {
     "icono": "ability_priest_thoughtsteal01",
-    "motivo": "sinonimo de psychic"
-   },
-   {
-    "icono": "eps_lol_singed_insanitypotion",
     "motivo": "sinonimo de psychic"
    }
   ]
@@ -4801,6 +4809,10 @@
     "motivo": "sinonimo de heal"
    },
    {
+    "icono": "spell_priest_power word",
+    "motivo": "sinonimo de power"
+   },
+   {
     "icono": "ability_monk_healthsphere",
     "motivo": "sinonimo de heal"
    },
@@ -4815,10 +4827,6 @@
    {
     "icono": "ability_vehicle_powertowheels",
     "motivo": "sinonimo de power"
-   },
-   {
-    "icono": "spell_holy_restoration",
-    "motivo": "sinonimo de heal"
    }
   ]
  },
@@ -4833,45 +4841,6 @@
    },
    {
     "icono": "spell_magic_polymorphpig",
-    "motivo": "sinonimo de polymorph"
-   },
-   {
-    "icono": "spell_magic_polymorphrabbit",
-    "motivo": "sinonimo de polymorph"
-   },
-   {
-    "icono": "spell_nature_polymorph_cow",
-    "motivo": "sinonimo de polymorph"
-   },
-   {
-    "icono": "eps_bg3_shapeshiftbadger",
-    "motivo": "sinonimo de polymorph"
-   },
-   {
-    "icono": "eps_bg3_shapeshiftbear",
-    "motivo": "sinonimo de polymorph"
-   },
-   {
-    "icono": "eps_bg3_shapeshiftkitty",
-    "motivo": "sinonimo de polymorph"
-   },
-   {
-    "icono": "eps_bg3_shapeshiftpanther",
-    "motivo": "sinonimo de polymorph"
-   }
-  ]
- },
- "Polimorfia verdadera": {
-  "nivel": 9,
-  "ingles": "truepolymorph",
-  "escuela": "Transmutación",
-  "candidatos": [
-   {
-    "icono": "spell_magic_polymorphpig",
-    "motivo": "sinonimo de polymorph"
-   },
-   {
-    "icono": "spell_magic_polymorphrabbit",
     "motivo": "sinonimo de polymorph"
    },
    {
@@ -4900,6 +4869,45 @@
    }
   ]
  },
+ "Polimorfia verdadera": {
+  "nivel": 9,
+  "ingles": "truepolymorph",
+  "escuela": "Transmutación",
+  "candidatos": [
+   {
+    "icono": "spell_magic_polymorphpig",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "spell_nature_polymorph_cow",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftbadger",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftbear",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftkitty",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftpanther",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftrat",
+    "motivo": "sinonimo de polymorph"
+   },
+   {
+    "icono": "eps_bg3_shapeshiftraven",
+    "motivo": "sinonimo de polymorph"
+   }
+  ]
+ },
  "Previsión": {
   "nivel": 9,
   "ingles": "foresight",
@@ -4915,6 +4923,10 @@
    },
    {
     "icono": "eps_lol_swain_visionofempire",
+    "motivo": "sinonimo de detect"
+   },
+   {
+    "icono": "wh_visionoftorment",
     "motivo": "sinonimo de detect"
    },
    {

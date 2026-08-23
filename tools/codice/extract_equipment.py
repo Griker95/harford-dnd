@@ -148,6 +148,68 @@ for nombre, cat, precio, peso, nota in GEAR:
                   "category": cat, "price": precio, "weight": a_metrico(peso),
                   "props": [], "propBase": [], "note": a_metrico(nota)})
 
+# Iconos ELEGIDOS A MANO, por nombre exacto. Mandan sobre las palabras clave de abajo,
+# que solo son un reparto por familia y dejaban cosas como la clava y la gran clava con
+# el mismo dibujo, o un hacha arrojadiza haciendo de dardo. No sobrescribir sin permiso.
+ICONO_MANUAL = {
+    "jabalina": "inv_weapon_halberd_ahnqiraj",
+    "hacha de batalla": "inv_axe_18",
+    "arco corto": "inv_weapon_bow_05",
+    "cerbatana": "inv_blowdart_zandalari",
+    "clava": "inv_mace_11",
+    "gran clava": "inv_mace_10",
+    "dardo": "inv_throwingknife_05",
+    "hacha de mano": "inv_axe_14",
+    "honda": "ability_hunter_beastcall02",
+    "hoz": "inv_misc_1h_farmsickle_a_01",
+    "lanza": "inv_polearm_2h_draenorcrafted_d_01_a",
+    "alabarda": "inv_weapon_halberd_02",
+    # Armaduras: los mismos iconos que la ficha del addon (BASIC_ARMOR en
+    # HarfordDnDItems.lua), una por pieza. Antes las 12 compartian tres dibujos.
+    "armadura acolchada": "inv_chest_leather_03",
+    "armadura de cuero": "inv_chest_leather_09",
+    "cuero tachonado": "inv_chest_cloth_45",
+    "armadura de pieles": "inv_chest_leather_06",
+    "camisa de mallas": "inv_chest_chain",
+    "coraza": "inv_chest_plate04",
+    "cota de escamas": "inv_chest_chain_05",
+    "media placa": "inv_chest_plate06",
+    "cota de anillas": "inv_chest_chain_17",
+    "cota de mallas": "inv_chest_chain_06",
+    "cota de bandas": "inv_chest_plate01",
+    "armadura de placas": "inv_chest_plate02",
+    "martillo ligero": "inv_hammer_17",
+    "pica": "inv_spear_06",
+    "arco largo": "inv_weapon_bow_02",
+    "ballesta de mano": "inv_weapon_crossbow_03",
+    "ballesta pesada": "inv_weapon_crossbow_04",
+    "cimitarra": "inv_sword_24",
+    "espada larga": "inv_sword_20",
+    "espadon": "inv_sword_23",
+    "estoque": "inv_sword_30",
+    "flagelo": "eps_lol_sejuani_flailofthenorthernwinds2",
+    "guja": "inv_weapon_halberd_04",
+    "lanza de caballeria": "inv_spear_05",
+    "latigo": "inv_misc_crop_01",
+    "lucero del alba": "inv_mace_05",
+    "martillo de guerra": "inv_hammer_07",
+    "mazo de guerra": "inv_hammer_11",
+    "pico de guerra": "inv_hammer_19",
+    "tridente": "inv_spear_07",
+    "pistola": "eps_plunder_piratepistol_03",
+    "rifle": "inv_weapon_rifle_04",
+    "escopeta": "inv_weapon_rifle_08",
+    "martillo arrojadizo enano": "inv_hammer_21",
+    "espada quel'dorei": "inv_sword_bloodelf_03",
+    "espada lunar kal'dorei": "inv_sword_2h_warfrontsnightelf_d_01",
+    "guja lunar kal'dorei": "inv_glaive_1h_tyrande_d_01",
+    "doble hoja sin'dorei": "inv_sword_28",
+    "alabarda tauren": "inv_weapon_halberd_09",
+    "totem de guerra tauren": "inv_relics_totemofrebirth",
+    "garra de guerra orca": "inv_hand_1h_bwdraid_d_01",
+    "guja de guerra": "inv_glaive_1h_newplayer_a_01",
+    "aquajet": "inv_weapon_rifle_33",
+}
 # iconos: arma por tipo (palabra clave del nombre), armadura por categoria
 ARMOR_ICON = {"Ligera": "inv_chest_leather_09", "Intermedia": "inv_chest_chain_05",
               "Pesada": "inv_chest_plate06", "Escudo": "inv_shield_04"}
@@ -212,6 +274,10 @@ def poner_iconos(lista):
     """
     for it in lista:
         if it.get("icon"):
+            continue
+        elegido = ICONO_MANUAL.get(sa(it["name"]).lower().strip())
+        if elegido:
+            it["icon"] = elegido
             continue
         if it["kind"] == "gear":
             k = sa(it["name"]).lower()
@@ -303,9 +369,26 @@ for k, v in _wo.items():
                   "category": v["category"], "price": v["cost"], "weight": v["weight"],
                   "props": [], "propBase": [], "note": "", "source": "Warcraft 5ª"})
     _nuevos += 1
+# La tabla de exoticas del Libro 1 llama a cinco armas por su nombre corto, y el addon a
+# las mismas por su gentilicio. Sin esto salian DOS VECES en la pestana, con dos iconos y
+# dos danos distintos. Se queda la racial y la del libro solo le presta precio y peso.
+MISMO_QUE_RACIAL = {
+    "totem de batalla": "Tótem de guerra tauren",
+    "espada lunar": "Espada lunar kal'dorei",
+    "guja lunar": "Guja lunar kal'dorei",
+    "doble hoja": "Doble hoja sin'dorei",
+    "garra de guerra": "Garra de guerra orca",
+}
 for k, v in _wa.items():
     if k in _por_nombre:
         _por_nombre[k]["source"] = "Warcraft 5ª"; continue
+    _racial = MISMO_QUE_RACIAL.get(k)
+    if _racial:
+        _gemela = _por_nombre.get(_nk(_racial))
+        if _gemela:
+            if v.get("cost") and not _gemela.get("price"): _gemela["price"] = v["cost"]
+            if v.get("weight") and not _gemela.get("weight"): _gemela["weight"] = v["weight"]
+            continue
     props = [x.strip().capitalize() for x in re.split(r",(?![^(]*\))", v["props"]) if x.strip()]
     items.append({"id": "arma-" + slug(v["name"]), "name": v["name"], "kind": "weapon",
                   "category": v["category"],

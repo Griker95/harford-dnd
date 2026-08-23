@@ -134,7 +134,7 @@ FUENTES_TRASFONDO = {
     "PHB": "Manual del Jugador",
     "SCAG": "Guía de la Costa de la Espada",
     "Warcraft": "Warcraft 5ª",
-    "Harford": "Propio de Harford",
+    "Harford": "Personalizado",
 }
 
 

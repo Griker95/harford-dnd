@@ -1,5 +1,11 @@
 {
  "features": {
+  "afliccion_maldiciones": [
+   "spell_shadow_antishadow"
+  ],
+  "bestias_vinculo_del_companero": [
+   "ability_hunter_pet_assist"
+  ],
   "bru_afl_acechar": [
    "spell_shadow_twilight"
   ],
@@ -65,6 +71,15 @@
   ],
   "cdm_presencia_maligna": [
    "spell_deathknight_unholypresence"
+  ],
+  "cervecero_brebaje_de_piel_de_hierro": [
+   "inv_drink_05"
+  ],
+  "cervecero_brebaje_fortificante": [
+   "ability_monk_fortifyingale_new"
+  ],
+  "cervecero_te_de_trueno": [
+   "ability_monk_thunderfocustea"
   ],
   "cha_ele_eco": [
    "ability_shaman_echooftheelements"
@@ -132,6 +147,12 @@
   "guerrero_arquetipo_marcial": [
    "ability_warrior_savageblow"
   ],
+  "guerrero_maniobras_3": [
+   "ability_warrior_weaponmastery"
+  ],
+  "guerrero_maniobras_6": [
+   "ability_warrior_trauma"
+  ],
   "mago_arc_brillantez": [
    "spell_arcane_blast"
   ],
@@ -183,6 +204,9 @@
   "pic_for_competencia": [
    "ability_rogue_pistolshot"
   ],
+  "restauracion_corteza_de_hierro": [
+   "spell_nature_stoneclawtotem"
+  ],
   "sac_dis_supresion": [
    "spell_holy_painsuppression"
   ],
@@ -197,6 +221,9 @@
   ],
   "sac_sag_oracion": [
    "spell_holy_prayerofhealing"
+  ],
+  "supervivencia_trampas": [
+   "ability_hunter_traplauncher"
   ]
  },
  "names": {
@@ -527,6 +554,12 @@
   "identificar": [
    "eps_bg3_identify"
   ],
+  "idioma": [
+   "inv_misc_note_05"
+  ],
+  "idiomas": [
+   "inv_misc_note_05"
+  ],
   "ilusion menor": [
    "spell_magic_lesserinvisibilty"
   ],
@@ -744,6 +777,9 @@
    "ability_warlock_inferno"
   ],
   "reserva de furia": [
+   "ability_warrior_focusedrage"
+  ],
+  "reserva de ira": [
    "ability_warrior_focusedrage"
   ],
   "resiliencia vil": [
@@ -1135,12 +1171,11 @@
    "eps_lol_tft_shapeshifteremblem"
   ],
   "amigos": [
-   "eps_bg3_fiends",
    "eps_bg3_friends",
    "Interface\\\\Icons\\\\Spell_Holy_MindVision"
   ],
   "amigos_rapidos": [
-   "eps_bg3_friends"
+   "achievement_guildperk_everybodysfriend"
   ],
   "ampliar_o_disminuir_magia": [
    "spell_arcane_studentofmagic"
@@ -1257,7 +1292,7 @@
    "spell_shadow_antimagicshell"
   ],
   "castigo_marcador": [
-   "spell_paladin_templarsverdict"
+   "spell_holy_sealofwrath"
   ],
   "causar_miedo": [
    "spell_shadow_possession"
@@ -1284,7 +1319,7 @@
    "dos2_mind"
   ],
   "cofre_secreto_de_leomund": [
-   "eps_lol_rk_missfortune_fotunesfavor",
+   "eps_lol_rk_missfortune_fortunesfavor",
    "Interface\\\\Icons\\\\INV_Box_01"
   ],
   "compulsion": [
@@ -1428,7 +1463,7 @@
    "inv_misc_bone_skull_01"
   ],
   "don_de_la_alacridad": [
-   "rogue_burstofspeed"
+   "eps_bg3_haste"
   ],
   "don_de_la_charla": [
    "achievement_halloween_smiley_01"
@@ -1537,7 +1572,7 @@
    "spell_nature_wispsplode"
   ],
   "explosion_arcana_nivel_3": [
-   "spell_nature_wispsplode"
+   "ability_monk_forcesphere_pink"
   ],
   "explosion_aullante": [
    "spell_frost_arcticwinds"
@@ -1683,7 +1718,7 @@
    "spell_deathknight_bloodboil"
   ],
   "hoja_de_fuego": [
-   "eps_lol_gangplank",
+   "eps_lol_gangplank_trialbyfire",
    "Interface\\\\Icons\\\\Spell_Fire_FlameTounge"
   ],
   "hoja_retumbante": [
@@ -1802,7 +1837,7 @@
    "eps_bg3_calllightning"
   ],
   "llamar_al_relampago": [
-   "eps_bg3_calllightning"
+   "eps_bg3_lightningblast"
   ],
   "localizar_animales_o_plantas": [
    "ability_druid_healinginstincts"
@@ -1883,7 +1918,7 @@
    "eps_lol_rk_yasuo_windwall"
   ],
   "nova_sagrada": [
-   "ability_revendreth_deathknight"
+   "spell_holy_holynova"
   ],
   "nube_apestosa": [
    "w3reforgedplaguecloud"
@@ -2163,6 +2198,12 @@
   "sordera_ceguera": [
    "spell_shadow_painandsuffering"
   ],
+  "sp_castigo_abrasador": [
+   "ability_paladin_bladeofjustice"
+  ],
+  "sp_resplandor_enfermizo": [
+   "ability_malkorok_blightofyshaarj_green"
+  ],
   "sueno_profundo": [
    "smite_kumbhakarna_passive"
   ],
@@ -2206,7 +2247,7 @@
    "spell_deathknight_icetouch"
   ],
   "toque_helado_nivel_1": [
-   "spell_deathknight_icetouch"
+   "dos2_ghost13"
   ],
   "toque_helado_nivel_2": [
    "ability_deathknight_icygrip"
@@ -2257,7 +2298,7 @@
    "ability_druid_cyclone"
   ],
   "vinculo_de_bestia": [
-   "eps_bg3_dominatebeast"
+   "ability_hunter_pet_assist"
   ],
   "vinculo_protector": [
    "eps_bg3_wardingbond"
@@ -2285,14 +2326,26 @@
   ]
  },
  "subclasses": {
+  "brujo.afliccion": [
+   "spell_shadow_deathcoil"
+  ],
+  "brujo.demonologia": [
+   "spell_shadow_metamorphosis"
+  ],
   "brujo.destruccion": [
    "spell_shadow_rainoffire"
   ],
   "caballero_muerte.escarcha": [
    "spell_deathknight_frostpresence"
   ],
+  "caballero_muerte.profana": [
+   "spell_deathknight_unholypresence"
+  ],
   "caballero_muerte.sangre": [
    "spell_deathknight_bloodpresence"
+  ],
+  "cazador.bestias": [
+   "ability_hunter_bestialdiscipline"
   ],
   "cazador.punteria": [
    "ability_hunter_focusedaim"
@@ -2300,11 +2353,26 @@
   "cazador.supervivencia": [
    "ability_hunter_camouflage"
   ],
+  "cazador_demonios.devastacion": [
+   "ability_demonhunter_specdps"
+  ],
   "cazador_demonios.ira": [
    "ability_demonhunter_chaoticimprint_fire"
   ],
+  "cazador_demonios.venganza": [
+   "ability_demonhunter_spectank"
+  ],
+  "chaman.elemental": [
+   "spell_nature_lightning"
+  ],
+  "chaman.mejora": [
+   "spell_shaman_improvedstormstrike"
+  ],
   "chaman.restauracion": [
    "spell_nature_healingwavegreater"
+  ],
+  "druida.equilibrio": [
+   "spell_nature_starfall"
   ],
   "druida.feral": [
    "ability_druid_catform"
@@ -2315,11 +2383,26 @@
   "guerrero.armas": [
    "ability_warrior_savageblow"
   ],
+  "guerrero.furia": [
+   "ability_warrior_innerrage"
+  ],
   "guerrero.proteccion": [
    "ability_warrior_defensivestance"
   ],
+  "mago.arcano": [
+   "spell_holy_magicalsentry"
+  ],
+  "mago.escarcha": [
+   "spell_frost_frostbolt02"
+  ],
   "mago.fuego": [
    "spell_fire_flamebolt"
+  ],
+  "monje.caminavientos": [
+   "spell_monk_windwalker_spec"
+  ],
+  "monje.cervecero": [
+   "spell_monk_brewmaster_spec"
   ],
   "monje.tejedor": [
    "spell_monk_mistweaver_spec"
@@ -2331,7 +2414,7 @@
    "spell_holy_auraoflight"
   ],
   "paladin.sagrado": [
-   "spell_holy_guardianspirit"
+   "spell_holy_holybolt"
   ],
   "picaro.asesino": [
    "ability_rogue_eviscerate"

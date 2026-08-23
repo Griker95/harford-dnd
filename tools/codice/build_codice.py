@@ -9,7 +9,9 @@ Uso:  python tools/codice/build_codice.py
 Cadena: extract_kb.py (addon -> kb.json) -> add_icons_kb.py (+iconos de EpsilonIcons ->
 kb_icons.json + icons_data.json) -> add_full_desc.py (+texto completo de RuleSource y Discord)
 -> inyeccion en codice_template.html. Los .json intermedios se regeneran siempre (gitignored);
-bgs_source.json es FUENTE (extraccion de Discord, no regenerable) y si se versiona.
+bgs_source.json lo REGENERA `trasfondos_desde_export.py` desde RuleSource/Discord_Export
+(42 trasfondos). Antes se extrajo a mano de un export parcial de 25 y estaba marcado como
+fuente no regenerable; ya no lo es. Se versiona igual, porque el pipeline lo lee.
 
 Requiere en disco: EpsilonIcons/png (dump de iconos) y RuleSource/ (manuales MD + exports).
 """

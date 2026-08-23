@@ -419,9 +419,23 @@ def _reponer_tildes(t):
         return bien[0].upper() + bien[1:] if w[:1].isupper() else bien
     return _TILDE_PAT.sub(_una, t)
 
+# Terminologia de la casa: donde el libro dice una cosa, la mesa dice otra. El idioma de
+# los Renegados es Visceralico, no Guturasico (decidido en idiomas_terminologia.json,
+# "language.gutterspeak"). Se corrige al importar el texto del libro, no en el libro:
+# `RuleSource/` es la transcripcion y no se toca.
+TERMINOS_DE_LA_CASA = [
+    (re.compile(r"\bGuturásico\b"), "Viscerálico"),
+    (re.compile(r"\bGuturasico\b"), "Visceralico"),
+    (re.compile(r"\bguturásico\b"), "viscerálico"),
+    (re.compile(r"\bguturasico\b"), "visceralico"),
+]
+
+
 def limpiar(t):
     if not t: return t
     t = _cabeza_de_componente(t)
+    for pat, rep in TERMINOS_DE_LA_CASA:
+        t = pat.sub(rep, t)
     for pat, rep in PARTIDAS:
         t = pat.sub(rep, t)
     for pat, rep in REGLAS:

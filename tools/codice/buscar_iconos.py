@@ -50,20 +50,26 @@ def _segmentos(nombre):
 
 
 def cargar_iconos():
-    return [f[:-4] for f in os.listdir(DUMP) if f.endswith(".png")]
+    """Nombres en minusculas.
+
+    Parte del volcado viene con mayusculas ("WH_BurnAwayLies", "Arcanum_...") y el filtro
+    por familia y el reparto en segmentos distinguen may/min: sin bajarlos, 1991 iconos
+    quedaban invisibles para la busqueda. El resto del pipeline ya resuelve por minusculas.
+    """
+    return [f[:-4].lower() for f in os.listdir(DUMP) if f.lower().endswith(".png")]
 
 
 def usados_ya():
     """Todo icono que ya esta puesto: catalogo manual y compendio."""
     fuera = set()
     txt = io.open(CAT, encoding="utf-8").read()
-    fuera |= set(re.findall(r'"([a-z0-9_]+)"', txt))
+    fuera |= {x.lower() for x in re.findall(r'"([A-Za-z0-9_]+)"', txt)}
     kb = json.load(io.open(KB, encoding="utf-8"))
 
     def rec(o):
         if isinstance(o, dict):
             if isinstance(o.get("icon"), str):
-                fuera.add(o["icon"])
+                fuera.add(o["icon"].lower())
             for v in o.values():
                 if not isinstance(v, str):
                     rec(v)

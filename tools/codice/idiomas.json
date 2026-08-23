@@ -1,0 +1,380 @@
+{
+ "_nota": "Idiomas del manual (tabla canonica) + que concede cada raza y trasfondo, leido del texto de la web (compendium-data.js). fijos = se conocen si o si. elige = cuantos se eligen libremente. entre = lista cerrada de opciones. revisar = casos que NO son mecanicos y necesitan decision.",
+ "catalogo": {
+  "basicos": [
+   {
+    "id": "comun",
+    "nombre": "Común",
+    "hablantes": "Humanos",
+    "escritura": "Común"
+   },
+   {
+    "id": "darnassiano",
+    "nombre": "Darnassiano",
+    "hablantes": "Elfos de la noche",
+    "escritura": "Darnassiano"
+   },
+   {
+    "id": "draenei",
+    "nombre": "Draenei",
+    "hablantes": "Draenei",
+    "escritura": "Eredun"
+   },
+   {
+    "id": "enano",
+    "nombre": "Enano",
+    "hablantes": "Enanos",
+    "escritura": "Enano"
+   },
+   {
+    "id": "goblin",
+    "nombre": "Goblin",
+    "hablantes": "Goblins",
+    "escritura": "Común"
+   },
+   {
+    "id": "gnomico",
+    "nombre": "Gnómico",
+    "hablantes": "Gnomos",
+    "escritura": "Común"
+   },
+   {
+    "id": "visceralico",
+    "nombre": "Viscerálico",
+    "hablantes": "Renegados",
+    "escritura": null
+   },
+   {
+    "id": "orco",
+    "nombre": "Orco",
+    "hablantes": "Orcos",
+    "escritura": "Orco"
+   },
+   {
+    "id": "pandaren",
+    "nombre": "Pandaren",
+    "hablantes": "Pandaren",
+    "escritura": "Mogu"
+   },
+   {
+    "id": "shalassiano",
+    "nombre": "Shalassiano",
+    "hablantes": "Nocheterna",
+    "escritura": "Darnassiano"
+   },
+   {
+    "id": "taur_ahe",
+    "nombre": "Taur-ahe",
+    "hablantes": "Tauren",
+    "escritura": "Taur-ahe"
+   },
+   {
+    "id": "thalassiano",
+    "nombre": "Thalassiano",
+    "hablantes": "Elfos nobles",
+    "escritura": "Darnassiano"
+   },
+   {
+    "id": "zandali",
+    "nombre": "Zandali",
+    "hablantes": "Trols",
+    "escritura": "Zandali"
+   }
+  ],
+  "exoticos": [
+   {
+    "id": "draconico",
+    "nombre": "Dracónico",
+    "hablantes": "Dragones",
+    "escritura": "Dracónico"
+   },
+   {
+    "id": "eredun",
+    "nombre": "Eredun",
+    "hablantes": "Demonios",
+    "escritura": "Eredun"
+   },
+   {
+    "id": "kalimag",
+    "nombre": "Kalimag",
+    "hablantes": "Elementales",
+    "escritura": "Kalimag"
+   },
+   {
+    "id": "bajo_comun",
+    "nombre": "Bajo Común",
+    "hablantes": "Razas monstruosas",
+    "escritura": "Común"
+   },
+   {
+    "id": "ogro",
+    "nombre": "Ogro",
+    "hablantes": "Ogros",
+    "escritura": "Ogro"
+   },
+   {
+    "id": "shath_yar",
+    "nombre": "Shath'Yar",
+    "hablantes": "Dioses antiguos",
+    "escritura": "Shath'Yar"
+   },
+   {
+    "id": "titanico",
+    "nombre": "Titánico",
+    "hablantes": "Forjados por Titanes",
+    "escritura": "Titánico"
+   }
+  ]
+ },
+ "razas": {
+  "hum_idiomas": {
+   "fijos": [
+    "comun"
+   ],
+   "elige": 1
+  },
+  "ena_idiomas": {
+   "fijos": [
+    "comun",
+    "enano"
+   ],
+   "elige": 0
+  },
+  "eln_idiomas": {
+   "fijos": [
+    "comun",
+    "darnassiano"
+   ],
+   "elige": 0
+  },
+  "gno_idiomas": {
+   "fijos": [
+    "comun",
+    "gnomico"
+   ],
+   "elige": 0
+  },
+  "dra_idiomas": {
+   "fijos": [
+    "comun",
+    "draenei"
+   ],
+   "elige": 0
+  },
+  "hua_idiomas": {
+   "fijos": [
+    "comun"
+   ],
+   "elige": 1
+  },
+  "orc_idiomas": {
+   "fijos": [
+    "comun",
+    "orco"
+   ],
+   "elige": 0
+  },
+  "ren_idiomas": {
+   "fijos": [
+    "comun",
+    "visceralico"
+   ],
+   "elige": 0
+  },
+  "tau_idiomas": {
+   "fijos": [
+    "comun",
+    "taur_ahe"
+   ],
+   "elige": 0
+  },
+  "tro_idiomas": {
+   "fijos": [
+    "comun",
+    "zandali"
+   ],
+   "elige": 0
+  },
+  "esa_idiomas": {
+   "fijos": [
+    "comun",
+    "thalassiano"
+   ],
+   "elige": 0
+  },
+  "gob_idiomas": {
+   "fijos": [
+    "comun",
+    "goblin"
+   ],
+   "elige": 1
+  },
+  "pan_idiomas": {
+   "fijos": [
+    "comun",
+    "pandaren"
+   ],
+   "elige": 0
+  },
+  "noc_idiomas": {
+   "fijos": [
+    "comun",
+    "shalassiano"
+   ],
+   "elige": 0
+  },
+  "elv_idiomas": {
+   "fijos": [
+    "comun",
+    "thalassiano"
+   ],
+   "elige": 0
+  },
+  "vul_idiomas": {
+   "fijos": [
+    "comun"
+   ],
+   "elige": 2
+  }
+ },
+ "trasfondos": {
+  "bg_cri_idiomas": {
+   "fijos": [],
+   "elige": 1,
+   "entre": [
+    "darnassiano",
+    "draenei",
+    "enano",
+    "gnomico"
+   ]
+  },
+  "bg_kir_idiomas": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_aco_idiomas": {
+   "fijos": [],
+   "elige": 2
+  },
+  "bg_art_idiomas": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_erm_idiomas": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_eru_idiomas": {
+   "fijos": [],
+   "elige": 2
+  },
+  "bg_nob_idiomas": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_sal_idiomas": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_cosecha_idioma": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_ord_idioma": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_luna_idioma": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_elu_idioma": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_for_idioma": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_guardia_idioma": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_hered_idioma": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_org_idiomas": {
+   "fijos": [],
+   "elige": 2
+  },
+  "bg_liga_idioma": {
+   "fijos": [],
+   "elige": 1
+  },
+  "bg_principe_idioma": {
+   "fijos": [
+    "goblin"
+   ],
+   "elige": 0
+  },
+  "bg_anillo_idioma": {
+   "fijos": [
+    "kalimag"
+   ],
+   "elige": 0
+  },
+  "bg_dob_idiomas": {
+   "fijos": [],
+   "elige": 1,
+   "entre": [
+    "comun",
+    "darnassiano",
+    "draenei",
+    "enano",
+    "goblin",
+    "gnomico",
+    "visceralico",
+    "orco",
+    "pandaren",
+    "shalassiano",
+    "taur_ahe",
+    "thalassiano",
+    "zandali"
+   ],
+   "_nota": "Todos los idiomas basicos. La restriccion narrativa de 'faccion opuesta' no la aplica el addon; el filtrado de los que ya hablas lo hace la creacion."
+  },
+  "bg_alt_idioma": {
+   "fijos": [
+    "orco"
+   ],
+   "elige": 0
+  },
+  "bg_luz_abisal_idioma": {
+   "fijos": [],
+   "elige": 1,
+   "entre": [
+    "eredun",
+    "shath_yar"
+   ],
+   "_nota": "Los dos son EXOTICOS."
+  },
+  "bg_torio_idioma": {
+   "fijos": [
+    "enano"
+   ],
+   "elige": 0,
+   "condicional": {
+    "si_ya_hablas": "enano",
+    "elige": 1,
+    "_nota": "Concede Enano. Si el personaje YA lo hablaba por otra fuente (p.ej. ser enano), en vez de repetirlo le deja elegir otro idioma."
+   }
+  }
+ },
+ "revisar": {
+  "_visceralico_hecho": {
+   "decidido": "Visceralico es el nombre correcto del idioma de los Renegados.",
+   "hecho": "Corregido en el addon (HarfordDnDRaces ren_idiomas y HarfordDnDBookText) y en la web."
+  }
+ }
+}

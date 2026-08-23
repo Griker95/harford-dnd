@@ -1287,6 +1287,21 @@ for _b in kb["backgrounds"]:
             _ncar += 1
 print("Rasgos de trasfondo sin la etiqueta Caracteristica: %d" % _ncar)
 
+# ----- orden de clase: el del juego, no el alfabetico -----
+# Es el de la pantalla de creacion de personaje. Se ordena el DATO para que lo hereden por
+# igual la pestana del compendio, el buscador y lo que venga despues. Por id, porque
+# "cazador" es prefijo de "cazador_demonios".
+ORDEN_DE_CLASE = ["guerrero", "cazador", "mago", "picaro", "sacerdote", "brujo",
+                  "paladin", "druida", "chaman", "monje", "cazador_demonios",
+                  "caballero_muerte"]
+_sin_orden = [c["id"] for c in kb["classes"] if c["id"] not in ORDEN_DE_CLASE]
+if _sin_orden:
+    print("AVISO: clases fuera de la lista de orden, van al final: %s" % _sin_orden)
+kb["classes"].sort(key=lambda c: (ORDEN_DE_CLASE.index(c["id"])
+                                  if c["id"] in ORDEN_DE_CLASE else len(ORDEN_DE_CLASE),
+                                  c["name"]))
+print("Clases en orden de juego: %s" % ", ".join(c["name"] for c in kb["classes"]))
+
 json.dump(kb, io.open(os.path.join(SP, "kb_icons.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("Clases: intro + %d/%d rasgos completos" % (cf, ct))
 

@@ -300,7 +300,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "acolito_luz_abisal", name = "Acolito de la Luz abisal", source = "Warcraft",
+        id = "acolito_luz_abisal", name = "Acolito de la Luz Abisal", source = "Warcraft",
         aliases = { "luz abisal", "acolito luz abisal" },
         desc = "Has aprendido a equilibrar devoción, oscuridad y disciplina espiritual en una fe marcada por fuerzas opuestas.",
         traits = {
@@ -408,7 +408,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "feriante_luna_negra", name = "Feriante de la luna negra", source = "Warcraft",
+        id = "feriante_luna_negra", name = "Feriante de la Luna Negra", source = "Warcraft",
         aliases = { "luna negra", "feriante" },
         desc = "Eres un artista cautivador dentro del enigmático reino de la Feria de la Luna Negra. Con tus hipnotizantes actos de magia, arte o hazañas audaces, atraes multitudes que acuden a presenciar tus maravillosas exhibiciones. Como artista de la Feria, ofreces un escape muy necesario de las penas del mundo, brindando sonrisas y asombro a quienes se congregan bajo las coloridas carpas del carnaval.\n\nSin embargo, entre tanto encanto, percibes un misterio más profundo que envuelve los orígenes de la Feria, y navegas sus secretos con la misma destreza con la que ejecutas tus actuaciones.",
         traits = {
@@ -453,14 +453,14 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "forjador_torio", name = "Forjador de la hermandad del torio", source = "Warcraft",
+        id = "forjador_torio", name = "Forjador de la Hermandad del Torio", source = "Warcraft",
         aliases = { "hermandad del torio", "forjador de torio", "forjador torio" },
         desc = "Los miembros de la Hermandad del Torio son perfeccionistas incansables, curtidos por el calor de las forjas y la presión de estar siempre un paso por delante de sus rivales. Muchos son toscos, silenciosos, incluso paranoicos, pero todos ellos comparten un respeto absoluto por el arte de su trabajo y una ética inquebrantable respecto a la calidad. La desconfianza hacia otros gremios o clanes, y el secretismo con que guardan sus técnicas, son también comunes entre ellos.\n\nEl fuego, el metal y la tradición te forjaron tanto como el yunque. Has dedicado años de tu vida a trabajar bajo la tutela de un maestro herrero de la Hermandad del Torio, soportando un aprendizaje áspero, vigilado por las brasas del Puesto del Torio y las exigencias despiadadas de los enanos Hierro Negro que renunciaron a Ragnaros.\n\nPerteneces a una casta de artesanos que anteponen la perfección a cualquier otra virtud. La Hermandad no acepta mediocridad: solo aquellos que soportan el calor y la presión de sus hornos pueden ganarse un nombre entre los suyos. Has aprendido los secretos de la forja encantada, de la runomagia práctica, y sabes que el valor de un objeto está en su equilibrio entre utilidad y arte.\n\nPuede que seas enano, pero no necesariamente. Aunque raros, se conocen casos de orcos, elfos o humanos que han sido aceptados como aprendices si demostraban una maestría sin igual y un respeto absoluto por el oficio. En cualquier caso, el orgullo de tu trabajo habla antes que tu raza.",
         traits = {
             { id = "bg_torio_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia y Perspicacia.", effects = { Skill("Historia"), Skill("Perspicacia") } },
             { id = "bg_torio_herr", name = "Herramientas de forja", type = "pasivo", description = "Competencia con herramientas de forja.", effects = { Tool("Herramientas de forja") } },
             { id = "bg_torio_idioma", icon = "inv_misc_note_05", name = "Idioma", type = "choice", description = "Enano y un idioma adicional si ya hablas enano.", effects = {}, choice = { slots = 1, optionsFrom = "language" } },
-            { id = "bg_torio_prestigio", name = "Prestigio de la hermandad del torio", type = "informativo", description = "Tu relación con la Hermandad del Torio puede darte acceso a artesanos, talleres, materiales o información de forja, a discreción del DM.", effects = {} },
+            { id = "bg_torio_prestigio", name = "Prestigio de la Hermandad del Torio", type = "informativo", description = "Tu relación con la Hermandad del Torio puede darte acceso a artesanos, talleres, materiales o información de forja, a discreción del DM.", effects = {} },
         },
     },
     {
@@ -529,7 +529,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "miembro_anillo_tierra", name = "Miembro del anillo de la tierra", source = "Warcraft",
+        id = "miembro_anillo_tierra", name = "Miembro del Anillo de la Tierra", source = "Warcraft",
         aliases = { "anillo de la tierra", "miembro del anillo de la tierra" },
         desc = "Los chamanes del Anillo de la Tierra comparten un profundo respeto por el equilibrio elemental, un compromiso inquebrantable con la sanación y la protección, y una conexión profunda con el mundo natural.\n\nComo miembro reverenciado del Anillo de la Tierra, canalizas las fuerzas primigenias de los elementos para restaurar el equilibrio en Azeroth. Guiado por antiguas tradiciones y una profunda conexión con la naturaleza, has dominado el arte del chamanismo, canalizando los poderes de la tierra, el aire, el fuego y el agua.\n\nCon una devoción inquebrantable por la sanación, la protección y el dominio elemental, te eriges como un guardián del orden natural, encargado de mantener la armonía entre los elementos y el mundo que moldean.",
         traits = {
@@ -550,7 +550,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "novato_liga_expedicionarios", name = "Novato de la liga de expedicionarios", source = "Warcraft",
+        id = "novato_liga_expedicionarios", name = "Novato de la Liga de Expedicionarios", source = "Warcraft",
         aliases = { "liga de expedicionarios", "novato expedicionarios" },
         desc = "Los miembros de la Liga de Expedicionarios comparten universalmente una curiosidad insaciable por lo desconocido, una camaradería firme que trasciende fronteras y una sed incontenible de descubrimiento.\n\nEres un orgulloso miembro de la renombrada Liga de Expedicionarios, una estimada organización dedicada a descubrir tesoros ocultos, artefactos ancestrales y los misterios del pasado de Azeroth. Con una sed de aventuras y pasión por el conocimiento, has recorrido territorios inexplorados, enfrentado desafíos peligrosos y desentrañado acertijos en tu búsqueda por la verdad.\n\nComo miembro de la Liga de Expedicionarios, encarnas el espíritu de la curiosidad, el coraje y la camaradería, siempre dispuesto a revelar los secretos del mundo y compartirlos con mentes ansiosas por aprender.",
         traits = {

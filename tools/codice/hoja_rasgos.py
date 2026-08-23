@@ -281,6 +281,10 @@ def main():
         # el icono del trasfondo en si, no el de sus rasgos: es el que se ve en la lista
         if not b.get("icon"):
             filas.append(("Iconos de trasfondo", b.get("source") or "", b))
+        # las variantes son un trasfondo contado en corto y tienen su propio icono
+        for v in b.get("variants") or []:
+            if not v.get("icon"):
+                filas.append(("Variantes de trasfondo", b["name"], v))
         for f in b.get("traits") or []:
             if not f.get("icon"):
                 filas.append(("Trasfondos", b["name"], f))

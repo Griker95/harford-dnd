@@ -204,7 +204,9 @@ for _d in dotes:
         if re.search(r"\bidiomas?\b", _n):
             _t["icon"] = "inv_misc_note_05"
             continue
-        if _n.startswith("competencia"):
+        # "Beneficios" es el rotulo que envuelve lo que hace cada dote: sale 52 veces
+        # y es siempre lo mismo, asi que lleva el mismo pergamino que las competencias.
+        if _n == "beneficios" or _n.startswith("competencia"):
             _t["icon"] = ICONO_COMPETENCIA
             _ncomp += 1
 print("etiquetas de competencia con pergamino: %d" % _ncomp)

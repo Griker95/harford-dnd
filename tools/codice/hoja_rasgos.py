@@ -480,8 +480,16 @@ PLANTILLA_PIE = """</aside>
   var elegido=JSON.parse(localStorage.getItem(CLAVE)||'{}');
   var filas=[].slice.call(document.querySelectorAll('.fila'));
   function pinta(){
-    document.getElementById('cuenta').textContent=Object.keys(elegido).length+' de '+filas.length;
-    document.getElementById('salida').value=JSON.stringify(elegido,null,1);
+    // Solo lo de ESTA hoja. El almacen es uno solo y comun a todas, asi que sin filtrar
+    // el cuadro de abajo volcaba todo lo elegido desde siempre y habia que buscar a mano
+    // lo nuevo entre cientos de lineas ya aplicadas.
+    var mias={}, n=0;
+    filas.forEach(function(f){
+      var k=f.getAttribute('data-k');
+      if(elegido[k]!==undefined && elegido[k]!==''){ mias[k]=elegido[k]; n++; }
+    });
+    document.getElementById('cuenta').textContent=n+' de '+filas.length;
+    document.getElementById('salida').value=JSON.stringify(mias,null,1);
   }
   filas.forEach(function(f){
     var k=f.getAttribute('data-k');

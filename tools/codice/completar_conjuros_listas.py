@@ -176,6 +176,7 @@ def aplicar(kb, limpiar=None, metrico=None, avisar=True):
             continue
         pares.append((_original.get(clave, clave), par[1]["nombre"], None))
 
+    por_id = {s["id"]: s for s in kb["spells"]}
     for libro, nombre_exp, nivel_fijo in pares:
         par = exp.get(nk(nombre_exp))
         if not par:
@@ -195,11 +196,23 @@ def aplicar(kb, limpiar=None, metrico=None, avisar=True):
                 creadas[clave]["aliases"].append(libro)
             continue
         titulo = _titulo(eq.get("titulos", {}).get(nombre_exp) or libro)
+        # Dos nombres de lista distintos pueden acabar en el MISMO titulo por la tabla de
+        # equivalencias ("Resucitar" y "Resurreccion" son "Alzar a los muertos"), y la clave
+        # de arriba, que es el nombre de origen, no los ve iguales: salian dos fichas con el
+        # mismo id. Manda el id final.
+        _id = "sp_" + _slug(titulo)
+        _ya = por_id.get(_id)
+        if _ya is not None:
+            alias[nk(libro)] = _id
+            if libro not in _ya["aliases"]:
+                _ya["aliases"].append(libro)
+            creadas[clave] = _ya
+            continue
         comp, dur = _rep.reparar(e)
         # los nombres de campo son los que ya usa la ficha de conjuro del compendio; el
         # export los trae con otros y la web no leeria ni la descripcion ni el tiempo
         obj = {
-            "id": "sp_" + _slug(titulo),
+            "id": _id,
             "name": titulo,
             "level": nv if nv is not None else (quiere or 0),
             "school": (e.get("escuela") or "").strip(),
@@ -229,6 +242,7 @@ def aplicar(kb, limpiar=None, metrico=None, avisar=True):
         kb["spells"].append(obj)
         porficha[nk(obj["name"])] = obj
         creadas[clave] = obj
+        por_id[_id] = obj
         alias[nk(libro)] = obj["id"]
         alias.setdefault(_sin_marcadores(libro), obj["id"])
         nuevas += 1

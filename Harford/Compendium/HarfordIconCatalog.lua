@@ -380,6 +380,7 @@ for name, icon in pairs(Catalog.presentationNames) do
 end
 
 Catalog.features = {
+    bg_crim_caract = "ability_rogue_deadliness",
     bg_alt_peso = "w3reforgedtinycastle",
     bg_anillo_sintonia = "spell_nature_elementalprecision_2",
     bg_arg_determinacion = "hots_xinzhao_determination",
@@ -388,7 +389,7 @@ Catalog.features = {
     bg_cen_guardian = "spell_nature_natureguardian",
     bg_cha_caract = "inv_misc_notepicture2c",
     bg_cosecha_codigo = "inv_misc_codexofxerrath_chains",
-    bg_cri_caract = "ability_rogue_deadliness",
+    bg_cri_caract = "hots_falseheart",
     bg_dob_caract = "inv_misc_coin_19",
     bg_ere_perspicacia = "hots_kharazim_insight",
     bg_erm_caract = "achievement_bg_winsoa",

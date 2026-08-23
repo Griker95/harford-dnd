@@ -70,14 +70,31 @@ def parse_features(region):
     return out
 
 # ---------- CLASES ----------
-book = rd("HarfordDnDBook.lua")
+# El libro se partio en un modulo por clase (Harford/DnD/Data/Classes/*.lua): el nucleo
+# HarfordDnDBook.lua se quedo con los helpers y `API.CLASSES` vacio, y leyendo solo ese
+# fichero el extractor pasaba de 12 clases a 0 sin quejarse. Se leen los dos y se pegan:
+# asi funciona con el libro partido, con el entero, y durante el reparto, que es cuando
+# una parte esta en cada sitio.
+def _texto_de_clases():
+    partes = []
+    for ruta in sorted(glob.glob(os.path.join(BASE, "**", "Classes", "*.lua"), recursive=True)):
+        partes.append(open(ruta, encoding="utf-8", errors="replace").read())
+    partes.append(rd("HarfordDnDBook.lua"))
+    # separador entre modulos: sin el, el ultimo bloque de un fichero y el primero del
+    # siguiente quedan pegados y el parseo por llaves los mezcla
+    return ("\n\n-- FIN DE MODULO --\n\n").join(partes)
+
+book = _texto_de_clases()
 class_hdr = re.compile(r'id = "([a-z_]+)", name = "([^"]+)", desc = "((?:[^"\\]|\\.)*)", hitDie = (\d+)')
 classes = []
 cstarts = [(m.start(), m.group(1), m.group(2), m.group(3), m.group(4)) for m in class_hdr.finditer(book)]
 for i, (pos, cid, cname, cdesc, hd) in enumerate(cstarts):
     end = cstarts[i+1][0] if i+1 < len(cstarts) else len(book)
     block = book[pos:end]
-    m = re.search(r'\n {8}features = \{', block)
+    # La sangria dejo de ser fija al partir el libro: dentro de HarfordDnDBook.lua la tabla
+    # de clase colgaba de API.CLASSES y sus campos iban a 8 espacios; en los modulos por
+    # clase cuelga del nivel superior y van a 4. Exigir 8 dejaba las 37 subclases fuera.
+    m = re.search(r'\n {2,12}features = \{', block)
     class_region = block[m.start():] if m else block
     sub_region = block[:m.start()] if m else ""
     subclasses = []

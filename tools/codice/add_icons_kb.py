@@ -212,7 +212,10 @@ ICONO_POR_NOMBRE = {
 def signo_incremento(f):
     """Signo del color de la caracteristica que sube este rasgo, si la nombra."""
     nombre = nk(f.get("name", ""))
-    if nombre in ("idioma", "idiomas") or nombre.startswith(("idioma ", "idiomas ")):
+    # cualquier rasgo que conceda idioma, aunque no empiece por la palabra
+    # ("Herramienta e idioma"). Solo se aplica a RASGOS: las listas de conjuros no pasan
+    # por aqui, asi que el conjuro "Comprender idiomas" no se ve afectado.
+    if re.search(r"\bidiomas?\b", nombre):
         return ICONO_IDIOMAS
     # TODA etiqueta de competencia lleva el pergamino, tambien las que nombran algo
     # concreto ("Competencia con venenos", "Competencia adicional (cervecero)"). Va por

@@ -200,7 +200,11 @@ ICONO_COMPETENCIA = "inv_scroll_11"
 _ncomp = 0
 for _d in dotes:
     for _t in _d.get("traits") or []:
-        if _nk(_t.get("name", "")).startswith("competencia"):
+        _n = _nk(_t.get("name", ""))
+        if re.search(r"\bidiomas?\b", _n):
+            _t["icon"] = "inv_misc_note_05"
+            continue
+        if _n.startswith("competencia"):
             _t["icon"] = ICONO_COMPETENCIA
             _ncomp += 1
 print("etiquetas de competencia con pergamino: %d" % _ncomp)

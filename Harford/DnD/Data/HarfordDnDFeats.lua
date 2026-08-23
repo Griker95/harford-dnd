@@ -72,7 +72,7 @@ API.FEATS = {
     {
         id = "amigo_criaturas", name = "Amigo de las criaturas", requires = "Elfo nocturno",
         traits = {
-            { id = "feat_ac_animales", name = "Trato con animales", type = "pasivo", description = "Competencia en Trato con Animales; si ya eres competente, duplicas tu bono de competencia en ella.", effects = { { kind = "skillProf", skill = "Animales" } } },
+            { id = "feat_ac_animales", name = "Trato con Animales", type = "pasivo", description = "Competencia en Trato con Animales; si ya eres competente, duplicas tu bono de competencia en ella.", effects = { { kind = "skillProf", skill = "Animales" } } },
             { id = "feat_ac_conjuros", name = "Conjuros de bestias", type = "informativo", description = "Aprendes hablar con animales (a voluntad, sin espacio) y amistad con los animales (una vez con este dote, recuperado en descanso largo). Característica: Sabiduría.", effects = {} },
         },
     },

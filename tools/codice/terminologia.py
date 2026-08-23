@@ -50,6 +50,10 @@ def _contextos(variante):
         (re.compile(r"(habilidades[^.:\n]{0,40}:\s*(?:[A-ZÁÉÍÓÚÑ][^,\n]{2,24},\s*){0,5})" + v + r"\b"), r"\1{C}"),
         # "prueba de Sabiduria (Manejo de Animales)" ya cubierto; y "Sabiduria (X)"
         (re.compile(r"(" + CARACS + r"\s*\(\s*)" + v + r"(\s*\))"), r"\1{C}\2"),
+        # primera de una lista de eleccion: "Elige dos entre Trato con animales, Arcanos".
+        # La regla de lista de abajo pide coma delante, asi que se saltaba justo esta.
+        (re.compile(r"((?:[Ee]lige|[Ee]scoge|[Ee]legir|[Ee]scoger)\s+\w+\s+(?:entre|de)\s+)"
+                    + v + r"\b"), r"\1{C}"),
         # lista separada por comas justo detras de otra habilidad canonica conocida
         (re.compile(r"(,\s*)" + v + r"(\s*(?:,|\sy\s|\.))"), r"\1{C}\2"),
         # encadenada con coma/o/y tras otra habilidad:

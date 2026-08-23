@@ -29,7 +29,7 @@ API.RACES = {
             { id = "hum_determinacion", name = "Determinacion", type = "informativo", description = "Cuando realices una tirada de ataque, una prueba de habilidad o una tirada de salvación, puedes hacerlo con ventaja. No puedes hacerlo de nuevo hasta que termines un descanso largo.", uses = { max = 1, recharge = "long" }, effects = {} },
             { id = "hum_espiritu", name = "Espiritu Humano", type = "informativo", description = "Cuando saques un 1 en una tirada de ataque, prueba de habilidad o tirada de salvación, puedes volver a tirar el dado. Debes usar el nuevo resultado, incluso si es un 1. No puedes hacerlo de nuevo hasta que termines un descanso largo.", effects = {} },
             { id = "hum_versatilidad", name = "Versatilidad de habilidades", type = "choice", description = "Competencia en dos habilidades de tu elección.", effects = {}, choice = { slots = 2, optionsFrom = "skillProf" } },
-            { id = "hum_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y un idioma adicional de tu elección.", effects = {} },
+            { id = "hum_idiomas", name = "Idiomas", type = "choice", description = "Hablas, lees y escribes Comun y un idioma adicional de tu elección.", effects = { { kind = "language", language = "Comun" } }, choice = { slots = 1, optionsFrom = "language" } },
         },
     },
     {
@@ -60,7 +60,7 @@ API.RACES = {
             { id = "ena_vision", name = "Vision en la oscuridad", type = "informativo", description = "Ves en luz tenue a 18 metros como luz brillante y en oscuridad como luz tenue (tonos de gris).", effects = {} },
             { id = "ena_entrenamiento", name = "Entrenamiento de combate Enano", type = "pasivo", description = "Competencia con hacha de batalla, hacha de mano, martillo de guerra, pistolas y rifles.", effects = WeaponProfEffects("hacha de batalla", "hacha de mano", "martillo de guerra", "pistolas", "rifles") },
             { id = "ena_piedra", name = "Conocimiento de la piedra", type = "informativo", description = "En pruebas de Historia sobre mamposteria, competente y sumas el doble de tu bono de competencia.", effects = {} },
-            { id = "ena_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Enano.", effects = {} },
+            { id = "ena_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Enano.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Enano" } } },
         },
     },
     {
@@ -85,7 +85,7 @@ API.RACES = {
             { id = "eln_sentidos", name = "Sentidos agudos", type = "pasivo", description = "Competencia en Percepción.", effects = { { kind = "skillProf", skill = "Percepcion" } } },
             { id = "eln_mascara", name = "Mascara de lo salvaje", type = "informativo", description = "Puedes ocultarte cuando estés ligeramente cubierto por elementos naturales.", effects = {} },
             { id = "eln_fusion", name = "Fusion con las sombras", type = "informativo", description = "Ventaja en tiradas de Sigilo al estar completamente oculto por la oscuridad.", effects = {} },
-            { id = "eln_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Darnassiano.", effects = {} },
+            { id = "eln_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Darnassiano.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Darnassiano" } } },
         },
     },
     {
@@ -93,7 +93,7 @@ API.RACES = {
         traits = {
             { id = "sme_espiritu", name = "Espiritu mestizo", type = "informativo", description = "Cuando obtienes un 1 en una tirada de ataque, prueba de característica o tirada de salvación, puedes repetir el dado. Debes usar el nuevo resultado aunque sea un 1. No puedes hacerlo de nuevo hasta que termines un descanso largo.", effects = {} },
             { id = "sme_vision", name = "Vision en la oscuridad", type = "informativo", description = "Puedes ver en la oscuridad hasta 60 pies.", effects = {} },
-            { id = "sme_arcano", name = "Conocimiento arcano", type = "pasivo", description = "Tienes competencia en la habilidad de Conocimiento Arcano. Además, puedes lanzar el conjuro Detectar magia una vez al día. La Inteligencia es tu característica de lanzamiento para este conjuro.", uses = { max = 1, recharge = "long" }, spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = {
+            { id = "sme_arcano", name = "Conocimiento Arcano", type = "pasivo", description = "Tienes competencia en la habilidad de Conocimiento Arcano. Además, puedes lanzar el conjuro Detectar magia una vez al día. La Inteligencia es tu característica de lanzamiento para este conjuro.", uses = { max = 1, recharge = "long" }, spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = {
                 { kind = "skillProf", skill = "Arcano" },
             } },
             { id = "sme_legado", name = "Legado elfico", type = "informativo", description = "Conoces un truco de mago a tu elección (característica Inteligencia).", effects = {} },
@@ -128,7 +128,7 @@ API.RACES = {
             { id = "gno_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +2.", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 2 } } },
             { id = "gno_artifice", name = "Conocimientos del artifice", type = "informativo", description = "Doble bono de competencia en Inteligencia (Historia) sobre objetos magicos, alquimicos o tecnologicos.", effects = {} },
             { id = "gno_escapista", name = "Escapista", type = "informativo", description = "Desenganche como accion adicional cada turno; ventaja para evitar/terminar apresado.", effects = {} },
-            { id = "gno_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Gnomico.", effects = {} },
+            { id = "gno_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Gnomico.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Gnomico" } } },
         },
     },
     {
@@ -176,7 +176,7 @@ API.RACES = {
             { id = "dra_sombras", name = "Resistencia a las sombras", type = "pasivo", description = "Resistencia al daño necrótico.", effects = {
                 { kind = "resist", damage = "necrotico" },
             } },
-            { id = "dra_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Draenei.", effects = {} },
+            { id = "dra_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Draenei.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Draenei" } } },
         },
     },
     {
@@ -201,7 +201,7 @@ API.RACES = {
             } },
             { id = "hua_salto", name = "Salto de pie", type = "informativo", description = "En forma huargen, puedes realizar un salto largo de hasta 9 metros y un salto alto de hasta 6 metros, con o sin carrera.", effects = {} },
             { id = "hua_dos_formas", name = "Dos formas", type = "informativo", description = "Puedes transformarte en humano en 1 minuto. En esta forma, te ves igual que antes de la maldición. Puedes volver a la forma de huargen como una acción gratuita.", effects = {} },
-            { id = "hua_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y un idioma adicional de tu elección.", effects = {} },
+            { id = "hua_idiomas", name = "Idiomas", type = "choice", description = "Hablas, lees y escribes Comun y un idioma adicional de tu elección.", effects = { { kind = "language", language = "Comun" } }, choice = { slots = 1, optionsFrom = "language" } },
         },
     },
     {
@@ -249,7 +249,7 @@ API.RACES = {
             { id = "orc_amenazante", name = "Amenazante", type = "pasivo", description = "Competencia en Intimidación.", effects = { { kind = "skillProf", skill = "Intimidacion" } } },
             { id = "orc_armas", name = "Entrenamiento con armas orcas", type = "pasivo", description = "Competencia con hacha de mano, hacha de batalla y garra de guerra.", effects = WeaponProfEffects("hacha de mano", "hacha de batalla", "garra de guerra") },
             { id = "orc_resistencia", name = "Resistencia implacable", type = "informativo", description = "Al caer a 0 PG sin morir, puedes quedarte en 1 PG. 1 uso por descanso largo.", uses = { max = 1, recharge = "long" }, effects = {} },
-            { id = "orc_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Orco.", effects = {} },
+            { id = "orc_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Orco.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Orco" } } },
         },
     },
     {
@@ -262,7 +262,7 @@ API.RACES = {
             } },
             { id = "elfo", name = "Renegado Elfo", desc = "Renegados de origen élfico, agiles y afilados, que conservan parte de su gracia en la no-muerte.", traits = {
                 { id = "ren_elf_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1.", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
-                { id = "ren_elf_arcano", name = "Conocimiento arcano", type = "pasivo", description = "Competencia en Arcano; lanzas detectar magia (Inteligencia) 1 vez por descanso.", spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = { { kind = "skillProf", skill = "Arcano" } } },
+                { id = "ren_elf_arcano", name = "Conocimiento Arcano", type = "pasivo", description = "Competencia en Arcano; lanzas detectar magia (Inteligencia) 1 vez por descanso.", spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = { { kind = "skillProf", skill = "Arcano" } } },
                 { id = "ren_elf_idioma", name = "Idioma extra", type = "informativo", description = "Hablas, lees y escribes Thalassiano.", effects = {} },
             } },
         },
@@ -276,7 +276,7 @@ API.RACES = {
                 { kind = "conditionImmunity", condition = "sleeping" },
             } },
             { id = "ren_voluntad", name = "Voluntad de los renegados", type = "informativo", description = "Ventaja en salvaciones contra encantamiento y efectos que vuelven a los no-muertos.", effects = {} },
-            { id = "ren_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Guturasico.", effects = {} },
+            { id = "ren_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Visceralico.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Visceralico" } } },
         },
     },
     {
@@ -306,7 +306,7 @@ API.RACES = {
             { id = "tau_cuernos", name = "Cuernos", type = "informativo", description = "Arma natural: golpe desarmado que inflige 1d6 + Mod. Fuerza perforante.", effects = {} },
             { id = "tau_construccion", name = "Construccion poderosa", type = "informativo", description = "Cuentas como una categoria de tamaño mayor para carga/empujar/arrastrar/levantar.", effects = {} },
             { id = "tau_armas", name = "Entrenamiento de armas Tauren", type = "pasivo", description = "Competencia con alabarda, tótem de batalla, pistola y rifle.", effects = WeaponProfEffects("alabarda", "totem de batalla", "pistolas", "rifles") },
-            { id = "tau_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Taur-ahe.", effects = {} },
+            { id = "tau_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Taur-ahe.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Taur-ahe" } } },
         },
     },
     {
@@ -327,7 +327,7 @@ API.RACES = {
                 { id = "tro_zan_loa", name = "Abrazo de los loa", type = "informativo", description = "Conoces guia; a nivel 3 lanzas habilidad mejorada 1 vez al día (Sabiduría).", uses = { max = 1, recharge = "long" }, effects = {} },
                 { id = "tro_zan_armas", name = "Entrenamiento con armas zandalari", type = "pasivo", description = "Competencia con hachas de mano, hachas de batalla, espadas largas y espadas grandes.", effects = WeaponProfEffects("hacha de mano", "hacha de batalla", "espadas largas", "espadas grandes") },
             } },
-            { id = "bosque", name = "Trol de Bosque", desc = "Trolls de bosque amani, feroces y territoriales, ligados a las profundidades arboladas.", traits = {
+            { id = "bosque", name = "Troll de Bosque", desc = "Trolls de bosque amani, feroces y territoriales, ligados a las profundidades arboladas.", traits = {
                 { id = "tro_bos_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Destreza +1 y Constitución +1.", effects = {
                     { kind = "bonus", target = "ability", ability = "Destreza", value = 1 },
                     { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 },
@@ -358,7 +358,7 @@ API.RACES = {
             { id = "tro_regeneracion", name = "Regeneracion", type = "pasivo", description = "Al gastar un Dado de Golpe recuperas lo lanzado + el doble de tu Mod. Constitución; como accion puedes gastar dados hasta la mitad de tu nivel. Recarga con descanso largo.", effects = {
                 { kind = "flag", flag = "trollRegenHitDie" },
             } },
-            { id = "tro_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Zandali.", effects = {} },
+            { id = "tro_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Zandali.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Zandali" } } },
         },
     },
     {
@@ -369,17 +369,19 @@ API.RACES = {
                 { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 },
             } },
             { id = "esa_vision", name = "Vision en la oscuridad", type = "informativo", description = "Puedes ver en luz tenue en un radio de 60 pies como si fuera luz brillante, y en oscuridad como si fuera luz tenue. En la oscuridad, solo puedes distinguir tonos de gris, sin distinguir colores.", effects = {} },
-            { id = "esa_arcano", name = "Conocimiento arcano", icon = "ability_racial_arcaneaffinity", type = "pasivo", description = "Tienes competencia en la habilidad de Conocimiento Arcano. Además, puedes lanzar el conjuro Detectar magia una vez al día. La Inteligencia es tu característica de lanzamiento para este conjuro.", spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = { { kind = "skillProf", skill = "Arcano" } } },
+            { id = "esa_arcano", name = "Conocimiento Arcano", icon = "ability_racial_arcaneaffinity", type = "pasivo", description = "Tienes competencia en la habilidad de Conocimiento Arcano. Además, puedes lanzar el conjuro Detectar magia una vez al día. La Inteligencia es tu característica de lanzamiento para este conjuro.", spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = { { kind = "skillProf", skill = "Arcano" } } },
             { id = "esa_sentidos", name = "Sentidos agudos", type = "pasivo", description = "Eres competente en Percepción.", effects = { { kind = "skillProf", skill = "Percepcion" } } },
             { id = "esa_reversion", name = "Reversion de conjuros", type = "informativo", description = "Cuando fallas una tirada de salvación contra un conjuro o efecto mágico, puedes repetir la tirada y debes usar el nuevo resultado. No puedes usar esta característica de nuevo hasta que termines un descanso corto o largo.", uses = { max = 1, recharge = "short" }, effects = {} },
-            { id = "esa_legado", name = "Legado thalassiano", type = "choice", description = "Elige un beneficio.", effects = {}, choice = {
+            { id = "esa_legado", name = "Legado thalassiano", type = "choice", description = "Conoces un truco de la lista de mago a tu elección. La Inteligencia es tu característica de lanzamiento para este conjuro. En su lugar puedes ganar competencia con espada gemela, guja, arco corto y arco largo.", effects = {}, choice = {
                 slots = 1,
+                -- Los trucos de mago se listan uno a uno (`extraFrom`, ver HarfordDnDBook): lo
+                -- elegido es el truco CONCRETO, no un generico "un truco de mago".
+                extraFrom = "cantrip:Mago",
                 options = {
-                    { id = "truco", label = "Un truco de mago (Inteligencia)", effects = {} },
                     { id = "armas", label = "Competencia con espada gemela, guja, arco corto y largo", effects = WeaponProfEffects("espada gemela", "guja", "arco corto", "arco largo") },
                 },
             } },
-            { id = "esa_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Thalassiano.", effects = {} },
+            { id = "esa_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Thalassiano.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Thalassiano" } } },
         },
     },
     {
@@ -398,7 +400,7 @@ API.RACES = {
                 { kind = "weaponProf", weapon = "armas de fuego" },
                 { kind = "toolProf", tool = "Herramientas de armero" },
             } },
-            { id = "gob_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun, Goblin y un idioma adicional de tu elección.", effects = {} },
+            { id = "gob_idiomas", name = "Idiomas", type = "choice", description = "Hablas, lees y escribes Comun, Goblin y un idioma adicional de tu elección.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Goblin" } }, choice = { slots = 1, optionsFrom = "language" } },
         },
     },
     {
@@ -415,7 +417,7 @@ API.RACES = {
             { id = "pan_paz", name = "Paz interior", type = "informativo", description = "Tienes ventaja en tiradas de salvación contra ser encantado o asustado.", effects = {} },
             { id = "pan_marcial", name = "Experto marcial", type = "informativo", description = "Tus ataques desarmados infligen 1d4 + Mod. Fuerza como daño contundente en un golpe. Además, obtienes un bono de +1 a tu Clase de Armadura. Para usar este bono, no debes llevar armadura mediana o pesada ni usar un escudo.", effects = {} },
             { id = "pan_palma", name = "Palma temblorosa", type = "informativo", description = "Eres capaz de atacar puntos focales en un objetivo. Como acción adicional, puedes hacer un ataque desarmado especial. Si el ataque impacta, causa su daño normal y el objetivo debe superar una tirada de salvación de Constitución (CD 8 + Mod. Sabiduría + Bonus Competencia). Si falla, queda aturdido hasta el final de tu próximo turno. Después de usarla, no puedes volver a hacerlo hasta que termines un descanso corto o largo.", uses = { max = 1, recharge = "short" }, effects = {} },
-            { id = "pan_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Pandaren.", effects = {} },
+            { id = "pan_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Pandaren.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Pandaren" } } },
         },
     },
     {
@@ -427,11 +429,11 @@ API.RACES = {
             } },
             { id = "noc_vision", name = "Vision en la oscuridad superior", type = "informativo", description = "Ves en luz tenue a 36 metros como luz brillante y en oscuridad como luz tenue (tonos de violeta).", effects = {} },
             { id = "noc_solar", name = "Sensibilidad a la Luz solar", type = "informativo", description = "Desventaja en ataques y en pruebas de Sabiduría (Percepción) basadas en la vista bajo luz solar directa.", effects = {} },
-            { id = "noc_arcano", name = "Conocimiento arcano", type = "pasivo", description = "Competencia en Conocimiento Arcano.", effects = { { kind = "skillProf", skill = "Arcano" } } },
+            { id = "noc_arcano", name = "Conocimiento Arcano", type = "pasivo", description = "Competencia en Conocimiento Arcano.", effects = { { kind = "skillProf", skill = "Arcano" } } },
             { id = "noc_sentidos", name = "Sentidos agudos", type = "pasivo", description = "Competencia en Percepción.", effects = { { kind = "skillProf", skill = "Percepcion" } } },
             { id = "noc_proteccion", name = "Proteccion mental", type = "informativo", description = "Ventaja en todas las tiradas de salvación de Inteligencia, Sabiduría y Carisma contra magia.", effects = {} },
             { id = "noc_magia", name = "Magia Nocheterna", type = "informativo", description = "Conoces el truco Mano de mago. A nivel 3 lanzas Detectar magia 1/día; a nivel 5, Desenfoque 1/día. Característica: Inteligencia.", effects = {} },
-            { id = "noc_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Shalassiano.", effects = {} },
+            { id = "noc_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Shalassiano.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Shalassiano" } } },
         },
     },
     {
@@ -449,14 +451,16 @@ API.RACES = {
             { id = "elv_sentidos", name = "Sentidos agudos", type = "pasivo", description = "Competencia en Percepción.", effects = { { kind = "skillProf", skill = "Percepcion" } } },
             { id = "elv_frio", name = "Frio de la Noche", type = "pasivo", description = "Resistencia al daño necrótico.", effects = { { kind = "resist", damage = "necrotico" } } },
             { id = "elv_grieta", name = "Grieta espacial", type = "informativo", description = "Accion adicional: te teletransportas hasta 9 metros a un espacio visible. 1 uso por descanso corto o largo.", uses = { max = 1, recharge = "short" }, effects = {} },
-            { id = "elv_legado", name = "Legado thalassiano", type = "choice", description = "Elige un beneficio.", effects = {}, choice = {
+            { id = "elv_legado", name = "Legado thalassiano", type = "choice", description = "Conoces un truco de la lista de mago a tu elección. La Inteligencia es tu característica de lanzamiento para este conjuro. En su lugar puedes ganar competencia con espada gemela, guja, arco corto y arco largo.", effects = {}, choice = {
                 slots = 1,
+                -- Los trucos de mago se listan uno a uno (`extraFrom`, ver HarfordDnDBook): lo
+                -- elegido es el truco CONCRETO, no un generico "un truco de mago".
+                extraFrom = "cantrip:Mago",
                 options = {
-                    { id = "truco", label = "Un truco de mago (Inteligencia)", effects = {} },
                     { id = "armas", label = "Competencia con espada gemela, guja, arco corto y largo", effects = WeaponProfEffects("espada gemela", "guja", "arco corto", "arco largo") },
                 },
             } },
-            { id = "elv_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Thalassiano.", effects = {} },
+            { id = "elv_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Thalassiano.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Thalassiano" } } },
         },
     },
     {
@@ -480,7 +484,7 @@ API.RACES = {
             } },
             { id = "vul_olfato", name = "Olfato para el peligro", type = "informativo", description = "Puedes realizar la acción de Desengancharse o Esquivar como acción adicional durante tu primer turno de cada combate. Si te sorprenden al comienzo del combate y no estás incapacitado, aún puedes realizar la acción de Esquivar en tu primer turno.", effects = {} },
             { id = "vul_explorador", name = "Explorador", type = "informativo", description = "Siempre que hagas una prueba de Sabiduría (Supervivencia) relacionada con la navegación, se te considera competente en la habilidad de Supervivencia y agregas el doble de tu bonificador por competencia al chequeo, en lugar de tu bonificador normal.", effects = {} },
-            { id = "vul_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y dos idiomas adicionales a tu elección.", effects = {} },
+            { id = "vul_idiomas", name = "Idiomas", type = "choice", description = "Hablas, lees y escribes Comun y dos idiomas adicionales a tu elección.", effects = { { kind = "language", language = "Comun" } }, choice = { slots = 2, optionsFrom = "language" } },
         },
     },
 }

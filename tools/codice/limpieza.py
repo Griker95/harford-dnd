@@ -301,6 +301,12 @@ _TILDE_PAT = re.compile(r"(?<![A-Za-zÁÉÍÓÚÜÑáéíóúüñ])(" +
                         r")(?![A-Za-zÁÉÍÓÚÜÑáéíóúüñ])", re.I)
 
 
+# El OCR lee el cero como letra O ("reducido a O puntos de golpe"). Solo se corrige
+# cuando ocupa el sitio de una cifra, delante de una unidad: la O suelta es casi
+# siempre la conjuncion ("...un septo? O eres un sacerdote impio...").
+_CERO_OCR = re.compile(r"\bO(?=\s+(?:puntos?|metros?|pies|dados?|casillas?|d\d)\b)")
+
+
 # el OCR del manual acentua un nombre propio que no lleva tilde
 _OCR_NOMBRES = ((re.compile(r"Mom[eé]ntum"), "Momentum"),)
 
@@ -440,6 +446,7 @@ def limpiar(t):
         t = pat.sub(rep, t)
     for pat, rep in REGLAS:
         t = pat.sub(rep, t)
+    t = _CERO_OCR.sub("0", t)
     t = _PARRAFO_PARTIDO.sub(r"\1 ", t)
     t = _reponer_tildes(t)
     t = sin_cabecera_de_nivel(t)

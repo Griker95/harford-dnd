@@ -601,7 +601,7 @@ for b in kb["backgrounds"]:
         fn = nk(re.sub(r"^caracteristica:\s*", "", f["name"], flags=re.I))
         if d.get("rasgoDesc") and (fn == rn or "caracteristica" in nk(f["name"]) or difflib.SequenceMatcher(None, fn, rn).ratio() > 0.7):
             # la etiqueta del rasgo propio del trasfondo es "Característica:" en todo el compendio
-            f["desc"] = d["rasgoDesc"]; f["name"] = "Característica: " + d["rasgoName"]; break
+            f["desc"] = d["rasgoDesc"]; f["name"] = d["rasgoName"]; break
 
 # ----- TRASFONDOS del Manual del Jugador: presentacion, competencias, equipo y rasgo -----
 PHB_BG = r"C:/Users/marco/Documents/New project/RuleSource/Export/trasfondos_phb.json"
@@ -1022,7 +1022,10 @@ print("Subclases con lista ampliada: %d" % _nsub)
 
 # ----- ficha para los conjuros que solo eran un nombre en las listas -----
 import completar_conjuros_listas as _ccl
-_nuevas, _nalias, _ = _ccl.aplicar(kb, limpiar=limpiar, metrico=a_metrico)
+# los conjuros creados desde el export tambien son texto de manual: les toca el
+# glosario ademas de la limpieza, o entran con "ranura de conjuro" y "puntos de vida"
+_nuevas, _nalias, _ = _ccl.aplicar(kb, limpiar=lambda s: limpiar(normalizar_habilidades(s)),
+                                   metrico=a_metrico)
 print("Conjuros nuevos desde export: %d | alias de traduccion: %d" % (_nuevas, _nalias))
 
 # ----- restos del OCR en el texto importado -----
@@ -1210,6 +1213,19 @@ for b in kb["backgrounds"]:
             v["icon"] = ICONO_VARIANTE[v["id"]]
             _nvi += 1
 print("Variantes con icono: %d" % _nvi)
+
+# ----- el rasgo propio del trasfondo va con su nombre a secas -----
+# El manual lo encabeza "Caracteristica: Identidad falsa"; en la ficha esa etiqueta no
+# aporta nada. Se quita al final, para que la cojan tambien los trasfondos del Libro 1 y
+# los propios, que la traen de su propia fuente.
+_ncar = 0
+for _b in kb["backgrounds"]:
+    for _f in _b.get("traits") or []:
+        _n = re.sub(r"^\s*[Cc]aracter[ií]stica:\s*", "", _f.get("name") or "")
+        if _n != _f.get("name"):
+            _f["name"] = _n
+            _ncar += 1
+print("Rasgos de trasfondo sin la etiqueta Caracteristica: %d" % _ncar)
 
 json.dump(kb, io.open(os.path.join(SP, "kb_icons.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 print("Clases: intro + %d/%d rasgos completos" % (cf, ct))

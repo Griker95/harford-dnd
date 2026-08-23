@@ -23,15 +23,43 @@ def sa(s):
 def nk(s):
     return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9 ]+", " ", sa(s).lower())).strip()
 
-def cargar(f, obj=False):
+def _recorte(t, inicio):
+    """Del corchete de apertura a su pareja, contando y saltandose las cadenas."""
+    abre = t[inicio]
+    cierra = {"[": "]", "{": "}"}[abre]
+    nivel, i, en_cadena, escapa = 0, inicio, None, False
+    while i < len(t):
+        c = t[i]
+        if en_cadena:
+            if escapa: escapa = False
+            elif c == "\\": escapa = True
+            elif c == en_cadena: en_cadena = None
+        elif c in "\"'":
+            en_cadena = c
+        elif c == abre:
+            nivel += 1
+        elif c == cierra:
+            nivel -= 1
+            if nivel == 0: return t[inicio:i + 1]
+        i += 1
+    raise ValueError("corchete sin cerrar")
+
+
+def cargar(f, obj=False, prop=None):
+    """Un fichero puede tener VARIAS asignaciones (profesiones lleva professionItems
+    detras), asi que se recorta la que se pide, no del primer corchete al ultimo."""
     t = io.open(os.path.join(WEB, f), encoding="utf-8").read()
-    a, b = (t.find("{"), t.rfind("}")) if obj else (t.find("["), t.rfind("]"))
-    return json.loads(t[a:b+1])
+    if prop:
+        marca = "." + prop + " = "
+        i = t.index(marca) + len(marca)
+    else:
+        i = t.find("{") if obj else t.find("[")
+    return json.loads(_recorte(t, i))
 
 KB = cargar("compendium-data.js", obj=True)
-EQ = cargar("compendium-equipment.js")
-DO = cargar("compendium-dotes.js")
-PR = cargar("compendium-professions.js")
+EQ = cargar("compendium-equipment.js", prop="equipment")
+DO = cargar("compendium-dotes.js", prop="dotes")
+PR = cargar("compendium-professions.js", prop="professions")
 
 fallos = collections.defaultdict(list)
 def añadir(clave, quien, detalle): fallos[clave].append((quien, detalle))
@@ -151,19 +179,14 @@ for p in PR:
 for b in KB["backgrounds"]:
     tr = b.get("traits", [])
     if not tr: añadir("trasfondo sin ningun rasgo", b["name"], "")
-    # El rasgo propio del trasfondo puede venir etiquetado ("Caracteristica: Refugio del
-    # fiel", como en el Manual del Jugador) o con nombre suelto ("Autoridad del capitan"),
-    # que es como lo escriben los trasfondos propios de Harford. Falta de verdad solo si
-    # no hay NINGUN rasgo mas alla de las competencias, los idiomas y el equipo.
+    # El rasgo propio del trasfondo se titula con su nombre a secas ("Identidad falsa"):
+    # la etiqueta "Caracteristica:" con la que lo encabeza el manual ya no se escribe.
+    # Falta de verdad solo si no hay NINGUN rasgo mas alla de competencias, idiomas y equipo.
     GENERICOS = ("competencia", "idioma", "equipo", "herramienta", "kit", "juego",
                  "util", "instrumento", "vehiculo")
-    etiquetado = any(nk(t["name"]).startswith(("caracteristica", "rasgo")) for t in tr)
     propios = [t for t in tr if not nk(t["name"]).startswith(GENERICOS)]
-    if not etiquetado and not propios:
+    if not propios:
         añadir("trasfondo sin su rasgo propio", b["name"], "")
-    elif not etiquetado:
-        añadir("rasgo propio sin la etiqueta 'Caracteristica' (solo presentacion)",
-               b["name"], ", ".join(t["name"] for t in propios)[:60])
 
 print("=" * 72)
 print("REVISION DE COHERENCIA")

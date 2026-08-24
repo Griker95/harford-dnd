@@ -1728,7 +1728,6 @@ Catalog.spells = {
     vacio_oscuro = { "inv_elemental_primal_shadow" },
     ventisca = { "d3_blizzard" },
     ver_invisibilidad = { "spell_shadow_detectinvisibility" },
-    vida_falsa = { "spell:20707", "eps_buildershaven_gobinfo" },
     viento_guardian = { "wh_windsprotection", "ability_druid_cyclone" },
     vinculo_de_bestia = { "ability_hunter_pet_assist" },
     vinculo_protector = { "eps_bg3_wardingbond" },

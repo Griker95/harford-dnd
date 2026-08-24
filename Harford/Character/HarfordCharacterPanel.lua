@@ -2221,6 +2221,38 @@ local function UsarModificadorDeTirada(feature)
     return true
 end
 
+-- Rasgos que conceden ATAQUES de verdad, no una nota en el chat: Punos de Furia hace dos golpes
+-- desarmados. Se disparan por la ruta normal de ataque de arma, asi que traen consigo lo que ya
+-- sabe hacer -- CA del objetivo, criticos, Artes Marciales subiendo el dado del desarmado,
+-- mitigacion del defensor y animacion -- en vez de reimplementar nada de eso aqui.
+local function UsarAtaquesExtra(feature)
+    local spec = feature.extraAttacks
+    if not (HarfordDnDStore and HarfordDnDStore.AttackWithBlock and HarfordDnDStore.GetWeaponDef) then
+        HarfordChat.Print("El sistema de ataques no esta disponible.")
+        return false
+    end
+    if not (UnitExists and UnitExists("target")) then
+        HarfordChat.Print(tostring(feature.name or "Ese rasgo") .. " necesita un objetivo.")
+        return false
+    end
+    local def = HarfordDnDStore.GetWeaponDef(spec.weaponKey or "Desarmado")
+    if not def then
+        HarfordChat.Print("No se encontro el arma " .. tostring(spec.weaponKey or "Desarmado") .. ".")
+        return false
+    end
+
+    local ok, err = SpendPowerWord(feature)
+    if not ok then HarfordChat.Print(err); return false end
+    AnnounceAbility(feature)
+    for _ = 1, math.max(1, math.floor(tonumber(spec.count) or 1)) do
+        -- `suppressAbilityDamage = false`: un golpe desarmado del Monje SI suma su modificador.
+        -- El valor por defecto de `AttackWithBlock` es para ataques de bloque y acompanantes.
+        HarfordDnDStore.AttackWithBlock(def, { suppressAbilityDamage = false })
+    end
+    if RefreshGameUI then RefreshGameUI() end
+    return true
+end
+
 -- Rasgos que actuan SOBRE EL ULTIMO CONJURO ya lanzado: apuntar a una segunda criatura (Caos) o
 -- redirigirlo si fallo (Quemar alma: Rebotar). No lo relanzan -- el conjuro ya se pago --: vuelven
 -- a resolver su efecto contra otro objetivo a cambio del recurso del rasgo.
@@ -3117,6 +3149,9 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif type(self.feature.extraAttacks) == "table" then
+        UsarAtaquesExtra(self.feature)
+        if RefreshBook then RefreshBook() end
     elseif type(self.feature.recastLastSpell) == "table" then
         UsarSobreUltimoConjuro(self.feature)
         if RefreshBook then RefreshBook() end

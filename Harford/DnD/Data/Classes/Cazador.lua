@@ -84,7 +84,7 @@ API.CLASSES[#API.CLASSES + 1] =
                 { kind = "toggleState", state = "lone_wolf", label = "Lobo Solitario", description = "Activa rasgos que requieren combatir sin companero bestial." },
                 { kind = "critRange", value = 19, requiresState = "lone_wolf" },
             } },
-            { id = "caz_sup_corte_ala", level = 5, name = "Corte de ala", type = "accion", resourceKey = "focus", resourceCost = 1, spendResourceOnAnnounce = true, description = "Al golpear, gasta un dado de enfoque: el objetivo con Fuerza (Atletismo) o su velocidad baja a 0 hasta tu próximo turno.", effects = {} },
+            { id = "caz_sup_corte_ala", level = 5, name = "Corte de ala", resourceKey = "focus", resourceCost = 1, type = "maniobra", description = "Al golpear, gasta un dado de enfoque: el objetivo con Fuerza (Atletismo) o su velocidad baja a 0 hasta tu próximo turno.", effects = { { kind = "energyManeuver", resource = "focus", cost = 1, spendOnHit = true, attack = true, save = "Fuerza", skill = "Atletismo", dcAbility = "Sabiduria", outcome = "velocidad 0", conditionId = "rooted", conditionDuration = "source_turn_start" } } },
             { id = "caz_sup_lobo_ataque", level = 5, name = "Lobo solitario: Ataque adicional", type = "pasivo", description = "Sin compañero bestial, atacas dos veces al realizar la acción de Atacar.", effects = {
                 { kind = "flag", flag = "extraAttack", requiresState = "lone_wolf" },
             } },

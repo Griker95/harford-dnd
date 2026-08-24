@@ -284,13 +284,13 @@ function HarfordDnDComm.CreateHandlers(deps)
         -- DOSAVE: el atacante solicita una salvacion, pero la tira y anuncia el
         -- propio cliente defensor para usar sus datos reales de ficha.
         if HarfordSync.DeserializeRequestedSave then
-            local saveAbility, saveDC, saveOutcome, saveAura, saveCondition, saveDuration, saveTurns, saveSourceGuid, saveSourceName, saveExtraDice, saveExtraType =
+            local saveAbility, saveDC, saveOutcome, saveAura, saveCondition, saveDuration, saveTurns, saveSourceGuid, saveSourceName, saveExtraDice, saveExtraType, saveSkill =
                 HarfordSync.DeserializeRequestedSave(message)
             if saveAbility then
                 if not IsTrustedEffectSender(sender) then return false end
                 if deps.HandleRequestedSave then
                     deps.HandleRequestedSave(saveAbility, saveDC, saveOutcome, saveAura, sender,
-                        saveCondition, saveDuration, saveTurns, saveSourceGuid, saveSourceName, saveExtraDice, saveExtraType)
+                        saveCondition, saveDuration, saveTurns, saveSourceGuid, saveSourceName, saveExtraDice, saveExtraType, saveSkill)
                 end
                 return false
             end

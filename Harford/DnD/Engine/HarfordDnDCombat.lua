@@ -304,6 +304,42 @@ function HarfordDnDCombat.GetSaveBonusForUnit(unit, abilityES)
     return 0
 end
 
+-- Bonus de una PRUEBA DE HABILIDAD de la unidad, para las maniobras que piden un chequeo contra
+-- CD en vez de una salvacion (Corte de Ala: Fuerza (Atletismo)). Se diferencian en la competencia,
+-- que en un bruto no es poca cosa, asi que no valia resolver una como la otra.
+--
+-- El stat block de TRP3 lista las habilidades con su bonus ya sumado. Si esa criatura no declara
+-- la habilidad, se cae al modificador de su caracteristica: es lo que tiene alguien sin
+-- competencia, no un cero.
+function HarfordDnDCombat.GetSkillBonusForUnit(unit, skillName)
+    if not (unit and UnitExists and UnitExists(unit)) then return 0 end
+    local buscado = HarfordClassColors.NormalizeKey(skillName or "")
+    if buscado == "" then return 0 end
+
+    local definicion
+    for _, s in ipairs((HarfordDnDData and HarfordDnDData.SKILLS) or {}) do
+        if HarfordClassColors.NormalizeKey(s.name) == buscado
+            or HarfordClassColors.NormalizeKey(s.id) == buscado then
+            definicion = s
+            break
+        end
+    end
+
+    if HarfordTRP3 and HarfordTRP3.GetNPCStatBlock then
+        local sb = HarfordTRP3.GetNPCStatBlock(unit)
+        for _, entrada in ipairs((sb and sb.skills) or {}) do
+            if HarfordClassColors.NormalizeKey(entrada.name) == buscado then
+                return tonumber(entrada.bonus) or 0
+            end
+        end
+        if definicion and sb and sb.stats then
+            local st = sb.stats[SAVE_STAT_KEY[definicion.ability]]
+            if st and tonumber(st.mod) then return tonumber(st.mod) end
+        end
+    end
+    return 0
+end
+
 -- Vida efectiva ACTUAL del objetivo, para "parar al morir" (no gastar/dañar de mas):
 --   NPC     -> UnitHealth("target") (= vida D&D, porque Harford la modifica en el servidor).
 --   Jugador -> cache remota (health + temp_health; su barra de WoW NO es la vida D&D).

@@ -1353,7 +1353,10 @@ local function LoadSaveRequestField(value)
     return value
 end
 
-function HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType)
+-- `skill` (ultimo campo): si viene, lo que se pide NO es una salvacion sino una prueba de esa
+-- habilidad contra la misma CD. Va al final a proposito: un cliente anterior lo ignora y resuelve
+-- una salvacion, que es una degradacion visible en el chat y no un fallo mudo.
+function HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill)
     ability = SaveRequestField(ability)
     outcome = SaveRequestField(outcome)
     dc = math.floor(tonumber(dc) or 0)
@@ -1366,11 +1369,12 @@ function HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId, condit
         conditionDuration, conditionTurns, SaveRequestField(tostring(sourceGuid or ""):sub(1, 64)),
         SaveRequestField(tostring(sourceName or ""):sub(1, 48)),
         SaveRequestField(tostring(extraDamageDice or ""):match("^%d*d%d+$") or ""),
-        SaveRequestField(tostring(extraDamageType or ""):match("^[%a_]+$") or "") }, "|")
+        SaveRequestField(tostring(extraDamageType or ""):match("^[%a_]+$") or ""),
+        SaveRequestField(tostring(skill or ""):sub(1, 32)) }, "|")
 end
 
 function HarfordSync.DeserializeRequestedSave(message)
-    local opcode, ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType =
+    local opcode, ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill =
         strsplit("|", tostring(message or ""))
     if opcode ~= "DOSAVE" then return nil end
     ability = LoadSaveRequestField(ability)
@@ -1380,14 +1384,15 @@ function HarfordSync.DeserializeRequestedSave(message)
     conditionTurns = math.max(0, math.min(99, math.floor(tonumber(conditionTurns) or 0)))
     return ability, tonumber(dc) or 0, outcome, tonumber(auraId) or 0, conditionId,
         conditionDuration, conditionTurns, LoadSaveRequestField(sourceGuid or ""):sub(1, 64),
-        LoadSaveRequestField(sourceName or ""):sub(1, 48), LoadSaveRequestField(extraDamageDice or ""), LoadSaveRequestField(extraDamageType or "")
+        LoadSaveRequestField(sourceName or ""):sub(1, 48), LoadSaveRequestField(extraDamageDice or ""),
+        LoadSaveRequestField(extraDamageType or ""), LoadSaveRequestField(skill or ""):sub(1, 32)
 end
 
 function HarfordSync.SendRequestedSave(prefix, target, ability, dc, outcome, auraId, conditionId,
-    conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType)
+    conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill)
     if not target or target == "" then return false end
     return HarfordSync.Send(prefix, HarfordSync.SerializeRequestedSave(ability, dc, outcome, auraId, conditionId,
-        conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType), "WHISPER", target)
+        conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill), "WHISPER", target)
 end
 
 function HarfordSync.SerializeRequestedSaveResult(saved, sourceGuid)

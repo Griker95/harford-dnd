@@ -9,7 +9,7 @@
 
 HarfordDnDWeaponRolls = HarfordDnDWeaponRolls or {}
 
-local ActorIsPlayer, ApplyConditionalDamageRiders, ApplyConditionalHitEffect, ApplyRequestedSaveAuraSelf, ConsumeMode, DamageTypeLabel, FormatSaveOutcome, FormatSaveRollLabel, GetWeaponSlotDamageBonus, OpcionesGolpeMagico, RequestPlayerTargetSave, WeaponRollName, fmtSigned, toN, K, SheetContext
+local ActorIsPlayer, ApplyConditionalDamageRiders, ApplyConditionalHitEffect, ApplyRequestedSaveAuraSelf, ConsumeMode, DamageTypeLabel, FormatCheckRollLabel, FormatSaveOutcome, FormatSaveRollLabel, GetWeaponSlotDamageBonus, OpcionesGolpeMagico, RequestPlayerTargetSave, WeaponRollName, fmtSigned, toN, K, SheetContext
 
 function HarfordDnDWeaponRolls.Init(deps)
     deps = deps or {}
@@ -23,6 +23,7 @@ function HarfordDnDWeaponRolls.Init(deps)
     FormatSaveRollLabel = deps.FormatSaveRollLabel or FormatSaveRollLabel
     GetWeaponSlotDamageBonus = deps.GetWeaponSlotDamageBonus or GetWeaponSlotDamageBonus
     OpcionesGolpeMagico = deps.OpcionesGolpeMagico or OpcionesGolpeMagico
+    FormatCheckRollLabel = deps.FormatCheckRollLabel or FormatCheckRollLabel
     RequestPlayerTargetSave = deps.RequestPlayerTargetSave or RequestPlayerTargetSave
     WeaponRollName = deps.WeaponRollName or WeaponRollName
     fmtSigned = deps.fmtSigned or fmtSigned
@@ -375,7 +376,8 @@ local function ResolveWeaponManeuverAfterHitSave(data)
     if not (UnitExists and UnitExists("target")) then return end
     if UnitIsPlayer and UnitIsPlayer("target") then
         RequestPlayerTargetSave(data.save, data.dc, data.outcome, data.onFailAura,
-            data.conditionId, data.conditionDuration, data.conditionTurns, data.nextAttackExtraDamageDice, data.extraDamageType)
+            data.conditionId, data.conditionDuration, data.conditionTurns, data.nextAttackExtraDamageDice,
+            data.extraDamageType, data.skill)
         if data.nextAttackExtraDamageDice then
             HarfordDnDStore.pendingFormSaveFollowup = {
                 target = HarfordClassColors.UnitFullName("target"), dice = data.nextAttackExtraDamageDice,
@@ -384,12 +386,25 @@ local function ResolveWeaponManeuverAfterHitSave(data)
         end
         return
     end
-    local saveBonus = HarfordDnDCombat and HarfordDnDCombat.GetSaveBonusForUnit
-        and HarfordDnDCombat.GetSaveBonusForUnit("target", data.save) or 0
-    local autoFail = HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+    -- Una maniobra puede pedir una PRUEBA DE HABILIDAD en vez de una salvacion (Corte de Ala:
+    -- Fuerza (Atletismo)). Cambia el bonus -- la competencia en esa habilidad -- y la etiqueta;
+    -- el resto de la resolucion es identica.
+    local esPrueba = data.skill and data.skill ~= ""
+    local saveBonus
+    if esPrueba then
+        saveBonus = (HarfordDnDCombat and HarfordDnDCombat.GetSkillBonusForUnit
+            and HarfordDnDCombat.GetSkillBonusForUnit("target", data.skill)) or 0
+    else
+        saveBonus = (HarfordDnDCombat and HarfordDnDCombat.GetSaveBonusForUnit
+            and HarfordDnDCombat.GetSaveBonusForUnit("target", data.save)) or 0
+    end
+    -- Fallar automaticamente una salvacion es un efecto de estado; una prueba de habilidad no lo
+    -- tiene, asi que solo aplica cuando de verdad es salvacion.
+    local autoFail = (not esPrueba) and HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
         and HarfordDnDConditions.IsSaveAutoFailed("target", data.save)
     local saveMode = HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode
-        and HarfordDnDConditions.ResolveRollMode("normal", "save", { actorUnit = "target", ability = data.save }) or "normal"
+        and HarfordDnDConditions.ResolveRollMode("normal", esPrueba and "skill" or "save",
+            { actorUnit = "target", ability = data.save, skill = data.skill }) or "normal"
     local d = autoFail and 0 or select(1, HarfordDnDCalc.RollD20(saveMode))
     local saveTotal = d + saveBonus
     local dc = tonumber(data.dc) or 10
@@ -416,8 +431,9 @@ local function ResolveWeaponManeuverAfterHitSave(data)
     HarfordDnDRolls.Broadcast({
         type = "info",
         targetUnit = "target",
-        label = string.format("%s %s",
-            targetName, FormatSaveRollLabel(data.save, saveTotal, d, dc, outcome, saveBonus)),
+        label = string.format("%s %s", targetName, esPrueba
+            and FormatCheckRollLabel(data.skill, saveTotal, d, dc, outcome, saveBonus)
+            or FormatSaveRollLabel(data.save, saveTotal, d, dc, outcome, saveBonus)),
         total = "",
         dice = "",
         modifiers = "",
@@ -427,12 +443,30 @@ local function ResolveWeaponManeuverAfterHitSave(data)
 end
 
 local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTarget,
-    conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType)
+    conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill)
     ability = tostring(ability or "")
     if ability == "" then return end
-    local base, prof = HarfordDnDCalc.GetSaveRollBonuses(ability)
+    -- `skill`: lo que se pide es una PRUEBA de esa habilidad, no una salvacion. La tira el
+    -- defensor con SU competencia, que es justo lo que las diferencia.
+    local skillDef
+    if skill and skill ~= "" then
+        local buscado = HarfordClassColors.NormalizeKey(skill)
+        for _, s in ipairs((HarfordDnDData and HarfordDnDData.SKILLS) or {}) do
+            if HarfordClassColors.NormalizeKey(s.name) == buscado
+                or HarfordClassColors.NormalizeKey(s.id) == buscado then
+                skillDef = s
+                break
+            end
+        end
+    end
+    local base, prof
+    if skillDef then
+        base, prof = HarfordDnDCalc.GetSkillRollBonuses(skillDef)
+    else
+        base, prof = HarfordDnDCalc.GetSaveRollBonuses(ability)
+    end
     local bonus = (tonumber(base) or 0) + (tonumber(prof) or 0)
-    local autoFail = HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+    local autoFail = (not skillDef) and HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
         and HarfordDnDConditions.IsSaveAutoFailed("player", ability)
     local mode = HarfordDnDCalc.GetMode()
     if HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode then
@@ -466,7 +500,9 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
     end
     local rollData = {
         type = "info",
-        label = FormatSaveRollLabel(ability, total, d, dc, result, base, prof),
+        label = skillDef
+            and FormatCheckRollLabel(skillDef.name, total, d, dc, result, base, prof)
+            or FormatSaveRollLabel(ability, total, d, dc, result, base, prof),
         -- La salvacion la haces TU, no la ficha que tengas cargada.
         player = HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName() or nil,
     }

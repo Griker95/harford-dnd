@@ -3326,6 +3326,18 @@ local function FormatSaveRollLabel(ability, total, die, dc, outcomeText, ...)
         GetSaveAbilityShort(ability), rollStr, tonumber(dc) or 0, tostring(outcomeText or ""))
 end
 
+-- Igual que la de salvacion, pero una prueba de habilidad se lee por su nombre: "Atletismo 12 vs
+-- CD 15", no "Salv FUE". Es la diferencia que hace falta ver en mesa para saber que se tiro.
+local function FormatCheckRollLabel(skillName, total, die, dc, outcomeText, ...)
+    total = tonumber(total) or 0
+    local formula = FormatSaveFormula(die, ...)
+    local rollStr = (formula == tostring(total))
+        and string.format("|cff66ccff%d|r", total)
+        or string.format("|cffb0b0b0%s=|r|cff66ccff%d|r", formula, total)
+    return string.format("%s %s vs CD %d: %s",
+        tostring(skillName or "Prueba"), rollStr, tonumber(dc) or 0, tostring(outcomeText or ""))
+end
+
 local function ApplyRequestedSaveAuraSelf(spellId)
     spellId = tonumber(spellId)
     if not spellId or spellId <= 0 then return end
@@ -3372,7 +3384,7 @@ HarfordDnDStore.ApplyFailedSpecialDamage = function(diceText, damageType, target
 end
 
 local function RequestPlayerTargetSave(ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns,
-    extraDamageDice, extraDamageType)
+    extraDamageDice, extraDamageType, skill)
     if not (UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target")) then
         return false
     end
@@ -3380,7 +3392,7 @@ local function RequestPlayerTargetSave(ability, dc, outcome, auraId, conditionId
         WeaponRolls.RollRequestedSaveForSelf(ability, dc, outcome, auraId, nil, conditionId, conditionDuration, conditionTurns,
             UnitGUID and UnitGUID("player") or "",
             HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName()
-                or UnitName and UnitName("player") or "", extraDamageDice, extraDamageType)
+                or UnitName and UnitName("player") or "", extraDamageDice, extraDamageType, skill)
         return true
     end
     local name = HarfordClassColors.UnitFullName("target")
@@ -3388,7 +3400,7 @@ local function RequestPlayerTargetSave(ability, dc, outcome, auraId, conditionId
         HarfordSync.SendRequestedSave(K.ADDON_PREFIX, name, ability, dc, outcome, auraId,
             conditionId, conditionDuration, conditionTurns, UnitGUID and UnitGUID("player") or "",
             HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName()
-                or UnitName and UnitName("player") or "", extraDamageDice, extraDamageType)
+                or UnitName and UnitName("player") or "", extraDamageDice, extraDamageType, skill)
         return true
     end
     return false
@@ -6025,9 +6037,10 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
     -- Un atacante nos pide una salvacion post-impacto: se tira con NUESTRA ficha
     -- local y se anuncia desde nuestro cliente.
     HandleRequestedSave = function(ability, dc, outcome, auraId, sender, conditionId,
-        conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType)
+        conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill)
         WeaponRolls.RollRequestedSaveForSelf(ability, dc, outcome, auraId, sender,
-            conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType)
+            conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice,
+            extraDamageType, skill)
     end,
     HandleRequestedSaveResult = function(sender, saved)
         local followup = HarfordDnDStore.pendingFormSaveFollowup

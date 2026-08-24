@@ -511,7 +511,7 @@ function API.ManeuverEffects(opcion, recurso)
     local efecto = { kind = "energyManeuver", resource = recurso }
     for _, campo in ipairs({ "cost", "attack", "spendOnHit", "save", "outcome", "dcAbility",
         "onFailAura", "onHitAura", "conditionId", "conditionDuration", "conditionTurns",
-        "damageDie", "damageType", "levelCost", "minLevel", "maxLevel", "noTarget" }) do
+        "damageDie", "damageType", "levelCost", "minLevel", "maxLevel", "noTarget", "skill" }) do
         if man[campo] ~= nil then efecto[campo] = man[campo] end
     end
     return { efecto }

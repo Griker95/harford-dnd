@@ -2,7 +2,7 @@
 # Escanea las descripciones del compendio buscando restos de cabecera de pagina del OCR.
 import io, re, glob, sys
 sys.stdout.reconfigure(encoding="utf-8")
-d = io.open(glob.glob(r"C:/Users/marco/Documents/New project/Harford/**/HarfordCompendioData.lua", recursive=True)[0], encoding="utf-8").read()
+d = io.open(glob.glob(r"C:/Users/marco/Documents/New project/**/HarfordCompendioData.lua"  # desde la RAIZ: el compendio salio de Harford/ al pasar a addon LoadOnDemand, recursive=True)[0], encoding="utf-8").read()
 pares = re.findall(r'\bname = "((?:[^"\\]|\\.)*)".*?description = "((?:[^"\\]|\\.)*)"', d, re.S)
 
 def lua_unescape(text):

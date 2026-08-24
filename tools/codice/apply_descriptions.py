@@ -4,7 +4,7 @@
 import io, re, os, sys, json, glob
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
-COMP = glob.glob(r"C:/Users/marco/Documents/New project/Harford/**/HarfordCompendioData.lua", recursive=True)[0]
+COMP = glob.glob(r"C:/Users/marco/Documents/New project/**/HarfordCompendioData.lua"  # desde la RAIZ: el compendio salio de Harford/ al pasar a addon LoadOnDemand, recursive=True)[0]
 
 KEEP = json.load(io.open(os.path.join(HERE, "spelltext_clean.json"), encoding="utf-8"))
 DESC_RE = re.compile(r'(\bdescription = ")((?:[^"\\]|\\.)*)(")')

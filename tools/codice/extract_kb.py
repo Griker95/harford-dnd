@@ -5,7 +5,8 @@
 import re, json, os
 
 import glob
-BASE = r"C:/Users/marco/Documents/New project/Harford"
+BASE = r"C:/Users/marco/Documents/New project"  # la raiz, no Harford/: el compendio y los
+# datos de profesiones salieron a addons LoadOnDemand hermanos de esa carpeta.
 def rd(p):
     hits = glob.glob(os.path.join(BASE, "**", p), recursive=True)  # el addon se reorganizo en subcarpetas
     if not hits: hits = [os.path.join(BASE, p)]

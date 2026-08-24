@@ -12,7 +12,7 @@ import io, re, subprocess, sys, unicodedata
 sys.stdout.reconfigure(encoding="utf-8")
 RAIZ = r"C:/Users/marco/Documents/New project"
 FICHEROS = [
-    "Harford/Compendium/HarfordCompendioData.lua",
+    "HarfordCompendioData/HarfordCompendioData.lua",
     "Harford/DnD/Data/HarfordDnDBook.lua",
     "Harford/DnD/Data/HarfordDnDBackgrounds.lua",
     "Harford/DnD/Data/HarfordDnDFeats.lua",

@@ -3863,8 +3863,12 @@ DoWeaponAttack = function(options)
         if handled then return end
     end
 
+    -- El bono del arma va coloreado como cualquier otro bono de la linea: verde suma, rojo resta.
     local wmodLabel = ""
-    if wmod ~= 0 then wmodLabel = " " .. fmtSigned(wmod) end
+    if wmod ~= 0 then
+        wmodLabel = " " .. ((HarfordDnDRolls and HarfordDnDRolls.ColorSigned
+            and HarfordDnDRolls.ColorSigned(wmod)) or fmtSigned(wmod))
+    end
 
     -- Nombre coloreado del objetivo al final de la linea. Jugador ataca a su target.
     local targetName = ColoredUnitName("target")

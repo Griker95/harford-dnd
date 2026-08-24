@@ -440,7 +440,10 @@ local function RenombrarRaza(race)
     return n
 end
 
-local function Migrate(data)
+-- `silencioso`: la ficha que se migra no es la tuya. El snapshot de inspeccion pasa por aqui para
+-- que sus ids viejos se lean bien, pero anunciar "Ficha actualizada" mientras miras a otro no
+-- significa nada para quien lo lee: parecia que se te habia tocado la tuya.
+local function Migrate(data, silencioso)
     if type(data) ~= "table" then data = EmptyProgression() end
     local oldSchema = tonumber(data.schema) or 0
     if type(data.classLevels) ~= "table" then data.classLevels = {} end
@@ -509,7 +512,7 @@ local function Migrate(data)
         total = total + nf
         total = total + RenombrarOpciones(data.choices)
         total = total + RenombrarRaza(data.race)
-        if total > 0 and HarfordChat and HarfordChat.Print then
+        if total > 0 and not silencioso and HarfordChat and HarfordChat.Print then
             HarfordChat.Print(("Ficha actualizada: %d rasgo(s) renombrados a la convencion nueva."):format(total))
         end
     end
@@ -567,7 +570,7 @@ end
 function API.SetInspectData(name, data)
     local key = ShortKey(name)
     if key == "" then return false end
-    inspectData[key] = (type(data) == "table") and Migrate(CopyTable(data)) or nil
+    inspectData[key] = (type(data) == "table") and Migrate(CopyTable(data), true) or nil
     if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.Invalidate then
         HarfordDnDFeatureEffects.Invalidate()
         if HarfordDnDFeatureEffects.Prime then

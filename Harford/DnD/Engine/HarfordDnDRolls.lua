@@ -26,6 +26,10 @@ local function ColorSigned(n)
     return GREEN .. fmtSigned(n) .. ENDCLR
 end
 
+-- Publico: cualquier etiqueta que muestre un bono usa este mismo criterio de color en vez de
+-- copiarlo. Verde lo que suma, rojo lo que resta.
+HarfordDnDRolls.ColorSigned = ColorSigned
+
 local function EscapeRollField(value)
     value = tostring(value or "")
     value = value:gsub("%%", "%%25")

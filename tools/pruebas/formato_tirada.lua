@@ -49,4 +49,21 @@ for _, ruta in ipairs({
     chk(ruta:match("([^/]+)%.lua$"), s:find('"d20: "', 1, true) == nil, true)
 end
 
+
+
+-- El bono del arma en la etiqueta se colorea con el MISMO criterio que el resto de bonos.
+print("Bonos coloreados: verde suma, rojo resta")
+local rolls = io.open("Harford/DnD/Engine/HarfordDnDRolls.lua"):read("*a")
+local dnd = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("el criterio es publico", rolls:find("HarfordDnDRolls.ColorSigned = ColorSigned", 1, true) ~= nil, true)
+chk("el bono de arma lo usa", dnd:find("HarfordDnDRolls.ColorSigned(wmod)", 1, true) ~= nil, true)
+
+-- Migrar la ficha de OTRO no debe anunciar nada: el aviso hablaba en primera persona.
+print("La migracion calla cuando la ficha no es tuya")
+local prog = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
+chk("Migrate acepta silencio", prog:find("local function Migrate(data, silencioso)", 1, true) ~= nil, true)
+chk("el aviso lo respeta", prog:find("if total > 0 and not silencioso", 1, true) ~= nil, true)
+chk("inspeccion migra en silencio",
+    prog:find("Migrate(CopyTable(data), true)", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

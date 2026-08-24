@@ -1517,8 +1517,16 @@ local function ApplyIncomingDamage(components, isCritical, sender, esMagico)
             end
         end
         total = total + cantidad
-        detalle[#detalle + 1] = tostring(cantidad) .. " " .. DamageTypeLabel(c.damageType)
-            .. (marcador ~= "" and (" " .. marcador) or "")
+        detalle[#detalle + 1] = { cantidad = cantidad, texto = DamageTypeLabel(c.damageType)
+            .. (marcador ~= "" and (" " .. marcador) or "") }
+    end
+
+    -- La linea se renderiza como "<total> <modifiers>". Con UN SOLO tipo, repetir ahi la cantidad
+    -- daba "Recibido: 9 9 Perforante": el mismo numero dos veces. Solo se desglosa por tipo cuando
+    -- hay mas de uno, que es cuando el desglose aporta algo.
+    local partes = {}
+    for _, d in ipairs(detalle) do
+        partes[#partes + 1] = (#detalle > 1 and (tostring(d.cantidad) .. " ") or "") .. d.texto
     end
 
     -- Te han golpeado, aunque la mitigacion lo deje en 0.
@@ -1528,8 +1536,10 @@ local function ApplyIncomingDamage(components, isCritical, sender, esMagico)
         HarfordDnDStore.ApplyLocalResourceDamage(total)
     end
     HarfordDnDRolls.Broadcast({
-        type = "damage", label = "Recibido", total = total, dice = "-",
-        modifiers = table.concat(detalle, "  "),
+        -- `dice` vacio: aqui no se tira nada, se recibe. Con "-" el render pintaba un "(-)" que no
+        -- significaba nada.
+        type = "damage", label = "Recibido", total = total, dice = "",
+        modifiers = table.concat(partes, "  "),
         critical = isCritical and "CRITICO" or "", mode = "",
     })
     return true

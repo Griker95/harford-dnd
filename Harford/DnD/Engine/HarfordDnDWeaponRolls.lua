@@ -1,0 +1,545 @@
+-- Tiradas grandes de la ficha: dano de arma, maniobras con salvacion posterior, la salvacion que
+-- pide otro cliente y el nucleo de tirada con ventaja/desventaja.
+--
+-- Salen de HarfordDnD.lua por tamano: `RollWeaponDamage` sola son 345 lineas y concentra critico,
+-- dano por tipo, mitigacion, Gran Arma y los danos condicionales. Estaba muy poco acoplada -- una
+-- sola llamada desde fuera -- asi que se puede aislar sin arrastrar la UI.
+--
+-- Reglas y calculo; NO crea frames. Lo que necesita de la ficha se inyecta con `Init`.
+
+HarfordDnDWeaponRolls = HarfordDnDWeaponRolls or {}
+
+local ActorIsPlayer, ApplyConditionalDamageRiders, ApplyConditionalHitEffect, ApplyRequestedSaveAuraSelf, ConsumeMode, DamageTypeLabel, FormatSaveOutcome, FormatSaveRollLabel, GetWeaponSlotDamageBonus, OpcionesGolpeMagico, RequestPlayerTargetSave, WeaponRollName, fmtSigned, toN, K, SheetContext
+
+function HarfordDnDWeaponRolls.Init(deps)
+    deps = deps or {}
+    ActorIsPlayer = deps.ActorIsPlayer or ActorIsPlayer
+    ApplyConditionalDamageRiders = deps.ApplyConditionalDamageRiders or ApplyConditionalDamageRiders
+    ApplyConditionalHitEffect = deps.ApplyConditionalHitEffect or ApplyConditionalHitEffect
+    ApplyRequestedSaveAuraSelf = deps.ApplyRequestedSaveAuraSelf or ApplyRequestedSaveAuraSelf
+    ConsumeMode = deps.ConsumeMode or ConsumeMode
+    DamageTypeLabel = deps.DamageTypeLabel or DamageTypeLabel
+    FormatSaveOutcome = deps.FormatSaveOutcome or FormatSaveOutcome
+    FormatSaveRollLabel = deps.FormatSaveRollLabel or FormatSaveRollLabel
+    GetWeaponSlotDamageBonus = deps.GetWeaponSlotDamageBonus or GetWeaponSlotDamageBonus
+    OpcionesGolpeMagico = deps.OpcionesGolpeMagico or OpcionesGolpeMagico
+    RequestPlayerTargetSave = deps.RequestPlayerTargetSave or RequestPlayerTargetSave
+    WeaponRollName = deps.WeaponRollName or WeaponRollName
+    fmtSigned = deps.fmtSigned or fmtSigned
+    toN = deps.toN or toN
+    K = deps.K or K
+    SheetContext = deps.SheetContext or SheetContext
+end
+
+local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamage)
+    if SheetContext and SheetContext.active then return 0 end
+    if not def or not def.dmgN or not def.dmgS or def.dmgN == 0 or def.dmgS == 0 then
+        HarfordDnDRolls.Broadcast({
+            type = "damage",
+            label = "Daño " .. WeaponRollName(def),
+            total = 0,
+            dice = "-",
+            modifiers = "",
+            critical = "",
+            mode = ""
+        })
+        return 0
+    end
+
+    local optsMagico = OpcionesGolpeMagico(def)
+    local diceStr = HarfordDnDWeapons.WeaponBaseDice(def)
+    local n, sides = HarfordDnDWeapons.ParseDice(diceStr)
+    if not n or not sides then
+        HarfordDnDRolls.Broadcast({
+            type = "damage",
+            label = "Daño " .. WeaponRollName(def),
+            total = 0,
+            dice = "-",
+            modifiers = "",
+            critical = "",
+            mode = ""
+        })
+        return 0
+    end
+
+    -- Artes Marciales: solo mejora el dado normal cuando el dado marcial es mayor.
+    -- La elegibilidad (arma de monje, sin armadura ni escudo) vive en FeatureEffects.
+    if ActorIsPlayer(def) and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetMartialArtsDamageDice then
+        local martialN, martialSides = HarfordDnDFeatureEffects.GetMartialArtsDamageDice(def)
+        if martialN and martialSides then
+            n, sides = martialN, martialSides
+            diceStr = tostring(n) .. "d" .. tostring(sides)
+        end
+    end
+
+    local offhand = HarfordDnDStore.GetOffhandActive and HarfordDnDStore.GetOffhandActive(def)
+    local abiMod = (not suppressAbilityDamage and def.addAbi and abilKey)
+        and HarfordDnDCalc.GetAbilityMod(abilKey) or 0
+    -- Por defecto el ataque offhand NO suma Mod. al daño; lo permiten "Combate con Dos Armas"
+    -- (flag offhandDamageMod) o, para un embate con escudo, "Maestro Escudero" (flag shieldBash).
+    if offhand and abiMod > 0
+        and not (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag and HarfordDnDFeatureEffects.HasFlag("offhandDamageMod"))
+        and not (def.key == "Escudo" and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag and HarfordDnDFeatureEffects.HasFlag("shieldBash")) then
+        abiMod = 0
+    end
+    -- Las formas ignoran los bonos globales de las armas equipadas, pero NO
+    -- su propio bono declarado en la ficha (ej. "1d8 + 4 de dano").
+    local wmod = GetWeaponSlotDamageBonus(def)
+    if not (def and def.ignoreGlobalWeaponBonuses) then
+        wmod = wmod + (HarfordDnDCalc.GetWeaponDamageBonus
+            and HarfordDnDCalc.GetWeaponDamageBonus() or HarfordDnDCalc.GetWeaponMod())
+    end
+
+    -- Gran Lucha con Armas (flag greatWeaponFighting): repetir una vez los dados de daño que
+    -- saquen 1 o 2, solo con arma a dos manos o versatil usada a dos manos; no en maximizado.
+    local gwf = false
+    if (not maximizeDice) and ActorIsPlayer(def) and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("greatWeaponFighting") then
+        local isMelee = def.mode == "Melee"
+        local twoHanded = HarfordDnDStore.HasWeaponProp and HarfordDnDStore.HasWeaponProp(def, "Dos manos")
+        local versatileTwoH = HarfordDnDWeapons.GetVersatileDice(def)
+            and HarfordDnDCalc.GetVersatileActive and HarfordDnDCalc.GetVersatileActive()
+        gwf = isMelee and (twoHanded or versatileTwoH) and true or false
+    end
+
+    local rolls, sum = {}, 0
+    -- Valores finales de los dados BASE, para que Golpe heroico pueda repetirlos despues.
+    local baseFinals = {}
+    for i=1,n do
+        local r = maximizeDice and sides or HarfordDnDCalc.RollDie(sides)
+        local final = r
+        if gwf and r <= 2 then
+            final = HarfordDnDCalc.RollDie(sides)
+            -- Gran Arma: la repeticion va ENTRE PARENTESIS para no confundirse con los "+" de la
+            -- suma y el modificador (antes "6+1->4+5" se leia como "4+5"; ahora "6+(1→4)+5").
+            rolls[#rolls+1] = "(" .. tostring(r) .. "→" .. tostring(final) .. ")"
+        else
+            rolls[#rolls+1] = r
+        end
+        sum = sum + final
+        baseFinals[#baseFinals + 1] = final
+    end
+
+    -- Golpe heroico: se armo al lanzar la maniobra y se resuelve AQUI, antes de sumar el total,
+    -- para que el daño que se aplica al objetivo sea ya el definitivo. Se repiten los dados mas
+    -- bajos y "debes usar el nuevo resultado", aunque sea peor.
+    local reroll = tonumber(HarfordDnDStore.pendingWeaponRerollDice) or 0
+    HarfordDnDStore.pendingWeaponRerollDice = nil
+    if reroll > 0 and not maximizeDice and #baseFinals > 0 then
+        local orden = {}
+        for i = 1, #baseFinals do orden[i] = i end
+        table.sort(orden, function(a, b) return baseFinals[a] < baseFinals[b] end)
+        for i = 1, math.min(reroll, #orden) do
+            local idx = orden[i]
+            local antes = baseFinals[idx]
+            local ahora = HarfordDnDCalc.RollDie(sides)
+            baseFinals[idx] = ahora
+            sum = sum + (ahora - antes)
+            -- Misma notacion entre parentesis que Gran Arma, para no confundir con los "+".
+            rolls[idx] = "(" .. tostring(antes) .. "→" .. tostring(ahora) .. ")"
+        end
+    end
+
+    -- Ataques Salvajes (flag savageCritDie, ej. Orco/Mediorco): en CRITICO tiras un dado
+    -- de daño de arma adicional (se tira, no se maximiza, como dice el rasgo).
+    if maximizeDice and ActorIsPlayer(def) and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("savageCritDie") then
+        local r = HarfordDnDCalc.RollDie(sides)
+        rolls[#rolls+1] = r
+        sum = sum + r
+    end
+
+    local baseTotal = sum + abiMod + wmod
+    local rollList = table.concat(rolls, "+")
+    local parts = {}
+    if abiMod ~= 0 then parts[#parts+1] = fmtSigned(abiMod) end
+    if wmod ~= 0 then parts[#parts+1] = fmtSigned(wmod) end
+    local bonusTxt = table.concat(parts, "")
+    local dtype = def.dmgType or ""
+
+    -- Defensas del objetivo (solo si es NPC): la tirada muestra el dano ya
+    -- mitigado y un marcador coloreado R/V/I junto al tipo.
+    local total = baseTotal
+    local marker = ""
+    if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+        local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", dtype, baseTotal, optsMagico)
+        total, marker = applied, mk
+    end
+    -- Acumulador de daño YA MITIGADO por TIPO: la cabecera muestra "N Tipo [R/V/I]" por cada
+    -- tipo (p.ej. base cortante + Golpe Runico frio => "6 Cortante  10 Frio"), no un total unico.
+    local dmgTypeOrder, dmgTypeMap = {}, {}
+    local function AddTypeDamage(t, amount, mk)
+        t = (t and t ~= "") and t or dtype
+        if t == "" then t = "?" end
+        local e = dmgTypeMap[t]
+        if not e then e = { total = 0, marker = "" }; dmgTypeMap[t] = e; dmgTypeOrder[#dmgTypeOrder + 1] = t end
+        e.total = e.total + (tonumber(amount) or 0)
+        if mk and mk ~= "" then e.marker = mk end
+    end
+    AddTypeDamage(dtype, total, marker)
+    local diceParts = { n .. "d" .. sides .. ": " .. rollList .. bonusTxt }
+
+    local extraDamage = {}
+    for _, extra in ipairs(def.extraDamage or {}) do extraDamage[#extraDamage + 1] = extra end
+    if ActorIsPlayer(def) and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetWeaponExtraDamage then
+        for _, extra in ipairs(HarfordDnDFeatureEffects.GetWeaponExtraDamage() or {}) do
+            extraDamage[#extraDamage + 1] = {
+                dice = tostring(extra.count or 1) .. "d" .. tostring(extra.die or 0),
+                damageType = extra.damageType,
+                label = extra.label,
+            }
+        end
+    end
+
+    for _, extra in ipairs(extraDamage) do
+        local extraN, extraSides = HarfordDnDWeapons.ParseDice(extra.dice)
+        if extraN and extraSides then
+            local extraRolls, extraTotal = {}, 0
+            for i = 1, extraN do
+                local r = maximizeDice and extraSides or HarfordDnDCalc.RollDie(extraSides)
+                extraRolls[#extraRolls + 1] = r
+                extraTotal = extraTotal + r
+            end
+            local extraType = extra.damageType or ""
+            local extraMarker = ""
+            if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+                local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", extraType, extraTotal, optsMagico)
+                extraTotal, extraMarker = applied, mk
+            end
+            total = total + extraTotal
+            AddTypeDamage(extraType, extraTotal, extraMarker)
+            local extraLabel = extra.dice .. ": " .. table.concat(extraRolls, "+")
+            if extraType ~= "" then
+                extraLabel = extraLabel .. " " .. extraType
+                if extraMarker ~= "" then extraLabel = extraLabel .. " " .. extraMarker end
+            end
+            diceParts[#diceParts + 1] = extraLabel
+        end
+    end
+
+    -- Daños condicionales conmutables ACTIVOS (Ataque Furtivo, Golpe del Cruzado, ...): cada
+    -- uno suma sus dados (tipo del arma salvo que indique otro). Se CONSUMEN tras la tirada.
+    -- Vida efectiva del objetivo para "parar al morir": el daño adicional no se aplica ni se gasta
+    -- una vez muerto, y los condicionales de COSTE-POR-DADO (Golpe Runico) solo gastan los dados
+    -- que hicieron falta. nil = vida desconocida -> comportamiento de siempre (sin cap).
+    local targetHP = HarfordDnDCombat and HarfordDnDCombat.GetTargetEffectiveHP and HarfordDnDCombat.GetTargetEffectiveHP()
+    local lethalReached = false
+
+    local active = ActorIsPlayer(def) and (HarfordDnDStore.activeCondDamage or {}) or {}
+    local condList = (ActorIsPlayer(def) and HarfordDnDStore.GetConditionalDamageList
+        and HarfordDnDStore.GetConditionalDamageList()) or {}
+    local consumedAny = false
+    for _, cd in ipairs(condList) do
+        local originalCd = cd
+        local cdLevel = HarfordDnDConditionalDamage.GetSelectedLevel(originalCd)
+        cd = HarfordDnDConditionalDamage.GetLeveled(originalCd)
+        local cdDice = tonumber(cd.dice) or 0
+        local cdFlat = tonumber(cd.flat) or 0
+        -- +Mod de caracteristica resuelto AQUI (Golpe Heroico = +Fuerza); no en FeatureEffects
+        -- porque GetAbilityMod dentro de Resolve provoca recursion infinita.
+        if cd.flatAbility and HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod then
+            cdFlat = cdFlat + (tonumber(HarfordDnDCalc.GetAbilityMod(cd.flatAbility)) or 0)
+        end
+        local isMarkedTarget = cd.requiresMarkedTarget == true
+            and HarfordDnDStore.IsHuntersMarkTarget and HarfordDnDStore.IsHuntersMarkTarget("target")
+        if (active[cd.id] or isMarkedTarget) and (cdDice > 0 or cdFlat ~= 0 or cd.resourceCost or cd.spellLevelCost) then
+            if targetHP and (lethalReached or total >= targetHP) then
+                -- El objetivo ya muere con el daño previo: no rolar, no gastar, no aplicar.
+                lethalReached = true
+                if not isMarkedTarget then
+                    HarfordDnDStore.activeCondDamage[cd.id] = nil
+                    HarfordDnDStore.condDamageLevel[cd.id] = nil
+                    consumedAny = true
+                end
+            else
+            local cdType = (cd.damageType and cd.damageType ~= "" and cd.damageType) or dtype
+            -- Coste por dado (Golpe Runico: 1 Poder Runico/dado) + vida conocida = tira dado a dado
+            -- y para al morir, gastando solo los usados. Los demas (espacio de conjuro, sin coste)
+            -- tiran todos sus dados como siempre.
+            local perDie = (cd.resourceCost and cdDice > 0 and targetHP) and true or false
+            local cdRolls, rawSum, diceUsed = {}, 0, cdDice
+            if perDie then
+                diceUsed = 0
+                for i = 1, cdDice do
+                    local r = maximizeDice and cd.die or HarfordDnDCalc.RollDie(cd.die)
+                    cdRolls[i] = r; rawSum = rawSum + r; diceUsed = i
+                    local mit = rawSum + cdFlat
+                    if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+                        mit = (HarfordDamageMitigation.ForTarget("target", cdType, rawSum + cdFlat, optsMagico))
+                    end
+                    if total + mit >= targetHP then break end  -- este dado ya mata: para
+                end
+            else
+                for i = 1, cdDice do
+                    local r = maximizeDice and cd.die or HarfordDnDCalc.RollDie(cd.die)
+                    cdRolls[i] = r; rawSum = rawSum + r
+                end
+            end
+
+            -- Coste: per-die paga solo los dados usados; el resto, el nivel completo.
+            local spendLevel = perDie and diceUsed or cdLevel
+            local paid, costText
+            if isMarkedTarget then
+                paid, costText = true, ""
+            else
+                paid, costText = HarfordDnDConditionalDamage.Spend(originalCd, spendLevel)
+            end
+            if not paid then
+                if DEFAULT_CHAT_FRAME then
+                    HarfordChat.Print("|cffff5555" .. tostring(cd.label or "Daño extra") .. " requiere " .. tostring(costText or "recursos suficientes") .. ".|r")
+                end
+                HarfordDnDStore.activeCondDamage[cd.id] = nil
+                HarfordDnDStore.condDamageLevel[cd.id] = nil
+                if not isMarkedTarget then consumedAny = true end
+            elseif #cdRolls > 0 or cdFlat ~= 0 then
+            if cd.conditionId or cd.onHitAura then
+                ApplyConditionalHitEffect(cd.conditionId, cd.onHitAura)
+            end
+            ApplyConditionalDamageRiders(cd.id)
+            local cdTotal = rawSum + cdFlat
+            local cdMarker = ""
+            if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+                local applied, _s, mk = HarfordDamageMitigation.ForTarget("target", cdType, cdTotal, optsMagico)
+                cdTotal, cdMarker = applied, mk
+            end
+            total = total + cdTotal
+            AddTypeDamage(cdType, cdTotal, cdMarker)
+            if targetHP and total >= targetHP then lethalReached = true end
+            local cdExpr = ""
+            if #cdRolls > 0 then
+                cdExpr = #cdRolls .. "d" .. cd.die .. ": " .. table.concat(cdRolls, "+")
+            end
+            if cdFlat ~= 0 then
+                cdExpr = cdExpr ~= "" and (cdExpr .. fmtSigned(cdFlat)) or fmtSigned(cdFlat)
+            end
+            local cdLabel = cd.label .. " " .. cdExpr
+            if cdType ~= "" then
+                cdLabel = cdLabel .. " " .. cdType
+                if cdMarker ~= "" then cdLabel = cdLabel .. " " .. cdMarker end
+            end
+            diceParts[#diceParts + 1] = cdLabel
+            if isMarkedTarget and HarfordDnDStore.huntersMark then
+                HarfordDnDStore.huntersMark.usedThisTurn = true
+            end
+            if not isMarkedTarget then consumedAny = true end
+            else
+                -- Maniobra SIN daño extra (ej. Desarme): solo gasta el coste; deja una nota.
+                if cd.conditionId or cd.onHitAura then
+                    ApplyConditionalHitEffect(cd.conditionId, cd.onHitAura)
+                end
+                ApplyConditionalDamageRiders(cd.id)
+                local manLabel = cd.label
+                if costText and costText ~= "" then manLabel = manLabel .. " (" .. costText .. ")" end
+                diceParts[#diceParts + 1] = manLabel
+                if not isMarkedTarget then consumedAny = true end
+            end
+            end
+        end
+    end
+    if consumedAny then
+        HarfordDnDStore.activeCondDamage = {}
+        HarfordDnDStore.condDamageLevel = {}
+        HarfordDnDAttackUI.RefreshWeaponInfo()
+    end
+
+    -- Cabecera por tipo: el render hace "<total> <modifiers>", asi que el primer tipo aporta el
+    -- numero de cabecera y el resto van "N Tipo" dentro de modifiers => "6 Cortante 10 Frio". El
+    -- numero de cada tipo extra se colorea con COLOR_ROLL (|cff66ccff) para igualar al de cabecera.
+    local headlineTotal, modifiersTxt = HarfordDnDRolls.FormatDamageHeader(dmgTypeOrder, dmgTypeMap, total)
+
+    HarfordDnDRolls.Broadcast({
+        type = "damage",
+        label = ((def.actorLabel and (def.actorLabel .. ": ")) or "")
+            .. (offhand and "Daño Offhand " or "Daño ") .. WeaponRollName(def),
+        total = headlineTotal,
+        dice = table.concat(diceParts, " + "),
+        modifiers = modifiersTxt,
+        critical = maximizeDice and "CRÍTICO" or "",
+        mode = ""
+    })
+    -- Segundo valor: los componentes POR TIPO. Contra un jugador viajan tal cual y los mitiga su
+    -- cliente; contra un NPC ya vienen mitigados de aqui y el total basta.
+    local componentes = {}
+    for _, t in ipairs(dmgTypeOrder) do
+        componentes[#componentes + 1] = { amount = dmgTypeMap[t].total, damageType = t }
+    end
+    return total, componentes
+end
+
+local function ResolveWeaponManeuverAfterHitSave(data)
+    if not data or not data.save then return end
+    if not (UnitExists and UnitExists("target")) then return end
+    if UnitIsPlayer and UnitIsPlayer("target") then
+        RequestPlayerTargetSave(data.save, data.dc, data.outcome, data.onFailAura,
+            data.conditionId, data.conditionDuration, data.conditionTurns, data.nextAttackExtraDamageDice, data.extraDamageType)
+        if data.nextAttackExtraDamageDice then
+            HarfordDnDStore.pendingFormSaveFollowup = {
+                target = HarfordClassColors.UnitFullName("target"), dice = data.nextAttackExtraDamageDice,
+                damageType = data.extraDamageType,
+            }
+        end
+        return
+    end
+    local saveBonus = HarfordDnDCombat and HarfordDnDCombat.GetSaveBonusForUnit
+        and HarfordDnDCombat.GetSaveBonusForUnit("target", data.save) or 0
+    local autoFail = HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+        and HarfordDnDConditions.IsSaveAutoFailed("target", data.save)
+    local saveMode = HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode
+        and HarfordDnDConditions.ResolveRollMode("normal", "save", { actorUnit = "target", ability = data.save }) or "normal"
+    local d = autoFail and 0 or select(1, HarfordDnDCalc.RollD20(saveMode))
+    local saveTotal = d + saveBonus
+    local dc = tonumber(data.dc) or 10
+    local saved = not autoFail and saveTotal >= dc
+    local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
+        or HarfordClassColors.UnitFullName("target") or "el objetivo"
+    local outcome = FormatSaveOutcome(saved, data.outcome)
+    if not saved and (data.conditionId or data.onFailAura) then
+        local applied, applyErr = ApplyConditionalHitEffect(data.conditionId, data.onFailAura, {
+            duration = data.conditionDuration,
+            turns = data.conditionTurns,
+            silentFailure = true,
+        })
+        if not applied then
+            local suffix = applyErr == "immune" and "inmune" or "no aplicado"
+            outcome = FormatSaveOutcome(false, tostring(data.outcome or "afectado") .. " (" .. suffix .. ")")
+        end
+    end
+    if not saved and data.nextAttackExtraDamageDice then
+        HarfordDnDStore.pendingFormNextAttackDamage = {
+            dice = data.nextAttackExtraDamageDice, name = "Embestida", damageType = data.extraDamageType,
+        }
+    end
+    HarfordDnDRolls.Broadcast({
+        type = "info",
+        targetUnit = "target",
+        label = string.format("%s %s",
+            targetName, FormatSaveRollLabel(data.save, saveTotal, d, dc, outcome, saveBonus)),
+        total = "",
+        dice = "",
+        modifiers = "",
+        critical = "",
+        mode = ""
+    })
+end
+
+local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTarget,
+    conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType)
+    ability = tostring(ability or "")
+    if ability == "" then return end
+    local base, prof = HarfordDnDCalc.GetSaveRollBonuses(ability)
+    local bonus = (tonumber(base) or 0) + (tonumber(prof) or 0)
+    local autoFail = HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+        and HarfordDnDConditions.IsSaveAutoFailed("player", ability)
+    local mode = HarfordDnDCalc.GetMode()
+    if HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode then
+        mode = HarfordDnDConditions.ResolveRollMode(mode, "save", { actorUnit = "player", ability = ability })
+    end
+    local d = 0
+    if not autoFail then d = select(1, HarfordDnDCalc.RollD20(mode)) end
+    local total = d + bonus
+    dc = tonumber(dc) or 10
+    local saved = not autoFail and total >= dc
+    local result = FormatSaveOutcome(saved, outcome)
+    if not saved then
+        local def = HarfordDnDConditions and HarfordDnDConditions.GetDefinition
+            and HarfordDnDConditions.GetDefinition(conditionId)
+        if def then
+            local applied = HarfordDnDConditions.ApplyOwned(conditionId, {
+                sourceGuid = sourceGuid,
+                sourceName = sourceName and sourceName ~= "" and sourceName or responseTarget,
+                duration = conditionDuration or "manual",
+                turns = conditionTurns,
+            })
+            if applied and HarfordDnDConditions.PublishOwnedCondition then
+                HarfordDnDConditions.PublishOwnedCondition(conditionId, "apply")
+            end
+        elseif auraId and tonumber(auraId) and tonumber(auraId) > 0 then
+            ApplyRequestedSaveAuraSelf(auraId)
+        end
+    end
+    if extraDamageDice and extraDamageDice ~= "" and responseTarget and HarfordSync and HarfordSync.SendRequestedSaveResult then
+        HarfordSync.SendRequestedSaveResult(K.ADDON_PREFIX, responseTarget, saved, sourceGuid)
+    end
+    local rollData = {
+        type = "info",
+        label = FormatSaveRollLabel(ability, total, d, dc, result, base, prof),
+    }
+    HarfordDnDRolls.Broadcast(rollData)
+    if responseTarget and responseTarget ~= "" and HarfordSync and HarfordSync.Send
+        and HarfordDnDRolls and HarfordDnDRolls.Serialize then
+        local channel = HarfordSync.BestChannel and HarfordSync.BestChannel() or nil
+        if not channel then
+            HarfordSync.Send(K.ADDON_PREFIX, HarfordDnDRolls.Serialize(rollData), "WHISPER", responseTarget)
+        end
+    end
+end
+
+local function DoRollEx(label, baseBonus, profBonus, rollType, rollContext)
+    baseBonus = toN(baseBonus, 0)
+    profBonus = toN(profBonus, 0)
+    local miscBonus = HarfordDnDCalc.GetMiscBonus()
+    local result = {
+        ok = true,
+        kind = rollType or "roll",
+        label = tostring(label or ""),
+        base = baseBonus,
+        prof = profBonus,
+        misc = miscBonus,
+        extra = miscBonus,
+        actorUnit = rollContext and rollContext.actorUnit or nil,
+        ability = rollContext and rollContext.ability or nil,
+        skill = rollContext and rollContext.skill or nil,
+        timestamp = time and time() or 0,
+    }
+
+    if rollType == "save" and HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
+        and HarfordDnDConditions.IsSaveAutoFailed((rollContext and rollContext.actorUnit) or "player",
+            rollContext and rollContext.ability) then
+        HarfordDnDRolls.Broadcast({ type = "roll", label = label, total = 0, dice = "Fallo automatico", modifiers = "", critical = "FALLO" })
+        ConsumeMode()
+        result.total = 0
+        result.die = 0
+        result.dice = "Fallo automatico"
+        result.modifiers = ""
+        result.crit = "FALLO"
+        result.critical = "FALLO"
+        result.autoFailed = true
+        _G.DND5E_ARC_API = _G.DND5E_ARC_API or {}
+        _G.DND5E_ARC_API._lastRoll = result
+        return result
+    end
+
+    local chosen, ra, rb, critTag, modeTag = HarfordDnDCalc.RollD20Full(rollType, rollContext)
+    local total = chosen + baseBonus + profBonus + miscBonus
+    local bonusTxt = HarfordDnDCalc.BonusConcat(baseBonus, profBonus, miscBonus)
+    local diceText = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb)
+
+    HarfordDnDRolls.Broadcast({
+        type = "roll",
+        label = label,
+        total = total,
+        dice = diceText,
+        modifiers = bonusTxt,
+        critical = critTag,
+        mode = modeTag,
+        miscBonus = miscBonus,
+    })
+    ConsumeMode()
+    result.total = total
+    result.die = chosen
+    result.rollA = ra
+    result.rollB = rb
+    result.dice = diceText
+    result.modifiers = bonusTxt
+    result.crit = critTag
+    result.critical = critTag
+    result.mode = modeTag
+    _G.DND5E_ARC_API = _G.DND5E_ARC_API or {}
+    _G.DND5E_ARC_API._lastRoll = result
+    return result
+end
+
+HarfordDnDWeaponRolls.RollWeaponDamage = RollWeaponDamage
+HarfordDnDWeaponRolls.ResolveWeaponManeuverAfterHitSave = ResolveWeaponManeuverAfterHitSave
+HarfordDnDWeaponRolls.RollRequestedSaveForSelf = RollRequestedSaveForSelf
+HarfordDnDWeaponRolls.DoRollEx = DoRollEx

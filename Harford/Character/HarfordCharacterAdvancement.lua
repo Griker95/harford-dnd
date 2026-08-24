@@ -9,6 +9,9 @@ local S = { frame = nil, mode = "creation", targetTotal = nil, stage = "race", r
 local CREATION_LEVEL = 1  -- la creacion confirma SOLO el nivel 1; los niveles 2 y 3 se encadenan como subidas
 local MAX_PREVIEW_LEVEL = CREATION_LEVEL
 
+-- Aplicar el borrador (crear personaje / subir nivel) vive en HarfordCharacterDraft.
+local Draft = HarfordCharacterDraft
+
 local function CopyTable(source)
     if type(source) ~= "table" then return source end
     local out = {}
@@ -227,8 +230,8 @@ local OpenChoiceDialog
 local RefreshSteps   -- forward: se asigna junto al frame; lo llaman los refrescos de cada etapa
 local RaceAbilityBonus     -- forward: se asigna mas abajo; el picker de conjuros lo usa antes de su def
 local AppendSpellPickers   -- forward: definido tras OpenSpellDialog; lo llama RefreshPendingLevelFeatures
-local SpellsForClass       -- forward: definido con el selector; lo usa PersistSpellPicks, mas arriba
-local ExpandedSpellNames   -- forward: mismo motivo, la poda de PersistSpellPicks lo usa antes
+local SpellsForClass       -- forward: definido con el selector; lo usa Draft.PersistSpellPicks, mas arriba
+local ExpandedSpellNames   -- forward: mismo motivo, la poda de Draft.PersistSpellPicks lo usa antes
 
 local function SetDetail(feature, level, source)
     S.selected = feature
@@ -1067,43 +1070,6 @@ local function GenerateAttributeArrays()
     S.selectedArray, S.attributeAssignments, S.pendingScore = nil, {}, nil
 end
 
--- Habilidades en las que el BORRADOR ya es competente: rasgos de raza/subraza, de trasfondo y de
--- clase/subclase, mas las opciones de otras elecciones ya marcadas. Durante la creacion el PJ aun
--- no existe como perfil, asi que no se puede preguntar a HarfordDnDFeatureEffects.GetSkillRank:
--- hay que derivarlo de lo elegido en el asistente.
-local function DraftSkillProficiencies()
-    local prof = {}
-    local function ApplyEffects(effects)
-        for _, effect in ipairs(effects or {}) do
-            if effect.kind == "skillProf" and effect.skill then prof[effect.skill] = true end
-        end
-    end
-    local function ApplyFeature(feature)
-        if type(feature) ~= "table" then return end
-        ApplyEffects(feature.effects)
-        -- Una eleccion ya resuelta (p.ej. las dos habilidades del trasfondo) tambien da competencia.
-        for _, optionId in ipairs(S.choiceSelections[feature.id] or {}) do
-            local option = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
-                and HarfordDnDBook.GetChoiceOption(feature, optionId)
-            ApplyEffects(option and option.effects)
-        end
-    end
-    local race = HarfordDnDRaces and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(S.raceId)
-    for _, feature in ipairs((race and race.traits) or {}) do ApplyFeature(feature) end
-    local subrace = HarfordDnDRaces and HarfordDnDRaces.GetSubrace
-        and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
-    for _, feature in ipairs((subrace and subrace.traits) or {}) do ApplyFeature(feature) end
-    local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
-        and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
-    for _, feature in ipairs((background and background.traits) or {}) do ApplyFeature(feature) end
-    for _, classId in ipairs({ S.classId, S.secondaryClassId }) do
-        local classDef = classId and HarfordDnDBook and HarfordDnDBook.GetClass
-            and HarfordDnDBook.GetClass(classId)
-        for _, feature in ipairs((classDef and classDef.features) or {}) do ApplyFeature(feature) end
-    end
-    return prof
-end
-
 RaceAbilityBonus = function(ability)
     local total = 0
     local function Apply(feature)
@@ -1159,123 +1125,6 @@ local function BaseScoreFor(abilityKey)
     return (array and assignedIndex and array.values[assignedIndex]) or nil
 end
 
-local function BuildCreationDraft()
-    local abilities = {}
-    local array = S.attributeArrays and S.attributeArrays[S.selectedArray]
-    for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
-        local base = BaseScoreFor(ability.key) or 0
-        -- Guardar SOLO la base asignada: sumar aqui el bono racial lo contaba DOS veces, porque el
-        -- asistente ya lo muestra sumado (`RaceAbilityBonus`). Quien lo hornea es
-        -- `HarfordCharacterCreation.Apply`, con `GetCreationAbilityBonus` y tras fijar la
-        -- progresion. OJO: los `bonus ability` NO se aplican en vivo (van al bucket
-        -- `creationBonus` de FeatureEffects), asi que el draft por si solo no basta.
-        abilities[ability.key] = base
-    end
-    local classes = {
-        { classId = S.classId, subclassId = S.subclassId, level = S.primaryLevel },
-    }
-    if S.secondaryClassId then
-        classes[#classes + 1] = { classId = S.secondaryClassId, subclassId = S.secondarySubclassId, level = S.secondaryLevel }
-    end
-    return {
-        raceId = S.raceId,
-        subraceId = S.subraceId,
-        backgroundId = S.backgroundId, backgroundVariantId = S.backgroundVariantId,
-        abilities = abilities,
-        classes = classes,
-        choices = S.choiceSelections,
-        -- Equipo inicial: la eleccion de clase mas lo que aporta el trasfondo.
-        equipment = (HarfordCharacterCreation and HarfordCharacterCreation.BuildStartingEquipment
-            and HarfordCharacterCreation.BuildStartingEquipment(S.classId, S.equipmentPicks, S.backgroundId))
-            or nil,
-    }
-end
-
--- Escribe los conjuros elegidos en el picker al compendio del PJ. Se llama ANTES de Apply para que
--- el About generado ya incluya las secciones de magia. Cantrips -> knownSpells (siempre); pool ->
--- knownSpells (known) o wizardBook (mago); preparados -> preparedSpells.
-local function PersistSpellPicks(draft)
-    if type(S.spellPicks) ~= "table" then return end
-    local db = _G.HarfordCompendioCharacterDB
-    local C = _G.HarfordCompendioAPI
-    if type(db) ~= "table" then return end
-    db.knownSpells = db.knownSpells or {}
-    db.wizardBook = db.wizardBook or {}
-    db.preparedSpells = db.preparedSpells or {}
-    local poolMode = "known"
-    for _, entry in ipairs((draft and draft.classes) or {}) do
-        local cls = HarfordDnDBook.GetClass(entry.classId)
-        local name = cls and cls.name
-        -- Mismo orden que el selector: la subclase manda sobre la clase.
-        local casting
-        if name and C and C.GetClassCasting then
-            local sub = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
-            if sub then casting = C.GetClassCasting(name .. " " .. sub.name) end
-            casting = casting or C.GetClassCasting(name)
-        end
-        if casting then poolMode = casting.mode; break end
-    end
-    local poolTbl = poolMode == "wizard_book" and db.wizardBook or db.knownSpells
-
-    -- PODA: lo que el selector gobierna y ya no esta marcado, se retira. Ver la nota de arriba
-    -- sobre por que se acota por clase y por tipo.
-    -- Los conjuros de las Listas Ampliadas tambien tienen que entrar en la poda: si no, al
-    -- deseleccionar uno se quedaria en la ficha para siempre.
-    local ampliados = {}
-    for _, entry in ipairs((draft and draft.classes) or {}) do
-        for nombre in pairs(ExpandedSpellNames(entry.classId, entry.subclassId) or {}) do
-            ampliados[nombre] = true
-        end
-    end
-    if not next(ampliados) then ampliados = nil end
-
-    local picks = S.spellPicks
-    for className in pairs(picks.sembradas or {}) do
-        for _, spell in ipairs((SpellsForClass and SpellsForClass(className, "cantrip", 9, ampliados)) or {}) do
-            if db.knownSpells[spell.id] and not (picks.cantrips or {})[spell.id] then
-                db.knownSpells[spell.id] = nil
-            end
-        end
-        for _, spell in ipairs((SpellsForClass and SpellsForClass(className, "spell", 9, ampliados)) or {}) do
-            if poolTbl[spell.id] and not (picks.spells or {})[spell.id] then
-                poolTbl[spell.id] = nil
-            end
-            if (picks.usaPreparados or {})[className]
-                and db.preparedSpells[spell.id] and not (picks.prepared or {})[spell.id] then
-                db.preparedSpells[spell.id] = nil
-            end
-        end
-    end
-
-    for id in pairs(picks.cantrips or {}) do db.knownSpells[id] = true end
-    for id in pairs(picks.spells or {}) do poolTbl[id] = true end
-    for id in pairs(picks.prepared or {}) do db.preparedSpells[id] = true end
-
-    -- Conjuros CONCEDIDOS por un rasgo (Maestro de maldiciones, Piromaniaco): el manual dice que
-    -- NO cuentan contra los conjuros conocidos, asi que no pasan por el selector ni por su limite.
-    -- Va al FINAL a proposito: los tres son conjuros de Brujo, y la poda de arriba los borraria por
-    -- no estar marcados en el picker.
-    if HarfordDnDBook and HarfordDnDBook.GetUnlockedFeatures then
-        -- Un rasgo con `requiresOption` solo concede si esa opcion esta ELEGIDA. Lo necesitan los
-        -- Conjuros de Vinculo del Chaman Elemental, que dependen de la Afinidad Elemental. El
-        -- GetUnlockedFeatures del LIBRO no filtra por eleccion (el de la progresion si), asi que
-        -- el filtro va aqui, sobre las elecciones del draft.
-        local elegidas = {}
-        for _, seleccion in pairs((draft and draft.choices) or {}) do
-            for _, optId in ipairs(seleccion or {}) do elegidas[tostring(optId)] = true end
-        end
-        for _, item in ipairs(HarfordDnDBook.GetUnlockedFeatures((draft and draft.classes) or {}) or {}) do
-            local feature = item and item.feature
-            local req = feature and feature.requiresOption
-            if not req or elegidas[tostring(req)] then
-                for _, spellId in ipairs((feature and feature.grantedSpells) or {}) do
-                    db.knownSpells[tostring(spellId)] = true
-                end
-            end
-        end
-    end
-end
-
 -- Una creacion desde cero sustituye al personaje anterior. El grimorio es una
 -- SavedVariablePerCharacter independiente de la progresion, asi que vaciarlo
 -- aqui evita que el About mezcle conjuros de una ficha previa con las elecciones
@@ -1287,133 +1136,6 @@ local function ResetCreationSpellState()
     db.knownSpells = {}
     db.wizardBook = {}
     db.preparedSpells = {}
-end
-
-local function FinishCreation()
-    local draft = BuildCreationDraft()
-    ResetCreationSpellState()
-    PersistSpellPicks(draft)  -- conjuros al compendio ANTES de generar el About
-    -- OJO: `X and Y and Y(draft)` truncaba los 2 retornos de Apply a uno, perdiendo el MOTIVO del
-    -- error (siempre salia "nil"). Capturar ambos valores con una llamada directa.
-    local ok, result
-    if HarfordCharacterCreation and HarfordCharacterCreation.Apply then
-        ok, result = HarfordCharacterCreation.Apply(draft)
-    else
-        result = "Modulo de creacion (HarfordCharacterCreation) no disponible."
-    end
-    if not ok then
-        if HarfordChat and HarfordChat.Print then HarfordChat.Print("|cffff5555No se pudo crear la ficha: " .. tostring(result) .. "|r") end
-        return
-    end
-    if HarfordChat and HarfordChat.Print then
-        HarfordChat.Print("|cff38d26aFicha creada a nivel 1 y About de TRP3 generado.|r")
-    end
-    S.frame:Hide()
-    -- Encadenar las subidas de creacion: nivel 2 y nivel 3 pasan por el asistente de
-    -- subida normal, uno a uno, abriendose solos hasta alcanzar el objetivo.
-    S.autoLevelTarget = 3
-    if API.OpenLevelUp then API.OpenLevelUp() end
-end
-
--- Aplica SOLO el nivel preparado por el asistente. A diferencia de la creacion,
--- conserva raza, trasfondo, caracteristicas, equipo y elecciones ya existentes.
-local function FinishLevelUp()
-    if not (HarfordDnDProgression and HarfordDnDProgression.SetClassEntry) then
-        if HarfordChat and HarfordChat.Print then HarfordChat.Print("No se puede aplicar la subida: progresion no disponible.") end
-        return
-    end
-    if S.primaryLevel + S.secondaryLevel ~= RequiredTotal() then return end
-
-    local entries = {
-        { classId = S.classId, subclassId = S.subclassId, level = S.primaryLevel },
-    }
-    if S.secondaryClassId then
-        entries[#entries + 1] = { classId = S.secondaryClassId, subclassId = S.secondarySubclassId, level = S.secondaryLevel }
-    end
-    for index, entry in ipairs(entries) do
-        local ok, err = HarfordDnDProgression.SetClassEntry(index, entry.classId, entry.subclassId, entry.level)
-        if not ok then
-            if HarfordChat and HarfordChat.Print then HarfordChat.Print("No se pudo aplicar la subida: " .. tostring(err)) end
-            return
-        end
-    end
-    for _, feature in ipairs(S.pendingFeatures or {}) do
-        for slot, optionId in ipairs(S.choiceSelections[feature.id] or {}) do
-            HarfordDnDProgression.SetChoiceSlot(feature.id, slot, optionId)
-            -- Si la eleccion fue una DOTE, hay que activarla: su opcion no lleva `effects`, lo
-            -- que aplica son los rasgos de la dote via `progression.feats`.
-            local opcion = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
-                and HarfordDnDBook.GetChoiceOption(feature, optionId)
-            if opcion and opcion.feat and HarfordDnDProgression.SetFeatEnabled then
-                HarfordDnDProgression.SetFeatEnabled(opcion.feat, true)
-            end
-            -- Un truco elegido en una eleccion se concede aqui: su opcion no lleva `effects`
-            -- porque el motor de efectos no sabe conceder conjuros.
-            if opcion and opcion.spellId and type(_G.HarfordCompendioCharacterDB) == "table" then
-                local db = _G.HarfordCompendioCharacterDB
-                db.knownSpells = db.knownSpells or {}
-                db.knownSpells[opcion.spellId] = true
-            end
-        end
-    end
-    PersistSpellPicks({ classes = entries, choices = S.choiceSelections })
-    -- El About de TRP3, de mas a menos capaz. La mecanica de la subida YA quedo aplicada arriba,
-    -- asi que ninguno de estos caminos puede dejarla a medias:
-    --   1. Harford genero el About  -> se regenera entero (conservando frames ajenos).
-    --   2. Ficha llevada a mano     -> NO se regenera, pero se INTENTA anadir lo del nivel nuevo
-    --                                  en un frame propio, sin tocar nada de lo suyo.
-    --   3. Ni eso                   -> se le pide que lo actualice a mano, diciendo que anadir.
-    local C = HarfordCharacterCreation
-    local aboutHecho = false
-    if C and C.RewriteAbout and C.CanRewriteAbout and C.CanRewriteAbout() then
-        aboutHecho = C.RewriteAbout() and true or false
-    elseif C and C.SyncAboutAdditive then
-        -- Ficha llevada a mano: se actualiza TODO lo que la subida cambia (nivel, caracteristicas,
-        -- rasgos de clase y subclase, conjuros, dotes) pero sin regenerar su perfil: solo se
-        -- sustituye el frame de Ficha, que es dato puro, y a los demas se les anaden los bloques
-        -- que les falten. Su texto propio no se toca ni se mueve.
-        local ok, detalle = C.SyncAboutAdditive()
-        aboutHecho = ok and true or false
-        if aboutHecho and HarfordChat and HarfordChat.Print then
-            HarfordChat.Print("Tu About de TRP3 no lo genera Harford: se ha actualizado sin tocar "
-                .. "tu texto (" .. tostring(detalle or "") .. ").")
-        end
-    end
-    if not aboutHecho and HarfordChat and HarfordChat.Print then
-        HarfordChat.Print("|cffffcc00Subida aplicada en la ficha, pero no se pudo actualizar el "
-            .. "About de TRP3: actualizalo a mano.|r")
-        local nuevos = {}
-        for _, feature in ipairs(S.pendingFeatures or {}) do
-            if feature and feature.name then nuevos[#nuevos + 1] = tostring(feature.name) end
-        end
-        if #nuevos > 0 then
-            HarfordChat.Print("   Este nivel anade: " .. table.concat(nuevos, ", "))
-        end
-    end
-
-    -- La XP acompana al nivel recien alcanzado. Es un suelo: si ya ibas por delante no se toca,
-    -- porque la XP puede adelantarse al nivel (es lo que enciende el aviso de subida).
-    if HarfordCharacterXP and HarfordCharacterXP.SyncToCharacterLevel then
-        HarfordCharacterXP.SyncToCharacterLevel("subida de nivel")
-    end
-    if HarfordCharacterPanel and HarfordCharacterPanel.Refresh then HarfordCharacterPanel.Refresh() end
-    if HarfordChat and HarfordChat.Print then
-        HarfordChat.Print("|cff38d26aSubida de nivel aplicada.|r")
-    end
-    S.frame:Hide()
-    -- Cadena de creacion: si venimos del asistente de creacion, seguir subiendo
-    -- automaticamente hasta el nivel objetivo (3), un nivel por pasada.
-    if S.autoLevelTarget then
-        local total = HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel() or 0
-        if total < S.autoLevelTarget then
-            if API.OpenLevelUp then API.OpenLevelUp() end
-            return
-        end
-        S.autoLevelTarget = nil
-        if HarfordChat and HarfordChat.Print then
-            HarfordChat.Print("|cff38d26aCreacion completada: ficha a nivel " .. total .. ".|r")
-        end
-    end
 end
 
 -- Modificador D&D coloreado: verde si es bonificador, rojo si es penalizador, gris en 0.
@@ -1781,7 +1503,7 @@ local function RefreshChoiceDialog()
         if #libres > 0 then options = libres end
     end
     if tostring(feature.choice and feature.choice.optionsFrom or "") == "skillExpertise" then
-        local prof = DraftSkillProficiencies()
+        local prof = Draft.DraftSkillProficiencies()
         local eligible = {}
         for _, option in ipairs(options) do
             if prof[option.id] then eligible[#eligible + 1] = option end
@@ -1892,7 +1614,6 @@ function OpenWeaponPickDialog(categoria, alElegir, modo)
     SetManualScroll(dialog.tree, dialog.treeChild, 0)
     dialog:Show()
 end
-
 
 -- ============================ SELECTOR DE CONJUROS ============================
 -- Picker reutilizable (creacion y descanso largo). Modal con filas toggle + contador, como el de
@@ -2244,7 +1965,7 @@ local function RefreshSummary()
     end
 
     local skills = {}
-    for skillId in pairs(DraftSkillProficiencies()) do skills[#skills + 1] = skillId end
+    for skillId in pairs(Draft.DraftSkillProficiencies()) do skills[#skills + 1] = skillId end
     table.sort(skills)
     S.sumSkills:SetText(#skills > 0
         and ("|cffffd100Competencias|r  " .. table.concat(skills, ", "))
@@ -2388,7 +2109,7 @@ local function CreateFrameIfNeeded()
             text = "Se creara la ficha de Harford a nivel 1 (reemplazando el About del perfil activo de Total RP 3) y a continuacion se encadenaran las subidas a nivel 2 y 3.",
             button1 = "Crear ficha",
             button2 = "Cancelar",
-            OnAccept = FinishCreation,
+            OnAccept = Draft.FinishCreation,
             timeout = 0,
             whileDead = true,
             hideOnEscape = true,
@@ -2591,7 +2312,7 @@ local function CreateFrameIfNeeded()
         elseif S.stage == "class" then
             if S.primaryLevel + S.secondaryLevel >= RequiredTotal() then
                 if IsLevelUpMode() then
-                    FinishLevelUp()
+                    Draft.FinishLevelUp()
                 elseif #EquipmentGroups() > 0 and RefreshEquipmentStage then
                     -- Falta repartir el equipo inicial: se crea despues de elegirlo.
                     S.stage = "equipment"
@@ -2802,4 +2523,17 @@ function API.OpenLevelUp()
     RefreshClassStage()
     S.frame:Show()
     return true
+end
+
+-- Al FINAL: varias dependencias son de asignacion adelantada.
+if Draft and Draft.Init then
+    Draft.Init({
+        API = API,
+        BaseScoreFor = BaseScoreFor,
+        ExpandedSpellNames = ExpandedSpellNames,
+        RequiredTotal = RequiredTotal,
+        ResetCreationSpellState = ResetCreationSpellState,
+        S = S,
+        SpellsForClass = SpellsForClass,
+    })
 end

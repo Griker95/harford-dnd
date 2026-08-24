@@ -212,136 +212,140 @@ end
 -- quedan block-local (do...end) para bajar el pico de locales.
 local GetOrMeasureLayout
 do
-local function FallbackLayout(unit)
-    local isPlayer = unit == "player"
-    return {
-        unit = unit,
-        root = { width = API.C.DEFAULT_FRAME_W, height = API.C.DEFAULT_FRAME_H },
-        texture = TextureInfo(nil, unit),
-        portrait = { x = isPlayer and 42 or API.C.DEFAULT_FRAME_W - 42 - 64, y = 12, width = 64, height = 64 },
-        health = { x = isPlayer and 106 or 7, y = 41, width = API.C.DEFAULT_BAR_W, height = API.C.DEFAULT_BAR_H },
-        power = { x = isPlayer and 106 or 7, y = 54, width = API.C.DEFAULT_BAR_W, height = API.C.DEFAULT_BAR_H },
-        level = { cx = isPlayer and 54 or 179.5, cy = 65, width = 22, height = 16 },
-        name = { cx = isPlayer and 166 or 66, cy = 31, width = 112, height = 14 },
-        measured = false,
-    }
-end
-
-local function DerivedLayout(unit, rootWidth, rootHeight)
-    local fallback = FallbackLayout(unit)
-    local sx = (rootWidth or API.C.DEFAULT_FRAME_W) / API.C.DEFAULT_FRAME_W
-    local sy = (rootHeight or API.C.DEFAULT_FRAME_H) / API.C.DEFAULT_FRAME_H
-    fallback.root = { width = rootWidth or API.C.DEFAULT_FRAME_W, height = rootHeight or API.C.DEFAULT_FRAME_H }
-    fallback.portrait = HarfordUIGeom.ScaleBox(fallback.portrait, sx, sy)
-    fallback.health = HarfordUIGeom.ScaleBox(fallback.health, sx, sy)
-    fallback.power = HarfordUIGeom.ScaleBox(fallback.power, sx, sy)
-    fallback.level = HarfordUIGeom.ScaleBox(fallback.level, sx, sy)
-    fallback.name = HarfordUIGeom.ScaleBox(fallback.name, sx, sy)
-    return fallback
-end
-
-local function NormalizeMeasuredLayout(layout)
-    local rootW = layout.root and layout.root.width or API.C.DEFAULT_FRAME_W
-    local rootH = layout.root and layout.root.height or API.C.DEFAULT_FRAME_H
-    local derived = DerivedLayout(layout.unit, rootW, rootH)
-
-    if not HarfordUIGeom.IsSaneBox(layout.portrait, rootW, rootH, 28, 28, 90, 90) then
-        layout.portrait = derived.portrait
-    else
-        local size = math.min(layout.portrait.width, layout.portrait.height)
-        size = HarfordUIGeom.Clamp(size, 36, 72)
-        layout.portrait.width = size
-        layout.portrait.height = size
+do
+    local function FallbackLayout(unit)
+        local isPlayer = unit == "player"
+        return {
+            unit = unit,
+            root = { width = API.C.DEFAULT_FRAME_W, height = API.C.DEFAULT_FRAME_H },
+            texture = TextureInfo(nil, unit),
+            portrait = { x = isPlayer and 42 or API.C.DEFAULT_FRAME_W - 42 - 64, y = 12, width = 64, height = 64 },
+            health = { x = isPlayer and 106 or 7, y = 41, width = API.C.DEFAULT_BAR_W, height = API.C.DEFAULT_BAR_H },
+            power = { x = isPlayer and 106 or 7, y = 54, width = API.C.DEFAULT_BAR_W, height = API.C.DEFAULT_BAR_H },
+            level = { cx = isPlayer and 54 or 179.5, cy = 65, width = 22, height = 16 },
+            name = { cx = isPlayer and 166 or 66, cy = 31, width = 112, height = 14 },
+            measured = false,
+        }
     end
 
-    if not HarfordUIGeom.IsSaneBox(layout.health, rootW, rootH, 50, 4, 180, 24) then
-        layout.health = derived.health
-    end
-    if not HarfordUIGeom.IsSaneBox(layout.power, rootW, rootH, 50, 4, 180, 24) then
-        layout.power = derived.power
-    end
-    if not HarfordUIGeom.IsSaneBox(layout.name, rootW, rootH, 40, 4, 180, 24) then
-        layout.name = derived.name
+    local function DerivedLayout(unit, rootWidth, rootHeight)
+        local fallback = FallbackLayout(unit)
+        local sx = (rootWidth or API.C.DEFAULT_FRAME_W) / API.C.DEFAULT_FRAME_W
+        local sy = (rootHeight or API.C.DEFAULT_FRAME_H) / API.C.DEFAULT_FRAME_H
+        fallback.root = { width = rootWidth or API.C.DEFAULT_FRAME_W, height = rootHeight or API.C.DEFAULT_FRAME_H }
+        fallback.portrait = HarfordUIGeom.ScaleBox(fallback.portrait, sx, sy)
+        fallback.health = HarfordUIGeom.ScaleBox(fallback.health, sx, sy)
+        fallback.power = HarfordUIGeom.ScaleBox(fallback.power, sx, sy)
+        fallback.level = HarfordUIGeom.ScaleBox(fallback.level, sx, sy)
+        fallback.name = HarfordUIGeom.ScaleBox(fallback.name, sx, sy)
+        return fallback
     end
 
-    return layout
-end
+    local function NormalizeMeasuredLayout(layout)
+        local rootW = layout.root and layout.root.width or API.C.DEFAULT_FRAME_W
+        local rootH = layout.root and layout.root.height or API.C.DEFAULT_FRAME_H
+        local derived = DerivedLayout(layout.unit, rootW, rootH)
 
-local function FindLargestTargetingTexture(root)
-    if not root or not root.GetRegions then return nil end
-    local best, bestArea = nil, 0
-    local function consider(region)
-        if not region or not region.GetObjectType or region:GetObjectType() ~= "Texture" then return end
-        if not region.GetTexture or not region:GetTexture() then return end
-        if not tostring(region:GetTexture()):lower():find("targetingframe", 1, true) then return end
-        local b = Bounds(region)
-        if not b then return end
-        local area = b.width * b.height
-        if area > bestArea then
-            best = region
-            bestArea = area
+        if not HarfordUIGeom.IsSaneBox(layout.portrait, rootW, rootH, 28, 28, 90, 90) then
+            layout.portrait = derived.portrait
+        else
+            local size = math.min(layout.portrait.width, layout.portrait.height)
+            size = HarfordUIGeom.Clamp(size, 36, 72)
+            layout.portrait.width = size
+            layout.portrait.height = size
         end
+
+        if not HarfordUIGeom.IsSaneBox(layout.health, rootW, rootH, 50, 4, 180, 24) then
+            layout.health = derived.health
+        end
+        if not HarfordUIGeom.IsSaneBox(layout.power, rootW, rootH, 50, 4, 180, 24) then
+            layout.power = derived.power
+        end
+        if not HarfordUIGeom.IsSaneBox(layout.name, rootW, rootH, 40, 4, 180, 24) then
+            layout.name = derived.name
+        end
+
+        return layout
     end
-    for _, region in ipairs({ root:GetRegions() }) do
-        consider(region)
-    end
-    if root.GetChildren then
-        for _, child in ipairs({ root:GetChildren() }) do
-            if child.GetRegions then
-                for _, region in ipairs({ child:GetRegions() }) do
-                    consider(region)
+
+    do
+        local function FindLargestTargetingTexture(root)
+            if not root or not root.GetRegions then return nil end
+            local best, bestArea = nil, 0
+            local function consider(region)
+                if not region or not region.GetObjectType or region:GetObjectType() ~= "Texture" then return end
+                if not region.GetTexture or not region:GetTexture() then return end
+                if not tostring(region:GetTexture()):lower():find("targetingframe", 1, true) then return end
+                local b = Bounds(region)
+                if not b then return end
+                local area = b.width * b.height
+                if area > bestArea then
+                    best = region
+                    bestArea = area
                 end
             end
+            for _, region in ipairs({ root:GetRegions() }) do
+                consider(region)
+            end
+            if root.GetChildren then
+                for _, child in ipairs({ root:GetChildren() }) do
+                    if child.GetRegions then
+                        for _, region in ipairs({ child:GetRegions() }) do
+                            consider(region)
+                        end
+                    end
+                end
+            end
+            return best
         end
+
+        function API.MeasureNativeLayout(unit)
+            unit = (unit == "target" or unit == "focus") and unit or "player"
+            local pieces = NativePiecesForUnit(unit)
+            local rootBounds = Bounds(pieces.root)
+            if not rootBounds then
+                return FallbackLayout(unit)
+            end
+
+            local layout = FallbackLayout(unit)
+            layout.root = { width = rootBounds.width, height = rootBounds.height }
+            layout.measured = true
+
+            local texture = pieces.texture or FindLargestTargetingTexture(pieces.root)
     end
-    return best
+        layout.texture = TextureInfo(texture, unit)
+        if layout.texture.bounds then
+            layout.texture.rel = RelativeBounds(layout.texture.bounds, rootBounds)
+        end
+
+        local portrait = RelativeBounds(Bounds(pieces.portrait), rootBounds)
+        local health = RelativeBounds(Bounds(pieces.health), rootBounds)
+        local power = RelativeBounds(Bounds(pieces.power), rootBounds)
+        local level = RelativeBounds(Bounds(pieces.level), rootBounds)
+        local name = RelativeBounds(Bounds(pieces.name), rootBounds)
+
+        if portrait then layout.portrait = portrait end
+        if health then layout.health = health end
+        if power then layout.power = power end
+        if level then layout.level = level end
+        if name then layout.name = name end
+
+        layout.healthBg = BarBackgroundInfo(pieces.health, unit)
+        layout.powerBg = BarBackgroundInfo(pieces.power, unit)
+        layout.healthFill = StatusBarTextureInfo(pieces.health, unit)
+        layout.powerFill = StatusBarTextureInfo(pieces.power, unit)
+        layout.native = {
+            root = DebugName(pieces.root),
+            portrait = DebugName(pieces.portrait),
+            health = DebugName(pieces.health),
+            power = DebugName(pieces.power),
+            level = DebugName(pieces.level),
+            name = DebugName(pieces.name),
+            texture = DebugName(texture),
+        }
+
+        return NormalizeMeasuredLayout(layout)
 end
-
-function API.MeasureNativeLayout(unit)
-    unit = (unit == "target" or unit == "focus") and unit or "player"
-    local pieces = NativePiecesForUnit(unit)
-    local rootBounds = Bounds(pieces.root)
-    if not rootBounds then
-        return FallbackLayout(unit)
-    end
-
-    local layout = FallbackLayout(unit)
-    layout.root = { width = rootBounds.width, height = rootBounds.height }
-    layout.measured = true
-
-    local texture = pieces.texture or FindLargestTargetingTexture(pieces.root)
-    layout.texture = TextureInfo(texture, unit)
-    if layout.texture.bounds then
-        layout.texture.rel = RelativeBounds(layout.texture.bounds, rootBounds)
-    end
-
-    local portrait = RelativeBounds(Bounds(pieces.portrait), rootBounds)
-    local health = RelativeBounds(Bounds(pieces.health), rootBounds)
-    local power = RelativeBounds(Bounds(pieces.power), rootBounds)
-    local level = RelativeBounds(Bounds(pieces.level), rootBounds)
-    local name = RelativeBounds(Bounds(pieces.name), rootBounds)
-
-    if portrait then layout.portrait = portrait end
-    if health then layout.health = health end
-    if power then layout.power = power end
-    if level then layout.level = level end
-    if name then layout.name = name end
-
-    layout.healthBg = BarBackgroundInfo(pieces.health, unit)
-    layout.powerBg = BarBackgroundInfo(pieces.power, unit)
-    layout.healthFill = StatusBarTextureInfo(pieces.health, unit)
-    layout.powerFill = StatusBarTextureInfo(pieces.power, unit)
-    layout.native = {
-        root = DebugName(pieces.root),
-        portrait = DebugName(pieces.portrait),
-        health = DebugName(pieces.health),
-        power = DebugName(pieces.power),
-        level = DebugName(pieces.level),
-        name = DebugName(pieces.name),
-        texture = DebugName(texture),
-    }
-
-    return NormalizeMeasuredLayout(layout)
 end
 
 function GetOrMeasureLayout(unit, force)
@@ -584,38 +588,40 @@ local function HideNativeClassPowerFrames()
     end
 end
 
-local function LooksLikeClassPowerFrame(frame)
-    if not frame or not frame.GetName then return false end
-    local name = frame:GetName()
-    if not name then return false end
-    name = tostring(name):lower()
-    return name:find("combo", 1, true)
-        or name:find("classpower", 1, true)
-        or name:find("classresource", 1, true)
-        or name:find("runeframe", 1, true)
-        or name:find("paladinpower", 1, true)
-        or name:find("arcanecharges", 1, true)
-        or name:find("warlockpower", 1, true)
-        or name:find("monkharmony", 1, true)
-        or name:find("eclipsebar", 1, true)
-end
-
-local function HideClassPowerChildren(root, depth)
-    if not root or not root.GetChildren or (depth or 0) > 4 then return end
-    for _, child in ipairs({ root:GetChildren() }) do
-        if LooksLikeClassPowerFrame(child) then
-            SaveFrameState(child)
-            SetFrameAlpha(child, 0)
-            if child.EnableMouse then child:EnableMouse(false) end
-        end
-        HideClassPowerChildren(child, (depth or 0) + 1)
+do
+    local function LooksLikeClassPowerFrame(frame)
+        if not frame or not frame.GetName then return false end
+        local name = frame:GetName()
+        if not name then return false end
+        name = tostring(name):lower()
+        return name:find("combo", 1, true)
+            or name:find("classpower", 1, true)
+            or name:find("classresource", 1, true)
+            or name:find("runeframe", 1, true)
+            or name:find("paladinpower", 1, true)
+            or name:find("arcanecharges", 1, true)
+            or name:find("warlockpower", 1, true)
+            or name:find("monkharmony", 1, true)
+            or name:find("eclipsebar", 1, true)
     end
-end
 
-function HideNativeClassPowerWidgets()
-    HideNativeClassPowerFrames()
-    HideClassPowerChildren(_G.PlayerFrame, 0)
-    HideClassPowerChildren(_G.TargetFrame, 0)
+    local function HideClassPowerChildren(root, depth)
+        if not root or not root.GetChildren or (depth or 0) > 4 then return end
+        for _, child in ipairs({ root:GetChildren() }) do
+            if LooksLikeClassPowerFrame(child) then
+                SaveFrameState(child)
+                SetFrameAlpha(child, 0)
+                if child.EnableMouse then child:EnableMouse(false) end
+            end
+            HideClassPowerChildren(child, (depth or 0) + 1)
+        end
+    end
+
+    function HideNativeClassPowerWidgets()
+        HideNativeClassPowerFrames()
+        HideClassPowerChildren(_G.PlayerFrame, 0)
+        HideClassPowerChildren(_G.TargetFrame, 0)
+end
 end
 end  -- do (cluster HideNativeClassPowerWidgets)
 
@@ -642,36 +648,38 @@ local function RestoreNativeClassPowerWidgets()
     end
 end
 
-local function FindTextureRegion(frame, preferredLayer)
-    if not frame or not frame.GetRegions then return nil end
-    local fallback
-    for _, region in ipairs({ frame:GetRegions() }) do
-        if region and region.GetObjectType and region:GetObjectType() == "Texture" then
-            local hasTexture = (region.GetTexture and region:GetTexture()) or (region.GetAtlas and region:GetAtlas())
-            if hasTexture then
-                local layer = region.GetDrawLayer and region:GetDrawLayer()
-                if preferredLayer and layer == preferredLayer then
-                    return region
+do
+    local function FindTextureRegion(frame, preferredLayer)
+        if not frame or not frame.GetRegions then return nil end
+        local fallback
+        for _, region in ipairs({ frame:GetRegions() }) do
+            if region and region.GetObjectType and region:GetObjectType() == "Texture" then
+                local hasTexture = (region.GetTexture and region:GetTexture()) or (region.GetAtlas and region:GetAtlas())
+                if hasTexture then
+                    local layer = region.GetDrawLayer and region:GetDrawLayer()
+                    if preferredLayer and layer == preferredLayer then
+                        return region
+                    end
+                    fallback = fallback or region
                 end
-                fallback = fallback or region
             end
         end
+        return fallback
     end
-    return fallback
-end
 
-function StatusBarTextureInfo(bar, unit)
-    if not bar then return nil end
-    local texture = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
-    local info = TextureInfo(texture, unit)
-    if info then
-        info.source = DebugName(texture)
+    function StatusBarTextureInfo(bar, unit)
+        if not bar then return nil end
+        local texture = bar.GetStatusBarTexture and bar:GetStatusBarTexture()
+        local info = TextureInfo(texture, unit)
+        if info then
+            info.source = DebugName(texture)
+        end
+        return info
     end
-    return info
-end
 
-function BarBackgroundInfo(bar, unit)
-    local texture = FindTextureRegion(bar, "BACKGROUND")
+    function BarBackgroundInfo(bar, unit)
+        local texture = FindTextureRegion(bar, "BACKGROUND")
+end
     local info = TextureInfo(texture, unit)
     if info then
         info.source = DebugName(texture)
@@ -769,153 +777,155 @@ local function AuraCount(unit, filter)
     return count
 end
 
-local function AuraData(unit, index, filter)
-    if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
-        return C_UnitAuras.GetAuraDataByIndex(unit, index, filter)
-    end
-    if UnitAura then
-        local name, icon, applications, dispelName, duration, expirationTime, sourceUnit, isStealable,
-            nameplateShowPersonal, spellId = UnitAura(unit, index, filter)
-        if name then
-            return {
-                name = name,
-                icon = icon,
-                applications = applications,
-                dispelName = dispelName,
-                duration = duration,
-                expirationTime = expirationTime,
-                sourceUnit = sourceUnit,
-                isStealable = isStealable,
-                nameplateShowPersonal = nameplateShowPersonal,
-                spellId = spellId,
-            }
+do
+    local function AuraData(unit, index, filter)
+        if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+            return C_UnitAuras.GetAuraDataByIndex(unit, index, filter)
+        end
+        if UnitAura then
+            local name, icon, applications, dispelName, duration, expirationTime, sourceUnit, isStealable,
+                nameplateShowPersonal, spellId = UnitAura(unit, index, filter)
+            if name then
+                return {
+                    name = name,
+                    icon = icon,
+                    applications = applications,
+                    dispelName = dispelName,
+                    duration = duration,
+                    expirationTime = expirationTime,
+                    sourceUnit = sourceUnit,
+                    isStealable = isStealable,
+                    nameplateShowPersonal = nameplateShowPersonal,
+                    spellId = spellId,
+                }
+            end
         end
     end
-end
 
--- Aura Manager conserva un indice global para target y lo reutiliza al pintar
--- focus. No usamos ese indice: el tooltip se vuelve a construir desde el aura
--- real que corresponde al boton que Harford acaba de colocar.
-local function ShowManagedAuraTooltip(button)
-    local unit = button and button._harfordAuraUnit
-    local index = button and button._harfordAuraIndex
-    local filter = button and button._harfordAuraFilter
-    local aura = unit and index and filter and AuraData(unit, index, filter)
-    if not aura or not aura.spellId or not GameTooltip then return end
+    -- Aura Manager conserva un indice global para target y lo reutiliza al pintar
+    -- focus. No usamos ese indice: el tooltip se vuelve a construir desde el aura
+    -- real que corresponde al boton que Harford acaba de colocar.
+    local function ShowManagedAuraTooltip(button)
+        local unit = button and button._harfordAuraUnit
+        local index = button and button._harfordAuraIndex
+        local filter = button and button._harfordAuraFilter
+        local aura = unit and index and filter and AuraData(unit, index, filter)
+        if not aura or not aura.spellId or not GameTooltip then return end
 
-    GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
-    if type(_G.GetAuraDescription) == "function" and GameTooltip.SetSpellByID then
-        -- Aura Manager resuelve sus nombres, iconos y descripciones por spellId;
-        -- esta via evita su mapa targetAuraMappingTable defectuoso.
-        GameTooltip:SetSpellByID(aura.spellId)
-    elseif GameTooltip.SetUnitAura then
-        -- Cliente sin Aura Manager: se conserva el tooltip nativo completo.
-        GameTooltip:SetUnitAura(unit, index, filter)
-    end
-end
-
-local function InstallManagedAuraTooltip(button)
-    if not button or button._harfordAuraTooltipHooked or not button.HookScript then return end
-    button._harfordAuraTooltipHooked = true
-    button:HookScript("OnEnter", ShowManagedAuraTooltip)
-end
-
-local function ResolvedAuraIcon(aura)
-    if not aura then return nil end
-    -- GetSpellTexture queda sustituida por Aura Manager cuando está cargado y
-    -- resuelve el icono personalizado de fase por spellId. UnitAura.icon es el
-    -- icono crudo: reimponerlo borraba precisamente esa sustitución.
-    if aura.spellId and type(_G.GetSpellTexture) == "function" then
-        local icon = _G.GetSpellTexture(aura.spellId)
-        if icon then return icon end
-    end
-    return aura.icon
-end
-
-local function ApplyAuraButtonData(button, unit, index, filter)
-    local aura = button and AuraData(unit, index, filter)
-    if not aura then return false end
-    local icon = _G[(button.GetName and button:GetName() or "") .. "Icon"]
-    if icon and icon.SetTexture then icon:SetTexture(ResolvedAuraIcon(aura)) end
-    button._harfordAuraUnit = unit
-    button._harfordAuraFilter = filter
-    button._harfordAuraIndex = index
-    InstallManagedAuraTooltip(button)
-    if icon and icon.Show then icon:Show() end
-    if button.Show then button:Show() end
-    return true
-end
-
-local function PlaceAuraButtons(unit, prefix, kind, filter, count, anchor)
-    if count <= 0 or not anchor then return nil end
-    local rowStart, previous
-    for index = 1, count do
-        local button = _G[prefix .. kind .. index]
-        if not ApplyAuraButtonData(button, unit, index, filter) then break end
-        SaveAuraPoints(button, unit)
-        button:ClearAllPoints()
-        if index == 1 then
-            button:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -AURA_BAR_GAP)
-            rowStart = button
-        elseif (index - 1) % AURAS_PER_ROW == 0 then
-            button:SetPoint("TOPLEFT", rowStart, "BOTTOMLEFT", 0, -AURA_ICON_GAP)
-            rowStart = button
-        else
-            button:SetPoint("TOPLEFT", previous, "TOPRIGHT", AURA_ICON_GAP, 0)
+        GameTooltip:SetOwner(button, "ANCHOR_RIGHT")
+        if type(_G.GetAuraDescription) == "function" and GameTooltip.SetSpellByID then
+            -- Aura Manager resuelve sus nombres, iconos y descripciones por spellId;
+            -- esta via evita su mapa targetAuraMappingTable defectuoso.
+            GameTooltip:SetSpellByID(aura.spellId)
+        elseif GameTooltip.SetUnitAura then
+            -- Cliente sin Aura Manager: se conserva el tooltip nativo completo.
+            GameTooltip:SetUnitAura(unit, index, filter)
         end
-        previous = button
     end
-    return rowStart
+
+    local function InstallManagedAuraTooltip(button)
+        if not button or button._harfordAuraTooltipHooked or not button.HookScript then return end
+        button._harfordAuraTooltipHooked = true
+        button:HookScript("OnEnter", ShowManagedAuraTooltip)
+    end
+
+    local function ResolvedAuraIcon(aura)
+        if not aura then return nil end
+        -- GetSpellTexture queda sustituida por Aura Manager cuando está cargado y
+        -- resuelve el icono personalizado de fase por spellId. UnitAura.icon es el
+        -- icono crudo: reimponerlo borraba precisamente esa sustitución.
+        if aura.spellId and type(_G.GetSpellTexture) == "function" then
+            local icon = _G.GetSpellTexture(aura.spellId)
+            if icon then return icon end
+        end
+        return aura.icon
+    end
+
+    local function ApplyAuraButtonData(button, unit, index, filter)
+        local aura = button and AuraData(unit, index, filter)
+        if not aura then return false end
+        local icon = _G[(button.GetName and button:GetName() or "") .. "Icon"]
+        if icon and icon.SetTexture then icon:SetTexture(ResolvedAuraIcon(aura)) end
+        button._harfordAuraUnit = unit
+        button._harfordAuraFilter = filter
+        button._harfordAuraIndex = index
+        InstallManagedAuraTooltip(button)
+        if icon and icon.Show then icon:Show() end
+        if button.Show then button:Show() end
+        return true
+    end
+
+    local function PlaceAuraButtons(unit, prefix, kind, filter, count, anchor)
+        if count <= 0 or not anchor then return nil end
+        local rowStart, previous
+        for index = 1, count do
+            local button = _G[prefix .. kind .. index]
+            if not ApplyAuraButtonData(button, unit, index, filter) then break end
+            SaveAuraPoints(button, unit)
+            button:ClearAllPoints()
+            if index == 1 then
+                button:SetPoint("TOPLEFT", anchor, "BOTTOMLEFT", 0, -AURA_BAR_GAP)
+                rowStart = button
+            elseif (index - 1) % AURAS_PER_ROW == 0 then
+                button:SetPoint("TOPLEFT", rowStart, "BOTTOMLEFT", 0, -AURA_ICON_GAP)
+                rowStart = button
+            else
+                button:SetPoint("TOPLEFT", previous, "TOPRIGHT", AURA_ICON_GAP, 0)
+            end
+            previous = button
+        end
+        return rowStart
+    end
+
+    -- El cliente puede dejar visible Buff1 con la textura del focus aunque UnitAura(target)
+    -- ya este vacio. Solo ocultamos slots que la API confirma vacios; nunca copiamos ni
+    -- reconstruimos texturas de auras.
+    function RefreshNativeAuraButtons(unit)
+        unit = unit == "focus" and "focus" or "target"
+        local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
+        local helpful = AuraCount(unit, "HELPFUL")
+        local harmful = AuraCount(unit, "HARMFUL")
+        for index = helpful + 1, 40 do
+            local button = _G[prefix .. "Buff" .. index]
+            if not button then break end
+            if button.Hide then button:Hide() end
+        end
+        for index = harmful + 1, 40 do
+            local button = _G[prefix .. "Debuff" .. index]
+            if not button then break end
+            if button.Hide then button:Hide() end
+        end
+        -- Esta parte no depende del anclaje de Harford. Aura Manager usa el mapa de
+        -- target tambien para FocusFrame; por eso se reconcilia siempre la textura y
+        -- la identidad del tooltip, incluso con las dos barras nativas habituales.
+        for index = 1, helpful do
+            ApplyAuraButtonData(_G[prefix .. "Buff" .. index], unit, index, "HELPFUL")
+        end
+        for index = 1, harmful do
+            ApplyAuraButtonData(_G[prefix .. "Debuff" .. index], unit, index, "HARMFUL")
+        end
+        return helpful, harmful
+    end
+
+    function ReanchorAurasBelowBars(frame, unit, helpful, harmful)
+        if not frame then return false end
+        unit = unit == "focus" and "focus" or "target"
+        local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
+        helpful = tonumber(helpful) or AuraCount(unit, "HELPFUL")
+        harmful = tonumber(harmful) or AuraCount(unit, "HARMFUL")
+        if helpful <= 0 and harmful <= 0 then return false end
+
+        local n = tonumber(frame.resourceCount) or 0
+        local lastBar = frame.bars and frame.bars[n]
+        local barAnchor = lastBar and (lastBar.container or lastBar)
+        if not barAnchor then return false end
+
+        -- Los botones nativos de Epsilon pueden conservar la textura del focus aunque
+        -- el unit token sea target. Reusamos sus botones/marcos, pero el icono y el
+        -- orden provienen siempre de C_UnitAuras para la unidad que se esta renderizando.
+        local lastBuffRow = PlaceAuraButtons(unit, prefix, "Buff", "HELPFUL", helpful, barAnchor)
+        PlaceAuraButtons(unit, prefix, "Debuff", "HARMFUL", harmful, lastBuffRow or barAnchor)
 end
-
--- El cliente puede dejar visible Buff1 con la textura del focus aunque UnitAura(target)
--- ya este vacio. Solo ocultamos slots que la API confirma vacios; nunca copiamos ni
--- reconstruimos texturas de auras.
-function RefreshNativeAuraButtons(unit)
-    unit = unit == "focus" and "focus" or "target"
-    local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
-    local helpful = AuraCount(unit, "HELPFUL")
-    local harmful = AuraCount(unit, "HARMFUL")
-    for index = helpful + 1, 40 do
-        local button = _G[prefix .. "Buff" .. index]
-        if not button then break end
-        if button.Hide then button:Hide() end
-    end
-    for index = harmful + 1, 40 do
-        local button = _G[prefix .. "Debuff" .. index]
-        if not button then break end
-        if button.Hide then button:Hide() end
-    end
-    -- Esta parte no depende del anclaje de Harford. Aura Manager usa el mapa de
-    -- target tambien para FocusFrame; por eso se reconcilia siempre la textura y
-    -- la identidad del tooltip, incluso con las dos barras nativas habituales.
-    for index = 1, helpful do
-        ApplyAuraButtonData(_G[prefix .. "Buff" .. index], unit, index, "HELPFUL")
-    end
-    for index = 1, harmful do
-        ApplyAuraButtonData(_G[prefix .. "Debuff" .. index], unit, index, "HARMFUL")
-    end
-    return helpful, harmful
-end
-
-function ReanchorAurasBelowBars(frame, unit, helpful, harmful)
-    if not frame then return false end
-    unit = unit == "focus" and "focus" or "target"
-    local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
-    helpful = tonumber(helpful) or AuraCount(unit, "HELPFUL")
-    harmful = tonumber(harmful) or AuraCount(unit, "HARMFUL")
-    if helpful <= 0 and harmful <= 0 then return false end
-
-    local n = tonumber(frame.resourceCount) or 0
-    local lastBar = frame.bars and frame.bars[n]
-    local barAnchor = lastBar and (lastBar.container or lastBar)
-    if not barAnchor then return false end
-
-    -- Los botones nativos de Epsilon pueden conservar la textura del focus aunque
-    -- el unit token sea target. Reusamos sus botones/marcos, pero el icono y el
-    -- orden provienen siempre de C_UnitAuras para la unidad que se esta renderizando.
-    local lastBuffRow = PlaceAuraButtons(unit, prefix, "Buff", "HELPFUL", helpful, barAnchor)
-    PlaceAuraButtons(unit, prefix, "Debuff", "HARMFUL", harmful, lastBuffRow or barAnchor)
     return true
 end
 end  -- do (cluster ReanchorAurasBelowBars)
@@ -2573,36 +2583,38 @@ local function RefreshFocusTargetOfTargetBars(forceVisual)
     end
 end
 
-local function EnsureFocusTargetOfTargetHooks()
-    if API.S.focusTot.hooksInstalled then return end
-    API.S.focusTot.hooksInstalled = true
-    local tot = _G["FocusFrameToT"]
-    if tot and not tot._harfordFocusToTHooked and tot.HookScript then
-        tot._harfordFocusToTHooked = true
-        tot:HookScript("OnShow", function()
-            if RefreshFocusTargetOfTargetBars then RefreshFocusTargetOfTargetBars() end
-        end)
-        tot:HookScript("OnHide", function()
-            API.S.focusTot.lastGUID = nil
-            HideFocusTotBarsOverlay()
-        end)
-    end
-    if hooksecurefunc then
-        -- FocusofTarget_Update: análogo a TargetofTarget_Update para el focus frame
-        if type(_G.FocusofTarget_Update) == "function" then
-            hooksecurefunc("FocusofTarget_Update", function()
+do
+    local function EnsureFocusTargetOfTargetHooks()
+        if API.S.focusTot.hooksInstalled then return end
+        API.S.focusTot.hooksInstalled = true
+        local tot = _G["FocusFrameToT"]
+        if tot and not tot._harfordFocusToTHooked and tot.HookScript then
+            tot._harfordFocusToTHooked = true
+            tot:HookScript("OnShow", function()
                 if RefreshFocusTargetOfTargetBars then RefreshFocusTargetOfTargetBars() end
-                local ov = API.S.focusTot.overlay
-                API._SyncToTNativePortraitAlpha(_G["FocusFrameToTPortrait"], ov and ov.portraitFrame)
+            end)
+            tot:HookScript("OnHide", function()
+                API.S.focusTot.lastGUID = nil
+                HideFocusTotBarsOverlay()
             end)
         end
+        if hooksecurefunc then
+            -- FocusofTarget_Update: análogo a TargetofTarget_Update para el focus frame
+            if type(_G.FocusofTarget_Update) == "function" then
+                hooksecurefunc("FocusofTarget_Update", function()
+                    if RefreshFocusTargetOfTargetBars then RefreshFocusTargetOfTargetBars() end
+                    local ov = API.S.focusTot.overlay
+                    API._SyncToTNativePortraitAlpha(_G["FocusFrameToTPortrait"], ov and ov.portraitFrame)
+                end)
+            end
+        end
     end
-end
 
--- Exponer funciones públicas via tabla (accesibles desde fuera del do-block)
-API.S.focusTot.hide       = HideFocusTotBarsOverlay
-API.S.focusTot.refresh    = RefreshFocusTargetOfTargetBars
-API.S.focusTot.ensureHooks = EnsureFocusTargetOfTargetHooks
+    -- Exponer funciones públicas via tabla (accesibles desde fuera del do-block)
+    API.S.focusTot.hide       = HideFocusTotBarsOverlay
+    API.S.focusTot.refresh    = RefreshFocusTargetOfTargetBars
+    API.S.focusTot.ensureHooks = EnsureFocusTargetOfTargetHooks
+end
 
 end  -- do-block focus ToT
 -- ────────────────────────────────────────────────────────────────────────────
@@ -3474,69 +3486,75 @@ end
 -- block-local (do...end) para no consumir locales de file-scope (limite 200 Lua 5.1).
 local CollectAllGroupFrames
 do
-local function CollectNamedGroupFrames(out)
-    local names = {
-        "CompactPartyFrameMember1", "CompactPartyFrameMember2", "CompactPartyFrameMember3", "CompactPartyFrameMember4", "CompactPartyFrameMember5",
-        "PartyMemberFrame1", "PartyMemberFrame2", "PartyMemberFrame3", "PartyMemberFrame4",
-    }
-    for _, name in ipairs(names) do
-        local frame = _G[name]
-        if frame then out[frame] = true end
-    end
-    for i = 1, 40 do
-        local frame = _G["CompactRaidFrame" .. i]
-        if frame then out[frame] = true end
-    end
-end
-
-local function CollectFrameFromTable(value, out, depth)
-    if type(value) ~= "table" or (depth or 0) > 3 then return end
-    if value.GetObjectType and GroupFrameIsUsable(value) then
-        out[value] = true
-        return
-    end
-    for _, child in pairs(value) do
-        if type(child) == "table" then
-            CollectFrameFromTable(child, out, (depth or 0) + 1)
+do
+    local function CollectNamedGroupFrames(out)
+        local names = {
+            "CompactPartyFrameMember1", "CompactPartyFrameMember2", "CompactPartyFrameMember3", "CompactPartyFrameMember4", "CompactPartyFrameMember5",
+            "PartyMemberFrame1", "PartyMemberFrame2", "PartyMemberFrame3", "PartyMemberFrame4",
+        }
+        for _, name in ipairs(names) do
+            local frame = _G[name]
+            if frame then out[frame] = true end
+        end
+        for i = 1, 40 do
+            local frame = _G["CompactRaidFrame" .. i]
+            if frame then out[frame] = true end
         end
     end
-end
 
-local function CollectContainerChildren(container, out, depth)
-    if not container or not container.GetChildren or (depth or 0) > 6 then return end
-    if GroupFrameIsUsable(container) then
-        out[container] = true
-    end
-    CollectFrameFromTable(container.memberUnitFrames, out, 0)
-    CollectFrameFromTable(container.unitFrames, out, 0)
-    CollectFrameFromTable(container.displayedUnitFrames, out, 0)
-    for _, child in ipairs({ container:GetChildren() }) do
-        if GroupFrameIsUsable(child) then
-            out[child] = true
+    do
+        local function CollectFrameFromTable(value, out, depth)
+            if type(value) ~= "table" or (depth or 0) > 3 then return end
+            if value.GetObjectType and GroupFrameIsUsable(value) then
+                out[value] = true
+                return
+            end
+            for _, child in pairs(value) do
+                if type(child) == "table" then
+                    CollectFrameFromTable(child, out, (depth or 0) + 1)
+                end
+            end
         end
-        CollectContainerChildren(child, out, (depth or 0) + 1)
+
+        local function CollectContainerChildren(container, out, depth)
+            if not container or not container.GetChildren or (depth or 0) > 6 then return end
+            if GroupFrameIsUsable(container) then
+                out[container] = true
+            end
+            CollectFrameFromTable(container.memberUnitFrames, out, 0)
+            CollectFrameFromTable(container.unitFrames, out, 0)
+            CollectFrameFromTable(container.displayedUnitFrames, out, 0)
+            for _, child in ipairs({ container:GetChildren() }) do
+                if GroupFrameIsUsable(child) then
+                    out[child] = true
+                end
+                CollectContainerChildren(child, out, (depth or 0) + 1)
+            end
+        end
+
+        do
+            local function CollectGroupFrames()
+                local out = {}
+                CollectNamedGroupFrames(out)
+end
+            CollectContainerChildren(_G.CompactPartyFrame, out)
+            CollectContainerChildren(_G.CompactRaidFrameManager, out)
+            CollectContainerChildren(_G.CompactRaidFrameContainer, out)
+            CollectContainerChildren(_G.CompactRaidGroup1, out)
+            CollectContainerChildren(_G.CompactRaidGroup2, out)
+            CollectContainerChildren(_G.CompactRaidGroup3, out)
+            CollectContainerChildren(_G.CompactRaidGroup4, out)
+            CollectContainerChildren(_G.CompactRaidGroup5, out)
+            CollectContainerChildren(_G.CompactRaidGroup6, out)
+            CollectContainerChildren(_G.CompactRaidGroup7, out)
+            CollectContainerChildren(_G.CompactRaidGroup8, out)
+end
+        return out
     end
-end
 
-local function CollectGroupFrames()
-    local out = {}
-    CollectNamedGroupFrames(out)
-    CollectContainerChildren(_G.CompactPartyFrame, out)
-    CollectContainerChildren(_G.CompactRaidFrameManager, out)
-    CollectContainerChildren(_G.CompactRaidFrameContainer, out)
-    CollectContainerChildren(_G.CompactRaidGroup1, out)
-    CollectContainerChildren(_G.CompactRaidGroup2, out)
-    CollectContainerChildren(_G.CompactRaidGroup3, out)
-    CollectContainerChildren(_G.CompactRaidGroup4, out)
-    CollectContainerChildren(_G.CompactRaidGroup5, out)
-    CollectContainerChildren(_G.CompactRaidGroup6, out)
-    CollectContainerChildren(_G.CompactRaidGroup7, out)
-    CollectContainerChildren(_G.CompactRaidGroup8, out)
-    return out
+    function CollectAllGroupFrames()
+        local out = CollectGroupFrames()
 end
-
-function CollectAllGroupFrames()
-    local out = CollectGroupFrames()
     return out
 end
 end  -- do (cluster CollectAllGroupFrames)
@@ -4303,78 +4321,80 @@ end
 -- los helpers quedan block-local (do...end) para bajar el pico de locales.
 local HideGroupOverlays
 do
-local function RepaintNativeCompactFrames()
-    if not _G.CompactUnitFrame_UpdateAll then return end
-    API.S.restoringCompactFrames = true
-    for frame in pairs(CollectAllGroupFrames()) do
-        if frame and frame.IsShown and frame:IsShown() and GroupFrameIsUsable(frame) then
-            pcall(_G.CompactUnitFrame_UpdateAll, frame)
+do
+    local function RepaintNativeCompactFrames()
+        if not _G.CompactUnitFrame_UpdateAll then return end
+        API.S.restoringCompactFrames = true
+        for frame in pairs(CollectAllGroupFrames()) do
+            if frame and frame.IsShown and frame:IsShown() and GroupFrameIsUsable(frame) then
+                pcall(_G.CompactUnitFrame_UpdateAll, frame)
+            end
+        end
+        API.S.restoringCompactFrames = false
+    end
+
+    local function RestoreClassicPartyVisibility()
+        if InCombatLockdown and InCombatLockdown() then return end
+        local inRaid = IsInRaid and IsInRaid()
+        for i = 1, 4 do
+            local frame = _G["PartyMemberFrame" .. i]
+            local unit = "party" .. i
+            if frame and frame.Hide and (inRaid or not (UnitExists and UnitExists(unit))) then
+                pcall(frame.Hide, frame)
+            end
         end
     end
-    API.S.restoringCompactFrames = false
-end
 
-local function RestoreClassicPartyVisibility()
-    if InCombatLockdown and InCombatLockdown() then return end
-    local inRaid = IsInRaid and IsInRaid()
-    for i = 1, 4 do
-        local frame = _G["PartyMemberFrame" .. i]
-        local unit = "party" .. i
-        if frame and frame.Hide and (inRaid or not (UnitExists and UnitExists(unit))) then
-            pcall(frame.Hide, frame)
+    local function QueueCompactRestorePasses()
+        if API.S.compactRestorePassesQueued then return end
+        if not (C_Timer and C_Timer.After) then return end
+        API.S.compactRestorePassesQueued = true
+        C_Timer.After(0.05, RestoreClassicPartyVisibility)
+        C_Timer.After(0.1, RepaintNativeCompactFrames)
+        C_Timer.After(0.25, RestoreClassicPartyVisibility)
+        C_Timer.After(0.5, function()
+            RepaintNativeCompactFrames()
+            API.S.compactRestorePassesQueued = false
+        end)
+    end
+
+    function HideGroupOverlays()
+        API.S.restoringCompactFrames = true
+        for _, overlay in pairs(API.S.groupOverlays) do
+            overlay:Hide()
+            overlay.healthData = nil
+            overlay.powerData = nil
+            if overlay.nameFrame then overlay.nameFrame:Hide() end
+            RestoreCompactNativeTexts(overlay.compactFrame)
         end
-    end
-end
-
-local function QueueCompactRestorePasses()
-    if API.S.compactRestorePassesQueued then return end
-    if not (C_Timer and C_Timer.After) then return end
-    API.S.compactRestorePassesQueued = true
-    C_Timer.After(0.05, RestoreClassicPartyVisibility)
-    C_Timer.After(0.1, RepaintNativeCompactFrames)
-    C_Timer.After(0.25, RestoreClassicPartyVisibility)
-    C_Timer.After(0.5, function()
-        RepaintNativeCompactFrames()
-        API.S.compactRestorePassesQueued = false
-    end)
-end
-
-function HideGroupOverlays()
-    API.S.restoringCompactFrames = true
-    for _, overlay in pairs(API.S.groupOverlays) do
-        overlay:Hide()
-        overlay.healthData = nil
-        overlay.powerData = nil
-        if overlay.nameFrame then overlay.nameFrame:Hide() end
-        RestoreCompactNativeTexts(overlay.compactFrame)
-    end
-    for frame in pairs(CollectAllGroupFrames()) do
-        local healthBar = FindGroupHealthBar(frame)
-        local powerBar = FindGroupPowerBar(frame)
-        local portrait = FindGroupPortrait(frame)
-        RestoreCompactPortrait(portrait)
-        RestoreCompactNativeTexts(frame)
-        for _, nativeBar in pairs({ healthBar, powerBar }) do
+        for frame in pairs(CollectAllGroupFrames()) do
+            local healthBar = FindGroupHealthBar(frame)
+            local powerBar = FindGroupPowerBar(frame)
+            local portrait = FindGroupPortrait(frame)
+            RestoreCompactPortrait(portrait)
+            RestoreCompactNativeTexts(frame)
+            for _, nativeBar in pairs({ healthBar, powerBar }) do
+                RestoreGroupNativeBar(nativeBar)
+            end
+        end
+        for nativeBar in pairs(API.S.compactBarState) do
             RestoreGroupNativeBar(nativeBar)
         end
-    end
-    for nativeBar in pairs(API.S.compactBarState) do
-        RestoreGroupNativeBar(nativeBar)
-    end
-    for portrait in pairs(API.S.compactPortraitState) do
-        RestoreCompactPortrait(portrait)
-    end
-    for frame in pairs(API.S.compactFramesTouched) do
-        if frame and frame.IsShown and frame:IsShown() and GroupFrameIsUsable(frame) and _G.CompactUnitFrame_UpdateAll then
-            pcall(_G.CompactUnitFrame_UpdateAll, frame)
-            RestoreCompactNativeTexts(frame)
+        for portrait in pairs(API.S.compactPortraitState) do
+            RestoreCompactPortrait(portrait)
         end
-        API.S.compactFramesTouched[frame] = nil
-    end
-    API.S.restoringCompactFrames = false
-    RestoreClassicPartyVisibility()
-    RepaintNativeCompactFrames()
-    QueueCompactRestorePasses()
+        for frame in pairs(API.S.compactFramesTouched) do
+            if frame and frame.IsShown and frame:IsShown() and GroupFrameIsUsable(frame) and _G.CompactUnitFrame_UpdateAll then
+                pcall(_G.CompactUnitFrame_UpdateAll, frame)
+                RestoreCompactNativeTexts(frame)
+            end
+            API.S.compactFramesTouched[frame] = nil
+        end
+        API.S.restoringCompactFrames = false
+        RestoreClassicPartyVisibility()
+        RepaintNativeCompactFrames()
+        QueueCompactRestorePasses()
+end
 end
 end  -- do (cluster HideGroupOverlays)
 
@@ -4426,15 +4446,17 @@ end
 -- Reaplica el re-anclaje de auras DESPUES de que Blizzard recoloque buffs/debuffs.
 -- Algunas versiones del cliente no pasan el frame como primer argumento, por lo que cada
 -- hook conoce su unidad de respaldo en vez de depender de una firma concreta.
-local function InstallAuraReanchorHooks()
-    -- No instalar hooks hasta conocer el arbol de auras de este cliente. Un hook sobre
-    -- nombres clasicos fue la causa de mezclar Buff1/Debuff1 entre target y focus.
-end
+do
+    local function InstallAuraReanchorHooks()
+        -- No instalar hooks hasta conocer el arbol de auras de este cliente. Un hook sobre
+        -- nombres clasicos fue la causa de mezclar Buff1/Debuff1 entre target y focus.
+    end
 
-function API.Attach()
-    InstallCompactUnitFrameHooks()
-    InstallNativePowerHooks()
-    InstallAuraReanchorHooks()
+    function API.Attach()
+        InstallCompactUnitFrameHooks()
+        InstallNativePowerHooks()
+        InstallAuraReanchorHooks()
+end
     CreateUnitFrame("Player", "player")
     CreateUnitFrame("Target", "target")
     CreateUnitFrame("Focus", "focus")

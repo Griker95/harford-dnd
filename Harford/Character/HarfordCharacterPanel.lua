@@ -206,13 +206,14 @@ K.PAPERDOLL_SLOT_LABELS_ES = {
     SecondaryHand = "Mano secundaria",
 }
 
-local function SlotLabelES(key)
-    return K.PAPERDOLL_SLOT_LABELS_ES[tostring(key or "")] or tostring(key or "")
-end
-
 K.POINT_BUY_COST = {
     [8] = 0, [9] = 1, [10] = 2, [11] = 3, [12] = 4, [13] = 5, [14] = 7, [15] = 9,
 }
+
+-- La pestana Ficha (paperdoll y sus tres vistas laterales) vive en HarfordCharacterSheet.
+local Ficha = HarfordCharacterSheet
+-- La pestana Profesiones vive en HarfordCharacterProfessions.
+local Profesiones = HarfordCharacterProfessions
 
 local function Print(msg)
     HarfordChat.Print(msg)
@@ -457,21 +458,6 @@ local function RawSigned(n)
     n = tonumber(n) or 0
     if n == 0 then return "0" end
     return (n >= 0 and "+" or "") .. tostring(n)
-end
-
-local function AbilityTooltipTitle(key)
-    -- `bonus` es solo el bono/penalizacion LIVE (estado/objeto): los modificadores de
-    -- raza/trasfondo ya estan horneados en la puntuacion de la ficha cargada y no se
-    -- muestran aqui. Se colorea verde (positivo) / rojo (negativo).
-    --
-    -- El parentesis NO es solo la puntuacion repetida: es el unico sitio donde se ve ese
-    -- bono live. Por eso se conserva.
-    local base, bonus = AbilityBaseAndBonus(key)
-    if bonus ~= 0 then
-        local color = bonus > 0 and "ff40ff40" or "ffff4040"
-        return key .. " (" .. tostring(base) .. "|c" .. color .. RawSigned(bonus) .. "|r)"
-    end
-    return key .. " (" .. tostring(base) .. ")"
 end
 
 local function AbilityMod(score)
@@ -970,62 +956,6 @@ local function SetColoredTextList(parent, owner, key, parts, opts)
     end
 end
 
-local function RefreshSubtitleClasses(SH, data)
-    if not SH then return end
-    local parts = GetClassParts(data)
-    if not parts then
-        if SH.subtitle then
-            SH.subtitle:SetText("Sin clase")
-            SH.subtitle:SetTextColor(1, 0.82, 0)
-            SH.subtitle:Show()
-        end
-        return
-    end
-
-    if SH.subtitle then SH.subtitle:Hide() end
-    SetColoredTextList(SH.page or S.frame, SH, "subtitleClassTexts", parts, { font = "GameFontNormal" })
-
-    local gap = 10
-    local maxWidth = 320
-    local total = 0
-    for i, fs in ipairs(SH.subtitleClassTexts or {}) do
-        if i <= #parts then
-            fs:SetWidth(1000)
-            if fs.SetWordWrap then fs:SetWordWrap(false) end
-            total = total + (fs:GetStringWidth() or 0)
-            if i > 1 then total = total + gap end
-        end
-    end
-
-    if total <= maxWidth then
-        local x = -total / 2
-        for i, fs in ipairs(SH.subtitleClassTexts or {}) do
-            if i <= #parts then
-                local w = fs:GetStringWidth() or 0
-                fs:SetWidth(w)
-                fs:SetPoint("TOPLEFT", SH.page or S.frame, "TOP", x, -36)
-                x = x + w + gap
-            end
-        end
-    else
-        local yOffset = 0
-        for i, fs in ipairs(SH.subtitleClassTexts or {}) do
-            if i <= #parts then
-                fs:SetWidth(maxWidth)
-                fs:SetJustifyH("CENTER")
-                if fs.SetWordWrap then fs:SetWordWrap(true) end
-                if fs.SetNonSpaceWrap then fs:SetNonSpaceWrap(false) end
-                fs:SetPoint("TOP", SH.page or S.frame, "TOP", 0, -34 - yOffset)
-                local h = 14
-                if fs.GetStringHeight then
-                    h = math.max(h, math.ceil(fs:GetStringHeight() or h))
-                end
-                yOffset = yOffset + h
-            end
-        end
-    end
-end
-
 -- Paginas que viven en la VENTANA DE HABILIDADES, no en el panel de personaje. Es una sola
 -- fuente a proposito: el bucle que oculta paginas del panel usa esta misma tabla, y cuando
 -- Profesiones se mudo aqui pero no alli, abrir el panel de personaje ocultaba sus marcos.
@@ -1143,17 +1073,6 @@ local function GetPrimaryClassId(data)
     return bestId
 end
 
-local function GetClassInfoAtlas(data)
-    local harfordAtlas = K.CLASS_INFO_ATLAS[GetPrimaryClassId(data)]
-    if harfordAtlas then return harfordAtlas end
-    if UnitClass then
-        local _, classFile = UnitClass("player")
-        local nativeAtlas = classFile and K.CLASS_FILE_TO_ATLAS[classFile]
-        if nativeAtlas then return nativeAtlas end
-    end
-    return "UI-Character-Info-Warrior-BG"
-end
-
 GetClassFileForEntry = function(entry, className, label)
     if not HarfordClassColors then return nil end
     local rawId = tostring(entry and entry.classId or "")
@@ -1180,19 +1099,6 @@ GetClassColorParts = function(entry, className, label)
         end
     end
     return r, g, b, hex
-end
-
-local function ApplyAtlasOrTexture(texture, atlas, fallback)
-    if not texture then return false end
-    if atlas and texture.SetAtlas then
-        local ok = pcall(texture.SetAtlas, texture, atlas)
-        if ok then return true end
-    end
-    if fallback then
-        texture:SetTexture(fallback)
-        return true
-    end
-    return false
 end
 
 local function SetTexCoord8(texture, coords)
@@ -1244,37 +1150,6 @@ local function RefreshRaceModelBackground(sheet, data)
     end
 end
 
-local function RefreshPaperDollSlots(sheet)
-    if not (sheet and sheet.slots) then return end
-    for _, slot in ipairs(sheet.slots) do
-        if slot.icon then
-            local texture = nil
-            local equipped = HarfordDnDItems and HarfordDnDItems.ResolveSlot
-                and HarfordDnDItems.ResolveSlot(slot.harfordSlotKey or slot.slotToken, GetProfileName())
-            if equipped and equipped.icon then
-                texture = equipped.icon
-            else
-                local basicInfo
-                if HarfordDnDItems and HarfordDnDItems.GetBasicWeaponInfo then
-                    basicInfo = HarfordDnDItems.GetBasicWeaponInfo(slot.harfordSlotKey or slot.slotToken, GetProfileName())
-                end
-                if not basicInfo and HarfordDnDItems and HarfordDnDItems.GetBasicArmorInfo then
-                    basicInfo = HarfordDnDItems.GetBasicArmorInfo(slot.harfordSlotKey or slot.slotToken, GetProfileName())
-                end
-                texture = basicInfo and basicInfo.icon or slot.emptyTexture
-                if slot.slotToken and GetInventorySlotInfo then
-                    local _, nativeTexture = GetInventorySlotInfo(slot.slotToken)
-                    if not basicInfo then texture = nativeTexture or texture end
-                end
-            end
-            slot.icon:SetTexture(texture or "Interface\\Icons\\INV_Misc_QuestionMark")
-            slot.icon:SetTexCoord(0, 1, 0, 1)
-            slot.icon:SetVertexColor(1, 1, 1, 0.88)
-            slot.icon:Show()
-        end
-    end
-end
-
 -- Mueve la seccion de Salvaciones y recoloca lo que depende de ella. Existe para poder
 -- afinar la posicion en juego sin recargar; la vista se repinta sola al refrescar.
 function API.SetSavesSectionY(y)
@@ -1312,98 +1187,6 @@ function API.SetAbilitySectionY(y)
     return true, SH.abilBarY
 end
 
-local function CreateFramePage(key)
-    local page = CreateFrame("Frame", nil, S.frame)
-    page:SetAllPoints(S.frame)
-    S.pages[key] = page
-    return page
-end
-
--- Lee un recurso (cur/max) del runtime via contexto.
-local function ResourceValue(suffixKey)
-    if IsInspecting() then
-        local snap = GetInspectSnapshot()
-        local resources = snap and snap.resources
-        if not resources and HarfordDnDResources and HarfordDnDResources.RemoteCache then
-            resources = HarfordDnDResources.RemoteCache[GetProfileName()]
-        end
-        return tonumber(resources and resources[suffixKey] or 0) or 0
-    end
-    return tonumber(GetProfileValue(suffixKey, 0)) or 0
-end
-
-
--- Borde interior NineSlice nativo (atlas UI-Frame-Inner* del CharacterFrameInset).
--- Dibuja las 4 esquinas (tamaño de atlas) y los 4 bordes tileados alrededor de 'frame'.
-local function MakeInnerBorder(frame)
-    local function tex()
-        local t = frame:CreateTexture(nil, "BORDER")
-        return t
-    end
-    local function atlas(t, name, useSize)
-        if t.SetAtlas then pcall(t.SetAtlas, t, name, useSize and true or false) end
-    end
-    local tl = tex(); atlas(tl, "UI-Frame-InnerTopLeft", true); tl:SetPoint("TOPLEFT")
-    local tr = tex(); atlas(tr, "UI-Frame-InnerTopRight", true); tr:SetPoint("TOPRIGHT")
-    local bl = tex(); atlas(bl, "UI-Frame-InnerBotLeftCorner", true); bl:SetPoint("BOTTOMLEFT")
-    local br = tex(); atlas(br, "UI-Frame-InnerBotRight", true); br:SetPoint("BOTTOMRIGHT")
-    -- Tiras de borde: grosor fijo (3px como el nativo, 256x3 / 3x256); el eje que abarca
-    -- lo fijan los anclajes entre esquinas. SIN tamaño transversal salian estiradas/grises.
-    local top = tex(); atlas(top, "_UI-Frame-InnerTopTile", true)
-    top:SetHeight(3)
-    top:SetPoint("TOPLEFT", tl, "TOPRIGHT", 0, 0); top:SetPoint("TOPRIGHT", tr, "TOPLEFT", 0, 0)
-    if top.SetHorizTile then top:SetHorizTile(true) end
-    local bot = tex(); atlas(bot, "_UI-Frame-InnerBotTile", true)
-    bot:SetHeight(3)
-    bot:SetPoint("BOTTOMLEFT", bl, "BOTTOMRIGHT", 0, 0); bot:SetPoint("BOTTOMRIGHT", br, "BOTTOMLEFT", 0, 0)
-    if bot.SetHorizTile then bot:SetHorizTile(true) end
-    local lft = tex(); atlas(lft, "!UI-Frame-InnerLeftTile", true)
-    lft:SetWidth(3)
-    lft:SetPoint("TOPLEFT", tl, "BOTTOMLEFT", 0, 0); lft:SetPoint("BOTTOMLEFT", bl, "TOPLEFT", 0, 0)
-    if lft.SetVertTile then lft:SetVertTile(true) end
-    local rgt = tex(); atlas(rgt, "!UI-Frame-InnerRightTile", true)
-    rgt:SetWidth(3)
-    rgt:SetPoint("TOPRIGHT", tr, "BOTTOMRIGHT", 0, 0); rgt:SetPoint("BOTTOMRIGHT", br, "TOPRIGHT", 0, 0)
-    if rgt.SetVertTile then rgt:SetVertTile(true) end
-end
-
-local function MakePaperDollInnerBorder(parent)
-    local function part(name, file, coords, w, h)
-        local t = parent:CreateTexture(name, "ARTWORK")
-        t:SetTexture(file)
-        SetTexCoord8(t, coords)
-        t:SetSize(w, h)
-        return t
-    end
-    local parts = "Interface\\CharacterFrame\\Char-Paperdoll-Parts"
-    local vertical = "Interface\\CharacterFrame\\Char-Paperdoll-Vertical"
-    local horizontal = "Interface\\CharacterFrame\\Char-Paperdoll-Horizontal"
-    local tl = part(nil, parts, { 0.40625, 0.8046875, 0.40625, 0.859375, 0.43359375, 0.8046875, 0.43359375, 0.859375 }, 7, 7)
-    tl:SetPoint("TOPLEFT", parent, "TOPLEFT", 46, -4)
-    local tr = part(nil, parts, { 0.40625, 0.734375, 0.40625, 0.7890625, 0.43359375, 0.734375, 0.43359375, 0.7890625 }, 7, 7)
-    tr:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -47, -4)
-    local bl = part(nil, parts, { 0.40625, 0.6640625, 0.40625, 0.71875, 0.43359375, 0.6640625, 0.43359375, 0.71875 }, 7, 7)
-    bl:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 46, 31)
-    local br = part(nil, parts, { 0.40625, 0.59375, 0.40625, 0.6484375, 0.43359375, 0.59375, 0.43359375, 0.6484375 }, 7, 7)
-    br:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -47, 31)
-    local left = part(nil, vertical, { 0.0625, 0, 0.0625, 1, 0.375, 0, 0.375, 1 }, 5, 32)
-    left:SetPoint("TOPLEFT", tl, "BOTTOMLEFT", -1, 0)
-    left:SetPoint("BOTTOMLEFT", bl, "TOPLEFT", -1, 0)
-    if left.SetVertTile then left:SetVertTile(true) end
-    local right = part(nil, vertical, { 0.5, 0, 0.5, 1, 0.8125, 0, 0.8125, 1 }, 5, 32)
-    right:SetPoint("TOPRIGHT", tr, "BOTTOMRIGHT", 1, 0)
-    right:SetPoint("BOTTOMRIGHT", br, "TOPRIGHT", 1, 0)
-    if right.SetVertTile then right:SetVertTile(true) end
-    local top = part(nil, horizontal, { 0, 0.5, 0, 0.8125, 1, 0.5, 1, 0.8125 }, 32, 5)
-    top:SetPoint("TOPLEFT", tl, "TOPRIGHT", 0, 1)
-    top:SetPoint("TOPRIGHT", tr, "TOPLEFT", 0, 1)
-    if top.SetHorizTile then top:SetHorizTile(true) end
-    local bottom = part(nil, horizontal, { 0, 0.0625, 0, 0.375, 1, 0.0625, 1, 0.375 }, 32, 5)
-    bottom:SetPoint("BOTTOMLEFT", bl, "BOTTOMRIGHT", 0, -1)
-    bottom:SetPoint("BOTTOMRIGHT", br, "BOTTOMLEFT", 0, -1)
-    if bottom.SetHorizTile then bottom:SetHorizTile(true) end
-end
-
 -- texCoords EXACTOS del PaperDollSidebarTabs nativo (sacados de /harford debug run probeframe).
 K.SBTAB_TC = {
     TOP     = { 0.015625, 0.003906, 0.015625, 0.046875, 0.453125, 0.003906, 0.453125, 0.046875 },
@@ -1421,1671 +1204,6 @@ K.SBTAB_TOOLTIP = {
     skills = "Habilidades",
     details = "Atributos",
 }
-
-local function CreateSidebarTabs(parent)
-    local tabs = CreateFrame("Frame", nil, parent)
-    tabs:SetSize(168, 35)
-    tabs:SetPoint("BOTTOMRIGHT", parent, "TOPRIGHT", -6, -1)
-    tabs.buttons = {}
-    local texFile = "Interface\\PaperDollInfoFrame\\PaperDollSidebarTabs"
-
-    local top = tabs:CreateTexture(nil, "BACKGROUND")
-    top:SetTexture(texFile)
-    SetTexCoord8(top, K.SBTAB_TC.TOP)
-    top:SetSize(28, 11)
-    top:SetPoint("BOTTOMLEFT", tabs, "BOTTOMLEFT", 0, 0)
-
-    local bottom = tabs:CreateTexture(nil, "BACKGROUND")
-    bottom:SetTexture(texFile)
-    SetTexCoord8(bottom, K.SBTAB_TC.BOTTOM)
-    bottom:SetSize(28, 13)
-    bottom:SetPoint("BOTTOMRIGHT", tabs, "BOTTOMRIGHT", 0, 0)
-
-    local function selectView(key)
-        if S.sheetView ~= key and HarfordUISounds and HarfordUISounds.Play then
-            HarfordUISounds.Play("character_sidebar_tab_changed")
-        end
-        S.sheetView = key
-        RefreshPanel()
-    end
-    -- bodyKind: tabla de texCoords (icono baked) o "portrait" (retrato del jugador).
-    local function makeTab(key, bodyKind, anchorTo)
-        local b = CreateFrame("Button", nil, tabs)
-        b:SetSize(33, 35)
-        if anchorTo then
-            b:SetPoint("RIGHT", anchorTo, "LEFT", -4, 0)
-        else
-            b:SetPoint("BOTTOMRIGHT", tabs, "BOTTOMRIGHT", -30, 0)
-        end
-        b:EnableMouse(true)
-        b:SetScript("OnClick", function() selectView(key) end)
-
-        -- Fondo nativo de la pestana (50x43). La seleccion cambia este mismo
-        -- recorte de GLOW a ACTIVE_BG; no usa una capa ni un marco adicional.
-        local glow = b:CreateTexture(nil, "BACKGROUND")
-        glow:SetTexture(texFile)
-        SetTexCoord8(glow, K.SBTAB_TC.GLOW)
-        glow:SetSize(50, 43)
-        glow:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", -9, -2)
-
-        -- Cuerpo (icono 33x34 o retrato).
-        local body = b:CreateTexture(nil, "ARTWORK")
-        if bodyKind == "portrait" then
-            body:SetSize(29, 31)
-            body:SetPoint("BOTTOM", b, "BOTTOM", 1, 0)
-            body:SetTexCoord(0.109375, 0.890625, 0.09375, 0.90625)
-            tabs.portrait = body
-        else
-            body:SetSize(33, 35)
-            body:SetPoint("BOTTOM", b, "BOTTOM", 1, -2)
-            body:SetTexture(texFile)
-            SetTexCoord8(body, bodyKind)
-        end
-
-        -- Separador inferior nativo (34x19).
-        local divider = b:CreateTexture(nil, "OVERLAY")
-        divider:SetTexture(texFile)
-        SetTexCoord8(divider, K.SBTAB_TC.DIVIDER)
-        divider:SetSize(34, 19)
-        divider:SetPoint("BOTTOM", b, "BOTTOM", 0, 0)
-
-        -- El probe del PaperDollSidebarTab nativo confirma capa HIGHLIGHT y mezcla BLEND.
-        local hilite = b:CreateTexture(nil, "HIGHLIGHT")
-        hilite:SetTexture(texFile)
-        SetTexCoord8(hilite, K.SBTAB_TC.HILITE)
-        hilite:SetSize(31, 31)
-        hilite:SetPoint("TOPLEFT", b, "TOPLEFT", 2, -3)
-        hilite:Hide()
-
-        b.body = body
-        b.background = glow
-        b.hover = hilite
-        b.tooltipText = K.SBTAB_TOOLTIP[key]
-        b:SetScript("OnEnter", function(self)
-            if not self.selected and self.hover then
-                self.hover:Show()
-            end
-            if self.tooltipText and GameTooltip then
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(self.tooltipText, 1, 0.82, 0)
-                GameTooltip:Show()
-            end
-        end)
-        b:SetScript("OnLeave", function(self)
-            if self.hover then
-                self.hover:Hide()
-            end
-            if GameTooltip then GameTooltip:Hide() end
-        end)
-        tabs.buttons[key] = b
-        return b
-    end
-
-    -- Orden nativo (derecha a izquierda): details, skills, summary(retrato).
-    local details = makeTab("details", K.SBTAB_TC.ICON3)
-    local skills = makeTab("skills", K.SBTAB_TC.ICON2, details)
-    makeTab("summary", "portrait", skills)
-
-    function tabs:SetSelected(key)
-        for viewKey, button in pairs(self.buttons) do
-            local selected = (viewKey == key)
-            button.selected = selected
-            button:SetAlpha(1)
-            SetTexCoord8(button.background, selected and K.SBTAB_TC.ACTIVE_BG or K.SBTAB_TC.GLOW)
-            if button.hover then button.hover:Hide() end
-        end
-    end
-    return tabs
-end
-
--- Crea la pagina de Ficha con estilo del panel de personaje nativo.
--- Las coordenadas base salen de CharacterFrame/PaperDollFrame medidos con
--- /harford debug run probeframe CharacterFrame y FrameDump.lua, no de ajustes a ojo.
-local function CreateSheetPage()
-    local page = CreateFramePage("sheet")
-    local SH = {}
-    S.sheet = SH
-    SH.page = page
-
-    -- CharacterFrameInset: TOPLEFT CharacterFrame 4,-60; BOTTOMRIGHT
-    -- CharacterFrame BOTTOMLEFT 332,4. Este bloque mantiene el mismo hueco que
-    -- el PaperDoll nativo para modelo y slots.
-    local leftInset = CreateFrame("Frame", nil, page)
-    leftInset:SetPoint("TOPLEFT", page, "TOPLEFT", 4, -60)
-    leftInset:SetPoint("BOTTOMRIGHT", page, "BOTTOMLEFT", 332, 4)
-    local lbg = leftInset:CreateTexture(nil, "BACKGROUND")
-    lbg:SetAllPoints(leftInset)
-    lbg:SetTexture("Interface\\FrameGeneral\\UI-Background-Marble", true, true)
-    if lbg.SetHorizTile then lbg:SetHorizTile(true) end
-    if lbg.SetVertTile then lbg:SetVertTile(true) end
-    MakeInnerBorder(leftInset)
-    SH.leftInset = leftInset
-
-    -- Subtitulo superior del paperdoll. Se alimenta con progresion Harford, pero
-    -- usa posicion/fuente de cabecera nativa.
-    SH.subtitle = CreateFS(page, "GameFontNormal", "")
-    SH.subtitle:SetPoint("TOP", page, "TOP", 0, -36)
-    SH.subtitle:SetWidth(320)
-    SH.subtitle:SetJustifyH("CENTER")
-    SH.subtitle:SetTextColor(1, 0.82, 0)
-
-    -- ===== Huecos de equipo (anclados al inset, posiciones exactas del nativo) =====
-    local function MakeSlot(parent, key)
-        local b = CreateFrame("Button", nil, parent)
-        b:SetSize(37, 37)
-        b.harfordSlotKey = key
-        b.nativeName = K.PAPERDOLL_SLOT_NAMES[key]
-        b.slotToken = K.PAPERDOLL_SLOT_TOKENS[key]
-        local frame = b:CreateTexture(nil, "BACKGROUND", nil, -1)
-        frame:SetTexture("Interface\\CharacterFrame\\Char-Paperdoll-Parts")
-        SetTexCoord8(frame, { 0.20703125, 0.59375, 0.20703125, 0.9375, 0.3984375, 0.59375, 0.3984375, 0.9375 })
-        frame:SetSize(49, 44)
-        frame:SetPoint("TOPLEFT", b, "TOPLEFT", -4, 0)
-        local fill = b:CreateTexture(nil, "BORDER", nil, -2)
-        fill:SetPoint("TOPLEFT", b, "TOPLEFT", 4, -4)
-        fill:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -4, 4)
-        fill:SetColorTexture(0.015, 0.014, 0.012, 0.25)
-        local bevel = b:CreateTexture(nil, "BORDER", nil, -1)
-        bevel:SetPoint("TOPLEFT", fill, "TOPLEFT", 1, -1)
-        bevel:SetPoint("BOTTOMRIGHT", fill, "BOTTOMRIGHT", -1, 1)
-        bevel:SetColorTexture(0.18, 0.18, 0.16, 0.08)
-        local icon = b:CreateTexture(nil, "BORDER")
-        icon:SetAllPoints(b)
-        if GetInventorySlotInfo and b.slotToken then
-            local _, nativeTexture = GetInventorySlotInfo(b.slotToken)
-            b.emptyTexture = nativeTexture
-            icon:SetTexture(nativeTexture)
-        else
-            icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-        end
-        icon:SetTexCoord(0, 1, 0, 1)
-        icon:SetVertexColor(1, 1, 1, 0.88)
-        if icon.SetDesaturated then pcall(icon.SetDesaturated, icon, false) end
-        icon:Show()
-        b.icon = icon
-        local function makeBasicSelector()
-            local isWeaponSlot = key == "MainHand" or key == "SecondaryHand"
-            local isArmorSlot = key == "Chest"
-            if not (isWeaponSlot or isArmorSlot) then return end
-
-            -- FLECHA: plantilla del propio cliente, la misma que usa el PaperDollFrame nativo
-            -- (`PaperDollFrame.xml` la declara como `$parentPopoutButton`). Asi sale la flecha
-            -- amarilla de verdad y no una aproximacion. Si no existiese, se cae al arte de chat
-            -- que habia antes, que al menos se ve.
-            -- Medidas EXACTAS del nativo. El template `EquipmentFlyoutPopoutButtonTemplate`
-            -- nace 16x32 anclado LEFT->RIGHT, pero `PaperDollItemSlotButton_OnLoad` lo
-            -- reconfigura para cada hueco: en la orientacion horizontal queda 16 de ancho x38
-            -- de alto, en `LEFT -> hueco.RIGHT (-8, 0)` -metido 8px SOBRE el hueco- y con unos
-            -- texCoords de OCHO argumentos que giran la flecha. Con 14x14 en la esquina, que
-            -- es lo que habia, no se parecia ni se veia.
-            -- Las manos usan la orientacion VERTICAL del nativo: la flecha va DEBAJO del
-            -- hueco y apunta hacia abajo. El pecho usa la horizontal, a su derecha.
-            local esVertical = isWeaponSlot
-            local arrow = CreateFrame("Button", nil, b)
-            if esVertical then
-                arrow:SetSize(38, 16)
-                arrow:SetPoint("TOP", b, "BOTTOM", 0, 4)
-            else
-                arrow:SetSize(16, 38)
-                -- DESVIACION del nativo, que la mete 8px SOBRE el hueco (`-8`). En el paperdoll
-                -- de Blizzard hay sitio a la derecha; en el nuestro la columna izquierda va pegada
-                -- al modelo y con -8 la flecha mordia el icono. -4 es el punto medio ajustado a ojo
-                -- sobre la ventana real.
-                arrow:SetPoint("LEFT", b, "RIGHT", -4, 0)
-            end
-            arrow:SetFrameLevel((b:GetFrameLevel() or 1) + 5)
-            local flechaNormal = arrow:CreateTexture(nil, "ARTWORK")
-            flechaNormal:SetAllPoints(arrow)
-            flechaNormal:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-FlyoutButton")
-            arrow:SetNormalTexture(flechaNormal)
-            local flechaHl = arrow:CreateTexture(nil, "HIGHLIGHT")
-            flechaHl:SetAllPoints(arrow)
-            flechaHl:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-FlyoutButton")
-            arrow:SetHighlightTexture(flechaHl)
-
-            -- `EquipmentFlyoutPopoutButton_SetReversed`: al abrirse, la flecha se da la
-            -- vuelta. Son los mismos ocho numeros con las dos mitades intercambiadas.
-            -- Se usan las texturas que hemos creado, NO `GetNormalTexture()`: si eso devolviera
-            -- otra cosa, el guard se lo tragaba en silencio y la flecha quedaba SIN texCoords,
-            -- o sea con el fichero entero estirado a 16x38 -una banda amarilla en vez de la
-            -- pestana-. Los ocho numeros son los de `EquipmentFlyoutPopoutButton_SetReversed`
-            -- en su rama horizontal: definen las cuatro esquinas y giran el recorte 90 grados.
-            -- Cada orientacion tiene SUS recortes. El vertical usa la forma normal de cuatro
-            -- numeros -con arriba y abajo invertidos, que es lo que hace que apunte hacia
-            -- abajo-; el horizontal usa la de ocho, que ademas gira el recorte 90 grados.
-            local function OrientarFlecha(abierta)
-                if esVertical then
-                    if abierta then
-                        flechaNormal:SetTexCoord(0.15625, 0.84375, 0, 0.5)
-                        flechaHl:SetTexCoord(0.15625, 0.84375, 0.5, 1)
-                    else
-                        flechaNormal:SetTexCoord(0.15625, 0.84375, 0.5, 0)
-                        flechaHl:SetTexCoord(0.15625, 0.84375, 1, 0.5)
-                    end
-                elseif abierta then
-                    flechaNormal:SetTexCoord(0.15625, 0, 0.84375, 0, 0.15625, 0.5, 0.84375, 0.5)
-                    flechaHl:SetTexCoord(0.15625, 0.5, 0.84375, 0.5, 0.15625, 1, 0.84375, 1)
-                else
-                    flechaNormal:SetTexCoord(0.15625, 0.5, 0.84375, 0.5, 0.15625, 0, 0.84375, 0)
-                    flechaHl:SetTexCoord(0.15625, 1, 0.84375, 1, 0.15625, 0.5, 0.84375, 0.5)
-                end
-            end
-            OrientarFlecha(false)
-            arrow:Show()
-
-            -- Resaltado sobre el HUECO mientras su menu esta abierto: el nativo lo pinta con
-            -- `UI-GearManager-ItemButton-Highlight` a 50x50 (EquipmentFlyoutFrame.Highlight).
-            -- POR DETRAS del hueco, no encima. El nativo lo pinta en el frame del flyout, que
-            -- monta a `itemButton:GetFrameLevel() - 1`: el resaltado asoma alrededor del hueco
-            -- como un halo, y el icono y el borde quedan por delante. Puesto en OVERLAY tapaba
-            -- las dos cosas y por eso se veia como un recuadro descuadrado encima.
-            local resaltado = b:CreateTexture(nil, "BACKGROUND", nil, -3)
-            resaltado:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-ItemButton-Highlight")
-            resaltado:SetSize(50, 50)
-            resaltado:SetPoint("CENTER", b, "CENTER", 0, 0)
-            resaltado:Hide()
-
-            -- Y la MISMA marca que lleva la pieza elegida dentro de la rejilla, sobre el icono
-            -- del hueco de origen: mientras el menu esta abierto se ve de un vistazo de que
-            -- hueco salio. Es la textura de los botones marcados (`CheckButtonHilight` en ADD),
-            -- al tamano del icono, no del borde.
-            local marcaOrigen = b:CreateTexture(nil, "OVERLAY", nil, 3)
-            marcaOrigen:SetTexture("Interface\\Buttons\\CheckButtonHilight")
-            marcaOrigen:SetBlendMode("ADD")
-            marcaOrigen:SetAllPoints(b)
-            marcaOrigen:Hide()
-
-            local function refreshAfterChoice()
-                RefreshGameUI()
-                RefreshPanel()
-            end
-
-            -- ── Reglas de que se puede poner en cada mano ──────────────────────────────────
-            local offhand, mainhand = (key == "SecondaryHand"), (key == "MainHand")
-            local function isTwoHanded(weapon)
-                for _, p in ipairs(weapon.props or {}) do
-                    if tostring(p) == "Dos manos" then return true end
-                end
-                return false
-            end
-            local function isAllowed(weapon)
-                -- Desarmado no se ofrece: sin objeto ni arma basica ya cuentas como desarmado.
-                if weapon.key == "Desarmado" then return false end
-                local isShield = (weapon.key == "Escudo")
-                if mainhand and isShield then return false end
-                -- Mano secundaria: solo se excluyen las de DOS MANOS. Las de una mano valen,
-                -- incluidas las a distancia (pistola, ballesta de mano) y el escudo.
-                if offhand and not isShield and isTwoHanded(weapon) then return false end
-                return true
-            end
-
-            local function GruposPermitidos()
-                local fuera = {}
-                if isArmorSlot then
-                    for _, g in ipairs((HarfordDnDItems and HarfordDnDItems.GetArmorMenuGroups
-                        and HarfordDnDItems.GetArmorMenuGroups()) or {}) do
-                        if #(g.items or {}) > 0 then fuera[#fuera + 1] = g end
-                    end
-                    return fuera
-                end
-                for _, g in ipairs((HarfordDnDWeapons and HarfordDnDWeapons.GetWeaponMenuGroups
-                    and HarfordDnDWeapons.GetWeaponMenuGroups()) or {}) do
-                    local permitidas = {}
-                    for _, w in ipairs(g.items or {}) do
-                        if isAllowed(w) then permitidas[#permitidas + 1] = w end
-                    end
-                    if #permitidas > 0 then
-                        fuera[#fuera + 1] = { key = g.key, text = g.text, items = permitidas }
-                    end
-                end
-                return fuera
-            end
-
-            -- Una ruta que el cliente no tenga se pinta en verde chillon sin avisar.
-            local function IconoSeguro(ruta, alternativa)
-                if not GetFileIDFromPath then return ruta end
-                if GetFileIDFromPath(ruta) then return ruta end
-                return alternativa
-            end
-
-            local function IconoDe(pieza)
-                if isArmorSlot then
-                    return pieza.icon or "Interface\\Icons\\INV_Chest_Leather_09"
-                end
-                if HarfordDnDWeapons and HarfordDnDWeapons.GetIconPath then
-                    return HarfordDnDWeapons.GetIconPath(pieza)
-                end
-                return "Interface\\Icons\\INV_Misc_QuestionMark"
-            end
-
-            local function Actual()
-                if isArmorSlot then
-                    return HarfordDnDItems and HarfordDnDItems.GetBasicArmor
-                        and HarfordDnDItems.GetBasicArmor(key, GetProfileName())
-                end
-                return HarfordDnDItems and HarfordDnDItems.GetBasicWeapon
-                    and HarfordDnDItems.GetBasicWeapon(key, GetProfileName())
-            end
-
-            local function Poner(claveElegida)
-                if isArmorSlot then
-                    if HarfordDnDItems and HarfordDnDItems.SetBasicArmor then
-                        HarfordDnDItems.SetBasicArmor(key, claveElegida, GetProfileName())
-                    end
-                elseif HarfordDnDItems and HarfordDnDItems.SetBasicWeapon then
-                    HarfordDnDItems.SetBasicWeapon(key, claveElegida, GetProfileName())
-                end
-                refreshAfterChoice()
-            end
-
-            -- REJILLA: replica del EquipmentFlyout nativo. Dos pasos -categorias y luego las
-            -- piezas de la elegida-, porque el catalogo tiene 52 armas y una rejilla plana se
-            -- desbordaria.
-            --
-            -- Constantes de `EquipmentFlyout.lua`: ITEMS_PER_ROW=5, EFITEM 37x37, XOFFSET=4,
-            -- YOFFSET=-5 (paso vertical 42), BORDERWIDTH=3.
-            local POR_FILA, LADO, BORDE, PASO_X, PASO_Y = 5, 37, 3, 41, 42
-
-            -- El fondo NO es un marco generico: el nativo lo monta por piezas de
-            -- `UI-GearManager-Flyout` con recortes distintos segun haya un solo hueco, una fila
-            -- o varias. Estos son sus texCoords y medidas tal cual.
-            local FLY_TEX = "Interface\\PaperDollInfoFrame\\UI-GearManager-Flyout"
-            local UNO_IZQ = { 0, 0.09765625, 0.5546875, 0.77734375 }
-            local UNO_DER = { 0.41796875, 0.51171875, 0.5546875, 0.77734375 }
-            local UNO_IZQ_W, UNO_DER_W = 25, 24
-            local FILA_IZQ = { 0, 0.16796875, 0.5546875, 0.77734375 }
-            local FILA_CEN = { 0.16796875, 0.328125, 0.5546875, 0.77734375 }
-            local FILA_DER = { 0.328125, 0.51171875, 0.5546875, 0.77734375 }
-            local FILA_H, FILA_IZQ_W, FILA_CEN_W, FILA_DER_W = 54, 43, 41, 47
-            local MULTI_ARR = { 0, 0.8359375, 0, 0.19140625 }
-            local MULTI_MED = { 0, 0.8359375, 0.19140625, 0.35546875 }
-            local MULTI_ABA = { 0, 0.8359375, 0.35546875, 0.546875 }
-            local MULTI_W, MULTI_ARR_H, MULTI_MED_H, MULTI_ABA_H = 214, 49, 42, 49
-
-            -- Cuelga de UIParent, NO del hueco: dentro del arbol del panel la rejilla quedaba
-            -- por debajo del marco exterior, porque el NineSlice del panel es un frame hijo con
-            -- nivel superior. FULLSCREEN_DIALOG es la strata de los desplegables sobre un dialogo.
-            local flyout = CreateFrame("Frame", nil, UIParent)
-            flyout:SetFrameStrata("FULLSCREEN_DIALOG")
-            -- Como el nativo: en vertical la rejilla nace DEBAJO de la flecha
-            -- (verticalAnchorX/Y = 0,0); en horizontal, a su derecha.
-            if esVertical then
-                flyout:SetPoint("TOPLEFT", arrow, "BOTTOMLEFT", 0, 0)
-            else
-                flyout:SetPoint("TOPLEFT", arrow, "TOPRIGHT", 0, 0)
-            end
-            flyout:Hide()
-            flyout.botones = {}
-            flyout.fondos = {}
-
-            local function PiezaDeFondo(i)
-                local t = flyout.fondos[i]
-                if t then return t end
-                t = flyout:CreateTexture(nil, "BACKGROUND")
-                t:SetTexture(FLY_TEX)
-                flyout.fondos[i] = t
-                return t
-            end
-
-            -- Monta el fondo con las mismas piezas y en el mismo orden que
-            -- `EquipmentFlyout_UpdateFlyout`. Todas arrancan en TOPLEFT (-5, +4) de la rejilla.
-            local function MontarFondo(cuantos, filas)
-                local usadas, ultima = 0, nil
-                local function Pieza(coords, ancho, alto, anclaA, punto)
-                    usadas = usadas + 1
-                    local t = PiezaDeFondo(usadas)
-                    t:ClearAllPoints()
-                    t:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
-                    t:SetSize(ancho, alto)
-                    if anclaA then
-                        t:SetPoint("TOPLEFT", anclaA, punto or "TOPRIGHT", 0, 0)
-                    else
-                        t:SetPoint("TOPLEFT", flyout, "TOPLEFT", -5, 4)
-                    end
-                    t:Show()
-                    ultima = t
-                    return t
-                end
-                if cuantos == 1 then
-                    Pieza(UNO_IZQ, UNO_IZQ_W, FILA_H)
-                    Pieza(UNO_DER, UNO_DER_W, FILA_H, ultima)
-                elseif cuantos <= POR_FILA then
-                    Pieza(FILA_IZQ, FILA_IZQ_W, FILA_H)
-                    for _ = 2, cuantos - 1 do
-                        Pieza(FILA_CEN, FILA_CEN_W, FILA_H, ultima)
-                    end
-                    Pieza(FILA_DER, FILA_DER_W, FILA_H, ultima)
-                else
-                    Pieza(MULTI_ARR, MULTI_W, MULTI_ARR_H)
-                    for _ = 2, filas - 1 do
-                        Pieza(MULTI_MED, MULTI_W, MULTI_MED_H, ultima, "BOTTOMLEFT")
-                    end
-                    Pieza(MULTI_ABA, MULTI_W, MULTI_ABA_H, ultima, "BOTTOMLEFT")
-                end
-                for i = usadas + 1, #flyout.fondos do flyout.fondos[i]:Hide() end
-            end
-
-            local function BotonDeRejilla(i)
-                local bt = flyout.botones[i]
-                if bt then return bt end
-                bt = CreateFrame("Button", nil, flyout)
-                bt:SetSize(LADO, LADO)
-                bt.icon = bt:CreateTexture(nil, "BORDER")
-                bt.icon:SetAllPoints(bt)
-                bt.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
-                bt.marco = bt:CreateTexture(nil, "OVERLAY")
-                bt.marco:SetTexture("Interface\\Common\\WhiteIconFrame")
-                bt.marco:SetAllPoints(bt)
-                bt:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-                -- Marca de "esto es lo que llevas puesto".
-                bt.puesta = bt:CreateTexture(nil, "OVERLAY", nil, 1)
-                bt.puesta:SetTexture("Interface\\Buttons\\CheckButtonHilight")
-                bt.puesta:SetBlendMode("ADD")
-                bt.puesta:SetAllPoints(bt)
-                bt.puesta:Hide()
-                bt:SetScript("OnEnter", function(self)
-                    if not (GameTooltip and self.tituloTooltip) then return end
-                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                    GameTooltip:SetText(self.tituloTooltip, 1, 0.82, 0, true)
-                    if self.subTooltip then
-                        GameTooltip:AddLine(self.subTooltip, 1, 1, 1, true)
-                    end
-                    GameTooltip:Show()
-                end)
-                bt:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-                flyout.botones[i] = bt
-                return bt
-            end
-
-            local Pintar   -- forward: el paso 1 necesita volver a pintarse desde el paso 2
-
-            -- `entradas` = { { icon, titulo, sub, marcada, alPulsar } }
-            --
-            -- Sin titulo: el flyout nativo no lo lleva. Cada icono se identifica por su
-            -- tooltip, incluidas las categorias del primer paso.
-            local function PintarRejilla(_, entradas)
-                local cuantos = math.max(1, #entradas)
-                local filas = math.ceil(cuantos / POR_FILA)
-                local columnas = math.min(POR_FILA, cuantos)
-                -- Medidas del nativo: el buttonAnchor mide
-                -- (n * 37) + ((n - 1) * 4) + 3 de ancho, y 43 + (filas - 1) * 42 de alto.
-                flyout:SetSize(columnas * LADO + (columnas - 1) * (PASO_X - LADO) + BORDE,
-                    (LADO + 2 * BORDE) + (filas - 1) * PASO_Y)
-                MontarFondo(cuantos, filas)
-                for i, e in ipairs(entradas) do
-                    local bt = BotonDeRejilla(i)
-                    local fila, col = math.floor((i - 1) / POR_FILA), (i - 1) % POR_FILA
-                    bt:ClearAllPoints()
-                    -- Igual que el nativo: el primero de cada fila cuelga del TOPLEFT con el
-                    -- borde, y los demas se encadenan a la derecha del anterior.
-                    bt:SetPoint("TOPLEFT", flyout, "TOPLEFT",
-                        BORDE + col * PASO_X, -(BORDE + fila * PASO_Y))
-                    bt.icon:SetTexture(e.icon)
-                    bt.tituloTooltip, bt.subTooltip = e.titulo, e.sub
-                    bt.puesta:SetShown(e.marcada and true or false)
-                    bt:SetScript("OnClick", e.alPulsar)
-                    bt:Show()
-                end
-                for i = #entradas + 1, #flyout.botones do flyout.botones[i]:Hide() end
-                flyout:Show()
-            end
-
-            local function PintarCategoria(grupo)
-                local actual = Actual()
-                local entradas = {}
-                for _, pieza in ipairs(grupo.items or {}) do
-                    entradas[#entradas + 1] = {
-                        icon = IconoDe(pieza),
-                        titulo = pieza.label or pieza.key,
-                        sub = isArmorSlot
-                            and ("CA " .. tostring(pieza.caText or pieza.base or 10))
-                            or (HarfordDnDWeapons and HarfordDnDWeapons.WeaponPropsLabel
-                                and HarfordDnDWeapons.WeaponPropsLabel(pieza) or nil),
-                        marcada = (actual == pieza.key),
-                        alPulsar = function() Poner(pieza.key); flyout:Hide() end,
-                    }
-                end
-                -- Volver a las categorias sin cerrar la rejilla.
-                entradas[#entradas + 1] = {
-                    icon = IconoSeguro("Interface\\Buttons\\UI-RefreshButton",
-                        "Interface\\Icons\\INV_Misc_QuestionMark"),
-                    titulo = "Volver",
-                    alPulsar = function() Pintar() end,
-                }
-                PintarRejilla(grupo.text or grupo.key, entradas)
-            end
-
-            Pintar = function()
-                local actual = Actual()
-                local entradas = {}
-                for _, grupo in ipairs(GruposPermitidos()) do
-                    -- La categoria no tiene icono propio: se usa el de su primera pieza como
-                    -- emblema, que es lo que hace reconocible el grupo de un vistazo.
-                    local primera = (grupo.items or {})[1]
-                    entradas[#entradas + 1] = {
-                        icon = primera and IconoDe(primera) or "Interface\\Icons\\INV_Misc_QuestionMark",
-                        titulo = grupo.text or grupo.key,
-                        sub = #(grupo.items or {}) .. (isArmorSlot and " armaduras" or " armas"),
-                        alPulsar = function() PintarCategoria(grupo) end,
-                    }
-                end
-                -- Quitar la basica: deja el hueco a desarmado / sin armadura.
-                entradas[#entradas + 1] = {
-                    icon = IconoSeguro("Interface\\Buttons\\UI-GroupLoot-Pass-Up",
-                        "Interface\\Icons\\INV_Misc_QuestionMark"),
-                    titulo = isArmorSlot and "Sin armadura" or "Sin arma basica",
-                    sub = isArmorSlot and "CA 10 + Destreza" or "Cuentas como desarmado",
-                    marcada = (not actual or actual == "none"),
-                    alPulsar = function() Poner(nil); flyout:Hide() end,
-                }
-                PintarRejilla(isArmorSlot and "Armadura basica" or "Arma basica", entradas)
-            end
-
-            flyout:SetScript("OnHide", function()
-                OrientarFlecha(false)
-                resaltado:Hide()
-                marcaOrigen:Hide()
-                -- Deja de ser el abierto. Se comprueba la identidad porque otro hueco puede
-                -- haberlo relevado ya al abrirse.
-                if API._flyoutAbierto == flyout then API._flyoutAbierto = nil end
-            end)
-            -- El nativo dispara el kit 856 (SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON) desde el
-            -- propio boton de la flecha, tanto al abrir como al cerrar; lo confirma
-            -- `/harford debug run nativeprobe sound on` sobre el paperdoll de Blizzard.
-            --
-            -- Suena en el CLIC, no en el OnHide: asi cambiar de hueco hace UN solo sonido -el
-            -- de abrir- en vez de encadenar el cierre del anterior con la apertura del nuevo,
-            -- y cerrar el panel entero no suena, que seria ruido.
-            local function SonarSelector()
-                if PlaySound then
-                    PlaySound((SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON) or 856, "SFX")
-                end
-            end
-            arrow:SetScript("OnClick", function()
-                if IsInspecting() then return end
-                if flyout:IsShown() then
-                    flyout:Hide()
-                    SonarSelector()
-                else
-                    -- Solo puede haber UNA rejilla abierta: abrir la de un hueco cierra la del
-                    -- anterior, como cualquier menu. Se guarda en la tabla del modulo y no en una
-                    -- local nueva: este fichero anda justo del limite de 200 locales de Lua 5.1.
-                    if API._flyoutAbierto and API._flyoutAbierto ~= flyout then
-                        API._flyoutAbierto:Hide()
-                    end
-                    API._flyoutAbierto = flyout
-                    Pintar()
-                    OrientarFlecha(true)
-                    resaltado:Show()
-                    marcaOrigen:Show()
-                    SonarSelector()
-                end
-            end)
-            arrow:SetScript("OnEnter", function(self)
-                if not GameTooltip then return end
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(isArmorSlot and "Armadura basica" or "Arma basica", 1, 0.82, 0, true)
-                GameTooltip:AddLine("Se usa solo si no hay un objeto equipado en este slot.", 1, 1, 1, true)
-                GameTooltip:Show()
-            end)
-            arrow:SetScript("OnLeave", function()
-                if GameTooltip then GameTooltip:Hide() end
-            end)
-            -- Al colgar de UIParent ya no se oculta sola con el panel: hay que llevarla.
-            b:HookScript("OnHide", function() flyout:Hide() end)
-            b.basicSelector = arrow
-            b.basicFlyout = flyout
-        end
-        makeBasicSelector()
-        local white = b:CreateTexture(nil, "OVERLAY")
-        white:SetTexture("Interface\\Common\\WhiteIconFrame")
-        white:SetSize(37, 37)
-        white:SetPoint("CENTER", b, "CENTER", 0, 0)
-        white:Hide()
-        local normal = b:CreateTexture(nil, "ARTWORK")
-        normal:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-        normal:SetSize(64, 64)
-        normal:SetPoint("CENTER", b, "CENTER", 0, -1)
-        normal:SetVertexColor(1, 1, 1, 1)
-        b:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-        b:RegisterForDrag("LeftButton")
-        local function equipFromCursor()
-            if IsInspecting() then return false end
-            if not (HarfordDnDItems and HarfordDnDItems.EquipSlot and GetCursorInfo) then return false end
-            local cursorType, itemId, itemLink = GetCursorInfo()
-            if cursorType ~= "item" then return false end
-            itemLink = itemLink or (itemId and select(2, GetItemInfo(itemId)))
-            if not itemLink or itemLink == "" then return false end
-            -- Solo se permite equipar objetos que correspondan a este slot.
-            local itemName, _, _, _, _, _, _, _, equipLoc = GetItemInfo(itemLink)
-            if itemName and not (HarfordDnDItems.CanEquipInSlot and HarfordDnDItems.CanEquipInSlot(equipLoc, key)) then
-                Print("Ese objeto no va en el slot " .. SlotLabelES(key) .. ".")
-                return false
-            end
-            HarfordDnDItems.EquipSlot(key, itemLink, GetProfileName())
-            if ClearCursor then ClearCursor() end
-            RefreshGameUI()
-            RefreshPanel()
-            return true
-        end
-        b:SetScript("OnReceiveDrag", equipFromCursor)
-        b:SetScript("OnClick", function(self, button)
-            -- Shift+click en un objeto equipado (no basico): linkearlo en el chat como un
-            -- objeto normal. Funciona tambien en inspeccion (solo comparte el link).
-            local slotEntry = HarfordDnDItems and HarfordDnDItems.GetSlot and HarfordDnDItems.GetSlot(key, GetProfileName())
-            if slotEntry and slotEntry.itemLink and slotEntry.itemLink ~= ""
-                and ((IsModifiedClick and IsModifiedClick("CHATLINK")) or (IsShiftKeyDown and IsShiftKeyDown()))
-            then
-                if ChatEdit_InsertLink then ChatEdit_InsertLink(slotEntry.itemLink) end
-                return
-            end
-            if IsInspecting() then return end
-            -- Ctrl+click: sintonizar o romper la sintonizacion. Es el unico gesto libre del
-            -- slot (shift linkea, click derecho/alt desequipa, click izquierdo equipa) y hasta
-            -- ahora la sintonizacion solo existia como API, sin forma de usarla desde la ficha.
-            if IsControlKeyDown and IsControlKeyDown() and HarfordDnDBurden then
-                local link = slotEntry and slotEntry.itemLink
-                local itemId = tonumber(tostring(link or ""):match("item:(%d+)"))
-                if not itemId then
-                    Print("|cffffcc00Ese hueco no tiene un objeto real que sintonizar.|r")
-                    return
-                end
-                if HarfordDnDBurden.IsAttuned(itemId) then
-                    HarfordDnDBurden.Unattune(itemId)
-                elseif not HarfordDnDBurden.RequiresAttunement(link) then
-                    Print("|cffffcc00Ese objeto no pide sintonizacion.|r")
-                    return
-                else
-                    local nombre = tostring(link):match("%[(.-)%]") or ("Objeto " .. itemId)
-                    local ok, err = HarfordDnDBurden.Attune(itemId, nombre)
-                    if not ok then Print("|cffff5555" .. tostring(err) .. ".|r") end
-                end
-                RefreshPanel()
-                return
-            end
-            if button == "RightButton" or (IsAltKeyDown and IsAltKeyDown()) then
-                if HarfordDnDItems and HarfordDnDItems.UnequipSlot then
-                    HarfordDnDItems.UnequipSlot(key, GetProfileName())
-                    RefreshGameUI()
-                    RefreshPanel()
-                end
-                return
-            end
-            equipFromCursor()
-        end)
-        b:SetScript("OnEnter", function(self)
-            if not GameTooltip then return end
-            local entry = HarfordDnDItems and HarfordDnDItems.GetSlot and HarfordDnDItems.GetSlot(key, GetProfileName())
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            -- Solo SetHyperlink con un link de objeto REAL (contiene "|H..."). Las armas/armaduras
-            -- basicas no tienen itemLink (solo una clave); pasarlas a SetHyperlink lanza
-            -- "Unknown link type". El pcall protege ademas de items custom de Epsilon no cacheados.
-            local linkShown = false
-            if entry and entry.itemLink and tostring(entry.itemLink):find("|H", 1, true) then
-                linkShown = pcall(GameTooltip.SetHyperlink, GameTooltip, entry.itemLink)
-            end
-            if linkShown then
-                local basicLabel = HarfordDnDItems and HarfordDnDItems.GetSlotBasicLabel and HarfordDnDItems.GetSlotBasicLabel(key, GetProfileName())
-                if basicLabel then
-                    GameTooltip:AddLine("Basico guardado: " .. tostring(basicLabel) .. " (ignorado por el objeto equipado)", 0.7, 0.7, 0.7, true)
-                end
-                if not IsInspecting() then
-                    GameTooltip:AddLine("Click derecho para desequipar", 0.4, 1, 0.4, true)
-                    -- Sintonizacion: solo se menciona si el objeto la pide o ya la tiene, para
-                    -- no llenar de ruido el tooltip de cada pieza corriente.
-                    if HarfordDnDBurden then
-                        local itemId = tonumber(tostring(entry.itemLink):match("item:(%d+)"))
-                        if itemId and HarfordDnDBurden.IsAttuned(itemId) then
-                            GameTooltip:AddLine(string.format("Sintonizado (%d/%d) - Ctrl+click para romperla",
-                                HarfordDnDBurden.CountAttuned(), HarfordDnDBurden.MAX_ATTUNED), 0.4, 1, 0.4, true)
-                        elseif itemId and HarfordDnDBurden.RequiresAttunement(entry.itemLink) then
-                            GameTooltip:AddLine(string.format("Requiere sintonizacion (%d/%d usadas) - Ctrl+click",
-                                HarfordDnDBurden.CountAttuned(), HarfordDnDBurden.MAX_ATTUNED), 1, 0.82, 0, true)
-                        end
-                    end
-                end
-            else
-                GameTooltip:SetText(SlotLabelES(key), 1, 0.82, 0, true)
-                if IsInspecting() then
-                    GameTooltip:AddLine("Sin objeto informado en el snapshot remoto.", 1, 1, 1, true)
-                else
-                    GameTooltip:AddLine("Arrastra un objeto aqui para equiparlo en la ficha Harford.", 1, 1, 1, true)
-                    local basicLabel = HarfordDnDItems and HarfordDnDItems.GetSlotBasicLabel and HarfordDnDItems.GetSlotBasicLabel(key, GetProfileName())
-                    if basicLabel then
-                        GameTooltip:AddLine("Basico activo: " .. tostring(basicLabel), 0.3, 1, 0.3, true)
-                    end
-                end
-            end
-            GameTooltip:Show()
-        end)
-        b:SetScript("OnLeave", function()
-            if GameTooltip then GameTooltip:Hide() end
-        end)
-        SH.slots = SH.slots or {}
-        SH.slots[#SH.slots + 1] = b
-        -- Acceso para diagnostico: rastrear el arbol de frames desde fuera es fragil.
-        API._slots = SH.slots
-        return b
-    end
-    local head = MakeSlot(leftInset, "Head")
-    head:SetPoint("TOPLEFT", leftInset, "TOPLEFT", 4, -2)
-    local prev = head
-    for _, t in ipairs({ "Neck", "Shoulder", "Back", "Chest", "Shirt", "Tabard", "Wrists" }) do
-        local s = MakeSlot(leftInset, t)
-        s:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 0, -4)
-        prev = s
-    end
-    local hands = MakeSlot(leftInset, "Hands")
-    hands:SetPoint("TOPRIGHT", leftInset, "TOPRIGHT", -4, -2)
-    prev = hands
-    for _, t in ipairs({ "Waist", "Legs", "Feet", "Finger0", "Finger1", "Trinket0", "Trinket1" }) do
-        local s = MakeSlot(leftInset, t)
-        s:SetPoint("TOPLEFT", prev, "BOTTOMLEFT", 0, -4)
-        prev = s
-    end
-    local mainHand = MakeSlot(leftInset, "MainHand")
-    mainHand:SetPoint("BOTTOMLEFT", leftInset, "BOTTOMLEFT", 130, 16)
-    local offHand = MakeSlot(leftInset, "SecondaryHand")
-    offHand:SetPoint("TOPLEFT", mainHand, "TOPRIGHT", 4, 0)
-
-    -- CharacterModelFrame: 231x320, TOPLEFT PaperDollFrame 52,-66.
-    local model = CreateFrame("PlayerModel", nil, leftInset)
-    model:SetSize(231, 320)
-    model:SetPoint("TOPLEFT", leftInset, "TOPLEFT", 48, -6)
-    if model.SetClipsChildren then pcall(model.SetClipsChildren, model, true) end
-    local sceneTL = model:CreateTexture(nil, "BACKGROUND")
-    sceneTL:SetTexture(131081); sceneTL:SetTexCoord(0.171875, 1, 0.039215688, 1)
-    sceneTL:SetSize(212, 245); sceneTL:SetPoint("TOPLEFT", model, "TOPLEFT", 0, 0)
-    local sceneTR = model:CreateTexture(nil, "BACKGROUND")
-    sceneTR:SetTexture(131082); sceneTR:SetTexCoord(0, 0.296875, 0.039215688, 1)
-    sceneTR:SetSize(19, 245); sceneTR:SetPoint("TOPLEFT", sceneTL, "TOPRIGHT", 0, 0)
-    local sceneBL = model:CreateTexture(nil, "BACKGROUND")
-    sceneBL:SetTexture(131083); sceneBL:SetTexCoord(0.171875, 1, 0, 1)
-    sceneBL:SetSize(212, 128); sceneBL:SetPoint("TOPLEFT", sceneTL, "BOTTOMLEFT", 0, 0)
-    local sceneBR = model:CreateTexture(nil, "BACKGROUND")
-    sceneBR:SetTexture(131084); sceneBR:SetTexCoord(0, 0.296875, 0, 1)
-    sceneBR:SetSize(19, 128); sceneBR:SetPoint("TOPLEFT", sceneTL, "BOTTOMRIGHT", 0, 0)
-    SH.modelBg = { tl = sceneTL, tr = sceneTR, bl = sceneBL, br = sceneBR }
-    for _, q in pairs(SH.modelBg) do
-        if q.SetDesaturated then pcall(q.SetDesaturated, q, true) end   -- escena en blanco y negro
-        if q.SetDesaturation then pcall(q.SetDesaturation, q, 1) end
-    end
-    local sceneDark = model:CreateTexture(nil, "BORDER")
-    sceneDark:SetAllPoints(model); sceneDark:SetColorTexture(0, 0, 0, 0.4)
-    SH.modelDark = sceneDark
-    model:SetScript("OnShow", function(self) if self.SetUnit then self:SetUnit(GetPortraitUnit()) end end)
-    model:EnableMouse(true)
-    model:SetScript("OnMouseDown", function(self)
-        self._lastX = ({ GetCursorPosition() })[1]
-        self:SetScript("OnUpdate", function(s)
-            local x = ({ GetCursorPosition() })[1]
-            local dx = x - (s._lastX or x)
-            s._lastX = x
-            s._rot = (s._rot or 0) + dx * 0.012
-            if s.SetRotation then s:SetRotation(s._rot) end
-        end)
-    end)
-    model:SetScript("OnMouseUp", function(self) self:SetScript("OnUpdate", nil) end)
-    model:SetScript("OnHide", function(self) self:SetScript("OnUpdate", nil) end)
-    SH.model = model
-    MakePaperDollInnerBorder(leftInset)
-    -- El inset nativo tapa toda la zona bajo el modelo con una banda oscura.
-    -- Si dejamos asomar el Marble del fondo aparecen franjas grises en la base.
-    local lowerMask = leftInset:CreateTexture(nil, "BACKGROUND", nil, 1)
-    lowerMask:SetColorTexture(0.012, 0.011, 0.01, 0.98)
-    lowerMask:SetPoint("BOTTOMLEFT", leftInset, "BOTTOMLEFT", 4, 5)
-    lowerMask:SetPoint("TOPRIGHT", leftInset, "BOTTOMRIGHT", -4, 52)
-    local lowerTop = leftInset:CreateTexture(nil, "BORDER", nil, 1)
-    lowerTop:SetColorTexture(0.9, 0.82, 0.58, 0.12)
-    lowerTop:SetPoint("TOPLEFT", lowerMask, "TOPLEFT", 0, 0)
-    lowerTop:SetPoint("TOPRIGHT", lowerMask, "TOPRIGHT", 0, 0)
-    lowerTop:SetHeight(1)
-
-    -- CharacterFrameInsetRight: TOPLEFT CharacterFrameInset TOPRIGHT 1,0;
-    -- BOTTOMRIGHT CharacterFrame -4,4.
-    local right = CreateFrame("Frame", nil, page)
-    right:SetPoint("TOPLEFT", leftInset, "TOPRIGHT", 1, 0)
-    right:SetPoint("BOTTOMRIGHT", page, "BOTTOMRIGHT", -4, 4)
-    local rbg = right:CreateTexture(nil, "BACKGROUND")
-    rbg:SetAllPoints(right)
-    rbg:SetTexture("Interface\\FrameGeneral\\UI-Background-Marble", true, true)
-    if rbg.SetHorizTile then rbg:SetHorizTile(true) end
-    if rbg.SetVertTile then rbg:SetVertTile(true) end
-    MakeInnerBorder(right)
-    SH.right = right
-    SH.sidebarTabs = CreateSidebarTabs(right)
-
-    -- CharacterStatsPane: TOPLEFT right 3,-3; BOTTOMRIGHT right -3,2.
-    local statsPane = CreateFrame("Frame", nil, right)
-    statsPane:SetPoint("TOPLEFT", right, "TOPLEFT", 3, -3)
-    statsPane:SetPoint("BOTTOMRIGHT", right, "BOTTOMRIGHT", -3, 2)
-    SH.statsPane = statsPane
-    SH.statsBg = statsPane:CreateTexture(nil, "BACKGROUND")
-    SH.statsBg:SetAllPoints(statsPane)
-    ApplyAtlasOrTexture(SH.statsBg, "UI-Character-Info-Warrior-BG", 1400895)
-
-    local function CatBar(label, y)
-        local bar = CreateFrame("Frame", nil, statsPane)
-        bar:SetSize(197, 40)
-        bar:SetPoint("TOP", statsPane, "TOP", 0, y)
-        local tex = bar:CreateTexture(nil, "ARTWORK")
-        tex:SetAllPoints(bar)
-        if tex.SetAtlas then tex:SetAtlas("UI-Character-Info-Title") else tex:SetTexture(1400895) end
-        local t = bar:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        t:SetPoint("CENTER", bar, "CENTER", 0, 1)
-        t:SetText(label)
-        bar.text = t
-        return bar
-    end
-    local function ValueBounceFrame(anchor)
-        local valueFrame = CreateFrame("Frame", nil, statsPane)
-        valueFrame:SetSize(187, 29)
-        valueFrame:SetPoint("TOP", anchor, "BOTTOM", 0, 0)
-        local bg = valueFrame:CreateTexture(nil, "BORDER")
-        bg:SetSize(162, 29)
-        bg:SetPoint("CENTER", valueFrame, "CENTER", 0, 0)
-        if not ApplyAtlasOrTexture(bg, "UI-Character-Info-ItemLevel-Bounce", 1400895) then
-            bg:SetTexture(1400895)
-        end
-        bg:SetAlpha(0.298)
-        valueFrame.bg = bg
-        return valueFrame
-    end
-    local function PaneRow(y)
-        local rowFrame = CreateFrame("Frame", nil, statsPane)
-        rowFrame:SetSize(170, 15)
-        rowFrame:SetPoint("TOPLEFT", statsPane, "TOPLEFT", 14, y + 3)
-        local stripe = rowFrame:CreateTexture(nil, "BACKGROUND")
-        stripe:SetAllPoints(rowFrame)
-        stripe:SetColorTexture(1, 1, 1, 0.045)
-        local l = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        l:SetPoint("LEFT", rowFrame, "LEFT", 0, 0)
-        l:SetJustifyH("LEFT")
-        l:SetTextColor(1, 0.82, 0)
-        local v = rowFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        v:SetPoint("RIGHT", rowFrame, "RIGHT", 0, 0)
-        v:SetJustifyH("RIGHT")
-        v:SetTextColor(1, 1, 1)
-        return { f = rowFrame, l = l, v = v, stripe = stripe }
-    end
-
-    SH.levelBar = CatBar("Nivel", -2)
-    SH.levelValueFrame = ValueBounceFrame(SH.levelBar)
-    SH.levelText = SH.levelValueFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    SH.levelText:SetPoint("CENTER", SH.levelValueFrame, "CENTER", 0, -1)
-    SH.levelText:SetTextColor(1, 0.82, 0)
-
-    -- Acceso a la subida: el "+" nativo, el mismo arte que usan las filas del panel de
-    -- reputacion. Antes era la flecha del ReputationBar (FileDataID 130821/130837), que se leia
-    -- como "desplegar" y no como "hay algo que hacer aqui".
-    --
-    -- Solo se muestra si hay subida DISPONIBLE (ver el refresco de la vista de ficha): el nivel
-    -- no sube solo, pero el boton tampoco debe invitar a subir sin XP para ello.
-    local levelUp = CreateFrame("Button", nil, SH.levelValueFrame)
-    levelUp:SetSize(13, 13)
-    levelUp:SetPoint("LEFT", SH.levelText, "RIGHT", 3, 0)
-    levelUp:SetNormalTexture("Interface" .. string.char(92) .. "Buttons" .. string.char(92) .. "UI-PlusButton-Up")
-    -- El arte "pulsado" no esta en todos los clientes; si falta se reutiliza el normal en vez de
-    -- dejar el boton sin textura al hacer click.
-    local plusDown = "Interface" .. string.char(92) .. "Buttons" .. string.char(92) .. "UI-PlusButton-Down"
-    if GetFileIDFromPath and not GetFileIDFromPath(plusDown) then
-        plusDown = "Interface" .. string.char(92) .. "Buttons" .. string.char(92) .. "UI-PlusButton-Up"
-    end
-    levelUp:SetPushedTexture(plusDown)
-    levelUp:SetHighlightTexture("Interface" .. string.char(92) .. "Buttons" .. string.char(92) .. "UI-PlusButton-Hilight", "ADD")
-    levelUp:SetScript("OnClick", function()
-        if not IsInspecting() and HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenLevelUp then
-            HarfordCharacterAdvancement.OpenLevelUp()
-        end
-    end)
-    levelUp:SetScript("OnEnter", function(self)
-        if not GameTooltip then return end
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Subir de nivel", 1, 0.82, 0)
-        GameTooltip:AddLine("Abre la subida moderna para elegir clase, subclase y rasgos.", 1, 1, 1, true)
-        GameTooltip:Show()
-    end)
-    levelUp:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-    SH.levelUpButton = levelUp
-
-    -- BARRA DE EXPERIENCIA. Es LA MISMA barra del borde inferior de la pantalla, solo que fina y
-    -- al ancho de la seccion: el arte lo pone `HarfordCharacterXP.SkinBar`, que es la unica fuente.
-    --
-    -- Va en la franja inferior de la banda del numero de nivel porque entre esa banda (acaba en
-    -- -71) y la barra de "Caracteristicas" (-70) no queda hueco libre.
-    --
-    -- NO usar aqui los caps de UI-Character-ReputationBar: a este tamano se renderizan rotos (dos
-    -- trozos rojos en los extremos). El envoltorio bueno es el atlas nativo de SkinBar.
-    local xpBar = CreateFrame("StatusBar", nil, statsPane)
-    -- 199x9 en y=-12 y 3 a la derecha: valores afinados en juego con `xpbarpanel`. La barra cae
-    -- POR DEBAJO de la banda del numero (que acaba en -71), de ahi que la seccion de
-    -- "Caracteristicas" baje para dejarle el hueco (ver S.ABIL_BAR_Y).
-    SH.xpBarX, SH.xpBarY = 3, -12
-    xpBar:SetSize(199, 9)
-    xpBar:SetPoint("BOTTOM", SH.levelValueFrame, "BOTTOM", SH.xpBarX, SH.xpBarY)
-    if HarfordCharacterXP and HarfordCharacterXP.SkinBar then
-        -- `true`: con envoltorio. El atlas nativo ya dibuja el carril vacio, asi que la barra se
-        -- ve tambien con 0 de experiencia, que era el motivo del tinte manual anterior.
-        HarfordCharacterXP.SkinBar(xpBar, true)
-    else
-        xpBar:SetMinMaxValues(0, 1)
-    end
-    xpBar:SetValue(0)
-
-    xpBar:EnableMouse(true)
-    xpBar:SetScript("OnEnter", function(self)
-        if not (GameTooltip and self.tipTexto) then return end
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetText("Experiencia", 1, 0.82, 0)
-        GameTooltip:AddLine(self.tipTexto, 1, 1, 1)
-        GameTooltip:Show()
-    end)
-    xpBar:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-    xpBar:Hide()
-    SH.xpBar = xpBar
-    -- Acceso para diagnostico (/harford debug run xpbar).
-    API._sheetState = SH
-
-    SH.abilBar = CatBar("Caracteristicas", S.ABIL_BAR_Y)
-    SH.abilRows = {}
-    for i = 1, 6 do
-        SH.abilRows[i] = PaneRow(-110 - (i - 1) * 15)
-        SH.abilRows[i].stripe:SetAlpha((i % 2 == 0) and 0.03 or 0.07)
-    end
-
-    SH.combatBar = CatBar("Combate", -206)
-    SH.combatRows = {}
-    for i = 1, 7 do
-        SH.combatRows[i] = PaneRow(-246 - (i - 1) * 15)
-        SH.combatRows[i].stripe:SetAlpha((i % 2 == 0) and 0.03 or 0.07)
-    end
-    SH.sheetRows = {}
-    for i = 1, 26 do
-        SH.sheetRows[i] = PaneRow(-52 - (i - 1) * 14)
-        SH.sheetRows[i].stripe:SetAlpha((i % 2 == 0) and 0.025 or 0.065)
-    end
-
-    -- Zona scrollable de "Rasgos" (vista resumen): la scrollbar nativa
-    -- aparece sola cuando los rasgos desbordan el alto del area.
-    local featScroll = CreateFrame("ScrollFrame", "HarfordCharPanelFeatScroll", statsPane, "UIPanelScrollFrameTemplate")
-    -- -243 = barra de seccion (-206) - 40 de alto + 3, el mismo espacio que "Caracteristicas".
-    SH.abilBarY = S.ABIL_BAR_Y
-    -- -243 es la regla del panel (barra de Rasgos -206, menos 40 de alto, mas 3); se desplaza lo
-    -- mismo que la seccion de Caracteristicas para que el bloque entero baje junto.
-    featScroll:SetPoint("TOPLEFT", statsPane, "TOPLEFT", 14, -243 + (S.ABIL_BAR_Y + 70))
-    featScroll:SetPoint("BOTTOMRIGHT", statsPane, "BOTTOMRIGHT", -26, 8)
-    local featChild = CreateFrame("Frame", nil, featScroll)
-    featChild:SetSize(150, 10)
-    featScroll:SetScrollChild(featChild)
-    featScroll:Hide()
-    SH.featScroll = featScroll
-
-    -- Banda de "Atributos": del hueco bajo su barra (-39) hasta justo encima de la barra de
-    -- "Salvaciones" (-206). Si el contenido no cabe, scrollea; nunca invade la de abajo.
-    local attrScroll = CreateFrame("ScrollFrame", "HarfordCharPanelAttrScroll", statsPane,
-        "UIPanelScrollFrameTemplate")
-    -- Y de donde este esa barra dependen tres cosas: ella misma, sus filas y el fondo de la
-    -- banda scrollable de Atributos. Se guarda en el estado para poder afinarla en vivo con
-    -- `/harford debug run salvaciones <y>` sin recargar.
-    SH.savesBarY = -226
-    attrScroll:SetPoint("TOPLEFT", statsPane, "TOPLEFT", 14, -39)
-    attrScroll:SetPoint("BOTTOMRIGHT", statsPane, "TOPRIGHT", -26, SH.savesBarY + 2)
-    local attrChild = CreateFrame("Frame", nil, attrScroll)
-    attrChild:SetSize(154, 10)
-    attrScroll:SetScrollChild(attrChild)
-    attrScroll:Hide()
-    SH.attrScroll = attrScroll
-    SH.attrChild = attrChild
-    SH.featChild = featChild
-    SH.featRows = {}
-
-    -- Origen oculto (el nativo no lo muestra; se reubicara mas adelante).
-    SH.origin = CreateFS(page, "GameFontHighlightSmall", "")
-    SH.origin:SetPoint("BOTTOMLEFT", leftInset, "BOTTOMLEFT", 6, 2)
-    SH.origin:Hide()
-
-    -- Capa modal interna: existe solo para una ficha vacia y queda por encima de
-    -- todas las regiones del panel, sin abrir otra ventana ni crear una pestana.
-    local empty = CreateFrame("Frame", nil, S.frame)
-    empty:SetPoint("TOPLEFT", S.frame, "TOPLEFT", 8, -42)
-    empty:SetPoint("BOTTOMRIGHT", S.frame, "BOTTOMRIGHT", -8, 28)
-    empty:SetFrameLevel((S.frame:GetFrameLevel() or 1) + 60)
-    empty:EnableMouse(true)
-    local dim = empty:CreateTexture(nil, "BACKGROUND")
-    dim:SetAllPoints(empty)
-    dim:SetColorTexture(0.01, 0.01, 0.008, 0.88)
-    local card = CreateFrame("Frame", nil, empty)
-    card:SetSize(318, 150)
-    card:SetPoint("CENTER", empty, "CENTER", 0, -4)
-    card:SetFrameLevel(empty:GetFrameLevel() + 2)
-    local cardBg = card:CreateTexture(nil, "BACKGROUND")
-    cardBg:SetAllPoints(card)
-    cardBg:SetColorTexture(0.06, 0.05, 0.03, 0.98)
-    local topLine = card:CreateTexture(nil, "BORDER")
-    topLine:SetPoint("TOPLEFT", card, "TOPLEFT", 0, 0)
-    topLine:SetPoint("TOPRIGHT", card, "TOPRIGHT", 0, 0)
-    topLine:SetHeight(2)
-    topLine:SetColorTexture(0.82, 0.65, 0.22, 0.9)
-    local emptyTitle = CreateFS(card, "GameFontNormalLarge", "No tienes una ficha creada")
-    emptyTitle:SetPoint("TOP", card, "TOP", 0, -20)
-    emptyTitle:SetTextColor(1, 0.82, 0)
-    local emptyText = CreateFS(card, "GameFontHighlightSmall", "Crea el origen, las caracteristicas y la clase de tu personaje.")
-    emptyText:SetPoint("TOP", emptyTitle, "BOTTOM", 0, -12)
-    emptyText:SetWidth(270)
-    emptyText:SetJustifyH("CENTER")
-    emptyText:SetNonSpaceWrap(false)
-    local emptyButton = CreateButton(card, "Abrir creador", 142, 24, function()
-        empty:Hide()
-        if HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenPrototype then
-            HarfordCharacterAdvancement.OpenPrototype("guerrero")
-        else
-            Print("El creador de personaje no esta disponible.")
-        end
-    end)
-    emptyButton:SetPoint("BOTTOM", card, "BOTTOM", 0, 18)
-    emptyButton:SetFrameLevel(card:GetFrameLevel() + 2)
-    SH.emptyPrompt = empty
-    empty:Hide()
-end
-
-local function SetSheetBar(bar, label, y, shown)
-    if not bar then return end
-    bar:ClearAllPoints()
-    bar:SetPoint("TOP", S.sheet.statsPane, "TOP", 0, y)
-    if bar.text then bar.text:SetText(label or "") end
-    bar:SetShown(shown ~= false)
-end
-
-local function SetSheetRow(row, y, label, value, tooltipTitle, tooltipText, opts)
-    if not row then return 14 end
-    opts = type(opts) == "table" and opts or nil
-    -- Contenedor: por defecto el panel, pero una vista puede pasar el hijo de un ScrollFrame
-    -- para que sus filas scrolleen en vez de desbordar sobre la seccion siguiente. Se
-    -- REPARENTA siempre, porque las filas se comparten entre vistas.
-    local host = (opts and opts.container) or S.sheet.statsPane
-    local enScroll = (opts and opts.container) and true or false
-    local hostX = enScroll and 0 or 14
-    if row.f:GetParent() ~= host then row.f:SetParent(host) end
-    row.f:ClearAllPoints()
-    row.f:SetPoint("TOPLEFT", host, "TOPLEFT", hostX, y)
-    -- Dentro de un scroll la fila se estrecha 16px: si no, la barra de scroll se come el borde
-    -- derecho y corta los valores, que van alineados a la derecha.
-    row.f:SetSize(enScroll and 154 or 170, 15)
-    row.l:ClearAllPoints()
-    if opts and opts.labelTop then
-        row.l:SetPoint("TOPLEFT", row.f, "TOPLEFT", 0, 0)
-        if row.l.SetJustifyV then row.l:SetJustifyV("TOP") end
-    else
-        row.l:SetPoint("LEFT", row.f, "LEFT", 0, 0)
-        if row.l.SetJustifyV then row.l:SetJustifyV("MIDDLE") end
-    end
-    row.l:SetWidth(opts and opts.labelWidth or (enScroll and 110 or 118))
-    row.l:SetJustifyH("LEFT")
-    if row.l.SetWordWrap then row.l:SetWordWrap(false) end
-    if row.l.SetNonSpaceWrap then row.l:SetNonSpaceWrap(false) end
-    row.v:ClearAllPoints()
-    row.v:SetWidth(opts and opts.valueWidth or (enScroll and 62 or 72))
-    if row.v.SetWordWrap then row.v:SetWordWrap(opts and opts.wrapValue or false) end
-    if row.v.SetNonSpaceWrap then row.v:SetNonSpaceWrap(false) end
-    if opts and opts.valueAlign == "LEFT" then
-        row.v:SetPoint("TOPLEFT", row.f, "TOPLEFT", opts.valueX or 78, 0)
-        row.v:SetJustifyH("LEFT")
-    else
-        row.v:SetPoint("TOPRIGHT", row.f, "TOPRIGHT", 0, 0)
-        row.v:SetJustifyH("RIGHT")
-    end
-    if row.classTexts then
-        for _, fs in ipairs(row.classTexts) do
-            fs:Hide()
-        end
-    end
-    if row.abilityScoreText then row.abilityScoreText:Hide() end
-    if row.abilityModText then row.abilityModText:Hide() end
-    row.l:SetText(label or "")
-    row.v:SetText(value or "")
-    local valueHeight = 14
-    if row.v.GetStringHeight then
-        valueHeight = math.max(valueHeight, math.ceil(row.v:GetStringHeight() or 14))
-    end
-    local rowHeight = math.max(14, valueHeight)
-    row.f:SetHeight(rowHeight)
-    if tooltipTitle or tooltipText then
-        row.f:EnableMouse(true)
-        row.f:SetScript("OnEnter", function(self) TooltipLines(self, tooltipTitle or label, tooltipText, opts and opts.tooltip) end)
-        row.f:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-    else
-        row.f:SetScript("OnEnter", nil)
-        row.f:SetScript("OnLeave", nil)
-        row.f:EnableMouse(false)
-    end
-    row.f:Show()
-    row.l:Show()
-    row.v:Show()
-    return rowHeight
-end
-
-local function SetAbilitySheetRow(row, y, label, score, mod, tooltipTitle, tooltipText)
-    SetSheetRow(row, y, label, "", tooltipTitle, tooltipText, { tooltip = { nativeAbility = true } })
-    if not row then return 14 end
-    row.v:Hide()
-    if not row.abilityScoreText then
-        row.abilityScoreText = row.f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.abilityScoreText:SetJustifyH("RIGHT")
-    end
-    if not row.abilityModText then
-        row.abilityModText = row.f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        row.abilityModText:SetJustifyH("RIGHT")
-    end
-    row.abilityScoreText:ClearAllPoints()
-    row.abilityScoreText:SetPoint("RIGHT", row.f, "RIGHT", -28, 0)
-    row.abilityScoreText:SetWidth(24)
-    row.abilityScoreText:SetText("|cffffffff" .. tostring(score or 0) .. "|r")
-    row.abilityScoreText:Show()
-
-    row.abilityModText:ClearAllPoints()
-    row.abilityModText:SetPoint("RIGHT", row.f, "RIGHT", 0, 0)
-    row.abilityModText:SetWidth(24)
-    row.abilityModText:SetText(ColorSigned(mod))
-    row.abilityModText:Show()
-    return row.f:GetHeight() or 14
-end
-
--- Tooltip de clase para la fila multiclase: una entrada por clase con su color y su
--- descripcion (subclase si esta elegida, si no la clase). El bloque coloreado de la
--- fila no admite el OnEnter de SetSheetRow, asi que lo gestionamos aqui directamente.
-local function ShowClassTooltip(owner, data)
-    if not (GameTooltip and owner and data and data.classLevels and HarfordDnDBook) then return end
-    if #data.classLevels == 0 then return end
-    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
-    GameTooltip:SetText("Clase", 1, 0.82, 0, true)
-    for _, entry in ipairs(data.classLevels) do
-        local className = (HarfordDnDBook.GetClassName and HarfordDnDBook.GetClassName(entry.classId)) or entry.classId
-        local subName = (HarfordDnDBook.GetSubclassName and HarfordDnDBook.GetSubclassName(entry.classId, entry.subclassId)) or ""
-        local classDef = HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(entry.classId)
-        local subDef = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
-        local r, g, b = GetClassColorParts(entry, className, className)
-        local head = tostring(className or "")
-        if subName ~= "" then head = head .. " " .. subName end
-        head = head .. " (" .. tostring(entry.level or 1) .. ")"
-        GameTooltip:AddLine(" ")
-        GameTooltip:AddLine(head, r or 1, g or 0.82, b or 0, true)
-        local desc = (subDef and subDef.desc) or (classDef and classDef.desc)
-        if desc and desc ~= "" then
-            GameTooltip:AddLine(desc, 1, 1, 1, true)
-        end
-    end
-    GameTooltip:Show()
-end
-
-local function SetClassSheetRow(row, y, data, opts)
-    SetSheetRow(row, y, "Clase", "", nil, nil, opts)
-    if not row then return 14 end
-    row.l:ClearAllPoints()
-    row.l:SetPoint("TOPLEFT", row.f, "TOPLEFT", 0, 0)
-    if row.l.SetJustifyV then row.l:SetJustifyV("TOP") end
-    local parts = GetClassParts(data) or { { text = "Sin clase", r = 1, g = 0.82, b = 0 } }
-    SetColoredTextList(row.f, row, "classTexts", parts, { font = "GameFontHighlightSmall" })
-    row.v:Hide()
-
-    local valueWidth = 112
-    local lineHeight = 12
-    local yOffset = 0
-    for i, fs in ipairs(row.classTexts or {}) do
-        if i <= #parts then
-            fs:ClearAllPoints()
-            fs:SetPoint("TOPRIGHT", row.f, "TOPRIGHT", 0, -yOffset)
-            fs:SetWidth(valueWidth)
-            fs:SetJustifyH("RIGHT")
-            if fs.SetWordWrap then fs:SetWordWrap(true) end
-            if fs.SetNonSpaceWrap then fs:SetNonSpaceWrap(false) end
-            fs:SetTextColor(parts[i].r or 1, parts[i].g or 1, parts[i].b or 1)
-            fs:Show()
-            local h = lineHeight
-            if fs.GetStringHeight then
-                h = math.max(lineHeight, math.ceil(fs:GetStringHeight() or lineHeight))
-            end
-            yOffset = yOffset + h
-        end
-    end
-    local rowHeight = math.max(14, yOffset)
-    row.f:SetHeight(rowHeight)
-    -- Tooltip multiclase (SetSheetRow desactivo el mouse al no pasar tooltip).
-    if data and data.classLevels and #data.classLevels > 0 then
-        row.f:EnableMouse(true)
-        row.f:SetScript("OnEnter", function(self) ShowClassTooltip(self, data) end)
-        row.f:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-    end
-    return rowHeight
-end
-
-local function HideSheetRows(SH)
-    local function hideList(list)
-        if not list then return end
-        for _, row in ipairs(list) do
-            if row and row.f then row.f:Hide() end
-        end
-    end
-    hideList(SH.abilRows)
-    hideList(SH.combatRows)
-    hideList(SH.sheetRows)
-    if SH.levelBar then SH.levelBar:Hide() end
-    if SH.levelValueFrame then SH.levelValueFrame:Hide() end
-    if SH.abilBar then SH.abilBar:Hide() end
-    if SH.combatBar then SH.combatBar:Hide() end
-    if SH.levelText then SH.levelText:Hide() end
-end
-
-local function SkillTotal(skill)
-    if IsInspecting() then
-        local name = GetProfileName()
-        local pb = HarfordDnDProgression and HarfordDnDProgression.GetProficiencyBonus
-            and HarfordDnDProgression.GetProficiencyBonus(name)
-            or tonumber(GetProfileValue("BonusCompetencia", 2)) or 2
-        local profFlag = tonumber(GetProfileValue("Hab_" .. skill.id .. "_Prof", 0)) or 0
-        local expFlag = tonumber(GetProfileValue("Hab_" .. skill.id .. "_Exp", 0)) or 0
-        local featureRank = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetSkillRank
-            and HarfordDnDFeatureEffects.GetSkillRank(skill.id, name)
-            or 0
-        local prof = 0
-        if expFlag == 1 or featureRank >= 2 then
-            prof = 2 * pb
-        elseif profFlag == 1 or featureRank >= 1 then
-            prof = pb
-        end
-        local bonus = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus
-            and HarfordDnDFeatureEffects.GetBonus("skill", skill.id, name)
-            or 0
-        return AbilityMod(AbilityScore(skill.ability)) + (tonumber(bonus) or 0) + prof
-    end
-    if HarfordDnDCalc and HarfordDnDCalc.GetSkillRollBonuses then
-        local base, prof = HarfordDnDCalc.GetSkillRollBonuses(skill)
-        return (tonumber(base) or 0) + (tonumber(prof) or 0)
-    end
-    return AbilityMod(AbilityScore(skill.ability))
-end
-
-local function SaveTotal(abilityKey)
-    if IsInspecting() then
-        local name = GetProfileName()
-        local pb = HarfordDnDProgression and HarfordDnDProgression.GetProficiencyBonus
-            and HarfordDnDProgression.GetProficiencyBonus(name)
-            or tonumber(GetProfileValue("BonusCompetencia", 2)) or 2
-        local prof = tonumber(GetProfileValue("Salv_" .. abilityKey, 0)) == 1
-            or (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasSaveProf
-                and HarfordDnDFeatureEffects.HasSaveProf(abilityKey, name) == true)
-        local bonus = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus
-            and HarfordDnDFeatureEffects.GetBonus("save", abilityKey, name)
-            or 0
-        if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetAllSavesAbilities then
-            for _, entry in ipairs(HarfordDnDFeatureEffects.GetAllSavesAbilities(name)) do
-                local mod = AbilityMod(AbilityScore(entry.ability))
-                local minVal = tonumber(entry.min) or 0
-                bonus = bonus + math.max(minVal, mod)
-            end
-        end
-        return AbilityMod(AbilityScore(abilityKey)) + (tonumber(bonus) or 0) + (prof and pb or 0)
-    end
-    if HarfordDnDCalc and HarfordDnDCalc.GetSaveRollBonuses then
-        local base, prof = HarfordDnDCalc.GetSaveRollBonuses(abilityKey)
-        return (tonumber(base) or 0) + (tonumber(prof) or 0)
-    end
-    return AbilityMod(AbilityScore(abilityKey))
-end
-
--- Pinta los rasgos en el area scrollable (vista resumen). Cada fila muestra el nombre
--- del rasgo con su descripcion en tooltip. El alto del child decide si sale scrollbar.
-local function SetFeatureScroll(rows)
-    local SH = S.sheet
-    if not (SH and SH.featChild and SH.featScroll) then return end
-    rows = rows or {}
-    SH.featRows = SH.featRows or {}
-    local lineH = 15
-    for i, r in ipairs(rows) do
-        local row = SH.featRows[i]
-        if not row then
-            row = CreateFrame("Button", nil, SH.featChild)
-            row:SetHeight(lineH)
-            row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            row.text:SetJustifyH("LEFT")
-            row.text:SetTextColor(1, 0.82, 0)
-            if row.text.SetWordWrap then row.text:SetWordWrap(false) end
-            if row.text.SetNonSpaceWrap then row.text:SetNonSpaceWrap(false) end
-            row.value = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-            row.value:SetJustifyH("RIGHT")
-            row.value:SetTextColor(1, 1, 1)
-            if row.value.SetWordWrap then row.value:SetWordWrap(false) end
-            if row.value.SetNonSpaceWrap then row.value:SetNonSpaceWrap(false) end
-            SH.featRows[i] = row
-        end
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", SH.featChild, "TOPLEFT", 0, -(i - 1) * lineH)
-        row:SetPoint("RIGHT", SH.featChild, "RIGHT", -2, 0)
-        row.text:ClearAllPoints()
-        row.value:ClearAllPoints()
-        local value = tostring(r[2] or "")
-        local valueWidth = (value ~= "") and 62 or 0
-        row.text:SetPoint("LEFT", row, "LEFT", 2, 0)
-        row.text:SetPoint("RIGHT", row, "RIGHT", -valueWidth - 4, 0)
-        row.text:SetText(tostring(r[1] or ""))
-        row.text:SetTextColor(1, 0.82, 0)
-        row.value:SetPoint("RIGHT", row, "RIGHT", -2, 0)
-        row.value:SetWidth(valueWidth)
-        row.value:SetText(value)
-        row.value:SetShown(value ~= "")
-        row:SetScript("OnClick", nil)
-        local tipTitle, tipText = r[3] or r[1], r[4]
-        row:SetScript("OnEnter", function(self)
-            if GameTooltip and tipTitle then
-                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                GameTooltip:SetText(tostring(tipTitle), 1, 0.82, 0, true)
-                if tipText and tipText ~= "" then GameTooltip:AddLine(tostring(tipText), 1, 1, 1, true) end
-                GameTooltip:Show()
-            end
-        end)
-        row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-        row:Show()
-    end
-    for i = #rows + 1, #SH.featRows do SH.featRows[i]:Hide() end
-    SH.featChild:SetWidth(math.max(1, (SH.featScroll:GetWidth() or 150) - 18))
-    SH.featChild:SetHeight(math.max(1, #rows * lineH + 2))
-end
-
-local function RefreshSheet()
-    local SH = S.sheet
-    if not SH then return end
-    if SH.featScroll then SH.featScroll:Hide() end  -- solo se muestra en la vista resumen
-    local name = GetProfileName()
-    local data = GetProgression()
-    local total = HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel(name) or 0
-
-    if SH.emptyPrompt then
-        SH.emptyPrompt:SetShown(not IsInspecting() and total <= 0)
-    end
-
-    RefreshSubtitleClasses(SH, data)
-    if SH.model and SH.model.SetUnit then SH.model:SetUnit(GetPortraitUnit()) end
-    RefreshRaceModelBackground(SH, data)
-    RefreshPaperDollSlots(SH)
-    if SH.sidebarTabs and SH.sidebarTabs.portrait and SetPortraitTexture then
-        SetPortraitTexture(SH.sidebarTabs.portrait, "player")
-        SH.sidebarTabs.portrait:SetTexCoord(0.109375, 0.890625, 0.09375, 0.90625)
-        if SH.sidebarTabs.SetSelected then SH.sidebarTabs:SetSelected(S.sheetView or "summary") end
-    end
-    if SH.statsBg then
-        local atlas = GetClassInfoAtlas(data)
-        if not ApplyAtlasOrTexture(SH.statsBg, atlas, 1400895) then
-            ApplyAtlasOrTexture(SH.statsBg, "UI-Character-Info-Warrior-BG", 1400895)
-        end
-    end
-
-    HideSheetRows(SH)
-    if SH.levelUpButton then SH.levelUpButton:Hide() end
-
-    local list = (HarfordDnDData and HarfordDnDData.ABIL) or K.ABIL_KEYS
-    local pb = HarfordDnDProgression and HarfordDnDProgression.GetProficiencyBonus and HarfordDnDProgression.GetProficiencyBonus(name) or nil
-    local dexMod = AbilityMod(AbilityScore("Destreza"))
-    local initBonus = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus and HarfordDnDFeatureEffects.GetBonus("initiative", nil, name)) or 0
-    -- Mismo calculo que HarfordDnDCalc.GetInitiativeBonus pero por perfil mostrado (soporta inspect):
-    -- + Mod. de caracteristicas que suman a iniciativa (Alacridad/Reflejos/Instintos) y + PB (Afinidad Aire).
-    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetInitiativeAbilities then
-        for _, ability in ipairs(HarfordDnDFeatureEffects.GetInitiativeAbilities(name)) do
-            initBonus = initBonus + AbilityMod(AbilityScore(ability))
-        end
-    end
-    if pb and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
-        and HarfordDnDFeatureEffects.HasFlag("initiativeProfBonus", name) then
-        initBonus = initBonus + pb
-    end
-    local manualCA = tonumber(GetProfileValue("ArmorClass", 10)) or 10
-    local itemCA = HarfordDnDItems and HarfordDnDItems.GetEquippedArmorClass and HarfordDnDItems.GetEquippedArmorClass(name) or nil
-    local featCA = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus and HarfordDnDFeatureEffects.GetBonus("armorClass", nil, name)) or 0
-    local ca = math.floor(math.max(manualCA, tonumber(itemCA) or 0) + featCA)
-    local hpCur = HarfordDnDResources and ResourceValue(HarfordDnDResources.CurKey("health")) or 0
-    local hpMax = HarfordDnDResources and ResourceValue(HarfordDnDResources.MaxKey("health")) or 0
-    local speed
-    if data and data.race and HarfordDnDRaces and HarfordDnDRaces.GetRace then
-        local rd = HarfordDnDRaces.GetRace(data.race.id)
-        speed = rd and rd.speed
-    end
-    -- Velocidad efectiva: bonos de rasgo (Afinidad Aire) o una velocidad fija activa
-    -- (Bestia Espiritual). En inspeccion no se aplica: los efectos resueltos son los del jugador local.
-    if not IsInspecting() and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetSpeed then
-        speed = HarfordDnDFeatureEffects.GetSpeed(speed)
-    end
-
-    local view = S.sheetView or "summary"
-    if view == "skills" then
-        -- Sin barra de "Bonificador por competencia" (libera espacio); el bono va en la cabecera.
-        SetSheetBar(SH.levelBar, "", 0, false)
-        if SH.xpBar then SH.xpBar:Hide() end
-        if SH.attrScroll then SH.attrScroll:Hide() end
-        SetSheetBar(SH.abilBar, "Habilidades " .. (pb and ("(" .. ColorSigned(pb) .. ")") or ""), -2, true)
-        local skills = HarfordDnDData and HarfordDnDData.SKILLS or {}
-        -- Agrupadas por caracteristica (cabecera "Fuerza (+3)" y sus habilidades debajo).
-        local y, index = -42, 1
-        for _, abil in ipairs(list) do
-            local group = {}
-            for _, skill in ipairs(skills) do
-                if skill.ability == abil.key then group[#group + 1] = skill end
-            end
-            if #group > 0 and SH.sheetRows[index] then
-                SetSheetRow(SH.sheetRows[index], y,
-                    "|cffffd200" .. abil.key .. " |r" .. ColorSigned(AbilityMod(AbilityScore(abil.key))), "")
-                y = y - 13; index = index + 1
-                for _, skill in ipairs(group) do
-                    if SH.sheetRows[index] then
-                        SetSheetRow(SH.sheetRows[index], y, "   " .. skill.name, ColorSigned(SkillTotal(skill)),
-                            skill.name, skill.desc or ("Caracteristica: " .. abil.key .. "."),
-                            { labelWidth = 140, valueWidth = 32 })
-                        y = y - 13; index = index + 1
-                    end
-                end
-            end
-        end
-    elseif view == "details" then
-        SetSheetBar(SH.levelBar, "Atributos", -2, true)
-        if SH.xpBar then SH.xpBar:Hide() end
-        -- Tooltips de raza/trasfondo: subraza si existe, si no la raza.
-        local raceTipTitle, raceTipText, bgTipTitle, bgTipText
-        if data and data.race and HarfordDnDRaces and HarfordDnDRaces.GetRace then
-            local rd = HarfordDnDRaces.GetRace(data.race.id)
-            local sd = HarfordDnDRaces.GetSubrace and HarfordDnDRaces.GetSubrace(data.race.id, data.race.subraceId)
-            local txt = (sd and sd.desc) or (rd and rd.desc)
-            if txt and txt ~= "" then raceTipTitle, raceTipText = GetRaceLabel(data), txt end
-        end
-        if data and data.background and data.background ~= "" and HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground then
-            local bd = HarfordDnDBackgrounds.GetBackground(data.background)
-            local txt = bd and (bd.desc or bd.description)
-            -- Trasfondo personalizado (no esta en el libro): usa el 1er parrafo cargado del TRP3.
-            if (not txt or txt == "") and data.backgroundDesc and data.backgroundDesc ~= "" then
-                txt = data.backgroundDesc
-            end
-            bgTipTitle, bgTipText = (bd and bd.name) or GetBackgroundLabel(data), txt
-        elseif data and data.background and data.background ~= "" then
-            bgTipTitle = GetBackgroundLabel(data)
-        end
-        local rows = {
-            { "Puntos de Golpe", hpMax > 0 and (tostring(hpCur) .. " / " .. tostring(hpMax)) or "-" },
-            { "Clase de Armadura", tostring(ca) },
-            { "Clase", GetClassSummary(data, "\n") },
-            { "Raza", GetRaceLabel(data), raceTipTitle, raceTipText },
-            { "Trasfondo", GetBackgroundLabel(data), bgTipTitle, bgTipText },
-            { "Iniciativa", Signed(dexMod + initBonus) },
-            -- 7,5 + 1,5 da "9.0" con tostring; se recorta el decimal cuando es entero.
-            { "Velocidad", speed and (string.format((speed % 1 == 0) and "%d m" or "%.1f m", speed)) or "-" },
-            -- "Bonus Competencia" y no "Competencia" a secas: en esta misma lista hay una fila
-            -- "Competencias" (las de armadura/arma/herramienta) y se confundian.
-            { "Bonus Competencia", pb and Signed(pb) or "-" },
-        }
-        if HarfordDnDConditions and HarfordDnDConditions.GetActive then
-            local conditionRef = IsInspecting() and S.inspectUnit or "player"
-            if conditionRef then
-                local labels = {}
-                for _, active in ipairs(HarfordDnDConditions.GetActive(conditionRef)) do
-                    labels[#labels + 1] = active.definition.label
-                end
-                if #labels > 0 then
-                    rows[#rows + 1] = { "Estados", table.concat(labels, ", "), "Estados activos", table.concat(labels, "\n") }
-                end
-            end
-        end
-        if HarfordDnDHitDice and HarfordDnDHitDice.GetTotalMax and HarfordDnDHitDice.GetTotalMax(name) > 0 then
-            rows[#rows + 1] = { "Dados de Golpe", HarfordDnDHitDice.GetSummaryText(name) }
-        end
-        -- Competencias (armadura / arma / herramienta) en UNA sola fila: la lista de filas de
-        -- detalle comparte espacio con la barra de "Salvaciones" (fija en -206), asi que una
-        -- fila por categoria desbordaria. El desglose completo va en el tooltip.
-        if HarfordDnDFeatureEffects then
-            -- Mismas lineas que el tooltip del libro: un unico constructor, sin duplicar.
-            local lineasProf = API.GetProficiencyLines and API.GetProficiencyLines() or {}
-            if #lineasProf > 0 then
-                -- El resumen corto de la fila: solo armadura y armas, que son las que caben.
-                local corto = {}
-                for _, l in ipairs(lineasProf) do
-                    local titulo, valor = l:match("^%- |cffffd100([^:]+):|r (.+)$")
-                    if titulo == "Armadura" or titulo == "Armas" then corto[#corto + 1] = valor end
-                end
-                rows[#rows + 1] = { "Competencias", table.concat(corto, " · "),
-                    "Competencias", table.concat(lineasProf, "\n") }
-            end
-        end
-        -- Sintonizacion y carga. Solo del personaje PROPIO: `HarfordDnDBurden` resuelve la
-        -- Fuerza con `HarfordDnDCalc`, que es el del jugador local, asi que en inspeccion daria
-        -- los numeros de uno bajo el nombre de otro. Mejor no ensenar la fila que mentir.
-        if HarfordDnDBurden and not IsInspecting() then
-            local estado = HarfordDnDBurden.GetStatus()
-            if estado then
-                local sintonizados = HarfordDnDBurden.GetAttuned()
-                local detalle = {}
-                for _, entrada in ipairs(sintonizados) do
-                    detalle[#detalle + 1] = "|cffffd100" .. tostring(entrada.name) .. "|r"
-                end
-                if #detalle == 0 then detalle[1] = "Ningun objeto sintonizado." end
-                detalle[#detalle + 1] = " "
-                detalle[#detalle + 1] = "Un objeto solo se sintoniza con una criatura a la vez, y"
-                detalle[#detalle + 1] = "no puedes llevar mas de " .. estado.maxAttuned .. " ni dos copias del mismo."
-                rows[#rows + 1] = { "Sintonizacion",
-                    string.format("%d / %d", estado.attuned, estado.maxAttuned),
-                    "Objetos sintonizados", table.concat(detalle, "\n") }
-
-                -- La carga solo se muestra si hay algun peso DECLARADO: el cliente de WoW no
-                -- expone el peso de un objeto, asi que sin datos la cifra seria siempre 0 y
-                -- pareceria que no llevas nada encima.
-                if estado.carried > 0 or estado.capacity > 0 then
-                    local texto = string.format("%d / %d", estado.carried, estado.capacity)
-                    if estado.overloaded then texto = "|cffff5555" .. texto .. "|r" end
-                    local tip = {
-                        "Capacidad = Fuerza x " .. HarfordDnDBurden.CARRY_PER_STRENGTH .. " libras.",
-                    }
-                    if estado.unknownWeights > 0 then
-                        texto = texto .. " |cff808080(+" .. estado.unknownWeights .. "?)|r"
-                        tip[#tip + 1] = " "
-                        tip[#tip + 1] = "|cffff9900" .. estado.unknownWeights ..
-                            " objeto(s) sin peso declarado|r no cuentan en el total:"
-                        tip[#tip + 1] = "el peso no viene del juego, lo declara el objeto o el DM."
-                    end
-                    if estado.overloaded then
-                        tip[#tip + 1] = " "
-                        tip[#tip + 1] = "|cffff5555Sobrecargado.|r"
-                    end
-                    rows[#rows + 1] = { "Carga", texto, "Carga", table.concat(tip, "\n") }
-                end
-            end
-        end
-        if HarfordDnDMana and HarfordDnDMana.IsEnabled and HarfordDnDMana.IsEnabled(name) then
-            local pool = HarfordDnDMana.GetManaPool and HarfordDnDMana.GetManaPool(name) or 0
-            -- La variante ya esta ON por defecto; la fila solo tiene sentido para lanzadores
-            -- (pool > 0), si no un no-lanzador mostraria "Mana: 0".
-            if pool > 0 then
-                local ms = HarfordDnDMana.GetMaxSpellLevel and HarfordDnDMana.GetMaxSpellLevel(name) or 0
-                rows[#rows + 1] = { "Mana", tostring(pool) .. "  (esp. " .. tostring(ms) .. ")" }
-            end
-        end
-        -- Dentro del scroll: la `y` es relativa al hijo y arranca en 0, porque el propio
-        -- ScrollFrame ya esta colocado bajo la barra.
-        if SH.attrScroll then SH.attrScroll:Show() end
-        local y = 0
-        for i, r in ipairs(rows) do
-            if r[1] == "Clase" then
-                y = y - SetClassSheetRow(SH.sheetRows[i], y, data, { container = SH.attrChild })
-            else
-                -- 64 + 88 = 152, dentro de los 154 de la fila con scroll. Con los 70 + 104 de
-                -- la version sin scroll el valor se salia por debajo de la barra.
-                local opts = r[1] == "Trasfondo"
-                    and { wrapValue = true, labelTop = true, labelWidth = 64, valueWidth = 88 }
-                    or {}
-                opts.container = SH.attrChild
-                y = y - SetSheetRow(SH.sheetRows[i], y, r[1], "|cffffffff" .. tostring(r[2] or "") .. "|r", r[3], r[4], opts)
-            end
-        end
-        -- El alto del hijo es lo que decide si aparece la barra de scroll.
-        if SH.attrChild then SH.attrChild:SetHeight(math.max(10, -y)) end
-        SetSheetBar(SH.abilBar, "Salvaciones", SH.savesBarY or -226, true)
-        for i, abil in ipairs(list) do
-            -- Mismo espacio bajo el titulo que "Caracteristicas": barra - 40 de alto + 3.
-            SetSheetRow(SH.sheetRows[#rows + i], (SH.savesBarY or -226) - 37 - (i - 1) * 14, abil.key, ColorSigned(SaveTotal(abil.key)), "Salvacion de " .. abil.key, abil.saveDesc or abil.desc or ("Tirada de salvacion de " .. abil.key .. "."))
-        end
-    else
-        SetSheetBar(SH.levelBar, "Nivel", -2, true)
-        if SH.xpBar then
-            local xpNivel, xpActual, xpNecesaria = 0, 0, 0
-            if HarfordCharacterXP and HarfordCharacterXP.Progress then
-                xpNivel, xpActual, xpNecesaria = HarfordCharacterXP.Progress()
-            end
-            xpNecesaria = math.max(1, tonumber(xpNecesaria) or 1)
-            xpActual = math.max(0, math.min(xpNecesaria, tonumber(xpActual) or 0))
-            SH.xpBar:SetMinMaxValues(0, xpNecesaria)
-            SH.xpBar:SetValue(xpActual)
-            SH.xpBar.tipTexto = string.format("%d / %d para el nivel %d",
-                xpActual, xpNecesaria, (tonumber(xpNivel) or 0) + 1)
-            SH.xpBar:Show()
-        end
-        -- La ficha no usa el scroll de Atributos: si viene de esa pestana, hay que apagarlo.
-        if SH.attrScroll then SH.attrScroll:Hide() end
-        local maxTotal = tonumber(HarfordDnDProgression and HarfordDnDProgression.MAX_TOTAL_LEVEL) or 20
-        -- La XP puede ir por delante del nivel; ese desfase es lo que habilita la subida.
-        local subidaDisponible = HarfordCharacterXP and HarfordCharacterXP.PendingLevelUp
-            and HarfordCharacterXP.PendingLevelUp()
-        if SH.levelUpButton and not IsInspecting() and total < maxTotal and subidaDisponible then
-            SH.levelUpButton:Show()
-        end
-        if SH.levelValueFrame then SH.levelValueFrame:Show() end
-        if SH.levelText then
-            SH.levelText:SetText(tostring(total))
-            SH.levelText:Show()
-        end
-        local abilY = SH.abilBarY or S.ABIL_BAR_Y
-        local abilDelta = abilY + 70
-        SetSheetBar(SH.abilBar, "Caracteristicas", abilY, true)
-        for i, abil in ipairs(list) do
-            local score = AbilityScore(abil.key)
-            local mod = AbilityMod(score)
-            -- barra - 40 de alto + 3, la misma regla de espaciado que el resto de secciones.
-            SetAbilitySheetRow(SH.sheetRows[i], abilY - 37 - (i - 1) * 15, abil.key,
-                score,
-                mod,
-                AbilityTooltipTitle(abil.key),
-                K.ABILITY_TOOLTIP_TEXT[abil.key] or "")
-        end
-        SetSheetBar(SH.combatBar, "Rasgos", -206 + abilDelta, true)
-        -- Lista completa de rasgos (sin tope de 5) en el area scrollable: la scrollbar
-        -- aparece sola al desbordar. Las filas fijas sobrantes se ocultan.
-        local featureRows = GetClassFeatureRows(100) or GetTRP3FeatureRows(100) or {
-            { "Raza", GetRaceLabel(data), "Raza", GetRaceLabel(data) },
-            { "Trasfondo", GetBackgroundLabel(data), "Trasfondo", GetBackgroundLabel(data) },
-            { "Dotes", GetFeatsLabel(data), "Dotes", GetFeatsLabel(data) },
-            { "Bonus Competencia", pb and Signed(pb) or "-", "Bonus Competencia", "Bonificador por competencia actual." },
-            { "Puntos de Golpe", hpMax > 0 and (tostring(hpCur) .. " / " .. tostring(hpMax)) or "-", "Puntos de Golpe", "Salud actual / maxima." },
-        }
-        for i = 7, #SH.sheetRows do
-            if SH.sheetRows[i] and SH.sheetRows[i].f then SH.sheetRows[i].f:Hide() end
-        end
-        SetFeatureScroll(featureRows)
-        if SH.featScroll then SH.featScroll:Show() end
-    end
-
-    SH.origin:SetText("Raza: " .. GetRaceLabel(data) .. "\nTrasfondo: " .. GetBackgroundLabel(data) .. "\n" .. GetFeatsLabel(data))
-end
 
 local function RefreshCreationCost()
     local C = S.creation
@@ -3690,248 +1808,6 @@ K.SKILLS_PAGE_RECT = { left = 0, top = -25, right = -31, bottom = -15, rightWidt
 -- `tx/ty` solo estan para afinar; con 0 la textura queda exactamente donde la pagina base.
 K.PROF_BOOKMARK = { w = 65, tx = 0, ty = 0 }
 
--- El cliente de Epsilon resuelve rutas con fiabilidad y los fileID sueltos no siempre; se usa la
--- ruta y solo se cae al id numerico si esa ruta no existe en este build.
-local function ProfTexture(path, fileId)
-    if GetFileIDFromPath and GetFileIDFromPath(path) then return path end
-    -- Si la ruta no existe en este build se cae al fileID, pero se AVISA una vez: sin aviso, un
-    -- id equivocado deja la pagina en verde y no hay forma de saber por que.
-    if not ProfTexture.avisado then
-        ProfTexture.avisado = true
-        if HarfordChat and HarfordChat.Print then
-            HarfordChat.Print(string.format(
-                "|cffff9900Profesiones:|r la textura |cffffd100%s|r no existe en este cliente; se usa el fileID %s.",
-                tostring(path), tostring(fileId)))
-        end
-    end
-    return fileId or path
-end
-
-local function CreateProfessionsPage()
-    local page = CreatePage("professions")
-    -- El libro NATIVO no recorta ornamentos por hueco: al entrar en la pestana Profesiones
-    -- sustituye las DOS paginas enteras (SpellBookFrame.lua: bgFileL/bgFileR ->
-    -- Professions-Book-Left / Professions-Book-Right). El marco ornamentado de cada profesion,
-    -- el marcapaginas verde y el resto del adorno vienen horneados en esas dos texturas.
-    -- Por eso aqui ya no hay ni `stamp` por boton ni parche para tapar la cinta azul: no hay
-    -- cinta azul que tapar, porque la pagina de conjuros no llega a dibujarse.
-    local host = S.skillsFrame or S.frame
-    local profBody = host:CreateTexture(nil, "BACKGROUND", nil, -7)
-    profBody:SetTexture(374155)
-    profBody:SetTexCoord(0, 0.533203125, 0, 0.4902344048)
-    profBody:SetAllPoints(host)
-    profBody:Hide()
-    -- Base: las MISMAS paginas del libro de habilidades (Habilidades/Conjuros), para que las
-    -- tres pestanas sean el mismo libro. La pagina de profesiones nativa NO se dibuja: de ella
-    -- solo se recorta el marco ornamentado de cada hueco (ver los `frameCovers` de abajo), que
-    -- es justo lo que la diferencia. Anclaje identico al de la pestana Conjuros.
-    local profPage1 = host:CreateTexture(nil, "BACKGROUND", nil, -6)
-    profPage1:SetTexture("Interface\\Spellbook\\Spellbook-Page-1")
-    profPage1:SetPoint("TOPLEFT", host, "TOPLEFT", K.SKILLS_PAGE_RECT.left, K.SKILLS_PAGE_RECT.top)
-    profPage1:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", K.SKILLS_PAGE_RECT.right, K.SKILLS_PAGE_RECT.bottom)
-    profPage1:Hide()
-    -- Identica a la del libro de habilidades, incluidos el sublevel -5 (por ENCIMA de la
-    -- pagina izquierda, que va en -6) y el ancho de 41. Sin ese ancho la textura de cierre
-    -- no tiene medida propia y no cierra igual que en Habilidades/Conjuros.
-    local profPage2 = host:CreateTexture(nil, "BACKGROUND", nil, -5)
-    profPage2:SetTexture("Interface\\Spellbook\\Spellbook-Page-2")
-    profPage2:SetPoint("TOPLEFT", profPage1, "TOPRIGHT", 0, 0)
-    profPage2:SetPoint("BOTTOMLEFT", profPage1, "BOTTOMRIGHT", 0, 0)
-    profPage2:SetWidth(K.SKILLS_PAGE_RECT.rightWidth)
-    profPage2:Hide()
-
-    -- Marco ornamentado de cada hueco, recortado de la pagina de profesiones NATIVA aunque el
-    -- fondo sea el del libro de habilidades: un frame que recorta (`SetClipsChildren`) con la
-    -- pagina de profesiones dentro, desplazada PROF_FRAME_OFFSET, de modo que en la ventana de
-    -- 437x81 caiga exactamente el marco del hueco 1. Asi el marco es el nativo de verdad, sin
-    -- texCoords calculadas ni arte inventado, y de paso tapa el arte de profesion secundaria.
-    -- Van colgados de la PAGINA y no del boton: los botones solo se crean para los huecos con
-    -- contenido (con cero profesiones conocidas solo se crean dos), asi que dentro del boton el
-    -- marco no llegaba a existir nunca.
-    -- MARCAPAGINAS VERDE. Es una TEXTURA del libro, no un frame que recorta: el retrato de la
-    -- ventana (58x58 en -4,+4) cae justo sobre esta franja, y un frame hijo dibuja SIEMPRE por
-    -- encima de las texturas de su padre, asi que tapaba el retrato con el lomo negro de la
-    -- pagina de profesiones. Como textura en BACKGROUND -4 queda encima de las dos paginas
-    -- (-6 y -5) y por debajo del retrato (ARTWORK 2), que es donde debe estar.
-    -- El recorte se hace con texCoord en vez de con SetClipsChildren, que solo existe en frames.
-    local bookmarkPage = host:CreateTexture(nil, "BACKGROUND", nil, -4)
-    bookmarkPage:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Left", 383588))
-    bookmarkPage:Hide()
-
-    local frameCovers = {}
-    for i = 1, #K.PROF_SLOTS do
-        local slot = K.PROF_SLOTS[i]
-        local m = K.PROF_FRAME_MARGIN
-        local cover = CreateFrame("Frame", nil, page)
-        cover:SetSize(slot.w + m * 2, slot.h + m * 2)
-        -- Anclado al LIBRO, no a la pagina de contenido: `skillsContent` empieza 21 px mas
-        -- abajo que el frame, y las coordenadas nativas son respecto al frame (ahi se ancla
-        -- tambien la textura de pagina). Colgarlos de `page` los bajaba 21 px.
-        cover:SetPoint("TOPLEFT", host, "TOPLEFT", slot.x - m, slot.y + m)
-        if cover.SetClipsChildren then cover:SetClipsChildren(true) end
-        local left = cover:CreateTexture(nil, "BACKGROUND")
-        left:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Left", 383588))
-        left:SetPoint("TOPLEFT", cover, "TOPLEFT",
-            K.PROF_FRAME_OFFSET.x + m, K.PROF_FRAME_OFFSET.y - m)
-        cover.pageLeft = left
-        local right = cover:CreateTexture(nil, "BACKGROUND")
-        right:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Right", 383589))
-        right:SetPoint("TOPLEFT", left, "TOPRIGHT", 0, 0)
-        frameCovers[#frameCovers + 1] = cover
-    end
-
-    -- Toda la geometria ajustable se aplica desde aqui, para que el ajuste en vivo use el mismo
-    -- camino que el arranque y no haya dos verdades.
-    local function ApplyProfSkin()
-        -- La pagina base se dibuja estirada en un ancho de `host - 31`. El marcapaginas ocupa
-        -- los `w` primeros pixeles de esa misma pagina, asi que su texCoord es esa fraccion:
-        -- se recorta lo mismo que veria un frame que recortase, pero sin frame.
-        local anchoPagina = (host:GetWidth() or 550) + K.SKILLS_PAGE_RECT.right - K.SKILLS_PAGE_RECT.left
-        if anchoPagina < 1 then anchoPagina = 519 end
-        local fraccion = math.min(1, K.PROF_BOOKMARK.w / anchoPagina)
-        bookmarkPage:SetTexCoord(0, fraccion, 0, 1)
-        bookmarkPage:ClearAllPoints()
-        bookmarkPage:SetPoint("TOPLEFT", host, "TOPLEFT",
-            K.SKILLS_PAGE_RECT.left + K.PROF_BOOKMARK.tx, K.SKILLS_PAGE_RECT.top + K.PROF_BOOKMARK.ty)
-        bookmarkPage:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT",
-            K.SKILLS_PAGE_RECT.left + K.PROF_BOOKMARK.tx, K.SKILLS_PAGE_RECT.bottom + K.PROF_BOOKMARK.ty)
-        bookmarkPage:SetWidth(K.PROF_BOOKMARK.w)
-        for i, cover in ipairs(frameCovers) do
-            local slot = K.PROF_SLOTS[i]
-            local m = K.PROF_FRAME_MARGIN
-            cover:SetSize(slot.w + m * 2, slot.h + m * 2)
-            cover:ClearAllPoints()
-            cover:SetPoint("TOPLEFT", host, "TOPLEFT", slot.x - m, slot.y + m)
-            cover.pageLeft:ClearAllPoints()
-            cover.pageLeft:SetPoint("TOPLEFT", cover, "TOPLEFT",
-                K.PROF_FRAME_OFFSET.x + m, K.PROF_FRAME_OFFSET.y - m)
-        end
-    end
-    ApplyProfSkin()
-    HarfordCharacterPanel._ApplyProfSkin = ApplyProfSkin
-    HarfordCharacterPanel._ProfSkinValues = {
-        bookmark = K.PROF_BOOKMARK, frame = K.PROF_FRAME_OFFSET,
-        margen = function(v)
-            if v then K.PROF_FRAME_MARGIN = math.max(0, math.floor(v)) end
-            return K.PROF_FRAME_MARGIN
-        end,
-    }
-
-    local title = CreateFS(page, "GameFontNormalLarge", "Profesiones")
-    title:SetPoint("TOPLEFT", 14, -10)
-    title:Hide()  -- el retrato lo pisa y la pestaña ya se llama Profesiones
-    local empty = CreateFS(page, "GameFontDisable",
-        "No conoces ninguna profesion todavia (llegan con competencias de herramienta o el DM).")
-    empty:SetPoint("TOPLEFT", 16, -44); empty:SetWidth(380); empty:SetJustifyH("LEFT"); empty:Hide()
-
-    -- Vista LISTA: los cinco huecos nativos sobre la pagina. Vista RECETAS: panel de crafteo
-    -- con boton de volver. Se alternan (P.view), como el libro nativo al abrir una profesion.
-    -- Los huecos se anclan a la PAGINA con coordenadas nativas, asi que profList cubre el frame.
-    local profList = CreateFrame("Frame", nil, page)
-    -- Cubre el LIBRO entero (no la pagina de contenido, 21 px mas baja): los huecos se anclan
-    -- dentro con las coordenadas nativas, que son respecto al frame de 550x525.
-    profList:SetPoint("TOPLEFT", host, "TOPLEFT", 0, 0)
-    profList:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", 0, 0)
-    -- Por encima de los marcos: si no, el marco recortado taparia icono, nombre y barra.
-    profList:SetFrameLevel((page:GetFrameLevel() or 1) + 3)
-    profList:EnableMouseWheel(true)
-    profList:SetScript("OnMouseWheel", function(_, delta)
-        local P = S.professions
-        local antes = P.pageNum or 1
-        P.pageNum = math.max(1, antes - delta)
-        -- La rueda tambien pasa pagina: suena solo si se ha movido.
-        if P.pageNum ~= antes then if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end end
-        if S.RefreshProfessions then S.RefreshProfessions() end
-    end)
-    -- Pasapaginas: mismas texturas, medidas y anclajes que en Habilidades/Conjuros, para que
-    -- las tres pestanas del libro se pasen igual. Anclados al LIBRO, no a la pagina de
-    -- contenido (que empieza 21 px mas abajo).
-    local nxt = CreateFrame("Button", nil, page)
-    nxt:SetSize(32, 32)
-    nxt:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -31, 26)
-    nxt:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Up")
-    nxt:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Down")
-    nxt:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-NextPage-Disabled")
-    nxt:SetScript("OnClick", function()
-        local P = S.professions
-        local antes = P.pageNum or 1
-        P.pageNum = antes + 1
-        if S.RefreshProfessions then S.RefreshProfessions() end
-        if P.pageNum ~= antes then if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end end
-    end)
-    local prev = CreateFrame("Button", nil, page)
-    prev:SetSize(32, 32)
-    prev:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -66, 26)
-    prev:SetNormalTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Up")
-    prev:SetPushedTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Down")
-    prev:SetDisabledTexture("Interface\\Buttons\\UI-SpellbookIcon-PrevPage-Disabled")
-    prev:SetScript("OnClick", function()
-        local P = S.professions
-        if (P.pageNum or 1) > 1 then
-            P.pageNum = P.pageNum - 1
-            if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("book_page_turned") end
-        end
-        if S.RefreshProfessions then S.RefreshProfessions() end
-    end)
-    local pageText = page:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    pageText:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", -110, 38)
-
-    local recipePanel = CreateFrame("Frame", nil, page)
-    recipePanel:SetPoint("TOPLEFT", host, "TOPLEFT", 80, -67); recipePanel:SetSize(437, 430)
-    recipePanel:Hide()
-    recipePanel:EnableMouseWheel(true)
-    recipePanel:SetScript("OnMouseWheel", function(_, delta)
-        local P = S.professions
-        P.recipeOffset = math.max(0, (P.recipeOffset or 0) - delta)
-        if S.RefreshProfessions then S.RefreshProfessions() end
-    end)
-    local backBtn = CreateFrame("Button", nil, recipePanel, "UIPanelButtonTemplate")
-    backBtn:SetSize(92, 20); backBtn:SetPoint("TOPLEFT", 0, 0); backBtn:SetText("< Volver")
-    backBtn:SetScript("OnClick", function()
-        S.professions.view = "list"
-        if S.RefreshProfessions then S.RefreshProfessions() end
-    end)
-    local recipeHeader = CreateFS(recipePanel, "GameFontNormal", "")
-    recipeHeader:SetPoint("TOPLEFT", 100, -4); recipeHeader:SetWidth(278); recipeHeader:SetJustifyH("LEFT")
-    recipeHeader:SetTextColor(0.25, 0.13, 0.05)
-
-    S.professions = { page = page, title = title, empty = empty, profList = profList,
-        recipePanel = recipePanel, recipeHeader = recipeHeader, backBtn = backBtn,
-        profBody = profBody, profPage1 = profPage1, profPage2 = profPage2,
-        frameCovers = frameCovers, bookmark = bookmarkPage,
-        profButtons = {}, recipeRows = {},
-        prev = prev, nxt = nxt, pageText = pageText,
-        selected = nil, forcedProfession = nil, view = "list", pageNum = 1 }
-    -- Solo para diagnostico (`/harford debug run proftex`): medir el alto real de la pagina,
-    -- del que depende hasta donde llegan los marcos.
-    HarfordCharacterPanel._professionsState = S.professions
-end
-
--- Sello de profesion (pool, pagina completa): el marco ornamentado de la pestaña
--- Profesiones nativa (recorte de 383588) como envoltorio, con icono+borde nativo (383591),
--- nombre en MORPHEUS y la barra de skill nativa (ProfessionsBook + Professions-Progress-Fill).
--- Icono GRANDE del hueco: recorte CIRCULAR, como hace `FormatProfession` en SpellBookFrame.lua
--- para una profesion aprendida (`SetPortraitToTexture(frame.icon, texture)`). La sonda muestra
--- ese icono con texCoord 0,0,1,1 solo porque se capturo SIN profesiones aprendidas: nunca llego
--- a formatearse. Sin el recorte, las esquinas del icono asoman por fuera del aro.
-local function SetProfIcon(texture, iconName)
-    local path = "Interface\\Icons\\" .. (iconName or "INV_Misc_QuestionMark")
-    if SetPortraitToTexture then
-        SetPortraitToTexture(texture, path)
-    else
-        texture:SetTexture(path)
-        texture:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    end
-end
-
--- Icono de los BOTONES de hechizo: cuadrado y a pelo. Aqui el nativo NO recorta —
--- `ProfessionButtonTemplate` declara `$parentIconTexture` con `setAllPoints` y sin texCoord, y
--- la sonda lo confirma (40x40, capa BORDER, mezcla BLEND, sin texCoord).
-local function SetProfButtonIcon(texture, iconName)
-    texture:SetTexture("Interface\\Icons\\" .. (iconName or "INV_Misc_QuestionMark"))
-    texture:SetTexCoord(0, 1, 0, 1)
-end
-
 -- Barra de progreso de profesion, 1:1 con ProfessionStatusBarTemplate del XML nativo:
 -- 95x16, relleno Professions-Progress-Fill, dos fondos de extremo de 16x16 y dos remates de
 -- 12x12 (el DERECHO va hidden=true en el propio XML, no es un apano nuestro), y el fondo
@@ -3946,414 +1822,7 @@ K.PROF_KIND_LABEL = {
     utility = "Competencia de herramienta",
 }
 
-local function SetProfTooltip(button, profId, modo)
-    button:SetScript("OnEnter", function(self)
-        local def = HarfordProfessions and HarfordProfessions.GetDefinition
-            and HarfordProfessions.GetDefinition(profId)
-        if not (def and GameTooltip) then return end
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        if modo == "tool" then
-            GameTooltip:SetText(def.tool or "Herramienta", 1, 0.82, 0)
-            if def.ability then
-                GameTooltip:AddLine("Tirada de " .. def.ability .. " con la herramienta.", 1, 1, 1, true)
-            end
-            GameTooltip:AddLine("Click para tirar.", 0.4, 1, 0.4, true)
-        else
-            local skill = HarfordProfessions.EffectiveSkill(profId)
-            GameTooltip:SetText(def.name or profId, 1, 0.82, 0)
-            GameTooltip:AddLine(K.PROF_KIND_LABEL[def.kind] or "Profesion", 1, 1, 1, true)
-            if def.ability then
-                GameTooltip:AddDoubleLine("Caracteristica", def.ability, 0.7, 0.7, 0.7, 1, 1, 1)
-            end
-            if def.tool then
-                GameTooltip:AddDoubleLine("Herramienta", def.tool, 0.7, 0.7, 0.7, 1, 1, 1)
-            end
-            GameTooltip:AddDoubleLine("Rango", string.format("%s  %d/%d",
-                HarfordProfessions.GetTierName(skill), skill, HarfordProfessions.MAX_SKILL),
-                0.7, 0.7, 0.7, 1, 1, 1)
-            local recetas = HarfordProfessions.GetRecipes and HarfordProfessions.GetRecipes(profId) or {}
-            local alAlcance = 0
-            for _, r in ipairs(recetas) do
-                if (tonumber(r.skillReq) or 1) <= skill then alAlcance = alAlcance + 1 end
-            end
-            GameTooltip:AddDoubleLine("Recetas", string.format("%d de %d a tu alcance",
-                alAlcance, #recetas), 0.7, 0.7, 0.7, 1, 1, 1)
-            GameTooltip:AddLine(" ")
-            local abierta = HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.GetOpenProfession
-                and HarfordProfessionsCraftUI.GetOpenProfession() == profId
-            GameTooltip:AddLine(abierta and "Click para cerrar las recetas."
-                or "Click para abrir las recetas.", 0.4, 1, 0.4, true)
-        end
-        GameTooltip:Show()
-    end)
-    button:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-end
-
-local function ProfStatusBar(parent)
-    local bar = CreateFrame("StatusBar", nil, parent)
-    bar:SetSize(95, 16)
-    bar:SetStatusBarTexture("Interface\\Spellbook\\Professions-Progress-Fill")
-    bar:SetMinMaxValues(0, 300)
-    local barBg = bar:CreateTexture(nil, "BACKGROUND")
-    barBg:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-    barBg:SetTexCoord(0, 1, 0.0078125, 0.1328125)
-    local bgCapL = bar:CreateTexture(nil, "BACKGROUND")
-    bgCapL:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-    bgCapL:SetTexCoord(0.00390625, 0.06640625, 0.484375, 0.609375)
-    bgCapL:SetSize(16, 16); bgCapL:SetPoint("RIGHT", bar, "LEFT", 0, 2)
-    local bgCapR = bar:CreateTexture(nil, "BACKGROUND")
-    bgCapR:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-    bgCapR:SetTexCoord(0.00390625, 0.06640625, 0.625, 0.75)
-    bgCapR:SetSize(16, 16); bgCapR:SetPoint("LEFT", bar, "RIGHT", 0, 2)
-    barBg:SetPoint("TOPLEFT", bgCapL, "TOPRIGHT", 0, 0)
-    barBg:SetPoint("BOTTOMRIGHT", bgCapR, "BOTTOMLEFT", 0, 0)
-    local capL = bar:CreateTexture(nil, "OVERLAY")
-    capL:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-    capL:SetTexCoord(0.00390625, 0.05078125, 0.875, 0.96875)
-    capL:SetSize(12, 12); capL:SetPoint("RIGHT", bar, "LEFT", 0, 2)
-    bar.text = bar:CreateFontString(nil, "OVERLAY", "TextStatusBarText")
-    bar.text:SetPoint("CENTER", bar, "CENTER", 0, 2)
-    return bar
-end
-
--- Boton de "hechizo" del hueco, 1:1 con ProfessionButtonTemplate: 40x40, icono a todo el boton
--- en capa BORDER, NameFrame de 108x41 (Professions-Item-Border, alpha 0.8) pegado a su derecha,
--- nombre GameFontNormal de 100 de ancho y 2 lineas a LEFT>boton.RIGHT +5,+7 y subtitulo de
--- 95x28 debajo. El primero va a TOPRIGHT -109,-3.
-local function ProfSpellButton(parent, previous, secondary)
-    local sb = CreateFrame("Button", nil, parent)
-    sb:SetSize(40, 40)
-    if previous then
-        -- XML: en el hueco grande el segundo boton cae DEBAJO del primero; en el pequeno va a
-        -- su IZQUIERDA, porque solo hay 46 de alto.
-        if secondary then
-            sb:SetPoint("TOPRIGHT", previous, "TOPLEFT", -109, 0)
-        else
-            sb:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0)
-        end
-    else
-        -- Ya solo hay UN boton por profesion (la tirada se fue al dado de la ventana de recetas),
-        -- y va en el hueco de ABAJO, que es el que ocupaba la tirada: en el hueco grande son dos
-        -- posiciones de 40 apiladas, asi que la segunda empieza en -43. En el hueco pequeno no
-        -- cabe esa segunda fila y se queda arriba.
-        sb:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -109, secondary and -3 or -43)
-    end
-    -- Sonda: 40x40, capa BORDER, mezcla BLEND, sin texCoord. Icono cuadrado y a pelo.
-    sb.icon = sb:CreateTexture(nil, "BORDER")
-    sb.icon:SetAllPoints(sb)
-    sb.icon:SetBlendMode("BLEND")
-    sb.nameFrame = sb:CreateTexture(nil, "BACKGROUND")
-    sb.nameFrame:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-    sb.nameFrame:SetTexCoord(0.00390625, 0.42578125, 0.1484375, 0.46875)
-    sb.nameFrame:SetSize(108, 41)
-    sb.nameFrame:SetVertexColor(1, 1, 1, 0.8)
-    sb.nameFrame:SetPoint("LEFT", sb.icon, "RIGHT", 1, 0)
-    sb.label = sb:CreateFontString(nil, "BORDER", "GameFontNormal")
-    sb.label:SetPoint("LEFT", sb, "RIGHT", 5, 7)
-    sb.label:SetSize(100, 0)
-    sb.label:SetJustifyH("LEFT")
-    if sb.label.SetMaxLines then sb.label:SetMaxLines(2) end
-    sb.sub = sb:CreateFontString(nil, "BORDER", "GameFontDisableSmall")
-    sb.sub:SetPoint("TOPLEFT", sb.label, "BOTTOMLEFT", 0, -1)
-    sb.sub:SetSize(95, 28)
-    sb.sub:SetJustifyH("LEFT")
-    sb.sub:SetJustifyV("TOP")
-    sb:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-    sb:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
-    sb:Hide()
-    return sb
-end
-
-local function ProfButton(i)
-    local P = S.professions
-    if P.profButtons[i] then return P.profButtons[i] end
-    -- Cada hueco va en SU sitio nativo (PROF_SLOTS) sobre la pagina, no apilados con un paso
-    -- fijo: el nativo tiene DOS huecos grandes (con aro de icono) y TRES pequenos (sin aro), y
-    -- el ornamento de todos ellos esta horneado en la textura de la pagina. El boton no dibuja
-    -- marco propio.
-    local slotDef = K.PROF_SLOTS[i] or K.PROF_SLOTS[#K.PROF_SLOTS]
-    local secondary = slotDef.kind == "secondary"
-    local b = CreateFrame("Button", nil, P.profList)
-    b.slotKind = slotDef.kind
-    b:SetSize(slotDef.w, slotDef.h)
-    b:SetPoint("TOPLEFT", P.profList, "TOPLEFT", slotDef.x, slotDef.y)
-    -- Sin resaltado al pasar el raton: el hueco NO es clicable (como en el libro nativo, donde
-    -- se pulsa el boton de hechizo), asi que iluminarlo entero prometia una interaccion que
-    -- no existe. El resaltado lo pone `spellOpen`, que si lo es.
-    b:EnableMouse(false)
-
-    b.bar = ProfStatusBar(b)
-    b.barText = b.bar.text
-
-    if not secondary then
-        -- XML PrimaryProfessionTemplate ------------------------------------------------
-        -- iconBorder 72x72 en TOPLEFT +7,-7. La region recortada de ProfessionsBook mide 74x74
-        -- reales (manifiesto de atlas del propio XML: Professions-MajorRing-Normal), y el
-        -- nativo la mete en 72: se conserva ese encogimiento de 2 px.
-        -- Capa OVERLAY/0, no ARTWORK: es lo que devuelve la sonda del frame nativo
-        -- (PrimaryProfession1IconBorder drawLayer = OVERLAY/0), coherente con el
-        -- <Layer level="OVERLAY"> del XML. El icono va en BORDER y queda debajo.
-        b.iconBorder = b:CreateTexture(nil, "OVERLAY")
-        b.iconBorder:SetTexture("Interface\\Spellbook\\ProfessionsBook")
-        b.iconBorder:SetTexCoord(0.43359375, 0.72265625, 0.1484375, 0.7265625)
-        b.iconBorder:SetSize(72, 72); b.iconBorder:SetPoint("TOPLEFT", 7, -7)
-        b.icon = b:CreateTexture(nil, "BORDER")
-        b.icon:SetBlendMode("ADD")   -- XML: alphaMode="ADD"
-        b.icon:SetPoint("TOPLEFT", b.iconBorder, "TOPLEFT", 1, -1)
-        b.icon:SetPoint("BOTTOMRIGHT", b.iconBorder, "BOTTOMRIGHT", -1, 1)
-
-        b.name = b:CreateFontString(nil, "OVERLAY", "QuestTitleFontBlackShadow")
-        b.name:SetPoint("TOPLEFT", 100, -2); b.name:SetJustifyH("LEFT")
-        b.name:SetTextColor(1, 0.82, 0)
-        b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        b.sub:SetPoint("TOPLEFT", b.name, "BOTTOMLEFT", 0, -33)   -- XML: rank
-        b.sub:SetWidth(300); b.sub:SetJustifyH("LEFT")
-        b.sub:SetTextColor(1, 1, 1)
-        b.bar:SetPoint("TOPLEFT", b.sub, "BOTTOMLEFT", 14, -5)    -- XML: rank.BOTTOMLEFT +14,-5
-
-        b.missingHeader = b:CreateFontString(nil, "OVERLAY", "QuestTitleFontBlackShadow")
-        b.missingHeader:SetPoint("TOPLEFT", 120, -13)
-        b.missingHeader:SetJustifyH("LEFT")
-        b.missingHeader:SetTextColor(0.85, 0.7, 0.6)
-        b.missingText = b:CreateFontString(nil, "OVERLAY", "SubSpellFont")
-        b.missingText:SetPoint("TOPLEFT", b.missingHeader, "BOTTOMLEFT", 0, -1)
-        b.missingText:SetWidth(305); b.missingText:SetJustifyH("LEFT")
-        b.missingText:SetTextColor(0.1, 0.05, 0.05)
-    else
-        -- XML SecondaryProfessionTemplate ----------------------------------------------
-        -- NO se usa con el reparto actual de cinco huecos iguales: se conserva porque es la
-        -- transcripcion fiel del hueco pequeno nativo y volveria a hacer falta si algun dia se
-        -- adopta el reparto 2 principales + 3 secundarias.
-        -- El hueco pequeno NO tiene aro de icono: solo barra, rango y nombre, montados de abajo
-        -- hacia arriba (statusBar en BOTTOMLEFT +16,-1 y el resto anclado sobre ella).
-        b.bar:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", 16, -1)
-        b.sub = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        b.sub:SetPoint("BOTTOMLEFT", b.bar, "TOPLEFT", -14, 4)
-        b.sub:SetPoint("BOTTOMRIGHT", b.bar, "TOPRIGHT", 25, 4)
-        b.sub:SetJustifyH("LEFT")
-        b.name = b:CreateFontString(nil, "OVERLAY", "QuestFont_Shadow_Small")
-        b.name:SetPoint("BOTTOMLEFT", b.sub, "TOPLEFT", 0, 2)
-        b.name:SetPoint("BOTTOMRIGHT", b.sub, "TOPRIGHT", 0, 2)
-        b.name:SetJustifyH("LEFT")
-        b.name:SetTextColor(1, 0.82, 0)
-
-        b.missingHeader = b:CreateFontString(nil, "OVERLAY", "QuestFont_Large")
-        b.missingHeader:SetPoint("TOPLEFT", 4, -15)
-        b.missingHeader:SetJustifyH("LEFT")
-        b.missingHeader:SetTextColor(0.15, 0.1, 0.1)
-        b.missingText = b:CreateFontString(nil, "OVERLAY", "SubSpellFont")
-        b.missingText:SetPoint("RIGHT", b, "RIGHT", -5, 0)
-        b.missingText:SetWidth(250); b.missingText:SetJustifyH("LEFT")
-        b.missingText:SetTextColor(0.1, 0.05, 0.05)
-    end
-
-    -- El hueco en si NO abre nada (como el libro nativo, donde se pulsa el boton de hechizo):
-    -- abrir la profesion es `spellOpen`. La tirada suelta se fue al boton de dado de la
-    -- ventana de recetas, asi que aqui ya no hay un segundo boton.
-    b.spellOpen = ProfSpellButton(b, nil, secondary)
-    P.profButtons[i] = b
-    return b
-end
-
--- Fila de receta (pool, panel derecho): icono + nombre(reqskill) + materiales + boton Craftear.
-local function RecipeRow(i)
-    local P = S.professions
-    if P.recipeRows[i] then return P.recipeRows[i] end
-    local r = CreateFrame("Frame", nil, P.recipePanel)
-    r:SetSize(449, 40); r:SetPoint("TOPLEFT", 0, -26 - ((i - 1) * 42))
-    r.icon = r:CreateTexture(nil, "ARTWORK"); r.icon:SetSize(26, 26); r.icon:SetPoint("TOPLEFT", 0, -2); r.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-    r.name = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall"); r.name:SetPoint("TOPLEFT", 32, -2); r.name:SetWidth(300); r.name:SetJustifyH("LEFT"); r.name:SetTextColor(0.25, 0.13, 0.05)
-    r.mats = r:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall"); r.mats:SetPoint("TOPLEFT", 32, -18); r.mats:SetWidth(360); r.mats:SetJustifyH("LEFT")
-    r.craft = CreateFrame("Button", nil, r, "UIPanelButtonTemplate"); r.craft:SetSize(58, 20); r.craft:SetPoint("TOPRIGHT", 0, -2); r.craft:SetText("Craftear")
-    P.recipeRows[i] = r
-    return r
-end
-
-local function RefreshProfessions()
-    local P = S.professions
-    if not P or not HarfordProfessions then return end
-    local known = {}
-    local forced = P.forcedProfession and HarfordProfessions.GetDefinition(P.forcedProfession)
-    if forced then
-        -- Una estacion del mundo abre su profesion aunque el PJ aun no la conozca.
-        known[1] = forced
-    else
-        for _, def in ipairs(HarfordProfessions.GetProfessions()) do
-            if HarfordProfessions.KnowsProfession(def.id) then known[#known + 1] = def end
-        end
-    end
-    P.empty:Hide()  -- los envoltorios vacios ya explican como se aprende una profesion
-
-    -- Mantener seleccion valida.
-    local selValid = false
-    for _, d in ipairs(known) do if d.id == P.selected then selValid = true break end end
-    if not selValid then P.selected = known[1] and known[1].id or nil end
-
-    -- Dos vistas alternadas: LISTA de sellos <-> RECETAS de la seleccionada
-    if P.view ~= "recipes" or not P.selected then P.view = "list" end
-    local isList = P.view == "list"
-    P.profList:SetShown(isList)
-    P.recipePanel:SetShown(not isList)
-    if P.prev then P.prev:SetShown(isList) end
-    if P.nxt then P.nxt:SetShown(isList) end
-    if P.pageText then P.pageText:SetShown(isList) end
-
-    -- Los marcos CRECEN con las profesiones: uno por cada una conocida, y un unico hueco vacio
-    -- cuando no hay ninguna (a modo de invitacion). El nativo enseña siempre dos porque solo
-    -- admite dos principales; aqui todas son equivalentes y no hay numero fijo que reservar.
-    local VISIBLE = #K.PROF_SLOTS
-    local totalSlots = math.max(#known, 1)
-    local maxPage = math.max(1, math.ceil(totalSlots / VISIBLE))
-    P.pageNum = math.max(1, math.min(P.pageNum or 1, maxPage))
-    local offset = (P.pageNum - 1) * VISIBLE
-    -- Marcos visibles en ESTA pagina: los que tengan hueco detras. Un marco suelto sobre
-    -- pergamino vacio se leeria como una profesion que no esta.
-    local enEstaPagina = math.max(0, math.min(VISIBLE, totalSlots - offset))
-    for i, cover in ipairs(P.frameCovers or {}) do
-        cover:SetShown(isList and i <= enEstaPagina)
-    end
-    if P.pageText then
-        -- Con una sola pagina no se anuncia el numero: el libro nativo tampoco lo hace.
-        P.pageText:SetText(maxPage > 1 and ("Pagina " .. P.pageNum) or "")
-    end
-    if P.prev then if P.pageNum > 1 then P.prev:Enable() else P.prev:Disable() end end
-    if P.nxt then if P.pageNum < maxPage then P.nxt:Enable() else P.nxt:Disable() end end
-    for i = 1, VISIBLE do
-        local slot = offset + i
-        local def = isList and known[slot] or nil
-        local emptySlot = isList and not def and slot <= totalSlots
-        local b = P.profButtons[i] or ((def or emptySlot) and ProfButton(i))
-        if b then
-            if def then
-                local profId = def.id
-                local skill = HarfordProfessions.EffectiveSkill(profId)
-                -- Solo los huecos GRANDES tienen aro de icono (SecondaryProfessionTemplate no
-                -- declara ninguno), asi que cada acceso al icono va guardado.
-                if b.icon then
-                    -- El icono del hueco va SIEMPRE al 60% y desaturado, tambien con la
-                    -- profesion aprendida: el `OnLoad` de PrimaryProfessionTemplate lo deja asi
-                    -- y `FormatProfession` nunca lo revierte (solo llama a SetPortraitToTexture).
-                    -- Devolverlo a color pleno, con la mezcla ADD encima, lo dejaba lavado y con
-                    -- tinte. Ese aspecto palido es el normal del nativo, no el de "sin aprender".
-                    SetProfIcon(b.icon, def.icon)
-                    b.icon:SetAlpha(0.6)
-                    if SetDesaturation then SetDesaturation(b.icon, true) end
-                    b.icon:Show()
-                end
-                b.missingHeader:Hide()
-                b.missingText:Hide()
-                b.name:Show()
-                b.sub:Show()
-                b.name:SetText(def.name)
-                b.name:SetTextColor(1, 0.82, 0)
-                b.sub:SetText(HarfordProfessions.GetTierName(skill))
-                b.bar:Show()
-                b.bar:SetValue(skill)
-                b.barText:SetText(string.format("%d/%d", skill, HarfordProfessions.MAX_SKILL))
-                -- El sello es el envoltorio: no abre nada por si mismo (como el libro nativo,
-                -- donde se pulsa el boton de hechizo). Abrir la profesion es `spellOpen`.
-                b:SetScript("OnClick", nil)
-                SetProfButtonIcon(b.spellOpen.icon, def.icon)
-                b.spellOpen.label:SetText(def.name)
-                SetProfTooltip(b.spellOpen, profId, "open")
-                b.spellOpen:SetScript("OnClick", function()
-                    P.selected = profId
-                    -- Alterna: si ya esta abierta CON ESTA profesion se cierra; si esta abierta
-                    -- con otra, cambia a esta sin cerrarse. La estacion del mundo no usa esto:
-                    -- ahi siempre se abre.
-                    if HarfordProfessionsCraftUI and HarfordProfessionsCraftUI.Toggle then
-                        HarfordProfessionsCraftUI.Toggle(profId)
-                    else
-                        P.view = "recipes"
-                        P.recipeOffset = 0
-                        RefreshProfessions()
-                    end
-                end)
-                b.spellOpen:Show()
-                b:Show()
-            elseif emptySlot then
-                -- Hueco VACIO, tal y como lo declara el XML: se ocultan professionName, rank y
-                -- barra, y se muestran missingHeader/missingText en SU posicion (+120,-13), que
-                -- no es la del nombre de una profesion aprendida.
-                -- El aro sigue ahi con el icono desaturado al 60% (OnLoad del template nativo).
-                b.name:Hide()
-                b.sub:Hide()
-                b.missingHeader:SetText("Sin profesiones")
-                b.missingHeader:Show()
-                b.missingText:SetText("Se aprende con la competencia de su herramienta o por decision del DM.")
-                b.missingText:Show()
-                if b.icon then
-                    b.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
-                    b.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-                    b.icon:SetAlpha(0.6)
-                    if SetDesaturation then SetDesaturation(b.icon, true) end
-                    b.icon:Show()
-                end
-                b.bar:Hide()
-                b:SetScript("OnClick", nil)
-                b.spellOpen:Hide()
-                b:Show()
-            else
-                b:Hide()
-            end
-        end
-    end
-
-    local sel = P.selected and HarfordProfessions.GetDefinition(P.selected)
-    if sel then
-        local skill = HarfordProfessions.EffectiveSkill(sel.id)
-        P.recipeHeader:SetText(string.format("%s  |cff6b4a2a%d/%d %s|r", sel.name, skill,
-            HarfordProfessions.MAX_SKILL, HarfordProfessions.GetTierName(skill)))
-    else
-        P.recipeHeader:SetText("")
-    end
-    local recipes = (not isList and sel) and HarfordProfessions.GetRecipes(sel.id) or {}
-    -- Ventana deslizante: 9 filas visibles, rueda para desplazar (parche hasta tener la
-    -- ventana nativa de recetas replicada; ver sonda nativeprobe prof)
-    local RECIPES_VISIBLE = 9
-    local recipeMax = math.max(0, #recipes - RECIPES_VISIBLE)
-    P.recipeOffset = math.max(0, math.min(P.recipeOffset or 0, recipeMax))
-    local visibleRecipes = {}
-    for i = 1, RECIPES_VISIBLE do
-        local rec = recipes[P.recipeOffset + i]
-        if rec then visibleRecipes[#visibleRecipes + 1] = rec end
-    end
-    recipes = visibleRecipes
-    for i, rec in ipairs(recipes) do
-        local row = RecipeRow(i)
-        local recipeId = rec.id
-        local recipeName = rec.name or rec.id
-        local recipeIcon = rec.icon
-        local recipeSkillReq = tonumber(rec.skillReq) or 1
-        local ok, reason, detail = HarfordProfessions.CanCraft(recipeId)
-        local reasonText = reason
-        local parts = {}
-        for _, m in ipairs(detail or {}) do
-            local col = m.missingId and "|cff888888" or (m.have >= m.need and "|cff44dd44" or "|cffdd4444")
-            parts[#parts + 1] = string.format("%s%s %d/%d|r", col, m.name, m.have, m.need)
-        end
-        if #parts == 0 then parts[1] = ok and "Listo" or (reason or "") end
-        row.icon:SetTexture("Interface\\Icons\\" .. (recipeIcon or "INV_Misc_QuestionMark"))
-        row.name:SetText(string.format("%s |cff808080(%d)|r", recipeName, recipeSkillReq))
-        row.mats:SetText(table.concat(parts, "  "))
-        row.craft:SetEnabled(ok and true or false)
-        row.craft:SetScript("OnClick", function()
-            HarfordProfessions.Craft(recipeId)
-            RefreshProfessions()
-        end)
-        row.craft:SetScript("OnEnter", function(self)
-            if reasonText then
-                GameTooltip:SetOwner(self, "ANCHOR_LEFT")
-                GameTooltip:SetText(reasonText, 1, 0.4, 0.4, true)
-                GameTooltip:Show()
-            end
-        end)
-        row.craft:SetScript("OnLeave", GameTooltip_Hide)
-        row:Show()
-    end
-    for i = #recipes + 1, #P.recipeRows do P.recipeRows[i]:Hide() end
-end
-S.RefreshProfessions = RefreshProfessions
+S.RefreshProfessions = Profesiones.RefreshProfessions
 
 -- ===========================================================================
 -- Pestaña LIBRO: libro de habilidades con look spellbook VANILLA. Lista los rasgos
@@ -4440,7 +1909,9 @@ local function FeatureUseAvailable(feature)
     return (tonumber(tracked.available) or 0) > 0
 end
 
-local function FeatureRechargeText(recharge)
+do
+    local function FeatureRechargeText(recharge)
+end
     return (recharge == "short") and "Descanso corto" or "Descanso largo"
 end
 
@@ -4966,24 +2437,26 @@ K.PROF_SECCIONES = {
 }
 
 -- Las claves de armadura/arma vienen en minusculas del libro ("ligera", "marciales").
-local function ProfEtiqueta(texto)
-    texto = tostring(texto or "")
-    if texto == "" then return texto end
-    return texto:sub(1, 1):upper() .. texto:sub(2)
-end
+do
+    local function ProfEtiqueta(texto)
+        texto = tostring(texto or "")
+        if texto == "" then return texto end
+        return texto:sub(1, 1):upper() .. texto:sub(2)
+    end
 
--- Las lineas de "Competencias", con su color ya embebido. Fuente UNICA para el tooltip del
--- libro y para la fila del panel de Atributos: antes eran dos implementaciones y no coincidian.
--- Una seccion sin contenido no genera linea.
-function API.GetProficiencyLines()
-    local FE = HarfordDnDFeatureEffects
-    if not FE then return {} end
-    local perfil = GetProfileName()
-    local lineas = {}
-    local function Seccion(titulo, lista)
-        if not (lista and #lista > 0) then return end
-        local partes = {}
-        for i, v in ipairs(lista) do partes[i] = ProfEtiqueta(v) end
+    -- Las lineas de "Competencias", con su color ya embebido. Fuente UNICA para el tooltip del
+    -- libro y para la fila del panel de Atributos: antes eran dos implementaciones y no coincidian.
+    -- Una seccion sin contenido no genera linea.
+    function API.GetProficiencyLines()
+        local FE = HarfordDnDFeatureEffects
+        if not FE then return {} end
+        local perfil = GetProfileName()
+        local lineas = {}
+        local function Seccion(titulo, lista)
+            if not (lista and #lista > 0) then return end
+            local partes = {}
+            for i, v in ipairs(lista) do partes[i] = ProfEtiqueta(v) end
+end
         lineas[#lineas + 1] = "- |cffffd100" .. titulo .. ":|r " .. table.concat(partes, ", ")
     end
     Seccion("Armadura", FE.GetArmorProfs and FE.GetArmorProfs(perfil))
@@ -5008,48 +2481,50 @@ function API.GetProficiencyLines()
     return lineas
 end
 
-local function AddProficienciesToTooltip()
-    local lineas = API.GetProficiencyLines()
-    if #lineas == 0 then
-        GameTooltip:AddLine("Sin competencias registradas.", 0.7, 0.7, 0.7, true)
+do
+    local function AddProficienciesToTooltip()
+        local lineas = API.GetProficiencyLines()
+        if #lineas == 0 then
+            GameTooltip:AddLine("Sin competencias registradas.", 0.7, 0.7, 0.7, true)
+            return true
+        end
+        for _, l in ipairs(lineas) do
+            -- Blanco de base: el color de cada etiqueta ya va dentro de la linea.
+            GameTooltip:AddLine(l, 1, 1, 1, true)
+        end
         return true
     end
-    for _, l in ipairs(lineas) do
-        -- Blanco de base: el color de cada etiqueta ya va dentro de la linea.
-        GameTooltip:AddLine(l, 1, 1, 1, true)
-    end
-    return true
-end
 
-local function AddLanguagesToTooltip()
-    -- GetLanguages ya fusiona los idiomas derivados de los DATOS (raza, trasfondo, clase, dotes
-    -- y elecciones) con los importados del About, sin repetir por acentos o mayusculas. Antes
-    -- esto leia SOLO el About, asi que un personaje creado con el asistente salia sin idiomas.
-    local idiomas = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetLanguages
-        and HarfordDnDFeatureEffects.GetLanguages(GetProfileName())) or {}
-    if #idiomas == 0 then
-        GameTooltip:AddLine("Sin idiomas registrados.", 0.7, 0.7, 0.7, true)
+    local function AddLanguagesToTooltip()
+        -- GetLanguages ya fusiona los idiomas derivados de los DATOS (raza, trasfondo, clase, dotes
+        -- y elecciones) con los importados del About, sin repetir por acentos o mayusculas. Antes
+        -- esto leia SOLO el About, asi que un personaje creado con el asistente salia sin idiomas.
+        local idiomas = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetLanguages
+            and HarfordDnDFeatureEffects.GetLanguages(GetProfileName())) or {}
+        if #idiomas == 0 then
+            GameTooltip:AddLine("Sin idiomas registrados.", 0.7, 0.7, 0.7, true)
+            return true
+        end
+        table.sort(idiomas)
+        -- Uno por linea y con guion, como pidio el formato de Competencias pero en lista.
+        for _, idioma in ipairs(idiomas) do
+            GameTooltip:AddLine("- " .. idioma, 1, 0.82, 0)
+        end
         return true
     end
-    table.sort(idiomas)
-    -- Uno por linea y con guion, como pidio el formato de Competencias pero en lista.
-    for _, idioma in ipairs(idiomas) do
-        GameTooltip:AddLine("- " .. idioma, 1, 0.82, 0)
+
+    -- Se reconoce por NOMBRE y no por id: cada raza declara el suyo (`hum_idiomas`, `ena_idiomas`...).
+    -- Los rasgos AGREGADOS (su contenido es un listado, no una regla) se reconocen por nombre.
+    function API.IsAggregatedFeature(feature)
+        local nombre = tostring(feature and feature.name or "")
+        return nombre == "Competencias" or nombre == "Idiomas"
     end
-    return true
-end
 
--- Se reconoce por NOMBRE y no por id: cada raza declara el suyo (`hum_idiomas`, `ena_idiomas`...).
--- Los rasgos AGREGADOS (su contenido es un listado, no una regla) se reconocen por nombre.
-function API.IsAggregatedFeature(feature)
-    local nombre = tostring(feature and feature.name or "")
-    return nombre == "Competencias" or nombre == "Idiomas"
+    function API.AddAggregatedFeatureTooltip(feature)
+        local nombre = tostring(feature and feature.name or "")
+        if nombre == "Competencias" then return AddProficienciesToTooltip() end
+        if nombre == "Idiomas" then return AddLanguagesToTooltip() end
 end
-
-function API.AddAggregatedFeatureTooltip(feature)
-    local nombre = tostring(feature and feature.name or "")
-    if nombre == "Competencias" then return AddProficienciesToTooltip() end
-    if nombre == "Idiomas" then return AddLanguagesToTooltip() end
     return false
 end
 end
@@ -5395,75 +2870,77 @@ end
 
 -- Geometria EXACTA del SpellBookFrame nativo (probe de GRIKER), 1:1. El panel del Libro usa el
 -- tamaño nativo (550x525) y TODO se ancla al frame con los offsets literales del probe.
-local function RollReactionDice(expr)
-    local count, sides = tostring(expr or ""):match("^(%d*)d(%d+)$")
-    count = tonumber(count ~= "" and count or "1") or 0
-    sides = tonumber(sides) or 0
-    if count <= 0 or sides <= 0 then return 0 end
+do
+    local function RollReactionDice(expr)
+        local count, sides = tostring(expr or ""):match("^(%d*)d(%d+)$")
+        count = tonumber(count ~= "" and count or "1") or 0
+        sides = tonumber(sides) or 0
+        if count <= 0 or sides <= 0 then return 0 end
 
-    local total = 0
-    for _ = 1, count do
-        if HarfordDnDCalc and HarfordDnDCalc.RollDie then
-            total = total + HarfordDnDCalc.RollDie(sides)
-        else
-            total = total + math.random(1, sides)
-        end
-    end
-    return total
-end
-
-local function ReactionFlatBonus(feature)
-    local flat = feature and feature.reactionFlat
-    if flat == "half_level" then
-        local lvl = HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel(GetProfileName()) or 0
-        return math.floor((tonumber(lvl) or 0) / 2)
-    end
-    return tonumber(flat) or 0
-end
-
-local function ApplyReactionEffect(feature, damage, context)
-    damage = math.max(0, math.floor(tonumber(damage) or 0))
-    if damage <= 0 then return damage end
-
-    local effect = FeatureReactionEffect(feature)
-    if effect == "half_damage" then
-        return math.max(0, math.floor(damage / 2))
-    elseif effect == "reduce_damage_roll" then
-        local reduction = RollReactionDice(feature.reactionDice) + ReactionFlatBonus(feature)
-        return math.max(0, damage - reduction)
-    end
-    return nil
-end
-
-function API.TriggerPreparedReaction(trigger, context)
-    trigger = tostring(trigger or "")
-    context = context or {}
-    local damage = tonumber(context.damage) or 0
-    if HarfordDnDConditions and HarfordDnDConditions.CanPerform then
-        local allowed = HarfordDnDConditions.CanPerform("reaction", { actorUnit = "player" })
-        if not allowed then return damage, false end
-    end
-    if trigger == "" or not (S.activeReactions and next(S.activeReactions)) then
-        return damage, false
-    end
-
-    for id in pairs(S.activeReactions) do
-        local feature = ResolveBookFeatureById(id)
-        local prepared = S.activeReactions[id]
-        local option = GetPowerWordOptionById(feature, prepared and prepared.optionId)
-        local reaction = option or feature
-        if feature and FeatureReactionTrigger(reaction) == trigger and FeatureUseAvailable(feature) then
-            local resourceKey = tostring(reaction.resourceKey or "")
-            local resourceCost = math.max(0, tonumber(reaction.resourceCost) or 0)
-            if resourceKey ~= "" and resourceCost > 0 then
-                if not (HarfordDnDStore and HarfordDnDStore.GetResourceCurrent
-                    and HarfordDnDStore.AdjustResourceCurrent)
-                    or HarfordDnDStore.GetResourceCurrent(resourceKey) < resourceCost then
-                    return damage, false
-                end
-                HarfordDnDStore.AdjustResourceCurrent(resourceKey, -resourceCost)
+        local total = 0
+        for _ = 1, count do
+            if HarfordDnDCalc and HarfordDnDCalc.RollDie then
+                total = total + HarfordDnDCalc.RollDie(sides)
+            else
+                total = total + math.random(1, sides)
             end
-            local newDamage = ApplyReactionEffect(reaction, damage, context)
+        end
+        return total
+    end
+
+    local function ReactionFlatBonus(feature)
+        local flat = feature and feature.reactionFlat
+        if flat == "half_level" then
+            local lvl = HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel(GetProfileName()) or 0
+            return math.floor((tonumber(lvl) or 0) / 2)
+        end
+        return tonumber(flat) or 0
+    end
+
+    local function ApplyReactionEffect(feature, damage, context)
+        damage = math.max(0, math.floor(tonumber(damage) or 0))
+        if damage <= 0 then return damage end
+
+        local effect = FeatureReactionEffect(feature)
+        if effect == "half_damage" then
+            return math.max(0, math.floor(damage / 2))
+        elseif effect == "reduce_damage_roll" then
+            local reduction = RollReactionDice(feature.reactionDice) + ReactionFlatBonus(feature)
+            return math.max(0, damage - reduction)
+        end
+        return nil
+    end
+
+    function API.TriggerPreparedReaction(trigger, context)
+        trigger = tostring(trigger or "")
+        context = context or {}
+        local damage = tonumber(context.damage) or 0
+        if HarfordDnDConditions and HarfordDnDConditions.CanPerform then
+            local allowed = HarfordDnDConditions.CanPerform("reaction", { actorUnit = "player" })
+            if not allowed then return damage, false end
+        end
+        if trigger == "" or not (S.activeReactions and next(S.activeReactions)) then
+            return damage, false
+        end
+
+        for id in pairs(S.activeReactions) do
+            local feature = ResolveBookFeatureById(id)
+            local prepared = S.activeReactions[id]
+            local option = GetPowerWordOptionById(feature, prepared and prepared.optionId)
+            local reaction = option or feature
+            if feature and FeatureReactionTrigger(reaction) == trigger and FeatureUseAvailable(feature) then
+                local resourceKey = tostring(reaction.resourceKey or "")
+                local resourceCost = math.max(0, tonumber(reaction.resourceCost) or 0)
+                if resourceKey ~= "" and resourceCost > 0 then
+                    if not (HarfordDnDStore and HarfordDnDStore.GetResourceCurrent
+                        and HarfordDnDStore.AdjustResourceCurrent)
+                        or HarfordDnDStore.GetResourceCurrent(resourceKey) < resourceCost then
+                        return damage, false
+                    end
+                    HarfordDnDStore.AdjustResourceCurrent(resourceKey, -resourceCost)
+                end
+                local newDamage = ApplyReactionEffect(reaction, damage, context)
+end
             if newDamage ~= nil then
                 S.activeReactions[id] = nil
                 AnnounceAbility(option and PowerWordDisplayFeature(feature, option) or feature)
@@ -5982,7 +3459,6 @@ RefreshBook = function()
     if S.book.pageNum < pages then S.book.nxt:Enable() else S.book.nxt:Disable() end
 end
 
-
 -- Ajusta en vivo el marco de una categoria a partir de la CAJA EN PIXELES (esquina sup-izq
 -- x1,y1 e inf-der x2,y2) sobre el sheet Spellbook-Parts; calcula texCoord y tamaño y refresca.
 -- Refresca el Libro si el panel esta visible (lo llama HarfordDnD tras elegir nivel/cantidad de
@@ -6198,11 +3674,11 @@ local function CreateFrameIfNeeded()
     PositionTabs()
     PositionSkillsTabs()
 
-    CreateSheetPage()
+    Ficha.CreateSheetPage()
     CreateCreationPage()
     CreateLevelingPage()
     CreateReputationPage()
-    CreateProfessionsPage()
+    Profesiones.CreateProfessionsPage()
     CreateBookPage()
     -- Pestaña Conjuros extraida a HarfordCharacterSpellbook; se le inyectan estado + constantes del libro.
     HarfordCharacterSpellbook.Init({
@@ -6213,11 +3689,11 @@ local function CreateFrameIfNeeded()
     })
     HarfordCharacterSpellbook.CreateSpellsPage()
 
-    S.refreshers.sheet = RefreshSheet
+    S.refreshers.sheet = Ficha.RefreshSheet
     S.refreshers.creation = RefreshCreation
     S.refreshers.leveling = RefreshLeveling
     S.refreshers.reputation = function() end
-    S.refreshers.professions = RefreshProfessions
+    S.refreshers.professions = Profesiones.RefreshProfessions
     S.refreshers.book = RefreshBook
     S.refreshers.spells = HarfordCharacterSpellbook.RefreshSpells
     sf:SetScript("OnShow", function()
@@ -6524,4 +4000,51 @@ SlashCmdList.HARFORDCHARACTERINSPECT = function(msg)
     else
         API.OpenInspect("target")
     end
+end
+
+-- La pestana Ficha recibe aqui el estado del panel y los ayudantes compartidos. Al FINAL del
+-- fichero: varios de estos son de asignacion adelantada y antes de este punto serian nil.
+if Ficha and Ficha.Init then
+    Ficha.Init({
+        S = S, K = K, API = API,
+        AbilityBaseAndBonus = AbilityBaseAndBonus,
+        GetClassColorParts = GetClassColorParts,
+        GetInspectSnapshot = GetInspectSnapshot,
+        GetPrimaryClassId = GetPrimaryClassId,
+        RawSigned = RawSigned,
+        AbilityMod = AbilityMod,
+        AbilityScore = AbilityScore,
+        ColorSigned = ColorSigned,
+        CreateButton = CreateButton,
+        CreateFS = CreateFS,
+        GetBackgroundLabel = GetBackgroundLabel,
+        GetClassFeatureRows = GetClassFeatureRows,
+        GetClassParts = GetClassParts,
+        GetClassSummary = GetClassSummary,
+        GetFeatsLabel = GetFeatsLabel,
+        GetPortraitUnit = GetPortraitUnit,
+        GetProfileName = GetProfileName,
+        GetProfileValue = GetProfileValue,
+        GetProgression = GetProgression,
+        GetRaceLabel = GetRaceLabel,
+        GetTRP3FeatureRows = GetTRP3FeatureRows,
+        IsInspecting = IsInspecting,
+        Print = Print,
+        RefreshGameUI = RefreshGameUI,
+        RefreshPanel = RefreshPanel,
+        RefreshRaceModelBackground = RefreshRaceModelBackground,
+        SetColoredTextList = SetColoredTextList,
+        SetTexCoord8 = SetTexCoord8,
+        Signed = Signed,
+        TooltipLines = TooltipLines,
+    })
+end
+
+if Profesiones and Profesiones.Init then
+    Profesiones.Init({
+        CreateFS = CreateFS,
+        CreatePage = CreatePage,
+        K = K,
+        S = S,
+    })
 end

@@ -61,6 +61,40 @@ end
 
 -- Emision comun de habilidades del Libro. Centraliza el hyperlink TRP3 para que
 -- ninguna ruta especial vuelva a publicar el formato heredado "usa <nombre>".
+-- Cabecera de dano AGREGADA POR TIPO. El render de una tirada es "<total> <modifiers>", asi que el
+-- primer tipo aporta el numero de cabecera y los demas van dentro de modifiers: "6 Cortante 10 Frio".
+-- Los numeros de los tipos extra se colorean igual que el de cabecera para que se lean como totales
+-- y no como bonificadores.
+--
+-- Vive aqui porque la usan DOS rutas: el dano de arma del jugador y el dano multicomponente de una
+-- accion NPC. Estaba duplicada literalmente en las dos.
+--
+-- Devuelve `headlineTotal, modifiersTxt`. OJO: `headlineTotal` es el total del PRIMER tipo, no la
+-- suma de todos -- es lo que exige el formato del render, y por eso el campo `total` de un
+-- broadcast de dano no se puede leer como el gran total.
+function HarfordDnDRolls.FormatDamageHeader(dmgTypeOrder, dmgTypeMap, totalPorDefecto)
+    local headlineTotal, modifiersTxt = totalPorDefecto, ""
+    for i, t in ipairs(dmgTypeOrder or {}) do
+        local e = dmgTypeMap and dmgTypeMap[t]
+        if e then
+            local key = tostring(t or "")
+            if HarfordDamageTypes and HarfordDamageTypes.FromWord then
+                key = HarfordDamageTypes.FromWord(key) or key
+            end
+            local name = (HarfordDamageTypes and HarfordDamageTypes.GetLabel
+                and HarfordDamageTypes.GetLabel(key)) or key
+            local mk = (e.marker and e.marker ~= "" and (" " .. e.marker)) or ""
+            if i == 1 then
+                headlineTotal = e.total
+                modifiersTxt = name .. mk
+            else
+                modifiersTxt = modifiersTxt .. " |cff66ccff" .. tostring(e.total) .. "|r " .. name .. mk
+            end
+        end
+    end
+    return headlineTotal, modifiersTxt
+end
+
 function HarfordDnDRolls.BroadcastAbility(feature, opts)
     if not feature then return false end
     opts = opts or {}

@@ -2796,6 +2796,69 @@ descripciones dentro de `Data.lua`: se pierden en la siguiente regeneracion.
 (`botas_zarzal` / `botas_zarzal_2`). Parecen duplicados del pipeline, no variantes. Forjarlos
 crearia 55 objetos redundantes; conviene resolverlos antes de una tanda larga.
 
+## Modularizacion: patron `Init(deps)` y sus trampas (2026-08-24)
+
+Ocho modulos salieron de los cuatro ficheros grandes. Todos siguen el mismo patron, y hay dos
+trampas que costaron cinco bugs reales en una sola sesion. **Ninguna la ve el compilador**: en Lua
+una funcion que no existe es una variable global valida hasta que la llamas.
+
+**El patron.** El modulo declara sus dependencias como locales sin valor y las recibe con
+`Init(deps)`; el fichero de origen guarda UN alias (`local Codec = HarfordTurnsCodec`) en vez de los
+doce locales que ocupaban las funciones. Los cuerpos se mueven **verbatim**: no se reescriben.
+
+**Trampa 1: el `Init` va al FINAL del fichero.** Muchas dependencias son de asignacion adelantada
+(`local X` arriba, `X = function` mil lineas abajo). Si el `Init` se coloca antes de esa asignacion,
+inyecta `nil` y el modulo se queda con una funcion muerta que compila igual. Paso dos veces
+(`NormalizeIconPath`, `SafeNumber`). Si no se puede mover el `Init`, inyectar un cierre:
+`NormalizeIconPath = function(i) return NormalizeIconPath(i) end`, que resuelve al llamarse.
+
+**Trampa 2: las referencias sin parentesis.** Reescribir `Nombre(` no encuentra las funciones
+pasadas POR REFERENCIA (`MakeButton(..., StartCombat)`, `S.refreshers.sheet = RefreshSheet`). Los
+botones Iniciar/Terminar del tracker se rompieron asi.
+
+**Verificacion obligatoria tras cada extraccion**, en este orden:
+1. Referencias sueltas en el fichero de origen: buscar cada nombre movido SIN el prefijo del alias,
+   por palabra completa (no solo seguido de `(`).
+2. Llamadas sin resolver en el modulo nuevo: comparar lo que llama contra lo que declara, contra los
+   globales de WoW y contra las palabras clave de Lua. Aparecen dependencias que el analisis inicial
+   no vio, sobre todo si se movieron ayudantes en un segundo paso.
+3. Referencias desde OTROS addons (`HarfordAdmin`, `HarfordDebug`), no solo el fichero de origen.
+4. Que la tabla global en la que escribe el modulo exista ya en su posicion del `.toc`.
+5. Que cada dependencia del `Init` este asignada en esa linea.
+
+**No basta con que compile.** Los cinco bugs de la sesion compilaban.
+
+## Limite de 200 locales: como medirlo y como bajarlo (2026-08-24)
+
+Lua 5.1 permite 200 locales por chunk. Al pasarlos el fichero no compila y el addon NO CARGA. No es
+estilo, es el techo real. `HarfordUnitFrames` llego a 180 (AGENTS.md lo documentaba en ~169) sin que
+nadie lo vigilara.
+
+Estado tras la sesion: UnitFrames 163, HarfordDnD 138, CharacterPanel 112, Turns 118.
+
+**Tecnica barata: bloques `do...end`.** Encierra locales de un solo uso sin mover codigo. El criterio
+correcto es que **NINGUN local de file-scope dentro del rango se use fuera de el** -- no solo el
+candidato. Comprobar solo el candidato dejo encerrado `RefreshSheetTitle`, cuyas dos llamadas van
+guardadas con `if X then`: no habria dado error, el titulo de la ficha simplemente habria dejado de
+refrescarse para siempre. Con el criterio correcto se rechazan 3 de cada 4 candidatos (52 liberados
+frente a 151 descartados); ese ratio es el resultado, no un fracaso.
+
+**La medida que decide que extraer no es el tamano, es el ACOPLAMIENTO.** `CreateSheetPage` tenia 946
+lineas y UNA llamada externa; se extrajo sin drama. Contar tambien cuales de sus dependencias se usan
+solo dentro del grupo: esas se mueven con el, no se inyectan (en la pestana Ficha eran 13 ayudantes,
+237 lineas extra).
+
+## Target y Focus NO se unifican (2026-08-24)
+
+Parece duplicacion -- `EnsureToTBarsOverlay` / `EnsureFocusTotBarsOverlay`, `RestoreTargetAuras` /
+`RestoreFocusAuras`, y dos pares mas -- pero **ya han divergido**: 61 %, 74 % y 88 % de similitud, y
+las versiones de focus son sistematicamente MAS CORTAS porque focus ya hace menos que target.
+
+Unificar exigiria condicionales desde el primer dia y uno mas por cada divergencia futura, hasta que
+la funcion compartida fuese peor que dos copias claras. Ademas las caches de anclas de ambos deben
+permanecer separadas (deriva infinita de buffs, ya documentado). **Evaluado y descartado; no
+reintentarlo.**
+
 ## Turno compartido "PJs": iniciativa por bandos (2026-08-24)
 
 Entrada de tipo `players` en el tracker: un unico hueco para TODOS los personajes jugadores, que

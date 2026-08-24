@@ -3882,6 +3882,17 @@ DoWeaponAttack = function(options)
         critical = critTag,
         mode = modeTag
     })
+    -- La tirada de arma se registra como ULTIMA TIRADA. Es la que modifican los rasgos que se usan
+    -- DESPUES de tirar (Ataque Preciso del Cazador, puntos de heroe), y hasta ahora solo pasaba por
+    -- ese registro la ruta de `DoRollEx`: un ataque con arma no se podia mejorar. Se guarda tambien
+    -- la CA, para que al sumar el dado se pueda decir si ahora si la supera.
+    _G.DND5E_ARC_API = _G.DND5E_ARC_API or {}
+    _G.DND5E_ARC_API._lastRoll = {
+        ok = true, kind = "attack", label = attackLabel, total = total, die = chosen,
+        dice = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb), modifiers = bonusTxt,
+        crit = critTag, critical = critTag, mode = modeTag, armorClass = armorClass,
+        timestamp = time and time() or 0,
+    }
     local isCritical = HarfordDnDCombat.IsCriticalRollTag(critTag)
     HarfordDnDStore.pendingWeaponCriticalKey = isCritical and def.key or nil
 

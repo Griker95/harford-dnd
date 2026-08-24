@@ -2115,6 +2115,47 @@ local function AnunciarValoresDerivados(feature)
     end
 end
 
+-- Rasgos que se usan DESPUES de tirar: los dados de enfoque del Cazador. La mecanica es de
+-- `HarfordDnDRolls`; aqui solo se cobra el recurso y se decide cual de las dos formas es.
+--
+-- El recurso se cobra al final A PROPOSITO: si no hay una tirada reciente que mejorar, el rasgo no
+-- hace nada y el dado no se pierde.
+local function UsarModificadorDeTirada(feature)
+    local mod = feature.rollModifier
+    if not (HarfordDnDRolls and HarfordDnDRolls.ModifyLastRoll) then
+        HarfordChat.Print("El sistema de tiradas no esta disponible.")
+        return false
+    end
+    local spec = {
+        label = mod.label or feature.name, die = mod.die, amount = mod.amount,
+        half = mod.half, applies = mod.applies, markKey = mod.markKey,
+        valueLabel = mod.valueLabel,
+    }
+    -- Sin `applies` no corrige nada: solo tira el dado y dice el numero, porque lo que modifica
+    -- (tu CA, una CD de concentracion, el dano de tu mascota) no lo lleva el cliente.
+    local puede = HarfordDnDStore and HarfordDnDStore.GetResourceCurrent
+        and HarfordDnDStore.GetResourceCurrent(tostring(feature.resourceKey or ""))
+        >= (tonumber(feature.resourceCost) or 0)
+    if not puede then
+        HarfordChat.Print("No tienes recurso suficiente para " .. tostring(feature.name) .. ".")
+        return false
+    end
+    local ok, _, err
+    if mod.applies then
+        ok, _, err = HarfordDnDRolls.ModifyLastRoll(spec)
+    else
+        ok, _, err = HarfordDnDRolls.AnnounceRollValue(spec)
+    end
+    if not ok then
+        HarfordChat.Print(tostring(err or "No se pudo usar ese rasgo") .. ".")
+        return false
+    end
+    local ok2, err2 = SpendPowerWord(feature)
+    if not ok2 then HarfordChat.Print(err2) end
+    if RefreshGameUI then RefreshGameUI() end
+    return true
+end
+
 -- Un rasgo que se pone a UNO MISMO un estado con duracion (el Brebaje de Piel de Hierro y su
 -- resistencia de 1 minuto). Se modela como condicion y no como bono suelto porque asi caduca sola
 -- por rondas, se ve en la lista de estados y viaja al resto de clientes.
@@ -2894,6 +2935,9 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif type(self.feature.rollModifier) == "table" then
+        UsarModificadorDeTirada(self.feature)
+        if RefreshBook then RefreshBook() end
     elseif type(self.feature.announceValues) == "table" and not self.feature.area then
         -- Solo numeros: la habilidad no aplica nada por si misma (Luz del Amanecer reparte su
         -- curacion a mano), pero el numero sale de la ficha y hay que decirlo.

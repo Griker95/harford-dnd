@@ -347,3 +347,126 @@ function HarfordDnDRolls.Broadcast(rollData)
 
     PlayRollSound(rollData)
 end
+
+------------------------------------------------------------
+-- MODIFICAR UNA TIRADA YA HECHA
+--
+-- 5e tiene una familia entera de rasgos que se usan DESPUES de tirar y antes de saber si acertaste:
+-- los puntos de heroe, los dados de enfoque del Cazador (Ataque Preciso, Llamada de lo Salvaje),
+-- Tacticas de Supervivencia... Todos hacen lo mismo: tiran un dado, lo suman a algo que ya esta
+-- tirado y lo dicen en mesa, porque cambia un numero que los demas ya han visto.
+--
+-- Esto vivia entero dentro de los puntos de heroe, con su 1d6 escrito dentro, asi que ningun otro
+-- rasgo podia usarlo. Aqui es generico y lo declara cada rasgo.
+--
+-- La ventana se cierra sola: se modifica `_lastRoll`, y la siguiente tirada la sustituye.
+------------------------------------------------------------
+
+-- Tipos de tirada sobre los que tiene sentido intervenir. El DANO queda fuera a proposito: estos
+-- rasgos modifican el d20, no la herida.
+HarfordDnDRolls.MODIFIABLE_ROLLS = {
+    roll = true, attack = true, save = true, ability = true, skill = true,
+}
+
+function HarfordDnDRolls.GetLastRoll()
+    local api = _G.DND5E_ARC_API
+    local last = api and api._lastRoll
+    if type(last) ~= "table" then return nil, "No hay ninguna tirada reciente" end
+    return last
+end
+
+-- El campo real es `kind`; `type`/`rollType` se aceptan porque otras rutas los han usado. Los
+-- puntos de heroe leian solo `type`, que NUNCA existe en el registro de tirada: su filtro caia
+-- siempre en "roll" y dejaba gastar un punto en cualquier cosa.
+function HarfordDnDRolls.RollKind(roll)
+    return tostring((roll and (roll.kind or roll.rollType or roll.type)) or "roll"):lower()
+end
+
+-- Tira el dado de un modificador. Devuelve el dado bruto y lo que se suma de verdad (la Llamada de
+-- lo Salvaje suma solo la MITAD, redondeando hacia arriba).
+local function RollModifierAmount(spec)
+    local bruto = tonumber(spec.amount)
+    if not bruto then
+        local caras = math.max(1, math.floor(tonumber(spec.die) or 0))
+        bruto = math.random(1, caras)
+    end
+    return bruto, spec.half and math.ceil(bruto / 2) or bruto
+end
+
+local function ModifierLabel(spec)
+    return tostring(spec.label or "Modificador")
+end
+
+-- Suma a la ULTIMA tirada y lo anuncia.
+--
+-- spec = {
+--   label    texto visible
+--   die      caras del dado a tirar (o `amount` para una cantidad fija)
+--   half     suma solo la mitad, redondeando hacia arriba
+--   applies  { attack = true, ... } tipos de tirada admitidos
+--   markKey  clave con la que se marca la tirada, para no usarlo dos veces sobre la misma
+-- }
+--
+-- Devuelve ok, total nuevo, error, dado bruto, cantidad sumada.
+function HarfordDnDRolls.ModifyLastRoll(spec)
+    spec = spec or {}
+    local last, err = HarfordDnDRolls.GetLastRoll()
+    if not last then return false, nil, err end
+
+    local marca = tostring(spec.markKey or "rollModified")
+    if last[marca] then return false, nil, "Ya usaste eso en esa tirada" end
+
+    local admitidos = spec.applies or HarfordDnDRolls.MODIFIABLE_ROLLS
+    if not admitidos[HarfordDnDRolls.RollKind(last)] then
+        return false, nil, "En esa tirada no se puede usar"
+    end
+
+    local bruto, suma = RollModifierAmount(spec)
+    local anterior = tonumber(last.total) or 0
+    local nuevo = anterior + suma
+    last.total = nuevo
+    last[marca] = true
+
+    local detalle
+    if spec.amount then
+        detalle = string.format("%d + %d", anterior, suma)
+    elseif spec.half then
+        detalle = string.format("%d + d%d: %d / 2 = %d", anterior, tonumber(spec.die) or 0, bruto, suma)
+    else
+        detalle = string.format("%d + d%d: %d", anterior, tonumber(spec.die) or 0, bruto)
+    end
+
+    -- Si la tirada guardo contra que CA iba, se dice si AHORA la supera: es justo lo que el
+    -- jugador quiere saber al gastar el dado, y ya no se ve en la linea original.
+    local extra = ""
+    local ca = tonumber(last.armorClass)
+    if ca then
+        extra = string.format(" vs CA %d %s", ca, nuevo >= ca and "Superada" or "No superada")
+    end
+
+    HarfordDnDRolls.Broadcast({
+        type = "roll",
+        label = ModifierLabel(spec) .. (last.label and (": " .. tostring(last.label)) or ""),
+        total = nuevo,
+        dice = detalle,
+        modifiers = extra,
+    })
+    return true, nuevo, nil, bruto, suma
+end
+
+-- Tira el dado y anuncia el numero, SIN tocar ninguna tirada. Es para lo que no modifica un d20
+-- sino otra cosa que el cliente no lleva: tu CA contra ese ataque, la CD de concentracion que
+-- provoca tu disparo, el dano del primer impacto de tu mascota. El numero sale aqui; donde se
+-- aplica lo hace la mesa.
+function HarfordDnDRolls.AnnounceRollValue(spec)
+    spec = spec or {}
+    local bruto, suma = RollModifierAmount(spec)
+    HarfordDnDRolls.Broadcast({
+        type = "roll",
+        label = ModifierLabel(spec) .. (spec.valueLabel and (" " .. tostring(spec.valueLabel)) or ""),
+        total = suma,
+        dice = spec.amount and "" or string.format("d%d: %d", tonumber(spec.die) or 0, bruto),
+        modifiers = "",
+    })
+    return true, suma, nil, bruto, suma
+end

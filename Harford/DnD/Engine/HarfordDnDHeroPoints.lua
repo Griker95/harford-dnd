@@ -79,53 +79,35 @@ end
 -- Gasto sobre la ultima tirada
 ------------------------------------------------------------
 
--- Tipos de tirada donde el manual permite gastar el punto.
+-- Tipos de tirada donde el manual permite gastar el punto: ataque, prueba de caracteristica y
+-- salvacion. El dano no entra.
 local SPENDABLE = { roll = true, attack = true, save = true, ability = true, skill = true }
 
--- Devuelve la ultima tirada si todavia se puede mejorar, o nil con el motivo.
-local function LastRoll()
-    local api = _G.DND5E_ARC_API
-    local last = api and api._lastRoll
-    if type(last) ~= "table" then return nil, "No hay ninguna tirada reciente" end
-    if last.heroPointSpent then return nil, "Ya gastaste un punto en esa tirada" end
-    local kind = tostring(last.type or last.rollType or "roll"):lower()
-    if not SPENDABLE[kind] then return nil, "En esa tirada no se puede gastar un punto" end
-    return last
-end
-
 -- Gasta 1 punto: tira 1d6 y lo suma a la ultima tirada. Un punto por tirada.
+--
+-- La mecanica de "sumar a la ultima tirada" ya no vive aqui: es de `HarfordDnDRolls`, porque los
+-- dados de enfoque del Cazador hacen exactamente lo mismo con otro dado. Aqui queda lo que si es
+-- propio de los puntos de heroe: cuantos tienes y cuando se recuperan.
 function API.Spend(profileName)
     local disponibles = API.Get(profileName)
     if disponibles <= 0 then
         Print("|cffff5555No te quedan puntos de heroe.|r")
         return false, "sin puntos"
     end
-    local last, err = LastRoll()
-    if not last then
+    if not (HarfordDnDRolls and HarfordDnDRolls.ModifyLastRoll) then
+        return false, "El sistema de tiradas no esta disponible"
+    end
+    local ok, nuevo, err, dado = HarfordDnDRolls.ModifyLastRoll({
+        label = "Punto de heroe", die = 6, applies = SPENDABLE, markKey = "heroPointSpent",
+    })
+    if not ok then
         Print("|cffff5555" .. tostring(err) .. ".|r")
         return false, err
     end
 
-    local d6 = math.random(1, 6)
-    local anterior = tonumber(last.total) or 0
-    local nuevo = anterior + d6
-    last.total = nuevo
-    last.heroPointSpent = true
-
     API.Set(profileName, disponibles - 1)
-    -- Se anuncia en mesa, como cualquier accion real: cambia el resultado de una tirada que
-    -- los demas ya han visto.
-    if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
-        HarfordDnDRolls.Broadcast({
-            type = "roll",
-            label = "Punto de heroe" .. (last.label and (": " .. tostring(last.label)) or ""),
-            total = nuevo,
-            dice = string.format("%d + d6: %d", anterior, d6),
-            modifiers = "",
-        })
-    end
-    Print(string.format("Gastas un punto de heroe: |cffffd100%d|r + %d = |cff38d26a%d|r. Te quedan %d.",
-        anterior, d6, nuevo, API.Get(profileName)))
+    Print(string.format("Gastas un punto de heroe: +%d = |cff38d26a%d|r. Te quedan %d.",
+        dado, nuevo, API.Get(profileName)))
     return true, nuevo
 end
 

@@ -31,7 +31,8 @@ end
 print("El catalogo, en el orden del manual y no alfabetico")
 local orden = {}
 for _, d in ipairs(A.GetOrdered()) do orden[#orden + 1] = d.id end
-chk("orden", table.concat(orden, ","), "esquivar,correr,desengancharse,esconderse")
+chk("orden", table.concat(orden, ","),
+    "esquivar,correr,desengancharse,esconderse,agarrar,empujar,ayudar,estabilizar,lanzar_arma,preparar")
 
 print("Sin rasgos que la abran, solo su coste base")
 chk("esquivar", costes("esquivar", {}), "accion")
@@ -63,6 +64,15 @@ print("Lo que NO tiene efecto lo dice, en vez de fingirlo")
 chk("correr", A.Get("correr").sinEfecto ~= nil, true)
 chk("desengancharse", A.Get("desengancharse").sinEfecto ~= nil, true)
 chk("esquivar si tiene efecto", A.Get("esquivar").selfCondition.id, "esquivando")
-chk("esconderse tira Sigilo", A.Get("esconderse").skillCheck, "Sigilo")
+chk("esconderse tira Sigilo", A.Get("esconderse").skillCheck.skill, "Sigilo")
+-- Sin CD: la de esconderse es la Percepcion pasiva de quien mira, que este cliente no conoce.
+chk("y sin CD, que no la sabemos", tostring(A.Get("esconderse").skillCheck.dc), "nil")
+-- Estabilizar es la unica de las nuevas con CD fija en el manual.
+chk("estabilizar: Medicina", A.Get("estabilizar").skillCheck.skill, "Medicina")
+chk("estabilizar: CD 10", A.Get("estabilizar").skillCheck.dc, 10)
+print("Las que aun no tienen efecto lo declaran")
+for _, id in ipairs({ "agarrar", "empujar", "ayudar", "lanzar_arma", "preparar" }) do
+    chk(id, A.Get(id).sinEfecto ~= nil, true)
+end
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

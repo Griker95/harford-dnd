@@ -2268,8 +2268,24 @@ do
                 duration = def.selfCondition.duration, turns = def.selfCondition.turns,
                 sourceName = HarfordClassColors.UnitFullName("player"),
             })
-        elseif def.skillCheck and _G.DND5E_ARC_API and _G.DND5E_ARC_API.RollSkill then
-            _G.DND5E_ARC_API.RollSkill(def.skillCheck)
+        elseif type(def.skillCheck) == "table" and _G.DND5E_ARC_API
+            and _G.DND5E_ARC_API.RollSkillEx then
+            -- Se tira con `RollSkillEx` y no con `RollSkill` porque hace falta el TOTAL para
+            -- compararlo con la CD. Estabilizar la tiene fija en el manual (Medicina 10);
+            -- Esconderse no, porque la suya es la Percepcion pasiva de quien mira y este cliente
+            -- no la conoce: ahi se tira y decide la mesa.
+            local resultado = _G.DND5E_ARC_API.RollSkillEx(def.skillCheck.skill)
+            local dc = tonumber(def.skillCheck.dc)
+            if dc and resultado and tonumber(resultado.total) then
+                local supera = tonumber(resultado.total) >= dc
+                local C = (HarfordDnDRolls and HarfordDnDRolls.COLORS) or {}
+                HarfordDnDRolls.Broadcast({
+                    type = "info",
+                    label = string.format("%s vs CD %d: %s%s%s", tostring(def.name), dc,
+                        supera and (C.crit or "") or (C.fumble or ""),
+                        supera and "EXITO" or "FALLO", C.close or ""),
+                })
+            end
         elseif def.sinEfecto then
             HarfordChat.Print("|cff808080" .. tostring(def.sinEfecto) .. "|r")
         end

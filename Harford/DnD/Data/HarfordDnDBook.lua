@@ -372,7 +372,9 @@ function API.GetChoiceOptions(feature)
         end
     elseif from == "artisanTool" and HarfordDnDData and HarfordDnDData.TOOLS then
         -- "Un tipo de herramientas de artesano o un instrumento musical" (Monje). Solo las
-        -- marcadas `artisan` mas el instrumento: no entran kits, ladron, juego ni vehiculos.
+        -- marcadas `artisan` mas el instrumento. `instrumento` y `juego` son CATEGORIAS (agrupan
+        -- laud/flauta, dados/ajedrez), no herramientas concretas; aqui entra solo la primera
+        -- porque es la que ofrece el rasgo. No entran kits, ladron ni vehiculos.
         for _, tool in ipairs(HarfordDnDData.TOOLS) do
             if tool.artisan or tool.id == "her_instrumento" then
                 out[#out + 1] = {

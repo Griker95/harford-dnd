@@ -71,10 +71,10 @@ HarfordDnDData.TOOLS = {
     { id="her_ladron",       name="Herramientas de ladron" },
     { id="her_navegante",    name="Herramientas de navegante" },
     { id="her_envenenador",  name="Utiles de envenenador" },
-    { id="her_instrumento",  name="Instrumento musical" },
-    { id="her_juego",        name="Juego de azar" },
-    { id="her_vehiculos_tierra", name="Vehiculos (terrestres)" },
-    { id="her_vehiculos_agua",   name="Vehiculos (acuaticos)" },
+    { id="her_instrumento",  name="Instrumento musical", categoria=true },
+    { id="her_juego",        name="Juego de azar", categoria=true },
+    { id="her_vehiculos_tierra", name="Vehiculos (terrestres)", vehiculo=true },
+    { id="her_vehiculos_agua",   name="Vehiculos (acuaticos)", vehiculo=true },
 }
 
 -- Los iconos viven en HarfordIconCatalog; se expone este alias por compatibilidad.

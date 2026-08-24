@@ -154,6 +154,17 @@ if _r2.returncode != 0:
         if _l.strip() and not _l.startswith('Locales usadas'):
             errores.append('orden: ' + _l.strip())
 
+# --- 5. Campos de datos que ningun motor lee ---------------------------------------------------
+# Un rasgo puede declarar el campo que quiera y Lua no se queja. Si nadie lo lee, el rasgo se
+# anuncia, gasta su uso y no hace NADA. Le pasaba a la Reserva de Ira, que declaraba
+# `rageReserveByLevel` y no daba ni un punto de ira.
+_r3 = _sp.run([sys.executable, os.path.join(RAIZ, 'tools', 'cargar', 'datos_muertos.py')],
+              capture_output=True, text=True, encoding='utf-8', errors='replace')
+if _r3.returncode != 0:
+    for _l in (_r3.stdout or '').strip().split(chr(10)):
+        if _l.strip() and not _l.startswith('Campos de datos'):
+            errores.append('datos: ' + _l.strip())
+
 print('  %d ficheros .lua revisados' % total)
 for a in avisos:
     print("  AVISO   %s" % a)

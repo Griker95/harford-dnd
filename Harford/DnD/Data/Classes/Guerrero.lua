@@ -86,8 +86,12 @@ API.CLASSES[#API.CLASSES + 1] =
             { kind = "resourceMax", resource = "rage", perClassLevel = "guerrero", base = 0, perLevel = 1 },
         } },
         { id = "guerrero_reserva_ira", icon = "ability_warrior_focusedrage", level = 2, name = "Reserva de ira", cast = "accion_adicional", type = "recurso", description = "Puedes usar una acción adicional en tu turno para aprovechar tu reserva interna de ira y ganar un número de puntos de ira. Una vez que uses tu reserva de ira, no puedes volver a usarla hasta que completes un descanso corto o largo.", uses = { max = 1, recharge = "short" },
-            -- Puntos que devuelve, por nivel de Guerrero (tabla del manual).
-            rageReserveByLevel = { [2] = 1, [3] = 2, [4] = 2, [5] = 3, [6] = 3 }, effects = {} },
+            -- Puntos que devuelve, por nivel de Guerrero (tabla del manual). Van dentro de
+            -- `grant` porque es lo que el motor de concesion lee: declarados aparte, nadie los
+            -- miraba y el rasgo gastaba su uso sin dar nada de ira.
+            grant = { self = true, resource = "rage", noun = "puntos de ira",
+                byClassLevel = { classId = "guerrero",
+                    values = { [2] = 1, [3] = 2, [4] = 2, [5] = 3, [6] = 3 } } }, effects = {} },
         { id = "guerrero_man_golpe_heroico", icon = "ability_warrior_punishingblow", level = 2, name = "Golpe heroico", type = "maniobra", description = "Cuando hagas daño con un ataque de arma cuerpo a cuerpo, puedes gastar 1 o más puntos de ira para volver a tirar 1 dado de daño por cada punto de ira gastado. Debes usar el nuevo resultado.", effects = {
             { kind = "energyManeuver", resource = "rage", cost = 1, levelCost = true, minLevel = 1, maxLevel = 6, attack = true, spendOnHit = true, rerollDamage = true },
         } },

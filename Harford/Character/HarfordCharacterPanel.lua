@@ -2403,6 +2403,14 @@ ApplyPowerWordGrant = function(feature, option, display)
     end
     -- `amount`: cantidad fija, sin caracteristica ni nivel (Capturar Fragmento de Alma da uno).
     local amount = tonumber(grant.amount)
+    -- `byClassLevel`: la cantidad la da una TABLA por nivel de clase, no una formula.
+    if not amount and type(grant.byClassLevel) == "table" then
+        local nivel = ClassLevelOf(grant.byClassLevel.classId)
+        local valores = grant.byClassLevel.values or {}
+        -- Se busca hacia abajo: la tabla solo anota los niveles en los que CAMBIA.
+        while nivel > 0 and not valores[nivel] do nivel = nivel - 1 end
+        amount = valores[nivel]
+    end
     if not amount then
         amount = HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod
             and HarfordDnDCalc.GetAbilityMod(grant.ability) or 0

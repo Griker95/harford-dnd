@@ -528,6 +528,11 @@ end
 local function Notify()
     for _, fn in ipairs(S.listeners) do pcall(fn) end
     if HarfordCharacterPanel and HarfordCharacterPanel.Refresh then HarfordCharacterPanel.Refresh() end
+    -- El contador que se pinta sobre el icono de aura lo lleva Harford, no el aura: si cambia sin
+    -- que entre o salga ninguna, `UNIT_AURA` no dispara y el numero se quedaria viejo.
+    if HarfordUnitFrames and HarfordUnitFrames.RefreshAuraCounters then
+        HarfordUnitFrames.RefreshAuraCounters()
+    end
 end
 
 local function RemoveRecord(key, id, silent)

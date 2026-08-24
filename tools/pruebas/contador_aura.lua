@@ -64,4 +64,32 @@ chk("dentro de ApplyAuraButtonData", uf:find("PintarContadorAura(button, unit, a
 chk("colgado del propio boton, sin frames nuevos",
     uf:find("button._harfordContador = fs", 1, true) ~= nil, true)
 
+
+
+-- QUE PASA SI EL TARGET SE PONE O SE QUITA UN AURA.
+--
+-- El numero NO se recuerda por boton: se recalcula del `spellId` del aura que hay en ese boton en
+-- ese momento. Por eso al desplazarse los indices sigue al aura y no se queda pegado al hueco.
+print("El numero sigue al aura, no al boton")
+ACTIVAS = {
+    { definition = { auraId = 30900 }, record = { vars = { contador = 9 } } },
+    { definition = { auraId = 267937 }, record = { vars = { contador = 4 } } },
+}
+-- Debuff1 tenia el 30900 y ahora, tras entrar otra aura, tiene el 267937.
+chk("antes, en ese hueco", Contador("player", 30900), 9)
+chk("despues, en el mismo hueco", Contador("player", 267937), 4)
+chk("un aura que no es de Harford no lleva numero", Contador("player", 12345), "nil")
+
+local uf2 = io.open("Harford/Frames/HarfordUnitFrames.lua"):read("*a")
+chk("se reprocesan TODOS los botones visibles",
+    uf2:find("ApplyAuraButtonData(_G[prefix ..", 1, true) ~= nil, true)
+chk("y se ocultan los sobrantes", uf2:find("if button.Hide then button:Hide() end", 1, true) ~= nil, true)
+
+-- Y al reves: el contador puede cambiar SIN que cambie ninguna aura, y ahi UNIT_AURA no dispara.
+print("Y si cambia el numero sin cambiar el aura, tambien se repinta")
+local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+chk("el motor avisa a los unitframes",
+    cond:find("HarfordUnitFrames.RefreshAuraCounters()", 1, true) ~= nil, true)
+chk("y existe donde avisar", uf2:find("function API.RefreshAuraCounters", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

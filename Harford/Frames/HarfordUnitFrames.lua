@@ -832,6 +832,18 @@ local function ResolvedAuraIcon(aura)
     return aura.icon
 end
 
+-- Repinta los contadores de target y focus. Lo llama el motor de condiciones cuando algo cambia,
+-- porque el numero puede cambiar SIN que cambie el aura: `UNIT_AURA` no se entera de que Harford
+-- haya subido un contador, y sin esto el icono se quedaria con el numero viejo hasta la siguiente
+-- aura que entrara o saliera.
+function API.RefreshAuraCounters()
+    for _, unit in ipairs({ "target", "focus" }) do
+        if UnitExists and UnitExists(unit) and RefreshNativeAuraButtons then
+            RefreshNativeAuraButtons(unit)
+        end
+    end
+end
+
 -- Contador de Harford sobre el icono de aura nativo.
 --
 -- En Epsilon no se pueden aplicar auras CON acumulaciones, asi que el numero lo lleva el motor de

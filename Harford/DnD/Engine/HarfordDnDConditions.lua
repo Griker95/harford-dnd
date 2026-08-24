@@ -18,6 +18,7 @@ API.ORDER = {
     "prone", "restrained", "stunned", "sleeping", "silenced", "rooted", "slowed",
     "disarmed", "exposed_armor", "burning", "frozen", "chilled", "blessed",
     "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado", "buey_negro", "esquivando", "circulo_demoniaco",
+    "piedra_salud", "piedra_fuego", "piedra_conjuro", "piedra_alma",
 }
 
 API.DEFS = {
@@ -31,6 +32,30 @@ API.DEFS = {
             { kind = "rollMode", rolls = { attack = true }, mode = "adv" },
             { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" },
         },
+    },
+    -- PIEDRAS DE ALMA del Brujo (Forja de almas). No conceden nada por si mismas: representan que
+    -- LLEVAS la piedra encima, que es lo que hace que forjarla y gastarla sean dos momentos. Sin
+    -- este estado la segunda mitad del rasgo no tendria donde vivir: Harford no tiene inventario
+    -- para un objeto asi. Duran hasta que las gastas, por eso no caducan.
+    piedra_salud = {
+        label = "Piedra de Salud", tracking = "state",
+        description = "Llevas una Piedra de Salud. Al aplastarla, tu o quien la tenga recupera puntos de golpe.",
+        effects = {},
+    },
+    piedra_fuego = {
+        label = "Piedra de Fuego", tracking = "state",
+        description = "Llevas una Piedra de Fuego. Gastala al lanzar un conjuro de brujo.",
+        effects = {},
+    },
+    piedra_conjuro = {
+        label = "Piedra de Conjuro", tracking = "state",
+        description = "Llevas una Piedra de Conjuro. Gastala al lanzar un conjuro de brujo.",
+        effects = {},
+    },
+    piedra_alma = {
+        label = "Piedra de Alma", tracking = "state",
+        description = "Llevas una Piedra de Alma. Gastala para lanzar reanimar, o se gasta sola si caes a 0 puntos de golpe.",
+        effects = {},
     },
     -- ESQUIVAR. No es de ninguna clase: es la accion basica del manual, y esta aqui porque hay
     -- rasgos que la conceden como accion adicional (Danza Elusiva del Monje). Dura hasta el inicio

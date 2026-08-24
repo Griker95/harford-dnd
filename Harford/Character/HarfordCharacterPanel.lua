@@ -2115,6 +2115,52 @@ local function AnunciarValoresDerivados(feature)
     end
 end
 
+-- CARGA QUE SE LLEVA ENCIMA: las piedras del Brujo. Forjarla y gastarla son dos momentos, y entre
+-- uno y otro la llevas puesta -- Harford no tiene inventario para un objeto asi, de modo que lo que
+-- representa llevarla es un ESTADO. El mismo boton hace las dos cosas segun si la llevas o no.
+--
+-- Al gastarla se aplica lo que declare `grant`, si declara algo; las que modifican un conjuro
+-- (Fuego, Conjuro, Alma) solo se anuncian, porque lo que hacen le pasa al conjuro y el cliente no
+-- lo sostiene.
+local function UsarCargaLlevada(feature)
+    local carga = feature.carriedCharge
+    if not (HarfordDnDConditions and HarfordDnDConditions.ApplyOwned) then
+        HarfordChat.Print("El sistema de condiciones no esta disponible.")
+        return false
+    end
+    local llevada = HarfordDnDConditions.Has and HarfordDnDConditions.Has("player", carga.condition)
+
+    if not llevada then
+        local ok, err = SpendPowerWord(feature)
+        if not ok then HarfordChat.Print(err); return false end
+        local aplicado, aplErr = HarfordDnDConditions.ApplyOwned(carga.condition, {
+            duration = "manual",
+            sourceName = HarfordClassColors.UnitFullName("player"),
+        })
+        if not aplicado then
+            local key, cost = tostring(feature.resourceKey or ""), tonumber(feature.resourceCost) or 0
+            if key ~= "" and cost > 0 and HarfordDnDStore and HarfordDnDStore.AdjustResourceCurrent then
+                HarfordDnDStore.AdjustResourceCurrent(key, cost)
+            end
+            HarfordChat.Print(tostring(aplErr or "No se pudo forjar la piedra."))
+            return false
+        end
+        AnnounceAbility(feature)
+        if RefreshGameUI then RefreshGameUI() end
+        return true
+    end
+
+    -- Gastarla. El recurso ya se pago al forjarla, asi que la opcion que se pasa no declara coste.
+    HarfordDnDConditions.RemoveOwned(carga.condition)
+    if type(carga.grant) == "table" then
+        ApplyPowerWordGrant(feature, { grant = carga.grant, label = feature.name }, feature)
+    else
+        AnnounceAbility(feature)
+    end
+    if RefreshGameUI then RefreshGameUI() end
+    return true
+end
+
 -- Rasgos que se usan DESPUES de tirar: los dados de enfoque del Cazador. La mecanica es de
 -- `HarfordDnDRolls`; aqui solo se cobra el recurso y se decide cual de las dos formas es.
 --
@@ -2353,15 +2399,19 @@ local function ApplyPowerWordGrant(feature, option, display)
         HarfordChat.Print("La " .. nombre .. " de un NPC debe gestionarla su ficha de DM.")
         return
     end
-    local amount = HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod
-        and HarfordDnDCalc.GetAbilityMod(grant.ability) or 0
-    -- Escudo suma ademas la mitad de tu nivel de clase; Consuelo no declara esta parte.
-    if grant.perClassLevel then
-        local nivel = 0
-        for _, entry in ipairs(HarfordDnDProgression.GetClassLevels(GetProfileName()) or {}) do
-            if entry.classId == grant.perClassLevel then nivel = tonumber(entry.level) or 0 break end
+    -- `amount`: cantidad fija, sin caracteristica ni nivel (Capturar Fragmento de Alma da uno).
+    local amount = tonumber(grant.amount)
+    if not amount then
+        amount = HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod
+            and HarfordDnDCalc.GetAbilityMod(grant.ability) or 0
+        -- Escudo suma ademas la mitad de tu nivel de clase; Consuelo no declara esta parte.
+        if grant.perClassLevel then
+            local nivel = 0
+            for _, entry in ipairs(HarfordDnDProgression.GetClassLevels(GetProfileName()) or {}) do
+                if entry.classId == grant.perClassLevel then nivel = tonumber(entry.level) or 0 break end
+            end
+            amount = amount + math.floor(nivel / (tonumber(grant.perLevelDiv) or 1))
         end
-        amount = amount + math.floor(nivel / (tonumber(grant.perLevelDiv) or 1))
     end
     amount = math.max(1, amount)
 
@@ -2935,6 +2985,14 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif type(self.feature.carriedCharge) == "table" then
+        UsarCargaLlevada(self.feature)
+        if RefreshBook then RefreshBook() end
+    elseif type(self.feature.grant) == "table" then
+        -- El rasgo concede un recurso directamente (vida temporal del Brebaje Fortificante, la
+        -- curacion de Efusion, el fragmento de Capturar Fragmento de Alma). El rasgo hace de
+        -- opcion de si mismo, asi que se pasa como los tres argumentos.
+        ApplyPowerWordGrant(self.feature, self.feature, self.feature)
     elseif type(self.feature.rollModifier) == "table" then
         UsarModificadorDeTirada(self.feature)
         if RefreshBook then RefreshBook() end
@@ -3032,13 +3090,6 @@ local function BookButtonOnClick(self)
         end
         if RefreshBook then RefreshBook() end
     elseif cat == "activo" or cat == "absolution" then
-        -- El rasgo concede un recurso directamente (vida temporal del Brebaje Fortificante,
-        -- curacion). Lo declara `grant`, igual que en las Palabras de Poder: el rasgo derivado
-        -- hace de opcion de si mismo, asi que se pasa como los tres argumentos.
-        if type(self.feature.grant) == "table" then
-            ApplyPowerWordGrant(self.feature, self.feature, self.feature)
-            return
-        end
         if self.feature.actionKind == "layOnHands" then
             OpenLayOnHandsPrompt(self.feature)
             return

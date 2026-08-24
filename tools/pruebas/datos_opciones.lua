@@ -73,7 +73,14 @@ for _, cl in ipairs(CLASES) do
     local f2 = io.open("Harford/DnD/Data/Classes/" .. cl .. ".lua")
     local src = f2 and f2:read("*a") or ""
     if f2 then f2:close() end
-    for id in src:gmatch('conditionId = "([a-z_0-9]+)"') do
+    -- Tres formas de nombrar una condicion: en un area (`conditionId`), en un estado propio
+    -- (`selfCondition`) y en una carga que se lleva encima (`carriedCharge`). Las tres tienen que
+    -- apuntar al catalogo.
+    local nombradas = {}
+    for id in src:gmatch('conditionId = "([a-z_0-9]+)"') do nombradas[#nombradas + 1] = id end
+    for id in src:gmatch('selfCondition = %{ id = "([a-z_0-9]+)"') do nombradas[#nombradas + 1] = id end
+    for id in src:gmatch('carriedCharge = %{ condition = "([a-z_0-9]+)"') do nombradas[#nombradas + 1] = id end
+    for _, id in ipairs(nombradas) do
         if not vistas[id] then
             vistas[id] = true
             condRevisadas = condRevisadas + 1

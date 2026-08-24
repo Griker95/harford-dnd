@@ -2796,6 +2796,34 @@ descripciones dentro de `Data.lua`: se pierden en la siguiente regeneracion.
 (`botas_zarzal` / `botas_zarzal_2`). Parecen duplicados del pipeline, no variantes. Forjarlos
 crearia 55 objetos redundantes; conviene resolverlos antes de una tanda larga.
 
+## Pruebas de logica: `python tools/pruebas.py` (2026-08-24)
+
+12 suites, 133 casos. Cada una EXTRAE funciones del codigo real con `string.find` sobre el fichero
+y las ejecuta con stubs de WoW: no hay copias del codigo que puedan quedarse viejas.
+
+```
+python tools/pruebas.py            # todas
+python tools/pruebas.py turnos     # solo las que casen con el nombre
+```
+
+**Que cubren:** protocolo de red de turnos (escapado, troceado, ida y vuelta), iniciativa y su
+autoridad, economia de turno, caducidad de la lista, tipos de entrada, mitigacion de dano magico,
+payload `DNDDMG`, cabecera de dano por tipo, borrador de creacion de personaje y calculo de
+habilidades.
+
+**Que NO cubren, y es importante saberlo:** nada visual, nada de red real, nada de dos clientes.
+Cuatro de los cinco bugs de la sesion de modularizacion solo se habrian visto ejecutando en WoW.
+
+**Regresiones que fijan** (bugs que ya ocurrieron una vez):
+- El borrador guarda la caracteristica BASE, sin el bono racial: sumarlo ahi lo contaba dos veces.
+- Nadie puede fijar la iniciativa de otro jugador mandando un `INITRES` falso.
+- Una resistencia calificada "de ataques no magicos" no frena un golpe magico, pero una sin
+  calificar SI lo frena -- es la regla correcta y es facil pasarse de listo.
+- El marcador de asalto no cuenta como "hay combate".
+
+Al anadir una suite, ponerle cabecera explicando QUE prueba y por que: el runner las lista por
+nombre y la cabecera es lo unico que dice si sigue teniendo sentido.
+
 ## Modularizacion: patron `Init(deps)` y sus trampas (2026-08-24)
 
 Ocho modulos salieron de los cuatro ficheros grandes. Todos siguen el mismo patron, y hay dos

@@ -138,6 +138,7 @@ do
     for _, opcion in ipairs((eleccion and eleccion.choice and eleccion.choice.options) or {}) do
         sub.features[#sub.features + 1] = {
             id = "bru_afl_mald_" .. tostring(opcion.id),
+            icon = opcion.icon,
             level = 2,
             name = opcion.label,
             type = "accion",

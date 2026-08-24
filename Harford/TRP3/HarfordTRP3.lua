@@ -2479,7 +2479,15 @@ do
             local m = existing or TRP3_API.ChatLinks:InstantiateModule("Harford - Habilidad", "harford_ability")
             function m:GetLinkData(feature)
                 local nm = tostring((feature and feature.name) or "Habilidad")
-                local icon = HarfordDnDData and HarfordDnDData.GetIcon and HarfordDnDData.GetIcon(nm)
+                -- `GetFeatureIcon` mira, por este orden, el catalogo por ID, el `icon` declarado en
+                -- el propio rasgo y por ultimo el nombre. Aqui se buscaba SOLO por nombre, que es
+                -- la via mas debil: cualquier rasgo cuyo nombre no estuviera en esa tabla -- casi
+                -- todos desde que hay ids -- se enlazaba sin icono.
+                local icon = HarfordDnDData and HarfordDnDData.GetFeatureIcon
+                    and HarfordDnDData.GetFeatureIcon(feature)
+                if not icon and HarfordDnDData and HarfordDnDData.GetIcon then
+                    icon = HarfordDnDData.GetIcon(nm)
+                end
                 return nm, { name = nm, desc = (feature and feature.description) or "", icon = icon }
             end
             function m:GetTooltipLines(data)

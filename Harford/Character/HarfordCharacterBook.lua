@@ -329,8 +329,22 @@ function API.BuildSections(data)
             { id = "harford_idiomas", name = "Idiomas", icon = "Interface" .. string.char(92)
                 .. "Icons" .. string.char(92) .. "inv_misc_note_05" },
         }
-        local esFija = {}
-        for _, f in ipairs(fijas) do esFija[f.name] = true end
+
+        -- ACCIONES BASICAS. Las tiene cualquiera, no dependen de clase ni de nivel, asi que van
+        -- aqui con Competencias e Idiomas y no en la seccion de ninguna clase. `basicAction` es lo
+        -- que las distingue de un rasgo: el Libro las manda a su propio catalogo.
+        for _, acc in ipairs((HarfordDnDActions and HarfordDnDActions.GetOrdered and
+            HarfordDnDActions.GetOrdered()) or {}) do
+            fijas[#fijas + 1] = {
+                id = "harford_accion_" .. tostring(acc.id), name = acc.name, icon = acc.icon,
+                description = acc.description, cast = acc.cast, type = "accion",
+                basicAction = acc.id,
+            }
+        end
+        -- Solo Competencias e Idiomas retiran el rasgo real que se llame igual: su contenido ya lo
+        -- agrega el tooltip. Las acciones basicas NO deben hacerlo -- borrarian por el nombre un
+        -- rasgo de clase que se llamase parecido, y eso desaparece sin dar ningun error.
+        local esFija = { Competencias = true, Idiomas = true }
 
         local limpio = {}
         for _, it in ipairs(general) do
@@ -341,7 +355,15 @@ function API.BuildSections(data)
         -- y no deben desplazar a los rasgos reales de raza y trasfondo.
         for _, f in ipairs(fijas) do
             limpio[#limpio + 1] = {
-                feature = { id = f.id, name = f.name, type = "pasivo", description = "", icon = f.icon },
+                feature = {
+                    id = f.id, name = f.name, icon = f.icon,
+                    -- Competencias e Idiomas son de consulta (pasivas); las acciones basicas se
+                    -- USAN, y su coste y descripcion tienen que llegar tal cual se declararon.
+                    type = f.type or "pasivo",
+                    description = f.description or "",
+                    cast = f.cast,
+                    basicAction = f.basicAction,
+                },
                 level = 0,
                 source = "core",
             }

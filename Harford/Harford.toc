@@ -59,6 +59,7 @@ DnD\Data\HarfordDnDBookText.lua
 DnD\Data\HarfordDnDRaces.lua
 DnD\Data\HarfordDnDBackgrounds.lua
 DnD\Data\HarfordDnDFeats.lua
+DnD\Data\HarfordDnDActions.lua
 DnD\Data\HarfordDnDWeapons.lua
 DnD\Data\HarfordDnDFormsData.lua
 DnD\Data\HarfordDnDCompanionsData.lua

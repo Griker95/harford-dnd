@@ -77,7 +77,7 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "pic_garrote", level = 2, name = "Garrote", type = "maniobra", description = "Tras impactar a una criatura con un ataque cuerpo a cuerpo, gastas 1 punto de energía: el objetivo supera una salvación de Constitución (CD de Energía) o no puede hablar hasta el final de tu siguiente turno.", effects = {
             { kind = "energyManeuver", resource = "energy", cost = 1, spendOnHit = true, attack = true, save = "Constitucion", outcome = "Silenciado", dcAbility = "Destreza", onFailAura = 30900, conditionId = "silenced", conditionDuration = "source_turn_end", conditionTurns = 2 },
         } },
-        { id = "pic_accion_astuta", level = 2, name = "Accion astuta", type = "informativo", description = "Acción adicional cada turno solo para Correr, Desengancharse o Esconderse.", effects = {} },
+        { id = "pic_accion_astuta", level = 2, name = "Accion astuta", type = "informativo", grantsAsBonus = { "correr", "desengancharse", "esconderse" }, description = "Acción adicional cada turno solo para Correr, Desengancharse o Esconderse.", effects = {} },
         { id = "pic_arquetipo", level = 3, name = "Arquetipo de Picaro", type = "informativo", description = "Eliges tu arquetipo (Asesino, Forajido o Sutileza). Concede rasgos en niveles 3, 9, 13 y 17.", effects = {} },
         ASI("picaro", 4),
         { id = "pic_esquiva_sobrenatural", level = 5, name = "Esquiva sobrenatural", type = "informativo", cast = "reaccion", reactionTrigger = "damage_taken", reactionEffect = "half_damage", description = "Reacción al recibir un ataque de un atacante visible: reduces el daño a la mitad.", effects = {} },

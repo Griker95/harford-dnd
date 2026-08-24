@@ -2221,6 +2221,96 @@ local function UsarModificadorDeTirada(feature)
     return true
 end
 
+-- ACCIONES BASICAS (Esquivar, Correr, Desengancharse, Esconderse).
+--
+-- Lo que cuesta y lo que hace son cosas distintas. El COSTE puede abrirlo un rasgo de clase -- la
+-- Accion Astuta del Picaro deja tomarlas como accion adicional -- y entonces se pregunta; con un
+-- solo coste posible se usa directamente, sin molestar.
+--
+-- El EFECTO es el que declare la accion: un estado propio (Esquivar), una prueba de habilidad
+-- (Esconderse) o ninguno (Correr y Desengancharse, que el addon no modela y lo dicen).
+local AbrirAccionBasica
+do
+    local menu, pendiente
+
+    -- Rasgos del personaje que abren costes alternativos, por su `grantsAsBonus`.
+    local function RasgosQueAbren()
+        local fuera = {}
+        local secciones = (HarfordCharacterBook and HarfordCharacterBook.BuildSections
+            and HarfordCharacterBook.BuildSections(GetProgression())) or {}
+        for _, seccion in ipairs(secciones) do
+            for _, it in ipairs(seccion.features or {}) do
+                if it.feature and type(it.feature.grantsAsBonus) == "table" then
+                    fuera[#fuera + 1] = it.feature
+                end
+            end
+        end
+        return fuera
+    end
+
+    local function Ejecutar(def, coste)
+        -- El recurso lo pide el RASGO que abre el coste (el chi de Paso del Viento), no la accion.
+        if coste.resourceKey and (tonumber(coste.resourceCost) or 0) > 0 then
+            local ok, err = SpendPowerWord({ resourceKey = coste.resourceKey, resourceCost = coste.resourceCost })
+            if not ok then HarfordChat.Print(err); return false end
+        end
+        -- Se anuncia con el coste ELEGIDO: es lo que la economia de turno mira para cobrarlo.
+        local anuncio = {
+            id = "harford_accion_" .. def.id, name = def.name, icon = def.icon,
+            description = def.description, cast = coste.cast,
+        }
+        if coste.porRasgo then anuncio.name = def.name .. " (" .. tostring(coste.porRasgo) .. ")" end
+        AnnounceAbility(anuncio)
+
+        if type(def.selfCondition) == "table" and HarfordDnDConditions
+            and HarfordDnDConditions.ApplyOwned then
+            HarfordDnDConditions.ApplyOwned(def.selfCondition.id, {
+                duration = def.selfCondition.duration, turns = def.selfCondition.turns,
+                sourceName = HarfordClassColors.UnitFullName("player"),
+            })
+        elseif def.skillCheck and _G.DND5E_ARC_API and _G.DND5E_ARC_API.RollSkill then
+            _G.DND5E_ARC_API.RollSkill(def.skillCheck)
+        elseif def.sinEfecto then
+            HarfordChat.Print("|cff808080" .. tostring(def.sinEfecto) .. "|r")
+        end
+        if RefreshGameUI then RefreshGameUI() end
+        if RefreshBook then RefreshBook() end
+        return true
+    end
+
+    AbrirAccionBasica = function(actionId, anchor)
+        local cat = _G.HarfordDnDActions
+        local def = cat and cat.Get and cat.Get(actionId)
+        if not def then return false end
+        local costes = cat.CostsFor(actionId, RasgosQueAbren())
+        if #costes <= 1 then return Ejecutar(def, costes[1] or { cast = def.cast }) end
+
+        if not (UIDropDownMenu_Initialize and ToggleDropDownMenu) then
+            return Ejecutar(def, costes[1])
+        end
+        menu = menu or CreateFrame("Frame", "HarfordAccionBasicaMenu", UIParent, "UIDropDownMenuTemplate")
+        pendiente = { def = def, costes = costes }
+        UIDropDownMenu_Initialize(menu, function()
+            for _, coste in ipairs(pendiente.costes) do
+                local elegido = coste
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = (elegido.cast == "accion_adicional" and "Accion adicional" or "Accion")
+                    .. (elegido.porRasgo and ("  |cff808080" .. elegido.porRasgo .. "|r") or "")
+                    .. (elegido.resourceKey and (elegido.resourceCost or 0) > 0
+                        and ("  |cff808080-" .. tostring(elegido.resourceCost) .. "|r") or "")
+                info.notCheckable = true
+                info.func = function()
+                    CloseDropDownMenus()
+                    Ejecutar(pendiente.def, elegido)
+                end
+                UIDropDownMenu_AddButton(info)
+            end
+        end, "MENU")
+        ToggleDropDownMenu(1, nil, menu, anchor or "cursor", 0, 0)
+        return true
+    end
+end
+
 -- Rasgos que conceden ATAQUES de verdad, no una nota en el chat: Punos de Furia hace dos golpes
 -- desarmados. Se disparan por la ruta normal de ataque de arma, asi que traen consigo lo que ya
 -- sabe hacer -- CA del objetivo, criticos, Artes Marciales subiendo el dado del desarmado,
@@ -3149,6 +3239,8 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif self.feature.basicAction then
+        AbrirAccionBasica(self.feature.basicAction, self)
     elseif type(self.feature.extraAttacks) == "table" then
         UsarAtaquesExtra(self.feature)
         if RefreshBook then RefreshBook() end

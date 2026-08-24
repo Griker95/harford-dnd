@@ -64,13 +64,20 @@ chk("condiciones con aura", #conAura, 15)
 chk("condiciones sin aura", #sinAura, 30)
 local faltan, sobran = 0, 0
 for _, id in ipairs(sinAura) do
-    if not cat:find('["harford_estado_' .. id .. '"]', 1, true) then faltan = faltan + 1 end
+    if not cat:find("\n    harford_estado_" .. id .. " = ", 1, true) then faltan = faltan + 1 end
 end
 for _, id in ipairs(conAura) do
-    if cat:find('["harford_estado_' .. id .. '"]', 1, true) then sobran = sobran + 1 end
+    if cat:find("\n    harford_estado_" .. id .. " = ", 1, true) then sobran = sobran + 1 end
 end
 chk("todas las que no tienen aura llevan icono", faltan, 0)
 chk("ninguna con aura duplica el arte", sobran, 0)
+
+-- Misma nomenclatura y misma sintaxis que su hermana `harford_accion_<id>`: una tabla con dos
+-- estilos de clave invita a escribir el siguiente en un tercero.
+print("Nomenclatura consistente con el resto del catalogo")
+chk("clave desnuda, no [\"clave\"]", cat:find('["harford_estado_', 1, true), "nil")
+chk("junto a las acciones basicas",
+    cat:find('harford_accion_preparar = "eps_bg3_detectthoughts",\n    --', 1, true) ~= nil, true)
 
 print("El contador es una sola regla, no dos copias")
 chk("regla unica", cond:find("function API.CounterFor", 1, true) ~= nil, true)

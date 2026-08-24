@@ -11,7 +11,10 @@ HarfordTurnOrderAPI = { HasActiveCombat = function()
 end }
 HarfordDnDFeatureEffects = { HasFlag = function() return false end }
 local src = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
-local i = assert(src:find("do\n    local ECONOMIA"), "no encuentro el bloque")
+local i = assert(src:find("local ECONOMIA"), "no encuentro el bloque")
+-- Retroceder a la ultima linea que sea exactamente `do`: es la que abre el bloque.
+-- Anclar al texto de alrededor no vale, porque los comentarios cambian.
+i = assert(src:sub(1, i):match(".*()\ndo\n"), "no encuentro el do")
 local fin = assert(src:find("    API.Turn = Turn\nend", i), "no encuentro el cierre")
 local bloque = src:sub(i, fin + #"    API.Turn = Turn\nend")
 API = {}

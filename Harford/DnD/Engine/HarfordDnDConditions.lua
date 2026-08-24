@@ -1048,7 +1048,10 @@ end
 -- recurso en mitad de la escena; avisar es util, prohibir es un riesgo de mesa. Es la misma linea
 -- que ya sigue el proyecto con Barrera (manual) y con las reacciones que no puede resolver.
 do
-    local ECONOMIA = { spent = {}, activa = false }
+    -- `extra`: presupuesto CONCEDIDO este turno por un rasgo (Accion adicional del Guerrero, que
+    -- da una adicional mas y se gasta con usos propios). Se limpia con el turno, igual que lo
+    -- gastado: es un permiso de ESTE turno, no una mejora permanente.
+    local ECONOMIA = { spent = {}, extra = {}, activa = false }
 
     -- Los tres presupuestos, en el orden en que se muestran.
     local ORDEN = { "action", "bonus", "reaction" }
@@ -1084,11 +1087,13 @@ do
         kind = tostring(kind or "")
         if not ETIQUETA[kind] then return 0 end
         local base = 1
-        if kind == "action" and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
-            and HarfordDnDFeatureEffects.HasFlag("extraTurnAction") then
+        -- Flag PASIVO: sube el presupuesto siempre, sin gastar nada.
+        local FLAG = { action = "extraTurnAction", bonus = "extraTurnBonus", reaction = "extraTurnReaction" }
+        if FLAG[kind] and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+            and HarfordDnDFeatureEffects.HasFlag(FLAG[kind]) then
             base = base + 1
         end
-        return base
+        return base + math.max(0, math.floor(tonumber(ECONOMIA.extra[kind]) or 0))
     end
 
     function Turn.GetSpent(kind)
@@ -1132,8 +1137,28 @@ do
         return cabia, restante, kind
     end
 
+    -- Concede presupuesto EXTRA para el turno en curso. Lo usan los rasgos que dan una accion en
+    -- vez de costarla; desaparece al empezar el siguiente turno, con el resto de la economia.
+    function Turn.GrantExtra(kind, amount)
+        kind = tostring(kind or "")
+        if not ETIQUETA[kind] then return 0 end
+        amount = math.max(1, math.floor(tonumber(amount) or 1))
+        ECONOMIA.extra[kind] = math.max(0, math.floor(tonumber(ECONOMIA.extra[kind]) or 0)) + amount
+        Notify()
+        return ECONOMIA.extra[kind]
+    end
+
+    -- Traduce lo que un rasgo CONCEDE (`grantsTurnAction`) al presupuesto que sube.
+    function Turn.GrantForFeature(feature)
+        if type(feature) ~= "table" then return nil end
+        local kind = DE_CAST[tostring(feature.grantsTurnAction or ""):lower()]
+        if not kind then return nil end
+        return kind, Turn.GrantExtra(kind, 1)
+    end
+
     function Turn.Reset()
         ECONOMIA.spent = {}
+        ECONOMIA.extra = {}
         Notify()
     end
 

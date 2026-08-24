@@ -6,7 +6,10 @@ local cargar = loadstring or load
 
 -- 1. La economia real, extraida de HarfordDnDConditions.
 local src = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
-local i = assert(src:find("do\n    local ECONOMIA"))
+local i = assert(src:find("local ECONOMIA"))
+-- Retroceder a la ultima linea que sea exactamente `do`: es la que abre el bloque.
+-- Buscarla por proximidad de texto no vale: los comentarios de por medio cambian.
+i = assert(src:sub(1, i):match(".*()\ndo\n"))
 local fin = assert(src:find("    API.Turn = Turn\nend", i))
 HarfordTurnOrderStore = { entries = { { kind = "npc", name = "Gnoll" } } }
 HarfordTurnOrderAPI = { HasActiveCombat = function()
@@ -71,4 +74,18 @@ chk("la reaccion sigue entera", T.GetRemaining("reaction"), 1)
 print("Hereda del padre si la opcion no lo declara")
 local d3 = Sintetizar({ id = "z", description = "", cast = "reaccion" }, { id = "w", label = "W" })
 chk("cast heredado", d3.cast, "reaccion")
+
+print("Rasgos que CONCEDEN presupuesto en vez de gastarlo")
+T.Reset()
+chk("adicional de partida", T.GetRemaining("bonus"), 1)
+T.GrantForFeature({ id = "guerrero_accion_adicional", name = "Accion adicional",
+                    grantsTurnAction = "accion_adicional" })
+chk("tras usar el rasgo del Guerrero: dos", T.GetRemaining("bonus"), 2)
+chk("  la accion normal no sube", T.GetRemaining("action"), 1)
+T.SpendForFeature({ id = "x", cast = "accion_adicional" })
+chk("gasto una: queda una", T.GetRemaining("bonus"), 1)
+T.Reset()
+chk("al empezar el turno, la concedida SE VA", T.GetRemaining("bonus"), 1)
+chk("un rasgo sin grantsTurnAction no concede",
+    tostring(T.GrantForFeature({ id = "y", cast = "accion" })), "nil")
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

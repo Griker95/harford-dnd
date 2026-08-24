@@ -37,7 +37,7 @@ API.CLASSES[#API.CLASSES + 1] =
         "Intimidacion", "Percepcion", "Supervivencia" },
     subclasses = {
         { id = "armas", name = "Armas", desc = "Maestria tecnica con armas pesadas y golpes precisos.", features = {
-            { id = "gue_arm_arrollar", level = 3, name = "Arrollar", type = "informativo", description = "Reacción al recibir un ataque cuerpo a cuerpo: tira 1d10 y sumalo a tu CA; si el ataque falla, puedes atacar al objetivo. 2 usos por descanso.", uses = { max = 2, recharge = "short" }, effects = {} },
+            { id = "gue_arm_arrollar", level = 3, name = "Arrollar", cast = "reaccion", type = "informativo", description = "Reacción al recibir un ataque cuerpo a cuerpo: tira 1d10 y sumalo a tu CA; si el ataque falla, puedes atacar al objetivo. 2 usos por descanso.", uses = { max = 2, recharge = "short" }, effects = {} },
             { id = "gue_arm_intrepido", level = 3, name = "Intrepido", type = "informativo", description = "Recuperas 1 punto de Ira al final de tu turno si golpeaste a una criatura con un movimiento de ira ese turno.", effects = {
             { kind = "resourceGain", resource = "rage", amount = 1, trigger = "rage_maneuver_hit", featureId = "gue_arm_intrepido",
               note = "Intrepido" },
@@ -56,7 +56,7 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "furia_berserker_enloquecido", level = 18, name = "Berserker Enloquecido", type = "informativo", description = "En el nivel 18, si recibes daño que te reduce a 0 puntos de golpe y no te mata de inmediato, puedes usar tu reacción para retrasar la pérdida de consciencia y tomar un turno adicional de inmediato. Mientras tengas 0 puntos de golpe durante ese turno adicional, recibir daño provoca fallos en las tiradas de salvación de muerte como es habitual, y tres fallos pueden matarte. Al terminar el turno adicional, caes inconsciente si aún tienes 0 puntos de golpe. Una vez que uses esta característica, no puedes volver a usarla hasta que completes un descanso largo.", effects = {} },
         } },
         { id = "proteccion", name = "Proteccion", desc = "Tanque con escudo que protege a sus aliados.", features = {
-            { id = "gue_pro_provocacion", level = 3, name = "Provocacion", type = "informativo", description = "Acción: las criaturas a 9 m que elijas hacen salvación de Sabiduría (CD de Ira) o tienen desventaja en ataques contra otros durante 1 minuto. 1 uso por descanso.", uses = { max = 1, recharge = "short" }, effects = {} },
+            { id = "gue_pro_provocacion", level = 3, name = "Provocacion", cast = "accion", type = "informativo", description = "Acción: las criaturas a 9 m que elijas hacen salvación de Sabiduría (CD de Ira) o tienen desventaja en ataques contra otros durante 1 minuto. 1 uso por descanso.", uses = { max = 1, recharge = "short" }, effects = {} },
             { id = "gue_pro_control", level = 3, name = "Control de ira", type = "informativo", description = "Cuando una criatura hostil te golpea con un ataque, ganas 1 punto de Ira (una vez por turno).", effects = {
             -- Lo resuelve el cliente del propio guerrero al recibir el dano.
             { kind = "resourceGain", resource = "rage", amount = 1, trigger = "damage_taken", featureId = "gue_pro_control",
@@ -81,11 +81,11 @@ API.CLASSES[#API.CLASSES + 1] =
                 { id = "tirador", label = "Tirador en Combate Cercano (+1 ataque a distancia, ignora cobertura)", effects = { { kind = "bonus", target = "weaponAttack", value = 1 } } },
             },
         } },
-        { id = "guerrero_segundo_aliento", level = 1, name = "Segundo aliento", type = "accion", description = "Acción adicional: gasta un dado de golpe d10 para recuperar PG (tirada + Mod. Constitución).", actionKind = "secondWind", effects = {} },
+        { id = "guerrero_segundo_aliento", level = 1, name = "Segundo aliento", cast = "accion_adicional", type = "accion", description = "Acción adicional: gasta un dado de golpe d10 para recuperar PG (tirada + Mod. Constitución).", actionKind = "secondWind", effects = {} },
         { id = "guerrero_furia_interna", level = 2, name = "Ira interna", type = "pasivo", description = "Ganas puntos de Ira al dañar con armas; los gastas en maniobras. Máximo de Ira = tu nivel de Guerrero. Los puntos acumulados permanecen 1 hora antes de disiparse, devolviendo tu reserva de ira a 0. CD de Ira = 8 + competencia + Mod. Fuerza.", effects = {
             { kind = "resourceMax", resource = "rage", perClassLevel = "guerrero", base = 0, perLevel = 1 },
         } },
-        { id = "guerrero_reserva_ira", icon = "ability_warrior_focusedrage", level = 2, name = "Reserva de ira", type = "recurso", description = "Puedes usar una acción adicional en tu turno para aprovechar tu reserva interna de ira y ganar un número de puntos de ira. Una vez que uses tu reserva de ira, no puedes volver a usarla hasta que completes un descanso corto o largo.", uses = { max = 1, recharge = "short" },
+        { id = "guerrero_reserva_ira", icon = "ability_warrior_focusedrage", level = 2, name = "Reserva de ira", cast = "accion_adicional", type = "recurso", description = "Puedes usar una acción adicional en tu turno para aprovechar tu reserva interna de ira y ganar un número de puntos de ira. Una vez que uses tu reserva de ira, no puedes volver a usarla hasta que completes un descanso corto o largo.", uses = { max = 1, recharge = "short" },
             -- Puntos que devuelve, por nivel de Guerrero (tabla del manual).
             rageReserveByLevel = { [2] = 1, [3] = 2, [4] = 2, [5] = 3, [6] = 3 }, effects = {} },
         { id = "guerrero_man_golpe_heroico", icon = "ability_warrior_punishingblow", level = 2, name = "Golpe heroico", type = "maniobra", description = "Cuando hagas daño con un ataque de arma cuerpo a cuerpo, puedes gastar 1 o más puntos de ira para volver a tirar 1 dado de daño por cada punto de ira gastado. Debes usar el nuevo resultado.", effects = {
@@ -132,7 +132,7 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "guerrero_ataque_extra", level = 5, name = "Ataque adicional", type = "pasivo", description = "Atacas dos veces, en lugar de una, al realizar la acción de Atacar.", effects = {
             { kind = "flag", flag = "extraAttack" },
         } },
-        { id = "guerrero_accion_adicional", level = 6, name = "Accion adicional", type = "accion", description = "Una acción adicional extra en tu turno; recarga con descanso corto o largo.", uses = { max = 1, recharge = "short" }, effects = {} },
+        { id = "guerrero_accion_adicional", level = 6, name = "Accion adicional", grantsTurnAction = "accion_adicional", type = "accion", description = "Una acción adicional extra en tu turno; recarga con descanso corto o largo.", uses = { max = 1, recharge = "short" }, effects = {} },
         { id = "guerrero_ataque_extra_2", level = 20, name = "Ataque adicional (2)", type = "informativo", description = "El número de ataques de tu rasgo de Ataque Extra aumenta a tres cuando alcanzas el nivel 20 en esta clase.", effects = {} },
     },
 }

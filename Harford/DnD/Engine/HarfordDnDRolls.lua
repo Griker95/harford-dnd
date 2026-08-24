@@ -103,6 +103,8 @@ function HarfordDnDRolls.BroadcastAbility(feature, opts)
     -- adivinarlo daria un contador equivocado, que es peor que no tenerlo.
     if opts.skipTurnCost ~= true and HarfordDnDConditions and HarfordDnDConditions.Turn then
         HarfordDnDConditions.Turn.SpendForFeature(feature)
+        -- Y al reves: hay rasgos que CONCEDEN una accion en vez de costarla.
+        HarfordDnDConditions.Turn.GrantForFeature(feature)
     end
     local label = HarfordTRP3 and HarfordTRP3.GetAbilityChatLink
         and HarfordTRP3.GetAbilityChatLink(feature)

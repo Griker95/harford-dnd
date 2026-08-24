@@ -198,7 +198,9 @@ function API.GetSpellSlotMax(spellLevel, profileName)
     spellLevel = math.floor(tonumber(spellLevel) or 0)
     local slots = API.SLOT_COUNT[API.GetCasterLevel(profileName, true)]
     local base = (slots and tonumber(slots[spellLevel])) or 0
-    -- Las de pacto se suman a las normales de su mismo nivel, no van en una reserva aparte.
+    -- Las de PACTO se cuentan en el maximo (para que la ficha muestre el total correcto) pero
+    -- llevan su propio gastado: recargan en descanso CORTO y las normales en largo. Fusionar los
+    -- dos hacia que un descanso corto devolviese espacios de otra clase en un multiclase de brujo.
     local pactCount, pactLevel = API.GetPactSlots(profileName)
     if pactCount > 0 and spellLevel == pactLevel then base = base + pactCount end
     -- Los espacios creados con puntos suman al maximo, para que se CUENTEN igual que los de la
@@ -213,7 +215,16 @@ function API.GetSpellSlotCurrent(spellLevel, profileName)
     if maximum <= 0 then return 0, maximum end
     local spent = HarfordDnDProgression and HarfordDnDProgression.GetSpellSlotsSpent
         and HarfordDnDProgression.GetSpellSlotsSpent(spellLevel, profileName) or 0
+    spent = spent + API.GetPactSpent(spellLevel, profileName)
     return math.max(0, maximum - spent), maximum
+end
+
+-- Ranuras de pacto gastadas que afectan a ESTE nivel. Fuera del nivel de pacto siempre es 0.
+function API.GetPactSpent(spellLevel, profileName)
+    local pactCount, pactLevel = API.GetPactSlots(profileName)
+    if pactCount <= 0 or math.floor(tonumber(spellLevel) or 0) ~= pactLevel then return 0 end
+    if not (HarfordDnDProgression and HarfordDnDProgression.GetPactSpent) then return 0 end
+    return math.min(pactCount, HarfordDnDProgression.GetPactSpent(profileName))
 end
 
 function API.CanSpendSpellSlot(spellLevel, profileName)
@@ -230,8 +241,18 @@ function API.SpendSpellSlot(spellLevel, profileName)
     if not ok then return false, currentOrErr end
     spellLevel = math.floor(tonumber(spellLevel) or 0)
     if spellLevel <= 0 then return true, 0, 0 end
-    local spent = HarfordDnDProgression.GetSpellSlotsSpent(spellLevel, profileName)
-    HarfordDnDProgression.SetSpellSlotsSpent(spellLevel, spent + 1, profileName)
+    -- Se gasta PRIMERO la ranura de pacto cuando la hay. No es una preferencia: vuelve con el
+    -- descanso corto y la normal con el largo, asi que gastar la de pacto antes es estrictamente
+    -- mejor para el jugador y no hay decision que preguntarle.
+    local pactCount = select(1, API.GetPactSlots(profileName))
+    local pactSpent = API.GetPactSpent(spellLevel, profileName)
+    if pactCount > 0 and pactSpent < pactCount then
+        HarfordDnDProgression.SetPactSpent(
+            HarfordDnDProgression.GetPactSpent(profileName) + 1, profileName)
+    else
+        local spent = HarfordDnDProgression.GetSpellSlotsSpent(spellLevel, profileName)
+        HarfordDnDProgression.SetSpellSlotsSpent(spellLevel, spent + 1, profileName)
+    end
     return true, currentOrErr - 1, maximum
 end
 

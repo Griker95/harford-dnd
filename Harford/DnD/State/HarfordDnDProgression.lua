@@ -58,6 +58,10 @@ local function EmptyProgression()
         -- Sacerdote). Van aparte de `spellSlots` para que "gastados" siga siendo un numero no
         -- negativo; suman al maximo y desaparecen en el mismo descanso largo.
         spellSlotsBonus = {},
+        -- Espacios de PACTO gastados. Van aparte de `spellSlots` porque recargan en descanso CORTO
+        -- y los normales en largo: fusionarlos hacia que un descanso corto devolviese espacios de
+        -- OTRA clase en un multiclase de brujo.
+        pactSpent = 0,
         activeStates = {},
         activeForm = "", -- forma druidica activa; vacio = forma normal.
         activeFormAction = "",
@@ -112,6 +116,7 @@ local function Migrate(data)
     data.useMana = nil
     if type(data.spellSlots) ~= "table" then data.spellSlots = {} end
     if type(data.spellSlotsBonus) ~= "table" then data.spellSlotsBonus = {} end
+    data.pactSpent = math.max(0, math.floor(tonumber(data.pactSpent) or 0))
     -- Reconstruir en una tabla nueva: añadir claves nuevas mientras se itera con pairs() sobre la
     -- misma tabla es comportamiento indefinido en Lua 5.1 (podia perder/duplicar espacios gastados).
     do
@@ -424,6 +429,7 @@ function API.ReplaceCreation(draft, profileName)
     data.feats = {}
     data.spellSlots = {}
     data.spellSlotsBonus = {}
+    data.pactSpent = nil
     data.activeStates = {}
     data.activeForm = ""
     data.activeFormAction = ""
@@ -615,6 +621,22 @@ function API.ResetRestCounters(profileName)
     return true
 end
 
+-- Espacios de pacto gastados. Un solo numero por perfil: el pacto concede todas sus ranuras al
+-- mismo nivel, asi que no hace falta desglosarlo por nivel como los normales.
+function API.GetPactSpent(profileName)
+    local data = EnsureProgression(profileName)
+    return math.max(0, math.floor(tonumber(data.pactSpent) or 0))
+end
+
+function API.SetPactSpent(spent, profileName)
+    local data = EnsureProgression(profileName)
+    spent = math.max(0, math.floor(tonumber(spent) or 0))
+    -- El 0 no se persiste, igual que el resto de contadores: no engordar SavedVariables.
+    data.pactSpent = spent > 0 and spent or nil
+    Touch(profileName)
+    return spent
+end
+
 function API.GetSpellSlotsBonus(level, profileName)
     local data = API.Get(profileName)
     return math.max(0, math.floor(tonumber(data.spellSlotsBonus[math.floor(tonumber(level) or 0)]) or 0))
@@ -633,9 +655,13 @@ end
 function API.ResetSpellSlots(profileName)
     local data = API.Get(profileName)
     -- El descanso largo restaura los gastados Y hace desaparecer los creados con puntos.
-    if next(data.spellSlots) == nil and next(data.spellSlotsBonus) == nil then return false end
+    -- El pacto entra en la guarda: si lo unico gastado son ranuras de pacto, el descanso largo
+    -- SI tiene algo que restaurar.
+    if next(data.spellSlots) == nil and next(data.spellSlotsBonus) == nil
+        and (tonumber(data.pactSpent) or 0) <= 0 then return false end
     data.spellSlots = {}
     data.spellSlotsBonus = {}
+    data.pactSpent = nil
     Touch(profileName)
     return true
 end

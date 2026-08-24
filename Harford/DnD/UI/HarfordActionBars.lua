@@ -52,7 +52,6 @@ local function Build()
     if TEX_RIGHT then bar.rightCap:SetTexture(TEX_RIGHT) end
 
     bar.slots = {}
-    bar.fichas = {}
     return bar
 end
 
@@ -99,7 +98,29 @@ function API.Layout()
         s:Show()
     end
     for i = c.count + 1, #bar.slots do bar.slots[i]:Hide() end
-    if API.RefreshTurnEconomy then API.RefreshTurnEconomy() end
+end
+
+-- ─── ANCLAJE A LA BARRA NATIVA ───────────────────────────────────────────────
+-- Las fichas van ENCIMA de la barra de accion de Blizzard, como en BG3, no sobre la barra propia
+-- de Harford: esa esta apagada por defecto y puede no usarse nunca.
+--
+-- El frame se busca en varios sitios porque los addons de barras (Dominos, Bartender) reparentan
+-- los botones, y el propio cliente ha movido estos frames entre versiones. Si no hay ninguno, las
+-- fichas no se pintan: es preferible a colocarlas en una esquina al azar.
+local function AnclaBarraNativa()
+    local candidatos = {
+        _G["ActionButton1"],
+        _G["MainMenuBarArtFrame"],
+        _G["MainMenuBar"],
+        _G["MultiBarBottomLeftButton1"],
+    }
+    for _, f in ipairs(candidatos) do
+        if f and f.GetObjectType and f:IsShown() then return f end
+    end
+    for _, f in ipairs(candidatos) do
+        if f and f.GetObjectType then return f end
+    end
+    return nil
 end
 
 -- ─── INDICADORES DE ECONOMIA DE TURNO ────────────────────────────────────────
@@ -115,6 +136,10 @@ end
 --
 -- Sin ticker: el motor de condiciones avisa a sus listeners al gastar y al reiniciar el turno.
 local FICHA_TAM, FICHA_HUECO = 15, 4
+-- Los orbes de conjuro son mas pequenos que las fichas de accion a proposito: son otro tipo de
+-- recurso (no se renuevan por turno) y conviene que no se confundan de un vistazo.
+local ORBE_TAM, ORBE_HUECO, GRUPO_HUECO = 10, 3, 12
+local COLOR_ORBE = { 0.44, 0.63, 0.90 }
 local COLOR_FICHA = {
     action   = { 0.91, 0.71, 0.30 },   -- dorado
     bonus    = { 0.39, 0.76, 0.42 },   -- verde
@@ -126,10 +151,63 @@ local function Economia()
     return HarfordDnDConditions and HarfordDnDConditions.Turn
 end
 
+-- Contenedor propio: las fichas no dependen de que la barra de Harford exista ni este visible.
+local fichasFrame
+
+local function EnsureFichasFrame()
+    if fichasFrame then return fichasFrame end
+    fichasFrame = CreateFrame("Frame", "HarfordTurnEconomyFrame", UIParent)
+    fichasFrame:SetSize(1, FICHA_TAM)
+    fichasFrame:SetFrameStrata("MEDIUM")
+    fichasFrame.fichas = {}
+    fichasFrame.orbes = {}
+    fichasFrame.niveles = {}
+    return fichasFrame
+end
+
+-- Un orbe de espacio de conjuro. Pool propio: no comparten geometria con las fichas de accion.
+local function EnsureOrbe(i)
+    local cont = EnsureFichasFrame()
+    cont.orbes = cont.orbes or {}
+    local o = cont.orbes[i]
+    if o then return o end
+    o = CreateFrame("Frame", nil, cont)
+    o:SetSize(ORBE_TAM, ORBE_TAM)
+    o.fondo = o:CreateTexture(nil, "ARTWORK")
+    o.fondo:SetPoint("TOPLEFT", 1, -1)
+    o.fondo:SetPoint("BOTTOMRIGHT", -1, 1)
+    o.marco = o:CreateTexture(nil, "OVERLAY")
+    o.marco:SetTexture(TEX_MARCO)
+    o.marco:SetAllPoints()
+    o:EnableMouse(true)
+    o:SetScript("OnEnter", function(self)
+        if not (GameTooltip and self.nivel) then return end
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Espacio de conjuro de nivel " .. tostring(self.nivel), 1, 1, 1)
+        GameTooltip:AddLine(self.quedan .. " de " .. self.total .. " disponibles", 0.7, 0.7, 0.7)
+        GameTooltip:Show()
+    end)
+    o:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    cont.orbes[i] = o
+    return o
+end
+
+-- Etiqueta con el numero de nivel delante de cada grupo de orbes.
+local function EnsureNivelTexto(i)
+    local cont = EnsureFichasFrame()
+    cont.niveles = cont.niveles or {}
+    local t = cont.niveles[i]
+    if t then return t end
+    t = cont:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    cont.niveles[i] = t
+    return t
+end
+
 local function EnsureFicha(i)
-    local f = bar.fichas[i]
+    local cont = EnsureFichasFrame()
+    local f = cont.fichas[i]
     if f then return f end
-    f = CreateFrame("Frame", nil, bar)
+    f = CreateFrame("Frame", nil, cont)
     f:SetSize(FICHA_TAM, FICHA_TAM)
     f.fondo = f:CreateTexture(nil, "ARTWORK")
     f.fondo:SetPoint("TOPLEFT", 2, -2)
@@ -151,47 +229,116 @@ local function EnsureFicha(i)
         GameTooltip:Show()
     end)
     f:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-    bar.fichas[i] = f
+    cont.fichas[i] = f
     return f
 end
 
 -- Redibuja la fila entera. Devuelve cuantas fichas quedaron visibles.
+-- Dibuja los recursos sobre la barra nativa: fichas de accion (solo con combate activo, porque
+-- fuera de combate no se lleva la cuenta) y orbes de espacios de conjuro (SIEMPRE, porque no se
+-- renuevan por turno y saber cuantos quedas es util fuera de combate).
+--
+-- Devuelve `fichas, orbes` para que se pueda comprobar.
 function API.RefreshTurnEconomy()
-    if not bar then return 0 end
-    bar.fichas = bar.fichas or {}
-    local T = Economia()
-    if not (T and T.IsActive and T.IsActive()) then
-        for _, f in ipairs(bar.fichas) do f:Hide() end
-        return 0
+    local cont = EnsureFichasFrame()
+    cont.orbes = cont.orbes or {}
+    cont.niveles = cont.niveles or {}
+    local ancla = AnclaBarraNativa()
+    if not ancla then
+        cont:Hide()
+        return 0, 0
     end
+
+    -- ── Fichas de accion ────────────────────────────────────────────────────
+    local T = Economia()
     local n = 0
-    for _, kind in ipairs(T.ORDEN or {}) do
-        local total = T.GetBudget(kind)
-        local quedan = T.GetRemaining(kind)
-        for punto = 1, total do
-            n = n + 1
-            local f = EnsureFicha(n)
-            f.kind, f.etiqueta = kind, T.ETIQUETA[kind]
-            f.gastada = punto > quedan
-            local c = COLOR_FICHA[kind] or { 0.7, 0.7, 0.7 }
-            if f.gastada then
-                f.fondo:SetColorTexture(c[1] * 0.22, c[2] * 0.22, c[3] * 0.22, 0.9)
-                f.marco:SetVertexColor(0.35, 0.35, 0.35)
-            else
-                f.fondo:SetColorTexture(c[1], c[2], c[3], 1)
-                f.marco:SetVertexColor(c[1] * 1.1, c[2] * 1.1, c[3] * 1.1)
+    if T and T.IsActive and T.IsActive() then
+        for _, kind in ipairs(T.ORDEN or {}) do
+            local total = T.GetBudget(kind)
+            local quedan = T.GetRemaining(kind)
+            for punto = 1, total do
+                n = n + 1
+                local f = EnsureFicha(n)
+                f.kind, f.etiqueta = kind, T.ETIQUETA[kind]
+                f.gastada = punto > quedan
+                local c = COLOR_FICHA[kind] or { 0.7, 0.7, 0.7 }
+                if f.gastada then
+                    f.fondo:SetColorTexture(c[1] * 0.22, c[2] * 0.22, c[3] * 0.22, 0.9)
+                    f.marco:SetVertexColor(0.35, 0.35, 0.35)
+                else
+                    f.fondo:SetColorTexture(c[1], c[2], c[3], 1)
+                    f.marco:SetVertexColor(c[1] * 1.1, c[2] * 1.1, c[3] * 1.1)
+                end
+                f:ClearAllPoints()
+                if n == 1 then
+                    f:SetPoint("BOTTOMLEFT", cont, "BOTTOMLEFT", 0, 0)
+                else
+                    f:SetPoint("LEFT", cont.fichas[n - 1], "RIGHT", FICHA_HUECO, 0)
+                end
+                f:Show()
             end
-            f:ClearAllPoints()
-            if n == 1 then
-                f:SetPoint("BOTTOMLEFT", bar, "TOPLEFT", HarfordActionBars._cfg.capW + 10, 3)
-            else
-                f:SetPoint("LEFT", bar.fichas[n - 1], "RIGHT", FICHA_HUECO, 0)
-            end
-            f:Show()
         end
     end
-    for i = n + 1, #bar.fichas do bar.fichas[i]:Hide() end
-    return n
+    for i = n + 1, #cont.fichas do cont.fichas[i]:Hide() end
+    local ancho = n * FICHA_TAM + math.max(0, n - 1) * FICHA_HUECO
+    local ultimo = n > 0 and cont.fichas[n] or nil
+
+    -- ── Orbes de espacios de conjuro ────────────────────────────────────────
+    -- Solo en modo "slots": en modo mana no hay piramide que pintar. `IsEnabled` devuelve true
+    -- cuando el MANA esta activo, asi que la piramide es justo el caso contrario.
+    local M = HarfordDnDMana
+    local orbes, grupos = 0, 0
+    if M and M.IsEnabled and not M.IsEnabled() and M.GetMaxSpellLevel and M.GetSpellSlotCurrent then
+        for nivel = 1, (M.GetMaxSpellLevel() or 0) do
+            local quedan, total = M.GetSpellSlotCurrent(nivel)
+            if (total or 0) > 0 then
+                grupos = grupos + 1
+                local etiqueta = EnsureNivelTexto(grupos)
+                etiqueta:SetText(tostring(nivel))
+                etiqueta:ClearAllPoints()
+                if ultimo then
+                    etiqueta:SetPoint("LEFT", ultimo, "RIGHT", GRUPO_HUECO, 0)
+                else
+                    etiqueta:SetPoint("BOTTOMLEFT", cont, "BOTTOMLEFT", 0, 1)
+                end
+                etiqueta:Show()
+                ancho = ancho + GRUPO_HUECO + 10
+                local anterior
+                for punto = 1, total do
+                    orbes = orbes + 1
+                    local o = EnsureOrbe(orbes)
+                    o.nivel, o.quedan, o.total = nivel, quedan, total
+                    local gastado = punto > quedan
+                    local c = COLOR_ORBE
+                    if gastado then
+                        o.fondo:SetColorTexture(c[1] * 0.20, c[2] * 0.20, c[3] * 0.20, 0.9)
+                        o.marco:SetVertexColor(0.32, 0.32, 0.32)
+                    else
+                        o.fondo:SetColorTexture(c[1], c[2], c[3], 1)
+                        o.marco:SetVertexColor(c[1] * 1.1, c[2] * 1.1, c[3] * 1.1)
+                    end
+                    o:ClearAllPoints()
+                    o:SetPoint("LEFT", anterior or etiqueta, "RIGHT", anterior and ORBE_HUECO or 3, 0)
+                    o:Show()
+                    anterior = o
+                    ancho = ancho + ORBE_TAM + ORBE_HUECO
+                end
+                ultimo = anterior or ultimo
+            end
+        end
+    end
+    for i = orbes + 1, #cont.orbes do cont.orbes[i]:Hide() end
+    for i = grupos + 1, #cont.niveles do cont.niveles[i]:Hide() end
+
+    if n == 0 and orbes == 0 then
+        cont:Hide()
+        return 0, 0
+    end
+    cont:ClearAllPoints()
+    cont:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, 6)
+    cont:SetWidth(math.max(1, ancho))
+    cont:Show()
+    return n, orbes
 end
 
 -- ─── API publica ─────────────────────────────────────────────────────────────
@@ -262,6 +409,45 @@ end
 -- sin ticker: es la regla del proyecto y aqui basta de sobra.
 if HarfordDnDConditions and HarfordDnDConditions.RegisterListener then
     HarfordDnDConditions.RegisterListener(function()
-        if API.IsShown and API.IsShown() then API.RefreshTurnEconomy() end
+        API.RefreshTurnEconomy()
     end)
+end
+
+-- Un refresco al entrar: el motor de condiciones solo avisa cuando algo cambia, y al arrancar no ha
+-- cambiado nada todavia. Sin ticker.
+do
+    local ev = CreateFrame("Frame")
+    ev:RegisterEvent("PLAYER_ENTERING_WORLD")
+    ev:SetScript("OnEvent", function()
+        if API.RefreshTurnEconomy then API.RefreshTurnEconomy() end
+    end)
+end
+
+-- Gastar o crear un espacio de conjuro no pasa por el motor de condiciones y no tiene evento de
+-- WoW propio. En vez de tocarle el control de flujo a HarfordDnDMana, se envuelven sus mutaciones
+-- desde aqui, que es el modulo al que le interesa el refresco.
+--
+-- `{ original(...) }` + `unpack` conserva TODOS los valores de retorno: varias de estas devuelven
+-- tres, y recortarlos romperia a sus llamadores.
+do
+    local desempaquetar = unpack or table.unpack
+    local MUTACIONES = { "SpendSpellSlot", "CreateSlotFromPoints", "ConvertSlotToPoints" }
+    local function Envolver()
+        if not HarfordDnDMana then return end
+        for _, nombre in ipairs(MUTACIONES) do
+            local original = HarfordDnDMana[nombre]
+            if type(original) == "function" and not HarfordDnDMana["_harfordEnvuelto_" .. nombre] then
+                HarfordDnDMana["_harfordEnvuelto_" .. nombre] = true
+                HarfordDnDMana[nombre] = function(...)
+                    local r = { original(...) }
+                    if API.RefreshTurnEconomy then API.RefreshTurnEconomy() end
+                    return desempaquetar(r)
+                end
+            end
+        end
+    end
+    local ev2 = CreateFrame("Frame")
+    ev2:RegisterEvent("PLAYER_LOGIN")
+    ev2:SetScript("OnEvent", Envolver)
+    Envolver()
 end

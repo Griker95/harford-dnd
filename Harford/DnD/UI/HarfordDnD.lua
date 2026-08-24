@@ -1658,13 +1658,12 @@ ApplyShortRest = function()
     -- devuelven COMO MUCHO tantas ranuras como le tocan al brujo, y solo en SU nivel de pacto:
     -- en un brujo puro las recupera todas, y en un multiclase nunca regala mas de lo que el pacto
     -- concede. Separar los dos pools (como ya se hizo con `spellSlotsBonus`) lo haria exacto.
-    if HarfordDnDMana and HarfordDnDMana.GetPactSlots and HarfordDnDProgression then
-        local cuantas, nivel = HarfordDnDMana.GetPactSlots()
-        if (tonumber(cuantas) or 0) > 0 and (tonumber(nivel) or 0) > 0 then
-            local gastadas = HarfordDnDProgression.GetSpellSlotsSpent(nivel)
-            if gastadas > 0 then
-                HarfordDnDProgression.SetSpellSlotsSpent(nivel, math.max(0, gastadas - cuantas))
-            end
+    if HarfordDnDMana and HarfordDnDProgression and HarfordDnDProgression.SetPactSpent then
+        -- Las ranuras de PACTO llevan su propia cuenta, asi que el descanso corto las devuelve
+        -- TODAS y solo esas. Antes se descontaban del pool comun de su nivel y en un multiclase de
+        -- brujo eso regalaba espacios de la otra clase en cada descanso corto.
+        if HarfordDnDProgression.GetPactSpent(GetProfileName and GetProfileName() or nil) > 0 then
+            HarfordDnDProgression.SetPactSpent(0)
         end
     end
 

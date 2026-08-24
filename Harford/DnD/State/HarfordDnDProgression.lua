@@ -307,6 +307,56 @@ local function RenombrarClaves(t)
     return fuera, n
 end
 
+-- Ids de HERRAMIENTA renombrados a `her_`. Van aparte de IDS_RENOMBRADOS porque no se guardan como
+-- CLAVE sino como VALOR: la opcion elegida en una eleccion de competencia con herramientas
+-- (`choices["bg_des_herr"] = { "instrumento" }`). Ocho de estos ids existen tambien como profesion,
+-- asi que traducirlos por su nombre suelto habria sido ambiguo.
+local HERRAMIENTAS_RENOMBRADAS = {
+    ["albanil"] = "her_albanil",
+    ["alfarero"] = "her_alfarero",
+    ["alquimista"] = "her_alquimista",
+    ["armero"] = "her_armero",
+    ["caligrafia"] = "her_caligrafia",
+    ["carpintero"] = "her_carpintero",
+    ["cartografo"] = "her_cartografo",
+    ["cervecero"] = "her_cervecero",
+    ["cocinero"] = "her_cocinero",
+    ["curtidor"] = "her_curtidor",
+    ["disfraz"] = "her_disfraz",
+    ["envenenador"] = "her_envenenador",
+    ["falsificacion"] = "her_falsificacion",
+    ["herborista"] = "her_herborista",
+    ["herrero"] = "her_herrero",
+    ["hojalatero"] = "her_hojalatero",
+    ["instrumento"] = "her_instrumento",
+    ["joyero"] = "her_joyero",
+    ["juego"] = "her_juego",
+    ["ladron"] = "her_ladron",
+    ["navegante"] = "her_navegante",
+    ["pintor"] = "her_pintor",
+    ["soplavidrio"] = "her_soplavidrio",
+    ["tallador"] = "her_tallador",
+    ["tejedor"] = "her_tejedor",
+    ["vehiculos_agua"] = "her_vehiculos_agua",
+    ["vehiculos_tierra"] = "her_vehiculos_tierra",
+    ["zapatero"] = "her_zapatero",
+}
+
+-- Las elecciones guardan LISTAS de ids de opcion. Se traducen sus valores.
+local function RenombrarOpciones(choices)
+    if type(choices) ~= "table" then return 0 end
+    local n = 0
+    for _, lista in pairs(choices) do
+        if type(lista) == "table" then
+            for i = 1, #lista do
+                local nuevo = HERRAMIENTAS_RENOMBRADAS[lista[i]]
+                if nuevo then lista[i] = nuevo n = n + 1 end
+            end
+        end
+    end
+    return n
+end
+
 local function Migrate(data)
     if type(data) ~= "table" then data = EmptyProgression() end
     local oldSchema = tonumber(data.schema) or 0
@@ -374,6 +424,7 @@ local function Migrate(data)
         end
         local _, nf = RenombrarValores(data.feats)
         total = total + nf
+        total = total + RenombrarOpciones(data.choices)
         if total > 0 and HarfordChat and HarfordChat.Print then
             HarfordChat.Print(("Ficha actualizada: %d rasgo(s) renombrados a la convencion nueva."):format(total))
         end

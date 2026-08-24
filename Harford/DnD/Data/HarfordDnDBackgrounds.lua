@@ -272,10 +272,10 @@ API.BACKGROUNDS = {
                 { kind = "toolProf", tool = "Un juego" },
             } },
             { id = "bg_merc_herr", name = "Herramienta adicional", type = "choice", description = "Escoge una herramienta adicional: herramientas de ladrón, vehículos terrestres, vehículos acuaticos o un instrumento musical.", choice = { slots = 1, options = {
-                { id = "ladron", label = "Herramientas de ladron", effects = { { kind = "toolProf", tool = "Herramientas de ladron" } } },
+                { id = "her_ladron", label = "Herramientas de ladron", effects = { { kind = "toolProf", tool = "Herramientas de ladron" } } },
                 { id = "vehiculos_terrestres", label = "Vehiculos terrestres", effects = { { kind = "toolProf", tool = "Vehiculos terrestres" } } },
                 { id = "vehiculos_acuaticos", label = "Vehiculos acuaticos", effects = { { kind = "toolProf", tool = "Vehiculos acuaticos" } } },
-                { id = "instrumento", label = "Instrumento musical", effects = { { kind = "toolProf", tool = "Instrumento musical" } } },
+                { id = "her_instrumento", label = "Instrumento musical", effects = { { kind = "toolProf", tool = "Instrumento musical" } } },
             } }, effects = {} },
             { id = "bg_merc_espiritu", icon = "inv_tabard_duelersguild", name = "Espiritu harford", type = "informativo", description = "Puedes encontrar antiguos miembros, simpatizantes o beneficiarios de la Compañía Harford dispuestos a asistirte de forma irregular. Además, tienes ventaja en tiradas de Carisma (Persuasión o Engaño) al tratar con mercenarios, criminales reformados, soldados veteranos o desertores.", effects = {} },
             { id = "bg_merc_vida", icon = "w3reforgedmercenarycamp", name = "Vida mercenaria", type = "informativo", description = "Conoces la vida mercenaria como solo puede hacerlo quien la ha vivido. Identificas a las compañías de mercenarios por sus emblemas y sabes algo de cualquiera de ellas: los nombres y la reputación de sus comandantes y los ejércitos que las han contratado últimamente. Puedes hallar las tabernas y los salones donde moran los mercenarios en cualquier lugar, siempre que hables el idioma local.\n\nSi estructuras tu trabajo de mercenario entre aventuras como parte normal de tu vida cotidiana, obtienes un modo de vida cómodo.", effects = {} },
@@ -291,8 +291,8 @@ API.BACKGROUNDS = {
                 { kind = "skillProf", skill = "Engano" }, { kind = "skillProf", skill = "Historia" },
             } },
             { id = "bg_alt_herr", name = "Competencia con herramientas", type = "choice", description = "Elige una competencia entre herramientas de falsificacion o kit de disfraz.", choice = { slots = 1, options = {
-                { id = "falsificacion", label = "Herramientas de falsificacion", effects = { { kind = "toolProf", tool = "Herramientas de falsificacion" } } },
-                { id = "disfraz", label = "Kit de disfraz", effects = { { kind = "toolProf", tool = "Kit de disfraz" } } },
+                { id = "her_falsificacion", label = "Herramientas de falsificacion", effects = { { kind = "toolProf", tool = "Herramientas de falsificacion" } } },
+                { id = "her_disfraz", label = "Kit de disfraz", effects = { { kind = "toolProf", tool = "Kit de disfraz" } } },
             } }, effects = {} },
             { id = "bg_alt_idioma", icon = "inv_misc_note_05", name = "Idioma", type = "choice", description = "Un idioma adicional, como Orco u otro idioma del pueblo que te acogio.", effects = {}, choice = { slots = 1, optionsFrom = "language" } },
             { id = "bg_alt_peso", name = "Peso de un reino caido", type = "informativo", description = "Puedes identificar a otros exiliados o simpatizantes de Alterac mediante gestos, acentos o simbolos ocultos. Obtienes ventaja en pruebas de Carisma (Persuasión o Engaño) o de Historia cuando trates con individuos marcados por el exilio, la derrota o el legado de la Segunda Guerra. También puedes encontrar refugio entre comunidades marginales, contrabandistas o grupos de exiliados que aun recuerdan a Alterac.", effects = {} },
@@ -367,7 +367,7 @@ API.BACKGROUNDS = {
         traits = {
             { id = "bg_ord_comp", name = "Competencias", type = "pasivo", description = "Competencia en Religión y Persuasión.", effects = { Skill("Religion"), Skill("Persuasion") } },
             { id = "bg_ord_herr", name = "Competencia con herramientas", type = "choice", description = "Elige herramientas de herrero o útiles de caligrafo.", choice = { slots = 1, options = {
-                { id = "herrero", label = "Herramientas de herrero", effects = { Tool("Herramientas de herrero") } },
+                { id = "her_herrero", label = "Herramientas de herrero", effects = { Tool("Herramientas de herrero") } },
                 { id = "caligrafo", label = "Utiles de caligrafo", effects = { Tool("Utiles de caligrafo") } },
             } }, effects = {} },
             { id = "bg_ord_idioma", icon = "inv_misc_note_05", name = "Idioma", type = "choice", description = "Un idioma de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "language" } },
@@ -391,8 +391,8 @@ API.BACKGROUNDS = {
         traits = {
             { id = "bg_des_comp", name = "Competencias", type = "pasivo", description = "Competencia en Perspicacia y Supervivencia.", effects = { Skill("Perspicacia"), Skill("Supervivencia") } },
             { id = "bg_des_herr", name = "Competencia con herramientas", type = "choice", description = "Elige un juego de azar o un instrumento musical.", choice = { slots = 1, options = {
-                { id = "juego", label = "Juego de azar", effects = { Tool("Un juego de azar") } },
-                { id = "instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
+                { id = "her_juego", label = "Juego de azar", effects = { Tool("Un juego de azar") } },
+                { id = "her_instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
             } }, effects = {} },
             { id = "bg_des_saboteador", icon = "inv_misc_enggizmos_38", name = "Saboteador", type = "informativo", description = "Conoces rutinas militares y puntos debiles de campamentos, patrullas y suministros, a discreción del DM.", effects = {} },
         },
@@ -415,8 +415,8 @@ API.BACKGROUNDS = {
             { id = "bg_luna_comp", name = "Competencias", type = "pasivo", description = "Competencia en Interpretación y Juego de Manos.", effects = { Skill("Interpretacion"), Skill("JuegoManos") } },
             { id = "bg_luna_herr1", name = "Kit de disfraces", type = "pasivo", description = "Competencia con kit de disfraces.", effects = { Tool("Kit de disfraces") } },
             { id = "bg_luna_herr2", name = "Juego o instrumento", type = "choice", description = "Elige un juego o un instrumento musical.", choice = { slots = 1, options = {
-                { id = "juego", label = "Juego", effects = { Tool("Un juego") } },
-                { id = "instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
+                { id = "her_juego", label = "Juego", effects = { Tool("Un juego") } },
+                { id = "her_instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
             } }, effects = {} },
             { id = "bg_luna_idioma", icon = "inv_misc_note_05", name = "Idioma", type = "choice", description = "Un idioma de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "language" } },
             { id = "bg_luna_actuacion", name = "Actuacion hipnotica", type = "informativo", description = "Sabes atraer atencion, distraer y leer al publico mediante espectaculo y misterio, a discreción del DM.", effects = {} },
@@ -445,8 +445,8 @@ API.BACKGROUNDS = {
         traits = {
             { id = "bg_for_comp", name = "Competencias", type = "pasivo", description = "Competencia en Percepción y Perspicacia.", effects = { Skill("Percepcion"), Skill("Perspicacia") } },
             { id = "bg_for_herr", name = "Juego o instrumento", type = "choice", description = "Elige un instrumento o juego de tu patria.", choice = { slots = 1, options = {
-                { id = "juego", label = "Juego", effects = { Tool("Un juego") } },
-                { id = "instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
+                { id = "her_juego", label = "Juego", effects = { Tool("Un juego") } },
+                { id = "her_instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
             } }, effects = {} },
             { id = "bg_for_idioma", icon = "inv_misc_note_05", name = "Idioma", type = "choice", description = "Un idioma cualquiera de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "language" } },
             { id = "bg_for_mirada", name = "Todos se fijan en ti", type = "informativo", description = "Tu presencia forastera puede abrir conversaciones, despertar sospechas o atraer ayuda por curiosidad, a discreción del DM.", effects = {} },
@@ -471,7 +471,7 @@ API.BACKGROUNDS = {
             { id = "bg_gsal_comp", name = "Competencias", type = "pasivo", description = "Competencia en Naturaleza y Supervivencia.", effects = { Skill("Naturaleza"), Skill("Supervivencia") } },
             { id = "bg_gsal_herr", name = "Competencia con herramientas", type = "choice", description = "Elige kit de herboristeria o herramientas de tallador de madera.", choice = { slots = 1, options = {
                 { id = "herboristeria", label = "Kit de herboristeria", effects = { Tool("Kit de herboristeria") } },
-                { id = "tallador", label = "Herramientas de tallador de madera", effects = { Tool("Herramientas de tallador de madera") } },
+                { id = "her_tallador", label = "Herramientas de tallador de madera", effects = { Tool("Herramientas de tallador de madera") } },
             } }, effects = {} },
             { id = "bg_gsal_voz", icon = "ability_hunter_onewithnature", name = "Voz de la naturaleza", type = "informativo", description = "Puedes interpretar señales naturales y tratar con comunidades o guardianes vinculados a lo salvaje, a discreción del DM.", effects = {} },
         },
@@ -497,8 +497,8 @@ API.BACKGROUNDS = {
                 { id = "religion", label = "Religion", effects = { Skill("Religion") } },
             } }, effects = {} },
             { id = "bg_hered_herr", name = "Juego o instrumento", type = "choice", description = "Elige un instrumento musical o un juego.", choice = { slots = 1, options = {
-                { id = "juego", label = "Juego", effects = { Tool("Un juego") } },
-                { id = "instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
+                { id = "her_juego", label = "Juego", effects = { Tool("Un juego") } },
+                { id = "her_instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
             } }, effects = {} },
             { id = "bg_hered_idioma", icon = "inv_misc_note_05", name = "Idioma", type = "choice", description = "Un idioma cualquiera de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "language" } },
             { id = "bg_hered_rasgo", name = "Herencia", type = "informativo", description = "Tu herencia puede darte acceso, interes, enemistades o autoridad según su naturaleza, a discreción del DM.", effects = {} },
@@ -587,7 +587,7 @@ API.BACKGROUNDS = {
         traits = {
             { id = "bg_cat_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia e Intimidación.", effects = { Skill("Historia"), Skill("Intimidacion") } },
             { id = "bg_cat_herr", name = "Competencia con herramientas", type = "choice", description = "Elige un juego o kit de herboristeria.", choice = { slots = 1, options = {
-                { id = "juego", label = "Juego", effects = { Tool("Un juego") } },
+                { id = "her_juego", label = "Juego", effects = { Tool("Un juego") } },
                 { id = "herboristeria", label = "Kit de herboristeria", effects = { Tool("Kit de herboristeria") } },
             } }, effects = {} },
             { id = "bg_cat_marcado", name = "Marcado pero en pie", type = "informativo", description = "Tu experiencia con desastres te ayuda a reconocer riesgos, sobrevivientes, ruinas o traumas similares, a discreción del DM.", effects = {} },
@@ -615,9 +615,9 @@ API.BACKGROUNDS = {
                 { id = "sigilo", label = "Sigilo", effects = { { kind = "skillProf", skill = "Sigilo" } } },
             } }, effects = {} },
             { id = "bg_caz_herr", name = "Competencia con herramientas", type = "choice", description = "Elige dos conjuntos de herramientas entre un juego, un instrumento musical y herramientas de ladrón.", choice = { slots = 2, options = {
-                { id = "juego", label = "Juego", effects = { Tool("Un juego") } },
-                { id = "instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
-                { id = "ladron", label = "Herramientas de ladron", effects = { Tool("Herramientas de ladron") } },
+                { id = "her_juego", label = "Juego", effects = { Tool("Un juego") } },
+                { id = "her_instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
+                { id = "her_ladron", label = "Herramientas de ladron", effects = { Tool("Herramientas de ladron") } },
             } }, effects = {} },
             { id = "bg_caz_oidos", icon = "inv_misc_ear_human_01", name = "Oidos atentos", type = "informativo", description = "Conservas contactos en la clase social o subcultura donde se mueven tus presas: crimen organizado, pueblo llano o alta sociedad.", effects = {} },
         },

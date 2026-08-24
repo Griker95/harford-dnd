@@ -43,12 +43,65 @@ API.TIERS = {
 ------------------------------------------------------------
 -- Persistencia (per-character)
 ------------------------------------------------------------
+-- Ids de profesion renombrados a `prof_`. Su progreso se guarda POR ID en
+-- `HarfordProfessionsStore.skills`, que es per-character y no pasa por la migracion de la
+-- progresion: sin esto, un personaje perderia el nivel de todas sus profesiones.
+local PROFESIONES_RENOMBRADAS = {
+    ["albanileria"] = "prof_albanileria",
+    ["alfareria"] = "prof_alfareria",
+    ["alquimia"] = "prof_alquimia",
+    ["carpinteria"] = "prof_carpinteria",
+    ["cartografia"] = "prof_cartografia",
+    ["cerveceria"] = "prof_cerveceria",
+    ["cocina"] = "prof_cocina",
+    ["desollar"] = "prof_desollar",
+    ["disfraz"] = "prof_disfraz",
+    ["encantamiento"] = "prof_encantamiento",
+    ["envenenador"] = "prof_envenenador",
+    ["falsificacion"] = "prof_falsificacion",
+    ["herboristeria"] = "prof_herboristeria",
+    ["herreria"] = "prof_herreria",
+    ["ingenieria"] = "prof_ingenieria",
+    ["inscripcion"] = "prof_inscripcion",
+    ["instrumento"] = "prof_instrumento",
+    ["joyeria"] = "prof_joyeria",
+    ["juego"] = "prof_juego",
+    ["ladron"] = "prof_ladron",
+    ["mineria"] = "prof_mineria",
+    ["navegante"] = "prof_navegante",
+    ["peleteria"] = "prof_peleteria",
+    ["pesca"] = "prof_pesca",
+    ["pintura"] = "prof_pintura",
+    ["primeros_auxilios"] = "prof_primeros_auxilios",
+    ["sastreria"] = "prof_sastreria",
+    ["soplavidrio"] = "prof_soplavidrio",
+    ["talla_madera"] = "prof_talla_madera",
+    ["zapateria"] = "prof_zapateria",
+}
+
+-- Se ejecuta una sola vez: al terminar, ninguna clave vieja queda y la funcion no encuentra nada.
+local function MigrarIds(store)
+    if type(store) ~= "table" or type(store.skills) ~= "table" then return 0 end
+    local nuevo, n = {}, 0
+    for k, v in pairs(store.skills) do
+        local destino = PROFESIONES_RENOMBRADAS[k]
+        if destino then n = n + 1 end
+        nuevo[destino or k] = v
+    end
+    store.skills = nuevo
+    return n
+end
+
 local function Store()
     HarfordProfessionsStore = HarfordProfessionsStore or {}
     HarfordProfessionsStore.skills = HarfordProfessionsStore.skills or {}   -- [profId] = skill (num)
     HarfordProfessionsStore.learned = HarfordProfessionsStore.learned or {} -- [recipeId] = true (worldLearned)
     HarfordProfessionsStore.nodeCooldowns = HarfordProfessionsStore.nodeCooldowns or {} -- [nodeGuid] = expiraEpoch
     HarfordProfessionsStore.custom = HarfordProfessionsStore.custom or {} -- [recipeId] = definicion dinamica
+    if not HarfordProfessionsStore._idsMigrados then
+        HarfordProfessionsStore._idsMigrados = true
+        MigrarIds(HarfordProfessionsStore)
+    end
     return HarfordProfessionsStore
 end
 

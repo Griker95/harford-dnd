@@ -4781,6 +4781,24 @@ API.RegisterCommand("dumpsheet", function(args)
     ShowCopyWindow("Harford - Volcado ficha (Ctrl+A, Ctrl+C)", full)
 end, "vuelca About TRP3 + ficha parseada (copiable): dumpsheet [target]")
 
+API.RegisterCommand("convertirficha", function(args)
+    local P = _G.HarfordDnDProgression
+    if not (P and P.HasPendingRename) then Print("HarfordDnDProgression no cargado"); return end
+    local pendiente, name = P.HasPendingRename()
+    if not pendiente then
+        Print("La ficha de |cffffcc00" .. tostring(name) .. "|r ya usa los nombres nuevos.")
+        return
+    end
+    if tostring(args or ""):lower():gsub("%s+", "") == "ya" then
+        local ok = P.ApplyPendingRename()
+        Print(ok and "Ficha convertida. Haz |cff00ff00/reload|r."
+            or "|cffff5555No se pudo convertir|r")
+        return
+    end
+    P.AskPendingRename(nil, true)
+    Print("Sin cuadro de dialogo: |cffffd100/harford debug run convertirficha ya|r")
+end, "convierte los nombres de rasgo de la ficha a la convencion nueva (pregunta antes)")
+
 API.RegisterCommand("fichaprevia", function(args)
     local P = _G.HarfordDnDProgression
     if not (P and P.GetPreviousProgression) then Print("HarfordDnDProgression no cargado"); return end

@@ -106,6 +106,8 @@ _G.strsplit = function(sep, s)
     for parte in tostring(s):gmatch("([^" .. sep .. "]*)") do fuera[#fuera + 1] = parte end
     return unpack(fuera)
 end
+-- WoW corre Lua 5.1, donde `unpack` es global. En 5.2+ se movio a table.unpack.
+_G.unpack = _G.unpack or table.unpack
 _G.SlashCmdList = {}
 -- Listas de WoW que el codigo rellena: tienen que ser tablas de verdad, no el objeto permisivo.
 _G.UISpecialFrames = {}

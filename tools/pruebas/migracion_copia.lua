@@ -36,4 +36,27 @@ chk("comando", dbg:find('RegisterCommand("fichaprevia"', 1, true) ~= nil, true)
 print("Y el aviso dice que existe")
 chk("el mensaje la nombra", src:find("Se ha guardado una copia de la ficha anterior", 1, true) ~= nil, true)
 
+
+
+-- El renombrado PREGUNTA antes. Es lo unico destructivo de la migracion: reescribe las elecciones
+-- del jugador y no se puede repetir. Lo estructural (valores por defecto, limpieza) si se aplica
+-- solo, porque no pierde nada.
+print("El renombrado no se hace sin permiso")
+chk("el renombrado esta condicionado", src:find("if oldSchema < 3 and not autorizado then", 1, true) ~= nil, true)
+chk("la ficha queda en el esquema intermedio",
+    src:find("data.schema = math.max(oldSchema, SCHEMA_SIN_RENOMBRAR)", 1, true) ~= nil, true)
+chk("y marcada como pendiente", src:find("data._renombradoPendiente = true", 1, true) ~= nil, true)
+chk("sin permiso NO se guarda copia", src:find("if previo then data._previo = nil end", 1, true) ~= nil, true)
+
+print("Se pregunta una vez, no en cada acceso")
+chk("hay cuadro de permiso", src:find('StaticPopupDialogs["HARFORD_MIGRAR_IDS"]', 1, true) ~= nil, true)
+chk("con memoria de preguntado", src:find("if not forzar and (preguntado[name]", 1, true) ~= nil, true)
+chk("rechazar se recuerda la sesion", src:find("renombrarRechazado[tostring(name or", 1, true) ~= nil, true)
+
+print("Y hay como aceptarlo despues")
+chk("aplicar", src:find("function API.ApplyPendingRename", 1, true) ~= nil, true)
+chk("consultar", src:find("function API.HasPendingRename", 1, true) ~= nil, true)
+local dbg2 = io.open("HarfordDebug/HarfordDebug.lua"):read("*a")
+chk("comando", dbg2:find('RegisterCommand("convertirficha"', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

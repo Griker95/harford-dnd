@@ -4,6 +4,12 @@ HarfordDnDProgression = HarfordDnDProgression or {}
 
 local API = HarfordDnDProgression
 local SCHEMA_VERSION = 3
+-- Esquema 2 = todo lo estructural al dia, ids AUN sin convertir. Existe para que la ficha pueda
+-- quedarse esperando permiso sin repetir el resto de la migracion en cada acceso.
+local SCHEMA_SIN_RENOMBRAR = 2
+
+-- Fichas que han aceptado (o rechazado, esta sesion) convertir sus ids.
+local renombrarAutorizado, renombrarRechazado = {}, {}
 local MAX_TOTAL_LEVEL = 20
 API.MAX_TOTAL_LEVEL = MAX_TOTAL_LEVEL
 
@@ -443,7 +449,7 @@ end
 -- `silencioso`: la ficha que se migra no es la tuya. El snapshot de inspeccion pasa por aqui para
 -- que sus ids viejos se lean bien, pero anunciar "Ficha actualizada" mientras miras a otro no
 -- significa nada para quien lo lee: parecia que se te habia tocado la tuya.
-local function Migrate(data, silencioso)
+local function Migrate(data, silencioso, autorizado)
     if type(data) ~= "table" then data = EmptyProgression() end
     local oldSchema = tonumber(data.schema) or 0
 
@@ -514,7 +520,21 @@ local function Migrate(data, silencioso)
         end
         data.spellSlots = migrated
     end
-    -- Renombrado de ids: solo al venir de un esquema anterior.
+    -- RENOMBRADO DE IDS. Es lo unico destructivo de toda la migracion: reescribe las elecciones
+    -- del jugador y no se puede repetir. Por eso NO se hace sin permiso.
+    --
+    -- Lo estructural de arriba si se aplica siempre: son valores por defecto y limpieza que no
+    -- pierden nada. La ficha se queda en el esquema intermedio hasta que se acepte, y quien
+    -- pregunta es `API.Get`, que es quien sabe de que perfil se trata.
+    if oldSchema < 3 and not autorizado then
+        if previo then data._previo = nil end
+        data.schema = math.max(oldSchema, SCHEMA_SIN_RENOMBRAR)
+        data._renombradoPendiente = true
+        if type(data.activeStates) ~= "table" then data.activeStates = {} end
+        if type(data.restCounters) ~= "table" then data.restCounters = {} end
+        return data
+    end
+    data._renombradoPendiente = nil
     if oldSchema < 3 then
         local total = 0
         for _, campo in ipairs({ "choices", "featureStates", "featureUses", "activeStates" }) do
@@ -612,12 +632,72 @@ function API.ClearInspectData(name)
     end
 end
 
+-- Cuadro de permiso. Vive aqui, pegado a la migracion, porque es la unica pantalla que existe en
+-- este modulo y separarla de la regla que la dispara haria mas dificil ver que una implica la otra.
+StaticPopupDialogs = StaticPopupDialogs or {}
+StaticPopupDialogs["HARFORD_MIGRAR_IDS"] = {
+    -- El salto de linea se compone con `string.char(10)`: escribirlo escapado dentro de esta
+    -- cadena es lo que mas veces se ha roto al editar el fichero desde fuera del juego.
+    text = "Tu ficha de |cffffcc00%s|r usa nombres de rasgo de una version anterior."
+        .. string.char(10) .. string.char(10)
+        .. "Para que los rasgos se lean bien hay que convertirlos. Es un cambio que reescribe tus "
+        .. "elecciones y |cffff5555no se puede deshacer solo|r, asi que se guardara una copia "
+        .. "antes y podras volver a ella con |cffffd100/harford debug run fichaprevia|r."
+        .. string.char(10) .. string.char(10)
+        .. "Hasta que aceptes, los rasgos con nombres antiguos no apareceran.",
+    button1 = "Convertir",
+    button2 = "Ahora no",
+    OnAccept = function(self, name) API.ApplyPendingRename(name) end,
+    OnCancel = function(self, name)
+        renombrarRechazado[tostring(name or "")] = true
+        if HarfordChat and HarfordChat.Print then
+            HarfordChat.Print("Ficha sin convertir: los rasgos con nombres antiguos no se mostraran. "
+                .. "Cuando quieras: |cffffd100/harford debug run convertirficha|r")
+        end
+    end,
+    timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
+}
+
+-- Convierte de verdad, ya con permiso. Devuelve si hizo algo.
+function API.ApplyPendingRename(profileName)
+    local name = ResolveProfileName(profileName)
+    local slot = ProfileSlot(name)
+    if not (slot._progression and slot._progression._renombradoPendiente) then return false, name end
+    renombrarAutorizado[name] = true
+    renombrarRechazado[name] = nil
+    slot._progression = Migrate(slot._progression, false, true)
+    Touch(name)
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.Invalidate then
+        HarfordDnDFeatureEffects.Invalidate()
+    end
+    return true, name
+end
+
+function API.HasPendingRename(profileName)
+    local name = ResolveProfileName(profileName)
+    local slot = ProfileSlot(name)
+    return (slot._progression and slot._progression._renombradoPendiente) == true, name
+end
+
+-- Se pregunta UNA vez por perfil y sesion: `Get` se llama constantemente y un cuadro por acceso
+-- seria insoportable.
+local preguntado = {}
+function API.AskPendingRename(profileName, forzar)
+    local pendiente, name = API.HasPendingRename(profileName)
+    if not pendiente then return false end
+    if not forzar and (preguntado[name] or renombrarRechazado[name]) then return false end
+    preguntado[name] = true
+    if StaticPopup_Show then StaticPopup_Show("HARFORD_MIGRAR_IDS", name, nil, name) end
+    return true
+end
+
 function API.Get(profileName)
     local name = ResolveProfileName(profileName)
     local ins = inspectData[ShortKey(name)]
     if ins then return ins, name end  -- modo inspeccion: snapshot efimero, sin tocar persistencia
     local slot = ProfileSlot(name)
-    slot._progression = Migrate(slot._progression)
+    slot._progression = Migrate(slot._progression, false, renombrarAutorizado[name])
+    if slot._progression._renombradoPendiente then API.AskPendingRename(name) end
     return slot._progression, name
 end
 

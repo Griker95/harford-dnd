@@ -171,19 +171,6 @@ function API.GetDefinition(profId)
     for _, p in ipairs(API.GetProfessions()) do
         if p.id == profId then return p end
     end
-    -- El prefijo `prof_` es obligatorio. Un gossip con el nombre de antes NO se acepta, pero se
-    -- dice en voz alta: si no, la ventana no abre y no hay ninguna pista de por que.
-    if profId ~= "" and profId:sub(1, 5) ~= "prof_" then
-        for _, p in ipairs(API.GetProfessions()) do
-            if p.id == "prof_" .. profId then
-                if HarfordChat and HarfordChat.Print then
-                    HarfordChat.Print("|cffff5555Profesion sin prefijo:|r " .. profId
-                        .. " -- el gossip de ese NPC debe decir |cffffd100prof_" .. profId .. "|r")
-                end
-                return nil
-            end
-        end
-    end
     return nil
 end
 

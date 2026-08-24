@@ -182,15 +182,6 @@ local cacheEntrenadores = {}
 function API.Get(trainerId)
     local id = Norm(trainerId)
     if id == "" then return nil end
-    -- El prefijo `prof_` es obligatorio. Un gossip con el nombre de antes NO se acepta, pero se
-    -- dice en voz alta: si no, la ventana no abre y el jugador no ve ningun motivo.
-    if id:sub(1, 5) ~= "prof_" and API._Construir("prof_" .. id) then
-        if HarfordChat and HarfordChat.Print then
-            HarfordChat.Print("|cffff5555Entrenador sin prefijo:|r " .. id
-                .. " -- el gossip de ese NPC debe decir |cffffd100prof_" .. id .. "|r")
-        end
-        return nil
-    end
     local memo = cacheEntrenadores[id]
     if memo ~= nil then
         if memo == false then return nil end

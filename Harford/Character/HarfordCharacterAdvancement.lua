@@ -673,6 +673,13 @@ local function GridIconFor(isRace, id)
         icon = HarfordIconCatalog and HarfordIconCatalog.GetFeatureIcon
             and HarfordIconCatalog.GetFeatureIcon(id)
     end
+    -- El propio elemento puede traer su arte declarada. Los trasfondos la declaran en sus datos
+    -- (`icon = "..."`) y el catalogo plano no siempre los tiene: sin esto, un trasfondo con icono
+    -- propio salia con el generico solo por faltarle la entrada duplicada en el catalogo.
+    if not icon and HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground then
+        local bg = HarfordDnDBackgrounds.GetBackground(id)
+        if bg and bg.icon and bg.icon ~= "" then icon = bg.icon end
+    end
     icon = icon or (C and C.GetGenericIcon and C.GetGenericIcon())
     return Ruta(icon) or (RAIZ .. "INV_Misc_QuestionMark")
 end

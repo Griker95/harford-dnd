@@ -42,7 +42,7 @@ local COL_RACIAL      = "008c7f"  -- titulo de "Magia Racial" (teal, como en los
 -- Harford (compendium-data.js, campos `icon`/`iconF`). Cubre las 17 razas; sin esto solo
 -- habia 7 y las hembras de huargen/pandaren/vulpera repetian el arte masculino.
 local RACE_FRAME_ICONS = {
-    raza_renegado_humano           = { "achievement_character_human_male", "achievement_character_human_female" },
+    raza_humano                    = { "achievement_character_human_male", "achievement_character_human_female" },
     raza_enano            = { "achievement_character_dwarf_male", "achievement_character_dwarf_female" },
     raza_elfo_noche       = { "achievement_character_nightelf_male", "achievement_character_nightelf_female" },
     raza_semielfo         = { "eps_wc3h_highelfrangermale", "eps_wc3h_highelfbaddiegirl" },

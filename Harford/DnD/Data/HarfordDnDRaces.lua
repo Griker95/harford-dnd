@@ -22,7 +22,7 @@ end
 -- faction: "alianza" | "horda" | "aliada"
 API.RACES = {
     {
-        id = "humano", name = "Humano", nameF = "Humana", desc = "Versatiles y ambiciosos; sus vidas breves los empujan a grandes logros y han forjado los mayores reinos de Azeroth.", faction = "alianza", size = "Mediano", speed = 9,
+        id = "raza_humano", name = "Humano", nameF = "Humana", desc = "Versatiles y ambiciosos; sus vidas breves los empujan a grandes logros y han forjado los mayores reinos de Azeroth.", faction = "alianza", size = "Mediano", speed = 9,
         traits = {
             { id = "hum_inc_2", name = "Incremento de caracteristica (+2)", type = "choice", description = "Una característica de tu elección aumenta en 2.", effects = {}, choice = { slots = 1, optionsFrom = "ability+2" } },
             { id = "hum_inc_1", name = "Incremento de caracteristica (+1)", type = "choice", description = "Otra característica de tu elección aumenta en 1.", effects = {}, choice = { slots = 1, optionsFrom = "ability+1" } },

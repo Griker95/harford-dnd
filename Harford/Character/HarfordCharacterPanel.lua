@@ -124,7 +124,8 @@ K.MODEL_BG_TEXCOORDS = {
 }
 
 K.MODEL_BG_RACE_TOKENS = {
-    raza_renegado_humano = "Human",
+    raza_humano = "Human",
+    raza_renegado_humano = "Scourge",
     raza_enano = { default = "Dwarf", subraces = { raza_enano_hierro_negro = "DarkIronDwarf" } },
     raza_elfo_noche = "NightElf",
     raza_gnomo = { default = "Gnome", subraces = { raza_gnomo_mecagnomo = "Mechagnome" } },

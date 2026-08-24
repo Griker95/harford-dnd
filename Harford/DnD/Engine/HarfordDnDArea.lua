@@ -978,8 +978,12 @@ local function PruneProcessed()
     end
 end
 
-local function BroadcastInfo(label, responseTarget)
+-- `propio`: la linea habla de lo que le pasa a ESTE jugador (su salvacion, lo que recibe), asi que
+-- lleva su nombre aunque tenga una ficha de NPC cargada por estar en modo DM. Sin esto salia a
+-- nombre del NPC, que no es quien esta salvando.
+local function BroadcastInfo(label, responseTarget, propio)
     local roll = { type = "info", label = label }
+    if propio and HarfordDnDRolls.GetOwnName then roll.player = HarfordDnDRolls.GetOwnName() end
     HarfordDnDRolls.Broadcast(roll)
     if responseTarget and responseTarget ~= "" and HarfordSync and HarfordSync.BestChannel
         and not HarfordSync.BestChannel() and HarfordDnDRolls.Serialize then
@@ -1168,7 +1172,7 @@ local function ResolvePlayerRequest(request, sender)
     end
 
     local label = PlayerResultLabel(request, status, applied, summaries, rollText)
-    BroadcastInfo(label, sender)
+    BroadcastInfo(label, sender, true)
     -- La linea completa ya se publica como tirada. El ACK queda deliberadamente minimo
     -- para no desbordar SendAddonMessage con colores/nombres largos.
     local result = { id = request.id, status = status, applied = applied, label = "" }

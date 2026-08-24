@@ -45,6 +45,18 @@ local function UnescapeRollField(value)
     return value
 end
 
+-- Nombre del JUGADOR, sin pasar por la ficha aplicada. `GetDisplayName` antepone el `rollName` del
+-- contexto, que es el del NPC cuando hay una ficha de DM cargada: con ella puesta, las tiradas
+-- DEFENSIVAS del propio jugador (su salvacion, el dano que recibe) salian a nombre del NPC. Esas
+-- lineas hablan de lo que te pasa a TI, asi que llevan tu nombre siempre.
+function HarfordDnDRolls.GetOwnName()
+    if HarfordTRP3 and HarfordTRP3.GetUnitRPName then
+        local trpName = HarfordTRP3.GetUnitRPName("player")
+        if trpName and trpName ~= "" then return trpName end
+    end
+    return (UnitName and UnitName("player")) or "Unknown"
+end
+
 function HarfordDnDRolls.GetDisplayName()
     local state = HarfordDnDContext and HarfordDnDContext.State
     if state and state.rollName and state.rollName ~= "" then

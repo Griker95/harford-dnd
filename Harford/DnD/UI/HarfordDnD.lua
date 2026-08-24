@@ -1547,6 +1547,9 @@ local function ApplyIncomingDamage(components, isCritical, sender, esMagico)
             -- `dice` vacio: aqui no se tira nada, se recibe. Con "-" el render pintaba un "(-)"
             -- que no significaba nada.
             type = "damage", label = "Recibido", total = total, dice = "",
+            -- Es TU vida la que baja: la linea lleva tu nombre aunque tengas una ficha de NPC
+            -- cargada por estar en modo DM.
+            player = HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName() or nil,
             modifiers = table.concat(partes, "  "),
             critical = isCritical and "CRITICO" or "", mode = "",
         })

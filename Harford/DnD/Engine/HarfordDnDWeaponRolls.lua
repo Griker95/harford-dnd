@@ -467,6 +467,8 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
     local rollData = {
         type = "info",
         label = FormatSaveRollLabel(ability, total, d, dc, result, base, prof),
+        -- La salvacion la haces TU, no la ficha que tengas cargada.
+        player = HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName() or nil,
     }
     HarfordDnDRolls.Broadcast(rollData)
     if responseTarget and responseTarget ~= "" and HarfordSync and HarfordSync.Send

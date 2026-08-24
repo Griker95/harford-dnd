@@ -280,10 +280,28 @@ function API.BuildSections(data)
         bucket[#bucket + 1] = { feature = API.PresentFeature(feature), level = level or 0, source = source }
     end
 
+    -- Un rasgo con `requiresOption` es la CONSECUENCIA de una eleccion: solo existe si esa opcion
+    -- esta elegida. Lo respetaban la creacion, la subida, el borrador y los acompanantes, pero NO
+    -- el Libro, que los pintaba todos: las ocho Maldiciones del Brujo cuando solo se elige una, y
+    -- lo mismo con los brebajes del Monje, las trampas del Cazador y los ataques del Chaman.
+    --
+    -- Una opcion cuenta como elegida si aparece en CUALQUIER seleccion del perfil, igual que en
+    -- `OpcionElegida` de la creacion: la misma opcion puede venir de dos elecciones distintas (el
+    -- Brujo elige Maldiciones a nivel 2 y otra mas a nivel 6).
+    local opcionesElegidas = {}
+    for _, seleccion in pairs(data.choices or {}) do
+        for _, optId in ipairs(seleccion or {}) do opcionesElegidas[tostring(optId)] = true end
+    end
+    local function OpcionConcedida(feature)
+        local req = feature and feature.requiresOption
+        if not req then return true end
+        return opcionesElegidas[tostring(req)] == true
+    end
+
     local general = {}
     local function addList(list, src)
         for _, it in ipairs(list or {}) do
-            if it.feature and API.IsVisible(it.feature) then
+            if it.feature and API.IsVisible(it.feature) and OpcionConcedida(it.feature) then
                 AddFeature(general, it.feature, it.level, src)
             end
         end
@@ -336,7 +354,7 @@ function API.BuildSections(data)
         local clsName = (HarfordDnDBook.GetClassName and HarfordDnDBook.GetClassName(entry.classId)) or entry.classId
         local clsF, subF = {}, {}
         for _, it in ipairs((HarfordDnDBook.GetUnlockedFeatures and HarfordDnDBook.GetUnlockedFeatures({ entry })) or {}) do
-            if API.IsVisible(it.feature) then
+            if API.IsVisible(it.feature) and OpcionConcedida(it.feature) then
                 local isSub = type(it.className) == "string" and it.className:find(" / ", 1, true)
                 local bucket = isSub and subF or clsF
                 AddFeature(bucket, it.feature, it.level, "class")

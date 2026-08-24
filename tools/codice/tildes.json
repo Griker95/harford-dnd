@@ -101,6 +101,8 @@
   "area": "área",
   "areas": "áreas",
   "artifice": "artífice",
+  "aspera": "áspera",
+  "asperas": "ásperas",
   "atras": "atrás",
   "automaticamente": "automáticamente",
   "basicas": "básicas",
@@ -174,6 +176,7 @@
   "deteccion": "detección",
   "determinacion": "determinación",
   "detras": "detrás",
+  "devocion": "devoción",
   "diametro": "diámetro",
   "dias": "días",
   "distraccion": "distracción",
@@ -332,6 +335,7 @@
   "psiquico": "psíquico",
   "puas": "púas",
   "puno": "puño",
+  "punteria": "puntería",
   "rafaga": "ráfaga",
   "rapida": "rápida",
   "rapido": "rápido",
@@ -383,6 +387,7 @@
   "totemico": "totémico",
   "totems": "tótems",
   "tradicion": "tradición",
+  "traicion": "traición",
   "transformacion": "transformación",
   "translucidos": "translúcidos",
   "trol": "troll",
@@ -402,8 +407,6 @@
   "vinculos": "vínculos",
   "vision": "visión",
   "vortice": "vórtice",
-  "vudu": "vudú",
-  "aspera": "áspera",
-  "asperas": "ásperas"
+  "vudu": "vudú"
  }
 }

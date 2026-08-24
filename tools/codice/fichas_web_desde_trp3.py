@@ -25,6 +25,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import fichas_desde_trp3 as trp3
 from terminologia import normalizar_habilidades
+from limpieza import _reponer_tildes  # los perfiles escriben Picaro y Paladin sin tilde
 
 WEB = "C:/Users/marco/Documents/harfordweb/js/characters.js"
 ADDON = "C:/Users/marco/Documents/New project/Harford"
@@ -105,7 +106,7 @@ def _clases(markup):
     for m in re.finditer(r"\{h2\}\{icon:classicon[^}]*\}(.{0,120}?)\{/h2\}", markup, re.S):
         texto = _sin_markup(m.group(1))
         nivel = re.search(r"\((\d+)\)\s*$", texto)
-        salida.append({"name": re.sub(r"\s*\(\d+\)\s*$", "", texto).strip(),
+        salida.append({"name": _reponer_tildes(re.sub(r"\s*\(\d+\)\s*$", "", texto).strip()),
                        "level": int(nivel.group(1)) if nivel else None})
     return salida
 
@@ -333,8 +334,8 @@ def main():
             sin_perfil.append(f.get("id") + " (perfil no encontrado)")
             continue
         pd = f.setdefault("profileData", {})
-        pd["rawTrpSections"] = [{"title": fr["title"] or "Sin titulo",
-                                 "icon": fr["icon"], "markup": normalizar_habilidades(a_metrico(fr["markup"]))}
+        pd["rawTrpSections"] = [{"title": _reponer_tildes(fr["title"]) or "Sin titulo",
+                                 "icon": fr["icon"], "markup": _reponer_tildes(normalizar_habilidades(a_metrico(fr["markup"])))}
                                 for fr in p["frames"]]
         hoja = hoja_de(p["frames"], formulas)
         if hoja:

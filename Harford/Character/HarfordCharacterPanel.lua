@@ -124,22 +124,22 @@ K.MODEL_BG_TEXCOORDS = {
 }
 
 K.MODEL_BG_RACE_TOKENS = {
-    humano = "Human",
-    enano = { default = "Dwarf", subraces = { hierro_negro = "DarkIronDwarf" } },
-    elfo_noche = "NightElf",
-    gnomo = { default = "Gnome", subraces = { mecagnomo = "Mechagnome" } },
-    draenei = { default = "Draenei", subraces = { forjado_luz = "LightforgedDraenei" } },
-    huargen = "Worgen",
-    orco = "Orc",
-    renegado = "Scourge",
-    tauren = { default = "Tauren", subraces = { monte_alto = "HighmountainTauren" } },
-    trol = { default = "Troll", subraces = { zandalari = "ZandalariTroll" } },
-    elfo_sangre = "BloodElf",
-    goblin = "Goblin",
-    nocheterna = "Nightborne",
-    pandaren = "Pandaren",
-    elfo_vacio = "VoidElf",
-    vulpera = "Vulpera",
+    raza_renegado_humano = "Human",
+    raza_enano = { default = "Dwarf", subraces = { raza_enano_hierro_negro = "DarkIronDwarf" } },
+    raza_elfo_noche = "NightElf",
+    raza_gnomo = { default = "Gnome", subraces = { raza_gnomo_mecagnomo = "Mechagnome" } },
+    raza_draenei = { default = "Draenei", subraces = { raza_draenei_forjado_luz = "LightforgedDraenei" } },
+    raza_huargen = "Worgen",
+    raza_orco = "Orc",
+    raza_renegado = "Scourge",
+    raza_tauren = { default = "Tauren", subraces = { raza_tauren_monte_alto = "HighmountainTauren" } },
+    raza_trol = { default = "Troll", subraces = { raza_trol_zandalari = "ZandalariTroll" } },
+    raza_elfo_sangre = "BloodElf",
+    raza_goblin = "Goblin",
+    raza_nocheterna = "Nightborne",
+    raza_pandaren = "Pandaren",
+    raza_elfo_vacio = "VoidElf",
+    raza_vulpera = "Vulpera",
 }
 
 K.PAPERDOLL_SLOT_NAMES = {

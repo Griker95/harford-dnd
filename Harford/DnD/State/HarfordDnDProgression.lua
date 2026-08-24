@@ -357,6 +357,89 @@ local function RenombrarOpciones(choices)
     return n
 end
 
+-- Entidades de RAZA renombradas a `raza_`. Se guardan como CAMPO (`data.race.id`,
+-- `data.race.subraceId`), no como clave ni como valor de lista, asi que llevan su propia
+-- traduccion. La subraza incluye su raza padre porque `humano` era raza Y subraza (Renegado
+-- Humano): sin eso, los dos destinos serian el mismo.
+local RAZAS_RENOMBRADAS = {
+    ["altonato"] = "raza_elfo_noche_altonato",
+    ["bosque"] = "raza_trol_bosque",
+    ["cazadores"] = "raza_orco_cazadores",
+    ["draenei"] = "raza_draenei",
+    ["elfo"] = "raza_renegado_elfo",
+    ["elfo_noche"] = "raza_elfo_noche",
+    ["elfo_sangre"] = "raza_elfo_sangre",
+    ["elfo_vacio"] = "raza_elfo_vacio",
+    ["enano"] = "raza_enano",
+    ["exodar"] = "raza_draenei_exodar",
+    ["forjado_luz"] = "raza_draenei_forjado_luz",
+    ["forjaz"] = "raza_enano_forjaz",
+    ["gnomeregan"] = "raza_gnomo_gnomeregan",
+    ["gnomo"] = "raza_gnomo",
+    ["goblin"] = "raza_goblin",
+    ["guerreros"] = "raza_orco_guerreros",
+    ["hielo"] = "raza_trol_hielo",
+    ["hierro_negro"] = "raza_enano_hierro_negro",
+    ["huargen"] = "raza_huargen",
+    ["humano"] = "raza_humano",
+    ["jungla"] = "raza_trol_jungla",
+    ["man_ari"] = "raza_draenei_man_ari",
+    ["martillo_salvaje"] = "raza_enano_martillo_salvaje",
+    ["mecagnomo"] = "raza_gnomo_mecagnomo",
+    ["misticos"] = "raza_orco_misticos",
+    ["monte_alto"] = "raza_tauren_monte_alto",
+    ["mulgore"] = "raza_tauren_mulgore",
+    ["nocheterna"] = "raza_nocheterna",
+    ["orco"] = "raza_orco",
+    ["pandaren"] = "raza_pandaren",
+    ["renegado"] = "raza_renegado",
+    ["semielfo"] = "raza_semielfo",
+    ["tabido"] = "raza_draenei_tabido",
+    ["taunka"] = "raza_tauren_taunka",
+    ["tauren"] = "raza_tauren",
+    ["trol"] = "raza_trol",
+    ["vulpera"] = "raza_vulpera",
+    ["zandalari"] = "raza_trol_zandalari",
+}
+
+local SUBRAZAS_RENOMBRADAS = {
+    ["altonato"] = "raza_elfo_noche_altonato",
+    ["bosque"] = "raza_trol_bosque",
+    ["cazadores"] = "raza_orco_cazadores",
+    ["elfo"] = "raza_renegado_elfo",
+    ["elfo_noche"] = "raza_elfo_noche",
+    ["elfo_sangre"] = "raza_elfo_sangre",
+    ["elfo_vacio"] = "raza_elfo_vacio",
+    ["exodar"] = "raza_draenei_exodar",
+    ["forjado_luz"] = "raza_draenei_forjado_luz",
+    ["forjaz"] = "raza_enano_forjaz",
+    ["gnomeregan"] = "raza_gnomo_gnomeregan",
+    ["guerreros"] = "raza_orco_guerreros",
+    ["hielo"] = "raza_trol_hielo",
+    ["hierro_negro"] = "raza_enano_hierro_negro",
+    ["humano"] = "raza_renegado_humano",
+    ["jungla"] = "raza_trol_jungla",
+    ["man_ari"] = "raza_draenei_man_ari",
+    ["martillo_salvaje"] = "raza_enano_martillo_salvaje",
+    ["mecagnomo"] = "raza_gnomo_mecagnomo",
+    ["misticos"] = "raza_orco_misticos",
+    ["monte_alto"] = "raza_tauren_monte_alto",
+    ["mulgore"] = "raza_tauren_mulgore",
+    ["tabido"] = "raza_draenei_tabido",
+    ["taunka"] = "raza_tauren_taunka",
+    ["zandalari"] = "raza_trol_zandalari",
+}
+
+local function RenombrarRaza(race)
+    if type(race) ~= "table" then return 0 end
+    local n = 0
+    local r = RAZAS_RENOMBRADAS[race.id]
+    if r then race.id = r n = n + 1 end
+    local s = SUBRAZAS_RENOMBRADAS[race.subraceId]
+    if s then race.subraceId = s n = n + 1 end
+    return n
+end
+
 local function Migrate(data)
     if type(data) ~= "table" then data = EmptyProgression() end
     local oldSchema = tonumber(data.schema) or 0
@@ -425,6 +508,7 @@ local function Migrate(data)
         local _, nf = RenombrarValores(data.feats)
         total = total + nf
         total = total + RenombrarOpciones(data.choices)
+        total = total + RenombrarRaza(data.race)
         if total > 0 and HarfordChat and HarfordChat.Print then
             HarfordChat.Print(("Ficha actualizada: %d rasgo(s) renombrados a la convencion nueva."):format(total))
         end

@@ -4,7 +4,7 @@
 HarfordCharacterAdvancement = HarfordCharacterAdvancement or {}
 
 local API = HarfordCharacterAdvancement
-local S = { frame = nil, mode = "creation", targetTotal = nil, stage = "race", raceId = "humano", subraceId = "", backgroundId = nil, selected = nil, nodeRows = {}, choiceSelections = {}, choiceRows = {}, attributeArrays = nil, selectedArray = nil, attributeAssignments = {}, pendingScore = nil, classConfirmed = false, secondaryClassId = nil, secondarySubclassId = "", primaryLevel = 0, secondaryLevel = 0, levelPlan = {}, pendingClassId = nil, pendingFeatures = {}, classSelectionOpen = true, classSelectionMode = "base" }
+local S = { frame = nil, mode = "creation", targetTotal = nil, stage = "race", raceId = "raza_humano", subraceId = "", backgroundId = nil, selected = nil, nodeRows = {}, choiceSelections = {}, choiceRows = {}, attributeArrays = nil, selectedArray = nil, attributeAssignments = {}, pendingScore = nil, classConfirmed = false, secondaryClassId = nil, secondarySubclassId = "", primaryLevel = 0, secondaryLevel = 0, levelPlan = {}, pendingClassId = nil, pendingFeatures = {}, classSelectionOpen = true, classSelectionMode = "base" }
 
 local CREATION_LEVEL = 1  -- la creacion confirma SOLO el nivel 1; los niveles 2 y 3 se encadenan como subidas
 local MAX_PREVIEW_LEVEL = CREATION_LEVEL

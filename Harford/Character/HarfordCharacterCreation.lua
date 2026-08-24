@@ -42,65 +42,65 @@ local COL_RACIAL      = "008c7f"  -- titulo de "Magia Racial" (teal, como en los
 -- Harford (compendium-data.js, campos `icon`/`iconF`). Cubre las 17 razas; sin esto solo
 -- habia 7 y las hembras de huargen/pandaren/vulpera repetian el arte masculino.
 local RACE_FRAME_ICONS = {
-    humano           = { "achievement_character_human_male", "achievement_character_human_female" },
-    enano            = { "achievement_character_dwarf_male", "achievement_character_dwarf_female" },
-    elfo_noche       = { "achievement_character_nightelf_male", "achievement_character_nightelf_female" },
-    semielfo         = { "eps_wc3h_highelfrangermale", "eps_wc3h_highelfbaddiegirl" },
-    gnomo            = { "gnome_m", "gnome_f" },
-    draenei          = { "achievement_character_draenei_male", "achievement_character_draenei_female" },
-    huargen          = { "achievement_worganhead", "ability_worgen_darkflight" },
-    orco             = { "achievement_character_orc_male", "achievement_character_orc_female" },
-    renegado         = { "forsaken_m", "forsaken_f" },
-    tauren           = { "tauren_m", "tauren_f" },
-    trol             = { "troll_m", "troll_f" },
-    elfo_sangre      = { "achievement_character_bloodelf_male", "achievement_character_bloodelf_female" },
-    goblin           = { "achievement_goblinhead", "achievement_femalegoblinhead" },
-    pandaren         = { "w3reforgedpandarenbrewmaster", "achievement_character_pandaren_female" },
-    nocheterna       = { "nightborne_m", "nightborne_f" },
-    elfo_vacio       = { "voidelf_m", "voidelf_f" },
-    vulpera          = { "vulpera_m", "vulpera_f" },
+    raza_renegado_humano           = { "achievement_character_human_male", "achievement_character_human_female" },
+    raza_enano            = { "achievement_character_dwarf_male", "achievement_character_dwarf_female" },
+    raza_elfo_noche       = { "achievement_character_nightelf_male", "achievement_character_nightelf_female" },
+    raza_semielfo         = { "eps_wc3h_highelfrangermale", "eps_wc3h_highelfbaddiegirl" },
+    raza_gnomo            = { "gnome_m", "gnome_f" },
+    raza_draenei          = { "achievement_character_draenei_male", "achievement_character_draenei_female" },
+    raza_huargen          = { "achievement_worganhead", "ability_worgen_darkflight" },
+    raza_orco             = { "achievement_character_orc_male", "achievement_character_orc_female" },
+    raza_renegado         = { "forsaken_m", "forsaken_f" },
+    raza_tauren           = { "tauren_m", "tauren_f" },
+    raza_trol             = { "troll_m", "troll_f" },
+    raza_elfo_sangre      = { "achievement_character_bloodelf_male", "achievement_character_bloodelf_female" },
+    raza_goblin           = { "achievement_goblinhead", "achievement_femalegoblinhead" },
+    raza_pandaren         = { "w3reforgedpandarenbrewmaster", "achievement_character_pandaren_female" },
+    raza_nocheterna       = { "nightborne_m", "nightborne_f" },
+    raza_elfo_vacio       = { "voidelf_m", "voidelf_f" },
+    raza_vulpera          = { "vulpera_m", "vulpera_f" },
 }
 
 -- Iconos de subraza, tambien de la web. Van anidados por raza porque los ids de subraza se
 -- repiten entre razas (renegado tiene "humano" y "elfo").
 local SUBRACE_FRAME_ICONS = {
-    enano = {
-        forjaz           = { "dwarf_m", "dwarf_f" },
-        martillo_salvaje = { "eps_wc3h_wildhammermale", "eps_hots_dwarfshaman" },
-        hierro_negro     = { "darkiron_m", "darkiron_f" },
+    raza_enano = {
+        raza_enano_forjaz           = { "dwarf_m", "dwarf_f" },
+        raza_enano_martillo_salvaje = { "eps_wc3h_wildhammermale", "eps_hots_dwarfshaman" },
+        raza_enano_hierro_negro     = { "darkiron_m", "darkiron_f" },
     },
-    elfo_noche = {
-        altonato         = { "eps_wc3h_nightelfmalewarrior", "eps_wc3h_nightelfcharm" },
+    raza_elfo_noche = {
+        raza_elfo_noche_altonato         = { "eps_wc3h_nightelfmalewarrior", "eps_wc3h_nightelfcharm" },
     },
-    gnomo = {
-        gnomeregan       = { "achievement_character_gnome_male", "achievement_character_gnome_female" },
-        mecagnomo        = { "mechagnome_m", "mechagnome_f" },
+    raza_gnomo = {
+        raza_gnomo_gnomeregan       = { "achievement_character_gnome_male", "achievement_character_gnome_female" },
+        raza_gnomo_mecagnomo        = { "mechagnome_m", "mechagnome_f" },
     },
-    draenei = {
-        exodar           = { "draenei_m", "draenei_f" },
-        forjado_luz      = { "lightforged_m", "lightforged_f" },
-        tabido           = { "broken", "eps_wc3_brokendraeneimage" },
-        man_ari          = { "eps_wc3h_eredardiabolist", "achievement_boss_argus_femaleeredar" },
+    raza_draenei = {
+        raza_draenei_exodar           = { "draenei_m", "draenei_f" },
+        raza_draenei_forjado_luz      = { "lightforged_m", "lightforged_f" },
+        raza_draenei_tabido           = { "broken", "eps_wc3_brokendraeneimage" },
+        raza_draenei_man_ari          = { "eps_wc3h_eredardiabolist", "achievement_boss_argus_femaleeredar" },
     },
-    orco = {
-        cazadores        = { "eps_wc3_orcwarlock", "eps_wc3h_orchuntress" },
-        misticos         = { "eps_wc3_orcwarlockred", "eps_wc3h_orcwarden" },
-        guerreros        = { "eps_wc3h_orcwarlord", "eps_wc3h_orcfemalewarrior" },
+    raza_orco = {
+        raza_orco_cazadores        = { "eps_wc3_orcwarlock", "eps_wc3h_orchuntress" },
+        raza_orco_misticos         = { "eps_wc3_orcwarlockred", "eps_wc3h_orcwarden" },
+        raza_orco_guerreros        = { "eps_wc3h_orcwarlord", "eps_wc3h_orcfemalewarrior" },
     },
-    renegado = {
-        humano           = { "achievement_character_undead_male", "achievement_character_undead_female" },
-        elfo             = { "eps_wc3h_forsakenhunter", "eps_wc3h_undeadsanlaynbaddiegirl" },
+    raza_renegado = {
+        raza_renegado_humano           = { "achievement_character_undead_male", "achievement_character_undead_female" },
+        raza_renegado_elfo             = { "eps_wc3h_forsakenhunter", "eps_wc3h_undeadsanlaynbaddiegirl" },
     },
-    tauren = {
-        mulgore          = { "achievement_character_tauren_male", "achievement_character_tauren_female" },
-        monte_alto       = { "highmountain_m", "highmountain_f" },
-        taunka           = { "eps_wc3h_taunkachieftain", "inv_misc_head_tauren_02" },
+    raza_tauren = {
+        raza_tauren_mulgore          = { "achievement_character_tauren_male", "achievement_character_tauren_female" },
+        raza_tauren_monte_alto       = { "highmountain_m", "highmountain_f" },
+        raza_tauren_taunka           = { "eps_wc3h_taunkachieftain", "inv_misc_head_tauren_02" },
     },
-    trol = {
-        jungla           = { "achievement_character_troll_male", "achievement_character_troll_female" },
-        zandalari        = { "inv_zandalarimalehead", "inv_zandalarifemalehead" },
-        bosque           = { "eps_wc3_foresttrollpriest", "eps_wc3h_trolltrollpriestessfemale" },
-        hielo            = { "eps_wc3_icetrollshadowpriest", "eps_wc3h_trollpeasant" },
+    raza_trol = {
+        raza_trol_jungla           = { "achievement_character_troll_male", "achievement_character_troll_female" },
+        raza_trol_zandalari        = { "inv_zandalarimalehead", "inv_zandalarifemalehead" },
+        raza_trol_bosque           = { "eps_wc3_foresttrollpriest", "eps_wc3h_trolltrollpriestessfemale" },
+        raza_trol_hielo            = { "eps_wc3_icetrollshadowpriest", "eps_wc3h_trollpeasant" },
     },
 }
 -- Color de spec por subclase (clave normalizada sin tildes).

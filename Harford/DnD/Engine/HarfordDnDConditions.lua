@@ -1033,6 +1033,139 @@ local function ResolveEndSave(key, id, record)
     return saved
 end
 
+-- ─── ECONOMIA DE TURNO ───────────────────────────────────────────────────────
+-- Accion, accion adicional y reaccion como presupuesto que se renueva al empezar TU turno.
+--
+-- Vive en este modulo, y no en uno propio, porque es el que ya posee la frontera de turno: aqui
+-- estan `OnTurnChanged` y las duraciones `*_turn_start`. Un modulo aparte significaria un segundo
+-- listener y un segundo guard de turno repetido, con dos verdades sobre cuando empieza un turno.
+--
+-- Estado EFIMERO: no se persiste ni viaja por red. Cada cliente cuenta lo suyo, igual que el
+-- tracker de turnos ya hace con su propia vista.
+--
+-- INFORMA, NO BLOQUEA. `Spend` gasta SIEMPRE y devuelve si habia presupuesto. Si el tracker esta
+-- desincronizado o alguien juega sin el, impedir usar un rasgo dejaria al jugador sin su propio
+-- recurso en mitad de la escena; avisar es util, prohibir es un riesgo de mesa. Es la misma linea
+-- que ya sigue el proyecto con Barrera (manual) y con las reacciones que no puede resolver.
+do
+    local ECONOMIA = { spent = {}, activa = false }
+
+    -- Los tres presupuestos, en el orden en que se muestran.
+    local ORDEN = { "action", "bonus", "reaction" }
+    local ETIQUETA = {
+        action   = "Accion",
+        bonus    = "Adicional",
+        reaction = "Reaccion",
+    }
+    -- `cast` tal como lo declaran los datos de clase -> presupuesto que consume.
+    local DE_CAST = {
+        accion             = "action",
+        accion_adicional   = "bonus",
+        reaccion           = "reaction",
+        bonus              = "bonus",
+        reaction           = "reaction",
+        action             = "action",
+    }
+
+    local Turn = {}
+    Turn.ORDEN = ORDEN
+    Turn.ETIQUETA = ETIQUETA
+
+    -- Sin orden de turnos no hay frontera que detectar, asi que los contadores quedan INACTIVOS en
+    -- vez de a cero para siempre: fuera de combate no se lleva la cuenta de acciones.
+    function Turn.IsActive()
+        if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.HasActiveCombat) then return false end
+        return HarfordTurnOrderAPI.HasActiveCombat()
+    end
+
+    -- Presupuesto de cada tipo. Uno de cada por turno; los rasgos que conceden acciones extra
+    -- (Impetu de Accion) suman aqui via el flag correspondiente.
+    function Turn.GetBudget(kind)
+        kind = tostring(kind or "")
+        if not ETIQUETA[kind] then return 0 end
+        local base = 1
+        if kind == "action" and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+            and HarfordDnDFeatureEffects.HasFlag("extraTurnAction") then
+            base = base + 1
+        end
+        return base
+    end
+
+    function Turn.GetSpent(kind)
+        return math.max(0, math.floor(tonumber(ECONOMIA.spent[tostring(kind or "")]) or 0))
+    end
+
+    function Turn.GetRemaining(kind)
+        return math.max(0, Turn.GetBudget(kind) - Turn.GetSpent(kind))
+    end
+
+    -- Gasta y devuelve `cabia, restante`. `cabia` es false cuando ya no habia presupuesto; el
+    -- gasto se registra igual, para que el contador refleje lo que de verdad se ha hecho.
+    function Turn.Spend(kind, amount)
+        kind = tostring(kind or "")
+        if not ETIQUETA[kind] then return true, 0 end
+        if not Turn.IsActive() then return true, Turn.GetBudget(kind) end
+        amount = math.max(1, math.floor(tonumber(amount) or 1))
+        local cabia = Turn.GetRemaining(kind) >= amount
+        ECONOMIA.spent[kind] = Turn.GetSpent(kind) + amount
+        Notify()
+        return cabia, Turn.GetRemaining(kind)
+    end
+
+    -- Traduce el `cast` de un rasgo al presupuesto que consume. nil si no lo declara: el 92% de
+    -- los rasgos todavia no lo dice, y adivinarlo por `type = "accion"` seria erroneo (en 5e
+    -- "accion" es la categoria e incluye las adicionales).
+    function Turn.KindFromFeature(feature)
+        if type(feature) ~= "table" then return nil end
+        local cast = tostring(feature.cast or ""):lower()
+        return DE_CAST[cast]
+    end
+
+    -- Gasta lo que declare el rasgo. Devuelve nil si no declara nada (no se cuenta ni se avisa).
+    function Turn.SpendForFeature(feature)
+        local kind = Turn.KindFromFeature(feature)
+        if not kind then return nil end
+        local cabia, restante = Turn.Spend(kind, 1)
+        if not cabia then
+            Print(string.format("Ya habias gastado tu %s este turno.", ETIQUETA[kind]:lower()))
+        end
+        return cabia, restante, kind
+    end
+
+    function Turn.Reset()
+        ECONOMIA.spent = {}
+        Notify()
+    end
+
+    -- Texto compacto para la ficha: "Accion 1/1  Adicional 0/1  Reaccion 1/1".
+    function Turn.StatusText()
+        if not Turn.IsActive() then return "" end
+        local partes = {}
+        for _, kind in ipairs(ORDEN) do
+            local restante, total = Turn.GetRemaining(kind), Turn.GetBudget(kind)
+            local color = restante > 0 and "ff40ff40" or "ffff4040"
+            partes[#partes + 1] = string.format("%s |c%s%d/%d|r",
+                ETIQUETA[kind], color, restante, total)
+        end
+        return table.concat(partes, "  ")
+    end
+
+    -- Forma corta para la cabecera de la ficha, donde no hay ancho para los nombres enteros.
+    local CORTA = { action = "Acc", bonus = "Adi", reaction = "Rea" }
+    function Turn.StatusShort()
+        if not Turn.IsActive() then return "" end
+        local partes = {}
+        for _, kind in ipairs(ORDEN) do
+            local restante = Turn.GetRemaining(kind)
+            partes[#partes + 1] = string.format("|c%s%s %d|r",
+                restante > 0 and "ff40ff40" or "ffff4040", CORTA[kind], restante)
+        end
+        return table.concat(partes, "  ")
+    end
+
+    API.Turn = Turn
+end
+
 function API.OnTurnChanged(entry, serial)
     LoadOwned()
     local turnKey = tostring(serial or 0) .. ":" .. tostring(entry and (entry.guid or entry.id or entry.name) or "")
@@ -1275,6 +1408,12 @@ events:RegisterEvent("GROUP_ROSTER_UPDATE")
 events:SetScript("OnEvent", function(_, event, unit)
     if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
         LoadOwned()
+        if not S.myTurnHooked and HarfordTurnOrderAPI and HarfordTurnOrderAPI.RegisterMyTurnListener then
+            S.myTurnHooked = true
+            -- Accion, adicional y reaccion se renuevan al EMPEZAR tu turno (en 5e la reaccion
+            -- tambien, no al terminarlo).
+            HarfordTurnOrderAPI.RegisterMyTurnListener(function() API.Turn.Reset() end)
+        end
         if not S.turnHooked and HarfordTurnOrderAPI and HarfordTurnOrderAPI.RegisterTurnChangedListener then
             S.turnHooked = true
             HarfordTurnOrderAPI.RegisterTurnChangedListener(API.OnTurnChanged)

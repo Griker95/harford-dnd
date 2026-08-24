@@ -57,10 +57,20 @@ local function ContainsAny(haystack, words)
     return false
 end
 
-local function ListMatchesType(list, words)
+-- Calificadores que limitan una defensa a ataques NO magicos. El stat block es texto libre, asi
+-- que aparecen redactados de muchas formas ("contundente de ataques no magicos", "bludgeoning
+-- from nonmagical attacks"). "no magic" cubre magico/magicos/magica/magicas ya sin tildes.
+local NO_MAGICO = { "no magic", "nonmagical", "non magical", "non-magical" }
+
+-- `golpeMagico` viene del atacante: si el golpe cuenta como magico, las entradas calificadas como
+-- "no magicas" se IGNORAN, que es justo lo que concede Golpes empoderados por el chi. Sin ese dato
+-- el comportamiento es el de antes: cualquier entrada del tipo cuenta.
+local function ListMatchesType(list, words, golpeMagico)
     if type(list) ~= "table" then return false end
     for _, entry in ipairs(list) do
-        if ContainsAny(entry, words) then return true end
+        if ContainsAny(entry, words) then
+            if not (golpeMagico and ContainsAny(entry, NO_MAGICO)) then return true end
+        end
     end
     return false
 end
@@ -149,7 +159,7 @@ end
 -- Resuelve el status de mitigacion de `unit` frente a `damageKey`.
 -- Devuelve uno de: "immune" | "resistant" | "vulnerable" | "normal".
 -- Si no hay stat block disponible, asume "normal" (sin mitigacion).
-function HarfordDamageMitigation.Resolve(unit, damageKey)
+function HarfordDamageMitigation.Resolve(unit, damageKey, opts)
     if not damageKey then return STATUS_NORMAL end
     local mapping = HarfordDamageMitigation.MITIGATION_MAP[damageKey]
     if not mapping then return STATUS_NORMAL end
@@ -161,14 +171,15 @@ function HarfordDamageMitigation.Resolve(unit, damageKey)
     if not stats then return STATUS_NORMAL end
 
     local words = mapping.words
+    local golpeMagico = (opts and opts.magical) and true or false
 
     -- Orden de prioridad: inmunidad antes que resistencia/vulnerabilidad.
-    if ListMatchesType(stats.immunities, words) then
+    if ListMatchesType(stats.immunities, words, golpeMagico) then
         return STATUS_IMMUNE
     end
     -- Resistencia y vulnerabilidad se cancelan entre si (regla 5e).
-    local isResistant  = ListMatchesType(stats.resistances, words)
-    local isVulnerable = ListMatchesType(stats.vulnerabilities, words)
+    local isResistant  = ListMatchesType(stats.resistances, words, golpeMagico)
+    local isVulnerable = ListMatchesType(stats.vulnerabilities, words, golpeMagico)
     if isResistant and isVulnerable then
         return STATUS_NORMAL
     elseif isResistant then
@@ -223,10 +234,10 @@ function HarfordDamageMitigation.KeyFromTypeText(typeText)
 end
 
 -- Resuelve el status de mitigacion directamente desde el texto libre del tipo.
-function HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
+function HarfordDamageMitigation.ResolveByTypeText(unit, typeText, opts)
     local key = HarfordDamageMitigation.KeyFromTypeText(typeText)
     if not key then return STATUS_NORMAL end
-    return HarfordDamageMitigation.Resolve(unit, key)
+    return HarfordDamageMitigation.Resolve(unit, key, opts)
 end
 
 -- Punto de entrada para la tirada de daño: solo mitiga si `unit` es un NPC
@@ -246,7 +257,9 @@ function HarfordDamageMitigation.TargetResolvesOwnDamage(unit)
     return true
 end
 
-function HarfordDamageMitigation.ForTarget(unit, typeText, amount)
+-- `opts.magical`: el golpe cuenta como magico (Golpes empoderados por el chi, arma encantada...),
+-- asi que las defensas limitadas a ataques no magicos no se le aplican.
+function HarfordDamageMitigation.ForTarget(unit, typeText, amount, opts)
     amount = tonumber(amount) or 0
     if not unit or not (UnitExists and UnitExists(unit)) then
         return amount, STATUS_NORMAL, ""
@@ -259,10 +272,10 @@ function HarfordDamageMitigation.ForTarget(unit, typeText, amount)
     local status = STATUS_NORMAL
     if UnitIsPlayer and UnitIsPlayer(unit) then
         status = ResolvePlayerFeatureStatus(unit, typeText)
-            or HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
+            or HarfordDamageMitigation.ResolveByTypeText(unit, typeText, opts)
             or STATUS_NORMAL
     else
-        status = HarfordDamageMitigation.ResolveByTypeText(unit, typeText)
+        status = HarfordDamageMitigation.ResolveByTypeText(unit, typeText, opts)
     end
 
     local conditionStatus = HarfordDnDConditions and HarfordDnDConditions.GetDamageStatus

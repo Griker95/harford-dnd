@@ -6726,3 +6726,55 @@ do
         Print("Por origen: " .. table.concat(resumen, ", "))
     end, "comprueba que cada icono del catalogo existe en el cliente (iconoscheck [todo|texto])")
 end
+
+-- Economia de turno: estado de accion/adicional/reaccion y que rasgos declaran su coste.
+do
+    API.RegisterCommand("turnecon", function(args)
+        local T = HarfordDnDConditions and HarfordDnDConditions.Turn
+        if not T then Print("HarfordDnDConditions.Turn no esta cargado.") return end
+        local arg = tostring(args or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
+
+        if arg == "reset" then
+            T.Reset()
+            Print("Economia de turno reiniciada.")
+            return
+        end
+
+        if arg == "rasgos" then
+            -- Cuantos rasgos declaran su coste, que es lo que limita el sistema.
+            local total, conCoste, porTipo = 0, 0, {}
+            local function Contar(lista)
+                for _, feature in ipairs(lista or {}) do
+                    total = total + 1
+                    local kind = T.KindFromFeature(feature)
+                    if kind then
+                        conCoste = conCoste + 1
+                        porTipo[kind] = (porTipo[kind] or 0) + 1
+                    end
+                end
+            end
+            for _, classDef in ipairs((HarfordDnDBook and HarfordDnDBook.GetClasses
+                and HarfordDnDBook.GetClasses()) or {}) do
+                Contar(classDef.features)
+                for _, sub in ipairs(classDef.subclasses or {}) do
+                    Contar(sub.features)
+                end
+            end
+            Print(string.format("Rasgos: %d; declaran coste: %d", total, conCoste))
+            for _, kind in ipairs(T.ORDEN) do
+                Print(string.format("  %-10s %d", T.ETIQUETA[kind], porTipo[kind] or 0))
+            end
+            return
+        end
+
+        Print("Orden de turnos activo: " .. (T.IsActive() and "si" or "no"))
+        if not T.IsActive() then
+            Print("Sin orden de turnos no se lleva la cuenta (los contadores quedan inactivos).")
+        end
+        for _, kind in ipairs(T.ORDEN) do
+            Print(string.format("  %-10s %d/%d  (gastado %d)", T.ETIQUETA[kind],
+                T.GetRemaining(kind), T.GetBudget(kind), T.GetSpent(kind)))
+        end
+        Print("Uso: turnecon [reset|rasgos]")
+    end, "estado de la economia de turno (turnecon [reset|rasgos])")
+end

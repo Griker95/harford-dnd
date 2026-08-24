@@ -416,6 +416,40 @@ function API.RefreshWeaponInfo()
     if store.RefreshWeaponDamageButton then store.RefreshWeaponDamageButton() end
 end
 
+-- Economia de turno (accion / adicional / reaccion) en la banda inferior de la seccion Ataque.
+-- Se ancla a BOTTOMRIGHT y no a un desplazamiento fijo: las dos filas de botones llegan a -166
+-- sobre 183 de panel, asi que la unica franja libre es la de abajo y anclarla por el borde la
+-- mantiene ahi aunque cambie el alto del panel.
+--
+-- Solo se ve mientras hay orden de turnos: fuera de combate no se lleva la cuenta de acciones y
+-- un contador congelado a 1/1 seria informacion falsa.
+function API.CreateTurnEconomyLabel(opts)
+    opts = opts or {}
+    local parent = opts.parent
+    if not parent then return nil end
+
+    local label = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    label:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", -8, 4)
+    label:SetJustifyH("RIGHT")
+    label:SetText("")
+
+    local function Refresh()
+        local T = HarfordDnDConditions and HarfordDnDConditions.Turn
+        label:SetText((T and T.StatusShort and T.StatusShort()) or "")
+    end
+    Refresh()
+
+    -- El motor de condiciones avisa a sus listeners cada vez que cambia algo, incluido el gasto y
+    -- el reinicio de turno, asi que no hace falta ningun ticker.
+    if HarfordDnDConditions and HarfordDnDConditions.RegisterListener then
+        HarfordDnDConditions.RegisterListener(Refresh)
+    end
+
+    API.Controls.turnEconomyLabel = label
+    API.RefreshTurnEconomy = Refresh
+    return label
+end
+
 function API.AttachMovementTracker(opts)
     opts = opts or {}
     local parent = opts.parent

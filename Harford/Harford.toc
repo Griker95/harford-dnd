@@ -111,6 +111,9 @@ Character\HarfordCharacterPanel.lua
 # --- Frames ---
 Frames\HarfordUnitFrames.lua
 Frames\HarfordNamePlates.lua
+Frames\HarfordTurnsCodec.lua
+Frames\HarfordTurnsCombat.lua
+Frames\HarfordTurnsSheet.lua
 Frames\HarfordTurns.lua
 
 # --- Reputation ---

@@ -1,4 +1,6 @@
--- Visual initiative tracker for Harford.
+-- Tracker visual de turnos de combate de Harford.
+-- El orden se fija al INICIAR COMBATE (tirada de iniciativa, mayor primero) y despues puede
+-- retocarse a mano con los botones de reordenar.
 
 HarfordTurnOrderStore = HarfordTurnOrderStore or {}
 
@@ -17,12 +19,6 @@ local TEX_STATUS = "Interface\\TargetingFrame\\UI-StatusBar"
 local ROUND_MARKER_ID = "HARFORD_ROUND_MARKER"
 
 local TurnFrame
-local SheetFrame
-local SheetScrollChild
-local SheetText
-local SheetSectionPool    = {}
-local SheetActiveSections = {}
-local RefreshSheetLayout  -- forward declaration (definida mas abajo)
 local StatusText
 local RefreshFrame
 local MarkChanged
@@ -34,11 +30,22 @@ local reorderSelectedIndex
 local lastTurnAlertKey = ""
 local lastTurnNoticeKey = ""
 local lastRoundAlertKey = ""
+-- El marcador de asalto encabeza siempre la lista: ninguna tirada de iniciativa puede alcanzarlo.
+-- No es 20 ni 30 porque "Preparado" (Cazador de Demonios) actua en el conteo 30.
+local ROUND_MARKER_INITIATIVE = 9999
+-- Una transferencia troceada que nunca se completa no puede quedarse en memoria.
+local CHUNK_TTL_SECONDS = 15
+
+-- Escapado, troceado y (de)serializacion viven en HarfordTurnsCodec: no dependen de la UI ni del
+-- store, asi que se pueden probar sueltos. Un solo local en vez de los doce que habia.
+local Codec = HarfordTurnsCodec
+-- Iniciativa, orden e inicio/fin de combate viven en HarfordTurnsCombat.
+local Combate = HarfordTurnsCombat
+-- La ficha emergente de una entrada es una ventana aparte.
+local Ficha = HarfordTurnsSheet
 local turnChunkBuffers = {}
 local turnSerial = 0
 local NormalizeIconPath
-local NormalizePlayerUnitID
-local NormalizeEntryLinks
 
 local function StripColors(text)
     text = tostring(text or "")
@@ -103,6 +110,7 @@ end
 local function GetEntryNameColor(entry)
     if not entry then return 1, 1, 1 end
     if entry.kind == "round" then return 1.0, 0.82, 0.1 end
+    if entry.kind == "players" then return 0.2, 1.0, 0.4 end
     if entry.kind == "player" then
         local r, g, b = HexToRGB(entry.nameColor)
         return r or 0.1, g or 1.0, b or 0.1
@@ -115,7 +123,6 @@ end
 local function Print(msg)
     HarfordChat.Print(msg)
 end
-
 
 -- Devuelve el calificativo de reaccion ("aliado"/"neutral"/"enemigo") y el markup de color.
 local function GetNPCReactionLabel(entry)
@@ -134,7 +141,7 @@ local function GetEntryNameForChat(entry)
     if entry and entry.kind == "round" then
         return "|cffffff00" .. name .. "|r"
     end
-    if entry and entry.kind == "player" then
+    if entry and (entry.kind == "player" or entry.kind == "players") then
         return "|cff00ff00" .. name .. "|r"
     end
     local _, colorMarkup = GetNPCReactionLabel(entry)
@@ -147,6 +154,10 @@ local function PrintTurn(entry)
         Print("|cffffff00" .. tostring(entry.name or "Inicio de turno") .. "|r")
         return
     end
+    if entry.kind == "players" then
+        Print("Turno de los " .. GetEntryNameForChat(entry) .. ": actuad en el orden que querais.")
+        return
+    end
     if entry.kind == "player" then
         Print("Turno de " .. GetEntryNameForChat(entry))
     else
@@ -155,7 +166,27 @@ local function PrintTurn(entry)
     end
 end
 
+-- Los UNICOS tipos de entrada validos. Cualquier otra cosa se normaliza a "npc": antes el tipo
+-- podia acabar siendo el token de unidad ("target", "focus", "mouseover"...) porque `AddUnit`
+-- hacia `kind or unit`, y HarfordAdmin llama sin kind.
+local ENTRY_KINDS = { round = true, generic = true, players = true, player = true, npc = true }
+
+local function NormalizeKind(kind)
+    kind = tostring(kind or "")
+    return ENTRY_KINDS[kind] and kind or "npc"
+end
+
+-- Entradas que no son una criatura: el marcador de asalto, los marcadores de fase y el turno
+-- compartido de los PJs. No tienen vida, CA ni ficha, y no se les puede ajustar nada.
+local function IsSystemEntry(entry)
+    if not entry then return false end
+    return entry.kind == "round" or entry.kind == "generic" or entry.kind == "players"
+end
+
+-- El turno "PJs" es de TODOS los jugadores a la vez, asi que pertenece a cualquiera que lo mire:
+-- cada cliente recibe su aviso de turno y renueva su propia economia de accion.
 local function EntryBelongsToMe(entry)
+    if entry and entry.kind == "players" then return true end
     if not entry or entry.kind ~= "player" then return false end
 
     local myShort = UnitName and UnitName("player")
@@ -275,6 +306,32 @@ local function EnsureStore()
     HarfordTurnOrderStore.turnSerial = nil
     if HarfordTurnOrderStore.activeIndex < 1 then HarfordTurnOrderStore.activeIndex = 1 end
     return HarfordTurnOrderStore
+end
+
+-- Un combate abandonado no deberia seguir ahi la semana que viene: sus NPC tienen GUIDs que ya no
+-- resuelven y la economia de turno lo tomaria por combate en curso. Cuatro horas es de sobra para
+-- cubrir un relogeo o una desconexion en mitad de la escena, y corto para no arrastrar sesiones.
+-- Sella cuando se toco la lista por ultima vez. Lo lee `PurgeStaleEntries` al entrar para saber
+-- si lo guardado es un combate vivo o el resto de una sesion antigua.
+local function TouchStore()
+    local store = EnsureStore()
+    store.lastTouched = (time and time()) or 0
+end
+
+local STALE_SECONDS = 4 * 60 * 60
+
+local function PurgeStaleEntries()
+    local store = EnsureStore()
+    if #store.entries == 0 then return false end
+    local ahora = (time and time()) or 0
+    local ultimo = tonumber(store.lastTouched) or 0
+    -- Sin sello (lista escrita por una version anterior) se considera vieja: es lo que hay guardado
+    -- de antes de existir la caducidad, y precisamente eso es lo que sobra.
+    if ultimo > 0 and ahora > 0 and (ahora - ultimo) < STALE_SECONDS then return false end
+    store.entries = {}
+    store.activeIndex = 1
+    store.lastTouched = nil
+    return true
 end
 
 local function AdvanceTurnSerial()
@@ -405,25 +462,25 @@ end
 local function FindDuplicateEntry(candidate)
     if type(candidate) ~= "table" then return nil end
 
-    NormalizeEntryLinks(candidate)
+    Codec.NormalizeEntryLinks(candidate)
 
     local candidateId = tostring(candidate.id or "")
     local candidateUnitName = tostring(candidate.unitName or "")
     local candidateName = tostring(candidate.name or "")
-    local candidateTrpUnitID = NormalizePlayerUnitID(candidate.trpUnitID or "")
+    local candidateTrpUnitID = Codec.NormalizePlayerUnitID(candidate.trpUnitID or "")
     local candidateShort = Ambiguate and Ambiguate(candidateUnitName ~= "" and candidateUnitName or candidateName, "short")
 
     local store = EnsureStore()
     for i, entry in ipairs(store.entries or {}) do
         if entry and entry.kind ~= "round" then
-            NormalizeEntryLinks(entry)
+            Codec.NormalizeEntryLinks(entry)
 
             if candidateId ~= "" and tostring(entry.id or "") == candidateId then
                 return entry, i
             end
 
             if candidate.kind == "player" and entry.kind == "player" then
-                local entryTrpUnitID = NormalizePlayerUnitID(entry.trpUnitID or "")
+                local entryTrpUnitID = Codec.NormalizePlayerUnitID(entry.trpUnitID or "")
                 if candidateTrpUnitID ~= "" and entryTrpUnitID ~= "" and candidateTrpUnitID == entryTrpUnitID then
                     return entry, i
                 end
@@ -451,7 +508,7 @@ local function EnsureRoundMarker()
         if entry and entry.kind == "round" then
             entry.id = ROUND_MARKER_ID
             entry.name = "Inicio de turno"
-            entry.initiative = tonumber(entry.initiative) or 999
+            entry.initiative = ROUND_MARKER_INITIATIVE
             entry.hp = 0
             entry.maxHp = 0
             entry.mana = 0
@@ -464,7 +521,7 @@ local function EnsureRoundMarker()
         id = ROUND_MARKER_ID,
         name = "Inicio de turno",
         kind = "round",
-        initiative = 999,
+        initiative = ROUND_MARKER_INITIATIVE,
         hp = 0,
         maxHp = 0,
         mana = 0,
@@ -487,127 +544,19 @@ local function SafeNumber(value, default)
     if n == nil then return default or 0 end
     return n
 end
-
-local function EscapeText(value)
-    value = tostring(value or "")
-    value = value:gsub("%%", "%%25")
-    value = value:gsub("|", "%%7C")
-    value = value:gsub(";", "%%3B")
-    value = value:gsub(",", "%%2C")
-    return value
-end
-
-local function UnescapeText(value)
-    value = tostring(value or "")
-    value = value:gsub("%%2C", ",")
-    value = value:gsub("%%3B", ";")
-    value = value:gsub("%%7C", "|")
-    value = value:gsub("%%25", "%%")
-    return value
-end
-
-NormalizePlayerUnitID = function(value)
-    value = tostring(value or "")
-    if value == "" then return "" end
-    if value:find("-", 1, true) then return value end
-
-    local realm = GetRealmName and GetRealmName()
-    realm = tostring(realm or ""):gsub("%s+", "")
-    if realm == "" then return value end
-    return value .. "-" .. realm
-end
-
-NormalizeEntryLinks = function(entry)
-    if type(entry) ~= "table" then return entry end
-
-    entry.kind = tostring(entry.kind or "npc")
-    if entry.kind == "round" then return entry end
-
-    entry.npcId = tostring(entry.npcId or "")
-    entry.phaseId = tostring(entry.phaseId or "")
-    entry.trpFullID = tostring(entry.trpFullID or "")
-    entry.trpUnitID = tostring(entry.trpUnitID or "")
-    entry.trpProfileID = tostring(entry.trpProfileID or "")
-    entry.unitName = tostring(entry.unitName or entry.name or "")
-    entry.icon = NormalizeIconPath(entry.icon) or tostring(entry.icon or "")
-    entry.nameColor = NormalizeColorHex(entry.nameColor)
-
-    if entry.kind == "player" then
-        -- Una entrada jugador nunca debe conservar rutas companion/NPC.
-        -- Pueden llegar de estados antiguos o de un sync previo y resolver
-        -- la ficha equivocada si se reutilizan como identidad TRP3.
-        entry.npcId = ""
-        entry.phaseId = ""
-        entry.trpFullID = ""
-        if entry.trpUnitID == "" then
-            entry.trpUnitID = NormalizePlayerUnitID(entry.unitName ~= "" and entry.unitName or entry.name)
-        end
-        return entry
-    end
-
-    if entry.trpFullID == "" and entry.phaseId ~= "" and entry.npcId ~= "" then
-        entry.trpFullID = entry.phaseId .. "_" .. entry.npcId
-    elseif entry.trpFullID ~= "" and (entry.phaseId == "" or entry.npcId == "") then
-        local phaseId, npcId = entry.trpFullID:match("^([^_]+)_(.+)$")
-        if phaseId and npcId then
-            if entry.phaseId == "" then entry.phaseId = phaseId end
-            if entry.npcId == "" then entry.npcId = npcId end
-        end
-    end
-
-    return entry
-end
-
-local function SerializeEntry(entry)
-    NormalizeEntryLinks(entry)
-    return table.concat({
-        EscapeText(entry.id),
-        EscapeText(entry.name),
-        EscapeText(entry.kind),
-        tostring(entry.initiative or 0),
-        tostring(entry.hp or 0),
-        tostring(entry.maxHp or 0),
-        entry.hidden and "1" or "0",
-        tostring(entry.mana or 0),
-        tostring(entry.maxMana or 0),
-        EscapeText(entry.unitName),
-        EscapeText(entry.icon),
-        tostring(entry.displayId or 0),
-        EscapeText(entry.npcId),
-        EscapeText(entry.phaseId),
-        EscapeText(entry.trpFullID),
-        EscapeText(entry.trpUnitID),
-        tostring(entry.reaction or 0),
-        EscapeText(entry.nameColor),
-        EscapeText(entry.trpProfileID),
-        tostring(entry.armorClass or 0),
-    }, ",")
-end
-
-local function DeserializeEntry(raw)
-    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID, armorClass = strsplit(",", raw or "")
-    if not name or name == "" then return nil end
-    return NormalizeEntryLinks({
-        id = UnescapeText(id),
-        name = UnescapeText(name),
-        kind = UnescapeText(kind or "npc"),
-        initiative = SafeNumber(init, 0),
-        hp = SafeNumber(hp, 0),
-        maxHp = SafeNumber(maxHp, 0),
-        hidden = hidden == "1",
-        mana = SafeNumber(mana, 0),
-        maxMana = SafeNumber(maxMana, 0),
-        unitName = UnescapeText(unitName),
-        icon = UnescapeText(icon),
-        displayId = SafeNumber(displayId, 0),
-        npcId = UnescapeText(npcId),
-        phaseId = UnescapeText(phaseId),
-        trpFullID = UnescapeText(trpFullID),
-        trpUnitID = UnescapeText(trpUnitID),
-        reaction = SafeNumber(reaction, 0),
-        nameColor = NormalizeColorHex(UnescapeText(nameColor)),
-        trpProfileID = UnescapeText(trpProfileID),
-        armorClass = SafeNumber(armorClass, 0),
+-- El codec necesita saber normalizar tipos y leer numeros con el mismo criterio que el tracker,
+-- y los limites de troceado son de la capa de red, que vive aqui.
+if Codec and Codec.Init then
+    Codec.Init({
+        SafeNumber = SafeNumber,
+        NormalizeKind = NormalizeKind,
+        -- Envuelta a proposito: `NormalizeIconPath` se asigna mas abajo que este Init, asi que
+        -- pasarla directamente inyectaria nil. El cierre la resuelve al llamarla.
+        NormalizeIconPath = function(icon) return NormalizeIconPath(icon) end,
+        NormalizeColorHex = function(hex) return NormalizeColorHex(hex) end,
+        chunkEncodedLimit = TURN_CHUNK_ENCODED_LIMIT,
+        maxChunks = TURN_MAX_CHUNKS,
+        chunkTTL = CHUNK_TTL_SECONDS,
     })
 end
 
@@ -615,41 +564,10 @@ local function SerializeState()
     local store = EnsureStore()
     local parts = {}
     for i = 1, #store.entries do
-        NormalizeEntryLinks(store.entries[i])
-        parts[#parts + 1] = SerializeEntry(store.entries[i])
+        Codec.NormalizeEntryLinks(store.entries[i])
+        parts[#parts + 1] = Codec.SerializeEntry(store.entries[i])
     end
     return "STATE|" .. tostring(store.activeIndex or 1) .. "||" .. table.concat(parts, ";")
-end
-
-local function SerializeTurnNoticeEntry(entry)
-    entry = NormalizeEntryLinks(entry or {}) or {}
-    -- Nombre corto sin realm para unitName y trpUnitID, igual que el banco de fichas.
-    -- El receptor llama a NormalizePlayerUnitID al deserializar si necesita el realm.
-    local unitNameShort = Ambiguate and Ambiguate(tostring(entry.unitName or ""), "short")
-        or tostring(entry.unitName or ""):match("^[^%-]+")
-        or tostring(entry.unitName or "")
-    local trpUnitIDShort = Ambiguate and Ambiguate(tostring(entry.trpUnitID or ""), "short")
-        or tostring(entry.trpUnitID or ""):match("^[^%-]+")
-        or tostring(entry.trpUnitID or "")
-    return table.concat({
-        EscapeText(entry.id),
-        EscapeText(entry.name),
-        EscapeText(entry.kind),
-        EscapeText(unitNameShort),
-        EscapeText(trpUnitIDShort),
-    }, ",")
-end
-
-local function DeserializeTurnNoticeEntry(raw)
-    local id, name, kind, unitName, trpUnitID = strsplit(",", raw or "")
-    if not name or name == "" then return nil end
-    return NormalizeEntryLinks({
-        id = UnescapeText(id),
-        name = UnescapeText(name),
-        kind = UnescapeText(kind or "npc"),
-        unitName = UnescapeText(unitName),
-        trpUnitID = UnescapeText(trpUnitID),
-    })
 end
 
 local function SerializeTurnNotice()
@@ -664,7 +582,7 @@ local function SerializeTurnNotice()
         tostring(index),
         tostring(#store.entries),
         "",
-        SerializeTurnNoticeEntry(entry),
+        Codec.SerializeTurnNoticeEntry(entry),
     }, "|")
 end
 
@@ -709,7 +627,7 @@ local function ApplyTurnNotice(message)
     local serial = SafeNumber(serialRaw, 0)
     local activeIndex = SafeNumber(activeRaw, 1)
     local count = SafeNumber(countRaw, 0)
-    local noticeEntry = DeserializeTurnNoticeEntry(entryRaw)
+    local noticeEntry = Codec.DeserializeTurnNoticeEntry(entryRaw)
     if not noticeEntry then return false end
 
     local store = EnsureStore()
@@ -725,6 +643,7 @@ local function ApplyTurnNotice(message)
         EnsureActiveVisible()
     end
 
+    TouchStore()
     PrintTurnNotice(entry, activeIndex, count, serial)
     AlertRoundStates(entry, activeIndex, serial)
     AlertTurnChanged(entry, activeIndex, serial)
@@ -742,7 +661,7 @@ local function ApplySerializedState(message)
     local entriesRaw = fourth or third
     if entriesRaw and entriesRaw ~= "" then
         for token in string.gmatch(entriesRaw, "[^;]+") do
-            local entry = DeserializeEntry(token)
+            local entry = Codec.DeserializeEntry(token)
             if entry then store.entries[#store.entries + 1] = entry end
         end
     end
@@ -754,49 +673,12 @@ local function ApplySerializedState(message)
     return true
 end
 
-local function EscapeChunkChar(char)
-    if char == "%" then return "%25" end
-    if char == "|" then return "%7C" end
-    return char
-end
-
-local function UnescapeChunk(value)
-    value = tostring(value or "")
-    value = value:gsub("%%7C", "|")
-    value = value:gsub("%%25", "%%")
-    return value
-end
-
-local function SplitEscapedChunks(payload)
-    payload = tostring(payload or "")
-    local chunks = {}
-    local current = ""
-    local currentSize = 0
-
-    for i = 1, #payload do
-        local encoded = EscapeChunkChar(payload:sub(i, i))
-        if currentSize > 0 and (currentSize + #encoded) > TURN_CHUNK_ENCODED_LIMIT then
-            chunks[#chunks + 1] = current
-            current = ""
-            currentSize = 0
-        end
-        current = current .. encoded
-        currentSize = currentSize + #encoded
-    end
-
-    if current ~= "" or #chunks == 0 then
-        chunks[#chunks + 1] = current
-    end
-
-    return chunks
-end
-
 local function SendSerializedState(payload, channel)
     if #payload <= TURN_SINGLE_MESSAGE_LIMIT then
         return HarfordSync.Send(COMM_PREFIX, payload, channel)
     end
 
-    local chunks = SplitEscapedChunks(payload)
+    local chunks = Codec.SplitEscapedChunks(payload)
     if #chunks > TURN_MAX_CHUNKS then
         Print("No se pudo compartir turnos: estado demasiado grande.")
         return false
@@ -810,89 +692,34 @@ local function SendSerializedState(payload, channel)
     return true
 end
 
+-- Reensamblado de un mensaje troceado. Las dos variantes (estado completo `SCHUNK` y aviso de
+-- turno `TCHUNK`) eran 39 lineas identicas salvo el prefijo de la clave y la funcion final, asi
+-- que comparten cuerpo. El prefijo debe seguir siendo DISTINTO: un mismo remitente puede tener a
+-- la vez una transferencia de estado y una de turno con el mismo id.
+
 local function ApplyChunkedState(message, sender)
-    local transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^SCHUNK|([^|]+)|([^|]+)|([^|]+)|(.*)$")
-    if not transferId or transferId == "" then return false end
-
-    local index = tonumber(indexRaw)
-    local total = tonumber(totalRaw)
-    if not index or not total or total < 1 or total > TURN_MAX_CHUNKS or index < 1 or index > total then
-        return false
-    end
-
-    local key = tostring(sender or "?") .. ":" .. transferId
-    local buffer = turnChunkBuffers[key]
-    if not buffer or buffer.total ~= total then
-        buffer = { total = total, received = 0, chunks = {} }
-        turnChunkBuffers[key] = buffer
-        if C_Timer and C_Timer.After then
-            C_Timer.After(15, function()
-                if turnChunkBuffers[key] == buffer then
-                    turnChunkBuffers[key] = nil
-                end
-            end)
-        end
-    end
-
-    if not buffer.chunks[index] then
-        buffer.chunks[index] = UnescapeChunk(chunk)
-        buffer.received = buffer.received + 1
-    end
-
-    if buffer.received < total then return false end
-
-    local assembled = {}
-    for i = 1, total do
-        if not buffer.chunks[i] then return false end
-        assembled[i] = buffer.chunks[i]
-    end
-
-    turnChunkBuffers[key] = nil
-    return ApplySerializedState(table.concat(assembled))
+    return Codec.ApplyChunked(message, sender, "SCHUNK", "", ApplySerializedState)
 end
 
--- Igual que ApplyChunkedState pero para TCHUNK (TURN notices largos).
--- El prefijo "T:" en la clave del buffer evita colisiones con buffers SCHUNK.
 local function ApplyChunkedTurnNotice(message, sender)
-    local transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^TCHUNK|([^|]+)|([^|]+)|([^|]+)|(.*)$")
-    if not transferId or transferId == "" then return false end
-
-    local index = tonumber(indexRaw)
-    local total = tonumber(totalRaw)
-    if not index or not total or total < 1 or total > TURN_MAX_CHUNKS or index < 1 or index > total then
-        return false
-    end
-
-    local key = "T:" .. tostring(sender or "?") .. ":" .. transferId
-    local buffer = turnChunkBuffers[key]
-    if not buffer or buffer.total ~= total then
-        buffer = { total = total, received = 0, chunks = {} }
-        turnChunkBuffers[key] = buffer
-        if C_Timer and C_Timer.After then
-            C_Timer.After(15, function()
-                if turnChunkBuffers[key] == buffer then
-                    turnChunkBuffers[key] = nil
-                end
-            end)
-        end
-    end
-
-    if not buffer.chunks[index] then
-        buffer.chunks[index] = UnescapeChunk(chunk)
-        buffer.received = buffer.received + 1
-    end
-
-    if buffer.received < total then return false end
-
-    local assembled = {}
-    for i = 1, total do
-        if not buffer.chunks[i] then return false end
-        assembled[i] = buffer.chunks[i]
-    end
-
-    turnChunkBuffers[key] = nil
-    return ApplyTurnNotice(table.concat(assembled))
+    return Codec.ApplyChunked(message, sender, "TCHUNK", "T:", ApplyTurnNotice)
 end
+
+-- ─── INICIO Y FIN DE COMBATE ─────────────────────────────────────────────────
+
+-- Bonus de iniciativa que este cliente puede calcular para una entrada.
+-- Para MI personaje sale de la ficha, con todos sus rasgos. Para un NPC, del Mod. de Destreza de su
+-- stat block TRP3 si se puede localizar la unidad. Para OTRO jugador no se intenta adivinar: su
+-- cliente lo hara mejor y responde a INITREQ.
+
+-- Mayor iniciativa primero. `table.sort` no es estable en Lua, asi que el indice actual entra como
+-- desempate: dos tiradas iguales conservan el orden que ya tenian en vez de bailar en cada
+-- reordenacion.
+
+-- Un jugador responde con SU tirada. Solo el admin la aplica, y solo sobre la entrada que de
+-- verdad le pertenece a ese remitente: nadie puede fijar la iniciativa de otro.
+
+-- El DM pide a cada jugador que tire la suya. Se responde por susurro al DM.
 
 local function ApplyTurnMessage(message, sender)
     local opcode = tostring(message or ""):match("^([^|]+)")
@@ -904,6 +731,10 @@ local function ApplyTurnMessage(message, sender)
         return ApplyTurnNotice(message)
     elseif opcode == "TCHUNK" then
         return ApplyChunkedTurnNotice(message, sender)
+    elseif opcode == "INITREQ" then
+        return Combate.ApplyInitiativeRequest(message, sender)
+    elseif opcode == "INITRES" then
+        return Combate.ApplyInitiativeReply(message, sender)
     end
     return false
 end
@@ -928,7 +759,7 @@ local function SendTurnNotice()
     end
 
     -- Nombre largo (TRP3 con espacios/caracteres codificados): enviar en TCHUNK.
-    local chunks = SplitEscapedChunks(payload)
+    local chunks = Codec.SplitEscapedChunks(payload)
     if #chunks > TURN_MAX_CHUNKS then
         Print("No se pudo anunciar el turno: mensaje demasiado grande.")
         return false
@@ -953,6 +784,7 @@ local function ScheduleBroadcast()
 end
 
 MarkChanged = function()
+    TouchStore()
     if RefreshFrame then RefreshFrame() end
     ScheduleBroadcast()
 end
@@ -966,15 +798,6 @@ local function SetFrameBackground(frame)
     return bg
 end
 
-local function MakeSheetLine(parent, point, rel, relPoint, x, y, width, height, r, g, b, a)
-    local line = parent:CreateTexture(nil, "BORDER")
-    line:SetTexture(TEX_WHITE)
-    line:SetVertexColor(r, g, b, a or 1)
-    line:SetSize(width, height)
-    line:SetPoint(point, rel, relPoint, x, y)
-    return line
-end
-
 local function MakeButton(parent, text, w, h, point, rel, relPoint, x, y, onClick)
     local b = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
     b:SetSize(w, h)
@@ -984,242 +807,17 @@ local function MakeButton(parent, text, w, h, point, rel, relPoint, x, y, onClic
     return b
 end
 
-local function CreateSheetFrame()
-    if SheetFrame then return end
-
-    SheetFrame = CreateFrame("Frame", "HarfordTurnSheetFrame", UIParent, "BackdropTemplate")
-    SheetFrame:SetSize(492, 548)
-    SheetFrame:SetPoint("CENTER", UIParent, "CENTER", 260, 40)
-    SheetFrame:SetFrameStrata("DIALOG")
-    SheetFrame:SetMovable(true)
-    SheetFrame:EnableMouse(true)
-    SheetFrame:RegisterForDrag("LeftButton")
-    SheetFrame:SetScript("OnDragStart", SheetFrame.StartMoving)
-    SheetFrame:SetScript("OnDragStop", SheetFrame.StopMovingOrSizing)
-    SheetFrame:Hide()
-    local outerBg = SheetFrame:CreateTexture(nil, "BACKGROUND")
-    outerBg:SetPoint("TOPLEFT", SheetFrame, "TOPLEFT", 7, -13)
-    outerBg:SetPoint("BOTTOMRIGHT", SheetFrame, "BOTTOMRIGHT", -7, 7)
-    outerBg:SetTexture(TEX_WHITE)
-    outerBg:SetVertexColor(0.06, 0.015, 0.012, 0.96)
-
-    local panelBg = SheetFrame:CreateTexture(nil, "BACKGROUND", nil, 1)
-    panelBg:SetPoint("TOPLEFT", SheetFrame, "TOPLEFT", 19, -78)
-    panelBg:SetPoint("BOTTOMRIGHT", SheetFrame, "BOTTOMRIGHT", -29, 19)
-    panelBg:SetTexture(TEX_WHITE)
-    panelBg:SetVertexColor(0.006, 0.006, 0.006, 0.92)
-
-    local border = CreateFrame("Frame", nil, SheetFrame, "DialogBorderTemplate")
-    border:SetAllPoints(SheetFrame)
-    border:SetFrameStrata(SheetFrame:GetFrameStrata())
-    border:SetFrameLevel(SheetFrame:GetFrameLevel() + 5)
-
-    MakeSheetLine(SheetFrame, "TOPLEFT", SheetFrame, "TOPLEFT", 19, -78, 444, 2, 0.78, 0.73, 0.66, 0.95)
-    MakeSheetLine(SheetFrame, "BOTTOMLEFT", SheetFrame, "BOTTOMLEFT", 19, 19, 444, 2, 0.78, 0.73, 0.66, 0.95)
-    MakeSheetLine(SheetFrame, "TOPLEFT", SheetFrame, "TOPLEFT", 19, -78, 2, 451, 0.78, 0.73, 0.66, 0.95)
-    MakeSheetLine(SheetFrame, "TOPRIGHT", SheetFrame, "TOPRIGHT", -29, -78, 2, 451, 0.78, 0.73, 0.66, 0.95)
-
-    SheetFrame.title = SheetFrame:CreateFontString(nil, "OVERLAY", "GameFontHighlightLarge")
-    SheetFrame.title:SetPoint("TOPLEFT", 32, -31)
-    SheetFrame.title:SetPoint("TOPRIGHT", -42, -31)
-    SheetFrame.title:SetJustifyH("CENTER")
-    SheetFrame.title:SetText("Ficha")
-    if STANDARD_TEXT_FONT then
-        SheetFrame.title:SetFont(STANDARD_TEXT_FONT, 18, "OUTLINE")
-    end
-
-    local close = CreateFrame("Button", nil, SheetFrame, "UIPanelCloseButton")
-    close:SetPoint("TOPRIGHT", -6, -6)
-
-    local scroll = CreateFrame("ScrollFrame", nil, SheetFrame, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", 42, -102)
-    scroll:SetPoint("BOTTOMRIGHT", -44, 31)
-
-    SheetScrollChild = CreateFrame("Frame", nil, scroll)
-    SheetScrollChild:SetSize(382, 1)
-    scroll:SetScrollChild(SheetScrollChild)
-
-    SheetText = SheetScrollChild:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    SheetText:SetPoint("TOPLEFT", 0, 0)
-    SheetText:SetWidth(370)
-    SheetText:SetJustifyH("LEFT")
-    SheetText:SetJustifyV("TOP")
-    if STANDARD_TEXT_FONT then
-        SheetText:SetFont(STANDARD_TEXT_FONT, 16, "")
-    end
-    SheetText:SetTextColor(1.0, 0.93, 0.82)
-    SheetText:SetSpacing(6)
-    SheetText:SetText("")
-end
-
 -- Secciones colapsables -----------------------------------------------------
-local SHEET_CONTENT_W  = 382
-local SECTION_BODY_PAD = 8
-local SECTION_GAP      = 6
 
 -- Lee fuente de un objeto FontObject de WoW en tiempo de ejecucion.
 -- Asi no hardcodeamos rutas ni tamanos - si TRP3 cambia su fuente, nosotros tambien.
-local function GetTRP3BodyFont()
-    -- TRP3 usa GameFontNormal para el cuerpo de su panel About
-    if GameFontNormal and GameFontNormal.GetFont then
-        local f, s, fl = GameFontNormal:GetFont()
-        if f and s and s > 0 then return f, s, fl or "" end
-    end
-    return "Fonts\\FRIZQT__.TTF", 12, ""
-end
 
-local function GetTRP3HeaderFont()
-    -- Un punto mas que el cuerpo - igual que el titulo de seccion TRP3
-    local f, s, fl = GetTRP3BodyFont()
-    return f, s + 2, fl
-end
-
-local SECTION_HDR_H  -- calculada tras leer la fuente
 do
-    local _, bodySize = GetTRP3BodyFont()
+    local _, bodySize = Ficha.GetTRP3BodyFont()
     SECTION_HDR_H = math.max(28, math.ceil(bodySize * 2.4))
 end
 
-local function GetOrCreateSectionWidget(i)
-    if SheetSectionPool[i] then return SheetSectionPool[i] end
-
-    local w = {}
-    local bodyFont, bodySize, bodyFlags   = GetTRP3BodyFont()
-    local hdrFont,  hdrSize,  hdrFlags    = GetTRP3HeaderFont()
-
-    -- Cabecera (clickable)
-    w.header = CreateFrame("Frame", nil, SheetScrollChild)
-    w.header:SetHeight(SECTION_HDR_H)
-    w.header:EnableMouse(true)
-
-    local hBg = w.header:CreateTexture(nil, "BACKGROUND")
-    hBg:SetAllPoints()
-    hBg:SetTexture(TEX_WHITE)
-    hBg:SetVertexColor(0.18, 0.10, 0.05, 0.6)
-
-    w.arrow = w.header:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    w.arrow:SetPoint("LEFT", w.header, "LEFT", 6, 0)
-    w.arrow:SetWidth(hdrSize + 2)
-    w.arrow:SetJustifyH("CENTER")
-    w.arrow:SetFont(hdrFont, hdrSize, hdrFlags)
-    w.arrow:SetTextColor(0.85, 0.65, 0.25)
-
-    w.label = w.header:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    w.label:SetPoint("LEFT", w.arrow, "RIGHT", 4, 0)
-    w.label:SetPoint("RIGHT", w.header, "RIGHT", -6, 0)
-    w.label:SetJustifyH("LEFT")
-    w.label:SetFont(hdrFont, hdrSize, hdrFlags)
-    -- Sin SetTextColor: el color lo dicta el markup |cff...| del titulo, igual que TRP3
-
-    w.header:SetScript("OnEnter", function() hBg:SetVertexColor(0.28, 0.16, 0.07, 0.75) end)
-    w.header:SetScript("OnLeave", function() hBg:SetVertexColor(0.18, 0.10, 0.05, 0.60) end)
-    w.header:SetScript("OnMouseDown", function()
-        w.expanded = not w.expanded
-        w.arrow:SetText(w.expanded and "-" or "+")
-        RefreshSheetLayout()
-    end)
-
-    -- Cuerpo
-    w.body = CreateFrame("Frame", nil, SheetScrollChild)
-    w.body:SetWidth(SHEET_CONTENT_W)
-
-    w.bodyText = w.body:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    w.bodyText:SetPoint("TOPLEFT", w.body, "TOPLEFT", 4, -SECTION_BODY_PAD)
-    w.bodyText:SetWidth(SHEET_CONTENT_W - 8)
-    w.bodyText:SetJustifyH("LEFT")
-    w.bodyText:SetJustifyV("TOP")
-    w.bodyText:SetFont(bodyFont, bodySize, bodyFlags)
-    w.bodyText:SetTextColor(1, 1, 1)
-    w.bodyText:SetSpacing(0)
-
-    w.expanded = true
-    w.bodyH    = 0
-    w.hasTitle = false
-
-    SheetSectionPool[i] = w
-    return w
-end
-
-RefreshSheetLayout = function()
-    local totalY = 0
-    for _, w in ipairs(SheetActiveSections) do
-        if w.hasTitle then
-            w.header:ClearAllPoints()
-            w.header:SetPoint("TOPLEFT", SheetScrollChild, "TOPLEFT", 0, -totalY)
-            w.header:SetWidth(SHEET_CONTENT_W)
-            w.header:Show()
-            totalY = totalY + SECTION_HDR_H + 2
-        else
-            w.header:Hide()
-        end
-
-        if w.expanded or not w.hasTitle then
-            local bh = w.bodyH + SECTION_BODY_PAD * 2
-            w.body:ClearAllPoints()
-            w.body:SetPoint("TOPLEFT", SheetScrollChild, "TOPLEFT", 0, -totalY)
-            w.body:SetHeight(bh)
-            w.body:Show()
-            totalY = totalY + bh + SECTION_GAP
-        else
-            w.body:Hide()
-            totalY = totalY + SECTION_GAP
-        end
-    end
-    SheetScrollChild:SetHeight(math.max(416, totalY + 12))
-end
-
 -- (BuildStateRows y STATE_ROW_H eliminados: la seccion de rasgos usa bodyText igual que el resto)
-
-local function PopulateSections(sections)
-    for i, w in ipairs(SheetSectionPool) do
-        if i > #sections then
-            w.header:Hide()
-            w.body:Hide()
-        end
-    end
-    SheetActiveSections = {}
-
-    for i, sec in ipairs(sections) do
-        local w = GetOrCreateSectionWidget(i)
-        w.hasTitle = sec.title and sec.title ~= ""
-        w.expanded = false
-
-        if w.hasTitle then
-            local iconMarkup = ""
-            if sec.icon and sec.icon ~= "" and HarfordTRP3 and HarfordTRP3.IconMarkup then
-                iconMarkup = HarfordTRP3.IconMarkup(sec.icon, 24) .. " "
-            end
-            w.label:SetText(iconMarkup .. sec.title)
-            w.arrow:SetText("+")
-        end
-
-        -- Todas las secciones (incluyendo rasgos) se muestran como texto formateado.
-        w.bodyText:SetText(sec.body or "")
-        w.bodyText:Show()
-        w.bodyH = 0  -- se mide tras show
-
-        SheetActiveSections[#SheetActiveSections + 1] = w
-    end
-end
-
-local function MeasureAndLayout()
-    local offsetY = 0
-    for _, w in ipairs(SheetActiveSections) do
-        if w.hasTitle then offsetY = offsetY + SECTION_HDR_H + 2 end
-        w.body:ClearAllPoints()
-        w.body:SetPoint("TOPLEFT", SheetScrollChild, "TOPLEFT", 0, -offsetY)
-        w.body:SetHeight(400)
-        w.body:Show()
-        offsetY = offsetY + 400 + SECTION_GAP
-    end
-    C_Timer.After(0, function()
-        for _, w in ipairs(SheetActiveSections) do
-            local bh = w.bodyText:GetStringHeight() or 0
-            w.bodyH = bh > 0 and bh or 60
-        end
-        RefreshSheetLayout()
-    end)
-end
 
 -- Popup de estado (se abre al clicar un link harfordstate:) ----------------
 local StatePopup
@@ -1251,7 +849,7 @@ local function EnsureStatePopup()
     StatePopup.titleStr:SetPoint("TOPLEFT", 16, -16)
     StatePopup.titleStr:SetPoint("TOPRIGHT", -36, -16)
     StatePopup.titleStr:SetJustifyH("LEFT")
-    local bodyFont, bodySize = GetTRP3BodyFont()
+    local bodyFont, bodySize = Ficha.GetTRP3BodyFont()
     local scroll = CreateFrame("ScrollFrame", nil, StatePopup, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT",     StatePopup, "TOPLEFT",     16, -52)
     scroll:SetPoint("BOTTOMRIGHT", StatePopup, "BOTTOMRIGHT", -28, 16)
@@ -1305,145 +903,9 @@ do
 end
 -- Fin secciones colapsables -----------------------------------------------
 
-local function GetEntryTRP3Profile(entry)
-    if not entry or not HarfordTRP3 then
-        return nil, "HarfordTRP3 no disponible"
-    end
-
-    NormalizeEntryLinks(entry)
-
-    if entry.kind == "player" then
-        local tried = {}
-        local function TryUnitID(value)
-            value = tostring(value or "")
-            if value == "" or tried[value] then return nil end
-            tried[value] = true
-            if HarfordTRP3.GetPlayerProfileByUnitID then
-                local profile, err, resolved, resolvedProfileID = HarfordTRP3.GetPlayerProfileByUnitID(value)
-                if profile then
-                    entry.trpUnitID = resolved or entry.trpUnitID
-                    entry.trpProfileID = resolvedProfileID or entry.trpProfileID
-                    entry.nameColor = GetPlayerTurnNameColorHex(profile) or entry.nameColor
-                    return profile, err, resolved or value
-                end
-            end
-        end
-
-        local candidates = {
-            entry.trpUnitID,
-            entry.unitName,
-            entry.name,
-        }
-        for _, candidate in ipairs(candidates) do
-            local profile, err, resolved = TryUnitID(candidate)
-            if profile then return profile, err, resolved end
-            local normalized = NormalizePlayerUnitID(candidate)
-            profile, err, resolved = TryUnitID(normalized)
-            if profile then return profile, err, resolved end
-            local short = tostring(candidate or ""):match("^[^-]+")
-            profile, err, resolved = TryUnitID(short)
-            if profile then return profile, err, resolved end
-        end
-
-        local function EntryMatchesUnit(unit)
-            if not UnitExists or not UnitExists(unit) then return false end
-            if UnitGUID and entry.id and entry.id ~= "" and UnitGUID(unit) == entry.id then return true end
-            local unitID = HarfordTRP3.BuildUnitID and HarfordTRP3.BuildUnitID(unit)
-            local fullName = GetUnitName and GetUnitName(unit, true)
-            local shortName = UnitName and UnitName(unit)
-            local entryUnitID = NormalizePlayerUnitID(entry.trpUnitID ~= "" and entry.trpUnitID or entry.unitName)
-            local entryUnitShort = Ambiguate and Ambiguate(entry.unitName or "", "short") or tostring(entry.unitName or ""):match("^[^-]+")
-            return (unitID and entryUnitID ~= "" and unitID == entryUnitID)
-                or (fullName and fullName ~= "" and (fullName == entry.unitName or fullName == entry.name))
-                or (shortName and shortName ~= "" and (shortName == entry.name or shortName == entryUnitShort))
-        end
-
-        local units = { "player", "target", "mouseover", "focus" }
-        for i = 1, 4 do units[#units + 1] = "party" .. tostring(i) end
-        for i = 1, 40 do units[#units + 1] = "raid" .. tostring(i) end
-        for _, unit in ipairs(units) do
-            if EntryMatchesUnit(unit) and HarfordTRP3.GetPlayerProfile then
-                local profile, err, resolved = HarfordTRP3.GetPlayerProfile(unit)
-                entry.nameColor = GetPlayerTurnNameColorHex(profile, unit) or entry.nameColor
-                if resolved and resolved ~= "" then
-                    entry.trpUnitID = resolved
-                end
-                if profile and TRP3_API and TRP3_API.register and TRP3_API.register.getUnitIDProfileID and resolved then
-                    local okProfileID, resolvedProfileID = pcall(TRP3_API.register.getUnitIDProfileID, resolved)
-                    if okProfileID and resolvedProfileID then
-                        entry.trpProfileID = resolvedProfileID
-                    end
-                end
-                return profile, err, resolved
-            end
-        end
-
-        return nil, "Ficha TRP3 de jugador no disponible para esta entrada"
-    end
-
-    local fullID = tostring(entry.trpFullID or "")
-    if fullID ~= "" and HarfordTRP3.GetEpsilonNpcProfileByFullID then
-        return HarfordTRP3.GetEpsilonNpcProfileByFullID(fullID)
-    end
-
-    local profileID = tostring(entry.trpProfileID or "")
-    if profileID ~= "" and HarfordTRP3.GetEpsilonNpcProfileByProfileID then
-        local profile = HarfordTRP3.GetEpsilonNpcProfileByProfileID(profileID)
-        if profile then return profile, nil, profileID end
-    end
-
-    if UnitExists and UnitExists("target") and UnitGUID and UnitGUID("target") == entry.id and HarfordTRP3.GetEpsilonNpcProfile then
-        return HarfordTRP3.GetEpsilonNpcProfile("target")
-    end
-
-    return nil, "Ficha TRP3 no disponible para esta entrada"
-end
-
-local function ShowEntrySheet(entry)
-    if not entry or entry.kind == "round" or entry.kind == "generic" then return end
-
-    CreateSheetFrame()
-    SheetFrame.title:SetText(EntryIconMarkup(entry, 26) .. tostring(entry.name or "Ficha"))
-    SheetFrame.title:SetTextColor(GetEntryNameColor(entry))
-
-    local profile, err = GetEntryTRP3Profile(entry)
-
-    -- Intentar modo secciones colapsables
-    local sections = profile and HarfordTRP3 and HarfordTRP3.ParseSections
-                     and HarfordTRP3.ParseSections(profile)
-
-    if sections then
-        SheetText:Hide()
-        PopulateSections(sections)
-        SheetFrame:Show()
-        SheetFrame:Raise()
-        -- Medir alturas un frame despues de que WoW renderice los FontStrings
-        C_Timer.After(0, MeasureAndLayout)
-    else
-        -- Fallback: texto plano
-        for _, w in ipairs(SheetSectionPool) do w.header:Hide() w.body:Hide() end
-        SheetActiveSections = {}
-
-        local text
-        if profile and HarfordTRP3 and HarfordTRP3.BuildDisplayText then
-            text = HarfordTRP3.BuildDisplayText(profile)
-        elseif profile and HarfordTRP3 and HarfordTRP3.GetProfileMainText then
-            text = HarfordTRP3.GetProfileMainText(profile)
-        end
-        if not text or text == "" then
-            text = tostring(err or "No hay ficha TRP3 disponible para esta entrada.")
-        end
-        SheetText:SetText(text)
-        SheetText:Show()
-        SheetScrollChild:SetHeight(math.max(416, (SheetText:GetStringHeight() or 0) + 24))
-        SheetFrame:Show()
-        SheetFrame:Raise()
-    end
-end
-
 local function GetPortraitTexture(kind)
     if kind == "player" then return "Interface\\Icons\\Achievement_Character_Human_Male" end
-    if kind == "target" then return "Interface\\Icons\\Ability_Hunter_MarkedForDeath" end
+    if kind == "players" then return "Interface\\Icons\\INV_Misc_GroupLooking" end
     return "Interface\\Icons\\INV_Misc_Head_Dragon_01"
 end
 
@@ -1828,7 +1290,7 @@ RefreshFrame = function()
                 card.init:Show()
                 card.armorClass:Hide()
                 card.hp:Hide()
-            elseif entry.kind == "generic" then
+            elseif entry.kind == "generic" or entry.kind == "players" then
                 -- Marcadores de fase (Aliado/Neutral/Enemigo): sin barra de vida ni texto extra
                 card.name:SetTextColor(GetEntryNameColor(entry))
                 card.init:SetText("")
@@ -1858,7 +1320,7 @@ RefreshFrame = function()
                 card.active:Hide()
                 card.turn:SetText("")
             end
-            local isSystem = entry.kind == "round" or entry.kind == "generic"
+            local isSystem = IsSystemEntry(entry)
             card.minus:SetShown(isAdmin and not isSystem)
             card.plus:SetShown(isAdmin and not isSystem)
             card.remove:SetShown(isAdmin and entry.kind ~= "round")
@@ -1877,7 +1339,8 @@ RefreshFrame = function()
     end
 end
 
-local function AddEntry(name, initiative, hp, maxHp, kind, id, mana, maxMana, unitName, icon, displayId, meta)
+-- No lleva `initiative`: el orden es manual y el parametro que habia aqui se descartaba.
+local function AddEntry(name, hp, maxHp, kind, id, mana, maxMana, unitName, icon, displayId, meta)
     if not IsTurnAdmin() then Print("Solo el admin puede anadir turnos.") return false end
     ClaimAdminIfNeeded()
     name = tostring(name or "")
@@ -1888,8 +1351,7 @@ local function AddEntry(name, initiative, hp, maxHp, kind, id, mana, maxMana, un
     local entry = {
         id = id or NewId(),
         name = name,
-        kind = kind or "npc",
-        initiative = 0,
+        kind = NormalizeKind(kind),
         hp = SafeNumber(hp, maxHp or 0),
         maxHp = SafeNumber(maxHp, hp or 0),
         mana = SafeNumber(mana, 0),
@@ -1906,7 +1368,7 @@ local function AddEntry(name, initiative, hp, maxHp, kind, id, mana, maxMana, un
         nameColor = meta and NormalizeColorHex(meta.nameColor) or nil,
         armorClass = meta and SafeNumber(meta.armorClass, 0) or 0,
     }
-    NormalizeEntryLinks(entry)
+    Codec.NormalizeEntryLinks(entry)
     local duplicate = FindDuplicateEntry(entry)
     if duplicate then
         Print(tostring(duplicate.name or entry.name or "El objetivo") .. " ya esta en la lista de turnos.")
@@ -1930,7 +1392,8 @@ local function AddUnit(unit, kind)
     local maxHp = UnitHealthMax and UnitHealthMax(unit) or hp
     local mana = UnitPower and UnitPower(unit, 0) or 0
     local maxMana = UnitPowerMax and UnitPowerMax(unit, 0) or mana
-    local entryKind = UnitIsPlayer and UnitIsPlayer(unit) and "player" or (kind or unit)
+    -- Un jugador es "player" mande lo que mande el llamador; lo demas se normaliza.
+    local entryKind = (UnitIsPlayer and UnitIsPlayer(unit)) and "player" or NormalizeKind(kind)
     local displayId = 0
     if UnitCreatureDisplayID then
         displayId = UnitCreatureDisplayID(unit) or 0
@@ -1945,7 +1408,7 @@ local function AddUnit(unit, kind)
         armorClass = SafeNumber(parsed and parsed.ac, 0)
     end
 
-    AddEntry(name, 0, hp, maxHp, entryKind, guid, mana, maxMana, fullName, trp.icon or GetFallbackCreatureIcon(unit), displayId, {
+    AddEntry(name, hp, maxHp, entryKind, guid, mana, maxMana, fullName, trp.icon or GetFallbackCreatureIcon(unit), displayId, {
         npcId = trp.npcId,
         phaseId = trp.phaseId,
         trpFullID = trp.trpFullID,
@@ -2051,7 +1514,7 @@ local function PromptAdjustHp(index, direction)
 
     local store = EnsureStore()
     local entry = store.entries[index]
-    if not entry or entry.kind == "round" or entry.kind == "generic" then return end
+    if not entry or IsSystemEntry(entry) then return end
 
     local dialogName = "HARFORD_TURN_ADJUST_HP"
     StaticPopupDialogs[dialogName] = StaticPopupDialogs[dialogName] or {
@@ -2102,7 +1565,7 @@ local function SetEntryArmorClass(index, armorClass)
     if not IsTurnAdmin() then Print("Solo el admin puede modificar CA.") return false end
     local store = EnsureStore()
     local entry = store.entries[index]
-    if not entry or entry.kind == "round" or entry.kind == "generic" or entry.kind == "player" then
+    if not entry or IsSystemEntry(entry) or entry.kind == "player" then
         return false
     end
     armorClass = math.floor(tonumber(armorClass) or 0)
@@ -2119,7 +1582,7 @@ end
 local function PromptSetArmorClass(index)
     local store = EnsureStore()
     local entry = store.entries[index]
-    if not entry or entry.kind == "round" or entry.kind == "generic" or entry.kind == "player" then return end
+    if not entry or IsSystemEntry(entry) or entry.kind == "player" then return end
 
     local dialogName = "HARFORD_TURN_SET_ARMOR_CLASS"
     StaticPopupDialogs[dialogName] = StaticPopupDialogs[dialogName] or {
@@ -2203,7 +1666,7 @@ local function CreateCard(parent, index)
             return
         end
         local entry = store.entries[entryIndex]
-        ShowEntrySheet(entry)
+        Ficha.ShowEntrySheet(entry)
     end)
     SetFrameBackground(card)
 
@@ -2367,16 +1830,38 @@ local function CreateTurnFrame()
     -- Botones de turno generico: anaden una entrada NPC con la reaccion fija
     local GENERIC_TURN_ICON = "Interface\\Icons\\INV_Misc_PocketWatch_01"
     local function AddGenericTurn(name, reaction)
-        AddEntry(name, 0, 0, 0, "generic", NewId(), 0, 0, name, GENERIC_TURN_ICON, 0, { reaction = reaction })
+        AddEntry(name, 0, 0, "generic", NewId(), 0, 0, name, GENERIC_TURN_ICON, 0, { reaction = reaction })
     end
 
     local btnAliado  = MakeButton(TurnFrame, "Aliado",  54, 22, "TOPLEFT", TurnFrame, "TOPLEFT",  82, -51, function() AddGenericTurn("Aliado",  8) end)
     local btnNeutral = MakeButton(TurnFrame, "Neutral", 60, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 140, -51, function() AddGenericTurn("Neutral", 4) end)
     local btnEnemigo = MakeButton(TurnFrame, "Enemigo", 64, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 204, -51, function() AddGenericTurn("Enemigo", 1) end)
 
+    -- Turno compartido de los PJs: iniciativa POR BANDOS. Un solo hueco para todos los
+    -- personajes jugadores, que actuan en el orden que quieran entre ellos. Solo tiene sentido
+    -- uno, asi que se avisa en vez de apilar varios.
+    local PLAYERS_TURN_ICON = "Interface\\Icons\\INV_Misc_GroupLooking"
+    local function AddPlayersTurn()
+        local store = EnsureStore()
+        for _, e in ipairs(store.entries or {}) do
+            if e.kind == "players" then
+                Print("Ya hay un turno de PJs en la lista.")
+                return
+            end
+        end
+        AddEntry("PJs", 0, 0, "players", NewId(), 0, 0, "PJs", PLAYERS_TURN_ICON, 0, {})
+    end
+    local btnPJs = MakeButton(TurnFrame, "PJs", 44, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 272, -51, AddPlayersTurn)
+    btnPJs:GetFontString():SetTextColor(0.2, 1.0, 0.4)
+
     btnAliado:GetFontString():SetTextColor(0.2, 1.0, 0.2)
     btnNeutral:GetFontString():SetTextColor(1.0, 1.0, 0.0)
     btnEnemigo:GetFontString():SetTextColor(1.0, 0.2, 0.2)
+
+    local btnIniciar = MakeButton(TurnFrame, "Iniciar", 58, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 320, -51, Combate.StartCombat)
+    local btnTerminar = MakeButton(TurnFrame, "Terminar", 66, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 382, -51, Combate.EndCombat)
+    btnIniciar:GetFontString():SetTextColor(1.0, 0.82, 0.1)
+    btnTerminar:GetFontString():SetTextColor(0.8, 0.8, 0.8)
 
     local editButton = MakeButton(TurnFrame, "Editar", 58, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 16, -206, ToggleEditMode)
     TurnFrame.editButton = editButton
@@ -2384,6 +1869,9 @@ local function CreateTurnFrame()
     tinsert(TurnFrame.adminControls, btnAliado)
     tinsert(TurnFrame.adminControls, btnNeutral)
     tinsert(TurnFrame.adminControls, btnEnemigo)
+    tinsert(TurnFrame.adminControls, btnPJs)
+    tinsert(TurnFrame.adminControls, btnIniciar)
+    tinsert(TurnFrame.adminControls, btnTerminar)
     tinsert(TurnFrame.adminControls, editButton)
 
     local prevButton = MakeButton(TurnFrame, "Anterior", 68, 22, "BOTTOMLEFT", TurnFrame, "BOTTOMLEFT", 80, 10, PrevTurn)
@@ -2435,6 +1923,7 @@ eventFrame:RegisterEvent("UNIT_MAXHEALTH")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
         EnsureStore()
+        PurgeStaleEntries()
         if HarfordSync and HarfordSync.RegisterPrefix then
             HarfordSync.RegisterPrefix(COMM_PREFIX)
         elseif C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
@@ -2489,10 +1978,57 @@ end)
 -- internamente por IsTurnAdmin() (= CanUseDMTools): inertes sin HarfordAdmin + .ph dm.
 -- HarfordAdmin las invoca por aqui (p.ej. HarfordAdminUnitMenu usa AddUnit/Toggle);
 -- no debe tocar internals del core (store/broadcast). Render/sync/recepcion viven en el core.
+-- La ficha emergente recibe aqui lo que necesita del tracker.
+if Ficha and Ficha.Init then
+    Ficha.Init({
+        EntryIconMarkup = EntryIconMarkup,
+        GetEntryNameColor = GetEntryNameColor,
+        GetPlayerTurnNameColorHex = GetPlayerTurnNameColorHex,
+        IsSystemEntry = IsSystemEntry,
+        SetFrameBackground = SetFrameBackground,
+        MakeButton = MakeButton,
+        Print = Print,
+    })
+end
+
+-- El modulo de combate recibe aqui lo que necesita del tracker. Va DESPUES de MarkChanged, que es
+-- de asignacion adelantada (`local` arriba, cuerpo mas abajo): inyectarlo antes pasaria nil.
+if Combate and Combate.Init then
+    Combate.Init({
+        commPrefix = COMM_PREFIX,
+        roundMarkerInitiative = ROUND_MARKER_INITIATIVE,
+        AdvanceTurnSerial = AdvanceTurnSerial,
+        ClaimAdminIfNeeded = ClaimAdminIfNeeded,
+        EnsureActiveVisible = EnsureActiveVisible,
+        EnsureRoundMarker = EnsureRoundMarker,
+        EnsureStore = EnsureStore,
+        EntryBelongsToMe = EntryBelongsToMe,
+        IsSystemEntry = IsSystemEntry,
+        IsTurnAdmin = IsTurnAdmin,
+        MarkChanged = MarkChanged,
+        Print = Print,
+        SafeNumber = SafeNumber,
+        SendState = SendState,
+    })
+end
+
 HarfordTurnOrderAPI = HarfordTurnOrderAPI or {}
 -- Listeners notificados cuando empieza TU turno (los invoca AlertMyTurn). Uso: reacciones del Libro.
 HarfordTurnOrderAPI._myTurnListeners = HarfordTurnOrderAPI._myTurnListeners or {}
 HarfordTurnOrderAPI._turnChangedListeners = HarfordTurnOrderAPI._turnChangedListeners or {}
+-- ?Hay un combate en marcha? Cuenta solo COMBATIENTES: el marcador de asalto se inserta siempre
+-- (`EnsureRoundMarker`, 8 llamadas) y `entries` PERSISTE en SavedVariables, asi que "la lista no
+-- esta vacia" es cierto para siempre en cuanto se abre el tracker una vez. Lo usa la economia de
+-- turno para saber si debe llevar la cuenta de acciones.
+function HarfordTurnOrderAPI.HasActiveCombat()
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
+    for _, entry in ipairs(store.entries) do
+        if not IsSystemEntry(entry) then return true end
+    end
+    return false
+end
+
 function HarfordTurnOrderAPI.RegisterMyTurnListener(fn)
     if type(fn) == "function" then
         table.insert(HarfordTurnOrderAPI._myTurnListeners, fn)
@@ -2579,7 +2115,7 @@ SlashCmdList["HARFORDTURNOS"] = function(msg)
     elseif cmd == "player" or cmd == "jugador" then
         AddUnit("player", "player")
     elseif cmd == "npc" and rest ~= "" then
-        AddEntry(rest, 0, 1, 1, "npc")
+        AddEntry(rest, 1, 1, "npc")
     else
         ToggleFrame()
     end

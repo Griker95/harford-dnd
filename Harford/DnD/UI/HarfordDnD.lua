@@ -678,6 +678,16 @@ local function ApplyConditionalDamageRiders(conditionalId)
     end
 end
 
+-- Golpes empoderados por el chi (Monje N6): el golpe DESARMADO cuenta como magico, asi que las
+-- defensas limitadas a ataques no magicos no se le aplican. Devuelve la tabla de opciones que
+-- espera la mitigacion, o nil si el golpe no es magico (asi no se toca el comportamiento normal).
+local function OpcionesGolpeMagico(def)
+    if def and def.key and def.key ~= "Desarmado" then return nil end
+    if not (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag) then return nil end
+    if not HarfordDnDFeatureEffects.HasFlag("magicalUnarmed") then return nil end
+    return { magical = true }
+end
+
 local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamage)
     if SheetContext and SheetContext.active then return 0 end
     if not def or not def.dmgN or not def.dmgS or def.dmgN == 0 or def.dmgS == 0 then
@@ -693,6 +703,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
         return 0
     end
 
+    local optsMagico = OpcionesGolpeMagico(def)
     local diceStr = HarfordDnDWeapons.WeaponBaseDice(def)
     local n, sides = HarfordDnDWeapons.ParseDice(diceStr)
     if not n or not sides then
@@ -808,7 +819,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
     local total = baseTotal
     local marker = ""
     if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
-        local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", dtype, baseTotal)
+        local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", dtype, baseTotal, optsMagico)
         total, marker = applied, mk
     end
     -- Acumulador de daño YA MITIGADO por TIPO: la cabecera muestra "N Tipo [R/V/I]" por cada
@@ -849,7 +860,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
             local extraType = extra.damageType or ""
             local extraMarker = ""
             if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
-                local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", extraType, extraTotal)
+                local applied, _status, mk = HarfordDamageMitigation.ForTarget("target", extraType, extraTotal, optsMagico)
                 extraTotal, extraMarker = applied, mk
             end
             total = total + extraTotal
@@ -911,7 +922,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
                     cdRolls[i] = r; rawSum = rawSum + r; diceUsed = i
                     local mit = rawSum + cdFlat
                     if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
-                        mit = (HarfordDamageMitigation.ForTarget("target", cdType, rawSum + cdFlat))
+                        mit = (HarfordDamageMitigation.ForTarget("target", cdType, rawSum + cdFlat, optsMagico))
                     end
                     if total + mit >= targetHP then break end  -- este dado ya mata: para
                 end
@@ -945,7 +956,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
             local cdTotal = rawSum + cdFlat
             local cdMarker = ""
             if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
-                local applied, _s, mk = HarfordDamageMitigation.ForTarget("target", cdType, cdTotal)
+                local applied, _s, mk = HarfordDamageMitigation.ForTarget("target", cdType, cdTotal, optsMagico)
                 cdTotal, cdMarker = applied, mk
             end
             total = total + cdTotal
@@ -1872,14 +1883,15 @@ end
 --   resistencia/inmunidad/vulnerabilidad por tipo -> reduccion plana de condiciones -> vida
 --   temporal -> salud.
 -- El atacante ya no decide nada de esto: manda cuanto y de que tipo.
-local function ApplyIncomingDamage(components, isCritical, sender)
+local function ApplyIncomingDamage(components, isCritical, sender, esMagico)
     if type(components) ~= "table" or #components == 0 then return false end
     -- Cada componente se mitiga con SU tipo: se puede ser resistente a uno y vulnerable a otro.
     local total, detalle = 0, {}
     for _, c in ipairs(components) do
         local cantidad, marcador = math.floor(tonumber(c.amount) or 0), ""
         if cantidad > 0 and HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
-            local aplicado, _estado, mk = HarfordDamageMitigation.ForTarget("player", c.damageType, cantidad)
+            local aplicado, _estado, mk = HarfordDamageMitigation.ForTarget("player", c.damageType, cantidad,
+                esMagico and { magical = true } or nil)
             cantidad, marcador = math.floor(tonumber(aplicado) or cantidad), mk or ""
         end
         -- Reduccion plana de condiciones con valor (Supresion del dolor), por tipo.
@@ -4424,7 +4436,8 @@ DoWeaponAttack = function(options)
                     and HarfordDamageMitigation.TargetResolvesOwnDamage("target") and damageComponents then
                     paraObjetivo = damageComponents
                 end
-                HarfordDnDCombat.ApplyWeaponDamageToTarget(paraObjetivo, isCritical)
+                HarfordDnDCombat.ApplyWeaponDamageToTarget(paraObjetivo, isCritical, nil,
+                    OpcionesGolpeMagico(def))
                 -- +1 Furia solo en ataque de arma normal (no si esta maniobra ya gasto Furia).
                 if not spendsRage and not (SheetContext and SheetContext.active)
                     and GetResourceMax("rage") > 0 then
@@ -4837,6 +4850,7 @@ HarfordDnDAttackUI.CreateActionButtons({
 HarfordDnDStore.playerAttackControls = HarfordDnDAttackUI.Controls
 HarfordDnDStore.RefreshWeaponDamageButton()
 HarfordDnDAttackUI.AttachMovementTracker({ parent = K.SEC_ATK })
+HarfordDnDAttackUI.CreateTurnEconomyLabel({ parent = K.SEC_ATK })
 
 DoSpellAttack = function()
     if SheetContext and SheetContext.active then return end

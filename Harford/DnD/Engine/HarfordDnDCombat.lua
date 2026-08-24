@@ -358,11 +358,12 @@ end
 -- habia llegado el reparto era erroneo, y las resistencias se aplicaban con una copia de sus
 -- defensas en vez de con las suyas. Ahora es el mismo modelo que el motor de area: el atacante dice
 -- CUANTO y DE QUE TIPO, y la victima decide el resto.
-local function ApplyDamageToPlayerUnit(unit, components, isCritical)
+local function ApplyDamageToPlayerUnit(unit, components, isCritical, opts)
     local name = HarfordClassColors.UnitFullName(unit)
     if not name or name == "" then return false end
     if not (HarfordSync and HarfordSync.SendDamage) then return false end
-    return HarfordSync.SendDamage(ADDON_PREFIX, name, components, isCritical) and true or false
+    return HarfordSync.SendDamage(ADDON_PREFIX, name, components, isCritical,
+        opts and opts.magical) and true or false
 end
 
 -- Normaliza lo que llega del llamador: una lista de componentes, o un total suelto con su tipo.
@@ -390,8 +391,8 @@ function HarfordDnDCombat.PayloadFor(unit, total, damageType)
     return total
 end
 
-local function ApplyWeaponDamageToPlayer(components, isCritical)
-    return ApplyDamageToPlayerUnit("target", components, isCritical)
+local function ApplyWeaponDamageToPlayer(components, isCritical, opts)
+    return ApplyDamageToPlayerUnit("target", components, isCritical, opts)
 end
 
 -- Aplica daño de una accion NPC al jugador en FOCUS (no a uno mismo ni a un NPC).
@@ -615,13 +616,15 @@ end
 -- `total` puede ser un numero (ya mitigado por el llamador, comportamiento antiguo) o una LISTA de
 -- componentes `{ { amount, damageType } }` en BRUTO. Contra un jugador se manda la lista tal cual y
 -- la resuelve su cliente; contra un NPC se suma aqui, porque el NPC no tiene quien lo haga.
-function HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical, damageType)
+-- `opts.magical`: el golpe cuenta como magico. Contra NPC se usa aqui al mitigar; contra jugador
+-- viaja en el payload para que lo aplique SU cliente, que es quien resuelve sus defensas.
+function HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical, damageType, opts)
     if not (UnitExists and UnitExists("target")) then return false end
     if UnitIsUnit and UnitIsUnit("target", "player") then return false end
     local componentes = AsComponents(total, damageType)
     if not componentes then return false end
     if UnitIsPlayer and UnitIsPlayer("target") then
-        return ApplyWeaponDamageToPlayer(componentes, isCritical)
+        return ApplyWeaponDamageToPlayer(componentes, isCritical, opts)
     end
     local suma = 0
     for _, c in ipairs(componentes) do
@@ -629,7 +632,7 @@ function HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical, damageTyp
         -- Solo se mitiga lo que viene en bruto (trae tipo); un total suelto ya venia mitigado.
         if cantidad > 0 and c.damageType and c.damageType ~= ""
             and HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
-            cantidad = math.floor(tonumber((HarfordDamageMitigation.ForTarget("target", c.damageType, cantidad))) or cantidad)
+            cantidad = math.floor(tonumber((HarfordDamageMitigation.ForTarget("target", c.damageType, cantidad, opts))) or cantidad)
         end
         suma = suma + cantidad
     end

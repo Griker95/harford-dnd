@@ -64,6 +64,12 @@ end
 function HarfordDnDRolls.BroadcastAbility(feature, opts)
     if not feature then return false end
     opts = opts or {}
+    -- Economia de turno: solo se cobra a los rasgos que DECLARAN su coste (`cast`). El resto no
+    -- se cuenta, porque `type = "accion"` es la categoria generica y en 5e incluye las adicionales:
+    -- adivinarlo daria un contador equivocado, que es peor que no tenerlo.
+    if opts.skipTurnCost ~= true and HarfordDnDConditions and HarfordDnDConditions.Turn then
+        HarfordDnDConditions.Turn.SpendForFeature(feature)
+    end
     local label = HarfordTRP3 and HarfordTRP3.GetAbilityChatLink
         and HarfordTRP3.GetAbilityChatLink(feature)
     if not label or label == "" then

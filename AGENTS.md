@@ -2796,6 +2796,83 @@ descripciones dentro de `Data.lua`: se pierden en la siguiente regeneracion.
 (`botas_zarzal` / `botas_zarzal_2`). Parecen duplicados del pipeline, no variantes. Forjarlos
 crearia 55 objetos redundantes; conviene resolverlos antes de una tanda larga.
 
+## Turno compartido "PJs": iniciativa por bandos (2026-08-24)
+
+Entrada de tipo `players` en el tracker: un unico hueco para TODOS los personajes jugadores, que
+actuan entre ellos en el orden que quieran. Es la variante de iniciativa por bandos, no una
+invencion: en RP, tirar iniciativa por cada jugador y sostener el orden es mas friccion que juego.
+
+- `EntryBelongsToMe(entry)` devuelve **true para cualquiera** si `entry.kind == "players"`. Eso hace
+  que cada cliente reciba su aviso de turno y **renueve su propia economia de accion**.
+- `IsSystemEntry(entry)` agrupa las tres entradas que no son criatura (`round`, `generic`,
+  `players`): sin vida, sin CA, sin ficha y sin ajustes. Sustituye a las comprobaciones sueltas
+  `kind == "round" or kind == "generic"` que estaban repetidas en cinco sitios.
+- Solo tiene sentido UNA entrada `players`; el boton avisa en vez de apilar varias.
+- **Consecuencia conocida**: el aviso "ES TU TURNO" del hueco PJs llega a todo cliente que tenga el
+  tracker sincronizado, tenga o no entrada propia en la lista. Con turnos individuales solo lo
+  recibia el jugador nombrado. Si eso molesta, la solucion es una lista de participantes en la
+  propia entrada, no cambiar `EntryBelongsToMe`.
+- El icono `INV_Misc_GroupLooking` NO se ha verificado en el cliente de Epsilon: comprobar con
+  `/harford debug run iconoscheck` antes de darlo por bueno.
+
+**Reglas de reaccion (5e, confirmado):** la reaccion se recupera **al comienzo de tu siguiente
+turno**, no al final del asalto. Una reaccion gastada en el turno de un enemigo sigue gastada el
+resto del asalto. `API.Turn` ya lo hace asi. Con el hueco PJs, todos los jugadores la recuperan a la
+vez, que es el comportamiento correcto bajo iniciativa por bandos.
+
+## Economia de turno: accion, adicional y reaccion (2026-08-24)
+
+`HarfordDnDConditions.Turn` lleva el presupuesto por turno. Vive **dentro del motor de condiciones**,
+no en un modulo propio, porque ese modulo ya posee la frontera de turno (`OnTurnChanged`, duraciones
+`*_turn_start`): un modulo aparte significaria un segundo listener y dos verdades sobre cuando
+empieza un turno.
+
+- **Estado efimero.** No se persiste ni viaja por red. Cada cliente cuenta lo suyo.
+- **Se reinicia al EMPEZAR tu turno**, colgado de `HarfordTurnOrderAPI.RegisterMyTurnListener`, que
+  ya trae su propio antirrepeticion (`lastTurnAlertKey`). En 5e la reaccion tambien vuelve al
+  empezar tu turno, no al terminarlo, asi que un solo reinicio cubre los tres.
+- **Sin orden de turnos queda INACTIVO**, no a cero. Fuera de combate no hay frontera que detectar y
+  un contador congelado a `1/1` seria informacion falsa. `IsActive()` mira si
+  `HarfordTurnOrderStore.entries` tiene alguna entrada.
+- **INFORMA, NO BLOQUEA.** `Spend` gasta SIEMPRE y devuelve si habia presupuesto. Si el tracker va
+  desincronizado o alguien juega sin el, impedir usar un rasgo dejaria al jugador sin su propio
+  recurso en mitad de la escena. Misma linea que Barrera (manual) y que las reacciones que el
+  cliente no puede resolver.
+- **El coste se cobra en `HarfordDnDRolls.BroadcastAbility`**, que es el punto unico de activacion
+  real; `opts.skipTurnCost = true` lo evita para rutas que no consumen accion.
+- **Solo se cobra a los rasgos que DECLARAN `cast`.** No deducir el coste de `type = "accion"`: en
+  5e "accion" es la categoria generica e incluye las adicionales, asi que adivinarlo daria un
+  contador equivocado, que es peor que no tener contador. `cast` acepta `accion`,
+  `accion_adicional` y `reaccion`.
+- **Estado del dato (2026-08-24): 13 de 292 rasgos de nivel 1-6 declaran su coste, y los 13 son
+  reacciones.** El contador funciona, pero hasta que se rellene `cast` solo se movera la reaccion.
+  Ese dato debe nacer en la web `harfordweb`, que es la fuente canonica, no parchearse en el addon.
+- El presupuesto base es 1 de cada. El flag `extraTurnAction` suma una accion (Impetu de Accion).
+- Indicador en la banda inferior de la seccion Ataque (`HarfordDnDAttackUI.CreateTurnEconomyLabel`),
+  anclado a `BOTTOMRIGHT`: las dos filas de botones llegan a -166 sobre 183 de panel, asi que la
+  unica franja libre es la de abajo. Se refresca por el listener de condiciones, sin ticker.
+- Diagnostico: `/harford debug run turnecon [reset|rasgos]`.
+
+**Lo que esto NO cierra.** `Accion astuta` del Picaro no queda mecanizada por tener contador: bajo
+el modelo de "1 accion adicional por turno para todos", ese rasgo no anade presupuesto, solo
+restringe para que se puede usar, asi que sigue siendo informativo. `Embestida vil` del Cazador de
+Demonios sigue bloqueada por el dado de Caos, que en el Libro 2 solo esta en una imagen.
+
+## Golpes empoderados por el chi: el bit "magico" viaja (2026-08-24)
+
+Una defensa calificada `"de ataques no magicos"` no debe frenar un golpe magico. La mitigacion la
+resuelve el DEFENSOR, asi que el dato tiene que viajar con el dano.
+
+- `HarfordDamageMitigation.ForTarget(unit, typeText, amount, opts)` acepta `opts.magical`.
+  `ListMatchesType` ignora las entradas que casan el tipo **y** llevan calificador no magico
+  (`"no magic"`, `"nonmagical"`, `"non magical"`, `"non-magical"`).
+- Una resistencia SIN calificar sigue aplicandose a un golpe magico: es la regla correcta.
+- El payload `DNDDMG` gana un CUARTO campo `M`. Es del GOLPE, no de un componente suelto, y es
+  compatible en los dos sentidos: un cliente viejo manda 3 campos y aqui sale nil, y uno viejo que
+  reciba 4 ignora el que no conoce.
+- El rasgo declara `{ kind = "flag", flag = "magicalUnarmed" }`; `OpcionesGolpeMagico(def)` en
+  `HarfordDnD.lua` solo lo aplica al arma `Desarmado`.
+
 ## Despliegue: `tools/desplegar.py`, no `cp` a mano (2026-08-24)
 
 **El despliegue a Epsilon pasa SIEMPRE por `python tools/desplegar.py`.** Copiar con `cp` se

@@ -49,4 +49,23 @@ chk("tres, con marcadores",
 print("Sin componentes no hay desglose")
 chk("vacio", partes({}), "")
 
+
+
+-- ¿CUANDO se anuncia? En un ataque normal, el atacante ya ha publicado ese numero y ese tipo:
+-- repetirlo desde la victima es una linea de ruido por cada golpe. Solo se dice cuando el resultado
+-- NO es el que se anuncio.
+print("Se anuncia solo si hay algo que contar")
+chk("la condicion esta en el codigo", src:find("if mitigado or total ~= bruto then", 1, true) ~= nil, true)
+
+local function anuncia(bruto, total, mitigado)
+    return (mitigado or total ~= bruto) and true or false
+end
+chk("golpe normal, nada cambia", anuncia(9, 9, false), false)
+chk("resistencia: la mitad", anuncia(9, 4, true), true)
+chk("inmunidad: a cero", anuncia(9, 0, true), true)
+chk("vulnerabilidad: el doble", anuncia(9, 18, true), true)
+chk("reduccion plana sin marcador", anuncia(9, 4, false), true)
+chk("desviado al demonio", anuncia(9, 5, false), true)
+chk("cero de entrada, cero de salida", anuncia(0, 0, false), false)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

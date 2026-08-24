@@ -1500,12 +1500,15 @@ local function ApplyIncomingDamage(components, isCritical, sender, esMagico)
     if type(components) ~= "table" or #components == 0 then return false end
     -- Cada componente se mitiga con SU tipo: se puede ser resistente a uno y vulnerable a otro.
     local total, detalle = 0, {}
+    local bruto, mitigado = 0, false
     for _, c in ipairs(components) do
+        bruto = bruto + math.floor(tonumber(c.amount) or 0)
         local cantidad, marcador = math.floor(tonumber(c.amount) or 0), ""
         if cantidad > 0 and HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
             local aplicado, _estado, mk = HarfordDamageMitigation.ForTarget("player", c.damageType, cantidad,
                 esMagico and { magical = true } or nil)
             cantidad, marcador = math.floor(tonumber(aplicado) or cantidad), mk or ""
+            if marcador ~= "" then mitigado = true end
         end
         -- Reduccion plana de condiciones con valor (Supresion del dolor), por tipo.
         if cantidad > 0 and HarfordDnDConditions and HarfordDnDConditions.GetDamageReduction then
@@ -1535,13 +1538,19 @@ local function ApplyIncomingDamage(components, isCritical, sender, esMagico)
     if total > 0 and HarfordDnDStore.ApplyLocalResourceDamage then
         HarfordDnDStore.ApplyLocalResourceDamage(total)
     end
-    HarfordDnDRolls.Broadcast({
-        -- `dice` vacio: aqui no se tira nada, se recibe. Con "-" el render pintaba un "(-)" que no
-        -- significaba nada.
-        type = "damage", label = "Recibido", total = total, dice = "",
-        modifiers = table.concat(partes, "  "),
-        critical = isCritical and "CRITICO" or "", mode = "",
-    })
+    -- Solo se anuncia si hay algo que contar. En un ataque normal el atacante ya ha publicado ese
+    -- mismo numero y ese mismo tipo: repetirlo desde la victima es una linea de ruido por golpe.
+    -- Se dice cuando el resultado NO es el que se anuncio: resistencia, inmunidad, vulnerabilidad,
+    -- reduccion plana de una condicion, o dano desviado al demonio del brujo.
+    if mitigado or total ~= bruto then
+        HarfordDnDRolls.Broadcast({
+            -- `dice` vacio: aqui no se tira nada, se recibe. Con "-" el render pintaba un "(-)"
+            -- que no significaba nada.
+            type = "damage", label = "Recibido", total = total, dice = "",
+            modifiers = table.concat(partes, "  "),
+            critical = isCritical and "CRITICO" or "", mode = "",
+        })
+    end
     return true
 end
 

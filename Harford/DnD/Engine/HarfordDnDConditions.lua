@@ -658,6 +658,31 @@ function API.GetVar(ref, conditionId, varName, default)
     return valor
 end
 
+-- Numero que lleva la condicion respaldada por ese aura, o nil si no lleva ninguno.
+--
+-- El contador NO sale del aura: en Epsilon no se pueden aplicar auras con acumulaciones, asi que lo
+-- lleva Harford en la instancia de la condicion (`vars.contador`, o el nivel si es de las que los
+-- tienen, como el Cansancio) y luego se pinta encima del icono.
+function API.GetAuraCounter(ref, spellId)
+    spellId = tonumber(spellId)
+    if not spellId then return nil end
+    for _, active in ipairs(API.GetActive(ref or "player")) do
+        local def = active.definition
+        if def and tonumber(def.auraId) == spellId then
+            local record = active.record
+            if def.leveled then
+                local nivel = record and tonumber(record.level)
+                if nivel and nivel > 1 then return math.floor(nivel) end
+                return nil
+            end
+            local n = record and record.vars and tonumber(record.vars.contador)
+            if n and n > 1 then return math.floor(n) end
+            return nil
+        end
+    end
+    return nil
+end
+
 function API.SetVar(ref, conditionId, opType, varName, value)
     conditionId, varName = tostring(conditionId or ""), tostring(varName or ""):match("^[%w_]+$")
     if not API.DEFS[conditionId] or not varName then return false end

@@ -10,6 +10,10 @@
 -- El rasgo no duplica la accion, la REFERENCIA por id -- si duplicara, el dia que cambie una habria
 -- dos versiones y solo una se actualizaria.
 --
+-- LOS ICONOS NO ESTAN AQUI. Van en `HarfordIconCatalog`, con el id que el Libro les da
+-- (`harford_accion_<id>`), que es la fuente unica de arte del proyecto. Declararlos tambien aqui
+-- crearia una segunda version que dejaria de coincidir en cuanto se tocara una de las dos.
+--
 -- Lo que una accion HACE es otra cosa que lo que CUESTA. Esquivar tiene efecto mecanico completo
 -- (su estado ya existe); Correr y Desengancharse no, porque el addon no lleva presupuesto de
 -- movimiento ni ataques de oportunidad. Su coste si se cuenta, que es lo que da sentido a los
@@ -19,35 +23,73 @@
 HarfordDnDActions = HarfordDnDActions or {}
 local API = HarfordDnDActions
 
-local RAIZ_ICONO = "Interface" .. string.char(92) .. "Icons" .. string.char(92)
-
 API.DEFS = {
     esquivar = {
-        id = "esquivar", name = "Esquivar", icon = RAIZ_ICONO .. "ability_rogue_feint",
+        id = "esquivar", name = "Esquivar",
         cast = "accion", orden = 1,
         description = "Hasta el inicio de tu proximo turno, las tiradas de ataque contra ti se hacen "
             .. "con desventaja si puedes ver al atacante, y tus salvaciones de Destreza tienen ventaja.",
         selfCondition = { id = "esquivando", duration = "source_turn_start" },
     },
     correr = {
-        id = "correr", name = "Correr", icon = RAIZ_ICONO .. "ability_rogue_sprint",
+        id = "correr", name = "Correr",
         cast = "accion", orden = 2,
         description = "Ganas movimiento adicional igual a tu velocidad en este turno.",
         sinEfecto = "El movimiento se lleva en mesa: Harford no cuenta cuanto te queda por moverte.",
     },
     desengancharse = {
-        id = "desengancharse", name = "Desengancharse", icon = RAIZ_ICONO .. "ability_rogue_shadowstep",
+        id = "desengancharse", name = "Desengancharse",
         cast = "accion", orden = 3,
         description = "Tu movimiento no provoca ataques de oportunidad durante el resto del turno.",
         sinEfecto = "Los ataques de oportunidad se llevan en mesa: Harford no sabe quien esta trabado con quien.",
     },
     esconderse = {
-        id = "esconderse", name = "Esconderse", icon = RAIZ_ICONO .. "ability_stealth",
+        id = "esconderse", name = "Esconderse",
         cast = "accion", orden = 4,
         description = "Haces una prueba de Sigilo para ocultarte.",
-        -- La CD es la Percepcion pasiva de quien mira, que este cliente no conoce: se tira y la
-        -- mesa decide. Fingir una CD seria inventarse el numero.
-        skillCheck = "Sigilo",
+        -- Sin CD: la de esconderse es la Percepcion pasiva de quien mira, que este cliente no
+        -- conoce. Se tira y decide la mesa; inventarse un numero seria peor que no ponerlo.
+        skillCheck = { skill = "Sigilo" },
+    },
+    agarrar = {
+        id = "agarrar", name = "Agarrar",
+        cast = "accion", orden = 5,
+        description = "Prueba de Atletismo contra el Atletismo o la Acrobacias del objetivo. "
+            .. "Si ganas, queda Agarrado: su velocidad pasa a 0.",
+        sinEfecto = "Falta la tirada ENFRENTADA: tirad los dos y aplicad el estado Agarrado a mano.",
+    },
+    empujar = {
+        id = "empujar", name = "Empujar",
+        cast = "accion", orden = 6,
+        description = "Misma prueba enfrentada. Si ganas, lo derribas o lo apartas 1,5 metros.",
+        sinEfecto = "Falta la tirada ENFRENTADA: tirad los dos y aplicad Derribado a mano.",
+    },
+    ayudar = {
+        id = "ayudar", name = "Ayudar",
+        cast = "accion", orden = 7,
+        description = "Un aliado tira con ventaja su proxima prueba de caracteristica, o su proximo "
+            .. "ataque contra una criatura a la que distraes.",
+        sinEfecto = "Harford aun no sabe conceder ventaja a OTRO: que la aplique el quien la reciba.",
+    },
+    estabilizar = {
+        id = "estabilizar", name = "Estabilizar",
+        cast = "accion", orden = 8,
+        description = "Prueba de Medicina CD 10 sobre una criatura a 0 puntos de golpe. Si la superas, "
+            .. "queda estable: deja de tirar salvaciones de muerte.",
+        -- La UNICA de las nuevas con CD fija en el manual, asi que se resuelve entera aqui.
+        skillCheck = { skill = "Medicina", dc = 10 },
+    },
+    lanzar_arma = {
+        id = "lanzar_arma", name = "Lanzar arma",
+        cast = "accion", orden = 9,
+        description = "Lanzas un arma arrojadiza contra un objetivo a distancia.",
+        sinEfecto = "Usa el ataque normal de la ficha con el arma arrojadiza equipada.",
+    },
+    preparar = {
+        id = "preparar", name = "Preparar",
+        cast = "accion", orden = 10,
+        description = "Eliges una accion y un disparador. Cuando ocurra, la ejecutas gastando tu reaccion.",
+        sinEfecto = "Gasta la accion ahora; el disparador y la reaccion los lleva la mesa.",
     },
 }
 

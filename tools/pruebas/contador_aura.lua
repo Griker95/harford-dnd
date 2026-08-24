@@ -1,0 +1,67 @@
+-- CONTADOR sobre el icono de un aura.
+--
+-- En Epsilon no se pueden aplicar auras CON acumulaciones, asi que el numero no puede salir del
+-- aura: lo lleva Harford en la instancia de la condicion y se pinta encima del icono nativo.
+local cargar = loadstring or load
+local src = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+local i = assert(src:find("function API.GetAuraCounter", 1, true))
+local j = assert(src:find("function API.SetVar", i, true))
+local codigo = "local API = ...\n" .. src:sub(i, j - 1) .. "\nreturn API.GetAuraCounter"
+
+local ACTIVAS = {}
+local API = { GetActive = function() return ACTIVAS end }
+local env = { ipairs = ipairs, tonumber = tonumber, math = math }
+local f
+if setfenv then f = assert(cargar(codigo)); setfenv(f, env) else f = assert(cargar(codigo, "t", "t", env)) end
+local Contador = f(API)
+
+local fallos = 0
+local function chk(etiqueta, real, esp)
+    local ok = tostring(real) == tostring(esp)
+    if not ok then fallos = fallos + 1 end
+    print(string.format("  %-52s %-8s %s", etiqueta, tostring(real),
+        ok and "ok" or ("FALLA, esperaba " .. tostring(esp))))
+end
+
+print("Sin condiciones no hay numero")
+chk("nada", Contador("player", 267937), "nil")
+
+print("La condicion se busca por el AURA, no por su id")
+ACTIVAS = { { definition = { auraId = 267937 }, record = { vars = { contador = 3 } } } }
+chk("acierta el aura", Contador("player", 267937), 3)
+chk("otro aura distinto", Contador("player", 30900), "nil")
+chk("sin spellId", Contador("player", nil), "nil")
+
+print("1 o menos NO se pinta: un '1' encima de un icono no dice nada")
+ACTIVAS = { { definition = { auraId = 267937 }, record = { vars = { contador = 1 } } } }
+chk("uno", Contador("player", 267937), "nil")
+ACTIVAS = { { definition = { auraId = 267937 }, record = { vars = { contador = 0 } } } }
+chk("cero", Contador("player", 267937), "nil")
+ACTIVAS = { { definition = { auraId = 267937 }, record = { vars = { contador = 2 } } } }
+chk("dos si", Contador("player", 267937), 2)
+
+print("Una condicion con NIVELES usa su nivel como contador")
+ACTIVAS = { { definition = { auraId = 999, leveled = true }, record = { level = 4 } } }
+chk("cansancio 4", Contador("player", 999), 4)
+ACTIVAS = { { definition = { auraId = 999, leveled = true }, record = { level = 1 } } }
+chk("nivel 1 no se pinta", Contador("player", 999), "nil")
+
+print("Una condicion sin contador no pinta nada aunque tenga aura")
+ACTIVAS = { { definition = { auraId = 30900 }, record = {} } }
+chk("sin vars", Contador("player", 30900), "nil")
+
+print("Con varias activas, coge la del aura preguntada")
+ACTIVAS = {
+    { definition = { auraId = 30900 }, record = { vars = { contador = 9 } } },
+    { definition = { auraId = 267937 }, record = { vars = { contador = 4 } } },
+}
+chk("la primera", Contador("player", 30900), 9)
+chk("la segunda", Contador("player", 267937), 4)
+
+print("Se pinta desde la ruta que Blizzard reaplica")
+local uf = io.open("Harford/Frames/HarfordUnitFrames.lua"):read("*a")
+chk("dentro de ApplyAuraButtonData", uf:find("PintarContadorAura(button, unit, aura)", 1, true) ~= nil, true)
+chk("colgado del propio boton, sin frames nuevos",
+    uf:find("button._harfordContador = fs", 1, true) ~= nil, true)
+
+print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

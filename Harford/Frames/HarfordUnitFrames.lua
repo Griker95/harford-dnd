@@ -832,6 +832,31 @@ local function ResolvedAuraIcon(aura)
     return aura.icon
 end
 
+-- Contador de Harford sobre el icono de aura nativo.
+--
+-- En Epsilon no se pueden aplicar auras CON acumulaciones, asi que el numero lo lleva el motor de
+-- condiciones y se estampa aqui, donde WoW pondria el suyo. No se crea ningun frame: es un
+-- FontString colgado del propio boton, asi que no hay strata que pelear.
+--
+-- Blizzard repinta estos botones, y por eso esto se llama desde `ApplyAuraButtonData`, que ya se
+-- reaplica tras `TargetFrame_UpdateAuras`.
+local function PintarContadorAura(button, unit, aura)
+    local n = HarfordDnDConditions and HarfordDnDConditions.GetAuraCounter
+        and HarfordDnDConditions.GetAuraCounter(unit, aura and aura.spellId)
+    if not n and not button._harfordContador then return end
+    if not button._harfordContador then
+        local fs = button:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+        fs:SetPoint("BOTTOMRIGHT", button, "BOTTOMRIGHT", 1, 0)
+        button._harfordContador = fs
+    end
+    if n then
+        button._harfordContador:SetText(tostring(n))
+        button._harfordContador:Show()
+    else
+        button._harfordContador:Hide()
+    end
+end
+
 local function ApplyAuraButtonData(button, unit, index, filter)
     local aura = button and AuraData(unit, index, filter)
     if not aura then return false end
@@ -841,6 +866,7 @@ local function ApplyAuraButtonData(button, unit, index, filter)
     button._harfordAuraFilter = filter
     button._harfordAuraIndex = index
     InstallManagedAuraTooltip(button)
+    PintarContadorAura(button, unit, aura)
     if icon and icon.Show then icon:Show() end
     if button.Show then button:Show() end
     return true

@@ -4781,6 +4781,42 @@ API.RegisterCommand("dumpsheet", function(args)
     ShowCopyWindow("Harford - Volcado ficha (Ctrl+A, Ctrl+C)", full)
 end, "vuelca About TRP3 + ficha parseada (copiable): dumpsheet [target]")
 
+API.RegisterCommand("contador", function(args)
+    local C = _G.HarfordDnDConditions
+    if not (C and C.SetVar) then Print("HarfordDnDConditions no cargado"); return end
+    local id, valor = tostring(args or ""):match("^%s*(%S*)%s*(%-?%d*)")
+    if id == "" then
+        Print("Uso: contador <condicion> [numero].  Sin numero, lo quita.")
+        Print("Pone a mano el contador que se pinta sobre el icono del aura. En Epsilon no se pueden")
+        Print("aplicar auras CON acumulaciones, asi que el numero lo lleva Harford.")
+        Print("Solo se ve si la condicion declara |cffffd100auraId|r y la tienes puesta.")
+        local conAura = {}
+        for cid, def in pairs(C.DEFS or {}) do
+            if def.auraId then conAura[#conAura + 1] = cid end
+        end
+        table.sort(conAura)
+        Print("Con aura: |cff808080" .. table.concat(conAura, "  ") .. "|r")
+        return
+    end
+    local def = C.GetDefinition and C.GetDefinition(id)
+    if not def then Print("Condicion desconocida: |cffffd100" .. id .. "|r"); return end
+    if not def.auraId then
+        Print("|cffff5555" .. id .. " no tiene aura|r: el contador existiria pero no habria icono "
+            .. "donde pintarlo.")
+    end
+    local n = tonumber(valor)
+    local ok = C.SetVar("player", id, "=", "contador", n or 0)
+    if not ok then
+        Print("No tienes |cffffd100" .. id .. "|r activa. Aplicala primero: "
+            .. "|cffffd100/harford debug run conditiontest apply " .. id .. "|r")
+        return
+    end
+    Print(n and ("Contador de |cffffd100" .. id .. "|r puesto a |cffffd100" .. n .. "|r"
+        .. (n <= 1 and "  |cff808080(1 o menos no se pinta)|r" or ""))
+        or ("Contador de |cffffd100" .. id .. "|r retirado"))
+    if HarfordUnitFrames and HarfordUnitFrames.Refresh then HarfordUnitFrames.Refresh() end
+end, "pone a mano el contador que se pinta sobre el icono de un aura: contador <condicion> [numero]")
+
 API.RegisterCommand("aboutprevio", function(args)
     local T = _G.HarfordTRP3
     if not (T and T.GetPreviousAbout) then Print("HarfordTRP3 no cargado"); return end

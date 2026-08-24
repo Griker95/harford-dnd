@@ -1095,6 +1095,18 @@ Catalog.features = {
     gue_pro_provocacion = "ability_physical_taunt",
     gue_segundo_aliento = "ability_hunter_harass",
     guerrero = "classicon_warrior",
+    -- Acciones basicas del Libro (HarfordDnDActions). El id es el que les pone la seccion
+    -- General: `harford_accion_<id>`.
+    harford_accion_esquivar = "eps_bg3_blink",
+    harford_accion_correr = "eps_bg3_dash",
+    harford_accion_desengancharse = "eps_bg3_disengage",
+    harford_accion_esconderse = "ability_stealth",
+    harford_accion_agarrar = "eps_bg3_dip",
+    harford_accion_empujar = "eps_bg3_shove",
+    harford_accion_ayudar = "eps_bg3_help",
+    harford_accion_estabilizar = "eps_bg3_secondwind",
+    harford_accion_lanzar_arma = "eps_bg3_throwweapon",
+    harford_accion_preparar = "eps_bg3_detectthoughts",
     guerrero_man_carga = "ability_warrior_charge",
     guerrero_man_desarme = "ability_warrior_disarm",
     guerrero_man_golpe_heroico = "ability_warrior_punishingblow",

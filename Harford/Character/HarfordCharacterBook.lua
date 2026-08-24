@@ -336,7 +336,8 @@ function API.BuildSections(data)
         for _, acc in ipairs((HarfordDnDActions and HarfordDnDActions.GetOrdered and
             HarfordDnDActions.GetOrdered()) or {}) do
             fijas[#fijas + 1] = {
-                id = "harford_accion_" .. tostring(acc.id), name = acc.name, icon = acc.icon,
+                -- Sin `icon`: el arte sale del catalogo por el id, que es la fuente unica.
+                id = "harford_accion_" .. tostring(acc.id), name = acc.name,
                 description = acc.description, cast = acc.cast, type = "accion",
                 basicAction = acc.id,
             }

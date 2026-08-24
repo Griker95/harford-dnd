@@ -2221,6 +2221,35 @@ local function UsarModificadorDeTirada(feature)
     return true
 end
 
+-- Rasgos que actuan SOBRE EL ULTIMO CONJURO ya lanzado: apuntar a una segunda criatura (Caos) o
+-- redirigirlo si fallo (Quemar alma: Rebotar). No lo relanzan -- el conjuro ya se pago --: vuelven
+-- a resolver su efecto contra otro objetivo a cambio del recurso del rasgo.
+--
+-- El recurso se cobra al FINAL: si no hay un conjuro reciente al que agarrarse, el rasgo no hace
+-- nada y el fragmento no se pierde.
+local function UsarSobreUltimoConjuro(feature)
+    local spec = feature.recastLastSpell
+    local api = _G.HarfordCompendioAPI
+    if not (api and api.RecastLastSingleTarget) then
+        HarfordChat.Print("El compendio de conjuros no esta disponible.")
+        return false
+    end
+    if not (UnitExists and UnitExists("target")) then
+        HarfordChat.Print(tostring(feature.name or "Ese rasgo") .. " necesita un objetivo nuevo.")
+        return false
+    end
+    local ok, err = api.RecastLastSingleTarget(spec.markKey or feature.id, feature.name)
+    if not ok then
+        HarfordChat.Print("|cffff5555" .. tostring(err) .. ".|r")
+        return false
+    end
+    local cobrado, cobroErr = SpendPowerWord(feature)
+    if not cobrado then HarfordChat.Print(cobroErr) end
+    AnnounceAbility(feature)
+    if RefreshGameUI then RefreshGameUI() end
+    return true
+end
+
 -- LANZAR UN RITUAL gastando un recurso propio (Ritos de alma del Brujo: un fragmento de alma).
 --
 -- El ritual no consume espacio de conjuro -- por eso `free` --: lo que se paga es el recurso del
@@ -3088,6 +3117,9 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif type(self.feature.recastLastSpell) == "table" then
+        UsarSobreUltimoConjuro(self.feature)
+        if RefreshBook then RefreshBook() end
     elseif type(self.feature.ritualCast) == "table" then
         AbrirRitualDeRasgo(self.feature, self)
     elseif type(self.feature.carriedCharge) == "table" then

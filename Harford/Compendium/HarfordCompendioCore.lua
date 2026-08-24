@@ -1251,6 +1251,51 @@ do
     end
 end
 
+-- El ultimo conjuro de objetivo unico que se resolvio, si sigue siendo reciente. Caduca a los dos
+-- minutos: redirigir un conjuro lanzado hace media hora no es lo que dice ningun rasgo.
+local VENTANA_ULTIMO_CONJURO = 120
+
+function API.GetLastSingleTargetCast()
+    local u = API._ultimoConjuroUnico
+    if type(u) ~= "table" then return nil, "No has lanzado ningun conjuro de objetivo unico" end
+    local ahora = (time and time()) or 0
+    if ahora > 0 and u.cuando > 0 and (ahora - u.cuando) > VENTANA_ULTIMO_CONJURO then
+        return nil, "Ese conjuro es de hace demasiado"
+    end
+    return u
+end
+
+-- Vuelve a resolver ese conjuro contra otro objetivo SIN volver a pagarlo: lo que se paga es el
+-- recurso del rasgo que lo permite. `marca` evita usar dos veces el mismo rasgo sobre el mismo
+-- lanzamiento.
+function API.RecastLastSingleTarget(marca, etiqueta)
+    local u, err = API.GetLastSingleTargetCast()
+    if not u then return false, err end
+    marca = tostring(marca or "recast")
+    u.usado = u.usado or {}
+    if u.usado[marca] then return false, "Ya lo usaste sobre ese conjuro" end
+    if not (HarfordDnDArea and HarfordDnDArea.Open) then
+        return false, "El motor de areas no esta disponible"
+    end
+    local def = {}
+    for k, v in pairs(u.definicion) do def[k] = v end
+    if etiqueta and etiqueta ~= "" then
+        def.label = etiqueta .. ": " .. tostring(def.label or u.nombre)
+        def.networkLabel = etiqueta .. ": " .. tostring(def.networkLabel or u.nombre)
+    end
+    -- Sin `onCommit`: el conjuro ya se pago al lanzarlo la primera vez.
+    local opened, abrirErr = HarfordDnDArea.Open(def, {
+        sourceKind = "player",
+        sourceGuid = UnitGUID and UnitGUID("player") or nil,
+        sourceName = HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName()
+            or (UnitName and UnitName("player")) or "Jugador",
+        autoResolve = true,
+    })
+    if not opened then return false, abrirErr or "No se pudo resolver el conjuro" end
+    u.usado[marca] = true
+    return true, u.nombre
+end
+
 function API.ResolveCast(spellId, options)
     local spell = API.GetSpellById(spellId)
     if not spell then return false, "Conjuro no encontrado" end
@@ -1266,6 +1311,19 @@ function API.ResolveCast(spellId, options)
         local isZone = areaDefinition.area and areaDefinition.area.zone == true
         local isSingle = areaDefinition.area and areaDefinition.area.shape == "other"
             and areaDefinition.area.sizeText == "Objetivo"
+        -- ULTIMO CONJURO DE OBJETIVO UNICO. Se guarda su definicion ya construida para los rasgos
+        -- que actuan DESPUES de lanzarlo: apuntar a una segunda criatura (Caos del Brujo) o
+        -- redirigirlo si fallo (Quemar alma: Rebotar). Solo objetivo unico: "otra criatura" no
+        -- significa nada en un area que ya cubre a varias.
+        if isSingle and not isZone then
+            API._ultimoConjuroUnico = {
+                spellId = spellId,
+                nombre = tostring(spell.name or spellId),
+                definicion = areaDefinition,
+                castLevel = API.GetCastLevel(spell, options),
+                cuando = (time and time()) or 0,
+            }
+        end
         local opened, err = HarfordDnDArea.Open(areaDefinition, {
             sourceKind = "player",
             sourceName = HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName()

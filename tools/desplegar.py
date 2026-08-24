@@ -165,6 +165,20 @@ if _r3.returncode != 0:
         if _l.strip() and not _l.startswith('Campos de datos'):
             errores.append('datos: ' + _l.strip())
 
+# --- 6. Pruebas de logica ----------------------------------------------------------------------
+# Dos veces en una sesion se desplego con una suite en rojo: una comprobacion se quedaba vieja al
+# cambiar la firma de una funcion, y nadie la ejecutaba antes de copiar. Un fichero que compila,
+# carga y ademas rompe una regla que ya estaba probada no tiene por que llegar al cliente.
+_r4 = _sp.run([sys.executable, os.path.join(RAIZ, 'tools', 'pruebas.py')],
+              capture_output=True, text=True, encoding='utf-8', errors='replace')
+if _r4.returncode != 0:
+    _resumen = [l for l in (_r4.stdout or '').split(chr(10)) if 'FALLA' in l or 'fallidos' in l]
+    for _l in _resumen[:12]:
+        if _l.strip():
+            errores.append('pruebas: ' + _l.strip())
+    if not _resumen:
+        errores.append('pruebas: fallan y no se pudo leer el resumen')
+
 print('  %d ficheros .lua revisados' % total)
 for a in avisos:
     print("  AVISO   %s" % a)

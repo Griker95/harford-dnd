@@ -49,7 +49,7 @@ API.CLASSES[#API.CLASSES + 1] =
                 { kind = "skillExpertise", skill = "Religion" },
             } },
             { id = "sac_sag_himno", level = 1, name = "Himno divino", cast = "accion", type = "accion", uses = { max = 1, recharge = "short" }, description = "Acción: curación (= nivel x5 PG) repartida entre criaturas a 30 pies (no por encima de la mitad de su maximo). 1 uso por descanso.", uses = { max = 1, recharge = "short" }, effects = {} },
-            { id = "sac_sag_oracion", level = 6, name = "Oracion de curacion", type = "accion", resourceKey = "light_point", resourceCost = 1, spendResourceOnAnnounce = true, description = "Gasta 1 punto de fe para volver a tirar dados de curación (tuya o de un aliado a 5 pies). 1 vez por turno.", effects = {} },
+            { id = "sac_sag_oracion", level = 6, name = "Oracion de curacion", type = "accion", resourceKey = "light_point", resourceCost = 1, rollModifier = { reroll = true, markKey = "oracionCuracion" }, description = "Gasta 1 punto de fe para volver a tirar dados de curación (tuya o de un aliado a 5 pies). 1 vez por turno.", effects = {} },
         } },
         { id = "sombra", name = "Sombra", desc = "Magia de la mente y energía sombria para destruir.", features = {
                 { id = "sac_som_conjuros_1", level = 1, name = "Conjuros del llamado (Sombra)", type = "informativo", grantedSpells = { "brazos_de_hadar", "vacio_oscuro" }, description = "Nivel 1: Brazos de Hadar y Vacio oscuro. Siempre los tienes preparados y NO cuentan contra los conjuros que puedes preparar cada dia.", effects = {} },

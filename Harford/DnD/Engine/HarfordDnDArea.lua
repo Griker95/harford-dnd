@@ -1020,6 +1020,7 @@ local function ApplyLocalHealing(total)
     return applied
 end
 
+
 local function ApplyNpcHealing(total)
     total = math.max(0, math.floor(tonumber(total) or 0))
     if total <= 0 then return 0 end

@@ -398,6 +398,25 @@ HarfordDnDRolls.MODIFIABLE_ROLLS = {
     roll = true, attack = true, save = true, ability = true, skill = true,
 }
 
+-- Registra una CURACION como ultima tirada. Las tiradas de d20 ya se registran en `DoRollEx`; las
+-- curaciones no lo hacian, y sin registro no habia nada que repetir.
+--
+-- Se guardan los DADOS, no solo el total: repetir una curacion exige saber cuantos dados eran y de
+-- que caras. `aplicadoA` dice a quien se le sumo, para poder ajustar la diferencia al repetir.
+function HarfordDnDRolls.RecordHealRoll(datos)
+    if type(datos) ~= "table" then return end
+    _G.DND5E_ARC_API = _G.DND5E_ARC_API or {}
+    _G.DND5E_ARC_API._lastRoll = {
+        ok = true, kind = "heal",
+        label = tostring(datos.label or "Curacion"),
+        total = math.max(0, math.floor(tonumber(datos.total) or 0)),
+        healDice = datos.healDice,          -- { { count, sides, bonus } }
+        healRolls = datos.healRolls,        -- valores concretos que salieron
+        aplicadoA = datos.aplicadoA,        -- "self" | nombre de jugador | nil
+        timestamp = (time and time()) or 0,
+    }
+end
+
 function HarfordDnDRolls.GetLastRoll()
     local api = _G.DND5E_ARC_API
     local last = api and api._lastRoll
@@ -438,6 +457,49 @@ end
 -- }
 --
 -- Devuelve ok, total nuevo, error, dado bruto, cantidad sumada.
+-- Repite los dados de la ULTIMA curacion y se queda con el resultado nuevo, salga mejor o peor:
+-- repetir es repetir, y quedarse con el mejor de los dos seria otra regla.
+--
+-- Devuelve ok, total nuevo, error, total viejo.
+function HarfordDnDRolls.RerollLastHeal(spec)
+    spec = spec or {}
+    local last, err = HarfordDnDRolls.GetLastRoll()
+    if not last then return false, nil, err end
+    if HarfordDnDRolls.RollKind(last) ~= "heal" then
+        return false, nil, "La ultima tirada no fue una curacion"
+    end
+    if type(last.healDice) ~= "table" or #last.healDice == 0 then
+        return false, nil, "Esa curacion no tenia dados que repetir"
+    end
+    local marca = tostring(spec.markKey or "healRerolled")
+    if last[marca] then return false, nil, "Ya repetiste esa curacion" end
+
+    local nuevos, total = {}, 0
+    for _, grupo in ipairs(last.healDice) do
+        local caras = math.max(2, math.floor(tonumber(grupo.sides) or 6))
+        for _ = 1, math.max(0, math.floor(tonumber(grupo.count) or 0)) do
+            local v = HarfordDnDCalc and HarfordDnDCalc.RollDie and HarfordDnDCalc.RollDie(caras)
+                or math.random(1, caras)
+            nuevos[#nuevos + 1] = v
+            total = total + v
+        end
+        total = total + (tonumber(grupo.bonus) or 0)
+    end
+    total = math.max(0, total)
+
+    local anterior = tonumber(last.total) or 0
+    last.total, last.healRolls, last[marca] = total, nuevos, true
+
+    HarfordDnDRolls.Broadcast({
+        type = "heal",
+        label = tostring(spec.label or "Repetir curacion") .. ": " .. tostring(last.label or ""),
+        total = total,
+        dice = table.concat(nuevos, "+"),
+        modifiers = string.format("antes %d", anterior),
+    })
+    return true, total, nil, anterior
+end
+
 function HarfordDnDRolls.ModifyLastRoll(spec)
     spec = spec or {}
     local last, err = HarfordDnDRolls.GetLastRoll()

@@ -2179,6 +2179,10 @@ local function UsarModificadorDeTirada(feature)
         half = mod.half, applies = mod.applies, markKey = mod.markKey,
         valueLabel = mod.valueLabel,
     }
+    if mod.reroll and not (HarfordDnDRolls and HarfordDnDRolls.RerollLastHeal) then
+        HarfordChat.Print("El sistema de tiradas no sabe repetir curaciones.")
+        return false
+    end
     -- Sin `applies` no corrige nada: solo tira el dado y dice el numero, porque lo que modifica
     -- (tu CA, una CD de concentracion, el dano de tu mascota) no lo lleva el cliente.
     local puede = HarfordDnDStore and HarfordDnDStore.GetResourceCurrent
@@ -2188,11 +2192,24 @@ local function UsarModificadorDeTirada(feature)
         HarfordChat.Print("No tienes recurso suficiente para " .. tostring(feature.name) .. ".")
         return false
     end
-    local ok, _, err
-    if mod.applies then
-        ok, _, err = HarfordDnDRolls.ModifyLastRoll(spec)
+    local ok, nuevo, err, anterior
+    if mod.reroll then
+        -- Repetir no es sumar: se vuelven a tirar los dados y vale el resultado nuevo.
+        ok, nuevo, err, anterior = HarfordDnDRolls.RerollLastHeal(spec)
+        -- La curacion ya se habia aplicado: se ajusta SOLO la diferencia, y unicamente si fue a
+        -- parar a uno mismo. Sobre la de otro no se puede: sus dados nunca llegan a este cliente.
+        if ok then
+            local last = HarfordDnDRolls.GetLastRoll and HarfordDnDRolls.GetLastRoll()
+            if last and last.aplicadoA == "self" and HarfordDnDStore
+                and HarfordDnDStore.AdjustResourceCurrent then
+                local delta = (tonumber(nuevo) or 0) - (tonumber(anterior) or 0)
+                if delta ~= 0 then HarfordDnDStore.AdjustResourceCurrent("health", delta) end
+            end
+        end
+    elseif mod.applies then
+        ok, nuevo, err = HarfordDnDRolls.ModifyLastRoll(spec)
     else
-        ok, _, err = HarfordDnDRolls.AnnounceRollValue(spec)
+        ok, nuevo, err = HarfordDnDRolls.AnnounceRollValue(spec)
     end
     if not ok then
         HarfordChat.Print(tostring(err or "No se pudo usar ese rasgo") .. ".")

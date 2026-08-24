@@ -1790,6 +1790,16 @@ RollHitDieHeal = function(sides, sourceFeature)
     if heal < 1 then heal = 1 end
 
     AdjustResourceCurrent("health", heal)
+    -- Queda como ULTIMA TIRADA con sus dados, para lo que pueda repetirla despues (Oracion de
+    -- Curacion del Sacerdote). Sin los dados registrados no hay nada que repetir.
+    if HarfordDnDRolls.RecordHealRoll then
+        HarfordDnDRolls.RecordHealRoll({
+            label = "Dado de Golpe d" .. sides,
+            total = heal, aplicadoA = "self",
+            healDice = { { count = 1, sides = sides, bonus = conMod } },
+            healRolls = { roll },
+        })
+    end
     HarfordDnDRolls.Broadcast({
         type = "heal",
         label = "Dado de Golpe d" .. sides .. " (cura)",

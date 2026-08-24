@@ -308,7 +308,9 @@ def bloque(texto, nombre):
 
 def ids_del_libro():
     """id -> nombre, de todo lo que el addon puede pedirle un icono al catalogo."""
-    RE = re.compile(r'\{\s*id\s*=\s*"([a-z_0-9]+)"\s*,\s*(?:level\s*=\s*(\d+)\s*,\s*)?name\s*=\s*"([^"]+)"')
+    # Entre `id` y `name` puede haber cualquier cosa (`level`, `icon`, `cast`...). Acotado a la
+    # misma entrada -- sin llaves en medio -- para no saltar al rasgo siguiente.
+    RE = re.compile(r'\{\s*id\s*=\s*"([a-z_0-9]+)"\s*,([^{}]{0,240}?)name\s*=\s*"([^"]+)"')
     rasgos = {}
     ficheros = sorted(glob.glob(RAIZ + 'Harford/DnD/Data/Classes/*.lua'))
     ficheros += [RAIZ + 'Harford/DnD/Data/HarfordDnDRaces.lua',

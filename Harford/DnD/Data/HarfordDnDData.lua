@@ -341,6 +341,16 @@ function HarfordDnDData.GetFeatureIcon(feature)
     if signo then return signo end
     local icon = IconCatalog and IconCatalog.GetFeatureIcon and IconCatalog.GetFeatureIcon(feature.id)
     if icon then return icon end
+    -- Arte declarada en los propios datos del rasgo (los de raza y trasfondo la traen). El catalogo
+    -- manda sobre ella, pero esto va ANTES del respaldo por nombre: si no, un rasgo con su icono
+    -- puesto acababa cogiendo el de otro que se llamase parecido, o ninguno.
+    local propio = feature.icon
+    if type(propio) == "number" then return propio end
+    if type(propio) == "string" and propio ~= "" then
+        if propio:find(string.char(92), 1, true) then return propio end
+        local sep = string.char(92)   -- barra invertida: la ruta de textura de WoW la exige
+        return "Interface" .. sep .. "Icons" .. sep .. propio
+    end
     return HarfordDnDData.GetIcon(feature.name)
 end
 

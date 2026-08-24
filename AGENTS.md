@@ -2796,6 +2796,39 @@ descripciones dentro de `Data.lua`: se pierden en la siguiente regeneracion.
 (`botas_zarzal` / `botas_zarzal_2`). Parecen duplicados del pipeline, no variantes. Forjarlos
 crearia 55 objetos redundantes; conviene resolverlos antes de una tanda larga.
 
+## Convencion de ids de rasgo de clase (2026-08-24)
+
+`<abrevClase>_<abrevSub>_<cosa>`. Las abreviaturas se **DECLARAN**, no se deducen: el Paladin usa
+`ret` para *represion* (retribution) y el Caballero de la Muerte usaba el nombre entero. Deducirlas
+da resultados equivocados.
+
+Aplicado a los 63 rasgos que se nombraban SOLO por su subclase (`afliccion_drenar_alma` ->
+`bru_afl_drenar_alma`). Sin prefijo de clase, dos clases con la misma subclase -- **Druida y Chaman
+comparten "restauracion"** -- solo se distinguian por suerte.
+
+**Comprobado antes de aplicar, y es lo que lo hizo seguro:**
+- **0 de los 63 aparecen en SavedVariables reales.** Solo hay 4 ids de rasgo guardados en toda la
+  cuenta (`bg_des_herr`, `guerrero_estilo_combate`, `hum_versatilidad`, `pic_pericia`), todos en
+  `choices`. No hizo falta migracion de datos de jugador.
+- **0 estan cableados en codigo.**
+- **6 estaban en el catalogo de iconos**, renombrados en el mismo commit.
+- Los ids construidos en RUNTIME (`monje_cer_breb_`, `caz_sup_trampa_`, `bru_afl_mald_`,
+  `cha_mej_atq_`, `sac_pp_`) ya seguian la convencion y no se tocan. `guerrero_man_` no, pero queda
+  fuera del alcance.
+- 0 colisiones con ids existentes y 0 entre los nuevos.
+
+**La WEB conserva los ids viejos y NO se toca desde aqui.** `importar_iconos_web.py` lleva una tabla
+`ALIAS_WEB` que traduce al leer, asi que el cruce de iconos sigue funcionando. Sin ella, si la web
+cambiase el icono de uno de esos 6, el addon dejaria de enterarse EN SILENCIO. Cuando la web adopte
+los ids nuevos la tabla se vuelve inerte sola y se puede borrar.
+
+**Fuera del alcance:** 33 ids con el nombre de clase entero (`guerrero_segundo_aliento`). Uno de
+ellos, `guerrero_estilo_combate`, SI esta en datos de jugador, asi que ese pase necesitaria
+migracion de verdad.
+
+Suite `ids_convencion`: falla si un rasgo vuelve a nombrarse solo por su subclase o si sobrevive un
+id viejo en cualquier parte del addon.
+
 ## Pruebas de logica: `python tools/pruebas.py` (2026-08-24)
 
 12 suites, 133 casos. Cada una EXTRAE funciones del codigo real con `string.find` sobre el fichero

@@ -54,6 +54,80 @@ def carga_web(nombre):
     return None
 
 
+# ---------------------------------------------------------------- ids renombrados
+# El addon aplico la convencion <abrevClase>_<abrevSub>_<cosa> a 63 rasgos que se nombraban solo
+# por su subclase (`afliccion_drenar_alma` -> `bru_afl_drenar_alma`). La WEB conserva los ids
+# viejos y NO se toca desde aqui: es su fuente y la mantiene otro flujo.
+#
+# Esta tabla traduce al leer, para que el cruce de iconos siga funcionando con la web sin cambios.
+# Cuando la web adopte los ids nuevos, cada entrada deja de encontrar su viejo y se vuelve inerte;
+# entonces se puede borrar la tabla entera.
+ALIAS_WEB = {
+    'bru_afl_aflicciones_inestables': 'afliccion_aflicciones_inestables',
+    'bru_afl_aflicciones_potentes': 'afliccion_aflicciones_potentes',
+    'bru_afl_drenar_alma': 'afliccion_drenar_alma',
+    'bru_dem_furia_demoniaca': 'demonologia_furia_demoniaca',
+    'bru_dem_grimorio_de_supremacia': 'demonologia_grimorio_de_supremacia',
+    'bru_dem_somos_legion': 'demonologia_somos_legion',
+    'bru_des_infierno': 'destruccion_infierno',
+    'bru_des_llamas_de_xerrath': 'destruccion_llamas_de_xerrath',
+    'bru_des_resolucion_inquebrantable': 'destruccion_resolucion_inquebrantable',
+    'caz_bes_vinculo_del_companero': 'bestias_vinculo_del_companero',
+    'caz_pun_aspecto_del_aguila': 'punteria_aspecto_del_aguila',
+    'caz_pun_ataque_multiple': 'punteria_ataque_multiple',
+    'caz_pun_enfoque_del_tirador': 'punteria_enfoque_del_tirador',
+    'caz_sup_camuflaje_natural': 'supervivencia_camuflaje_natural',
+    'caz_sup_contraataque_marcado': 'supervivencia_contraataque_marcado',
+    'caz_sup_terminos_de_compromiso': 'supervivencia_terminos_de_compromiso',
+    'cdm_esc_corazon_congelado': 'escarcha_corazon_congelado',
+    'cdm_esc_garras_de_hielo': 'escarcha_garras_de_hielo',
+    'cdm_esc_invierno_implacable': 'escarcha_invierno_implacable',
+    'cdm_esc_pilar_de_escarcha': 'escarcha_pilar_de_escarcha',
+    'cdm_san_arma_runica_danza': 'sangre_arma_runica_danza',
+    'cdm_san_golpe_al_corazon': 'sangre_golpe_al_corazon',
+    'cdm_san_purgatorio': 'sangre_purgatorio',
+    'cdm_san_tormenta_de_huesos': 'sangre_tormenta_de_huesos',
+    'dh_ven_aura_de_inmolacion': 'venganza_aura_de_inmolacion',
+    'dh_ven_ultimo_recurso': 'venganza_ultimo_recurso',
+    'dru_eq_bendicion_de_los_ancestros': 'equilibrio_bendicion_de_los_ancestros',
+    'dru_eq_encarnacion_elegido_de_elune': 'equilibrio_encarnacion_elegido_de_elune',
+    'dru_eq_influencia_astral': 'equilibrio_influencia_astral',
+    'dru_fer_afinidad_superior_feral_o_guar': 'feral_afinidad_superior_feral_o_guar',
+    'dru_fer_encarnacion_guardian_de_las_ti': 'feral_encarnacion_guardian_de_las_ti',
+    'dru_fer_mutilacion_brutal': 'feral_mutilacion_brutal',
+    'dru_res_corteza_de_hierro': 'restauracion_corteza_de_hierro',
+    'dru_res_encarnacion_arbol_de_vida': 'restauracion_encarnacion_arbol_de_vida',
+    'dru_res_guardia_cenarion': 'restauracion_guardia_cenarion',
+    'dru_res_rejuvenecimiento': 'restauracion_rejuvenecimiento',
+    'dru_res_tranquilidad': 'restauracion_tranquilidad',
+    'gue_arm_calma_mortal': 'armas_calma_mortal',
+    'gue_arm_golpe_colosal': 'armas_golpe_colosal',
+    'gue_arm_golpes_de_oportunidad': 'armas_golpes_de_oportunidad',
+    'gue_arm_grito_de_mando': 'armas_grito_de_mando',
+    'gue_fur_berserker_enloquecido': 'furia_berserker_enloquecido',
+    'gue_fur_critico_devastador': 'furia_critico_devastador',
+    'gue_fur_furia_focalizada': 'furia_furia_focalizada',
+    'gue_fur_sed_de_sangre': 'furia_sed_de_sangre',
+    'gue_pro_golpes_atenuados': 'proteccion_golpes_atenuados',
+    'gue_pro_interceptar': 'proteccion_interceptar',
+    'gue_pro_nunca_te_rindas': 'proteccion_nunca_te_rindas',
+    'gue_pro_presencia_inspiradora': 'proteccion_presencia_inspiradora',
+    'mago_esc_anillo_de_escarcha': 'escarcha_anillo_de_escarcha',
+    'mago_esc_manos_de_escarcha': 'escarcha_manos_de_escarcha',
+    'mago_fue_combustion': 'fuego_combustion',
+    'mago_fue_prender': 'fuego_prender',
+    'monje_cer_brebajes_elusivos': 'cervecero_brebajes_elusivos',
+    'monje_cer_elaboracion_ligera': 'cervecero_elaboracion_ligera',
+    'monje_tej_anillo_de_paz': 'tejedor_anillo_de_paz',
+    'monje_tej_estatua_del_dragon_de_jade': 'tejedor_estatua_del_dragon_de_jade',
+    'sac_dis_absolucion_penitencia': 'disciplina_absolucion_penitencia',
+    'sac_dis_castigo': 'disciplina_castigo',
+    'sac_dis_claridad_de_voluntad': 'disciplina_claridad_de_voluntad',
+    'sac_dis_expiacion': 'disciplina_expiacion',
+    'sac_som_mente_dominante': 'sombra_mente_dominante',
+    'sac_som_rendicion_a_la_locura': 'sombra_rendicion_a_la_locura',
+}
+
 def iconos_de_la_web():
     iconos = {}
     for fichero in ['compendium-data.js', 'compendium-dotes.js', 'compendium-equipment.js',
@@ -72,6 +146,10 @@ def iconos_de_la_web():
                 for v in n:
                     anda(v)
         anda(d)
+    # Los ids que el addon renombro heredan el icono de su nombre anterior en la web.
+    for nuevo, viejo in ALIAS_WEB.items():
+        if nuevo not in iconos and viejo in iconos:
+            iconos[nuevo] = iconos[viejo]
     return iconos
 
 

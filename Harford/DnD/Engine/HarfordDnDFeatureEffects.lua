@@ -263,7 +263,17 @@ local function ApplyEffect(resolved, effect, profileName)
                 v = (tonumber(effect.base) or 0) + lvl * (tonumber(effect.perLevel) or 1)
             end
         end
-        Add(resolved.resourceMax, effect.resource, v)
+        -- `stack = "max"`: el maximo NO se acumula entre fuentes, se queda el mayor. Lo pide la
+        -- regla de multiclase del PHB para Canalizar Divinidad: si ya tienes el rasgo y subes nivel
+        -- en otra clase que tambien lo concede, obtienes sus efectos pero NO usos adicionales.
+        -- OJO al ampliarlo: si algun dia una clase sube sus usos por nivel, hay que declararlo como
+        -- VALOR TOTAL (`values` por nivel), no como incrementos, o el `max` se los comeria.
+        if effect.stack == "max" then
+            local key = tostring(effect.resource)
+            resolved.resourceMax[key] = math.max(tonumber(resolved.resourceMax[key]) or 0, v)
+        else
+            Add(resolved.resourceMax, effect.resource, v)
+        end
     elseif kind == "resourceGain" and effect.resource and effect.trigger then
         local t = tostring(effect.trigger)
         resolved.resourceGain[t] = resolved.resourceGain[t] or {}

@@ -67,10 +67,15 @@ local function GetSelfArmorClass()
     -- "Defensa sin Armadura" (Monje: Sabiduria) suman aqui el Mod. de su caracteristica,
     -- y SOLO aqui: con armadura o escudo equipados se cae a la rama anterior y no aplican.
     local dex = (HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod and HarfordDnDCalc.GetAbilityMod("Destreza")) or 0
+    -- Defensa sin Armadura NO SE ACUMULA: en 5e solo puedes beneficiarte de una, aunque tengas la
+    -- de dos clases (Monje suma Sabiduria, Cazador de Demonios suma Inteligencia). Se coge la MEJOR,
+    -- que es la que elegiria cualquiera, asi que no hay nada que preguntarle al jugador.
+    -- Sumarlas daba 10 + Des + Sab + Int a un multiclase Monje/Cazador de Demonios.
     local unarmored = 0
     if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetUnarmoredDefenseAbilities and HarfordDnDCalc then
         for _, ability in ipairs(HarfordDnDFeatureEffects.GetUnarmoredDefenseAbilities()) do
-            unarmored = unarmored + (HarfordDnDCalc.GetAbilityMod(ability) or 0)
+            local mod = HarfordDnDCalc.GetAbilityMod(ability) or 0
+            if mod > unarmored then unarmored = mod end
         end
     end
     return math.floor(10 + dex + unarmored + bonus)

@@ -63,7 +63,7 @@ API.CLASSES[#API.CLASSES + 1] =
         } },
         { id = "elune", name = "Sacerdocio de Elune", desc = "Especializacion exclusiva de elfos de la noche: devoción a la Madre Luna y disciplina marcial de las centinelas.", requiredRace = "elfo_noche", features = {
             { id = "sac_elu_canalizar_divinidad", level = 1, name = "Canalizar divinidad", type = "pasivo", requiredRace = "elfo_noche", description = "Tu devoción a Elune te permite canalizar energía divina para alimentar sus dones. Dispones de 1 uso de Canalizar Divinidad y recuperas todos los usos al terminar un descanso corto o largo.", effects = {
-                { kind = "resourceMax", resource = "channel_divinity", value = 1 },
+                { kind = "resourceMax", resource = "channel_divinity", value = 1, stack = "max" },
             } },
             { id = "sac_elu_gracia", level = 1, name = "Gracia de Elune", type = "accion", requiredRace = "elfo_noche", actionKind = "elunesGrace", description = "Como acción adicional, gastas Canalizar Divinidad para envolver a una criatura que veas a 30 pies en el abrazo protector de Elune. Durante 1 minuto, o hasta que quedes incapacitado o mueras, puede realizar Destrabarse, Esquivar u Ocultarse como acción adicional. Si te eliges a ti, puedes realizar una de esas acciones al activar la gracia.", effects = {} },
             { id = "sac_elu_conjuros", level = 1, name = "Conjuros del sacerdocio de Elune", type = "pasivo", requiredRace = "elfo_noche", description = "Hasta nivel 6, estos conjuros están siempre preparados y no cuentan contra tu limite: nivel 1 Encontrar familiar y Marca del cazador; nivel 2 Rayo de luna y Oleada estelar; nivel 3 Señal de esperanza y Explosión lunar; nivel 4 Destierro e Invisibilidad mayor.", spellGrants = {

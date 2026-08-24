@@ -75,7 +75,7 @@ API.CLASSES[#API.CLASSES + 1] =
             { kind = "conditionalWeaponDamage", id = "smite", label = "Golpe del Cruzado", count = 2, die = 8, damageType = "radiante", spellLevelCost = "level", minLevel = 1, maxSpellLevel = true, countPerLevel = 1, extraCountOffset = 1, maxCount = 6 },
         } },
         { id = "pal_camino_sagrado", level = 3, name = "Camino sagrado", type = "recurso", description = "Eliges tu camino (de lo Sagrado, de la Protección o de la Represion). Concede rasgos y Canalizar Divinidad (1 uso, recarga en descanso corto o largo) en niveles 3, 7, 15 y 20.", effects = {
-            { kind = "resourceMax", resource = "channel_divinity", value = 1 },
+            { kind = "resourceMax", resource = "channel_divinity", value = 1, stack = "max" },
         } },
         ASI("paladin", 4),
         { id = "pal_ataque_extra", level = 5, name = "Ataque adicional", type = "pasivo", description = "Atacas dos veces, en lugar de una, al realizar la acción de Atacar.", effects = {

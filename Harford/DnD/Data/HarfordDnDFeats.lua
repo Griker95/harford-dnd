@@ -107,7 +107,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_rencor_faccion", name = "Rencor de faccion", requires = "Cualquier raza",
+        id = "feat_rencor_faccion", name = "Rencor de faccion", requires = "Cualquier raza", description = "Odio jurado a dos razas enemigas: las conoces, las lees y reaccionas antes ante ellas.",
         traits = {
             { id = "feat_rf_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza, Constitución o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion"), AbilOpt("Sabiduria") } } },
             { id = "feat_rf_enemigos", name = "Enemigos jurados", type = "informativo", description = "Elige dos razas de la facción opuesta. En el primer asalto de combate, tus ataques contra ellas tienen ventaja.", effects = {} },
@@ -179,14 +179,14 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_actor", name = "Actor", source = "PHB",
+        id = "feat_actor", name = "Actor", description = "Talento para la imitación y el disfraz verbal: convences con la voz y con el gesto.", source = "PHB",
         traits = {
             { id = "feat_phb_actor_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Carisma +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Carisma", value = 1 } } },
             { id = "feat_phb_actor_b", name = "Beneficios", type = "informativo", description = "Ventaja en Engaño e Interpretación para hacerte pasar por otra persona. Puedes imitar voces y sonidos oidos al menos 1 minuto.", effects = {} },
         },
     },
     {
-        id = "feat_afortunado", name = "Afortunado", source = "PHB",
+        id = "feat_afortunado", name = "Afortunado", description = "Una suerte inexplicable que puedes gastar cuando el dado no acompaña.", source = "PHB",
         traits = {
             { id = "feat_phb_afortunado", name = "Suerte", type = "informativo", description = "Tienes 3 puntos de suerte. Gastas 1 para tirar un d20 extra en un ataque/prueba/salvación (tuyo o contra ti) y elegir el resultado. Recargan en descanso largo.", effects = {} },
         },
@@ -199,130 +199,130 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_apresador", name = "Apresador", requires = "Fuerza 13 o mas", source = "PHB",
+        id = "feat_apresador", name = "Apresador", requires = "Fuerza 13 o mas", description = "Pelea pegado al enemigo: agarrar, sujetar y castigar a quien tienes encima.", source = "PHB",
         traits = {
             { id = "feat_phb_apresador", name = "Beneficios", type = "informativo", description = "Ventaja en ataques contra criaturas que estés agarrando. Con una acción puedes someter a un agarrado: ambos quedais apresados si tienes éxito.", effects = {} },
         },
     },
     {
-        id = "feat_atacante_carga", name = "Atacante a la carga", source = "PHB",
+        id = "feat_atacante_carga", name = "Atacante a la carga", description = "Aprovechas la carrera para rematarla con un golpe o una embestida.", source = "PHB",
         traits = {
             { id = "feat_phb_carga", name = "Beneficios", type = "informativo", description = "Al usar la acción de Correr puedes usar acción adicional para un ataque cuerpo a cuerpo o empujar. Si te moviste 3 m en línea recta antes, +5 al daño o empujas 3 m.", effects = {} },
         },
     },
     {
-        id = "feat_atacante_salvaje", name = "Atacante salvaje", source = "PHB",
+        id = "feat_atacante_salvaje", name = "Atacante salvaje", description = "Una vez por turno, repites el daño de un golpe cuerpo a cuerpo que no te convenza.", source = "PHB",
         traits = {
             { id = "feat_phb_salvaje", name = "Beneficios", type = "informativo", description = "Una vez por turno, al tirar el daño de un ataque cuerpo a cuerpo con arma, puedes repetir los dados de daño y usar el resultado que prefieras.", effects = {} },
         },
     },
     {
-        id = "feat_atleta", name = "Atleta", source = "PHB",
+        id = "feat_atleta", name = "Atleta", description = "Cuerpo entrenado: te levantas, trepas y saltas donde otros pierden el turno.", source = "PHB",
         traits = {
             { id = "feat_phb_atleta_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_phb_atleta_b", name = "Beneficios", type = "informativo", description = "Levantarte derribado cuesta solo 1,5 m. Trepar no cuesta movimiento extra. Saltas con carrerilla tras moverte solo 1,5 m.", effects = {} },
         },
     },
     {
-        id = "feat_azote_magos", name = "Azote de magos", source = "PHB",
+        id = "feat_azote_magos", name = "Azote de magos", description = "Técnicas para ahogar la magia enemiga en cuanto la tienes al alcance.", source = "PHB",
         traits = {
             { id = "feat_phb_azote", name = "Beneficios", type = "informativo", description = "Reacción para atacar cuerpo a cuerpo a quien lance un conjuro a 1,5 m. Si lo dañas mientras se concentra, tiene desventaja en la salvación de concentración. Ventaja en salvaciones contra conjuros lanzados a 1,5 m.", effects = {} },
         },
     },
     {
-        id = "feat_centinela", name = "Centinela", source = "PHB",
+        id = "feat_centinela", name = "Centinela", description = "Nadie se escapa de tu lado: castigas a quien lo intenta y frenas a quien pasa.", source = "PHB",
         traits = {
             { id = "feat_phb_centinela", name = "Beneficios", type = "informativo", description = "Al impactar con un ataque de oportunidad, la velocidad del objetivo baja a 0 ese turno. Atacas de oportunidad aunque el enemigo se Destrabe. Reacción para atacar a quien ataque a un aliado a 1,5 m de ti.", effects = {} },
         },
     },
     {
-        id = "feat_combatiente_dos_armas", name = "Combatiente con dos armas", source = "PHB",
+        id = "feat_combatiente_dos_armas", name = "Combatiente con dos armas", description = "Dominio de las dos manos: mejor guardia y golpes de la mano torpe.", source = "PHB",
         traits = {
             { id = "feat_phb_2armas", name = "Beneficios", type = "informativo", description = "+1 CA empuñando un arma cuerpo a cuerpo en cada mano. Puedes combatir con dos armas aunque no sean ligeras. Envainas/desenvainas dos armas a una mano a la vez.", effects = {} },
         },
     },
     {
-        id = "feat_combatiente_montado", name = "Combatiente montado", source = "PHB",
+        id = "feat_combatiente_montado", name = "Combatiente montado", description = "A caballo eres otra cosa: proteges a tu montura y golpeas desde arriba.", source = "PHB",
         traits = {
             { id = "feat_phb_montado", name = "Beneficios", type = "informativo", description = "Montado y no incapacitado: ventaja en ataques cuerpo a cuerpo contra criaturas no montadas de tamaño menor que tu montura; rediriges a ti ataques contra tu montura; tu montura no recibe daño si supera una salvación de Destreza por mitad.", effects = {} },
         },
     },
     {
-        id = "feat_duelista_defensivo", name = "Duelista defensivo", requires = "Destreza 13 o mas", source = "PHB",
+        id = "feat_duelista_defensivo", name = "Duelista defensivo", requires = "Destreza 13 o mas", description = "Con arma sutil, conviertes la parada en defensa cuando te van a impactar.", source = "PHB",
         traits = {
             { id = "feat_phb_duelista", name = "Beneficios", type = "informativo", description = "Empuñando un arma sutil con la que seas competente, al recibir un ataque cuerpo a cuerpo puedes usar tu reacción para sumar tu bono de competencia a la CA contra ese ataque.", effects = {} },
         },
     },
     {
-        id = "feat_duro", name = "Duro", source = "PHB",
+        id = "feat_duro", name = "Duro", description = "Cuerpo curtido: aguantas mucho más castigo del que aparentas.", source = "PHB",
         traits = {
             { id = "feat_phb_duro", name = "Beneficios", type = "pasivo", description = "Tus PG máximos aumentan en 2 por cada nivel (2x tu nivel total).", effects = { { kind = "hpPerLevel", value = 2 } } },
         },
     },
     {
-        id = "feat_experto_ballestas", name = "Experto en ballestas", source = "PHB",
+        id = "feat_experto_ballestas", name = "Experto en ballestas", description = "La ballesta en tus manos no se atasca ni pierde ritmo, ni con el enemigo encima.", source = "PHB",
         traits = {
             { id = "feat_phb_ballestas", name = "Beneficios", type = "informativo", description = "Ignoras la recarga de ballestas con las que eres competente. Estar a 1,5 m de un enemigo no da desventaja a tus ataques a distancia. Al atacar con un arma a una mano, acción adicional para atacar con ballesta de mano.", effects = {} },
         },
     },
     {
-        id = "feat_explorador_mazmorras", name = "Explorador de mazmorras", source = "PHB",
+        id = "feat_explorador_mazmorras", name = "Explorador de mazmorras", description = "Ojo entrenado para trampas y puertas secretas, y memoria para el terreno.", source = "PHB",
         traits = {
             { id = "feat_phb_mazmorras", name = "Beneficios", type = "informativo", description = "Ventaja en Percepción e Investigación para detectar puertas secretas y en salvaciones contra trampas. Resistencia al daño de trampas. Buscas trampas a ritmo normal.", effects = {} },
         },
     },
     {
-        id = "feat_habilidoso", name = "Habilidoso", source = "PHB",
+        id = "feat_habilidoso", name = "Habilidoso", description = "Aprendizaje amplio: tres campos nuevos, a tu elección, entre habilidades y herramientas.", source = "PHB",
         traits = {
             { id = "feat_phb_habilidoso", name = "Competencias", type = "choice", description = "Competencia en tres habilidades o herramientas de tu elección.", effects = {}, choice = { slots = 3, optionsFrom = "skillProf" } },
         },
     },
     {
-        id = "feat_iniciado_magia", name = "Iniciado en la magia", source = "PHB",
+        id = "feat_iniciado_magia", name = "Iniciado en la magia", description = "Un pie en otra tradición mágica: unos trucos y un conjuro prestados.", source = "PHB",
         traits = {
             { id = "feat_phb_iniciado", name = "Beneficios", type = "informativo", description = "Elige una clase lanzadora: aprendes dos trucos de su lista y un conjuro de nivel 1 (lanzable 1 vez por descanso largo con este dote). La aptitud mágica depende de la clase elegida.", effects = {} },
         },
     },
     {
-        id = "feat_lanzador_combate", name = "Lanzador en combate", requires = "Capacidad de lanzar al menos un conjuro", source = "PHB",
+        id = "feat_lanzador_combate", name = "Lanzador en combate", requires = "Capacidad de lanzar al menos un conjuro", description = "Lanzar bajo presión: no pierdes el conjuro por un golpe ni por tener las manos ocupadas.", source = "PHB",
         traits = {
             { id = "feat_phb_lcombate", name = "Beneficios", type = "informativo", description = "Ventaja en salvaciones de Constitución para mantener concentración al recibir daño. Ejecutas componentes somaticos con las manos ocupadas por armas/escudo. Reacción para lanzar un conjuro (1 acción, 1 objetivo) en lugar de un ataque de oportunidad.", effects = {} },
         },
     },
     {
-        id = "feat_lanzador_preciso", name = "Lanzador preciso", requires = "Capacidad de lanzar al menos un conjuro", source = "PHB",
+        id = "feat_lanzador_preciso", name = "Lanzador preciso", requires = "Capacidad de lanzar al menos un conjuro", description = "Puntería con la magia: tus ataques de conjuro no sufren por la cercanía ni por la cobertura.", source = "PHB",
         traits = {
             { id = "feat_phb_lpreciso", name = "Beneficios", type = "informativo", description = "Al lanzar un conjuro con tirada de ataque, su alcance se duplica. Tus ataques de conjuro a distancia ignoran cobertura media y tres cuartos. Aprendes un truco con tirada de ataque.", effects = {} },
         },
     },
     {
-        id = "feat_lanzador_ritual", name = "Lanzador ritual", requires = "Inteligencia o Sabiduria 13 o mas", source = "PHB",
+        id = "feat_lanzador_ritual", name = "Lanzador ritual", requires = "Inteligencia o Sabiduria 13 o mas", description = "Un libro propio de rituales que puedes lanzar sin gastar espacios.", source = "PHB",
         traits = {
             { id = "feat_phb_lritual", name = "Beneficios", type = "informativo", description = "Obtienes un libro de rituales con dos conjuros de nivel 1 con etiqueta ritual de una clase a elegir. Puedes copiar al libro otros conjuros rituales que encuentres.", effects = {} },
         },
     },
     {
-        id = "feat_lider_inspirador", name = "Lider inspirador", requires = "Carisma 13 o mas", source = "PHB",
+        id = "feat_lider_inspirador", name = "Lider inspirador", requires = "Carisma 13 o mas", description = "Una arenga antes del combate deja a los tuyos con aguante de sobra.", source = "PHB",
         traits = {
             { id = "feat_phb_lider", name = "Beneficios", type = "informativo", description = "Tras 10 minutos, hasta seis criaturas (incluido tu) a 9 m que te vean u oigan reciben PG temporales = tu nivel + Mod. Carisma. No se repite hasta un descanso.", effects = {} },
         },
     },
     {
-        id = "feat_ligeramente_acorazado", name = "Ligeramente acorazado", source = "PHB",
+        id = "feat_ligeramente_acorazado", name = "Ligeramente acorazado", description = "Entrenamiento con armadura ligera, para quien no la tenía.", source = "PHB",
         traits = {
             { id = "feat_phb_lacor_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_phb_lacor_b", name = "Beneficios", type = "pasivo", description = "Competencia con armaduras ligeras.", effects = { { kind = "armorProf", armor = "ligera" } } },
         },
     },
     {
-        id = "feat_linguista", name = "Linguista", source = "PHB",
+        id = "feat_linguista", name = "Linguista", description = "Estudio de lenguas y códigos: hablas más idiomas y escribes en clave.", source = "PHB",
         traits = {
             { id = "feat_phb_ling_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
             { id = "feat_phb_ling_b", name = "Beneficios", type = "informativo", description = "Aprendes tres idiomas. Puedes crear códigos cifrados para tus mensajes escritos.", effects = {} },
         },
     },
     {
-        id = "feat_maestro_armas", name = "Maestro de armas", source = "PHB",
+        id = "feat_maestro_armas", name = "Maestro de armas", description = "Práctica con un puñado de armas nuevas, elegidas por ti.", source = "PHB",
         traits = {
             { id = "feat_phb_marmas_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_phb_marmas_b", name = "Beneficios", type = "informativo", description = "Competencia con cuatro armas a tu elección (sencillas o marciales).", effects = {} },
@@ -347,79 +347,79 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_maestro_armaduras_medias", name = "Maestro en armaduras medias", requires = "Competente con armaduras medias", source = "PHB",
+        id = "feat_maestro_armaduras_medias", name = "Maestro en armaduras medias", requires = "Competente con armaduras medias", description = "Te mueves con armadura media como si no la llevaras.", source = "PHB",
         traits = {
             { id = "feat_phb_amedias", name = "Beneficios", type = "informativo", description = "La armadura media no te da desventaja en Sigilo. Con Destreza 16+ sumas 3 (en vez de 2) a la CA con armadura media.", effects = {} },
         },
     },
     {
-        id = "feat_maestro_armaduras_pesadas", name = "Maestro en armaduras pesadas", requires = "Competencia con armaduras pesadas", source = "PHB",
+        id = "feat_maestro_armaduras_pesadas", name = "Maestro en armaduras pesadas", requires = "Competencia con armaduras pesadas", description = "La armadura pesada desvía contigo golpes que a otros los matarían.", source = "PHB",
         traits = {
             { id = "feat_phb_apes_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Fuerza +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
             { id = "feat_phb_apes_b", name = "Beneficios", type = "informativo", description = "Con armadura pesada, el daño contundente/cortante/perforante de armas no mágicas que recibes se reduce en 3.", effects = {} },
         },
     },
     {
-        id = "feat_maestro_armas_asta", name = "Maestro en armas de asta", source = "PHB",
+        id = "feat_maestro_armas_asta", name = "Maestro en armas de asta", description = "Alabardas y lanzas largas: golpeas dos veces y castigas a quien se acerca.", source = "PHB",
         traits = {
             { id = "feat_phb_asta", name = "Beneficios", type = "informativo", description = "Con alabarda, bastón o guja, acción adicional para un ataque con el extremo opuesto (d4 contundente). Atacas de oportunidad a quien entre en el alcance de alabarda/bastón/guja/pica.", effects = {} },
         },
     },
     {
-        id = "feat_maestro_armas_pesadas", name = "Maestro en armas pesadas", source = "PHB",
+        id = "feat_maestro_armas_pesadas", name = "Maestro en armas pesadas", description = "Usas el peso del arma a tu favor y rematas a quien cae.", source = "PHB",
         traits = {
             { id = "feat_phb_apesadas", name = "Beneficios", type = "informativo", description = "Una vez por turno, con un crítico o al reducir a 0 PG con arma cuerpo a cuerpo, acción adicional para otro ataque cuerpo a cuerpo. Con arma pesada competente puedes -5 al ataque por +10 al daño.", effects = {} },
         },
     },
     {
-        id = "feat_maestro_escudos", name = "Maestro en escudos", source = "PHB",
+        id = "feat_maestro_escudos", name = "Maestro en escudos", description = "El escudo también golpea: derribas y te cubres de lo que estalla.", source = "PHB",
         traits = {
             { id = "feat_phb_escudos", name = "Beneficios", type = "informativo", description = "Con escudo: al usar la acción de Atacar, acción adicional para empujar con el escudo a 1,5 m. Sumas el bono de CA del escudo a salvaciones de Destreza que solo te afecten a ti; con reacción puedes anular el daño si superas la salvación.", effects = {} },
         },
     },
     {
-        id = "feat_maton_taberna", name = "Maton de taberna", source = "PHB",
+        id = "feat_maton_taberna", name = "Maton de taberna", description = "Pelea sucia: puños, botellas y cualquier cosa que esté a mano.", source = "PHB",
         traits = {
             { id = "feat_phb_maton_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Constitución +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion") } } },
             { id = "feat_phb_maton_b", name = "Beneficios", type = "informativo", description = "Competente con armas improvisadas. Tus ataques sin armas infligen 1d4. Al impactar con golpe desarmado o arma improvisada, acción adicional para agarrar.", effects = {} },
         },
     },
     {
-        id = "feat_mente_aguda", name = "Mente aguda", source = "PHB",
+        id = "feat_mente_aguda", name = "Mente aguda", description = "Memoria y orientación infalibles: sabes la hora, el rumbo y lo que se dijo.", source = "PHB",
         traits = {
             { id = "feat_phb_mente_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
             { id = "feat_phb_mente_b", name = "Beneficios", type = "informativo", description = "Siempre sabes donde esta el norte y cuanto falta para el amanecer/anochecer. Recuerdas con exactitud todo lo visto u oído el ultimo mes.", effects = {} },
         },
     },
     {
-        id = "feat_moderadamente_acorazado", name = "Moderadamente acorazado", requires = "Competencia con armaduras ligeras", source = "PHB",
+        id = "feat_moderadamente_acorazado", name = "Moderadamente acorazado", requires = "Competencia con armaduras ligeras", description = "Entrenamiento con armadura media y escudo, para quien solo llevaba ligera.", source = "PHB",
         traits = {
             { id = "feat_phb_macor_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_phb_macor_b", name = "Beneficios", type = "pasivo", description = "Competencia con armaduras medias y escudos.", effects = { { kind = "armorProf", armor = "media" }, { kind = "armorProf", armor = "escudo" } } },
         },
     },
     {
-        id = "feat_movil", name = "Movil", source = "PHB",
+        id = "feat_movil", name = "Movil", description = "Rápido y escurridizo: cubres más terreno y te vas sin que te castiguen.", source = "PHB",
         traits = {
             { id = "feat_phb_movil", name = "Beneficios", type = "informativo", description = "Tu velocidad aumenta 3 m. Al Correr, el terreno difícil no cuesta movimiento extra ese turno. Tras un ataque cuerpo a cuerpo a una criatura, no provocas ataques de oportunidad de ella ese turno.", effects = {} },
         },
     },
     {
-        id = "feat_muy_acorazado", name = "Muy acorazado", requires = "Competente con armaduras medias", source = "PHB",
+        id = "feat_muy_acorazado", name = "Muy acorazado", requires = "Competente con armaduras medias", description = "Entrenamiento con armadura pesada, para quien ya manejaba la media.", source = "PHB",
         traits = {
             { id = "feat_phb_muyacor_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Fuerza +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
             { id = "feat_phb_muyacor_b", name = "Beneficios", type = "pasivo", description = "Competencia con armaduras pesadas.", effects = { { kind = "armorProf", armor = "pesada" } } },
         },
     },
     {
-        id = "feat_observador", name = "Observador", source = "PHB",
+        id = "feat_observador", name = "Observador", description = "Detalle que se te escapa, detalle que no existe; y además lees los labios.", source = "PHB",
         traits = {
             { id = "feat_phb_obs_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria") } } },
             { id = "feat_phb_obs_b", name = "Beneficios", type = "informativo", description = "Lees los labios de quien hable un idioma que conozcas y veas su boca. +5 a tu Percepción e Investigación pasivas.", effects = {} },
         },
     },
     {
-        id = "feat_resiliente", name = "Resiliente", source = "PHB",
+        id = "feat_resiliente", name = "Resiliente", description = "Refuerzas una característica y aprendes a salvar con ella.", source = "PHB",
         traits = {
             { id = "feat_phb_resiliente", name = "Caracteristica y salvacion", type = "choice", description = "Una característica +1 (max 20) y competencia en sus salvaciones.", effects = {}, choice = {
                 slots = 1,
@@ -435,79 +435,79 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_resistente", name = "Resistente", source = "PHB",
+        id = "feat_resistente", name = "Resistente", description = "Constitución de sobra: cada nivel te deja más vida de la que te corresponde.", source = "PHB",
         traits = {
             { id = "feat_phb_resistente_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
             { id = "feat_phb_resistente_b", name = "Beneficios", type = "informativo", description = "Al tirar un Dado de Golpe para curarte, el mínimo que recuperas es 2x tu Mod. Constitución (mínimo 2).", effects = {} },
         },
     },
     {
-        id = "feat_sanador", name = "Sanador", source = "PHB",
+        id = "feat_sanador", name = "Sanador", description = "Manos de médico: levantas a un caído y curas más de lo normal con un botiquín.", source = "PHB",
         traits = {
             { id = "feat_phb_sanador", name = "Beneficios", type = "informativo", description = "Al estabilizar con útiles de sanador, la criatura recupera además 1 PG. Como acción, gastas un uso de útiles de sanador para curar 1d6+4 PG mas su numero de Dados de Golpe (1 vez por descanso por criatura).", effects = {} },
         },
     },
     {
-        id = "feat_tirador_primera", name = "Tirador de primera", source = "PHB",
+        id = "feat_tirador_primera", name = "Tirador de primera", description = "Disparos que otros dan por imposibles: distancia, cobertura y potencia a cambio de puntería.", source = "PHB",
         traits = {
             { id = "feat_phb_tirador", name = "Beneficios", type = "informativo", description = "Sin desventaja a alcance largo. Tus ataques a distancia ignoran cobertura media y tres cuartos. Con arma a distancia competente puedes -5 al ataque por +10 al daño.", effects = {} },
         },
     },
     {
-        id = "feat_versado_armas", name = "Versado en las armas", source = "PHB",
+        id = "feat_versado_armas", name = "Versado en las armas", description = "Maniobras marciales prestadas, con su dado de superioridad.", source = "PHB",
         traits = {
             { id = "feat_phb_versarmas", name = "Beneficios", type = "informativo", description = "Aprendes dos maniobras del Maestro del Combate (guerrero). Ganas un dado de supremacia d6 (o uno mas si ya tienes). Recargan en descanso corto o largo.", effects = {} },
         },
     },
     {
-        id = "feat_versado_elemento", name = "Versado en un elemento", requires = "Capacidad de lanzar al menos un conjuro", source = "PHB",
+        id = "feat_versado_elemento", name = "Versado en un elemento", requires = "Capacidad de lanzar al menos un conjuro", description = "Eliges un elemento y tus conjuros de ese tipo pegan más y atraviesan resistencias.", source = "PHB",
         traits = {
             { id = "feat_phb_verselem", name = "Beneficios", type = "informativo", description = "Elige un tipo de daño (acido, frío, fuego, relámpago o trueno): tus conjuros ignoran la resistencia a ese tipo y puedes contar cualquier 1 en sus dados de daño como 2. Puedes tomar el dote varias veces (tipo distinto).", effects = {} },
         },
     },
     -- ===== Dotes de El Caldero para Todo de Tasha (TCoE 5e ES) =====
     {
-        id = "feat_iniciado_artificiero", name = "Iniciado artificiero", source = "TCoE",
+        id = "feat_iniciado_artificiero", name = "Iniciado artificiero", description = "Un poco de la inventiva del artífice: un truco, un conjuro y herramientas.", source = "TCoE",
         traits = {
             { id = "feat_tco_artif_tool", name = "Herramientas de artesano", type = "choice", description = "Competencia con un tipo de herramientas de artesano de tu elección (canalizador mágico para conjuros con Inteligencia).", effects = {}, choice = { slots = 1, optionsFrom = "toolProf" } },
             { id = "feat_tco_artif", name = "Beneficios", type = "informativo", description = "Aprendes un truco y un conjuro de nivel 1 de la lista de artífice (Inteligencia); el conjuro 1 vez por descanso largo sin espacio.", effects = {} },
         },
     },
     {
-        id = "feat_cocinero", name = "Cocinero", source = "TCoE",
+        id = "feat_cocinero", name = "Cocinero", description = "Cocina de campamento que alimenta el cuerpo y el ánimo de la partida.", source = "TCoE",
         traits = {
             { id = "feat_tco_cocinero_inc", name = "Incremento de caracteristica", type = "choice", description = "Constitución o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Constitucion"), AbilOpt("Sabiduria") } } },
             { id = "feat_tco_cocinero_b", name = "Beneficios", type = "informativo", description = "Competencia con útiles de cocinero. En un descanso corto cocinas comida para 4 + tu bono de competencia (recuperan 1d8 PG extra al gastar Dados de Golpe). Tras un descanso largo preparas golosinas que dan PG temporales.", effects = { { kind = "toolProf", tool = "Utiles de cocinero" } } },
         },
     },
     {
-        id = "feat_triturador", name = "Triturador", source = "TCoE",
+        id = "feat_triturador", name = "Triturador", description = "Golpes que desplazan: mueves al enemigo de sitio y le abres la guardia.", source = "TCoE",
         traits = {
             { id = "feat_tco_trit_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Constitución +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion") } } },
             { id = "feat_tco_trit_b", name = "Beneficios", type = "informativo", description = "Una vez por turno, al dañar con daño contundente mueves al objetivo 1,5 m. Con un crítico contundente, los ataques contra ese objetivo tienen ventaja hasta tu próximo turno.", effects = {} },
         },
     },
     {
-        id = "feat_adepto_sobrenatural", name = "Adepto sobrenatural", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", source = "TCoE",
+        id = "feat_adepto_sobrenatural", name = "Adepto sobrenatural", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", description = "Desbloqueas una invocación sobrenatural del brujo.", source = "TCoE",
         traits = {
             { id = "feat_tco_sobren", name = "Beneficios", type = "informativo", description = "Aprendes una Invocacion Sobrenatural de la clase brujo (si tiene requisito, debes cumplirlo como brujo). Puedes cambiarla al subir de nivel.", effects = {} },
         },
     },
     {
-        id = "feat_tocado_hadas", name = "Tocado por las hadas", source = "TCoE",
+        id = "feat_tocado_hadas", name = "Tocado por las hadas", description = "La magia feérica te ha marcado: apareces donde no estabas y encantas a quien te mira.", source = "TCoE",
         traits = {
             { id = "feat_tco_hadas_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_tco_hadas_b", name = "Beneficios", type = "informativo", description = "Aprendes paso brumoso y un conjuro de nivel 1 de adivinacion o encantamiento; lanzas cada uno 1 vez por descanso largo sin espacio (también con espacios). Aptitud mágica: la característica aumentada.", effects = {} },
         },
     },
     {
-        id = "feat_iniciado_combate", name = "Iniciado en el combate", requires = "Competencia con un arma marcial", source = "TCoE",
+        id = "feat_iniciado_combate", name = "Iniciado en el combate", requires = "Competencia con un arma marcial", description = "Adoptas un estilo de combate y un truco marcial que lo acompaña.", source = "TCoE",
         traits = {
             { id = "feat_tco_inicomb", name = "Beneficios", type = "informativo", description = "Aprendes un Estilo de Combate de la clase guerrero (distinto si ya tienes uno). Puedes cambiarlo al subir de nivel.", effects = {} },
         },
     },
     {
-        id = "feat_artillero_dote", name = "Tirador (armas de fuego)", source = "TCoE",
+        id = "feat_artillero_dote", name = "Tirador (armas de fuego)", description = "Mano rápida con la pólvora: recargas sola y disparas sin miedo al cuerpo a cuerpo.", source = "TCoE",
         traits = {
             { id = "feat_tco_gunner_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Destreza +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Destreza", value = 1 } } },
             { id = "feat_tco_gunner_b", name = "Beneficios", type = "informativo", description = "Competencia con armas de fuego. Ignoras la propiedad de munición de las armas de fuego. Estar a 1,5 m de un enemigo no da desventaja a tus ataques a distancia.", effects = { { kind = "weaponProf", weapon = "armas de fuego" } } },
@@ -520,7 +520,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_perforador", name = "Perforador", source = "TCoE",
+        id = "feat_perforador", name = "Perforador", description = "Buscas el hueco de la armadura: repites el daño de tus golpes perforantes.", source = "TCoE",
         traits = {
             { id = "feat_tco_perf_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_tco_perf_b", name = "Beneficios", type = "informativo", description = "Una vez por turno, al dañar con daño perforante puedes repetir un dado de daño (usas el nuevo). Con un crítico perforante, tiras un dado de daño perforante adicional.", effects = {} },
@@ -533,14 +533,14 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_tocado_sombras", name = "Tocado por las sombras", source = "TCoE",
+        id = "feat_tocado_sombras", name = "Tocado por las sombras", description = "El Páramo Sombrío te ha cambiado: te vuelves invisible y ves lo que otros no.", source = "TCoE",
         traits = {
             { id = "feat_tco_sombras_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_tco_sombras_b", name = "Beneficios", type = "informativo", description = "Aprendes invisibilidad y un conjuro de nivel 1 de ilusion o nigromancia; lanzas cada uno 1 vez por descanso largo sin espacio (también con espacios). Aptitud mágica: la característica aumentada.", effects = {} },
         },
     },
     {
-        id = "feat_experto_habilidades", name = "Experto en habilidades", source = "TCoE",
+        id = "feat_experto_habilidades", name = "Experto en habilidades", description = "Perfeccionas lo que ya sabías hasta convertirlo en pericia.", source = "TCoE",
         traits = {
             { id = "feat_tco_exph_inc", name = "Incremento de caracteristica", type = "choice", description = "Una característica de tu elección +1 (max 20).", effects = {}, choice = { slots = 1, optionsFrom = "ability+1" } },
             { id = "feat_tco_exph_prof", name = "Competencia en habilidad", type = "choice", description = "Competencia en una habilidad de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "skillProf" } },
@@ -548,21 +548,21 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_cortador", name = "Cortador", source = "TCoE",
+        id = "feat_cortador", name = "Cortador", description = "Sabes dónde cortar: tus golpes cortantes frenan o ciegan al enemigo.", source = "TCoE",
         traits = {
             { id = "feat_tco_cort_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_tco_cort_b", name = "Beneficios", type = "informativo", description = "Una vez por turno, al dañar con daño cortante reduces la velocidad del objetivo en 3 m hasta tu próximo turno. Con un crítico cortante, el objetivo tiene desventaja en ataques hasta tu próximo turno.", effects = {} },
         },
     },
     {
-        id = "feat_telequinetico", name = "Telequinetico", source = "TCoE",
+        id = "feat_telequinetico", name = "Telequinetico", description = "Mueves objetos y empujas criaturas con la mente.", source = "TCoE",
         traits = {
             { id = "feat_tco_telek_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_tco_telek_b", name = "Beneficios", type = "informativo", description = "Aprendes mano de mago (sin componentes V/S, mano invisible). Como acción adicional, empujas telequineticamente a una criatura a 9 m (salvación de Fuerza o movida 1,5 m). Aptitud mágica: la característica aumentada.", effects = {} },
         },
     },
     {
-        id = "feat_telepata", name = "Telepata", source = "TCoE",
+        id = "feat_telepata", name = "Telepata", description = "Hablas mente a mente y puedes asomarte a los pensamientos ajenos.", source = "TCoE",
         traits = {
             { id = "feat_tco_telep_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_tco_telep_b", name = "Beneficios", type = "informativo", description = "Hablas telepaticamente con cualquier criatura a 18 m (en un idioma que conozcas). Lanzas detectar pensamientos 1 vez por descanso largo sin espacio (aptitud: la característica aumentada).", effects = {} },

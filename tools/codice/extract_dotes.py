@@ -147,9 +147,13 @@ if "ubservador" in libro_txt: libro_txt.setdefault("observador", libro_txt["ubse
 enr = 0
 for d in dotes:
     t = libro_txt.get(_nk(d["name"]))
-    # el texto del manual rellena a quien no tiene descripcion propia; nunca la sustituye
-    if t and not d.get("propia") and len(t) > len(d.get("desc", "")):
-        d["desc"] = t; enr += 1
+    # El texto del manual ya no sustituye a la descripcion: viaja aparte, como texto largo
+    # para el detalle de la ficha. Quien no tenga descripcion propia si lo usa como tal.
+    if t:
+        d["manual"] = t
+        enr += 1
+        if not d.get("propia") and len(t) > len(d.get("desc", "")):
+            d["desc"] = t
         # El texto del manual se queda en la DOTE y no se copia a su primer rasgo. Copiarlo
         # hacia que 68 de las 77 tuvieran un primer rasgo que decia llamarse "Trucos de Mago"
         # y contenia la dote entera -- requisito y todas las vinetas -- mientras el segundo y

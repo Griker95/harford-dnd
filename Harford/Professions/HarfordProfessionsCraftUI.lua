@@ -805,7 +805,11 @@ local function CreateFrameIfNeeded()
     end
 
     castBar.text = castOverlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    castBar.text:SetPoint("CENTER", castBar, "CENTER", 0, 0)
+    -- +3 en vertical, medido en el cliente. El texto ya estaba centrado sobre el FRAME (desvio
+    -- horizontal 0.0 comprobado), pero el frame mide 13 px de alto y el arte del marco es una
+    -- textura de 64 px anclada por su TOP 28 px mas arriba: el centro de lo que se VE no es el
+    -- centro del frame, y el texto quedaba pegado abajo.
+    castBar.text:SetPoint("CENTER", castBar, "CENTER", 0, 3)
     castBar:Hide()
     frame.castBar = castBar
 

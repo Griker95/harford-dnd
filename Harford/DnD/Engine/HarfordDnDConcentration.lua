@@ -113,7 +113,7 @@ function API.OnDamage(damage, sourceLabel)
             label = string.format("Concentracion: %s (CD %d)%s", current.spell, dc,
                 sourceLabel and (" <" .. tostring(sourceLabel) .. ">") or ""),
             total = total,
-            dice = "d20: " .. d20,
+            dice = tostring(d20),
             modifiers = bonus ~= 0 and string.format("%s%d", bonus > 0 and "+" or "", bonus) or "",
             critical = d20 == 20 and "CRITICO" or (d20 == 1 and "FALLO" or nil),
         })

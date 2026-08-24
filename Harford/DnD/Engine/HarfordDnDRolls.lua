@@ -211,13 +211,24 @@ function HarfordDnDRolls.Deserialize(msg)
     }
 end
 
+-- Paleta del render de tiradas. Vive aqui y no dentro de `DisplayInChat` porque hay lineas que se
+-- construyen enteras fuera (la de fabricar, que no encaja en el orden generico) y deben usar los
+-- MISMOS colores: duplicarlos era garantizar que un dia dejaran de coincidir.
+HarfordDnDRolls.COLORS = {
+    roll   = "|cff66ccff",
+    detail = "|cffb0b0b0",
+    crit   = "|cff00ff00",
+    fumble = "|cffff3333",
+    close  = "|r",
+}
+
 function HarfordDnDRolls.DisplayInChat(data)
     if not data then return end
 
-    local COLOR_ROLL = "|cff66ccff"
-    local COLOR_DETAIL = "|cffb0b0b0"
-    local COLOR_CRIT = "|cff00ff00"
-    local COLOR_FUMBLE = "|cffff3333"
+    local COLOR_ROLL = HarfordDnDRolls.COLORS.roll
+    local COLOR_DETAIL = HarfordDnDRolls.COLORS.detail
+    local COLOR_CRIT = HarfordDnDRolls.COLORS.crit
+    local COLOR_FUMBLE = HarfordDnDRolls.COLORS.fumble
 
     local parts = {}
     local playerName = data.player or UnitName("player") or "Unknown"
@@ -240,7 +251,10 @@ function HarfordDnDRolls.DisplayInChat(data)
         modeStr = " " .. COLOR_FUMBLE .. "[D]" .. ENDCLR
     end
 
-    local labelStr = parts[1] .. modeStr .. " " .. (data.label or "Tirada") .. ": "
+    -- Sin ":" entre la etiqueta y el total: lo que hace resaltar el resultado es el color, y los
+    -- dos puntos solo anaden ruido en una linea que ya distingue etiqueta, total, detalle y
+    -- desenlace por su tinte.
+    local labelStr = parts[1] .. modeStr .. " " .. (data.label or "Tirada") .. " "
         .. COLOR_ROLL .. tostring(data.total or 0) .. ENDCLR
 
     local damageTypeStr = ""
@@ -288,7 +302,7 @@ function HarfordDnDRolls.DisplayInChat(data)
         end
     end
 
-    local output = labelStr .. damageTypeStr .. critStr .. detailStr
+    local output = labelStr .. damageTypeStr .. detailStr .. critStr
     DEFAULT_CHAT_FRAME:AddMessage(output)
     if ChatFrame2 then
         ChatFrame2:AddMessage(output)

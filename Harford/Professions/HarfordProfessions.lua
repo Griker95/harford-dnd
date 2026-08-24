@@ -684,7 +684,7 @@ function API.RollTool(profId)
             -- que sustituyo a la antigua tirada suelta de "Suministros de ...".
             label = def.name or def.tool,
             total = total,
-            dice = "d20: " .. d20,
+            dice = tostring(d20),
             modifiers = bonus ~= 0 and string.format("%s%d", bonus > 0 and "+" or "", bonus) or "",
             critical = d20 == 20 and "CRITICO" or (d20 == 1 and "FALLO" or nil),
         })
@@ -945,16 +945,21 @@ function API.Craft(recipeId)
     -- El crafteo es una ACCION REAL: se tira en mesa como cualquier otra prueba, no se
     -- resuelve en el chat local del artesano. Se emite siempre, salga bien o mal.
     if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+        -- El desenlace SIEMPRE, no solo en los naturales: la tirada de fabricar se lee en mesa
+        -- y lo primero que se mira es si salio.
+        --
+        -- La CD va dentro de la ETIQUETA y en gris: es dato de la receta, no resultado. Todo lo
+        -- demas -- total, detalle y desenlace -- lo coloca el render generico, igual que en
+        -- cualquier otra tirada.
+        local gris = (HarfordDnDRolls.COLORS and HarfordDnDRolls.COLORS.detail) or ""
+        local cierre = (HarfordDnDRolls.COLORS and HarfordDnDRolls.COLORS.close) or ""
         HarfordDnDRolls.Broadcast({
             type = "roll",
-            label = string.format("%s: %s (CD %d)", def and def.name or r.profession,
-                outLink or r.name or outName, dc),
+            label = string.format("%s %s %sCD %d%s", def and def.name or r.profession,
+                outLink or r.name or outName, gris, dc, cierre),
             total = total,
-            dice = "d20: " .. d20,
+            dice = tostring(d20),
             modifiers = bonus ~= 0 and string.format("%s%d", bonus > 0 and "+" or "", bonus) or "",
-            -- El desenlace SIEMPRE, no solo en los naturales: la tirada de fabricar se lee en
-            -- mesa y lo primero que se mira es si salio. Ademas el "FALLO" de antes ni se
-            -- pintaba, porque el render solo conocia "PIFIA".
             critical = (d20 == 20 and "CRITICO")
                 or (d20 == 1 and "PIFIA")
                 or (success and "EXITO" or "FALLO"),

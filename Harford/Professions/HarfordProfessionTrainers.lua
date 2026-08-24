@@ -182,6 +182,14 @@ local cacheEntrenadores = {}
 function API.Get(trainerId)
     local id = Norm(trainerId)
     if id == "" then return nil end
+    -- Los ids de entrenador se derivan de `<profesion>_<rango>`, y las profesiones pasaron a
+    -- llevar prefijo `prof_`. Los NPC ya colocados en el mundo declaran en su gossip el nombre
+    -- ANTIGUO ("herreria_experto") y no se pueden ir a editar uno a uno: sin esta tolerancia,
+    -- `OpenTrainer` devuelve false y al jugador no se le abre nada, sin decir por que.
+    if not cacheEntrenadores[id] and id:sub(1, 5) ~= "prof_" then
+        local conPrefijo = "prof_" .. id
+        if API._Construir(conPrefijo) then id = conPrefijo end
+    end
     local memo = cacheEntrenadores[id]
     if memo ~= nil then
         if memo == false then return nil end

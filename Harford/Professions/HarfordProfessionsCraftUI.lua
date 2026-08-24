@@ -1440,9 +1440,15 @@ end
 -- ── API publica ──────────────────────────────────────────────────────────────
 function API.Open(profId)
     profId = tostring(profId or ""):lower()
-    if not (HarfordProfessions and HarfordProfessions.GetDefinition and HarfordProfessions.GetDefinition(profId)) then
+    local def = HarfordProfessions and HarfordProfessions.GetDefinition
+        and HarfordProfessions.GetDefinition(profId)
+    if not def then
         return false, "Profesion desconocida: " .. profId
     end
+    -- Se acepta el nombre de antes del prefijo `prof_` (lo que declaran los NPC ya colocados) pero
+    -- se guarda el CANONICO: el resto de la ventana busca las recetas por `state.profId`, y con el
+    -- nombre viejo no encontraba ninguna y reventaba al montar la lista.
+    profId = def.id or profId
     -- Si la construccion o el refresco fallan a media, la ventana se queda a medias y desde
     -- fuera parece "igual que antes". Se reporta el error en vez de morir en silencio.
     local built, buildErr = pcall(CreateFrameIfNeeded)

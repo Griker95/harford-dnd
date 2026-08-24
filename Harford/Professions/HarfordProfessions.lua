@@ -171,6 +171,16 @@ function API.GetDefinition(profId)
     for _, p in ipairs(API.GetProfessions()) do
         if p.id == profId then return p end
     end
+    -- Las profesiones pasaron a llevar prefijo `prof_`. Los NPC y ArcSpells ya colocados en el
+    -- mundo llaman con el nombre ANTIGUO ("herreria") y no se pueden ir a editar uno a uno: sin
+    -- esto la ventana no se abre y el jugador no ve ningun motivo. Es el punto UNICO de consulta,
+    -- asi que todo lo que cuelga de el hereda la tolerancia.
+    if profId ~= "" and profId:sub(1, 5) ~= "prof_" then
+        local conPrefijo = "prof_" .. profId
+        for _, p in ipairs(API.GetProfessions()) do
+            if p.id == conPrefijo then return p end
+        end
+    end
     return nil
 end
 

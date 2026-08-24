@@ -312,29 +312,28 @@ do
             layout.measured = true
 
             local texture = pieces.texture or FindLargestTargetingTexture(pieces.root)
-    end
-        layout.texture = TextureInfo(texture, unit)
-        if layout.texture.bounds then
+            layout.texture = TextureInfo(texture, unit)
+            if layout.texture.bounds then
             layout.texture.rel = RelativeBounds(layout.texture.bounds, rootBounds)
-        end
+            end
 
-        local portrait = RelativeBounds(Bounds(pieces.portrait), rootBounds)
-        local health = RelativeBounds(Bounds(pieces.health), rootBounds)
-        local power = RelativeBounds(Bounds(pieces.power), rootBounds)
-        local level = RelativeBounds(Bounds(pieces.level), rootBounds)
-        local name = RelativeBounds(Bounds(pieces.name), rootBounds)
+            local portrait = RelativeBounds(Bounds(pieces.portrait), rootBounds)
+            local health = RelativeBounds(Bounds(pieces.health), rootBounds)
+            local power = RelativeBounds(Bounds(pieces.power), rootBounds)
+            local level = RelativeBounds(Bounds(pieces.level), rootBounds)
+            local name = RelativeBounds(Bounds(pieces.name), rootBounds)
 
-        if portrait then layout.portrait = portrait end
-        if health then layout.health = health end
-        if power then layout.power = power end
-        if level then layout.level = level end
-        if name then layout.name = name end
+            if portrait then layout.portrait = portrait end
+            if health then layout.health = health end
+            if power then layout.power = power end
+            if level then layout.level = level end
+            if name then layout.name = name end
 
-        layout.healthBg = BarBackgroundInfo(pieces.health, unit)
-        layout.powerBg = BarBackgroundInfo(pieces.power, unit)
-        layout.healthFill = StatusBarTextureInfo(pieces.health, unit)
-        layout.powerFill = StatusBarTextureInfo(pieces.power, unit)
-        layout.native = {
+            layout.healthBg = BarBackgroundInfo(pieces.health, unit)
+            layout.powerBg = BarBackgroundInfo(pieces.power, unit)
+            layout.healthFill = StatusBarTextureInfo(pieces.health, unit)
+            layout.powerFill = StatusBarTextureInfo(pieces.power, unit)
+            layout.native = {
             root = DebugName(pieces.root),
             portrait = DebugName(pieces.portrait),
             health = DebugName(pieces.health),
@@ -342,10 +341,11 @@ do
             level = DebugName(pieces.level),
             name = DebugName(pieces.name),
             texture = DebugName(texture),
-        }
+            }
 
-        return NormalizeMeasuredLayout(layout)
-end
+            return NormalizeMeasuredLayout(layout)
+        end
+    end
 end
 
 function GetOrMeasureLayout(unit, force)

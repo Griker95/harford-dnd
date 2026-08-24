@@ -113,6 +113,35 @@ for addon in ADDONS:
         if not os.path.exists(p):
             errores.append('%s.toc: lista %s y no existe' % (addon, linea))
 
+# --- 3. Carga real de los ficheros -------------------------------------------------------------
+# Compilar NO basta. Un `end` de mas cierra una funcion antes de tiempo, el fichero sigue
+# compilando, y su cuerpo pasa a ejecutarse en el chunk principal donde las locales de esa funcion
+# no existen. Asi rompio HarfordUnitFrames el addon entero sin un solo error de sintaxis: el
+# cliente aborta ese fichero y todo lo que va detras muere en silencio.
+#
+# Esto los carga con stubs de WoW, que es donde ese fallo si sale.
+# Lo que NO cubre: nada posterior a la carga (PLAYER_LOGIN, eventos, abrir una ventana).
+import subprocess as _sp
+_lua = None
+for _c in [os.path.join(os.environ.get('LOCALAPPDATA', ''), 'Programs', 'Lua', 'bin', 'lua.exe'),
+           'lua5.1', 'lua51', 'luajit', 'lua']:
+    try:
+        _sp.run([_c, '-v'], capture_output=True, timeout=5)
+        _lua = _c
+        break
+    except (OSError, _sp.SubprocessError):
+        continue
+if _lua:
+    _arranque = os.path.join(RAIZ, 'tools', 'cargar', 'arranque.lua')
+    _r = _sp.run([_lua, _arranque, RAIZ.replace(chr(92), '/').rstrip('/')],
+                 capture_output=True, text=True, encoding='utf-8', errors='replace')
+    if _r.returncode != 0:
+        for _l in ((_r.stdout or '') + (_r.stderr or '')).strip().split(chr(10)):
+            if _l.strip() and not _l.startswith('Ficheros cargados'):
+                errores.append('al cargar: ' + _l.strip())
+else:
+    avisos.append('sin interprete Lua: no se ha comprobado la carga de los ficheros')
+
 print('  %d ficheros .lua revisados' % total)
 for a in avisos:
     print("  AVISO   %s" % a)

@@ -2204,6 +2204,82 @@ local function UsarModificadorDeTirada(feature)
     return true
 end
 
+-- LANZAR UN RITUAL gastando un recurso propio (Ritos de alma del Brujo: un fragmento de alma).
+--
+-- El ritual no consume espacio de conjuro -- por eso `free` --: lo que se paga es el recurso del
+-- rasgo. Se ofrecen solo los conjuros de esa clase con etiqueta de ritual y de un nivel que ya
+-- puedas lanzar, que es lo que dice el rasgo.
+local AbrirRitualDeRasgo
+do
+    local menu
+    AbrirRitualDeRasgo = function(feature, anchor)
+        local spec = feature.ritualCast
+        local api = _G.HarfordCompendioAPI
+        if not (api and api.GetAllSpells and api.ResolveCast) then
+            HarfordChat.Print("El compendio de conjuros no esta disponible.")
+            return false
+        end
+        local clase = tostring(spec.className or "")
+        local nivelClase = ClassLevelOf(spec.classId)
+        local maximo = api.GetMaxSpellLevel and api.GetMaxSpellLevel(clase, nivelClase) or 9
+
+        local elegibles = {}
+        for _, s in ipairs(api.GetAllSpells() or {}) do
+            if s.ritual == true and (tonumber(s.level) or 0) <= maximo then
+                for _, c in ipairs(s.classes or {}) do
+                    if tostring(c):find(clase, 1, true) then
+                        elegibles[#elegibles + 1] = s
+                        break
+                    end
+                end
+            end
+        end
+        table.sort(elegibles, function(a, b)
+            local la, lb = tonumber(a.level) or 0, tonumber(b.level) or 0
+            if la ~= lb then return la < lb end
+            return tostring(a.name) < tostring(b.name)
+        end)
+        if #elegibles == 0 then
+            HarfordChat.Print("No tienes ningun conjuro de ritual que puedas lanzar todavia.")
+            return false
+        end
+
+        if not (UIDropDownMenu_Initialize and ToggleDropDownMenu) then return false end
+        menu = menu or CreateFrame("Frame", "HarfordRitualMenu", UIParent, "UIDropDownMenuTemplate")
+        UIDropDownMenu_Initialize(menu, function()
+            for _, s in ipairs(elegibles) do
+                local conjuro = s
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = string.format("%s  |cff808080(nivel %d)|r", tostring(conjuro.name),
+                    tonumber(conjuro.level) or 0)
+                info.notCheckable = true
+                info.func = function()
+                    CloseDropDownMenus()
+                    local ok, err = SpendPowerWord(feature)   -- el rasgo declara su propio recurso
+                    if not ok then HarfordChat.Print(err); return end
+                    -- `ritual` para que no gaste espacio, `free` porque lo pagas con el recurso.
+                    local lanzado, castErr = api.ResolveCast(conjuro.id, { ritual = true, free = true })
+                    if not lanzado then
+                        local key = tostring(feature.resourceKey or "")
+                        local cost = tonumber(feature.resourceCost) or 0
+                        if key ~= "" and cost > 0 and HarfordDnDStore.AdjustResourceCurrent then
+                            HarfordDnDStore.AdjustResourceCurrent(key, cost)
+                        end
+                        HarfordChat.Print(tostring(castErr or "No se pudo lanzar el ritual."))
+                        return
+                    end
+                    AnnounceAbility(feature)
+                    if RefreshGameUI then RefreshGameUI() end
+                    if RefreshBook then RefreshBook() end
+                end
+                UIDropDownMenu_AddButton(info)
+            end
+        end, "MENU")
+        ToggleDropDownMenu(1, nil, menu, anchor or "cursor", 0, 0)
+        return true
+    end
+end
+
 -- Un rasgo que se pone a UNO MISMO un estado con duracion (el Brebaje de Piel de Hierro y su
 -- resistencia de 1 minuto). Se modela como condicion y no como bono suelto porque asi caduca sola
 -- por rondas, se ve en la lista de estados y viaja al resto de clientes.
@@ -2995,6 +3071,8 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif type(self.feature.ritualCast) == "table" then
+        AbrirRitualDeRasgo(self.feature, self)
     elseif type(self.feature.carriedCharge) == "table" then
         UsarCargaLlevada(self.feature)
         if RefreshBook then RefreshBook() end

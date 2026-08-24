@@ -82,6 +82,83 @@ end
 -- Solo se recorre al migrar desde un esquema anterior a 3: despues, cada perfil ya esta traducido
 -- y la tabla no se vuelve a mirar. Se puede borrar cuando no queden perfiles viejos.
 local IDS_RENOMBRADOS = {
+    ["abrazo_vacio"] = "feat_abrazo_vacio",
+    ["acechador"] = "feat_acechador",
+    ["actor"] = "feat_actor",
+    ["adepto_armas_fuego"] = "feat_adepto_armas_fuego",
+    ["adepto_metamagia"] = "feat_adepto_metamagia",
+    ["adepto_sobrenatural"] = "feat_adepto_sobrenatural",
+    ["afortunado"] = "feat_afortunado",
+    ["agilidad_robusta"] = "feat_agilidad_robusta",
+    ["alerta"] = "feat_alerta",
+    ["amigo_criaturas"] = "feat_amigo_criaturas",
+    ["apresador"] = "feat_apresador",
+    ["artillero_dote"] = "feat_artillero_dote",
+    ["atacante_carga"] = "feat_atacante_carga",
+    ["atacante_salvaje"] = "feat_atacante_salvaje",
+    ["atleta"] = "feat_atleta",
+    ["azote_magos"] = "feat_azote_magos",
+    ["centinela"] = "feat_centinela",
+    ["cocinero"] = "feat_cocinero",
+    ["combatiente_dos_armas"] = "feat_combatiente_dos_armas",
+    ["combatiente_montado"] = "feat_combatiente_montado",
+    ["cortador"] = "feat_cortador",
+    ["depredador_endurecido"] = "feat_depredador_endurecido",
+    ["duelista_defensivo"] = "feat_duelista_defensivo",
+    ["duro"] = "feat_duro",
+    ["envenenador"] = "feat_envenenador",
+    ["experto_armas_fuego"] = "feat_experto_armas_fuego",
+    ["experto_ballestas"] = "feat_experto_ballestas",
+    ["experto_habilidades"] = "feat_experto_habilidades",
+    ["explorador_mazmorras"] = "feat_explorador_mazmorras",
+    ["fortaleza_enana"] = "feat_fortaleza_enana",
+    ["furia_orca"] = "feat_furia_orca",
+    ["gran_maestro_armas"] = "feat_gran_maestro_armas",
+    ["guia_espiritual"] = "feat_guia_espiritual",
+    ["habilidoso"] = "feat_habilidoso",
+    ["herencia_darnassiana"] = "feat_herencia_darnassiana",
+    ["iniciado_artificiero"] = "feat_iniciado_artificiero",
+    ["iniciado_combate"] = "feat_iniciado_combate",
+    ["iniciado_magia"] = "feat_iniciado_magia",
+    ["lanzador_combate"] = "feat_lanzador_combate",
+    ["lanzador_preciso"] = "feat_lanzador_preciso",
+    ["lanzador_ritual"] = "feat_lanzador_ritual",
+    ["lider_inspirador"] = "feat_lider_inspirador",
+    ["ligeramente_acorazado"] = "feat_ligeramente_acorazado",
+    ["linguista"] = "feat_linguista",
+    ["maestro_armaduras_medias"] = "feat_maestro_armaduras_medias",
+    ["maestro_armaduras_pesadas"] = "feat_maestro_armaduras_pesadas",
+    ["maestro_armas"] = "feat_maestro_armas",
+    ["maestro_armas_asta"] = "feat_maestro_armas_asta",
+    ["maestro_armas_exoticas"] = "feat_maestro_armas_exoticas",
+    ["maestro_armas_pesadas"] = "feat_maestro_armas_pesadas",
+    ["maestro_escudero"] = "feat_maestro_escudero",
+    ["maestro_escudos"] = "feat_maestro_escudos",
+    ["mago_de_batalla"] = "feat_mago_de_batalla",
+    ["maton_taberna"] = "feat_maton_taberna",
+    ["mejor_quimica"] = "feat_mejor_quimica",
+    ["mente_aguda"] = "feat_mente_aguda",
+    ["moderadamente_acorazado"] = "feat_moderadamente_acorazado",
+    ["movil"] = "feat_movil",
+    ["muy_acorazado"] = "feat_muy_acorazado",
+    ["observador"] = "feat_observador",
+    ["perforador"] = "feat_perforador",
+    ["precision_elfica"] = "feat_precision_elfica",
+    ["prodigio"] = "feat_prodigio",
+    ["rencor_faccion"] = "feat_rencor_faccion",
+    ["resiliente"] = "feat_resiliente",
+    ["resistencia_tauren"] = "feat_resistencia_tauren",
+    ["resistente"] = "feat_resistente",
+    ["sanador"] = "feat_sanador",
+    ["telepata"] = "feat_telepata",
+    ["telequinetico"] = "feat_telequinetico",
+    ["teletransporte_arcano"] = "feat_teletransporte_arcano",
+    ["tirador_primera"] = "feat_tirador_primera",
+    ["tocado_hadas"] = "feat_tocado_hadas",
+    ["tocado_sombras"] = "feat_tocado_sombras",
+    ["triturador"] = "feat_triturador",
+    ["versado_armas"] = "feat_versado_armas",
+    ["versado_elemento"] = "feat_versado_elemento",
     ["afliccion_aflicciones_inestables"] = "bru_afl_aflicciones_inestables",
     ["afliccion_aflicciones_potentes"] = "bru_afl_aflicciones_potentes",
     ["afliccion_drenar_alma"] = "bru_afl_drenar_alma",
@@ -208,6 +285,17 @@ local IDS_RENOMBRADOS = {
 
 -- Traduce las claves de una tabla indexada por id de rasgo. Reconstruye en una tabla NUEVA: anadir
 -- claves mientras se itera con pairs() sobre la misma es comportamiento indefinido en Lua 5.1.
+-- `data.feats` es una LISTA de ids, no una tabla indexada por id: se traduce por valor.
+local function RenombrarValores(t)
+    if type(t) ~= "table" then return t, 0 end
+    local n = 0
+    for i = 1, #t do
+        local nuevo = IDS_RENOMBRADOS[t[i]]
+        if nuevo then t[i] = nuevo n = n + 1 end
+    end
+    return t, n
+end
+
 local function RenombrarClaves(t)
     if type(t) ~= "table" then return t, 0 end
     local fuera, n = {}, 0
@@ -284,6 +372,8 @@ local function Migrate(data)
                 total = total + n
             end
         end
+        local _, nf = RenombrarValores(data.feats)
+        total = total + nf
         if total > 0 and HarfordChat and HarfordChat.Print then
             HarfordChat.Print(("Ficha actualizada: %d rasgo(s) renombrados a la convencion nueva."):format(total))
         end

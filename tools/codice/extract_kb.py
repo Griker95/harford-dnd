@@ -118,8 +118,11 @@ for i, (pos, cid, cname, cdesc, hd) in enumerate(cstarts):
                     "features": parse_features(class_region), "subclasses": subclasses})
 
 # ---------- RAZAS ----------
+# `nameF` (nombre en femenino) es un campo opcional que va entre `name` y `desc`.
+# Sin contemplarlo, las razas que lo declaran no se reconocian.
+OPC_NAMEF = r'(?:\s*nameF = "[^"]*",)?'
 races_txt = rd("HarfordDnDRaces.lua")
-race_hdr = re.compile(r'id = "([a-z_]+)", name = "([^"]+)", desc = "((?:[^"\\]|\\.)*)", faction')
+race_hdr = re.compile(r'id = "([a-z_]+)", name = "([^"]+)",' + OPC_NAMEF + r' desc = "((?:[^"\\]|\\.)*)", faction')
 races = []
 rstarts = [(m.start(), m.group(1), m.group(2), m.group(3)) for m in race_hdr.finditer(races_txt)]
 for i, (pos, rid, rname, rdesc) in enumerate(rstarts):
@@ -132,7 +135,7 @@ for i, (pos, rid, rname, rdesc) in enumerate(rstarts):
         s = block.index("{", ms.start())
         sub_region = block[s:balanced(block, s)]
         rest = block[:ms.start()] + block[s + len(sub_region):]
-        sub_hdrs = list(re.finditer(r'\{ id = "([a-z_]+)", name = "([^"]+)", desc = "((?:[^"\\]|\\.)*)", traits =', sub_region))
+        sub_hdrs = list(re.finditer(r'\{ id = "([a-z_]+)", name = "([^"]+)",' + OPC_NAMEF + r' desc = "((?:[^"\\]|\\.)*)", traits =', sub_region))
         for j, sm in enumerate(sub_hdrs):
             s_end = sub_hdrs[j+1].start() if j+1 < len(sub_hdrs) else len(sub_region)
             subraces.append({"id": sm.group(1), "name": sm.group(2), "desc": sm.group(3).replace('\\"', '"'),

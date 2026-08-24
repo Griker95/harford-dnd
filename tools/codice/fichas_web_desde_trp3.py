@@ -111,13 +111,19 @@ def _clases(markup):
 
 
 def _atributos(markup):
-    salida = []
+    """Objeto por nombre con puntuacion y modificador NUMERICO, que es lo que pinta la web."""
+    salida = {}
     for c in CARACS:
         m = re.search(r"\{h3\}\{icon:[^}]*\}\s*" + c + r"\s*\{col:[^}]*\}(\d+)\{/col\}(.{0,40}?)\{/h3\}",
                       markup, re.S)
-        if m:
-            salida.append({"name": c, "value": int(m.group(1)),
-                           "modifier": _sin_markup(m.group(2)).strip() or "0"})
+        if not m:
+            continue
+        crudo = _sin_markup(m.group(2)).strip().replace("+", "") or "0"
+        try:
+            mod = int(crudo)
+        except ValueError:
+            mod = 0
+        salida[c] = {"score": int(m.group(1)), "modifier": mod}
     return salida
 
 
@@ -243,13 +249,8 @@ def _pg_del_addon(clases, atributos, dados, dotes=()):
     """Regla del manual: dado entero el primer nivel, dado/2+1 el resto, + Mod. CON por nivel."""
     if not clases:
         return None
-    con = next((a for a in atributos if a["name"].startswith("Constituci")), None)
-    mod = 0
-    if con:
-        try:
-            mod = int(str(con["modifier"]).replace("+", "").strip() or 0)
-        except ValueError:
-            mod = 0
+    con = next((v for k, v in (atributos or {}).items() if k.startswith("Constituci")), None)
+    mod = int(con["modifier"]) if con else 0
     pg, total, primero = 0, 0, True
     for c in clases:
         die = dados.get(_id_de(c["name"]) or "", 8)
@@ -297,8 +298,9 @@ def hoja_de(frames, formulas):
         "classes": clases,
         "attributes": _atributos(m),
         "resources": recursos,
-        "armor": (" ".join(armadura["trozos"]) if armadura else ""),
-        "weapons": (" ".join(armas["trozos"]) if armas else ""),
+        # listas, que es como las pinta la web
+        "armor": ([" ".join(armadura["trozos"])] if armadura and armadura["trozos"] else []),
+        "weapons": ([" ".join(armas["trozos"])] if armas and armas["trozos"] else []),
         "proficiencyBonus": (comp.group(1).strip() if comp else ""),
         "proficiencies": _lista_tras(m, "Competencia"),
         "savingThrows": _lista_tras(m, "Tiradas de salvación"),

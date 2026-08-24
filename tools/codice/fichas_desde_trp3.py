@@ -59,8 +59,39 @@ def _bloques_de_perfil(texto):
         inicio = m.end()
 
 
+def _recorre_llaves(texto, desde):
+    """Recorre desde una llave de apertura devolviendo (posicion, caracter, nivel).
+
+    Salta el contenido de las cadenas: el markup del About lleva llaves dentro ({h1:c},
+    {icon:...}), y contarlas descuadra el recorrido entero.
+    """
+    nivel, k, cadena, escapa = 0, desde, None, False
+    while k < len(texto):
+        c = texto[k]
+        if cadena:
+            if escapa:
+                escapa = False
+            elif c == "\\":
+                escapa = True
+            elif c == cadena:
+                cadena = None
+        elif c in "\"'":
+            cadena = c
+        elif c == "{":
+            nivel += 1
+            yield k, c, nivel
+        elif c == "}":
+            yield k, c, nivel
+            nivel -= 1
+            if nivel == 0:
+                return
+        elif nivel >= 1:
+            yield k, c, nivel
+        k += 1
+
+
 def _tramo_t2(bloque):
-    """El sub-bloque `["T2"]` del About, contando llaves desde su apertura.
+    """El sub-bloque `["T2"]` del About.
 
     Hace falta acotar: los VISTAZOS del perfil (`AT FIRST GLANCE`) tambien guardan su texto
     en `["TX"]`, asi que scaneando el perfil entero se colaban como si fueran frames --a
@@ -72,18 +103,10 @@ def _tramo_t2(bloque):
     j = bloque.find("{", i)
     if j < 0:
         return ""
-    nivel, k = 0, j
-    while k < len(bloque):
-        c = bloque[k]
-        if c == "{":
-            nivel += 1
-        elif c == "}":
-            nivel -= 1
-            if nivel == 0:
-                return bloque[j:k + 1]
-        k += 1
+    for k, c, nivel in _recorre_llaves(bloque, j):
+        if c == "}" and nivel == 1:
+            return bloque[j:k + 1]
     return bloque[j:]
-
 
 def frames_de(bloque):
     """Frames del About en orden: titulo, icono y markup."""
@@ -106,23 +129,40 @@ def frames_de(bloque):
 _FN = re.compile(r'\["FN"\]\s*=\s*"((?:[^"\\]|\\.)*)"')
 
 
+def _hijos_de_tabla(texto, inicio):
+    """Trozos `["clave"] = { ... }` que cuelgan directamente de la tabla que abre en `inicio`."""
+    j = texto.find("{", inicio)
+    if j < 0:
+        return
+    arranque = None
+    for k, c, nivel in _recorre_llaves(texto, j):
+        if c == "[" and nivel == 1 and arranque is None:
+            arranque = k
+        elif c == "}" and nivel == 2 and arranque is not None:
+            yield texto[arranque:k + 1]
+            arranque = None
+
 def _perfiles_vistos(cuenta):
     """Perfiles de OTROS jugadores, del registro (`totalRP3_Data.lua`).
 
-    No llevan `profileName`: el nombre esta en `["FN"]` de sus caracteristicas. Se trocea
-    igual, por la marca de nombre, que aqui tambien va DETRAS del About.
+    Se recorre la tabla `["profiles"]` por bloques: de cada perfil se lee su nombre en
+    `["FN"]` y su About del mismo bloque. Cortar por la marca de nombre, como se hacia
+    antes, desplazaba la correspondencia en cuanto un perfil no tenia About.
     """
     ruta = os.path.join(CUENTAS, cuenta, "SavedVariables", "totalRP3_Data.lua")
     if not os.path.exists(ruta):
         return []
     texto = io.open(ruta, encoding="utf-8", errors="replace").read()
-    marcas = list(_FN.finditer(texto))
-    salida, inicio = [], 0
-    for m in marcas:
-        # igual que en los propios, la marca de nombre va al FINAL de su perfil: tomando el
-        # texto siguiente, a Dornalei le colgaban los frames de Kijava
-        salida.append((desescapa(m.group(1)), texto[inicio:m.start()]))
-        inicio = m.end()
+    i = texto.find('["profiles"]')
+    if i < 0:
+        return []
+    salida = []
+    for bloque in _hijos_de_tabla(texto, i):
+        fn = _FN.search(bloque)
+        if not fn:
+            continue
+        visto = re.search(r'\["time"\]\s*=\s*(\d+)', bloque)
+        salida.append((desescapa(fn.group(1)), bloque, int(visto.group(1)) if visto else 0))
     return salida
 
 
@@ -135,8 +175,8 @@ def perfiles(solo_pj=True):
             continue
         texto = io.open(ruta, encoding="utf-8", errors="replace").read()
         # los propios y, detras, los vistos de otros jugadores
-        fuentes = list(_bloques_de_perfil(texto)) + _perfiles_vistos(cuenta)
-        for etiqueta, bloque in fuentes:
+        fuentes = [(e, b, 0) for e, b in _bloques_de_perfil(texto)] + _perfiles_vistos(cuenta)
+        for etiqueta, bloque, visto in fuentes:
             if solo_pj and not etiqueta.startswith("{PJ}"):
                 continue
             nombre = re.sub(r"^\{[^}]*\}\s*", "", etiqueta).strip()
@@ -147,7 +187,8 @@ def perfiles(solo_pj=True):
             # que manda es el marcado {PJ}, que es el canonico; entre iguales, el que mas
             # frames trae. Ordenar solo por numero de frames hacia que la ficha cambiara de
             # perfil segun cual estuviera mas relleno ese dia.
-            rango = (1 if etiqueta.startswith("{PJ}") else 0, len(fr))
+            # propio {PJ} > visto mas reciente > mas frames
+            rango = (1 if etiqueta.startswith("{PJ}") else 0, visto, len(fr))
             registro = {"etiqueta": etiqueta, "nombre": nombre,
                         "cuenta": cuenta, "frames": fr, "rango": rango}
             # La clave por ETIQUETA se guarda SIEMPRE: es la que permite pedir un perfil

@@ -1911,8 +1911,8 @@ end
 
 do
     local function FeatureRechargeText(recharge)
-end
-    return (recharge == "short") and "Descanso corto" or "Descanso largo"
+        return (recharge == "short") and "Descanso corto" or "Descanso largo"
+    end
 end
 
 local function WarnFeatureWithoutUses(feature)
@@ -2801,9 +2801,8 @@ do
             if not (lista and #lista > 0) then return end
             local partes = {}
             for i, v in ipairs(lista) do partes[i] = ProfEtiqueta(v) end
-end
-        lineas[#lineas + 1] = "- |cffffd100" .. titulo .. ":|r " .. table.concat(partes, ", ")
-    end
+            lineas[#lineas + 1] = "- |cffffd100" .. titulo .. ":|r " .. table.concat(partes, ", ")
+        end
     Seccion("Armadura", FE.GetArmorProfs and FE.GetArmorProfs(perfil))
     Seccion("Armas", FE.GetWeaponProfs and FE.GetWeaponProfs(perfil))
     -- GetToolProfs incluye las herramientas de las profesiones conocidas; es la lista buena.
@@ -2824,6 +2823,7 @@ end
         lineas[#lineas + 1] = "- |cffffd100Profesiones:|r " .. table.concat(oficios, ", ")
     end
     return lineas
+end
 end
 
 do
@@ -2869,8 +2869,8 @@ do
         local nombre = tostring(feature and feature.name or "")
         if nombre == "Competencias" then return AddProficienciesToTooltip() end
         if nombre == "Idiomas" then return AddLanguagesToTooltip() end
-end
-    return false
+        return false
+    end
 end
 end
 
@@ -3350,17 +3350,16 @@ do
                     HarfordDnDStore.AdjustResourceCurrent(resourceKey, -resourceCost)
                 end
                 local newDamage = ApplyReactionEffect(reaction, damage, context)
-end
-            if newDamage ~= nil then
-                S.activeReactions[id] = nil
-                AnnounceAbility(option and PowerWordDisplayFeature(feature, option) or feature)
-                if RefreshBook then RefreshBook() end
-                return newDamage, true, feature
+                if newDamage ~= nil then
+                    S.activeReactions[id] = nil
+                    AnnounceAbility(option and PowerWordDisplayFeature(feature, option) or feature)
+                    if RefreshBook then RefreshBook() end
+                    return newDamage, true, feature
+                end
             end
         end
+        return damage, false
     end
-    return damage, false
-end
 
 -- Reacciones que deben ocurrir antes de aplicar el resultado del ataque. El
 -- cliente defensor decide y paga su propio recurso; el atacante no modifica
@@ -3411,6 +3410,7 @@ function API.TriggerPreparedAttackReaction(trigger, context)
         end
     end
     return false
+end
 end
 
 K.BOOK_BTN = 37                 -- SpellButton 37x37
@@ -4473,4 +4473,40 @@ if Profesiones and Profesiones.Init then
         K = K,
         S = S,
     })
+end
+
+-- Comandos sueltos retirados: se usan `/harford char` y `/harford inspect`. La funcion se conserva
+-- en SlashCmdList porque es por donde el despachador de `/harford` enruta.
+--
+-- Estas dos registraciones SE PERDIERON al extraer los modulos del panel, y sin ellas `/harford
+-- char` no abria nada NI DABA ERROR: el despachador hace `local f = SlashCmdList[key]; if f then`,
+-- asi que una clave que no existe se traga el comando en silencio.
+SlashCmdList.HARFORDCHARACTERPANEL = function(msg)
+    msg = tostring(msg or ""):lower()
+    if msg == "rep" or msg == "reputacion" then
+        API.Toggle("reputation")
+    elseif msg == "crear" or msg == "creacion" then
+        if HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenPrototype then
+            HarfordCharacterAdvancement.OpenPrototype("guerrero")
+        else
+            API.Toggle("sheet")
+        end
+    elseif msg == "subir" or msg == "clases" then
+        if HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenLevelUp then
+            HarfordCharacterAdvancement.OpenLevelUp()
+        else
+            API.Open("leveling", { allowHidden = true })
+        end
+    else
+        API.Toggle("sheet")
+    end
+end
+
+SlashCmdList.HARFORDCHARACTERINSPECT = function(msg)
+    msg = tostring(msg or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    if msg ~= "" then
+        API.OpenInspect(msg)
+    else
+        API.OpenInspect("target")
+    end
 end

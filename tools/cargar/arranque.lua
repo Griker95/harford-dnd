@@ -135,6 +135,17 @@ local ADDONS = {
     { "HarfordDebug", "HarfordDebug.toc" },
 }
 
+-- Ultima linea del fichero que contiene codigo de verdad (ni blanca ni comentario).
+local function ultimaLineaConCodigo(ruta)
+    local n, i = 0, 0
+    for linea in io.lines(ruta) do
+        i = i + 1
+        local limpia = linea:gsub("%-%-.*", ""):gsub("%s", "")
+        if limpia ~= "" then n = i end
+    end
+    return n
+end
+
 local total, fallos = 0, {}
 for _, a in ipairs(ADDONS) do
     for _, rel in ipairs(ficherosDelToc(a[1], a[2])) do
@@ -144,8 +155,75 @@ for _, a in ipairs(ADDONS) do
             fallos[#fallos + 1] = { rel, "no compila: " .. tostring(err) }
         else
             total = total + 1
+            -- Ultima linea ejecutada en el CHUNK PRINCIPAL. Un `return` a nivel de fichero -- que
+            -- es lo que deja un `end` de mas dentro de un `do` -- corta el fichero ahi sin dar
+            -- ningun error: todo lo que viene despues no llega a existir. Asi es como el panel de
+            -- personaje se quedaba sin sus 2600 ultimas lineas y sin su comando.
+            local ultima = 0
+            -- Solo el chunk principal DE ESTE fichero: sin comprobar el origen, el hook tambien
+            -- cuenta las lineas del propio arnes y todos los ficheros parecen cortarse igual.
+            local marca = rel:match("([^/]+)$")
+            debug.sethook(function(_, linea)
+                local info = debug.getinfo(2, "S")
+                if info and info.what == "main" and info.short_src
+                    and info.short_src:sub(-#marca) == marca then
+                    ultima = linea
+                end
+            end, "l")
             local ok, e = pcall(chunk)
-            if not ok then fallos[#fallos + 1] = { rel, tostring(e) } end
+            debug.sethook()
+            if not ok then
+                fallos[#fallos + 1] = { rel, tostring(e) }
+            elseif ultima > 0 and ultima < ultimaLineaConCodigo(ruta) - 2 then
+                fallos[#fallos + 1] = { rel, string.format(
+                    "el fichero se corta en la linea %d y tiene codigo hasta la %d: hay un `return` "
+                    .. "a nivel de fichero (casi siempre, un `end` de mas dentro de un `do`)",
+                    ultima, ultimaLineaConCodigo(ruta)) }
+            end
+        end
+    end
+end
+
+-- ---------------------------------------------------------------- rutas de barra
+-- El despachador de `/harford` hace `local f = SlashCmdList[key]; if f then f(rest) end`: una clave
+-- que NO existe se traga el subcomando en silencio, sin abrir nada y sin dar error. Asi es como
+-- `/harford char` dejo de abrir el panel al perderse su registro en el refactor.
+--
+-- Las claves se sacan del propio despachador, no de una lista escrita aqui, para que anadir un
+-- subcomando nuevo quede cubierto solo.
+do
+    local fh = io.open(raiz .. "/Harford/DnD/UI/HarfordDnD.lua")
+    if fh then
+        local src = fh:read("*a")
+        fh:close()
+        local vistas = {}
+        for clave in src:gmatch('route%("([A-Z0-9]+)"%)') do vistas[clave] = true end
+        for clave in pairs(vistas) do
+            if type(SlashCmdList[clave]) ~= "function" then
+                -- Las que se registran dentro de un evento (HARFORDCONFIG, en PLAYER_LOGIN) no
+                -- existen todavia aqui y no son un fallo.
+                if not src:find('SlashCmdList%["' .. clave .. '"%]')
+                    and not io.open(raiz .. "/Harford/Core/HarfordConfig.lua") then
+                    fallos[#fallos + 1] = { "despachador", clave .. ": /harford la enruta y nadie la registra" }
+                end
+                local encontrada = false
+                for _, a2 in ipairs(ADDONS) do
+                    for _, rel2 in ipairs(ficherosDelToc(a2[1], a2[2])) do
+                        local f2 = io.open(raiz .. "/" .. rel2)
+                        if f2 then
+                            local s2 = f2:read("*a"); f2:close()
+                            if s2:find('SlashCmdList%["' .. clave .. '"%]')
+                                or s2:find('SlashCmdList%.' .. clave) then
+                                encontrada = true
+                            end
+                        end
+                    end
+                end
+                if not encontrada then
+                    fallos[#fallos + 1] = { "despachador",
+                        clave .. ": `/harford` la enruta y NADIE la registra (el subcomando no hace nada)" }
+                end
+            end
         end
     end
 end

@@ -38,25 +38,28 @@ chk("el mensaje la nombra", src:find("Se ha guardado una copia de la ficha anter
 
 
 
--- El renombrado PREGUNTA antes. Es lo unico destructivo de la migracion: reescribe las elecciones
--- del jugador y no se puede repetir. Lo estructural (valores por defecto, limpieza) si se aplica
--- solo, porque no pierde nada.
-print("El renombrado no se hace sin permiso")
-chk("el renombrado esta condicionado", src:find("if oldSchema < 3 and not autorizado then", 1, true) ~= nil, true)
-chk("la ficha queda en el esquema intermedio",
-    src:find("data.schema = math.max(oldSchema, SCHEMA_SIN_RENOMBRAR)", 1, true) ~= nil, true)
-chk("y marcada como pendiente", src:find("data._renombradoPendiente = true", 1, true) ~= nil, true)
-chk("sin permiso NO se guarda copia", src:find("if previo then data._previo = nil end", 1, true) ~= nil, true)
-
-print("Se pregunta una vez, no en cada acceso")
-chk("hay cuadro de permiso", src:find('StaticPopupDialogs["HARFORD_MIGRAR_IDS"]', 1, true) ~= nil, true)
-chk("con memoria de preguntado", src:find("if not forzar and (preguntado[name]", 1, true) ~= nil, true)
-chk("rechazar se recuerda la sesion", src:find("renombrarRechazado[tostring(name or", 1, true) ~= nil, true)
-
-print("Y hay como aceptarlo despues")
-chk("aplicar", src:find("function API.ApplyPendingRename", 1, true) ~= nil, true)
-chk("consultar", src:find("function API.HasPendingRename", 1, true) ~= nil, true)
+-- Lo que de verdad no se puede perder es el ABOUT de TRP3: es lo unico de la ficha que escribe el
+-- JUGADOR (su lore, sus notas, sus frames) y que Harford reescribe. La progresion se rehace
+-- subiendo de nivel otra vez; un About perdido no sale de ningun sitio.
+print("El About se copia antes de sobrescribirlo")
+local trp = io.open("Harford/TRP3/HarfordTRP3.lua"):read("*a")
+local iPrev = trp:find("local prev = type(profile.player.about)", 1, true)
+local iCopia = trp:find("API.SavePreviousAbout(prev)", 1, true)
+-- El punto destructivo no es una reasignacion: es el vaciado in-place del About.
+local iEscribe = trp:find("for key in pairs(about) do about[key] = nil end", 1, true)
+chk("la copia se toma antes de escribir",
+    (iCopia and iEscribe and iCopia < iEscribe) and true or false, true)
+chk("y despues de leer el About actual",
+    (iPrev and iCopia and iPrev < iCopia) and true or false, true)
+chk("guardar", trp:find("function API.SavePreviousAbout", 1, true) ~= nil, true)
+chk("consultar", trp:find("function API.GetPreviousAbout", 1, true) ~= nil, true)
+chk("restaurar", trp:find("function API.RestorePreviousAbout", 1, true) ~= nil, true)
+chk("restaurar no comparte tabla con la copia",
+    trp:find("profile.player.about = CopiaProfunda(prev.datos)", 1, true) ~= nil, true)
 local dbg2 = io.open("HarfordDebug/HarfordDebug.lua"):read("*a")
-chk("comando", dbg2:find('RegisterCommand("convertirficha"', 1, true) ~= nil, true)
+chk("comando", dbg2:find('RegisterCommand("aboutprevio"', 1, true) ~= nil, true)
+
+print("La migracion de ids vuelve a ser automatica")
+chk("sin cuadro de permiso", src:find("HARFORD_MIGRAR_IDS", 1, true) == nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

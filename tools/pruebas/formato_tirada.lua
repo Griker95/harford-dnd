@@ -61,7 +61,7 @@ chk("el bono de arma lo usa", dnd:find("HarfordDnDRolls.ColorSigned(wmod)", 1, t
 -- Migrar la ficha de OTRO no debe anunciar nada: el aviso hablaba en primera persona.
 print("La migracion calla cuando la ficha no es tuya")
 local prog = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
-chk("Migrate acepta silencio", prog:find("local function Migrate(data, silencioso, autorizado)", 1, true) ~= nil, true)
+chk("Migrate acepta silencio", prog:find("local function Migrate(data, silencioso)", 1, true) ~= nil, true)
 chk("el aviso lo respeta", prog:find("if total > 0 and not silencioso", 1, true) ~= nil, true)
 chk("inspeccion migra en silencio",
     prog:find("Migrate(CopyTable(data), true)", 1, true) ~= nil, true)

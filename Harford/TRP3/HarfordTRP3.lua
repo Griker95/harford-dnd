@@ -996,6 +996,64 @@ function API.ReplaceAboutFrames(frames)
     return API.WritePlayerAbout(frames, { previous = previas })
 end
 
+------------------------------------------------------------
+-- COPIA DEL ABOUT
+--
+-- Se guarda junto al perfil en `HarfordDnDPersistStore.profiles[nombre]._aboutPrevio`, que es donde
+-- ya vive todo lo demas de la ficha, asi que sobrevive al /reload y viaja con el personaje.
+--
+-- Solo la ULTIMA: encadenar copias de copias creceria sin limite dentro de las SavedVariables, y la
+-- util es la de justo antes del cambio que se llevo algo por delante.
+------------------------------------------------------------
+local function CopiaProfunda(src)
+    if type(src) ~= "table" then return src end
+    local out = {}
+    for k, v in pairs(src) do out[k] = CopiaProfunda(v) end
+    return out
+end
+
+local function RanuraDePerfil()
+    local nombre = (UnitName and UnitName("player")) or "player"
+    HarfordDnDPersistStore = HarfordDnDPersistStore or {}
+    if type(HarfordDnDPersistStore.profiles) ~= "table" then HarfordDnDPersistStore.profiles = {} end
+    if type(HarfordDnDPersistStore.profiles[nombre]) ~= "table" then
+        HarfordDnDPersistStore.profiles[nombre] = {}
+    end
+    return HarfordDnDPersistStore.profiles[nombre], nombre
+end
+
+function API.SavePreviousAbout(about)
+    if type(about) ~= "table" or next(about) == nil then return false end
+    local slot = RanuraDePerfil()
+    slot._aboutPrevio = { cuando = (time and time()) or 0, datos = CopiaProfunda(about) }
+    return true
+end
+
+function API.GetPreviousAbout()
+    local slot, nombre = RanuraDePerfil()
+    local prev = slot._aboutPrevio
+    if type(prev) ~= "table" or type(prev.datos) ~= "table" then return nil, nombre end
+    return prev, nombre
+end
+
+-- Devuelve el About guardado al perfil TRP3. No fusiona ni regenera: deja exactamente lo que habia.
+function API.RestorePreviousAbout()
+    local prev, nombre = API.GetPreviousAbout()
+    if not prev then return false, "No hay copia del About de " .. tostring(nombre) end
+    if not (TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile) then
+        return false, "No hay un perfil local de TRP3 activo."
+    end
+    local profile = SafeCall(TRP3_API.profile.getPlayerCurrentProfile)
+    if type(profile) ~= "table" then return false, "No se encontro el perfil local de TRP3." end
+    if type(profile.player) ~= "table" then profile.player = {} end
+    -- La copia de la copia: restaurar no debe dejar el perfil compartiendo tabla con el respaldo,
+    -- porque la siguiente escritura de TRP3 lo modificaria tambien a el.
+    profile.player.about = CopiaProfunda(prev.datos)
+    EnsureAboutSchema(profile.player.about)
+    NotifyAboutUpdated()
+    return true, nombre
+end
+
 function API.WritePlayerAbout(content, opts)
     if not (TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile) then
         return false, "No hay un perfil local de TRP3 activo."
@@ -1013,6 +1071,15 @@ function API.WritePlayerAbout(content, opts)
     -- El contenido de las plantillas 1 y 3 se CONSERVA. Harford escribe en la 2, pero blanquear
     -- las otras borraba la biografia de quien la tuviera escrita ahi.
     local prev = type(profile.player.about) == "table" and profile.player.about or {}
+    -- COPIA DEL ABOUT ANTERIOR, antes de sobrescribirlo.
+    --
+    -- El About es lo unico de la ficha que escribe el JUGADOR y que Harford reescribe: su lore, sus
+    -- notas, los frames que se haya puesto el. La progresion se puede rehacer subiendo de nivel
+    -- otra vez; un About perdido no se recupera de ningun sitio.
+    --
+    -- La fusion por huellas conserva los frames ajenos, pero un frame editado a mano deja de casar
+    -- con su huella y puede acabar duplicado o desplazado -- y esta es la unica marcha atras.
+    API.SavePreviousAbout(prev)
     local function KeepSection(seccion)
         local origen = type(prev.T3) == "table" and prev.T3[seccion] or nil
         if type(origen) ~= "table" then return { BK = 1, TX = "" } end

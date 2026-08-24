@@ -4781,23 +4781,50 @@ API.RegisterCommand("dumpsheet", function(args)
     ShowCopyWindow("Harford - Volcado ficha (Ctrl+A, Ctrl+C)", full)
 end, "vuelca About TRP3 + ficha parseada (copiable): dumpsheet [target]")
 
-API.RegisterCommand("convertirficha", function(args)
-    local P = _G.HarfordDnDProgression
-    if not (P and P.HasPendingRename) then Print("HarfordDnDProgression no cargado"); return end
-    local pendiente, name = P.HasPendingRename()
-    if not pendiente then
-        Print("La ficha de |cffffcc00" .. tostring(name) .. "|r ya usa los nombres nuevos.")
+API.RegisterCommand("aboutprevio", function(args)
+    local T = _G.HarfordTRP3
+    if not (T and T.GetPreviousAbout) then Print("HarfordTRP3 no cargado"); return end
+    local prev, nombre = T.GetPreviousAbout()
+    if not prev then
+        Print("No hay copia del About de |cffffcc00" .. tostring(nombre) .. "|r.")
+        Print("Se guarda cada vez que Harford escribe en el About; si nunca lo ha escrito, no hay nada.")
         return
     end
-    if tostring(args or ""):lower():gsub("%s+", "") == "ya" then
-        local ok = P.ApplyPendingRename()
-        Print(ok and "Ficha convertida. Haz |cff00ff00/reload|r."
-            or "|cffff5555No se pudo convertir|r")
+
+    local function Frames(about)
+        local n, titulos = 0, {}
+        for _, f in ipairs((type(about.T2) == "table" and about.T2) or {}) do
+            n = n + 1
+            -- Primera linea del frame: su cabecera. El corte se compone con string.char para no
+            -- depender de escapar el salto de linea dentro del patron.
+            local primera = tostring(f.TX or ""):match("^[^" .. string.char(10) .. string.char(13) .. "]*") or ""
+            primera = (T.StripInlineMarkup and T.StripInlineMarkup(primera)) or primera
+            if #titulos < 12 then titulos[#titulos + 1] = primera:sub(1, 34) end
+        end
+        return n, titulos
+    end
+
+    if tostring(args or ""):lower():gsub("%s+", "") ~= "restaurar" then
+        local cuando = prev.cuando and prev.cuando > 0 and date("%d/%m/%Y %H:%M", prev.cuando) or "?"
+        local nAnt, tAnt = Frames(prev.datos)
+        Print("Copia del About de |cffffcc00" .. tostring(nombre) .. "|r, guardada el |cffffd100"
+            .. cuando .. "|r: |cffffd100" .. nAnt .. "|r frame(s)")
+        for _, s in ipairs(tAnt) do Print("   |cff808080" .. s .. "|r") end
+        local actual = T.GetPlayerProfile and T.GetPlayerProfile("player")
+        local about = actual and type(actual.player) == "table" and actual.player.about
+        if type(about) == "table" then
+            local nHoy = Frames(about)
+            Print("AHORA: |cffffd100" .. nHoy .. "|r frame(s)"
+                .. (nHoy < nAnt and "  |cffff5555(hay menos que en la copia)|r" or ""))
+        end
+        Print("Para volver a ella: |cff00ff00/harford debug run aboutprevio restaurar|r")
         return
     end
-    P.AskPendingRename(nil, true)
-    Print("Sin cuadro de dialogo: |cffffd100/harford debug run convertirficha ya|r")
-end, "convierte los nombres de rasgo de la ficha a la convencion nueva (pregunta antes)")
+
+    local ok, err = T.RestorePreviousAbout()
+    Print(ok and ("About de |cffffcc00" .. tostring(err or nombre) .. "|r restaurado tal cual estaba.")
+        or ("|cffff5555" .. tostring(err) .. "|r"))
+end, "copia del About de TRP3 anterior a que Harford lo escribiera (aboutprevio restaurar)")
 
 API.RegisterCommand("fichaprevia", function(args)
     local P = _G.HarfordDnDProgression

@@ -49,9 +49,15 @@ for m in re.finditer(r'\{\s*\n\s*id = "([a-z0-9_]+)", name = "((?:[^"\\]|\\.)*)"
     tr = re.search(r'\btraits = \{', blk)
     traits = parse_traits(blk[tr.end()-1:balanced(blk, tr.end()-1)]) if tr else []
     requires = (m.group(3) or "").replace('\\"', '"').strip()
-    desc = traits[0]["desc"] if traits else ""
+    # La descripcion propia de la dote manda. Sin ella se caia al texto del PRIMER rasgo,
+    # que es detalle mecanico y no una presentacion.
+    _cab = blk[:tr.start()] if tr else blk
+    _propia = re.search(r'\bdescription = "((?:[^"\\]|\\.)*)"', _cab)
+    desc = (_propia.group(1).replace('\\"', '"') if _propia
+            else (traits[0]["desc"] if traits else ""))
+    propia = bool(_propia)
     dotes.append({"id": m.group(1), "name": m.group(2).replace('\\"', '"'),
-                  "requires": requires, "desc": desc, "traits": traits})
+                  "requires": requires, "desc": desc, "traits": traits, "propia": propia})
 
 # ---- texto del manual para cada dote (en el libro son titulos de nivel 3) ----
 import unicodedata
@@ -141,7 +147,8 @@ if "ubservador" in libro_txt: libro_txt.setdefault("observador", libro_txt["ubse
 enr = 0
 for d in dotes:
     t = libro_txt.get(_nk(d["name"]))
-    if t and len(t) > len(d.get("desc", "")):
+    # el texto del manual rellena a quien no tiene descripcion propia; nunca la sustituye
+    if t and not d.get("propia") and len(t) > len(d.get("desc", "")):
         d["desc"] = t; enr += 1
         # El texto del manual se queda en la DOTE y no se copia a su primer rasgo. Copiarlo
         # hacia que 68 de las 77 tuvieran un primer rasgo que decia llamarse "Trucos de Mago"

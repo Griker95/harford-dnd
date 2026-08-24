@@ -22,7 +22,7 @@ end
 API.FEATS = {
     -- ===== Dotes especiales =====
     {
-        id = "feat_mago_de_batalla", name = "Mago de batalla", requires = "Capacidad de lanzar al menos un conjuro",
+        id = "feat_mago_de_batalla", name = "Mago de batalla", requires = "Capacidad de lanzar al menos un conjuro", description = "Magia de combate a quemarropa: más trucos, sin penalización por tener al enemigo encima y la opción de cambiar puntería por potencia.",
         traits = {
             { id = "feat_mb_trucos", name = "Trucos de Mago", type = "informativo", description = "Aprendes dos trucos extra de la lista de conjuros de mago.", effects = {} },
             { id = "feat_mb_cercania", name = "Sin desventaja en cercania", type = "informativo", description = "Al hacer un ataque de conjuro a distancia, no sufres desventaja por estar a 1.5 m de una criatura hostil.", effects = {} },
@@ -30,7 +30,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_experto_armas_fuego", name = "Experto en armas de fuego", requires = "",
+        id = "feat_experto_armas_fuego", name = "Experto en armas de fuego", requires = "", description = "Manejo veterano de la pólvora: recargas sin perder el turno, disparas cómodo en corta distancia y encadenas un segundo tiro.",
         traits = {
             { id = "feat_eaf_recarga", name = "Sin recarga", type = "informativo", description = "Ignoras la propiedad de recarga de las armas de fuego con las que eres competente.", effects = {} },
             { id = "feat_eaf_cercania", name = "Sin desventaja en cercania", type = "informativo", description = "Estar a 1.5 m de una criatura hostil no impone desventaja en tus ataques a distancia.", effects = {} },
@@ -38,7 +38,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_adepto_armas_fuego", name = "Adepto en armas de fuego", requires = "",
+        id = "feat_adepto_armas_fuego", name = "Adepto en armas de fuego", requires = "", description = "Formación básica en armas de fuego, con las herramientas de armero para mantenerlas a punto.",
         traits = {
             { id = "feat_adf_inc", name = "Incremento de caracteristica", type = "choice", description = "Destreza o Inteligencia +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Destreza"), AbilOpt("Inteligencia") } } },
             { id = "feat_adf_armero", name = "Competencia con herramientas de armero", type = "pasivo", description = "Obtienes competencia con herramientas de armero.", effects = { { kind = "toolProf", tool = "Herramientas de armero" } } },
@@ -46,7 +46,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_maestro_armas_exoticas", name = "Maestro en armas exoticas", requires = "",
+        id = "feat_maestro_armas_exoticas", name = "Maestro en armas exoticas", requires = "", description = "Adiestramiento en armamento poco común, del que casi nadie sabe sacar partido.",
         traits = {
             { id = "feat_mae_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_mae_armas", name = "Armas exoticas", type = "informativo", description = "Competencia con cuatro armas exoticas de tu elección.", effects = {} },
@@ -54,14 +54,14 @@ API.FEATS = {
     },
     -- ===== Dotes raciales =====
     {
-        id = "feat_teletransporte_arcano", name = "Teletransporte arcano", requires = "Elfo de sangre, renegado (elfo) o nocheterna",
+        id = "feat_teletransporte_arcano", name = "Teletransporte arcano", requires = "Elfo de sangre, renegado (elfo) o nocheterna", description = "Herencia arcana élfica que permite desaparecer y reaparecer unos pasos más allá, una vez entre descansos.",
         traits = {
             { id = "feat_ta_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Carisma") } } },
             { id = "feat_ta_conjuro", name = "Paso brumoso", type = "informativo", description = "Aprendes paso brumoso y puedes lanzarlo una vez sin gastar espacio; lo recuperas al terminar un descanso corto o largo. Característica de lanzamiento: Inteligencia.", effects = {} },
         },
     },
     {
-        id = "feat_mejor_quimica", name = "Mejor quimica", requires = "Goblin",
+        id = "feat_mejor_quimica", name = "Mejor quimica", requires = "Goblin", description = "Instinto goblin para la alquimia: reconoces una poción de un vistazo y sabes sacarle más provecho.",
         traits = {
             { id = "feat_mq_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
             { id = "feat_mq_alquimista", name = "Suministros de alquimista", type = "pasivo", description = "Competencia con suministros de alquimista; si ya la tienes, duplicas tu bono de competencia con ellos.", effects = { { kind = "toolProf", tool = "Suministros de alquimista" } } },
@@ -70,14 +70,14 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_amigo_criaturas", name = "Amigo de las criaturas", requires = "Elfo nocturno",
+        id = "feat_amigo_criaturas", name = "Amigo de las criaturas", requires = "Elfo nocturno", description = "Trato natural con las bestias: te entienden, te escuchan y rara vez te ven como una amenaza.",
         traits = {
             { id = "feat_ac_animales", name = "Trato con Animales", type = "pasivo", description = "Competencia en Trato con Animales; si ya eres competente, duplicas tu bono de competencia en ella.", effects = { { kind = "skillProf", skill = "Animales" } } },
             { id = "feat_ac_conjuros", name = "Conjuros de bestias", type = "informativo", description = "Aprendes hablar con animales (a voluntad, sin espacio) y amistad con los animales (una vez con este dote, recuperado en descanso largo). Característica: Sabiduría.", effects = {} },
         },
     },
     {
-        id = "feat_herencia_darnassiana", name = "Herencia darnassiana", requires = "Elfo nocturno",
+        id = "feat_herencia_darnassiana", name = "Herencia darnassiana", requires = "Elfo nocturno", description = "El legado de Darnassus: moverte sin ser visto en la penumbra y un espíritu que vela por ti cuando la muerte se acerca.",
         traits = {
             { id = "feat_hd_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria") } } },
             { id = "feat_hd_sigilo", name = "Sigilo en penumbra", type = "informativo", description = "Ventaja en pruebas de Destreza (Sigilo) en areas con luz tenue o sin luz.", effects = {} },
@@ -85,21 +85,21 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_fortaleza_enana", name = "Fortaleza enana", requires = "Enano",
+        id = "feat_fortaleza_enana", name = "Fortaleza enana", requires = "Enano", description = "Aguante enano: cuando te cubres, aprovechas el respiro para recomponerte.",
         traits = {
             { id = "feat_fe_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
             { id = "feat_fe_esquivar", name = "Esquivar y curar", type = "informativo", description = "Al tomar la acción de Esquivar, puedes gastar un dado de golpe para curarte (tirada + Mod. Constitución, mínimo 1).", effects = {} },
         },
     },
     {
-        id = "feat_precision_elfica", name = "Precision elfica", requires = "Cualquier elfo o renegado (elfo)",
+        id = "feat_precision_elfica", name = "Precision elfica", requires = "Cualquier elfo o renegado (elfo)", description = "Puntería élfica: cuando la ocasión te favorece, la aprovechas mejor que nadie.",
         traits = {
             { id = "feat_pe_inc", name = "Incremento de caracteristica", type = "choice", description = "Destreza, Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Destreza"), AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_pe_reroll", name = "Precision", type = "informativo", description = "Con ventaja en un ataque de Destreza, Inteligencia, Sabiduría o Carisma, puedes volver a tirar uno de los dados una vez.", effects = {} },
         },
     },
     {
-        id = "feat_abrazo_vacio", name = "Abrazo del Vacio", requires = "Elfo del Vacio",
+        id = "feat_abrazo_vacio", name = "Abrazo del Vacio", requires = "Elfo del Vacio", description = "El Vacío responde a tu magia necrótica, la refuerza y te envuelve mientras la canalizas.",
         traits = {
             { id = "feat_av_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_av_reroll", name = "Daño necrotico", type = "informativo", description = "Al tirar daño necrótico de un conjuro tuyo, puedes volver a tirar los 1 (usas el nuevo resultado, aunque sea otro 1).", effects = {} },
@@ -116,7 +116,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_depredador_endurecido", name = "Depredador endurecido", requires = "Huargen",
+        id = "feat_depredador_endurecido", name = "Depredador endurecido", requires = "Huargen", description = "El instinto huargen a flor de piel: olfato, carrera a cuatro patas y garras que cuentan como arma.",
         traits = {
             { id = "feat_de_olfato", name = "Olfato agudo", type = "informativo", description = "Ventaja en pruebas de Sabiduría (Percepción) que dependan del olfato.", effects = {} },
             { id = "feat_de_correr", name = "Carrera a cuatro patas", type = "informativo", description = "Con ambas manos vacias, puedes Correr como acción adicional, desplazandote a cuatro patas.", effects = {} },
@@ -125,7 +125,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_furia_orca", name = "Furia orca", requires = "Orco",
+        id = "feat_furia_orca", name = "Furia orca", requires = "Orco", description = "Furia orca en cada golpe, y una embestida más cuando la sangre ya te hierve.",
         traits = {
             { id = "feat_fo_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Constitución +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion") } } },
             { id = "feat_fo_dado", name = "Golpe furioso", type = "informativo", description = "Al golpear con un arma simple o marcial, tiras un dado de daño del arma extra (mismo tipo). 1 uso por descanso corto o largo.", effects = {} },
@@ -133,7 +133,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_prodigio", name = "Prodigio", requires = "Renegado (humano) o humano",
+        id = "feat_prodigio", name = "Prodigio", requires = "Renegado (humano) o humano", description = "Versatilidad humana: aprendes deprisa una habilidad, una herramienta y un idioma, y dominas algo que ya sabías.",
         traits = {
             { id = "feat_pr_competencia", name = "Competencia en habilidad", type = "choice", description = "Competencia en una habilidad de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "skillProf" } },
             { id = "feat_pr_extra", name = "Herramienta e idioma", type = "choice", description = "Competencia en una herramienta de tu elección (elige abajo) y fluidez en un idioma de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "toolProf" } },
@@ -141,7 +141,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_guia_espiritual", name = "Guia espiritual", requires = "Enano (Martillo Salvaje), orco, tauren o trol",
+        id = "feat_guia_espiritual", name = "Guia espiritual", requires = "Enano (Martillo Salvaje), orco, tauren o trol", description = "Los espíritus de tu pueblo te acompañan: sostienen tu ánimo y sanan a los tuyos.",
         traits = {
             { id = "feat_ge_inc", name = "Incremento de caracteristica", type = "choice", description = "Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_ge_miedo", name = "Valor espiritual", type = "informativo", description = "Ventaja en tiradas de salvación contra el miedo.", effects = {} },
@@ -149,7 +149,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_agilidad_robusta", name = "Agilidad robusta", requires = "Enano, gnomo o goblin",
+        id = "feat_agilidad_robusta", name = "Agilidad robusta", requires = "Enano, gnomo o goblin", description = "Cuerpo bajo y compacto, pero rápido: te mueves más y cuesta sujetarte.",
         traits = {
             { id = "feat_ar_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_ar_velocidad", name = "Velocidad", type = "informativo", description = "Tu velocidad aumenta en 1,5 metros.", effects = {} },
@@ -164,7 +164,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_resistencia_tauren", name = "Resistencia Tauren", requires = "Tauren",
+        id = "feat_resistencia_tauren", name = "Resistencia Tauren", requires = "Tauren", description = "Corpulencia tauren: aguantas golpes sin armadura y tu vida crece con cada nivel.",
         traits = {
             { id = "feat_rt_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza, Destreza o Constitución +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza"), AbilOpt("Constitucion") } } },
             { id = "feat_rt_piel", name = "Piel gruesa", type = "informativo", description = "Sin armadura, tu CA = 10 + Mod. Destreza + Mod. Constitución. Puedes usar escudo y mantener este beneficio.", effects = {} },
@@ -173,7 +173,7 @@ API.FEATS = {
     },
     -- ===== Dotes del Manual del Jugador (PHB 5e ES) =====
     {
-        id = "feat_acechador", name = "Acechador", requires = "Destreza 13 o mas", source = "PHB",
+        id = "feat_acechador", name = "Acechador", requires = "Destreza 13 o mas", description = "Sabes esconderte donde otros no podrían, y un intento fallido no te delata.", source = "PHB",
         traits = {
             { id = "feat_phb_acechador", name = "Beneficios", type = "informativo", description = "Puedes esconderte si solo estas ligeramente oscurecido para la criatura. Fallar un ataque a distancia estando escondido no revela tu posición. La luz tenue no te da desventaja en Percepción (vista).", effects = {} },
         },
@@ -192,7 +192,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_alerta", name = "Alerta", source = "PHB",
+        id = "feat_alerta", name = "Alerta", description = "Nada te pilla desprevenido: reaccionas antes que nadie y no te sorprenden.", source = "PHB",
         traits = {
             { id = "feat_phb_alerta_ini", name = "Iniciativa", type = "pasivo", description = "+5 a la iniciativa.", effects = { { kind = "bonus", target = "initiative", value = 5 } } },
             { id = "feat_phb_alerta_b", name = "Beneficios", type = "informativo", description = "Consciente, no puedes ser sorprendido; las criaturas que no ves no obtienen ventaja al atacarte por ello.", effects = {} },
@@ -329,7 +329,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_maestro_escudero", name = "Maestro escudero", source = "PHB",
+        id = "feat_maestro_escudero", name = "Maestro escudero", description = "El escudo como muro y como arma: protege a quien tienes al lado y derriba al que tienes delante.", source = "PHB",
         traits = {
             { id = "feat_mesc_defensa", name = "Defensa con escudo", type = "informativo", description = "Mientras portes un escudo y no estés incapacitado: sumas la CA del escudo a tus salvaciones de Destreza contra ataques o efectos que te tengan a TI de objetivo; y si superas una salvación de Destreza contra un efecto que aun así inflige daño, lo ignoras por completo.", effects = {} },
             { id = "feat_mesc_embate", name = "Embate con escudo", type = "pasivo", description = "Al usar la acción de Ataque en tu turno, puedes usar tu acción adicional para embatir con el escudo a una criatura a tu alcance cuerpo a cuerpo: 1d4 + Mod. Fuerza contundente. Activa 'Offhand' con un escudo en la mano secundaria y ataca para tirarlo.", effects = {
@@ -338,7 +338,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_gran_maestro_armas", name = "Gran maestro de armas", source = "PHB",
+        id = "feat_gran_maestro_armas", name = "Gran maestro de armas", description = "Armas grandes llevadas al límite: cambias puntería por daño y encadenas ataques cuando cae un enemigo.", source = "PHB",
         traits = {
             { id = "feat_gma_adicional", name = "Ataque adicional", type = "informativo", description = "En tu turno, al hacer un golpe crítico con un arma cuerpo a cuerpo o reducir a una criatura a 0 PG con ella, puedes hacer un ataque cuerpo a cuerpo como acción adicional.", effects = {} },
             { id = "feat_gma_potente", name = "Golpe potente", type = "recurso", description = "Toggle: antes de atacar c/c con un arma a dos manos competente, -5 a la tirada de ataque y +10 al daño si impacta. Actívalo en 'Daño extra'.", effects = {
@@ -514,7 +514,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_adepto_metamagia", name = "Adepto de la metamagia", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", source = "TCoE",
+        id = "feat_adepto_metamagia", name = "Adepto de la metamagia", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", description = "Aprendes a retorcer tus conjuros con los recursos del hechicero.", source = "TCoE",
         traits = {
             { id = "feat_tco_metamagia", name = "Beneficios", type = "informativo", description = "Aprendes dos opciones de Metamagia de la clase hechicero (cambiables al subir nivel). Obtienes 2 puntos de hechicería solo para Metamagia, que recargan en descanso largo.", effects = {} },
         },
@@ -527,7 +527,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_envenenador", name = "Envenenador", source = "TCoE",
+        id = "feat_envenenador", name = "Envenenador", description = "Uso experto del veneno: lo aplicas sin perder el turno y atraviesas las defensas habituales.", source = "TCoE",
         traits = {
             { id = "feat_tco_envenenador", name = "Beneficios", type = "informativo", description = "Ignoras la resistencia al daño por veneno. Aplicas veneno como acción adicional. Competencia con útiles de envenenador; en 1 hora y 50 po creas dosis de veneno potente (CD 14 Con, 2d8 veneno y envenenado).", effects = { { kind = "toolProf", tool = "Utiles de envenenador" } } },
         },

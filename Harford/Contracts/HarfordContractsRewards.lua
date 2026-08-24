@@ -32,6 +32,65 @@ end
 -- Recorre los contratos completados y concede la parte propia de XP/rep no cobrada. Idempotente
 -- (HarfordQuests.ClaimRewards no repite: marca "claimed" en el ledger per-PJ). El id se prefija
 -- para no chocar con otros ids en HarfordQuestsStore.claimed. Anuncia solo la primera concesion.
+-- Clave del recibo per-PJ: el id PELADO del contrato. Es la MISMA que usan el listener de
+-- completado de HarfordQuests y la ruta de mision de mundo, y esa unificacion es justamente el
+-- arreglo: con dos claves distintas para el mismo contrato, ninguna bloqueaba a la otra.
+function TC.Rewards.SharedKey(contract)
+    return tostring(contract and contract.id or "")
+end
+
+-- Clave HEREDADA de cuando esta ruta iba prefijada. No se escribe nunca: solo se consulta, para
+-- reconocer lo que ya se cobro entonces y no volver a concederlo ahora.
+function TC.Rewards.LegacySharedKey(contract)
+    return "contract:" .. tostring(contract and contract.id or "")
+end
+
+-- ¿Este contrato reparte algo compartido (XP o reputacion)? El oro y los objetos NO cuentan: son
+-- individuales de quien entrega en el NPC.
+function TC.Rewards.HasShared(contract)
+    if type(contract) ~= "table" then return false end
+    local reps = type(contract.rewardReps) == "table" and #contract.rewardReps > 0
+    local rep = type(contract.rewardRep) == "table"
+    return (tonumber(contract.rewardXP) ~= nil) or reps or rep
+end
+
+-- ¿Ya lo cobro ESTE personaje? Se consultan las DOS claves: la actual y la heredada. Mirar solo
+-- una es exactamente el fallo que se esta corrigiendo.
+function TC.Rewards.IsSharedClaimed(contract)
+    if not (HarfordQuests and HarfordQuests.IsSharedRewardsClaimed) then return false end
+    if HarfordQuests.IsSharedRewardsClaimed(TC.Rewards.SharedKey(contract)) then return true end
+    return HarfordQuests.IsSharedRewardsClaimed(TC.Rewards.LegacySharedKey(contract)) and true or false
+end
+
+-- Las misiones de mundo reparten su rep/xp por la ruta del world quest (turn-in del NPC + reparto
+-- del DM a los ausentes, con la clave del id pelado). Cobrarlas tambien aqui la daria DOS veces.
+function TC.Rewards.IsSharedClaimable(contract)
+    if type(contract) ~= "table" then return false end
+    if contract.status ~= "completed" or contract.worldNpc then return false end
+    if not TC.Rewards.HasShared(contract) then return false end
+    return not TC.Rewards.IsSharedClaimed(contract)
+end
+
+-- Concede la parte compartida de UN contrato. Idempotente: `HarfordQuests.ClaimRewards` lleva su
+-- propio recibo por componente, asi que llamarla de mas no concede de mas.
+function TC.Rewards.ClaimShared(contract)
+    if not (HarfordQuests and HarfordQuests.ClaimRewards) then return false end
+    if type(contract) ~= "table" or contract.status ~= "completed" or contract.worldNpc then return false end
+    local reps = (type(contract.rewardReps) == "table" and #contract.rewardReps > 0 and contract.rewardReps) or nil
+    local rep = type(contract.rewardRep) == "table" and contract.rewardRep or nil
+    if not (tonumber(contract.rewardXP) or reps or rep) then return false end
+    -- Cortafuegos del recibo heredado: si se cobro con la clave antigua, no se concede otra vez.
+    -- `ClaimRewards` no puede saberlo, porque su recibo va por la clave que se le pasa.
+    if HarfordQuests.IsSharedRewardsClaimed
+        and HarfordQuests.IsSharedRewardsClaimed(TC.Rewards.LegacySharedKey(contract)) then
+        return false
+    end
+    return HarfordQuests.ClaimRewards({
+        id = TC.Rewards.SharedKey(contract),
+        reward = { xp = tonumber(contract.rewardXP), rep = rep, reps = reps },
+    }) and true or false
+end
+
 function TC.Rewards.Reconcile()
     if not (HarfordQuests and HarfordQuests.ClaimRewards) then return end
     local db = TC.GetDB and TC.GetDB()
@@ -42,20 +101,9 @@ function TC.Rewards.Reconcile()
         -- quest (turn-in del NPC + DM reparto a ausentes, clave de claim = id pelado). Reconciliarlos
         -- aqui (clave "contract:<id>") concederia la rep DOS veces. Se saltan.
         if type(contract) == "table" and contract.status == "completed" and not contract.worldNpc then
-            -- (a) Recompensa compartida (XP/rep) no cobrada por este PJ. Soporta VARIAS reputaciones
-            -- (`rewardReps`, lista) ademas de la unica legacy (`rewardRep`). Sin la lista, un contrato
-            -- con multiples reps no concedia ninguna al reconciliar (solo miraba `rewardRep`).
-            local reps = (type(contract.rewardReps) == "table" and #contract.rewardReps > 0 and contract.rewardReps) or nil
-            local rep = type(contract.rewardRep) == "table" and contract.rewardRep or nil
-            if tonumber(contract.rewardXP) or reps or rep then
-                local granted = HarfordQuests.ClaimRewards({
-                    id = "contract:" .. tostring(contract.id),
-                    reward = { xp = tonumber(contract.rewardXP), rep = rep, reps = reps },
-                })
-                -- El aviso de rep lo emite ya HarfordQuests.ClaimRewards (una vez, incluida la
-                -- recuperacion offline); no duplicar aqui. `granted` se conserva por si hace falta.
-                local _ = granted
-            end
+            -- (a) Recompensa compartida (XP/rep) no cobrada por este PJ. Misma funcion que el
+            -- boton de la pestaña Completadas: una sola via, un solo recibo.
+            TC.Rewards.ClaimShared(contract)
 
             -- (b) Si lo seguias en tu quest log, sacalo: la mision esta entregada (como el juego).
             if HarfordQuests.IsAccepted and HarfordQuests.Abandon

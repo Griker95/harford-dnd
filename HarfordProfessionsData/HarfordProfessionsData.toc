@@ -1,0 +1,14 @@
+## Interface: 90207
+## Title: |cff88ccffHarford|r Datos de profesiones
+## Notes: Catalogo de profesiones, recetas y objetos. Se carga BAJO DEMANDA desde Harford.
+## Author: Griker
+## Version: 2.0.0
+## RequiredDeps: Harford
+## LoadOnDemand: 1
+
+# Un MB de constructores de tabla (4.811 + 3.916 entradas) que WoW parseaba en cada login aunque
+# el jugador no abriera profesiones en toda la sesion. Harford los pide con
+# HarfordProfessions.EnsureData() la primera vez que alguien consulta el catalogo.
+
+HarfordProfessionsData.lua
+HarfordProfessionsItems.lua

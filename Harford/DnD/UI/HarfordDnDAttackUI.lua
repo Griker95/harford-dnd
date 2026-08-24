@@ -396,8 +396,9 @@ function API.RefreshWeaponInfo()
         weaponMod = weaponMod + (HarfordDnDCalc and HarfordDnDCalc.GetWeaponDamageBonus
             and HarfordDnDCalc.GetWeaponDamageBonus() or (HarfordDnDCalc and HarfordDnDCalc.GetWeaponMod and HarfordDnDCalc.GetWeaponMod() or 0))
     end
-    local dice = HarfordDnDWeapons and HarfordDnDWeapons.WeaponBaseDice
-        and HarfordDnDWeapons.WeaponBaseDice(def) or "1d4"
+    -- Para MOSTRAR se usa WeaponDamageText: el desarmado es 1 fijo y "1d1" se lee mal.
+    local dice = HarfordDnDWeapons and HarfordDnDWeapons.WeaponDamageText
+        and HarfordDnDWeapons.WeaponDamageText(def) or "1d4"
     local parts = {}
     if abilityMod ~= 0 then parts[#parts + 1] = deps.formatSigned(abilityMod) end
     if weaponMod ~= 0 then parts[#parts + 1] = deps.formatSigned(weaponMod) end

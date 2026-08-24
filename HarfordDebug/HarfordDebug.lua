@@ -175,19 +175,46 @@ API.RegisterCommand("xpbar", function()
 end, "Estado de las barras Harford de XP/reputacion y del desplazamiento de la barra de accion")
 
 API.RegisterCommand("xp", function(args)
-    local amount = tonumber(tostring(args or ""):match("%-?%d+"))
-    if not amount or amount == 0 then
-        Print("Uso: xp <cantidad>. Ejemplo: xp 300")
-        return
-    end
-    if not (HarfordCharacterXP and HarfordCharacterXP.AddXP) then
+    local X = _G.HarfordCharacterXP
+    if not (X and X.AddXP and X.GetXP and X.Progress) then
         Print("HarfordCharacterXP no disponible")
         return
     end
-    if not HarfordCharacterXP.AddXP(amount, "debug") then
-        Print("No se pudo ajustar la XP")
+    local texto = tostring(args or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    -- `xp = 900` fija el total; `xp 300` / `xp -300` suman o restan.
+    local absoluto = texto:match("^=%s*(%d+)$")
+    local delta = not absoluto and tonumber(texto:match("^%-?%d+$"))
+
+    local antes = X.GetXP()
+    local nivelAntes = X.LevelForXP(antes)
+    if absoluto then
+        if not X.SetXP(tonumber(absoluto)) then Print("No se pudo fijar la XP"); return end
+        X.Refresh()
+    elseif delta and delta ~= 0 then
+        if not X.AddXP(delta, "debug") then Print("No se pudo ajustar la XP"); return end
+    else
+        Print("Uso: |cffffd100xp <cantidad>|r suma o resta (xp 300 / xp -300)")
+        Print("     |cffffd100xp = <total>|r fija el total (xp = 900)")
+        local nivel, dentro, tramo = X.Progress()
+        Print(string.format("Ahora: %d XP  -  nivel %d, %d/%d del tramo", antes, nivel, dentro, tramo))
+        return
     end
-end, "suma/resta XP propia: xp <cantidad>")
+
+    local ahora = X.GetXP()
+    local nivel, dentro, tramo = X.Progress()
+    Print(string.format("XP %d -> |cffffd100%d|r  (%+d)", antes, ahora, ahora - antes))
+    Print(string.format("nivel de XP %d%s   tramo %d/%d",
+        nivel,
+        (nivel ~= nivelAntes) and string.format(" |cff00ff00(antes %d)|r", nivelAntes) or "",
+        dentro, tramo))
+    -- Restar por debajo de 0 lo capa SetXP: si pediste mas de lo que tenias, conviene decirlo.
+    if delta and delta < 0 and (antes + delta) < 0 then
+        Print("   |cffffcc00capado a 0|r: tenias menos XP de la que querias restar")
+    end
+    if X.PendingLevelUp and X.PendingLevelUp() then
+        Print("   hay subida pendiente: |cffffd100/harford char subir|r")
+    end
+end, "XP propia: xp <cantidad> suma/resta, xp = <total> fija")
 
 API.RegisterCommand("rep", function(args)
     local factionId, amount = tostring(args or ""):match("^%s*(%S+)%s+([%-]?%d+)%s*$")
@@ -853,6 +880,53 @@ do
             return
         end
 
+        -- El frame del entrenador (`Blizzard_TrainerUI`) es de CARGA BAJO DEMANDA: normalmente
+        -- solo aparece al hablar con un entrenador, y en Epsilon no hay forma de abrirlo. Pero se
+        -- puede cargar a mano, y con eso el frame queda construido con toda su geometria, arte y
+        -- fuentes aunque no tenga datos. Eso es justo lo que la sonda necesita.
+        if action == "trainer" then
+            -- Lo primero: que las rutas del XML nativo EXISTAN en este cliente. Una ruta que no
+            -- resuelve se pinta en verde chillon sin avisar, y toda la ventana depende de estas.
+            Print("texturas del entrenador en este cliente:")
+            for _, ruta in ipairs({
+                "Interface\\ClassTrainerFrame\\TrainerTextures",
+                "Interface\\GuildFrame\\GuildFrame",
+                "Interface\\MoneyFrame\\UI-MoneyFrame-Border",
+                "Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar",
+            }) do
+                local id = GetFileIDFromPath and GetFileIDFromPath(ruta)
+                Print("   " .. (id and ("OK  fileID " .. id) or "NO EXISTE") .. "  " .. ruta)
+            end
+            local cargar = (C_AddOns and C_AddOns.LoadAddOn) or _G.LoadAddOn
+            if not cargar then return Print("no hay API para cargar addons bajo demanda") end
+            local ok, err = cargar("Blizzard_TrainerUI")
+            Print("cargar Blizzard_TrainerUI: " .. (ok and "OK" or ("fallo: " .. tostring(err))))
+            local f = _G.ClassTrainerFrame
+            if not f then
+                Print("ClassTrainerFrame no existe tras cargar; prueba tambien:")
+                for _, n in ipairs({ "TrainerFrame", "ProfessionsBookFrame", "ClassTrainerFrameInset" }) do
+                    Print("   " .. n .. ": " .. (_G[n] and "existe" or "no"))
+                end
+                return
+            end
+            -- Se ensena para que el arte quede colocado. Va en pcall porque su OnShow pide datos
+            -- de un entrenador que aqui no hay; si revienta, la geometria del XML ya esta puesta
+            -- y la captura sigue valiendo.
+            local vistoOk, vistoErr = pcall(function() f:Show() end)
+            if not vistoOk then
+                Print("Show fallo (esperable sin entrenador): " .. tostring(vistoErr):sub(1, 80))
+            end
+            local tag = label ~= "" and label or "nativo"
+            API.RunCommand("probeframecapture", "ClassTrainerFrame " .. tag)
+            -- No dejar la ventana nativa por medio: se abrio solo para poder medirla.
+            pcall(function() f:Hide() end)
+            Print("capturado ClassTrainerFrame como '" .. tag .. "'. Haz /reload para persistirlo.")
+            Print("mostrado: " .. (f:IsShown() and "SI" or "no") ..
+                "  tamano: " .. tostring(math.floor(f:GetWidth() or 0)) .. "x" ..
+                tostring(math.floor(f:GetHeight() or 0)))
+            return
+        end
+
         if action == "rep" then
             local tag = label ~= "" and label or "base"
             API.RunCommand("probeframecapture", "ReputationFrame rep_" .. tag)
@@ -954,6 +1028,24 @@ do
             end
             if _G.HarfordSkillsPanelFrame then
                 API.RunCommand("probeframecapture", "HarfordSkillsPanelFrame skills_" .. tag)
+                any = true
+            end
+            -- La ventana de entrenador, para diffearla contra la captura de ClassTrainerFrame.
+            -- Si no esta abierta se abre con el primer entrenador que tenga recetas.
+            if not (_G.HarfordProfessionTrainerFrame and _G.HarfordProfessionTrainerFrame:IsShown())
+                and HarfordProfessionTrainers and HarfordProfessionTrainerUI then
+                local elegido
+                for _, def in ipairs(HarfordProfessions and HarfordProfessions.GetProfessions() or {}) do
+                    for _, rango in ipairs({ "aprendiz", "oficial", "experto" }) do
+                        local id = def.id .. "_" .. rango
+                        if not elegido and HarfordProfessionTrainers.Get
+                            and HarfordProfessionTrainers.Get(id) then elegido = id end
+                    end
+                end
+                if elegido then HarfordProfessionTrainerUI.Open(elegido) end
+            end
+            if _G.HarfordProfessionTrainerFrame then
+                API.RunCommand("probeframecapture", "HarfordProfessionTrainerFrame trainer_" .. tag)
                 any = true
             end
             if any then
@@ -3807,6 +3899,27 @@ API.RegisterCommand("svclean", function(args)
             or "svclean contratos: nada que limpiar.")
     end
 
+    -- `addedAt` era una marca de tiempo por contacto que no leia nadie: ni ordena la lista (va
+    -- alfabetica), ni se muestra, ni caduca nada. Se dejo de escribir; esto retira las que ya
+    -- estaban en disco.
+    local function CleanCommunicatorLeftovers()
+        local store = _G.HarfordCommunicatorStore
+        if type(store) ~= "table" or type(store.contacts) ~= "table" then
+            Print("svclean comunicador: no hay contactos guardados.")
+            return
+        end
+        local quitados = 0
+        for _, contacto in pairs(store.contacts) do
+            if type(contacto) == "table" and contacto.addedAt ~= nil then
+                contacto.addedAt = nil
+                quitados = quitados + 1
+            end
+        end
+        Print(quitados > 0
+            and string.format("svclean comunicador: %d marca(s) de tiempo sin uso retirada(s).", quitados)
+            or "svclean comunicador: nada que limpiar.")
+    end
+
     local function CleanFrameProbe()
         local count = CountTable(HarfordFrameProbe)
         HarfordFrameProbe = nil
@@ -3866,6 +3979,7 @@ API.RegisterCommand("svclean", function(args)
         CleanTargetResourceSettings(false)
         CleanFrameProbe()
         CleanContractLeftovers()
+        CleanCommunicatorLeftovers()
         return
     end
 
@@ -3875,6 +3989,7 @@ API.RegisterCommand("svclean", function(args)
     if action == "dnd" then CleanDnDDefaults(); return end
     if action == "frameprobe" then CleanFrameProbe(); return end
     if action == "contratos" then CleanContractLeftovers(); return end
+    if action == "comunicador" then CleanCommunicatorLeftovers(); return end
     if action == "debug" then CleanDebugDumps(); return end
     if action == "targetpos" then
         local force = args:match("%s+force%s*$") ~= nil
@@ -3889,6 +4004,7 @@ API.RegisterCommand("svclean", function(args)
         CleanTargetResourceSettings(true)
         CleanFrameProbe()
         CleanContractLeftovers()
+        CleanCommunicatorLeftovers()
         CleanDebugDumps()
         return
     end
@@ -3902,7 +4018,7 @@ API.RegisterCommand("svclean", function(args)
         return
     end
 
-    Print("uso: /harford debug run svclean status|safe|dnd|logs|npclinks|guilds|frameprobe|contratos|debug|targetpos [force]|all|purge confirm")
+    Print("uso: /harford debug run svclean status|safe|dnd|logs|npclinks|guilds|frameprobe|contratos|comunicador|debug|targetpos [force]|all|purge confirm")
 end, "limpia SavedVariables obsoletas/controladas")
 
 -- Diagnostico en vivo del fondo del modelo 3D del panel de personaje. Abre antes el panel
@@ -6158,3 +6274,455 @@ API.RegisterCommand("tainttrade", function()
         Print(string.format("  %s: %s%s", name, state, by))
     end
 end, "origen de taint en trade/UIParent; ejecutar tras abrir la confirmacion")
+
+-- Que texturas de barra de lanzamiento resuelven en ESTE cliente. Epsilon no tiene el mismo
+-- listado de ficheros que el retail, y una ruta que no resuelve deja la barra vacia EN SILENCIO:
+-- `SetTexture` con una ruta inexistente no falla, simplemente no pinta. Fue lo que dejo la barra
+-- de fabricacion con el borde perfecto y nada dentro.
+-- El bucle de sonido de una profesion se encadena por SOUNDKIT_FINISHED, sin reloj. Esto lo
+-- arranca tal cual suena al fabricar y lo corta a los 5 s (lo que dura el casteo) para poder oir
+-- que no se solapa ni deja silencio.
+-- Los iconos de arma vienen de la web y son nombres de Wowhead: no todos tienen por que existir
+-- en el cliente de Epsilon, y una ruta que no resuelve se pinta en VERDE sin avisar. Esto los
+-- comprueba los 52 de golpe.
+-- Mide el resaltado del selector contra su hueco. El nativo pone 50x50 sobre un hueco de 37x37;
+-- si aqui no sale centrado, los numeros lo dicen y no hay que adivinar.
+-- Repara el About del perfil TRP3 activo si le faltan T1/T3. Explicito, nunca automatico.
+API.RegisterCommand("aboutfix", function()
+    if not (_G.HarfordTRP3 and HarfordTRP3.RepairPlayerAboutSchema) then
+        return API.Print("HarfordTRP3 no esta cargado")
+    end
+    local ok, detalle = HarfordTRP3.RepairPlayerAboutSchema()
+    API.Print(ok and ("About del perfil activo: " .. tostring(detalle))
+        or ("|cffff5555" .. tostring(detalle) .. "|r"))
+    if ok then API.Print("Prueba a editar la ficha en TRP3; si sigue fallando, dilo.") end
+end, "Completa T1/T3 del About del perfil TRP3 activo")
+
+-- Mueve la seccion "Salvaciones" del panel de personaje para afinarla en juego. Sin argumento
+-- solo informa. El valor es la Y de la barra respecto al TOP del panel (mas negativo = mas abajo).
+-- Estado de la barra de experiencia del panel: si no se ve, esto dice si existe, donde esta y
+-- con que valores, en vez de adivinar.
+API.RegisterCommand("seccioncaract", function(args)
+    local P = _G.HarfordCharacterPanel
+    if not (P and P.SetAbilitySectionY) then
+        return API.Print("abre el panel de personaje (/harford char)")
+    end
+    local y = tostring(args or ""):match("^%s*(-?%d+)%s*$")
+    if not y then return API.Print("uso: seccioncaract <y>   (por defecto -84; el historico era -70)") end
+    local ok, valor = P.SetAbilitySectionY(tonumber(y))
+    if not ok then return API.Print("no se pudo mover") end
+    if P.Refresh then P.Refresh() end
+    API.Print(string.format("Caracteristicas en y=%d; Rasgos y su scroll bajan lo mismo (%+d)",
+        valor, valor + 70))
+end, "Sube/baja la seccion de Caracteristicas de la ficha y todo lo que va debajo")
+
+API.RegisterCommand("contratorec", function()
+    local TC = _G.HarfordContracts
+    local db = TC and TC.GetDB and TC.GetDB()
+    if not (db and type(db.contracts) == "table") then
+        return API.Print("El tablon no esta cargado")
+    end
+    local R = TC.Rewards
+    API.Print("contratos completados y su recompensa compartida:")
+    local n = 0
+    for _, c in ipairs(db.contracts) do
+        if type(c) == "table" and c.status == "completed" then
+            n = n + 1
+            local tieneRep = (type(c.rewardReps) == "table" and #c.rewardReps > 0)
+                or (type(c.rewardRep) == "table")
+            API.Print(string.format("  |cffffd100%s|r", tostring(c.title or c.id)))
+            API.Print(string.format("     xp=%s  rep=%s  worldNpc=%s",
+                tostring(c.rewardXP), tostring(tieneRep), tostring(c.worldNpc)))
+            if R then
+                API.Print(string.format("     HasShared=%s  Cobrada=%s  Reclamable=%s",
+                    tostring(R.HasShared and R.HasShared(c)),
+                    tostring(R.IsSharedClaimed and R.IsSharedClaimed(c)),
+                    tostring(R.IsSharedClaimable and R.IsSharedClaimable(c))))
+            end
+        end
+    end
+    if n == 0 then API.Print("   (ninguno completado)") end
+end, "Por que sale o no el boton de cobrar recompensa de cada contrato completado")
+
+API.RegisterCommand("aboutsync", function(args)
+    local C = _G.HarfordCharacterCreation
+    if not (C and C.SyncAboutAdditive) then return API.Print("HarfordCharacterCreation no cargado") end
+    local aplicar = tostring(args or ""):lower():find("aplicar", 1, true) ~= nil
+
+    if C.CanRewriteAbout then
+        local propio, motivo = C.CanRewriteAbout()
+        API.Print("About generado por Harford: " .. (propio
+            and ("|cff38d26asi|r por " .. tostring(motivo) .. " (una subida lo REGENERA entero)")
+            or "|cffffcc00no|r (una subida solo ANADE lo que falte)"))
+    end
+
+    local ok, detalle, informe = C.SyncAboutAdditive(nil, { dryRun = not aplicar })
+    API.Print((ok and "" or "|cffff5555fallo:|r ") .. tostring(detalle or "?"))
+    for _, l in ipairs(informe or {}) do API.Print("   " .. l) end
+    if not aplicar and informe and #informe > 0 then
+        API.Print("Para aplicarlo de verdad: |cffffd100aboutsync aplicar|r")
+    end
+end, "Simula (o aplica con 'aplicar') la actualizacion del About sin regenerarlo")
+
+API.RegisterCommand("xpcapas", function(args)
+    local P = _G.HarfordCharacterPanel
+    local X = _G.HarfordCharacterXP
+    local bar = P and P._sheetState and P._sheetState.xpBar
+    if not (bar and X and X.SetBarLayer) then
+        return API.Print("abre el panel de personaje (/harford char)")
+    end
+    local capa, estado = tostring(args or ""):match("^%s*(%a+)%s+(%a+)%s*$")
+    if not capa then
+        API.Print("uso: xpcapas <carril|tono|marco|fondo> <on|off>")
+        for _, c in ipairs({ "carril", "tono", "marco", "fondo" }) do
+            local tex = ({ carril = bar.harfordRail, tono = bar.harfordTone,
+                marco = bar.harfordFrame, fondo = bar.harfordBg })[c]
+            API.Print(string.format("   %-7s %s", c,
+                tex and (tex:IsShown() and "|cff38d26aon|r" or "|cffff5555off|r") or "|cff888888no existe|r"))
+        end
+        return
+    end
+    local visible = (estado:lower() == "on")
+    if not X.SetBarLayer(bar, capa:lower(), visible) then
+        return API.Print("capa desconocida o no creada: " .. capa)
+    end
+    API.Print(string.format("capa %s -> %s", capa:lower(), visible and "on" or "off"))
+end, "Enciende/apaga capas de la barra de XP del panel para ver cual sobra")
+
+API.RegisterCommand("xpbarpanel", function(args)
+    local P = _G.HarfordCharacterPanel
+    local SH = P and P._sheetState
+    local bar = SH and SH.xpBar
+    if not bar then
+        return API.Print("no encuentro la barra: abre el panel de personaje (/harford char)")
+    end
+    -- Con argumentos, recoloca: `xpbarpanel <y> [ancho] [alto] [x]`.
+    local y, ancho, alto, x = tostring(args or ""):match("^%s*(-?%d+)%s*(%d*)%s*(%d*)%s*(-?%d*)%s*$")
+    if y and P.SetXPBarPlacement then
+        local ok, w, h, px, py = P.SetXPBarPlacement(tonumber(y), tonumber(ancho), tonumber(alto), tonumber(x))
+        if ok then
+            API.Print(string.format("barra movida: %.0fx%.0f en x=%s y=%s", w, h, tostring(px), tostring(py)))
+            if P.Refresh then P.Refresh() end
+        end
+    end
+    API.Print(string.format("barra: %.0fx%.0f  visible=%s  alpha=%.2f",
+        bar:GetWidth(), bar:GetHeight(), tostring(bar:IsShown()), bar:GetAlpha()))
+    local mn, mx = bar:GetMinMaxValues()
+    API.Print(string.format("valor %.0f de %.0f-%.0f   tooltip: %s",
+        bar:GetValue(), mn, mx, tostring(bar.tipTexto)))
+    if _G.HarfordCharacterXP and HarfordCharacterXP.Progress then
+        local n, a, b = HarfordCharacterXP.Progress()
+        API.Print(string.format("XP: nivel %s, %s de %s", tostring(n), tostring(a), tostring(b)))
+    else
+        API.Print("|cffff5555HarfordCharacterXP no esta cargado|r")
+    end
+end, "Estado y recolocacion de la barra de XP del panel: xpbarpanel <y> [ancho] [alto]")
+
+API.RegisterCommand("salvaciones", function(args)
+    local P = _G.HarfordCharacterPanel
+    if not (P and P.SetSavesSectionY) then
+        return API.Print("abre el panel de personaje (/harford char) y repite")
+    end
+    local y = tonumber(tostring(args or ""):match("(-?%d+)"))
+    local ok, actual = P.SetSavesSectionY(y)
+    if not ok then return API.Print("el panel no esta construido todavia") end
+    API.Print(string.format("Salvaciones en y=%d  (filas en %d, la banda de Atributos acaba en %d)",
+        actual, actual - 37, actual + 2))
+    if not y then
+        API.Print("usa: /harford debug run salvaciones -230   (mas negativo = mas abajo)")
+    else
+        API.Print("cambia de pestana y vuelve a Atributos para verlo repintado")
+    end
+end, "Mueve la seccion de Salvaciones del panel para afinarla")
+
+API.RegisterCommand("selectorhl", function()
+    local P = _G.HarfordCharacterPanel
+    local slots = P and P._slots
+    if not slots then
+        return API.Print("abre NUESTRO panel de personaje (/harford char) y repite")
+    end
+    local vistos = 0
+    for _, hueco in ipairs(slots) do
+        if hueco.basicSelector then
+            vistos = vistos + 1
+            local hx, hy = hueco:GetLeft(), hueco:GetTop()
+            API.Print(string.format("|cffffd100hueco %d|r %.0fx%.0f", vistos,
+                hueco:GetWidth(), hueco:GetHeight()))
+            local fl = hueco.basicSelector
+            API.Print(string.format("   flecha %.0fx%.0f, su izquierda a %+.1f del borde derecho",
+                fl:GetWidth(), fl:GetHeight(),
+                (fl:GetLeft() or 0) - ((hx or 0) + hueco:GetWidth())))
+            -- Sin texCoords la textura sale entera y estirada (una banda, no una pestana).
+            local nt = fl.GetNormalTexture and fl:GetNormalTexture()
+            if nt and nt.GetTexCoord then
+                local c = { nt:GetTexCoord() }
+                local partes = {}
+                for _, v in ipairs(c) do partes[#partes + 1] = string.format("%.3f", v) end
+                API.Print("   texCoords: " .. table.concat(partes, " "))
+                if #c == 8 and c[1] == 0 and c[2] == 0 and c[3] == 0 and c[4] == 1 then
+                    API.Print("   |cffff5555SIN recorte: sale la textura entera|r")
+                end
+            else
+                API.Print("   |cffff5555no puedo leer la textura de la flecha|r")
+            end
+            for _, r in ipairs({ hueco:GetRegions() }) do
+                if r.GetTexture and tostring(r:GetTexture() or ""):find("GearManager") then
+                    local rx, ry = r:GetLeft(), r:GetTop()
+                    API.Print(string.format("   resaltado %.0fx%.0f", r:GetWidth(), r:GetHeight()))
+                    if hx and rx and hy and ry then
+                        API.Print(string.format("   |cff40c040desvio del centro: %+.1f en x, %+.1f en y|r",
+                            (rx + r:GetWidth() / 2) - (hx + hueco:GetWidth() / 2),
+                            (ry - r:GetHeight() / 2) - (hy - hueco:GetHeight() / 2)))
+                    else
+                        API.Print("   |cffff5555sin posicion: el hueco esta oculto|r")
+                    end
+                end
+            end
+        end
+    end
+    if vistos == 0 then API.Print("ningun hueco tiene selector (Pecho / manos)") end
+end, "Mide el resaltado del selector contra su hueco")
+
+API.RegisterCommand("razasiconos", function()
+    local C = _G.HarfordCharacterCreation
+    if not (C and C.GetAllOriginIcons) then return API.Print("HarfordCharacterCreation no esta cargado") end
+    local sep = string.char(92)
+    local ok, faltan = 0, {}
+    for _, fila in ipairs(C.GetAllOriginIcons()) do
+        local raceId, subId, icon = fila[1], fila[2], fila[3]
+        local ruta = "Interface" .. sep .. "Icons" .. sep .. icon
+        -- Muchos son iconos custom de Epsilon (eps_wc3h_*, dwarf_m, forsaken_m...): no se puede
+        -- dar por hecho que existan solo porque la web los declare.
+        if GetFileIDFromPath and GetFileIDFromPath(ruta) then
+            ok = ok + 1
+        else
+            faltan[#faltan + 1] = raceId .. (subId and ("/" .. subId) or "") .. "  ->  " .. icon
+        end
+    end
+    API.Print(string.format("iconos de origen: %d resuelven, %d SIN resolver", ok, #faltan))
+    for _, l in ipairs(faltan) do API.Print("   |cffff5555NO EXISTE|r " .. l) end
+    if #faltan == 0 then API.Print("   todos correctos") end
+end, "Comprueba que los iconos de raza/subraza existen en este cliente")
+
+API.RegisterCommand("armasiconos", function()
+    local W = _G.HarfordDnDWeapons
+    if not (W and W.WEAPONS) then return API.Print("HarfordDnDWeapons no esta cargado") end
+    local ok, faltan, sinCampo = 0, {}, {}
+    for _, w in ipairs(W.WEAPONS) do
+        if not w.icon or w.icon == "" then
+            sinCampo[#sinCampo + 1] = w.key
+        else
+            -- Se pregunta al MISMO resolutor que usa el juego, no a GetFileIDFromPath a pelo:
+            -- si LibRPMedia encuentra el nombre, devuelve un fileID y la ruta directa no
+            -- importa. Un icono que no se pudo resolver acaba en el interrogante.
+            local resuelto = W.GetIconPath(w)
+            if resuelto == "Interface\\Icons\\INV_Misc_QuestionMark" then
+                faltan[#faltan + 1] = w.key .. "  ->  " .. w.icon
+            else
+                ok = ok + 1
+            end
+        end
+    end
+    API.Print(string.format("iconos de arma: %d resuelven, %d SIN resolver, %d sin campo",
+        ok, #faltan, #sinCampo))
+    for _, l in ipairs(faltan) do API.Print("   |cffff5555NO EXISTE|r " .. l) end
+    for _, l in ipairs(sinCampo) do API.Print("   |cffffcc00sin icono|r " .. l) end
+    if #faltan == 0 and #sinCampo == 0 then API.Print("   todos correctos") end
+end, "Comprueba que los iconos de arma existen en este cliente")
+
+API.RegisterCommand("profsonido", function(args)
+    local prof = tostring(args or ""):match("^%s*(%S+)") or ""
+    local FX = _G.HarfordProfessionFX
+    if not FX then return API.Print("HarfordProfessionFX no esta cargado") end
+    if prof == "" or not FX.PERFILES[prof] then
+        local ids = {}
+        for k, v in pairs(FX.PERFILES) do
+            ids[#ids + 1] = string.format("%s (sonido %d%s)", k, v.sonido or 0,
+                v.sonidoExito and (", remate " .. v.sonidoExito) or "")
+        end
+        table.sort(ids)
+        API.Print("Uso: /harford debug run profsonido <profesion>")
+        for _, l in ipairs(ids) do API.Print("   " .. l) end
+        return
+    end
+    local perfil = FX.PERFILES[prof]
+    API.Print(string.format("%s: sonido %d en bucle por evento durante 5s%s",
+        prof, perfil.sonido or 0,
+        perfil.sonidoExito and (", y " .. perfil.sonidoExito .. " al lograrlo") or ""))
+    local estado = FX.Begin(prof, nil)
+    -- Un unico aviso diferido para cerrar la prueba; no hay tick de por medio.
+    C_Timer.After(5, function()
+        FX.Finish(estado, true)
+        FX.Stop(estado)
+        API.Print("fin: el bucle se corto aqui")
+    end)
+end, "Oye el bucle de sonido de una profesion tal cual suena al fabricar")
+
+API.RegisterCommand("casttex", function()
+    local RUTAS = {
+        "Interface\\CastingBar\\UI-CastingBar-Fill",
+        "Interface\\CastingBar\\UI-CastingBar-Border",
+        "Interface\\CastingBar\\UI-CastingBar-Spark",
+        "Interface\\CastingBar\\UI-CastingBar-Flash",
+        "Interface\\TargetingFrame\\UI-StatusBar",
+        "Interface\\PaperDollInfoFrame\\UI-Character-Skills-Bar",
+        "Interface\\AddOns\\SpellCreator\\assets\\castingbar-fill",
+    }
+    Print("Texturas de barra en este cliente:")
+    for _, ruta in ipairs(RUTAS) do
+        local id = GetFileIDFromPath and GetFileIDFromPath(ruta) or nil
+        Print(string.format("  %s %s%s", id and "|cff55ff55si |r" or "|cffff5555NO |r", ruta,
+            id and ("  |cff808080id " .. id .. "|r") or ""))
+    end
+    Print("La barra usa la primera que resuelva; si ninguna, color solido.")
+end, "que texturas de barra de lanzamiento existen en este cliente")
+
+HarfordDebug.RegisterCommand("golpeheroico", function()
+    local def = HarfordDnDStore and HarfordDnDStore.GetWeaponDef
+        and HarfordDnDStore.GetWeaponDef(HarfordDnDStore.GetWeaponKey and HarfordDnDStore.GetWeaponKey())
+    if not def then
+        Print("No hay arma seleccionada en la ficha.")
+        return
+    end
+    local dados = 0
+    if def.mode == "Melee" and HarfordDnDWeapons and HarfordDnDWeapons.WeaponBaseDice then
+        dados = tonumber(HarfordDnDWeapons.ParseDice(HarfordDnDWeapons.WeaponBaseDice(def))) or 0
+    end
+    local rage = HarfordDnDStore.GetResourceCurrent and HarfordDnDStore.GetResourceCurrent("rage")
+    Print(string.format("Arma %s (%s)  dados base %d", tostring(def.key), tostring(def.mode), dados))
+    Print("Puntos de ira: " .. tostring(rage or "?"))
+    Print("Puntos que ofrecera el menu: " .. tostring(math.min(dados, tonumber(rage) or 0))
+        .. "  (limite = dados del arma y ira disponible)")
+    if def.mode ~= "Melee" then
+        Print("|cffff5555Golpe heroico solo aplica a cuerpo a cuerpo.|r")
+    end
+end, "por que Golpe heroico ofrece (o no) puntos con el arma actual")
+
+-- ICONOSCHECK: comprueba que cada icono declarado EXISTE en el cliente de Epsilon.
+--
+-- Motivo (AGENTS.md): hay texturas de retail que Epsilon no tiene y salen en verde o como
+-- interrogacion. El catalogo se importa de la web, que no sabe que tiene este cliente, asi que
+-- la unica forma de saberlo es preguntarselo al cliente con `GetFileIDFromPath`.
+--
+--   /harford debug run iconoscheck            resumen + los que faltan
+--   /harford debug run iconoscheck todo       ademas lista los que si existen
+--   /harford debug run iconoscheck <texto>    solo los que contengan ese texto
+do
+    local PREFIJO = "Interface" .. string.char(92) .. "Icons" .. string.char(92)
+
+    local function Existe(nombre)
+        nombre = tostring(nombre or "")
+        if nombre == "" then return false end
+        -- Un icono puede venir ya como ruta completa o como id numerico de textura.
+        if tonumber(nombre) then return true end
+        -- `spell:<id>` es una forma VALIDA que resuelve HarfordCompendioIconMap con
+        -- GetSpellTexture; sin este caso el validador la daba por rota.
+        local spellId = nombre:match("^spell:(%d+)$")
+        if spellId then
+            local tex = GetSpellTexture and GetSpellTexture(tonumber(spellId))
+            return tex ~= nil and tex ~= 0
+        end
+        local ruta = nombre:find(string.char(92), 1, true) and nombre or (PREFIJO .. nombre)
+        if GetFileIDFromPath then
+            local id = GetFileIDFromPath(ruta)
+            if id and id ~= 0 then return true end
+        end
+        return false
+    end
+
+    -- Recorre las tres tablas del catalogo mas el arte de origen, que vive aparte.
+    local function Recolecta()
+        local out, vistos = {}, {}
+        local function anota(origen, clave, icono)
+            if not icono or icono == "" then return end
+            local firma = tostring(origen) .. "|" .. tostring(clave) .. "|" .. tostring(icono)
+            if vistos[firma] then return end
+            vistos[firma] = true
+            out[#out + 1] = { origen = origen, clave = clave, icono = icono }
+        end
+
+        local C = _G.HarfordIconCatalog
+        if C then
+            for id, icono in pairs(C.features or {}) do anota("rasgo", id, icono) end
+            for id, cands in pairs(C.spells or {}) do
+                if type(cands) == "table" then
+                    for i, icono in ipairs(cands) do
+                        anota("conjuro" .. (i > 1 and (" alt" .. i) or ""), id, icono)
+                    end
+                else
+                    anota("conjuro", id, cands)
+                end
+            end
+            for clase, subs in pairs(C.subclasses or {}) do
+                for sub, icono in pairs(subs or {}) do
+                    anota("subclase", tostring(clase) .. "/" .. tostring(sub), icono)
+                end
+            end
+            for nombre, icono in pairs(C.names or {}) do anota("por nombre", nombre, icono) end
+        end
+
+        -- Arte de origen: no esta en el catalogo, tiene tablas propias por sexo.
+        local Cre = _G.HarfordCharacterCreation
+        if Cre and Cre.GetAllOriginIcons then
+            for _, par in ipairs(Cre.GetAllOriginIcons()) do
+                local clave = tostring(par[1]) .. (par[2] and ("/" .. tostring(par[2])) or "")
+                anota("origen", clave, par[3])
+            end
+        end
+        return out
+    end
+
+    HarfordDebug.RegisterCommand("iconoscheck", function(args)
+        if not GetFileIDFromPath then
+            Print("|cffff5555GetFileIDFromPath no existe en este cliente: no se puede validar.|r")
+            return
+        end
+        local filtro = tostring(args or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
+        local listarTodo = filtro == "todo"
+        if listarTodo then filtro = "" end
+
+        local entradas = Recolecta()
+        local total, faltan, porOrigen = 0, {}, {}
+        for _, e in ipairs(entradas) do
+            local pasa = filtro == ""
+                or tostring(e.clave):lower():find(filtro, 1, true)
+                or tostring(e.icono):lower():find(filtro, 1, true)
+            if pasa then
+                total = total + 1
+                if not Existe(e.icono) then
+                    faltan[#faltan + 1] = e
+                    porOrigen[e.origen] = (porOrigen[e.origen] or 0) + 1
+                elseif listarTodo then
+                    Print(string.format("|cff44ff44ok|r   %-10s %-32s %s", e.origen, e.clave, e.icono))
+                end
+            end
+        end
+
+        Print(string.format("Iconos comprobados: |cffffd100%d|r  -  faltan en el cliente: %s%d|r",
+            total, #faltan > 0 and "|cffff5555" or "|cff44ff44", #faltan))
+        if #faltan == 0 then return end
+
+        -- Se agrupan por icono: un mismo nombre roto suele estar en varios rasgos y no aporta
+        -- repetirlo veinte veces.
+        local porIcono = {}
+        for _, e in ipairs(faltan) do
+            porIcono[e.icono] = porIcono[e.icono] or {}
+            local lista = porIcono[e.icono]
+            lista[#lista + 1] = e.origen .. " " .. e.clave
+        end
+        local nombres = {}
+        for icono in pairs(porIcono) do nombres[#nombres + 1] = icono end
+        table.sort(nombres)
+        Print("Texturas que este cliente NO tiene (" .. #nombres .. " distintas):")
+        for _, icono in ipairs(nombres) do
+            local usos = porIcono[icono]
+            local muestra = usos[1]
+            if #usos > 1 then muestra = muestra .. "  (+" .. (#usos - 1) .. " mas)" end
+            Print(string.format("  |cffff5555%-42s|r %s", icono, muestra))
+        end
+        local resumen = {}
+        for origen, n in pairs(porOrigen) do resumen[#resumen + 1] = origen .. "=" .. n end
+        table.sort(resumen)
+        Print("Por origen: " .. table.concat(resumen, ", "))
+    end, "comprueba que cada icono del catalogo existe en el cliente (iconoscheck [todo|texto])")
+end

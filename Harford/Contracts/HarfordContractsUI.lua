@@ -928,6 +928,39 @@ local function BuildFrame(parent, embedded)
     frame.rewardItemButtons[index] = button
   end
 
+  -- Boton para cobrar la recompensa COMPARTIDA (reputacion y XP) de esta mision. La cobra cada
+  -- miembro por separado, con su propio recibo; no es un bote unico como el dinero.
+  frame.sharedClaimButton = CreateButton(frame.detailPanel, "Cobrar recompensa", 150, 26)
+  frame.sharedClaimButton:Hide()
+  frame.sharedClaimButton:SetScript("OnClick", function(self)
+    local contract = self.contractId and TC.Data.GetContractById(self.contractId)
+    if not (contract and TC.Rewards and TC.Rewards.IsSharedClaimable
+      and TC.Rewards.IsSharedClaimable(contract)) then
+      TC.Print("Esa recompensa no esta disponible (¿ya cobrada o mision sin completar?).")
+      return
+    end
+    if TC.Rewards.ClaimShared(contract) then
+      TC.Refresh()
+    else
+      TC.Print("No se pudo cobrar la recompensa.")
+    end
+  end)
+  frame.sharedClaimButton:SetScript("OnEnter", function(self)
+    if not GameTooltip then return end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Recompensa compartida", 1, 0.82, 0)
+    GameTooltip:AddLine("Reputacion y experiencia. La cobra cada miembro por separado.", 1, 1, 1, true)
+    if self.motivoNpc then
+      GameTooltip:AddLine("Esta mision se entrega a un NPC: la reputacion y la experiencia "
+        .. "se reparten al entregarla alli.", 1, 0.82, 0, true)
+    end
+    if self.yaCobrada then
+      GameTooltip:AddLine("Ya la has cobrado con este personaje.", 0.6, 1, 0.6, true)
+    end
+    GameTooltip:Show()
+  end)
+  frame.sharedClaimButton:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+
   -- Boton para cobrar el BOTE de dinero (bote unico, lo coge una persona). Visible solo si el
   -- contrato esta Completado, tiene dinero y no se ha cobrado. Posicion en el render.
   frame.moneyClaimButton = CreateButton(frame.detailPanel, "Cobrar dinero", 130, 22)
@@ -1002,6 +1035,9 @@ local function BuildFrame(parent, embedded)
   -- Seguir contrato: lo anade al quest log per-PJ (HarfordQuests) y lo abre con /harford misiones.
   frame.trackButton = CreateButton(frame.detailPanel, "Seguir mision", 140, 26)
   frame.trackButton:SetPoint("BOTTOMRIGHT", -14, 14)
+  -- El de cobrar recompensa se ancla AQUI y no donde se crea: es un boton de accion de la
+  -- barra inferior, y trackButton todavia no existia en ese punto.
+  frame.sharedClaimButton:SetPoint("RIGHT", frame.trackButton, "LEFT", -8, 0)
   frame.trackButton:Hide()
   frame.trackButton:SetScript("OnClick", function()
     local contract = TC.Data.GetContractById(selectedContractId)
@@ -1342,6 +1378,7 @@ function UI.RefreshDetails()
       frame.detailLocation:SetText("")
       frame.rewardItemsPanel:Hide()
       if frame.moneyClaimButton then frame.moneyClaimButton:Hide() end
+      if frame.sharedClaimButton then frame.sharedClaimButton:Hide() end
       frame.detailDescription:ClearAllPoints()
       frame.detailDescription:SetPoint("TOPLEFT", frame.detailIcon, "BOTTOMLEFT", 0, -24)
       frame.detailDangers:SetText("Peligros habituales: " .. (contractType.dangers or "Sin definir."))
@@ -1366,6 +1403,7 @@ function UI.RefreshDetails()
       frame.detailLocation:SetText("")
       frame.rewardItemsPanel:Hide()
       if frame.moneyClaimButton then frame.moneyClaimButton:Hide() end
+      if frame.sharedClaimButton then frame.sharedClaimButton:Hide() end
       frame.detailDescription:ClearAllPoints()
       frame.detailDescription:SetPoint("TOPLEFT", frame.detailIcon, "BOTTOMLEFT", 0, -24)
       frame.detailDescription:SetText("Aqui puedes revisar todos los contratos publicados sin entrar categoria por categoria. Usa el buscador o las paginas para encontrar una mision concreta.")
@@ -1387,6 +1425,7 @@ function UI.RefreshDetails()
     frame.detailDangers:SetText("")
     frame.detailSkills:SetText("")
     if frame.moneyClaimButton then frame.moneyClaimButton:Hide() end
+    if frame.sharedClaimButton then frame.sharedClaimButton:Hide() end
     frame.detailDescription:ClearAllPoints()
     frame.detailDescription:SetPoint("TOPLEFT", frame.detailIcon, "BOTTOMLEFT", 0, -24)  -- a detailIcon (NO a rewardItemsPanel: crearia ciclo con el reordenado)
     frame.detailDescription:SetText("")
@@ -1488,6 +1527,34 @@ function UI.RefreshDetails()
   frame.moneyClaimButton.contractId = contract.id
   frame.moneyClaimButton:SetShown(showMoneyBtn)
   local afterReward = lastRew
+
+  -- Recompensa compartida (rep/XP). El boton NO se recoloca: vive fijo en la barra inferior.
+  -- Se muestra en cuanto la mision esta completada y reparte algo compartido, y se DESACTIVA
+  -- cuando ya no hay nada que cobrar; ocultarlo dejaba al jugador sin saber si habia cobrado.
+  local shared = TC.Rewards and TC.Rewards.HasShared and TC.Rewards.HasShared(contract)
+  local showSharedBtn = shared and (contract.status == "completed")
+  frame.sharedClaimButton.contractId = contract.id
+  frame.sharedClaimButton:SetShown(showSharedBtn and true or false)
+  if showSharedBtn then
+    if contract.worldNpc then
+      -- Mision de mundo: su rep/XP la reparte el turn-in del NPC, con la clave del id pelado.
+      -- Cobrarla aqui la daria DOS veces, asi que el boton solo informa.
+      -- Misma consulta que el resto: `IsSharedClaimed` ya usa el id pelado (la clave del NPC)
+      -- y ademas mira la heredada. Preguntar aparte aqui era duplicar la regla.
+      local yaNpc = TC.Rewards.IsSharedClaimed and TC.Rewards.IsSharedClaimed(contract)
+      frame.sharedClaimButton.yaCobrada = yaNpc and true or false
+      frame.sharedClaimButton.motivoNpc = true
+      frame.sharedClaimButton:SetText(yaNpc and "Recompensa cobrada" or "Se cobra en el NPC")
+      frame.sharedClaimButton:SetEnabled(false)
+    else
+      local cobrada = TC.Rewards.IsSharedClaimed and TC.Rewards.IsSharedClaimed(contract)
+      frame.sharedClaimButton.yaCobrada = cobrada
+      frame.sharedClaimButton.motivoNpc = false
+      frame.sharedClaimButton:SetText(cobrada and "Recompensa cobrada" or "Cobrar recompensa")
+      frame.sharedClaimButton:SetEnabled(not cobrada)
+    end
+  end
+
   if showMoneyBtn then
     frame.moneyClaimButton:ClearAllPoints()
     frame.moneyClaimButton:SetPoint("TOPLEFT", lastRew, "BOTTOMLEFT", 0, -6)

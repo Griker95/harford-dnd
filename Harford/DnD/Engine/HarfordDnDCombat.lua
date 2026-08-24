@@ -328,6 +328,7 @@ function HarfordDnDCombat.GetTargetEffectiveHP()
     return nil
 end
 
+-- Recibe el total YA mitigado: contra NPC mitiga el atacante, y lo hace la puerta de arriba.
 function HarfordDnDCombat.ApplyWeaponDamageToNpc(total, isCritical)
     if total and total > 0
         and HarfordAuthority and HarfordAuthority.IsOfficerPlus and HarfordAuthority.IsOfficerPlus()
@@ -350,53 +351,78 @@ end
 -- (segun la cache remota) y el resto a health. Si no hay cache, manda todo a health
 -- y solicita recursos para futuras tiradas. El cliente receptor aplica el delta (y
 -- su propia aura de muerte segun su flag de animaciones).
-local function ApplyDamageToPlayerUnit(unit, total)
+-- Manda el dano EN BRUTO con su tipo; lo resuelve el cliente de la victima.
+--
+-- Antes se hacia aqui todo: se miraba su vida temporal en la CACHE remota, se partia el dano entre
+-- temporal y salud, y se mandaban dos RADJ ya mitigados. Eso fallaba de dos formas: si la cache no
+-- habia llegado el reparto era erroneo, y las resistencias se aplicaban con una copia de sus
+-- defensas en vez de con las suyas. Ahora es el mismo modelo que el motor de area: el atacante dice
+-- CUANTO y DE QUE TIPO, y la victima decide el resto.
+local function ApplyDamageToPlayerUnit(unit, components, isCritical)
     local name = HarfordClassColors.UnitFullName(unit)
     if not name or name == "" then return false end
-    if not (HarfordSync and HarfordSync.SendResourceAdjust) then return false end
-
-    local tempCur = 0
-    local cache = HarfordDnDResources and HarfordDnDResources.RemoteCache
-    if cache then
-        local short = Ambiguate and Ambiguate(name, "short") or name
-        cache = cache[name] or cache[short]
-    end
-    if cache then
-        tempCur = math.max(0, tonumber(cache[HarfordDnDResources.CurKey("temp_health")]) or 0)
-    elseif HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
-        HarfordDnDAPI.RequestResourcesForName(name)
-    end
-
-    local tempDmg = math.min(total, tempCur)
-    local healthDmg = total - tempDmg
-    if tempDmg > 0 then
-        HarfordSync.SendResourceAdjust(ADDON_PREFIX, "temp_health", -tempDmg, name)
-    end
-    if healthDmg > 0 then
-        HarfordSync.SendResourceAdjust(ADDON_PREFIX, "health", -healthDmg, name)
-    end
-    return true
+    if not (HarfordSync and HarfordSync.SendDamage) then return false end
+    return HarfordSync.SendDamage(ADDON_PREFIX, name, components, isCritical) and true or false
 end
 
-local function ApplyWeaponDamageToPlayer(total)
-    return ApplyDamageToPlayerUnit("target", total)
+-- Normaliza lo que llega del llamador: una lista de componentes, o un total suelto con su tipo.
+local function AsComponents(totalOrList, damageType)
+    if type(totalOrList) == "table" then return totalOrList end
+    local total = math.floor(tonumber(totalOrList) or 0)
+    if total <= 0 then return nil end
+    return { { amount = total, damageType = damageType or "" } }
+end
+
+-- Que mandar a una unidad: si resuelve su propio dano (otro jugador), la lista de componentes EN
+-- BRUTO con su tipo; si no (NPC o uno mismo), el total tal cual, que el llamador ya mitigo.
+--
+-- Existe para que los sitios que calculan dano no repitan el condicional: pasan siempre lo mismo y
+-- aqui se decide. `total` es el valor que tiene el llamador -- bruto si el objetivo es jugador,
+-- porque `ForTarget` se auto-desactiva en ese caso; mitigado si no.
+function HarfordDnDCombat.PayloadFor(unit, total, damageType)
+    total = math.floor(tonumber(total) or 0)
+    if total <= 0 then return 0 end
+    if damageType and damageType ~= "" and HarfordDamageMitigation
+        and HarfordDamageMitigation.TargetResolvesOwnDamage
+        and HarfordDamageMitigation.TargetResolvesOwnDamage(unit) then
+        return { { amount = total, damageType = damageType } }
+    end
+    return total
+end
+
+local function ApplyWeaponDamageToPlayer(components, isCritical)
+    return ApplyDamageToPlayerUnit("target", components, isCritical)
 end
 
 -- Aplica daño de una accion NPC al jugador en FOCUS (no a uno mismo ni a un NPC).
 -- Lo usa el ataque NPC de la ficha para dañar al focus en el impacto sin tirada
 -- manual. El focus NPC no se daña por esta via (los `.npc` actuan sobre el target).
-function HarfordDnDCombat.ApplyActionDamageToFocus(total)
-    if not (total and total > 0 and UnitExists and UnitExists("focus")) then return false end
-    -- Focus = mi propio PJ: el NPC ataca a mi personaje -> daño local directo.
+-- `total` puede ser un numero YA mitigado (comportamiento antiguo) o una LISTA de componentes en
+-- bruto `{ { amount, damageType } }`. Contra otro jugador la lista viaja tal cual y la resuelve su
+-- cliente; contra uno mismo se mitiga aqui, que es lo mismo que haria su cliente.
+function HarfordDnDCombat.ApplyActionDamageToFocus(total, damageType, isCritical)
+    if not (UnitExists and UnitExists("focus")) then return false end
+    local componentes = AsComponents(total, damageType)
+    if not componentes then return false end
     if UnitIsUnit and UnitIsUnit("focus", "player") then
+        local suma = 0
+        for _, c in ipairs(componentes) do
+            local cantidad = math.floor(tonumber(c.amount) or 0)
+            if cantidad > 0 and c.damageType and c.damageType ~= ""
+                and HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+                cantidad = math.floor(tonumber((HarfordDamageMitigation.ForTarget("player", c.damageType, cantidad))) or cantidad)
+            end
+            suma = suma + cantidad
+        end
+        if suma <= 0 then return true end
         if HarfordDnDStore and HarfordDnDStore.ApplyLocalResourceDamage then
-            HarfordDnDStore.ApplyLocalResourceDamage(total)
+            HarfordDnDStore.ApplyLocalResourceDamage(suma)
             return true
         end
         return false
     end
     if not (UnitIsPlayer and UnitIsPlayer("focus")) then return false end
-    return ApplyDamageToPlayerUnit("focus", total)
+    return ApplyDamageToPlayerUnit("focus", componentes, isCritical)
 end
 
 -- ─── Reaccion defensiva al fallar el ataque (parry/dodge) ─────────────────────
@@ -586,11 +612,26 @@ end
 
 -- Aplica el daño al objetivo actual segun su tipo: NPC (ruta oficial, en bruto) o
 -- jugador ajeno (RADJ con split temp/health). No hace nada contra uno mismo.
-function HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical)
-    if not (total and total > 0 and UnitExists and UnitExists("target")) then return false end
+-- `total` puede ser un numero (ya mitigado por el llamador, comportamiento antiguo) o una LISTA de
+-- componentes `{ { amount, damageType } }` en BRUTO. Contra un jugador se manda la lista tal cual y
+-- la resuelve su cliente; contra un NPC se suma aqui, porque el NPC no tiene quien lo haga.
+function HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical, damageType)
+    if not (UnitExists and UnitExists("target")) then return false end
     if UnitIsUnit and UnitIsUnit("target", "player") then return false end
+    local componentes = AsComponents(total, damageType)
+    if not componentes then return false end
     if UnitIsPlayer and UnitIsPlayer("target") then
-        return ApplyWeaponDamageToPlayer(total)
+        return ApplyWeaponDamageToPlayer(componentes, isCritical)
     end
-    return HarfordDnDCombat.ApplyWeaponDamageToNpc(total, isCritical)
+    local suma = 0
+    for _, c in ipairs(componentes) do
+        local cantidad = math.floor(tonumber(c.amount) or 0)
+        -- Solo se mitiga lo que viene en bruto (trae tipo); un total suelto ya venia mitigado.
+        if cantidad > 0 and c.damageType and c.damageType ~= ""
+            and HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+            cantidad = math.floor(tonumber((HarfordDamageMitigation.ForTarget("target", c.damageType, cantidad))) or cantidad)
+        end
+        suma = suma + cantidad
+    end
+    return HarfordDnDCombat.ApplyWeaponDamageToNpc(suma, isCritical)
 end

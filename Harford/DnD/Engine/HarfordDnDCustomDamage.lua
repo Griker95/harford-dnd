@@ -114,9 +114,12 @@ function API.Apply()
         applyUnit
     )
     if applyUnit == "focus" then
-        HarfordDnDCombat.ApplyActionDamageToFocus(total)
+        -- Contra otro jugador va en bruto con su tipo y lo resuelve su cliente.
+        HarfordDnDCombat.ApplyActionDamageToFocus(
+            HarfordDnDCombat.PayloadFor("focus", total, damageType))
     else
-        HarfordDnDCombat.ApplyWeaponDamageToTarget(total, isCritical)
+        HarfordDnDCombat.ApplyWeaponDamageToTarget(
+            HarfordDnDCombat.PayloadFor("target", total, damageType), isCritical)
     end
 end
 

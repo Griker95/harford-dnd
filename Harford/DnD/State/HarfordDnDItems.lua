@@ -399,6 +399,13 @@ end
 
 local function GetWeaponIcon(def)
     if not def then return nil end
+    -- El icono PROPIO del arma manda. Viene de la web (fuente canonica) en el campo `icon`
+    -- de HarfordDnDWeapons.WEAPONS; antes todas las de cuerpo a cuerpo caian en el mismo
+    -- INV_Sword_04 generico y los huecos del paperdoll se veian todos iguales.
+    if def.icon and def.icon ~= "" and HarfordDnDWeapons and HarfordDnDWeapons.GetIconPath then
+        return HarfordDnDWeapons.GetIconPath(def)
+    end
+    -- De aqui abajo, red de seguridad para entradas que aun no traigan icono propio.
     if def.key == "Escudo" then return "Interface\\Icons\\INV_Shield_04" end
     if def.mode == "Ranged" then return "Interface\\Icons\\INV_Weapon_Bow_05" end
     if def.cat == "De fuego" then return "Interface\\Icons\\INV_Weapon_Rifle_01" end
@@ -925,6 +932,42 @@ function API.SetEquipment(profileName, data)
     return true
 end
 
+-- ¿El arma de un slot ocupa las dos manos? `GetEquippedWeapon` ya resuelve tanto el objeto de
+-- Epsilon como el arma basica, asi que no hace falta mirar la entrada a mano.
+local DOS_MANOS_EQUIPLOC = {
+    INVTYPE_2HWEAPON = true,
+    INVTYPE_RANGED = true,
+    INVTYPE_RANGEDRIGHT = true,
+}
+
+function API.SlotIsTwoHanded(slotKey, profileName)
+    -- 1) Señal nativa del objeto: funciona con CUALQUIER arma de Epsilon, aunque su tipo D&D no
+    -- se haya podido deducir del nombre ni de la descripcion.
+    local entry = API.GetSlot(slotKey, profileName)
+    if entry and entry.itemLink and entry.itemLink ~= "" then
+        local resolved = API.ResolveItem(entry.itemLink)
+        if resolved and DOS_MANOS_EQUIPLOC[tostring(resolved.equipLoc or "")] then return true end
+    end
+    -- 2) Propiedad D&D del arma (basica, o deducida del objeto).
+    local def = API.GetEquippedWeapon(slotKey, profileName)
+    if not def then return false end
+    if HarfordDnDStore and HarfordDnDStore.HasWeaponProp then
+        return HarfordDnDStore.HasWeaponProp(def, "Dos manos") and true or false
+    end
+    for _, p in ipairs(def.props or {}) do
+        if tostring(p) == "Dos manos" then return true end
+    end
+    return false
+end
+
+-- Si la mano principal pasa a llevar un arma a dos manos, se vacia la secundaria.
+local function EnforceTwoHanded(slotKey, profileName)
+    if tostring(slotKey or "") ~= "MainHand" then return end
+    if API.SlotIsTwoHanded("MainHand", profileName) then
+        API.UnequipSlot("SecondaryHand", profileName)
+    end
+end
+
 function API.EquipSlot(slotKey, itemLink, profileName)
     slotKey = tostring(slotKey or "")
     itemLink = tostring(itemLink or "")
@@ -935,6 +978,7 @@ function API.EquipSlot(slotKey, itemLink, profileName)
     entry.itemId = ItemKey(itemLink)
     profile[slotKey] = entry
     DropResolvedCache(itemLink)
+    EnforceTwoHanded(slotKey, profileName)
     Touch()
     return true
 end
@@ -1003,6 +1047,7 @@ function API.SetBasicWeapon(slotKey, weaponKey, profileName)
     else
         profile[slotKey] = entry
     end
+    EnforceTwoHanded(slotKey, profileName)
     Touch()
     return true
 end

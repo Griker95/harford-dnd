@@ -487,6 +487,16 @@ function Phase.EnsureBoard(force)
       return
     end
 
+    -- Si lo que tienes cargado es de OTRA fase, el reemplazo de abajo te lo va a retirar de la
+    -- lista local. Es correcto (la fase es la verdad aqui), pero conviene decirlo antes de que
+    -- pase: quien queria llevarse el tablon todavia esta a tiempo de copiarlo.
+    local origenPrevio = TC.GetDB().phaseOrigin
+    if origenPrevio and tostring(origenPrevio) ~= tostring(fase) and publicosLocales > 0 then
+      TC.Print("Tu tablon era de la fase |cffffd100" .. tostring(origenPrevio)
+        .. "|r y se va a sustituir por el de la |cffffd100" .. tostring(fase) .. "|r. "
+        .. "Si querias traertelo, usa |cffffd100/harford contratos copiar|r antes de recargar.")
+    end
+
     local aplicados, retirados = Phase.ApplyIndexReplacing(indice)
     Phase.LoadAllBlocks()
     local ids = {}
@@ -500,6 +510,119 @@ function Phase.EnsureBoard(force)
     TC.SetSyncStatus(string.format("Fase %s: %d contratos%s", tostring(fase), aplicados,
       retirados > 0 and (", " .. retirados .. " retirados") or ""))
     if TC.UI and TC.UI.Refresh then TC.UI.Refresh() end
+  end)
+  return true
+end
+
+-- Copia a la fase ACTUAL los contratos publicos que tengas cargados, sin retirar nada de lo que
+-- ya haya aqui. Es la unica via legitima para llevar un tablon de una fase a otra: `Publish` se
+-- niega a cruzar fases porque fusiona, y fusionar aqui vaciaria el destino.
+--
+-- Choque de ids: gana el DESTINO. Copiar no debe pisar lo que otro DM tenga montado en esta fase;
+-- los omitidos se informan para que se decida a mano.
+--
+-- Al terminar reasigna `phaseOrigin` a esta fase, para que la siguiente publicacion normal ya sea
+-- coherente y no vuelva a bloquearse.
+function Phase.CopyBoardHere(callback)
+  local function fallar(msg)
+    TC.SetSyncStatus(msg)
+    TC.Print(msg)
+    if callback then callback(false, nil, msg) end
+  end
+
+  if not TC.IsDMMode() then
+    return fallar("Activa el modo DM con .ph dm on para copiar el tablon.")
+  end
+  if not (Phase.IsAvailable() and Phase.CanWrite()) then
+    return fallar("No tienes permiso de escritura en esta fase (hace falta ser oficial).")
+  end
+
+  local fase = Phase.GetPhaseId()
+  local origen = TC.GetDB().phaseOrigin
+  if origen and tostring(origen) == tostring(fase) then
+    return fallar("Tu tablon ya es de esta fase; para actualizarla usa Publicar.")
+  end
+
+  local mios = {}
+  for _, contract in ipairs(TC.GetDB().contracts or {}) do
+    if EsPublico(contract) then mios[#mios + 1] = contract end
+  end
+  if #mios == 0 then
+    return fallar("No tienes contratos publicos que copiar.")
+  end
+
+  Phase.LoadIndex(function(enFase, err)
+    -- Una lectura FALLIDA no es una fase vacia. Copiar sobre un indice que no se pudo leer
+    -- perderia lo que hubiera aqui al reescribirlo.
+    if type(enFase) ~= "table" then
+      if err then
+        return fallar("No se pudo leer el tablon de esta fase (" .. tostring(err) .. "); no se copia.")
+      end
+      enFase = {}
+    end
+
+    local presentes = {}
+    for _, fila in ipairs(enFase) do
+      if type(fila) == "table" and fila.id then presentes[tostring(fila.id)] = true end
+    end
+
+    local indice, claves = {}, { CLAVE_INDICE, CLAVE_MANIFIESTO }
+    for _, fila in ipairs(enFase) do indice[#indice + 1] = fila end
+    for _, fila in ipairs(enFase) do
+      local clave = fila and fila.id and ClaveBloque(tostring(fila.id))
+      if clave then claves[#claves + 1] = clave end
+    end
+
+    local copiados, omitidos, fallos = 0, {}, 0
+    for _, contract in ipairs(mios) do
+      local id = tostring(contract.id)
+      if presentes[id] then
+        omitidos[#omitidos + 1] = tostring(contract.title or id)
+      else
+        local clave, larga = ClaveBloque(id)
+        if not clave then
+          fallos = fallos + 1
+          TC.Print("Id demasiado largo para una clave de fase: " .. tostring(larga))
+        else
+          local ok, werr = Escribir(clave, Proyectar(contract, CAMPOS_BLOQUE))
+          if ok then
+            indice[#indice + 1] = Proyectar(contract, CAMPOS_INDICE)
+            claves[#claves + 1] = clave
+            copiados = copiados + 1
+          else
+            fallos = fallos + 1
+            TC.Print("No se pudo copiar " .. tostring(contract.title) .. ": " .. tostring(werr))
+          end
+        end
+      end
+    end
+
+    if copiados == 0 then
+      return fallar("No se copio nada: todos los contratos ya estaban en esta fase.")
+    end
+
+    -- El indice al final, como en Publish: si esto se corta quedan bloques huerfanos
+    -- (invisibles e inofensivos) en vez de un indice apuntando a la nada.
+    indice.meta = { by = (UnitName and UnitName("player")) or "?", at = (time and time()) or 0 }
+    local ok, werr = Escribir(CLAVE_INDICE, indice)
+    if not ok then
+      return fallar("No se pudo escribir el indice: " .. tostring(werr))
+    end
+    EscribirManifiesto(claves)
+    TC.GetDB().phaseOrigin = tostring(fase)
+
+    local resumen = string.format("Copiados %d contratos a la fase %s", copiados, tostring(fase))
+    if #omitidos > 0 then
+      resumen = resumen .. "; " .. #omitidos .. " ya estaban y no se han tocado"
+    end
+    if fallos > 0 then resumen = resumen .. "; " .. fallos .. " con error" end
+    TC.SetSyncStatus(resumen)
+    TC.Print(resumen .. ".")
+    for _, titulo in ipairs(omitidos) do
+      TC.Print("   |cffffcc00ya existia aqui:|r " .. titulo)
+    end
+    if TC.UI and TC.UI.Refresh then TC.UI.Refresh() end
+    if callback then callback(true, copiados) end
   end)
   return true
 end

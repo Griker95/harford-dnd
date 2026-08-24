@@ -291,9 +291,8 @@ API.Register({ key = "conjuros", label = "Conjuros", icon = "Interface\\Icons\\S
     tooltip = "Libro de conjuros", onClick = OpenPanel("spells") })
 API.Register({ key = "personaje", label = "Personaje", icon = "Interface\\Icons\\Achievement_Character_Human_Male",
     tooltip = "Panel de personaje", onClick = OpenPanel("sheet") })
-API.Register({ key = "reputacion", label = "Reputacion", icon = "Interface\\Icons\\Achievement_Reputation_01",
-    tooltip = "Reputaciones", onClick = RouteSlash("HARFORDREP") })
 API.Register({ key = "misiones", label = "Misiones", icon = "Interface\\Icons\\INV_Misc_Note_01",
     tooltip = "Registro de misiones", onClick = RouteSlash("HARFORDQUESTLOG") })
-API.Register({ key = "profesiones", label = "Profesiones", icon = "Interface\\Icons\\Trade_BlackSmithing",
-    tooltip = "Profesiones y crafteo", onClick = OpenPanel("professions") })
+-- Reputacion y Profesiones YA NO estan en la bandeja: se llega a ellas desde donde viven.
+-- Reputacion es una pestana del panel de personaje, y Profesiones una de la ventana de
+-- habilidades/conjuros; tenerlas tambien aqui era una tercera puerta a lo mismo.

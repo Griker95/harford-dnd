@@ -341,6 +341,15 @@ local function SetNativeBalance(target, profileName, callback)
         return false, "Accion de dinero no disponible."
     end
 
+    -- Un cobro a la vez. `runtime.pending` es UNA ranura: dos operaciones en vuelo leen el mismo
+    -- saldo de partida, calculan el mismo destino y la segunda pisa a la primera, de modo que se
+    -- cobra una sola vez lo que se compro dos veces. Encadenar compras rapidas lo dispara solo.
+    local enVuelo = runtime.pending
+    if enVuelo and (tonumber(enVuelo.expires) or 0) > Now() then
+        if callback then callback(false, { "Espera a que termine el cobro anterior." }) end
+        return false, "Hay un cobro en curso."
+    end
+
     runtime.pending = {
         profileName = name,
         target = target,

@@ -36,7 +36,15 @@ local function Prof()
         and HarfordProfessions.GetDefinition(state.profId) or nil
 end
 
-local RefreshUI  -- forward
+local RefreshUI, RefreshList, RefreshDetail  -- forward
+
+-- La lista construida (`state.model`) y las cantidades fabricables ya calculadas
+-- (`state.craftableCache`) se reutilizan mientras nada cambie. Al hacer scroll NO se recalcula
+-- nada: solo se repintan las 20 filas visibles con datos que ya estan.
+local function InvalidarLista()
+    state.model = nil
+    state.craftableCache = nil
+end
 
 -- TEXTURAS: SIEMPRE por RUTA. Los fileID numericos NO se resuelven para addons en Epsilon.
 --
@@ -115,7 +123,14 @@ local function CreateReagentSlot(parent, index)
     slot.name = slot.Name or slot.name
     if not slot.count then
         slot.count = slot:CreateFontString(nil, "OVERLAY")
+        -- Arial Narrow 14 con contorno (NumberFontNormal), alineado a la derecha y anclado por
+        -- BOTTOMRIGHT. SIN ancho fijo: el XML nativo lo declara sin \`Size\`, asi que la cadena
+        -- crece hacia la izquierda sola. Ponerle los 26 que MEDIA la sonda fue el error -eso era
+        -- el ancho del texto "0 /5" ya pintado, no una anchura declarada- y con dos cifras
+        -- ("12 /1") el texto no cabia y se partia en dos lineas desbordando el icono.
         slot.count:SetFont("Fonts\\ARIALN.TTF", 14, "OUTLINE")
+        slot.count:SetJustifyH("RIGHT")
+        slot.count:SetWordWrap(false)
         slot.count:SetPoint("BOTTOMRIGHT", slot.icon, "BOTTOMRIGHT", -1, 1)
     end
     slot:SetScript("OnEnter", function(self)
@@ -132,6 +147,14 @@ local function CreateReagentSlot(parent, index)
         end
         GameTooltip:Show()
     end)
+    -- Shift+click sobre un material: su enlace al chat, igual que el del resultado.
+    slot:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    slot:SetScript("OnClick", function(self)
+        if not (IsShiftKeyDown and IsShiftKeyDown() and self.itemKey) then return end
+        if HarfordProfessionsItems and HarfordProfessionsItems.InsertLinkInChat then
+            HarfordProfessionsItems.InsertLinkInChat(self.itemKey)
+        end
+    end)
     slot:SetScript("OnLeave", function() GameTooltip:Hide() end)
     return slot
 end
@@ -145,6 +168,30 @@ end
 --   en medio                 -> las dos encendidas
 -- Un Slider no lo hace por su cuenta: en el nativo lo hace ScrollFrame_OnScrollRangeChanged.
 -- Las plantillas nombran sus flechas de dos formas segun cual sea, asi que se prueban ambas.
+-- Las plantillas de barra (HybridScrollBarTemplate y compania) traen sus flechas con un OnClick
+-- propio que sube dos padres esperando encontrar un HybridScrollFrame de verdad, con su
+-- `stepSize`, `buttonHeight` y `range`. Nuestras listas NO lo son: el desplazamiento lo llevamos
+-- nosotros por indice de fila. Ese manejador reventaba al pulsar la flecha:
+--   HybridScrollFrame.lua:67: attempt to perform arithmetic on local 'stepSize' (a nil value)
+-- Se sustituye por uno propio que solo mueve el valor del slider; el clamp lo hace el Slider y el
+-- refresco lo dispara su OnValueChanged.
+local function WireScrollArrows(slider, paso)
+    if not slider then return end
+    paso = paso or 1
+    local arriba = slider.ScrollUpButton or slider.ScrollUp
+    local abajo = slider.ScrollDownButton or slider.ScrollDown
+    if arriba then
+        arriba:SetScript("OnClick", function()
+            slider:SetValue((slider:GetValue() or 0) - paso)
+        end)
+    end
+    if abajo then
+        abajo:SetScript("OnClick", function()
+            slider:SetValue((slider:GetValue() or 0) + paso)
+        end)
+    end
+end
+
 local function UpdateScrollArrows(slider)
     if not slider then return end
     local minimo, maximo = slider:GetMinMaxValues()
@@ -193,6 +240,19 @@ local function CreateRow(parent, index)
     row.expander = CreateFrame("Button", nil, row)
     row.expander:SetSize(16, 16)
     row.expander:SetPoint("LEFT", row, "LEFT", 3, 0)
+    -- Resaltado y manejador se montan AQUI, no en cada refresco: cargar una textura por ruta
+    -- y crear un cierre nuevo veinte veces por muesca de rueda costaba fps. El rango al que
+    -- corresponde la fila viaja en `row.tier`, que si cambia en cada refresco.
+    row.expander:SetHighlightTexture(TEX.expanderHi, "ADD")
+    row.expander:SetScript("OnClick", function(self)
+        local fila = self:GetParent()
+        local tier = fila and fila.tier
+        if not tier then return end
+        state.collapsed[tier] = not state.collapsed[tier] or nil
+        state.offset = 0
+        InvalidarLista()   -- plegar/desplegar cambia que filas hay
+        RefreshList()
+    end)
     row.expander:Hide()
     row.text = row:CreateFontString(nil, "ARTWORK", "GameFontHighlightLeft")
     row.text:SetPoint("LEFT", row.expander, "RIGHT", 2, 1)
@@ -282,6 +342,15 @@ local function CreateFrameIfNeeded()
     end
     frame.insetLeft, frame.insetRight = insetLeft, insetRight
     frame.skillBar = bar
+    -- FONDO TRANSLUCIDO de la barra. El XML lo declara dentro del StatusBar como una Texture SIN
+    -- anclajes ni tamano y con \`<Color r="0" g="0" b="0.75" a="0.1"/>\`; el cliente la estira a la
+    -- barra entera -la sonda del nativo la mide a 447x14 en capa BACKGROUND-. Sin el, la barra se
+    -- ve vacia a la derecha del relleno en vez de tener carril.
+    if not bar._harfordFondo then
+        bar._harfordFondo = bar:CreateTexture(nil, "BACKGROUND")
+        bar._harfordFondo:SetAllPoints(bar)
+        bar._harfordFondo:SetColorTexture(0, 0, 0.75, 0.1)
+    end
     -- XML: RankText inherits="WhiteNormalNumberFont", justifyH="CENTER"
     frame.skillText = bar:CreateFontString(nil, "OVERLAY", "WhiteNormalNumberFont")
     frame.skillText:SetPoint("CENTER", bar, "CENTER", 0, 0)
@@ -293,7 +362,9 @@ local function CreateFrameIfNeeded()
     list:EnableMouseWheel(true)
     list:SetScript("OnMouseWheel", function(_, delta)
         state.offset = math.max(0, state.offset - delta)
-        RefreshUI()
+        -- Solo la lista: mover la rueda no cambia la receta seleccionada, asi que rehacer el
+        -- panel de detalle en cada muesca era trabajo tirado (y lo que bajaba los fps).
+        RefreshList()
     end)
     frame.list = list
     for i = 1, ROWS_VISIBLE do
@@ -315,8 +386,9 @@ local function CreateFrameIfNeeded()
         UpdateScrollArrows(self)
         if self._updating then return end
         state.offset = math.floor(value + 0.5)
-        RefreshUI()
+        RefreshList()
     end)
+    WireScrollArrows(slider, 1)
     frame.scrollSlider = slider
     -- PESTAÑAS: el XML del cliente (Blizzard_TradeSkillRecipeList.xml, build 45745) las
     -- declara como `inherits="TabButtonTemplate"` ancladas BOTTOMLEFT>lista.TOPLEFT +10,+3 y
@@ -401,6 +473,43 @@ local function CreateFrameIfNeeded()
     end)
     frame.filterBtn = filterBtn
 
+    -- BOTON DE TIRADA. Ocupa el sitio y el tamano del `LinkToButton` nativo -30x30 en
+    -- BOTTOMRIGHT del boton de filtro (+3,+1)- con su mismo resaltado, pero con un dado en
+    -- vez del icono de enlazar profesion: aqui no se enlaza la profesion al chat, se tira.
+    --
+    -- La REGLA no vive aqui: la ventana solo llama a HarfordProfessions.RollTool, que es la
+    -- prueba de profesion (d20 + competencia + modificador de caracteristica).
+    local rollBtn = CreateFrame("Button", nil, frame)
+    rollBtn:SetSize(30, 30)
+    rollBtn:SetPoint("BOTTOMRIGHT", filterBtn, "TOPRIGHT", 3, 1)
+    local dado = rollBtn:CreateTexture(nil, "ARTWORK")
+    dado:SetPoint("CENTER", rollBtn, "CENTER", 0, 0)
+    dado:SetSize(22, 22)
+    -- SafeTexture es el validador que ya usa esta ventana: si la ruta no existe en el cliente
+    -- oculta la textura y lo anota, en vez de pintar el cuadrado verde.
+    SafeTexture(dado, "Interface\\Icons\\INV_Misc_Dice_01", "dado de tirada")
+    rollBtn:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    -- Pulsado: el nativo cambia de textura; aqui basta con hundir el icono un pixel.
+    rollBtn:SetScript("OnMouseDown", function() dado:SetPoint("CENTER", rollBtn, "CENTER", 1, -1) end)
+    rollBtn:SetScript("OnMouseUp", function() dado:SetPoint("CENTER", rollBtn, "CENTER", 0, 0) end)
+    rollBtn:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+        local def = Prof()
+        GameTooltip:SetText("Tirada de " .. ((def and def.name) or "profesion"), 1, 1, 1)
+        -- La caracteristica de cada profesion esta en el catalogo (`def.ability`), asi que se
+        -- nombra en vez de decir "modificador de caracteristica" a secas.
+        GameTooltip:AddLine("d20 + Bonus Competencia + Mod. "
+            .. ((def and def.ability) or "Caracteristica"), 0.8, 0.8, 0.8, true)
+        GameTooltip:Show()
+    end)
+    rollBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    rollBtn:SetScript("OnClick", function()
+        if state.profId and HarfordProfessions and HarfordProfessions.RollTool then
+            HarfordProfessions.RollTool(state.profId)
+        end
+    end)
+    frame.rollBtn = rollBtn
+
     -- Panel derecho: detalle de la receta, dentro del inset derecho nativo
     -- En el nativo el detalle NO es un panel fijo: es un ScrollFrame 300x385 en TOPRIGHT
     -- -32,-83 con su propio slider (20x351 a +6,-17 / +6,+17). Sin el, una receta con muchos
@@ -430,6 +539,8 @@ local function CreateFrameIfNeeded()
         detailSlider:SetValue(math.max(0, math.min(mx, detailSlider:GetValue() - delta * 20)))
     end)
     detailSlider:Show()
+    -- El detalle se desplaza en pixeles, no en filas: el paso del nativo para una flecha.
+    WireScrollArrows(detailSlider, 20)
     frame.detailSlider = detailSlider
     -- Fondo del detalle: en el XML pertenece al ScrollFrame, NO al contenido que scrollea
     -- (`Texture parentKey="Background" atlas="tradeskill-background-recipe"` 310x383 en
@@ -492,40 +603,98 @@ local function CreateFrameIfNeeded()
         GameTooltip:Show()
     end)
     detail.iconHit:SetScript("OnLeave", function() GameTooltip:Hide() end)
+    -- Shift+click mete el enlace en el chat, como en la bolsa. `OnMouseDown` y no `OnClick`
+    -- porque iconHit es un Frame, no un Button.
+    detail.iconHit:SetScript("OnMouseDown", function(self)
+        if not (IsShiftKeyDown and IsShiftKeyDown() and self.itemKey) then return end
+        if HarfordProfessionsItems and HarfordProfessionsItems.InsertLinkInChat then
+            HarfordProfessionsItems.InsertLinkInChat(self.itemKey)
+        end
+    end)
     -- Contador del resultado sobre el icono (XML: Count inherits="NumberFontNormal" en
     -- BOTTOMRIGHT -2,+3). Sin el no se ve que una receta produce mas de una unidad.
     detail.resultCount = detail:CreateFontString(nil, "ARTWORK", "NumberFontNormal")
     detail.resultCount:SetPoint("BOTTOMRIGHT", detail.icon, "BOTTOMRIGHT", -2, 3)
     detail.resultCount:SetJustifyH("RIGHT")
 
-    -- XML: RecipeName GameFontNormalMed2, 230 de ancho, en TOPLEFT +65,-20
-    detail.name = detail:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
+    -- Medidas tomadas de la sonda del TradeSkillFrame nativo (captura "nativo",
+    -- panel root.f6.f9, 300x232). Se fija fuente, tamano, ancho, alineacion y color a mano
+    -- porque los FontObject con nombre no coinciden: el nativo usa Friz Quadrata a 14/11/10/12
+    -- segun la fila, no la escala de un unico objeto.
+    local FRIZ = "Fonts\\FRIZQT__.TTF"
+    local ORO_R, ORO_G, ORO_B = 1, 0.82, 0
+
+    -- r1: 230x14, LEFT/MIDDLE, blanco, TOPLEFT del panel +65,-20
+    detail.name = detail:CreateFontString(nil, "OVERLAY")
+    detail.name:SetFont(FRIZ, 14, "")
     detail.name:SetPoint("TOPLEFT", detail, "TOPLEFT", 65, -20)
     detail.name:SetWidth(230)
     detail.name:SetJustifyH("LEFT")
+    detail.name:SetJustifyV("MIDDLE")
+    detail.name:SetTextColor(1, 1, 1)
 
-    -- XML: Description GameFontHighlightSmall2, 290 de ancho, en TOPLEFT +8,-85. Es lo que
-    -- llena la mitad del panel en el nativo; sin ella el detalle se ve medio vacio.
-    detail.desc = detail:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall2")
+    -- r2: 290 de ancho, LEFT/MIDDLE, blanco, TOPLEFT del panel +8,-85. La posicion es FIJA
+    -- en el nativo aunque la receta no tenga descripcion: con el texto vacio la cadena mide 0
+    -- de alto y la fila de "Requiere" sube sola. Por eso no se oculta ni se re-ancla.
+    detail.desc = detail:CreateFontString(nil, "OVERLAY")
+    detail.desc:SetFont(FRIZ, 11, "")
     detail.desc:SetPoint("TOPLEFT", detail, "TOPLEFT", 8, -85)
     detail.desc:SetWidth(290)
     detail.desc:SetJustifyH("LEFT")
-    detail.desc:SetJustifyV("TOP")
+    detail.desc:SetJustifyV("MIDDLE")
+    detail.desc:SetTextColor(1, 1, 1)
 
-    -- XML: RequirementLabel/RequirementText debajo de la descripcion
-    detail.reqLabel = detail:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    detail.reqLabel:SetPoint("TOPLEFT", detail.desc, "BOTTOMLEFT", 0, -6)
+    -- r3: 48x10, CENTER/MIDDLE, dorado. r4: 188x10, LEFT/TOP, blanco (el rojo del requisito
+    -- no cumplido viaja en linea dentro del propio texto, igual que en el nativo).
+    -- SIN ancho fijo. El XML declara \`RequirementLabel\` sin \`Size\`, asi que mide lo que mida su
+    -- texto; los 48 que veia la sonda eran el ancho del ingles "Requires:", no una anchura
+    -- declarada, y en castellano no tiene por que coincidir.
+    detail.reqLabel = detail:CreateFontString(nil, "OVERLAY")
+    detail.reqLabel:SetFont(FRIZ, 10, "")
+    detail.reqLabel:SetJustifyV("MIDDLE")
+    detail.reqLabel:SetTextColor(ORO_R, ORO_G, ORO_B)
     detail.reqLabel:SetText("Requiere:")
-    detail.req = detail:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    detail.req:SetPoint("TOPLEFT", detail.reqLabel, "BOTTOMLEFT", 0, -2)
-    detail.req:SetWidth(290)
+    -- El anclaje vertical es CONDICIONAL y se decide en el refresco (ver abajo).
+    detail.reqLabel:SetPoint("TOPLEFT", detail.desc, "BOTTOMLEFT", 0, 0)
+
+    detail.req = detail:CreateFontString(nil, "OVERLAY")
+    detail.req:SetFont(FRIZ, 10, "")
+    detail.req:SetPoint("TOPLEFT", detail.reqLabel, "TOPRIGHT", 4, 0)
+    -- Su ancho lo calcula el nativo en el OnLoad: \`SetWidth(236 - RequirementLabel:GetWidth())\`.
+    -- Se aplica en el refresco, cuando la etiqueta ya tiene metricas de fuente.
     detail.req:SetJustifyH("LEFT")
     detail.req:SetJustifyV("TOP")
+    detail.req:SetTextColor(1, 1, 1)
 
-    -- XML: ReagentLabel GameFontNormalSmall, encadenado bajo lo anterior
-    detail.reagentsTitle = detail:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    detail.reagentsTitle:SetPoint("TOPLEFT", detail.req, "BOTTOMLEFT", 0, -8)
-    detail.reagentsTitle:SetText("Materiales")
+    -- r8: 54x10, CENTER/MIDDLE, dorado. DOS anclajes, como el nativo: la Y cuelga de los
+    -- valores del requisito (si ocupan dos lineas, los materiales bajan con ellos) y la X
+    -- vuelve al margen izquierdo por su cuenta.
+    detail.reagentsTitle = detail:CreateFontString(nil, "OVERLAY")
+    detail.reagentsTitle:SetFont(FRIZ, 10, "")
+    -- El nativo le pone 54 de ancho, que es lo que mide "Reagents:". En castellano
+    -- "Materiales:" no cabe y salia cortado, asi que aqui se deja que la cadena mida lo suyo:
+    -- solo se ancla por la izquierda, nadie cuelga de su borde derecho.
+    detail.reagentsTitle:SetWidth(0)
+    detail.reagentsTitle:SetJustifyH("CENTER")
+    detail.reagentsTitle:SetJustifyV("MIDDLE")
+    detail.reagentsTitle:SetTextColor(ORO_R, ORO_G, ORO_B)
+    detail.reagentsTitle:SetText("Materiales:")
+    -- -12 y no 0: el nativo mete entre medias una cadena vacia para la experiencia ganada
+    -- (r7, anclada a -11 del valor y con 1 de alto) que no muestra nada pero si separa. Aqui
+    -- no existe esa fila, asi que su hueco se aplica como desplazamiento.
+    detail.reagentsTitle:SetPoint("TOP", detail.req, "BOTTOM", 0, -12)
+    detail.reagentsTitle:SetPoint("LEFT", detail.reqLabel, "LEFT", 0, 0)
+
+    -- r11: instructor Y coste son UNA SOLA cadena de 290 de ancho separada por |n, en Friz 12
+    -- blanco. Tambien lleva dos anclajes: la Y del ultimo hueco de material y la X del margen.
+    -- Ese segundo punto es justo lo que evitaba que la linea se fuera a la derecha cuando la
+    -- ultima fila de materiales tenia una sola columna.
+    detail.trainerLine = detail:CreateFontString(nil, "OVERLAY")
+    detail.trainerLine:SetFont(FRIZ, 12, "")
+    detail.trainerLine:SetWidth(290)
+    detail.trainerLine:SetJustifyH("LEFT")
+    detail.trainerLine:SetJustifyV("MIDDLE")
+    detail.trainerLine:SetTextColor(1, 1, 1)
 
     -- Botonera nativa: [Crear todo] ... [cantidad] [Crear] [Salir], todos 80x22
     --
@@ -534,7 +703,7 @@ local function CreateFrameIfNeeded()
     -- empezar la siguiente, porque `RemoveItem` es un comando de servidor asincrono y encadenar a
     -- ciegas dejaria craftear con material ya gastado (ademas de reventar el servidor a comandos).
     local MAX_QUEUE = 20
-    local CRAFT_TIME = 3.0   -- fundicion visible, al estilo del lanzamiento nativo
+    local CRAFT_TIME = 5.0   -- fundicion visible, al estilo del lanzamiento nativo
     -- `recipeId` se fija al arrancar la cola: si se leyera `state.selected` en cada pieza,
     -- cambiar de receta a mitad haria que se fabricase otra cosa distinta.
     local queue = { left = 0, timeout = nil, recipeId = nil }
@@ -542,33 +711,126 @@ local function CreateFrameIfNeeded()
 
     -- Barra de fundicion con el arte de la barra de lanzamiento nativa. El OnUpdate solo vive
     -- mientras dura la fundicion y se retira al terminar (no hay ticks permanentes).
-    local castBar = CreateFrame("StatusBar", nil, frame)
-    castBar:SetSize(220, 18)
-    castBar:SetPoint("BOTTOMLEFT", frame, "BOTTOMLEFT", 14, 10)
-    castBar:SetStatusBarTexture(TEX.barFill)
+    -- BARRA DE FUNDICION, montada A MANO con las texturas nativas de la barra de lanzamiento.
+    --
+    -- Se descarto `CastingBarFrameTemplate`: la plantilla trae borde, destello, chispa, escudo y
+    -- marco de texto que solo quedan colocados si corre `CastingBarFrame_OnLoad`, y esa funcion
+    -- NO existe en este cliente -no la referencia ningun addon instalado-. Sin ella las piezas
+    -- se quedan todas superpuestas, que era el amasijo que se veia.
+    --
+    -- Aqui son tres piezas y se sabe donde esta cada una. La geometria es la del nativo: barra
+    -- de 195x13 y borde de 256x64 desbordandola 23 a los lados y 20 arriba y abajo.
+    local castBar = CreateFrame("StatusBar", "HarfordCraftCastBar", UIParent)
+    -- TAMANO Y SITIO: se copian de la barra de lanzamiento NATIVA de este cliente en vez de
+    -- hardcodear medidas. `CastingBarFrame` ya existe con el tamano bueno para esta build;
+    -- los 195x13 que habia eran una estimacion y la barra se salia del marco.
+    -- 195x13, medido en la CastingBarFrame de este cliente con la sonda.
+    castBar:SetSize(195, 13)
+    -- HIGH, la misma strata que la CastingBarFrame nativa segun la sonda.
+    castBar:SetFrameStrata("HIGH")
+    -- Encima de la barra de lanzamiento del jugador, como hace SpellCreator. Cuelga de UIParent
+    -- para seguir viendose aunque la ventana quede detras.
+    -- SITIO: el de la nativa, medido en BOTTOM -> UIParent.BOTTOM (0, +160). Si el jugador la
+    -- ha movido, se copia su punto para que la de fabricar salga donde espera ver una barra.
+    local nativa = _G.CastingBarFrame
+    local punto, rel, puntoRel, dx, dy
+    if nativa and nativa.GetPoint and nativa:GetNumPoints() > 0 then
+        punto, rel, puntoRel, dx, dy = nativa:GetPoint(1)
+    end
+    if punto and rel then
+        castBar:SetPoint(punto, rel, puntoRel, dx or 0, dy or 0)
+    else
+        castBar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 160)
+    end
+
+    local RUTA_RELLENO = "Interface\\CastingBar\\UI-CastingBar-Fill"
+    local RUTA_BORDE   = "Interface\\CastingBar\\UI-CastingBar-Border"
+    local RUTA_CHISPA  = "Interface\\CastingBar\\UI-CastingBar-Spark"
+    local function Existe(ruta)
+        return (not GetFileIDFromPath) or GetFileIDFromPath(ruta) ~= nil
+    end
+
+    local castBg = castBar:CreateTexture(nil, "BACKGROUND")
+    castBg:SetColorTexture(0, 0, 0, 0.7)
+    castBg:SetAllPoints(castBar)
+
+    -- El relleno SIEMPRE tiene que pintar. Antes se ponia solo `if Existe(...)`, y como en este
+    -- cliente esa ruta no resuelve, la barra se quedaba vacia: borde perfecto y nada dentro.
+    -- SpellCreator llego a la misma conclusion y por eso trae su propia `castingbar-fill.blp`;
+    -- aqui se resuelve con respaldo en vez de con un fichero de arte propio.
+    --
+    -- Ultimo recurso un color solido: sin textura no hay barra, y una barra lisa se ve, que es
+    -- infinitamente mejor que un hueco.
+    -- La sonda de la nativa dice que su relleno es `UI-StatusBar`, no `UI-CastingBar-Fill`
+    -- (esa ruta ni siquiera resuelve en este cliente). Se usa la buena directamente.
+    local relleno = castBar:CreateTexture(nil, "ARTWORK")
+    if Existe("Interface\\TargetingFrame\\UI-StatusBar") then
+        relleno:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+    else
+        relleno:SetColorTexture(1, 1, 1)
+    end
+    castBar:SetStatusBarTexture(relleno)
     castBar:SetStatusBarColor(1, 0.7, 0)
     castBar:SetMinMaxValues(0, 1)
-    local castBg = castBar:CreateTexture(nil, "BACKGROUND")
-    castBg:SetColorTexture(0, 0, 0, 0.6)
-    castBg:SetAllPoints(castBar)
-    local castBorder = castBar:CreateTexture(nil, "OVERLAY")
-    local borderPath = "Interface\\CastingBar\\UI-CastingBar-Border"
-    if not GetFileIDFromPath or GetFileIDFromPath(borderPath) then
-        castBorder:SetTexture(borderPath)
-        castBorder:SetPoint("TOPLEFT", castBar, "TOPLEFT", -23, 20)
-        castBorder:SetPoint("BOTTOMRIGHT", castBar, "BOTTOMRIGHT", 23, -20)
+    castBar:SetValue(0)
+
+    -- La chispa marca el frente del relleno. ADD para que brille sobre la barra.
+    local castSpark = castBar:CreateTexture(nil, "OVERLAY")
+    if Existe(RUTA_CHISPA) then
+        castSpark:SetTexture(RUTA_CHISPA)
+        castSpark:SetBlendMode("ADD")
+        castSpark:SetSize(32, 32)
+        -- La nativa la centra con +2 de alto; el avance lo mueve el OnUpdate.
+    else
+        castSpark:Hide()
+    end
+    castBar.spark = castSpark
+
+    -- El borde va en su propio frame POR ENCIMA: como textura del StatusBar quedaria por debajo
+    -- del relleno y se veria cortado por el avance de la barra.
+    local castOverlay = CreateFrame("Frame", nil, castBar)
+    castOverlay:SetFrameLevel(castBar:GetFrameLevel() + 2)
+    castOverlay:SetAllPoints(castBar)
+    local castBorder = castOverlay:CreateTexture(nil, "ARTWORK")
+    if Existe(RUTA_BORDE) then
+        castBorder:SetTexture(RUTA_BORDE)
+        -- El marco es una textura de TAMANO FIJO 256x64 anclada por su TOP al TOP de la
+        -- barra con +28, tal cual lo mide la sonda de la nativa. NO se estira con
+        -- TOPLEFT/BOTTOMRIGHT: hacerlo la deformaba a 241x53 y el relleno parecia salirse
+        -- del marco. El arte ya trae su propio margen alrededor de los 195x13 utiles.
+        castBorder:SetSize(256, 64)
+        castBorder:SetPoint("TOP", castBar, "TOP", 0, 28)
     else
         castBorder:Hide()
     end
-    castBar.text = castBar:CreateFontString(nil, "OVERLAY")
-    castBar.text:SetFont("Fonts\\FRIZQT__.TTF", 11, "OUTLINE")
+
+    castBar.text = castOverlay:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     castBar.text:SetPoint("CENTER", castBar, "CENTER", 0, 0)
     castBar:Hide()
     frame.castBar = castBar
 
+    -- Animacion y sonido los lleva `HarfordProfessionFX`: aqui solo se le dice en que punto va
+    -- la fabricacion. `fx` es el estado de la TANDA, no de la pieza, para que la animacion no se
+    -- devuelva entre piezas encadenadas (daba el parpadeo 69-13-69 en cada unidad de la cola).
+    --
+    -- Se declara ANTES de CancelCast a proposito: un cierre solo captura las locales que ya
+    -- existen cuando se crea, y declarada despues seria una global nil ahi dentro.
+    local fx = nil
+
     local function CancelCast()
         castBar:SetScript("OnUpdate", nil)
         castBar:Hide()
+        -- El sonido muere con la barra, no despues: por aqui pasan TODAS las salidas del casteo
+        -- -completarse, moverse, cerrar la ventana-, asi que corta en el instante exacto y no
+        -- sigue sonando mientras se tira el dado o se descuentan materiales.
+        if HarfordProfessionFX then HarfordProfessionFX.CutSound(fx) end
+    end
+
+    -- `Stop` va en StopQueue y no en CancelCast a proposito: devuelve la ANIMACION a reposo, y
+    -- CancelCast corre tambien ENTRE piezas encadenadas (daria el parpadeo). El sonido si se
+    -- corta en cada pieza, la animacion no.
+    local function ResetAnim()
+        if HarfordProfessionFX then fx = HarfordProfessionFX.Stop(fx) else fx = nil end
     end
 
     local function StopQueue(reason)
@@ -577,6 +839,7 @@ local function CreateFrameIfNeeded()
         bagWatcher:UnregisterAllEvents()
         if queue.timeout then queue.timeout = nil end
         CancelCast()
+        ResetAnim()
         if reason and HarfordChat and HarfordChat.Print then HarfordChat.Print(reason) end
         RefreshUI()
     end
@@ -587,16 +850,25 @@ local function CreateFrameIfNeeded()
     -- Fundicion: animacion de artesano en el personaje + barra + sonido, y la receta se
     -- resuelve (tirada incluida) SOLO al terminar la barra.
     local function BeginCast(recipeName)
-        if HarfordServerActions and HarfordServerActions.ModAnim then
-            HarfordServerActions.ModAnim(69, { addonName = "Harford", showMessages = false })
+        if HarfordProfessionFX then
+            fx = HarfordProfessionFX.Begin(state.profId, fx)
         end
-        if HarfordUISounds and HarfordUISounds.Play then HarfordUISounds.Play("craft_started") end
         castBar.text:SetText(recipeName or "")
         castBar:SetValue(0)
         castBar:Show()
         local elapsed = 0
         castBar:SetScript("OnUpdate", function(self, dt)
+            -- Moverse interrumpe, como en el juego. Se mira la VELOCIDAD y no
+            -- PLAYER_STARTED_MOVING: AGENTS.md avisa de que ese evento puede no disparar en
+            -- Epsilon, y aqui ya hay un OnUpdate corriendo, asi que preguntarla sale gratis.
+            -- Como los materiales se gastan al COMPLETAR, interrumpir no cuesta nada.
+            if GetUnitSpeed and (GetUnitSpeed("player") or 0) > 0 then
+                -- Sin motivo en el chat: la barra desapareciendo ya lo dice, y moverse es algo
+                -- que el jugador acaba de hacer a proposito.
+                return StopQueue()
+            end
             elapsed = elapsed + dt
+            if HarfordProfessionFX then HarfordProfessionFX.Tick(fx, dt, CRAFT_TIME) end
             self:SetValue(math.min(1, elapsed / CRAFT_TIME))
             if elapsed >= CRAFT_TIME then
                 CancelCast()
@@ -610,14 +882,35 @@ local function CreateFrameIfNeeded()
         if not (queue.recipeId and HarfordProfessions and HarfordProfessions.Craft) then
             return StopQueue()
         end
-        -- Craft revalida CanCraft por su cuenta y descuenta el material reservado, asi que una
-        -- pieza que ya no se puede hacer corta la cola en vez de seguir intentandolo.
-        local ok = HarfordProfessions.Craft(queue.recipeId)
-        if HarfordUISounds and HarfordUISounds.Play then
-            HarfordUISounds.Play(ok and "craft_succeeded" or "craft_failed")
-        end
-        if not ok then return StopQueue() end
+        -- Craft revalida CanCraft por su cuenta y descuenta el material reservado.
+        local ok, motivo = HarfordProfessions.Craft(queue.recipeId)
+        -- Cierra la fase de la pieza: corta el sonido de la profesion en seco. El de exito -solo
+        -- lo tiene encantamiento- es el unico que puede seguir sonando despues de la barra.
+        if HarfordProfessionFX then HarfordProfessionFX.Finish(fx, ok) end
+
+        -- "Crear todo" pide N INTENTOS, no N aciertos: un fallo normal no gasta nada y se sigue
+        -- con el siguiente. Antes el primer fallo se llevaba por delante los que quedaban.
+        --
+        -- La PIFIA si corta: acaba de echar a perder los materiales, y encadenar mas intentos
+        -- despues de eso es justo lo que el jugador no querria. Y tampoco se sigue cuando la
+        -- pieza ya NO SE PUEDE intentar -sin materiales, sin herramienta, receta no aprendida-,
+        -- porque eso no cambia por reintentar.
+        local seguirIntentando = (motivo == "fallo")
+        if not ok and not seguirIntentando then return StopQueue() end
         if queue.left <= 0 then return StopQueue() end
+
+        -- Un fallo SIN pifia no gasta materiales, asi que la bolsa no cambia y su evento no
+        -- llegaria nunca: se encadena directo en vez de esperar a un aviso que no vendra.
+        if not ok and motivo == "fallo" then
+            RefreshUI()
+            if C_Timer and C_Timer.After then
+                C_Timer.After(0, CraftNext)
+            else
+                CraftNext()
+            end
+            return
+        end
+
         -- Encadenar solo cuando el servidor confirme el gasto (o rendirse si no llega).
         bagWatcher:RegisterEvent("BAG_UPDATE_DELAYED")
         local token = {}
@@ -645,6 +938,34 @@ local function CreateFrameIfNeeded()
         bagWatcher:UnregisterAllEvents()
         queue.timeout = nil
         if queue.left > 0 then CraftNext() end
+    end)
+
+    -- Refresco automatico mientras la ventana este abierta. Recibir o gastar objetos cambia lo
+    -- que se puede fabricar y cuantas unidades salen, y hasta ahora habia que hacer click en algo
+    -- para que la lista se enterase.
+    --
+    -- Watcher APARTE del de la cola: aquel se des-registra solo al encadenar piezas con
+    -- `UnregisterAllEvents`, asi que compartirlo apagaria tambien este.
+    --
+    -- `BAG_UPDATE_DELAYED` y no `BAG_UPDATE`: dispara UNA vez por tanda de cambios en vez de una
+    -- por hueco de bolsa, que al descontar materiales serian varias seguidas.
+    --
+    -- Se registra en OnShow y se suelta en OnHide: con la ventana cerrada no hay nada que
+    -- repintar, y dejar el evento vivo es justo lo que el contrato pide no hacer.
+    local stockWatcher = CreateFrame("Frame")
+    stockWatcher:SetScript("OnEvent", function()
+        if frame and frame:IsShown() then RefreshUI() end
+    end)
+    frame:HookScript("OnShow", function()
+        stockWatcher:RegisterEvent("BAG_UPDATE_DELAYED")
+    end)
+    frame:HookScript("OnHide", function()
+        stockWatcher:UnregisterAllEvents()
+        -- La estacion dura lo que la ventana: al cerrarla dejas de estar en la forja. Asi no
+        -- hace falta vigilar la distancia, que seria sondeo continuo.
+        if HarfordProfessions and HarfordProfessions.ClearActiveStation then
+            HarfordProfessions.ClearActiveStation()
+        end
     end)
 
     local function CraftTimes(n)
@@ -728,32 +1049,15 @@ local function CreateFrameIfNeeded()
 end
 
 -- ── Refresco ─────────────────────────────────────────────────────────────────
-RefreshUI = function()
-    if not (frame and frame:IsShown()) then return end
-    local def = Prof()
-    if not (def and HarfordProfessions) then return end
-    local skill = HarfordProfessions.EffectiveSkill(def.id)
-
-    if frame.TitleText then
-        -- El titulo salia cortado ("Herreri"): el TitleText del template viene estrecho.
-        frame.TitleText:SetWidth(0)
-        frame.TitleText:SetText(def.name)
-    end
-    if frame.portrait then
-        -- SetPortraitToTexture recorta en circulo (evita el cuadrado con esquinas oscuras)
-        if SetPortraitToTexture then
-            SetPortraitToTexture(frame.portrait, "Interface\\Icons\\" .. (def.icon or "INV_Misc_QuestionMark"))
-        else
-            frame.portrait:SetTexture("Interface\\Icons\\" .. (def.icon or "INV_Misc_QuestionMark"))
-            frame.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-        end
-    end
-    if frame.tabLearned and frame.tabLearned.SetActiveLook then frame.tabLearned:SetActiveLook(state.tab ~= "unlearned") end
-    if frame.tabUnlearned and frame.tabUnlearned.SetActiveLook then frame.tabUnlearned:SetActiveLook(state.tab == "unlearned") end
-    frame.skillBar:SetValue(skill)
-    -- Formato nativo de la barra: "Herreria 50/300" (el rango va en las cabeceras de grupo)
-    frame.skillText:SetText(string.format("%s %d/%d", def.name, skill, HarfordProfessions.MAX_SKILL))
-
+-- MODELO DE LA LISTA: recetas filtradas, ordenadas y con sus cabeceras de rango.
+--
+-- Se construye UNA vez y se guarda en `state.model`. Antes esto corria entero en CADA muesca
+-- de rueda -recorrer las 1614 recetas del catalogo, filtrar, ordenar y montar las cabeceras-
+-- y era lo que hundia los fps. Al hacer scroll no cambia ningun dato: solo hay que repintar
+-- las filas visibles. Lo invalida `InvalidarLista()`, que llaman las cosas que SI cambian el
+-- contenido: cambiar de profesion o de pestana, buscar, filtrar, plegar un rango, fabricar y
+-- las bolsas.
+local function ConstruirModelo(def)
     -- Filtro por pestaña: Aprendidas = iniciales o aprendidas explicitamente;
     -- No aprendidas = cualquier receta que aun debe enseñarse o comprarse.
     local Strip = HarfordClassColors and HarfordClassColors.StripAccents or tostring
@@ -794,6 +1098,44 @@ RefreshUI = function()
         if not state.collapsed[tier] then display[#display + 1] = r end
     end
 
+    return display
+end
+
+RefreshList = function()
+    if not (frame and frame:IsShown()) then return end
+    local def = Prof()
+    if not (def and HarfordProfessions) then return end
+    local skill = HarfordProfessions.EffectiveSkill(def.id)
+
+    if frame.TitleText then
+        -- El titulo salia cortado ("Herreri"): el TitleText del template viene estrecho.
+        frame.TitleText:SetWidth(0)
+        frame.TitleText:SetText(def.name)
+    end
+    -- El retrato solo se recarga al CAMBIAR de profesion: es una carga de textura, y repetirla
+    -- en cada refresco de la lista no cambia nada de lo que se ve.
+    if frame.portrait and frame._retratoDe ~= def.id then
+        frame._retratoDe = def.id
+        -- SetPortraitToTexture recorta en circulo (evita el cuadrado con esquinas oscuras)
+        if SetPortraitToTexture then
+            SetPortraitToTexture(frame.portrait, "Interface\\Icons\\" .. (def.icon or "INV_Misc_QuestionMark"))
+        else
+            frame.portrait:SetTexture("Interface\\Icons\\" .. (def.icon or "INV_Misc_QuestionMark"))
+            frame.portrait:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        end
+    end
+    if frame.tabLearned and frame.tabLearned.SetActiveLook then frame.tabLearned:SetActiveLook(state.tab ~= "unlearned") end
+    if frame.tabUnlearned and frame.tabUnlearned.SetActiveLook then frame.tabUnlearned:SetActiveLook(state.tab == "unlearned") end
+    frame.skillBar:SetValue(skill)
+    -- Formato nativo de la barra: "Herreria 50/300" (el rango va en las cabeceras de grupo)
+    frame.skillText:SetText(string.format("%s %d/%d", def.name, skill, HarfordProfessions.MAX_SKILL))
+
+    local display = state.model
+    if not display then
+        display = ConstruirModelo(def)
+        state.model = display
+    end
+
     local maxOffset = math.max(0, #display - ROWS_VISIBLE)
     state.offset = math.max(0, math.min(state.offset, maxOffset))
     if frame.scrollSlider then
@@ -811,15 +1153,17 @@ RefreshUI = function()
             -- Cabecera de grupo: rango en ORO con el contador de recetas a la derecha
             row.recipeId = nil
             local tier = entry.header
-            row.expander:SetNormalTexture(state.collapsed[tier]
-                and "Interface\\Buttons\\UI-PlusButton-Up"
-                or "Interface\\Buttons\\UI-MinusButton-Up")
-            row.expander:SetHighlightTexture("Interface\\Buttons\\UI-PlusButton-Hilight", "ADD")
-            row.expander:SetScript("OnClick", function()
-                state.collapsed[tier] = not state.collapsed[tier] or nil
-                state.offset = 0
-                RefreshUI()
-            end)
+            row.tier = tier
+            -- Solo se toca la textura si de verdad cambia de estado: SetNormalTexture por ruta
+            -- vuelve a resolver el fichero cada vez. El resaltado y el OnClick ya se pusieron al
+            -- crear la fila, y el rango que necesita el manejador viaja en `row.tier`.
+            local plegado = state.collapsed[tier] and true or false
+            if row._plegado ~= plegado then
+                row._plegado = plegado
+                row.expander:SetNormalTexture(plegado
+                    and "Interface\\Buttons\\UI-PlusButton-Up"
+                    or "Interface\\Buttons\\UI-MinusButton-Up")
+            end
             row.expander:Show()
             -- El resaltado es el del icono de plegar: solo tiene sentido donde hay icono.
             if row.hi then row.hi:SetAlpha(1) end
@@ -835,25 +1179,38 @@ RefreshUI = function()
             local r, g, b = DifficultyColor(skill, tonumber(rec.skillReq) or 1)
             -- El numero entre corchetes es CUANTAS puedes fabricar con tus materiales
             -- (como el nativo), no el requisito de skill (ese va en el detalle).
-            local craftable
-            do
+            -- CanCraft es CARO en la pestana de no aprendidas (resuelve el entrenador de cada
+            -- receta), asi que su resultado se cachea por receta y solo se recalcula cuando la
+            -- lista se invalida. Antes se llamaba 20 veces por muesca de rueda.
+            state.craftableCache = state.craftableCache or {}
+            local craftable = state.craftableCache[rec.id]
+            if craftable == nil then
                 local _, _, mats = HarfordProfessions.CanCraft(rec.id)
                 for _, m in ipairs(mats or {}) do
                     local possible = m.missingId and 0 or math.floor((m.have or 0) / math.max(1, m.need or 1))
                     craftable = craftable and math.min(craftable, possible) or possible
                 end
+                state.craftableCache[rec.id] = craftable or false
+            elseif craftable == false then
+                craftable = nil
             end
-            -- Como el nativo: el nombre va limpio y la CANTIDAD FABRICABLE va suelta a la
-            -- derecha, con el mismo color de dificultad de la fila.
+            -- La CANTIDAD FABRICABLE va pegada al nombre y entre corchetes -"Espada larga [3]"-,
+            -- como en la ventana de referencia. Antes iba en una etiqueta suelta a la derecha,
+            -- que la separaba de la receta a la que se refiere.
             row.expander:Hide()
+            row.tier = nil
             -- Sin icono de plegar no hay nada que iluminar: dejarlo encendido pintaba un brillo
             -- suelto en el margen izquierdo que el nativo no tiene.
             if row.hi then row.hi:SetAlpha(0) end
-            row.text:SetText(rec.name or rec.id)
+            local nombre = rec.name or rec.id
+            if craftable and craftable > 0 then
+                nombre = nombre .. " [" .. craftable .. "]"
+            end
+            row.text:SetText(nombre)
             row.text:SetTextColor(r, g, b)
             row.baseColor = { r, g, b }
-            row.count:SetText((craftable and craftable > 0) and tostring(craftable) or "")
-            row.count:SetTextColor(r, g, b)
+            -- La etiqueta suelta se vacia: el contador vive ahora dentro del nombre.
+            row.count:SetText("")
             row.sel:SetVertexColor(r, g, b)   -- nativo: la seleccion toma el color de la fila
             local seleccionada = rec.id == state.selected
             row.sel:SetShown(seleccionada)
@@ -862,19 +1219,34 @@ RefreshUI = function()
             row:Show()
         else
             row.recipeId = nil
+            row.tier = nil
             row:Hide()
         end
     end
 
+end
+
+-- El detalle solo se rehace cuando cambia la RECETA SELECCIONADA. Antes iba pegado al
+-- refresco de la lista, asi que cada muesca de la rueda volvia a cargar el icono de la
+-- receta, los de todos los materiales y sus tooltips aunque la seleccion no hubiera
+-- cambiado: eso era lo que hundia los fps al hacer scroll.
+RefreshDetail = function()
+    if not (frame and frame:IsShown()) then return end
+    local def = Prof()
+    if not (def and HarfordProfessions) then return end
+    local skill = HarfordProfessions.EffectiveSkill(def.id)
     -- Detalle de la seleccionada
-    local sel
-    for _, r in ipairs(recipes) do if r.id == state.selected then sel = r break end end
+    -- La receta se pide por id: \`recipes\` era una local del refresco de la LISTA y aqui ya no
+    -- existe. Con ella nil, \`ipairs\` reventaba y el detalle no se repintaba nunca.
+    local sel = state.selected and HarfordProfessions.GetRecipe
+        and HarfordProfessions.GetRecipe(state.selected) or nil
     local d = frame.detail
     if not sel then
         d.name:SetText("")
         d.req:SetText("")
         d.desc:SetText("")
         d.reqLabel:Hide()
+        if d.trainerLine then d.trainerLine:SetText("") end
         d.resultCount:SetText("")
         for _, slot in ipairs(state.reagents) do slot:Hide() end
         frame.craftBtn:SetEnabled(false)
@@ -899,47 +1271,64 @@ RefreshUI = function()
 
     -- Descripcion: la de la receta si la declara; si no, de que profesion y rango es. Antes
     -- este medio panel quedaba vacio porque no pintabamos nada de esto.
-    local tierName = HarfordProfessions.GetTierName(tonumber(sel.skillReq) or 1)
-    d.desc:SetText(sel.description or string.format("Receta de %s del rango %s.",
-        (def.name or ""):lower(), tierName))
+    -- Solo la descripcion PROPIA de la receta. La de relleno -"Receta de alquimia del rango
+    -- Oficial"- no decia nada que no estuviera ya en la lista y en la linea de instructor.
+    --
+    -- El hueco bajo la descripcion es CONDICIONAL, igual que en el nativo
+    -- (Blizzard_TradeSkillDetails.lua): por defecto ancla a BOTTOMLEFT (0,0) y SOLO cuando hay
+    -- descripcion de verdad lo baja a -18. Sin esto queda un hueco muerto entre el icono y
+    -- "Requiere" en las recetas sin texto.
+    local hayDesc = sel.description and sel.description ~= ""
+    d.desc:SetText(hayDesc and sel.description or "")
+    d.reqLabel:ClearAllPoints()
+    d.reqLabel:SetPoint("TOPLEFT", d.desc, "BOTTOMLEFT", 0, hayDesc and -18 or 0)
 
-    d.reqLabel:Show()
-    -- "Alquimia (15)", no "Nivel de alquimia: 15": el nombre de la profesion tal cual y el
-    -- requisito entre parentesis, que es como lo lee el jugador de un vistazo.
+    -- "Requiere" son las CONDICIONES DEL SITIO Y DEL EQUIPO: estacion y herramienta, en una
+    -- sola linea separadas por coma, como el "Requires: Anvil, Blacksmith Hammer" del nativo.
+    --
+    -- El nivel de profesion ya NO va aqui: es lo que hace falta para APRENDERLA, no para
+    -- fabricarla, y por eso baja a la linea de instructor.
     local skillReq = tonumber(sel.skillReq) or 1
-    local skillActual = HarfordProfessions.EffectiveSkill(def.id)
-    -- Si no llegas al requisito, la linea entera va en rojo. Sin decir cuanto tienes: el numero
-    -- propio ya esta en la barra de habilidad, y repetirlo aqui solo alarga la linea.
-    local reqSkill = string.format("%s (%d)", def.name or "", skillReq)
-    if skillActual < skillReq then reqSkill = "|cffff5555" .. reqSkill .. "|r" end
-    local reqLines = { reqSkill }
-    -- La herramienta va en rojo si es comprobable y no la llevas encima. Si su objeto aun no
-    -- esta registrado no se puede comprobar, asi que se muestra en gris sin prometer nada.
+    local reqPartes = {}
+
+    local estacionNombre = select(2, HarfordProfessions.GetRequiredStation
+        and HarfordProfessions.GetRequiredStation(sel))
+    if estacionNombre then
+        local dentro = HarfordProfessions.HasRequiredStation
+            and HarfordProfessions.HasRequiredStation(sel)
+        reqPartes[#reqPartes + 1] = (dentro and "|cff40c040" or "|cffff5555")
+            .. estacionNombre .. "|r"
+    end
+
+    -- La herramienta va en rojo si es comprobable y no la llevas. Si su objeto aun no esta
+    -- registrado no se puede comprobar, asi que se muestra sin color y sin prometer nada.
     if def.tool then
         local comprobable = HarfordProfessions.ToolIsCheckable
             and HarfordProfessions.ToolIsCheckable(def.id)
         local llevada = not comprobable or (HarfordProfessions.HasToolItem
             and HarfordProfessions.HasToolItem(def.id))
         if not comprobable then
-            reqLines[#reqLines + 1] = def.tool
-        elseif llevada then
-            reqLines[#reqLines + 1] = "|cff40c040" .. def.tool .. "|r"
+            reqPartes[#reqPartes + 1] = def.tool
         else
-            reqLines[#reqLines + 1] = "|cffff5555" .. def.tool .. "|r"
+            reqPartes[#reqPartes + 1] = (llevada and "|cff40c040" or "|cffff5555")
+                .. def.tool .. "|r"
         end
     end
-    -- Entrenador, en el mismo sitio que el "Trainer / Zone" del nativo: solo si la receta se
-    -- aprende de alguien y aun no la tienes. Aprendida ya no aporta nada.
-    if sel.trainer and HarfordProfessionTrainers and not HarfordProfessions.IsRecipeLearned(sel.id) then
-        local donde = HarfordProfessionTrainers.DescribeForRecipe(sel.id)
-        reqLines[#reqLines + 1] = "|cffffd100Entrenador:|r " .. (donde or "por localizar")
-    end
-    -- El motivo, salvo cuando ya lo dice la propia linea de requisito: repetir "Skill
-    -- insuficiente (requiere 15)" debajo de "Alquimia (15) (tienes 3)" es ruido.
-    if not ok and reason and not tostring(reason):find("Skill insuficiente", 1, true) then
-        reqLines[#reqLines + 1] = "|cffff5555" .. tostring(reason) .. "|r"
-    end
-    d.req:SetText(table.concat(reqLines, "\n"))
+
+    -- Aqui SOLO van el sitio y la herramienta, como el "Requires: Anvil, Blacksmith Hammer"
+    -- nativo. Los demas motivos ya se ven en su sitio y repetirlos era ruido: los materiales que
+    -- faltan los pintan los propios huecos en rojo, y lo de la habilidad y donde se aprende lo
+    -- dice la linea de instructor de abajo.
+    local hayReq = #reqPartes > 0
+    d.reqLabel:SetShown(hayReq)
+    d.req:SetShown(hayReq)
+    -- La formula del nativo, con la etiqueta ya medida en castellano.
+    d.req:SetWidth(236 - (d.reqLabel:GetWidth() or 48))
+    d.req:SetText(table.concat(reqPartes, ", "))
+
+    -- "Materiales:" no se re-ancla: sus dos puntos fijos ya lo resuelven. Si no hay requisitos
+    -- la cadena de valores mide 0 de alto y la etiqueta sube sola hasta la fila de "Requiere".
+
     local mats = detailMats or {}
     for i, m in ipairs(mats) do
         local slot = state.reagents[i]
@@ -976,6 +1365,39 @@ RefreshUI = function()
         slot:Show()
     end
     for i = #mats + 1, #state.reagents do state.reagents[i]:Hide() end
+
+    -- INSTRUCTOR Y COSTE: una SOLA cadena separada por |n, como el nativo, que lo guarda todo
+    -- en un unico FontString. Dos anclajes: la Y del ultimo hueco de material -por eso se pone
+    -- aqui y no al construir, la altura depende de cuantas filas haya- y la X del margen
+    -- izquierdo. Sin ese segundo punto la linea se iba a la derecha cuando la ultima fila de
+    -- materiales tenia una sola columna.
+    local ultimoHueco = (#mats > 0) and state.reagents[#mats] or d.reagentsTitle
+    d.trainerLine:ClearAllPoints()
+    d.trainerLine:SetPoint("TOP", ultimoHueco, "BOTTOM", 0, -15)
+    d.trainerLine:SetPoint("LEFT", d.reagentsTitle, "LEFT", 0, 0)
+
+    -- Se muestra mientras NO la tengas: una vez aprendida ya no dice nada util.
+    local yaLaTienes = HarfordProfessions.IsRecipeLearned
+        and HarfordProfessions.IsRecipeLearned(sel.id)
+    if yaLaTienes then
+        d.trainerLine:SetText("")
+    else
+        -- Como lo escribe el nativo, leido de la sonda: la ETIQUETA en dorado dentro de la
+        -- propia cadena (|cFFFFD200) y el VALOR en blanco, que es el color del FontString.
+        -- El valor va en rojo si aun no llegas al nivel, igual que el nativo pinta en rojo lo
+        -- que te falta en "Requires".
+        local enRojo = HarfordProfessions.EffectiveSkill(def.id) < skillReq
+        local lineas = string.format("|cFFFFD200Instructor de profesion: |r%s%s (%d)%s",
+            enRojo and "|cffff2020" or "", def.name or "", skillReq, enRojo and "|r" or "")
+
+        -- El coste con los iconos de moneda del juego, como el "Cost:" nativo.
+        local coste = HarfordProfessionTrainers and HarfordProfessionTrainers.GetRecipeCost
+            and HarfordProfessionTrainers.GetRecipeCost(sel.id) or 0
+        if coste > 0 and GetCoinTextureString then
+            lineas = lineas .. "|n|cFFFFD200Coste: |r" .. GetCoinTextureString(coste)
+        end
+        d.trainerLine:SetText(lineas)
+    end
     if frame.SetDetailBackground then
         frame:SetDetailBackground(state.tab ~= "unlearned")
     end
@@ -1005,6 +1427,14 @@ RefreshUI = function()
     -- CreateMultipleInputBox comparten `effectivelyCraftable`). Sin esto las flechas de cantidad
     -- se quedaban doradas —habilitadas— sobre una receta que no se puede fabricar.
     SetQuantityEnabled(ok and true or false)
+end
+
+RefreshUI = function()
+    -- Refresco completo = los datos pueden haber cambiado (pestana, busqueda, filtro, una
+    -- fabricacion, las bolsas). El scroll llama a RefreshList a secas y reaprovecha el modelo.
+    InvalidarLista()
+    RefreshList()
+    RefreshDetail()
 end
 
 -- ── API publica ──────────────────────────────────────────────────────────────
@@ -1083,3 +1513,31 @@ end
 function API.Refresh()
     RefreshUI()
 end
+
+------------------------------------------------------------
+-- Entrada desde el mundo
+------------------------------------------------------------
+
+-- Lo que llama el ArcSpell de la forja, del yunque o de la fogata: abre la ventana Y deja
+-- constancia de que estas en esa estacion, para las recetas que la exijan.
+--
+-- `profId` es opcional: con el se abre directamente esa profesion; sin el solo se marca la
+-- estacion y el jugador abre lo que quiera desde el libro.
+--
+-- Se marca ANTES de abrir porque `Open` refresca, y el refresco ya tiene que ver la estacion
+-- puesta o pintaria las recetas como no disponibles durante un instante.
+function API.OpenAtStation(stationId, profId)
+    if not (HarfordProfessions and HarfordProfessions.SetActiveStation) then
+        return false, "Profesiones no disponible"
+    end
+    local ok, err = HarfordProfessions.SetActiveStation(stationId)
+    if not ok then return false, err end
+    if profId then return API.Open(profId) end
+    return true
+end
+
+-- Mismo nombre publico que usan los entrenadores y las misiones de mundo, para que el gossip
+-- tenga un solo sitio donde mirar.
+_G.HarfordProfessionsAPI = _G.HarfordProfessionsAPI or {}
+_G.HarfordProfessionsAPI.OpenAtStation = API.OpenAtStation
+_G.HarfordProfessionsAPI.OpenProfession = API.Open

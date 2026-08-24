@@ -22,7 +22,7 @@ end
 -- faction: "alianza" | "horda" | "aliada"
 API.RACES = {
     {
-        id = "humano", name = "Humano", desc = "Versatiles y ambiciosos; sus vidas breves los empujan a grandes logros y han forjado los mayores reinos de Azeroth.", faction = "alianza", size = "Mediano", speed = 9,
+        id = "humano", name = "Humano", nameF = "Humana", desc = "Versatiles y ambiciosos; sus vidas breves los empujan a grandes logros y han forjado los mayores reinos de Azeroth.", faction = "alianza", size = "Mediano", speed = 9,
         traits = {
             { id = "hum_inc_2", name = "Incremento de caracteristica (+2)", type = "choice", description = "Una característica de tu elección aumenta en 2.", effects = {}, choice = { slots = 1, optionsFrom = "ability+2" } },
             { id = "hum_inc_1", name = "Incremento de caracteristica (+1)", type = "choice", description = "Otra característica de tu elección aumenta en 1.", effects = {}, choice = { slots = 1, optionsFrom = "ability+1" } },
@@ -33,20 +33,20 @@ API.RACES = {
         },
     },
     {
-        id = "enano", name = "Enano", desc = "Pueblo de las montanas de Khaz Modan, ligado al clan y la tradicion, maestro de la piedra, la forja y la mineria.", faction = "alianza", size = "Mediano", speed = 7.5,
+        id = "enano", name = "Enano", nameF = "Enana", desc = "Pueblo de las montanas de Khaz Modan, ligado al clan y la tradicion, maestro de la piedra, la forja y la mineria.", faction = "alianza", size = "Mediano", speed = 7.5,
         subraces = {
-            { id = "forjaz", name = "Enano de Forjaz", desc = "Robustos y tradicionales enanos de Forjaz, firmes como la piedra y maestros de la forja y la mineria.", traits = {
+            { id = "forjaz", name = "Enano de Forjaz", nameF = "Enana de Forjaz", desc = "Robustos y tradicionales enanos de Forjaz, firmes como la piedra y maestros de la forja y la mineria.", traits = {
                 { id = "ena_forjaz_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Fuerza +1.", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
                 { id = "ena_forjaz_dureza", name = "Dureza enana", type = "informativo", description = "Tus PG máximos aumentan en 1, y +1 cada vez que subes de nivel.", effects = {} },
                 { id = "ena_forjaz_piedra", name = "Forma de piedra", type = "informativo", description = "Reaccion al recibir un ataque cuerpo a cuerpo: resistencia a fisico hasta tu proximo turno. 1 uso por descanso largo.", uses = { max = 1, recharge = "long" }, effects = {} },
             } },
-            { id = "martillo_salvaje", name = "Enano Martillo Salvaje", desc = "Enanos libres de las alturas, jinetes de grifos de espíritu salvaje y vínculo con la naturaleza.", traits = {
+            { id = "martillo_salvaje", name = "Enano Martillo Salvaje", nameF = "Enana Martillo Salvaje", desc = "Enanos libres de las alturas, jinetes de grifos de espíritu salvaje y vínculo con la naturaleza.", traits = {
                 { id = "ena_mart_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Sabiduría +1.", effects = { { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 } } },
                 { id = "ena_mart_altura", name = "Residencia en altura", type = "informativo", description = "Acostumbrado a grandes altitudes y al frío.", effects = {} },
                 { id = "ena_mart_valentia", name = "Valentia irrazonable", type = "informativo", description = "Ventaja en tiradas de salvación contra el miedo.", effects = {} },
                 { id = "ena_mart_domador", name = "Domador natural", type = "pasivo", description = "Competencia en Trato con Animales y en tiradas hacia grifos.", effects = { { kind = "skillProf", skill = "Animales" } } },
             } },
-            { id = "hierro_negro", name = "Enano Hierro Negro", desc = "Enanos oscuros ligados al fuego y la magia, antano siervos de Ragnaros en las profundidades.", traits = {
+            { id = "hierro_negro", name = "Enano Hierro Negro", nameF = "Enana Hierro Negro", desc = "Enanos oscuros ligados al fuego y la magia, antano siervos de Ragnaros en las profundidades.", traits = {
                 { id = "ena_hn_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1.", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
                 { id = "ena_hn_sangre", name = "Sangre de fuego", type = "informativo", description = "Lanzas restauración menor en ti mismo una vez al día.", uses = { max = 1, recharge = "long" }, effects = {} },
                 { id = "ena_hn_forjado", name = "Forjado en llamas", type = "pasivo", description = "Resistencia al daño por fuego.", effects = {
@@ -64,9 +64,9 @@ API.RACES = {
         },
     },
     {
-        id = "elfo_noche", name = "Elfo de la Noche", desc = "Kaldorei antiguos y orgullosos, primeros estudiosos de la magia; hoy guardianes de la naturaleza y devotos de Elune.", faction = "alianza", size = "Mediano", speed = 10.5,
+        id = "elfo_noche", name = "Elfo de la Noche", nameF = "Elfa de la Noche", desc = "Kaldorei antiguos y orgullosos, primeros estudiosos de la magia; hoy guardianes de la naturaleza y devotos de Elune.", faction = "alianza", size = "Mediano", speed = 10.5,
         subraces = {
-            { id = "altonato", name = "Altonato", desc = "Kaldorei de Eldre'Thalas (los Shen'dralar/Altonato), eruditos arcanos de la antigua Dire Maul; conservan un saber mágico vedado al resto de los suyos.", traits = {
+            { id = "altonato", name = "Altonato", nameF = "Altonata", desc = "Kaldorei de Eldre'Thalas (los Shen'dralar/Altonato), eruditos arcanos de la antigua Dire Maul; conservan un saber mágico vedado al resto de los suyos.", traits = {
                 { id = "eln_alt_conocimiento", name = "Conocimiento antiguo de eldre'thalas", type = "pasivo", description = "Competencia en Conocimiento Arcano e Historia. Además duplicas tu bono de competencia en Historia en tiradas relacionadas con civilizaciones antiguas o artefactos.", effects = {
                     { kind = "skillProf", skill = "Arcano" },
                     { kind = "skillProf", skill = "Historia" },
@@ -89,7 +89,7 @@ API.RACES = {
         },
     },
     {
-        id = "semielfo", name = "Semielfo", desc = "Hijos de dos mundos, mezcla de humano y elfo; combinan la versatilidad humana con la gracia y el legado arcano élfico.", faction = "aliada", size = "Mediano", speed = 9,
+        id = "semielfo", name = "Semielfo", nameF = "Semielfa", desc = "Hijos de dos mundos, mezcla de humano y elfo; combinan la versatilidad humana con la gracia y el legado arcano élfico.", faction = "aliada", size = "Mediano", speed = 9,
         traits = {
             { id = "sme_espiritu", name = "Espiritu mestizo", type = "informativo", description = "Cuando obtienes un 1 en una tirada de ataque, prueba de característica o tirada de salvación, puedes repetir el dado. Debes usar el nuevo resultado aunque sea un 1. No puedes hacerlo de nuevo hasta que termines un descanso largo.", effects = {} },
             { id = "sme_vision", name = "Vision en la oscuridad", type = "informativo", description = "Puedes ver en la oscuridad hasta 60 pies.", effects = {} },
@@ -100,16 +100,16 @@ API.RACES = {
         },
     },
     {
-        id = "gnomo", name = "Gnomo", desc = "Raza diminuta de ingenieros e inventores subterraneos, celebres por su ingenio mecanico y su curiosidad insaciable.", faction = "alianza", size = "Pequeño", speed = 7.5,
+        id = "gnomo", name = "Gnomo", nameF = "Gnoma", desc = "Raza diminuta de ingenieros e inventores subterraneos, celebres por su ingenio mecanico y su curiosidad insaciable.", faction = "alianza", size = "Pequeño", speed = 7.5,
         subraces = {
-            { id = "gnomeregan", name = "Gnomo de Gnomeregan", desc = "Los brillantes ingenieros e inventores clasicos, mentes inquietas de Gnomeregan.", traits = {
+            { id = "gnomeregan", name = "Gnomo de Gnomeregan", nameF = "Gnoma de Gnomeregan", desc = "Los brillantes ingenieros e inventores clasicos, mentes inquietas de Gnomeregan.", traits = {
                 { id = "gno_gnom_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Carisma +1.", effects = { { kind = "bonus", target = "ability", ability = "Carisma", value = 1 } } },
                 { id = "gno_gnom_mente", name = "Mente expansiva", type = "informativo", description = "Sumas la mitad de tu bono de competencia en pruebas de Inteligencia sin competencia.", effects = {} },
                 { id = "gno_gnom_ingenieria", name = "Ingenieria gnomica", type = "pasivo", description = "Competencia con herramientas de artesano; creas pequeños dispositivos con efectos simples.", effects = {
                     { kind = "toolProf", tool = "Herramientas de artesano" },
                 } },
             } },
-            { id = "mecagnomo", name = "Mecagnomo", desc = "Gnomos parcialmente mecanizados, con miembros y mejoras de metal integrados en su cuerpo.", traits = {
+            { id = "mecagnomo", name = "Mecagnomo", nameF = "Mecagnoma", desc = "Gnomos parcialmente mecanizados, con miembros y mejoras de metal integrados en su cuerpo.", traits = {
                 { id = "gno_mec_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1.", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
                 { id = "gno_mec_mejoras", name = "Mejoras mecanicas", type = "choice", description = "Elige una mejora (otra al nivel 5).", effects = {}, choice = {
                     slots = 1,
@@ -142,7 +142,7 @@ API.RACES = {
                 { id = "dra_exo_naaru", name = "Don de los Naaru", type = "informativo", description = "Accion: tocas y curas (= tu nivel). 1 uso por descanso largo.", uses = { max = 1, recharge = "long" }, effects = {} },
                 { id = "dra_exo_heroica", name = "Presencia heroica", type = "informativo", description = "Lanzas heroismo y favor divino usando Sabiduría. 1 uso por descanso largo.", uses = { max = 1, recharge = "long" }, effects = {} },
             } },
-            { id = "forjado_luz", name = "Draenei Forjado por la Luz", desc = "Cruzados imbuidos de Luz Sagrada, forjados como arma viviente contra la Legion Ardiente.", traits = {
+            { id = "forjado_luz", name = "Draenei Forjado por la Luz", nameF = "Draenei Forjada por la Luz", desc = "Cruzados imbuidos de Luz Sagrada, forjados como arma viviente contra la Legion Ardiente.", traits = {
                 { id = "dra_fl_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1.", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
                 { id = "dra_fl_forjado", name = "Forjado en Luz", type = "informativo", description = "Sin armadura, tu CA es 12 + Mod. Destreza.", effects = {} },
                 { id = "dra_fl_resistencia", name = "Resistencia sagrada", type = "pasivo", description = "Resistencia al daño radiante.", effects = {
@@ -150,7 +150,7 @@ API.RACES = {
                 } },
                 { id = "dra_fl_juicio", name = "Juicio de la Luz", type = "informativo", description = "Conoces luz; a niveles 3/5 lanzas rayo guiador / golpe de marca (Sabiduría).", effects = {} },
             } },
-            { id = "tabido", name = "Draenei Tabido", desc = "Draenei rotos por la energia vil; marginados pero resistentes y perseverantes.", traits = {
+            { id = "tabido", name = "Draenei Tabido", nameF = "Draenei Tábida", desc = "Draenei rotos por la energia vil; marginados pero resistentes y perseverantes.", traits = {
                 { id = "dra_tab_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Sabiduría +1.", effects = { { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 } } },
                 { id = "dra_tab_vision", name = "Vision en la oscuridad", type = "informativo", description = "Visión en la oscuridad a 18 metros (tonos de gris).", effects = {} },
                 { id = "dra_tab_elemental", name = "Vinculo elemental", type = "informativo", description = "Conoces escarcha; a niveles 3/5 lanzas temblor de tierra / rafaga de viento (Sabiduría).", effects = {} },
@@ -205,7 +205,7 @@ API.RACES = {
         },
     },
     {
-        id = "orco", name = "Orco", desc = "Guerreros de honor y fuerza que rompieron el ansia de sangre de la Legion y reconstruyeron la Horda con el chamanismo.", faction = "horda", size = "Mediano", speed = 9,
+        id = "orco", name = "Orco", nameF = "Orca", desc = "Guerreros de honor y fuerza que rompieron el ansia de sangre de la Legion y reconstruyeron la Horda con el chamanismo.", faction = "horda", size = "Mediano", speed = 9,
         subraces = {
             { id = "cazadores", name = "Clanes Cazadores", desc = "Orcos de los clanes cazadores: emboscadores agiles y rastreadores letales.", traits = {
                 { id = "orc_caz_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Destreza +1.", effects = { { kind = "bonus", target = "ability", ability = "Destreza", value = 1 } } },
@@ -253,14 +253,14 @@ API.RACES = {
         },
     },
     {
-        id = "renegado", name = "Renegado", desc = "Humanos y elfos no-muertos liberados del Rey Exanime; una fuerza oscura de Entranas, aliada de la Horda por conveniencia.", faction = "horda", size = "Mediano", speed = 9,
+        id = "renegado", name = "Renegado", nameF = "Renegada", desc = "Humanos y elfos no-muertos liberados del Rey Exanime; una fuerza oscura de Entranas, aliada de la Horda por conveniencia.", faction = "horda", size = "Mediano", speed = 9,
         subraces = {
-            { id = "humano", name = "Renegado Humano", desc = "La mayoría de los Renegados: humanos no-muertos, decididos y versatiles tras su muerte.", traits = {
+            { id = "humano", name = "Renegado Humano", nameF = "Renegada Humana", desc = "La mayoría de los Renegados: humanos no-muertos, decididos y versatiles tras su muerte.", traits = {
                 { id = "ren_hum_inc", name = "Incremento de caracteristica", type = "choice", description = "Una característica de tu elección +1.", effects = {}, choice = { slots = 1, optionsFrom = "ability+1" } },
                 { id = "ren_hum_determinacion", name = "Determinacion", type = "informativo", description = "Repites una tirada de ataque/prueba/salvación con ventaja. 1 uso por descanso.", uses = { max = 1, recharge = "short" }, effects = {} },
                 { id = "ren_hum_versatilidad", name = "Versatilidad", type = "choice", description = "Competencia en una habilidad de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "skillProf" } },
             } },
-            { id = "elfo", name = "Renegado Elfo", desc = "Renegados de origen élfico, agiles y afilados, que conservan parte de su gracia en la no-muerte.", traits = {
+            { id = "elfo", name = "Renegado Elfo", nameF = "Renegada Elfa", desc = "Renegados de origen élfico, agiles y afilados, que conservan parte de su gracia en la no-muerte.", traits = {
                 { id = "ren_elf_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1.", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
                 { id = "ren_elf_arcano", name = "Conocimiento Arcano", type = "pasivo", description = "Competencia en Arcano; lanzas detectar magia (Inteligencia) 1 vez por descanso.", spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = { { kind = "skillProf", skill = "Arcano" } } },
                 { id = "ren_elf_idioma", name = "Idioma extra", type = "informativo", description = "Hablas, lees y escribes Thalassiano.", effects = {} },
@@ -362,14 +362,14 @@ API.RACES = {
         },
     },
     {
-        id = "elfo_sangre", name = "Elfo de Sangre", desc = "Sin'dorei de Quel'Thalas, sedientos de magia tras la caida del Pozo del Sol; elegantes, arcanos y orgullosos.", faction = "horda", size = "Mediano", speed = 9,
+        id = "elfo_sangre", name = "Elfo de Sangre", nameF = "Elfa de Sangre", desc = "Sin'dorei de Quel'Thalas, sedientos de magia tras la caida del Pozo del Sol; elegantes, arcanos y orgullosos.", faction = "horda", size = "Mediano", speed = 9,
         traits = {
             { id = "esa_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Destreza +2 e Inteligencia +1.", effects = {
                 { kind = "bonus", target = "ability", ability = "Destreza", value = 2 },
                 { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 },
             } },
             { id = "esa_vision", name = "Vision en la oscuridad", type = "informativo", description = "Puedes ver en luz tenue en un radio de 60 pies como si fuera luz brillante, y en oscuridad como si fuera luz tenue. En la oscuridad, solo puedes distinguir tonos de gris, sin distinguir colores.", effects = {} },
-            { id = "esa_arcano", name = "Conocimiento Arcano", icon = "ability_racial_arcaneaffinity", type = "pasivo", description = "Tienes competencia en la habilidad de Conocimiento Arcano. Además, puedes lanzar el conjuro Detectar magia una vez al día. La Inteligencia es tu característica de lanzamiento para este conjuro.", spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = { { kind = "skillProf", skill = "Arcano" } } },
+            { id = "esa_arcano", name = "Conocimiento Arcano", type = "pasivo", description = "Tienes competencia en la habilidad de Conocimiento Arcano. Además, puedes lanzar el conjuro Detectar magia una vez al día. La Inteligencia es tu característica de lanzamiento para este conjuro.", spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = { { kind = "skillProf", skill = "Arcano" } } },
             { id = "esa_sentidos", name = "Sentidos agudos", type = "pasivo", description = "Eres competente en Percepción.", effects = { { kind = "skillProf", skill = "Percepcion" } } },
             { id = "esa_reversion", name = "Reversion de conjuros", type = "informativo", description = "Cuando fallas una tirada de salvación contra un conjuro o efecto mágico, puedes repetir la tirada y debes usar el nuevo resultado. No puedes usar esta característica de nuevo hasta que termines un descanso corto o largo.", uses = { max = 1, recharge = "short" }, effects = {} },
             { id = "esa_legado", name = "Legado thalassiano", type = "choice", description = "Conoces un truco de la lista de mago a tu elección. La Inteligencia es tu característica de lanzamiento para este conjuro. En su lugar puedes ganar competencia con espada gemela, guja, arco corto y arco largo.", effects = {}, choice = {
@@ -421,7 +421,7 @@ API.RACES = {
         },
     },
     {
-        id = "nocheterna", name = "Nocheterna", desc = "Shal'dorei de Suramar, elfos arcanos refinados por milenios bajo el Mana del Pozo; ordenados, orgullosos y sensibles a la luz solar.", faction = "aliada", size = "Mediano", speed = 9,
+        id = "nocheterna", name = "Nocheterna", nameF = "Elfa Nocheterna", desc = "Shal'dorei de Suramar, elfos arcanos refinados por milenios bajo el Mana del Pozo; ordenados, orgullosos y sensibles a la luz solar.", faction = "aliada", size = "Mediano", speed = 9,
         traits = {
             { id = "noc_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Destreza +1 e Inteligencia +2.", effects = {
                 { kind = "bonus", target = "ability", ability = "Destreza", value = 1 },
@@ -437,7 +437,7 @@ API.RACES = {
         },
     },
     {
-        id = "elfo_vacio", name = "Elfo del Vacio", desc = "Ren'dorei exiliados de Quel'Thalas que abrazaron el poder del Vacio siguiendo a Umbric; elegantes y arcanos, marcados por energías sombrias.", faction = "aliada", size = "Mediano", speed = 9,
+        id = "elfo_vacio", name = "Elfo del Vacio", nameF = "Elfa del Vacio", desc = "Ren'dorei exiliados de Quel'Thalas que abrazaron el poder del Vacio siguiendo a Umbric; elegantes y arcanos, marcados por energías sombrias.", faction = "aliada", size = "Mediano", speed = 9,
         traits = {
             { id = "elv_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Destreza +2.", effects = { { kind = "bonus", target = "ability", ability = "Destreza", value = 2 } } },
             { id = "elv_inc_choice", name = "Incremento de caracteristica (eleccion)", type = "choice", description = "Inteligencia o Carisma +1.", effects = {}, choice = {

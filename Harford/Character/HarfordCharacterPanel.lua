@@ -20,6 +20,11 @@ HarfordCharacterPanel._bookFrame = HarfordCharacterPanel._bookFrame or {
     reaccion = { tc = { 0.00390625, 0.27734375, 0.703125, 0.93359375 },  w = 70, h = 59, ox = 1.5, oy = -3 }, -- UnlearnedSlotFrame
 }
 local S = {
+    -- Y de la seccion "Caracteristicas" en la vista de ficha. Baja respecto al -70 historico para
+    -- dejar sitio a la barra de experiencia, que ahora cae por debajo de la banda del numero de
+    -- nivel. Las filas de caracteristica, la barra de "Rasgos" y su scroll se derivan de este
+    -- valor, asi que mover la seccion los mueve a todos. Afinable con `xpbarpanel`.
+    ABIL_BAR_Y = -80,
     frame = nil,
     content = nil,
     portrait = nil,
@@ -37,15 +42,20 @@ local S = {
     inspectUnit = nil,
 }
 
-local TEX_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
--- Tamano/aspecto del CharacterFrame nativo (medido con FrameDump: Bg 536x401 + insets).
-local NORMAL_W, NORMAL_H = 540, 424
-local REPUTATION_W, REPUTATION_H = 390, 460
--- Pestaña Libro: tamaño EXACTO del SpellBookFrame nativo (probe). Todo se ancla al frame 1:1.
-local BOOK_W, BOOK_H = 550, 525
-local BOTTOM_TAB_W, BOTTOM_TAB_H, BOTTOM_TAB_GAP = 85, 28, 4
+-- Constantes de presentacion agrupadas en una sola tabla. En file-scope ocupaban 50 de los
+-- 200 locales que permite Lua 5.1 y el fichero se quedaba con 6 de margen; agrupadas gastan 1.
+-- No cambia ninguna logica: solo deja de gastar un slot por constante.
+local K = {}
 
-local ABIL_KEYS = {
+K.TEX_PORTRAIT_MASK = "Interface\\CharacterFrame\\TempPortraitAlphaMask"
+-- Tamano/aspecto del CharacterFrame nativo (medido con FrameDump: Bg 536x401 + insets).
+K.NORMAL_W, K.NORMAL_H = 540, 424
+K.REPUTATION_W, K.REPUTATION_H = 390, 460
+-- Pestaña Libro: tamaño EXACTO del SpellBookFrame nativo (probe). Todo se ancla al frame 1:1.
+K.BOOK_W, K.BOOK_H = 550, 525
+K.BOTTOM_TAB_W, K.BOTTOM_TAB_H, K.BOTTOM_TAB_GAP = 85, 28, 4
+
+K.ABIL_KEYS = {
     { key = "Fuerza", short = "FUE" },
     { key = "Destreza", short = "DES" },
     { key = "Constitucion", short = "CON" },
@@ -54,7 +64,7 @@ local ABIL_KEYS = {
     { key = "Carisma", short = "CAR" },
 }
 
-local CLASS_INFO_ATLAS = {
+K.CLASS_INFO_ATLAS = {
     caballero_muerte = "UI-Character-Info-DeathKnight-BG",
     cazador_demonios = "UI-Character-Info-DemonHunter-BG",
     druida = "UI-Character-Info-Druid-BG",
@@ -69,7 +79,7 @@ local CLASS_INFO_ATLAS = {
     guerrero = "UI-Character-Info-Warrior-BG",
 }
 
-local CLASS_FILE_TO_ATLAS = {
+K.CLASS_FILE_TO_ATLAS = {
     DEATHKNIGHT = "UI-Character-Info-DeathKnight-BG",
     DEMONHUNTER = "UI-Character-Info-DemonHunter-BG",
     DRUID = "UI-Character-Info-Druid-BG",
@@ -84,7 +94,7 @@ local CLASS_FILE_TO_ATLAS = {
     WARRIOR = "UI-Character-Info-Warrior-BG",
 }
 
-local CLASS_ID_TO_CLASS_FILE = {
+K.CLASS_ID_TO_CLASS_FILE = {
     caballero_muerte = "DEATHKNIGHT",
     cazador_demonios = "DEMONHUNTER",
     druida = "DRUID",
@@ -99,21 +109,21 @@ local CLASS_ID_TO_CLASS_FILE = {
     guerrero = "WARRIOR",
 }
 
-local MODEL_BG_SOURCES = {
+K.MODEL_BG_SOURCES = {
     { key = "tl" },
     { key = "tr" },
     { key = "bl" },
     { key = "br" },
 }
 
-local MODEL_BG_TEXCOORDS = {
+K.MODEL_BG_TEXCOORDS = {
     tl = { 0.171875, 1, 0.039215688, 1 },
     tr = { 0, 0.296875, 0.039215688, 1 },
     bl = { 0.171875, 1, 0, 1 },
     br = { 0, 0.296875, 0, 1 },
 }
 
-local MODEL_BG_RACE_TOKENS = {
+K.MODEL_BG_RACE_TOKENS = {
     humano = "Human",
     enano = { default = "Dwarf", subraces = { hierro_negro = "DarkIronDwarf" } },
     elfo_noche = "NightElf",
@@ -132,7 +142,7 @@ local MODEL_BG_RACE_TOKENS = {
     vulpera = "Vulpera",
 }
 
-local PAPERDOLL_SLOT_NAMES = {
+K.PAPERDOLL_SLOT_NAMES = {
     Head = "CharacterHeadSlot",
     Neck = "CharacterNeckSlot",
     Shoulder = "CharacterShoulderSlot",
@@ -153,7 +163,7 @@ local PAPERDOLL_SLOT_NAMES = {
     SecondaryHand = "CharacterSecondaryHandSlot",
 }
 
-local PAPERDOLL_SLOT_TOKENS = {
+K.PAPERDOLL_SLOT_TOKENS = {
     Head = "HeadSlot",
     Neck = "NeckSlot",
     Shoulder = "ShoulderSlot",
@@ -175,7 +185,7 @@ local PAPERDOLL_SLOT_TOKENS = {
 }
 
 -- Nombres de slot en español para los tooltips (las claves internas siguen en ingles).
-local PAPERDOLL_SLOT_LABELS_ES = {
+K.PAPERDOLL_SLOT_LABELS_ES = {
     Head = "Cabeza",
     Neck = "Cuello",
     Shoulder = "Hombros",
@@ -197,10 +207,10 @@ local PAPERDOLL_SLOT_LABELS_ES = {
 }
 
 local function SlotLabelES(key)
-    return PAPERDOLL_SLOT_LABELS_ES[tostring(key or "")] or tostring(key or "")
+    return K.PAPERDOLL_SLOT_LABELS_ES[tostring(key or "")] or tostring(key or "")
 end
 
-local POINT_BUY_COST = {
+K.POINT_BUY_COST = {
     [8] = 0, [9] = 1, [10] = 2, [11] = 3, [12] = 4, [13] = 5, [14] = 7, [15] = 9,
 }
 
@@ -308,19 +318,19 @@ local function GetPanelTitle()
     return name or GetProfileName()
 end
 
-local TAB_ORDER = { "sheet", "reputation", "creation", "leveling" }
-local SKILLS_TAB_ORDER = { "book", "spells", "professions" }
+K.TAB_ORDER = { "sheet", "reputation", "creation", "leveling" }
+K.SKILLS_TAB_ORDER = { "book", "spells", "professions" }
 
 -- Pestañas OCULTAS para el despliegue (Creacion/Subida aun no listas). No se crean sus
 -- botones (ver tabData) y cualquier intento de activarlas cae a "sheet". Las paginas siguen
 -- construyendose para no romper refrescos; solo no son accesibles desde la UI.
-local HIDDEN_TABS = { creation = true, leveling = true }
+K.HIDDEN_TABS = { creation = true, leveling = true }
 
 -- Creacion y Subida no forman parte de la navegacion inferior. La subida sigue
 -- accesible de forma explicita desde `/harford char subir`, sin reintroducir una
 -- pestaña visual que compita con Personaje/Reputacion/Profesiones.
 local function IsExplicitHiddenTab(tab)
-    return HIDDEN_TABS[tab] and S.explicitHiddenTab == tab
+    return K.HIDDEN_TABS[tab] and S.explicitHiddenTab == tab
 end
 
 local function PositionTabs()
@@ -328,7 +338,7 @@ local function PositionTabs()
     -- Anclaje nativo: primera pestaña a BOTTOMLEFT(11,2), las siguientes solapadas a la
     -- derecha (-15) igual que CharacterFrameTab1/2/3.
     local prev
-    for _, key in ipairs(TAB_ORDER) do
+    for _, key in ipairs(K.TAB_ORDER) do
         local btn = S.tabs[key]
         if btn then
             btn:ClearAllPoints()
@@ -345,7 +355,7 @@ end
 local function PositionSkillsTabs()
     if not S.skillsFrame then return end
     local prev
-    for _, key in ipairs(SKILLS_TAB_ORDER) do
+    for _, key in ipairs(K.SKILLS_TAB_ORDER) do
         local btn = S.skillsTabs and S.skillsTabs[key]
         if btn then
             btn:ClearAllPoints()
@@ -360,11 +370,11 @@ local function PositionSkillsTabs()
 end
 
 local function SetPanelMode()
-    for _, key in ipairs(TAB_ORDER) do
+    for _, key in ipairs(K.TAB_ORDER) do
         local tab = S.tabs[key]
         if tab then tab:Show() end
     end
-    for _, key in ipairs(SKILLS_TAB_ORDER) do
+    for _, key in ipairs(K.SKILLS_TAB_ORDER) do
         local tab = S.tabs[key]
         if tab then tab:Hide() end
     end
@@ -373,8 +383,8 @@ end
 local function ApplyFrameLayout()
     if not S.frame then return end
     local isRep = S.activeTab == "reputation"
-    local w = isRep and REPUTATION_W or NORMAL_W
-    local h = isRep and REPUTATION_H or NORMAL_H
+    local w = isRep and K.REPUTATION_W or K.NORMAL_W
+    local h = isRep and K.REPUTATION_H or K.NORMAL_H
     S.frame:SetSize(w, h)
     if S.content then
         S.content:ClearAllPoints()
@@ -453,6 +463,9 @@ local function AbilityTooltipTitle(key)
     -- `bonus` es solo el bono/penalizacion LIVE (estado/objeto): los modificadores de
     -- raza/trasfondo ya estan horneados en la puntuacion de la ficha cargada y no se
     -- muestran aqui. Se colorea verde (positivo) / rojo (negativo).
+    --
+    -- El parentesis NO es solo la puntuacion repetida: es el unico sitio donde se ve ese
+    -- bono live. Por eso se conserva.
     local base, bonus = AbilityBaseAndBonus(key)
     if bonus ~= 0 then
         local color = bonus > 0 and "ff40ff40" or "ffff4040"
@@ -481,9 +494,9 @@ local function ColorSigned(n)
 end
 
 -- Descripciones de caracteristicas: fuente unica en HarfordDnDData.ABIL[].desc.
-local ABILITY_TOOLTIP_TEXT = {}
+K.ABILITY_TOOLTIP_TEXT = {}
 for _, a in ipairs((HarfordDnDData and HarfordDnDData.ABIL) or {}) do
-    if a.key and a.desc then ABILITY_TOOLTIP_TEXT[a.key] = a.desc end
+    if a.key and a.desc then K.ABILITY_TOOLTIP_TEXT[a.key] = a.desc end
 end
 
 local function TooltipLines(owner, title, text, opts)
@@ -521,9 +534,9 @@ local function CreateButton(parent, text, w, h, onClick)
 end
 
 -- Texturas exactas del CharacterFrameTab nativo (sacadas de /harford debug run probeframe).
-local TAB_TEX_INACTIVE = "Interface\\PaperDollInfoFrame\\UI-Character-InActiveTab"
-local TAB_TEX_ACTIVE   = "Interface\\PaperDollInfoFrame\\UI-Character-ActiveTab"
-local TAB_TEX_HILITE   = "Interface\\PaperDollInfoFrame\\UI-Character-Tab-RealHighlight"
+K.TAB_TEX_INACTIVE = "Interface\\PaperDollInfoFrame\\UI-Character-InActiveTab"
+K.TAB_TEX_ACTIVE = "Interface\\PaperDollInfoFrame\\UI-Character-ActiveTab"
+K.TAB_TEX_HILITE = "Interface\\PaperDollInfoFrame\\UI-Character-Tab-RealHighlight"
 
 -- Pestana inferior replicando el CharacterFrameTab nativo: 3-slice inactivo (32px),
 -- 3-slice activo (34px, ActiveTab) y highlight de hover (RealHighlight).
@@ -532,20 +545,20 @@ local function CreateNativeTab(parent, id, text, onClick)
     b:SetHeight(32)
 
     -- Estado INACTIVO: regiones CharacterFrameTab*Left/Middle/Right.
-    local il = b:CreateTexture(nil, "BACKGROUND"); il:SetTexture(TAB_TEX_INACTIVE); il:SetTexCoord(0, 0.15625, 0, 1); il:SetSize(20, 32); il:SetPoint("TOPLEFT", b, "TOPLEFT", 0, -1)
-    local im = b:CreateTexture(nil, "BACKGROUND"); im:SetTexture(TAB_TEX_INACTIVE); im:SetTexCoord(0.15625, 0.84375, 0, 1); im:SetHeight(32); im:SetPoint("LEFT", il, "RIGHT", 0, 0)
-    local ir = b:CreateTexture(nil, "BACKGROUND"); ir:SetTexture(TAB_TEX_INACTIVE); ir:SetTexCoord(0.84375, 1, 0, 1); ir:SetSize(20, 32); ir:SetPoint("LEFT", im, "RIGHT", 0, 0)
+    local il = b:CreateTexture(nil, "BACKGROUND"); il:SetTexture(K.TAB_TEX_INACTIVE); il:SetTexCoord(0, 0.15625, 0, 1); il:SetSize(20, 32); il:SetPoint("TOPLEFT", b, "TOPLEFT", 0, -1)
+    local im = b:CreateTexture(nil, "BACKGROUND"); im:SetTexture(K.TAB_TEX_INACTIVE); im:SetTexCoord(0.15625, 0.84375, 0, 1); im:SetHeight(32); im:SetPoint("LEFT", il, "RIGHT", 0, 0)
+    local ir = b:CreateTexture(nil, "BACKGROUND"); ir:SetTexture(K.TAB_TEX_INACTIVE); ir:SetTexCoord(0.84375, 1, 0, 1); ir:SetSize(20, 32); ir:SetPoint("LEFT", im, "RIGHT", 0, 0)
     b.inactive = { il, im, ir }
 
     -- Estado ACTIVO/seleccionado: regiones *Disabled del CharacterFrameTab.
-    local al = b:CreateTexture(nil, "BACKGROUND"); al:SetTexture(TAB_TEX_ACTIVE); al:SetTexCoord(0, 0.15625, 0, 0.546875); al:SetSize(20, 35); al:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0)
-    local am = b:CreateTexture(nil, "BACKGROUND"); am:SetTexture(TAB_TEX_ACTIVE); am:SetTexCoord(0.15625, 0.84375, 0, 0.546875); am:SetHeight(35); am:SetPoint("LEFT", al, "RIGHT", 0, 0)
-    local ar = b:CreateTexture(nil, "BACKGROUND"); ar:SetTexture(TAB_TEX_ACTIVE); ar:SetTexCoord(0.84375, 1, 0, 0.546875); ar:SetSize(20, 35); ar:SetPoint("LEFT", am, "RIGHT", 0, 0)
+    local al = b:CreateTexture(nil, "BACKGROUND"); al:SetTexture(K.TAB_TEX_ACTIVE); al:SetTexCoord(0, 0.15625, 0, 0.546875); al:SetSize(20, 35); al:SetPoint("TOPLEFT", b, "TOPLEFT", 0, 0)
+    local am = b:CreateTexture(nil, "BACKGROUND"); am:SetTexture(K.TAB_TEX_ACTIVE); am:SetTexCoord(0.15625, 0.84375, 0, 0.546875); am:SetHeight(35); am:SetPoint("LEFT", al, "RIGHT", 0, 0)
+    local ar = b:CreateTexture(nil, "BACKGROUND"); ar:SetTexture(K.TAB_TEX_ACTIVE); ar:SetTexCoord(0.84375, 1, 0, 0.546875); ar:SetSize(20, 35); ar:SetPoint("LEFT", am, "RIGHT", 0, 0)
     b.active = { al, am, ar }
 
     -- Hover nativo, pero solo para pestanas inactivas.
     local h = b:CreateTexture(nil, "OVERLAY")
-    h:SetTexture(TAB_TEX_HILITE)
+    h:SetTexture(K.TAB_TEX_HILITE)
     h:SetPoint("TOPLEFT", b, "TOPLEFT", 3, 5)
     h:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -3, 0)
     if h.SetBlendMode then h:SetBlendMode("ADD") end
@@ -1016,11 +1029,11 @@ end
 -- Paginas que viven en la VENTANA DE HABILIDADES, no en el panel de personaje. Es una sola
 -- fuente a proposito: el bucle que oculta paginas del panel usa esta misma tabla, y cuando
 -- Profesiones se mudo aqui pero no alli, abrir el panel de personaje ocultaba sus marcos.
-local SKILLS_WINDOW_PAGES = { book = true, spells = true, professions = true }
+K.SKILLS_WINDOW_PAGES = { book = true, spells = true, professions = true }
 
 local function RefreshPanel()
     if not S.frame or not S.frame:IsShown() then return end
-    if HIDDEN_TABS[S.activeTab] and not IsExplicitHiddenTab(S.activeTab) then
+    if K.HIDDEN_TABS[S.activeTab] and not IsExplicitHiddenTab(S.activeTab) then
         S.activeTab = "sheet"
     end
     if S.activeTab == "book" or S.activeTab == "spells" then
@@ -1046,7 +1059,7 @@ local function RefreshPanel()
     end
     for key, page in pairs(S.pages) do
         -- Las paginas del libro de habilidades las gobierna SU ventana, no esta.
-        if not SKILLS_WINDOW_PAGES[key] then
+        if not K.SKILLS_WINDOW_PAGES[key] then
             page:SetShown((not isReputation) and key == S.activeTab)
         end
     end
@@ -1069,7 +1082,7 @@ local RefreshSkillsPanel
 RefreshSkillsPanel = function()
     local f = S.skillsFrame
     if not (f and f:IsShown()) then return end
-    f:SetSize(BOOK_W, BOOK_H)
+    f:SetSize(K.BOOK_W, K.BOOK_H)
     if S.skillsContent then
         S.skillsContent:ClearAllPoints()
         S.skillsContent:SetPoint("TOPLEFT", f, "TOPLEFT", 0, -21)
@@ -1111,7 +1124,7 @@ RefreshSkillsPanel = function()
 end
 
 local function CreatePage(key)
-    local parent = (SKILLS_WINDOW_PAGES[key] and S.skillsContent) or S.content or S.frame
+    local parent = (K.SKILLS_WINDOW_PAGES[key] and S.skillsContent) or S.content or S.frame
     local page = CreateFrame("Frame", nil, parent)
     page:SetAllPoints(parent)
     S.pages[key] = page
@@ -1131,11 +1144,11 @@ local function GetPrimaryClassId(data)
 end
 
 local function GetClassInfoAtlas(data)
-    local harfordAtlas = CLASS_INFO_ATLAS[GetPrimaryClassId(data)]
+    local harfordAtlas = K.CLASS_INFO_ATLAS[GetPrimaryClassId(data)]
     if harfordAtlas then return harfordAtlas end
     if UnitClass then
         local _, classFile = UnitClass("player")
-        local nativeAtlas = classFile and CLASS_FILE_TO_ATLAS[classFile]
+        local nativeAtlas = classFile and K.CLASS_FILE_TO_ATLAS[classFile]
         if nativeAtlas then return nativeAtlas end
     end
     return "UI-Character-Info-Warrior-BG"
@@ -1144,7 +1157,7 @@ end
 GetClassFileForEntry = function(entry, className, label)
     if not HarfordClassColors then return nil end
     local rawId = tostring(entry and entry.classId or "")
-    return CLASS_ID_TO_CLASS_FILE[rawId]
+    return K.CLASS_ID_TO_CLASS_FILE[rawId]
         or (HarfordClassColors.ClassFileFromText and HarfordClassColors.ClassFileFromText(rawId))
         or (HarfordClassColors.ClassFileFromText and HarfordClassColors.ClassFileFromText(className))
         or (HarfordClassColors.ClassFileFromText and HarfordClassColors.ClassFileFromText(label))
@@ -1194,7 +1207,7 @@ end
 
 local function GetModelBackgroundToken(race)
     race = race or {}
-    local def = MODEL_BG_RACE_TOKENS[tostring(race.id or "")]
+    local def = K.MODEL_BG_RACE_TOKENS[tostring(race.id or "")]
     if type(def) == "table" then
         local subToken = def.subraces and def.subraces[tostring(race.subraceId or "")]
         return subToken or def.default
@@ -1213,12 +1226,12 @@ end
 local function RefreshRaceModelBackground(sheet, data)
     if not (sheet and sheet.modelBg) then return end
     local token = GetModelBackgroundToken(data and data.race)
-    for index, spec in ipairs(MODEL_BG_SOURCES) do
+    for index, spec in ipairs(K.MODEL_BG_SOURCES) do
         local t = sheet.modelBg[spec.key]
         if t then
             if token then
                 t:SetTexture("Interface\\DressUpFrame\\DressUpBackground-" .. token .. tostring(index))
-                SetTexCoord8(t, MODEL_BG_TEXCOORDS[spec.key])
+                SetTexCoord8(t, K.MODEL_BG_TEXCOORDS[spec.key])
                 t:SetVertexColor(1, 1, 1, 1)
                 t:SetAlpha(1)
             else
@@ -1260,6 +1273,43 @@ local function RefreshPaperDollSlots(sheet)
             slot.icon:Show()
         end
     end
+end
+
+-- Mueve la seccion de Salvaciones y recoloca lo que depende de ella. Existe para poder
+-- afinar la posicion en juego sin recargar; la vista se repinta sola al refrescar.
+function API.SetSavesSectionY(y)
+    local SH = S.sheet
+    if not (SH and SH.attrScroll) then return false end
+    SH.savesBarY = tonumber(y) or SH.savesBarY or -226
+    SH.attrScroll:SetPoint("BOTTOMRIGHT", SH.statsPane, "TOPRIGHT", -26, SH.savesBarY + 2)
+    return true, SH.savesBarY
+end
+
+-- Mueve/redimensiona la barra de experiencia en caliente. Existe para afinarla en juego sin
+-- recargar: no se puede ver el resultado desde fuera del cliente.
+function API.SetXPBarPlacement(y, ancho, alto, x)
+    local SH = S.sheet
+    local bar = SH and SH.xpBar
+    if not bar then return false end
+    local w = tonumber(ancho) or bar:GetWidth()
+    local h = tonumber(alto) or bar:GetHeight()
+    SH.xpBarY = tonumber(y) or SH.xpBarY or -7
+    SH.xpBarX = tonumber(x) or SH.xpBarX or 3
+    bar:SetSize(w, h)
+    bar:ClearAllPoints()
+    bar:SetPoint("BOTTOM", SH.levelValueFrame, "BOTTOM", SH.xpBarX, SH.xpBarY)
+    return true, w, h, SH.xpBarX, SH.xpBarY
+end
+
+-- Baja/sube la seccion de "Caracteristicas" y arrastra con ella todo lo que va debajo (las filas
+-- de caracteristica, la barra de "Rasgos" y su scroll). Existe porque la barra de experiencia se
+-- come el hueco que habia entre el numero de nivel y esta seccion.
+function API.SetAbilitySectionY(y)
+    local SH = S.sheet
+    if not (SH and SH.featScroll) then return false end
+    SH.abilBarY = tonumber(y) or SH.abilBarY or S.ABIL_BAR_Y
+    SH.featScroll:SetPoint("TOPLEFT", SH.statsPane, "TOPLEFT", 14, -243 + (SH.abilBarY + 70))
+    return true, SH.abilBarY
 end
 
 local function CreateFramePage(key)
@@ -1355,7 +1405,7 @@ local function MakePaperDollInnerBorder(parent)
 end
 
 -- texCoords EXACTOS del PaperDollSidebarTabs nativo (sacados de /harford debug run probeframe).
-local SBTAB_TC = {
+K.SBTAB_TC = {
     TOP     = { 0.015625, 0.003906, 0.015625, 0.046875, 0.453125, 0.003906, 0.453125, 0.046875 },
     BOTTOM  = { 0.015625, 0.054688, 0.015625, 0.105469, 0.453125, 0.054688, 0.453125, 0.105469 },
     GLOW    = { 0.015625, 0.613281, 0.015625, 0.781250, 0.796875, 0.613281, 0.796875, 0.781250 }, -- fondo inactivo 50x43
@@ -1366,7 +1416,7 @@ local SBTAB_TC = {
     ACTIVE_BG = { 0.015625, 0.789063, 0.015625, 0.957031, 0.796875, 0.789063, 0.796875, 0.957031 }, -- fondo activo 50x43
 }
 
-local SBTAB_TOOLTIP = {
+K.SBTAB_TOOLTIP = {
     summary = "Caracteristicas",
     skills = "Habilidades",
     details = "Atributos",
@@ -1381,13 +1431,13 @@ local function CreateSidebarTabs(parent)
 
     local top = tabs:CreateTexture(nil, "BACKGROUND")
     top:SetTexture(texFile)
-    SetTexCoord8(top, SBTAB_TC.TOP)
+    SetTexCoord8(top, K.SBTAB_TC.TOP)
     top:SetSize(28, 11)
     top:SetPoint("BOTTOMLEFT", tabs, "BOTTOMLEFT", 0, 0)
 
     local bottom = tabs:CreateTexture(nil, "BACKGROUND")
     bottom:SetTexture(texFile)
-    SetTexCoord8(bottom, SBTAB_TC.BOTTOM)
+    SetTexCoord8(bottom, K.SBTAB_TC.BOTTOM)
     bottom:SetSize(28, 13)
     bottom:SetPoint("BOTTOMRIGHT", tabs, "BOTTOMRIGHT", 0, 0)
 
@@ -1414,7 +1464,7 @@ local function CreateSidebarTabs(parent)
         -- recorte de GLOW a ACTIVE_BG; no usa una capa ni un marco adicional.
         local glow = b:CreateTexture(nil, "BACKGROUND")
         glow:SetTexture(texFile)
-        SetTexCoord8(glow, SBTAB_TC.GLOW)
+        SetTexCoord8(glow, K.SBTAB_TC.GLOW)
         glow:SetSize(50, 43)
         glow:SetPoint("BOTTOMLEFT", b, "BOTTOMLEFT", -9, -2)
 
@@ -1435,14 +1485,14 @@ local function CreateSidebarTabs(parent)
         -- Separador inferior nativo (34x19).
         local divider = b:CreateTexture(nil, "OVERLAY")
         divider:SetTexture(texFile)
-        SetTexCoord8(divider, SBTAB_TC.DIVIDER)
+        SetTexCoord8(divider, K.SBTAB_TC.DIVIDER)
         divider:SetSize(34, 19)
         divider:SetPoint("BOTTOM", b, "BOTTOM", 0, 0)
 
         -- El probe del PaperDollSidebarTab nativo confirma capa HIGHLIGHT y mezcla BLEND.
         local hilite = b:CreateTexture(nil, "HIGHLIGHT")
         hilite:SetTexture(texFile)
-        SetTexCoord8(hilite, SBTAB_TC.HILITE)
+        SetTexCoord8(hilite, K.SBTAB_TC.HILITE)
         hilite:SetSize(31, 31)
         hilite:SetPoint("TOPLEFT", b, "TOPLEFT", 2, -3)
         hilite:Hide()
@@ -1450,7 +1500,7 @@ local function CreateSidebarTabs(parent)
         b.body = body
         b.background = glow
         b.hover = hilite
-        b.tooltipText = SBTAB_TOOLTIP[key]
+        b.tooltipText = K.SBTAB_TOOLTIP[key]
         b:SetScript("OnEnter", function(self)
             if not self.selected and self.hover then
                 self.hover:Show()
@@ -1472,8 +1522,8 @@ local function CreateSidebarTabs(parent)
     end
 
     -- Orden nativo (derecha a izquierda): details, skills, summary(retrato).
-    local details = makeTab("details", SBTAB_TC.ICON3)
-    local skills = makeTab("skills", SBTAB_TC.ICON2, details)
+    local details = makeTab("details", K.SBTAB_TC.ICON3)
+    local skills = makeTab("skills", K.SBTAB_TC.ICON2, details)
     makeTab("summary", "portrait", skills)
 
     function tabs:SetSelected(key)
@@ -1481,7 +1531,7 @@ local function CreateSidebarTabs(parent)
             local selected = (viewKey == key)
             button.selected = selected
             button:SetAlpha(1)
-            SetTexCoord8(button.background, selected and SBTAB_TC.ACTIVE_BG or SBTAB_TC.GLOW)
+            SetTexCoord8(button.background, selected and K.SBTAB_TC.ACTIVE_BG or K.SBTAB_TC.GLOW)
             if button.hover then button.hover:Hide() end
         end
     end
@@ -1524,8 +1574,8 @@ local function CreateSheetPage()
         local b = CreateFrame("Button", nil, parent)
         b:SetSize(37, 37)
         b.harfordSlotKey = key
-        b.nativeName = PAPERDOLL_SLOT_NAMES[key]
-        b.slotToken = PAPERDOLL_SLOT_TOKENS[key]
+        b.nativeName = K.PAPERDOLL_SLOT_NAMES[key]
+        b.slotToken = K.PAPERDOLL_SLOT_TOKENS[key]
         local frame = b:CreateTexture(nil, "BACKGROUND", nil, -1)
         frame:SetTexture("Interface\\CharacterFrame\\Char-Paperdoll-Parts")
         SetTexCoord8(frame, { 0.20703125, 0.59375, 0.20703125, 0.9375, 0.3984375, 0.59375, 0.3984375, 0.9375 })
@@ -1557,150 +1607,419 @@ local function CreateSheetPage()
             local isWeaponSlot = key == "MainHand" or key == "SecondaryHand"
             local isArmorSlot = key == "Chest"
             if not (isWeaponSlot or isArmorSlot) then return end
+
+            -- FLECHA: plantilla del propio cliente, la misma que usa el PaperDollFrame nativo
+            -- (`PaperDollFrame.xml` la declara como `$parentPopoutButton`). Asi sale la flecha
+            -- amarilla de verdad y no una aproximacion. Si no existiese, se cae al arte de chat
+            -- que habia antes, que al menos se ve.
+            -- Medidas EXACTAS del nativo. El template `EquipmentFlyoutPopoutButtonTemplate`
+            -- nace 16x32 anclado LEFT->RIGHT, pero `PaperDollItemSlotButton_OnLoad` lo
+            -- reconfigura para cada hueco: en la orientacion horizontal queda 16 de ancho x38
+            -- de alto, en `LEFT -> hueco.RIGHT (-8, 0)` -metido 8px SOBRE el hueco- y con unos
+            -- texCoords de OCHO argumentos que giran la flecha. Con 14x14 en la esquina, que
+            -- es lo que habia, no se parecia ni se veia.
+            -- Las manos usan la orientacion VERTICAL del nativo: la flecha va DEBAJO del
+            -- hueco y apunta hacia abajo. El pecho usa la horizontal, a su derecha.
+            local esVertical = isWeaponSlot
             local arrow = CreateFrame("Button", nil, b)
-            arrow:SetSize(14, 14)
-            arrow:SetPoint("TOPRIGHT", b, "TOPRIGHT", -1, -1)
+            if esVertical then
+                arrow:SetSize(38, 16)
+                arrow:SetPoint("TOP", b, "BOTTOM", 0, 4)
+            else
+                arrow:SetSize(16, 38)
+                -- DESVIACION del nativo, que la mete 8px SOBRE el hueco (`-8`). En el paperdoll
+                -- de Blizzard hay sitio a la derecha; en el nuestro la columna izquierda va pegada
+                -- al modelo y con -8 la flecha mordia el icono. -4 es el punto medio ajustado a ojo
+                -- sobre la ventana real.
+                arrow:SetPoint("LEFT", b, "RIGHT", -4, 0)
+            end
             arrow:SetFrameLevel((b:GetFrameLevel() or 1) + 5)
-            local up = arrow:CreateTexture(nil, "ARTWORK")
-            up:SetAllPoints(arrow)
-            up:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Up")
-            arrow:SetNormalTexture(up)
-            local hi = arrow:CreateTexture(nil, "OVERLAY")
-            hi:SetAllPoints(arrow)
-            hi:SetTexture("Interface\\ChatFrame\\UI-ChatIcon-ScrollDown-Highlight")
-            arrow:SetHighlightTexture(hi)
-            local drop = CreateFrame("Frame", nil, arrow, "UIDropDownMenuTemplate")
-            drop:SetPoint("TOPLEFT", arrow, "BOTTOMLEFT", -16, 0)
+            local flechaNormal = arrow:CreateTexture(nil, "ARTWORK")
+            flechaNormal:SetAllPoints(arrow)
+            flechaNormal:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-FlyoutButton")
+            arrow:SetNormalTexture(flechaNormal)
+            local flechaHl = arrow:CreateTexture(nil, "HIGHLIGHT")
+            flechaHl:SetAllPoints(arrow)
+            flechaHl:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-FlyoutButton")
+            arrow:SetHighlightTexture(flechaHl)
+
+            -- `EquipmentFlyoutPopoutButton_SetReversed`: al abrirse, la flecha se da la
+            -- vuelta. Son los mismos ocho numeros con las dos mitades intercambiadas.
+            -- Se usan las texturas que hemos creado, NO `GetNormalTexture()`: si eso devolviera
+            -- otra cosa, el guard se lo tragaba en silencio y la flecha quedaba SIN texCoords,
+            -- o sea con el fichero entero estirado a 16x38 -una banda amarilla en vez de la
+            -- pestana-. Los ocho numeros son los de `EquipmentFlyoutPopoutButton_SetReversed`
+            -- en su rama horizontal: definen las cuatro esquinas y giran el recorte 90 grados.
+            -- Cada orientacion tiene SUS recortes. El vertical usa la forma normal de cuatro
+            -- numeros -con arriba y abajo invertidos, que es lo que hace que apunte hacia
+            -- abajo-; el horizontal usa la de ocho, que ademas gira el recorte 90 grados.
+            local function OrientarFlecha(abierta)
+                if esVertical then
+                    if abierta then
+                        flechaNormal:SetTexCoord(0.15625, 0.84375, 0, 0.5)
+                        flechaHl:SetTexCoord(0.15625, 0.84375, 0.5, 1)
+                    else
+                        flechaNormal:SetTexCoord(0.15625, 0.84375, 0.5, 0)
+                        flechaHl:SetTexCoord(0.15625, 0.84375, 1, 0.5)
+                    end
+                elseif abierta then
+                    flechaNormal:SetTexCoord(0.15625, 0, 0.84375, 0, 0.15625, 0.5, 0.84375, 0.5)
+                    flechaHl:SetTexCoord(0.15625, 0.5, 0.84375, 0.5, 0.15625, 1, 0.84375, 1)
+                else
+                    flechaNormal:SetTexCoord(0.15625, 0.5, 0.84375, 0.5, 0.15625, 0, 0.84375, 0)
+                    flechaHl:SetTexCoord(0.15625, 1, 0.84375, 1, 0.15625, 0.5, 0.84375, 0.5)
+                end
+            end
+            OrientarFlecha(false)
+            arrow:Show()
+
+            -- Resaltado sobre el HUECO mientras su menu esta abierto: el nativo lo pinta con
+            -- `UI-GearManager-ItemButton-Highlight` a 50x50 (EquipmentFlyoutFrame.Highlight).
+            -- POR DETRAS del hueco, no encima. El nativo lo pinta en el frame del flyout, que
+            -- monta a `itemButton:GetFrameLevel() - 1`: el resaltado asoma alrededor del hueco
+            -- como un halo, y el icono y el borde quedan por delante. Puesto en OVERLAY tapaba
+            -- las dos cosas y por eso se veia como un recuadro descuadrado encima.
+            local resaltado = b:CreateTexture(nil, "BACKGROUND", nil, -3)
+            resaltado:SetTexture("Interface\\PaperDollInfoFrame\\UI-GearManager-ItemButton-Highlight")
+            resaltado:SetSize(50, 50)
+            resaltado:SetPoint("CENTER", b, "CENTER", 0, 0)
+            resaltado:Hide()
+
+            -- Y la MISMA marca que lleva la pieza elegida dentro de la rejilla, sobre el icono
+            -- del hueco de origen: mientras el menu esta abierto se ve de un vistazo de que
+            -- hueco salio. Es la textura de los botones marcados (`CheckButtonHilight` en ADD),
+            -- al tamano del icono, no del borde.
+            local marcaOrigen = b:CreateTexture(nil, "OVERLAY", nil, 3)
+            marcaOrigen:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+            marcaOrigen:SetBlendMode("ADD")
+            marcaOrigen:SetAllPoints(b)
+            marcaOrigen:Hide()
+
             local function refreshAfterChoice()
                 RefreshGameUI()
                 RefreshPanel()
-                CloseDropDownMenus()
             end
-            UIDropDownMenu_Initialize(drop, function(_, level, menuList)
-                if IsInspecting() then return end
-                level = level or 1
+
+            -- ── Reglas de que se puede poner en cada mano ──────────────────────────────────
+            local offhand, mainhand = (key == "SecondaryHand"), (key == "MainHand")
+            local function isTwoHanded(weapon)
+                for _, p in ipairs(weapon.props or {}) do
+                    if tostring(p) == "Dos manos" then return true end
+                end
+                return false
+            end
+            local function isAllowed(weapon)
+                -- Desarmado no se ofrece: sin objeto ni arma basica ya cuentas como desarmado.
+                if weapon.key == "Desarmado" then return false end
+                local isShield = (weapon.key == "Escudo")
+                if mainhand and isShield then return false end
+                -- Mano secundaria: solo se excluyen las de DOS MANOS. Las de una mano valen,
+                -- incluidas las a distancia (pistola, ballesta de mano) y el escudo.
+                if offhand and not isShield and isTwoHanded(weapon) then return false end
+                return true
+            end
+
+            local function GruposPermitidos()
+                local fuera = {}
                 if isArmorSlot then
-                    local groups = HarfordDnDItems and HarfordDnDItems.GetArmorMenuGroups
-                        and HarfordDnDItems.GetArmorMenuGroups() or {}
-                    local currentArmor = HarfordDnDItems and HarfordDnDItems.GetBasicArmor
+                    for _, g in ipairs((HarfordDnDItems and HarfordDnDItems.GetArmorMenuGroups
+                        and HarfordDnDItems.GetArmorMenuGroups()) or {}) do
+                        if #(g.items or {}) > 0 then fuera[#fuera + 1] = g end
+                    end
+                    return fuera
+                end
+                for _, g in ipairs((HarfordDnDWeapons and HarfordDnDWeapons.GetWeaponMenuGroups
+                    and HarfordDnDWeapons.GetWeaponMenuGroups()) or {}) do
+                    local permitidas = {}
+                    for _, w in ipairs(g.items or {}) do
+                        if isAllowed(w) then permitidas[#permitidas + 1] = w end
+                    end
+                    if #permitidas > 0 then
+                        fuera[#fuera + 1] = { key = g.key, text = g.text, items = permitidas }
+                    end
+                end
+                return fuera
+            end
+
+            -- Una ruta que el cliente no tenga se pinta en verde chillon sin avisar.
+            local function IconoSeguro(ruta, alternativa)
+                if not GetFileIDFromPath then return ruta end
+                if GetFileIDFromPath(ruta) then return ruta end
+                return alternativa
+            end
+
+            local function IconoDe(pieza)
+                if isArmorSlot then
+                    return pieza.icon or "Interface\\Icons\\INV_Chest_Leather_09"
+                end
+                if HarfordDnDWeapons and HarfordDnDWeapons.GetIconPath then
+                    return HarfordDnDWeapons.GetIconPath(pieza)
+                end
+                return "Interface\\Icons\\INV_Misc_QuestionMark"
+            end
+
+            local function Actual()
+                if isArmorSlot then
+                    return HarfordDnDItems and HarfordDnDItems.GetBasicArmor
                         and HarfordDnDItems.GetBasicArmor(key, GetProfileName())
-                    if level == 1 then
-                        local info = UIDropDownMenu_CreateInfo()
-                        info.text = "Sin armadura (CA 10 + Des)"
-                        info.checked = not currentArmor or currentArmor == "none"
-                        info.func = function()
-                            if HarfordDnDItems and HarfordDnDItems.SetBasicArmor then
-                                HarfordDnDItems.SetBasicArmor(key, nil, GetProfileName())
-                            end
-                            refreshAfterChoice()
-                        end
-                        UIDropDownMenu_AddButton(info, level)
-                        for _, group in ipairs(groups) do
-                            if #(group.items or {}) > 0 then
-                                info = UIDropDownMenu_CreateInfo()
-                                info.text = group.text or group.key
-                                info.hasArrow = true
-                                info.notCheckable = true
-                                info.menuList = group.key
-                                UIDropDownMenu_AddButton(info, level)
-                            end
-                        end
-                    elseif level == 2 then
-                        for _, group in ipairs(groups) do
-                            if group.key == menuList then
-                                for _, armor in ipairs(group.items or {}) do
-                                    local armorKey = armor.key
-                                    local info = UIDropDownMenu_CreateInfo()
-                                    info.text = armor.label .. " (CA " .. tostring(armor.caText or armor.base or 10) .. ")"
-                                    info.checked = currentArmor == armorKey
-                                    info.func = function()
-                                        if HarfordDnDItems and HarfordDnDItems.SetBasicArmor then
-                                            HarfordDnDItems.SetBasicArmor(key, armorKey, GetProfileName())
-                                        end
-                                        refreshAfterChoice()
-                                    end
-                                    UIDropDownMenu_AddButton(info, level)
-                                end
-                                return
-                            end
-                        end
-                    end
-                    return
                 end
-                local groups = HarfordDnDWeapons and HarfordDnDWeapons.GetWeaponMenuGroups and HarfordDnDWeapons.GetWeaponMenuGroups() or {}
-                -- Filtro por mano: principal sin escudo; secundaria solo armas a 1 mano
-                -- (sin armas a dos manos; escudo si). Desarmado nunca se ofrece (sin item
-                -- ni arma basica ya cuenta como Desarmado).
-                local offhand = (key == "SecondaryHand")
-                local mainhand = (key == "MainHand")
-                local function isTwoHanded(weapon)
-                    for _, p in ipairs(weapon.props or {}) do
-                        if tostring(p) == "Dos manos" then return true end
+                return HarfordDnDItems and HarfordDnDItems.GetBasicWeapon
+                    and HarfordDnDItems.GetBasicWeapon(key, GetProfileName())
+            end
+
+            local function Poner(claveElegida)
+                if isArmorSlot then
+                    if HarfordDnDItems and HarfordDnDItems.SetBasicArmor then
+                        HarfordDnDItems.SetBasicArmor(key, claveElegida, GetProfileName())
                     end
-                    return false
+                elseif HarfordDnDItems and HarfordDnDItems.SetBasicWeapon then
+                    HarfordDnDItems.SetBasicWeapon(key, claveElegida, GetProfileName())
                 end
-                local function isAllowed(weapon)
-                    if weapon.key == "Desarmado" then return false end
-                    local isShield = (weapon.key == "Escudo")
-                    if mainhand and isShield then return false end
-                    -- Mano secundaria: solo se excluyen armas a DOS MANOS (las de una mano,
-                    -- incluidas a distancia como Pistola o Ballesta de mano, si valen).
-                    if offhand and not isShield and isTwoHanded(weapon) then return false end
-                    return true
+                refreshAfterChoice()
+            end
+
+            -- REJILLA: replica del EquipmentFlyout nativo. Dos pasos -categorias y luego las
+            -- piezas de la elegida-, porque el catalogo tiene 52 armas y una rejilla plana se
+            -- desbordaria.
+            --
+            -- Constantes de `EquipmentFlyout.lua`: ITEMS_PER_ROW=5, EFITEM 37x37, XOFFSET=4,
+            -- YOFFSET=-5 (paso vertical 42), BORDERWIDTH=3.
+            local POR_FILA, LADO, BORDE, PASO_X, PASO_Y = 5, 37, 3, 41, 42
+
+            -- El fondo NO es un marco generico: el nativo lo monta por piezas de
+            -- `UI-GearManager-Flyout` con recortes distintos segun haya un solo hueco, una fila
+            -- o varias. Estos son sus texCoords y medidas tal cual.
+            local FLY_TEX = "Interface\\PaperDollInfoFrame\\UI-GearManager-Flyout"
+            local UNO_IZQ = { 0, 0.09765625, 0.5546875, 0.77734375 }
+            local UNO_DER = { 0.41796875, 0.51171875, 0.5546875, 0.77734375 }
+            local UNO_IZQ_W, UNO_DER_W = 25, 24
+            local FILA_IZQ = { 0, 0.16796875, 0.5546875, 0.77734375 }
+            local FILA_CEN = { 0.16796875, 0.328125, 0.5546875, 0.77734375 }
+            local FILA_DER = { 0.328125, 0.51171875, 0.5546875, 0.77734375 }
+            local FILA_H, FILA_IZQ_W, FILA_CEN_W, FILA_DER_W = 54, 43, 41, 47
+            local MULTI_ARR = { 0, 0.8359375, 0, 0.19140625 }
+            local MULTI_MED = { 0, 0.8359375, 0.19140625, 0.35546875 }
+            local MULTI_ABA = { 0, 0.8359375, 0.35546875, 0.546875 }
+            local MULTI_W, MULTI_ARR_H, MULTI_MED_H, MULTI_ABA_H = 214, 49, 42, 49
+
+            -- Cuelga de UIParent, NO del hueco: dentro del arbol del panel la rejilla quedaba
+            -- por debajo del marco exterior, porque el NineSlice del panel es un frame hijo con
+            -- nivel superior. FULLSCREEN_DIALOG es la strata de los desplegables sobre un dialogo.
+            local flyout = CreateFrame("Frame", nil, UIParent)
+            flyout:SetFrameStrata("FULLSCREEN_DIALOG")
+            -- Como el nativo: en vertical la rejilla nace DEBAJO de la flecha
+            -- (verticalAnchorX/Y = 0,0); en horizontal, a su derecha.
+            if esVertical then
+                flyout:SetPoint("TOPLEFT", arrow, "BOTTOMLEFT", 0, 0)
+            else
+                flyout:SetPoint("TOPLEFT", arrow, "TOPRIGHT", 0, 0)
+            end
+            flyout:Hide()
+            flyout.botones = {}
+            flyout.fondos = {}
+
+            local function PiezaDeFondo(i)
+                local t = flyout.fondos[i]
+                if t then return t end
+                t = flyout:CreateTexture(nil, "BACKGROUND")
+                t:SetTexture(FLY_TEX)
+                flyout.fondos[i] = t
+                return t
+            end
+
+            -- Monta el fondo con las mismas piezas y en el mismo orden que
+            -- `EquipmentFlyout_UpdateFlyout`. Todas arrancan en TOPLEFT (-5, +4) de la rejilla.
+            local function MontarFondo(cuantos, filas)
+                local usadas, ultima = 0, nil
+                local function Pieza(coords, ancho, alto, anclaA, punto)
+                    usadas = usadas + 1
+                    local t = PiezaDeFondo(usadas)
+                    t:ClearAllPoints()
+                    t:SetTexCoord(coords[1], coords[2], coords[3], coords[4])
+                    t:SetSize(ancho, alto)
+                    if anclaA then
+                        t:SetPoint("TOPLEFT", anclaA, punto or "TOPRIGHT", 0, 0)
+                    else
+                        t:SetPoint("TOPLEFT", flyout, "TOPLEFT", -5, 4)
+                    end
+                    t:Show()
+                    ultima = t
+                    return t
                 end
-                local function groupHasAllowed(group)
-                    for _, weapon in ipairs(group.items or {}) do
-                        if isAllowed(weapon) then return true end
+                if cuantos == 1 then
+                    Pieza(UNO_IZQ, UNO_IZQ_W, FILA_H)
+                    Pieza(UNO_DER, UNO_DER_W, FILA_H, ultima)
+                elseif cuantos <= POR_FILA then
+                    Pieza(FILA_IZQ, FILA_IZQ_W, FILA_H)
+                    for _ = 2, cuantos - 1 do
+                        Pieza(FILA_CEN, FILA_CEN_W, FILA_H, ultima)
                     end
-                    return false
+                    Pieza(FILA_DER, FILA_DER_W, FILA_H, ultima)
+                else
+                    Pieza(MULTI_ARR, MULTI_W, MULTI_ARR_H)
+                    for _ = 2, filas - 1 do
+                        Pieza(MULTI_MED, MULTI_W, MULTI_MED_H, ultima, "BOTTOMLEFT")
+                    end
+                    Pieza(MULTI_ABA, MULTI_W, MULTI_ABA_H, ultima, "BOTTOMLEFT")
                 end
-                if level == 1 then
-                    local clear = UIDropDownMenu_CreateInfo()
-                    clear.text = "Sin arma basica"
-                    clear.notCheckable = true
-                    clear.func = function()
-                        if HarfordDnDItems and HarfordDnDItems.SetBasicWeapon then
-                            HarfordDnDItems.SetBasicWeapon(key, nil, GetProfileName())
-                        end
-                        refreshAfterChoice()
+                for i = usadas + 1, #flyout.fondos do flyout.fondos[i]:Hide() end
+            end
+
+            local function BotonDeRejilla(i)
+                local bt = flyout.botones[i]
+                if bt then return bt end
+                bt = CreateFrame("Button", nil, flyout)
+                bt:SetSize(LADO, LADO)
+                bt.icon = bt:CreateTexture(nil, "BORDER")
+                bt.icon:SetAllPoints(bt)
+                bt.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+                bt.marco = bt:CreateTexture(nil, "OVERLAY")
+                bt.marco:SetTexture("Interface\\Common\\WhiteIconFrame")
+                bt.marco:SetAllPoints(bt)
+                bt:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
+                -- Marca de "esto es lo que llevas puesto".
+                bt.puesta = bt:CreateTexture(nil, "OVERLAY", nil, 1)
+                bt.puesta:SetTexture("Interface\\Buttons\\CheckButtonHilight")
+                bt.puesta:SetBlendMode("ADD")
+                bt.puesta:SetAllPoints(bt)
+                bt.puesta:Hide()
+                bt:SetScript("OnEnter", function(self)
+                    if not (GameTooltip and self.tituloTooltip) then return end
+                    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                    GameTooltip:SetText(self.tituloTooltip, 1, 0.82, 0, true)
+                    if self.subTooltip then
+                        GameTooltip:AddLine(self.subTooltip, 1, 1, 1, true)
                     end
-                    UIDropDownMenu_AddButton(clear, level)
-                    for _, group in ipairs(groups) do
-                        if groupHasAllowed(group) then
-                            local info = UIDropDownMenu_CreateInfo()
-                            info.text = group.text or group.key
-                            info.hasArrow = true
-                            info.notCheckable = true
-                            info.menuList = group.key
-                            UIDropDownMenu_AddButton(info, level)
-                        end
-                    end
-                elseif level == 2 then
-                    for _, group in ipairs(groups) do
-                        if group.key == menuList then
-                            for _, weapon in ipairs(group.items or {}) do
-                                local weaponKey = weapon.key
-                                if isAllowed(weapon) then
-                                local info = UIDropDownMenu_CreateInfo()
-                                info.text = weaponKey
-                                info.checked = HarfordDnDItems and HarfordDnDItems.GetBasicWeapon and HarfordDnDItems.GetBasicWeapon(key, GetProfileName()) == weaponKey
-                                info.func = function()
-                                    if HarfordDnDItems and HarfordDnDItems.SetBasicWeapon then
-                                        HarfordDnDItems.SetBasicWeapon(key, weaponKey, GetProfileName())
-                                    end
-                                    refreshAfterChoice()
-                                end
-                                UIDropDownMenu_AddButton(info, level)
-                                end
-                            end
-                            return
-                        end
-                    end
+                    GameTooltip:Show()
+                end)
+                bt:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+                flyout.botones[i] = bt
+                return bt
+            end
+
+            local Pintar   -- forward: el paso 1 necesita volver a pintarse desde el paso 2
+
+            -- `entradas` = { { icon, titulo, sub, marcada, alPulsar } }
+            --
+            -- Sin titulo: el flyout nativo no lo lleva. Cada icono se identifica por su
+            -- tooltip, incluidas las categorias del primer paso.
+            local function PintarRejilla(_, entradas)
+                local cuantos = math.max(1, #entradas)
+                local filas = math.ceil(cuantos / POR_FILA)
+                local columnas = math.min(POR_FILA, cuantos)
+                -- Medidas del nativo: el buttonAnchor mide
+                -- (n * 37) + ((n - 1) * 4) + 3 de ancho, y 43 + (filas - 1) * 42 de alto.
+                flyout:SetSize(columnas * LADO + (columnas - 1) * (PASO_X - LADO) + BORDE,
+                    (LADO + 2 * BORDE) + (filas - 1) * PASO_Y)
+                MontarFondo(cuantos, filas)
+                for i, e in ipairs(entradas) do
+                    local bt = BotonDeRejilla(i)
+                    local fila, col = math.floor((i - 1) / POR_FILA), (i - 1) % POR_FILA
+                    bt:ClearAllPoints()
+                    -- Igual que el nativo: el primero de cada fila cuelga del TOPLEFT con el
+                    -- borde, y los demas se encadenan a la derecha del anterior.
+                    bt:SetPoint("TOPLEFT", flyout, "TOPLEFT",
+                        BORDE + col * PASO_X, -(BORDE + fila * PASO_Y))
+                    bt.icon:SetTexture(e.icon)
+                    bt.tituloTooltip, bt.subTooltip = e.titulo, e.sub
+                    bt.puesta:SetShown(e.marcada and true or false)
+                    bt:SetScript("OnClick", e.alPulsar)
+                    bt:Show()
                 end
-            end, "MENU")
-            arrow:SetScript("OnClick", function(self)
+                for i = #entradas + 1, #flyout.botones do flyout.botones[i]:Hide() end
+                flyout:Show()
+            end
+
+            local function PintarCategoria(grupo)
+                local actual = Actual()
+                local entradas = {}
+                for _, pieza in ipairs(grupo.items or {}) do
+                    entradas[#entradas + 1] = {
+                        icon = IconoDe(pieza),
+                        titulo = pieza.label or pieza.key,
+                        sub = isArmorSlot
+                            and ("CA " .. tostring(pieza.caText or pieza.base or 10))
+                            or (HarfordDnDWeapons and HarfordDnDWeapons.WeaponPropsLabel
+                                and HarfordDnDWeapons.WeaponPropsLabel(pieza) or nil),
+                        marcada = (actual == pieza.key),
+                        alPulsar = function() Poner(pieza.key); flyout:Hide() end,
+                    }
+                end
+                -- Volver a las categorias sin cerrar la rejilla.
+                entradas[#entradas + 1] = {
+                    icon = IconoSeguro("Interface\\Buttons\\UI-RefreshButton",
+                        "Interface\\Icons\\INV_Misc_QuestionMark"),
+                    titulo = "Volver",
+                    alPulsar = function() Pintar() end,
+                }
+                PintarRejilla(grupo.text or grupo.key, entradas)
+            end
+
+            Pintar = function()
+                local actual = Actual()
+                local entradas = {}
+                for _, grupo in ipairs(GruposPermitidos()) do
+                    -- La categoria no tiene icono propio: se usa el de su primera pieza como
+                    -- emblema, que es lo que hace reconocible el grupo de un vistazo.
+                    local primera = (grupo.items or {})[1]
+                    entradas[#entradas + 1] = {
+                        icon = primera and IconoDe(primera) or "Interface\\Icons\\INV_Misc_QuestionMark",
+                        titulo = grupo.text or grupo.key,
+                        sub = #(grupo.items or {}) .. (isArmorSlot and " armaduras" or " armas"),
+                        alPulsar = function() PintarCategoria(grupo) end,
+                    }
+                end
+                -- Quitar la basica: deja el hueco a desarmado / sin armadura.
+                entradas[#entradas + 1] = {
+                    icon = IconoSeguro("Interface\\Buttons\\UI-GroupLoot-Pass-Up",
+                        "Interface\\Icons\\INV_Misc_QuestionMark"),
+                    titulo = isArmorSlot and "Sin armadura" or "Sin arma basica",
+                    sub = isArmorSlot and "CA 10 + Destreza" or "Cuentas como desarmado",
+                    marcada = (not actual or actual == "none"),
+                    alPulsar = function() Poner(nil); flyout:Hide() end,
+                }
+                PintarRejilla(isArmorSlot and "Armadura basica" or "Arma basica", entradas)
+            end
+
+            flyout:SetScript("OnHide", function()
+                OrientarFlecha(false)
+                resaltado:Hide()
+                marcaOrigen:Hide()
+                -- Deja de ser el abierto. Se comprueba la identidad porque otro hueco puede
+                -- haberlo relevado ya al abrirse.
+                if API._flyoutAbierto == flyout then API._flyoutAbierto = nil end
+            end)
+            -- El nativo dispara el kit 856 (SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON) desde el
+            -- propio boton de la flecha, tanto al abrir como al cerrar; lo confirma
+            -- `/harford debug run nativeprobe sound on` sobre el paperdoll de Blizzard.
+            --
+            -- Suena en el CLIC, no en el OnHide: asi cambiar de hueco hace UN solo sonido -el
+            -- de abrir- en vez de encadenar el cierre del anterior con la apertura del nuevo,
+            -- y cerrar el panel entero no suena, que seria ruido.
+            local function SonarSelector()
+                if PlaySound then
+                    PlaySound((SOUNDKIT and SOUNDKIT.IG_MAINMENU_OPTION_CHECKBOX_ON) or 856, "SFX")
+                end
+            end
+            arrow:SetScript("OnClick", function()
                 if IsInspecting() then return end
-                ToggleDropDownMenu(1, nil, drop, self, 0, 0)
+                if flyout:IsShown() then
+                    flyout:Hide()
+                    SonarSelector()
+                else
+                    -- Solo puede haber UNA rejilla abierta: abrir la de un hueco cierra la del
+                    -- anterior, como cualquier menu. Se guarda en la tabla del modulo y no en una
+                    -- local nueva: este fichero anda justo del limite de 200 locales de Lua 5.1.
+                    if API._flyoutAbierto and API._flyoutAbierto ~= flyout then
+                        API._flyoutAbierto:Hide()
+                    end
+                    API._flyoutAbierto = flyout
+                    Pintar()
+                    OrientarFlecha(true)
+                    resaltado:Show()
+                    marcaOrigen:Show()
+                    SonarSelector()
+                end
             end)
             arrow:SetScript("OnEnter", function(self)
                 if not GameTooltip then return end
@@ -1712,7 +2031,10 @@ local function CreateSheetPage()
             arrow:SetScript("OnLeave", function()
                 if GameTooltip then GameTooltip:Hide() end
             end)
+            -- Al colgar de UIParent ya no se oculta sola con el panel: hay que llevarla.
+            b:HookScript("OnHide", function() flyout:Hide() end)
             b.basicSelector = arrow
+            b.basicFlyout = flyout
         end
         makeBasicSelector()
         local white = b:CreateTexture(nil, "OVERLAY")
@@ -1841,6 +2163,8 @@ local function CreateSheetPage()
         end)
         SH.slots = SH.slots or {}
         SH.slots[#SH.slots + 1] = b
+        -- Acceso para diagnostico: rastrear el arbol de frames desde fuera es fragil.
+        API._slots = SH.slots
         return b
     end
     local head = MakeSlot(leftInset, "Head")
@@ -1991,14 +2315,24 @@ local function CreateSheetPage()
     SH.levelText:SetPoint("CENTER", SH.levelValueFrame, "CENTER", 0, -1)
     SH.levelText:SetTextColor(1, 0.82, 0)
 
-    -- Acceso visual a la subida: el probe de ReputationBar confirma que el
-    -- expand/collapse nativo usa estos FileDataID, no una ruta de textura.
+    -- Acceso a la subida: el "+" nativo, el mismo arte que usan las filas del panel de
+    -- reputacion. Antes era la flecha del ReputationBar (FileDataID 130821/130837), que se leia
+    -- como "desplegar" y no como "hay algo que hacer aqui".
+    --
+    -- Solo se muestra si hay subida DISPONIBLE (ver el refresco de la vista de ficha): el nivel
+    -- no sube solo, pero el boton tampoco debe invitar a subir sin XP para ello.
     local levelUp = CreateFrame("Button", nil, SH.levelValueFrame)
     levelUp:SetSize(13, 13)
     levelUp:SetPoint("LEFT", SH.levelText, "RIGHT", 3, 0)
-    levelUp:SetNormalTexture(130821)
-    levelUp:SetPushedTexture(130821)
-    levelUp:SetHighlightTexture(130837, "ADD")
+    levelUp:SetNormalTexture("Interface" .. string.char(92) .. "Buttons" .. string.char(92) .. "UI-PlusButton-Up")
+    -- El arte "pulsado" no esta en todos los clientes; si falta se reutiliza el normal en vez de
+    -- dejar el boton sin textura al hacer click.
+    local plusDown = "Interface" .. string.char(92) .. "Buttons" .. string.char(92) .. "UI-PlusButton-Down"
+    if GetFileIDFromPath and not GetFileIDFromPath(plusDown) then
+        plusDown = "Interface" .. string.char(92) .. "Buttons" .. string.char(92) .. "UI-PlusButton-Up"
+    end
+    levelUp:SetPushedTexture(plusDown)
+    levelUp:SetHighlightTexture("Interface" .. string.char(92) .. "Buttons" .. string.char(92) .. "UI-PlusButton-Hilight", "ADD")
     levelUp:SetScript("OnClick", function()
         if not IsInspecting() and HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenLevelUp then
             HarfordCharacterAdvancement.OpenLevelUp()
@@ -2014,7 +2348,45 @@ local function CreateSheetPage()
     levelUp:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
     SH.levelUpButton = levelUp
 
-    SH.abilBar = CatBar("Caracteristicas", -70)
+    -- BARRA DE EXPERIENCIA. Es LA MISMA barra del borde inferior de la pantalla, solo que fina y
+    -- al ancho de la seccion: el arte lo pone `HarfordCharacterXP.SkinBar`, que es la unica fuente.
+    --
+    -- Va en la franja inferior de la banda del numero de nivel porque entre esa banda (acaba en
+    -- -71) y la barra de "Caracteristicas" (-70) no queda hueco libre.
+    --
+    -- NO usar aqui los caps de UI-Character-ReputationBar: a este tamano se renderizan rotos (dos
+    -- trozos rojos en los extremos). El envoltorio bueno es el atlas nativo de SkinBar.
+    local xpBar = CreateFrame("StatusBar", nil, statsPane)
+    -- 199x9 en y=-12 y 3 a la derecha: valores afinados en juego con `xpbarpanel`. La barra cae
+    -- POR DEBAJO de la banda del numero (que acaba en -71), de ahi que la seccion de
+    -- "Caracteristicas" baje para dejarle el hueco (ver S.ABIL_BAR_Y).
+    SH.xpBarX, SH.xpBarY = 3, -12
+    xpBar:SetSize(199, 9)
+    xpBar:SetPoint("BOTTOM", SH.levelValueFrame, "BOTTOM", SH.xpBarX, SH.xpBarY)
+    if HarfordCharacterXP and HarfordCharacterXP.SkinBar then
+        -- `true`: con envoltorio. El atlas nativo ya dibuja el carril vacio, asi que la barra se
+        -- ve tambien con 0 de experiencia, que era el motivo del tinte manual anterior.
+        HarfordCharacterXP.SkinBar(xpBar, true)
+    else
+        xpBar:SetMinMaxValues(0, 1)
+    end
+    xpBar:SetValue(0)
+
+    xpBar:EnableMouse(true)
+    xpBar:SetScript("OnEnter", function(self)
+        if not (GameTooltip and self.tipTexto) then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetText("Experiencia", 1, 0.82, 0)
+        GameTooltip:AddLine(self.tipTexto, 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    xpBar:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    xpBar:Hide()
+    SH.xpBar = xpBar
+    -- Acceso para diagnostico (/harford debug run xpbar).
+    API._sheetState = SH
+
+    SH.abilBar = CatBar("Caracteristicas", S.ABIL_BAR_Y)
     SH.abilRows = {}
     for i = 1, 6 do
         SH.abilRows[i] = PaneRow(-110 - (i - 1) * 15)
@@ -2036,13 +2408,34 @@ local function CreateSheetPage()
     -- Zona scrollable de "Rasgos" (vista resumen): la scrollbar nativa
     -- aparece sola cuando los rasgos desbordan el alto del area.
     local featScroll = CreateFrame("ScrollFrame", "HarfordCharPanelFeatScroll", statsPane, "UIPanelScrollFrameTemplate")
-    featScroll:SetPoint("TOPLEFT", statsPane, "TOPLEFT", 14, -240)
+    -- -243 = barra de seccion (-206) - 40 de alto + 3, el mismo espacio que "Caracteristicas".
+    SH.abilBarY = S.ABIL_BAR_Y
+    -- -243 es la regla del panel (barra de Rasgos -206, menos 40 de alto, mas 3); se desplaza lo
+    -- mismo que la seccion de Caracteristicas para que el bloque entero baje junto.
+    featScroll:SetPoint("TOPLEFT", statsPane, "TOPLEFT", 14, -243 + (S.ABIL_BAR_Y + 70))
     featScroll:SetPoint("BOTTOMRIGHT", statsPane, "BOTTOMRIGHT", -26, 8)
     local featChild = CreateFrame("Frame", nil, featScroll)
     featChild:SetSize(150, 10)
     featScroll:SetScrollChild(featChild)
     featScroll:Hide()
     SH.featScroll = featScroll
+
+    -- Banda de "Atributos": del hueco bajo su barra (-39) hasta justo encima de la barra de
+    -- "Salvaciones" (-206). Si el contenido no cabe, scrollea; nunca invade la de abajo.
+    local attrScroll = CreateFrame("ScrollFrame", "HarfordCharPanelAttrScroll", statsPane,
+        "UIPanelScrollFrameTemplate")
+    -- Y de donde este esa barra dependen tres cosas: ella misma, sus filas y el fondo de la
+    -- banda scrollable de Atributos. Se guarda en el estado para poder afinarla en vivo con
+    -- `/harford debug run salvaciones <y>` sin recargar.
+    SH.savesBarY = -226
+    attrScroll:SetPoint("TOPLEFT", statsPane, "TOPLEFT", 14, -39)
+    attrScroll:SetPoint("BOTTOMRIGHT", statsPane, "TOPRIGHT", -26, SH.savesBarY + 2)
+    local attrChild = CreateFrame("Frame", nil, attrScroll)
+    attrChild:SetSize(154, 10)
+    attrScroll:SetScrollChild(attrChild)
+    attrScroll:Hide()
+    SH.attrScroll = attrScroll
+    SH.attrChild = attrChild
     SH.featChild = featChild
     SH.featRows = {}
 
@@ -2106,9 +2499,18 @@ end
 local function SetSheetRow(row, y, label, value, tooltipTitle, tooltipText, opts)
     if not row then return 14 end
     opts = type(opts) == "table" and opts or nil
+    -- Contenedor: por defecto el panel, pero una vista puede pasar el hijo de un ScrollFrame
+    -- para que sus filas scrolleen en vez de desbordar sobre la seccion siguiente. Se
+    -- REPARENTA siempre, porque las filas se comparten entre vistas.
+    local host = (opts and opts.container) or S.sheet.statsPane
+    local enScroll = (opts and opts.container) and true or false
+    local hostX = enScroll and 0 or 14
+    if row.f:GetParent() ~= host then row.f:SetParent(host) end
     row.f:ClearAllPoints()
-    row.f:SetPoint("TOPLEFT", S.sheet.statsPane, "TOPLEFT", 14, y)
-    row.f:SetSize(170, 15)
+    row.f:SetPoint("TOPLEFT", host, "TOPLEFT", hostX, y)
+    -- Dentro de un scroll la fila se estrecha 16px: si no, la barra de scroll se come el borde
+    -- derecho y corta los valores, que van alineados a la derecha.
+    row.f:SetSize(enScroll and 154 or 170, 15)
     row.l:ClearAllPoints()
     if opts and opts.labelTop then
         row.l:SetPoint("TOPLEFT", row.f, "TOPLEFT", 0, 0)
@@ -2117,12 +2519,12 @@ local function SetSheetRow(row, y, label, value, tooltipTitle, tooltipText, opts
         row.l:SetPoint("LEFT", row.f, "LEFT", 0, 0)
         if row.l.SetJustifyV then row.l:SetJustifyV("MIDDLE") end
     end
-    row.l:SetWidth(opts and opts.labelWidth or 118)
+    row.l:SetWidth(opts and opts.labelWidth or (enScroll and 110 or 118))
     row.l:SetJustifyH("LEFT")
     if row.l.SetWordWrap then row.l:SetWordWrap(false) end
     if row.l.SetNonSpaceWrap then row.l:SetNonSpaceWrap(false) end
     row.v:ClearAllPoints()
-    row.v:SetWidth(opts and opts.valueWidth or 72)
+    row.v:SetWidth(opts and opts.valueWidth or (enScroll and 62 or 72))
     if row.v.SetWordWrap then row.v:SetWordWrap(opts and opts.wrapValue or false) end
     if row.v.SetNonSpaceWrap then row.v:SetNonSpaceWrap(false) end
     if opts and opts.valueAlign == "LEFT" then
@@ -2215,8 +2617,8 @@ local function ShowClassTooltip(owner, data)
     GameTooltip:Show()
 end
 
-local function SetClassSheetRow(row, y, data)
-    SetSheetRow(row, y, "Clase", "")
+local function SetClassSheetRow(row, y, data, opts)
+    SetSheetRow(row, y, "Clase", "", nil, nil, opts)
     if not row then return 14 end
     row.l:ClearAllPoints()
     row.l:SetPoint("TOPLEFT", row.f, "TOPLEFT", 0, 0)
@@ -2419,7 +2821,7 @@ local function RefreshSheet()
     HideSheetRows(SH)
     if SH.levelUpButton then SH.levelUpButton:Hide() end
 
-    local list = (HarfordDnDData and HarfordDnDData.ABIL) or ABIL_KEYS
+    local list = (HarfordDnDData and HarfordDnDData.ABIL) or K.ABIL_KEYS
     local pb = HarfordDnDProgression and HarfordDnDProgression.GetProficiencyBonus and HarfordDnDProgression.GetProficiencyBonus(name) or nil
     local dexMod = AbilityMod(AbilityScore("Destreza"))
     local initBonus = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus and HarfordDnDFeatureEffects.GetBonus("initiative", nil, name)) or 0
@@ -2445,11 +2847,18 @@ local function RefreshSheet()
         local rd = HarfordDnDRaces.GetRace(data.race.id)
         speed = rd and rd.speed
     end
+    -- Velocidad efectiva: bonos de rasgo (Afinidad Aire) o una velocidad fija activa
+    -- (Bestia Espiritual). En inspeccion no se aplica: los efectos resueltos son los del jugador local.
+    if not IsInspecting() and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetSpeed then
+        speed = HarfordDnDFeatureEffects.GetSpeed(speed)
+    end
 
     local view = S.sheetView or "summary"
     if view == "skills" then
         -- Sin barra de "Bonificador por competencia" (libera espacio); el bono va en la cabecera.
         SetSheetBar(SH.levelBar, "", 0, false)
+        if SH.xpBar then SH.xpBar:Hide() end
+        if SH.attrScroll then SH.attrScroll:Hide() end
         SetSheetBar(SH.abilBar, "Habilidades " .. (pb and ("(" .. ColorSigned(pb) .. ")") or ""), -2, true)
         local skills = HarfordDnDData and HarfordDnDData.SKILLS or {}
         -- Agrupadas por caracteristica (cabecera "Fuerza (+3)" y sus habilidades debajo).
@@ -2475,6 +2884,7 @@ local function RefreshSheet()
         end
     elseif view == "details" then
         SetSheetBar(SH.levelBar, "Atributos", -2, true)
+        if SH.xpBar then SH.xpBar:Hide() end
         -- Tooltips de raza/trasfondo: subraza si existe, si no la raza.
         local raceTipTitle, raceTipText, bgTipTitle, bgTipText
         if data and data.race and HarfordDnDRaces and HarfordDnDRaces.GetRace then
@@ -2501,8 +2911,11 @@ local function RefreshSheet()
             { "Raza", GetRaceLabel(data), raceTipTitle, raceTipText },
             { "Trasfondo", GetBackgroundLabel(data), bgTipTitle, bgTipText },
             { "Iniciativa", Signed(dexMod + initBonus) },
-            { "Velocidad", speed and (tostring(speed) .. " m") or "-" },
-            { "Competencia", pb and Signed(pb) or "-" },
+            -- 7,5 + 1,5 da "9.0" con tostring; se recorta el decimal cuando es entero.
+            { "Velocidad", speed and (string.format((speed % 1 == 0) and "%d m" or "%.1f m", speed)) or "-" },
+            -- "Bonus Competencia" y no "Competencia" a secas: en esta misma lista hay una fila
+            -- "Competencias" (las de armadura/arma/herramienta) y se confundian.
+            { "Bonus Competencia", pb and Signed(pb) or "-" },
         }
         if HarfordDnDConditions and HarfordDnDConditions.GetActive then
             local conditionRef = IsInspecting() and S.inspectUnit or "player"
@@ -2523,33 +2936,17 @@ local function RefreshSheet()
         -- detalle comparte espacio con la barra de "Salvaciones" (fija en -206), asi que una
         -- fila por categoria desbordaria. El desglose completo va en el tooltip.
         if HarfordDnDFeatureEffects then
-            local function ProfList(getter)
-                if not getter then return nil end
-                local list = getter(name)
-                if not (list and #list > 0) then return nil end
-                local pretty = {}
-                for i, key in ipairs(list) do
-                    local k = tostring(key)
-                    pretty[i] = k:sub(1, 1):upper() .. k:sub(2)
+            -- Mismas lineas que el tooltip del libro: un unico constructor, sin duplicar.
+            local lineasProf = API.GetProficiencyLines and API.GetProficiencyLines() or {}
+            if #lineasProf > 0 then
+                -- El resumen corto de la fila: solo armadura y armas, que son las que caben.
+                local corto = {}
+                for _, l in ipairs(lineasProf) do
+                    local titulo, valor = l:match("^%- |cffffd100([^:]+):|r (.+)$")
+                    if titulo == "Armadura" or titulo == "Armas" then corto[#corto + 1] = valor end
                 end
-                return table.concat(pretty, ", ")
-            end
-            local armor = ProfList(HarfordDnDFeatureEffects.GetArmorProfs)
-            local weapon = ProfList(HarfordDnDFeatureEffects.GetWeaponProfs)
-            local tools = ProfList(HarfordDnDFeatureEffects.GetToolProfs)
-            if armor or weapon or tools then
-                local short, detail = {}, {}
-                if armor then
-                    short[#short + 1] = armor
-                    detail[#detail + 1] = "|cffffd100Armadura:|r " .. armor
-                end
-                if weapon then
-                    short[#short + 1] = weapon
-                    detail[#detail + 1] = "|cffffd100Armas:|r " .. weapon
-                end
-                if tools then detail[#detail + 1] = "|cffffd100Herramientas:|r " .. tools end
-                rows[#rows + 1] = { "Competencias", table.concat(short, " · "),
-                    "Competencias", table.concat(detail, "\n") }
+                rows[#rows + 1] = { "Competencias", table.concat(corto, " · "),
+                    "Competencias", table.concat(lineasProf, "\n") }
             end
         end
         -- Sintonizacion y carga. Solo del personaje PROPIO: `HarfordDnDBurden` resuelve la
@@ -2604,46 +3001,80 @@ local function RefreshSheet()
                 rows[#rows + 1] = { "Mana", tostring(pool) .. "  (esp. " .. tostring(ms) .. ")" }
             end
         end
-        local y = -50
+        -- Dentro del scroll: la `y` es relativa al hijo y arranca en 0, porque el propio
+        -- ScrollFrame ya esta colocado bajo la barra.
+        if SH.attrScroll then SH.attrScroll:Show() end
+        local y = 0
         for i, r in ipairs(rows) do
             if r[1] == "Clase" then
-                y = y - SetClassSheetRow(SH.sheetRows[i], y, data)
+                y = y - SetClassSheetRow(SH.sheetRows[i], y, data, { container = SH.attrChild })
             else
-                local opts = r[1] == "Trasfondo" and { wrapValue = true, labelTop = true, labelWidth = 70, valueWidth = 104 } or nil
+                -- 64 + 88 = 152, dentro de los 154 de la fila con scroll. Con los 70 + 104 de
+                -- la version sin scroll el valor se salia por debajo de la barra.
+                local opts = r[1] == "Trasfondo"
+                    and { wrapValue = true, labelTop = true, labelWidth = 64, valueWidth = 88 }
+                    or {}
+                opts.container = SH.attrChild
                 y = y - SetSheetRow(SH.sheetRows[i], y, r[1], "|cffffffff" .. tostring(r[2] or "") .. "|r", r[3], r[4], opts)
             end
         end
-        SetSheetBar(SH.abilBar, "Salvaciones", -206, true)
+        -- El alto del hijo es lo que decide si aparece la barra de scroll.
+        if SH.attrChild then SH.attrChild:SetHeight(math.max(10, -y)) end
+        SetSheetBar(SH.abilBar, "Salvaciones", SH.savesBarY or -226, true)
         for i, abil in ipairs(list) do
-            SetSheetRow(SH.sheetRows[#rows + i], -244 - (i - 1) * 14, abil.key, ColorSigned(SaveTotal(abil.key)), "Salvacion de " .. abil.key, abil.saveDesc or abil.desc or ("Tirada de salvacion de " .. abil.key .. "."))
+            -- Mismo espacio bajo el titulo que "Caracteristicas": barra - 40 de alto + 3.
+            SetSheetRow(SH.sheetRows[#rows + i], (SH.savesBarY or -226) - 37 - (i - 1) * 14, abil.key, ColorSigned(SaveTotal(abil.key)), "Salvacion de " .. abil.key, abil.saveDesc or abil.desc or ("Tirada de salvacion de " .. abil.key .. "."))
         end
     else
         SetSheetBar(SH.levelBar, "Nivel", -2, true)
+        if SH.xpBar then
+            local xpNivel, xpActual, xpNecesaria = 0, 0, 0
+            if HarfordCharacterXP and HarfordCharacterXP.Progress then
+                xpNivel, xpActual, xpNecesaria = HarfordCharacterXP.Progress()
+            end
+            xpNecesaria = math.max(1, tonumber(xpNecesaria) or 1)
+            xpActual = math.max(0, math.min(xpNecesaria, tonumber(xpActual) or 0))
+            SH.xpBar:SetMinMaxValues(0, xpNecesaria)
+            SH.xpBar:SetValue(xpActual)
+            SH.xpBar.tipTexto = string.format("%d / %d para el nivel %d",
+                xpActual, xpNecesaria, (tonumber(xpNivel) or 0) + 1)
+            SH.xpBar:Show()
+        end
+        -- La ficha no usa el scroll de Atributos: si viene de esa pestana, hay que apagarlo.
+        if SH.attrScroll then SH.attrScroll:Hide() end
         local maxTotal = tonumber(HarfordDnDProgression and HarfordDnDProgression.MAX_TOTAL_LEVEL) or 20
-        if SH.levelUpButton and not IsInspecting() and total < maxTotal then SH.levelUpButton:Show() end
+        -- La XP puede ir por delante del nivel; ese desfase es lo que habilita la subida.
+        local subidaDisponible = HarfordCharacterXP and HarfordCharacterXP.PendingLevelUp
+            and HarfordCharacterXP.PendingLevelUp()
+        if SH.levelUpButton and not IsInspecting() and total < maxTotal and subidaDisponible then
+            SH.levelUpButton:Show()
+        end
         if SH.levelValueFrame then SH.levelValueFrame:Show() end
         if SH.levelText then
             SH.levelText:SetText(tostring(total))
             SH.levelText:Show()
         end
-        SetSheetBar(SH.abilBar, "Caracteristicas", -70, true)
+        local abilY = SH.abilBarY or S.ABIL_BAR_Y
+        local abilDelta = abilY + 70
+        SetSheetBar(SH.abilBar, "Caracteristicas", abilY, true)
         for i, abil in ipairs(list) do
             local score = AbilityScore(abil.key)
             local mod = AbilityMod(score)
-            SetAbilitySheetRow(SH.sheetRows[i], -107 - (i - 1) * 15, abil.key,
+            -- barra - 40 de alto + 3, la misma regla de espaciado que el resto de secciones.
+            SetAbilitySheetRow(SH.sheetRows[i], abilY - 37 - (i - 1) * 15, abil.key,
                 score,
                 mod,
                 AbilityTooltipTitle(abil.key),
-                ABILITY_TOOLTIP_TEXT[abil.key] or "")
+                K.ABILITY_TOOLTIP_TEXT[abil.key] or "")
         end
-        SetSheetBar(SH.combatBar, "Rasgos", -206, true)
+        SetSheetBar(SH.combatBar, "Rasgos", -206 + abilDelta, true)
         -- Lista completa de rasgos (sin tope de 5) en el area scrollable: la scrollbar
         -- aparece sola al desbordar. Las filas fijas sobrantes se ocultan.
         local featureRows = GetClassFeatureRows(100) or GetTRP3FeatureRows(100) or {
             { "Raza", GetRaceLabel(data), "Raza", GetRaceLabel(data) },
             { "Trasfondo", GetBackgroundLabel(data), "Trasfondo", GetBackgroundLabel(data) },
             { "Dotes", GetFeatsLabel(data), "Dotes", GetFeatsLabel(data) },
-            { "Competencia", pb and Signed(pb) or "-", "Competencia", "Bonificador por competencia actual." },
+            { "Bonus Competencia", pb and Signed(pb) or "-", "Bonus Competencia", "Bonificador por competencia actual." },
             { "Puntos de Golpe", hpMax > 0 and (tostring(hpCur) .. " / " .. tostring(hpMax)) or "-", "Puntos de Golpe", "Salud actual / maxima." },
         }
         for i = 7, #SH.sheetRows do
@@ -2660,12 +3091,12 @@ local function RefreshCreationCost()
     local C = S.creation
     if not C then return end
     local total, valid = 0, true
-    for _, abil in ipairs(ABIL_KEYS) do
+    for _, abil in ipairs(K.ABIL_KEYS) do
         local value = tonumber(C.boxes[abil.key]:GetText()) or 10
-        if not POINT_BUY_COST[value] then
+        if not K.POINT_BUY_COST[value] then
             valid = false
         else
-            total = total + POINT_BUY_COST[value]
+            total = total + K.POINT_BUY_COST[value]
         end
     end
     if valid then
@@ -2689,7 +3120,7 @@ local function ApplyCreationScores()
         Print("La ficha DnD todavia no esta lista.")
         return
     end
-    for _, abil in ipairs(ABIL_KEYS) do
+    for _, abil in ipairs(K.ABIL_KEYS) do
         local value = math.floor(tonumber(S.creation.boxes[abil.key]:GetText()) or 10)
         if value < 1 then value = 1 end
         if value > 30 then value = 30 end
@@ -2712,7 +3143,7 @@ local function CreateCreationPage()
     hint:SetWidth(620)
     hint:SetNonSpaceWrap(true)
 
-    for i, abil in ipairs(ABIL_KEYS) do
+    for i, abil in ipairs(K.ABIL_KEYS) do
         local x = ((i - 1) % 3) * 190
         local y = -78 - math.floor((i - 1) / 3) * 54
         local label = CreateFS(page, "GameFontHighlight", abil.short .. " - " .. abil.key)
@@ -2727,24 +3158,24 @@ local function CreateCreationPage()
     C.cost:SetPoint("TOPLEFT", 0, -188)
 
     local read = CreateButton(page, "Leer ficha", 90, 22, function()
-        for _, abil in ipairs(ABIL_KEYS) do C.boxes[abil.key]:SetText(tostring(AbilityScore(abil.key))) end
+        for _, abil in ipairs(K.ABIL_KEYS) do C.boxes[abil.key]:SetText(tostring(AbilityScore(abil.key))) end
         RefreshCreationCost()
     end)
     read:SetPoint("TOPLEFT", 0, -220)
 
     local array = CreateButton(page, "Array", 74, 22, function()
         local values = { 15, 14, 13, 12, 10, 8 }
-        for i, abil in ipairs(ABIL_KEYS) do C.boxes[abil.key]:SetText(tostring(values[i] or 10)) end
+        for i, abil in ipairs(K.ABIL_KEYS) do C.boxes[abil.key]:SetText(tostring(values[i] or 10)) end
     end)
     array:SetPoint("LEFT", read, "RIGHT", 8, 0)
 
     local pointBuy = CreateButton(page, "Compra 27", 92, 22, function()
-        for _, abil in ipairs(ABIL_KEYS) do C.boxes[abil.key]:SetText("8") end
+        for _, abil in ipairs(K.ABIL_KEYS) do C.boxes[abil.key]:SetText("8") end
     end)
     pointBuy:SetPoint("LEFT", array, "RIGHT", 8, 0)
 
     local rolled = CreateButton(page, "Tirar 4d6", 92, 22, function()
-        for _, abil in ipairs(ABIL_KEYS) do C.boxes[abil.key]:SetText(tostring(RollAbility())) end
+        for _, abil in ipairs(K.ABIL_KEYS) do C.boxes[abil.key]:SetText(tostring(RollAbility())) end
     end)
     rolled:SetPoint("LEFT", pointBuy, "RIGHT", 8, 0)
 
@@ -2754,7 +3185,7 @@ end
 
 local function RefreshCreation()
     if not S.creation then return end
-    for _, abil in ipairs(ABIL_KEYS) do
+    for _, abil in ipairs(K.ABIL_KEYS) do
         S.creation.boxes[abil.key]:SetText(tostring(HarfordDnDContext and HarfordDnDContext.Get and HarfordDnDContext.Get(abil.key, 10) or 10))
     end
     RefreshCreationCost()
@@ -2842,9 +3273,28 @@ local function RefreshFeatureList()
             chk:SetChecked(HarfordDnDProgression.IsToggleStateActive
                 and HarfordDnDProgression.IsToggleStateActive(stateId, GetProfileName()) or false)
             if chk.text then chk.text:SetWidth(250) end
-            if state.description and state.description ~= "" then
+            -- "Lobo Solitario" son los rasgos del Cazador que SOLO valen SIN companero bestial.
+            -- Invocar la bestia apaga el estado, pero sin esto se podia volver a marcar con la
+            -- bestia en juego y quedarse con las dos cosas, que es lo que el manual excluye.
+            local bloqueo
+            if stateId == "lone_wolf" and HarfordDnDCompanions and HarfordDnDCompanions.GetActive then
+                local activa = HarfordDnDCompanions.GetActive(GetProfileName())
+                if activa then
+                    bloqueo = "No puedes combatir como Lobo Solitario mientras tengas a "
+                        .. tostring(activa.name) .. " invocada."
+                end
+            end
+            -- Enable/Disable en vez de SetEnabled: existen desde siempre y Epsilon no siempre
+            -- trae la API moderna. El label es GameFontHighlightSmall (blanco), asi que el gris
+            -- de bloqueo se aplica y se restaura a blanco explicitamente.
+            if bloqueo then chk:Disable() else chk:Enable() end
+            if chk.text then
+                if bloqueo then chk.text:SetTextColor(0.5, 0.5, 0.5)
+                else chk.text:SetTextColor(1, 1, 1) end
+            end
+            if bloqueo or (state.description and state.description ~= "") then
                 chk:SetScript("OnEnter", function(self)
-                    TooltipLines(self, state.label or stateId, state.description)
+                    TooltipLines(self, state.label or stateId, bloqueo or state.description)
                 end)
                 chk:SetScript("OnLeave", function() GameTooltip:Hide() end)
             end
@@ -3208,23 +3658,23 @@ end
 -- (ver PROF_FRAME_OFFSET).
 -- CUATRO huecos: el quinto (que acabaria en -520) se sale del area visible del libro.
 -- 67 + 3*93 + 81 = 427, con margen de sobra hasta el borde inferior de la pagina.
-local PROF_SLOTS = {}
+K.PROF_SLOTS = {}
 for i = 1, 4 do
-    PROF_SLOTS[i] = { kind = "primary", x = 80, y = -(67 + (i - 1) * 93), w = 437, h = 81 }
+    K.PROF_SLOTS[i] = { kind = "primary", x = 80, y = -(67 + (i - 1) * 93), w = 437, h = 81 }
 end
 
 -- Para tapar el arte de secundarias se recorta el marco del PRIMER hueco de la propia pagina.
 -- No hacen falta texCoords ni saber el tamano del fichero: basta con volver a dibujar la pagina
 -- dentro de un frame que recorta, desplazada de modo que el hueco 1 caiga sobre el hueco actual.
 -- Pagina izquierda anclada en (7,-25) y hueco 1 en (80,-67) => desplazamiento (-73, +42).
-local PROF_FRAME_OFFSET = { x = -73, y = 42 }
+K.PROF_FRAME_OFFSET = { x = -73, y = 42 }
 
 -- El hueco de contenido mide 437x81, pero el ornamento de la pagina nativa SOBRESALE de ese
 -- rectangulo: recortando justo el hueco se pierde parte del marco por arriba y por abajo. Este
 -- margen ensancha la ventana de recorte por los cuatro lados (y desplaza la copia de la pagina
 -- otro tanto, para que siga cayendo el mismo trozo). El paso entre huecos es 12, asi que 6 es
 -- justo la mitad del hueco entre marcos: mas que eso y dos marcos contiguos se solaparian.
-local PROF_FRAME_MARGIN = 4
+K.PROF_FRAME_MARGIN = 4
 
 -- Franja izquierda de la pagina de profesiones que se recorta para quedarse solo con el
 -- marcapaginas VERDE, superpuesto sobre el borde del libro de habilidades (que lleva el suyo
@@ -3234,11 +3684,11 @@ local PROF_FRAME_MARGIN = 4
 -- Vive aqui una sola vez porque lo usan dos cosas: la pagina base de Profesiones y la textura
 -- del marcapaginas, que debe estirarse al MISMO rectangulo para que el marcapaginas verde caiga
 -- justo sobre el azul al que sustituye. A tamano natural la escala no coincidiria.
-local SKILLS_PAGE_RECT = { left = 0, top = -25, right = -31, bottom = -15, rightWidth = 41 }
+K.SKILLS_PAGE_RECT = { left = 0, top = -25, right = -31, bottom = -15, rightWidth = 41 }
 
 -- Ventana de recorte del marcapaginas: mismo alto que la pagina y `w` de ancho por la izquierda.
 -- `tx/ty` solo estan para afinar; con 0 la textura queda exactamente donde la pagina base.
-local PROF_BOOKMARK = { w = 65, tx = 0, ty = 0 }
+K.PROF_BOOKMARK = { w = 65, tx = 0, ty = 0 }
 
 -- El cliente de Epsilon resuelve rutas con fiabilidad y los fileID sueltos no siempre; se usa la
 -- ruta y solo se cae al id numerico si esa ruta no existe en este build.
@@ -3277,8 +3727,8 @@ local function CreateProfessionsPage()
     -- es justo lo que la diferencia. Anclaje identico al de la pestana Conjuros.
     local profPage1 = host:CreateTexture(nil, "BACKGROUND", nil, -6)
     profPage1:SetTexture("Interface\\Spellbook\\Spellbook-Page-1")
-    profPage1:SetPoint("TOPLEFT", host, "TOPLEFT", SKILLS_PAGE_RECT.left, SKILLS_PAGE_RECT.top)
-    profPage1:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", SKILLS_PAGE_RECT.right, SKILLS_PAGE_RECT.bottom)
+    profPage1:SetPoint("TOPLEFT", host, "TOPLEFT", K.SKILLS_PAGE_RECT.left, K.SKILLS_PAGE_RECT.top)
+    profPage1:SetPoint("BOTTOMRIGHT", host, "BOTTOMRIGHT", K.SKILLS_PAGE_RECT.right, K.SKILLS_PAGE_RECT.bottom)
     profPage1:Hide()
     -- Identica a la del libro de habilidades, incluidos el sublevel -5 (por ENCIMA de la
     -- pagina izquierda, que va en -6) y el ancho de 41. Sin ese ancho la textura de cierre
@@ -3287,7 +3737,7 @@ local function CreateProfessionsPage()
     profPage2:SetTexture("Interface\\Spellbook\\Spellbook-Page-2")
     profPage2:SetPoint("TOPLEFT", profPage1, "TOPRIGHT", 0, 0)
     profPage2:SetPoint("BOTTOMLEFT", profPage1, "BOTTOMRIGHT", 0, 0)
-    profPage2:SetWidth(SKILLS_PAGE_RECT.rightWidth)
+    profPage2:SetWidth(K.SKILLS_PAGE_RECT.rightWidth)
     profPage2:Hide()
 
     -- Marco ornamentado de cada hueco, recortado de la pagina de profesiones NATIVA aunque el
@@ -3309,9 +3759,9 @@ local function CreateProfessionsPage()
     bookmarkPage:Hide()
 
     local frameCovers = {}
-    for i = 1, #PROF_SLOTS do
-        local slot = PROF_SLOTS[i]
-        local m = PROF_FRAME_MARGIN
+    for i = 1, #K.PROF_SLOTS do
+        local slot = K.PROF_SLOTS[i]
+        local m = K.PROF_FRAME_MARGIN
         local cover = CreateFrame("Frame", nil, page)
         cover:SetSize(slot.w + m * 2, slot.h + m * 2)
         -- Anclado al LIBRO, no a la pagina de contenido: `skillsContent` empieza 21 px mas
@@ -3322,7 +3772,7 @@ local function CreateProfessionsPage()
         local left = cover:CreateTexture(nil, "BACKGROUND")
         left:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Left", 383588))
         left:SetPoint("TOPLEFT", cover, "TOPLEFT",
-            PROF_FRAME_OFFSET.x + m, PROF_FRAME_OFFSET.y - m)
+            K.PROF_FRAME_OFFSET.x + m, K.PROF_FRAME_OFFSET.y - m)
         cover.pageLeft = left
         local right = cover:CreateTexture(nil, "BACKGROUND")
         right:SetTexture(ProfTexture("Interface\\Spellbook\\Professions-Book-Right", 383589))
@@ -3336,34 +3786,34 @@ local function CreateProfessionsPage()
         -- La pagina base se dibuja estirada en un ancho de `host - 31`. El marcapaginas ocupa
         -- los `w` primeros pixeles de esa misma pagina, asi que su texCoord es esa fraccion:
         -- se recorta lo mismo que veria un frame que recortase, pero sin frame.
-        local anchoPagina = (host:GetWidth() or 550) + SKILLS_PAGE_RECT.right - SKILLS_PAGE_RECT.left
+        local anchoPagina = (host:GetWidth() or 550) + K.SKILLS_PAGE_RECT.right - K.SKILLS_PAGE_RECT.left
         if anchoPagina < 1 then anchoPagina = 519 end
-        local fraccion = math.min(1, PROF_BOOKMARK.w / anchoPagina)
+        local fraccion = math.min(1, K.PROF_BOOKMARK.w / anchoPagina)
         bookmarkPage:SetTexCoord(0, fraccion, 0, 1)
         bookmarkPage:ClearAllPoints()
         bookmarkPage:SetPoint("TOPLEFT", host, "TOPLEFT",
-            SKILLS_PAGE_RECT.left + PROF_BOOKMARK.tx, SKILLS_PAGE_RECT.top + PROF_BOOKMARK.ty)
+            K.SKILLS_PAGE_RECT.left + K.PROF_BOOKMARK.tx, K.SKILLS_PAGE_RECT.top + K.PROF_BOOKMARK.ty)
         bookmarkPage:SetPoint("BOTTOMLEFT", host, "BOTTOMLEFT",
-            SKILLS_PAGE_RECT.left + PROF_BOOKMARK.tx, SKILLS_PAGE_RECT.bottom + PROF_BOOKMARK.ty)
-        bookmarkPage:SetWidth(PROF_BOOKMARK.w)
+            K.SKILLS_PAGE_RECT.left + K.PROF_BOOKMARK.tx, K.SKILLS_PAGE_RECT.bottom + K.PROF_BOOKMARK.ty)
+        bookmarkPage:SetWidth(K.PROF_BOOKMARK.w)
         for i, cover in ipairs(frameCovers) do
-            local slot = PROF_SLOTS[i]
-            local m = PROF_FRAME_MARGIN
+            local slot = K.PROF_SLOTS[i]
+            local m = K.PROF_FRAME_MARGIN
             cover:SetSize(slot.w + m * 2, slot.h + m * 2)
             cover:ClearAllPoints()
             cover:SetPoint("TOPLEFT", host, "TOPLEFT", slot.x - m, slot.y + m)
             cover.pageLeft:ClearAllPoints()
             cover.pageLeft:SetPoint("TOPLEFT", cover, "TOPLEFT",
-                PROF_FRAME_OFFSET.x + m, PROF_FRAME_OFFSET.y - m)
+                K.PROF_FRAME_OFFSET.x + m, K.PROF_FRAME_OFFSET.y - m)
         end
     end
     ApplyProfSkin()
     HarfordCharacterPanel._ApplyProfSkin = ApplyProfSkin
     HarfordCharacterPanel._ProfSkinValues = {
-        bookmark = PROF_BOOKMARK, frame = PROF_FRAME_OFFSET,
+        bookmark = K.PROF_BOOKMARK, frame = K.PROF_FRAME_OFFSET,
         margen = function(v)
-            if v then PROF_FRAME_MARGIN = math.max(0, math.floor(v)) end
-            return PROF_FRAME_MARGIN
+            if v then K.PROF_FRAME_MARGIN = math.max(0, math.floor(v)) end
+            return K.PROF_FRAME_MARGIN
         end,
     }
 
@@ -3490,7 +3940,7 @@ end
 -- Tooltip de los botones de profesion. El libro nativo muestra uno al pasar por encima y el
 -- nuestro no mostraba nada. Aqui no hay hechizo del que sacar la descripcion, asi que se compone
 -- con lo que si tenemos: tipo, herramienta, caracteristica que la rige, rango y recetas.
-local PROF_KIND_LABEL = {
+K.PROF_KIND_LABEL = {
     craft = "Profesion de fabricacion",
     gather = "Profesion de recoleccion",
     utility = "Competencia de herramienta",
@@ -3511,7 +3961,7 @@ local function SetProfTooltip(button, profId, modo)
         else
             local skill = HarfordProfessions.EffectiveSkill(profId)
             GameTooltip:SetText(def.name or profId, 1, 0.82, 0)
-            GameTooltip:AddLine(PROF_KIND_LABEL[def.kind] or "Profesion", 1, 1, 1, true)
+            GameTooltip:AddLine(K.PROF_KIND_LABEL[def.kind] or "Profesion", 1, 1, 1, true)
             if def.ability then
                 GameTooltip:AddDoubleLine("Caracteristica", def.ability, 0.7, 0.7, 0.7, 1, 1, 1)
             end
@@ -3582,7 +4032,11 @@ local function ProfSpellButton(parent, previous, secondary)
             sb:SetPoint("TOPLEFT", previous, "BOTTOMLEFT", 0, 0)
         end
     else
-        sb:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -109, -3)
+        -- Ya solo hay UN boton por profesion (la tirada se fue al dado de la ventana de recetas),
+        -- y va en el hueco de ABAJO, que es el que ocupaba la tirada: en el hueco grande son dos
+        -- posiciones de 40 apiladas, asi que la segunda empieza en -43. En el hueco pequeno no
+        -- cabe esa segunda fila y se queda arriba.
+        sb:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -109, secondary and -3 or -43)
     end
     -- Sonda: 40x40, capa BORDER, mezcla BLEND, sin texCoord. Icono cuadrado y a pelo.
     sb.icon = sb:CreateTexture(nil, "BORDER")
@@ -3617,7 +4071,7 @@ local function ProfButton(i)
     -- fijo: el nativo tiene DOS huecos grandes (con aro de icono) y TRES pequenos (sin aro), y
     -- el ornamento de todos ellos esta horneado en la textura de la pagina. El boton no dibuja
     -- marco propio.
-    local slotDef = PROF_SLOTS[i] or PROF_SLOTS[#PROF_SLOTS]
+    local slotDef = K.PROF_SLOTS[i] or K.PROF_SLOTS[#K.PROF_SLOTS]
     local secondary = slotDef.kind == "secondary"
     local b = CreateFrame("Button", nil, P.profList)
     b.slotKind = slotDef.kind
@@ -3625,7 +4079,7 @@ local function ProfButton(i)
     b:SetPoint("TOPLEFT", P.profList, "TOPLEFT", slotDef.x, slotDef.y)
     -- Sin resaltado al pasar el raton: el hueco NO es clicable (como en el libro nativo, donde
     -- se pulsa el boton de hechizo), asi que iluminarlo entero prometia una interaccion que
-    -- no existe. El resaltado lo ponen `spellOpen`/`spellTool`, que si lo son.
+    -- no existe. El resaltado lo pone `spellOpen`, que si lo es.
     b:EnableMouse(false)
 
     b.bar = ProfStatusBar(b)
@@ -3694,9 +4148,9 @@ local function ProfButton(i)
     end
 
     -- El hueco en si NO abre nada (como el libro nativo, donde se pulsa el boton de hechizo):
-    -- abrir la profesion es `spellOpen`, y `spellTool` es la tirada suelta de su herramienta.
+    -- abrir la profesion es `spellOpen`. La tirada suelta se fue al boton de dado de la
+    -- ventana de recetas, asi que aqui ya no hay un segundo boton.
     b.spellOpen = ProfSpellButton(b, nil, secondary)
-    b.spellTool = ProfSpellButton(b, b.spellOpen, secondary)
     P.profButtons[i] = b
     return b
 end
@@ -3747,7 +4201,7 @@ local function RefreshProfessions()
     -- Los marcos CRECEN con las profesiones: uno por cada una conocida, y un unico hueco vacio
     -- cuando no hay ninguna (a modo de invitacion). El nativo enseña siempre dos porque solo
     -- admite dos principales; aqui todas son equivalentes y no hay numero fijo que reservar.
-    local VISIBLE = #PROF_SLOTS
+    local VISIBLE = #K.PROF_SLOTS
     local totalSlots = math.max(#known, 1)
     local maxPage = math.max(1, math.ceil(totalSlots / VISIBLE))
     P.pageNum = math.max(1, math.min(P.pageNum or 1, maxPage))
@@ -3816,18 +4270,6 @@ local function RefreshProfessions()
                     end
                 end)
                 b.spellOpen:Show()
-                -- Segundo boton solo si la profesion tiene herramienta: tirada suelta de uso.
-                if def.tool and HarfordProfessions.RollTool then
-                    SetProfButtonIcon(b.spellTool.icon, def.icon)
-                    b.spellTool.label:SetText(def.tool)
-                    SetProfTooltip(b.spellTool, profId, "tool")
-                    b.spellTool:SetScript("OnClick", function()
-                        HarfordProfessions.RollTool(profId)
-                    end)
-                    b.spellTool:Show()
-                else
-                    b.spellTool:Hide()
-                end
                 b:Show()
             elseif emptySlot then
                 -- Hueco VACIO, tal y como lo declara el XML: se ocultan professionName, rank y
@@ -3850,7 +4292,6 @@ local function RefreshProfessions()
                 b.bar:Hide()
                 b:SetScript("OnClick", nil)
                 b.spellOpen:Hide()
-                b.spellTool:Hide()
                 b:Show()
             else
                 b:Hide()
@@ -3920,14 +4361,14 @@ S.RefreshProfessions = RefreshProfessions
 -- Comportamiento por click: pasivo = nada (tooltip), activo = anuncia en chat con enlace
 -- propio + ejecuta su mecanica, reaccion = toggle (vacio por ahora). Texturas vanilla.
 -- ===========================================================================
-local BOOK_COLS, BOOK_ROWS = 2, 6
-local BOOK_PER_PAGE = BOOK_COLS * BOOK_ROWS
+K.BOOK_COLS, K.BOOK_ROWS = 2, 6
+K.BOOK_PER_PAGE = K.BOOK_COLS * K.BOOK_ROWS
 -- Clasificacion y datos de presentacion del Libro -> extraidos a HarfordCharacterBook (modulo
 -- puro, sin `S`). Alias locales para no tocar los call-sites de la UI del Libro de abajo.
-local BOOK_ICON               = HarfordCharacterBook.ICON
+K.BOOK_ICON = HarfordCharacterBook.ICON
 local FeatureCondDamageId     = HarfordCharacterBook.CondDamageId
 local BookCategory            = HarfordCharacterBook.Category
-local REACTION_TRIGGER_TEXT   = HarfordCharacterBook.REACTION_TRIGGER_TEXT
+K.REACTION_TRIGGER_TEXT = HarfordCharacterBook.REACTION_TRIGGER_TEXT
 local FeatureReactionTrigger  = HarfordCharacterBook.ReactionTrigger
 local FeatureReactionEffect   = HarfordCharacterBook.ReactionEffect
 
@@ -3962,11 +4403,14 @@ end
 
 local RefreshBook   -- forward (los handlers lo llaman)
 
+-- `usesFrom` apunta al id de otro rasgo: este consume la reserva de aquel. Lo usan las
+-- Maldiciones, que gastan usos de Corrupcion y no tienen reserva propia.
 local function GetFeatureUseState(feature)
-    if not (feature and feature.uses and HarfordDnDFeatureUses and HarfordDnDFeatureUses.GetTracked) then
+    if not (feature and (feature.uses or feature.usesFrom)
+        and HarfordDnDFeatureUses and HarfordDnDFeatureUses.GetTracked) then
         return nil
     end
-    local id = feature.id
+    local id = feature.usesFrom or feature.id
     if not id then return nil end
     for _, tracked in ipairs(HarfordDnDFeatureUses.GetTracked(GetProfileName()) or {}) do
         if tracked.featureId == id then
@@ -3990,7 +4434,7 @@ local function FeatureUseTooltipText(feature)
 end
 
 local function FeatureUseAvailable(feature)
-    if not (feature and feature.uses) then return true end
+    if not (feature and (feature.uses or feature.usesFrom)) then return true end
     local tracked = GetFeatureUseState(feature)
     if not tracked then return true end
     return (tonumber(tracked.available) or 0) > 0
@@ -4006,7 +4450,7 @@ local function WarnFeatureWithoutUses(feature)
     end
 end
 
-local AnnounceAbility, OpenLayOnHandsPrompt
+local AnnounceAbility, OpenLayOnHandsPrompt, OpenDemonicFirePrompt
 
 local function GetPowerWordOption(feature)
     if not (feature and feature.actionKind == "powerWord" and HarfordDnDProgression
@@ -4084,26 +4528,41 @@ local function OpenPowerWordChoice(anchor, feature)
     ToggleDropDownMenu(1, nil, menu, anchor, 0, 0)
 end
 
-local function OpenPowerWordSave(feature, option)
+-- Constructor UNICO de area para las Palabras de Poder. Antes habia dos funciones casi identicas
+-- (una para las de salvacion, otra para Fortaleza) que solo diferian en valores declarados. Lo que
+-- cambia lo dice la OPCION: `resolution`, `saveAbility`, `applicationCountAbility` y `sizeText`.
+local function OpenPowerWordArea(feature, option)
     if not (HarfordDnDArea and HarfordDnDArea.Open) then
-        HarfordChat.Print("El motor de salvaciones no esta disponible.")
+        HarfordChat.Print("El motor de areas no esta disponible.")
         return
     end
     local display = PowerWordDisplayFeature(feature, option)
-    local definition = {
-        name = display.name,
-        area = {
-            shape = "other", sizeText = "Objetivo", resolution = "save",
-            saveAbility = option.saveAbility, dc = PriestSpellDC(), success = "none",
-            conditionId = option.conditionId, conditionDuration = option.conditionDuration or "target_turn_end",
-        },
+    local resolucion = option.resolution or (option.saveAbility and "save" or "auto")
+    local area = {
+        shape = "other",
+        sizeText = option.sizeText or (option.applicationCountAbility and "Objetivos" or "Objetivo"),
+        resolution = resolucion,
+        conditionId = option.conditionId,
+        conditionDuration = option.conditionDuration or "target_turn_end",
     }
-    local opened, err = HarfordDnDArea.Open(definition, {
+    if resolucion == "save" then
+        area.saveAbility = option.saveAbility
+        area.dc = PriestSpellDC()
+        area.success = "none"
+    end
+    -- Fortaleza afecta a tantas criaturas como tu Mod. de Carisma (minimo 1).
+    if option.applicationCountAbility then
+        local mod = HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod
+            and HarfordDnDCalc.GetAbilityMod(option.applicationCountAbility) or 1
+        area.applicationCount = math.max(1, mod)
+    end
+    local opened, err = HarfordDnDArea.Open({ name = display.name, area = area }, {
         sourceKind = "player",
         sourceGuid = UnitGUID and UnitGUID("player") or "",
         sourceName = HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName()
             or HarfordClassColors.UnitFullName("player"),
-        autoResolve = true,
+        -- Solo las de salvacion se resuelven solas: Fortaleza deja marcar varias criaturas.
+        autoResolve = (resolucion == "save") or nil,
         onCommit = function()
             local ok, spendErr = SpendPowerWord(option)
             if ok then AnnounceAbility(display) end
@@ -4113,79 +4572,42 @@ local function OpenPowerWordSave(feature, option)
     if not opened then HarfordChat.Print(tostring(err or "No se pudo resolver la Palabra de Poder.")) end
 end
 
-local function ApplyPowerWordFortaleza(feature, option)
-    if not (HarfordDnDArea and HarfordDnDArea.Open) then return end
-    local count = math.max(1, HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod and HarfordDnDCalc.GetAbilityMod("Carisma") or 1)
-    local display = PowerWordDisplayFeature(feature, option)
-    local definition = {
-        name = display.name,
-        area = {
-            shape = "other", sizeText = "Objetivos", resolution = "auto", applicationCount = count,
-            conditionId = option.conditionId, conditionDuration = option.conditionDuration or "target_turn_end",
-        },
-    }
-    local opened, err = HarfordDnDArea.Open(definition, {
-        sourceKind = "player", sourceGuid = UnitGUID and UnitGUID("player") or "",
-        sourceName = HarfordClassColors.UnitFullName("player"),
-        onCommit = function()
-            local ok, spendErr = SpendPowerWord(option)
-            if ok then AnnounceAbility(display) end
-            return ok, spendErr
-        end,
-    })
-    if not opened then HarfordChat.Print(tostring(err or "No se pudo preparar Fortaleza.")) end
-end
-
-local function ApplyPowerWordShield(feature, option)
+-- Concesion directa de un recurso a un jugador objetivo (Escudo = vida temporal, Consuelo =
+-- curacion). Eran dos funciones identicas salvo el recurso, la formula y el sustantivo de los
+-- avisos: ahora los declara la OPCION en `grant`. Un NPC no se toca: lo gestiona su ficha de DM.
+local function ApplyPowerWordGrant(feature, option)
+    local grant = option.grant
+    if type(grant) ~= "table" then return end
+    local nombre = tostring(grant.noun or "el efecto")
     if not (UnitExists and UnitExists("target")) then
-        HarfordChat.Print("Escudo requiere un objetivo.")
+        HarfordChat.Print(tostring(option.label or "Esta Palabra") .. " requiere un objetivo.")
         return
     end
     if not (UnitIsPlayer and UnitIsPlayer("target")) then
-        HarfordChat.Print("La vida temporal de un NPC debe gestionarla su ficha de DM.")
+        HarfordChat.Print("La " .. nombre .. " de un NPC debe gestionarla su ficha de DM.")
         return
     end
-    local priestLevel = 0
-    for _, entry in ipairs(HarfordDnDProgression.GetClassLevels(GetProfileName()) or {}) do
-        if entry.classId == "sacerdote" then priestLevel = tonumber(entry.level) or 0; break end
-    end
-    local amount = math.max(1, math.floor(priestLevel / 2) + (HarfordDnDCalc.GetAbilityMod("Carisma") or 0))
-    local ok, err = SpendPowerWord(option)
-    if not ok then HarfordChat.Print(err); return end
-    if UnitIsUnit and UnitIsUnit("target", "player") then
-        HarfordDnDStore.AdjustResourceCurrent("temp_health", amount)
-    elseif HarfordDnDNet and HarfordDnDNet.SendResourceAdjustToPlayer then
-        local targetName = HarfordClassColors.UnitFullName("target")
-        if not HarfordDnDNet.SendResourceAdjustToPlayer(targetName, "temp_health", amount) then
-            HarfordChat.Print("No se pudo enviar la vida temporal al objetivo.")
-            HarfordDnDStore.AdjustResourceCurrent(option.resourceKey or "light_point", tonumber(option.resourceCost) or 0)
-            return
+    local amount = HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod
+        and HarfordDnDCalc.GetAbilityMod(grant.ability) or 0
+    -- Escudo suma ademas la mitad de tu nivel de clase; Consuelo no declara esta parte.
+    if grant.perClassLevel then
+        local nivel = 0
+        for _, entry in ipairs(HarfordDnDProgression.GetClassLevels(GetProfileName()) or {}) do
+            if entry.classId == grant.perClassLevel then nivel = tonumber(entry.level) or 0 break end
         end
+        amount = amount + math.floor(nivel / (tonumber(grant.perLevelDiv) or 1))
     end
-    AnnounceAbility(PowerWordDisplayFeature(feature, option))
-    if RefreshGameUI then RefreshGameUI() end
-    if RefreshBook then RefreshBook() end
-end
+    amount = math.max(1, amount)
 
-local function ApplyPowerWordConsuelo(feature, option)
-    if not (UnitExists and UnitExists("target")) then
-        HarfordChat.Print("Consuelo requiere seleccionar a la criatura curada.")
-        return
-    end
-    if not (UnitIsPlayer and UnitIsPlayer("target")) then
-        HarfordChat.Print("La curacion adicional de un NPC debe gestionarla su ficha de DM.")
-        return
-    end
-    local amount = math.max(1, HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod
-        and HarfordDnDCalc.GetAbilityMod("Carisma") or 1)
     local ok, err = SpendPowerWord(option)
     if not ok then HarfordChat.Print(err); return end
     if UnitIsUnit and UnitIsUnit("target", "player") then
-        HarfordDnDStore.AdjustResourceCurrent("health", amount)
+        HarfordDnDStore.AdjustResourceCurrent(grant.resource, amount)
     elseif HarfordDnDNet and HarfordDnDNet.SendResourceAdjustToPlayer then
         local targetName = HarfordClassColors.UnitFullName("target")
-        if not HarfordDnDNet.SendResourceAdjustToPlayer(targetName, "health", amount) then
-            HarfordChat.Print("No se pudo enviar la curacion adicional al objetivo.")
+        if not HarfordDnDNet.SendResourceAdjustToPlayer(targetName, grant.resource, amount) then
+            HarfordChat.Print("No se pudo enviar " .. nombre .. " al objetivo.")
+            -- Devolver la Fe: se gasto antes de saber que el envio fallaba.
             HarfordDnDStore.AdjustResourceCurrent(option.resourceKey or "light_point", tonumber(option.resourceCost) or 0)
             return
         end
@@ -4203,27 +4625,21 @@ local function UsePowerWord(feature, anchor)
         HarfordChat.Print("Elige una opcion para Palabra de Poder.")
         return
     end
-    if option.id == "barrera" then
-        -- No existe una ventana fiable entre impacto y daño para que el defensor
-        -- confirme esta reacción. Barrera se resuelve en mesa: anuncia su uso y
-        -- consume Fe ahora, sin dejar una reacción automática preparada.
-        local ok, err = SpendPowerWord(option)
-        if not ok then HarfordChat.Print(err); return end
-        AnnounceAbility(PowerWordDisplayFeature(parent, option))
-    elseif option.id == "castigo" or option.id == "dolor" or option.id == "resplandor" then
-        OpenPowerWordSave(parent, option)
-    elseif option.id == "fortaleza" then
-        ApplyPowerWordFortaleza(parent, option)
-    elseif option.id == "escudo" then
-        ApplyPowerWordShield(parent, option)
+    -- Barrera no lleva rama propia: hacia exactamente lo mismo que el `else` final (gastar Fe y
+    -- anunciar). No existe una ventana fiable entre impacto y daño para que el defensor confirme
+    -- esa reaccion, asi que se resuelve en mesa y NO se deja preparada.
+    -- Salvacion o aplicacion directa: lo decide lo que declara la opcion, no su id.
+    if option.saveAbility or option.applicationCountAbility then
+        OpenPowerWordArea(parent, option)
+    -- Concede un recurso al objetivo (Escudo, Consuelo): lo declara la opcion.
+    elseif type(option.grant) == "table" then
+        ApplyPowerWordGrant(parent, option)
     elseif option.id == "muerte" then
         if not (HarfordDnDStore and HarfordDnDStore.PreparePowerWordDeath) then
             HarfordChat.Print("El sistema de dano de conjuros no esta disponible.")
             return
         end
         HarfordDnDStore.PreparePowerWordDeath(parent, option)
-    elseif option.id == "consuelo" then
-        ApplyPowerWordConsuelo(parent, option)
     else
         local ok, err = SpendPowerWord(option)
         if not ok then HarfordChat.Print(err); return end
@@ -4236,7 +4652,7 @@ end
 -- limitado, gasta un uso. (La mecanica de recurso/daño activable vive en la seccion Ataque.)
 AnnounceAbility = function(feature)
     if not feature then return false end
-    if feature.uses and not FeatureUseAvailable(feature) then
+    if (feature.uses or feature.usesFrom) and not FeatureUseAvailable(feature) then
         WarnFeatureWithoutUses(feature)
         return false
     end
@@ -4261,8 +4677,9 @@ AnnounceAbility = function(feature)
     elseif DEFAULT_CHAT_FRAME then
         HarfordChat.Print(link)
     end
-    if feature.uses and HarfordDnDFeatureUses and HarfordDnDFeatureUses.Spend and not IsInspecting() then
-        HarfordDnDFeatureUses.Spend(feature.id, GetProfileName())
+    if (feature.uses or feature.usesFrom) and HarfordDnDFeatureUses and HarfordDnDFeatureUses.Spend
+        and not IsInspecting() then
+        HarfordDnDFeatureUses.Spend(feature.usesFrom or feature.id, GetProfileName())
         if RefreshBook then RefreshBook() end
     end
     if feature.spendResourceOnAnnounce and not IsInspecting() then
@@ -4285,9 +4702,12 @@ end
 -- Imposicion de Manos usa una reserva de PG, no una barra de recursos. El prompt captura
 -- una cantidad concreta y delega la curacion al motor comun de jugadores/NPCs.
 do
-    StaticPopupDialogs["HARFORD_LAY_ON_HANDS"] = {
+    -- Cuadro UNICO de "elige una cantidad". Lo comparten Imposicion de Manos (curar) y Canalizar
+    -- fuego demoniaco (danar): eran dos popups identicos salvo el texto del boton. Lo que cambia
+    -- va en `data`: el rango, la etiqueta y que hacer con la cantidad.
+    StaticPopupDialogs["HARFORD_AMOUNT_PROMPT"] = {
         text = "%s",
-        button1 = "Curar",
+        button1 = "Aceptar",
         button2 = "Cancelar",
         hasEditBox = true,
         maxLetters = 5,
@@ -4296,15 +4716,14 @@ do
         hideOnEscape = 1,
         OnShow = function(self)
             local data = self.data or {}
+            if self.button1 and data.acceptText then self.button1:SetText(data.acceptText) end
             self.editBox:SetText(tostring(data.defaultAmount or 1))
             self.editBox:HighlightText()
             self.editBox:SetFocus()
         end,
         OnAccept = function(self)
             local data = self.data
-            if data and type(data.confirm) == "function" then
-                data.confirm(self.editBox:GetText())
-            end
+            if data and type(data.confirm) == "function" then data.confirm(self.editBox:GetText()) end
         end,
         EditBoxOnEnterPressed = function(editBox)
             local popup = editBox:GetParent()
@@ -4312,42 +4731,103 @@ do
         end,
     }
 
-    OpenLayOnHandsPrompt = function(feature)
+    -- Pide una cantidad entre 1 y `max` y llama a `apply(cantidad)`. Valida el rango y que el
+    -- objetivo no haya cambiado entre la pregunta y la respuesta.
+    local function OpenAmountPrompt(opts)
         if IsInspecting() then return end
         if not (UnitExists and UnitExists("target")) then
-            HarfordChat.Print("Imposicion de Manos requiere un objetivo.")
+            HarfordChat.Print(tostring(opts.title or "Esta habilidad") .. " requiere un objetivo.")
             return
         end
-        local tracked = GetFeatureUseState(feature)
-        local available = math.max(0, tonumber(tracked and tracked.available) or 0)
-        local maximum = math.max(0, tonumber(tracked and tracked.max) or 0)
-        if available <= 0 then
-            WarnFeatureWithoutUses(feature)
+        local max = math.floor(tonumber(opts.max) or 0)
+        if max < 1 then
+            HarfordChat.Print(tostring(opts.emptyText or "No queda reserva disponible."))
             return
         end
         local targetGuid = UnitGUID and UnitGUID("target") or ""
+        local texto = tostring(opts.title or "") .. "\n"
+            .. tostring(opts.subtitle or "") .. "\n"
+            .. tostring(opts.prompt or "Cantidad") .. " (1-" .. tostring(max) .. "):"
+        StaticPopup_Show("HARFORD_AMOUNT_PROMPT", texto, nil, {
+            defaultAmount = max,
+            acceptText = opts.acceptText,
+            confirm = function(bruto)
+                local cantidad = math.floor(tonumber(bruto) or 0)
+                if cantidad < 1 or cantidad > max then
+                    HarfordChat.Print("Introduce una cantidad entre 1 y " .. tostring(max) .. ".")
+                    return
+                end
+                if not (UnitExists and UnitExists("target"))
+                    or (targetGuid ~= "" and UnitGUID("target") ~= targetGuid) then
+                    HarfordChat.Print("El objetivo ha cambiado.")
+                    return
+                end
+                opts.apply(cantidad, targetGuid)
+            end,
+        })
+    end
+
+    -- Canalizar fuego demoniaco: recibes N de fuego (hasta tu nivel de brujo) y el objetivo el DOBLE.
+    OpenDemonicFirePrompt = function(feature)
+        local nivel = 0
+        for _, entry in ipairs((HarfordDnDProgression and HarfordDnDProgression.GetClassLevels
+            and HarfordDnDProgression.GetClassLevels(GetProfileName())) or {}) do
+            if entry.classId == "brujo" then nivel = tonumber(entry.level) or 0 break end
+        end
+        OpenAmountPrompt({
+            title = tostring(feature.name or "Canalizar fuego demoniaco"),
+            subtitle = "Recibes dano por fuego y el objetivo recibe el doble.",
+            prompt = "Cantidad que RECIBES",
+            acceptText = "Canalizar",
+            max = nivel,
+            emptyText = "Necesitas niveles de Brujo para canalizar fuego demoniaco.",
+            apply = function(propio)
+                if not AnnounceAbility(feature) then return end
+                -- El dano propio no se mitiga: es el coste que paga el brujo.
+                if HarfordDnDStore and HarfordDnDStore.AdjustResourceCurrent then
+                    HarfordDnDStore.AdjustResourceCurrent("health", -propio)
+                end
+                local objetivo, marca = propio * 2, ""
+                if HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
+                    local aplicado, _estado, mk = HarfordDamageMitigation.ForTarget("target", "fuego", propio * 2)
+                    objetivo, marca = aplicado, mk or ""
+                end
+                if HarfordDnDCombat and HarfordDnDCombat.ApplyWeaponDamageToTarget then
+                    HarfordDnDCombat.ApplyWeaponDamageToTarget(
+                        HarfordDnDCombat.PayloadFor("target", objetivo, "fuego"), false)
+                end
+                if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+                    HarfordDnDRolls.Broadcast({
+                        type = "damage", targetUnit = "target",
+                        label = tostring(feature.name or "Canalizar fuego demoniaco"),
+                        total = objetivo, dice = "recibes " .. tostring(propio),
+                        modifiers = "Fuego" .. (marca ~= "" and (" " .. marca) or ""),
+                        critical = "", mode = "",
+                    })
+                end
+                if RefreshBook then RefreshBook() end
+            end,
+        })
+    end
+
+    -- Imposicion de Manos: reserva de PG de la que gastas la cantidad que quieras.
+    OpenLayOnHandsPrompt = function(feature)
+        local tracked = GetFeatureUseState(feature)
+        local available = math.max(0, tonumber(tracked and tracked.available) or 0)
+        local maximum = math.max(0, tonumber(tracked and tracked.max) or 0)
+        if available <= 0 then WarnFeatureWithoutUses(feature); return end
         local targetName = HarfordClassColors.UnitFullName("target")
-        local text = "Imposicion de Manos\nReserva disponible: " .. tostring(available) .. "/" .. tostring(maximum)
-            .. "\nObjetivo: " .. tostring(targetName ~= "" and targetName or "objetivo")
-            .. "\nCantidad a curar (1-" .. tostring(available) .. "):"
-        StaticPopup_Show("HARFORD_LAY_ON_HANDS", text, nil, {
-            defaultAmount = available,
-            confirm = function(rawAmount)
-                local amount = math.floor(tonumber(rawAmount) or 0)
-                if amount < 1 or amount > available then
-                    HarfordChat.Print("Introduce una cantidad entre 1 y " .. tostring(available) .. ".")
-                    return
-                end
-                if not (UnitExists and UnitExists("target")) or (targetGuid ~= "" and UnitGUID("target") ~= targetGuid) then
-                    HarfordChat.Print("El objetivo de Imposicion de Manos ha cambiado.")
-                    return
-                end
+        OpenAmountPrompt({
+            title = "Imposicion de Manos",
+            subtitle = "Reserva disponible: " .. tostring(available) .. "/" .. tostring(maximum)
+                .. "   Objetivo: " .. tostring(targetName ~= "" and targetName or "objetivo"),
+            prompt = "Cantidad a curar",
+            acceptText = "Curar",
+            max = available,
+            apply = function(amount)
                 local opened, err = HarfordDnDArea.Open({
-                    title = feature.name,
-                    shape = "other",
-                    sizeText = "Objetivo",
-                    resolution = "heal",
-                    healingComponents = { { fixedAmount = amount } },
+                    title = feature.name, shape = "other", sizeText = "Objetivo",
+                    resolution = "heal", healingComponents = { { fixedAmount = amount } },
                 }, {
                     sourceKind = "player",
                     sourceGuid = UnitGUID and UnitGUID("player") or "",
@@ -4368,7 +4848,7 @@ do
 end
 
 -- Colores/label de categoria -> HarfordCharacterBook (modulo). Alias locales.
-local BOOK_CAT_COLOR    = HarfordCharacterBook.CAT_COLOR
+K.BOOK_CAT_COLOR = HarfordCharacterBook.CAT_COLOR
 local BookCategoryLabel = HarfordCharacterBook.CategoryLabel
 
 local function BookFeatureDescription(feature, source, classId)
@@ -4388,8 +4868,13 @@ local function BookButtonOnEnter(self)
     -- Cabecera igual que el subtexto del boton: solo "<Categoria>  ·  Nivel N" (sin pista de click).
     local catTxt = BookCategoryLabel(cat, self.feature)
     if self.featLevel and self.featLevel > 0 then catTxt = catTxt .. "  ·  Nivel " .. self.featLevel end
-    local col = BOOK_CAT_COLOR[cat] or { 0.6, 0.8, 1 }
-    GameTooltip:AddLine(catTxt, col[1], col[2], col[3])
+    -- Los agregados (Competencias, Idiomas) tampoco llevan la categoria en el tooltip: su
+    -- contenido es el listado, y "Pasiva" solo anade una linea vacia de informacion.
+    -- Ni en los de ELECCION: lo que importa de ellos es que se eligio, no que sean pasivos.
+    if not (API.IsAggregatedFeature(self.feature) or self.feature.choice) then
+        local col = K.BOOK_CAT_COLOR[cat] or { 0.6, 0.8, 1 }
+        GameTooltip:AddLine(catTxt, col[1], col[2], col[3])
+    end
     local useText, useState = FeatureUseTooltipText(self.feature)
     if useText and useState then
         local r, g, b = 0.8, 0.8, 0.8
@@ -4399,31 +4884,174 @@ local function BookButtonOnEnter(self)
     local choiceText, pendingChoice = GetFeatureChoiceDisplay(self.feature, GetProfileName())
     if choiceText then
         local r, g, b = pendingChoice and 1 or 0.8, pendingChoice and 0.25 or 0.8, pendingChoice and 0.25 or 0.8
-        GameTooltip:AddLine("Eleccion: " .. choiceText, r, g, b)
+        -- Resuelta: solo lo elegido, con su separador. La etiqueta "Eleccion:" sobra cuando el
+        -- contenido ya se explica solo. PENDIENTE si la conserva: "pendiente" a secas no dice
+        -- nada, y ademas es el texto que fija el contrato del proyecto.
+        GameTooltip:AddLine(pendingChoice and ("Eleccion: " .. choiceText) or choiceText, r, g, b)
     end
     if cat == "reaccion" then
         local trigger = FeatureReactionTrigger(self.feature)
         if trigger then
-            GameTooltip:AddLine("Disparador: " .. (REACTION_TRIGGER_TEXT[trigger] or trigger), 0.8, 0.8, 0.8)
+            GameTooltip:AddLine("Disparador: " .. (K.REACTION_TRIGGER_TEXT[trigger] or trigger), 0.8, 0.8, 0.8)
         end
     end
     -- Para rasgos de eleccion resueltos, la descripcion es la de la OPCION elegida (p.ej. el
     -- estilo de combate concreto), no la generica "Adoptas un estilo...".
     local descText = BookFeatureDescription(self.feature, self.source, self.classId)
+    local opcionDesc
     if self.feature.choice and HarfordDnDProgression and HarfordDnDProgression.GetChoice
         and HarfordDnDBook and HarfordDnDBook.GetChoiceOptionDesc then
         local chosen = HarfordDnDProgression.GetChoice(self.feature.id, GetProfileName())
         if type(chosen) == "table" then
             for _, optId in ipairs(chosen) do
                 local d = HarfordDnDBook.GetChoiceOptionDesc(self.feature, optId)
-                if d then descText = d; break end
+                if d then opcionDesc = d; break end
             end
         end
     end
-    if descText and descText ~= "" then
-        GameTooltip:AddLine(descText, 0.9, 0.9, 0.9, true)
+    if opcionDesc then
+        -- Resuelto: SOLO lo que hace la opcion elegida. Ni el texto del manual (enumera todas las
+        -- opciones y contradice a la ya elegida) ni la introduccion del rasgo, que no anade nada
+        -- cuando la eleccion ya se muestra arriba.
+        descText = opcionDesc
+        opcionDesc = nil
+    end
+    -- La descripcion de un agregado es un resumen PARCIAL heredado del rasgo de origen
+    -- ("Competencia en Engano y Atletismo", "Hablas Comun y Darnassiano") que contradice al
+    -- listado completo de abajo. No se muestra en ninguno de los dos.
+    if descText and descText ~= "" and not API.IsAggregatedFeature(self.feature) then
+        -- Dorado del tooltip nativo: titulo en blanco, descripcion en NORMAL_FONT_COLOR.
+        local nf = NORMAL_FONT_COLOR
+        GameTooltip:AddLine(descText, nf and nf.r or 1, nf and nf.g or 0.82, nf and nf.b or 0, true)
+    end
+    -- Competencias e Idiomas anaden su listado agregado.
+    -- "Lista ampliada de conjuros": los nombres viven en `expandedSpells` de la SUBCLASE, no en el
+    -- rasgo. Se leen de ahi para no tener la misma lista en dos sitios y que no puedan divergir.
+    if self.feature.showsExpandedSpells and HarfordDnDBook and HarfordDnDBook.GetSubclass then
+        local progression = GetProgression()
+        for _, entry in ipairs((progression and progression.classLevels) or {}) do
+            local sub = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
+            if sub and type(sub.expandedSpells) == "table" and #sub.expandedSpells > 0 then
+                GameTooltip:AddLine(" ")
+                for _, nombre in ipairs(sub.expandedSpells) do
+                    GameTooltip:AddLine("- " .. tostring(nombre), 0.8, 0.8, 0.8)
+                end
+                break
+            end
+        end
+    end
+    if API.AddAggregatedFeatureTooltip(self.feature) then
+        -- (las lineas ya se han anadido)
     end
     GameTooltip:Show()
+end
+
+-- COMPETENCIAS E IDIOMAS: un solo sitio donde consultarlo todo.
+--
+-- Las competencias no se reparten en un rasgo por fuente: raza, clase y trasfondo aportan a la
+-- MISMA bolsa, que `HarfordDnDFeatureEffects.GetProficiencies` ya tiene agregada. Cada rasgo de
+-- origen sigue mostrando lo suyo -su texto- y aqui se ve el resultado sumado.
+--
+-- Una seccion vacia NO se pinta: un tooltip con "Herramientas: -" no dice nada.
+--
+-- Todo va dentro de un `do...end` y solo sale UNA funcion, por la tabla del modulo: este
+-- fichero esta en el limite de 200 locales de Lua 5.1 y seis mas lo rompian.
+do
+-- Solo estas cuatro. Salvaciones y habilidades NO son "competencias" en este sentido: se
+-- consultan en la ficha, donde ya salen con su modificador, y repetirlas aqui era ruido.
+K.PROF_SECCIONES = {
+    { clave = "armor",  titulo = "Armadura" },
+    { clave = "weapon", titulo = "Armas" },
+    { clave = "tool",   titulo = "Herramientas" },
+}
+
+-- Las claves de armadura/arma vienen en minusculas del libro ("ligera", "marciales").
+local function ProfEtiqueta(texto)
+    texto = tostring(texto or "")
+    if texto == "" then return texto end
+    return texto:sub(1, 1):upper() .. texto:sub(2)
+end
+
+-- Las lineas de "Competencias", con su color ya embebido. Fuente UNICA para el tooltip del
+-- libro y para la fila del panel de Atributos: antes eran dos implementaciones y no coincidian.
+-- Una seccion sin contenido no genera linea.
+function API.GetProficiencyLines()
+    local FE = HarfordDnDFeatureEffects
+    if not FE then return {} end
+    local perfil = GetProfileName()
+    local lineas = {}
+    local function Seccion(titulo, lista)
+        if not (lista and #lista > 0) then return end
+        local partes = {}
+        for i, v in ipairs(lista) do partes[i] = ProfEtiqueta(v) end
+        lineas[#lineas + 1] = "- |cffffd100" .. titulo .. ":|r " .. table.concat(partes, ", ")
+    end
+    Seccion("Armadura", FE.GetArmorProfs and FE.GetArmorProfs(perfil))
+    Seccion("Armas", FE.GetWeaponProfs and FE.GetWeaponProfs(perfil))
+    -- GetToolProfs incluye las herramientas de las profesiones conocidas; es la lista buena.
+    Seccion("Herramientas", FE.GetToolProfs and FE.GetToolProfs(perfil))
+
+    local oficios = {}
+    if HarfordProfessions and HarfordProfessions.GetProfessions then
+        for _, def in ipairs(HarfordProfessions.GetProfessions() or {}) do
+            if HarfordProfessions.KnowsProfession and HarfordProfessions.KnowsProfession(def.id) then
+                local rango = HarfordProfessions.GetTierName and HarfordProfessions.EffectiveSkill
+                    and HarfordProfessions.GetTierName(HarfordProfessions.EffectiveSkill(def.id))
+                oficios[#oficios + 1] = (def.name or def.id) .. (rango and (" (" .. rango .. ")") or "")
+            end
+        end
+    end
+    table.sort(oficios)
+    if #oficios > 0 then
+        lineas[#lineas + 1] = "- |cffffd100Profesiones:|r " .. table.concat(oficios, ", ")
+    end
+    return lineas
+end
+
+local function AddProficienciesToTooltip()
+    local lineas = API.GetProficiencyLines()
+    if #lineas == 0 then
+        GameTooltip:AddLine("Sin competencias registradas.", 0.7, 0.7, 0.7, true)
+        return true
+    end
+    for _, l in ipairs(lineas) do
+        -- Blanco de base: el color de cada etiqueta ya va dentro de la linea.
+        GameTooltip:AddLine(l, 1, 1, 1, true)
+    end
+    return true
+end
+
+local function AddLanguagesToTooltip()
+    -- GetLanguages ya fusiona los idiomas derivados de los DATOS (raza, trasfondo, clase, dotes
+    -- y elecciones) con los importados del About, sin repetir por acentos o mayusculas. Antes
+    -- esto leia SOLO el About, asi que un personaje creado con el asistente salia sin idiomas.
+    local idiomas = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetLanguages
+        and HarfordDnDFeatureEffects.GetLanguages(GetProfileName())) or {}
+    if #idiomas == 0 then
+        GameTooltip:AddLine("Sin idiomas registrados.", 0.7, 0.7, 0.7, true)
+        return true
+    end
+    table.sort(idiomas)
+    -- Uno por linea y con guion, como pidio el formato de Competencias pero en lista.
+    for _, idioma in ipairs(idiomas) do
+        GameTooltip:AddLine("- " .. idioma, 1, 0.82, 0)
+    end
+    return true
+end
+
+-- Se reconoce por NOMBRE y no por id: cada raza declara el suyo (`hum_idiomas`, `ena_idiomas`...).
+-- Los rasgos AGREGADOS (su contenido es un listado, no una regla) se reconocen por nombre.
+function API.IsAggregatedFeature(feature)
+    local nombre = tostring(feature and feature.name or "")
+    return nombre == "Competencias" or nombre == "Idiomas"
+end
+
+function API.AddAggregatedFeatureTooltip(feature)
+    local nombre = tostring(feature and feature.name or "")
+    if nombre == "Competencias" then return AddProficienciesToTooltip() end
+    if nombre == "Idiomas" then return AddLanguagesToTooltip() end
+    return false
+end
 end
 
 local function BookButtonOnClick(self)
@@ -4462,10 +5090,83 @@ local function BookButtonOnClick(self)
             if RefreshBook then RefreshBook() end
         end)
         if not opened then Print(err or "No se pudo leer una forma druidica valida.") end
+    elseif cat == "acompanante" then
+        if not (HarfordDnDCompanions and HarfordDnDCompanions.OpenMenu) then
+            Print("El sistema de criaturas acompanantes no esta disponible.")
+            return
+        end
+        local opened, err = HarfordDnDCompanions.OpenMenu(self, function()
+            RefreshGameUI()
+            RefreshPanel()
+            if RefreshBook then RefreshBook() end
+            -- Tomar o soltar un nucleo demoniaco cambia que conjuros son tuyos, asi que la
+            -- pestana de Conjuros tiene que repintarse si esta abierta.
+            if HarfordCharacterSpellbook and HarfordCharacterSpellbook.RefreshSpells then
+                HarfordCharacterSpellbook.RefreshSpells()
+            end
+        end)
+        if not opened then Print(err or "No se pudo abrir el selector de criaturas.") end
+    elseif self.feature.actionKind == "painSuppression" then
+        if HarfordDnDStore and HarfordDnDStore.UsePainSuppression then
+            HarfordDnDStore.UsePainSuppression(self.feature)
+        end
+    elseif self.feature.actionKind == "arcaneCharge" then
+        if HarfordDnDStore and HarfordDnDStore.OpenArcaneChargeMenu then
+            HarfordDnDStore.OpenArcaneChargeMenu(self.feature, self)
+        end
+    elseif self.feature.actionKind == "unleashedRage" then
+        if HarfordDnDStore and HarfordDnDStore.ToggleUnleashedRage then
+            HarfordDnDStore.ToggleUnleashedRage(self.feature)
+        end
+    elseif self.feature.actionKind == "flashOfLight" then
+        if HarfordDnDStore and HarfordDnDStore.OpenFlashOfLight then
+            HarfordDnDStore.OpenFlashOfLight(self.feature, self)
+        end
+    elseif self.feature.actionKind == "divineStorm" then
+        if HarfordDnDStore and HarfordDnDStore.OpenDivineStorm then
+            HarfordDnDStore.OpenDivineStorm(self.feature, self)
+        end
+    elseif self.feature.actionKind == "spearHand" then
+        if HarfordDnDStore and HarfordDnDStore.OpenSpearHandMenu then
+            HarfordDnDStore.OpenSpearHandMenu(self.feature, self)
+        end
+    elseif self.feature.actionKind == "chiJiPalm" then
+        if HarfordDnDStore and HarfordDnDStore.UseChiJiPalm then
+            HarfordDnDStore.UseChiJiPalm(self.feature)
+        end
+    elseif self.feature.actionKind == "windwalking" then
+        if HarfordDnDStore and HarfordDnDStore.UseWindwalking then
+            HarfordDnDStore.UseWindwalking(self.feature)
+        end
+    elseif self.feature.actionKind == "voidLegacy" then
+        if HarfordDnDStore and HarfordDnDStore.UseVoidLegacy then
+            HarfordDnDStore.UseVoidLegacy(self.feature)
+        end
+    elseif self.feature.actionKind == "penance" then
+        -- Penitencia gasta HASTA 5 puntos y todo escala por punto: el desplegable pide modalidad,
+        -- cuantos puntos y, si condena, el tipo de dano.
+        if HarfordDnDStore and HarfordDnDStore.OpenPenanceMenu then
+            HarfordDnDStore.OpenPenanceMenu(self.feature, self)
+        end
+    elseif self.feature.actionKind == "rejuvenation" then
+        -- Cuantos d6 se gastan lo elige el jugador (tope: la mitad de su nivel de druida).
+        if HarfordDnDStore and HarfordDnDStore.OpenRejuvenationMenu then
+            HarfordDnDStore.OpenRejuvenationMenu(self.feature, self)
+        end
+    elseif self.feature.actionKind == "atonement" then
+        if HarfordDnDStore and HarfordDnDStore.OpenAtonementMenu then
+            HarfordDnDStore.OpenAtonementMenu(self.feature, self)
+        end
+    elseif self.feature.actionKind == "slotConversion" then
+        -- Lanzamiento Flexible / Devocion: el nivel del espacio se elige en un desplegable,
+        -- porque el coste y lo que ganas dependen de el.
+        if HarfordDnDStore and HarfordDnDStore.OpenSlotConversionMenu then
+            HarfordDnDStore.OpenSlotConversionMenu(self.feature, self)
+        end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
     elseif cat == "area" then
-        if self.feature.uses and not FeatureUseAvailable(self.feature) then
+        if (self.feature.uses or self.feature.usesFrom) and not FeatureUseAvailable(self.feature) then
             WarnFeatureWithoutUses(self.feature)
             return
         end
@@ -4484,7 +5185,7 @@ local function BookButtonOnClick(self)
             sourceGuid = UnitGUID and UnitGUID("player") or nil,
             abilityFeature = self.feature,
             onCommit = function()
-                if self.feature.uses and not FeatureUseAvailable(self.feature) then return false, "No quedan usos." end
+                if (self.feature.uses or self.feature.usesFrom) and not FeatureUseAvailable(self.feature) then return false, "No quedan usos." end
                 local resourceKey, resourceCost = definition.resourceKey, tonumber(definition.resourceCost) or 0
                 if resourceKey ~= "" and resourceCost > 0 then
                     if not (HarfordDnDStore.GetResourceCurrent and HarfordDnDStore.AdjustResourceCurrent) then
@@ -4494,8 +5195,9 @@ local function BookButtonOnClick(self)
                         return false, "No hay recurso suficiente."
                     end
                 end
-                if self.feature.uses and HarfordDnDFeatureUses and HarfordDnDFeatureUses.Spend
-                    and not HarfordDnDFeatureUses.Spend(self.feature.id, GetProfileName()) then
+                if (self.feature.uses or self.feature.usesFrom) and HarfordDnDFeatureUses
+                    and HarfordDnDFeatureUses.Spend
+                    and not HarfordDnDFeatureUses.Spend(self.feature.usesFrom or self.feature.id, GetProfileName()) then
                     return false, "No quedan usos."
                 end
                 if resourceKey ~= "" and resourceCost > 0 then HarfordDnDStore.AdjustResourceCurrent(resourceKey, -resourceCost) end
@@ -4504,7 +5206,7 @@ local function BookButtonOnClick(self)
             end,
         })
     elseif cat == "al_accion" then
-        if self.feature.uses and not FeatureUseAvailable(self.feature) then
+        if (self.feature.uses or self.feature.usesFrom) and not FeatureUseAvailable(self.feature) then
             WarnFeatureWithoutUses(self.feature)
             return
         end
@@ -4531,12 +5233,19 @@ local function BookButtonOnClick(self)
             OpenLayOnHandsPrompt(self.feature)
             return
         end
-        if self.feature.actionKind == "compendio" or self.feature.actionKind == "absolution" then
-            local spellId = self.feature.spellId
-            if HarfordCompendioAPI and HarfordCompendioAPI.OpenSpellById and spellId then
-                HarfordCompendioAPI.OpenSpellById(spellId)
-            else
-                HarfordChat.Print("El Compendio no esta disponible para esta habilidad.")
+        -- Maldicion del Brujo: pregunta si se amplia gastando un fragmento de alma. El uso de
+        -- Corrupcion y el fragmento los descuenta OpenMaledictionMenu, no la ruta de anuncio.
+        if self.feature.actionKind == "demonicFire" then
+            OpenDemonicFirePrompt(self.feature)
+            return
+        end
+        if self.feature.actionKind == "malediction" then
+            if not FeatureUseAvailable(self.feature) then
+                WarnFeatureWithoutUses(self.feature)
+                return
+            end
+            if HarfordDnDStore and HarfordDnDStore.OpenMaledictionMenu then
+                HarfordDnDStore.OpenMaledictionMenu(self.feature, self)
             end
             return
         end
@@ -4584,13 +5293,6 @@ local function BookButtonOnClick(self)
                 return
             end
             if RefreshGameUI then RefreshGameUI() end
-            if RefreshBook then RefreshBook() end
-            return
-        end
-        if self.feature.actionKind == "furyOfElune" then
-            if not (HarfordDnDStore and HarfordDnDStore.PrepareFuryOfElune and HarfordDnDStore.PrepareFuryOfElune()) then
-                return
-            end
             if RefreshBook then RefreshBook() end
             return
         end
@@ -4824,9 +5526,9 @@ function API.TriggerPreparedAttackReaction(trigger, context)
     return false
 end
 
-local BOOK_BTN = 37                 -- SpellButton 37x37
-local BOOK_COL_X = { 100, 325 }     -- columnas izq/der (SpellButton1 x=100, +225)
-local BOOK_ROW_Y0, BOOK_ROW_PITCH = -72, 66  -- primera fila (SpellButton1 y=-72) y pitch
+K.BOOK_BTN = 37                 -- SpellButton 37x37
+K.BOOK_COL_X = { 100, 325 }     -- columnas izq/der (SpellButton1 x=100, +225)
+K.BOOK_ROW_Y0, K.BOOK_ROW_PITCH = -72, 66  -- primera fila (SpellButton1 y=-72) y pitch
 
 local function CreateBookPage()
     local page = CreatePage("book")
@@ -4869,14 +5571,14 @@ local function CreateBookPage()
     -- nombre y la barra son regiones que se extienden a la derecha. Anclados al FRAME (offsets nativos).
     local PARTS = "Interface\\Spellbook\\Spellbook-Parts"
     local buttons = {}
-    for i = 1, BOOK_PER_PAGE do
+    for i = 1, K.BOOK_PER_PAGE do
         local b = CreateFrame("Button", nil, area)
-        b:SetSize(BOOK_BTN, BOOK_BTN)
+        b:SetSize(K.BOOK_BTN, K.BOOK_BTN)
         -- Relleno column-major como el nativo: botones 1..6 columna izquierda (arriba->abajo),
         -- 7..12 columna derecha. RefreshBook llena buttons[i] en orden.
-        local col = (i <= BOOK_ROWS) and 0 or 1
-        local row = (i <= BOOK_ROWS) and (i - 1) or (i - 1 - BOOK_ROWS)
-        b:SetPoint("TOPLEFT", host, "TOPLEFT", BOOK_COL_X[col + 1], BOOK_ROW_Y0 - row * BOOK_ROW_PITCH)
+        local col = (i <= K.BOOK_ROWS) and 0 or 1
+        local row = (i <= K.BOOK_ROWS) and (i - 1) or (i - 1 - K.BOOK_ROWS)
+        b:SetPoint("TOPLEFT", host, "TOPLEFT", K.BOOK_COL_X[col + 1], K.BOOK_ROW_Y0 - row * K.BOOK_ROW_PITCH)
 
         -- ════════════════════════════════════════════════════════════════════════════════
         -- LAYOUT DEL BOTON DEL LIBRO. Todo cuelga del boton `b` (= el icono 37x37). Cada parte
@@ -5014,7 +5716,7 @@ local function CreateBookPage()
 end
 
 -- classId de Harford -> token de clase en ingles para el icono classicon_<token>.
-local CLASS_ICON_TOKEN = {
+K.CLASS_ICON_TOKEN = {
     caballero_muerte = "deathknight",
     cazador_demonios = "demonhunter",
     druida           = "druid",
@@ -5028,20 +5730,20 @@ local CLASS_ICON_TOKEN = {
     brujo            = "warlock",
     guerrero         = "warrior",
 }
-local BOOK_GENERAL_ICON = "Interface\\Icons\\INV_Misc_Book_09"
+K.BOOK_GENERAL_ICON = "Interface\\Icons\\INV_Misc_Book_09"
 
 -- Icono de la pestaña: General = libro fijo; clase/subclase = classicon_<clase>.
 local function SectionIcon(sec)
-    if sec and sec.isGeneral then return BOOK_GENERAL_ICON end
+    if sec and sec.isGeneral then return K.BOOK_GENERAL_ICON end
     if sec and sec.classId and sec.subclassId and HarfordDnDData and HarfordDnDData.GetSubclassIcon then
         local subclassIcon = HarfordDnDData.GetSubclassIcon(sec.classId, sec.subclassId)
         if subclassIcon then return subclassIcon end
     end
     if sec and sec.classId then
-        local token = CLASS_ICON_TOKEN[sec.classId]
+        local token = K.CLASS_ICON_TOKEN[sec.classId]
         if token then return "Interface\\Icons\\classicon_" .. token end
     end
-    return BOOK_GENERAL_ICON
+    return K.BOOK_GENERAL_ICON
 end
 
 local function BookSideTabOnEnter(self)
@@ -5116,11 +5818,11 @@ RefreshBook = function()
     -- Contenido de la seccion activa, paginado.
     local sec = sections[S.book.section] or { features = {} }
     local feats = sec.features or {}
-    local pages = math.max(1, math.ceil(#feats / BOOK_PER_PAGE))
+    local pages = math.max(1, math.ceil(#feats / K.BOOK_PER_PAGE))
     if S.book.pageNum > pages then S.book.pageNum = pages end
     if S.book.pageNum < 1 then S.book.pageNum = 1 end
-    local startI = (S.book.pageNum - 1) * BOOK_PER_PAGE
-    for i = 1, BOOK_PER_PAGE do
+    local startI = (S.book.pageNum - 1) * K.BOOK_PER_PAGE
+    for i = 1, K.BOOK_PER_PAGE do
         local b = S.book.buttons[i]
         local item = feats[startI + i]
         if item and item.feature then
@@ -5143,11 +5845,18 @@ RefreshBook = function()
             local activeForm = cat == "forma" and HarfordDnDForms and HarfordDnDForms.GetActiveForm
                 and HarfordDnDForms.GetActiveForm() or nil
             if activeForm and activeForm.icon then realIcon = activeForm.icon end
-            b.icon:SetTexture(realIcon or BOOK_ICON[cat] or BOOK_ICON.pasivo)
+            local activeCompanion = cat == "acompanante" and HarfordDnDCompanions
+                and HarfordDnDCompanions.GetActive and HarfordDnDCompanions.GetActive() or nil
+            if activeCompanion and activeCompanion.icon then realIcon = activeCompanion.icon end
+            -- Sosteniendo un nucleo no hay criatura, pero la fila debe decir cual llevas.
+            local activeCore = (cat == "acompanante" and not activeCompanion) and HarfordDnDCompanions
+                and HarfordDnDCompanions.GetActiveCore and HarfordDnDCompanions.GetActiveCore() or nil
+            b.icon:SetTexture(realIcon or K.BOOK_ICON[cat] or K.BOOK_ICON.pasivo)
             b.icon:SetTexCoord(0.06, 0.94, 0.06, 0.94)
             b.icon:Show()
             -- Marco: pasivo (marron, detras); activo/al_accion (SlotFrame ENCIMA); reaccion (UnlearnedSlotFrame).
-            local frameKey = (cat == "al_accion" or cat == "maniobra" or cat == "forma" or cat == "poder" or cat == "absolution") and "activo" or cat
+            local frameKey = (cat == "al_accion" or cat == "maniobra" or cat == "forma"
+                or cat == "acompanante" or cat == "poder" or cat == "absolution") and "activo" or cat
             local fr = HarfordCharacterPanel._bookFrame[frameKey] or HarfordCharacterPanel._bookFrame.pasivo
             b.ring:SetTexCoord(fr.tc[1], fr.tc[2], fr.tc[3], fr.tc[4])
             b.ring:SetSize(fr.w, fr.h)
@@ -5155,11 +5864,19 @@ RefreshBook = function()
             b.ring:SetPoint("CENTER", b, "CENTER", fr.ox or 0, fr.oy or 0)
             b.ring:SetDrawLayer(cat == "pasivo" and "BACKGROUND" or "OVERLAY")
             b.ring:SetAlpha(1); b.bar:SetAlpha(1)
-            b.name:SetText(item.feature.name or "?")
+            -- En los rasgos de ELECCION se quita el sufijo entre parentesis del nombre
+            -- ("Incremento de caracteristica (+2)" -> "Incremento de caracteristica"): el
+            -- valor ya lo dice la eleccion, que va justo debajo. Los dos incrementos de humano
+            -- quedan con el mismo titulo y se distinguen por su eleccion, que es lo util.
+            local nombreRasgo = tostring(item.feature.name or "?")
+            if item.feature.choice then
+                nombreRasgo = nombreRasgo:gsub("%s*%b()%s*$", "")
+            end
+            b.name:SetText(nombreRasgo)
             b.name:SetWidth(145)
             b.sub:SetWidth(145)
-            b.formArrow:SetShown(cat == "forma")
-            if cat ~= "forma" then
+            b.formArrow:SetShown(cat == "forma" or cat == "acompanante")
+            if cat ~= "forma" and cat ~= "acompanante" then
                 b.formFlyoutBorder:Hide()
                 b.formFlyoutShadow:Hide()
             end
@@ -5175,23 +5892,59 @@ RefreshBook = function()
             local sub = (item.level and item.level > 0) and (catTxt .. "  ·  Nivel " .. item.level) or catTxt
             if cat == "forma" then
                 sub = activeForm and ("Forma activa: " .. tostring(activeForm.name)) or "Forma normal"
+            elseif item.feature.actionKind == "arcaneCharge" and HarfordDnDStore
+                and HarfordDnDStore.GetArcaneChargeState then
+                sub = HarfordDnDStore.GetArcaneChargeState()
+            elseif item.feature.actionKind == "voidLegacy" and HarfordDnDStore
+                and HarfordDnDStore.GetVoidLegacyState then
+                -- La CD sube con cada uso, asi que el estado es lo util de ver en la fila.
+                sub = HarfordDnDStore.GetVoidLegacyState()
+            elseif cat == "acompanante" then
+                if activeCompanion then
+                    local _, pg = HarfordDnDCompanions.GetActive()
+                    sub = string.format("%s  ·  %d/%d PG", tostring(activeCompanion.name),
+                        tonumber(pg) or 0, HarfordDnDCompanions.GetMaxHP(activeCompanion) or 0)
+                elseif activeCore then
+                    sub = "Nucleo de " .. tostring(activeCore.name)
+                else
+                    sub = "Sin invocar"
+                end
             elseif cat == "al_accion" and cdActive then
                 local lvl = HarfordDnDStore.GetConditionalDamageActiveLevel and HarfordDnDStore.GetConditionalDamageActiveLevel(cdId)
                 sub = sub .. ((lvl and lvl > 1) and ("  ·  Preparado x" .. lvl) or "  ·  Preparado")
             elseif reactionOn then
                 sub = sub .. "  ·  Preparada"
             end
+            -- Competencias e Idiomas no llevan subtexto de categoria: lo suyo es el listado del
+            -- tooltip, y poner "Pasiva" debajo solo ocupa sitio sin decir nada.
+            if API.IsAggregatedFeature(item.feature) then sub = "" end
             local choiceText, pendingChoice = GetFeatureChoiceDisplay(item.feature, GetProfileName())
             if choiceText then
-                sub = sub .. "  -  Eleccion: " .. choiceText
+                -- SOLO la eleccion. Decir "Pasiva - Eleccion: Sabiduria +2" era repetir dos
+                -- etiquetas para dar un dato; lo que interesa de un rasgo de eleccion es QUE
+                -- se eligio. La categoria sigue estando en el tooltip y en el marco del icono.
+                --
+                -- EXCEPCION: un rasgo de criatura acompanante que ADEMAS tiene eleccion (Domar
+                -- bestia: dos habilidades). Ahi el estado -que criatura hay y con cuantos PG-
+                -- cambia a cada momento y es lo que se consulta; la eleccion es fija. Se muestran
+                -- los dos, con el mismo separador gris que usa la linea de usos.
+                if cat == "acompanante" and sub ~= "" then
+                    sub = sub .. " |cff888888|||r " .. choiceText
+                else
+                    sub = choiceText
+                end
             end
             local useState = GetFeatureUseState(item.feature)
             local useExhausted = useState and (tonumber(useState.available) or 0) <= 0
             if useState then
-                sub = sub .. "  |  " .. FeatureUseCompactText(item.feature)
+                -- Mismo separador gris que usa la linea de eleccion. La barra va ESCAPADA
+                -- (`||`): una `|` suelta es prefijo de secuencia de escape para WoW y no se
+                -- pinta como caracter. Aqui ademas iba sin color, asi que heredaba el del
+                -- subtitulo en vez de quedar apagada como separador.
+                sub = sub .. " |cff888888|||r " .. FeatureUseCompactText(item.feature)
             end
             b.sub:SetText(sub)
-            local col = BOOK_CAT_COLOR[cat] or { 0.82, 0.82, 0.82 }
+            local col = K.BOOK_CAT_COLOR[cat] or { 0.82, 0.82, 0.82 }
             if pendingChoice then
                 b.sub:SetTextColor(1, 0.25, 0.25)
             elseif useExhausted then
@@ -5306,7 +6059,7 @@ local function CreateFrameIfNeeded()
     if S.frame then return end
 
     local f = CreateFrame("Frame", "HarfordCharacterPanelFrame", UIParent, "ButtonFrameTemplate")
-    f:SetSize(NORMAL_W, NORMAL_H)
+    f:SetSize(K.NORMAL_W, K.NORMAL_H)
     f:SetPoint("CENTER")
     f:SetFrameStrata("DIALOG")
     -- La ficha DnD vive en DIALOG/100. Este panel y el Libro deben ser ventanas completas:
@@ -5352,7 +6105,7 @@ local function CreateFrameIfNeeded()
     -- vez en este contenedor, por lo que los filtros y el estado del Libro se reutilizan sin
     -- duplicar datos ni obligar a cerrar el panel de personaje.
     local sf = CreateFrame("Frame", "HarfordSkillsPanelFrame", UIParent, "ButtonFrameTemplate")
-    sf:SetSize(BOOK_W, BOOK_H)
+    sf:SetSize(K.BOOK_W, K.BOOK_H)
     sf:SetPoint("CENTER", UIParent, "CENTER", 80, 0)
     sf:SetFrameStrata("DIALOG")
     sf:SetFrameLevel(120)
@@ -5373,7 +6126,7 @@ local function CreateFrameIfNeeded()
     skillsPortrait:SetDrawLayer("ARTWORK", 2)
     if skillsPortrait.AddMaskTexture and sf.CreateMaskTexture then
         local mask = sf:CreateMaskTexture(nil, "ARTWORK")
-        mask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        mask:SetTexture(K.TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
         mask:SetAllPoints(skillsPortrait)
         skillsPortrait:AddMaskTexture(mask)
         S.skillsPortraitMask = mask
@@ -5402,7 +6155,7 @@ local function CreateFrameIfNeeded()
     portrait:SetDrawLayer("ARTWORK", 2)
     if portrait.AddMaskTexture and f.CreateMaskTexture then
         local mask = f:CreateMaskTexture(nil, "ARTWORK")
-        mask:SetTexture(TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        mask:SetTexture(K.TEX_PORTRAIT_MASK, "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
         mask:SetAllPoints(portrait)
         portrait:AddMaskTexture(mask)
         S.portraitMask = mask
@@ -5454,9 +6207,9 @@ local function CreateFrameIfNeeded()
     -- Pestaña Conjuros extraida a HarfordCharacterSpellbook; se le inyectan estado + constantes del libro.
     HarfordCharacterSpellbook.Init({
         S = S, CreatePage = CreatePage, BookSideTabOnEnter = BookSideTabOnEnter,
-        BOOK_PER_PAGE = BOOK_PER_PAGE, BOOK_ROWS = BOOK_ROWS, BOOK_BTN = BOOK_BTN,
-        BOOK_COL_X = BOOK_COL_X, BOOK_ROW_Y0 = BOOK_ROW_Y0, BOOK_ROW_PITCH = BOOK_ROW_PITCH,
-        BOOK_GENERAL_ICON = BOOK_GENERAL_ICON,
+        BOOK_PER_PAGE = K.BOOK_PER_PAGE, BOOK_ROWS = K.BOOK_ROWS, BOOK_BTN = K.BOOK_BTN,
+        BOOK_COL_X = K.BOOK_COL_X, BOOK_ROW_Y0 = K.BOOK_ROW_Y0, BOOK_ROW_PITCH = K.BOOK_ROW_PITCH,
+        BOOK_GENERAL_ICON = K.BOOK_GENERAL_ICON,
     })
     HarfordCharacterSpellbook.CreateSpellsPage()
 
@@ -5539,8 +6292,8 @@ function API.Open(tab, opts)
     end
     SetPanelMode()
     S.activeTab = tab or "sheet"
-    S.explicitHiddenTab = (opts and opts.allowHidden and HIDDEN_TABS[S.activeTab]) and S.activeTab or nil
-    if HIDDEN_TABS[S.activeTab] and not IsExplicitHiddenTab(S.activeTab) then
+    S.explicitHiddenTab = (opts and opts.allowHidden and K.HIDDEN_TABS[S.activeTab]) and S.activeTab or nil
+    if K.HIDDEN_TABS[S.activeTab] and not IsExplicitHiddenTab(S.activeTab) then
         S.activeTab = "sheet"
     end
     S.frame:Show()
@@ -5696,11 +6449,11 @@ function API.DebugModelBg(argStr)
         return "VertexColor (brillo) = " .. tostring(v)
     else
         -- Tratar cmd como token de DressUpBackground: aplica DressUpBackground-<token>1..4.
-        for index, spec in ipairs(MODEL_BG_SOURCES) do
+        for index, spec in ipairs(K.MODEL_BG_SOURCES) do
             local t = SH.modelBg[spec.key]
             if t then
                 t:SetTexture("Interface\\DressUpFrame\\DressUpBackground-" .. cmd .. tostring(index))
-                SetTexCoord8(t, MODEL_BG_TEXCOORDS[spec.key])
+                SetTexCoord8(t, K.MODEL_BG_TEXCOORDS[spec.key])
                 t:SetVertexColor(1, 1, 1, 1); t:SetAlpha(1)
             end
         end

@@ -21,6 +21,17 @@ API.ORDER = {
 }
 
 API.DEFS = {
+    -- Guerrero "Ira desatada": no es una condicion del manual sino el estado que deja el rasgo.
+    -- Se modela como condicion porque el motor ya sabe hacer las dos mitades a la vez: ventaja en
+    -- tus ataques y ventaja en los ataques CONTRA ti.
+    unleashed_rage = {
+        label = "Ira desatada", tracking = "state",
+        description = "Ventaja en tus ataques cuerpo a cuerpo con Fuerza; los ataques contra ti tambien tienen ventaja hasta tu proximo turno.",
+        effects = {
+            { kind = "rollMode", rolls = { attack = true }, mode = "adv" },
+            { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" },
+        },
+    },
     blinded = {
         label = "Cegado", tracking = "state",
         description = "Ataques propios con desventaja; ataques contra la criatura con ventaja.",
@@ -74,6 +85,20 @@ API.DEFS = {
         label = "Fortaleza", tracking = "state",
         description = "Tiene ventaja en la proxima tirada de salvacion indicada por la Palabra de Poder.",
         effects = { { kind = "rollMode", rolls = { save = true }, mode = "adv" } },
+    },
+    -- Sacerdote Disciplina "Supresion del dolor". Primera condicion CON VALOR: la cantidad que
+    -- reduce viaja en `vars.reduccion` (distinta para cada sacerdote), y a QUE tipos afecta es fijo
+    -- del rasgo, asi que vive aqui y no en la instancia.
+    supresion_dolor = {
+        label = "Supresion del dolor", tracking = "state",
+        description = "Reduce el dano contundente, perforante y cortante que recibe.",
+        damageReduction = { "contundente", "perforante", "cortante" },
+        effects = {},
+    },
+    marca_ignea = {
+        label = "Marca ignea", tracking = "state",
+        description = "Tiene desventaja en las tiradas de ataque hasta el final de su siguiente turno.",
+        effects = { { kind = "rollMode", rolls = { attack = true }, mode = "dis" } },
     },
     palabra_dolor = {
         label = "Dolor", tracking = "state",
@@ -134,6 +159,16 @@ API.DEFS = {
         label = "Envenenado", auraId = 167407, tracking = "aura",
         description = "Desventaja en tiradas de ataque y pruebas de habilidad.",
         effects = { { kind = "rollMode", rolls = { attack = true, ability = true }, mode = "dis" } },
+    },
+    -- Orden oscura (Caballero de la Muerte N3): provocacion. La criatura ataca con desventaja a
+    -- cualquiera MENOS a quien se la aplico, asi que no vale un `rollMode` normal: penalizaria
+    -- tambien los ataques contra el propio caballero, que es lo contrario del rasgo.
+    orden_oscura = {
+        label = "Orden oscura", tracking = "state",
+        description = "Desventaja en ataques contra cualquiera que no sea quien impuso la orden.",
+        effects = {
+            { kind = "rollModeExceptSource", rolls = { attack = true }, mode = "dis" },
+        },
     },
     prone = {
         label = "Derribado", auraId = 267937, tracking = "aura",
@@ -289,7 +324,26 @@ local function CopyRecord(record)
         created = tonumber(record.created) or Now(), appliedTurnSerial = tonumber(record.appliedTurnSerial) or 0,
         expiresAt = tonumber(record.expiresAt), persist = record.persist == true,
         authority = record.authority == true,
+        -- `level` NO se copiaba: al persistir y recargar, una condicion con niveles (cansancio)
+        -- volvia a 1 y sus efectos de nivel 2+ no se aplicaban. Es el mismo fallo que ya se
+        -- corrigio al APLICARLA, pero seguia vivo en la ruta de guardado.
+        level = record.level and math.max(1, math.floor(tonumber(record.level) or 1)) or nil,
+        vars = NormalizeVars(record.vars),
     }
+end
+
+-- Variables de una condicion: `{ nombre = numero }`. Es lo que convierte una etiqueta de si/no en
+-- algo que lleva una cantidad ("reduce 5") o un contador ("3 acumulaciones"). Solo numeros: el QUE
+-- hace la condicion vive en su definicion (`API.DEFS`), la instancia solo lleva CUANTO.
+local function NormalizeVars(vars)
+    if type(vars) ~= "table" then return nil end
+    local out, n = {}, 0
+    for nombre, valor in pairs(vars) do
+        nombre = tostring(nombre):match("^[%w_]+$")
+        valor = tonumber(valor)
+        if nombre and valor then out[nombre] = math.floor(valor); n = n + 1 end
+    end
+    return n > 0 and out or nil
 end
 
 local function SaveOwned()
@@ -413,6 +467,7 @@ local function StoreRecord(key, id, options)
         -- guardarlo aqui se perdia al aplicarlo y GetExhaustion caia siempre a 1: ningun
         -- efecto de nivel 2 o superior llegaba a activarse.
         level = options.level and math.max(1, math.floor(tonumber(options.level) or 1)) or nil,
+        vars = NormalizeVars(options.vars),
     }
     if key == "player" then SaveOwned() end
     Notify()
@@ -489,6 +544,74 @@ function API.Has(ref, id)
     LoadOwned()
     local unit, guid, name = ResolveRef(ref)
     return RecordActive(def, unit, StateKey(unit, guid, name), id) == true
+end
+
+-- VARIABLES DE CONDICION. Lee y opera sobre el valor que lleva una condicion activa.
+-- Las operaciones son las de TRP3 Extended, que ya resolvio este problema:
+--   "[=]" fija solo si NO existe (inicializar sin pisar)
+--   "="   fija siempre
+--   "+" / "-" / "*" operan sobre lo que hubiera (0 si no habia)
+-- Solo NUMEROS: el que hace la condicion vive en su definicion, la instancia lleva el cuanto.
+function API.GetVar(ref, conditionId, varName, default)
+    local def = API.DEFS[tostring(conditionId or "")]
+    if not def then return default end
+    LoadOwned()
+    local unit, guid, name = ResolveRef(ref)
+    local key = StateKey(unit, guid, name)
+    local record = key and S.units[key] and S.units[key][tostring(conditionId or "")]
+    local vars = record and record.vars
+    local valor = vars and tonumber(vars[tostring(varName or "")])
+    if valor == nil then return default end
+    return valor
+end
+
+function API.SetVar(ref, conditionId, opType, varName, value)
+    conditionId, varName = tostring(conditionId or ""), tostring(varName or ""):match("^[%w_]+$")
+    if not API.DEFS[conditionId] or not varName then return false end
+    LoadOwned()
+    local unit, guid, name = ResolveRef(ref)
+    local key = StateKey(unit, guid, name)
+    local record = key and S.units[key] and S.units[key][conditionId]
+    if not record then return false end
+    record.vars = record.vars or {}
+    local previo = tonumber(record.vars[varName]) or 0
+    value = tonumber(value) or 0
+    opType = tostring(opType or "=")
+    if opType == "[=]" then
+        if record.vars[varName] == nil then record.vars[varName] = math.floor(value) end
+    elseif opType == "+" then record.vars[varName] = math.floor(previo + value)
+    elseif opType == "-" then record.vars[varName] = math.floor(previo - value)
+    elseif opType == "*" then record.vars[varName] = math.floor(previo * value)
+    else record.vars[varName] = math.floor(value) end
+    if key == "player" then SaveOwned() end
+    Notify()
+    return true, record.vars[varName]
+end
+
+-- Reduccion PLANA que aplican las condiciones activas de una unidad a un tipo de dano concreto.
+-- Es distinto de resistir (mitad) o ser inmune (nada): aqui se RESTA una cantidad fija, y no se
+-- gasta -- a diferencia de la vida temporal, reduce todos los golpes mientras dure.
+function API.GetDamageReduction(ref, damageType)
+    LoadOwned()
+    local unit, guid, name = ResolveRef(ref)
+    local key = StateKey(unit, guid, name)
+    local bucket = key and S.units[key]
+    if not bucket then return 0 end
+    damageType = tostring(damageType or ""):lower()
+    local total = 0
+    for id, record in pairs(bucket) do
+        local def = API.DEFS[id]
+        local tipos = def and def.damageReduction
+        if tipos and record.vars then
+            local cantidad = tonumber(record.vars.reduccion) or 0
+            if cantidad > 0 then
+                for _, t in ipairs(tipos) do
+                    if tostring(t):lower() == damageType then total = total + cantidad break end
+                end
+            end
+        end
+    end
+    return total
 end
 
 function API.HasConditionImmunity(ref, conditionId)
@@ -687,6 +810,23 @@ function API.ResolveRollMode(baseMode, rollType, context)
     local actorEffects = context.actorConditionIds and EffectsForIds(context.actorConditionIds) or EffectsFor(actor)
     for _, effect in ipairs(actorEffects) do
         if effect.kind == "rollMode" and EffectApplies(effect, rollType, context) then AddMode(flags, effect.mode) end
+    end
+    -- `rollModeExceptSource`: se resuelve aparte porque necesita el sourceGuid de la INSTANCIA,
+    -- que `EffectsFor` no arrastra. Mismo patron que `blockAttackSource` mas abajo.
+    do
+        local objetivo = context.targetGuid
+            or (context.targetUnit and UnitGUID and UnitGUID(context.targetUnit))
+        for _, active in ipairs(API.GetActive(actor)) do
+            local origen = active.record and active.record.sourceGuid
+            for _, effect in ipairs(active.definition and active.definition.effects or {}) do
+                if effect.kind == "rollModeExceptSource" and EffectApplies(effect, rollType, context) then
+                    -- Sin objetivo conocido se aplica: es el caso conservador para el defensor.
+                    if not (origen and origen ~= "" and objetivo and origen == objetivo) then
+                        AddMode(flags, effect.mode)
+                    end
+                end
+            end
+        end
     end
     local target = context.targetUnit or context.targetGuid
     if target or context.targetConditionIds then
@@ -1040,6 +1180,7 @@ function API.RequestPlayer(unit, conditionId, apply, options)
         duration = options and options.duration or "manual", turns = options and options.turns or 0,
         saveAbility = options and options.saveAbility or "", saveDC = options and options.saveDC or 0,
         persist = options and options.persist == true,
+        vars = options and options.vars or nil,
         expires = Now() + REQUEST_TTL,
     }
     local payload = {
@@ -1049,6 +1190,7 @@ function API.RequestPlayer(unit, conditionId, apply, options)
         duration = options and options.duration, turns = options and options.turns,
         saveAbility = options and options.saveAbility, saveDC = options and options.saveDC,
         persist = options and options.persist == true,
+        vars = options and options.vars or nil,
     }
     local ok, err = HarfordSync.SendConditionRequest(PREFIX, target, payload)
     if not ok then S.pending[opId] = nil end

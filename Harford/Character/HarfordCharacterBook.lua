@@ -21,6 +21,7 @@ API.ICON = {
     maniobra = "Interface\\Icons\\Ability_Warrior_Trauma",
     area     = "Interface\\Icons\\Spell_Fire_SelfDestruct",
     poder    = "Interface\\Icons\\Spell_Holy_PowerWordShield",
+    acompanante = "Interface\\Icons\\Spell_Shadow_RaiseDead",
 }
 
 -- Id del daño condicional (conditionalWeaponDamage) declarado por una habilidad, si lo tiene.
@@ -52,7 +53,14 @@ function API.Category(feature)
     if feature.id == "dru_cambio_forma" then return "forma" end
     -- Las Absoluciones son dones propios del sacerdote; algunas delegan su
     -- resolucion en el Compendio, pero no pasan a ser conjuros por ello.
-    if feature.actionKind == "absolution" then return "absolution" end
+    -- `category` es PRESENTACION declarada (etiqueta y color del boton), no comportamiento. Las
+    -- Absoluciones del Sacerdote la usan para distinguirse; su mecanica es la normal de un rasgo.
+    -- El rasgo concede criatura(s) acompanante(s): su boton abre el selector de
+    -- invocar/despedir/ordenar, igual que Cambio de Forma abre el de formas. `companionId` es una
+    -- criatura concreta; `companions` son varias y se elige cual al invocar (los 5 demonios del
+    -- brujo). Que criaturas salen lo decide HarfordDnDCompanions por clase, nivel y elecciones.
+    if feature.companionId or feature.companions then return "acompanante" end
+    if feature.category then return tostring(feature.category) end
     if feature.actionKind == "powerWord" then return "poder" end
     -- Marca del Cazador se activa sobre un objetivo y su dado se resuelve luego
     -- automaticamente al impactar a esa presa; no es un toggle de "Daño extra".
@@ -61,6 +69,9 @@ function API.Category(feature)
     if feature.cast == "reaccion" then return "reaccion" end
     if API.IsEnergyManeuver(feature) then return "maniobra" end  -- ejecuta contra el objetivo
     if API.CondDamageId(feature) then return "al_accion" end  -- daño condicional preparable
+    -- `usesArePool`: el rasgo NO es una accion, es la reserva que gastan otros mediante
+    -- `usesFrom` (Corrupcion y sus Maldiciones). Pulsarlo quemaria un uso sin invocar nada.
+    if feature.usesArePool then return "pasivo" end
     -- Un rasgo con usos propios debe poder activarse desde el Libro. Si su
     -- efecto es situacional, el uso se anuncia para resolverlo en mesa.
     if type(feature.uses) == "table" then return "activo" end
@@ -105,6 +116,7 @@ API.CAT_LABEL = {
     area      = "Area",
     poder     = "Palabra",
     absolution = "Absolucion",
+    acompanante = "Criatura",
 }
 -- Colores de categoria. El subtexto del boton lleva CONTORNO negro (OUTLINE) para leerse sobre
 -- el pergamino con textura, asi que usamos tonos VIVOS (un color apagado con contorno se ve sucio).
@@ -119,11 +131,17 @@ API.CAT_COLOR = {
     area      = { 1.00, 0.72, 0.32 },
     poder     = { 0.78, 0.72, 1.00 },
     absolution = { 1.00, 0.62, 0.30 },
+    acompanante = { 0.72, 0.90, 0.62 },
 }
 
 -- Etiqueta visible de la categoria. "activo" se desglosa en "Accion" o "Adicional" segun el
 -- coste de accion: el libro indica "Accion adicional" en la descripcion de las de bonus action.
 function API.CategoryLabel(cat, feature)
+    -- Una maniobra declarada como tal en el libro se etiqueta como maniobra aunque su mecanica
+    -- sea la de dano condicional: para el jugador son lo mismo (Carga, Desarme, Golpe heroico).
+    if cat == "al_accion" and feature and feature.type == "maniobra" then
+        return API.CAT_LABEL.maniobra
+    end
     if cat == "activo" then
         local d = ((feature and feature.description) or ""):lower()
         if d:find("accion adicional", 1, true) or d:find("acción adicional", 1, true) then
@@ -169,6 +187,10 @@ local function IsSubclassMarkerFeature(feature)
         or name:find("llamado", 1, true)
         or name:find("vinculo", 1, true)
 end
+
+-- Expuesto porque el generador del About necesita el mismo criterio que el Libro para no
+-- escribir los marcadores de subclase como si fueran rasgos.
+API.IsSubclassMarker = IsSubclassMarkerFeature
 
 function API.IsVisible(feature)
     return feature and feature.bookHidden ~= true and not IsSubclassMarkerFeature(feature)
@@ -246,6 +268,39 @@ function API.BuildSections(data)
     end
     if HarfordDnDFeats and HarfordDnDFeats.GetFeatTraits and type(data.feats) == "table" and #data.feats > 0 then
         addList(HarfordDnDFeats.GetFeatTraits(data.feats), "feat")
+    end
+    -- «Competencias» e «Idiomas» son FIJAS: no dependen de que una raza o un trasfondo declaren
+    -- un rasgo con ese nombre. Competencias venia del trasfondo (41 de 52 lo declaran) e Idiomas
+    -- de la raza, asi que un PJ sin trasfondo se quedaba sin la primera, y las competencias de
+    -- armadura y arma vienen sobre todo de la CLASE.
+    --
+    -- Los rasgos reales con esos nombres se RETIRAN para no duplicar la fila: su contenido ya lo
+    -- agrega el tooltip, que lee las competencias e idiomas efectivos del personaje.
+    do
+        local fijas = {
+            { id = "harford_competencias", name = "Competencias", icon = "Interface"
+                .. string.char(92) .. "Icons" .. string.char(92) .. "inv_scroll_11" },
+            { id = "harford_idiomas", name = "Idiomas", icon = "Interface" .. string.char(92)
+                .. "Icons" .. string.char(92) .. "inv_misc_note_05" },
+        }
+        local esFija = {}
+        for _, f in ipairs(fijas) do esFija[f.name] = true end
+
+        local limpio = {}
+        for _, it in ipairs(general) do
+            local nombre = it.feature and tostring(it.feature.name or "")
+            if not esFija[nombre] then limpio[#limpio + 1] = it end
+        end
+        -- Al FINAL de General y en su orden: son entradas de consulta, no rasgos del personaje,
+        -- y no deben desplazar a los rasgos reales de raza y trasfondo.
+        for _, f in ipairs(fijas) do
+            limpio[#limpio + 1] = {
+                feature = { id = f.id, name = f.name, type = "pasivo", description = "", icon = f.icon },
+                level = 0,
+                source = "core",
+            }
+        end
+        general = limpio
     end
     sections[#sections + 1] = { label = "General", short = "Gen.", features = general, isGeneral = true }
 

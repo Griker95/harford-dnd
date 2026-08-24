@@ -98,6 +98,32 @@ function HarfordDnDCalc.GetWeaponMod()
     return 0
 end
 
+-- Categoria del arma -> clave de competencia. Las que no tienen categoria propia (raciales,
+-- especiales) solo cuentan por su nombre concreto.
+local WEAPON_CAT_PROF = {
+    ["simple"] = "sencillas",
+    ["marcial"] = "marciales",
+    ["de fuego"] = "armas de fuego",
+}
+
+-- ¿El personaje es competente con esta arma? Por categoria o por nombre concreto.
+function HarfordDnDCalc.HasWeaponProficiency(def)
+    if IsNpcContext() then return true end
+    if type(def) ~= "table" then return true end
+    -- El golpe sin armas lo domina todo el mundo.
+    if tostring(def.key or "") == "Desarmado" then return true end
+    local FE = HarfordDnDFeatureEffects
+    if not (FE and FE.HasWeaponProf) then return true end
+
+    local cat = tostring(def.cat or ""):lower()
+    local claveCat = WEAPON_CAT_PROF[cat]
+    if claveCat and FE.HasWeaponProf(claveCat) then return true end
+    -- Por nombre: el libro declara competencias sueltas ("espadas cortas", "hacha de mano").
+    local nombre = tostring(def.key or "")
+    if nombre ~= "" and FE.HasWeaponProf(nombre) then return true end
+    return false
+end
+
 function HarfordDnDCalc.GetWeaponAttackBonus()
     if IsNpcContext() then return 0 end
     local bonus = HarfordDnDFeatureEffects

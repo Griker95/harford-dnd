@@ -1367,7 +1367,7 @@ Tu personaje Renegado tiene los siguientes rasgos raciales.
 
 &nbsp;&nbsp;&nbsp; ***Voluntad de los Renegados.*** Ventaja en tiradas de salvación contra encantamientos y efectos que vuelven a los no-muertos.
 
-***Idiomas.*** Hablas, lees y escribes Común y Guturásico, una forma baja de Común usada en mercados clandestinos.
+***Idiomas.*** Hablas, lees y escribes Común y Viscerálico, una forma baja de Común usada en mercados clandestinos.
 
 ***Subraza.*** Existen dos subrazas entre los Renegados: humanos y elfos.
 
@@ -8213,7 +8213,7 @@ Un orco con cota de malla interpone su escudo <br> entre el garrote del ogro y s
 Un gladiador lucha por deporte en una arena, maestro con su tridente y red, experto en derribar enemigos y moverlos para deleitar a la multitud y obtener una ventaja táctica. La espada de su oponente brilla con luz azul un instante antes de lanzar un rayo que lo impacta.
 
 ### Práctica Antigua
-Mientras la guerra ha rugido a lo largo de los tiempos, héroes de todas las razas han buscado dominar su arte de la batalla. Los guerreros combinan fuerza, liderazgo y un vasto conocimiento de armas y armaduras para causar estragos en un glorioso combate. Algunos protegen desde las líneas frontales con escudos, reteniendo a los enemigos mientras los aliados apoyan desde atrás con hechizos y arcos. Otros prescinden del escudo y desatan su furia contra la amenaza más cercana con gran variedad de armas.
+Mientras la guerra ha rugido a lo largo de los tiempos, héroes de todas las razas han buscado dominar su arte de la batalla. Los guerreros combinan fuerza, liderazgo y un vasto conocimiento de armas y armaduras para causar estragos en un glorioso combate. Algunos protegen desde las líneas frontales con escudos, reteniendo a los enemigos mientras los aliados apoyan desde atrás con hechizos y arcos. Otros prescinden del escudo y desatan su ira contra la amenaza más cercana con gran variedad de armas.
 
 Los gritos de batalla del guerrero inspiran a sus amigos y dejan a sus enemigos temblando de miedo. Con precisión legendaria, los guerreros apuntan a los espacios más pequeños en la armadura y cortantendones en un desenfoque de acero. Cada dragón derrotado, tirano corrupto derribado y demonio desterrado de Azeroth ha temblado ante estos señores de la guerra.
 
@@ -8240,11 +8240,11 @@ Al crear tu guerrero, piensa en dos elementos relacionados de su trasfondo: ¿D�
 <div class='classTable wide'>
 
 ##### El Guerrero
-|Nivel| Bonificación de <br> competencia | Rasgos | Reserva de <br> Furia | Maniobras <br> Conocidas |
+|Nivel| Bonificación de <br> competencia | Rasgos | Reserva de <br> Ira | Maniobras <br> Conocidas |
 |:---:|:--:|:----------------------------------------|:--:|:-:|
 | 1º  | +2  | Estilo de Combate, Segundo Aliento       |  —  | — |
-| 2º  | +2  | Furia Interna                            |  1  | — |
-| 3º  | +2  | Arquetipo Marcial, mejora de Furia       |  2  | 2 |
+| 2º  | +2  | Ira Interna                            |  1  | — |
+| 3º  | +2  | Arquetipo Marcial, mejora de Ira       |  2  | 2 |
 | 4º  | +2  | Mejora de Puntuación de Característica   |  2  | 2 |
 | 5º  | +3  | Ataque Extra                             |  3  | 2 |
 | 6º  | +3  | Acción Adicional (un uso)                |  3  | 3 |
@@ -8331,48 +8331,48 @@ Cuando participes en combate con dos armas, puedes añadir tu modificador de hab
 ### Segundo Aliento
 Puedes recurrir a tu resistencia para protegerte del daño. Como acción adicional, puedes gastar un dado de golpe para recuperar puntos de golpe al instante, como si hubieras tomado un descanso corto, recuperando puntos de golpe equivalentes al total + tu modificador de Constitución.
 
-### Furia Interna
-Al alcanzar el nivel 2, aprendes a combatir con ferocidad abrumadora y puedes canalizar esa furia en tus ataques.
+### Ira Interna
+Al alcanzar el nivel 2, aprendes a combatir con ferocidad abrumadora y puedes canalizar esa ira en tus ataques.
 
-#### Furia
-Ganas 1 punto de furia cuando infliges daño a una criatura con un ataque de arma que no hayas gastado puntos de furia en él. Puedes gastar estos puntos para realizar diversas maniobras. Para usar una de estas maniobras, debes gastar una cantidad de puntos de furia igual a su coste. No puedes tener más puntos de furia que tu nivel de Guerrero.
+#### Ira
+Ganas 1 punto de ira cuando infliges daño a una criatura con un ataque de arma que no hayas gastado puntos de ira en él. Puedes gastar estos puntos para realizar diversas maniobras. Para usar una de estas maniobras, debes gastar una cantidad de puntos de ira igual a su coste. No puedes tener más puntos de ira que tu nivel de Guerrero.
 
-Tus puntos de furia acumulados permanecen durante 1 hora antes de disiparse, devolviendo tu reserva de furia a 0.
+Tus puntos de ira acumulados permanecen durante 1 hora antes de disiparse, devolviendo tu reserva de ira a 0.
 
 \columnbreak
 
-#### Maniobras de Furia Conocidas
+#### Maniobras de Ira Conocidas
 Empiezas conociendo tres maniobras: Carga, Desarme y Golpe Furioso, que se detallan a continuación.
 
-La columna de Maniobras Conocidas en la tabla del Guerrero muestra cuándo aprendes nuevas maniobras de furia a tu elección. Las opciones de maniobras se detallan al final de la descripción de la clase.
+La columna de Maniobras Conocidas en la tabla del Guerrero muestra cuándo aprendes nuevas maniobras de ira a tu elección. Las opciones de maniobras se detallan al final de la descripción de la clase.
 
 Además, al ganar niveles en esta clase, puedes elegir una de las maniobras que has aprendido y reemplazarla con otra que puedas aprender en ese nivel. No puedes cambiar Carga, Desarme o Golpe Furioso.
 
-#### Reserva de Furia
-Puedes usar una acción adicional en tu turno para aprovechar tu reserva interna de furia y ganar un número de puntos de furia igual a la columna de Reserva de Furia en la tabla del Guerrero.
+#### Reserva de Ira
+Puedes usar una acción adicional en tu turno para aprovechar tu reserva interna de ira y ganar un número de puntos de ira igual a la columna de Reserva de Ira en la tabla del Guerrero.
 
-Una vez que uses tu reserva de furia, no puedes volver a usarla hasta que completes un descanso corto o largo.
+Una vez que uses tu reserva de ira, no puedes volver a usarla hasta que completes un descanso corto o largo.
 
 #### Tirada de Salvación de Maniobras
-Algunas de tus maniobras de furia requieren que tu objetivo realice una tirada de salvación para resistir el efecto. La CD de la tirada de salvación se calcula de la siguiente manera:
+Algunas de tus maniobras de ira requieren que tu objetivo realice una tirada de salvación para resistir el efecto. La CD de la tirada de salvación se calcula de la siguiente manera:
 
 <div style="text-align: Center">
 
-**CD de Furia** = <br>8 + Bonus competencia + Mod. Fuerza 
+**CD de Ira** = <br>8 + Bonus competencia + Mod. Fuerza 
 </div>
 
-#### Maniobras de Furia
-Empiezas conociendo tres maniobras de furia:
+#### Maniobras de Ira
+Empiezas conociendo tres maniobras de ira:
 
-***Carga.*** Cuando realizas la acción de Correr y te desplazas al menos 20 pies hacia un objetivo, puedes gastar 1 punto de furia y realizar un ataque de arma contra él como parte de la acción de Correr. Este ataque se realiza con ventaja.
+***Carga.*** Cuando realizas la acción de Correr y te desplazas al menos 20 pies hacia un objetivo, puedes gastar 1 punto de ira y realizar un ataque de arma contra él como parte de la acción de Correr. Este ataque se realiza con ventaja.
 
-***Desarme.*** Puedes gastar 2 puntos de furia cuando hagas una tirada de ataque para intentar un golpe desarmador. Si el ataque impacta, infliges daño normal y el objetivo suelta un objeto de tu elección que esté sujetando.
+***Desarme.*** Puedes gastar 2 puntos de ira cuando hagas una tirada de ataque para intentar un golpe desarmador. Si el ataque impacta, infliges daño normal y el objetivo suelta un objeto de tu elección que esté sujetando.
 
-***Golpe Furioso.*** Cuando hagas daño con un ataque de arma cuerpo a cuerpo, puedes gastar 1 o más puntos de furia para volver a tirar 1 dado de daño por cada punto de furia gastado. Debes usar el nuevo resultado.
+***Golpe Furioso.*** Cuando hagas daño con un ataque de arma cuerpo a cuerpo, puedes gastar 1 o más puntos de ira para volver a tirar 1 dado de daño por cada punto de ira gastado. Debes usar el nuevo resultado.
 <div style='margin-top:-3px;'></div>
 
 ### Arquetipo Marcial
-Al alcanzar el nivel 3, eliges un arquetipo marcial que buscas emular en tus estilos y técnicas de combate. Elige entre Armas, Furia o Protección, todos detallados al final de la descripción de la clase. Tu arquetipo te concede rasgos en los niveles 3, 7, 11, 15 y 18.
+Al alcanzar el nivel 3, eliges un arquetipo marcial que buscas emular en tus estilos y técnicas de combate. Elige entre Armas, Ira o Protección, todos detallados al final de la descripción de la clase. Tu arquetipo te concede rasgos en los niveles 3, 7, 11, 15 y 18.
 <div style='margin-top:-3px;'></div>
 
 <div class='footnote'>PARTE 1 | CLASES</div>
@@ -8400,20 +8400,20 @@ A partir del nivel 10, puedes volver a tirar una tirada de salvación fallida. S
 
 Puedes usar este rasgo dos veces entre descansos largos a partir del nivel 14.
 
-## Maniobras de Furia
-Si una maniobra de furia tiene requisitos previos, debes cumplirlos para aprenderla. Puedes aprender la maniobra al mismo tiempo que cumples con sus requisitos. Un requisito de nivel se refiere a tu nivel en esta clase.
+## Maniobras de Ira
+Si una maniobra de ira tiene requisitos previos, debes cumplirlos para aprenderla. Puedes aprender la maniobra al mismo tiempo que cumples con sus requisitos. Un requisito de nivel se refiere a tu nivel en esta clase.
 
-#### Furia Berserker
-Puedes usar tu acción y gastar 3 puntos de furia para finalizar un efecto que te esté encantando o asustando.
+#### Ira Berserker
+Puedes usar tu acción y gastar 3 puntos de ira para finalizar un efecto que te esté encantando o asustando.
 
 #### Sed de Sangre
-Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 3 puntos de furia para fortalecerte en el momento. Al hacerlo, ganas puntos de golpe temporales iguales a 1d8 + tu nivel de Guerrero. Estos puntos duran 1 minuto.
+Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 3 puntos de ira para fortalecerte en el momento. Al hacerlo, ganas puntos de golpe temporales iguales a 1d8 + tu nivel de Guerrero. Estos puntos duran 1 minuto.
 
 #### Cuchillada
 *Requisito: 6º nivel*
 <div style='margin-top:-6px;'></div>
 
-Cuando golpeas a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 4 puntos de furia para intentar atacar a otra criatura con el mismo ataque. Elige otra criatura a 5 pies del objetivo original y dentro de tu alcance. Si la tirada de ataque original impactaría al segundo objetivo, realiza el daño como un ataque normal.
+Cuando golpeas a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 4 puntos de ira para intentar atacar a otra criatura con el mismo ataque. Elige otra criatura a 5 pies del objetivo original y dentro de tu alcance. Si la tirada de ataque original impactaría al segundo objetivo, realiza el daño como un ataque normal.
 
 \columnbreak
 
@@ -8421,7 +8421,7 @@ Cuando golpeas a una criatura con un ataque de arma cuerpo a cuerpo, puedes gast
 *Requisito: 6º nivel*
 <div style='margin-top:-6px;'></div>
 
-Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de furia para intentar infligir una herida profunda. El objetivo debe superar una tirada de salvación de Constitución o perder 1d4 puntos de golpe debido a la pérdida de sangre. La herida profunda dura 1 minuto.
+Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de ira para intentar infligir una herida profunda. El objetivo debe superar una tirada de salvación de Constitución o perder 1d4 puntos de golpe debido a la pérdida de sangre. La herida profunda dura 1 minuto.
 
 Al final de su turno, el objetivo pierde otros 1d4 puntos de golpe. Luego, realiza otra tirada de salvación de Constitución, deteniendo la hemorragia si tiene éxito.
 
@@ -8429,22 +8429,22 @@ Al final de su turno, el objetivo pierde otros 1d4 puntos de golpe. Luego, reali
 *Requisito: 6º nivel*
 <div style='margin-top:-6px;'></div>
 
-Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 6 puntos de furia para convertir tu ataque en un golpe crítico. Esto no tiene efecto si la tirada de ataque ya era crítica.
+Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 6 puntos de ira para convertir tu ataque en un golpe crítico. Esto no tiene efecto si la tirada de ataque ya era crítica.
 
 #### Golpe Potente
-Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de furia para intentar forzar a un objetivo a retroceder. Si el objetivo es Grande o más pequeño, debe realizar una tirada de salvación de Fuerza. Si falla, lo empujas hasta 10 pies de distancia.
+Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de ira para intentar forzar a un objetivo a retroceder. Si el objetivo es Grande o más pequeño, debe realizar una tirada de salvación de Fuerza. Si falla, lo empujas hasta 10 pies de distancia.
 
 #### Corte Tendones
-Cuando golpees a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de furia para intentar derribar al objetivo. Si el objetivo es Grande o más pequeño, debe superar una tirada de salvación de Fuerza. Si falla, lo derribas.
+Cuando golpees a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de ira para intentar derribar al objetivo. Si el objetivo es Grande o más pequeño, debe superar una tirada de salvación de Fuerza. Si falla, lo derribas.
 
 #### Ignorar Dolor
-Puedes usar tu reacción y gastar 3 puntos de furia cuando <br> recibas un ataque de arma para darte resistencia al daño contundente, perforante y cortante hasta el inicio de tu próximo turno.
+Puedes usar tu reacción y gastar 3 puntos de ira cuando <br> recibas un ataque de arma para darte resistencia al daño contundente, perforante y cortante hasta el inicio de tu próximo turno.
 
 #### Golpe Mortal
-Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de furia para intentar asestar un golpe mortal. El objetivo debe superar una tirada de salvación de Constitución o no podrá recuperar puntos de golpe hasta el inicio de tu próximo turno.
+Cuando impactes a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de ira para intentar asestar un golpe mortal. El objetivo debe superar una tirada de salvación de Constitución o no podrá recuperar puntos de golpe hasta el inicio de tu próximo turno.
 
 #### Embate con Escudo
-Cuando golpeas a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de furia y usar tu acción adicional para golpear al objetivo con tu escudo, infligiendo daño igual a 1d4 + tu modificador de Fuerza.
+Cuando golpeas a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de ira y usar tu acción adicional para golpear al objetivo con tu escudo, infligiendo daño igual a 1d4 + tu modificador de Fuerza.
 
 Para ello, debes llevar un escudo.
 
@@ -8463,7 +8463,7 @@ A partir de que elijas este arquetipo al nivel 3, aprendes a usar tu arma como b
 Puedes usar esta característica dos veces. Recuperas los usos gastados al completar un descanso corto o largo.
 
 #### Intrépido
-Al nivel 3, tu furia se regenera a medida que la viertes en tus ataques. Recuperas 1 punto de furia al final de tu turno si golpeas a una criatura con un movimiento de furia durante el mismo.
+Al nivel 3, tu ira se regenera a medida que la viertes en tus ataques. Recuperas 1 punto de ira al final de tu turno si golpeas a una criatura con un movimiento de ira durante el mismo.
 
 #### Grito de Mando
 A partir del nivel 7, puedes comandar a un aliado para que ataque a tu objetivo. Como acción adicional, elige a una criatura aliada a 60 pies de ti que pueda verte o escucharte. Esa criatura puede usar su reacción para realizar un ataque cuerpo a cuerpo.
@@ -8479,16 +8479,16 @@ En el nivel 18, respondes con ferocidad a las aperturas en las defensas del enem
 
 \columnbreak
 
-### Furia
-Los guerreros de furia son combatientes temidos, lanzándose al fragor de la batalla con un ansia por el combate, desatendiendo su defensa para asestar golpes brutales. Muchos prefieren armas que puedan blandirse con una sola mano, desatando una ráfaga de ataques para despedazar a sus enemigos.
+### Ira
+Los guerreros de ira son combatientes temidos, lanzándose al fragor de la batalla con un ansia por el combate, desatendiendo su defensa para asestar golpes brutales. Muchos prefieren armas que puedan blandirse con una sola mano, desatando una ráfaga de ataques para despedazar a sus enemigos.
 
-#### Furia Desatada
-Al elegir este arquetipo al nivel 3, puedes dejar de lado toda preocupación por la defensa para atacar con una desesperación feroz. Al realizar tu primer ataque en tu turno, puedes decidir desatar tu furia. Esto te otorga ventaja en tiradas de ataque cuerpo a cuerpo usando Fuerza durante ese turno, pero las tiradas de ataque contra ti también tendrán ventaja hasta tu próximo turno.
+#### Ira Desatada
+Al elegir este arquetipo al nivel 3, puedes dejar de lado toda preocupación por la defensa para atacar con una desesperación feroz. Al realizar tu primer ataque en tu turno, puedes decidir desatar tu ira. Esto te otorga ventaja en tiradas de ataque cuerpo a cuerpo usando Fuerza durante ese turno, pero las tiradas de ataque contra ti también tendrán ventaja hasta tu próximo turno.
 
 #### Temible
 Al nivel 3, obtienes competencia en la habilidad de Intimidación si no la tienes ya. Cuando hagas una prueba de esta habilidad, puedes elegir usar tu modificador de Fuerza en lugar de tu modificador de Carisma.
 
-#### Furia Focalizada
+#### Ira Focalizada
 A partir del nivel 7, tu fuerza bruta te permite manejar armas con una potencia incomparable. 
 
 Cuando uses un arma que inflige un único dado de daño, el dado de daño se incrementa en 1. Por ejemplo, una espada corta que normalmente inflige 1d6 de daño, en su lugar inflige 1d8 de daño. El dado de daño de un arma no puede incrementarse más allá de 1d12.
@@ -8512,12 +8512,12 @@ En el nivel 18, si recibes daño que te reduce a 0 puntos de golpe y no te mata 
 Los guerreros de protección muestran una habilidad especial para usar el escudo, anulando los avances de sus oponentes y creando oportunidades para contraatacar. Para ellos, ser el soldado más resistente en el frente no significa nada si los aliados quedan vulnerables al ataque enemigo. Estos tenaces defensores son cruciales para el éxito de cualquier campaña militar.
 
 #### Provocación
-A partir de que elijas este arquetipo al nivel 3, puedes usar tu acción para provocar a criaturas en un radio de 30 pies. Toda criatura que elijas en el rango debe superar una tirada de salvación de Sabiduría contra la CD de tu Furia o tener desventaja en las tiradas de ataque contra criaturas que no seas tú durante 1 minuto. Una criatura puede repetir la salvación al final de cada uno de sus turnos, terminando el efecto si tiene éxito.
+A partir de que elijas este arquetipo al nivel 3, puedes usar tu acción para provocar a criaturas en un radio de 30 pies. Toda criatura que elijas en el rango debe superar una tirada de salvación de Sabiduría contra la CD de tu Ira o tener desventaja en las tiradas de ataque contra criaturas que no seas tú durante 1 minuto. Una criatura puede repetir la salvación al final de cada uno de sus turnos, terminando el efecto si tiene éxito.
 
 Una vez que uses esta característica, no puedes volver a usarla hasta que completes un descanso corto o largo.
 
 #### Control de Ira
-Al nivel 3, tu furia se renueva con los golpes que recibes. Cuando una criatura hostil te golpea con un ataque, ganas 1 punto de furia de inmediato. Solo puedes beneficiarte de este efecto una vez por turno.
+Al nivel 3, tu ira se renueva con los golpes que recibes. Cuando una criatura hostil te golpea con un ataque, ganas 1 punto de ira de inmediato. Solo puedes beneficiarte de este efecto una vez por turno.
 
 #### Interceptar
 A partir del nivel 7, cuando una criatura que puedes ver ataque a un objetivo que no seas tú y que esté a 5 pies de ti, puedes usar tu reacción para interceptar el ataque, forzando al atacante a dirigirse a ti en su lugar.
@@ -12782,6 +12782,16 @@ API.FEATURE_TITLES = {
     dh_mordida_demonio = "Mordida de Demonio",
     dh_momentum = "Moméntum",
     dh_metamorfosis = "Metamorfosis",
+
+    -- Rasgos RENOMBRADOS al nombre canonico de la web/TRP3, que NO es el del manual. El texto
+    -- largo se busca por el titulo del manual, asi que sin este mapeo la ficha se quedaria
+    -- con la descripcion corta. Al renombrar un rasgo, comprobar siempre si necesita entrada aqui.
+    cdm_comando_oscuro = "Comando Oscuro",              -- ficha: "Orden oscura"
+    monje_tej_niebla_calmante = "Niebla Calmante",      -- ficha: "Niebla reconfortante"
+    pic_ase_intuicion = "Intuición del Asesino",        -- ficha: "Intuición de asesino"
+    pic_ase_competencia = "Competencia Adicional",      -- ficha: "Competencia con venenos"
+    sac_sag_competencia = "Competencia Adicional",      -- ficha: "Saber divino"
+    bru_forjado_almas = "Forjado de Almas",             -- ficha: "Forja de almas"
 }
 
 -- Devuelve primero el pasaje exacto del Libro y conserva el texto interno como respaldo.

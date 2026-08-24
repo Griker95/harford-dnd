@@ -1,0 +1,13 @@
+## Interface: 90207
+## Title: |cff88ccffHarford|r Datos de conjuros
+## Notes: Los 384 conjuros del compendio. Se carga BAJO DEMANDA desde Harford.
+## Author: Griker
+## Version: 2.0.0
+## RequiredDeps: Harford
+## LoadOnDemand: 1
+
+# 609 KB de constructores de tabla (811 entradas) que WoW parseaba en cada login aunque el
+# jugador no abriera el compendio ni lanzara un conjuro. Harford los pide desde
+# HarfordCompendioAPI.GetAllSpells(), que es la unica puerta a estos datos.
+
+HarfordCompendioData.lua

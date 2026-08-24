@@ -105,7 +105,12 @@ local function Empty()
             armorClass = 0,
             spellAttack = 0,
             spellDC = 0,
+            -- Velocidad en METROS, como el dato de raza (9 m = 30 pies). Afinidad Aire suma 1,5.
+            speed = 0,
         },
+        -- Velocidad FIJA que sustituye a la de la raza mientras dure (Bestia Espiritual: 15 m).
+        -- Se queda con la mayor si hubiera varias.
+        speedOverride = 0,
         -- Modificadores de caracteristica de CREACION (raza/trasfondo/dote). La ficha
         -- cargada ya los incluye horneados en la puntuacion nativa, asi que NO se suman
         -- en vivo (ni aparecen en el tooltip). Solo los usa el pipeline de creacion de
@@ -115,14 +120,23 @@ local function Empty()
         saveProf = {},
         skillRank = {},
         resourceMax = {},
+        -- Recuperacion PARCIAL de un recurso al descansar, que no es lo mismo que su `recharge`:
+        -- el recurso puede recargar en largo y aun asi un rasgo devolver N en el corto
+        -- (Sacerdote "Restauracion de los fieles": 2 puntos de fe en descanso corto).
+        restRestore = { short = {}, long = {} },
+        -- Recurso GANADO por un disparador observable (Guerrero: Ira al recibir un golpe o al
+        -- impactar con una maniobra de Ira). Indexado por disparador -> { recurso, cantidad, nota }.
+        resourceGain = {},
         hpPerLevel = 0,   -- PG adicionales por nivel TOTAL (ej. dote Duro = 2). Lo suma ComputeMaxHP.
         armorProf = {},   -- competencias de armadura: ligera/media/pesada/escudo (bool por clave)
         weaponProf = {},  -- competencias de arma: sencillas/marciales/armas de fuego o arma concreta (bool)
         toolProf = {},    -- competencias de herramienta: clave libre (ej. "Herramientas de cervecero") -> bool
+        language = {},    -- idiomas conocidos: nombre exacto del catalogo -> bool
         critThreshold = { any = 20, melee = 20 },  -- tirada minima de critico (rasgos de critico ampliado)
         flags = {},       -- flags booleanos de rasgo (ej. offhandDamageMod, greatWeaponFighting, extraAttack)
         damageStatus = {},-- resistencia/inmunidad/vulnerabilidad por tipo de dano (clave normalizada -> status)
         conditionImmunity = {}, -- inmunidades mecanicas por conditionId canonico
+        conditionalDamageRiders = {}, -- id de dano condicional -> condiciones que aplica al impactar
         conditionalDamage = {}, -- dados de daño condicional conmutables (Ataque Furtivo, Golpe Runico...)
         weaponExtraDamage = {}, -- daño automatico por impacto de arma (ej. Metamorfosis)
         toggleStates = {},
@@ -131,6 +145,9 @@ local function Empty()
         unarmoredDefenseAbilities = {}, -- caracteristicas cuyo Mod. se suma a la CA SIN armadura ni escudo (Defensa sin Armadura del Monje: Sabiduria)
         weaponFinesse = {}, -- reglas que permiten tratar armas concretas como Sutiles
         martialArts = {}, -- reglas de armas de monje: Destreza y dado marcial por nivel
+        -- Sustitucion de la caracteristica de ataque/dano de un arma (Monje "Serenidad": Sabiduria
+        -- con armas de monje mientras dure la postura). Se gatea con `requiresState`.
+        weaponAbilityOverride = {},
     }
 end
 
@@ -142,6 +159,52 @@ end
 API.NormDamageKey = NormDamageKey
 
 -- Aplica un efecto declarativo individual sobre la capa resuelta.
+-- Nombres equivalentes de una misma competencia de arma. Sin esto la misma competencia aparece
+-- dos veces con dos grafias distintas (ver la nota de arriba de weaponProf).
+local WEAPON_PROF_ALIAS = {
+    ["simples"] = "sencillas",
+    ["armas simples"] = "sencillas",
+    ["armas sencillas"] = "sencillas",
+    ["armas marciales"] = "marciales",
+    ["de fuego"] = "armas de fuego",
+    ["armas de fuego"] = "armas de fuego",
+    -- El libro declara las competencias sueltas en PLURAL ("espadas cortas"), pero la consulta
+    -- llega con la clave exacta del arma, en singular ("Espada corta"). Sin estos alias el Picaro
+    -- salia "sin competencia" con su propio estoque inicial y el Monje con su espada corta.
+    ["espadas cortas"] = "espada corta",
+    ["espadas largas"] = "espada larga",
+    ["ballestas de mano"] = "ballesta de mano",
+    ["hachas de mano"] = "hacha de mano",
+    ["gujas"] = "guja",
+    ["jabalinas"] = "jabalina",
+    ["dagas"] = "daga",
+    ["mazas"] = "maza",
+    ["bastones"] = "baston",
+    ["lanzas"] = "lanza",
+    -- El manual llama "florete" a la misma arma que la tabla registra como "Estoque".
+    ["floretes"] = "estoque",
+    ["florete"] = "estoque",
+}
+
+-- Compara idiomas sin acentos ni mayusculas: el About los escribe a mano.
+local function NormLanguage(name)
+    local texto = tostring(name or "")
+    if HarfordClassColors and HarfordClassColors.StripAccents then
+        texto = HarfordClassColors.StripAccents(texto)
+    end
+    return (texto:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+local function NormWeaponProf(key)
+    local texto = tostring(key or "")
+    local plano = texto
+    if HarfordClassColors and HarfordClassColors.StripAccents then
+        plano = HarfordClassColors.StripAccents(plano)
+    end
+    plano = plano:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+    return WEAPON_PROF_ALIAS[plano] or plano
+end
+
 local function ApplyEffect(resolved, effect, profileName)
     if type(effect) ~= "table" then return end
     local kind = effect.kind
@@ -177,6 +240,8 @@ local function ApplyEffect(resolved, effect, profileName)
         elseif resolved.bonus[target] ~= nil then
             resolved.bonus[target] = (tonumber(resolved.bonus[target]) or 0) + value
         end
+    elseif kind == "speedOverride" then
+        resolved.speedOverride = math.max(tonumber(resolved.speedOverride) or 0, tonumber(effect.value) or 0)
     elseif kind == "saveProf" and effect.ability then
         resolved.saveProf[effect.ability] = true
     elseif kind == "skillProf" and effect.skill then
@@ -199,9 +264,40 @@ local function ApplyEffect(resolved, effect, profileName)
             end
         end
         Add(resolved.resourceMax, effect.resource, v)
+    elseif kind == "resourceGain" and effect.resource and effect.trigger then
+        local t = tostring(effect.trigger)
+        resolved.resourceGain[t] = resolved.resourceGain[t] or {}
+        resolved.resourceGain[t][#resolved.resourceGain[t] + 1] = {
+            resource = tostring(effect.resource),
+            amount = math.max(1, math.floor(tonumber(effect.amount) or 1)),
+            -- El id del rasgo viaja con la ganancia: la linea que se publica debe llevar SU link,
+            -- no una frase; el formato es `[D&D] <Actor> [LINK] <Objetivo>`.
+            featureId = effect.featureId and tostring(effect.featureId) or nil,
+        }
+    elseif kind == "restRestore" and effect.resource then
+        -- Mismo escalado por nivel que `resourceMax`: valor fijo o tabla por nivel de clase.
+        local v = tonumber(effect.value) or 0
+        if effect.perClassLevel and HarfordDnDProgression and HarfordDnDProgression.GetClassLevels then
+            local lvl = 0
+            for _, e in ipairs(HarfordDnDProgression.GetClassLevels(profileName) or {}) do
+                if e.classId == effect.perClassLevel then lvl = tonumber(e.level) or 0; break end
+            end
+            if type(effect.values) == "table" then v = tonumber(effect.values[lvl]) or 0 end
+        end
+        local cual = (tostring(effect.rest or "short") == "long") and "long" or "short"
+        if v > 0 then Add(resolved.restRestore[cual], effect.resource, v) end
     elseif kind == "hpPerLevel" then
         -- PG por nivel TOTAL (dote Duro = 2). Lo consume ComputeMaxHP, no resourceMax (la vida es baked).
         resolved.hpPerLevel = (tonumber(resolved.hpPerLevel) or 0) + (tonumber(effect.value) or 0)
+    elseif kind == "conditionalDamageRider" and effect.conditionalId then
+        -- Condicion que se aplica al impactar CON un dano condicional concreto. Va aparte del
+        -- propio dano porque quien la concede puede ser otro rasgo (Orden oscura, N3, sobre el
+        -- Golpe runico, N1).
+        local clave = tostring(effect.conditionalId)
+        resolved.conditionalDamageRiders[clave] = resolved.conditionalDamageRiders[clave] or {}
+        local lista = resolved.conditionalDamageRiders[clave]
+        lista[#lista + 1] = { conditionId = tostring(effect.conditionId or ""),
+                              duration = tostring(effect.duration or "manual") }
     elseif kind == "flag" and effect.flag then
         resolved.flags[tostring(effect.flag)] = true
     elseif kind == "initiativeAbility" and effect.ability then
@@ -215,6 +311,11 @@ local function ApplyEffect(resolved, effect, profileName)
             meleeOnly = effect.meleeOnly ~= false,
             excludeHeavy = effect.excludeHeavy == true,
             excludeTwoHanded = effect.excludeTwoHanded == true,
+        }
+    elseif kind == "weaponAbilityOverride" and effect.ability then
+        resolved.weaponAbilityOverride[#resolved.weaponAbilityOverride + 1] = {
+            ability = tostring(effect.ability),
+            martialArtsOnly = effect.martialArtsOnly and true or false,
         }
     elseif kind == "martialArts" then
         resolved.martialArts[#resolved.martialArts + 1] = {
@@ -312,9 +413,11 @@ local function ApplyEffect(resolved, effect, profileName)
     elseif kind == "armorProf" and (effect.armor or effect.value) then
         resolved.armorProf[tostring(effect.armor or effect.value)] = true
     elseif kind == "weaponProf" and (effect.weapon or effect.value) then
-        resolved.weaponProf[tostring(effect.weapon or effect.value)] = true
+        resolved.weaponProf[NormWeaponProf(effect.weapon or effect.value)] = true
     elseif kind == "toolProf" and (effect.tool or effect.value) then
         resolved.toolProf[tostring(effect.tool or effect.value)] = true
+    elseif kind == "language" and (effect.language or effect.value) then
+        resolved.language[tostring(effect.language or effect.value)] = true
     end
 end
 
@@ -348,8 +451,9 @@ function API.Resolve(profileName)
             local classDef = HarfordDnDBook.GetClass(entry.classId)
             if classDef then
                 for _, a in ipairs(classDef.armorProfs or {}) do resolved.armorProf[tostring(a)] = true end
-                for _, w in ipairs(classDef.weaponProfs or {}) do resolved.weaponProf[tostring(w)] = true end
+                for _, w in ipairs(classDef.weaponProfs or {}) do resolved.weaponProf[NormWeaponProf(w)] = true end
                 for _, t in ipairs(classDef.toolProfs or {}) do resolved.toolProf[tostring(t)] = true end
+                for _, lg in ipairs(classDef.languages or {}) do resolved.language[tostring(lg)] = true end
             end
         end
     end
@@ -369,7 +473,7 @@ function API.Resolve(profileName)
             if enabled then resolved.armorProf[tostring(key)] = true end
         end
         for key, enabled in pairs(imported.weaponProf or {}) do
-            if enabled then resolved.weaponProf[tostring(key)] = true end
+            if enabled then resolved.weaponProf[NormWeaponProf(key)] = true end
         end
         for key, enabled in pairs(imported.toolProf or {}) do
             if enabled then resolved.toolProf[tostring(key)] = true end
@@ -433,6 +537,18 @@ function API.Prime(profileName)
     API.Resolve(profileName)
 end
 
+-- Velocidad efectiva en metros: una velocidad FIJA activa (forma, transformacion) sustituye a la
+-- de la raza; si no, se suma el bono. Devuelve nil si no hay base ni override, para que la ficha
+-- muestre "-" en vez de un 0 enganoso.
+function API.GetSpeed(baseSpeed, profileName)
+    local resolved = API.Resolve(profileName)
+    local override = tonumber(resolved.speedOverride) or 0
+    if override > 0 then return override end
+    local base = tonumber(baseSpeed)
+    if not base then return nil end
+    return base + (tonumber(resolved.bonus.speed) or 0)
+end
+
 function API.GetBonus(target, key, profileName)
     local resolved = API.Resolve(profileName)
     target = tostring(target or "")
@@ -457,6 +573,13 @@ end
 -- Lista de daños condicionales conmutables disponibles (cada uno {id,label,dice,die,damageType}).
 function API.GetConditionalDamage(profileName)
     return API.Resolve(profileName).conditionalDamage
+end
+
+-- Condiciones que un rasgo cuelga de un dano condicional concreto (Orden oscura sobre Golpe
+-- runico). Devuelve lista vacia si ese dano no tiene ninguna.
+function API.GetConditionalDamageRiders(conditionalId, profileName)
+    local todos = API.Resolve(profileName).conditionalDamageRiders or {}
+    return todos[tostring(conditionalId or "")] or {}
 end
 
 function API.GetToggleStates(profileName)
@@ -550,6 +673,16 @@ end
 -- Devuelve el dado marcial que mejora el dado normal del arma. Si el arma ya usa
 -- un dado igual o mayor, el flujo normal conserva ese dado: el jugador nunca pierde
 -- dano por tener Artes Marciales activas.
+-- Caracteristica que sustituye a la normal para atacar/danar con este arma, o nil.
+function API.GetWeaponAbilityOverride(def, profileName)
+    for _, regla in ipairs(API.Resolve(profileName).weaponAbilityOverride or {}) do
+        if not regla.martialArtsOnly or API.TreatWeaponAsMartialArts(def, profileName) then
+            return regla.ability
+        end
+    end
+    return nil
+end
+
 function API.GetMartialArtsDamageDice(def, profileName)
     if not API.TreatWeaponAsMartialArts(def, profileName) then return nil, nil end
     for _, rule in ipairs(API.Resolve(profileName).martialArts or {}) do
@@ -612,6 +745,20 @@ function API.GetSkillRank(skillId, profileName)
     return tonumber(API.Resolve(profileName).skillRank[skillId]) or 0
 end
 
+-- Recuperaciones parciales al descansar: { [recurso] = cantidad }. Las aplica ApplyShortRest /
+-- ApplyLongRest despues de las recargas normales.
+-- Ganancias de recurso declaradas para un disparador. Lista vacia si el personaje no tiene ninguna.
+function API.GetResourceGains(trigger, profileName)
+    local r = API.Resolve(profileName)
+    return (r and r.resourceGain and r.resourceGain[tostring(trigger or "")]) or {}
+end
+
+function API.GetRestRestores(restType, profileName)
+    local r = API.Resolve(profileName)
+    local cual = (tostring(restType or "short") == "long") and "long" or "short"
+    return (r and r.restRestore and r.restRestore[cual]) or {}
+end
+
 function API.GetResourceMaxBonus(resourceKey, profileName)
     return tonumber(API.Resolve(profileName).resourceMax[resourceKey]) or 0
 end
@@ -627,13 +774,25 @@ function API.HasArmorProf(key, profileName)
 end
 
 function API.HasWeaponProf(key, profileName)
-    return API.Resolve(profileName).weaponProf[tostring(key)] == true
+    -- La consulta se normaliza igual que el almacenamiento: preguntar por "de fuego" tiene que
+    -- encontrar la competencia guardada como "armas de fuego".
+    return API.Resolve(profileName).weaponProf[NormWeaponProf(key)] == true
 end
 
 -- Clave libre, por nombre exacto como se declara en el efecto `toolProf` (ej. "Herramientas de
 -- cervecero"). Lo usan las profesiones: tener la competencia = conocer la profesion.
+-- Competente con una herramienta por rasgo/dote, O por saber la profesion que la usa: aprender
+-- un oficio incluye manejar sus herramientas.
+--
+-- La consulta a profesiones va por `HasSkillInProfessionWithTool`, que mira el nivel de
+-- habilidad y no `KnowsProfession`: esta ultima pregunta por la competencia de herramienta, y
+-- llamarla desde aqui cerraria el ciclo.
 function API.HasToolProf(key, profileName)
-    return API.Resolve(profileName).toolProf[tostring(key)] == true
+    if API.Resolve(profileName).toolProf[tostring(key)] == true then return true end
+    if HarfordProfessions and HarfordProfessions.HasSkillInProfessionWithTool then
+        return HarfordProfessions.HasSkillInProfessionWithTool(key) == true
+    end
+    return false
 end
 
 -- Devuelve la lista (ordenada) de claves competentes de una categoria del set resuelto.
@@ -652,8 +811,43 @@ function API.GetWeaponProfs(profileName)
     return SortedKeys(API.Resolve(profileName).weaponProf)
 end
 
+-- Idiomas derivados de los DATOS (raza, trasfondo, clase, dotes y elecciones). Se fusionan con
+-- los importados del About de TRP3, que son los del personaje escrito a mano.
+function API.GetLanguages(profileName)
+    local out = SortedKeys(API.Resolve(profileName).language)
+    local imported = HarfordDnDProgression and HarfordDnDProgression.GetImportedProficiencies
+        and HarfordDnDProgression.GetImportedProficiencies(profileName)
+    if not (imported and type(imported.languages) == "table") then return out end
+    local vistas = {}
+    for _, l in ipairs(out) do vistas[NormLanguage(l)] = true end
+    for idioma, activo in pairs(imported.languages) do
+        local texto = tostring(idioma or "")
+        -- El About escribe el idioma como lo teclea el jugador ("Comun", "comun", "Común"):
+        -- se compara sin acentos ni mayusculas para no listarlo dos veces.
+        if activo and texto ~= "" and not vistas[NormLanguage(texto)] then
+            vistas[NormLanguage(texto)] = true
+            out[#out + 1] = texto
+        end
+    end
+    table.sort(out)
+    return out
+end
+
+-- Incluye las herramientas de las profesiones aprendidas, para que la ficha las liste junto a
+-- las que dan rasgos y dotes: para el jugador son la misma competencia.
 function API.GetToolProfs(profileName)
-    return SortedKeys(API.Resolve(profileName).toolProf)
+    local out = SortedKeys(API.Resolve(profileName).toolProf)
+    if not (HarfordProfessions and HarfordProfessions.GetKnownTools) then return out end
+    local vistas = {}
+    for _, t in ipairs(out) do vistas[t] = true end
+    for _, t in ipairs(HarfordProfessions.GetKnownTools()) do
+        if not vistas[t] then
+            vistas[t] = true
+            out[#out + 1] = t
+        end
+    end
+    table.sort(out)
+    return out
 end
 
 -- Instantanea unificada de las 4 categorias de competencia para la UI:

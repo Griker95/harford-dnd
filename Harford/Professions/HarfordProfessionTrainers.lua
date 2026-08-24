@@ -173,9 +173,26 @@ end
 
 -- El entrenador con ese nombre de catalogo, construido al vuelo. nil si ese par (profesion,
 -- rango) no tiene ninguna receta que ensenar: entonces ese entrenador no existe.
+-- Los entrenadores se construyen al vuelo, y comprobar que el par profesion/rango TIENE recetas
+-- obliga a recorrer las 1614 del catalogo. Eso es aceptable una vez, no una por fila que entra en
+-- pantalla al hacer scroll. Se memoiza igual que la resolucion por receta, y `OlvidarCache()`
+-- limpia las dos.
+local cacheEntrenadores = {}
+
 function API.Get(trainerId)
     local id = Norm(trainerId)
     if id == "" then return nil end
+    local memo = cacheEntrenadores[id]
+    if memo ~= nil then
+        if memo == false then return nil end
+        return memo
+    end
+    local construido = API._Construir(id)
+    cacheEntrenadores[id] = construido or false
+    return construido
+end
+
+function API._Construir(id)
     local declarado
     for _, def in ipairs(Declarados()) do
         if Norm(def.id) == id then declarado = def break end
@@ -212,8 +229,30 @@ function API.GetAll()
 end
 
 -- ¿Quien ensena esta receta? Es la consulta que usa el libro para decir donde aprenderla.
+-- Que entrenador ensena cada receta NO cambia en caliente: sale del catalogo y de PLACED, ambos
+-- estaticos en la sesion. Resolverlo costaba 0.28 ms por receta -recorre los declarados y monta
+-- el entrenador del rango- y la lista lo pedia por cada fila visible en cada refresco. Se memoiza
+-- por id; `API.OlvidarCache()` lo limpia si alguna vez se toca PLACED o se define una receta nueva.
+local cacheEntrenadorPorReceta = {}
+
+function API.OlvidarCache()
+    cacheEntrenadorPorReceta = {}
+    cacheEntrenadores = {}
+end
+
 function API.GetForRecipe(recipeId)
     if not (HarfordProfessions and HarfordProfessions.GetRecipe) then return nil end
+    local memo = cacheEntrenadorPorReceta[recipeId]
+    if memo ~= nil then
+        if memo == false then return nil end
+        return memo
+    end
+    local resultado = API._ResolverParaReceta(recipeId)
+    cacheEntrenadorPorReceta[recipeId] = resultado or false
+    return resultado
+end
+
+function API._ResolverParaReceta(recipeId)
     local recipe = HarfordProfessions.GetRecipe(recipeId)
     if not recipe then return nil end
     -- Primero los declarados: uno puede atar una receta suelta al margen de su rango.
@@ -361,13 +400,18 @@ local function ValidateTeach(trainerId, recipeId)
     if not HarfordProfessions.KnowsProfession(r.profession) then
         return false, "No conoces esa profesion"
     end
-    -- El requisito de habilidad tambien es cosa del entrenador: no ensena por encima de lo que
-    -- el alumno puede seguir. Faltaba, y se podia aprender una receta de 300 con habilidad 1.
+    -- Lo que decide es el RANGO, no el requisito exacto de la receta: siendo Aprendiz se pueden
+    -- aprender TODAS las de Aprendiz, aunque alguna quede por encima de tu habilidad y salga en
+    -- rojo. Fabricarla sera dificil -CD 20-, pero tenerla es cosa de haber llegado al rango.
+    --
+    -- Comparar contra el `skillReq` de cada receta dejaba media lista del entrenador fuera de
+    -- alcance justo despues de pagarle por llegar a su rango.
     local skill = HarfordProfessions.EffectiveSkill
         and HarfordProfessions.EffectiveSkill(r.profession) or 0
-    local req = SkillReq(r)
-    if skill < req then
-        return false, "Te falta habilidad: requiere " .. req
+    local rango = HarfordProfessions.GetTierName and HarfordProfessions.GetTierName(SkillReq(r))
+    local minimo = rango and API.GetTierRange(rango) or SkillReq(r)
+    if skill < minimo then
+        return false, "Te falta habilidad: ese rango empieza en " .. minimo
     end
     if HarfordProfessions.IsRecipeLearned and HarfordProfessions.IsRecipeLearned(recipeId) then
         return false, "Ya conoces esa receta"
@@ -405,14 +449,43 @@ end
 
 -- Compra asincrona: primero valida la receta, luego retira el dinero y SOLO entonces aprende.
 -- `callback(ok, err, recipe)` se llama exactamente una vez incluso si el transporte no existe.
+-- Segundos para dar por muerta la confirmacion del servidor.
+--
+-- Ni este modulo, ni la economia, ni HarfordEpsilonCommands, ni EpsilonLib tienen plazo: el
+-- callback se dispara cuando el servidor RESPONDE, y si calla no se dispara nunca. Sin esto la
+-- ventana se quedaba con el boton apagado para siempre, porque solo lo reactiva el callback.
+local PLAZO_PAGO = 8
+
+-- Una compra en vuelo a la vez. La economia ya lo rechazaria por su lado, pero aqui la receta se
+-- concede ANTES de cobrar: sin este guard, encadenar clicks concedia la segunda y la deshacia un
+-- instante despues, con el parpadeo correspondiente.
+local compraEnVuelo = nil
+
+-- Compra: la receta se concede EN EL MOMENTO y el cobro se lanza a la vez.
+--
+-- El orden importa. Antes se esperaba la confirmacion del servidor para conceder, y eso metia
+-- una espera visible en algo que para el jugador es instantaneo. Ahora se concede primero y solo
+-- se DESHACE si el servidor rechaza el pago explicitamente.
+--
+-- Si el servidor calla no se revierte nada: no se sabe si cobro o no, y quitarle la receta a
+-- alguien a quien quiza si le cobraron es peor que dejarsela. Se le avisa y que lo mire.
+--
+-- `callback(ok, err, recipe)` se llama exactamente una vez, pase lo que pase.
 function API.Purchase(trainerId, recipeId, callback)
     callback = type(callback) == "function" and callback or function() end
     local callbackDone = false
     local function Finish(ok, err, recipe)
         if callbackDone then return end
         callbackDone = true
+        compraEnVuelo = nil
         callback(ok, err, recipe)
     end
+
+    if compraEnVuelo then
+        Finish(false, "Espera a que termine la compra anterior", nil)
+        return false, "Hay una compra en curso"
+    end
+
     local def = API.Get(trainerId)
     local recipe = HarfordProfessions and HarfordProfessions.GetRecipe
         and HarfordProfessions.GetRecipe(recipeId)
@@ -421,45 +494,61 @@ function API.Purchase(trainerId, recipeId, callback)
         return false, "Receta o entrenador desconocido"
     end
 
-    -- Para un coste cero no hay comando de servidor que confirmar.
+    -- Sin coste no hay nada que confirmar: se concede y ya.
     local cost = API.GetRecipeCost(recipeId)
     if cost <= 0 then
         local ok, err = API.Teach(trainerId, recipeId)
         Finish(ok, err, recipe)
         return ok, err
     end
+
     if not (HarfordDnDEconomy and HarfordDnDEconomy.CanAfford and HarfordDnDEconomy.CanAfford(cost)) then
         local err = "No tienes suficiente dinero"
         Finish(false, err, recipe)
         return false, err
     end
-
-    -- Validar ANTES de cobrar y otra vez tras la confirmacion: el estado podria cambiar mientras
-    -- el comando estaba en cola, pero en ningun momento se escribe la receta antes del cobro.
-    local valid, validErr = ValidateTeach(trainerId, recipeId)
-    if not valid then
-        Finish(false, validErr, recipe)
-        return false, validErr
-    end
-
     if not (HarfordDnDEconomy and HarfordDnDEconomy.Spend) then
         Finish(false, "No se puede cobrar el entrenamiento", recipe)
         return false, "No se puede cobrar el entrenamiento"
     end
+
+    -- CONCEDER YA. `Teach` revalida rango, profesion, habilidad y si ya la sabes.
+    compraEnVuelo = recipeId
+    local learned, learnErr = API.Teach(trainerId, recipeId)
+    if not learned then
+        Finish(false, learnErr, recipe)
+        return false, learnErr
+    end
+
+    local function Deshacer()
+        if HarfordProfessions and HarfordProfessions.UnlearnRecipe then
+            HarfordProfessions.UnlearnRecipe(recipeId)
+        end
+    end
+
     local sent, sendErr = HarfordDnDEconomy.Spend(cost, {
         callback = function(success, messages)
-            if not success then
-                Finish(false, (messages and messages[1]) or "El servidor rechazo el pago", recipe)
+            if success then
+                Finish(true, nil, recipe)
                 return
             end
-            local learned, learnErr = API.Teach(trainerId, recipeId)
-            Finish(learned, learnErr, recipe)
+            Deshacer()
+            Finish(false, (messages and messages[1]) or "El servidor rechazo el pago", recipe)
         end,
     })
     if not sent then
+        Deshacer()
         Finish(false, sendErr or "No se pudo enviar el pago", recipe)
+        return false, sendErr
     end
-    return sent, sendErr
+
+    -- Red de seguridad. No deshace: solo libera la ventana y lo dice.
+    if C_Timer and C_Timer.After then
+        C_Timer.After(PLAZO_PAGO, function()
+            Finish(false, "El servidor no confirmo el pago. Comprueba tu oro.", recipe)
+        end)
+    end
+    return true
 end
 
 -- API para el ArcSpell del gossip, con el mismo nombre publico que usan las misiones de mundo.

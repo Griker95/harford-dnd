@@ -767,7 +767,6 @@ Catalog.features = {
     dru_mejora_cambio_forma = "ability_druid_tigersroar",
     dru_res_conjuros_camino = "spell_nature_healingtouch",
     dru_res_conjuros_camino_5 = "spell_nature_resistnature",
-    dru_res_marca_salvaje = "spell_nature_regeneration",
     dru_res_rejuvenecimiento = "spell_nature_rejuvenation",
     dru_senda = "ability_druid_lunarguidance",
     druida = "classicon_druid",

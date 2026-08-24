@@ -58,6 +58,7 @@ LAYER = {
  "TRP3": ("Integracion TRP3", "Lectura/escritura de perfiles de TotalRP3."),
  "Compendium": ("Compendio de conjuros", "Catalogo y resolucion de lanzamiento."),
  "DnD/Data": ("D&D - Datos", "Libros hardcodeados: clases, razas, trasfondos, dotes, armas, mitigacion."),
+ "DnD/Data/Classes": ("D&D - Clases", "Una clase por archivo: sus datos y el generador de rasgos derivados que solo le afecta. Se apilan en `API.CLASSES` en el orden del `.toc`; el nucleo (`HarfordDnDBook.lua`) carga antes y `HarfordDnDBookDerived.lua` el ultimo."),
  "DnD/State": ("D&D - Estado", "Persistencia y estado por perfil: ficha, progresion, equipo, formas."),
  "DnD/Engine": ("D&D - Motor", "Calculo y reglas: tiradas, combate, condiciones, area y red."),
  "DnD/UI": ("D&D - Interfaz", "Ficha de personaje y controles de tirada."),
@@ -70,7 +71,7 @@ LAYER = {
  "Communicator": ("Comunicador", "Mensajeria RP fiable y bandeja de herramientas."),
  "Loot": ("Loot", "Loot resuelto y configuracion compartida."),
 }
-SEQ = ["Core", "Server", "TRP3", "Compendium", "DnD/Data", "DnD/State", "DnD/Engine", "DnD/UI",
+SEQ = ["Core", "Server", "TRP3", "Compendium", "DnD/Data", "DnD/Data/Classes", "DnD/State", "DnD/Engine", "DnD/UI",
        "Character", "Frames", "Reputation", "Quests", "Contracts", "Professions", "Communicator", "Loot"]
 
 ROLECLEAN = re.compile(r"^--+\s?")
@@ -215,7 +216,8 @@ def build(rows):
     add("")
     add("| Quiero cambiar... | Archivo |")
     add("|---|---|")
-    add("| Una clase, subclase o rasgo | `DnD/Data/HarfordDnDBook.lua` |")
+    add("| Una clase, subclase o rasgo | `DnD/Data/Classes/<Clase>.lua` |")
+    add("| La API del Libro o un helper compartido | `DnD/Data/HarfordDnDBook.lua` |")
     add("| Una raza o un trasfondo | `DnD/Data/HarfordDnDRaces.lua` - `HarfordDnDBackgrounds.lua` |")
     add("| Un conjuro | `Compendium/HarfordCompendioData.lua` |")
     add("| Como se calcula una tirada o un bonus | `DnD/Engine/HarfordDnDCalc.lua` - `HarfordDnDFeatureEffects.lua` |")

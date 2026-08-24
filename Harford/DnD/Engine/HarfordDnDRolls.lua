@@ -194,11 +194,18 @@ function HarfordDnDRolls.DisplayInChat(data)
         damageTypeStr = " " .. data.modifiers
     end
 
+    -- Desenlace de la tirada: verde lo que sale bien, rojo lo que sale mal.
+    --
+    -- Las variantes acentuadas se aceptan tal cual porque el texto viaja por la red y llega como
+    -- lo escribio el emisor: CRITICO y CR\195\141TICO son el mismo estado.
+    local VERDE = { CRITICO = true, ["CR\195\141TICO"] = true,
+                    EXITO = true, ["\195\137XITO"] = true }
+    local ROJO = { PIFIA = true, FALLO = true }
     local critStr = ""
-    if data.critical == "CRITICO" or data.critical == "CR\195\141TICO" then
+    if VERDE[data.critical] then
         critStr = " " .. COLOR_CRIT .. data.critical .. ENDCLR
-    elseif data.critical == "PIFIA" then
-        critStr = " " .. COLOR_FUMBLE .. "PIFIA" .. ENDCLR
+    elseif ROJO[data.critical] then
+        critStr = " " .. COLOR_FUMBLE .. data.critical .. ENDCLR
     end
 
     local detailStr = ""

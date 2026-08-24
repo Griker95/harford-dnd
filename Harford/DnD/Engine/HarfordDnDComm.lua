@@ -130,6 +130,15 @@ function HarfordDnDComm.CreateHandlers(deps)
             return true  -- caché actualizada → refrescar overlays
         end
 
+        -- Dano BRUTO: lo resuelve ESTE cliente, que es la victima. Mismo gate de remitente que
+        -- RADJ, porque aplica un efecto real sobre nosotros.
+        local dmgComponents, dmgCrit = HarfordSync.DeserializeDamage and HarfordSync.DeserializeDamage(message)
+        if dmgComponents then
+            if not IsTrustedEffectSender(sender) then return false end
+            if deps.ApplyIncomingDamage then deps.ApplyIncomingDamage(dmgComponents, dmgCrit, sender) end
+            return true  -- cambia la vida -> refrescar overlays
+        end
+
         local adjustKey, adjustDelta = HarfordSync.DeserializeResourceAdjustMessage(message)
         if adjustKey and adjustDelta then
             if not IsTrustedEffectSender(sender) then return false end

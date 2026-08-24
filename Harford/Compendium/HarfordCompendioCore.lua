@@ -18,6 +18,8 @@ local CLASS_CASTING = {
     ["Caballero de la Muerte"] = { mode = "known", ability = "Carisma" },
     ["Brujo"] = { mode = "known", ability = "Inteligencia" },
     ["Picaro Sutileza"] = { mode = "known", ability = "Inteligencia" },
+    -- Mejora sustituye la tabla del Chaman por la suya desde N3 y cuenta como MEDIO lanzador.
+    ["Chaman Mejora"] = { mode = "known", ability = "Sabiduria" },
 }
 
 -- Progresion magica por clase, niveles 1-6 (Libro 1 - Warcraft 5ª). TOTALES acumulados:
@@ -38,6 +40,7 @@ local SPELL_PROGRESSION = {
     ["Caballero de la Muerte"] = { cantrips = {0,2,2,2,2,2}, spells = {0,2,3,3,4,4} },      -- lanza desde N2
     ["Picaro Sutileza"]        = { cantrips = {0,0,3,3,3,3}, spells = {0,0,3,4,4,4} },      -- subclase desde N3
     ["Brujo"]                  = { cantrips = {2,2,2,3,3,3}, spells = {2,3,4,5,6,7} },      -- Libro 1 confirmado
+    ["Chaman Mejora"]          = { cantrips = {2,2,2,2,2,2}, spells = {4,5,5,5,5,6} },      -- subclase desde N3
 }
 
 local function EnsureTables()
@@ -688,6 +691,8 @@ local function HealingDefinition(spell, options)
         healingComponents = components,
         applicationCount = targetCount,
         rollPerTarget = targetCount > 1,
+        -- Nivel al que se lanza: Guia Ancestral solo repite dados de conjuros de nivel 1 o superior.
+        castLevel = API.GetCastLevel and API.GetCastLevel(spell, options) or spell.level,
     }
 end
 
@@ -727,6 +732,16 @@ function API.BuildAreaDefinition(spell, options)
     damageComponents = ApplyCantripScaling(spell, damageComponents)
     local condition = SpellCondition(spell)
     if not damageComponents and not condition then return nil end
+    -- Carga arcana gastada en "+X al ataque y dano de tu proximo conjuro": se consume UNA vez por
+    -- lanzamiento y se reparte al ataque y a cada componente de dano.
+    local cargaArcana = (HarfordDnDStore and HarfordDnDStore.TakeArcaneSpellBonus
+        and HarfordDnDStore.TakeArcaneSpellBonus()) or 0
+    if cargaArcana > 0 and damageComponents then
+        for _, comp in ipairs(damageComponents) do
+            comp.damageBonus = (tonumber(comp.damageBonus) or 0) + cargaArcana
+        end
+    end
+
     local saveAbility = ParseSaveAbility(spell)
     local directSave = IsDirectSaveSpell(spell)
     if spell.autohit == true and damageComponents then
@@ -748,7 +763,7 @@ function API.BuildAreaDefinition(spell, options)
         -- de area como "Objetivo" (auto-marca el target), aplicando daño/condicion a Player y NPC.
         area = area or { shape = "other", sizeText = "Objetivo" }
         area.resolution = "attack"
-        area.attackBonus = SpellAttackBonus()
+        area.attackBonus = SpellAttackBonus() + cargaArcana
         area.attackRange = SpellAttackRange(spell)
         local applications = RepeatedAttackCount(spell)
         if applications and applications > 1 then
@@ -959,7 +974,7 @@ end
 -- Nivel de conjuro MAXIMO lanzable por una clase a un nivel dado (para filtrar el picker). Segun el
 -- tipo de lanzador: completo (Mago/Druida/Sacerdote/Chaman/Brujo), medio (Paladin/CdM, nivel efectivo
 -- = ceil/2) o tercio (Picaro Sutileza, nivel efectivo = ceil/3). Devuelve 0 si aun no lanza.
-local HALF_CASTERS = { ["Paladin"] = true, ["Caballero de la Muerte"] = true }
+local HALF_CASTERS = { ["Paladin"] = true, ["Caballero de la Muerte"] = true, ["Chaman Mejora"] = true }
 local THIRD_CASTERS = { ["Picaro Sutileza"] = true }
 function API.GetMaxSpellLevel(className, level)
     if not SPELL_PROGRESSION[className] then return 0 end
@@ -1012,7 +1027,33 @@ function API.RequiresConcentration(spell)
     return NormalizeText(spell.duration):find("concentraci", 1, true) ~= nil
 end
 
+-- Los conjuros viven en el addon HarfordCompendioData, marcado LoadOnDemand: son 609 KB de
+-- constructores de tabla que WoW parseaba en cada login aunque nadie abriera el compendio.
+-- Esta funcion es la UNICA puerta a esos datos, asi que la compuerta va aqui y ningun llamador
+-- cambia. `GetSpellIndex` ya se reconstruye cuando la tabla cambia de referencia, asi que el
+-- indice se rehace solo en cuanto los datos entran.
+local conjurosPedidos, conjurosListos = false, false
+function API.EnsureSpellData()
+    if conjurosListos then return true end
+    if _G.HarfordCompendioSpells then
+        conjurosListos = true
+        return true
+    end
+    if conjurosPedidos then return false end
+    conjurosPedidos = true
+    local cargar = (C_AddOns and C_AddOns.LoadAddOn) or _G.LoadAddOn
+    if not cargar then return false end
+    cargar("HarfordCompendioData")
+    conjurosListos = _G.HarfordCompendioSpells ~= nil
+    if not conjurosListos and HarfordChat and HarfordChat.Print then
+        HarfordChat.Print("No se pudo cargar |cffffcc00HarfordCompendioData|r: "
+            .. "el compendio se quedara sin conjuros. Comprueba que la carpeta esta instalada y activada.")
+    end
+    return conjurosListos
+end
+
 function API.GetAllSpells()
+    if not conjurosListos then API.EnsureSpellData() end
     return _G.HarfordCompendioSpells or {}
 end
 
@@ -1182,6 +1223,27 @@ function API.ConfirmCast(spellId, options)
     local suffix = target ~= "" and (" " .. target) or ""
     BroadcastInfo(SpellLink(spell) .. suffix .. " |cff00ff00EXITO|r")
     return true, cost, current, maxValue
+end
+
+-- "Cargas Arcanas" (Mago del Arcano) se gana al LANZAR un conjuro de mago de nivel 1 o superior.
+-- Se engancha aqui, en el punto UNICO donde se paga, y como envoltorio para no tocar los multiples
+-- puntos de retorno de SpendSpellMana. El rasgo decide si aplica: si el mago no lo tiene, no pasa nada.
+do
+    local original = API.SpendSpellMana
+    API.SpendSpellMana = function(spellOrId, options)
+        local ok, a, b, c, d = original(spellOrId, options)
+        if ok and HarfordDnDStore and HarfordDnDStore.GainArcaneCharge then
+            local spell = type(spellOrId) == "table" and spellOrId or API.GetSpellById(spellOrId)
+            local esMago = false
+            for _, clase in ipairs((spell and spell.classes) or {}) do
+                if tostring(clase) == "Mago" then esMago = true break end
+            end
+            if esMago then
+                HarfordDnDStore.GainArcaneCharge(API.GetCastLevel(spell, options))
+            end
+        end
+        return ok, a, b, c, d
+    end
 end
 
 function API.ResolveCast(spellId, options)

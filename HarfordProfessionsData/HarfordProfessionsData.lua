@@ -24,7 +24,7 @@ D.PROFESSIONS = {
     { id = "sastreria",    name = "Sastreria",        tool = "Herramientas de tejedor",       kind = "craft",  ability = "Destreza",     icon = "Trade_Tailoring" },
     { id = "encantamiento",name = "Encantamiento",    tool = nil,                             kind = "craft",  ability = "Inteligencia", icon = "Trade_Engraving" },
     { id = "ingenieria",   name = "Ingenieria",       tool = "Herramientas de hojalatero",    kind = "craft",  ability = "Inteligencia", icon = "Trade_Engineering" },
-    { id = "joyeria",      name = "Joyeria",          tool = "Herramientas de joyero",        kind = "craft",  ability = "Inteligencia", icon = "INV_Misc_Gem_Variety_01" },
+    { id = "joyeria",      name = "Joyeria",          tool = "Herramientas de joyero",        kind = "craft",  ability = "Inteligencia", icon = "INV_Misc_Gem_01" },
     { id = "inscripcion",  name = "Inscripcion",      tool = "Suministros de caligrafia",     kind = "craft",  ability = "Inteligencia", icon = "INV_Inscription_Tradeskill01" },
     { id = "cocina",       name = "Cocina",           tool = "Utiles de cocinero",            kind = "craft",  ability = "Sabiduria",    icon = "INV_Misc_Food_15" },
     { id = "pesca",        name = "Pesca",            tool = nil,                             kind = "gather", ability = "Sabiduria",    icon = "Trade_Fishing" },

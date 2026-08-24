@@ -54,9 +54,20 @@ local function EmptyProgression()
         feats = {},
         xp = 0, -- experiencia acumulada D&D 5e de Harford; la subida sigue siendo manual.
         spellSlots = {}, -- espacios de conjuro gastados por nivel; se restauran en descanso largo.
+        -- Espacios CREADOS gastando puntos (Lanzamiento Flexible del Mago, Devocion del
+        -- Sacerdote). Van aparte de `spellSlots` para que "gastados" siga siendo un numero no
+        -- negativo; suman al maximo y desaparecen en el mismo descanso largo.
+        spellSlotsBonus = {},
         activeStates = {},
         activeForm = "", -- forma druidica activa; vacio = forma normal.
         activeFormAction = "",
+        activeCompanion = "",    -- criatura acompanante invocada; vacio = ninguna.
+        activeCore = "",         -- nucleo demoniaco sostenido; excluyente con activeCompanion.
+        -- Contadores "desde el ultimo descanso largo" para rasgos que NO tienen un maximo de usos
+        -- y por tanto no encajan en `_featureUses` (que necesita un tope). Ej.: Legado del Vacio,
+        -- cuya CD sube 1 por cada uso adicional y solo se corta al fallar la salvacion.
+        restCounters = {},
+        activeCompanionHP = 0,
     }
 end
 
@@ -88,6 +99,7 @@ local function Migrate(data)
     if type(data.importedProficiencies.weaponProf) ~= "table" then data.importedProficiencies.weaponProf = {} end
     if type(data.importedProficiencies.toolProf) ~= "table" then data.importedProficiencies.toolProf = {} end
     if type(data.importedProficiencies.languages) ~= "table" then data.importedProficiencies.languages = {} end
+    if type(data.importedProficiencies.professions) ~= "table" then data.importedProficiencies.professions = {} end
     if type(data.race) ~= "table" then data.race = { id = "", subraceId = "" } end
     data.race.id = tostring(data.race.id or "")
     data.race.subraceId = tostring(data.race.subraceId or "")
@@ -99,6 +111,7 @@ local function Migrate(data)
     -- ahora global (HarfordConfig.spell_cost_mode), asi que se descarta al migrar.
     data.useMana = nil
     if type(data.spellSlots) ~= "table" then data.spellSlots = {} end
+    if type(data.spellSlotsBonus) ~= "table" then data.spellSlotsBonus = {} end
     -- Reconstruir en una tabla nueva: añadir claves nuevas mientras se itera con pairs() sobre la
     -- misma tabla es comportamiento indefinido en Lua 5.1 (podia perder/duplicar espacios gastados).
     do
@@ -116,6 +129,10 @@ local function Migrate(data)
     if type(data.activeStates) ~= "table" then data.activeStates = {} end
     data.activeForm = tostring(data.activeForm or "")
     data.activeFormAction = tostring(data.activeFormAction or "")
+    data.activeCompanion = tostring(data.activeCompanion or "")
+    data.activeCore = tostring(data.activeCore or "")
+    if type(data.restCounters) ~= "table" then data.restCounters = {} end
+    data.activeCompanionHP = math.max(0, math.floor(tonumber(data.activeCompanionHP) or 0))
     return data
 end
 
@@ -320,6 +337,12 @@ function API.IsFeatureEnabled(feature, profileName)
         and tostring(data.race.id) ~= tostring(feature.requiredRace) then
         return false
     end
+    -- Nucleo demoniaco del Brujo: los cinco rasgos existen desde nivel 2, pero solo cuenta el
+    -- del nucleo que sostienes. Sin esto, sus `spellGrants` darian los conjuros de los cinco a la
+    -- vez, cuando el manual deja llevar uno.
+    if feature.requiredCore and tostring(data.activeCore or "") ~= tostring(feature.requiredCore) then
+        return false
+    end
     local value = data.featureStates[feature.id]
     if value ~= nil then return value == true end
     -- Los rasgos desbloqueados son funcionales por defecto. `featureStates` es estado
@@ -329,11 +352,26 @@ function API.IsFeatureEnabled(feature, profileName)
 end
 
 -- Elecciones de un rasgo: lista de optionId por slot. choices[featureId] = { ... }.
+-- Devuelve las opciones elegidas COMPACTADAS. `choices[featureId]` esta indexado por SLOT y el
+-- desplegable por slot del panel permite dejar huecos (poner el 2 sin el 1). Los consumidores
+-- recorren la lista con `ipairs`, que se detiene en el primer hueco: con el slot 1 vacio la
+-- eleccion entera se comportaba como si no existiera -- sin efecto, sin salir en el About y
+-- marcada como pendiente en el Libro. Compactar aqui lo arregla para TODOS a la vez.
 function API.GetChoice(featureId, profileName)
     local data = API.Get(profileName)
     featureId = tostring(featureId or "")
     local slots = data.choices[featureId]
-    return type(slots) == "table" and slots or {}
+    if type(slots) ~= "table" then return {} end
+    local out = {}
+    for i = 1, 20 do
+        local v = slots[i]
+        if v ~= nil and v ~= "" then out[#out + 1] = v end
+    end
+    -- Claves no numericas (importaciones antiguas): se conservan al final para no perderlas.
+    for k, v in pairs(slots) do
+        if type(k) ~= "number" and v ~= nil and v ~= "" then out[#out + 1] = v end
+    end
+    return out
 end
 
 function API.SetChoiceSlot(featureId, slotIndex, optionId, profileName)
@@ -385,6 +423,7 @@ function API.ReplaceCreation(draft, profileName)
     data.importedProficiencies = EmptyProgression().importedProficiencies
     data.feats = {}
     data.spellSlots = {}
+    data.spellSlotsBonus = {}
     data.activeStates = {}
     data.activeForm = ""
     data.activeFormAction = ""
@@ -392,6 +431,8 @@ function API.ReplaceCreation(draft, profileName)
 
     API.SetRace(draft.raceId, draft.subraceId, profileName)
     API.SetBackground(draft.backgroundId, profileName)
+    -- Despues de SetBackground, que borra la variante del trasfondo anterior.
+    API.SetBackgroundVariant(draft.backgroundVariantId, profileName)
     for index, entry in ipairs(draft.classes or {}) do
         local ok, err = API.SetClassEntry(index, entry.classId, entry.subclassId, entry.level, profileName)
         if not ok then return false, err end
@@ -420,6 +461,28 @@ function API.SetBackground(backgroundId, profileName)
     -- Al fijar un trasfondo (del libro o ninguno) se limpia la desc personalizada;
     -- SeedFromTRP3 la re-asigna despues si el trasfondo cargado es personalizado.
     data.backgroundDesc = ""
+    -- La variante pertenece al trasfondo anterior: cambiar de trasfondo la invalida.
+    data.backgroundVariant = nil
+    Touch(profileName)
+    return true
+end
+
+-- Variante de trasfondo (Criminal -> Espia, Noble -> Caballero nobiliario...). Es OPCIONAL y
+-- solo narrativa: no concede rasgos ni efectos. Se guarda unicamente cuando hay una elegida —
+-- la clave se BORRA al deseleccionar, en vez de dejar "" en las SavedVariables.
+function API.GetBackgroundVariant(profileName)
+    local data = API.Get(profileName)
+    return data.backgroundVariant or ""
+end
+
+function API.SetBackgroundVariant(variantId, profileName)
+    local data = API.Get(profileName)
+    variantId = tostring(variantId or "")
+    if variantId == "" then
+        data.backgroundVariant = nil
+    else
+        data.backgroundVariant = variantId
+    end
     Touch(profileName)
     return true
 end
@@ -460,6 +523,26 @@ local function SetBackgroundFromIndex(backgroundId, backgroundDesc, profileName)
 end
 
 -- Dotes del perfil: lista de featId. Solo runtime/persistido, sin nivel.
+-- Equipo inicial como LISTA de nombres. No son items de Epsilon: es lo que el personaje declara
+-- llevar, y de ahi salen la seccion "Equipo" del About y (mas adelante) los slots equipados.
+function API.GetEquipmentList(profileName)
+    local data = API.Get(profileName)
+    if type(data.equipmentList) ~= "table" then data.equipmentList = {} end
+    return data.equipmentList
+end
+
+function API.SetEquipmentList(items, profileName)
+    local data, name = API.Get(profileName)
+    local limpio = {}
+    for _, item in ipairs(items or {}) do
+        local texto = tostring(item or ""):gsub("^%s+", ""):gsub("%s+$", "")
+        if texto ~= "" then limpio[#limpio + 1] = texto end
+    end
+    data.equipmentList = limpio
+    Touch(name)
+    return true
+end
+
 function API.GetFeats(profileName)
     local data = API.Get(profileName)
     return data.feats
@@ -507,10 +590,52 @@ function API.SetSpellSlotsSpent(level, spent, profileName)
     return true
 end
 
+-- Contadores por descanso largo. Genericos a proposito: cualquier rasgo con la forma "N desde el
+-- ultimo descanso largo" los usa sin inventarse su propio almacen.
+function API.GetRestCounter(key, profileName)
+    local data = API.Get(profileName)
+    return math.floor(tonumber(data.restCounters[tostring(key or "")]) or 0)
+end
+
+function API.SetRestCounter(key, value, profileName)
+    key = tostring(key or "")
+    if key == "" then return false end
+    local data = API.Get(profileName)
+    value = math.floor(tonumber(value) or 0)
+    if value ~= 0 then data.restCounters[key] = value else data.restCounters[key] = nil end
+    Touch(profileName)
+    return true
+end
+
+function API.ResetRestCounters(profileName)
+    local data = API.Get(profileName)
+    if next(data.restCounters) == nil then return false end
+    data.restCounters = {}
+    Touch(profileName)
+    return true
+end
+
+function API.GetSpellSlotsBonus(level, profileName)
+    local data = API.Get(profileName)
+    return math.max(0, math.floor(tonumber(data.spellSlotsBonus[math.floor(tonumber(level) or 0)]) or 0))
+end
+
+function API.SetSpellSlotsBonus(level, bonus, profileName)
+    level = math.floor(tonumber(level) or 0)
+    if level < 1 or level > 9 then return false end
+    local data = API.Get(profileName)
+    bonus = math.max(0, math.floor(tonumber(bonus) or 0))
+    if bonus > 0 then data.spellSlotsBonus[level] = bonus else data.spellSlotsBonus[level] = nil end
+    Touch(profileName)
+    return true
+end
+
 function API.ResetSpellSlots(profileName)
     local data = API.Get(profileName)
-    if next(data.spellSlots) == nil then return false end
+    -- El descanso largo restaura los gastados Y hace desaparecer los creados con puntos.
+    if next(data.spellSlots) == nil and next(data.spellSlotsBonus) == nil then return false end
     data.spellSlots = {}
+    data.spellSlotsBonus = {}
     Touch(profileName)
     return true
 end
@@ -591,10 +716,24 @@ function API.GetUnlockedFeatures(profileName)
             out[#out + 1] = item
         end
     end
-    -- Rasgos de clase/subclase.
+    -- Rasgos de clase/subclase. Los que declaran `requiresOption` (maniobras elegibles) solo
+    -- entran si esa opcion esta realmente elegida: existen como rasgo para que el Libro pueda
+    -- mostrarlas y ejecutarlas, pero el PJ solo conoce las que ha aprendido.
     if HarfordDnDBook and HarfordDnDBook.GetUnlockedFeatures then
+        local elegidas
         for _, item in ipairs(HarfordDnDBook.GetUnlockedFeatures(data.classLevels)) do
-            out[#out + 1] = item
+            local req = item.feature and item.feature.requiresOption
+            if req then
+                if not elegidas then
+                    elegidas = {}
+                    for _, seleccion in pairs(data.choices or {}) do
+                        for _, optId in ipairs(seleccion or {}) do elegidas[tostring(optId)] = true end
+                    end
+                end
+                if elegidas[tostring(req)] then out[#out + 1] = item end
+            else
+                out[#out + 1] = item
+            end
         end
     end
     return out
@@ -774,7 +913,8 @@ local function AddSkillMatchesFromLine(pool, line)
 end
 
 local function EmptyImportedProficiencies()
-    return { skillRank = {}, saveProf = {}, armorProf = {}, weaponProf = {}, toolProf = {}, languages = {} }
+    return { skillRank = {}, saveProf = {}, armorProf = {}, weaponProf = {}, toolProf = {},
+        languages = {}, professions = {} }
 end
 
 local function AddMapFlag(map, key)
@@ -799,10 +939,53 @@ local function NormalizeProfLine(line)
     return text
 end
 
+-- "Herreria Aprendiz" -> ("herreria", 1). El rango es opcional: sin el cuenta como Aprendiz,
+-- que es el escalon minimo de conocer la profesion.
+--
+-- El nombre tiene que casar ENTERO, no por substring: asi "Herramientas de herrero" sigue siendo
+-- una competencia de herramienta y no se confunde con la profesion "Herreria".
+local function MatchProfessionLine(text)
+    local P = _G.HarfordProfessions
+    if not (P and P.GetProfessions and P.GetTierMin) then return nil end
+
+    local cuerpo, skill = text, 1
+    local ultima = text:match("(%S+)%s*$")
+    local minimo = ultima and P.GetTierMin(ultima)
+    if minimo then
+        cuerpo = NormalizeText(text:sub(1, #text - #ultima))
+        skill = minimo
+    end
+    if cuerpo == "" then return nil end
+
+    for _, def in ipairs(P.GetProfessions() or {}) do
+        if NormalizeText(def.name or "") == cuerpo or NormalizeText(def.id or "") == cuerpo then
+            return def.id, skill
+        end
+    end
+    return nil
+end
+
+-- Recorta la etiqueta de fuente final ("Armas de fuego Trasfondo" -> "Armas de fuego"). Es la
+-- misma lista que en Idiomas: en el About marcan de donde viene la competencia, no forman parte
+-- de su nombre.
+local function StripSourceTag(raw)
+    local last = raw:match("(%S+)%s*$")
+    if last and LANGUAGE_SOURCE_TAGS[NormalizeText(last)] then
+        return (raw:sub(1, #raw - #last):gsub("%s+$", ""))
+    end
+    return raw
+end
+
 local function ImportGeneralProficiency(imported, line)
-    local raw = NormalizeProfLine(line)
+    local raw = StripSourceTag(NormalizeProfLine(line))
     local text = NormalizeText(raw)
     if text == "" then return end
+
+    local profId, profSkill = MatchProfessionLine(text)
+    if profId then
+        imported.professions[profId] = math.max(tonumber(imported.professions[profId]) or 0, profSkill)
+        return
+    end
 
     if text:find("armadura", 1, true) or text == "escudo" or text == "escudos" then
         if text:find("ligera", 1, true) then AddMapFlag(imported.armorProf, "ligera") end
@@ -841,6 +1024,34 @@ local function ImportLanguage(imported, line)
         text = text:sub(1, #text - #last):gsub("%s+$", "")
     end
     if text ~= "" then imported.languages[text] = true end
+end
+
+-- El About decide QUE profesiones tienes; el skill local decide CUANTO, mientras no baje del rango
+-- que declara la ficha:
+--   * nombrada en el About -> se queda el mayor entre tu skill y el minimo de ese rango. El rango
+--     es grueso (Aprendiz cubre de 1 a 74), asi que un "Aprendiz" no puede tirarte un 25 a 1; solo
+--     te SUBE si vienes por debajo del escalon declarado.
+--   * ausente del About -> no la tienes, se borra.
+--
+-- Barrer TODAS las profesiones y no solo las nombradas es seguro aqui porque el unico llamador es
+-- `/harford cargarficha`, que ya ha abortado antes si no pudo leer la ficha del About: si esta
+-- tabla llega vacia es porque el perfil no declara ninguna, no porque el parseo fallase.
+--
+-- Solo toca el skill guardado. Una profesion que conozcas por competencia de herramienta de un
+-- rasgo sigue saliendo como Aprendiz via `KnowsProfession`/`EffectiveSkill`: eso lo concede el
+-- rasgo, no el store, y borrarlo aqui no lo quitaria.
+local function ApplyImportedProfessions(imported)
+    local P = _G.HarfordProfessions
+    if not (P and P.SetSkill and P.GetSkill and P.GetProfessions) then return end
+    local declaradas = (imported and imported.professions) or {}
+    for _, def in ipairs(P.GetProfessions() or {}) do
+        local declarada = tonumber(declaradas[def.id])
+        if declarada then
+            P.SetSkill(def.id, math.max(tonumber(P.GetSkill(def.id)) or 0, declarada))
+        else
+            P.SetSkill(def.id, 0)
+        end
+    end
 end
 
 local function ExtractImportedProficiencies(aboutLines)
@@ -1156,6 +1367,7 @@ function API.LoadFromTRP3Replace(sheet, profileName)
     data.feats = {}
     data.importedFromTRP3 = true
     data.importedProficiencies = ExtractImportedProficiencies(sheet.aboutLines)
+    ApplyImportedProfessions(data.importedProficiencies)
 
     local idx = 0
     for _, c in ipairs(sheet.classes or {}) do
@@ -1476,7 +1688,13 @@ do
             for _, e in ipairs(API.GetClassLevels(profileName) or {}) do
                 if e.classId == uses.perClassLevel then lvl = tonumber(e.level) or 0; break end
             end
-            v = v + lvl * (tonumber(uses.perLevel) or 1)
+            -- `values` da el maximo por nivel de clase (1 uso a nivel 2, 2 a nivel 6...), igual
+            -- que resourceMax. Si no lo hay, se mantiene el producto por nivel de siempre.
+            if type(uses.values) == "table" then
+                v = v + (tonumber(uses.values[lvl]) or 0)
+            else
+                v = v + lvl * (tonumber(uses.perLevel) or 1)
+            end
         end
         if uses.min then v = math.max(tonumber(uses.min) or 0, v) end
         return math.max(0, v)

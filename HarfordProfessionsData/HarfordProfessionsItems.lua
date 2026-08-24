@@ -2010,10 +2010,99 @@ function API.Get(key)
     return API.REGISTRY[key]
 end
 
+-- El id operativo es `id` si existe (objeto custom de Epsilon) y si no `wow`, que es el itemId
+-- del objeto normal de WoW.
+--
+-- El catalogo trae 1809 entradas con `wow` y solo 31 con `id`, asi que leer unicamente `id`
+-- dejaba practicamente todo sin resolver: sin material que consumir, sin resultado que entregar
+-- y sin tooltip. Los nombres siguen siendo los nuestros en espanol; lo unico que se toma del
+-- objeto de WoW es su id, su icono y su tooltip.
 function API.GetId(key)
     local e = API.Get(key)
-    local id = e and tonumber(e.id)
-    return id
+    if not e then return nil end
+    return tonumber(e.id) or tonumber(e.wow)
+end
+
+-- ¿El id que se va a usar es de un objeto de WoW en vez de uno custom de Epsilon? Lo necesita
+-- el tooltip para no prometer un objeto propio que todavia no existe.
+-- Enlace del objeto listo para el chat.
+--
+-- `GetLink` cae al nombre pelado cuando el cliente aun no tiene el item cacheado, y un nombre
+-- suelto en el chat no es clicable. Aqui se arma el enlace minimo `|Hitem:ID|h[Nombre]|h` a
+-- partir del id, que WoW reconstruye solo: el tooltip sale igual del lado de quien lo recibe.
+-- Enlace clicable del objeto con NUESTRO nombre.
+--
+-- No se devuelve el link que da `GetItemInfo`: ese trae el nombre del CLIENTE, que en Epsilon
+-- esta en ingles, y el addon va en castellano. WoW pinta el texto entre corchetes tal cual y
+-- resuelve el objeto por su ID, asi que se construye a mano el enlace con el nombre del
+-- catalogo: sigue siendo clicable y con tooltip, pero se lee "Elixir de defensa menor".
+-- De `GetItemInfo` solo se aprovecha el COLOR de calidad.
+function API.GetChatLink(key)
+    local id = API.GetId(key)
+    if not id then return nil end
+    local nombre = API.GetName(key) or tostring(key)
+    local color = "|cffffffff"
+    if GetItemInfo then
+        local _, _, calidad = GetItemInfo(id)
+        if calidad and ITEM_QUALITY_COLORS and ITEM_QUALITY_COLORS[calidad]
+            and ITEM_QUALITY_COLORS[calidad].hex then
+            color = ITEM_QUALITY_COLORS[calidad].hex
+        end
+    end
+    return color .. "|Hitem:" .. id .. "|h[" .. nombre .. "]|h|r"
+end
+
+-- Shift+click: mete el enlace en el chat. Si no hay caja de texto abierta, la abre con el
+-- enlace dentro, que es lo que hace el juego al hacerlo desde la bolsa.
+function API.InsertLinkInChat(key)
+    local link = API.GetChatLink(key)
+    if not link then return false end
+    if ChatEdit_InsertLink and ChatEdit_InsertLink(link) then return true end
+    if ChatFrame_OpenChat then ChatFrame_OpenChat(link); return true end
+    return false
+end
+
+-- Tooltip de un objeto del catalogo.
+--
+-- Es el gancho que la ventana de recetas ya llamaba en el icono del resultado y en cada reactivo,
+-- y que nunca se llego a escribir: al no existir, caia a un respaldo que exigia un itemId propio,
+-- y como casi ninguno lo tenia, no salia ningun tooltip.
+--
+-- Con id resoluble se muestra el tooltip NATIVO del objeto, que trae calidad, stats y venta. El
+-- nombre de nuestro catalogo se anade solo si difiere del que ya pone el juego, para no repetir
+-- la misma linea dos veces.
+function API.ShowTooltip(owner, key)
+    if not (owner and GameTooltip) then return false end
+    local e = API.Get(key)
+    if not e then return false end
+
+    local id = API.GetId(key)
+    if id then
+        GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+        local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, "item:" .. id)
+        if ok then
+            local propio = tostring(e.name or "")
+            local delJuego = GameTooltipTextLeft1 and GameTooltipTextLeft1.GetText
+                and GameTooltipTextLeft1:GetText()
+            if propio ~= "" and delJuego and propio ~= delJuego then
+                GameTooltip:AddLine(propio, 0.8, 0.8, 0.8)
+            end
+            GameTooltip:Show()
+            return true
+        end
+    end
+
+    -- Sin id que resolver, al menos el nombre: un hueco mudo no dice si falta el dato o el objeto.
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+    GameTooltip:SetText(tostring(e.name or key), 1, 1, 1)
+    GameTooltip:AddLine("Pendiente de id en Epsilon", 0.6, 0.6, 0.6)
+    GameTooltip:Show()
+    return true
+end
+
+function API.IsWowFallback(key)
+    local e = API.Get(key)
+    return e ~= nil and tonumber(e.id) == nil and tonumber(e.wow) ~= nil
 end
 
 function API.HasId(key)

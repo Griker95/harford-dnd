@@ -47,23 +47,24 @@ HarfordDnDData.SKILLS = {
 -- juegos + vehiculos). Lo usa el selector `optionsFrom = "toolProf"` de los choice (dotes como
 -- Prodigio o Artifice Iniciado). El campo `name` es el que consume el efecto `toolProf`.
 HarfordDnDData.TOOLS = {
-    { id="alquimista",   name="Suministros de alquimista" },
-    { id="cervecero",    name="Suministros de cervecero" },
-    { id="caligrafia",   name="Suministros de caligrafia" },
-    { id="carpintero",   name="Herramientas de carpintero" },
-    { id="cartografo",   name="Herramientas de cartografo" },
-    { id="zapatero",     name="Herramientas de zapatero" },
-    { id="cocinero",     name="Utiles de cocinero" },
-    { id="soplavidrio",  name="Herramientas de soplador de vidrio" },
-    { id="joyero",       name="Herramientas de joyero" },
-    { id="curtidor",     name="Herramientas de curtidor" },
-    { id="albanil",      name="Herramientas de albanil" },
-    { id="pintor",       name="Suministros de pintor" },
-    { id="alfarero",     name="Herramientas de alfarero" },
-    { id="herrero",      name="Herramientas de herrero" },
-    { id="hojalatero",   name="Herramientas de hojalatero" },
-    { id="tejedor",      name="Herramientas de tejedor" },
-    { id="tallador",     name="Herramientas de tallador de madera" },
+    { id="alquimista",   name="Suministros de alquimista", artisan=true },
+    { id="cervecero",    name="Suministros de cervecero", artisan=true },
+    { id="caligrafia",   name="Suministros de caligrafia", artisan=true },
+    { id="carpintero",   name="Herramientas de carpintero", artisan=true },
+    { id="cartografo",   name="Herramientas de cartografo", artisan=true },
+    { id="zapatero",     name="Herramientas de zapatero", artisan=true },
+    { id="cocinero",     name="Utiles de cocinero", artisan=true },
+    { id="soplavidrio",  name="Herramientas de soplador de vidrio", artisan=true },
+    { id="joyero",       name="Herramientas de joyero", artisan=true },
+    { id="curtidor",     name="Herramientas de curtidor", artisan=true },
+    { id="albanil",      name="Herramientas de albanil", artisan=true },
+    { id="pintor",       name="Suministros de pintor", artisan=true },
+    { id="alfarero",     name="Herramientas de alfarero", artisan=true },
+    { id="herrero",      name="Herramientas de herrero", artisan=true },
+    { id="armero",       name="Herramientas de armero", artisan=true },
+    { id="hojalatero",   name="Herramientas de hojalatero", artisan=true },
+    { id="tejedor",      name="Herramientas de tejedor", artisan=true },
+    { id="tallador",     name="Herramientas de tallador de madera", artisan=true },
     { id="disfraz",      name="Kit de disfraz" },
     { id="falsificacion",name="Kit de falsificacion" },
     { id="herborista",   name="Kit de herborista" },
@@ -168,7 +169,7 @@ HarfordDnDData.TRP3_PRESENTATION = {
     ["chi"] = {description = "Puntos 5 || CD Salv 15\nTu entrenamiento te permite aprovechar la energía mística del chi. Tu acceso a esta energía se representa por una cantidad de puntos de chi. Tu nivel de monje determina cuántos puntos tienes. Puedes gastar estos puntos para alimentar varias características de chi. \nCuando gastas un punto de chi, no está disponible hasta que termines un descanso corto o largo, al final del cual recuperas todos los puntos de chi gastados. Debes pasar 30 minutos del descanso meditando para recuperar tus puntos de chi." },
     ["conocimiento demoniaco"] = {description = "Tus estudios en grimorios de conocimiento oscuro te han otorgado el poder de invocar demonios.\nLa invocación de un demonio solo puede realizarse al final de un descanso largo. Solo puedes tener un demonio invocado o un núcleo a la vez." },
     ["constitucion no muerta"] = {description = "Tu naturaleza no-muerta te hace inmune a las enfermedades, a la condición de envenenado y a la de hemorragia, además de ganar resistencia al daño por veneno." },
-    ["control de ira"] = {description = "Tu furia se renueva con los golpes que recibes.\nCuando una criatura hostil te golpea con un ataque, ganas 1 punto de furia de inmediato.\nSolo puedes beneficiarte de este efecto una vez por turno." },
+    ["control de ira"] = {description = "Tu ira se renueva con los golpes que recibes.\nCuando una criatura hostil te golpea con un ataque, ganas 1 punto de ira de inmediato.\nSolo puedes beneficiarte de este efecto una vez por turno." },
     ["dedos de escarcha"] = {description = "Evocación 1 acción || Uno mismo (cono de 15 pies) || V, S || Instantánea\nUn estallido de frío helado surge de tus dedos en un cono de 15 pies. Cada criatura en esa área debe realizar una tirada de salvación de Constitución. Una criatura sufre 2d8 de daño por frío si falla la tirada, o la mitad de daño si la supera.\n\nEl frío congela los líquidos no mágicos en el área que no estén siendo llevados ni transportados." },
     ["defensa sin armadura"] = {description = "Mientras no lleves armadura ni estés empuñando un escudo, tu CA será igual a 10 + Mod. Destreza + Mod. Sabiduría 17." },
     ["desarme"] = {description = "Puedes gastar 2 puntos de furia cuando hagas una tirada de ataque para intentar un golpe desarmador. Si el ataque impacta, infliges daño normal y el objetivo suelta un objeto de tu elección que esté sujetando." },
@@ -187,7 +188,7 @@ HarfordDnDData.TRP3_PRESENTATION = {
     ["formulas de trucos"] = {description = "Has inscrito un conjunto de fórmulas arcanas en tu libro de conjuros que puedes usar para formular un truco en tu mente. Siempre que termines un descanso largo y consultes esas fórmulas en tu libro de conjuros, puedes reemplazar un truco de mago que conozcas por otro truco de la lista de conjuros de mago." },
     ["fragmentos de alma"] = {description = "Puedes tener hasta tres fragmentos de alma en cualquier momento; intentar crear un fragmento de alma adicional resulta en una gema inútil y opaca. Los fragmentos de alma duran hasta que se usan, momento en el que desaparecen. Si un fragmento de alma sale de tu posesión durante al menos 8 horas, desaparece. Los fragmentos de alma que creas solo pueden ser utilizados por ti; los fragmentos creados por otros brujos son inútiles.\n\nDurante el transcurso de un descanso, puedes recolectar fragmentos de almas errantes para crear fragmentos de alma. Puedes crear un solo fragmento de alma durante un descanso breve o cualquier cantidad durante un descanso largo.\n\nPuedes capturar parte de las almas que escapan de las criaturas moribundas. Cuando una criatura apropiada a 60 pies de ti muere, puedes usar tu reacción para crear un fragmento de alma.\n\n- Todos los humanoides pueden producir fragmentos de alma.\n- La mayoría de los no muertos y casi todos los constructos no pueden producir fragmentos de alma.\n\nPuedes gastar un fragmento de alma a 5 pies." },
     ["fuente de magia"] = {description = "Puntos hechicería 3\nAccedes a un profundo manantial de magia dentro de ti. Este manantial se representa mediante puntos de hechicería, que te permiten crear una variedad de efectos mágicos. Nunca puedes tener más puntos de hechicería que los mostrados en la tabla para tu nivel. Recuperas todos los puntos de hechicería gastados cuando terminas un descanso largo.\n\nPuedes usar tus puntos de hechicería para ganar espacios de conjuro adicionales o sacrificar espacios de conjuro para ganar puntos de hechicería adicionales.\n\nPuedes transformar puntos de hechicería no gastados en un espacio de conjuro como una acción adicional en tu turno. Los espacios de conjuro creados de esta manera desaparecen al final de un descanso largo." },
-    ["furia"] = {description = "Puntos máximos 2 || CD Salv 12\nGanas 1 punto de furia cuando infliges daño a una criatura con un ataque de arma que no hayas gastado puntos de furia en él. Puedes gastar estos puntos para realizar diversas maniobras. Para usar una de estas maniobras, debes gastar una cantidad de puntos de furia igual a su coste. No puedes tener más puntos de furia que tu nivel de Guerrero. Tus puntos de furia acumulados permanecen durante 1 hora antes de disiparse, devolviendo tu reserva de furia a 0." },
+    ["ira"] = {description = "Puntos máximos 2 || CD Salv 12\nGanas 1 punto de ira cuando infliges daño a una criatura con un ataque de arma que no hayas gastado puntos de ira en él. Puedes gastar estos puntos para realizar diversas maniobras. Para usar una de estas maniobras, debes gastar una cantidad de puntos de ira igual a su coste. No puedes tener más puntos de ira que tu nivel de Guerrero. Tus puntos de ira acumulados permanecen durante 1 hora antes de disiparse, devolviendo tu reserva de ira a 0." },
     ["furia de elune"] = {description = "Cuando usas tu acción para lanzar un truco de sacerdote, puedes realizar un ataque con arma como acción adicional.\nPuedes usar este rasgo un número de veces igual a tu modificador de Carisma, mínimo una vez. Recuperas los usos al terminar un descanso corto o largo." },
     ["garrote"] = {description = "Cuando golpeas a una criatura con un ataque cuerpo a cuerpo, puedes gastar 1 punto de energía para garrotearla. El objetivo debe superar una tirada de salvación de Constitución o no podrá hablar hasta el final de tu siguiente turno." },
     ["golpe de escarcha"] = {description = "Aprendes a potenciar tus ataques con furia invernal. Cuando gastas dados de Poder Rúnico en un golpe rúnico, los dados se convierten en d8 y el golpe rúnico inflige daño frío en lugar de daño necrótico." },
@@ -200,7 +201,7 @@ HarfordDnDData.TRP3_PRESENTATION = {
     ["imposicion de manos"] = {description = "Tu toque bendito puede curar heridas. Tienes una reserva de poder curativo que se repone cuando tomas un descanso largo. Con esa reserva, puedes restaurar un número total de puntos de golpe igual a tu nivel de paladín × 5 10.\n\nComo acción, puedes tocar a una criatura y extraer poder de la reserva para restaurar un número de puntos de golpe a esa criatura, hasta la cantidad máxima que quede en tu reserva.\n\nAlternativamente, puedes gastar 5 puntos de golpe de tu reserva de curación para curar al objetivo de una enfermedad o neutralizar un veneno que lo esté afectando. Puedes curar múltiples enfermedades y neutralizar múltiples venenos con un solo uso de Imposición de Manos, gastando puntos de golpe por separado para cada uno.\n\nEsta característica no tiene efecto en muertos vivientes o constructos." },
     ["iniciacion illidari"] = {description = "Eres un iniciado Illidari, habiendo sobrevivido a las pruebas despiadadas de los Illidari y recibido un entrenamiento inaudito en otros lugares. Esto te otorga los siguientes beneficios:\n\n- En tu primer turno del combate, tienes ventaja en las tiradas de ataque contra criaturas que aún no hayan actuado.\n- Puedes tratar las armas cuerpo a cuerpo que no tengan la propiedad de pesada o de dos manos como si tuvieran las propiedades de ligereza y precisión, además de sus otras propiedades.\n- Cuando haces una prueba de Supervivencia relacionada con rastrear una criatura, se considera que tienes competencia en la habilidad de Supervivencia.\n\nAdemás, tienes un odio profundo hacia los seres demoníacos y has sido entrenado para derrotarlos. Esto te otorga los siguientes beneficios adicionales:\n\n- Tienes ventaja en las pruebas de Supervivencia para rastrear a los demonios, así como en las pruebas de Inteligencia para recordar información sobre ellos.\n- Puedes hablar, leer y escribir Eredun." },
     ["intrepido"] = {description = "Tu furia se regenera a medida que la viertes en tus ataques. Recuperas 1 punto de furia al final de tu turno si golpeas a una criatura con un movimiento de furia durante el mismo." },
-    ["ira"] = {description = "Puntos máximos 2 || CD Salv 13\nGanas 1 punto de furia cuando infliges daño a una criatura con un ataque de arma que no hayas gastado puntos de furia en él. Puedes gastar estos puntos para realizar diversas maniobras. Para usar una de estas maniobras, debes gastar una cantidad de puntos de furia igual a su coste. No puedes tener más puntos de furia que tu nivel de Guerrero. Tus puntos de furia acumulados permanecen durante 1 hora antes de disiparse, devolviendo tu reserva de furia a 0." },
+    ["ira"] = {description = "Puntos máximos 2 || CD Salv 13\nGanas 1 punto de ira cuando infliges daño a una criatura con un ataque de arma que no hayas gastado puntos de ira en él. Puedes gastar estos puntos para realizar diversas maniobras. Para usar una de estas maniobras, debes gastar una cantidad de puntos de ira igual a su coste. No puedes tener más puntos de ira que tu nivel de Guerrero. Tus puntos de ira acumulados permanecen durante 1 hora antes de disiparse, devolviendo tu reserva de ira a 0." },
     ["kalimag"] = {description = "Conoces Kalimag, el idioma de los elementales. Puedes hablar el idioma y usarlo para dejar mensajes en rocas y charcas de agua que solo tú y otros chamanes pueden notar. Los mensajes se transmiten como si fuera un conjuro de mensaje, con las limitaciones de dicho conjuro." },
     ["legado del vacio"] = {description = "Cuando infliges daño a una criatura con un truco de sacerdote, puedes causar daño psíquico adicional igual a tu Mod. Carisma 3.\n\nCuando usas esta característica, debes tener éxito en una tirada de salvación de Sabiduría (CD 10 + 1 por cada uso adicional de esta característica desde el último descanso largo). Si fallas, no podrás usar esta característica nuevamente hasta que termines un descanso largo." },
     ["llamas del caos"] = {description = "Aprendes a manifestar llamas viles puras. Obtienes una nueva opción de ataque que puedes usar con la acción de Ataque.\n\nEste ataque especial es un ataque a distancia con un arma con un alcance de 30 pies. Tienes competencia con él y añades tu modificador de Destreza a sus tiradas de ataque y de daño.\nEn un golpe exitoso, este ataque especial inflige 1d6 de daño por fuego." },
@@ -273,8 +274,71 @@ function HarfordDnDData.GetIcon(name)
     return id and ("Interface\\Icons\\" .. id) or nil
 end
 
+-- Signo de mas coloreado por caracteristica. Los incrementos salian todos con el mismo
+-- dibujo, y cada uno sube una cosa distinta. El color va por la clase que encarna esa
+-- caracteristica: guerrero la Fuerza, picaro la Destreza, mago la Inteligencia.
+local SIGNO_CARACTERISTICA = {
+    fuerza       = "Interface\\Icons\\hd_plussign_warrior",
+    destreza     = "Interface\\Icons\\hd_plussign_rogue",
+    constitucion = "Interface\\Icons\\hd_plussign_deathknight",
+    inteligencia = "Interface\\Icons\\hd_plussign_mage",
+    sabiduria    = "Interface\\Icons\\hd_plussign_monk",
+    carisma      = "Interface\\Icons\\hd_plussign_paladin",
+}
+local SIGNO_SIN_ASIGNAR = "Interface\\Icons\\hd_plussign_priest"
+local SIGNO_MEJORA      = "Interface\\Icons\\hd_plussign_hunter"
+
+local function AbilityKey(value)
+    value = HarfordClassColors and HarfordClassColors.StripAccents
+        and HarfordClassColors.StripAccents(tostring(value or "")) or tostring(value or "")
+    return value:lower():gsub("%s+", "")
+end
+
+-- Devuelve el signo del color que le toca a un rasgo de caracteristica, o nil si no lo es.
+-- A diferencia de la web, aqui SI se sabe que ha elegido el jugador, asi que un incremento
+-- a eleccion deja de ser gris en cuanto se resuelve.
+local function AbilitySignIcon(feature)
+    local name = AbilityKey(feature.name)
+    -- El rasgo de idiomas lleva siempre la misma nota, este en una raza, una subraza o un
+    -- trasfondo. Va por nombre y no por id porque son cuarenta repartidos por todo el libro.
+    if name:match("^idiomas?") then return "Interface\\Icons\\inv_misc_note_05" end
+    if name:find("mejoradecaracteristica", 1, true) then return SIGNO_MEJORA end
+    if not name:find("incrementodecaracteristica", 1, true) then return nil end
+
+    -- "Destreza +2 y Sabiduria +1" sube dos cosas y no hay un color que represente eso,
+    -- asi que va el verde de mejora, el mismo que el ASI de clase. Cuando el rasgo se
+    -- parta en dos pasivas, cada una recuperara su color sola.
+    local primero, distintas = nil, 0
+    local vistas = {}
+    for _, effect in ipairs(feature.effects or {}) do
+        if effect.kind == "bonus" and effect.target == "ability" and effect.ability then
+            local key = AbilityKey(effect.ability)
+            if SIGNO_CARACTERISTICA[key] and not vistas[key] then
+                vistas[key] = true
+                distintas = distintas + 1
+                primero = primero or SIGNO_CARACTERISTICA[key]
+            end
+        end
+    end
+    if distintas > 1 then return SIGNO_MEJORA end
+    if primero then return primero end
+
+    local choice = feature.choice
+    if type(choice) == "table" and tostring(choice.optionsFrom or ""):match("^ability%+%d+$")
+        and HarfordDnDProgression and HarfordDnDProgression.GetChoice then
+        -- el id de opcion de un ASI es el nombre de la caracteristica ("Fuerza")
+        for _, chosen in ipairs(HarfordDnDProgression.GetChoice(feature.id) or {}) do
+            local icon = SIGNO_CARACTERISTICA[AbilityKey(chosen)]
+            if icon then return icon end
+        end
+    end
+    return SIGNO_SIN_ASIGNAR
+end
+
 function HarfordDnDData.GetFeatureIcon(feature)
     if type(feature) ~= "table" then return nil end
+    local signo = AbilitySignIcon(feature)
+    if signo then return signo end
     local icon = IconCatalog and IconCatalog.GetFeatureIcon and IconCatalog.GetFeatureIcon(feature.id)
     if icon then return icon end
     return HarfordDnDData.GetIcon(feature.name)
@@ -297,3 +361,30 @@ function HarfordDnDData.GetSubclassIcon(classId, subclassId)
     if catalogIcon then return catalogIcon end
     return nil
 end
+
+-- Idiomas de Warcraft 5a (tabla "Idiomas" del manual). `exotic` distingue los exoticos,
+-- que algunas elecciones no ofrecen.
+HarfordDnDData.LANGUAGES = {
+    { id="comun", name="Comun" },
+    { id="darnassiano", name="Darnassiano" },
+    { id="draenei", name="Draenei" },
+    { id="enano", name="Enano" },
+    { id="goblin", name="Goblin" },
+    { id="gnomico", name="Gnomico" },
+    { id="visceralico", name="Visceralico" },
+    { id="orco", name="Orco" },
+    { id="pandaren", name="Pandaren" },
+    { id="shalassiano", name="Shalassiano" },
+    { id="taurahe", name="Taur-ahe" },
+    { id="thalassiano", name="Thalassiano" },
+    { id="zandali", name="Zandali" },
+    { id="draconico", name="Draconico", exotic=true },
+    { id="eredun", name="Eredun", exotic=true },
+    { id="kalimag", name="Kalimag", exotic=true },
+    { id="bajocomun", name="Bajo Comun", exotic=true },
+    { id="ogro", name="Ogro", exotic=true },
+    { id="shathyar", name="Shath'Yar", exotic=true },
+    { id="titanico", name="Titanico", exotic=true },
+    -- Lengua secreta de los druidas: la concede la clase, no se elige.
+    { id="druidico", name="Druidico", exotic=true },
+}

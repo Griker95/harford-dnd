@@ -208,6 +208,32 @@ SlashCmdList.HARFORDCONTRACTS = function(msg)
   msg = string.lower((msg or ""):match("^%s*(.-)%s*$"))
   if msg == "dm" then
     TC.OpenDM()
+  elseif msg == "copiar" then
+    -- Llevar el tablon de una fase a otra. Se confirma con los numeros delante porque escribe en
+    -- la fase y afecta a lo que ven los demas; la copia en si es aditiva y no retira nada.
+    if not (TC.Phase and TC.Phase.CopyBoardHere) then
+      TC.Print("La integracion con la fase no esta disponible.")
+      return
+    end
+    local origen = TC.GetDB().phaseOrigin
+    local aqui = TC.Phase.GetPhaseId and TC.Phase.GetPhaseId()
+    local publicos = 0
+    for _, c in ipairs(TC.GetDB().contracts or {}) do
+      if c and c.status ~= "draft" and c.status ~= "archived" then publicos = publicos + 1 end
+    end
+    StaticPopupDialogs.TABLONCONTRATOS_COPIAR_FASE = StaticPopupDialogs.TABLONCONTRATOS_COPIAR_FASE or {
+      button1 = "Copiar", button2 = CANCEL, timeout = 0, whileDead = true, hideOnEscape = true,
+      preferredIndex = 3,
+      OnAccept = function()
+        if TC.Phase and TC.Phase.CopyBoardHere then TC.Phase.CopyBoardHere() end
+      end,
+    }
+    local nl = string.char(10)
+    StaticPopupDialogs.TABLONCONTRATOS_COPIAR_FASE.text =
+      "Copiar " .. publicos .. " contrato(s) de la fase " .. tostring(origen or "?")
+      .. nl .. "a la fase " .. tostring(aqui or "?") .. "?"
+      .. nl .. nl .. "Solo se ANADEN: lo que ya exista aqui no se toca."
+    StaticPopup_Show("TABLONCONTRATOS_COPIAR_FASE")
   elseif msg == "minimap" then
     local db = TC.GetDB()
     db.settings.minimap.hide = not db.settings.minimap.hide

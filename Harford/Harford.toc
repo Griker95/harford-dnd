@@ -33,7 +33,8 @@ TRP3\HarfordTRP3.lua
 # --- Compendium ---
 Compendium\HarfordIconCatalog.lua
 Compendium\HarfordCompendioCore.lua
-Compendium\HarfordCompendioData.lua
+# HarfordCompendioData.lua se movio al addon aparte HarfordCompendioData/ (LoadOnDemand):
+# 609 KB de constructores de tabla. Lo pide HarfordCompendioAPI.GetAllSpells().
 Compendium\HarfordCompendioIconMap.lua
 Compendium\HarfordCompendioUI.lua
 
@@ -41,11 +42,26 @@ Compendium\HarfordCompendioUI.lua
 DnD\Data\HarfordDamageMitigation.lua
 DnD\Data\HarfordDnDData.lua
 DnD\Data\HarfordDnDBook.lua
+DnD\Data\Classes\CaballerodelaMuerte.lua
+DnD\Data\Classes\CazadordeDemonios.lua
+DnD\Data\Classes\Druida.lua
+DnD\Data\Classes\Cazador.lua
+DnD\Data\Classes\Mago.lua
+DnD\Data\Classes\Monje.lua
+DnD\Data\Classes\Paladin.lua
+DnD\Data\Classes\Sacerdote.lua
+DnD\Data\Classes\Picaro.lua
+DnD\Data\Classes\Chaman.lua
+DnD\Data\Classes\Brujo.lua
+DnD\Data\Classes\Guerrero.lua
+DnD\Data\HarfordDnDBookDerived.lua
 DnD\Data\HarfordDnDBookText.lua
 DnD\Data\HarfordDnDRaces.lua
 DnD\Data\HarfordDnDBackgrounds.lua
 DnD\Data\HarfordDnDFeats.lua
 DnD\Data\HarfordDnDWeapons.lua
+DnD\Data\HarfordDnDFormsData.lua
+DnD\Data\HarfordDnDCompanionsData.lua
 
 # --- DnD/State ---
 DnD\State\HarfordDnDResources.lua
@@ -58,6 +74,8 @@ DnD\State\HarfordDnDProgression.lua
 DnD\State\HarfordDnDItems.lua
 DnD\State\HarfordDnDBurden.lua
 DnD\State\HarfordDnDForms.lua
+DnD\State\HarfordDnDCompanions.lua
+DnD\State\HarfordDnDBeast.lua
 
 # --- DnD/Engine ---
 DnD\Engine\HarfordDnDCustomDamage.lua
@@ -120,11 +138,17 @@ Contracts\HarfordContractsPhase.lua
 Contracts\HarfordContractsMinimap.lua
 
 # --- Professions ---
-Professions\HarfordObjectCatalog.lua
-Professions\HarfordProfessionsItems.lua
+# HarfordProfessionsData.lua y HarfordProfessionsItems.lua se movieron al addon aparte
+# HarfordProfessionsData/ (LoadOnDemand): 1 MB de constructores de tabla que se parseaban en
+# cada login. Los pide HarfordProfessions.EnsureData() al consultar el catalogo por primera vez.
+# HarfordObjectCatalog.lua NO se carga (2026-08-24): son 1,2 MB y 41.539 lineas que WoW parsea
+# en cada login y que NINGUN modulo lee. Se genero para cruzar los `wow = <id>` de
+# HarfordProfessionsItems con nombre e icono de Wowhead, pero ese cruce nunca se cableo: los
+# objetos se resuelven con la API del cliente. El fichero se conserva porque es dato generado
+# (tools/codice/generar_catalogo_objetos.py); si algun dia se usa, basta con reponer esta linea.
+Professions\HarfordProfessionFX.lua
 Professions\HarfordProfessionsCraftSkin.lua
 Professions\HarfordProfessionsCraftUI.lua
-Professions\HarfordProfessionsData.lua
 Professions\HarfordProfessions.lua
 Professions\HarfordProfessionTrainers.lua
 Professions\HarfordProfessionTrainerUI.lua

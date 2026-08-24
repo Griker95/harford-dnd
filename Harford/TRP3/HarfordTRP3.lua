@@ -83,6 +83,10 @@ local function NormalizeBuildText(value)
     return value
 end
 
+-- Se expone para que quien componga texto de About pueda comparar titulos sin markup (p.ej.
+-- localizar el frame de una clase por su cabecera) sin duplicar la lista de etiquetas.
+API.StripInlineMarkup = StripInlineMarkup
+
 local function CleanAboutLines(text)
     local lines = {}
     for line in tostring(text or ""):gmatch("[^\r\n]+") do
@@ -912,12 +916,17 @@ local function EnsureAboutSchema(about)
     if type(about) ~= "table" then return false end
 
     local changed = false
-    if type(about.T1) ~= "table" then about.T1 = {}; changed = true end
+    -- OJO: nada de tablas vacias. Una tabla sin claves NO llega a las SavedVariables, asi
+    -- que al recargar T1/T3 volvian a faltar y el editor de TRP3 fallaba con
+    -- "Nil template1 data or not a table". Se rellenan con los valores por defecto que el
+    -- propio editor lee (`T1.TX or ""`, `T3.PH.BK or 1`), que ademas es contenido legitimo.
+    if type(about.T1) ~= "table" then about.T1 = { TX = "" }; changed = true end
+    if type(about.T1.TX) ~= "string" then about.T1.TX = ""; changed = true end
     if type(about.T2) ~= "table" then about.T2 = {}; changed = true end
     if type(about.T3) ~= "table" then about.T3 = {}; changed = true end
     for _, key in ipairs({ "PH", "PS", "HI" }) do
         if type(about.T3[key]) ~= "table" then
-            about.T3[key] = {}
+            about.T3[key] = { BK = 1, TX = "" }
             changed = true
         end
     end
@@ -937,7 +946,57 @@ local function NotifyAboutUpdated()
         GetTRP3PlayerID(), profileID, "about")
 end
 
-function API.WritePlayerAbout(content)
+-- Repara el esquema del About del perfil ACTIVO. Es EXPLICITA a proposito: la norma del
+-- proyecto es no tocar perfiles existentes por nuestra cuenta. Sirve para los perfiles que
+-- quedaron sin T1/T3 por haberlos escrito con tablas vacias, que no sobreviven al guardado.
+function API.RepairPlayerAboutSchema()
+    if not (TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile) then
+        return false, "No hay un perfil local de TRP3 activo."
+    end
+    local profile = SafeCall(TRP3_API.profile.getPlayerCurrentProfile)
+    if type(profile) ~= "table" or type(profile.player) ~= "table" then
+        return false, "No se encontro el perfil local de TRP3."
+    end
+    local about = profile.player.about
+    if type(about) ~= "table" then
+        about = {}
+        profile.player.about = about
+    end
+    local faltaban = {}
+    if type(about.T1) ~= "table" then faltaban[#faltaban + 1] = "T1" end
+    if type(about.T3) ~= "table" then faltaban[#faltaban + 1] = "T3" end
+    local cambiado = EnsureAboutSchema(about)
+    if cambiado then NotifyAboutUpdated() end
+    return true, (#faltaban > 0 and ("faltaban: " .. table.concat(faltaban, ", "))
+        or (cambiado and "esquema completado" or "ya estaba bien"))
+end
+
+-- Huella de un frame para reconocer los que genero Harford. djb2 sobre el texto: no necesita ser
+-- criptografica, solo estable y corta para guardarla en SavedVariables.
+local function FrameHash(text)
+    local h = 5381
+    for i = 1, #text do
+        h = (h * 33 + text:byte(i)) % 4294967296
+    end
+    return string.format("%x:%d", h, #text)
+end
+
+API.FrameHash = FrameHash
+
+function API.ReplaceAboutFrames(frames)
+    if type(frames) ~= "table" or #frames == 0 then return false, "Sin frames." end
+    -- Reutiliza la ruta normal: sin `previous` no sustituye nada, asi que se le pasa la huella de
+    -- TODOS los frames actuales para que los retire y deje exactamente la lista dada.
+    local profile = SafeCall(TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile)
+    local about = type(profile) == "table" and type(profile.player) == "table" and profile.player.about
+    local previas = {}
+    for _, fr in ipairs((type(about) == "table" and type(about.T2) == "table") and about.T2 or {}) do
+        if type(fr) == "table" and fr.TX then previas[#previas + 1] = FrameHash(tostring(fr.TX)) end
+    end
+    return API.WritePlayerAbout(frames, { previous = previas })
+end
+
+function API.WritePlayerAbout(content, opts)
     if not (TRP3_API and TRP3_API.profile and TRP3_API.profile.getPlayerCurrentProfile) then
         return false, "No hay un perfil local de TRP3 activo."
     end
@@ -949,7 +1008,25 @@ function API.WritePlayerAbout(content)
 
     -- Harford siempre genera plantilla 2: la ficha se compone de frames de contenido TRP3.
     -- Si algun llamador futuro aporta texto plano, se conserva como un unico frame T2.
-    local newAbout = { T1 = {}, T2 = {}, T3 = { PH = {}, PS = {}, HI = {} } }
+    -- Con contenido por defecto, NO vacias: las tablas sin claves no llegan al fichero de
+    -- SavedVariables y el editor de TRP3 falla al releer el perfil.
+    -- El contenido de las plantillas 1 y 3 se CONSERVA. Harford escribe en la 2, pero blanquear
+    -- las otras borraba la biografia de quien la tuviera escrita ahi.
+    local prev = type(profile.player.about) == "table" and profile.player.about or {}
+    local function KeepSection(seccion)
+        local origen = type(prev.T3) == "table" and prev.T3[seccion] or nil
+        if type(origen) ~= "table" then return { BK = 1, TX = "" } end
+        return { BK = tonumber(origen.BK) or 1, TX = tostring(origen.TX or "") }
+    end
+    local newAbout = {
+        T1 = { TX = (type(prev.T1) == "table" and tostring(prev.T1.TX or "")) or "" },
+        T2 = {},
+        T3 = {
+            PH = KeepSection("PH"),
+            PS = KeepSection("PS"),
+            HI = KeepSection("HI"),
+        },
+    }
     local frames = {}
     if type(content) == "table" then
         for _, fr in ipairs(content) do
@@ -963,8 +1040,46 @@ function API.WritePlayerAbout(content)
         frames[1] = { TX = text }
     end
     if #frames == 0 then return false, "El About no tiene contenido." end
+
+    -- Huellas de lo que Harford escribio la vez anterior. Sin ellas (primera pasada, o perfil
+    -- escrito a mano) no se reconoce nada como propio y los frames generados se anaden al FINAL,
+    -- detras de lo que ya hubiera: anadir es seguro, sustituir a ciegas no.
+    local previas = {}
+    for _, h in ipairs((opts and opts.previous) or {}) do previas[h] = true end
+
+    -- Punto de insercion cuando NO se sustituye ningun frame: sin el, lo nuevo cae al final del
+    -- About, detras del lore y las notas del jugador. Con `opts.insertAfter` (una huella) se
+    -- coloca justo despues de ese frame, que es lo que conserva el orden del perfil.
+    local trasEsta = opts and opts.insertAfter
+    local antes, despues, sustituidos = {}, {}, 0
+    local corte = false
+    if type(prev.T2) == "table" then
+        for _, fr in ipairs(prev.T2) do
+            if type(fr) == "table" and fr.TX then
+                local huella = FrameHash(tostring(fr.TX))
+                if previas[huella] then
+                    sustituidos = sustituidos + 1
+                elseif sustituidos > 0 or corte then
+                    despues[#despues + 1] = { IC = fr.IC, TX = fr.TX }
+                else
+                    antes[#antes + 1] = { IC = fr.IC, TX = fr.TX }
+                    -- El de referencia se queda en `antes`, asi que lo nuevo entra detras de el.
+                    if trasEsta and huella == trasEsta then corte = true end
+                end
+            end
+        end
+    end
+
+    local finales, huellas = {}, {}
+    for _, fr in ipairs(antes) do finales[#finales + 1] = fr end
+    for _, fr in ipairs(frames) do
+        finales[#finales + 1] = fr
+        huellas[#huellas + 1] = FrameHash(fr.TX)
+    end
+    for _, fr in ipairs(despues) do finales[#finales + 1] = fr end
+
     newAbout.TE = 2
-    newAbout.T2 = frames
+    newAbout.T2 = finales
 
     -- Escritura IN-PLACE sobre profile.player.about (nunca reemplazar la referencia).
     local about = profile.player.about
@@ -985,7 +1100,8 @@ function API.WritePlayerAbout(content)
     end
 
     NotifyAboutUpdated()
-    return true
+    -- Las huellas vuelven al llamador, que es quien las persiste para la proxima reescritura.
+    return true, nil, huellas, { conservados = #antes + #despues, sustituidos = sustituidos }
 end
 
 -- Rellena raza/clase en las characteristics TRP3 (RA/CL) del perfil LOCAL para que cargarficha y los

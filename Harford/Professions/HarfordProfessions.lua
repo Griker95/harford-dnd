@@ -74,8 +74,39 @@ end
 ------------------------------------------------------------
 -- Catalogo (delega en HarfordProfessionsData)
 ------------------------------------------------------------
-local function Data() return _G.HarfordProfessionsData end
-local function Items() return _G.HarfordProfessionsItems end
+-- El catalogo vive en el addon HarfordProfessionsData, marcado LoadOnDemand: es 1 MB de
+-- constructores de tabla que WoW parseaba en cada login aunque nadie abriera profesiones.
+-- Se carga la PRIMERA vez que alguien lo consulta y no antes. Si el addon no esta instalado o
+-- esta desactivado, se avisa UNA vez y las profesiones quedan vacias en vez de romper.
+local datosPedidos, datosListos = false, false
+function API.EnsureData()
+    if datosListos then return true end
+    if _G.HarfordProfessionsData and _G.HarfordProfessionsItems then
+        datosListos = true
+        return true
+    end
+    if datosPedidos then return false end
+    datosPedidos = true
+    local cargar = (C_AddOns and C_AddOns.LoadAddOn) or _G.LoadAddOn
+    if not cargar then return false end
+    local ok = cargar("HarfordProfessionsData")
+    datosListos = ok and _G.HarfordProfessionsData ~= nil and _G.HarfordProfessionsItems ~= nil
+    if not datosListos and HarfordChat and HarfordChat.Print then
+        HarfordChat.Print("No se pudo cargar |cffffcc00HarfordProfessionsData|r: "
+            .. "las profesiones no tendran catalogo. Comprueba que la carpeta esta instalada y activada.")
+    end
+    return datosListos
+end
+
+local function Data()
+    API.EnsureData()
+    return _G.HarfordProfessionsData
+end
+
+local function Items()
+    API.EnsureData()
+    return _G.HarfordProfessionsItems
+end
 
 function API.GetProfessions()
     local d = Data()
@@ -189,6 +220,91 @@ function API.HasToolItem(profId)
     return (I.GetOwnedCount and I.GetOwnedCount(clave) or 0) > 0, clave
 end
 
+------------------------------------------------------------
+-- Estaciones de trabajo
+--
+-- La forja, el yunque, la fogata: objetos del mundo sin los que ciertas recetas no se pueden
+-- hacer, igual que el "Requires: Anvil" del nativo. Son distintas de la HERRAMIENTA, que se
+-- lleva encima; la estacion esta en un sitio y hay que ir a ella.
+--
+-- Quien declara que estas en una es el MUNDO: un ArcSpell en el gossip de la forja llama a
+-- `HarfordProfessionsAPI.OpenAtStation("forja")`. El addon no adivina que tienes cerca.
+--
+-- La estacion es EFIMERA y dura lo que la ventana: se pone al abrirla desde el objeto y se
+-- suelta al cerrarla. Sin esto habria que vigilar la distancia, y eso es sondeo continuo.
+------------------------------------------------------------
+
+API.STATIONS = {
+    forja    = "Forja",
+    yunque   = "Yunque",
+    fogata   = "Fuego de cocina",
+    alambique = "Alambique",
+    mesa     = "Mesa de trabajo",
+    telar    = "Telar",
+    curtidor = "Bastidor de curtir",
+}
+
+local estacionActiva = nil
+
+function API.SetActiveStation(stationId)
+    stationId = stationId and tostring(stationId):lower() or nil
+    if stationId and not API.STATIONS[stationId] then return false, "Estacion desconocida" end
+    estacionActiva = stationId
+    return true
+end
+
+function API.GetActiveStation()
+    return estacionActiva, estacionActiva and API.STATIONS[estacionActiva] or nil
+end
+
+function API.ClearActiveStation()
+    estacionActiva = nil
+end
+
+-- Que estacion pide una receta, si es que pide alguna.
+function API.GetRequiredStation(recipeOrId)
+    local r = type(recipeOrId) == "table" and recipeOrId or API.GetRecipe(recipeOrId)
+    local id = r and r.station and tostring(r.station):lower() or nil
+    if not id or not API.STATIONS[id] then return nil end
+    return id, API.STATIONS[id]
+end
+
+-- ¿Estas donde hay que estar? Una receta que no declara estacion nunca la exige: mientras el
+-- catalogo no traiga el dato, fabricar sigue funcionando como hasta ahora. Mismo criterio que
+-- las herramientas y los entrenadores.
+function API.HasRequiredStation(recipeOrId)
+    local id = API.GetRequiredStation(recipeOrId)
+    if not id then return true end
+    return estacionActiva == id
+end
+
+-- ¿Alguna profesion APRENDIDA usa esta herramienta? Saber el oficio implica ser competente con
+-- sus herramientas, asi que esto es lo que `HasToolProf` consulta para concederla.
+--
+-- Mira `GetSkill` y NO `KnowsProfession` a proposito: KnowsProfession pregunta a su vez por la
+-- competencia de herramienta, y llamarla desde aqui cerraria el ciclo y colgaria el cliente.
+function API.HasSkillInProfessionWithTool(toolName)
+    toolName = tostring(toolName or "")
+    if toolName == "" then return false end
+    for _, def in ipairs(API.GetProfessions()) do
+        if def.tool == toolName and API.GetSkill(def.id) > 0 then return true end
+    end
+    return false
+end
+
+-- Las herramientas de todas las profesiones aprendidas, para listarlas junto a las demas
+-- competencias en la ficha.
+function API.GetKnownTools()
+    local out = {}
+    for _, def in ipairs(API.GetProfessions()) do
+        if def.tool and def.tool ~= "" and API.GetSkill(def.id) > 0 then
+            out[#out + 1] = def.tool
+        end
+    end
+    table.sort(out)
+    return out
+end
+
 -- ¿Conoce la profesion? Por competencia de herramienta (auto) o por skill aprendido (>0).
 function API.KnowsProfession(profId)
     if API.GetSkill(profId) > 0 then return true end
@@ -224,6 +340,52 @@ function API.DifficultyColor(skill, req)
     if margen < 45 then return 1.00, 1.00, 0.00, "medio" end
     if margen < 70 then return 0.25, 0.75, 0.25, "facil" end
     return 0.60, 0.60, 0.60, "trivial"
+end
+
+-- Cuanta habilidad da fabricar algo, segun lo dificil que te resulte. El mismo escalon que
+-- decide el color: gris no da nada, verde 1, amarillo 2, naranja 3 y rojo 5.
+--
+-- Que color y ganancia salgan de la MISMA funcion es lo que hace que lo que ves sea lo que
+-- ganas; con dos umbrales separados acaban discrepando. Antes el gris era `skillReq + 100` aqui
+-- y margen 70 en el color, asi que habia recetas grises que seguian subiendo.
+local GANANCIA_POR_ESCALON = {
+    imposible = 5,   -- por encima de tu nivel: solo alcanzable si algun dia se permite intentarlo
+    optimo    = 3,
+    medio     = 2,
+    facil     = 1,
+    trivial   = 0,
+}
+
+function API.SkillGainFor(skill, req)
+    local _, _, _, escalon = API.DifficultyColor(skill, req)
+    return GANANCIA_POR_ESCALON[escalon] or 0, escalon
+end
+
+-- CD de fabricar. La propia de la receta, salvo que la intentes por encima de tu habilidad:
+-- entonces es 20, que es lo que cuesta sacar algo para lo que aun no estas preparado.
+local CD_POR_ENCIMA_DE_TU_NIVEL = 20
+
+function API.CraftDC(recipeOrId)
+    local r = type(recipeOrId) == "table" and recipeOrId or API.GetRecipe(recipeOrId)
+    if not r then return 10 end
+    local propia = tonumber(r.dc) or 10
+    local _, _, _, escalon = API.DifficultyColor(API.EffectiveSkill(r.profession),
+        tonumber(r.skillReq) or 1)
+    if escalon == "imposible" then return math.max(propia, CD_POR_ENCIMA_DE_TU_NIVEL) end
+    return propia
+end
+
+-- Reverso de GetTierName: del nombre del rango al skill minimo que lo consigue. Lo usa la
+-- importacion del About de TRP3, donde la profesion viene escrita como "Herreria Aprendiz".
+-- Devuelve nil si el texto no es un rango, que es como el llamador distingue una etiqueta de
+-- rango de una etiqueta de fuente ("Trasfondo", "Racial").
+function API.GetTierMin(name)
+    local buscado = HarfordClassColors.StripAccents(tostring(name or "")):lower()
+    if buscado == "" then return nil end
+    for _, t in ipairs(API.TIERS) do
+        if HarfordClassColors.StripAccents(t.name):lower() == buscado then return t.min end
+    end
+    return nil
 end
 
 function API.GetTierName(skill)
@@ -270,12 +432,28 @@ end
 ------------------------------------------------------------
 -- Tirada de la profesion (competencia herramienta + caracteristica)
 ------------------------------------------------------------
-local function ProfBonusIfTool(def)
-    if not (def and def.tool) then return 0 end
-    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasToolProf
-        and HarfordDnDFeatureEffects.HasToolProf(def.tool, ProfileName())
-        and HarfordDnDCalc and HarfordDnDCalc.GetProficiencyBonus then
-        return tonumber(HarfordDnDCalc.GetProficiencyBonus()) or 0
+-- Bonus de competencia de las tiradas de profesion.
+--
+-- Tener la profesion YA es ser competente con ella: quien la sabe suma su bonus, tenga o no
+-- ademas la competencia D&D de la herramienta. Antes solo lo daba `HasToolProf`, asi que un
+-- personaje con la profesion aprendida y sin esa competencia tiraba a pelo, que es lo contrario
+-- de lo que significa saber un oficio.
+--
+-- No se acumulan: la competencia de herramienta y saber la profesion son dos caminos al MISMO
+-- bonus, como en 5e, donde la competencia se suma una vez.
+local function ProfBonus(def)
+    if not (def and def.id) then return 0 end
+    if not API.KnowsProfession(def.id) then return 0 end
+    -- El accesor bueno es GetPB(), NO GetProficiencyBonus: esa no existe en HarfordDnDCalc y el
+    -- guard caia al `return 0` en silencio, asi que la tirada de profesion salia sin competencia.
+    -- GetPB ya resuelve contexto NPC, efectos de rasgos y el valor de la ficha.
+    if HarfordDnDCalc and HarfordDnDCalc.GetPB then
+        return tonumber(HarfordDnDCalc.GetPB()) or 0
+    end
+    -- Sin la ficha cargada, la progresion tambien lo sabe.
+    if HarfordDnDProgression and HarfordDnDProgression.GetProficiencyBonus and UnitName then
+        local nombre = UnitName("player")
+        return tonumber(HarfordDnDProgression.GetProficiencyBonus(nombre)) or 0
     end
     return 0
 end
@@ -309,6 +487,8 @@ local function ReservedQty(key)
 end
 
 local function ReleaseSettledReservations()
+    -- Lo normal es no tener nada reservado: se sale antes de pedir la hora ni contar bolsas.
+    if next(reserved) == nil then return end
     local items = Items()
     if not items then return end
     local now = time()
@@ -320,10 +500,15 @@ local function ReleaseSettledReservations()
     end
 end
 
+-- Escucha SIEMPRE, tambien con la ventana cerrada: una reserva puede sobrevivir al cierre y hay
+-- que soltarla igual. Es estado, no interfaz.
+--
+-- Solo `BAG_UPDATE_DELAYED`: `BAG_UPDATE` dispara una vez por bolsa afectada, asi que un cambio
+-- normal lo llamaba varias veces seguidas para hacer exactamente el mismo trabajo. El diferido
+-- llega una vez cuando la tanda ha terminado, que es justo cuando interesa mirar.
 do
     local watcher = CreateFrame("Frame")
     watcher:RegisterEvent("BAG_UPDATE_DELAYED")
-    watcher:RegisterEvent("BAG_UPDATE")
     watcher:SetScript("OnEvent", ReleaseSettledReservations)
 end
 
@@ -395,9 +580,13 @@ function API.CanCraft(recipeId)
         local def = API.GetDefinition(r.profession)
         return false, "Te falta " .. tostring((def and def.tool) or "la herramienta"), detail
     end
-    if API.EffectiveSkill(r.profession) < (tonumber(r.skillReq) or 1) then
-        return false, "Skill insuficiente (requiere " .. tostring(r.skillReq) .. ")", detail
+    if not API.HasRequiredStation(r) then
+        local _, nombre = API.GetRequiredStation(r)
+        return false, "Necesitas estar en: " .. tostring(nombre), detail
     end
+    -- Estar por debajo del requisito ya NO impide intentarlo: la receta sale en rojo y se tira
+    -- contra CD 20 (ver `API.CraftDC`). Es lo que hace jugable el escalon rojo y su +5 de
+    -- habilidad, que hasta ahora era inalcanzable.
     if not API.IsRecipeLearned(r.id) then
         local donde = HarfordProfessionTrainers and HarfordProfessionTrainers.DescribeForRecipe
             and HarfordProfessionTrainers.DescribeForRecipe(r.id)
@@ -432,12 +621,15 @@ function API.RollTool(profId)
     local def = API.GetDefinition(profId)
     if not def then return false end
     local d20 = math.random(1, 20)
-    local bonus = ProfBonusIfTool(def) + AbilityMod(def.ability)
+    local bonus = ProfBonus(def) + AbilityMod(def.ability)
     local total = d20 + bonus
     if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
         HarfordDnDRolls.Broadcast({
             type = "roll",
-            label = def.tool or def.name,
+            -- El nombre de la PROFESION, no el de la herramienta: la tirada se lee como
+            -- "Alquimia", "Herreria". Se lanza desde el boton de dado de la ventana de recetas,
+            -- que sustituyo a la antigua tirada suelta de "Suministros de ...".
+            label = def.name or def.tool,
             total = total,
             dice = "d20: " .. d20,
             modifiers = bonus ~= 0 and string.format("%s%d", bonus > 0 and "+" or "", bonus) or "",
@@ -485,6 +677,11 @@ end
 
 -- Registra (o actualiza) una receta dinamica. NO la marca como aprendida.
 function API.DefineRecipe(def)
+    -- Una receta nueva puede cambiar que entrenador la ensena: la memoizacion de
+    -- HarfordProfessionTrainers deja de ser valida.
+    if HarfordProfessionTrainers and HarfordProfessionTrainers.OlvidarCache then
+        HarfordProfessionTrainers.OlvidarCache()
+    end
     if type(def) ~= "table" then return false, "Definicion invalida" end
     local id = tostring(def.id or "")
     local profession = tostring(def.profession or "")
@@ -562,6 +759,16 @@ function API.TeachCustomRecipe(def)
 end
 
 -- Retira una receta dinamica de este personaje (no toca el catalogo).
+-- Retira una receta aprendida explicitamente. Existe para poder DESHACER una concesion cuando
+-- el cobro se rechaza: el entrenador da la receta en el momento y solo la quita si el servidor
+-- dice que no. No toca las iniciales, que no se guardan sino que se derivan.
+function API.UnlearnRecipe(recipeId)
+    recipeId = tostring(recipeId or "")
+    if Store().learned[recipeId] == nil then return false end
+    Store().learned[recipeId] = nil
+    return true
+end
+
 function API.ForgetCustomRecipe(recipeId)
     recipeId = tostring(recipeId or "")
     if not Store().custom[recipeId] then return false end
@@ -641,14 +848,16 @@ end
 
 -- Sube skill al craftear con exito, estilo WoW: solo si aun aprendes de la receta (skill por debajo
 -- del umbral "gris" = skillReq + 100) y por debajo del maximo.
+-- Solo se llama al COMPLETAR con exito: fallar no sube nada.
 local function SkillUp(profId, recipe)
     local cur = API.GetSkill(profId)
     -- Primer craft (conocia por competencia, skill 0): persiste el punto base = 1 (no saltar a 2).
-    if cur <= 0 then API.SetSkill(profId, 1); return end
-    local grey = (tonumber(recipe.skillReq) or 1) + 100
-    if cur < API.MAX_SKILL and cur < grey then
-        API.SetSkill(profId, cur + 1)
-    end
+    if cur <= 0 then API.SetSkill(profId, 1); return 1 end
+    if cur >= API.MAX_SKILL then return 0 end
+    local ganancia = API.SkillGainFor(cur, tonumber(recipe.skillReq) or 1)
+    if ganancia <= 0 then return 0 end
+    API.SetSkill(profId, math.min(API.MAX_SKILL, cur + ganancia))
+    return ganancia
 end
 
 -- Ejecuta el crafteo: tirada, consumo de materiales reales y entrega del output.
@@ -669,13 +878,16 @@ function API.Craft(recipeId)
     -- Tirada: d20 + competencia (si tiene la herramienta) + mod. caracteristica.
     local ability = r.ability or (def and def.ability) or "Inteligencia"
     local d20 = math.random(1, 20)
-    local bonus = ProfBonusIfTool(def) + AbilityMod(ability)
+    local bonus = ProfBonus(def) + AbilityMod(ability)
     local total = d20 + bonus
-    local dc = tonumber(r.dc) or 10
+    local dc = API.CraftDC(r)
     local crit = (d20 == 20)
     local success = crit or (d20 ~= 1 and total >= dc)
 
     local outName = items.GetName(r.output.key)
+    -- Para la tirada en mesa se usa el ENLACE del objeto: clicable, con tooltip y con el
+    -- nombre en castellano. Si el objeto aun no tiene ID resuelto, queda el nombre a secas.
+    local outLink = (items.GetChatLink and items.GetChatLink(r.output.key)) or outName
 
     -- El crafteo es una ACCION REAL: se tira en mesa como cualquier otra prueba, no se
     -- resuelve en el chat local del artesano. Se emite siempre, salga bien o mal.
@@ -683,11 +895,16 @@ function API.Craft(recipeId)
         HarfordDnDRolls.Broadcast({
             type = "roll",
             label = string.format("%s: %s (CD %d)", def and def.name or r.profession,
-                r.name or outName, dc),
+                outLink or r.name or outName, dc),
             total = total,
             dice = "d20: " .. d20,
             modifiers = bonus ~= 0 and string.format("%s%d", bonus > 0 and "+" or "", bonus) or "",
-            critical = crit and "CRITICO" or (d20 == 1 and "FALLO" or nil),
+            -- El desenlace SIEMPRE, no solo en los naturales: la tirada de fabricar se lee en
+            -- mesa y lo primero que se mira es si salio. Ademas el "FALLO" de antes ni se
+            -- pintaba, porque el render solo conocia "PIFIA".
+            critical = (d20 == 20 and "CRITICO")
+                or (d20 == 1 and "PIFIA")
+                or (success and "EXITO" or "FALLO"),
         })
     end
 
@@ -700,8 +917,27 @@ function API.Craft(recipeId)
     end
 
     if not success then
-        -- Fallo: por defecto NO gasta materiales (mas amable para RP). Cambiar si se quiere coste.
-        Announce(string.format("falla al fabricar %s.", r.name or outName))
+        -- Un fallo normal no cuesta materiales; la PIFIA si. Es el unico desenlace en el que se
+        -- pierde algo sin obtener nada, y por eso se anuncia aparte en vez de como un fallo mas.
+        if d20 == 1 then
+            ReserveMaterials(r)
+            local perdidos = {}
+            for _, m in ipairs(r.materials or {}) do
+                local id = items.GetId(m.key)
+                local qty = tonumber(m.qty) or 1
+                if server.RemoveItem(id, qty) then
+                    perdidos[#perdidos + 1] = string.format("%s x%d", items.GetName(m.key), qty)
+                end
+            end
+            ReleaseMaterials(r)
+            Announce(string.format("|cffff5555echa a perder %s|r y pierde los materiales%s.",
+                r.name or outName,
+                #perdidos > 0 and (": " .. table.concat(perdidos, ", ")) or ""))
+            return false, "pifia"
+        end
+        -- Sin anuncio: la tirada ya se emitio arriba con su total y su CD, asi que decir
+        -- ademas "falla al fabricar" repite en la linea siguiente lo que se acaba de leer.
+        -- La PIFIA si se anuncia, porque ahi ademas se pierden materiales.
         return false, "fallo"
     end
 

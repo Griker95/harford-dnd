@@ -38,14 +38,70 @@ local COL_RACIAL      = "008c7f"  -- titulo de "Magia Racial" (teal, como en los
 
 -- Icono del frame de raza por GENERO { masculino, femenino }, extraido de los perfiles reales del
 -- proyecto. Solo las razas confirmadas; el resto usa el generico (no inventar iconos por raza).
+-- Iconos de raza por genero { masculino, femenino }, importados de la web canonica de
+-- Harford (compendium-data.js, campos `icon`/`iconF`). Cubre las 17 razas; sin esto solo
+-- habia 7 y las hembras de huargen/pandaren/vulpera repetian el arte masculino.
 local RACE_FRAME_ICONS = {
-    humano      = { "achievement_character_human_male",    "achievement_character_human_female" },
-    elfo_noche  = { "achievement_character_nightelf_male", "achievement_character_nightelf_female" },
-    elfo_sangre = { "achievement_character_bloodelf_male", "achievement_character_bloodelf_female" },
-    semielfo    = { "eps_wc3h_highelfrangermale",          "eps_wc3h_highelfbaddiegirl" },
-    huargen     = { "achievement_worganhead",              "achievement_worganhead" },
-    pandaren    = { "w3reforgedpandarenbrewmaster",        "w3reforgedpandarenbrewmaster" },
-    vulpera     = { "vulpera_m",                           "vulpera_m" },
+    humano           = { "achievement_character_human_male", "achievement_character_human_female" },
+    enano            = { "achievement_character_dwarf_male", "achievement_character_dwarf_female" },
+    elfo_noche       = { "achievement_character_nightelf_male", "achievement_character_nightelf_female" },
+    semielfo         = { "eps_wc3h_highelfrangermale", "eps_wc3h_highelfbaddiegirl" },
+    gnomo            = { "gnome_m", "gnome_f" },
+    draenei          = { "achievement_character_draenei_male", "achievement_character_draenei_female" },
+    huargen          = { "achievement_worganhead", "ability_worgen_darkflight" },
+    orco             = { "achievement_character_orc_male", "achievement_character_orc_female" },
+    renegado         = { "forsaken_m", "forsaken_f" },
+    tauren           = { "tauren_m", "tauren_f" },
+    trol             = { "troll_m", "troll_f" },
+    elfo_sangre      = { "achievement_character_bloodelf_male", "achievement_character_bloodelf_female" },
+    goblin           = { "achievement_goblinhead", "achievement_femalegoblinhead" },
+    pandaren         = { "w3reforgedpandarenbrewmaster", "achievement_character_pandaren_female" },
+    nocheterna       = { "nightborne_m", "nightborne_f" },
+    elfo_vacio       = { "voidelf_m", "voidelf_f" },
+    vulpera          = { "vulpera_m", "vulpera_f" },
+}
+
+-- Iconos de subraza, tambien de la web. Van anidados por raza porque los ids de subraza se
+-- repiten entre razas (renegado tiene "humano" y "elfo").
+local SUBRACE_FRAME_ICONS = {
+    enano = {
+        forjaz           = { "dwarf_m", "dwarf_f" },
+        martillo_salvaje = { "eps_wc3h_wildhammermale", "eps_hots_dwarfshaman" },
+        hierro_negro     = { "darkiron_m", "darkiron_f" },
+    },
+    elfo_noche = {
+        altonato         = { "eps_wc3h_nightelfmalewarrior", "eps_wc3h_nightelfcharm" },
+    },
+    gnomo = {
+        gnomeregan       = { "achievement_character_gnome_male", "achievement_character_gnome_female" },
+        mecagnomo        = { "mechagnome_m", "mechagnome_f" },
+    },
+    draenei = {
+        exodar           = { "draenei_m", "draenei_f" },
+        forjado_luz      = { "lightforged_m", "lightforged_f" },
+        tabido           = { "broken", "eps_wc3_brokendraeneimage" },
+        man_ari          = { "eps_wc3h_eredardiabolist", "achievement_boss_argus_femaleeredar" },
+    },
+    orco = {
+        cazadores        = { "eps_wc3_orcwarlock", "eps_wc3h_orchuntress" },
+        misticos         = { "eps_wc3_orcwarlockred", "eps_wc3h_orcwarden" },
+        guerreros        = { "eps_wc3h_orcwarlord", "eps_wc3h_orcfemalewarrior" },
+    },
+    renegado = {
+        humano           = { "achievement_character_undead_male", "achievement_character_undead_female" },
+        elfo             = { "eps_wc3h_forsakenhunter", "eps_wc3h_undeadsanlaynbaddiegirl" },
+    },
+    tauren = {
+        mulgore          = { "achievement_character_tauren_male", "achievement_character_tauren_female" },
+        monte_alto       = { "highmountain_m", "highmountain_f" },
+        taunka           = { "eps_wc3h_taunkachieftain", "inv_misc_head_tauren_02" },
+    },
+    trol = {
+        jungla           = { "achievement_character_troll_male", "achievement_character_troll_female" },
+        zandalari        = { "inv_zandalarimalehead", "inv_zandalarifemalehead" },
+        bosque           = { "eps_wc3_foresttrollpriest", "eps_wc3h_trolltrollpriestessfemale" },
+        hielo            = { "eps_wc3_icetrollshadowpriest", "eps_wc3h_trollpeasant" },
+    },
 }
 -- Color de spec por subclase (clave normalizada sin tildes).
 --
@@ -104,19 +160,44 @@ local SUBCLASS_SPEC_COLORS = {
 local ICON_GENERIC = "inv_misc_note_01"
 local ICON_TRAIT_DEFAULT = "inv_misc_note_01"
 
--- Icono del frame de raza segun sexo del jugador (2=masculino, 3=femenino); generico si no hay dato.
-local function RaceFrameIcon(raceId)
-    local entry = RACE_FRAME_ICONS[tostring(raceId or ""):lower()]
-    if not entry then return ICON_GENERIC end
+-- Icono de origen segun sexo del jugador (2=masculino, 3=femenino). La subraza tiene prioridad
+-- cuando trae arte propio: es lo que da nombre a la tarjeta y al frame, asi que el icono debe
+-- acompanarla. Si no lo tiene, cae a la raza; si tampoco, al generico. Nunca uno inventado.
+local function RaceFrameIcon(raceId, subraceId)
+    local race = tostring(raceId or ""):lower()
     local female = UnitSex and UnitSex("player") == 3
+    local entry
+    local sub = tostring(subraceId or ""):lower()
+    if sub ~= "" and SUBRACE_FRAME_ICONS[race] then
+        entry = SUBRACE_FRAME_ICONS[race][sub]
+    end
+    entry = entry or RACE_FRAME_ICONS[race]
+    if not entry then return ICON_GENERIC end
     return entry[female and 2 or 1] or entry[1]
 end
 
 -- Icono de raza para la UI (rejilla del asistente de creacion). Se expone desde aqui para no
--- duplicar RACE_FRAME_ICONS: esta tabla es la unica fuente y ya resuelve el sexo del jugador.
--- Las razas sin entrada devuelven el icono generico, nunca uno inventado.
-function API.GetRaceIcon(raceId)
-    return RaceFrameIcon(raceId)
+-- duplicar las tablas: son la unica fuente y ya resuelven el sexo del jugador.
+function API.GetRaceIcon(raceId, subraceId)
+    return RaceFrameIcon(raceId, subraceId)
+end
+
+-- Pares { raceId, subraceId or nil, icono } de todo el arte declarado. Solo lo consume el
+-- diagnostico que comprueba que el cliente tiene cada textura.
+function API.GetAllOriginIcons()
+    local out = {}
+    for raceId, entry in pairs(RACE_FRAME_ICONS) do
+        out[#out + 1] = { raceId, nil, entry[1] }
+        if entry[2] ~= entry[1] then out[#out + 1] = { raceId, nil, entry[2] } end
+    end
+    for raceId, subs in pairs(SUBRACE_FRAME_ICONS) do
+        for subId, entry in pairs(subs) do
+            out[#out + 1] = { raceId, subId, entry[1] }
+            if entry[2] ~= entry[1] then out[#out + 1] = { raceId, subId, entry[2] } end
+        end
+    end
+    table.sort(out, function(a, b) return tostring(a[3]) < tostring(b[3]) end)
+    return out
 end
 
 -- Icono generico para elementos sin arte propio (p.ej. trasfondos).
@@ -125,6 +206,18 @@ function API.GetGenericIcon()
 end
 
 -- Color de spec de una subclase; si no hay dato, cae al color de la clase.
+-- Nombre de raza/subraza segun el sexo del PJ. La web publica `nameF` para las 17 razas y 22
+-- subrazas, y se importo a `HarfordDnDRaces` (tools/codice/importar_femenino.py). Solo lo llevan
+-- las que CAMBIAN: Draenei, Tauren, Troll, Goblin, Pandaren y Vulpera son invariables.
+-- El lector del propio addon (`Masculinize` en HarfordDnDRaces) ya daba por hecho que el About
+-- viene en femenino; hasta ahora el generador nunca lo escribia asi.
+local function NombreDeOrigen(def)
+    if type(def) ~= "table" then return "" end
+    local femenino = UnitSex and UnitSex("player") == 3
+    if femenino and def.nameF and def.nameF ~= "" then return tostring(def.nameF) end
+    return tostring(def.name or "")
+end
+
 local function SubclassColor(subName, classHex)
     local key = HarfordClassColors and HarfordClassColors.StripAccents
         and HarfordClassColors.StripAccents(tostring(subName or "")):lower() or tostring(subName or ""):lower()
@@ -255,7 +348,11 @@ end
 
 local function ChoiceText(feature, choices)
     local selected = choices[tostring(feature.id or "")] or {}
-    if #selected == 0 then return "" end
+    -- Un rasgo con `choice` SIEMPRE dice en que quedo: sin nada elegido, "pendiente". Callarlo
+    -- dejaba el volcado de opciones (Defensa, Duelo, Gran Arma...) como si las tuviera todas.
+    if #selected == 0 then
+        return type(feature.choice) == "table" and " Eleccion: pendiente." or ""
+    end
     local labels = {}
     for _, optionId in ipairs(selected) do
         local option = HarfordDnDBook.GetChoiceOption(feature, optionId)
@@ -271,6 +368,10 @@ local MARKER_PATTERNS = {
     "^versatilidad", "^competencias", "^competencia con herramientas", "^equipo$",
 }
 local function IsMarkerFeature(feature)
+    -- Marcadores de subclase ("Arquetipo marcial", "Estudio Magico", "Camino Sagrado"...): mismo
+    -- criterio que el Libro, que ya los oculta. No son rasgos, solo anuncian que eliges subclase.
+    local Book = _G.HarfordCharacterBook
+    if Book and Book.IsSubclassMarker and Book.IsSubclassMarker(feature) then return true end
     local name = tostring(feature and feature.name or "")
     if HarfordClassColors and HarfordClassColors.StripAccents then name = HarfordClassColors.StripAccents(name) end
     name = name:lower()
@@ -310,8 +411,18 @@ local function BuildTraitLines(traits, draft)
             local description = HarfordDnDBookText and HarfordDnDBookText.GetFeatureDescription
                 and HarfordDnDBookText.GetFeatureDescription(feature, entry.classId, entry.source, draft.backgroundId, true)
                 or feature.description
-            lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "
-                .. tostring(feature.name or "Rasgo") .. "{/h2}"
+            if feature.type == "maniobra" then
+                local hexClase = COL_TAG
+                local clase = entry.classId and HarfordDnDBook and HarfordDnDBook.GetClass
+                    and HarfordDnDBook.GetClass(entry.classId)
+                if clase and clase.name then hexClase = ClassHex(clase.name) end
+                lines[#lines + 1] = "{h3}{icon:" .. FeatureIconName(feature) .. ":25}{col:" .. hexClase
+                    .. "} Maniobra{/col}{col:" .. COL_NEG .. "} "
+                    .. tostring(feature.name or "Maniobra") .. "{/col}{/h3}"
+            else
+                lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "
+                    .. tostring(feature.name or "Rasgo") .. "{/h2}"
+            end
             lines[#lines + 1] = ColorizeDescription(Trim(description)) .. ChoiceText(feature, draft.choices)
         end
     end
@@ -319,23 +430,40 @@ local function BuildTraitLines(traits, draft)
 end
 
 -- Rasgos (clase + subclase) de UNA entrada de clase, para su propio frame coloreado.
-local function GetClassEntryTraits(entry)
-    local out = {}
+-- Devuelve los rasgos de CLASE y los de SUBCLASE POR SEPARADO: van a frames distintos. El orden
+-- canonico es [Clase, Especializacion <Sub>, Magia <Clase>, Magia <Sub>] y asi lo tienen los 45
+-- perfiles reales; antes se escribian todos mezclados en el frame de la clase.
+local function OpcionesElegidasDelDraft(draft)
+    local elegidas = {}
+    for _, seleccion in pairs((draft and draft.choices) or {}) do
+        for _, optId in ipairs(seleccion or {}) do elegidas[tostring(optId)] = true end
+    end
+    return elegidas
+end
+
+local function GetClassEntryTraits(entry, elegidas)
+    local function Concedido(feature)
+        local req = feature and feature.requiresOption
+        if not req then return true end
+        return elegidas ~= nil and elegidas[tostring(req)] == true
+    end
+    local base, sub = {}, {}
     local class = HarfordDnDBook.GetClass(entry.classId)
+    local subclass
     if class then
         for _, feature in ipairs(class.features or {}) do
-            if (tonumber(feature.level) or 99) <= entry.level then
-                out[#out + 1] = { feature = feature, source = "Clase", classId = class.id }
+            if (tonumber(feature.level) or 99) <= entry.level and Concedido(feature) then
+                base[#base + 1] = { feature = feature, source = "Clase", classId = class.id }
             end
         end
-        local subclass = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
+        subclass = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
         for _, feature in ipairs((subclass and subclass.features) or {}) do
-            if (tonumber(feature.level) or 99) <= entry.level then
-                out[#out + 1] = { feature = feature, source = "Subclase", classId = class.id }
+            if (tonumber(feature.level) or 99) <= entry.level and Concedido(feature) then
+                sub[#sub + 1] = { feature = feature, source = "Subclase", classId = class.id }
             end
         end
     end
-    return out, class
+    return base, class, sub, subclass
 end
 
 function API.Validate(draft)
@@ -395,22 +523,105 @@ end
 -- Frames de magia (uno por clase lanzadora del PJ): cabecera "Ataque Conjuro/DC Conjuro" + conjuros
 -- agrupados por nivel (Trucos, Nivel 1...). Lee los conjuros conocidos/preparados/libro del compendio
 -- segun el modo de la clase. Vacio al crear (los conjuros se eligen despues en el compendio).
-local function BuildMagicFrames(profileName)
+local function BuildMagicFrames(profileName, idsRaciales)
     local C = _G.HarfordCompendioAPI
     if not (C and C.GetSpellById and C.GetClassCasting) then return {} end
     local Calc = HarfordDnDCalc
     local pb = (Calc and Calc.GetSpellPB and Calc.GetSpellPB()) or (Calc and Calc.GetPB and Calc.GetPB()) or 2
-    local frames = {}
+    -- Indexado por POSICION de la clase en la progresion, para poder intercalarlos en su bloque.
+    local porEntrada = {}
     local classLevels = (HarfordDnDProgression and HarfordDnDProgression.GetClassLevels
         and HarfordDnDProgression.GetClassLevels(profileName)) or {}
-    for _, entry in ipairs(classLevels) do
+
+    local opcionesElegidas
+    local function OpcionElegida(optionId)
+        if not opcionesElegidas then
+            opcionesElegidas = {}
+            local data = (HarfordDnDProgression and HarfordDnDProgression.Get
+                and HarfordDnDProgression.Get(profileName)) or {}
+            for _, seleccion in pairs(data.choices or {}) do
+                for _, optId in ipairs(seleccion or {}) do opcionesElegidas[tostring(optId)] = true end
+            end
+        end
+        return opcionesElegidas[tostring(optionId)] == true
+    end
+
+    -- Clave de lanzamiento de cada clase (la de CLASS_CASTING) y cuantas lanzan en total.
+    local claveDeEntrada, lanzadoras = {}, 0
+    for i, entry in ipairs(classLevels) do
+        local class = HarfordDnDBook.GetClass(entry.classId)
+        if class then
+            local clave = C.GetClassCasting(class.name) and class.name or nil
+            if not clave then
+                local sub = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
+                local compuesta = sub and (class.name .. " " .. sub.name)
+                if compuesta and C.GetClassCasting(compuesta) then clave = compuesta end
+            end
+            if clave then
+                claveDeEntrada[i] = clave
+                lanzadoras = lanzadoras + 1
+            end
+        end
+    end
+
+    -- Que clase concede cada conjuro (indice de la entrada), respetando nivel y `requiresOption`.
+    local concedidoPor = {}
+    for i, entry in ipairs(classLevels) do
+        local sub = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
+        for _, feature in ipairs((sub and sub.features) or {}) do
+            if (tonumber(feature.level) or 99) <= (tonumber(entry.level) or 0)
+                and (not feature.requiresOption or OpcionElegida(feature.requiresOption)) then
+                for _, spellId in ipairs(feature.grantedSpells or {}) do
+                    if concedidoPor[spellId] == nil then concedidoPor[spellId] = i end
+                end
+            end
+        end
+    end
+
+    local duenoDe = {}
+
+    -- Con UN solo lanzador no se filtra: un conjuro sin etiquetar (fuente propia, custom de
+    -- Epsilon) se perderia, y no hay ambiguedad que resolver.
+    local function EsDeLaClave(spell, clave)
+        if lanzadoras < 2 then return true end
+        local limpia = HarfordClassColors and HarfordClassColors.StripAccents
+            and HarfordClassColors.StripAccents(tostring(clave)):lower() or tostring(clave):lower()
+        local propia = false
+        for _, etiqueta in ipairs(spell.classes or {}) do
+            local e = HarfordClassColors and HarfordClassColors.StripAccents
+                and HarfordClassColors.StripAccents(tostring(etiqueta)):lower() or tostring(etiqueta):lower()
+            if e == limpia then return true end
+            for j, otra in pairs(claveDeEntrada) do
+                local o = HarfordClassColors and HarfordClassColors.StripAccents
+                    and HarfordClassColors.StripAccents(tostring(otra)):lower() or tostring(otra):lower()
+                if e == o then propia = true end
+            end
+        end
+        -- Si no lo reclama NINGUNA de sus clases lanzadoras, no se tira: va a la primera.
+        if propia then return false end
+        for j = 1, #classLevels do
+            if claveDeEntrada[j] then return claveDeEntrada[j] == clave end
+        end
+        return true
+    end
+    for indiceClase, entry in ipairs(classLevels) do
+        local frames = porEntrada[indiceClase] or {}
+        porEntrada[indiceClase] = frames
         local class = HarfordDnDBook.GetClass(entry.classId)
         if class then
             local casting = C.GetClassCasting(class.name)
+            -- Hay clases que NO lanzan de por si y solo lanzan por su subclase (Picaro Sutileza,
+            -- Chaman Mejora). Ahi los conjuros son de la SUBCLASE: los perfiles reales tienen
+            -- "Magia Sutileza" x3 y ni un solo "Magia Picaro".
+            local soloSubclase = false
             if not casting then
-                local subclass = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
-                if subclass then casting = C.GetClassCasting(class.name .. " " .. subclass.name) end
+                local sub = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
+                if sub then
+                    casting = C.GetClassCasting(class.name .. " " .. sub.name)
+                    soloSubclase = casting ~= nil
+                end
             end
+            local subclass = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
             if casting then
                 -- Union de fuentes: knownSpells lleva SIEMPRE los trucos (y, en known casters, todo);
                 -- ademas el pool del modo (libro / preparados). Set por id, sin duplicados.
@@ -419,23 +630,43 @@ local function BuildMagicFrames(profileName)
                 collect(C.GetKnownSpells and C.GetKnownSpells())
                 if casting.mode == "wizard_book" then collect(C.GetWizardBook and C.GetWizardBook())
                 elseif casting.mode == "prepared" then collect(C.GetPreparedSpells and C.GetPreparedSpells()) end
-                local byLevel = {}
+                local claveLanzamiento = claveDeEntrada[indiceClase]
+                -- Dos cubos: los conjuros propios de la clase y los concedidos por la subclase.
+                -- El corte NO es trucos/niveles: hay perfiles reales con "Nivel 1" en los dos
+                -- frames (Cody, Caballero de la Muerte Sangre).
+                local porClase, porSub = {}, {}
                 for spellId in pairs(ids) do
                     local spell = C.GetSpellById(spellId)
-                    if spell then
+                    local quienLoConcede = concedidoPor[spellId]
+                    -- Racial y sin clase que lo conceda: es del frame de la raza, no de este.
+                    if quienLoConcede == nil and idsRaciales and idsRaciales[spellId] then
+                        spell = nil
+                    end
+                    -- Un conjuro concedido va SIEMPRE al frame de quien lo concede, sin pasar por
+                    -- el filtro por clase; el resto se reparte por etiqueta.
+                    local destino
+                    if quienLoConcede ~= nil then
+                        if quienLoConcede == indiceClase then destino = porSub end
+                    elseif EsDeLaClave(spell, claveLanzamiento) then
+                        if duenoDe[spellId] == nil then duenoDe[spellId] = indiceClase end
+                        if duenoDe[spellId] == indiceClase then destino = porClase end
+                    end
+                    if spell and destino then
                         local lvl = tonumber(spell.level) or 0
-                        byLevel[lvl] = byLevel[lvl] or {}
-                        byLevel[lvl][#byLevel[lvl] + 1] = spell
+                        destino[lvl] = destino[lvl] or {}
+                        destino[lvl][#destino[lvl] + 1] = spell
                     end
                 end
-                local levels = {}
-                for lvl in pairs(byLevel) do levels[#levels + 1] = lvl end
-                if #levels > 0 then
+                local abilityMod = (Calc and Calc.GetAbilityMod and Calc.GetAbilityMod(casting.ability)) or 0
+                local hex = ClassHex(class.name)
+
+                local function EscribirFrame(byLevel, titulo, colorTitulo, icono)
+                    local levels = {}
+                    for lvl in pairs(byLevel) do levels[#levels + 1] = lvl end
+                    if #levels == 0 then return end
                     table.sort(levels)
-                    local abilityMod = (Calc and Calc.GetAbilityMod and Calc.GetAbilityMod(casting.ability)) or 0
-                    local hex = ClassHex(class.name)
                     local out = {
-                        "{h1:c}Magia {col:" .. hex .. "}" .. tostring(class.name) .. "{/col}{/h1}",
+                        "{h1:c}Magia {col:" .. colorTitulo .. "}" .. tostring(titulo) .. "{/col}{/h1}",
                         "{h3:c}Ataque Conjuro{col:" .. COL_DERIVED .. "} +" .. (pb + abilityMod)
                             .. " {/col}{col:" .. COL_TAG .. "}||{/col} DC Conjuro{col:" .. COL_DERIVED .. "} "
                             .. (8 + pb + abilityMod) .. "{/col}{/h3}",
@@ -451,12 +682,29 @@ local function BuildMagicFrames(profileName)
                         end
                         for _, spell in ipairs(spells) do out[#out + 1] = FormatSpellEntry(spell) end
                     end
-                    frames[#frames + 1] = { IC = ICON_MAGIC_FRAME, TX = table.concat(out, "\n") }
+                    frames[#frames + 1] = { IC = icono or ICON_MAGIC_FRAME, TX = table.concat(out, "\n") }
+                end
+
+                local iconoSub = (HarfordDnDData and HarfordDnDData.GetSubclassIcon
+                    and HarfordDnDData.GetSubclassIcon(class.id, subclass and subclass.id))
+                    or ICON_MAGIC_FRAME
+                if soloSubclase and subclass then
+                    -- Todo lo que lanza lo concede la subclase: un unico frame, con su nombre.
+                    for lvl, lista in pairs(porClase) do
+                        porSub[lvl] = porSub[lvl] or {}
+                        for _, sp in ipairs(lista) do porSub[lvl][#porSub[lvl] + 1] = sp end
+                    end
+                    EscribirFrame(porSub, subclass.name, SubclassColor(subclass.name, hex), iconoSub)
+                else
+                    EscribirFrame(porClase, class.name, hex, ICON_MAGIC_FRAME)
+                    if subclass then
+                        EscribirFrame(porSub, subclass.name, SubclassColor(subclass.name, hex), iconoSub)
+                    end
                 end
             end
         end
     end
-    return frames
+    return porEntrada
 end
 
 -- Conjuros concedidos por la RAZA (spellGrants/cantripSpellIds de raza+subraza). Devuelve la lista
@@ -490,23 +738,21 @@ end
 -- conjuros concedidos por la raza. Devuelve nil si la raza no concede conjuros.
 -- Frame "Profesiones" del About: una linea por profesion conocida, con icono, tier y skill.
 -- Mismo formato visual que el resto de frames (h1 centrado + lineas con {icon}).
-local function BuildProfessionsFrame()
+-- Profesiones conocidas como lineas de la seccion "Competencia": "- Herreria {col:...}Aprendiz{/col}".
+-- Solo el rango, sin el numero de skill: el About es la ficha de cara al RP, no el contador.
+local function ProfessionProficiencyLines()
     local P = _G.HarfordProfessions
     if not (P and P.GetProfessions and P.KnowsProfession and P.EffectiveSkill and P.GetTierName) then
-        return nil
+        return {}
     end
     local lines = {}
     for _, def in ipairs(P.GetProfessions() or {}) do
         if P.KnowsProfession(def.id) then
-            local skill = P.EffectiveSkill(def.id)
-            local icon = tostring(def.icon or "inv_misc_note_01"):lower()
-            lines[#lines + 1] = string.format("{icon:%s:20} %s {col:%s}%s (%d){/col}",
-                icon, tostring(def.name), COL_TAG, P.GetTierName(skill), skill)
+            lines[#lines + 1] = "- " .. tostring(def.name)
+                .. " {col:" .. COL_TAG .. "}" .. tostring(P.GetTierName(P.EffectiveSkill(def.id))) .. "{/col}"
         end
     end
-    if #lines == 0 then return nil end
-    table.insert(lines, 1, "{h1:c}Profesiones{/h1}")
-    return { IC = "trade_blacksmithing", TX = table.concat(lines, string.char(10)) }
+    return lines
 end
 
 local function BuildRacialMagicFrame(draft)
@@ -514,7 +760,7 @@ local function BuildRacialMagicFrame(draft)
     if #spells == 0 then return nil end
     local race = HarfordDnDRaces.GetRace(draft.raceId)
     local subrace = HarfordDnDRaces.GetSubrace(draft.raceId, draft.subraceId)
-    local raceName = tostring((subrace and subrace.name) or (race and race.name) or "")
+    local raceName = NombreDeOrigen(subrace) ~= "" and NombreDeOrigen(subrace) or NombreDeOrigen(race)
     local Calc = HarfordDnDCalc
     local pb = (Calc and Calc.GetSpellPB and Calc.GetSpellPB()) or (Calc and Calc.GetPB and Calc.GetPB()) or 2
     local mod = (ability and Calc and Calc.GetAbilityMod and Calc.GetAbilityMod(ability)) or 0
@@ -604,6 +850,11 @@ function API.BuildAbout(draft, profileName)
         ficha[#ficha + 1] = ""
         for _, t in ipairs(toolKeys) do ficha[#ficha + 1] = "- " .. tostring(t) end
     end
+    local profLines = ProfessionProficiencyLines()
+    if #profLines > 0 then
+        ficha[#ficha + 1] = ""
+        for _, l in ipairs(profLines) do ficha[#ficha + 1] = l end
+    end
     -- Salvaciones competentes.
     local saveList = {}
     for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
@@ -630,19 +881,73 @@ function API.BuildAbout(draft, profileName)
         ficha[#ficha + 1] = "{h3}Habilidades{/h3}"
         for _, l in ipairs(skillLines) do ficha[#ficha + 1] = l end
     end
+
+    -- Idiomas. El importador los lee desde siempre, pero nadie los escribia: el viaje de ida
+    -- y vuelta estaba roto por ese lado.
+    do
+        -- Fuente unica: los derivados de raza/trasfondo/clase/elecciones MAS los importados. Leer
+        -- solo lo importado dejaba la seccion vacia en una ficha creada con el asistente.
+        local idiomas = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetLanguages
+            and HarfordDnDFeatureEffects.GetLanguages(profileName)) or {}
+        if #idiomas > 0 then
+            ficha[#ficha + 1] = ""
+            ficha[#ficha + 1] = "{h3}Idiomas{/h3}"
+            for _, l in ipairs(idiomas) do ficha[#ficha + 1] = "- " .. l end
+        end
+    end
+
+    -- Equipo: el resto de lo que lleva, detras de Idiomas. El arma y la armadura ya salen
+    -- arriba en sus propias lineas, asi que aqui va lo demas. Es una SECCION del frame Ficha,
+    -- no un frame propio.
+    do
+        local lista = (HarfordDnDProgression and HarfordDnDProgression.GetEquipmentList
+            and HarfordDnDProgression.GetEquipmentList(profileName)) or {}
+        -- Lo equipado ya sale arriba en Armadura y Armas: aqui va solo el resto.
+        local _, equipo = API.SplitStartingEquipment(lista)
+        if #equipo > 0 then
+            ficha[#ficha + 1] = ""
+            ficha[#ficha + 1] = "{h3}Equipo{/h3}"
+            for _, item in ipairs(equipo) do ficha[#ficha + 1] = "- " .. tostring(item) end
+        end
+    end
+
     frames[#frames + 1] = { IC = ICON_FICHA_FRAME, TX = table.concat(ficha, "\n") }
+
+    -- Dotes del personaje, al final del frame de RAZA (ver el bloque de abajo).
+    local function BuildFeatLines(prof)
+        local F = HarfordDnDFeats
+        local Pg = HarfordDnDProgression
+        if not (F and F.GetFeat and Pg and Pg.GetFeats) then return "" end
+        local out = {}
+        for _, featId in ipairs(Pg.GetFeats(prof) or {}) do
+            local def = F.GetFeat(featId)
+            if def then
+                local icono = FeatureIconName((def.traits or {})[1])
+                out[#out + 1] = "{h2}{icon:" .. icono .. ":25}{col:" .. COL_RACIAL
+                    .. "} Dote{/col} " .. tostring(def.name) .. "{/h2}"
+                local cuerpo = F.GetFeatTraits and BuildTraitLines(F.GetFeatTraits({ featId }), draft) or ""
+                if cuerpo ~= "" then out[#out + 1] = cuerpo end
+            end
+        end
+        return table.concat(out, string.char(10))
+    end
 
     -- ===== Frame 2: RAZA ===== (titulo centrado + rasgos; sin linea "Raza:", como los perfiles reales)
     do
-        local raceName = tostring(subrace and subrace.name or race.name)
+        local raceName = NombreDeOrigen(subrace or race)
         local lines = { "{h1:c}" .. raceName .. "{/h1}" }
         local body = BuildTraitLines(GetRaceTraits(draft), draft)
         if body ~= "" then lines[#lines + 1] = body end
-        frames[#frames + 1] = { IC = RaceFrameIcon(race.id), TX = table.concat(lines, "\n") }
+        -- Las dotes van AQUI, detras de los rasgos raciales: es donde las tienen los perfiles
+        -- reales (5 de 5 en los {PJ}) y donde las busca ResolveFeatsFromAbout al recargar.
+        local dotes = BuildFeatLines(profileName)
+        if dotes ~= "" then lines[#lines + 1] = dotes end
+        frames[#frames + 1] = { IC = RaceFrameIcon(race.id, subrace and subrace.id), TX = table.concat(lines, "\n") }
     end
 
     -- ===== Frame 3: TRASFONDO ===== (nombre coloreado teal como en los perfiles)
-    do
+    -- Sin trasfondo no hay frame: no todos los personajes tienen uno.
+    if bg then
         local lines = { "{h1:c}Trasfondo {col:" .. COL_RACIAL .. "}" .. tostring(bg.name) .. "{/col}{/h1}" }
         local desc = Trim(bg.desc)
         if desc ~= "" then lines[#lines + 1] = desc end
@@ -651,30 +956,47 @@ function API.BuildAbout(draft, profileName)
         frames[#frames + 1] = { IC = ICON_GENERIC, TX = table.concat(lines, "\n") }
     end
 
-    -- ===== Frames de CLASE (uno por clase, con titulo coloreado) =====
-    for _, entry in ipairs(draft.classes or {}) do
-        local traits, class = GetClassEntryTraits(entry)
+    -- ===== Bloques de CLASE: [Clase, Especializacion <Sub>, Magia <Clase>, Magia <Sub>] =====
+    local opcionesDelDraft = OpcionesElegidasDelDraft(draft)
+    local idsRaciales = {}
+    for _, entrada in ipairs((CollectRacialSpells(draft)) or {}) do
+        local sp = entrada and entrada.spell
+        if sp and sp.id then idsRaciales[sp.id] = true end
+    end
+    local magiaPorClase = BuildMagicFrames(profileName, idsRaciales)
+    for indiceClase, entry in ipairs(draft.classes or {}) do
+        local traits, class, subTraits, subclass = GetClassEntryTraits(entry, opcionesDelDraft)
         local body = BuildTraitLines(traits, draft)
         if class and body ~= "" then
             local hex = ClassHex(class.name)
             local lines = { "{h1:c}{col:" .. hex .. "}" .. tostring(class.name) .. "{/col}{/h1}", body }
             frames[#frames + 1] = { IC = "classicon_" .. ClassIconToken(class.name), TX = table.concat(lines, "\n") }
         end
+        -- Frame propio de la especializacion, justo detras del de su clase.
+        if class and subclass then
+            local subBody = BuildTraitLines(subTraits, draft)
+            if subBody ~= "" then
+                local hex = ClassHex(class.name)
+                local lines = {
+                    "{h1:c}Especializacion {col:" .. SubclassColor(subclass.name, hex) .. "}"
+                        .. tostring(subclass.name) .. "{/col}{/h1}",
+                    subBody,
+                }
+                local icono = HarfordDnDData and HarfordDnDData.GetSubclassIcon
+                    and HarfordDnDData.GetSubclassIcon(class.id, subclass.id)
+                frames[#frames + 1] = {
+                    IC = icono or ("classicon_" .. ClassIconToken(class.name)),
+                    TX = table.concat(lines, "\n"),
+                }
+            end
+        end
+        -- Magia de esta clase (primero la de la clase, luego la que concede su subclase).
+        for _, frame in ipairs(magiaPorClase[indiceClase] or {}) do frames[#frames + 1] = frame end
     end
-
-    -- ===== Frames de MAGIA (uno por clase lanzadora, si el PJ tiene conjuros) =====
-    for _, frame in ipairs(BuildMagicFrames(profileName)) do frames[#frames + 1] = frame end
 
     -- ===== Frame de MAGIA RACIAL (si la raza concede conjuros, p.ej. Detectar magia) =====
     local racialFrame = BuildRacialMagicFrame(draft)
     if racialFrame then frames[#frames + 1] = racialFrame end
-
-    -- ===== Frame de PROFESIONES (solo si conoce alguna) =====
-    -- Lista las profesiones conocidas (competencia de herramienta o skill > 0) con su tier y
-    -- skill. Al CREAR un PJ suele salir por las competencias de dote/trasfondo (skill 1 = base);
-    -- al regenerar el About (`/harford debug run abouttrp3`) refleja el skill real acumulado.
-    local profFrame = BuildProfessionsFrame()
-    if profFrame then frames[#frames + 1] = profFrame end
 
     return frames
 end
@@ -682,10 +1004,207 @@ end
 -- Regenera el About TRP3 desde el estado ACTUAL de la ficha (progresion + conjuros del compendio),
 -- reconstruyendo un draft equivalente. Es la via para que aparezcan las secciones de magia despues
 -- de elegir conjuros (la creacion solo escribe el About inicial, sin conjuros).
-function API.RewriteAbout(profileName)
-    profileName = tostring(profileName or (UnitName and UnitName("player")) or "default")
+-- Huellas de los frames que Harford escribio en el About, anidadas en el perfil igual que
+-- `_equipment` o `_progression`. Sirven para reconocer en la proxima reescritura cuales son suyos
+-- y cuales ha anadido el jugador, y asi no borrarle contenido.
+local function HashSlot(name, clave, nuevas)
+    HarfordDnDPersistStore = HarfordDnDPersistStore or {}
+    if type(HarfordDnDPersistStore.profiles) ~= "table" then HarfordDnDPersistStore.profiles = {} end
+    local perfiles = HarfordDnDPersistStore.profiles
+    if type(perfiles[name]) ~= "table" then perfiles[name] = {} end
+    if nuevas then
+        perfiles[name][clave] = (#nuevas > 0) and nuevas or nil
+        return nuevas
+    end
+    local guardadas = perfiles[name][clave]
+    return type(guardadas) == "table" and guardadas or {}
+end
+
+-- Huellas de los frames REGENERADOS (ficha creada con el asistente).
+local function AboutFrameHashes(name, nuevas)
+    return HashSlot(name, "_aboutFrames", nuevas)
+end
+
+-- Devuelve true si Harford puede reescribir el About sin pisarle nada al jugador: o esta vacio,
+-- o al menos uno de los frames que hay lo escribio Harford (su huella casa con las guardadas).
+--
+-- Una ficha llevada a mano NUNCA casa, asi que la subida se aplica solo en la mecanica del addon
+-- y se le pide al jugador que actualice su TRP3. Es preferible a regenerarle el perfil por su
+-- cuenta o a dejarle frames duplicados.
+-- Anade al About el bloque del nivel recien ganado sin tocar nada mas. Reescribe SIEMPRE el mismo
+-- frame propio, acumulando niveles, en vez de dejar uno nuevo por cada subida.
+-- Rangos fijos de los frames que no pertenecen a ninguna clase.
+local RANGO_FICHA, RANGO_RAZA, RANGO_TRASFONDO = 1, 2, 3
+local RANGO_RACIAL = 9000
+
+-- Quita un prefijo de cabecera ("Magia ", "Especializacion ", "Rasgos ") y devuelve el resto.
+-- La comparacion es sin acentos y en minusculas, porque los perfiles reales escriben
+-- "Especializacion" con tilde y con mayuscula inicial.
+local function SinPrefijo(titulo, prefijo)
+    local t = tostring(titulo or "")
+    local limpioT = HarfordClassColors and HarfordClassColors.StripAccents
+        and HarfordClassColors.StripAccents(t):lower() or t:lower()
+    local limpioP = HarfordClassColors and HarfordClassColors.StripAccents
+        and HarfordClassColors.StripAccents(prefijo):lower() or tostring(prefijo):lower()
+    if limpioT:sub(1, #limpioP) ~= limpioP then return nil end
+    return (t:sub(#limpioP + 1):gsub("^%s+", ""))
+end
+
+-- Rango de una cabecera dentro del orden canonico, o nil si no se reconoce (frames propios del
+-- jugador: lore, notas, relatos...). `clases` es la progresion, para saber a que bloque pertenece.
+-- Cabeceras de frames EXTRA de una clase: no la nombran, asi que heredan el bloque del frame
+-- reconocido inmediatamente anterior (`rangoPrevio`).
+local EXTRAS_DE_CLASE = {
+    ["libro de conjuros"] = true,
+    ["cambio de forma"] = true,
+    ["estilo de combate"] = true,
+}
+
+local function TituloRango(titulo, clases, raceId, rangoPrevio)
+    local t = tostring(titulo or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    if t == "" then return nil end
+    local B, R = HarfordDnDBook, HarfordDnDRaces
+
+    local function RangoClase(texto, delta)
+        if not (B and B.FindClassIdByText) then return nil end
+        for i, e in ipairs(clases or {}) do
+            if B.FindClassIdByText(texto) == e.classId then return 10 * i + delta end
+        end
+        return nil
+    end
+    local function RangoSubclase(texto, delta)
+        if not (B and B.FindSubclassIdByText) then return nil end
+        for i, e in ipairs(clases or {}) do
+            local sub = B.FindSubclassIdByText(e.classId, texto)
+            if sub and sub ~= "" and (e.subclassId == "" or sub == e.subclassId) then
+                return 10 * i + delta
+            end
+        end
+        return nil
+    end
+    local function EsRaza(texto)
+        if not (R and R.FindRaceIdByText) then return false end
+        -- La cabecera puede traer raza y subraza juntas ("Enano Martillo Salvaje"), y el
+        -- buscador ya tolera genero ("Renegada Humana", "Gnoma").
+        -- Un titulo que resuelve a una raza conocida ES un frame de raza, coincida o no con la
+        -- del personaje. Exigir la coincidencia dejaba fuera cabeceras de raza perfectamente
+        -- validas cuando la raza deducida del perfil no era la misma (o no se dedujo bien), y
+        -- equivocarse aqui es inofensivo: como mucho se ancla tras un frame de raza.
+        if (R.FindRaceIdByText(texto) or "") ~= "" then return true end
+        return raceId and R.FindSubraceIdByText and (R.FindSubraceIdByText(raceId, texto) or "") ~= ""
+    end
+
+    if HarfordClassColors and HarfordClassColors.StripAccents
+        and HarfordClassColors.StripAccents(t):lower() == "ficha" then return RANGO_FICHA end
+
+    local resto = SinPrefijo(t, "Magia ")
+    if resto then
+        return RangoSubclase(resto, 4) or RangoClase(resto, 3) or (EsRaza(resto) and RANGO_RACIAL) or nil
+    end
+    resto = SinPrefijo(t, "Especializacion ")
+    if resto then return RangoSubclase(resto, 2) end
+    resto = SinPrefijo(t, "Rasgos ")
+    if resto then
+        -- Titulacion HEREDADA: es el frame de la clase o el de la raza, con el mismo rango que
+        -- si vinieran sin prefijo. No es un bloque posterior. Solo se conserva para leer perfiles
+        -- antiguos; lo que Harford escribe usa el nombre a secas.
+        return RangoClase(resto, 1) or (EsRaza(resto) and RANGO_RAZA) or nil
+    end
+    local plano = HarfordClassColors and HarfordClassColors.StripAccents
+        and HarfordClassColors.StripAccents(t):lower() or t:lower()
+    if EXTRAS_DE_CLASE[plano] then
+        -- Dentro del bloque de la clase anterior (base + 5). Fuera de un bloque de clase no se
+        -- reconoce: seria adivinar, y un frame sin clasificar simplemente no sirve de ancla.
+        local prev = tonumber(rangoPrevio) or 0
+        if prev >= 10 and prev < RANGO_RACIAL then
+            return math.floor(prev / 10) * 10 + 5
+        end
+        return nil
+    end
+    if SinPrefijo(t, "Trasfondo ") then return RANGO_TRASFONDO end
+
+    return RangoClase(t, 1) or RangoSubclase(t, 2) or (EsRaza(t) and RANGO_RAZA) or nil
+end
+
+-- Trocea el texto de un frame en bloques: cada cabecera {h2}...{/h2} con su cuerpo hasta la
+-- siguiente. Lo que va antes de la primera cabecera (el titulo {h1} y su descripcion) es el
+-- preambulo y se conserva intacto.
+local function BloquesDeFrame(tx)
+    tx = tostring(tx or "")
+    local preambulo, bloques = tx, {}
+    local primera = tx:find("{h2}", 1, true)
+    if primera then
+        preambulo = tx:sub(1, primera - 1)
+        local resto = tx:sub(primera)
+        local ini = 1
+        while true do
+            local sig = resto:find("{h2}", ini + 4, true)
+            local trozo = resto:sub(ini, (sig and sig - 1) or #resto)
+            local cab = trozo:match("^{h2}(.-){/h2}") or ""
+            bloques[#bloques + 1] = { cabecera = cab, texto = trozo }
+            if not sig then break end
+            ini = sig
+        end
+    end
+    return preambulo, bloques
+end
+
+-- Cabecera comparable: sin markup, sin acentos, en minusculas.
+local function ClaveBloque(cab)
+    local limpio = HarfordTRP3 and HarfordTRP3.StripInlineMarkup
+        and HarfordTRP3.StripInlineMarkup(cab) or tostring(cab or "")
+    if HarfordClassColors and HarfordClassColors.StripAccents then
+        limpio = HarfordClassColors.StripAccents(limpio)
+    end
+    return (limpio:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
+-- Una cabecera de DOTE: "Dote <Nombre>" (o el formato antiguo "Dote: <Nombre>").
+local function EsBloqueDote(clave)
+    return clave:match("^dote%s") ~= nil or clave:match("^dote:") ~= nil
+end
+
+-- Anade a `destino` los bloques de `origen` que no tenga ya. Devuelve el texto y cuantos anadio.
+--
+-- Los bloques normales entran ANTES de la primera dote, porque la dote es siempre lo ultimo del
+-- frame de raza. Los bloques del jugador NO se reordenan: solo se elige donde encajar los nuevos.
+local function FusionarBloques(destino, origen)
+    local preambulo, propios = BloquesDeFrame(destino)
+    local tengo = {}
+    for _, b in ipairs(propios) do tengo[ClaveBloque(b.cabecera)] = true end
+
+    local _, candidatos = BloquesDeFrame(origen)
+    local normales, dotes = {}, {}
+    for _, b in ipairs(candidatos) do
+        local clave = ClaveBloque(b.cabecera)
+        if clave ~= "" and not tengo[clave] then
+            tengo[clave] = true
+            if EsBloqueDote(clave) then dotes[#dotes + 1] = b else normales[#normales + 1] = b end
+        end
+    end
+    local anadidos = #normales + #dotes
+    if anadidos == 0 then return tostring(destino), 0 end
+
+    -- Primera dote ya presente: los bloques normales nuevos van justo antes.
+    local corte = #propios + 1
+    for i, b in ipairs(propios) do
+        if EsBloqueDote(ClaveBloque(b.cabecera)) then corte = i break end
+    end
+
+    local partes = { (preambulo:gsub("%s+$", "")) }
+    local function mete(b) partes[#partes + 1] = (b.texto:gsub("%s+$", "")) end
+    for i = 1, corte - 1 do mete(propios[i]) end
+    for _, b in ipairs(normales) do mete(b) end
+    for i = corte, #propios do mete(propios[i]) end
+    for _, b in ipairs(dotes) do mete(b) end
+    return table.concat(partes, string.char(10)), anadidos
+end
+
+-- Draft a partir de la progresion guardada. Lo usan la regeneracion completa y la
+-- actualizacion aditiva, que necesitan exactamente los mismos datos.
+local function DraftDesdeProgresion(profileName)
     local P = HarfordDnDProgression
-    if not (P and P.Get) then return false, "Progresion no disponible." end
+    if not (P and P.Get) then return nil, "Progresion no disponible." end
     local data = P.Get(profileName)
     local race = (P.GetRace and P.GetRace(profileName)) or {}
     local draft = {
@@ -700,10 +1219,359 @@ function API.RewriteAbout(profileName)
         draft.classes[#draft.classes + 1] = { classId = e.classId, subclassId = e.subclassId, level = e.level }
     end
     for _, ability in ipairs(HarfordDnDData.ABIL or {}) do
-        draft.abilities[ability.key] = HarfordDnDStore and HarfordDnDStore.GetValue and HarfordDnDStore.GetValue(ability.key, 0) or 0
+        draft.abilities[ability.key] = HarfordDnDStore and HarfordDnDStore.GetValue
+            and HarfordDnDStore.GetValue(ability.key, 0) or 0
     end
-    if #draft.classes == 0 then return false, "No hay una ficha creada para regenerar." end
-    return HarfordTRP3.WritePlayerAbout(API.BuildAbout(draft, profileName))
+    if #draft.classes == 0 then return nil, "No hay una ficha creada para regenerar." end
+    return draft
+end
+
+-- Actualiza el About del jugador SIN regenerarlo: ver la nota de arriba.
+function API.SyncAboutAdditive(profileName, opts)
+    profileName = tostring(profileName or (UnitName and UnitName("player")) or "default")
+    if not (HarfordTRP3 and HarfordTRP3.ReplaceAboutFrames and HarfordTRP3.GetPlayerProfile) then
+        return false, "TRP3 no disponible."
+    end
+    local draft, err = DraftDesdeProgresion(profileName)
+    if not draft then return false, err end
+
+    local P = HarfordDnDProgression
+    local clases = (P and P.GetClassLevels and P.GetClassLevels(profileName)) or {}
+    local raza = P and P.GetRace and P.GetRace(profileName)
+    local razaId = raza and raza.id
+    local salto = string.char(10)
+    local function Cabecera(tx)
+        local primera = tostring(tx):match("^[^" .. salto .. "]+") or ""
+        local limpio = HarfordTRP3.StripInlineMarkup and HarfordTRP3.StripInlineMarkup(primera) or primera
+        return (limpio:gsub("^%s+", ""):gsub("%s+$", ""))
+    end
+
+    -- Frames canonicos, con su rango.
+    local generados = {}
+    do
+        local previo = 0
+        for _, fr in ipairs(API.BuildAbout(draft, profileName) or {}) do
+            local r = TituloRango(Cabecera(fr.TX), clases, razaId, previo)
+            if r then previo = r end
+            generados[#generados + 1] = { frame = fr, rango = r or (previo + 1) }
+        end
+        table.sort(generados, function(a, b) return a.rango < b.rango end)
+    end
+
+    local profile = HarfordTRP3.GetPlayerProfile("player")
+    local about = profile and type(profile.player) == "table" and profile.player.about
+    local suyos = (type(about) == "table" and type(about.T2) == "table") and about.T2 or {}
+
+    local informe = {}
+    local final, g, cambios, insertados = {}, 1, 0, 0
+    local previo = 0
+    for _, fr in ipairs(suyos) do
+        local tx = type(fr) == "table" and fr.TX and tostring(fr.TX)
+        if tx and tx ~= "" then
+            local rango = TituloRango(Cabecera(tx), clases, razaId, previo)
+            if rango then
+                previo = rango
+                -- Los canonicos que van ANTES de este y no existen, se insertan aqui.
+                while generados[g] and generados[g].rango < rango do
+                    final[#final + 1] = generados[g].frame
+                    insertados = insertados + 1
+                    informe[#informe + 1] = "crear      " .. Cabecera(generados[g].frame.TX)
+                    g = g + 1
+                end
+                if generados[g] and generados[g].rango == rango then
+                    local gen = generados[g].frame
+                    if rango == RANGO_FICHA then
+                        -- Dato puro: se sustituye. Anadir no vale para un valor que cambia.
+                        if tostring(gen.TX) ~= tx then
+                            fr = { IC = fr.IC or gen.IC, TX = gen.TX }
+                            cambios = cambios + 1
+                            informe[#informe + 1] = "sustituir  Ficha (nivel, caracteristicas, PG)"
+                        end
+                    else
+                        local texto, n = FusionarBloques(tx, gen.TX)
+                        if n > 0 then
+                            fr = { IC = fr.IC, TX = texto }
+                            cambios = cambios + 1
+                            informe[#informe + 1] = string.format("anadir     %d bloque(s) a %s",
+                                n, Cabecera(tx))
+                        end
+                    end
+                    g = g + 1
+                end
+            end
+            final[#final + 1] = fr
+        end
+    end
+    while generados[g] do
+        final[#final + 1] = generados[g].frame
+        insertados = insertados + 1
+        informe[#informe + 1] = "crear      " .. Cabecera(generados[g].frame.TX)
+        g = g + 1
+    end
+
+    if cambios == 0 and insertados == 0 then return true, "el About ya estaba al dia", informe end
+    -- Simulacion: se informa de lo que se haria y NO se escribe.
+    if opts and opts.dryRun then
+        return true, string.format("(simulacion) %d frame(s) a actualizar, %d a crear",
+            cambios, insertados), informe
+    end
+    local ok, werr = HarfordTRP3.ReplaceAboutFrames(final)
+    if not ok then return false, werr, informe end
+    return true, string.format("%d frame(s) actualizados, %d anadidos", cambios, insertados), informe
+end
+
+function API.CanRewriteAbout(profileName)
+    profileName = tostring(profileName or (UnitName and UnitName("player")) or "default")
+    if not (HarfordTRP3 and HarfordTRP3.GetPlayerProfile and HarfordTRP3.FrameHash) then return false end
+    local profile = HarfordTRP3.GetPlayerProfile("player")
+    local about = profile and type(profile.player) == "table" and profile.player.about
+    local frames = (type(about) == "table" and type(about.T2) == "table") and about.T2 or {}
+
+    -- Sin contenido no hay nada que destruir.
+    local conTexto = 0
+    for _, fr in ipairs(frames) do
+        if type(fr) == "table" and fr.TX and tostring(fr.TX) ~= "" then conTexto = conTexto + 1 end
+    end
+    if conTexto == 0 then return true end
+
+    local guardadas = {}
+    for _, h in ipairs(AboutFrameHashes(profileName)) do guardadas[h] = true end
+    for _, fr in ipairs(frames) do
+        if type(fr) == "table" and fr.TX and guardadas[HarfordTRP3.FrameHash(tostring(fr.TX))] then
+            return true, "huella guardada"
+        end
+    end
+
+    -- Sin huellas: la cabecera "Ficha" es marca del generador de Harford. Sin esto, cualquier
+    -- personaje creado antes de que existieran las huellas se trataba como llevado a mano.
+    local salto = string.char(10)
+    for _, fr in ipairs(frames) do
+        local tx = type(fr) == "table" and fr.TX and tostring(fr.TX)
+        if tx and tx ~= "" then
+            local primera = tx:match("^[^" .. salto .. "]+") or ""
+            local limpio = HarfordTRP3.StripInlineMarkup and HarfordTRP3.StripInlineMarkup(primera) or primera
+            limpio = limpio:gsub("^%s+", ""):gsub("%s+$", "")
+            if HarfordClassColors and HarfordClassColors.StripAccents then
+                limpio = HarfordClassColors.StripAccents(limpio)
+            end
+            if limpio:lower() == "ficha" then return true, "cabecera Ficha" end
+        end
+    end
+    return false
+end
+
+-- Nombre de conjuro -> definicion, normalizado (sin acentos, minusculas).
+local function SpellsByName()
+    local C = _G.HarfordCompendioAPI
+    if not (C and C.GetAllSpells) then return nil end
+    local mapa = {}
+    for _, spell in ipairs(C.GetAllSpells() or {}) do
+        local n = tostring(spell.name or "")
+        if HarfordClassColors and HarfordClassColors.StripAccents then n = HarfordClassColors.StripAccents(n) end
+        n = n:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+        if n ~= "" then mapa[n] = spell end
+    end
+    return mapa
+end
+
+-- Lee los conjuros del About y los deja en el compendio. Devuelve cuantos importo.
+function API.ImportSpellsFromAbout(profileName)
+    profileName = tostring(profileName or (UnitName and UnitName("player")) or "default")
+    local C = _G.HarfordCompendioAPI
+    if not (C and HarfordTRP3 and HarfordTRP3.GetPlayerProfile) then return 0 end
+    local mapa = SpellsByName()
+    if not mapa then return 0 end
+    local db = _G.HarfordCompendioCharacterDB
+    if type(db) ~= "table" then return 0 end
+
+    local profile = HarfordTRP3.GetPlayerProfile("player")
+    local about = profile and type(profile.player) == "table" and profile.player.about
+    local frames = (type(about) == "table" and type(about.T2) == "table") and about.T2 or {}
+
+    -- Carga destructiva, como el resto del comando: el About manda sobre lo que hubiera.
+    local conocidos, libro, preparados, total = {}, {}, {}, 0
+    local salto = string.char(10)
+    -- Modo de la ultima clase lanzadora vista: los frames de subclase heredan el suyo.
+    local ultimoModo
+    local raza = HarfordDnDProgression and HarfordDnDProgression.GetRace
+        and HarfordDnDProgression.GetRace(profileName)
+    local razaId = raza and raza.id
+    for _, fr in ipairs(frames) do
+        local tx = type(fr) == "table" and fr.TX and tostring(fr.TX)
+        local titulo = tx and (tx:match("^[^" .. salto .. "]+") or "")
+        local limpio = titulo and HarfordTRP3.StripInlineMarkup and HarfordTRP3.StripInlineMarkup(titulo) or ""
+        local nombreClase = limpio:match("^%s*Magia%s+(.+)%s*$")
+        if nombreClase then
+            nombreClase = (nombreClase:gsub("%s+$", ""))
+            local casting = C.GetClassCasting and C.GetClassCasting(nombreClase)
+            local modo
+            if casting then
+                modo = casting.mode
+                ultimoModo = casting.mode
+            else
+                local R = HarfordDnDRaces
+                local esRaza = R and ((R.FindRaceIdByText and (R.FindRaceIdByText(nombreClase) or "") ~= "")
+                    or (razaId and R.FindSubraceIdByText and (R.FindSubraceIdByText(razaId, nombreClase) or "") ~= ""))
+                -- Racial -> conocidos. Subclase -> el modo de la clase a la que sigue.
+                modo = (not esRaza and ultimoModo) or "known"
+            end
+            for icono, nombre in tx:gmatch("{h3}{icon:[^}]+}%s*([^{]*)") do
+                local n = tostring(nombre or "")
+                if HarfordClassColors and HarfordClassColors.StripAccents then
+                    n = HarfordClassColors.StripAccents(n)
+                end
+                n = n:lower():gsub("%s+", " "):gsub("^%s+", ""):gsub("%s+$", "")
+                local spell = mapa[n]
+                if spell then
+                    total = total + 1
+                    local nivel = tonumber(spell.level) or 0
+                    if nivel == 0 then
+                        conocidos[spell.id] = true
+                    elseif modo == "wizard_book" then
+                        libro[spell.id] = true
+                    elseif modo == "prepared" then
+                        preparados[spell.id] = true
+                        conocidos[spell.id] = true
+                    else
+                        conocidos[spell.id] = true
+                    end
+                end
+                local _ = icono
+            end
+        end
+    end
+    if total == 0 then return 0 end
+    db.knownSpells, db.wizardBook, db.preparedSpells = conocidos, libro, preparados
+    return total
+end
+
+-- Objetos que aporta un trasfondo, de su rasgo "Equipo". El manual los escribe como una frase
+-- con comas, asi que se trocea por comas y se limpia; una entrada vacia no cuenta.
+function API.BackgroundEquipment(backgroundId)
+    local out = {}
+    local bg = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
+        and HarfordDnDBackgrounds.GetBackground(backgroundId)
+    for _, trait in ipairs((bg and bg.traits) or {}) do
+        if tostring(trait.name or "") == "Equipo" then
+            for trozo in tostring(trait.description or ""):gmatch("[^,]+") do
+                local item = trozo:gsub("^%s+", ""):gsub("%s+$", ""):gsub("%.$", "")
+                if item ~= "" then out[#out + 1] = item end
+            end
+        end
+    end
+    return out
+end
+
+-- Lista completa del equipo inicial: lo elegido de la clase mas lo del trasfondo.
+-- `seleccion` es { [indiceDeGrupo] = indiceDeOpcion } por clase, tal y como lo devuelve el
+-- asistente. Devuelve la lista y, aparte, el arma y la armadura, que van a sus propias lineas.
+-- Definicion de arma basica por nombre, o nil si no es un arma.
+local function ArmaPorNombre(nombre)
+    local buscado = tostring(nombre or ""):lower()
+    for _, w in ipairs((HarfordDnDWeapons and HarfordDnDWeapons.WEAPONS) or {}) do
+        if tostring(w.key or ""):lower() == buscado then return w end
+    end
+    return nil
+end
+
+local function EsArmadura(nombre)
+    local buscado = tostring(nombre or ""):lower()
+    for _, a in ipairs((HarfordDnDItems and HarfordDnDItems.GetBasicArmors and HarfordDnDItems.GetBasicArmors()) or {}) do
+        if tostring(a.label or ""):lower() == buscado and a.key ~= "none" then return true end
+    end
+    return false
+end
+
+local function EsEscudo(nombre)
+    return tostring(nombre or ""):lower():find("escudo", 1, true) ~= nil
+end
+
+local function EsDosManos(arma)
+    for _, p in ipairs((arma and arma.props) or {}) do
+        if tostring(p) == "Dos manos" then return true end
+    end
+    return false
+end
+
+-- Devuelve lo equipado y el RESTO. El orden manda: la primera armadura se viste y la primera arma
+-- va a la mano principal.
+function API.SplitStartingEquipment(items)
+    local equipado, resto = {}, {}
+    local principal
+    for _, item in ipairs(items or {}) do
+        local nombre = tostring(item or "")
+        local arma = ArmaPorNombre(nombre)
+        if not equipado.armadura and EsArmadura(nombre) then
+            equipado.armadura = nombre
+        elseif arma and not principal then
+            principal = arma
+            equipado.mainhand = nombre
+        elseif not equipado.offhand and principal and not EsDosManos(principal)
+            and (EsEscudo(nombre) or (arma and not EsDosManos(arma))) then
+            equipado.offhand = nombre
+        else
+            resto[#resto + 1] = nombre
+        end
+    end
+    return equipado, resto
+end
+
+-- Armas de una categoria ("Marcial", "Simple", "De fuego"...), para que la seleccion ofrezca
+-- armas concretas donde el manual dice solo "un arma marcial".
+function API.WeaponsByCategory(cat, mode)
+    local out = {}
+    for _, w in ipairs((HarfordDnDWeapons and HarfordDnDWeapons.WEAPONS) or {}) do
+        -- `mode` filtra Melee/Ranged: el manual pide a veces "arma marcial cuerpo a cuerpo".
+        local casaModo = (not mode) or (tostring(w.mode or "") == tostring(mode))
+        if tostring(w.cat or "") == tostring(cat or "") and casaModo then out[#out + 1] = w.key end
+    end
+    table.sort(out)
+    return out
+end
+
+-- `seleccion[i]` = { opcion = n, armas = { "Espadon", ... } }: la opcion elegida del grupo y las
+-- armas concretas para sus huecos de categoria, en orden. Tambien admite un numero suelto, que se
+-- interpreta como la opcion sin concretar.
+function API.BuildStartingEquipment(classId, seleccion, backgroundId)
+    local items = {}
+    local clase = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(classId)
+    for indice, grupo in ipairs((clase and clase.startingEquipment) or {}) do
+        -- Objetos que el manual concede sin eleccion ("ademas de..."): siempre entran.
+        for _, item in ipairs(grupo.fixed or {}) do items[#items + 1] = tostring(item) end
+        local elec = (seleccion and seleccion[indice]) or nil
+        local nOpcion = (type(elec) == "table" and tonumber(elec.opcion)) or tonumber(elec) or 1
+        local armas = (type(elec) == "table" and elec.armas) or {}
+        local elegida = grupo.options[nOpcion]
+        local hueco = 0
+        for _, item in ipairs((elegida and elegida.items) or {}) do
+            if type(item) == "table" and item.pick then
+                hueco = hueco + 1
+                -- Sin concretar se guarda la categoria: se pierde precision, no la linea.
+                items[#items + 1] = tostring(armas[hueco] or ("Arma " .. tostring(item.pick):lower()))
+            else
+                items[#items + 1] = tostring(item)
+            end
+        end
+    end
+    for _, item in ipairs(API.BackgroundEquipment(backgroundId)) do items[#items + 1] = item end
+    return items
+end
+
+function API.RewriteAbout(profileName)
+    profileName = tostring(profileName or (UnitName and UnitName("player")) or "default")
+    local draft, err = DraftDesdeProgresion(profileName)
+    if not draft then return false, err end
+    local ok, err, huellas, resumen = HarfordTRP3.WritePlayerAbout(
+        API.BuildAbout(draft, profileName),
+        { previous = AboutFrameHashes(profileName) })
+    if not ok then return false, err end
+    AboutFrameHashes(profileName, huellas or {})
+    -- Solo se avisa si habia contenido ajeno: que el jugador sepa que su texto sigue ahi.
+    if resumen and (resumen.conservados or 0) > 0 and HarfordChat and HarfordChat.Print then
+        HarfordChat.Print(string.format("About actualizado: %d frame(s) propios conservados.",
+            resumen.conservados))
+    end
+    return true
 end
 
 function API.Apply(draft)
@@ -716,6 +1584,33 @@ function API.Apply(draft)
     -- DnD, por lo que deben reiniciarse aqui de manera explicita.
     if HarfordProfessions and HarfordProfessions.ResetCharacterState then
         HarfordProfessions.ResetCharacterState()
+    end
+
+    -- Equipo inicial elegido en el asistente: se guarda la lista y se visten los slots. Lo que se
+    -- equipa NO se repite en la seccion "Equipo" del About (ver SplitStartingEquipment).
+    if type(draft.equipment) == "table" and #draft.equipment > 0 then
+        local P2 = HarfordDnDProgression
+        if P2 and P2.SetEquipmentList then P2.SetEquipmentList(draft.equipment, profileName) end
+        local eq = API.SplitStartingEquipment(draft.equipment)
+        local I = HarfordDnDItems
+        if I and I.SetBasicArmor and eq.armadura and I.GetBasicArmors then
+            local buscado = tostring(eq.armadura):lower()
+            for _, a in ipairs(I.GetBasicArmors() or {}) do
+                if tostring(a.label or ""):lower() == buscado then
+                    I.SetBasicArmor("Chest", a.key, profileName)
+                    break
+                end
+            end
+        end
+        if I and I.SetBasicWeapon then
+            if eq.mainhand then I.SetBasicWeapon("MainHand", eq.mainhand, profileName) end
+            if eq.offhand then I.SetBasicWeapon("SecondaryHand", eq.offhand, profileName) end
+        end
+    end
+    -- La XP tambien vuelve a cero: es del personaje anterior, no del que se esta creando. Las
+    -- subidas encadenadas a nivel 2 y 3 la volveran a poner en el umbral que toque.
+    if HarfordCharacterXP and HarfordCharacterXP.ResetXP then
+        HarfordCharacterXP.ResetXP()
     end
 
     -- La ficha HARFORD es lo esencial (tiene su propio store; no depende de TRP3). Se crea PRIMERO
@@ -761,7 +1656,12 @@ function API.Apply(draft)
     -- About de TRP3: BEST-EFFORT. Si TRP3 no esta disponible o no hay perfil activo, la ficha Harford
     -- YA quedo creada; solo se avisa de que no se escribio el About. No aborta la creacion.
     local about = API.BuildAbout(draft, profileName)
-    local wrote, writeErr = HarfordTRP3.WritePlayerAbout(about)
+    -- Se pasan las huellas anteriores tambien aqui: crear ficha de cero sobre un perfil que ya
+    -- tenia una sustituye SUS frames, no los anade encima de los viejos. Y se guardan las nuevas,
+    -- o la primera subida de nivel no reconoceria nada como propio.
+    local wrote, writeErr, huellas = HarfordTRP3.WritePlayerAbout(about,
+        { previous = AboutFrameHashes(profileName) })
+    if wrote then AboutFrameHashes(profileName, huellas or {}) end
     if not wrote and HarfordChat and HarfordChat.Print then
         HarfordChat.Print("|cffffcc00Ficha creada, pero no se escribio el About de TRP3: "
             .. tostring(writeErr or "TRP3 no disponible") .. "|r")
@@ -772,7 +1672,7 @@ function API.Apply(draft)
     if HarfordTRP3.WritePlayerRaceClass then
         local race = HarfordDnDRaces.GetRace(draft.raceId)
         local subrace = HarfordDnDRaces.GetSubrace(draft.raceId, draft.subraceId)
-        local raceName = tostring((subrace and subrace.name) or (race and race.name) or "")
+        local raceName = NombreDeOrigen(subrace) ~= "" and NombreDeOrigen(subrace) or NombreDeOrigen(race)
         local classNames = {}
         for _, entry in ipairs(draft.classes or {}) do
             local cls = HarfordDnDBook.GetClass(entry.classId)

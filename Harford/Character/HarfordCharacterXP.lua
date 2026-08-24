@@ -77,6 +77,70 @@ function API.SetXP(amount)
     return true
 end
 
+-- Pone la XP al minimo que corresponde al nivel que YA tiene el personaje. Se llama al crear la
+-- ficha, al cargarla del TRP3 y al terminar cada subida: un PJ de nivel 3 arranca con la XP de
+-- nivel 3, no a 0.
+--
+-- Es un SUELO, no una asignacion: si ya tenias XP de sobra para el siguiente nivel se conserva,
+-- porque la XP puede ir POR DELANTE del nivel. Ese desfase es justo lo que enciende el aviso de
+-- subida disponible: el nivel de personaje solo cambia por el asistente, nunca solo.
+function API.SyncToCharacterLevel(reason)
+    if not Progression() then return false end
+    local charLevel = (HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel
+        and HarfordDnDProgression.GetTotalLevel()) or 0
+    if charLevel < 1 then return false end
+    local minimo = XP_TABLE[math.min(charLevel, MAX_LEVEL)] or 0
+    local antes = API.GetXP()
+    if antes >= minimo then return false end
+    if not API.SetXP(minimo) then return false end
+    API.Refresh()
+    if HarfordChat and HarfordChat.Print then
+        HarfordChat.Print(string.format("Experiencia ajustada al nivel %d: %d XP%s",
+            charLevel, minimo, (reason and reason ~= "") and (" (" .. reason .. ")") or ""))
+    end
+    return true
+end
+
+-- Acota la XP AL TRAMO del nivel que tiene el personaje: nunca por debajo de su umbral y nunca
+-- tanta como para dar el siguiente nivel. Es lo que usa `/harford cargarficha`, donde la ficha
+-- cargada manda sobre el nivel: si traias XP de sobra, te quedas en ese nivel con la barra llena
+-- menos 1, en vez de con una subida pendiente que la ficha no contempla.
+--
+-- Se diferencia de SyncToCharacterLevel en el TECHO: alli la XP puede ir por delante del nivel
+-- (subiste de nivel pero te sobraba XP); aqui no.
+function API.ClampToCharacterLevel(reason)
+    if not Progression() then return false end
+    local charLevel = (HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel
+        and HarfordDnDProgression.GetTotalLevel()) or 0
+    if charLevel < 1 then return false end
+    charLevel = math.min(charLevel, MAX_LEVEL)
+    local antes = API.GetXP()
+    local objetivo = math.max(antes, XP_TABLE[charLevel] or 0)
+    -- En nivel maximo no hay tramo siguiente que acotar.
+    local siguiente = XP_TABLE[charLevel + 1]
+    if siguiente then objetivo = math.min(objetivo, siguiente - 1) end
+    if objetivo == antes then return false end
+    if not API.SetXP(objetivo) then return false end
+    API.Refresh()
+    if HarfordChat and HarfordChat.Print then
+        HarfordChat.Print(string.format("Experiencia ajustada al nivel %d: %d XP%s",
+            charLevel, objetivo, (reason and reason ~= "") and (" (" .. reason .. ")") or ""))
+    end
+    return true
+end
+
+-- Vuelve a empezar: XP a 0 (nivel 1). Solo lo llama la creacion de ficha desde cero, para que la
+-- experiencia del personaje anterior no se cuele en el nuevo.
+function API.ResetXP(reason)
+    if not Progression() then return false end
+    if not API.SetXP(0) then return false end
+    API.Refresh()
+    if HarfordChat and HarfordChat.Print and reason and reason ~= "" then
+        HarfordChat.Print("Experiencia reiniciada a 0 (" .. reason .. ").")
+    end
+    return true
+end
+
 -- Suma XP al perfil activo. Imprime la ganancia y avisa si hay nivel disponible.
 function API.AddXP(amount, reason)
     amount = math.floor(tonumber(amount) or 0)
@@ -305,6 +369,91 @@ do
         return xpBar
     end
 
+    -- Arte de la barra de experiencia, en un solo sitio para que la del borde inferior y la
+    -- fina del panel de personaje no acaben pareciendose "casi".
+    --
+    -- `framed` reproduce el envoltorio de la barra nativa. Sale de la sonda del gestor
+    -- (`/harford debug run probeframe StatusTrackingBarManager`): NO son piezas por secciones,
+    -- es UN atlas OVERLAY del tamano exacto de la barra, que se estira al ancho que tenga; el
+    -- gestor solo cambia de variante segun el ancho (large 804 / small 550). El relleno nativo
+    -- es la textura 1098846, y la altura nativa de ambos es 14.
+    local XP_FRAME_ATLAS = "hud-MainMenuBar-experiencebar-small-single"
+    -- Ancho en pixeles de cada remate del envoltorio, sin escalar.
+    local XP_FRAME_CAP = 12
+    -- NO anadir una capa de tono con `XPBarAnim-OrangeGain`. La sonda la muestra a alpha 1 sobre
+    -- la barra nativa, pero los `XPBarAnim-*` son las texturas de la ANIMACION de ganancia de XP
+    -- (en reposo van a alpha 0); reproducirla aqui cubre la barra de amarillo, tanto en BLEND como
+    -- en ADD. Comprobado en juego con `/harford debug run xpcapas tono off`.
+
+    function API.SkinBar(bar, framed)
+        bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        bar:SetStatusBarColor(BAR_COLOR.r, BAR_COLOR.g, BAR_COLOR.b, 1)
+        bar:SetMinMaxValues(0, 1)
+        local bg = bar.harfordBg
+        if not bg then
+            bg = bar:CreateTexture(nil, "BACKGROUND")
+            bg:SetAllPoints(bar)
+            bar.harfordBg = bg
+        end
+        bg:SetColorTexture(0, 0, 0, framed and 1 or 0.55)
+        if not framed then return bar end
+
+        -- Capas de la barra nativa, en su orden y con sus tintes exactos: carril tintado debajo
+        -- del relleno y envoltorio encima. El relleno es la MISMA textura de arriba.
+        if not bar.harfordRail then
+            local rail = bar:CreateTexture(nil, "BACKGROUND", nil, 1)
+            rail:SetAllPoints(bar)
+            rail:SetTexture("Interface\\TargetingFrame\\UI-StatusBar")
+            -- NO el 0.50,0.44,0.28 de la sonda: ese tostado es del carril nativo, que va bajo un
+            -- envoltorio de 14 px que lo oculta. Con 9 px de alto se ve, y se lee como una barra
+            -- amarilla en vez de como un hueco. Oscuro conserva el grano de la textura sin color.
+            rail:SetVertexColor(0.16, 0.14, 0.13, 1)
+            bar.harfordRail = rail
+        end
+        -- Envoltorio en TRES piezas. El atlas esta pensado para usarse a su ancho natural (550 u
+        -- 804 segun variante); estirarlo a 199 apelotona los remates y la barra sale moteada. Se
+        -- corta por UV: cada remate a su ancho real y el centro, que es liso, estirado.
+        --
+        -- Si el atlas no existe en este cliente la barra se queda sin marco pero legible; nunca
+        -- con una textura de ruta inventada.
+        local info = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(XP_FRAME_ATLAS)
+        local archivo = info and (info.file or info.fileID)
+        if not bar.harfordFrame and archivo then
+            local u0, u1 = info.leftTexCoord, info.rightTexCoord
+            local v0, v1 = info.topTexCoord, info.bottomTexCoord
+            local anchoAtlas = tonumber(info.width) or 550
+            local capPx = math.min(XP_FRAME_CAP, math.floor(anchoAtlas / 4))
+            local frac = capPx / anchoAtlas
+            local du = (u1 - u0)
+
+            local izq = bar:CreateTexture(nil, "OVERLAY")
+            izq:SetTexture(archivo)
+            izq:SetTexCoord(u0, u0 + du * frac, v0, v1)
+            izq:SetPoint("TOPLEFT", bar, "TOPLEFT", 0, 0)
+            izq:SetPoint("BOTTOMLEFT", bar, "BOTTOMLEFT", 0, 0)
+            izq:SetWidth(capPx)
+
+            local der = bar:CreateTexture(nil, "OVERLAY")
+            der:SetTexture(archivo)
+            der:SetTexCoord(u1 - du * frac, u1, v0, v1)
+            der:SetPoint("TOPRIGHT", bar, "TOPRIGHT", 0, 0)
+            der:SetPoint("BOTTOMRIGHT", bar, "BOTTOMRIGHT", 0, 0)
+            der:SetWidth(capPx)
+
+            local centro = bar:CreateTexture(nil, "OVERLAY")
+            centro:SetTexture(archivo)
+            centro:SetTexCoord(u0 + du * frac, u1 - du * frac, v0, v1)
+            centro:SetPoint("TOPLEFT", izq, "TOPRIGHT", 0, 0)
+            centro:SetPoint("BOTTOMRIGHT", der, "BOTTOMLEFT", 0, 0)
+
+            -- `harfordFrame` sigue siendo la referencia que apaga `xpcapas marco off`; las otras
+            -- dos cuelgan de ella para no multiplicar campos en la barra.
+            bar.harfordFrame = centro
+            centro.piezas = { izq, der }
+        end
+        return bar
+    end
+
     local function EnsureFallbackBar()
         if fallbackBar then return fallbackBar end
         local bar = CreateFrame("StatusBar", "HarfordXPBar", UIParent)
@@ -313,12 +462,7 @@ do
         bar:SetFrameLevel(85)
         bar:SetSize(570, 11)
         bar:SetPoint("BOTTOM", UIParent, "BOTTOM", 0, 0)
-        bar:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-        bar:SetStatusBarColor(BAR_COLOR.r, BAR_COLOR.g, BAR_COLOR.b, 1)
-        bar:SetMinMaxValues(0, 1)
-        local bg = bar:CreateTexture(nil, "BACKGROUND")
-        bg:SetAllPoints(bar)
-        bg:SetColorTexture(0, 0, 0, 0.55)
+        API.SkinBar(bar)
         local text = bar:CreateFontString(nil, "OVERLAY")
         text:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
         text:SetPoint("CENTER", bar, "CENTER", 0, 0)
@@ -333,7 +477,29 @@ do
         return bar
     end
 
+    -- La barra fina del panel de personaje la dibuja HarfordCharacterPanel y no se entera de un
+    -- cambio de XP. Solo se repinta si la ventana esta abierta: Refresh() es un repintado
+    -- completo del panel, no algo que lanzar a ciegas en cada evento.
+    local function RefreshCharacterPanelBar()
+        local f = _G.HarfordCharacterPanelFrame
+        if not (f and f.IsShown and f:IsShown()) then return end
+        local panel = _G.HarfordCharacterPanel
+        if panel and panel.Refresh then panel.Refresh() end
+    end
+
+    -- Enciende o apaga una capa concreta de una barra ya pintada. Sirve para identificar en juego
+    -- que capa produce un artefacto visual, en vez de ir tocando a ciegas desde fuera del cliente.
+    function API.SetBarLayer(bar, capa, visible)
+        local tex = bar and ({ carril = bar.harfordRail, tono = bar.harfordTone,
+            marco = bar.harfordFrame, fondo = bar.harfordBg })[tostring(capa or "")]
+        if not tex then return false end
+        tex:SetShown(visible and true or false)
+        for _, extra in ipairs(tex.piezas or {}) do extra:SetShown(visible and true or false) end
+        return true
+    end
+
     function API.Refresh()
+        RefreshCharacterPanelBar()
         -- Via nativa: el gestor decide mostrar/ocultar y recoloca la UI
         if EnsureManagedBars() then
             local mgr = _G.StatusTrackingBarManager

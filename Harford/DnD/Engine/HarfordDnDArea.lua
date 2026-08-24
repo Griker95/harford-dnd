@@ -312,6 +312,7 @@ local function NormalizeDefinition(definition)
         shape = shape,
         sizeText = tostring(area.sizeText or ""):sub(1, 40),
         resolution = resolution,
+        castLevel = math.max(0, math.floor(tonumber(area.castLevel or definition.castLevel) or 0)),
         damageComponents = components,
         auraId = math.max(0, math.floor(tonumber(area.auraId or area.onFailAura or area.onHitAura or definition.onFailAura or definition.onHitAura) or 0)),
         conditionId = conditionId,
@@ -824,6 +825,7 @@ end
 
 local function RollComponents(definition)
     local rolled, details = {}, {}
+    local rachaUsada = false   -- "Racha de calor": una vez por lanzamiento, no por componente
     for _, component in ipairs(definition.damageComponents) do
         local count, sides = HarfordDnDWeapons.ParseDice(component.damageDice)
         local values, amount = {}, component.damageBonus
@@ -848,6 +850,24 @@ local function RollComponents(definition)
             replaced[#replaced + 1] = tostring(lowestValue) .. "->" .. tostring(newValue)
             rerolls = rerolls - 1
         end
+        -- "Racha de calor" (Mago de Fuego): si un dado saca el maximo, tiras UNO mas y lo SUMAS
+        -- -- al reves que la repeticion de Palabra de Poder: Muerte, que SUSTITUYE el mas bajo.
+        -- Mismo criterio que Guia Ancestral para saber que es un conjuro: `castLevel >= 1`, asi que
+        -- los trucos y las areas de un rasgo del Libro quedan fuera. Una sola vez por lanzamiento;
+        -- el manual dice por turno y el cliente no observa el fin de turno.
+        local racha
+        if not rachaUsada and (tonumber(definition.castLevel) or 0) >= 1
+            and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+            and HarfordDnDFeatureEffects.HasFlag("heatStreak") then
+            for _, v in ipairs(values) do
+                if v == sides then
+                    racha = HarfordDnDCalc.RollDie(sides)
+                    amount = amount + racha
+                    rachaUsada = true
+                    break
+                end
+            end
+        end
         rolled[#rolled + 1] = {
             amount = math.max(0, amount),
             maximum = math.max(0, count * sides + component.damageBonus),
@@ -857,6 +877,7 @@ local function RollComponents(definition)
         details[#details + 1] = component.damageDice .. bonus .. " " .. DamageLabel(component.damageType)
             .. ": " .. table.concat(values, "+")
             .. (#replaced > 0 and (" (Muerte " .. table.concat(replaced, ", ") .. ")") or "")
+            .. (racha and (" (Racha de calor +" .. tostring(racha) .. ")") or "")
     end
     return rolled, table.concat(details, " | ")
 end
@@ -871,9 +892,22 @@ local function RollHealingComponents(definition)
             amount = math.max(0, math.floor(fixedAmount))
         else
             count, sides = HarfordDnDWeapons.ParseDice(component.damageDice)
+            -- Guia Ancestral (Chaman de Restauracion): un dado de curacion que saque 1 o 2 se
+            -- repite UNA vez y hay que usar el nuevo resultado, aunque sea otro 1 o 2. Igual que
+            -- Gran Arma en el dano de arma, y con la misma notacion entre parentesis. Solo en
+            -- conjuros de nivel 1 o superior: los trucos y las reservas fijas quedan fuera.
+            local repiteBajos = (tonumber(definition.castLevel) or 0) >= 1
+                and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+                and HarfordDnDFeatureEffects.HasFlag("ancestralGuidance")
             for _ = 1, count do
                 local value = HarfordDnDCalc.RollDie(sides)
-                values[#values + 1] = value
+                if repiteBajos and value <= 2 then
+                    local nuevo = HarfordDnDCalc.RollDie(sides)
+                    values[#values + 1] = "(" .. tostring(value) .. "→" .. tostring(nuevo) .. ")"
+                    value = nuevo
+                else
+                    values[#values + 1] = value
+                end
                 amount = amount + value
             end
         end

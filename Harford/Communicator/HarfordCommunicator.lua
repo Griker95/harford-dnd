@@ -214,7 +214,7 @@ local function AddContact(name)
     EnsureStore()
     local existing = FindContact(name)
     if existing then return existing end
-    store.contacts[name] = { name = name, alias = ShortName(name), addedAt = Now() }
+    store.contacts[name] = { name = name, alias = ShortName(name) }
     return name
 end
 

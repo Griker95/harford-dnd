@@ -256,13 +256,35 @@ local function ParseForms(raw)
     return forms
 end
 
+-- Nivel de druida del personaje, para saber que formas estan desbloqueadas (2 / 4 / 8).
+local function DruidLevel()
+    if not (HarfordDnDProgression and HarfordDnDProgression.GetClassLevels) then return 0 end
+    for _, entry in ipairs(HarfordDnDProgression.GetClassLevels() or {}) do
+        if tostring(entry.classId or "") == "druida" then return tonumber(entry.level) or 0 end
+    end
+    return 0
+end
+
+-- Las 7 formas del manual estan siempre disponibles al nivel que toca; lo que el jugador declare
+-- en su ficha TRP3 se anade, y si repite un id SUSTITUYE a la canonica (es su personalizacion).
 local function GetForms()
     local raw = RawAboutText() or ""
     if raw ~= cache.source then
         cache.source = raw
         cache.forms = ParseForms(raw)
     end
-    return cache.forms
+    local nivel = DruidLevel()
+    local out, vistos = {}, {}
+    for _, f in ipairs(cache.forms or {}) do
+        out[#out + 1] = f
+        vistos[tostring(f.id)] = true
+    end
+    for _, f in ipairs((HarfordDnDFormsData and HarfordDnDFormsData.FORMS) or {}) do
+        if nivel >= (tonumber(f.minLevel) or 2) and not vistos[tostring(f.id)] then
+            out[#out + 1] = f
+        end
+    end
+    return out
 end
 
 local function IsDruid()
@@ -321,7 +343,18 @@ end
 
 function API.GetArmorClass()
     local form = API.GetActiveForm()
-    return form and form.armorClass or nil
+    if not form then return nil end
+    -- Las canonicas declaran "12 + Mod. Destreza" (el Oso suma tambien Constitucion); las de TRP3
+    -- traen su CA ya calculada por el jugador.
+    if form.armorClassBase then
+        local total = tonumber(form.armorClassBase) or 0
+        for _, abi in ipairs(form.armorClassAbilities or {}) do
+            total = total + ((HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod
+                and HarfordDnDCalc.GetAbilityMod(abi)) or 0)
+        end
+        return total
+    end
+    return form.armorClass
 end
 
 function API.GetWeapon()
@@ -565,6 +598,20 @@ local function ShowFlyout(menu, anchor, entries, activeKey, onChosen)
     SetAnchorFlyoutState(anchor, true)
     menu:Show()
     return true
+end
+
+-- Flyout COMPARTIDO de selectores de bloque de estadisticas. Nacio aqui para las formas, pero
+-- no sabe nada de ellas: recibe `entries` ({ key, name, icon, detail }) y devuelve la elegida.
+-- Lo reusan las criaturas acompanantes (HarfordDnDCompanions) para no duplicar el arte nativo.
+function API.OpenEntryFlyout(menuKey, anchor, entries, activeKey, onChosen)
+    if not (anchor and type(entries) == "table" and #entries > 0) then return false end
+    API._menus = API._menus or {}
+    local menu = API._menus[menuKey]
+    if not menu then
+        menu = CreateFlyout("HarfordDnDFlyout" .. tostring(menuKey))
+        API._menus[menuKey] = menu
+    end
+    return ShowFlyout(menu, anchor, entries, activeKey or "", onChosen)
 end
 
 -- Cambio de forma: cada icono es una forma. Sus ataques se eligen en el

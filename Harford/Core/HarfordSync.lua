@@ -1113,6 +1113,49 @@ function HarfordSync.SerializeResourceAdjustMessage(resourceKey, delta)
     return "RADJ|" .. key .. "|" .. tostring(math.floor(amount))
 end
 
+-- ─── Dano BRUTO a un jugador (DNDDMG) ────────────────────────────────────────
+-- Sustituye a RADJ para el DANO. La diferencia no es el formato: es QUIEN decide.
+-- Con RADJ el atacante mitigaba con una copia cacheada de las defensas ajenas y mandaba el
+-- resultado; aqui se manda el dano EN BRUTO con su tipo y lo resuelve el cliente de la victima,
+-- que es el unico que conoce de verdad sus resistencias, sus reducciones y su vida temporal.
+-- Es el mismo modelo que ya usa el motor de area.
+-- Los componentes van como `cantidad:tipo,cantidad:tipo`. Un golpe puede tener varios tipos a la
+-- vez (arma cortante + Golpe Runico de frio) y la victima necesita CADA uno por separado: puede ser
+-- resistente a uno y vulnerable al otro. Mandar un solo tipo daria un resultado erroneo.
+function HarfordSync.SerializeDamage(components, isCritical)
+    if type(components) ~= "table" then return nil end
+    local partes, total = {}, 0
+    for _, c in ipairs(components) do
+        local amount = math.floor(tonumber(c.amount) or 0)
+        local tipo = tostring(c.damageType or ""):match("^[%w_%-]*$") or ""
+        if amount > 0 then
+            partes[#partes + 1] = tostring(amount) .. ":" .. tipo:sub(1, 20)
+            total = total + amount
+        end
+    end
+    if total <= 0 or #partes == 0 then return nil end
+    local payload = "DNDDMG|" .. table.concat(partes, ",") .. "|" .. (isCritical and "C" or "")
+    return #payload <= 240 and payload or nil
+end
+
+function HarfordSync.DeserializeDamage(message)
+    local opcode, lista, crit = strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDDMG" or not lista then return nil end
+    local out = {}
+    for amount, tipo in tostring(lista):gmatch("(%d+):([%w_%-]*)") do
+        amount = math.floor(tonumber(amount) or 0)
+        if amount > 0 then out[#out + 1] = { amount = amount, damageType = tipo } end
+    end
+    if #out == 0 then return nil end
+    return out, crit == "C"
+end
+
+function HarfordSync.SendDamage(prefix, target, components, isCritical)
+    local payload = HarfordSync.SerializeDamage(components, isCritical)
+    if not payload then return false end
+    return HarfordSync.Send(prefix, payload, "WHISPER", target)
+end
+
 function HarfordSync.DeserializeResourceAdjustMessage(message)
     local opcode, key, delta = strsplit("|", tostring(message or ""))
     if opcode ~= "RADJ" then
@@ -1636,6 +1679,32 @@ local function LoadConditionOperation(value)
 end
 
 
+local function ConditionVars(vars)
+    if type(vars) ~= "table" then return "" end
+    local partes = {}
+    for nombre, valor in pairs(vars) do
+        nombre = tostring(nombre):match("^[%w_]+$")
+        valor = tonumber(valor)
+        if nombre and valor and #nombre <= 16 then
+            partes[#partes + 1] = nombre .. "=" .. tostring(math.floor(valor))
+        end
+    end
+    table.sort(partes)   -- orden estable: el mismo estado produce el mismo mensaje
+    local out = table.concat(partes, ",")
+    return #out <= 80 and out or ""
+end
+
+local function LoadConditionVars(text)
+    text = tostring(text or "")
+    if text == "" then return nil end
+    local out, n = {}, 0
+    for nombre, valor in text:gmatch("([%w_]+)=(-?%d+)") do
+        out[nombre] = tonumber(valor)
+        n = n + 1
+    end
+    return n > 0 and out or nil
+end
+
 function HarfordSync.SerializeConditionRequest(data)
     data = data or {}
     local id = tostring(data.id or ""):match("^[%w%._%-]+$")
@@ -1649,12 +1718,13 @@ function HarfordSync.SerializeConditionRequest(data)
         ConditionField(data.saveAbility, 20),
         math.max(0, math.min(99, math.floor(tonumber(data.saveDC) or 0))),
         data.persist == true and "P" or "",
+        ConditionVars(data.vars),
     }, "|")
     return #payload <= 240 and payload or nil
 end
 
 function HarfordSync.DeserializeConditionRequest(message)
-    local opcode, id, op, conditionId, sourceGuid, sourceName, duration, turns, saveAbility, saveDC, persist =
+    local opcode, id, op, conditionId, sourceGuid, sourceName, duration, turns, saveAbility, saveDC, persist, vars =
         strsplit("|", tostring(message or ""))
     if opcode ~= "DNDCOND" or not id or not id:match("^[%w%._%-]+$") or #id > 40 then return nil end
     op, conditionId = LoadConditionOperation(op), ConditionId(conditionId)
@@ -1665,6 +1735,7 @@ function HarfordSync.DeserializeConditionRequest(message)
         duration = LoadConditionField(duration, 24), turns = math.max(0, math.min(99, math.floor(tonumber(turns) or 0))),
         saveAbility = LoadConditionField(saveAbility, 20), saveDC = math.max(0, math.min(99, math.floor(tonumber(saveDC) or 0))),
         persist = persist == "P",
+        vars = LoadConditionVars(vars),
     }
 end
 

@@ -232,9 +232,28 @@ end
 -- Punto de entrada para la tirada de daño: solo mitiga si `unit` es un NPC
 -- (las defensas no afectan a victimas jugador). Devuelve:
 --   amountAplicado, status, marcadorColoreado
+-- ¿Resuelve el objetivo su propia mitigacion? Si es OTRO jugador, si: su cliente recibe el dano en
+-- bruto (`DNDDMG`) y aplica SUS resistencias, sus reducciones y su vida temporal, que son datos que
+-- aqui solo se tienen por una copia cacheada que puede faltar o estar vieja.
+--
+-- Es la pieza que migra `RADJ` al modelo del motor de area sin tocar los sitios que calculan dano:
+-- ellos siguen llamando a `ForTarget` igual, y aqui se decide si mitigar o dejar pasar el bruto.
+-- Contra un NPC o contra uno mismo NO aplica: no hay otro cliente que lo resuelva.
+function HarfordDamageMitigation.TargetResolvesOwnDamage(unit)
+    if not (unit and UnitExists and UnitExists(unit)) then return false end
+    if not (UnitIsPlayer and UnitIsPlayer(unit)) then return false end
+    if UnitIsUnit and UnitIsUnit(unit, "player") then return false end
+    return true
+end
+
 function HarfordDamageMitigation.ForTarget(unit, typeText, amount)
     amount = tonumber(amount) or 0
     if not unit or not (UnitExists and UnitExists(unit)) then
+        return amount, STATUS_NORMAL, ""
+    end
+    if HarfordDamageMitigation.TargetResolvesOwnDamage(unit) then
+        -- Bruto: lo mitiga su cliente. El marcador queda vacio a proposito -- desde aqui no se
+        -- sabe si es resistente, y fingir un marcador seria peor que no poner ninguno.
         return amount, STATUS_NORMAL, ""
     end
     local status = STATUS_NORMAL

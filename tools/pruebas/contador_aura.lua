@@ -4,7 +4,8 @@
 -- aura: lo lleva Harford en la instancia de la condicion y se pinta encima del icono nativo.
 local cargar = loadstring or load
 local src = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
-local i = assert(src:find("function API.GetAuraCounter", 1, true))
+-- Desde `CounterFor`: es la regla del numero, y `GetAuraCounter` la reutiliza en vez de repetirla.
+local i = assert(src:find("function API.CounterFor", 1, true))
 local j = assert(src:find("function API.SetVar", i, true))
 local codigo = "local API = ...\n" .. src:sub(i, j - 1) .. "\nreturn API.GetAuraCounter"
 

@@ -832,6 +832,154 @@ local function ResolvedAuraIcon(aura)
     return aura.icon
 end
 
+-- === TIRA DE ESTADOS HARFORD ================================================
+-- Los estados de Harford NO son auras del juego. Solo 15 de las 45 condiciones tienen un aura
+-- detras, y esas se ven porque el cliente las pinta; las otras 30 no existen para el juego y no
+-- apareceran en ninguna parte del unitframe del objetivo por mucho aura que se les enganche.
+--
+-- Por eso Harford pinta los suyos APARTE, en una tira propia justo encima del frame. No se mezclan
+-- con los buffs nativos a proposito: son de otra naturaleza (los lleva Harford, no el servidor) y
+-- confundirlos haria pensar que se pueden disipar o que duran lo que diga el juego.
+--
+-- La tira se coloca por encima de lo que haya: si las auras nativas siguen sobre el frame (el caso
+-- normal, sin barras extra) se ancla sobre la mas alta de ellas, y si Harford las movio bajo las
+-- barras se ancla sobre el frame. Recalcular el ancla en cada repaso sale mas barato que mantener
+-- dos rutas que se desincronizarian.
+do
+    -- Dentro del `do`: este fichero roza el limite de 200 locales de Lua 5.1 y estas tres no las
+    -- necesita nadie fuera de la tira.
+    local ESTADO_TAM, ESTADO_HUECO, ESTADOS_POR_FILA = 20, 3, 8
+    local tiras = {}
+
+    local function EnsureTira(unit)
+        if tiras[unit] then return tiras[unit] end
+        local f = CreateFrame("Frame", "HarfordEstados" .. unit, UIParent)
+        f:SetFrameStrata("MEDIUM")
+        f:SetFrameLevel(85)
+        f:SetSize(1, ESTADO_TAM)
+        f.iconos = {}
+        tiras[unit] = f
+        return f
+    end
+
+    local function EnsureIcono(tira, i)
+        local b = tira.iconos[i]
+        if b then return b end
+        b = CreateFrame("Frame", nil, tira)
+        b:SetSize(ESTADO_TAM, ESTADO_TAM)
+        b.icon = b:CreateTexture(nil, "ARTWORK")
+        b.icon:SetPoint("TOPLEFT", 1, -1)
+        b.icon:SetPoint("BOTTOMRIGHT", -1, 1)
+        b.marco = b:CreateTexture(nil, "OVERLAY")
+        b.marco:SetTexture("Interface\\Common\\WhiteIconFrame")
+        b.marco:SetAllPoints()
+        b.marco:SetVertexColor(0.68, 0.62, 0.44)
+        b.contador = b:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmall")
+        b.contador:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", 1, 0)
+        b:EnableMouse(true)
+        b:SetScript("OnEnter", function(self)
+            if not (GameTooltip and self.estado) then return end
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:AddLine(self.estado.label, 1, 0.82, 0)
+            if self.estado.description then
+                GameTooltip:AddLine(self.estado.description, 1, 1, 1, true)
+            end
+            if self.estado.restante then
+                GameTooltip:AddLine(self.estado.restante, 0.6, 0.8, 1)
+            end
+            GameTooltip:Show()
+        end)
+        b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+        tira.iconos[i] = b
+        return b
+    end
+
+    -- Lo mas alto que ocupa el unitframe ahora mismo, incluidas las auras nativas si siguen encima.
+    -- Se devuelve el OBJETO al que anclarse, no una coordenada: el frame se mueve y una coordenada
+    -- absoluta se quedaria vieja en cuanto el jugador reposicionara cualquier cosa.
+    local function AnclaSuperior(frame, prefix)
+        local mejor, mejorY = frame, frame.GetTop and frame:GetTop()
+        if not mejorY then return frame end
+        for _, kind in ipairs({ "Buff", "Debuff" }) do
+            for i = 1, 8 do
+                local b = _G[prefix .. kind .. i]
+                if not b or not b.IsShown or not b:IsShown() then break end
+                local y = b.GetTop and b:GetTop()
+                if y and y > mejorY then mejor, mejorY = b, y end
+            end
+        end
+        return mejor
+    end
+
+    -- Los estados activos de la unidad, en el orden del catalogo y ya resueltos para pintar.
+    local function EstadosDe(unit)
+        if not (HarfordDnDConditions and HarfordDnDConditions.GetActive) then return {} end
+        local ahora = GetTime and GetTime() or 0
+        local fuera = {}
+        for _, activo in ipairs(HarfordDnDConditions.GetActive(unit)) do
+            local def, record = activo.definition, activo.record
+            local restante
+            local expira = record and tonumber(record.expiresAt)
+            if expira and expira > ahora then
+                restante = string.format("Quedan %d s", math.ceil(expira - ahora))
+            end
+            fuera[#fuera + 1] = {
+                id = activo.id,
+                label = def.label,
+                description = def.description,
+                restante = restante,
+                icono = HarfordDnDConditions.GetIcon(activo.id),
+                contador = HarfordDnDConditions.CounterFor(def, record),
+            }
+        end
+        return fuera
+    end
+
+    function API.RefreshConditionStrip(unit)
+        if unit ~= "target" and unit ~= "focus" then return end
+        local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
+        local frame = _G[prefix]
+        local tira = EnsureTira(unit)
+        local hay = frame and UnitExists and UnitExists(unit)
+        local estados = hay and EstadosDe(unit) or {}
+
+        for i = #estados + 1, #tira.iconos do tira.iconos[i]:Hide() end
+        if #estados == 0 then
+            tira:Hide()
+            return 0
+        end
+
+        local ancho = 0
+        for i, estado in ipairs(estados) do
+            local b = EnsureIcono(tira, i)
+            b.estado = estado
+            b.icon:SetTexture(estado.icono)
+            if estado.contador then
+                b.contador:SetText(tostring(estado.contador))
+                b.contador:Show()
+            else
+                b.contador:Hide()
+            end
+            local col = (i - 1) % ESTADOS_POR_FILA
+            -- Las filas crecen HACIA ARRIBA: la primera queda pegada al frame, para que al entrar
+            -- un estado nuevo no salte toda la tira sobre la cabeza del objetivo.
+            local fila = math.floor((i - 1) / ESTADOS_POR_FILA)
+            b:ClearAllPoints()
+            b:SetPoint("BOTTOMLEFT", tira, "BOTTOMLEFT",
+                col * (ESTADO_TAM + ESTADO_HUECO), fila * (ESTADO_TAM + ESTADO_HUECO))
+            b:Show()
+            ancho = math.max(ancho, (col + 1) * (ESTADO_TAM + ESTADO_HUECO) - ESTADO_HUECO)
+        end
+
+        local filas = math.ceil(#estados / ESTADOS_POR_FILA)
+        tira:SetSize(math.max(1, ancho), filas * (ESTADO_TAM + ESTADO_HUECO) - ESTADO_HUECO)
+        tira:ClearAllPoints()
+        tira:SetPoint("BOTTOMLEFT", AnclaSuperior(frame, prefix), "TOPLEFT", 0, 6)
+        tira:Show()
+        return #estados
+    end
+end
+
 -- Repinta los contadores de target y focus. Lo llama el motor de condiciones cuando algo cambia,
 -- porque el numero puede cambiar SIN que cambie el aura: `UNIT_AURA` no se entera de que Harford
 -- haya subido un contador, y sin esto el icono se quedaria con el numero viejo hasta la siguiente
@@ -841,6 +989,7 @@ function API.RefreshAuraCounters()
         if UnitExists and UnitExists(unit) and RefreshNativeAuraButtons then
             RefreshNativeAuraButtons(unit)
         end
+        API.RefreshConditionStrip(unit)
     end
 end
 
@@ -982,6 +1131,8 @@ local function AdjustUnitAuras(frame, resourceCount, extraHeight)
     local unit = frame and frame.unit
     if unit ~= "target" and unit ~= "focus" then return end
     ReanchorActualUnitAuras(unit)
+    -- Despues de reanclar: la tira se apoya en la aura nativa mas alta, que acaba de moverse.
+    API.RefreshConditionStrip(unit)
 end
 
 local function AdjustTargetAuras(frame, resourceCount, extraHeight)
@@ -4659,10 +4810,13 @@ events:SetScript("OnEvent", function(_, event, ...)
     elseif event == "PLAYER_TARGET_CHANGED" then
         forceMeasure = true
         QueueNativeAuraCleanup("target")
+        API.RefreshConditionStrip("target")
     elseif event == "PLAYER_FOCUS_CHANGED" then
         forceMeasure = true
         QueueNativeAuraCleanup("focus")
         QueueNativeAuraCleanup("target")
+        API.RefreshConditionStrip("focus")
+        API.RefreshConditionStrip("target")
     elseif event == "UNIT_TARGET" then
         local unit = ...
         if unit == "target" then

@@ -663,6 +663,40 @@ function API.GetVar(ref, conditionId, varName, default)
     return valor
 end
 
+-- Arte del estado. El que TIENE aura usa el icono del propio aura: es el que el jugador ya ve en
+-- pantalla, y declarar una segunda version solo serviria para que un dia dejaran de coincidir. Los
+-- demas lo sacan del catalogo de iconos, que es la fuente unica de arte del proyecto.
+function API.GetIcon(conditionId)
+    local def = API.DEFS[tostring(conditionId or "")]
+    if not def then return nil end
+    if HarfordIconCatalog and HarfordIconCatalog.GetFeatureIcon then
+        local icono = HarfordIconCatalog.GetFeatureIcon("harford_estado_" .. tostring(conditionId))
+        if icono then return icono end
+    end
+    if def.auraId and GetSpellTexture then
+        local textura = GetSpellTexture(def.auraId)
+        if textura then return textura end
+    end
+    return "Interface\\Icons\\INV_Misc_QuestionMark"
+end
+
+-- El numero que lleva una condicion activa, o nil si no lleva ninguno.
+--
+-- El contador NO sale del aura: en Epsilon no se pueden aplicar auras con acumulaciones, asi que lo
+-- lleva Harford en la instancia (`vars.contador`, o el nivel en las que los tienen, como el
+-- Cansancio). Un 1 no se pinta: un contador que siempre marca uno es ruido.
+function API.CounterFor(def, record)
+    if not def then return nil end
+    if def.leveled then
+        local nivel = record and tonumber(record.level)
+        if nivel and nivel > 1 then return math.floor(nivel) end
+        return nil
+    end
+    local n = record and record.vars and tonumber(record.vars.contador)
+    if n and n > 1 then return math.floor(n) end
+    return nil
+end
+
 -- Numero que lleva la condicion respaldada por ese aura, o nil si no lleva ninguno.
 --
 -- El contador NO sale del aura: en Epsilon no se pueden aplicar auras con acumulaciones, asi que lo
@@ -674,15 +708,7 @@ function API.GetAuraCounter(ref, spellId)
     for _, active in ipairs(API.GetActive(ref or "player")) do
         local def = active.definition
         if def and tonumber(def.auraId) == spellId then
-            local record = active.record
-            if def.leveled then
-                local nivel = record and tonumber(record.level)
-                if nivel and nivel > 1 then return math.floor(nivel) end
-                return nil
-            end
-            local n = record and record.vars and tonumber(record.vars.contador)
-            if n and n > 1 then return math.floor(n) end
-            return nil
+            return API.CounterFor(def, active.record)
         end
     end
     return nil

@@ -46,6 +46,15 @@ function API.IsEnergyManeuver(feature)
     return false
 end
 
+-- Un rasgo cuyas OPCIONES ELEGIDAS se convierten en habilidades propias del Libro. Palabra de
+-- Poder fue el primero y le dio nombre al marcador; `optionAbility` es el generico para los demas
+-- (brebajes del Monje, trampas del Cazador, maldiciones del Brujo, ataques del Chaman).
+function API.IsOptionAbility(feature)
+    if type(feature) ~= "table" then return false end
+    local k = feature.actionKind
+    return k == "powerWord" or k == "optionAbility"
+end
+
 function API.Category(feature)
     if not feature then return "pasivo" end
     -- Cambio de Forma no es un checkbox de configuracion: es una accion de
@@ -61,7 +70,7 @@ function API.Category(feature)
     -- brujo). Que criaturas salen lo decide HarfordDnDCompanions por clase, nivel y elecciones.
     if feature.companionId or feature.companions then return "acompanante" end
     if feature.category then return tostring(feature.category) end
-    if feature.actionKind == "powerWord" then return "poder" end
+    if API.IsOptionAbility(feature) then return feature.actionKind == "powerWord" and "poder" or "activo" end
     -- Marca del Cazador se activa sobre un objetivo y su dado se resuelve luego
     -- automaticamente al impactar a esa presa; no es un toggle de "Daño extra".
     if feature.actionKind == "huntersMark" then return "activo" end
@@ -222,7 +231,7 @@ function API.BuildSections(data)
     -- El Libro muestra cada palabra ya elegida por separado, pero conserva una referencia
     -- al rasgo padre para que recursos, reacciones y sincronizacion sigan usando su id estable.
     local function AddFeature(bucket, feature, level, source)
-        if feature and feature.actionKind == "powerWord"
+        if feature and API.IsOptionAbility(feature)
             and HarfordDnDBook and HarfordDnDBook.GetChoiceOption then
             -- Leer la eleccion del `data` recibido (no de GetChoice, que cae al perfil LOCAL): en
             -- inspeccion el libro debe mostrar las Palabras de Poder del perfil inspeccionado.
@@ -236,9 +245,15 @@ function API.BuildSections(data)
                             id = tostring(feature.id) .. "_" .. tostring(option.id),
                             name = option.label,
                             description = option.desc or feature.description,
-                            actionKind = "powerWord",
+                            actionKind = feature.actionKind,
                             powerWordParent = feature,
                             powerWordOption = option,
+                            -- `cast` y el coste viajan con la habilidad sintetizada: son lo que
+                            -- mira la economia de turno y el gasto de recurso.
+                            cast = option.cast or feature.cast,
+                            resourceKey = option.resourceKey,
+                            resourceCost = option.resourceCost,
+                            area = option.area,
                             icon = IconPath(option.icon),
                         },
                         level = level or 0,

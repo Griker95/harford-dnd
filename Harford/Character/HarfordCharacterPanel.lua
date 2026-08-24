@@ -1924,7 +1924,7 @@ end
 local AnnounceAbility, OpenLayOnHandsPrompt, OpenDemonicFirePrompt
 
 local function GetPowerWordOption(feature)
-    if not (feature and feature.actionKind == "powerWord" and HarfordDnDProgression
+    if not (feature and HarfordCharacterBook.IsOptionAbility(feature) and HarfordDnDProgression
         and HarfordDnDProgression.GetChoice and HarfordDnDBook and HarfordDnDBook.GetChoiceOption) then
         return nil
     end
@@ -2545,7 +2545,7 @@ local function BookButtonOnClick(self)
         return
     end
     local cat = BookCategory(self.feature)
-    local powerOption = self.feature.actionKind == "powerWord" and GetPowerWordOption(self.feature) or nil
+    local powerOption = HarfordCharacterBook.IsOptionAbility(self.feature) and GetPowerWordOption(self.feature) or nil
     if cat ~= "pasivo" and HarfordDnDConditions and HarfordDnDConditions.CanPerform then
         local actionType = (cat == "reaccion" or (powerOption and powerOption.cast == "reaccion")) and "reaction" or "action"
         local allowed, condition = HarfordDnDConditions.CanPerform(actionType, { actorUnit = "player", targetUnit = "target" })

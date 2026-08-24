@@ -33,7 +33,7 @@ API.CLASSES[#API.CLASSES + 1] =
                 { kind = "toolProf", tool = "Herramientas de cervecero" },
             } },
             { id = "monje_cer_buey_negro", level = 3, name = "Brebaje del Buey Negro", type = "accion", resourceKey = "chi", resourceCost = 1, spendResourceOnAnnounce = true, description = "Lo conoces siempre. Gastas 1 punto de chi para darte ventaja en el proximo ataque cuerpo a cuerpo que realices dentro de 1 minuto. Puedes atacar como parte de la misma accion.", effects = {} },
-            { id = "monje_cer_brebajes", level = 3, name = "Cervecero elusivo", type = "choice", description = "Canalizas tu chi en brebajes. Conoces el Brebaje del Buey Negro y UNO mas a tu eleccion; aprendes otro a los niveles 6, 11 y 17. Usarlos cuesta una accion y sus puntos de chi cada vez, y necesitas un frasco de liquido potable contigo.", effects = {}, choice = {
+            { id = "monje_cer_brebajes", level = 3, name = "Cervecero elusivo", actionKind = "optionAbility", bookHidden = true, type = "choice", description = "Canalizas tu chi en brebajes. Conoces el Brebaje del Buey Negro y UNO mas a tu eleccion; aprendes otro a los niveles 6, 11 y 17. Usarlos cuesta una accion y sus puntos de chi cada vez, y necesitas un frasco de liquido potable contigo.", effects = {}, choice = {
                 slots = 1,
                 options = {
                     { id = "aliento_fuego", label = "Aliento de Fuego", resourceKey = "chi", resourceCost = 2, requiresLevel = 6, desc = "Gastas 2 puntos de chi para exhalar fuego en un cono de 4,6 metros. Cada criatura en el area hace una salvacion de Destreza: dano por fuego igual a tu nivel de Monje mas tu Mod. Sabiduria si falla, la mitad si tiene exito." },

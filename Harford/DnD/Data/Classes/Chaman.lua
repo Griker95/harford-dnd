@@ -59,7 +59,7 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "cha_mej_torbellino", level = 3, name = "Torbellino", type = "pasivo", description = "Puntos de torbellino (mitad de tu nivel, redondeado hacia arriba) para ataques con armas elementales (Golpe de Roca, Látigo Elemental, etc.). Recargan en descanso corto o largo.", effects = {
                 { kind = "resourceMax", resource = "maelstrom", perClassLevel = "chaman", values = { 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10 } },
             } },
-            { id = "cha_mej_ataques_3", level = 3, name = "Ataques con armas conocidos", type = "choice", description = "Conoces dos ataques con armas a tu eleccion; aprendes mas a los niveles 7, 11 y 15. La CD de sus salvaciones es la de tus conjuros.", effects = {}, choice = {
+            { id = "cha_mej_ataques_3", level = 3, name = "Ataques con armas conocidos", actionKind = "optionAbility", bookHidden = true, type = "choice", description = "Conoces dos ataques con armas a tu eleccion; aprendes mas a los niveles 7, 11 y 15. La CD de sus salvaciones es la de tus conjuros.", effects = {}, choice = {
             slots = 2,
             options = {
                 { id = "golpe_roca", label = "Golpe de Roca", resourceKey = "maelstrom", resourceCost = 1, desc = "Cuando golpeas con un ataque con arma, gastas 1 punto de torbellino para obligarla a una salvacion de Fuerza. Si falla, es empujada 4,6 metros directamente lejos de ti.", maneuver = { cost = 1, attack = true, spendOnHit = true, save = "Fuerza", outcome = "empujado 4,6 metros" } },

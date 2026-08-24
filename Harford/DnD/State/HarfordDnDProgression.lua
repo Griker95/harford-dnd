@@ -3,7 +3,7 @@
 HarfordDnDProgression = HarfordDnDProgression or {}
 
 local API = HarfordDnDProgression
-local SCHEMA_VERSION = 2
+local SCHEMA_VERSION = 3
 local MAX_TOTAL_LEVEL = 20
 API.MAX_TOTAL_LEVEL = MAX_TOTAL_LEVEL
 
@@ -75,6 +75,150 @@ local function EmptyProgression()
     }
 end
 
+-- Ids de rasgo renombrados a la convencion <abrevClase>_<abrevSub>_<cosa>. El estado del jugador
+-- se guarda POR ID (`choices`, `featureStates`, `featureUses`, `activeStates`), asi que sin esto un
+-- personaje perderia su eleccion de Estilo de combate, su brebaje o sus usos por descanso.
+--
+-- Solo se recorre al migrar desde un esquema anterior a 3: despues, cada perfil ya esta traducido
+-- y la tabla no se vuelve a mirar. Se puede borrar cuando no queden perfiles viejos.
+local IDS_RENOMBRADOS = {
+    ["afliccion_aflicciones_inestables"] = "bru_afl_aflicciones_inestables",
+    ["afliccion_aflicciones_potentes"] = "bru_afl_aflicciones_potentes",
+    ["afliccion_drenar_alma"] = "bru_afl_drenar_alma",
+    ["armas_calma_mortal"] = "gue_arm_calma_mortal",
+    ["armas_golpe_colosal"] = "gue_arm_golpe_colosal",
+    ["armas_golpes_de_oportunidad"] = "gue_arm_golpes_de_oportunidad",
+    ["armas_grito_de_mando"] = "gue_arm_grito_de_mando",
+    ["bestias_vinculo_del_companero"] = "caz_bes_vinculo_del_companero",
+    ["brujo_nigromancia_del_vacio_nivel_6"] = "bru_nigromancia_del_vacio_nivel_6",
+    ["brujo_nigromancia_del_vacio_nivel_7"] = "bru_nigromancia_del_vacio_nivel_7",
+    ["caballero_mu_forja_de_runas_superior"] = "cdm_forja_de_runas_superior",
+    ["caballero_mu_sin_muerte"] = "cdm_sin_muerte",
+    ["caballero_mu_voluntad_de_la_tumba"] = "cdm_voluntad_de_la_tumba",
+    ["cazador_acechador"] = "caz_acechador",
+    ["cazador_aspecto_de_lo_salvaje"] = "caz_aspecto_de_lo_salvaje",
+    ["cazador_conocimiento_del_depredador"] = "caz_conocimiento_del_depredador",
+    ["cazador_demo_alas_demoniacas"] = "dh_alas_demoniacas",
+    ["cazador_demo_cuerpo_atemporal"] = "dh_cuerpo_atemporal",
+    ["cazador_demo_destreza_illidari"] = "dh_destreza_illidari",
+    ["cazador_demo_evasion"] = "dh_evasion",
+    ["cazador_demo_mirada_reveladora"] = "dh_mirada_reveladora",
+    ["cazador_demo_preparado"] = "dh_preparado",
+    ["cazador_demo_purificado_por_las_llamas"] = "dh_purificado_por_las_llamas",
+    ["cazador_demo_resiliencia_abisal"] = "dh_resiliencia_abisal",
+    ["cazador_demo_un_cazador_por_encima_de_todo"] = "dh_un_cazador_por_encima_de_todo",
+    ["cazador_sentidos_agudizados"] = "caz_sentidos_agudizados",
+    ["cdm_comando_oscuro"] = "cdm_san_comando_oscuro",
+    ["cdm_escarcha_conjuros_3"] = "cdm_esc_conjuros_3",
+    ["cdm_escarcha_conjuros_5"] = "cdm_esc_conjuros_5",
+    ["cdm_escudo_sangre"] = "cdm_san_escudo_sangre",
+    ["cdm_golpe_escarcha"] = "cdm_esc_golpe_escarcha",
+    ["cdm_maquina_matar"] = "cdm_esc_maquina_matar",
+    ["cdm_portador_plagas"] = "cdm_pro_portador_plagas",
+    ["cdm_profana_conjuros_3"] = "cdm_pro_conjuros_3",
+    ["cdm_profana_conjuros_5"] = "cdm_pro_conjuros_5",
+    ["cdm_sangre_conjuros_3"] = "cdm_san_conjuros_3",
+    ["cdm_sangre_conjuros_5"] = "cdm_san_conjuros_5",
+    ["cervecero_brebajes_elusivos"] = "monje_cer_brebajes_elusivos",
+    ["cervecero_elaboracion_ligera"] = "monje_cer_elaboracion_ligera",
+    ["demonologia_furia_demoniaca"] = "bru_dem_furia_demoniaca",
+    ["demonologia_grimorio_de_supremacia"] = "bru_dem_grimorio_de_supremacia",
+    ["demonologia_somos_legion"] = "bru_dem_somos_legion",
+    ["destruccion_infierno"] = "bru_des_infierno",
+    ["destruccion_llamas_de_xerrath"] = "bru_des_llamas_de_xerrath",
+    ["destruccion_resolucion_inquebrantable"] = "bru_des_resolucion_inquebrantable",
+    ["disciplina_absolucion_penitencia"] = "sac_dis_absolucion_penitencia",
+    ["disciplina_castigo"] = "sac_dis_castigo",
+    ["disciplina_claridad_de_voluntad"] = "sac_dis_claridad_de_voluntad",
+    ["disciplina_expiacion"] = "sac_dis_expiacion",
+    ["druida_alma_del_bosque"] = "dru_alma_del_bosque",
+    ["druida_cuerpo_atemporal"] = "dru_cuerpo_atemporal",
+    ["equilibrio_bendicion_de_los_ancestros"] = "dru_eq_bendicion_de_los_ancestros",
+    ["equilibrio_encarnacion_elegido_de_elune"] = "dru_eq_encarnacion_elegido_de_elune",
+    ["equilibrio_influencia_astral"] = "dru_eq_influencia_astral",
+    ["escarcha_anillo_de_escarcha"] = "mago_esc_anillo_de_escarcha",
+    ["escarcha_corazon_congelado"] = "cdm_esc_corazon_congelado",
+    ["escarcha_garras_de_hielo"] = "cdm_esc_garras_de_hielo",
+    ["escarcha_invierno_implacable"] = "cdm_esc_invierno_implacable",
+    ["escarcha_manos_de_escarcha"] = "mago_esc_manos_de_escarcha",
+    ["escarcha_pilar_de_escarcha"] = "cdm_esc_pilar_de_escarcha",
+    ["feral_afinidad_superior_feral_o_guar"] = "dru_fer_afinidad_superior_feral_o_guar",
+    ["feral_encarnacion_guardian_de_las_ti"] = "dru_fer_encarnacion_guardian_de_las_ti",
+    ["feral_mutilacion_brutal"] = "dru_fer_mutilacion_brutal",
+    ["fuego_combustion"] = "mago_fue_combustion",
+    ["fuego_prender"] = "mago_fue_prender",
+    ["furia_berserker_enloquecido"] = "gue_fur_berserker_enloquecido",
+    ["furia_critico_devastador"] = "gue_fur_critico_devastador",
+    ["furia_furia_focalizada"] = "gue_fur_furia_focalizada",
+    ["furia_sed_de_sangre"] = "gue_fur_sed_de_sangre",
+    ["guerrero_accion_adicional"] = "gue_accion_adicional",
+    ["guerrero_arquetipo_marcial"] = "gue_arquetipo_marcial",
+    ["guerrero_ataque_extra"] = "gue_ataque_extra",
+    ["guerrero_ataque_extra_2"] = "gue_ataque_extra_2",
+    ["guerrero_estilo_combate"] = "gue_estilo_combate",
+    ["guerrero_furia_interna"] = "gue_furia_interna",
+    ["guerrero_segundo_aliento"] = "gue_segundo_aliento",
+    ["pal_proteccion_conjuros_3"] = "pal_pro_conjuros_3",
+    ["pal_proteccion_conjuros_5"] = "pal_pro_conjuros_5",
+    ["pal_represion_conjuros_3"] = "pal_ret_conjuros_3",
+    ["pal_represion_conjuros_5"] = "pal_ret_conjuros_5",
+    ["pal_sagrado_conjuros_3"] = "pal_sag_conjuros_3",
+    ["pal_sagrado_conjuros_5"] = "pal_sag_conjuros_5",
+    ["paladin_aura_de_coraje"] = "pal_aura_de_coraje",
+    ["paladin_toque_purificador"] = "pal_toque_purificador",
+    ["picaro_anticipacion"] = "pic_anticipacion",
+    ["picaro_esquivo"] = "pic_esquivo",
+    ["picaro_evasion"] = "pic_evasion",
+    ["picaro_golpe_de_suerte"] = "pic_golpe_de_suerte",
+    ["proteccion_golpes_atenuados"] = "gue_pro_golpes_atenuados",
+    ["proteccion_interceptar"] = "gue_pro_interceptar",
+    ["proteccion_nunca_te_rindas"] = "gue_pro_nunca_te_rindas",
+    ["proteccion_presencia_inspiradora"] = "gue_pro_presencia_inspiradora",
+    ["punteria_aspecto_del_aguila"] = "caz_pun_aspecto_del_aguila",
+    ["punteria_ataque_multiple"] = "caz_pun_ataque_multiple",
+    ["punteria_enfoque_del_tirador"] = "caz_pun_enfoque_del_tirador",
+    ["restauracion_corteza_de_hierro"] = "dru_res_corteza_de_hierro",
+    ["restauracion_encarnacion_arbol_de_vida"] = "dru_res_encarnacion_arbol_de_vida",
+    ["restauracion_guardia_cenarion"] = "dru_res_guardia_cenarion",
+    ["restauracion_rejuvenecimiento"] = "dru_res_rejuvenecimiento",
+    ["restauracion_tranquilidad"] = "dru_res_tranquilidad",
+    ["sac_disciplina_conjuros_1"] = "sac_dis_conjuros_1",
+    ["sac_disciplina_conjuros_3"] = "sac_dis_conjuros_3",
+    ["sac_disciplina_conjuros_5"] = "sac_dis_conjuros_5",
+    ["sac_sagrado_conjuros_1"] = "sac_sag_conjuros_1",
+    ["sac_sagrado_conjuros_3"] = "sac_sag_conjuros_3",
+    ["sac_sagrado_conjuros_5"] = "sac_sag_conjuros_5",
+    ["sac_sombra_conjuros_1"] = "sac_som_conjuros_1",
+    ["sac_sombra_conjuros_3"] = "sac_som_conjuros_3",
+    ["sac_sombra_conjuros_5"] = "sac_som_conjuros_5",
+    ["sangre_arma_runica_danza"] = "cdm_san_arma_runica_danza",
+    ["sangre_golpe_al_corazon"] = "cdm_san_golpe_al_corazon",
+    ["sangre_purgatorio"] = "cdm_san_purgatorio",
+    ["sangre_tormenta_de_huesos"] = "cdm_san_tormenta_de_huesos",
+    ["sombra_mente_dominante"] = "sac_som_mente_dominante",
+    ["sombra_rendicion_a_la_locura"] = "sac_som_rendicion_a_la_locura",
+    ["supervivencia_camuflaje_natural"] = "caz_sup_camuflaje_natural",
+    ["supervivencia_contraataque_marcado"] = "caz_sup_contraataque_marcado",
+    ["supervivencia_terminos_de_compromiso"] = "caz_sup_terminos_de_compromiso",
+    ["tejedor_anillo_de_paz"] = "monje_tej_anillo_de_paz",
+    ["tejedor_estatua_del_dragon_de_jade"] = "monje_tej_estatua_del_dragon_de_jade",
+    ["venganza_aura_de_inmolacion"] = "dh_ven_aura_de_inmolacion",
+    ["venganza_ultimo_recurso"] = "dh_ven_ultimo_recurso",
+}
+
+-- Traduce las claves de una tabla indexada por id de rasgo. Reconstruye en una tabla NUEVA: anadir
+-- claves mientras se itera con pairs() sobre la misma es comportamiento indefinido en Lua 5.1.
+local function RenombrarClaves(t)
+    if type(t) ~= "table" then return t, 0 end
+    local fuera, n = {}, 0
+    for k, v in pairs(t) do
+        local nuevo = IDS_RENOMBRADOS[k]
+        if nuevo then n = n + 1 end
+        fuera[nuevo or k] = v
+    end
+    return fuera, n
+end
+
 local function Migrate(data)
     if type(data) ~= "table" then data = EmptyProgression() end
     local oldSchema = tonumber(data.schema) or 0
@@ -129,6 +273,20 @@ local function Migrate(data)
             end
         end
         data.spellSlots = migrated
+    end
+    -- Renombrado de ids: solo al venir de un esquema anterior.
+    if oldSchema < 3 then
+        local total = 0
+        for _, campo in ipairs({ "choices", "featureStates", "featureUses", "activeStates" }) do
+            if type(data[campo]) == "table" then
+                local nuevo, n = RenombrarClaves(data[campo])
+                data[campo] = nuevo
+                total = total + n
+            end
+        end
+        if total > 0 and HarfordChat and HarfordChat.Print then
+            HarfordChat.Print(("Ficha actualizada: %d rasgo(s) renombrados a la convencion nueva."):format(total))
+        end
     end
     data.schema = SCHEMA_VERSION
     if type(data.activeStates) ~= "table" then data.activeStates = {} end

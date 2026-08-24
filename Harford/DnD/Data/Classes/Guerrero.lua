@@ -69,7 +69,7 @@ API.CLASSES[#API.CLASSES + 1] =
         } },
     },
     features = {
-        { id = "guerrero_estilo_combate", level = 1, name = "Estilo de combate", type = "choice", description = "Adoptas un estilo de combate como especialidad. Elige una opcion.", effects = {}, choice = {
+        { id = "gue_estilo_combate", level = 1, name = "Estilo de combate", type = "choice", description = "Adoptas un estilo de combate como especialidad. Elige una opcion.", effects = {}, choice = {
             slots = 1,
             options = {
                 { id = "defensa",    label = "Defensa (+1 CA con armadura)",          effects = { { kind = "bonus", target = "armorClass", value = 1 } } },
@@ -81,8 +81,8 @@ API.CLASSES[#API.CLASSES + 1] =
                 { id = "tirador", label = "Tirador en Combate Cercano (+1 ataque a distancia, ignora cobertura)", effects = { { kind = "bonus", target = "weaponAttack", value = 1 } } },
             },
         } },
-        { id = "guerrero_segundo_aliento", level = 1, name = "Segundo aliento", cast = "accion_adicional", type = "accion", description = "Acción adicional: gasta un dado de golpe d10 para recuperar PG (tirada + Mod. Constitución).", actionKind = "secondWind", effects = {} },
-        { id = "guerrero_furia_interna", level = 2, name = "Ira interna", type = "pasivo", description = "Ganas puntos de Ira al dañar con armas; los gastas en maniobras. Máximo de Ira = tu nivel de Guerrero. Los puntos acumulados permanecen 1 hora antes de disiparse, devolviendo tu reserva de ira a 0. CD de Ira = 8 + competencia + Mod. Fuerza.", effects = {
+        { id = "gue_segundo_aliento", level = 1, name = "Segundo aliento", cast = "accion_adicional", type = "accion", description = "Acción adicional: gasta un dado de golpe d10 para recuperar PG (tirada + Mod. Constitución).", actionKind = "secondWind", effects = {} },
+        { id = "gue_furia_interna", level = 2, name = "Ira interna", type = "pasivo", description = "Ganas puntos de Ira al dañar con armas; los gastas en maniobras. Máximo de Ira = tu nivel de Guerrero. Los puntos acumulados permanecen 1 hora antes de disiparse, devolviendo tu reserva de ira a 0. CD de Ira = 8 + competencia + Mod. Fuerza.", effects = {
             { kind = "resourceMax", resource = "rage", perClassLevel = "guerrero", base = 0, perLevel = 1 },
         } },
         { id = "guerrero_reserva_ira", icon = "ability_warrior_focusedrage", level = 2, name = "Reserva de ira", cast = "accion_adicional", type = "recurso", description = "Puedes usar una acción adicional en tu turno para aprovechar tu reserva interna de ira y ganar un número de puntos de ira. Una vez que uses tu reserva de ira, no puedes volver a usarla hasta que completes un descanso corto o largo.", uses = { max = 1, recharge = "short" },
@@ -127,13 +127,13 @@ API.CLASSES[#API.CLASSES + 1] =
                 { id = "embate_escudo", label = "Embate con escudo", icon = "ability_warrior_shieldbash", desc = "Cuando golpees a una criatura con un ataque de arma cuerpo a cuerpo, puedes gastar 2 puntos de ira y usar tu acción adicional para golpear al objetivo con tu escudo, infligiendo daño igual a 1d4 + tu modificador de Fuerza. Para ello, debes llevar un escudo.", maneuver = { cost = 2, attack = true, spendOnHit = true, outcome = "1d4 + Mod. Fuerza con el escudo" }, effects = {} },
             },
         } },
-        { id = "guerrero_arquetipo_marcial", level = 3, name = "Arquetipo marcial", type = "informativo", description = "Eliges tu arquetipo (Armas, Ira o Protección). Concede rasgos en niveles 3, 7, 11, 15 y 18.", effects = {} },
+        { id = "gue_arquetipo_marcial", level = 3, name = "Arquetipo marcial", type = "informativo", description = "Eliges tu arquetipo (Armas, Ira o Protección). Concede rasgos en niveles 3, 7, 11, 15 y 18.", effects = {} },
         ASI("guerrero", 4),
-        { id = "guerrero_ataque_extra", level = 5, name = "Ataque adicional", type = "pasivo", description = "Atacas dos veces, en lugar de una, al realizar la acción de Atacar.", effects = {
+        { id = "gue_ataque_extra", level = 5, name = "Ataque adicional", type = "pasivo", description = "Atacas dos veces, en lugar de una, al realizar la acción de Atacar.", effects = {
             { kind = "flag", flag = "extraAttack" },
         } },
-        { id = "guerrero_accion_adicional", level = 6, name = "Accion adicional", grantsTurnAction = "accion_adicional", type = "accion", description = "Una acción adicional extra en tu turno; recarga con descanso corto o largo.", uses = { max = 1, recharge = "short" }, effects = {} },
-        { id = "guerrero_ataque_extra_2", level = 20, name = "Ataque adicional (2)", type = "informativo", description = "El número de ataques de tu rasgo de Ataque Extra aumenta a tres cuando alcanzas el nivel 20 en esta clase.", effects = {} },
+        { id = "gue_accion_adicional", level = 6, name = "Accion adicional", grantsTurnAction = "accion_adicional", type = "accion", description = "Una acción adicional extra en tu turno; recarga con descanso corto o largo.", uses = { max = 1, recharge = "short" }, effects = {} },
+        { id = "gue_ataque_extra_2", level = 20, name = "Ataque adicional (2)", type = "informativo", description = "El número de ataques de tu rasgo de Ataque Extra aumenta a tres cuando alcanzas el nivel 20 en esta clase.", effects = {} },
     },
 }
 
@@ -147,7 +147,7 @@ do
     end
     for _, opcion in ipairs((eleccion and eleccion.choice and eleccion.choice.options) or {}) do
         clase.features[#clase.features + 1] = {
-            id = "guerrero_man_" .. tostring(opcion.id),
+            id = "gue_man_" .. tostring(opcion.id),
             icon = opcion.icon,
             -- Disponible desde que se puede elegir: nivel 3, o el que exija la maniobra.
             level = tonumber(opcion.requiresLevel) or 3,

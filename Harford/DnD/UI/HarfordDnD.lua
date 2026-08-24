@@ -1784,7 +1784,7 @@ end
 -- gasta un d10 disponible y la curacion se anuncia/sincroniza por la misma ruta.
 HarfordDnDStore.UseSecondWind = function()
     return RollHitDieHeal and RollHitDieHeal(10, {
-        id = "guerrero_segundo_aliento",
+        id = "gue_segundo_aliento",
         name = "Segundo Aliento",
         description = "Como accion adicional, gastas un dado de golpe d10 para recuperar PG.",
     }) or false

@@ -12786,7 +12786,7 @@ API.FEATURE_TITLES = {
     -- Rasgos RENOMBRADOS al nombre canonico de la web/TRP3, que NO es el del manual. El texto
     -- largo se busca por el titulo del manual, asi que sin este mapeo la ficha se quedaria
     -- con la descripcion corta. Al renombrar un rasgo, comprobar siempre si necesita entrada aqui.
-    cdm_comando_oscuro = "Comando Oscuro",              -- ficha: "Orden oscura"
+    cdm_san_comando_oscuro = "Comando Oscuro",              -- ficha: "Orden oscura"
     monje_tej_niebla_calmante = "Niebla Calmante",      -- ficha: "Niebla reconfortante"
     pic_ase_intuicion = "Intuición del Asesino",        -- ficha: "Intuición de asesino"
     pic_ase_competencia = "Competencia Adicional",      -- ficha: "Competencia con venenos"

@@ -159,7 +159,7 @@ bg_txt = rd("HarfordDnDBackgrounds.lua")
 # El salto de linea cuenta, y no todos declaran lo mismo detras del nombre: cuatro
 # trasfondos ponen sus alias en la linea siguiente y dos van directos a sus rasgos. Se
 # quedaban fuera del compendio, que luego los recreaba desde el libro con peores datos.
-bg_hdr = re.compile(r'id = "([a-z_0-9]+)", name = "([^"]+)",\s*(?:source|aliases|traits)')
+bg_hdr = re.compile(r'id = "([a-z_0-9]+)", name = "([^"]+)",\s*(?:source|aliases|traits|variants)')
 
 # El addon declara que concede cada trasfondo con `Skill("Sigilo")`, `Tool("...")` o su
 # forma larga `{ kind = "skillProf", skill = "..." }`. Se recogen para poder filtrar por

@@ -11,8 +11,17 @@ BASE = r"C:/Users/marco/Documents/New project"
 WEB = r"C:/Users/marco/Documents/harfordweb"
 PNG = os.path.join(BASE, "EpsilonIcons", "png")
 
-DATA = io.open(glob.glob(os.path.join(BASE, "Harford", "**", "HarfordProfessionsData.lua"), recursive=True)[0], encoding="utf-8").read()
-ITEMS = io.open(glob.glob(os.path.join(BASE, "Harford", "**", "HarfordProfessionsItems.lua"), recursive=True)[0], encoding="utf-8").read()
+# Desde la RAIZ, no desde Harford/: los datos de profesiones salieron a un addon
+# LoadOnDemand hermano de esa carpeta, igual que el compendio.
+def _lee(nombre):
+    hits = glob.glob(os.path.join(BASE, "**", nombre), recursive=True)
+    if not hits:
+        raise SystemExit("no encuentro %s bajo %s" % (nombre, BASE))
+    return io.open(hits[0], encoding="utf-8").read()
+
+
+DATA = _lee("HarfordProfessionsData.lua")
+ITEMS = _lee("HarfordProfessionsItems.lua")
 
 g = lambda blk, k: (re.search(r'\b%s\s*=\s*"((?:[^"\\]|\\.)*)"' % k, blk).group(1) if re.search(r'\b%s\s*=\s*"' % k, blk) else "")
 gn = lambda blk, k: (int(re.search(r"\b%s\s*=\s*(\d+)" % k, blk).group(1)) if re.search(r"\b%s\s*=\s*\d+" % k, blk) else None)

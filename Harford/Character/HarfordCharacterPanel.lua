@@ -1950,6 +1950,10 @@ local function PowerWordDisplayFeature(feature, option)
         name = tostring(option.label),
         description = option.desc or feature.description,
         icon = icon,
+        -- `cast` SE ARRASTRA: es lo que mira `BroadcastAbility` para cobrar la economia de turno.
+        -- Sin el, una reaccion elegida como opcion (Palabra de Poder) disparaba sin gastar la
+        -- reaccion del turno. La opcion manda sobre el rasgo padre, que puede tener otro coste.
+        cast = option.cast or feature.cast,
     }
 end
 

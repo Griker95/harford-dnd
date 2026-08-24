@@ -68,4 +68,30 @@ chk("reduccion plana sin marcador", anuncia(9, 4, false), true)
 chk("desviado al demonio", anuncia(9, 5, false), true)
 chk("cero de entrada, cero de salida", anuncia(0, 0, false), false)
 
+
+
+-- El DETALLE de la linea del atacante no debe repetir el tipo de la cabecera.
+-- Salia "9 Perforante (1d6: 1+3+1 + Ataque Furtivo 2d6: 2+2 perforante)": el tipo dos veces en la
+-- misma linea. Solo se nombra cuando el componente es de OTRO tipo que el arma.
+print("El detalle solo nombra el tipo si difiere del arma")
+local wr = io.open("Harford/DnD/Engine/HarfordDnDWeaponRolls.lua"):read("*a")
+chk("dano condicional", wr:find('if cdType ~= "" and cdType ~= dtype then', 1, true) ~= nil, true)
+chk("dano extra", wr:find('if extraType ~= "" and extraType ~= dtype then', 1, true) ~= nil, true)
+
+local function etiqueta(base, tipoArma, tipoComp, marcador)
+    local out = base
+    if tipoComp ~= "" and tipoComp ~= tipoArma then out = out .. " " .. tipoComp end
+    if marcador ~= "" then out = out .. " " .. marcador end
+    return out
+end
+chk("mismo tipo que el arma", etiqueta("Ataque Furtivo 2d6: 2+2", "perforante", "perforante", ""),
+    "Ataque Furtivo 2d6: 2+2")
+chk("otro tipo si se nombra", etiqueta("Golpe Runico 1d6: 4", "cortante", "necrotico", ""),
+    "Golpe Runico 1d6: 4 necrotico")
+chk("el marcador va siempre", etiqueta("Ataque Furtivo 2d6: 2+2", "perforante", "perforante", "R"),
+    "Ataque Furtivo 2d6: 2+2 R")
+chk("otro tipo y marcador", etiqueta("Golpe Runico 1d6: 4", "cortante", "fuego", "V"),
+    "Golpe Runico 1d6: 4 fuego V")
+chk("componente sin tipo declarado", etiqueta("Extra 1d4: 3", "perforante", "", ""), "Extra 1d4: 3")
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

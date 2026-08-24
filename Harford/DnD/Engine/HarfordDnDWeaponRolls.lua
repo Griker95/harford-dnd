@@ -209,10 +209,10 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
             total = total + extraTotal
             AddTypeDamage(extraType, extraTotal, extraMarker)
             local extraLabel = extra.dice .. ": " .. table.concat(extraRolls, "+")
-            if extraType ~= "" then
+            if extraType ~= "" and extraType ~= dtype then
                 extraLabel = extraLabel .. " " .. extraType
-                if extraMarker ~= "" then extraLabel = extraLabel .. " " .. extraMarker end
             end
+            if extraMarker ~= "" then extraLabel = extraLabel .. " " .. extraMarker end
             diceParts[#diceParts + 1] = extraLabel
         end
     end
@@ -313,10 +313,14 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
                 cdExpr = cdExpr ~= "" and (cdExpr .. fmtSigned(cdFlat)) or fmtSigned(cdFlat)
             end
             local cdLabel = cd.label .. " " .. cdExpr
-            if cdType ~= "" then
+            -- El tipo solo se nombra si es DISTINTO del arma: la cabecera ya agrega por tipo, y
+            -- repetirlo daba "9 Perforante (1d6: 1+3+1 + Ataque Furtivo 2d6: 2+2 perforante)".
+            -- Cuando difiere (un 1d6 de fuego sobre una espada) si hace falta decirlo.
+            if cdType ~= "" and cdType ~= dtype then
                 cdLabel = cdLabel .. " " .. cdType
-                if cdMarker ~= "" then cdLabel = cdLabel .. " " .. cdMarker end
             end
+            -- El marcador de mitigacion es de ESE componente y va siempre.
+            if cdMarker ~= "" then cdLabel = cdLabel .. " " .. cdMarker end
             diceParts[#diceParts + 1] = cdLabel
             if isMarkedTarget and HarfordDnDStore.huntersMark then
                 HarfordDnDStore.huntersMark.usedThisTurn = true

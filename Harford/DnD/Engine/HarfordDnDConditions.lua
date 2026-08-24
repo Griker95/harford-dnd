@@ -17,7 +17,7 @@ API.ORDER = {
     "incapacitated", "invisible", "paralyzed", "petrified", "poisoned",
     "prone", "restrained", "stunned", "sleeping", "silenced", "rooted", "slowed",
     "disarmed", "exposed_armor", "burning", "frozen", "chilled", "blessed",
-    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado", "buey_negro",
+    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado", "buey_negro", "esquivando", "circulo_demoniaco",
 }
 
 API.DEFS = {
@@ -31,6 +31,25 @@ API.DEFS = {
             { kind = "rollMode", rolls = { attack = true }, mode = "adv" },
             { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" },
         },
+    },
+    -- ESQUIVAR. No es de ninguna clase: es la accion basica del manual, y esta aqui porque hay
+    -- rasgos que la conceden como accion adicional (Danza Elusiva del Monje). Dura hasta el inicio
+    -- de tu proximo turno.
+    esquivando = {
+        label = "Esquivando", tracking = "state",
+        description = "Los ataques contra ti se hacen con desventaja y tus salvaciones de Destreza tienen ventaja.",
+        effects = {
+            { kind = "incomingRollMode", rolls = { attack = true }, mode = "dis" },
+            { kind = "rollMode", rolls = { save = true }, ability = "Destreza", mode = "adv" },
+        },
+    },
+    -- Brujo "Circulo demoniaco". La ventaja es solo MIENTRAS SIGAS DENTRO, y el cliente no sabe
+    -- donde estas: por eso dura `manual` y lo retira el jugador al salir. Se ve en su lista de
+    -- estados, que es lo unico que evita que se quede puesto sin querer.
+    circulo_demoniaco = {
+        label = "Circulo demoniaco", tracking = "state",
+        description = "Ventaja en los chequeos de concentracion mientras permanezcas dentro del circulo.",
+        effects = { { kind = "rollMode", rolls = { save = true }, ability = "Constitucion", mode = "adv" } },
     },
     -- Monje "Brebaje del Buey Negro". Es ventaja en el PROXIMO ataque, no durante un minuto: se
     -- gasta al tirar (`consumeAfterRoll`), y el minuto es solo el plazo para usarlo.

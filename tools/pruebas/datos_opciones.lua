@@ -37,4 +37,27 @@ print("Etiquetas de opcion revisadas: " .. total)
 chk("ninguna lleva el coste dentro del nombre", conCoste, 0)
 for i = 1, math.min(#ejemplos, 5) do print("     sobra: " .. ejemplos[i]) end
 chk("ninguna dice 'gastas N puntos' sin declararlo", sinDeclarar, 0)
+
+-- Un `castsSpell` que apunte a un conjuro inexistente no da error: el rasgo simplemente no hace
+-- nada al pulsarlo. Se comprueba contra los datos REALES del compendio.
+print("Rasgos que lanzan un conjuro del compendio")
+local compendio = io.open("HarfordCompendioData/HarfordCompendioData.lua")
+local datos = compendio and compendio:read("*a") or ""
+if compendio then compendio:close() end
+local revisados, huerfanos = 0, {}
+for _, cl in ipairs(CLASES) do
+    local fh = io.open("Harford/DnD/Data/Classes/" .. cl .. ".lua")
+    local src = fh and fh:read("*a") or ""
+    if fh then fh:close() end
+    for id in src:gmatch('castsSpell = "([a-z_0-9]+)"') do
+        revisados = revisados + 1
+        if not datos:find('id = "' .. id .. '"', 1, true) then
+            huerfanos[#huerfanos + 1] = id
+        end
+    end
+end
+print("  referencias a conjuro revisadas: " .. revisados)
+for _, id in ipairs(huerfanos) do print("     no existe en el compendio: " .. id) end
+chk("todas apuntan a un conjuro que existe", #huerfanos, 0)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

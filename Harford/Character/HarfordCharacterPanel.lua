@@ -2079,6 +2079,40 @@ end
 -- No se lleva registro de las trampas puestas: sobreviven a un /reload, a un cambio de zona y a una
 -- sesion entera, asi que un contador local mentiria mas de lo que ayudaria. El uso se descuenta al
 -- colocarla, que es donde el manual lo pone.
+-- Un rasgo que concede "los efectos del conjuro X": los brebajes del Monje que replican Contorno
+-- borroso, Acelerar y Libertad de movimiento. Lo lanza el COMPENDIO, no una copia de sus reglas
+-- aqui, asi que trae consigo su duracion, su concentracion y su anuncio reales.
+--
+-- Va con `free`: el coste ya se pago con el recurso del rasgo (chi), y un Monje no tiene ni mana
+-- ni espacios de conjuro con los que pagarlo otra vez.
+local function LanzarConjuroDeRasgo(feature)
+    local api = _G.HarfordCompendioAPI
+    if not (api and api.ResolveCast and api.GetSpellById) then
+        HarfordChat.Print("El compendio de conjuros no esta disponible.")
+        return false
+    end
+    if not api.GetSpellById(feature.castsSpell) then
+        HarfordChat.Print("El conjuro de " .. tostring(feature.name or "ese rasgo")
+            .. " no esta en el compendio todavia.")
+        return false
+    end
+    local ok, err = SpendPowerWord(feature)   -- el rasgo declara su propio resourceKey/resourceCost
+    if not ok then HarfordChat.Print(err); return false end
+    local lanzado, castErr = api.ResolveCast(feature.castsSpell, { free = true })
+    if not lanzado then
+        -- Devolver el recurso: se gasto antes de saber que el lanzamiento no salia.
+        local key, cost = tostring(feature.resourceKey or ""), tonumber(feature.resourceCost) or 0
+        if key ~= "" and cost > 0 and HarfordDnDStore and HarfordDnDStore.AdjustResourceCurrent then
+            HarfordDnDStore.AdjustResourceCurrent(key, cost)
+        end
+        HarfordChat.Print(tostring(castErr or "No se pudo lanzar el conjuro."))
+        return false
+    end
+    AnnounceAbility(feature)
+    if RefreshGameUI then RefreshGameUI() end
+    return true
+end
+
 -- Abre el area de un rasgo cuyo coste YA se ha cobrado en otra ruta (la trampa gasto su uso al
 -- colocarse; la Maldicion gasto su Corrupcion al invocarse). Sin `onCommit`, por eso.
 local function AbrirAreaDeRasgo(feature)
@@ -2794,6 +2828,9 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif self.feature.castsSpell then
+        LanzarConjuroDeRasgo(self.feature)
+        if RefreshBook then RefreshBook() end
     elseif self.feature.actionKind == "malediction" then
         -- Antes vivia dentro de `cat == "activo"`. Al declarar su area pasaron a categoria "area",
         -- que se resolveria sin gastar la Corrupcion ni ofrecer ampliarla.

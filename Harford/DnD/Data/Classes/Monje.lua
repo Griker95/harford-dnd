@@ -40,9 +40,9 @@ API.CLASSES[#API.CLASSES + 1] =
                     { id = "fortificante", label = "Brebaje Fortificante", resourceKey = "chi", resourceCost = 1, grant = { self = true, resource = "temp_health", ability = "Sabiduria", perClassLevel = "monje", perLevelDiv = 2, noun = "vida temporal" }, desc = "Gastas 1 punto de chi para ganar puntos de golpe temporales iguales a la mitad de tu nivel de Monje mas tu Mod. Sabiduria." },
                     { id = "piel_hierro", label = "Brebaje de Piel de Hierro", resourceKey = "chi", resourceCost = 2, requiresLevel = 6, desc = "Gastas 2 puntos de chi para ganar resistencia al dano contundente, perforante y cortante infligido por ataques no magicos durante 1 minuto." },
                     { id = "te_trueno", label = "Te de Trueno", resourceKey = "chi", resourceCost = 1, effects = { { kind = "conditionalWeaponDamage", id = "monje_te_trueno", label = "Te de Trueno", flatAbility = "Sabiduria", damageType = "trueno", resourceCost = "chi", costPerLevel = 1, minLevel = 1, maxLevel = 1 } }, desc = "Gastas 1 punto de chi para ganar la fuerza de Xuen. Hasta el final de tu proximo turno, tus ataques cuerpo a cuerpo infligen dano adicional por trueno igual a tu Mod. Sabiduria." },
-                    { id = "desmayo", label = "Brebaje del Desmayo", resourceKey = "chi", resourceCost = 3, requiresLevel = 11, desc = "Gastas 3 puntos de chi para obtener los efectos del conjuro desenfocar durante 1 minuto." },
-                    { id = "vigorizante", label = "Brebaje Vigorizante", resourceKey = "chi", resourceCost = 4, requiresLevel = 11, desc = "Gastas 4 puntos de chi para obtener los efectos del conjuro prisa durante 1 minuto." },
-                    { id = "agil", label = "Brebaje Agil", resourceKey = "chi", resourceCost = 3, requiresLevel = 11, desc = "Gastas 3 puntos de chi para obtener los efectos del conjuro libertad de movimiento durante 1 minuto." },
+                    { id = "desmayo", label = "Brebaje del Desmayo", resourceKey = "chi", resourceCost = 3, requiresLevel = 11, castsSpell = "contorno_borroso", desc = "Gastas 3 puntos de chi para obtener los efectos del conjuro desenfocar durante 1 minuto." },
+                    { id = "vigorizante", label = "Brebaje Vigorizante", resourceKey = "chi", resourceCost = 4, requiresLevel = 11, castsSpell = "acelerar", desc = "Gastas 4 puntos de chi para obtener los efectos del conjuro prisa durante 1 minuto." },
+                    { id = "agil", label = "Brebaje Agil", resourceKey = "chi", resourceCost = 3, requiresLevel = 11, castsSpell = "libertad_de_movimiento", desc = "Gastas 3 puntos de chi para obtener los efectos del conjuro libertad de movimiento durante 1 minuto." },
                     { id = "purificador", label = "Brebaje Purificador", resourceKey = "chi", resourceCost = 5, requiresLevel = 17, desc = "Gastas 5 puntos de chi para lanzar restauracion mayor sobre ti mismo." },
             } } },
             { id = "monje_cer_tambaleo", level = 6, name = "Tambaleo", cast = "reaccion", type = "informativo", description = "Reacción al recibir daño: resistencia a todo el daño del ataque salvo psíquico. 2 usos por descanso.", uses = { max = 2, recharge = "short" }, effects = {} },
@@ -121,7 +121,7 @@ do
     for _, opcion in ipairs((eleccion and eleccion.choice and eleccion.choice.options) or {}) do
         -- El coste es un DATO de la opcion. Antes se sacaba del nombre con un patron "(N chi)",
         -- que dejo de existir al separarlo: todos los brebajes acabaron costando 1.
-        local mecanica = opcion.area or opcion.grant or opcion.effects
+        local mecanica = opcion.area or opcion.grant or opcion.effects or opcion.castsSpell
         sub.features[#sub.features + 1] = {
             id = "monje_cer_breb_" .. tostring(opcion.id),
             icon = opcion.icon,
@@ -136,6 +136,7 @@ do
             dcAbility = "Sabiduria",
             area = opcion.area,
             grant = opcion.grant,
+            castsSpell = opcion.castsSpell,
             -- Solo cobra el chi al anunciar si NO hay motor que lo cobre en su propia ruta
             -- (el area lo gasta al confirmar, la concesion al aplicarla, el dano condicional al
             -- prepararlo). Si no, se pagaria dos veces.

@@ -1159,6 +1159,11 @@ end
 function API.SpendSpellMana(spellOrId, options)
     local spell = type(spellOrId) == "table" and spellOrId or API.GetSpellById(spellOrId)
     if not spell then return false, "Conjuro no encontrado" end
+    -- `free`: el conjuro ya se ha pagado con OTRO recurso. Lo usan los rasgos que conceden "los
+    -- efectos del conjuro X" -- los brebajes del Monje cuestan chi -- y que por tanto no gastan
+    -- mana ni espacios; un Monje ademas no tiene ninguno de los dos. Todo lo demas del lanzamiento
+    -- sigue igual, y en particular la concentracion, que si le aplica.
+    if options and options.free then return true, 0, API.GetManaCurrent(), API.GetManaMax() end
     if not (options and options.ritual and spell.ritual == true) and API.GetSpellCostMode() == "slots" then
         if (tonumber(spell.level) or 0) <= 0 then return true, 0, 0, 0 end
         if not (HarfordDnDMana and HarfordDnDMana.SpendSpellSlot) then
@@ -1268,7 +1273,8 @@ function API.ResolveCast(spellId, options)
             autoResolve = (isSingle and not isZone) and true or nil,
             zone = isZone and true or nil,
             onCommit = function()
-                local commitOptions = { silent = true, castLevel = API.GetCastLevel(spell, options) }
+                local commitOptions = { silent = true, free = options.free,
+                    castLevel = API.GetCastLevel(spell, options) }
                 local ok, castErr = API.ConfirmCast(spellId, commitOptions)
                 return ok, castErr
             end,
@@ -1285,7 +1291,8 @@ function API.ResolveCast(spellId, options)
     if IsSpellAttack(spell) then
         local valid, attackErr = ValidateSpellAttack()
         if not valid then return false, attackErr end
-        local ok, castErr = API.ConfirmCast(spellId, { silent = true, castLevel = API.GetCastLevel(spell, options) })
+        local ok, castErr = API.ConfirmCast(spellId, { silent = true, free = options.free,
+            castLevel = API.GetCastLevel(spell, options) })
         if not ok then return false, castErr end
         return RollSpellAttack(spell, true)
     end

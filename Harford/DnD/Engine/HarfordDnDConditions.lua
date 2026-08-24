@@ -17,7 +17,7 @@ API.ORDER = {
     "incapacitated", "invisible", "paralyzed", "petrified", "poisoned",
     "prone", "restrained", "stunned", "sleeping", "silenced", "rooted", "slowed",
     "disarmed", "exposed_armor", "burning", "frozen", "chilled", "blessed",
-    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente",
+    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado",
 }
 
 API.DEFS = {
@@ -31,6 +31,27 @@ API.DEFS = {
             { kind = "rollMode", rolls = { attack = true }, mode = "adv" },
             { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" },
         },
+    },
+    -- Paladin "Escudo Sagrado" (Proteccion). El dano de represalia de 1d6 + medio nivel se queda
+    -- fuera: es una reaccion al ataque recibido y el cliente no observa ese momento.
+    escudo_sagrado = {
+        label = "Escudo sagrado", tracking = "state",
+        description = "Las tiradas de ataque contra ti se hacen con desventaja.",
+        effects = { { kind = "incomingRollMode", rolls = { attack = true }, mode = "dis" } },
+    },
+    -- Paladin "Veredicto del Templario" (Represion). La ventaja es SOLO para quien lo emitio.
+    veredicto = {
+        label = "Bajo veredicto", tracking = "state",
+        description = "Quien emitio el veredicto tiene ventaja en sus ataques contra la criatura.",
+        effects = { { kind = "incomingRollModeFromSource", rolls = { attack = true }, mode = "adv" } },
+    },
+    -- Paladin "Rechazar lo Profano" (Represion). "Apartado" del manual: la criatura huye y no
+    -- puede acercarse. Lo unico que el cliente puede sostener es que no ataque a quien la aparto y
+    -- que el efecto acabe al recibir dano; el movimiento se juega en mesa.
+    apartado = {
+        label = "Apartado", tracking = "state",
+        description = "Huye de quien la aparto, no puede acercarsele voluntariamente y no puede atacarle. Termina si recibe dano.",
+        effects = { { kind = "blockAttackSource" }, { kind = "breakOnDamage" } },
     },
     -- Brujo "Maldicion de la Imprudencia". Como Ira desatada, pero solo la mitad mala: la victima
     -- no gana nada, solo recibe ataques con ventaja.
@@ -851,6 +872,24 @@ function API.ResolveRollMode(baseMode, rollType, context)
         local targetEffects = context.targetConditionIds and EffectsForIds(context.targetConditionIds) or EffectsFor(target)
         for _, effect in ipairs(targetEffects) do
             if effect.kind == "incomingRollMode" and EffectApplies(effect, rollType, context) then AddMode(flags, effect.mode) end
+        end
+        -- `incomingRollModeFromSource`: solo se lo aplica QUIEN puso la condicion. El Veredicto del
+        -- Templario da ventaja a los ataques del paladin contra esa criatura, no a los de todos.
+        -- Va aparte por lo mismo que `rollModeExceptSource`: necesita el sourceGuid de la
+        -- INSTANCIA, que `EffectsFor` no arrastra.
+        local actorGuid = context.actorGuid
+            or (context.actorUnit and UnitGUID and UnitGUID(context.actorUnit))
+            or (UnitGUID and UnitGUID("player"))
+        for _, active in ipairs(API.GetActive(target)) do
+            local origen = active.record and active.record.sourceGuid
+            if origen and origen ~= "" and actorGuid and origen == actorGuid then
+                for _, effect in ipairs(active.definition and active.definition.effects or {}) do
+                    if effect.kind == "incomingRollModeFromSource"
+                        and EffectApplies(effect, rollType, context) then
+                        AddMode(flags, effect.mode)
+                    end
+                end
+            end
         end
     end
     if flags.adv == flags.dis then return "normal" end

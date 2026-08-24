@@ -2056,6 +2056,24 @@ local function ResolveAreaValues(feature)
         } }
         area.damageDiceFrom = nil
     end
+    -- `damageBonusFrom`: suma fija a los dados ya declarados (el Martillo de Luz hace "2d10 mas tu
+    -- nivel de paladin"). No sustituye los dados, a diferencia de `damageFrom`.
+    local bono = area.damageBonusFrom
+    if type(bono) == "table" and type(area.damageComponents) == "table" then
+        local extra = math.floor(ClassLevelOf(bono.classLevel) * (tonumber(bono.multiplier) or 1))
+        if bono.abilityMod and HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod then
+            extra = extra + (HarfordDnDCalc.GetAbilityMod(bono.abilityMod) or 0)
+        end
+        local copia = {}
+        for i, comp in ipairs(area.damageComponents) do
+            local c = {}
+            for k, v in pairs(comp) do c[k] = v end
+            if i == 1 then c.damageBonus = (tonumber(c.damageBonus) or 0) + extra end
+            copia[i] = c
+        end
+        area.damageComponents = copia
+        area.damageBonusFrom = nil
+    end
     local from = area.damageFrom
     if type(from) == "table" then
         local total = math.floor(ClassLevelOf(from.classLevel) * (tonumber(from.multiplier) or 1))
@@ -2079,6 +2097,24 @@ end
 -- No se lleva registro de las trampas puestas: sobreviven a un /reload, a un cambio de zona y a una
 -- sesion entera, asi que un contador local mentiria mas de lo que ayudaria. El uso se descuenta al
 -- colocarla, que es donde el manual lo pone.
+-- Cantidades que dependen de la ficha y que la habilidad NO puede repartir sola: los 5 PG por
+-- nivel de la Luz del Amanecer, que el paladin reparte entre quien quiera, o los PG temporales que
+-- Consagracion da a los aliados que elija. Fingir un reparto seria inventarse la regla, asi que se
+-- calcula el numero y se dice en voz alta; el reparto lo hace el jugador.
+local function AnunciarValoresDerivados(feature)
+    for _, v in ipairs(feature.announceValues or {}) do
+        local total = math.floor(ClassLevelOf(v.classLevel) * (tonumber(v.multiplier) or 1))
+        if v.abilityMod and HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod then
+            total = total + (HarfordDnDCalc.GetAbilityMod(v.abilityMod) or 0)
+        end
+        total = math.max(0, total + (tonumber(v.flat) or 0))
+        if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+            HarfordDnDRolls.Broadcast({ type = "info",
+                label = "|cffffd100" .. tostring(total) .. "|r " .. tostring(v.label or "") })
+        end
+    end
+end
+
 -- Un rasgo que se pone a UNO MISMO un estado con duracion (el Brebaje de Piel de Hierro y su
 -- resistencia de 1 minuto). Se modela como condicion y no como bono suelto porque asi caduca sola
 -- por rondas, se ve en la lista de estados y viaja al resto de clientes.
@@ -2104,6 +2140,7 @@ local function AplicarEstadoPropio(feature)
         return false
     end
     AnnounceAbility(feature)
+    AnunciarValoresDerivados(feature)
     if RefreshGameUI then RefreshGameUI() end
     return true
 end
@@ -2857,6 +2894,11 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif type(self.feature.announceValues) == "table" and not self.feature.area then
+        -- Solo numeros: la habilidad no aplica nada por si misma (Luz del Amanecer reparte su
+        -- curacion a mano), pero el numero sale de la ficha y hay que decirlo.
+        if AnnounceAbility(self.feature) then AnunciarValoresDerivados(self.feature) end
+        if RefreshBook then RefreshBook() end
     elseif type(self.feature.selfCondition) == "table" then
         AplicarEstadoPropio(self.feature)
         if RefreshBook then RefreshBook() end
@@ -2917,6 +2959,7 @@ local function BookButtonOnClick(self)
                     return false, "No quedan usos."
                 end
                 if resourceKey ~= "" and resourceCost > 0 then HarfordDnDStore.AdjustResourceCurrent(resourceKey, -resourceCost) end
+                AnunciarValoresDerivados(self.feature)
                 if RefreshBook then RefreshBook() end
                 return true
             end,

@@ -82,4 +82,30 @@ print("Un rasgo sin area pasa tal cual")
 local pelado = { name = "X" }
 chk("misma tabla", Resolve(pelado), pelado)
 
+
+print("Canalizar Divinidad del Paladin (nivel 6, Carisma +4, competencia +3)")
+NIVELES[1] = { classId = "paladin", level = 6 }
+MODS.Carisma = 4
+local martillo = Resolve({ dcAbility = "Carisma", area = {
+    shape = "sphere", resolution = "save", saveAbility = "Constitucion", success = "half",
+    damageComponents = { { damageDice = "2d10", damageType = "radiante" } },
+    damageBonusFrom = { classLevel = "paladin" } } })
+chk("Martillo de Luz: dados intactos", martillo.area.damageComponents[1].damageDice, "2d10")
+chk("Martillo de Luz: +nivel como bonus", martillo.area.damageComponents[1].damageBonus, 6)
+chk("Martillo de Luz: CD 8+3+4", martillo.area.dc, 15)
+chk("damageBonusFrom consumido", martillo.area.damageBonusFrom, nil)
+
+local consagracion = Resolve({ dcAbility = "Carisma", area = {
+    shape = "sphere", resolution = "save", saveAbility = "Destreza", success = "half",
+    damageFrom = { classLevel = "paladin", multiplier = 0.5, damageType = "radiante" } } })
+chk("Consagracion: medio nivel, redondeado abajo", consagracion.area.damageComponents[1].fixedAmount, 3)
+
+-- El bonus se suma al PRIMER componente y no toca la tabla del libro.
+local libro = { dcAbility = "Carisma", area = { resolution = "auto",
+    damageComponents = { { damageDice = "2d10", damageType = "radiante" } },
+    damageBonusFrom = { classLevel = "paladin" } } }
+Resolve(libro); Resolve(libro)
+chk("aplicado dos veces no acumula", Resolve(libro).area.damageComponents[1].damageBonus, 6)
+chk("el libro conserva damageBonusFrom", type(libro.area.damageBonusFrom), "table")
+chk("el libro no gana damageBonus", libro.area.damageComponents[1].damageBonus, nil)
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

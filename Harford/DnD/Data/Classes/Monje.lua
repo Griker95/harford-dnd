@@ -36,10 +36,10 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "monje_cer_brebajes", level = 3, name = "Cervecero elusivo", actionKind = "optionAbility", bookHidden = true, type = "choice", description = "Canalizas tu chi en brebajes. Conoces el Brebaje del Buey Negro y UNO mas a tu eleccion; aprendes otro a los niveles 6, 11 y 17. Usarlos cuesta una accion y sus puntos de chi cada vez, y necesitas un frasco de liquido potable contigo.", effects = {}, choice = {
                 slots = 1,
                 options = {
-                    { id = "aliento_fuego", label = "Aliento de Fuego", resourceKey = "chi", resourceCost = 2, requiresLevel = 6, desc = "Gastas 2 puntos de chi para exhalar fuego en un cono de 4,6 metros. Cada criatura en el area hace una salvacion de Destreza: dano por fuego igual a tu nivel de Monje mas tu Mod. Sabiduria si falla, la mitad si tiene exito." },
-                    { id = "fortificante", label = "Brebaje Fortificante", resourceKey = "chi", resourceCost = 1, desc = "Gastas 1 punto de chi para ganar puntos de golpe temporales iguales a la mitad de tu nivel de Monje mas tu Mod. Sabiduria." },
+                    { id = "aliento_fuego", label = "Aliento de Fuego", resourceKey = "chi", resourceCost = 2, requiresLevel = 6, area = { shape = "cone", sizeText = "4,6 m", resolution = "save", saveAbility = "Destreza", success = "half", damageFrom = { classLevel = "monje", abilityMod = "Sabiduria", damageType = "fuego" } }, desc = "Gastas 2 puntos de chi para exhalar fuego en un cono de 4,6 metros. Cada criatura en el area hace una salvacion de Destreza: dano por fuego igual a tu nivel de Monje mas tu Mod. Sabiduria si falla, la mitad si tiene exito." },
+                    { id = "fortificante", label = "Brebaje Fortificante", resourceKey = "chi", resourceCost = 1, grant = { self = true, resource = "temp_health", ability = "Sabiduria", perClassLevel = "monje", perLevelDiv = 2, noun = "vida temporal" }, desc = "Gastas 1 punto de chi para ganar puntos de golpe temporales iguales a la mitad de tu nivel de Monje mas tu Mod. Sabiduria." },
                     { id = "piel_hierro", label = "Brebaje de Piel de Hierro", resourceKey = "chi", resourceCost = 2, requiresLevel = 6, desc = "Gastas 2 puntos de chi para ganar resistencia al dano contundente, perforante y cortante infligido por ataques no magicos durante 1 minuto." },
-                    { id = "te_trueno", label = "Te de Trueno", resourceKey = "chi", resourceCost = 1, desc = "Gastas 1 punto de chi para ganar la fuerza de Xuen. Hasta el final de tu proximo turno, tus ataques cuerpo a cuerpo infligen dano adicional por trueno igual a tu Mod. Sabiduria." },
+                    { id = "te_trueno", label = "Te de Trueno", resourceKey = "chi", resourceCost = 1, effects = { { kind = "conditionalWeaponDamage", id = "monje_te_trueno", label = "Te de Trueno", flatAbility = "Sabiduria", damageType = "trueno", resourceCost = "chi", costPerLevel = 1, minLevel = 1, maxLevel = 1 } }, desc = "Gastas 1 punto de chi para ganar la fuerza de Xuen. Hasta el final de tu proximo turno, tus ataques cuerpo a cuerpo infligen dano adicional por trueno igual a tu Mod. Sabiduria." },
                     { id = "desmayo", label = "Brebaje del Desmayo", resourceKey = "chi", resourceCost = 3, requiresLevel = 11, desc = "Gastas 3 puntos de chi para obtener los efectos del conjuro desenfocar durante 1 minuto." },
                     { id = "vigorizante", label = "Brebaje Vigorizante", resourceKey = "chi", resourceCost = 4, requiresLevel = 11, desc = "Gastas 4 puntos de chi para obtener los efectos del conjuro prisa durante 1 minuto." },
                     { id = "agil", label = "Brebaje Agil", resourceKey = "chi", resourceCost = 3, requiresLevel = 11, desc = "Gastas 3 puntos de chi para obtener los efectos del conjuro libertad de movimiento durante 1 minuto." },
@@ -119,18 +119,28 @@ do
     end
     -- El coste en puntos de chi se lee de la etiqueta ("(2 chi)"), que es donde lo declara la opcion.
     for _, opcion in ipairs((eleccion and eleccion.choice and eleccion.choice.options) or {}) do
-        local coste = tonumber(tostring(opcion.label):match("%((%d+) chi%)")) or 1
+        -- El coste es un DATO de la opcion. Antes se sacaba del nombre con un patron "(N chi)",
+        -- que dejo de existir al separarlo: todos los brebajes acabaron costando 1.
+        local mecanica = opcion.area or opcion.grant or opcion.effects
         sub.features[#sub.features + 1] = {
             id = "monje_cer_breb_" .. tostring(opcion.id),
+            icon = opcion.icon,
             level = tonumber(opcion.requiresLevel) or 3,
-            name = (tostring(opcion.label):gsub("%s*%(%d+ chi%)", "")),
+            name = opcion.label,
             type = "accion",
             description = opcion.desc,
             requiresOption = opcion.id,
             resourceKey = "chi",
-            resourceCost = coste,
-            spendResourceOnAnnounce = true,
-            effects = {},
+            resourceCost = tonumber(opcion.resourceCost) or 1,
+            -- Las salvaciones del Aliento de Fuego son de Sabiduria, como todo lo del Monje.
+            dcAbility = "Sabiduria",
+            area = opcion.area,
+            grant = opcion.grant,
+            -- Solo cobra el chi al anunciar si NO hay motor que lo cobre en su propia ruta
+            -- (el area lo gasta al confirmar, la concesion al aplicarla, el dano condicional al
+            -- prepararlo). Si no, se pagaria dos veces.
+            spendResourceOnAnnounce = (not mecanica) or nil,
+            effects = opcion.effects or {},
         }
     end
 end

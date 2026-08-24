@@ -255,6 +255,19 @@ function API.BuildSections(data)
                             resourceCost = option.resourceCost,
                             area = option.area,
                             icon = IconPath(option.icon),
+                            -- Lo que la opcion declara como MECANICA viaja con ella: es lo que
+                            -- mira el resolvedor para saber si la resuelve un motor (maniobra,
+                            -- area, concesion de recurso, dano condicional) o si solo se anuncia.
+                            maneuver = option.maneuver,
+                            grant = option.grant,
+                            trap = option.trap,
+                            saveAbility = option.saveAbility,
+                            -- La CD la fija la caracteristica de lanzamiento de la CLASE, no la
+                            -- opcion: se hereda del rasgo padre salvo que la opcion la cambie.
+                            dcAbility = option.dcAbility or feature.dcAbility,
+                            -- Los usos son del rasgo PADRE (una reserva compartida por todas sus
+                            -- opciones), asi que gastar cualquiera descuenta del mismo contador.
+                            usesFrom = feature.usesFrom or (feature.uses and feature.id) or nil,
                         },
                         level = level or 0,
                         source = source,

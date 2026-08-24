@@ -220,6 +220,18 @@ local function NormalizeComponents(components)
     local out = {}
     for i, component in ipairs(components or {}) do
         if i > 8 then break end
+        -- Dano FIJO sin dados. Existe en 5e (el Aliento de Fuego del Monje inflige "tu nivel de
+        -- Monje mas tu Mod. Sabiduria", las trampas del Cazador "el doble de tu nivel"), y hasta
+        -- ahora solo lo aceptaba la curacion, asi que esos efectos no se podian declarar.
+        local fixedAmount = tonumber(component.fixedAmount)
+        if fixedAmount then
+            local damageType = CanonicalDamageType(component.damageType or component.type)
+            if not damageType then return nil, "Componente de dano de area invalido" end
+            out[#out + 1] = {
+                fixedAmount = math.max(1, math.min(10000, math.floor(fixedAmount))),
+                damageType = damageType,
+            }
+        else
         local dice = tostring(component.damageDice or component.dice or "")
         local count, sides
         if HarfordDnDWeapons and HarfordDnDWeapons.ParseDice then
@@ -234,6 +246,7 @@ local function NormalizeComponents(components)
             damageBonus = math.max(-10000, math.min(10000, math.floor(tonumber(component.damageBonus or component.bonus) or 0))),
             damageType = damageType,
         }
+        end
     end
     if #out == 0 then return nil, "El ataque de area no tiene dano" end
     return out
@@ -827,6 +840,13 @@ local function RollComponents(definition)
     local rolled, details = {}, {}
     local rachaUsada = false   -- "Racha de calor": una vez por lanzamiento, no por componente
     for _, component in ipairs(definition.damageComponents) do
+        -- Dano fijo: no hay dados que tirar ni que repetir, asi que ninguna de las reglas de
+        -- repeticion de abajo le aplica.
+        if component.fixedAmount then
+            local amount = math.max(0, math.floor(tonumber(component.fixedAmount) or 0))
+            rolled[#rolled + 1] = { amount = amount, maximum = amount, damageType = component.damageType }
+            details[#details + 1] = tostring(amount) .. " " .. DamageLabel(component.damageType)
+        else
         local count, sides = HarfordDnDWeapons.ParseDice(component.damageDice)
         local values, amount = {}, component.damageBonus
         for _ = 1, count do
@@ -878,6 +898,7 @@ local function RollComponents(definition)
             .. ": " .. table.concat(values, "+")
             .. (#replaced > 0 and (" (Muerte " .. table.concat(replaced, ", ") .. ")") or "")
             .. (racha and (" (Racha de calor +" .. tostring(racha) .. ")") or "")
+        end
     end
     return rolled, table.concat(details, " | ")
 end

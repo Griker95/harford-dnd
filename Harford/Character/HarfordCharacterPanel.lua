@@ -1965,14 +1965,19 @@ local function SpendPowerWord(option)
         return false, "El sistema de recursos no esta disponible."
     end
     if HarfordDnDStore.GetResourceCurrent(key) < cost then
-        return false, "No hay puntos de fe suficientes."
+        return false, "No hay recurso suficiente para esa opcion."
     end
     HarfordDnDStore.AdjustResourceCurrent(key, -cost)
     return true
 end
 
-local function PriestSpellDC()
-    local mod = HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod and HarfordDnDCalc.GetAbilityMod("Carisma") or 0
+-- CD de salvacion de una opcion elegida. La caracteristica NO es fija: la declara el rasgo padre
+-- en `dcAbility` (Carisma en las Palabras de Poder del Sacerdote, Sabiduria en los brebajes del
+-- Monje, las trampas del Cazador y los ataques del Chaman). Carisma queda como valor por defecto
+-- porque Palabra de Poder fue el primer usuario de esta ruta.
+local function OptionSaveDC(feature, option)
+    local abil = tostring((option and option.dcAbility) or (feature and feature.dcAbility) or "Carisma")
+    local mod = HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod and HarfordDnDCalc.GetAbilityMod(abil) or 0
     local pb = HarfordDnDCalc and HarfordDnDCalc.GetSpellPB and HarfordDnDCalc.GetSpellPB() or 0
     local bonus = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus
         and HarfordDnDFeatureEffects.GetBonus("spellDC") or 0
@@ -2003,27 +2008,169 @@ local function OpenPowerWordChoice(anchor, feature)
     ToggleDropDownMenu(1, nil, menu, anchor, 0, 0)
 end
 
--- Constructor UNICO de area para las Palabras de Poder. Antes habia dos funciones casi identicas
--- (una para las de salvacion, otra para Fortaleza) que solo diferian en valores declarados. Lo que
--- cambia lo dice la OPCION: `resolution`, `saveAbility`, `applicationCountAbility` y `sizeText`.
+-- Nivel del jugador en una clase concreta (0 si no la tiene).
+local function ClassLevelOf(classId)
+    if not classId then return 0 end
+    for _, entry in ipairs(HarfordDnDProgression.GetClassLevels(GetProfileName()) or {}) do
+        if entry.classId == classId then return tonumber(entry.level) or 0 end
+    end
+    return 0
+end
+
+-- Un area declarada en los datos NO puede llevar CD ni dano escritos: dependen de la ficha de
+-- quien la usa (nivel de clase y caracteristica de lanzamiento). Se rellenan aqui sobre una COPIA,
+-- porque la tabla del libro es compartida por todos los personajes de la sesion.
+--
+-- `damageFrom` cubre el dano FIJO de 5e ("tu nivel de Monje mas tu Mod. Sabiduria" del Aliento de
+-- Fuego, "el doble de tu nivel de Cazador" de la trampa explosiva), que no es una tirada de dados.
+local function ResolveAreaValues(feature)
+    if type(feature) ~= "table" or type(feature.area) ~= "table" then return feature end
+    local area = {}
+    for k, v in pairs(feature.area) do area[k] = v end
+    -- El motor de areas cobra `area.resourceKey`, no el del rasgo. Un brebaje declara su chi en el
+    -- rasgo, asi que si el area no trae coste propio hereda el suyo.
+    if area.resourceKey == nil and feature.resourceKey then
+        area.resourceKey = feature.resourceKey
+        area.resourceCost = feature.resourceCost
+    end
+    if area.resolution == "save" and not tonumber(area.dc) then
+        area.dc = OptionSaveDC(feature, nil)
+    end
+    if area.conditionSaveAbility and not tonumber(area.conditionSaveDC) then
+        area.conditionSaveDC = OptionSaveDC(feature, nil)
+    end
+    if area.conditionApplySaveAbility and not tonumber(area.conditionApplySaveDC) then
+        area.conditionApplySaveDC = OptionSaveDC(feature, nil)
+    end
+    -- `damageDiceFrom`: los dados escalan con el nivel de clase (la Maldicion de la Agonia pasa de
+    -- 1d4 a 2d4, 3d4 y 4d4). El escalon se declara como { nivel, cantidad }, de menor a mayor.
+    local dados = area.damageDiceFrom
+    if type(dados) == "table" then
+        local nivel, cantidad = ClassLevelOf(dados.classLevel), tonumber(dados.count) or 1
+        for _, escalon in ipairs(dados.scale or {}) do
+            if nivel >= (tonumber(escalon[1]) or 0) then cantidad = tonumber(escalon[2]) or cantidad end
+        end
+        area.damageComponents = { {
+            damageDice = tostring(cantidad) .. "d" .. tostring(tonumber(dados.die) or 4),
+            damageType = dados.damageType,
+        } }
+        area.damageDiceFrom = nil
+    end
+    local from = area.damageFrom
+    if type(from) == "table" then
+        local total = math.floor(ClassLevelOf(from.classLevel) * (tonumber(from.multiplier) or 1))
+        if from.abilityMod and HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod then
+            total = total + (HarfordDnDCalc.GetAbilityMod(from.abilityMod) or 0)
+        end
+        total = total + (tonumber(from.flat) or 0)
+        area.damageComponents = { { fixedAmount = math.max(1, total), damageType = from.damageType } }
+        area.damageFrom = nil
+    end
+    local copia = {}
+    for k, v in pairs(feature) do copia[k] = v end
+    copia.area = area
+    return copia
+end
+
+-- TRAMPAS DEL CAZADOR. Una trampa no se resuelve al pulsarla: se COLOCA con una accion, gastando
+-- un uso, y se dispara mas tarde cuando alguien la pisa. Son dos momentos distintos y el cliente no
+-- puede observar el segundo, asi que lo dice el jugador.
+--
+-- No se lleva registro de las trampas puestas: sobreviven a un /reload, a un cambio de zona y a una
+-- sesion entera, asi que un contador local mentiria mas de lo que ayudaria. El uso se descuenta al
+-- colocarla, que es donde el manual lo pone.
+-- Abre el area de un rasgo cuyo coste YA se ha cobrado en otra ruta (la trampa gasto su uso al
+-- colocarse; la Maldicion gasto su Corrupcion al invocarse). Sin `onCommit`, por eso.
+local function AbrirAreaDeRasgo(feature)
+    if not (HarfordDnDArea and HarfordDnDArea.Open) then return false end
+    local definition, err = HarfordDnDArea.DefinitionFromFeature(ResolveAreaValues(feature))
+    if not definition then
+        HarfordChat.Print(tostring(err or "Definicion de area incompleta."))
+        return false
+    end
+    -- Objetivo unico se resuelve solo, como un ataque normal; un area de verdad abre la ventana.
+    local resolucionUnica = definition.shape == "other" and definition.sizeText == "Objetivo"
+    HarfordDnDArea.Open(definition, {
+        sourceKind = "player",
+        sourceGuid = UnitGUID and UnitGUID("player") or nil,
+        abilityFeature = feature,
+        autoResolve = resolucionUnica or nil,
+    })
+    return true
+end
+API.AbrirAreaDeRasgo = AbrirAreaDeRasgo
+
+local AbrirMenuTrampa
+do
+    local menu, trampa, anclaje
+    AbrirMenuTrampa = function(feature, anchor)
+        if not (UIDropDownMenu_Initialize and ToggleDropDownMenu) then return end
+        menu = menu or CreateFrame("Frame", "HarfordTrapMenu", UIParent, "UIDropDownMenuTemplate")
+        trampa, anclaje = feature, anchor
+        UIDropDownMenu_Initialize(menu, function()
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = "Colocar (gasta un uso)"
+            info.notCheckable = true
+            info.disabled = not FeatureUseAvailable(trampa)
+            info.func = function()
+                CloseDropDownMenus()
+                -- Anuncio sin area: colocarla no hace nada a nadie todavia. `AnnounceAbility`
+                -- gasta el uso porque el rasgo declara `usesFrom`.
+                AnnounceAbility(trampa)
+            end
+            UIDropDownMenu_AddButton(info)
+
+            info = UIDropDownMenu_CreateInfo()
+            info.text = "Se ha activado (resolver)"
+            info.notCheckable = true
+            info.disabled = type(trampa.area) ~= "table"
+            info.func = function()
+                CloseDropDownMenus()
+                AbrirAreaDeRasgo(trampa)   -- el uso ya se gasto al colocarla
+            end
+            UIDropDownMenu_AddButton(info)
+        end, "MENU")
+        ToggleDropDownMenu(1, nil, menu, anclaje or "cursor", 0, 0)
+    end
+end
+
+-- Constructor UNICO de area para las opciones elegidas (Palabras de Poder, brebajes del Monje,
+-- trampas del Cazador). Antes habia dos funciones casi identicas que solo diferian en valores
+-- declarados. Lo que cambia lo dice la OPCION: si trae una tabla `area` completa se usa tal cual
+-- (cono, esfera, dano) y solo se le rellena la CD; si no, se construye el area de objetivo unico
+-- a partir de `resolution`, `saveAbility`, `applicationCountAbility` y `sizeText`.
 local function OpenPowerWordArea(feature, option)
     if not (HarfordDnDArea and HarfordDnDArea.Open) then
         HarfordChat.Print("El motor de areas no esta disponible.")
         return
     end
     local display = PowerWordDisplayFeature(feature, option)
-    local resolucion = option.resolution or (option.saveAbility and "save" or "auto")
-    local area = {
-        shape = "other",
-        sizeText = option.sizeText or (option.applicationCountAbility and "Objetivos" or "Objetivo"),
-        resolution = resolucion,
-        conditionId = option.conditionId,
-        conditionDuration = option.conditionDuration or "target_turn_end",
-    }
-    if resolucion == "save" then
-        area.saveAbility = option.saveAbility
-        area.dc = PriestSpellDC()
-        area.success = "none"
+    local area, resolucion
+    if type(option.area) == "table" then
+        -- Copia: la tabla del libro es compartida y la CD depende de la ficha de quien la usa.
+        area = {}
+        for k, v in pairs(option.area) do area[k] = v end
+        resolucion = area.resolution
+    else
+        resolucion = option.resolution or (option.saveAbility and "save" or "auto")
+        area = {
+            shape = "other",
+            sizeText = option.sizeText or (option.applicationCountAbility and "Objetivos" or "Objetivo"),
+            resolution = resolucion,
+            conditionId = option.conditionId,
+            conditionDuration = option.conditionDuration or "target_turn_end",
+        }
+        if resolucion == "save" then
+            area.saveAbility = option.saveAbility
+            area.success = "none"
+        end
+    end
+    -- La CD nunca se declara en los datos: sale de la ficha de quien usa la habilidad.
+    if resolucion == "save" and not tonumber(area.dc) then
+        area.dc = OptionSaveDC(feature, option)
+    end
+    if area.conditionSaveAbility and not tonumber(area.conditionSaveDC) then
+        area.conditionSaveDC = OptionSaveDC(feature, option)
     end
     -- Fortaleza afecta a tantas criaturas como tu Mod. de Carisma (minimo 1).
     if option.applicationCountAbility then
@@ -2036,29 +2183,32 @@ local function OpenPowerWordArea(feature, option)
         sourceGuid = UnitGUID and UnitGUID("player") or "",
         sourceName = HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName()
             or HarfordClassColors.UnitFullName("player"),
-        -- Solo las de salvacion se resuelven solas: Fortaleza deja marcar varias criaturas.
-        autoResolve = (resolucion == "save") or nil,
+        -- Objetivo unico se resuelve solo, como un ataque normal. Un area de verdad (el cono del
+        -- Aliento de Fuego) o varias criaturas (Fortaleza) abren la ventana para marcarlas.
+        autoResolve = (resolucion == "save" and area.shape == "other"
+            and not area.applicationCount and area.sizeText ~= "Objetivos") or nil,
         onCommit = function()
             local ok, spendErr = SpendPowerWord(option)
             if ok then AnnounceAbility(display) end
             return ok, spendErr
         end,
     })
-    if not opened then HarfordChat.Print(tostring(err or "No se pudo resolver la Palabra de Poder.")) end
+    if not opened then HarfordChat.Print(tostring(err or "No se pudo resolver esa habilidad.")) end
 end
 
 -- Concesion directa de un recurso a un jugador objetivo (Escudo = vida temporal, Consuelo =
 -- curacion). Eran dos funciones identicas salvo el recurso, la formula y el sustantivo de los
 -- avisos: ahora los declara la OPCION en `grant`. Un NPC no se toca: lo gestiona su ficha de DM.
-local function ApplyPowerWordGrant(feature, option)
+local function ApplyPowerWordGrant(feature, option, display)
     local grant = option.grant
     if type(grant) ~= "table" then return end
     local nombre = tostring(grant.noun or "el efecto")
-    if not (UnitExists and UnitExists("target")) then
+    -- `self`: el efecto es sobre uno mismo (Brebaje Fortificante) y no mira el objetivo.
+    if not grant.self and not (UnitExists and UnitExists("target")) then
         HarfordChat.Print(tostring(option.label or "Esta Palabra") .. " requiere un objetivo.")
         return
     end
-    if not (UnitIsPlayer and UnitIsPlayer("target")) then
+    if not grant.self and not (UnitIsPlayer and UnitIsPlayer("target")) then
         HarfordChat.Print("La " .. nombre .. " de un NPC debe gestionarla su ficha de DM.")
         return
     end
@@ -2076,7 +2226,7 @@ local function ApplyPowerWordGrant(feature, option)
 
     local ok, err = SpendPowerWord(option)
     if not ok then HarfordChat.Print(err); return end
-    if UnitIsUnit and UnitIsUnit("target", "player") then
+    if grant.self or (UnitIsUnit and UnitIsUnit("target", "player")) then
         HarfordDnDStore.AdjustResourceCurrent(grant.resource, amount)
     elseif HarfordDnDNet and HarfordDnDNet.SendResourceAdjustToPlayer then
         local targetName = HarfordClassColors.UnitFullName("target")
@@ -2087,7 +2237,7 @@ local function ApplyPowerWordGrant(feature, option)
             return
         end
     end
-    AnnounceAbility(PowerWordDisplayFeature(feature, option))
+    AnnounceAbility(display or PowerWordDisplayFeature(feature, option))
     if RefreshGameUI then RefreshGameUI() end
     if RefreshBook then RefreshBook() end
 end
@@ -2644,14 +2794,32 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif self.feature.actionKind == "malediction" then
+        -- Antes vivia dentro de `cat == "activo"`. Al declarar su area pasaron a categoria "area",
+        -- que se resolveria sin gastar la Corrupcion ni ofrecer ampliarla.
+        if not FeatureUseAvailable(self.feature) then
+            WarnFeatureWithoutUses(self.feature)
+            return
+        end
+        if HarfordDnDStore and HarfordDnDStore.OpenMaledictionMenu then
+            HarfordDnDStore.OpenMaledictionMenu(self.feature, self)
+        end
+    elseif self.feature.trap then
+        -- Colocarla y que se dispare son dos momentos distintos: lo decide el jugador. El menu NO
+        -- exige usos disponibles: si colocaste la ultima y luego se dispara, hay que poder
+        -- resolverla con el contador ya a 0.
+        AbrirMenuTrampa(self.feature, self)
     elseif cat == "area" then
         if (self.feature.uses or self.feature.usesFrom) and not FeatureUseAvailable(self.feature) then
             WarnFeatureWithoutUses(self.feature)
             return
         end
+        -- La CD y el dano por nivel se calculan AHORA: en los datos solo esta declarado de donde
+        -- salen (`dcAbility`, `damageFrom`), porque dependen de la ficha de quien la usa.
+        local resuelta = ResolveAreaValues(self.feature)
         local definition, err
         if HarfordDnDArea and HarfordDnDArea.DefinitionFromFeature then
-            definition, err = HarfordDnDArea.DefinitionFromFeature(self.feature)
+            definition, err = HarfordDnDArea.DefinitionFromFeature(resuelta)
         end
         if not definition then
             if DEFAULT_CHAT_FRAME then
@@ -2708,6 +2876,13 @@ local function BookButtonOnClick(self)
         end
         if RefreshBook then RefreshBook() end
     elseif cat == "activo" or cat == "absolution" then
+        -- El rasgo concede un recurso directamente (vida temporal del Brebaje Fortificante,
+        -- curacion). Lo declara `grant`, igual que en las Palabras de Poder: el rasgo derivado
+        -- hace de opcion de si mismo, asi que se pasa como los tres argumentos.
+        if type(self.feature.grant) == "table" then
+            ApplyPowerWordGrant(self.feature, self.feature, self.feature)
+            return
+        end
         if self.feature.actionKind == "layOnHands" then
             OpenLayOnHandsPrompt(self.feature)
             return
@@ -2716,16 +2891,6 @@ local function BookButtonOnClick(self)
         -- Corrupcion y el fragmento los descuenta OpenMaledictionMenu, no la ruta de anuncio.
         if self.feature.actionKind == "demonicFire" then
             OpenDemonicFirePrompt(self.feature)
-            return
-        end
-        if self.feature.actionKind == "malediction" then
-            if not FeatureUseAvailable(self.feature) then
-                WarnFeatureWithoutUses(self.feature)
-                return
-            end
-            if HarfordDnDStore and HarfordDnDStore.OpenMaledictionMenu then
-                HarfordDnDStore.OpenMaledictionMenu(self.feature, self)
-            end
             return
         end
         if self.feature.actionKind == "demonBite" then

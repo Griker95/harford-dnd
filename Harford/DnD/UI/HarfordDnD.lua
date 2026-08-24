@@ -2550,6 +2550,11 @@ do
                 label = "|cffb388ff[Ampliada]|r " .. tostring(feature.name or "Maldicion"),
             })
         end
+        -- Lo que le hace a la victima se resuelve DESPUES: la Corrupcion se gasta al invocarla,
+        -- supere o no la salvacion. Solo las Maldiciones que declaran area llegan aqui.
+        if feature.area and HarfordCharacterPanel and HarfordCharacterPanel.AbrirAreaDeRasgo then
+            HarfordCharacterPanel.AbrirAreaDeRasgo(feature)
+        end
         return true
     end
 

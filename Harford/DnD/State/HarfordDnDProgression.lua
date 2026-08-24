@@ -446,6 +446,22 @@ end
 local function Migrate(data, silencioso)
     if type(data) ~= "table" then data = EmptyProgression() end
     local oldSchema = tonumber(data.schema) or 0
+
+    -- COPIA ANTES DE TOCAR NADA. La migracion reescribe la ficha en el sitio, corre sola al primer
+    -- acceso y no se puede repetir: si un renombrado sale mal, el rasgo desaparece sin dar error y
+    -- sin nada a lo que volver. La copia se guarda con la propia ficha, asi que sobrevive al
+    -- /reload y se restaura sin depender de que alguien se acordara de copiar el WTF.
+    --
+    -- Se guarda SOLO la anterior: encadenar copias de copias creceria sin limite y la util es la
+    -- de justo antes del cambio que rompio algo.
+    local previo
+    if oldSchema < SCHEMA_VERSION then
+        local limpio = {}
+        for k, v in pairs(data) do
+            if k ~= "_previo" then limpio[k] = v end
+        end
+        previo = CopyTable(limpio)
+    end
     if type(data.classLevels) ~= "table" then data.classLevels = {} end
     -- El progreso de jugador esta limitado a nivel total 20. Normalizar tambien perfiles
     -- antiguos/importados para que no sobreviva una multiclase invalida al nuevo contrato.
@@ -514,7 +530,12 @@ local function Migrate(data, silencioso)
         total = total + RenombrarRaza(data.race)
         if total > 0 and not silencioso and HarfordChat and HarfordChat.Print then
             HarfordChat.Print(("Ficha actualizada: %d rasgo(s) renombrados a la convencion nueva."):format(total))
+            HarfordChat.Print("Se ha guardado una copia de la ficha anterior. Si algo no cuadra: "
+                .. "|cffffd100/harford debug run fichaprevia|r")
         end
+    end
+    if previo then
+        data._previo = { schema = oldSchema, cuando = (time and time()) or 0, datos = previo }
     end
     data.schema = SCHEMA_VERSION
     if type(data.activeStates) ~= "table" then data.activeStates = {} end
@@ -598,6 +619,30 @@ function API.Get(profileName)
     local slot = ProfileSlot(name)
     slot._progression = Migrate(slot._progression)
     return slot._progression, name
+end
+
+-- Copia de la ficha de justo antes de la ultima migracion, si la hubo.
+function API.GetPreviousProgression(profileName)
+    local name = ResolveProfileName(profileName)
+    local slot = ProfileSlot(name)
+    local prev = slot._progression and slot._progression._previo
+    if type(prev) ~= "table" or type(prev.datos) ~= "table" then return nil, name end
+    return prev, name
+end
+
+-- Devuelve la ficha al estado anterior a la migracion. NO migra al restaurar: se deja tal cual
+-- estaba, para poder mirarla. Volvera a migrarse al siguiente acceso, asi que esto sirve para
+-- comparar y para recuperar algo concreto, no para quedarse en el esquema viejo.
+function API.RestorePreviousProgression(profileName)
+    local prev, name = API.GetPreviousProgression(profileName)
+    if not prev then return false, "No hay copia anterior de " .. tostring(name) end
+    local slot = ProfileSlot(name)
+    slot._progression = CopyTable(prev.datos)
+    Touch(name)
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.Invalidate then
+        HarfordDnDFeatureEffects.Invalidate()
+    end
+    return true, name
 end
 
 function API.Set(profileName, data)

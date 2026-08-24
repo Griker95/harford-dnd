@@ -4781,6 +4781,47 @@ API.RegisterCommand("dumpsheet", function(args)
     ShowCopyWindow("Harford - Volcado ficha (Ctrl+A, Ctrl+C)", full)
 end, "vuelca About TRP3 + ficha parseada (copiable): dumpsheet [target]")
 
+API.RegisterCommand("fichaprevia", function(args)
+    local P = _G.HarfordDnDProgression
+    if not (P and P.GetPreviousProgression) then Print("HarfordDnDProgression no cargado"); return end
+    local sub = tostring(args or ""):lower():gsub("%s+", "")
+    local prev, name = P.GetPreviousProgression()
+
+    if not prev then
+        Print("No hay copia anterior de |cffffcc00" .. tostring(name) .. "|r.")
+        Print("Solo se guarda cuando la ficha se MIGRA a un esquema nuevo; si ya estaba al dia, no habia nada que copiar.")
+        return
+    end
+
+    local cuando = prev.cuando and prev.cuando > 0 and date("%d/%m/%Y %H:%M", prev.cuando) or "?"
+    if sub ~= "restaurar" then
+        Print("Copia de |cffffcc00" .. tostring(name) .. "|r anterior a la migracion:")
+        Print(string.format("   esquema |cffffd100%s|r, guardada el |cffffd100%s|r",
+            tostring(prev.schema), cuando))
+        local d = prev.datos
+        local function cuenta(tabla)
+            local n = 0
+            for _ in pairs(type(tabla) == "table" and tabla or {}) do n = n + 1 end
+            return n
+        end
+        Print(string.format("   clases %d | elecciones %d | rasgos con estado %d | usos %d | dotes %d",
+            cuenta(d.classLevels), cuenta(d.choices), cuenta(d.featureStates),
+            cuenta(d.featureUses), cuenta(d.feats)))
+        local actual = P.Get()
+        Print(string.format("   AHORA:  clases %d | elecciones %d | rasgos con estado %d | usos %d | dotes %d",
+            cuenta(actual.classLevels), cuenta(actual.choices), cuenta(actual.featureStates),
+            cuenta(actual.featureUses), cuenta(actual.feats)))
+        Print("Para volver a esa copia: |cff00ff00/harford debug run fichaprevia restaurar|r")
+        return
+    end
+
+    local ok, err = P.RestorePreviousProgression()
+    if not ok then Print("|cffff5555" .. tostring(err) .. "|r"); return end
+    Print("Ficha de |cffffcc00" .. tostring(name) .. "|r restaurada al estado anterior a la migracion.")
+    Print("|cffff5555Ojo:|r se volvera a migrar al siguiente acceso. Sirve para MIRAR que habia y "
+        .. "recuperar algo concreto, no para quedarse en el esquema viejo. Haz |cff00ff00/reload|r.")
+end, "copia de la ficha anterior a la migracion (fichaprevia restaurar para volver a ella)")
+
 API.RegisterCommand("wipesheet", function(args)
     args = tostring(args or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
     local name = (UnitName and UnitName("player")) or "default"

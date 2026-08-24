@@ -231,35 +231,6 @@ do
     end
 end
 
--- ---------------------------------------------------------------- nombres de antes del prefijo
--- Los NPC y ArcSpells ya colocados en el mundo llaman a estas APIs con el nombre ANTERIOR al
--- prefijo `prof_` ("herreria", "herreria_experto"). No se pueden ir a editar uno a uno, asi que la
--- puerta de entrada tiene que aceptarlos; dentro se guarda siempre el id canonico. Sin esto la
--- ventana no se abre y el jugador no ve ningun motivo.
-do
-    local casos = {
-        { "HarfordProfessions.GetDefinition", function()
-            return HarfordProfessions and HarfordProfessions.GetDefinition
-                and HarfordProfessions.GetDefinition("herreria") ~= nil end },
-        { "HarfordTrainerAPI.GetTrainer", function()
-            return _G.HarfordTrainerAPI and _G.HarfordTrainerAPI.GetTrainer
-                and _G.HarfordTrainerAPI.GetTrainer("herreria_experto") ~= nil end },
-        { "HarfordTrainerAPI.OpenTrainer", function()
-            return _G.HarfordTrainerAPI and _G.HarfordTrainerAPI.OpenTrainer
-                and _G.HarfordTrainerAPI.OpenTrainer("herreria_experto") == true end },
-        { "HarfordProfessionsAPI.OpenProfession", function()
-            return _G.HarfordProfessionsAPI and _G.HarfordProfessionsAPI.OpenProfession
-                and _G.HarfordProfessionsAPI.OpenProfession("herreria") == true end },
-    }
-    for _, c in ipairs(casos) do
-        local ok, r = pcall(c[2])
-        if not (ok and r) then
-            fallos[#fallos + 1] = { "compatibilidad",
-                c[1] .. ": no acepta el nombre de antes del prefijo `prof_` (gossip del mundo roto)" }
-        end
-    end
-end
-
 print(string.format("Ficheros cargados: %d   con error al cargar: %d", total, #fallos))
 for _, f in ipairs(fallos) do
     print("")

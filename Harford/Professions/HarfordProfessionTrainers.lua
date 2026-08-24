@@ -182,13 +182,14 @@ local cacheEntrenadores = {}
 function API.Get(trainerId)
     local id = Norm(trainerId)
     if id == "" then return nil end
-    -- Los ids de entrenador se derivan de `<profesion>_<rango>`, y las profesiones pasaron a
-    -- llevar prefijo `prof_`. Los NPC ya colocados en el mundo declaran en su gossip el nombre
-    -- ANTIGUO ("herreria_experto") y no se pueden ir a editar uno a uno: sin esta tolerancia,
-    -- `OpenTrainer` devuelve false y al jugador no se le abre nada, sin decir por que.
-    if not cacheEntrenadores[id] and id:sub(1, 5) ~= "prof_" then
-        local conPrefijo = "prof_" .. id
-        if API._Construir(conPrefijo) then id = conPrefijo end
+    -- El prefijo `prof_` es obligatorio. Un gossip con el nombre de antes NO se acepta, pero se
+    -- dice en voz alta: si no, la ventana no abre y el jugador no ve ningun motivo.
+    if id:sub(1, 5) ~= "prof_" and API._Construir("prof_" .. id) then
+        if HarfordChat and HarfordChat.Print then
+            HarfordChat.Print("|cffff5555Entrenador sin prefijo:|r " .. id
+                .. " -- el gossip de ese NPC debe decir |cffffd100prof_" .. id .. "|r")
+        end
+        return nil
     end
     local memo = cacheEntrenadores[id]
     if memo ~= nil then

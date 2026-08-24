@@ -171,14 +171,17 @@ function API.GetDefinition(profId)
     for _, p in ipairs(API.GetProfessions()) do
         if p.id == profId then return p end
     end
-    -- Las profesiones pasaron a llevar prefijo `prof_`. Los NPC y ArcSpells ya colocados en el
-    -- mundo llaman con el nombre ANTIGUO ("herreria") y no se pueden ir a editar uno a uno: sin
-    -- esto la ventana no se abre y el jugador no ve ningun motivo. Es el punto UNICO de consulta,
-    -- asi que todo lo que cuelga de el hereda la tolerancia.
+    -- El prefijo `prof_` es obligatorio. Un gossip con el nombre de antes NO se acepta, pero se
+    -- dice en voz alta: si no, la ventana no abre y no hay ninguna pista de por que.
     if profId ~= "" and profId:sub(1, 5) ~= "prof_" then
-        local conPrefijo = "prof_" .. profId
         for _, p in ipairs(API.GetProfessions()) do
-            if p.id == conPrefijo then return p end
+            if p.id == "prof_" .. profId then
+                if HarfordChat and HarfordChat.Print then
+                    HarfordChat.Print("|cffff5555Profesion sin prefijo:|r " .. profId
+                        .. " -- el gossip de ese NPC debe decir |cffffd100prof_" .. profId .. "|r")
+                end
+                return nil
+            end
         end
     end
     return nil

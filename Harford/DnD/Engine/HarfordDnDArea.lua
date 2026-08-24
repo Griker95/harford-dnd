@@ -102,19 +102,42 @@ local function ParseAreaNumbers(text)
     return numbers
 end
 
+-- UNIDADES. Las posiciones del cliente vienen en YARDAS (`C_Epsilon.GetPosition`, igual que
+-- `UnitPosition`), pero el tamano del area se escribe en METROS -- o en PIES cuando el texto lo
+-- dice, porque los conjuros del compendio conservan la unidad de su manual.
+--
+-- Sin convertir pasaban dos cosas: un "radio 9 m" cubria 9 yardas = 8,2 m, un 9% corto en TODAS
+-- las areas; y un "cono de 30 pies" se leia como 30, casi cuatro veces su tamano real.
+local YARDAS_POR_METRO = 1 / 0.9144
+local YARDAS_POR_PIE = 1 / 3
+
+local function FactorAYardas(texto)
+    texto = HarfordClassColors.StripAccents(tostring(texto or "")):lower()
+    if texto:find("%f[%a]pies?%f[%A]") or texto:find("%f[%a]ft%f[%A]") then
+        return YARDAS_POR_PIE
+    end
+    return YARDAS_POR_METRO
+end
+
 local function AreaGeometry(def)
-    local nums = ParseAreaNumbers(def and def.sizeText)
+    local texto = def and def.sizeText
+    local nums = ParseAreaNumbers(texto)
+    local f = FactorAYardas(texto)
+    -- Solo se convierten las DISTANCIAS. El segundo numero de un cono son grados de apertura, no
+    -- una longitud: convertirlo abriria o cerraria el cono sin motivo.
+    local function d(v) return v and (v * f) or nil end
     local shape = tostring(def and def.shape or "other")
     if shape == "sphere" then
-        return { shape = "circle", radius = nums[1] or 0, maxZ = DEFAULT_MAX_Z }
+        return { shape = "circle", radius = d(nums[1]) or 0, maxZ = DEFAULT_MAX_Z }
     elseif shape == "cone" then
-        return { shape = "cone", range = nums[1] or 0, angle = nums[2] or DEFAULT_CONE_ANGLE, maxZ = DEFAULT_MAX_Z }
+        return { shape = "cone", range = d(nums[1]) or 0, angle = nums[2] or DEFAULT_CONE_ANGLE, maxZ = DEFAULT_MAX_Z }
     elseif shape == "line" then
-        return { shape = "line", length = nums[1] or 0, width = nums[2] or DEFAULT_LINE_WIDTH, maxZ = DEFAULT_MAX_Z }
+        return { shape = "line", length = d(nums[1]) or 0, width = d(nums[2]) or DEFAULT_LINE_WIDTH, maxZ = DEFAULT_MAX_Z }
     elseif shape == "square" then
-        return { shape = "square", size = nums[1] or 0, maxZ = DEFAULT_MAX_Z }
+        return { shape = "square", size = d(nums[1]) or 0, maxZ = DEFAULT_MAX_Z }
     elseif shape == "rectangle" then
-        return { shape = "rectangle", length = nums[1] or 0, width = nums[2] or nums[1] or 0, maxZ = DEFAULT_MAX_Z }
+        return { shape = "rectangle", length = d(nums[1]) or 0,
+                 width = d(nums[2]) or d(nums[1]) or 0, maxZ = DEFAULT_MAX_Z }
     end
     return nil
 end

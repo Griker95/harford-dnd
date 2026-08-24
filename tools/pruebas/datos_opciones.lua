@@ -60,4 +60,31 @@ print("  referencias a conjuro revisadas: " .. revisados)
 for _, id in ipairs(huerfanos) do print("     no existe en el compendio: " .. id) end
 chk("todas apuntan a un conjuro que existe", #huerfanos, 0)
 
+
+-- Un `conditionId` que no exista en el catalogo hace que el motor rechace el area entera con
+-- "Condicion de area desconocida", asi que el rasgo deja de funcionar del todo.
+print("Condiciones referidas por los datos de clase")
+local fh = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua")
+local motor = fh and fh:read("*a") or ""
+if fh then fh:close() end
+local condRevisadas, condHuerfanas = 0, {}
+local vistas = {}
+for _, cl in ipairs(CLASES) do
+    local f2 = io.open("Harford/DnD/Data/Classes/" .. cl .. ".lua")
+    local src = f2 and f2:read("*a") or ""
+    if f2 then f2:close() end
+    for id in src:gmatch('conditionId = "([a-z_0-9]+)"') do
+        if not vistas[id] then
+            vistas[id] = true
+            condRevisadas = condRevisadas + 1
+            if not motor:find("    " .. id .. " = {", 1, true) then
+                condHuerfanas[#condHuerfanas + 1] = id
+            end
+        end
+    end
+end
+print("  condiciones distintas revisadas: " .. condRevisadas)
+for _, id in ipairs(condHuerfanas) do print("     no esta en el catalogo: " .. id) end
+chk("todas existen en el catalogo", #condHuerfanas, 0)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

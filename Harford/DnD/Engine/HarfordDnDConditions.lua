@@ -17,7 +17,7 @@ API.ORDER = {
     "incapacitated", "invisible", "paralyzed", "petrified", "poisoned",
     "prone", "restrained", "stunned", "sleeping", "silenced", "rooted", "slowed",
     "disarmed", "exposed_armor", "burning", "frozen", "chilled", "blessed",
-    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion",
+    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente",
 }
 
 API.DEFS = {
@@ -30,6 +30,24 @@ API.DEFS = {
         effects = {
             { kind = "rollMode", rolls = { attack = true }, mode = "adv" },
             { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" },
+        },
+    },
+    -- Brujo "Maldicion de la Imprudencia". Como Ira desatada, pero solo la mitad mala: la victima
+    -- no gana nada, solo recibe ataques con ventaja.
+    imprudente = {
+        label = "Imprudente", tracking = "state",
+        description = "Los ataques contra la criatura tienen ventaja.",
+        effects = { { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" } },
+    },
+    -- Monje "Brebaje de Piel de Hierro". No es una condicion del manual, sino el estado que deja
+    -- el brebaje durante 1 minuto. Se modela como condicion porque es lo que ya sabe caducar por
+    -- rondas y viajar al resto de clientes.
+    piel_hierro = {
+        label = "Piel de hierro", tracking = "state",
+        description = "Resistencia al dano contundente, perforante y cortante de ataques no magicos.",
+        effects = {
+            { kind = "resistTypes", nonMagical = true,
+              types = { "bludgeoning", "piercing", "slashing" } },
         },
     },
     blinded = {
@@ -944,8 +962,36 @@ function API.IsSpeedZero(ref)
     return false
 end
 
-function API.GetDamageStatus(ref)
-    for _, effect in ipairs(EffectsFor(ref or "player")) do if effect.kind == "resistAll" then return "resistant" end end
+-- Estado frente a un tipo de dano por CONDICIONES activas.
+--
+-- `resistAll` no mira el tipo (Petrificado resiste todo). `resistTypes` si: la Piel de Hierro del
+-- Monje resiste contundente, perforante y cortante y nada mas, y solo de golpes NO magicos --
+-- `opts.magical` lo dice el atacante, igual que en el resto de la mitigacion.
+--
+-- `damageType` puede llegar en español ("contundente") o con la clave interna ("bludgeoning").
+local function ClaveDeTipo(valor)
+    if type(valor) ~= "string" then return nil end
+    local minus = valor:lower()
+    if HarfordDamageTypes then
+        if HarfordDamageTypes.FromWord and HarfordDamageTypes.FromWord(minus) then
+            return HarfordDamageTypes.FromWord(minus)
+        end
+        if HarfordDamageTypes.Exists and HarfordDamageTypes.Exists(minus) then return minus end
+    end
+    return minus
+end
+
+function API.GetDamageStatus(ref, damageType, opts)
+    local clave = ClaveDeTipo(damageType)
+    for _, effect in ipairs(EffectsFor(ref or "player")) do
+        if effect.kind == "resistAll" then return "resistant" end
+        if effect.kind == "resistTypes" and clave
+            and not (effect.nonMagical and opts and opts.magical) then
+            for _, tipo in ipairs(effect.types or {}) do
+                if ClaveDeTipo(tipo) == clave then return "resistant" end
+            end
+        end
+    end
     return nil
 end
 

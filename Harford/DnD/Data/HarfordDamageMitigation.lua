@@ -278,8 +278,10 @@ function HarfordDamageMitigation.ForTarget(unit, typeText, amount, opts)
         status = HarfordDamageMitigation.ResolveByTypeText(unit, typeText, opts)
     end
 
+    -- El tipo y `opts` hacen falta: hay condiciones que solo resisten ciertos tipos y solo de
+    -- golpes no magicos (Piel de Hierro). Sin ellos resistiria cualquier cosa.
     local conditionStatus = HarfordDnDConditions and HarfordDnDConditions.GetDamageStatus
-        and HarfordDnDConditions.GetDamageStatus(unit)
+        and HarfordDnDConditions.GetDamageStatus(unit, typeText, opts)
     if conditionStatus == STATUS_IMMUNE or status == STATUS_IMMUNE then
         status = STATUS_IMMUNE
     elseif (conditionStatus == STATUS_RESISTANT and status == STATUS_VULNERABLE)

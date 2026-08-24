@@ -2079,6 +2079,35 @@ end
 -- No se lleva registro de las trampas puestas: sobreviven a un /reload, a un cambio de zona y a una
 -- sesion entera, asi que un contador local mentiria mas de lo que ayudaria. El uso se descuenta al
 -- colocarla, que es donde el manual lo pone.
+-- Un rasgo que se pone a UNO MISMO un estado con duracion (el Brebaje de Piel de Hierro y su
+-- resistencia de 1 minuto). Se modela como condicion y no como bono suelto porque asi caduca sola
+-- por rondas, se ve en la lista de estados y viaja al resto de clientes.
+local function AplicarEstadoPropio(feature)
+    local est = feature.selfCondition
+    if not (HarfordDnDConditions and HarfordDnDConditions.ApplyOwned) then
+        HarfordChat.Print("El sistema de condiciones no esta disponible.")
+        return false
+    end
+    local ok, err = SpendPowerWord(feature)   -- el rasgo declara su propio recurso
+    if not ok then HarfordChat.Print(err); return false end
+    local aplicado, aplErr = HarfordDnDConditions.ApplyOwned(est.id, {
+        duration = est.duration, turns = est.turns,
+        sourceName = HarfordClassColors.UnitFullName("player"),
+    })
+    if not aplicado then
+        -- Devolver el recurso: se gasto antes de saber que el estado no entraba.
+        local key, cost = tostring(feature.resourceKey or ""), tonumber(feature.resourceCost) or 0
+        if key ~= "" and cost > 0 and HarfordDnDStore and HarfordDnDStore.AdjustResourceCurrent then
+            HarfordDnDStore.AdjustResourceCurrent(key, cost)
+        end
+        HarfordChat.Print(tostring(aplErr or "No se pudo aplicar el estado."))
+        return false
+    end
+    AnnounceAbility(feature)
+    if RefreshGameUI then RefreshGameUI() end
+    return true
+end
+
 -- Un rasgo que concede "los efectos del conjuro X": los brebajes del Monje que replican Contorno
 -- borroso, Acelerar y Libertad de movimiento. Lo lanza el COMPENDIO, no una copia de sus reglas
 -- aqui, asi que trae consigo su duracion, su concentracion y su anuncio reales.
@@ -2828,6 +2857,9 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif type(self.feature.selfCondition) == "table" then
+        AplicarEstadoPropio(self.feature)
+        if RefreshBook then RefreshBook() end
     elseif self.feature.castsSpell then
         LanzarConjuroDeRasgo(self.feature)
         if RefreshBook then RefreshBook() end

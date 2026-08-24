@@ -285,10 +285,14 @@ end
 --   critTag -> "CRÍTICO" | "PIFIA" | ""
 --   modeTag -> "V" | "D" | "" (para el campo mode de la tirada difundida)
 function HarfordDnDCalc.RollD20Full(rollType, context)
-    local consumeFortaleza = rollType == "save" and context
-        and (context.actorUnit == "player" or context.actorGuid == (UnitGUID and UnitGUID("player")))
-        and HarfordDnDConditions and HarfordDnDConditions.Has
-        and HarfordDnDConditions.Has("player", "palabra_fortaleza")
+    -- Estados de un solo uso (Palabra de Poder: Fortaleza, Brebaje del Buey Negro): valen para UNA
+    -- tirada y se retiran al hacerla. Cuales son lo declara cada condicion, no una lista escrita
+    -- aqui. Solo cuentan si el que tira eres tu: son estados TUYOS.
+    local propia = context and (context.actorUnit == "player"
+        or context.actorGuid == (UnitGUID and UnitGUID("player")))
+    local consumir = propia and HarfordDnDConditions
+        and HarfordDnDConditions.ConditionsToConsumeAfterRoll
+        and HarfordDnDConditions.ConditionsToConsumeAfterRoll(rollType) or nil
     local mode = HarfordDnDCalc.GetMode()
     if rollType and HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode then
         mode = HarfordDnDConditions.ResolveRollMode(mode, rollType, context)
@@ -297,8 +301,8 @@ function HarfordDnDCalc.RollD20Full(rollType, context)
     local chosen, ra, rb = HarfordDnDCalc.RollTextWithMode(mode, a, b)
     local critTag = HarfordDnDCalc.GetCritTag(mode, a, b)
     local modeTag = (mode == "adv" and "V") or (mode == "dis" and "D") or ""
-    if consumeFortaleza and HarfordDnDConditions and HarfordDnDConditions.RemoveOwned then
-        HarfordDnDConditions.RemoveOwned("palabra_fortaleza")
+    for _, id in ipairs(consumir or {}) do
+        if HarfordDnDConditions.RemoveOwned then HarfordDnDConditions.RemoveOwned(id) end
     end
     return chosen, ra, rb, critTag, modeTag, mode
 end

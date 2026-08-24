@@ -17,7 +17,7 @@ API.ORDER = {
     "incapacitated", "invisible", "paralyzed", "petrified", "poisoned",
     "prone", "restrained", "stunned", "sleeping", "silenced", "rooted", "slowed",
     "disarmed", "exposed_armor", "burning", "frozen", "chilled", "blessed",
-    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado",
+    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado", "buey_negro",
 }
 
 API.DEFS = {
@@ -31,6 +31,14 @@ API.DEFS = {
             { kind = "rollMode", rolls = { attack = true }, mode = "adv" },
             { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" },
         },
+    },
+    -- Monje "Brebaje del Buey Negro". Es ventaja en el PROXIMO ataque, no durante un minuto: se
+    -- gasta al tirar (`consumeAfterRoll`), y el minuto es solo el plazo para usarlo.
+    buey_negro = {
+        label = "Buey negro", tracking = "state",
+        description = "Ventaja en tu proximo ataque cuerpo a cuerpo.",
+        effects = { { kind = "rollMode", rolls = { attack = true }, mode = "adv" } },
+        consumeAfterRoll = { attack = true },
     },
     -- Paladin "Escudo Sagrado" (Proteccion). El dano de represalia de 1d6 + medio nivel se queda
     -- fuera: es una reaccion al ataque recibido y el cliente no observa ese momento.
@@ -124,6 +132,7 @@ API.DEFS = {
         label = "Fortaleza", tracking = "state",
         description = "Tiene ventaja en la proxima tirada de salvacion indicada por la Palabra de Poder.",
         effects = { { kind = "rollMode", rolls = { save = true }, mode = "adv" } },
+        consumeAfterRoll = { save = true },
     },
     -- Sacerdote Disciplina "Supresion del dolor". Primera condicion CON VALOR: la cantidad que
     -- reduce viaja en `vars.reduccion` (distinta para cada sacerdote), y a QUE tipos afecta es fijo
@@ -1018,6 +1027,19 @@ local function ClaveDeTipo(valor)
         if HarfordDamageTypes.Exists and HarfordDamageTypes.Exists(minus) then return minus end
     end
     return minus
+end
+
+-- Estados de UN SOLO USO: se retiran en cuanto se hace la tirada para la que servian. Los declara
+-- la propia condicion en `consumeAfterRoll`; antes esto era un `if` con el id de Palabra de Poder:
+-- Fortaleza escrito dentro del calculo de la tirada.
+function API.ConditionsToConsumeAfterRoll(rollType)
+    local fuera = {}
+    if not rollType then return fuera end
+    for _, active in ipairs(API.GetActive("player")) do
+        local consumo = active.definition and active.definition.consumeAfterRoll
+        if type(consumo) == "table" and consumo[rollType] then fuera[#fuera + 1] = active.id end
+    end
+    return fuera
 end
 
 function API.GetDamageStatus(ref, damageType, opts)

@@ -1923,6 +1923,7 @@ local function WarnFeatureWithoutUses(feature)
 end
 
 local AnnounceAbility, OpenLayOnHandsPrompt, OpenDemonicFirePrompt
+local ApplyPowerWordGrant  -- forward: la usan la carga llevada y el estado propio, mas arriba
 
 local function GetPowerWordOption(feature)
     if not (feature and HarfordCharacterBook.IsOptionAbility(feature) and HarfordDnDProgression
@@ -2387,7 +2388,7 @@ end
 -- Concesion directa de un recurso a un jugador objetivo (Escudo = vida temporal, Consuelo =
 -- curacion). Eran dos funciones identicas salvo el recurso, la formula y el sustantivo de los
 -- avisos: ahora los declara la OPCION en `grant`. Un NPC no se toca: lo gestiona su ficha de DM.
-local function ApplyPowerWordGrant(feature, option, display)
+ApplyPowerWordGrant = function(feature, option, display)
     local grant = option.grant
     if type(grant) ~= "table" then return end
     local nombre = tostring(grant.noun or "el efecto")

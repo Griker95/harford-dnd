@@ -142,6 +142,18 @@ if _lua:
 else:
     avisos.append('sin interprete Lua: no se ha comprobado la carga de los ficheros')
 
+# --- 4. Locales usadas antes de declararse -----------------------------------------------------
+# En Lua un `local` solo existe a partir de su linea: llamarlo antes se resuelve como GLOBAL, vale
+# nil y revienta al EJECUTARSE. Compila, carga, y solo falla cuando el jugador pulsa lo que la usa,
+# asi que ni el compilador ni el arnes de carga lo ven. Le paso a `EquipmentGroups` al elegir
+# equipo, definida 400 lineas por debajo de donde se llama.
+_r2 = _sp.run([sys.executable, os.path.join(RAIZ, 'tools', 'cargar', 'adelantadas.py')],
+              capture_output=True, text=True, encoding='utf-8', errors='replace')
+if _r2.returncode != 0:
+    for _l in (_r2.stdout or '').strip().split(chr(10)):
+        if _l.strip() and not _l.startswith('Locales usadas'):
+            errores.append('orden: ' + _l.strip())
+
 print('  %d ficheros .lua revisados' % total)
 for a in avisos:
     print("  AVISO   %s" % a)

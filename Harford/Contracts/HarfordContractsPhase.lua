@@ -523,6 +523,7 @@ end
 --
 -- Al terminar reasigna `phaseOrigin` a esta fase, para que la siguiente publicacion normal ya sea
 -- coherente y no vuelva a bloquearse.
+local EscribirManifiesto  -- forward: se usa mas arriba de donde se define
 function Phase.CopyBoardHere(callback)
   local function fallar(msg)
     TC.SetSyncStatus(msg)
@@ -777,7 +778,7 @@ function Phase.LoadManifest(callback)
 end
 
 -- Deja escrito exactamente que claves componen el tablon ahora mismo, en la fase Y en el espejo.
-local function EscribirManifiesto(claves)
+EscribirManifiesto = function(claves)
   local espejo, tabla, fase = EspejoLocal()
   local copia = {}
   for i, k in ipairs(claves) do copia[i] = tostring(k) end

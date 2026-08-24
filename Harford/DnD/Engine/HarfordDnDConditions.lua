@@ -405,6 +405,7 @@ local function PersistRoot(create)
     return HarfordDnDPersistStore.conditionStates
 end
 
+local NormalizeVars  -- forward: se usa mas arriba de donde se define
 local function CopyRecord(record)
     if type(record) ~= "table" then return nil end
     return {
@@ -427,7 +428,7 @@ end
 -- Variables de una condicion: `{ nombre = numero }`. Es lo que convierte una etiqueta de si/no en
 -- algo que lleva una cantidad ("reduce 5") o un contador ("3 acumulaciones"). Solo numeros: el QUE
 -- hace la condicion vive en su definicion (`API.DEFS`), la instancia solo lleva CUANTO.
-local function NormalizeVars(vars)
+NormalizeVars = function(vars)
     if type(vars) ~= "table" then return nil end
     local out, n = {}, 0
     for nombre, valor in pairs(vars) do

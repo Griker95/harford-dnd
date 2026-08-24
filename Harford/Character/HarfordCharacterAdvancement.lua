@@ -329,6 +329,8 @@ end
 
 local RefreshClassStage
 local RefreshOptionCards  -- forward: la usan subraza (etapa raza) y subclase (etapa clase)
+local EquipmentGroups     -- forward: la etapa de clase pregunta si hay equipo mucho antes de
+                          -- que se defina, junto al selector de equipo
 local CommitClassLevel
 
 local function RefreshClassList()
@@ -972,7 +974,7 @@ local function EquipPick(i)
 end
 
 -- Grupos de equipo inicial de la clase que se esta creando.
-local function EquipmentGroups()
+EquipmentGroups = function()
     local classId = S.classId or S.pendingClassId
     local clase = classId and HarfordDnDBook and HarfordDnDBook.GetClass
         and HarfordDnDBook.GetClass(classId)

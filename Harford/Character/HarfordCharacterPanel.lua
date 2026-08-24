@@ -2872,6 +2872,40 @@ local function BookButtonOnClick(self)
     -- pasivo: nada
 end
 
+-- Activa una habilidad del Libro por su id, sin tener el boton del Libro delante. Lo usa la barra
+-- de accion, que coloca habilidades en los botones nativos de Blizzard.
+--
+-- Reutiliza `BookButtonOnClick` en vez de repetir sus decisiones: categoria, condiciones que
+-- impiden actuar, coste de recurso, area, reaccion preparada y anuncio. Son 338 lineas de reglas
+-- que no deben existir dos veces.
+--
+-- `anchor` es el frame sobre el que abrir menus y flyouts (el propio boton de la barra).
+function API.ActivarHabilidadPorId(featureId, anchor)
+    local feature = ResolveBookFeatureById(featureId)
+    if not feature then
+        HarfordChat.Print("Esa habilidad ya no existe en tu ficha.")
+        return false
+    end
+    -- Objeto minimo con la forma que espera el manejador del Libro.
+    local falso = anchor or CreateFrame("Frame", nil, UIParent)
+    falso.feature = feature
+    BookButtonOnClick(falso)
+    return true
+end
+
+-- Datos de presentacion para pintar la habilidad en un boton ajeno.
+function API.DatosDeHabilidad(featureId)
+    local feature = ResolveBookFeatureById(featureId)
+    if not feature then return nil end
+    return {
+        name = feature.name,
+        icon = IconPath(feature.icon) or (HarfordDnDData and HarfordDnDData.GetFeatureIcon
+            and HarfordDnDData.GetFeatureIcon(feature.id, feature.name)) or nil,
+        description = feature.description,
+        feature = feature,
+    }
+end
+
 -- Geometria EXACTA del SpellBookFrame nativo (probe de GRIKER), 1:1. El panel del Libro usa el
 -- tamaño nativo (550x525) y TODO se ancla al frame con los offsets literales del probe.
 do
@@ -3156,6 +3190,22 @@ local function CreateBookPage()
         b:SetScript("OnEnter", BookButtonOnEnter)
         b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
         b:SetScript("OnClick", BookButtonOnClick)
+        -- Arrastrar a la barra de accion. La habilidad no es un hechizo real, asi que no vale
+        -- `PickupSpell`: la carga la lleva HarfordActionBars con su propio icono de cursor.
+        b:RegisterForDrag("LeftButton")
+        b:SetScript("OnDragStart", function(self)
+            local f = self.feature
+            if f and f.id and HarfordActionBars and HarfordActionBars.RecogerHabilidad then
+                HarfordActionBars.RecogerHabilidad(f.id)
+            end
+        end)
+        -- Soltar en el vacio no debe dejar el icono pegado al cursor. Se difiere un tick porque
+        -- el `OnReceiveDrag` del boton de la barra corre en el mismo instante y necesita leerlo.
+        b:SetScript("OnDragStop", function()
+            if C_Timer and HarfordActionBars and HarfordActionBars.SoltarHabilidad then
+                C_Timer.After(0, HarfordActionBars.SoltarHabilidad)
+            end
+        end)
         b:Hide()
         buttons[i] = b
     end

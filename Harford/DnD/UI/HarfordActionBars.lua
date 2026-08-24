@@ -8,8 +8,11 @@
 -- Los comandos de diagnostico viven en HarfordDebug.lua (convencion del proyecto); este modulo
 -- solo expone API publica (Toggle / SetTestTexture / SetGeometry / Layout).
 --
--- FASE 2 (pendiente): arrastrar habilidades del Libro a los slots, click = ejecutar/preparar
--- (reutiliza la logica de HarfordCharacterPanel), y persistencia en SavedVariables.
+-- La colocacion de habilidades NO usa esta barra visual, sino los ActionButton NATIVOS de
+-- Blizzard (bloque del final del fichero): es donde el jugador ya tiene sus teclas y sus addons
+-- de barras. Arrastrar desde el Libro, click para ejecutar, y persistencia por personaje en
+-- `HarfordActionBarStore`. La ejecucion la resuelve `HarfordCharacterPanel.ActivarHabilidadPorId`,
+-- que reutiliza el manejador del Libro en vez de repetir sus reglas.
 
 HarfordActionBars = HarfordActionBars or {}
 local API = HarfordActionBars
@@ -450,4 +453,223 @@ do
     ev2:RegisterEvent("PLAYER_LOGIN")
     ev2:SetScript("OnEvent", Envolver)
     Envolver()
+end
+
+-- ─── HABILIDADES EN LA BARRA NATIVA ──────────────────────────────────────────
+-- Se colocan sobre los ActionButton de Blizzard, no en una barra propia: es donde el jugador ya
+-- tiene sus teclas y sus addons de barras. El patron es el de SpellCreator/Arcanum, que lleva anos
+-- funcionando en Epsilon: un SecureActionButton acepta un `type` PERSONALIZADO y ejecuta el
+-- manejador declarado en `_<type>`.
+--
+-- Convivencia con Arcanum: cada addon toca SOLO los botones cuyo `type` es el suyo. Mientras los
+-- dos respeten eso, se reparten la barra sin pisarse.
+--
+-- NADA de esto funciona en combate: cambiar atributos seguros esta bloqueado por el cliente. Todas
+-- las rutas abortan con aviso, igual que hace Arcanum.
+do
+    local TIPO = "harford"
+    local TEX_LLENO = "Interface\\Buttons\\UI-Quickslot2"
+
+    local function Aviso(texto)
+        if HarfordChat and HarfordChat.Print then HarfordChat.Print(texto) end
+    end
+
+    local function EnCombate()
+        if InCombatLockdown and InCombatLockdown() then
+            Aviso("No se pueden mover habilidades de la barra en combate.")
+            return true
+        end
+        return false
+    end
+
+    -- Clave de registro. La barra principal cambia de accion segun la PAGINA, asi que la pagina
+    -- forma parte de la identidad de la ranura; las barras secundarias no cambian.
+    local function Ranura(button)
+        if not (button and button.GetName and button:GetName()) then return nil end
+        local nombre = button:GetName()
+        local padre = button.GetParent and button:GetParent()
+        local nombrePadre = padre and padre.GetName and padre:GetName() or ""
+        if nombrePadre == "MainMenuBarArtFrame" or nombrePadre:find("Dominos", 1, true)
+            or nombre:find("^ActionButton%d") then
+            return nombre .. ":" .. tostring(GetActionBarPage and GetActionBarPage() or 1)
+        end
+        return nombre
+    end
+
+    local function Store()
+        HarfordActionBarStore = HarfordActionBarStore or {}
+        HarfordActionBarStore.botones = HarfordActionBarStore.botones or {}
+        return HarfordActionBarStore
+    end
+
+    local function Pintar(button)
+        local icono = button.icon or (button.GetName and _G[button:GetName() .. "Icon"])
+        if not (icono and button.harfordIcon) then return end
+        icono:SetTexture(button.harfordIcon)
+        icono:SetVertexColor(1, 1, 1, 1)
+        icono:SetAlpha(1)
+        icono:Show()
+        if button.SetNormalTexture then
+            button:SetNormalTexture(TEX_LLENO)
+            if button.NormalTexture then button.NormalTexture:SetVertexColor(0.45, 0.75, 1, 1) end
+        end
+    end
+
+    -- Quita la habilidad y devuelve al boton sus atributos normales.
+    function API.LimpiarBoton(button)
+        if not button or EnCombate() then return false end
+        if button:GetAttribute("type") ~= TIPO then return false end
+        button:SetAttribute("type", "action")
+        button:SetAttribute("_" .. TIPO, nil)
+        button.harfordFeature, button.harfordIcon = nil, nil
+        local r = Ranura(button)
+        if r then Store().botones[r] = nil end
+        if button.Update then pcall(button.Update, button) end
+        return true
+    end
+
+    -- Coloca una habilidad del Libro en un boton nativo.
+    function API.AsignarBoton(button, featureId, silencioso)
+        if not button or EnCombate() then return false end
+        local datos = HarfordCharacterPanel and HarfordCharacterPanel.DatosDeHabilidad
+            and HarfordCharacterPanel.DatosDeHabilidad(featureId)
+        if not datos then
+            if not silencioso then Aviso("Esa habilidad ya no existe en tu ficha.") end
+            return false
+        end
+        button.harfordFeature = tostring(featureId)
+        button.harfordIcon = datos.icon
+        button:SetAttribute("type", TIPO)
+        button:SetAttribute("_" .. TIPO, function(self)
+            if HarfordCharacterPanel and HarfordCharacterPanel.ActivarHabilidadPorId then
+                HarfordCharacterPanel.ActivarHabilidadPorId(self.harfordFeature, self)
+            end
+        end)
+        Pintar(button)
+        local r = Ranura(button)
+        if r then Store().botones[r] = button.harfordFeature end
+        return true
+    end
+
+    -- ── Arrastre desde el Libro ──────────────────────────────────────────────
+    -- Estas habilidades no son hechizos reales, asi que `PickupSpell` no vale: la carga la lleva el
+    -- propio addon y un icono sigue al cursor, como hace Arcanum.
+    local arrastre
+
+    local function IconoArrastre()
+        if arrastre then return arrastre end
+        arrastre = CreateFrame("Frame", "HarfordActionDragIcon", UIParent)
+        arrastre:SetFrameStrata("TOOLTIP")
+        arrastre:SetSize(32, 32)
+        arrastre:EnableMouse(false)
+        arrastre.tex = arrastre:CreateTexture(nil, "OVERLAY")
+        arrastre.tex:SetAllPoints()
+        arrastre:Hide()
+        -- OnUpdate solo mientras dura el arrastre: la guardia sale en la primera linea.
+        arrastre:SetScript("OnUpdate", function(self)
+            if not self.activo then return end
+            local escala, x, y = UIParent:GetEffectiveScale(), GetCursorPosition()
+            self:ClearAllPoints()
+            self:SetPoint("CENTER", nil, "BOTTOMLEFT", x / escala, y / escala)
+        end)
+        return arrastre
+    end
+
+    function API.RecogerHabilidad(featureId)
+        if EnCombate() then return false end
+        local datos = HarfordCharacterPanel and HarfordCharacterPanel.DatosDeHabilidad
+            and HarfordCharacterPanel.DatosDeHabilidad(featureId)
+        if not datos then return false end
+        local f = IconoArrastre()
+        f.featureId, f.activo = tostring(featureId), true
+        f.tex:SetTexture(datos.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+        f:Show()
+        if GameTooltip then GameTooltip:Hide() end
+        return true
+    end
+
+    function API.HabilidadEnElCursor()
+        return arrastre and arrastre.activo and arrastre.featureId or nil
+    end
+
+    function API.SoltarHabilidad()
+        if arrastre then
+            arrastre.activo, arrastre.featureId = false, nil
+            arrastre:Hide()
+        end
+    end
+
+    -- ── Enganche a los botones nativos ───────────────────────────────────────
+    local enganchados = {}
+
+    local function Enganchar(button)
+        if not button or enganchados[button] then return end
+        enganchados[button] = true
+        local function soltar(self)
+            local id = API.HabilidadEnElCursor()
+            if not id then return end
+            API.AsignarBoton(self, id)
+            API.SoltarHabilidad()
+        end
+        button:HookScript("OnReceiveDrag", soltar)
+        button:HookScript("OnClick", soltar)
+        button:HookScript("OnDragStart", function(self)
+            -- Sacar la habilidad del boton devuelve el hueco a Blizzard.
+            if self:GetAttribute("type") == TIPO then API.LimpiarBoton(self) end
+        end)
+    end
+
+    local function BotonesNativos()
+        local fuera = {}
+        if ActionBarButtonEventsFrame and ActionBarButtonEventsFrame.frames then
+            for _, b in ipairs(ActionBarButtonEventsFrame.frames) do fuera[#fuera + 1] = b end
+        else
+            for i = 1, 12 do
+                local b = _G["ActionButton" .. i]
+                if b then fuera[#fuera + 1] = b end
+            end
+        end
+        return fuera
+    end
+
+    -- Restaura lo guardado. Se llama al entrar y al cambiar de pagina de barra.
+    function API.RestaurarBarra()
+        if InCombatLockdown and InCombatLockdown() then return 0 end
+        local n = 0
+        for _, b in ipairs(BotonesNativos()) do
+            Enganchar(b)
+            local r = Ranura(b)
+            local id = r and Store().botones[r]
+            if id and b:GetAttribute("type") ~= TIPO then
+                if API.AsignarBoton(b, id, true) then n = n + 1 end
+            elseif not id and b:GetAttribute("type") == TIPO then
+                API.LimpiarBoton(b)
+            end
+        end
+        return n
+    end
+
+    -- Blizzard repinta sus botones y borraria el icono. `ActionButton_UpdateFlyout` sigue siendo
+    -- global y se llama al final de la actualizacion, asi que es donde se recupera. Y si le han
+    -- soltado encima un hechizo REAL, la habilidad se aparta: manda Blizzard.
+    if hooksecurefunc and _G.ActionButton_UpdateFlyout then
+        hooksecurefunc("ActionButton_UpdateFlyout", function(self)
+            if not (self and self.GetAttribute and self:GetAttribute("type") == TIPO) then return end
+            if self.CalculateAction and GetActionInfo then
+                local accion = self:CalculateAction()
+                if accion and GetActionInfo(accion) then
+                    API.LimpiarBoton(self)
+                    if self.Update then pcall(self.Update, self) end
+                    return
+                end
+            end
+            Pintar(self)
+        end)
+    end
+
+    local ev = CreateFrame("Frame")
+    ev:RegisterEvent("PLAYER_LOGIN")
+    ev:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
+    ev:RegisterEvent("PLAYER_REGEN_ENABLED")
+    ev:SetScript("OnEvent", function() API.RestaurarBarra() end)
 end

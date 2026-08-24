@@ -1686,6 +1686,35 @@ API.RegisterCommand("actionbarscan", function(args)
     if not any then Print("  (ninguna de la lista). Prueba rutas sueltas: actionbarscan <ruta>") end
 end, "escanea que texturas de madera/barra existen en tu cliente (o comprueba una ruta)")
 
+API.RegisterCommand("actionbarslots", function(args)
+    if not (HarfordActionBars and HarfordActionBars.RestaurarBarra) then
+        Print("HarfordActionBars no expone la barra nativa.") return
+    end
+    local sub = (args or ""):match("^%s*(%S+)")
+    if sub == "limpiar" then
+        HarfordActionBarStore = { botones = {} }
+        for i = 1, 12 do
+            local b = _G["ActionButton" .. i]
+            if b and b:GetAttribute("type") == "harford" then HarfordActionBars.LimpiarBoton(b) end
+        end
+        Print("Ranuras Harford vaciadas.")
+        return
+    end
+    Print("Ranuras con habilidad Harford:")
+    local store = HarfordActionBarStore and HarfordActionBarStore.botones or {}
+    local n = 0
+    for ranura, id in pairs(store) do
+        local d = HarfordCharacterPanel and HarfordCharacterPanel.DatosDeHabilidad
+            and HarfordCharacterPanel.DatosDeHabilidad(id)
+        Print(("  %s  =  %s  %s"):format(ranura, id, d and ("|cff66ff66" .. (d.name or "?") .. "|r")
+            or "|cffff6666(ya no esta en tu ficha)|r"))
+        n = n + 1
+    end
+    if n == 0 then Print("  (ninguna)") end
+    Print(("Restauradas ahora: %d. En combate: %s"):format(
+        HarfordActionBars.RestaurarBarra(), tostring(InCombatLockdown and InCombatLockdown())))
+end, "lista las habilidades colocadas en la barra nativa (actionbarslots limpiar las quita)")
+
 -- ─── Panel de personaje / inspeccion / items ─────────────────────────────────
 API.RegisterCommand("trp3build", function()
     if HarfordCharacterPanel and HarfordCharacterPanel.RunTRP3BuildDiagnostic then

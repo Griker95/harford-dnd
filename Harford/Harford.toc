@@ -5,7 +5,7 @@
 ## Version: 2.0.0
 ## OptionalDeps: totalRP3, totalRP3_Extended
 ## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordConfigStore, HarfordReputationStore, HarfordCompendioDB, HarfordContractsDB, HarfordQuestsStore, HarfordCommunicatorStore, HarfordLootPhaseStore, HarfordReputationPhaseStore
-## SavedVariablesPerCharacter: HarfordCompendioCharacterDB, HarfordCourierStore, HarfordProfessionsStore
+## SavedVariablesPerCharacter: HarfordCompendioCharacterDB, HarfordCourierStore, HarfordProfessionsStore, HarfordActionBarStore
 
 # --- Core ---
 Core\HarfordSync.lua

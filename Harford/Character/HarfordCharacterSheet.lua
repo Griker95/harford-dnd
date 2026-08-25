@@ -153,7 +153,12 @@ end
 
 local function RefreshPaperDollSlots(sheet)
     if not (sheet and sheet.slots) then return end
+    -- En inspeccion la ficha es de SOLO LECTURA: la flecha de seleccion invita a cambiarle el
+    -- equipo a otro, que ni se puede ni tendria sentido. Se decide en cada refresco porque el
+    -- panel alterna entre ficha propia e inspeccion sin reconstruir los huecos.
+    local soloLectura = IsInspecting and IsInspecting()
     for _, slot in ipairs(sheet.slots) do
+        if slot.flechaEquipo then slot.flechaEquipo:SetShown(not soloLectura) end
         if slot.icon then
             local texture = nil
             local equipped = HarfordDnDItems and HarfordDnDItems.ResolveSlot
@@ -523,6 +528,10 @@ local function CreateSheetPage()
             end
             OrientarFlecha(false)
             arrow:Show()
+            -- Se guarda en el boton para poder ocultarla en inspeccion. Se crea una sola vez y el
+            -- panel alterna entre ficha propia e inspeccion sin reconstruirse, asi que decidirlo
+            -- aqui la dejaria visible para siempre.
+            b.flechaEquipo = arrow
 
             -- Resaltado sobre el HUECO mientras su menu esta abierto: el nativo lo pinta con
             -- `UI-GearManager-ItemButton-Highlight` a 50x50 (EquipmentFlyoutFrame.Highlight).

@@ -187,6 +187,8 @@ end
 -- cada cliente recibe su aviso de turno y renueva su propia economia de accion.
 local function EntryBelongsToMe(entry)
     if entry and entry.kind == "players" then return true end
+    -- El turno del bando de los PJs es el turno de todos los jugadores, incluido yo.
+    if entry and entry.kind == "bando" and entry.bando == "pjs" then return true end
     if not entry or entry.kind ~= "player" then return false end
 
     local myShort = UnitName and UnitName("player")
@@ -1622,12 +1624,64 @@ local function PromptSetArmorClass(index)
     StaticPopup_Show(dialogName, nil, nil, { index = index, value = SafeNumber(entry.armorClass, 0) })
 end
 
+-- ─── AVANCE POR BANDOS ──────────────────────────────────────────────────────
+-- El turno pasa de BLOQUE a bloque, no de criatura a criatura. Se anuncia con una entrada
+-- sintetica -- `kind = "bando"` -- en vez de con un combatiente: asi el aviso que ya recorre a
+-- todos los clientes sigue sirviendo sin cambiar el protocolo, y cada uno resuelve lo suyo.
+--
+-- Los bandos VACIOS se saltan. Un turno de "Neutrales" sin ningun neutral seria un clic perdido
+-- cada asalto, y en mesa eso cansa mas que cualquier otra cosa.
+local function SiguienteBandoConGente(desde)
+    local orden = HarfordTurnOrderAPI.BANDOS
+    for salto = 1, #orden do
+        local i = ((desde - 1 + salto) % #orden) + 1
+        if #HarfordTurnOrderAPI.GetBandoMembers(orden[i]) > 0 then return i end
+    end
+    return nil
+end
+
+local function AnteriorBandoConGente(desde)
+    local orden = HarfordTurnOrderAPI.BANDOS
+    for salto = 1, #orden do
+        local i = ((desde - 1 - salto) % #orden) + 1
+        if #HarfordTurnOrderAPI.GetBandoMembers(orden[i]) > 0 then return i end
+    end
+    return nil
+end
+
+local function EntradaDeBando(bando)
+    return {
+        kind = "bando",
+        bando = bando,
+        id = "bando:" .. tostring(bando),
+        name = HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or tostring(bando),
+    }
+end
+
 local function NextTurn()
     if not IsTurnAdmin() then Print("Solo el admin puede avanzar turnos.") return end
     ClaimAdminIfNeeded()
     local store = EnsureStore()
     EnsureRoundMarker()
     if #store.entries == 0 then return end
+
+    if store.modoBandos then
+        local actual = tonumber(store.activeBando) or 0
+        local siguiente = SiguienteBandoConGente(actual)
+        if not siguiente then Print("No hay nadie en ningun bando.") return end
+        store.activeBando = siguiente
+        local bando = HarfordTurnOrderAPI.BANDOS[siguiente]
+        local turnSerial = AdvanceTurnSerial()
+        MarkChanged()
+        local entrada = EntradaDeBando(bando)
+        Print("Turno de " .. tostring(entrada.name) .. ".")
+        AlertRoundStates(entrada, siguiente, turnSerial)
+        AlertTurnChanged(entrada, siguiente, turnSerial)
+        AlertMyTurn(entrada, siguiente, turnSerial)
+        SendTurnNotice()
+        return
+    end
+
     store.activeIndex = store.activeIndex + 1
     ClampActiveIndex()
     EnsureActiveVisible()
@@ -1646,6 +1700,22 @@ local function PrevTurn()
     local store = EnsureStore()
     EnsureRoundMarker()
     if #store.entries == 0 then return end
+
+    if store.modoBandos then
+        local actual = tonumber(store.activeBando) or 1
+        local anterior = AnteriorBandoConGente(actual)
+        if not anterior then Print("No hay nadie en ningun bando.") return end
+        store.activeBando = anterior
+        local turnSerial = AdvanceTurnSerial()
+        MarkChanged()
+        local entrada = EntradaDeBando(HarfordTurnOrderAPI.BANDOS[anterior])
+        Print("Turno de " .. tostring(entrada.name) .. ".")
+        AlertTurnChanged(entrada, anterior, turnSerial)
+        AlertMyTurn(entrada, anterior, turnSerial)
+        SendTurnNotice()
+        return
+    end
+
     store.activeIndex = store.activeIndex - 1
     ClampActiveIndex()
     EnsureActiveVisible()
@@ -2086,6 +2156,29 @@ function HarfordTurnOrderAPI.GetBandoMembers(bando)
         if HarfordTurnOrderAPI.GetBando(entry) == bando then fuera[#fuera + 1] = entry end
     end
     return fuera
+end
+
+-- Encender o apagar la iniciativa por bandos. Se guarda en el almacen y viaja con la foto, para
+-- que la mesa entera este en el mismo modo: media mesa por bandos y media por criatura serian dos
+-- combates distintos.
+function HarfordTurnOrderAPI.GetActiveBando()
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" then return nil end
+    local i = tonumber(store.activeBando)
+    return i and HarfordTurnOrderAPI.BANDOS[i] or nil
+end
+
+function HarfordTurnOrderAPI.SetModoBandos(activo)
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" then return false end
+    store.modoBandos = activo and true or nil
+    store.activeBando = activo and (tonumber(store.activeBando) or 0) or nil
+    return true
+end
+
+function HarfordTurnOrderAPI.IsModoBandos()
+    local store = HarfordTurnOrderStore
+    return type(store) == "table" and store.modoBandos == true
 end
 
 function HarfordTurnOrderAPI.HasActiveCombat()

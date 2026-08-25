@@ -1345,10 +1345,35 @@ function API.OnDamageTaken(ref, amount)
     return #remove > 0
 end
 
+-- Los miembros de un bando, como conjunto de guid y nombre corto, para poder preguntar rapido si
+-- un registro pertenece a quien le acaba de tocar.
+local function MiembrosDeBando(bando)
+    local guids, nombres = {}, {}
+    if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.GetBandoMembers) then return guids, nombres end
+    for _, e in ipairs(HarfordTurnOrderAPI.GetBandoMembers(bando) or {}) do
+        local g = tostring(e.guid or e.id or "")
+        if g ~= "" then guids[g] = true end
+        if e.name and e.name ~= "" then nombres[ShortName(e.name)] = true end
+    end
+    return guids, nombres
+end
+
 local function IdentityMatches(record, entry, which)
     if not (record and entry) then return false end
     local guid = tostring(record[which .. "Guid"] or "")
     local name = tostring(record[which .. "Name"] or "")
+    -- Turno de BANDO: no es un combatiente sino un bloque, asi que casa con CUALQUIERA de sus
+    -- miembros. Es lo que hace que a los cinco enemigos les baje el contador de golpe en vez de
+    -- uno a uno, y cada cliente lo resuelve solo: el DM unicamente anuncia que bando empieza.
+    if tostring(entry.kind or "") == "bando" then
+        local guids, nombres = MiembrosDeBando(entry.bando)
+        if guid ~= "" and guids[guid] then return true end
+        if name ~= "" and nombres[ShortName(name)] then return true end
+        -- Y si el bloque es el de los PJs, mis propios estados cuentan aunque el registro no traiga
+        -- identidad: son mios, y yo soy un PJ.
+        if entry.bando == "pjs" and guid == "" and name == "" then return true end
+        return false
+    end
     return (guid ~= "" and guid == tostring(entry.guid or entry.id or ""))
         or (name ~= "" and ShortName(name) == ShortName(entry.name))
 end
@@ -1545,7 +1570,9 @@ end
 
 function API.OnTurnChanged(entry, serial)
     LoadOwned()
-    local turnKey = tostring(serial or 0) .. ":" .. tostring(entry and (entry.guid or entry.id or entry.name) or "")
+    local turnKey = tostring(serial or 0) .. ":"
+        .. tostring(entry and entry.kind == "bando" and ("bando:" .. tostring(entry.bando))
+            or (entry and (entry.guid or entry.id or entry.name)) or "")
     if S.lastTurnKey == turnKey then return end
     S.lastTurnKey = turnKey
     local previous = S.lastTurn

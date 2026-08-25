@@ -88,4 +88,69 @@ chk("se recibe", codec:find("bando = UnescapeText(bando),", 1, true) ~= nil, tru
 chk("y va detras de la CA",
     codec:find("EscapeText(entry.bando)", 1, true) > codec:find("tostring(entry.armorClass or 0)", 1, true), true)
 
+-- ─── AVANCE POR BLOQUES ─────────────────────────────────────────────────────
+-- El turno pasa de BLOQUE a bloque. Se extraen los tres ayudantes del avance, que viven mas
+-- arriba en el fichero que el API de bandos y por eso hay que sacarlos aparte.
+local ia = assert(src:find("local function SiguienteBandoConGente", 1, true))
+local fa = assert(src:find("local function NextTurn()", ia, true))
+local trozo = src:sub(ia, fa - 1)
+    .. " return SiguienteBandoConGente, AnteriorBandoConGente, EntradaDeBando"
+local g
+if setfenv then g = assert(cargar(trozo)); setfenv(g, env)
+else g = assert(cargar(trozo, "t", "t", env)) end
+local Siguiente, Anterior, Entrada = g()
+
+print("El avance recorre los bandos en el orden fijo")
+env.HarfordTurnOrderStore = { entries = {
+    { kind = "player", name = "Gmaster" },
+    { kind = "npc", reaction = 1, name = "Cobra" },
+    { kind = "npc", reaction = 4, name = "Vendedor" },
+    { kind = "npc", reaction = 5, name = "Guardia" },
+} }
+chk("sin empezar, el primero es PJs", Siguiente(0), 1)
+chk("de PJs a Enemigos", Siguiente(1), 2)
+chk("de Enemigos a Neutrales", Siguiente(2), 3)
+chk("de Neutrales a Aliados", Siguiente(3), 4)
+chk("y de Aliados vuelve a PJs", Siguiente(4), 1)
+chk("hacia atras, de Enemigos a PJs", Anterior(2), 1)
+chk("y de PJs se va al ultimo", Anterior(1), 4)
+
+-- Los bandos vacios se SALTAN. Un turno de Neutrales sin ningun neutral seria un clic perdido
+-- cada asalto, y en mesa eso cansa mas que cualquier otra cosa.
+print("Los bandos sin nadie se saltan")
+env.HarfordTurnOrderStore = { entries = {
+    { kind = "player", name = "Gmaster" },
+    { kind = "npc", reaction = 1, name = "Cobra" },
+} }
+chk("de Enemigos salta a PJs sin pasar por vacios", Siguiente(2), 1)
+chk("y hacia atras igual", Anterior(1), 2)
+env.HarfordTurnOrderStore = { entries = {} }
+chk("sin nadie en ningun bando, no hay siguiente", tostring(Siguiente(0)), "nil")
+
+-- La entrada del turno es SINTETICA: representa al bloque, no a una criatura. Asi el aviso que ya
+-- recorre a todos los clientes sirve sin cambiar el protocolo.
+print("El turno se anuncia con una entrada de bando")
+local e = Entrada("enemigos")
+chk("se distingue de un combatiente", e.kind, "bando")
+chk("dice de que bando es", e.bando, "enemigos")
+chk("y se llama como la mesa lo llama", e.name, "Enemigos")
+chk("con id propio para no chocar con nadie", e.id, "bando:enemigos")
+
+-- El bloque de los PJs es de todos los jugadores: cada uno tiene que ver su aviso de turno.
+local turnos = src
+print("El bloque de PJs pertenece a todo jugador")
+chk("EntryBelongsToMe lo reconoce",
+    turnos:find('entry.kind == "bando" and entry.bando == "pjs" then return true', 1, true) ~= nil, true)
+chk("retroceder tambien va por bloques",
+    turnos:find("local anterior = AnteriorBandoConGente(actual)", 1, true) ~= nil, true)
+
+-- Dos bandos seguidos comparten asalto pero NO turno: si la clave no los distinguiera, al segundo
+-- no le bajaria ningun contador.
+local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+print("Cada bloque cuenta como un turno distinto")
+chk("la clave de turno marca el bando",
+    cond:find('("bando:" .. tostring(entry.bando))', 1, true) ~= nil, true)
+chk("y un turno de bando casa con cualquiera de sus miembros",
+    cond:find('if tostring(entry.kind or "") == "bando" then', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

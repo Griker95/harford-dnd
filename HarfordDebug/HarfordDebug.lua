@@ -7027,7 +7027,7 @@ do
         Print("  cuentas de juego WoW alcanzables: " .. alcanzables)
         Print("--- Limites ---")
         Print("  SendAddonMessage: 255 bytes; BNSendGameData: 4078 (16 veces mas)")
-        Print("Usa: chomp enviar [nombre] | chomp bn | chomp limite | chomp crudo")
+        Print("Usa: chomp enviar [nombre] | chomp ctl | chomp bn | chomp limite | chomp crudo")
     end
 
     -- El experimento que decide: mandar lo MISMO por las dos vias y ver que llega por donde.
@@ -7104,6 +7104,45 @@ do
         end
     end
 
+    -- ChatThrottleLib, que ya esta cargado en Epsilon (lo trae AceComm, y Chomp le DELEGA cuando
+    -- lo encuentra). Da callback de entrega, colas con prioridad y control de ancho de banda
+    -- IGUAL que Chomp, pero envia el texto TAL CUAL por `C_ChatInfo.SendAddonMessage`: sin
+    -- cabecera, sin formato propio. Si eso se confirma aqui, es la via a adoptar, porque da lo que
+    -- buscabamos sin romper a ningun cliente antiguo.
+    local function CTL(args)
+        local L = _G.ChatThrottleLib
+        if not L then Print("ChatThrottleLib no disponible.") return end
+        if not Registrar() then
+            -- Sin Chomp no hay callback suyo, pero el receptor crudo si se puede montar.
+            if not recibidor then
+                recibidor = CreateFrame("Frame")
+                recibidor:RegisterEvent("CHAT_MSG_ADDON")
+                recibidor:SetScript("OnEvent", AlLlegarEnCrudo)
+            end
+            if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
+                C_ChatInfo.RegisterAddonMessagePrefix(PREFIJO)
+            end
+        end
+        Print("version de CTL: " .. tostring(L.version))
+        local destino = Destino(args)
+        local carga = "prueba ctl|" .. tostring(GetTime and math.floor(GetTime()) or 0)
+        Print("Destino: " .. tostring(destino) .. "  carga: " .. carga .. " (" .. #carga .. " bytes)")
+        -- El callback recibe (callbackArg, salio, resultado): tambien el valor que devolvio el
+        -- envio, que es mas de lo que da Chomp.
+        local ok, err = pcall(L.SendAddonMessage, L, "ALERT", PREFIJO, carga, "WHISPER", destino,
+            nil, function(arg, salio, resultado)
+                Print("|cff88ff88callback de CTL|r: salio=" .. tostring(salio)
+                    .. " resultado=" .. tostring(resultado) .. " (" .. tostring(arg) .. ")")
+            end, "envioctl")
+        Print("  CTL acepto el envio: " .. (ok and "si" or ("NO -- " .. tostring(err))))
+        Print("Si la linea CRUDO sale SIN cabecera Chomp, CTL no toca el formato: se puede adoptar")
+        Print("sin romper a nadie. Prueba tambien el limite:")
+        local gordo = string.rep("X", 300)
+        local ok2, err2 = pcall(L.SendAddonMessage, L, "BULK", PREFIJO, gordo, "WHISPER", destino)
+        Print("  300 bytes -> " .. (ok2 and "los acepto, que no deberia"
+            or ("los rechazo con error -- " .. tostring(err2))))
+    end
+
     local function Crudo()
         Print("Ultimo por Chomp: " .. (ultimo.chomp
             and (tostring(ultimo.chomp.texto) .. "  [" .. tostring(ultimo.chomp.canal) .. "]")
@@ -7124,7 +7163,8 @@ do
         if sub == "enviar" then return Enviar(resto) end
         if sub == "bn" then return BattleNet(resto) end
         if sub == "limite" then return Limite(resto) end
+        if sub == "ctl" then return CTL(resto) end
         if sub == "crudo" then return Crudo() end
         Informe()
-    end, "mide Chomp frente a SendAddonMessage (chomp [enviar|bn|limite|crudo])")
+    end, "mide Chomp y CTL frente a SendAddonMessage (chomp [enviar|ctl|bn|limite|crudo])")
 end

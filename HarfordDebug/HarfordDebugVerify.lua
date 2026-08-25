@@ -25,9 +25,25 @@ local Print = API.Print
 local GRUPOS = {}         -- nombre -> funcion(reg)
 local ORDEN_GRUPOS = {}
 
-local function Grupo(nombre, fn)
+-- Cada grupo trae su descripcion. Antes la ayuda era una cadena escrita aparte al final del
+-- fichero, que se quedaba vieja al anadir un grupo; ahora se genera de aqui y no puede desfasarse.
+local DESCRIPCIONES = {}
+
+local function Grupo(nombre, descripcion, fn)
+    -- Firma tolerante: si solo llegan dos argumentos, el segundo es la funcion.
+    if type(descripcion) == "function" then fn, descripcion = descripcion, nil end
     GRUPOS[nombre] = fn
+    DESCRIPCIONES[nombre] = descripcion or ""
     ORDEN_GRUPOS[#ORDEN_GRUPOS + 1] = nombre
+end
+
+-- Que hace cada uno, para poder elegir sin salir del juego.
+local function ListarGrupos()
+    Print("grupos de verificacion:")
+    for _, nombre in ipairs(ORDEN_GRUPOS) do
+        Print(string.format("  |cff00ccff%-11s|r %s", nombre, DESCRIPCIONES[nombre] or ""))
+    end
+    Print("uso: /harford debug run verificar [grupo]   ·   sin grupo, los ejecuta todos")
 end
 
 -- Registrador que se pasa a cada grupo. Acumula en vez de imprimir para poder dar primero el
@@ -46,7 +62,7 @@ end
 -- ICONOS. El que no existe sale VERDE en Epsilon, y desde fuera del juego no hay forma de saberlo:
 -- los nombres se eligen a ciegas. Esta es la unica comprobacion posible, y es automatica.
 ------------------------------------------------------------
-Grupo("iconos", function(r)
+Grupo("iconos", "que los iconos existan de verdad (uno inventado sale verde)", function(r)
     local cat = _G.HarfordIconCatalog
     if not (cat and cat.features) then
         r.chk("catalogo de iconos disponible", false, "HarfordIconCatalog no cargado")
@@ -87,7 +103,7 @@ end)
 -- se resuelvan, retirarlo. Solo los que NO llevan aura: aplicar los otros lanzaria comandos de
 -- servidor y le pondria quince auras encima al que verifica.
 ------------------------------------------------------------
-Grupo("estados", function(r)
+Grupo("estados", "las 48 condiciones: alcanzables, y su ciclo aplicar/ver/retirar", function(r)
     local C = _G.HarfordDnDConditions
     if not (C and C.DEFS and C.GetActive) then
         r.chk("motor de condiciones disponible", false)
@@ -142,7 +158,7 @@ end)
 -- ACCIONES BASICAS. Definicion, arte, coste y ruta: las cuatro cosas que hacen falta para que una
 -- entrada del Libro haga algo al pulsarla.
 ------------------------------------------------------------
-Grupo("acciones", function(r, extra)
+Grupo("acciones", 'las diez acciones basicas; anade "ejecutar" para dispararlas de verdad', function(r, extra)
     local A = _G.HarfordDnDActions
     if not (A and A.GetOrdered) then
         r.chk("catalogo de acciones disponible", false)
@@ -216,7 +232,7 @@ end)
 -- TIRA DE ESTADOS. Lo unico verificable solo es que se construya y se coloque; que se VEA bien es
 -- de mirar la pantalla, y se dice como.
 ------------------------------------------------------------
-Grupo("tira", function(r)
+Grupo("tira", "la tira de estados sobre el objetivo, y que quede encima del frame", function(r)
     local UF = _G.HarfordUnitFrames
     r.chk("la tira existe", UF and UF.RefreshConditionStrip ~= nil)
     if not (UF and UF.RefreshConditionStrip) then return end
@@ -252,7 +268,7 @@ end)
 -- mudo: una etiqueta larga pasaba de 255 bytes, `SendAddonMessage` descartaba el mensaje y la
 -- tirada simplemente no llegaba, sin error en ninguno de los dos lados.
 ------------------------------------------------------------
-Grupo("red", function(r)
+Grupo("red", "que los mensajes se compongan y se vuelvan a leer, con su limite de bytes", function(r)
     local WR = _G.HarfordDnDWeaponRolls
     r.chk("motor de tiradas enfrentadas cargado", WR and WR.RollContest ~= nil)
     local C = _G.HarfordDnDConditions
@@ -322,7 +338,7 @@ end)
 -- TIRADAS. La API publica es la que usan Arcanum y los propios rasgos: si devuelve basura, falla
 -- todo lo que cuelga de ella y el sintoma aparece lejos de la causa.
 ------------------------------------------------------------
-Grupo("tiradas", function(r)
+Grupo("tiradas", "la API publica de tiradas, y que registre la ultima", function(r)
     local api = _G.DND5E_ARC_API
     if not api then
         r.chk("API de tiradas disponible", false)
@@ -360,7 +376,7 @@ end)
 ------------------------------------------------------------
 -- FICHA. Los valores derivados: si uno revienta, la ficha se queda a medias sin decir por que.
 ------------------------------------------------------------
-Grupo("ficha", function(r)
+Grupo("ficha", "habilidades, salvaciones, CA y que ningun recurso pase de su maximo", function(r)
     local Calc, Datos = _G.HarfordDnDCalc, _G.HarfordDnDData
     if not (Calc and Datos) then
         r.chk("calculo y datos disponibles", false)
@@ -409,7 +425,7 @@ end)
 -- PROGRESION. Que las 12 clases construyan sus rasgos de 1 a 6 sin reventar. Es barrido puro: no
 -- cambia nada de tu ficha, solo pregunta al libro.
 ------------------------------------------------------------
-Grupo("progresion", function(r)
+Grupo("progresion", "que las 12 clases construyan sus rasgos de 1 a 6", function(r)
     local B = _G.HarfordDnDBook
     local API_B = B and (B.API or B)
     local clases = API_B and API_B.CLASSES
@@ -451,7 +467,7 @@ end)
 --               en BRUTO para que lo resuelva el con sus resistencias.
 -- Confundirlos es como se cuela un fallo que solo aparece contra uno de los dos.
 ------------------------------------------------------------
-Grupo("ataque", function(r)
+Grupo("ataque", "contra EL OBJETIVO QUE TENGAS: distingue NPC de jugador", function(r)
     local K = _G.HarfordDnDCombat
     if not K then
         r.chk("motor de combate disponible", false)
@@ -522,7 +538,7 @@ end)
 -- AREAS. La geometria se prueba fuera de WoW; lo que solo se puede comprobar aqui es que el
 -- cliente de VERDAD entregue posiciones, y que el centro caiga donde debe con lo que hay delante.
 ------------------------------------------------------------
-Grupo("areas", function(r)
+Grupo("areas", "posicion, contexto y donde va a caer el centro de un area", function(r)
     local A = _G.HarfordDnDArea
     r.chk("motor de areas cargado", A ~= nil)
     if not A then return end
@@ -568,7 +584,7 @@ end)
 -- SEGURIDAD. Quien puede hacerte que. Es la unica barrera que impide que un desconocido te baje la
 -- vida o te ponga un estado, y no se ve por ninguna parte hasta que falla.
 ------------------------------------------------------------
-Grupo("seguridad", function(r)
+Grupo("seguridad", "quien puede aplicarte dano o estados, y quien no", function(r)
     local Comm = _G.HarfordDnDComm
     r.chk("capa de mensajes cargada", Comm and Comm.CreateHandlers ~= nil)
 
@@ -597,7 +613,7 @@ end)
 ------------------------------------------------------------
 -- LIBRO. Que ninguna entrada quede sin arte ni sin categoria, que es lo que la deja muerta al clic.
 ------------------------------------------------------------
-Grupo("libro", function(r)
+Grupo("libro", "que el Libro se construya y no queden entradas sin nombre ni arte", function(r)
     local B = _G.HarfordCharacterBook
     local P = _G.HarfordDnDProgression
     if not (B and B.BuildSections and P) then
@@ -627,9 +643,13 @@ API.RegisterCommand("verificar", function(args)
     local pedido, extra = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
     local lista = {}
     if pedido and pedido ~= "" then
+        if pedido == "ayuda" or pedido == "grupos" then
+            ListarGrupos()
+            return
+        end
         if not GRUPOS[pedido] then
             Print("grupo desconocido: " .. pedido)
-            Print("grupos: " .. table.concat(ORDEN_GRUPOS, ", "))
+            ListarGrupos()
             return
         end
         lista = { pedido }
@@ -673,8 +693,7 @@ API.RegisterCommand("verificar", function(args)
     if totalManuales > 0 then
         Print("Lo marcado 'a mano' NO esta verificado: el cliente no puede comprobarlo solo.")
     end
-end, "bateria de verificacion en juego [iconos|estados|acciones|tira|red|tiradas|ficha|"
-    .. "progresion|ataque|areas|seguridad|libro]")
+end, "bateria de verificacion en juego; 'verificar ayuda' lista los grupos")
 
 ------------------------------------------------------------
 -- Comandos de apoyo para la sesion de pruebas.

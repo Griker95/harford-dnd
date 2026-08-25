@@ -30,17 +30,24 @@ for nombre in v:gmatch('Grupo%("([a-z_]+)"') do grupos[#grupos + 1] = nombre end
 print("Hay grupos, y cada uno cumple el contrato")
 chk("hay grupos", #grupos > 0, true)
 
--- Todo grupo tiene que aparecer en la ayuda del comando, o nadie sabra que existe.
-local ayuda = v:match('end, "bateria de verificacion en juego %[(.-)%]"') or ""
-if ayuda == "" then
-    ayuda = v:match('end, "bateria de verificacion en juego %[([^"]+)') or ""
-end
-local sinAyuda = {}
+-- La ayuda ya no es una cadena escrita a mano: se genera de las descripciones que declara cada
+-- grupo, asi que no puede desfasarse. Lo que hay que exigir es que TODOS traigan descripcion, o
+-- saldrian en la lista sin decir para que sirven.
+-- Se mira JUSTO lo que sigue al nombre, no una ventana de doscientos caracteres: el cuerpo de un
+-- grupo contiene comillas y comas por todas partes, y con una ventana amplia cualquier `r.chk` daba
+-- la descripcion por buena. Lo comprobe anadiendo un grupo mudo y la prueba no salto.
+local sinDescripcion = {}
 for _, g in ipairs(grupos) do
-    if not ayuda:find(g, 1, true) then sinAyuda[#sinAyuda + 1] = g end
+    local marca = 'Grupo("' .. g .. '"'
+    local ini = v:find(marca, 1, true)
+    local siguiente = v:sub(ini + #marca, ini + #marca + 2)
+    if not siguiente:match('^,%s*["\']') then
+        sinDescripcion[#sinDescripcion + 1] = g
+    end
 end
-chk("todos salen en la ayuda del comando", #sinAyuda, 0)
-for _, g in ipairs(sinAyuda) do print("     falta en la ayuda: " .. g) end
+chk("todos declaran para que sirven", #sinDescripcion, 0)
+for _, g in ipairs(sinDescripcion) do print("     sin descripcion: " .. g) end
+chk("y la ayuda se genera de ahi", v:find("local function ListarGrupos", 1, true) ~= nil, true)
 
 -- Y todo grupo tiene que COMPROBAR algo. Uno que solo imprima instrucciones da la sensacion de
 -- estar verificando sin verificar nada, que es peor que no tenerlo.

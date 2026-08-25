@@ -51,7 +51,14 @@ print("Preparar: no concede nada, y su estado lo dice")
 chk("estado sin efectos", cond:find("preparado = {.-effects = {},") ~= nil, true)
 chk("dura hasta tu proximo turno", A.Get("preparar").readyAction.duration, "source_turn_start")
 chk("el segundo clic lo dispara", panel:find('if C.Has and C.Has("player", spec.conditionId) then', 1, true) ~= nil, true)
-chk("y cuesta la reaccion", panel:find('cast = "reaccion",', 1, true) ~= nil, true)
+-- El anuncio es lo que la economia de turno mira para cobrar, y ocurre ANTES de la rama: si no se
+-- decide ahi, disparar cobraba otra ACCION ademas de la reaccion. La accion ya se pago al preparar.
+chk("y cuesta SOLO la reaccion",
+    panel:find('cast = disparando and "reaccion" or coste.cast,', 1, true) ~= nil, true)
+chk("se decide antes de anunciar",
+    panel:find("local disparando = type(def.readyAction)", 1, true) < panel:find("AnnounceAbility(anuncio)", 1, true), true)
+chk("y no se anuncia dos veces",
+    select(2, panel:gsub("Se dispara la accion preparada", "")), 1)
 
 -- LANZAR ARMA. Se elige mano porque con cual se lanza cambia el dado y los bonos.
 print("Lanzar arma: se elige mano, y solo entre las que llevan arma")

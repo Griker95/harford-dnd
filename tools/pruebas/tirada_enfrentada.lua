@@ -54,8 +54,19 @@ chk("tiene opciones", acc:find("options = {", 1, true) ~= nil, true)
 chk("apartar no deja estado", acc:find("conditionId = false", 1, true) ~= nil, true)
 chk("se pregunta antes de tirar",
     panel:find("if Elegir(contest.options, def, Contienda, elegida) then return true end", 1, true) ~= nil, true)
+-- `cond and X or Y` devuelve Y cuando X es FALSE, que es justo lo que vale "apartar". Con ese
+-- idioma, elegir apartar derribaba igual. Se resuelve con un `if`, y la prueba lo fija ejecutando
+-- la logica de verdad en vez de mirar el texto.
 chk("y la eleccion manda sobre el estado por defecto",
-    wr:find("(opts and opts.conditionId ~= nil) and opts.conditionId or contest.onWin", 1, true) ~= nil, true)
+    wr:find("estado = opts.conditionId or nil", 1, true) ~= nil, true)
+local function EstadoElegido(opts, onWin)
+    local estado = onWin
+    if opts and opts.conditionId ~= nil then estado = opts.conditionId or nil end
+    return estado
+end
+chk("derribar aplica Derribado", EstadoElegido({ conditionId = "prone" }, "prone"), "prone")
+chk("APARTAR no aplica ninguno", EstadoElegido({ conditionId = false }, "prone"), "nil")
+chk("sin elegir, el de por defecto", EstadoElegido(nil, "prone"), "prone")
 
 print("Conectado al Libro por la ruta de acciones basicas")
 chk("rama en el ejecutor", panel:find('elseif type(def.contest) == "table" then', 1, true) ~= nil, true)

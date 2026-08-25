@@ -2349,13 +2349,11 @@ do
         local C = HarfordDnDConditions
         if not (C and C.ApplyOwned) then return false end
         local spec = def.readyAction
+        -- El anuncio (y el cobro de la reaccion) ya lo hizo el ejecutor, que necesita saber si se
+        -- esta preparando o disparando ANTES de anunciar. Aqui solo se retira el estado.
         if C.Has and C.Has("player", spec.conditionId) then
             if C.RemoveOwned then C.RemoveOwned(spec.conditionId) end
             if C.PublishOwnedCondition then C.PublishOwnedCondition(spec.conditionId, "remove") end
-            AnnounceAbility({
-                id = "harford_accion_preparar_disparo", name = "Accion preparada",
-                description = "Se dispara la accion preparada.", cast = "reaccion",
-            })
             return true
         end
         C.ApplyOwned(spec.conditionId, {
@@ -2392,12 +2390,24 @@ do
             local ok, err = SpendPowerWord({ resourceKey = coste.resourceKey, resourceCost = coste.resourceCost })
             if not ok then HarfordChat.Print(err); return false end
         end
+        -- Disparar una accion YA preparada cuesta la reaccion, no otra accion: la accion se pago
+        -- al prepararla. Hay que saberlo ANTES de anunciar, porque el anuncio es lo que la
+        -- economia de turno mira para cobrar.
+        local disparando = type(def.readyAction) == "table" and HarfordDnDConditions
+            and HarfordDnDConditions.Has
+            and HarfordDnDConditions.Has("player", def.readyAction.conditionId)
+
         -- Se anuncia con el coste ELEGIDO: es lo que la economia de turno mira para cobrarlo.
         local anuncio = {
             id = "harford_accion_" .. def.id, name = def.name, icon = def.icon,
-            description = def.description, cast = coste.cast,
+            description = def.description, cast = disparando and "reaccion" or coste.cast,
         }
-        if coste.porRasgo then anuncio.name = def.name .. " (" .. tostring(coste.porRasgo) .. ")" end
+        if disparando then
+            anuncio.name = "Accion preparada"
+            anuncio.description = "Se dispara la accion preparada."
+        elseif coste.porRasgo then
+            anuncio.name = def.name .. " (" .. tostring(coste.porRasgo) .. ")"
+        end
         AnnounceAbility(anuncio)
 
         if type(def.selfCondition) == "table" and HarfordDnDConditions

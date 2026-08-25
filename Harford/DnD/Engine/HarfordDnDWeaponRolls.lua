@@ -613,12 +613,21 @@ local function RollContest(contest, opts)
     local contra = contest.against
     if type(contra) == "table" then contra = table.concat(contra, "/") end
 
+    -- La opcion elegida manda sobre el estado por defecto, y puede ser `false` para decir
+    -- EXPRESAMENTE que no aplique ninguno (Empujar: apartar mueve, no derriba). Por eso se
+    -- resuelve con un `if` y no con `and/or`: ese idioma devuelve el otro lado cuando el valor
+    -- es false, que es justo el caso que hay que distinguir.
+    local estado = contest.onWin
+    if opts and opts.conditionId ~= nil then
+        estado = opts.conditionId or nil
+    end
+
     ResolveWeaponManeuverAfterHitSave({
         dc = total,
         skill = contra,
         -- Solo se usa si el defensor no reconoce ninguna de las habilidades pedidas.
         save = contest.ability or "Fuerza",
-        conditionId = (opts and opts.conditionId ~= nil) and opts.conditionId or contest.onWin,
+        conditionId = estado,
         conditionDuration = contest.duration or "manual",
         outcome = contest.outcome or "resiste",
     })

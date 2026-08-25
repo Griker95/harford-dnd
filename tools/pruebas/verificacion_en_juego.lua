@@ -23,10 +23,32 @@ chk("registra el comando", v:find('API.RegisterCommand("verificar"', 1, true) ~=
 chk("y no se cuela en el core", io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
     :find("RegisterCommand", 1, true), "nil")
 
-print("Cubre los seis grupos")
-for _, g in ipairs({ "iconos", "estados", "acciones", "tira", "red", "libro" }) do
+print("Cubre los nueve grupos")
+for _, g in ipairs({ "iconos", "estados", "acciones", "tira", "red", "tiradas", "ficha",
+                     "progresion", "libro" }) do
     chk(g, v:find('Grupo("' .. g .. '"', 1, true) ~= nil, true)
 end
+
+-- La red no necesita otro cliente para comprobar que el mensaje se COMPONE y se vuelve a leer. Solo
+-- para ver si llega. Antes el grupo entero era manual por no distinguir esas dos cosas.
+print("La red se comprueba sola hasta donde se puede")
+chk("ida y vuelta de una tirada", v:find("R.Deserialize(R.Serialize(original))", 1, true) ~= nil, true)
+-- Ya hubo un fallo mudo: una etiqueta larga pasaba de 255 bytes y SendAddonMessage la descartaba.
+chk("el limite de bytes se mide", v:find("#payload <= 240", 1, true) ~= nil, true)
+chk("los separadores sobreviven al texto", v:find("con ^ y | y % dentro", 1, true) ~= nil, true)
+chk("la contienda viaja con las dos habilidades",
+    v:find('skill == "Atletismo/Acrobacias"', 1, true) ~= nil, true)
+chk("y la peticion de estado tambien", v:find("S.DeserializeConditionRequest(", 1, true) ~= nil, true)
+
+-- Ejecutar una accion la ANUNCIA por chat, asi que no puede ser lo que pasa por defecto.
+print("Ejecutar acciones es opt-in, y solo las que se resuelven en uno mismo")
+chk("hace falta pedirlo", v:find('if extra ~= "ejecutar" then', 1, true) ~= nil, true)
+chk("y se avisa del ruido", v:find("anuncia cada una por chat", 1, true) ~= nil, true)
+chk("preparar comprueba los DOS clics",
+    v:find("preparar: el segundo clic lo retira", 1, true) ~= nil, true)
+-- Fingir un clic de menu no comprobaria el menu.
+chk("las de menu no se fingen",
+    v:find("no se automatizan: usa /harford debug run accion", 1, true) ~= nil, true)
 
 -- Lo que el cliente no puede comprobar NO se cuenta como aprobado. Una verificacion que se da por
 -- buena sin mirarla es peor que no tenerla: da una seguridad que no existe.
@@ -37,7 +59,7 @@ chk("y se avisa al final",
     v:find("Lo marcado 'a mano' NO esta verificado", 1, true) ~= nil, true)
 
 print("Un grupo que revienta no se lleva a los demas")
-chk("cada grupo va en pcall", v:find("local ok, err = pcall(GRUPOS[nombre], r)", 1, true) ~= nil, true)
+chk("cada grupo va en pcall", v:find("local ok, err = pcall(GRUPOS[nombre], r, extra)", 1, true) ~= nil, true)
 chk("y el reventon cuenta como fallo", v:find('r.fallos[#r.fallos + 1] = "el grupo reviento: "', 1, true) ~= nil, true)
 
 -- Aplicar un estado CON aura lanzaria comandos de servidor y le pondria quince auras encima a quien

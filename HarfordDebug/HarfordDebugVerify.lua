@@ -142,7 +142,7 @@ end)
 -- ACCIONES BASICAS. Definicion, arte, coste y ruta: las cuatro cosas que hacen falta para que una
 -- entrada del Libro haga algo al pulsarla.
 ------------------------------------------------------------
-Grupo("acciones", function(r)
+Grupo("acciones", function(r, extra)
     local A = _G.HarfordDnDActions
     if not (A and A.GetOrdered) then
         r.chk("catalogo de acciones disponible", false)
@@ -170,6 +170,46 @@ Grupo("acciones", function(r)
             end
         end
     end
+
+    -- EJECUTARLAS de verdad es lo unico que demuestra que hacen algo, pero cada una ANUNCIA por
+    -- chat, asi que no se hace sola: `verificar acciones ejecutar`. Con gente delante, el ruido
+    -- seria peor que la comprobacion.
+    if extra ~= "ejecutar" then
+        r.manual("Para ejecutarlas de verdad: /harford debug run verificar acciones ejecutar")
+        r.manual("  (anuncia cada una por chat; hazlo a solas)")
+        return
+    end
+    local P = _G.HarfordCharacterPanel
+    if not (P and P.RunBasicAction and C) then
+        r.chk("panel disponible para ejecutar", false)
+        return
+    end
+    -- Solo las que se resuelven sobre UNO MISMO. Las de objetivo tiran dados contra alguien y las
+    -- de menu se quedan esperando un clic: eso no se automatiza sin fingir la interaccion, y una
+    -- comprobacion que finge la interaccion no comprueba la interaccion.
+    local propias = {
+        { id = "esquivar", estado = "esquivando" },
+        { id = "preparar", estado = "preparado" },
+    }
+    for _, caso in ipairs(propias) do
+        local antes = C.Has and C.Has("player", caso.estado)
+        if antes then
+            if C.RemoveOwned then C.RemoveOwned(caso.estado) end
+        end
+        local ok = pcall(P.RunBasicAction, caso.id)
+        r.chk(caso.id .. " se ejecuta sin reventar", ok)
+        r.chk(caso.id .. " deja su estado", C.Has and C.Has("player", caso.estado) == true,
+            "esperaba " .. caso.estado)
+        -- Preparar es la unica con dos golpes: el segundo lo dispara y RETIRA el estado.
+        if caso.id == "preparar" then
+            pcall(P.RunBasicAction, caso.id)
+            r.chk("preparar: el segundo clic lo retira",
+                C.Has and C.Has("player", caso.estado) == false)
+        elseif C.RemoveOwned then
+            C.RemoveOwned(caso.estado)
+        end
+    end
+    r.manual("Las de objetivo y las de menu no se automatizan: usa /harford debug run accion <id>")
 end)
 
 ------------------------------------------------------------
@@ -207,7 +247,10 @@ Grupo("tira", function(r)
 end)
 
 ------------------------------------------------------------
--- RED. Nada de esto se puede verificar en solitario: hace falta otro cliente. Se imprime el guion.
+-- RED. Hace falta otro cliente para ver si LLEGA, pero no para comprobar que el mensaje se compone
+-- y se vuelve a leer bien. Eso se prueba entero aqui, en solitario, y es donde ya hubo un fallo
+-- mudo: una etiqueta larga pasaba de 255 bytes, `SendAddonMessage` descartaba el mensaje y la
+-- tirada simplemente no llegaba, sin error en ninguno de los dos lados.
 ------------------------------------------------------------
 Grupo("red", function(r)
     local WR = _G.HarfordDnDWeaponRolls
@@ -215,12 +258,186 @@ Grupo("red", function(r)
     local C = _G.HarfordDnDConditions
     r.chk("ruta de estado a otro jugador cargada", C and C.ApplyToUnit ~= nil)
 
-    r.manual("Con OTRO jugador de objetivo:")
+    -- Ida y vuelta de una tirada: lo que se manda tiene que volver a leerse igual.
+    local R = _G.HarfordDnDRolls
+    if R and R.Serialize and R.Deserialize then
+        local original = { type = "info", label = "Ataque [Espada corta] +1", total = 17,
+            dice = "1d20", modifiers = "+5", critical = "", mode = "", player = "Prueba" }
+        local vuelta = R.Deserialize(R.Serialize(original))
+        r.chk("una tirada vuelve de la red", vuelta ~= nil)
+        if vuelta then
+            r.chk("con su etiqueta", vuelta.label == original.label, tostring(vuelta.label))
+            r.chk("con su total", tostring(vuelta.total) == tostring(original.total), tostring(vuelta.total))
+        end
+
+        -- El limite de verdad: `SendAddonMessage` descarta por encima de ~255 bytes y no avisa.
+        local larga = { type = "info", player = "Prueba", total = 9, dice = "", modifiers = "",
+            critical = "", mode = "",
+            label = string.rep("Exponer Armadura: Ataque con nota muy larga ", 12) }
+        local payload = R.Serialize(larga)
+        r.chk("una etiqueta larga se recorta bajo el limite", #payload <= 240, #payload .. " bytes")
+        r.chk("y sigue siendo legible al volver", R.Deserialize(payload) ~= nil)
+
+        -- Los separadores del formato tienen que sobrevivir dentro del texto.
+        local sucia = { type = "info", player = "Prueba", total = 1, dice = "", modifiers = "",
+            critical = "", mode = "", label = "con ^ y | y % dentro" }
+        local v2 = R.Deserialize(R.Serialize(sucia))
+        r.chk("los separadores no rompen la etiqueta", v2 and v2.label == sucia.label,
+            v2 and tostring(v2.label) or "no vuelve")
+    end
+
+    -- La peticion de estado a otro cliente, ida y vuelta.
+    local S = _G.HarfordSync
+    if S and S.SerializeConditionRequest and S.DeserializeConditionRequest then
+        local datos = { id = "1.1", op = "apply", conditionId = "ayudado_prueba",
+            sourceGuid = "Player-1-0000", sourceName = "Prueba", duration = "source_turn_start", turns = 0 }
+        local v = S.DeserializeConditionRequest(S.SerializeConditionRequest(datos))
+        r.chk("una peticion de estado vuelve", v ~= nil)
+        if v then
+            r.chk("con la condicion correcta", v.conditionId == datos.conditionId, tostring(v.conditionId))
+            r.chk("y con su duracion", v.duration == datos.duration, tostring(v.duration))
+        end
+    end
+
+    -- La contienda viaja por `DOSAVE` con las DOS habilidades en el ultimo campo. Si el campo se
+    -- pierde o se trunca, el defensor tiraria una salvacion en vez de su prueba y nadie lo notaria.
+    if S and S.SerializeRequestedSave and S.DeserializeRequestedSave then
+        local msg = S.SerializeRequestedSave("Fuerza", 15, "agarrado", 0, "grappled",
+            "manual", 0, "Player-1-0000", "Prueba", "", "", "Atletismo/Acrobacias")
+        local _, dc, _, _, cond2, _, _, _, _, _, _, skill = S.DeserializeRequestedSave(msg)
+        r.chk("la contienda viaja entera", tostring(dc) == "15" and cond2 == "grappled",
+            tostring(dc) .. " / " .. tostring(cond2))
+        r.chk("con las DOS habilidades", skill == "Atletismo/Acrobacias", tostring(skill))
+    end
+
+    r.manual("Queda por ver con OTRO jugador de objetivo (que llegue, no que se componga):")
     r.manual("  1. Agarrar -> el debe tirar Atletismo o Acrobacias en SU cliente y salir Agarrado si pierde.")
     r.manual("  2. Empujar -> elige Apartar: NO debe quedar Derribado. Repite con Derribar: si debe.")
     r.manual("  3. Ayudar -> elige prueba: su siguiente prueba sale con ventaja y el estado se le va.")
     r.manual("Con un NPC de objetivo: Agarrar debe resolverse en TU cliente, sin pedirle nada a nadie.")
     r.manual("Preparar: primer clic gasta ACCION, segundo clic gasta REACCION y retira el estado.")
+end)
+
+------------------------------------------------------------
+-- TIRADAS. La API publica es la que usan Arcanum y los propios rasgos: si devuelve basura, falla
+-- todo lo que cuelga de ella y el sintoma aparece lejos de la causa.
+------------------------------------------------------------
+Grupo("tiradas", function(r)
+    local api = _G.DND5E_ARC_API
+    if not api then
+        r.chk("API de tiradas disponible", false)
+        return
+    end
+    -- Cada una TIRA de verdad: no hay forma de comprobar el resultado sin producirlo.
+    local casos = {
+        { "RollAbilityEx", "Fuerza" }, { "RollSaveEx", "Destreza" }, { "RollSkillEx", "Atletismo" },
+    }
+    for _, caso in ipairs(casos) do
+        local fn = api[caso[1]]
+        if type(fn) ~= "function" then
+            r.chk("falta " .. caso[1], false)
+        else
+            local ok, res = pcall(fn, caso[2])
+            r.chk(caso[1] .. " no revienta", ok, not ok and tostring(res) or nil)
+            if ok then
+                local total = res and tonumber(res.total)
+                r.chk(caso[1] .. " devuelve un total", total ~= nil, tostring(res and res.total))
+                -- Un d20 mas bonos: por debajo de -20 o por encima de 60 algo va muy mal.
+                if total then
+                    r.chk(caso[1] .. " da un numero creible", total > -20 and total < 60, total)
+                end
+            end
+        end
+    end
+    -- La ultima tirada tiene que quedar registrada: de ella dependen los puntos de heroe y los
+    -- dados de enfoque, que modifican una tirada YA hecha.
+    r.chk("queda registrada la ultima tirada", api._lastRoll ~= nil)
+    if api._lastRoll then
+        r.chk("con su tipo", api._lastRoll.kind ~= nil, tostring(api._lastRoll.kind))
+    end
+end)
+
+------------------------------------------------------------
+-- FICHA. Los valores derivados: si uno revienta, la ficha se queda a medias sin decir por que.
+------------------------------------------------------------
+Grupo("ficha", function(r)
+    local Calc, Datos = _G.HarfordDnDCalc, _G.HarfordDnDData
+    if not (Calc and Datos) then
+        r.chk("calculo y datos disponibles", false)
+        return
+    end
+    -- Las 18 habilidades y las 6 salvaciones, una por una: basta con que una tabla mal escrita
+    -- rompa el bucle para que la ficha se quede sin pintar de ahi para abajo.
+    local malas = {}
+    for _, s in ipairs(Datos.SKILLS or {}) do
+        local ok = pcall(Calc.GetSkillRollBonuses, s)
+        if not ok then malas[#malas + 1] = tostring(s.name) end
+    end
+    r.chk("las " .. #(Datos.SKILLS or {}) .. " habilidades calculan", #malas == 0, table.concat(malas, ", "))
+    local malasSalv = {}
+    for _, a in ipairs(Datos.ABIL or {}) do
+        local ok = pcall(Calc.GetSaveRollBonuses, a.name or a.key or a.id)
+        if not ok then malasSalv[#malasSalv + 1] = tostring(a.name or a.key) end
+    end
+    r.chk("las salvaciones calculan", #malasSalv == 0, table.concat(malasSalv, ", "))
+
+    local Combat = _G.HarfordDnDCombat
+    if Combat and Combat.ComputeSelfArmorClass then
+        local ok, ca = pcall(Combat.ComputeSelfArmorClass)
+        r.chk("la CA se calcula", ok and tonumber(ca) ~= nil, tostring(ca))
+        if ok and tonumber(ca) then
+            r.chk("y da un valor creible", ca >= 5 and ca <= 40, ca)
+        end
+    end
+
+    -- Ningun recurso puede tener el actual por encima del maximo: eso es una barra desbordada.
+    local Store, Res = _G.HarfordDnDStore, _G.HarfordDnDResources
+    if Store and Store.GetResourceCurrent and Res and Res.ORDER then
+        local desbordados = {}
+        for _, clave in ipairs(Res.ORDER) do
+            local cur = tonumber(Store.GetResourceCurrent(clave)) or 0
+            local max = Store.GetResourceMax and tonumber(Store.GetResourceMax(clave)) or nil
+            if max and max > 0 and cur > max then
+                desbordados[#desbordados + 1] = clave .. " " .. cur .. "/" .. max
+            end
+        end
+        r.chk("ningun recurso pasa de su maximo", #desbordados == 0, table.concat(desbordados, ", "))
+    end
+end)
+
+------------------------------------------------------------
+-- PROGRESION. Que las 12 clases construyan sus rasgos de 1 a 6 sin reventar. Es barrido puro: no
+-- cambia nada de tu ficha, solo pregunta al libro.
+------------------------------------------------------------
+Grupo("progresion", function(r)
+    local B = _G.HarfordDnDBook
+    local API_B = B and (B.API or B)
+    local clases = API_B and API_B.CLASSES
+    if not clases then
+        r.chk("libro de clases disponible", false)
+        return
+    end
+    local n, rotas = 0, {}
+    for id, clase in pairs(clases) do
+        n = n + 1
+        for nivel = 1, 6 do
+            local ok, err = pcall(function()
+                local lista = clase.features or clase.rasgos or {}
+                for _, f in ipairs(lista) do
+                    if (tonumber(f.level) or 1) <= nivel then
+                        -- Tocar los campos es suficiente: un `name` que no sea texto o un `uses`
+                        -- que no sea tabla revientan al pintarlos, no al declararlos.
+                        local _ = tostring(f.name) .. tostring(f.id)
+                        if f.uses ~= nil and type(f.uses) ~= "table" then error("uses no es tabla") end
+                        if f.effects ~= nil and type(f.effects) ~= "table" then error("effects no es tabla") end
+                    end
+                end
+            end)
+            if not ok then rotas[#rotas + 1] = tostring(id) .. " n" .. nivel .. ": " .. tostring(err) end
+        end
+    end
+    r.chk("las " .. n .. " clases construyen de 1 a 6", #rotas == 0, table.concat(rotas, " | "))
+    r.chk("hay 12 clases", n == 12, n)
 end)
 
 ------------------------------------------------------------
@@ -253,7 +470,7 @@ end)
 -- Ejecucion
 ------------------------------------------------------------
 API.RegisterCommand("verificar", function(args)
-    local pedido = tostring(args or ""):match("^%s*(%S*)")
+    local pedido, extra = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
     local lista = {}
     if pedido and pedido ~= "" then
         if not GRUPOS[pedido] then
@@ -272,7 +489,7 @@ API.RegisterCommand("verificar", function(args)
         local r = NuevoRegistro()
         -- Un grupo que revienta no puede llevarse por delante a los demas: lo que se esta
         -- verificando es precisamente codigo del que se duda.
-        local ok, err = pcall(GRUPOS[nombre], r)
+        local ok, err = pcall(GRUPOS[nombre], r, extra)
         if not ok then r.fallos[#r.fallos + 1] = "el grupo reviento: " .. tostring(err) end
         totalOk = totalOk + r.ok
         totalFallos = totalFallos + #r.fallos

@@ -165,6 +165,16 @@ if _r3.returncode != 0:
         if _l.strip() and not _l.startswith('Campos de datos'):
             errores.append('datos: ' + _l.strip())
 
+# --- 5b. Una mutacion a medio deshacer ---------------------------------------------------------
+# `mutaciones.py` rompe el codigo a proposito y lo restaura despues, pero si lo matan desde fuera
+# (un `timeout`, un Ctrl-C) el fichero se queda MUTADO en disco. Paso de verdad. La herramienta lo
+# deshace en su siguiente arranque, pero entre medias un despliegue se llevaria el fichero roto al
+# cliente, y encima con una rotura sutil y a proposito.
+_marca = os.path.join(RAIZ, 'tools', 'cargar', '.mutacion_en_curso')
+if os.path.exists(_marca):
+    errores.append('mutacion: hay una mutacion a medio deshacer; ejecuta '
+                   '"python tools/cargar/mutaciones.py X.lua 1" para que la restaure')
+
 # --- 6. Referencias a algo que no existe -------------------------------------------------------
 # Un rasgo puede nombrar la condicion `ayudado_pruebaa` y Lua no se queja: la busca, no la
 # encuentra, y no hace nada. Es la misma familia que dejo nueve condiciones sin aplicarse jamas por

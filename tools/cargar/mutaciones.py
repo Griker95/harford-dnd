@@ -22,6 +22,7 @@ import os
 import re
 import sys
 import random
+import signal
 import subprocess
 
 RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -100,6 +101,55 @@ def candidatas(ruta):
     return texto, fuera
 
 
+# El fichero se restaura en un `finally`, pero eso NO cubre que maten el proceso desde fuera: un
+# `timeout` o un Ctrl-C dejaban el modulo MUTADO en disco, y el siguiente despliegue se lo llevaba
+# al cliente. Paso de verdad. Asi que ademas:
+#   - se atienden las senales para restaurar antes de morir,
+#   - y se deja una marca en disco con lo que se esta tocando, para poder deshacerlo en el arranque
+#     siguiente aunque no diera tiempo a nada (SIGKILL no se puede atender).
+MARCA = os.path.join(RAIZ, 'tools', 'cargar', '.mutacion_en_curso')
+_restaurar = None
+
+
+def _guardar_respaldo(ruta_rel, texto):
+    global _restaurar
+    _restaurar = (ruta_rel, texto)
+    with io.open(MARCA, 'w', encoding='utf-8', newline='') as fh:
+        fh.write(ruta_rel + chr(10))
+        fh.write(texto)
+
+
+def _deshacer():
+    global _restaurar
+    if _restaurar:
+        rel, texto = _restaurar
+        io.open(os.path.join(RAIZ, rel), 'w', encoding='utf-8', newline='').write(texto)
+        _restaurar = None
+    if os.path.exists(MARCA):
+        os.remove(MARCA)
+
+
+def _al_morir(signum, frame):
+    _deshacer()
+    sys.exit(130)
+
+
+def recuperar_de_una_muerte_anterior():
+    """Si la ejecucion anterior no llego a restaurar, se deshace ahora."""
+    if not os.path.exists(MARCA):
+        return
+    with io.open(MARCA, encoding='utf-8', newline='') as fh:
+        contenido = fh.read()
+    corte = contenido.find(chr(10))
+    if corte > 0:
+        rel, texto = contenido[:corte], contenido[corte + 1:]
+        destino = os.path.join(RAIZ, rel)
+        if os.path.exists(destino):
+            io.open(destino, 'w', encoding='utf-8', newline='').write(texto)
+            print('Se restauro %s, que una ejecucion anterior dejo mutado.' % rel)
+    os.remove(MARCA)
+
+
 def suites_pasan():
     r = subprocess.run([sys.executable, os.path.join(RAIZ, 'tools', 'pruebas.py')],
                        capture_output=True, text=True, encoding='utf-8', errors='replace')
@@ -116,6 +166,13 @@ def main():
         else:
             ficheros.append(a.replace(os.sep, '/'))
     ficheros = ficheros or POR_DEFECTO
+
+    recuperar_de_una_muerte_anterior()
+    for s in (signal.SIGINT, signal.SIGTERM):
+        try:
+            signal.signal(s, _al_morir)
+        except (ValueError, AttributeError):
+            pass   # En algunos entornos no se pueden atender; queda la marca en disco.
 
     if not suites_pasan():
         print('Las suites ya fallan sin mutar nada. Arregla eso primero.')
@@ -137,12 +194,13 @@ def main():
     for i, (ruta, texto, (a, b, viejo, nuevo, linea)) in enumerate(elegidas, 1):
         completa = os.path.join(RAIZ, ruta)
         try:
+            _guardar_respaldo(ruta, texto)
             io.open(completa, 'w', encoding='utf-8', newline='').write(texto[:a] + nuevo + texto[b:])
             if suites_pasan():
                 sobreviven.append((ruta, linea, viejo, nuevo))
         finally:
             # Pase lo que pase, el fichero vuelve. Un fallo aqui dejaria el addon roto en disco.
-            io.open(completa, 'w', encoding='utf-8', newline='').write(texto)
+            _deshacer()
         sys.stdout.write('\r  %d/%d probadas, %d sin detectar   ' % (i, len(elegidas), len(sobreviven)))
         sys.stdout.flush()
     print()

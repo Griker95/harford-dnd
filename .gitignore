@@ -40,3 +40,4 @@ tools/codice/cotejo/wowhead_cache/
 # Hojas visuales de eleccion de iconos (~8MB): llevan los PNG incrustados en base64
 # y las regenera `tools/codice/hoja_rasgos.py` cuando hacen falta.
 tools/codice/hoja_*.html
+tools/cargar/.mutacion_en_curso

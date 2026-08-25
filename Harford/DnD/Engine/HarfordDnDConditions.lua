@@ -380,6 +380,27 @@ API.DEFS = {
     },
 }
 
+-- `API.ORDER` es el orden de PRESENTACION -- el que siguen la tira del unitframe, el menu del DM y
+-- la ficha --, pero `GetActive` tambien lo usa para recorrer las condiciones. Eso convertia una
+-- lista de presentacion en una lista de existencia: una condicion definida y no listada aqui no
+-- aparecia como activa NUNCA, y por tanto sus efectos no se aplicaban jamas. No fallaba, no
+-- avisaba y compilaba igual; simplemente no hacia nada.
+--
+-- Paso por aqui nueve veces, seis de ellas sin que nadie lo notara (Ira desatada, Fortaleza,
+-- Supresion del dolor, Marca ignea, Dolor y Orden oscura). Asi que la lista deja de mantenerse a
+-- mano: lo declarado ordena lo que le importa y el resto se anade solo, en orden estable. Olvidarse
+-- ya no puede apagar una condicion, solo ponerla al final.
+do
+    local listadas = {}
+    for _, id in ipairs(API.ORDER) do listadas[id] = true end
+    local resto = {}
+    for id in pairs(API.DEFS) do
+        if not listadas[id] then resto[#resto + 1] = id end
+    end
+    table.sort(resto)
+    for _, id in ipairs(resto) do API.ORDER[#API.ORDER + 1] = id end
+end
+
 API.State = API.State or {
     units = {}, remote = {}, processed = {}, pending = {}, serial = 0,
     listeners = {}, loadedOwned = false, lastTurn = nil,

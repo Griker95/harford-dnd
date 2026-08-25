@@ -95,11 +95,12 @@ chk("la del aura la reutiliza", cond:find("return API.CounterFor(def, active.rec
 -- de la tira acababan en 1031. Colocada con exquisitez respecto al marco, y completamente
 -- invisible. Las comprobaciones automaticas pasaban -- construida, visible, "por encima" -- porque
 -- ninguna miraba si eso caia dentro de la vista.
+local uf3 = io.open("Harford/Frames/HarfordUnitFrames.lua"):read("*a")
 print("Si no cabe arriba, se baja lo justo para que quepa")
-chk("se mira el techo de la pantalla", uf2:find("local techo = UIParent and UIParent:GetHeight()", 1, true) ~= nil, true)
-chk("y se compara con lo alto que queda", uf2:find("if techo and arriba and arriba > techo then", 1, true) ~= nil, true)
+chk("se mira el techo de la pantalla", uf3:find("local techo = UIParent and UIParent:GetHeight()", 1, true) ~= nil, true)
+chk("y se compara con lo alto que queda", uf3:find("if techo and arriba and arriba > techo then", 1, true) ~= nil, true)
 chk("bajandola justo lo que se sale",
-    uf2:find("margen - (arriba - techo) - 2", 1, true) ~= nil, true)
+    uf3:find("margen - (arriba - techo) - 2", 1, true) ~= nil, true)
 
 -- La aritmetica, ejecutada: con 20 de alto, ancla en 1005 y pantalla de 1009, tiene que acabar
 -- dentro. Sin el ajuste la tira ocupaba de 1011 a 1031.
@@ -111,7 +112,9 @@ local function ColocarY(anclaArriba, altoTira, margen, techo)
 end
 local base, arriba = ColocarY(1005, 20, 6, 1009)
 chk("con la pantalla justa, entra", arriba <= 1009, true)
-chk("y queda pegada al borde", arriba, 1009)
+-- No pegada al filo: se dejan 2 px, o el borde superior del icono se confunde con el de la
+-- pantalla y parece cortado.
+chk("con dos pixeles de aire", arriba, 1007)
 -- Con sitio de sobra no se toca nada: el ajuste solo actua cuando hace falta.
 base, arriba = ColocarY(500, 20, 6, 1009)
 chk("con sitio de sobra, no se mueve", base, 506)

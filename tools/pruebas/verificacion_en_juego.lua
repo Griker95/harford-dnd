@@ -23,9 +23,9 @@ chk("registra el comando", v:find('API.RegisterCommand("verificar"', 1, true) ~=
 chk("y no se cuela en el core", io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
     :find("RegisterCommand", 1, true), "nil")
 
-print("Cubre los nueve grupos")
+print("Cubre los diez grupos")
 for _, g in ipairs({ "iconos", "estados", "acciones", "tira", "red", "tiradas", "ficha",
-                     "progresion", "libro" }) do
+                     "progresion", "ataque", "libro" }) do
     chk(g, v:find('Grupo("' .. g .. '"', 1, true) ~= nil, true)
 end
 
@@ -94,5 +94,24 @@ chk("y avisa de donde confirmarlo",
 -- Separa "el estado no esta" de "el estado esta pero no se ve": son dos fallos distintos.
 chk("tira distingue estado de pintado",
     v:find("la tira no existe todavia", 1, true) ~= nil, true)
+
+-- ATAQUE trabaja sobre EL OBJETIVO QUE YA HAY: no se puede cambiar de objetivo por comando, asi
+-- que se selecciona antes y se ejecuta despues. Y NPC y jugador son dos caminos distintos.
+print("Ataque: sobre el objetivo actual, y distinguiendo NPC de jugador")
+chk("no intenta cambiar de objetivo", v:find("TargetUnit(", 1, true), "nil")
+chk("dice que hay que seleccionar antes",
+    v:find("Selecciona un NPC o un jugador y repite", 1, true) ~= nil, true)
+chk("distingue quien es", v:find('UnitIsPlayer and UnitIsPlayer("target")', 1, true) ~= nil, true)
+chk("y lo dice en la salida", v:find('(esJugador and "JUGADOR" or "NPC")', 1, true) ~= nil, true)
+-- Contra jugador el dano viaja en bruto; contra NPC lo aplica el atacante y hace falta permiso.
+chk("contra jugador comprueba el paquete de dano",
+    v:find("K.PayloadFor, \"target\"", 1, true) ~= nil, true)
+chk("contra NPC comprueba el permiso de oficial",
+    v:find("A.CanUseOfficerCommands()", 1, true) ~= nil, true)
+-- Sin CA no hay veredicto, y eso se lee como "no funciona" si no se explica.
+chk("sin CA explica que mirar", v:find("sin CA: mira su TRP3 o ponla a mano", 1, true) ~= nil, true)
+-- El empate lo gana el defensor, y se comprueba contra la CA REAL del que tienes delante.
+chk("comprueba el empate con la CA real",
+    v:find('K.ResolveArmorClassOutcome(ca, "", "target")', 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

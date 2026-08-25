@@ -441,6 +441,84 @@ Grupo("progresion", function(r)
 end)
 
 ------------------------------------------------------------
+-- ATAQUE. Se comprueba contra EL OBJETIVO QUE YA TIENES: no se puede cambiar de objetivo por
+-- comando, asi que selecciona primero y ejecuta despues.
+--
+-- NPC y jugador son dos caminos DISTINTOS y hay que probar los dos:
+--   NPC      -> su CA sale del tracker de turnos, de lo escrito a mano o de su stat block TRP3, y
+--               el dano se lo aplica el atacante por comando de servidor.
+--   Jugador  -> su CA sale de su TRP3 o de lo que su propio cliente publica, y el dano se le manda
+--               en BRUTO para que lo resuelva el con sus resistencias.
+-- Confundirlos es como se cuela un fallo que solo aparece contra uno de los dos.
+------------------------------------------------------------
+Grupo("ataque", function(r)
+    local K = _G.HarfordDnDCombat
+    if not K then
+        r.chk("motor de combate disponible", false)
+        return
+    end
+    if not (UnitExists and UnitExists("target")) then
+        r.manual("Sin objetivo. Selecciona un NPC o un jugador y repite: verificar ataque")
+        return
+    end
+
+    local esJugador = UnitIsPlayer and UnitIsPlayer("target")
+    local yo = UnitIsUnit and UnitIsUnit("target", "player")
+    local nombre = tostring(UnitName("target"))
+    r.manual("Objetivo: " .. nombre .. " (" .. (esJugador and "JUGADOR" or "NPC")
+        .. (yo and ", eres tu" or "") .. ")")
+
+    -- La CA es lo primero: sin ella el ataque se anuncia sin veredicto, y eso se lee como que
+    -- "no funciona" cuando en realidad es que no se sabe contra que comparar.
+    local ca = K.GetArmorClassForUnit("target")
+    r.chk("se conoce la CA del objetivo", ca ~= nil and ca > 0,
+        ca and ("CA " .. tostring(ca)) or "sin CA: mira su TRP3 o ponla a mano")
+    if not ca then
+        r.manual(esJugador
+            and "Jugador sin CA: que la escriba en TRP3 (Currently/Other Information) o que abra su ficha."
+            or "NPC sin CA: ponsela con el editbox CA, o dale un stat block en su perfil TRP3.")
+        return
+    end
+
+    -- El veredicto, contra la CA de VERDAD del objetivo que tienes delante.
+    local _, entra = K.ResolveArmorClassOutcome(ca + 1, "", "target")
+    r.chk("un total por encima entra", entra == true)
+    local _, empate = K.ResolveArmorClassOutcome(ca, "", "target")
+    -- Regla de la mesa: el defensor gana los empates.
+    r.chk("un empate NO entra", empate == false, "empate con CA " .. tostring(ca))
+    local _, debajo = K.ResolveArmorClassOutcome(ca - 1, "", "target")
+    r.chk("por debajo no entra", debajo == false)
+    local _, critico = K.ResolveArmorClassOutcome(1, "CRÍTICO", "target")
+    r.chk("un critico entra aunque el total sea 1", critico == true)
+    local _, pifia = K.ResolveArmorClassOutcome(ca + 99, "PIFIA", "target")
+    r.chk("una pifia falla aunque el total sobre", pifia == false)
+
+    if esJugador and not yo then
+        -- Contra jugador el dano viaja en BRUTO: lo resuelve su cliente con sus resistencias, su
+        -- vida temporal y sus reacciones. Aqui solo se comprueba que la ruta exista y componga.
+        r.chk("hay ruta de dano a jugador", K.PayloadFor ~= nil)
+        if K.PayloadFor then
+            local ok, payload = pcall(K.PayloadFor, "target", 7, "cortante")
+            r.chk("el paquete de dano se compone", ok and payload ~= nil,
+                not ok and tostring(payload) or nil)
+        end
+        r.manual("Pegale de verdad y confirma EN SU CLIENTE: que le baje la vida, que aplique")
+        r.manual("  sus resistencias, y que la linea salga con tu nombre.")
+    elseif not esJugador then
+        -- Contra NPC el dano lo aplica el atacante por comando de servidor, asi que hace falta
+        -- permiso de oficial de fase: sin el, el ataque sale pero la vida no se mueve.
+        local A = _G.HarfordAuthority
+        local puede = A and A.CanUseOfficerCommands and A.CanUseOfficerCommands()
+        r.chk("puedes modificar la vida del NPC", puede == true,
+            "sin permiso de oficial de fase el ataque sale pero su vida no baja")
+        r.chk("hay ruta de dano a NPC", K.ApplyWeaponDamageToNpc ~= nil)
+        r.manual("Pegale de verdad y confirma que le baja la vida y que emota la herida.")
+    else
+        r.manual("Te tienes a ti mismo de objetivo: para el resto, coge un NPC o a otro jugador.")
+    end
+end)
+
+------------------------------------------------------------
 -- LIBRO. Que ninguna entrada quede sin arte ni sin categoria, que es lo que la deja muerta al clic.
 ------------------------------------------------------------
 Grupo("libro", function(r)

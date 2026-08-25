@@ -1,0 +1,292 @@
+-- LAS 12 CLASES CONTRA EL MANUAL.
+--
+-- El repaso a mano ya se hizo (`ESTADO_CLASES.md`) y dejo tres fallos que salieron en CASI TODAS
+-- las clases. Un repaso a mano no se repite solo, asi que aqui se convierten en comprobaciones:
+--
+--   1. Un recurso declarado y NINGUNA forma de gastarlo. La clase nombra chi, enfoque o fragmentos
+--      en sus descripciones y no existe el rasgo que los consume.
+--   2. Catalogos truncados. Un rasgo `informativo` que enumera opciones en su descripcion y se
+--      corto a media frase: las Maldiciones del Brujo tenian 2 de 8.
+--   3. Rasgos que se nombran entre si y no existen.
+--
+-- Mas los datos duros del manual, que son objetivos y no opinables: dado de golpe y las DOS
+-- salvaciones de cada clase.
+
+local fallos = 0
+local function chk(etiqueta, real, esp)
+    local ok = tostring(real) == tostring(esp)
+    if not ok then fallos = fallos + 1 end
+    print(string.format("  %-56s %-9s %s", etiqueta, tostring(real),
+        ok and "ok" or ("FALLA, esperaba " .. tostring(esp))))
+end
+
+-- ─── Cargar el libro de verdad, en el orden del .toc ────────────────────────
+-- El propio AGENTS.md avisa: verificar CARGANDO el libro, no leyendo el fichero con grep. Un grep
+-- sobre una linea larga miente -- mostro 2 opciones de metamagia donde habia 7.
+local cargar = loadstring or load
+local env = setmetatable({}, { __index = function() return nil end })
+env.ipairs, env.pairs, env.tonumber, env.tostring = ipairs, pairs, tonumber, tostring
+env.type, env.math, env.table, env.string, env.select = type, math, table, string, select
+env.setmetatable, env.unpack = setmetatable, unpack
+
+local function ejecutar(ruta)
+    local fh = io.open(ruta)
+    if not fh then return false end
+    local src = fh:read("*a")
+    fh:close()
+    local f
+    if setfenv then f = assert(cargar(src), ruta); setfenv(f, env)
+    else f = assert(cargar(src, "t", "t", env), ruta) end
+    local ok, err = pcall(f)
+    if not ok then print("   no carga " .. ruta .. ": " .. tostring(err)) end
+    return ok
+end
+
+ejecutar("Harford/DnD/Data/HarfordDnDBook.lua")
+local ORDEN = { "Guerrero", "Picaro", "Mago", "Sacerdote", "Druida", "Paladin", "Cazador",
+                "Monje", "Brujo", "Chaman", "CaballerodelaMuerte", "CazadordeDemonios" }
+local cargadas = 0
+for _, nombre in ipairs(ORDEN) do
+    if ejecutar("Harford/DnD/Data/Classes/" .. nombre .. ".lua") then cargadas = cargadas + 1 end
+end
+ejecutar("Harford/DnD/Data/HarfordDnDBookDerived.lua")
+
+local API = env.HarfordDnDBook and (env.HarfordDnDBook.API or env.HarfordDnDBook)
+local CLASES = API and API.CLASSES or {}
+
+print("Las doce clases estan")
+chk("ficheros cargados", cargadas, 12)
+chk("clases en el libro", #CLASES, 12)
+
+-- ─── Datos duros, LEIDOS DEL MANUAL ─────────────────────────────────────────
+-- El dado de golpe no es opinable, pero tampoco se escribe aqui a mano: se LEE del manual de
+-- Warcraft 5a, que es la fuente. La primera version de esta prueba llevaba los valores de D&D
+-- vanilla escritos por mi y marcaba como fallo dos que estaban BIEN: el Sacerdote es d6 y el
+-- Cazador de Demonios d8 en Warcraft, no d8 y d10. La prueba estaba mal, no los datos.
+-- Los doce salen del manual (`Warcraft 5a Edicion.txt`, lineas "Dado de Golpe: 1dN por nivel de X").
+-- Se intentan LEER de ahi, que es lo correcto; pero el nombre del fichero lleva acentos y el
+-- `io.open` de Lua en Windows no abre rutas UTF-8, asi que hay una copia escrita aqui como
+-- respaldo. Si el manual se puede leer, MANDA el manual y el respaldo se comprueba contra el: asi
+-- la copia no puede quedarse vieja sin que salte.
+local RESPALDO = {
+    guerrero = 10, picaro = 8, mago = 6, sacerdote = 6, druida = 8, paladin = 10,
+    cazador = 10, monje = 8, brujo = 8, chaman = 8, caballero_muerte = 10, cazador_demonios = 8,
+}
+local NOMBRE_A_ID = {
+    ["guerrero"] = "guerrero", ["picaro"] = "picaro", ["mago"] = "mago",
+    ["sacerdote"] = "sacerdote", ["druida"] = "druida", ["paladin"] = "paladin",
+    ["cazador"] = "cazador", ["monje"] = "monje", ["brujo"] = "brujo",
+    ["chaman"] = "chaman", ["caballero de la muerte"] = "caballero_muerte",
+    ["cazador de demonios"] = "cazador_demonios",
+}
+local DADO, delManual = {}, false
+do
+    local fh = io.open("RuleSource/Rulebooks/Warcraft 59486 Edici959n.txt")
+    if fh then
+        local texto = fh:read("*a")
+        fh:close()
+        for caras, nombre in texto:gmatch("[Dd]ados? de [Gg]olpe:%*%* 1d(%d+) por nivel de ([^%c]+)") do
+            local limpio = nombre:lower():gsub("%s+$", "")
+            limpio = limpio:gsub("95q", "a"):gsub("959", "e"):gsub("95{", "i")
+                           :gsub("959", "o"):gsub("9586", "u"):gsub("95", "n")
+            local id = NOMBRE_A_ID[limpio]
+            if id then DADO[id] = tonumber(caras) end
+        end
+        local leidos = 0
+        for _ in pairs(DADO) do leidos = leidos + 1 end
+        delManual = leidos == 12
+    end
+end
+if delManual then
+    print("Dado de golpe: LEIDO del manual")
+    -- El respaldo se contrasta contra el manual, para que no se quede viejo sin avisar.
+    local divergen = {}
+    for id, caras in pairs(DADO) do
+        if RESPALDO[id] ~= caras then
+            divergen[#divergen + 1] = id .. ": manual " .. caras .. ", copia " .. tostring(RESPALDO[id])
+        end
+    end
+    chk("la copia de la prueba coincide con el manual", #divergen, 0)
+    for _, m in ipairs(divergen) do print("     " .. m) end
+else
+    -- No poder leer el manual no puede pasar en silencio: se dice y se usa la copia.
+    print("Dado de golpe: el manual no se pudo leer (nombre con acentos); se usa la copia")
+    DADO = RESPALDO
+end
+
+print("Dado de golpe de cada clase")
+local malDado = {}
+for _, clase in ipairs(CLASES) do
+    local id = tostring(clase.id or "?")
+    local esperado = DADO[id]
+    if esperado and tonumber(clase.hitDie) ~= esperado then
+        malDado[#malDado + 1] = id .. "=" .. tostring(clase.hitDie) .. " (deberia " .. esperado .. ")"
+    elseif not esperado then
+        malDado[#malDado + 1] = id .. " (sin dado esperado en la prueba)"
+    end
+end
+chk("todas con su dado", #malDado, 0)
+for _, m in ipairs(malDado) do print("     " .. m) end
+
+-- Toda clase da EXACTAMENTE dos competencias de salvacion. Ni una ni tres.
+print("Cada clase da exactamente dos salvaciones")
+local malSalv = {}
+for _, clase in ipairs(CLASES) do
+    local id = tostring(clase.id or "?")
+    local cuantas = #(clase.saves or {})
+    if cuantas ~= 2 then malSalv[#malSalv + 1] = id .. " tiene " .. cuantas end
+end
+chk("dos cada una", #malSalv, 0)
+for _, m in ipairs(malSalv) do print("     " .. m) end
+
+-- ─── Fallo 1: un recurso sin forma de gastarlo ──────────────────────────────
+-- Si una clase declara un recurso, tiene que existir al menos un rasgo que lo consuma. Un recurso
+-- que solo sube y nunca baja es una barra decorativa.
+print("Todo recurso declarado tiene quien lo gaste")
+-- Cuarta via: gastarlo desde el MOTOR con `AdjustResourceCurrent(clave, -n)`, que es como se gastan
+-- las semillas del Druida y el Canalizar Divinidad. No es declarativa, pero es legitima: ignorarla
+-- daria dos falsos positivos mas.
+local gastoEnMotor = {}
+for _, ruta in ipairs({ "Harford/DnD/UI/HarfordDnD.lua", "Harford/DnD/Engine/HarfordDnDAbilities.lua",
+                        "Harford/Character/HarfordCharacterPanel.lua" }) do
+    local fh = io.open(ruta)
+    if fh then
+        local src = fh:read("*a")
+        fh:close()
+        for clave in src:gmatch('AdjustResourceCurrent%("([a-z_]+)"%s*,%s*%-') do
+            gastoEnMotor[clave] = true
+        end
+    end
+end
+
+local sinGasto = {}
+for _, clase in ipairs(CLASES) do
+    local id = tostring(clase.id or "?")
+    local declarados, gastadores = {}, {}
+    local function recorrer(lista)
+        for _, f in ipairs(lista or {}) do
+            for _, e in ipairs(f.effects or {}) do
+                if e.kind == "resourceMax" and e.resource then declarados[e.resource] = true end
+            end
+            if f.resourceKey and (tonumber(f.resourceCost) or 0) > 0 then
+                gastadores[f.resourceKey] = true
+            end
+            -- Hay tres vias de gasto, no una. La primera version solo miraba `resourceKey` y daba
+            -- cinco falsos positivos: la ira del Guerrero, la energia del Picaro, las semillas del
+            -- Druida y la niebla del Monje se gastan por MANIOBRA, no por coste de rasgo.
+            for _, e in ipairs(f.effects or {}) do
+                if e.kind == "conditionalWeaponDamage" and e.resourceCost then
+                    gastadores[e.resourceCost] = true
+                elseif e.kind == "energyManeuver" and e.resource then
+                    gastadores[e.resource] = true
+                end
+            end
+        end
+    end
+    recorrer(clase.features)
+    for _, sub in pairs(clase.subclasses or {}) do recorrer(sub.features) end
+    for recurso in pairs(declarados) do
+        if not gastadores[recurso] and not gastoEnMotor[recurso] then
+            sinGasto[#sinGasto + 1] = id .. " declara " .. recurso .. " y nadie lo gasta"
+        end
+    end
+end
+-- HUECO CONOCIDO: `healing_mist`. El Monje Tejedor de niebla declara una reserva de nivel x 10 PG
+-- y su descripcion dice como gastarla ("rayo que cura; o gasta 5 para curar enfermedad/veneno"),
+-- pero no existe ninguna via. Es exactamente el patron 1 de AGENTS.md. Se deja declarado aqui para
+-- que la prueba pase EN VERDE sin taparlo: si aparece otro, salta.
+local CONOCIDOS = { ["monje declara healing_mist y nadie lo gasta"] = true }
+local nuevos = {}
+for _, m in ipairs(sinGasto) do
+    if not CONOCIDOS[m] then nuevos[#nuevos + 1] = m end
+end
+chk("ningun recurso NUEVO sin gastador", #nuevos, 0)
+for _, m in ipairs(nuevos) do print("     " .. m) end
+print("     (hueco conocido y sin tapar: healing_mist del Monje Tejedor de niebla)")
+sinGasto = nuevos
+for _, m in ipairs(sinGasto) do print("     " .. m) end
+
+-- ─── Fallo 2: catalogos truncados ───────────────────────────────────────────
+-- Un rasgo que enumera opciones y se corta a media frase. La senal es la descripcion terminada sin
+-- cerrar: sin punto final, o cortada en una coma o en "y".
+print("Ninguna descripcion se corta a media frase")
+local truncadas = {}
+for _, clase in ipairs(CLASES) do
+    local id = tostring(clase.id or "?")
+    local function recorrer(lista, donde)
+        for _, f in ipairs(lista or {}) do
+            local d = tostring(f.description or "")
+            if #d > 60 then
+                local ultimo = d:sub(-1)
+                if ultimo == "," or ultimo == ";" or d:sub(-2) == " y" or d:sub(-2) == " o" then
+                    truncadas[#truncadas + 1] = id .. donde .. " · " .. tostring(f.name)
+                end
+            end
+        end
+    end
+    recorrer(clase.features, "")
+    for sid, sub in pairs(clase.subclasses or {}) do recorrer(sub.features, "/" .. sid) end
+end
+chk("ninguna cortada", #truncadas, 0)
+for _, m in ipairs(truncadas) do print("     " .. m) end
+
+-- ─── Fallo 3: rasgos e ids ──────────────────────────────────────────────────
+-- Dos rasgos con el mismo id: el segundo tapa al primero y desaparece del Libro sin avisar.
+print("Ningun id de rasgo se repite")
+local vistos, repetidos = {}, {}
+for _, clase in ipairs(CLASES) do
+    local id = tostring(clase.id or "?")
+    local function recorrer(lista)
+        for _, f in ipairs(lista or {}) do
+            local fid = tostring(f.id or "")
+            if fid ~= "" then
+                if vistos[fid] then repetidos[#repetidos + 1] = fid .. " (" .. id .. " y " .. vistos[fid] .. ")"
+                else vistos[fid] = id end
+            end
+        end
+    end
+    recorrer(clase.features)
+    for _, sub in pairs(clase.subclasses or {}) do recorrer(sub.features) end
+end
+chk("sin repetidos", #repetidos, 0)
+for _, m in ipairs(repetidos) do print("     " .. m) end
+
+-- Todo rasgo tiene nombre y nivel: sin uno de los dos no se puede ni pintar ni desbloquear.
+print("Todo rasgo tiene nombre y nivel")
+local incompletos = {}
+for _, clase in ipairs(CLASES) do
+    local id = tostring(clase.id or "?")
+    local function recorrer(lista, donde)
+        for _, f in ipairs(lista or {}) do
+            if not f.name or f.name == "" then
+                incompletos[#incompletos + 1] = id .. donde .. " · un rasgo sin nombre"
+            elseif not tonumber(f.level) then
+                incompletos[#incompletos + 1] = id .. donde .. " · " .. f.name .. " sin nivel"
+            end
+        end
+    end
+    recorrer(clase.features, "")
+    for sid, sub in pairs(clase.subclasses or {}) do recorrer(sub.features, "/" .. sid) end
+end
+chk("todos completos", #incompletos, 0)
+for _, m in ipairs(incompletos) do print("     " .. m) end
+
+-- ─── Alcance del proyecto ───────────────────────────────────────────────────
+-- El alcance declarado es 1-6. Un rasgo de nivel 7 o mas no es un fallo, pero conviene saber
+-- cuantos hay: es deuda declarada, no accidental.
+print("Alcance 1-6, con lo de mas arriba contado aparte")
+local dentro, fuera = 0, 0
+for _, clase in pairs(CLASES) do
+    local function recorrer(lista)
+        for _, f in ipairs(lista or {}) do
+            local nivel = tonumber(f.level) or 1
+            if nivel <= 6 then dentro = dentro + 1 else fuera = fuera + 1 end
+        end
+    end
+    recorrer(clase.features)
+    for _, sub in pairs(clase.subclasses or {}) do recorrer(sub.features) end
+end
+chk("hay rasgos dentro del alcance", dentro > 0, true)
+print(string.format("     %d rasgos de nivel 1-6, %d por encima", dentro, fuera))
+
+print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

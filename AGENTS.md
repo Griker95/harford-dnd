@@ -2229,10 +2229,119 @@ local ok, err = _G.HarfordTrainerAPI and _G.HarfordTrainerAPI.OpenTrainer
 
 Para esas, el olor es cualquier `local` con varios nombres cuya parte derecha acabe en `and`.
 
+### La otra cara: `cond and X or Y` cuando X vale `false` (2026-08-25)
+
+El mismo idioma tiene un segundo fallo, y este NO va de retornos multiples:
+
+```lua
+-- MAL: si `opts.conditionId` es false, devuelve `contest.onWin`, no false.
+local estado = (opts and opts.conditionId ~= nil) and opts.conditionId or contest.onWin
+
+-- BIEN: con `if` no hay trampa.
+local estado = contest.onWin
+if opts and opts.conditionId ~= nil then estado = opts.conditionId or nil end
+```
+
+`and/or` no puede distinguir "el valor es false" de "no hay valor", porque los dos son falsos para
+Lua. En cuanto `false` sea un valor CON SIGNIFICADO -- y lo es en cuanto se usa para decir "ninguno"
+en vez de "por defecto" -- el idioma deja de servir.
+
+Paso en `Empujar`: la opcion "Apartar 1,5 m" llevaba `conditionId = false` para decir expresamente
+que no aplicara ningun estado, y apartar derribaba igual. Compilaba, pasaba las suites (que miraban
+el texto del fichero, no el resultado) y habria salido mal en mesa.
+
+**Regla:** si `false` es un valor legitimo del campo, no se lee con `and/or`. Y la prueba de un
+campo asi tiene que EJECUTAR la logica, no comprobar que el codigo diga lo que se espera.
+
 Hay un intérprete Lua real en `C:/Users/marco/AppData/Local/Programs/Lua/bin/lua.exe`: para logica
 pura (parsers, escalados, formulas) se puede extraer el trozo del modulo con `load()` y stubs de
 los globales y probarlo de verdad, en vez de deducir el comportamiento leyendo. Asi se encontro
 esto. `luac -p` solo valida sintaxis y no habria detectado ninguno de los tres fallos.
+
+## Una lista de PRESENTACION nunca puede ser la lista de EXISTENCIA (2026-08-25)
+
+`HarfordDnDConditions.API.ORDER` es el orden en que se pintan las condiciones: la tira del
+unitframe, el menu del DM, la ficha. Pero `GetActive` la usaba tambien para RECORRERLAS, y con eso
+una lista de presentacion se convirtio en una lista de existencia:
+
+> una condicion definida en `DEFS` y no listada en `ORDER` no aparecia como activa NUNCA, y como
+> `EffectsFor` va por `GetActive`, sus efectos no se aplicaban jamas.
+
+No fallaba, no avisaba y compilaba igual. **Nueve estaban fuera**, y seis llevaban tiempo apagadas
+sin que nadie lo notara: Ira desatada, Fortaleza, Marca ignea, Dolor y Orden oscura perdian sus
+efectos enteros. Supresion del dolor se salvo por casualidad, porque su `damageReduction` se lee
+recorriendo el bucket directamente y no por `GetActive`.
+
+**Arreglo estructural, no once lineas mas en la lista.** `ORDER` se completa sola al cargar: lo
+declarado ordena lo que le importa y el resto se anade en orden estable (`table.sort`) detras.
+Olvidarse ya no puede apagar una condicion, solo ponerla al final de la tira.
+
+**Regla general:** si una lista ordena, que solo ordene. Cuando ademas decide que existe, cualquier
+olvido apaga funcionalidad en silencio. Antes de usar una lista declarada a mano para iterar,
+completarla desde la tabla de datos.
+
+El detector permanente vive en `tools/cargar/referencias.py` (paso 6 del despliegue) y la bateria en
+juego lo comprueba tambien en el grupo `estados`, porque la version cargada puede diferir del texto.
+
+## Referencias a ids que no existen: `tools/cargar/referencias.py` (2026-08-25)
+
+Un rasgo puede nombrar la condicion `ayudado_pruebaa` y Lua no se queja: la busca, no la encuentra,
+y no hace nada. Misma familia que lo anterior -- algo apunta a un sitio vacio y el fallo aparece
+como SILENCIO. Es paso de despliegue y bloquea la copia.
+
+Cuatro espacios de nombres, y **NO se mezclan**:
+
+| Campo | Se comprueba contra |
+|---|---|
+| `conditionId`, `selfCondition.id`, `onWin` | `HarfordDnDConditions.DEFS` |
+| `resourceKey` | `HarfordDnDResources.DEFS` |
+| `grantsAsBonus` | `HarfordDnDActions.DEFS` |
+| `requiresState` | los `kind = "toggleState"` declarados |
+
+**`requiresState` NO son condiciones** aunque los dos se llamen "estados": son estados activables de
+`HarfordDnDProgression` (`lone_wolf`, `wild_shape`, `metamorphosis`, `spirit_beast`,
+`serene_stance`). Confundirlos da cinco falsos positivos. Un `requiresState` sin su `toggleState`
+si es un fallo real: el efecto que lo pide no se activaria jamas.
+
+Si una tabla no se puede leer, el detector lo DICE en vez de callarse: sin ella todas sus
+referencias pareceria rotas y el aviso se volveria ruido que se aprende a ignorar.
+
+## Tira de estados propia sobre el unitframe (2026-08-25)
+
+Solo 15 de las 48 condiciones tienen aura detras. Las otras **no existen para el cliente** y no
+apareceran en el unitframe por mucho aura que se les enganche, asi que Harford pinta los suyos
+APARTE en `HarfordEstados<unit>`, no mezclados con los buffs nativos: son de otra naturaleza (los
+lleva Harford, no el servidor) y confundirlos haria creer que se pueden disipar.
+
+- `HarfordUnitFrames.RefreshConditionStrip(unit)` para `target` y `focus`. UIParent/MEDIUM nivel 85,
+  como cualquier overlay de unitframe (nunca DIALOG).
+- **El ancla se recalcula cada vez**: sobre la aura nativa mas alta si siguen encima del frame (el
+  caso normal, sin barras extra), o sobre el frame si Harford las movio bajo las barras. Se ancla al
+  OBJETO, no a una coordenada, que se quedaria vieja al reposicionar.
+- Pool de iconos, sin ticker. Se repinta al cambiar target/focus, al reanclar auras y cuando el
+  motor de condiciones avisa (`Notify` llama a `RefreshAuraCounters`).
+- **El contador puede cambiar sin que cambie el aura**, y ahi `UNIT_AURA` no dispara: por eso
+  `Notify` avisa a los unitframes ademas de al panel. Sin eso el numero se queda viejo hasta que
+  entre o salga un aura cualquiera.
+- Arte: la condicion CON aura usa el icono del aura (el que el jugador ya ve); las demas, el
+  catalogo, con clave `harford_estado_<id>` en `Catalog.features` -- misma nomenclatura y misma
+  sintaxis de clave desnuda que `harford_accion_<id>`.
+
+## Tiradas enfrentadas (Agarrar, Empujar) (2026-08-25)
+
+La dificultad NO es fija: la pone el atacante con su propia tirada, y su total es la CD del
+defensor. `HarfordDnDWeaponRolls.RollContest(contest, opts)`.
+
+**No hay opcode nuevo ni resolucion nueva.** `DOSAVE` ya llevaba un campo `skill` que convierte la
+peticion en prueba de habilidad, y `ResolveWeaponManeuverAfterHitSave` ya sabe distinguir jugador de
+NPC, pedirle la tirada al cliente defensor y aplicar el estado al que pierde. Lo unico propio de una
+contienda es de donde sale la dificultad.
+
+- **Elige el DEFENSOR**: las habilidades viajan juntas separadas por `/` (`"Atletismo/Acrobacias"`) y
+  su cliente se queda con la mejor. Quien decide que le conviene es quien lo recibe.
+- **El empate lo gana el defensor**, y eso ya salia de la comparacion inclusiva (`total >= dc`).
+- La opcion elegida manda sobre `onWin` y puede ser `false` para no aplicar ninguno (ver la trampa
+  de `and/or` mas arriba).
 
 ## Reglas De Seguridad
 
@@ -3045,6 +3154,31 @@ sobre `MAXARG_Bx` (2^18): la barrera real que salta primero esta en 2^16 y va po
 del constructor, no por cadenas distintas.
 
 ## Verificacion
+
+**La cadena de despliegue son seis barreras, y cada una nacio de un fallo que llego al cliente:**
+
+| Paso | Que atrapa | Fallo que lo motivo |
+|---|---|---|
+| 1. Compilar con Lua 5.1 real | sintaxis, limite de 200 locales | `luac` local es 5.4 y no ve el limite |
+| 2. Arnes de carga | errores de ejecucion al cargar, chunk truncado, rutas `/harford` sin registrar | un `end` de mas dejo 2600 lineas fuera del chunk |
+| 3. `adelantadas.py` | locales usadas antes de declararse | `EquipmentGroups` reventaba al elegir equipo |
+| 4. `datos_muertos.py` | campos que ningun motor lee | `rageReserveByLevel` no daba ni un punto de ira |
+| 5. `referencias.py` | ids que apuntan a algo inexistente | ver su seccion |
+| 6. `pruebas.py` | reglas ya probadas que se rompen | se desplego dos veces con una suite en rojo |
+
+**Y lo que las suites NO pueden ver, porque corren fuera de WoW:** `/harford debug run verificar`
+(`HarfordDebug/HarfordDebugVerify.lua`), seis grupos -- `iconos`, `estados`, `acciones`, `tira`,
+`red`, `libro`.
+
+- Los iconos se validan con `GetFileIDFromPath` y **se nombra cual falla**. Uno inventado sale VERDE
+  en Epsilon y desde fuera no hay forma de saberlo: los ~1000 del catalogo se eligen a ciegas.
+- **Lo que el cliente no puede comprobar solo se marca MANUAL y nunca cuenta como aprobado.** Una
+  verificacion que se da por buena sin mirarla da una seguridad que no existe.
+- No deja rastro en quien la ejecuta: el ciclo aplicar/ver/retirar solo prueba estados SIN aura
+  (probar los otros lanzaria comandos de servidor), no toca los que ya estuvieran puestos, y la tira
+  restaura lo que encontro. Cada grupo va en su `pcall`.
+- Apoyo para montar la escena: `accion <id>` (por la MISMA ruta que el boton del Libro),
+  `estadoen <cond> [quitar]` (ruta de red, al objetivo) y `tira [target|focus]`.
 
 Para esta documentacion:
 

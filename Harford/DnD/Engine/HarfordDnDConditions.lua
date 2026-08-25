@@ -196,6 +196,10 @@ API.DEFS = {
     elunes_grace = {
         label = "Gracia de Elune", tracking = "state",
         description = "Puede usar Destrabarse, Esquivar u Ocultarse como accion adicional mientras dure la bendicion.",
+        -- No es un efecto sobre tiradas, sino sobre la ECONOMIA del turno: abre esas tres
+        -- acciones como adicional mientras dure. Se declara igual que en un rasgo (`grantsAsBonus`)
+        -- para que el resolutor de costes no tenga que distinguir de donde le llega.
+        grantsAsBonus = { "desengancharse", "esquivar", "esconderse" },
         effects = {},
     },
     palabra_fortaleza = {

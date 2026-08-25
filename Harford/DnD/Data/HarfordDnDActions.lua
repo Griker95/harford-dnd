@@ -131,26 +131,29 @@ function API.GetOrdered()
     return fuera
 end
 
--- Costes con los que ESTE personaje puede usar la accion: el base, mas los que le abra algun rasgo.
+-- Costes con los que ESTE personaje puede usar la accion: el base, mas los que le abra algo suyo.
 -- Devuelve una lista de { cast, porRasgo, resourceKey, resourceCost }, con el base el primero.
 --
--- `data` es la progresion ya resuelta (la misma que recibe el Libro), para no volver a mirarla.
-function API.CostsFor(actionId, rasgos)
+-- `fuentes` son cosas que declaran `grantsAsBonus`, y pueden ser de dos clases: un RASGO permanente
+-- (la Accion Astuta del Picaro) o una CONDICION activa (Gracia de Elune, que las abre solo mientras
+-- dura). Aqui no se distinguen a proposito: lo que importa es que algo lo abra, no de donde viene.
+-- Por eso el nombre se lee de `name` o de `label`, que es como se llaman en cada una.
+function API.CostsFor(actionId, fuentes)
     local def = API.Get(actionId)
     if not def then return {} end
     local fuera = { { cast = def.cast } }
     local vistos = { [tostring(def.cast)] = true }
-    for _, feature in ipairs(rasgos or {}) do
-        local abre = feature and feature.grantsAsBonus
+    for _, fuente in ipairs(fuentes or {}) do
+        local abre = fuente and fuente.grantsAsBonus
         if type(abre) == "table" then
             for _, id in ipairs(abre) do
                 if tostring(id) == tostring(actionId) and not vistos["accion_adicional"] then
                     vistos["accion_adicional"] = true
                     fuera[#fuera + 1] = {
                         cast = "accion_adicional",
-                        porRasgo = feature.name,
-                        resourceKey = feature.resourceKey,
-                        resourceCost = feature.resourceCost,
+                        porRasgo = fuente.name or fuente.label,
+                        resourceKey = fuente.resourceKey,
+                        resourceCost = fuente.resourceCost,
                     }
                 end
             end

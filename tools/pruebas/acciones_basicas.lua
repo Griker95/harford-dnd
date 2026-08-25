@@ -92,3 +92,24 @@ end
 chk("solo Correr y Desengancharse", narrativas, 2)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))
+
+-- GRACIA DE ELUNE abre Desengancharse, Esquivar y Esconderse como accion adicional, igual que la
+-- Accion Astuta del Picaro, pero solo MIENTRAS DURA. Por eso el resolutor de costes acepta las dos
+-- procedencias sin distinguirlas: lo que importa es que algo lo abra, no de donde viene.
+print("Un coste alternativo puede venir de un rasgo o de una condicion")
+local porCondicion = {
+    { label = "Gracia de Elune", grantsAsBonus = { "desengancharse", "esquivar", "esconderse" } },
+}
+for _, id in ipairs({ "desengancharse", "esquivar", "esconderse" }) do
+    local costes = A.CostsFor(id, porCondicion)
+    chk(id .. ": dos costes", #costes, 2)
+    chk(id .. ": el segundo es adicional", costes[2].cast, "accion_adicional")
+    -- La condicion se llama `label`, el rasgo `name`: el resolutor lee el que haya.
+    chk(id .. ": lo firma quien lo abre", costes[2].porRasgo, "Gracia de Elune")
+end
+chk("y no abre lo que no declara", #A.CostsFor("agarrar", porCondicion), 1)
+
+local cond2 = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+chk("la condicion lo declara", cond2:find('elunes_grace = {.-grantsAsBonus = { "desengancharse", "esquivar", "esconderse" }') ~= nil, true)
+local panel2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+chk("y el panel las aporta", panel2:find('if type(activo.definition.grantsAsBonus) == "table" then', 1, true) ~= nil, true)

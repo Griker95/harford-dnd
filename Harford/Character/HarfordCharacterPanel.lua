@@ -2234,9 +2234,19 @@ do
     local menu, pendiente
     local menuOpc, pendienteOpc
 
-    -- Rasgos del personaje que abren costes alternativos, por su `grantsAsBonus`.
+    -- Todo lo del personaje que abre costes alternativos por su `grantsAsBonus`: sus rasgos
+    -- permanentes y las condiciones que lleva puestas ahora mismo. Gracia de Elune abre las
+    -- mismas tres acciones que la Accion Astuta, pero solo mientras dura, asi que tiene que
+    -- entrar y salir de esta lista sola.
     local function RasgosQueAbren()
         local fuera = {}
+        if HarfordDnDConditions and HarfordDnDConditions.GetActive then
+            for _, activo in ipairs(HarfordDnDConditions.GetActive("player")) do
+                if type(activo.definition.grantsAsBonus) == "table" then
+                    fuera[#fuera + 1] = activo.definition
+                end
+            end
+        end
         local secciones = (HarfordCharacterBook and HarfordCharacterBook.BuildSections
             and HarfordCharacterBook.BuildSections(GetProgression())) or {}
         for _, seccion in ipairs(secciones) do

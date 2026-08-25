@@ -28,7 +28,7 @@ chk("despues de todos los demas", (iTipo and iSkill and iSkill > iTipo) and true
 chk("se recibe", sync:find("extraDamageType, skill =", 1, true) ~= nil, true)
 
 print("Cada lado la resuelve con SU competencia")
-chk("el defensor jugador", wr:find("HarfordDnDCalc.GetSkillRollBonuses(skillDef)", 1, true) ~= nil, true)
+chk("el defensor jugador", wr:find("HarfordDnDCalc.GetSkillRollBonuses(s)", 1, true) ~= nil, true)
 chk("el NPC", wr:find("HarfordDnDCombat.GetSkillBonusForUnit", 1, true) ~= nil, true)
 chk("el bonus de NPC existe", combat:find("function HarfordDnDCombat.GetSkillBonusForUnit", 1, true) ~= nil, true)
 chk("sin competencia declarada, el modificador",

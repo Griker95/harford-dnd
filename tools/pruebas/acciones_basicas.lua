@@ -70,8 +70,16 @@ chk("y sin CD, que no la sabemos", tostring(A.Get("esconderse").skillCheck.dc), 
 -- Estabilizar es la unica de las nuevas con CD fija en el manual.
 chk("estabilizar: Medicina", A.Get("estabilizar").skillCheck.skill, "Medicina")
 chk("estabilizar: CD 10", A.Get("estabilizar").skillCheck.dc, 10)
+-- Agarrar y Empujar se resuelven por tirada enfrentada (ver `tirada_enfrentada`), asi que ya no
+-- son narrativas. Una accion tiene UNA forma de resolverse: declarar las dos seria contradecirse.
+print("Las que se resuelven por contienda no declaran ademas que no hacen nada")
+for _, id in ipairs({ "agarrar", "empujar" }) do
+    chk(id .. ": contienda", type(A.Get(id).contest), "table")
+    chk(id .. ": sin nota de narrativa", A.Get(id).sinEfecto, "nil")
+end
+
 print("Las que aun no tienen efecto lo declaran")
-for _, id in ipairs({ "agarrar", "empujar", "ayudar", "lanzar_arma", "preparar" }) do
+for _, id in ipairs({ "ayudar", "lanzar_arma", "preparar" }) do
     chk(id, A.Get(id).sinEfecto ~= nil, true)
 end
 

@@ -448,21 +448,28 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
     if ability == "" then return end
     -- `skill`: lo que se pide es una PRUEBA de esa habilidad, no una salvacion. La tira el
     -- defensor con SU competencia, que es justo lo que las diferencia.
-    local skillDef
+    --
+    -- Puede venir mas de una separadas por "/". Es una tirada ENFRENTADA, y en 5e el que se
+    -- defiende elige con cual: un agarre se resiste con Atletismo o con Acrobacias, y quien decide
+    -- cual le conviene es el defensor, no el atacante. Por eso se resuelve aqui, en su cliente,
+    -- donde estan sus competencias de verdad.
+    local skillDef, base, prof
     if skill and skill ~= "" then
-        local buscado = HarfordClassColors.NormalizeKey(skill)
-        for _, s in ipairs((HarfordDnDData and HarfordDnDData.SKILLS) or {}) do
-            if HarfordClassColors.NormalizeKey(s.name) == buscado
-                or HarfordClassColors.NormalizeKey(s.id) == buscado then
-                skillDef = s
-                break
+        for nombre in tostring(skill):gmatch("[^/]+") do
+            local buscado = HarfordClassColors.NormalizeKey(nombre)
+            for _, s in ipairs((HarfordDnDData and HarfordDnDData.SKILLS) or {}) do
+                if HarfordClassColors.NormalizeKey(s.name) == buscado
+                    or HarfordClassColors.NormalizeKey(s.id) == buscado then
+                    local b, pr = HarfordDnDCalc.GetSkillRollBonuses(s)
+                    if not skillDef or ((b or 0) + (pr or 0)) > ((base or 0) + (prof or 0)) then
+                        skillDef, base, prof = s, b, pr
+                    end
+                    break
+                end
             end
         end
     end
-    local base, prof
-    if skillDef then
-        base, prof = HarfordDnDCalc.GetSkillRollBonuses(skillDef)
-    else
+    if not skillDef then
         base, prof = HarfordDnDCalc.GetSaveRollBonuses(ability)
     end
     local bonus = (tonumber(base) or 0) + (tonumber(prof) or 0)
@@ -581,6 +588,44 @@ local function DoRollEx(label, baseBonus, profBonus, rollType, rollContext)
     return result
 end
 
+-- TIRADA ENFRENTADA (Agarrar, Empujar).
+--
+-- No es una salvacion contra CD fija: la CD la pone el atacante con su propia tirada. Por eso se
+-- resuelve en dos pasos y no en uno -- primero se tira, y el total resultante ES la dificultad.
+--
+-- La resolucion del defensor NO se duplica: se reusa la misma ruta que las maniobras con salvacion
+-- posterior al impacto, que ya sabe distinguir jugador de NPC, pedirle la tirada al cliente
+-- defensor y aplicar el estado al que pierde. Lo unico propio de una tirada enfrentada es de donde
+-- sale la dificultad.
+--
+-- En 5e el defensor gana los empates, y eso ya sale bien de `total >= dc`: si iguala, se defiende.
+local function RollContest(contest, opts)
+    if type(contest) ~= "table" then return false, "sin datos" end
+    if not (UnitExists and UnitExists("target")) then return false, "sin objetivo" end
+    local api = _G.DND5E_ARC_API
+    if not (api and api.RollSkillEx) then return false, "sin tiradas" end
+
+    local propia = api.RollSkillEx(contest.skill)
+    local total = propia and tonumber(propia.total)
+    if not total then return false, "no se pudo tirar" end
+
+    -- La lista completa viaja junta: el defensor elige, no el atacante.
+    local contra = contest.against
+    if type(contra) == "table" then contra = table.concat(contra, "/") end
+
+    ResolveWeaponManeuverAfterHitSave({
+        dc = total,
+        skill = contra,
+        -- Solo se usa si el defensor no reconoce ninguna de las habilidades pedidas.
+        save = contest.ability or "Fuerza",
+        conditionId = (opts and opts.conditionId ~= nil) and opts.conditionId or contest.onWin,
+        conditionDuration = contest.duration or "manual",
+        outcome = contest.outcome or "resiste",
+    })
+    return true
+end
+
+HarfordDnDWeaponRolls.RollContest = RollContest
 HarfordDnDWeaponRolls.RollWeaponDamage = RollWeaponDamage
 HarfordDnDWeaponRolls.ResolveWeaponManeuverAfterHitSave = ResolveWeaponManeuverAfterHitSave
 HarfordDnDWeaponRolls.RollRequestedSaveForSelf = RollRequestedSaveForSelf

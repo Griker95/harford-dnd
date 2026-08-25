@@ -56,13 +56,22 @@ API.DEFS = {
         cast = "accion", orden = 5,
         description = "Prueba de Atletismo contra el Atletismo o la Acrobacias del objetivo. "
             .. "Si ganas, queda Agarrado: su velocidad pasa a 0.",
-        sinEfecto = "Falta la tirada ENFRENTADA: tirad los dos y aplicad el estado Agarrado a mano.",
+        -- `against` lleva las DOS: en una tirada enfrentada elige el defensor, no el atacante.
+        contest = { skill = "Atletismo", ability = "Fuerza",
+            against = { "Atletismo", "Acrobacias" }, onWin = "grappled" },
     },
     empujar = {
         id = "empujar", name = "Empujar",
         cast = "accion", orden = 6,
         description = "Misma prueba enfrentada. Si ganas, lo derribas o lo apartas 1,5 metros.",
-        sinEfecto = "Falta la tirada ENFRENTADA: tirad los dos y aplicad Derribado a mano.",
+        -- Derribar o apartar se decide ANTES de tirar, que es cuando lo decide el manual, y solo
+        -- derribar deja estado: apartar mueve, y el movimiento se lleva en mesa.
+        contest = { skill = "Atletismo", ability = "Fuerza",
+            against = { "Atletismo", "Acrobacias" }, onWin = "prone",
+            options = {
+                { label = "Derribar", conditionId = "prone" },
+                { label = "Apartar 1,5 m", conditionId = false },
+            } },
     },
     ayudar = {
         id = "ayudar", name = "Ayudar",

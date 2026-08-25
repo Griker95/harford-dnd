@@ -2232,6 +2232,7 @@ end
 local AbrirAccionBasica
 do
     local menu, pendiente
+    local menuOpc, pendienteOpc
 
     -- Rasgos del personaje que abren costes alternativos, por su `grantsAsBonus`.
     local function RasgosQueAbren()
@@ -2246,6 +2247,45 @@ do
             end
         end
         return fuera
+    end
+
+    -- TIRADA ENFRENTADA (Agarrar, Empujar). La dificultad no es fija: la pone el atacante con su
+    -- propia tirada, y el defensor responde con la mejor de las habilidades que se le ofrecen.
+    --
+    -- Empujar deja elegir entre derribar y apartar, y se pregunta ANTES de tirar porque es cuando
+    -- lo decide el manual: se declara la intencion y despues se ve si sale. Apartar no deja estado
+    -- -- mueve, y el movimiento se lleva en mesa --, asi que su opcion trae `conditionId = false`.
+    local function Contienda(def, elegida)
+        local contest = def.contest
+        local rolls = _G.HarfordDnDWeaponRolls
+        if not (rolls and rolls.RollContest) then
+            HarfordChat.Print("El motor de tiradas enfrentadas no esta disponible.")
+            return false
+        end
+        local opciones = contest.options
+        if type(opciones) == "table" and not elegida and UIDropDownMenu_Initialize and ToggleDropDownMenu then
+            menuOpc = menuOpc or CreateFrame("Frame", "HarfordContiendaMenu", UIParent, "UIDropDownMenuTemplate")
+            pendienteOpc = def
+            UIDropDownMenu_Initialize(menuOpc, function()
+                for _, opcion in ipairs(opciones) do
+                    local esta = opcion
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text = esta.label
+                    info.notCheckable = true
+                    info.func = function()
+                        CloseDropDownMenus()
+                        Contienda(pendienteOpc, esta)
+                    end
+                    UIDropDownMenu_AddButton(info)
+                end
+            end, "MENU")
+            ToggleDropDownMenu(1, nil, menuOpc, "cursor", 0, 0)
+            return true
+        end
+        local ok, err = rolls.RollContest(contest,
+            elegida and { conditionId = elegida.conditionId } or nil)
+        if not ok then HarfordChat.Print(tostring(def.name) .. ": " .. tostring(err)) end
+        return ok
     end
 
     local function Ejecutar(def, coste)
@@ -2286,6 +2326,8 @@ do
                         supera and "EXITO" or "FALLO", C.close or ""),
                 })
             end
+        elseif type(def.contest) == "table" then
+            Contienda(def)
         elseif def.sinEfecto then
             HarfordChat.Print("|cff808080" .. tostring(def.sinEfecto) .. "|r")
         end

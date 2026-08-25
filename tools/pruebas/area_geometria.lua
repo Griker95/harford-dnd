@@ -36,10 +36,10 @@ local env = {
     HarfordClassColors = { StripAccents = function(v) return v end },
 }
 local cargar = loadstring or load
-local codigo = cuerpo .. "\nreturn AreaGeometry, IsPositionAffected, ParseAreaNumbers"
+local codigo = cuerpo .. "\nreturn AreaGeometry, IsPositionAffected, ParseAreaNumbers, AreaDistanceInfo, AreaDistanceText"
 local f
 if setfenv then f = assert(cargar(codigo)); setfenv(f, env) else f = assert(cargar(codigo, "t", "t", env)) end
-local Geometria, Afecta, Numeros = f()
+local Geometria, Afecta, Numeros, Distancia, TextoDistancia = f()
 
 -- ─── Leer los numeros del texto ─────────────────────────────────────────────
 print("Los numeros salen del texto del conjuro")
@@ -138,5 +138,59 @@ chk("circulo de radio 0", Afecta({ shape = "circle", radius = 0, maxZ = 5 }, en(
 chk("cono de alcance 0",
     Afecta({ shape = "cone", range = 0, angle = 90, maxZ = 5 }, en(0, 1), origen, mirandoAlNorte), false)
 chk("y una forma desconocida tampoco", Afecta(nil, en(0, 0), origen), false)
+
+-- ─── La distancia que se ensena ─────────────────────────────────────────────
+-- Saber quien entra no basta: lo que se discute en mesa es por que uno entro y otro no, y por
+-- cuanto. Cada figura se mide desde SU referencia, que no es la misma en todas.
+print("Cada figura se mide desde su referencia")
+local _, _, ref = Distancia({ shape = "circle", radius = 10 }, en(3, 0), origen)
+chk("la esfera, desde el centro", ref, "centro")
+_, _, ref = Distancia({ shape = "square", size = 10 }, en(3, 0), origen)
+chk("el cubo, desde el centro", ref, "centro")
+_, _, ref = Distancia({ shape = "cone", range = 10 }, en(3, 0), origen)
+chk("el cono, desde el origen", ref, "origen")
+_, _, ref = Distancia({ shape = "line", length = 20, width = 4 }, en(3, 0), origen)
+chk("la linea, desde el origen", ref, "origen")
+
+-- Se ensena en METROS, que es como se escriben las areas, aunque por dentro todo son yardas.
+print("Se ensena en metros, aunque por dentro sean yardas")
+local d, limite = Distancia({ shape = "circle", radius = 10.936 }, en(10.936, 0), origen)
+casi("diez yardas son 10 metros", d, 10)
+casi("y el limite tambien se convierte", limite, 10)
+
+-- En un cubo el limite es la MITAD del lado: un cubo de 10 alcanza 5 desde el centro.
+print("En un cubo el limite es media anchura")
+_, limite = Distancia({ shape = "square", size = 10.936 }, en(0, 0), origen)
+casi("un cubo de 10 m alcanza 5", limite, 5)
+
+-- En una linea lo que cuenta es lo que AVANZA por el eje, no la distancia directa: alguien muy a un
+-- lado puede estar cerca de ti y quedar fuera igualmente por anchura.
+print("En una linea se mide lo que avanza por el eje")
+local haciaElNorte = { x = 0, y = 10 }
+d = Distancia({ shape = "line", length = 21.872, width = 4 }, en(0, 10.936), origen, haciaElNorte)
+casi("justo en el eje", d, 10)
+d = Distancia({ shape = "line", length = 21.872, width = 4 }, en(10.936, 10.936), origen, haciaElNorte)
+casi("desplazado a un lado, avanza lo mismo", d, 10)
+-- Hacia atras avanza en negativo, que es la senal de que esta a tu espalda.
+d = Distancia({ shape = "line", length = 21.872, width = 4 }, en(0, -10.936), origen, haciaElNorte)
+casi("a la espalda, negativo", d, -10)
+
+print("El texto de la fila")
+chk("con coma decimal, como se escribe en espanol",
+    TextoDistancia({ shape = "circle", radius = 10.936 }, en(4.572, 0), origen), "4,2 / 10,0 m")
+chk("una forma sin geometria no ensena nada",
+    TextoDistancia({ shape = "other" }, en(1, 0), origen), "")
+
+-- Los que quedan FUERA se ensenan, pero NUNCA entran en la lista que recibe el dano.
+local area = io.open("Harford/DnD/Engine/HarfordDnDArea.lua"):read("*a")
+print("Los que quedan fuera se ensenan, pero no reciben nada")
+chk("se guardan aparte", area:find("session.outside = {}", 1, true) ~= nil, true)
+chk("no en la lista de objetivos",
+    area:find("session.outside[#session.outside + 1] = {", 1, true) ~= nil, true)
+chk("se ordenan del mas cerca al mas lejos",
+    area:find("table.sort(session.outside", 1, true) ~= nil, true)
+chk("se pintan en gris", area:find('"|cff707070fuera  "', 1, true) ~= nil, true)
+chk("y la distancia acompana al marcado",
+    area:find('dist = "  |cff909090" .. texto', 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

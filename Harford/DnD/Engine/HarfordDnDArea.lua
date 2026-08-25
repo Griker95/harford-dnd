@@ -192,6 +192,55 @@ local function IsInRectangle(player, center, aim, length, width, maxZ)
     return math.abs(forward) <= length / 2 and math.abs(sideways) <= width / 2
 end
 
+-- DISTANCIA AL AREA, para poder ENSENARLA. Saber quien entra no basta: lo que se discute en mesa
+-- es por que uno entro y otro no, y por cuanto.
+--
+-- Cada figura se mide desde SU referencia, que no es la misma:
+--   esfera, cubo, rectangulo -> desde el CENTRO
+--   cono, linea              -> desde el ORIGEN, que es quien lanza
+-- Medirlas todas desde el lanzador daria un numero que no explica nada en las dos primeras.
+--
+-- Se devuelve en METROS, que es como se escriben las areas y como piensa el jugador; por dentro
+-- todo son yardas, que es como mide el mundo.
+local METROS_POR_YARDA = 0.9144
+
+local function AreaDistanceInfo(geometry, player, origin, aim)
+    if not (geometry and player and origin) then return nil end
+    local dist = math.sqrt(PositionDistance2DSq(player, origin))
+    local shape = geometry.shape
+    if shape == "circle" then
+        return dist * METROS_POR_YARDA, (geometry.radius or 0) * METROS_POR_YARDA, "centro"
+    elseif shape == "square" then
+        return dist * METROS_POR_YARDA, ((geometry.size or 0) / 2) * METROS_POR_YARDA, "centro"
+    elseif shape == "rectangle" then
+        return dist * METROS_POR_YARDA, ((geometry.length or 0) / 2) * METROS_POR_YARDA, "centro"
+    elseif shape == "cone" then
+        return dist * METROS_POR_YARDA, (geometry.range or 0) * METROS_POR_YARDA, "origen"
+    elseif shape == "line" then
+        -- En una linea la distancia que importa es lo que AVANZA por el eje, no la directa: alguien
+        -- muy a un lado puede estar cerca de ti y aun asi quedar fuera por anchura.
+        if aim then
+            local dirX, dirY = (aim.x or 0) - (origin.x or 0), (aim.y or 0) - (origin.y or 0)
+            local dirLen = math.sqrt(dirX * dirX + dirY * dirY)
+            if dirLen > 0 then
+                dirX, dirY = dirX / dirLen, dirY / dirLen
+                local offX, offY = (player.x or 0) - (origin.x or 0), (player.y or 0) - (origin.y or 0)
+                local forward = offX * dirX + offY * dirY
+                return forward * METROS_POR_YARDA, (geometry.length or 0) * METROS_POR_YARDA, "origen"
+            end
+        end
+        return dist * METROS_POR_YARDA, (geometry.length or 0) * METROS_POR_YARDA, "origen"
+    end
+    return nil
+end
+
+-- Texto corto para la fila: "4,2 / 9,8 m". La coma decimal, que es como se escribe en español.
+local function AreaDistanceText(geometry, player, origin, aim)
+    local d, limite = AreaDistanceInfo(geometry, player, origin, aim)
+    if not d then return "" end
+    return (string.format("%.1f / %.1f m", d, limite):gsub("%.", ","))
+end
+
 local function IsPositionAffected(geometry, player, origin, aim)
     if not geometry then return false end
     if geometry.shape == "circle" then
@@ -454,11 +503,22 @@ local function ReevaluatePositionResponses(session)
         return 0
     end
     local added = 0
+    -- Los que respondieron y NO entran se guardan aparte para poder ensenarlos. NUNCA en
+    -- `session.targets`: esa lista es la que recibe el dano, y meter ahi a alguien que quedo fuera
+    -- se lo aplicaria.
+    session.outside = {}
     for _, position in pairs(scan.responses or {}) do
         if IsPositionAffected(session.geometry, position, scan.origin, aim) then
             if AddTargetFromPosition(session, position, "Auto") then added = added + 1 end
+        else
+            session.outside[#session.outside + 1] = {
+                name = position.name ~= "" and position.name or "Jugador",
+                distancia = AreaDistanceText(session.geometry, position, scan.origin, aim),
+            }
         end
     end
+    -- Del mas cerca al mas lejos: el que casi entra es el que interesa mirar.
+    table.sort(session.outside, function(a, b) return tostring(a.distancia) < tostring(b.distancia) end)
     return added
 end
 
@@ -701,14 +761,37 @@ RefreshFrame = function()
     frame.candidate:SetText(candidate and ("Objetivo actual: " .. candidate.name) or "Objetivo actual: ninguno")
 
     local targets = session.targets or {}
+    -- Detras de los marcados van, en gris, los que respondieron y quedaron FUERA. Sin ellos, quien
+    -- no entra simplemente desaparece de la ventana y no hay forma de saber por que.
+    local filas = {}
+    for _, target in ipairs(targets) do filas[#filas + 1] = { target = target } end
+    for _, fuera in ipairs(session.outside or {}) do filas[#filas + 1] = { fuera = fuera } end
+
+    local scan = session.positionScan
+    local aimPos = scan and scan.aim
     local offset = FauxScrollFrame_GetOffset(frame.scroll) or 0
-    FauxScrollFrame_Update(frame.scroll, #targets, ROW_COUNT, ROW_HEIGHT)
+    FauxScrollFrame_Update(frame.scroll, #filas, ROW_COUNT, ROW_HEIGHT)
     for i, row in ipairs(frame.rows) do
-        local target = targets[offset + i]
-        if target then
+        local fila = filas[offset + i]
+        local target = fila and fila.target
+        if fila and fila.fuera then
+            row:Show()
+            row.name:SetText("|cff707070" .. fila.fuera.name .. "|r")
+            row.status:SetText("|cff707070fuera  " .. tostring(fila.fuera.distancia) .. "|r")
+            row.remove.targetIndex = nil
+            row.remove:Hide()
+        elseif target then
             row:Show()
             local number = (def.applicationCount or 1) > 1 and (tostring(offset + i) .. ". ") or ""
-            row.name:SetText(number .. target.name .. (target.kind == "player" and " |cff66ccff[J]|r" or " |cffffcc66[NPC]|r"))
+            -- La distancia va con el nombre: es lo que permite ver de un vistazo quien esta al
+            -- borde y decidir a mano, que es lo que se acaba haciendo igualmente.
+            local dist = ""
+            if target.position and session.geometry and scan and scan.origin then
+                local texto = AreaDistanceText(session.geometry, target.position, scan.origin, aimPos)
+                if texto ~= "" then dist = "  |cff909090" .. texto .. "|r" end
+            end
+            row.name:SetText(number .. target.name
+                .. (target.kind == "player" and " |cff66ccff[J]|r" or " |cffffcc66[NPC]|r") .. dist)
             local statusLabels = {
                 marked = "Marcado", waiting = "Esperando", saved = "Salvada", failed = "Fallada",
                 hit = "Impacto", miss = "Fallo", skipped = "Omitido", timeout = "Sin confirmar",

@@ -974,7 +974,22 @@ do
         local filas = math.ceil(#estados / ESTADOS_POR_FILA)
         tira:SetSize(math.max(1, ancho), filas * (ESTADO_TAM + ESTADO_HUECO) - ESTADO_HUECO)
         tira:ClearAllPoints()
-        tira:SetPoint("BOTTOMLEFT", AnclaSuperior(frame, prefix), "TOPLEFT", 0, 6)
+        local ancla, margen = AnclaSuperior(frame, prefix), 6
+        tira:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, margen)
+
+        -- El marco del objetivo puede estar pegado al borde superior de la pantalla, y entonces la
+        -- tira se coloca BIEN respecto a el pero fuera de la vista. Pasa de verdad: con el marco a
+        -- 1005 y la pantalla midiendo 1009, los 20 px de la tira acababan en 1031.
+        --
+        -- Se baja lo justo para que quepa. Solaparse unos pixeles con lo de arriba del marco es
+        -- feo, pero verla mal es infinitamente mejor que no verla: colocada con exquisitez fuera
+        -- de la pantalla no le sirve a nadie.
+        local techo = UIParent and UIParent:GetHeight()
+        local arriba = tira:GetTop()
+        if techo and arriba and arriba > techo then
+            tira:ClearAllPoints()
+            tira:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, margen - (arriba - techo) - 2)
+        end
         tira:Show()
         return #estados
     end

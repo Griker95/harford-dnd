@@ -26,7 +26,8 @@ print("Se ancla sobre lo mas alto que haya, no a ciegas sobre el frame")
 chk("calcula el ancla", uf:find("local function AnclaSuperior", 1, true) ~= nil, true)
 chk("mira las auras nativas", uf:find('for _, kind in ipairs({ "Buff", "Debuff" })', 1, true) ~= nil, true)
 chk("y se ancla al objeto, no a una coordenada",
-    uf:find('SetPoint("BOTTOMLEFT", AnclaSuperior(frame, prefix), "TOPLEFT", 0, 6)', 1, true) ~= nil, true)
+    uf:find('local ancla, margen = AnclaSuperior(frame, prefix), 6', 1, true) ~= nil, true)
+chk("por encima de ese ancla", uf:find('SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, margen)', 1, true) ~= nil, true)
 
 print("Se repinta cuando algo puede haber cambiado")
 chk("al cambiar de target", uf:find('QueueNativeAuraCleanup("target")\n        API.RefreshConditionStrip("target")', 1, true) ~= nil, true)
@@ -85,5 +86,38 @@ chk("junto a las acciones basicas",
 print("El contador es una sola regla, no dos copias")
 chk("regla unica", cond:find("function API.CounterFor", 1, true) ~= nil, true)
 chk("la del aura la reutiliza", cond:find("return API.CounterFor(def, active.record)", 1, true) ~= nil, true)
+
+
+
+-- LA TIRA NO PUEDE SALIRSE DE LA PANTALLA.
+--
+-- Paso en juego: el marco del objetivo estaba a 1005 y la pantalla medía 1009, asi que los 20 px
+-- de la tira acababan en 1031. Colocada con exquisitez respecto al marco, y completamente
+-- invisible. Las comprobaciones automaticas pasaban -- construida, visible, "por encima" -- porque
+-- ninguna miraba si eso caia dentro de la vista.
+print("Si no cabe arriba, se baja lo justo para que quepa")
+chk("se mira el techo de la pantalla", uf2:find("local techo = UIParent and UIParent:GetHeight()", 1, true) ~= nil, true)
+chk("y se compara con lo alto que queda", uf2:find("if techo and arriba and arriba > techo then", 1, true) ~= nil, true)
+chk("bajandola justo lo que se sale",
+    uf2:find("margen - (arriba - techo) - 2", 1, true) ~= nil, true)
+
+-- La aritmetica, ejecutada: con 20 de alto, ancla en 1005 y pantalla de 1009, tiene que acabar
+-- dentro. Sin el ajuste la tira ocupaba de 1011 a 1031.
+local function ColocarY(anclaArriba, altoTira, margen, techo)
+    local base = anclaArriba + margen
+    local arriba = base + altoTira
+    if techo and arriba > techo then base = base - (arriba - techo) - 2 end
+    return base, base + altoTira
+end
+local base, arriba = ColocarY(1005, 20, 6, 1009)
+chk("con la pantalla justa, entra", arriba <= 1009, true)
+chk("y queda pegada al borde", arriba, 1009)
+-- Con sitio de sobra no se toca nada: el ajuste solo actua cuando hace falta.
+base, arriba = ColocarY(500, 20, 6, 1009)
+chk("con sitio de sobra, no se mueve", base, 506)
+chk("y sigue por encima del ancla", base > 500, true)
+-- Dos filas de estados ocupan mas y tambien tienen que caber.
+base, arriba = ColocarY(1005, 43, 6, 1009)
+chk("con dos filas, tambien entra", arriba <= 1009, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

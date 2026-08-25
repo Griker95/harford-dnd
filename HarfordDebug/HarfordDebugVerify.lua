@@ -259,7 +259,12 @@ Grupo("tira", "la tira de estados sobre el objetivo, y que quede encima del fram
         end
     end
     if C and C.RemoveFromUnit and not tenia then C.RemoveFromUnit("target", prueba) end
-    r.manual("Mira el objetivo: el icono debe verse encima del retrato, sin tapar sus buffs.")
+    -- El estado se pone y se QUITA, asi que no queda nada que mirar: pedir "mira el objetivo" aqui
+    -- era una instruccion imposible de seguir. Para verlo hace falta uno que se quede.
+    r.manual("Para VERLO, deja un estado puesto y vuelve a mirar:")
+    r.manual("  /harford debug run estadoen prone")
+    r.manual("  /harford debug run tira        (dice que deberia pintar, y si quedo por encima)")
+    r.manual("  /harford debug run estadoen prone quitar")
 end)
 
 ------------------------------------------------------------
@@ -768,4 +773,27 @@ API.RegisterCommand("tira", function(args)
         tira:GetBottom() or -1, (frame and frame:GetTop()) or -1,
         (tira:GetBottom() and frame and frame:GetTop() and tira:GetBottom() >= frame:GetTop())
             and "|cff00ff00por encima|r" or "|cffff3333NO esta por encima|r"))
+
+    -- "Visible y en su sitio" no basta: puede estar transparente, de tamano cero, fuera de la
+    -- pantalla o tapada. Se vuelca todo lo que puede hacer que no se vea, para no adivinar.
+    Print(string.format("  tamano=%.0fx%.0f  alfa=%.2f  escala=%.2f  strata=%s  nivel=%d",
+        tira:GetWidth() or 0, tira:GetHeight() or 0, tira:GetAlpha() or 0,
+        tira:GetEffectiveScale() or 0, tostring(tira:GetFrameStrata()), tira:GetFrameLevel() or 0))
+    local alto = UIParent and UIParent:GetHeight() or 0
+    local arriba = tira:GetTop() or 0
+    Print(string.format("  arriba=%.0f  alto de UIParent=%.0f  %s", arriba, alto,
+        (arriba > alto) and "|cffff3333SE SALE POR ARRIBA|r" or "dentro de la pantalla"))
+    local pintados = 0
+    for i, b in ipairs(tira.iconos or {}) do
+        if b:IsShown() then
+            pintados = pintados + 1
+            if i <= 3 then
+                local tex = b.icon and b.icon.GetTexture and b.icon:GetTexture()
+                Print(string.format("  icono %d: %.0fx%.0f  alfa=%.2f  textura=%s", i,
+                    b:GetWidth() or 0, b:GetHeight() or 0, b:GetAlpha() or 0,
+                    tex and tostring(tex) or "|cffff3333SIN TEXTURA|r"))
+            end
+        end
+    end
+    Print("  iconos pintados: " .. pintados .. " de " .. #(tira.iconos or {}))
 end, "vuelca la tira de estados del objetivo: tira [target|focus]")

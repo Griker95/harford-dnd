@@ -29,11 +29,64 @@ chk("reusa la ruta que ya existe",
 chk("sin opcode nuevo en el protocolo",
     wr:find("DOCONTEST", 1, true), "nil")
 
+-- Esto se EJECUTA, no se busca en el texto. Que el fichero contenga la linea correcta no demuestra
+-- que elija bien: hoy mismo, una asercion llamada "la eleccion manda sobre el estado por defecto"
+-- pasaba mientras la expresion que comprobaba estaba mal.
 print("Elige el DEFENSOR, y elige la mejor")
 chk("la lista viaja junta", wr:find('table.concat(contra, "/")', 1, true) ~= nil, true)
-chk("el defensor la parte", wr:find('for nombre in tostring(skill):gmatch("[^/]+") do', 1, true) ~= nil, true)
-chk("y se queda con la mejor",
-    wr:find("if not skillDef or ((b or 0) + (pr or 0)) > ((base or 0) + (prof or 0)) then", 1, true) ~= nil, true)
+
+local ini = assert(wr:find("local skillDef, base, prof", 1, true))
+-- El corte tiene que ser inequivoco. "if not skillDef then" tambien aparece DENTRO del bloque que
+-- se extrae, asi que se toma la ULTIMA aparicion antes del `GetSaveRollBonuses`, que es la de
+-- verdad. Con la primera, mutar la condicion interna movia el corte y el fallo salia como error de
+-- sintaxis en vez de como asercion: rojo igual, pero ilegible.
+local tope = assert(wr:find("base, prof = HarfordDnDCalc.GetSaveRollBonuses(ability)", ini, true))
+local fin, busca = nil, ini
+while true do
+    local x = wr:find("    if not skillDef then", busca, true)
+    if not x or x >= tope then break end
+    fin, busca = x, x + 1
+end
+fin = assert(fin)
+local cuerpo = wr:sub(ini, fin - 1)
+
+-- Bonos de mentira elegidos para DISCRIMINAR: lo que decide es base+competencia, asi que Atletismo
+-- (1+5=6) gana a Acrobacias (4+0=4) aunque su base sea menor. Con datos donde la base sola diera la
+-- misma respuesta, un fallo que comparase solo la base pasaria la prueba: se comprobo mutando el
+-- codigo, y con los numeros anteriores no saltaba.
+local BONOS = { Atletismo = { 1, 5 }, Acrobacias = { 4, 0 }, Sigilo = { 0, 1 } }
+local env = {
+    ipairs = ipairs, tostring = tostring, tonumber = tonumber,
+    HarfordClassColors = { NormalizeKey = function(v) return tostring(v or ""):lower() end },
+    HarfordDnDData = { SKILLS = {
+        { id = "atletismo", name = "Atletismo" },
+        { id = "acrobacias", name = "Acrobacias" },
+        { id = "sigilo", name = "Sigilo" },
+    } },
+    HarfordDnDCalc = { GetSkillRollBonuses = function(s)
+        local b = BONOS[s.name] or { 0, 0 }
+        return b[1], b[2]
+    end },
+}
+local cargar = loadstring or load
+local codigo = "local skill = ...\n" .. cuerpo .. "\nreturn skillDef, base, prof"
+local f
+if setfenv then f = assert(cargar(codigo)); setfenv(f, env) else f = assert(cargar(codigo, "t", "t", env)) end
+local function Elige(lista)
+    local def, b, pr = f(lista)
+    if not def then return "nil" end
+    return def.name .. "=" .. tostring((b or 0) + (pr or 0))
+end
+
+-- Acrobacias suma 4 y Atletismo 3: gana Acrobacias, venga en el orden que venga.
+chk("de dos, la mejor", Elige("Atletismo/Acrobacias"), "Atletismo=6")
+chk("y da igual el orden", Elige("Acrobacias/Atletismo"), "Atletismo=6")
+chk("una sola, esa", Elige("Atletismo"), "Atletismo=6")
+chk("las tres, la mejor de las tres", Elige("Sigilo/Atletismo/Acrobacias"), "Atletismo=6")
+-- Un cliente viejo puede mandar una habilidad que este no conozca: no debe quedarse a medias.
+chk("una desconocida se ignora", Elige("Inventada/Atletismo"), "Atletismo=6")
+chk("todas desconocidas, ninguna", Elige("Inventada/Tampoco"), "nil")
+chk("sin habilidad, ninguna", Elige(""), "nil")
 
 -- En 5e el defensor gana los empates. `saved = total >= dc` ya lo hace: si iguala, se defiende.
 print("El empate lo gana el defensor")

@@ -975,7 +975,20 @@ do
         tira:SetSize(math.max(1, ancho), filas * (ESTADO_TAM + ESTADO_HUECO) - ESTADO_HUECO)
         tira:ClearAllPoints()
         local ancla, margen = AnclaSuperior(frame, prefix), 6
-        tira:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, margen)
+
+        -- En COLUMNA con el primer buff, no pegada al borde del marco. Los botones de aura no
+        -- empiezan en el borde izquierdo del frame, asi que anclar al frame dejaba la tira
+        -- desplazada respecto a ellos y parecia que no pertenecia al mismo bloque.
+        local desplazX = 0
+        do
+            local ref = _G[prefix .. "Buff1"]
+            if not (ref and ref.IsShown and ref:IsShown()) then ref = _G[prefix .. "Debuff1"] end
+            if ref and ref.IsShown and ref:IsShown() and ref.GetLeft and ancla.GetLeft then
+                local a, b = ref:GetLeft(), ancla:GetLeft()
+                if a and b then desplazX = a - b end
+            end
+        end
+        tira:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", desplazX, margen)
 
         -- El marco del objetivo puede estar pegado al borde superior de la pantalla, y entonces la
         -- tira se coloca BIEN respecto a el pero fuera de la vista. Pasa de verdad: con el marco a
@@ -988,7 +1001,7 @@ do
         local arriba = tira:GetTop()
         if techo and arriba and arriba > techo then
             tira:ClearAllPoints()
-            tira:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, margen - (arriba - techo) - 2)
+            tira:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", desplazX, margen - (arriba - techo) - 2)
         end
         tira:Show()
         return #estados

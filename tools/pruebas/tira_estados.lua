@@ -27,7 +27,8 @@ chk("calcula el ancla", uf:find("local function AnclaSuperior", 1, true) ~= nil,
 chk("mira las auras nativas", uf:find('for _, kind in ipairs({ "Buff", "Debuff" })', 1, true) ~= nil, true)
 chk("y se ancla al objeto, no a una coordenada",
     uf:find('local ancla, margen = AnclaSuperior(frame, prefix), 6', 1, true) ~= nil, true)
-chk("por encima de ese ancla", uf:find('SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, margen)', 1, true) ~= nil, true)
+chk("por encima de ese ancla, y en su columna",
+    uf:find('SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", desplazX, margen)', 1, true) ~= nil, true)
 
 print("Se repinta cuando algo puede haber cambiado")
 chk("al cambiar de target", uf:find('QueueNativeAuraCleanup("target")\n        API.RefreshConditionStrip("target")', 1, true) ~= nil, true)
@@ -122,5 +123,26 @@ chk("y sigue por encima del ancla", base > 500, true)
 -- Dos filas de estados ocupan mas y tambien tienen que caber.
 base, arriba = ColocarY(1005, 43, 6, 1009)
 chk("con dos filas, tambien entra", arriba <= 1009, true)
+
+-- ─── En columna con los buffs ───────────────────────────────────────────────
+-- Los botones de aura no empiezan en el borde izquierdo del frame. Anclando la tira al frame
+-- quedaba desplazada respecto a ellos y no parecia del mismo bloque.
+print("La tira se alinea con la columna del primer buff")
+chk("busca el primer buff", uf3:find('local ref = _G[prefix .. "Buff1"]', 1, true) ~= nil, true)
+chk("y si no hay, el primer debuff",
+    uf3:find('if not (ref and ref.IsShown and ref:IsShown()) then ref = _G[prefix .. "Debuff1"] end', 1, true) ~= nil, true)
+chk("se desplaza esa diferencia", uf3:find("desplazX = a - b", 1, true) ~= nil, true)
+chk("y el desplazamiento sobrevive al ajuste vertical",
+    uf3:find('SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", desplazX, margen - (arriba - techo) - 2)', 1, true) ~= nil, true)
+
+-- Sin auras visibles no hay con que alinearse: se queda en el borde, que es lo que habia antes.
+local function Desplazamiento(izqBuff, izqAncla)
+    if izqBuff and izqAncla then return izqBuff - izqAncla end
+    return 0
+end
+chk("con buff, la diferencia", Desplazamiento(120, 100), 20)
+chk("sin buff, ninguno", Desplazamiento(nil, 100), 0)
+-- Si el ancla YA es un boton de aura, estan en la misma columna y no hay que mover nada.
+chk("si el ancla ya es el buff, cero", Desplazamiento(120, 120), 0)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

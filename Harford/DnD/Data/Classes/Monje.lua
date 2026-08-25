@@ -50,7 +50,14 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "monje_cer_brebajes_elusivos", level = 11, name = "Brebajes Elusivos", type = "informativo", description = "Los brebajes elusivos se presentan en orden alfabético. Si un brebaje requiere un nivel, debes tener ese nivel en esta clase para aprender el brebaje. ***Brebaje del Buey Negro.*** Puedes gastar 1 punto de chi para darte ventaja en el próximo ataque cuerpo a cuerpo que realices dentro de 1 minuto. Puedes realizar un ataque cuerpo a cuerpo como parte de la misma acción. ***Brebaje del Desmayo (Requiere 11º nivel).*** Puedes gastar 3 puntos de chi para obtener los efectos del hechizo *desenfoque* durante 1 minuto. ***Aliento de Fuego (Requiere 6º nivel).*** Puedes gastar 2 puntos de chi para exhalar fuego en un cono de 4,6 metros. Cada criatura en el área debe realizar una tirada de salvación de Destreza, recibiendo daño por fuego igual a tu nivel de Monje + tu modificador de Sabiduría si falla la tirada, o la mitad de daño si tiene éxito.", effects = {} },
         } },
         { id = "tejedor", name = "Tejedor de niebla", desc = "Sanacion y apoyo mediante nieblas restauradoras.", features = {
-            { id = "monje_tej_niebla_calmante", level = 3, name = "Niebla reconfortante", type = "recurso", description = "Reserva de chi sanador (= nivel x 10 PG). Acción: rayo a 30 pies que cura; o gasta 5 para curar enfermedad/veneno. Recarga en descanso largo.", effects = {
+            { id = "monje_tej_niebla_calmante", level = 3, name = "Niebla reconfortante", cast = "accion", type = "accion", description = "Reserva de chi sanador (= tu nivel de monje x 10 PG), que se repone con el descanso largo. Como accion, un rayo de chi a una criatura a 9 metros restaura los puntos de golpe que elijas, hasta lo que quede en la reserva. Alternativamente, gasta 5 puntos para curar una enfermedad o neutralizar un veneno.",
+                -- La cantidad la ELIGE el jugador: el manual dice "hasta el maximo que quede en tu
+                -- reservorio", asi que no hay una cifra que declarar aqui. Los escalones son solo
+                -- atajos del menu; el tope real es lo que quede.
+                poolHeal = { resource = "healing_mist", noun = "curacion",
+                             steps = { 5, 10, 20, 50 },
+                             cure = { amount = 5, label = "Curar enfermedad o veneno" } },
+                effects = {
                 { kind = "resourceMax", resource = "healing_mist", perClassLevel = "monje", base = 0, perLevel = 10 },
             } },
             { id = "monje_tej_palma_chiji", level = 3, name = "Palma de chi-ji", cast = "accion_adicional", type = "accion", actionKind = "chiJiPalm", description = "Al usar Niebla reconfortante, golpe desarmado como acción adicional usando tu Mod. Sabiduría al ataque y daño.", effects = {} },

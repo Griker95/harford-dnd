@@ -174,6 +174,10 @@ for _, clase in ipairs(CLASES) do
             -- Hay tres vias de gasto, no una. La primera version solo miraba `resourceKey` y daba
             -- cinco falsos positivos: la ira del Guerrero, la energia del Picaro, las semillas del
             -- Druida y la niebla del Monje se gastan por MANIOBRA, no por coste de rasgo.
+            -- Quinta via: una RESERVA que se gasta en cantidad elegida (Niebla reconfortante).
+            if type(f.poolHeal) == "table" and f.poolHeal.resource then
+                gastadores[f.poolHeal.resource] = true
+            end
             for _, e in ipairs(f.effects or {}) do
                 if e.kind == "conditionalWeaponDamage" and e.resourceCost then
                     gastadores[e.resourceCost] = true
@@ -191,18 +195,15 @@ for _, clase in ipairs(CLASES) do
         end
     end
 end
--- HUECO CONOCIDO: `healing_mist`. El Monje Tejedor de niebla declara una reserva de nivel x 10 PG
--- y su descripcion dice como gastarla ("rayo que cura; o gasta 5 para curar enfermedad/veneno"),
--- pero no existe ninguna via. Es exactamente el patron 1 de AGENTS.md. Se deja declarado aqui para
--- que la prueba pase EN VERDE sin taparlo: si aparece otro, salta.
-local CONOCIDOS = { ["monje declara healing_mist y nadie lo gasta"] = true }
+-- Ya no queda ninguno: `healing_mist` era el ultimo y se mecanizo. La lista se deja vacia a
+-- proposito, para que declarar un hueco nuevo sea un gesto explicito y no un descuido.
+local CONOCIDOS = {}
 local nuevos = {}
 for _, m in ipairs(sinGasto) do
     if not CONOCIDOS[m] then nuevos[#nuevos + 1] = m end
 end
-chk("ningun recurso NUEVO sin gastador", #nuevos, 0)
+chk("ningun recurso sin gastador", #nuevos, 0)
 for _, m in ipairs(nuevos) do print("     " .. m) end
-print("     (hueco conocido y sin tapar: healing_mist del Monje Tejedor de niebla)")
 sinGasto = nuevos
 for _, m in ipairs(sinGasto) do print("     " .. m) end
 
@@ -288,5 +289,44 @@ for _, clase in pairs(CLASES) do
 end
 chk("hay rasgos dentro del alcance", dentro > 0, true)
 print(string.format("     %d rasgos de nivel 1-6, %d por encima", dentro, fuera))
+
+
+
+-- ─── Niebla reconfortante ───────────────────────────────────────────────────
+-- Era el ultimo recurso sin gastador. El manual dice "hasta el maximo que quede en tu reservorio",
+-- asi que la cantidad NO se declara: la elige el jugador y el tope es lo que quede.
+local monje
+for _, c in ipairs(CLASES) do if c.id == "monje" then monje = c end end
+local niebla
+for _, sub in pairs(monje and monje.subclasses or {}) do
+    for _, f in ipairs(sub.features or {}) do
+        if f.id == "monje_tej_niebla_calmante" then niebla = f end
+    end
+end
+print("La reserva del Tejedor de niebla ya se puede gastar")
+chk("el rasgo existe", niebla ~= nil, true)
+chk("es una accion, no solo un recurso", niebla and niebla.cast, "accion")
+chk("declara su reserva", niebla and niebla.poolHeal and niebla.poolHeal.resource, "healing_mist")
+chk("sin cantidad fija, que la elige el jugador", niebla and niebla.poolHeal.amount, "nil")
+chk("y la cura de enfermedad cuesta 5", niebla and niebla.poolHeal.cure.amount, 5)
+-- El nombre NO se toca: "Niebla reconfortante" es el canonico de la web/TRP3, y el texto largo del
+-- manual se busca por "Niebla Calmante" a traves del mapeo de `HarfordDnDBookText`. Renombrarlo
+-- dejaria la ficha con la descripcion corta.
+chk("conserva su nombre canonico", niebla and niebla.name, "Niebla reconfortante")
+local texto = io.open("Harford/DnD/Data/HarfordDnDBookText.lua"):read("*a")
+chk("y el mapeo al titulo del manual sigue",
+    texto:find('monje_tej_niebla_calmante = "Niebla Calmante"', 1, true) ~= nil, true)
+
+local panel2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+chk("el Libro la enruta", panel2:find('type(self.feature.poolHeal) == "table"', 1, true) ~= nil, true)
+-- Curar enfermedad gasta de la reserva pero NO da puntos de golpe: son dos usos de lo mismo.
+chk("curar enfermedad no da ademas vida",
+    panel2:find("if not esCura then", 1, true) ~= nil, true)
+-- Se gasta antes de entregar y se devuelve si la entrega falla, igual que la Fe.
+chk("si la entrega falla, se devuelve lo gastado",
+    panel2:find("HarfordDnDStore.AdjustResourceCurrent(spec.resource, cantidad)", 1, true) ~= nil, true)
+-- La entrega al objetivo se REUSA de la concesion; no se copio.
+chk("la entrega al objetivo es una sola",
+    select(2, panel2:gsub("function EntregarAObjetivo", "")), 1)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

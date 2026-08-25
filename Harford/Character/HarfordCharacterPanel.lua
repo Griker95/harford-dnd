@@ -2801,6 +2801,38 @@ local function OpenPowerWordArea(feature, option)
     if not opened then HarfordChat.Print(tostring(err or "No se pudo resolver esa habilidad.")) end
 end
 
+-- Entrega una cantidad de un recurso al objetivo: a uno mismo directo, a otro jugador por red.
+-- Estaba dentro de la concesion de Palabra de Poder; se saca porque la Niebla Calmante del Monje
+-- hace lo mismo con una cantidad que elige el jugador, y copiarlo daria dos versiones que un dia
+-- dejarian de coincidir. Devuelve false si no se pudo entregar, para poder devolver lo gastado.
+local function EntregarAObjetivo(recurso, cantidad, nombreEfecto)
+    if UnitIsUnit and UnitIsUnit("target", "player") then
+        HarfordDnDStore.AdjustResourceCurrent(recurso, cantidad)
+        return true
+    end
+    if not (HarfordDnDNet and HarfordDnDNet.SendResourceAdjustToPlayer) then return false end
+    local targetName = HarfordClassColors.UnitFullName("target")
+    if not HarfordDnDNet.SendResourceAdjustToPlayer(targetName, recurso, cantidad) then
+        HarfordChat.Print("No se pudo enviar " .. tostring(nombreEfecto) .. " al objetivo.")
+        return false
+    end
+    return true
+end
+
+-- Un objetivo valido para curar o reforzar: tiene que existir y ser JUGADOR. Un NPC lo gestiona su
+-- ficha de DM, que es quien puede tocarle la vida en el servidor.
+local function ObjetivoDeApoyoValido(nombreEfecto, quien)
+    if not (UnitExists and UnitExists("target")) then
+        HarfordChat.Print(tostring(quien) .. " requiere un objetivo.")
+        return false
+    end
+    if not (UnitIsPlayer and UnitIsPlayer("target")) then
+        HarfordChat.Print("La " .. tostring(nombreEfecto) .. " de un NPC debe gestionarla su ficha de DM.")
+        return false
+    end
+    return true
+end
+
 -- Concesion directa de un recurso a un jugador objetivo (Escudo = vida temporal, Consuelo =
 -- curacion). Eran dos funciones identicas salvo el recurso, la formula y el sustantivo de los
 -- avisos: ahora los declara la OPCION en `grant`. Un NPC no se toca: lo gestiona su ficha de DM.
@@ -2809,12 +2841,7 @@ ApplyPowerWordGrant = function(feature, option, display)
     if type(grant) ~= "table" then return end
     local nombre = tostring(grant.noun or "el efecto")
     -- `self`: el efecto es sobre uno mismo (Brebaje Fortificante) y no mira el objetivo.
-    if not grant.self and not (UnitExists and UnitExists("target")) then
-        HarfordChat.Print(tostring(option.label or "Esta Palabra") .. " requiere un objetivo.")
-        return
-    end
-    if not grant.self and not (UnitIsPlayer and UnitIsPlayer("target")) then
-        HarfordChat.Print("La " .. nombre .. " de un NPC debe gestionarla su ficha de DM.")
+    if not grant.self and not ObjetivoDeApoyoValido(nombre, option.label or "Esta Palabra") then
         return
     end
     -- `amount`: cantidad fija, sin caracteristica ni nivel (Capturar Fragmento de Alma da uno).
@@ -2843,20 +2870,119 @@ ApplyPowerWordGrant = function(feature, option, display)
 
     local ok, err = SpendPowerWord(option)
     if not ok then HarfordChat.Print(err); return end
-    if grant.self or (UnitIsUnit and UnitIsUnit("target", "player")) then
+    if grant.self then
         HarfordDnDStore.AdjustResourceCurrent(grant.resource, amount)
-    elseif HarfordDnDNet and HarfordDnDNet.SendResourceAdjustToPlayer then
-        local targetName = HarfordClassColors.UnitFullName("target")
-        if not HarfordDnDNet.SendResourceAdjustToPlayer(targetName, grant.resource, amount) then
-            HarfordChat.Print("No se pudo enviar " .. nombre .. " al objetivo.")
-            -- Devolver la Fe: se gasto antes de saber que el envio fallaba.
-            HarfordDnDStore.AdjustResourceCurrent(option.resourceKey or "light_point", tonumber(option.resourceCost) or 0)
-            return
-        end
+    elseif not EntregarAObjetivo(grant.resource, amount, nombre) then
+        -- Devolver la Fe: se gasto antes de saber que el envio fallaba.
+        HarfordDnDStore.AdjustResourceCurrent(option.resourceKey or "light_point", tonumber(option.resourceCost) or 0)
+        return
     end
     AnnounceAbility(display or PowerWordDisplayFeature(feature, option))
     if RefreshGameUI then RefreshGameUI() end
     if RefreshBook then RefreshBook() end
+end
+
+local UsarReservaDeCuracion
+
+-- RESERVA DE CURACION (Monje, Niebla Calmante). Se distingue de una concesion normal en que la
+-- cantidad NO esta declarada: el manual dice "hasta el maximo que quede en tu reservorio", asi que
+-- la elige el jugador. Los escalones del menu son atajos; el tope real es lo que quede.
+--
+-- Lo que el cliente NO puede comprobar y por eso no se finge: el manual dice que no funciona sobre
+-- muertos vivientes ni constructos. Eso lo sabe la mesa, no el addon.
+do
+    local menuReserva, reservaPendiente
+
+    local function GastarReserva(feature, cantidad, esCura)
+        local spec = feature.poolHeal
+        local nombre = tostring(spec.noun or "curacion")
+        if not ObjetivoDeApoyoValido(nombre, feature.name) then return false end
+
+        local queda = math.max(0, math.floor(tonumber(
+            HarfordDnDStore.GetResourceCurrent and HarfordDnDStore.GetResourceCurrent(spec.resource) or 0) or 0))
+        cantidad = math.min(math.max(1, math.floor(tonumber(cantidad) or 0)), queda)
+        if cantidad <= 0 then
+            HarfordChat.Print("No queda nada en la reserva de " .. nombre .. ".")
+            return false
+        end
+
+        -- Se gasta ANTES de entregar y se devuelve si la entrega falla, igual que la Fe.
+        HarfordDnDStore.AdjustResourceCurrent(spec.resource, -cantidad)
+        -- Curar enfermedad o veneno gasta de la reserva pero NO da puntos de golpe: son dos usos
+        -- distintos de la misma reserva, y sumar vida ademas seria regalar los dos.
+        if not esCura then
+            if not EntregarAObjetivo("health", cantidad, nombre) then
+                HarfordDnDStore.AdjustResourceCurrent(spec.resource, cantidad)
+                return false
+            end
+        end
+
+        AnnounceAbility({
+            id = feature.id, name = feature.name, icon = feature.icon, cast = feature.cast,
+            description = esCura
+                and ("Gasta " .. cantidad .. " de la reserva para curar una enfermedad o neutralizar un veneno.")
+                or ("Restaura " .. cantidad .. " puntos de golpe."),
+        })
+        if RefreshGameUI then RefreshGameUI() end
+        if RefreshBook then RefreshBook() end
+        return true
+    end
+
+    UsarReservaDeCuracion = function(feature, anchor)
+        local spec = feature.poolHeal
+        if not (spec and HarfordDnDStore and HarfordDnDStore.GetResourceCurrent) then return false end
+        local queda = math.max(0, math.floor(tonumber(HarfordDnDStore.GetResourceCurrent(spec.resource)) or 0))
+        if queda <= 0 then
+            HarfordChat.Print("No queda nada en la reserva de " .. tostring(spec.noun or "curacion") .. ".")
+            return false
+        end
+        if not (UIDropDownMenu_Initialize and ToggleDropDownMenu) then
+            return GastarReserva(feature, queda, false)
+        end
+        menuReserva = menuReserva or CreateFrame("Frame", "HarfordReservaCuracionMenu", UIParent,
+            "UIDropDownMenuTemplate")
+        reservaPendiente = feature
+        UIDropDownMenu_Initialize(menuReserva, function()
+            local puestos = {}
+            for _, paso in ipairs(spec.steps or {}) do
+                -- Solo lo que se puede pagar, y sin repetir el "todo lo que queda" de abajo.
+                if paso < queda and not puestos[paso] then
+                    puestos[paso] = true
+                    local cantidad = paso
+                    local info = UIDropDownMenu_CreateInfo()
+                    info.text = "Curar " .. cantidad
+                    info.notCheckable = true
+                    info.func = function()
+                        CloseDropDownMenus()
+                        GastarReserva(reservaPendiente, cantidad, false)
+                    end
+                    UIDropDownMenu_AddButton(info)
+                end
+            end
+            local todo = UIDropDownMenu_CreateInfo()
+            todo.text = "Curar todo lo que queda (" .. queda .. ")"
+            todo.notCheckable = true
+            todo.func = function()
+                CloseDropDownMenus()
+                GastarReserva(reservaPendiente, queda, false)
+            end
+            UIDropDownMenu_AddButton(todo)
+            local cura = spec.cure
+            if type(cura) == "table" and queda >= (tonumber(cura.amount) or 5) then
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = tostring(cura.label or "Curar enfermedad o veneno")
+                    .. "  |cff808080-" .. tostring(cura.amount) .. "|r"
+                info.notCheckable = true
+                info.func = function()
+                    CloseDropDownMenus()
+                    GastarReserva(reservaPendiente, cura.amount, true)
+                end
+                UIDropDownMenu_AddButton(info)
+            end
+        end, "MENU")
+        ToggleDropDownMenu(1, nil, menuReserva, anchor or "cursor", 0, 0)
+        return true
+    end
 end
 
 local function UsePowerWord(feature, anchor)
@@ -3411,6 +3537,8 @@ local function BookButtonOnClick(self)
         end
     elseif cat == "poder" then
         UsePowerWord(self.feature, self)
+    elseif type(self.feature.poolHeal) == "table" then
+        UsarReservaDeCuracion(self.feature, self)
     elseif self.feature.basicAction then
         AbrirAccionBasica(self.feature.basicAction, self)
     elseif type(self.feature.extraAttacks) == "table" then

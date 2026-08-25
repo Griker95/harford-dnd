@@ -288,8 +288,11 @@ function HarfordDnDCalc.RollD20Full(rollType, context)
     -- Estados de un solo uso (Palabra de Poder: Fortaleza, Brebaje del Buey Negro): valen para UNA
     -- tirada y se retiran al hacerla. Cuales son lo declara cada condicion, no una lista escrita
     -- aqui. Solo cuentan si el que tira eres tu: son estados TUYOS.
+    -- El GUID solo identifica si EXISTE: `nil == nil` es verdadero, asi que sin este guard una
+    -- tirada ajena que no traiga `actorGuid` se contaria como tuya y te gastaria el estado.
+    local miGuid = UnitGUID and UnitGUID("player")
     local propia = context and (context.actorUnit == "player"
-        or context.actorGuid == (UnitGUID and UnitGUID("player")))
+        or (context.actorGuid ~= nil and context.actorGuid == miGuid))
     local consumir = propia and HarfordDnDConditions
         and HarfordDnDConditions.ConditionsToConsumeAfterRoll
         and HarfordDnDConditions.ConditionsToConsumeAfterRoll(rollType) or nil

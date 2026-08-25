@@ -6929,3 +6929,202 @@ do
         Print("Uso: turnecon [reset|rasgos]")
     end, "estado de la economia de turno (turnecon [reset|rasgos])")
 end
+
+-- ─── PRUEBA DE CHOMP ────────────────────────────────────────────────────────
+-- Chomp (LibMSP, lo trae TotalRP3) ofrece tres cosas que `SendAddonMessage` crudo no da: aviso de
+-- entrega por callback, colas con prioridad y control de ancho de banda, y `BNSendGameData`, que
+-- cruza personaje y realm sin necesidad de grupo y admite 4078 bytes en vez de 255.
+--
+-- Antes de plantear adoptarlo hay que medirlo AQUI, en Epsilon, no fiarse de que la API exista.
+-- La pregunta que lo decide todo es la tercera: si el formato de cable es compatible con lo que ya
+-- enviamos. Chomp antepone una cabecera de 12 hex (bitField, sesion, id, total) y DESCARTA en
+-- silencio cualquier mensaje que no la traiga (`if not hasVersion16 then return end`). Si eso se
+-- confirma, Chomp no se puede adoptar de forma incremental sobre `DND5EARC`: el dia que se active,
+-- todo cliente sin actualizar deja de recibir, y sin error que lo delate.
+do
+    local PREFIJO = "HARFCHOMP"
+    local recibidor          -- frame propio para ver el cable EN CRUDO
+    local registrado = false
+    local ultimo = {}        -- lo ultimo visto por cada via, para poder compararlas
+
+    local function Lib()
+        return _G.AddOn_Chomp
+    end
+
+    -- Lo que llega por la via de Chomp: ya sin cabecera y reensamblado.
+    local function AlLlegarPorChomp(prefix, texto, canal, emisor)
+        ultimo.chomp = { texto = texto, canal = canal, emisor = emisor }
+        Print(string.format("|cff88ff88CHOMP recibe|r [%s] de %s: %s",
+            tostring(canal), tostring(emisor), tostring(texto)))
+    end
+
+    -- Lo que llega por el evento pelado: el cable tal cual, con cabecera si la trae. Es lo que
+    -- permite ver cuanto ocupa esa cabecera y si nuestro receptor de hoy sabria leerlo.
+    local function AlLlegarEnCrudo(_, _, prefix, texto, canal, emisor)
+        if prefix ~= PREFIJO then return end
+        ultimo.crudo = { texto = texto, canal = canal, emisor = emisor }
+        local cabecera = tostring(texto):match("^(%x%x%x%x%x%x%x%x%x%x%x%x)")
+        Print(string.format("|cffffcc00CRUDO recibe|r [%s] de %s: %d bytes%s",
+            tostring(canal), tostring(emisor), #tostring(texto),
+            cabecera and (" (cabecera Chomp " .. cabecera .. ")") or " (sin cabecera Chomp)"))
+    end
+
+    local function Registrar()
+        local C = Lib()
+        if not C then return false end
+        if registrado then return true end
+        if not C.IsAddonPrefixRegistered(PREFIJO) then
+            local ok, err = pcall(C.RegisterAddonPrefix, PREFIJO, AlLlegarPorChomp)
+            if not ok then Print("no se pudo registrar el prefijo en Chomp: " .. tostring(err)) end
+        end
+        if not recibidor then
+            recibidor = CreateFrame("Frame")
+            recibidor:RegisterEvent("CHAT_MSG_ADDON")
+            recibidor:SetScript("OnEvent", AlLlegarEnCrudo)
+        end
+        if C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then
+            C_ChatInfo.RegisterAddonMessagePrefix(PREFIJO)
+        end
+        registrado = true
+        return true
+    end
+
+    -- A quien se le manda. Por defecto a UNO MISMO: el susurro a si mismo funciona para addon
+    -- messages, asi que la prueba se puede hacer con un solo cliente. Con un jugador en target o
+    -- un nombre por argumento, se prueba de verdad entre dos.
+    local function Destino(args)
+        local nombre = args and args:match("^%s*(%S+)%s*$")
+        if nombre and nombre ~= "" then return nombre end
+        if UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target") then
+            return GetUnitName and GetUnitName("target", true) or UnitName("target")
+        end
+        return GetUnitName and GetUnitName("player", true) or (UnitName and UnitName("player"))
+    end
+
+    local function Informe()
+        local C = Lib()
+        Print("--- Disponibilidad ---")
+        Print("  AddOn_Chomp: " .. (C and "si" or "NO -- mira si TotalRP3 esta cargado"))
+        if not C then return end
+        Print("  version: " .. tostring(C.GetVersion and C.GetVersion() or "?"))
+        local bps, rafaga
+        if C.GetBPS then bps, rafaga = C.GetBPS() end
+        Print(string.format("  ancho de banda: %s bps, rafaga %s", tostring(bps), tostring(rafaga)))
+        Print("  ChatThrottleLib presente: " .. (_G.ChatThrottleLib and "si" or "no"))
+        Print("--- Battle.net ---")
+        Print("  BNSendGameData existe: " .. (_G.BNSendGameData and "si" or "NO"))
+        local alcanzables = 0
+        if BNGetNumFriends and C_BattleNet and C_BattleNet.GetFriendAccountInfo then
+            for i = 1, BNGetNumFriends() do
+                local info = C_BattleNet.GetFriendAccountInfo(i)
+                local juego = info and info.gameAccountInfo
+                -- Solo sirve una cuenta de JUEGO conectada a WoW: el resto no puede recibir datos.
+                if juego and juego.isOnline and juego.clientProgram == "WoW" and juego.gameAccountID then
+                    alcanzables = alcanzables + 1
+                end
+            end
+        end
+        Print("  cuentas de juego WoW alcanzables: " .. alcanzables)
+        Print("--- Limites ---")
+        Print("  SendAddonMessage: 255 bytes; BNSendGameData: 4078 (16 veces mas)")
+        Print("Usa: chomp enviar [nombre] | chomp bn | chomp limite | chomp crudo")
+    end
+
+    -- El experimento que decide: mandar lo MISMO por las dos vias y ver que llega por donde.
+    local function Enviar(args)
+        local C = Lib()
+        if not C then Print("Chomp no disponible.") return end
+        if not Registrar() then return end
+        local destino = Destino(args)
+        local carga = "prueba|" .. tostring(GetTime and math.floor(GetTime()) or 0)
+        Print("Destino: " .. tostring(destino) .. "  carga: " .. carga .. " (" .. #carga .. " bytes)")
+
+        -- Via Chomp, con callback de entrega. El callback recibe (callbackArg, salio).
+        local ok, err = pcall(C.SendAddonMessage, PREFIJO, carga, "WHISPER", destino, "HIGH", nil,
+            function(arg, salio)
+                Print("|cff88ff88callback de Chomp|r: salio=" .. tostring(salio)
+                    .. " (" .. tostring(arg) .. ")")
+            end, "envio1")
+        Print("  Chomp acepto el envio: " .. (ok and "si" or ("NO -- " .. tostring(err))))
+
+        -- Via cruda, la de hoy. Sin callback: solo se sabe que la llamada no reventó.
+        local ok2 = HarfordSync and HarfordSync.Send
+            and HarfordSync.Send(PREFIJO, carga, "WHISPER", destino)
+        Print("  crudo acepto el envio: " .. tostring(ok2)
+            .. " (sin callback no hay forma de saber si salio)")
+        Print("Mira las lineas de recepcion. Si el mensaje CRUDO no sale como 'CHOMP recibe',")
+        Print("los dos formatos son incompatibles y Chomp no se puede adoptar a medias.")
+    end
+
+    -- El limite de tamano: Chomp lanza error DURO al pasarse; el crudo lo descarta sin decir nada.
+    -- Es justo el fallo silencioso que costo encontrar en las tiradas largas.
+    local function Limite(args)
+        local C = Lib()
+        if not C then Print("Chomp no disponible.") return end
+        if not Registrar() then return end
+        local destino = Destino(args)
+        local gordo = string.rep("X", 300)
+        Print("Enviando 300 bytes, cuando el limite son 255...")
+        local ok, err = pcall(C.SendAddonMessage, PREFIJO, gordo, "WHISPER", destino)
+        Print("  Chomp: " .. (ok and "lo acepto, que no deberia" or ("lo rechazo -- " .. tostring(err))))
+        local ok2, res = pcall(function()
+            return C_ChatInfo.SendAddonMessage(PREFIJO, gordo, "WHISPER", destino)
+        end)
+        Print("  crudo: " .. (ok2 and ("devolvio " .. tostring(res) .. " y lo descarta en silencio")
+            or ("error -- " .. tostring(res))))
+    end
+
+    local function BattleNet(args)
+        local C = Lib()
+        if not C then Print("Chomp no disponible.") return end
+        if not _G.BNSendGameData then Print("BNSendGameData no existe en este cliente.") return end
+        if not Registrar() then return end
+        if not (BNGetNumFriends and C_BattleNet and C_BattleNet.GetFriendAccountInfo) then
+            Print("API de Battle.net no disponible.")
+            return
+        end
+        local enviados = 0
+        for i = 1, BNGetNumFriends() do
+            local info = C_BattleNet.GetFriendAccountInfo(i)
+            local juego = info and info.gameAccountInfo
+            if juego and juego.isOnline and juego.clientProgram == "WoW" and juego.gameAccountID then
+                local nombre = tostring(juego.characterName or info.accountName or "?")
+                local ok, err = pcall(C.BNSendGameData, juego.gameAccountID, PREFIJO,
+                    "prueba bn|" .. tostring(GetTime and math.floor(GetTime()) or 0), "HIGH", nil,
+                    function(arg, salio)
+                        Print("|cff88ff88callback BN|r (" .. tostring(arg) .. "): salio=" .. tostring(salio))
+                    end, nombre)
+                Print(string.format("  -> %s (%s): %s", nombre, tostring(juego.gameAccountID),
+                    ok and "aceptado" or ("ERROR " .. tostring(err))))
+                enviados = enviados + 1
+            end
+        end
+        if enviados == 0 then
+            Print("Ningun amigo de Battle.net con WoW abierto. Sin destinatario no se puede probar.")
+        end
+    end
+
+    local function Crudo()
+        Print("Ultimo por Chomp: " .. (ultimo.chomp
+            and (tostring(ultimo.chomp.texto) .. "  [" .. tostring(ultimo.chomp.canal) .. "]")
+            or "nada"))
+        Print("Ultimo en crudo:  " .. (ultimo.crudo
+            and (#tostring(ultimo.crudo.texto) .. " bytes  [" .. tostring(ultimo.crudo.canal) .. "]")
+            or "nada"))
+        if ultimo.chomp and ultimo.crudo then
+            local extra = #tostring(ultimo.crudo.texto) - #tostring(ultimo.chomp.texto)
+            Print("Diferencia de tamano, que es la cabecera de Chomp: " .. extra .. " bytes")
+        end
+    end
+
+    API.RegisterCommand("chomp", function(args)
+        args = tostring(args or ""):gsub("^%s+", ""):gsub("%s+$", "")
+        local sub, resto = args:match("^(%S+)%s*(.*)$")
+        sub = sub and sub:lower() or ""
+        if sub == "enviar" then return Enviar(resto) end
+        if sub == "bn" then return BattleNet(resto) end
+        if sub == "limite" then return Limite(resto) end
+        if sub == "crudo" then return Crudo() end
+        Informe()
+    end, "mide Chomp frente a SendAddonMessage (chomp [enviar|bn|limite|crudo])")
+end

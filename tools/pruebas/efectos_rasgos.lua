@@ -1,0 +1,316 @@
+-- HarfordDnDFeatureEffects: de aqui sale CADA bonus del personaje.
+--
+-- Todo lo que un rasgo concede pasa por este modulo: competencias, resistencias, dados de artes
+-- marciales, umbral de critico, maximos de recurso. Estaba sin cubrir -- de 14 mutaciones, 13
+-- pasaban --, y un fallo aqui no rompe nada: simplemente el rasgo deja de dar lo que dice.
+
+local fallos = 0
+local function chk(etiqueta, real, esp)
+    local ok = tostring(real) == tostring(esp)
+    if not ok then fallos = fallos + 1 end
+    print(string.format("  %-56s %-9s %s", etiqueta, tostring(real),
+        ok and "ok" or ("FALLA, esperaba " .. tostring(esp))))
+end
+
+-- ─── Progresion de mentira, controlable ─────────────────────────────────────
+local RASGOS, CLASES, ESTADOS, NIVELES = {}, {}, {}, {}
+
+local env = setmetatable({}, { __index = function() return nil end })
+env.ipairs, env.pairs, env.tonumber, env.tostring = ipairs, pairs, tonumber, tostring
+env.type, env.math, env.table, env.string, env.select = type, math, table, string, select
+env.setmetatable = setmetatable
+env.HarfordClassColors = {
+    NormalizeKey = function(v) return tostring(v or ""):lower() end,
+    StripAccents = function(v) return v end,
+}
+env.HarfordDnDProgression = {
+    GetUnlockedFeatures = function() return RASGOS end,
+    IsFeatureEnabled = function() return true end,
+    GetClassLevels = function() return NIVELES end,
+    IsToggleStateActive = function(id) return ESTADOS[id] == true end,
+    GetChoice = function() return {} end,
+}
+env.HarfordDnDBook = { GetClass = function(id) return CLASES[id] end }
+
+local cargar = loadstring or load
+local src = io.open("Harford/DnD/Engine/HarfordDnDFeatureEffects.lua"):read("*a")
+local f
+if setfenv then f = assert(cargar(src)); setfenv(f, env) else f = assert(cargar(src, "t", "t", env)) end
+assert(pcall(f))
+local F = env.HarfordDnDFeatureEffects
+
+-- La cache es por perfil y por generacion; sin invalidar, la segunda prueba leeria la primera.
+local function conRasgos(efectos)
+    RASGOS = { { feature = { id = "prueba", effects = efectos } } }
+    F.Invalidate()
+end
+local function conClases(niveles, defs)
+    NIVELES, CLASES = niveles, defs
+    F.Invalidate()
+end
+
+-- ─── Multiclase: la regla que mas se equivoca ───────────────────────────────
+-- En 5e SOLO la primera clase da sus competencias de SALVACION. Las armaduras y armas, en cambio,
+-- se unen todas. Confundirlo regala dos salvaciones a cualquier multiclase.
+print("Multiclase: salvaciones solo de la PRIMERA clase")
+RASGOS = {}
+conClases(
+    { { classId = "guerrero", level = 3 }, { classId = "picaro", level = 2 } },
+    {
+        guerrero = { saves = { "Fuerza", "Constitucion" }, armorProfs = { "pesada" },
+                     weaponProfs = { "marciales" } },
+        picaro   = { saves = { "Destreza", "Inteligencia" }, armorProfs = { "ligera" },
+                     weaponProfs = { "sencillas" } },
+    })
+chk("Fuerza, de la primera", F.HasSaveProf("Fuerza"), true)
+chk("Constitucion, de la primera", F.HasSaveProf("Constitucion"), true)
+chk("Destreza, de la SEGUNDA, no", F.HasSaveProf("Destreza"), false)
+chk("Inteligencia tampoco", F.HasSaveProf("Inteligencia"), false)
+
+print("Pero las competencias de armadura y arma se UNEN")
+chk("pesada, de la primera", F.Resolve().armorProf["pesada"], true)
+chk("ligera, de la segunda, tambien", F.Resolve().armorProf["ligera"], true)
+chk("marciales", F.Resolve().weaponProf["marciales"], true)
+chk("y sencillas", F.Resolve().weaponProf["sencillas"], true)
+
+-- Invertir el orden invierte quien da las salvaciones: es el orden en que se subio de nivel.
+print("El orden importa: manda con que clase empezaste")
+conClases(
+    { { classId = "picaro", level = 2 }, { classId = "guerrero", level = 3 } },
+    { guerrero = { saves = { "Fuerza" } }, picaro = { saves = { "Destreza" } } })
+chk("ahora Destreza si", F.HasSaveProf("Destreza"), true)
+chk("y Fuerza no", F.HasSaveProf("Fuerza"), false)
+conClases({}, {})
+
+-- ─── Habilidades: competencia y pericia ─────────────────────────────────────
+print("Competencia y pericia se guardan como rango")
+conRasgos({ { kind = "skillProf", skill = "atletismo" } })
+chk("competencia es rango 1", F.GetSkillRank("atletismo"), 1)
+conRasgos({ { kind = "skillExpertise", skill = "atletismo" } })
+chk("pericia es rango 2", F.GetSkillRank("atletismo"), 2)
+-- La pericia no puede bajar a competencia si llegan las dos: se queda el rango mayor.
+conRasgos({ { kind = "skillExpertise", skill = "atletismo" },
+            { kind = "skillProf", skill = "atletismo" } })
+chk("las dos juntas: se queda la pericia", F.GetSkillRank("atletismo"), 2)
+chk("una que no tiene, cero", F.GetSkillRank("sigilo"), 0)
+
+-- ─── Bonos ──────────────────────────────────────────────────────────────────
+print("Los bonos se SUMAN, no se pisan")
+conRasgos({ { kind = "bonus", target = "armorClass", value = 1 },
+            { kind = "bonus", target = "armorClass", value = 2 } })
+chk("uno mas dos son tres", F.GetBonus("armorClass"), 3)
+chk("y un objetivo sin bonos, cero", F.GetBonus("initiative"), 0)
+print("Un bonus a una habilidad concreta va por su clave")
+conRasgos({ { kind = "bonus", target = "skill", skill = "naturaleza", value = 2 } })
+chk("la que dice", F.GetBonus("skill", "naturaleza"), 2)
+chk("y no otra", F.GetBonus("skill", "sigilo"), 0)
+conRasgos({ { kind = "bonus", target = "save", ability = "Destreza", value = 1 } })
+chk("y una salvacion concreta, por su caracteristica", F.GetBonus("save", "Destreza"), 1)
+chk("no las demas", F.GetBonus("save", "Fuerza"), 0)
+
+-- ─── Estados activables ─────────────────────────────────────────────────────
+-- Un efecto con `requiresState` solo cuenta con ese estado ENCENDIDO. Lobo Solitario del Cazador
+-- da ataque extra solo mientras combatas sin companero.
+print("Un efecto con `requiresState` no cuenta hasta que el estado se enciende")
+conRasgos({
+    { kind = "toggleState", state = "lobo", label = "Lobo Solitario" },
+    { kind = "bonus", target = "armorClass", value = 5, requiresState = "lobo" },
+})
+ESTADOS = {}
+F.Invalidate()
+chk("apagado, no da nada", F.GetBonus("armorClass"), 0)
+chk("pero el estado si se declara", F.GetToggleStates()[1] and F.GetToggleStates()[1].id, "lobo")
+ESTADOS = { lobo = true }
+F.Invalidate()
+chk("encendido, ya da", F.GetBonus("armorClass"), 5)
+ESTADOS = {}
+
+-- ─── Defensas por tipo ──────────────────────────────────────────────────────
+print("Resistencia, vulnerabilidad e inmunidad")
+conRasgos({ { kind = "resist", damageType = "veneno" } })
+chk("resiste", F.GetDamageStatus("veneno"), "resistant")
+conRasgos({ { kind = "vuln", damageType = "fuego" } })
+chk("vulnerable", F.GetDamageStatus("fuego"), "vulnerable")
+conRasgos({ { kind = "immune", damageType = "veneno" } })
+chk("inmune", F.GetDamageStatus("veneno"), "immune")
+chk("un tipo sin nada, nil", F.GetDamageStatus("cortante"), "nil")
+-- La inmunidad manda sobre la resistencia venga en el orden que venga: es mas fuerte.
+print("La inmunidad manda sobre la resistencia, en cualquier orden")
+conRasgos({ { kind = "resist", damageType = "veneno" }, { kind = "immune", damageType = "veneno" } })
+chk("resistencia y luego inmunidad", F.GetDamageStatus("veneno"), "immune")
+conRasgos({ { kind = "immune", damageType = "veneno" }, { kind = "resist", damageType = "veneno" } })
+chk("inmunidad y luego resistencia", F.GetDamageStatus("veneno"), "immune")
+
+-- ─── Umbral de critico ──────────────────────────────────────────────────────
+-- Maquina de Matar baja el critico a 19, pero solo cuerpo a cuerpo. Se queda el MENOR.
+print("Umbral de critico: se queda el menor, y el de melee solo con arma cuerpo a cuerpo")
+conRasgos({})
+chk("por defecto, 20", F.GetWeaponCritThreshold(false), 20)
+conRasgos({ { kind = "critRange", value = 19, melee = true } })
+chk("cuerpo a cuerpo baja a 19", F.GetWeaponCritThreshold(true), 19)
+chk("a distancia sigue en 20", F.GetWeaponCritThreshold(false), 20)
+conRasgos({ { kind = "critRange", value = 19 } })
+chk("sin marcar melee, vale para todo", F.GetWeaponCritThreshold(false), 19)
+-- Dos rasgos que lo bajan: se queda el mas bajo, no el ultimo.
+conRasgos({ { kind = "critRange", value = 19 }, { kind = "critRange", value = 18 } })
+chk("dos rebajas: la mejor", F.GetWeaponCritThreshold(false), 18)
+conRasgos({ { kind = "critRange", value = 18 }, { kind = "critRange", value = 19 } })
+chk("y da igual el orden", F.GetWeaponCritThreshold(false), 18)
+
+-- ─── Sutileza concedida ─────────────────────────────────────────────────────
+-- Iniciacion Illidari trata como Sutil las armas cuerpo a cuerpo sin Pesada ni Dos manos.
+print("Sutileza concedida: solo donde el rasgo dice")
+conRasgos({ { kind = "weaponFinesse", meleeOnly = true, excludeHeavy = true, excludeTwoHanded = true } })
+chk("guja cuerpo a cuerpo", F.TreatWeaponAsFinesse({ key = "Guja", mode = "Melee", props = {} }), true)
+chk("pero no un arco", F.TreatWeaponAsFinesse({ key = "Arco", mode = "Ranged", props = {} }), false)
+chk("ni una pesada",
+    F.TreatWeaponAsFinesse({ key = "Mandoble", mode = "Melee", props = { "Pesada" } }), false)
+chk("ni una de dos manos",
+    F.TreatWeaponAsFinesse({ key = "Pica", mode = "Melee", props = { "Dos manos" } }), false)
+-- El desarmado y el escudo nunca: no son armas de las que se pueda hablar de sutileza.
+chk("desarmado no", F.TreatWeaponAsFinesse({ key = "Desarmado", mode = "Melee", props = {} }), false)
+chk("escudo tampoco", F.TreatWeaponAsFinesse({ key = "Escudo", mode = "Melee", props = {} }), false)
+conRasgos({})
+chk("y sin el rasgo, ninguna", F.TreatWeaponAsFinesse({ key = "Guja", mode = "Melee", props = {} }), false)
+
+-- ─── Maximos de recurso y vida ──────────────────────────────────────────────
+print("Maximos de recurso y vida por nivel")
+conRasgos({ { kind = "resourceMax", resource = "chi", value = 3 },
+            { kind = "resourceMax", resource = "chi", value = 2 } })
+chk("los maximos se suman", F.GetResourceMaxBonus("chi"), 5)
+chk("un recurso sin bonos, cero", F.GetResourceMaxBonus("rage"), 0)
+conRasgos({ { kind = "hpPerLevel", value = 1 } })
+chk("vida por nivel", F.GetHpPerLevelBonus(), 1)
+
+-- ─── Banderas ───────────────────────────────────────────────────────────────
+print("Banderas")
+conRasgos({ { kind = "flag", flag = "extraAttack" } })
+chk("la que hay", F.HasFlag("extraAttack"), true)
+chk("y una que no", F.HasFlag("inventada"), false)
+-- Una bandera con `requiresState` tampoco cuenta con el estado apagado.
+conRasgos({ { kind = "flag", flag = "extraAttack", requiresState = "lobo" } })
+chk("con estado apagado, no", F.HasFlag("extraAttack"), false)
+ESTADOS = { lobo = true }
+F.Invalidate()
+chk("con estado encendido, si", F.HasFlag("extraAttack"), true)
+ESTADOS = {}
+
+-- ─── Inmunidad a condiciones ────────────────────────────────────────────────
+print("Inmunidad a condiciones")
+conRasgos({ { kind = "conditionImmunity", condition = "frightened" } })
+chk("a la que dice", F.HasConditionImmunity("frightened"), true)
+chk("y no a otra", F.HasConditionImmunity("poisoned"), false)
+chk("y se puede listar", F.GetConditionImmunities()[1], "frightened")
+
+-- ─── Caracteristicas que suman a iniciativa y salvaciones ───────────────────
+print("Caracteristicas extra en iniciativa y salvaciones")
+conRasgos({ { kind = "initiativeAbility", ability = "Carisma" } })
+chk("iniciativa", F.GetInitiativeAbilities()[1], "Carisma")
+conRasgos({ { kind = "allSavesAbility", ability = "Carisma", min = 1 } })
+chk("todas las salvaciones", F.GetAllSavesAbilities()[1].ability, "Carisma")
+chk("con su minimo", F.GetAllSavesAbilities()[1].min, 1)
+
+-- ─── Defensa sin Armadura ───────────────────────────────────────────────────
+-- Se declaran TODAS; quien decide que no se acumulan es HarfordDnDCombat, cogiendo la mejor.
+print("Defensa sin Armadura: aqui se declaran, no se eligen")
+conRasgos({ { kind = "unarmoredDefenseAbility", ability = "Sabiduria" },
+            { kind = "unarmoredDefenseAbility", ability = "Inteligencia" } })
+chk("se declaran las dos", #F.GetUnarmoredDefenseAbilities(), 2)
+
+-- ─── La cache no puede servir datos viejos ──────────────────────────────────
+-- `Resolve` cachea por perfil y generacion. Si `Invalidate` no subiera la generacion, cambiar de
+-- rasgos no cambiaria nada y el personaje se quedaria con los bonos del anterior.
+print("Invalidar la cache hace que se vuelva a resolver")
+conRasgos({ { kind = "bonus", target = "armorClass", value = 1 } })
+chk("primero uno", F.GetBonus("armorClass"), 1)
+RASGOS = { { feature = { id = "otro", effects = { { kind = "bonus", target = "armorClass", value = 9 } } } } }
+chk("sin invalidar, sigue el viejo", F.GetBonus("armorClass"), 1)
+F.Invalidate()
+chk("invalidando, el nuevo", F.GetBonus("armorClass"), 9)
+
+-- ─── Vulnerabilidad frente a resistencia e inmunidad ────────────────────────
+-- Resistencia y vulnerabilidad del mismo tipo no se anulan a medias: manda la vulnerabilidad. La
+-- inmunidad, en cambio, no la tumba nada.
+print("Vulnerabilidad sobre resistencia; la inmunidad no se pierde")
+conRasgos({ { kind = "resist", damageType = "fuego" }, { kind = "vuln", damageType = "fuego" } })
+chk("resistente y luego vulnerable", F.GetDamageStatus("fuego"), "vulnerable")
+conRasgos({ { kind = "immune", damageType = "fuego" }, { kind = "vuln", damageType = "fuego" } })
+chk("pero inmune no se pierde", F.GetDamageStatus("fuego"), "immune")
+
+-- ─── Competencias de armadura y arma ────────────────────────────────────────
+print("Competencias de armadura y arma")
+conRasgos({ { kind = "armorProf", armor = "ligera" }, { kind = "weaponProf", weapon = "marciales" } })
+chk("la armadura que da", F.HasArmorProf("ligera"), true)
+chk("y no otra", F.HasArmorProf("pesada"), false)
+chk("el arma que da", F.HasWeaponProf("marciales"), true)
+chk("y no otra", F.HasWeaponProf("sencillas"), false)
+-- La consulta se normaliza igual que el guardado: preguntar por "de fuego" encuentra
+-- "armas de fuego". Sin eso, el Forajido no seria competente con su propia pistola.
+conRasgos({ { kind = "weaponProf", weapon = "armas de fuego" } })
+chk("y la pregunta se normaliza como el guardado", F.HasWeaponProf("de fuego"), true)
+
+-- ─── Maximo de recurso: sumar o quedarse con el mayor ───────────────────────
+-- Una tabla de valores POR NIVEL es un total, no un incremento: sumarla daria la suma de todos los
+-- niveles por los que ha pasado el personaje.
+print("Maximo de recurso: `stack = max` no acumula")
+conRasgos({ { kind = "resourceMax", resource = "chi", value = 3, stack = "max" },
+            { kind = "resourceMax", resource = "chi", value = 5, stack = "max" } })
+chk("se queda el mayor", F.GetResourceMaxBonus("chi"), 5)
+conRasgos({ { kind = "resourceMax", resource = "chi", value = 5, stack = "max" },
+            { kind = "resourceMax", resource = "chi", value = 3, stack = "max" } })
+chk("y da igual el orden", F.GetResourceMaxBonus("chi"), 5)
+
+-- ─── Ganancias y descansos ──────────────────────────────────────────────────
+print("Ganancias de recurso por disparador")
+conRasgos({ { kind = "resourceGain", resource = "rage", trigger = "onKill", amount = 1,
+              featureId = "cdm_cosecha" } })
+local g = F.GetResourceGains("onKill")
+chk("hay una", #g, 1)
+chk("del recurso que dice", g[1] and g[1].resource, "rage")
+chk("y lleva el id del rasgo, para poder enlazarlo", g[1] and g[1].featureId, "cdm_cosecha")
+chk("otro disparador no la ve", #F.GetResourceGains("onHit"), 0)
+
+print("Recuperaciones al descansar: corto y largo son listas distintas")
+conRasgos({ { kind = "restRestore", resource = "chi", value = 2, rest = "short" } })
+chk("el corto la tiene", F.GetRestRestores("short")["chi"], 2)
+chk("el largo no", F.GetRestRestores("long")["chi"], "nil")
+conRasgos({ { kind = "restRestore", resource = "chi", value = 2, rest = "long" } })
+chk("y al reves", F.GetRestRestores("long")["chi"], 2)
+-- Sin `rest` declarado se asume el corto, que es el caso comun.
+conRasgos({ { kind = "restRestore", resource = "chi", value = 2 } })
+chk("sin decirlo, corto", F.GetRestRestores("short")["chi"], 2)
+-- Un valor de cero no se registra: seria una recuperacion que no recupera.
+conRasgos({ { kind = "restRestore", resource = "chi", value = 0 } })
+chk("un cero no se registra", F.GetRestRestores("short")["chi"], "nil")
+
+-- ─── Valores que escalan con el nivel ───────────────────────────────────────
+-- `value = "level"` significa "tu nivel", y con `flatClassId` el de ESA clase, no el total. Un
+-- multiclase Monje 3 / Picaro 2 tiene nivel total 5 pero nivel de Monje 3.
+print("Un valor que escala con el nivel usa el nivel de SU clase")
+conClases({ { classId = "monje", level = 3 }, { classId = "picaro", level = 2 } },
+    { monje = {}, picaro = {} })
+env.HarfordDnDProgression.GetTotalLevel = function() return 5 end
+-- Vive en el `flatBonus` de un dano condicional, que es donde hace falta: "+tu nivel de paladin".
+local function planoDe(efecto)
+    conRasgos({ efecto })
+    local lista = F.GetConditionalDamage()
+    return lista[1] and lista[1].flat
+end
+chk("sin clase, el nivel total",
+    planoDe({ kind = "conditionalWeaponDamage", id = "x", flatBonus = "level" }), 5)
+chk("con clase, el de esa clase",
+    planoDe({ kind = "conditionalWeaponDamage", id = "x", flatBonus = "level",
+              flatClassId = "monje" }), 3)
+-- Una clase que no se tiene da nivel 0, y un dano condicional que no anade NADA (ni dados, ni
+-- bonus, ni coste) directamente no se lista: no tendria nada que ofrecer en el menu.
+conRasgos({ { kind = "conditionalWeaponDamage", id = "x", flatBonus = "level",
+              flatClassId = "brujo" } })
+chk("una clase que no se tiene no deja nada que ofrecer", #F.GetConditionalDamage(), 0)
+-- "pb" resuelve al bonus de competencia, no a un texto.
+env.HarfordDnDFeatureEffects.GetProficiencyBonus = function() return 4 end
+chk("y `pb` es el bonus de competencia",
+    planoDe({ kind = "conditionalWeaponDamage", id = "x", flatBonus = "pb" }), 4)
+env.HarfordDnDFeatureEffects.GetProficiencyBonus = nil
+conClases({}, {})
+
+print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

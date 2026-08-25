@@ -894,7 +894,23 @@ end
 
 function API.RemoveUnitState(ref, id)
     local unit, guid, name = ResolveRef(ref)
-    local removed = RemoveRecord(StateKey(unit, guid, name), tostring(id or ""), true)
+    id = tostring(id or "")
+    local removed = RemoveRecord(StateKey(unit, guid, name), id, true)
+    -- Si el estado llevaba aura y el NPC no esta delante, se apunta para retirarla cuando lo este.
+    -- El estado desaparece ya -- es dato de Harford -- pero el icono seguiria pegado.
+    local def = API.DEFS[id]
+    if removed and def and def.auraId and guid and guid ~= "" then
+        local esteEsElObjetivo = UnitExists and UnitExists("target") and UnitGUID
+            and UnitGUID("target") == guid
+        if not (unit and UnitIsPlayer and UnitIsPlayer(unit)) then
+            if esteEsElObjetivo then
+                API.QueueNpcAura(guid, def.auraId, "remove")
+                API.FlushPendingAuras("target")
+            else
+                API.QueueNpcAura(guid, def.auraId, "remove")
+            end
+        end
+    end
     Notify()
     return removed
 end
@@ -951,6 +967,83 @@ function API.RemoveAllFromUnit(unit)
         if ok then removed = removed + 1 end
     end
     return removed
+end
+
+-- ─── COLA DE AURAS PENDIENTES SOBRE NPC ─────────────────────────────────────
+-- Poner o quitar un aura a un NPC exige tenerlo SELECCIONADO: el comando de servidor actua sobre
+-- el objetivo actual y no hay forma de hacerlo en bloque. Eso choca con los contadores, que bajan
+-- de golpe para todo un bando sin tocar a nadie: cuando a cinco enemigos les expira algo a la vez,
+-- el numero desaparece al instante pero el icono se queda pegado hasta que alguien los seleccione.
+--
+-- En vez de pedirle al DM que vaya uno por uno, se APUNTA lo que falta y se ejecuta sola en cuanto
+-- selecciona a ese NPC -- cosa que va a hacer igualmente, porque le toca actuar. El coste
+-- desaparece porque se aprovecha una seleccion que ya ocurre.
+--
+-- Mismo patron que la cola por GUID del motor de areas, que ya resolvia esto para el dano.
+local pendientesAura = {}
+
+function API.QueueNpcAura(guid, auraId, op)
+    guid, auraId = tostring(guid or ""), tonumber(auraId)
+    if guid == "" or not auraId or auraId <= 0 then return false end
+    pendientesAura[guid] = pendientesAura[guid] or {}
+    -- Sin duplicados: si ya estaba apuntado quitar esa aura, apuntarlo otra vez no anade nada.
+    for _, p in ipairs(pendientesAura[guid]) do
+        if p.auraId == auraId and p.op == op then return true end
+    end
+    pendientesAura[guid][#pendientesAura[guid] + 1] = { auraId = auraId, op = op or "remove" }
+    Notify()
+    return true
+end
+
+-- Cuantas quedan, para poder decirlo en la ventana en vez de dejarlo mudo.
+function API.GetPendingAuraCount()
+    local total = 0
+    for _, lista in pairs(pendientesAura) do total = total + #lista end
+    return total
+end
+
+function API.GetPendingAurasFor(guid)
+    return pendientesAura[tostring(guid or "")]
+end
+
+-- Ejecuta lo apuntado para la unidad que se acaba de seleccionar. Se llama al cambiar de objetivo.
+function API.FlushPendingAuras(unit)
+    unit = unit or "target"
+    if not (UnitExists and UnitExists(unit)) then return 0 end
+    if UnitIsPlayer and UnitIsPlayer(unit) then return 0 end
+    local guid = UnitGUID and UnitGUID(unit)
+    local lista = guid and pendientesAura[guid]
+    if not lista or #lista == 0 then return 0 end
+    -- Sin permiso no se intenta: se deja apuntado para quien pueda, en vez de perderlo.
+    if not (HarfordAuthority and HarfordAuthority.CanUseOfficerCommands
+        and HarfordAuthority.CanUseOfficerCommands()) then
+        return 0
+    end
+    local hechas = 0
+    for i = #lista, 1, -1 do
+        local p = lista[i]
+        local ok = false
+        -- `RemoveAura` y `ApplyAuraToCurrentTarget` ya actuan sobre el objetivo actual: no hace
+        -- falta accion nueva de servidor, solo llamarlas en el momento adecuado.
+        if p.op == "remove" and HarfordServerActions and HarfordServerActions.RemoveAura then
+            ok = HarfordServerActions.RemoveAura(p.auraId, { addonName = "Harford" })
+        elseif p.op == "apply" and HarfordServerActions and HarfordServerActions.ApplyAuraToCurrentTarget then
+            ok = HarfordServerActions.ApplyAuraToCurrentTarget(p.auraId, { addonName = "Harford" })
+        end
+        -- Solo se tacha lo que se pudo hacer: un fallo de servidor no debe borrar el recordatorio.
+        if ok then
+            table.remove(lista, i)
+            hechas = hechas + 1
+        end
+    end
+    if #lista == 0 then pendientesAura[guid] = nil end
+    if hechas > 0 then Notify() end
+    return hechas
+end
+
+function API.ClearPendingAuras(guid)
+    if guid then pendientesAura[tostring(guid)] = nil else pendientesAura = {} end
+    Notify()
 end
 
 function API.ClearUnitStateRecords(ref)
@@ -1765,7 +1858,14 @@ events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 events:RegisterEvent("UNIT_AURA")
 events:RegisterEvent("GROUP_ROSTER_UPDATE")
+-- Al seleccionar un NPC se ejecuta lo que quedara apuntado para el: es el unico momento en que se
+-- le puede tocar el aura. Mismo enganche que usa el motor de areas para su cola.
+events:RegisterEvent("PLAYER_TARGET_CHANGED")
 events:SetScript("OnEvent", function(_, event, unit)
+    if event == "PLAYER_TARGET_CHANGED" then
+        API.FlushPendingAuras("target")
+        return
+    end
     if event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
         LoadOwned()
         if not S.myTurnHooked and HarfordTurnOrderAPI and HarfordTurnOrderAPI.RegisterMyTurnListener then

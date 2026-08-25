@@ -348,6 +348,11 @@ Grupo("red", "que los mensajes se compongan y se vuelvan a leer, con su limite d
         r.chk("con las DOS habilidades", skill == "Atletismo/Acrobacias", tostring(skill))
     end
 
+    -- Sin grupo no hay canal, y entonces NADA de esto llega aunque este bien compuesto.
+    local canal = _G.HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+    r.chk("hay canal para publicar estados y tiradas", canal ~= nil,
+        "sin grupo, los estados no se publican a nadie")
+
     r.manual("Queda por ver con OTRO jugador de objetivo (que llegue, no que se componga):")
     r.manual("  1. Agarrar -> el debe tirar Atletismo o Acrobacias en SU cliente y salir Agarrado si pierde.")
     r.manual("  2. Empujar -> elige Apartar: NO debe quedar Derribado. Repite con Derribar: si debe.")
@@ -764,7 +769,18 @@ API.RegisterCommand("estadoen", function(args)
     Print(string.format("%s -> %s (%s): %s", id, tostring(UnitName("target")),
         esJugador and "jugador, va por red" or "NPC, local",
         ok and "|cff00ff00hecho|r" or ("|cffff3333" .. tostring(err) .. "|r")))
-    if esJugador and ok then Print("Confirma en el OTRO cliente que le ha llegado.") end
+    -- Los estados se publican por PARTY/RAID. Sin grupo, `BestChannel` devuelve nil y
+    -- `PublishState` se sale sin mandar NADA: el estado se aplica solo en el cliente que lo
+    -- recibe y nadie mas lo ve. Callarselo hace parecer que la sincronizacion esta rota.
+    if esJugador and ok then
+        local canal = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+        if canal then
+            Print("Confirma en el OTRO cliente que le ha llegado (se publica por " .. canal .. ").")
+        else
+            Print("|cffffcc00No estas en grupo: el estado NO se publica a nadie mas.|r")
+            Print("  Los estados viajan por PARTY/RAID. Formad grupo y repite.")
+        end
+    end
 end, "aplica/retira un estado al objetivo: estadoen <condicion> [quitar]")
 
 -- Que cree la tira que tiene que pintar, y donde. Separa "el estado no esta" de "el estado esta

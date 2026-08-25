@@ -987,6 +987,18 @@ do
                 local a, b = ref:GetLeft(), ancla:GetLeft()
                 if a and b then desplazX = a - b end
             end
+            -- Un objetivo SIN auras no tiene columna con la que alinearse, y la tira se iba al
+            -- borde del marco: quedaba en un sitio distinto segun el objetivo llevara buffs o no,
+            -- que se lee como un fallo aunque cada caso este bien por separado.
+            --
+            -- Se RECUERDA la ultima columna aprendida en vez de escribir aqui un numero: el inset
+            -- de los botones depende del arte del marco y de la escala, y un valor fijo se
+            -- quedaria viejo en cuanto Blizzard o un addon lo tocaran.
+            if desplazX ~= 0 then
+                tira.columna = desplazX
+            elseif tira.columna then
+                desplazX = tira.columna
+            end
         end
         tira:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", desplazX, margen)
 

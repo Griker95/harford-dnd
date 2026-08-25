@@ -8,3 +8,4 @@
 ## SavedVariables: HarfordDebugSettings, HarfordFrameProbe
 
 HarfordDebug.lua
+HarfordDebugVerify.lua

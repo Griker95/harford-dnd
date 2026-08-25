@@ -23,11 +23,35 @@ chk("registra el comando", v:find('API.RegisterCommand("verificar"', 1, true) ~=
 chk("y no se cuela en el core", io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
     :find("RegisterCommand", 1, true), "nil")
 
-print("Cubre los diez grupos")
-for _, g in ipairs({ "iconos", "estados", "acciones", "tira", "red", "tiradas", "ficha",
-                     "progresion", "ataque", "libro" }) do
-    chk(g, v:find('Grupo("' .. g .. '"', 1, true) ~= nil, true)
+-- La lista de grupos NO se escribe aqui: se lee del fichero. Una lista a mano se queda vieja al
+-- anadir un grupo, y entonces la prueba deja de proteger justo lo nuevo.
+local grupos = {}
+for nombre in v:gmatch('Grupo%("([a-z_]+)"') do grupos[#grupos + 1] = nombre end
+print("Hay grupos, y cada uno cumple el contrato")
+chk("hay grupos", #grupos > 0, true)
+
+-- Todo grupo tiene que aparecer en la ayuda del comando, o nadie sabra que existe.
+local ayuda = v:match('end, "bateria de verificacion en juego %[(.-)%]"') or ""
+if ayuda == "" then
+    ayuda = v:match('end, "bateria de verificacion en juego %[([^"]+)') or ""
 end
+local sinAyuda = {}
+for _, g in ipairs(grupos) do
+    if not ayuda:find(g, 1, true) then sinAyuda[#sinAyuda + 1] = g end
+end
+chk("todos salen en la ayuda del comando", #sinAyuda, 0)
+for _, g in ipairs(sinAyuda) do print("     falta en la ayuda: " .. g) end
+
+-- Y todo grupo tiene que COMPROBAR algo. Uno que solo imprima instrucciones da la sensacion de
+-- estar verificando sin verificar nada, que es peor que no tenerlo.
+local sinChk = {}
+for _, g in ipairs(grupos) do
+    local ini = v:find('Grupo("' .. g .. '"', 1, true)
+    local sig = v:find('Grupo("', ini + 10, true) or #v
+    if not v:sub(ini, sig):find("r.chk(", 1, true) then sinChk[#sinChk + 1] = g end
+end
+chk("todos comprueban algo, no solo instruyen", #sinChk, 0)
+for _, g in ipairs(sinChk) do print("     solo instruye: " .. g) end
 
 -- La red no necesita otro cliente para comprobar que el mensaje se COMPONE y se vuelve a leer. Solo
 -- para ver si llega. Antes el grupo entero era manual por no distinguir esas dos cosas.

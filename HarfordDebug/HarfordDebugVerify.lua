@@ -519,6 +519,82 @@ Grupo("ataque", function(r)
 end)
 
 ------------------------------------------------------------
+-- AREAS. La geometria se prueba fuera de WoW; lo que solo se puede comprobar aqui es que el
+-- cliente de VERDAD entregue posiciones, y que el centro caiga donde debe con lo que hay delante.
+------------------------------------------------------------
+Grupo("areas", function(r)
+    local A = _G.HarfordDnDArea
+    r.chk("motor de areas cargado", A ~= nil)
+    if not A then return end
+
+    -- Sin posicion propia no hay area automatica: todo habria que marcarlo a mano.
+    if C_Epsilon and C_Epsilon.GetPosition then
+        local ok, x, y, z, ctx = pcall(C_Epsilon.GetPosition)
+        r.chk("el cliente da tu posicion", ok and tonumber(x) ~= nil and tonumber(y) ~= nil)
+        if ok and tonumber(x) then
+            -- La z falta en algunos builds; no es un fallo, pero conviene saberlo porque es lo
+            -- que corta el area en vertical.
+            if tonumber(z) == nil then
+                r.manual("Este build no da altura (z): el corte vertical de las areas no filtra.")
+            end
+            r.chk("y un identificador de contexto", tostring(ctx or "") ~= "",
+                "sin contexto no se distinguen dos fases con las mismas coordenadas")
+        end
+    else
+        r.chk("C_Epsilon.GetPosition disponible", false, "sin el no hay automarcado de areas")
+    end
+
+    -- Solo los jugadores del grupo responden posicion. Es la limitacion que mas confunde: el
+    -- automarcado no ve a nadie fuera del grupo, y sin grupo no ve a nadie.
+    local enGrupo = IsInGroup and IsInGroup()
+    r.chk("estas en grupo para poder pedir posiciones", enGrupo == true,
+        "sin grupo, el automarcado no puede preguntar a nadie")
+
+    -- El centro de una esfera sale de la posicion del jugador al que apuntas. Apuntar a un NPC no
+    -- da centro, y el area cae en ti: la ventana lo avisa, pero conviene verlo aqui.
+    if UnitExists and UnitExists("target") then
+        local esJugador = UnitIsPlayer and UnitIsPlayer("target")
+        if esJugador then
+            r.manual("Objetivo jugador: una esfera se centrara EN EL, que es lo correcto.")
+        else
+            r.manual("Objetivo NPC: una esfera se centrara EN TI (los NPC no responden posicion).")
+            r.manual("  Para centrarla lejos, apunta a un jugador que este en el punto.")
+        end
+    end
+    r.manual("Lanza un area y comprueba en la ventana: distancia por objetivo y los de fuera en gris.")
+end)
+
+------------------------------------------------------------
+-- SEGURIDAD. Quien puede hacerte que. Es la unica barrera que impide que un desconocido te baje la
+-- vida o te ponga un estado, y no se ve por ninguna parte hasta que falla.
+------------------------------------------------------------
+Grupo("seguridad", function(r)
+    local Comm = _G.HarfordDnDComm
+    r.chk("capa de mensajes cargada", Comm and Comm.CreateHandlers ~= nil)
+
+    -- La resolucion de nombre a unidad es lo que decide si un mensaje de efecto se acepta.
+    local CC = _G.HarfordClassColors
+    r.chk("se puede resolver un nombre a unidad", CC and CC.FindUnitByName ~= nil)
+    if CC and CC.FindUnitByName then
+        local yo = CC.UnitFullName and CC.UnitFullName("player")
+        r.chk("te resuelves a ti mismo", yo ~= nil and yo ~= "")
+        -- Un nombre inventado NO puede resolverse: si lo hiciera, cualquiera pasaria el filtro.
+        r.chk("un nombre inventado no se resuelve",
+            CC.FindUnitByName("Nadie" .. tostring(math.random(100000, 999999))) == nil)
+    end
+
+    -- Los prefijos de efecto tienen que estar registrados, o los mensajes no llegan siquiera.
+    if C_ChatInfo and C_ChatInfo.IsAddonMessagePrefixRegistered then
+        for _, prefijo in ipairs({ "DND5EARC", "HARFORDTURN" }) do
+            r.chk("prefijo registrado: " .. prefijo,
+                C_ChatInfo.IsAddonMessagePrefixRegistered(prefijo) == true)
+        end
+    end
+    r.manual("Con otro jugador: que un ataque suyo te baje la vida, y que uno de fuera del")
+    r.manual("  grupo y sin verte NO pueda (esto ultimo solo se puede probar con un tercero).")
+end)
+
+------------------------------------------------------------
 -- LIBRO. Que ninguna entrada quede sin arte ni sin categoria, que es lo que la deja muerta al clic.
 ------------------------------------------------------------
 Grupo("libro", function(r)
@@ -597,7 +673,8 @@ API.RegisterCommand("verificar", function(args)
     if totalManuales > 0 then
         Print("Lo marcado 'a mano' NO esta verificado: el cliente no puede comprobarlo solo.")
     end
-end, "bateria de verificacion en juego [iconos|estados|acciones|tira|red|libro]")
+end, "bateria de verificacion en juego [iconos|estados|acciones|tira|red|tiradas|ficha|"
+    .. "progresion|ataque|areas|seguridad|libro]")
 
 ------------------------------------------------------------
 -- Comandos de apoyo para la sesion de pruebas.

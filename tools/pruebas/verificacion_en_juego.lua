@@ -55,4 +55,22 @@ chk("que la tira quede por encima del frame",
 chk("y nombra el icono roto, no solo la cuenta",
     v:find('r.chk("icono inexistente: " .. tostring(id), false, icono)', 1, true) ~= nil, true)
 
+-- Los comandos de apoyo montan la escena de lo que la bateria no puede comprobar sola.
+print("Comandos de apoyo para la sesion")
+for _, c in ipairs({ "accion", "estadoen", "tira" }) do
+    chk(c, v:find('API.RegisterCommand("' .. c .. '"', 1, true) ~= nil, true)
+end
+-- Una via de prueba que no pase por donde pasa el jugador no prueba lo que hay que probar.
+chk("la accion va por la ruta del boton",
+    v:find("P.RunBasicAction(id)", 1, true) ~= nil, true)
+local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+chk("y esa ruta es la misma", panel:find("return AbrirAccionBasica(actionId, anchor)", 1, true) ~= nil, true)
+-- `conditiontest` solo opera sobre uno mismo, y lo que suele fallar es el salto al otro cliente.
+chk("estadoen usa la ruta de red", v:find('C.ApplyToUnit("target", id', 1, true) ~= nil, true)
+chk("y avisa de donde confirmarlo",
+    v:find("Confirma en el OTRO cliente", 1, true) ~= nil, true)
+-- Separa "el estado no esta" de "el estado esta pero no se ve": son dos fallos distintos.
+chk("tira distingue estado de pintado",
+    v:find("la tira no existe todavia", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

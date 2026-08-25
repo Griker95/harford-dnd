@@ -303,3 +303,78 @@ API.RegisterCommand("verificar", function(args)
         Print("Lo marcado 'a mano' NO esta verificado: el cliente no puede comprobarlo solo.")
     end
 end, "bateria de verificacion en juego [iconos|estados|acciones|tira|red|libro]")
+
+------------------------------------------------------------
+-- Comandos de apoyo para la sesion de pruebas.
+--
+-- La bateria comprueba lo que puede sola; estos son para MONTAR la escena de lo que no puede.
+------------------------------------------------------------
+
+-- Dispara una accion basica sin abrir el Libro, por la MISMA ruta que el boton: menus de coste y
+-- de opcion incluidos. Una via de prueba que no pase por donde pasa el jugador no prueba lo que
+-- hay que probar.
+API.RegisterCommand("accion", function(args)
+    local id = tostring(args or ""):match("^%s*(%S*)")
+    local A = _G.HarfordDnDActions
+    local P = _G.HarfordCharacterPanel
+    if not (A and P and P.RunBasicAction) then Print("acciones o panel no cargados"); return end
+    if id == "" then
+        local nombres = {}
+        for _, def in ipairs(A.GetOrdered()) do
+            nombres[#nombres + 1] = def.id .. " (" .. tostring(def.cast) .. ")"
+        end
+        Print("Uso: accion <id>.  Disponibles:")
+        for _, n in ipairs(nombres) do Print("  " .. n) end
+        return
+    end
+    if not A.Get(id) then Print("accion desconocida: " .. id); return end
+    Print("ejecutando " .. id .. (UnitExists and UnitExists("target")
+        and (" sobre " .. tostring(UnitName("target"))) or " (sin objetivo)"))
+    P.RunBasicAction(id)
+end, "dispara una accion basica: accion <id>")
+
+-- Aplica o retira un estado al OBJETIVO por la ruta real (`ApplyToUnit`), que es la de red: si el
+-- objetivo es jugador, se le pide a su cliente. `conditiontest` solo opera sobre uno mismo, y lo
+-- que suele fallar es justo el salto al otro cliente.
+API.RegisterCommand("estadoen", function(args)
+    local id, op = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
+    local C = _G.HarfordDnDConditions
+    if not (C and C.ApplyToUnit) then Print("HarfordDnDConditions no cargado"); return end
+    if id == "" then Print("Uso: estadoen <condicion> [quitar]"); return end
+    if not (UnitExists and UnitExists("target")) then Print("necesita objetivo"); return end
+    local esJugador = UnitIsPlayer and UnitIsPlayer("target")
+    local ok, err
+    if op:lower() == "quitar" then ok, err = C.RemoveFromUnit("target", id)
+    else ok, err = C.ApplyToUnit("target", id, { duration = "manual",
+        sourceName = HarfordClassColors and HarfordClassColors.UnitFullName("player") or nil,
+        sourceGuid = UnitGUID and UnitGUID("player") or nil }) end
+    Print(string.format("%s -> %s (%s): %s", id, tostring(UnitName("target")),
+        esJugador and "jugador, va por red" or "NPC, local",
+        ok and "|cff00ff00hecho|r" or ("|cffff3333" .. tostring(err) .. "|r")))
+    if esJugador and ok then Print("Confirma en el OTRO cliente que le ha llegado.") end
+end, "aplica/retira un estado al objetivo: estadoen <condicion> [quitar]")
+
+-- Que cree la tira que tiene que pintar, y donde. Separa "el estado no esta" de "el estado esta
+-- pero no se ve", que son dos fallos distintos y se confunden mirando la pantalla.
+API.RegisterCommand("tira", function(args)
+    local unit = tostring(args or ""):match("^%s*(%S*)")
+    if unit ~= "focus" then unit = "target" end
+    local C, UF = _G.HarfordDnDConditions, _G.HarfordUnitFrames
+    if not (C and UF and UF.RefreshConditionStrip) then Print("no cargado"); return end
+    if not (UnitExists and UnitExists(unit)) then Print("no hay " .. unit); return end
+    UF.RefreshConditionStrip(unit)
+    local activos = C.GetActive(unit)
+    Print(unit .. " (" .. tostring(UnitName(unit)) .. "): " .. #activos .. " estados")
+    for _, a in ipairs(activos) do
+        Print(string.format("  %-22s %-28s n=%s", a.id, tostring(a.definition.label),
+            tostring(C.CounterFor and C.CounterFor(a.definition, a.record) or "-")))
+    end
+    local tira = _G["HarfordEstados" .. unit]
+    local frame = _G[(unit == "focus" and "FocusFrame" or "TargetFrame")]
+    if not tira then Print("la tira no existe todavia"); return end
+    Print(string.format("tira: %s  base=%.0f  frame arriba=%.0f  %s",
+        tira:IsShown() and "visible" or "oculta",
+        tira:GetBottom() or -1, (frame and frame:GetTop()) or -1,
+        (tira:GetBottom() and frame and frame:GetTop() and tira:GetBottom() >= frame:GetTop())
+            and "|cff00ff00por encima|r" or "|cffff3333NO esta por encima|r"))
+end, "vuelca la tira de estados del objetivo: tira [target|focus]")

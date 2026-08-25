@@ -165,7 +165,19 @@ if _r3.returncode != 0:
         if _l.strip() and not _l.startswith('Campos de datos'):
             errores.append('datos: ' + _l.strip())
 
-# --- 6. Pruebas de logica ----------------------------------------------------------------------
+# --- 6. Referencias a algo que no existe -------------------------------------------------------
+# Un rasgo puede nombrar la condicion `ayudado_pruebaa` y Lua no se queja: la busca, no la
+# encuentra, y no hace nada. Es la misma familia que dejo nueve condiciones sin aplicarse jamas por
+# no estar en `API.ORDER`: algo apunta a un sitio vacio y el fallo aparece como SILENCIO, que es lo
+# que mas ha costado esta semana.
+_r5 = _sp.run([sys.executable, os.path.join(RAIZ, 'tools', 'cargar', 'referencias.py')],
+              capture_output=True, text=True, encoding='utf-8', errors='replace')
+if _r5.returncode != 0:
+    for _l in (_r5.stdout or '').strip().split(chr(10)):
+        if _l.strip() and not _l.startswith('Referencias a'):
+            errores.append('refs: ' + _l.strip())
+
+# --- 7. Pruebas de logica ----------------------------------------------------------------------
 # Dos veces en una sesion se desplego con una suite en rojo: una comprobacion se quedaba vieja al
 # cambiar la firma de una funcion, y nadie la ejecutaba antes de copiar. Un fichero que compila,
 # carga y ademas rompe una regla que ya estaba probada no tiene por que llegar al cliente.

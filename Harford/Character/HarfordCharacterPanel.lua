@@ -4325,6 +4325,13 @@ end
 -- x1,y1 e inf-der x2,y2) sobre el sheet Spellbook-Parts; calcula texCoord y tamaño y refresca.
 -- Refresca el Libro si el panel esta visible (lo llama HarfordDnD tras elegir nivel/cantidad de
 -- un daño condicional en el dropdown del Libro, para reflejar el estado "Preparado").
+-- Punto de entrada publico a una accion basica, para poder dispararla sin abrir el Libro. Es la
+-- MISMA ruta que usa el boton (menus de coste y de opcion incluidos): una via de prueba que no
+-- pasara por donde pasa el jugador no probaria lo que hay que probar.
+function HarfordCharacterPanel.RunBasicAction(actionId, anchor)
+    return AbrirAccionBasica(actionId, anchor)
+end
+
 function HarfordCharacterPanel.RefreshBookIfShown()
     if S.skillsFrame and S.skillsFrame:IsShown() and RefreshBook then
         RefreshBook()

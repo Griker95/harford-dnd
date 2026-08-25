@@ -292,6 +292,68 @@ print(string.format("     %d rasgos de nivel 1-6, %d por encima", dentro, fuera)
 
 
 
+-- ─── Fallo 3 del repaso: conjuros que no existen ────────────────────────────
+-- El manual y el compendio traducen distinto, y un conjuro concedido que no existe no da error:
+-- el rasgo se anuncia y no concede nada. AGENTS.md avisa de buscar por NIVEL y EFECTO, nunca por
+-- parecido -- `Rayo de hechiceria` parece *rayo del caos* y es *witch bolt*.
+local IDS, NOMBRES = {}, {}
+do
+    local fh = io.open("HarfordCompendioData/HarfordCompendioData.lua")
+    if fh then
+        local src = fh:read("*a")
+        fh:close()
+        for id in src:gmatch('\n        id = \"([a-z_0-9]+)\"') do IDS[id] = true end
+        for nombre in src:gmatch('\n        name = \"([^\"]+)\"') do
+            NOMBRES[nombre:lower()] = true
+        end
+    end
+end
+local hayCompendio = next(IDS) ~= nil
+print("Los conjuros que conceden las clases existen en el compendio")
+chk("el compendio se pudo leer", hayCompendio, true)
+
+if hayCompendio then
+    local rotosId, rotosNombre = {}, {}
+    for _, clase in ipairs(CLASES) do
+        local id = tostring(clase.id or "?")
+        local function mirar(lista, donde)
+            for _, f in ipairs(lista or {}) do
+                -- Por id: `grantedSpells` y las listas de `spellGrants`.
+                for _, sid in ipairs(f.grantedSpells or {}) do
+                    if not IDS[sid] then rotosId[#rotosId + 1] = id .. donde .. " · " .. sid end
+                end
+                for _, grupo in ipairs(f.spellGrants or {}) do
+                    for _, sid in ipairs(grupo.ids or {}) do
+                        if not IDS[sid] then rotosId[#rotosId + 1] = id .. donde .. " · " .. sid end
+                    end
+                end
+                for _, sid in ipairs(f.cantripSpellIds or {}) do
+                    if not IDS[sid] then rotosId[#rotosId + 1] = id .. donde .. " · " .. sid end
+                end
+            end
+        end
+        mirar(clase.features, "")
+        for sid, sub in pairs(clase.subclasses or {}) do
+            mirar(sub.features, "/" .. sid)
+            -- La lista AMPLIADA cuelga de la SUBCLASE, no de un rasgo, y va por nombre visible en
+            -- vez de por id. Mi primera version la buscaba en los rasgos y no encontraba ninguna:
+            -- decia "0 sin casar" mirando una lista vacia, que es peor que no comprobar.
+            for _, nom in ipairs(sub.expandedSpells or {}) do
+                if not NOMBRES[tostring(nom):lower()] then
+                    rotosNombre[#rotosNombre + 1] = id .. "/" .. tostring(sub.id or sid) .. " · " .. tostring(nom)
+                end
+            end
+        end
+    end
+    chk("ningun id de conjuro inexistente", #rotosId, 0)
+    for _, m in ipairs(rotosId) do print("     " .. m) end
+    -- Los nombres se listan aparte: divergen mas a menudo y son mas faciles de arreglar.
+    print("     nombres de la lista ampliada que no casan: " .. #rotosNombre)
+    for i, m in ipairs(rotosNombre) do
+        if i <= 12 then print("        " .. m) end
+    end
+end
+
 -- ─── Niebla reconfortante ───────────────────────────────────────────────────
 -- Era el ultimo recurso sin gastador. El manual dice "hasta el maximo que quede en tu reservorio",
 -- asi que la cantidad NO se declara: la elige el jugador y el tope es lo que quede.

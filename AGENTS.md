@@ -3500,6 +3500,30 @@ Cazador, Caballero de la Muerte y Mago) declaran una con la MISMA forma -bloque 
 estadisticas propio, iniciativa compartida con turno posterior al tuyo, y solo accion
 de Esquivar salvo que gastes tu accion en ordenarle otra-. Ninguna existe.
 
+## Los tres fallos del repaso de clases, ya automatizados (2026-08-25)
+
+El repaso a mano no se repite solo, asi que los tres patrones estan en
+`tools/pruebas/clases_manual.lua`, que **carga el libro de verdad** en el orden del `.toc` -- nunca
+con grep, por el motivo que ya avisa este fichero.
+
+| Patron | Como se comprueba |
+|---|---|
+| Recurso declarado sin forma de gastarlo | cinco vias de gasto: `resourceKey`, `conditionalWeaponDamage`, `energyManeuver`, `poolHeal` y `AdjustResourceCurrent(clave, -n)` desde el motor |
+| Catalogo cortado a media frase | descripciones largas que acaban en coma, punto y coma, " y" o " o" |
+| Conjuro concedido que no existe | ids (`grantedSpells`, `spellGrants.ids`, `cantripSpellIds`) contra los del compendio, y `expandedSpells` por NOMBRE visible |
+
+Mas los datos duros: dado de golpe de cada clase y que todas den exactamente dos salvaciones.
+
+**Cuidado con las estructuras, que no estan donde parece.** `API.CLASSES` es una LISTA, no un mapa
+por id: cada clase trae su `id` dentro. Y `expandedSpells` cuelga de la SUBCLASE, no de un rasgo --
+buscarla en los rasgos no da error, da "0 sin casar" mirando una lista vacia, que es peor que no
+comprobar. Las dos cosas me costaron una pasada.
+
+**Los dados de golpe son los de WARCRAFT, no los de D&D vanilla.** Sacerdote es **d6** y Cazador de
+Demonios **d8** (no d8 y d10). Escribi los vanilla y marque como fallo dos datos que estaban BIEN.
+La prueba los lee del manual cuando puede abrirlo; en Windows el nombre lleva acentos y el
+`io.open` de Lua no lo abre, asi que usa una copia contrastada y **dice** que la esta usando.
+
 ## Decisiones de mesa que DIVERGEN del manual (leer antes de cualquier auditoria de reglas)
 
 Estaban repartidas entre este fichero, `CLAUDE.md` y comentarios de codigo. Se juntan aqui porque

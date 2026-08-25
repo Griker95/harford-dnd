@@ -159,6 +159,70 @@ function HarfordSync.Send(prefix, message, channel, target)
     return true
 end
 
+-- PETICION DE ESTADOS (DNDCONDREQ / DNDCONDALL)
+--
+-- Los estados se difundian SOLO al aplicarse. Eso deja fuera tres casos que pasan constantemente:
+-- no estar en el grupo en ese momento, recargar despues, o simplemente empezar a mirar a alguien
+-- mas tarde. Se copia el modelo de los recursos, que ya lo resolvia: al targetear se PIDE, y el
+-- otro contesta con lo que lleva puesto ahora.
+--
+-- El push se conserva: mantiene la mesa al dia en pleno combate sin volver a targetear. Uno da
+-- inmediatez y el otro, correccion.
+function HarfordSync.SerializeConditionRequest2(requester)
+    return "DNDCONDREQ|" .. tostring(requester or "")
+end
+
+function HarfordSync.DeserializeConditionRequest2(message)
+    local opcode, requester = strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDCONDREQ" then return nil end
+    return tostring(requester or "")
+end
+
+function HarfordSync.SendConditionRequest2(prefix, requester, target)
+    if not target or target == "" then return false end
+    return HarfordSync.Send(prefix, HarfordSync.SerializeConditionRequest2(requester), "WHISPER", target)
+end
+
+-- La respuesta lleva TODOS los estados de golpe: `id:duracion:turnos,id:...`. Un mensaje por
+-- estado multiplicaria el trafico por nada, y la lista completa cabe de sobra en un envio.
+function HarfordSync.SerializeConditionList(targetGuid, targetName, estados)
+    local partes = {}
+    for _, e in ipairs(estados or {}) do
+        partes[#partes + 1] = table.concat({
+            tostring(e.id or ""),
+            tostring(e.duration or "manual"),
+            tostring(math.floor(tonumber(e.turns) or 0)),
+            tostring(math.floor(tonumber(e.level) or 0)),
+        }, ":")
+    end
+    return table.concat({ "DNDCONDALL", tostring(targetGuid or ""),
+        tostring(targetName or ""), table.concat(partes, ",") }, "|")
+end
+
+function HarfordSync.DeserializeConditionList(message)
+    local opcode, guid, name, lista = strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDCONDALL" then return nil end
+    local fuera = {}
+    for trozo in tostring(lista or ""):gmatch("[^,]+") do
+        local id, duracion, turnos, nivel = strsplit(":", trozo)
+        if id and id ~= "" then
+            fuera[#fuera + 1] = {
+                id = id,
+                duration = duracion ~= "" and duracion or "manual",
+                turns = tonumber(turnos) or 0,
+                level = tonumber(nivel) or 0,
+            }
+        end
+    end
+    return tostring(guid or ""), tostring(name or ""), fuera
+end
+
+function HarfordSync.SendConditionList(prefix, target, targetGuid, targetName, estados)
+    if not target or target == "" then return false end
+    return HarfordSync.Send(prefix,
+        HarfordSync.SerializeConditionList(targetGuid, targetName, estados), "WHISPER", target)
+end
+
 function HarfordSync.BestChannel()
     if IsInRaid and IsInRaid() then return "RAID" end
     if IsInGroup and IsInGroup() then return "PARTY" end

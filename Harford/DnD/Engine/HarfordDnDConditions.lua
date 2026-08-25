@@ -1571,6 +1571,66 @@ local function CacheRemoteState(data, sender)
     Notify()
 end
 
+-- Pedirle a otro jugador que cuente sus estados. Con el mismo enfriamiento por jugador que los
+-- recursos: al cambiar de objetivo a menudo, sin el se llenaria el canal de peticiones.
+local PETICION_ENFRIAMIENTO = 12
+local ultimaPeticion = {}
+
+function API.RequestStatesFrom(unit)
+    if not (UnitExists and UnitExists(unit) and UnitIsPlayer and UnitIsPlayer(unit)) then return false end
+    if UnitIsUnit and UnitIsUnit(unit, "player") then return false end
+    local target = HarfordClassColors.UnitFullName(unit)
+    if not target or target == "" then return false end
+    local ahora = Now()
+    if ahora - (ultimaPeticion[target] or 0) < PETICION_ENFRIAMIENTO then return false end
+    ultimaPeticion[target] = ahora
+    if not (HarfordSync and HarfordSync.SendConditionRequest2) then return false end
+    return HarfordSync.SendConditionRequest2(PREFIX,
+        HarfordClassColors.UnitFullName("player") or "", target)
+end
+
+-- Contestar: los estados PROPIOS, con lo que necesitan para pintarse y caducar bien.
+function API.SendMyStatesTo(target)
+    if not (target and target ~= "" and HarfordSync and HarfordSync.SendConditionList) then return false end
+    LoadOwned()
+    local estados = {}
+    for _, activo in ipairs(API.GetActive("player")) do
+        local rec = activo.record
+        estados[#estados + 1] = {
+            id = activo.id,
+            duration = rec and rec.duration or "manual",
+            turns = rec and rec.turns or 0,
+            level = rec and rec.level or 0,
+        }
+    end
+    return HarfordSync.SendConditionList(PREFIX, target,
+        UnitGUID and UnitGUID("player") or "",
+        HarfordClassColors.UnitFullName("player") or PlayerProfileName(), estados)
+end
+
+-- Guardar la respuesta. SUSTITUYE lo que hubiera de ese jugador: es una foto completa, asi que un
+-- estado que ya no este en la lista es un estado que se ha quitado.
+function API.CacheStateList(guid, name, estados, sender)
+    local key = guid ~= "" and guid or name
+    if not key or key == "" then return false end
+    if sender and sender ~= "" and name and name ~= "" then
+        if ShortName(sender) ~= ShortName(name) then return false end
+    end
+    local bucket = {}
+    for _, e in ipairs(estados or {}) do
+        if API.DEFS[e.id] then
+            bucket[e.id] = {
+                id = e.id, duration = e.duration, turns = e.turns, level = e.level,
+                targetGuid = guid, targetName = name,
+                created = Now(), expiresAt = Now() + REMOTE_TTL,
+            }
+        end
+    end
+    S.units[key] = next(bucket) and bucket or nil
+    Notify()
+    return true
+end
+
 function API.RequestPlayer(unit, conditionId, apply, options)
     conditionId = tostring(conditionId or "")
     if not API.DEFS[conditionId] or not (UnitExists and UnitExists(unit) and UnitIsPlayer and UnitIsPlayer(unit)) then
@@ -1662,6 +1722,22 @@ function API.HandleMessage(message, sender)
     if state then
         if IsTrustedSender(sender) then CacheRemoteState(state, sender) end
         return true
+    end
+    -- Alguien pregunta que llevo puesto: se le contesta con la lista entera.
+    if HarfordSync.DeserializeConditionRequest2 then
+        local requester = HarfordSync.DeserializeConditionRequest2(message)
+        if requester then
+            if IsTrustedSender(sender) then API.SendMyStatesTo(sender) end
+            return true
+        end
+    end
+    -- La respuesta de otro: es una foto completa y sustituye lo que hubiera suyo.
+    if HarfordSync.DeserializeConditionList then
+        local guid, name, estados = HarfordSync.DeserializeConditionList(message)
+        if guid then
+            if IsTrustedSender(sender) then API.CacheStateList(guid, name, estados, sender) end
+            return true
+        end
     end
     return false
 end

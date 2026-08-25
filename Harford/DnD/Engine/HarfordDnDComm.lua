@@ -44,6 +44,12 @@ function HarfordDnDComm.CreateHandlers(deps)
         end
 
         deps.RequestResourcesFromPlayer(targetName)
+        -- Los estados se piden igual que los recursos. Difundirlos solo al aplicarse dejaba fuera
+        -- tres casos que pasan siempre: no estar en el grupo en ese momento, recargar despues, o
+        -- empezar a mirar a alguien mas tarde. El push se conserva para la inmediatez en combate.
+        if HarfordDnDConditions and HarfordDnDConditions.RequestStatesFrom then
+            HarfordDnDConditions.RequestStatesFrom("target")
+        end
         deps.RefreshTargetResourceFrame()
     end
 

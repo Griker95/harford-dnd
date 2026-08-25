@@ -798,6 +798,38 @@ API.RegisterCommand("tira", function(args)
         Print(string.format("  %-22s %-28s n=%s", a.id, tostring(a.definition.label),
             tostring(C.CounterFor and C.CounterFor(a.definition, a.record) or "-")))
     end
+    -- Lo que ha LLEGADO frente a lo que se PINTA. Un estado puede estar en el almacen y no salir
+    -- en la lista de activos: los que llevan aura exigen que el aura este de verdad en la unidad,
+    -- y si el receptor no la ve, descarta el registro. Sin ver las dos listas, "no llega" y "llega
+    -- y se descarta" son indistinguibles, y se arreglan de forma muy distinta.
+    local guid = UnitGUID and UnitGUID(unit)
+    local nombre = HarfordClassColors and HarfordClassColors.UnitFullName
+        and HarfordClassColors.UnitFullName(unit)
+    local cubo = C.State and C.State.units
+        and ((guid and C.State.units[guid]) or (nombre and C.State.units[nombre])
+             or (UnitIsUnit and UnitIsUnit(unit, "player") and C.State.units.player))
+    local guardados = 0
+    for id, rec in pairs(cubo or {}) do
+        guardados = guardados + 1
+        local def = C.DEFS and C.DEFS[id]
+        local origen = rec.authority and "propio" or "|cff66ccffremoto|r"
+        local aura = ""
+        if def and def.auraId then
+            local tiene = false
+            if C_UnitAuras and C_UnitAuras.GetAuraDataByIndex then
+                for i = 1, 40 do
+                    local a = C_UnitAuras.GetAuraDataByIndex(unit, i, "HARMFUL")
+                        or C_UnitAuras.GetAuraDataByIndex(unit, i, "HELPFUL")
+                    if not a then break end
+                    if a.spellId == def.auraId then tiene = true break end
+                end
+            end
+            aura = tiene and "  aura SI" or "  |cffff3333aura NO -> se descarta|r"
+        end
+        Print(string.format("  guardado: %-20s %s%s", id, origen, aura))
+    end
+    Print("  registros en el almacen: " .. guardados)
+
     local tira = _G["HarfordEstados" .. unit]
     local frame = _G[(unit == "focus" and "FocusFrame" or "TargetFrame")]
     if not tira then Print("la tira no existe todavia"); return end

@@ -87,10 +87,19 @@ local narrativas = {
     "Da mucha fuerza al portador",             -- la palabra suelta dentro de una frase
     "Su fuerza es +2 veces la de un hombre",   -- etiqueta y numero, pero no la linea entera
     "Inventada +3",                            -- etiqueta desconocida
-    -- ESTOS son los que discriminan de verdad: el prefijo SI es una etiqueta valida y el numero
-    -- tambien, pero la linea CONTINUA. Sin el ancla final concederian, y las frases con etiqueta
-    -- desconocida no lo detectarian porque ahi lo que protege es el catalogo, no el ancla. Se vio
-    -- mutando el patron y viendo que la prueba seguia en verde.
+    -- Estas tres son INVENTADAS para la prueba, no salidas de ningun objeto real, y hacen falta
+    -- por dos motivos.
+    --
+    -- El primero es tecnico: son las unicas que discriminan. Su prefijo SI es una etiqueta valida
+    -- y el numero tambien, pero la linea CONTINUA, asi que solo el ancla final las rechaza. Con
+    -- frases de etiqueta desconocida lo que protege es el catalogo, y la mutacion del ancla pasaba
+    -- desapercibida -- se comprobo mutandola y viendo la suite en verde.
+    --
+    -- El segundo es de reglas, y es el que importa: son BONOS CONDICIONALES, y el addon no puede
+    -- evaluar "bajo la luz de la luna" ni "contra no-muertos". La norma del proyecto es no
+    -- convertir ventajas situacionales sin una capa mecanica explicita, asi que lo correcto es
+    -- justo lo que hace: no conceder nada y dejarlo como texto para que lo aplique la mesa.
+    -- Convertirlas en un +1 permanente seria peor que ignorarlas.
     "Fuerza +2 veces mas rapido que un hombre",
     "CA +1 solo bajo la luz de la luna",
     "Ataque +1 contra no-muertos unicamente",
@@ -118,6 +127,10 @@ print("Lo que no concede se conserva como texto")
 chk("una frase de sabor se conserva",
     descripcion("Forjada en Rasganorte."), "Forjada en Rasganorte.")
 chk("y las lineas vacias no ensucian", descripcion("", "Algo.", ""), "Algo.")
+-- Un bono condicional no se concede, pero TIENE que seguir leyendose: es lo unico que permite a la
+-- mesa aplicarlo a mano. Perderlo seria peor que no interpretarlo.
+chk("un bono condicional se conserva entero",
+    descripcion("CA +1 solo bajo la luz de la luna"), "CA +1 solo bajo la luz de la luna")
 
 -- ─── Varias lineas juntas ───────────────────────────────────────────────────
 print("Varias reglas en el mismo objeto se acumulan")

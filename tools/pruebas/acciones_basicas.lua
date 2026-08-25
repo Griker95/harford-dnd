@@ -78,9 +78,17 @@ for _, id in ipairs({ "agarrar", "empujar" }) do
     chk(id .. ": sin nota de narrativa", A.Get(id).sinEfecto, "nil")
 end
 
-print("Las que aun no tienen efecto lo declaran")
+-- Ayudar, Lanzar arma y Preparar ya se resuelven (ver `ayudar_preparar_lanzar`). Solo Correr y
+-- Desengancharse siguen siendo narrativas, y por una razon declarada: el addon no lleva
+-- presupuesto de movimiento ni ataques de oportunidad.
+print("Ya no queda ninguna accion narrativa por accidente")
 for _, id in ipairs({ "ayudar", "lanzar_arma", "preparar" }) do
-    chk(id, A.Get(id).sinEfecto ~= nil, true)
+    chk(id .. ": se resuelve", A.Get(id).sinEfecto, "nil")
 end
+local narrativas = 0
+for _, def in ipairs(A.GetOrdered()) do
+    if def.sinEfecto then narrativas = narrativas + 1 end
+end
+chk("solo Correr y Desengancharse", narrativas, 2)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

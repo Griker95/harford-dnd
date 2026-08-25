@@ -76,6 +76,32 @@ API.DEFS = {
         description = "Ventaja en los chequeos de concentracion mientras permanezcas dentro del circulo.",
         effects = { { kind = "rollMode", rolls = { save = true }, ability = "Constitucion", mode = "adv" } },
     },
+    -- Ayudar. Son DOS estados y no uno con dos efectos porque en el manual son dos usos distintos
+    -- de la accion: o ayudas en una prueba, o distraes a una criatura para el ataque de un aliado.
+    -- Quien ayuda declara cual, y con un solo estado la ventaja se gastaria en la primera tirada
+    -- que hiciera el ayudado, que casi nunca seria la que le prometieron.
+    ayudado_prueba = {
+        label = "Ayudado", tracking = "state",
+        description = "Ventaja en tu proxima prueba de caracteristica.",
+        effects = { { kind = "rollMode", rolls = { ability = true }, mode = "adv" } },
+        consumeAfterRoll = { ability = true },
+    },
+    ayudado_ataque = {
+        label = "Ayudado en el ataque", tracking = "state",
+        description = "Ventaja en tu proximo ataque contra la criatura distraida.",
+        effects = { { kind = "rollMode", rolls = { attack = true }, mode = "adv" } },
+        consumeAfterRoll = { attack = true },
+    },
+    -- Preparar. NO da efecto mecanico ninguno, y es a proposito: preparar no concede nada, solo
+    -- adelanta una accion para gastarla con la reaccion cuando ocurra el disparador. El estado
+    -- existe para que se VEA que la tienes preparada -- en tu tira y en la del resto -- y para
+    -- saber que hay algo que disparar. El disparador lo reconoce la mesa, no el cliente.
+    preparado = {
+        label = "Accion preparada", tracking = "state",
+        description = "Tienes una accion preparada. Cuando ocurra el disparador, gastas tu reaccion "
+            .. "para ejecutarla.",
+        effects = {},
+    },
     -- Monje "Brebaje del Buey Negro". Es ventaja en el PROXIMO ataque, no durante un minuto: se
     -- gasta al tirar (`consumeAfterRoll`), y el minuto es solo el plazo para usarlo.
     buey_negro = {

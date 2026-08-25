@@ -52,7 +52,8 @@ chk("ambas se defienden con dos habilidades",
 print("Empujar deja elegir, y se pregunta antes de tirar")
 chk("tiene opciones", acc:find("options = {", 1, true) ~= nil, true)
 chk("apartar no deja estado", acc:find("conditionId = false", 1, true) ~= nil, true)
-chk("se pregunta antes", panel:find("if type(opciones) == \"table\" and not elegida", 1, true) ~= nil, true)
+chk("se pregunta antes de tirar",
+    panel:find("if Elegir(contest.options, def, Contienda, elegida) then return true end", 1, true) ~= nil, true)
 chk("y la eleccion manda sobre el estado por defecto",
     wr:find("(opts and opts.conditionId ~= nil) and opts.conditionId or contest.onWin", 1, true) ~= nil, true)
 

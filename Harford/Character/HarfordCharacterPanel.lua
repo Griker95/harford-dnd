@@ -2249,6 +2249,113 @@ do
         return fuera
     end
 
+    -- Varias acciones se declaran ANTES de resolverse: Empujar (derribar o apartar), Ayudar (en
+    -- una prueba o en un ataque) y Lanzar arma (con que mano). Es el mismo gesto en las tres, asi
+    -- que el menu es uno solo: `opciones` es una lista de { label, ... } y se vuelve a llamar al
+    -- mismo ejecutor con la elegida. Devuelve true si abrio menu, es decir, si aun no toca actuar.
+    local function Elegir(opciones, def, ejecutor, yaElegida)
+        if yaElegida or type(opciones) ~= "table" or #opciones == 0 then return false end
+        -- Una sola opcion no es una eleccion: preguntar seria un clic de mas.
+        if #opciones == 1 then ejecutor(def, opciones[1]); return true end
+        if not (UIDropDownMenu_Initialize and ToggleDropDownMenu) then return false end
+        menuOpc = menuOpc or CreateFrame("Frame", "HarfordAccionOpcionMenu", UIParent, "UIDropDownMenuTemplate")
+        pendienteOpc = def
+        UIDropDownMenu_Initialize(menuOpc, function()
+            for _, opcion in ipairs(opciones) do
+                local esta = opcion
+                local info = UIDropDownMenu_CreateInfo()
+                info.text = esta.label
+                info.notCheckable = true
+                info.func = function()
+                    CloseDropDownMenus()
+                    ejecutor(pendienteOpc, esta)
+                end
+                UIDropDownMenu_AddButton(info)
+            end
+        end, "MENU")
+        ToggleDropDownMenu(1, nil, menuOpc, "cursor", 0, 0)
+        return true
+    end
+
+    -- AYUDAR. El estado va sobre el ALIADO, no sobre quien ayuda, asi que sale por `ApplyToUnit`,
+    -- que ya sabe pedirselo a su cliente si es jugador. La ventaja se gasta en su primera tirada
+    -- del tipo elegido (`consumeAfterRoll`), que es exactamente lo que dice el manual.
+    local function Ayudar(def, elegida)
+        if Elegir(def.helpOther.options, def, Ayudar, elegida) then return true end
+        if not (UnitExists and UnitExists("target")) then
+            HarfordChat.Print("Ayudar necesita un objetivo.")
+            return false
+        end
+        if not (HarfordDnDConditions and HarfordDnDConditions.ApplyToUnit) then return false end
+        local ok, err = HarfordDnDConditions.ApplyToUnit("target", elegida.conditionId, {
+            duration = "source_turn_start",
+            sourceName = HarfordClassColors.UnitFullName("player"),
+            sourceGuid = UnitGUID and UnitGUID("player") or nil,
+        })
+        if not ok then HarfordChat.Print("Ayudar: " .. tostring(err or "no se pudo")) end
+        return ok and true or false
+    end
+
+    -- LANZAR ARMA. Se ofrece la mano que lleva ARMA: un escudo no se lanza. El ataque sale por la
+    -- ruta normal, asi que trae consigo la CA del objetivo, el critico y la mitigacion del
+    -- defensor en vez de reimplementar nada de eso.
+    local function LanzarArma(def, elegida)
+        local items = _G.HarfordDnDItems
+        if not (items and items.GetEquippedWeapon and HarfordDnDStore and HarfordDnDStore.AttackWithBlock) then
+            HarfordChat.Print("El equipo no esta disponible.")
+            return false
+        end
+        if not elegida then
+            local opciones = {}
+            for _, slot in ipairs(def.throwWeapon.slots) do
+                local arma = items.GetEquippedWeapon(slot)
+                if arma then
+                    opciones[#opciones + 1] = {
+                        label = (slot == "MainHand" and "Mano principal" or "Mano secundaria")
+                            .. "  |cff808080" .. tostring(arma.key or arma.name or "") .. "|r",
+                        slot = slot,
+                    }
+                end
+            end
+            if #opciones == 0 then
+                HarfordChat.Print("No llevas ningun arma que lanzar.")
+                return false
+            end
+            if Elegir(opciones, def, LanzarArma, nil) then return true end
+            elegida = opciones[1]
+        end
+        local arma = items.GetEquippedWeapon(elegida.slot)
+        if not arma then return false end
+        -- `suppressAbilityDamage = false`: un arma lanzada suma tu modificador, como cualquier otro
+        -- ataque con arma. El valor por defecto es para ataques de bloque y acompanantes.
+        HarfordDnDStore.AttackWithBlock(arma, { suppressAbilityDamage = false })
+        return true
+    end
+
+    -- PREPARAR. No concede nada: gasta la accion ahora y deja la reaccion comprometida. El segundo
+    -- clic, con el estado ya puesto, la DISPARA y cobra la reaccion. El disparador lo reconoce la
+    -- mesa; el cliente solo lleva la cuenta de que hay algo preparado y de lo que cuesta soltarlo.
+    local function Preparar(def)
+        local C = HarfordDnDConditions
+        if not (C and C.ApplyOwned) then return false end
+        local spec = def.readyAction
+        if C.Has and C.Has("player", spec.conditionId) then
+            if C.RemoveOwned then C.RemoveOwned(spec.conditionId) end
+            if C.PublishOwnedCondition then C.PublishOwnedCondition(spec.conditionId, "remove") end
+            AnnounceAbility({
+                id = "harford_accion_preparar_disparo", name = "Accion preparada",
+                description = "Se dispara la accion preparada.", cast = "reaccion",
+            })
+            return true
+        end
+        C.ApplyOwned(spec.conditionId, {
+            duration = spec.duration,
+            sourceName = HarfordClassColors.UnitFullName("player"),
+        })
+        if C.PublishOwnedCondition then C.PublishOwnedCondition(spec.conditionId, "apply") end
+        return true
+    end
+
     -- TIRADA ENFRENTADA (Agarrar, Empujar). La dificultad no es fija: la pone el atacante con su
     -- propia tirada, y el defensor responde con la mejor de las habilidades que se le ofrecen.
     --
@@ -2262,26 +2369,7 @@ do
             HarfordChat.Print("El motor de tiradas enfrentadas no esta disponible.")
             return false
         end
-        local opciones = contest.options
-        if type(opciones) == "table" and not elegida and UIDropDownMenu_Initialize and ToggleDropDownMenu then
-            menuOpc = menuOpc or CreateFrame("Frame", "HarfordContiendaMenu", UIParent, "UIDropDownMenuTemplate")
-            pendienteOpc = def
-            UIDropDownMenu_Initialize(menuOpc, function()
-                for _, opcion in ipairs(opciones) do
-                    local esta = opcion
-                    local info = UIDropDownMenu_CreateInfo()
-                    info.text = esta.label
-                    info.notCheckable = true
-                    info.func = function()
-                        CloseDropDownMenus()
-                        Contienda(pendienteOpc, esta)
-                    end
-                    UIDropDownMenu_AddButton(info)
-                end
-            end, "MENU")
-            ToggleDropDownMenu(1, nil, menuOpc, "cursor", 0, 0)
-            return true
-        end
+        if Elegir(contest.options, def, Contienda, elegida) then return true end
         local ok, err = rolls.RollContest(contest,
             elegida and { conditionId = elegida.conditionId } or nil)
         if not ok then HarfordChat.Print(tostring(def.name) .. ": " .. tostring(err)) end
@@ -2328,6 +2416,12 @@ do
             end
         elseif type(def.contest) == "table" then
             Contienda(def)
+        elseif type(def.helpOther) == "table" then
+            Ayudar(def)
+        elseif type(def.throwWeapon) == "table" then
+            LanzarArma(def)
+        elseif type(def.readyAction) == "table" then
+            Preparar(def)
         elseif def.sinEfecto then
             HarfordChat.Print("|cff808080" .. tostring(def.sinEfecto) .. "|r")
         end

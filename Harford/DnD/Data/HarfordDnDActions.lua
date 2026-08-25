@@ -78,7 +78,14 @@ API.DEFS = {
         cast = "accion", orden = 7,
         description = "Un aliado tira con ventaja su proxima prueba de caracteristica, o su proximo "
             .. "ataque contra una criatura a la que distraes.",
-        sinEfecto = "Harford aun no sabe conceder ventaja a OTRO: que la aplique el quien la reciba.",
+        -- Los dos usos del manual, y se declara cual ANTES: la ventaja se gasta en la primera
+        -- tirada del tipo que sea, asi que prometer las dos seria prometer la que no era.
+        helpOther = {
+            options = {
+                { label = "En una prueba", conditionId = "ayudado_prueba" },
+                { label = "En un ataque contra mi objetivo", conditionId = "ayudado_ataque" },
+            },
+        },
     },
     estabilizar = {
         id = "estabilizar", name = "Estabilizar",
@@ -92,13 +99,19 @@ API.DEFS = {
         id = "lanzar_arma", name = "Lanzar arma",
         cast = "accion", orden = 9,
         description = "Lanzas un arma arrojadiza contra un objetivo a distancia.",
-        sinEfecto = "Usa el ataque normal de la ficha con el arma arrojadiza equipada.",
+        -- Se elige mano: quien lleva dos armas puede lanzar cualquiera de las dos, y con cual se
+        -- lanza cambia el dado y los bonos. Solo se ofrecen las manos con arma -- un escudo no se
+        -- lanza -- y el ataque sale por la ruta normal, con su CA, critico y mitigacion.
+        throwWeapon = { slots = { "MainHand", "SecondaryHand" } },
     },
     preparar = {
         id = "preparar", name = "Preparar",
         cast = "accion", orden = 10,
         description = "Eliges una accion y un disparador. Cuando ocurra, la ejecutas gastando tu reaccion.",
-        sinEfecto = "Gasta la accion ahora; el disparador y la reaccion los lleva la mesa.",
+        -- Preparar no concede nada: gasta la accion AHORA y deja la reaccion comprometida. Por eso
+        -- el estado no lleva efectos. Volver a pulsar la accion con el estado puesto la dispara y
+        -- cobra la reaccion; el disparador lo reconoce la mesa, no el cliente.
+        readyAction = { conditionId = "preparado", duration = "source_turn_start" },
     },
 }
 

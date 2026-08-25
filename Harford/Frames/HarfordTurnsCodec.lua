@@ -127,11 +127,14 @@ local function SerializeEntry(entry)
         EscapeText(entry.nameColor),
         EscapeText(entry.trpProfileID),
         tostring(entry.armorClass or 0),
+        EscapeText(entry.bando),
     }, ",")
 end
 
 local function DeserializeEntry(raw)
-    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID, armorClass = strsplit(",", raw or "")
+    -- `bando` va el ULTIMO a proposito: un cliente con version anterior lo ignora y sigue leyendo
+    -- el resto, en vez de descuadrarse todos los campos.
+    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID, armorClass, bando = strsplit(",", raw or "")
     if not name or name == "" then return nil end
     return NormalizeEntryLinks({
         id = UnescapeText(id),
@@ -154,6 +157,7 @@ local function DeserializeEntry(raw)
         nameColor = NormalizeColorHex(UnescapeText(nameColor)),
         trpProfileID = UnescapeText(trpProfileID),
         armorClass = SafeNumber(armorClass, 0),
+        bando = UnescapeText(bando),
     })
 end
 

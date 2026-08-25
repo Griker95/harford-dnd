@@ -1367,7 +1367,13 @@ local function AddEntry(name, hp, maxHp, kind, id, mana, maxMana, unitName, icon
         reaction = meta and SafeNumber(meta.reaction, 0) or 0,
         nameColor = meta and NormalizeColorHex(meta.nameColor) or nil,
         armorClass = meta and SafeNumber(meta.armorClass, 0) or 0,
+        -- Se siembra de la reaccion, pero queda escrito para que el DM pueda corregirlo.
+        bando = nil,
     }
+    entry.bando = (tostring(entry.kind or "") == "player" and "pjs")
+        or ((tonumber(entry.reaction) or 0) >= 5 and "aliados")
+        or ((tonumber(entry.reaction) or 0) == 4 and "neutrales")
+        or "enemigos"
     Codec.NormalizeEntryLinks(entry)
     local duplicate = FindDuplicateEntry(entry)
     if duplicate then
@@ -2020,6 +2026,68 @@ HarfordTurnOrderAPI._turnChangedListeners = HarfordTurnOrderAPI._turnChangedList
 -- (`EnsureRoundMarker`, 8 llamadas) y `entries` PERSISTE en SavedVariables, asi que "la lista no
 -- esta vacia" es cierto para siempre en cuanto se abre el tracker una vez. Lo usa la economia de
 -- turno para saber si debe llevar la cuenta de acciones.
+-- ─── BANDOS ─────────────────────────────────────────────────────────────────
+-- La iniciativa va por BANDOS, no por criatura: cuando le toca a Enemigos actuan todos, y sus
+-- duraciones bajan de golpe. Es una divergencia deliberada del manual (5e usa iniciativa
+-- individual) y esta en la seccion de decisiones de mesa de AGENTS.md.
+--
+-- El orden es FIJO. Sin tirada: se sabe siempre quien va despues de quien, que en mesa vale mas
+-- que la sorpresa de quien empieza.
+HarfordTurnOrderAPI.BANDOS = { "pjs", "enemigos", "neutrales", "aliados" }
+HarfordTurnOrderAPI.BANDO_ETIQUETA = {
+    pjs = "Personajes", enemigos = "Enemigos", neutrales = "Neutrales", aliados = "Aliados",
+}
+
+-- La reaccion de WoW sirve para PROPONER, nunca para decidir: un NPC hostil de verdad puede estar
+-- marcado como neutral en el servidor, y al reves. El DM lo corrige y su correccion manda.
+local function BandoSugerido(entry)
+    if not entry then return "enemigos" end
+    -- Un PJ siempre va con los PJs, mire lo que mire su reaccion.
+    if tostring(entry.kind or "") == "player" then return "pjs" end
+    local r = tonumber(entry.reaction) or 0
+    if r >= 5 then return "aliados" end
+    if r == 4 then return "neutrales" end
+    return "enemigos"
+end
+
+function HarfordTurnOrderAPI.GetBando(entry)
+    if not entry then return "enemigos" end
+    -- Un PJ no se puede mover de su bando ni a mano: es la regla que pidio la mesa.
+    if tostring(entry.kind or "") == "player" then return "pjs" end
+    local guardado = tostring(entry.bando or "")
+    for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do
+        if guardado == b then return guardado end
+    end
+    return BandoSugerido(entry)
+end
+
+-- Cambiarlo a mano. Se GUARDA en la entrada y viaja en la foto, para que la correccion del DM la
+-- vean todos y sobreviva a una recarga; recalcularlo en cada cliente daria versiones distintas.
+function HarfordTurnOrderAPI.SetBando(entry, bando)
+    if not entry then return false end
+    if tostring(entry.kind or "") == "player" then return false, "Los personajes van siempre con los PJs" end
+    bando = tostring(bando or "")
+    for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do
+        if bando == b then
+            entry.bando = bando
+            return true
+        end
+    end
+    return false, "Bando desconocido"
+end
+
+-- Quienes componen un bando ahora mismo. Lo usa el avance de turno para saber a quien le baja el
+-- contador, y cada cliente lo resuelve por su cuenta: el DM solo anuncia QUE bando empieza.
+function HarfordTurnOrderAPI.GetBandoMembers(bando)
+    local fuera = {}
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" or type(store.entries) ~= "table" then return fuera end
+    for _, entry in ipairs(store.entries) do
+        if HarfordTurnOrderAPI.GetBando(entry) == bando then fuera[#fuera + 1] = entry end
+    end
+    return fuera
+end
+
 function HarfordTurnOrderAPI.HasActiveCombat()
     local store = HarfordTurnOrderStore
     if type(store) ~= "table" or type(store.entries) ~= "table" then return false end

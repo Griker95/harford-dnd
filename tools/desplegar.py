@@ -165,6 +165,18 @@ if _r3.returncode != 0:
         if _l.strip() and not _l.startswith('Campos de datos'):
             errores.append('datos: ' + _l.strip())
 
+# --- 5c. Dependencias declaradas que nadie entrega ---------------------------------------------
+# Varios modulos reciben sus dependencias por inyeccion (`X = deps.X or X`). Si el llamador se deja
+# una, queda en `nil` y no falla al cargar: falla el dia que alguien pulsa lo que la usa, y con un
+# error que apunta al modulo y no a quien se la olvido. Le paso a `FormatCheckRollLabel`, que
+# reventaba solo al usar Empujar contra un NPC.
+_r6 = _sp.run([sys.executable, os.path.join(RAIZ, 'tools', 'cargar', 'dependencias.py')],
+              capture_output=True, text=True, encoding='utf-8', errors='replace')
+if _r6.returncode != 0:
+    for _l in (_r6.stdout or '').strip().split(chr(10)):
+        if _l.strip() and not _l.startswith('Dependencias declaradas'):
+            errores.append('deps: ' + _l.strip())
+
 # --- 5b. Una mutacion a medio deshacer ---------------------------------------------------------
 # `mutaciones.py` rompe el codigo a proposito y lo restaura despues, pero si lo matan desde fuera
 # (un `timeout`, un Ctrl-C) el fichero se queda MUTADO en disco. Paso de verdad. La herramienta lo

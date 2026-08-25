@@ -6326,6 +6326,7 @@ if WeaponRolls and WeaponRolls.Init then
         ApplyRequestedSaveAuraSelf = ApplyRequestedSaveAuraSelf,
         ConsumeMode = ConsumeMode,
         DamageTypeLabel = DamageTypeLabel,
+        FormatCheckRollLabel = FormatCheckRollLabel,
         FormatSaveOutcome = FormatSaveOutcome,
         FormatSaveRollLabel = FormatSaveRollLabel,
         GetWeaponSlotDamageBonus = GetWeaponSlotDamageBonus,

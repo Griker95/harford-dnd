@@ -257,6 +257,23 @@ Grupo("tira", "la tira de estados sobre el objetivo, y que quede encima del fram
             r.chk("y queda POR ENCIMA del unitframe", tira:GetBottom() >= frame:GetTop(),
                 string.format("tira=%.0f frame=%.0f", tira:GetBottom(), frame:GetTop()))
         end
+        -- "Por encima" no basta: con el marco pegado al borde superior, la tira quedaba colocada
+        -- perfectamente respecto a el y VEINTIDOS PIXELES fuera de la pantalla. Las tres
+        -- comprobaciones de arriba pasaban y no se veia nada.
+        local techo = UIParent and UIParent:GetHeight()
+        local arriba = tira:GetTop()
+        if techo and arriba then
+            r.chk("y DENTRO de la pantalla", arriba <= techo,
+                string.format("arriba=%.0f pantalla=%.0f", arriba, techo))
+        end
+        -- Un icono sin textura se pinta transparente y parece que no hay tira.
+        local sinTextura = 0
+        for _, b in ipairs(tira.iconos or {}) do
+            if b:IsShown() and not (b.icon and b.icon.GetTexture and b.icon:GetTexture()) then
+                sinTextura = sinTextura + 1
+            end
+        end
+        r.chk("y sus iconos tienen textura", sinTextura == 0, sinTextura .. " sin textura")
     end
     if C and C.RemoveFromUnit and not tenia then C.RemoveFromUnit("target", prueba) end
     -- El estado se pone y se QUITA, asi que no queda nada que mirar: pedir "mira el objetivo" aqui

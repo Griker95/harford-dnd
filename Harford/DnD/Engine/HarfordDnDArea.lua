@@ -204,9 +204,36 @@ end
 -- todo son yardas, que es como mide el mundo.
 local METROS_POR_YARDA = 0.9144
 
+-- DONDE SE CENTRA EL AREA. No es lo mismo en todas las figuras, y confundirlo pone el conjuro en
+-- el sitio contrario:
+--   esfera y cubo -> en un PUNTO ELEGIDO dentro del alcance (Bola de fuego "a 45 metros"). El punto
+--                    es a quien apuntas; el `aim` deja de ser solo una direccion y pasa a ser el
+--                    centro. Sin el, se centra en uno mismo, que es el otro caso legitimo
+--                    (una explosion a tu alrededor) y lo unico honesto cuando no se sabe donde.
+--   cono y linea  -> SIEMPRE en quien lanza. Salen de ti; el `aim` sigue siendo la direccion.
+--   rectangulo    -> tambien en quien lanza: se usa para muros y demas, que van orientados desde el
+--                    origen, y moverle el centro le quitaria la orientacion.
+--
+-- Antes se centraba todo en el lanzador. Una Bola de fuego contra un grupo a 30 metros marcaba a
+-- los companeros que tenias al lado y no a los orcos.
+local function AreaCenter(geometry, origin, aim)
+    local shape = geometry and geometry.shape
+    if (shape == "circle" or shape == "square") and aim then return aim end
+    return origin
+end
+
+-- Si el area se centra en un punto elegido pero no se sabe cual, cae al lanzador. Hay que DECIRLO:
+-- que el automarcado coja a los de al lado en vez de a los del fondo tiene que tener explicacion.
+local function AreaCenterFallsBack(geometry, aim)
+    local shape = geometry and geometry.shape
+    return (shape == "circle" or shape == "square") and not aim
+end
+
 local function AreaDistanceInfo(geometry, player, origin, aim)
     if not (geometry and player and origin) then return nil end
-    local dist = math.sqrt(PositionDistance2DSq(player, origin))
+    -- Se mide desde donde el area esta CENTRADA de verdad, no desde el lanzador.
+    local ref = AreaCenter(geometry, origin, aim)
+    local dist = math.sqrt(PositionDistance2DSq(player, ref))
     local shape = geometry.shape
     if shape == "circle" then
         return dist * METROS_POR_YARDA, (geometry.radius or 0) * METROS_POR_YARDA, "centro"
@@ -508,7 +535,7 @@ local function ReevaluatePositionResponses(session)
     -- se lo aplicaria.
     session.outside = {}
     for _, position in pairs(scan.responses or {}) do
-        if IsPositionAffected(session.geometry, position, scan.origin, aim) then
+        if IsPositionAffected(session.geometry, position, AreaCenter(session.geometry, scan.origin, aim), aim) then
             if AddTargetFromPosition(session, position, "Auto") then added = added + 1 end
         else
             session.outside[#session.outside + 1] = {
@@ -756,6 +783,10 @@ RefreshFrame = function()
     end
     local pending = session.resolved and session.pendingNpc and session.pendingNpc[session.pendingNpcIndex or 1]
     if pending then infoText = infoText .. " | Siguiente NPC: " .. pending.target.name end
+    -- Un area que deberia centrarse donde apuntas y se ha centrado en ti no puede quedarse callada.
+    if AreaCenterFallsBack(session.geometry, session.positionScan and session.positionScan.aim) then
+        infoText = infoText .. " | |cffffcc00centrada en ti: apunta a un jugador del punto|r"
+    end
     frame.info:SetText(infoText)
     local candidate = CaptureUnit("target")
     frame.candidate:SetText(candidate and ("Objetivo actual: " .. candidate.name) or "Objetivo actual: ninguno")

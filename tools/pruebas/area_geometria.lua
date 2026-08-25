@@ -36,10 +36,10 @@ local env = {
     HarfordClassColors = { StripAccents = function(v) return v end },
 }
 local cargar = loadstring or load
-local codigo = cuerpo .. "\nreturn AreaGeometry, IsPositionAffected, ParseAreaNumbers, AreaDistanceInfo, AreaDistanceText"
+local codigo = cuerpo .. "\nreturn AreaGeometry, IsPositionAffected, ParseAreaNumbers, AreaDistanceInfo, AreaDistanceText, AreaCenter, AreaCenterFallsBack"
 local f
 if setfenv then f = assert(cargar(codigo)); setfenv(f, env) else f = assert(cargar(codigo, "t", "t", env)) end
-local Geometria, Afecta, Numeros, Distancia, TextoDistancia = f()
+local Geometria, Afecta, Numeros, Distancia, TextoDistancia, Centro, CaeEnMi = f()
 
 -- ─── Leer los numeros del texto ─────────────────────────────────────────────
 print("Los numeros salen del texto del conjuro")
@@ -192,5 +192,54 @@ chk("se ordenan del mas cerca al mas lejos",
 chk("se pintan en gris", area:find('"|cff707070fuera  "', 1, true) ~= nil, true)
 chk("y la distancia acompana al marcado",
     area:find('dist = "  |cff909090" .. texto', 1, true) ~= nil, true)
+
+-- ─── DONDE SE CENTRA ────────────────────────────────────────────────────────
+-- Una esfera o un cubo se centran en un punto ELEGIDO dentro del alcance; un cono o una linea salen
+-- siempre de quien lanza. Centrarlo todo en el lanzador ponia la Bola de fuego en el sitio
+-- contrario: marcaba a los companeros de al lado y no a los orcos del fondo.
+print("Esfera y cubo se centran donde apuntas")
+local puntoLejano = { x = 30, y = 0, z = 0 }
+chk("la esfera, en el punto", Centro({ shape = "circle" }, origen, puntoLejano).x, 30)
+chk("el cubo, tambien", Centro({ shape = "square" }, origen, puntoLejano).x, 30)
+
+print("Cono y linea salen SIEMPRE de quien lanza")
+chk("el cono, del origen", Centro({ shape = "cone" }, origen, puntoLejano).x, 0)
+chk("la linea, del origen", Centro({ shape = "line" }, origen, puntoLejano).x, 0)
+-- El rectangulo se usa para muros y va orientado desde el origen: moverle el centro lo desorienta.
+chk("el rectangulo, del origen", Centro({ shape = "rectangle" }, origen, puntoLejano).x, 0)
+
+print("Sin punto al que apuntar, se centra en uno mismo")
+chk("la esfera cae al lanzador", Centro({ shape = "circle" }, origen, nil).x, 0)
+chk("y se avisa de ello", CaeEnMi({ shape = "circle" }, nil), true)
+chk("con punto, no hay que avisar", CaeEnMi({ shape = "circle" }, puntoLejano), false)
+-- Un cono centrado en ti es lo normal, no una degradacion: no hay nada que avisar.
+chk("un cono no avisa nunca", CaeEnMi({ shape = "cone" }, nil), false)
+
+-- El caso real: Bola de fuego (esfera de 6 m) contra un grupo a 30 m.
+print("Bola de fuego a 30 metros, con el caso real")
+local bola = { shape = "circle", radius = 6.56, maxZ = 5 }   -- 6 m
+local orco = { x = 30, y = 0, z = 0 }
+local companero = { x = 2, y = 0, z = 0 }
+local centro = Centro(bola, origen, orco)
+chk("el orco entra", Afecta(bola, orco, centro), true)
+chk("y el companero de al lado NO", Afecta(bola, companero, centro), false)
+-- Antes, centrando en el lanzador, pasaba justo al reves.
+chk("centrando en ti pasaba al reves: el orco fuera", Afecta(bola, orco, origen), false)
+chk("y el companero dentro", Afecta(bola, companero, origen), true)
+
+-- La distancia que se ensena tambien se mide desde el centro real, o no explicaria nada.
+print("Y la distancia se mide desde ese centro")
+local d = Distancia(bola, orco, origen, orco)
+casi("el orco esta a cero del centro", d, 0)
+d = Distancia(bola, companero, origen, orco)
+casi("y el companero, a 25,6 m", d, 25.6, 0.2)
+
+-- NO todos los conjuros llevan area: 69 de 381. Los de objetivo unico no tienen geometria, y sin
+-- geometria no hay centro que mover. El cambio no puede alcanzarlos.
+print("Un conjuro sin area no se ve afectado")
+chk("sin geometria no hay centro", Centro(nil, origen, puntoLejano).x, 0)
+chk("una forma desconocida se queda en el origen",
+    Centro({ shape = "other" }, origen, puntoLejano).x, 0)
+chk("y no avisa de nada", CaeEnMi({ shape = "other" }, nil), false)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

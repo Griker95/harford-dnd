@@ -153,4 +153,35 @@ chk("la clave de turno marca el bando",
 chk("y un turno de bando casa con cualquiera de sus miembros",
     cond:find('if tostring(entry.kind or "") == "bando" then', 1, true) ~= nil, true)
 
+-- ─── EL ANUNCIO LLEVA LA LISTA ──────────────────────────────────────────────
+-- El aviso de turno viajaba serializando `store.entries[activeIndex]`, que en modo bandos NO se
+-- mueve: los demas clientes recibian el combatiente de siempre y hacian tocar a quien no era.
+-- Ahora se manda el bando Y su lista, para que la pertenencia la fije el DM y no la deduzca cada
+-- cliente de su copia, que puede ir retrasada.
+print("El aviso de turno habla de bandos, no de una criatura")
+chk("existe el opcode propio", turnos:find('"TURNB", tostring(turnSerial or 0), bando', 1, true) ~= nil, true)
+chk("y el receptor lo entiende", turnos:find('if opcode == "TURNB" then', 1, true) ~= nil, true)
+chk("la lista de miembros viaja con el",
+    turnos:find("ids[#ids + 1] = tostring(e.id)", 1, true) ~= nil, true)
+chk("y se resuelve contra las entradas locales",
+    turnos:find("local function EntradaDeBandoRecibida", 1, true) ~= nil, true)
+
+-- Corregir el reparto tiene que difundirse EN EL ACTO. Si llegase con la foto retrasada, el bloque
+-- que ya esta en juego tocaria con la lista vieja.
+print("El DM reparte a mano y se difunde ya")
+chk("hay menu de bando", turnos:find("local function AbrirMenuDeBando", 1, true) ~= nil, true)
+chk("se abre con el boton derecho",
+    turnos:find('if button == "RightButton" then', 1, true) ~= nil, true)
+chk("solo el admin reparte",
+    turnos:find("Solo el admin reparte los bandos", 1, true) ~= nil, true)
+chk("y difunde al cambiar",
+    turnos:find("if HarfordTurnOrderAPI.SetBando(entry, b) then", 1, true) ~= nil, true)
+
+-- La lista que manda el DM PISA a la que calcularia el cliente: es lo que evita que dos clientes
+-- con la foto desincronizada hagan tocar a criaturas distintas.
+print("La lista del DM manda sobre la del cliente")
+chk("el motor la prefiere", cond:find("if entry.miembros then", 1, true) ~= nil, true)
+chk("y solo cae a la suya si no llega",
+    cond:find("guids, nombres = MiembrosDeBando(entry.bando)", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

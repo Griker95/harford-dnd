@@ -1366,7 +1366,15 @@ local function IdentityMatches(record, entry, which)
     -- miembros. Es lo que hace que a los cinco enemigos les baje el contador de golpe en vez de
     -- uno a uno, y cada cliente lo resuelve solo: el DM unicamente anuncia que bando empieza.
     if tostring(entry.kind or "") == "bando" then
-        local guids, nombres = MiembrosDeBando(entry.bando)
+        local guids, nombres
+        if entry.miembros then
+            -- La lista vino con el anuncio del DM: esa manda. Es lo que evita que dos clientes
+            -- con la foto desincronizada hagan tocar a criaturas distintas.
+            guids, nombres = entry.miembros.guids or {}, {}
+            for n in pairs(entry.miembros.nombres or {}) do nombres[ShortName(n)] = true end
+        else
+            guids, nombres = MiembrosDeBando(entry.bando)
+        end
         if guid ~= "" and guids[guid] then return true end
         if name ~= "" and nombres[ShortName(name)] then return true end
         -- Y si el bloque es el de los PJs, mis propios estados cuentan aunque el registro no traiga

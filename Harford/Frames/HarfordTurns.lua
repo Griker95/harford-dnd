@@ -574,6 +574,22 @@ end
 
 local function SerializeTurnNotice()
     local store = EnsureStore()
+
+    -- En modo bandos el aviso NO va de una criatura. Se manda el bando y, con el, LA LISTA de
+    -- quien lo compone: la pertenencia la fija el DM y viaja con el anuncio, en vez de que cada
+    -- cliente la deduzca de su copia. Sin esto habia carrera -- el aviso sale ya y la foto va
+    -- retrasada 0,15 s -- y un reparto recien corregido llegaba tarde.
+    if store.modoBandos then
+        local bando = HarfordTurnOrderAPI.BANDOS[tonumber(store.activeBando) or 0]
+        if not bando then return nil end
+        local ids = {}
+        for _, e in ipairs(HarfordTurnOrderAPI.GetBandoMembers(bando)) do
+            if e.id and e.id ~= "" then ids[#ids + 1] = tostring(e.id) end
+        end
+        return table.concat({ "TURNB", tostring(turnSerial or 0), bando,
+            table.concat(ids, ",") }, "|")
+    end
+
     local index = tonumber(store.activeIndex) or 1
     local entry = store.entries[index]
     if not entry then return nil end
@@ -622,8 +638,59 @@ local function PrintTurnNotice(entry, activeIndex, count, turnSerial)
     end
 end
 
+-- Reconstruye la entrada sintetica de un turno de bando a partir del anuncio. La lista de
+-- miembros llega por id; se resuelve contra las entradas locales para sacar guid y nombre, que es
+-- con lo que casan los estados. Un id que no exista aqui (foto vieja) simplemente no aporta: se
+-- pierde ese miembro, no se rompe el turno.
+local function EntradaDeBandoRecibida(bando, idsRaw)
+    local store = EnsureStore()
+    local porId = {}
+    for _, e in ipairs(store.entries) do
+        if e.id and e.id ~= "" then porId[tostring(e.id)] = e end
+    end
+    local guids, nombres, cuantos = {}, {}, 0
+    for id in tostring(idsRaw or ""):gmatch("[^,]+") do
+        local e = porId[id]
+        if e then
+            if e.guid and e.guid ~= "" then guids[tostring(e.guid)] = true end
+            if e.name and e.name ~= "" then nombres[tostring(e.name)] = true end
+            cuantos = cuantos + 1
+        end
+    end
+    return {
+        kind = "bando",
+        bando = bando,
+        id = "bando:" .. tostring(bando),
+        name = HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or tostring(bando),
+        -- La lista que mando el DM manda sobre lo que opine este cliente.
+        miembros = (cuantos > 0) and { guids = guids, nombres = nombres } or nil,
+    }
+end
+
 local function ApplyTurnNotice(message)
     local opcode, serialRaw, activeRaw, countRaw, adminRaw, entryRaw = strsplit("|", message or "")
+
+    if opcode == "TURNB" then
+        local bando, idsRaw = activeRaw, countRaw
+        local valido = false
+        for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do if b == bando then valido = true end end
+        if not valido then return false end
+        local serial = SafeNumber(serialRaw, 0)
+        local store = EnsureStore()
+        turnSerial = serial
+        for i, b in ipairs(HarfordTurnOrderAPI.BANDOS) do
+            if b == bando then store.activeBando = i end
+        end
+        store.modoBandos = true
+        local entrada = EntradaDeBandoRecibida(bando, idsRaw)
+        TouchStore()
+        if RefreshFrame then RefreshFrame() end
+        Print("Turno de " .. tostring(entrada.name) .. ".")
+        AlertTurnChanged(entrada, store.activeBando, serial)
+        AlertMyTurn(entrada, store.activeBando, serial)
+        return true
+    end
+
     if opcode ~= "TURN" then return false end
 
     local serial = SafeNumber(serialRaw, 0)
@@ -1728,15 +1795,60 @@ local function PrevTurn()
     SendTurnNotice()
 end
 
+-- Menu de reparto por bando (click derecho en la tarjeta). La reaccion del servidor solo PROPONE:
+-- un NPC marcado como neutral puede ser hostil en la escena, y solo el DM lo sabe. Cambiarlo es
+-- suyo, y el cambio se difunde ya -- no espera al siguiente turno -- porque la pertenencia es lo
+-- que decide a quien le bajan los contadores.
+local menuBando
+local function AbrirMenuDeBando(entry, ancla)
+    if not entry then return end
+    if not IsTurnAdmin() then Print("Solo el admin reparte los bandos.") return end
+    if tostring(entry.kind or "") ~= "npc" and tostring(entry.kind or "") ~= "player" then return end
+    if tostring(entry.kind or "") == "player" then
+        Print("Los personajes van siempre con los PJs.")
+        return
+    end
+    menuBando = menuBando or CreateFrame("Frame", "HarfordTurnsBandoMenu", UIParent,
+        "UIDropDownMenuTemplate")
+    UIDropDownMenu_Initialize(menuBando, function(_, level)
+        local info = UIDropDownMenu_CreateInfo()
+        info.isTitle, info.notCheckable = true, true
+        info.text = tostring(entry.name or "?")
+        UIDropDownMenu_AddButton(info, level)
+        local actual = HarfordTurnOrderAPI.GetBando(entry)
+        for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do
+            local i2 = UIDropDownMenu_CreateInfo()
+            i2.text = HarfordTurnOrderAPI.BANDO_ETIQUETA[b] or b
+            i2.checked = (b == actual)
+            i2.func = function()
+                if HarfordTurnOrderAPI.SetBando(entry, b) then
+                    -- Difundir en el acto: si el reparto llegase tarde, el bloque que ya esta en
+                    -- juego tocaria con la lista vieja.
+                    MarkChanged()
+                    Print(tostring(entry.name or "?") .. " pasa a "
+                        .. tostring(HarfordTurnOrderAPI.BANDO_ETIQUETA[b] or b) .. ".")
+                end
+                CloseDropDownMenus()
+            end
+            UIDropDownMenu_AddButton(i2, level)
+        end
+    end, "MENU")
+    ToggleDropDownMenu(1, nil, menuBando, ancla or "cursor", 0, 0)
+end
+
 local function CreateCard(parent, index)
     local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     card:SetSize(CARD_W, CARD_H)
     card:SetPoint("TOPLEFT", 18 + (index - 1) * (CARD_W + CARD_GAP), -78)
     card:EnableMouse(true)
     card:SetScript("OnMouseUp", function(self, button)
-        if button ~= "LeftButton" then return end
         local store = EnsureStore()
         local entryIndex = self.entryIndex or index
+        if button == "RightButton" then
+            AbrirMenuDeBando(store.entries[entryIndex], self)
+            return
+        end
+        if button ~= "LeftButton" then return end
         if editMode then
             ClickEditEntry(entryIndex)
             return

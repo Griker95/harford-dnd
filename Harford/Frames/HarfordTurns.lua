@@ -333,6 +333,10 @@ local function PurgeStaleEntries()
     store.entries = {}
     store.activeIndex = 1
     store.lastTouched = nil
+    -- Sin combatientes no hay bandos: dejar el bloque activo apuntando a una lista vacia haria que
+    -- el siguiente avance arrancara a media rotacion.
+    store.activeBando = nil
+    store.faseBando = nil
     return true
 end
 

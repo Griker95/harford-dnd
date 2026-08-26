@@ -1653,15 +1653,23 @@ local function AdjustHp(index, amount)
         return
     end
 
-    if not HarfordServerActions or not HarfordServerActions.SetNpcHealthDelta then
-        Print("No puedo enviar comando NPC: HarfordServerActions no disponible.")
+    local Cond = HarfordDnDConditions
+    if not (Cond and Cond.AplicarEfectoNpc) then
+        Print("No puedo modificar la vida del NPC: falta el motor de condiciones.")
         return
     end
 
-    local ok, err = HarfordServerActions.SetNpcHealthDelta(amount)
-    if not ok then
-        Print("No se pudo ejecutar npc set health: " .. tostring(err or "error desconocido"))
+    -- Un punto unico: si soy oficial lo emite, y si no lo manda al lider para que lo emita el.
+    -- El signo es el del comando -- negativo resta --, que es el mismo que ya trae `amount`.
+    local via = Cond.AplicarEfectoNpc(entry.id, amount < 0 and "damage" or "heal",
+        math.abs(amount), "target")
+    if not via then
+        Print("No se pudo modificar la vida del NPC, y no hay lider a quien pedirselo.")
         return
+    end
+    if via == "delegado" then
+        Print(string.format("%d de %s enviado al lider: se aplicara cuando tenga a %s seleccionado.",
+            math.abs(amount), amount < 0 and "dano" or "curacion", tostring(entry.name or "el NPC")))
     end
 
     local maxHp = SafeNumber(entry.maxHp, 0)
@@ -1671,7 +1679,11 @@ local function AdjustHp(index, amount)
         amount = amount + absorb
     end
     if amount ~= 0 then
-        entry.hp = math.max(0, math.min(SafeNumber(entry.hp, 0) + amount, maxHp))
+        local nuevo = math.max(0, SafeNumber(entry.hp, 0) + amount)
+        -- El tope SOLO si se conoce: sin maximo, `math.min(hp + amount, 0)` dejaba al NPC en 0 de
+        -- un clic -- tambien curandolo -- y el cero se difundia a toda la mesa.
+        if maxHp > 0 then nuevo = math.min(nuevo, maxHp) end
+        entry.hp = nuevo
     end
     MarkChanged()
 end

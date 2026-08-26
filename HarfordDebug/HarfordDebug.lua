@@ -7243,6 +7243,9 @@ do
         datos.activeStates = {}
         datos.spellSlots = {}
         datos.spellSlotsBonus = {}
+        -- Las dotes tambien: una dote de la prueba anterior seguia aplicando sus rasgos sobre un
+        -- personaje que ya no la tiene, y no hay nada en pantalla que lo delate.
+        datos.feats = {}
         -- Los dados de golpe y los usos por descanso viven en el perfil, no en la progresion.
         -- El origen tambien: una raza que se queda de la prueba anterior deja sus rasgos y sus
         -- bonos sumandose a los de la nueva.

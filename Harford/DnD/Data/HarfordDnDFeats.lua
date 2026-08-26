@@ -603,6 +603,8 @@ end
 
 -- Devuelve los rasgos de una lista de dotes (ids) en el MISMO formato que
 -- HarfordDnDBook.GetUnlockedFeatures: { { className, level=0, feature }, ... }.
+-- Los rasgos SUELTOS de cada dote. Lo usa quien necesita sus efectos uno a uno -- el motor de
+-- efectos, el generador del About --, no quien la muestra.
 function API.GetFeatTraits(featIds)
     local out = {}
     if type(featIds) ~= "table" then return out end
@@ -612,6 +614,46 @@ function API.GetFeatTraits(featIds)
             for _, trait in ipairs(featDef.traits or {}) do
                 out[#out + 1] = { className = "Dote: " .. featDef.name, level = 0, feature = trait }
             end
+        end
+    end
+    return out
+end
+
+-- UNA entrada por dote, con su nombre y todo lo que hace dentro. Es lo que quiere el Libro: antes
+-- se anadia un rasgo suelto por cada cosa que hacia la dote, asi que "Mago de batalla" aparecia
+-- como tres habilidades sin nombre reconocible -- "Trucos de Mago", "Sin desventaja en cercania",
+-- "Conjuro potente" -- y la dote como tal no salia por ninguna parte.
+--
+-- Agrupar no pierde nada porque NINGUN rasgo de dote es accionable: no hay uno solo con `cast`,
+-- `uses` ni `actionKind`. Si alguna vez lo hubiera, habria que sacarlo aparte para poder usarlo.
+function API.GetFeatAbilities(featIds)
+    local out = {}
+    if type(featIds) ~= "table" then return out end
+    for _, featId in ipairs(featIds) do
+        local featDef = API.GetFeat(featId)
+        if featDef then
+            local partes = {}
+            if featDef.description and featDef.description ~= "" then
+                partes[#partes + 1] = featDef.description
+            end
+            for _, trait in ipairs(featDef.traits or {}) do
+                local nombre = tostring(trait.name or "")
+                local texto = tostring(trait.description or "")
+                -- El nombre del rasgo delante y en negrita: dentro de la dote sigue siendo util
+                -- saber que parte hace que, aunque ya no sea una habilidad aparte.
+                partes[#partes + 1] = (nombre ~= "" and ("|cffffd100" .. nombre .. ":|r ") or "") .. texto
+            end
+            out[#out + 1] = {
+                className = "Dote",
+                level = 0,
+                feature = {
+                    id = featDef.id,
+                    name = featDef.name,
+                    icon = featDef.icon,
+                    type = "pasivo",
+                    description = table.concat(partes, "\n\n"),
+                },
+            }
         end
     end
     return out

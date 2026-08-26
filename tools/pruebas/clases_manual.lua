@@ -566,4 +566,38 @@ chk("y la opcion sigue trayendo el id de la dote",
 chk("y las elecciones se recorren sin cortarse en un hueco",
     prog:find("for slot, optionId in pairs(selections or {}) do", 1, true) ~= nil, true)
 
+-- ─── UNA DOTE ES UNA HABILIDAD, NO TRES ─────────────────────────────────────
+-- `GetFeatTraits` devuelve los rasgos SUELTOS, y el Libro los pintaba como habilidades
+-- independientes: "Mago de batalla" salia como "Trucos de Mago", "Sin desventaja en cercania" y
+-- "Conjuro potente", y la dote no aparecia por su nombre en ninguna parte.
+local FEATS = env.HarfordDnDFeats
+print("Cada dote es UNA entrada con su nombre")
+local unaDote = (FEATS.GetFeats and FEATS.GetFeats() or {})[1]
+chk("hay dotes", unaDote ~= nil, true)
+local sueltos = FEATS.GetFeatTraits({ unaDote.id })
+local agrupada = FEATS.GetFeatAbilities({ unaDote.id })
+chk("suelta da un rasgo por cada cosa", #sueltos, #(unaDote.traits or {}))
+chk("agrupada da UNA", #agrupada, 1)
+chk("y se llama como la dote", agrupada[1] and agrupada[1].feature.name, unaDote.name)
+-- Dentro tiene que estar TODO lo que hace, o agrupar seria perder informacion.
+local cuerpo = agrupada[1] and agrupada[1].feature.description or ""
+local dentro = 0
+for _, tr in ipairs(unaDote.traits or {}) do
+    if cuerpo:find(tostring(tr.description or ""), 1, true) then dentro = dentro + 1 end
+end
+chk("con todo lo que hace dentro", dentro, #(unaDote.traits or {}))
+-- Agrupar solo vale porque ningun rasgo de dote es accionable. Si alguno lo fuera, quedaria
+-- enterrado en un texto y no habria forma de usarlo.
+local accionables = 0
+for _, f in ipairs(FEATS.GetFeats() or {}) do
+    for _, tr in ipairs(f.traits or {}) do
+        if tr.cast or tr.uses or tr.actionKind then accionables = accionables + 1 end
+    end
+end
+chk("y ninguna dote tiene rasgos accionables", accionables, 0)
+-- El Libro tiene que pedir la agrupada, no la suelta.
+local libro = io.open("Harford/Character/HarfordCharacterBook.lua"):read("*a")
+chk("el Libro pide la agrupada",
+    libro:find("HarfordDnDFeats.GetFeatAbilities(data.feats)", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

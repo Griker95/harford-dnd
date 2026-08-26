@@ -315,8 +315,11 @@ function API.BuildSections(data)
     if HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackgroundTraits and data.background and data.background ~= "" then
         addList(HarfordDnDBackgrounds.GetBackgroundTraits(data.background), "bg")
     end
-    if HarfordDnDFeats and HarfordDnDFeats.GetFeatTraits and type(data.feats) == "table" and #data.feats > 0 then
-        addList(HarfordDnDFeats.GetFeatTraits(data.feats), "feat")
+    -- Una entrada POR DOTE, no una por cada cosa que hace: `GetFeatTraits` las devuelve sueltas y
+    -- el Libro las pintaba como habilidades independientes, asi que la dote no salia por su
+    -- nombre en ninguna parte.
+    if HarfordDnDFeats and HarfordDnDFeats.GetFeatAbilities and type(data.feats) == "table" and #data.feats > 0 then
+        addList(HarfordDnDFeats.GetFeatAbilities(data.feats), "feat")
     end
     -- «Competencias» e «Idiomas» son FIJAS: no dependen de que una raza o un trasfondo declaren
     -- un rasgo con ese nombre. Competencias venia del trasfondo (41 de 52 lo declaran) e Idiomas

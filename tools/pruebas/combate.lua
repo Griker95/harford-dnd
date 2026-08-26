@@ -204,4 +204,26 @@ env.UnitExists = function() return false end
 chk("nil, no cero", K.GetArmorClassForUnit("target"), "nil")
 env.UnitExists = function() return true end
 
+-- ─── EL DEFENSOR GANA LOS EMPATES ───────────────────────────────────────────
+-- Divergencia DELIBERADA del manual: en 5e una tirada que iguala la CA impacta; en esta mesa no.
+-- Se comprueba que los TRES sitios que resuelven la comparacion dicen lo mismo, porque uno usaba
+-- `>=` y la misma tirada contra la misma CA salia "No superada" al atacar y "Superada" al gastar
+-- un dado sobre ella.
+print("Los tres sitios resuelven el empate igual")
+local combate2 = io.open("Harford/DnD/Engine/HarfordDnDCombat.lua"):read("*a")
+local area2 = io.open("Harford/DnD/Engine/HarfordDnDArea.lua"):read("*a")
+local rolls2 = io.open("Harford/DnD/Engine/HarfordDnDRolls.lua"):read("*a")
+chk("al atacar", combate2:find("(tonumber(total) or 0) > armorClass", 1, true) ~= nil, true)
+chk("en area", area2:find("request.attackTotal > armorClass", 1, true) ~= nil, true)
+chk("y al recalcular tras gastar", rolls2:find('nuevo > ca and "Superada"', 1, true) ~= nil, true)
+-- Si alguno vuelve a `>=`, esto lo caza antes de que la mesa vea dos respuestas distintas.
+chk("ninguno usa >= contra la CA",
+    (rolls2:find("nuevo >= ca", 1, true) == nil)
+    and (combate2:find("or 0) >= armorClass", 1, true) == nil)
+    and (area2:find("attackTotal >= armorClass", 1, true) == nil), true)
+-- Y que quede escrito: sin documentar, la siguiente revision lo marca como bug y lo "arregla".
+local agentes = io.open("AGENTS.md"):read("*a")
+chk("y esta documentado como divergencia",
+    agentes:find("El defensor gana los empates de CA", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

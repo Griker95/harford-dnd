@@ -3053,6 +3053,25 @@ turno**, no al final del asalto. Una reaccion gastada en el turno de un enemigo 
 resto del asalto. `API.Turn` ya lo hace asi. Con el hueco PJs, todos los jugadores la recuperan a la
 vez, que es el comportamiento correcto bajo iniciativa por bandos.
 
+## El defensor gana los empates de CA (2026-08-26)
+
+**Divergencia deliberada del manual.** En 5e, una tirada que IGUALA la CA impacta ("equals or
+exceeds"). En esta mesa NO: el empate falla y el defensor lo gana.
+
+La comparacion es `>` en los tres sitios que la resuelven:
+
+- `HarfordDnDCombat.ResolveArmorClassOutcome` (`total > armorClass`)
+- `HarfordDnDArea` (`request.attackTotal > armorClass`)
+- `HarfordDnDRolls`, al recalcular tras gastar un dado o un modificador
+
+Los dos primeros ya lo hacian; el tercero usaba `>=` y **se contradecia con ellos**: la misma
+tirada contra la misma CA salia "No superada" al atacar y "Superada" al gastar el dado sobre ella.
+
+Esta escrito aqui porque una decision de mesa sin documentar se "corrige" sola en la siguiente
+revision: paso el 26 de agosto, cuando una revision la marco como bug citando el manual. El
+comentario en el codigo -- "empate = fallo para el atacante (el defensor gana los empates)" -- es
+lo unico que lo delataba.
+
 ## Iniciativa por BANDOS: el turno avanza por bloques (2026-08-26)
 
 Evolucion del hueco `players` de arriba: no un bloque para los PJs, sino **cuatro bandos** y el

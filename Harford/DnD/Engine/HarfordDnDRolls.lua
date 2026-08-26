@@ -533,7 +533,11 @@ function HarfordDnDRolls.ModifyLastRoll(spec)
     local extra = ""
     local ca = tonumber(last.armorClass)
     if ca then
-        extra = string.format(" vs CA %d %s", ca, nuevo >= ca and "Superada" or "No superada")
+        -- `>`, no `>=`: en esta mesa EL DEFENSOR GANA LOS EMPATES, que es una divergencia
+        -- deliberada del manual (5e impacta al igualar la CA). `HarfordDnDCombat` y
+        -- `HarfordDnDArea` ya lo hacian asi; esta linea decia lo contrario, y la misma tirada
+        -- contra la misma CA salia "No superada" al atacar y "Superada" al gastar el dado.
+        extra = string.format(" vs CA %d %s", ca, nuevo > ca and "Superada" or "No superada")
     end
 
     HarfordDnDRolls.Broadcast({

@@ -1566,10 +1566,39 @@ local function MiembrosDeBando(bando)
     return guids, nombres
 end
 
+-- ¿Este turno es MIO? El hueco colectivo de PJs y el bloque de bandos "pjs" son de todos los
+-- jugadores, y su entrada se llama "PJs", no como tu personaje. Sin esto, un estado tuyo que
+-- caduca al empezar tu turno -- Esquivar, Preparar, Desengancharse -- no casaba con ninguna
+-- entrada y no se retiraba NUNCA.
+local function EsMiTurno(entry)
+    if not entry then return false end
+    local k = tostring(entry.kind or "")
+    if k == "players" then return true end
+    if k == "bando" then return entry.bando == "pjs" end
+    -- Tu entrada individual: por guid, o por nombre si no lo trae.
+    local mio = UnitGUID and UnitGUID("player")
+    if mio and tostring(entry.guid or entry.id or "") == mio then return true end
+    local yo = HarfordClassColors.UnitFullName("player")
+    return yo ~= nil and entry.name ~= nil and ShortName(entry.name) == ShortName(yo)
+end
+
+-- ¿La identidad guardada en el registro soy YO?
+local function EsMio(guid, name)
+    local mio = UnitGUID and UnitGUID("player")
+    if guid ~= "" and mio and guid == mio then return true end
+    if name == "" then return false end
+    local yo = HarfordClassColors.UnitFullName("player")
+    return yo ~= nil and ShortName(name) == ShortName(yo)
+end
+
 local function IdentityMatches(record, entry, which)
     if not (record and entry) then return false end
     local guid = tostring(record[which .. "Guid"] or "")
     local name = tostring(record[which .. "Name"] or "")
+
+    -- Lo MIO caduca en MI turno, aunque ese turno se llame "PJs" y no como yo. Va antes que todo
+    -- lo demas porque el hueco colectivo no tiene ni mi guid ni mi nombre.
+    if EsMio(guid, name) and EsMiTurno(entry) then return true end
     -- Turno de BANDO: no es un combatiente sino un bloque, asi que casa con CUALQUIERA de sus
     -- miembros. Es lo que hace que a los cinco enemigos les baje el contador de golpe en vez de
     -- uno a uno, y cada cliente lo resuelve solo: el DM unicamente anuncia que bando empieza.

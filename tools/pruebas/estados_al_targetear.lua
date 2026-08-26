@@ -228,4 +228,22 @@ local corta = { { id = "prone", duration = "manual", turns = 0, level = 0 } }
 local p2, r2 = S.SerializeConditionList("g", "n", corta)
 chk("una lista corta no se recorta", tostring(r2), "false")
 
+-- ─── LO MIO CADUCA EN MI TURNO, SE LLAME COMO SE LLAME ──────────────────────
+-- Esquivar y Preparar guardan tu nombre como origen y caducan al empezar TU turno. Pero si tu
+-- turno es el hueco colectivo, la entrada se llama "PJs" y los nombres no casaban: el estado no se
+-- retiraba nunca. Lo mismo con el bloque "pjs" de bandos.
+print("El turno propio se reconoce aunque se llame PJs")
+chk("hay una nocion de turno mio", cond:find("local function EsMiTurno(entry)", 1, true) ~= nil, true)
+chk("el hueco colectivo cuenta", cond:find('if k == "players" then return true end', 1, true) ~= nil, true)
+chk("y el bloque de bandos tambien",
+    cond:find('if k == "bando" then return entry.bando == "pjs" end', 1, true) ~= nil, true)
+chk("se sabe que un registro es mio", cond:find("local function EsMio(guid, name)", 1, true) ~= nil, true)
+-- Va ANTES del resto: el hueco colectivo no tiene ni mi guid ni mi nombre, asi que ninguna de las
+-- comparaciones de abajo podria acertar.
+chk("y se comprueba lo primero",
+    cond:find("if EsMio(guid, name) and EsMiTurno(entry) then return true end", 1, true) ~= nil, true)
+-- Sin romper lo de siempre: un estado AJENO no puede caducar en mi turno.
+chk("pero lo ajeno sigue casando por identidad",
+    cond:find('or (name ~= "" and ShortName(name) == ShortName(entry.name))', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

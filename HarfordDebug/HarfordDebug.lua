@@ -7168,3 +7168,216 @@ do
         Informe()
     end, "mide Chomp y CTL frente a SendAddonMessage (chomp [enviar|ctl|bn|limite|crudo])")
 end
+
+-- ─── FICHA RAPIDA DE NIVEL 6 ────────────────────────────────────────────────
+-- Montar a mano una ficha de nivel 6 para probar algo son doce pasos por el asistente, y hay DOCE
+-- clases. Esto la deja hecha de un comando, y `todas` recorre las doce seguidas informando de lo
+-- que sale: es la unica forma practica de ver de un vistazo que las doce se montan sin romperse y
+-- cuantas elecciones deja cada una sin resolver.
+--
+-- DESTRUYE la ficha actual. Por eso guarda copia ANTES de tocar nada, y la copia se persiste: si
+-- solo viviera en memoria, un /reload en medio se llevaria por delante el personaje de verdad.
+do
+    local NIVEL = 6
+    local Limpiar, Refrescar   -- se asignan mas abajo; `Restaurar` cierra sobre ellas
+
+    local function Prog() return _G.HarfordDnDProgression end
+    local function Libro() return _G.HarfordDnDBook end
+
+    local function Clases()
+        local L = Libro()
+        if not (L and L.GetClasses) then return {} end
+        return L.GetClasses() or {}
+    end
+
+    -- Copia de seguridad, persistida. Solo se toma la PRIMERA vez: si se encadenan varias fichas
+    -- de prueba, la copia buena sigue siendo la del personaje real, no la de la prueba anterior.
+    local function Guardar()
+        HarfordDebugSettings = HarfordDebugSettings or {}
+        if HarfordDebugSettings.fichaPrevia then return false end
+        local P = Prog()
+        if not (P and P.Get) then return false end
+        local datos = P.Get()
+        local copia = {}
+        local function Copiar(t)
+            local out = {}
+            for k, v in pairs(t or {}) do
+                out[k] = (type(v) == "table") and Copiar(v) or v
+            end
+            return out
+        end
+        copia = Copiar(datos)
+        HarfordDebugSettings.fichaPrevia = {
+            datos = copia,
+            perfil = (UnitName and UnitName("player")) or "?",
+            cuando = (date and date("%d/%m %H:%M")) or "?",
+        }
+        return true
+    end
+
+    local function Restaurar()
+        local guardada = HarfordDebugSettings and HarfordDebugSettings.fichaPrevia
+        if not guardada then
+            Print("No hay copia guardada. La ficha actual se queda como esta.")
+            return
+        end
+        local P = Prog()
+        if not (P and P.Set) then Print("HarfordDnDProgression no disponible") return end
+        P.Set(nil, guardada.datos)
+        HarfordDebugSettings.fichaPrevia = nil
+        Print("Ficha restaurada a la copia de " .. tostring(guardada.cuando)
+            .. " (" .. tostring(guardada.perfil) .. ").")
+        Refrescar()
+    end
+
+    -- Borra lo que la clase anterior dejo puesto. NO se tocan raza ni trasfondo: no son de la
+    -- clase, y rehacerlos en cada prueba obligaria a volver a elegirlos por nada.
+    Limpiar = function()
+        local P = Prog()
+        if not (P and P.Get) then return end
+        local datos = P.Get()
+        datos.classLevels = {}
+        -- Elecciones, usos y espacios: todos apuntan a rasgos de la clase que se va.
+        datos.choices = {}
+        datos.featureStates = {}
+        datos.activeStates = {}
+        datos.spellSlots = {}
+        datos.spellSlotsBonus = {}
+        -- Los dados de golpe y los usos por descanso viven en el perfil, no en la progresion.
+        local perfiles = _G.HarfordDnDPersistStore and _G.HarfordDnDPersistStore.profiles
+        local nombre = (UnitName and UnitName("player")) or ""
+        local slot = perfiles and perfiles[nombre]
+        if slot then
+            slot._hitDice = nil
+            slot._featureUses = nil
+        end
+    end
+
+    -- Que la ficha cambie SIN /reload. Cada panel abierto tiene que enterarse: si no, se sigue
+    -- viendo la clase anterior y parece que el comando no ha hecho nada.
+    Refrescar = function()
+        if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.Invalidate then
+            HarfordDnDFeatureEffects.Invalidate()
+        end
+        if HarfordDnDStore and HarfordDnDStore.ReconcileDerivedResources then
+            HarfordDnDStore.ReconcileDerivedResources(nil, "debug ficha6")
+        end
+        if HarfordDnDStore and HarfordDnDStore.RefreshMainUI then HarfordDnDStore.RefreshMainUI() end
+        if _G.DND5E_ARC_API and _G.DND5E_ARC_API.Refresh then _G.DND5E_ARC_API.Refresh() end
+        if HarfordCharacterPanel then
+            if HarfordCharacterPanel.Refresh then HarfordCharacterPanel.Refresh() end
+            if HarfordCharacterPanel.RefreshBookIfShown then HarfordCharacterPanel.RefreshBookIfShown() end
+        end
+    end
+
+    -- Monta la ficha. Devuelve un resumen, que es lo que hace util el recorrido de `todas`.
+    local function Montar(classId, subclassId)
+        local P, L = Prog(), Libro()
+        if not (P and L) then return nil, "modulos no disponibles" end
+        local classDef = L.GetClass and L.GetClass(classId)
+        if not classDef then return nil, "clase desconocida: " .. tostring(classId) end
+
+        Limpiar()
+        local datos = P.Get()
+        local ok, err = P.SetClassEntry(1, classId, subclassId, NIVEL)
+        if not ok then return nil, tostring(err) end
+
+        -- La XP no debe quedar por debajo del nivel recien fijado, o el panel ofreceria subir a un
+        -- nivel que ya se tiene.
+        local umbral = HarfordCharacterXP and HarfordCharacterXP.XP_TABLE
+            and HarfordCharacterXP.XP_TABLE[NIVEL]
+        if umbral and HarfordCharacterXP.SetXP then HarfordCharacterXP.SetXP(umbral) end
+        Refrescar()
+
+        local entrada = P.GetClassLevels()[1]
+        local rasgos = (L.GetUnlockedFeatures and L.GetUnlockedFeatures(P.GetClassLevels())) or {}
+        local pendientes, conEleccion = 0, {}
+        for _, item in ipairs(rasgos) do
+            local f = item.feature
+            local huecos = (L.GetChoiceSlots and f and f.choice) and L.GetChoiceSlots(f) or 0
+            if huecos > 0 then
+                local elegido = P.GetChoice and P.GetChoice(f.id)
+                local puestos = 0
+                if type(elegido) == "table" then
+                    for _ in pairs(elegido) do puestos = puestos + 1 end
+                elseif elegido then puestos = 1 end
+                if puestos < huecos then
+                    pendientes = pendientes + (huecos - puestos)
+                    conEleccion[#conEleccion + 1] = tostring(f.name or f.id)
+                end
+            end
+        end
+        return {
+            classId = classDef.id, className = classDef.name,
+            subclassId = entrada and entrada.subclassId or "",
+            hitDie = classDef.hitDie,
+            rasgos = #rasgos, pendientes = pendientes, conEleccion = conEleccion,
+            pb = P.GetProficiencyBonus and P.GetProficiencyBonus() or nil,
+        }
+    end
+
+    local function Listar()
+        Print("Clases y sus especializaciones (id que hay que escribir):")
+        for _, c in ipairs(Clases()) do
+            local subs = {}
+            for _, s in ipairs(c.subclasses or {}) do subs[#subs + 1] = tostring(s.id) end
+            Print(string.format("  |cffffcc00%-18s|r d%-2s  %s", tostring(c.id),
+                tostring(c.hitDie or "?"), table.concat(subs, ", ")))
+        end
+        Print("Uso: ficha6 <clase> [subclase] | ficha6 todas | ficha6 restaurar")
+        Print("|cffff8888Sustituye la ficha actual|r; se guarda copia y se recupera con 'restaurar'.")
+    end
+
+    API.RegisterCommand("ficha6", function(args)
+        args = tostring(args or ""):gsub("^%s+", ""):gsub("%s+$", "")
+        local sub, resto = args:match("^(%S+)%s*(.*)$")
+        sub = sub and sub:lower() or ""
+
+        if sub == "" then return Listar() end
+        if sub == "restaurar" then return Restaurar() end
+
+        if sub == "todas" then
+            Guardar()
+            Print("Montando nivel " .. NIVEL .. " de cada clase...")
+            local fallos, totalPend = 0, 0
+            for _, c in ipairs(Clases()) do
+                local r, err = Montar(c.id, nil)
+                if not r then
+                    fallos = fallos + 1
+                    Print(string.format("  |cffff4444%-18s FALLA|r %s", tostring(c.id), tostring(err)))
+                else
+                    totalPend = totalPend + r.pendientes
+                    Print(string.format("  %-18s d%-2s %-16s %2d rasgos  %s",
+                        tostring(r.classId), tostring(r.hitDie), tostring(r.subclassId),
+                        r.rasgos,
+                        r.pendientes > 0
+                            and ("|cffffcc00" .. r.pendientes .. " sin elegir|r: "
+                                .. table.concat(r.conEleccion, ", "))
+                            or "|cff88ff88completa|r"))
+                end
+            end
+            Print(string.format("%d clases, %d fallos, %d elecciones sin resolver.",
+                #Clases(), fallos, totalPend))
+            -- La ficha queda con la ULTIMA clase montada. Se avisa, porque quedarse con una ficha
+            -- de prueba sin saberlo es peor que perderla.
+            Print("La ficha ha quedado con la ultima clase. Usa 'ficha6 restaurar' para deshacer.")
+            return
+        end
+
+        local nueva = Guardar()
+        local r, err = Montar(sub, (resto ~= "" and resto or nil))
+        if not r then
+            Print("|cffff4444" .. tostring(err) .. "|r")
+            Print("Usa 'ficha6' a secas para ver las clases.")
+            return
+        end
+        Print(string.format("|cff88ff88%s nivel %d|r (%s), d%s, bono de competencia +%s, %d rasgos.",
+            tostring(r.className), NIVEL, tostring(r.subclassId), tostring(r.hitDie),
+            tostring(r.pb or "?"), r.rasgos))
+        if r.pendientes > 0 then
+            Print("  |cffffcc00" .. r.pendientes .. " eleccion(es) sin resolver|r: "
+                .. table.concat(r.conEleccion, ", "))
+        end
+        if nueva then Print("  Copia de la ficha anterior guardada ('ficha6 restaurar').") end
+    end, "monta una ficha de nivel 6 (ficha6 [clase|todas|restaurar])")
+end

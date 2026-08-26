@@ -391,4 +391,57 @@ chk("si la entrega falla, se devuelve lo gastado",
 chk("la entrega al objetivo es una sola",
     select(2, panel2:gsub("function EntregarAObjetivo", "")), 1)
 
+-- ─── FICHA DE NIVEL 6 DE CADA CLASE ─────────────────────────────────────────
+-- Nivel 6 es el techo del alcance actual, asi que es donde una clase tiene todo lo que va a tener.
+-- El comando `ficha6` monta esto en juego; aqui se comprueba lo que puede comprobarse sin cliente:
+-- que las doce producen rasgos, que llegan con especializacion elegida y que las elecciones que
+-- dejan pendientes se pueden enumerar -- si no, el comando no podria decir cuales faltan.
+print("Las doce montan a nivel 6")
+local sinRasgos, sinSub, rasgosTotales = {}, {}, 0
+for _, c in ipairs(CLASES) do
+    local sub = API.GetDefaultSubclassId and API.GetDefaultSubclassId(c.id)
+    local niveles = { { classId = c.id, subclassId = sub, level = 6 } }
+    local rasgos = API.GetUnlockedFeatures and API.GetUnlockedFeatures(niveles) or {}
+    rasgosTotales = rasgosTotales + #rasgos
+    if #rasgos == 0 then sinRasgos[#sinRasgos + 1] = c.id end
+    -- La especializacion se elige al 3 en casi todas, asi que al 6 ninguna deberia quedarse sin
+    -- una por defecto: sin ella, la ficha de prueba saldria a medias y no serviria para probar.
+    if not sub or sub == "" then sinSub[#sinSub + 1] = c.id end
+end
+chk("todas dan rasgos al 6", #sinRasgos == 0 and "si" or table.concat(sinRasgos, ","), "si")
+chk("todas tienen especializacion por defecto",
+    #sinSub == 0 and "si" or table.concat(sinSub, ","), "si")
+chk("y el total es razonable, no cero", rasgosTotales > 60, true)
+
+-- Un nivel 6 tiene que traer MAS que un nivel 1. Parece obvio, pero si `GetUnlockedFeatures`
+-- dejara de filtrar por nivel, las dos cifras serian iguales y nadie se enteraria.
+local unoTotal, seisTotal = 0, 0
+for _, c in ipairs(CLASES) do
+    local sub = API.GetDefaultSubclassId and API.GetDefaultSubclassId(c.id)
+    unoTotal = unoTotal + #(API.GetUnlockedFeatures({ { classId = c.id, subclassId = sub, level = 1 } }) or {})
+    seisTotal = seisTotal + #(API.GetUnlockedFeatures({ { classId = c.id, subclassId = sub, level = 6 } }) or {})
+end
+chk("el 6 trae mas que el 1", seisTotal > unoTotal, true)
+-- Y el nivel 1 NO puede traer rasgos de subclase, que se elige despues.
+chk("el 1 no trae ya todo", unoTotal < seisTotal, true)
+
+print("Las elecciones pendientes se pueden enumerar")
+local conEleccion = 0
+for _, c in ipairs(CLASES) do
+    local sub = API.GetDefaultSubclassId and API.GetDefaultSubclassId(c.id)
+    for _, item in ipairs(API.GetUnlockedFeatures({ { classId = c.id, subclassId = sub, level = 6 } }) or {}) do
+        local f = item.feature
+        if f and f.choice then
+            local huecos = API.GetChoiceSlots and API.GetChoiceSlots(f) or 0
+            if huecos > 0 then conEleccion = conEleccion + 1 end
+            -- Un rasgo de eleccion sin nombre no se podria listar por pantalla.
+            if not (f.name and f.name ~= "") then
+                chk("rasgo de eleccion sin nombre en " .. tostring(c.id), f.id, "(deberia tener nombre)")
+            end
+        end
+    end
+end
+-- Si esto fuera 0, `ficha6` diria siempre "completa" y no estaria comprobando nada.
+chk("hay rasgos de eleccion al 6", conEleccion > 0, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

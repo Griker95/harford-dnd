@@ -42,6 +42,9 @@ local function ejecutar(ruta)
     return ok
 end
 
+env._G = env  -- el libro consulta _G para el compendio
+ejecutar("Harford/DnD/Data/HarfordDnDData.lua")
+ejecutar("Harford/DnD/Data/HarfordDnDFeats.lua")
 ejecutar("Harford/DnD/Data/HarfordDnDBook.lua")
 local ORDEN = { "Guerrero", "Picaro", "Mago", "Sacerdote", "Druida", "Paladin", "Cazador",
                 "Monje", "Brujo", "Chaman", "CaballerodelaMuerte", "CazadordeDemonios" }
@@ -443,5 +446,54 @@ for _, c in ipairs(CLASES) do
 end
 -- Si esto fuera 0, `ficha6` diria siempre "completa" y no estaria comprobando nada.
 chk("hay rasgos de eleccion al 6", conEleccion > 0, true)
+
+-- ─── LAS ELECCIONES SE PUEDEN RESOLVER SOLAS ────────────────────────────────
+-- `ficha6` rellena las elecciones al azar para dejar una ficha usable de un comando. Solo puede
+-- hacerlo si cada rasgo de eleccion sabe decir sus opciones. Las dinamicas -- Mejora de
+-- Caracteristica, Pericia -- no las declaran: las genera `GetChoiceOptions` desde los datos, y
+-- leer `choice.options` en crudo dejaba 18 sin rellenar, 12 de ellas la misma ASI.
+print("Las elecciones del 6 saben decir sus opciones")
+local resolubles, mudas, cortas = 0, {}, {}
+for _, c in ipairs(CLASES) do
+    local sub6 = API.GetDefaultSubclassId and API.GetDefaultSubclassId(c.id)
+    for _, item in ipairs(API.GetUnlockedFeatures({ { classId = c.id, subclassId = sub6, level = 6 } }) or {}) do
+        local f = item.feature
+        local huecos = (f and f.choice) and API.GetChoiceSlots(f) or 0
+        if huecos > 0 then
+            local ops = API.GetChoiceOptions and API.GetChoiceOptions(f)
+            if type(ops) ~= "table" or #ops == 0 then
+                -- `Truco de bonificacion` sale del compendio, que no se carga aqui. Es la unica
+                -- excepcion conocida; cualquier otra es un rasgo que nadie podria completar.
+                if f.id ~= "sac_dis_truco" then mudas[#mudas + 1] = tostring(f.id) end
+            else
+                resolubles = resolubles + 1
+                -- Mas huecos que opciones significa que la eleccion no se puede completar NUNCA,
+                -- ni a mano ni sola.
+                if #ops < huecos then
+                    cortas[#cortas + 1] = tostring(f.id) .. " (" .. #ops .. "/" .. huecos .. ")"
+                end
+            end
+        end
+    end
+end
+chk("ninguna se queda muda", #mudas == 0 and "si" or table.concat(mudas, ","), "si")
+chk("ninguna tiene menos opciones que huecos",
+    #cortas == 0 and "si" or table.concat(cortas, ","), "si")
+-- Si esto cayera a cero, `ficha6` no rellenaria nada y nadie se enteraria.
+chk("y hay bastantes que resolver", resolubles > 30, true)
+
+-- La ASI aparece en las doce, asi que es la que mas se nota si deja de resolverse.
+local asiResueltas = 0
+for _, c in ipairs(CLASES) do
+    local sub6 = API.GetDefaultSubclassId and API.GetDefaultSubclassId(c.id)
+    for _, item in ipairs(API.GetUnlockedFeatures({ { classId = c.id, subclassId = sub6, level = 6 } }) or {}) do
+        local f = item.feature
+        if f and f.choice and tostring(f.name or ""):find("Mejora de Caracteristica", 1, true) then
+            local ops = API.GetChoiceOptions and API.GetChoiceOptions(f)
+            if type(ops) == "table" and #ops >= 6 then asiResueltas = asiResueltas + 1 end
+        end
+    end
+end
+chk("la Mejora de Caracteristica se resuelve en las doce", asiResueltas >= 12, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

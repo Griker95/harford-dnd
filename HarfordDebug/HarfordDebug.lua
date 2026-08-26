@@ -7270,6 +7270,64 @@ do
         end
     end
 
+    -- Rellena las elecciones pendientes, AL AZAR entre las opciones validas. Sin esto la ficha
+    -- llega al 6 con entre 4 y 10 decisiones a medias -- estilo de combate, maniobras, pericias,
+    -- mejoras de caracteristica -- y hay que terminarla a mano cada vez que se cambia de clase,
+    -- que es justo lo que el comando venia a evitar.
+    --
+    -- Un hueco YA elegido no se toca: si vuelves a montar la misma clase tras cambiar algo a mano,
+    -- tu eleccion se queda.
+    local function RellenarElecciones()
+        local P, L = Prog(), Libro()
+        if not (P and L and P.SetChoiceSlot) then return 0, 0 end
+        local puestas, sinOpciones = 0, 0
+        for _, item in ipairs(L.GetUnlockedFeatures(P.GetClassLevels()) or {}) do
+            local f = item.feature
+            -- `GetChoiceOptions`, no `choice.options` en crudo: las elecciones dinamicas
+            -- -- Mejora de Caracteristica, Pericia, trucos -- no declaran su lista, la generan
+            -- desde los datos. Leyendo el campo pelado se quedaban 18 sin rellenar, 12 de ellas
+            -- la misma Mejora de Caracteristica.
+            local opciones = (f and f.choice and L.GetChoiceOptions) and L.GetChoiceOptions(f) or nil
+            local huecos = (f and f.choice) and L.GetChoiceSlots(f) or 0
+            if huecos > 0 then
+                if type(opciones) ~= "table" or #opciones == 0 then
+                    -- Una eleccion sin opciones no se puede rellenar sola. Se cuenta para poder
+                    -- decirlo en vez de dejar creer que la ficha quedo completa.
+                    sinOpciones = sinOpciones + 1
+                else
+                    local yaPuestas = {}
+                    local actuales = P.GetChoice and P.GetChoice(f.id) or {}
+                    for _, v in ipairs(actuales) do yaPuestas[tostring(v)] = true end
+                    for hueco = 1, huecos do
+                        local datos = P.Get()
+                        local ocupado = datos.choices[f.id] and datos.choices[f.id][hueco]
+                        if not (ocupado and ocupado ~= "") then
+                            -- AL AZAR entre las que quedan, no siempre la primera: montar la misma
+                            -- clase dos veces prueba combinaciones distintas, y elegir siempre la
+                            -- primera dejaria el resto de opciones sin pisar nunca.
+                            --
+                            -- Sin repetir dentro de la misma eleccion: dos huecos con la misma
+                            -- opcion serian una maniobra aprendida dos veces y una pericia tirada.
+                            local libres = {}
+                            for _, o in ipairs(opciones) do
+                                if o.id and not yaPuestas[tostring(o.id)] then
+                                    libres[#libres + 1] = o
+                                end
+                            end
+                            local elegida = (#libres > 0) and libres[math.random(#libres)] or nil
+                            if elegida then
+                                P.SetChoiceSlot(f.id, hueco, elegida.id)
+                                yaPuestas[tostring(elegida.id)] = true
+                                puestas = puestas + 1
+                            end
+                        end
+                    end
+                end
+            end
+        end
+        return puestas, sinOpciones
+    end
+
     -- Monta la ficha. Devuelve un resumen, que es lo que hace util el recorrido de `todas`.
     local function Montar(classId, subclassId)
         local P, L = Prog(), Libro()
@@ -7287,6 +7345,7 @@ do
         local umbral = HarfordCharacterXP and HarfordCharacterXP.XP_TABLE
             and HarfordCharacterXP.XP_TABLE[NIVEL]
         if umbral and HarfordCharacterXP.SetXP then HarfordCharacterXP.SetXP(umbral) end
+        local puestas, sinOpciones = RellenarElecciones()
         Refrescar()
 
         local entrada = P.GetClassLevels()[1]
@@ -7308,6 +7367,7 @@ do
             end
         end
         return {
+            puestas = puestas, sinOpciones = sinOpciones,
             classId = classDef.id, className = classDef.name,
             subclassId = entrada and entrada.subclassId or "",
             hitDie = classDef.hitDie,
@@ -7347,17 +7407,20 @@ do
                     Print(string.format("  |cffff4444%-18s FALLA|r %s", tostring(c.id), tostring(err)))
                 else
                     totalPend = totalPend + r.pendientes
-                    Print(string.format("  %-18s d%-2s %-16s %2d rasgos  %s",
+                    Print(string.format("  %-18s d%-2s %-16s %2d rasgos  %2d elegidas  %s",
                         tostring(r.classId), tostring(r.hitDie), tostring(r.subclassId),
-                        r.rasgos,
+                        r.rasgos, r.puestas,
                         r.pendientes > 0
-                            and ("|cffffcc00" .. r.pendientes .. " sin elegir|r: "
+                            and ("|cffffcc00" .. r.pendientes .. " sin resolver|r: "
                                 .. table.concat(r.conEleccion, ", "))
-                            or "|cff88ff88completa|r"))
+                            or "|cff88ff88lista|r"))
                 end
             end
             Print(string.format("%d clases, %d fallos, %d elecciones sin resolver.",
                 #Clases(), fallos, totalPend))
+            if totalPend > 0 then
+                Print("Las que quedan no tienen opciones declaradas: no se pueden rellenar solas.")
+            end
             -- La ficha queda con la ULTIMA clase montada. Se avisa, porque quedarse con una ficha
             -- de prueba sin saberlo es peor que perderla.
             Print("La ficha ha quedado con la ultima clase. Usa 'ficha6 restaurar' para deshacer.")
@@ -7374,8 +7437,10 @@ do
         Print(string.format("|cff88ff88%s nivel %d|r (%s), d%s, bono de competencia +%s, %d rasgos.",
             tostring(r.className), NIVEL, tostring(r.subclassId), tostring(r.hitDie),
             tostring(r.pb or "?"), r.rasgos))
+        Print(string.format("  %d eleccion(es) rellenadas por defecto; cambialas en el panel.",
+            r.puestas))
         if r.pendientes > 0 then
-            Print("  |cffffcc00" .. r.pendientes .. " eleccion(es) sin resolver|r: "
+            Print("  |cffffcc00" .. r.pendientes .. " sin resolver|r (no tienen opciones que elegir): "
                 .. table.concat(r.conEleccion, ", "))
         end
         if nueva then Print("  Copia de la ficha anterior guardada ('ficha6 restaurar').") end

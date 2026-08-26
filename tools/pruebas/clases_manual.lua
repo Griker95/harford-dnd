@@ -45,6 +45,8 @@ end
 env._G = env  -- el libro consulta _G para el compendio
 ejecutar("Harford/DnD/Data/HarfordDnDData.lua")
 ejecutar("Harford/DnD/Data/HarfordDnDFeats.lua")
+ejecutar("Harford/DnD/Data/HarfordDnDRaces.lua")
+ejecutar("Harford/DnD/Data/HarfordDnDBackgrounds.lua")
 ejecutar("Harford/DnD/Data/HarfordDnDBook.lua")
 local ORDEN = { "Guerrero", "Picaro", "Mago", "Sacerdote", "Druida", "Paladin", "Cazador",
                 "Monje", "Brujo", "Chaman", "CaballerodelaMuerte", "CazadordeDemonios" }
@@ -495,5 +497,53 @@ for _, c in ipairs(CLASES) do
     end
 end
 chk("la Mejora de Caracteristica se resuelve en las doce", asiResueltas >= 12, true)
+
+-- ─── ORIGEN: RAZAS Y TRASFONDOS ─────────────────────────────────────────────
+-- Una ficha de prueba sin raza no tiene rasgos raciales ni bonos de caracteristica, asi que
+-- `ficha6` sortea tambien el origen y rellena SUS elecciones. Aqui se comprueba que se pueden
+-- resolver: el Humano solo trae cinco.
+local RAZAS = env.HarfordDnDRaces
+local FONDOS = env.HarfordDnDBackgrounds
+print("El origen esta y sus elecciones se pueden resolver")
+chk("hay razas", #(RAZAS.GetRaces() or {}) > 0, true)
+chk("hay trasfondos", #(FONDOS.GetBackgrounds() or {}) > 0, true)
+
+-- `GetRaceTraits` y `GetBackgroundTraits` devuelven ENVUELTO -- { className, level, feature } --
+-- igual que `GetUnlockedFeatures`. Tratar el envoltorio como si fuera el rasgo no da error: la
+-- tabla exterior no tiene `.choice`, asi que simplemente no cuenta ninguna eleccion, en silencio.
+-- Por eso se comprueba la forma, y no solo el numero.
+local primeraRaza = (RAZAS.GetRaces() or {})[1]
+local envuelto = (RAZAS.GetRaceTraits(primeraRaza.id, nil) or {})[1]
+chk("los rasgos de raza vienen envueltos", envuelto ~= nil and envuelto.feature ~= nil, true)
+local envueltoF = (FONDOS.GetBackgroundTraits((FONDOS.GetBackgrounds() or {})[1].id) or {})[1]
+chk("los de trasfondo tambien", envueltoF ~= nil and envueltoF.feature ~= nil, true)
+
+local huecosOrigen, mudasOrigen = 0, {}
+local function RevisarOrigen(lista, quien)
+    for _, item in ipairs(lista or {}) do
+        local tr = item.feature
+        local huecos = (tr and tr.choice) and API.GetChoiceSlots(tr) or 0
+        if huecos > 0 then
+            huecosOrigen = huecosOrigen + huecos
+            local ops = API.GetChoiceOptions(tr)
+            -- Menos opciones que huecos = eleccion que no se puede completar NUNCA, ni a mano.
+            if type(ops) ~= "table" or #ops < huecos then
+                mudasOrigen[#mudasOrigen + 1] = quien .. "/" .. tostring(tr.id)
+            end
+        end
+    end
+end
+for _, raza in ipairs(RAZAS.GetRaces() or {}) do
+    local sr = RAZAS.GetDefaultSubraceId and RAZAS.GetDefaultSubraceId(raza.id)
+    RevisarOrigen(RAZAS.GetRaceTraits(raza.id, sr), raza.id)
+end
+for _, fondo in ipairs(FONDOS.GetBackgrounds() or {}) do
+    RevisarOrigen(FONDOS.GetBackgroundTraits(fondo.id), fondo.id)
+end
+chk("ninguna eleccion de origen se queda sin opciones",
+    #mudasOrigen == 0 and "si" or table.concat(mudasOrigen, ","), "si")
+-- Si esto fuera 0, el relleno de origen no estaria haciendo nada y la comprobacion de arriba
+-- pasaria por vacia.
+chk("y hay elecciones de origen que resolver", huecosOrigen > 20, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

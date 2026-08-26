@@ -7244,6 +7244,11 @@ do
         datos.spellSlots = {}
         datos.spellSlotsBonus = {}
         -- Los dados de golpe y los usos por descanso viven en el perfil, no en la progresion.
+        -- El origen tambien: una raza que se queda de la prueba anterior deja sus rasgos y sus
+        -- bonos sumandose a los de la nueva.
+        if P.SetRace then P.SetRace(nil, nil) end
+        if P.SetBackground then P.SetBackground(nil) end
+        if P.SetBackgroundVariant then P.SetBackgroundVariant(nil) end
         local perfiles = _G.HarfordDnDPersistStore and _G.HarfordDnDPersistStore.profiles
         local nombre = (UnitName and UnitName("player")) or ""
         local slot = perfiles and perfiles[nombre]
@@ -7281,8 +7286,28 @@ do
         local P, L = Prog(), Libro()
         if not (P and L and P.SetChoiceSlot) then return 0, 0 end
         local puestas, sinOpciones = 0, 0
+
+        -- Rasgos de clase, de raza y de trasfondo, todos por la misma puerta: los tres guardan sus
+        -- elecciones en `choices` y los tres se quedarian a medias si solo se mirara la clase.
+        local aRellenar = {}
         for _, item in ipairs(L.GetUnlockedFeatures(P.GetClassLevels()) or {}) do
-            local f = item.feature
+            aRellenar[#aRellenar + 1] = item.feature
+        end
+        local R = _G.HarfordDnDRaces
+        if R and R.GetRaceTraits then
+            local raza, subraza = P.GetRace()
+            for _, item in ipairs(R.GetRaceTraits(raza, subraza) or {}) do
+                aRellenar[#aRellenar + 1] = item.feature or item
+            end
+        end
+        local B = _G.HarfordDnDBackgrounds
+        if B and B.GetBackgroundTraits then
+            for _, item in ipairs(B.GetBackgroundTraits(P.GetBackground()) or {}) do
+                aRellenar[#aRellenar + 1] = item.feature or item
+            end
+        end
+
+        for _, f in ipairs(aRellenar) do
             -- `GetChoiceOptions`, no `choice.options` en crudo: las elecciones dinamicas
             -- -- Mejora de Caracteristica, Pericia, trucos -- no declaran su lista, la generan
             -- desde los datos. Leyendo el campo pelado se quedaban 18 sin rellenar, 12 de ellas
@@ -7328,6 +7353,85 @@ do
         return puestas, sinOpciones
     end
 
+    -- ─── ORIGEN Y CARACTERISTICAS ───────────────────────────────────────────
+    -- Sin raza no hay rasgos raciales ni bonos, y sin caracteristicas todo se queda a 10: una ficha
+    -- asi no sirve para probar practicamente nada. Se sortean como las elecciones, para que montar
+    -- dos veces la misma clase no de siempre el mismo personaje.
+    local function Barajar(lista)
+        for i = #lista, 2, -1 do
+            local j = math.random(i)
+            lista[i], lista[j] = lista[j], lista[i]
+        end
+        return lista
+    end
+
+    local function OrigenAlAzar()
+        local P = Prog()
+        local R, B = _G.HarfordDnDRaces, _G.HarfordDnDBackgrounds
+        local razaNombre, trasfondoNombre = "?", "?"
+        if R and R.GetRaces and P.SetRace then
+            local razas = R.GetRaces() or {}
+            local elegida = razas[math.random(#razas)]
+            if elegida then
+                -- Subraza al azar entre las suyas; si no tiene, la de por defecto.
+                local sub
+                local subs = elegida.subraces
+                if type(subs) == "table" and #subs > 0 then
+                    sub = subs[math.random(#subs)].id
+                else
+                    sub = R.GetDefaultSubraceId and R.GetDefaultSubraceId(elegida.id) or nil
+                end
+                P.SetRace(elegida.id, sub)
+                razaNombre = tostring(elegida.name or elegida.id)
+                    .. (sub and sub ~= "" and (" / " .. tostring(sub)) or "")
+            end
+        end
+        if B and B.GetBackgrounds and P.SetBackground then
+            local fondos = B.GetBackgrounds() or {}
+            local elegido = fondos[math.random(#fondos)]
+            if elegido then
+                P.SetBackground(elegido.id)
+                trasfondoNombre = tostring(elegido.name or elegido.id)
+                -- La variante tambien: es una eleccion mas del trasfondo y quedaria sin tocar.
+                if P.SetBackgroundVariant then
+                    local vs = elegido.variants
+                    if type(vs) == "table" and #vs > 0 then
+                        local v = vs[math.random(#vs)]
+                        P.SetBackgroundVariant(v.id)
+                        trasfondoNombre = trasfondoNombre .. " (" .. tostring(v.name or v.id) .. ")"
+                    else
+                        P.SetBackgroundVariant(nil)
+                    end
+                end
+            end
+        end
+        return razaNombre, trasfondoNombre
+    end
+
+    -- Reparto estandar, repartido al azar. Es el que usa la mesa y da un personaje jugable, a
+    -- diferencia de tirar 6d6 -- que puede salir inservible y no sirve para probar.
+    local REPARTO = { 15, 14, 13, 12, 10, 8 }
+
+    -- Se HORNEA base + bonos de creacion, igual que hace el asistente: los incrementos de raza y
+    -- trasfondo van a `creationBonus` y no se suman en vivo, asi que sin esto el personaje
+    -- perderia su bono racial. Va DESPUES de fijar raza, trasfondo y sus elecciones, o el motor no
+    -- tendria de donde resolverlos.
+    local function CaracteristicasAlAzar()
+        local D = _G.HarfordDnDData
+        if not (D and D.ABIL and HarfordDnDStore and HarfordDnDStore.SetValue) then return {} end
+        local valores = Barajar({ REPARTO[1], REPARTO[2], REPARTO[3], REPARTO[4], REPARTO[5], REPARTO[6] })
+        local resumen = {}
+        for i, abil in ipairs(D.ABIL) do
+            local base = valores[i] or 10
+            local bono = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetCreationAbilityBonus
+                and HarfordDnDFeatureEffects.GetCreationAbilityBonus(abil.key)) or 0
+            local total = base + (tonumber(bono) or 0)
+            HarfordDnDStore.SetValue(abil.key, total)
+            resumen[#resumen + 1] = string.format("%s %d", tostring(abil.short or abil.key), total)
+        end
+        return resumen
+    end
+
     -- Monta la ficha. Devuelve un resumen, que es lo que hace util el recorrido de `todas`.
     local function Montar(classId, subclassId)
         local P, L = Prog(), Libro()
@@ -7345,7 +7449,11 @@ do
         local umbral = HarfordCharacterXP and HarfordCharacterXP.XP_TABLE
             and HarfordCharacterXP.XP_TABLE[NIVEL]
         if umbral and HarfordCharacterXP.SetXP then HarfordCharacterXP.SetXP(umbral) end
+        local razaNombre, trasfondoNombre = OrigenAlAzar()
         local puestas, sinOpciones = RellenarElecciones()
+        -- Las caracteristicas al final: hornean los bonos de raza y trasfondo, que no existen
+        -- hasta que sus elecciones estan resueltas.
+        local caracteristicas = CaracteristicasAlAzar()
         Refrescar()
 
         local entrada = P.GetClassLevels()[1]
@@ -7368,6 +7476,7 @@ do
         end
         return {
             puestas = puestas, sinOpciones = sinOpciones,
+            raza = razaNombre, trasfondo = trasfondoNombre, caract = caracteristicas,
             classId = classDef.id, className = classDef.name,
             subclassId = entrada and entrada.subclassId or "",
             hitDie = classDef.hitDie,
@@ -7414,6 +7523,9 @@ do
                             and ("|cffffcc00" .. r.pendientes .. " sin resolver|r: "
                                 .. table.concat(r.conEleccion, ", "))
                             or "|cff88ff88lista|r"))
+                    Print(string.format("      %s | %s | %s",
+                        tostring(r.raza), tostring(r.trasfondo),
+                        table.concat(r.caract or {}, " ")))
                 end
             end
             Print(string.format("%d clases, %d fallos, %d elecciones sin resolver.",
@@ -7437,7 +7549,9 @@ do
         Print(string.format("|cff88ff88%s nivel %d|r (%s), d%s, bono de competencia +%s, %d rasgos.",
             tostring(r.className), NIVEL, tostring(r.subclassId), tostring(r.hitDie),
             tostring(r.pb or "?"), r.rasgos))
-        Print(string.format("  %d eleccion(es) rellenadas por defecto; cambialas en el panel.",
+        Print("  Raza: " .. tostring(r.raza) .. "   Trasfondo: " .. tostring(r.trasfondo))
+        Print("  " .. table.concat(r.caract or {}, "  "))
+        Print(string.format("  %d eleccion(es) rellenadas al azar; cambialas en el panel.",
             r.puestas))
         if r.pendientes > 0 then
             Print("  |cffffcc00" .. r.pendientes .. " sin resolver|r (no tienen opciones que elegir): "

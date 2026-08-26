@@ -1576,10 +1576,33 @@ do
     API.Turn = Turn
 end
 
+-- Que duraciones toca cada fase de un bloque. `fase` nil = iniciativa individual, donde el
+-- cierre de un turno es la apertura del siguiente y por eso se mira contra la entrada ANTERIOR.
+-- Devuelve: si toca, y contra quien casar ("actual" o "anterior").
+function API.DurationTicks(duration, fase)
+    local abre = (duration == "target_turn_start" or duration == "source_turn_start")
+    local cierra = (duration == "target_turn_end" or duration == "source_turn_end")
+    if not fase then
+        if abre then return true, "actual" end
+        if cierra then return true, "anterior" end
+        return false
+    end
+    if fase == "inicio" then return abre, abre and "actual" or nil end
+    if fase == "fin" then return cierra, cierra and "actual" or nil end
+    return false
+end
+
+-- Y para la salvacion de fin de turno, que sigue la misma regla.
+function API.EndSaveTicks(fase)
+    if not fase then return true, "anterior" end
+    return fase == "fin", (fase == "fin") and "actual" or nil
+end
+
 function API.OnTurnChanged(entry, serial)
     LoadOwned()
     local turnKey = tostring(serial or 0) .. ":"
-        .. tostring(entry and entry.kind == "bando" and ("bando:" .. tostring(entry.bando))
+        .. tostring(entry and entry.kind == "bando"
+            and ("bando:" .. tostring(entry.bando) .. ":" .. tostring(entry.fase or "inicio"))
             or (entry and (entry.guid or entry.id or entry.name)) or "")
     if S.lastTurnKey == turnKey then return end
     S.lastTurnKey = turnKey
@@ -1592,17 +1615,22 @@ function API.OnTurnChanged(entry, serial)
                 -- Las caches remotas solo informan tiradas; su propietario gestiona duracion y retirada.
             else
             local duration = record.duration
-            local durationMatch = (duration == "target_turn_start" and IdentityMatches(record, entry, "target"))
-                or (duration == "source_turn_start" and IdentityMatches(record, entry, "source"))
-                or (duration == "target_turn_end" and IdentityMatches(record, previous, "target"))
-                or (duration == "source_turn_end" and IdentityMatches(record, previous, "source"))
+            local fase = entry and entry.fase
+            local toca, contra = API.DurationTicks(duration, fase)
+            local quien = (contra == "anterior") and previous or entry
+            local lado = (duration == "source_turn_start" or duration == "source_turn_end")
+                and "source" or "target"
+            local durationMatch = toca and IdentityMatches(record, quien, lado)
             local expire = durationMatch
             if durationMatch and (tonumber(record.turns) or 0) > 0 then
                 record.turns = math.max(0, record.turns - 1)
                 expire = record.turns <= 0
                 if key == "player" then SaveOwned() end
             end
-            if duration == "save_at_turn_end" and IdentityMatches(record, previous, "target") then
+            local salva, salvaContra = API.EndSaveTicks(fase)
+            local tocaSalvacion = salva and IdentityMatches(record,
+                (salvaContra == "anterior") and previous or entry, "target")
+            if duration == "save_at_turn_end" and tocaSalvacion then
                 local saved = ResolveEndSave(key, id, record)
                 if saved == nil then
                     record.pendingEndSave = true

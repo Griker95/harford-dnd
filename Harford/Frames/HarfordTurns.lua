@@ -587,7 +587,7 @@ local function SerializeTurnNotice()
             if e.id and e.id ~= "" then ids[#ids + 1] = tostring(e.id) end
         end
         return table.concat({ "TURNB", tostring(turnSerial or 0), bando,
-            table.concat(ids, ",") }, "|")
+            table.concat(ids, ","), tostring(store.faseBando or "inicio") }, "|")
     end
 
     local index = tonumber(store.activeIndex) or 1
@@ -642,7 +642,7 @@ end
 -- miembros llega por id; se resuelve contra las entradas locales para sacar guid y nombre, que es
 -- con lo que casan los estados. Un id que no exista aqui (foto vieja) simplemente no aporta: se
 -- pierde ese miembro, no se rompe el turno.
-local function EntradaDeBandoRecibida(bando, idsRaw)
+local function EntradaDeBandoRecibida(bando, idsRaw, fase)
     local store = EnsureStore()
     local porId = {}
     for _, e in ipairs(store.entries) do
@@ -660,7 +660,8 @@ local function EntradaDeBandoRecibida(bando, idsRaw)
     return {
         kind = "bando",
         bando = bando,
-        id = "bando:" .. tostring(bando),
+        fase = fase or "inicio",
+        id = "bando:" .. tostring(bando) .. ":" .. tostring(fase or "inicio"),
         name = HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or tostring(bando),
         -- La lista que mando el DM manda sobre lo que opine este cliente.
         miembros = (cuantos > 0) and { guids = guids, nombres = nombres } or nil,
@@ -671,7 +672,8 @@ local function ApplyTurnNotice(message)
     local opcode, serialRaw, activeRaw, countRaw, adminRaw, entryRaw = strsplit("|", message or "")
 
     if opcode == "TURNB" then
-        local bando, idsRaw = activeRaw, countRaw
+        local bando, idsRaw, fase = activeRaw, countRaw, adminRaw
+        fase = (fase == "fin") and "fin" or "inicio"
         local valido = false
         for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do if b == bando then valido = true end end
         if not valido then return false end
@@ -682,12 +684,14 @@ local function ApplyTurnNotice(message)
             if b == bando then store.activeBando = i end
         end
         store.modoBandos = true
-        local entrada = EntradaDeBandoRecibida(bando, idsRaw)
+        store.faseBando = fase
+        local entrada = EntradaDeBandoRecibida(bando, idsRaw, fase)
         TouchStore()
         if RefreshFrame then RefreshFrame() end
-        Print("Turno de " .. tostring(entrada.name) .. ".")
+        Print("|cffffff00" .. (HarfordTurnOrderAPI.FASE_ETIQUETA[fase] or "turno de")
+            .. " " .. tostring(entrada.name) .. "|r")
         AlertTurnChanged(entrada, store.activeBando, serial)
-        AlertMyTurn(entrada, store.activeBando, serial)
+        if fase == "inicio" then AlertMyTurn(entrada, store.activeBando, serial) end
         return true
     end
 
@@ -1716,13 +1720,22 @@ local function AnteriorBandoConGente(desde)
     return nil
 end
 
-local function EntradaDeBando(bando)
+-- Un bloque tiene DOS momentos, no uno. Entre ellos el DM juega a sus criaturas, y ahi es donde
+-- hace falta poder tocar el reparto: lo que se anade con el bloque ya empezado NO participa en el,
+-- porque su inicio ya se resolvio sin ellos y aplicarselo ahora seria contarlo dos veces.
+local function EntradaDeBando(bando, fase)
     return {
         kind = "bando",
         bando = bando,
-        id = "bando:" .. tostring(bando),
+        fase = fase or "inicio",
+        id = "bando:" .. tostring(bando) .. ":" .. tostring(fase or "inicio"),
         name = HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or tostring(bando),
     }
+end
+
+local function AnunciarBando(entrada)
+    Print("|cffffff00" .. (HarfordTurnOrderAPI.FASE_ETIQUETA[entrada.fase] or "turno de")
+        .. " " .. tostring(entrada.name) .. "|r")
 end
 
 local function NextTurn()
@@ -1734,17 +1747,24 @@ local function NextTurn()
 
     if store.modoBandos then
         local actual = tonumber(store.activeBando) or 0
-        local siguiente = SiguienteBandoConGente(actual)
-        if not siguiente then Print("No hay nadie en ningun bando.") return end
-        store.activeBando = siguiente
-        local bando = HarfordTurnOrderAPI.BANDOS[siguiente]
+        local bando, fase
+        -- Si el bloque en curso solo ha empezado, lo siguiente es CERRARLO, no saltar al otro.
+        if actual >= 1 and store.faseBando == "inicio" then
+            bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"
+        else
+            local siguiente = SiguienteBandoConGente(actual)
+            if not siguiente then Print("No hay nadie en ningun bando.") return end
+            store.activeBando = siguiente
+            bando, fase = HarfordTurnOrderAPI.BANDOS[siguiente], "inicio"
+        end
+        store.faseBando = fase
         local turnSerial = AdvanceTurnSerial()
         MarkChanged()
-        local entrada = EntradaDeBando(bando)
-        Print("Turno de " .. tostring(entrada.name) .. ".")
-        AlertRoundStates(entrada, siguiente, turnSerial)
-        AlertTurnChanged(entrada, siguiente, turnSerial)
-        AlertMyTurn(entrada, siguiente, turnSerial)
+        local entrada = EntradaDeBando(bando, fase)
+        AnunciarBando(entrada)
+        AlertTurnChanged(entrada, store.activeBando, turnSerial)
+        -- El aviso de "es tu turno" es solo al EMPEZAR: repetirlo al cerrar seria ruido.
+        if fase == "inicio" then AlertMyTurn(entrada, store.activeBando, turnSerial) end
         SendTurnNotice()
         return
     end
@@ -1770,15 +1790,21 @@ local function PrevTurn()
 
     if store.modoBandos then
         local actual = tonumber(store.activeBando) or 1
-        local anterior = AnteriorBandoConGente(actual)
-        if not anterior then Print("No hay nadie en ningun bando.") return end
-        store.activeBando = anterior
+        local bando, fase
+        if store.faseBando == "fin" then
+            bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "inicio"
+        else
+            local anterior = AnteriorBandoConGente(actual)
+            if not anterior then Print("No hay nadie en ningun bando.") return end
+            store.activeBando = anterior
+            bando, fase = HarfordTurnOrderAPI.BANDOS[anterior], "fin"
+        end
+        store.faseBando = fase
         local turnSerial = AdvanceTurnSerial()
         MarkChanged()
-        local entrada = EntradaDeBando(HarfordTurnOrderAPI.BANDOS[anterior])
-        Print("Turno de " .. tostring(entrada.name) .. ".")
-        AlertTurnChanged(entrada, anterior, turnSerial)
-        AlertMyTurn(entrada, anterior, turnSerial)
+        local entrada = EntradaDeBando(bando, fase)
+        AnunciarBando(entrada)
+        AlertTurnChanged(entrada, store.activeBando, turnSerial)
         SendTurnNotice()
         return
     end
@@ -1821,7 +1847,14 @@ local function AbrirMenuDeBando(entry, ancla)
             i2.text = HarfordTurnOrderAPI.BANDO_ETIQUETA[b] or b
             i2.checked = (b == actual)
             i2.func = function()
+                local vivo = HarfordTurnOrderAPI.GetActiveBando()
                 if HarfordTurnOrderAPI.SetBando(entry, b) then
+                    -- Decir SIEMPRE cuando entra en juego. Meter a alguien en el bloque que se
+                    -- esta jugando y que no le toque nada seria desconcertante sin explicacion.
+                    if vivo == b then
+                        Print("El turno de " .. tostring(HarfordTurnOrderAPI.BANDO_ETIQUETA[b] or b)
+                            .. " ya esta en juego: entra en el proximo asalto.")
+                    end
                     -- Difundir en el acto: si el reparto llegase tarde, el bloque que ya esta en
                     -- juego tocaria con la lista vieja.
                     MarkChanged()
@@ -2215,6 +2248,9 @@ HarfordTurnOrderAPI._turnChangedListeners = HarfordTurnOrderAPI._turnChangedList
 --
 -- El orden es FIJO. Sin tirada: se sabe siempre quien va despues de quien, que en mesa vale mas
 -- que la sorpresa de quien empieza.
+HarfordTurnOrderAPI.FASES = { "inicio", "fin" }
+HarfordTurnOrderAPI.FASE_ETIQUETA = { inicio = "empieza el turno de", fin = "termina el turno de" }
+
 HarfordTurnOrderAPI.BANDOS = { "pjs", "enemigos", "neutrales", "aliados" }
 HarfordTurnOrderAPI.BANDO_ETIQUETA = {
     pjs = "Personajes", enemigos = "Enemigos", neutrales = "Neutrales", aliados = "Aliados",

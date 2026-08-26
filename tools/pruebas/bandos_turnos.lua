@@ -17,7 +17,7 @@ end
 
 -- Se extrae el bloque de bandos: son funciones del API de turnos y el fichero entero necesita WoW.
 local src = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
-local ini = assert(src:find("HarfordTurnOrderAPI.BANDOS = {", 1, true))
+local ini = assert(src:find("HarfordTurnOrderAPI.FASES = {", 1, true))
 local fin = assert(src:find("function HarfordTurnOrderAPI.HasActiveCombat", ini, true))
 local env = { ipairs = ipairs, pairs = pairs, tonumber = tonumber, tostring = tostring,
     type = type, table = table, HarfordTurnOrderAPI = {}, HarfordTurnOrderStore = nil }
@@ -130,11 +130,11 @@ chk("sin nadie en ningun bando, no hay siguiente", tostring(Siguiente(0)), "nil"
 -- La entrada del turno es SINTETICA: representa al bloque, no a una criatura. Asi el aviso que ya
 -- recorre a todos los clientes sirve sin cambiar el protocolo.
 print("El turno se anuncia con una entrada de bando")
-local e = Entrada("enemigos")
+local e = Entrada("enemigos", "inicio")
 chk("se distingue de un combatiente", e.kind, "bando")
 chk("dice de que bando es", e.bando, "enemigos")
 chk("y se llama como la mesa lo llama", e.name, "Enemigos")
-chk("con id propio para no chocar con nadie", e.id, "bando:enemigos")
+chk("con id propio para no chocar con nadie", e.id, "bando:enemigos:inicio")
 
 -- El bloque de los PJs es de todos los jugadores: cada uno tiene que ver su aviso de turno.
 local turnos = src
@@ -149,7 +149,7 @@ chk("retroceder tambien va por bloques",
 local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
 print("Cada bloque cuenta como un turno distinto")
 chk("la clave de turno marca el bando",
-    cond:find('("bando:" .. tostring(entry.bando))', 1, true) ~= nil, true)
+    cond:find('("bando:" .. tostring(entry.bando) .. ":"', 1, true) ~= nil, true)
 chk("y un turno de bando casa con cualquiera de sus miembros",
     cond:find('if tostring(entry.kind or "") == "bando" then', 1, true) ~= nil, true)
 
@@ -183,5 +183,65 @@ print("La lista del DM manda sobre la del cliente")
 chk("el motor la prefiere", cond:find("if entry.miembros then", 1, true) ~= nil, true)
 chk("y solo cae a la suya si no llega",
     cond:find("guids, nombres = MiembrosDeBando(entry.bando)", 1, true) ~= nil, true)
+
+-- ─── INICIO Y FINAL DE BLOQUE ───────────────────────────────────────────────
+-- Un bloque tiene dos momentos. Entre ellos el DM juega a sus criaturas, y ese hueco es justo
+-- donde hace falta poder tocar el reparto.
+print("Cada bloque abre y cierra")
+chk("hay dos fases", #T.FASES, 2)
+chk("primero abre", T.FASES[1], "inicio")
+chk("y luego cierra", T.FASES[2], "fin")
+local cierre = Entrada("enemigos", "fin")
+chk("el cierre se distingue del inicio", cierre.id ~= e.id, true)
+chk("y lo dice", cierre.fase, "fin")
+chk("con texto distinto", T.FASE_ETIQUETA.fin, "termina el turno de")
+
+-- Sin esto, el cierre de un bloque tendria la misma clave que su apertura y el motor lo tomaria
+-- por repetido: no bajaria ningun contador de fin de turno.
+print("El motor separa las dos fases")
+chk("la clave de turno lleva la fase",
+    cond:find('.. ":" .. tostring(entry.fase or "inicio")', 1, true) ~= nil, true)
+-- Se EJECUTA la decision, no se busca su texto: la version anterior de esta prueba solo miraba que
+-- estuviera escrita y no cazo una mutacion que hacia disparar lo de inicio tambien al cerrar.
+local ini = assert(cond:find("function API.DurationTicks", 1, true))
+local fin2 = assert(cond:find("function API.OnTurnChanged", ini, true))
+local trozoD = cond:sub(ini, fin2 - 1) .. " return API"
+local entorno = { API = {}, tostring = tostring, type = type }
+local d
+if setfenv then d = assert(cargar(trozoD)); setfenv(d, entorno)
+else d = assert(cargar(trozoD, "t", "t", entorno)) end
+local D = d()
+
+chk("al ABRIR toca lo de inicio", (D.DurationTicks("target_turn_start", "inicio")), true)
+chk("y NO lo de fin", (D.DurationTicks("target_turn_end", "inicio")), false)
+chk("al CERRAR toca lo de fin", (D.DurationTicks("target_turn_end", "fin")), true)
+chk("y NO lo de inicio", (D.DurationTicks("target_turn_start", "fin")), false)
+chk("lo del origen sigue la misma regla", (D.DurationTicks("source_turn_end", "fin")), true)
+chk("una duracion ajena no toca nunca", (D.DurationTicks("rounds", "inicio")), false)
+-- La iniciativa individual NO tiene fases y sigue con el truco de siempre: el final de un turno es
+-- la apertura del siguiente, y por eso casa contra la entrada ANTERIOR.
+local toca, contra = D.DurationTicks("target_turn_end", nil)
+chk("sin fases, el fin sigue tocando", toca, true)
+chk("pero contra el turno anterior", contra, "anterior")
+local _, contra2 = D.DurationTicks("target_turn_start", nil)
+chk("y el inicio contra el actual", contra2, "actual")
+chk("con fases, el fin casa contra el bando actual",
+    select(2, D.DurationTicks("target_turn_end", "fin")), "actual")
+-- La salvacion de fin de turno sigue la misma regla.
+chk("la salvacion de fin solo al cerrar", (D.EndSaveTicks("fin")), true)
+chk("nunca al abrir", (D.EndSaveTicks("inicio")), false)
+chk("y sin fases, contra el anterior", select(2, D.EndSaveTicks(nil)), "anterior")
+
+print("El avance pasa por las dos y avisa al tocar un bloque vivo")
+chk("cerrar antes de saltar",
+    turnos:find('bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"', 1, true) ~= nil, true)
+chk("la fase viaja en el anuncio",
+    turnos:find('tostring(store.faseBando or "inicio") }, "|")', 1, true) ~= nil, true)
+chk("y va la ultima, para no descuadrar el formato anterior",
+    turnos:find('table.concat(ids, ","), tostring(store.faseBando', 1, true) ~= nil, true)
+chk("solo se avisa de turno propio al abrir",
+    turnos:find('if fase == "inicio" then AlertMyTurn', 1, true) ~= nil, true)
+chk("y se avisa si el bloque tocado ya esta en juego",
+    turnos:find("ya esta en juego: entra en el proximo asalto", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

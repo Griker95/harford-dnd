@@ -47,17 +47,32 @@ end
 
 -- ¿Este contrato reparte algo compartido (XP o reputacion)? El oro y los objetos NO cuentan: son
 -- individuales de quien entrega en el NPC.
+-- Una entrada de reputacion solo reparte si trae faccion Y cantidad: es EXACTAMENTE lo que exige
+-- el bucle de `HarfordQuests.ClaimRewards`, que se salta las demas. Cualquier prueba mas laxa
+-- enciende un boton que no se puede completar nunca.
+local function RepValida(rp)
+    return type(rp) == "table"
+        and (rp.faction or rp.factionId) ~= nil
+        and (tonumber(rp.amount) or 0) ~= 0
+end
+
+-- Las reputaciones que de verdad se pueden conceder. Fuente UNICA: antes habia tres pruebas
+-- distintas repartidas -- `HasShared`, `ClaimShared` y el bucle de concesion -- y divergian.
+function TC.Rewards.SharedReps(contract)
+    if type(contract) ~= "table" then return nil end
+    local fuera = {}
+    for _, rp in ipairs((type(contract.rewardReps) == "table" and contract.rewardReps) or {}) do
+        if RepValida(rp) then fuera[#fuera + 1] = rp end
+    end
+    if RepValida(contract.rewardRep) then fuera[#fuera + 1] = contract.rewardRep end
+    return (#fuera > 0) and fuera or nil
+end
+
 function TC.Rewards.HasShared(contract)
     if type(contract) ~= "table" then return false end
-    -- Cero XP no es una recompensa: con `~= nil` bastaba con que el campo existiera, y el boton
-    -- se quedaba encendido reclamando algo que nunca se podia marcar como cobrado.
+    -- Cero XP no es una recompensa: con `~= nil` bastaba con que el campo existiera.
     local xp = (tonumber(contract.rewardXP) or 0) > 0
-    local reps = type(contract.rewardReps) == "table" and #contract.rewardReps > 0
-    -- Una tabla de reputacion sin faccion ni cantidad tampoco reparte nada.
-    local rep = type(contract.rewardRep) == "table"
-        and (contract.rewardRep.faction or contract.rewardRep.factionId) ~= nil
-        and (tonumber(contract.rewardRep.amount) or 0) ~= 0
-    return xp or reps or rep
+    return xp or (TC.Rewards.SharedReps(contract) ~= nil)
 end
 
 -- ¿Ya lo cobro ESTE personaje? Se consultan las DOS claves: la actual y la heredada. Mirar solo
@@ -82,9 +97,9 @@ end
 function TC.Rewards.ClaimShared(contract)
     if not (HarfordQuests and HarfordQuests.ClaimRewards) then return false end
     if type(contract) ~= "table" or contract.status ~= "completed" or contract.worldNpc then return false end
-    local reps = (type(contract.rewardReps) == "table" and #contract.rewardReps > 0 and contract.rewardReps) or nil
-    local rep = type(contract.rewardRep) == "table" and contract.rewardRep or nil
-    if not (tonumber(contract.rewardXP) or reps or rep) then return false end
+    -- La MISMA prueba que `HasShared`: si divergen, el boton se enciende y esto lo rechaza, o al
+    -- reves. Ya paso.
+    if not TC.Rewards.HasShared(contract) then return false end
     -- Cortafuegos del recibo heredado: si se cobro con la clave antigua, no se concede otra vez.
     -- `ClaimRewards` no puede saberlo, porque su recibo va por la clave que se le pasa.
     if HarfordQuests.IsSharedRewardsClaimed
@@ -93,7 +108,9 @@ function TC.Rewards.ClaimShared(contract)
     end
     return HarfordQuests.ClaimRewards({
         id = TC.Rewards.SharedKey(contract),
-        reward = { xp = tonumber(contract.rewardXP), rep = rep, reps = reps },
+        -- La lista ya FILTRADA: se manda solo lo que `ClaimRewards` puede conceder, y asi el
+        -- recibo cuadra con lo concedido. `rep` va dentro de `reps`, no aparte.
+        reward = { xp = tonumber(contract.rewardXP), reps = TC.Rewards.SharedReps(contract) },
     }) and true or false
 end
 

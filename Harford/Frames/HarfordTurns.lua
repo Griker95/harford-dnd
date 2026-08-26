@@ -593,8 +593,15 @@ local function SerializeState()
     end
     -- El tercer campo llevaba vacio desde siempre; ahora lleva el modo. Un receptor antiguo lo
     -- ignora y sigue leyendo las entradas del cuarto, que es donde ya las buscaba.
+    -- El tercer campo llevaba vacio desde siempre; ahora lleva el modo Y donde va la rotacion.
+    -- Sin la posicion, un DM que recibe la foto sin haber visto un TURNB arranca de cero.
+    local modo = ""
+    if store.modoBandos then
+        modo = table.concat({ "B", tostring(store.activeBando or 0),
+            tostring(store.faseBando or "inicio"), tostring(store.asalto or 0) }, ",")
+    end
     return "STATE|" .. tostring(store.activeIndex or 1) .. "|"
-        .. (store.modoBandos and "B" or "") .. "|" .. table.concat(parts, ";")
+        .. modo .. "|" .. table.concat(parts, ";")
 end
 
 local function SerializeTurnNotice()
@@ -768,7 +775,17 @@ local function ApplySerializedState(message)
     store.activeIndex = SafeNumber(activeRaw, 1)
     -- Solo se acepta la marca si viene en el hueco del modo Y hay un cuarto campo: en el formato
     -- viejo las entradas iban en el tercero y una que empezara por "B" se tomaria por el modo.
-    if fourth then store.modoBandos = (third == "B") or nil end
+    if fourth then
+        local marca, bando, fase, asalto = strsplit(",", tostring(third or ""))
+        if marca == "B" then
+            store.modoBandos = true
+            store.activeBando = tonumber(bando)
+            store.faseBando = (fase == "fin") and "fin" or "inicio"
+            store.asalto = tonumber(asalto) or 0
+        else
+            store.modoBandos = nil
+        end
+    end
     local entriesRaw = fourth or third
     if entriesRaw and entriesRaw ~= "" then
         for token in string.gmatch(entriesRaw, "[^;]+") do
@@ -2181,8 +2198,8 @@ local function CreateTurnFrame()
             Print(activo
                 and "Iniciativa por BANDOS: el turno pasa de bloque a bloque."
                 or "Iniciativa individual: el turno pasa de criatura a criatura.")
+            -- `MarkChanged` repinta la ventana, y el repintado ya actualiza este boton.
             MarkChanged()
-            if TurnFrame.RefreshModoBandos then TurnFrame.RefreshModoBandos() end
         end)
     -- El estado se lee del almacen en cada refresco: viaja en la foto, asi que puede cambiarlo
     -- otro DM y este cliente tiene que enterarse.
@@ -2201,6 +2218,9 @@ local function CreateTurnFrame()
 
     local editButton = MakeButton(TurnFrame, "Editar", 58, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 16, -206, ToggleEditMode)
     TurnFrame.editButton = editButton
+    -- Con el resto de controles de admin: si no, un jugador normal ve un boton suelto flotando
+    -- en una ventana sin controles, y al pulsarlo solo le dicen que no puede.
+    tinsert(TurnFrame.adminControls, btnBandos)
     tinsert(TurnFrame.adminControls, targetButton)
     tinsert(TurnFrame.adminControls, btnAliado)
     tinsert(TurnFrame.adminControls, btnNeutral)

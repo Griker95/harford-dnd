@@ -1136,11 +1136,20 @@ end
 -- apuntado en su cola y no pasa nada: es mejor que se pierda un comando a que se pierda el turno.
 local function NombreDelLider()
     if not (IsInGroup and IsInGroup()) then return nil end
+    -- Si el lider soy YO no hay a quien delegar: mandarmelo a mi mismo se pierde, porque el
+    -- receptor lo rechaza si no puede emitirlo. Mejor decirlo que fingir que se envio.
+    if UnitIsGroupLeader and UnitIsGroupLeader("player") then return nil end
+    -- `party1..N` NO incluye tu unidad y `GetNumGroupMembers` te cuenta a ti, asi que en party se
+    -- recorre uno de menos; en raid `raid1..N` si te incluye y hay que saltarse el propio.
     local n = GetNumGroupMembers and GetNumGroupMembers() or 0
-    local prefijo = (IsInRaid and IsInRaid()) and "raid" or "party"
-    for i = 1, n do
+    local enRaid = IsInRaid and IsInRaid()
+    local prefijo = enRaid and "raid" or "party"
+    local tope = enRaid and n or (n - 1)
+    for i = 1, tope do
         local u = prefijo .. i
-        if UnitExists and UnitExists(u) and UnitIsGroupLeader and UnitIsGroupLeader(u) then
+        if UnitExists and UnitExists(u)
+            and not (UnitIsUnit and UnitIsUnit(u, "player"))
+            and UnitIsGroupLeader and UnitIsGroupLeader(u) then
             return HarfordClassColors.UnitFullName(u)
         end
     end
@@ -2130,10 +2139,18 @@ function API.CacheStateList(guid, name, estados, sender)
             -- sigue puesta se conserva lo que ya se sabia y la foto no lleva -- salvacion
             -- pendiente, variables sueltas --, o cada sincronizacion la dejaria mas pobre.
             local antes = previoBucket[e.id]
-            local vars = antes and antes.vars or nil
-            if (tonumber(e.contador) or 0) > 0 then
+            -- COPIA, no referencia: escribir sobre la tabla del registro anterior mutaba algo que
+            -- otros podian seguir mirando.
+            local vars
+            if antes and type(antes.vars) == "table" then
+                vars = {}
+                for k, v in pairs(antes.vars) do vars[k] = v end
+            end
+            -- El contador se escribe SIEMPRE, tambien a cero: la foto manda, y con `> 0` un
+            -- contador que bajaba a cero conservaba el valor viejo para siempre.
+            if e.contador ~= nil then
                 vars = vars or {}
-                vars.contador = e.contador
+                vars.contador = tonumber(e.contador) or 0
             end
             bucket[e.id] = {
                 id = e.id, duration = e.duration, turns = e.turns, level = e.level,

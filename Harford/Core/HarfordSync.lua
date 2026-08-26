@@ -245,6 +245,18 @@ end
 
 -- La respuesta lleva TODOS los estados de golpe: `id:duracion:turnos,id:...`. Un mensaje por
 -- estado multiplicaria el trafico por nada, y la lista completa cabe de sobra en un envio.
+-- Un nombre de origen con `:` o `,` partia la entrada en trozos que no son. Se escapan los tres
+-- caracteres que estructuran el mensaje, y el `%` primero para no re-escapar los que se anaden.
+local function EscaparCampo(texto)
+    return (tostring(texto or ""):gsub("%%", "%%25"):gsub(":", "%%3A"):gsub(",", "%%2C"))
+end
+
+local function DesescaparCampo(texto)
+    return (tostring(texto or ""):gsub("%%3A", ":"):gsub("%%2C", ","):gsub("%%25", "%%"))
+end
+
+HarfordSync.MAX_CONDLIST_BYTES = 240
+
 function HarfordSync.SerializeConditionList(targetGuid, targetName, estados)
     local partes = {}
     for _, e in ipairs(estados or {}) do
@@ -256,12 +268,25 @@ function HarfordSync.SerializeConditionList(targetGuid, targetName, estados)
             tostring(e.duration or "manual"),
             tostring(math.floor(tonumber(e.turns) or 0)),
             tostring(math.floor(tonumber(e.level) or 0)),
-            tostring(e.sourceName or ""),
+            EscaparCampo(e.sourceName),
             tostring(math.floor(tonumber(e.contador) or 0)),
         }, ":")
     end
-    return table.concat({ "DNDCONDALL", tostring(targetGuid or ""),
-        tostring(targetName or ""), table.concat(partes, ",") }, "|")
+    -- Se recorta por el FINAL hasta que cabe, en vez de dejar que se pierda el mensaje entero:
+    -- una lista incompleta es peor que una completa, pero mucho mejor que ninguna.
+    local function Montar(n)
+        local trozo = {}
+        for i = 1, n do trozo[i] = partes[i] end
+        return table.concat({ "DNDCONDALL", tostring(targetGuid or ""),
+            tostring(targetName or ""), table.concat(trozo, ",") }, "|")
+    end
+    local cuantos = #partes
+    local payload = Montar(cuantos)
+    while cuantos > 0 and #payload > HarfordSync.MAX_CONDLIST_BYTES do
+        cuantos = cuantos - 1
+        payload = Montar(cuantos)
+    end
+    return payload, cuantos < #partes
 end
 
 function HarfordSync.DeserializeConditionList(message)
@@ -270,6 +295,7 @@ function HarfordSync.DeserializeConditionList(message)
     local fuera = {}
     for trozo in tostring(lista or ""):gmatch("[^,]+") do
         local id, duracion, turnos, nivel, origen, contador = strsplit(":", trozo)
+        origen = DesescaparCampo(origen)
         if id and id ~= "" then
             fuera[#fuera + 1] = {
                 id = id,
@@ -286,8 +312,9 @@ end
 
 function HarfordSync.SendConditionList(prefix, target, targetGuid, targetName, estados)
     if not target or target == "" then return false end
-    return HarfordSync.Send(prefix,
-        HarfordSync.SerializeConditionList(targetGuid, targetName, estados), "WHISPER", target)
+    local payload, recortado = HarfordSync.SerializeConditionList(targetGuid, targetName, estados)
+    local ok, err = HarfordSync.Send(prefix, payload, "WHISPER", target)
+    return ok, err, recortado
 end
 
 -- PETICION DE ESTADOS DE NPC (DNDCONDNPCREQ)

@@ -315,12 +315,16 @@ chk("hay boton", turnos:find('MakeButton(TurnFrame, "Bandos"', 1, true) ~= nil, 
 chk("que lo enciende de verdad", turnos:find("HarfordTurnOrderAPI.SetModoBandos(activo)", 1, true) ~= nil, true)
 chk("solo el admin", turnos:find("Solo el admin cambia el modo de turnos", 1, true) ~= nil, true)
 -- Media mesa por bandos y media por criatura serian dos combates distintos a la vez.
-chk("el modo viaja en la foto",
-    turnos:find('(store.modoBandos and "B" or "")', 1, true) ~= nil, true)
+chk("el modo viaja en la foto", turnos:find('modo = table.concat({ "B",', 1, true) ~= nil, true)
+-- Y DONDE va la rotacion: sin la posicion, un DM que recibe la foto sin haber visto un TURNB
+-- arranca de cero, anuncia "Asalto 1" en mitad del quinto y devuelve el turno a los PJs.
+chk("con el bando, la fase y el asalto",
+    turnos:find("store.faseBando or \"inicio\"), tostring(store.asalto or 0) }", 1, true) ~= nil, true)
 -- El hueco del medio llevaba vacio desde siempre; un receptor antiguo lo ignora y sigue leyendo
 -- las entradas del cuarto campo, que es donde ya las buscaba.
 chk("y solo se acepta si hay cuarto campo",
-    turnos:find('if fourth then store.modoBandos = (third == "B") or nil end', 1, true) ~= nil, true)
+    turnos:find('local marca, bando, fase, asalto = strsplit(",", tostring(third or ""))', 1, true) ~= nil, true)
+chk("con marca reconocible", turnos:find('if marca == "B" then', 1, true) ~= nil, true)
 
 -- El GUID de una entrada vive en `id`; `guid` no existe. Cuatro sitios lo leian, y dos eran
 -- guardias: la delegacion de efectos no aceptaba NADA y no se informaba de ningun NPC.

@@ -194,4 +194,38 @@ chk("pero acaba contestando igual",
 chk("estando solo se cuenta como lider",
     cond:find("if not (IsInGroup and IsInGroup()) then return true end", 1, true) ~= nil, true)
 
+-- ─── LA LISTA NO SE PIERDE NI SE PARTE MAL ──────────────────────────────────
+-- `Send` no mide nada: por encima de 255 bytes CTL lanza error y el envio directo lo descarta
+-- callado. Una lista larga se perdia ENTERA y quien pregunto no recibia nada -- ni siquiera una
+-- parte. Y `sourceName` iba entre `:` dentro de una lista unida por `,` sin escapar.
+print("Un nombre con separadores no rompe el parseo")
+local conRaros = S.SerializeConditionList("Creature-1", "Ogro", {
+    { id = "prone", duration = "manual", turns = 0, level = 0,
+      sourceName = "Ana:Bea,Cid", contador = 2 },
+})
+local _, _, leidos = S.DeserializeConditionList(conRaros)
+chk("el origen vuelve entero", leidos[1] and leidos[1].sourceName, "Ana:Bea,Cid")
+chk("y no parte la entrada en trozos", #leidos, 1)
+chk("el contador tambien", leidos[1] and leidos[1].contador, 2)
+
+print("Una lista larga se recorta en vez de perderse")
+local muchos = {}
+for i = 1, 30 do
+    muchos[i] = { id = "prone", duration = "target_turn_start", turns = 3, level = 0,
+                  sourceName = "NombreLargoDeJugador" .. i, contador = i }
+end
+local payload, recortado = S.SerializeConditionList("Creature-0-1234-5678-90123-45678-000012ABCD",
+    "Un NPC con nombre largo", muchos)
+chk("cabe en el limite", #payload <= S.MAX_CONDLIST_BYTES, true)
+chk("y avisa de que recorto", recortado, true)
+-- Lo que queda tiene que seguir siendo legible: recortar por el final, no por la mitad de una
+-- entrada.
+local _, _, parciales = S.DeserializeConditionList(payload)
+chk("lo que queda se lee", #parciales > 0, true)
+chk("y cada entrada esta completa", parciales[1] and parciales[1].id, "prone")
+-- Una lista corta no se toca.
+local corta = { { id = "prone", duration = "manual", turns = 0, level = 0 } }
+local p2, r2 = S.SerializeConditionList("g", "n", corta)
+chk("una lista corta no se recorta", tostring(r2), "false")
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

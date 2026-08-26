@@ -290,7 +290,7 @@ function API.BuildSections(data)
     -- Brujo elige Maldiciones a nivel 2 y otra mas a nivel 6).
     local opcionesElegidas = {}
     for _, seleccion in pairs(data.choices or {}) do
-        for _, optId in ipairs(seleccion or {}) do opcionesElegidas[tostring(optId)] = true end
+        for _, optId in pairs(seleccion or {}) do opcionesElegidas[tostring(optId)] = true end
     end
     local function OpcionConcedida(feature)
         local req = feature and feature.requiresOption

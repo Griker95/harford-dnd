@@ -436,7 +436,7 @@ end
 local function OpcionesElegidasDelDraft(draft)
     local elegidas = {}
     for _, seleccion in pairs((draft and draft.choices) or {}) do
-        for _, optId in ipairs(seleccion or {}) do elegidas[tostring(optId)] = true end
+        for _, optId in pairs(seleccion or {}) do elegidas[tostring(optId)] = true end
     end
     return elegidas
 end
@@ -540,7 +540,7 @@ local function BuildMagicFrames(profileName, idsRaciales)
             local data = (HarfordDnDProgression and HarfordDnDProgression.Get
                 and HarfordDnDProgression.Get(profileName)) or {}
             for _, seleccion in pairs(data.choices or {}) do
-                for _, optId in ipairs(seleccion or {}) do opcionesElegidas[tostring(optId)] = true end
+                for _, optId in pairs(seleccion or {}) do opcionesElegidas[tostring(optId)] = true end
             end
         end
         return opcionesElegidas[tostring(optionId)] == true

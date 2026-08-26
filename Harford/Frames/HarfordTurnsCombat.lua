@@ -56,8 +56,12 @@ local function LocalInitiativeBonus(entry)
         and HarfordClassColors.FindUnitByName(entry.unitName)
     if unit and HarfordTRP3 and HarfordTRP3.GetNPCStatBlock then
         local stats = HarfordTRP3.GetNPCStatBlock(unit)
-        local dex = stats and stats.abilities and stats.abilities.Destreza
-        if dex then return math.floor(((tonumber(dex.value) or 10) - 10) / 2) end
+        -- El stat block trae claves en INGLES y cada una es `{ score, mod }`. El modificador ya
+        -- viene calculado; recalcularlo desde `score` seria repetir la cuenta del parser.
+        local dex = stats and stats.stats and stats.stats.dexterity
+        if dex then
+            return math.floor(tonumber(dex.mod) or ((tonumber(dex.score) or 10) - 10) / 2)
+        end
     end
     return 0
 end
@@ -82,7 +86,8 @@ local function ApplyInitiativeReply(message, sender)
     local opcode, entryId, valueRaw = strsplit("|", message or "")
     if opcode ~= "INITRES" then return false end
     if not IsTurnAdmin() then return false end
-    local valor = SafeNumber(valueRaw, nil)
+    -- OJO: `SafeNumber(x, nil)` devuelve 0, no nil (`default or 0`). Hay que mirar el crudo.
+    local valor = tonumber(valueRaw)
     if not valor then return false end
     local store = EnsureStore()
     for _, entry in ipairs(store.entries) do

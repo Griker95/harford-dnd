@@ -538,14 +538,21 @@ local function ReevaluatePositionResponses(session)
         if IsPositionAffected(session.geometry, position, AreaCenter(session.geometry, scan.origin, aim), aim) then
             if AddTargetFromPosition(session, position, "Auto") then added = added + 1 end
         else
+            -- Se guarda tambien el NUMERO: `distancia` es texto ya formateado ("4,2 / 9,8 m")
+            -- y ordenar por el pone "10,1" antes que "4,2".
+            local metros = AreaDistanceInfo(session.geometry, position, scan.origin, aim)
             session.outside[#session.outside + 1] = {
                 name = position.name ~= "" and position.name or "Jugador",
                 distancia = AreaDistanceText(session.geometry, position, scan.origin, aim),
+                metros = tonumber(metros) or 0,
             }
         end
     end
     -- Del mas cerca al mas lejos: el que casi entra es el que interesa mirar.
-    table.sort(session.outside, function(a, b) return tostring(a.distancia) < tostring(b.distancia) end)
+    -- Por DISTANCIA, no por el texto ya formateado: en texto, "10,1" va antes que "4,2".
+    table.sort(session.outside, function(a, b)
+        return (tonumber(a.metros) or 0) < (tonumber(b.metros) or 0)
+    end)
     return added
 end
 

@@ -149,8 +149,13 @@ chk("sin combate montado, NO", EsNpc("Creature-0-1-2-3-4-5"), false)
 print("Un NPC limpio tambien se informa")
 chk("se manda aunque no lleve nada",
     cond:find("HarfordSync.SendConditionList(PREFIX, target, guid", 1, true) ~= nil, true)
-chk("y solo contesta el DM",
-    cond:find("HarfordAuthority.CanUseDMTools()) then", 1, true) ~= nil, true)
+-- El core NO decide si eres DM: expone un callback y HarfordAdmin lo sustituye. Es la regla de
+-- CLAUDE.md, y ademas hace que sin Admin cargado no conteste nadie, que es lo correcto.
+chk("y solo contesta quien pueda", cond:find("if not API.CanAnswerNpcStates() then", 1, true) ~= nil, true)
+chk("por defecto, nadie", cond:find("function API.CanAnswerNpcStates()", 1, true) ~= nil, true)
+local admin = io.open("HarfordAdmin/HarfordAdminConditions.lua"):read("*a")
+chk("y es HarfordAdmin quien lo abre",
+    admin:find("HarfordDnDConditions.CanAnswerNpcStates = function()", 1, true) ~= nil, true)
 
 -- ─── VARIOS DMs: MANDA EL LIDER ─────────────────────────────────────────────
 -- Puede haber dos o mas DMs, pero el principal suele ser el lider del grupo. Sin desempate los dos

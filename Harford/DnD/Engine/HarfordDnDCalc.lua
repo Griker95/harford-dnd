@@ -121,6 +121,11 @@ function HarfordDnDCalc.HasWeaponProficiency(def)
     -- Por nombre: el libro declara competencias sueltas ("espadas cortas", "hacha de mano").
     local nombre = tostring(def.key or "")
     if nombre ~= "" and FE.HasWeaponProf(nombre) then return true end
+    -- Solo se NIEGA la competencia cuando la categoria tiene una clave declarable y el personaje
+    -- no la tiene. `Racial`, `Especial`, `Otros` y las formas del Druida no se declaran por
+    -- categoria en ninguna parte: negarles el bono lo quitaba sin que nada lo dijera, y antes de
+    -- esta funcion el bono era incondicional.
+    if not claveCat then return true end
     return false
 end
 

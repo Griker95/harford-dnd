@@ -145,3 +145,18 @@ events:SetScript("OnEvent", function()
     end
     pendingRemovals[guid] = nil
 end)
+
+-- Informar de los estados de un NPC a quien acaba de entrar es cosa del DM: es quien los aplico y
+-- quien tiene los registros con autoridad. El core expone el callback y aqui se sustituye, en vez
+-- de meterle un `IsDMMode()` al core.
+do
+    local ev = CreateFrame("Frame")
+    ev:RegisterEvent("PLAYER_LOGIN")
+    ev:SetScript("OnEvent", function()
+        if not HarfordDnDConditions then return end
+        HarfordDnDConditions.CanAnswerNpcStates = function()
+            return HarfordAuthority and HarfordAuthority.CanUseDMTools
+                and HarfordAuthority.CanUseDMTools() == true
+        end
+    end)
+end

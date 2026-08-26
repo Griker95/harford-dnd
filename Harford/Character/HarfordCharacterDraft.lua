@@ -165,7 +165,7 @@ local function PersistSpellPicks(draft)
         -- el filtro va aqui, sobre las elecciones del draft.
         local elegidas = {}
         for _, seleccion in pairs((draft and draft.choices) or {}) do
-            for _, optId in ipairs(seleccion or {}) do elegidas[tostring(optId)] = true end
+            for _, optId in pairs(seleccion or {}) do elegidas[tostring(optId)] = true end
         end
         for _, item in ipairs(HarfordDnDBook.GetUnlockedFeatures((draft and draft.classes) or {}) or {}) do
             local feature = item and item.feature

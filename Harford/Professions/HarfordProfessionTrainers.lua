@@ -482,7 +482,10 @@ function API.Purchase(trainerId, recipeId, callback)
     end
 
     if compraEnVuelo then
-        Finish(false, "Espera a que termine la compra anterior", nil)
+        -- NO se usa `Finish`: limpia `compraEnVuelo`, y aqui esa marca es de la compra que sigue
+        -- viva. Borrarla dejaba pasar el siguiente clic y se cobraba dos veces.
+        callbackDone = true
+        callback(false, "Espera a que termine la compra anterior", nil)
         return false, "Hay una compra en curso"
     end
 

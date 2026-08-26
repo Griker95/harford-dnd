@@ -1834,12 +1834,17 @@ API.RETRASO_DM_SECUNDARIO = 3
 
 -- Contestar. Solo el DM: es quien aplico esos estados y quien tiene los registros con autoridad.
 -- Un DM que NO es lider espera antes de responder, para dejar contestar primero al principal.
+-- Quien puede informar de los estados de un NPC. Por defecto NADIE: el core no decide si eres DM
+-- -- eso vive en HarfordAdmin, que sobrescribe esto en su PLAYER_LOGIN, igual que con
+-- `HarfordTRP3.InsertGlanceLink`. Sin Admin cargado no se contesta, que es lo correcto: los
+-- registros con autoridad sobre NPC los tiene el DM.
+function API.CanAnswerNpcStates()
+    return false
+end
+
 function API.SendNpcStatesTo(target, yaEsperado)
     if not (target and target ~= "") then return false end
-    if not (HarfordAuthority and HarfordAuthority.CanUseDMTools
-        and HarfordAuthority.CanUseDMTools()) then
-        return false
-    end
+    if not API.CanAnswerNpcStates() then return false end
     if not (yaEsperado or SoyElLider()) then
         -- No se descarta: si el lider no es DM, nadie contestaria y quien entra se queda a ciegas.
         if C_Timer and C_Timer.After then

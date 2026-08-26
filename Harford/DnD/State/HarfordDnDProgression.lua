@@ -1082,12 +1082,12 @@ end
 -- Espacios de pacto gastados. Un solo numero por perfil: el pacto concede todas sus ranuras al
 -- mismo nivel, asi que no hace falta desglosarlo por nivel como los normales.
 function API.GetPactSpent(profileName)
-    local data = EnsureProgression(profileName)
+    local data = API.Get(profileName)
     return math.max(0, math.floor(tonumber(data.pactSpent) or 0))
 end
 
 function API.SetPactSpent(spent, profileName)
-    local data = EnsureProgression(profileName)
+    local data = API.Get(profileName)
     spent = math.max(0, math.floor(tonumber(spent) or 0))
     -- El 0 no se persiste, igual que el resto de contadores: no engordar SavedVariables.
     data.pactSpent = spent > 0 and spent or nil

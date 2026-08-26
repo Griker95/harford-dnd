@@ -248,11 +248,15 @@ end
 -- Un nombre de origen con `:` o `,` partia la entrada en trozos que no son. Se escapan los tres
 -- caracteres que estructuran el mensaje, y el `%` primero para no re-escapar los que se anaden.
 local function EscaparCampo(texto)
-    return (tostring(texto or ""):gsub("%%", "%%25"):gsub(":", "%%3A"):gsub(",", "%%2C"))
+    -- Tambien `|`: es el separador de campos del propio mensaje, y un nombre con un `|c` de color
+    -- -- comunes en TRP3 -- cortaba la lista y se perdian todos los estados posteriores.
+    return (tostring(texto or ""):gsub("%%", "%%25"):gsub(":", "%%3A")
+        :gsub(",", "%%2C"):gsub("|", "%%7C"))
 end
 
 local function DesescaparCampo(texto)
-    return (tostring(texto or ""):gsub("%%3A", ":"):gsub("%%2C", ","):gsub("%%25", "%%"))
+    return (tostring(texto or ""):gsub("%%7C", "|"):gsub("%%3A", ":")
+        :gsub("%%2C", ","):gsub("%%25", "%%"))
 end
 
 HarfordSync.MAX_CONDLIST_BYTES = 240

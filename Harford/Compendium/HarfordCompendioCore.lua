@@ -742,11 +742,13 @@ function API.BuildAreaDefinition(spell, options)
     -- una condicion se la comia sin que el bono llegara a ninguna tirada.
     -- Consultar NO gasta: `SpellNeedsTarget` llama aqui como predicado y sin esto abrir la ficha
     -- de cualquier conjuro con dano se comia la carga.
+    -- Se MIRA sin gastar; el cobro real se hace al final, cuando ya se sabe que hay definicion
+    -- que devolver. Cobrar aqui perdia la carga en las dos ramas que salen con nil.
     local soloMirando = options and options.soloConsultar == true
     local cargaArcana = 0
     if not soloMirando and damageComponents and HarfordDnDStore
-        and HarfordDnDStore.TakeArcaneSpellBonus then
-        cargaArcana = HarfordDnDStore.TakeArcaneSpellBonus() or 0
+        and HarfordDnDStore.PeekArcaneSpellBonus then
+        cargaArcana = HarfordDnDStore.PeekArcaneSpellBonus() or 0
     end
     if cargaArcana > 0 and damageComponents then
         for _, comp in ipairs(damageComponents) do
@@ -787,6 +789,11 @@ function API.BuildAreaDefinition(spell, options)
         end
     else
         return nil
+    end
+    -- Aqui ya no hay salida con nil: se cobra la carga que se conto arriba. Cobrarla antes la
+    -- perdia en las dos ramas que devuelven nil sin llegar a ninguna tirada.
+    if cargaArcana > 0 and HarfordDnDStore and HarfordDnDStore.TakeArcaneSpellBonus then
+        HarfordDnDStore.TakeArcaneSpellBonus()
     end
     area.damageComponents = damageComponents  -- nil = condicion pura (el motor lo acepta)
     if condition then

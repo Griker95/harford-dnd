@@ -1416,6 +1416,11 @@ do
         if bono > 0 then Anotar(BONO_CONJURO, 0) end
         return bono
     end
+    -- Mirar sin gastar: el compendio necesita saber cuanto hay para construir la definicion, pero
+    -- hay ramas que salen sin resolver nada y ahi la carga no debe perderse.
+    function HarfordDnDStore.PeekArcaneSpellBonus()
+        return Leer(BONO_CONJURO)
+    end
     function HarfordDnDStore.PeekArcaneSaveBonus()
         return Leer(BONO_SALV)
     end

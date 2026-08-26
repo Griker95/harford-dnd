@@ -60,11 +60,16 @@ end
 -- distintas repartidas -- `HasShared`, `ClaimShared` y el bucle de concesion -- y divergian.
 function TC.Rewards.SharedReps(contract)
     if type(contract) ~= "table" then return nil end
+    -- `rewardRep` es una COPIA de `rewardReps[1]`, guardada para lectores antiguos -- no una
+    -- reputacion aparte. Sumarlas concedia el doble: el recibo va por indice, asi que las dos
+    -- entradas pasan por componentes distintos. Es alternativa, no aniadido.
+    local origen = (type(contract.rewardReps) == "table" and #contract.rewardReps > 0)
+        and contract.rewardReps
+        or (RepValida(contract.rewardRep) and { contract.rewardRep } or {})
     local fuera = {}
-    for _, rp in ipairs((type(contract.rewardReps) == "table" and contract.rewardReps) or {}) do
+    for _, rp in ipairs(origen) do
         if RepValida(rp) then fuera[#fuera + 1] = rp end
     end
-    if RepValida(contract.rewardRep) then fuera[#fuera + 1] = contract.rewardRep end
     return (#fuera > 0) and fuera or nil
 end
 

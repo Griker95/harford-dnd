@@ -56,4 +56,30 @@ for i, t in ipairs(trozos) do
 end
 chk("se reensambla completo", hecho, true)
 chk("y es identico al original", buf[1], largo)
+-- ─── LA VIDA TEMPORAL VIAJA ─────────────────────────────────────────────────
+-- `tempHp` se usaba para pintar la barra y para ABSORBER dano, pero no estaba entre los campos
+-- que se envian: cada cliente calculaba el mismo golpe con una absorcion distinta, y nadie mas
+-- que el DM veia la vida temporal de un NPC.
+local codec = io.open("Harford/Frames/HarfordTurnsCodec.lua"):read("*a")
+print("La vida temporal de un NPC se comparte")
+chk("se envia", codec:find("tostring(entry.tempHp or 0),", 1, true) ~= nil, true)
+chk("y se recibe", codec:find("tempHp = SafeNumber(tempHp, 0),", 1, true) ~= nil, true)
+-- Detras de `bando`, que es el ultimo que se anadio: un cliente sin actualizar lo ignora en vez de
+-- descuadrarse todos los campos.
+chk("y va el ultimo, para no romper a los viejos",
+    codec:find("tostring(entry.tempHp or 0)", 1, true) > codec:find("EscapeText(entry.bando)", 1, true), true)
+
+-- Empezar el combate era mudo para todos menos para el DM: los demas se encontraban metidos en
+-- turnos sin que nada se lo dijera.
+local turnos = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
+print("Empezar el combate avisa a la mesa")
+chk("hay aviso propio", turnos:find('"TSTART|"', 1, true) ~= nil, true)
+chk("y quien lo recibe lo ve", turnos:find("COMIENZA EL COMBATE", 1, true) ~= nil, true)
+chk("se le abre la ventana", turnos:find("if TurnFrame and not TurnFrame:IsShown() then TurnFrame:Show() end", 1, true) ~= nil, true)
+-- Mensaje PROPIO y no deducido de la foto: quien llega tarde tambien recibe una foto con combate
+-- activo, y deducirlo de ahi le anunciaria un combate que empezo hace cinco asaltos.
+local combate = io.open("Harford/Frames/HarfordTurnsCombat.lua"):read("*a")
+chk("la foto se manda ANTES que el aviso",
+    combate:find("SendState()", 1, true) < combate:find("SendCombatStart(combatientes)", 1, true), true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

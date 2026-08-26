@@ -128,13 +128,14 @@ local function SerializeEntry(entry)
         EscapeText(entry.trpProfileID),
         tostring(entry.armorClass or 0),
         EscapeText(entry.bando),
+        tostring(entry.tempHp or 0),
     }, ",")
 end
 
 local function DeserializeEntry(raw)
     -- `bando` va el ULTIMO a proposito: un cliente con version anterior lo ignora y sigue leyendo
     -- el resto, en vez de descuadrarse todos los campos.
-    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID, armorClass, bando = strsplit(",", raw or "")
+    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID, armorClass, bando, tempHp = strsplit(",", raw or "")
     if not name or name == "" then return nil end
     return NormalizeEntryLinks({
         id = UnescapeText(id),
@@ -158,6 +159,9 @@ local function DeserializeEntry(raw)
         trpProfileID = UnescapeText(trpProfileID),
         armorClass = SafeNumber(armorClass, 0),
         bando = UnescapeText(bando),
+        -- La vida temporal es dato de Harford: el servidor no la conoce y no vuelve en ningun
+        -- evento. Sin compartirla, cada cliente absorbia una cantidad distinta del MISMO golpe.
+        tempHp = SafeNumber(tempHp, 0),
     })
 end
 

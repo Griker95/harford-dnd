@@ -17,6 +17,7 @@ local API = HarfordTurnsCombat
 -- "Preparado" actua en el conteo 30.
 local ROUND_MARKER_INITIATIVE = 9999
 local COMM_PREFIX
+local AnnounceCombatStart, SendCombatStart
 
 -- Inyectadas por HarfordTurns: este modulo no toca su estado interno directamente.
 local AdvanceTurnSerial, ClaimAdminIfNeeded, EnsureActiveVisible, EnsureRoundMarker, EnsureStore, EntryBelongsToMe, IsSystemEntry, IsTurnAdmin, MarkChanged, Print, SafeNumber, SendState
@@ -26,6 +27,8 @@ function API.Init(deps)
     COMM_PREFIX = deps.commPrefix or COMM_PREFIX
     ROUND_MARKER_INITIATIVE = deps.roundMarkerInitiative or ROUND_MARKER_INITIATIVE
     AdvanceTurnSerial = deps.AdvanceTurnSerial or AdvanceTurnSerial
+    AnnounceCombatStart = deps.AnnounceCombatStart or AnnounceCombatStart
+    SendCombatStart = deps.SendCombatStart or SendCombatStart
     ClaimAdminIfNeeded = deps.ClaimAdminIfNeeded or ClaimAdminIfNeeded
     EnsureActiveVisible = deps.EnsureActiveVisible or EnsureActiveVisible
     EnsureRoundMarker = deps.EnsureRoundMarker or EnsureRoundMarker
@@ -167,10 +170,11 @@ local function StartCombat()
     if HarfordDnDConditions and HarfordDnDConditions.Turn then
         HarfordDnDConditions.Turn.Reset()
     end
-    Print("|cffffff00Comienza el combate.|r Iniciativa tirada para "
-        .. tostring(combatientes) .. " combatiente(s).")
+    -- La FOTO primero: quien reciba el aviso tiene que poder abrir la ventana y ver ya la lista.
     MarkChanged()
     SendState()
+    if AnnounceCombatStart then AnnounceCombatStart(combatientes) end
+    if SendCombatStart then SendCombatStart(combatientes) end
 end
 
 local function EndCombat()

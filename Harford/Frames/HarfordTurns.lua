@@ -28,6 +28,7 @@ local ultimoAvanceAjeno = { quien = nil, cuando = 0 }
 local avanceConfirmado = 0        -- sello del aviso ya visto, para dejar pasar el segundo clic
 local VENTANA_DOBLE_AVANCE = 4
 local SendStateTo   -- se asigna abajo; el manejador de mensajes la usa antes
+local AnnounceCombatStart   -- idem: la usa el manejador de TSTART
 local suppressBroadcast = false
 local broadcastPending = false
 local viewStart = 1
@@ -859,6 +860,10 @@ local function ApplyTurnMessage(message, sender)
         return ApplyTurnNotice(message, sender)
     elseif opcode == "TCHUNK" then
         return ApplyChunkedTurnNotice(message, sender)
+    elseif opcode == "TSTART" then
+        local _, cuantos = strsplit("|", message or "")
+        AnnounceCombatStart(SafeNumber(cuantos, 0))
+        return true
     elseif opcode == "TREQ" then
         -- Solo el DM tiene la foto buena. Si hay varios, contestan todos: la foto es la misma y
         -- aplicarla dos veces no cambia nada, a diferencia de los estados de NPC, donde la lista
@@ -898,6 +903,28 @@ local function RequestTurnState()
     if not ch then return false end
     return HarfordSync.Send(COMM_PREFIX, "TREQ|"
         .. tostring((GetUnitName and GetUnitName("player", true)) or ""), ch)
+end
+
+-- Aviso de que empieza el combate. Es de un solo uso y no lleva estado: la lista va aparte, en la
+-- foto, y esto solo abre la ventana y lo dice.
+local function SendCombatStart(combatientes)
+    local ch = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+    if not ch then return false end
+    return HarfordSync.Send(COMM_PREFIX, "TSTART|" .. tostring(math.floor(tonumber(combatientes) or 0)), ch)
+end
+
+AnnounceCombatStart = function(combatientes)
+    local texto = "COMIENZA EL COMBATE"
+    if RaidNotice_AddMessage and RaidWarningFrame then
+        RaidNotice_AddMessage(RaidWarningFrame, texto, ChatTypeInfo and ChatTypeInfo["RAID_WARNING"])
+    end
+    if PlaySound and SOUNDKIT and SOUNDKIT.RAID_WARNING then
+        PlaySound(SOUNDKIT.RAID_WARNING, "Master")
+    end
+    Print("|cffffff00" .. texto .. ".|r " .. tostring(combatientes) .. " combatiente(s) en la lista.")
+    -- Y se abre la ventana: estar en turnos sin verlos es peor que no estar.
+    if TurnFrame and not TurnFrame:IsShown() then TurnFrame:Show() end
+    if RefreshFrame then RefreshFrame() end
 end
 
 local function SendTurnNotice()
@@ -2397,6 +2424,8 @@ if Combate and Combate.Init then
         Print = Print,
         SafeNumber = SafeNumber,
         SendState = SendState,
+        AnnounceCombatStart = AnnounceCombatStart,
+        SendCombatStart = SendCombatStart,
     })
 end
 

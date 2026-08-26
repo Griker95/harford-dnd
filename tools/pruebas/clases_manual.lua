@@ -546,4 +546,24 @@ chk("ninguna eleccion de origen se queda sin opciones",
 -- pasaria por vacia.
 chk("y hay elecciones de origen que resolver", huecosOrigen > 20, true)
 
+-- ─── UNA DOTE ELEGIDA HAY QUE ACTIVARLA ─────────────────────────────────────
+-- La opcion de dote de la Mejora de Caracteristica NO lleva `effects`: lo que aplica son los
+-- rasgos de la dote, que llegan por `progression.feats`. Guardar la eleccion no basta -- la dote
+-- se elegia y luego no salia en el Libro, porque `feats` seguia vacio.
+print("Elegir una dote la activa, no solo la apunta")
+local prog = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
+local dbg = io.open("HarfordDebug/HarfordDebug.lua"):read("*a")
+chk("al crear la ficha",
+    prog:find("if opcion and opcion.feat then API.SetFeatEnabled(opcion.feat, true, profileName) end", 1, true) ~= nil, true)
+chk("y al montarla con ficha6",
+    dbg:find("if elegida.feat and P.SetFeatEnabled then", 1, true) ~= nil, true)
+-- La opcion trae `feat` con el id de la dote: si eso cambiara, las dos ramas de arriba dejarian de
+-- encontrarla y volverian a fallar en silencio.
+chk("y la opcion sigue trayendo el id de la dote",
+    io.open("Harford/DnD/Data/HarfordDnDBook.lua"):read("*a"):find("feat = featDef.id,", 1, true) ~= nil, true)
+-- `choices` esta indexado por hueco: con `ipairs`, un hueco vacio cortaba el recorrido y las
+-- elecciones posteriores no se aplicaban al crear.
+chk("y las elecciones se recorren sin cortarse en un hueco",
+    prog:find("for slot, optionId in pairs(selections or {}) do", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

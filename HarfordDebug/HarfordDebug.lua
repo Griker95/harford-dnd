@@ -7345,6 +7345,20 @@ do
                             local elegida = (#libres > 0) and libres[math.random(#libres)] or nil
                             if elegida then
                                 P.SetChoiceSlot(f.id, hueco, elegida.id)
+                                -- Una DOTE no se aplica con la eleccion: su opcion no lleva
+                                -- `effects`, lo que aplica son los rasgos de la dote via
+                                -- `progression.feats`. Sin esto se elegia la dote en la Mejora de
+                                -- Caracteristica y luego no salia en el Libro, porque `feats`
+                                -- seguia vacio. Es lo mismo que hace el asistente de subida.
+                                if elegida.feat and P.SetFeatEnabled then
+                                    P.SetFeatEnabled(elegida.feat, true)
+                                end
+                                -- Y un truco elegido se concede aparte, por el mismo motivo.
+                                if elegida.spellId and type(_G.HarfordCompendioCharacterDB) == "table" then
+                                    local db = _G.HarfordCompendioCharacterDB
+                                    db.knownSpells = db.knownSpells or {}
+                                    db.knownSpells[elegida.spellId] = true
+                                end
                                 yaPuestas[tostring(elegida.id)] = true
                                 puestas = puestas + 1
                             end

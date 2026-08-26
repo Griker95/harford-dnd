@@ -902,8 +902,20 @@ function API.ReplaceCreation(draft, profileName)
         if not ok then return false, err end
     end
     for featureId, selections in pairs(draft.choices or {}) do
-        for slot, optionId in ipairs(selections or {}) do
-            API.SetChoiceSlot(featureId, slot, optionId, profileName)
+        -- `pairs`, no `ipairs`: `choices` esta indexado por HUECO y un hueco vacio corta el
+        -- recorrido, dejando fuera las elecciones posteriores. Este mismo fichero lo documenta.
+        for slot, optionId in pairs(selections or {}) do
+            if type(slot) == "number" then
+                API.SetChoiceSlot(featureId, slot, optionId, profileName)
+                -- Una DOTE elegida no se aplica sola: su opcion no lleva `effects`, lo que aplica
+                -- son los rasgos de la dote via `feats`. Aqui se vaciaba `data.feats` y no se
+                -- volvia a escribir, asi que una dote elegida en creacion se perdia al aplicarla.
+                local feature = HarfordDnDBook and HarfordDnDBook.GetFeature
+                    and HarfordDnDBook.GetFeature(featureId)
+                local opcion = feature and HarfordDnDBook.GetChoiceOption
+                    and HarfordDnDBook.GetChoiceOption(feature, optionId)
+                if opcion and opcion.feat then API.SetFeatEnabled(opcion.feat, true, profileName) end
+            end
         end
     end
     Touch(profileName)

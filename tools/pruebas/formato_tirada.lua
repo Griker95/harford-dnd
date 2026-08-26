@@ -61,7 +61,11 @@ chk("el bono de arma lo usa", dnd:find("HarfordDnDRolls.ColorSigned(wmod)", 1, t
 -- Migrar la ficha de OTRO no debe anunciar nada: el aviso hablaba en primera persona.
 print("La migracion calla cuando la ficha no es tuya")
 local prog = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
-chk("Migrate acepta silencio", prog:find("local function Migrate(data, silencioso)", 1, true) ~= nil, true)
+chk("Migrate acepta silencio", prog:find("local function Migrate(data, silencioso, slot)", 1, true) ~= nil, true)
+-- El tercer parametro es el hueco del PERFIL: los usos por descanso viven ahi, no en la
+-- progresion, asi que sin el no se les puede renombrar nada.
+chk("y el hueco del perfil, para los usos por descanso",
+    prog:find("slot._featureUses = nuevo", 1, true) ~= nil, true)
 chk("el aviso lo respeta", prog:find("if total > 0 and not silencioso", 1, true) ~= nil, true)
 chk("inspeccion migra en silencio",
     prog:find("Migrate(CopyTable(data), true)", 1, true) ~= nil, true)

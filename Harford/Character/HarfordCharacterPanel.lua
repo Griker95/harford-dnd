@@ -1454,7 +1454,10 @@ local function RefreshFeatureList()
             end
 
             if feature.choice and HarfordDnDBook and HarfordDnDBook.GetChoiceSlots then
-                local chosen = HarfordDnDProgression.GetChoice and HarfordDnDProgression.GetChoice(feature.id, GetProfileName()) or {}
+                -- POR HUECO, no la lista compactada: `GetChoice` mueve las elecciones de sitio y
+                -- el desplegable del hueco 1 acababa mostrando lo elegido en el 2.
+                local chosen = HarfordDnDProgression.GetChoiceSlotMap
+                    and HarfordDnDProgression.GetChoiceSlotMap(feature.id, GetProfileName()) or {}
                 for slot = 1, HarfordDnDBook.GetChoiceSlots(feature) do
                     local slotNo = slot
                     local drop = AcquireDynamicDrop(child, 210)

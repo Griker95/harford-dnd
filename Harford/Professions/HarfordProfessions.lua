@@ -987,7 +987,8 @@ function API.Craft(recipeId)
                     perdidos[#perdidos + 1] = string.format("%s x%d", items.GetName(m.key), qty)
                 end
             end
-            ReleaseMaterials(r)
+            -- NO se libera la reserva: el material SI se gasto. La suelta el vigilante de
+            -- BAG_UPDATE_DELAYED, igual que en el crafteo con exito.
             Announce(string.format("|cffff5555echa a perder %s|r y pierde los materiales%s.",
                 r.name or outName,
                 #perdidos > 0 and (": " .. table.concat(perdidos, ", ")) or ""))

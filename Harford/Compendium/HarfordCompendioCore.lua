@@ -699,7 +699,11 @@ end
 -- ¿El conjuro requiere objetivo? Solo los ataques de conjuro DIRECTOS (contra el target). Los de
 -- area (incluida la salvacion-"Objetivo") se resuelven en el motor de area y no se gatean aqui.
 function API.SpellNeedsTarget(spell)
-    if API.BuildAreaDefinition and API.BuildAreaDefinition(spell) then return false end
+    -- `BuildAreaDefinition` CONSUME la carga arcana pendiente, asi que no puede usarse como
+    -- predicado: abrir la ficha de un conjuro en el compendio bastaba para perder el bono.
+    if API.BuildAreaDefinition and API.BuildAreaDefinition(spell, { soloConsultar = true }) then
+        return false
+    end
     return IsSpellAttack(spell) and true or false
 end
 
@@ -734,8 +738,14 @@ function API.BuildAreaDefinition(spell, options)
     if not damageComponents and not condition then return nil end
     -- Carga arcana gastada en "+X al ataque y dano de tu proximo conjuro": se consume UNA vez por
     -- lanzamiento y se reparte al ataque y a cada componente de dano.
-    local cargaArcana = (HarfordDnDStore and HarfordDnDStore.TakeArcaneSpellBonus
-        and HarfordDnDStore.TakeArcaneSpellBonus()) or 0
+    -- Solo se cobra si hay DONDE aplicarla. Antes se tomaba siempre y un conjuro que solo pone
+    -- una condicion se la comia sin que el bono llegara a ninguna tirada.
+    local puedeAplicarse = (damageComponents ~= nil) or (options and options.soloConsultar ~= true)
+    local cargaArcana = 0
+    if puedeAplicarse and damageComponents and HarfordDnDStore
+        and HarfordDnDStore.TakeArcaneSpellBonus then
+        cargaArcana = HarfordDnDStore.TakeArcaneSpellBonus() or 0
+    end
     if cargaArcana > 0 and damageComponents then
         for _, comp in ipairs(damageComponents) do
             comp.damageBonus = (tonumber(comp.damageBonus) or 0) + cargaArcana

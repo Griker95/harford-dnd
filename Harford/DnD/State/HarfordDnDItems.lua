@@ -946,7 +946,18 @@ function API.SlotIsTwoHanded(slotKey, profileName)
     local entry = API.GetSlot(slotKey, profileName)
     if entry and entry.itemLink and entry.itemLink ~= "" then
         local resolved = API.ResolveItem(entry.itemLink)
-        if resolved and DOS_MANOS_EQUIPLOC[tostring(resolved.equipLoc or "")] then return true end
+        if resolved and DOS_MANOS_EQUIPLOC[tostring(resolved.equipLoc or "")] then
+            -- La ranura nativa a distancia agrupa arcos con PISTOLAS y varitas. Si el tipo D&D
+            -- del arma dice que no es de dos manos, manda el libro: una pistola no puede
+            -- desequiparte el escudo.
+            local clave = API.DetectWeaponKey and API.DetectWeaponKey(entry.itemLink)
+            local def = clave and HarfordDnDWeapons and HarfordDnDWeapons.WEAPONS
+                and HarfordDnDWeapons.WEAPONS[clave]
+            if def and not (tostring(def.props or ""):find("Dos manos", 1, true)) then
+                return false
+            end
+            return true
+        end
     end
     -- 2) Propiedad D&D del arma (basica, o deducida del objeto).
     local def = API.GetEquippedWeapon(slotKey, profileName)

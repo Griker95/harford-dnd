@@ -443,7 +443,9 @@ end
 -- `silencioso`: la ficha que se migra no es la tuya. El snapshot de inspeccion pasa por aqui para
 -- que sus ids viejos se lean bien, pero anunciar "Ficha actualizada" mientras miras a otro no
 -- significa nada para quien lo lee: parecia que se te habia tocado la tuya.
-local function Migrate(data, silencioso)
+-- `slot` es el hueco del perfil, que es donde viven los usos por descanso: la progresion no los
+-- tiene, asi que sin el no se les puede renombrar nada.
+local function Migrate(data, silencioso, slot)
     if type(data) ~= "table" then data = EmptyProgression() end
     local oldSchema = tonumber(data.schema) or 0
 
@@ -454,8 +456,10 @@ local function Migrate(data, silencioso)
     --
     -- Se guarda SOLO la anterior: encadenar copias de copias creceria sin limite y la util es la
     -- de justo antes del cambio que rompio algo.
+    -- Las fotos de INSPECCION llegan sin `schema`, asi que contaban como viejas y cada una
+    -- duplicaba la ficha entera. Son efimeras y de otro jugador: no hay nada que rescatar.
     local previo
-    if oldSchema < SCHEMA_VERSION then
+    if oldSchema < SCHEMA_VERSION and not silencioso then
         local limpio = {}
         for k, v in pairs(data) do
             if k ~= "_previo" then limpio[k] = v end
@@ -517,12 +521,19 @@ local function Migrate(data, silencioso)
     -- Renombrado de ids: solo al venir de un esquema anterior.
     if oldSchema < 3 then
         local total = 0
-        for _, campo in ipairs({ "choices", "featureStates", "featureUses", "activeStates" }) do
+        for _, campo in ipairs({ "choices", "featureStates", "activeStates" }) do
             if type(data[campo]) == "table" then
                 local nuevo, n = RenombrarClaves(data[campo])
                 data[campo] = nuevo
                 total = total + n
             end
+        end
+        -- Los usos por descanso NO viven en la progresion sino en el perfil, asi que buscarlos en
+        -- `data` era un no-op: los gastados volvian a estar llenos y las claves viejas se quedaban.
+        if slot and type(slot._featureUses) == "table" then
+            local nuevo, n = RenombrarClaves(slot._featureUses)
+            slot._featureUses = nuevo
+            total = total + n
         end
         local _, nf = RenombrarValores(data.feats)
         total = total + nf
@@ -617,7 +628,7 @@ function API.Get(profileName)
     local ins = inspectData[ShortKey(name)]
     if ins then return ins, name end  -- modo inspeccion: snapshot efimero, sin tocar persistencia
     local slot = ProfileSlot(name)
-    slot._progression = Migrate(slot._progression)
+    slot._progression = Migrate(slot._progression, nil, slot)
     return slot._progression, name
 end
 
@@ -806,6 +817,19 @@ function API.GetChoice(featureId, profileName)
     -- Claves no numericas (importaciones antiguas): se conservan al final para no perderlas.
     for k, v in pairs(slots) do
         if type(k) ~= "number" and v ~= nil and v ~= "" then out[#out + 1] = v end
+    end
+    return out
+end
+
+-- La misma tabla pero SIN compactar, indexada por hueco. La necesita quien pinta un control por
+-- hueco; `GetChoice` no sirve ahi porque mueve las elecciones de sitio.
+function API.GetChoiceSlotMap(featureId, profileName)
+    local data = API.Get(profileName)
+    local slots = data.choices[tostring(featureId or "")]
+    if type(slots) ~= "table" then return {} end
+    local out = {}
+    for k, v in pairs(slots) do
+        if type(k) == "number" and v ~= nil and v ~= "" then out[k] = v end
     end
     return out
 end

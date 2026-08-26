@@ -327,6 +327,9 @@ function API.Unbind(trainerId)
     local id = Norm(trainerId)
     if id == "" or not vivos[id] then return false end
     vivos[id] = nil
+    -- La cache memoriza tambien los negativos, asi que sin limpiarla el entrenador soltado seguia
+    -- resolviendo.
+    API.OlvidarCache()
     return true
 end
 

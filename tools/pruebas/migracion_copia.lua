@@ -25,7 +25,12 @@ print("No se encadenan copias de copias")
 chk("la copia excluye la copia anterior", src:find('if k ~= "_previo" then', 1, true) ~= nil, true)
 
 print("Solo se copia si hay migracion que hacer")
-chk("condicionada al esquema", src:find("if oldSchema < SCHEMA_VERSION then", 1, true) ~= nil, true)
+chk("condicionada al esquema",
+    src:find("if oldSchema < SCHEMA_VERSION and not silencioso then", 1, true) ~= nil, true)
+-- Las fotos de INSPECCION llegan sin `schema`, asi que contaban como viejas y cada una duplicaba
+-- la ficha entera del otro jugador -- efimera y ajena, no hay nada que rescatar de ella.
+chk("y no se copia una foto de inspeccion",
+    src:find("Migrate(CopyTable(data), true)", 1, true) ~= nil, true)
 
 print("Hay como consultarla y como volver a ella")
 chk("consulta", src:find("function API.GetPreviousProgression", 1, true) ~= nil, true)

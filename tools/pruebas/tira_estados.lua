@@ -86,7 +86,11 @@ chk("junto a las acciones basicas",
 
 print("El contador es una sola regla, no dos copias")
 chk("regla unica", cond:find("function API.CounterFor", 1, true) ~= nil, true)
-chk("la del aura la reutiliza", cond:find("return API.CounterFor(def, active.record)", 1, true) ~= nil, true)
+chk("la del aura la reutiliza", cond:find("mapa[id] = API.CounterFor(def, active.record)", 1, true) ~= nil, true)
+-- Y se calcula UNA vez por unidad: antes era un recorrido de las ~50 condiciones por cada boton de
+-- aura, en la ruta de UNIT_AURA, que las reglas de rendimiento exigen barata.
+chk("y solo una vez por unidad", cond:find("function API.GetAuraCounterMap", 1, true) ~= nil, true)
+chk("invalidada por el aviso del motor", cond:find("S.selloAviso = (S.selloAviso or 0) + 1", 1, true) ~= nil, true)
 
 
 
@@ -131,7 +135,10 @@ print("La tira se alinea con la columna del primer buff")
 chk("busca el primer buff", uf3:find('local ref = _G[prefix .. "Buff1"]', 1, true) ~= nil, true)
 chk("y si no hay, el primer debuff",
     uf3:find('if not (ref and ref.IsShown and ref:IsShown()) then ref = _G[prefix .. "Debuff1"] end', 1, true) ~= nil, true)
-chk("se desplaza esa diferencia", uf3:find("desplazX = a - b", 1, true) ~= nil, true)
+chk("se desplaza esa diferencia", uf3:find("desplazX, medido = a - b, true", 1, true) ~= nil, true)
+-- Sin la marca, un desplazamiento de 0 -- valido cuando el ancla ya es Buff1 -- se tomaba por "no
+-- medido" y se recuperaba la columna aprendida de OTRO objetivo, moviendo la tira 20 px.
+chk("y 0 cuenta como medido", uf3:find("if medido then", 1, true) ~= nil, true)
 chk("y el desplazamiento sobrevive al ajuste vertical",
     uf3:find('SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", desplazX, margen - (arriba - techo) - 2)', 1, true) ~= nil, true)
 

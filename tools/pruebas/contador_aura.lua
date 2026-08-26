@@ -11,7 +11,13 @@ local codigo = "local API = ...\n" .. src:sub(i, j - 1) .. "\nreturn API.GetAura
 
 local ACTIVAS = {}
 local API = { GetActive = function() return ACTIVAS end }
-local env = { ipairs = ipairs, tonumber = tonumber, math = math }
+-- `S` es el estado del modulo. Esta prueba mide la REGLA DEL NUMERO, no la cache, y los casos
+-- reasignan `ACTIVAS` sin pasar por `Notify`. Un sello que cambia en cada lectura hace que la
+-- cache falle siempre y se mida la logica limpia; que la cache exista se comprueba aparte, en
+-- `tira_estados`.
+local sello = 0
+local S = setmetatable({}, { __index = function() sello = sello + 1 return sello end })
+local env = { ipairs = ipairs, tonumber = tonumber, tostring = tostring, math = math, S = S }
 local f
 if setfenv then f = assert(cargar(codigo)); setfenv(f, env) else f = assert(cargar(codigo, "t", "t", env)) end
 local Contador = f(API)

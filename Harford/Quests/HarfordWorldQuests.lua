@@ -238,7 +238,15 @@ function API.TurnInCurrent(unit)
     -- Individual: dinero + items al que entrega.
     if r.money and HarfordDnDEconomy and HarfordDnDEconomy.Grant and HarfordQuests.RewardMoneyCopper then
         local copper = HarfordQuests.RewardMoneyCopper(r)
-        if copper > 0 then HarfordDnDEconomy.Grant(copper) end
+        if copper > 0 then
+            -- `Grant` devuelve false si la economia no esta inicializada. Sin mirarlo, el oro
+            -- desaparecia en silencio y el jugador creia haber cobrado.
+            local pagado = HarfordDnDEconomy.Grant(copper)
+            if not pagado and HarfordChat and HarfordChat.Print then
+                HarfordChat.Print("No se pudo entregar el oro de la mision: tu ficha no tiene "
+                    .. "economia iniciada. Pideselo al DM.")
+            end
+        end
     end
     if type(r.items) == "table" and HarfordServerActions and HarfordServerActions.GiveItem then
         for _, it in ipairs(r.items) do

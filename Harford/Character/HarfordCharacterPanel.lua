@@ -2292,6 +2292,13 @@ do
     -- del tipo elegido (`consumeAfterRoll`), que es exactamente lo que dice el manual.
     local function Ayudar(def, elegida)
         if Elegir(def.helpOther.options, def, Ayudar, elegida) then return true end
+        -- `Elegir` tambien devuelve false por su guardia de "sin API de desplegable", y ahi
+        -- `elegida` sigue nil. Se cae a la primera opcion, como hace `LanzarArma`.
+        elegida = elegida or (def.helpOther.options and def.helpOther.options[1])
+        if not elegida then
+            HarfordChat.Print("Ayudar no tiene ninguna opcion declarada.")
+            return false
+        end
         if not (UnitExists and UnitExists("target")) then
             HarfordChat.Print("Ayudar necesita un objetivo.")
             return false
@@ -3835,7 +3842,7 @@ function API.DatosDeHabilidad(featureId)
     if not feature then return nil end
     return {
         name = feature.name,
-        icon = IconPath(feature.icon) or (HarfordDnDData and HarfordDnDData.GetFeatureIcon
+        icon = HarfordCharacterBook.IconPath(feature.icon) or (HarfordDnDData and HarfordDnDData.GetFeatureIcon
             and HarfordDnDData.GetFeatureIcon(feature.id, feature.name)) or nil,
         description = feature.description,
         feature = feature,
@@ -5044,40 +5051,4 @@ if Profesiones and Profesiones.Init then
         K = K,
         S = S,
     })
-end
-
--- Comandos sueltos retirados: se usan `/harford char` y `/harford inspect`. La funcion se conserva
--- en SlashCmdList porque es por donde el despachador de `/harford` enruta.
---
--- Estas dos registraciones SE PERDIERON al extraer los modulos del panel, y sin ellas `/harford
--- char` no abria nada NI DABA ERROR: el despachador hace `local f = SlashCmdList[key]; if f then`,
--- asi que una clave que no existe se traga el comando en silencio.
-SlashCmdList.HARFORDCHARACTERPANEL = function(msg)
-    msg = tostring(msg or ""):lower()
-    if msg == "rep" or msg == "reputacion" then
-        API.Toggle("reputation")
-    elseif msg == "crear" or msg == "creacion" then
-        if HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenPrototype then
-            HarfordCharacterAdvancement.OpenPrototype("guerrero")
-        else
-            API.Toggle("sheet")
-        end
-    elseif msg == "subir" or msg == "clases" then
-        if HarfordCharacterAdvancement and HarfordCharacterAdvancement.OpenLevelUp then
-            HarfordCharacterAdvancement.OpenLevelUp()
-        else
-            API.Open("leveling", { allowHidden = true })
-        end
-    else
-        API.Toggle("sheet")
-    end
-end
-
-SlashCmdList.HARFORDCHARACTERINSPECT = function(msg)
-    msg = tostring(msg or ""):gsub("^%s+", ""):gsub("%s+$", "")
-    if msg ~= "" then
-        API.OpenInspect(msg)
-    else
-        API.OpenInspect("target")
-    end
 end

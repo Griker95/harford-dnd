@@ -979,13 +979,16 @@ do
         -- En COLUMNA con el primer buff, no pegada al borde del marco. Los botones de aura no
         -- empiezan en el borde izquierdo del frame, asi que anclar al frame dejaba la tira
         -- desplazada respecto a ellos y parecia que no pertenecia al mismo bloque.
-        local desplazX = 0
+        local desplazX, medido = 0, false
         do
             local ref = _G[prefix .. "Buff1"]
             if not (ref and ref.IsShown and ref:IsShown()) then ref = _G[prefix .. "Debuff1"] end
             if ref and ref.IsShown and ref:IsShown() and ref.GetLeft and ancla.GetLeft then
                 local a, b = ref:GetLeft(), ancla:GetLeft()
-                if a and b then desplazX = a - b end
+                -- `medido` aparte del valor: 0 es un desplazamiento VALIDO -- pasa cuando el ancla
+                -- ya es el propio Buff1 -- y usarlo como "no encontrado" recuperaba la columna
+                -- aprendida de otro objetivo y movia la tira unos 20 px.
+                if a and b then desplazX, medido = a - b, true end
             end
             -- Un objetivo SIN auras no tiene columna con la que alinearse, y la tira se iba al
             -- borde del marco: quedaba en un sitio distinto segun el objetivo llevara buffs o no,
@@ -994,7 +997,7 @@ do
             -- Se RECUERDA la ultima columna aprendida en vez de escribir aqui un numero: el inset
             -- de los botones depende del arte del marco y de la escala, y un valor fijo se
             -- quedaria viejo en cuanto Blizzard o un addon lo tocaran.
-            if desplazX ~= 0 then
+            if medido then
                 tira.columna = desplazX
             elseif tira.columna then
                 desplazX = tira.columna

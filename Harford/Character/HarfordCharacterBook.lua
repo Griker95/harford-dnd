@@ -7,11 +7,14 @@
 HarfordCharacterBook = HarfordCharacterBook or {}
 local API = HarfordCharacterBook
 
-local function IconPath(icon)
+-- Publica: la usa tambien el panel para pintar la barra de accion. Era local, y desde fuera
+-- resolvia a nil, asi que la barra reventaba en cada arrastre.
+function API.IconPath(icon)
     icon = tostring(icon or "")
     if icon == "" or icon:find("\\", 1, true) then return icon end
     return "Interface\\Icons\\" .. icon
 end
+local IconPath = API.IconPath
 
 API.ICON = {
     activo   = "Interface\\Icons\\Ability_Warrior_BattleShout",

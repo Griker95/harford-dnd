@@ -577,6 +577,8 @@ local function StateKey(unit, guid, name)
 end
 
 local function Notify()
+    -- Invalida el mapa de contadores por aura sin tener que saber a quien afecto el cambio.
+    S.selloAviso = (S.selloAviso or 0) + 1
     for _, fn in ipairs(S.listeners) do pcall(fn) end
     if HarfordCharacterPanel and HarfordCharacterPanel.Refresh then HarfordCharacterPanel.Refresh() end
     -- El contador que se pinta sobre el icono de aura lo lleva Harford, no el aura: si cambia sin
@@ -753,16 +755,27 @@ end
 -- El contador NO sale del aura: en Epsilon no se pueden aplicar auras con acumulaciones, asi que lo
 -- lleva Harford en la instancia de la condicion (`vars.contador`, o el nivel si es de las que los
 -- tienen, como el Cansancio) y luego se pinta encima del icono.
+-- Mapa aura -> contador de una unidad, calculado UNA vez. Se invalida por sello: `Notify` lo sube
+-- cada vez que algo cambia, asi que no caduca por tiempo ni necesita ticker.
+local cacheContadores = {}
+function API.GetAuraCounterMap(ref)
+    local clave = tostring(ref or "player")
+    local guardado = cacheContadores[clave]
+    if guardado and guardado.sello == (S.selloAviso or 0) then return guardado.mapa end
+    local mapa = {}
+    for _, active in ipairs(API.GetActive(clave)) do
+        local def = active.definition
+        local id = def and tonumber(def.auraId)
+        if id then mapa[id] = API.CounterFor(def, active.record) end
+    end
+    cacheContadores[clave] = { sello = S.selloAviso or 0, mapa = mapa }
+    return mapa
+end
+
 function API.GetAuraCounter(ref, spellId)
     spellId = tonumber(spellId)
     if not spellId then return nil end
-    for _, active in ipairs(API.GetActive(ref or "player")) do
-        local def = active.definition
-        if def and tonumber(def.auraId) == spellId then
-            return API.CounterFor(def, active.record)
-        end
-    end
-    return nil
+    return API.GetAuraCounterMap(ref or "player")[spellId]
 end
 
 function API.SetVar(ref, conditionId, opType, varName, value)

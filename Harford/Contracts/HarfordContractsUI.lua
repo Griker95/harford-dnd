@@ -989,8 +989,12 @@ local function BuildFrame(parent, embedded)
           TC.Print("La economia Harford no esta disponible.")
           return
         end
+        -- `Grant` llama al callback de forma SINCRONA en los fallos tempranos y ADEMAS devuelve
+        -- `false, err`. Sin esta marca se deshacia la reclamacion dos veces y salian dos errores.
+        local yaAtendido = false
         local sent, sendErr = HarfordDnDEconomy.Grant(copper, {
           callback = function(success, messages)
+            yaAtendido = true
             if not success then
               TC.Data.UnclaimMoney(data.contractId)
               TC.Print(tostring((messages and messages[1]) or "El servidor rechazo el pago."))
@@ -1003,7 +1007,7 @@ local function BuildFrame(parent, embedded)
             UI.Refresh()
           end,
         })
-        if not sent then
+        if not sent and not yaAtendido then
           TC.Data.UnclaimMoney(data.contractId)
           TC.Print(tostring(sendErr or "No se pudo enviar el pago."))
           UI.Refresh()

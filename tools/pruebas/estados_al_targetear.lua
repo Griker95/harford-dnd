@@ -85,7 +85,7 @@ chk("solo de remitentes de confianza",
 chk("y el remitente tiene que ser el interesado",
     cond:find("ShortName(sender) ~= ShortName(name) and not EsNpcDeLosTurnos(guid)", 1, true) ~= nil, true)
 chk("salvo los NPC, que no tienen quien hable por ellos",
-    cond:find("local function EsNpcDeLosTurnos(guid)", 1, true) ~= nil, true)
+    cond:find("EsNpcDeLosTurnos = function(guid)", 1, true) ~= nil, true)
 chk("y solo los que ya estan en la lista de turnos",
     cond:find('tostring(e.kind or "") == "npc" then return true', 1, true) ~= nil, true)
 
@@ -118,7 +118,7 @@ chk("ni la de jugador con esta",
 -- texto: es lo unico que separa "el DM me cuenta lo que lleva el ogro" de "cualquiera se inventa
 -- condiciones sobre cualquier cosa".
 local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
-local i2 = assert(cond:find("local function EsNpcDeLosTurnos", 1, true))
+local i2 = assert(cond:find("EsNpcDeLosTurnos = function(guid)", 1, true))
 local f2 = assert(cond:find("function API.CacheStateList", i2, true))
 -- El trozo extraido arrastra tambien la declaracion de `API.FuenteNpcGana`, que necesita la tabla
 -- para existir al cargarse.

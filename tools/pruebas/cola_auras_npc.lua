@@ -117,4 +117,67 @@ chk("y vacia la cola", cond:find('API.FlushPendingAuras("target")', 1, true) ~= 
 -- Se reusa la accion que ya existia; no hace falta uina nueva de servidor.
 chk("reusa la accion existente", cond:find("HarfordServerActions.RemoveAura(p.auraId", 1, true) ~= nil, true)
 
+-- ─── EFECTOS DELEGADOS AL LIDER ─────────────────────────────────────────────
+-- Un jugador que no es oficial no puede bajarle la vida a un NPC ni ponerle un aura: el servidor
+-- se lo rechaza. Pero SI puede tirar, calcular su dano y mitigarlo -- eso es del cliente. Asi que
+-- resuelve todo y manda el EFECTO YA CALCULADO a quien puede emitir el comando.
+--
+-- No se delega la DECISION, solo la EJECUCION: el lider no vuelve a tirar ni a mitigar.
+local sync = io.open("Harford/Core/HarfordSync.lua"):read("*a")
+local ini = assert(sync:find("function HarfordSync.SerializeNpcEffect", 1, true))
+local fin = assert(sync:find("function HarfordSync.BestChannel", ini, true))
+local ent = { table = table, math = math, tostring = tostring, tonumber = tonumber,
+    HarfordSync = {},
+    strsplit = function(sep, s)
+        local out = {}
+        for trozo in (tostring(s) .. sep):gmatch("([^" .. sep .. "]*)" .. sep) do
+            out[#out + 1] = trozo
+        end
+        return (table.unpack or unpack)(out)
+    end }
+local cargarS = loadstring or load
+local fS
+if setfenv then fS = assert(cargarS(sync:sub(ini, fin - 1))); setfenv(fS, ent)
+else fS = assert(cargarS(sync:sub(ini, fin - 1), "t", "t", ent)) end
+fS()
+local SY = ent.HarfordSync
+
+print("El efecto delegado va y vuelve")
+chk("se compone", SY.SerializeNpcEffect("Creature-1", "damage", 7, "Deryk"),
+    "DNDNPCDO|Creature-1|damage|7|Deryk")
+local g, tp, v, a = SY.DeserializeNpcEffect("DNDNPCDO|Creature-1|damage|7|Deryk")
+chk("y se lee el guid", g, "Creature-1")
+chk("el tipo", tp, "damage")
+chk("la cantidad", v, 7)
+chk("y quien lo mando", a, "Deryk")
+-- Sin guid no hay a quien aplicarselo, y un mensaje de otro opcode no debe colarse.
+chk("sin guid se rechaza", (SY.DeserializeNpcEffect("DNDNPCDO||damage|7|X")), "nil")
+chk("otro opcode no se confunde", (SY.DeserializeNpcEffect("DNDCOND|algo")), "nil")
+-- El valor se normaliza a entero: media vida no existe en el comando de servidor.
+chk("la cantidad se entera", select(3, SY.DeserializeNpcEffect(
+    SY.SerializeNpcEffect("Creature-1", "damage", 7.8, "X"))), 7)
+
+print("La cola distingue dano de aura")
+-- Dos golpes de 7 son catorce, no siete: el dano se SUMA, al reves que las auras, donde repetir
+-- la misma no anade nada.
+chk("el dano se suma en una sola entrada",
+    cond:find("p.cantidad = p.cantidad + cantidad", 1, true) ~= nil, true)
+chk("y las auras siguen sin duplicarse",
+    cond:find("if p.auraId == auraId and p.op == op then return true end", 1, true) ~= nil, true)
+chk("el dano llega ya mitigado y no se recalcula",
+    cond:find("SetNpcHealthDelta(-math.abs(p.cantidad)", 1, true) ~= nil, true)
+
+print("Quien puede lo hace; quien no, lo delega")
+chk("hay punto unico", cond:find("function API.AplicarEfectoNpc", 1, true) ~= nil, true)
+chk("se manda al lider", cond:find("local function NombreDelLider", 1, true) ~= nil, true)
+-- Recibirlo sin poder emitirlo seria acumular trabajo que no se hara, y ademas dejaria creer al
+-- que lo mando que esta resuelto.
+chk("no se acepta si no puedo emitirlo",
+    cond:find("if not API.PuedoAplicarEnNpc() then return false end", 1, true) ~= nil, true)
+-- Y solo sobre NPCs que la mesa ya conoce: si no, cualquiera podria pedir dano sobre cualquier cosa.
+chk("y solo sobre NPCs de la lista de turnos",
+    cond:find("if not EsNpcDeLosTurnos(guid) then return false end", 1, true) ~= nil, true)
+chk("el remitente tiene que ser de fiar",
+    cond:find("if IsTrustedSender(sender) then API.RecibirEfectoNpc", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

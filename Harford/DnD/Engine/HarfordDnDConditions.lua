@@ -9,6 +9,7 @@ local API = HarfordDnDConditions
 local PREFIX = "DND5EARC"
 local AURA_GRACE = 2
 local REMOTE_TTL = 600
+local EsNpcDeLosTurnos   -- se asigna abajo; el guardia de efectos delegados la usa antes
 local REQUEST_TTL = 60
 local MAX_STATES_PER_UNIT = 32
 
@@ -1008,6 +1009,31 @@ function API.QueueNpcAura(guid, auraId, op)
     return true
 end
 
+-- Dano pendiente sobre un NPC. NO se deduplica y NO se agrupa por igualdad como las auras: dos
+-- golpes de 7 son catorce puntos de vida, no siete. Se SUMAN en una sola entrada para no emitir
+-- dos comandos de servidor donde basta uno.
+function API.QueueNpcDamage(guid, cantidad, autor)
+    guid = tostring(guid or "")
+    cantidad = math.floor(tonumber(cantidad) or 0)
+    if guid == "" or cantidad == 0 then return false end
+    pendientesAura[guid] = pendientesAura[guid] or {}
+    for _, p in ipairs(pendientesAura[guid]) do
+        if p.op == "damage" then
+            p.cantidad = p.cantidad + cantidad
+            p.autores = p.autores or {}
+            if autor and autor ~= "" then p.autores[#p.autores + 1] = autor end
+            Notify()
+            return true
+        end
+    end
+    pendientesAura[guid][#pendientesAura[guid] + 1] = {
+        op = "damage", cantidad = cantidad,
+        autores = (autor and autor ~= "") and { autor } or {},
+    }
+    Notify()
+    return true
+end
+
 -- Cuantas quedan, para poder decirlo en la ventana en vez de dejarlo mudo.
 function API.GetPendingAuraCount()
     local total = 0
@@ -1042,6 +1068,15 @@ function API.FlushPendingAuras(unit)
             ok = HarfordServerActions.RemoveAura(p.auraId, { addonName = "Harford" })
         elseif p.op == "apply" and HarfordServerActions and HarfordServerActions.ApplyAuraToCurrentTarget then
             ok = HarfordServerActions.ApplyAuraToCurrentTarget(p.auraId, { addonName = "Harford" })
+        elseif p.op == "damage" and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
+            -- El dano ya viene MITIGADO por quien lo calculo: aqui no se vuelve a resolver nada,
+            -- solo se emite el comando que el otro no podia emitir.
+            ok = HarfordServerActions.SetNpcHealthDelta(-math.abs(p.cantidad), { addonName = "Harford" })
+            if ok and HarfordChat and HarfordChat.Print then
+                local de = (#(p.autores or {}) > 0) and (" (" .. table.concat(p.autores, ", ") .. ")") or ""
+                HarfordChat.Print(string.format("Aplicados %d de dano pendiente a %s%s.",
+                    math.abs(p.cantidad), tostring(UnitName and UnitName(unit) or "?"), de))
+            end
         end
         -- Solo se tacha lo que se pudo hacer: un fallo de servidor no debe borrar el recordatorio.
         if ok then
@@ -1052,6 +1087,72 @@ function API.FlushPendingAuras(unit)
     if #lista == 0 then pendientesAura[guid] = nil end
     if hechas > 0 then Notify() end
     return hechas
+end
+
+-- ─── DELEGAR EL EFECTO EN QUIEN PUEDA EMITIRLO ──────────────────────────────
+-- `EsNpcDeLosTurnos` se declara mas abajo; aqui solo se cierra sobre ella.
+-- Quien manda el efecto ya lo ha resuelto entero: tirada, dano y mitigacion son del cliente. Lo
+-- unico que no puede hacer es EMITIR el comando de servidor, porque no es oficial.
+--
+-- Se manda al lider del grupo, que es el DM principal en mesa. Si el lider tampoco puede, se queda
+-- apuntado en su cola y no pasa nada: es mejor que se pierda un comando a que se pierda el turno.
+local function NombreDelLider()
+    if not (IsInGroup and IsInGroup()) then return nil end
+    local n = GetNumGroupMembers and GetNumGroupMembers() or 0
+    local prefijo = (IsInRaid and IsInRaid()) and "raid" or "party"
+    for i = 1, n do
+        local u = prefijo .. i
+        if UnitExists and UnitExists(u) and UnitIsGroupLeader and UnitIsGroupLeader(u) then
+            return HarfordClassColors.UnitFullName(u)
+        end
+    end
+    return nil
+end
+
+-- ¿Puedo emitirlo yo? Si si, no hay nada que delegar.
+function API.PuedoAplicarEnNpc()
+    return (HarfordAuthority and HarfordAuthority.CanUseOfficerCommands
+        and HarfordAuthority.CanUseOfficerCommands()) == true
+end
+
+-- Punto unico: aplicar un efecto a un NPC, lo pueda yo o no. Devuelve "aplicado", "encolado",
+-- "delegado" o nil, para que quien llama pueda decirlo por chat sin repetir la logica.
+function API.AplicarEfectoNpc(guid, tipo, valor, unidad)
+    guid = tostring(guid or "")
+    if guid == "" then return nil end
+
+    if API.PuedoAplicarEnNpc() then
+        if tipo == "damage" then API.QueueNpcDamage(guid, valor, nil)
+        else API.QueueNpcAura(guid, valor, tipo) end
+        -- Si ya lo tengo delante, se ejecuta ahora mismo en vez de esperar a re-seleccionarlo.
+        local mirando = UnitExists and UnitExists(unidad or "target")
+            and UnitGUID and UnitGUID(unidad or "target") == guid
+        if mirando and API.FlushPendingAuras(unidad or "target") > 0 then return "aplicado" end
+        return "encolado"
+    end
+
+    local lider = NombreDelLider()
+    if not (lider and HarfordSync and HarfordSync.SerializeNpcEffect) then return nil end
+    local yo = HarfordClassColors.UnitFullName("player") or ""
+    HarfordSync.Send(PREFIX, HarfordSync.SerializeNpcEffect(guid, tipo, valor, yo), "WHISPER", lider)
+    return "delegado"
+end
+
+-- Recepcion. Solo entra si YO puedo emitirlo: si no, encolarlo seria acumular trabajo que nunca
+-- se hara y ademas dejaria creer al que lo mando que esta resuelto.
+function API.RecibirEfectoNpc(guid, tipo, valor, autor, sender)
+    if not API.PuedoAplicarEnNpc() then return false end
+    if not EsNpcDeLosTurnos(guid) then return false end
+    if tipo == "damage" then
+        API.QueueNpcDamage(guid, valor, autor ~= "" and ShortName(autor) or ShortName(sender or ""))
+    elseif tipo == "apply" or tipo == "remove" then
+        API.QueueNpcAura(guid, valor, tipo)
+    else
+        return false
+    end
+    -- Si ya lo tengo seleccionado, se ejecuta sin esperar.
+    API.FlushPendingAuras("target")
+    return true
 end
 
 function API.ClearPendingAuras(guid)
@@ -1927,7 +2028,7 @@ end
 -- ¿Este guid es un NPC que ya esta en el orden de turnos? Es el unico caso en que se acepta que
 -- alguien informe de estados ajenos: sin esto, cualquiera podria inventarse condiciones sobre
 -- cualquier cosa.
-local function EsNpcDeLosTurnos(guid)
+EsNpcDeLosTurnos = function(guid)
     guid = tostring(guid or "")
     if guid == "" then return false end
     local store = _G.HarfordTurnOrderStore
@@ -2083,6 +2184,14 @@ function API.HandleMessage(message, sender)
     if state then
         if IsTrustedSender(sender) then CacheRemoteState(state, sender) end
         return true
+    end
+    -- Un jugador sin permiso delega en mi un efecto que ya ha resuelto por su cuenta.
+    if HarfordSync.DeserializeNpcEffect then
+        local guid, tipo, valor, autor = HarfordSync.DeserializeNpcEffect(message)
+        if guid then
+            if IsTrustedSender(sender) then API.RecibirEfectoNpc(guid, tipo, valor, autor, sender) end
+            return true
+        end
     end
     -- Alguien acaba de entrar y pregunta por los NPCs. Solo contesta el DM.
     if HarfordSync.DeserializeNpcStatesRequest then

@@ -301,6 +301,30 @@ function HarfordSync.DeserializeNpcStatesRequest(message)
     return tostring(requester or "")
 end
 
+-- EFECTO SOBRE NPC DELEGADO AL LIDER (DNDNPCDO)
+--
+-- Un jugador que no es oficial NO puede bajarle la vida a un NPC ni ponerle un aura: esos son
+-- comandos de servidor y el servidor se los rechaza. Pero SI puede tirar, calcular su dano y
+-- resolver sus reglas -- todo eso es del cliente.
+--
+-- Asi que lo resuelve entero y manda solo el EFECTO ya calculado a quien puede aplicarlo. No se
+-- delega la decision, se delega la ejecucion: el lider no vuelve a tirar ni a mitigar nada,
+-- unicamente ejecuta el comando que el otro no tiene permiso para emitir.
+--
+-- Se apunta por GUID y se ejecuta cuando el lider tenga a ese NPC seleccionado, que es la unica
+-- forma de actuar sobre el en Epsilon.
+function HarfordSync.SerializeNpcEffect(guid, tipo, valor, nombre)
+    return table.concat({ "DNDNPCDO", tostring(guid or ""), tostring(tipo or ""),
+        tostring(math.floor(tonumber(valor) or 0)), tostring(nombre or "") }, "|")
+end
+
+function HarfordSync.DeserializeNpcEffect(message)
+    local opcode, guid, tipo, valor, nombre = strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDNPCDO" then return nil end
+    if tostring(guid or "") == "" then return nil end
+    return tostring(guid), tostring(tipo or ""), tonumber(valor) or 0, tostring(nombre or "")
+end
+
 function HarfordSync.BestChannel()
     if IsInRaid and IsInRaid() then return "RAID" end
     if IsInGroup and IsInGroup() then return "PARTY" end

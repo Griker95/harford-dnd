@@ -136,4 +136,62 @@ chk("y no se aplica nada", APLICADO, "nil")
 print("Solo devuelve true lo que cambia lo que se ve")
 chk("un mensaje que no reconoce", H.HandleAddonMessage("DND5EARC", "ALGO|raro", "Companero"), false)
 
+-- ─── ENTREGA POR ChatThrottleLib ────────────────────────────────────────────
+-- `SendAddonMessage` a secas no dice si el mensaje salio. CTL devuelve el enum de WoW, y ahi esta
+-- `NotInGroup = 5`, que es el fallo silencioso que se venia persiguiendo: `BestChannel()` a nil, o
+-- un grupo del que ya no formas parte. Se guarda la causa para el diagnostico, sin avisar por chat
+-- -- un aviso por cada fallo seria peor que el fallo.
+local envSync = { _G = {} }
+local Sync = cargarModulo("Harford/Core/HarfordSync.lua", envSync)
+Sync = envSync.HarfordSync or Sync
+
+print("Cada trafico tiene su prioridad en la cola")
+-- Una tirada y un cambio de turno la mesa los espera YA. Una foto de reputacion puede esperar, y
+-- no debe adelantar a una tirada.
+chk("las tiradas van primero", Sync.PRIORIDAD_POR_PREFIJO.DND5EARC, "ALERT")
+chk("el turno tambien", Sync.PRIORIDAD_POR_PREFIJO.HARFORDTURN, "ALERT")
+chk("las fotos de reputacion esperan", Sync.PRIORIDAD_POR_PREFIJO.HARFORDREP, "BULK")
+chk("y las de contratos", Sync.PRIORIDAD_POR_PREFIJO.TCBOARD, "BULK")
+
+print("La causa del fallo se traduce, no se guarda un numero")
+chk("no estar en el grupo", Sync.CAUSA_ENTREGA[5], "no estas en el grupo")
+chk("saturacion", Sync.CAUSA_ENTREGA[3], "saturado")
+chk("entrega buena", Sync.CAUSA_ENTREGA[0], "entregado")
+
+print("El registro de entregas cuenta lo que pasa")
+Sync.ENTREGA.ok, Sync.ENTREGA.fallos = 0, 0
+Sync._AlEntregar("DND5EARC", true, 0)
+Sync._AlEntregar("DND5EARC", true, 0)
+chk("dos entregadas", Sync.ENTREGA.ok, 2)
+chk("y ningun fallo", Sync.ENTREGA.fallos, 0)
+Sync._AlEntregar("HARFORDTURN", false, 5)
+chk("un fallo contado", Sync.ENTREGA.fallos, 1)
+chk("con su causa en claro", Sync.ENTREGA.ultimoFallo, "no estas en el grupo")
+chk("y de que trafico era", Sync.ENTREGA.ultimoPrefijo, "HARFORDTURN")
+-- Un codigo que no conocemos no puede perderse: mejor "codigo 99" que nil.
+Sync._AlEntregar("DND5EARC", false, 99)
+chk("un codigo desconocido no se traga", Sync.ENTREGA.ultimoFallo, "codigo 99")
+
+-- Turnos solo EMPUJABA la foto. Quien reconectaba veia su lista guardada -- de antes de caerse --
+-- hasta que el DM avanzara, sin nada que le dijera que miraba algo viejo.
+local turnos = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
+print("Los turnos ya se pueden pedir, no solo recibir")
+chk("hay peticion", turnos:find('"TREQ|"', 1, true) ~= nil, true)
+chk("y quien la atiende es el DM",
+    turnos:find("if IsTurnAdmin() and sender", 1, true) ~= nil, true)
+-- Por susurro: la foto completa solo le interesa a quien la pidio, no a toda la mesa.
+chk("se contesta a uno solo",
+    turnos:find('SendSerializedState(SerializeState(), "WHISPER", target)', 1, true) ~= nil, true)
+chk("se pide al entrar en grupo",
+    turnos:find('if event == "GROUP_ROSTER_UPDATE" then', 1, true) ~= nil, true)
+
+-- Con dos DMs, dos clics seguidos eran dos seriales y el bloque saltaba DOS veces.
+print("Dos DMs no avanzan el turno dos veces sin querer")
+chk("se avisa del avance ajeno",
+    turnos:find("acaba de avanzar el turno", 1, true) ~= nil, true)
+-- Avisar y no bloquear: bloquear al segundo DM le dejaria sin poder corregir al primero.
+chk("pero el segundo clic pasa",
+    turnos:find("Pulsa otra vez si quieres avanzarlo igualmente", 1, true) ~= nil, true)
+chk("y se anota quien avanzo", turnos:find("ultimoAvanceAjeno.quien", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

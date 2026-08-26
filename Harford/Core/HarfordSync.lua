@@ -130,6 +130,40 @@ function HarfordSync.RegisterPrefix(prefix)
     end
 end
 
+-- Prioridad de cada trafico en la cola de ChatThrottleLib. `ALERT` para lo que la mesa espera ver
+-- YA -- una tirada, un cambio de turno --; `BULK` para las fotos grandes, que pueden esperar y no
+-- deben adelantar a una tirada. El resto, normal.
+HarfordSync.PRIORIDAD_POR_PREFIJO = {
+    DND5EARC     = "ALERT",   -- tiradas, recursos, estados
+    HARFORDTURN  = "ALERT",   -- avance de turno
+    HARFORDREP   = "BULK",
+    HARFORDLOOT  = "BULK",
+    HARFORDCFG   = "BULK",
+    TCBOARD      = "BULK",    -- snapshots de contratos
+}
+
+-- Lo que CTL devuelve al intentar enviar. Solo se GUARDA -- que se mire es cosa del diagnostico --
+-- porque avisar por chat de cada fallo seria peor que el fallo.
+HarfordSync.ENTREGA = { ok = 0, fallos = 0, ultimoFallo = nil, ultimoPrefijo = nil }
+
+-- Codigos de `Enum.SendAddonMessageResult`, con nombre para que el diagnostico diga algo util en
+-- vez de un numero.
+HarfordSync.CAUSA_ENTREGA = {
+    [0] = "entregado", [3] = "saturado", [5] = "no estas en el grupo",
+    [8] = "canal saturado", [9] = "error general",
+}
+
+function HarfordSync._AlEntregar(prefijo, salio, causa)
+    local E = HarfordSync.ENTREGA
+    if salio then
+        E.ok = E.ok + 1
+        return
+    end
+    E.fallos = E.fallos + 1
+    E.ultimoFallo = HarfordSync.CAUSA_ENTREGA[causa] or ("codigo " .. tostring(causa))
+    E.ultimoPrefijo = tostring(prefijo)
+end
+
 function HarfordSync.Send(prefix, message, channel, target)
     if not prefix or prefix == "" then
         return false, "Prefix invalido"
@@ -139,6 +173,32 @@ function HarfordSync.Send(prefix, message, channel, target)
     end
     if channel == "WHISPER" and (not target or target == "") then
         return false, "WHISPER requiere target"
+    end
+
+    -- ChatThrottleLib si esta (lo trae EpsilonLib, y otros siete addons del cliente). Aporta tres
+    -- cosas que el envio directo no tiene, y NINGUNA cambia el formato del cable: envia el texto
+    -- tal cual por `C_ChatInfo.SendAddonMessage`, sin cabecera. Verificado en Epsilon: 16 bytes
+    -- enviados, 16 recibidos.
+    --
+    --   1. Callback de entrega con CAUSA. `SendAddonMessage` a secas no dice si el mensaje salio;
+    --      CTL devuelve el enum, y `NotInGroup = 5` es justo el fallo silencioso que se venia
+    --      persiguiendo -- `BestChannel()` a nil, o un grupo del que ya no formas parte.
+    --   2. Cola con prioridad y control de ancho de banda. Sin ella, una rafaga de recursos o
+    --      estados se descarta sin avisar.
+    --   3. Reintento automatico ante saturacion (`AddonMessageThrottle`), donde antes se perdia.
+    --
+    -- Se descarto Chomp para esto: antepone 12 hex de cabecera y DESCARTA lo que no la traiga, asi
+    -- que activarlo dejaria sordo a todo cliente sin actualizar. Ademas delega en CTL cuando lo
+    -- encuentra, que es el caso en Epsilon.
+    local CTL = _G.ChatThrottleLib
+    if CTL and CTL.SendAddonMessage then
+        local prioridad = HarfordSync.PRIORIDAD_POR_PREFIJO[prefix] or "NORMAL"
+        local enviado, err = pcall(CTL.SendAddonMessage, CTL, prioridad, prefix, message or "",
+            channel, target, nil, HarfordSync._AlEntregar, prefix)
+        -- Si CTL revienta -- mensaje de mas de 255, canal invalido -- se cae al envio directo en
+        -- vez de perder el mensaje: el error ya se registro y el directo puede que aun pase.
+        if enviado then return true end
+        HarfordSync._UltimoError = tostring(err)
     end
 
     local ok, result

@@ -22,6 +22,12 @@ local TurnFrame
 local StatusText
 local RefreshFrame
 local MarkChanged
+-- Cuando y quien avanzo el turno por ULTIMA vez desde otro cliente. Se rellena al recibir el
+-- aviso; el que lo emite no recibe el suyo.
+local ultimoAvanceAjeno = { quien = nil, cuando = 0 }
+local avanceConfirmado = 0        -- sello del aviso ya visto, para dejar pasar el segundo clic
+local VENTANA_DOBLE_AVANCE = 4
+local SendStateTo   -- se asigna abajo; el manejador de mensajes la usa antes
 local suppressBroadcast = false
 local broadcastPending = false
 local viewStart = 1
@@ -337,6 +343,18 @@ local function PurgeStaleEntries()
     -- el siguiente avance arrancara a media rotacion.
     store.activeBando = nil
     store.faseBando = nil
+    return true
+end
+
+-- ¿Acaba de avanzar otro DM? Devuelve true si hay que PARARSE y avisar. El segundo clic dentro de
+-- los 10 s siguientes pasa: quien insiste sabe lo que hace.
+local function OtroDMAcabaDeAvanzar()
+    local ahora = (time and time()) or 0
+    if ahora - (ultimoAvanceAjeno.cuando or 0) >= VENTANA_DOBLE_AVANCE then return false end
+    if ahora - avanceConfirmado < 10 then return false end
+    avanceConfirmado = ahora
+    Print("|cffffcc00" .. tostring(ultimoAvanceAjeno.quien or "Otro DM")
+        .. " acaba de avanzar el turno.|r Pulsa otra vez si quieres avanzarlo igualmente.")
     return true
 end
 
@@ -675,6 +693,11 @@ end
 local function ApplyTurnNotice(message)
     local opcode, serialRaw, activeRaw, countRaw, adminRaw, entryRaw = strsplit("|", message or "")
 
+    if (opcode == "TURN" or opcode == "TURNB") and sender and sender ~= "" then
+        ultimoAvanceAjeno.quien = Ambiguate and Ambiguate(sender, "short") or sender
+        ultimoAvanceAjeno.cuando = (time and time()) or 0
+    end
+
     if opcode == "TURNB" then
         local bando, idsRaw, fase = activeRaw, countRaw, adminRaw
         fase = (fase == "fin") and "fin" or "inicio"
@@ -750,9 +773,9 @@ local function ApplySerializedState(message)
     return true
 end
 
-local function SendSerializedState(payload, channel)
+local function SendSerializedState(payload, channel, target)
     if #payload <= TURN_SINGLE_MESSAGE_LIMIT then
-        return HarfordSync.Send(COMM_PREFIX, payload, channel)
+        return HarfordSync.Send(COMM_PREFIX, payload, channel, target)
     end
 
     local chunks = Codec.SplitEscapedChunks(payload)
@@ -763,7 +786,7 @@ local function SendSerializedState(payload, channel)
 
     local transferId = NewId()
     for i = 1, #chunks do
-        local ok, err = HarfordSync.Send(COMM_PREFIX, "SCHUNK|" .. transferId .. "|" .. tostring(i) .. "|" .. tostring(#chunks) .. "|" .. chunks[i], channel)
+        local ok, err = HarfordSync.Send(COMM_PREFIX, "SCHUNK|" .. transferId .. "|" .. tostring(i) .. "|" .. tostring(#chunks) .. "|" .. chunks[i], channel, target)
         if not ok then return false, err end
     end
     return true
@@ -808,6 +831,12 @@ local function ApplyTurnMessage(message, sender)
         return ApplyTurnNotice(message)
     elseif opcode == "TCHUNK" then
         return ApplyChunkedTurnNotice(message, sender)
+    elseif opcode == "TREQ" then
+        -- Solo el DM tiene la foto buena. Si hay varios, contestan todos: la foto es la misma y
+        -- aplicarla dos veces no cambia nada, a diferencia de los estados de NPC, donde la lista
+        -- SUSTITUYE y por eso alli si hizo falta desempate.
+        if IsTurnAdmin() and sender and sender ~= "" then SendStateTo(sender) end
+        return true
     elseif opcode == "INITREQ" then
         return Combate.ApplyInitiativeRequest(message, sender)
     elseif opcode == "INITRES" then
@@ -821,6 +850,26 @@ local function SendState()
     local ch = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
     if not ch then return false end
     return SendSerializedState(SerializeState(), ch)
+end
+
+-- Contestar a uno solo, por susurro: la foto completa solo le interesa a quien la pidio.
+SendStateTo = function(target)
+    if not IsTurnAdmin() then return false end
+    if not (target and target ~= "") then return false end
+    return SendSerializedState(SerializeState(), "WHISPER", target)
+end
+
+-- Preguntar. Va al canal del GRUPO porque quien entra no sabe quien es el DM; contestan los que lo
+-- sean. Con enfriamiento, que `GROUP_ROSTER_UPDATE` se dispara en rafagas.
+local ULTIMA_PETICION_TURNOS = 0
+local function RequestTurnState()
+    local ahora = (time and time()) or 0
+    if ahora - ULTIMA_PETICION_TURNOS < 12 then return false end
+    ULTIMA_PETICION_TURNOS = ahora
+    local ch = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+    if not ch then return false end
+    return HarfordSync.Send(COMM_PREFIX, "TREQ|"
+        .. tostring((GetUnitName and GetUnitName("player", true)) or ""), ch)
 end
 
 local function SendTurnNotice()
@@ -1744,6 +1793,7 @@ end
 
 local function NextTurn()
     if not IsTurnAdmin() then Print("Solo el admin puede avanzar turnos.") return end
+    if OtroDMAcabaDeAvanzar() then return end
     ClaimAdminIfNeeded()
     local store = EnsureStore()
     EnsureRoundMarker()
@@ -1787,6 +1837,7 @@ end
 
 local function PrevTurn()
     if not IsTurnAdmin() then Print("Solo el admin puede retroceder turnos.") return end
+    if OtroDMAcabaDeAvanzar() then return end
     ClaimAdminIfNeeded()
     local store = EnsureStore()
     EnsureRoundMarker()
@@ -2141,6 +2192,8 @@ end
 
 local eventFrame = CreateFrame("Frame")
 eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 eventFrame:RegisterEvent("CHAT_MSG_ADDON")
 eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
 eventFrame:RegisterEvent("UNIT_HEALTH")
@@ -2156,6 +2209,20 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         elseif RegisterAddonMessagePrefix then
             RegisterAddonMessagePrefix(COMM_PREFIX)
         end
+        return
+    end
+
+    if event == "PLAYER_ENTERING_WORLD" then
+        -- Diferido: al entrar, el grupo aun no esta formado y `BestChannel()` devolveria nil, que
+        -- es fallar en silencio.
+        if C_Timer and C_Timer.After then
+            C_Timer.After(4, function() RequestTurnState() end)
+        end
+        return
+    end
+
+    if event == "GROUP_ROSTER_UPDATE" then
+        RequestTurnState()
         return
     end
 

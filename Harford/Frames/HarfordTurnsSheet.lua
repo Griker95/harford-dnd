@@ -18,11 +18,13 @@ local RefreshSheetLayout  -- forward declaration (definida mas abajo)
 local SHEET_CONTENT_W  = 382
 local SECTION_BODY_PAD = 8
 local SECTION_GAP      = 6
-local SECTION_HDR_H  -- calculada tras leer la fuente
+-- Se calcula al leer la fuente y la INYECTA HarfordTurns: declararla aqui sin recibirla la
+-- dejaba nil y `SetHeight(nil)` reventaba al abrir cualquier ficha con secciones.
+local SECTION_HDR_H
 
 -- Inyectadas por HarfordTurns.
 local EntryIconMarkup, GetEntryNameColor, GetPlayerTurnNameColorHex, IsSystemEntry, SetFrameBackground, MakeButton, Print
-local Codec
+local Codec, TEX_WHITE
 
 function API.Init(deps)
     deps = deps or {}
@@ -34,6 +36,13 @@ function API.Init(deps)
     MakeButton = deps.MakeButton or MakeButton
     Print = deps.Print or Print
     Codec = deps.Codec or Codec
+    TEX_WHITE = deps.TEX_WHITE or TEX_WHITE
+end
+
+-- La altura de cabecera se calcula DESPUES de que HarfordTurns lea la fuente, asi que llega por su
+-- cuenta y no en el `Init` inicial.
+function API.SetSectionHeaderHeight(alto)
+    SECTION_HDR_H = tonumber(alto) or SECTION_HDR_H
 end
 
 local function MakeSheetLine(parent, point, rel, relPoint, x, y, width, height, r, g, b, a)
@@ -188,7 +197,7 @@ local function GetOrCreateSectionWidget(i)
     return w
 end
 
-local function RefreshSheetLayout()
+RefreshSheetLayout = function()
     local totalY = 0
     for _, w in ipairs(SheetActiveSections) do
         if w.hasTitle then

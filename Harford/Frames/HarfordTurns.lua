@@ -591,7 +591,10 @@ local function SerializeState()
         Codec.NormalizeEntryLinks(store.entries[i])
         parts[#parts + 1] = Codec.SerializeEntry(store.entries[i])
     end
-    return "STATE|" .. tostring(store.activeIndex or 1) .. "||" .. table.concat(parts, ";")
+    -- El tercer campo llevaba vacio desde siempre; ahora lleva el modo. Un receptor antiguo lo
+    -- ignora y sigue leyendo las entradas del cuarto, que es donde ya las buscaba.
+    return "STATE|" .. tostring(store.activeIndex or 1) .. "|"
+        .. (store.modoBandos and "B" or "") .. "|" .. table.concat(parts, ";")
 end
 
 local function SerializeTurnNotice()
@@ -675,7 +678,9 @@ local function EntradaDeBandoRecibida(bando, idsRaw, fase)
     for id in tostring(idsRaw or ""):gmatch("[^,]+") do
         local e = porId[id]
         if e then
-            if e.guid and e.guid ~= "" then guids[tostring(e.guid)] = true end
+            -- El GUID de una entrada vive en `id`; `guid` no existe.
+            local g = tostring(e.guid or e.id or "")
+            if g ~= "" then guids[g] = true end
             if e.name and e.name ~= "" then nombres[tostring(e.name)] = true end
             cuantos = cuantos + 1
         end
@@ -691,7 +696,7 @@ local function EntradaDeBandoRecibida(bando, idsRaw, fase)
     }
 end
 
-local function ApplyTurnNotice(message)
+local function ApplyTurnNotice(message, sender)
     local opcode, serialRaw, activeRaw, countRaw, adminRaw, entryRaw = strsplit("|", message or "")
 
     if (opcode == "TURN" or opcode == "TURNB") and sender and sender ~= "" then
@@ -761,6 +766,9 @@ local function ApplySerializedState(message)
     local store = EnsureStore()
     store.entries = {}
     store.activeIndex = SafeNumber(activeRaw, 1)
+    -- Solo se acepta la marca si viene en el hueco del modo Y hay un cuarto campo: en el formato
+    -- viejo las entradas iban en el tercero y una que empezara por "B" se tomaria por el modo.
+    if fourth then store.modoBandos = (third == "B") or nil end
     local entriesRaw = fourth or third
     if entriesRaw and entriesRaw ~= "" then
         for token in string.gmatch(entriesRaw, "[^;]+") do
@@ -831,7 +839,7 @@ local function ApplyTurnMessage(message, sender)
     elseif opcode == "SCHUNK" then
         return ApplyChunkedState(message, sender)
     elseif opcode == "TURN" then
-        return ApplyTurnNotice(message)
+        return ApplyTurnNotice(message, sender)
     elseif opcode == "TCHUNK" then
         return ApplyChunkedTurnNotice(message, sender)
     elseif opcode == "TREQ" then
@@ -943,7 +951,11 @@ end
 
 do
     local _, bodySize = Ficha.GetTRP3BodyFont()
-    SECTION_HDR_H = math.max(28, math.ceil(bodySize * 2.4))
+    -- Se calcula aqui porque depende de la fuente de TRP3, pero quien la usa es el modulo de la
+    -- ficha. Escribirla sin pasarsela creaba una global que su propio local tapaba: le llegaba nil
+    -- y `SetHeight(nil)` reventaba al abrir cualquier ficha con secciones.
+    local alto = math.max(28, math.ceil(bodySize * 2.4))
+    if Ficha.SetSectionHeaderHeight then Ficha.SetSectionHeaderHeight(alto) end
 end
 
 -- (BuildStateRows y STATE_ROW_H eliminados: la seccion de rasgos usa bodyText igual que el resto)
@@ -1372,6 +1384,8 @@ end
 RefreshFrame = function()
     if not TurnFrame then return end
     if not TurnFrame:IsShown() then return end
+    -- El modo viaja en la foto: puede cambiarlo otro DM y este cliente tiene que verlo.
+    if TurnFrame.RefreshModoBandos then TurnFrame.RefreshModoBandos() end
     local store = EnsureStore()
     EnsureRoundMarker()
     ClampActiveIndex()
@@ -2156,6 +2170,30 @@ local function CreateTurnFrame()
     btnNeutral:GetFontString():SetTextColor(1.0, 1.0, 0.0)
     btnEnemigo:GetFontString():SetTextColor(1.0, 0.2, 0.2)
 
+    -- Interruptor del modo bandos. Sin el, `SetModoBandos` no se llamaba desde ningun sitio y el
+    -- avance por bloques era codigo inalcanzable.
+    local btnBandos
+    btnBandos = MakeButton(TurnFrame, "Bandos", 56, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 320, -75,
+        function()
+            if not IsTurnAdmin() then Print("Solo el admin cambia el modo de turnos.") return end
+            local activo = not HarfordTurnOrderAPI.IsModoBandos()
+            HarfordTurnOrderAPI.SetModoBandos(activo)
+            Print(activo
+                and "Iniciativa por BANDOS: el turno pasa de bloque a bloque."
+                or "Iniciativa individual: el turno pasa de criatura a criatura.")
+            MarkChanged()
+            if TurnFrame.RefreshModoBandos then TurnFrame.RefreshModoBandos() end
+        end)
+    -- El estado se lee del almacen en cada refresco: viaja en la foto, asi que puede cambiarlo
+    -- otro DM y este cliente tiene que enterarse.
+    TurnFrame.RefreshModoBandos = function()
+        local activo = HarfordTurnOrderAPI.IsModoBandos()
+        btnBandos:GetFontString():SetTextColor(activo and 1.0 or 0.55,
+            activo and 0.82 or 0.55, activo and 0.1 or 0.55)
+        btnBandos:SetText(activo and "Bandos" or "Individual")
+    end
+    TurnFrame.RefreshModoBandos()
+
     local btnIniciar = MakeButton(TurnFrame, "Iniciar", 58, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 320, -51, Combate.StartCombat)
     local btnTerminar = MakeButton(TurnFrame, "Terminar", 66, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 382, -51, Combate.EndCombat)
     btnIniciar:GetFontString():SetTextColor(1.0, 0.82, 0.1)
@@ -2305,6 +2343,7 @@ if Ficha and Ficha.Init then
         -- Faltaba: se usa en tres sitios de la ficha y resolvia a nil, asi que abrir la ficha de
         -- una entrada reventaba.
         Codec = Codec,
+        TEX_WHITE = TEX_WHITE,
     })
 end
 
@@ -2365,7 +2404,8 @@ do
         local store = HarfordTurnOrderStore
         if type(store) ~= "table" or type(store.entries) ~= "table" then return puestos end
         for _, e in ipairs(store.entries) do
-            if e.guid and e.guid ~= "" then puestos[tostring(e.guid)] = true end
+            local g = tostring(e.guid or e.id or "")
+            if g ~= "" then puestos[g] = true end
         end
         return puestos
     end
@@ -2600,7 +2640,11 @@ function HarfordTurnOrderAPI.GetBandoMembers(bando)
     local store = HarfordTurnOrderStore
     if type(store) ~= "table" or type(store.entries) ~= "table" then return fuera end
     for _, entry in ipairs(store.entries) do
-        if HarfordTurnOrderAPI.GetBando(entry) == bando then fuera[#fuera + 1] = entry end
+        -- Fuera las entradas de SISTEMA: el marcador de asalto no es una criatura, y sin
+        -- filtrarlo caia por reaccion 0 en "enemigos" y ese bando no se veia vacio nunca.
+        if not IsSystemEntry(entry) and HarfordTurnOrderAPI.GetBando(entry) == bando then
+            fuera[#fuera + 1] = entry
+        end
     end
     return fuera
 end

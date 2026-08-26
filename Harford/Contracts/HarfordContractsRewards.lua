@@ -49,9 +49,15 @@ end
 -- individuales de quien entrega en el NPC.
 function TC.Rewards.HasShared(contract)
     if type(contract) ~= "table" then return false end
+    -- Cero XP no es una recompensa: con `~= nil` bastaba con que el campo existiera, y el boton
+    -- se quedaba encendido reclamando algo que nunca se podia marcar como cobrado.
+    local xp = (tonumber(contract.rewardXP) or 0) > 0
     local reps = type(contract.rewardReps) == "table" and #contract.rewardReps > 0
+    -- Una tabla de reputacion sin faccion ni cantidad tampoco reparte nada.
     local rep = type(contract.rewardRep) == "table"
-    return (tonumber(contract.rewardXP) ~= nil) or reps or rep
+        and (contract.rewardRep.faction or contract.rewardRep.factionId) ~= nil
+        and (tonumber(contract.rewardRep.amount) or 0) ~= 0
+    return xp or reps or rep
 end
 
 -- ¿Ya lo cobro ESTE personaje? Se consultan las DOS claves: la actual y la heredada. Mirar solo

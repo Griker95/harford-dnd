@@ -2012,7 +2012,7 @@ function API.SendNpcStatesTo(target, yaEsperado)
     if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
     local enviados = 0
     for _, e in ipairs(store.entries) do
-        local guid = tostring(e.guid or "")
+        local guid = tostring(e.guid or e.id or "")
         if tostring(e.kind or "") == "npc" and guid ~= "" then
             local estados = {}
             for _, activo in ipairs(API.GetActive(guid) or {}) do
@@ -2078,7 +2078,7 @@ EsNpcDeLosTurnos = function(guid)
     local store = _G.HarfordTurnOrderStore
     if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
     for _, e in ipairs(store.entries) do
-        if tostring(e.guid or "") == guid and tostring(e.kind or "") == "npc" then return true end
+        if tostring(e.guid or e.id or "") == guid and tostring(e.kind or "") == "npc" then return true end
     end
     return false
 end

@@ -577,7 +577,11 @@ function Phase.CopyBoardHere(callback)
     local copiados, omitidos, fallos = 0, {}, 0
     for _, contract in ipairs(mios) do
       local id = tostring(contract.id)
-      if presentes[id] then
+      if contract._phaseStub then
+        -- Un esbozo es un hueco a la espera de su contenido: copiarlo a otra fase deja alli un
+        -- contrato vacio y ademas lo cuenta como copiado.
+        omitidos[#omitidos + 1] = tostring(contract.title or id) .. " (esbozo)"
+      elseif presentes[id] then
         omitidos[#omitidos + 1] = tostring(contract.title or id)
       else
         local clave, larga = ClaveBloque(id)

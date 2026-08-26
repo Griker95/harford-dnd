@@ -19,8 +19,14 @@ end
 local src = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
 local ini = assert(src:find("HarfordTurnOrderAPI.FASES = {", 1, true))
 local fin = assert(src:find("function HarfordTurnOrderAPI.HasActiveCombat", ini, true))
+-- `IsSystemEntry` es del tracker: el marcador de asalto no es una criatura y no puede contar como
+-- miembro de ningun bando. Aqui se imita con lo mismo que mira el original.
 local env = { ipairs = ipairs, pairs = pairs, tonumber = tonumber, tostring = tostring,
-    type = type, table = table, HarfordTurnOrderAPI = {}, HarfordTurnOrderStore = nil }
+    type = type, table = table, HarfordTurnOrderAPI = {}, HarfordTurnOrderStore = nil,
+    IsSystemEntry = function(e)
+        local k = tostring(e and e.kind or "")
+        return k == "round" or k == "generic" or k == "players"
+    end }
 local cargar = loadstring or load
 local f
 if setfenv then f = assert(cargar(src:sub(ini, fin - 1))); setfenv(f, env)
@@ -76,6 +82,14 @@ chk("un PJ", #T.GetBandoMembers("pjs"), 1)
 chk("dos enemigos", #T.GetBandoMembers("enemigos"), 2)
 chk("un aliado", #T.GetBandoMembers("aliados"), 1)
 chk("ningun neutral", #T.GetBandoMembers("neutrales"), 0)
+-- El marcador de asalto caia por reaccion 0 en "enemigos": ese bando no se veia vacio NUNCA y por
+-- tanto no se saltaba, aunque no hubiera un solo enemigo de verdad.
+env.HarfordTurnOrderStore = { entries = {
+    { kind = "round", name = "Inicio de turno" },
+    { kind = "player", name = "Gmaster" },
+} }
+chk("el marcador de asalto no es de nadie", #T.GetBandoMembers("enemigos"), 0)
+chk("y el PJ sigue contando", #T.GetBandoMembers("pjs"), 1)
 env.HarfordTurnOrderStore = nil
 chk("sin almacen, lista vacia", #T.GetBandoMembers("enemigos"), 0)
 
@@ -292,5 +306,31 @@ chk("el ultimo asalto se guarda", cond:find("root._asalto[perfil] = asalto", 1, 
 -- Un salto de 1 es el asalto normal, no una ausencia.
 chk("un asalto seguido no dispara nada",
     cond:find("if visto > 0 and asalto > visto + 1 then", 1, true) ~= nil, true)
+
+-- ─── EL MODO SE PUEDE ENCENDER Y VIAJA ──────────────────────────────────────
+-- Nadie llamaba a `SetModoBandos`, y `TURNB` solo sale si `modoBandos` YA es true: todo el avance
+-- por bloques era codigo inalcanzable. Existir no es lo mismo que poder usarse.
+print("Hay como encender el modo, y se comparte")
+chk("hay boton", turnos:find('MakeButton(TurnFrame, "Bandos"', 1, true) ~= nil, true)
+chk("que lo enciende de verdad", turnos:find("HarfordTurnOrderAPI.SetModoBandos(activo)", 1, true) ~= nil, true)
+chk("solo el admin", turnos:find("Solo el admin cambia el modo de turnos", 1, true) ~= nil, true)
+-- Media mesa por bandos y media por criatura serian dos combates distintos a la vez.
+chk("el modo viaja en la foto",
+    turnos:find('(store.modoBandos and "B" or "")', 1, true) ~= nil, true)
+-- El hueco del medio llevaba vacio desde siempre; un receptor antiguo lo ignora y sigue leyendo
+-- las entradas del cuarto campo, que es donde ya las buscaba.
+chk("y solo se acepta si hay cuarto campo",
+    turnos:find('if fourth then store.modoBandos = (third == "B") or nil end', 1, true) ~= nil, true)
+
+-- El GUID de una entrada vive en `id`; `guid` no existe. Cuatro sitios lo leian, y dos eran
+-- guardias: la delegacion de efectos no aceptaba NADA y no se informaba de ningun NPC.
+print("El GUID de una entrada se lee de donde esta")
+chk("en la lista de miembros del bando",
+    turnos:find("local g = tostring(e.guid or e.id or \"\")", 1, true) ~= nil, true)
+chk("y en el guardia de efectos delegados",
+    cond:find('tostring(e.guid or e.id or "") == guid', 1, true) ~= nil, true)
+-- Sin el remitente, `ultimoAvanceAjeno` no se llenaba y el aviso de doble avance no salia jamas.
+chk("el aviso de doble avance recibe al remitente",
+    turnos:find("local function ApplyTurnNotice(message, sender)", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

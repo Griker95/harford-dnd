@@ -166,14 +166,18 @@ function Phase.Publish(quiet)
     return false
   end
 
-  local publicos, fallos = {}, 0
+  local publicos, fallos, saltados = {}, 0, 0
   for _, contract in ipairs(TC.GetDB().contracts or {}) do
     if EsPublico(contract) then publicos[#publicos + 1] = contract end
   end
 
   for _, contract in ipairs(publicos) do
     local clave, larga = ClaveBloque(contract.id)
-    if not clave then
+    if Phase.IsStub(contract) then
+      -- Un esbozo no tiene contenido que publicar: escribirlo machacaria el bloque bueno que ya
+      -- hay en la fase con uno vacio. Se salta y se dice, en vez de perderlo en silencio.
+      saltados = saltados + 1
+    elseif not clave then
       fallos = fallos + 1
       TC.Print("Id demasiado largo para una clave de fase: " .. tostring(larga))
     else
@@ -201,7 +205,10 @@ function Phase.Publish(quiet)
   end
 
   local resumen = string.format("Fase %s: %d contratos publicados",
-    tostring(Phase.GetPhaseId()), #publicos - fallos)
+    tostring(Phase.GetPhaseId()), #publicos - fallos - saltados)
+  if saltados > 0 then
+    resumen = resumen .. "; " .. saltados .. " sin cargar (usa Cargar bloques antes)"
+  end
   TC.SetSyncStatus(resumen)
   if not quiet then
     TC.Print(resumen .. (fallos > 0 and (" (" .. fallos .. " con error)") or ""))
@@ -574,13 +581,14 @@ function Phase.CopyBoardHere(callback)
       if clave then claves[#claves + 1] = clave end
     end
 
-    local copiados, omitidos, fallos = 0, {}, 0
+    local copiados, omitidos, fallos, esbozos = 0, {}, 0, {}
     for _, contract in ipairs(mios) do
       local id = tostring(contract.id)
-      if contract._phaseStub then
-        -- Un esbozo es un hueco a la espera de su contenido: copiarlo a otra fase deja alli un
-        -- contrato vacio y ademas lo cuenta como copiado.
-        omitidos[#omitidos + 1] = tostring(contract.title or id) .. " (esbozo)"
+      if Phase.IsStub(contract) then
+        -- Saco APARTE: meterlos con los duplicados hacia que el resumen dijera "ya existia aqui"
+        -- de contratos que no estan en el destino, y si todos eran esbozos abortaba diciendo que
+        -- no habia nada que copiar. Lo que hace falta es cargar sus bloques primero.
+        esbozos[#esbozos + 1] = tostring(contract.title or id)
       elseif presentes[id] then
         omitidos[#omitidos + 1] = tostring(contract.title or id)
       else
@@ -620,11 +628,18 @@ function Phase.CopyBoardHere(callback)
     if #omitidos > 0 then
       resumen = resumen .. "; " .. #omitidos .. " ya estaban y no se han tocado"
     end
+    if #esbozos > 0 then
+      resumen = resumen .. "; " .. #esbozos .. " sin cargar"
+    end
     if fallos > 0 then resumen = resumen .. "; " .. fallos .. " con error" end
     TC.SetSyncStatus(resumen)
     TC.Print(resumen .. ".")
     for _, titulo in ipairs(omitidos) do
       TC.Print("   |cffffcc00ya existia aqui:|r " .. titulo)
+    end
+    -- Aparte de los duplicados: estos NO estan en el destino, solo les falta su contenido.
+    for _, titulo in ipairs(esbozos) do
+      TC.Print("   |cffffcc00sin cargar, no se copio:|r " .. titulo)
     end
     if TC.UI and TC.UI.Refresh then TC.UI.Refresh() end
     if callback then callback(true, copiados) end

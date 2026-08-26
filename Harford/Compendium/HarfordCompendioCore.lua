@@ -740,9 +740,11 @@ function API.BuildAreaDefinition(spell, options)
     -- lanzamiento y se reparte al ataque y a cada componente de dano.
     -- Solo se cobra si hay DONDE aplicarla. Antes se tomaba siempre y un conjuro que solo pone
     -- una condicion se la comia sin que el bono llegara a ninguna tirada.
-    local puedeAplicarse = (damageComponents ~= nil) or (options and options.soloConsultar ~= true)
+    -- Consultar NO gasta: `SpellNeedsTarget` llama aqui como predicado y sin esto abrir la ficha
+    -- de cualquier conjuro con dano se comia la carga.
+    local soloMirando = options and options.soloConsultar == true
     local cargaArcana = 0
-    if puedeAplicarse and damageComponents and HarfordDnDStore
+    if not soloMirando and damageComponents and HarfordDnDStore
         and HarfordDnDStore.TakeArcaneSpellBonus then
         cargaArcana = HarfordDnDStore.TakeArcaneSpellBonus() or 0
     end

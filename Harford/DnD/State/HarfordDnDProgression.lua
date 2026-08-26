@@ -659,7 +659,10 @@ end
 function API.Set(profileName, data)
     local name = ResolveProfileName(profileName)
     local slot = ProfileSlot(name)
-    slot._progression = Migrate(CopyTable(data))
+    -- Con el hueco: `Migrate` sella el esquema SIEMPRE y el renombrado de usos por descanso solo
+    -- corre con el esquema viejo. Una ficha que llegara por aqui antes de leerse gastaba la ventana
+    -- y el renombrado ya no ocurria nunca.
+    slot._progression = Migrate(CopyTable(data), nil, slot)
     Touch(name)
     return slot._progression, name
 end

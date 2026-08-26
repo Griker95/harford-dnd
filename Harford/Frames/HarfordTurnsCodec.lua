@@ -268,7 +268,9 @@ local function ApplyChunked(message, sender, opcode, keyPrefix, aplicar)
     end
 
     turnChunkBuffers[key] = nil
-    return aplicar(table.concat(assembled))
+    -- Con el REMITENTE: sin el, lo que llega troceado no sabe quien lo mando, y el aviso de doble
+    -- avance entre dos DMs quedaba mudo justo en un combate grande, que es cuando se trocea.
+    return aplicar(table.concat(assembled), sender)
 end
 
 API.EscapeText = EscapeText

@@ -319,12 +319,14 @@ function HarfordDnDCombat.GetSkillBonusForUnit(unit, skillName)
     -- MEJOR, que es lo que elegiria el.
     local texto = tostring(skillName or "")
     if texto:find("/", 1, true) then
-        local mejor = 0
+        -- Sin semilla: arrancar en 0 le regalaba el bono a un NPC con TODAS las habilidades en
+        -- negativo, que defendia mejor de lo que le toca.
+        local mejor
         for parte in texto:gmatch("[^/]+") do
             local b = HarfordDnDCombat.GetSkillBonusForUnit(unit, (parte:gsub("^%s+", ""):gsub("%s+$", "")))
-            if b > mejor then mejor = b end
+            if mejor == nil or b > mejor then mejor = b end
         end
-        return mejor
+        return mejor or 0
     end
 
     local buscado = HarfordClassColors.NormalizeKey(texto)

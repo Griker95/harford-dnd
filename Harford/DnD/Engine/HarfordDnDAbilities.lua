@@ -8,6 +8,7 @@
 -- este modulo no crea frames ni toca el layout.
 
 local ApplyConditionalHitAura, DoWeaponAttack, IsPriestSpell, Print, GetWeaponDef, GetWeaponKey
+local SheetContext
 
 HarfordDnDAbilities = HarfordDnDAbilities or {}
 

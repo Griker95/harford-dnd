@@ -947,13 +947,17 @@ function API.SlotIsTwoHanded(slotKey, profileName)
     if entry and entry.itemLink and entry.itemLink ~= "" then
         local resolved = API.ResolveItem(entry.itemLink)
         if resolved and DOS_MANOS_EQUIPLOC[tostring(resolved.equipLoc or "")] then
-            -- La ranura nativa a distancia agrupa arcos con PISTOLAS y varitas. Si el tipo D&D
-            -- del arma dice que no es de dos manos, manda el libro: una pistola no puede
-            -- desequiparte el escudo.
-            local clave = API.DetectWeaponKey and API.DetectWeaponKey(entry.itemLink)
-            local def = clave and HarfordDnDWeapons and HarfordDnDWeapons.WEAPONS
-                and HarfordDnDWeapons.WEAPONS[clave]
-            if def and not (tostring(def.props or ""):find("Dos manos", 1, true)) then
+            -- La ranura nativa a distancia agrupa arcos con PISTOLAS y varitas. Si el tipo D&D del
+            -- arma dice que no es de dos manos, manda el libro: una pistola no desequipa el escudo.
+            --
+            -- `DetectWeaponKey` recibe una LISTA de textos, `props` es una TABLA -- no una cadena --
+            -- y el def se busca recorriendo `WEAPONS`, que es una lista.
+            local clave = DetectWeaponKey({ resolved.name or "", entry.itemLink })
+            local def = clave and FindWeaponDefByKey(clave)
+            if def then
+                for _, prop in ipairs(def.props or {}) do
+                    if tostring(prop) == "Dos manos" then return true end
+                end
                 return false
             end
             return true

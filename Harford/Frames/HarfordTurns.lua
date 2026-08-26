@@ -2640,9 +2640,12 @@ function HarfordTurnOrderAPI.GetBandoMembers(bando)
     local store = HarfordTurnOrderStore
     if type(store) ~= "table" or type(store.entries) ~= "table" then return fuera end
     for _, entry in ipairs(store.entries) do
-        -- Fuera las entradas de SISTEMA: el marcador de asalto no es una criatura, y sin
-        -- filtrarlo caia por reaccion 0 en "enemigos" y ese bando no se veia vacio nunca.
-        if not IsSystemEntry(entry) and HarfordTurnOrderAPI.GetBando(entry) == bando then
+        -- Fuera SOLO el marcador de asalto: sin filtrarlo caia por reaccion 0 en "enemigos" y ese
+        -- bando no parecia vacio nunca. `IsSystemEntry` no vale aqui porque tambien tapa `players`
+        -- y `generic`, que son justo los marcadores de bando -- el hueco colectivo de PJs y los
+        -- Aliado/Neutral/Enemigo -- y filtrarlos vaciaba la rotacion entera.
+        if tostring(entry.kind or "") ~= "round"
+            and HarfordTurnOrderAPI.GetBando(entry) == bando then
             fuera[#fuera + 1] = entry
         end
     end

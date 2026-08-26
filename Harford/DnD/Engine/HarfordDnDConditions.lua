@@ -1598,8 +1598,79 @@ function API.EndSaveTicks(fase)
     return fase == "fin", (fase == "fin") and "actual" or nil
 end
 
+-- ─── PONERSE AL DIA TRAS UNA AUSENCIA ───────────────────────────────────────
+-- Mientras estabas desconectado nadie bajaba tus contadores: tu cliente no corria y los demas no
+-- tocan registros ajenos (solo los `authority`). Al volver, un estado que debio expirar hace tres
+-- asaltos seguia entero, y nada lo delataba.
+--
+-- Con el numero de asalto en el aviso se puede saber cuantos se perdieron. Cada criatura actua UNA
+-- vez por asalto, asi que una duracion por turno baja exactamente una vez por asalto: restar los
+-- asaltos perdidos es la cuenta correcta, no una aproximacion.
+--
+-- Lo que NO se puede reconstruir son las salvaciones de fin de turno (`save_at_turn_end`): habria
+-- que tirarlas, y tirar tres dados de golpe por algo que ya paso es inventarse la partida. Esas se
+-- dejan como estan y se avisa, para que la mesa decida.
+local POR_TURNO = {
+    target_turn_start = true, source_turn_start = true,
+    target_turn_end = true, source_turn_end = true, rounds = true,
+}
+
+function API.CatchUpRounds(perdidos)
+    perdidos = math.floor(tonumber(perdidos) or 0)
+    if perdidos <= 0 then return 0, 0 end
+    LoadOwned()
+    local bajados, caducados, aMano = 0, 0, 0
+    local quitar = {}
+    for key, bucket in pairs(S.units) do
+        for id, record in pairs(bucket) do
+            -- Solo lo PROPIO: de los demas informa su dueno, y su cliente ya hizo esta cuenta.
+            if record.authority then
+                if record.duration == "save_at_turn_end" then
+                    aMano = aMano + 1
+                elseif POR_TURNO[record.duration] and (tonumber(record.turns) or 0) > 0 then
+                    local antes = tonumber(record.turns) or 0
+                    record.turns = math.max(0, antes - perdidos)
+                    bajados = bajados + 1
+                    if record.turns <= 0 then
+                        quitar[#quitar + 1] = { key = key, id = id }
+                        caducados = caducados + 1
+                    end
+                end
+            end
+        end
+    end
+    for _, r in ipairs(quitar) do RemoveRecord(r.key, r.id, true) end
+    SaveOwned()
+    if bajados > 0 or aMano > 0 then
+        local partes = {}
+        if caducados > 0 then partes[#partes + 1] = caducados .. " expirado(s)" end
+        if bajados - caducados > 0 then partes[#partes + 1] = (bajados - caducados) .. " al dia" end
+        if aMano > 0 then partes[#partes + 1] = aMano .. " con salvacion, revisalos a mano" end
+        Print(string.format("Te perdiste %d asalto(s): %s.", perdidos, table.concat(partes, ", ")))
+    end
+    Notify()
+    return bajados, caducados
+end
+
+-- El ultimo asalto visto se PERSISTE junto a los estados: si viviera en memoria, al reconectar
+-- valdria 0 y la cuenta de perdidos seria el asalto entero.
+function API.NoteRound(asalto)
+    asalto = math.floor(tonumber(asalto) or 0)
+    if asalto <= 0 then return end
+    local root = PersistRoot(true)
+    local perfil = PlayerProfileName()
+    root._asalto = type(root._asalto) == "table" and root._asalto or {}
+    local visto = tonumber(root._asalto[perfil]) or 0
+    -- Solo hacia adelante y solo si hay hueco: un salto de 1 es el asalto normal, no una ausencia.
+    if visto > 0 and asalto > visto + 1 then
+        API.CatchUpRounds(asalto - visto - 1)
+    end
+    root._asalto[perfil] = asalto
+end
+
 function API.OnTurnChanged(entry, serial)
     LoadOwned()
+    if entry and entry.asalto then API.NoteRound(entry.asalto) end
     local turnKey = tostring(serial or 0) .. ":"
         .. tostring(entry and entry.kind == "bando"
             and ("bando:" .. tostring(entry.bando) .. ":" .. tostring(entry.fase or "inicio"))

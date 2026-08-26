@@ -236,12 +236,61 @@ print("El avance pasa por las dos y avisa al tocar un bloque vivo")
 chk("cerrar antes de saltar",
     turnos:find('bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"', 1, true) ~= nil, true)
 chk("la fase viaja en el anuncio",
-    turnos:find('tostring(store.faseBando or "inicio") }, "|")', 1, true) ~= nil, true)
+    turnos:find('tostring(store.faseBando or "inicio"),', 1, true) ~= nil, true)
+-- Y el asalto detras: sin el, quien vuelve no puede saber cuantos se perdio.
+chk("y el asalto tambien",
+    turnos:find('tostring(store.asalto or 0) }, "|")', 1, true) ~= nil, true)
 chk("y va la ultima, para no descuadrar el formato anterior",
     turnos:find('table.concat(ids, ","), tostring(store.faseBando', 1, true) ~= nil, true)
 chk("solo se avisa de turno propio al abrir",
     turnos:find('if fase == "inicio" then AlertMyTurn', 1, true) ~= nil, true)
 chk("y se avisa si el bloque tocado ya esta en juego",
     turnos:find("ya esta en juego: entra en el proximo asalto", 1, true) ~= nil, true)
+
+-- ─── EL HUECO COLECTIVO DE PJs ──────────────────────────────────────────────
+-- Su `kind` es "players" (plural), no "player". Los tres sitios que fuerzan el bando miraban solo
+-- el singular, asi que caia por reaccion 0 -> ENEMIGOS: el turno de los jugadores en el bando
+-- enemigo, y nada que lo delatara.
+print("El hueco colectivo de PJs va con los PJs")
+chk("kind players va a pjs", T.GetBando({ kind = "players", name = "PJs" }), "pjs")
+chk("aunque no traiga reaccion", T.GetBando({ kind = "players" }), "pjs")
+chk("y no se le puede mover", (T.SetBando({ kind = "players" }, "enemigos")), false)
+-- Y sigue funcionando el singular, que es lo que ya estaba bien.
+chk("un jugador suelto sigue en pjs", T.GetBando({ kind = "player" }), "pjs")
+
+-- ─── ASALTOS ────────────────────────────────────────────────────────────────
+-- En modo bandos el marcador de asalto nunca se visitaba -- es una tarjeta de la lista, y el
+-- avance ya no recorre tarjetas -- asi que las duraciones de asalto no bajaban NUNCA.
+print("El asalto se cierra al dar la vuelta")
+chk("se marca al volver al primer bando",
+    turnos:find("nuevoAsalto = (siguiente <= actual) or actual == 0", 1, true) ~= nil, true)
+chk("y se cuenta", turnos:find("store.asalto = (tonumber(store.asalto) or 0) + 1", 1, true) ~= nil, true)
+-- La marca tiene que llegar al motor como `kind = "round"`, que es lo que hace bajar `rounds`.
+chk("avisa al motor como asalto",
+    turnos:find('local marca = { kind = "round"', 1, true) ~= nil, true)
+chk("y viaja a los demas clientes",
+    turnos:find("entrada.asalto = store.asalto", 1, true) ~= nil, true)
+
+-- Mientras estabas desconectado nadie bajaba tus contadores: tu cliente no corria y los demas solo
+-- tocan sus propios registros. Al volver, un estado que debio expirar seguia entero.
+print("Al volver, los contadores se ponen al dia")
+chk("existe la recuperacion", cond:find("function API.CatchUpRounds", 1, true) ~= nil, true)
+-- Cada criatura actua una vez por asalto, asi que restar los asaltos perdidos es la cuenta exacta.
+chk("resta los asaltos perdidos",
+    cond:find("record.turns = math.max(0, antes - perdidos)", 1, true) ~= nil, true)
+-- Solo lo PROPIO: de los demas informa su dueno, y su cliente ya hizo esta cuenta.
+chk("solo toca lo propio", cond:find("if record.authority then", 1, true) ~= nil, true)
+-- Las salvaciones de fin de turno NO se reconstruyen: tirar tres dados por algo que ya paso es
+-- inventarse la partida.
+chk("las salvaciones se dejan a mano",
+    cond:find('record.duration == "save_at_turn_end" then', 1, true) ~= nil, true)
+chk("y se avisa de ellas",
+    cond:find("con salvacion, revisalos a mano", 1, true) ~= nil, true)
+-- El ultimo asalto visto se PERSISTE: en memoria valdria 0 al reconectar y la cuenta de perdidos
+-- seria el asalto entero.
+chk("el ultimo asalto se guarda", cond:find("root._asalto[perfil] = asalto", 1, true) ~= nil, true)
+-- Un salto de 1 es el asalto normal, no una ausencia.
+chk("un asalto seguido no dispara nada",
+    cond:find("if visto > 0 and asalto > visto + 1 then", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

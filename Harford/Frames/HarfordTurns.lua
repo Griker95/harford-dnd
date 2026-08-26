@@ -609,7 +609,8 @@ local function SerializeTurnNotice()
             if e.id and e.id ~= "" then ids[#ids + 1] = tostring(e.id) end
         end
         return table.concat({ "TURNB", tostring(turnSerial or 0), bando,
-            table.concat(ids, ","), tostring(store.faseBando or "inicio") }, "|")
+            table.concat(ids, ","), tostring(store.faseBando or "inicio"),
+            tostring(store.asalto or 0) }, "|")
     end
 
     local index = tonumber(store.activeIndex) or 1
@@ -699,7 +700,7 @@ local function ApplyTurnNotice(message)
     end
 
     if opcode == "TURNB" then
-        local bando, idsRaw, fase = activeRaw, countRaw, adminRaw
+        local bando, idsRaw, fase, asaltoRaw = activeRaw, countRaw, adminRaw, entryRaw
         fase = (fase == "fin") and "fin" or "inicio"
         local valido = false
         for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do if b == bando then valido = true end end
@@ -712,7 +713,9 @@ local function ApplyTurnNotice(message)
         end
         store.modoBandos = true
         store.faseBando = fase
+        store.asalto = SafeNumber(asaltoRaw, 0)
         local entrada = EntradaDeBandoRecibida(bando, idsRaw, fase)
+        entrada.asalto = store.asalto
         TouchStore()
         if RefreshFrame then RefreshFrame() end
         Print("|cffffff00" .. (HarfordTurnOrderAPI.FASE_ETIQUETA[fase] or "turno de")
@@ -1496,7 +1499,9 @@ local function AddEntry(name, hp, maxHp, kind, id, mana, maxMana, unitName, icon
         -- Se siembra de la reaccion, pero queda escrito para que el DM pueda corregirlo.
         bando = nil,
     }
-    entry.bando = (tostring(entry.kind or "") == "player" and "pjs")
+    -- "players" es el hueco COLECTIVO de PJs; "player" un jugador concreto. Los dos van a pjs.
+    entry.bando = ((tostring(entry.kind or "") == "player"
+        or tostring(entry.kind or "") == "players") and "pjs")
         or ((tonumber(entry.reaction) or 0) >= 5 and "aliados")
         or ((tonumber(entry.reaction) or 0) == 4 and "neutrales")
         or "enemigos"
@@ -1801,20 +1806,33 @@ local function NextTurn()
 
     if store.modoBandos then
         local actual = tonumber(store.activeBando) or 0
-        local bando, fase
+        local bando, fase, nuevoAsalto
         -- Si el bloque en curso solo ha empezado, lo siguiente es CERRARLO, no saltar al otro.
         if actual >= 1 and store.faseBando == "inicio" then
             bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"
         else
             local siguiente = SiguienteBandoConGente(actual)
             if not siguiente then Print("No hay nadie en ningun bando.") return end
+            -- Dar la vuelta = asalto nuevo. Tambien al arrancar (`actual` 0), que es el asalto 1.
+            nuevoAsalto = (siguiente <= actual) or actual == 0
             store.activeBando = siguiente
             bando, fase = HarfordTurnOrderAPI.BANDOS[siguiente], "inicio"
         end
         store.faseBando = fase
         local turnSerial = AdvanceTurnSerial()
+        -- Se cierra el asalto al volver al primer bando: es el unico punto del ciclo que significa
+        -- "ha dado la vuelta". Sin esto las duraciones de asalto no bajaban nunca en modo bandos.
+        if fase == "inicio" and nuevoAsalto then
+            store.asalto = (tonumber(store.asalto) or 0) + 1
+            local marca = { kind = "round", id = "asalto:" .. tostring(store.asalto),
+                name = "Asalto " .. tostring(store.asalto), asalto = store.asalto }
+            Print("|cffffff00Asalto " .. tostring(store.asalto) .. "|r")
+            AlertRoundStates(marca, 0, turnSerial)
+            AlertTurnChanged(marca, 0, turnSerial)
+        end
         MarkChanged()
         local entrada = EntradaDeBando(bando, fase)
+        entrada.asalto = store.asalto
         AnunciarBando(entrada)
         AlertTurnChanged(entrada, store.activeBando, turnSerial)
         -- El aviso de "es tu turno" es solo al EMPEZAR: repetirlo al cerrar seria ruido.
@@ -2332,7 +2350,8 @@ HarfordTurnOrderAPI.BANDO_ETIQUETA = {
 local function BandoSugerido(entry)
     if not entry then return "enemigos" end
     -- Un PJ siempre va con los PJs, mire lo que mire su reaccion.
-    if tostring(entry.kind or "") == "player" then return "pjs" end
+    local k = tostring(entry.kind or "")
+    if k == "player" or k == "players" then return "pjs" end
     local r = tonumber(entry.reaction) or 0
     if r >= 5 then return "aliados" end
     if r == 4 then return "neutrales" end
@@ -2342,7 +2361,8 @@ end
 function HarfordTurnOrderAPI.GetBando(entry)
     if not entry then return "enemigos" end
     -- Un PJ no se puede mover de su bando ni a mano: es la regla que pidio la mesa.
-    if tostring(entry.kind or "") == "player" then return "pjs" end
+    local k = tostring(entry.kind or "")
+    if k == "player" or k == "players" then return "pjs" end
     local guardado = tostring(entry.bando or "")
     for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do
         if guardado == b then return guardado end
@@ -2354,7 +2374,10 @@ end
 -- vean todos y sobreviva a una recarga; recalcularlo en cada cliente daria versiones distintas.
 function HarfordTurnOrderAPI.SetBando(entry, bando)
     if not entry then return false end
-    if tostring(entry.kind or "") == "player" then return false, "Los personajes van siempre con los PJs" end
+    local k = tostring(entry.kind or "")
+    if k == "player" or k == "players" then
+        return false, "Los personajes van siempre con los PJs"
+    end
     bando = tostring(bando or "")
     for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do
         if bando == b then

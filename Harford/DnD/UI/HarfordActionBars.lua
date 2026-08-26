@@ -162,6 +162,10 @@ local function EnsureFichasFrame()
     fichasFrame = CreateFrame("Frame", "HarfordTurnEconomyFrame", UIParent)
     fichasFrame:SetSize(1, FICHA_TAM)
     fichasFrame:SetFrameStrata("MEDIUM")
+    -- Nivel alto DENTRO de MEDIUM: nacia en el 1 y la barra de accion nativa, que comparte capa,
+    -- se pintaba encima. Es la misma leccion que la tira de estados: medir "esta en pantalla" no
+    -- basta, hay que mirar tambien QUE hay delante.
+    fichasFrame:SetFrameLevel(90)
     fichasFrame.fichas = {}
     fichasFrame.orbes = {}
     fichasFrame.niveles = {}
@@ -338,6 +342,11 @@ function API.RefreshTurnEconomy()
         return 0, 0
     end
     cont:ClearAllPoints()
+    -- Por encima del ancla REAL: con Dominos, Bartender o similares la barra puede estar en un
+    -- nivel mas alto que el fijo de arriba.
+    if ancla.GetFrameLevel then
+        cont:SetFrameLevel(math.max(90, (ancla:GetFrameLevel() or 0) + 5))
+    end
     cont:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, 6)
     cont:SetWidth(math.max(1, ancho))
     cont:Show()

@@ -11,7 +11,10 @@ local cargar = loadstring or load
 local function NuevoFrame(nombre)
     local f = { nombre = nombre, visible = false }
     for _, m in ipairs({"SetSize","SetWidth","SetPoint","ClearAllPoints","EnableMouse","SetScript",
-                        "RegisterEvent","SetFrameStrata","SetText"}) do f[m] = function() end end
+                        "RegisterEvent","SetFrameStrata","SetFrameLevel","SetText"}) do f[m] = function() end end
+    -- El contenedor se sube POR ENCIMA del ancla, asi que el falso tiene que saber decir su nivel:
+    -- nacia en el suelo de MEDIUM y la barra de accion nativa lo tapaba.
+    f.GetFrameLevel = function() return 1 end
     function f:GetObjectType() return "Frame" end
     function f:IsShown() return self.visible end
     function f:Show() self.visible = true end
@@ -107,4 +110,23 @@ a, b = R(); chk("2 + 1 orbes, el nivel vacio se salta", a, b, 3, 3)
 print("Sin barra nativa no se pinta nada")
 _G.ActionButton1 = nil
 a, b = R(); chk("cero y cero", a, b, 0, 0)
+-- ─── LAS FICHAS TIENEN QUE QUEDAR DELANTE ───────────────────────────────────
+-- Se dibujaban, estaban en pantalla y con alfa 1... y no se veian: nacian en el nivel 1, el suelo
+-- de MEDIUM, y la barra de accion nativa comparte capa con niveles mas altos. Estar en pantalla no
+-- es estar visible, que es la misma leccion que dejo la tira de estados.
+local fuente = io.open("Harford/DnD/UI/HarfordActionBars.lua"):read("*a")
+-- `chk` de esta suite compara PARES (fichas, orbes); aqui basta con una condicion.
+local function chk1(n, real, esp)
+    local ok = tostring(real) == tostring(esp)
+    if not ok then fallos = fallos + 1 end
+    print(string.format("  %-50s %-6s %s", n, tostring(real),
+        ok and "ok" or ("FALLA, esperaba " .. tostring(esp))))
+end
+print("Las fichas se pintan por delante de la barra nativa")
+chk1("nacen en un nivel alto", fuente:find("fichasFrame:SetFrameLevel(90)", 1, true) ~= nil, true)
+-- Y por encima del ancla REAL: con Dominos o Bartender la barra puede estar mas alta que 90.
+chk1("y por encima del ancla real",
+    fuente:find("math.max(90, (ancla:GetFrameLevel() or 0) + 5)", 1, true) ~= nil, true)
+chk1("sin salirse de su capa", fuente:find('fichasFrame:SetFrameStrata("MEDIUM")', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

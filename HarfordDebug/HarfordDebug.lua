@@ -7651,6 +7651,15 @@ do
         end
         Print("  strata=" .. tostring(cont:GetFrameStrata())
             .. "  nivel=" .. tostring(cont:GetFrameLevel()))
+        -- Estar en pantalla no es estar VISIBLE: en la misma capa, quien tenga mas nivel se pinta
+        -- encima. Es lo que escondia las fichas detras de la barra de accion.
+        local ancla2 = _G["ActionButton1"] or _G["MainMenuBar"]
+        if ancla2 and ancla2.GetFrameLevel then
+            local mio, suyo = cont:GetFrameLevel() or 0, ancla2:GetFrameLevel() or 0
+            Print(string.format("  la barra nativa esta en %s nivel %d; yo en %d -> %s",
+                tostring(ancla2:GetFrameStrata()), suyo, mio,
+                mio > suyo and "|cff88ff88delante|r" or "|cffff4444DETRAS, no se ve|r"))
+        end
         -- Una ficha suelta, para separar "el contenedor esta mal" de "las fichas estan mal".
         local f1 = cont.fichas and cont.fichas[1]
         if f1 then

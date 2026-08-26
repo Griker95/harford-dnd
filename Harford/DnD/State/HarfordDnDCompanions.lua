@@ -440,7 +440,9 @@ function API.TakeCore(companionId, profileName)
     data.activeCompanion = ""
     data.activeCompanionHP = 0
     data.activeCore = tostring(c.id)
-    if HarfordDnDProgression.Save then HarfordDnDProgression.Save(profileName) end
+    -- `Save` no existe en Progression: la llamada estaba guardada por un `if`, asi que no fallaba
+    -- -- simplemente no invalidaba nada. `Set` es el que persiste y refresca los efectos.
+    if HarfordDnDProgression.Set then HarfordDnDProgression.Set(profileName, data) end
     return true
 end
 
@@ -449,7 +451,9 @@ function API.DropCore(profileName)
     if not (HarfordDnDProgression and HarfordDnDProgression.Get) then return false end
     local data = HarfordDnDProgression.Get(profileName)
     data.activeCore = ""
-    if HarfordDnDProgression.Save then HarfordDnDProgression.Save(profileName) end
+    -- `Save` no existe en Progression: la llamada estaba guardada por un `if`, asi que no fallaba
+    -- -- simplemente no invalidaba nada. `Set` es el que persiste y refresca los efectos.
+    if HarfordDnDProgression.Set then HarfordDnDProgression.Set(profileName, data) end
     return true
 end
 
@@ -479,7 +483,9 @@ function API.Summon(companionId, profileName)
             HarfordChat.Print("Lobo Solitario se desactiva: sus rasgos exigen no tener companero bestial.")
         end
     end
-    if HarfordDnDProgression.Save then HarfordDnDProgression.Save(profileName) end
+    -- `Save` no existe en Progression: la llamada estaba guardada por un `if`, asi que no fallaba
+    -- -- simplemente no invalidaba nada. `Set` es el que persiste y refresca los efectos.
+    if HarfordDnDProgression.Set then HarfordDnDProgression.Set(profileName, data) end
     return true
 end
 
@@ -488,7 +494,7 @@ function API.Dismiss(profileName)
     local data = HarfordDnDProgression.Get(Perfil(profileName))
     data.activeCompanion = ""
     data.activeCompanionHP = 0
-    if HarfordDnDProgression.Save then HarfordDnDProgression.Save(Perfil(profileName)) end
+    if HarfordDnDProgression.Set then HarfordDnDProgression.Set(Perfil(profileName), data) end
     return true
 end
 
@@ -501,7 +507,9 @@ function API.AdjustHP(delta, profileName)
     local maximo = API.GetMaxHP(c, profileName)
     local nuevo = math.max(0, math.min(maximo, (tonumber(data.activeCompanionHP) or 0) + (tonumber(delta) or 0)))
     data.activeCompanionHP = nuevo
-    if HarfordDnDProgression.Save then HarfordDnDProgression.Save(profileName) end
+    -- `Save` no existe en Progression: la llamada estaba guardada por un `if`, asi que no fallaba
+    -- -- simplemente no invalidaba nada. `Set` es el que persiste y refresca los efectos.
+    if HarfordDnDProgression.Set then HarfordDnDProgression.Set(profileName, data) end
     if nuevo <= 0 then
         -- A 0 PG la criatura cae y deja de estar invocada. La Fortaleza No-Muerta del esbirro
         -- (salvacion para quedarse a 1 PG) es una tirada de mesa: se resuelve antes de anotar

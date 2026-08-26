@@ -96,6 +96,53 @@ def main():
         for rel in sorted(requeridos[estado]):
             rotas.append((rel, 'requiresState', estado, 'estado activable'))
 
+    # ── Funciones de modulo que no existen ──────────────────────────────────
+    # `HarfordAlgo.Funcion(...)` donde `Funcion` no esta declarada en ninguna parte. No falla al
+    # cargar: la llamada esta casi siempre tras un `and` que la da por ausente, asi que el codigo
+    # sigue como si el modulo no estuviera y el efecto simplemente no ocurre.
+    #
+    # Dos casos reales el mismo dia: `HarfordDnDNet.ScheduleMyResourceBroadcast` (no existia; el
+    # nombre era un local de otro fichero) y `HarfordClassColors.GetUnitColor` (se llama
+    # `UnitColorRGB`, y ademas devuelve tres valores, no una tabla).
+    declaradas = {}
+    llamadas = {}
+    for ruta in fuentes:
+        rel = os.path.relpath(ruta, RAIZ).replace(os.sep, '/')
+        t = io.open(ruta, encoding='utf-8').read()
+        t = re.sub(r'--[^\n]*', '', t)
+        # Los modulos declaran casi siempre con un ALIAS local (`local API = HarfordAlgo`), asi
+        # que buscar solo `function HarfordAlgo.Foo` no encuentra nada y TODO parece roto. Es el
+        # mismo error que ya se cometio en `dependencias.py` adivinando el alias por el fichero.
+        alias = {}
+        for m in re.finditer(r'local\s+(\w+)\s*=\s*(Harford\w+)\b', t):
+            alias[m.group(1)] = m.group(2)
+        for m in re.finditer(r'(\w+)\s*=\s*(Harford\w+)\s+or\s+\{\}', t):
+            alias[m.group(1)] = m.group(2)
+
+        # Todo lo que un modulo expone, por su nombre o por su alias.
+        for m in re.finditer(r'\bfunction\s+(\w+)[.:](\w+)', t):
+            modulo = alias.get(m.group(1), m.group(1))
+            if modulo.startswith('Harford'):
+                declaradas.setdefault(modulo, set()).add(m.group(2))
+        for m in re.finditer(r'\b(\w+)\.(\w+)\s*=[^=]', t):
+            modulo = alias.get(m.group(1), m.group(1))
+            if modulo.startswith('Harford'):
+                declaradas.setdefault(modulo, set()).add(m.group(2))
+        # Y las llamadas.
+        for m in re.finditer(r'\b(Harford\w+)\.(\w+)\s*\(', t):
+            llamadas.setdefault((m.group(1), m.group(2)), set()).add(rel)
+
+    # Un modulo del que no se ha visto NINGUNA declaracion no se puede juzgar: puede venir de otro
+    # addon (HarfordAdmin, HarfordDebug) o construirse en runtime.
+    for (modulo, nombre), donde in sorted(llamadas.items()):
+        conocidas = declaradas.get(modulo)
+        if not conocidas:
+            continue
+        if nombre in conocidas:
+            continue
+        for rel in sorted(donde):
+            rotas.append((rel, 'llamada', modulo + '.' + nombre, 'funcion de modulo'))
+
     vistas, unicas = set(), []
     for rel, campo, ident, clase in rotas:
         clave = (campo, ident, clase)

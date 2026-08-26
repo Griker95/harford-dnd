@@ -2146,6 +2146,10 @@ local function CreateTurnFrame()
         AddEntry("PJs", 0, 0, "players", NewId(), 0, 0, "PJs", PLAYERS_TURN_ICON, 0, {})
     end
     local btnPJs = MakeButton(TurnFrame, "PJs", 44, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 272, -51, AddPlayersTurn)
+    -- Abre la lista de candidatos. Se declara aqui pero la funcion vive mas abajo, en su bloque.
+    local btnLista = MakeButton(TurnFrame, "Lista", 48, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 448, -51,
+        function() HarfordTurnOrderAPI.ToggleCandidates() end)
+    btnLista:GetFontString():SetTextColor(0.55, 0.85, 1.0)
     btnPJs:GetFontString():SetTextColor(0.2, 1.0, 0.4)
 
     btnAliado:GetFontString():SetTextColor(0.2, 1.0, 0.2)
@@ -2337,6 +2341,204 @@ HarfordTurnOrderAPI._turnChangedListeners = HarfordTurnOrderAPI._turnChangedList
 --
 -- El orden es FIJO. Sin tirada: se sabe siempre quien va despues de quien, que en mesa vale mas
 -- que la sorpresa de quien empieza.
+-- ─── LISTA DE CANDIDATOS ────────────────────────────────────────────────────
+-- Anadir de uno en uno targeteando es la unica via que teniamos, y en una escena con seis enemigos
+-- son doce clics y perder el objetivo que tenias. Este panel los junta y se anaden pulsando.
+--
+-- El cliente NO permite enumerar "los NPC cercanos": no hay API. Las dos unicas fuentes reales son
+-- el GRUPO (`party1-4` / `raid1-40`, mascotas incluidas) y las PLACAS DE NOMBRE visibles
+-- (`C_NamePlate.GetNamePlates()`). Comprobado tambien en Atlas, que resuelve unidades exactamente
+-- con esas dos y ninguna mas.
+--
+-- Va en `do...end` porque este fichero ronda el limite de 200 locales de Lua 5.1.
+do
+    local FILA_ALTO, PANEL_ANCHO, VISIBLES = 19, 214, 11
+    local panel, filas = nil, {}
+
+    -- Quien esta YA en la lista de turnos, por guid. Volver a anadirlo duplicaria la entrada, y un
+    -- duplicado en el orden de turnos es de las cosas que mas confunden en mesa.
+    local function YaEstan()
+        local puestos = {}
+        local store = HarfordTurnOrderStore
+        if type(store) ~= "table" or type(store.entries) ~= "table" then return puestos end
+        for _, e in ipairs(store.entries) do
+            if e.guid and e.guid ~= "" then puestos[tostring(e.guid)] = true end
+        end
+        return puestos
+    end
+
+    -- Los candidatos, en dos bloques. El orden es deliberado: el grupo primero porque casi siempre
+    -- se anade entero, y las placas despues porque cambian solas al moverse.
+    local function Candidatos()
+        local puestos, vistos, fuera = YaEstan(), {}, {}
+
+        local function Meter(unit, bloque)
+            if not (UnitExists and UnitExists(unit)) then return end
+            local guid = UnitGUID and UnitGUID(unit)
+            if not guid or guid == "" or vistos[guid] then return end
+            -- Ya en la lista: no se muestra. Es mas claro que mostrarlo en gris y no reaccionar.
+            if puestos[guid] then return end
+            vistos[guid] = true
+            local esJugador = UnitIsPlayer and UnitIsPlayer(unit)
+            fuera[#fuera + 1] = {
+                unit = unit, guid = guid, bloque = bloque,
+                nombre = (UnitName and UnitName(unit)) or "?",
+                jugador = esJugador and true or false,
+                muerto = (UnitIsDeadOrGhost and UnitIsDeadOrGhost(unit)) and true or false,
+                reaccion = (not esJugador) and UnitReaction and UnitReaction("player", unit) or nil,
+            }
+        end
+
+        Meter("player", "grupo")
+        if IsInRaid and IsInRaid() then
+            for i = 1, 40 do Meter("raid" .. i, "grupo"); Meter("raidpet" .. i, "grupo") end
+        elseif IsInGroup and IsInGroup() then
+            for i = 1, 4 do Meter("party" .. i, "grupo"); Meter("partypet" .. i, "grupo") end
+        end
+        -- El objetivo y el foco pueden no tener placa (fuera de rango de nameplates), asi que se
+        -- meten aparte: son justo los que el DM tiene mas a mano.
+        Meter("target", "vista")
+        Meter("focus", "vista")
+        if C_NamePlate and C_NamePlate.GetNamePlates then
+            for _, placa in ipairs(C_NamePlate.GetNamePlates() or {}) do
+                if placa.namePlateUnitToken then Meter(placa.namePlateUnitToken, "vista")
+                elseif placa.unit then Meter(placa.unit, "vista") end
+            end
+        end
+        return fuera
+    end
+
+    local function ColorDe(c)
+        if c.jugador then
+            -- `UnitColorRGB` devuelve r, g, b sueltos (mas classFile), no una tabla.
+            if HarfordClassColors and HarfordClassColors.UnitColorRGB then
+                local r, g, b = HarfordClassColors.UnitColorRGB(c.unit)
+                if r then return r, g, b end
+            end
+            return 0.6, 0.8, 1.0
+        end
+        local r = tonumber(c.reaccion) or 0
+        if r >= 5 then return 0.35, 0.85, 0.40 end     -- aliado
+        if r == 4 then return 0.95, 0.85, 0.30 end     -- neutral
+        return 0.95, 0.35, 0.30                        -- hostil
+    end
+
+    local function EnsureFila(i)
+        local f = filas[i]
+        if f then return f end
+        f = CreateFrame("Button", nil, panel)
+        f:SetSize(PANEL_ANCHO - 16, FILA_ALTO)
+        f.fondo = f:CreateTexture(nil, "BACKGROUND")
+        f.fondo:SetAllPoints(f)
+        f.fondo:SetTexture(TEX_WHITE)
+        f.fondo:SetVertexColor(1, 1, 1, 0)
+        f.texto = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        f.texto:SetPoint("LEFT", f, "LEFT", 6, 0)
+        f.texto:SetPoint("RIGHT", f, "RIGHT", -6, 0)
+        f.texto:SetJustifyH("LEFT")
+        f:SetScript("OnEnter", function(self) self.fondo:SetVertexColor(1, 0.82, 0.2, 0.18) end)
+        f:SetScript("OnLeave", function(self) self.fondo:SetVertexColor(1, 1, 1, 0) end)
+        filas[i] = f
+        return f
+    end
+
+    local RefrescarLista   -- se asigna abajo; el OnClick de las filas cierra sobre ella
+
+    local function PintarFilas(lista, desde)
+        local usadas = 0
+        for i = 1, VISIBLES do
+            local c = lista[desde + i - 1]
+            local f = EnsureFila(i)
+            if not c then f:Hide()
+            else
+                usadas = usadas + 1
+                local r, g, b = ColorDe(c)
+                local marca = c.bloque == "grupo" and "" or "· "
+                f.texto:SetText(marca .. tostring(c.nombre) .. (c.muerto and " |cff888888(muerto)|r" or ""))
+                f.texto:SetTextColor(r, g, b)
+                f.candidato = c
+                f:SetScript("OnClick", function(self)
+                    -- Se anade por UNIDAD, que es lo que trae vida, CA, retrato y reaccion. Anadir
+                    -- por nombre daria una entrada hueca.
+                    AddUnit(self.candidato.unit, self.candidato.jugador and "player" or "npc")
+                    if RefrescarLista then RefrescarLista() end
+                end)
+                f:ClearAllPoints()
+                f:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -26 - (i - 1) * FILA_ALTO)
+                f:Show()
+            end
+        end
+        return usadas
+    end
+
+    local function CrearPanel()
+        if panel then return panel end
+        panel = CreateFrame("Frame", "HarfordTurnCandidatesFrame", UIParent, "BackdropTemplate")
+        panel:SetSize(PANEL_ANCHO, 26 + VISIBLES * FILA_ALTO + 30)
+        -- DIALOG como el resto de ventanas del proyecto; los overlays de unitframe van a MEDIUM,
+        -- pero esto es un panel.
+        panel:SetFrameStrata("DIALOG")
+        panel:SetFrameLevel(510)
+        panel:SetClampedToScreen(true)
+        SetFrameBackground(panel)
+        panel.border = CreateFrame("Frame", nil, panel, "DialogBorderTemplate")
+        panel.border:SetAllPoints(panel)
+
+        panel.titulo = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        panel.titulo:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -10)
+        panel.titulo:SetText("Anadir al combate")
+
+        panel.aviso = panel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        panel.aviso:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 10, 10)
+        panel.aviso:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -10, 10)
+        panel.aviso:SetJustifyH("LEFT")
+
+        -- Solo mientras se ve: la regla del proyecto es no dejar eventos vivos con el panel
+        -- cerrado, y las placas de nombre disparan constantemente.
+        panel:SetScript("OnShow", function(self)
+            self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+            self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+            self:RegisterEvent("GROUP_ROSTER_UPDATE")
+            self:RegisterEvent("PLAYER_TARGET_CHANGED")
+            self:RegisterEvent("PLAYER_FOCUS_CHANGED")
+            if RefrescarLista then RefrescarLista() end
+        end)
+        panel:SetScript("OnHide", function(self) self:UnregisterAllEvents() end)
+        panel:SetScript("OnEvent", function() if RefrescarLista then RefrescarLista() end end)
+        panel:Hide()
+        return panel
+    end
+
+    RefrescarLista = function()
+        if not (panel and panel:IsShown()) then return end
+        local lista = Candidatos()
+        local usadas = PintarFilas(lista, 1)
+        if #lista == 0 then
+            panel.aviso:SetText("Nada que anadir. Acercate o selecciona a alguien.")
+        elseif #lista > VISIBLES then
+            panel.aviso:SetText(string.format("%d mas fuera de la lista; anade y se recolocan.",
+                #lista - VISIBLES))
+        else
+            panel.aviso:SetText(usadas .. " disponible(s). Pulsa para anadir.")
+        end
+    end
+
+    -- Se cuelga del lado derecho de la ventana de turnos, para no taparla.
+    function HarfordTurnOrderAPI.ToggleCandidates()
+        CrearPanel()
+        if panel:IsShown() then panel:Hide() return end
+        if not (HarfordTurnOrderFrame and HarfordTurnOrderFrame:IsShown()) then
+            Print("Abre primero la ventana de turnos.")
+            return
+        end
+        panel:ClearAllPoints()
+        panel:SetPoint("TOPLEFT", HarfordTurnOrderFrame, "TOPRIGHT", -6, 0)
+        panel:Show()
+    end
+
+    HarfordTurnOrderAPI.RefreshCandidates = function() if RefrescarLista then RefrescarLista() end end
+end
+
 HarfordTurnOrderAPI.FASES = { "inicio", "fin" }
 HarfordTurnOrderAPI.FASE_ETIQUETA = { inicio = "empieza el turno de", fin = "termina el turno de" }
 

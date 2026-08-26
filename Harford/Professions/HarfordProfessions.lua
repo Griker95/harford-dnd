@@ -117,10 +117,10 @@ function API.ResetCharacterState()
     return true
 end
 
+-- El perfil es SIEMPRE el personaje actual (asi se decidio al retirar `activeProfile`), que es lo
+-- que devuelve esto. Antes preguntaba por `HarfordDnDAPI.GetProfileName`, que no existe: la rama
+-- no se tomaba nunca y solo hacia creer que habia otra fuente.
 local function ProfileName()
-    if HarfordDnD and HarfordDnDAPI and HarfordDnDAPI.GetProfileName then
-        local n = HarfordDnDAPI.GetProfileName(); if n and n ~= "" then return n end
-    end
     return (UnitName and UnitName("player")) or "player"
 end
 

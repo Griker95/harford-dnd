@@ -1732,6 +1732,58 @@ end
 local PETICION_ENFRIAMIENTO = 12
 local ultimaPeticion = {}
 
+-- Preguntar por los NPCs. Solo tiene sentido si hay combate montado: fuera de el no hay NPCs de
+-- los que hablar, y preguntarlo seria ruido en el canal.
+local ULTIMA_PETICION_NPC = 0
+function API.RequestNpcStates()
+    local store = _G.HarfordTurnOrderStore
+    if type(store) ~= "table" or type(store.entries) ~= "table" or #store.entries == 0 then
+        return false
+    end
+    local ahora = Now()
+    if ahora - ULTIMA_PETICION_NPC < 12 then return false end
+    ULTIMA_PETICION_NPC = ahora
+    if not (HarfordSync and HarfordSync.SerializeNpcStatesRequest and HarfordSync.BestChannel) then
+        return false
+    end
+    local canal = HarfordSync.BestChannel()
+    if not canal then return false end
+    return HarfordSync.Send(PREFIX, HarfordSync.SerializeNpcStatesRequest(
+        HarfordClassColors.UnitFullName("player") or ""), canal)
+end
+
+-- Contestar. Solo el DM: es quien aplico esos estados y quien tiene los registros con autoridad.
+function API.SendNpcStatesTo(target)
+    if not (target and target ~= "") then return false end
+    if not (HarfordAuthority and HarfordAuthority.CanUseDMTools
+        and HarfordAuthority.CanUseDMTools()) then
+        return false
+    end
+    local store = _G.HarfordTurnOrderStore
+    if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
+    local enviados = 0
+    for _, e in ipairs(store.entries) do
+        local guid = tostring(e.guid or "")
+        if tostring(e.kind or "") == "npc" and guid ~= "" then
+            local estados = {}
+            for _, activo in ipairs(API.GetActive(guid) or {}) do
+                local rec = activo.record
+                estados[#estados + 1] = {
+                    id = activo.id,
+                    duration = rec and rec.duration or "manual",
+                    turns = rec and rec.turns or 0,
+                    level = rec and rec.level or 0,
+                }
+            end
+            -- Se manda tambien si esta VACIO: es la unica forma de que el otro borre lo que
+            -- creyera que ese NPC llevaba encima. Callar dejaria estados fantasma.
+            HarfordSync.SendConditionList(PREFIX, target, guid, tostring(e.name or ""), estados)
+            enviados = enviados + 1
+        end
+    end
+    return enviados > 0
+end
+
 function API.RequestStatesFrom(unit)
     if not (UnitExists and UnitExists(unit) and UnitIsPlayer and UnitIsPlayer(unit)) then return false end
     if UnitIsUnit and UnitIsUnit(unit, "player") then return false end
@@ -1766,11 +1818,25 @@ end
 
 -- Guardar la respuesta. SUSTITUYE lo que hubiera de ese jugador: es una foto completa, asi que un
 -- estado que ya no este en la lista es un estado que se ha quitado.
+-- ¿Este guid es un NPC que ya esta en el orden de turnos? Es el unico caso en que se acepta que
+-- alguien informe de estados ajenos: sin esto, cualquiera podria inventarse condiciones sobre
+-- cualquier cosa.
+local function EsNpcDeLosTurnos(guid)
+    guid = tostring(guid or "")
+    if guid == "" then return false end
+    local store = _G.HarfordTurnOrderStore
+    if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
+    for _, e in ipairs(store.entries) do
+        if tostring(e.guid or "") == guid and tostring(e.kind or "") == "npc" then return true end
+    end
+    return false
+end
+
 function API.CacheStateList(guid, name, estados, sender)
     local key = guid ~= "" and guid or name
     if not key or key == "" then return false end
     if sender and sender ~= "" and name and name ~= "" then
-        if ShortName(sender) ~= ShortName(name) then return false end
+        if ShortName(sender) ~= ShortName(name) and not EsNpcDeLosTurnos(guid) then return false end
     end
     local bucket = {}
     for _, e in ipairs(estados or {}) do
@@ -1879,6 +1945,14 @@ function API.HandleMessage(message, sender)
         if IsTrustedSender(sender) then CacheRemoteState(state, sender) end
         return true
     end
+    -- Alguien acaba de entrar y pregunta por los NPCs. Solo contesta el DM.
+    if HarfordSync.DeserializeNpcStatesRequest then
+        local quien = HarfordSync.DeserializeNpcStatesRequest(message)
+        if quien then
+            if IsTrustedSender(sender) then API.SendNpcStatesTo(sender) end
+            return true
+        end
+    end
     -- Alguien pregunta que llevo puesto: se le contesta con la lista entera.
     if HarfordSync.DeserializeConditionRequest2 then
         local requester = HarfordSync.DeserializeConditionRequest2(message)
@@ -1942,10 +2016,16 @@ events:SetScript("OnEvent", function(_, event, unit)
             HarfordTurnOrderAPI.RegisterTurnChangedListener(API.OnTurnChanged)
         end
         Notify()
+        if C_Timer and C_Timer.After then
+            C_Timer.After(4, function() API.RequestNpcStates() end)
+        end
     elseif event == "UNIT_AURA" then
         if unit == "player" then ReconcileOwnedAuras() end
         if unit == "player" or unit == "target" or unit == "focus" then Notify() end
     elseif event == "GROUP_ROSTER_UPDATE" then
         PruneRuntime()
+        -- Entrar al grupo a mitad de combate no pasa por PLAYER_ENTERING_WORLD. El enfriamiento de
+        -- la propia peticion evita que un roster movido dispare una rafaga.
+        API.RequestNpcStates()
     end
 end)

@@ -223,6 +223,24 @@ function HarfordSync.SendConditionList(prefix, target, targetGuid, targetName, e
         HarfordSync.SerializeConditionList(targetGuid, targetName, estados), "WHISPER", target)
 end
 
+-- PETICION DE ESTADOS DE NPC (DNDCONDNPCREQ)
+--
+-- Quien se acaba de unir o de reconectar no sabe nada de lo que llevan encima los NPCs: esos
+-- estados solo se difundieron al aplicarse, y el no estaba. Se pregunta al entrar y contesta quien
+-- tenga herramientas de DM, que es quien los aplico.
+--
+-- Va al canal del grupo, no por susurro, porque el que pregunta NO SABE quien es el DM. Contestar
+-- si es por susurro: la respuesta solo le interesa a quien pregunto.
+function HarfordSync.SerializeNpcStatesRequest(requester)
+    return "DNDCONDNPCREQ|" .. tostring(requester or "")
+end
+
+function HarfordSync.DeserializeNpcStatesRequest(message)
+    local opcode, requester = strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDCONDNPCREQ" then return nil end
+    return tostring(requester or "")
+end
+
 function HarfordSync.BestChannel()
     if IsInRaid and IsInRaid() then return "RAID" end
     if IsInGroup and IsInGroup() then return "PARTY" end

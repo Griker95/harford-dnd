@@ -80,8 +80,14 @@ chk("y no se pide a uno mismo",
 chk("solo de remitentes de confianza",
     cond:find("if IsTrustedSender(sender) then API.CacheStateList", 1, true) ~= nil, true)
 -- Y que la respuesta venga de quien dice ser: nadie puede contarme los estados de un tercero.
+-- La UNICA excepcion es un NPC, que no tiene cliente que hable por el, y esta acotada a los que ya
+-- estan en el orden de turnos: solo se puede informar de lo que la mesa ya conoce.
 chk("y el remitente tiene que ser el interesado",
-    cond:find("if ShortName(sender) ~= ShortName(name) then return false end", 1, true) ~= nil, true)
+    cond:find("ShortName(sender) ~= ShortName(name) and not EsNpcDeLosTurnos(guid)", 1, true) ~= nil, true)
+chk("salvo los NPC, que no tienen quien hable por ellos",
+    cond:find("local function EsNpcDeLosTurnos(guid)", 1, true) ~= nil, true)
+chk("y solo los que ya estan en la lista de turnos",
+    cond:find('tostring(e.kind or "") == "npc" then return true', 1, true) ~= nil, true)
 
 local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
 print("Se pide al cambiar de objetivo, como los recursos")
@@ -94,5 +100,53 @@ chk("justo despues de pedirlos",
 -- El push NO se quita: da inmediatez en combate sin volver a targetear. Los dos juntos.
 print("Y el aviso al aplicar se conserva")
 chk("sigue publicandose al aplicar", cond:find("local function PublishState", 1, true) ~= nil, true)
+
+-- ─── LOS ESTADOS DE LOS NPC AL ENTRAR ───────────────────────────────────────
+-- Quien se une o se reconecta a mitad de combate no sabe nada de lo que llevan encima los NPCs:
+-- esos estados solo se difundieron al aplicarse, y el no estaba. Pregunta al entrar.
+print("La peticion de estados de NPC va y vuelve")
+chk("se compone", S.SerializeNpcStatesRequest("Yo"), "DNDCONDNPCREQ|Yo")
+chk("y se lee", S.DeserializeNpcStatesRequest("DNDCONDNPCREQ|Yo"), "Yo")
+-- Los dos opcodes empiezan igual; si uno se comiera al otro, la peticion de jugador dejaria de
+-- responderse o al reves.
+chk("no se confunde con la de jugador",
+    (S.DeserializeNpcStatesRequest("DNDCONDREQ|Yo")), "nil")
+chk("ni la de jugador con esta",
+    (S.DeserializeConditionRequest2("DNDCONDNPCREQ|Yo")), "nil")
+
+-- El guardia que decide si se acepta informacion de estados AJENOS. Se ejecuta, no se busca su
+-- texto: es lo unico que separa "el DM me cuenta lo que lleva el ogro" de "cualquiera se inventa
+-- condiciones sobre cualquier cosa".
+local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+local i2 = assert(cond:find("local function EsNpcDeLosTurnos", 1, true))
+local f2 = assert(cond:find("function API.CacheStateList", i2, true))
+local entorno = { ipairs = ipairs, pairs = pairs, type = type, tostring = tostring, _G = {} }
+local g
+if setfenv then g = assert(cargar(cond:sub(i2, f2 - 1) .. " return EsNpcDeLosTurnos")); setfenv(g, entorno)
+else g = assert(cargar(cond:sub(i2, f2 - 1) .. " return EsNpcDeLosTurnos", "t", "t", entorno)) end
+local EsNpc = g()
+
+print("Solo se acepta informacion ajena de NPCs que la mesa ya conoce")
+entorno._G.HarfordTurnOrderStore = { entries = {
+    { kind = "npc", guid = "Creature-0-1-2-3-4-5", name = "Ogro" },
+    { kind = "player", guid = "Player-1-ABC", name = "Huldram" },
+} }
+chk("un NPC de la lista, si", EsNpc("Creature-0-1-2-3-4-5"), true)
+-- Un JUGADOR nunca: el suyo lo cuenta su propio cliente, y aceptarlo de un tercero permitiria
+-- ponerle condiciones a alguien sin que se entere.
+chk("un jugador de la lista, NO", EsNpc("Player-1-ABC"), false)
+chk("un guid que no esta, NO", EsNpc("Creature-9-9-9-9-9-9"), false)
+chk("vacio, NO", EsNpc(""), false)
+chk("nil, NO", EsNpc(nil), false)
+entorno._G.HarfordTurnOrderStore = nil
+chk("sin combate montado, NO", EsNpc("Creature-0-1-2-3-4-5"), false)
+
+-- Un NPC sin estados TIENE que informarse igual, con la lista vacia: callar dejaria pegado lo que
+-- el otro creyera que llevaba encima.
+print("Un NPC limpio tambien se informa")
+chk("se manda aunque no lleve nada",
+    cond:find("HarfordSync.SendConditionList(PREFIX, target, guid", 1, true) ~= nil, true)
+chk("y solo contesta el DM",
+    cond:find("HarfordAuthority.CanUseDMTools()) then", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

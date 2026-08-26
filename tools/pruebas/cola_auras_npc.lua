@@ -161,11 +161,18 @@ print("La cola distingue dano de aura")
 -- Dos golpes de 7 son catorce, no siete: el dano se SUMA, al reves que las auras, donde repetir
 -- la misma no anade nada.
 chk("el dano se suma en una sola entrada",
-    cond:find("p.cantidad = p.cantidad + cantidad", 1, true) ~= nil, true)
+    cond:find("p.delta = p.delta + delta", 1, true) ~= nil, true)
+-- La cola guarda un DELTA con el signo del comando de servidor, no "dano" a secas: asi un golpe y
+-- una curacion pendientes sobre el mismo NPC se cancelan en vez de emitir dos comandos que se
+-- pisan. Y si se anulan del todo, no queda nada que emitir.
+chk("y una curacion pendiente lo cancela",
+    cond:find("if p.delta == 0 then", 1, true) ~= nil, true)
+chk("el dano entra en positivo y se guarda en negativo",
+    cond:find("return API.QueueNpcHealth(guid, -math.abs(", 1, true) ~= nil, true)
 chk("y las auras siguen sin duplicarse",
     cond:find("if p.auraId == auraId and p.op == op then return true end", 1, true) ~= nil, true)
 chk("el dano llega ya mitigado y no se recalcula",
-    cond:find("SetNpcHealthDelta(-math.abs(p.cantidad)", 1, true) ~= nil, true)
+    cond:find("SetNpcHealthDelta(p.delta,", 1, true) ~= nil, true)
 
 print("Quien puede lo hace; quien no, lo delega")
 chk("hay punto unico", cond:find("function API.AplicarEfectoNpc", 1, true) ~= nil, true)
@@ -199,7 +206,16 @@ chk("delega el aura", cond:find('API.AplicarEfectoNpc(guid, "apply", def.auraId,
 chk("pero el estado se guarda igual",
     cond:find("options.authority = true", 1, true) ~= nil, true)
 -- Delegar y aplicar directo tienen que acabar en el mismo sitio.
+-- Solo al RESTAR vida: una curacion no dispara los avisos de dano.
 chk("el receptor dispara lo mismo que el atacante",
-    cond:find("if ok and API.OnDamageTaken then API.OnDamageTaken(unit", 1, true) ~= nil, true)
+    cond:find("if ok and p.delta < 0 and API.OnDamageTaken then", 1, true) ~= nil, true)
+
+-- El motor de areas entra por el mismo sitio, o su curacion y sus auras sueltas seguirian
+-- fallando calladas para quien no es oficial.
+local area = io.open("Harford/DnD/Engine/HarfordDnDArea.lua"):read("*a")
+print("El motor de areas tambien delega")
+chk("la curacion de NPC", area:find('AplicarEfectoNpc(guid, "heal", total, "target")', 1, true) ~= nil, true)
+chk("y el aura suelta", area:find('AplicarEfectoNpc(guid, "apply", request.auraId, "target")', 1, true) ~= nil, true)
+chk("avisando de cuando se aplicara", area:find("de curacion enviada al lider", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

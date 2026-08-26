@@ -1024,26 +1024,40 @@ end
 -- Dano pendiente sobre un NPC. NO se deduplica y NO se agrupa por igualdad como las auras: dos
 -- golpes de 7 son catorce puntos de vida, no siete. Se SUMAN en una sola entrada para no emitir
 -- dos comandos de servidor donde basta uno.
-function API.QueueNpcDamage(guid, cantidad, autor)
+-- `delta` lleva el MISMO signo que espera el comando de servidor: negativo resta vida, positivo
+-- cura. Asi un golpe y una curacion pendientes sobre el mismo NPC se cancelan solos en vez de
+-- emitir dos comandos que se pisan.
+function API.QueueNpcHealth(guid, delta, autor)
     guid = tostring(guid or "")
-    cantidad = math.floor(tonumber(cantidad) or 0)
-    if guid == "" or cantidad == 0 then return false end
+    delta = math.floor(tonumber(delta) or 0)
+    if guid == "" or delta == 0 then return false end
     pendientesAura[guid] = pendientesAura[guid] or {}
     for _, p in ipairs(pendientesAura[guid]) do
-        if p.op == "damage" then
-            p.cantidad = p.cantidad + cantidad
+        if p.op == "health" then
+            p.delta = p.delta + delta
             p.autores = p.autores or {}
             if autor and autor ~= "" then p.autores[#p.autores + 1] = autor end
+            -- Si se cancelan del todo no queda nada que emitir.
+            if p.delta == 0 then
+                for i = #pendientesAura[guid], 1, -1 do
+                    if pendientesAura[guid][i] == p then table.remove(pendientesAura[guid], i) end
+                end
+            end
             Notify()
             return true
         end
     end
     pendientesAura[guid][#pendientesAura[guid] + 1] = {
-        op = "damage", cantidad = cantidad,
+        op = "health", delta = delta,
         autores = (autor and autor ~= "") and { autor } or {},
     }
     Notify()
     return true
+end
+
+-- Dano: se recibe en positivo -- "siete de dano" -- y baja siete de vida.
+function API.QueueNpcDamage(guid, cantidad, autor)
+    return API.QueueNpcHealth(guid, -math.abs(math.floor(tonumber(cantidad) or 0)), autor)
 end
 
 -- Cuantas quedan, para poder decirlo en la ventana en vez de dejarlo mudo.
@@ -1080,17 +1094,21 @@ function API.FlushPendingAuras(unit)
             ok = HarfordServerActions.RemoveAura(p.auraId, { addonName = "Harford" })
         elseif p.op == "apply" and HarfordServerActions and HarfordServerActions.ApplyAuraToCurrentTarget then
             ok = HarfordServerActions.ApplyAuraToCurrentTarget(p.auraId, { addonName = "Harford" })
-        elseif p.op == "damage" and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
-            -- El dano ya viene MITIGADO por quien lo calculo: aqui no se vuelve a resolver nada,
-            -- solo se emite el comando que el otro no podia emitir.
-            ok = HarfordServerActions.SetNpcHealthDelta(-math.abs(p.cantidad), { addonName = "Harford" })
+        elseif p.op == "health" and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
+            -- Ya viene MITIGADO por quien lo calculo: aqui no se vuelve a resolver nada, solo se
+            -- emite el comando que el otro no podia emitir.
+            ok = HarfordServerActions.SetNpcHealthDelta(p.delta, { addonName = "Harford" })
             -- Lo mismo que dispara el atacante cuando puede aplicarlo el: delegar y aplicar
-            -- directo tienen que acabar en el mismo sitio.
-            if ok and API.OnDamageTaken then API.OnDamageTaken(unit, math.abs(p.cantidad)) end
+            -- directo tienen que acabar en el mismo sitio, o una concentracion se romperia o no
+            -- segun quien pegara.
+            if ok and p.delta < 0 and API.OnDamageTaken then
+                API.OnDamageTaken(unit, math.abs(p.delta))
+            end
             if ok and HarfordChat and HarfordChat.Print then
                 local de = (#(p.autores or {}) > 0) and (" (" .. table.concat(p.autores, ", ") .. ")") or ""
-                HarfordChat.Print(string.format("Aplicados %d de dano pendiente a %s%s.",
-                    math.abs(p.cantidad), tostring(UnitName and UnitName(unit) or "?"), de))
+                HarfordChat.Print(string.format("Aplicado%s %d de %s pendiente a %s%s.",
+                    "", math.abs(p.delta), p.delta < 0 and "dano" or "curacion",
+                    tostring(UnitName and UnitName(unit) or "?"), de))
             end
         end
         -- Solo se tacha lo que se pudo hacer: un fallo de servidor no debe borrar el recordatorio.
@@ -1138,6 +1156,7 @@ function API.AplicarEfectoNpc(guid, tipo, valor, unidad)
 
     if API.PuedoAplicarEnNpc() then
         if tipo == "damage" then API.QueueNpcDamage(guid, valor, nil)
+        elseif tipo == "heal" then API.QueueNpcHealth(guid, math.abs(valor), nil)
         else API.QueueNpcAura(guid, valor, tipo) end
         -- Si ya lo tengo delante, se ejecuta ahora mismo en vez de esperar a re-seleccionarlo.
         local mirando = UnitExists and UnitExists(unidad or "target")
@@ -1158,8 +1177,11 @@ end
 function API.RecibirEfectoNpc(guid, tipo, valor, autor, sender)
     if not API.PuedoAplicarEnNpc() then return false end
     if not EsNpcDeLosTurnos(guid) then return false end
+    local quien = autor ~= "" and ShortName(autor) or ShortName(sender or "")
     if tipo == "damage" then
-        API.QueueNpcDamage(guid, valor, autor ~= "" and ShortName(autor) or ShortName(sender or ""))
+        API.QueueNpcDamage(guid, valor, quien)
+    elseif tipo == "heal" then
+        API.QueueNpcHealth(guid, math.abs(valor), quien)
     elseif tipo == "apply" or tipo == "remove" then
         API.QueueNpcAura(guid, valor, tipo)
     else

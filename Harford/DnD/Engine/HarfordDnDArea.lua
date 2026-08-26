@@ -1152,9 +1152,16 @@ local function ApplyNpcHealing(total)
         if maximum > 0 then total = math.min(total, math.max(0, maximum - current)) end
     end
     if total <= 0 then return 0 end
-    if HarfordServerActions and HarfordServerActions.SetNpcHealthDelta
-        and HarfordServerActions.SetNpcHealthDelta(total, { addonName = "Harford" }) then
-        return total
+    -- Igual que el dano: sin permiso de oficial se DELEGA en el lider en vez de perderse. Curar a
+    -- un NPC es el mismo comando de servidor y la misma barrera.
+    local guid = UnitGUID and UnitGUID("target")
+    if HarfordDnDConditions and HarfordDnDConditions.AplicarEfectoNpc and guid then
+        local via = HarfordDnDConditions.AplicarEfectoNpc(guid, "heal", total, "target")
+        if via == "delegado" then
+            Print(string.format("%d de curacion enviada al lider: se aplicara cuando tenga a %s "
+                .. "seleccionado.", total, tostring(UnitName and UnitName("target") or "el objetivo")))
+        end
+        if via then return total end
     end
     return 0
 end
@@ -1631,8 +1638,15 @@ local function ResolveNpcEntry(entry)
             local ok, err = HarfordDnDConditions.ApplyToUnit("target", request.conditionId,
                 ConditionOptsFromRequest(request, request.sourceName))
             if not ok then Print(err == "immune" and (target.name .. " es inmune a la condicion.") or tostring(err)) end
-        elseif (tonumber(request.auraId) or 0) > 0 and HarfordAuras then
-            HarfordAuras.ApplyById(request.auraId, "npc", { addonName = "Harford" })
+        elseif (tonumber(request.auraId) or 0) > 0 then
+            -- Aura suelta, sin condicion detras. Por el mismo sitio que todo lo demas, para que
+            -- tambien se delegue cuando no hay permiso.
+            local guid = UnitGUID and UnitGUID("target")
+            if HarfordDnDConditions and HarfordDnDConditions.AplicarEfectoNpc and guid then
+                HarfordDnDConditions.AplicarEfectoNpc(guid, "apply", request.auraId, "target")
+            elseif HarfordAuras then
+                HarfordAuras.ApplyById(request.auraId, "npc", { addonName = "Harford" })
+            end
         end
     end
     BroadcastInfo(FormatVictimResult(target.name, request, status, applied, summaries, rollText))

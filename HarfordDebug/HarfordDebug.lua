@@ -7563,3 +7563,87 @@ do
         if nueva then Print("  Copia de la ficha anterior guardada ('ficha6 restaurar').") end
     end, "monta una ficha de nivel 6 (ficha6 [clase|todas|restaurar])")
 end
+
+-- ─── POR QUE NO SE VEN LAS FICHAS DE ACCION ─────────────────────────────────
+-- Las fichas de Accion / Adicional / Reaccion tienen CUATRO condiciones encadenadas, y si falla
+-- una no se ven sin que nada lo diga. Con la tira de estados ya paso: tres comprobaciones daban
+-- verde mientras el frame estaba 22 pixeles por encima del borde de la pantalla. La leccion fue
+-- medir -- tamano, alfa, escala, anclaje y limites en pantalla -- en vez de deducir.
+do
+    local function Si(v) return v and "|cff88ff88si|r" or "|cffff4444NO|r" end
+
+    API.RegisterCommand("economia", function()
+        local AB = _G.HarfordActionBars
+        local T = _G.HarfordDnDConditions and _G.HarfordDnDConditions.Turn
+        Print("--- Modulos ---")
+        Print("  HarfordActionBars: " .. Si(AB ~= nil))
+        Print("  motor de economia: " .. Si(T ~= nil))
+        if not (AB and T) then return end
+
+        Print("--- Condicion 1: hay combate ---")
+        local activo = T.IsActive and T.IsActive()
+        Print("  Turn.IsActive(): " .. Si(activo))
+        local TO = _G.HarfordTurnOrderAPI
+        Print("  HasActiveCombat(): " .. Si(TO and TO.HasActiveCombat and TO.HasActiveCombat()))
+        local store = _G.HarfordTurnOrderStore
+        Print("  combatientes en la lista: "
+            .. tostring(type(store) == "table" and type(store.entries) == "table" and #store.entries or 0))
+        if not activo then
+            Print("  |cffffcc00Sin combate no se pintan a proposito|r: fuera de combate no se lleva")
+            Print("  la cuenta, y unas fichas llenas serian informacion falsa.")
+        end
+
+        Print("--- Condicion 2: presupuestos ---")
+        for _, kind in ipairs(T.ORDEN or {}) do
+            Print(string.format("  %-10s %d/%d", tostring(T.ETIQUETA[kind]),
+                T.GetRemaining(kind), T.GetBudget(kind)))
+        end
+
+        Print("--- Condicion 3: hay ancla ---")
+        -- El contenedor se cuelga de la barra de accion NATIVA. Sin ninguna de las cuatro
+        -- candidatas creada, no hay de donde colgarlo y se esconde.
+        for _, nombre in ipairs({ "ActionButton1", "MainMenuBarArtFrame", "MainMenuBar",
+                                  "MultiBarBottomLeftButton1" }) do
+            local f = _G[nombre]
+            Print(string.format("  %-26s %s%s", nombre, Si(f ~= nil),
+                f and (f.IsShown and f:IsShown() and " (visible)" or " (oculta)") or ""))
+        end
+
+        Print("--- Condicion 4: el frame, medido ---")
+        local n, orbes = AB.RefreshTurnEconomy and AB.RefreshTurnEconomy()
+        Print("  fichas dibujadas: " .. tostring(n) .. "   orbes: " .. tostring(orbes))
+        local cont = _G.HarfordTurnEconomyFrame
+        if not cont then
+            Print("  |cffff4444El contenedor no existe|r")
+            return
+        end
+        Print(string.format("  visible=%s  alfa=%.2f  escala=%.2f  tam=%.0fx%.0f",
+            Si(cont:IsShown()), cont:GetAlpha() or 0, cont:GetScale() or 1,
+            cont:GetWidth() or 0, cont:GetHeight() or 0))
+        local izq, abajo = cont:GetLeft(), cont:GetBottom()
+        local arriba, der = cont:GetTop(), cont:GetRight()
+        if not izq then
+            Print("  |cffff4444Sin posicion|r: no esta anclado a nada.")
+            return
+        end
+        local anchoP, altoP = UIParent:GetWidth(), UIParent:GetHeight()
+        Print(string.format("  posicion: x %.0f-%.0f  y %.0f-%.0f   (pantalla %.0fx%.0f)",
+            izq, der or 0, abajo, arriba or 0, anchoP, altoP))
+        -- Esto es lo que se escapo con la tira de estados: estar dibujado no es estar visible.
+        local dentro = izq >= 0 and abajo >= 0 and (der or 0) <= anchoP and (arriba or 0) <= altoP
+        Print("  dentro de la pantalla: " .. Si(dentro))
+        if not dentro then
+            Print("  |cffff4444Esta fuera de la pantalla|r: dibujado pero invisible.")
+        end
+        Print("  strata=" .. tostring(cont:GetFrameStrata())
+            .. "  nivel=" .. tostring(cont:GetFrameLevel()))
+        -- Una ficha suelta, para separar "el contenedor esta mal" de "las fichas estan mal".
+        local f1 = cont.fichas and cont.fichas[1]
+        if f1 then
+            Print(string.format("  ficha 1: visible=%s tam=%.0fx%.0f alfa=%.2f",
+                Si(f1:IsShown()), f1:GetWidth() or 0, f1:GetHeight() or 0, f1:GetAlpha() or 0))
+        else
+            Print("  no hay ninguna ficha creada todavia")
+        end
+    end, "por que no se ven las fichas de accion/adicional/reaccion")
+end

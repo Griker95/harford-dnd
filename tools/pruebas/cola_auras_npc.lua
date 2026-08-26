@@ -180,4 +180,26 @@ chk("y solo sobre NPCs de la lista de turnos",
 chk("el remitente tiene que ser de fiar",
     cond:find("if IsTrustedSender(sender) then API.RecibirEfectoNpc", 1, true) ~= nil, true)
 
+-- ─── LAS DOS RUTAS DE ATAQUE LO USAN ────────────────────────────────────────
+-- No basta con que la cola exista: hay que ENTRAR en ella. Antes, sin permiso de oficial, el dano
+-- de arma simplemente no hacia nada -- tu tirada salia en el chat y el NPC seguia igual -- y la
+-- condicion se rechazaba entera.
+local combate = io.open("Harford/DnD/Engine/HarfordDnDCombat.lua"):read("*a")
+print("El dano de arma delega en vez de perderse")
+chk("ya no exige ser oficial para entrar",
+    combate:find("if not (total and total > 0) then return false end", 1, true) ~= nil, true)
+chk("y delega si no puede", combate:find('AplicarEfectoNpc(guid, "damage", total, "target")', 1, true) ~= nil, true)
+chk("avisando de que se aplicara al seleccionarlo",
+    combate:find("se aplicara cuando tenga a", 1, true) ~= nil, true)
+
+print("La condicion sobre NPC tambien")
+chk("delega el aura", cond:find('API.AplicarEfectoNpc(guid, "apply", def.auraId, unit)', 1, true) ~= nil, true)
+-- El ESTADO de Harford no necesita permiso ninguno: se guarda aunque el aura viaje. Antes se
+-- rechazaba todo junto y un Derribado de un jugador normal no existia ni como dato.
+chk("pero el estado se guarda igual",
+    cond:find("options.authority = true", 1, true) ~= nil, true)
+-- Delegar y aplicar directo tienen que acabar en el mismo sitio.
+chk("el receptor dispara lo mismo que el atacante",
+    cond:find("if ok and API.OnDamageTaken then API.OnDamageTaken(unit", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

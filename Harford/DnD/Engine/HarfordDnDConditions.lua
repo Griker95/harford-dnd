@@ -940,12 +940,24 @@ function API.ApplyToUnit(unit, conditionId, options)
         -- Las condiciones disparadas por una habilidad (Desarme, Derribado...) son
         -- reglas core, no herramientas del menu DM. Igual que el dano a un NPC,
         -- requieren el permiso de oficial de fase, pero no HarfordAdmin ni .ph dm.
-        if not (HarfordAuthority and HarfordAuthority.CanUseOfficerCommands
-            and HarfordAuthority.CanUseOfficerCommands()) then
-            return false, "Requiere permiso de oficial de fase para aplicar la condicion al NPC"
+        if not API.PuedoAplicarEnNpc() then
+            -- Sin permiso NO se pierde la condicion: el aura se delega en el lider y el ESTADO se
+            -- guarda igual aqui abajo. Antes se rechazaba entera, asi que un Derribado de un
+            -- jugador normal no existia para nadie -- ni siquiera como estado de Harford, que no
+            -- necesita permiso ninguno.
+            local guid = UnitGUID and UnitGUID(unit)
+            local via = guid and API.AplicarEfectoNpc(guid, "apply", def.auraId, unit)
+            if via == "delegado" and HarfordChat and HarfordChat.Print then
+                HarfordChat.Print(string.format("%s enviado al lider: el icono aparecera cuando "
+                    .. "tenga a %s seleccionado.", tostring(def.name or conditionId),
+                    tostring(UnitName and UnitName(unit) or "el objetivo")))
+            elseif not via then
+                return false, "No hay a quien delegar la aura: no estas en grupo con un lider"
+            end
+        else
+            local ok, err = ApplyAura(def, "npc", false)
+            if ok == false then return false, err or "No se pudo aplicar la aura al NPC" end
         end
-        local ok, err = ApplyAura(def, "npc", false)
-        if ok == false then return false, err or "No se pudo aplicar la aura al NPC" end
     end
     options = options or {}
     options.authority = true
@@ -1072,6 +1084,9 @@ function API.FlushPendingAuras(unit)
             -- El dano ya viene MITIGADO por quien lo calculo: aqui no se vuelve a resolver nada,
             -- solo se emite el comando que el otro no podia emitir.
             ok = HarfordServerActions.SetNpcHealthDelta(-math.abs(p.cantidad), { addonName = "Harford" })
+            -- Lo mismo que dispara el atacante cuando puede aplicarlo el: delegar y aplicar
+            -- directo tienen que acabar en el mismo sitio.
+            if ok and API.OnDamageTaken then API.OnDamageTaken(unit, math.abs(p.cantidad)) end
             if ok and HarfordChat and HarfordChat.Print then
                 local de = (#(p.autores or {}) > 0) and (" (" .. table.concat(p.autores, ", ") .. ")") or ""
                 HarfordChat.Print(string.format("Aplicados %d de dano pendiente a %s%s.",

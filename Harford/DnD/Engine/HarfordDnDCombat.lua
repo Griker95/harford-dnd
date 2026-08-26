@@ -370,12 +370,19 @@ function HarfordDnDCombat.GetTargetEffectiveHP()
 end
 
 -- Recibe el total YA mitigado: contra NPC mitiga el atacante, y lo hace la puerta de arriba.
+--
+-- Si no eres oficial NO se pierde el golpe: se DELEGA en el lider, que emite el comando por ti.
+-- Antes esta funcion simplemente no hacia nada y el NPC se quedaba con la misma vida mientras tu
+-- tirada salia en el chat; la mesa lo apuntaba a mano.
 function HarfordDnDCombat.ApplyWeaponDamageToNpc(total, isCritical)
-    if total and total > 0
-        and HarfordAuthority and HarfordAuthority.IsOfficerPlus and HarfordAuthority.IsOfficerPlus()
-        and UnitExists and UnitExists("target")
-        and not (UnitIsPlayer and UnitIsPlayer("target"))
-        and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
+    if not (total and total > 0) then return false end
+    if not (UnitExists and UnitExists("target")) then return false end
+    if UnitIsPlayer and UnitIsPlayer("target") then return false end
+
+    local soyOficial = HarfordAuthority and HarfordAuthority.IsOfficerPlus
+        and HarfordAuthority.IsOfficerPlus()
+
+    if soyOficial and HarfordServerActions and HarfordServerActions.SetNpcHealthDelta then
         HarfordServerActions.SetNpcHealthDelta(-total, {
             isCritical = isCritical,
             addonName  = "Harford",
@@ -384,6 +391,19 @@ function HarfordDnDCombat.ApplyWeaponDamageToNpc(total, isCritical)
             HarfordDnDConditions.OnDamageTaken("target", total)
         end
         return true
+    end
+
+    -- Sin permiso: se manda el total YA calculado a quien pueda emitirlo. El lider no vuelve a
+    -- tirar ni a mitigar; solo ejecuta.
+    if HarfordDnDConditions and HarfordDnDConditions.AplicarEfectoNpc then
+        local guid = UnitGUID and UnitGUID("target")
+        local via = guid and HarfordDnDConditions.AplicarEfectoNpc(guid, "damage", total, "target")
+        if via == "delegado" and HarfordChat and HarfordChat.Print then
+            HarfordChat.Print(string.format(
+                "%d de dano enviado al lider: se aplicara cuando tenga a %s seleccionado.",
+                total, tostring(UnitName and UnitName("target") or "el objetivo")))
+        end
+        return via ~= nil
     end
     return false
 end

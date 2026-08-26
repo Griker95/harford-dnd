@@ -138,7 +138,12 @@ function HarfordDnDComm.CreateHandlers(deps)
 
         -- Dano BRUTO: lo resuelve ESTE cliente, que es la victima. Mismo gate de remitente que
         -- RADJ, porque aplica un efecto real sobre nosotros.
-        local dmgComponents, dmgCrit, dmgMagico = HarfordSync.DeserializeDamage and HarfordSync.DeserializeDamage(message)
+        -- OJO: `f and f(x)` se ajusta a UN valor. Sin este `if`, `dmgCrit` y `dmgMagico` llegaban
+        -- siempre nil y ningun golpe entrante contaba como magico.
+        local dmgComponents, dmgCrit, dmgMagico
+        if HarfordSync.DeserializeDamage then
+            dmgComponents, dmgCrit, dmgMagico = HarfordSync.DeserializeDamage(message)
+        end
         if dmgComponents then
             if not IsTrustedEffectSender(sender) then return false end
             if deps.ApplyIncomingDamage then deps.ApplyIncomingDamage(dmgComponents, dmgCrit, sender, dmgMagico) end

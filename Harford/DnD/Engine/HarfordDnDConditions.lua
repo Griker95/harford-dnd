@@ -761,15 +761,20 @@ end
 local cacheContadores = {}
 function API.GetAuraCounterMap(ref)
     local clave = tostring(ref or "player")
+    -- Por GUID, no por el token: "target" apunta a otra criatura en cuanto cambias de objetivo, y
+    -- el sello solo sube al cambiar un ESTADO, asi que se pintaban los contadores del anterior.
+    local guid = UnitGUID and UnitGUID(clave)
     local guardado = cacheContadores[clave]
-    if guardado and guardado.sello == (S.selloAviso or 0) then return guardado.mapa end
+    if guardado and guardado.sello == (S.selloAviso or 0) and guardado.guid == guid then
+        return guardado.mapa
+    end
     local mapa = {}
     for _, active in ipairs(API.GetActive(clave)) do
         local def = active.definition
         local id = def and tonumber(def.auraId)
         if id then mapa[id] = API.CounterFor(def, active.record) end
     end
-    cacheContadores[clave] = { sello = S.selloAviso or 0, mapa = mapa }
+    cacheContadores[clave] = { sello = S.selloAviso or 0, guid = guid, mapa = mapa }
     return mapa
 end
 
@@ -949,7 +954,7 @@ function API.ApplyToUnit(unit, conditionId, options)
             local via = guid and API.AplicarEfectoNpc(guid, "apply", def.auraId, unit)
             if via == "delegado" and HarfordChat and HarfordChat.Print then
                 HarfordChat.Print(string.format("%s enviado al lider: el icono aparecera cuando "
-                    .. "tenga a %s seleccionado.", tostring(def.name or conditionId),
+                    .. "tenga a %s seleccionado.", tostring(def.label or def.name or conditionId),
                     tostring(UnitName and UnitName(unit) or "el objetivo")))
             elseif not via then
                 return false, "No hay a quien delegar la aura: no estas en grupo con un lider"
@@ -2053,6 +2058,8 @@ function API.SendMyStatesTo(target)
             duration = rec and rec.duration or "manual",
             turns = rec and rec.turns or 0,
             level = rec and rec.level or 0,
+            sourceName = rec and rec.sourceName or nil,
+            contador = rec and rec.vars and rec.vars.contador or 0,
         }
     end
     return HarfordSync.SendConditionList(PREFIX, target,
@@ -2115,13 +2122,28 @@ function API.CacheStateList(guid, name, estados, sender)
     if sender and sender ~= "" and name and name ~= "" then
         if ShortName(sender) ~= ShortName(name) and not EsNpcDeLosTurnos(guid) then return false end
     end
+    local previoBucket = S.units[key] or {}
     local bucket = {}
     for _, e in ipairs(estados or {}) do
         if API.DEFS[e.id] then
+            -- La foto dice QUE condiciones hay, y por eso sustituye el saco. Pero de una que
+            -- sigue puesta se conserva lo que ya se sabia y la foto no lleva -- salvacion
+            -- pendiente, variables sueltas --, o cada sincronizacion la dejaria mas pobre.
+            local antes = previoBucket[e.id]
+            local vars = antes and antes.vars or nil
+            if (tonumber(e.contador) or 0) > 0 then
+                vars = vars or {}
+                vars.contador = e.contador
+            end
             bucket[e.id] = {
                 id = e.id, duration = e.duration, turns = e.turns, level = e.level,
+                sourceName = e.sourceName or (antes and antes.sourceName) or nil,
+                sourceGuid = antes and antes.sourceGuid or nil,
+                saveAbility = antes and antes.saveAbility or nil,
+                saveDC = antes and antes.saveDC or nil,
+                vars = vars,
                 targetGuid = guid, targetName = name,
-                created = Now(), expiresAt = Now() + REMOTE_TTL,
+                created = (antes and antes.created) or Now(), expiresAt = Now() + REMOTE_TTL,
             }
         end
     end

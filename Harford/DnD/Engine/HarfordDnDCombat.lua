@@ -313,7 +313,21 @@ end
 -- competencia, no un cero.
 function HarfordDnDCombat.GetSkillBonusForUnit(unit, skillName)
     if not (unit and UnitExists and UnitExists(unit)) then return 0 end
-    local buscado = HarfordClassColors.NormalizeKey(skillName or "")
+
+    -- Puede venir una LISTA separada por "/": es la forma en que viaja una tirada enfrentada,
+    -- porque el defensor elige con cual se resiste. Resolviendo aqui por el NPC, se coge la
+    -- MEJOR, que es lo que elegiria el.
+    local texto = tostring(skillName or "")
+    if texto:find("/", 1, true) then
+        local mejor = 0
+        for parte in texto:gmatch("[^/]+") do
+            local b = HarfordDnDCombat.GetSkillBonusForUnit(unit, (parte:gsub("^%s+", ""):gsub("%s+$", "")))
+            if b > mejor then mejor = b end
+        end
+        return mejor
+    end
+
+    local buscado = HarfordClassColors.NormalizeKey(texto)
     if buscado == "" then return 0 end
 
     local definicion

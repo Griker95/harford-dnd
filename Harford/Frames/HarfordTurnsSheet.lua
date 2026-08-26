@@ -22,6 +22,7 @@ local SECTION_HDR_H  -- calculada tras leer la fuente
 
 -- Inyectadas por HarfordTurns.
 local EntryIconMarkup, GetEntryNameColor, GetPlayerTurnNameColorHex, IsSystemEntry, SetFrameBackground, MakeButton, Print
+local Codec
 
 function API.Init(deps)
     deps = deps or {}
@@ -32,6 +33,7 @@ function API.Init(deps)
     SetFrameBackground = deps.SetFrameBackground or SetFrameBackground
     MakeButton = deps.MakeButton or MakeButton
     Print = deps.Print or Print
+    Codec = deps.Codec or Codec
 end
 
 local function MakeSheetLine(parent, point, rel, relPoint, x, y, width, height, r, g, b, a)

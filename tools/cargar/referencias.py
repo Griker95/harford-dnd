@@ -143,6 +143,74 @@ def main():
         for rel in sorted(donde):
             rotas.append((rel, 'llamada', modulo + '.' + nombre, 'funcion de modulo'))
 
+    # ── Locales huerfanas al extraer un modulo ──────────────────────────────
+    # Un nombre que en OTRO fichero del proyecto es `local`, usado aqui sin declararlo: es lo que
+    # queda cuando se saca una funcion a su propio modulo y su dependencia se deja atras. No falla
+    # al cargar -- resuelve a nil -- y casi siempre esta detras de un `and` que la da por ausente,
+    # asi que el guardia entero se vuelve mudo.
+    #
+    # Cuatro veces el mismo dia: `IconPath` (la barra de accion no pintaba nada), `SheetContext`
+    # (un DM con ficha de NPC gastaba sus propios recursos), `damageType` (el dano viajaba sin tipo
+    # y saltaba todas las resistencias) y `GetUnitColor` (que ni existia).
+    #
+    # Se comparan CONJUNTOS, no una regex por nombre: con 134 ficheros y miles de identificadores,
+    # buscar uno a uno tardaba minutos.
+    RE_DECL = re.compile(r'\blocal\s+(?:function\s+)?([A-Za-z_][\w,\s]*?)\s*[=({\n]')
+    RE_PARAM = re.compile(r'function[^(\n]*\(([^)]*)\)')
+    RE_FOR = re.compile(r'\bfor\s+([A-Za-z_][\w,\s]*?)\s*(?:=|\bin\b)')
+    RE_GLOBAL = re.compile(r'^\s*([A-Za-z_]\w*)\s*=[^=]', re.M)
+    # Usado como funcion, tabla o indice -- `x(`, `x.`, `x[` -- y NO precedido de punto o dos
+    # puntos, que serian un campo de otra tabla.
+    RE_USO = re.compile(r'(?<![\w.:])([A-Za-z_]\w*)\s*[.(\[]')
+
+    def nombres(cadena):
+        return {x.strip() for x in cadena.split(',') if x.strip()}
+
+    info = {}
+    for ruta in fuentes:
+        rel = os.path.relpath(ruta, RAIZ).replace(os.sep, '/')
+        t2 = re.sub(r'--[^\n]*', '', io.open(ruta, encoding='utf-8').read())
+        # Sin CADENAS: una descripcion que dice "...Correr, Desengancharse o Ayudar." deja
+        # `Ayudar.` en el texto y la regex de uso lo tomaba por un acceso a tabla. Tres de los
+        # cuatro hallazgos iniciales eran exactamente eso.
+        t2 = re.sub(r'"(?:\\.|[^"\\])*"', '""', t2)
+        t2 = re.sub(r"'(?:\\.|[^'\\])*'", "''", t2)
+        # Cadenas largas con cualquier numero de `=`: `HarfordDnDBookText` usa `[====[`.
+        t2 = re.sub(r'\[(=*)\[.*?\]\1\]', '[[]]', t2, flags=re.S)
+        declara = set()
+        for m in RE_DECL.finditer(t2):
+            declara |= nombres(m.group(1))
+        propios = set(declara)
+        for m in RE_PARAM.finditer(t2):
+            propios |= nombres(m.group(1))
+        for m in RE_FOR.finditer(t2):
+            propios |= nombres(m.group(1))
+        propios |= set(RE_GLOBAL.findall(t2))
+        info[rel] = (declara, propios, set(RE_USO.findall(t2)))
+
+    # De quien es local cada nombre.
+    duenos = {}
+    for rel, (declara, _, _) in info.items():
+        for n in declara:
+            duenos.setdefault(n, set()).add(rel)
+
+    # Se acota a nombres DISTINTIVOS. Sin acotar salian 211 hallazgos y todos eran ruido: `aura`,
+    # `target`, `activo`... son locales en algun fichero y locales tambien aqui, y cualquier forma
+    # de declaracion que la regex no cubra se convierte en un falso positivo. Un detector con 211
+    # falsos positivos entrena a ignorarlo, que es peor que no tenerlo.
+    #
+    # El filtro: empieza en MAYUSCULA (convencion del proyecto para funciones y modulos), al menos
+    # cinco letras, y es local en UN SOLO fichero. Eso deja fuera `damageType` -- que empieza en
+    # minuscula -- pero caza el patron que se ha repetido: una funcion o una tabla que se quedo
+    # atras al extraer un modulo.
+    for rel, (_, propios, usados) in info.items():
+        for n in sorted(usados & set(duenos)):
+            if n in propios or rel in duenos[n]:
+                continue
+            if len(n) < 5 or not n[0].isupper() or len(duenos[n]) != 1:
+                continue
+            rotas.append((rel, 'global', n, 'local de ' + sorted(duenos[n])[0]))
+
     vistas, unicas = set(), []
     for rel, campo, ident, clase in rotas:
         clave = (campo, ident, clase)

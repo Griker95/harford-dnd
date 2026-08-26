@@ -248,11 +248,16 @@ end
 function HarfordSync.SerializeConditionList(targetGuid, targetName, estados)
     local partes = {}
     for _, e in ipairs(estados or {}) do
+        -- El ORIGEN viaja por nombre corto, no por guid: `IdentityMatches` casa por cualquiera de
+        -- los dos y un guid son 45 caracteres que multiplicados por cada estado revientan el
+        -- mensaje. El contador va detras porque sin el la condicion se pinta sin numero.
         partes[#partes + 1] = table.concat({
             tostring(e.id or ""),
             tostring(e.duration or "manual"),
             tostring(math.floor(tonumber(e.turns) or 0)),
             tostring(math.floor(tonumber(e.level) or 0)),
+            tostring(e.sourceName or ""),
+            tostring(math.floor(tonumber(e.contador) or 0)),
         }, ":")
     end
     return table.concat({ "DNDCONDALL", tostring(targetGuid or ""),
@@ -264,13 +269,15 @@ function HarfordSync.DeserializeConditionList(message)
     if opcode ~= "DNDCONDALL" then return nil end
     local fuera = {}
     for trozo in tostring(lista or ""):gmatch("[^,]+") do
-        local id, duracion, turnos, nivel = strsplit(":", trozo)
+        local id, duracion, turnos, nivel, origen, contador = strsplit(":", trozo)
         if id and id ~= "" then
             fuera[#fuera + 1] = {
                 id = id,
                 duration = duracion ~= "" and duracion or "manual",
                 turns = tonumber(turnos) or 0,
                 level = tonumber(nivel) or 0,
+                sourceName = (origen and origen ~= "") and origen or nil,
+                contador = tonumber(contador) or 0,
             }
         end
     end

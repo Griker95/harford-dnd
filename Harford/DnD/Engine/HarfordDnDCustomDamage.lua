@@ -113,13 +113,16 @@ function API.Apply()
         isCritical,
         applyUnit
     )
+    -- El tipo sale del propio control, no de una global: `damageType` es un local de `API.Roll` y
+    -- aqui resolvia a nil, asi que el dano llegaba SIN TIPO y saltaba todas las resistencias.
+    local tipo = frame.damageKey or "slashing"
     if applyUnit == "focus" then
         -- Contra otro jugador va en bruto con su tipo y lo resuelve su cliente.
         HarfordDnDCombat.ApplyActionDamageToFocus(
-            HarfordDnDCombat.PayloadFor("focus", total, damageType))
+            HarfordDnDCombat.PayloadFor("focus", total, tipo))
     else
         HarfordDnDCombat.ApplyWeaponDamageToTarget(
-            HarfordDnDCombat.PayloadFor("target", total, damageType), isCritical)
+            HarfordDnDCombat.PayloadFor("target", total, tipo), isCritical)
     end
 end
 

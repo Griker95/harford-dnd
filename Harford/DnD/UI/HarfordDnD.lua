@@ -6314,6 +6314,9 @@ if HarfordDnDAbilities and HarfordDnDAbilities.Init then
         Print = Print,
         GetWeaponDef = GetWeaponDef,
         GetWeaponKey = GetWeaponKey,
+        -- Sin esto, el guardia de "estoy en ficha NPC" era una global nil y no hacia nada: un DM
+        -- con ficha de NPC cargada gastaba SUS PROPIOS recursos.
+        SheetContext = SheetContext,
     })
 end
 

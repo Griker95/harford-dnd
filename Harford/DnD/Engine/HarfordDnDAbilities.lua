@@ -19,6 +19,7 @@ function HarfordDnDAbilities.Init(deps)
     Print = deps.Print or Print
     GetWeaponDef = deps.GetWeaponDef or GetWeaponDef
     GetWeaponKey = deps.GetWeaponKey or GetWeaponKey
+    SheetContext = deps.SheetContext or SheetContext
 end
 
 -- Mordida de Demonio: dos ataques de arma como accion adicional tras Atacar. El

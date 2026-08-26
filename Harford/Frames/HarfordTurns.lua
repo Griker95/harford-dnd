@@ -2302,6 +2302,9 @@ if Ficha and Ficha.Init then
         SetFrameBackground = SetFrameBackground,
         MakeButton = MakeButton,
         Print = Print,
+        -- Faltaba: se usa en tres sitios de la ficha y resolvia a nil, asi que abrir la ficha de
+        -- una entrada reventaba.
+        Codec = Codec,
     })
 end
 

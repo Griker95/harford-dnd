@@ -7647,3 +7647,65 @@ do
         end
     end, "por que no se ven las fichas de accion/adicional/reaccion")
 end
+
+-- ─── POR QUE NO SALEN LAS DOTES ─────────────────────────────────────────────
+-- Una dote llega al Libro por una cadena de cuatro pasos, y si falla uno no sale nada ni se dice
+-- por que. Se miden los cuatro en vez de deducirlos.
+do
+    API.RegisterCommand("dotes", function()
+        local P, F, B = _G.HarfordDnDProgression, _G.HarfordDnDFeats, _G.HarfordCharacterBook
+        Print("--- 1. Que dotes tiene la ficha ---")
+        if not (P and P.Get) then Print("  HarfordDnDProgression no disponible") return end
+        local data = P.Get()
+        local lista = type(data.feats) == "table" and data.feats or {}
+        -- OJO: `data.feats` es una LISTA de ids, no un mapa. Si alguien la escribio como mapa,
+        -- `#lista` da 0 y el Libro se la salta entera sin quejarse.
+        local porClave = 0
+        for k in pairs(lista) do if type(k) ~= "number" then porClave = porClave + 1 end end
+        Print(string.format("  data.feats: %d en lista, %d por clave", #lista, porClave))
+        if porClave > 0 then
+            Print("  |cffff4444Hay claves NO numericas|r: el Libro solo recorre la lista.")
+        end
+        for i, id in ipairs(lista) do Print("    " .. i .. ". " .. tostring(id)) end
+        if #lista == 0 and porClave == 0 then
+            Print("  |cffffcc00La ficha no tiene ninguna dote guardada.|r")
+            Print("  Se eligen en la Mejora de Caracteristica (nivel 4). Si elegiste una y no")
+            Print("  esta aqui, el fallo esta al aplicarla, no al mostrarla.")
+        end
+
+        Print("--- 2. Se reconocen en el libro de dotes ---")
+        if not (F and F.GetFeat) then Print("  HarfordDnDFeats no disponible") return end
+        for _, id in ipairs(lista) do
+            local def = F.GetFeat(id)
+            Print(string.format("  %-28s %s", tostring(id),
+                def and ("|cff88ff88" .. tostring(def.name) .. "|r, " .. #(def.traits or {}) .. " rasgo(s)")
+                or "|cffff4444no existe con ese id|r"))
+        end
+
+        Print("--- 3. Sus rasgos salen envueltos ---")
+        local traits = F.GetFeatTraits and F.GetFeatTraits(lista) or {}
+        Print("  GetFeatTraits devuelve: " .. #traits)
+        for i, item in ipairs(traits) do
+            if i <= 6 then
+                Print(string.format("    %s | %s", tostring(item.className),
+                    tostring(item.feature and item.feature.name or "|cffff4444SIN feature|r")))
+            end
+        end
+
+        Print("--- 4. El Libro los deja pasar ---")
+        if not (B and B.IsVisible) then Print("  HarfordCharacterBook no disponible") return end
+        local visibles, ocultos = 0, {}
+        for _, item in ipairs(traits) do
+            if item.feature and B.IsVisible(item.feature) then visibles = visibles + 1
+            elseif item.feature then ocultos[#ocultos + 1] = tostring(item.feature.name) end
+        end
+        Print("  pasan el filtro: " .. visibles .. " de " .. #traits)
+        for _, n in ipairs(ocultos) do Print("    |cffffcc00filtrado:|r " .. n) end
+        if #traits > 0 and visibles == 0 then
+            Print("  |cffff4444Los rasgos existen pero el Libro los oculta|r (bookHidden o marcador).")
+        end
+        if visibles > 0 then
+            Print("  |cff88ff88Deberian verse en General.|r Si no salen, el fallo esta al pintar.")
+        end
+    end, "por que no salen las dotes en el Libro")
+end

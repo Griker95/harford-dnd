@@ -2185,9 +2185,26 @@ local function CreateTurnFrame()
     end
     local btnPJs = MakeButton(TurnFrame, "PJs", 44, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 272, -51, AddPlayersTurn)
     -- Abre la lista de candidatos. Se declara aqui pero la funcion vive mas abajo, en su bloque.
-    local btnLista = MakeButton(TurnFrame, "Lista", 48, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 448, -51,
-        function() HarfordTurnOrderAPI.ToggleCandidates() end)
-    btnLista:GetFontString():SetTextColor(0.55, 0.85, 1.0)
+    -- Click derecho en cada bando: abre la lista de quien puede entrar AHI. Izquierdo sigue
+    -- anadiendo el marcador suelto, que es lo que hacia antes.
+    do
+        local porBoton = {
+            [btnAliado] = "aliados", [btnNeutral] = "neutrales",
+            [btnEnemigo] = "enemigos", [btnPJs] = "pjs",
+        }
+        for boton, bando in pairs(porBoton) do
+            boton:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+            local izquierdo = boton:GetScript("OnClick")
+            boton:SetScript("OnClick", function(self, button, ...)
+                if button == "RightButton" then
+                    HarfordTurnOrderAPI.ToggleCandidates(bando)
+                    return
+                end
+                if izquierdo then izquierdo(self, button, ...) end
+            end)
+        end
+    end
+
     btnPJs:GetFontString():SetTextColor(0.2, 1.0, 0.4)
 
     btnAliado:GetFontString():SetTextColor(0.2, 1.0, 0.2)
@@ -2429,6 +2446,16 @@ do
             if puestos[guid] then return end
             vistos[guid] = true
             local esJugador = UnitIsPlayer and UnitIsPlayer(unit)
+            -- Si la lista es de un bando, solo se ofrece quien iria ahi por su reaccion. El DM
+            -- puede corregirlo despues, pero lo normal es que la propuesta acierte.
+            local destino = HarfordTurnOrderAPI.GetCandidateBando and HarfordTurnOrderAPI.GetCandidateBando()
+            if destino then
+                local suyo = esJugador and "pjs"
+                    or ((tonumber(UnitReaction and UnitReaction("player", unit) or 0) or 0) >= 5 and "aliados")
+                    or ((tonumber(UnitReaction and UnitReaction("player", unit) or 0) or 0) == 4 and "neutrales")
+                    or "enemigos"
+                if suyo ~= destino then vistos[guid] = nil; return end
+            end
             fuera[#fuera + 1] = {
                 unit = unit, guid = guid, bloque = bloque,
                 nombre = (UnitName and UnitName(unit)) or "?",
@@ -2510,6 +2537,14 @@ do
                     -- Se anade por UNIDAD, que es lo que trae vida, CA, retrato y reaccion. Anadir
                     -- por nombre daria una entrada hueca.
                     AddUnit(self.candidato.unit, self.candidato.jugador and "player" or "npc")
+                    -- Y va al bando de la lista desde la que se anadio: repartirlo despues,
+                    -- tarjeta a tarjeta, es el trabajo que esta pantalla viene a quitar.
+                    local destino = HarfordTurnOrderAPI.GetCandidateBando()
+                    if destino then
+                        local store2 = EnsureStore()
+                        local nueva = store2.entries[#store2.entries]
+                        if nueva then HarfordTurnOrderAPI.SetBando(nueva, destino) end
+                    end
                     if RefrescarLista then RefrescarLista() end
                 end)
                 f:ClearAllPoints()
@@ -2537,6 +2572,30 @@ do
         panel.titulo:SetPoint("TOPLEFT", panel, "TOPLEFT", 10, -10)
         panel.titulo:SetText("Anadir al combate")
 
+        -- Solo para la lista de PJs: los NPC no se pueden anadir en bloque, porque no hay forma de
+        -- enumerarlos mas alla de los que tengan placa visible.
+        panel.todos = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+        panel.todos:SetSize(PANEL_ANCHO - 16, 20)
+        panel.todos:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 8, 26)
+        panel.todos:SetText("Anadir a todos")
+        panel.todos:SetScript("OnClick", function()
+            local puestos, anadidos = YaEstan(), 0
+            for _, c in ipairs(Candidatos()) do
+                -- Solo jugadores CONECTADOS: uno desconectado no va a jugar su turno, y meterlo
+                -- obliga a quitarlo despues.
+                if c.jugador and not puestos[c.guid]
+                    and (not UnitIsConnected or UnitIsConnected(c.unit)) then
+                    AddUnit(c.unit, "player")
+                    anadidos = anadidos + 1
+                end
+            end
+            Print(anadidos > 0
+                and ("Anadidos " .. anadidos .. " jugador(es) al combate.")
+                or "No hay jugadores conectados que anadir.")
+            if RefrescarLista then RefrescarLista() end
+        end)
+        panel.todos:Hide()
+
         panel.aviso = panel:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
         panel.aviso:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 10, 10)
         panel.aviso:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -10, 10)
@@ -2561,6 +2620,8 @@ do
     RefrescarLista = function()
         if not (panel and panel:IsShown()) then return end
         local lista = Candidatos()
+        -- El boton de bloque solo tiene sentido en la lista de PJs.
+        panel.todos:SetShown(HarfordTurnOrderAPI.GetCandidateBando() == "pjs")
         local usadas = PintarFilas(lista, 1)
         if #lista == 0 then
             panel.aviso:SetText("Nada que anadir. Acercate o selecciona a alguien.")
@@ -2573,16 +2634,31 @@ do
     end
 
     -- Se cuelga del lado derecho de la ventana de turnos, para no taparla.
-    function HarfordTurnOrderAPI.ToggleCandidates()
+    -- `bandoDestino` filtra lo que se ofrece Y decide en que bando entra lo anadido. Sin el, la
+    -- lista era general y habia que repartir despues, tarjeta a tarjeta.
+    local bandoDestino
+
+    function HarfordTurnOrderAPI.ToggleCandidates(bando)
         CrearPanel()
-        if panel:IsShown() then panel:Hide() return end
+        -- Pulsar el mismo bando cierra; pulsar otro CAMBIA de lista sin cerrar, que es lo que se
+        -- espera al ir repasando bandos.
+        if panel:IsShown() and (bando == nil or bando == bandoDestino) then panel:Hide() return end
+        bandoDestino = bando
         if not (HarfordTurnOrderFrame and HarfordTurnOrderFrame:IsShown()) then
             Print("Abre primero la ventana de turnos.")
             return
         end
         panel:ClearAllPoints()
         panel:SetPoint("TOPLEFT", HarfordTurnOrderFrame, "TOPRIGHT", -6, 0)
+        panel.titulo:SetText(bandoDestino
+            and ("Anadir a " .. tostring(HarfordTurnOrderAPI.BANDO_ETIQUETA[bandoDestino] or bandoDestino))
+            or "Anadir al combate")
         panel:Show()
+        if RefrescarLista then RefrescarLista() end
+    end
+
+    function HarfordTurnOrderAPI.GetCandidateBando()
+        return bandoDestino
     end
 
     HarfordTurnOrderAPI.RefreshCandidates = function() if RefrescarLista then RefrescarLista() end end

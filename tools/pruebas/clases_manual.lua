@@ -578,7 +578,9 @@ local sueltos = FEATS.GetFeatTraits({ unaDote.id })
 local agrupada = FEATS.GetFeatAbilities({ unaDote.id })
 chk("suelta da un rasgo por cada cosa", #sueltos, #(unaDote.traits or {}))
 chk("agrupada da UNA", #agrupada, 1)
-chk("y se llama como la dote", agrupada[1] and agrupada[1].feature.name, unaDote.name)
+-- Con el prefijo "Dote:": en una lista de treinta habilidades, el nombre solo no dice de donde
+-- sale la entrada.
+chk("y se llama como la dote", agrupada[1] and agrupada[1].feature.name, "Dote: " .. unaDote.name)
 -- Dentro tiene que estar TODO lo que hace, o agrupar seria perder informacion.
 local cuerpo = agrupada[1] and agrupada[1].feature.description or ""
 local dentro = 0
@@ -599,5 +601,20 @@ chk("y ninguna dote tiene rasgos accionables", accionables, 0)
 local libro = io.open("Harford/Character/HarfordCharacterBook.lua"):read("*a")
 chk("el Libro pide la agrupada",
     libro:find("HarfordDnDFeats.GetFeatAbilities(data.feats)", 1, true) ~= nil, true)
+
+-- ─── UN ICONO QUE NO EXISTE NO PUEDE HEREDARSE ──────────────────────────────
+-- `SetTexture` con una ruta invalida NO borra la textura: la deja como estaba. Y como las filas
+-- del Libro vienen de un pool, la habilidad heredaba el icono de la que ocupaba ese hueco antes.
+-- Media pagina salia con el mismo dibujo.
+print("El icono se comprueba antes de ponerlo")
+local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+chk("se valida la ruta",
+    panel:find("GetFileIDFromPath and not GetFileIDFromPath(final)", 1, true) ~= nil, true)
+chk("y hay respaldo por categoria",
+    panel:find("local respaldo = K.BOOK_ICON[cat] or K.BOOK_ICON.pasivo", 1, true) ~= nil, true)
+-- El respaldo tiene que ser una ruta que EXISTA, o el arreglo no arregla nada.
+local libro2 = io.open("Harford/Character/HarfordCharacterBook.lua"):read("*a")
+chk("el respaldo de pasivo esta declarado",
+    libro2:find('pasivo   = "Interface', 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

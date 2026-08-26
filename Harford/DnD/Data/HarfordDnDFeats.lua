@@ -648,7 +648,9 @@ function API.GetFeatAbilities(featIds)
                 level = 0,
                 feature = {
                     id = featDef.id,
-                    name = featDef.name,
+                    -- Con el prefijo: en una lista de treinta habilidades, "Mago de batalla" no
+                    -- dice de donde sale. "Dote: Mago de batalla" si.
+                    name = "Dote: " .. tostring(featDef.name or featDef.id),
                     icon = featDef.icon,
                     type = "pasivo",
                     description = table.concat(partes, "\n\n"),

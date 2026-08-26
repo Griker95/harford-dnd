@@ -4328,7 +4328,15 @@ RefreshBook = function()
             -- Sosteniendo un nucleo no hay criatura, pero la fila debe decir cual llevas.
             local activeCore = (cat == "acompanante" and not activeCompanion) and HarfordDnDCompanions
                 and HarfordDnDCompanions.GetActiveCore and HarfordDnDCompanions.GetActiveCore() or nil
-            b.icon:SetTexture(realIcon or K.BOOK_ICON[cat] or K.BOOK_ICON.pasivo)
+            -- Se COMPRUEBA que exista: `SetTexture` con una ruta invalida deja la textura
+            -- anterior, y como la fila viene de un pool, hereda el icono de la habilidad que
+            -- ocupaba ese hueco antes. Es lo que llenaba la pagina del mismo dibujo.
+            local respaldo = K.BOOK_ICON[cat] or K.BOOK_ICON.pasivo
+            local final = realIcon or respaldo
+            if type(final) == "string" and GetFileIDFromPath and not GetFileIDFromPath(final) then
+                final = respaldo
+            end
+            b.icon:SetTexture(final)
             b.icon:SetTexCoord(0.06, 0.94, 0.06, 0.94)
             b.icon:Show()
             -- Marco: pasivo (marron, detras); activo/al_accion (SlotFrame ENCIMA); reaccion (UnlearnedSlotFrame).

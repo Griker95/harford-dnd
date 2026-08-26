@@ -182,14 +182,18 @@ chk("y se resuelve contra las entradas locales",
 
 -- Corregir el reparto tiene que difundirse EN EL ACTO. Si llegase con la foto retrasada, el bloque
 -- que ya esta en juego tocaria con la lista vieja.
-print("El DM reparte a mano y se difunde ya")
-chk("hay menu de bando", turnos:find("local function AbrirMenuDeBando", 1, true) ~= nil, true)
-chk("se abre con el boton derecho",
+-- La UI de DM vive en HarfordAdmin: sin ese addon no aparece ni el menu ni el interruptor, que es
+-- la regla de carga del proyecto. El core solo expone el gesto.
+local admin = io.open("HarfordAdmin/HarfordAdminTurns.lua"):read("*a")
+print("El DM reparte a mano, desde HarfordAdmin")
+chk("el menu vive en Admin", admin:find("local function AbrirMenu(entry, ancla)", 1, true) ~= nil, true)
+chk("y NO en el core", turnos:find("AbrirMenuDeBando", 1, true) == nil, true)
+chk("el core solo expone el gesto",
+    turnos:find("function HarfordTurnOrderAPI.OnCardRightClick", 1, true) ~= nil, true)
+chk("que la tarjeta dispara con el boton derecho",
     turnos:find('if button == "RightButton" then', 1, true) ~= nil, true)
-chk("solo el admin reparte",
-    turnos:find("Solo el admin reparte los bandos", 1, true) ~= nil, true)
-chk("y difunde al cambiar",
-    turnos:find("if HarfordTurnOrderAPI.SetBando(entry, b) then", 1, true) ~= nil, true)
+chk("solo el admin reparte", admin:find("Solo el admin gestiona los turnos", 1, true) ~= nil, true)
+chk("y difunde al cambiar", admin:find("if T.SetBando(entry, b) then", 1, true) ~= nil, true)
 
 -- La lista que manda el DM PISA a la que calcularia el cliente: es lo que evita que dos clientes
 -- con la foto desincronizada hagan tocar a criaturas distintas.
@@ -259,7 +263,7 @@ chk("y va la ultima, para no descuadrar el formato anterior",
 chk("solo se avisa de turno propio al abrir",
     turnos:find('if fase == "inicio" then AlertMyTurn', 1, true) ~= nil, true)
 chk("y se avisa si el bloque tocado ya esta en juego",
-    turnos:find("ya esta en juego: entra en el proximo asalto", 1, true) ~= nil, true)
+    admin:find("ya esta en juego: entra en el proximo asalto", 1, true) ~= nil, true)
 
 -- ─── EL HUECO COLECTIVO DE PJs ──────────────────────────────────────────────
 -- Su `kind` es "players" (plural), no "player". Los tres sitios que fuerzan el bando miraban solo
@@ -311,9 +315,15 @@ chk("un asalto seguido no dispara nada",
 -- Nadie llamaba a `SetModoBandos`, y `TURNB` solo sale si `modoBandos` YA es true: todo el avance
 -- por bloques era codigo inalcanzable. Existir no es lo mismo que poder usarse.
 print("Hay como encender el modo, y se comparte")
-chk("hay boton", turnos:find('MakeButton(TurnFrame, "Bandos"', 1, true) ~= nil, true)
-chk("que lo enciende de verdad", turnos:find("HarfordTurnOrderAPI.SetModoBandos(activo)", 1, true) ~= nil, true)
-chk("solo el admin", turnos:find("Solo el admin cambia el modo de turnos", 1, true) ~= nil, true)
+chk("hay boton, en Admin", admin:find("local function MontarBotonModo", 1, true) ~= nil, true)
+chk("que lo enciende de verdad", admin:find("T.SetModoBandos(activo)", 1, true) ~= nil, true)
+chk("solo el admin", admin:find("Solo el admin cambia el modo de turnos", 1, true) ~= nil, true)
+-- El core tiene que ofrecer donde colgarlo, o Admin no tendria sitio.
+chk("y el core ofrece donde colgarlo",
+    turnos:find("function HarfordTurnOrderAPI.RegisterAdminControl", 1, true) ~= nil, true)
+-- La ventana se crea al abrirla, que puede ser despues de que Admin arranque.
+chk("y avisa cuando la ventana nace",
+    turnos:find("function HarfordTurnOrderAPI.RegisterOnFrameCreated", 1, true) ~= nil, true)
 -- Media mesa por bandos y media por criatura serian dos combates distintos a la vez.
 chk("el modo viaja en la foto", turnos:find('modo = table.concat({ "B",', 1, true) ~= nil, true)
 -- Y DONDE va la rotacion: sin la posicion, un DM que recibe la foto sin haber visto un TURNB
@@ -323,7 +333,13 @@ chk("con el bando, la fase y el asalto",
 -- El hueco del medio llevaba vacio desde siempre; un receptor antiguo lo ignora y sigue leyendo
 -- las entradas del cuarto campo, que es donde ya las buscaba.
 chk("y solo se acepta si hay cuarto campo",
-    turnos:find('local marca, bando, fase, asalto = strsplit(",", tostring(third or ""))', 1, true) ~= nil, true)
+    turnos:find('local marca, bando, fase, asalto = strsplit(",", tostring(modoRaw or ""))', 1, true) ~= nil, true)
+-- La lista de DMs secundarios viaja en el mismo hueco, detras: quien delega necesita la MISMA
+-- cadena que los demas o mandaria el efecto a alguien que nadie reconoce como eslabon.
+chk("y los DMs secundarios viajan con ella",
+    turnos:find('strsplit("~", tostring(third or ""))', 1, true) ~= nil, true)
+chk("el dato vive en el core", turnos:find("function HarfordTurnOrderAPI.SetSecondaryDMs", 1, true) ~= nil, true)
+chk("pero nombrarlos es de Admin", admin:find("local function AlternarSecundario", 1, true) ~= nil, true)
 chk("con marca reconocible", turnos:find('if marca == "B" then', 1, true) ~= nil, true)
 
 -- El GUID de una entrada vive en `id`; `guid` no existe. Cuatro sitios lo leian, y dos eran

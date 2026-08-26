@@ -143,8 +143,14 @@ fS()
 local SY = ent.HarfordSync
 
 print("El efecto delegado va y vuelve")
-chk("se compone", SY.SerializeNpcEffect("Creature-1", "damage", 7, "Deryk"),
-    "DNDNPCDO|Creature-1|damage|7|Deryk")
+-- El SALTO viaja: quien recibe tiene que saber por donde va la cadena para pasarla al siguiente,
+-- y para que no pueda dar vueltas.
+chk("se compone", SY.SerializeNpcEffect("Creature-1", "damage", 7, "Deryk", 1),
+    "DNDNPCDO|Creature-1|damage|7|Deryk|1")
+chk("y el salto se lee", select(5, SY.DeserializeNpcEffect("DNDNPCDO|Creature-1|damage|7|Deryk|2")), 2)
+-- Un mensaje del formato viejo, sin salto, arranca por el principio de la cadena.
+chk("sin salto, empieza por el primero",
+    select(5, SY.DeserializeNpcEffect("DNDNPCDO|Creature-1|damage|7|Deryk")), 1)
 local g, tp, v, a = SY.DeserializeNpcEffect("DNDNPCDO|Creature-1|damage|7|Deryk")
 chk("y se lee el guid", g, "Creature-1")
 chk("el tipo", tp, "damage")
@@ -179,13 +185,29 @@ chk("hay punto unico", cond:find("function API.AplicarEfectoNpc", 1, true) ~= ni
 chk("se manda al lider", cond:find("local function NombreDelLider", 1, true) ~= nil, true)
 -- Recibirlo sin poder emitirlo seria acumular trabajo que no se hara, y ademas dejaria creer al
 -- que lo mando que esta resuelto.
-chk("no se acepta si no puedo emitirlo",
-    cond:find("if not API.PuedoAplicarEnNpc() then return false end", 1, true) ~= nil, true)
+-- Ya no se descarta: se pasa al SIGUIENTE de la cadena. Guardarlo aqui seria acumular trabajo que
+-- nunca se hara y dejar creer al que lo mando que esta resuelto.
+chk("si no puedo emitirlo, pasa al siguiente",
+    cond:find("local siguiente = API.EnviarPorLaCadena(guid, tipo, valor, autor, salto + 1)", 1, true) ~= nil, true)
+-- Y si no queda nadie, se le dice a quien lo lanzo.
+chk("y si no queda nadie, se avisa", cond:find('"DNDNPCFAIL|"', 1, true) ~= nil, true)
+chk("con un mensaje que se entiende",
+    cond:find("nadie del grupo", 1, true) ~= nil, true)
+
+-- El orden lo decidio la mesa: LIDER primero. El que aplica tiene que tener el NPC seleccionado, y
+-- el lider suele estar en todo; un secundario puede no mirar nunca a ese NPC y dejarlo en la cola
+-- para siempre.
+print("La cadena va lider primero")
+chk("existe", cond:find("function API.CadenaDeMando", 1, true) ~= nil, true)
+chk("y el lider encabeza", cond:find("if lider then cadena[#cadena + 1] = lider end", 1, true) ~= nil, true)
+-- Sin repetir al lider si ademas esta nombrado secundario, y sin mandarmelo a mi mismo: el
+-- receptor lo rechaza si no puede emitirlo y se perderia.
+chk("sin repetir eslabones", cond:find("local repetido = (lider and ShortName(lider) == corto) or (corto == yo)", 1, true) ~= nil, true)
 -- Y solo sobre NPCs que la mesa ya conoce: si no, cualquiera podria pedir dano sobre cualquier cosa.
 chk("y solo sobre NPCs de la lista de turnos",
     cond:find("if not EsNpcDeLosTurnos(guid) then return false end", 1, true) ~= nil, true)
 chk("el remitente tiene que ser de fiar",
-    cond:find("if IsTrustedSender(sender) then API.RecibirEfectoNpc", 1, true) ~= nil, true)
+    cond:find("API.RecibirEfectoNpc(guid, tipo, valor, autor, sender, salto)", 1, true) ~= nil, true)
 
 -- ─── LAS DOS RUTAS DE ATAQUE LO USAN ────────────────────────────────────────
 -- No basta con que la cola exista: hay que ENTRAR en ella. Antes, sin permiso de oficial, el dano

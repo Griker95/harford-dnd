@@ -596,13 +596,16 @@ local function SerializeState()
     -- ignora y sigue leyendo las entradas del cuarto, que es donde ya las buscaba.
     -- El tercer campo llevaba vacio desde siempre; ahora lleva el modo Y donde va la rotacion.
     -- Sin la posicion, un DM que recibe la foto sin haber visto un TURNB arranca de cero.
+    -- Los DMs secundarios van en el mismo hueco que el modo, detras: quien delega tiene que ver
+    -- la MISMA cadena que los demas o mandaria el efecto a alguien que nadie reconoce.
+    local dms = table.concat(store.dms or {}, ";")
     local modo = ""
     if store.modoBandos then
         modo = table.concat({ "B", tostring(store.activeBando or 0),
             tostring(store.faseBando or "inicio"), tostring(store.asalto or 0) }, ",")
     end
     return "STATE|" .. tostring(store.activeIndex or 1) .. "|"
-        .. modo .. "|" .. table.concat(parts, ";")
+        .. modo .. "~" .. dms .. "|" .. table.concat(parts, ";")
 end
 
 local function SerializeTurnNotice()
@@ -777,7 +780,11 @@ local function ApplySerializedState(message)
     -- Solo se acepta la marca si viene en el hueco del modo Y hay un cuarto campo: en el formato
     -- viejo las entradas iban en el tercero y una que empezara por "B" se tomaria por el modo.
     if fourth then
-        local marca, bando, fase, asalto = strsplit(",", tostring(third or ""))
+        local modoRaw, dmsRaw = strsplit("~", tostring(third or ""))
+        local listaDms = {}
+        for nombre in tostring(dmsRaw or ""):gmatch("[^;]+") do listaDms[#listaDms + 1] = nombre end
+        store.dms = (#listaDms > 0) and listaDms or nil
+        local marca, bando, fase, asalto = strsplit(",", tostring(modoRaw or ""))
         if marca == "B" then
             store.modoBandos = true
             store.activeBando = tonumber(bando)
@@ -1428,8 +1435,11 @@ end
 RefreshFrame = function()
     if not TurnFrame then return end
     if not TurnFrame:IsShown() then return end
-    -- El modo viaja en la foto: puede cambiarlo otro DM y este cliente tiene que verlo.
-    if TurnFrame.RefreshModoBandos then TurnFrame.RefreshModoBandos() end
+    -- Los controles que anade HarfordAdmin se repintan solos si se registraron con
+    -- `RegisterAdminControl`; el core no sabe lo que son.
+    for _, extra in ipairs(TurnFrame.adminExtras or {}) do
+        if extra.Refrescar then extra.Refrescar() end
+    end
     local store = EnsureStore()
     EnsureRoundMarker()
     ClampActiveIndex()
@@ -1968,50 +1978,6 @@ end
 -- un NPC marcado como neutral puede ser hostil en la escena, y solo el DM lo sabe. Cambiarlo es
 -- suyo, y el cambio se difunde ya -- no espera al siguiente turno -- porque la pertenencia es lo
 -- que decide a quien le bajan los contadores.
-local menuBando
-local function AbrirMenuDeBando(entry, ancla)
-    if not entry then return end
-    if not IsTurnAdmin() then Print("Solo el admin reparte los bandos.") return end
-    if tostring(entry.kind or "") ~= "npc" and tostring(entry.kind or "") ~= "player" then return end
-    if tostring(entry.kind or "") == "player" then
-        Print("Los personajes van siempre con los PJs.")
-        return
-    end
-    menuBando = menuBando or CreateFrame("Frame", "HarfordTurnsBandoMenu", UIParent,
-        "UIDropDownMenuTemplate")
-    UIDropDownMenu_Initialize(menuBando, function(_, level)
-        local info = UIDropDownMenu_CreateInfo()
-        info.isTitle, info.notCheckable = true, true
-        info.text = tostring(entry.name or "?")
-        UIDropDownMenu_AddButton(info, level)
-        local actual = HarfordTurnOrderAPI.GetBando(entry)
-        for _, b in ipairs(HarfordTurnOrderAPI.BANDOS) do
-            local i2 = UIDropDownMenu_CreateInfo()
-            i2.text = HarfordTurnOrderAPI.BANDO_ETIQUETA[b] or b
-            i2.checked = (b == actual)
-            i2.func = function()
-                local vivo = HarfordTurnOrderAPI.GetActiveBando()
-                if HarfordTurnOrderAPI.SetBando(entry, b) then
-                    -- Decir SIEMPRE cuando entra en juego. Meter a alguien en el bloque que se
-                    -- esta jugando y que no le toque nada seria desconcertante sin explicacion.
-                    if vivo == b then
-                        Print("El turno de " .. tostring(HarfordTurnOrderAPI.BANDO_ETIQUETA[b] or b)
-                            .. " ya esta en juego: entra en el proximo asalto.")
-                    end
-                    -- Difundir en el acto: si el reparto llegase tarde, el bloque que ya esta en
-                    -- juego tocaria con la lista vieja.
-                    MarkChanged()
-                    Print(tostring(entry.name or "?") .. " pasa a "
-                        .. tostring(HarfordTurnOrderAPI.BANDO_ETIQUETA[b] or b) .. ".")
-                end
-                CloseDropDownMenus()
-            end
-            UIDropDownMenu_AddButton(i2, level)
-        end
-    end, "MENU")
-    ToggleDropDownMenu(1, nil, menuBando, ancla or "cursor", 0, 0)
-end
-
 local function CreateCard(parent, index)
     local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     card:SetSize(CARD_W, CARD_H)
@@ -2021,7 +1987,9 @@ local function CreateCard(parent, index)
         local store = EnsureStore()
         local entryIndex = self.entryIndex or index
         if button == "RightButton" then
-            AbrirMenuDeBando(store.entries[entryIndex], self)
+            -- El core no abre menus de DM: expone el gesto y HarfordAdmin decide. Sin Admin
+            -- cargado no pasa nada, que es lo correcto.
+            HarfordTurnOrderAPI.OnCardRightClick(store.entries[entryIndex], self)
             return
         end
         if button ~= "LeftButton" then return end
@@ -2226,30 +2194,6 @@ local function CreateTurnFrame()
     btnNeutral:GetFontString():SetTextColor(1.0, 1.0, 0.0)
     btnEnemigo:GetFontString():SetTextColor(1.0, 0.2, 0.2)
 
-    -- Interruptor del modo bandos. Sin el, `SetModoBandos` no se llamaba desde ningun sitio y el
-    -- avance por bloques era codigo inalcanzable.
-    local btnBandos
-    btnBandos = MakeButton(TurnFrame, "Bandos", 56, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 320, -75,
-        function()
-            if not IsTurnAdmin() then Print("Solo el admin cambia el modo de turnos.") return end
-            local activo = not HarfordTurnOrderAPI.IsModoBandos()
-            HarfordTurnOrderAPI.SetModoBandos(activo)
-            Print(activo
-                and "Iniciativa por BANDOS: el turno pasa de bloque a bloque."
-                or "Iniciativa individual: el turno pasa de criatura a criatura.")
-            -- `MarkChanged` repinta la ventana, y el repintado ya actualiza este boton.
-            MarkChanged()
-        end)
-    -- El estado se lee del almacen en cada refresco: viaja en la foto, asi que puede cambiarlo
-    -- otro DM y este cliente tiene que enterarse.
-    TurnFrame.RefreshModoBandos = function()
-        local activo = HarfordTurnOrderAPI.IsModoBandos()
-        btnBandos:GetFontString():SetTextColor(activo and 1.0 or 0.55,
-            activo and 0.82 or 0.55, activo and 0.1 or 0.55)
-        btnBandos:SetText(activo and "Bandos" or "Individual")
-    end
-    TurnFrame.RefreshModoBandos()
-
     local btnIniciar = MakeButton(TurnFrame, "Iniciar", 58, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 320, -51, Combate.StartCombat)
     local btnTerminar = MakeButton(TurnFrame, "Terminar", 66, 22, "TOPLEFT", TurnFrame, "TOPLEFT", 382, -51, Combate.EndCombat)
     btnIniciar:GetFontString():SetTextColor(1.0, 0.82, 0.1)
@@ -2259,7 +2203,6 @@ local function CreateTurnFrame()
     TurnFrame.editButton = editButton
     -- Con el resto de controles de admin: si no, un jugador normal ve un boton suelto flotando
     -- en una ventana sin controles, y al pulsarlo solo le dicen que no puede.
-    tinsert(TurnFrame.adminControls, btnBandos)
     tinsert(TurnFrame.adminControls, targetButton)
     tinsert(TurnFrame.adminControls, btnAliado)
     tinsert(TurnFrame.adminControls, btnNeutral)
@@ -2301,6 +2244,8 @@ local function CreateTurnFrame()
     end
     UpdateEditButton()
     RefreshFrame()
+    -- Ya existe: quien esperaba para colgar sus controles puede hacerlo.
+    for _, fn in ipairs(alCrearVentana or {}) do pcall(fn) end
 end
 
 local function ToggleFrame()
@@ -2734,6 +2679,72 @@ end
 function HarfordTurnOrderAPI.IsModoBandos()
     local store = HarfordTurnOrderStore
     return type(store) == "table" and store.modoBandos == true
+end
+
+-- ─── PUERTAS PARA HarfordAdmin ──────────────────────────────────────────────
+-- El core no tiene UI de DM: expone gestos y sitios donde colgar controles, y HarfordAdmin los
+-- rellena en su PLAYER_LOGIN. Es el patron de `HarfordTRP3.InsertGlanceLink`. Sin HarfordAdmin
+-- cargado no aparece nada, que es justo la regla de carga del proyecto.
+
+-- Click derecho sobre una tarjeta. Por defecto no hace nada.
+function HarfordTurnOrderAPI.OnCardRightClick(entry, ancla)
+end
+
+-- Cuelga un control en la ventana de turnos. Se oculta solo cuando quien mira no es admin, igual
+-- que los controles propios, y se le pide repintarse en cada refresco si trae `Refrescar`.
+function HarfordTurnOrderAPI.RegisterAdminControl(control)
+    if type(control) ~= "table" or not TurnFrame then return false end
+    TurnFrame.adminExtras = TurnFrame.adminExtras or {}
+    TurnFrame.adminExtras[#TurnFrame.adminExtras + 1] = control
+    if control.frame then
+        TurnFrame.adminControls = TurnFrame.adminControls or {}
+        TurnFrame.adminControls[#TurnFrame.adminControls + 1] = control.frame
+    end
+    return true
+end
+
+-- La ventana, para que HarfordAdmin pueda anclar sus controles.
+function HarfordTurnOrderAPI.GetFrame()
+    return TurnFrame
+end
+
+-- La ventana se crea al abrirla por primera vez, que puede ser despues de que HarfordAdmin haya
+-- arrancado. Se le avisa para que cuelgue entonces lo suyo.
+local alCrearVentana = {}
+function HarfordTurnOrderAPI.RegisterOnFrameCreated(fn)
+    if type(fn) ~= "function" then return false end
+    alCrearVentana[#alCrearVentana + 1] = fn
+    return true
+end
+
+-- Repartir la foto desde fuera del core. HarfordAdmin cambia datos -- bandos, modo, DMs -- y
+-- necesita que la mesa se entere sin conocer el transporte.
+function HarfordTurnOrderAPI.Broadcast()
+    MarkChanged()
+end
+
+-- ─── DMs SECUNDARIOS ────────────────────────────────────────────────────────
+-- Solo el DATO y su reparto. Nombrarlos es cosa de HarfordAdmin.
+--
+-- Sirven para repartir la carga de emitir comandos de servidor: un efecto delegado recorre la
+-- cadena -- lider primero, secundarios detras -- y lo aplica el PRIMERO que pueda. En cadena y no
+-- a todos, porque si dos lo aplicaran el golpe contaria dos veces.
+function HarfordTurnOrderAPI.GetSecondaryDMs()
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" or type(store.dms) ~= "table" then return {} end
+    return store.dms
+end
+
+function HarfordTurnOrderAPI.SetSecondaryDMs(lista)
+    local store = EnsureStore()
+    local limpia = {}
+    for _, n in ipairs(type(lista) == "table" and lista or {}) do
+        local nombre = tostring(n or "")
+        if nombre ~= "" then limpia[#limpia + 1] = nombre end
+    end
+    store.dms = (#limpia > 0) and limpia or nil
+    MarkChanged()
+    return true
 end
 
 function HarfordTurnOrderAPI.HasActiveCombat()

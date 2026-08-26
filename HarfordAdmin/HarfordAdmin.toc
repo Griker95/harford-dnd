@@ -8,6 +8,7 @@
 HarfordAdminNPC.lua
 HarfordAdminLoot.lua
 HarfordAdminConditions.lua
+HarfordAdminTurns.lua
 HarfordAdminUnitMenu.lua
 HarfordReputationAdmin.lua
 HarfordAdmin.lua

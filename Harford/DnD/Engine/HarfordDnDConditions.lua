@@ -1156,6 +1156,29 @@ local function NombreDelLider()
     return nil
 end
 
+-- Lider primero, secundarios detras. En CADENA y no a todos: si le llegara a varios y dos
+-- tuvieran el NPC seleccionado, el efecto se aplicaria dos veces -- un golpe de 7 quitaria 14, y
+-- eso no se ve venir en mesa.
+--
+-- El lider va primero porque el que aplica tiene que tener el NPC SELECCIONADO, y si no se le
+-- queda en la cola. El lider suele estar en todo; un secundario puede no mirar nunca a ese NPC y
+-- dejarlo ahi para siempre.
+function API.CadenaDeMando()
+    local cadena = {}
+    local lider = NombreDelLider()
+    if lider then cadena[#cadena + 1] = lider end
+    local T = _G.HarfordTurnOrderAPI
+    for _, n in ipairs((T and T.GetSecondaryDMs and T.GetSecondaryDMs()) or {}) do
+        -- Sin repetir al lider si ademas esta nombrado secundario, y sin mandarmelo a mi mismo:
+        -- el receptor lo rechaza si no puede emitirlo y se perderia.
+        local corto = ShortName(n)
+        local yo = ShortName(HarfordClassColors.UnitFullName("player") or "")
+        local repetido = (lider and ShortName(lider) == corto) or (corto == yo)
+        if not repetido then cadena[#cadena + 1] = n end
+    end
+    return cadena
+end
+
 -- ¿Puedo emitirlo yo? Si si, no hay nada que delegar.
 function API.PuedoAplicarEnNpc()
     return (HarfordAuthority and HarfordAuthority.CanUseOfficerCommands
@@ -1179,17 +1202,37 @@ function API.AplicarEfectoNpc(guid, tipo, valor, unidad)
         return "encolado"
     end
 
-    local lider = NombreDelLider()
-    if not (lider and HarfordSync and HarfordSync.SerializeNpcEffect) then return nil end
-    local yo = HarfordClassColors.UnitFullName("player") or ""
-    HarfordSync.Send(PREFIX, HarfordSync.SerializeNpcEffect(guid, tipo, valor, yo), "WHISPER", lider)
+    return API.EnviarPorLaCadena(guid, tipo, valor,
+        HarfordClassColors.UnitFullName("player") or "", 1)
+end
+
+-- Manda el efecto al eslabon `salto` de la cadena. Devuelve "delegado" si salio, nil si no queda
+-- nadie a quien pasarselo.
+function API.EnviarPorLaCadena(guid, tipo, valor, autor, salto)
+    if not (HarfordSync and HarfordSync.SerializeNpcEffect) then return nil end
+    salto = math.max(1, math.floor(tonumber(salto) or 1))
+    local cadena = API.CadenaDeMando()
+    local destino = cadena[salto]
+    if not destino then return nil end
+    HarfordSync.Send(PREFIX, HarfordSync.SerializeNpcEffect(guid, tipo, valor, autor, salto),
+        "WHISPER", destino)
     return "delegado"
 end
 
--- Recepcion. Solo entra si YO puedo emitirlo: si no, encolarlo seria acumular trabajo que nunca
--- se hara y ademas dejaria creer al que lo mando que esta resuelto.
-function API.RecibirEfectoNpc(guid, tipo, valor, autor, sender)
-    if not API.PuedoAplicarEnNpc() then return false end
+-- Recepcion. Si no puedo emitirlo, se lo paso al SIGUIENTE de la cadena en vez de encolarlo:
+-- guardarlo aqui seria acumular trabajo que nunca se hara y dejar creer al que lo mando que esta
+-- resuelto.
+function API.RecibirEfectoNpc(guid, tipo, valor, autor, sender, salto)
+    if not API.PuedoAplicarEnNpc() then
+        salto = math.max(1, math.floor(tonumber(salto) or 1))
+        local siguiente = API.EnviarPorLaCadena(guid, tipo, valor, autor, salto + 1)
+        if not siguiente and autor and autor ~= "" then
+            -- Nadie de la cadena puede emitirlo. Se le dice a quien lo lanzo, en vez de dejar que
+            -- crea que su golpe conto: hoy hemos visto demasiadas cosas perderse en silencio.
+            HarfordSync.Send(PREFIX, "DNDNPCFAIL|" .. tostring(guid), "WHISPER", autor)
+        end
+        return false
+    end
     if not EsNpcDeLosTurnos(guid) then return false end
     local quien = autor ~= "" and ShortName(autor) or ShortName(sender or "")
     if tipo == "damage" then
@@ -2261,11 +2304,22 @@ function API.HandleMessage(message, sender)
         if IsTrustedSender(sender) then CacheRemoteState(state, sender) end
         return true
     end
+    -- Nadie de la cadena pudo emitir un efecto que delegue.
+    local sinNadie = tostring(message or ""):match("^DNDNPCFAIL|(.+)$")
+    if sinNadie then
+        if IsTrustedSender(sender) and HarfordChat and HarfordChat.Print then
+            HarfordChat.Print("|cffff5555Tu efecto sobre el NPC no se aplico:|r nadie del grupo "
+                .. "tiene permiso de fase para emitirlo. Diselo al DM.")
+        end
+        return true
+    end
     -- Un jugador sin permiso delega en mi un efecto que ya ha resuelto por su cuenta.
     if HarfordSync.DeserializeNpcEffect then
-        local guid, tipo, valor, autor = HarfordSync.DeserializeNpcEffect(message)
+        local guid, tipo, valor, autor, salto = HarfordSync.DeserializeNpcEffect(message)
         if guid then
-            if IsTrustedSender(sender) then API.RecibirEfectoNpc(guid, tipo, valor, autor, sender) end
+            if IsTrustedSender(sender) then
+                API.RecibirEfectoNpc(guid, tipo, valor, autor, sender, salto)
+            end
             return true
         end
     end

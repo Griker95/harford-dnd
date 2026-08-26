@@ -351,16 +351,20 @@ end
 --
 -- Se apunta por GUID y se ejecuta cuando el lider tenga a ese NPC seleccionado, que es la unica
 -- forma de actuar sobre el en Epsilon.
-function HarfordSync.SerializeNpcEffect(guid, tipo, valor, nombre)
+function HarfordSync.SerializeNpcEffect(guid, tipo, valor, nombre, salto)
+    -- `salto` es la posicion en la cadena de mando. Viaja para que quien no pueda aplicarlo sepa a
+    -- quien pasarselo, y para que la cadena no pueda dar vueltas.
     return table.concat({ "DNDNPCDO", tostring(guid or ""), tostring(tipo or ""),
-        tostring(math.floor(tonumber(valor) or 0)), tostring(nombre or "") }, "|")
+        tostring(math.floor(tonumber(valor) or 0)), tostring(nombre or ""),
+        tostring(math.floor(tonumber(salto) or 1)) }, "|")
 end
 
 function HarfordSync.DeserializeNpcEffect(message)
-    local opcode, guid, tipo, valor, nombre = strsplit("|", tostring(message or ""))
+    local opcode, guid, tipo, valor, nombre, salto = strsplit("|", tostring(message or ""))
     if opcode ~= "DNDNPCDO" then return nil end
     if tostring(guid or "") == "" then return nil end
-    return tostring(guid), tostring(tipo or ""), tonumber(valor) or 0, tostring(nombre or "")
+    return tostring(guid), tostring(tipo or ""), tonumber(valor) or 0, tostring(nombre or ""),
+        math.max(1, math.floor(tonumber(salto) or 1))
 end
 
 function HarfordSync.BestChannel()

@@ -146,6 +146,9 @@ local function StartCombat()
     end
     SortByInitiative()
     store.activeIndex = 1
+    -- El ciclo de bandos vuelve al principio: un combate nuevo no hereda por donde iba el anterior.
+    store.activeBando = nil
+    store.faseBando = nil
     EnsureActiveVisible()
 
     -- Cada jugador vuelve a tirar la suya con su propio bonus y responde.
@@ -171,6 +174,10 @@ local function EndCombat()
     store.entries = {}
     store.activeIndex = 1
     store.lastTouched = nil
+    -- Sin combatientes no hay bandos. Dejarlos puestos haria que el siguiente combate arrancara a
+    -- media rotacion, igual que pasaba al caducar la lista.
+    store.activeBando = nil
+    store.faseBando = nil
     EnsureRoundMarker()
     Print("|cffffff00Fin del combate.|r")
     MarkChanged()

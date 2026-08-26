@@ -3053,6 +3053,99 @@ turno**, no al final del asalto. Una reaccion gastada en el turno de un enemigo 
 resto del asalto. `API.Turn` ya lo hace asi. Con el hueco PJs, todos los jugadores la recuperan a la
 vez, que es el comportamiento correcto bajo iniciativa por bandos.
 
+## Iniciativa por BANDOS: el turno avanza por bloques (2026-08-26)
+
+Evolucion del hueco `players` de arriba: no un bloque para los PJs, sino **cuatro bandos** y el
+turno pasa de bloque a bloque en vez de de criatura a criatura. Cuando le toca a Enemigos actuan
+todos y **sus duraciones bajan de golpe**.
+
+Es una **divergencia deliberada del manual** — 5e usa iniciativa individual — decidida en mesa. La
+razon es la misma que la del hueco `players`: sostener el orden de doce criaturas es mas friccion
+que juego.
+
+### El dato
+
+- `HarfordTurnOrderAPI.BANDOS = { "pjs", "enemigos", "neutrales", "aliados" }`. **Orden FIJO, sin
+  tirada.** Saber siempre quien va detras de quien vale mas en mesa que la sorpresa de quien
+  empieza.
+- `entry.bando` se guarda EN LA ENTRADA y viaja en la foto. La reaccion del servidor solo
+  **propone** (`r>=5` aliado, `r==4` neutral, resto enemigo): un NPC hostil en la escena puede estar
+  marcado neutral en Epsilon. El DM corrige con **click derecho en la tarjeta** y su correccion
+  manda; recalcularlo en cada cliente daria versiones distintas.
+- **Los PJs no se mueven de `pjs`**, ni por reaccion ni a mano ni escribiendo el campo: `GetBando`
+  lo fuerza y `SetBando` lo rechaza.
+- En `HarfordTurnsCodec`, `bando` va el **ULTIMO** campo de la entrada serializada: un cliente sin
+  actualizar lo ignora en vez de descuadrarse todos los campos.
+
+### El avance
+
+- `store.modoBandos` enciende el modo; `store.activeBando` (indice) y `store.faseBando` llevan donde
+  esta. `PurgeStaleEntries` limpia los dos: sin combatientes no hay bandos, y dejar el bloque
+  apuntando a una lista vacia arrancaria el siguiente avance a media rotacion.
+- **Los bandos vacios se saltan.** Un turno de Neutrales sin ningun neutral es un clic perdido cada
+  asalto.
+- **Cada bloque tiene DOS momentos**, `inicio` y `fin`. Entre ellos el DM juega a sus criaturas, y
+  ese hueco es donde puede tocar el reparto. `NextTurn` va `inicio(X)` -> `fin(X)` -> `inicio(Y)`.
+- Lo que se anade **con el bloque ya empezado NO participa en el**: su inicio se resolvio sin ellos
+  y aplicarselo ahora seria contarlo dos veces. Se avisa por chat; callarlo desconcierta.
+- `AlertMyTurn` solo al **abrir**. Repetirlo al cerrar seria ruido.
+- El **marcador de asalto no participa** en modo bandos: es una tarjeta que dispara `AlertRoundStates`
+  al activarse, y en bandos nunca se visita. No hay contador numerico de asalto. Decision consciente,
+  no olvido.
+
+### El aviso lleva SU LISTA (`TURNB`)
+
+El turno se anuncia con una **entrada sintetica** `{ kind = "bando", bando, fase }` en vez de con un
+combatiente, asi el mensaje que ya recorre a todos los clientes sirve sin tocar el protocolo.
+
+**Y con el viaja la lista de miembros**, por id de entrada:
+
+```
+TURNB | serial | enemigos | id1,id2,id3 | inicio
+```
+
+Tres motivos, los tres aprendidos rompiendose:
+
+1. **El bug original**: `SerializeTurnNotice` mandaba `store.entries[store.activeIndex]`, que en
+   modo bandos NO se mueve. Los demas clientes recibian el combatiente de siempre con un serial
+   nuevo y hacian tocar los contadores de quien no era. **En local funcionaba**, que es lo que lo
+   hacia dificil de ver.
+2. **La carrera**: el aviso sale al instante y la foto va retrasada 0,15 s (`ScheduleBroadcast`).
+   Un reparto recien corregido llegaba tarde.
+3. **La divergencia**: la pertenencia la fija el DM. Si cada cliente la dedujera de su copia, dos
+   clientes desincronizados harian tocar a criaturas distintas.
+
+`entry.miembros` (guids y nombres, resueltos contra las entradas locales) **PISA** lo que calcularia
+el cliente; solo se cae a `MiembrosDeBando` local si el anuncio no la trae. Un id que no exista en
+la copia local se pierde: se pierde ese miembro, no se rompe el turno. Mandar guid y nombre en vez
+de ids lo blindaria a costa de engordar el mensaje.
+
+### El motor de condiciones
+
+- `IdentityMatches` reconoce `kind == "bando"` y casa con **cualquiera** de sus miembros. Eso es lo
+  que baja el contador a cinco enemigos de golpe.
+- La **clave de turno lleva bando Y fase**: `serial:bando:enemigos:fin`. Sin la fase, el cierre de
+  un bloque tendria la misma clave que su apertura y se tomaria por repetido — no bajaria ningun
+  contador de fin de turno.
+- `API.DurationTicks(duration, fase)` decide que duraciones toca cada fase. **Es una funcion pura y
+  se extrajo para poder probarla**: dentro de `OnTurnChanged` solo se podia comprobar que el texto
+  estuviera escrito, y una prueba asi no cazo una mutacion que disparaba lo de inicio tambien al
+  cerrar.
+- **Sin fase (`nil`) se conserva el comportamiento clasico**: el final de un turno es la apertura del
+  siguiente, y por eso casa contra la entrada ANTERIOR. Es lo que usa la iniciativa individual y no
+  debe cambiar.
+
+### Lo que queda abierto
+
+- **Dos DMs pueden avanzar turno**: `IsTurnAdmin()` es solo `CanUseDMTools()`, sin desempate. Dos
+  avances seguidos son dos seriales y el bloque salta dos veces. La regla del lider que se usa para
+  informar de los estados de NPC valdria aqui, pero avanzar turno es una accion deliberada y quiza
+  convenga un aviso antes que un bloqueo.
+- **Turnos no tiene peticion de estado**: quien reconecta ve su foto guardada hasta que el DM avance.
+  Recursos (`DNDRESREQ`) y estados (`DNDCONDREQ`) ya la tienen; turnos es el unico que falta.
+
+Pruebas: `tools/pruebas/bandos_turnos.lua`.
+
 ## Economia de turno: accion, adicional y reaccion (2026-08-24)
 
 `HarfordDnDConditions.Turn` lleva el presupuesto por turno. Vive **dentro del motor de condiciones**,

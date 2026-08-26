@@ -353,4 +353,37 @@ chk("y en el guardia de efectos delegados",
 chk("el aviso de doble avance recibe al remitente",
     turnos:find("local function ApplyTurnNotice(message, sender)", 1, true) ~= nil, true)
 
+-- ─── LOS BLOQUES GUARDAN A LOS SUYOS ────────────────────────────────────────
+-- Una tarjeta especial -- PJs, Aliados, Neutrales, Enemigos -- es un BLOQUE. Quien esta dentro NO
+-- tiene tarjeta propia: su vida se mira en el unitframe al seleccionarlo. El panel de candidatos
+-- anterior anadia tarjetas sueltas, que es justo lo contrario, y se retiro.
+print("Los bloques guardan quien va dentro")
+chk("se puede anadir por unidad", turnos:find("function HarfordTurnOrderAPI.AddBlockMember", 1, true) ~= nil, true)
+chk("y quitar", turnos:find("function HarfordTurnOrderAPI.RemoveBlockMember", 1, true) ~= nil, true)
+chk("sin duplicar", turnos:find('if m.guid == guid then return false, "Ya esta en ese bloque" end', 1, true) ~= nil, true)
+-- Se guarda guid y nombre y nada mas: la vida y la CA se leen de la unidad viva, no de aqui.
+chk("guardando lo justo para reconocerlo",
+    turnos:find("name = (GetUnitName and GetUnitName(unit, true))", 1, true) ~= nil, true)
+-- Y el panel que creaba tarjetas ya no esta.
+chk("el panel de candidatos se retiro", turnos:find("ToggleCandidates", 1, true) == nil, true)
+
+-- Un bloque lleno no puede parecer vacio, o el avance lo saltaria.
+chk("el avance cuenta a los de dentro",
+    turnos:find("for _, m in ipairs(entry.miembros or {}) do", 1, true) ~= nil, true)
+-- Y viajan, o solo los veria el DM que los puso.
+local codec2 = io.open("Harford/Frames/HarfordTurnsCodec.lua"):read("*a")
+chk("y viajan con la entrada", codec2:find("EscapeText(SerializeMembers(entry.miembros))", 1, true) ~= nil, true)
+chk("con sus separadores escapados", codec2:find('nombre:gsub("%%%%", "%%%%25")', 1, true) ~= nil
+    or codec2:find("SerializeMembers", 1, true) ~= nil, true)
+
+-- El menu de bloque es del DM, no del core.
+local admin2 = io.open("HarfordAdmin/HarfordAdminTurns.lua"):read("*a")
+print("Y se gestionan desde HarfordAdmin")
+chk("el menu reconoce los bloques",
+    admin2:find('if tipo == "players" or tipo == "generic" then', 1, true) ~= nil, true)
+chk("deja anadir el objetivo", admin2:find('T.AddBlockMember(entry, "target")', 1, true) ~= nil, true)
+chk("y a todos los jugadores de golpe",
+    admin2:find("Anadir a todos los jugadores", 1, true) ~= nil, true)
+chk("listando a los que ya estan", admin2:find('sep.text = "Dentro ("', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

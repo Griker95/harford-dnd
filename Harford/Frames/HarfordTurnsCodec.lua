@@ -104,6 +104,33 @@ local function NormalizeEntryLinks(entry)
     return entry
 end
 
+-- Los miembros de un bloque: `guid|nombre|esJugador`, separados por `;`. Se escapan los dos
+-- separadores dentro de cada campo, que un nombre de NPC puede traerlos.
+local function SerializeMembers(lista)
+    if type(lista) ~= "table" or #lista == 0 then return "" end
+    local partes = {}
+    for _, m in ipairs(lista) do
+        local nombre = tostring(m.name or ""):gsub("%%", "%%25"):gsub(";", "%%3B"):gsub("|", "%%7C")
+        partes[#partes + 1] = table.concat({
+            tostring(m.guid or ""), nombre, m.jugador and "1" or "0" }, "|")
+    end
+    return table.concat(partes, ";")
+end
+
+local function DeserializeMembers(texto)
+    texto = tostring(texto or "")
+    if texto == "" then return nil end
+    local fuera = {}
+    for trozo in texto:gmatch("[^;]+") do
+        local guid, nombre, jugador = strsplit("|", trozo)
+        if guid and guid ~= "" then
+            nombre = tostring(nombre or ""):gsub("%%7C", "|"):gsub("%%3B", ";"):gsub("%%25", "%%")
+            fuera[#fuera + 1] = { guid = guid, name = nombre, jugador = jugador == "1" or nil }
+        end
+    end
+    return (#fuera > 0) and fuera or nil
+end
+
 local function SerializeEntry(entry)
     NormalizeEntryLinks(entry)
     return table.concat({
@@ -129,13 +156,16 @@ local function SerializeEntry(entry)
         tostring(entry.armorClass or 0),
         EscapeText(entry.bando),
         tostring(entry.tempHp or 0),
+        -- Quien va DENTRO del bloque. Van al final y con separadores propios, para no tocar el
+        -- formato de los 22 campos anteriores.
+        EscapeText(SerializeMembers(entry.miembros)),
     }, ",")
 end
 
 local function DeserializeEntry(raw)
     -- `bando` va el ULTIMO a proposito: un cliente con version anterior lo ignora y sigue leyendo
     -- el resto, en vez de descuadrarse todos los campos.
-    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID, armorClass, bando, tempHp = strsplit(",", raw or "")
+    local id, name, kind, init, hp, maxHp, hidden, mana, maxMana, unitName, icon, displayId, npcId, phaseId, trpFullID, trpUnitID, reaction, nameColor, trpProfileID, armorClass, bando, tempHp, miembros = strsplit(",", raw or "")
     if not name or name == "" then return nil end
     return NormalizeEntryLinks({
         id = UnescapeText(id),
@@ -162,6 +192,7 @@ local function DeserializeEntry(raw)
         -- La vida temporal es dato de Harford: el servidor no la conoce y no vuelve en ningun
         -- evento. Sin compartirla, cada cliente absorbia una cantidad distinta del MISMO golpe.
         tempHp = SafeNumber(tempHp, 0),
+        miembros = DeserializeMembers(UnescapeText(miembros)),
     })
 end
 

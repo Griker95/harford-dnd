@@ -69,7 +69,9 @@ local function AbrirMenu(entry, ancla)
     if not entry then return end
     if not EsAdmin() then Print("Solo el admin gestiona los turnos.") return end
     local tipo = tostring(entry.kind or "")
-    if tipo ~= "npc" and tipo ~= "player" then return end
+    if tipo ~= "npc" and tipo ~= "player" and tipo ~= "players" and tipo ~= "generic" then
+        return
+    end
 
     local T = API()
     menuTarjeta = menuTarjeta or CreateFrame("Frame", "HarfordAdminTurnsMenu", UIParent,
@@ -79,6 +81,78 @@ local function AbrirMenu(entry, ancla)
         titulo.isTitle, titulo.notCheckable = true, true
         titulo.text = tostring(entry.name or "?")
         UIDropDownMenu_AddButton(titulo, level)
+
+        -- Una tarjeta ESPECIAL es un BLOQUE: aqui se gestiona quien va dentro. Sus miembros no
+        -- tienen tarjeta propia -- su vida se mira en el unitframe al seleccionarlos --, asi que
+        -- esta es la unica forma de verlos y de tocarlos.
+        if tipo == "players" or tipo == "generic" then
+            local dentro = T.GetBlockMembers(entry)
+
+            local anadir = UIDropDownMenu_CreateInfo()
+            anadir.notCheckable = true
+            anadir.text = (UnitExists and UnitExists("target"))
+                and ("Anadir a " .. tostring(UnitName("target")))
+                or "Anadir el objetivo (no hay ninguno)"
+            anadir.disabled = not (UnitExists and UnitExists("target"))
+            anadir.func = function()
+                local ok, err = T.AddBlockMember(entry, "target")
+                Print(ok and (tostring(UnitName("target")) .. " entra en "
+                    .. tostring(entry.name or "el bloque") .. ".") or tostring(err))
+                CloseDropDownMenus()
+            end
+            UIDropDownMenu_AddButton(anadir, level)
+
+            -- Solo en el bloque de PJs: a los NPC no se les puede hacer en bloque, porque el
+            -- cliente no permite enumerarlos mas alla de los que tengan placa visible.
+            if tipo == "players" then
+                local todos = UIDropDownMenu_CreateInfo()
+                todos.notCheckable = true
+                todos.text = "Anadir a todos los jugadores"
+                todos.func = function()
+                    local n = (GetNumGroupMembers and GetNumGroupMembers()) or 0
+                    local enRaid = IsInRaid and IsInRaid()
+                    local unidades = { "player" }
+                    for i = 1, (enRaid and n or math.max(0, n - 1)) do
+                        unidades[#unidades + 1] = (enRaid and "raid" or "party") .. i
+                    end
+                    local puestos = 0
+                    for _, u in ipairs(unidades) do
+                        -- Solo CONECTADOS: uno desconectado no va a jugar su turno y meterlo
+                        -- obliga a quitarlo despues.
+                        if UnitExists and UnitExists(u)
+                            and (not UnitIsConnected or UnitIsConnected(u))
+                            and T.AddBlockMember(entry, u) then
+                            puestos = puestos + 1
+                        end
+                    end
+                    Print(puestos > 0
+                        and ("Anadidos " .. puestos .. " jugador(es) a " .. tostring(entry.name) .. ".")
+                        or "No habia ningun jugador conectado que anadir.")
+                    CloseDropDownMenus()
+                end
+                UIDropDownMenu_AddButton(todos, level)
+            end
+
+            if #dentro > 0 then
+                local sep = UIDropDownMenu_CreateInfo()
+                sep.isTitle, sep.notCheckable = true, true
+                sep.text = "Dentro (" .. #dentro .. "):"
+                UIDropDownMenu_AddButton(sep, level)
+                for _, m in ipairs(dentro) do
+                    local fila = UIDropDownMenu_CreateInfo()
+                    fila.notCheckable = true
+                    fila.text = "|cffff8888x|r  " .. tostring(m.name or "?")
+                    fila.func = function()
+                        T.RemoveBlockMember(entry, m.guid)
+                        Print(tostring(m.name or "?") .. " sale de "
+                            .. tostring(entry.name or "el bloque") .. ".")
+                        CloseDropDownMenus()
+                    end
+                    UIDropDownMenu_AddButton(fila, level)
+                end
+            end
+            return
+        end
 
         -- Un JUGADOR no cambia de bando -- va siempre con los PJs -- pero si puede ser DM
         -- secundario, que es lo unico que se decide sobre el desde aqui.

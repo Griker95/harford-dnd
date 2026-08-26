@@ -1752,12 +1752,29 @@ function API.RequestNpcStates()
         HarfordClassColors.UnitFullName("player") or ""), canal)
 end
 
+-- ¿Soy el lider del grupo? Es la senal de "DM principal" que usa la mesa. Estando solo se cuenta
+-- como lider: no hay nadie con mas derecho a contestar.
+local function SoyElLider()
+    if not (IsInGroup and IsInGroup()) then return true end
+    return UnitIsGroupLeader and UnitIsGroupLeader("player") == true
+end
+
+API.RETRASO_DM_SECUNDARIO = 3
+
 -- Contestar. Solo el DM: es quien aplico esos estados y quien tiene los registros con autoridad.
-function API.SendNpcStatesTo(target)
+-- Un DM que NO es lider espera antes de responder, para dejar contestar primero al principal.
+function API.SendNpcStatesTo(target, yaEsperado)
     if not (target and target ~= "") then return false end
     if not (HarfordAuthority and HarfordAuthority.CanUseDMTools
         and HarfordAuthority.CanUseDMTools()) then
         return false
+    end
+    if not (yaEsperado or SoyElLider()) then
+        -- No se descarta: si el lider no es DM, nadie contestaria y quien entra se queda a ciegas.
+        if C_Timer and C_Timer.After then
+            C_Timer.After(API.RETRASO_DM_SECUNDARIO, function() API.SendNpcStatesTo(target, true) end)
+            return true
+        end
     end
     local store = _G.HarfordTurnOrderStore
     if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
@@ -1832,9 +1849,42 @@ local function EsNpcDeLosTurnos(guid)
     return false
 end
 
+-- De quien se acepto la ultima foto de cada NPC, y si venia del lider. Un DM secundario no puede
+-- pisar lo que dijo el principal; el principal si puede corregir al secundario.
+local ultimaFuenteNpc = {}
+local VENTANA_DESEMPATE = 15
+
+-- ¿Le dejo pisar la foto que ya tengo de este NPC? Puede haber varios DMs, pero el principal
+-- suele ser el lider: el secundario no corrige al principal, y el principal si al secundario.
+-- Devuelve true si la nueva fuente manda.
+function API.FuenteNpcGana(previo, lider, sender, ahora, ventana)
+    if not previo then return true end
+    -- El mismo que hablo antes siempre puede actualizarse a si mismo.
+    if ShortName(previo.sender or "") == ShortName(sender or "") then return true end
+    if lider then return true end
+    if not previo.lider then return true end
+    return (ahora - (tonumber(previo.cuando) or 0)) >= (tonumber(ventana) or 0)
+end
+
+local function EsElLider(nombre)
+    if not (nombre and nombre ~= "" and UnitIsGroupLeader) then return false end
+    local unidad = HarfordClassColors and HarfordClassColors.FindUnitByName
+        and HarfordClassColors.FindUnitByName(nombre)
+    return unidad ~= nil and UnitIsGroupLeader(unidad) == true
+end
+
 function API.CacheStateList(guid, name, estados, sender)
     local key = guid ~= "" and guid or name
     if not key or key == "" then return false end
+
+    -- Desempate entre DMs, solo para NPCs: los estados de un jugador siempre los cuenta el mismo.
+    if EsNpcDeLosTurnos(guid) then
+        local lider = EsElLider(sender)
+        if not API.FuenteNpcGana(ultimaFuenteNpc[key], lider, sender, Now(), VENTANA_DESEMPATE) then
+            return false
+        end
+        ultimaFuenteNpc[key] = { sender = sender, lider = lider, cuando = Now() }
+    end
     if sender and sender ~= "" and name and name ~= "" then
         if ShortName(sender) ~= ShortName(name) and not EsNpcDeLosTurnos(guid) then return false end
     end

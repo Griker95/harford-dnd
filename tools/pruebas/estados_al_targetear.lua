@@ -120,7 +120,10 @@ chk("ni la de jugador con esta",
 local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
 local i2 = assert(cond:find("local function EsNpcDeLosTurnos", 1, true))
 local f2 = assert(cond:find("function API.CacheStateList", i2, true))
-local entorno = { ipairs = ipairs, pairs = pairs, type = type, tostring = tostring, _G = {} }
+-- El trozo extraido arrastra tambien la declaracion de `API.FuenteNpcGana`, que necesita la tabla
+-- para existir al cargarse.
+local entorno = { ipairs = ipairs, pairs = pairs, type = type, tostring = tostring,
+    tonumber = tonumber, API = {}, _G = {} }
 local g
 if setfenv then g = assert(cargar(cond:sub(i2, f2 - 1) .. " return EsNpcDeLosTurnos")); setfenv(g, entorno)
 else g = assert(cargar(cond:sub(i2, f2 - 1) .. " return EsNpcDeLosTurnos", "t", "t", entorno)) end
@@ -148,5 +151,42 @@ chk("se manda aunque no lleve nada",
     cond:find("HarfordSync.SendConditionList(PREFIX, target, guid", 1, true) ~= nil, true)
 chk("y solo contesta el DM",
     cond:find("HarfordAuthority.CanUseDMTools()) then", 1, true) ~= nil, true)
+
+-- ─── VARIOS DMs: MANDA EL LIDER ─────────────────────────────────────────────
+-- Puede haber dos o mas DMs, pero el principal suele ser el lider del grupo. Sin desempate los dos
+-- contestan y, como la lista SUSTITUYE el saco entero, el segundo pisa al primero: si ese segundo
+-- acaba de llegar y aun no sabe nada, borra lo bueno.
+local i3 = assert(cond:find("function API.FuenteNpcGana", 1, true))
+local f3 = assert(cond:find("local function EsElLider", i3, true))
+local ent3 = { tonumber = tonumber, tostring = tostring, API = {},
+    ShortName = function(n) return tostring(n or ""):match("^[^%-]+") or "" end }
+local h
+if setfenv then h = assert(cargar(cond:sub(i3, f3 - 1) .. " return API")); setfenv(h, ent3)
+else h = assert(cargar(cond:sub(i3, f3 - 1) .. " return API", "t", "t", ent3)) end
+local G = h().FuenteNpcGana
+
+print("Entre dos DMs manda el lider")
+chk("sin nada previo, entra", G(nil, false, "Dos", 100, 15), true)
+local delLider = { sender = "Uno", lider = true, cuando = 100 }
+chk("un secundario NO pisa al lider", G(delLider, false, "Dos", 105, 15), false)
+chk("el lider SI pisa al secundario",
+    G({ sender = "Dos", lider = false, cuando = 100 }, true, "Uno", 105, 15), true)
+-- Si el lider hablo hace mucho, su foto ya no es de fiar y el secundario puede tomar el relevo.
+chk("pasada la ventana, el secundario toma el relevo", G(delLider, false, "Dos", 200, 15), true)
+-- Y nadie se bloquea a si mismo: el mismo DM tiene que poder actualizar lo que dijo antes.
+chk("el mismo se actualiza siempre", G(delLider, true, "Uno", 105, 15), true)
+chk("aunque su rol haya cambiado", G(delLider, false, "Uno", 105, 15), true)
+chk("y con realm en el nombre tambien", G(delLider, false, "Uno-Apertus", 105, 15), true)
+chk("dos secundarios: gana el ultimo",
+    G({ sender = "Dos", lider = false, cuando = 100 }, false, "Tres", 105, 15), true)
+
+print("El DM secundario deja hablar antes al principal")
+chk("espera antes de contestar",
+    cond:find("C_Timer.After(API.RETRASO_DM_SECUNDARIO", 1, true) ~= nil, true)
+-- Pero NO se calla: si el lider no es DM, nadie contestaria y quien entra se queda a ciegas.
+chk("pero acaba contestando igual",
+    cond:find("API.SendNpcStatesTo(target, true)", 1, true) ~= nil, true)
+chk("estando solo se cuenta como lider",
+    cond:find("if not (IsInGroup and IsInGroup()) then return true end", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

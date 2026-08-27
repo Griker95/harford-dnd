@@ -2355,10 +2355,14 @@ local function CreateTurnFrame()
         local store = HarfordTurnOrderStore
         if type(store) == "table" then store.ventanaAbierta = true end
     end)
-    TurnFrame:HookScript("OnHide", function()
+    -- Y NO se usa `OnHide`: al recargar o salir, WoW oculta todos los frames, asi que la marca se
+    -- borraba justo antes de guardar y al volver la ventana siempre parecia cerrada. Solo cuenta
+    -- que la cierre el JUGADOR, y eso son dos gestos concretos: la X y el comando.
+    local function Cerrada()
         local store = HarfordTurnOrderStore
         if type(store) == "table" then store.ventanaAbierta = nil end
-    end)
+    end
+    TurnFrame.MarcarCerrada = Cerrada
     SetFrameBackground(TurnFrame)
 
     local mainBorder = CreateFrame("Frame", nil, TurnFrame, "DialogBorderTemplate")
@@ -2378,6 +2382,7 @@ local function CreateTurnFrame()
 
     local close = CreateFrame("Button", nil, TurnFrame, "UIPanelCloseButton")
     close:SetPoint("TOPRIGHT", -6, -5)
+    close:HookScript("OnClick", Cerrada)
 
     TurnFrame.adminControls = {}
 
@@ -2493,7 +2498,8 @@ end
 local function ToggleFrame()
     if not TurnFrame then CreateTurnFrame() end
     TurnFrame:SetShown(not TurnFrame:IsShown())
-    if TurnFrame:IsShown() then RefreshFrame() end
+    if TurnFrame:IsShown() then RefreshFrame()
+    elseif TurnFrame.MarcarCerrada then TurnFrame.MarcarCerrada() end
 end
 
 local eventFrame = CreateFrame("Frame")

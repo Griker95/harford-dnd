@@ -569,6 +569,15 @@ chk("el boton sale solo cuando toca",
 print("La ventana de turnos vuelve tras un /reload")
 chk("se apunta si estaba abierta",
     turnos:find("store.ventanaAbierta = true", 1, true) ~= nil, true)
+-- Y NO se borra en `OnHide`: al recargar o salir, WoW oculta todos los frames, asi que la marca se
+-- borraba justo antes de guardar y al volver la ventana siempre parecia cerrada. Solo cuenta que
+-- la cierre el JUGADOR: la X y el comando.
+chk("pero no se borra al ocultarse",
+    turnos:find('TurnFrame:HookScript("OnHide"', 1, true) == nil, true)
+chk("solo al cerrarla a mano",
+    turnos:find("close:HookScript(\"OnClick\", Cerrada)", 1, true) ~= nil, true)
+chk("o con el comando",
+    turnos:find("elseif TurnFrame.MarcarCerrada then TurnFrame.MarcarCerrada() end", 1, true) ~= nil, true)
 chk("y se reabre al entrar",
     turnos:find("if HarfordTurnOrderStore.ventanaAbierta and HarfordTurnOrderAPI.HasCombatants() then",
         1, true) ~= nil, true)

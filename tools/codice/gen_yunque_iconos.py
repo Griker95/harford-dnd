@@ -19,6 +19,7 @@ Uso:
 """
 import base64
 import csv
+import math
 import io as _io
 import io
 import json
@@ -43,11 +44,13 @@ PAGINA = os.path.join(BASE, 'yunque.html')
 # A 32 px habria que recortar, y recortar significaba quedarse con el principio del
 # alfabeto: entraban inv_axe y inv_belt y no llegaba ni a inv_sword.
 # El tamano de la hoja manda: la pagina calcula sola las celdas y los huecos a partir de
-# `HOJA.lado`, asi que cambiarlo aqui es todo lo que hace falta. Cuesta peso -- 24 px son
-# 6,0 MB de pagina, 28 son 7,9 y 32 son 9,7 -- porque la hoja crece con el cuadrado.
-LADO = 28
-COLUMNAS = 56
-CUPO = 0           # 0 = todos. Baja el cupo solo si la pagina tarda en abrir
+# `HOJA.lado`, asi que cambiarlo aqui es todo lo que hace falta.
+#
+# Cuesta peso, y crece con el CUADRADO del lado. Medido con el catalogo entero (18.830):
+# 24 px = 6,0 MB de pagina | 28 px = 7,6 | 32 px = 9,7 | 50 px = 20,6, que NO CABE en el
+# limite de 16 MB del artefacto. A 50 px hay que quedarse en unos 9.000 iconos.
+LADO = 50
+CUPO = 9000
 PREFIJOS = ('inv_', 'trade_', 'item_')
 
 
@@ -69,12 +72,11 @@ def usadosPorLaLista():
 
 
 def main():
-    cupo, lado, columnas = CUPO, LADO, COLUMNAS
+    cupo, lado = CUPO, LADO
     if '--cupo' in sys.argv:
         cupo = int(sys.argv[sys.argv.index('--cupo') + 1])
     if '--lado' in sys.argv:
         lado = int(sys.argv[sys.argv.index('--lado') + 1])
-        columnas = max(8, int(1536 / lado))   # se mantiene el ancho de hoja
 
     catalogo = nombresDelCatalogo()
     usados = usadosPorLaLista()
@@ -104,7 +106,13 @@ def main():
             break
     print("En la hoja:               %d" % len(orden))
 
+    # Cuadrada a proposito: WebP no admite mas de 16.383 px por lado, y una hoja estrecha y
+    # muy alta se pasa en cuanto crece el icono. Cuadrada aprovecha el margen por los dos.
+    columnas = int(math.ceil(math.sqrt(len(orden)))) if orden else 1
     filas = (len(orden) + columnas - 1) // columnas
+    if max(columnas, filas) * lado > 16383:
+        print("AVISO: la hoja se pasa del limite de WebP (16.383 px). Baja el cupo o el lado.")
+        return 1
     hoja = Image.new('RGBA', (columnas * lado, filas * lado), (0, 0, 0, 0))
     for i, n in enumerate(orden):
         try:

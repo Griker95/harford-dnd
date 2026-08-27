@@ -2919,9 +2919,15 @@ definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la
      archivo. `--cupo N` lo recorta si alguna vez se prefiere que abra antes. Convertir
      4,5 MB de base64 a blob son 28 ms, asi que el tamano de la hoja no penaliza en runtime.
    - **El tamano del icono es `--lado` y la pagina se ajusta sola**: celdas, huecos y los
-     tres previsualizadores salen de `HOJA.lado`, no van fijos en el CSS. Cuesta peso porque
-     la hoja crece con el cuadrado: 24 px = 6,0 MB de pagina, **28 px = 7,6 MB** (el actual),
-     32 px = 9,7 MB.
+     tres previsualizadores salen de `HOJA.lado`, no van fijos en el CSS.
+   - **El lado y el cupo se compran el uno al otro**, porque la hoja crece con el CUADRADO.
+     Medido con el catalogo entero (18.830): 24 px = 6,0 MB de pagina | 28 px = 7,6 |
+     32 px = 9,7 | **50 px = 20,6, que NO CABE** en los 16 MB del artefacto ni bajando la
+     calidad al minimo (15,3). Por eso a 50 px el cupo baja a 9.000 y la pagina queda en
+     8,8 MB. El buscador por nombre sigue cubriendo los 20.447.
+   - **La hoja se monta CUADRADA**: WebP no admite mas de 16.383 px por lado, y una tira
+     estrecha y muy alta se pasa en cuanto crece el icono -- a 50 px con ancho fijo salian
+     31.400 px de alto y el codificador fallaba. `columnas = ceil(sqrt(n))`.
    - El resto del cupo se reparte tomando **uno de cada N por todo el catalogo**. Por orden
      alfabetico solo entraba el principio: `inv_axe`, `inv_belt`, y no se llegaba a
      `inv_sword`.

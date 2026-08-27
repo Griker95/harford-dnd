@@ -1772,7 +1772,18 @@ do
     function Turn.KindFromFeature(feature)
         if type(feature) ~= "table" then return nil end
         local cast = tostring(feature.cast or ""):lower()
-        return DE_CAST[cast]
+        if DE_CAST[cast] then return DE_CAST[cast] end
+        -- Una MANIOBRA es una accion. Solo 5 de las 15 lo declaraban, asi que diez no costaban
+        -- nada -- y su ataque tampoco, porque salta el cobro dando por hecho que ya se pago al
+        -- anunciarla. Se deduce aqui y no se escribe en las quince tablas: la que se anada manana
+        -- tambien tiene que costar, y nadie se acuerda de poner `cast` en una fila de datos.
+        --
+        -- Lo declarado MANDA: una maniobra que diga que es adicional lo sigue siendo.
+        if feature.type == "maniobra" then return "action" end
+        for _, e in ipairs(feature.effects or {}) do
+            if e.kind == "energyManeuver" then return "action" end
+        end
+        return nil
     end
 
     function Turn.RestoreFromStore()

@@ -105,4 +105,25 @@ HarfordTurnOrderStore.asalto = 5
 chk("otro asalto no vale", T.RestoreFromStore(), false)
 chk("  y se empieza limpio", T.GetRemaining("action"), 1)
 
+-- ─── UNA MANIOBRA ES UNA ACCION ─────────────────────────────────────────────
+-- Solo 5 de las 15 declaraban su coste, asi que diez no costaban nada -- y su ataque tampoco,
+-- porque salta el cobro dando por hecho que ya se pago al anunciarla. Se deduce del tipo en vez de
+-- escribirlo en quince tablas: la que se anada manana tambien tiene que costar.
+print("Una maniobra cuesta la accion aunque no lo diga")
+chk("por su tipo", T.KindFromFeature({ type = "maniobra" }), "action")
+chk("o por su efecto",
+    T.KindFromFeature({ effects = { { kind = "energyManeuver" } } }), "action")
+-- Lo declarado MANDA: una maniobra que diga que es adicional lo sigue siendo.
+chk("pero lo declarado manda",
+    T.KindFromFeature({ type = "maniobra", cast = "accion_adicional" }), "bonus")
+-- Y un rasgo cualquiera sin `cast` sigue sin costar: adivinarlo por `type = "accion"` daria un
+-- contador equivocado, que es peor que no tenerlo.
+chk("y un rasgo normal sin cast sigue sin costar",
+    T.KindFromFeature({ type = "accion" }), nil)
+-- Se cobra al EJECUTARLA, despues de comprobar recurso y usos: cobrar antes obligaria a devolver
+-- la accion en cada uno de esos cortes.
+local ficha2 = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("y se cobra al ejecutarla",
+    ficha2:find("HarfordDnDConditions.Turn.SpendForFeature(feature) == false then", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -3466,6 +3466,15 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
         end
     end
 
+    -- La ACCION del turno, ya con el recurso y los usos comprobados: cobrarla antes obligaria a
+    -- devolverla en cada uno de los cortes de arriba. Si no te queda, la maniobra no ocurre --su
+    -- recurso sigue intacto, porque todavia no se ha gastado.
+    if HarfordDnDConditions and HarfordDnDConditions.Turn
+        and HarfordDnDConditions.Turn.SpendForFeature
+        and HarfordDnDConditions.Turn.SpendForFeature(feature) == false then
+        return
+    end
+
     local dcAbility = man.dcAbility or "Destreza"
     local dc = 8 + HarfordDnDCalc.GetPB() + HarfordDnDCalc.GetAbilityMod(dcAbility)
 

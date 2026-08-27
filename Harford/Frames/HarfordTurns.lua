@@ -327,7 +327,9 @@ local function AlertRoundStates(entry, activeIndex, turnSerial)
 end
 
 local function AlertTurnChanged(entry, activeIndex, turnSerial)
-    if HarfordTurnOrderAPI.RefreshTurnMarker then HarfordTurnOrderAPI.RefreshTurnMarker() end
+    -- Protegido: un fallo pintando el marcador no puede llevarse por delante el aviso a los
+    -- oyentes, que es lo que apaga estados y reinicia el turno en el resto del addon.
+    if HarfordTurnOrderAPI.RefreshTurnMarker then pcall(HarfordTurnOrderAPI.RefreshTurnMarker) end
     if HarfordTurnOrderAPI and HarfordTurnOrderAPI._turnChangedListeners then
         for _, fn in ipairs(HarfordTurnOrderAPI._turnChangedListeners) do
             pcall(fn, entry, turnSerial, activeIndex)
@@ -1118,11 +1120,16 @@ end
 
 MarkChanged = function()
     TouchStore()
-    if RefreshFrame then RefreshFrame() end
+    -- LA DIFUSION VA PRIMERO, Y LOS REPINTADOS PROTEGIDOS. Estaban antes y sin `pcall`: si
+    -- cualquiera de los dos petaba --y repintar toca muchos frames-- la funcion moria ahi y
+    -- `ScheduleBroadcast` no llegaba a correr NUNCA. La mesa dejaba de recibir el estado entero
+    -- por un fallo de dibujo, y en el otro cliente eso no se ve como un error: se ve como que el
+    -- addon del DM ha dejado de hablar.
+    ScheduleBroadcast()
+    if RefreshFrame then pcall(RefreshFrame) end
     -- El marcador tambien: iniciar y terminar el combate no son cambios de TURNO, asi que no
     -- pasan por `AlertTurnChanged` y se quedaria puesto despues de terminar.
-    if HarfordTurnOrderAPI.RefreshTurnMarker then HarfordTurnOrderAPI.RefreshTurnMarker() end
-    ScheduleBroadcast()
+    if HarfordTurnOrderAPI.RefreshTurnMarker then pcall(HarfordTurnOrderAPI.RefreshTurnMarker) end
 end
 
 local function SetFrameBackground(frame)
@@ -3037,9 +3044,9 @@ do
             nombre = bando and (HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or bando) or "Sin empezar"
             -- La FASE importa tanto como el bando: "cierra Enemigos" y "empiezan Enemigos" son dos
             -- momentos distintos del mismo bloque, y desde fuera se confunden.
-            -- Sin "fase": un bloque esta jugando o no esta. La fase de cierre se retiro porque
-            -- obligaba a pulsar `Siguiente` dos veces por bloque.
-            if bando then detalle = "jugando" end
+            -- Sin detalle: que el bloque salga ahi ya quiere decir que le toca. "jugando" era el
+            -- resto de cuando habia fase de cierre y habia algo que distinguir.
+            detalle = nil
         else
             local entrada = store.entries and store.entries[store.activeIndex or 0]
             nombre = entrada and tostring(entrada.name or "") or "Sin empezar"

@@ -681,15 +681,19 @@ chk("comprobando que exista",
 -- cambios de turno, asi que sin el de `MarkChanged` se quedaba puesto despues de terminar; y
 -- recibir el estado de otro cliente no pasa por ahi, asi que necesita el suyo.
 chk("se repinta al cambiar el turno",
-    turnos:find("RefreshTurnMarker() end\n    if HarfordTurnOrderAPI and", 1, true) ~= nil, true)
-chk("al cambiar el estado",
-    turnos:find("RefreshTurnMarker() end\n    ScheduleBroadcast", 1, true) ~= nil, true)
+    turnos:find("pcall(HarfordTurnOrderAPI.RefreshTurnMarker)", 1, true) ~= nil, true)
+-- La DIFUSION va primero y los repintados protegidos: estaban antes y sin pcall, asi que un
+-- fallo pintando mataba ScheduleBroadcast y la mesa dejaba de recibir el estado entero.
+chk("y difundir va antes que pintar",
+    turnos:find("ScheduleBroadcast()", 1, true)
+    < turnos:find("if RefreshFrame then pcall(RefreshFrame) end", 1, true), true)
 chk("y al recibirlo de otro",
     turnos:find("RefrescarMarcadorTrasRecibir()", 1, true) ~= nil, true)
 -- Sin fase que contar: un bloque esta jugando o no esta. La fase de cierre se retiro porque
 -- obligaba a pulsar `Siguiente` dos veces por bloque.
-chk("un bloque activo esta jugando, y ya",
-    turnos:find('if bando then detalle = "jugando" end', 1, true) ~= nil, true)
+-- Sin detalle: que el bloque salga ahi ya quiere decir que le toca.
+chk("el marcador no anade texto de sobra",
+    turnos:find("detalle = \"jugando\"", 1, true) == nil, true)
 chk("se puede apagar", turnos:find('HarfordConfig.Get("turnmarker") == "off"', 1, true) ~= nil, true)
 -- ── LO QUE TE QUEDA, DENTRO DEL MARCADOR ────────────────────────────────────
 -- La barra de movimiento y las fichas vivian sueltas encima de la barra de accion. Es todo lo

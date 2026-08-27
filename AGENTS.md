@@ -2916,8 +2916,12 @@ definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la
      Antes se anadian de 400 en 400 al bajar, pero el evento de scroll se dispara decenas de
      veces por gesto y la condicion seguia siendo cierta: miles de elementos de golpe.
    - Con eso, el catalogo COMPLETO (18.830) sale gratis en ejecucion y solo cuesta peso de
-     archivo: 6,0 MB. `--cupo N` lo recorta si alguna vez se prefiere que abra antes.
-     Convertir 4,5 MB de base64 a blob son 28 ms, asi que el tamano de la hoja no penaliza.
+     archivo. `--cupo N` lo recorta si alguna vez se prefiere que abra antes. Convertir
+     4,5 MB de base64 a blob son 28 ms, asi que el tamano de la hoja no penaliza en runtime.
+   - **El tamano del icono es `--lado` y la pagina se ajusta sola**: celdas, huecos y los
+     tres previsualizadores salen de `HOJA.lado`, no van fijos en el CSS. Cuesta peso porque
+     la hoja crece con el cuadrado: 24 px = 6,0 MB de pagina, **28 px = 7,6 MB** (el actual),
+     32 px = 9,7 MB.
    - El resto del cupo se reparte tomando **uno de cada N por todo el catalogo**. Por orden
      alfabetico solo entraba el principio: `inv_axe`, `inv_belt`, y no se llegaba a
      `inv_sword`.

@@ -2905,11 +2905,23 @@ definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la
    juego. La pagina avisa antes. Ademas normaliza lo que se pegue -- ruta, extension,
    mayusculas -- a la forma que acepta el comando.
 3. **El selector visual va sobre una HOJA DE SPRITES**, no imagenes sueltas: la pagina no
-   puede pedirle nada a ningun servidor, y los 19.347 iconos como PNG serian 164 MB. Una
-   hoja unica a 32 px con 6.000 iconos son 3,3 MB y cada uno se recorta con
-   `background-position` (`gen_yunque_iconos.py`, cupo configurable). Los nombres de la hoja
-   van SIEMPRE en minusculas: `Data.lua` los guarda con mayusculas y la pagina normaliza a
-   minusculas, asi que sin eso el sprite no encontraria justo los que ya se usan.
+   puede pedirle nada a ningun servidor, y los iconos como PNG sueltos serian 164 MB. A
+   **24 px** caben los 18.882 enteros en 6,15 MB (`gen_yunque_iconos.py`). A 32 px habia que
+   recortar por cupo, y recortar significaba quedarse con el PRINCIPIO DEL ALFABETO: entraban
+   `inv_axe` y `inv_belt` y no llegaba ni a `inv_sword`.
+   - **La fuente es `EpsilonIcons/icons_master.csv` con `estado == extraido`**, que es la
+     lista canonica que sirve la web: si esta ahi, el PNG existe. Da 20.447 utiles frente a
+     los 17.800 del volcado de nombres, e incluye 6.370 custom de Epsilon.
+   - Los nombres van SIEMPRE en minusculas: `Data.lua` los guarda con mayusculas
+     (`INV_Misc_Fish_01`) y la pagina normaliza, asi que sin eso el sprite fallaba justo en
+     los que ya se usan.
+   - **El recorte es por caja de contenido**: `padding` para centrar mas
+     `background-origin/clip: content-box`, de modo que el fondo solo se pinta en una caja
+     que mide exactamente una celda. Sin eso se colaba el icono contiguo.
+   - **El buscador y el valor son campos DISTINTOS.** Cuando eran el mismo, elegir un icono
+     dejaba la rejilla con un unico resultado. Y el filtro traduce del castellano
+     (`espada` -> `sword`): los nombres son ingleses y sin eso parece que no busca.
+   - La rejilla los pinta de 400 en 400 al bajar; 18.882 botones de golpe atascan la pagina.
 
 Estan **las 37 opciones** de `.forge item set` que admite el cliente, no solo las que usa
 Core.lua: bonding, sheath, material, la familia `property` (adder, additem anyone/character/

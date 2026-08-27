@@ -13,6 +13,7 @@ Uso:
     python tools/codice/gen_yunque_iconos.py [--cupo 3000]
 """
 import base64
+import csv
 import io as _io
 import io
 import json
@@ -27,22 +28,26 @@ sys.stdout.reconfigure(encoding='utf-8')
 BASE = os.path.dirname(os.path.abspath(__file__))
 PNG = 'EpsilonIcons/png'
 DATOS = 'AddonsIndependientes/HarfordItemForge/Data.lua'
-CATALOGO = 'EpsilonIcons/epsilon_icons.json'
+# La lista canonica es la que alimenta la web: cada fila dice si el icono se pudo extraer, y
+# solo esos tienen un PNG que servir. Incluye ademas los custom de Epsilon, que el volcado de
+# nombres se dejaba fuera.
+CATALOGO = 'EpsilonIcons/icons_master.csv'
 PAGINA = os.path.join(BASE, 'yunque.html')
 
-LADO = 32          # tamano en la hoja
-COLUMNAS = 48
-CUPO = 3000
+# 24 px es lo que permite meter el catalogo ENTERO por debajo del limite del artefacto.
+# A 32 px habria que recortar, y recortar significaba quedarse con el principio del
+# alfabeto: entraban inv_axe y inv_belt y no llegaba ni a inv_sword.
+LADO = 24
+COLUMNAS = 64
+CUPO = 0           # 0 = todos
 PREFIJOS = ('inv_', 'trade_', 'item_')
 
 
 def nombresDelCatalogo():
-    crudo = json.load(io.open(CATALOGO, encoding='utf-8'))
-    if isinstance(crudo, dict):
-        nombres = list(crudo)
-    else:
-        nombres = [x if isinstance(x, str) else (x.get('name') or '') for x in crudo]
-    return sorted({n.lower() for n in nombres if n and n.lower().startswith(PREFIJOS)})
+    filas = csv.DictReader(io.open(CATALOGO, encoding='utf-8'), delimiter=';')
+    return sorted({f['nombre'].lower() for f in filas
+                   if f.get('estado') == 'extraido'
+                   and f['nombre'].lower().startswith(PREFIJOS)})
 
 
 def usadosPorLaLista():
@@ -73,7 +78,7 @@ def main():
         if os.path.exists(os.path.join(PNG, n + '.png')):
             vistos.add(n)
             orden.append(n)
-        if len(orden) >= cupo:
+        if cupo and len(orden) >= cupo:
             break
     print("En la hoja:               %d" % len(orden))
 

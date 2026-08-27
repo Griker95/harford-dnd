@@ -11,6 +11,7 @@ edita a mano con normalidad y esto solo refresca ese trozo.
 Uso:
     python tools/codice/gen_yunque.py
 """
+import csv
 import io
 import json
 import os
@@ -20,7 +21,8 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-ICONOS = 'EpsilonIcons/epsilon_icons.json'
+# La misma lista canonica que sirve la web: solo los que se pudieron extraer.
+ICONOS = 'EpsilonIcons/icons_master.csv'
 PAGINA = os.path.join(BASE, 'yunque.html')
 
 # Solo lo que puede ser icono de OBJETO. Los de habilidad o logro solo estorbarian al buscar.
@@ -31,15 +33,9 @@ def main():
     if not os.path.exists(ICONOS):
         print("No existe %s" % ICONOS)
         return 1
-    crudo = json.load(io.open(ICONOS, encoding='utf-8'))
-    # El catalogo trae fichas {fdid, name, path}, no cadenas sueltas.
-    if isinstance(crudo, dict):
-        todos = list(crudo)
-    else:
-        todos = [x if isinstance(x, str) else (x.get('name') or '') for x in crudo]
-
-    nombres = sorted({n.lower() for n in todos
-                      if n and n.lower().startswith(PREFIJOS)})
+    filas = list(csv.DictReader(io.open(ICONOS, encoding='utf-8'), delimiter=';'))
+    todos = [f['nombre'] for f in filas if f.get('estado') == 'extraido']
+    nombres = sorted({n.lower() for n in todos if n and n.lower().startswith(PREFIJOS)})
     print("Iconos en el catalogo: %d" % len(todos))
     print("   utiles para objetos: %d" % len(nombres))
 

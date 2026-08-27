@@ -21,8 +21,8 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-# La misma lista canonica que sirve la web: solo los que se pudieron extraer.
-ICONOS = 'EpsilonIcons/icons_master.csv'
+# La carpeta de PNG, que es lo que la web sirve y la unica fuente completa.
+PNG = 'EpsilonIcons/png'
 PAGINA = os.path.join(BASE, 'yunque.html')
 
 # Solo lo que puede ser icono de OBJETO. Los de habilidad o logro solo estorbarian al buscar.
@@ -30,20 +30,14 @@ PREFIJOS = ('inv_', 'trade_', 'item_', 'spell_holy_', 'ability_')
 
 
 def main():
-    if not os.path.exists(ICONOS):
-        print("No existe %s" % ICONOS)
+    if not os.path.isdir(PNG):
+        print("No existe %s" % PNG)
         return 1
-    # Los CUSTOM entran todos, con el nombre que tengan: son arte propio del servidor y no
-    # hay donde buscarlos. A los de Blizzard si se les pide el prefijo, porque `spell_` y
-    # `ability_` son arte de hechizo y solo estorban.
-    nombres = set()
-    for f in csv.DictReader(io.open(ICONOS, encoding='utf-8'), delimiter=';'):
-        if f.get('estado') != 'extraido':
-            continue
-        n = f['nombre'].lower()
-        if f.get('tipo') in ('custom', 'addon') or n.startswith(PREFIJOS):
-            nombres.add(n)
-    nombres = sorted(nombres)
+    # LA CARPETA es la fuente: si el PNG esta ahi, el icono existe. Filtrar por el CSV y por
+    # prefijo dejaba fuera 9.582, entre ellos los 6.192 del espacio `eps_` con los 461 de
+    # BG3. Aqui entran todos, porque escribir un nombre no cuesta peso: lo que cuesta es la
+    # miniatura, y de eso se ocupa el cupo de la hoja.
+    nombres = sorted({f[:-4].lower() for f in os.listdir(PNG) if f.endswith('.png')})
     print("Iconos del catalogo (custom incluidos): %d" % len(nombres))
     print("   utiles para objetos: %d" % len(nombres))
 

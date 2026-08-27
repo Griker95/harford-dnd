@@ -49,31 +49,37 @@ PAGINA = os.path.join(BASE, 'yunque.html')
 # Cuesta peso, y crece con el CUADRADO del lado. Medido con el catalogo entero (18.830):
 # 24 px = 6,0 MB de pagina | 28 px = 7,6 | 32 px = 9,7 | 50 px = 20,6, que NO CABE en el
 # limite de 16 MB del artefacto. A 50 px hay que quedarse en unos 9.000 iconos.
-LADO = 50
-CUPO = 14400   # entran los 13.086 custom enteros
-PREFIJOS = ('inv_', 'trade_', 'item_')
+# 36 px es el mayor tamano al que caben TODOS los propios (20.780). A 40 px se pasarian de
+# los 16 MB y a 50 px solo entrarian unos 12.600, dejando fuera BG3 y medio `eps_`.
+LADO = 36
+CUPO = 22200   # los 20.780 propios + los que usan los objetos + margen
+# Paquetes de arte que NO son de Blizzard. `eps_` es el espacio propio de Epsilon e incluye
+# los de BG3 (`eps_bg3_*`); el resto son colecciones portadas de otros juegos.
+PROPIOS = ('eps_', 'custom_', 'hots_', 'hd_', 'd3_', 'dos2_', 'sha_', 'ivn_', 'smite_',
+           'sanctum_', 'warlock_', 'ui_', 'inv-', 'racial_')
 
 
 def nombresDelCatalogo():
-    """Devuelve (custom, base). Van separados porque no se filtran igual.
+    """Devuelve (propios, base) leyendo LA CARPETA, que es la unica fuente fiable.
 
-    Los CUSTOM entran todos, se llamen como se llamen: son arte hecho a medida para este
-    servidor y no hay donde buscarlos si faltan. Filtrarlos por prefijo dejaba fuera 3.793
-    -- `inv-sword_53` con guion, `custom_*`, `smite_*`, `ivn_*` (un `inv` mal escrito)...
+    Antes esto salia del CSV filtrando por prefijo `inv_/trade_/item_`, y se dejaba fuera
+    9.582 iconos: los 6.192 del espacio `eps_` -- entre ellos los 461 de BG3 --, los paquetes
+    `hots_`, `hd_`, `d3_`, `dos2_`... Si el PNG esta en disco, el icono existe: no hay nada
+    mas que comprobar.
 
-    A los BASE si se les aplica el prefijo: son los de Blizzard y ahi `spell_`/`ability_` es
-    arte de hechizo, no de objeto, y solo estorba al buscar.
+    PROPIOS es todo lo que no es arte base de Blizzard, y es lo que va primero en la hoja:
+    de lo de Blizzard siempre se puede tirar de cualquier base de datos de WoW, de esto no.
     """
-    custom, base = set(), set()
-    for f in csv.DictReader(io.open(CATALOGO, encoding='utf-8'), delimiter=';'):
-        if f.get('estado') != 'extraido':
-            continue
-        n = f['nombre'].lower()
-        if f.get('tipo') in ('custom', 'addon'):
-            custom.add(n)
-        elif n.startswith(PREFIJOS):
-            base.add(n)
-    return sorted(custom), sorted(base)
+    enDisco = sorted({f[:-4].lower() for f in os.listdir(PNG) if f.endswith('.png')})
+    tipo = {}
+    if os.path.exists(CATALOGO):
+        for f in csv.DictReader(io.open(CATALOGO, encoding='utf-8'), delimiter=';'):
+            tipo[f['nombre'].lower()] = f.get('tipo')
+    propios, base = [], []
+    for n in enDisco:
+        esPropio = n.startswith(PROPIOS) or tipo.get(n) in ('custom', 'addon')
+        (propios if esPropio else base).append(n)
+    return propios, base
 
 
 def usadosPorLaLista():
@@ -95,8 +101,9 @@ def main():
 
     custom, base = nombresDelCatalogo()
     usados = usadosPorLaLista()
-    print("Custom y de addon:        %d  (entran todos)" % len(custom))
-    print("De Blizzard utiles:       %d" % len(base))
+    print("PNG en la carpeta:        %d" % (len(custom) + len(base)))
+    print("   propios (eps_, bg3...):%d  <- van primero" % len(custom))
+    print("   base de Blizzard:      %d" % len(base))
     print("Usados por los objetos:   %d" % len(usados))
 
     # Primero los que ya se usan. El resto NO por orden alfabetico: asi solo entraba el
@@ -112,7 +119,7 @@ def main():
 
     for n in usados:
         mete(n)
-    # Los custom van DESPUES de los usados y ANTES que los de Blizzard: si hay que recortar,
+    # Los propios van DESPUES de los usados y ANTES que los de Blizzard: si hay que recortar,
     # que se recorte de lo que se puede mirar en cualquier base de datos de WoW.
     for n in custom:
         mete(n)

@@ -2927,20 +2927,27 @@ definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la
      hay que recortar, se recorta de lo de Blizzard. El prefijo se sigue aplicando SOLO a
      los `base`, donde `spell_`/`ability_` es arte de hechizo y estorba. Por lo mismo,
      `aIcono()` conserva el guion.
+   - **Nombres y miniaturas se separan**: los 36.605 nombres van SIEMPRE enteros (escribir
+     no cuesta peso), y el cupo decide solo cuales llevan miniatura. Asi nunca hay un icono
+     inalcanzable.
    - **El lado y el cupo se compran el uno al otro**, porque la hoja crece con el CUADRADO.
-     Medido: a 50 px, 9.000 iconos = 9,1 MB de pagina y 14.400 = 15,5 MB; a 44 px esos
-     14.400 son 12,8 y a 40 px, 11,2. El ajuste actual (50 px / 14.400) mete los 13.086
-     custom enteros y deja la pagina a 0,5 MB del limite: **cualquier crecimiento del
-     catalogo obliga a bajar el lado o el cupo**. El buscador por nombre cubre 27.024.
+     El ajuste actual, **36 px / 22.200**, es el mayor tamano al que caben TODOS los propios
+     (20.780, BG3 incluido): 14,4 MB de pagina. A 40 px esos mismos se pasarian de 16 MB, y
+     a 50 px solo entrarian ~12.600, dejando fuera BG3 y medio `eps_`. Lo que se queda sin
+     miniatura son 14.405 de arte base de Blizzard, que se consulta en cualquier base de
+     datos de WoW.
+   - Queda a 1,6 MB del limite: **si la carpeta de iconos crece, hay que bajar el lado**.
    - **La hoja se monta CUADRADA**: WebP no admite mas de 16.383 px por lado, y una tira
      estrecha y muy alta se pasa en cuanto crece el icono -- a 50 px con ancho fijo salian
      31.400 px de alto y el codificador fallaba. `columnas = ceil(sqrt(n))`.
    - El resto del cupo se reparte tomando **uno de cada N por todo el catalogo**. Por orden
      alfabetico solo entraba el principio: `inv_axe`, `inv_belt`, y no se llegaba a
      `inv_sword`.
-   - **La fuente es `EpsilonIcons/icons_master.csv` con `estado == extraido`**, que es la
-     lista canonica que sirve la web: si esta ahi, el PNG existe. Da 20.447 utiles frente a
-     los 17.800 del volcado de nombres, e incluye 6.370 custom de Epsilon.
+   - **La fuente es la CARPETA `EpsilonIcons/png` (36.605 PNG), no un CSV ni un filtro de
+     prefijos.** Si el PNG esta en disco, el icono existe. Filtrar por `icons_master.csv` y
+     por `inv_/trade_/item_` dejaba fuera **9.582**, entre ellos los 6.204 del espacio `eps_`
+     -- el propio de Epsilon -- con **los 461 de BG3**, y los paquetes `hots_`, `hd_`, `d3_`,
+     `dos2_`. Costo tres intentos verlo: no volver a filtrar iconos por prefijo.
    - Los nombres van SIEMPRE en minusculas: `Data.lua` los guarda con mayusculas
      (`INV_Misc_Fish_01`) y la pagina normaliza, asi que sin eso el sprite fallaba justo en
      los que ya se usan.

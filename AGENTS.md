@@ -3370,6 +3370,10 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   (`API.TurnStartAnchor`), a la que se vuelve A MANO con click derecho en el boton -- deshace el
   turno entero y pone el contador a cero --, y la del AGOTAMIENTO (`API.RecordedMovementAnchor`),
   que es a donde te devuelve el muro. Las dos se olvidan al empezar el turno siguiente.
+- **Al NPC NO se le pone muro, solo se le cuenta.** `worldport` mueve TU cuerpo, no a la criatura
+  poseida, y `npc info` actua sobre el objetivo, que mientras posees no es ella: no hay comando con
+  el que devolverla. Se avisa al agotarlo y corregir es cosa del DM -- que es exactamente lo que
+  hace Atlas, cuyo `TryOutOfTurnMovementSnapback` empieza con `if isPossessing then return end`.
 - **El muro salta al SOLTAR la tecla, no mientras corres.** `hooksecurefunc` sobre
   `MoveForwardStop`, `MoveBackwardStop`, `StrafeLeft/RightStop`, `TurnLeft/RightStop`,
   `CameraOrSelectOrMoveStop` y `JumpOrAscendStart`. Antes era un `worldport` cada 0.75 s mientras

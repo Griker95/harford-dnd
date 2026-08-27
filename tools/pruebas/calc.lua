@@ -461,6 +461,11 @@ chk("con su velocidad real",
     ataque:find('GetUnitSpeed("pet")) or 0) * 0.9144', 1, true) ~= nil, true)
 chk("y el jugador sigue midiendose por posicion",
     ataque:find("local x, y, z = GetPosition()", 1, true) ~= nil, true)
+-- Al NPC se le cuenta, pero NO se le pone muro: `worldport` mueve tu cuerpo, no a la criatura
+-- poseida, y `npc info` actua sobre el objetivo, que mientras posees no es ella. Es lo mismo que
+-- hace Atlas, cuyo muro se salta entero al poseer.
+chk("al NPC no se le pone muro",
+    ataque:find("API.MovimientoSinMuro = true", 1, true) ~= nil, true)
 
 -- ── EL MURO SALTA AL SOLTAR LA TECLA ────────────────────────────────────────
 -- Un teleporte cada 0.75 s mientras corres es una rafaga de comandos y ademas se ve a trompicones.

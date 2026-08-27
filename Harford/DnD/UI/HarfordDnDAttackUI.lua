@@ -614,13 +614,25 @@ function API.AttachMovementTracker(opts)
         label:SetText(FormatMeters(totalMeters))
         AvisarMovimiento(totalMeters, MaximoDelTurno())
 
-        -- Al agotar el movimiento se marca DONDE se acabo. No se tira de ti aqui: el tiron va en el
-        -- momento en que sueltas la tecla, que es UN comando en vez de una rafaga mientras corres.
         local tope = MaximoDelTurno()
-        if tope > 0 and totalMeters >= tope and not API.RecordedMovementAnchor then
-            API.RecordedMovementAnchor = CapturarAncla()
-            HarfordChat.Print("|cffffcc00Has agotado tu movimiento.|r Al parar volveras a donde "
-                .. "se te acabo.")
+        if tope > 0 and totalMeters >= tope and not API.RecordedMovementAnchor
+            and not API.MovimientoSinMuro then
+            if LlevandoNpc() then
+                -- Al NPC se le cuenta y se le avisa, pero no se le pone muro: no hay con que.
+                -- `worldport` mueve TU cuerpo, no a la criatura poseida, y `npc info` actua sobre
+                -- el objetivo, que mientras posees no es ella. Corregir es cosa del DM, igual que
+                -- en Atlas, cuyo muro se salta entero mientras se posee.
+                API.MovimientoSinMuro = true
+                HarfordChat.Print("|cffffcc00" .. tostring(UnitName and UnitName("pet") or "El NPC")
+                    .. " ha agotado su movimiento.|r Devuelvelo tu: no hay comando que mueva a una "
+                    .. "criatura poseida.")
+            else
+                -- Al agotar el movimiento se marca DONDE se acabo. No se tira de ti aqui: el
+                -- tiron va al soltar la tecla, que es UN comando en vez de una rafaga.
+                API.RecordedMovementAnchor = CapturarAncla()
+                HarfordChat.Print("|cffffcc00Has agotado tu movimiento.|r Al parar volveras a "
+                    .. "donde se te acabo.")
+            end
         end
         API.RecordedMovementInfo = { meters = totalMeters }
     end
@@ -662,6 +674,7 @@ function API.AttachMovementTracker(opts)
         API.RecordedMovementInfo = nil
         -- El ancla del turno pasado ya no vale: volver ahi te devolveria un asalto entero atras.
         API.RecordedMovementAnchor = nil
+        API.MovimientoSinMuro = nil
         -- Y si corriste el turno pasado, ese doble no se hereda.
         corriendo = false
         ultimoTiron = 0

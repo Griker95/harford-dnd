@@ -3053,6 +3053,131 @@ turno**, no al final del asalto. Una reaccion gastada en el turno de un enemigo 
 resto del asalto. `API.Turn` ya lo hace asi. Con el hueco PJs, todos los jugadores la recuperan a la
 vez, que es el comportamiento correcto bajo iniciativa por bandos.
 
+## Bloques de turno: las tarjetas especiales guardan a los suyos (2026-08-26)
+
+Una tarjeta `players` o `generic` -- PJs, Aliados, Neutrales, Enemigos -- **no es un combatiente:
+es un BLOQUE**, y guarda en `entry.miembros` quien va dentro.
+
+- Un miembro **no tiene tarjeta**. Se guardan solo `guid`, `name` y `jugador`: lo justo para
+  reconocerlo cuando le toque el turno. Su vida y su CA se miran en el **unitframe al
+  seleccionarlo**, que es donde ya se ven; el bloque no las guarda y por eso no pueden quedarse
+  viejas.
+- `GetBandoMembers` cuenta el bloque **y a los de dentro**. Sin eso, un bloque lleno parece vacio y
+  `SiguienteBandoConGente` lo salta entero.
+- `miembros` viaja en la entrada serializada, detras de `tempHp`. Si no viajara, solo los veria el
+  DM que los puso.
+- **Se retiro el panel de candidatos** que hubo antes: anadia a cada uno como tarjeta suelta, que es
+  justo lo contrario de este modelo, y la lista se llenaba.
+
+**Gestion (solo DM, en `HarfordAdminTurns`)**: click DERECHO sobre el bloque abre el menu -- anadir
+el objetivo, anadir a todos los jugadores conectados, y sacar a los que ya estan. Click IZQUIERDO
+abre la lista de tarjetas con retrato, nombre y vida leida de la unidad viva (`sin vista` cuando no
+esta a la mano). Solo a los PJs se les puede anadir en bloque: a los NPC no, porque **el cliente no
+permite enumerarlos** mas alla de los que tengan placa visible (confirmado tambien en Atlas, que
+resuelve unidades con las mismas dos fuentes: grupo y `C_NamePlate.GetNamePlates`).
+
+## Efectos sobre NPC delegados al lider (2026-08-26)
+
+Un jugador que no es **oficial de fase** no puede bajarle la vida a un NPC ni ponerle un aura: son
+comandos de servidor y el servidor se los rechaza. Pero SI puede tirar, calcular su dano y
+mitigarlo, que es todo del cliente.
+
+Asi que resuelve el efecto entero y manda **solo el resultado ya calculado** a quien pueda
+emitirlo. **No se delega la decision, se delega la ejecucion**: el receptor no vuelve a tirar ni a
+mitigar.
+
+- Punto unico: `HarfordDnDConditions.AplicarEfectoNpc(guid, tipo, valor, unidad)`. Devuelve
+  `"aplicado"`, `"encolado"`, `"delegado"` o nil.
+- Reutiliza la **cola por GUID** de las auras pendientes: en Epsilon solo se puede actuar sobre el
+  NPC seleccionado, asi que lo apuntado se ejecuta cuando el receptor lo seleccione -- cosa que
+  hara igualmente, porque le toca jugarlo.
+- La cola guarda un **DELTA con el signo del comando** (`op = "health"`), no "dano": asi un golpe y
+  una curacion pendientes sobre el mismo NPC **se cancelan** en vez de emitir dos comandos que se
+  pisan.
+- **Cadena de mando**: lider primero, DMs secundarios detras (`GetSecondaryDMs`). Quien no puede
+  emitirlo lo pasa al siguiente; si no queda nadie, se avisa a quien lo lanzo.
+- **En cadena y no a todos**: si le llegara a varios y dos tuvieran el NPC seleccionado se
+  aplicaria dos veces -- un golpe de 7 quitaria 14, y eso no se ve venir en mesa.
+- El lider va **primero** porque quien aplica tiene que tener el NPC seleccionado o se le queda en
+  la cola; el lider suele estar en todo, un secundario puede no mirar nunca a ese NPC.
+- Dos guardias al recibir: solo se acepta si **yo puedo emitirlo**, y solo sobre **NPCs que ya
+  estan en el orden de turnos** (`EsNpcDeLosTurnos`), que es lo que impide pedir dano sobre
+  cualquier cosa.
+
+Rutas enganchadas: dano de arma (`ApplyWeaponDamageToNpc`), dano y curacion de area, condiciones
+(`ApplyToUnit` delega el aura y **guarda el estado igual** -- el estado de Harford no necesita
+permiso ninguno) y los botones `+`/`-` de la tarjeta de turno.
+
+## Un icono que no existe deja el de la fila anterior (2026-08-26)
+
+`SetTexture` con una ruta invalida **no borra la textura: la deja como estaba**. Y como las filas
+del Libro vienen de un pool, la habilidad hereda el icono de la que ocupaba ese hueco antes. Media
+pagina salia con el mismo dibujo.
+
+**Estar en el catalogo no valida un icono.** Varios rasgos de trasfondo declaran arte que no esta
+en este build (`w3reforgedmercenarycamp` y similares). Antes de poner una textura hay que
+comprobarla con `GetFileIDFromPath` y caer a un respaldo -- es lo que ya hacian
+`HarfordCharacterProfessions` y `HarfordCharacterSheet`.
+
+## Una dote es UNA habilidad, y hay que ACTIVARLA (2026-08-26)
+
+Dos cosas distintas que fallaban a la vez:
+
+1. **`GetFeatTraits` devuelve los rasgos sueltos** y el Libro los pintaba como habilidades
+   independientes: "Mago de batalla" salia como tres entradas y la dote no aparecia por su nombre.
+   `GetFeatAbilities` devuelve **una entrada por dote**, titulada `Dote: <nombre>`, con la
+   descripcion y debajo cada rasgo. Agrupar solo vale porque **ningun rasgo de dote es accionable**
+   -- no hay uno con `cast`, `uses` ni `actionKind` -- y la suite lo comprueba: el dia que lo haya,
+   cae. `GetFeatTraits` se queda para el motor de efectos y el About, que los necesitan uno a uno.
+
+2. **Elegir una dote no la aplica.** Su opcion no lleva `effects`: lo que aplica son sus rasgos, que
+   llegan por `progression.feats`. Hay que llamar a `SetFeatEnabled`. Lo hacia solo el asistente de
+   subida; `ReplaceCreation` (que ademas vacia `feats`) y `ficha6` lo omitian.
+
+## Lo mio caduca en MI turno, se llame como se llame (2026-08-26)
+
+Esquivar y Preparar guardan tu nombre como ORIGEN y caducan con `source_turn_start`, que casa el
+registro contra la entrada de turno. Si tu turno es el **hueco colectivo**, esa entrada se llama
+"PJs" -- y en bandos, "Personajes" --, los nombres no casaban y el estado no se retiraba nunca.
+
+`IdentityMatches` comprueba **primero** si el registro es mio y el turno es mio, reconociendo las
+tres formas que puede tener mi turno: entrada individual, hueco `players` y bloque `pjs`. Va
+delante porque el hueco colectivo no tiene ni mi guid ni mi nombre.
+
+Afecta a **todo lo que uno se aplica a si mismo con duracion de turno**, no solo a esas dos.
+
+## ChatThrottleLib en `HarfordSync.Send` (2026-08-26)
+
+`Send` usa **CTL** cuando esta (lo trae EpsilonLib y otros siete addons del cliente). Aporta tres
+cosas y **no cambia el formato del cable** -- envia el texto tal cual por
+`C_ChatInfo.SendAddonMessage`, verificado en vivo: 16 bytes enviados, 16 recibidos:
+
+1. **Callback de entrega con CAUSA**. `NotInGroup = 5` es el fallo silencioso de siempre.
+2. Cola con prioridad (`PRIORIDAD_POR_PREFIJO`: tiradas y turnos `ALERT`, fotos grandes `BULK`).
+3. Reintento automatico ante saturacion.
+
+Si CTL revienta se cae al envio directo, para no perder el mensaje.
+
+**Chomp queda DESCARTADO**: antepone 12 hex de cabecera y **descarta en silencio** lo que no la
+traiga (`if not hasVersion16 then return end`), asi que activarlo dejaria sordo a todo cliente sin
+actualizar. Ademas delega en CTL cuando lo encuentra, que es el caso en Epsilon. Solo aportaria
+`BNSendGameData` a 4078 bytes, y el CTL propio lo limita a 255 aposta.
+
+## Detector de locales huerfanas en `referencias.py` (2026-08-26)
+
+Cuatro fallos del mismo dia fueron **una local que se queda atras al extraer un modulo**:
+`IconPath` (la barra de accion no pintaba), `SheetContext` (un DM con ficha de NPC gastaba sus
+propios recursos), `damageType` (el dano viajaba sin tipo y saltaba todas las resistencias) y
+`Codec` (reventaba al abrir la ficha de una entrada). No fallan al cargar -- resuelven a nil -- y
+casi siempre estan detras de un `and` que las da por ausentes, asi que el guardia entero se vuelve
+mudo.
+
+`referencias.py` los caza comparando CONJUNTOS (una regex por nombre tardaba minutos) y acotado a
+nombres **distintivos**: mayuscula inicial, cinco letras o mas, y local en UN SOLO fichero. Sin
+acotar salian **211 hallazgos, todos ruido**, y un detector asi entrena a ignorarlo. Se quitan
+tambien las cadenas antes de buscar: una descripcion que dice "...o Ayudar." ponia `Ayudar.` en el
+texto y contaba como acceso a tabla.
+
 ## El defensor gana los empates de CA (2026-08-26)
 
 **Divergencia deliberada del manual.** En 5e, una tirada que IGUALA la CA impacta ("equals or

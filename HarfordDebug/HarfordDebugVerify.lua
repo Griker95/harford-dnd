@@ -663,6 +663,136 @@ Grupo("libro", "que el Libro se construya y no queden entradas sin nombre ni art
     r.chk("y todas tienen de donde sacar arte", sinIcono == 0, sinIcono .. " sin icono ni id")
 end)
 
+
+Grupo("turnos", "bandos, bloques y quien va dentro de cada uno", function(r)
+    local T = _G.HarfordTurnOrderAPI
+    r.chk("el orden de turnos esta cargado", T ~= nil)
+    if not T then return end
+
+    -- Los cuatro bandos y su orden FIJO. Sin tirada: saber siempre quien va detras de quien vale
+    -- mas en mesa que la sorpresa de quien empieza.
+    r.chk("hay cuatro bandos", type(T.BANDOS) == "table" and #T.BANDOS == 4,
+        T.BANDOS and #T.BANDOS)
+    r.chk("en el orden acordado", T.BANDOS and T.BANDOS[1] == "pjs" and T.BANDOS[4] == "aliados",
+        T.BANDOS and (T.BANDOS[1] .. ".." .. T.BANDOS[4]))
+    r.chk("con dos fases por bloque", type(T.FASES) == "table" and #T.FASES == 2)
+
+    -- Un PJ no se mueve de su bando ni a mano, y el hueco COLECTIVO tampoco: su `kind` es
+    -- "players", no "player", y durante un tiempo caia por reaccion 0 en enemigos.
+    r.chk("un jugador va a pjs", T.GetBando and T.GetBando({ kind = "player" }) == "pjs")
+    r.chk("y el hueco colectivo tambien", T.GetBando and T.GetBando({ kind = "players" }) == "pjs",
+        T.GetBando and T.GetBando({ kind = "players" }))
+    r.chk("y no se les puede mover", T.SetBando and T.SetBando({ kind = "players" }, "enemigos") == false)
+
+    -- Los BLOQUES guardan a los suyos: quien esta dentro no tiene tarjeta, su vida se mira en el
+    -- unitframe. Sin esto, anadir a alguien llenaba la lista de tarjetas sueltas.
+    r.chk("los bloques admiten miembros", type(T.AddBlockMember) == "function")
+    r.chk("y se pueden sacar", type(T.RemoveBlockMember) == "function")
+    local store = _G.HarfordTurnOrderStore
+    local bloques, dentro = 0, 0
+    for _, e in ipairs((type(store) == "table" and store.entries) or {}) do
+        local k = tostring(e.kind or "")
+        if k == "players" or k == "generic" then
+            bloques = bloques + 1
+            dentro = dentro + #(e.miembros or {})
+        end
+    end
+    r.chk("hay bloques en la lista", bloques > 0, bloques .. " bloque(s), " .. dentro .. " dentro")
+
+    -- Un bloque LLENO no puede parecer vacio, o el avance lo saltaria entero.
+    if T.GetBandoMembers then
+        local total = 0
+        for _, b in ipairs(T.BANDOS or {}) do total = total + #T.GetBandoMembers(b) end
+        r.chk("el avance cuenta a todos", total >= bloques, total .. " contados")
+    end
+
+    if T.IsModoBandos and not T.IsModoBandos() then
+        r.manual("Estas en iniciativa INDIVIDUAL. Para probar bloques, pulsa `Bandos` en la ventana.")
+    end
+    if bloques == 0 then
+        r.manual("No hay bloques: pulsa `PJs`/`Aliado`/`Neutral`/`Enemigo` en la ventana de turnos.")
+    elseif dentro == 0 then
+        r.manual("Los bloques estan vacios: click DERECHO en uno y `Anadir` con algo en el objetivo.")
+    end
+end)
+
+Grupo("delegar", "que un jugador sin permiso pueda pegarle a un NPC igual", function(r)
+    local C = _G.HarfordDnDConditions
+    r.chk("el motor de condiciones esta cargado", C ~= nil)
+    if not C then return end
+
+    r.chk("hay punto unico para aplicar", type(C.AplicarEfectoNpc) == "function")
+    r.chk("y cadena de mando", type(C.CadenaDeMando) == "function")
+
+    local puedo = C.PuedoAplicarEnNpc and C.PuedoAplicarEnNpc()
+    r.chk("se sabe si puedo emitir comandos", type(puedo) == "boolean", tostring(puedo))
+
+    local cadena = C.CadenaDeMando and C.CadenaDeMando() or {}
+    -- El lider va primero porque el que aplica tiene que tener el NPC SELECCIONADO: si no, se le
+    -- queda en la cola. El lider suele estar en todo; un secundario puede no mirar nunca a ese NPC.
+    r.chk("la cadena se puede construir", type(cadena) == "table", #cadena .. " eslabon(es)")
+
+    local pendientes = C.GetPendingAuraCount and C.GetPendingAuraCount() or 0
+    r.chk("la cola de pendientes responde", type(pendientes) == "number", pendientes .. " en cola")
+
+    if puedo then
+        r.manual("Eres oficial de fase: TU aplicas directo y no delegas. Para probar la cadena hace "
+            .. "falta un segundo cliente SIN ese permiso.")
+    elseif #cadena == 0 then
+        r.chk("hay a quien delegar", false, "no estas en grupo con un lider que no seas tu")
+    else
+        r.manual("Pega a un NPC: deberia decir que el efecto se envio al lider.")
+    end
+    if pendientes > 0 then
+        r.manual("Hay " .. pendientes .. " efecto(s) esperando: selecciona a ese NPC y se aplicaran.")
+    end
+end)
+
+Grupo("dotes", "que una dote sea UNA habilidad y este activada, no solo elegida", function(r)
+    local P, F, B = _G.HarfordDnDProgression, _G.HarfordDnDFeats, _G.HarfordCharacterBook
+    r.chk("el libro de dotes esta cargado", F ~= nil)
+    if not (P and F) then return end
+
+    -- Una dote elegida NO se aplica sola: su opcion no lleva `effects`, lo que aplica son sus
+    -- rasgos, que llegan por `progression.feats`. Guardar la eleccion no basta.
+    local data = P.Get and P.Get() or {}
+    local lista = type(data.feats) == "table" and data.feats or {}
+    local porClave = 0
+    for k in pairs(lista) do if type(k) ~= "number" then porClave = porClave + 1 end end
+    r.chk("`feats` es una LISTA, no un mapa", porClave == 0, porClave .. " clave(s) no numerica(s)")
+
+    -- Una entrada por DOTE, no una por cada cosa que hace: antes "Mago de batalla" salia como tres
+    -- habilidades y la dote no aparecia por su nombre.
+    r.chk("hay forma de agruparlas", type(F.GetFeatAbilities) == "function")
+    if F.GetFeatAbilities and #lista > 0 then
+        local agrupadas = F.GetFeatAbilities(lista)
+        r.chk("una entrada por dote", #agrupadas == #lista,
+            #agrupadas .. " entradas para " .. #lista .. " dote(s)")
+        for _, item in ipairs(agrupadas) do
+            local n = item.feature and tostring(item.feature.name or "")
+            r.chk("se llama 'Dote: ...'", n:find("Dote:", 1, true) == 1, n)
+            r.chk("y trae su contenido",
+                item.feature and #tostring(item.feature.description or "") > 0, n)
+        end
+    end
+
+    -- Y que el Libro las deje pasar hasta General.
+    if B and B.IsVisible and F.GetFeatAbilities and #lista > 0 then
+        local visibles = 0
+        for _, item in ipairs(F.GetFeatAbilities(lista)) do
+            if item.feature and B.IsVisible(item.feature) then visibles = visibles + 1 end
+        end
+        r.chk("el Libro no las oculta", visibles == #lista, visibles .. "/" .. #lista)
+    end
+
+    if #lista == 0 then
+        r.manual("Esta ficha no tiene dotes. Se eligen en la Mejora de Caracteristica (nivel 4); "
+            .. "`ficha6 <clase>` monta una al azar.")
+    else
+        r.manual("Abre el Libro y comprueba que sale en General como una sola entrada.")
+    end
+end)
+
 ------------------------------------------------------------
 -- Ejecucion
 ------------------------------------------------------------

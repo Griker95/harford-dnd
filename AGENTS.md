@@ -3055,6 +3055,16 @@ vez, que es el comportamiento correcto bajo iniciativa por bandos.
 
 ## Bloques de turno: las tarjetas especiales guardan a los suyos (2026-08-26)
 
+- **La lista de un bloque son las MISMAS tarjetas de la ventana de turnos, solo que dentro de la
+  lista**: 70x122, `DialogBorderTemplate`, retrato 36x36 arriba, nombre, `CA N` y barra de vida con
+  `actual/maxima`. Una fila de texto no se lee como un combatiente, que es lo que son.
+- Vida y CA se leen de la unidad VIVA en cada refresco (`UnitHealth`, y la CA por
+  `HarfordDnDCombat.GetArmorClassForUnit`, la misma resolucion que usa el ataque). Sin vista se
+  dice `sin vista`: un numero viejo que nadie puede comprobar es peor que no tener numero.
+- **Tres por fila, con scroll.** Las tarjetas cuelgan de `panel.contenido` (el hijo del
+  `ScrollFrame`); el boton de anadir cuelga del PANEL, fuera del area que se desplaza, para que no
+  lo recorte el scroll ni se pierda de vista cuando la lista crece.
+
 Una tarjeta `players` o `generic` -- PJs, Aliados, Neutrales, Enemigos -- **no es un combatiente:
 es un BLOQUE**, y guarda en `entry.miembros` quien va dentro.
 

@@ -403,6 +403,18 @@ chk("si nadie lo toma, el core hace lo de siempre",
 -- puede comprobar: la del bloque no se guarda en ninguna parte.
 chk("la vida se lee de la unidad viva", admin2:find("UnitHealth(unidad)", 1, true) ~= nil, true)
 chk("y se dice cuando no esta a la vista",
-    admin2:find('f.vida:SetText("sin vista")', 1, true) ~= nil, true)
+    admin2:find('f.vidaTexto:SetText("|cff808080sin vista|r")', 1, true) ~= nil, true)
+-- Son las tarjetas de siempre, solo que dentro de la lista: mismo tamano y mismo borde que las de
+-- la ventana de turnos. Una fila de texto no se lee como un combatiente.
+chk("las tarjetas miden lo que las de turnos",
+    admin2:find("local TARJ_W, TARJ_H, TARJ_HUECO = 70, 122, 6", 1, true) ~= nil, true)
+chk("y llevan su mismo borde",
+    admin2:find('CreateFrame("Frame", nil, f, "DialogBorderTemplate")', 1, true) ~= nil, true)
+-- Con muchas se baja a verlas, pero el boton no se va con ellas ni lo recorta el scroll: cuelga del
+-- panel, no del contenido que se desplaza.
+chk("las tarjetas van dentro del scroll",
+    admin2:find('CreateFrame("Button", nil, panel.contenido, "BackdropTemplate")', 1, true) ~= nil, true)
+chk("y el boton se queda fuera",
+    admin2:find('panel.anadir = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")', 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

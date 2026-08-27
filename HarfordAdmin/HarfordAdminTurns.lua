@@ -204,41 +204,58 @@ do
     local panel, filas = nil, {}
     local AnadirABloque   -- se asigna abajo; el boton cierra sobre ella
     local bloqueActual
-    local FILA_ALTO, PANEL_ANCHO, VISIBLES = 24, 240, 12
+    -- Las mismas medidas que las tarjetas de la ventana de turnos (70x122): son lo mismo, un
+    -- combatiente, y tienen que leerse igual. Tres por fila, cuatro filas.
+    local TARJ_W, TARJ_H, TARJ_HUECO = 70, 122, 6
+    local COLUMNAS, FILAS_A_LA_VISTA = 3, 4
+    -- Hueco para la barra de desplazamiento a la derecha: si no, se come media tarjeta.
+    local PANEL_ANCHO = 16 + COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO + 22
+    local ALTO_VISTA = FILAS_A_LA_VISTA * (TARJ_H + TARJ_HUECO)
     local RefrescarPanel
 
     local function EnsureFila(i)
         local f = filas[i]
         if f then return f end
-        f = CreateFrame("Button", nil, panel, "BackdropTemplate")
-        f:SetSize(PANEL_ANCHO - 16, FILA_ALTO)
-        -- Con fondo y marco: son TARJETAS, como las de la ventana de turnos, no lineas de texto.
-        -- Quien esta dentro de un bloque es un combatiente, y se tiene que leer como tal.
+        f = CreateFrame("Button", nil, panel.contenido, "BackdropTemplate")
+        f:SetSize(TARJ_W, TARJ_H)
         f.fondo = f:CreateTexture(nil, "BACKGROUND")
         f.fondo:SetAllPoints(f)
-        f.fondo:SetColorTexture(0, 0, 0, 0.35)
+        f.fondo:SetColorTexture(0.05, 0.05, 0.06, 0.85)
+        -- El mismo borde que las tarjetas de turnos. Por encima del contenido, como alli.
+        f.borde = CreateFrame("Frame", nil, f, "DialogBorderTemplate")
+        f.borde:SetAllPoints(f)
+        f.borde:SetFrameLevel(f:GetFrameLevel() + 3)
+
         f.retrato = f:CreateTexture(nil, "ARTWORK")
-        f.retrato:SetSize(FILA_ALTO - 6, FILA_ALTO - 6)
-        f.retrato:SetPoint("LEFT", f, "LEFT", 3, 0)
-        -- Retrato circular, como el resto del addon.
-        local mascara = f:CreateMaskTexture(nil, "ARTWORK")
-        mascara:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask",
-            "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
-        mascara:SetAllPoints(f.retrato)
-        f.retrato:AddMaskTexture(mascara)
-        f.marco = f:CreateTexture(nil, "OVERLAY")
-        f.marco:SetTexture("Interface\\Common\\WhiteIconFrame")
-        f.marco:SetSize(FILA_ALTO - 2, FILA_ALTO - 2)
-        f.marco:SetPoint("CENTER", f.retrato, "CENTER")
-        f.marco:SetVertexColor(0.55, 0.5, 0.4)
+        f.retrato:SetSize(36, 36)
+        f.retrato:SetPoint("TOP", 0, -9)
+        f.retrato:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
         f.texto = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        f.texto:SetPoint("LEFT", f.retrato, "RIGHT", 6, 0)
-        f.texto:SetJustifyH("LEFT")
-        f.vida = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-        f.vida:SetPoint("RIGHT", f, "RIGHT", -20, 0)
+        f.texto:SetPoint("TOPLEFT", 5, -46)
+        f.texto:SetPoint("TOPRIGHT", -5, -46)
+        f.texto:SetJustifyH("CENTER")
+        f.texto:SetHeight(20)
+
+        f.ca = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        f.ca:SetPoint("TOP", 0, -68)
+
+        f.vida = CreateFrame("StatusBar", nil, f)
+        f.vida:SetSize(58, 10)
+        f.vida:SetPoint("TOP", 0, -86)
+        f.vida:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        f.vida:SetMinMaxValues(0, 1)
+        f.vidaFondo = f.vida:CreateTexture(nil, "BACKGROUND")
+        f.vidaFondo:SetAllPoints()
+        f.vidaFondo:SetColorTexture(0.08, 0.08, 0.08, 0.95)
+        f.vidaTexto = f.vida:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        f.vidaTexto:SetPoint("CENTER", 0, 0)
+        if f.vidaTexto.SetDrawLayer then f.vidaTexto:SetDrawLayer("OVERLAY", 7) end
+
         f.quitar = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-        f.quitar:SetSize(18, 18)
-        f.quitar:SetPoint("RIGHT", f, "RIGHT", 2, 0)
+        f.quitar:SetSize(20, 20)
+        f.quitar:SetPoint("TOPRIGHT", f, "TOPRIGHT", 2, 2)
+        f.quitar:SetFrameLevel(f.borde:GetFrameLevel() + 1)
         filas[i] = f
         return f
     end
@@ -267,7 +284,7 @@ do
     local function CrearPanel()
         if panel then return panel end
         panel = CreateFrame("Frame", "HarfordAdminBlockFrame", UIParent, "BackdropTemplate")
-        panel:SetSize(PANEL_ANCHO, 30 + VISIBLES * FILA_ALTO + 12)
+        panel:SetSize(PANEL_ANCHO, 30 + ALTO_VISTA + 40)
         panel:SetFrameStrata("DIALOG")
         panel:SetFrameLevel(520)
         panel:SetClampedToScreen(true)
@@ -280,6 +297,17 @@ do
         panel.borde:SetAllPoints(panel)
         panel.titulo = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         panel.titulo:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -12)
+        -- Con muchas tarjetas se baja a verlas, pero el boton NO se va con ellas: vive en el
+        -- panel, fuera del area que se desplaza, asi que no lo recorta el scroll ni se pierde de
+        -- vista cuando la lista crece.
+        panel.scroll = CreateFrame("ScrollFrame", "HarfordAdminBlockScroll", panel,
+            "UIPanelScrollFrameTemplate")
+        panel.scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -30)
+        panel.scroll:SetSize(COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO, ALTO_VISTA)
+        panel.contenido = CreateFrame("Frame", nil, panel.scroll)
+        panel.contenido:SetSize(COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO, ALTO_VISTA)
+        panel.scroll:SetScrollChild(panel.contenido)
+
         -- Abajo, donde se busca: anadir es lo que mas se hace en esta ventana.
         panel.anadir = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
         panel.anadir:SetSize(PANEL_ANCHO - 24, 22)
@@ -313,7 +341,11 @@ do
         -- NPCs: alli hay lista, aqui se anade lo que tengas delante.
         panel.anadir:SetText(tostring(bloqueActual.kind or "") == "players"
             and "Anadir al grupo..." or "Anadir el objetivo")
-        for i = 1, VISIBLES do
+        -- El alto del contenido crece con las tarjetas; el area a la vista no. Eso es lo que hace
+        -- que aparezca la barra en vez de recortar la lista.
+        local filasNecesarias = math.max(FILAS_A_LA_VISTA, math.ceil(#dentro / COLUMNAS))
+        panel.contenido:SetHeight(filasNecesarias * (TARJ_H + TARJ_HUECO))
+        for i = 1, math.max(#dentro, #filas) do
             local m, f = dentro[i], EnsureFila(i)
             if not m then f:Hide()
             else
@@ -328,12 +360,20 @@ do
                 -- La vida sale de la unidad viva. Si no esta a la vista se dice, en vez de enseniar
                 -- un numero viejo que nadie puede comprobar.
                 if unidad and UnitHealth then
-                    f.vida:SetText(tostring(UnitHealth(unidad)) .. "/" .. tostring(UnitHealthMax(unidad)))
-                    f.vida:SetTextColor(0.6, 0.85, 0.6)
+                    local vida, maxima = UnitHealth(unidad), UnitHealthMax(unidad)
+                    f.vida:SetValue(maxima > 0 and (vida / maxima) or 0)
+                    f.vida:SetStatusBarColor(0.16, 0.68, 0.24)
+                    f.vidaTexto:SetText(tostring(vida) .. "/" .. tostring(maxima))
                 else
-                    f.vida:SetText("sin vista")
-                    f.vida:SetTextColor(0.5, 0.5, 0.5)
+                    -- Sin vista no se inventa una barra: se dice. Un numero viejo que nadie puede
+                    -- comprobar es peor que no tener numero.
+                    f.vida:SetValue(0)
+                    f.vidaTexto:SetText("|cff808080sin vista|r")
                 end
+                -- La CA sale de la misma resolucion que usa el ataque, no de una copia aparte.
+                local ca = unidad and HarfordDnDCombat and HarfordDnDCombat.GetArmorClassForUnit
+                    and HarfordDnDCombat.GetArmorClassForUnit(unidad)
+                f.ca:SetText(ca and ("CA " .. tostring(ca)) or "|cff808080CA --|r")
                 if unidad and SetPortraitTexture then
                     SetPortraitTexture(f.retrato, unidad)
                 else
@@ -345,7 +385,9 @@ do
                     RefrescarPanel()
                 end)
                 f:ClearAllPoints()
-                f:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -30 - (i - 1) * FILA_ALTO)
+                local col, fila = (i - 1) % COLUMNAS, math.floor((i - 1) / COLUMNAS)
+                f:SetPoint("TOPLEFT", panel.contenido, "TOPLEFT",
+                    col * (TARJ_W + TARJ_HUECO), -fila * (TARJ_H + TARJ_HUECO))
                 f:Show()
             end
         end

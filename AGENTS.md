@@ -3477,9 +3477,11 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   solo -- la foto trae el estado y los miembros.
 - Si NO estabas, hay un boton **`Unirse`** en la ventana de turnos, en el sitio de `Limpiar` (que
   es de DM, asi que nunca se ven los dos). Solo aparece con combate empezado y estando fuera.
-- **Lo decide el DM**: manda `TJOIN` y el DM te mete en el bloque de PJs. Anadirse en local seria
-  inutil -- la siguiente foto lo borraria -- y el DM no mete a quien no ve (`FindUnitByName`),
-  porque un nombre suelto no basta para saber a quien estas anadiendo.
+- **Es AUTOMATICO**: mandas `TJOIN` y el cliente del DM te mete solo, sin confirmar nada -- al DM
+  se le avisa y ya. Pasa por el porque **la lista es suya** (una entrada anadida en local
+  desapareceria con la siguiente foto), no porque haya que pedirle permiso.
+- Lo unico que lo para es que el DM **no te vea** (`FindUnitByName`): un nombre suelto no basta
+  para saber a quien estas anadiendo, y ahi si te mete a mano.
 
 ## Un combate abandonado caduca ENTERO (2026-08-27)
 

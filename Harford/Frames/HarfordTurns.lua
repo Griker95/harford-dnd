@@ -980,8 +980,9 @@ local function ApplyTurnMessage(message, sender)
         end
         return true
     elseif opcode == "TJOIN" then
-        -- Alguien pide entrar en el combate en curso. Lo mete el DM, no el que lo pide: la lista
-        -- es suya, y una entrada que se anadiera en local desapareceria con la siguiente foto.
+        -- Alguien entra en el combate en curso. Se mete SOLO, sin que el DM tenga que aceptar
+        -- nada: al DM se le avisa y ya. Pasa por el porque la lista es suya --una entrada anadida
+        -- en local desapareceria con la siguiente foto--, no porque haya que pedirle permiso.
         if not IsTurnAdmin() then return true end
         if HarfordTurnOrderAPI.GetCombatState() ~= "activo" then
             Print(tostring(sender) .. " pide unirse, pero no hay combate empezado.")
@@ -2434,7 +2435,7 @@ local function CreateTurnFrame()
         if not ch then Print("No hay grupo al que pedirselo.") return end
         HarfordSync.Send(COMM_PREFIX, "TJOIN|"
             .. tostring((GetUnitName and GetUnitName("player", true)) or ""), ch)
-        Print("Pedido al DM: unirte al combate.")
+        Print("Te unes al combate.")
     end)
     TurnFrame.joinButton:Hide()
 

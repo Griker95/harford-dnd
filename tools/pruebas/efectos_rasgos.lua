@@ -348,11 +348,29 @@ chk("salvo pasivos y trampas",
 -- nunca y el contador era de adorno.
 print("Atacar y lanzar cuestan la accion")
 local ficha = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
-chk("atacar cuesta la accion", ficha:find('T.Spend("action", 1)', 1, true) ~= nil, true)
--- Solo la PRIMERA del turno: Ataque Extra da mas ataques dentro de la MISMA accion, asi que
--- cobrar cada uno avisaria en falso a partir del segundo.
-chk("pero solo si queda por gastar",
-    ficha:find('T.GetRemaining("action") > 0', 1, true) ~= nil, true)
+local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+chk("atacar cuesta lo que diga el motor",
+    ficha:find("HarfordDnDConditions.Turn.SpendWeaponAttack(offhand and true or false)",
+        1, true) ~= nil, true)
+-- Ataque Extra es un RASGO que hay que tener, no algo que se da por hecho: a nivel 4 atacas una
+-- vez y el segundo ataque seria una segunda accion de Atacar.
+chk("cuantos caben sale del rasgo",
+    cond:find('HarfordDnDFeatureEffects.HasFlag("extraAttack")', 1, true) ~= nil, true)
+chk("uno, o dos con el rasgo", cond:find("return extra and 2 or 1", 1, true) ~= nil, true)
+-- Los de en medio ya estan pagados; el que abre otra tanda cobra otra accion.
+chk("solo cobra el que abre la tanda",
+    cond:find("if (ECONOMIA.ataques - 1) % porAccion ~= 0 then return nil end", 1, true) ~= nil, true)
+-- El ataque con la SECUNDARIA es Combate con Dos Armas: cuesta accion ADICIONAL, no la accion, y
+-- no cuenta contra los ataques de la accion.
+chk("la secundaria cuesta accion adicional",
+    cond:find('local cabia = Turn.Spend("bonus", 1)', 1, true) ~= nil, true)
+-- Y los ataques ya hechos son de ESTE turno: sin reiniciarlos, el primero del siguiente se
+-- tomaria por el segundo y saldria gratis.
+chk("y se reinician con el turno", cond:find("ECONOMIA.ataques = 0", 1, true) ~= nil, true)
+-- Tener una accion adicional POR RASGO no es lo mismo que Ataque Extra: el Guerrero de nivel 6
+-- tiene las dos y son cosas separadas.
+chk("la accion adicional por rasgo es otra cosa",
+    cond:find("function Turn.GrantForFeature", 1, true) ~= nil, true)
 -- Y una maniobra ya cobro al anunciarse: su ataque no vuelve a cobrar.
 chk("y una maniobra no cobra dos veces",
     ficha:find("DoWeaponAttack({ skipTurnCost = true })", 1, true) ~= nil, true)

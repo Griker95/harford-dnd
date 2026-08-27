@@ -3390,11 +3390,20 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   `SpendForFeature`). **Atacar con el arma y lanzar un conjuro no cobraban nada**, que es
   justamente lo que la gente hace en su turno: las fichas no bajaban nunca y el contador quedaba de
   adorno.
-- **`DoWeaponAttack` cuesta la accion, pero solo la PRIMERA del turno**: Ataque Extra da mas
-  ataques dentro de la MISMA accion, asi que cobrar cada uno avisaria en falso a partir del
-  segundo. Si ya estaba gastada no se cobra ni se dice nada -- es lo esperado, no un error.
-  `options.skipTurnCost` lo ponen las rutas que ya cobraron (maniobras), para no cobrar dos veces
-  por el mismo golpe.
+- **Lo que cuesta un ataque lo decide `Turn.SpendWeaponAttack(esOffhand)`**, no la ficha. Tres
+  casos y confundirlos hacia el contador inutil:
+  - **Mano SECUNDARIA** → cuesta **accion ADICIONAL** (Combate con Dos Armas), no la accion, y no
+    cuenta contra los ataques de la accion.
+  - **Los N de tu accion de Atacar** → solo el primero cobra; los demas van dentro de esa misma
+    accion. **N sale del RASGO** (`flag extraAttack` → 2, si no 1): Ataque Extra hay que TENERLO,
+    y a nivel 4 el segundo ataque es una segunda accion de Atacar.
+  - **N+1 en adelante** → otra accion de Atacar, y se cobra como tal.
+- **Ataque Extra y "accion adicional por rasgo" son cosas DISTINTAS** y el Guerrero de nivel 6
+  tiene las dos: una da mas ataques dentro de la accion (`flag extraAttack`), la otra da un hueco
+  mas en el turno (`grantsTurnAction`). No mezclarlas.
+- `ECONOMIA.ataques` se reinicia en `Turn.Reset()`: sin eso, el primer ataque del turno siguiente
+  se tomaria por el segundo y saldria gratis. `options.skipTurnCost` lo ponen las rutas que ya
+  cobraron (maniobras), y la criatura acompanante no gasta la economia de su duenio.
 - **`ConfirmCast` cobra lo que diga el TIEMPO DE LANZAMIENTO** del conjuro, no siempre accion:
   "adicional"/"bonus" → adicional, "reacc" → reaccion, y los de minutos u horas **no cobran nada**
   porque no se juegan por turnos. Un ritual sale por su rama antes de llegar ahi.

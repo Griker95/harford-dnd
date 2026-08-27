@@ -1673,7 +1673,7 @@ do
     -- `extra`: presupuesto CONCEDIDO este turno por un rasgo (Accion adicional del Guerrero, que
     -- da una adicional mas y se gasta con usos propios). Se limpia con el turno, igual que lo
     -- gastado: es un permiso de ESTE turno, no una mejora permanente.
-    local ECONOMIA = { spent = {}, extra = {}, activa = false }
+    local ECONOMIA = { spent = {}, extra = {}, activa = false, ataques = 0 }
 
     -- Los tres presupuestos, en el orden en que se muestran.
     local ORDEN = { "action", "bonus", "reaction" }
@@ -1748,6 +1748,47 @@ do
         return DE_CAST[cast]
     end
 
+    -- Cuantos ataques caben en UNA accion de Atacar. Uno, y dos con Ataque Extra -- que es un
+    -- RASGO que hay que tener (`flag extraAttack`), no algo que se da por hecho: a nivel 4 atacas
+    -- una vez, y el segundo ataque seria una segunda accion de Atacar.
+    function Turn.AtaquesPorAccion()
+        local extra = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+            and HarfordDnDFeatureEffects.HasFlag("extraAttack")
+        return extra and 2 or 1
+    end
+
+    -- Cobra un ataque de arma. Devuelve el tipo que gasto, o nil si no gasto nada.
+    --
+    -- Tres casos distintos, y confundirlos era lo que hacia el contador inutil:
+    --   OFFHAND    -- el ataque con la mano secundaria es Combate con Dos Armas, y eso cuesta
+    --                 ACCION ADICIONAL, no la accion. No cuenta contra los ataques de la accion.
+    --   1..N       -- los N que da tu accion de Atacar (N = 1, o 2 con Ataque Extra). Solo el
+    --                 primero cobra: los demas van DENTRO de esa misma accion.
+    --   N+1 en adelante -- eso ya es OTRA accion de Atacar, y se cobra como tal.
+    --
+    -- Y Ataque Extra no tiene nada que ver con tener una accion adicional por rasgo (el Guerrero
+    -- de nivel 6 tiene las dos y son cosas separadas): una da mas ataques dentro de la accion, la
+    -- otra da un hueco mas en el turno.
+    function Turn.SpendWeaponAttack(esOffhand)
+        if not Turn.IsActive() then return nil end
+        if esOffhand then
+            local cabia = Turn.Spend("bonus", 1)
+            if not cabia then
+                Print("Ya habias gastado tu accion adicional: el ataque con la mano secundaria la cuesta.")
+            end
+            return "bonus"
+        end
+        ECONOMIA.ataques = (tonumber(ECONOMIA.ataques) or 0) + 1
+        local porAccion = Turn.AtaquesPorAccion()
+        -- El primero de cada tanda cobra; los de en medio ya estan pagados.
+        if (ECONOMIA.ataques - 1) % porAccion ~= 0 then return nil end
+        local cabia = Turn.Spend("action", 1)
+        if not cabia then
+            Print("Ya habias gastado tu accion este turno.")
+        end
+        return "action"
+    end
+
     -- Gasta lo que declare el rasgo. Devuelve nil si no declara nada (no se cuenta ni se avisa).
     function Turn.SpendForFeature(feature)
         local kind = Turn.KindFromFeature(feature)
@@ -1779,6 +1820,9 @@ do
     end
 
     function Turn.Reset()
+        -- Los ataques ya hechos son de ESTE turno: sin reiniciarlos, el primer ataque del turno
+        -- siguiente se tomaria por el segundo y saldria gratis.
+        ECONOMIA.ataques = 0
         ECONOMIA.spent = {}
         ECONOMIA.extra = {}
         Notify()

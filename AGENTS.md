@@ -3323,6 +3323,31 @@ revision: paso el 26 de agosto, cuando una revision la marco como bug citando el
 comentario en el codigo -- "empate = fallo para el atacante (el defensor gana los empates)" -- es
 lo unico que lo delataba.
 
+## La descripcion de un objeto de Epsilon viene ENTRECOMILLADA (2026-08-27)
+
+El editor de objetos de Epsilon guarda la descripcion entre comillas, y el tooltip las muestra: una
+descripcion de una linea sale como `"CA +1"`, y una de varias abre comilla en la primera linea y la
+cierra en la ultima.
+
+Los patrones de regla de `ParseTooltipRules` estan anclados a la linea COMPLETA (`^...$`), a
+proposito, para que una frase de sabor que mencione un numero no se convierta en mecanica. Con la
+comilla pegada, **ninguno casaba**: la linea pasaba a texto narrativo y la regla se perdia sin dar
+error. Afectaba a TODAS las lineas mecanicas de TODOS los objetos custom -- `CA +1`, `Fuerza +2`,
+`Dano extra 1d6 fuego` --, no solo a la CA.
+
+`StripWrappingQuotes` quita la comilla inicial y la final por separado (recta, simple y
+tipografica), y **solo para intentar leer la regla**: el texto narrativo conserva las suyas.
+
+Sintoma con el que se encontro: unas botas verdes con `"CA +1"` no movian la CA ni un punto. El
+diagnostico `/harford debug run ca` las listaba como `Feet  Botas de Conrad  CA +0` -- resueltas,
+con nombre, pero sin reglas.
+
+**La rareza de una pieza de armadura tampoco daba CA** si el objeto custom no venia con clase
+"Armadura" de WoW. `ResolveCategory` mira la clase declarada, y un item de Epsilon puede no
+traerla. Ahora el bonus por calidad acepta tambien el HUECO (`ARMOR_EQUIPLOC`: cabeza, hombros,
+pecho, tunica, cintura, piernas, pies, muneca, manos, capa). Anillos, abalorios y cuello quedan
+FUERA a proposito: su rareza no es una pieza de armadura y no debe dar CA.
+
 ## El avance por BLOQUES se retiro; los bloques se quedan (2026-08-27)
 
 Hubo un segundo modo de avanzar el turno: en vez de ir de criatura en criatura, iba de **bloque en

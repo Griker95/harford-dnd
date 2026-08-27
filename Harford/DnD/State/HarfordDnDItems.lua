@@ -558,6 +558,35 @@ local function ScanTooltipLines(itemLink)
     return lines
 end
 
+-- Las comillas que envuelven una linea entera se quitan antes de leerla. El editor de objetos de
+-- Epsilon guarda la descripcion entrecomillada, asi que en el tooltip sale literalmente `"CA +1"`
+-- -- y los patrones estan anclados a la linea COMPLETA, asi que la comilla final los rompia y la
+-- regla se perdia sin avisar: la linea pasaba a ser texto narrativo.
+local COMILLA_ABRE = string.char(226, 128, 156)
+local COMILLA_CIERRA = string.char(226, 128, 157)
+
+-- Quita la comilla del principio y la del final, cada una por su cuenta. El editor de objetos de
+-- Epsilon entrecomilla SIEMPRE la descripcion, asi que en el tooltip la primera linea empieza por
+-- comilla y la ultima acaba en comilla -- y si la descripcion es de una sola linea, las dos. Los
+-- patrones de regla estan anclados a la linea COMPLETA, de modo que cualquiera de las dos los
+-- rompia y la regla se perdia en silencio: la linea pasaba a ser texto narrativo. Esto afectaba a
+-- TODAS las lineas mecanicas de TODOS los objetos custom, no solo a la CA.
+--
+-- Solo se usa para INTENTAR leer la regla; el texto narrativo conserva sus comillas.
+local function StripWrappingQuotes(value)
+    value = tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
+    for _, comilla in ipairs({ '"', "'", COMILLA_ABRE }) do
+        if value:sub(1, #comilla) == comilla then value = value:sub(#comilla + 1) break end
+    end
+    for _, comilla in ipairs({ '"', "'", COMILLA_CIERRA }) do
+        if #value >= #comilla and value:sub(-#comilla) == comilla then
+            value = value:sub(1, #value - #comilla)
+            break
+        end
+    end
+    return (value:gsub("^%s+", ""):gsub("%s+$", ""))
+end
+
 local function ResolveRuleLabel(label)
     local normalized = NormalizeLabel(label)
     if ABILITY_ALIASES[normalized] then return "ability", ABILITY_ALIASES[normalized] end
@@ -745,7 +774,8 @@ local function ParseTooltipRules(lines)
         if extraDice then
             parsed = AddExtraDamageRule(rules, extraDice, extraType)
         end
-        local label, sign, amount = line:match("^%s*(.-)%s*([%+%-])%s*(%d+)%s*$")
+        local sinComillas = StripWrappingQuotes(line)
+        local label, sign, amount = sinComillas:match("^%s*(.-)%s*([%+%-])%s*(%d+)%s*$")
         if not parsed and label and sign and amount then
             label = label:gsub("[:：]+$", "")
             local kind, key = ResolveRuleLabel(label)
@@ -757,7 +787,7 @@ local function ParseTooltipRules(lines)
             end
         end
         if not parsed then
-            local baseLabel, baseAmount = line:match("^%s*(.-)%s+(%d+)%s*$")
+            local baseLabel, baseAmount = sinComillas:match("^%s*(.-)%s+(%d+)%s*$")
             local normalized = NormalizeLabel(baseLabel)
             if baseAmount and (normalized == "ca" or normalized == "armadura" or normalized == "clasearmadura") then
                 rules.armorBase = math.max(tonumber(rules.armorBase) or 0, tonumber(baseAmount) or 0)
@@ -789,6 +819,14 @@ local function ParseTooltipRules(lines)
     end
     return rules, description
 end
+
+-- Huecos que llevan armadura de verdad. Anillos, abalorios y cuello quedan fuera a proposito: su
+-- rareza no es una pieza de armadura y no debe dar CA.
+local ARMOR_EQUIPLOC = {
+    INVTYPE_HEAD = true, INVTYPE_SHOULDER = true, INVTYPE_CHEST = true, INVTYPE_ROBE = true,
+    INVTYPE_WAIST = true, INVTYPE_LEGS = true, INVTYPE_FEET = true, INVTYPE_WRIST = true,
+    INVTYPE_HAND = true, INVTYPE_CLOAK = true,
+}
 
 local function ResolveCategory(itemClass, itemSubClass, equipLoc)
     if equipLoc == "INVTYPE_SHIELD" or itemSubClass == "Escudos" then return "escudo" end
@@ -915,7 +953,10 @@ local function ResolveFromClient(itemLink)
     local qb = QUALITY_BONUS[tonumber(effectiveQuality) or 0]
     if qb then
         resolved.qualityBonus = qb
-        if category == "escudo" or category == "armadura" or equipLoc == "INVTYPE_SHIELD" then
+        -- Vale el HUECO, no solo la clase que declare WoW: un objeto custom de Epsilon puede venir
+        -- sin clase "Armadura" y aun asi ser unas botas, y entonces su rareza no daba CA ninguna.
+        if category == "escudo" or category == "armadura" or equipLoc == "INVTYPE_SHIELD"
+            or ARMOR_EQUIPLOC[tostring(equipLoc or "")] then
             rules.armorClass = (tonumber(rules.armorClass) or 0) + qb
             rules.list[#rules.list + 1] = { kind = "qualityBonus", target = "armorClass", value = qb }
         elseif resolved.weapon then

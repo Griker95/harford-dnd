@@ -50,15 +50,30 @@ PAGINA = os.path.join(BASE, 'yunque.html')
 # 24 px = 6,0 MB de pagina | 28 px = 7,6 | 32 px = 9,7 | 50 px = 20,6, que NO CABE en el
 # limite de 16 MB del artefacto. A 50 px hay que quedarse en unos 9.000 iconos.
 LADO = 50
-CUPO = 9000
+CUPO = 14400   # entran los 13.086 custom enteros
 PREFIJOS = ('inv_', 'trade_', 'item_')
 
 
 def nombresDelCatalogo():
-    filas = csv.DictReader(io.open(CATALOGO, encoding='utf-8'), delimiter=';')
-    return sorted({f['nombre'].lower() for f in filas
-                   if f.get('estado') == 'extraido'
-                   and f['nombre'].lower().startswith(PREFIJOS)})
+    """Devuelve (custom, base). Van separados porque no se filtran igual.
+
+    Los CUSTOM entran todos, se llamen como se llamen: son arte hecho a medida para este
+    servidor y no hay donde buscarlos si faltan. Filtrarlos por prefijo dejaba fuera 3.793
+    -- `inv-sword_53` con guion, `custom_*`, `smite_*`, `ivn_*` (un `inv` mal escrito)...
+
+    A los BASE si se les aplica el prefijo: son los de Blizzard y ahi `spell_`/`ability_` es
+    arte de hechizo, no de objeto, y solo estorba al buscar.
+    """
+    custom, base = set(), set()
+    for f in csv.DictReader(io.open(CATALOGO, encoding='utf-8'), delimiter=';'):
+        if f.get('estado') != 'extraido':
+            continue
+        n = f['nombre'].lower()
+        if f.get('tipo') in ('custom', 'addon'):
+            custom.add(n)
+        elif n.startswith(PREFIJOS):
+            base.add(n)
+    return sorted(custom), sorted(base)
 
 
 def usadosPorLaLista():
@@ -78,9 +93,10 @@ def main():
     if '--lado' in sys.argv:
         lado = int(sys.argv[sys.argv.index('--lado') + 1])
 
-    catalogo = nombresDelCatalogo()
+    custom, base = nombresDelCatalogo()
     usados = usadosPorLaLista()
-    print("Catalogo util:            %d" % len(catalogo))
+    print("Custom y de addon:        %d  (entran todos)" % len(custom))
+    print("De Blizzard utiles:       %d" % len(base))
     print("Usados por los objetos:   %d" % len(usados))
 
     # Primero los que ya se usan. El resto NO por orden alfabetico: asi solo entraba el
@@ -96,7 +112,13 @@ def main():
 
     for n in usados:
         mete(n)
-    resto = [n for n in catalogo if n not in vistos]
+    # Los custom van DESPUES de los usados y ANTES que los de Blizzard: si hay que recortar,
+    # que se recorte de lo que se puede mirar en cualquier base de datos de WoW.
+    for n in custom:
+        mete(n)
+        if cupo and len(orden) >= cupo:
+            break
+    resto = [n for n in base if n not in vistos]
     if cupo and len(resto) > cupo - len(orden) > 0:
         paso = len(resto) / float(cupo - len(orden))
         resto = [resto[int(i * paso)] for i in range(cupo - len(orden))]

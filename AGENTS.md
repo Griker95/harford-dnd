@@ -2920,11 +2920,18 @@ definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la
      4,5 MB de base64 a blob son 28 ms, asi que el tamano de la hoja no penaliza en runtime.
    - **El tamano del icono es `--lado` y la pagina se ajusta sola**: celdas, huecos y los
      tres previsualizadores salen de `HOJA.lado`, no van fijos en el CSS.
+   - **Los CUSTOM entran todos, con el nombre que tengan.** Filtrarlos por prefijo
+     `inv_/trade_/item_` dejaba fuera 3.793 -- `inv-sword_53` con GUION, `custom_*`,
+     `smite_*`, `ivn_*` (un `inv` mal escrito), `racial_*`. Son arte propio del servidor y no
+     hay donde buscarlos si faltan, asi que van sin filtro y con prioridad en el cupo: si
+     hay que recortar, se recorta de lo de Blizzard. El prefijo se sigue aplicando SOLO a
+     los `base`, donde `spell_`/`ability_` es arte de hechizo y estorba. Por lo mismo,
+     `aIcono()` conserva el guion.
    - **El lado y el cupo se compran el uno al otro**, porque la hoja crece con el CUADRADO.
-     Medido con el catalogo entero (18.830): 24 px = 6,0 MB de pagina | 28 px = 7,6 |
-     32 px = 9,7 | **50 px = 20,6, que NO CABE** en los 16 MB del artefacto ni bajando la
-     calidad al minimo (15,3). Por eso a 50 px el cupo baja a 9.000 y la pagina queda en
-     8,8 MB. El buscador por nombre sigue cubriendo los 20.447.
+     Medido: a 50 px, 9.000 iconos = 9,1 MB de pagina y 14.400 = 15,5 MB; a 44 px esos
+     14.400 son 12,8 y a 40 px, 11,2. El ajuste actual (50 px / 14.400) mete los 13.086
+     custom enteros y deja la pagina a 0,5 MB del limite: **cualquier crecimiento del
+     catalogo obliga a bajar el lado o el cupo**. El buscador por nombre cubre 27.024.
    - **La hoja se monta CUADRADA**: WebP no admite mas de 16.383 px por lado, y una tira
      estrecha y muy alta se pasa en cuanto crece el icono -- a 50 px con ancho fijo salian
      31.400 px de alto y el codificador fallaba. `columnas = ceil(sqrt(n))`.

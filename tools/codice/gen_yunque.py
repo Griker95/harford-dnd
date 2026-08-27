@@ -33,10 +33,18 @@ def main():
     if not os.path.exists(ICONOS):
         print("No existe %s" % ICONOS)
         return 1
-    filas = list(csv.DictReader(io.open(ICONOS, encoding='utf-8'), delimiter=';'))
-    todos = [f['nombre'] for f in filas if f.get('estado') == 'extraido']
-    nombres = sorted({n.lower() for n in todos if n and n.lower().startswith(PREFIJOS)})
-    print("Iconos en el catalogo: %d" % len(todos))
+    # Los CUSTOM entran todos, con el nombre que tengan: son arte propio del servidor y no
+    # hay donde buscarlos. A los de Blizzard si se les pide el prefijo, porque `spell_` y
+    # `ability_` son arte de hechizo y solo estorban.
+    nombres = set()
+    for f in csv.DictReader(io.open(ICONOS, encoding='utf-8'), delimiter=';'):
+        if f.get('estado') != 'extraido':
+            continue
+        n = f['nombre'].lower()
+        if f.get('tipo') in ('custom', 'addon') or n.startswith(PREFIJOS):
+            nombres.add(n)
+    nombres = sorted(nombres)
+    print("Iconos del catalogo (custom incluidos): %d" % len(nombres))
     print("   utiles para objetos: %d" % len(nombres))
 
     pagina = io.open(PAGINA, encoding='utf-8').read()

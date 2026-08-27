@@ -3278,7 +3278,9 @@ local function BookButtonOnEnter(self)
     -- contenido es el listado, y "Pasiva" solo anade una linea vacia de informacion.
     -- Ni en los de ELECCION: lo que importa de ellos es que se eligio, no que sean pasivos.
     if not (API.IsAggregatedFeature(self.feature) or self.feature.choice) then
-        local col = K.BOOK_CAT_COLOR[cat] or { 0.6, 0.8, 1 }
+        local col = (HarfordCharacterBook.CategoryColor
+            and HarfordCharacterBook.CategoryColor(cat, self.feature))
+            or K.BOOK_CAT_COLOR[cat] or { 0.6, 0.8, 1 }
         GameTooltip:AddLine(catTxt, col[1], col[2], col[3])
     end
     local useText, useState = FeatureUseTooltipText(self.feature)
@@ -4477,7 +4479,9 @@ RefreshBook = function()
                 sub = sub .. " |cff888888|||r " .. FeatureUseCompactText(item.feature)
             end
             b.sub:SetText(sub)
-            local col = K.BOOK_CAT_COLOR[cat] or { 0.82, 0.82, 0.82 }
+            local col = (HarfordCharacterBook.CategoryColor
+                and HarfordCharacterBook.CategoryColor(cat, item.feature))
+                or K.BOOK_CAT_COLOR[cat] or { 0.82, 0.82, 0.82 }
             if pendingChoice then
                 b.sub:SetTextColor(1, 0.25, 0.25)
             elseif useExhausted then

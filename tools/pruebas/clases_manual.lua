@@ -578,9 +578,18 @@ local sueltos = FEATS.GetFeatTraits({ unaDote.id })
 local agrupada = FEATS.GetFeatAbilities({ unaDote.id })
 chk("suelta da un rasgo por cada cosa", #sueltos, #(unaDote.traits or {}))
 chk("agrupada da UNA", #agrupada, 1)
--- Con el prefijo "Dote:": en una lista de treinta habilidades, el nombre solo no dice de donde
--- sale la entrada.
-chk("y se llama como la dote", agrupada[1] and agrupada[1].feature.name, "Dote: " .. unaDote.name)
+-- El NOMBRE de la dote a secas. El prefijo "Dote:" sobraba: lo que es se dice en la etiqueta de
+-- categoria, debajo, como el resto de habilidades -- ninguna se llama "Pasiva: Vision oscura".
+chk("y se llama como la dote", agrupada[1] and agrupada[1].feature.name, unaDote.name)
+-- Y se marca como dote, que es lo que hace que su etiqueta diga "Dote" y lleve su color en vez de
+-- los de la mecanica que tenga por debajo.
+chk("y queda marcada como dote", agrupada[1] and agrupada[1].feature.esDote, true)
+local libro = io.open("Harford/Character/HarfordCharacterBook.lua"):read("*a")
+chk("la etiqueta lo respeta",
+    libro:find("if feature and feature.esDote then return API.CAT_LABEL.dote end", 1, true) ~= nil, true)
+-- El verde azulado que los perfiles TRP3 llevan usando para las dotes (`{col:008c7f}`).
+chk("y el color tambien",
+    libro:find("function API.CategoryColor(cat, feature)", 1, true) ~= nil, true)
 -- Dentro tiene que estar TODO lo que hace, o agrupar seria perder informacion.
 local cuerpo = agrupada[1] and agrupada[1].feature.description or ""
 local dentro = 0

@@ -3248,7 +3248,11 @@ Dos cosas distintas que fallaban a la vez:
 
 1. **`GetFeatTraits` devuelve los rasgos sueltos** y el Libro los pintaba como habilidades
    independientes: "Mago de batalla" salia como tres entradas y la dote no aparecia por su nombre.
-   `GetFeatAbilities` devuelve **una entrada por dote**, titulada `Dote: <nombre>`, con la
+   `GetFeatAbilities` devuelve **una entrada por dote**, titulada con el NOMBRE de la dote a
+   secas --el prefijo `Dote:` sobraba: lo que es se dice en la etiqueta de categoria, como en el
+   resto (ninguna se llama `Pasiva: Vision oscura`)--, marcada con `esDote = true` para que su
+   etiqueta diga **Dote** y lleve el verde azulado de los perfiles TRP3 (`{col:008c7f}`) en vez del
+   color de la mecanica que tenga por debajo. Con la
    descripcion y debajo cada rasgo. Agrupar solo vale porque **ningun rasgo de dote es accionable**
    -- no hay uno con `cast`, `uses` ni `actionKind` -- y la suite lo comprueba: el dia que lo haya,
    cae. `GetFeatTraits` se queda para el motor de efectos y el About, que los necesitan uno a uno.

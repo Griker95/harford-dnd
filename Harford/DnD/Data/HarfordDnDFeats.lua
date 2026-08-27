@@ -650,7 +650,11 @@ function API.GetFeatAbilities(featIds)
                     id = featDef.id,
                     -- Con el prefijo: en una lista de treinta habilidades, "Mago de batalla" no
                     -- dice de donde sale. "Dote: Mago de batalla" si.
-                    name = "Dote: " .. tostring(featDef.name or featDef.id),
+                    -- El NOMBRE de la dote a secas. El prefijo "Dote: " sobraba: lo que es se
+                    -- dice en la etiqueta de categoria, debajo, como el resto de habilidades --
+                    -- ninguna se llama "Pasiva: Vision oscura".
+                    name = tostring(featDef.name or featDef.id),
+                    esDote = true,
                     icon = featDef.icon,
                     type = "pasivo",
                     description = table.concat(partes, "\n\n"),

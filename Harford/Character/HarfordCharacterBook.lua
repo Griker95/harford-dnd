@@ -129,6 +129,7 @@ API.CAT_LABEL = {
     poder     = "Palabra",
     absolution = "Absolucion",
     acompanante = "Criatura",
+    dote      = "Dote",
 }
 -- Colores de categoria. El subtexto del boton lleva CONTORNO negro (OUTLINE) para leerse sobre
 -- el pergamino con textura, asi que usamos tonos VIVOS (un color apagado con contorno se ve sucio).
@@ -144,11 +145,17 @@ API.CAT_COLOR = {
     poder     = { 0.78, 0.72, 1.00 },
     absolution = { 1.00, 0.62, 0.30 },
     acompanante = { 0.72, 0.90, 0.62 },
+    -- El verde azulado que los perfiles TRP3 llevan usando para las dotes (`{col:008c7f}`),
+    -- aclarado para que se lea con contorno sobre el pergamino.
+    dote      = { 0.20, 0.78, 0.70 },
 }
 
 -- Etiqueta visible de la categoria. "activo" se desglosa en "Accion" o "Adicional" segun el
 -- coste de accion: el libro indica "Accion adicional" en la descripcion de las de bonus action.
 function API.CategoryLabel(cat, feature)
+    -- Una DOTE se dice que es una dote, aunque por dentro sea pasiva: es lo que el jugador busca
+    -- en la lista, y es el unico dato que no puede deducir del nombre.
+    if feature and feature.esDote then return API.CAT_LABEL.dote end
     -- Una maniobra declarada como tal en el libro se etiqueta como maniobra aunque su mecanica
     -- sea la de dano condicional: para el jugador son lo mismo (Carga, Desarme, Golpe heroico).
     if cat == "al_accion" and feature and feature.type == "maniobra" then
@@ -162,6 +169,13 @@ function API.CategoryLabel(cat, feature)
         return "Accion"
     end
     return API.CAT_LABEL[cat] or "Pasiva"
+end
+
+-- Color de la categoria, con la misma excepcion: una dote se pinta con su color y no con el de
+-- la mecanica que tenga por debajo.
+function API.CategoryColor(cat, feature)
+    if feature and feature.esDote then return API.CAT_COLOR.dote end
+    return API.CAT_COLOR[cat]
 end
 
 -- ¿La habilidad parece magia (conjuro/truco/mana...)? El resumen de rasgos del panel las

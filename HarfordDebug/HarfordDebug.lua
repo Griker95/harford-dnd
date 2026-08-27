@@ -1756,6 +1756,37 @@ API.RegisterCommand("combate", function()
     -- El DM tiene mas margen porque su copia es la buena y nadie se la devuelve.
     Print("  mandas: " .. (mando and "|cff88ff88si|r (limite 4 h)" or "no (limite 15 min)"))
 
+    -- Quien deberia estar iluminado. En BANDOS lo decide `activeBando`; en individual,
+    -- `activeIndex`. Son variables distintas para la misma pregunta, y mirar la que no es deja la
+    -- marca clavada donde estaba.
+    Print("--- a quien le toca ---")
+    Print("  modo: |cffffcc00" .. (store.modoBandos and "bandos" or "individual") .. "|r")
+    if store.modoBandos then
+        local i = tonumber(store.activeBando) or 0
+        local bando = i >= 1 and T.BANDOS and T.BANDOS[i] or nil
+        Print("  activeBando: " .. tostring(i) .. " -> " .. tostring(bando or "ninguno")
+            .. "   fase: " .. tostring(store.faseBando or "-"))
+        if not bando then
+            Print("  |cffff5555Sin bando activo|r: nada que iluminar. Dale a Siguiente.")
+        end
+    else
+        Print("  activeIndex: " .. tostring(store.activeIndex or 0))
+    end
+    for i, e in ipairs(store.entries or {}) do
+        local suyo = T.GetBando and T.GetBando(e) or "?"
+        local marcada
+        if store.modoBandos then
+            local j = tonumber(store.activeBando) or 0
+            local bando = j >= 1 and T.BANDOS and T.BANDOS[j] or nil
+            marcada = bando ~= nil and tostring(e.kind or "") ~= "round" and suyo == bando
+        else
+            marcada = (i == store.activeIndex)
+        end
+        Print(string.format("  %d. %-18s kind=%-8s bando=%-10s %s", i,
+            tostring(e.name or "?"), tostring(e.kind or "?"), tostring(suyo),
+            marcada and "|cff88ff88<- ACTIVA|r" or ""))
+    end
+
     local p = T.ultimaPurga
     Print("--- la ultima limpieza ---")
     if not p then

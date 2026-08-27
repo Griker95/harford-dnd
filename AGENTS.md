@@ -2892,6 +2892,26 @@ y sigue holgado: el peor caso son 169 caracteres de 249. Lo que sigue SIN enviar
 0..7 no esta verificado y equivocarlo solo afecta a donde se envaina, asi que se deja hasta
 poder comprobarlo en juego.
 
+**Yunque** (`tools/codice/yunque.html`, generado por `gen_yunque.py`): pagina suelta para
+definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la ordenan:
+
+1. **Los campos se separan por naturaleza.** Los que se convierten en un `.forge item set …`
+   van juntos y marcados en verdin; los que solo ordenan la lista de Harford (profesion,
+   papel, clave) van aparte en cobre. No anadir un campo que no caiga claramente en uno de
+   los dos lados.
+2. **El icono se valida contra el catalogo real** (19.347 nombres de `epsilon_icons.json`,
+   que trae fichas `{fdid,name,path}`, no cadenas). Un icono inexistente NO borra la textura
+   anterior: el objeto hereda la del hueco que ocupaba antes y no se nota hasta verlo en
+   juego. La pagina avisa antes. Ademas normaliza lo que se pegue -- ruta, extension,
+   mayusculas -- a la forma que acepta el comando.
+
+**Merchant**: los catalogos de vendedor NO son comandos de servidor. `Epsilon_Merchant`
+guarda cada uno en el vault de la fase con la clave `VENDOR_DATA_<merchantID>`, troceado por
+`SetPhaseData`, y cada articulo es un array posicional `{ itemID, precio, tamanoPila,
+moneda }` (moneda -1 = cobre). Para cargar un catalogo se rellena
+`EPSILON_VENDOR_DATA[merchantID]` y se llama a `Epsilon_Merchant_SaveVendor()`. Harford ya
+engancha `BuyEpsilon_MerchantItem`/`SellEpsilon_MerchantItem` desde `HarfordDnDEconomy`.
+
 **Regenerar cuando cambian las fuentes**: `tools/codice/actualizar_itemforge.py [--aplicar]`
 encadena las cinco etapas en el orden correcto: (1) VUELTA, lee los ids forjados de las
 SavedVariables del juego y prepara las lineas para el registro; (2) WOWHEAD, vuelca calidad,

@@ -1696,10 +1696,18 @@ local function RefreshSheet()
         and HarfordDnDFeatureEffects.HasFlag("initiativeProfBonus", name) then
         initBonus = initBonus + pb
     end
-    local manualCA = tonumber(GetProfileValue("ArmorClass", 10)) or 10
-    local itemCA = HarfordDnDItems and HarfordDnDItems.GetEquippedArmorClass and HarfordDnDItems.GetEquippedArmorClass(name) or nil
-    local featCA = (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus and HarfordDnDFeatureEffects.GetBonus("armorClass", nil, name)) or 0
-    local ca = math.floor(math.max(manualCA, tonumber(itemCA) or 0) + featCA)
+    -- UNA sola fuente para la CA. Aqui se derivaba por su cuenta --`max(CA guardada, CA de la
+    -- armadura) + bonus`-- y eso contaba el bonus DOS veces: la CA guardada ya es la EFECTIVA, que
+    -- escribe `RefreshArmorClassBoxes` desde `ComputeSelfArmorClass`, y esa ya lleva los bonus de
+    -- equipo y de rasgos dentro. Un +1 de botas salia 14 en la ficha y 15 aqui.
+    local ca
+    if not IsInspecting() and HarfordDnDCombat and HarfordDnDCombat.ComputeSelfArmorClass then
+        -- En local se calcula al momento: la CA guardada solo se refresca al abrir la ficha, y a
+        -- este panel se puede llegar sin haber pasado por ella.
+        ca = HarfordDnDCombat.ComputeSelfArmorClass()
+    end
+    -- Inspeccionando a otro, su CA llega ya calculada en su foto: no hay nada que recalcular aqui.
+    ca = math.floor(tonumber(ca) or tonumber(GetProfileValue("ArmorClass", 10)) or 10)
     local hpCur = HarfordDnDResources and ResourceValue(HarfordDnDResources.CurKey("health")) or 0
     local hpMax = HarfordDnDResources and ResourceValue(HarfordDnDResources.MaxKey("health")) or 0
     local speed

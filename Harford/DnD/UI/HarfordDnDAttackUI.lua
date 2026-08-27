@@ -442,7 +442,15 @@ end
 -- Metros que puede recorrer este turno, con el doble de `Correr` ya aplicado. Lo de fuera no puede
 -- calcularlo por su cuenta: `Correr` vive aqui.
 function API.GetTurnMovementMax()
-    return API.TurnMovementMax or 0
+    -- Se CALCULA aqui, no se lee de lo que dejo el seguimiento. Antes devolvia `API.TurnMovementMax`
+    -- --un efecto secundario de `MaximoDelTurno`, que solo corre con la ficha montada--, asi que
+    -- quien no hubiera abierto la ficha en esa sesion recibia 0 y la barra de movimiento no se
+    -- pintaba nunca. Un dato que depende de que otro haya pasado por ahi no es un dato.
+    local base = (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
+        and HarfordDnDCalc.GetTurnMovement()) or 0
+    -- `Correr` dobla el tope de ESTE turno; vive en el seguimiento porque no es una propiedad del
+    -- personaje, pero el tope tiene que reflejarlo se pregunte desde donde se pregunte.
+    return API.DashActive and (base * 2) or base
 end
 
 function API.CreateTurnEconomyLabel(opts)
@@ -560,6 +568,7 @@ function API.AttachMovementTracker(opts)
     -- una propiedad del personaje sino algo que hizo en este asalto.
     local corriendo = false
     function API.SetDashActive(activo)
+        API.DashActive = activo and true or nil
         corriendo = activo and true or false
         if API.RefreshMovement then API.RefreshMovement() end
     end
@@ -677,6 +686,7 @@ function API.AttachMovementTracker(opts)
         API.MovimientoSinMuro = nil
         -- Y si corriste el turno pasado, ese doble no se hereda.
         corriendo = false
+        API.DashActive = nil
         ultimoTiron = 0
         label:SetText("")
         -- Y arranca SOLO. Tener que acordarse de pulsar el boton cada turno es la friccion que

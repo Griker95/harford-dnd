@@ -177,6 +177,15 @@ ACTIVO = false
 R()
 chk2("sin turnos no se pinta", cont.mov:IsShown(), false)
 ACTIVO = true
+-- El tope se CALCULA, no se lee de lo que dejo el seguimiento de la ficha. Antes salia de un
+-- efecto secundario que solo ocurre con la ficha montada, asi que quien no la hubiera abierto en
+-- esa sesion recibia 0 y la barra no se pintaba nunca.
+local ataqueSrc = io.open("Harford/DnD/UI/HarfordDnDAttackUI.lua"):read("*a")
+chk2("el tope se calcula, no se hereda",
+    ataqueSrc:find("HarfordDnDCalc.GetTurnMovement()) or 0", 1, true) ~= nil, true)
+chk2("y `Correr` lo dobla se pregunte desde donde se pregunte",
+    ataqueSrc:find("return API.DashActive and (base * 2) or base", 1, true) ~= nil, true)
+ACTIVO = true
 
 if fallos > 0 then os.exit(1) end
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

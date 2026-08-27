@@ -203,6 +203,10 @@ local SKILL_ALIASES = {
 local RULE_LABELS = {
     ca = "armorClass",
     clasearmadura = "armorClass",
+    -- `NormalizeLabel` quita los espacios pero NO las palabras: "Clase de Armadura" queda
+    -- `clasedearmadura`, que no casaba con nada. Quien escribia el nombre completo en la
+    -- descripcion no obtenia bonus y no habia forma de saberlo desde el juego.
+    clasedearmadura = "armorClass",
     armadura = "armorClass",
     escudo = "armorClass",
     iniciativa = "initiative",

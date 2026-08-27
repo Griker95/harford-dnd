@@ -2645,6 +2645,9 @@ end
 if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
     HarfordAuthority.RegisterChangeListener("HarfordTurns", function()
         if TurnFrame and TurnFrame:IsShown() and RefreshFrame then RefreshFrame() end
+        -- Y la lista de un bloque, que tiene sus propios controles de DM colgados: sin esto,
+        -- ponerse `.ph dm` con la lista abierta no hacia aparecer los botones.
+        if HarfordTurnOrderAPI.RefreshBlockPanel then HarfordTurnOrderAPI.RefreshBlockPanel() end
     end)
 end
 

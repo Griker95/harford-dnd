@@ -468,7 +468,16 @@ function API.DefinitionFromAction(action)
     return NormalizeDefinition(action)
 end
 
+-- Un efecto de OBJETIVO UNICO no es un area, aunque use este motor para resolverse: se enruta por
+-- aqui para reusar la salvacion, el dano y la mitigacion del receptor, que es util. Lo que no
+-- aporta nada es rotularlo "(Area Objetivo)" en la linea de chat -- decir la forma sirve cuando hay
+-- forma que decir, y "Objetivo" no lo es.
+local function EsObjetivoUnico(def)
+    return def and def.shape == "other" and tostring(def.sizeText or "") == "Objetivo"
+end
+
 local function ShapeText(def)
+    if EsObjetivoUnico(def) then return "" end
     local labels = { cone = "Cono", sphere = "Radio", line = "Linea", square = "Cuadrado", rectangle = "Rectangulo", other = "Area" }
     local text = labels[def.shape] or "Area"
     if def.sizeText ~= "" then text = text .. " " .. def.sizeText end
@@ -780,7 +789,8 @@ RefreshFrame = function()
     if not session then frame:Hide(); return end
     frame.areaTitle:SetText(session.definition.label)
     local def = session.definition
-    local infoText = ShapeText(def) .. " - " .. (
+    local forma = ShapeText(def)
+    local infoText = ((forma ~= "") and (forma .. " - ") or "") .. (
         def.resolution == "save" and ("Salv. " .. def.saveAbility .. " CD " .. def.dc)
         or def.resolution == "auto" and "Auto-impacto"
         or def.resolution == "heal" and "Curacion"
@@ -1475,7 +1485,9 @@ local function BroadcastSharedRoll(session, details)
     HarfordDnDRolls.Broadcast({
         type = session.definition.resolution == "heal" and "heal" or "damage",
         label = (session.definition.resolution == "heal" and "Curacion " or "")
-            .. session.definition.label .. " (" .. ShapeText(session.definition) .. ")",
+            .. session.definition.label
+            .. ((ShapeText(session.definition) ~= "")
+                and (" (" .. ShapeText(session.definition) .. ")") or ""),
         total = first.amount,
         dice = details,
         modifiers = modifiers,

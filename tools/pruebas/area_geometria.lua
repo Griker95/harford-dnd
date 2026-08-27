@@ -242,4 +242,20 @@ chk("una forma desconocida se queda en el origen",
     Centro({ shape = "other" }, origen, puntoLejano).x, 0)
 chk("y no avisa de nada", CaeEnMi({ shape = "other" }, nil), false)
 
+-- ─── UN OBJETIVO UNICO NO SE ROTULA COMO AREA ───────────────────────────────
+-- Muchos efectos de objetivo unico se enrutan por este motor para reusar su salvacion, su dano y
+-- la mitigacion del receptor. Eso es util. Rotularlos "(Area Objetivo)" en el chat no: decir la
+-- forma sirve cuando hay forma que decir, y "Objetivo" no lo es.
+print("Un objetivo unico no se rotula como area")
+local areaSrc = io.open("Harford/DnD/Engine/HarfordDnDArea.lua"):read("*a")
+chk("se reconoce el objetivo unico",
+    areaSrc:find("local function EsObjetivoUnico(def)", 1, true) ~= nil, true)
+chk("y su rotulo se queda vacio",
+    areaSrc:find('if EsObjetivoUnico(def) then return "" end', 1, true) ~= nil, true)
+-- Y donde se pinta, un rotulo vacio no deja los parentesis colgando.
+chk("sin parentesis vacios",
+    areaSrc:find('and (" (" .. ShapeText(session.definition) .. ")") or ""', 1, true) ~= nil, true)
+chk("ni guiones sueltos",
+    areaSrc:find('((forma ~= "") and (forma .. " - ") or "")', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

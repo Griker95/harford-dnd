@@ -242,6 +242,17 @@ do
     -- por refresco seria una fuga silenciosa que solo se nota tras un rato largo de mesa.
     local function Decorar(p, entry, tarjetas, cuantas)
         panel, bloqueActual = p, entry
+        -- Tener HarfordAdmin instalado no es estar de DM: sin `.ph dm` la lista es de LECTURA,
+        -- igual que para quien no lo tiene. Antes los botones salian siempre y el que los pulsaba
+        -- se comia el rechazo del servidor sin saber por que.
+        if not EsAdmin() then
+            if p.anadir then p.anadir:Hide() end
+            if p.anadirGrupo then p.anadirGrupo:Hide() end
+            for _, f in ipairs(tarjetas) do
+                if f.quitar then f.quitar:Hide() end
+            end
+            return
+        end
         if not p.anadir then
             local ancho = API().GetBlockPanelWidth()
             p.anadir = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")

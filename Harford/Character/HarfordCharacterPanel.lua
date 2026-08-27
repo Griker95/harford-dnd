@@ -3230,24 +3230,45 @@ do
             prompt = "Cantidad a curar",
             acceptText = "Curar",
             max = available,
+            -- NO pasa por el motor de areas. Se enrutaba por el como "area de forma otra, tamano
+            -- Objetivo" para reusar su entrega, y eso arrastraba toda su presentacion: la linea
+            -- salia con "(Area Objetivo)" y con un EXITO de una tirada que aqui no existe --
+            -- Imposicion de manos no tira nada, tocas y curas.
+            --
+            -- Entrega directa, como la reserva de curacion del Monje, y UNA linea.
             apply = function(amount)
-                local opened, err = HarfordDnDArea.Open({
-                    title = feature.name, shape = "other", sizeText = "Objetivo",
-                    resolution = "heal", healingComponents = { { fixedAmount = amount } },
-                }, {
-                    sourceKind = "player",
-                    sourceGuid = UnitGUID and UnitGUID("player") or "",
-                    abilityFeature = feature,
-                    autoResolve = true,
-                    onCommit = function()
-                        if not (HarfordDnDFeatureUses and HarfordDnDFeatureUses.Spend)
-                            or not HarfordDnDFeatureUses.Spend(feature.id, GetProfileName(), amount) then
-                            return false, "No queda reserva suficiente para Imposicion de Manos."
-                        end
-                        return true
-                    end,
+                if not ObjetivoDeApoyoValido("curacion", feature.name) then return end
+                amount = math.max(1, math.min(math.floor(tonumber(amount) or 0), available))
+                -- Se gasta ANTES de entregar y se devuelve si la entrega falla, igual que la Fe.
+                if not (HarfordDnDFeatureUses and HarfordDnDFeatureUses.Spend
+                    and HarfordDnDFeatureUses.Spend(feature.id, GetProfileName(), amount)) then
+                    HarfordChat.Print("No queda reserva suficiente para " .. tostring(feature.name) .. ".")
+                    return
+                end
+                if not EntregarAObjetivo("health", amount, "curacion") then
+                    -- `Restore` devuelve UNO. Aqui puede haberse gastado media reserva, asi que se
+                    -- descuenta lo gastado a mano o el paladin perderia la diferencia.
+                    if HarfordDnDFeatureUses.GetSpent and HarfordDnDFeatureUses.SetSpent then
+                        local gastado = HarfordDnDFeatureUses.GetSpent(feature.id, GetProfileName())
+                        HarfordDnDFeatureUses.SetSpent(feature.id,
+                            math.max(0, gastado - amount), GetProfileName())
+                    end
+                    return
+                end
+                -- `ORIGEN [Imposicion de manos] OBJETIVO N curacion`, y nada mas. El nombre de
+                -- quien lo hace lo antepone el render de la tirada.
+                local link = (HarfordTRP3 and HarfordTRP3.GetAbilityChatLink
+                    and HarfordTRP3.GetAbilityChatLink(feature))
+                    or ("|cff66ccff[" .. tostring(feature.name) .. "]|r")
+                local quien = HarfordClassColors.UnitFullName("target")
+                HarfordDnDRolls.Broadcast({
+                    type = "info",
+                    label = link .. " " .. tostring(quien ~= "" and quien or "objetivo")
+                        .. " |cff66ff66" .. amount .. "|r curacion",
+                    targetUnit = "target",
                 })
-                if not opened then HarfordChat.Print(tostring(err or "No se pudo aplicar Imposicion de Manos.")) end
+                if RefreshGameUI then RefreshGameUI() end
+                if RefreshBook then RefreshBook() end
             end,
         })
     end

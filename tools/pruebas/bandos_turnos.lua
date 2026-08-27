@@ -386,4 +386,23 @@ chk("y a todos los jugadores de golpe",
     admin2:find("Anadir a todos los jugadores", 1, true) ~= nil, true)
 chk("listando a los que ya estan", admin2:find('sep.text = "Dentro ("', 1, true) ~= nil, true)
 
+-- ─── LA LISTA DE TARJETAS DEL BLOQUE ────────────────────────────────────────
+-- Los miembros no tienen tarjeta en la lista compartida -- ese es el modelo --, pero el DM
+-- necesita verlos. El panel es SUYO: vive en HarfordAdmin y no existe para nadie mas.
+print("El DM ve las tarjetas de cada bloque")
+chk("hay panel", admin2:find("function AbrirPanelDeBloque(entry)", 1, true) ~= nil, true)
+chk("y solo para el admin", admin2:find("if not EsAdmin() then return end", 1, true) ~= nil, true)
+-- El click izquierdo del core abre la ficha de la entrada; Admin se lo queda SOLO para los bloques.
+chk("el core ofrece el gesto",
+    turnos:find("function HarfordTurnOrderAPI.RegisterOnCardLeftClick", 1, true) ~= nil, true)
+chk("y solo se lo queda si es un bloque",
+    admin2:find('if k ~= "players" and k ~= "generic" then return false end', 1, true) ~= nil, true)
+chk("si nadie lo toma, el core hace lo de siempre",
+    turnos:find("if AlguienSeQuedaElClick(entry) then return end", 1, true) ~= nil, true)
+-- La vida sale de la unidad VIVA. Sin vista se dice, en vez de enseniar un numero viejo que nadie
+-- puede comprobar: la del bloque no se guarda en ninguna parte.
+chk("la vida se lee de la unidad viva", admin2:find("UnitHealth(unidad)", 1, true) ~= nil, true)
+chk("y se dice cuando no esta a la vista",
+    admin2:find('f.vida:SetText("sin vista")', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

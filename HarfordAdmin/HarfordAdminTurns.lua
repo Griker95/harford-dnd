@@ -193,6 +193,152 @@ local function AbrirMenu(entry, ancla)
     ToggleDropDownMenu(1, nil, menuTarjeta, ancla or "cursor", 0, 0)
 end
 
+-- ─── LA LISTA DE TARJETAS DE UN BLOQUE ───────────────────────────────────────
+-- Quien esta dentro de un bloque no tiene tarjeta en la lista compartida -- ese es el modelo: la
+-- mesa ve el bloque, no a sus quince miembros --, pero el DM necesita verlos y tocarlos. Este
+-- panel es esa vista, y es SUYA: vive en HarfordAdmin y no existe para nadie mas.
+--
+-- La vida sale de la unidad viva cuando esta a la vista; si no lo esta, se dice, en vez de enseniar
+-- un numero viejo que nadie puede comprobar.
+do
+    local panel, filas = nil, {}
+    local bloqueActual
+    local FILA_ALTO, PANEL_ANCHO, VISIBLES = 24, 240, 12
+    local RefrescarPanel
+
+    local function EnsureFila(i)
+        local f = filas[i]
+        if f then return f end
+        f = CreateFrame("Button", nil, panel)
+        f:SetSize(PANEL_ANCHO - 16, FILA_ALTO)
+        f.retrato = f:CreateTexture(nil, "ARTWORK")
+        f.retrato:SetSize(20, 20)
+        f.retrato:SetPoint("LEFT", f, "LEFT", 2, 0)
+        f.texto = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        f.texto:SetPoint("LEFT", f.retrato, "RIGHT", 6, 0)
+        f.texto:SetJustifyH("LEFT")
+        f.vida = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+        f.vida:SetPoint("RIGHT", f, "RIGHT", -20, 0)
+        f.quitar = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+        f.quitar:SetSize(18, 18)
+        f.quitar:SetPoint("RIGHT", f, "RIGHT", 2, 0)
+        filas[i] = f
+        return f
+    end
+
+    -- La unidad viva de un guid, si esta a la vista. Las mismas dos fuentes de siempre: el grupo y
+    -- las placas de nombre; no hay forma de mirar a alguien que no este en ninguna.
+    local function UnidadDe(guid)
+        for _, u in ipairs({ "target", "focus", "mouseover", "player" }) do
+            if UnitExists and UnitExists(u) and UnitGUID and UnitGUID(u) == guid then return u end
+        end
+        local n = (GetNumGroupMembers and GetNumGroupMembers()) or 0
+        local prefijo = (IsInRaid and IsInRaid()) and "raid" or "party"
+        for i = 1, n do
+            local u = prefijo .. i
+            if UnitExists and UnitExists(u) and UnitGUID(u) == guid then return u end
+        end
+        if C_NamePlate and C_NamePlate.GetNamePlates then
+            for _, placa in ipairs(C_NamePlate.GetNamePlates() or {}) do
+                local u = placa.namePlateUnitToken or placa.unit
+                if u and UnitGUID(u) == guid then return u end
+            end
+        end
+        return nil
+    end
+
+    local function CrearPanel()
+        if panel then return panel end
+        panel = CreateFrame("Frame", "HarfordAdminBlockFrame", UIParent, "BackdropTemplate")
+        panel:SetSize(PANEL_ANCHO, 30 + VISIBLES * FILA_ALTO + 12)
+        panel:SetFrameStrata("DIALOG")
+        panel:SetFrameLevel(520)
+        panel:SetClampedToScreen(true)
+        panel:SetMovable(true)
+        panel:EnableMouse(true)
+        panel:RegisterForDrag("LeftButton")
+        panel:SetScript("OnDragStart", panel.StartMoving)
+        panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
+        panel.borde = CreateFrame("Frame", nil, panel, "DialogBorderTemplate")
+        panel.borde:SetAllPoints(panel)
+        panel.titulo = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        panel.titulo:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -12)
+        panel.cerrar = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
+        panel.cerrar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
+        panel.cerrar:SetScript("OnClick", function() panel:Hide() end)
+        -- Solo mientras se ve: las placas y la vida disparan constantemente.
+        panel:SetScript("OnShow", function(self)
+            self:RegisterEvent("UNIT_HEALTH")
+            self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
+            self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
+            self:RegisterEvent("PLAYER_TARGET_CHANGED")
+            if RefrescarPanel then RefrescarPanel() end
+        end)
+        panel:SetScript("OnHide", function(self) self:UnregisterAllEvents() end)
+        panel:SetScript("OnEvent", function() if RefrescarPanel then RefrescarPanel() end end)
+        panel:Hide()
+        return panel
+    end
+
+    RefrescarPanel = function()
+        if not (panel and panel:IsShown() and bloqueActual) then return end
+        local T = API()
+        local dentro = T.GetBlockMembers(bloqueActual)
+        panel.titulo:SetText(tostring(bloqueActual.name or "Bloque")
+            .. "  |cff999999(" .. #dentro .. ")|r")
+        for i = 1, VISIBLES do
+            local m, f = dentro[i], EnsureFila(i)
+            if not m then f:Hide()
+            else
+                local unidad = UnidadDe(m.guid)
+                f.texto:SetText(tostring(m.name or "?"))
+                if m.jugador and HarfordClassColors and HarfordClassColors.UnitColorRGB and unidad then
+                    local r, g, b = HarfordClassColors.UnitColorRGB(unidad)
+                    if r then f.texto:SetTextColor(r, g, b) end
+                else
+                    f.texto:SetTextColor(0.9, 0.85, 0.7)
+                end
+                -- La vida sale de la unidad viva. Si no esta a la vista se dice, en vez de enseniar
+                -- un numero viejo que nadie puede comprobar.
+                if unidad and UnitHealth then
+                    f.vida:SetText(tostring(UnitHealth(unidad)) .. "/" .. tostring(UnitHealthMax(unidad)))
+                    f.vida:SetTextColor(0.6, 0.85, 0.6)
+                else
+                    f.vida:SetText("sin vista")
+                    f.vida:SetTextColor(0.5, 0.5, 0.5)
+                end
+                if unidad and SetPortraitTexture then
+                    SetPortraitTexture(f.retrato, unidad)
+                else
+                    f.retrato:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+                end
+                f.quitar:SetScript("OnClick", function()
+                    T.RemoveBlockMember(bloqueActual, m.guid)
+                    Print(tostring(m.name or "?") .. " sale de " .. tostring(bloqueActual.name) .. ".")
+                    RefrescarPanel()
+                end)
+                f:ClearAllPoints()
+                f:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -30 - (i - 1) * FILA_ALTO)
+                f:Show()
+            end
+        end
+    end
+
+    function AbrirPanelDeBloque(entry)
+        if not EsAdmin() then return end
+        CrearPanel()
+        -- Pulsar el mismo bloque cierra; otro CAMBIA sin cerrar, que es lo que se espera al ir
+        -- repasando categorias.
+        if panel:IsShown() and bloqueActual == entry then panel:Hide() return end
+        bloqueActual = entry
+        local ventana = API().GetFrame and API().GetFrame()
+        panel:ClearAllPoints()
+        if ventana then panel:SetPoint("TOPLEFT", ventana, "BOTTOMLEFT", 0, -6)
+        else panel:SetPoint("CENTER") end
+        panel:Show()
+    end
+end
+
 -- ─── INTERRUPTOR DE MODO ─────────────────────────────────────────────────────
 local function MontarBotonModo()
     local T = API()
@@ -233,6 +379,16 @@ do
         local T = API()
         if not T then return end
         T.OnCardRightClick = AbrirMenu
+        -- Click IZQUIERDO sobre un bloque: su lista de miembros. Sobre una criatura no se toca --
+        -- ahi el core abre su ficha, que es lo util.
+        if T.RegisterOnCardLeftClick then
+            T.RegisterOnCardLeftClick(function(entry)
+                local k = tostring(entry and entry.kind or "")
+                if k ~= "players" and k ~= "generic" then return false end
+                AbrirPanelDeBloque(entry)
+                return true
+            end)
+        end
         -- El boton necesita la ventana, que se crea al abrirla por primera vez. Se intenta ahora y
         -- se reintenta al abrirse: sin ticker, solo dos oportunidades reales.
         MontarBotonModo()

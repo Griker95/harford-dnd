@@ -28,6 +28,7 @@ local ultimoAvanceAjeno = { quien = nil, cuando = 0 }
 local avanceConfirmado = 0        -- sello del aviso ya visto, para dejar pasar el segundo clic
 local VENTANA_DOBLE_AVANCE = 4
 local SendStateTo   -- se asigna abajo; el manejador de mensajes la usa antes
+local AlguienSeQuedaElClick   -- idem: la tarjeta se crea antes que el API
 local AnnounceCombatStart   -- idem: la usa el manejador de TSTART
 local suppressBroadcast = false
 local broadcastPending = false
@@ -1998,6 +1999,8 @@ local function CreateCard(parent, index)
             return
         end
         local entry = store.entries[entryIndex]
+        -- Si nadie se lo queda, lo de siempre: la ficha de la entrada.
+        if AlguienSeQuedaElClick(entry) then return end
         Ficha.ShowEntrySheet(entry)
     end)
     SetFrameBackground(card)
@@ -2490,6 +2493,23 @@ end
 
 -- Click derecho sobre una tarjeta. Por defecto no hace nada.
 function HarfordTurnOrderAPI.OnCardRightClick(entry, ancla)
+end
+
+-- Click IZQUIERDO. A diferencia del derecho, aqui el core SI tiene comportamiento propio -- abrir
+-- la ficha de la entrada --, asi que HarfordAdmin se apunta y devuelve true para quedarselo.
+local alClickIzquierdo = {}
+function HarfordTurnOrderAPI.RegisterOnCardLeftClick(fn)
+    if type(fn) ~= "function" then return false end
+    alClickIzquierdo[#alClickIzquierdo + 1] = fn
+    return true
+end
+
+AlguienSeQuedaElClick = function(entry)
+    for _, fn in ipairs(alClickIzquierdo) do
+        local ok, tomado = pcall(fn, entry)
+        if ok and tomado then return true end
+    end
+    return false
 end
 
 -- Cuelga un control en la ventana de turnos. Se oculta solo cuando quien mira no es admin, igual

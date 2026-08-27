@@ -3485,6 +3485,15 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   **sin tocar el ancla de inicio**: sigues donde estas y en el mismo turno. No te MUEVE.
 - **`Profesiones` sale del menu de un jugador**: es su ficha, no una herramienta de mesa.
 
+## `Siguiente` pasa UN bloque (2026-08-27)
+
+- El avance por bandos tenia **dos fases por bloque** --empezarlo y cerrarlo-- asi que pasar de
+  Enemigos a Neutrales costaba DOS pulsaciones, y en medio la mesa se quedaba mirando un "cerrando
+  Enemigos" que no le dice nada a nadie. **Retirada**: un bloque por pulsacion, adelante y atras.
+- Lo que caducaba al CERRAR un bloque caduca ahora al EMPEZAR el siguiente: es el mismo instante.
+- La fase sigue viajando en el mensaje **por compatibilidad** con clientes anteriores, pero vale
+  siempre `inicio`. No reintroducir la fase de cierre.
+
 ## Unirse a un combate en curso (2026-08-27)
 
 - **Se sale FUERA de combate por defecto**: nadie entra solo porque haya una pelea en su raid. Al

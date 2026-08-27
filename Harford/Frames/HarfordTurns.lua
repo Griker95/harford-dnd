@@ -2087,17 +2087,16 @@ local function NextTurn()
     if store.modoBandos then
         local actual = tonumber(store.activeBando) or 0
         local bando, fase, nuevoAsalto
-        -- Si el bloque en curso solo ha empezado, lo siguiente es CERRARLO, no saltar al otro.
-        if actual >= 1 and store.faseBando == "inicio" then
-            bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"
-        else
-            local siguiente = SiguienteBandoConGente(actual)
-            if not siguiente then Print("No hay nadie en ningun bando.") return end
-            -- Dar la vuelta = asalto nuevo. Tambien al arrancar (`actual` 0), que es el asalto 1.
-            nuevoAsalto = (siguiente <= actual) or actual == 0
-            store.activeBando = siguiente
-            bando, fase = HarfordTurnOrderAPI.BANDOS[siguiente], "inicio"
-        end
+        -- UN bloque por pulsacion. Antes habia dos fases --empezarlo y cerrarlo-- asi que pasar de
+        -- Enemigos a Neutrales costaba DOS pulsaciones, y en medio la mesa se quedaba mirando un
+        -- "cerrando Enemigos" que no le dice nada a nadie. Lo que caducaba al cerrar un bloque
+        -- caduca ahora al empezar el siguiente, que es el mismo instante.
+        local siguiente = SiguienteBandoConGente(actual)
+        if not siguiente then Print("No hay nadie en ningun bando.") return end
+        -- Dar la vuelta = asalto nuevo. Tambien al arrancar (`actual` 0), que es el asalto 1.
+        nuevoAsalto = (siguiente <= actual) or actual == 0
+        store.activeBando = siguiente
+        bando, fase = HarfordTurnOrderAPI.BANDOS[siguiente], "inicio"
         store.faseBando = fase
         local turnSerial = AdvanceTurnSerial()
         -- Se cierra el asalto al volver al primer bando: es el unico punto del ciclo que significa
@@ -2142,16 +2141,12 @@ local function PrevTurn()
     if #store.entries == 0 then return end
 
     if store.modoBandos then
+        -- Y hacia atras igual: un bloque por pulsacion.
         local actual = tonumber(store.activeBando) or 1
-        local bando, fase
-        if store.faseBando == "fin" then
-            bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "inicio"
-        else
-            local anterior = AnteriorBandoConGente(actual)
-            if not anterior then Print("No hay nadie en ningun bando.") return end
-            store.activeBando = anterior
-            bando, fase = HarfordTurnOrderAPI.BANDOS[anterior], "fin"
-        end
+        local anterior = AnteriorBandoConGente(actual)
+        if not anterior then Print("No hay nadie en ningun bando.") return end
+        store.activeBando = anterior
+        local bando, fase = HarfordTurnOrderAPI.BANDOS[anterior], "inicio"
         store.faseBando = fase
         local turnSerial = AdvanceTurnSerial()
         MarkChanged()
@@ -3032,9 +3027,9 @@ do
             nombre = bando and (HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or bando) or "Sin empezar"
             -- La FASE importa tanto como el bando: "cierra Enemigos" y "empiezan Enemigos" son dos
             -- momentos distintos del mismo bloque, y desde fuera se confunden.
-            if bando then
-                detalle = (store.faseBando == "fin") and "cerrando el bloque" or "jugando"
-            end
+            -- Sin "fase": un bloque esta jugando o no esta. La fase de cierre se retiro porque
+            -- obligaba a pulsar `Siguiente` dos veces por bloque.
+            if bando then detalle = "jugando" end
         else
             local entrada = store.entries and store.entries[store.activeIndex or 0]
             nombre = entrada and tostring(entrada.name or "") or "Sin empezar"
@@ -3738,7 +3733,6 @@ function HarfordTurnOrderAPI.IsMyTurn()
         local indice = tonumber(store.activeBando) or 0
         local bando = indice >= 1 and HarfordTurnOrderAPI.BANDOS[indice] or nil
         if bando ~= "pjs" then return false end
-        if tostring(store.faseBando or "") == "fin" then return false end
         return HarfordTurnOrderAPI.AmIInCombat()
     end
     local entrada = store.entries and store.entries[store.activeIndex or 0]

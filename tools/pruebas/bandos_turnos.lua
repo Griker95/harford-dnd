@@ -259,9 +259,17 @@ chk("la salvacion de fin solo al cerrar", (D.EndSaveTicks("fin")), true)
 chk("nunca al abrir", (D.EndSaveTicks("inicio")), false)
 chk("y sin fases, contra el anterior", select(2, D.EndSaveTicks(nil)), "anterior")
 
-print("El avance pasa por las dos y avisa al tocar un bloque vivo")
-chk("cerrar antes de saltar",
-    turnos:find('bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"', 1, true) ~= nil, true)
+-- UN bloque por pulsacion. Hubo dos fases --empezarlo y cerrarlo-- y pasar de Enemigos a
+-- Neutrales costaba DOS pulsaciones, con la mesa mirando en medio un "cerrando Enemigos" que no le
+-- dice nada a nadie. Lo que caducaba al cerrar caduca al empezar el siguiente: es el mismo
+-- instante. La fase sigue viajando en el mensaje por compatibilidad, pero siempre vale "inicio".
+print("El avance pasa UN bloque por pulsacion")
+chk("no hay fase de cierre",
+    turnos:find('bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"', 1, true) == nil, true)
+chk("se salta directo al siguiente con gente",
+    turnos:find("local siguiente = SiguienteBandoConGente(actual)", 1, true) ~= nil, true)
+chk("y hacia atras igual",
+    turnos:find("local bando, fase = HarfordTurnOrderAPI.BANDOS[anterior], \"inicio\"", 1, true) ~= nil, true)
 chk("la fase viaja en el anuncio",
     turnos:find('tostring(store.faseBando or "inicio"),', 1, true) ~= nil, true)
 -- Y el asalto detras: sin el, quien vuelve no puede saber cuantos se perdio.
@@ -664,10 +672,10 @@ chk("al cambiar el estado",
     turnos:find("RefreshTurnMarker() end\n    ScheduleBroadcast", 1, true) ~= nil, true)
 chk("y al recibirlo de otro",
     turnos:find("RefrescarMarcadorTrasRecibir()", 1, true) ~= nil, true)
--- La FASE importa tanto como el bando: "cierra Enemigos" y "empiezan Enemigos" son dos momentos
--- distintos del mismo bloque y desde fuera se confunden.
-chk("y dice la fase, no solo el bando",
-    turnos:find('(store.faseBando == "fin") and "cerrando el bloque" or "jugando"', 1, true) ~= nil, true)
+-- Sin fase que contar: un bloque esta jugando o no esta. La fase de cierre se retiro porque
+-- obligaba a pulsar `Siguiente` dos veces por bloque.
+chk("un bloque activo esta jugando, y ya",
+    turnos:find('if bando then detalle = "jugando" end', 1, true) ~= nil, true)
 chk("se puede apagar", turnos:find('HarfordConfig.Get("turnmarker") == "off"', 1, true) ~= nil, true)
 -- ── LO QUE TE QUEDA, DENTRO DEL MARCADOR ────────────────────────────────────
 -- La barra de movimiento y las fichas vivian sueltas encima de la barra de accion. Es todo lo

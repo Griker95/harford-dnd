@@ -2159,6 +2159,16 @@ local function CreateCard(parent, index)
     card.targetText:SetTextColor(0.05, 0.85, 1.0)
     card.targetText:Hide()
 
+    -- Reordenar es SOLO de la ventana de turnos: mueve la entrada dentro de `store.entries`, y un
+    -- miembro de bloque no vive ahi. Por eso estos dos no van en el constructor comun.
+    card.moveLeft = MakeButton(card, "<", 18, 16, "TOPLEFT", card, "TOPLEFT", 3, -4, function()
+        MoveEntry(card.entryIndex or index, -1)
+    end)
+    card.moveLeft:Hide()
+    card.moveRight = MakeButton(card, ">", 18, 16, "TOPRIGHT", card, "TOPRIGHT", -20, -4, function()
+        MoveEntry(card.entryIndex or index, 1)
+    end)
+    card.moveRight:Hide()
     card.remove = MakeButton(card, "x", 16, 16, "TOPRIGHT", card, "TOPRIGHT", -2, -4, function()
         RemoveEntry(card.entryIndex or index)
     end)

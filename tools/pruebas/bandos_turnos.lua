@@ -487,6 +487,15 @@ chk("que apuntan a la entrada, no a una posicion",
 -- Sin mando, de LECTURA: se ve quien hay y no se le toca nada.
 chk("y sin mando no se tocan",
     turnos:find("f.minus:SetShown(mando)", 1, true) ~= nil, true)
+-- Toda pieza que el refresco toca tiene que EXISTIR. Al sacar los controles al constructor comun
+-- se llevaron por delante `moveLeft`/`moveRight`, y el refresco petaba en la primera tarjeta y
+-- dejaba la fila entera a medio pintar. Compilar no lo caza: son campos, no variables.
+print("La tarjeta tiene todas sus piezas")
+for _, pieza in ipairs({ "icon", "name", "init", "armorClass", "hp", "hpText", "minus", "plus",
+                         "remove", "moveLeft", "moveRight", "active", "reorder", "turn" }) do
+    chk("card." .. pieza, turnos:find("card." .. pieza .. " = ", 1, true) ~= nil, true)
+end
+
 -- Los mismos gestos que una tarjeta normal: izquierdo su ficha, derecho el menu.
 chk("responden al click como las de siempre",
     turnos:find("HarfordTurnOrderAPI.OnCardRightClick(m, self)", 1, true) ~= nil, true)

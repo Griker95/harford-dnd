@@ -3358,12 +3358,23 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   listener `RegisterMyTurnListener`, igual que Atlas. El boton queda para pararlo antes de tiempo
   (izquierdo) y para volver al ancla (derecho). Tener que acordarse de pulsarlo cada turno era la
   friccion que hacia que la cuenta no se llevara nunca.
-- **El limite es un MURO, no un aviso.** Al llegar al tope (`HarfordDnDCalc.GetTurnMovement`, x2 si
-  `Correr` esta activo) se captura el ancla en ese punto exacto y se avisa; si sigues andando mas
-  de 1.5 m por encima, `HarfordServerActions.WorldportSelf` te devuelve ahi. Enfriamiento de 2 s:
-  sin el, cada paso pediria un teleporte y el servidor se comeria una rafaga de `worldport`.
-- El ancla se olvida al empezar tu turno siguiente: volver a la del turno pasado te devolveria un
-  asalto entero atras.
+- **Se mide distinto segun quien se mueva.** Un JUGADOR tiene posicion: se resta donde estaba de
+  donde esta, que es el dato REAL. De una criatura POSEIDA no hay posicion que leer -- un NPC
+  poseido es el `pet` del cliente y `UnitPosition` solo habla del jugador --, asi que se INTEGRA su
+  velocidad (`GetUnitSpeed("pet") * 0.9144 * dt`). Es una estimacion, pero con la velocidad REAL:
+  Atlas da por buena la carrera base (7 yd/s) y con eso un ralentizado gasta su turno igual de
+  rapido que uno suelto.
+- **Un salto de mas de 5 m en una muestra no cuenta como paso.** Es un desplazamiento (el teleporte
+  de vuelta, un empujon) y sumarlo hacia que el tiron se pagase a si mismo y encadenara teleportes.
+- **DOS anclas, y hacen cosas distintas** (como en Atlas): la del INICIO del turno
+  (`API.TurnStartAnchor`), a la que se vuelve A MANO con click derecho en el boton -- deshace el
+  turno entero y pone el contador a cero --, y la del AGOTAMIENTO (`API.RecordedMovementAnchor`),
+  que es a donde te devuelve el muro. Las dos se olvidan al empezar el turno siguiente.
+- **El muro salta al SOLTAR la tecla, no mientras corres.** `hooksecurefunc` sobre
+  `MoveForwardStop`, `MoveBackwardStop`, `StrafeLeft/RightStop`, `TurnLeft/RightStop`,
+  `CameraOrSelectOrMoveStop` y `JumpOrAscendStart`. Antes era un `worldport` cada 0.75 s mientras
+  te movias: una rafaga de comandos y ademas se veia a trompicones. **`TurnOrActionStop` queda
+  FUERA a proposito** -- es el giro de camara con el raton, y girar la vista no es moverse.
 - `WorldportSelf` es el UNICO comando de Harford que mueve a alguien. No emite nada sin coordenadas
   validas Y mapa (`GetInstanceInfo`, no `C_Map`, que devuelve el id de la interfaz).
 

@@ -443,13 +443,46 @@ chk("y el ancla se olvida en tu turno",
 -- El salto de VUELTA no cuenta como que has andado. Al aterrizar el teleporte la muestra siguiente
 -- veia varios metros de golpe y los sumaba: el tiron se pagaba a si mismo, volvias a pasarte al
 -- instante y encadenabas teleportes.
-chk("un salto grande no cuenta como paso",
-    ataque:find("if distance > 5 then", 1, true) ~= nil, true)
--- Y el muro tiene que notarse EN el paso: margen corto y muestreo rapido.
-chk("el muro salta con margen corto",
-    ataque:find("totalMeters > tope + 0.3", 1, true) ~= nil, true)
+chk("un salto grande no cuenta como paso", ataque:find("if avance > 5 then", 1, true) ~= nil, true)
 chk("y se muestrea a 20 por segundo",
     ataque:find("local pollInterval = 0.05", 1, true) ~= nil, true)
+
+-- ── COMO SE MIDE, SEGUN QUIEN SE MUEVE ──────────────────────────────────────
+-- Un JUGADOR tiene posicion: se mide de donde estaba a donde esta, que es el dato real. De una
+-- criatura POSEIDA no hay posicion que leer (`UnitPosition` solo habla del jugador), asi que se
+-- integra su velocidad. Es una estimacion, pero es la unica via.
+print("El movimiento se mide distinto segun quien se mueva")
+chk("un NPC poseido es el `pet`", ataque:find('UnitExists("pet")', 1, true) ~= nil, true)
+chk("y se le integra la velocidad",
+    ataque:find("avance = v * trozo", 1, true) ~= nil, true)
+-- Con la velocidad REAL, no con la de carrera base: Atlas da por buena 7 yd/s y un ralentizado
+-- gasta su turno igual de rapido que uno suelto, que es mentira.
+chk("con su velocidad real",
+    ataque:find('GetUnitSpeed("pet")) or 0) * 0.9144', 1, true) ~= nil, true)
+chk("y el jugador sigue midiendose por posicion",
+    ataque:find("local x, y, z = GetPosition()", 1, true) ~= nil, true)
+
+-- ── EL MURO SALTA AL SOLTAR LA TECLA ────────────────────────────────────────
+-- Un teleporte cada 0.75 s mientras corres es una rafaga de comandos y ademas se ve a trompicones.
+-- Enganchando el soltar de cada tecla sale UN comando, y justo cuando has dejado de andar.
+print("El muro salta al soltar la tecla")
+chk("engancha las teclas de movimiento",
+    ataque:find('"MoveForwardStop", "MoveBackwardStop",', 1, true) ~= nil, true)
+-- Girar la camara con el raton NO es moverse: `TurnOrActionStop` queda fuera a proposito.
+chk("pero no el giro de camara",
+    ataque:find('"TurnOrActionStop"', 1, true) == nil, true)
+chk("y no se dispara sin haberse pasado",
+    ataque:find("if tope <= 0 or totalMeters <= tope + 0.3 then return end", 1, true) ~= nil, true)
+
+-- ── DOS ANCLAS, DOS COSAS DISTINTAS ─────────────────────────────────────────
+-- A la del INICIO se vuelve a mano, y deshace el turno entero. A la del AGOTAMIENTO te devuelve el
+-- muro. Con una sola, "volver" te dejaba en el punto donde se te acabo, que no es lo que quieres
+-- cuando te has colocado mal.
+print("Dos anclas de movimiento")
+chk("se guarda donde empiezas el turno",
+    ataque:find("API.TurnStartAnchor = CapturarAncla()", 1, true) ~= nil, true)
+chk("y volver ahi pone el contador a cero",
+    ataque:find("local ancla = API.TurnStartAnchor", 1, true) ~= nil, true)
 
 -- `Correr` dobla el tope de ESTE turno. Se guarda aparte del calculo de velocidad porque no es una
 -- propiedad del personaje sino algo que hizo en este asalto -- y por eso se apaga al empezar el

@@ -506,6 +506,21 @@ function API.AttachMovementTracker(opts)
         end)
     end
 
+    -- Se esta llevando a un NPC? Un NPC poseido es el `pet` del cliente. Es la UNICA situacion en
+    -- la que no se puede medir por posicion: `UnitPosition` solo habla del jugador, y de la
+    -- criatura poseida no devuelve nada.
+    local function LlevandoNpc()
+        return (UnitExists and UnitExists("pet")) and true or false
+    end
+
+    -- Velocidad REAL del NPC en metros por segundo. `GetUnitSpeed` da yardas/segundo y responde a
+    -- ralentizaciones y aceleraciones; dar por buena la carrera base (7 yd/s, que es lo que hace
+    -- Atlas) haria que un NPC ralentizado gastase su turno igual de rapido que uno suelto.
+    local function VelocidadMetrosNpc()
+        if not GetUnitSpeed then return 0 end
+        return (tonumber(GetUnitSpeed("pet")) or 0) * 0.9144
+    end
+
     local function GetPosition()
         if UnitPosition then
             local x, y, z = UnitPosition("player")
@@ -541,19 +556,6 @@ function API.AttachMovementTracker(opts)
         }
     end
 
-    local function VolverAlAncla()
-        local ancla = API.RecordedMovementAnchor
-        if not ancla then
-            HarfordChat.Print("No hay sitio al que volver: muevete y para el contador primero.")
-            return
-        end
-        if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then return end
-        local ok, err = HarfordServerActions.WorldportSelf(ancla, { addonName = "Harford" })
-        HarfordChat.Print(ok
-            and "Vuelves a donde terminaste tu movimiento."
-            or ("No se pudo volver: " .. tostring(err or "error desconocido")))
-    end
-
     -- `Correr` dobla el tope de ESTE turno. Se guarda aparte del calculo de velocidad porque no es
     -- una propiedad del personaje sino algo que hizo en este asalto.
     local corriendo = false
@@ -582,56 +584,45 @@ function API.AttachMovementTracker(opts)
     local function OnUpdate(_, delta)
         elapsed = elapsed + delta
         if elapsed < pollInterval then return end
+        local trozo = elapsed
         elapsed = 0
 
-        local x, y, z = GetPosition()
-        if not x then return end
-        if lastX then
+        local avance
+        if LlevandoNpc() then
+            -- De una criatura poseida no hay posicion que leer, asi que se INTEGRA su velocidad.
+            -- Es una estimacion, pero con la velocidad REAL, no con la de carrera base.
+            local v = VelocidadMetrosNpc()
+            if v <= 0 then return end
+            avance = v * trozo
+        else
+            -- Un JUGADOR si tiene posicion: se mide de donde estaba a donde esta. Eso es el dato
+            -- real, y para el jugador no hace falta estimar nada.
+            local x, y, z = GetPosition()
+            if not x then return end
+            if not lastX then lastX, lastY, lastZ = x, y, z return end
             local dx, dy, dz = x - lastX, y - lastY, z - lastZ
-            local distance = math.sqrt(dx * dx + dy * dy + dz * dz) * yardsToMeters
-            if distance > 5 then
-                distance = 0
-            end
-            if distance > 0.05 then
-                totalMeters = totalMeters + distance
-                button:SetText("Parar " .. FormatMeters(totalMeters))
-                label:SetText(FormatMeters(totalMeters))
-
-                AvisarMovimiento(totalMeters, MaximoDelTurno())
-                -- Al agotar el movimiento te quedas donde estas. Un contador que solo cuenta deja
-                -- el limite en un numero de adorno: aqui el punto donde se acaba se convierte en
-                -- tu sitio, y seguir andando te devuelve a el.
-                local tope = MaximoDelTurno()
-                if tope > 0 and totalMeters >= tope then
-                    if not API.RecordedMovementAnchor then
-                        API.RecordedMovementAnchor = CapturarAncla()
-                        HarfordChat.Print("|cffffcc00Has agotado tu movimiento.|r Seguir andando "
-                            .. "te devolvera a donde te quedaste.")
-                    -- Margen corto y enfriamiento corto: el muro tiene que notarse en el paso, no
-                    -- metro y medio despues. El enfriamiento sigue estando para que el servidor no
-                    -- se lleve una rafaga de `worldport` mientras el primero esta de camino.
-                    elseif totalMeters > tope + 0.3
-                        and ((GetTime and GetTime()) or 0) - ultimoTiron > 0.75 then
-                        ultimoTiron = (GetTime and GetTime()) or 0
-                        local ok, err
-                        if HarfordServerActions and HarfordServerActions.WorldportSelf then
-                            ok, err = HarfordServerActions.WorldportSelf(
-                                API.RecordedMovementAnchor, { addonName = "Harford" })
-                        else
-                            err = "HarfordServerActions.WorldportSelf no disponible"
-                        end
-                        if ok then
-                            totalMeters = tope
-                        else
-                            HarfordChat.Print("|cffff5555No se pudo devolverte a tu sitio:|r "
-                                .. tostring(err or "error desconocido"))
-                        end
-                    end
-                end
-            end
+            avance = math.sqrt(dx * dx + dy * dy + dz * dz) * yardsToMeters
+            lastX, lastY, lastZ = x, y, z
+            -- Nadie recorre cinco metros en una vigesima de segundo a pie: eso es un
+            -- desplazamiento (el teleporte de vuelta, un empujon), no un paso.
+            if avance > 5 then avance = 0 end
+            if avance <= 0.05 then return end
         end
-        lastX, lastY, lastZ = x, y, z
-        API.RecordedMovementInfo = { meters = totalMeters, startX = startX, startY = startY, startZ = startZ, endX = x, endY = y, endZ = z }
+
+        totalMeters = totalMeters + avance
+        button:SetText("Parar " .. FormatMeters(totalMeters))
+        label:SetText(FormatMeters(totalMeters))
+        AvisarMovimiento(totalMeters, MaximoDelTurno())
+
+        -- Al agotar el movimiento se marca DONDE se acabo. No se tira de ti aqui: el tiron va en el
+        -- momento en que sueltas la tecla, que es UN comando en vez de una rafaga mientras corres.
+        local tope = MaximoDelTurno()
+        if tope > 0 and totalMeters >= tope and not API.RecordedMovementAnchor then
+            API.RecordedMovementAnchor = CapturarAncla()
+            HarfordChat.Print("|cffffcc00Has agotado tu movimiento.|r Al parar volveras a donde "
+                .. "se te acabo.")
+        end
+        API.RecordedMovementInfo = { meters = totalMeters }
     end
 
     local function StopTracking()
@@ -678,6 +669,9 @@ function API.AttachMovementTracker(opts)
         -- Y arranca SOLO. Tener que acordarse de pulsar el boton cada turno es la friccion que
         -- hace que la cuenta no se lleve nunca; el boton queda para pararla antes de tiempo.
         AvisarMovimiento(0, MaximoDelTurno())
+        -- Donde empiezas el turno. Son DOS anclas y hacen cosas distintas: a esta se vuelve a mano
+        -- para deshacer el turno entero; a la del agotamiento te devuelve el muro.
+        API.TurnStartAnchor = CapturarAncla()
         if IniciarSeguimiento then IniciarSeguimiento() end
     end
 
@@ -716,6 +710,71 @@ function API.AttachMovementTracker(opts)
         button:SetText("Parar  0.0m")
         label:SetText(FormatMeters(0))
         button:SetScript("OnUpdate", OnUpdate)
+    end
+
+    -- Deshacer el movimiento del turno: vuelves a donde EMPEZASTE y el contador se pone a cero,
+    -- como si no te hubieras movido. Es lo que quieres cuando te has colocado mal, no volver al
+    -- punto donde se te acabo -- para eso ya esta el muro.
+    local function VolverAlAncla()
+        local ancla = API.TurnStartAnchor
+        if not ancla then
+            HarfordChat.Print("No se donde empezaste el turno: no hay sitio al que volver.")
+            return
+        end
+        if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then return end
+        local ok, err = HarfordServerActions.WorldportSelf(ancla, { addonName = "Harford" })
+        if not ok then
+            HarfordChat.Print("No se pudo volver: " .. tostring(err or "error desconocido"))
+            return
+        end
+        totalMeters = 0
+        lastX, lastY, lastZ = nil, nil, nil
+        API.RecordedMovementMeters = 0
+        API.RecordedMovementAnchor = nil
+        label:SetText(FormatMeters(0))
+        AvisarMovimiento(0, MaximoDelTurno())
+        HarfordChat.Print("Vuelves a donde empezaste el turno. Movimiento a cero.")
+    end
+
+    -- El muro: al SOLTAR una tecla de movimiento, si te habias pasado, vuelves a donde se te
+    -- acabo. `TurnOrActionStop` queda FUERA a proposito -- es el giro de camara con el raton, y
+    -- girar la vista no es moverse.
+    do
+        local TECLAS = {
+            "MoveForwardStop", "MoveBackwardStop",
+            "StrafeLeftStop", "StrafeRightStop",
+            "TurnLeftStop", "TurnRightStop",
+            "CameraOrSelectOrMoveStop", "JumpOrAscendStart",
+        }
+        local ultimoTiron = 0
+        local function Tirar()
+            local ancla = API.RecordedMovementAnchor
+            if not ancla then return end
+            local tope = MaximoDelTurno()
+            if tope <= 0 or totalMeters <= tope + 0.3 then return end
+            -- Enfriamiento corto: soltar varias teclas a la vez dispara varios enganches seguidos,
+            -- y eso serian tres `worldport` para un solo frenazo.
+            local ahora = (GetTime and GetTime()) or 0
+            if ahora - ultimoTiron < 1 then return end
+            ultimoTiron = ahora
+            if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then return end
+            local ok, err = HarfordServerActions.WorldportSelf(ancla, { addonName = "Harford" })
+            if ok then
+                totalMeters = tope
+                label:SetText(FormatMeters(totalMeters))
+                AvisarMovimiento(totalMeters, tope)
+            else
+                HarfordChat.Print("|cffff5555No se pudo devolverte a tu sitio:|r "
+                    .. tostring(err or "error desconocido"))
+            end
+        end
+        for _, nombre in ipairs(TECLAS) do
+            if type(_G[nombre]) == "function" then
+                hooksecurefunc(nombre, function()
+                    if tracking then Tirar() end
+                end)
+            end
+        end
     end
 
     button:RegisterForClicks("LeftButtonUp", "RightButtonUp")

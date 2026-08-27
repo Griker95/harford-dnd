@@ -205,6 +205,11 @@ local function NormWeaponProf(key)
     return WEAPON_PROF_ALIAS[plano] or plano
 end
 
+-- De donde sale lo que se esta aplicando. Se guarda en vez de solo `true` para poder decir "Enano
+-- (Enano)" o "Comun (Soldado)": el jugador quiere saber QUE se lo dio, y sin eso hacia falta una
+-- entrada suelta por idioma solo para nombrar su origen.
+local ORIGEN_ACTUAL = nil
+
 local function ApplyEffect(resolved, effect, profileName)
     if type(effect) ~= "table" then return end
     local kind = effect.kind
@@ -427,7 +432,7 @@ local function ApplyEffect(resolved, effect, profileName)
     elseif kind == "toolProf" and (effect.tool or effect.value) then
         resolved.toolProf[tostring(effect.tool or effect.value)] = true
     elseif kind == "language" and (effect.language or effect.value) then
-        resolved.language[tostring(effect.language or effect.value)] = true
+        resolved.language[tostring(effect.language or effect.value)] = ORIGEN_ACTUAL or true
     end
 end
 
@@ -463,7 +468,9 @@ function API.Resolve(profileName)
                 for _, a in ipairs(classDef.armorProfs or {}) do resolved.armorProf[tostring(a)] = true end
                 for _, w in ipairs(classDef.weaponProfs or {}) do resolved.weaponProf[NormWeaponProf(w)] = true end
                 for _, t in ipairs(classDef.toolProfs or {}) do resolved.toolProf[tostring(t)] = true end
-                for _, lg in ipairs(classDef.languages or {}) do resolved.language[tostring(lg)] = true end
+                for _, lg in ipairs(classDef.languages or {}) do
+                    resolved.language[tostring(lg)] = tostring(classDef.name or entry.classId)
+                end
             end
         end
     end
@@ -493,6 +500,10 @@ function API.Resolve(profileName)
     for _, item in ipairs(HarfordDnDProgression.GetUnlockedFeatures(profileName)) do
         local feature = item.feature
         if HarfordDnDProgression.IsFeatureEnabled(feature, profileName) then
+            -- El nombre de la CLASE/raza/trasfondo si lo trae el item; si no, el del propio rasgo,
+            -- que es mejor que nada ("Enano" lo da el rasgo `Idioma` de la raza Enano).
+            ORIGEN_ACTUAL = tostring(item.className or feature.source or feature.name or "")
+            if ORIGEN_ACTUAL == "" then ORIGEN_ACTUAL = nil end
             -- Efectos base del rasgo.
             for _, effect in ipairs(feature.effects or {}) do
                 ApplyEffect(resolved, effect, profileName)
@@ -509,6 +520,7 @@ function API.Resolve(profileName)
                     end
                 end
             end
+            ORIGEN_ACTUAL = nil
         end
     end
 
@@ -819,6 +831,16 @@ end
 
 function API.GetWeaponProfs(profileName)
     return SortedKeys(API.Resolve(profileName).weaponProf)
+end
+
+-- De donde sale cada idioma: nombre -> origen (texto) o nil si no se sabe. Lo usa el Libro para
+-- decirlo en la propia entrada de Idiomas, en vez de una fila suelta por idioma.
+function API.GetLanguageSources(profileName)
+    local out = {}
+    for idioma, origen in pairs(API.Resolve(profileName).language or {}) do
+        if origen then out[idioma] = (type(origen) == "string") and origen or nil end
+    end
+    return out
 end
 
 -- Idiomas derivados de los DATOS (raza, trasfondo, clase, dotes y elecciones). Se fusionan con

@@ -365,12 +365,25 @@ function API.BuildSections(data)
         -- Solo Competencias e Idiomas retiran el rasgo real que se llame igual: su contenido ya lo
         -- agrega el tooltip. Las acciones basicas NO deben hacerlo -- borrarian por el nombre un
         -- rasgo de clase que se llamase parecido, y eso desaparece sin dar ningun error.
-        local esFija = { Competencias = true, Idiomas = true }
+        -- Se retiran tambien las variantes en SINGULAR y el equipo: un rasgo llamado `Idioma`
+        -- cuyo cuerpo es "Enano" no aporta nada que la entrada agregada no diga ya --y ahora la
+        -- agregada dice ademas DE DONDE sale cada uno--, asi que su unica fila era ruido. Lo mismo
+        -- con `Competencia` y con `Equipo`/`Equipamiento`, que son listados, no reglas.
+        local esFija = {
+            Competencias = true, Competencia = true,
+            Idiomas = true, Idioma = true,
+            Equipo = true, Equipamiento = true,
+        }
 
         local limpio = {}
         for _, it in ipairs(general) do
             local nombre = it.feature and tostring(it.feature.name or "")
-            if not esFija[nombre] then limpio[#limpio + 1] = it end
+            -- Sin acentos ni mayusculas: los rasgos de raza y trasfondo los escribe cada tabla a
+            -- su manera (`Idioma`, `idiomas`, `Equipamiento`).
+            local clave = HarfordClassColors and HarfordClassColors.StripAccents
+                and HarfordClassColors.StripAccents(nombre) or nombre
+            clave = tostring(clave):gsub("^%l", string.upper)
+            if not (esFija[nombre] or esFija[clave]) then limpio[#limpio + 1] = it end
         end
         -- Al FINAL de General y en su orden: son entradas de consulta, no rasgos del personaje,
         -- y no deben desplazar a los rasgos reales de raza y trasfondo.

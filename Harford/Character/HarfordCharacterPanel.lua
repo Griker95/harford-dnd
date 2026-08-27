@@ -3443,9 +3443,14 @@ do
             return true
         end
         table.sort(idiomas)
-        -- Uno por linea y con guion, como pidio el formato de Competencias pero en lista.
+        -- Con su ORIGEN al lado. Antes cada raza metia ademas una fila suelta `Idioma` en el Libro
+        -- solo para decir de donde salia el suyo: una entrada entera por un dato que cabe aqui.
+        local origenes = (HarfordDnDFeatureEffects.GetLanguageSources
+            and HarfordDnDFeatureEffects.GetLanguageSources(GetProfileName())) or {}
         for _, idioma in ipairs(idiomas) do
-            GameTooltip:AddLine("- " .. idioma, 1, 0.82, 0)
+            local de = origenes[idioma]
+            GameTooltip:AddLine("- " .. idioma
+                .. (de and ("  |cff808080" .. tostring(de) .. "|r") or ""), 1, 0.82, 0)
         end
         return true
     end

@@ -626,4 +626,30 @@ local libro2 = io.open("Harford/Character/HarfordCharacterBook.lua"):read("*a")
 chk("el respaldo de pasivo esta declarado",
     libro2:find('pasivo   = "Interface', 1, true) ~= nil, true)
 
+-- ─── LOS LISTADOS NO OCUPAN UNA FILA CADA UNO ───────────────────────────────
+-- Un rasgo llamado `Idioma` cuyo cuerpo es "Enano" no aporta nada que la entrada agregada no diga
+-- ya --y ahora la agregada dice ademas DE DONDE sale cada uno--, asi que su fila era ruido. Lo
+-- mismo con Competencia y con Equipo: son listados, no reglas.
+print("El Libro no repite los listados")
+local libroSrc = io.open("Harford/Character/HarfordCharacterBook.lua"):read("*a")
+for _, nombre in ipairs({ "Competencias", "Competencia", "Idiomas", "Idioma",
+                          "Equipo", "Equipamiento" }) do
+    chk("se retira la fila suelta: " .. nombre,
+        libroSrc:find(nombre .. " = true", 1, true) ~= nil, true)
+end
+-- Sin acentos ni mayusculas: cada tabla los escribe a su manera.
+chk("y da igual como este escrito",
+    libroSrc:find("HarfordClassColors.StripAccents(nombre)", 1, true) ~= nil, true)
+-- Cada idioma recuerda de donde sale, que es lo que hace que la fila suelta sobre.
+local efectos = io.open("Harford/DnD/Engine/HarfordDnDFeatureEffects.lua"):read("*a")
+chk("cada idioma guarda su origen",
+    efectos:find("function API.GetLanguageSources(profileName)", 1, true) ~= nil, true)
+-- PERO la creacion y la subida los siguen leyendo por su cuenta: alli SI hay que ver que da cada
+-- raza y cada trasfondo, porque es como se elige. Solo el Libro los agrega.
+local creacion = io.open("Harford/Character/HarfordCharacterCreation.lua"):read("*a")
+chk("la creacion sigue leyendo los rasgos enteros",
+    creacion:find("BuildTraitLines(GetRaceTraits(draft), draft)", 1, true) ~= nil, true)
+chk("y no pasa por el agregado del Libro",
+    creacion:find("BuildSections", 1, true) == nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

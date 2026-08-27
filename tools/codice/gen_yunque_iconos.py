@@ -2,12 +2,15 @@
 """Construye la hoja de sprites de iconos que lleva el Yunque dentro.
 
 Un selector visual necesita las imagenes, y no se pueden pedir a ningun servidor: la pagina
-va sola. Meter los 19.347 iconos como imagenes sueltas serian 164 MB, muy por encima del
-limite. Una hoja unica a 32 px los deja en un par de megas, y cada icono se recorta con
-`background-position`.
+va sola. Sueltas serian 164 MB. Una hoja unica en WebP a 24 px las deja en poco mas de un
+mega, y cada icono se recorta con `background-position`.
 
-Se priorizan los iconos que los objetos de la lista USAN de verdad; el resto rellena hasta
-el cupo. Los que se queden fuera siguen buscandose por nombre, solo que sin miniatura.
+El cupo existe por VELOCIDAD, no por el limite del artefacto: los 18.830 caben (unos 4,4 MB
+de hoja), pero la pagina tarda demasiado en abrir. 6.000 la dejan en 2,5 MB.
+
+Se meten primero los que los objetos USAN de verdad, y el resto se reparte por todo el
+catalogo tomando uno de cada N -- por orden alfabetico solo entraba la A y la B. Los que se
+queden fuera siguen buscandose por nombre, solo que sin miniatura.
 
 Uso:
     python tools/codice/gen_yunque_iconos.py [--cupo 3000]
@@ -39,7 +42,7 @@ PAGINA = os.path.join(BASE, 'yunque.html')
 # alfabeto: entraban inv_axe y inv_belt y no llegaba ni a inv_sword.
 LADO = 24
 COLUMNAS = 64
-CUPO = 0           # 0 = todos
+CUPO = 6000        # 0 = todos, pero entonces la pagina tarda en abrir
 PREFIJOS = ('inv_', 'trade_', 'item_')
 
 
@@ -70,14 +73,25 @@ def main():
     print("Catalogo util:            %d" % len(catalogo))
     print("Usados por los objetos:   %d" % len(usados))
 
-    # Primero los que ya se usan, luego el resto del catalogo hasta llenar el cupo.
+    # Primero los que ya se usan. El resto NO por orden alfabetico: asi solo entraba el
+    # principio del abecedario (inv_axe, inv_belt) y no se llegaba ni a inv_sword. Se toma
+    # uno de cada N para que el cupo quede repartido por todo el catalogo.
     orden, vistos = [], set()
-    for n in usados + catalogo:
-        if n in vistos:
-            continue
-        if os.path.exists(os.path.join(PNG, n + '.png')):
-            vistos.add(n)
-            orden.append(n)
+    def mete(n):
+        if n in vistos or not os.path.exists(os.path.join(PNG, n + '.png')):
+            return False
+        vistos.add(n)
+        orden.append(n)
+        return True
+
+    for n in usados:
+        mete(n)
+    resto = [n for n in catalogo if n not in vistos]
+    if cupo and len(resto) > cupo - len(orden) > 0:
+        paso = len(resto) / float(cupo - len(orden))
+        resto = [resto[int(i * paso)] for i in range(cupo - len(orden))]
+    for n in resto:
+        mete(n)
         if cupo and len(orden) >= cupo:
             break
     print("En la hoja:               %d" % len(orden))
@@ -94,15 +108,16 @@ def main():
         hoja.paste(im, ((i % COLUMNAS) * LADO, (i // COLUMNAS) * LADO))
 
     buf = _io.BytesIO()
-    # La paleta baja mucho el peso y para iconos de 32 px no se nota.
-    hoja.convert('RGBA').quantize(colors=255, method=Image.FASTOCTREE).save(
-        buf, format='PNG', optimize=True)
+    # WebP con transparencia: a 24 px no se distingue del PNG y pesa bastante menos, que
+    # aqui es lo unico que decide si la pagina abre rapido.
+    hoja.save(buf, format='WEBP', quality=70, method=4)
     datos = buf.getvalue()
-    print("Hoja: %dx%d  ->  %.2f MB" % (hoja.size[0], hoja.size[1], len(datos) / 1024 / 1024))
+    print("Hoja: %dx%d  ->  %.2f MB (webp)"
+          % (hoja.size[0], hoja.size[1], len(datos) / 1024 / 1024))
 
     b64 = base64.b64encode(datos).decode('ascii')
     bloque = ('/*HOJA_INICIO*/const HOJA={lado:%d,columnas:%d,'
-              'orden:%s,img:"data:image/png;base64,%s"};/*HOJA_FIN*/'
+              'orden:%s,img:"data:image/webp;base64,%s"};/*HOJA_FIN*/'
               % (LADO, COLUMNAS, json.dumps(orden, separators=(',', ':')), b64))
 
     pagina = io.open(PAGINA, encoding='utf-8').read()

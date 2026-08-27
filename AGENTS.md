@@ -2904,11 +2904,18 @@ definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la
    anterior: el objeto hereda la del hueco que ocupaba antes y no se nota hasta verlo en
    juego. La pagina avisa antes. Ademas normaliza lo que se pegue -- ruta, extension,
    mayusculas -- a la forma que acepta el comando.
-3. **El selector visual va sobre una HOJA DE SPRITES**, no imagenes sueltas: la pagina no
-   puede pedirle nada a ningun servidor, y los iconos como PNG sueltos serian 164 MB. A
-   **24 px** caben los 18.882 enteros en 6,15 MB (`gen_yunque_iconos.py`). A 32 px habia que
-   recortar por cupo, y recortar significaba quedarse con el PRINCIPIO DEL ALFABETO: entraban
-   `inv_axe` y `inv_belt` y no llegaba ni a `inv_sword`.
+3. **El selector visual va sobre una HOJA DE SPRITES** en WebP a 24 px, no imagenes
+   sueltas: la pagina no puede pedirle nada a ningun servidor, y sueltas serian 164 MB.
+   - **La data-URI se declara UNA VEZ** como variable CSS (`--hoja`) y cada elemento solo
+     pone `background-position`. Meterla en el `style` de cada boton dejaba la pagina
+     clavada al bajar por la rejilla: son megas de texto por elemento. Es EL fallo a no
+     repetir.
+   - **El cupo (6.000) es por VELOCIDAD, no por el limite de 16 MB.** Los 18.830 caben
+     (~4,4 MB de hoja) pero la pagina tarda demasiado en abrir; 6.000 la dejan en 2,5 MB.
+     `--cupo 0` los mete todos si algun dia se prefiere cobertura a velocidad.
+   - El resto del cupo se reparte tomando **uno de cada N por todo el catalogo**. Por orden
+     alfabetico solo entraba el principio: `inv_axe`, `inv_belt`, y no se llegaba a
+     `inv_sword`.
    - **La fuente es `EpsilonIcons/icons_master.csv` con `estado == extraido`**, que es la
      lista canonica que sirve la web: si esta ahi, el PNG existe. Da 20.447 utiles frente a
      los 17.800 del volcado de nombres, e incluye 6.370 custom de Epsilon.

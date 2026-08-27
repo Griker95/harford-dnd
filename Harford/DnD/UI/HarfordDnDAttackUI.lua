@@ -488,7 +488,7 @@ function API.AttachMovementTracker(opts)
     local yardsToMeters = 0.9144
     local pollInterval = 0.05
     local tracking = false
-    local IniciarSeguimiento   -- se asigna abajo; lo llama el reinicio de turno, que esta antes
+    local ArrancarSeguimiento  -- se asigna abajo; lo llama el reinicio de turno, que esta antes
     local ultimoTiron = 0
     local totalMeters = 0
     local startX, startY, startZ
@@ -695,7 +695,7 @@ function API.AttachMovementTracker(opts)
         -- Donde empiezas el turno. Son DOS anclas y hacen cosas distintas: a esta se vuelve a mano
         -- para deshacer el turno entero; a la del agotamiento te devuelve el muro.
         API.TurnStartAnchor = CapturarAncla()
-        if IniciarSeguimiento then IniciarSeguimiento() end
+        if ArrancarSeguimiento then ArrancarSeguimiento(false) end
     end
 
     local function RefreshConditionState()
@@ -711,8 +711,16 @@ function API.AttachMovementTracker(opts)
         end
     end
 
-    IniciarSeguimiento = function()
+    local function EnCombate()
+        return HarfordTurnOrderAPI and HarfordTurnOrderAPI.HasActiveCombat
+            and HarfordTurnOrderAPI.HasActiveCombat()
+    end
+
+    ArrancarSeguimiento = function(aMano)
         if tracking then return end
+        -- Fuera de combate no hay turno que gastar: el contador no arranca solo. A mano si -- el
+        -- boton sigue valiendo para medir una distancia cuando te apetezca.
+        if not aMano and not EnCombate() then return end
         if HarfordDnDConditions and HarfordDnDConditions.IsSpeedZero
             and HarfordDnDConditions.IsSpeedZero("player") then
             RefreshConditionState()
@@ -812,11 +820,21 @@ function API.AttachMovementTracker(opts)
             StopTracking()
             return
         end
-        IniciarSeguimiento()
+        -- A mano se arranca aunque no haya combate: el boton tambien sirve para medir una
+        -- distancia sin mas. Lo que no ocurre fuera de combate es que arranque SOLO.
+        ArrancarSeguimiento(true)
     end)
 
     if HarfordDnDConditions and HarfordDnDConditions.RegisterListener then
-        HarfordDnDConditions.RegisterListener(RefreshConditionState)
+        HarfordDnDConditions.RegisterListener(function()
+            RefreshConditionState()
+            -- Al terminar el combate se para y se limpia. El turno no "termina" -- desaparece el
+            -- combate entero --, asi que sin esto el contador se quedaba corriendo con un tope que
+            -- ya no significaba nada, y el muro seguia devolviendote a un sitio de otro combate.
+            if tracking and not EnCombate() then
+                ReiniciarPorTurno()
+            end
+        end)
     end
     RefreshConditionState()
 end

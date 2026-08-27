@@ -3426,6 +3426,12 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
 - **Sin ticker.** Las fichas las refresca el listener de `HarfordDnDConditions`; la barra, el
   `RegisterMovementListener` del seguimiento de la ficha, que ya corre mientras andas.
 
+- **Estar en combate es una CONDICION del contador, no un detalle.** Fuera de un combate por turnos
+  no hay turno que gastar y un contador corriendo miente, asi que NO arranca solo -- pero a mano
+  si, porque el boton tambien sirve para medir una distancia sin mas. Y **se para al ACABAR el
+  combate**, que es el caso que se olvida: el turno no "termina", desaparece el combate entero, y
+  sin eso el contador seguia con un tope que ya no valia y el muro te devolvia a un sitio de otro
+  combate. Lo avisa el listener de `HarfordDnDConditions`.
 - **Se cuenta SOLO, no hay que pulsar nada.** `HarfordDnDAttackUI` arranca el seguimiento desde el
   listener `RegisterMyTurnListener`, igual que Atlas. El boton queda para pararlo antes de tiempo
   (izquierdo) y para volver al ancla (derecho). Tener que acordarse de pulsarlo cada turno era la

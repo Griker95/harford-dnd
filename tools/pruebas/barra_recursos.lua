@@ -17,6 +17,8 @@ local function NuevoFrame(nombre)
     -- El contenedor se sube POR ENCIMA del ancla, asi que el falso tiene que saber decir su nivel:
     -- nacia en el suelo de MEDIUM y la barra de accion nativa lo tapaba.
     f.GetFrameLevel = function() return 1 end
+    -- La altura apilada se mide en pixeles de pantalla: sin `GetTop` no hay nada que medir.
+    f.GetTop = function() return 100 end
     function f:GetObjectType() return "Frame" end
     function f:IsShown() return self.visible end
     function f:Show() self.visible = true end
@@ -148,8 +150,13 @@ chk1("y ningun hueco en la lista",
     fuente:find('"StanceBarFrame",            -- Sigilo', 1, true) ~= nil, true)
 -- Centrado sobre la barra, no pegado a su borde izquierdo: es donde el juego pone la barra de
 -- Sigilo y las formas de druida, y es donde se mira.
-chk1("centrado sobre la barra",
-    fuente:find('cont:SetPoint("BOTTOM", ancla, "TOP", 0, 8)', 1, true) ~= nil, true)
+-- El CENTRO sale de la barra principal y la ALTURA de lo mas alto que haya apilado: son dos cosas
+-- distintas, y mezclarlas dejaba los iconos centrados sobre la barra de la DERECHA, que ni empieza
+-- donde la principal ni mide lo mismo.
+chk1("centrado sobre la barra principal",
+    fuente:find('cont:SetPoint("BOTTOM", base, "TOP", 0, 8 + AlturaApilada(base))', 1, true) ~= nil, true)
+chk1("y la altura se mide, no se cuenta por barras",
+    fuente:find("local function AlturaApilada(base)", 1, true) ~= nil, true)
 chk1("y la fila de fichas centrada dentro",
     fuente:find('cont.fichas[1]:SetPoint("BOTTOMLEFT", cont, "BOTTOM", -fila / 2, 0)', 1, true) ~= nil, true)
 

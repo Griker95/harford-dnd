@@ -467,6 +467,20 @@ chk("y el jugador sigue midiendose por posicion",
 chk("al NPC no se le pone muro",
     ataque:find("API.MovimientoSinMuro = true", 1, true) ~= nil, true)
 
+-- ── ESTAR EN COMBATE ES UNA CONDICION, NO UN DETALLE ────────────────────────
+-- El movimiento del turno solo significa algo dentro de un combate por turnos: fuera de el no hay
+-- turno que gastar y un contador corriendo miente.
+print("El movimiento solo se cuenta en combate")
+chk("no arranca solo fuera de combate",
+    ataque:find("if not aMano and not EnCombate() then return end", 1, true) ~= nil, true)
+-- Pero a MANO si: el boton tambien sirve para medir una distancia sin mas.
+chk("pero a mano si", ataque:find("ArrancarSeguimiento(true)", 1, true) ~= nil, true)
+-- Y se para al ACABAR el combate, que es el caso que se olvida: el turno no "termina", desaparece
+-- el combate entero, y el contador se quedaba corriendo con un tope que ya no valia -- y el muro
+-- devolviendote a un sitio de otro combate.
+chk("y se para al acabar el combate",
+    ataque:find("if tracking and not EnCombate() then", 1, true) ~= nil, true)
+
 -- ── EL MURO SALTA AL SOLTAR LA TECLA ────────────────────────────────────────
 -- Un teleporte cada 0.75 s mientras corres es una rafaga de comandos y ademas se ve a trompicones.
 -- Enganchando el soltar de cada tecla sale UN comando, y justo cuando has dejado de andar.

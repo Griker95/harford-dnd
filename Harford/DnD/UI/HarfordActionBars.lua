@@ -138,6 +138,40 @@ local function AnclaBarraNativa()
     return nil
 end
 
+-- Cuanto sobresale por encima de la barra principal lo que haya apilado. Se mide en pixeles de
+-- pantalla en vez de contar barras: da igual como las haya colocado el addon de turno.
+local function AlturaApilada(base)
+    if not (base and base.GetTop) then return 0 end
+    local suelo = base:GetTop()
+    if not suelo then return 0 end
+    local extra = 0
+    for _, nombre in ipairs({ "MultiBarBottomLeft", "MultiBarBottomRight", "StanceBarFrame",
+                             "PetActionBarFrame", "MultiCastActionBarFrame" }) do
+        local f = _G[nombre]
+        if f and f.IsShown and f:IsShown() and f.GetTop then
+            local arriba = f:GetTop()
+            if arriba and arriba - suelo > extra then extra = arriba - suelo end
+        end
+    end
+    return extra
+end
+
+-- La barra PRINCIPAL, que es la que manda el centro. Las extras se apilan encima pero no siempre
+-- ocupan el mismo ancho ni empiezan donde ella, asi que centrarse en una de ellas deja los iconos
+-- descolocados a un lado -- que es justo lo que pasaba con la de la derecha.
+local function BarraPrincipal()
+    for _, nombre in ipairs({ "MainMenuBarArtFrame", "MainMenuBar", "ActionButton1" }) do
+        local f = _G[nombre]
+        if f and f.GetObjectType and f:IsShown() then return f end
+    end
+    for _, nombre in ipairs({ "MainMenuBarArtFrame", "MainMenuBar", "ActionButton1" }) do
+        local f = _G[nombre]
+        if f and f.GetObjectType then return f end
+    end
+    return nil
+end
+
+
 -- ─── INDICADORES DE ECONOMIA DE TURNO ────────────────────────────────────────
 -- Fichas de Accion / Adicional / Reaccion sobre la barra, al estilo BG3: una ficha por punto
 -- disponible, encendida si te queda y apagada si la gastaste.
@@ -433,9 +467,11 @@ function API.RefreshTurnEconomy()
     if ancla.GetFrameLevel then
         cont:SetFrameLevel(math.max(90, (ancla:GetFrameLevel() or 0) + 5))
     end
-    -- CENTRADO sobre la barra, no pegado a su borde izquierdo: es donde el juego pone la barra de
-    -- Sigilo y las formas de druida, y es donde se mira.
-    cont:SetPoint("BOTTOM", ancla, "TOP", 0, 8)
+    -- El CENTRO sale de la barra principal y la ALTURA de lo mas alto que haya apilado: son dos
+    -- cosas distintas y mezclarlas dejaba los iconos centrados sobre la barra de la DERECHA, que
+    -- ni empieza donde la principal ni mide lo mismo.
+    local base = BarraPrincipal() or ancla
+    cont:SetPoint("BOTTOM", base, "TOP", 0, 8 + AlturaApilada(base))
     cont:SetWidth(math.max(1, ancho))
     -- La fila de fichas se centra dentro del contenedor moviendo solo la primera: las demas van
     -- encadenadas a ella.

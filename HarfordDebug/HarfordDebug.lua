@@ -2157,6 +2157,82 @@ API.RegisterCommand("inspecttarget", function()
     end
 end, "solicita e inspecciona el panel Harford del target jugador")
 
+-- De donde sale tu CA, escalon a escalon. La pregunta "por que no se aplica el +1 de las botas"
+-- no se puede contestar leyendo el codigo: depende de si tienes CA escrita en TRP3 (que MANDA
+-- sobre todo el equipo), de si llevas pecho, y de bajo que nombre esta guardado tu equipo.
+API.RegisterCommand("ca", function()
+    local corto = UnitName and UnitName("player") or "?"
+    local largo = HarfordClassColors and HarfordClassColors.UnitFullName
+        and HarfordClassColors.UnitFullName("player") or corto
+    Print("--- de que perfil se lee ---")
+    Print("  UnitName: |cffffcc00" .. tostring(corto) .. "|r   UnitFullName: |cffffcc00"
+        .. tostring(largo) .. "|r")
+    -- Si estos dos no son el mismo, el equipo puede estar guardado bajo uno y leerse bajo el otro.
+    local perfiles = HarfordDnDPersistStore and HarfordDnDPersistStore.profiles
+    if type(perfiles) == "table" then
+        for nombre, p in pairs(perfiles) do
+            local eq = type(p) == "table" and p._equipment or nil
+            if type(eq) == "table" then
+                local n = 0
+                for _ in pairs(eq) do n = n + 1 end
+                Print("  equipo guardado en |cffffcc00" .. tostring(nombre) .. "|r: "
+                    .. n .. " hueco(s)")
+            end
+        end
+    end
+
+    Print("--- que aporta cada hueco ---")
+    if HarfordDnDItems and HarfordDnDItems.ResolveSlot then
+        for _, hueco in ipairs({ "Head", "Shoulder", "Back", "Chest", "Wrist", "Hands", "Waist",
+            "Legs", "Feet", "Finger0", "Finger1", "Trinket0", "Trinket1", "MainHand",
+            "SecondaryHand" }) do
+            local r = HarfordDnDItems.ResolveSlot(hueco)
+            if r then
+                local ca = tonumber(r.rules and r.rules.armorClass) or 0
+                local base = tonumber(r.rules and r.rules.armorBase) or nil
+                local aviso = r.pending and " |cffff5555(SIN RESOLVER: el cliente aun no tiene el"
+                    .. " objeto; sus reglas NO cuentan)|r" or ""
+                Print(string.format("  %-15s %s   CA %+d%s%s", hueco,
+                    tostring(r.name or "?"), ca,
+                    base and ("   base " .. tostring(base)) or "", aviso))
+            end
+        end
+    end
+
+    Print("--- la suma ---")
+    local bonus = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("armorClass") or 0
+    Print("  bonus de rasgos+equipo (sin nombre): |cffffcc00" .. tostring(bonus) .. "|r")
+    local bonusLargo = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus
+        and HarfordDnDFeatureEffects.GetBonus("armorClass", nil, largo) or 0
+    Print("  bonus con tu nombre completo:        |cffffcc00" .. tostring(bonusLargo) .. "|r")
+    if bonus ~= bonusLargo then
+        Print("  |cffff5555Los dos no coinciden|r: el equipo se lee bajo un nombre y se guarda"
+            .. " bajo otro.")
+    end
+    local equipada = HarfordDnDItems and HarfordDnDItems.GetEquippedArmorClass
+        and HarfordDnDItems.GetEquippedArmorClass() or nil
+    Print("  CA de armadura equipada: " .. tostring(equipada or "ninguna (vas sin pecho ni escudo)"))
+
+    Print("--- que gana al final ---")
+    local forma = HarfordDnDForms and HarfordDnDForms.GetArmorClass
+        and HarfordDnDForms.GetArmorClass() or nil
+    local trp3 = HarfordTRP3 and HarfordTRP3.GetPlayerArmorClass
+        and HarfordTRP3.GetPlayerArmorClass("player") or nil
+    if forma then
+        Print("  |cffffcc00manda la FORMA activa|r: " .. tostring(forma)
+            .. " -- el equipo entero se ignora.")
+    elseif trp3 then
+        Print("  |cffff5555manda TRP3|r: " .. tostring(trp3) .. ". Tienes una CA escrita en"
+            .. " \"Other Information\"/\"Currently\" y eso pisa al equipo, botas incluidas."
+            .. " Borrala de ahi para que cuente la armadura.")
+    else
+        Print("  manda el EQUIPO. CA final: " .. tostring(
+            HarfordDnDCombat and HarfordDnDCombat.ComputeSelfArmorClass
+            and HarfordDnDCombat.ComputeSelfArmorClass() or "?"))
+    end
+end, "de donde sale tu CA, escalon a escalon (por que no se aplica un +1 de equipo)")
+
 API.RegisterCommand("itemrules", function(args)
     if not (HarfordDnDItems and HarfordDnDItems.ResolveSlot) then
         Print("HarfordDnDItems no disponible")

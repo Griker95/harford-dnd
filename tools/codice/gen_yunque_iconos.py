@@ -49,7 +49,10 @@ def usadosPorLaLista():
     if not os.path.exists(DATOS):
         return []
     t = io.open(DATOS, encoding='utf-8').read()
-    return sorted(set(re.findall(r'icono = "([^"]+)"', t)))
+    # En minusculas SIEMPRE: la pagina normaliza asi lo que se escribe, y si la hoja guarda
+    # `INV_Misc_Fish_01` la busqueda de `inv_misc_fish_01` no lo encontraria. En disco da
+    # igual porque Windows no distingue mayusculas.
+    return sorted({n.lower() for n in re.findall(r'icono = "([^"]+)"', t)})
 
 
 def main():

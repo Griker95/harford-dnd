@@ -2904,6 +2904,18 @@ definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la
    anterior: el objeto hereda la del hueco que ocupaba antes y no se nota hasta verlo en
    juego. La pagina avisa antes. Ademas normaliza lo que se pegue -- ruta, extension,
    mayusculas -- a la forma que acepta el comando.
+3. **El selector visual va sobre una HOJA DE SPRITES**, no imagenes sueltas: la pagina no
+   puede pedirle nada a ningun servidor, y los 19.347 iconos como PNG serian 164 MB. Una
+   hoja unica a 32 px con 6.000 iconos son 3,3 MB y cada uno se recorta con
+   `background-position` (`gen_yunque_iconos.py`, cupo configurable). Los nombres de la hoja
+   van SIEMPRE en minusculas: `Data.lua` los guarda con mayusculas y la pagina normaliza a
+   minusculas, asi que sin eso el sprite no encontraria justo los que ya se usan.
+
+Estan **las 37 opciones** de `.forge item set` que admite el cliente, no solo las que usa
+Core.lua: bonding, sheath, material, la familia `property` (adder, additem anyone/character/
+member/officer, copy, creator, info, lookup) y las tres listas blancas. Las propiedades son
+de TRES estados -- sin tocar / si / no -- y solo emiten comando si se tocan, para no anadir
+nueve comandos por objeto sin motivo.
 
 **Merchant**: los catalogos de vendedor NO son comandos de servidor. `Epsilon_Merchant`
 guarda cada uno en el vault de la fase con la clave `VENDOR_DATA_<merchantID>`, troceado por

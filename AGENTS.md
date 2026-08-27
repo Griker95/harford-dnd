@@ -3483,6 +3483,14 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   `MarkChanged` (iniciar y terminar el combate NO son cambios de turno, asi que sin este se quedaba
   puesto despues de terminar) y al recibir estado de otro cliente, que no pasa por `MarkChanged`
   porque seria reenviarlo.
+- **Lleva DENTRO la barra de movimiento y las fichas de economia.** Vivian sueltas encima de la
+  barra de accion: es todo lo mismo --lo que te queda este turno-- y en dos sitios obliga a mirar a
+  dos sitios. **Click en la barra: vuelves a donde EMPEZASTE el turno** y el contador a cero
+  (`HarfordDnDAttackUI.ReturnToTurnStart`), que es lo que quieres cuando te has colocado mal y no
+  tenia gesto. Se repinta tambien al moverse y al gastar, no solo al cambiar de turno.
+- **El marco de OBJETIVO lo crea `CreateCardVisuals`, no `CreateCard`.** Vivia en el segundo, asi
+  que las tarjetas de la lista de un bloque no lo tenian -- y `SetCardTargetState` comprueba
+  `if card.targetTop then`, asi que no fallaba: no hacia nada, en silencio.
 - `MEDIUM` nivel 60, no DIALOG: se queda en pantalla y no puede ponerse por delante de una ventana.
   Movible con `SetUserPlaced`. Ajuste `turnmarker` (`on` por defecto). **Sin ticker**: solo se
   repinta cuando cambia lo que dice.

@@ -828,6 +828,7 @@ function API.AttachMovementTracker(opts)
         AvisarMovimiento(0, MaximoDelTurno())
         HarfordChat.Print("Vuelves a donde empezaste el turno. Movimiento a cero.")
     end
+    API.DoReturnToTurnStart = VolverAlAncla
 
     -- RESPALDO del muro: el tiron principal salta en el instante en que se agota el recurso, aqui
     -- arriba en el `OnUpdate`. Esto solo recoge el caso de que sueltes la tecla justo cuando se
@@ -894,6 +895,12 @@ end
 
 -- Para el contador y lo deja a cero. Lo llama la recogida de fin de combate: fuera de un combate
 -- no hay turno que gastar, y el ancla del muro apunta a un sitio de un combate que ya no existe.
+-- Vuelve a donde EMPEZASTE el turno y pone el contador a cero. Se expone porque el gesto vive en
+-- la barra del marcador de turnos, que esta en otro modulo.
+function API.ReturnToTurnStart()
+    if API.DoReturnToTurnStart then API.DoReturnToTurnStart() end
+end
+
 function API.StopTurnMovement()
     if API.ResetTurnMovement then API.ResetTurnMovement() end
 end

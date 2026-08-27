@@ -597,6 +597,26 @@ chk("y al recibirlo de otro",
 chk("y dice la fase, no solo el bando",
     turnos:find('(store.faseBando == "fin") and "cerrando el bloque" or "jugando"', 1, true) ~= nil, true)
 chk("se puede apagar", turnos:find('HarfordConfig.Get("turnmarker") == "off"', 1, true) ~= nil, true)
+-- ── LO QUE TE QUEDA, DENTRO DEL MARCADOR ────────────────────────────────────
+-- La barra de movimiento y las fichas vivian sueltas encima de la barra de accion. Es todo lo
+-- mismo --lo que te queda este turno-- y en dos sitios obliga a mirar a dos sitios.
+chk("lleva la barra de movimiento", turnos:find("marcador.mov.barra", 1, true) ~= nil, true)
+chk("y las fichas de economia", turnos:find("marcador.fichas[n] = f", 1, true) ~= nil, true)
+-- Click en la barra: vuelves a donde empezaste el turno. Ese gesto no existia.
+chk("click para volver al inicio del turno",
+    turnos:find("HarfordDnDAttackUI.ReturnToTurnStart()", 1, true) ~= nil, true)
+local ataqueSrc2 = io.open("Harford/DnD/UI/HarfordDnDAttackUI.lua"):read("*a")
+chk("y el gesto esta expuesto",
+    ataqueSrc2:find("function API.ReturnToTurnStart()", 1, true) ~= nil, true)
+-- Y se repinta al moverse o gastar, no solo al cambiar de turno: si no, la barra se quedaria
+-- llena mientras andas y las fichas encendidas al gastarlas.
+chk("se repinta al moverse",
+    turnos:find("HarfordDnDAttackUI.RegisterMovementListener(Repintar)", 1, true) ~= nil, true)
+-- El marco de OBJETIVO es de la TARJETA, no de la ventana: vivia en `CreateCard`, asi que las de
+-- la lista no lo tenian y `SetCardTargetState` no hacia nada, en silencio.
+chk("el marco de objetivo lo crea el constructor comun",
+    turnos:find("card.targetTop = card:CreateTexture", 1, true)
+    < turnos:find("local function CreateCard(parent, index)", 1, true), true)
 
 print("El estandarte de turno")
 chk("existe", turnos:find("function HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)",

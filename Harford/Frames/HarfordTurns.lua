@@ -2111,6 +2111,48 @@ local function CreateCardVisuals(parent, Objetivo)
     card.hpText = card.hp:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     card.hpText:SetPoint("CENTER", 0, 0)
     if card.hpText.SetDrawLayer then card.hpText:SetDrawLayer("OVERLAY", 7) end
+
+    -- El marco de OBJETIVO es de la tarjeta, no de la ventana de turnos. Vivia en `CreateCard`,
+    -- asi que las tarjetas de la lista de un bloque no lo tenian -- y `SetCardTargetState`
+    -- comprueba `if card.targetTop then`, asi que no fallaba: no hacia nada, en silencio.
+    card.targetTop = card:CreateTexture(nil, "OVERLAY")
+    card.targetTop:SetTexture(TEX_WHITE)
+    card.targetTop:SetVertexColor(0.05, 0.85, 1.0, 0.95)
+    card.targetTop:SetPoint("TOPLEFT", 2, -2)
+    card.targetTop:SetPoint("TOPRIGHT", -2, -2)
+    card.targetTop:SetHeight(2)
+    card.targetTop:Hide()
+
+    card.targetBottom = card:CreateTexture(nil, "OVERLAY")
+    card.targetBottom:SetTexture(TEX_WHITE)
+    card.targetBottom:SetVertexColor(0.05, 0.85, 1.0, 0.95)
+    card.targetBottom:SetPoint("BOTTOMLEFT", 2, 2)
+    card.targetBottom:SetPoint("BOTTOMRIGHT", -2, 2)
+    card.targetBottom:SetHeight(2)
+    card.targetBottom:Hide()
+
+    card.targetLeft = card:CreateTexture(nil, "OVERLAY")
+    card.targetLeft:SetTexture(TEX_WHITE)
+    card.targetLeft:SetVertexColor(0.05, 0.85, 1.0, 0.95)
+    card.targetLeft:SetPoint("TOPLEFT", 2, -2)
+    card.targetLeft:SetPoint("BOTTOMLEFT", 2, 2)
+    card.targetLeft:SetWidth(2)
+    card.targetLeft:Hide()
+
+    card.targetRight = card:CreateTexture(nil, "OVERLAY")
+    card.targetRight:SetTexture(TEX_WHITE)
+    card.targetRight:SetVertexColor(0.05, 0.85, 1.0, 0.95)
+    card.targetRight:SetPoint("TOPRIGHT", -2, -2)
+    card.targetRight:SetPoint("BOTTOMRIGHT", -2, 2)
+    card.targetRight:SetWidth(2)
+    card.targetRight:Hide()
+
+
+    card.targetText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    card.targetText:SetPoint("BOTTOM", 0, 20)
+    card.targetText:SetText("OBJETIVO")
+    card.targetText:SetTextColor(0.05, 0.85, 1.0)
+    card.targetText:Hide()
     return card
 end
 
@@ -2155,47 +2197,9 @@ local function CreateCard(parent, index)
     card.reorder:SetAllPoints(card)
     card.reorder:Hide()
 
-    card.targetTop = card:CreateTexture(nil, "OVERLAY")
-    card.targetTop:SetTexture(TEX_WHITE)
-    card.targetTop:SetVertexColor(0.05, 0.85, 1.0, 0.95)
-    card.targetTop:SetPoint("TOPLEFT", 2, -2)
-    card.targetTop:SetPoint("TOPRIGHT", -2, -2)
-    card.targetTop:SetHeight(2)
-    card.targetTop:Hide()
-
-    card.targetBottom = card:CreateTexture(nil, "OVERLAY")
-    card.targetBottom:SetTexture(TEX_WHITE)
-    card.targetBottom:SetVertexColor(0.05, 0.85, 1.0, 0.95)
-    card.targetBottom:SetPoint("BOTTOMLEFT", 2, 2)
-    card.targetBottom:SetPoint("BOTTOMRIGHT", -2, 2)
-    card.targetBottom:SetHeight(2)
-    card.targetBottom:Hide()
-
-    card.targetLeft = card:CreateTexture(nil, "OVERLAY")
-    card.targetLeft:SetTexture(TEX_WHITE)
-    card.targetLeft:SetVertexColor(0.05, 0.85, 1.0, 0.95)
-    card.targetLeft:SetPoint("TOPLEFT", 2, -2)
-    card.targetLeft:SetPoint("BOTTOMLEFT", 2, 2)
-    card.targetLeft:SetWidth(2)
-    card.targetLeft:Hide()
-
-    card.targetRight = card:CreateTexture(nil, "OVERLAY")
-    card.targetRight:SetTexture(TEX_WHITE)
-    card.targetRight:SetVertexColor(0.05, 0.85, 1.0, 0.95)
-    card.targetRight:SetPoint("TOPRIGHT", -2, -2)
-    card.targetRight:SetPoint("BOTTOMRIGHT", -2, 2)
-    card.targetRight:SetWidth(2)
-    card.targetRight:Hide()
-
-
     card.turn = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     card.turn:SetPoint("BOTTOM", 0, 7)
 
-    card.targetText = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    card.targetText:SetPoint("BOTTOM", 0, 20)
-    card.targetText:SetText("OBJETIVO")
-    card.targetText:SetTextColor(0.05, 0.85, 1.0)
-    card.targetText:Hide()
 
     -- Reordenar es SOLO de la ventana de turnos: mueve la entrada dentro de `store.entries`, y un
     -- miembro de bloque no vive ahi. Por eso estos dos no van en el constructor comun.
@@ -2610,6 +2614,7 @@ end
 -- ticker: se repinta cuando cambia el turno, que es la unica vez que cambia lo que dice.
 do
     local marcador
+    local PintarRecursos
 
     local function Activo()
         if HarfordConfig and HarfordConfig.Get and HarfordConfig.Get("turnmarker") == "off" then
@@ -2621,7 +2626,9 @@ do
     local function Crear()
         if marcador then return marcador end
         marcador = CreateFrame("Frame", "HarfordTurnMarkerFrame", UIParent)
-        marcador:SetSize(243, 77)
+        -- Mas alto que el atlas (243x77): debajo del turno van la barra de movimiento y las
+        -- fichas de economia, que antes vivian sueltas encima de la barra de accion.
+        marcador:SetSize(243, 96)
         marcador:SetPoint("TOP", UIParent, "TOP", 0, -18)
         -- MEDIUM, no DIALOG: se queda en pantalla y no puede ponerse por delante de una ventana.
         marcador:SetFrameStrata("MEDIUM")
@@ -2664,6 +2671,40 @@ do
         marcador.detalle:SetJustifyH("LEFT")
         marcador.detalle:SetTextColor(0.75, 0.72, 0.62)
 
+        -- Barra de movimiento. Click IZQUIERDO: vuelves a donde empezaste el turno y el contador
+        -- se pone a cero. Es lo que quieres cuando te has colocado mal, y no tenia gesto.
+        marcador.mov = CreateFrame("Button", nil, marcador)
+        marcador.mov:SetHeight(12)
+        marcador.mov:SetPoint("TOPLEFT", marcador, "TOPLEFT", 14, -44)
+        marcador.mov:SetPoint("RIGHT", marcador, "RIGHT", -14, 0)
+        marcador.mov.barra = CreateFrame("StatusBar", nil, marcador.mov)
+        marcador.mov.barra:SetAllPoints()
+        marcador.mov.barra:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        marcador.mov.barra:SetMinMaxValues(0, 1)
+        marcador.mov.fondo = marcador.mov.barra:CreateTexture(nil, "BACKGROUND")
+        marcador.mov.fondo:SetAllPoints()
+        marcador.mov.fondo:SetColorTexture(0, 0, 0, 0.6)
+        marcador.mov.texto = marcador.mov.barra:CreateFontString(nil, "OVERLAY",
+            "GameFontHighlightSmall")
+        marcador.mov.texto:SetPoint("CENTER")
+        marcador.mov:SetScript("OnClick", function()
+            if HarfordDnDAttackUI and HarfordDnDAttackUI.ReturnToTurnStart then
+                HarfordDnDAttackUI.ReturnToTurnStart()
+            end
+        end)
+        marcador.mov:SetScript("OnEnter", function(self)
+            if not GameTooltip then return end
+            GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+            GameTooltip:AddLine("Movimiento", 1, 1, 1)
+            GameTooltip:AddLine("Click: vuelves a donde empezaste el turno.", 0.7, 0.7, 0.7)
+            GameTooltip:Show()
+        end)
+        marcador.mov:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+
+        -- Las fichas de accion, adicional y reaccion. Una por punto de presupuesto: un Impetu de
+        -- Accion se ve como dos, que es lo que hace que se lean de un vistazo.
+        marcador.fichas = {}
+
         marcador:SetScript("OnEnter", function(self)
             if not GameTooltip then return end
             GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
@@ -2677,8 +2718,88 @@ do
         return marcador
     end
 
+    local COLOR_FICHA = {
+        action   = { 0.36, 0.74, 0.36 },   -- verde, los mismos que BG3 y que la barra de accion
+        bonus    = { 0.62, 0.42, 0.24 },   -- marron
+        reaction = { 0.62, 0.36, 0.80 },   -- morado
+    }
+
+    -- Barra de movimiento y fichas de economia. Solo tienen sentido si TU estas en el combate:
+    -- `Turn.IsActive` ya lo mira, asi que no hay que repetirlo aqui.
+    PintarRecursos = function()
+        local U = HarfordDnDAttackUI
+        local tope = (U and U.GetTurnMovementMax and U.GetTurnMovementMax()) or 0
+        local T = HarfordDnDConditions and HarfordDnDConditions.Turn
+        local activa = T and T.IsActive and T.IsActive()
+
+        if activa and tope > 0 then
+            local gastado = (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0
+            local quedan = math.max(0, tope - gastado)
+            local fraccion = quedan / tope
+            marcador.mov.barra:SetValue(fraccion)
+            -- Verde mientras te queda, ambar en el ultimo tercio y roja al agotarse, que es cuando
+            -- el muro te devuelve a donde se te acabo.
+            if fraccion <= 0.001 then marcador.mov.barra:SetStatusBarColor(0.75, 0.25, 0.25)
+            elseif fraccion < 0.34 then marcador.mov.barra:SetStatusBarColor(0.90, 0.68, 0.25)
+            else marcador.mov.barra:SetStatusBarColor(0.35, 0.72, 0.40) end
+            marcador.mov.texto:SetText(string.format("%.1f m", quedan))
+            marcador.mov:Show()
+        else
+            marcador.mov:Hide()
+        end
+
+        local n = 0
+        if activa then
+            for _, tipo in ipairs(T.ORDEN or {}) do
+                local total, quedan = T.GetBudget(tipo), T.GetRemaining(tipo)
+                for punto = 1, total do
+                    n = n + 1
+                    local f = marcador.fichas[n]
+                    if not f then
+                        f = CreateFrame("Frame", nil, marcador)
+                        f:SetSize(13, 13)
+                        f.fondo = f:CreateTexture(nil, "ARTWORK")
+                        f.fondo:SetPoint("TOPLEFT", 2, -2)
+                        f.fondo:SetPoint("BOTTOMRIGHT", -2, 2)
+                        f.marco = f:CreateTexture(nil, "OVERLAY")
+                        f.marco:SetTexture("Interface\\Common\\WhiteIconFrame")
+                        f.marco:SetAllPoints()
+                        marcador.fichas[n] = f
+                    end
+                    local c = COLOR_FICHA[tipo] or { 0.7, 0.7, 0.7 }
+                    -- La gastada se apaga en vez de desaparecer: asi se ve cuantas TENIAS.
+                    if punto > quedan then
+                        f.fondo:SetColorTexture(c[1] * 0.22, c[2] * 0.22, c[3] * 0.22, 0.9)
+                        f.marco:SetVertexColor(0.35, 0.35, 0.35)
+                    else
+                        f.fondo:SetColorTexture(c[1], c[2], c[3], 1)
+                        f.marco:SetVertexColor(c[1] * 1.1, c[2] * 1.1, c[3] * 1.1)
+                    end
+                    f:ClearAllPoints()
+                    f:SetPoint("TOPLEFT", marcador, "TOPLEFT", 14 + (n - 1) * 16, -60)
+                    f:Show()
+                end
+            end
+        end
+        for i = n + 1, #marcador.fichas do marcador.fichas[i]:Hide() end
+    end
+
     -- Repinta con lo que hay ahora. Sale de la MISMA fuente que la ventana de turnos, para que no
     -- puedan decir cosas distintas.
+    -- Se repinta tambien cuando cambia el movimiento o la economia, no solo al cambiar de turno:
+    -- si no, la barra se quedaria llena mientras andas y las fichas encendidas al gastarlas.
+    do
+        local function Repintar()
+            if marcador and marcador:IsShown() then PintarRecursos() end
+        end
+        if HarfordDnDAttackUI and HarfordDnDAttackUI.RegisterMovementListener then
+            HarfordDnDAttackUI.RegisterMovementListener(Repintar)
+        end
+        if HarfordDnDConditions and HarfordDnDConditions.RegisterListener then
+            HarfordDnDConditions.RegisterListener(Repintar)
+        end
+    end
+
     function HarfordTurnOrderAPI.RefreshTurnMarker()
         if not Activo() then
             if marcador then marcador:Hide() end
@@ -2707,6 +2828,7 @@ do
         marcador.detalle:SetText(tostring(detalle or ""))
         local asalto = tonumber(store.asalto) or 0
         marcador.asalto:SetText(asalto > 0 and ("Asalto " .. asalto) or "")
+        PintarRecursos()
         marcador:Show()
         return true
     end

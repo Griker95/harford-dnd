@@ -11,7 +11,7 @@ local sis = src:sub(i, j + 4)
 local k = assert(src:find("function HarfordTurnOrderAPI.HasActiveCombat"))
 local l = assert(src:find("\nend", k))
 local hac = src:sub(k, l + 4)
-local env = { ipairs = ipairs, type = type, HarfordTurnOrderAPI = {} }
+local env = { ipairs = ipairs, type = type, tostring = tostring, HarfordTurnOrderAPI = {} }
 local f
 local codigo = sis .. "\n" .. hac .. "\nreturn HarfordTurnOrderAPI.HasActiveCombat"
 if setfenv then f = assert(cargar(codigo)); setfenv(f, env) else f = assert(cargar(codigo, "t", "t", env)) end
@@ -28,10 +28,13 @@ set({})
 chk("lista vacia", Has(), false)
 set({ { kind = "round", name = "Inicio de turno" } })
 chk("SOLO el marcador de asalto (el caso del bug)", Has(), false)
+-- Un BLOQUE cuenta como combatiente. Antes no, y montar PJs/Neutral/Enemigo y darle a Iniciar
+-- decia "no hay combatientes" con la mesa llena: `IsSystemEntry` tapaba `players` y `generic`, que
+-- son justo las tarjetas que representan a los bandos. Lo unico que no cuenta es el asalto.
 set({ { kind = "round" }, { kind = "generic", name = "Enemigo" } })
-chk("marcador + marcador de fase", Has(), false)
+chk("marcador + bloque de enemigos -> SI", Has(), true)
 set({ { kind = "round" }, { kind = "players", name = "PJs" } })
-chk("marcador + turno PJs (aun sin combatientes)", Has(), false)
+chk("marcador + bloque de PJs -> SI", Has(), true)
 set({ { kind = "round" }, { kind = "npc", name = "Gnoll" } })
 chk("marcador + un NPC -> SI hay combate", Has(), true)
 set({ { kind = "round" }, { kind = "player", name = "Marcos" } })

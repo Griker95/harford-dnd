@@ -458,6 +458,8 @@ function API.AttachMovementTracker(opts)
     local yardsToMeters = 0.9144
     local pollInterval = 0.1
     local tracking = false
+    local IniciarSeguimiento   -- se asigna abajo; lo llama el reinicio de turno, que esta antes
+    local ultimoTiron = 0
     local totalMeters = 0
     local startX, startY, startZ
     local lastX, lastY, lastZ
@@ -567,6 +569,27 @@ function API.AttachMovementTracker(opts)
                 totalMeters = totalMeters + distance
                 button:SetText("Parar " .. FormatMeters(totalMeters))
                 label:SetText(FormatMeters(totalMeters))
+
+                -- Al agotar el movimiento te quedas donde estas. Un contador que solo cuenta deja
+                -- el limite en un numero de adorno: aqui el punto donde se acaba se convierte en
+                -- tu sitio, y seguir andando te devuelve a el.
+                local tope = MaximoDelTurno()
+                if tope > 0 and totalMeters >= tope then
+                    if not API.RecordedMovementAnchor then
+                        API.RecordedMovementAnchor = CapturarAncla()
+                        HarfordChat.Print("|cffffcc00Has agotado tu movimiento.|r Seguir andando "
+                            .. "te devolvera a donde te quedaste.")
+                    -- Con margen y con enfriamiento: sin ellos cada paso pediria un teleporte y el
+                    -- servidor se llevaria una rafaga de `worldport` por cruzar una puerta.
+                    elseif totalMeters > tope + 1.5
+                        and ((GetTime and GetTime()) or 0) - ultimoTiron > 2
+                        and HarfordServerActions and HarfordServerActions.WorldportSelf then
+                        ultimoTiron = (GetTime and GetTime()) or 0
+                        totalMeters = tope
+                        HarfordServerActions.WorldportSelf(API.RecordedMovementAnchor,
+                            { addonName = "Harford" })
+                    end
+                end
             end
         end
         lastX, lastY, lastZ = x, y, z
@@ -611,7 +634,11 @@ function API.AttachMovementTracker(opts)
         API.RecordedMovementAnchor = nil
         -- Y si corriste el turno pasado, ese doble no se hereda.
         corriendo = false
+        ultimoTiron = 0
         label:SetText("")
+        -- Y arranca SOLO. Tener que acordarse de pulsar el boton cada turno es la friccion que
+        -- hace que la cuenta no se lleve nunca; el boton queda para pararla antes de tiempo.
+        if IniciarSeguimiento then IniciarSeguimiento() end
     end
 
     local function RefreshConditionState()
@@ -627,19 +654,8 @@ function API.AttachMovementTracker(opts)
         end
     end
 
-    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
-    button:SetScript("OnClick", function(_, boton)
-        -- Derecho: volver al ancla. Es un comando que te MUEVE, asi que va en un gesto distinto
-        -- del que se pulsa cada turno, no vaya a portarte por querer parar el contador.
-        if boton == "RightButton" then
-            VolverAlAncla()
-            return
-        end
-        if tracking then
-            StopTracking()
-            return
-        end
-
+    IniciarSeguimiento = function()
+        if tracking then return end
         if HarfordDnDConditions and HarfordDnDConditions.IsSpeedZero
             and HarfordDnDConditions.IsSpeedZero("player") then
             RefreshConditionState()
@@ -658,8 +674,23 @@ function API.AttachMovementTracker(opts)
         API.RecordedMovementInfo = { meters = 0, startX = x, startY = y, startZ = z, endX = x, endY = y, endZ = z }
         tracking = true
         button:SetText("Parar  0.0m")
-        label:SetText("0.0 m")
+        label:SetText(FormatMeters(0))
         button:SetScript("OnUpdate", OnUpdate)
+    end
+
+    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    button:SetScript("OnClick", function(_, boton)
+        -- Derecho: volver al ancla. Es un comando que te MUEVE, asi que va en un gesto distinto
+        -- del que se pulsa cada turno, no vaya a portarte por querer parar el contador.
+        if boton == "RightButton" then
+            VolverAlAncla()
+            return
+        end
+        if tracking then
+            StopTracking()
+            return
+        end
+        IniciarSeguimiento()
     end)
 
     if HarfordDnDConditions and HarfordDnDConditions.RegisterListener then

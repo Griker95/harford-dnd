@@ -2627,7 +2627,10 @@ function HarfordTurnOrderAPI.HasActiveCombat()
     local store = HarfordTurnOrderStore
     if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
     for _, entry in ipairs(store.entries) do
-        if not IsSystemEntry(entry) then return true end
+        -- Lo unico que NO cuenta es el marcador de asalto. Un BLOQUE si cuenta: `IsSystemEntry`
+        -- tapaba `players` y `generic`, asi que montar PJs, Neutral y Enemigo y darle a Iniciar
+        -- decia que no habia combatientes -- justo lo que se acababa de poner.
+        if tostring(entry.kind or "") ~= "round" then return true end
     end
     return false
 end

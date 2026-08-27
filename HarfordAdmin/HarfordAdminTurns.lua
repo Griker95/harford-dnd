@@ -202,6 +202,7 @@ end
 -- un numero viejo que nadie puede comprobar.
 do
     local panel, filas = nil, {}
+    local AnadirABloque   -- se asigna abajo; el boton cierra sobre ella
     local bloqueActual
     local FILA_ALTO, PANEL_ANCHO, VISIBLES = 24, 240, 12
     local RefrescarPanel
@@ -209,11 +210,27 @@ do
     local function EnsureFila(i)
         local f = filas[i]
         if f then return f end
-        f = CreateFrame("Button", nil, panel)
+        f = CreateFrame("Button", nil, panel, "BackdropTemplate")
         f:SetSize(PANEL_ANCHO - 16, FILA_ALTO)
+        -- Con fondo y marco: son TARJETAS, como las de la ventana de turnos, no lineas de texto.
+        -- Quien esta dentro de un bloque es un combatiente, y se tiene que leer como tal.
+        f.fondo = f:CreateTexture(nil, "BACKGROUND")
+        f.fondo:SetAllPoints(f)
+        f.fondo:SetColorTexture(0, 0, 0, 0.35)
         f.retrato = f:CreateTexture(nil, "ARTWORK")
-        f.retrato:SetSize(20, 20)
-        f.retrato:SetPoint("LEFT", f, "LEFT", 2, 0)
+        f.retrato:SetSize(FILA_ALTO - 6, FILA_ALTO - 6)
+        f.retrato:SetPoint("LEFT", f, "LEFT", 3, 0)
+        -- Retrato circular, como el resto del addon.
+        local mascara = f:CreateMaskTexture(nil, "ARTWORK")
+        mascara:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask",
+            "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        mascara:SetAllPoints(f.retrato)
+        f.retrato:AddMaskTexture(mascara)
+        f.marco = f:CreateTexture(nil, "OVERLAY")
+        f.marco:SetTexture("Interface\\Common\\WhiteIconFrame")
+        f.marco:SetSize(FILA_ALTO - 2, FILA_ALTO - 2)
+        f.marco:SetPoint("CENTER", f.retrato, "CENTER")
+        f.marco:SetVertexColor(0.55, 0.5, 0.4)
         f.texto = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         f.texto:SetPoint("LEFT", f.retrato, "RIGHT", 6, 0)
         f.texto:SetJustifyH("LEFT")
@@ -263,6 +280,12 @@ do
         panel.borde:SetAllPoints(panel)
         panel.titulo = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         panel.titulo:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -12)
+        -- Abajo, donde se busca: anadir es lo que mas se hace en esta ventana.
+        panel.anadir = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+        panel.anadir:SetSize(PANEL_ANCHO - 24, 22)
+        panel.anadir:SetPoint("BOTTOM", panel, "BOTTOM", 0, 10)
+        panel.anadir:SetScript("OnClick", function() AnadirABloque() end)
+
         panel.cerrar = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
         panel.cerrar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
         panel.cerrar:SetScript("OnClick", function() panel:Hide() end)
@@ -286,6 +309,10 @@ do
         local dentro = T.GetBlockMembers(bloqueActual)
         panel.titulo:SetText(tostring(bloqueActual.name or "Bloque")
             .. "  |cff999999(" .. #dentro .. ")|r")
+        -- El boton dice lo que va a hacer, que no es lo mismo en un bloque de PJs que en uno de
+        -- NPCs: alli hay lista, aqui se anade lo que tengas delante.
+        panel.anadir:SetText(tostring(bloqueActual.kind or "") == "players"
+            and "Anadir al grupo..." or "Anadir el objetivo")
         for i = 1, VISIBLES do
             local m, f = dentro[i], EnsureFila(i)
             if not m then f:Hide()
@@ -322,6 +349,87 @@ do
                 f:Show()
             end
         end
+    end
+
+    -- En PJs se despliega la LISTA del grupo: son varios y estan todos a mano. En los demas se
+    -- anade el OBJETIVO, porque a los NPC no hay forma de enumerarlos.
+    local menuAnadir
+    AnadirABloque = function()
+        local T = API()
+        if not bloqueActual then return end
+
+        if tostring(bloqueActual.kind or "") ~= "players" then
+            -- Un jugador NO entra en un bloque de NPCs: los PJs van siempre con los PJs, y meterlo
+            -- aqui lo sacaria de su bando sin que nadie lo note.
+            if UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target") then
+                Print("|cffff5555" .. tostring(UnitName("target")) .. " es un jugador:|r va en el "
+                    .. "bloque de PJs, no en " .. tostring(bloqueActual.name) .. ".")
+                return
+            end
+            local ok, err = T.AddBlockMember(bloqueActual, "target")
+            Print(ok and (tostring(UnitName("target")) .. " entra en "
+                .. tostring(bloqueActual.name) .. ".") or tostring(err))
+            RefrescarPanel()
+            return
+        end
+
+        -- Bloque de PJs: la lista del grupo, con los que ya estan marcados.
+        menuAnadir = menuAnadir or CreateFrame("Frame", "HarfordAdminBlockAddMenu", UIParent,
+            "UIDropDownMenuTemplate")
+        UIDropDownMenu_Initialize(menuAnadir, function(_, level)
+            local titulo = UIDropDownMenu_CreateInfo()
+            titulo.isTitle, titulo.notCheckable = true, true
+            titulo.text = "Anadir al bloque"
+            UIDropDownMenu_AddButton(titulo, level)
+
+            local dentro = {}
+            for _, m in ipairs(T.GetBlockMembers(bloqueActual)) do dentro[m.guid] = true end
+
+            local n = (GetNumGroupMembers and GetNumGroupMembers()) or 0
+            local enRaid = IsInRaid and IsInRaid()
+            local unidades = { "player" }
+            for i = 1, (enRaid and n or math.max(0, n - 1)) do
+                unidades[#unidades + 1] = (enRaid and "raid" or "party") .. i
+            end
+            for _, u in ipairs(unidades) do
+                if UnitExists and UnitExists(u) then
+                    local guid = UnitGUID(u)
+                    local i = UIDropDownMenu_CreateInfo()
+                    i.text = tostring(UnitName(u))
+                    -- Un desconectado no va a jugar su turno: se ve, pero no se puede meter.
+                    local conectado = (not UnitIsConnected) or UnitIsConnected(u)
+                    if not conectado then i.text = i.text .. " |cff808080(desconectado)|r" end
+                    i.checked = dentro[guid] and true or false
+                    i.disabled = not conectado
+                    i.func = function()
+                        if dentro[guid] then T.RemoveBlockMember(bloqueActual, guid)
+                        else T.AddBlockMember(bloqueActual, u) end
+                        RefrescarPanel()
+                        CloseDropDownMenus()
+                    end
+                    UIDropDownMenu_AddButton(i, level)
+                end
+            end
+
+            local todos = UIDropDownMenu_CreateInfo()
+            todos.notCheckable = true
+            todos.text = "|cff88ff88Anadir a todo el grupo|r"
+            todos.func = function()
+                local puestos = 0
+                for _, u in ipairs(unidades) do
+                    if UnitExists(u) and ((not UnitIsConnected) or UnitIsConnected(u))
+                        and T.AddBlockMember(bloqueActual, u) then
+                        puestos = puestos + 1
+                    end
+                end
+                Print(puestos > 0 and ("Anadidos " .. puestos .. " jugador(es).")
+                    or "No habia a quien anadir.")
+                RefrescarPanel()
+                CloseDropDownMenus()
+            end
+            UIDropDownMenu_AddButton(todos, level)
+        end, "MENU")
+        ToggleDropDownMenu(1, nil, menuAnadir, panel.anadir, 0, 0)
     end
 
     function AbrirPanelDeBloque(entry)

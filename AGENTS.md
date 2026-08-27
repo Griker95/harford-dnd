@@ -3290,6 +3290,21 @@ de ids lo blindaria a costa de engordar el mensaje.
 
 Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
+## Movimiento del turno: se cuenta solo y el limite es un muro (2026-08-27)
+
+- **Se cuenta SOLO, no hay que pulsar nada.** `HarfordDnDAttackUI` arranca el seguimiento desde el
+  listener `RegisterMyTurnListener`, igual que Atlas. El boton queda para pararlo antes de tiempo
+  (izquierdo) y para volver al ancla (derecho). Tener que acordarse de pulsarlo cada turno era la
+  friccion que hacia que la cuenta no se llevara nunca.
+- **El limite es un MURO, no un aviso.** Al llegar al tope (`HarfordDnDCalc.GetTurnMovement`, x2 si
+  `Correr` esta activo) se captura el ancla en ese punto exacto y se avisa; si sigues andando mas
+  de 1.5 m por encima, `HarfordServerActions.WorldportSelf` te devuelve ahi. Enfriamiento de 2 s:
+  sin el, cada paso pediria un teleporte y el servidor se comeria una rafaga de `worldport`.
+- El ancla se olvida al empezar tu turno siguiente: volver a la del turno pasado te devolveria un
+  asalto entero atras.
+- `WorldportSelf` es el UNICO comando de Harford que mueve a alguien. No emite nada sin coordenadas
+  validas Y mapa (`GetInstanceInfo`, no `C_Map`, que devuelve el id de la interfaz).
+
 ## Economia de turno: accion, adicional y reaccion (2026-08-24)
 
 `HarfordDnDConditions.Turn` lleva el presupuesto por turno. Vive **dentro del motor de condiciones**,

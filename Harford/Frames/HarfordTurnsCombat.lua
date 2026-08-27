@@ -144,12 +144,17 @@ local function StartCombat()
 
     local jugadores, combatientes = 0, 0
     for _, entry in ipairs(store.entries) do
+        local k = tostring(entry.kind or "")
         if not IsSystemEntry(entry) then
             entry.initiative = RollD20() + LocalInitiativeBonus(entry)
             combatientes = combatientes + 1
-            if entry.kind == "player" and not EntryBelongsToMe(entry) then
+            if k == "player" and not EntryBelongsToMe(entry) then
                 jugadores = jugadores + 1
             end
+        elseif k ~= "round" then
+            -- Un BLOQUE no tira iniciativa -- el orden de bandos es fijo -- pero SI es un
+            -- combatiente: si no se contara, el aviso diria "0 combatientes" con la mesa llena.
+            combatientes = combatientes + 1 + #(entry.miembros or {})
         end
     end
     SortByInitiative()

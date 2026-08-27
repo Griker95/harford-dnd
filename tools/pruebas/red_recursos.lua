@@ -178,7 +178,19 @@ local turnos = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
 print("Los turnos ya se pueden pedir, no solo recibir")
 chk("hay peticion", turnos:find('"TREQ|"', 1, true) ~= nil, true)
 chk("y quien la atiende es el DM",
-    turnos:find("if IsTurnAdmin() and sender", 1, true) ~= nil, true)
+    turnos:find("if IsTurnAdmin() then SendStateTo(sender) return true end", 1, true) ~= nil, true)
+-- Y si el DM se ha caido no contesta NADIE, asi que quien entra se queda sin combate. Un companero
+-- tiene la misma foto --se la mandaron a el igual-- y puede servirla, pero DESPUES de esperar: la
+-- del DM es la buena y tiene que llegar primero si esta.
+chk("y si no hay DM, releva un companero",
+    turnos:find("SendStateTo(sender, true)", 1, true) ~= nil, true)
+-- No contesta si desde la peticion ha pasado una foto por el canal: alguien con mas derecho ya lo
+-- hizo, y dos fotos distintas serian peor que ninguna.
+chk("pero no si alguien ya contesto",
+    turnos:find("if (ULTIMA_FOTO_VISTA or 0) >= pedido then return end", 1, true) ~= nil, true)
+-- Ni si el no tiene combate que servir.
+chk("ni si no tiene combate",
+    turnos:find("if not HarfordTurnOrderAPI.HasCombatants() then return true end", 1, true) ~= nil, true)
 -- Por susurro: la foto completa solo le interesa a quien la pidio, no a toda la mesa.
 chk("se contesta a uno solo",
     turnos:find('SendSerializedState(SerializeState(), "WHISPER", target)', 1, true) ~= nil, true)

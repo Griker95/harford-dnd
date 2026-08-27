@@ -822,6 +822,10 @@ local function RefrescarMarcadorTrasRecibir()
     if HarfordTurnOrderAPI.RefreshTurnMarker then HarfordTurnOrderAPI.RefreshTurnMarker() end
 end
 
+-- Cuando se vio la ultima foto. Lo mira el relevo entre companeros para no contestar si el DM ya
+-- lo hizo.
+ULTIMA_FOTO_VISTA = 0
+
 local function ApplySerializedState(message)
     local opcode, activeRaw, third, fourth = strsplit("|", message or "")
     if opcode ~= "STATE" then return false end
@@ -859,6 +863,7 @@ local function ApplySerializedState(message)
         end
     end
 
+    ULTIMA_FOTO_VISTA = (time and time()) or 0
     ClampActiveIndex()
     EnsureRoundMarker()
     ClampActiveIndex()
@@ -933,7 +938,22 @@ local function ApplyTurnMessage(message, sender)
         -- Solo el DM tiene la foto buena. Si hay varios, contestan todos: la foto es la misma y
         -- aplicarla dos veces no cambia nada, a diferencia de los estados de NPC, donde la lista
         -- SUSTITUYE y por eso alli si hizo falta desempate.
-        if IsTurnAdmin() and sender and sender ~= "" then SendStateTo(sender) end
+        if not (sender and sender ~= "") then return true end
+        if IsTurnAdmin() then SendStateTo(sender) return true end
+        -- Y si el DM se ha caido, no contesta NADIE y quien entra se queda sin combate. Un
+        -- companero tiene la misma foto --se la mandaron a el igual-- asi que puede servirla,
+        -- pero DESPUES de esperar: la del DM es la buena y tiene que llegar primero si esta.
+        --
+        -- No se responde si desde entonces ha pasado una foto por el canal: eso significa que
+        -- alguien con mas derecho ya contesto.
+        if not HarfordTurnOrderAPI.HasCombatants() then return true end
+        local pedido = (time and time()) or 0
+        if C_Timer and C_Timer.After then
+            C_Timer.After(5, function()
+                if (ULTIMA_FOTO_VISTA or 0) >= pedido then return end
+                SendStateTo(sender, true)
+            end)
+        end
         return true
     elseif opcode == "INITREQ" then
         return Combate.ApplyInitiativeRequest(message, sender)
@@ -951,8 +971,10 @@ local function SendState()
 end
 
 -- Contestar a uno solo, por susurro: la foto completa solo le interesa a quien la pidio.
-SendStateTo = function(target)
-    if not IsTurnAdmin() then return false end
+-- `comoPar`: la manda alguien que NO es DM, porque el DM no contesto. Es el unico caso en que se
+-- permite; el resto de la vida la foto la sirve quien manda.
+SendStateTo = function(target, comoPar)
+    if not comoPar and not IsTurnAdmin() then return false end
     if not (target and target ~= "") then return false end
     return SendSerializedState(SerializeState(), "WHISPER", target)
 end

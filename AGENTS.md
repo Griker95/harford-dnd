@@ -3466,6 +3466,17 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   `/harford debug run movimiento` (y `movimiento simular` dispara el aviso de turno a mano, que es
   el eslabon que no se puede provocar sin montar un combate entero).
 
+## Si el DM se cae, releva un companero (2026-08-27)
+
+- `TREQ` lo contestaba **solo el DM**. Si se caia a mitad de combate, quien entraba o reconectaba se
+  quedaba sin nada. Copiado del `COMBAT_QUERY` de Atlas, cuyo comentario dice que sirve "para que
+  los lideres que han crasheado tambien puedan recuperar de sus pares".
+- **La foto del DM sigue mandando**: contesta al instante. Un companero espera **5 s** y solo
+  responde si en ese rato **no ha pasado ninguna foto** por el canal (`ULTIMA_FOTO_VISTA`) -- si
+  paso, alguien con mas derecho ya contesto, y dos fotos distintas serian peor que ninguna.
+- Tampoco contesta si el no tiene combate que servir. `SendStateTo(target, comoPar)`: el segundo
+  argumento es el UNICO camino por el que un no-DM puede servir la foto.
+
 ## El estado del combate es EXPLICITO (2026-08-27)
 
 - Tres estados, como en Atlas: sin combate, `preparando` (mesa montada, sin empezar) y `activo`.

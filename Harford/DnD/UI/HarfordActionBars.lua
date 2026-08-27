@@ -196,10 +196,6 @@ local COLOR_FICHA = {
     bonus    = { 0.62, 0.42, 0.24 },   -- marron
     reaction = { 0.62, 0.36, 0.80 },   -- morado
 }
--- La barra de movimiento va SOBRE la fila de fichas, no dentro: es un recurso continuo y las
--- fichas son puntos enteros. Mezclarlas en la misma fila hacia leer los metros como una ficha mas.
-local MOV_ALTO, MOV_ANCHO_MIN, MOV_HUECO = 9, 130, 4
-local TEX_BARRA = "Interface\\TargetingFrame\\UI-StatusBar"
 local TEX_MARCO = "Interface\\Common\\WhiteIconFrame"
 
 local function Economia()
@@ -260,40 +256,6 @@ local function EnsureNivelTexto(i)
     t = cont:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     cont.niveles[i] = t
     return t
-end
-
--- Barra de movimiento: se gasta al andar, como en BG3. Verde mientras te queda, ambar en el
--- ultimo tercio y roja al agotarse -- que es cuando el muro te devuelve a tu sitio.
-local function EnsureMovBar()
-    local cont = EnsureFichasFrame()
-    if cont.mov then return cont.mov end
-    local b = CreateFrame("StatusBar", nil, cont)
-    b:SetHeight(MOV_ALTO)
-    b:SetStatusBarTexture(TEX_BARRA)
-    b:SetMinMaxValues(0, 1)
-    b.fondo = b:CreateTexture(nil, "BACKGROUND")
-    b.fondo:SetAllPoints()
-    b.fondo:SetColorTexture(0, 0, 0, 0.6)
-    b.marco = b:CreateTexture(nil, "OVERLAY")
-    b.marco:SetTexture(TEX_MARCO)
-    b.marco:SetAllPoints()
-    b.marco:SetVertexColor(0.35, 0.35, 0.35)
-    b.texto = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    b.texto:SetPoint("CENTER", b, "CENTER", 0, 0)
-    b:EnableMouse(true)
-    b:SetScript("OnEnter", function(self)
-        if not GameTooltip then return end
-        GameTooltip:SetOwner(self, "ANCHOR_TOP")
-        GameTooltip:AddLine("Movimiento", 1, 1, 1)
-        GameTooltip:AddLine(string.format("%.1f m de %.1f", self.quedan or 0, self.tope or 0),
-            0.7, 0.7, 0.7)
-        -- La regla que se olvida: al agotarlo no es que "no deberias", es que no puedes.
-        GameTooltip:AddLine("Al agotarlo vuelves a donde te quedaste", 0.6, 0.6, 0.6)
-        GameTooltip:Show()
-    end)
-    b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
-    cont.mov = b
-    return b
 end
 
 local function EnsureFicha(i)

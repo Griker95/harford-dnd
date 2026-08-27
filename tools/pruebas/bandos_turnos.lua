@@ -425,6 +425,10 @@ chk("y no crea un boton por refresco",
 -- DOS botones en el bloque de PJs: apuntar a uno y anadirlo, o desplegar el grupo entero. Antes en
 -- PJs solo estaba la lista, asi que meter al que tenias delante obligaba a buscarlo en ella.
 chk("y boton de grupo", admin2:find("AnadirDelGrupo = function()", 1, true) ~= nil, true)
+-- En RAID, `raidN` ya te incluye: anadir ademas "player" te listaba DOS veces. Se filtra por guid
+-- --es la misma unidad se llame como se llame-- en vez de por el tipo de grupo.
+chk("la lista del grupo no repite a nadie",
+    admin2:find("if not guid or vistos[guid] then return end", 1, true) ~= nil, true)
 chk("y el de grupo se esconde fuera de PJs",
     admin2:find("p.anadirGrupo:Hide()", 1, true) ~= nil, true)
 -- El bloque de PJs es de JUGADORES: un NPC ahi rompe el bando igual de callado que un PJ entre NPCs.

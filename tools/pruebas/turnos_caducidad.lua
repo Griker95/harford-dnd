@@ -3,12 +3,22 @@
 -- CONSERVA y que una de horas se purga: borrar a ciegas seria peor que no borrar.
 local cargar = loadstring or load
 local src = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
+-- La limpieza se movio detras de `IsTurnAdmin` --lo usa para dar mas margen al DM-- asi que el
+-- trozo se coge por partes: el almacen y el sello por un lado, la limpieza por otro.
 local i = assert(src:find("local function EnsureStore"))
-local fin = assert(src:find("\n    return true\nend", i))
-local bloque = src:sub(i, fin + #"\n    return true\nend")
+local fin = assert(src:find("\nlocal STALE_SECONDS", i))
+local p1 = assert(src:find("local function PurgeStaleEntries"))
+local p2 = assert(src:find("\n    return true\nend", p1))
+-- Los dos limites van en el trozo: la limpieza los compara, y sin ellos serian globales nil.
+local lim1 = assert(src:find("local STALE_SECONDS = "))
+local lim2 = assert(src:find("\n", assert(src:find("local STALE_SECONDS_DM = "))))
+local bloque = src:sub(i, fin) .. "\n" .. src:sub(lim1, lim2)
+    .. src:sub(p1, p2 + #"\n    return true\nend")
     .. "\nreturn TouchStore, PurgeStaleEntries"
 local AHORA = 1000000
-local env = { type = type, tonumber = tonumber, time = function() return AHORA end }
+-- Sin ser DM: el margen corto es el que se comprueba aqui.
+local env = { type = type, tonumber = tonumber, time = function() return AHORA end,
+              ipairs = ipairs, IsTurnAdmin = function() return false end }
 local f
 if setfenv then f = assert(cargar(bloque)); setfenv(f, env) else f = assert(cargar(bloque, "t", "t", env)) end
 local Touch, Purge = f()
@@ -19,7 +29,7 @@ local function chk(n, real, esp)
     print(string.format("  %-54s %-6s %s", n, tostring(real), ok and "ok" or "FALLA"))
 end
 local H = 60 * 60
-print("Caducidad de la lista de turnos (limite 4h)")
+print("Caducidad de la lista de turnos (15 min; 4 h si mandas)")
 env.HarfordTurnOrderStore = { entries = {} }
 chk("lista vacia: nada que purgar", Purge(), false)
 
@@ -50,4 +60,18 @@ env.HarfordTurnOrderStore = { entries = {{kind="npc"}} }
 Touch()
 chk("lastTouched sellado", env.HarfordTurnOrderStore.lastTouched, AHORA)
 chk("  y ahora ya no se purga", Purge(), false)
+-- ─── EL DM TIENE MAS MARGEN ─────────────────────────────────────────────────
+-- Su copia es LA BUENA y nadie puede devolversela: si se le cae el cliente veinte minutos,
+-- tirarle el combate es perderlo de verdad, no limpiar un resto. Al que solo lo recibe le sobra
+-- con quince minutos, porque volver le cuesta un boton.
+print("El DM tiene mas margen")
+env.IsTurnAdmin = function() return true end
+env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 60*60 }
+chk("tocada hace 1 hora, siendo DM -> se conserva", Purge(), false)
+env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 5*H }
+chk("tocada hace 5 horas -> ni el DM la salva", Purge(), true)
+env.IsTurnAdmin = function() return false end
+env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 60*60 }
+chk("y sin mandar, esa misma hora se purga", Purge(), true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

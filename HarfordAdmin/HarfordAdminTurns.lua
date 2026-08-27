@@ -193,10 +193,20 @@ do
 
             local n = (GetNumGroupMembers and GetNumGroupMembers()) or 0
             local enRaid = IsInRaid and IsInRaid()
-            local unidades = { "player" }
-            for i = 1, (enRaid and n or math.max(0, n - 1)) do
-                unidades[#unidades + 1] = (enRaid and "raid" or "party") .. i
+            -- En RAID, `raidN` ya te incluye a ti: anadir ademas "player" te listaba dos veces.
+            -- En grupo no, porque `partyN` son los OTROS. Se filtra por guid en vez de por el tipo
+            -- de grupo: es la misma unidad se llame como se llame, y asi tampoco cuela un `focus`
+            -- o un `target` que apunte a alguien ya listado.
+            local unidades, vistos = {}, {}
+            local function Apuntar(u)
+                if not (UnitExists and UnitExists(u)) then return end
+                local guid = UnitGUID and UnitGUID(u)
+                if not guid or vistos[guid] then return end
+                vistos[guid] = true
+                unidades[#unidades + 1] = u
             end
+            Apuntar("player")
+            for i = 1, n do Apuntar((enRaid and "raid" or "party") .. i) end
             for _, u in ipairs(unidades) do
                 -- Un desconectado NO se enumera. Antes salia en gris y deshabilitado, y con una
                 -- hermandad detras eran veinte lineas muertas para encontrar a los tres que

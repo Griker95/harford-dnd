@@ -360,44 +360,16 @@ local function TouchStore()
     store.lastTouched = (time and time()) or 0
 end
 
--- QUINCE MINUTOS. Con el boton de `Unirse` y el relevo entre companeros, volver a un combate en
--- curso ya no depende de esto: la caducidad es para el caso raro --nadie conectado que te mande la
--- foto-- y cuanto antes limpie, menos rato se arrastra un combate muerto. Cuatro horas eran de
--- cuando esta era la unica via de vuelta.
+-- QUINCE MINUTOS para quien puede recuperarla: con el boton de `Unirse`, la foto automatica y el
+-- relevo entre companeros, volver a un combate en curso ya no depende de esto. Cuanto antes limpie,
+-- menos rato se arrastra un combate muerto.
 local STALE_SECONDS = 15 * 60
 
-local function PurgeStaleEntries()
-    local store = EnsureStore()
-    -- No se sale por lista vacia: lo que caduca es el COMBATE, y su estado puede haber quedado
-    -- puesto sin entradas. Si no hay ni entradas ni estado no hay nada que hacer.
-    if #store.entries == 0 and store.estado == nil and not store.movimiento
-        and not store.economia then
-        return false
-    end
-    local ahora = (time and time()) or 0
-    local ultimo = tonumber(store.lastTouched) or 0
-    -- Sin sello (lista escrita por una version anterior) se considera vieja: es lo que hay guardado
-    -- de antes de existir la caducidad, y precisamente eso es lo que sobra.
-    if ultimo > 0 and ahora > 0 and (ahora - ultimo) < STALE_SECONDS then return false end
-    store.entries = {}
-    store.activeIndex = 1
-    store.lastTouched = nil
-    -- Sin combatientes no hay bandos: dejar el bloque activo apuntando a una lista vacia haria que
-    -- el siguiente avance arrancara a media rotacion.
-    store.activeBando = nil
-    store.faseBando = nil
-    -- Y el COMBATE se acabo. Sin esto, el que se desconecta a media pelea y vuelve al dia
-    -- siguiente --sin nadie que le mande una foto nueva-- se encontraba las entradas limpias pero
-    -- el estado en `activo`: seguia "en combate" el solo, con su asalto de ayer.
-    store.estado = nil
-    store.asalto = nil
-    -- Lo gastado iba sellado con el asalto, que acaba de irse: se tira con el, o el sello dejaria
-    -- de valer y podria aplicarse a la pelea siguiente.
-    store.movimiento = nil
-    store.economia = nil
-    if Combate and Combate.CleanUpAfterCombat then pcall(Combate.CleanUpAfterCombat) end
-    return true
-end
+-- CUATRO HORAS para el DM. Su copia es LA BUENA y no hay nadie que pueda devolversela: si se le
+-- cae el cliente veinte minutos, tirarle el combate es perderlo de verdad, no limpiar un resto.
+-- Al que solo lo recibe le sobra con quince minutos, porque volver le cuesta un boton.
+local STALE_SECONDS_DM = 4 * 60 * 60
+
 
 -- ¿Acaba de avanzar otro DM? Devuelve true si hay que PARARSE y avisar. El segundo clic dentro de
 -- los 10 s siguientes pasa: quien insiste sabe lo que hace.
@@ -424,6 +396,40 @@ local function IsTurnAdmin()
     return HarfordAuthority
         and HarfordAuthority.CanUseDMTools
         and HarfordAuthority.CanUseDMTools() == true
+end
+
+local function PurgeStaleEntries()
+    local store = EnsureStore()
+    -- No se sale por lista vacia: lo que caduca es el COMBATE, y su estado puede haber quedado
+    -- puesto sin entradas. Si no hay ni entradas ni estado no hay nada que hacer.
+    if #store.entries == 0 and store.estado == nil and not store.movimiento
+        and not store.economia then
+        return false
+    end
+    local ahora = (time and time()) or 0
+    local ultimo = tonumber(store.lastTouched) or 0
+    -- Sin sello (lista escrita por una version anterior) se considera vieja: es lo que hay guardado
+    -- de antes de existir la caducidad, y precisamente eso es lo que sobra.
+    local limite = (IsTurnAdmin and IsTurnAdmin()) and STALE_SECONDS_DM or STALE_SECONDS
+    if ultimo > 0 and ahora > 0 and (ahora - ultimo) < limite then return false end
+    store.entries = {}
+    store.activeIndex = 1
+    store.lastTouched = nil
+    -- Sin combatientes no hay bandos: dejar el bloque activo apuntando a una lista vacia haria que
+    -- el siguiente avance arrancara a media rotacion.
+    store.activeBando = nil
+    store.faseBando = nil
+    -- Y el COMBATE se acabo. Sin esto, el que se desconecta a media pelea y vuelve al dia
+    -- siguiente --sin nadie que le mande una foto nueva-- se encontraba las entradas limpias pero
+    -- el estado en `activo`: seguia "en combate" el solo, con su asalto de ayer.
+    store.estado = nil
+    store.asalto = nil
+    -- Lo gastado iba sellado con el asalto, que acaba de irse: se tira con el, o el sello dejaria
+    -- de valer y podria aplicarse a la pelea siguiente.
+    store.movimiento = nil
+    store.economia = nil
+    if Combate and Combate.CleanUpAfterCombat then pcall(Combate.CleanUpAfterCombat) end
+    return true
 end
 
 local function ClaimAdminIfNeeded()
@@ -2484,7 +2490,20 @@ eventFrame:RegisterEvent("UNIT_MAXHEALTH")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
         EnsureStore()
-        PurgeStaleEntries()
+        -- La limpieza espera a que la peticion de foto haya tenido su oportunidad: purgar al
+        -- instante tiraba el combate ANTES de preguntar si seguia vivo, y luego lo recuperaba --o
+        -- no-- por los pelos. Si en ese rato llega una foto, no hay nada que limpiar.
+        if C_Timer and C_Timer.After then
+            local alEntrar = (time and time()) or 0
+            C_Timer.After(12, function()
+                if (ULTIMA_FOTO_VISTA or 0) >= alEntrar then return end
+                if PurgeStaleEntries() then
+                    Print("|cff808080Se retiro un combate abandonado.|r")
+                end
+            end)
+        else
+            PurgeStaleEntries()
+        end
         if HarfordSync and HarfordSync.RegisterPrefix then
             HarfordSync.RegisterPrefix(COMM_PREFIX)
         elseif C_ChatInfo and C_ChatInfo.RegisterAddonMessagePrefix then

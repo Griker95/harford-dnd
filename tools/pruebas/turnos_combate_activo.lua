@@ -120,7 +120,14 @@ chk("no se sale por lista vacia",
 -- La caducidad solo se comprueba AL ENTRAR, no mientras juegas: estar conectado cuatro horas no
 -- mata un combate. Lo que se mide es cuanto lleva la lista sin tocarse.
 chk("solo se comprueba al entrar",
-    src:find("EnsureStore()\n        PurgeStaleEntries()", 1, true) ~= nil, true)
+    src:find('if event == "PLAYER_LOGIN" then', 1, true) ~= nil, true)
+-- Y no antes de haber intentado recuperarla: purgar al instante tiraba el combate ANTES de
+-- preguntar si seguia vivo. Si en ese rato llega una foto, no hay nada que limpiar.
+chk("y despues de pedir la foto",
+    src:find("if (ULTIMA_FOTO_VISTA or 0) >= alEntrar then return end", 1, true) ~= nil, true)
+-- El DM tiene cuatro horas: su copia es LA BUENA y nadie puede devolversela.
+chk("y el DM tiene mas margen",
+    src:find("local limite = (IsTurnAdmin and IsTurnAdmin()) and STALE_SECONDS_DM", 1, true) ~= nil, true)
 -- Y recibir la foto CUENTA como tocarla: es la unica senal de vida de un jugador que no manda
 -- nada. Sin eso su sello se quedaba a nil --"version anterior", o sea vieja-- y un /reload justo
 -- despues de entrar en combate le borraba la pelea en curso.

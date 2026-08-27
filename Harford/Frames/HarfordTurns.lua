@@ -326,10 +326,23 @@ local function AlertRoundStates(entry, activeIndex, turnSerial)
     -- por que vuelta vamos-- pero callado.
 end
 
+-- Repinta sin que un fallo pueda llevarse por delante lo que venga detras, pero DICIENDOLO. Una
+-- proteccion silenciosa cambia un error visible por una funcionalidad que no va, que es peor.
+local avisadoRepintado = false
+local function RepintarProtegido(fn)
+    if not fn then return end
+    local ok, err = pcall(fn)
+    if not ok and not avisadoRepintado then
+        avisadoRepintado = true
+        Print("|cffff5555Fallo pintando la ventana de turnos|r (el turno sigue funcionando): "
+            .. tostring(err))
+    end
+end
+
 local function AlertTurnChanged(entry, activeIndex, turnSerial)
     -- Protegido: un fallo pintando el marcador no puede llevarse por delante el aviso a los
     -- oyentes, que es lo que apaga estados y reinicia el turno en el resto del addon.
-    if HarfordTurnOrderAPI.RefreshTurnMarker then pcall(HarfordTurnOrderAPI.RefreshTurnMarker) end
+    RepintarProtegido(HarfordTurnOrderAPI.RefreshTurnMarker)
     if HarfordTurnOrderAPI and HarfordTurnOrderAPI._turnChangedListeners then
         for _, fn in ipairs(HarfordTurnOrderAPI._turnChangedListeners) do
             pcall(fn, entry, turnSerial, activeIndex)
@@ -799,11 +812,16 @@ local function ApplyTurnNotice(message, sender)
         local entrada = EntradaDeBandoRecibida(bando, idsRaw, fase)
         entrada.asalto = store.asalto
         TouchStore()
-        if RefreshFrame then RefreshFrame() end
+        -- PRIMERO lo que importa, y el repintado al final y protegido. Estaba delante y a pelo: si
+        -- petaba --y pinta doce tarjetas con todo lo que se les ha ido metiendo-- se llevaba por
+        -- delante el anuncio del chat, el aviso a los oyentes (que es lo que REINICIA la economia
+        -- del turno) y el "es tu turno" (que arranca el contador de movimiento). En el cliente eso
+        -- se ve como que el turno no llega, cuando el estado si habia llegado.
         Print("|cffffff00" .. (HarfordTurnOrderAPI.FASE_ETIQUETA[fase] or "turno de")
             .. " " .. tostring(entrada.name) .. "|r")
         AlertTurnChanged(entrada, store.activeBando, serial)
         if fase == "inicio" then AlertMyTurn(entrada, store.activeBando, serial) end
+        RepintarProtegido(RefreshFrame)
         return true
     end
 
@@ -1124,10 +1142,10 @@ MarkChanged = function()
     -- por un fallo de dibujo, y en el otro cliente eso no se ve como un error: se ve como que el
     -- addon del DM ha dejado de hablar.
     ScheduleBroadcast()
-    if RefreshFrame then pcall(RefreshFrame) end
+    RepintarProtegido(RefreshFrame)
     -- El marcador tambien: iniciar y terminar el combate no son cambios de TURNO, asi que no
     -- pasan por `AlertTurnChanged` y se quedaria puesto despues de terminar.
-    if HarfordTurnOrderAPI.RefreshTurnMarker then pcall(HarfordTurnOrderAPI.RefreshTurnMarker) end
+    RepintarProtegido(HarfordTurnOrderAPI.RefreshTurnMarker)
 end
 
 local function SetFrameBackground(frame)

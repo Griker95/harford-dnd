@@ -879,6 +879,11 @@ local function ApplySerializedState(message)
     end
 
     ULTIMA_FOTO_VISTA = (time and time()) or 0
+    -- Y se SELLA. Recibir la foto es la unica senal de vida que tiene un jugador que no manda
+    -- nada: sin esto su sello se quedaba a nil --"lista de una version anterior", o sea vieja-- y
+    -- un `/reload` justo despues de entrar en combate le borraba la pelea en curso. La caducidad
+    -- solo mira cuando se toco por ultima vez, y recibirla es tocarla.
+    TouchStore()
     ClampActiveIndex()
     EnsureRoundMarker()
     ClampActiveIndex()

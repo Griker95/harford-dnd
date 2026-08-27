@@ -117,6 +117,15 @@ chk("y lo gastado, que iba sellado con el asalto",
 -- puesto sin entradas.
 chk("no se sale por lista vacia",
     src:find("if #store.entries == 0 and store.estado == nil", 1, true) ~= nil, true)
+-- La caducidad solo se comprueba AL ENTRAR, no mientras juegas: estar conectado cuatro horas no
+-- mata un combate. Lo que se mide es cuanto lleva la lista sin tocarse.
+chk("solo se comprueba al entrar",
+    src:find("EnsureStore()\n        PurgeStaleEntries()", 1, true) ~= nil, true)
+-- Y recibir la foto CUENTA como tocarla: es la unica senal de vida de un jugador que no manda
+-- nada. Sin eso su sello se quedaba a nil --"version anterior", o sea vieja-- y un /reload justo
+-- despues de entrar en combate le borraba la pelea en curso.
+chk("recibir la foto sella la lista",
+    src:find("TouchStore()\n    ClampActiveIndex()", 1, true) ~= nil, true)
 -- Se recoge lo demas igual que al Terminar: el contador, el estandarte y el marcador.
 chk("y se recoge como al terminar",
     src:find("if Combate and Combate.CleanUpAfterCombat then pcall(Combate.CleanUpAfterCombat) end",

@@ -3481,6 +3481,11 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   siguiente. Y se llama a `CleanUpAfterCombat`, igual que al Terminar.
 - **No se sale por lista vacia**: lo que caduca es el COMBATE, y su estado puede haber quedado
   puesto sin entradas.
+- **La caducidad solo se comprueba AL ENTRAR** (`PLAYER_LOGIN`), no mientras juegas: estar
+  conectado cuatro horas no mata un combate. Lo que se mide es cuanto lleva la lista sin TOCARSE.
+- **Recibir la foto cuenta como tocarla.** Es la unica senal de vida de un jugador que no manda
+  nada: sin eso su sello se quedaba a `nil` --que se lee como "de una version anterior", o sea
+  vieja-- y un `/reload` justo despues de entrar en combate le borraba la pelea en curso.
 
 ## Si el DM se cae, releva un companero (2026-08-27)
 

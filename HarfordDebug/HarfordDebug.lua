@@ -1721,6 +1721,23 @@ API.RegisterCommand("atlas", function(args)
     -- Y los que pida quien lo llame, para probar uno suelto sin tocar el codigo.
     for extra in tostring(args or ""):gmatch("%S+") do lista[#lista + 1] = extra end
 
+    -- Y las APIs nativas de aviso que aun no usamos. Un atlas se puede sustituir; una API que no
+    -- existe no tiene apano, asi que hay que saberlo ANTES de disenar nada encima.
+    for nombre, para in pairs({
+        SpellActivationOverlay_ShowOverlay  = "fogonazo en los bordes de la pantalla",
+        SpellActivationOverlay_HideOverlays = "retirarlo",
+        TopBannerManager_Show               = "cola de titulares nativos",
+        RaidNotice_AddMessage               = "aviso de raid (ya en uso)",
+    }) do
+        Print((type(_G[nombre]) == "function" and "|cff88ff88OK|r  " or "|cffff5555NO|r  ")
+            .. nombre .. "  |cff808080" .. para .. "|r")
+    end
+    if AlertFrame and AlertFrame.AddExternallyAnchoredSubSystem then
+        Print("|cff88ff88OK|r  AlertFrame:AddExternallyAnchoredSubSystem  |cff808080toast en cola|r")
+    else
+        Print("|cffff5555NO|r  AlertFrame:AddExternallyAnchoredSubSystem")
+    end
+
     local hay, faltan = 0, 0
     for _, nombre in ipairs(lista) do
         local info = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(nombre)

@@ -1620,6 +1620,53 @@ API.RegisterCommand("bookframe", function(args)
 end, "ajusta en vivo el marco (texCoord/size) de los botones del Libro por categoria")
 
 -- ─── Barra de accion (HarfordActionBars) ─────────────────────────────────────
+-- El muro de movimiento depende de un `worldport` que ni se ve fallar ni se ve llegar: si el
+-- comando no existe en este servidor, o el mapa sale mal, desde fuera parece que el addon
+-- simplemente no hace nada. Esto lo parte en dos: primero marca, luego devuelve.
+API.RegisterCommand("worldport", function(args)
+    local modo = tostring(args or ""):lower():match("^%s*(%S*)")
+    _G.HarfordDebugWorldportAnchor = _G.HarfordDebugWorldportAnchor
+
+    if modo ~= "volver" then
+        if not (C_Epsilon and C_Epsilon.GetPosition) then
+            Print("C_Epsilon.GetPosition no disponible.")
+            return
+        end
+        local ok, x, y, z = pcall(C_Epsilon.GetPosition)
+        if not ok or not tonumber(x) then
+            Print("GetPosition fallo: " .. tostring(x))
+            return
+        end
+        local okI, mapa = pcall(function() return select(8, GetInstanceInfo()) end)
+        Print(string.format("Marcado: x=%.3f y=%.3f z=%.3f mapa=%s o=%.3f",
+            tonumber(x), tonumber(y), tonumber(z) or 0,
+            tostring(okI and mapa or "ERROR"), (GetPlayerFacing and GetPlayerFacing()) or 0))
+        if not tonumber(okI and mapa) then
+            Print("|cffff5555El mapa no es un numero:|r sin el no se emite nada.")
+        end
+        _G.HarfordDebugWorldportAnchor = {
+            x = tonumber(x), y = tonumber(y), z = tonumber(z) or 0,
+            map = tonumber(okI and mapa),
+            o = (GetPlayerFacing and GetPlayerFacing()) or 0,
+        }
+        Print("Muevete y usa: /harford debug run worldport volver")
+        return
+    end
+
+    local ancla = _G.HarfordDebugWorldportAnchor
+    if not ancla then
+        Print("No hay nada marcado. Usa /harford debug run worldport primero.")
+        return
+    end
+    if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then
+        Print("|cffff5555HarfordServerActions.WorldportSelf no existe.|r")
+        return
+    end
+    local ok, err = HarfordServerActions.WorldportSelf(ancla, { addonName = "HarfordDebug" })
+    Print(ok and "Comando emitido."
+        or ("|cffff5555No se emitio:|r " .. tostring(err or "error desconocido")))
+end, "Marca tu sitio y te devuelve (worldport | worldport volver)")
+
 API.RegisterCommand("actionbar", function()
     if not (HarfordActionBars and HarfordActionBars.Toggle) then
         Print("HarfordActionBars no disponible")

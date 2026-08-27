@@ -428,7 +428,11 @@ chk("y sin mapa tampoco",
 chk("con seis decimales", acciones:find('string.format("%.6f", x)', 1, true) ~= nil, true)
 
 chk("el mapa sale del servidor, no de la interfaz",
-    ataque:find("pcall(GetInstanceInfo)", 1, true) ~= nil, true)
+    ataque:find("GetInstanceInfo()", 1, true) ~= nil, true)
+-- Y del retorno 8, que es `instanceMapID`. Contando huecos me comi uno y salia `isDynamic`, un
+-- booleano: el ancla se quedaba SIN mapa y `WorldportSelf` se negaba a emitir, en silencio.
+chk("y del retorno 8, que es el id de mapa",
+    ataque:find("select(8, GetInstanceInfo())", 1, true) ~= nil, true)
 chk("y se guarda hacia donde mirabas",
     ataque:find("GetPlayerFacing and GetPlayerFacing()", 1, true) ~= nil, true)
 -- Va en un gesto DISTINTO del que se pulsa cada turno: no vaya a portarte por querer parar.

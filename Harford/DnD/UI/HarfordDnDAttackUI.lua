@@ -509,7 +509,7 @@ function API.AttachMovementTracker(opts)
         if not ok or not tonumber(x) or not tonumber(y) then return nil end
         local mapa
         if GetInstanceInfo then
-            local okI, _, _, _, _, _, _, id = pcall(GetInstanceInfo)
+            local okI, id = pcall(function() return select(8, GetInstanceInfo()) end)
             if okI then mapa = tonumber(id) end
         end
         return {
@@ -582,12 +582,21 @@ function API.AttachMovementTracker(opts)
                     -- Con margen y con enfriamiento: sin ellos cada paso pediria un teleporte y el
                     -- servidor se llevaria una rafaga de `worldport` por cruzar una puerta.
                     elseif totalMeters > tope + 1.5
-                        and ((GetTime and GetTime()) or 0) - ultimoTiron > 2
-                        and HarfordServerActions and HarfordServerActions.WorldportSelf then
+                        and ((GetTime and GetTime()) or 0) - ultimoTiron > 2 then
                         ultimoTiron = (GetTime and GetTime()) or 0
-                        totalMeters = tope
-                        HarfordServerActions.WorldportSelf(API.RecordedMovementAnchor,
-                            { addonName = "Harford" })
+                        local ok, err
+                        if HarfordServerActions and HarfordServerActions.WorldportSelf then
+                            ok, err = HarfordServerActions.WorldportSelf(
+                                API.RecordedMovementAnchor, { addonName = "Harford" })
+                        else
+                            err = "HarfordServerActions.WorldportSelf no disponible"
+                        end
+                        if ok then
+                            totalMeters = tope
+                        else
+                            HarfordChat.Print("|cffff5555No se pudo devolverte a tu sitio:|r "
+                                .. tostring(err or "error desconocido"))
+                        end
                     end
                 end
             end

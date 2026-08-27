@@ -320,15 +320,10 @@ local function AlertRoundStates(entry, activeIndex, turnSerial)
     if key == lastRoundAlertKey then return end
     lastRoundAlertKey = key
 
-    local text = "ESTADOS"
-    if RaidNotice_AddMessage and RaidWarningFrame then
-        local info = ChatTypeInfo and ChatTypeInfo["RAID_WARNING"]
-        RaidNotice_AddMessage(RaidWarningFrame, text, info)
-    end
-    if PlaySound and SOUNDKIT and SOUNDKIT.RAID_WARNING then
-        PlaySound(SOUNDKIT.RAID_WARNING, "Master")
-    end
-    Print("|cffffff00" .. text .. "|r")
+    -- Sin aviso de "ESTADOS": era de cuando las condiciones se repasaban a mano al llegar el
+    -- marcador de asalto. Ahora cada una caduca sola, en el turno de su dueno, asi que anunciarlo
+    -- pedia a la mesa que hiciera algo que ya estaba hecho. El marcador de asalto se queda --dice
+    -- por que vuelta vamos-- pero callado.
 end
 
 local function AlertTurnChanged(entry, activeIndex, turnSerial)
@@ -1678,7 +1673,19 @@ RefreshFrame = function()
             -- tengas seleccionado TU, que es del cliente y no de la entrada: la lista de un bloque
             -- pinta las mismas tarjetas y ahi no aplica.
             SetCardTargetState(card, IsEntryCurrentTarget(entry))
-            if entryIndex == store.activeIndex then
+            -- En BANDOS el turno lo lleva `activeBando`, no `activeIndex`: la marca se quedaba en
+            -- la tarjeta 1 --el marcador de asalto-- mientras el turno iba por Enemigos. Es la
+            -- misma entrada la que manda en cada modo, pero no es la misma variable.
+            local esActiva
+            if store.modoBandos then
+                local i = tonumber(store.activeBando) or 0
+                local bando = i >= 1 and HarfordTurnOrderAPI.BANDOS[i] or nil
+                esActiva = bando ~= nil and tostring(entry.kind or "") ~= "round"
+                    and HarfordTurnOrderAPI.GetBando(entry) == bando
+            else
+                esActiva = (entryIndex == store.activeIndex)
+            end
+            if esActiva then
                 card.active:Show()
                 card.turn:SetText("ACTIVO")
             else

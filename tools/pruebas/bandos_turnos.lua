@@ -590,6 +590,23 @@ chk("solo si queda gente montada",
 chk("creandola si hace falta",
     turnos:find("if not TurnFrame then CreateTurnFrame() end\n            TurnFrame:Show()", 1, true) ~= nil, true)
 
+-- ─── LA MARCA DE ACTIVO SIGUE AL BANDO ──────────────────────────────────────
+-- En bandos el turno lo lleva `activeBando`, no `activeIndex`: la marca se quedaba clavada en la
+-- tarjeta 1 --el marcador de asalto-- mientras el turno iba por Enemigos. Es la misma entrada la
+-- que manda en cada modo, pero no es la misma variable.
+print("La marca de ACTIVO sigue al bando")
+chk("en bandos se mira el bando",
+    turnos:find("esActiva = bando ~= nil and tostring(entry.kind or \"\") ~= \"round\"", 1, true) ~= nil, true)
+chk("y en individual, el indice",
+    turnos:find("esActiva = (entryIndex == store.activeIndex)", 1, true) ~= nil, true)
+-- Y el marcador de asalto nunca es el activo: no es de nadie.
+chk("el marcador de asalto no se marca",
+    turnos:find('tostring(entry.kind or "") ~= "round"', 1, true) ~= nil, true)
+-- Sin aviso de ESTADOS: cada condicion caduca sola en el turno de su dueno, asi que anunciarlo
+-- pedia a la mesa algo que ya estaba hecho.
+chk("y no se anuncia ESTADOS",
+    turnos:find('local text = "ESTADOS"', 1, true) == nil, true)
+
 print("El estado del combate es explicito")
 chk("tres estados", turnos:find("function HarfordTurnOrderAPI.GetCombatState()", 1, true) ~= nil, true)
 chk("montar la mesa es preparar",

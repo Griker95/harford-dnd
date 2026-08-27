@@ -293,6 +293,14 @@ local function DropResolvedCache(itemLink)
     end
     resolvedCache[itemLink] = nil
     resolvedCacheCount = math.max(0, resolvedCacheCount - 1)
+    -- Y FUERA de la lista de antiguedad. Sin esto quedaba un enlace muerto ahi, y si el mismo item
+    -- se volvia a resolver, `CacheResolvedItem` lo apuntaba OTRA VEZ --para el era nuevo-- y
+    -- acababa dos veces en la lista: al desalojar, la primera copia borraba una entrada VIVA y la
+    -- segunda no liberaba nada. La lista esta acotada al tope de la cache, asi que recorrerla sale
+    -- barato.
+    for i = #resolvedCacheOrder, 1, -1 do
+        if resolvedCacheOrder[i] == itemLink then table.remove(resolvedCacheOrder, i) end
+    end
 end
 
 local function CopyTable(src)
@@ -1275,8 +1283,12 @@ function API.GetEquippedArmorClass(profileName)
                 local base = ARMOR_KIND_BASE[resolved.armorKind]
                 if base then consider(base + ArmorDexBonus(ARMOR_KIND_CAT[resolved.armorKind], dex)) end
             end
-            if resolved.rules and resolved.rules.armorBase then
-                -- CA explicita del item (ya final): no se le suma Destreza automatica.
+            -- CA explicita del item (ya final): no se le suma Destreza automatica. SOLO desde el
+            -- pecho: `armorBase` sale de una linea `Armadura 14` de la descripcion, y se estaba
+            -- leyendo desde CUALQUIER hueco -- un anillo, una capa o unas botas con esa linea
+            -- fijaban tu CA entera. La armadura del cuerpo es la que pone la CA base; lo que
+            -- lleven los demas huecos suma como bonus (`ca`), no sustituye.
+            if slotKey == "Chest" and resolved.rules and resolved.rules.armorBase then
                 consider(resolved.rules.armorBase)
             end
         elseif type(entry) == "table" and not entry.itemLink then

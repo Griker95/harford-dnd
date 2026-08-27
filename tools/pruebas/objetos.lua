@@ -75,6 +75,20 @@ chk("y no cuenta como bonus", (reglas("Armadura 14")).armorClass, 0)
 -- Con dos lineas de base se queda la MAYOR, no la ultima.
 chk("dos bases, la mayor", (reglas("Armadura 12", "CA 16")).armorBase, 16)
 chk("y da igual el orden", (reglas("CA 16", "Armadura 12")).armorBase, 16)
+-- Pero esa CA base solo cuenta desde el PECHO. Se leia desde cualquier hueco, asi que un anillo,
+-- una capa o unas botas con una linea "Armadura 14" en la descripcion fijaban tu CA entera. La
+-- armadura del cuerpo es la que pone la CA base; lo de los demas huecos suma como bonus.
+local items = io.open("Harford/DnD/State/HarfordDnDItems.lua"):read("*a")
+-- Al sacar un item de la cache hay que sacarlo TAMBIEN de la lista de antiguedad. Sin eso quedaba
+-- un enlace muerto ahi y, si el mismo item se volvia a resolver, se apuntaba otra vez --para el
+-- era nuevo-- y acababa DOS veces: al desalojar, la primera copia borraba una entrada viva y la
+-- segunda no liberaba nada.
+chk("al soltar de la cache sale de la lista de antiguedad",
+    items:find("if resolvedCacheOrder[i] == itemLink then table.remove(resolvedCacheOrder, i) end",
+        1, true) ~= nil, true)
+chk("la CA base solo cuenta desde el pecho",
+    items:find('if slotKey == "Chest" and resolved.rules and resolved.rules.armorBase then',
+        1, true) ~= nil, true)
 
 -- ─── Lo que NO debe conceder nada ───────────────────────────────────────────
 -- Esta es la regla que mas importa: el texto de sabor no puede dar bonos.

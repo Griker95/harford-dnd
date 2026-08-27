@@ -1625,6 +1625,71 @@ end, "ajusta en vivo el marco (texCoord/size) de los botones del Libro por categ
 -- mas una sola textura propia para los extremos del estandarte. Antes de construir nada hay que
 -- saber cuales existen AQUI: un atlas que falta no borra la textura anterior, la deja como estaba,
 -- que es la misma trampa que ya nos comimos con los iconos del Libro.
+-- ─── POR QUE NO ARRANCA SOLO EL MOVIMIENTO ──────────────────────────────────
+-- El contador tiene que arrancar al empezar TU turno, sin pulsar nada. Son cuatro eslabones y si
+-- falla uno no se ve: el aviso de turno, que la entrada sea TUYA, que el combate este activo y que
+-- el seguimiento este montado. Se miden en vez de deducirlos.
+API.RegisterCommand("movimiento", function(args)
+    local U, T = _G.HarfordDnDAttackUI, _G.HarfordTurnOrderAPI
+    local function Si(v) return v and "|cff88ff88si|r" or "|cffff4444NO|r" end
+
+    Print("--- 1. El seguimiento esta montado? ---")
+    Print("  HarfordDnDAttackUI: " .. Si(U ~= nil))
+    if not U then return end
+    -- Si esto falta, `AttachMovementTracker` no llego a correr y no hay quien escuche el turno.
+    Print("  boton creado: " .. Si(U.Controls and U.Controls.movementButton ~= nil))
+    Print("  reinicio expuesto: " .. Si(type(U.ResetTurnMovement) == "function"))
+
+    Print("--- 2. El combate esta ACTIVO? ---")
+    Print("  HarfordTurnOrderAPI: " .. Si(T ~= nil))
+    if T then
+        Print("  estado: |cffffcc00" .. tostring(T.GetCombatState and T.GetCombatState() or "?") .. "|r")
+        Print("  HasActiveCombat(): " .. Si(T.HasActiveCombat and T.HasActiveCombat()))
+        Print("  HasCombatants(): " .. Si(T.HasCombatants and T.HasCombatants()))
+        -- Fuera de combate no arranca SOLO, a proposito: no hay turno que gastar.
+        if T.HasActiveCombat and not T.HasActiveCombat() then
+            Print("  |cffffcc00Sin combate activo no arranca solo|r: dale a Iniciar.")
+        end
+    end
+
+    Print("--- 3. El aviso de turno llega? ---")
+    local n = 0
+    for _ in ipairs(T and T._myTurnListeners or {}) do n = n + 1 end
+    -- Si hay cero, nadie se entera de que te toca: el contador no puede arrancar.
+    Print("  oyentes de 'es tu turno': " .. tostring(n) .. (n > 0 and "" or "  |cffff4444(nadie escucha)|r"))
+    local store = _G.HarfordTurnOrderStore
+    if type(store) == "table" then
+        Print("  modo: " .. (store.modoBandos and "bandos" or "individual")
+            .. "   asalto: " .. tostring(store.asalto or 0))
+        if store.modoBandos then
+            Print("  bando activo: " .. tostring(store.activeBando or "-")
+                .. "   fase: " .. tostring(store.faseBando or "-"))
+        end
+    end
+
+    Print("--- 4. Cuanto se puede mover ---")
+    Print("  tope del turno: " .. string.format("%.1f m",
+        (U.GetTurnMovementMax and U.GetTurnMovementMax()) or 0))
+    Print("  llevado: " .. string.format("%.1f m",
+        (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0))
+    -- Un tope de 0 esconde la barra y hace que el muro no salte nunca.
+    if ((U.GetTurnMovementMax and U.GetTurnMovementMax()) or 0) <= 0 then
+        Print("  |cffff4444Tope 0|r: sin raza puesta no hay velocidad que gastar.")
+    end
+
+    if tostring(args or ""):find("simular") then
+        -- Dispara el aviso de turno a mano, que es el eslabon que no se puede provocar sin montar
+        -- un combate entero. Si con esto arranca, lo que falla es que el aviso no llega.
+        Print("Simulando 'es tu turno'...")
+        for _, fn in ipairs(T and T._myTurnListeners or {}) do pcall(fn, {}) end
+        Print("  llevado tras simular: " .. string.format("%.1f m",
+            (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0))
+        Print("  (muevete: deberia subir solo)")
+    else
+        Print("Para disparar el aviso a mano: |cffffcc00movimiento simular|r")
+    end
+end, "Por que no arranca solo el contador de movimiento (movimiento [simular])")
+
 -- Los estilos de aviso de turno que hay, uno detras de otro. Elegir a ciegas entre nombres no
 -- funciona: hay que VERLOS, y verlos seguidos para poder compararlos.
 API.RegisterCommand("banners", function(args)

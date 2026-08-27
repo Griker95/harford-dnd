@@ -342,4 +342,30 @@ chk("y antes de la primera rama", (arriba or 0) < (primeraRama or 0), true)
 chk("salvo pasivos y trampas",
     reparto:find('if cat ~= "pasivo" and not self.feature.trap then', 1, true) ~= nil, true)
 
+-- ─── LA ECONOMIA DE TURNO SE GASTA DE VERDAD ────────────────────────────────
+-- Solo cobraba a los rasgos del Libro que declaran `cast`. Atacar con el arma y lanzar un conjuro
+-- --que es lo que la gente hace en su turno-- no cobraban nada, asi que las fichas no bajaban
+-- nunca y el contador era de adorno.
+print("Atacar y lanzar cuestan la accion")
+local ficha = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("atacar cuesta la accion", ficha:find('T.Spend("action", 1)', 1, true) ~= nil, true)
+-- Solo la PRIMERA del turno: Ataque Extra da mas ataques dentro de la MISMA accion, asi que
+-- cobrar cada uno avisaria en falso a partir del segundo.
+chk("pero solo si queda por gastar",
+    ficha:find('T.GetRemaining("action") > 0', 1, true) ~= nil, true)
+-- Y una maniobra ya cobro al anunciarse: su ataque no vuelve a cobrar.
+chk("y una maniobra no cobra dos veces",
+    ficha:find("DoWeaponAttack({ skipTurnCost = true })", 1, true) ~= nil, true)
+local comp = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
+chk("lanzar tambien cuesta",
+    comp:find("HarfordDnDConditions.Turn.SpendForFeature({ cast = coste", 1, true) ~= nil, true)
+-- Lo que diga su tiempo de lanzamiento, no siempre accion.
+chk("segun su tiempo de lanzamiento",
+    comp:find('if texto:find("adicional") or texto:find("bonus") then coste = "accion_adicional"',
+        1, true) ~= nil, true)
+-- Un conjuro de minutos u horas no se juega por turnos: no cobra nada.
+chk("y los de minutos no cobran",
+    comp:find('elseif texto:find("minuto") or texto:find("hora") then coste = nil end',
+        1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

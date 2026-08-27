@@ -1240,6 +1240,20 @@ function API.ConfirmCast(spellId, options)
     if API.RequiresConcentration(spell) and HarfordDnDConcentration and HarfordDnDConcentration.Begin then
         HarfordDnDConcentration.Begin(spell.name or tostring(spellId), spellId)
     end
+    -- Y cuesta lo que diga su TIEMPO DE LANZAMIENTO. Casi todos son accion; los que no lo dicen en
+    -- su texto ("1 accion adicional", "1 reaccion"). Un ritual no cuesta accion -- por eso se
+    -- lanza como ritual, y esa rama sale antes de llegar aqui.
+    if HarfordDnDConditions and HarfordDnDConditions.Turn and not (options and options.silent) then
+        local texto = tostring(spell.castingTime or spell.casting_time or spell.tiempo or ""):lower()
+        local coste = "accion"
+        if texto:find("adicional") or texto:find("bonus") then coste = "accion_adicional"
+        elseif texto:find("reacc") then coste = "reaccion"
+        -- Un conjuro de minutos u horas no se juega por turnos: no cobra nada.
+        elseif texto:find("minuto") or texto:find("hora") then coste = nil end
+        if coste then
+            HarfordDnDConditions.Turn.SpendForFeature({ cast = coste, name = spell.name })
+        end
+    end
     if options and options.silent then return true, costOrErr, current, maxValue end
     local cost = tonumber(costOrErr) or 0
     -- Anuncio limpio: solo lanzador (lo antepone el render) + link del conjuro + target si hay.

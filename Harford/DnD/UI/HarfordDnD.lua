@@ -3504,7 +3504,8 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
                 conditionTurns = man.conditionTurns,
             } or nil,
         }
-        if DoWeaponAttack then DoWeaponAttack() end
+        -- La maniobra ya cobro su coste al anunciarse: su ataque no vuelve a cobrar.
+        if DoWeaponAttack then DoWeaponAttack({ skipTurnCost = true }) end
         return
     end
 
@@ -3813,6 +3814,18 @@ DoWeaponAttack = function(options)
     if options.expectedTargetGuid and UnitGUID and UnitGUID("target") ~= options.expectedTargetGuid then
         Print("El objetivo de la habilidad ya no coincide.")
         return
+    end
+    -- Atacar CUESTA la accion. Pero solo la PRIMERA del turno: Ataque Extra da mas ataques dentro
+    -- de la misma accion, asi que cobrar cada uno avisaria en falso a partir del segundo. Si ya
+    -- estaba gastada no se cobra ni se dice nada -- es lo esperado, no un error.
+    --
+    -- `options.skipTurnCost` lo ponen las rutas que YA cobraron por su cuenta (maniobras, rasgos
+    -- del Libro con `cast`), para no cobrar dos veces por el mismo golpe.
+    if not options.skipTurnCost and HarfordDnDConditions and HarfordDnDConditions.Turn then
+        local T = HarfordDnDConditions.Turn
+        if T.IsActive and T.IsActive() and T.GetRemaining and T.GetRemaining("action") > 0 then
+            T.Spend("action", 1)
+        end
     end
     -- `options.weaponDef` deja que un actor externo (criatura acompanante) reuse esta misma
     -- ruta con su bloque en lugar del arma equipada del jugador.

@@ -3377,6 +3377,24 @@ de ids lo blindaria a costa de engordar el mensaje.
 
 Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
+## La economia de turno se GASTA de verdad (2026-08-27)
+
+- Solo cobraba a los rasgos del Libro que declaran `cast` (via `BroadcastAbility` →
+  `SpendForFeature`). **Atacar con el arma y lanzar un conjuro no cobraban nada**, que es
+  justamente lo que la gente hace en su turno: las fichas no bajaban nunca y el contador quedaba de
+  adorno.
+- **`DoWeaponAttack` cuesta la accion, pero solo la PRIMERA del turno**: Ataque Extra da mas
+  ataques dentro de la MISMA accion, asi que cobrar cada uno avisaria en falso a partir del
+  segundo. Si ya estaba gastada no se cobra ni se dice nada -- es lo esperado, no un error.
+  `options.skipTurnCost` lo ponen las rutas que ya cobraron (maniobras), para no cobrar dos veces
+  por el mismo golpe.
+- **`ConfirmCast` cobra lo que diga el TIEMPO DE LANZAMIENTO** del conjuro, no siempre accion:
+  "adicional"/"bonus" → adicional, "reacc" → reaccion, y los de minutos u horas **no cobran nada**
+  porque no se juegan por turnos. Un ritual sale por su rama antes de llegar ahi.
+- Diagnostico de por que no arranca solo el contador de movimiento:
+  `/harford debug run movimiento` (y `movimiento simular` dispara el aviso de turno a mano, que es
+  el eslabon que no se puede provocar sin montar un combate entero).
+
 ## El estado del combate es EXPLICITO (2026-08-27)
 
 - Tres estados, como en Atlas: sin combate, `preparando` (mesa montada, sin empezar) y `activo`.

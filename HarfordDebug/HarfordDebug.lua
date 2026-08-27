@@ -1620,6 +1620,37 @@ API.RegisterCommand("bookframe", function(args)
 end, "ajusta en vivo el marco (texCoord/size) de los botones del Libro por categoria")
 
 -- ─── Barra de accion (HarfordActionBars) ─────────────────────────────────────
+-- El aviso de inicio de turno se va a montar con el mismo material que usa DiceMaster: atlas
+-- NATIVOS del cliente (BossBanner-*, LootBanner-*, *Scenario-TrackerHeader, bonusobjectives-bar-*)
+-- mas una sola textura propia para los extremos del estandarte. Antes de construir nada hay que
+-- saber cuales existen AQUI: un atlas que falta no borra la textura anterior, la deja como estaba,
+-- que es la misma trampa que ya nos comimos con los iconos del Libro.
+API.RegisterCommand("atlas", function(args)
+    local lista = {
+        "BossBanner-BgBanner-Mid", "BossBanner-RedLightning", "BossBanner-Title",
+        "LootBanner-ItemBg", "LootBanner-IconGlow",
+        "AllianceScenario-TrackerHeader", "HordeScenario-TrackerHeader",
+        "bonusobjectives-bar-frame", "bonusobjectives-bar-glow", "bonusobjectives-bar-sheen",
+        "bonusobjectives-bar-starburst",
+    }
+    -- Y los que pida quien lo llame, para probar uno suelto sin tocar el codigo.
+    for extra in tostring(args or ""):gmatch("%S+") do lista[#lista + 1] = extra end
+
+    local hay, faltan = 0, 0
+    for _, nombre in ipairs(lista) do
+        local info = C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(nombre)
+        if info then
+            hay = hay + 1
+            Print(string.format("|cff88ff88OK|r  %-32s %dx%d", nombre,
+                math.floor(info.width or 0), math.floor(info.height or 0)))
+        else
+            faltan = faltan + 1
+            Print("|cffff5555NO|r  " .. nombre)
+        end
+    end
+    Print(string.format("%d disponibles, %d ausentes.", hay, faltan))
+end, "Comprueba que existan los atlas del estandarte de turno")
+
 -- El muro de movimiento depende de un `worldport` que ni se ve fallar ni se ve llegar: si el
 -- comando no existe en este servidor, o el mapa sale mal, desde fuera parece que el addon
 -- simplemente no hace nada. Esto lo parte en dos: primero marca, luego devuelve.

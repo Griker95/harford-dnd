@@ -2452,6 +2452,12 @@ do
             LanzarArma(def)
         elseif type(def.readyAction) == "table" then
             Preparar(def)
+        elseif def.dobleMovimiento then
+            -- `Correr` dobla el tope del contador hasta que empiece tu siguiente turno. Antes la
+            -- accion existia y solo decia que el movimiento "se lleva en mesa".
+            if HarfordDnDAttackUI and HarfordDnDAttackUI.SetDashActive then
+                HarfordDnDAttackUI.SetDashActive(true)
+            end
         elseif def.sinEfecto then
             HarfordChat.Print("|cff808080" .. tostring(def.sinEfecto) .. "|r")
         end

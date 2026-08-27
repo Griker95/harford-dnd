@@ -530,9 +530,18 @@ function API.AttachMovementTracker(opts)
             or ("No se pudo volver: " .. tostring(err or "error desconocido")))
     end
 
+    -- `Correr` dobla el tope de ESTE turno. Se guarda aparte del calculo de velocidad porque no es
+    -- una propiedad del personaje sino algo que hizo en este asalto.
+    local corriendo = false
+    function API.SetDashActive(activo)
+        corriendo = activo and true or false
+        if API.RefreshMovement then API.RefreshMovement() end
+    end
+
     local function MaximoDelTurno()
-        return (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
+        local base = (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
             and HarfordDnDCalc.GetTurnMovement()) or 0
+        return corriendo and (base * 2) or base
     end
 
     -- Cuanto llevas DE cuanto puedes. Un numero suelto no dice si te has pasado, que es lo unico
@@ -600,6 +609,8 @@ function API.AttachMovementTracker(opts)
         API.RecordedMovementInfo = nil
         -- El ancla del turno pasado ya no vale: volver ahi te devolveria un asalto entero atras.
         API.RecordedMovementAnchor = nil
+        -- Y si corriste el turno pasado, ese doble no se hereda.
+        corriendo = false
         label:SetText("")
     end
 

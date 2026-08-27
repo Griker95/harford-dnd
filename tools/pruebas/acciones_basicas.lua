@@ -61,7 +61,11 @@ print("Una accion que no existe no inventa costes")
 chk("vacio", costes("volar", { astuta }), "")
 
 print("Lo que NO tiene efecto lo dice, en vez de fingirlo")
-chk("correr", A.Get("correr").sinEfecto ~= nil, true)
+-- `Correr` YA tiene efecto: dobla el tope del contador de movimiento. Decia que se llevaba en
+-- mesa "porque Harford no cuenta cuanto te queda por moverte", y eso dejo de ser cierto en cuanto
+-- el contador supo su maximo.
+chk("correr ya hace algo", A.Get("correr").dobleMovimiento, true)
+chk("y ya no dice que no", A.Get("correr").sinEfecto, "nil")
 chk("desengancharse", A.Get("desengancharse").sinEfecto ~= nil, true)
 chk("esquivar si tiene efecto", A.Get("esquivar").selfCondition.id, "esquivando")
 chk("esconderse tira Sigilo", A.Get("esconderse").skillCheck.skill, "Sigilo")
@@ -89,7 +93,7 @@ local narrativas = 0
 for _, def in ipairs(A.GetOrdered()) do
     if def.sinEfecto then narrativas = narrativas + 1 end
 end
-chk("solo Correr y Desengancharse", narrativas, 2)
+chk("solo queda Desengancharse sin efecto", narrativas, 1)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))
 

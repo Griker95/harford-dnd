@@ -35,7 +35,8 @@ API.DEFS = {
         id = "correr", name = "Correr",
         cast = "accion", orden = 2,
         description = "Ganas movimiento adicional igual a tu velocidad en este turno.",
-        sinEfecto = "El movimiento se lleva en mesa: Harford no cuenta cuanto te queda por moverte.",
+        -- Dobla el tope del contador de movimiento hasta que empiece tu siguiente turno.
+        dobleMovimiento = true,
     },
     desengancharse = {
         id = "desengancharse", name = "Desengancharse",

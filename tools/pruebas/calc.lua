@@ -437,4 +437,15 @@ chk("volver es click derecho", ataque:find('if boton == "RightButton" then', 1, 
 chk("y el ancla se olvida en tu turno",
     ataque:find("API.RecordedMovementAnchor = nil", 1, true) ~= nil, true)
 
+-- `Correr` dobla el tope de ESTE turno. Se guarda aparte del calculo de velocidad porque no es una
+-- propiedad del personaje sino algo que hizo en este asalto -- y por eso se apaga al empezar el
+-- siguiente, o el doble se heredaria para siempre.
+print("Correr dobla el tope, y solo este turno")
+chk("hay interruptor", ataque:find("function API.SetDashActive", 1, true) ~= nil, true)
+chk("que dobla", ataque:find("return corriendo and (base * 2) or base", 1, true) ~= nil, true)
+chk("y se apaga en tu turno", ataque:find("corriendo = false", 1, true) ~= nil, true)
+local panel2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+chk("y la accion lo enciende",
+    panel2:find("HarfordDnDAttackUI.SetDashActive(true)", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -697,13 +697,14 @@ Grupo("turnos", "bandos, bloques y quien va dentro de cada uno", function(r)
             dentro = dentro + #(e.miembros or {})
         end
     end
-    r.chk("hay bloques en la lista", bloques > 0, bloques .. " bloque(s), " .. dentro .. " dentro")
-
-    -- Un bloque LLENO no puede parecer vacio, o el avance lo saltaria entero.
-    if T.GetBandoMembers then
+    -- Un bloque LLENO no puede parecer vacio, o el avance lo saltaria entero. Solo se comprueba si
+    -- HAY bloques: que no los hayas creado no es un fallo, y marcarlo en rojo entrena a ignorar la
+    -- bateria entera.
+    if bloques > 0 and T.GetBandoMembers then
         local total = 0
         for _, b in ipairs(T.BANDOS or {}) do total = total + #T.GetBandoMembers(b) end
-        r.chk("el avance cuenta a todos", total >= bloques, total .. " contados")
+        r.chk("el avance cuenta a los bloques y a los suyos", total >= bloques,
+            total .. " contados para " .. bloques .. " bloque(s) y " .. dentro .. " dentro")
     end
 
     if T.IsModoBandos and not T.IsModoBandos() then

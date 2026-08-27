@@ -3415,6 +3415,15 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
 ## La economia de turno BLOQUEA, no avisa (2026-08-27)
 
+- **Sobrevive a un `/reload`.** Era una tabla de runtime: recargabas y recuperabas accion, adicional
+  y reaccion. Con la economia bloqueando, eso deja de ser un detalle y pasa a ser **la forma de
+  saltarsela**. Se guarda en `HarfordTurnOrderStore.economia` sellada con el ASALTO y tu guid --el
+  mismo trato que el contador de movimiento-- y se retoma en `PLAYER_ENTERING_WORLD`. El sello
+  impide que lo de un combate se aplique a otro.
+- **`GuardarEconomia` va declarada ANTES que `Turn.Spend`**, que es quien la usa: un
+  `local function` declarado despues no es una upvalue, se resuelve como global y vale nil. Y
+  `Turn.RestoreFromStore` va DESPUES, donde `Turn` ya existe.
+
 - `Turn.Spend` apuntaba el gasto **aunque no cupiera**, asi que el contador se iba a negativo y el
   "ya lo habias gastado" era un aviso y nada mas: seguias atacando y lanzando. Ahora un gasto que
   no cabe **devuelve false y no deja rastro**, y los tres llamadores lo respetan:

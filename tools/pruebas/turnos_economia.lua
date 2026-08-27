@@ -82,4 +82,27 @@ print("Texto de ficha")
 HarfordDnDFeatureEffects.HasFlag = function() return false end
 T.Reset(); T.Spend("bonus")
 print("  " .. T.StatusText():gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
+-- ─── UN /RELOAD NO TE DEVUELVE LA ACCION ────────────────────────────────────
+-- La economia era una tabla de runtime: recargabas y recuperabas accion, adicional y reaccion. Con
+-- la economia BLOQUEANDO, eso deja de ser un detalle y pasa a ser la forma de saltarsela.
+print("La economia sobrevive a un /reload")
+HarfordTurnOrderStore.asalto = 2
+T.Reset()
+chk("gasto la accion", (T.Spend("action")), true)
+chk("  queda 0", T.GetRemaining("action"), 0)
+chk("se guardo", type(HarfordTurnOrderStore.economia), "table")
+-- Se simula la recarga: se guarda la foto, se vacia la tabla viva --`Reset` guarda la suya, asi
+-- que la foto hay que apartarla antes-- y se restaura.
+local foto = HarfordTurnOrderStore.economia
+T.Reset()
+HarfordTurnOrderStore.economia = foto
+chk("tras recargar, se retoma", T.RestoreFromStore(), true)
+chk("  y la accion sigue gastada", T.GetRemaining("action"), 0)
+-- El sello es lo que impide que lo de un combate se aplique a otro.
+T.Reset()
+HarfordTurnOrderStore.economia = foto
+HarfordTurnOrderStore.asalto = 5
+chk("otro asalto no vale", T.RestoreFromStore(), false)
+chk("  y se empieza limpio", T.GetRemaining("action"), 1)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

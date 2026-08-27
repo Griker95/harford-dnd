@@ -1675,6 +1675,23 @@ do
     -- gastado: es un permiso de ESTE turno, no una mejora permanente.
     local ECONOMIA = { spent = {}, extra = {}, activa = false, ataques = 0 }
 
+    -- Se guarda en el store de turnos --que es SavedVariable-- sellado con el ASALTO y con tu
+    -- guid. El sello impide que lo de un combate se aplique a otro: si el asalto no coincide, no
+    -- vale. Es el mismo trato que el contador de movimiento.
+    local function GuardarEconomia()
+        local store = HarfordTurnOrderStore
+        if type(store) ~= "table" then return end
+        store.economia = {
+            guid = UnitGUID and UnitGUID("player") or nil,
+            asalto = tonumber(store.asalto) or 0,
+            spent = ECONOMIA.spent,
+            extra = ECONOMIA.extra,
+            ataques = ECONOMIA.ataques,
+        }
+    end
+
+
+
     -- Los tres presupuestos, en el orden en que se muestran.
     local ORDEN = { "action", "bonus", "reaction" }
     local ETIQUETA = {
@@ -1744,6 +1761,7 @@ do
         -- significar que la accion NO ocurre.
         if Turn.GetRemaining(kind) < amount then return false, 0 end
         ECONOMIA.spent[kind] = Turn.GetSpent(kind) + amount
+        GuardarEconomia()
         Notify()
         return true, Turn.GetRemaining(kind)
     end
@@ -1755,6 +1773,19 @@ do
         if type(feature) ~= "table" then return nil end
         local cast = tostring(feature.cast or ""):lower()
         return DE_CAST[cast]
+    end
+
+    function Turn.RestoreFromStore()
+        local store = HarfordTurnOrderStore
+        local g = type(store) == "table" and store.economia
+        if type(g) ~= "table" then return false end
+        if g.guid ~= (UnitGUID and UnitGUID("player")) then return false end
+        if (tonumber(g.asalto) or -1) ~= (tonumber(store.asalto) or 0) then return false end
+        ECONOMIA.spent = type(g.spent) == "table" and g.spent or {}
+        ECONOMIA.extra = type(g.extra) == "table" and g.extra or {}
+        ECONOMIA.ataques = tonumber(g.ataques) or 0
+        Notify()
+        return true
     end
 
     -- Cuantos ataques caben en UNA accion de Atacar. Uno, y dos con Ataque Extra -- que es un
@@ -1819,6 +1850,7 @@ do
         if not ETIQUETA[kind] then return 0 end
         amount = math.max(1, math.floor(tonumber(amount) or 1))
         ECONOMIA.extra[kind] = math.max(0, math.floor(tonumber(ECONOMIA.extra[kind]) or 0)) + amount
+        GuardarEconomia()
         Notify()
         return ECONOMIA.extra[kind]
     end
@@ -1836,6 +1868,8 @@ do
         -- siguiente se tomaria por el segundo y saldria gratis.
         ECONOMIA.ataques = 0
         ECONOMIA.spent = {}
+        -- Y se guarda el turno limpio: si no, una recarga resucitaria lo del turno anterior.
+        if GuardarEconomia then GuardarEconomia() end
         ECONOMIA.extra = {}
         Notify()
     end
@@ -2492,3 +2526,17 @@ events:SetScript("OnEvent", function(_, event, unit)
         API.RequestNpcStates()
     end
 end)
+
+-- Tras un `/reload` el turno ya estaba empezado y no hay aviso que esperar: se retoma lo gastado o
+-- recargar seria la forma de recuperar tu accion. Evento, no temporizador.
+do
+    local ev = CreateFrame("Frame")
+    ev:RegisterEvent("PLAYER_ENTERING_WORLD")
+    ev:SetScript("OnEvent", function(self)
+        self:UnregisterAllEvents()
+        local T = HarfordDnDConditions and HarfordDnDConditions.Turn
+        if T and T.IsActive and T.IsActive() and T.RestoreFromStore then
+            T.RestoreFromStore()
+        end
+    end)
+end

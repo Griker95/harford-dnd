@@ -214,13 +214,15 @@ chk("y solo cae a la suya si no llega",
 -- ─── INICIO Y FINAL DE BLOQUE ───────────────────────────────────────────────
 -- Un bloque tiene dos momentos. Entre ellos el DM juega a sus criaturas, y ese hueco es justo
 -- donde hace falta poder tocar el reparto.
-print("Cada bloque abre y cierra")
-chk("hay dos fases", #T.FASES, 2)
-chk("primero abre", T.FASES[1], "inicio")
-chk("y luego cierra", T.FASES[2], "fin")
+-- La fase se RETIRO del avance: un bloque es un solo momento y `Siguiente` pasa uno por
+-- pulsacion. La lista `FASES` y el id con fase se conservan por compatibilidad --un cliente
+-- anterior aun manda dos entradas por bloque y su id no debe chocar-- pero la ENTRADA ya no lleva
+-- fase, porque el motor solo caduca las condiciones de fin de turno cuando no la hay.
+print("La fase se conserva en el cable, no en la entrada")
+chk("las dos fases siguen declaradas", #T.FASES, 2)
 local cierre = Entrada("enemigos", "fin")
-chk("el cierre se distingue del inicio", cierre.id ~= e.id, true)
-chk("y lo dice", cierre.fase, "fin")
+chk("el id sigue distinguiendolas", cierre.id ~= e.id, true)
+chk("pero la entrada no lleva fase", cierre.fase, nil)
 chk("con texto distinto", T.FASE_ETIQUETA.fin, "termina el turno de")
 
 -- Sin esto, el cierre de un bloque tendria la misma clave que su apertura y el motor lo tomaria
@@ -263,6 +265,18 @@ chk("y sin fases, contra el anterior", select(2, D.EndSaveTicks(nil)), "anterior
 -- Neutrales costaba DOS pulsaciones, con la mesa mirando en medio un "cerrando Enemigos" que no le
 -- dice nada a nadie. Lo que caducaba al cerrar caduca al empezar el siguiente: es el mismo
 -- instante. La fase sigue viajando en el mensaje por compatibilidad, pero siempre vale "inicio".
+-- Y la entrada NO lleva fase. El motor caduca las de inicio contra el bloque que entra y las de
+-- fin contra el que sale SOLO cuando no hay fase: con "inicio" puesto, las de fin de turno no
+-- caducarian NUNCA, y eso no avisa -- el estado se queda ahi y nadie sabe por que.
+print("Sin fase, para que caduquen las dos")
+chk("la entrada propia no la lleva",
+    turnos:find("fase = nil,\n        -- El id sigue llevando la fase", 1, true) ~= nil, true)
+chk("ni la recibida",
+    turnos:find("fase = nil,\n        id = ", 1, true) ~= nil, true)
+chk("y sin fase caducan las dos",
+    cond:find('if abre then return true, "actual" end', 1, true) ~= nil
+    and cond:find('if cierra then return true, "anterior" end', 1, true) ~= nil, true)
+
 print("El avance pasa UN bloque por pulsacion")
 chk("no hay fase de cierre",
     turnos:find('bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"', 1, true) == nil, true)

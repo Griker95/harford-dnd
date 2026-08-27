@@ -741,6 +741,8 @@ end
 -- miembros llega por id; se resuelve contra las entradas locales para sacar guid y nombre, que es
 -- con lo que casan los estados. Un id que no exista aqui (foto vieja) simplemente no aporta: se
 -- pierde ese miembro, no se rompe el turno.
+-- Igual que la propia: la fase llega por el cable pero no se le pone a la entrada, o las
+-- condiciones de fin de turno no caducarian en los clientes que la reciben.
 local function EntradaDeBandoRecibida(bando, idsRaw, fase)
     local store = EnsureStore()
     local porId = {}
@@ -761,7 +763,9 @@ local function EntradaDeBandoRecibida(bando, idsRaw, fase)
     return {
         kind = "bando",
         bando = bando,
-        fase = fase or "inicio",
+        -- Sin fase, igual que la propia: con "inicio" puesto, las condiciones de FIN de turno no
+        -- caducarian nunca en el cliente que la recibe.
+        fase = nil,
         id = "bando:" .. tostring(bando) .. ":" .. tostring(fase or "inicio"),
         name = HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or tostring(bando),
         -- La lista que mando el DM manda sobre lo que opine este cliente.
@@ -2054,7 +2058,13 @@ local function EntradaDeBando(bando, fase)
     return {
         kind = "bando",
         bando = bando,
-        fase = fase or "inicio",
+        -- SIN fase: un bloque es un solo momento. El motor de condiciones caduca entonces las de
+        -- inicio contra el bloque que entra y las de fin contra el que sale, que es lo correcto.
+        -- Con "inicio" puesto, las de FIN de turno no caducaban nunca -- y eso no avisa: el estado
+        -- se queda ahi y nadie sabe por que.
+        fase = nil,
+        -- El id sigue llevando la fase que venga, para no chocar con un cliente anterior que aun
+        -- mande dos entradas por bloque.
         id = "bando:" .. tostring(bando) .. ":" .. tostring(fase or "inicio"),
         name = HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or tostring(bando),
     }

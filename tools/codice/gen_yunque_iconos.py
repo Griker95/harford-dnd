@@ -5,8 +5,10 @@ Un selector visual necesita las imagenes, y no se pueden pedir a ningun servidor
 va sola. Sueltas serian 164 MB. Una hoja unica en WebP a 24 px las deja en poco mas de un
 mega, y cada icono se recorta con `background-position`.
 
-El cupo existe por VELOCIDAD, no por el limite del artefacto: los 18.830 caben (unos 4,4 MB
-de hoja), pero la pagina tarda demasiado en abrir. 6.000 la dejan en 2,5 MB.
+Van TODOS: 18.830 en una hoja de 3,8 MB. Lo que hacia lenta la pagina no era el numero de
+iconos sino como se les daba la imagen -- ver el comentario de `montaHoja` en yunque.html --
+y con eso resuelto el unico coste del catalogo completo es el peso del archivo. El cupo sigue
+ahi por si algun dia se prefiere que abra antes.
 
 Se meten primero los que los objetos USAN de verdad, y el resto se reparte por todo el
 catalogo tomando uno de cada N -- por orden alfabetico solo entraba la A y la B. Los que se
@@ -42,7 +44,7 @@ PAGINA = os.path.join(BASE, 'yunque.html')
 # alfabeto: entraban inv_axe y inv_belt y no llegaba ni a inv_sword.
 LADO = 24
 COLUMNAS = 64
-CUPO = 6000        # 0 = todos, pero entonces la pagina tarda en abrir
+CUPO = 0           # 0 = todos. Baja el cupo solo si la pagina tarda en abrir
 PREFIJOS = ('inv_', 'trade_', 'item_')
 
 
@@ -110,7 +112,7 @@ def main():
     buf = _io.BytesIO()
     # WebP con transparencia: a 24 px no se distingue del PNG y pesa bastante menos, que
     # aqui es lo unico que decide si la pagina abre rapido.
-    hoja.save(buf, format='WEBP', quality=70, method=4)
+    hoja.save(buf, format='WEBP', quality=60, method=5)
     datos = buf.getvalue()
     print("Hoja: %dx%d  ->  %.2f MB (webp)"
           % (hoja.size[0], hoja.size[1], len(datos) / 1024 / 1024))

@@ -2906,13 +2906,18 @@ definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la
    mayusculas -- a la forma que acepta el comando.
 3. **El selector visual va sobre una HOJA DE SPRITES** en WebP a 24 px, no imagenes
    sueltas: la pagina no puede pedirle nada a ningun servidor, y sueltas serian 164 MB.
-   - **La data-URI se declara UNA VEZ** como variable CSS (`--hoja`) y cada elemento solo
-     pone `background-position`. Meterla en el `style` de cada boton dejaba la pagina
-     clavada al bajar por la rejilla: son megas de texto por elemento. Es EL fallo a no
-     repetir.
-   - **El cupo (6.000) es por VELOCIDAD, no por el limite de 16 MB.** Los 18.830 caben
-     (~4,4 MB de hoja) pero la pagina tarda demasiado en abrir; 6.000 la dejan en 2,5 MB.
-     `--cupo 0` los mete todos si algun dia se prefiere cobertura a velocidad.
+   - **La data-URI se convierte a un `blob:` y se inyecta como UNA regla CSS.** Es lo unico
+     que hace la pagina usable, y costo dos intentos fallidos: metida en el `style` de cada
+     boton se copiaban megas de texto por elemento; metida en una variable CSS tampoco vale,
+     porque `var()` se sustituye TEXTUALMENTE y cada elemento que la usa vuelve a arrastrar
+     la cadena entera. Medido: 60 desplazamientos pasaban de **11.312 ms a 39 ms**. Nunca
+     poner una data-URI grande en una variable CSS ni en un style por elemento.
+   - **La rejilla es VIRTUAL**: en el DOM viven solo los ~90 botones visibles y se reciclan.
+     Antes se anadian de 400 en 400 al bajar, pero el evento de scroll se dispara decenas de
+     veces por gesto y la condicion seguia siendo cierta: miles de elementos de golpe.
+   - Con eso, el catalogo COMPLETO (18.830) sale gratis en ejecucion y solo cuesta peso de
+     archivo: 6,0 MB. `--cupo N` lo recorta si alguna vez se prefiere que abra antes.
+     Convertir 4,5 MB de base64 a blob son 28 ms, asi que el tamano de la hoja no penaliza.
    - El resto del cupo se reparte tomando **uno de cada N por todo el catalogo**. Por orden
      alfabetico solo entraba el principio: `inv_axe`, `inv_belt`, y no se llegaba a
      `inv_sword`.

@@ -717,6 +717,129 @@ Grupo("turnos", "bandos, bloques y quien va dentro de cada uno", function(r)
     end
 end)
 
+Grupo("economia", "que la accion, la adicional y la reaccion se gasten Y bloqueen", function(r)
+    local C = _G.HarfordDnDConditions
+    local T = C and C.Turn
+    r.chk("la economia de turno esta cargada", T ~= nil)
+    if not T then return end
+
+    -- Todo lo del turno cuelga de `IsActive`, que exige DOS cosas: que haya combate y que TU estes
+    -- dentro. Estar en la raid no es estar en la pelea.
+    local TO = _G.HarfordTurnOrderAPI
+    local hayCombate = TO and TO.HasActiveCombat and TO.HasActiveCombat()
+    local estoyDentro = TO and TO.AmIInCombat and TO.AmIInCombat()
+    r.chk("se sabe si TU estas dentro", type(TO and TO.AmIInCombat) == "function")
+    r.chk("y la economia lo respeta",
+        (T.IsActive() == false) or (hayCombate and estoyDentro),
+        "combate=" .. tostring(hayCombate) .. " dentro=" .. tostring(estoyDentro))
+
+    -- Un gasto que NO cabe tiene que devolver false y no dejar rastro: si se apunta igual, el
+    -- contador se va a negativo y el aviso es lo unico que pasa.
+    r.chk("gastar devuelve si cupo", type(T.Spend) == "function")
+    r.chk("y hay coste de ataque mecanizado", type(T.SpendWeaponAttack) == "function")
+    r.chk("que sabe cuantos caben en una accion", type(T.AtaquesPorAccion) == "function")
+    if T.AtaquesPorAccion then
+        local n = T.AtaquesPorAccion()
+        r.chk("uno, o dos con Ataque Extra", n == 1 or n == 2, n)
+    end
+
+    -- Sobrevive a un /reload: con la economia bloqueando, recargar seria la forma de saltarsela.
+    r.chk("se guarda para sobrevivir a un /reload", type(T.RestoreFromStore) == "function")
+
+    if not T.IsActive() then
+        r.manual("Sin combate activo (o no estas en la lista): la economia no limita nada, a proposito.")
+    else
+        for _, k in ipairs(T.ORDEN or {}) do
+            r.manual(string.format("%s: %d/%d", tostring(T.ETIQUETA[k]),
+                T.GetRemaining(k), T.GetBudget(k)))
+        end
+    end
+end)
+
+Grupo("movimiento", "que el contador arranque solo, mida y te ate al agotarse", function(r)
+    local U = _G.HarfordDnDAttackUI
+    r.chk("el seguimiento esta cargado", U ~= nil)
+    if not U then return end
+
+    -- El motor NO puede colgar del boton: WoW no ejecuta `OnUpdate` en un frame oculto, y con la
+    -- ficha cerrada el contador no contaba nada sin que nada lo dijera.
+    local motor = _G.HarfordMovementDriver
+    r.chk("hay motor propio, fuera de la ficha", motor ~= nil)
+    r.chk("y esta mostrado", motor and motor:IsShown())
+
+    -- El oyente del turno se apunta a mano en la lista porque este fichero carga ANTES que
+    -- HarfordTurns: con `RegisterMyTurnListener` no se registraba nunca.
+    local TO = _G.HarfordTurnOrderAPI
+    local oyentes = 0
+    for _ in ipairs((TO and TO._myTurnListeners) or {}) do oyentes = oyentes + 1 end
+    r.chk("alguien escucha el inicio de turno", oyentes > 0, oyentes .. " oyente(s)")
+
+    r.chk("el tope se calcula al preguntarlo", type(U.GetTurnMovementMax) == "function")
+    local tope = U.GetTurnMovementMax and U.GetTurnMovementMax() or 0
+    -- Un tope de 0 esconde la barra y hace que el muro no salte nunca.
+    r.chk("y no es cero", tope > 0, string.format("%.1f m", tope))
+    r.chk("se puede volver al inicio del turno", type(U.ReturnToTurnStart) == "function")
+
+    if not (TO and TO.HasActiveCombat and TO.HasActiveCombat()) then
+        r.manual("Sin combate no se cuenta ni se ata: es lo correcto. Inicia un combate para probarlo.")
+    else
+        r.manual(string.format("Llevas %.1f m de %.1f. Anda y mira si sube solo.",
+            (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0, tope))
+    end
+end)
+
+Grupo("aviso", "el estandarte y el marcador de turno, y que su arte exista", function(r)
+    local T = _G.HarfordTurnOrderAPI
+    r.chk("el orden de turnos esta cargado", T ~= nil)
+    if not T then return end
+
+    r.chk("hay estandarte", type(T.ShowTurnBanner) == "function")
+    r.chk("y se puede retirar de golpe", type(T.HideTurnBanner) == "function")
+    r.chk("hay marcador permanente", type(T.RefreshTurnMarker) == "function")
+
+    -- Un atlas que no existe NO borra la textura anterior: la deja como estaba. Por eso se
+    -- comprueba antes de pintar, y por eso se comprueba aqui.
+    local faltan = {}
+    for _, a in ipairs({ "BossBanner-BgBanner-Top", "BossBanner-BgBanner-Mid",
+                         "BossBanner-BgBanner-Bottom", "BossBanner-SkullCircle",
+                         "BossBanner-RedLightning", "LootBanner-ItemBg", "LootBanner-IconGlow",
+                         "AllianceScenario-TrackerHeader" }) do
+        if not (C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(a)) then
+            faltan[#faltan + 1] = a
+        end
+    end
+    r.chk("el arte del aviso existe en este cliente", #faltan == 0, table.concat(faltan, ", "))
+
+    local estilo = _G.HarfordConfig and _G.HarfordConfig.Get and _G.HarfordConfig.Get("turnbanner")
+    r.manual("Estilo puesto: " .. tostring(estilo)
+        .. ". Verlos todos: /harford debug run banners")
+end)
+
+Grupo("combate", "los tres estados del combate y que terminar no vacie la mesa", function(r)
+    local T = _G.HarfordTurnOrderAPI
+    r.chk("el orden de turnos esta cargado", T ~= nil)
+    if not T then return end
+
+    -- "Hay combate" ya no se deduce de que haya entradas: son dos preguntas distintas, y
+    -- confundirlas hacia que terminar el combate y vaciar la lista fueran lo mismo.
+    r.chk("el estado es explicito", type(T.GetCombatState) == "function")
+    r.chk("y se distingue de tener gente montada", type(T.HasCombatants) == "function")
+    local estado = T.GetCombatState and T.GetCombatState()
+    local gente = T.HasCombatants and T.HasCombatants()
+    r.chk("activo implica gente montada", (estado ~= "activo") or gente,
+        "estado=" .. tostring(estado) .. " gente=" .. tostring(gente))
+
+    -- Terminar recoge TODO en un sitio: si cada cosa se engancha por su cuenta, lo que se anada
+    -- despues no lo limpia nadie.
+    local Combate = _G.HarfordTurnsCombat
+    r.chk("hay recogida de fin de combate", type(Combate and Combate.CleanUpAfterCombat) == "function")
+    r.chk("y un modulo nuevo puede sumarse",
+        type(Combate and Combate.RegisterCombatCleanup) == "function")
+
+    r.manual("Estado: " .. tostring(estado or "sin combate")
+        .. ". Terminar ya NO vacia la lista -- eso es `Limpiar`.")
+end)
+
 Grupo("delegar", "que un jugador sin permiso pueda pegarle a un NPC igual", function(r)
     local C = _G.HarfordDnDConditions
     r.chk("el motor de condiciones esta cargado", C ~= nil)

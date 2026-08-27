@@ -166,10 +166,10 @@ Ficha de personaje y controles de tirada.
 | Archivo | Lineas | Rol |
 |---|--:|---|
 | `HarfordDnDUI.lua` | 110 | Constantes y fabricas UI pequenas usadas por la ficha Harford DnD. |
-| `HarfordDnDAttackUI.lua` | 578 | Construccion y estado visual de la seccion Ataque. |
+| `HarfordDnDAttackUI.lua` | 976 | Seccion Ataque y contador de movimiento del turno (motor propio `HarfordMovementDriver`, siempre mostrado). |
 | `HarfordDnDMinimap.lua` | 165 | Boton de minimapa de la ficha Harford. |
 | `HarfordDnD.lua` | 6277 | DND 5e (persistencia local + sync) + UI completa (/harford ficha) |
-| `HarfordActionBars.lua` | 166 | Barra de accion de madera para colocar habilidades del Libro. |
+| `HarfordActionBars.lua` | 772 | Barra de accion para habilidades del Libro, y orbes de espacios de conjuro sobre la barra nativa. |
 
 ## `Character/` - Panel de personaje
 
@@ -199,7 +199,7 @@ Overlays sobre unitframes, nameplates y tracker de turnos.
 | `HarfordTurnsCodec.lua` | 281 | Codec de la red de turnos: escapado, troceado y (de)serializacion de entradas. |
 | `HarfordTurnsCombat.lua` | 187 | Combate del tracker de turnos: tirada de iniciativa, orden e inicio/fin. |
 | `HarfordTurnsSheet.lua` | 409 | Ficha emergente de una entrada del tracker de turnos. |
-| `HarfordTurns.lua` | 2123 | Tracker visual de turnos de combate de Harford. |
+| `HarfordTurns.lua` | 3702 | Turnos de combate: ventana, bloques y sus listas, estandarte de turno y marcador permanente. |
 
 ## `Reputation/` - Reputacion
 

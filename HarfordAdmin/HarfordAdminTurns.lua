@@ -112,14 +112,7 @@ local function AbrirMenu(entry, ancla)
             i.text = T.BANDO_ETIQUETA[b] or b
             i.checked = (b == actual)
             i.func = function()
-                local vivo = T.GetActiveBando()
                 if T.SetBando(entry, b) then
-                    -- Decir SIEMPRE cuando entra en juego: meter a alguien en el bloque que se
-                    -- esta jugando y que no le toque nada desconcierta sin explicacion.
-                    if vivo == b then
-                        Print("El turno de " .. tostring(T.BANDO_ETIQUETA[b] or b)
-                            .. " ya esta en juego: entra en el proximo asalto.")
-                    end
                     Print(tostring(entry.name or "?") .. " pasa a "
                         .. tostring(T.BANDO_ETIQUETA[b] or b) .. ".")
                     -- Difundir en el acto: si el reparto llegase tarde, el bloque que ya esta en
@@ -315,38 +308,6 @@ do
     HarfordAdminTurnsDecorarBloque = Decorar
 end
 
--- ─── INTERRUPTOR DE MODO ─────────────────────────────────────────────────────
-local function MontarBotonModo()
-    local T = API()
-    local frame = T and T.GetFrame and T.GetFrame()
-    if not (frame and T.RegisterAdminControl) then return end
-
-    local boton = CreateFrame("Button", nil, frame, "UIPanelButtonTemplate")
-    boton:SetSize(56, 22)
-    boton:SetPoint("TOPLEFT", frame, "TOPLEFT", 320, -75)
-    boton:SetScript("OnClick", function()
-        if not EsAdmin() then Print("Solo el admin cambia el modo de turnos.") return end
-        local activo = not T.IsModoBandos()
-        T.SetModoBandos(activo)
-        Print(activo
-            and "Iniciativa por BANDOS: el turno pasa de bloque a bloque."
-            or "Iniciativa individual: el turno pasa de criatura a criatura.")
-        if T.Broadcast then T.Broadcast() end
-    end)
-
-    local control = { frame = boton }
-    -- El estado se lee del almacen en cada repintado: el modo viaja en la foto, asi que puede
-    -- cambiarlo otro DM y este cliente tiene que enterarse.
-    control.Refrescar = function()
-        local activo = T.IsModoBandos()
-        boton:SetText(activo and "Bandos" or "Individual")
-        boton:GetFontString():SetTextColor(activo and 1.0 or 0.55,
-            activo and 0.82 or 0.55, activo and 0.1 or 0.55)
-    end
-    control.Refrescar()
-    T.RegisterAdminControl(control)
-end
-
 -- ─── ENGANCHE ────────────────────────────────────────────────────────────────
 do
     local ev = CreateFrame("Frame")
@@ -369,9 +330,5 @@ do
                 return true
             end)
         end
-        -- El boton necesita la ventana, que se crea al abrirla por primera vez. Se intenta ahora y
-        -- se reintenta al abrirse: sin ticker, solo dos oportunidades reales.
-        MontarBotonModo()
-        if T.RegisterOnFrameCreated then T.RegisterOnFrameCreated(MontarBotonModo) end
     end)
 end

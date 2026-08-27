@@ -17,7 +17,7 @@ end
 
 -- Se extrae el bloque de bandos: son funciones del API de turnos y el fichero entero necesita WoW.
 local src = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
-local ini = assert(src:find("HarfordTurnOrderAPI.FASES = {", 1, true))
+local ini = assert(src:find("HarfordTurnOrderAPI.BANDOS = {", 1, true))
 local fin = assert(src:find("function HarfordTurnOrderAPI.HasActiveCombat", ini, true))
 -- `IsSystemEntry` es del tracker: el marcador de asalto no es una criatura y no puede contar como
 -- miembro de ningun bando. Aqui se imita con lo mismo que mira el original.
@@ -102,208 +102,11 @@ chk("se recibe", codec:find("bando = UnescapeText(bando),", 1, true) ~= nil, tru
 chk("y va detras de la CA",
     codec:find("EscapeText(entry.bando)", 1, true) > codec:find("tostring(entry.armorClass or 0)", 1, true), true)
 
--- ─── AVANCE POR BLOQUES ─────────────────────────────────────────────────────
--- El turno pasa de BLOQUE a bloque. Se extraen los tres ayudantes del avance, que viven mas
--- arriba en el fichero que el API de bandos y por eso hay que sacarlos aparte.
-local ia = assert(src:find("local function SiguienteBandoConGente", 1, true))
-local fa = assert(src:find("local function NextTurn()", ia, true))
-local trozo = src:sub(ia, fa - 1)
-    .. " return SiguienteBandoConGente, AnteriorBandoConGente, EntradaDeBando"
-local g
-if setfenv then g = assert(cargar(trozo)); setfenv(g, env)
-else g = assert(cargar(trozo, "t", "t", env)) end
-local Siguiente, Anterior, Entrada = g()
-
-print("El avance recorre los bandos en el orden fijo")
-env.HarfordTurnOrderStore = { entries = {
-    { kind = "player", name = "Gmaster" },
-    { kind = "npc", reaction = 1, name = "Cobra" },
-    { kind = "npc", reaction = 4, name = "Vendedor" },
-    { kind = "npc", reaction = 5, name = "Guardia" },
-} }
-chk("sin empezar, el primero es PJs", Siguiente(0), 1)
-chk("de PJs a Enemigos", Siguiente(1), 2)
-chk("de Enemigos a Neutrales", Siguiente(2), 3)
-chk("de Neutrales a Aliados", Siguiente(3), 4)
-chk("y de Aliados vuelve a PJs", Siguiente(4), 1)
-chk("hacia atras, de Enemigos a PJs", Anterior(2), 1)
-chk("y de PJs se va al ultimo", Anterior(1), 4)
-
--- Los bandos vacios se SALTAN. Un turno de Neutrales sin ningun neutral seria un clic perdido
--- cada asalto, y en mesa eso cansa mas que cualquier otra cosa.
-print("Los bandos sin nadie se saltan")
-env.HarfordTurnOrderStore = { entries = {
-    { kind = "player", name = "Gmaster" },
-    { kind = "npc", reaction = 1, name = "Cobra" },
-} }
-chk("de Enemigos salta a PJs sin pasar por vacios", Siguiente(2), 1)
-chk("y hacia atras igual", Anterior(1), 2)
-env.HarfordTurnOrderStore = { entries = {} }
-chk("sin nadie en ningun bando, no hay siguiente", tostring(Siguiente(0)), "nil")
-
--- La entrada del turno es SINTETICA: representa al bloque, no a una criatura. Asi el aviso que ya
--- recorre a todos los clientes sirve sin cambiar el protocolo.
-print("El turno se anuncia con una entrada de bando")
-local e = Entrada("enemigos", "inicio")
-chk("se distingue de un combatiente", e.kind, "bando")
-chk("dice de que bando es", e.bando, "enemigos")
-chk("y se llama como la mesa lo llama", e.name, "Enemigos")
-chk("con id propio para no chocar con nadie", e.id, "bando:enemigos:inicio")
-
--- El turno del bloque de PJs es de SUS MIEMBROS, no de todo el que tenga el addon puesto:
--- devolver true a secas mandaba "ES TU TURNO" a la raid entera, incluida la gente que solo estaba
--- mirando. La pertenencia la fija el DM y esta guardada, asi que hay que consultarla.
+-- Los tres ficheros que se leen como texto para comprobar que el codigo dice lo que debe.
 local turnos = src
-print("El bloque de PJs es de sus miembros, no de la raid")
-chk("se comprueba la pertenencia",
-    turnos:find('if entry and entry.kind == "players" then return SoyMiembroDe(entry) end',
-        1, true) ~= nil, true)
--- La entrada sintetica de un BANDO no lleva miembros --solo dice de que bando es el turno--, asi
--- que hay que buscar el bloque de verdad en la lista.
-chk("y el bando busca el bloque de verdad",
-    turnos:find("local function EstoyEnElBloqueDePJs()", 1, true) ~= nil, true)
-chk("retroceder tambien va por bloques",
-    turnos:find("local anterior = AnteriorBandoConGente(actual)", 1, true) ~= nil, true)
-
--- Dos bandos seguidos comparten asalto pero NO turno: si la clave no los distinguiera, al segundo
--- no le bajaria ningun contador.
 local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
-print("Cada bloque cuenta como un turno distinto")
-chk("la clave de turno marca el bando",
-    cond:find('("bando:" .. tostring(entry.bando) .. ":"', 1, true) ~= nil, true)
-chk("y un turno de bando casa con cualquiera de sus miembros",
-    cond:find('if tostring(entry.kind or "") == "bando" then', 1, true) ~= nil, true)
-
--- ─── EL ANUNCIO LLEVA LA LISTA ──────────────────────────────────────────────
--- El aviso de turno viajaba serializando `store.entries[activeIndex]`, que en modo bandos NO se
--- mueve: los demas clientes recibian el combatiente de siempre y hacian tocar a quien no era.
--- Ahora se manda el bando Y su lista, para que la pertenencia la fije el DM y no la deduzca cada
--- cliente de su copia, que puede ir retrasada.
-print("El aviso de turno habla de bandos, no de una criatura")
-chk("existe el opcode propio", turnos:find('"TURNB", tostring(turnSerial or 0), bando', 1, true) ~= nil, true)
-chk("y el receptor lo entiende", turnos:find('if opcode == "TURNB" then', 1, true) ~= nil, true)
-chk("la lista de miembros viaja con el",
-    turnos:find("ids[#ids + 1] = tostring(e.id)", 1, true) ~= nil, true)
-chk("y se resuelve contra las entradas locales",
-    turnos:find("local function EntradaDeBandoRecibida", 1, true) ~= nil, true)
-
--- Corregir el reparto tiene que difundirse EN EL ACTO. Si llegase con la foto retrasada, el bloque
--- que ya esta en juego tocaria con la lista vieja.
--- La UI de DM vive en HarfordAdmin: sin ese addon no aparece ni el menu ni el interruptor, que es
--- la regla de carga del proyecto. El core solo expone el gesto.
 local admin = io.open("HarfordAdmin/HarfordAdminTurns.lua"):read("*a")
-print("El DM reparte a mano, desde HarfordAdmin")
-chk("el menu vive en Admin", admin:find("local function AbrirMenu(entry, ancla)", 1, true) ~= nil, true)
-chk("y NO en el core", turnos:find("AbrirMenuDeBando", 1, true) == nil, true)
-chk("el core solo expone el gesto",
-    turnos:find("function HarfordTurnOrderAPI.OnCardRightClick", 1, true) ~= nil, true)
-chk("que la tarjeta dispara con el boton derecho",
-    turnos:find('if button == "RightButton" then', 1, true) ~= nil, true)
--- Sin admin no se abre menu, y CALLANDO: el click derecho se da constantemente y avisar cada vez
--- llenaba el chat de la misma linea.
-chk("solo el admin reparte", admin:find("if not EsAdmin() then return end", 1, true) ~= nil, true)
-chk("y difunde al cambiar", admin:find("if T.SetBando(entry, b) then", 1, true) ~= nil, true)
 
--- La lista que manda el DM PISA a la que calcularia el cliente: es lo que evita que dos clientes
--- con la foto desincronizada hagan tocar a criaturas distintas.
-print("La lista del DM manda sobre la del cliente")
-chk("el motor la prefiere", cond:find("if entry.miembros then", 1, true) ~= nil, true)
-chk("y solo cae a la suya si no llega",
-    cond:find("guids, nombres = MiembrosDeBando(entry.bando)", 1, true) ~= nil, true)
-
--- ─── INICIO Y FINAL DE BLOQUE ───────────────────────────────────────────────
--- Un bloque tiene dos momentos. Entre ellos el DM juega a sus criaturas, y ese hueco es justo
--- donde hace falta poder tocar el reparto.
--- La fase se RETIRO del avance: un bloque es un solo momento y `Siguiente` pasa uno por
--- pulsacion. La lista `FASES` y el id con fase se conservan por compatibilidad --un cliente
--- anterior aun manda dos entradas por bloque y su id no debe chocar-- pero la ENTRADA ya no lleva
--- fase, porque el motor solo caduca las condiciones de fin de turno cuando no la hay.
-print("La fase se conserva en el cable, no en la entrada")
-chk("las dos fases siguen declaradas", #T.FASES, 2)
-local cierre = Entrada("enemigos", "fin")
-chk("el id sigue distinguiendolas", cierre.id ~= e.id, true)
--- La entrada la conserva: el anuncio elige sus palabras con ella y el estandarte decide si sale.
-chk("y la entrada la conserva", cierre.fase, "fin")
-chk("con texto distinto", T.FASE_ETIQUETA.fin, "termina el turno de")
-
--- Sin esto, el cierre de un bloque tendria la misma clave que su apertura y el motor lo tomaria
--- por repetido: no bajaria ningun contador de fin de turno.
-print("El motor separa las dos fases")
-chk("la clave de turno lleva la fase",
-    cond:find('.. ":" .. tostring(entry.fase or "inicio")', 1, true) ~= nil, true)
--- Se EJECUTA la decision, no se busca su texto: la version anterior de esta prueba solo miraba que
--- estuviera escrita y no cazo una mutacion que hacia disparar lo de inicio tambien al cerrar.
-local ini = assert(cond:find("function API.DurationTicks", 1, true))
-local fin2 = assert(cond:find("function API.OnTurnChanged", ini, true))
-local trozoD = cond:sub(ini, fin2 - 1) .. " return API"
-local entorno = { API = {}, tostring = tostring, type = type }
-local d
-if setfenv then d = assert(cargar(trozoD)); setfenv(d, entorno)
-else d = assert(cargar(trozoD, "t", "t", entorno)) end
-local D = d()
-
-chk("al ABRIR toca lo de inicio", (D.DurationTicks("target_turn_start", "inicio")), true)
-chk("y NO lo de fin", (D.DurationTicks("target_turn_end", "inicio")), false)
-chk("al CERRAR toca lo de fin", (D.DurationTicks("target_turn_end", "fin")), true)
-chk("y NO lo de inicio", (D.DurationTicks("target_turn_start", "fin")), false)
-chk("lo del origen sigue la misma regla", (D.DurationTicks("source_turn_end", "fin")), true)
-chk("una duracion ajena no toca nunca", (D.DurationTicks("rounds", "inicio")), false)
--- La iniciativa individual NO tiene fases y sigue con el truco de siempre: el final de un turno es
--- la apertura del siguiente, y por eso casa contra la entrada ANTERIOR.
-local toca, contra = D.DurationTicks("target_turn_end", nil)
-chk("sin fases, el fin sigue tocando", toca, true)
-chk("pero contra el turno anterior", contra, "anterior")
-local _, contra2 = D.DurationTicks("target_turn_start", nil)
-chk("y el inicio contra el actual", contra2, "actual")
-chk("con fases, el fin casa contra el bando actual",
-    select(2, D.DurationTicks("target_turn_end", "fin")), "actual")
--- La salvacion de fin de turno sigue la misma regla.
-chk("la salvacion de fin solo al cerrar", (D.EndSaveTicks("fin")), true)
-chk("nunca al abrir", (D.EndSaveTicks("inicio")), false)
-chk("y sin fases, contra el anterior", select(2, D.EndSaveTicks(nil)), "anterior")
-
--- UN bloque por pulsacion. Hubo dos fases --empezarlo y cerrarlo-- y pasar de Enemigos a
--- Neutrales costaba DOS pulsaciones, con la mesa mirando en medio un "cerrando Enemigos" que no le
--- dice nada a nadie. Lo que caducaba al cerrar caduca al empezar el siguiente: es el mismo
--- instante. La fase sigue viajando en el mensaje por compatibilidad, pero siempre vale "inicio".
--- Y la entrada NO lleva fase. El motor caduca las de inicio contra el bloque que entra y las de
--- fin contra el que sale SOLO cuando no hay fase: con "inicio" puesto, las de fin de turno no
--- caducarian NUNCA, y eso no avisa -- el estado se queda ahi y nadie sabe por que.
-print("Sin fase, para que caduquen las dos")
--- La entrada CONSERVA su fase: el anuncio la usa para elegir las palabras y el estandarte
--- para saber si mostrarse. Quien no debe leerla es el motor de condiciones, que con un
--- bloque por pulsacion no tiene dos momentos que distinguir.
-chk("la entrada conserva su fase",
-    turnos:find("fase = fase or \"inicio\",", 1, true) ~= nil, true)
-chk("y el motor no la mira",
-    cond:find("local fase = nil", 1, true) ~= nil, true)
-chk("y sin fase caducan las dos",
-    cond:find('if abre then return true, "actual" end', 1, true) ~= nil
-    and cond:find('if cierra then return true, "anterior" end', 1, true) ~= nil, true)
-
-print("El avance pasa UN bloque por pulsacion")
-chk("no hay fase de cierre",
-    turnos:find('bando, fase = HarfordTurnOrderAPI.BANDOS[actual], "fin"', 1, true) == nil, true)
-chk("se salta directo al siguiente con gente",
-    turnos:find("local siguiente = SiguienteBandoConGente(actual)", 1, true) ~= nil, true)
-chk("y hacia atras igual",
-    turnos:find("local bando, fase = HarfordTurnOrderAPI.BANDOS[anterior], \"inicio\"", 1, true) ~= nil, true)
-chk("la fase viaja en el anuncio",
-    turnos:find('tostring(store.faseBando or "inicio"),', 1, true) ~= nil, true)
--- Y el asalto detras: sin el, quien vuelve no puede saber cuantos se perdio.
-chk("y el asalto tambien",
-    turnos:find('tostring(store.asalto or 0) }, "|")', 1, true) ~= nil, true)
-chk("y va la ultima, para no descuadrar el formato anterior",
-    turnos:find('table.concat(ids, ","), tostring(store.faseBando', 1, true) ~= nil, true)
-chk("solo se avisa de turno propio al abrir",
-    turnos:find('if fase == "inicio" then AlertMyTurn', 1, true) ~= nil, true)
-chk("y se avisa si el bloque tocado ya esta en juego",
-    admin:find("ya esta en juego: entra en el proximo asalto", 1, true) ~= nil, true)
-
--- ─── EL HUECO COLECTIVO DE PJs ──────────────────────────────────────────────
--- Su `kind` es "players" (plural), no "player". Los tres sitios que fuerzan el bando miraban solo
--- el singular, asi que caia por reaccion 0 -> ENEMIGOS: el turno de los jugadores en el bando
--- enemigo, y nada que lo delatara.
 print("El hueco colectivo de PJs va con los PJs")
 chk("kind players va a pjs", T.GetBando({ kind = "players", name = "PJs" }), "pjs")
 chk("aunque no traiga reaccion", T.GetBando({ kind = "players" }), "pjs")
@@ -312,20 +115,15 @@ chk("y no se le puede mover", (T.SetBando({ kind = "players" }, "enemigos")), fa
 chk("un jugador suelto sigue en pjs", T.GetBando({ kind = "player" }), "pjs")
 
 -- ─── ASALTOS ────────────────────────────────────────────────────────────────
--- En modo bandos el marcador de asalto nunca se visitaba -- es una tarjeta de la lista, y el
--- avance ya no recorre tarjetas -- asi que las duraciones de asalto no bajaban NUNCA.
-print("El asalto se cierra al dar la vuelta")
-chk("se marca al volver al primer bando",
-    turnos:find("nuevoAsalto = (siguiente <= actual) or actual == 0", 1, true) ~= nil, true)
+-- El asalto sube al PASAR POR EL MARCADOR, que es una tarjeta mas de la lista. Lo contaba el
+-- avance por bloques --el unico sitio donde se contaba--, asi que al retirarlo habria dejado de
+-- contarse, y las duraciones medidas en asaltos dependen de esta cuenta.
+print("El asalto sube al pasar por el marcador")
+chk("se detecta el marcador",
+    turnos:find('if activa and activa.kind == "round" then', 1, true) ~= nil, true)
 chk("y se cuenta", turnos:find("store.asalto = (tonumber(store.asalto) or 0) + 1", 1, true) ~= nil, true)
--- La marca tiene que llegar al motor como `kind = "round"`, que es lo que hace bajar `rounds`.
-chk("avisa al motor como asalto",
-    turnos:find('local marca = { kind = "round"', 1, true) ~= nil, true)
-chk("y viaja a los demas clientes",
-    turnos:find("entrada.asalto = store.asalto", 1, true) ~= nil, true)
+chk("la tarjeta se lo lleva", turnos:find("activa.asalto = store.asalto", 1, true) ~= nil, true)
 
--- Mientras estabas desconectado nadie bajaba tus contadores: tu cliente no corria y los demas solo
--- tocan sus propios registros. Al volver, un estado que debio expirar seguia entero.
 print("Al volver, los contadores se ponen al dia")
 chk("existe la recuperacion", cond:find("function API.CatchUpRounds", 1, true) ~= nil, true)
 -- Cada criatura actua una vez por asalto, asi que restar los asaltos perdidos es la cuenta exacta.
@@ -349,40 +147,38 @@ chk("un asalto seguido no dispara nada",
 -- ─── EL MODO SE PUEDE ENCENDER Y VIAJA ──────────────────────────────────────
 -- Nadie llamaba a `SetModoBandos`, y `TURNB` solo sale si `modoBandos` YA es true: todo el avance
 -- por bloques era codigo inalcanzable. Existir no es lo mismo que poder usarse.
-print("Hay como encender el modo, y se comparte")
-chk("hay boton, en Admin", admin:find("local function MontarBotonModo", 1, true) ~= nil, true)
-chk("que lo enciende de verdad", admin:find("T.SetModoBandos(activo)", 1, true) ~= nil, true)
-chk("solo el admin", admin:find("Solo el admin cambia el modo de turnos", 1, true) ~= nil, true)
--- El core tiene que ofrecer donde colgarlo, o Admin no tendria sitio.
-chk("y el core ofrece donde colgarlo",
-    turnos:find("function HarfordTurnOrderAPI.RegisterAdminControl", 1, true) ~= nil, true)
--- La ventana se crea al abrirla, que puede ser despues de que Admin arranque.
-chk("y avisa cuando la ventana nace",
-    turnos:find("function HarfordTurnOrderAPI.RegisterOnFrameCreated", 1, true) ~= nil, true)
--- Media mesa por bandos y media por criatura serian dos combates distintos a la vez.
-chk("el modo viaja en la foto", turnos:find('modo = table.concat({ "B",', 1, true) ~= nil, true)
--- Y DONDE va la rotacion: sin la posicion, un DM que recibe la foto sin haber visto un TURNB
--- arranca de cero, anuncia "Asalto 1" en mitad del quinto y devuelve el turno a los PJs.
-chk("con el bando, la fase y el asalto",
-    turnos:find("store.faseBando or \"inicio\"), tostring(store.asalto or 0) }", 1, true) ~= nil, true)
--- El hueco del medio llevaba vacio desde siempre; un receptor antiguo lo ignora y sigue leyendo
--- las entradas del cuarto campo, que es donde ya las buscaba.
-chk("y solo se acepta si hay cuarto campo",
-    turnos:find('local marca, bando, fase, asalto = strsplit(",", tostring(modoRaw or ""))', 1, true) ~= nil, true)
--- La lista de DMs secundarios viaja en el mismo hueco, detras: quien delega necesita la MISMA
--- cadena que los demas o mandaria el efecto a alguien que nadie reconoce como eslabon.
-chk("y los DMs secundarios viajan con ella",
+-- ─── EL MODO POR BLOQUES SE RETIRO ──────────────────────────────────────────
+-- Habia dos formas de avanzar el turno --de criatura en criatura y de bloque en bloque-- con un
+-- interruptor en la ventana. La de bloques no funcionaba bien y nadie sabia para que estaba, asi
+-- que se quito: queda UNA. Los bloques siguen siendo tarjetas y siguen guardando a los suyos; lo
+-- que se fue es el modo de avance.
+print("El avance por bloques ya no existe")
+chk("sin interruptor en Admin", admin:find("MontarBotonModo", 1, true) == nil, true)
+chk("sin encenderlo desde fuera", turnos:find("SetModoBandos", 1, true) == nil, true)
+chk("sin preguntarlo", turnos:find("IsModoBandos", 1, true) == nil, true)
+chk("sin ramas por modo", turnos:find("if store.modoBandos then", 1, true) == nil, true)
+chk("sin fases de turno", turnos:find("FASE_ETIQUETA", 1, true) == nil, true)
+chk("sin entrada sintetica de bando", turnos:find("local function EntradaDeBando", 1, true) == nil, true)
+chk("y ya no se emite el aviso por bloque",
+    turnos:find('table.concat({ "TURNB"', 1, true) == nil, true)
+-- Recibirlo SI se tolera: un cliente sin actualizar puede seguir mandandolo, y lo que no se
+-- entiende se descarta en silencio en vez de aplicarse a medias.
+chk("pero recibirlo no rompe", turnos:find('if opcode == "TURNB" then return false end', 1, true) ~= nil, true)
+-- El hueco del modo se queda VACIO en la foto, no desaparece: el tercer campo es "modo~dms~estado"
+-- y quitarlo descuadraria los otros dos en un cliente que aun no se haya actualizado.
+chk("el hueco sigue en la foto", turnos:find('local modo = ""', 1, true) ~= nil, true)
+chk("y los DMs secundarios viajan con el",
     turnos:find('strsplit("~", tostring(third or ""))', 1, true) ~= nil, true)
 chk("el dato vive en el core", turnos:find("function HarfordTurnOrderAPI.SetSecondaryDMs", 1, true) ~= nil, true)
 chk("pero nombrarlos es de Admin", admin:find("local function AlternarSecundario", 1, true) ~= nil, true)
-chk("con marca reconocible", turnos:find('if marca == "B" then', 1, true) ~= nil, true)
+-- El core tiene que ofrecer donde colgar los controles de DM, o Admin no tendria sitio.
+chk("y el core sigue ofreciendo donde colgar",
+    turnos:find("function HarfordTurnOrderAPI.RegisterAdminControl", 1, true) ~= nil, true)
 
 -- El GUID de una entrada vive en `id`; `guid` no existe. Cuatro sitios lo leian, y dos eran
 -- guardias: la delegacion de efectos no aceptaba NADA y no se informaba de ningun NPC.
 print("El GUID de una entrada se lee de donde esta")
-chk("en la lista de miembros del bando",
-    turnos:find("local g = tostring(e.guid or e.id or \"\")", 1, true) ~= nil, true)
-chk("y en el guardia de efectos delegados",
+chk("en el guardia de efectos delegados",
     cond:find('tostring(e.guid or e.id or "") == guid', 1, true) ~= nil, true)
 -- Sin el remitente, `ultimoAvanceAjeno` no se llenaba y el aviso de doble avance no salia jamas.
 chk("el aviso de doble avance recibe al remitente",
@@ -620,14 +416,9 @@ chk("creandola si hace falta",
 -- En bandos el turno lo lleva `activeBando`, no `activeIndex`: la marca se quedaba clavada en la
 -- tarjeta 1 --el marcador de asalto-- mientras el turno iba por Enemigos. Es la misma entrada la
 -- que manda en cada modo, pero no es la misma variable.
-print("La marca de ACTIVO sigue al bando")
-chk("en bandos se mira el bando",
-    turnos:find("esActiva = bando ~= nil and tostring(entry.kind or \"\") ~= \"round\"", 1, true) ~= nil, true)
-chk("y en individual, el indice",
-    turnos:find("esActiva = (entryIndex == store.activeIndex)", 1, true) ~= nil, true)
--- Y el marcador de asalto nunca es el activo: no es de nadie.
-chk("el marcador de asalto no se marca",
-    turnos:find('tostring(entry.kind or "") ~= "round"', 1, true) ~= nil, true)
+print("La marca de ACTIVO sigue al indice")
+chk("y no hay otra variable que mirar",
+    turnos:find("local esActiva = (entryIndex == store.activeIndex)", 1, true) ~= nil, true)
 -- Sin aviso de ESTADOS: cada condicion caduca sola en el turno de su dueno, asi que anunciarlo
 -- pedia a la mesa algo que ya estaba hecho.
 chk("y no se anuncia ESTADOS",
@@ -733,13 +524,15 @@ chk("y usa arte nativo", turnos:find('SetAtlas("BossBanner-BgBanner-Mid"', 1, tr
 -- otra cosa.
 chk("comprobando que exista",
     turnos:find('C_Texture.GetAtlasInfo("BossBanner-BgBanner-Mid")', 1, true) ~= nil, true)
--- Solo al EMPEZAR un bando: al cerrarlo no empieza nada, y dos estandartes por bando es ruido.
-chk("solo al empezar el bando",
-    turnos:find('if entrada.fase == "inicio" and HarfordTurnOrderAPI.ShowTurnBanner then',
-        1, true) ~= nil, true)
--- Dorado si empieza el bando de los PJs, que es SIEMPRE el tuyo: AddEntry manda a un jugador a
--- pjs se ponga donde se ponga.
-chk("dorado cuando te toca", turnos:find('entrada.bando == "pjs")', 1, true) ~= nil, true)
+-- Lo levanta TU turno, no el de un bloque: el estandarte era el aviso de "empieza el bando" y al
+-- retirar ese modo se habria quedado sin quien lo levantara. Ahora sale desde `AlertMyTurn`, que
+-- es el mismo momento para quien lo mira: le toca.
+chk("lo levanta tu turno",
+    turnos:find("local conEstandarte = HarfordTurnOrderAPI.ShowTurnBanner", 1, true) ~= nil, true)
+-- El aviso de raid es su RESPALDO, no un segundo aviso: salian los dos y quedaban tres "ES TU
+-- TURNO" pisandose en la misma esquina. Por eso se mira lo que DEVUELVE el estandarte.
+chk("y el aviso de raid solo si no hubo estandarte",
+    turnos:find("if not conEstandarte and RaidNotice_AddMessage", 1, true) ~= nil, true)
 -- Sin ticker: se retira con un temporizador de una sola vez, cancelable si vuelve a salir.
 chk("se retira solo", turnos:find("ocultar = C_Timer.NewTimer(4, function()", 1, true) ~= nil, true)
 chk("y se puede apagar", turnos:find('if estilo == "off" then return false end', 1, true) ~= nil, true)

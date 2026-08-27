@@ -230,13 +230,18 @@ chk("una lista corta no se recorta", tostring(r2), "false")
 
 -- ─── LO MIO CADUCA EN MI TURNO, SE LLAME COMO SE LLAME ──────────────────────
 -- Esquivar y Preparar guardan tu nombre como origen y caducan al empezar TU turno. Pero si tu
--- turno es el hueco colectivo, la entrada se llama "PJs" y los nombres no casaban: el estado no se
--- retiraba nunca. Lo mismo con el bloque "pjs" de bandos.
+-- turno es el bloque de PJs, la entrada se llama "PJs" y los nombres no casaban: el estado no se
+-- retiraba nunca.
 print("El turno propio se reconoce aunque se llame PJs")
 chk("hay una nocion de turno mio", cond:find("local function EsMiTurno(entry)", 1, true) ~= nil, true)
 chk("el hueco colectivo cuenta", cond:find('if k == "players" then return true end', 1, true) ~= nil, true)
-chk("y el bloque de bandos tambien",
-    cond:find('if k == "bando" then return entry.bando == "pjs" end', 1, true) ~= nil, true)
+-- Y el turno de un BLOQUE caduca lo de TODOS los suyos, uno por uno de su lista de miembros. Lo
+-- llevaba una entrada sintetica que fabricaba el avance por bloques; al retirarse ese modo la
+-- tarjeta paso a ser una entrada normal, y sin esto un turno de `Enemigos` no caducaba nada.
+chk("y un bloque caduca lo de los suyos",
+    cond:find('if kind == "players" or kind == "generic" then', 1, true) ~= nil, true)
+chk("recorriendo su lista",
+    cond:find('for _, m in ipairs(entry.miembros or {}) do', 1, true) ~= nil, true)
 chk("se sabe que un registro es mio", cond:find("local function EsMio(guid, name)", 1, true) ~= nil, true)
 -- Va ANTES del resto: el hueco colectivo no tiene ni mi guid ni mi nombre, asi que ninguna de las
 -- comparaciones de abajo podria acertar.

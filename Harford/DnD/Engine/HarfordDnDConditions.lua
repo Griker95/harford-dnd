@@ -1553,19 +1553,6 @@ function API.OnDamageTaken(ref, amount)
     return #remove > 0
 end
 
--- Los miembros de un bando, como conjunto de guid y nombre corto, para poder preguntar rapido si
--- un registro pertenece a quien le acaba de tocar.
-local function MiembrosDeBando(bando)
-    local guids, nombres = {}, {}
-    if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.GetBandoMembers) then return guids, nombres end
-    for _, e in ipairs(HarfordTurnOrderAPI.GetBandoMembers(bando) or {}) do
-        local g = tostring(e.guid or e.id or "")
-        if g ~= "" then guids[g] = true end
-        if e.name and e.name ~= "" then nombres[ShortName(e.name)] = true end
-    end
-    return guids, nombres
-end
-
 -- ¿Este turno es MIO? El hueco colectivo de PJs y el bloque de bandos "pjs" son de todos los
 -- jugadores, y su entrada se llama "PJs", no como tu personaje. Sin esto, un estado tuyo que
 -- caduca al empezar tu turno -- Esquivar, Preparar, Desengancharse -- no casaba con ninguna
@@ -1574,7 +1561,6 @@ local function EsMiTurno(entry)
     if not entry then return false end
     local k = tostring(entry.kind or "")
     if k == "players" then return true end
-    if k == "bando" then return entry.bando == "pjs" end
     -- Tu entrada individual: por guid, o por nombre si no lo trae.
     local mio = UnitGUID and UnitGUID("player")
     if mio and tostring(entry.guid or entry.id or "") == mio then return true end
@@ -1599,24 +1585,23 @@ local function IdentityMatches(record, entry, which)
     -- Lo MIO caduca en MI turno, aunque ese turno se llame "PJs" y no como yo. Va antes que todo
     -- lo demas porque el hueco colectivo no tiene ni mi guid ni mi nombre.
     if EsMio(guid, name) and EsMiTurno(entry) then return true end
-    -- Turno de BANDO: no es un combatiente sino un bloque, asi que casa con CUALQUIERA de sus
-    -- miembros. Es lo que hace que a los cinco enemigos les baje el contador de golpe en vez de
-    -- uno a uno, y cada cliente lo resuelve solo: el DM unicamente anuncia que bando empieza.
-    if tostring(entry.kind or "") == "bando" then
-        local guids, nombres
-        if entry.miembros then
-            -- La lista vino con el anuncio del DM: esa manda. Es lo que evita que dos clientes
-            -- con la foto desincronizada hagan tocar a criaturas distintas.
-            guids, nombres = entry.miembros.guids or {}, {}
-            for n in pairs(entry.miembros.nombres or {}) do nombres[ShortName(n)] = true end
-        else
-            guids, nombres = MiembrosDeBando(entry.bando)
+    -- Turno de un BLOQUE (`PJs`, `Enemigos`, ...): no es un combatiente, asi que casa con
+    -- CUALQUIERA de los suyos. Es lo que hace que a los cinco enemigos les baje el contador de
+    -- golpe en vez de uno a uno, y cada cliente lo resuelve solo con la lista que lleva la tarjeta.
+    --
+    -- Antes esto colgaba de una entrada sintetica `kind = "bando"` que fabricaba el avance por
+    -- bloques. Al retirarse ese modo, la tarjeta del bloque paso a ser una entrada NORMAL de la
+    -- lista -- y sin esto, al caer el turno en `Enemigos` no le caducaba nada a nadie, porque la
+    -- tarjeta no tiene ni guid ni nombre de criatura contra los que casar.
+    local kind = tostring(entry.kind or "")
+    if kind == "players" or kind == "generic" then
+        for _, m in ipairs(entry.miembros or {}) do
+            if guid ~= "" and guid == tostring(m.guid or m.id or "") then return true end
+            if name ~= "" and m.name and ShortName(name) == ShortName(m.name) then return true end
         end
-        if guid ~= "" and guids[guid] then return true end
-        if name ~= "" and nombres[ShortName(name)] then return true end
-        -- Y si el bloque es el de los PJs, mis propios estados cuentan aunque el registro no traiga
+        -- Y si es el bloque de los PJs, mis propios estados cuentan aunque el registro no traiga
         -- identidad: son mios, y yo soy un PJ.
-        if entry.bando == "pjs" and guid == "" and name == "" then return true end
+        if kind == "players" and guid == "" and name == "" then return true end
         return false
     end
     return (guid ~= "" and guid == tostring(entry.guid or entry.id or ""))
@@ -2063,9 +2048,7 @@ function API.OnTurnChanged(entry, serial)
     LoadOwned()
     if entry and entry.asalto then API.NoteRound(entry.asalto) end
     local turnKey = tostring(serial or 0) .. ":"
-        .. tostring(entry and entry.kind == "bando"
-            and ("bando:" .. tostring(entry.bando) .. ":" .. tostring(entry.fase or "inicio"))
-            or (entry and (entry.guid or entry.id or entry.name)) or "")
+        .. tostring(entry and (entry.guid or entry.id or entry.name) or "")
     if S.lastTurnKey == turnKey then return end
     S.lastTurnKey = turnKey
     local previous = S.lastTurn

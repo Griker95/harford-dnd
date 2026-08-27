@@ -711,9 +711,6 @@ Grupo("turnos", "bandos, bloques y quien va dentro de cada uno", function(r)
             total .. " contados para " .. bloques .. " bloque(s) y " .. dentro .. " dentro")
     end
 
-    if T.IsModoBandos and not T.IsModoBandos() then
-        r.manual("Estas en iniciativa INDIVIDUAL. Para probar bloques, pulsa `Bandos` en la ventana.")
-    end
     if bloques == 0 then
         r.manual("No hay bloques: pulsa `PJs`/`Aliado`/`Neutral`/`Enemigo` en la ventana de turnos.")
     elseif dentro == 0 then

@@ -364,7 +364,12 @@ local STALE_SECONDS = 4 * 60 * 60
 
 local function PurgeStaleEntries()
     local store = EnsureStore()
-    if #store.entries == 0 then return false end
+    -- No se sale por lista vacia: lo que caduca es el COMBATE, y su estado puede haber quedado
+    -- puesto sin entradas. Si no hay ni entradas ni estado no hay nada que hacer.
+    if #store.entries == 0 and store.estado == nil and not store.movimiento
+        and not store.economia then
+        return false
+    end
     local ahora = (time and time()) or 0
     local ultimo = tonumber(store.lastTouched) or 0
     -- Sin sello (lista escrita por una version anterior) se considera vieja: es lo que hay guardado
@@ -377,6 +382,16 @@ local function PurgeStaleEntries()
     -- el siguiente avance arrancara a media rotacion.
     store.activeBando = nil
     store.faseBando = nil
+    -- Y el COMBATE se acabo. Sin esto, el que se desconecta a media pelea y vuelve al dia
+    -- siguiente --sin nadie que le mande una foto nueva-- se encontraba las entradas limpias pero
+    -- el estado en `activo`: seguia "en combate" el solo, con su asalto de ayer.
+    store.estado = nil
+    store.asalto = nil
+    -- Lo gastado iba sellado con el asalto, que acaba de irse: se tira con el, o el sello dejaria
+    -- de valer y podria aplicarse a la pelea siguiente.
+    store.movimiento = nil
+    store.economia = nil
+    if Combate and Combate.CleanUpAfterCombat then pcall(Combate.CleanUpAfterCombat) end
     return true
 end
 

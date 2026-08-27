@@ -3470,6 +3470,18 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   `/harford debug run movimiento` (y `movimiento simular` dispara el aviso de turno a mano, que es
   el eslabon que no se puede provocar sin montar un combate entero).
 
+## Un combate abandonado caduca ENTERO (2026-08-27)
+
+- `PurgeStaleEntries` (4 h sin tocar la lista, al entrar) limpiaba las ENTRADAS pero **no el
+  estado**: quien se desconectaba a media pelea y volvia al dia siguiente --sin nadie que le
+  mandara una foto nueva-- se encontraba la lista vacia y `estado = "activo"`. O sea, **"en
+  combate" el solo**, con el asalto de ayer.
+- Ahora se van tambien `estado`, `asalto` y lo gastado (`movimiento`, `economia`), **que iba
+  sellado con el asalto**: si el asalto se va y el sello se queda, podria aplicarse a la pelea
+  siguiente. Y se llama a `CleanUpAfterCombat`, igual que al Terminar.
+- **No se sale por lista vacia**: lo que caduca es el COMBATE, y su estado puede haber quedado
+  puesto sin entradas.
+
 ## Si el DM se cae, releva un companero (2026-08-27)
 
 - `TREQ` lo contestaba **solo el DM**. Si se caia a mitad de combate, quien entraba o reconectaba se

@@ -102,4 +102,24 @@ env3.HarfordTurnOrderStore = { entries = {
     { kind = "players", name = "PJs", miembros = { { guid = "GUID-OTRO" } } } } }
 chk("pero el bloque de otro no me mete", B.AmIInCombat(), false)
 
+-- ─── UN COMBATE ABANDONADO CADUCA ENTERO ────────────────────────────────────
+-- Te desconectas a media pelea y vuelves al dia siguiente, sin nadie que te mande una foto nueva.
+-- La caducidad de cuatro horas limpiaba las ENTRADAS pero no el estado: te encontrabas la lista
+-- vacia y `activo` puesto, o sea "en combate" tu solo, con el asalto de ayer.
+print("Un combate abandonado caduca entero")
+chk("la caducidad borra el estado",
+    src:find("store.estado = nil\n    store.asalto = nil", 1, true) ~= nil, true)
+-- Lo gastado iba sellado con el asalto, que acaba de irse: se tira con el, o el sello dejaria de
+-- valer y podria aplicarse a la pelea siguiente.
+chk("y lo gastado, que iba sellado con el asalto",
+    src:find("store.movimiento = nil\n    store.economia = nil", 1, true) ~= nil, true)
+-- Y no se sale por lista vacia: lo que caduca es el COMBATE, y su estado puede haber quedado
+-- puesto sin entradas.
+chk("no se sale por lista vacia",
+    src:find("if #store.entries == 0 and store.estado == nil", 1, true) ~= nil, true)
+-- Se recoge lo demas igual que al Terminar: el contador, el estandarte y el marcador.
+chk("y se recoge como al terminar",
+    src:find("if Combate and Combate.CleanUpAfterCombat then pcall(Combate.CleanUpAfterCombat) end",
+        1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

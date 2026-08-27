@@ -74,4 +74,32 @@ chk("y los combatientes siguen ahi", A.HasCombatants(), true)
 env2.HarfordTurnOrderStore = { entries = { { kind = "npc" } }, asalto = 3 }
 chk("un combate de antes de esto se respeta", A.HasActiveCombat(), true)
 
+-- ─── ESTAR EN LA RAID NO ES ESTAR EN LA PELEA ───────────────────────────────
+-- Media hermandad puede ver el combate sin jugarlo. A esos no hay que pintarles fichas de accion,
+-- ni barra de movimiento, ni limitarles nada.
+print("Solo cuentan los que estan DENTRO")
+local q = assert(src:find("function HarfordTurnOrderAPI.AmIInCombat"))
+local r = assert(src:find("\n-- Cuantos combatientes", q))
+local env3 = { ipairs = ipairs, type = type, tostring = tostring, HarfordTurnOrderAPI = {},
+    UnitGUID = function(u) return u == "player" and "GUID-YO" or nil end,
+    UnitExists = function() return false end,
+    EntryBelongsToMe = function(e) return e and e.name == "Yo" end,
+    IsTurnAdmin = function() return false end }
+local h
+local cod3 = src:sub(q, r)
+if setfenv then h = assert(cargar(cod3)); setfenv(h, env3) else h = assert(cargar(cod3, "d", "t", env3)) end
+h()
+local B = env3.HarfordTurnOrderAPI
+env3.HarfordTurnOrderStore = { entries = { { kind = "npc", name = "Gnoll" } } }
+chk("mirando desde fuera, NO estoy dentro", B.AmIInCombat(), false)
+env3.HarfordTurnOrderStore = { entries = { { kind = "player", name = "Yo" } } }
+chk("con entrada propia SI", B.AmIInCombat(), true)
+-- Dentro de un BLOQUE tambien cuento, que es como entran los PJs en modo bandos.
+env3.HarfordTurnOrderStore = { entries = {
+    { kind = "players", name = "PJs", miembros = { { guid = "GUID-YO" } } } } }
+chk("dentro de un bloque tambien", B.AmIInCombat(), true)
+env3.HarfordTurnOrderStore = { entries = {
+    { kind = "players", name = "PJs", miembros = { { guid = "GUID-OTRO" } } } } }
+chk("pero el bloque de otro no me mete", B.AmIInCombat(), false)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -1698,9 +1698,15 @@ do
 
     -- Sin orden de turnos no hay frontera que detectar, asi que los contadores quedan INACTIVOS en
     -- vez de a cero para siempre: fuera de combate no se lleva la cuenta de acciones.
+    -- Hay combate Y YO ESTOY DENTRO. Lo segundo importa tanto como lo primero: estar en la raid
+    -- no es estar en la pelea, y a quien solo mira no hay que pintarle fichas de accion, ni barra
+    -- de movimiento, ni limitarle nada. Todo lo del turno cuelga de aqui, asi que basta con
+    -- decirlo una vez.
     function Turn.IsActive()
         if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.HasActiveCombat) then return false end
-        return HarfordTurnOrderAPI.HasActiveCombat()
+        if not HarfordTurnOrderAPI.HasActiveCombat() then return false end
+        if HarfordTurnOrderAPI.AmIInCombat then return HarfordTurnOrderAPI.AmIInCombat() end
+        return true
     end
 
     -- Presupuesto de cada tipo. Uno de cada por turno; los rasgos que conceden acciones extra

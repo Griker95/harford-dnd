@@ -15,7 +15,7 @@ catalogo tomando uno de cada N -- por orden alfabetico solo entraba la A y la B.
 queden fuera siguen buscandose por nombre, solo que sin miniatura.
 
 Uso:
-    python tools/codice/gen_yunque_iconos.py [--cupo 3000]
+    python tools/codice/gen_yunque_iconos.py [--cupo 3000] [--lado 32]
 """
 import base64
 import csv
@@ -42,8 +42,11 @@ PAGINA = os.path.join(BASE, 'yunque.html')
 # 24 px es lo que permite meter el catalogo ENTERO por debajo del limite del artefacto.
 # A 32 px habria que recortar, y recortar significaba quedarse con el principio del
 # alfabeto: entraban inv_axe y inv_belt y no llegaba ni a inv_sword.
-LADO = 24
-COLUMNAS = 64
+# El tamano de la hoja manda: la pagina calcula sola las celdas y los huecos a partir de
+# `HOJA.lado`, asi que cambiarlo aqui es todo lo que hace falta. Cuesta peso -- 24 px son
+# 6,0 MB de pagina, 28 son 7,9 y 32 son 9,7 -- porque la hoja crece con el cuadrado.
+LADO = 28
+COLUMNAS = 56
 CUPO = 0           # 0 = todos. Baja el cupo solo si la pagina tarda en abrir
 PREFIJOS = ('inv_', 'trade_', 'item_')
 
@@ -66,9 +69,12 @@ def usadosPorLaLista():
 
 
 def main():
-    cupo = CUPO
+    cupo, lado, columnas = CUPO, LADO, COLUMNAS
     if '--cupo' in sys.argv:
         cupo = int(sys.argv[sys.argv.index('--cupo') + 1])
+    if '--lado' in sys.argv:
+        lado = int(sys.argv[sys.argv.index('--lado') + 1])
+        columnas = max(8, int(1536 / lado))   # se mantiene el ancho de hoja
 
     catalogo = nombresDelCatalogo()
     usados = usadosPorLaLista()
@@ -98,16 +104,16 @@ def main():
             break
     print("En la hoja:               %d" % len(orden))
 
-    filas = (len(orden) + COLUMNAS - 1) // COLUMNAS
-    hoja = Image.new('RGBA', (COLUMNAS * LADO, filas * LADO), (0, 0, 0, 0))
+    filas = (len(orden) + columnas - 1) // columnas
+    hoja = Image.new('RGBA', (columnas * lado, filas * lado), (0, 0, 0, 0))
     for i, n in enumerate(orden):
         try:
             im = Image.open(os.path.join(PNG, n + '.png')).convert('RGBA')
         except Exception:
             continue
-        if im.size != (LADO, LADO):
-            im = im.resize((LADO, LADO), Image.LANCZOS)
-        hoja.paste(im, ((i % COLUMNAS) * LADO, (i // COLUMNAS) * LADO))
+        if im.size != (lado, lado):
+            im = im.resize((lado, lado), Image.LANCZOS)
+        hoja.paste(im, ((i % columnas) * lado, (i // columnas) * lado))
 
     buf = _io.BytesIO()
     # WebP con transparencia: a 24 px no se distingue del PNG y pesa bastante menos, que
@@ -120,7 +126,7 @@ def main():
     b64 = base64.b64encode(datos).decode('ascii')
     bloque = ('/*HOJA_INICIO*/const HOJA={lado:%d,columnas:%d,'
               'orden:%s,img:"data:image/webp;base64,%s"};/*HOJA_FIN*/'
-              % (LADO, COLUMNAS, json.dumps(orden, separators=(',', ':')), b64))
+              % (lado, columnas, json.dumps(orden, separators=(',', ':')), b64))
 
     pagina = io.open(PAGINA, encoding='utf-8').read()
     nueva, n = re.subn(r'/\*HOJA_INICIO\*/.*?/\*HOJA_FIN\*/', lambda _: bloque,

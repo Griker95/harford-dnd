@@ -3513,6 +3513,11 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
 - **Sin ticker.** Las fichas las refresca el listener de `HarfordDnDConditions`; la barra, el
   `RegisterMovementListener` del seguimiento de la ficha, que ya corre mientras andas.
 
+- **ESTAR EN LA RAID NO ES ESTAR EN LA PELEA.** `HarfordTurnOrderAPI.AmIInCombat()` decide si TU
+  estas dentro: entrada propia, miembro de algun bloque, o llevando un NPC poseido siendo DM --ahi
+  juegas SU turno--. `Turn.IsActive()` exige las dos cosas (hay combate Y estoy dentro), y como
+  todo lo del turno cuelga de ahi, basta con decirlo una vez: a quien solo mira no se le pintan
+  fichas de accion, ni barra de movimiento, ni se le limita nada.
 - **FUERA DE COMBATE NO SE LIMITA NADA.** Todo lo del turno --contador de movimiento, muro,
   economia de accion/adicional/reaccion-- es del MODO COMBATE. Fuera, la gente tira y se mueve
   como siempre: el contador puede medir si lo arrancas a mano, pero **no marca ancla ni tira de

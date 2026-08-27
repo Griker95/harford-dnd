@@ -611,9 +611,13 @@ function API.AttachMovementTracker(opts)
         return string.format("%s%.1f|r / %.1f m", color, value, tope)
     end
 
+    -- Hay combate Y YO ESTOY DENTRO: estar en la raid no es estar en la pelea. A quien solo mira
+    -- no se le cuenta el movimiento ni se le pone muro.
     local function EnCombate()
-        return HarfordTurnOrderAPI and HarfordTurnOrderAPI.HasActiveCombat
-            and HarfordTurnOrderAPI.HasActiveCombat()
+        local T = HarfordTurnOrderAPI
+        if not (T and T.HasActiveCombat and T.HasActiveCombat()) then return false end
+        if T.AmIInCombat then return T.AmIInCombat() end
+        return true
     end
 
     local function OnUpdate(_, delta)

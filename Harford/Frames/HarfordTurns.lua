@@ -3368,6 +3368,25 @@ function HarfordTurnOrderAPI.SetCombatState(estado)
     return true
 end
 
+-- Estoy YO dentro del combate? Estar en la raid no es estar en la pelea: media hermandad puede
+-- ver el combate sin jugarlo, y a esos no hay que pintarles la barra de movimiento ni limitarles
+-- nada. Cuento como dentro si tengo entrada propia, si estoy en la lista de algun bloque, o si
+-- estoy llevando a un NPC poseido -- en ese caso estoy jugando SU turno.
+function HarfordTurnOrderAPI.AmIInCombat()
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
+    local miGuid = UnitGUID and UnitGUID("player")
+    for _, entry in ipairs(store.entries) do
+        if EntryBelongsToMe(entry) and tostring(entry.kind or "") ~= "players" then return true end
+        for _, m in ipairs(entry.miembros or {}) do
+            if miGuid and tostring(m.guid or "") == miGuid then return true end
+        end
+    end
+    -- El DM que lleva un NPC esta jugando el turno de ese NPC, aunque el no figure en la lista.
+    if UnitExists and UnitExists("pet") and IsTurnAdmin and IsTurnAdmin() then return true end
+    return false
+end
+
 -- Cuantos combatientes hay montados, este el combate empezado o no. Lo que antes contestaba
 -- `HasActiveCombat`, y lo que de verdad hace falta para saber si se puede iniciar.
 function HarfordTurnOrderAPI.HasCombatants()

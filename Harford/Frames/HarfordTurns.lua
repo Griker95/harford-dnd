@@ -1523,6 +1523,10 @@ RefreshFrame = function()
             card.entryIndex = entryIndex
             card:Show()
             PaintEntryCard(card, entry, isAdmin)
+            -- El marco de OBJETIVO. Se llama aqui y no dentro del pintor porque depende de a quien
+            -- tengas seleccionado TU, que es del cliente y no de la entrada: la lista de un bloque
+            -- pinta las mismas tarjetas y ahi no aplica.
+            SetCardTargetState(card, IsEntryCurrentTarget(entry))
             if entryIndex == store.activeIndex then
                 card.active:Show()
                 card.turn:SetText("ACTIVO")

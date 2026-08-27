@@ -143,10 +143,12 @@ local FICHA_TAM, FICHA_HUECO = 15, 4
 -- recurso (no se renuevan por turno) y conviene que no se confundan de un vistazo.
 local ORBE_TAM, ORBE_HUECO, GRUPO_HUECO = 10, 3, 12
 local COLOR_ORBE = { 0.44, 0.63, 0.90 }
+-- Los colores de BG3, que es de donde viene el gesto: quien ha jugado a eso ya sabe cual es cual
+-- sin leer nada, y cambiarlos por otros le obliga a reaprenderlo.
 local COLOR_FICHA = {
-    action   = { 0.91, 0.71, 0.30 },   -- dorado
-    bonus    = { 0.39, 0.76, 0.42 },   -- verde
-    reaction = { 0.49, 0.56, 0.88 },   -- azul
+    action   = { 0.36, 0.74, 0.36 },   -- verde
+    bonus    = { 0.62, 0.42, 0.24 },   -- marron
+    reaction = { 0.62, 0.36, 0.80 },   -- morado
 }
 -- La barra de movimiento va SOBRE la fila de fichas, no dentro: es un recurso continuo y las
 -- fichas son puntos enteros. Mezclarlas en la misma fila hacia leer los metros como una ficha mas.

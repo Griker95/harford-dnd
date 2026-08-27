@@ -496,6 +496,12 @@ for _, pieza in ipairs({ "icon", "name", "init", "armorClass", "hp", "hpText", "
     chk("card." .. pieza, turnos:find("card." .. pieza .. " = ", 1, true) ~= nil, true)
 end
 
+-- Y toda pieza creada tiene que USARSE. `moveLeft` se creaba y el refresco petaba al tocarla;
+-- `targetText` se creaba y NADIE la encendia, asi que el marco de objetivo desaparecio en silencio.
+-- Crear y llamar son dos fallos distintos y hacen falta las dos comprobaciones.
+chk("el marco de objetivo se enciende",
+    turnos:find("SetCardTargetState(card, IsEntryCurrentTarget(entry))", 1, true) ~= nil, true)
+
 -- Los mismos gestos que una tarjeta normal: izquierdo su ficha, derecho el menu.
 chk("responden al click como las de siempre",
     turnos:find("HarfordTurnOrderAPI.OnCardRightClick(m, self)", 1, true) ~= nil, true)

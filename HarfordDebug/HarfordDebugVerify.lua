@@ -166,8 +166,12 @@ Grupo("acciones", 'las diez acciones basicas; anade "ejecutar" para dispararlas 
     end
     local C = _G.HarfordDnDConditions
     for _, def in ipairs(A.GetOrdered()) do
+        -- `dobleMovimiento` faltaba en esta lista: Correr paso de "se lleva en mesa" a doblar de
+        -- verdad el tope del contador, y la comprobacion se quedo vieja marcandolo en rojo. Una
+        -- bateria que da falsos fallos entrena a ignorarla entera, asi que se corrige EN CUANTO se
+        -- ve -- no se convive con un rojo conocido.
         local ruta = def.selfCondition or def.skillCheck or def.contest or def.helpOther
-            or def.throwWeapon or def.readyAction or def.sinEfecto
+            or def.throwWeapon or def.readyAction or def.dobleMovimiento or def.sinEfecto
         r.chk("accion sin forma de resolverse: " .. def.id, ruta ~= nil)
         r.chk("accion sin coste: " .. def.id, def.cast ~= nil)
         local costes = A.CostsFor(def.id, {})

@@ -26,6 +26,43 @@ local RADIO_STATIONS = {
     { name = "Susurros de Darrow", soundId = 1538389 },
 }
 
+-- Emisoras que trae un addon aparte (`HarfordMusic`). Van APARTE de las de arriba para que se vea
+-- de un vistazo que las de arriba no dependen de nadie: la radio funciona sin el paquete de
+-- musica, solo con menos emisoras.
+--
+-- Dos tipos de emisora, y suenan por caminos distintos:
+--   `soundId`  -- pista del CLIENTE. La oye cualquiera en Epsilon, no pesa nada.
+--   `file`     -- fichero del addon de musica. Solo la oye quien lo tenga instalado.
+local RADIO_EXTRA = {}
+
+-- La llama `HarfordMusic` al cargar. Se acumula en vez de sustituir para que puedan sumarse varios
+-- paquetes; y se ignora lo que no traiga ni `soundId` ni `file`, que no sonaria de todas formas.
+function HarfordCommunicator.RegisterRadioStations(lista)
+    if type(lista) ~= "table" then return 0 end
+    local puestas = 0
+    for _, e in ipairs(lista) do
+        if type(e) == "table" and e.name and (e.soundId or e.file) then
+            RADIO_EXTRA[#RADIO_EXTRA + 1] = {
+                name = tostring(e.name),
+                soundId = tonumber(e.soundId),
+                file = e.file and tostring(e.file) or nil,
+            }
+            puestas = puestas + 1
+        end
+    end
+    -- Si la ventana ya se creo, se repuebla: el paquete puede cargar despues.
+    if HarfordCommunicator._RefreshRadio then HarfordCommunicator._RefreshRadio() end
+    return puestas
+end
+
+-- Las de casa primero y las del paquete detras, en el orden en que se registraron.
+local function TodasLasEmisoras()
+    local todas = {}
+    for _, e in ipairs(RADIO_STATIONS) do todas[#todas + 1] = e end
+    for _, e in ipairs(RADIO_EXTRA) do todas[#todas + 1] = e end
+    return todas
+end
+
 local EMOJIS = {
     [":dado:"] = 237284, [":calavera:"] = "Interface\\TargetingFrame\\UI-RaidTargetingIcon_8",
     [":corazon:"] = 135451, [":mision:"] = 4072784, [":alerta:"] = 512904,
@@ -67,7 +104,40 @@ local function Print(msg)
     HarfordChat.Print(msg)
 end
 
+-- Lo que esta sonando de un fichero propio, para poder cortarlo: `PlaySoundFile` devuelve un
+-- manejador y es la unica forma de pararlo. Las pistas del cliente las corta TRP3 por su cuenta.
+local radioHandle
+
+local function StopRadio()
+    if radioHandle and StopSound then
+        pcall(StopSound, radioHandle)
+        radioHandle = nil
+    end
+    local music = TRP3_API and TRP3_API.utils and TRP3_API.utils.music
+    if music and type(music.stopLocalMusic) == "function" then
+        music.stopLocalMusic()
+    end
+end
+
 local function PlayRadioStation(station)
+    StopRadio()
+    -- Fichero del paquete de musica. Canal `Music` a proposito: asi respeta el volumen de musica
+    -- del juego y quien lo tenga bajado no se lleva un susto.
+    if station.file then
+        if type(PlaySoundFile) ~= "function" then return false end
+        local ok, sono, handle = pcall(PlaySoundFile, station.file, "Music")
+        if not (ok and sono) then
+            -- Silencio y ya seria indistinguible de "no ha sonado". Un fichero que no esta es lo
+            -- normal si alguien copio el addon a medias, o si no ha reiniciado el cliente: WoW
+            -- indexa los ficheros de addon AL ARRANCAR, y un `/reload` no basta.
+            Print("No suena |cffffcc00" .. tostring(station.name) .. "|r: falta el fichero, o hay "
+                .. "que reiniciar el WoW entero (un /reload no basta para un audio nuevo).")
+            return false
+        end
+        radioHandle = handle
+        return true
+    end
+
     local music = TRP3_API and TRP3_API.utils and TRP3_API.utils.music
     if not (music and type(music.playLocalMusic) == "function") then
         Print("La radio requiere Total RP 3 Extended.")
@@ -891,26 +961,37 @@ local function EnsureFrame()
     frame.radio.nowPlaying = frame.radio:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     frame.radio.nowPlaying:SetPoint("TOP", 0, -62); frame.radio.nowPlaying:SetWidth(250)
     frame.radio.nowPlaying:SetJustifyH("CENTER")
-    for index, station in ipairs(RADIO_STATIONS) do
-        local button = CreateButton(frame.radio, station.name, 248, 30)
-        button:SetPoint("TOP", 0, -86 - (index - 1) * 32)
-        button:SetScript("OnClick", function()
-            if PlayRadioStation(station) then
-                frame.radio.nowPlaying:SetText("Sintonizando: " .. station.name)
-            end
-        end)
-    end
     frame.radio.stop = CreateButton(frame.radio, "Apagar radio", 248, 30)
-    frame.radio.stop:SetPoint("TOP", 0, -86 - #RADIO_STATIONS * 32)
     frame.radio.stop:SetScript("OnClick", function()
-        local music = TRP3_API and TRP3_API.utils and TRP3_API.utils.music
-        if music and type(music.stopLocalMusic) == "function" then
-            music.stopLocalMusic()
-            frame.radio.nowPlaying:SetText("Radio apagada")
-        else
-            Print("La radio requiere Total RP 3 Extended.")
-        end
+        StopRadio()
+        frame.radio.nowPlaying:SetText("Radio apagada")
     end)
+
+    -- Se repuebla en vez de crearse una vez: el paquete de musica puede cargar despues que esto.
+    -- Los botones se REUTILIZAN, que es la regla de las listas del proyecto.
+    frame.radio.botones = {}
+    HarfordCommunicator._RefreshRadio = function()
+        if not frame.radio then return end
+        local emisoras = TodasLasEmisoras()
+        for i, station in ipairs(emisoras) do
+            local button = frame.radio.botones[i]
+            if not button then
+                button = CreateButton(frame.radio, station.name, 248, 30)
+                frame.radio.botones[i] = button
+            end
+            button:SetText(station.name)
+            button:SetPoint("TOP", 0, -86 - (i - 1) * 32)
+            button:SetScript("OnClick", function()
+                if PlayRadioStation(station) then
+                    frame.radio.nowPlaying:SetText("Sintonizando: " .. station.name)
+                end
+            end)
+            button:Show()
+        end
+        for i = #emisoras + 1, #frame.radio.botones do frame.radio.botones[i]:Hide() end
+        frame.radio.stop:SetPoint("TOP", 0, -86 - #emisoras * 32)
+    end
+    HarfordCommunicator._RefreshRadio()
     frame:SetScript("OnShow", function()
         if not frame._harfordSuppressAura then SetCommunicatorAura(true) end
     end)

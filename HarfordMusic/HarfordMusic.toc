@@ -1,0 +1,8 @@
+## Interface: 90207
+## Title: |cff3536CCHarford|r Musica
+## Notes: Emisoras extra para la radio del Comunicador. Opcional: sin esto la radio funciona igual, con menos emisoras.
+## Author: Griker
+## Version: 1.0.0
+## RequiredDeps: Harford
+
+HarfordMusic.lua

@@ -95,6 +95,23 @@ for _, def in ipairs(A.GetOrdered()) do
 end
 chk("solo queda Desengancharse sin efecto", narrativas, 1)
 
+-- ─── TODA ACCION TIENE FORMA DE RESOLVERSE ──────────────────────────────────
+-- La bateria en juego comprueba lo mismo, y se le habia quedado vieja la lista: Correr paso de
+-- "se lleva en mesa" a doblar de verdad el tope del contador y salia en rojo. Aqui se fija para
+-- que las dos listas no se separen otra vez.
+print("Toda accion basica sabe resolverse")
+local RUTAS = { "selfCondition", "skillCheck", "contest", "helpOther", "throwWeapon",
+                "readyAction", "dobleMovimiento", "sinEfecto" }
+for _, def in ipairs(A.GetOrdered()) do
+    local tiene = false
+    for _, k in ipairs(RUTAS) do if def[k] then tiene = true break end end
+    chk("  " .. tostring(def.id), tiene, true)
+end
+local verif = io.open("HarfordDebug/HarfordDebugVerify.lua"):read("*a")
+for _, k in ipairs(RUTAS) do
+    chk("la bateria en juego mira " .. k, verif:find("def." .. k, 1, true) ~= nil, true)
+end
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))
 
 -- GRACIA DE ELUNE abre Desengancharse, Esquivar y Esconderse como accion adicional, igual que la

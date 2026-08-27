@@ -28,7 +28,9 @@ sys.path.insert(0, os.path.join(AQUI, 'codice'))
 import lua51
 
 ADDONS = ['Harford', 'HarfordAdmin', 'HarfordDebug',
-          'HarfordProfessionsData', 'HarfordCompendioData']
+          'HarfordProfessionsData', 'HarfordCompendioData',
+          # Opcional: sin el, la radio funciona igual con menos emisoras.
+          'HarfordMusic']
 
 SOLO_REVISAR = '--revisar' in sys.argv
 FORZAR = '--forzar' in sys.argv

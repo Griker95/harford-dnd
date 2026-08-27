@@ -456,7 +456,7 @@ function API.AttachMovementTracker(opts)
     if not parent then return end
 
     local yardsToMeters = 0.9144
-    local pollInterval = 0.1
+    local pollInterval = 0.05
     local tracking = false
     local IniciarSeguimiento   -- se asigna abajo; lo llama el reinicio de turno, que esta antes
     local ultimoTiron = 0
@@ -565,6 +565,9 @@ function API.AttachMovementTracker(opts)
         if lastX then
             local dx, dy, dz = x - lastX, y - lastY, z - lastZ
             local distance = math.sqrt(dx * dx + dy * dy + dz * dz) * yardsToMeters
+            if distance > 5 then
+                distance = 0
+            end
             if distance > 0.05 then
                 totalMeters = totalMeters + distance
                 button:SetText("Parar " .. FormatMeters(totalMeters))
@@ -579,10 +582,11 @@ function API.AttachMovementTracker(opts)
                         API.RecordedMovementAnchor = CapturarAncla()
                         HarfordChat.Print("|cffffcc00Has agotado tu movimiento.|r Seguir andando "
                             .. "te devolvera a donde te quedaste.")
-                    -- Con margen y con enfriamiento: sin ellos cada paso pediria un teleporte y el
-                    -- servidor se llevaria una rafaga de `worldport` por cruzar una puerta.
-                    elseif totalMeters > tope + 1.5
-                        and ((GetTime and GetTime()) or 0) - ultimoTiron > 2 then
+                    -- Margen corto y enfriamiento corto: el muro tiene que notarse en el paso, no
+                    -- metro y medio despues. El enfriamiento sigue estando para que el servidor no
+                    -- se lleve una rafaga de `worldport` mientras el primero esta de camino.
+                    elseif totalMeters > tope + 0.3
+                        and ((GetTime and GetTime()) or 0) - ultimoTiron > 0.75 then
                         ultimoTiron = (GetTime and GetTime()) or 0
                         local ok, err
                         if HarfordServerActions and HarfordServerActions.WorldportSelf then

@@ -440,6 +440,16 @@ chk("volver es click derecho", ataque:find('if boton == "RightButton" then', 1, 
 -- El ancla del turno pasado no vale: volver ahi te devolveria un asalto entero atras.
 chk("y el ancla se olvida en tu turno",
     ataque:find("API.RecordedMovementAnchor = nil", 1, true) ~= nil, true)
+-- El salto de VUELTA no cuenta como que has andado. Al aterrizar el teleporte la muestra siguiente
+-- veia varios metros de golpe y los sumaba: el tiron se pagaba a si mismo, volvias a pasarte al
+-- instante y encadenabas teleportes.
+chk("un salto grande no cuenta como paso",
+    ataque:find("if distance > 5 then", 1, true) ~= nil, true)
+-- Y el muro tiene que notarse EN el paso: margen corto y muestreo rapido.
+chk("el muro salta con margen corto",
+    ataque:find("totalMeters > tope + 0.3", 1, true) ~= nil, true)
+chk("y se muestrea a 20 por segundo",
+    ataque:find("local pollInterval = 0.05", 1, true) ~= nil, true)
 
 -- `Correr` dobla el tope de ESTE turno. Se guarda aparte del calculo de velocidad porque no es una
 -- propiedad del personaje sino algo que hizo en este asalto -- y por eso se apaga al empezar el

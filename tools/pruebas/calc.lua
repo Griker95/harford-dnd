@@ -519,8 +519,20 @@ chk("ni se tira de nadie",
 -- ── EL MURO SALTA AL SOLTAR LA TECLA ────────────────────────────────────────
 -- Un teleporte cada 0.75 s mientras corres es una rafaga de comandos y ademas se ve a trompicones.
 -- Enganchando el soltar de cada tecla sale UN comando, y justo cuando has dejado de andar.
-print("El muro salta al soltar la tecla")
-chk("engancha las teclas de movimiento",
+-- El muro salta EN EL INSTANTE en que se agota el recurso, no al parar: el movimiento se acaba
+-- cuando se acaba, y esperar a que sueltes la tecla te regala los metros de en medio.
+print("El muro salta al agotarse el recurso")
+chk("se ancla en el momento",
+    ataque:find("Anclar()\n            end", 1, true) ~= nil, true)
+-- Y si sigues andando te devuelve otra vez: no es un aviso de una sola vez. El salto de vuelta no
+-- cuenta como paso (guardia de 5 m), asi que no se realimenta.
+chk("y vuelve a tirar si insistes",
+    ataque:find("if API.RecordedMovementAnchor and EnCombate() then Anclar() end", 1, true) ~= nil, true)
+-- Con enfriamiento: el servidor tarda en responder al worldport y sin el se mandaria uno por
+-- muestra, veinte por segundo, mientras el primero esta de camino.
+chk("con enfriamiento", ataque:find("if ahora - ultimoTiron < 0.6 then return end", 1, true) ~= nil, true)
+-- El enganche de soltar tecla se queda como RESPALDO, por si la ultima muestra no llego a verlo.
+chk("y el soltar la tecla queda de respaldo",
     ataque:find('"MoveForwardStop", "MoveBackwardStop",', 1, true) ~= nil, true)
 -- Girar la camara con el raton NO es moverse: `TurnOrActionStop` queda fuera a proposito.
 chk("pero no el giro de camara",

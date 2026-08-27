@@ -620,6 +620,28 @@ function API.AttachMovementTracker(opts)
         return true
     end
 
+    -- Te devuelve al punto donde se te acabo el movimiento. Con enfriamiento corto: el servidor
+    -- tarda en responder al `worldport`, y sin el se mandaria uno por muestra --veinte por
+    -- segundo-- mientras el primero esta de camino.
+    local ultimoTiron = 0
+    local function Anclar()
+        local ancla = API.RecordedMovementAnchor
+        if not ancla then return end
+        local ahora = (GetTime and GetTime()) or 0
+        if ahora - ultimoTiron < 0.6 then return end
+        if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then return end
+        ultimoTiron = ahora
+        local ok, err = HarfordServerActions.WorldportSelf(ancla, { addonName = "Harford" })
+        if ok then
+            totalMeters = MaximoDelTurno()
+            API.RecordedMovementMeters = totalMeters
+            AvisarMovimiento(totalMeters, MaximoDelTurno())
+        else
+            HarfordChat.Print("|cffff5555No se pudo devolverte a tu sitio:|r "
+                .. tostring(err or "error desconocido"))
+        end
+    end
+
     local function OnUpdate(_, delta)
         elapsed = elapsed + delta
         if elapsed < pollInterval then return end
@@ -660,6 +682,11 @@ function API.AttachMovementTracker(opts)
 
         -- Fuera de combate el contador MIDE, pero no ata: no se marca ancla y por tanto no hay
         -- muro. Solo dentro de un combate por turnos el movimiento es un recurso que se acaba.
+        -- Si ya te habias quedado sin recurso y sigues andando, se te devuelve otra vez: el muro
+        -- no es un aviso de una sola vez. El salto de vuelta no cuenta como paso (guardia de 5 m),
+        -- asi que no se realimenta.
+        if API.RecordedMovementAnchor and EnCombate() then Anclar() end
+
         local tope = MaximoDelTurno()
         if EnCombate() and tope > 0 and totalMeters >= tope and not API.RecordedMovementAnchor
             and not API.MovimientoSinMuro then
@@ -673,11 +700,12 @@ function API.AttachMovementTracker(opts)
                     .. " ha agotado su movimiento.|r Devuelvelo tu: no hay comando que mueva a una "
                     .. "criatura poseida.")
             else
-                -- Al agotar el movimiento se marca DONDE se acabo. No se tira de ti aqui: el
-                -- tiron va al soltar la tecla, que es UN comando en vez de una rafaga.
+                -- Se marca EL PUNTO EXACTO donde se acabo y te quedas ahi EN ESE MOMENTO, no al
+                -- soltar la tecla: el recurso se agota cuando se agota, y esperar a que pares
+                -- deja andar metros de regalo mientras tanto.
                 API.RecordedMovementAnchor = CapturarAncla()
-                HarfordChat.Print("|cffffcc00Has agotado tu movimiento.|r Al parar volveras a "
-                    .. "donde se te acabo.")
+                HarfordChat.Print("|cffffcc00Has agotado tu movimiento.|r")
+                Anclar()
             end
         end
         API.RecordedMovementInfo = { meters = totalMeters }
@@ -801,9 +829,10 @@ function API.AttachMovementTracker(opts)
         HarfordChat.Print("Vuelves a donde empezaste el turno. Movimiento a cero.")
     end
 
-    -- El muro: al SOLTAR una tecla de movimiento, si te habias pasado, vuelves a donde se te
-    -- acabo. `TurnOrActionStop` queda FUERA a proposito -- es el giro de camara con el raton, y
-    -- girar la vista no es moverse.
+    -- RESPALDO del muro: el tiron principal salta en el instante en que se agota el recurso, aqui
+    -- arriba en el `OnUpdate`. Esto solo recoge el caso de que sueltes la tecla justo cuando se
+    -- acababa y la ultima muestra no llegara a verlo. `TurnOrActionStop` queda FUERA a proposito
+    -- -- es el giro de camara con el raton, y girar la vista no es moverse.
     do
         local TECLAS = {
             "MoveForwardStop", "MoveBackwardStop",
@@ -811,7 +840,6 @@ function API.AttachMovementTracker(opts)
             "TurnLeftStop", "TurnRightStop",
             "CameraOrSelectOrMoveStop", "JumpOrAscendStart",
         }
-        local ultimoTiron = 0
         local function Tirar()
             -- Doble guardia: sin combate no se tira de nadie ni aunque quedara un ancla vieja de
             -- un combate anterior.
@@ -820,21 +848,9 @@ function API.AttachMovementTracker(opts)
             if not ancla then return end
             local tope = MaximoDelTurno()
             if tope <= 0 or totalMeters <= tope + 0.3 then return end
-            -- Enfriamiento corto: soltar varias teclas a la vez dispara varios enganches seguidos,
-            -- y eso serian tres `worldport` para un solo frenazo.
-            local ahora = (GetTime and GetTime()) or 0
-            if ahora - ultimoTiron < 1 then return end
-            ultimoTiron = ahora
-            if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then return end
-            local ok, err = HarfordServerActions.WorldportSelf(ancla, { addonName = "Harford" })
-            if ok then
-                totalMeters = tope
-                label:SetText(FormatMeters(totalMeters))
-                AvisarMovimiento(totalMeters, tope)
-            else
-                HarfordChat.Print("|cffff5555No se pudo devolverte a tu sitio:|r "
-                    .. tostring(err or "error desconocido"))
-            end
+            -- Comparte enfriamiento con el tiron del `OnUpdate`: soltar varias teclas a la vez
+            -- dispara varios enganches seguidos, y eso serian tres `worldport` para un frenazo.
+            Anclar()
         end
         for _, nombre in ipairs(TECLAS) do
             if type(_G[nombre]) == "function" then

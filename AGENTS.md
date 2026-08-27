@@ -3558,11 +3558,14 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   poseida, y `npc info` actua sobre el objetivo, que mientras posees no es ella: no hay comando con
   el que devolverla. Se avisa al agotarlo y corregir es cosa del DM -- que es exactamente lo que
   hace Atlas, cuyo `TryOutOfTurnMovementSnapback` empieza con `if isPossessing then return end`.
-- **El muro salta al SOLTAR la tecla, no mientras corres.** `hooksecurefunc` sobre
-  `MoveForwardStop`, `MoveBackwardStop`, `StrafeLeft/RightStop`, `TurnLeft/RightStop`,
-  `CameraOrSelectOrMoveStop` y `JumpOrAscendStart`. Antes era un `worldport` cada 0.75 s mientras
-  te movias: una rafaga de comandos y ademas se veia a trompicones. **`TurnOrActionStop` queda
-  FUERA a proposito** -- es el giro de camara con el raton, y girar la vista no es moverse.
+- **El muro salta EN EL INSTANTE en que se agota el recurso**, dentro del `OnUpdate`, no al soltar
+  la tecla: el movimiento se acaba cuando se acaba, y esperar a que pares regala los metros de en
+  medio. Si sigues andando te devuelve otra vez -- no es un aviso de una sola vez --, con
+  enfriamiento de 0.6 s porque el servidor tarda en responder al `worldport` y sin el se mandaria
+  uno por muestra (veinte por segundo) mientras el primero esta de camino.
+- Los enganches de soltar tecla (`MoveForwardStop` y companeros) se quedan como **RESPALDO**, por
+  si la ultima muestra no llego a ver el agotamiento. **`TurnOrActionStop` queda FUERA a
+  proposito** -- es el giro de camara con el raton, y girar la vista no es moverse.
 - `WorldportSelf` es el UNICO comando de Harford que mueve a alguien. No emite nada sin coordenadas
   validas Y mapa (`GetInstanceInfo`, no `C_Map`, que devuelve el id de la interfaz).
 

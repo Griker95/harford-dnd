@@ -148,6 +148,10 @@ local COLOR_FICHA = {
     bonus    = { 0.39, 0.76, 0.42 },   -- verde
     reaction = { 0.49, 0.56, 0.88 },   -- azul
 }
+-- La barra de movimiento va SOBRE la fila de fichas, no dentro: es un recurso continuo y las
+-- fichas son puntos enteros. Mezclarlas en la misma fila hacia leer los metros como una ficha mas.
+local MOV_ALTO, MOV_ANCHO_MIN, MOV_HUECO = 9, 130, 4
+local TEX_BARRA = "Interface\\TargetingFrame\\UI-StatusBar"
 local TEX_MARCO = "Interface\\Common\\WhiteIconFrame"
 
 local function Economia()
@@ -208,6 +212,40 @@ local function EnsureNivelTexto(i)
     t = cont:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     cont.niveles[i] = t
     return t
+end
+
+-- Barra de movimiento: se gasta al andar, como en BG3. Verde mientras te queda, ambar en el
+-- ultimo tercio y roja al agotarse -- que es cuando el muro te devuelve a tu sitio.
+local function EnsureMovBar()
+    local cont = EnsureFichasFrame()
+    if cont.mov then return cont.mov end
+    local b = CreateFrame("StatusBar", nil, cont)
+    b:SetHeight(MOV_ALTO)
+    b:SetStatusBarTexture(TEX_BARRA)
+    b:SetMinMaxValues(0, 1)
+    b.fondo = b:CreateTexture(nil, "BACKGROUND")
+    b.fondo:SetAllPoints()
+    b.fondo:SetColorTexture(0, 0, 0, 0.6)
+    b.marco = b:CreateTexture(nil, "OVERLAY")
+    b.marco:SetTexture(TEX_MARCO)
+    b.marco:SetAllPoints()
+    b.marco:SetVertexColor(0.35, 0.35, 0.35)
+    b.texto = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    b.texto:SetPoint("CENTER", b, "CENTER", 0, 0)
+    b:EnableMouse(true)
+    b:SetScript("OnEnter", function(self)
+        if not GameTooltip then return end
+        GameTooltip:SetOwner(self, "ANCHOR_TOP")
+        GameTooltip:AddLine("Movimiento", 1, 1, 1)
+        GameTooltip:AddLine(string.format("%.1f m de %.1f", self.quedan or 0, self.tope or 0),
+            0.7, 0.7, 0.7)
+        -- La regla que se olvida: al agotarlo no es que "no deberias", es que no puedes.
+        GameTooltip:AddLine("Al agotarlo vuelves a donde te quedaste", 0.6, 0.6, 0.6)
+        GameTooltip:Show()
+    end)
+    b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+    cont.mov = b
+    return b
 end
 
 local function EnsureFicha(i)
@@ -337,7 +375,39 @@ function API.RefreshTurnEconomy()
     for i = orbes + 1, #cont.orbes do cont.orbes[i]:Hide() end
     for i = grupos + 1, #cont.niveles do cont.niveles[i]:Hide() end
 
-    if n == 0 and orbes == 0 then
+    -- ── Barra de movimiento ─────────────────────────────────────────────────
+    -- Solo con turnos activos, por lo mismo que las fichas: fuera de combate no se lleva la cuenta
+    -- y una barra llena seria informacion falsa.
+    local mov = EnsureMovBar()
+    local U = HarfordDnDAttackUI
+    local tope = (U and U.GetTurnMovementMax and U.GetTurnMovementMax()) or 0
+    if T and T.IsActive and T.IsActive() and tope > 0 then
+        local gastado = (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0
+        local quedan = math.max(0, tope - gastado)
+        mov.quedan, mov.tope = quedan, tope
+        mov:SetValue(quedan / tope)
+        local fraccion = quedan / tope
+        if fraccion <= 0.001 then
+            mov:SetStatusBarColor(0.75, 0.25, 0.25)
+        elseif fraccion < 0.34 then
+            mov:SetStatusBarColor(0.90, 0.68, 0.25)
+        else
+            mov:SetStatusBarColor(0.35, 0.72, 0.40)
+        end
+        mov.texto:SetText(string.format("%.1f m", quedan))
+        mov:ClearAllPoints()
+        -- Encima de las fichas y tan ancha como ellas: es la misma economia, leida de una pieza.
+        mov:SetWidth(math.max(MOV_ANCHO_MIN, ancho))
+        mov:SetPoint("BOTTOMLEFT", cont, "BOTTOMLEFT", 0, FICHA_TAM + MOV_HUECO)
+        mov:Show()
+        cont:SetHeight(FICHA_TAM + MOV_HUECO + MOV_ALTO)
+        ancho = math.max(ancho, MOV_ANCHO_MIN)
+    else
+        mov:Hide()
+        cont:SetHeight(FICHA_TAM)
+    end
+
+    if n == 0 and orbes == 0 and not mov:IsShown() then
         cont:Hide()
         return 0, 0
     end
@@ -421,6 +491,15 @@ end
 -- sin ticker: es la regla del proyecto y aqui basta de sobra.
 if HarfordDnDConditions and HarfordDnDConditions.RegisterListener then
     HarfordDnDConditions.RegisterListener(function()
+        API.RefreshTurnEconomy()
+    end)
+end
+
+-- El movimiento no pasa por el motor de condiciones: lo lleva el seguimiento de la ficha, que ya
+-- corre mientras andas. Que avise el, y solo cuando cambia -- preguntarselo en un ticker seria
+-- justo lo que este addon no hace.
+if HarfordDnDAttackUI and HarfordDnDAttackUI.RegisterMovementListener then
+    HarfordDnDAttackUI.RegisterMovementListener(function()
         API.RefreshTurnEconomy()
     end)
 end

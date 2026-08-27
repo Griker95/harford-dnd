@@ -11,7 +11,9 @@ local cargar = loadstring or load
 local function NuevoFrame(nombre)
     local f = { nombre = nombre, visible = false }
     for _, m in ipairs({"SetSize","SetWidth","SetPoint","ClearAllPoints","EnableMouse","SetScript",
-                        "RegisterEvent","SetFrameStrata","SetFrameLevel","SetText"}) do f[m] = function() end end
+                        "RegisterEvent","SetFrameStrata","SetFrameLevel","SetText",
+                        "SetHeight","SetStatusBarTexture","SetMinMaxValues","SetStatusBarColor",
+                        "SetValue"}) do f[m] = function() end end
     -- El contenedor se sube POR ENCIMA del ancla, asi que el falso tiene que saber decir su nivel:
     -- nacia en el suelo de MEDIUM y la barra de accion nativa lo tapaba.
     f.GetFrameLevel = function() return 1 end
@@ -34,7 +36,12 @@ local function NuevoFrame(nombre)
     end
     return f
 end
-CreateFrame = function() return NuevoFrame() end
+local CREADOS = {}
+CreateFrame = function(_, nombre)
+    local f = NuevoFrame(nombre)
+    if nombre then CREADOS[nombre] = f end
+    return f
+end
 UIParent = NuevoFrame("UIParent")
 GameTooltip = nil
 local BOTON = NuevoFrame("ActionButton1"); BOTON.visible = true
@@ -49,6 +56,13 @@ HarfordDnDConditions = { Turn = {
     GetBudget = function(k) return PRESUPUESTO[k] or 0 end,
     GetRemaining = function(k) return math.max(0, (PRESUPUESTO[k] or 0) - (GASTADO[k] or 0)) end,
 } }
+-- La barra de movimiento necesita saber de cuanto es el turno y cuanto llevas. Fuera de combate
+-- el tope da igual: la barra no se pinta.
+local MOV_TOPE, MOV_GASTADO = 9, 0
+HarfordDnDAttackUI = {
+    GetTurnMovementMax = function() return MOV_TOPE end,
+    GetRecordedMovementMeters = function() return MOV_GASTADO end,
+}
 local MODO_MANA, PIRAMIDE = false, {}
 HarfordDnDMana = {
     IsEnabled = function() return MODO_MANA end,
@@ -69,6 +83,7 @@ local i = assert(src:find("local function AnclaBarraNativa"))
 local j = assert(src:find("\nend", src:find("function API.RefreshTurnEconomy")))
 local env = { API = API, CreateFrame = CreateFrame, UIParent = UIParent, _G = _G, pairs = pairs,
     HarfordDnDConditions = HarfordDnDConditions, HarfordDnDMana = HarfordDnDMana,
+    HarfordDnDAttackUI = HarfordDnDAttackUI, string = string,
     ipairs = ipairs, math = math, tostring = tostring, GameTooltip = nil }
 local codigo = src:sub(i, j + 4)
 local f
@@ -129,4 +144,39 @@ chk1("y por encima del ancla real",
     fuente:find("math.max(90, (ancla:GetFrameLevel() or 0) + 5)", 1, true) ~= nil, true)
 chk1("sin salirse de su capa", fuente:find('fichasFrame:SetFrameStrata("MEDIUM")', 1, true) ~= nil, true)
 
+
+-- ── Barra de movimiento ─────────────────────────────────────────────────────
+-- Se gasta al andar y se vacia del todo: es lo que hace que el muro que te devuelve a tu sitio se
+-- vea venir en vez de sorprenderte.
+print("Barra de movimiento")
+-- El caso "sin barra nativa" deja el ancla RETIRADA, y sin ancla el refresco sale por arriba sin
+-- tocar nada: estas comprobaciones se quedaban mirando el ultimo dibujo en vez del nuevo.
+_G.ActionButton1 = BOTON
+BOTON.visible = true
+MODO_MANA, PIRAMIDE, ACTIVO, GASTADO = false, {}, true, {}
+MOV_TOPE, MOV_GASTADO = 9, 0
+R()
+local cont = CREADOS["HarfordTurnEconomyFrame"]
+local function chk2(n, a, ea)
+    local ok = tostring(a) == tostring(ea)
+    if not ok then fallos = fallos + 1 end
+    print(string.format("  %-50s %-12s %s", n, tostring(a),
+        ok and "ok" or ("FALLA, esperaba " .. tostring(ea))))
+end
+chk2("con turnos activos se ve", cont and cont.mov and cont.mov:IsShown(), true)
+chk2("y dice lo que QUEDA, no lo andado", cont and cont.mov.texto and cont.mov.texto.texto, "9.0 m")
+MOV_GASTADO = 4
+R()
+chk2("baja al andar", cont.mov.texto.texto, "5.0 m")
+MOV_GASTADO = 20
+R()
+-- Pasarse no la deja en negativo: cero es cero, y el muro ya te ha devuelto.
+chk2("agotada no baja de cero", cont.mov.texto.texto, "0.0 m")
+-- Fuera de combate no se lleva la cuenta: una barra llena seria informacion falsa.
+ACTIVO = false
+R()
+chk2("sin turnos no se pinta", cont.mov:IsShown(), false)
+ACTIVO = true
+
+if fallos > 0 then os.exit(1) end
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

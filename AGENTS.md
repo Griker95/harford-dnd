@@ -3292,6 +3292,18 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
 ## Movimiento del turno: se cuenta solo y el limite es un muro (2026-08-27)
 
+- **La economia se pinta sobre la barra de accion nativa, estilo BG3** (`HarfordActionBars`): fila
+  de FICHAS (Accion / Adicional / Reaccion, una por punto de presupuesto -- Impetu de Accion da
+  dos), y encima la BARRA de movimiento, que es un recurso continuo y no cabe como ficha. Verde,
+  ambar en el ultimo tercio, roja al agotarse.
+- **Los orbes de espacios de conjuro solo salen en modo `slots`.** En modo mana no hay piramide que
+  pintar y no aparece nada. Ojo: `HarfordDnDMana.IsEnabled()` devuelve true con el MANA activo, asi
+  que la piramide es el caso CONTRARIO.
+- Fichas y barra solo con turnos activos: fuera de combate no se lleva la cuenta y pintarlas llenas
+  seria informacion falsa. Los orbes SI se ven siempre, porque no se renuevan por turno.
+- **Sin ticker.** Las fichas las refresca el listener de `HarfordDnDConditions`; la barra, el
+  `RegisterMovementListener` del seguimiento de la ficha, que ya corre mientras andas.
+
 - **Se cuenta SOLO, no hay que pulsar nada.** `HarfordDnDAttackUI` arranca el seguimiento desde el
   listener `RegisterMyTurnListener`, igual que Atlas. El boton queda para pararlo antes de tiempo
   (izquierdo) y para volver al ancla (derecho). Tener que acordarse de pulsarlo cada turno era la

@@ -423,6 +423,28 @@ end
 --
 -- Solo se ve mientras hay orden de turnos: fuera de combate no se lleva la cuenta de acciones y
 -- un contador congelado a 1/1 seria informacion falsa.
+local movListeners = {}
+
+-- Avisa a quien pinte el movimiento. `tope` viene aparte del calculo de velocidad porque incluye
+-- el doble de `Correr`, que es de ESTE turno y no una propiedad del personaje.
+local function AvisarMovimiento(metros, tope)
+    for _, fn in ipairs(movListeners) do
+        pcall(fn, metros, tope)
+    end
+end
+
+function API.RegisterMovementListener(fn)
+    if type(fn) ~= "function" then return false end
+    movListeners[#movListeners + 1] = fn
+    return true
+end
+
+-- Metros que puede recorrer este turno, con el doble de `Correr` ya aplicado. Lo de fuera no puede
+-- calcularlo por su cuenta: `Correr` vive aqui.
+function API.GetTurnMovementMax()
+    return API.TurnMovementMax or 0
+end
+
 function API.CreateTurnEconomyLabel(opts)
     opts = opts or {}
     local parent = opts.parent
@@ -543,7 +565,9 @@ function API.AttachMovementTracker(opts)
     local function MaximoDelTurno()
         local base = (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
             and HarfordDnDCalc.GetTurnMovement()) or 0
-        return corriendo and (base * 2) or base
+        local tope = corriendo and (base * 2) or base
+        API.TurnMovementMax = tope
+        return tope
     end
 
     -- Cuanto llevas DE cuanto puedes. Un numero suelto no dice si te has pasado, que es lo unico
@@ -573,6 +597,7 @@ function API.AttachMovementTracker(opts)
                 button:SetText("Parar " .. FormatMeters(totalMeters))
                 label:SetText(FormatMeters(totalMeters))
 
+                AvisarMovimiento(totalMeters, MaximoDelTurno())
                 -- Al agotar el movimiento te quedas donde estas. Un contador que solo cuenta deja
                 -- el limite en un numero de adorno: aqui el punto donde se acaba se convierte en
                 -- tu sitio, y seguir andando te devuelve a el.
@@ -616,6 +641,7 @@ function API.AttachMovementTracker(opts)
         button:SetText("Movimiento")
         label:SetText(totalMeters > 0 and FormatMeters(totalMeters) or "")
         API.RecordedMovementMeters = totalMeters
+        AvisarMovimiento(totalMeters, MaximoDelTurno())
         -- Y se ANCLA aqui: es el sitio donde terminaste, al que querras volver si te empujan o te
         -- mueves durante el turno de otro.
         API.RecordedMovementAnchor = CapturarAncla()
@@ -651,6 +677,7 @@ function API.AttachMovementTracker(opts)
         label:SetText("")
         -- Y arranca SOLO. Tener que acordarse de pulsar el boton cada turno es la friccion que
         -- hace que la cuenta no se lleve nunca; el boton queda para pararla antes de tiempo.
+        AvisarMovimiento(0, MaximoDelTurno())
         if IniciarSeguimiento then IniciarSeguimiento() end
     end
 

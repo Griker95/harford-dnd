@@ -456,7 +456,7 @@ chk("y se muestrea a 20 por segundo",
 -- siguiente, o el doble se heredaria para siempre.
 print("Correr dobla el tope, y solo este turno")
 chk("hay interruptor", ataque:find("function API.SetDashActive", 1, true) ~= nil, true)
-chk("que dobla", ataque:find("return corriendo and (base * 2) or base", 1, true) ~= nil, true)
+chk("que dobla", ataque:find("corriendo and (base * 2) or base", 1, true) ~= nil, true)
 chk("y se apaga en tu turno", ataque:find("corriendo = false", 1, true) ~= nil, true)
 local panel2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
 chk("y la accion lo enciende",

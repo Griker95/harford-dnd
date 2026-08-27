@@ -54,7 +54,10 @@ chk("IsActive()", T.IsActive(), true)
 chk("gasto la accion -> cabia", (T.Spend("action")), true)
 chk("  restante", T.GetRemaining("action"), 0)
 chk("gasto otra vez -> NO cabia", (T.Spend("action")), false)
-chk("  pero se registra", T.GetSpent("action"), 2)
+-- Y NO se apunta: antes se sumaba igual y el contador se iba a negativo, asi que el "ya lo habias
+-- gastado" era un aviso y nada mas. Devolver false tiene que significar que la accion NO ocurre,
+-- y para eso el gasto que no cabe no puede dejar rastro.
+chk("  y no deja rastro", T.GetSpent("action"), 1)
 chk("la adicional intacta", T.GetRemaining("bonus"), 1)
 chk("la reaccion intacta", T.GetRemaining("reaction"), 1)
 

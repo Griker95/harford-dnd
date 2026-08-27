@@ -2681,13 +2681,13 @@ do
         end
 
         marcador.titulo = marcador:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
-        marcador.titulo:SetPoint("TOPLEFT", marcador, "TOPLEFT", 14, -10)
+        marcador.titulo:SetPoint("TOPLEFT", marcador, "TOPLEFT", 14, -16)
         marcador.titulo:SetWidth(150)
         marcador.titulo:SetJustifyH("LEFT")
         marcador.titulo:SetMaxLines(1)
 
         marcador.asalto = marcador:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall2")
-        marcador.asalto:SetPoint("TOPRIGHT", marcador, "TOPRIGHT", -14, -10)
+        marcador.asalto:SetPoint("TOPRIGHT", marcador, "TOPRIGHT", -14, -16)
         marcador.asalto:SetJustifyH("RIGHT")
 
         marcador.detalle = marcador:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -2700,15 +2700,35 @@ do
         -- se pone a cero. Es lo que quieres cuando te has colocado mal, y no tenia gesto.
         marcador.mov = CreateFrame("Button", nil, marcador)
         marcador.mov:SetHeight(12)
-        marcador.mov:SetPoint("TOPLEFT", marcador, "TOPLEFT", 14, -44)
-        marcador.mov:SetPoint("RIGHT", marcador, "RIGHT", -14, 0)
+        -- Mas adentro que el titulo: el marco del castbar sobresale 23 px por cada lado.
+        marcador.mov:SetPoint("TOPLEFT", marcador, "TOPLEFT", 32, -46)
+        marcador.mov:SetPoint("RIGHT", marcador, "RIGHT", -32, 0)
         marcador.mov.barra = CreateFrame("StatusBar", nil, marcador.mov)
         marcador.mov.barra:SetAllPoints()
-        marcador.mov.barra:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
+        marcador.mov.barra:SetStatusBarTexture(
+            (not GetFileIDFromPath or GetFileIDFromPath("Interface\\CastingBar\\UI-CastingBar-Fill"))
+            and "Interface\\CastingBar\\UI-CastingBar-Fill"
+            or "Interface\\TargetingFrame\\UI-StatusBar")
         marcador.mov.barra:SetMinMaxValues(0, 1)
         marcador.mov.fondo = marcador.mov.barra:CreateTexture(nil, "BACKGROUND")
         marcador.mov.fondo:SetAllPoints()
         marcador.mov.fondo:SetColorTexture(0, 0, 0, 0.6)
+        -- Marco de barra de lanzamiento. Se estira a lo ancho, que es lo que hace el propio juego
+        -- cuando la barra crece; los desplazamientos son los del `CastingBarFrame` nativo, en
+        -- proporcion a nuestra altura. Se comprueba que la textura EXISTA: una que falta no borra
+        -- la anterior, la deja como estaba, y aqui quedaria un rectangulo con arte de otra cosa.
+        local RUTA_MARCO = "Interface\\CastingBar\\UI-CastingBar-Border"
+        if not GetFileIDFromPath or GetFileIDFromPath(RUTA_MARCO) then
+            marcador.mov.marco = marcador.mov:CreateTexture(nil, "OVERLAY")
+            marcador.mov.marco:SetTexture(RUTA_MARCO)
+            marcador.mov.marco:SetPoint("TOPLEFT", marcador.mov, "TOPLEFT", -23, 19)
+            marcador.mov.marco:SetPoint("BOTTOMRIGHT", marcador.mov, "BOTTOMRIGHT", 23, -18)
+        end
+        local RUTA_FONDO = "Interface\\CastingBar\\UI-CastingBar-Background"
+        if not GetFileIDFromPath or GetFileIDFromPath(RUTA_FONDO) then
+            marcador.mov.fondo:SetTexture(RUTA_FONDO)
+            marcador.mov.fondo:SetVertexColor(1, 1, 1, 1)
+        end
         marcador.mov.texto = marcador.mov.barra:CreateFontString(nil, "OVERLAY",
             "GameFontHighlightSmall")
         marcador.mov.texto:SetPoint("CENTER")

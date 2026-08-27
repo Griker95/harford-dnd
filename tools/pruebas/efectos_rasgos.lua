@@ -359,11 +359,25 @@ chk("cuantos caben sale del rasgo",
 chk("uno, o dos con el rasgo", cond:find("return extra and 2 or 1", 1, true) ~= nil, true)
 -- Los de en medio ya estan pagados; el que abre otra tanda cobra otra accion.
 chk("solo cobra el que abre la tanda",
-    cond:find("if (ECONOMIA.ataques - 1) % porAccion ~= 0 then return nil end", 1, true) ~= nil, true)
+    cond:find('if (ECONOMIA.ataques - 1) % porAccion ~= 0 then return "action" end', 1, true) ~= nil, true)
 -- El ataque con la SECUNDARIA es Combate con Dos Armas: cuesta accion ADICIONAL, no la accion, y
 -- no cuenta contra los ataques de la accion.
 chk("la secundaria cuesta accion adicional",
-    cond:find('local cabia = Turn.Spend("bonus", 1)', 1, true) ~= nil, true)
+    cond:find('if not Turn.Spend("bonus", 1) then', 1, true) ~= nil, true)
+-- ── Y SI NO CABE, NO SE HACE ────────────────────────────────────────────────
+-- Avisar y dejar atacar igual es no llevar economia, solo comentarla.
+chk("un gasto que no cabe no deja rastro",
+    cond:find("if Turn.GetRemaining(kind) < amount then return false, 0 end", 1, true) ~= nil, true)
+chk("y el ataque se aborta",
+    ficha:find("SpendWeaponAttack(offhand and true or false) == false then", 1, true) ~= nil, true)
+-- El ataque que no ocurre tampoco se apunta: si no, el siguiente intento se tomaria por el segundo
+-- de la tanda y saldria gratis.
+chk("sin dejar contado el ataque que no fue",
+    cond:find("ECONOMIA.ataques = ECONOMIA.ataques - 1", 1, true) ~= nil, true)
+local rolls = io.open("Harford/DnD/Engine/HarfordDnDRolls.lua"):read("*a")
+chk("y la habilidad del Libro tampoco se anuncia",
+    rolls:find("if HarfordDnDConditions.Turn.SpendForFeature(feature) == false then return false end",
+        1, true) ~= nil, true)
 -- Y los ataques ya hechos son de ESTE turno: sin reiniciarlos, el primero del siguiente se
 -- tomaria por el segundo y saldria gratis.
 chk("y se reinician con el turno", cond:find("ECONOMIA.ataques = 0", 1, true) ~= nil, true)
@@ -376,7 +390,12 @@ chk("y una maniobra no cobra dos veces",
     ficha:find("DoWeaponAttack({ skipTurnCost = true })", 1, true) ~= nil, true)
 local comp = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
 chk("lanzar tambien cuesta",
-    comp:find("HarfordDnDConditions.Turn.SpendForFeature({ cast = coste", 1, true) ~= nil, true)
+    comp:find("HarfordDnDConditions.Turn.SpendForFeature(", 1, true) ~= nil, true)
+-- Y se cobra ANTES que el mana: si no te queda esa accion el conjuro no sale, y asi no hay que
+-- devolver nada. Cobrar por un conjuro que no sale es peor que no llevar la cuenta.
+chk("y antes que el mana",
+    comp:find("HarfordDnDConditions.Turn.SpendForFeature(", 1, true)
+    < comp:find("local ok, costOrErr, current, maxValue = API.SpendSpellMana", 1, true), true)
 -- Lo que diga su tiempo de lanzamiento, no siempre accion.
 chk("segun su tiempo de lanzamiento",
     comp:find('if texto:find("adicional") or texto:find("bonus") then coste = "accion_adicional"',

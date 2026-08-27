@@ -3827,7 +3827,11 @@ DoWeaponAttack = function(options)
     if not options.skipTurnCost and ActorIsPlayer(def)
         and HarfordDnDConditions and HarfordDnDConditions.Turn
         and HarfordDnDConditions.Turn.SpendWeaponAttack then
-        HarfordDnDConditions.Turn.SpendWeaponAttack(offhand and true or false)
+        -- `false` significa que NO cabia. Si no cabe, no se ataca: avisar y dejar atacar igual es
+        -- no llevar economia, solo comentarla.
+        if HarfordDnDConditions.Turn.SpendWeaponAttack(offhand and true or false) == false then
+            return
+        end
     end
     local abil = GetWeaponAttackAbility(def)
     local base = HarfordDnDCalc.GetAbilityMod(abil)

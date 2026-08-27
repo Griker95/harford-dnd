@@ -1739,10 +1739,13 @@ do
         if not ETIQUETA[kind] then return true, 0 end
         if not Turn.IsActive() then return true, Turn.GetBudget(kind) end
         amount = math.max(1, math.floor(tonumber(amount) or 1))
-        local cabia = Turn.GetRemaining(kind) >= amount
+        -- Si NO cabe, no se apunta nada: antes se sumaba igual y el contador se iba a negativo,
+        -- asi que el "ya lo habias gastado" era un aviso y nada mas. Devolver false tiene que
+        -- significar que la accion NO ocurre.
+        if Turn.GetRemaining(kind) < amount then return false, 0 end
         ECONOMIA.spent[kind] = Turn.GetSpent(kind) + amount
         Notify()
-        return cabia, Turn.GetRemaining(kind)
+        return true, Turn.GetRemaining(kind)
     end
 
     -- Traduce el `cast` de un rasgo al presupuesto que consume. nil si no lo declara: el 92% de
@@ -1778,19 +1781,22 @@ do
     function Turn.SpendWeaponAttack(esOffhand)
         if not Turn.IsActive() then return nil end
         if esOffhand then
-            local cabia = Turn.Spend("bonus", 1)
-            if not cabia then
+            if not Turn.Spend("bonus", 1) then
                 Print("Ya habias gastado tu accion adicional: el ataque con la mano secundaria la cuesta.")
+                return false
             end
             return "bonus"
         end
         ECONOMIA.ataques = (tonumber(ECONOMIA.ataques) or 0) + 1
         local porAccion = Turn.AtaquesPorAccion()
         -- El primero de cada tanda cobra; los de en medio ya estan pagados.
-        if (ECONOMIA.ataques - 1) % porAccion ~= 0 then return nil end
-        local cabia = Turn.Spend("action", 1)
-        if not cabia then
+        if (ECONOMIA.ataques - 1) % porAccion ~= 0 then return "action" end
+        if not Turn.Spend("action", 1) then
+            -- El ataque no ocurre, asi que tampoco se apunta: si no, el siguiente intento se
+            -- tomaria por el segundo de la tanda y saldria gratis.
+            ECONOMIA.ataques = ECONOMIA.ataques - 1
             Print("Ya habias gastado tu accion este turno.")
+            return false
         end
         return "action"
     end

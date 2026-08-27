@@ -118,7 +118,9 @@ function HarfordDnDRolls.BroadcastAbility(feature, opts)
     -- se cuenta, porque `type = "accion"` es la categoria generica y en 5e incluye las adicionales:
     -- adivinarlo daria un contador equivocado, que es peor que no tenerlo.
     if opts.skipTurnCost ~= true and HarfordDnDConditions and HarfordDnDConditions.Turn then
-        HarfordDnDConditions.Turn.SpendForFeature(feature)
+        -- Si el rasgo declara un coste y NO cabe, no se anuncia ni se hace. `SpendForFeature`
+        -- devuelve nil cuando el rasgo no declara nada, que no es lo mismo que un false.
+        if HarfordDnDConditions.Turn.SpendForFeature(feature) == false then return false end
         -- Y al reves: hay rasgos que CONCEDEN una accion en vez de costarla.
         HarfordDnDConditions.Turn.GrantForFeature(feature)
     end

@@ -1,9 +1,9 @@
--- Recursos sobre la barra NATIVA, estilo BG3: fichas de accion y orbes de espacios de conjuro.
+-- Orbes de espacios de conjuro sobre la barra NATIVA.
 --
--- Dos reglas que los separan y conviene no confundir:
---   - Las FICHAS de accion solo existen con combate activo: fuera de combate no se lleva la cuenta.
---   - Los ORBES de conjuro se ven SIEMPRE: no se renuevan por turno y saber cuantos quedan importa
---     tambien fuera de combate.
+-- Las FICHAS de accion y la barra de movimiento estuvieron aqui y se MUDARON al marcador de turno:
+-- son lo que te queda ESTE TURNO y su sitio es junto al turno y el asalto. Tenerlas en los dos
+-- lados era la misma informacion en dos sitios. Los orbes se quedan porque NO son del turno --no
+-- se renuevan con el-- y por eso se ven tambien fuera de combate.
 -- Y una diferencia con BG3 que impone el motor: los espacios de PACTO del brujo se suman a los
 -- normales de su nivel, no van en reserva aparte.
 local cargar = loadstring or load
@@ -103,11 +103,11 @@ end
 
 print("Solo combate, sin conjuros")
 MODO_MANA, PIRAMIDE, ACTIVO, GASTADO = false, {}, true, {}
-local a, b = R(); chk("tres fichas, ningun orbe", a, b, 3, 0)
+local a, b = R(); chk("las fichas ya no se pintan aqui", a, b, 0, 0)
 
 print("Lanzador con piramide")
 PIRAMIDE = { [1] = { total = 4, gastados = 1 }, [2] = { total = 3 }, [3] = { total = 2 } }
-a, b = R(); chk("3 fichas y 9 orbes (4+3+2)", a, b, 3, 9)
+a, b = R(); chk("9 orbes (4+3+2), sin fichas", a, b, 0, 9)
 
 print("Los orbes se ven FUERA de combate; las fichas no")
 ACTIVO = false
@@ -117,12 +117,12 @@ print("Modo mana: no hay piramide que pintar")
 MODO_MANA = true
 a, b = R(); chk("nada", a, b, 0, 0)
 ACTIVO = true
-a, b = R(); chk("solo las fichas de accion", a, b, 3, 0)
+a, b = R(); chk("en modo mana no se pinta nada", a, b, 0, 0)
 
 print("Un nivel sin espacios no genera grupo")
 MODO_MANA = false
 PIRAMIDE = { [1] = { total = 2 }, [2] = { total = 0 }, [3] = { total = 1 } }
-a, b = R(); chk("2 + 1 orbes, el nivel vacio se salta", a, b, 3, 3)
+a, b = R(); chk("2 + 1 orbes, el nivel vacio se salta", a, b, 0, 3)
 
 print("Sin barra nativa no se pinta nada")
 _G.ActionButton1 = nil
@@ -168,47 +168,4 @@ chk1("y por encima del ancla real",
 chk1("sin salirse de su capa", fuente:find('fichasFrame:SetFrameStrata("MEDIUM")', 1, true) ~= nil, true)
 
 
--- ── Barra de movimiento ─────────────────────────────────────────────────────
--- Se gasta al andar y se vacia del todo: es lo que hace que el muro que te devuelve a tu sitio se
--- vea venir en vez de sorprenderte.
-print("Barra de movimiento")
--- El caso "sin barra nativa" deja el ancla RETIRADA, y sin ancla el refresco sale por arriba sin
--- tocar nada: estas comprobaciones se quedaban mirando el ultimo dibujo en vez del nuevo.
-_G.ActionButton1 = BOTON
-BOTON.visible = true
-MODO_MANA, PIRAMIDE, ACTIVO, GASTADO = false, {}, true, {}
-MOV_TOPE, MOV_GASTADO = 9, 0
-R()
-local cont = CREADOS["HarfordTurnEconomyFrame"]
-local function chk2(n, a, ea)
-    local ok = tostring(a) == tostring(ea)
-    if not ok then fallos = fallos + 1 end
-    print(string.format("  %-50s %-12s %s", n, tostring(a),
-        ok and "ok" or ("FALLA, esperaba " .. tostring(ea))))
-end
-chk2("con turnos activos se ve", cont and cont.mov and cont.mov:IsShown(), true)
-chk2("y dice lo que QUEDA, no lo andado", cont and cont.mov.texto and cont.mov.texto.texto, "9.0 m")
-MOV_GASTADO = 4
-R()
-chk2("baja al andar", cont.mov.texto.texto, "5.0 m")
-MOV_GASTADO = 20
-R()
--- Pasarse no la deja en negativo: cero es cero, y el muro ya te ha devuelto.
-chk2("agotada no baja de cero", cont.mov.texto.texto, "0.0 m")
--- Fuera de combate no se lleva la cuenta: una barra llena seria informacion falsa.
-ACTIVO = false
-R()
-chk2("sin turnos no se pinta", cont.mov:IsShown(), false)
-ACTIVO = true
--- El tope se CALCULA, no se lee de lo que dejo el seguimiento de la ficha. Antes salia de un
--- efecto secundario que solo ocurre con la ficha montada, asi que quien no la hubiera abierto en
--- esa sesion recibia 0 y la barra no se pintaba nunca.
-local ataqueSrc = io.open("Harford/DnD/UI/HarfordDnDAttackUI.lua"):read("*a")
-chk2("el tope se calcula, no se hereda",
-    ataqueSrc:find("HarfordDnDCalc.GetTurnMovement()) or 0", 1, true) ~= nil, true)
-chk2("y `Correr` lo dobla se pregunte desde donde se pregunte",
-    ataqueSrc:find("return API.DashActive and (base * 2) or base", 1, true) ~= nil, true)
-ACTIVO = true
-
-if fallos > 0 then os.exit(1) end
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

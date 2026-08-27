@@ -1233,14 +1233,8 @@ end
 function API.ConfirmCast(spellId, options)
     local spell = API.GetSpellById(spellId)
     if not spell then return false, "Conjuro no encontrado" end
-    local ok, costOrErr, current, maxValue = API.SpendSpellMana(spell, options)
-    if not ok then return false, costOrErr end
-    -- CONCENTRACION: el conjuro declara si la exige. Empezar sustituye a la anterior, porque el
-    -- manual no permite concentrarse en dos a la vez; el modulo se encarga de anunciarlo.
-    if API.RequiresConcentration(spell) and HarfordDnDConcentration and HarfordDnDConcentration.Begin then
-        HarfordDnDConcentration.Begin(spell.name or tostring(spellId), spellId)
-    end
-    -- Y cuesta lo que diga su TIEMPO DE LANZAMIENTO. Casi todos son accion; los que no lo dicen en
+    -- Cuesta lo que diga su TIEMPO DE LANZAMIENTO, y se cobra ANTES que el mana: si no te queda
+    -- esa accion el conjuro no sale, y asi no hay que devolver nada. Casi todos son accion; los que no lo dicen en
     -- su texto ("1 accion adicional", "1 reaccion"). Un ritual no cuesta accion -- por eso se
     -- lanza como ritual, y esa rama sale antes de llegar aqui.
     if HarfordDnDConditions and HarfordDnDConditions.Turn and not (options and options.silent) then
@@ -1250,9 +1244,18 @@ function API.ConfirmCast(spellId, options)
         elseif texto:find("reacc") then coste = "reaccion"
         -- Un conjuro de minutos u horas no se juega por turnos: no cobra nada.
         elseif texto:find("minuto") or texto:find("hora") then coste = nil end
-        if coste then
-            HarfordDnDConditions.Turn.SpendForFeature({ cast = coste, name = spell.name })
+        if coste and HarfordDnDConditions.Turn.SpendForFeature(
+            { cast = coste, name = spell.name }) == false then
+            return false, "No te queda esa accion este turno."
         end
+    end
+
+    local ok, costOrErr, current, maxValue = API.SpendSpellMana(spell, options)
+    if not ok then return false, costOrErr end
+    -- CONCENTRACION: el conjuro declara si la exige. Empezar sustituye a la anterior, porque el
+    -- manual no permite concentrarse en dos a la vez; el modulo se encarga de anunciarlo.
+    if API.RequiresConcentration(spell) and HarfordDnDConcentration and HarfordDnDConcentration.Begin then
+        HarfordDnDConcentration.Begin(spell.name or tostring(spellId), spellId)
     end
     if options and options.silent then return true, costOrErr, current, maxValue end
     local cost = tonumber(costOrErr) or 0

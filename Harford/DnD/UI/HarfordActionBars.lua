@@ -326,6 +326,12 @@ local function EnsureFicha(i)
     return f
 end
 
+-- Las fichas de accion y la barra de movimiento VIVEN AHORA EN EL MARCADOR DE TURNO, con el turno
+-- y el asalto. Tenerlas ademas aqui encima de la barra de accion era la misma informacion en dos
+-- sitios: dos cosas que mantener y dos sitios donde mirar. Esta funcion se queda para los ORBES de
+-- espacios de conjuro, que no son del turno --no se renuevan con el-- y siguen teniendo sentido
+-- pegados a la barra.
+--
 -- Redibuja la fila entera. Devuelve cuantas fichas quedaron visibles.
 -- Dibuja los recursos sobre la barra nativa: fichas de accion (solo con combate activo, porque
 -- fuera de combate no se lleva la cuenta) y orbes de espacios de conjuro (SIEMPRE, porque no se
@@ -344,36 +350,10 @@ function API.RefreshTurnEconomy()
 
     -- ── Fichas de accion ────────────────────────────────────────────────────
     local T = Economia()
+    -- Las fichas de accion y la barra de movimiento VIVEN EN EL MARCADOR DE TURNO, con el turno y
+    -- el asalto. Tenerlas ademas aqui era la misma informacion en dos sitios: dos cosas que
+    -- mantener y dos sitios donde mirar.
     local n = 0
-    if T and T.IsActive and T.IsActive() then
-        for _, kind in ipairs(T.ORDEN or {}) do
-            local total = T.GetBudget(kind)
-            local quedan = T.GetRemaining(kind)
-            for punto = 1, total do
-                n = n + 1
-                local f = EnsureFicha(n)
-                f.kind, f.etiqueta = kind, T.ETIQUETA[kind]
-                f.gastada = punto > quedan
-                local c = COLOR_FICHA[kind] or { 0.7, 0.7, 0.7 }
-                if f.gastada then
-                    f.fondo:SetColorTexture(c[1] * 0.22, c[2] * 0.22, c[3] * 0.22, 0.9)
-                    f.marco:SetVertexColor(0.35, 0.35, 0.35)
-                else
-                    f.fondo:SetColorTexture(c[1], c[2], c[3], 1)
-                    f.marco:SetVertexColor(c[1] * 1.1, c[2] * 1.1, c[3] * 1.1)
-                end
-                f:ClearAllPoints()
-                if n == 1 then
-                    -- La primera ficha se coloca al final, cuando ya se sabe cuanto mide la fila
-                    -- entera: es lo que permite centrarla en vez de pegarla a la izquierda.
-                    f:SetPoint("BOTTOMLEFT", cont, "BOTTOM", 0, 0)
-                else
-                    f:SetPoint("LEFT", cont.fichas[n - 1], "RIGHT", FICHA_HUECO, 0)
-                end
-                f:Show()
-            end
-        end
-    end
     for i = n + 1, #cont.fichas do cont.fichas[i]:Hide() end
     local ancho = n * FICHA_TAM + math.max(0, n - 1) * FICHA_HUECO
     local ultimo = n > 0 and cont.fichas[n] or nil
@@ -425,39 +405,7 @@ function API.RefreshTurnEconomy()
     for i = orbes + 1, #cont.orbes do cont.orbes[i]:Hide() end
     for i = grupos + 1, #cont.niveles do cont.niveles[i]:Hide() end
 
-    -- ── Barra de movimiento ─────────────────────────────────────────────────
-    -- Solo con turnos activos, por lo mismo que las fichas: fuera de combate no se lleva la cuenta
-    -- y una barra llena seria informacion falsa.
-    local mov = EnsureMovBar()
-    local U = HarfordDnDAttackUI
-    local tope = (U and U.GetTurnMovementMax and U.GetTurnMovementMax()) or 0
-    if T and T.IsActive and T.IsActive() and tope > 0 then
-        local gastado = (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0
-        local quedan = math.max(0, tope - gastado)
-        mov.quedan, mov.tope = quedan, tope
-        mov:SetValue(quedan / tope)
-        local fraccion = quedan / tope
-        if fraccion <= 0.001 then
-            mov:SetStatusBarColor(0.75, 0.25, 0.25)
-        elseif fraccion < 0.34 then
-            mov:SetStatusBarColor(0.90, 0.68, 0.25)
-        else
-            mov:SetStatusBarColor(0.35, 0.72, 0.40)
-        end
-        mov.texto:SetText(string.format("%.1f m", quedan))
-        mov:ClearAllPoints()
-        -- Encima de las fichas y tan ancha como ellas: es la misma economia, leida de una pieza.
-        mov:SetWidth(math.max(MOV_ANCHO_MIN, ancho))
-        mov:SetPoint("BOTTOM", cont, "BOTTOM", 0, FICHA_TAM + MOV_HUECO)
-        mov:Show()
-        cont:SetHeight(FICHA_TAM + MOV_HUECO + MOV_ALTO)
-        ancho = math.max(ancho, MOV_ANCHO_MIN)
-    else
-        mov:Hide()
-        cont:SetHeight(FICHA_TAM)
-    end
-
-    if n == 0 and orbes == 0 and not mov:IsShown() then
+    if n == 0 and orbes == 0 then
         cont:Hide()
         return 0, 0
     end

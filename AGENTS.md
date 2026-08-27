@@ -3406,6 +3406,23 @@ de ids lo blindaria a costa de engordar el mensaje.
 
 Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
+## La economia de turno BLOQUEA, no avisa (2026-08-27)
+
+- `Turn.Spend` apuntaba el gasto **aunque no cupiera**, asi que el contador se iba a negativo y el
+  "ya lo habias gastado" era un aviso y nada mas: seguias atacando y lanzando. Ahora un gasto que
+  no cabe **devuelve false y no deja rastro**, y los tres llamadores lo respetan:
+  `DoWeaponAttack` no ataca, `BroadcastAbility` no anuncia ni ejecuta, y `ConfirmCast` no lanza.
+- **El coste del conjuro se cobra ANTES que el mana**: si no te queda esa accion el conjuro no
+  sale, y asi no hay que devolver nada. Cobrar por un conjuro que no sale es peor que no llevar la
+  cuenta.
+- **Un ataque que no ocurre tampoco se apunta** (`ECONOMIA.ataques` se decrementa): si no, el
+  siguiente intento se tomaria por el segundo de la tanda y saldria gratis.
+- **Las fichas y la barra de movimiento viven en el MARCADOR DE TURNO**, no encima de la barra de
+  accion. Es lo que te queda ESTE turno y su sitio es junto al turno y el asalto; tenerlas en los
+  dos lados era la misma informacion en dos sitios. Sobre la barra de accion se quedan solo los
+  ORBES de espacios de conjuro, que **no son del turno** --no se renuevan con el-- y por eso se ven
+  tambien fuera de combate.
+
 ## La economia de turno se GASTA de verdad (2026-08-27)
 
 - Solo cobraba a los rasgos del Libro que declaran `cast` (via `BroadcastAbility` →

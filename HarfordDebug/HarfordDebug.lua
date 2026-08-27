@@ -1731,6 +1731,28 @@ API.RegisterCommand("espacios", function(args)
     end
 end, "Los espacios de conjuro: cuantos hay, y por que no se ven (espacios [probar|devolver N])")
 
+-- ─── SE ESTA MANDANDO EL ESTADO DE TURNOS? ──────────────────────────────────
+-- "No llega al cliente" puede ser que no se mande, que no haya canal, o que se mande y el otro no
+-- lo aplique. Desde este lado se pueden separar las dos primeras.
+API.RegisterCommand("turnored", function()
+    local T = _G.HarfordTurnOrderAPI
+    local function Si(v) return v and "|cff88ff88si|r" or "|cffff4444NO|r" end
+    Print("  HarfordSync: " .. Si(_G.HarfordSync ~= nil))
+    Print("  mandas (IsTurnAdmin): " .. Si(T and T.IsTurnAdmin and T.IsTurnAdmin()))
+    local ch = _G.HarfordSync and _G.HarfordSync.BestChannel and _G.HarfordSync.BestChannel()
+    -- Sin canal no sale nada y no se avisa: `SendState` devuelve false en silencio.
+    Print("  canal: " .. tostring(ch or "|cffff4444ninguno|r (no estas en grupo/raid)"))
+    Print("  en grupo: " .. Si(IsInGroup and IsInGroup()) .. "   en raid: " .. Si(IsInRaid and IsInRaid()))
+
+    -- Y se manda uno de verdad, mirando lo que contesta el transporte.
+    if T and T.Broadcast then
+        local ok, err = T.Broadcast()
+        Print("  Broadcast(): " .. Si(ok) .. (err and ("  |cff808080" .. tostring(err) .. "|r") or ""))
+    else
+        Print("  |cffff5555HarfordTurnOrderAPI.Broadcast no existe.|r")
+    end
+end, "Se esta mandando el estado de turnos a la raid?")
+
 -- ─── POR QUE SE BORRO EL COMBATE ────────────────────────────────────────────
 -- Una limpieza silenciosa que se lleva un combate en curso es indistinguible de un fallo. Esto
 -- dice si limpio, por que, y que habria hecho AHORA con lo que hay guardado.

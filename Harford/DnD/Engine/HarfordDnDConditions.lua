@@ -2077,7 +2077,11 @@ function API.OnTurnChanged(entry, serial)
                 -- Las caches remotas solo informan tiradas; su propietario gestiona duracion y retirada.
             else
             local duration = record.duration
-            local fase = entry and entry.fase
+            -- SIN fase, a proposito. La entrada sigue trayendola porque el anuncio y el
+            -- estandarte la usan para su texto, pero aqui no vale: con un bloque por pulsacion no
+            -- hay dos momentos que distinguir, y pasarle "inicio" haria que las condiciones de FIN
+            -- de turno no caducaran NUNCA. Sin fase caduca las dos, cada una contra su bloque.
+            local fase = nil
             local toca, contra = API.DurationTicks(duration, fase)
             local quien = (contra == "anterior") and previous or entry
             local lado = (duration == "source_turn_start" or duration == "source_turn_end")

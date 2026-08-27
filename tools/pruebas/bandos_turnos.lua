@@ -222,7 +222,8 @@ print("La fase se conserva en el cable, no en la entrada")
 chk("las dos fases siguen declaradas", #T.FASES, 2)
 local cierre = Entrada("enemigos", "fin")
 chk("el id sigue distinguiendolas", cierre.id ~= e.id, true)
-chk("pero la entrada no lleva fase", cierre.fase, nil)
+-- La entrada la conserva: el anuncio elige sus palabras con ella y el estandarte decide si sale.
+chk("y la entrada la conserva", cierre.fase, "fin")
 chk("con texto distinto", T.FASE_ETIQUETA.fin, "termina el turno de")
 
 -- Sin esto, el cierre de un bloque tendria la misma clave que su apertura y el motor lo tomaria
@@ -269,10 +270,13 @@ chk("y sin fases, contra el anterior", select(2, D.EndSaveTicks(nil)), "anterior
 -- fin contra el que sale SOLO cuando no hay fase: con "inicio" puesto, las de fin de turno no
 -- caducarian NUNCA, y eso no avisa -- el estado se queda ahi y nadie sabe por que.
 print("Sin fase, para que caduquen las dos")
-chk("la entrada propia no la lleva",
-    turnos:find("fase = nil,\n        -- El id sigue llevando la fase", 1, true) ~= nil, true)
-chk("ni la recibida",
-    turnos:find("fase = nil,\n        id = ", 1, true) ~= nil, true)
+-- La entrada CONSERVA su fase: el anuncio la usa para elegir las palabras y el estandarte
+-- para saber si mostrarse. Quien no debe leerla es el motor de condiciones, que con un
+-- bloque por pulsacion no tiene dos momentos que distinguir.
+chk("la entrada conserva su fase",
+    turnos:find("fase = fase or \"inicio\",", 1, true) ~= nil, true)
+chk("y el motor no la mira",
+    cond:find("local fase = nil", 1, true) ~= nil, true)
 chk("y sin fase caducan las dos",
     cond:find('if abre then return true, "actual" end', 1, true) ~= nil
     and cond:find('if cierra then return true, "anterior" end', 1, true) ~= nil, true)

@@ -765,9 +765,7 @@ local function EntradaDeBandoRecibida(bando, idsRaw, fase)
     return {
         kind = "bando",
         bando = bando,
-        -- Sin fase, igual que la propia: con "inicio" puesto, las condiciones de FIN de turno no
-        -- caducarian nunca en el cliente que la recibe.
-        fase = nil,
+        fase = fase or "inicio",
         id = "bando:" .. tostring(bando) .. ":" .. tostring(fase or "inicio"),
         name = HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or tostring(bando),
         -- La lista que mando el DM manda sobre lo que opine este cliente.
@@ -2065,13 +2063,11 @@ local function EntradaDeBando(bando, fase)
     return {
         kind = "bando",
         bando = bando,
-        -- SIN fase: un bloque es un solo momento. El motor de condiciones caduca entonces las de
-        -- inicio contra el bloque que entra y las de fin contra el que sale, que es lo correcto.
-        -- Con "inicio" puesto, las de FIN de turno no caducaban nunca -- y eso no avisa: el estado
-        -- se queda ahi y nadie sabe por que.
-        fase = nil,
-        -- El id sigue llevando la fase que venga, para no chocar con un cliente anterior que aun
-        -- mande dos entradas por bloque.
+        -- La fase se conserva: el ANUNCIO la usa para elegir las palabras y el estandarte para
+        -- saber si mostrarse. Quitarla de aqui les cambio el texto y apago el estandarte, que es
+        -- lo que se vio en el chat. Lo que NO debe leerla es el motor de condiciones -- eso se
+        -- decide en su propia llamada.
+        fase = fase or "inicio",
         id = "bando:" .. tostring(bando) .. ":" .. tostring(fase or "inicio"),
         name = HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or tostring(bando),
     }

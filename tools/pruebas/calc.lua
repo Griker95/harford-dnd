@@ -494,6 +494,12 @@ chk("pero a mano si", ataque:find("ArrancarSeguimiento(true)", 1, true) ~= nil, 
 -- devolviendote a un sitio de otro combate.
 chk("y se para al acabar el combate",
     ataque:find("if tracking and not EnCombate() then", 1, true) ~= nil, true)
+-- Y FUERA de combate no limita nada: el contador mide, pero no ata. Ni se marca ancla ni se tira
+-- de nadie. Todo esto es del modo combate; fuera, la gente hace lo que quiera como siempre.
+chk("fuera de combate no se marca ancla",
+    ataque:find("if EnCombate() and tope > 0 and totalMeters >= tope", 1, true) ~= nil, true)
+chk("ni se tira de nadie",
+    ataque:find("if not EnCombate() then return end\n            local ancla", 1, true) ~= nil, true)
 
 -- ── EL MURO SALTA AL SOLTAR LA TECLA ────────────────────────────────────────
 -- Un teleporte cada 0.75 s mientras corres es una rafaga de comandos y ademas se ve a trompicones.

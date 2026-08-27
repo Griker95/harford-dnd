@@ -602,6 +602,11 @@ function API.AttachMovementTracker(opts)
         return string.format("%s%.1f|r / %.1f m", color, value, tope)
     end
 
+    local function EnCombate()
+        return HarfordTurnOrderAPI and HarfordTurnOrderAPI.HasActiveCombat
+            and HarfordTurnOrderAPI.HasActiveCombat()
+    end
+
     local function OnUpdate(_, delta)
         elapsed = elapsed + delta
         if elapsed < pollInterval then return end
@@ -635,8 +640,10 @@ function API.AttachMovementTracker(opts)
         label:SetText(FormatMeters(totalMeters))
         AvisarMovimiento(totalMeters, MaximoDelTurno())
 
+        -- Fuera de combate el contador MIDE, pero no ata: no se marca ancla y por tanto no hay
+        -- muro. Solo dentro de un combate por turnos el movimiento es un recurso que se acaba.
         local tope = MaximoDelTurno()
-        if tope > 0 and totalMeters >= tope and not API.RecordedMovementAnchor
+        if EnCombate() and tope > 0 and totalMeters >= tope and not API.RecordedMovementAnchor
             and not API.MovimientoSinMuro then
             if LlevandoNpc() then
                 -- Al NPC se le cuenta y se le avisa, pero no se le pone muro: no hay con que.
@@ -725,11 +732,6 @@ function API.AttachMovementTracker(opts)
         end
     end
 
-    local function EnCombate()
-        return HarfordTurnOrderAPI and HarfordTurnOrderAPI.HasActiveCombat
-            and HarfordTurnOrderAPI.HasActiveCombat()
-    end
-
     ArrancarSeguimiento = function(aMano)
         if tracking then return end
         -- Fuera de combate no hay turno que gastar: el contador no arranca solo. A mano si -- el
@@ -793,6 +795,9 @@ function API.AttachMovementTracker(opts)
         }
         local ultimoTiron = 0
         local function Tirar()
+            -- Doble guardia: sin combate no se tira de nadie ni aunque quedara un ancla vieja de
+            -- un combate anterior.
+            if not EnCombate() then return end
             local ancla = API.RecordedMovementAnchor
             if not ancla then return end
             local tope = MaximoDelTurno()

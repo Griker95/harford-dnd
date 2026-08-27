@@ -3508,6 +3508,11 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
 - **Sin ticker.** Las fichas las refresca el listener de `HarfordDnDConditions`; la barra, el
   `RegisterMovementListener` del seguimiento de la ficha, que ya corre mientras andas.
 
+- **FUERA DE COMBATE NO SE LIMITA NADA.** Todo lo del turno --contador de movimiento, muro,
+  economia de accion/adicional/reaccion-- es del MODO COMBATE. Fuera, la gente tira y se mueve
+  como siempre: el contador puede medir si lo arrancas a mano, pero **no marca ancla ni tira de
+  nadie**, y `Turn.Spend` devuelve exito sin apuntar nada. No anadir avisos ni bloqueos que se
+  disparen sin combate activo.
 - **Estar en combate es una CONDICION del contador, no un detalle.** Fuera de un combate por turnos
   no hay turno que gastar y un contador corriendo miente, asi que NO arranca solo -- pero a mano
   si, porque el boton tambien sirve para medir una distancia sin mas. Y **se para al ACABAR el

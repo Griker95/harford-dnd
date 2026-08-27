@@ -65,8 +65,6 @@ local function AlternarSecundario(entry)
 end
 
 -- ─── MENU DE LA TARJETA ──────────────────────────────────────────────────────
-local AbrirPanelDeBloque   -- se asigna abajo; el menu de tarjeta cierra sobre ella
-
 local function AbrirMenu(entry, ancla)
     if not entry then return end
     -- Sin ser admin no se abre menu y YA ESTA. Avisarlo convertia cada click derecho sobre una
@@ -93,7 +91,7 @@ local function AbrirMenu(entry, ancla)
         -- izquierdo. Tener ademas un submenu de anadir aqui era la misma cosa en dos sitios, y el
         -- de aqui ni siquiera podia enseniar la vida ni la CA de quien esta dentro.
         if tipo == "players" or tipo == "generic" then
-            AbrirPanelDeBloque(entry)
+            API().OpenBlockPanel(entry)
             return
         end
 
@@ -137,145 +135,14 @@ local function AbrirMenu(entry, ancla)
 end
 
 -- ─── LA LISTA DE TARJETAS DE UN BLOQUE ───────────────────────────────────────
--- Quien esta dentro de un bloque no tiene tarjeta en la lista compartida -- ese es el modelo: la
--- mesa ve el bloque, no a sus quince miembros --, pero el DM necesita verlos y tocarlos. Este
--- panel es esa vista, y es SUYA: vive en HarfordAdmin y no existe para nadie mas.
---
--- La vida sale de la unidad viva cuando esta a la vista; si no lo esta, se dice, en vez de enseniar
--- un numero viejo que nadie puede comprobar.
+
+-- ─── LO QUE EL DM AÑADE A LA LISTA DE UN BLOQUE ─────────────────────────────
+-- La lista la abre y la pinta el CORE, y la puede abrir cualquiera: mirar quien esta dentro es
+-- informacion. EDITARLA si es del DM, y es lo unico que se cuelga desde aqui -- los dos botones de
+-- anadir y la X de cada tarjeta. Sin HarfordAdmin la lista sigue existiendo, solo que de lectura.
 do
-    local panel, filas = nil, {}
+    local panel, bloqueActual
     local AnadirObjetivo, AnadirDelGrupo   -- se asignan abajo; los botones cierran sobre ellas
-    local bloqueActual
-    -- Las mismas medidas que las tarjetas de la ventana de turnos (70x122): son lo mismo, un
-    -- combatiente, y tienen que leerse igual. Tres por fila, cuatro filas.
-    local TARJ_W, TARJ_H, TARJ_HUECO = 70, 122, 6
-    local COLUMNAS, FILAS_A_LA_VISTA = 3, 4
-    -- Hueco para la barra de desplazamiento a la derecha: si no, se come media tarjeta.
-    local PANEL_ANCHO = 16 + COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO + 22
-    local ALTO_VISTA = FILAS_A_LA_VISTA * (TARJ_H + TARJ_HUECO)
-    local RefrescarPanel
-
-    local function EnsureFila(i)
-        local f = filas[i]
-        if f then return f end
-        -- La monta el CORE, con las mismas piezas que las tarjetas de la ventana de turnos.
-        -- Rehacerlas aqui fue el error de la primera version: quedaban parecidas y se actualizaban
-        -- de otra forma, asi que cualquier cambio en una no llegaba a la otra.
-        f = API().CreateCardVisuals(panel.contenido)
-        f:EnableMouse(true)
-        f.quitar = CreateFrame("Button", nil, f, "UIPanelCloseButton")
-        f.quitar:SetSize(20, 20)
-        f.quitar:SetPoint("TOPRIGHT", f, "TOPRIGHT", 2, 2)
-        f.quitar:SetFrameLevel(f.border:GetFrameLevel() + 1)
-        filas[i] = f
-        return f
-    end
-
-    local function CrearPanel()
-        if panel then return panel end
-        panel = CreateFrame("Frame", "HarfordAdminBlockFrame", UIParent, "BackdropTemplate")
-        panel:SetSize(PANEL_ANCHO, 30 + ALTO_VISTA + 40)
-        panel:SetFrameStrata("DIALOG")
-        panel:SetFrameLevel(520)
-        panel:SetClampedToScreen(true)
-        panel:SetMovable(true)
-        panel:EnableMouse(true)
-        panel:RegisterForDrag("LeftButton")
-        panel:SetScript("OnDragStart", panel.StartMoving)
-        panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
-        panel.borde = CreateFrame("Frame", nil, panel, "DialogBorderTemplate")
-        panel.borde:SetAllPoints(panel)
-        panel.titulo = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        panel.titulo:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -12)
-        -- Con muchas tarjetas se baja a verlas, pero el boton NO se va con ellas: vive en el
-        -- panel, fuera del area que se desplaza, asi que no lo recorta el scroll ni se pierde de
-        -- vista cuando la lista crece.
-        panel.scroll = CreateFrame("ScrollFrame", "HarfordAdminBlockScroll", panel,
-            "UIPanelScrollFrameTemplate")
-        panel.scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -30)
-        panel.scroll:SetSize(COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO, ALTO_VISTA)
-        panel.contenido = CreateFrame("Frame", nil, panel.scroll)
-        panel.contenido:SetSize(COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO, ALTO_VISTA)
-        panel.scroll:SetScrollChild(panel.contenido)
-
-        -- Abajo, donde se busca: anadir es lo que mas se hace en esta ventana.
-        panel.anadir = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-        panel.anadir:SetHeight(22)
-        panel.anadir:SetScript("OnClick", function() AnadirObjetivo() end)
-        -- Anadir al grupo entero es SOLO para el bloque de PJs: a los NPC no se les puede hacer
-        -- porque el cliente no permite enumerarlos mas alla de los que tengan placa visible.
-        panel.anadirGrupo = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-        panel.anadirGrupo:SetHeight(22)
-        panel.anadirGrupo:SetText("Anadir al grupo...")
-        panel.anadirGrupo:SetScript("OnClick", function() AnadirDelGrupo() end)
-
-        panel.cerrar = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
-        panel.cerrar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
-        panel.cerrar:SetScript("OnClick", function() panel:Hide() end)
-        -- Solo mientras se ve: las placas y la vida disparan constantemente.
-        panel:SetScript("OnShow", function(self)
-            self:RegisterEvent("UNIT_HEALTH")
-            self:RegisterEvent("NAME_PLATE_UNIT_ADDED")
-            self:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
-            self:RegisterEvent("PLAYER_TARGET_CHANGED")
-            if RefrescarPanel then RefrescarPanel() end
-        end)
-        panel:SetScript("OnHide", function(self) self:UnregisterAllEvents() end)
-        panel:SetScript("OnEvent", function() if RefrescarPanel then RefrescarPanel() end end)
-        panel:Hide()
-        return panel
-    end
-
-    RefrescarPanel = function()
-        if not (panel and panel:IsShown() and bloqueActual) then return end
-        local T = API()
-        local dentro = T.GetBlockMembers(bloqueActual)
-        panel.titulo:SetText(tostring(bloqueActual.name or "Bloque")
-            .. "  |cff999999(" .. #dentro .. ")|r")
-        -- En PJs van los dos, uno al lado del otro; en un bloque de NPCs solo el del objetivo, y
-        -- entonces ocupa el ancho entero.
-        panel.anadir:SetText("Anadir el objetivo")
-        panel.anadir:ClearAllPoints()
-        if tostring(bloqueActual.kind or "") == "players" then
-            local mitad = (PANEL_ANCHO - 28) / 2
-            panel.anadir:SetWidth(mitad)
-            panel.anadir:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 10, 10)
-            panel.anadirGrupo:SetWidth(mitad)
-            panel.anadirGrupo:ClearAllPoints()
-            panel.anadirGrupo:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -10, 10)
-            panel.anadirGrupo:Show()
-        else
-            panel.anadir:SetWidth(PANEL_ANCHO - 24)
-            panel.anadir:SetPoint("BOTTOM", panel, "BOTTOM", 0, 10)
-            panel.anadirGrupo:Hide()
-        end
-        -- El alto del contenido crece con las tarjetas; el area a la vista no. Eso es lo que hace
-        -- que aparezca la barra en vez de recortar la lista.
-        local filasNecesarias = math.max(FILAS_A_LA_VISTA, math.ceil(#dentro / COLUMNAS))
-        panel.contenido:SetHeight(filasNecesarias * (TARJ_H + TARJ_HUECO))
-        for i = 1, math.max(#dentro, #filas) do
-            local m, f = dentro[i], EnsureFila(i)
-            if not m then f:Hide()
-            else
-                -- El miembro YA ES una entrada, con los mismos datos que una tarjeta normal.
-                -- Se le pasa tal cual al pintor del core: nada de rellenar de la unidad que tengas
-                -- delante, que era lo que hacia perder el icono al cambiar de objetivo y ponia la
-                -- vida NATIVA de un PJ en vez de la del sistema.
-                API().PaintEntryCard(f, m, false)
-                f.quitar:SetScript("OnClick", function()
-                    T.RemoveBlockMember(bloqueActual, m.guid)
-                    Print(tostring(m.name or "?") .. " sale de " .. tostring(bloqueActual.name) .. ".")
-                    RefrescarPanel()
-                end)
-                f:ClearAllPoints()
-                local col, fila = (i - 1) % COLUMNAS, math.floor((i - 1) / COLUMNAS)
-                f:SetPoint("TOPLEFT", panel.contenido, "TOPLEFT",
-                    col * (TARJ_W + TARJ_HUECO), -fila * (TARJ_H + TARJ_HUECO))
-                f:Show()
-            end
-        end
-    end
 
     -- Anadir al que tengas delante. Vale para cualquier bloque, PJs incluido: un jugador tambien
     -- se mete apuntandolo, sin tener que buscarlo en una lista.
@@ -305,7 +172,7 @@ do
         local ok, err = T.AddBlockMember(bloqueActual, "target")
         Print(ok and (tostring(UnitName("target")) .. " entra en "
             .. tostring(bloqueActual.name) .. ".") or tostring(err))
-        RefrescarPanel()
+        API().RefreshBlockPanel()
     end
 
     -- Y la lista del grupo, solo para PJs: son varios y estan todos a mano.
@@ -342,7 +209,7 @@ do
                     i.func = function()
                         if dentro[guid] then T.RemoveBlockMember(bloqueActual, guid)
                         else T.AddBlockMember(bloqueActual, u) end
-                        RefrescarPanel()
+                        API().RefreshBlockPanel()
                         CloseDropDownMenus()
                     end
                     UIDropDownMenu_AddButton(i, level)
@@ -362,7 +229,7 @@ do
                 end
                 Print(puestos > 0 and ("Anadidos " .. puestos .. " jugador(es).")
                     or "No habia a quien anadir.")
-                RefrescarPanel()
+                API().RefreshBlockPanel()
                 CloseDropDownMenus()
             end
             UIDropDownMenu_AddButton(todos, level)
@@ -370,19 +237,62 @@ do
         ToggleDropDownMenu(1, nil, menuAnadir, panel.anadirGrupo, 0, 0)
     end
 
-    AbrirPanelDeBloque = function(entry)
-        if not EsAdmin() then return end
-        CrearPanel()
-        -- Pulsar el mismo bloque cierra; otro CAMBIA sin cerrar, que es lo que se espera al ir
-        -- repasando categorias.
-        if panel:IsShown() and bloqueActual == entry then panel:Hide() return end
-        bloqueActual = entry
-        local ventana = API().GetFrame and API().GetFrame()
-        panel:ClearAllPoints()
-        if ventana then panel:SetPoint("TOPLEFT", ventana, "BOTTOMLEFT", 0, -6)
-        else panel:SetPoint("CENTER") end
-        panel:Show()
+    -- El decorador corre en CADA refresco, asi que todo lo que crea se reutiliza. Crear un boton
+    -- por refresco seria una fuga silenciosa que solo se nota tras un rato largo de mesa.
+    local function Decorar(p, entry, tarjetas, cuantas)
+        panel, bloqueActual = p, entry
+        if not p.anadir then
+            local ancho = API().GetBlockPanelWidth()
+            p.anadir = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")
+            p.anadir:SetHeight(22)
+            p.anadir:SetScript("OnClick", function() AnadirObjetivo() end)
+            p.anadirGrupo = CreateFrame("Button", nil, p, "UIPanelButtonTemplate")
+            p.anadirGrupo:SetHeight(22)
+            p.anadirGrupo:SetText("Anadir al grupo...")
+            p.anadirGrupo:SetScript("OnClick", function() AnadirDelGrupo() end)
+            p.anchoPanel = ancho
+        end
+
+        -- En PJs van los dos, uno al lado del otro; en un bloque de NPCs solo el del objetivo, y
+        -- entonces ocupa el ancho entero.
+        p.anadir:SetText("Anadir el objetivo")
+        p.anadir:ClearAllPoints()
+        if tostring(entry.kind or "") == "players" then
+            local mitad = (p.anchoPanel - 28) / 2
+            p.anadir:SetWidth(mitad)
+            p.anadir:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 10, 10)
+            p.anadirGrupo:SetWidth(mitad)
+            p.anadirGrupo:ClearAllPoints()
+            p.anadirGrupo:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -10, 10)
+            p.anadirGrupo:Show()
+        else
+            p.anadir:SetWidth(p.anchoPanel - 24)
+            p.anadir:SetPoint("BOTTOM", p, "BOTTOM", 0, 10)
+            p.anadirGrupo:Hide()
+        end
+        p.anadir:Show()
+
+        for i, f in ipairs(tarjetas) do
+            if not f.quitar then
+                f.quitar = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+                f.quitar:SetSize(20, 20)
+                f.quitar:SetPoint("TOPRIGHT", f, "TOPRIGHT", 2, 2)
+                f.quitar:SetFrameLevel(f.border:GetFrameLevel() + 1)
+            end
+            local m = f.miembro
+            f.quitar:SetShown(i <= (cuantas or 0) and m ~= nil)
+            if m then
+                f.quitar:SetScript("OnClick", function()
+                    API().RemoveBlockMember(bloqueActual, m.guid)
+                    Print(tostring(m.name or "?") .. " sale de "
+                        .. tostring(bloqueActual.name) .. ".")
+                    API().RefreshBlockPanel()
+                end)
+            end
+        end
     end
+
+    HarfordAdminTurnsDecorarBloque = Decorar
 end
 
 -- ─── INTERRUPTOR DE MODO ─────────────────────────────────────────────────────
@@ -425,13 +335,17 @@ do
         local T = API()
         if not T then return end
         T.OnCardRightClick = AbrirMenu
+        -- La edicion de la lista de un bloque: sin Admin, la lista sigue abriendose de lectura.
+        if T.RegisterBlockPanelDecorator and HarfordAdminTurnsDecorarBloque then
+            T.RegisterBlockPanelDecorator(HarfordAdminTurnsDecorarBloque)
+        end
         -- Click IZQUIERDO sobre un bloque: su lista de miembros. Sobre una criatura no se toca --
         -- ahi el core abre su ficha, que es lo util.
         if T.RegisterOnCardLeftClick then
             T.RegisterOnCardLeftClick(function(entry)
                 local k = tostring(entry and entry.kind or "")
                 if k ~= "players" and k ~= "generic" then return false end
-                AbrirPanelDeBloque(entry)
+                API().OpenBlockPanel(entry)
                 return true
             end)
         end

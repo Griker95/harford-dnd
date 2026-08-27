@@ -3055,14 +3055,24 @@ vez, que es el comportamiento correcto bajo iniciativa por bandos.
 
 ## Bloques de turno: las tarjetas especiales guardan a los suyos (2026-08-26)
 
-- **La lista de un bloque son las MISMAS tarjetas de la ventana de turnos, solo que dentro de la
-  lista** -- literalmente: las monta `HarfordTurnOrderAPI.CreateCardVisuals` y las pinta
-  `HarfordTurnOrderAPI.PaintEntryCard`, las dos del core, y la ventana de turnos usa esas mismas.
-  **No rehacer la tarjeta en Admin**: la primera version lo hizo y quedaban parecidas pero se
-  actualizaban de otra forma, asi que un cambio en una no llegaba a la otra.
-- Admin le pasa una entrada `kind = "npc"` aunque el miembro sea un jugador: la rama `player` del
-  pintor saca la vida del snapshot Harford por nombre, y aqui se quiere lo que marca la unidad que
-  tienes delante.
+- **La lista de un bloque vive en el CORE** (`HarfordTurnOrderAPI.OpenBlockPanel`) y la abre
+  CUALQUIERA con el click izquierdo: mirar quien esta dentro es informacion, no una herramienta de
+  DM, y HarfordAdmin no esta instalado en el cliente de un jugador. Lo que SI es del DM es
+  EDITARLA, y se cuelga con `RegisterBlockPanelDecorator`: sin Admin la lista sigue abriendose, de
+  lectura. El decorador corre en CADA refresco, asi que tiene que reutilizar sus botones.
+- **Son las MISMAS tarjetas de la ventana de turnos**, no una imitacion: las monta
+  `CreateCardVisuals` y las pinta `PaintEntryCard`, y la ventana usa esas dos. **No rehacer la
+  tarjeta**: la primera version lo hizo y quedaban parecidas pero se actualizaban de otra forma.
+- **Un miembro ES una entrada**: `AddBlockMember` lo captura con `CapturarUnidadDeTurno`, el mismo
+  codigo que una tarjeta normal (icono, displayId, vida, CA, unitName, kind), y se le pasa TAL CUAL
+  al pintor. Guardar solo guid/nombre obligaba a rellenar el resto de la unidad que tuvieras
+  delante: al cambiar de objetivo se perdia el icono, la CA salia 0 y la vida de un PJ era la
+  NATIVA en vez de la del sistema Harford. Un jugador conserva `kind = "player"`, que es lo que
+  hace que el pintor le busque la vida por nombre. Y el miembro viaja ENTERO por la red: en el otro
+  cliente la unidad puede no estar ni a la vista.
+- **`.ph dm on` no dispara ningun evento de WoW**: la ventana se queda en modo jugador hasta que la
+  cierras y la abres. Por eso `HarfordTurns` registra `HarfordAuthority.RegisterChangeListener` y
+  refresca -- los controles de DM se deciden en cada refresco, asi que con eso basta.
 - **El click derecho de un bloque abre su lista y no un submenu de anadir** -- eso era la misma cosa
   en dos sitios, y la del menu ni siquiera enseniaba vida ni CA. Sin ser admin no abre nada y
   CALLA: el click derecho se da constantemente y avisar cada vez llenaba el chat.

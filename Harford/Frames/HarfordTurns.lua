@@ -2062,6 +2062,9 @@ local function CreateCard(parent, index)
         local entry = store.entries[entryIndex]
         -- Si nadie se lo queda, lo de siempre: la ficha de la entrada.
         if AlguienSeQuedaElClick(entry) then return end
+        -- Salvo un BLOQUE, que abre su lista. La abre CUALQUIERA: mirar quien esta dentro es
+        -- informacion, no una herramienta de DM; editarla si lo es, y eso lo aporta Admin.
+        if HarfordTurnOrderAPI.OpenBlockPanel(entry) then return end
         Ficha.ShowEntrySheet(entry)
     end)
 
@@ -2516,6 +2519,142 @@ end
 -- Una tarjeta, montada y pintada por el core. La lista de miembros de un bloque (HarfordAdmin) usa
 -- estas dos y no una copia: si cada una pintara la suya, se irian separando con cada cambio, que es
 -- justo lo que paso al montar la lista por primera vez.
+-- `.ph dm on` no dispara ningun evento de WoW: sin esto, la ventana seguia en modo jugador hasta
+-- que la cerrabas y la volvias a abrir. Los controles de DM se deciden en cada refresco, asi que
+-- basta con refrescar cuando cambia la autoridad.
+if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
+    HarfordAuthority.RegisterChangeListener("HarfordTurns", function()
+        if TurnFrame and TurnFrame:IsShown() and RefreshFrame then RefreshFrame() end
+    end)
+end
+
+-- ─── LA LISTA DE UN BLOQUE ──────────────────────────────────────────────────
+-- Vive en el CORE porque MIRAR quien esta dentro no es cosa del DM: un jugador tiene que poder
+-- abrirla igual, y HarfordAdmin no esta instalado en su cliente. Lo que si es del DM es EDITARLA,
+-- y eso lo aporta Admin con `RegisterBlockPanelDecorator`.
+--
+-- Va entero en un `do...end`: el fichero ronda los 139 locales de file-scope y el limite de Lua 5.1
+-- son 200. Aqui dentro no cuesta ninguno.
+do
+    -- Las medidas de tarjeta son las de la ventana de turnos, no una copia.
+    local TARJ_HUECO, COLUMNAS, FILAS_A_LA_VISTA = 6, 3, 4
+    local TARJ_W, TARJ_H, PANEL_ANCHO, ALTO_VISTA
+    local function Medidas()
+        TARJ_W, TARJ_H = CARD_W, CARD_H
+        -- 22 de mas para la barra de desplazamiento: si no, se come media tarjeta.
+        PANEL_ANCHO = 16 + COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO + 22
+        ALTO_VISTA = FILAS_A_LA_VISTA * (TARJ_H + TARJ_HUECO)
+    end
+
+    local panel, tarjetas, bloqueActual = nil, {}, nil
+    local decoradores = {}
+    local RefrescarPanel
+
+    local function EnsureTarjeta(i)
+        if tarjetas[i] then return tarjetas[i] end
+        local f = CreateCardVisuals(panel.contenido)
+        f:EnableMouse(true)
+        tarjetas[i] = f
+        return f
+    end
+
+    local function CrearPanel()
+        if panel then return panel end
+        Medidas()
+        panel = CreateFrame("Frame", "HarfordTurnBlockFrame", UIParent, "BackdropTemplate")
+        panel:SetSize(PANEL_ANCHO, 30 + ALTO_VISTA + 40)
+        panel:SetFrameStrata("DIALOG")
+        panel:SetFrameLevel(520)
+        panel:SetClampedToScreen(true)
+        panel:SetMovable(true)
+        panel:EnableMouse(true)
+        panel:RegisterForDrag("LeftButton")
+        panel:SetScript("OnDragStart", panel.StartMoving)
+        panel:SetScript("OnDragStop", panel.StopMovingOrSizing)
+        SetFrameBackground(panel)
+        panel.borde = CreateFrame("Frame", nil, panel, "DialogBorderTemplate")
+        panel.borde:SetAllPoints(panel)
+        panel.titulo = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        panel.titulo:SetPoint("TOPLEFT", panel, "TOPLEFT", 12, -12)
+
+        panel.scroll = CreateFrame("ScrollFrame", "HarfordTurnBlockScroll", panel,
+            "UIPanelScrollFrameTemplate")
+        panel.scroll:SetPoint("TOPLEFT", panel, "TOPLEFT", 8, -30)
+        panel.scroll:SetSize(COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO, ALTO_VISTA)
+        panel.contenido = CreateFrame("Frame", nil, panel.scroll)
+        panel.contenido:SetSize(COLUMNAS * TARJ_W + (COLUMNAS - 1) * TARJ_HUECO, ALTO_VISTA)
+        panel.scroll:SetScrollChild(panel.contenido)
+
+        panel.cerrar = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
+        panel.cerrar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
+        panel.cerrar:SetScript("OnClick", function() panel:Hide() end)
+        panel:Hide()
+        return panel
+    end
+
+    RefrescarPanel = function()
+        if not (panel and panel:IsShown() and bloqueActual) then return end
+        local dentro = bloqueActual.miembros or {}
+        panel.titulo:SetText(tostring(bloqueActual.name or "Bloque")
+            .. "  |cff999999(" .. #dentro .. ")|r")
+        -- El alto del contenido crece con las tarjetas; el area a la vista no. Eso es lo que hace
+        -- que aparezca la barra en vez de recortar la lista.
+        local filasNecesarias = math.max(FILAS_A_LA_VISTA, math.ceil(#dentro / COLUMNAS))
+        panel.contenido:SetHeight(filasNecesarias * (TARJ_H + TARJ_HUECO))
+        for i = 1, math.max(#dentro, #tarjetas) do
+            local m, f = dentro[i], EnsureTarjeta(i)
+            if not m then
+                f:Hide()
+            else
+                -- El miembro YA ES una entrada: se le pasa tal cual, sin rellenar de la unidad que
+                -- tengas delante. Por eso no se pierde nada al cambiar de objetivo.
+                PaintEntryCard(f, m, false)
+                f.miembro = m
+                f:ClearAllPoints()
+                local col, fila = (i - 1) % COLUMNAS, math.floor((i - 1) / COLUMNAS)
+                f:SetPoint("TOPLEFT", panel.contenido, "TOPLEFT",
+                    col * (TARJ_W + TARJ_HUECO), -fila * (TARJ_H + TARJ_HUECO))
+                f:Show()
+            end
+        end
+        -- Y aqui es donde el DM cuelga lo suyo. Sin Admin no pasa nada, que es lo correcto.
+        for _, fn in ipairs(decoradores) do
+            pcall(fn, panel, bloqueActual, tarjetas, #dentro)
+        end
+    end
+
+    -- Abre la lista de un bloque. La puede abrir cualquiera: es informacion, no una herramienta.
+    function HarfordTurnOrderAPI.OpenBlockPanel(entry)
+        if type(entry) ~= "table" then return false end
+        local k = tostring(entry.kind or "")
+        if k ~= "players" and k ~= "generic" then return false end
+        CrearPanel()
+        bloqueActual = entry
+        panel:ClearAllPoints()
+        panel:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        panel:Show()
+        RefrescarPanel()
+        return true
+    end
+
+    -- HarfordAdmin aniade aqui sus controles de edicion. Se llama en CADA refresco, asi que el
+    -- decorador debe reutilizar sus botones y no crear uno nuevo cada vez.
+    function HarfordTurnOrderAPI.RegisterBlockPanelDecorator(fn)
+        if type(fn) ~= "function" then return false end
+        decoradores[#decoradores + 1] = fn
+        return true
+    end
+
+    function HarfordTurnOrderAPI.RefreshBlockPanel()
+        RefrescarPanel()
+    end
+
+    function HarfordTurnOrderAPI.GetBlockPanelWidth()
+        if not PANEL_ANCHO then Medidas() end
+        return PANEL_ANCHO
+    end
+end
+
 function HarfordTurnOrderAPI.CreateCardVisuals(parent, onArmorClick)
     return CreateCardVisuals(parent, onArmorClick)
 end

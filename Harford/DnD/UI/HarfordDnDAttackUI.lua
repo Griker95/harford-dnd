@@ -566,6 +566,18 @@ function API.AttachMovementTracker(opts)
 
     -- `Correr` dobla el tope de ESTE turno. Se guarda aparte del calculo de velocidad porque no es
     -- una propiedad del personaje sino algo que hizo en este asalto.
+    -- Frame de 1x1 pegado a UIParent, sin textura ni raton: existe solo para que su `OnUpdate`
+    -- corra siempre. No se puede colgar del boton -- un frame oculto NO ejecuta `OnUpdate`, y con
+    -- la ficha cerrada el contador se quedaba parado sin que nada lo dijera.
+    local motor = API.MovementDriver
+    if not motor then
+        motor = CreateFrame("Frame", "HarfordMovementDriver", UIParent)
+        motor:SetSize(1, 1)
+        motor:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 0, 0)
+        motor:Show()
+        API.MovementDriver = motor
+    end
+
     local corriendo = false
     function API.SetDashActive(activo)
         API.DashActive = activo and true or nil
@@ -649,7 +661,7 @@ function API.AttachMovementTracker(opts)
     local function StopTracking()
         if not tracking then return end
         tracking = false
-        button:SetScript("OnUpdate", nil)
+        motor:SetScript("OnUpdate", nil)
         button:SetText("Movimiento")
         label:SetText(totalMeters > 0 and FormatMeters(totalMeters) or "")
         API.RecordedMovementMeters = totalMeters
@@ -677,7 +689,7 @@ function API.AttachMovementTracker(opts)
     API.ResetTurnMovement = function() if ReiniciarPorTurno then ReiniciarPorTurno() end end
     ReiniciarPorTurno = function()
         tracking = false
-        button:SetScript("OnUpdate", nil)
+        motor:SetScript("OnUpdate", nil)
         button:SetText("Movimiento")
         totalMeters, elapsed = 0, 0
         lastX, lastY, lastZ = nil, nil, nil
@@ -742,7 +754,7 @@ function API.AttachMovementTracker(opts)
         tracking = true
         button:SetText("Parar  0.0m")
         label:SetText(FormatMeters(0))
-        button:SetScript("OnUpdate", OnUpdate)
+        motor:SetScript("OnUpdate", OnUpdate)
     end
 
     -- Deshacer el movimiento del turno: vuelves a donde EMPEZASTE y el contador se pone a cero,

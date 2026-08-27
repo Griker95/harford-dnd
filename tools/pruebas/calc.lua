@@ -470,6 +470,20 @@ chk("al NPC no se le pone muro",
 -- ── ESTAR EN COMBATE ES UNA CONDICION, NO UN DETALLE ────────────────────────
 -- El movimiento del turno solo significa algo dentro de un combate por turnos: fuera de el no hay
 -- turno que gastar y un contador corriendo miente.
+-- ── EL MOTOR NO PUEDE COLGAR DE LA FICHA ────────────────────────────────────
+-- WoW no ejecuta `OnUpdate` en un frame OCULTO, y el boton de movimiento vive dentro de la seccion
+-- Ataque: con la ficha cerrada el contador no contaba nada, sin que nada lo dijera. "Funcionaba"
+-- al pulsarlo solo porque para pulsarlo tenias la ficha abierta.
+print("El contador corre con la ficha cerrada")
+chk("hay un frame motor propio",
+    ataque:find('CreateFrame("Frame", "HarfordMovementDriver", UIParent)', 1, true) ~= nil, true)
+chk("y esta siempre mostrado", ataque:find("motor:Show()", 1, true) ~= nil, true)
+chk("el OnUpdate va en el motor",
+    ataque:find('motor:SetScript("OnUpdate", OnUpdate)', 1, true) ~= nil, true)
+-- Y NO en el boton: ese es solo el mando.
+chk("y no en el boton",
+    ataque:find('button:SetScript("OnUpdate"', 1, true) == nil, true)
+
 print("El movimiento solo se cuenta en combate")
 chk("no arranca solo fuera de combate",
     ataque:find("if not aMano and not EnCombate() then return end", 1, true) ~= nil, true)

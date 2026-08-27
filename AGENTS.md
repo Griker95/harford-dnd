@@ -3514,6 +3514,11 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   combate**, que es el caso que se olvida: el turno no "termina", desaparece el combate entero, y
   sin eso el contador seguia con un tope que ya no valia y el muro te devolvia a un sitio de otro
   combate. Lo avisa el listener de `HarfordDnDConditions`.
+- **El motor del contador NO puede colgar de la ficha.** WoW **no ejecuta `OnUpdate` en un frame
+  oculto**, y el boton de movimiento vive dentro de la seccion Ataque: con la ficha cerrada el
+  contador no contaba nada y no lo decia nadie. "Funcionaba" al pulsar el boton solo porque para
+  pulsarlo tenias la ficha abierta. El `OnUpdate` va en `HarfordMovementDriver`, un frame de 1x1
+  colgado de UIParent y siempre mostrado; el boton es solo el mando.
 - **Se cuenta SOLO, no hay que pulsar nada.** `HarfordDnDAttackUI` arranca el seguimiento desde el
   listener `RegisterMyTurnListener`, igual que Atlas. El boton queda para pararlo antes de tiempo
   (izquierdo) y para volver al ancla (derecho). Tener que acordarse de pulsarlo cada turno era la

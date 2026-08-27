@@ -7747,7 +7747,7 @@ end
 do
     local function Si(v) return v and "|cff88ff88si|r" or "|cffff4444NO|r" end
 
-    API.RegisterCommand("economia", function()
+    API.RegisterCommand("economia", function(args)
         local AB = _G.HarfordActionBars
         local T = _G.HarfordDnDConditions and _G.HarfordDnDConditions.Turn
         Print("--- Modulos ---")
@@ -7829,7 +7829,41 @@ do
         else
             Print("  no hay ninguna ficha creada todavia")
         end
-    end, "por que no se ven las fichas de accion/adicional/reaccion")
+
+        -- Y la prueba que ninguna medida sustituye: pintarlo a la fuerza donde no puede tapar
+        -- nada. Separa "no se esta dibujando" de "se dibuja donde no miras", que son dos averias
+        -- distintas y las medidas de arriba no siempre las distinguen.
+        if not tostring(args or ""):find("forzar") then
+            Print("Para verlo a la fuerza en el centro: |cffffcc00economia forzar|r")
+            return
+        end
+        if not cont.pruebaFondo then
+            cont.pruebaFondo = cont:CreateTexture(nil, "BACKGROUND")
+            cont.pruebaFondo:SetAllPoints(cont)
+        end
+        cont.pruebaFondo:SetColorTexture(1, 0, 1, 0.5)
+        cont.pruebaFondo:Show()
+        cont:ClearAllPoints()
+        cont:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+        cont:SetFrameStrata("TOOLTIP")
+        cont:Show()
+        -- Y con presupuesto de mentira, para que haya fichas que pintar aunque no haya combate.
+        local fichas = cont.fichas or {}
+        for i = 1, 3 do
+            local f = fichas[i]
+            if f then
+                f:ClearAllPoints()
+                f:SetPoint("BOTTOMLEFT", cont, "BOTTOMLEFT", (i - 1) * 19, 0)
+                f:Show()
+            end
+        end
+        Print("|cffff00ffFondo magenta en el CENTRO durante 10 s.|r Si no lo ves, no se dibuja.")
+        C_Timer.After(10, function()
+            if cont.pruebaFondo then cont.pruebaFondo:Hide() end
+            cont:SetFrameStrata("MEDIUM")
+            if AB.RefreshTurnEconomy then AB.RefreshTurnEconomy() end
+        end)
+    end, "por que no se ven las fichas de accion/adicional/reaccion (economia [forzar])")
 end
 
 -- ─── POR QUE NO SALEN LAS DOTES ─────────────────────────────────────────────

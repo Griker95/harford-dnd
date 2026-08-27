@@ -137,6 +137,22 @@ local function chk1(n, real, esp)
     print(string.format("  %-50s %-6s %s", n, tostring(real),
         ok and "ok" or ("FALLA, esperaba " .. tostring(esp))))
 end
+-- ── LA PILA DE BARRAS SE BUSCA POR NOMBRE ───────────────────────────────────
+-- Una tabla `{ _G["A"], _G["B"] }` donde el primero no existe se construye con un hueco en el
+-- indice 1, y `ipairs` para en el primer nil: con la barra de Sigilo la primera de la lista, un
+-- cliente sin ella no encontraba NINGUNA barra. Funcionaba de milagro porque el unico que solia
+-- existir estaba el primero.
+print("La pila de barras se busca por nombre")
+chk1("por nombre, no por frame", fuente:find('for _, nombre in ipairs(pila) do', 1, true) ~= nil, true)
+chk1("y ningun hueco en la lista",
+    fuente:find('"StanceBarFrame",            -- Sigilo', 1, true) ~= nil, true)
+-- Centrado sobre la barra, no pegado a su borde izquierdo: es donde el juego pone la barra de
+-- Sigilo y las formas de druida, y es donde se mira.
+chk1("centrado sobre la barra",
+    fuente:find('cont:SetPoint("BOTTOM", ancla, "TOP", 0, 8)', 1, true) ~= nil, true)
+chk1("y la fila de fichas centrada dentro",
+    fuente:find('cont.fichas[1]:SetPoint("BOTTOMLEFT", cont, "BOTTOM", -fila / 2, 0)', 1, true) ~= nil, true)
+
 print("Las fichas se pintan por delante de la barra nativa")
 chk1("nacen en un nivel alto", fuente:find("fichasFrame:SetFrameLevel(90)", 1, true) ~= nil, true)
 -- Y por encima del ancla REAL: con Dominos o Bartender la barra puede estar mas alta que 90.

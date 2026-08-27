@@ -111,16 +111,28 @@ end
 -- los botones, y el propio cliente ha movido estos frames entre versiones. Si no hay ninguno, las
 -- fichas no se pintan: es preferible a colocarlas en una esquina al azar.
 local function AnclaBarraNativa()
-    local candidatos = {
-        _G["ActionButton1"],
-        _G["MainMenuBarArtFrame"],
-        _G["MainMenuBar"],
-        _G["MultiBarBottomLeftButton1"],
+    -- En ORDEN DE ALTURA, de la barra mas alta de la pila a la mas baja. Las barras extra se
+    -- apilan encima de la principal, asi que colgarse de la principal cuando hay una extra puesta
+    -- deja las fichas DEBAJO de ella. Se coge la mas alta que este visible.
+    -- Lista de NOMBRES, no de frames. Una tabla `{ _G["A"], _G["B"] }` donde el primero no existe
+    -- se construye con un hueco en el indice 1, y `ipairs` para en el primer nil: con este orden,
+    -- un cliente sin `StanceBarFrame` no encontraba NINGUNA barra. Antes funcionaba de milagro,
+    -- porque el unico que solia existir estaba el primero.
+    local pila = {
+        "StanceBarFrame",            -- Sigilo / formas: ya vive donde queremos estar
+        "MultiBarBottomRight",
+        "MultiBarBottomLeft",
+        "MainMenuBarArtFrame",
+        "MainMenuBar",
+        "ActionButton1",
     }
-    for _, f in ipairs(candidatos) do
+    for _, nombre in ipairs(pila) do
+        local f = _G[nombre]
         if f and f.GetObjectType and f:IsShown() then return f end
     end
-    for _, f in ipairs(candidatos) do
+    -- Nada visible: vale cualquiera para tener de donde colgar, aunque no se vea.
+    for _, nombre in ipairs(pila) do
+        local f = _G[nombre]
         if f and f.GetObjectType then return f end
     end
     return nil
@@ -318,7 +330,9 @@ function API.RefreshTurnEconomy()
                 end
                 f:ClearAllPoints()
                 if n == 1 then
-                    f:SetPoint("BOTTOMLEFT", cont, "BOTTOMLEFT", 0, 0)
+                    -- La primera ficha se coloca al final, cuando ya se sabe cuanto mide la fila
+                    -- entera: es lo que permite centrarla en vez de pegarla a la izquierda.
+                    f:SetPoint("BOTTOMLEFT", cont, "BOTTOM", 0, 0)
                 else
                     f:SetPoint("LEFT", cont.fichas[n - 1], "RIGHT", FICHA_HUECO, 0)
                 end
@@ -400,7 +414,7 @@ function API.RefreshTurnEconomy()
         mov:ClearAllPoints()
         -- Encima de las fichas y tan ancha como ellas: es la misma economia, leida de una pieza.
         mov:SetWidth(math.max(MOV_ANCHO_MIN, ancho))
-        mov:SetPoint("BOTTOMLEFT", cont, "BOTTOMLEFT", 0, FICHA_TAM + MOV_HUECO)
+        mov:SetPoint("BOTTOM", cont, "BOTTOM", 0, FICHA_TAM + MOV_HUECO)
         mov:Show()
         cont:SetHeight(FICHA_TAM + MOV_HUECO + MOV_ALTO)
         ancho = math.max(ancho, MOV_ANCHO_MIN)
@@ -419,8 +433,17 @@ function API.RefreshTurnEconomy()
     if ancla.GetFrameLevel then
         cont:SetFrameLevel(math.max(90, (ancla:GetFrameLevel() or 0) + 5))
     end
-    cont:SetPoint("BOTTOMLEFT", ancla, "TOPLEFT", 0, 6)
+    -- CENTRADO sobre la barra, no pegado a su borde izquierdo: es donde el juego pone la barra de
+    -- Sigilo y las formas de druida, y es donde se mira.
+    cont:SetPoint("BOTTOM", ancla, "TOP", 0, 8)
     cont:SetWidth(math.max(1, ancho))
+    -- La fila de fichas se centra dentro del contenedor moviendo solo la primera: las demas van
+    -- encadenadas a ella.
+    if n > 0 then
+        local fila = n * FICHA_TAM + math.max(0, n - 1) * FICHA_HUECO
+        cont.fichas[1]:ClearAllPoints()
+        cont.fichas[1]:SetPoint("BOTTOMLEFT", cont, "BOTTOM", -fila / 2, 0)
+    end
     cont:Show()
     return n, orbes
 end

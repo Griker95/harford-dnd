@@ -1625,6 +1625,112 @@ end, "ajusta en vivo el marco (texCoord/size) de los botones del Libro por categ
 -- mas una sola textura propia para los extremos del estandarte. Antes de construir nada hay que
 -- saber cuales existen AQUI: un atlas que falta no borra la textura anterior, la deja como estaba,
 -- que es la misma trampa que ya nos comimos con los iconos del Libro.
+-- ─── ESPACIOS DE CONJURO ────────────────────────────────────────────────────
+-- Los orbes salen solo en modo `slots` y agrupados por nivel, asi que "no veo nada" puede ser
+-- cuatro cosas distintas: modo mana, sin niveles de lanzador, sin ancla donde colgarlos, o
+-- dibujados donde no miras. Se separan aqui en vez de deducirlas.
+API.RegisterCommand("espacios", function(args)
+    local M = _G.HarfordDnDMana
+    local function Si(v) return v and "|cff88ff88si|r" or "|cffff4444NO|r" end
+    if not M then Print("|cffff5555HarfordDnDMana no cargado.|r") return end
+
+    -- `IsEnabled` devuelve true con el MANA activo: la piramide es el caso CONTRARIO. Es la
+    -- confusion que mas veces se ha colado al leer este modulo.
+    local mana = M.IsEnabled and M.IsEnabled()
+    Print("Modo de coste: |cffffcc00" .. (mana and "mana" or "espacios") .. "|r")
+    if mana then
+        Print("  En modo mana NO hay orbes, a proposito: no hay piramide que pintar.")
+        Print("  Cambiar con: /harford config spell_cost_mode slots")
+    end
+
+    Print("--- la piramide ---")
+    local maxNivel = (M.GetMaxSpellLevel and M.GetMaxSpellLevel()) or 0
+    if maxNivel <= 0 then
+        Print("  |cffff4444Ningun nivel de conjuro|r: sin niveles de lanzador no hay espacios.")
+    end
+    local total = 0
+    for nivel = 1, maxNivel do
+        local quedan, tope = M.GetSpellSlotCurrent and M.GetSpellSlotCurrent(nivel)
+        tope = tonumber(tope) or 0
+        if tope > 0 then
+            total = total + tope
+            Print(string.format("  nivel %d: |cff88ccff%s|r de %d", nivel, tostring(quedan), tope))
+        end
+    end
+    -- El brujo suma sus espacios de PACTO a los normales de su nivel, no en reserva aparte: si
+    -- esperas una fila separada, no la hay.
+    if M.PACT_SLOTS and HarfordDnDProgression and HarfordDnDProgression.GetClassLevels then
+        for _, e in ipairs(HarfordDnDProgression.GetClassLevels() or {}) do
+            if tostring(e.classId) == "brujo" then
+                local pacto = M.PACT_SLOTS[tonumber(e.level) or 0]
+                Print("  |cff808080brujo nivel " .. tostring(e.level) .. ": "
+                    .. (pacto and (pacto.count .. " de pacto de nivel " .. pacto.level
+                        .. ", ya sumados arriba") or "sin tabla") .. "|r")
+            end
+        end
+    end
+    Print("  total de espacios: " .. tostring(total))
+
+    Print("--- donde se pintan ---")
+    local B = _G.HarfordActionBars
+    local fichas, orbes = 0, 0
+    if B and B.RefreshTurnEconomy then fichas, orbes = B.RefreshTurnEconomy() end
+    Print("  orbes dibujados: " .. tostring(orbes))
+    local cont = _G.HarfordTurnEconomyFrame
+    if not cont then
+        Print("  |cffff4444El contenedor no existe.|r")
+        return
+    end
+    Print("  visible: " .. Si(cont:IsShown())
+        .. "   capa " .. tostring(cont:GetFrameStrata()) .. " nivel " .. tostring(cont:GetFrameLevel()))
+    local izq, abajo = cont:GetLeft(), cont:GetBottom()
+    if izq and abajo then
+        Print(string.format("  posicion: (%.0f, %.0f)  tam %.0fx%.0f",
+            izq, abajo, cont:GetWidth() or 0, cont:GetHeight() or 0))
+    else
+        Print("  |cffff4444Sin posicion|r: no esta anclado a nada.")
+    end
+    if total > 0 and orbes == 0 then
+        Print("  |cffff4444Hay espacios pero no se pintan|r: mira el modo y el ancla de arriba.")
+    end
+
+    -- Gastar y devolver uno, para ver que el orbe se apaga y se enciende de verdad: contar cuantos
+    -- se dibujan no dice que reflejen lo que queda.
+    if tostring(args or ""):find("probar") and maxNivel > 0 and M.SpendSpellSlot then
+        for nivel = 1, maxNivel do
+            local quedan, tope = M.GetSpellSlotCurrent(nivel)
+            if (tonumber(quedan) or 0) > 0 then
+                Print("Gastando un espacio de nivel " .. nivel .. "...")
+                M.SpendSpellSlot(nivel)
+                Print("  quedan " .. tostring((M.GetSpellSlotCurrent(nivel))) .. " de " .. tostring(tope))
+                Print("  |cffffcc00Miralo, y devuelvelo con:|r /harford debug run espacios devolver " .. nivel)
+                return
+            end
+        end
+        Print("No queda ningun espacio que gastar.")
+    end
+    -- No hay `RestoreSpellSlot`: los espacios vuelven con el descanso, no de uno en uno. Para
+    -- probar se baja el contador de gastados a mano, que es lo mismo que hace el descanso.
+    local devolver = tonumber(tostring(args or ""):match("devolver%s+(%d+)") or "")
+    if devolver and HarfordDnDProgression and HarfordDnDProgression.GetSpellSlotsSpent then
+        local gastados = HarfordDnDProgression.GetSpellSlotsSpent(devolver)
+        if (tonumber(gastados) or 0) > 0 then
+            HarfordDnDProgression.SetSpellSlotsSpent(devolver, gastados - 1)
+            Print("Devuelto un espacio de nivel " .. devolver .. ".")
+        else
+            -- Si se gasto el de PACTO, el contador que bajo fue el suyo, no este.
+            local pacto = HarfordDnDProgression.GetPactSpent and HarfordDnDProgression.GetPactSpent()
+            if (tonumber(pacto) or 0) > 0 then
+                HarfordDnDProgression.SetPactSpent(pacto - 1)
+                Print("Devuelto un espacio de PACTO (era el que se habia gastado).")
+            else
+                Print("No habia ninguno gastado de ese nivel.")
+            end
+        end
+        if B and B.RefreshTurnEconomy then B.RefreshTurnEconomy() end
+    end
+end, "Los espacios de conjuro: cuantos hay, y por que no se ven (espacios [probar|devolver N])")
+
 -- ─── POR QUE SE BORRO EL COMBATE ────────────────────────────────────────────
 -- Una limpieza silenciosa que se lleva un combate en curso es indistinguible de un fallo. Esto
 -- dice si limpio, por que, y que habria hecho AHORA con lo que hay guardado.

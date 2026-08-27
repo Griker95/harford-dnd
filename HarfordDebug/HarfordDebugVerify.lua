@@ -792,6 +792,40 @@ Grupo("movimiento", "que el contador arranque solo, mida y te ate al agotarse", 
     end
 end)
 
+Grupo("espacios", "los espacios de conjuro y los de pacto del brujo", function(r)
+    local M = _G.HarfordDnDMana
+    r.chk("el modulo de mana esta cargado", M ~= nil)
+    if not M then return end
+
+    -- `IsEnabled` devuelve true con el MANA activo: la piramide es el caso CONTRARIO. Es la
+    -- confusion que mas veces se ha colado al leer este modulo.
+    local mana = M.IsEnabled and M.IsEnabled()
+    r.chk("se sabe el modo de coste", type(M.IsEnabled) == "function")
+    r.chk("y hay tabla de pacto", type(M.PACT_SLOTS) == "table")
+
+    if mana then
+        r.manual("Modo MANA: no hay orbes, a proposito. Para verlos: /harford config spell_cost_mode slots")
+        return
+    end
+    local maxNivel = (M.GetMaxSpellLevel and M.GetMaxSpellLevel()) or 0
+    if maxNivel <= 0 then
+        r.manual("Sin niveles de lanzador: no hay espacios que pintar.")
+        return
+    end
+    -- Lo que QUEDA nunca puede pasar del tope: si pasa, algo devolvio de mas.
+    local descuadre = 0
+    for nivel = 1, maxNivel do
+        local quedan, tope = M.GetSpellSlotCurrent(nivel)
+        if (tonumber(quedan) or 0) > (tonumber(tope) or 0) then descuadre = descuadre + 1 end
+    end
+    r.chk("ningun nivel tiene mas de lo que cabe", descuadre == 0, descuadre .. " descuadrado(s)")
+
+    local B = _G.HarfordActionBars
+    local _, orbes = B and B.RefreshTurnEconomy and B.RefreshTurnEconomy()
+    r.chk("se pintan orbes", (tonumber(orbes) or 0) > 0, tostring(orbes))
+    r.manual("Detalle nivel a nivel: /harford debug run espacios")
+end)
+
 Grupo("aviso", "el estandarte y el marcador de turno, y que su arte exista", function(r)
     local T = _G.HarfordTurnOrderAPI
     r.chk("el orden de turnos esta cargado", T ~= nil)

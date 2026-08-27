@@ -150,11 +150,18 @@ chk("dice de que bando es", e.bando, "enemigos")
 chk("y se llama como la mesa lo llama", e.name, "Enemigos")
 chk("con id propio para no chocar con nadie", e.id, "bando:enemigos:inicio")
 
--- El bloque de los PJs es de todos los jugadores: cada uno tiene que ver su aviso de turno.
+-- El turno del bloque de PJs es de SUS MIEMBROS, no de todo el que tenga el addon puesto:
+-- devolver true a secas mandaba "ES TU TURNO" a la raid entera, incluida la gente que solo estaba
+-- mirando. La pertenencia la fija el DM y esta guardada, asi que hay que consultarla.
 local turnos = src
-print("El bloque de PJs pertenece a todo jugador")
-chk("EntryBelongsToMe lo reconoce",
-    turnos:find('entry.kind == "bando" and entry.bando == "pjs" then return true', 1, true) ~= nil, true)
+print("El bloque de PJs es de sus miembros, no de la raid")
+chk("se comprueba la pertenencia",
+    turnos:find('if entry and entry.kind == "players" then return SoyMiembroDe(entry) end',
+        1, true) ~= nil, true)
+-- La entrada sintetica de un BANDO no lleva miembros --solo dice de que bando es el turno--, asi
+-- que hay que buscar el bloque de verdad en la lista.
+chk("y el bando busca el bloque de verdad",
+    turnos:find("local function EstoyEnElBloqueDePJs()", 1, true) ~= nil, true)
 chk("retroceder tambien va por bloques",
     turnos:find("local anterior = AnteriorBandoConGente(actual)", 1, true) ~= nil, true)
 
@@ -638,6 +645,11 @@ chk("se retira solo", turnos:find("ocultar = C_Timer.NewTimer(4, function()", 1,
 chk("y se puede apagar", turnos:find('if estilo == "off" then return false end', 1, true) ~= nil, true)
 -- DOS formas, no una: la franja discreta y el estandarte colgante del aviso de jefe. Los tres
 -- trozos del estandarte existen en este cliente, comprobado con la sonda de atlas.
+-- El estandarte O el aviso de raid, NO los dos: salian a la vez y quedaban tres "ES TU TURNO"
+-- pisandose en la misma esquina. El de raid es el RESPALDO para cuando el estandarte esta apagado
+-- o el arte no existe, por eso se mira lo que DEVUELVE.
+chk("el aviso de raid es respaldo, no acompanante",
+    turnos:find("if not conEstandarte and RaidNotice_AddMessage", 1, true) ~= nil, true)
 chk("hay dos estilos",
     turnos:find('SetAtlas("BossBanner-BgBanner-Top"', 1, true) ~= nil
     and turnos:find('SetAtlas("BossBanner-BgBanner-Bottom"', 1, true) ~= nil, true)

@@ -9,7 +9,9 @@ local DEFAULTS = {
     actionbar              = "off",        -- "on" | "off": barra de accion de madera del Libro
     xpbar                  = "on",         -- "on" | "off": barra de experiencia Harford (posicion de la barra de exp nativa)
     spell_cost_mode        = "mana",       -- "mana" | "slots": coste global de lanzamiento
-    turnbanner             = "estandarte", -- "estandarte" | "franja" | "off": aviso de turno
+    -- `franja` por defecto: es el aviso discreto que cruza la pantalla, el primero que se probo y
+    -- el que no compite con el estandarte de jefe del juego.
+    turnbanner             = "franja",     -- "estandarte" | "franja" | "off": aviso de turno
     turnmarker             = "on",         -- "on" | "off": marcador permanente de turno y asalto
 }
 

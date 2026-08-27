@@ -1,12 +1,18 @@
--- A quien le toca y que entradas son "de sistema". Lo critico: el turno compartido de PJs pertenece
--- a CUALQUIER jugador, y un NPC que se llame igual que tu no debe disparar tu turno.
+-- A quien le toca y que entradas son "de sistema". Lo critico: el turno del bloque de PJs es de
+-- SUS MIEMBROS --no de todo el que tenga el addon puesto, que mandaba "ES TU TURNO" a la raid
+-- entera-- y un NPC que se llame igual que tu no debe disparar tu turno.
 local cargar = loadstring or load
 local src = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
 local i = assert(src:find("local function IsSystemEntry"), "no encuentro IsSystemEntry")
-local fin = assert(src:find("\n    return false\nend", i), "no encuentro el cierre")
+-- El corte se busca desde `EntryBelongsToMe`, no desde `IsSystemEntry`: entre las dos hay ahora
+-- ayudantes que tambien acaban en "return false", y cortar en el primero dejaba fuera justo la
+-- funcion que se quiere probar.
+local ini = assert(src:find("local function EntryBelongsToMe", i), "no encuentro EntryBelongsToMe")
+local fin = assert(src:find("\n    return false\nend", ini), "no encuentro el cierre")
 local bloque = src:sub(i, fin + #"\n    return false\nend")
     .. "\nreturn IsSystemEntry, EntryBelongsToMe"
-local env = { ipairs = ipairs, tostring = tostring,
+local env = { ipairs = ipairs, tostring = tostring, type = type,
+              UnitGUID = function(u) return u == "player" and "GUID-YO" or nil end,
               UnitName = function() return "Marcos" end,
               GetUnitName = function() return "Marcos-Epsilon" end,
               Ambiguate = function(n) return (n:match("^[^-]+")) end }
@@ -27,7 +33,12 @@ chk("players (turno de PJs)", IsSystemEntry({kind="players"}), true)
 chk("player (un PJ concreto) NO", IsSystemEntry({kind="player", name="Marcos"}), false)
 chk("npc NO", IsSystemEntry({kind="npc"}), false)
 print("A quien le toca (esto dispara el reinicio de la economia)")
-chk("turno PJs -> le toca a CUALQUIERA", EntryBelongsToMe({kind="players", name="PJs"}), true)
+chk("bloque de PJs sin mi -> NO me toca",
+    EntryBelongsToMe({kind="players", name="PJs", miembros={{guid="GUID-OTRO"}}}), false)
+chk("bloque de PJs conmigo dentro -> si",
+    EntryBelongsToMe({kind="players", name="PJs", miembros={{guid="GUID-YO"}}}), true)
+-- Un bloque sin lista no es de nadie: antes lo era de todos.
+chk("bloque vacio -> de nadie", EntryBelongsToMe({kind="players", name="PJs"}), false)
 chk("turno de otro jugador -> no", EntryBelongsToMe({kind="player", name="Otro"}), false)
 chk("mi propio turno -> si", EntryBelongsToMe({kind="player", name="Marcos"}), true)
 chk("mi nombre con realm -> si", EntryBelongsToMe({kind="player", name="Marcos-Epsilon"}), true)

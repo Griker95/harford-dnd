@@ -193,10 +193,33 @@ end
 
 -- El turno "PJs" es de TODOS los jugadores a la vez, asi que pertenece a cualquiera que lo mire:
 -- cada cliente recibe su aviso de turno y renueva su propia economia de accion.
+-- Estoy YO en la lista de miembros de un bloque? Se compara por guid, que es lo que guarda cada
+-- miembro. Sin bloque o sin lista, no.
+local function SoyMiembroDe(entry)
+    local miGuid = UnitGUID and UnitGUID("player")
+    if not miGuid then return false end
+    for _, m in ipairs((type(entry) == "table" and entry.miembros) or {}) do
+        if tostring(m.guid or "") == miGuid then return true end
+    end
+    return false
+end
+
+-- Estoy en el bloque de PJs? Se busca el bloque de verdad en la lista, porque la entrada sintetica
+-- de un BANDO no lleva miembros: solo dice de que bando es el turno.
+local function EstoyEnElBloqueDePJs()
+    local store = HarfordTurnOrderStore
+    for _, e in ipairs((type(store) == "table" and store.entries) or {}) do
+        if tostring(e.kind or "") == "players" and SoyMiembroDe(e) then return true end
+    end
+    return false
+end
+
 local function EntryBelongsToMe(entry)
-    if entry and entry.kind == "players" then return true end
-    -- El turno del bando de los PJs es el turno de todos los jugadores, incluido yo.
-    if entry and entry.kind == "bando" and entry.bando == "pjs" then return true end
+    -- El turno del bloque de PJs es de SUS MIEMBROS, no de todo el que tenga el addon puesto.
+    -- Devolver true a secas mandaba "ES TU TURNO" a la raid entera, incluida la gente que solo
+    -- estaba mirando: la pertenencia la fija el DM y esta guardada, asi que hay que consultarla.
+    if entry and entry.kind == "players" then return SoyMiembroDe(entry) end
+    if entry and entry.kind == "bando" and entry.bando == "pjs" then return EstoyEnElBloqueDePJs() end
     if not entry or entry.kind ~= "player" then return false end
 
     local myShort = UnitName and UnitName("player")
@@ -259,13 +282,15 @@ local function AlertMyTurn(entry, activeIndex, turnSerial)
     lastTurnAlertKey = key
 
     local text = "ES TU TURNO"
-    if HarfordTurnOrderAPI.ShowTurnBanner then
+    -- El estandarte O el aviso de raid, no los dos: salian a la vez y quedaban tres "ES TU TURNO"
+    -- pisandose en la misma esquina. El estandarte es el aviso; el de raid es su respaldo para
+    -- cuando esta apagado o el arte no existe -- por eso se mira lo que DEVUELVE.
+    local conEstandarte = HarfordTurnOrderAPI.ShowTurnBanner
         -- El asalto sale de la ENTRADA, no del store: aqui arriba `EnsureStore` todavia no existe.
-        local asalto = tonumber(entry.asalto) or 0
-        HarfordTurnOrderAPI.ShowTurnBanner(text,
-            asalto > 0 and ("Asalto " .. asalto) or tostring(entry.name or ""), true)
-    end
-    if RaidNotice_AddMessage and RaidWarningFrame then
+        and HarfordTurnOrderAPI.ShowTurnBanner(text,
+            (tonumber(entry.asalto) or 0) > 0 and ("Asalto " .. entry.asalto)
+                or tostring(entry.name or ""), true)
+    if not conEstandarte and RaidNotice_AddMessage and RaidWarningFrame then
         local info = ChatTypeInfo and ChatTypeInfo["RAID_WARNING"]
         RaidNotice_AddMessage(RaidWarningFrame, text, info)
     end
@@ -2859,9 +2884,9 @@ do
 
     local function Estilo()
         local v = HarfordConfig and HarfordConfig.Get and HarfordConfig.Get("turnbanner")
-        v = tostring(v or "estandarte")
+        v = tostring(v or "franja")
         -- `on` es lo que valia antes de haber estilos: se respeta y significa el de por defecto.
-        if v == "on" then return "estandarte" end
+        if v == "on" then return "franja" end
         return v
     end
 

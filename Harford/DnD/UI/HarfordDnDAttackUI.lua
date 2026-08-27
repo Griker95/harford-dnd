@@ -642,6 +642,38 @@ function API.AttachMovementTracker(opts)
         end
     end
 
+    -- Se guarda en el store de turnos --que es SavedVariable-- sellado con el ASALTO y con tu
+    -- guid. El sello es lo que impide que lo guardado de un combate se aplique a otro: si el
+    -- asalto no coincide, no vale y se empieza limpio.
+    local function Guardar()
+        local store = HarfordTurnOrderStore
+        if type(store) ~= "table" then return end
+        store.movimiento = {
+            guid = UnitGUID and UnitGUID("player") or nil,
+            asalto = tonumber(store.asalto) or 0,
+            metros = totalMeters,
+            corriendo = corriendo or nil,
+            ancla = API.RecordedMovementAnchor,
+            inicio = API.TurnStartAnchor,
+        }
+    end
+
+    local function Restaurar()
+        local store = HarfordTurnOrderStore
+        local g = type(store) == "table" and store.movimiento
+        if type(g) ~= "table" then return false end
+        -- Distinto asalto o distinto personaje: lo guardado no habla de este turno.
+        if g.guid ~= (UnitGUID and UnitGUID("player")) then return false end
+        if (tonumber(g.asalto) or -1) ~= (tonumber(store.asalto) or 0) then return false end
+        totalMeters = tonumber(g.metros) or 0
+        corriendo = g.corriendo and true or false
+        API.DashActive = corriendo and true or nil
+        API.RecordedMovementMeters = totalMeters
+        API.RecordedMovementAnchor = g.ancla
+        API.TurnStartAnchor = g.inicio
+        return true
+    end
+
     local function OnUpdate(_, delta)
         elapsed = elapsed + delta
         if elapsed < pollInterval then return end
@@ -709,6 +741,7 @@ function API.AttachMovementTracker(opts)
             end
         end
         API.RecordedMovementInfo = { meters = totalMeters }
+        Guardar()
     end
 
     local function StopTracking()
@@ -762,6 +795,7 @@ function API.AttachMovementTracker(opts)
         -- Donde empiezas el turno. Son DOS anclas y hacen cosas distintas: a esta se vuelve a mano
         -- para deshacer el turno entero; a la del agotamiento te devuelve el muro.
         API.TurnStartAnchor = CapturarAncla()
+        if Guardar then Guardar() end
         if ArrancarSeguimiento then ArrancarSeguimiento(false) end
     end
 
@@ -829,6 +863,23 @@ function API.AttachMovementTracker(opts)
         HarfordChat.Print("Vuelves a donde empezaste el turno. Movimiento a cero.")
     end
     API.DoReturnToTurnStart = VolverAlAncla
+
+    -- Tras un `/reload` no hay aviso de turno que espere: el turno ya estaba empezado. Se retoma
+    -- con lo que quedo guardado, o el resto del turno seria movimiento gratis.
+    do
+        local ev = CreateFrame("Frame")
+        ev:RegisterEvent("PLAYER_ENTERING_WORLD")
+        ev:SetScript("OnEvent", function(self)
+            self:UnregisterAllEvents()
+            if not EnCombate() then return end
+            if not Restaurar() then return end
+            label:SetText(FormatMeters(totalMeters))
+            AvisarMovimiento(totalMeters, MaximoDelTurno())
+            ArrancarSeguimiento(true)
+            HarfordChat.Print(string.format(
+                "Retomado tu movimiento del turno: |cffffcc00%.1f m|r gastados.", totalMeters))
+        end)
+    end
 
     -- RESPALDO del muro: el tiron principal salta en el instante en que se agota el recurso, aqui
     -- arriba en el `OnUpdate`. Esto solo recoge el caso de que sueltes la tecla justo cuando se

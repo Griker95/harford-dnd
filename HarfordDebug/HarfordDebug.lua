@@ -2199,6 +2199,29 @@ API.RegisterCommand("ca", function()
         end
     end
 
+    Print("--- que armadura te cree puesta ---")
+    -- El pecho puede ser un OBJETO o la seleccion basica del hueco, y dan el mismo texto con
+    -- causas distintas: un objeto mal reconocido es un fallo; una seleccion basica equivocada la
+    -- cambias tu con la flecha del hueco.
+    local pecho = HarfordDnDItems and HarfordDnDItems.GetSlot and HarfordDnDItems.GetSlot("Chest") or nil
+    if type(pecho) == "table" and pecho.itemLink then
+        local r = HarfordDnDItems.ResolveItem and HarfordDnDItems.ResolveItem(pecho.itemLink) or nil
+        Print("  es un OBJETO: " .. tostring(r and r.name or pecho.itemLink))
+        Print("  subclase WoW -> " .. tostring(r and r.armorKind or "?")
+            .. "   reconocida por el nombre -> |cffffcc00"
+            .. tostring(r and r.armorBasicKey or "ninguna") .. "|r")
+        if r and not r.armorBasicKey then
+            Print("  |cffff5555El nombre no dice que armadura D&D es|r, asi que se usa la base de"
+                .. " la subclase de WoW, que no distingue cuero de cuero tachonado.")
+        end
+    elseif type(pecho) == "table" and pecho.basicArmorKey then
+        Print("  es la SELECCION BASICA del hueco: |cffffcc00"
+            .. tostring(pecho.basicArmorKey) .. "|r")
+        Print("  Si no es la que llevas, cambiala con la flecha del hueco de pecho.")
+    else
+        Print("  nada en el pecho.")
+    end
+
     Print("--- la suma ---")
     local bonus = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus
         and HarfordDnDFeatureEffects.GetBonus("armorClass") or 0

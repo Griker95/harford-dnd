@@ -884,6 +884,20 @@ local function ResolveFromClient(itemLink)
         pending = false,
     }
     resolved.armorKind = ARMOR_SUBCLASS_TO_KIND[tostring(itemSubClass or "")]
+    -- El tipo D&D de la armadura, del NOMBRE o de la descripcion, igual que ya se hace con las
+    -- armas. Antes salia SOLO de la subclase de WoW, y WoW nada mas distingue Tela/Cuero/Malla/
+    -- Placas: un cuero tachonado (base 12) entraba como cuero (base 11) y no habia forma de
+    -- decirlo. `FindBasicArmorKeyByText` ya existia para leer la ficha de TRP3 y busca la
+    -- etiqueta MAS LARGA que aparezca como frase completa, asi que "cuero tachonado" gana a
+    -- "cuero" en vez de quedarse en el primero que casa.
+    if category == "armadura" then
+        local textos = { name }
+        for _, l in ipairs(descriptionLines) do textos[#textos + 1] = l end
+        for _, texto in ipairs(textos) do
+            local clave = FindBasicArmorKeyByText(texto)
+            if clave then resolved.armorBasicKey = clave break end
+        end
+    end
     -- Prioridad del arma resuelta: tipo declarado en descripcion > escudo > arma por subclase.
     if rules.weaponOverride then
         resolved.weapon = BuildWeapon(itemSubClass, name, link or itemLink, rules)
@@ -1284,8 +1298,16 @@ function API.GetEquippedArmorClass(profileName)
             if resolved.category == "escudo" or resolved.equipLoc == "INVTYPE_SHIELD" then
                 shieldBonus = math.max(shieldBonus, 2)
             elseif resolved.category == "armadura" and slotKey == "Chest" then
-                local base = ARMOR_KIND_BASE[resolved.armorKind]
-                if base then consider(base + ArmorDexBonus(ARMOR_KIND_CAT[resolved.armorKind], dex)) end
+                -- El tipo reconocido por el nombre manda sobre la subclase de WoW: lleva la base y
+                -- la categoria D&D de verdad (cuero tachonado 12 ligera, cota de malla 16 pesada),
+                -- que la subclase no puede distinguir.
+                local def = resolved.armorBasicKey and FindArmorDefByKey(resolved.armorBasicKey) or nil
+                if def and def.base then
+                    consider(def.base + ArmorDexBonus(def.cat, dex))
+                else
+                    local base = ARMOR_KIND_BASE[resolved.armorKind]
+                    if base then consider(base + ArmorDexBonus(ARMOR_KIND_CAT[resolved.armorKind], dex)) end
+                end
             end
             -- CA explicita del item (ya final): no se le suma Destreza automatica. SOLO desde el
             -- pecho: `armorBase` sale de una linea `Armadura 14` de la descripcion, y se estaba

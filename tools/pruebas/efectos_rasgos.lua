@@ -313,4 +313,18 @@ chk("y `pb` es el bonus de competencia",
 env.HarfordDnDFeatureEffects.GetProficiencyBonus = nil
 conClases({}, {})
 
+-- ─── UN RASGO AGOTADO NO PUEDE TENER EFECTO ─────────────────────────────────
+-- La Reserva de ira te daba sus puntos y DESPUES avisaba de que no te quedaban usos: el guardia
+-- estaba dentro de `AnnounceAbility`, que se llama al final, y la concesion iba antes. Un rasgo
+-- agotado no puede conceder nada, asi que la comprobacion tiene que ir ANTES del efecto.
+print("Un rasgo sin usos no concede nada")
+local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local i = panel:find("ApplyPowerWordGrant = function(feature, option, display)", 1, true)
+chk("existe la concesion", i ~= nil, true)
+local cuerpo = panel:sub(i or 1, (i or 1) + 4000)
+local guardia = cuerpo:find("FeatureUseAvailable(conUsos)", 1, true)
+local efecto = cuerpo:find("AdjustResourceCurrent(grant.resource", 1, true)
+chk("comprueba los usos", guardia ~= nil, true)
+chk("y lo hace ANTES de conceder", (guardia or 0) < (efecto or 0), true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

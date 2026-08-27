@@ -2855,6 +2855,15 @@ end
 ApplyPowerWordGrant = function(feature, option, display)
     local grant = option.grant
     if type(grant) ~= "table" then return end
+    -- LOS USOS SE MIRAN AQUI, ANTES DE CONCEDER NADA. El guardia estaba solo dentro de
+    -- `AnnounceAbility`, que se llama al FINAL: con el contador a cero, la Reserva de ira te daba
+    -- sus puntos y despues avisaba de que no te quedaban usos. Un rasgo agotado no puede tener
+    -- efecto, asi que la comprobacion va antes que el efecto y no despues.
+    local conUsos = display or feature
+    if conUsos and (conUsos.uses or conUsos.usesFrom) and not FeatureUseAvailable(conUsos) then
+        WarnFeatureWithoutUses(conUsos)
+        return
+    end
     local nombre = tostring(grant.noun or "el efecto")
     -- `self`: el efecto es sobre uno mismo (Brebaje Fortificante) y no mira el objetivo.
     if not grant.self and not ObjetivoDeApoyoValido(nombre, option.label or "Esta Palabra") then

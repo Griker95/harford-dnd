@@ -3470,6 +3470,21 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   `/harford debug run movimiento` (y `movimiento simular` dispara el aviso de turno a mano, que es
   el eslabon que no se puede provocar sin montar un combate entero).
 
+## El DM puede DEVOLVER lo gastado (2026-08-27)
+
+- Menu de unitframe → `Turnos` → `Devolver`: **Accion, Accion adicional, Reaccion y Movimiento**.
+  Sirve para cuando algo no llego a pasar --se cancelo, el objetivo ya no estaba-- y cobrarlo seria
+  quitarle el turno a alguien por un error de mesa.
+- **No es lo mismo que `GrantExtra`**: aquello SUBE el presupuesto (te da una accion de mas), esto
+  DESHACE un gasto. `Turn.Refund(kind)` no baja de cero, asi que devolver dos veces no regala nada.
+- **Lo aplica el RECEPTOR** (`TGIVE` por whisper): es quien lleva su propia economia, y escribirsela
+  desde fuera daria dos verdades distintas sobre lo mismo. Con el mismo filtro de remitente que el
+  resto de mensajes con efecto, y **lista cerrada de tipos**: lo que llega por el cable no elige a
+  que parte del motor se llama.
+- El movimiento se devuelve con `RefundTurnMovement`, que pone el contador a cero y levanta el muro
+  **sin tocar el ancla de inicio**: sigues donde estas y en el mismo turno. No te MUEVE.
+- **`Profesiones` sale del menu de un jugador**: es su ficha, no una herramienta de mesa.
+
 ## Unirse a un combate en curso (2026-08-27)
 
 - **Se sale FUERA de combate por defecto**: nadie entra solo porque haya una pelea en su raid. Al

@@ -1875,6 +1875,21 @@ do
         return cabia, restante, kind
     end
 
+    -- Devuelve lo GASTADO de un tipo, hasta dejarlo como estaba. No es lo mismo que `GrantExtra`:
+    -- aquello sube el presupuesto (te da una accion de mas), esto deshace un gasto. El DM lo usa
+    -- cuando algo no llego a pasar -- se cancelo la accion, el objetivo ya no estaba -- y cobrarla
+    -- seria quitarle el turno a alguien por un error de mesa.
+    function Turn.Refund(kind)
+        kind = tostring(kind or "")
+        if not ETIQUETA[kind] then return false end
+        local gastado = Turn.GetSpent(kind)
+        if gastado <= 0 then return false end
+        ECONOMIA.spent[kind] = gastado - 1
+        GuardarEconomia()
+        Notify()
+        return true
+    end
+
     -- Concede presupuesto EXTRA para el turno en curso. Lo usan los rasgos que dan una accion en
     -- vez de costarla; desaparece al empezar el siguiente turno, con el resto de la economia.
     function Turn.GrantExtra(kind, amount)

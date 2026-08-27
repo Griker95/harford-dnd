@@ -159,6 +159,31 @@ function HarfordDnDComm.CreateHandlers(deps)
             return true  -- recurso ajustado → refrescar overlays
         end
 
+        -- Devolucion de economia de turno. Cambia lo que TU puedes hacer este turno, asi que pasa
+        -- por el mismo filtro que el resto de mensajes con efecto: propio, unidad visible o
+        -- miembro de grupo/raid.
+        local refundKind = HarfordSync.DeserializeTurnRefund
+            and HarfordSync.DeserializeTurnRefund(message)
+        if refundKind then
+            if not IsTrustedEffectSender(sender) then return false end
+            if refundKind == "movement" then
+                if HarfordDnDAttackUI and HarfordDnDAttackUI.RefundTurnMovement then
+                    HarfordDnDAttackUI.RefundTurnMovement()
+                end
+            elseif HarfordDnDConditions and HarfordDnDConditions.Turn
+                and HarfordDnDConditions.Turn.Refund then
+                local etiqueta = HarfordDnDConditions.Turn.ETIQUETA
+                    and HarfordDnDConditions.Turn.ETIQUETA[refundKind] or refundKind
+                if HarfordDnDConditions.Turn.Refund(refundKind) then
+                    HarfordChat.Print("|cff88ff88Se te ha devuelto tu " .. tostring(etiqueta):lower()
+                        .. " de este turno.|r")
+                else
+                    HarfordChat.Print("No tenias gastada tu " .. tostring(etiqueta):lower() .. ".")
+                end
+            end
+            return false
+        end
+
         -- Señal de aura (Desarme u otra maniobra): el objetivo se aplica `.au <id> self`.
         -- Aplica un efecto real (comando de servidor sin whitelist) -> exige el mismo gate de sender
         -- que DOAPPLYAURA/RADJ: solo propio jugador, unidad visible o miembro de grupo/raid.

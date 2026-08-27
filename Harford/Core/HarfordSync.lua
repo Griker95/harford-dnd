@@ -1381,6 +1381,27 @@ function HarfordSync.DeserializeResourceAdjustMessage(message)
     return key, math.floor(delta)
 end
 
+-- ─── Devolver economia de turno a otro jugador (TGIVE) ──────────────────────
+-- El DM le devuelve a alguien su accion, su adicional, su reaccion o su movimiento: algo no llego
+-- a pasar y cobrarlo seria quitarle el turno por un error de mesa. Lo aplica el RECEPTOR, que es
+-- quien lleva su propia economia; el DM no puede escribirla desde fuera.
+local TGIVE_TIPOS = { action = true, bonus = true, reaction = true, movement = true }
+
+function HarfordSync.SerializeTurnRefund(kind)
+    kind = tostring(kind or "")
+    if not TGIVE_TIPOS[kind] then return nil end
+    return "TGIVE|" .. kind
+end
+
+function HarfordSync.DeserializeTurnRefund(message)
+    local opcode, kind = strsplit("|", tostring(message or ""))
+    if opcode ~= "TGIVE" then return nil end
+    kind = tostring(kind or "")
+    -- Lista cerrada: lo que llegue por el cable no elige a que parte del motor se llama.
+    if not TGIVE_TIPOS[kind] then return nil end
+    return kind
+end
+
 -- ─── Señal de aura a otro jugador (AURASIG) ──────────────────────────────────
 -- El atacante pide al jugador objetivo que se aplique un aura (ej. Desarme): el receptor
 -- ejecuta `.au <id> self` en su cliente.

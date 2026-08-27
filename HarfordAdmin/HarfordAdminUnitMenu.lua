@@ -440,6 +440,29 @@ local function AddSubmenu(text, menuList, level)
     UIDropDownMenu_AddButton(info, level)
 end
 
+-- Devolverle a un jugador lo que gasto este turno. Lo aplica SU cliente --es quien lleva su
+-- economia-- asi que esto solo manda el aviso: escribirle el contador desde fuera daria dos
+-- verdades distintas sobre lo mismo.
+local function BuildDevolverSubmenu(snapshot, level)
+    local nombre = snapshot and snapshot.name
+    if not (nombre and nombre ~= "") then return end
+    local OPCIONES = {
+        { kind = "action",    etiqueta = "Accion" },
+        { kind = "bonus",     etiqueta = "Accion adicional" },
+        { kind = "reaction",  etiqueta = "Reaccion" },
+        { kind = "movement",  etiqueta = "Movimiento" },
+    }
+    for _, o in ipairs(OPCIONES) do
+        AddAction(o.etiqueta, function()
+            local payload = HarfordSync and HarfordSync.SerializeTurnRefund
+                and HarfordSync.SerializeTurnRefund(o.kind)
+            if not payload then return end
+            HarfordSync.Send("DND5EARC", payload, "WHISPER", nombre)
+            Print("Devuelto a " .. tostring(nombre) .. ": " .. o.etiqueta:lower() .. ".")
+        end, level)
+    end
+end
+
 local function BuildEstadosSubmenu(snapshot, level)
     local definitions = HarfordDnDConditions and HarfordDnDConditions.GetDefinitions
         and HarfordDnDConditions.GetDefinitions() or {}
@@ -763,6 +786,9 @@ local function BuildPlayerSubmenu(menuList, level)
     elseif menuList == "TURNOS" then
         AddAction("Anadir a turnos", function() AddToTurns(snapshot) end, level)
         AddAction("Abrir turnos", OpenTurns, level)
+        AddSubmenu("Devolver", "TURNOS_DEVOLVER", level)
+    elseif menuList == "TURNOS_DEVOLVER" then
+        BuildDevolverSubmenu(snapshot, level)
     elseif menuList == "RECURSOS" then
         AddAction("Mod. Salud", function() PromptHealth(snapshot, true) end, level)
         AddAction("Mod. Recursos", function() OpenResourceEditor(snapshot) end, level)
@@ -847,7 +873,8 @@ local function InitializeMenu(_, level, menuList)
         elseif ctx == "player" then
             -- Jugador ajeno: enviar ficha (primera opcion), turnos, recursos, auras. Sin TRP3, sin loot.
             AddAction("Enviar ficha", function() SendSheetToTarget(snapshot) end, level)
-            AddSubmenu("Profesiones", "PROFESIONES", level)
+            -- Sin `Profesiones`: es la ficha del jugador, no una herramienta de mesa, y el DM no
+            -- le ensena recetas desde el menu del unitframe.
             AddSubmenu("Turnos", "TURNOS", level)
             AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Auras", "AURAS", level)

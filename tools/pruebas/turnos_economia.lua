@@ -126,4 +126,36 @@ local ficha2 = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
 chk("y se cobra al ejecutarla",
     ficha2:find("HarfordDnDConditions.Turn.SpendForFeature(feature) == false then", 1, true) ~= nil, true)
 
+-- ─── EL DM PUEDE DEVOLVER LO GASTADO ────────────────────────────────────────
+-- Algo no llego a pasar --se cancelo, el objetivo ya no estaba-- y cobrarlo seria quitarle el
+-- turno a alguien por un error de mesa. No es lo mismo que conceder una accion EXTRA: aquello sube
+-- el presupuesto, esto deshace un gasto.
+print("Se puede devolver lo gastado")
+HarfordTurnOrderStore.entries = { { name = "Alguien", kind = "npc" } }
+T.Reset()
+chk("nada gastado -> no hay nada que devolver", T.Refund("action"), false)
+T.Spend("action")
+chk("  tras gastarla, queda 0", T.GetRemaining("action"), 0)
+chk("se devuelve", T.Refund("action"), true)
+chk("  y vuelve a estar", T.GetRemaining("action"), 1)
+-- Devolver no REGALA: dos devoluciones seguidas no dan dos acciones.
+chk("y no se puede devolver dos veces", T.Refund("action"), false)
+chk("  sigue habiendo una", T.GetRemaining("action"), 1)
+-- Un tipo que no existe no toca nada: lo que llega por el cable no elige a que se llama.
+chk("un tipo inventado no hace nada", T.Refund("loquesea"), false)
+-- Y el mensaje lleva lista cerrada por lo mismo.
+local sync = io.open("Harford/Core/HarfordSync.lua"):read("*a")
+chk("el mensaje tiene lista cerrada",
+    sync:find("local TGIVE_TIPOS = { action = true, bonus = true, reaction = true, movement = true }",
+        1, true) ~= nil, true)
+-- Lo aplica el RECEPTOR: es quien lleva su economia, y escribirsela desde fuera daria dos verdades
+-- distintas sobre lo mismo.
+local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
+chk("y lo aplica el receptor",
+    comm:find("HarfordDnDConditions.Turn.Refund(refundKind)", 1, true) ~= nil, true)
+-- Con el mismo filtro de remitente que el resto de mensajes con efecto: cambia lo que TU puedes
+-- hacer este turno.
+chk("con el filtro de siempre",
+    comm:find("if not IsTrustedEffectSender(sender) then return false end", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

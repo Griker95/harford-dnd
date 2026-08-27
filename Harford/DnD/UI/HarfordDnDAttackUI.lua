@@ -784,6 +784,19 @@ function API.AttachMovementTracker(opts)
     -- terminado de moverte.
     -- Se expone para que la recogida de fin de combate pueda pararlo desde fuera.
     API.ResetTurnMovement = function() if ReiniciarPorTurno then ReiniciarPorTurno() end end
+    -- Como el reinicio de turno pero SIN tocar el ancla de inicio: sigues donde estas y en el
+    -- mismo turno, solo que sin deber los metros. Reiniciar del todo te dejaria sin sitio al que
+    -- volver si luego te pasas.
+    API.ResetTurnMovementKeepAnchor = function()
+        totalMeters = 0
+        lastX, lastY, lastZ = nil, nil, nil
+        API.RecordedMovementMeters = 0
+        API.RecordedMovementAnchor = nil
+        API.MovimientoSinMuro = nil
+        if label then label:SetText(FormatMeters(0)) end
+        AvisarMovimiento(0, MaximoDelTurno())
+        HarfordChat.Print("|cff88ff88Se te ha devuelto el movimiento de este turno.|r")
+    end
     ReiniciarPorTurno = function()
         tracking = false
         motor:SetScript("OnUpdate", nil)
@@ -961,6 +974,13 @@ end
 -- la barra del marcador de turnos, que esta en otro modulo.
 function API.ReturnToTurnStart()
     if API.DoReturnToTurnStart then API.DoReturnToTurnStart() end
+end
+
+-- Devuelve el movimiento del turno: contador a cero y muro levantado. Lo usa el DM cuando el
+-- desplazamiento no llego a contar --te empujaron, se cancelo-- y no tiene sentido que lo pagues.
+-- No te MUEVE: solo deja de deberlo.
+function API.RefundTurnMovement()
+    if API.ResetTurnMovementKeepAnchor then API.ResetTurnMovementKeepAnchor() end
 end
 
 function API.StopTurnMovement()

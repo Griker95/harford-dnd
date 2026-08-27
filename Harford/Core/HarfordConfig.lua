@@ -9,7 +9,7 @@ local DEFAULTS = {
     actionbar              = "off",        -- "on" | "off": barra de accion de madera del Libro
     xpbar                  = "on",         -- "on" | "off": barra de experiencia Harford (posicion de la barra de exp nativa)
     spell_cost_mode        = "mana",       -- "mana" | "slots": coste global de lanzamiento
-    turnbanner             = "on",         -- "on" | "off": estandarte al empezar un turno
+    turnbanner             = "estandarte", -- "estandarte" | "franja" | "off": aviso de turno
 }
 
 local listeners = {}

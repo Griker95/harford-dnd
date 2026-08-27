@@ -1635,13 +1635,21 @@ API.RegisterCommand("estandarte", function(args)
     -- El chat escapa la barra vertical como `||`, asi que separar por ella dejaba la segunda
     -- pegada al subtitulo. Se separa por `;`, que el chat no toca.
     local texto = tostring(args or "")
+    -- Primera palabra: el estilo, si es uno de los que hay. Asi se comparan sin dejar puesto
+    -- ninguno, que es lo que se quiere al estar eligiendo.
+    local estilo
+    local primera = texto:match("^%s*(%S+)")
+    if primera == "estandarte" or primera == "franja" then
+        estilo = primera
+        texto = texto:gsub("^%s*%S+%s*", "", 1)
+    end
     local titulo, subtitulo = texto:match("^(.-)%s*;%s*(.+)$")
     titulo = titulo or (texto ~= "" and texto) or "ES TU TURNO"
-    local ok = HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo or "Asalto 1", true)
+    local ok = HarfordTurnOrderAPI.PreviewTurnBanner(estilo, titulo, subtitulo or "Asalto 1", true)
     if not ok then
         Print("No se pinto: mira `turnbanner` en la config y `/harford debug run atlas`.")
     end
-end, "Levanta el estandarte de turno (estandarte <titulo> ; <subtitulo>)")
+end, "Prueba el aviso de turno (estandarte [estandarte|franja] <titulo> ; <subtitulo>)")
 
 API.RegisterCommand("atlas", function(args)
     local lista = {

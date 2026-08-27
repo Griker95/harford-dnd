@@ -456,9 +456,11 @@ chk("y los campos nuevos van detras",
 -- Son las tarjetas de siempre, solo que dentro de la lista: NO una imitacion. Las monta y las pinta
 -- el core con las mismas dos funciones que la ventana de turnos, porque la primera version las
 -- rehizo aqui y las dos se actualizaban de forma distinta.
-chk("las monta el core", turnos:find("CreateCardVisuals(panel.contenido)", 1, true) ~= nil, true)
+chk("las monta el core",
+    turnos:find("CreateCardVisuals(panel.contenido, function() return f.miembro end)",
+        1, true) ~= nil, true)
 -- Se le pasa el miembro TAL CUAL, sin sintetizar una entrada a medias.
-chk("y las pinta el core", turnos:find("PaintEntryCard(f, m, false)", 1, true) ~= nil, true)
+chk("y las pinta el core", turnos:find("PaintEntryCard(f, m, mando)", 1, true) ~= nil, true)
 chk("el core expone el constructor",
     turnos:find("function HarfordTurnOrderAPI.CreateCardVisuals(parent, onArmorClick)", 1, true) ~= nil, true)
 chk("y el pintor",
@@ -466,13 +468,28 @@ chk("y el pintor",
 -- Y la ventana de turnos usa las MISMAS: si el core se quedara con una copia propia, seguiriamos
 -- teniendo dos.
 chk("la ventana de turnos usa el mismo constructor",
-    turnos:find("local card = CreateCardVisuals(parent, function()", 1, true) ~= nil, true)
+    turnos:find("card = CreateCardVisuals(parent, function()", 1, true) ~= nil, true)
 chk("y el mismo pintor",
     turnos:find("PaintEntryCard(card, entry, isAdmin)", 1, true) ~= nil, true)
 -- Con muchas se baja a verlas, pero el boton no se va con ellas ni lo recorta el scroll: cuelga del
 -- panel, no del contenido que se desplaza.
 chk("las tarjetas van dentro del scroll",
-    turnos:find("CreateCardVisuals(panel.contenido)", 1, true) ~= nil, true)
+    turnos:find("CreateCardVisuals(panel.contenido,", 1, true) ~= nil, true)
+-- Y son tarjetas ENTERAS: se les puede tocar la CA y la vida, como a las de la ventana de turnos.
+-- Los controles se montan en el constructor comun, asi que ninguna de las dos puede quedarse sin.
+chk("con sus controles de CA y vida",
+    turnos:find("PromptSetArmorClass(Objetivo())", 1, true) ~= nil
+    and turnos:find("AdjustHp(Objetivo(), -1)", 1, true) ~= nil, true)
+-- Una operacion apunta a la ENTRADA o a su posicion: un miembro de bloque no esta en la lista de
+-- turnos, asi que por posicion no habria forma de alcanzarlo.
+chk("que apuntan a la entrada, no a una posicion",
+    turnos:find("local function EntradaDe(objetivo)", 1, true) ~= nil, true)
+-- Sin mando, de LECTURA: se ve quien hay y no se le toca nada.
+chk("y sin mando no se tocan",
+    turnos:find("f.minus:SetShown(mando)", 1, true) ~= nil, true)
+-- Los mismos gestos que una tarjeta normal: izquierdo su ficha, derecho el menu.
+chk("responden al click como las de siempre",
+    turnos:find("HarfordTurnOrderAPI.OnCardRightClick(m, self)", 1, true) ~= nil, true)
 chk("y el boton se queda fuera",
     admin2:find('CreateFrame("Button", nil, p, "UIPanelButtonTemplate")', 1, true) ~= nil, true)
 
@@ -480,6 +497,11 @@ chk("y el boton se queda fuera",
 -- El aviso que se ve sin estar mirando el chat. Todo el arte es NATIVO (`BossBanner-*`): un atlas
 -- propio habria que meterlo en el addon, y uno que no existe no borra la textura anterior -- la
 -- deja como estaba, que es la trampa de los iconos del Libro.
+-- Un desconectado NO se enumera: no va a jugar su turno, y con una hermandad detras eran veinte
+-- lineas muertas para encontrar a los tres que estaban.
+chk("un desconectado no se enumera",
+    admin2:find("(desconectado)", 1, true) == nil, true)
+
 print("El estandarte de turno")
 chk("existe", turnos:find("function HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)",
     1, true) ~= nil, true)
@@ -497,8 +519,14 @@ chk("solo al empezar el bando",
 chk("dorado cuando te toca", turnos:find('entrada.bando == "pjs")', 1, true) ~= nil, true)
 -- Sin ticker: se retira con un temporizador de una sola vez, cancelable si vuelve a salir.
 chk("se retira solo", turnos:find("ocultar = C_Timer.NewTimer(4, function()", 1, true) ~= nil, true)
-chk("y se puede apagar",
-    turnos:find('HarfordConfig.Get("turnbanner") == "off"', 1, true) ~= nil, true)
+chk("y se puede apagar", turnos:find('if estilo == "off" then return false end', 1, true) ~= nil, true)
+-- DOS formas, no una: la franja discreta y el estandarte colgante del aviso de jefe. Los tres
+-- trozos del estandarte existen en este cliente, comprobado con la sonda de atlas.
+chk("hay dos estilos",
+    turnos:find('SetAtlas("BossBanner-BgBanner-Top"', 1, true) ~= nil
+    and turnos:find('SetAtlas("BossBanner-BgBanner-Bottom"', 1, true) ~= nil, true)
+chk("y se eligen sin dejarlos puestos",
+    turnos:find("function HarfordTurnOrderAPI.PreviewTurnBanner(", 1, true) ~= nil, true)
 local config = io.open("Harford/Core/HarfordConfig.lua"):read("*a")
 chk("con su ajuste declarado", config:find("turnbanner", 1, true) ~= nil, true)
 

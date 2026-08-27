@@ -169,9 +169,10 @@ do
                 .. "bloque de NPCs, no en " .. tostring(bloqueActual.name) .. ".")
             return
         end
+        -- Que entre no se anuncia: se ve aparecer en la lista, que esta abierta delante. Una linea
+        -- por miembro son diez seguidas al montar un bando. Lo que NO se ve es un fallo, y eso si.
         local ok, err = T.AddBlockMember(bloqueActual, "target")
-        Print(ok and (tostring(UnitName("target")) .. " entra en "
-            .. tostring(bloqueActual.name) .. ".") or tostring(err))
+        if not ok then Print(tostring(err)) end
         API().RefreshBlockPanel()
     end
 
@@ -197,15 +198,15 @@ do
                 unidades[#unidades + 1] = (enRaid and "raid" or "party") .. i
             end
             for _, u in ipairs(unidades) do
-                if UnitExists and UnitExists(u) then
+                -- Un desconectado NO se enumera. Antes salia en gris y deshabilitado, y con una
+                -- hermandad detras eran veinte lineas muertas para encontrar a los tres que
+                -- estaban: no va a jugar su turno, asi que no pinta nada en la lista.
+                if UnitExists and UnitExists(u)
+                    and ((not UnitIsConnected) or UnitIsConnected(u)) then
                     local guid = UnitGUID(u)
                     local i = UIDropDownMenu_CreateInfo()
                     i.text = tostring(UnitName(u))
-                    -- Un desconectado no va a jugar su turno: se ve, pero no se puede meter.
-                    local conectado = (not UnitIsConnected) or UnitIsConnected(u)
-                    if not conectado then i.text = i.text .. " |cff808080(desconectado)|r" end
                     i.checked = dentro[guid] and true or false
-                    i.disabled = not conectado
                     i.func = function()
                         if dentro[guid] then T.RemoveBlockMember(bloqueActual, guid)
                         else T.AddBlockMember(bloqueActual, u) end
@@ -284,8 +285,6 @@ do
             if m then
                 f.quitar:SetScript("OnClick", function()
                     API().RemoveBlockMember(bloqueActual, m.guid)
-                    Print(tostring(m.name or "?") .. " sale de "
-                        .. tostring(bloqueActual.name) .. ".")
                     API().RefreshBlockPanel()
                 end)
             end

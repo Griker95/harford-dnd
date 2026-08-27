@@ -1655,11 +1655,18 @@ local function RemoveEntry(index)
     MarkChanged()
 end
 
+-- El objetivo de una operacion de tarjeta puede venir como posicion en la lista o como la entrada
+-- misma. Un miembro de bloque NO esta en `store.entries`, asi que por posicion no hay forma de
+-- alcanzarlo -- y es una tarjeta igual que las demas.
+local function EntradaDe(objetivo)
+    if type(objetivo) == "table" then return objetivo end
+    return EnsureStore().entries[objetivo]
+end
+
 local function AdjustHp(index, amount)
     if not IsTurnAdmin() then Print("Solo el admin puede modificar vida.") return end
     ClaimAdminIfNeeded()
-    local store = EnsureStore()
-    local entry = store.entries[index]
+    local entry = EntradaDe(index)
     if not entry then return end
     if entry.kind == "round" then return end
 
@@ -1747,8 +1754,7 @@ local function PromptAdjustHp(index, direction)
     direction = tonumber(direction) or 1
     direction = direction < 0 and -1 or 1
 
-    local store = EnsureStore()
-    local entry = store.entries[index]
+    local entry = EntradaDe(index)
     if not entry or IsSystemEntry(entry) then return end
 
     local dialogName = "HARFORD_TURN_ADJUST_HP"
@@ -1798,8 +1804,7 @@ end
 
 local function SetEntryArmorClass(index, armorClass)
     if not IsTurnAdmin() then Print("Solo el admin puede modificar CA.") return false end
-    local store = EnsureStore()
-    local entry = store.entries[index]
+    local entry = EntradaDe(index)
     if not entry or IsSystemEntry(entry) or entry.kind == "player" then
         return false
     end
@@ -1815,8 +1820,7 @@ local function SetEntryArmorClass(index, armorClass)
 end
 
 local function PromptSetArmorClass(index)
-    local store = EnsureStore()
-    local entry = store.entries[index]
+    local entry = EntradaDe(index)
     if not entry or IsSystemEntry(entry) or entry.kind == "player" then return end
 
     local dialogName = "HARFORD_TURN_SET_ARMOR_CLASS"
@@ -2010,10 +2014,12 @@ end
 -- Las PIEZAS visuales de una tarjeta, sin los controles de la ventana de turnos (mover, quitar,
 -- +/-). Se expone para que la lista de miembros de un bloque monte las MISMAS, en vez de una
 -- imitacion que se desvia en cuanto se toca cualquiera de las dos.
-local function CreateCardVisuals(parent, onArmorClick)
+local function CreateCardVisuals(parent, Objetivo)
     local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     card:SetSize(CARD_W, CARD_H)
     SetFrameBackground(card)
+    -- A que apunta esta tarjeta. Por defecto, a su posicion en la lista de turnos.
+    Objetivo = Objetivo or function() return card.entryIndex end
 
     card.border = CreateFrame("Frame", nil, card, "DialogBorderTemplate")
     card.border:SetAllPoints(card)
@@ -2034,9 +2040,23 @@ local function CreateCardVisuals(parent, onArmorClick)
     card.init = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     card.init:SetPoint("TOP", 0, -65)
 
-    card.armorClass = MakeButton(card, "CA --", 48, 16, "TOP", card, "TOP", 0, -63,
-        onArmorClick or function() end)
+    card.armorClass = MakeButton(card, "CA --", 48, 16, "TOP", card, "TOP", 0, -63, function()
+        PromptSetArmorClass(Objetivo())
+    end)
     card.armorClass:Hide()
+
+    -- Shift para escribir la cantidad; sin Shift, de uno en uno. Es el gesto que ya tenian las
+    -- tarjetas de la ventana de turnos.
+    card.minus = MakeButton(card, "-", 18, 16, "BOTTOMLEFT", card, "BOTTOMLEFT", 5, 4, function()
+        if IsShiftKeyDown and IsShiftKeyDown() then PromptAdjustHp(Objetivo(), -1)
+        else AdjustHp(Objetivo(), -1) end
+    end)
+    card.plus = MakeButton(card, "+", 18, 16, "BOTTOMRIGHT", card, "BOTTOMRIGHT", -5, 4, function()
+        if IsShiftKeyDown and IsShiftKeyDown() then PromptAdjustHp(Objetivo(), 1)
+        else AdjustHp(Objetivo(), 1) end
+    end)
+    card.minus:Hide()
+    card.plus:Hide()
 
     card.hp = CreateFrame("StatusBar", nil, card)
     card.hp:SetSize(58, 10)
@@ -2057,8 +2077,9 @@ local function CreateCardVisuals(parent, onArmorClick)
 end
 
 local function CreateCard(parent, index)
-    local card = CreateCardVisuals(parent, function()
-        PromptSetArmorClass(card and card.entryIndex or index)
+    local card
+    card = CreateCardVisuals(parent, function()
+        return (card and card.entryIndex) or index
     end)
     card:SetPoint("TOPLEFT", 18 + (index - 1) * (CARD_W + CARD_GAP), -78)
     card:EnableMouse(true)
@@ -2138,30 +2159,6 @@ local function CreateCard(parent, index)
     card.targetText:SetTextColor(0.05, 0.85, 1.0)
     card.targetText:Hide()
 
-    card.minus = MakeButton(card, "-", 18, 16, "BOTTOMLEFT", card, "BOTTOMLEFT", 5, 4, function()
-        local entryIndex = card.entryIndex or index
-        if IsShiftKeyDown and IsShiftKeyDown() then
-            PromptAdjustHp(entryIndex, -1)
-        else
-            AdjustHp(entryIndex, -1)
-        end
-    end)
-    card.plus = MakeButton(card, "+", 18, 16, "BOTTOMRIGHT", card, "BOTTOMRIGHT", -5, 4, function()
-        local entryIndex = card.entryIndex or index
-        if IsShiftKeyDown and IsShiftKeyDown() then
-            PromptAdjustHp(entryIndex, 1)
-        else
-            AdjustHp(entryIndex, 1)
-        end
-    end)
-    card.moveLeft = MakeButton(card, "<", 18, 16, "TOPLEFT", card, "TOPLEFT", 3, -4, function()
-        MoveEntry(card.entryIndex or index, -1)
-    end)
-    card.moveLeft:Hide()
-    card.moveRight = MakeButton(card, ">", 18, 16, "TOPRIGHT", card, "TOPRIGHT", -20, -4, function()
-        MoveEntry(card.entryIndex or index, 1)
-    end)
-    card.moveRight:Hide()
     card.remove = MakeButton(card, "x", 16, 16, "TOPRIGHT", card, "TOPRIGHT", -2, -4, function()
         RemoveEntry(card.entryIndex or index)
     end)
@@ -2545,67 +2542,88 @@ if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
     end)
 end
 
--- ─── EL ESTANDARTE DE TURNO ─────────────────────────────────────────────────
--- El aviso grande de que empieza un turno, al estilo del que usa DiceMaster. Todo el arte es
--- NATIVO del cliente (`BossBanner-*`), comprobado con `/harford debug run atlas`: 10 de los 11 que
--- usa DiceMaster existen aqui, y el que falta (`BossBanner-Title`) es prescindible porque el titulo
--- es texto, no textura.
+-- ─── EL ESTANDARTE DE TURNO ────────────────────────────────────────────
+-- El aviso grande de que empieza un turno. Hay DOS formas, porque no todas las mesas quieren lo
+-- mismo: una franja discreta que cruza la pantalla, y el estandarte colgante del aviso de jefe.
+-- Se elige con el ajuste `turnbanner` (`estandarte` | `franja` | `off`).
+--
+-- Todo el arte es NATIVO (`BossBanner-*`), comprobado con `/harford debug run atlas`: existen los
+-- tres trozos del estandarte (Top/Mid/Bottom, 440x112 los extremos), el medallon `-SkullCircle` y
+-- los rayos `-RedLightning`. NO existen `-Title`, `-Skull`, `-BgGlow` ni `-Shield`, asi que el
+-- titulo es texto y no hay resplandor de fondo.
 --
 -- Va en un `do...end`: el fichero ronda los 140 locales de file-scope y el limite de Lua 5.1 es 200.
---
--- Sin ticker: se levanta con la animacion y se retira con un `C_Timer.After` de una sola vez.
+-- Sin ticker: entra con `AnimationGroup` y se retira con un `C_Timer` de una sola vez.
 do
-    local banner, ocultar
+    local banner, ocultar, estiloMontado
+
+    local function Estilo()
+        local v = HarfordConfig and HarfordConfig.Get and HarfordConfig.Get("turnbanner")
+        v = tostring(v or "estandarte")
+        -- `on` es lo que valia antes de haber estilos: se respeta y significa el de por defecto.
+        if v == "on" then return "estandarte" end
+        return v
+    end
 
     local function Crear()
         if banner then return banner end
         banner = CreateFrame("Frame", "HarfordTurnBannerFrame", UIParent)
-        banner:SetSize(600, 90)
-        banner:SetPoint("TOP", UIParent, "TOP", 0, -140)
+        banner:SetPoint("TOP", UIParent, "TOP", 0, -120)
         -- HIGH y no DIALOG: tiene que verse sobre la interfaz de juego, pero NO tapar una ventana
         -- que el jugador tenga abierta -- dura cuatro segundos y no se puede quitar de en medio.
         banner:SetFrameStrata("HIGH")
         banner:EnableMouse(false)
         banner:Hide()
 
-        banner.fondo = banner:CreateTexture(nil, "BACKGROUND")
-        banner.fondo:SetAtlas("BossBanner-BgBanner-Mid", false)
-        banner.fondo:SetPoint("TOPLEFT", 0, 0)
-        banner.fondo:SetPoint("BOTTOMRIGHT", 0, 0)
+        -- Los tres trozos del estandarte. `-Mid` se estira entre los dos extremos; los extremos
+        -- llevan su tamano de atlas, que es el que hace que el dibujo case.
+        banner.arriba = banner:CreateTexture(nil, "BACKGROUND")
+        banner.arriba:SetAtlas("BossBanner-BgBanner-Top", true)
+        banner.abajo = banner:CreateTexture(nil, "BACKGROUND")
+        banner.abajo:SetAtlas("BossBanner-BgBanner-Bottom", true)
+        banner.medio = banner:CreateTexture(nil, "BACKGROUND")
+        banner.medio:SetAtlas("BossBanner-BgBanner-Mid", false)
+
+        banner.medallon = banner:CreateTexture(nil, "ARTWORK")
+        banner.medallon:SetAtlas("BossBanner-SkullCircle", true)
 
         -- Los rayos salen de los DOS lados, espejados. Es lo que le da el golpe de entrada.
         banner.rayoDer = banner:CreateTexture(nil, "ARTWORK")
         banner.rayoDer:SetAtlas("BossBanner-RedLightning", true)
         banner.rayoDer:SetBlendMode("ADD")
-        banner.rayoDer:SetPoint("LEFT", banner, "CENTER", 40, 0)
         banner.rayoIzq = banner:CreateTexture(nil, "ARTWORK")
         banner.rayoIzq:SetAtlas("BossBanner-RedLightning", true)
         banner.rayoIzq:SetBlendMode("ADD")
         banner.rayoIzq:SetTexCoord(1, 0, 0, 1)
-        banner.rayoIzq:SetPoint("RIGHT", banner, "CENTER", -40, 0)
 
         banner.titulo = banner:CreateFontString(nil, "OVERLAY", "GameFont_Gigantic")
-        banner.titulo:SetPoint("CENTER", banner, "CENTER", 0, 8)
         banner.titulo:SetJustifyH("CENTER")
         banner.subtitulo = banner:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-        banner.subtitulo:SetPoint("TOP", banner.titulo, "BOTTOM", 0, -2)
         banner.subtitulo:SetTextColor(0.85, 0.82, 0.72)
 
         -- La entrada: el estandarte se despliega en horizontal (escala en X desde casi nada) y el
         -- texto entra despues, para que se lea cuando ya hay sitio donde leerlo.
         local ent = banner:CreateAnimationGroup()
         ent:SetToFinalAlpha(true)
-        local abre = ent:CreateAnimation("Scale")
-        abre:SetChildKey("fondo")
-        abre:SetDuration(0.30)
-        abre:SetFromScale(0.08, 1)
-        abre:SetToScale(1, 1)
-        abre:SetSmoothing("OUT")
-        local aparece = ent:CreateAnimation("Alpha")
-        aparece:SetChildKey("fondo")
-        aparece:SetDuration(0.20)
-        aparece:SetFromAlpha(0)
-        aparece:SetToAlpha(1)
+        for _, clave in ipairs({ "arriba", "medio", "abajo" }) do
+            local abre = ent:CreateAnimation("Scale")
+            abre:SetChildKey(clave)
+            abre:SetDuration(0.30)
+            abre:SetFromScale(0.08, 1)
+            abre:SetToScale(1, 1)
+            abre:SetSmoothing("OUT")
+            local aparece = ent:CreateAnimation("Alpha")
+            aparece:SetChildKey(clave)
+            aparece:SetDuration(0.20)
+            aparece:SetFromAlpha(0)
+            aparece:SetToAlpha(1)
+        end
+        -- El medallon cae de golpe encima, como en el aviso de jefe.
+        local caeMedallon = ent:CreateAnimation("Scale")
+        caeMedallon:SetChildKey("medallon")
+        caeMedallon:SetDuration(0.15)
+        caeMedallon:SetFromScale(5, 5)
+        caeMedallon:SetToScale(1, 1)
         for _, clave in ipairs({ "titulo", "subtitulo" }) do
             local a = ent:CreateAnimation("Alpha")
             a:SetChildKey(clave)
@@ -2639,10 +2657,49 @@ do
         return banner
     end
 
-    function HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)
-        if HarfordConfig and HarfordConfig.Get and HarfordConfig.Get("turnbanner") == "off" then
-            return false
+    -- Cada estilo re-ancla las MISMAS piezas y esconde las que no usa. Un frame por estilo daria
+    -- dos juegos de animaciones que mantener en paralelo.
+    local function AplicarEstilo(estilo)
+        if estiloMontado == estilo then return end
+        estiloMontado = estilo
+        local b = banner
+        b.arriba:ClearAllPoints() b.abajo:ClearAllPoints() b.medio:ClearAllPoints()
+        b.medallon:ClearAllPoints() b.titulo:ClearAllPoints() b.subtitulo:ClearAllPoints()
+        b.rayoDer:ClearAllPoints() b.rayoIzq:ClearAllPoints()
+
+        if estilo == "franja" then
+            -- Solo la franja de en medio, cruzando la pantalla. Discreta y baja.
+            b:SetSize(600, 90)
+            b.arriba:Hide() b.abajo:Hide() b.medallon:Hide()
+            b.medio:Show()
+            b.medio:SetPoint("TOPLEFT")
+            b.medio:SetPoint("BOTTOMRIGHT")
+            b.titulo:SetPoint("CENTER", b, "CENTER", 0, 8)
+            b.subtitulo:SetPoint("TOP", b.titulo, "BOTTOM", 0, -2)
+            b.rayoDer:SetPoint("LEFT", b, "CENTER", 40, 0)
+            b.rayoIzq:SetPoint("RIGHT", b, "CENTER", -40, 0)
+            return
         end
+
+        -- El estandarte colgante: extremo arriba, extremo abajo y la franja estirada entre los dos.
+        b:SetSize(440, 230)
+        b.arriba:Show() b.abajo:Show() b.medallon:Show() b.medio:Show()
+        b.arriba:SetPoint("TOP", b, "TOP", 0, 0)
+        b.abajo:SetPoint("BOTTOM", b, "BOTTOM", 0, 0)
+        -- Solapado a proposito: los extremos traen su propio degradado y si se dejan al ras se ve
+        -- la costura entre las tres piezas.
+        b.medio:SetPoint("TOPLEFT", b.arriba, "BOTTOMLEFT", 0, 34)
+        b.medio:SetPoint("BOTTOMRIGHT", b.abajo, "TOPRIGHT", 0, -25)
+        b.medallon:SetPoint("CENTER", b.arriba, "TOP", 0, -14)
+        b.titulo:SetPoint("CENTER", b, "CENTER", 0, 10)
+        b.subtitulo:SetPoint("TOP", b.titulo, "BOTTOM", 0, -4)
+        b.rayoDer:SetPoint("LEFT", b, "CENTER", 60, 0)
+        b.rayoIzq:SetPoint("RIGHT", b, "CENTER", -60, 0)
+    end
+
+    function HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)
+        local estilo = Estilo()
+        if estilo == "off" then return false end
         if not (C_Texture and C_Texture.GetAtlasInfo
             and C_Texture.GetAtlasInfo("BossBanner-BgBanner-Mid")) then
             -- Un atlas que no existe no borra la textura anterior, la deja como estaba: mas vale no
@@ -2650,6 +2707,7 @@ do
             return false
         end
         Crear()
+        AplicarEstilo(estilo)
         if ocultar then ocultar:Cancel() ocultar = nil end
         banner.salida:Stop()
         banner:SetAlpha(1)
@@ -2669,6 +2727,19 @@ do
             if banner:IsShown() then banner.salida:Play() end
         end)
         return true
+    end
+
+    -- Para probar un estilo sin dejarlo puesto: lo aplica a la siguiente aparicion y nada mas.
+    function HarfordTurnOrderAPI.PreviewTurnBanner(estilo, titulo, subtitulo, esMio)
+        local antes = HarfordConfig and HarfordConfig.Get and HarfordConfig.Get("turnbanner")
+        if estilo and estilo ~= "" and HarfordConfig and HarfordConfig.Set then
+            HarfordConfig.Set("turnbanner", estilo)
+        end
+        local ok = HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)
+        if estilo and estilo ~= "" and HarfordConfig and HarfordConfig.Set then
+            HarfordConfig.Set("turnbanner", antes)
+        end
+        return ok
     end
 end
 
@@ -2696,8 +2767,22 @@ do
 
     local function EnsureTarjeta(i)
         if tarjetas[i] then return tarjetas[i] end
-        local f = CreateCardVisuals(panel.contenido)
+        local f
+        f = CreateCardVisuals(panel.contenido, function() return f.miembro end)
         f:EnableMouse(true)
+        f:SetScript("OnMouseUp", function(self, boton)
+            local m = self.miembro
+            if not m then return end
+            if boton == "RightButton" then
+                -- El core no abre menus de DM: expone el gesto y HarfordAdmin decide. Sin Admin
+                -- cargado no pasa nada, que es lo correcto.
+                HarfordTurnOrderAPI.OnCardRightClick(m, self)
+                return
+            end
+            if boton ~= "LeftButton" then return end
+            if AlguienSeQuedaElClick(m) then return end
+            Ficha.ShowEntrySheet(m)
+        end)
         tarjetas[i] = f
         return f
     end
@@ -2752,8 +2837,13 @@ do
             else
                 -- El miembro YA ES una entrada: se le pasa tal cual, sin rellenar de la unidad que
                 -- tengas delante. Por eso no se pierde nada al cambiar de objetivo.
-                PaintEntryCard(f, m, false)
+                local mando = IsTurnAdmin()
+                PaintEntryCard(f, m, mando)
                 f.miembro = m
+                -- Sin mando la lista es de LECTURA: se ve quien hay, no se le toca la vida ni la
+                -- CA. Es la misma regla que ya seguian las tarjetas de la ventana de turnos.
+                f.minus:SetShown(mando)
+                f.plus:SetShown(mando)
                 f:ClearAllPoints()
                 local col, fila = (i - 1) % COLUMNAS, math.floor((i - 1) / COLUMNAS)
                 f:SetPoint("TOPLEFT", panel.contenido, "TOPLEFT",

@@ -402,7 +402,17 @@ print("Y el contador lo usa")
 chk("muestra llevado y tope", ataque:find('"%s%.1f|r / %.1f m"', 1, true) ~= nil, true)
 chk("avisa si te pasas", ataque:find("(se pasa ", 1, true) ~= nil, true)
 chk("se reinicia en tu turno",
-    ataque:find("HarfordTurnOrderAPI.RegisterMyTurnListener", 1, true) ~= nil, true)
+    ataque:find("T._myTurnListeners[#T._myTurnListeners + 1] = function()", 1, true) ~= nil, true)
+-- Y se apunta DIRECTAMENTE en la lista, no por `RegisterMyTurnListener`: este fichero carga ANTES
+-- que HarfordTurns (linea 102 del toc contra la 123) y esa funcion todavia no existe, asi que el
+-- `if` que la comprobaba no se cumplia NUNCA y el oyente no llegaba a registrarse. La lista si se
+-- puede sembrar, porque HarfordTurns la crea con `or {}` y respeta lo que encuentre.
+chk("sin depender del orden de carga",
+    ataque:find("_G.HarfordTurnOrderAPI = _G.HarfordTurnOrderAPI or {}", 1, true) ~= nil, true)
+local turnosSrc = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
+chk("y HarfordTurns respeta lo sembrado",
+    turnosSrc:find("HarfordTurnOrderAPI._myTurnListeners = HarfordTurnOrderAPI._myTurnListeners or {}",
+        1, true) ~= nil, true)
 -- Se cuenta en la mesa AL PARAR, no en cada paso: difundir cada decima llenaria el canal para
 -- decir lo mismo. Atlas lo hace continuo; aqui no hace falta.
 chk("y se cuenta en la mesa al parar",

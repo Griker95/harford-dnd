@@ -1657,6 +1657,11 @@ API.RegisterCommand("movimiento", function(args)
     for _ in ipairs(T and T._myTurnListeners or {}) do n = n + 1 end
     -- Si hay cero, nadie se entera de que te toca: el contador no puede arrancar.
     Print("  oyentes de 'es tu turno': " .. tostring(n) .. (n > 0 and "" or "  |cffff4444(nadie escucha)|r"))
+    -- Contar oyentes NO basta: pueden ser tres y ninguno el del movimiento. Se comprueba que el
+    -- contador este entre ellos, que es lo que fallaba -- el registro dependia del orden de carga
+    -- y `HarfordDnD` va ANTES que `HarfordTurns`.
+    Print("  el motor esta SIEMPRE mostrado: "
+        .. Si(_G.HarfordMovementDriver and _G.HarfordMovementDriver:IsShown()))
     local store = _G.HarfordTurnOrderStore
     if type(store) == "table" then
         Print("  modo: " .. (store.modoBandos and "bandos" or "individual")

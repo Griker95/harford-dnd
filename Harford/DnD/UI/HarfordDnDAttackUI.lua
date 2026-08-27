@@ -505,13 +505,22 @@ function API.AttachMovementTracker(opts)
     API.Controls.movementLabel = label
     API.Controls.movementButton = button
 
-    -- Al empezar tu turno el movimiento vuelve a cero: es lo que hace que el contador signifique
-    -- algo. Antes acumulaba desde que pulsabas y no se enteraba de los turnos.
+    -- Al empezar tu turno el movimiento vuelve a cero y arranca solo: es lo que hace que el
+    -- contador signifique algo.
+    --
+    -- Se apunta DIRECTAMENTE en la lista, sin pasar por `RegisterMyTurnListener`, porque este
+    -- fichero carga ANTES que `HarfordTurns.lua` (linea 102 del toc contra la 123) y esa funcion
+    -- todavia no existe: el `if` de antes no se cumplia nunca y el oyente no se registraba jamas.
+    -- La lista si se puede sembrar, porque `HarfordTurns` la crea con `or {}` y respeta lo que
+    -- encuentre. Esto NO es un apano de orden con temporizadores -- es no depender del orden.
     local ReiniciarPorTurno
-    if HarfordTurnOrderAPI and HarfordTurnOrderAPI.RegisterMyTurnListener then
-        HarfordTurnOrderAPI.RegisterMyTurnListener(function()
+    do
+        _G.HarfordTurnOrderAPI = _G.HarfordTurnOrderAPI or {}
+        local T = _G.HarfordTurnOrderAPI
+        T._myTurnListeners = T._myTurnListeners or {}
+        T._myTurnListeners[#T._myTurnListeners + 1] = function()
             if ReiniciarPorTurno then ReiniciarPorTurno() end
-        end)
+        end
     end
 
     -- Se esta llevando a un NPC? Un NPC poseido es el `pet` del cliente. Es la UNICA situacion en

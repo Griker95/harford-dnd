@@ -3365,6 +3365,24 @@ de ids lo blindaria a costa de engordar el mensaje.
 
 Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
+## El estado del combate es EXPLICITO (2026-08-27)
+
+- Tres estados, como en Atlas: sin combate, `preparando` (mesa montada, sin empezar) y `activo`.
+  `HarfordTurnOrderAPI.GetCombatState()` / `SetCombatState()`, guardados en `store.estado`.
+- **`HasActiveCombat()` dice si el combate se ha INICIADO**, no si hay gente en la lista. Lo
+  segundo lo contesta ahora **`HasCombatants()`**, que es lo que mira `StartCombat` -- preguntar
+  por `HasActiveCombat` alli era circular y solo funcionaba porque eran lo mismo.
+- **Terminar el combate YA NO vacia la lista.** Eran dos cosas distintas juntadas, y obligaba a
+  volver a montar la mesa entera entre escena y escena. Vaciar es el boton `Limpiar`, y ese SI
+  termina ademas: un combate "activo" sin nadie dentro no tiene sentido.
+- **El estado viaja al FINAL del tercer hueco**, detras de los DMs: un cliente anterior lee modo y
+  DMs como siempre y no llega a mirarlo, en vez de descuadrarse los campos. Y si el mensaje **no lo
+  trae, no se toca el nuestro** -- poner nil ahi mataria un combate en curso cada vez que hablara
+  alguien sin actualizar.
+- Compatibilidad: una lista guardada por una version anterior no trae estado, asi que un combate
+  con `asalto > 0` y combatientes se sigue considerando activo. Sin eso, actualizar el addon a
+  media sesion mataba el combate en curso.
+
 ## Al terminar el combate se recoge TODO, y en un sitio (2026-08-27)
 
 - `RecogerTodo()` en `HarfordTurnsCombat` es el UNICO punto de limpieza de fin de combate: economia

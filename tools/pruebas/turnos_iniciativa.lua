@@ -14,10 +14,18 @@ local esAdmin, enviados, impresos = true, {}, {}
 HarfordSync = { Send = function(_, msg, ch, to) enviados[#enviados+1] = { msg = msg, ch = ch, to = to } return true end,
                 BestChannel = function() return "RAID" end }
 HarfordDnDCalc = { GetInitiativeBonus = function() return 5 end }
-HarfordTurnOrderAPI = { HasActiveCombat = function()
-    for _, e in ipairs(store.entries) do if e.kind ~= "round" then return true end end
-    return false
-end }
+-- `HasCombatants` cuenta gente montada; `HasActiveCombat` dice si se ha INICIADO. Iniciar mira lo
+-- primero: preguntar por lo segundo era circular, y solo funcionaba porque eran lo mismo.
+local estadoCombate = nil
+HarfordTurnOrderAPI = {
+    HasCombatants = function()
+        for _, e in ipairs(store.entries) do if e.kind ~= "round" then return true end end
+        return false
+    end,
+    HasActiveCombat = function() return estadoCombate == "activo" end,
+    GetCombatState = function() return estadoCombate end,
+    SetCombatState = function(e) estadoCombate = e end,
+}
 C.Init({
     commPrefix = "HARFORDTURN", roundMarkerInitiative = 9999,
     EnsureStore = function() return store end,
@@ -73,9 +81,14 @@ chk("  valor aplicado", otra.initiative, 18)
 chk("RECHAZA si el remitente no es el dueno", C.ApplyInitiativeReply("INITRES|id-otra|99", "Impostor"), false)
 chk("  y no se toco", otra.initiative, 18)
 
+-- Terminar YA NO vacia la lista: son dos cosas distintas y juntarlas obligaba a volver a montar
+-- la mesa entera entre escena y escena. La lista se vacia con `Limpiar`.
 print("Fin de combate")
+estadoCombate = "activo"
 C.EndCombat()
-chk("lista vaciada", #store.entries, 0)
+chk("el combate deja de estar activo", estadoCombate, nil)
+chk("pero la mesa se queda montada", #store.entries > 0, true)
+chk("y el asalto vuelve a cero", store.asalto, nil)
 
 print("Solo el admin")
 esAdmin = false

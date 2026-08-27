@@ -607,13 +607,16 @@ local function SerializeState()
     -- Los DMs secundarios van en el mismo hueco que el modo, detras: quien delega tiene que ver
     -- la MISMA cadena que los demas o mandaria el efecto a alguien que nadie reconoce.
     local dms = table.concat(store.dms or {}, ";")
+    -- El estado del combate va al final del tercer hueco, detras de los DMs. Un cliente anterior
+    -- lee modo y DMs como siempre y no llega a mirar esto, en vez de descuadrarse los campos.
+    local estado = HarfordTurnOrderAPI.GetCombatState() or ""
     local modo = ""
     if store.modoBandos then
         modo = table.concat({ "B", tostring(store.activeBando or 0),
             tostring(store.faseBando or "inicio"), tostring(store.asalto or 0) }, ",")
     end
     return "STATE|" .. tostring(store.activeIndex or 1) .. "|"
-        .. modo .. "~" .. dms .. "|" .. table.concat(parts, ";")
+        .. modo .. "~" .. dms .. "~" .. estado .. "|" .. table.concat(parts, ";")
 end
 
 local function SerializeTurnNotice()
@@ -804,7 +807,12 @@ local function ApplySerializedState(message)
     -- Solo se acepta la marca si viene en el hueco del modo Y hay un cuarto campo: en el formato
     -- viejo las entradas iban en el tercero y una que empezara por "B" se tomaria por el modo.
     if fourth then
-        local modoRaw, dmsRaw = strsplit("~", tostring(third or ""))
+        local modoRaw, dmsRaw, estadoRaw = strsplit("~", tostring(third or ""))
+        -- Sin estado en el mensaje (cliente anterior) NO se toca el nuestro: poner nil ahi mataria
+        -- un combate en curso cada vez que hablara alguien sin actualizar.
+        if estadoRaw ~= nil then
+            HarfordTurnOrderAPI.SetCombatState(estadoRaw ~= "" and estadoRaw or nil)
+        end
         local listaDms = {}
         for nombre in tostring(dmsRaw or ""):gmatch("[^;]+") do listaDms[#listaDms + 1] = nombre end
         store.dms = (#listaDms > 0) and listaDms or nil
@@ -1619,6 +1627,11 @@ local function AddEntry(name, hp, maxHp, kind, id, mana, maxMana, unitName, icon
     end
 
     store.entries[#store.entries + 1] = entry
+    -- Montar la mesa es PREPARAR. Sirve para distinguir "hay gente puesta pero no hemos empezado"
+    -- de "no hay nada", que es lo que antes no se podia decir. No pisa un combate ya empezado.
+    if HarfordTurnOrderAPI.GetCombatState() == nil then
+        HarfordTurnOrderAPI.SetCombatState("preparando")
+    end
     ClampActiveIndex()
     MarkChanged()
     return true
@@ -2306,7 +2319,14 @@ local function CreateTurnFrame()
         local store = EnsureStore()
         store.entries = {}
         store.activeIndex = 1
+        -- Vaciar la mesa es ademas salir del combate: si no, quedaria un combate "activo" sin
+        -- nadie dentro. Terminar y limpiar son distintos, pero limpiar implica terminar.
+        HarfordTurnOrderAPI.SetCombatState(nil)
+        store.asalto = nil
+        store.activeBando = nil
+        store.faseBando = nil
         EnsureRoundMarker()
+        if Combate and Combate.CleanUpAfterCombat then pcall(Combate.CleanUpAfterCombat) end
         MarkChanged()
     end)
     tinsert(TurnFrame.adminControls, clearButton)
@@ -3309,14 +3329,54 @@ function HarfordTurnOrderAPI.SetSecondaryDMs(lista)
     return true
 end
 
-function HarfordTurnOrderAPI.HasActiveCombat()
+-- ─── EL ESTADO DEL COMBATE ───────────────────────────────────────────────────
+-- Tres estados, como en Atlas: sin combate, `preparando` (montando la lista) y `activo` (ya se
+-- juegan turnos). Antes "hay combate" se DEDUCIA de que hubiera entradas en la lista, y eso hacia
+-- que terminar el combate y vaciar la lista fueran lo mismo: no se podia dejar la mesa montada
+-- entre escenas, y un `/reload` con entradas guardadas resucitaba un combate ya cerrado.
+HarfordTurnOrderAPI.ESTADO_NINGUNO   = nil
+HarfordTurnOrderAPI.ESTADO_PREPARA   = "preparando"
+HarfordTurnOrderAPI.ESTADO_ACTIVO    = "activo"
+
+function HarfordTurnOrderAPI.GetCombatState()
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" then return nil end
+    local e = tostring(store.estado or "")
+    if e == "activo" or e == "preparando" then return e end
+    return nil
+end
+
+function HarfordTurnOrderAPI.SetCombatState(estado)
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" then return false end
+    if estado ~= "activo" and estado ~= "preparando" then estado = nil end
+    if store.estado == estado then return false end
+    store.estado = estado
+    return true
+end
+
+-- Cuantos combatientes hay montados, este el combate empezado o no. Lo que antes contestaba
+-- `HasActiveCombat`, y lo que de verdad hace falta para saber si se puede iniciar.
+function HarfordTurnOrderAPI.HasCombatants()
     local store = HarfordTurnOrderStore
     if type(store) ~= "table" or type(store.entries) ~= "table" then return false end
     for _, entry in ipairs(store.entries) do
-        -- Lo unico que NO cuenta es el marcador de asalto. Un BLOQUE si cuenta: `IsSystemEntry`
-        -- tapaba `players` y `generic`, asi que montar PJs, Neutral y Enemigo y darle a Iniciar
-        -- decia que no habia combatientes -- justo lo que se acababa de poner.
+        -- Lo unico que NO cuenta es el marcador de asalto. Un BLOQUE si cuenta.
         if tostring(entry.kind or "") ~= "round" then return true end
+    end
+    return false
+end
+
+-- "Hay combate" es ahora que se haya INICIADO, no que haya gente en la lista. Montar la mesa y
+-- jugar turnos son dos cosas distintas: la economia de turno, el contador de movimiento y las
+-- fichas de accion solo tienen sentido en la segunda.
+function HarfordTurnOrderAPI.HasActiveCombat()
+    if HarfordTurnOrderAPI.GetCombatState() == "activo" then return true end
+    -- Compatibilidad hacia atras: una lista guardada por una version anterior no trae estado, y
+    -- sin esto un combate en curso se quedaba muerto al actualizar el addon.
+    local store = HarfordTurnOrderStore
+    if type(store) == "table" and store.estado == nil and store.asalto and store.asalto > 0 then
+        return HarfordTurnOrderAPI.HasCombatants()
     end
     return false
 end

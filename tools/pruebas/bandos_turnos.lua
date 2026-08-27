@@ -526,6 +526,28 @@ chk("un desconectado no se enumera",
 -- contador de movimiento acabo escuchando al motor de condiciones para enterarse-- y de lo que se
 -- anadia despues no se acordaba nadie. Atlas lo tiene en una funcion (`EndCombatState`) que recoge
 -- todo de golpe, y es la forma correcta.
+-- ─── EL ESTADO DEL COMBATE ES EXPLICITO ─────────────────────────────────────
+-- Antes se DEDUCIA de que hubiera entradas, asi que terminar y vaciar la lista eran lo mismo.
+print("El estado del combate es explicito")
+chk("tres estados", turnos:find("function HarfordTurnOrderAPI.GetCombatState()", 1, true) ~= nil, true)
+chk("montar la mesa es preparar",
+    turnos:find('HarfordTurnOrderAPI.SetCombatState("preparando")', 1, true) ~= nil, true)
+-- Terminar deja la mesa MONTADA: son dos cosas distintas y juntarlas obligaba a rehacerla entre
+-- escena y escena. Vaciar es el boton Limpiar, y ese si termina ademas.
+local combate2 = io.open("Harford/Frames/HarfordTurnsCombat.lua"):read("*a")
+chk("terminar no vacia la lista",
+    combate2:find("store.entries = {}", 1, true) == nil, true)
+chk("pero limpiar si termina",
+    turnos:find("SetCombatState(nil)\n        store.asalto = nil", 1, true) ~= nil, true)
+-- Y viaja al final del tercer hueco: un cliente anterior lee modo y DMs como siempre y no llega a
+-- mirarlo, en vez de descuadrarse los campos.
+chk("el estado viaja detras de los DMs",
+    turnos:find('.. modo .. "~" .. dms .. "~" .. estado .. "|"', 1, true) ~= nil, true)
+-- Y si el mensaje no lo trae NO se toca el nuestro: poner nil ahi mataria un combate en curso cada
+-- vez que hablara alguien sin actualizar.
+chk("y un cliente sin estado no mata el combate",
+    turnos:find("if estadoRaw ~= nil then", 1, true) ~= nil, true)
+
 print("Al terminar el combate se recoge todo, en un sitio")
 local combate = io.open("Harford/Frames/HarfordTurnsCombat.lua"):read("*a")
 chk("hay un punto unico", combate:find("local function RecogerTodo()", 1, true) ~= nil, true)

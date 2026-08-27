@@ -137,8 +137,14 @@ local function StartCombat()
     ClaimAdminIfNeeded()
     local store = EnsureStore()
     EnsureRoundMarker()
-    if not HarfordTurnOrderAPI.HasActiveCombat() then
+    -- Mira si hay GENTE montada, no si el combate esta activo: preguntar por lo segundo aqui era
+    -- circular, y solo funcionaba porque "hay combate" queria decir "hay entradas".
+    if not HarfordTurnOrderAPI.HasCombatants() then
         Print("Anade combatientes antes de iniciar el combate.")
+        return
+    end
+    if HarfordTurnOrderAPI.GetCombatState() == "activo" then
+        Print("El combate ya esta empezado.")
         return
     end
 
@@ -157,6 +163,7 @@ local function StartCombat()
             combatientes = combatientes + 1 + #(entry.miembros or {})
         end
     end
+    HarfordTurnOrderAPI.SetCombatState("activo")
     SortByInitiative()
     store.activeIndex = 1
     -- El ciclo de bandos vuelve al principio: un combate nuevo no hereda por donde iba el anterior.
@@ -225,7 +232,9 @@ local function EndCombat()
     if not IsTurnAdmin() then Print("Solo el admin puede terminar el combate.") return end
     ClaimAdminIfNeeded()
     local store = EnsureStore()
-    store.entries = {}
+    -- Terminar el combate YA NO vacia la lista: son dos cosas distintas y juntarlas obligaba a
+    -- volver a montar la mesa entera entre escena y escena. La lista se vacia con `Limpiar`.
+    HarfordTurnOrderAPI.SetCombatState(nil)
     store.activeIndex = 1
     store.lastTouched = nil
     -- Sin combatientes no hay bandos. Dejarlos puestos haria que el siguiente combate arrancara a

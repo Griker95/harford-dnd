@@ -588,11 +588,6 @@ function API.AttachMovementTracker(opts)
     end
 
     local corriendo = false
-    function API.SetDashActive(activo)
-        API.DashActive = activo and true or nil
-        corriendo = activo and true or false
-        if API.RefreshMovement then API.RefreshMovement() end
-    end
 
     local function MaximoDelTurno()
         local base = (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
@@ -672,6 +667,22 @@ function API.AttachMovementTracker(opts)
         API.RecordedMovementAnchor = g.ancla
         API.TurnStartAnchor = g.inicio
         return true
+    end
+
+    function API.SetDashActive(activo)
+        API.DashActive = activo and true or nil
+        corriendo = activo and true or false
+        -- Correr DOBLA el tope, asi que si ya estabas agotado vuelves a tener sitio: hay que
+        -- levantar el muro. Sin esto la accion se gastaba, el tope subia y el ancla seguia
+        -- devolviendote al metro nueve -- o sea, Correr no hacia nada.
+        if corriendo and API.RecordedMovementAnchor
+            and totalMeters < MaximoDelTurno() then
+            API.RecordedMovementAnchor = nil
+            API.MovimientoSinMuro = nil
+            HarfordChat.Print("|cff88ff88Correr:|r vuelves a tener movimiento.")
+        end
+        if API.RefreshMovement then API.RefreshMovement() end
+        AvisarMovimiento(totalMeters, MaximoDelTurno())
     end
 
     local function OnUpdate(_, delta)

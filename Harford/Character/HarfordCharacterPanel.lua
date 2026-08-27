@@ -2418,7 +2418,13 @@ do
         elseif coste.porRasgo then
             anuncio.name = def.name .. " (" .. tostring(coste.porRasgo) .. ")"
         end
-        AnnounceAbility(anuncio)
+        -- UNA linea por accion. Si la accion va a tirar, la tirada YA lleva su nombre delante
+        -- ("Esconderse: Sigilo"), asi que anunciarla aparte son dos lineas para decir lo mismo.
+        -- Se cobra igual --el coste no depende de cuantas lineas salgan-- pero sin difundir.
+        local vaATirar = type(def.skillCheck) == "table" and _G.DND5E_ARC_API
+            and _G.DND5E_ARC_API.RollSkillEx and type(def.selfCondition) ~= "table"
+        -- Si no cabe el coste, la accion NO ocurre: ni tirada, ni estado, ni nada.
+        if AnnounceAbility(anuncio, { silencioso = vaATirar }) == false then return false end
 
         if type(def.selfCondition) == "table" and HarfordDnDConditions
             and HarfordDnDConditions.ApplyOwned then
@@ -2432,7 +2438,7 @@ do
             -- compararlo con la CD. Estabilizar la tiene fija en el manual (Medicina 10);
             -- Esconderse no, porque la suya es la Percepcion pasiva de quien mira y este cliente
             -- no la conoce: ahi se tira y decide la mesa.
-            local resultado = _G.DND5E_ARC_API.RollSkillEx(def.skillCheck.skill)
+            local resultado = _G.DND5E_ARC_API.RollSkillEx(def.skillCheck.skill, def.name)
             local dc = tonumber(def.skillCheck.dc)
             if dc and resultado and tonumber(resultado.total) then
                 local supera = tonumber(resultado.total) >= dc
@@ -3043,7 +3049,7 @@ end
 
 -- Click en rasgo ACTIVO: anuncia su uso a la mesa con enlace clicable y, si es de uso
 -- limitado, gasta un uso. (La mecanica de recurso/daño activable vive en la seccion Ataque.)
-AnnounceAbility = function(feature)
+AnnounceAbility = function(feature, opciones)
     if not feature then return false end
     if (feature.uses or feature.usesFrom) and not FeatureUseAvailable(feature) then
         WarnFeatureWithoutUses(feature)
@@ -3064,7 +3070,14 @@ AnnounceAbility = function(feature)
     local link = (HarfordTRP3 and HarfordTRP3.GetAbilityChatLink and HarfordTRP3.GetAbilityChatLink(feature))
         or AbilityChatLink(feature)
     if HarfordDnDRolls and HarfordDnDRolls.BroadcastAbility then
-        HarfordDnDRolls.BroadcastAbility(feature)
+        -- Si la economia dice que NO cabe, el anuncio devuelve false y el llamador tiene que
+        -- pararse: antes se avisaba y la accion seguia adelante --tirada incluida--, que es
+        -- exactamente no llevar economia.
+        --
+        -- `silencioso`: se cobra y se comprueba igual, pero no se difunde -- lo usa quien va a
+        -- sacar su propia linea (una tirada con el nombre de la accion delante) y no quiere dos.
+        if HarfordDnDRolls.BroadcastAbility(feature,
+            { skipBroadcast = opciones and opciones.silencioso }) == false then return false end
     elseif HarfordDnDRolls and HarfordDnDRolls.Broadcast then
         HarfordDnDRolls.Broadcast({ type = "info", label = link })
     elseif DEFAULT_CHAT_FRAME then

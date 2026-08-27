@@ -56,7 +56,8 @@ chk("el segundo clic lo dispara", panel:find('if C.Has and C.Has("player", spec.
 chk("y cuesta SOLO la reaccion",
     panel:find('cast = disparando and "reaccion" or coste.cast,', 1, true) ~= nil, true)
 chk("se decide antes de anunciar",
-    panel:find("local disparando = type(def.readyAction)", 1, true) < panel:find("AnnounceAbility(anuncio)", 1, true), true)
+    panel:find("local disparando = type(def.readyAction)", 1, true)
+    < panel:find("if AnnounceAbility(anuncio", 1, true), true)
 chk("y no se anuncia dos veces",
     select(2, panel:gsub("Se dispara la accion preparada", "")), 1)
 

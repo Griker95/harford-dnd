@@ -375,6 +375,19 @@ chk("y el ataque se aborta",
 chk("sin dejar contado el ataque que no fue",
     cond:find("ECONOMIA.ataques = ECONOMIA.ataques - 1", 1, true) ~= nil, true)
 local rolls = io.open("Harford/DnD/Engine/HarfordDnDRolls.lua"):read("*a")
+-- Y la accion basica tambien se para: antes avisaba y tiraba igual, que es lo que se veia en
+-- pantalla --"Ya habias gastado tu accion" y debajo la tirada de Sigilo.
+chk("la accion basica tambien se para",
+    panel:find("if AnnounceAbility(anuncio, { silencioso = vaATirar }) == false then return false end",
+        1, true) ~= nil, true)
+-- UNA linea por accion: si va a tirar, la tirada lleva su nombre delante ("Esconderse: Sigilo") y
+-- anunciarla aparte son dos lineas para decir lo mismo. Se cobra igual.
+chk("y sale en una sola linea",
+    rolls:find("if not opts.skipBroadcast then", 1, true) ~= nil, true)
+local fichaSrc = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("con el nombre de la accion en la tirada",
+    fichaSrc:find('local nombre = (etiqueta and etiqueta ~= "") and (etiqueta .. ": " .. s.name) or s.name',
+        1, true) ~= nil, true)
 chk("y la habilidad del Libro tampoco se anuncia",
     rolls:find("if HarfordDnDConditions.Turn.SpendForFeature(feature) == false then return false end",
         1, true) ~= nil, true)

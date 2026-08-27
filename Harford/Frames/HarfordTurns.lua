@@ -2719,7 +2719,13 @@ do
         -- la anterior, la deja como estaba, y aqui quedaria un rectangulo con arte de otra cosa.
         local RUTA_MARCO = "Interface\\CastingBar\\UI-CastingBar-Border"
         if not GetFileIDFromPath or GetFileIDFromPath(RUTA_MARCO) then
-            marcador.mov.marco = marcador.mov:CreateTexture(nil, "OVERLAY")
+            -- El marco va en su PROPIO frame, con nivel por encima del de la barra. Como textura
+            -- del boton se quedaba debajo: un frame hijo (la barra) se dibuja siempre sobre las
+            -- texturas de su padre, por mucho `OVERLAY` que se le ponga.
+            marcador.mov.marcoFrame = CreateFrame("Frame", nil, marcador.mov)
+            marcador.mov.marcoFrame:SetAllPoints()
+            marcador.mov.marcoFrame:SetFrameLevel(marcador.mov.barra:GetFrameLevel() + 2)
+            marcador.mov.marco = marcador.mov.marcoFrame:CreateTexture(nil, "OVERLAY")
             marcador.mov.marco:SetTexture(RUTA_MARCO)
             marcador.mov.marco:SetPoint("TOPLEFT", marcador.mov, "TOPLEFT", -23, 19)
             marcador.mov.marco:SetPoint("BOTTOMRIGHT", marcador.mov, "BOTTOMRIGHT", 23, -18)
@@ -2729,9 +2735,10 @@ do
             marcador.mov.fondo:SetTexture(RUTA_FONDO)
             marcador.mov.fondo:SetVertexColor(1, 1, 1, 1)
         end
-        marcador.mov.texto = marcador.mov.barra:CreateFontString(nil, "OVERLAY",
-            "GameFontHighlightSmall")
-        marcador.mov.texto:SetPoint("CENTER")
+        -- Y el numero por encima del marco, que si no lo tapa el adorno de los extremos.
+        marcador.mov.texto = (marcador.mov.marcoFrame or marcador.mov.barra):CreateFontString(
+            nil, "OVERLAY", "GameFontHighlightSmall")
+        marcador.mov.texto:SetPoint("CENTER", marcador.mov, "CENTER", 0, 0)
         marcador.mov:SetScript("OnClick", function()
             if HarfordDnDAttackUI and HarfordDnDAttackUI.ReturnToTurnStart then
                 HarfordDnDAttackUI.ReturnToTurnStart()

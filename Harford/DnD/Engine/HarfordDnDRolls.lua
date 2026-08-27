@@ -129,13 +129,18 @@ function HarfordDnDRolls.BroadcastAbility(feature, opts)
     if not label or label == "" then
         label = "|cff66ccff[" .. tostring(feature.name or "Habilidad") .. "]|r"
     end
-    HarfordDnDRolls.Broadcast({
-        type = "info",
-        label = label,
-        targetUnit = opts.targetUnit,
-        player = opts.player,
-        nameColor = opts.nameColor,
-    })
+    -- `skipBroadcast`: se ha cobrado y comprobado, pero no se difunde. Lo usa quien va a sacar su
+    -- propia linea --una tirada con el nombre de la accion delante-- y no quiere dos diciendo lo
+    -- mismo. El coste no depende de cuantas lineas salgan.
+    if not opts.skipBroadcast then
+        HarfordDnDRolls.Broadcast({
+            type = "info",
+            label = label,
+            targetUnit = opts.targetUnit,
+            player = opts.player,
+            nameColor = opts.nameColor,
+        })
+    end
     return true
 end
 

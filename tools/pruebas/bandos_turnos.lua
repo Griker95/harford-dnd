@@ -608,6 +608,12 @@ chk("se puede apagar", turnos:find('HarfordConfig.Get("turnmarker") == "off"', 1
 -- La barra de movimiento y las fichas vivian sueltas encima de la barra de accion. Es todo lo
 -- mismo --lo que te queda este turno-- y en dos sitios obliga a mirar a dos sitios.
 chk("lleva la barra de movimiento", turnos:find("marcador.mov.barra", 1, true) ~= nil, true)
+-- El marco va en su PROPIO frame, con nivel por encima del de la barra: como textura del boton se
+-- quedaba DEBAJO, porque un frame hijo se dibuja siempre sobre las texturas de su padre por mucho
+-- OVERLAY que se le ponga.
+chk("y el marco por encima de ella",
+    turnos:find("marcador.mov.marcoFrame:SetFrameLevel(marcador.mov.barra:GetFrameLevel() + 2)",
+        1, true) ~= nil, true)
 chk("y las fichas de economia", turnos:find("marcador.fichas[n] = f", 1, true) ~= nil, true)
 -- Click en la barra: vuelves a donde empezaste el turno. Ese gesto no existia.
 chk("click para volver al inicio del turno",

@@ -557,6 +557,12 @@ print("Correr dobla el tope, y solo este turno")
 chk("hay interruptor", ataque:find("function API.SetDashActive", 1, true) ~= nil, true)
 chk("que dobla", ataque:find("corriendo and (base * 2) or base", 1, true) ~= nil, true)
 chk("y se apaga en tu turno", ataque:find("corriendo = false", 1, true) ~= nil, true)
+-- Y LEVANTA EL MURO si con el doble vuelve a caber: la accion se gastaba, el tope subia y el ancla
+-- seguia devolviendote al metro nueve. O sea, Correr no hacia nada.
+chk("Correr levanta el muro",
+    ataque:find("if corriendo and API.RecordedMovementAnchor", 1, true) ~= nil, true)
+chk("solo si con el doble vuelve a caber",
+    ataque:find("and totalMeters < MaximoDelTurno() then", 1, true) ~= nil, true)
 local panel2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
 chk("y la accion lo enciende",
     panel2:find("HarfordDnDAttackUI.SetDashActive(true)", 1, true) ~= nil, true)

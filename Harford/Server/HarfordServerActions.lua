@@ -117,6 +117,28 @@ function API.TakeMoney(copper, opts)
 end
 
 -- Aplica un aura al propio personaje: envia "aura ID self".
+-- Teleporta al PROPIO personaje a una posicion guardada. Es el unico comando de Harford que MUEVE
+-- a alguien, asi que se valida entero antes de emitirlo: sin coordenadas buenas no se manda nada,
+-- porque un `worldport` con basura te deja fuera del mundo.
+function API.WorldportSelf(pos, opts)
+    if type(pos) ~= "table" then return false, "posicion invalida" end
+    local x, y, z = tonumber(pos.x), tonumber(pos.y), tonumber(pos.z)
+    if not (x and y and z) then return false, "faltan coordenadas" end
+    -- El mapa NO se adivina: si la posicion guardada no trae el suyo, no se emite. Portar con un
+    -- mapa equivocado es mucho peor que no portar.
+    local mapa = tonumber(pos.map)
+    if not mapa then return false, "la posicion guardada no trae mapa" end
+    local o = tonumber(pos.o) or 0
+
+    return BuildAndSend("WORLDPORT", {
+        x = string.format("%.6f", x),
+        y = string.format("%.6f", y),
+        z = string.format("%.6f", z),
+        map = tostring(math.floor(mapa)),
+        o = string.format("%.6f", o),
+    }, opts)
+end
+
 function API.ApplyAura(spellId, opts)
     local safeSpellId, spellErr = ToPositiveInteger(spellId, "spellId")
     if not safeSpellId then

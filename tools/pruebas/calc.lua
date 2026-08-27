@@ -412,4 +412,29 @@ chk("y se cuenta en la mesa al parar",
 chk("pero reiniciar no lo cuenta",
     ataque:find("ReiniciarPorTurno = function()", 1, true) ~= nil, true)
 
+-- ─── VOLVER A DONDE TERMINASTE ──────────────────────────────────────────────
+-- `worldport` es el UNICO comando de Harford que MUEVE a alguien, asi que se valida entero antes
+-- de emitirlo: con coordenadas malas te deja fuera del mundo.
+local acciones = io.open("Harford/Server/HarfordServerActions.lua"):read("*a")
+local plantillas = io.open("Harford/Server/HarfordCommandTemplates.lua"):read("*a")
+print("El regreso al ancla se valida antes de emitirse")
+chk("hay plantilla", plantillas:find("HarfordCommandTemplates.WORLDPORT", 1, true) ~= nil, true)
+chk("y accion validada", acciones:find("function API.WorldportSelf", 1, true) ~= nil, true)
+chk("sin coordenadas no se manda", acciones:find('return false, "faltan coordenadas"', 1, true) ~= nil, true)
+-- El mapa NO se adivina: portar con uno equivocado es peor que no portar.
+chk("y sin mapa tampoco",
+    acciones:find('return false, "la posicion guardada no trae mapa"', 1, true) ~= nil, true)
+-- Seis decimales, como los emite Epsilon: redondear a menos te deja dentro de una pared.
+chk("con seis decimales", acciones:find('string.format("%.6f", x)', 1, true) ~= nil, true)
+
+chk("el mapa sale del servidor, no de la interfaz",
+    ataque:find("pcall(GetInstanceInfo)", 1, true) ~= nil, true)
+chk("y se guarda hacia donde mirabas",
+    ataque:find("GetPlayerFacing and GetPlayerFacing()", 1, true) ~= nil, true)
+-- Va en un gesto DISTINTO del que se pulsa cada turno: no vaya a portarte por querer parar.
+chk("volver es click derecho", ataque:find('if boton == "RightButton" then', 1, true) ~= nil, true)
+-- El ancla del turno pasado no vale: volver ahi te devolveria un asalto entero atras.
+chk("y el ancla se olvida en tu turno",
+    ataque:find("API.RecordedMovementAnchor = nil", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

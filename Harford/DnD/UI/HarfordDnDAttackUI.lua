@@ -497,6 +497,39 @@ function API.AttachMovementTracker(opts)
         return nil
     end
 
+    -- Donde terminaste tu movimiento, para poder volver si te desplazan o te vas de sitio durante
+    -- el turno de otro. `C_Epsilon.GetPosition` da x/y/z; el mapa del SERVIDOR sale de
+    -- `GetInstanceInfo` -- `C_Map` devuelve el id de la interfaz, que no es el mismo -- y la
+    -- orientacion de `GetPlayerFacing`, para no aparecer mirando al norte.
+    local function CapturarAncla()
+        if not (C_Epsilon and C_Epsilon.GetPosition) then return nil end
+        local ok, x, y, z = pcall(C_Epsilon.GetPosition)
+        if not ok or not tonumber(x) or not tonumber(y) then return nil end
+        local mapa
+        if GetInstanceInfo then
+            local okI, _, _, _, _, _, _, id = pcall(GetInstanceInfo)
+            if okI then mapa = tonumber(id) end
+        end
+        return {
+            x = tonumber(x), y = tonumber(y), z = tonumber(z) or 0,
+            map = mapa,
+            o = (GetPlayerFacing and GetPlayerFacing()) or 0,
+        }
+    end
+
+    local function VolverAlAncla()
+        local ancla = API.RecordedMovementAnchor
+        if not ancla then
+            HarfordChat.Print("No hay sitio al que volver: muevete y para el contador primero.")
+            return
+        end
+        if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then return end
+        local ok, err = HarfordServerActions.WorldportSelf(ancla, { addonName = "Harford" })
+        HarfordChat.Print(ok
+            and "Vuelves a donde terminaste tu movimiento."
+            or ("No se pudo volver: " .. tostring(err or "error desconocido")))
+    end
+
     local function MaximoDelTurno()
         return (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
             and HarfordDnDCalc.GetTurnMovement()) or 0
@@ -538,6 +571,9 @@ function API.AttachMovementTracker(opts)
         button:SetText("Movimiento")
         label:SetText(totalMeters > 0 and FormatMeters(totalMeters) or "")
         API.RecordedMovementMeters = totalMeters
+        -- Y se ANCLA aqui: es el sitio donde terminaste, al que querras volver si te empujan o te
+        -- mueves durante el turno de otro.
+        API.RecordedMovementAnchor = CapturarAncla()
         -- Se cuenta en la mesa AL PARAR, no en cada paso: difundir cada decima llenaria el canal
         -- para decir lo mismo. Lo que importa es cuanto recorriste y si te pasaste.
         if totalMeters > 0.05 and HarfordDnDRolls and HarfordDnDRolls.Broadcast then
@@ -562,6 +598,8 @@ function API.AttachMovementTracker(opts)
         lastX, lastY, lastZ = nil, nil, nil
         API.RecordedMovementMeters = 0
         API.RecordedMovementInfo = nil
+        -- El ancla del turno pasado ya no vale: volver ahi te devolveria un asalto entero atras.
+        API.RecordedMovementAnchor = nil
         label:SetText("")
     end
 
@@ -578,7 +616,14 @@ function API.AttachMovementTracker(opts)
         end
     end
 
-    button:SetScript("OnClick", function()
+    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    button:SetScript("OnClick", function(_, boton)
+        -- Derecho: volver al ancla. Es un comando que te MUEVE, asi que va en un gesto distinto
+        -- del que se pulsa cada turno, no vaya a portarte por querer parar el contador.
+        if boton == "RightButton" then
+            VolverAlAncla()
+            return
+        end
         if tracking then
             StopTracking()
             return

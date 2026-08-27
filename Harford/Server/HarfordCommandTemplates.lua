@@ -14,6 +14,10 @@
 
 HarfordCommandTemplates = HarfordCommandTemplates or {}
 
+-- Vuelve al sitio exacto donde terminaste tu turno. Los decimales importan: seis, como los emite
+-- Epsilon, porque redondear a menos te deja dentro de una pared.
+HarfordCommandTemplates.WORLDPORT      = "worldport {x} {y} {z} {map} {o}"
+
 HarfordCommandTemplates.AURA_SELF      = "aura {id} self"
 HarfordCommandTemplates.AURA_TARGET    = "aura {id}"
 HarfordCommandTemplates.UNAURA_SELF    = "unaura {id} self"

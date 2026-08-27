@@ -501,14 +501,35 @@ chk("y no en el boton",
 
 print("El movimiento solo se cuenta en combate")
 chk("no arranca solo fuera de combate",
-    ataque:find("if not aMano and not EnCombate() then return end", 1, true) ~= nil, true)
+    ataque:find("if not aMano and (not EnCombate() or not EsMiTurno()) then return end",
+        1, true) ~= nil, true)
+-- Ni fuera de TU turno: moverse es tuyo mientras te toca. Si no, cruzabas la sala gratis durante
+-- el turno del enemigo.
+chk("ni fuera de tu turno",
+    ataque:find("local function EsMiTurno()", 1, true) ~= nil, true)
+-- Pero llevar un NPC ES jugar SU turno: el DM lo mueve cuando le toca a el, no a los PJs.
+-- Preguntar ahi por el turno de los PJs le bloquearia el movimiento justo cuando debe moverse.
+chk("salvo si llevas un NPC",
+    ataque:find("if LlevandoNpc and LlevandoNpc() then return true end", 1, true) ~= nil, true)
+-- Y su tope sale de SU ficha ("Velocidad 9 m"), no de tu raza: aplicarle la tuya no tiene nada que
+-- ver con la suya, y sin raza puesta salia 0, o sea sin limite.
+chk("y su tope sale de su stat block",
+    ataque:find("local function VelocidadDelNpc()", 1, true) ~= nil, true)
+chk("leyendo la Velocidad del bloque",
+    ataque:find('tostring(bloque.speed or "")', 1, true) ~= nil, true)
+-- Se escribe a mano: "9 m", "9m", "30 pies". El primer numero es el que vale, y los pies se pasan.
+chk("y entendiendo pies", ataque:find('if texto:lower():find("pie") then', 1, true) ~= nil, true)
 -- Pero a MANO si: el boton tambien sirve para medir una distancia sin mas.
 chk("pero a mano si", ataque:find("ArrancarSeguimiento(true)", 1, true) ~= nil, true)
 -- Y se para al ACABAR el combate, que es el caso que se olvida: el turno no "termina", desaparece
 -- el combate entero, y el contador se quedaba corriendo con un tope que ya no valia -- y el muro
 -- devolviendote a un sitio de otro combate.
-chk("y se para al acabar el combate",
-    ataque:find("if tracking and not EnCombate() then", 1, true) ~= nil, true)
+chk("y se para al acabar el combate, o al pasar el turno",
+    ataque:find("if tracking and (not EnCombate() or not EsMiTurno()) then", 1, true) ~= nil, true)
+-- Al pasar el turno se para DONDE ESTABAS y el ancla se queda: si sigues andando, el muro te
+-- devuelve. Reiniciar del todo seria regalarte el movimiento del turno siguiente.
+chk("dejando el ancla puesta",
+    ataque:find("if not API.RecordedMovementAnchor then", 1, true) ~= nil, true)
 -- Y FUERA de combate no limita nada: el contador mide, pero no ata. Ni se marca ancla ni se tira
 -- de nadie. Todo esto es del modo combate; fuera, la gente hace lo que quiera como siempre.
 chk("fuera de combate no se marca ancla",

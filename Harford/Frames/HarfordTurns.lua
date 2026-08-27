@@ -1545,7 +1545,9 @@ local function PaintEntryCard(card, entry, isAdmin)
     card.name:SetText(entry.name or "Sin nombre")
     if entry.kind == "round" then
         card.name:SetTextColor(GetEntryNameColor(entry))
-        card.init:SetText("ESTADOS")
+        -- La tarjeta del marcador dice el asalto y nada mas: "ESTADOS" pedia un repaso a
+        -- mano que ya no existe -- cada estado caduca solo, en el turno de su dueno.
+        card.init:SetText("")
         card.init:Show()
         card.armorClass:Hide()
         card.hp:Hide()
@@ -3709,6 +3711,26 @@ function HarfordTurnOrderAPI.AmIInCombat()
     -- El DM que lleva un NPC esta jugando el turno de ese NPC, aunque el no figure en la lista.
     if UnitExists and UnitExists("pet") and IsTurnAdmin and IsTurnAdmin() then return true end
     return false
+end
+
+-- Es MI turno ahora mismo? En bandos, que el bloque activo sea el de los PJs y este EMPEZADO --el
+-- cierre de un bloque no es tiempo de jugar--. En individual, que la entrada activa sea la mia.
+--
+-- Hace falta para lo que NO se puede hacer fuera de tu turno: la accion, la adicional y el
+-- movimiento son tuyos mientras te toca. La reaccion no, que para eso es una reaccion.
+function HarfordTurnOrderAPI.IsMyTurn()
+    if not HarfordTurnOrderAPI.HasActiveCombat() then return false end
+    local store = HarfordTurnOrderStore
+    if type(store) ~= "table" then return false end
+    if store.modoBandos then
+        local indice = tonumber(store.activeBando) or 0
+        local bando = indice >= 1 and HarfordTurnOrderAPI.BANDOS[indice] or nil
+        if bando ~= "pjs" then return false end
+        if tostring(store.faseBando or "") == "fin" then return false end
+        return HarfordTurnOrderAPI.AmIInCombat()
+    end
+    local entrada = store.entries and store.entries[store.activeIndex or 0]
+    return entrada ~= nil and EntryBelongsToMe(entrada)
 end
 
 -- Cuantos combatientes hay montados, este el combate empezado o no. Lo que antes contestaba

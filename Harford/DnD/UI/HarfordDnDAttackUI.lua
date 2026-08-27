@@ -589,7 +589,31 @@ function API.AttachMovementTracker(opts)
 
     local corriendo = false
 
+    -- Metros que puede recorrer el NPC que llevas, de SU stat block TRP3 ("Velocidad 9 m"). Sin
+    -- esto se le aplicaba la velocidad de TU raza, que no tiene nada que ver con la suya -- y si
+    -- el jugador no tenia raza puesta salia 0, o sea sin limite.
+    local function VelocidadDelNpc()
+        if not (HarfordTRP3 and HarfordTRP3.GetNPCStatBlock) then return nil end
+        local ok, bloque = pcall(HarfordTRP3.GetNPCStatBlock, "pet")
+        local texto = ok and bloque and tostring(bloque.speed or "") or ""
+        if texto == "" then return nil end
+        -- Se escribe a mano: "9 m", "9m", "9 metros", "30 pies". El primer numero es el que vale.
+        local n = tonumber(texto:match("([%d%.]+)"))
+        if not n then return nil end
+        if texto:lower():find("pie") then return n * 0.3048 end
+        return n
+    end
+
     local function MaximoDelTurno()
+        -- Llevando un NPC, su velocidad manda: la tuya no pinta nada mientras juegas lo suyo.
+        if LlevandoNpc and LlevandoNpc() then
+            local suya = VelocidadDelNpc()
+            if suya and suya > 0 then
+                local tope = corriendo and (suya * 2) or suya
+                API.TurnMovementMax = tope
+                return tope
+            end
+        end
         local base = (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
             and HarfordDnDCalc.GetTurnMovement()) or 0
         local tope = corriendo and (base * 2) or base
@@ -613,6 +637,18 @@ function API.AttachMovementTracker(opts)
         if not (T and T.HasActiveCombat and T.HasActiveCombat()) then return false end
         if T.AmIInCombat then return T.AmIInCombat() end
         return true
+    end
+
+    -- Moverse es tuyo mientras TE TOCA. Fuera de tu turno el contador no arranca y el muro te
+    -- devuelve a donde estabas: si no, cruzabas la sala gratis durante el turno del enemigo.
+    local function EsMiTurno()
+        -- Llevar un NPC ES jugar SU turno: el DM lo mueve cuando le toca a el, no a los PJs.
+        -- Preguntar aqui por el turno de los PJs le bloquearia el movimiento justo cuando debe
+        -- moverse.
+        if LlevandoNpc and LlevandoNpc() then return true end
+        local T = HarfordTurnOrderAPI
+        if not (T and T.IsMyTurn) then return true end
+        return T.IsMyTurn()
     end
 
     -- Te devuelve al punto donde se te acabo el movimiento. Con enfriamiento corto: el servidor
@@ -840,7 +876,7 @@ function API.AttachMovementTracker(opts)
         if tracking then return end
         -- Fuera de combate no hay turno que gastar: el contador no arranca solo. A mano si -- el
         -- boton sigue valiendo para medir una distancia cuando te apetezca.
-        if not aMano and not EnCombate() then return end
+        if not aMano and (not EnCombate() or not EsMiTurno()) then return end
         if HarfordDnDConditions and HarfordDnDConditions.IsSpeedZero
             and HarfordDnDConditions.IsSpeedZero("player") then
             RefreshConditionState()
@@ -960,8 +996,15 @@ function API.AttachMovementTracker(opts)
             -- Al terminar el combate se para y se limpia. El turno no "termina" -- desaparece el
             -- combate entero --, asi que sin esto el contador se quedaba corriendo con un tope que
             -- ya no significaba nada, y el muro seguia devolviendote a un sitio de otro combate.
-            if tracking and not EnCombate() then
-                ReiniciarPorTurno()
+            if tracking and (not EnCombate() or not EsMiTurno()) then
+                -- Al pasar el turno a otro se para donde estabas: el ancla se queda, asi que si
+                -- sigues andando el muro te devuelve. Moverse en el turno de otro no es gratis.
+                tracking = false
+                motor:SetScript("OnUpdate", nil)
+                button:SetText("Movimiento")
+                if not API.RecordedMovementAnchor then
+                    API.RecordedMovementAnchor = CapturarAncla()
+                end
             end
         end)
     end

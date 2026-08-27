@@ -158,4 +158,25 @@ chk("y lo aplica el receptor",
 chk("con el filtro de siempre",
     comm:find("if not IsTrustedEffectSender(sender) then return false end", 1, true) ~= nil, true)
 
+-- ─── FUERA DE TU TURNO NO TIENES ACCION NI ADICIONAL ────────────────────────
+-- Son tuyas mientras te TOCA. La reaccion no: para eso es una reaccion, se usa en el turno de otro
+-- por definicion. No se "gastan" al pasar el turno --se consideran no disponibles-- porque gastarlas
+-- de verdad haria imposible distinguirlas de un gasto real a la hora de devolverlas.
+print("Fuera de tu turno no hay accion ni adicional")
+HarfordTurnOrderStore.entries = { { name = "Alguien", kind = "npc" } }
+T.Reset()
+local miTurno = true
+HarfordTurnOrderAPI.IsMyTurn = function() return miTurno end
+chk("en tu turno, la accion esta", T.GetRemaining("action"), 1)
+chk("y la adicional tambien", T.GetRemaining("bonus"), 1)
+miTurno = false
+chk("en turno ajeno, sin accion", T.GetRemaining("action"), 0)
+chk("ni adicional", T.GetRemaining("bonus"), 0)
+chk("pero la REACCION sigue", T.GetRemaining("reaction"), 1)
+-- Y no se ha gastado nada: al volver tu turno esta entera.
+chk("no se apunto como gastada", T.GetSpent("action"), 0)
+miTurno = true
+chk("y vuelve entera", T.GetRemaining("action"), 1)
+HarfordTurnOrderAPI.IsMyTurn = nil
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

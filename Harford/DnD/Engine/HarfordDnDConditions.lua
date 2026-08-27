@@ -1726,6 +1726,19 @@ do
         return true
     end
 
+    -- Fuera de TU turno no tienes accion ni adicional ni movimiento: son tuyos mientras te toca.
+    -- La REACCION si, que para eso es una reaccion -- se usa en el turno de otro por definicion.
+    --
+    -- No se "gastan" al pasar el turno: se consideran NO DISPONIBLES mientras no te toque, que es
+    -- lo mismo de cara al jugador y ademas no ensucia el contador -- si se gastaran de verdad,
+    -- devolverlas seria imposible de distinguir de un gasto real.
+    local FUERA_DE_TURNO = { action = true, bonus = true }
+
+    function Turn.IsMyTurn()
+        if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.IsMyTurn) then return true end
+        return HarfordTurnOrderAPI.IsMyTurn()
+    end
+
     -- Presupuesto de cada tipo. Uno de cada por turno; los rasgos que conceden acciones extra
     -- (Impetu de Accion) suman aqui via el flag correspondiente.
     function Turn.GetBudget(kind)
@@ -1746,6 +1759,10 @@ do
     end
 
     function Turn.GetRemaining(kind)
+        -- Lo que no es tuyo ahora mismo esta a cero, aunque no lo hayas gastado.
+        if Turn.IsActive() and FUERA_DE_TURNO[tostring(kind or "")] and not Turn.IsMyTurn() then
+            return 0
+        end
         return math.max(0, Turn.GetBudget(kind) - Turn.GetSpent(kind))
     end
 

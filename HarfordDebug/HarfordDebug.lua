@@ -1625,6 +1625,43 @@ end, "ajusta en vivo el marco (texCoord/size) de los botones del Libro por categ
 -- mas una sola textura propia para los extremos del estandarte. Antes de construir nada hay que
 -- saber cuales existen AQUI: un atlas que falta no borra la textura anterior, la deja como estaba,
 -- que es la misma trampa que ya nos comimos con los iconos del Libro.
+-- ─── POR QUE SE BORRO EL COMBATE ────────────────────────────────────────────
+-- Una limpieza silenciosa que se lleva un combate en curso es indistinguible de un fallo. Esto
+-- dice si limpio, por que, y que habria hecho AHORA con lo que hay guardado.
+API.RegisterCommand("combate", function()
+    local T = _G.HarfordTurnOrderAPI
+    local store = _G.HarfordTurnOrderStore
+    if not (T and type(store) == "table") then Print("Turnos no cargados.") return end
+
+    Print("--- lo que hay guardado ---")
+    Print("  estado: |cffffcc00" .. tostring(store.estado or "sin combate") .. "|r"
+        .. "   asalto: " .. tostring(store.asalto or 0)
+        .. "   entradas: " .. tostring(#(store.entries or {})))
+    local sello = tonumber(store.lastTouched) or 0
+    local ahora = (time and time()) or 0
+    -- SIN sello se purga siempre, sin mirar la hora: es lo que hay de antes de existir la
+    -- caducidad. Si sale 0 en un combate en curso, eso es la averia.
+    if sello <= 0 then
+        Print("  |cffff5555sin sello|r: se purga al entrar sin mirar la hora.")
+    else
+        Print(string.format("  sellada hace %.0f s (%.1f min)", ahora - sello, (ahora - sello) / 60))
+    end
+    local mando = T.IsTurnAdmin and T.IsTurnAdmin()
+    -- El DM tiene mas margen porque su copia es la buena y nadie se la devuelve.
+    Print("  mandas: " .. (mando and "|cff88ff88si|r (limite 4 h)" or "no (limite 15 min)"))
+
+    local p = T.ultimaPurga
+    Print("--- la ultima limpieza ---")
+    if not p then
+        Print("  |cff88ff88no ha limpiado nada|r en esta sesion.")
+    else
+        Print(string.format("  motivo: |cffff5555%s|r   sello=%s  hace %.0f s  limite %.0f s",
+            tostring(p.motivo), tostring(p.sello), (p.ahora or 0) - (p.sello or 0), p.limite or 0))
+        Print("  se llevo " .. tostring(p.entradas) .. " entrada(s), estado "
+            .. tostring(p.estado or "nil") .. ", mandabas: " .. tostring(p.mandaba))
+    end
+end, "Por que se borro el combate al entrar")
+
 -- ─── POR QUE NO ARRANCA SOLO EL MOVIMIENTO ──────────────────────────────────
 -- El contador tiene que arrancar al empezar TU turno, sin pulsar nada. Son cuatro eslabones y si
 -- falla uno no se ve: el aviso de turno, que la entrada sea TUYA, que el combate este activo y que

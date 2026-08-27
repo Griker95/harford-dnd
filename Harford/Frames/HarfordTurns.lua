@@ -412,6 +412,12 @@ local function PurgeStaleEntries()
     -- de antes de existir la caducidad, y precisamente eso es lo que sobra.
     local limite = (IsTurnAdmin and IsTurnAdmin()) and STALE_SECONDS_DM or STALE_SECONDS
     if ultimo > 0 and ahora > 0 and (ahora - ultimo) < limite then return false end
+    HarfordTurnOrderAPI.ultimaPurga = {
+        sello = ultimo, ahora = ahora, limite = limite,
+        motivo = (ultimo <= 0) and "sin sello" or "caducado",
+        mandaba = (IsTurnAdmin and IsTurnAdmin()) and true or false,
+        entradas = #store.entries, estado = store.estado,
+    }
     store.entries = {}
     store.activeIndex = 1
     store.lastTouched = nil
@@ -3682,6 +3688,12 @@ end
 
 -- Cuantos combatientes hay montados, este el combate empezado o no. Lo que antes contestaba
 -- `HasActiveCombat`, y lo que de verdad hace falta para saber si se puede iniciar.
+-- Lo consulta el diagnostico de por que se borro un combate: el limite de caducidad depende de si
+-- mandas, y sin poder preguntarlo desde fuera no se puede explicar la decision.
+function HarfordTurnOrderAPI.IsTurnAdmin()
+    return IsTurnAdmin and IsTurnAdmin() or false
+end
+
 function HarfordTurnOrderAPI.HasCombatants()
     local store = HarfordTurnOrderStore
     if type(store) ~= "table" or type(store.entries) ~= "table" then return false end

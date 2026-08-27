@@ -18,7 +18,9 @@ local bloque = src:sub(i, fin) .. "\n" .. src:sub(lim1, lim2)
 local AHORA = 1000000
 -- Sin ser DM: el margen corto es el que se comprueba aqui.
 local env = { type = type, tonumber = tonumber, time = function() return AHORA end,
-              ipairs = ipairs, IsTurnAdmin = function() return false end }
+              ipairs = ipairs, IsTurnAdmin = function() return false end,
+              -- La limpieza apunta ahi por que lo hizo, para poder explicarlo despues.
+              HarfordTurnOrderAPI = {} }
 local f
 if setfenv then f = assert(cargar(bloque)); setfenv(f, env) else f = assert(cargar(bloque, "t", "t", env)) end
 local Touch, Purge = f()

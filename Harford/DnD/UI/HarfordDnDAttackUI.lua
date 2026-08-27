@@ -645,6 +645,11 @@ function API.AttachMovementTracker(opts)
         end
 
         totalMeters = totalMeters + avance
+        -- Se publica EN CADA PASO, no solo al parar. `GetRecordedMovementMeters` es lo que lee la
+        -- barra de la economia, y solo se escribia en `StopTracking`: la barra se refrescaba bien
+        -- --el aviso llegaba-- pero leia un cero, asi que se quedaba llena mientras el contador
+        -- corria por dentro y hasta te avisaba de que lo habias agotado.
+        API.RecordedMovementMeters = totalMeters
         button:SetText("Parar " .. FormatMeters(totalMeters))
         label:SetText(FormatMeters(totalMeters))
         AvisarMovimiento(totalMeters, MaximoDelTurno())

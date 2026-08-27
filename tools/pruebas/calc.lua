@@ -454,6 +454,11 @@ chk("y el ancla se olvida en tu turno",
 -- veia varios metros de golpe y los sumaba: el tiron se pagaba a si mismo, volvias a pasarte al
 -- instante y encadenabas teleportes.
 chk("un salto grande no cuenta como paso", ataque:find("if avance > 5 then", 1, true) ~= nil, true)
+-- Y lo recorrido se publica EN CADA PASO, no solo al parar: `GetRecordedMovementMeters` es lo que
+-- lee la barra de la economia, y escribirlo solo en `StopTracking` la dejaba llena mientras el
+-- contador corria por dentro y hasta avisaba de que lo habias agotado.
+chk("lo recorrido se publica en cada paso",
+    ataque:find("API.RecordedMovementMeters = totalMeters\n        button:SetText", 1, true) ~= nil, true)
 chk("y se muestrea a 20 por segundo",
     ataque:find("local pollInterval = 0.05", 1, true) ~= nil, true)
 

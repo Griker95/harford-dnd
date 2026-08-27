@@ -519,6 +519,17 @@ chk("leyendo la Velocidad del bloque",
     ataque:find('tostring(bloque.speed or "")', 1, true) ~= nil, true)
 -- Se escribe a mano: "9 m", "9m", "30 pies". El primer numero es el que vale, y los pies se pasan.
 chk("y entendiendo pies", ataque:find('if texto:lower():find("pie") then', 1, true) ~= nil, true)
+-- UNA sola cuenta: la barra del marcador usa la MISMA que el contador. Calcularla aparte daba dos
+-- topes distintos --la barra el tuyo, el contador el del NPC-- y eso ya nos costo la barra entera.
+chk("y la barra usa esa misma cuenta",
+    ataque:find("if API.CalcularTopeTurno then return API.CalcularTopeTurno() end", 1, true) ~= nil, true)
+-- Y se dice de QUIEN es: ensenar "9.0 m" a secas hace creer que son tus metros cuando son los de
+-- un esqueleto.
+chk("diciendo de quien es",
+    ataque:find("function API.GetTurnMovementOwner()", 1, true) ~= nil, true)
+local turnosSrc2 = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
+chk("y el marcador lo pinta",
+    turnosSrc2:find("local dueno = U.GetTurnMovementOwner and U.GetTurnMovementOwner()", 1, true) ~= nil, true)
 -- Pero a MANO si: el boton tambien sirve para medir una distancia sin mas.
 chk("pero a mano si", ataque:find("ArrancarSeguimiento(true)", 1, true) ~= nil, true)
 -- Y se para al ACABAR el combate, que es el caso que se olvida: el turno no "termina", desaparece

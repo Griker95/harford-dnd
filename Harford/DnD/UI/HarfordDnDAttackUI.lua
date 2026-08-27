@@ -442,15 +442,25 @@ end
 -- Metros que puede recorrer este turno, con el doble de `Correr` ya aplicado. Lo de fuera no puede
 -- calcularlo por su cuenta: `Correr` vive aqui.
 function API.GetTurnMovementMax()
-    -- Se CALCULA aqui, no se lee de lo que dejo el seguimiento. Antes devolvia `API.TurnMovementMax`
-    -- --un efecto secundario de `MaximoDelTurno`, que solo corre con la ficha montada--, asi que
-    -- quien no hubiera abierto la ficha en esa sesion recibia 0 y la barra de movimiento no se
-    -- pintaba nunca. Un dato que depende de que otro haya pasado por ahi no es un dato.
+    -- UNA sola cuenta. El seguimiento la publica al montarse y sabe cosas que aqui no se saben:
+    -- que llevando un NPC manda la velocidad de SU ficha, no la tuya. Calcularlo aparte daba dos
+    -- topes distintos --la barra ensenaba el tuyo mientras el contador usaba el suyo-- que es
+    -- exactamente el fallo que ya nos costo la barra de movimiento entera.
+    if API.CalcularTopeTurno then return API.CalcularTopeTurno() end
+    -- Sin seguimiento montado se calcula igual: un dato que depende de que otro haya pasado por
+    -- ahi no es un dato.
     local base = (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
         and HarfordDnDCalc.GetTurnMovement()) or 0
-    -- `Correr` dobla el tope de ESTE turno; vive en el seguimiento porque no es una propiedad del
-    -- personaje, pero el tope tiene que reflejarlo se pregunte desde donde se pregunte.
     return API.DashActive and (base * 2) or base
+end
+
+-- De quien es el movimiento que se esta contando: tuyo, o del NPC que llevas. Lo usa la barra para
+-- no hacer creer que 9 m son los tuyos cuando son los de un esqueleto.
+function API.GetTurnMovementOwner()
+    if API.MovimientoDeNpc and API.MovimientoDeNpc() then
+        return (UnitName and UnitName("pet")) or "NPC", true
+    end
+    return nil, false
 end
 
 function API.CreateTurnEconomyLabel(opts)
@@ -604,7 +614,11 @@ function API.AttachMovementTracker(opts)
         return n
     end
 
-    local function MaximoDelTurno()
+    -- Se publica para que la barra del marcador use ESTA cuenta y no otra.
+    local MaximoDelTurno
+    API.MovimientoDeNpc = function() return LlevandoNpc() and VelocidadDelNpc() ~= nil end
+
+    MaximoDelTurno = function()
         -- Llevando un NPC, su velocidad manda: la tuya no pinta nada mientras juegas lo suyo.
         if LlevandoNpc and LlevandoNpc() then
             local suya = VelocidadDelNpc()
@@ -620,6 +634,7 @@ function API.AttachMovementTracker(opts)
         API.TurnMovementMax = tope
         return tope
     end
+    API.CalcularTopeTurno = MaximoDelTurno
 
     -- Cuanto llevas DE cuanto puedes. Un numero suelto no dice si te has pasado, que es lo unico
     -- que la mesa necesita saber.

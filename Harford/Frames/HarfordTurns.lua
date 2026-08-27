@@ -2946,7 +2946,12 @@ do
             if fraccion <= 0.001 then marcador.mov.barra:SetStatusBarColor(0.75, 0.25, 0.25)
             elseif fraccion < 0.34 then marcador.mov.barra:SetStatusBarColor(0.90, 0.68, 0.25)
             else marcador.mov.barra:SetStatusBarColor(0.35, 0.72, 0.40) end
-            marcador.mov.texto:SetText(string.format("%.1f m", quedan))
+            -- De QUIEN es el movimiento. Llevando un NPC son SUS metros, y ensenar "9.0 m" a
+            -- secas hace creer que son los tuyos.
+            local dueno = U.GetTurnMovementOwner and U.GetTurnMovementOwner()
+            marcador.mov.texto:SetText(dueno
+                and string.format("%s  %.1f m", tostring(dueno), quedan)
+                or string.format("%.1f m", quedan))
             marcador.mov:Show()
         else
             marcador.mov:Hide()

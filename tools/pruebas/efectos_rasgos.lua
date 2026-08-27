@@ -327,4 +327,19 @@ local efecto = cuerpo:find("AdjustResourceCurrent(grant.resource", 1, true)
 chk("comprueba los usos", guardia ~= nil, true)
 chk("y lo hace ANTES de conceder", (guardia or 0) < (efecto or 0), true)
 
+-- Y no solo la concesion: el guardia va en el REPARTIDOR, antes de bajar a las veinticinco ramas.
+-- Cada una lo miraba por su cuenta o no lo miraba, y un guardia por rama es un guardia que alguien
+-- olvidara en la siguiente.
+local j = panel:find("local function BookButtonOnClick(self)", 1, true)
+chk("el click del Libro existe", j ~= nil, true)
+local reparto = panel:sub(j or 1, (j or 1) + 3000)
+local arriba = reparto:find("WarnFeatureWithoutUses(conUsos)", 1, true)
+local primeraRama = reparto:find('if cat == "forma" then', 1, true)
+chk("comprueba los usos antes de repartir", arriba ~= nil, true)
+chk("y antes de la primera rama", (arriba or 0) < (primeraRama or 0), true)
+-- Con dos excepciones, y las dos a proposito: un pasivo es un tooltip y no gasta nada, y una
+-- trampa ya colocada tiene que poder dispararse con el contador a 0.
+chk("salvo pasivos y trampas",
+    reparto:find('if cat ~= "pasivo" and not self.feature.trap then', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

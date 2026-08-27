@@ -3464,6 +3464,26 @@ local function BookButtonOnClick(self)
     end
     local cat = BookCategory(self.feature)
     local powerOption = HarfordCharacterBook.IsOptionAbility(self.feature) and GetPowerWordOption(self.feature) or nil
+
+    -- ── UN RASGO AGOTADO NO HACE NADA ───────────────────────────────────────
+    -- Se comprueba AQUI, una sola vez, antes de repartir a las veinticinco ramas de abajo. Cada
+    -- una lo miraba por su cuenta o no lo miraba, y las que no acababan aplicando su efecto y
+    -- avisando DESPUES -- la Reserva de ira daba sus puntos de ira con el contador a cero, porque
+    -- el guardia vivia dentro del anuncio, que va al final. Un guardia por rama es un guardia que
+    -- alguien olvidara en la siguiente.
+    --
+    -- Dos excepciones, las dos a proposito:
+    --   `pasivo`  no gasta nada: es un tooltip.
+    --   `trap`    colocar la trampa y que se dispare son momentos distintos. Si colocaste la
+    --             ultima y luego salta, hay que poder resolverla con el contador ya a 0.
+    if cat ~= "pasivo" and not self.feature.trap then
+        local conUsos = self.feature
+        if (conUsos.uses or conUsos.usesFrom) and not FeatureUseAvailable(conUsos) then
+            WarnFeatureWithoutUses(conUsos)
+            return
+        end
+    end
+
     if cat ~= "pasivo" and HarfordDnDConditions and HarfordDnDConditions.CanPerform then
         local actionType = (cat == "reaccion" or (powerOption and powerOption.cast == "reaccion")) and "reaction" or "action"
         local allowed, condition = HarfordDnDConditions.CanPerform(actionType, { actorUnit = "player", targetUnit = "target" })

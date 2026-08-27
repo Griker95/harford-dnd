@@ -1625,6 +1625,52 @@ end, "ajusta en vivo el marco (texCoord/size) de los botones del Libro por categ
 -- mas una sola textura propia para los extremos del estandarte. Antes de construir nada hay que
 -- saber cuales existen AQUI: un atlas que falta no borra la textura anterior, la deja como estaba,
 -- que es la misma trampa que ya nos comimos con los iconos del Libro.
+-- Los estilos de aviso de turno que hay, uno detras de otro. Elegir a ciegas entre nombres no
+-- funciona: hay que VERLOS, y verlos seguidos para poder compararlos.
+API.RegisterCommand("banners", function(args)
+    local T = HarfordTurnOrderAPI
+    if not (T and T.PreviewTurnBanner) then
+        Print("HarfordTurnOrderAPI.PreviewTurnBanner no existe.")
+        return
+    end
+
+    local ESTILOS = {
+        { id = "estandarte", que = "Estandarte colgante, como el aviso de jefe" },
+        { id = "franja",     que = "Franja discreta cruzando la pantalla" },
+    }
+
+    local pedido = tostring(args or ""):match("^%s*(%S*)")
+    if pedido ~= "" then
+        for _, e in ipairs(ESTILOS) do
+            if e.id == pedido then
+                Print("Estilo |cffffcc00" .. e.id .. "|r: " .. e.que)
+                T.PreviewTurnBanner(e.id, "ES TU TURNO", "Asalto 3", true)
+                return
+            end
+        end
+        Print("No conozco el estilo '" .. pedido .. "'.")
+    end
+
+    Print("Estilos disponibles (se ven uno detras de otro):")
+    for _, e in ipairs(ESTILOS) do
+        local puesto = HarfordConfig and HarfordConfig.Get
+            and HarfordConfig.Get("turnbanner") == e.id
+        Print("  |cffffcc00" .. e.id .. "|r" .. (puesto and " |cff88ff88(puesto)|r" or "")
+            .. " - " .. e.que)
+    end
+    Print("  |cffffcc00off|r - sin aviso")
+    Print("Se pone con: /harford config turnbanner <estilo>")
+
+    -- Uno cada cinco segundos: el aviso dura cuatro y hace falta verlo entero antes del siguiente.
+    -- `C_Timer.After` de una vez por estilo, sin ticker.
+    for i, e in ipairs(ESTILOS) do
+        C_Timer.After((i - 1) * 5, function()
+            Print("Mostrando |cffffcc00" .. e.id .. "|r")
+            T.PreviewTurnBanner(e.id, "ES TU TURNO", e.que, i == 1)
+        end)
+    end
+end, "Ensena todos los estilos de aviso de turno (banners [estilo])")
+
 -- El estandarte solo se ve cuando cambia el turno, que no es un momento que se pueda repetir a
 -- voluntad para mirarle la animacion. Esto lo levanta a mano.
 API.RegisterCommand("estandarte", function(args)

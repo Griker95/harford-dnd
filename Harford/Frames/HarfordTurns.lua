@@ -2348,6 +2348,17 @@ local function CreateTurnFrame()
     TurnFrame:RegisterForDrag("LeftButton")
     TurnFrame:SetClampedToScreen(true)
     TurnFrame:Hide()
+    -- Se recuerda si estaba abierta. Un `/reload` a media pelea la cerraba y habia que volver a
+    -- abrirla a mano: la ventana solo se muestra sola al INICIAR el combate, y eso ya habia
+    -- pasado. Se apunta en el propio store, que es SavedVariable.
+    TurnFrame:HookScript("OnShow", function()
+        local store = HarfordTurnOrderStore
+        if type(store) == "table" then store.ventanaAbierta = true end
+    end)
+    TurnFrame:HookScript("OnHide", function()
+        local store = HarfordTurnOrderStore
+        if type(store) == "table" then store.ventanaAbierta = nil end
+    end)
     SetFrameBackground(TurnFrame)
 
     local mainBorder = CreateFrame("Frame", nil, TurnFrame, "DialogBorderTemplate")
@@ -2496,6 +2507,14 @@ eventFrame:RegisterEvent("UNIT_MAXHEALTH")
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     if event == "PLAYER_LOGIN" then
         EnsureStore()
+        -- Y se reabre si estaba abierta, pero solo si queda algo que enseniar: reabrirla vacia
+        -- despues de que la caducidad se llevara el combate seria un frame en blanco.
+        if HarfordTurnOrderStore.ventanaAbierta and HarfordTurnOrderAPI.HasCombatants() then
+            -- La ventana se crea al abrirla por primera vez, asi que aqui todavia no existe.
+            if not TurnFrame then CreateTurnFrame() end
+            TurnFrame:Show()
+            if RefreshFrame then RefreshFrame() end
+        end
         -- La limpieza espera a que la peticion de foto haya tenido su oportunidad: purgar al
         -- instante tiraba el combate ANTES de preguntar si seguia vivo, y luego lo recuperaba --o
         -- no-- por los pelos. Si en ese rato llega una foto, no hay nada que limpiar.

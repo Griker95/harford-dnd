@@ -563,6 +563,24 @@ chk("pero solo si lo ve",
 chk("el boton sale solo cuando toca",
     turnos:find("and not HarfordTurnOrderAPI.AmIInCombat())", 1, true) ~= nil, true)
 
+-- ─── LA VENTANA SOBREVIVE A UN /RELOAD ──────────────────────────────────────
+-- Solo se abre sola al INICIAR el combate, y eso ya habia pasado: un /reload a media pelea la
+-- cerraba y habia que volver a abrirla a mano.
+print("La ventana de turnos vuelve tras un /reload")
+chk("se apunta si estaba abierta",
+    turnos:find("store.ventanaAbierta = true", 1, true) ~= nil, true)
+chk("y se reabre al entrar",
+    turnos:find("if HarfordTurnOrderStore.ventanaAbierta and HarfordTurnOrderAPI.HasCombatants() then",
+        1, true) ~= nil, true)
+-- Pero solo si queda algo que enseniar: reabrirla vacia despues de que la caducidad se llevara el
+-- combate seria un frame en blanco.
+chk("solo si queda gente montada",
+    turnos:find("HarfordTurnOrderStore.ventanaAbierta and HarfordTurnOrderAPI.HasCombatants()",
+        1, true) ~= nil, true)
+-- La ventana se crea al abrirla por primera vez: al entrar todavia no existe.
+chk("creandola si hace falta",
+    turnos:find("if not TurnFrame then CreateTurnFrame() end\n            TurnFrame:Show()", 1, true) ~= nil, true)
+
 print("El estado del combate es explicito")
 chk("tres estados", turnos:find("function HarfordTurnOrderAPI.GetCombatState()", 1, true) ~= nil, true)
 chk("montar la mesa es preparar",

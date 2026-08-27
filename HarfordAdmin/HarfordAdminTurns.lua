@@ -172,27 +172,6 @@ do
         return f
     end
 
-    -- La unidad viva de un guid, si esta a la vista. Las mismas dos fuentes de siempre: el grupo y
-    -- las placas de nombre; no hay forma de mirar a alguien que no este en ninguna.
-    local function UnidadDe(guid)
-        for _, u in ipairs({ "target", "focus", "mouseover", "player" }) do
-            if UnitExists and UnitExists(u) and UnitGUID and UnitGUID(u) == guid then return u end
-        end
-        local n = (GetNumGroupMembers and GetNumGroupMembers()) or 0
-        local prefijo = (IsInRaid and IsInRaid()) and "raid" or "party"
-        for i = 1, n do
-            local u = prefijo .. i
-            if UnitExists and UnitExists(u) and UnitGUID(u) == guid then return u end
-        end
-        if C_NamePlate and C_NamePlate.GetNamePlates then
-            for _, placa in ipairs(C_NamePlate.GetNamePlates() or {}) do
-                local u = placa.namePlateUnitToken or placa.unit
-                if u and UnitGUID(u) == guid then return u end
-            end
-        end
-        return nil
-    end
-
     local function CrearPanel()
         if panel then return panel end
         panel = CreateFrame("Frame", "HarfordAdminBlockFrame", UIParent, "BackdropTemplate")
@@ -279,33 +258,11 @@ do
             local m, f = dentro[i], EnsureFila(i)
             if not m then f:Hide()
             else
-                local unidad = UnidadDe(m.guid)
-                -- Se pinta con la funcion del core, dandole una entrada como las suyas. Los valores
-                -- se leen de la unidad VIVA porque la vida de un miembro no se guarda en ninguna
-                -- parte: no tiene tarjeta en la lista compartida, ese es el modelo.
-                local vida, maxima = 0, 0
-                if unidad and UnitHealth then
-                    vida, maxima = UnitHealth(unidad), UnitHealthMax(unidad)
-                end
-                local ca = unidad and HarfordDnDCombat and HarfordDnDCombat.GetArmorClassForUnit
-                    and HarfordDnDCombat.GetArmorClassForUnit(unidad)
-                API().PaintEntryCard(f, {
-                    -- `npc` y no `player`: la entrada de jugador saca la vida del snapshot Harford
-                    -- por nombre, y aqui se quiere lo que marca la unidad delante.
-                    kind = "npc",
-                    name = m.name,
-                    id = m.guid,
-                    unitName = m.name,
-                    armorClass = ca or 0,
-                    hp = vida,
-                    maxHp = maxima,
-                }, false)
-                -- Sin vista no se enseña una barra vacia como si estuviera muerto: se dice.
-                if not unidad then f.hpText:SetText("|cff808080sin vista|r") end
-                if m.jugador and HarfordClassColors and HarfordClassColors.UnitColorRGB and unidad then
-                    local r, g, b = HarfordClassColors.UnitColorRGB(unidad)
-                    if r then f.name:SetTextColor(r, g, b) end
-                end
+                -- El miembro YA ES una entrada, con los mismos datos que una tarjeta normal.
+                -- Se le pasa tal cual al pintor del core: nada de rellenar de la unidad que tengas
+                -- delante, que era lo que hacia perder el icono al cambiar de objetivo y ponia la
+                -- vida NATIVA de un PJ en vez de la del sistema.
+                API().PaintEntryCard(f, m, false)
                 f.quitar:SetScript("OnClick", function()
                     T.RemoveBlockMember(bloqueActual, m.guid)
                     Print(tostring(m.name or "?") .. " sale de " .. tostring(bloqueActual.name) .. ".")

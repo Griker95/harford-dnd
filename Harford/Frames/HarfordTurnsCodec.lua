@@ -106,13 +106,26 @@ end
 
 -- Los miembros de un bloque: `guid|nombre|esJugador`, separados por `;`. Se escapan los dos
 -- separadores dentro de cada campo, que un nombre de NPC puede traerlos.
+-- Los separadores del miembro son `;` y `|`, asi que cualquier texto suyo se escapa antes.
+local function Campo(v)
+    return tostring(v or ""):gsub("%%", "%%25"):gsub(";", "%%3B"):gsub("|", "%%7C")
+end
+
+local function DesCampo(v)
+    return tostring(v or ""):gsub("%%7C", "|"):gsub("%%3B", ";"):gsub("%%25", "%%")
+end
+
 local function SerializeMembers(lista)
     if type(lista) ~= "table" or #lista == 0 then return "" end
     local partes = {}
     for _, m in ipairs(lista) do
-        local nombre = tostring(m.name or ""):gsub("%%", "%%25"):gsub(";", "%%3B"):gsub("|", "%%7C")
+        local nombre = Campo(m.name)
         partes[#partes + 1] = table.concat({
-            tostring(m.guid or ""), nombre, m.jugador and "1" or "0" }, "|")
+            tostring(m.guid or ""), nombre, m.jugador and "1" or "0",
+            tostring(m.kind or ""), Campo(m.unitName), tostring(SafeNumber(m.hp, 0)),
+            tostring(SafeNumber(m.maxHp, 0)), Campo(m.icon), tostring(SafeNumber(m.displayId, 0)),
+            tostring(SafeNumber(m.armorClass, 0)), tostring(SafeNumber(m.reaction, 0)),
+            Campo(m.nameColor) }, "|")
     end
     return table.concat(partes, ";")
 end
@@ -122,10 +135,26 @@ local function DeserializeMembers(texto)
     if texto == "" then return nil end
     local fuera = {}
     for trozo in texto:gmatch("[^;]+") do
-        local guid, nombre, jugador = strsplit("|", trozo)
+        -- Los campos nuevos van DETRAS: un cliente con la version anterior manda tres y aqui se
+        -- leen tres, con el resto en su valor por defecto, en vez de descuadrarse.
+        local guid, nombre, jugador, kind, unitName, hp, maxHp, icon, displayId,
+            armorClass, reaction, nameColor = strsplit("|", trozo)
         if guid and guid ~= "" then
-            nombre = tostring(nombre or ""):gsub("%%7C", "|"):gsub("%%3B", ";"):gsub("%%25", "%%")
-            fuera[#fuera + 1] = { guid = guid, name = nombre, jugador = jugador == "1" or nil }
+            fuera[#fuera + 1] = NormalizeEntryLinks({
+                id = guid,
+                guid = guid,
+                name = DesCampo(nombre),
+                jugador = jugador == "1" or nil,
+                kind = NormalizeKind(DesCampo(kind)),
+                unitName = DesCampo(unitName),
+                hp = SafeNumber(hp, 0),
+                maxHp = SafeNumber(maxHp, 0),
+                icon = DesCampo(icon),
+                displayId = SafeNumber(displayId, 0),
+                armorClass = SafeNumber(armorClass, 0),
+                reaction = SafeNumber(reaction, 0),
+                nameColor = DesCampo(nameColor) ~= "" and DesCampo(nameColor) or nil,
+            })
         end
     end
     return (#fuera > 0) and fuera or nil

@@ -363,9 +363,9 @@ print("Los bloques guardan quien va dentro")
 chk("se puede anadir por unidad", turnos:find("function HarfordTurnOrderAPI.AddBlockMember", 1, true) ~= nil, true)
 chk("y quitar", turnos:find("function HarfordTurnOrderAPI.RemoveBlockMember", 1, true) ~= nil, true)
 chk("sin duplicar", turnos:find('if m.guid == guid then return false, "Ya esta en ese bloque" end', 1, true) ~= nil, true)
--- Se guarda guid y nombre y nada mas: la vida y la CA se leen de la unidad viva, no de aqui.
-chk("guardando lo justo para reconocerlo",
-    turnos:find("name = (GetUnitName and GetUnitName(unit, true))", 1, true) ~= nil, true)
+-- Y se guarda ENTERO, no solo guid y nombre: su tarjeta es la misma que la de una entrada normal.
+chk("guardando todo lo que pinta su tarjeta",
+    turnos:find("armorClass = meta.armorClass or 0, reaction = meta.reaction or 0,", 1, true) ~= nil, true)
 -- Y el panel que creaba tarjetas ya no esta.
 chk("el panel de candidatos se retiro", turnos:find("ToggleCandidates", 1, true) == nil, true)
 
@@ -413,16 +413,34 @@ chk("y solo se lo queda si es un bloque",
     admin2:find('if k ~= "players" and k ~= "generic" then return false end', 1, true) ~= nil, true)
 chk("si nadie lo toma, el core hace lo de siempre",
     turnos:find("if AlguienSeQuedaElClick(entry) then return end", 1, true) ~= nil, true)
--- La vida sale de la unidad VIVA. Sin vista se dice, en vez de enseniar un numero viejo que nadie
--- puede comprobar: la del bloque no se guarda en ninguna parte.
-chk("la vida se lee de la unidad viva", admin2:find("UnitHealth(unidad)", 1, true) ~= nil, true)
-chk("y se dice cuando no esta a la vista",
-    admin2:find('f.hpText:SetText("|cff808080sin vista|r")', 1, true) ~= nil, true)
+-- Un MIEMBRO ES UNA ENTRADA: se captura con los mismos datos que una tarjeta normal (icono,
+-- displayId, vida, CA, unitName) y se pinta tal cual. Guardar solo guid/nombre obligaba a
+-- rellenar el resto de la unidad que tuvieras delante: al cambiar de objetivo se perdia el icono,
+-- la CA salia 0 y la vida de un PJ era la NATIVA, no la del sistema Harford.
+chk("el miembro se captura como una entrada",
+    turnos:find("CapturarUnidadDeTurno(unit, nil)", 1, true) ~= nil, true)
+chk("con el mismo capturador que una tarjeta normal",
+    turnos:find("AddEntry(CapturarUnidadDeTurno(unit, kind))", 1, true) ~= nil, true)
+chk("y guarda su icono", turnos:find("icon = NormalizeIconPath(icon)", 1, true) ~= nil, true)
+-- Un jugador conserva su `kind`, que es lo que hace que el pintor le saque la vida del sistema
+-- Harford por nombre en vez de la de la unidad.
+chk("un jugador sigue siendo player", turnos:find("jugador = (entryKind == ", 1, true) ~= nil, true)
+chk("y se le piden sus recursos",
+    turnos:find('if entryKind == "player" and HarfordDnDAPI', 1, true) ~= nil, true)
+-- Y viaja entero: en el otro cliente la unidad puede no estar ni a la vista, asi que lo que no se
+-- mande no se puede recuperar alli.
+local codec = io.open("Harford/Frames/HarfordTurnsCodec.lua"):read("*a")
+chk("el miembro viaja con su icono y su CA",
+    codec:find("Campo(m.icon), tostring(SafeNumber(m.displayId, 0))", 1, true) ~= nil, true)
+chk("y los campos nuevos van detras",
+    codec:find("local guid, nombre, jugador, kind, unitName, hp, maxHp, icon, displayId",
+        1, true) ~= nil, true)
 -- Son las tarjetas de siempre, solo que dentro de la lista: NO una imitacion. Las monta y las pinta
 -- el core con las mismas dos funciones que la ventana de turnos, porque la primera version las
 -- rehizo aqui y las dos se actualizaban de forma distinta.
 chk("las monta el core", admin2:find("API().CreateCardVisuals(panel.contenido)", 1, true) ~= nil, true)
-chk("y las pinta el core", admin2:find("API().PaintEntryCard(f, {", 1, true) ~= nil, true)
+-- Se le pasa el miembro TAL CUAL, sin sintetizar una entrada a medias.
+chk("y las pinta el core", admin2:find("API().PaintEntryCard(f, m, false)", 1, true) ~= nil, true)
 chk("el core expone el constructor",
     turnos:find("function HarfordTurnOrderAPI.CreateCardVisuals(parent, onArmorClick)", 1, true) ~= nil, true)
 chk("y el pintor",

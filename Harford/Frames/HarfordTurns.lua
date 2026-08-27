@@ -1593,8 +1593,7 @@ local function AddEntry(name, hp, maxHp, kind, id, mana, maxMana, unitName, icon
     return true
 end
 
-local function AddUnit(unit, kind)
-    if not UnitExists(unit) then Print("No hay unidad valida seleccionada.") return end
+local function CapturarUnidadDeTurno(unit, kind)
     local name = UnitName(unit) or "Unidad"
     local fullName = GetUnitName and GetUnitName(unit, true) or name
     local trp = TryGetTRP3UnitInfo(unit)
@@ -1620,7 +1619,8 @@ local function AddUnit(unit, kind)
         armorClass = SafeNumber(parsed and parsed.ac, 0)
     end
 
-    AddEntry(name, hp, maxHp, entryKind, guid, mana, maxMana, fullName, trp.icon or GetFallbackCreatureIcon(unit), displayId, {
+    return name, hp, maxHp, entryKind, guid, mana, maxMana, fullName,
+        trp.icon or GetFallbackCreatureIcon(unit), displayId, {
         npcId = trp.npcId,
         phaseId = trp.phaseId,
         trpFullID = trp.trpFullID,
@@ -1629,9 +1629,14 @@ local function AddUnit(unit, kind)
         reaction = reaction,
         nameColor = trp.nameColor,
         armorClass = armorClass,
-    })
+    }
+end
+
+local function AddUnit(unit, kind)
+    if not UnitExists(unit) then Print("No hay unidad valida seleccionada.") return end
+    AddEntry(CapturarUnidadDeTurno(unit, kind))
     if HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName and UnitIsPlayer and UnitIsPlayer(unit) then
-        HarfordDnDAPI.RequestResourcesForName(fullName)
+        HarfordDnDAPI.RequestResourcesForName((GetUnitName and GetUnitName(unit, true)) or UnitName(unit))
     end
 end
 
@@ -2611,11 +2616,26 @@ function HarfordTurnOrderAPI.AddBlockMember(entry, unit)
     for _, m in ipairs(entry.miembros) do
         if m.guid == guid then return false, "Ya esta en ese bloque" end
     end
-    entry.miembros[#entry.miembros + 1] = {
-        guid = guid,
-        name = (GetUnitName and GetUnitName(unit, true)) or (UnitName and UnitName(unit)) or "?",
-        jugador = (UnitIsPlayer and UnitIsPlayer(unit)) and true or nil,
+    -- Un miembro se guarda con los MISMOS datos que una tarjeta normal (icono, displayId, vida,
+    -- CA, unitName...), porque su tarjeta es la misma y se pinta con el mismo pintor. Guardar solo
+    -- guid/nombre obligaba a rellenar el resto de la unidad que tuvieras delante: al cambiar de
+    -- objetivo se perdia el icono, la CA salia 0 y la vida de un PJ era la nativa, no la Harford.
+    local nombre, hp, maxHp, entryKind, id, mana, maxMana, unitName, icon, displayId, meta =
+        CapturarUnidadDeTurno(unit, nil)
+    local miembro = {
+        id = id, guid = guid, name = nombre, kind = entryKind, unitName = unitName,
+        hp = hp, maxHp = maxHp, mana = mana, maxMana = maxMana,
+        icon = NormalizeIconPath(icon) or "", displayId = displayId,
+        armorClass = meta.armorClass or 0, reaction = meta.reaction or 0,
+        nameColor = meta.nameColor,
+        jugador = (entryKind == "player") and true or nil,
     }
+    Codec.NormalizeEntryLinks(miembro)
+    entry.miembros[#entry.miembros + 1] = miembro
+    -- La vida de un jugador la sirve el sistema Harford, no la unidad: hay que pedirsela.
+    if entryKind == "player" and HarfordDnDAPI and HarfordDnDAPI.RequestResourcesForName then
+        HarfordDnDAPI.RequestResourcesForName(unitName)
+    end
     MarkChanged()
     return true
 end

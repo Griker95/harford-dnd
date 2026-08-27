@@ -501,6 +501,13 @@ end
 -- Crear y llamar son dos fallos distintos y hacen falta las dos comprobaciones.
 chk("el marco de objetivo se enciende",
     turnos:find("SetCardTargetState(card, IsEntryCurrentTarget(entry))", 1, true) ~= nil, true)
+-- Y tambien en la lista de un bloque, PJs o NPCs: son las mismas tarjetas y "a quien tengo
+-- delante" se pregunta lo mismo en las dos. El `id` de un miembro es su guid.
+chk("tambien en la lista de un bloque",
+    turnos:find("SetCardTargetState(f, IsEntryCurrentTarget(m))", 1, true) ~= nil, true)
+-- Y hay que repintar al cambiar de objetivo, o el marco se queda donde estaba.
+chk("y se repinta al cambiar de objetivo",
+    turnos:find('self:RegisterEvent("PLAYER_TARGET_CHANGED")', 1, true) ~= nil, true)
 
 -- Los mismos gestos que una tarjeta normal: izquierdo su ficha, derecho el menu.
 chk("responden al click como las de siempre",

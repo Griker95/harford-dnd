@@ -3103,6 +3103,15 @@ do
         panel.cerrar = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
         panel.cerrar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
         panel.cerrar:SetScript("OnClick", function() panel:Hide() end)
+        -- Solo mientras se ve: el objetivo y la vida cambian constantemente y repintar una lista
+        -- cerrada es trabajo tirado.
+        panel:SetScript("OnShow", function(self)
+            self:RegisterEvent("PLAYER_TARGET_CHANGED")
+            self:RegisterEvent("UNIT_HEALTH")
+            RefrescarPanel()
+        end)
+        panel:SetScript("OnHide", function(self) self:UnregisterAllEvents() end)
+        panel:SetScript("OnEvent", function() RefrescarPanel() end)
         panel:Hide()
         return panel
     end
@@ -3125,6 +3134,10 @@ do
                 -- tengas delante. Por eso no se pierde nada al cambiar de objetivo.
                 local mando = IsTurnAdmin()
                 PaintEntryCard(f, m, mando)
+                -- El marco de OBJETIVO, igual que en la ventana de turnos: son las mismas
+                -- tarjetas y "a quien tengo delante" se pregunta lo mismo en las dos. El `id` de
+                -- un miembro es su guid, que es lo que compara `IsEntryCurrentTarget`.
+                SetCardTargetState(f, IsEntryCurrentTarget(m))
                 f.miembro = m
                 -- Sin mando la lista es de LECTURA: se ve quien hay, no se le toca la vida ni la
                 -- CA. Es la misma regla que ya seguian las tarjetas de la ventana de turnos.

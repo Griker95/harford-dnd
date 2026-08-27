@@ -372,4 +372,44 @@ reset()
 -- obligaria a exponer una funcion local solo para eso. Si algun dia se llama desde otro sitio con
 -- un cero, esta nota deja de valer.
 
+-- ─── MOVIMIENTO POR TURNO ───────────────────────────────────────────────────
+-- Sale de la RAZA, que el libro declara en METROS. Los rasgos la modifican por `bonus.speed` y
+-- una forma activa la sustituye entera -- si eres un oso, te mueves como un oso -- pero esa viene
+-- en PIES, como el stat block de donde se lee.
+print("El movimiento del turno sale de la raza")
+local calc = io.open("Harford/DnD/Engine/HarfordDnDCalc.lua"):read("*a")
+chk("existe la regla", calc:find("function HarfordDnDCalc.GetTurnMovement", 1, true) ~= nil, true)
+chk("la forma manda sobre la raza", calc:find("if forma and tonumber(forma.speed) then", 1, true) ~= nil, true)
+-- Las formas declaran pies; las razas, metros. Mezclarlos daria un oso que corre tres veces mas.
+chk("y convierte los pies de la forma",
+    calc:find("tonumber(forma.speed) * 0.3048", 1, true) ~= nil, true)
+chk("los rasgos pueden modificarla",
+    calc:find("HarfordDnDFeatureEffects.GetSpeed(base, profileName)", 1, true) ~= nil, true)
+-- Las velocidades del libro estan en metros y son razonables: si alguna se colara en pies, un
+-- personaje se moveria treinta metros por turno.
+local razas = io.open("Harford/DnD/Data/HarfordDnDRaces.lua"):read("*a")
+local fuera = 0
+for v in razas:gmatch("speed = ([%d%.]+)") do
+    local n = tonumber(v)
+    if n and (n < 5 or n > 15) then fuera = fuera + 1 end
+end
+chk("y todas las razas van en metros", fuera, 0)
+
+-- El contador tiene que decir cuanto te QUEDA: un numero suelto no dice si te has pasado, que es
+-- lo unico que la mesa necesita saber. Y reiniciarse al empezar tu turno, o no significa nada.
+local ataque = io.open("Harford/DnD/UI/HarfordDnDAttackUI.lua"):read("*a")
+print("Y el contador lo usa")
+chk("muestra llevado y tope", ataque:find('"%s%.1f|r / %.1f m"', 1, true) ~= nil, true)
+chk("avisa si te pasas", ataque:find("(se pasa ", 1, true) ~= nil, true)
+chk("se reinicia en tu turno",
+    ataque:find("HarfordTurnOrderAPI.RegisterMyTurnListener", 1, true) ~= nil, true)
+-- Se cuenta en la mesa AL PARAR, no en cada paso: difundir cada decima llenaria el canal para
+-- decir lo mismo. Atlas lo hace continuo; aqui no hace falta.
+chk("y se cuenta en la mesa al parar",
+    ataque:find('HarfordDnDRolls.Broadcast({ type = "info", label = texto })', 1, true) ~= nil, true)
+-- Reiniciar por turno NO se cuenta: el turno nuevo empieza limpio, no es que hayas terminado de
+-- moverte.
+chk("pero reiniciar no lo cuenta",
+    ataque:find("ReiniciarPorTurno = function()", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

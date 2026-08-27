@@ -473,6 +473,15 @@ function API.AttachMovementTracker(opts)
     API.Controls.movementLabel = label
     API.Controls.movementButton = button
 
+    -- Al empezar tu turno el movimiento vuelve a cero: es lo que hace que el contador signifique
+    -- algo. Antes acumulaba desde que pulsabas y no se enteraba de los turnos.
+    local ReiniciarPorTurno
+    if HarfordTurnOrderAPI and HarfordTurnOrderAPI.RegisterMyTurnListener then
+        HarfordTurnOrderAPI.RegisterMyTurnListener(function()
+            if ReiniciarPorTurno then ReiniciarPorTurno() end
+        end)
+    end
+
     local function GetPosition()
         if UnitPosition then
             local x, y, z = UnitPosition("player")
@@ -488,8 +497,18 @@ function API.AttachMovementTracker(opts)
         return nil
     end
 
+    local function MaximoDelTurno()
+        return (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
+            and HarfordDnDCalc.GetTurnMovement()) or 0
+    end
+
+    -- Cuanto llevas DE cuanto puedes. Un numero suelto no dice si te has pasado, que es lo unico
+    -- que la mesa necesita saber.
     local function FormatMeters(value)
-        return string.format("%.1f m", value)
+        local tope = MaximoDelTurno()
+        if tope <= 0 then return string.format("%.1f m", value) end
+        local color = (value > tope + 0.05) and "|cffff4444" or "|cff88ff88"
+        return string.format("%s%.1f|r / %.1f m", color, value, tope)
     end
 
     local function OnUpdate(_, delta)
@@ -519,6 +538,31 @@ function API.AttachMovementTracker(opts)
         button:SetText("Movimiento")
         label:SetText(totalMeters > 0 and FormatMeters(totalMeters) or "")
         API.RecordedMovementMeters = totalMeters
+        -- Se cuenta en la mesa AL PARAR, no en cada paso: difundir cada decima llenaria el canal
+        -- para decir lo mismo. Lo que importa es cuanto recorriste y si te pasaste.
+        if totalMeters > 0.05 and HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+            local tope = MaximoDelTurno()
+            local texto = (tope > 0)
+                and string.format("se mueve %.1f m de %.1f", totalMeters, tope)
+                or string.format("se mueve %.1f m", totalMeters)
+            if tope > 0 and totalMeters > tope + 0.05 then
+                texto = texto .. " |cffff4444(se pasa " .. string.format("%.1f", totalMeters - tope) .. " m)|r"
+            end
+            HarfordDnDRolls.Broadcast({ type = "info", label = texto })
+        end
+    end
+
+    -- Vuelve a cero SIN contarlo en la mesa: el turno nuevo empieza limpio, no es que hayas
+    -- terminado de moverte.
+    ReiniciarPorTurno = function()
+        tracking = false
+        button:SetScript("OnUpdate", nil)
+        button:SetText("Movimiento")
+        totalMeters, elapsed = 0, 0
+        lastX, lastY, lastZ = nil, nil, nil
+        API.RecordedMovementMeters = 0
+        API.RecordedMovementInfo = nil
+        label:SetText("")
     end
 
     local function RefreshConditionState()

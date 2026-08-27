@@ -106,6 +106,26 @@ local WEAPON_CAT_PROF = {
     ["de fuego"] = "armas de fuego",
 }
 
+-- Metros que puede recorrer el personaje en un turno. La velocidad la declara la raza en el
+-- libro; los rasgos la modifican por `bonus.speed`, y una forma activa la sustituye entera.
+function HarfordDnDCalc.GetTurnMovement(profileName)
+    local forma = HarfordDnDForms and HarfordDnDForms.GetActiveForm and HarfordDnDForms.GetActiveForm()
+    if forma and tonumber(forma.speed) then
+        -- Las formas declaran su velocidad en PIES, como el stat block de donde salen.
+        return tonumber(forma.speed) * 0.3048
+    end
+    local base = 9   -- el andar de un Mediano; solo se usa si no hay raza puesta
+    if HarfordDnDProgression and HarfordDnDProgression.GetRace and HarfordDnDRaces then
+        local razaId = HarfordDnDProgression.GetRace(profileName)
+        local raza = razaId and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(razaId)
+        if raza and tonumber(raza.speed) then base = tonumber(raza.speed) end
+    end
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetSpeed then
+        return HarfordDnDFeatureEffects.GetSpeed(base, profileName)
+    end
+    return base
+end
+
 -- ¿El personaje es competente con esta arma? Por categoria o por nombre concreto.
 function HarfordDnDCalc.HasWeaponProficiency(def)
     if IsNpcContext() then return true end

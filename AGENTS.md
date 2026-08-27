@@ -3388,7 +3388,17 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   abierta, porque dura cuatro segundos y no se puede apartar.
 - **Sin ticker**: entra con un `AnimationGroup` y se retira con un `C_Timer.NewTimer` de una sola
   vez, que se cancela si vuelve a salir antes. Ajuste `turnbanner` (`on` por defecto).
-- Vista previa a mano: `/harford debug run estandarte <titulo> | <subtitulo>`.
+- **Debajo lleva TARJETAS con lo que te queda por gastar** (accion, adicional, reaccion y
+  movimiento), con fondo `LootBanner-ItemBg` y aro `LootBanner-IconGlow`, los dos nativos. Es la
+  idea que mejor funciona de DiceMaster --el aviso no solo dice que te toca, ENSENA lo que puedes
+  hacer--, pero lo suyo es una lista fija escrita a mano y esto sale de la economia REAL: un Impetu
+  de Accion se ve como dos acciones y no como una.
+- **Solo en TU turno y solo lo que QUEDA.** En el turno de otro serian cuatro tarjetas de relleno
+  tapando la pantalla, y pintar lo gastado contradice para lo que esta la tarjeta.
+- El texto de cada tipo vive en `HarfordTurnOrderAPI.TEXTO_ECONOMIA`, no dentro del estandarte: el
+  marcador y los tooltips dicen lo mismo y dos copias se acaban contradiciendo.
+- Vista previa a mano: `/harford debug run estandarte <titulo> ; <subtitulo>`, y
+  `/harford debug run banners` para verlos todos seguidos.
 
 ## Movimiento del turno: se cuenta solo y el limite es un muro (2026-08-27)
 

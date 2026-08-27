@@ -2682,6 +2682,14 @@ do
     end
 end
 
+-- Que es cada cosa de la economia de turno, en una linea. Vive aqui y no dentro del estandarte
+-- porque el marcador y los tooltips dicen lo mismo: dos copias se acaban contradiciendo.
+HarfordTurnOrderAPI.TEXTO_ECONOMIA = {
+    action   = "Atacar, lanzar, correr, esquivar, ayudar, preparar...",
+    bonus    = "Solo lo que un rasgo tuyo declare como adicional.",
+    reaction = "Fuera de tu turno. Vuelve al empezar el siguiente.",
+}
+
 -- ─── EL ESTANDARTE DE TURNO ────────────────────────────────────────────
 -- El aviso grande de que empieza un turno. Hay DOS formas, porque no todas las mesas quieren lo
 -- mismo: una franja discreta que cruza la pantalla, y el estandarte colgante del aviso de jefe.
@@ -2837,6 +2845,102 @@ do
         b.rayoIzq:SetPoint("RIGHT", b, "CENTER", -60, 0)
     end
 
+    -- Lo que te queda por gastar este turno, en tarjetas debajo del estandarte. Es la idea que
+    -- mejor funciona de DiceMaster: el aviso no solo dice que te toca, ENSENA lo que puedes hacer.
+    -- La diferencia es que lo suyo es una lista fija escrita a mano y esto sale de la economia de
+    -- turno real, asi que un Impetu de Accion se ve como dos acciones y no como una.
+    --
+    -- Fondo `LootBanner-ItemBg` (269x41) y aro `LootBanner-IconGlow` (40x40), los dos nativos.
+    local TARJ_ALTO, TARJ_HUECO = 41, 4
+    local COLOR_TIPO = {
+        action   = { 0.36, 0.74, 0.36 },   -- verde, como las fichas de la barra
+        bonus    = { 0.62, 0.42, 0.24 },   -- marron
+        reaction = { 0.62, 0.36, 0.80 },   -- morado
+    }
+    local ICONO_TIPO = {
+        action   = "Interface\\Icons\\Ability_Warrior_Charge",
+        bonus    = "Interface\\Icons\\Ability_Rogue_SprintB",
+        reaction = "Interface\\Icons\\Ability_Warrior_ShieldWall",
+    }
+
+    local function EnsureOpcion(i)
+        banner.opciones = banner.opciones or {}
+        local o = banner.opciones[i]
+        if o then return o end
+        o = CreateFrame("Frame", nil, banner)
+        o:SetSize(269, TARJ_ALTO)
+        o.fondo = o:CreateTexture(nil, "BACKGROUND")
+        o.fondo:SetAtlas("LootBanner-ItemBg", false)
+        o.fondo:SetAllPoints()
+        o.icono = o:CreateTexture(nil, "ARTWORK")
+        o.icono:SetSize(28, 28)
+        o.icono:SetPoint("LEFT", o, "LEFT", 10, 0)
+        o.icono:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+        o.aro = o:CreateTexture(nil, "OVERLAY")
+        o.aro:SetAtlas("LootBanner-IconGlow", true)
+        o.aro:SetBlendMode("ADD")
+        o.aro:SetPoint("CENTER", o.icono, "CENTER")
+        o.titulo = o:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        o.titulo:SetPoint("TOPLEFT", o.icono, "TOPRIGHT", 9, -2)
+        o.titulo:SetJustifyH("LEFT")
+        o.detalle = o:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        o.detalle:SetPoint("TOPLEFT", o.titulo, "BOTTOMLEFT", 0, -1)
+        o.detalle:SetWidth(210)
+        o.detalle:SetJustifyH("LEFT")
+        o.detalle:SetTextColor(0.78, 0.75, 0.66)
+        banner.opciones[i] = o
+        return o
+    end
+
+    -- Devuelve cuantas tarjetas quedaron puestas, para que el estandarte crezca lo justo.
+    local function PintarOpciones(esMio)
+        banner.opciones = banner.opciones or {}
+        local n = 0
+        -- Solo en TU turno: lo que puedes hacer tu no le interesa a nadie mas, y en el turno de
+        -- otro serian cuatro tarjetas de relleno tapando la pantalla.
+        local T = esMio and HarfordDnDConditions and HarfordDnDConditions.Turn or nil
+        if T and T.IsActive and T.IsActive() then
+            for _, tipo in ipairs(T.ORDEN or {}) do
+                local quedan = (T.GetRemaining and T.GetRemaining(tipo)) or 0
+                -- Lo GASTADO no se pinta: la tarjeta esta para decirte lo que te queda.
+                if quedan > 0 then
+                    n = n + 1
+                    local o = EnsureOpcion(n)
+                    local c = COLOR_TIPO[tipo] or { 0.8, 0.8, 0.8 }
+                    local etiqueta = (T.ETIQUETA and T.ETIQUETA[tipo]) or tipo
+                    o.icono:SetTexture(ICONO_TIPO[tipo] or "Interface\\Icons\\INV_Misc_QuestionMark")
+                    o.aro:SetVertexColor(c[1], c[2], c[3])
+                    o.titulo:SetText(etiqueta .. (quedan > 1 and ("  x" .. quedan) or ""))
+                    o.titulo:SetTextColor(c[1] + 0.2, c[2] + 0.2, c[3] + 0.2)
+                    o.detalle:SetText(HarfordTurnOrderAPI.TEXTO_ECONOMIA[tipo] or "")
+                    o:ClearAllPoints()
+                    o:SetPoint("TOP", banner, "BOTTOM", 0, -(n - 1) * (TARJ_ALTO + TARJ_HUECO) - 2)
+                    o:Show()
+                end
+            end
+            -- El movimiento no es una ficha entera sino un resto continuo, asi que va como una
+            -- tarjeta mas pero contando metros.
+            local U = HarfordDnDAttackUI
+            local tope = (U and U.GetTurnMovementMax and U.GetTurnMovementMax()) or 0
+            if tope > 0 then
+                local gastado = (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0
+                local quedan = math.max(0, tope - gastado)
+                n = n + 1
+                local o = EnsureOpcion(n)
+                o.icono:SetTexture("Interface\\Icons\\Ability_Rogue_Sprint")
+                o.aro:SetVertexColor(0.45, 0.72, 0.85)
+                o.titulo:SetText(string.format("Movimiento  %.1f m", quedan))
+                o.titulo:SetTextColor(0.65, 0.88, 1)
+                o.detalle:SetText("Correr dobla el resto de este turno.")
+                o:ClearAllPoints()
+                o:SetPoint("TOP", banner, "BOTTOM", 0, -(n - 1) * (TARJ_ALTO + TARJ_HUECO) - 2)
+                o:Show()
+            end
+        end
+        for i = n + 1, #banner.opciones do banner.opciones[i]:Hide() end
+        return n
+    end
+
     function HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)
         local estilo = Estilo()
         if estilo == "off" then return false end
@@ -2857,6 +2961,7 @@ do
         if esMio then banner.titulo:SetTextColor(1, 0.82, 0)
         else banner.titulo:SetTextColor(0.95, 0.95, 0.95) end
         banner.subtitulo:SetText(tostring(subtitulo or ""))
+        PintarOpciones(esMio)
         banner:Show()
         banner.entrada:Stop()
         banner.entrada:Play()

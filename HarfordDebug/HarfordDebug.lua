@@ -1666,7 +1666,9 @@ API.RegisterCommand("banners", function(args)
     for i, e in ipairs(ESTILOS) do
         C_Timer.After((i - 1) * 5, function()
             Print("Mostrando |cffffcc00" .. e.id .. "|r")
-            T.PreviewTurnBanner(e.id, "ES TU TURNO", e.que, i == 1)
+            -- `esMio` a true en los dos: las tarjetas de opcion solo salen en TU turno, y aqui se
+            -- estan comparando estilos, no turnos ajenos.
+            T.PreviewTurnBanner(e.id, "ES TU TURNO", e.que, true)
         end)
     end
 end, "Ensena todos los estilos de aviso de turno (banners [estilo])")

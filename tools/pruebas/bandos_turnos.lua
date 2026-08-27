@@ -568,6 +568,25 @@ chk("y se puede apagar", turnos:find('if estilo == "off" then return false end',
 chk("hay dos estilos",
     turnos:find('SetAtlas("BossBanner-BgBanner-Top"', 1, true) ~= nil
     and turnos:find('SetAtlas("BossBanner-BgBanner-Bottom"', 1, true) ~= nil, true)
+-- ── LAS TARJETAS DE OPCION ──────────────────────────────────────────────────
+-- La idea que mejor funciona de DiceMaster: el aviso no solo dice que te toca, ENSENA lo que
+-- puedes hacer. La diferencia es que lo suyo es una lista fija escrita a mano y esto sale de la
+-- economia real, asi que un Impetu de Accion se ve como dos acciones y no como una.
+chk("el estandarte lista lo que te queda",
+    turnos:find("local function PintarOpciones(esMio)", 1, true) ~= nil, true)
+chk("con arte nativo",
+    turnos:find('SetAtlas("LootBanner-ItemBg"', 1, true) ~= nil, true)
+-- Lo GASTADO no se pinta: la tarjeta esta para decir lo que QUEDA.
+chk("y solo lo que queda", turnos:find("if quedan > 0 then", 1, true) ~= nil, true)
+-- Solo en TU turno: en el de otro serian cuatro tarjetas de relleno tapando la pantalla.
+chk("solo en tu turno",
+    turnos:find("local T = esMio and HarfordDnDConditions", 1, true) ~= nil, true)
+-- El movimiento no es una ficha entera sino un resto continuo, pero se lee en la misma fila.
+chk("el movimiento va con ellas",
+    turnos:find('string.format("Movimiento  %.1f m", quedan)', 1, true) ~= nil, true)
+-- El texto de cada tipo vive en la API: dos copias se acaban contradiciendo.
+chk("y el texto de cada tipo no se duplica",
+    turnos:find("HarfordTurnOrderAPI.TEXTO_ECONOMIA = {", 1, true) ~= nil, true)
 chk("y se eligen sin dejarlos puestos",
     turnos:find("function HarfordTurnOrderAPI.PreviewTurnBanner(", 1, true) ~= nil, true)
 local config = io.open("Harford/Core/HarfordConfig.lua"):read("*a")

@@ -542,6 +542,23 @@ chk("un desconectado no se enumera",
 -- todo de golpe, y es la forma correcta.
 -- ─── EL ESTADO DEL COMBATE ES EXPLICITO ─────────────────────────────────────
 -- Antes se DEDUCIA de que hubiera entradas, asi que terminar y vaciar la lista eran lo mismo.
+-- ─── UNIRSE A UN COMBATE EN CURSO ───────────────────────────────────────────
+-- Se sale FUERA de combate por defecto: nadie entra solo porque haya una pelea en su raid. Para
+-- entrar hay un boton, y lo decide el DM -- la lista es suya, y una entrada anadida en local
+-- desapareceria con la foto siguiente.
+print("Unirse a un combate en curso")
+chk("hay peticion", turnos:find('"TJOIN|"', 1, true) ~= nil, true)
+chk("y la atiende el DM",
+    turnos:find('elseif opcode == "TJOIN" then', 1, true) ~= nil, true)
+chk("que mete al que pide en el bloque de PJs",
+    turnos:find("HarfordTurnOrderAPI.AddBlockMember(e, unidad)", 1, true) ~= nil, true)
+-- No se mete a quien no se ve: un nombre suelto no basta para saber a quien estas anadiendo.
+chk("pero solo si lo ve",
+    turnos:find("HarfordClassColors.FindUnitByName(sender)", 1, true) ~= nil, true)
+-- El boton solo sale si hay combate y NO estas dentro: si ya estas, no hay nada que pedir.
+chk("el boton sale solo cuando toca",
+    turnos:find("and not HarfordTurnOrderAPI.AmIInCombat())", 1, true) ~= nil, true)
+
 print("El estado del combate es explicito")
 chk("tres estados", turnos:find("function HarfordTurnOrderAPI.GetCombatState()", 1, true) ~= nil, true)
 chk("montar la mesa es preparar",

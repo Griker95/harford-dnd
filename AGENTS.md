@@ -3470,9 +3470,20 @@ Pruebas: `tools/pruebas/bandos_turnos.lua`.
   `/harford debug run movimiento` (y `movimiento simular` dispara el aviso de turno a mano, que es
   el eslabon que no se puede provocar sin montar un combate entero).
 
+## Unirse a un combate en curso (2026-08-27)
+
+- **Se sale FUERA de combate por defecto**: nadie entra solo porque haya una pelea en su raid. Al
+  entrar se pide la foto (`TREQ`) y, **si el DM ya te tenia en el bloque de PJs**, vuelves dentro
+  solo -- la foto trae el estado y los miembros.
+- Si NO estabas, hay un boton **`Unirse`** en la ventana de turnos, en el sitio de `Limpiar` (que
+  es de DM, asi que nunca se ven los dos). Solo aparece con combate empezado y estando fuera.
+- **Lo decide el DM**: manda `TJOIN` y el DM te mete en el bloque de PJs. Anadirse en local seria
+  inutil -- la siguiente foto lo borraria -- y el DM no mete a quien no ve (`FindUnitByName`),
+  porque un nombre suelto no basta para saber a quien estas anadiendo.
+
 ## Un combate abandonado caduca ENTERO (2026-08-27)
 
-- `PurgeStaleEntries` (4 h sin tocar la lista, al entrar) limpiaba las ENTRADAS pero **no el
+- `PurgeStaleEntries` (15 min sin tocar la lista, al entrar) limpiaba las ENTRADAS pero **no el
   estado**: quien se desconectaba a media pelea y volvia al dia siguiente --sin nadie que le
   mandara una foto nueva-- se encontraba la lista vacia y `estado = "activo"`. O sea, **"en
   combate" el solo**, con el asalto de ayer.

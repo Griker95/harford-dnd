@@ -27,11 +27,15 @@ env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 60
 chk("tocada hace 1 minuto (relogeo) -> se CONSERVA", Purge(), false)
 chk("  y las entradas siguen", #env.HarfordTurnOrderStore.entries, 1)
 
-env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 3*H }
-chk("tocada hace 3 horas -> se conserva", Purge(), false)
+-- QUINCE minutos. Con el boton de `Unirse` y el relevo entre companeros, volver a un combate en
+-- curso ya no depende de la caducidad: es para el caso raro --nadie conectado que te mande la
+-- foto-- y cuanto antes limpie, menos rato se arrastra un combate muerto. Las cuatro horas eran de
+-- cuando esta era la unica via de vuelta.
+env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 10*60 }
+chk("tocada hace 10 minutos -> se conserva", Purge(), false)
 
-env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 5*H }
-chk("tocada hace 5 horas -> se PURGA", Purge(), true)
+env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 20*60 }
+chk("tocada hace 20 minutos -> se PURGA", Purge(), true)
 chk("  lista vacia", #env.HarfordTurnOrderStore.entries, 0)
 chk("  indice reiniciado", env.HarfordTurnOrderStore.activeIndex, 1)
 

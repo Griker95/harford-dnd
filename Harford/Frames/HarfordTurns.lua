@@ -360,7 +360,11 @@ local function TouchStore()
     store.lastTouched = (time and time()) or 0
 end
 
-local STALE_SECONDS = 4 * 60 * 60
+-- QUINCE MINUTOS. Con el boton de `Unirse` y el relevo entre companeros, volver a un combate en
+-- curso ya no depende de esto: la caducidad es para el caso raro --nadie conectado que te mande la
+-- foto-- y cuanto antes limpie, menos rato se arrastra un combate muerto. Cuatro horas eran de
+-- cuando esta era la unica via de vuelta.
+local STALE_SECONDS = 15 * 60
 
 local function PurgeStaleEntries()
     local store = EnsureStore()
@@ -974,6 +978,35 @@ local function ApplyTurnMessage(message, sender)
                 SendStateTo(sender, true)
             end)
         end
+        return true
+    elseif opcode == "TJOIN" then
+        -- Alguien pide entrar en el combate en curso. Lo mete el DM, no el que lo pide: la lista
+        -- es suya, y una entrada que se anadiera en local desapareceria con la siguiente foto.
+        if not IsTurnAdmin() then return true end
+        if HarfordTurnOrderAPI.GetCombatState() ~= "activo" then
+            Print(tostring(sender) .. " pide unirse, pero no hay combate empezado.")
+            return true
+        end
+        local unidad = HarfordClassColors and HarfordClassColors.FindUnitByName
+            and HarfordClassColors.FindUnitByName(sender)
+        if not unidad then
+            Print("|cffff5555" .. tostring(sender) .. " pide unirse|r pero no lo veo: metelo a mano.")
+            return true
+        end
+        -- Al bloque de PJs, que es donde va un jugador se ponga donde se ponga.
+        local store = EnsureStore()
+        for _, e in ipairs(store.entries) do
+            if tostring(e.kind or "") == "players" then
+                local ok, err = HarfordTurnOrderAPI.AddBlockMember(e, unidad)
+                Print(ok and ("|cff88ff88" .. tostring(sender) .. " se une al combate.|r")
+                    or (tostring(sender) .. " no se pudo unir: " .. tostring(err)))
+                -- La foto se manda por el camino normal (`MarkChanged` la programa): llamar aqui
+                -- a `SendState` seria usarla antes de declararla.
+                if ok then MarkChanged() end
+                return true
+            end
+        end
+        Print("|cffff5555" .. tostring(sender) .. " pide unirse|r pero no hay bloque de PJs.")
         return true
     elseif opcode == "INITREQ" then
         return Combate.ApplyInitiativeRequest(message, sender)
@@ -1608,6 +1641,13 @@ RefreshFrame = function()
     if TurnFrame.viewPrev then
         TurnFrame.viewPrev:SetShown(count > MAX_CARDS)
         TurnFrame.viewNext:SetShown(count > MAX_CARDS)
+    end
+    -- `Unirse` ocupa el sitio de `Limpiar`, que es de DM: nunca se ven los dos. Solo aparece si hay
+    -- combate empezado y tu no estas dentro -- si ya estas, no hay nada que pedir.
+    if TurnFrame.joinButton then
+        TurnFrame.joinButton:SetShown(not isAdmin
+            and HarfordTurnOrderAPI.HasActiveCombat()
+            and not HarfordTurnOrderAPI.AmIInCombat())
     end
 
     for i = 1, MAX_CARDS do
@@ -2383,6 +2423,20 @@ local function CreateTurnFrame()
     tinsert(TurnFrame.adminControls, prevButton)
     tinsert(TurnFrame.adminControls, nextButton)
     tinsert(TurnFrame.adminControls, shareButton)
+
+    -- Para el que NO esta en la pelea: pide entrar. Se sale FUERA de combate por defecto --nadie
+    -- entra solo porque haya un combate en su raid-- y este boton es la unica via, que ademas la
+    -- decide el DM: la lista es suya, y una entrada anadida en local desapareceria con la foto
+    -- siguiente.
+    TurnFrame.joinButton = MakeButton(TurnFrame, "Unirse", 62, 22, "BOTTOMRIGHT", TurnFrame,
+        "BOTTOMRIGHT", -18, 10, function()
+        local ch = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+        if not ch then Print("No hay grupo al que pedirselo.") return end
+        HarfordSync.Send(COMM_PREFIX, "TJOIN|"
+            .. tostring((GetUnitName and GetUnitName("player", true)) or ""), ch)
+        Print("Pedido al DM: unirte al combate.")
+    end)
+    TurnFrame.joinButton:Hide()
 
     local clearButton = MakeButton(TurnFrame, "Limpiar", 62, 22, "BOTTOMRIGHT", TurnFrame, "BOTTOMRIGHT", -18, 10, function()
         if not IsTurnAdmin() then Print("Solo el admin puede limpiar turnos.") return end

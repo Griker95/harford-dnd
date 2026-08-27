@@ -1625,6 +1625,22 @@ end, "ajusta en vivo el marco (texCoord/size) de los botones del Libro por categ
 -- mas una sola textura propia para los extremos del estandarte. Antes de construir nada hay que
 -- saber cuales existen AQUI: un atlas que falta no borra la textura anterior, la deja como estaba,
 -- que es la misma trampa que ya nos comimos con los iconos del Libro.
+-- El estandarte solo se ve cuando cambia el turno, que no es un momento que se pueda repetir a
+-- voluntad para mirarle la animacion. Esto lo levanta a mano.
+API.RegisterCommand("estandarte", function(args)
+    if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.ShowTurnBanner) then
+        Print("HarfordTurnOrderAPI.ShowTurnBanner no existe.")
+        return
+    end
+    local texto = tostring(args or "")
+    local titulo, subtitulo = texto:match("^(.-)%s*|%s*(.+)$")
+    titulo = titulo or (texto ~= "" and texto) or "ES TU TURNO"
+    local ok = HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo or "Asalto 1", true)
+    if not ok then
+        Print("No se pinto: mira `turnbanner` en la config y `/harford debug run atlas`.")
+    end
+end, "Levanta el estandarte de turno (estandarte <titulo> | <subtitulo>)")
+
 API.RegisterCommand("atlas", function(args)
     local lista = {
         "BossBanner-BgBanner-Mid", "BossBanner-RedLightning", "BossBanner-Title",

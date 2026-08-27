@@ -3321,6 +3321,25 @@ de ids lo blindaria a costa de engordar el mensaje.
 
 Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
+## El estandarte de turno (2026-08-27)
+
+- Aviso grande al empezar un turno, al estilo del de DiceMaster. **Todo el arte es NATIVO**
+  (`BossBanner-BgBanner-Mid` de fondo, `BossBanner-RedLightning` espejado a los dos lados). De los
+  11 atlas que usa DiceMaster, **10 existen en este build**; el que falta, `BossBanner-Title`, es
+  prescindible porque el titulo es texto. Comprobar con `/harford debug run atlas`.
+- **Si el atlas no existe no se pinta nada.** Un atlas ausente no borra la textura anterior, la
+  deja como estaba: mas vale no pintar que pintar un rectangulo con la textura de otra cosa.
+- **Solo al EMPEZAR.** En bandos, `AnunciarBando` lo levanta con `fase == "inicio"` -- al cerrar el
+  bloque no empieza nada. En individual lo levanta `AlertMyTurn`, o sea SOLO cuando te toca a ti:
+  un estandarte por cada combatiente seria insoportable.
+- El titulo va **dorado si empieza el bando de los PJs**, que es siempre el tuyo (`AddEntry` manda
+  a un jugador a `pjs` se ponga donde se ponga, asi que no hay que buscarse entre los miembros).
+- `frameStrata` **HIGH y no DIALOG**: tiene que verse sobre el juego pero no tapar una ventana
+  abierta, porque dura cuatro segundos y no se puede apartar.
+- **Sin ticker**: entra con un `AnimationGroup` y se retira con un `C_Timer.NewTimer` de una sola
+  vez, que se cancela si vuelve a salir antes. Ajuste `turnbanner` (`on` por defecto).
+- Vista previa a mano: `/harford debug run estandarte <titulo> | <subtitulo>`.
+
 ## Movimiento del turno: se cuenta solo y el limite es un muro (2026-08-27)
 
 - **La economia se pinta sobre la barra de accion nativa, estilo BG3** (`HarfordActionBars`): fila

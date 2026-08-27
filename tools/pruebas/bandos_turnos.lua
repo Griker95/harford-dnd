@@ -476,6 +476,32 @@ chk("las tarjetas van dentro del scroll",
 chk("y el boton se queda fuera",
     admin2:find('CreateFrame("Button", nil, p, "UIPanelButtonTemplate")', 1, true) ~= nil, true)
 
+-- ─── EL ESTANDARTE DE TURNO ─────────────────────────────────────────────────
+-- El aviso que se ve sin estar mirando el chat. Todo el arte es NATIVO (`BossBanner-*`): un atlas
+-- propio habria que meterlo en el addon, y uno que no existe no borra la textura anterior -- la
+-- deja como estaba, que es la trampa de los iconos del Libro.
+print("El estandarte de turno")
+chk("existe", turnos:find("function HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)",
+    1, true) ~= nil, true)
+chk("y usa arte nativo", turnos:find('SetAtlas("BossBanner-BgBanner-Mid"', 1, true) ~= nil, true)
+-- Y si el atlas no estuviera, no se pinta NADA: mas vale eso que un rectangulo con la textura de
+-- otra cosa.
+chk("comprobando que exista",
+    turnos:find('C_Texture.GetAtlasInfo("BossBanner-BgBanner-Mid")', 1, true) ~= nil, true)
+-- Solo al EMPEZAR un bando: al cerrarlo no empieza nada, y dos estandartes por bando es ruido.
+chk("solo al empezar el bando",
+    turnos:find('if entrada.fase == "inicio" and HarfordTurnOrderAPI.ShowTurnBanner then',
+        1, true) ~= nil, true)
+-- Dorado si empieza el bando de los PJs, que es SIEMPRE el tuyo: AddEntry manda a un jugador a
+-- pjs se ponga donde se ponga.
+chk("dorado cuando te toca", turnos:find('entrada.bando == "pjs")', 1, true) ~= nil, true)
+-- Sin ticker: se retira con un temporizador de una sola vez, cancelable si vuelve a salir.
+chk("se retira solo", turnos:find("ocultar = C_Timer.NewTimer(4, function()", 1, true) ~= nil, true)
+chk("y se puede apagar",
+    turnos:find('HarfordConfig.Get("turnbanner") == "off"', 1, true) ~= nil, true)
+local config = io.open("Harford/Core/HarfordConfig.lua"):read("*a")
+chk("con su ajuste declarado", config:find("turnbanner", 1, true) ~= nil, true)
+
 print("El modo DM entra en caliente")
 chk("la ventana se entera de .ph dm",
     turnos:find('HarfordAuthority.RegisterChangeListener("HarfordTurns"', 1, true) ~= nil, true)

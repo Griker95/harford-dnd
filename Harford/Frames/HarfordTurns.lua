@@ -259,6 +259,12 @@ local function AlertMyTurn(entry, activeIndex, turnSerial)
     lastTurnAlertKey = key
 
     local text = "ES TU TURNO"
+    if HarfordTurnOrderAPI.ShowTurnBanner then
+        -- El asalto sale de la ENTRADA, no del store: aqui arriba `EnsureStore` todavia no existe.
+        local asalto = tonumber(entry.asalto) or 0
+        HarfordTurnOrderAPI.ShowTurnBanner(text,
+            asalto > 0 and ("Asalto " .. asalto) or tostring(entry.name or ""), true)
+    end
     if RaidNotice_AddMessage and RaidWarningFrame then
         local info = ChatTypeInfo and ChatTypeInfo["RAID_WARNING"]
         RaidNotice_AddMessage(RaidWarningFrame, text, info)
@@ -1886,6 +1892,17 @@ end
 local function AnunciarBando(entrada)
     Print("|cffffff00" .. (HarfordTurnOrderAPI.FASE_ETIQUETA[entrada.fase] or "turno de")
         .. " " .. tostring(entrada.name) .. "|r")
+    -- Y el estandarte, que es el aviso que se ve sin estar mirando el chat. Solo al EMPEZAR: al
+    -- cerrar el bloque no empieza nada, y levantarlo dos veces por bando seria ruido.
+    if entrada.fase == "inicio" and HarfordTurnOrderAPI.ShowTurnBanner then
+        local asalto = tonumber(entrada.asalto) or 0
+        HarfordTurnOrderAPI.ShowTurnBanner(tostring(entrada.name),
+            asalto > 0 and ("Asalto " .. asalto) or nil,
+            -- Dorado si empieza el bando de los PJs, que es SIEMPRE el tuyo: un jugador va a pjs
+            -- se ponga donde se ponga (`AddEntry` lo fuerza), asi que no hay que buscarse en la
+            -- lista de miembros para saberlo.
+            entrada.bando == "pjs")
+    end
 end
 
 local function NextTurn()
@@ -2526,6 +2543,133 @@ if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
     HarfordAuthority.RegisterChangeListener("HarfordTurns", function()
         if TurnFrame and TurnFrame:IsShown() and RefreshFrame then RefreshFrame() end
     end)
+end
+
+-- ─── EL ESTANDARTE DE TURNO ─────────────────────────────────────────────────
+-- El aviso grande de que empieza un turno, al estilo del que usa DiceMaster. Todo el arte es
+-- NATIVO del cliente (`BossBanner-*`), comprobado con `/harford debug run atlas`: 10 de los 11 que
+-- usa DiceMaster existen aqui, y el que falta (`BossBanner-Title`) es prescindible porque el titulo
+-- es texto, no textura.
+--
+-- Va en un `do...end`: el fichero ronda los 140 locales de file-scope y el limite de Lua 5.1 es 200.
+--
+-- Sin ticker: se levanta con la animacion y se retira con un `C_Timer.After` de una sola vez.
+do
+    local banner, ocultar
+
+    local function Crear()
+        if banner then return banner end
+        banner = CreateFrame("Frame", "HarfordTurnBannerFrame", UIParent)
+        banner:SetSize(600, 90)
+        banner:SetPoint("TOP", UIParent, "TOP", 0, -140)
+        -- HIGH y no DIALOG: tiene que verse sobre la interfaz de juego, pero NO tapar una ventana
+        -- que el jugador tenga abierta -- dura cuatro segundos y no se puede quitar de en medio.
+        banner:SetFrameStrata("HIGH")
+        banner:EnableMouse(false)
+        banner:Hide()
+
+        banner.fondo = banner:CreateTexture(nil, "BACKGROUND")
+        banner.fondo:SetAtlas("BossBanner-BgBanner-Mid", false)
+        banner.fondo:SetPoint("TOPLEFT", 0, 0)
+        banner.fondo:SetPoint("BOTTOMRIGHT", 0, 0)
+
+        -- Los rayos salen de los DOS lados, espejados. Es lo que le da el golpe de entrada.
+        banner.rayoDer = banner:CreateTexture(nil, "ARTWORK")
+        banner.rayoDer:SetAtlas("BossBanner-RedLightning", true)
+        banner.rayoDer:SetBlendMode("ADD")
+        banner.rayoDer:SetPoint("LEFT", banner, "CENTER", 40, 0)
+        banner.rayoIzq = banner:CreateTexture(nil, "ARTWORK")
+        banner.rayoIzq:SetAtlas("BossBanner-RedLightning", true)
+        banner.rayoIzq:SetBlendMode("ADD")
+        banner.rayoIzq:SetTexCoord(1, 0, 0, 1)
+        banner.rayoIzq:SetPoint("RIGHT", banner, "CENTER", -40, 0)
+
+        banner.titulo = banner:CreateFontString(nil, "OVERLAY", "GameFont_Gigantic")
+        banner.titulo:SetPoint("CENTER", banner, "CENTER", 0, 8)
+        banner.titulo:SetJustifyH("CENTER")
+        banner.subtitulo = banner:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+        banner.subtitulo:SetPoint("TOP", banner.titulo, "BOTTOM", 0, -2)
+        banner.subtitulo:SetTextColor(0.85, 0.82, 0.72)
+
+        -- La entrada: el estandarte se despliega en horizontal (escala en X desde casi nada) y el
+        -- texto entra despues, para que se lea cuando ya hay sitio donde leerlo.
+        local ent = banner:CreateAnimationGroup()
+        ent:SetToFinalAlpha(true)
+        local abre = ent:CreateAnimation("Scale")
+        abre:SetChildKey("fondo")
+        abre:SetDuration(0.30)
+        abre:SetFromScale(0.08, 1)
+        abre:SetToScale(1, 1)
+        abre:SetSmoothing("OUT")
+        local aparece = ent:CreateAnimation("Alpha")
+        aparece:SetChildKey("fondo")
+        aparece:SetDuration(0.20)
+        aparece:SetFromAlpha(0)
+        aparece:SetToAlpha(1)
+        for _, clave in ipairs({ "titulo", "subtitulo" }) do
+            local a = ent:CreateAnimation("Alpha")
+            a:SetChildKey(clave)
+            a:SetStartDelay(0.22)
+            a:SetDuration(0.22)
+            a:SetFromAlpha(0)
+            a:SetToAlpha(1)
+        end
+        for _, clave in ipairs({ "rayoDer", "rayoIzq" }) do
+            local brilla = ent:CreateAnimation("Alpha")
+            brilla:SetChildKey(clave)
+            brilla:SetDuration(0.18)
+            brilla:SetFromAlpha(0)
+            brilla:SetToAlpha(1)
+            local apaga = ent:CreateAnimation("Alpha")
+            apaga:SetChildKey(clave)
+            apaga:SetStartDelay(0.18)
+            apaga:SetDuration(0.45)
+            apaga:SetFromAlpha(1)
+            apaga:SetToAlpha(0)
+        end
+        banner.entrada = ent
+
+        local sal = banner:CreateAnimationGroup()
+        local fuera = sal:CreateAnimation("Alpha")
+        fuera:SetDuration(0.5)
+        fuera:SetFromAlpha(1)
+        fuera:SetToAlpha(0)
+        sal:SetScript("OnFinished", function() banner:Hide() end)
+        banner.salida = sal
+        return banner
+    end
+
+    function HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)
+        if HarfordConfig and HarfordConfig.Get and HarfordConfig.Get("turnbanner") == "off" then
+            return false
+        end
+        if not (C_Texture and C_Texture.GetAtlasInfo
+            and C_Texture.GetAtlasInfo("BossBanner-BgBanner-Mid")) then
+            -- Un atlas que no existe no borra la textura anterior, la deja como estaba: mas vale no
+            -- pintar nada que pintar un rectangulo con la textura de otra cosa.
+            return false
+        end
+        Crear()
+        if ocultar then ocultar:Cancel() ocultar = nil end
+        banner.salida:Stop()
+        banner:SetAlpha(1)
+        banner.titulo:SetText(tostring(titulo or ""))
+        -- Tu turno en dorado; el de otro en el gris de siempre. Es la unica diferencia que hace
+        -- falta: lo que importa es saber de un vistazo si te toca.
+        if esMio then banner.titulo:SetTextColor(1, 0.82, 0)
+        else banner.titulo:SetTextColor(0.95, 0.95, 0.95) end
+        banner.subtitulo:SetText(tostring(subtitulo or ""))
+        banner:Show()
+        banner.entrada:Stop()
+        banner.entrada:Play()
+        if PlaySound and SOUNDKIT and SOUNDKIT.UI_PERSONAL_LOOT_BANNER then
+            PlaySound(SOUNDKIT.UI_PERSONAL_LOOT_BANNER, "Master")
+        end
+        ocultar = C_Timer.NewTimer(4, function()
+            if banner:IsShown() then banner.salida:Play() end
+        end)
+        return true
+    end
 end
 
 -- ─── LA LISTA DE UN BLOQUE ──────────────────────────────────────────────────

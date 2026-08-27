@@ -1390,6 +1390,41 @@ local function IsEntryCurrentTarget(entry)
     return id ~= "" and UnitGUID("target") == id
 end
 
+-- Pinta una tarjeta a partir de su entrada. La usan la ventana de turnos Y la lista de miembros
+-- de un bloque en HarfordAdmin: si cada una pintara la suya, se irian separando con cada cambio.
+local function PaintEntryCard(card, entry, isAdmin)
+    if not (card and entry) then return end
+    card.name:SetText(entry.name or "Sin nombre")
+    if entry.kind == "round" then
+        card.name:SetTextColor(GetEntryNameColor(entry))
+        card.init:SetText("ESTADOS")
+        card.init:Show()
+        card.armorClass:Hide()
+        card.hp:Hide()
+    elseif entry.kind == "generic" or entry.kind == "players" then
+        -- Marcadores de fase (Aliado/Neutral/Enemigo): sin barra de vida ni texto extra
+        card.name:SetTextColor(GetEntryNameColor(entry))
+        card.init:SetText("")
+        card.init:Hide()
+        card.armorClass:Hide()
+        card.hp:Hide()
+    else
+        card.name:SetTextColor(GetEntryNameColor(entry))
+        card.init:SetText("")
+        card.init:Hide()
+        local showArmor = entry.kind ~= "player"
+        card.armorClass:SetShown(showArmor)
+        if showArmor then
+            card.armorClass:SetText("CA " .. tostring(SafeNumber(entry.armorClass, 0)))
+            card.armorClass:SetEnabled(isAdmin and true or false)
+        end
+        local hp, maxHp, tempHp = GetEntryResourceValues(entry)
+        card.hp:Show()
+        UpdateSmallBar(card.hp, card.hpText, hp, maxHp, 0.78, 0.05, 0.08, tempHp)
+    end
+    SetEntryPortrait(card.icon, entry)
+end
+
 local function SetCardTargetState(card, isTarget)
     if not card then return end
     if card.targetTop then
@@ -1481,36 +1516,7 @@ RefreshFrame = function()
             RefreshPlayerEntryTRP3Meta(entry)
             card.entryIndex = entryIndex
             card:Show()
-            card.name:SetText(entry.name or "Sin nombre")
-            if entry.kind == "round" then
-                card.name:SetTextColor(GetEntryNameColor(entry))
-                card.init:SetText("ESTADOS")
-                card.init:Show()
-                card.armorClass:Hide()
-                card.hp:Hide()
-            elseif entry.kind == "generic" or entry.kind == "players" then
-                -- Marcadores de fase (Aliado/Neutral/Enemigo): sin barra de vida ni texto extra
-                card.name:SetTextColor(GetEntryNameColor(entry))
-                card.init:SetText("")
-                card.init:Hide()
-                card.armorClass:Hide()
-                card.hp:Hide()
-            else
-                card.name:SetTextColor(GetEntryNameColor(entry))
-                card.init:SetText("")
-                card.init:Hide()
-                local showArmor = entry.kind ~= "player"
-                card.armorClass:SetShown(showArmor)
-                if showArmor then
-                    card.armorClass:SetText("CA " .. tostring(SafeNumber(entry.armorClass, 0)))
-                    card.armorClass:SetEnabled(isAdmin)
-                end
-                local hp, maxHp, tempHp = GetEntryResourceValues(entry)
-                card.hp:Show()
-                UpdateSmallBar(card.hp, card.hpText, hp, maxHp, 0.78, 0.05, 0.08, tempHp)
-            end
-            SetCardTargetState(card, IsEntryCurrentTarget(entry))
-            SetEntryPortrait(card.icon, entry)
+            PaintEntryCard(card, entry, isAdmin)
             if entryIndex == store.activeIndex then
                 card.active:Show()
                 card.turn:SetText("ACTIVO")
@@ -1979,9 +1985,59 @@ end
 -- un NPC marcado como neutral puede ser hostil en la escena, y solo el DM lo sabe. Cambiarlo es
 -- suyo, y el cambio se difunde ya -- no espera al siguiente turno -- porque la pertenencia es lo
 -- que decide a quien le bajan los contadores.
-local function CreateCard(parent, index)
+-- Las PIEZAS visuales de una tarjeta, sin los controles de la ventana de turnos (mover, quitar,
+-- +/-). Se expone para que la lista de miembros de un bloque monte las MISMAS, en vez de una
+-- imitacion que se desvia en cuanto se toca cualquiera de las dos.
+local function CreateCardVisuals(parent, onArmorClick)
     local card = CreateFrame("Frame", nil, parent, "BackdropTemplate")
     card:SetSize(CARD_W, CARD_H)
+    SetFrameBackground(card)
+
+    card.border = CreateFrame("Frame", nil, card, "DialogBorderTemplate")
+    card.border:SetAllPoints(card)
+    card.border:SetFrameStrata(card:GetFrameStrata())
+    card.border:SetFrameLevel(card:GetFrameLevel() + 3)
+
+    card.icon = card:CreateTexture(nil, "ARTWORK")
+    card.icon:SetSize(36, 36)
+    card.icon:SetPoint("TOP", 0, -9)
+    card.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    card.name = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    card.name:SetPoint("TOPLEFT", 5, -46)
+    card.name:SetPoint("TOPRIGHT", -5, -46)
+    card.name:SetJustifyH("CENTER")
+    card.name:SetHeight(20)
+
+    card.init = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    card.init:SetPoint("TOP", 0, -65)
+
+    card.armorClass = MakeButton(card, "CA --", 48, 16, "TOP", card, "TOP", 0, -63,
+        onArmorClick or function() end)
+    card.armorClass:Hide()
+
+    card.hp = CreateFrame("StatusBar", nil, card)
+    card.hp:SetSize(58, 10)
+    card.hp:SetPoint("TOP", 0, -81)
+    card.hp:SetStatusBarTexture(TEX_STATUS)
+    card.hpBg = card.hp:CreateTexture(nil, "BACKGROUND")
+    card.hpBg:SetAllPoints()
+    card.hpBg:SetTexture(TEX_WHITE)
+    card.hpBg:SetVertexColor(0.08, 0.08, 0.08, 0.95)
+    card.hp.tempFill = card.hp:CreateTexture(nil, "OVERLAY", nil, 1)
+    card.hp.tempFill:SetTexture(TEX_WHITE)
+    card.hp.tempFill:SetVertexColor(0.35, 0.82, 1.0, 0.78)
+    card.hp.tempFill:Hide()
+    card.hpText = card.hp:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    card.hpText:SetPoint("CENTER", 0, 0)
+    if card.hpText.SetDrawLayer then card.hpText:SetDrawLayer("OVERLAY", 7) end
+    return card
+end
+
+local function CreateCard(parent, index)
+    local card = CreateCardVisuals(parent, function()
+        PromptSetArmorClass(card and card.entryIndex or index)
+    end)
     card:SetPoint("TOPLEFT", 18 + (index - 1) * (CARD_W + CARD_GAP), -78)
     card:EnableMouse(true)
     card:SetScript("OnMouseUp", function(self, button)
@@ -2003,12 +2059,6 @@ local function CreateCard(parent, index)
         if AlguienSeQuedaElClick(entry) then return end
         Ficha.ShowEntrySheet(entry)
     end)
-    SetFrameBackground(card)
-
-    card.border = CreateFrame("Frame", nil, card, "DialogBorderTemplate")
-    card.border:SetAllPoints(card)
-    card.border:SetFrameStrata(card:GetFrameStrata())
-    card.border:SetFrameLevel(card:GetFrameLevel() + 3)
 
     card.active = card:CreateTexture(nil, "OVERLAY")
     card.active:SetTexture(TEX_WHITE)
@@ -2053,40 +2103,6 @@ local function CreateCard(parent, index)
     card.targetRight:SetWidth(2)
     card.targetRight:Hide()
 
-    card.icon = card:CreateTexture(nil, "ARTWORK")
-    card.icon:SetSize(36, 36)
-    card.icon:SetPoint("TOP", 0, -9)
-    card.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-
-    card.name = card:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    card.name:SetPoint("TOPLEFT", 5, -46)
-    card.name:SetPoint("TOPRIGHT", -5, -46)
-    card.name:SetJustifyH("CENTER")
-    card.name:SetHeight(20)
-
-    card.init = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    card.init:SetPoint("TOP", 0, -65)
-
-    card.armorClass = MakeButton(card, "CA --", 48, 16, "TOP", card, "TOP", 0, -63, function()
-        PromptSetArmorClass(card.entryIndex or index)
-    end)
-    card.armorClass:Hide()
-
-    card.hp = CreateFrame("StatusBar", nil, card)
-    card.hp:SetSize(58, 10)
-    card.hp:SetPoint("TOP", 0, -81)
-    card.hp:SetStatusBarTexture(TEX_STATUS)
-    card.hpBg = card.hp:CreateTexture(nil, "BACKGROUND")
-    card.hpBg:SetAllPoints()
-    card.hpBg:SetTexture(TEX_WHITE)
-    card.hpBg:SetVertexColor(0.08, 0.08, 0.08, 0.95)
-    card.hp.tempFill = card.hp:CreateTexture(nil, "OVERLAY", nil, 1)
-    card.hp.tempFill:SetTexture(TEX_WHITE)
-    card.hp.tempFill:SetVertexColor(0.35, 0.82, 1.0, 0.78)
-    card.hp.tempFill:Hide()
-    card.hpText = card.hp:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    card.hpText:SetPoint("CENTER", 0, 0)
-    if card.hpText.SetDrawLayer then card.hpText:SetDrawLayer("OVERLAY", 7) end
 
     card.turn = card:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     card.turn:SetPoint("BOTTOM", 0, 7)
@@ -2492,6 +2508,17 @@ end
 -- cargado no aparece nada, que es justo la regla de carga del proyecto.
 
 -- Click derecho sobre una tarjeta. Por defecto no hace nada.
+-- Una tarjeta, montada y pintada por el core. La lista de miembros de un bloque (HarfordAdmin) usa
+-- estas dos y no una copia: si cada una pintara la suya, se irian separando con cada cambio, que es
+-- justo lo que paso al montar la lista por primera vez.
+function HarfordTurnOrderAPI.CreateCardVisuals(parent, onArmorClick)
+    return CreateCardVisuals(parent, onArmorClick)
+end
+
+function HarfordTurnOrderAPI.PaintEntryCard(card, entry, isAdmin)
+    return PaintEntryCard(card, entry, isAdmin)
+end
+
 function HarfordTurnOrderAPI.OnCardRightClick(entry, ancla)
 end
 

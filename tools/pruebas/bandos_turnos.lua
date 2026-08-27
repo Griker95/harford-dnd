@@ -192,7 +192,9 @@ chk("el core solo expone el gesto",
     turnos:find("function HarfordTurnOrderAPI.OnCardRightClick", 1, true) ~= nil, true)
 chk("que la tarjeta dispara con el boton derecho",
     turnos:find('if button == "RightButton" then', 1, true) ~= nil, true)
-chk("solo el admin reparte", admin:find("Solo el admin gestiona los turnos", 1, true) ~= nil, true)
+-- Sin admin no se abre menu, y CALLANDO: el click derecho se da constantemente y avisar cada vez
+-- llenaba el chat de la misma linea.
+chk("solo el admin reparte", admin:find("if not EsAdmin() then return end", 1, true) ~= nil, true)
 chk("y difunde al cambiar", admin:find("if T.SetBando(entry, b) then", 1, true) ~= nil, true)
 
 -- La lista que manda el DM PISA a la que calcularia el cliente: es lo que evita que dos clientes
@@ -381,16 +383,28 @@ local admin2 = io.open("HarfordAdmin/HarfordAdminTurns.lua"):read("*a")
 print("Y se gestionan desde HarfordAdmin")
 chk("el menu reconoce los bloques",
     admin2:find('if tipo == "players" or tipo == "generic" then', 1, true) ~= nil, true)
-chk("deja anadir el objetivo", admin2:find('T.AddBlockMember(entry, "target")', 1, true) ~= nil, true)
-chk("y a todos los jugadores de golpe",
-    admin2:find("Anadir a todos los jugadores", 1, true) ~= nil, true)
-chk("listando a los que ya estan", admin2:find('sep.text = "Dentro ("', 1, true) ~= nil, true)
+-- Y NO abre un submenu de anadir: eso vive en la lista, que es donde ademas se ve la vida y la CA
+-- de quien esta dentro. Tenerlo en los dos sitios era la misma cosa dos veces, y la de aqui peor.
+chk("el click derecho de un bloque abre su lista, sin submenu",
+    admin2:find("then\n            AbrirPanelDeBloque(entry)", 1, true) ~= nil, true)
+-- Y sin ser admin no dice nada: el click derecho se da constantemente, y avisar cada vez llenaba
+-- el chat de la misma linea.
+chk("y sin admin calla", admin2:find('Print("Solo el admin gestiona los turnos.")', 1, true) == nil, true)
 
 -- ─── LA LISTA DE TARJETAS DEL BLOQUE ────────────────────────────────────────
 -- Los miembros no tienen tarjeta en la lista compartida -- ese es el modelo --, pero el DM
 -- necesita verlos. El panel es SUYO: vive en HarfordAdmin y no existe para nadie mas.
 print("El DM ve las tarjetas de cada bloque")
-chk("hay panel", admin2:find("function AbrirPanelDeBloque(entry)", 1, true) ~= nil, true)
+chk("hay panel", admin2:find("AbrirPanelDeBloque = function(entry)", 1, true) ~= nil, true)
+-- DOS botones en el bloque de PJs: apuntar a uno y anadirlo, o desplegar el grupo entero. Antes en
+-- PJs solo estaba la lista, asi que meter al que tenias delante obligaba a buscarlo en ella.
+chk("en PJs hay boton de objetivo", admin2:find("AnadirObjetivo = function()", 1, true) ~= nil, true)
+chk("y boton de grupo", admin2:find("AnadirDelGrupo = function()", 1, true) ~= nil, true)
+chk("y el de grupo se esconde fuera de PJs",
+    admin2:find("panel.anadirGrupo:Hide()", 1, true) ~= nil, true)
+-- El bloque de PJs es de JUGADORES: un NPC ahi rompe el bando igual de callado que un PJ entre NPCs.
+chk("un NPC no entra en el bloque de PJs",
+    admin2:find("if esBloqueDePJs and not esJugador then", 1, true) ~= nil, true)
 chk("y solo para el admin", admin2:find("if not EsAdmin() then return end", 1, true) ~= nil, true)
 -- El click izquierdo del core abre la ficha de la entrada; Admin se lo queda SOLO para los bloques.
 chk("el core ofrece el gesto",
@@ -403,17 +417,26 @@ chk("si nadie lo toma, el core hace lo de siempre",
 -- puede comprobar: la del bloque no se guarda en ninguna parte.
 chk("la vida se lee de la unidad viva", admin2:find("UnitHealth(unidad)", 1, true) ~= nil, true)
 chk("y se dice cuando no esta a la vista",
-    admin2:find('f.vidaTexto:SetText("|cff808080sin vista|r")', 1, true) ~= nil, true)
--- Son las tarjetas de siempre, solo que dentro de la lista: mismo tamano y mismo borde que las de
--- la ventana de turnos. Una fila de texto no se lee como un combatiente.
-chk("las tarjetas miden lo que las de turnos",
-    admin2:find("local TARJ_W, TARJ_H, TARJ_HUECO = 70, 122, 6", 1, true) ~= nil, true)
-chk("y llevan su mismo borde",
-    admin2:find('CreateFrame("Frame", nil, f, "DialogBorderTemplate")', 1, true) ~= nil, true)
+    admin2:find('f.hpText:SetText("|cff808080sin vista|r")', 1, true) ~= nil, true)
+-- Son las tarjetas de siempre, solo que dentro de la lista: NO una imitacion. Las monta y las pinta
+-- el core con las mismas dos funciones que la ventana de turnos, porque la primera version las
+-- rehizo aqui y las dos se actualizaban de forma distinta.
+chk("las monta el core", admin2:find("API().CreateCardVisuals(panel.contenido)", 1, true) ~= nil, true)
+chk("y las pinta el core", admin2:find("API().PaintEntryCard(f, {", 1, true) ~= nil, true)
+chk("el core expone el constructor",
+    turnos:find("function HarfordTurnOrderAPI.CreateCardVisuals(parent, onArmorClick)", 1, true) ~= nil, true)
+chk("y el pintor",
+    turnos:find("function HarfordTurnOrderAPI.PaintEntryCard(card, entry, isAdmin)", 1, true) ~= nil, true)
+-- Y la ventana de turnos usa las MISMAS: si el core se quedara con una copia propia, seguiriamos
+-- teniendo dos.
+chk("la ventana de turnos usa el mismo constructor",
+    turnos:find("local card = CreateCardVisuals(parent, function()", 1, true) ~= nil, true)
+chk("y el mismo pintor",
+    turnos:find("PaintEntryCard(card, entry, isAdmin)", 1, true) ~= nil, true)
 -- Con muchas se baja a verlas, pero el boton no se va con ellas ni lo recorta el scroll: cuelga del
 -- panel, no del contenido que se desplaza.
 chk("las tarjetas van dentro del scroll",
-    admin2:find('CreateFrame("Button", nil, panel.contenido, "BackdropTemplate")', 1, true) ~= nil, true)
+    admin2:find("CreateCardVisuals(panel.contenido)", 1, true) ~= nil, true)
 chk("y el boton se queda fuera",
     admin2:find('panel.anadir = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")', 1, true) ~= nil, true)
 

@@ -3056,8 +3056,19 @@ vez, que es el comportamiento correcto bajo iniciativa por bandos.
 ## Bloques de turno: las tarjetas especiales guardan a los suyos (2026-08-26)
 
 - **La lista de un bloque son las MISMAS tarjetas de la ventana de turnos, solo que dentro de la
-  lista**: 70x122, `DialogBorderTemplate`, retrato 36x36 arriba, nombre, `CA N` y barra de vida con
-  `actual/maxima`. Una fila de texto no se lee como un combatiente, que es lo que son.
+  lista** -- literalmente: las monta `HarfordTurnOrderAPI.CreateCardVisuals` y las pinta
+  `HarfordTurnOrderAPI.PaintEntryCard`, las dos del core, y la ventana de turnos usa esas mismas.
+  **No rehacer la tarjeta en Admin**: la primera version lo hizo y quedaban parecidas pero se
+  actualizaban de otra forma, asi que un cambio en una no llegaba a la otra.
+- Admin le pasa una entrada `kind = "npc"` aunque el miembro sea un jugador: la rama `player` del
+  pintor saca la vida del snapshot Harford por nombre, y aqui se quiere lo que marca la unidad que
+  tienes delante.
+- **El click derecho de un bloque abre su lista y no un submenu de anadir** -- eso era la misma cosa
+  en dos sitios, y la del menu ni siquiera enseniaba vida ni CA. Sin ser admin no abre nada y
+  CALLA: el click derecho se da constantemente y avisar cada vez llenaba el chat.
+- En el bloque de PJs hay DOS botones: anadir el objetivo y desplegar el grupo. Cada uno valida el
+  tipo -- un NPC no entra en el bloque de PJs ni un PJ en uno de NPCs -- porque colar a uno donde no
+  va rompe su bando sin que nadie lo note.
 - Vida y CA se leen de la unidad VIVA en cada refresco (`UnitHealth`, y la CA por
   `HarfordDnDCombat.GetArmorClassForUnit`, la misma resolucion que usa el ataque). Sin vista se
   dice `sin vista`: un numero viejo que nadie puede comprobar es peor que no tener numero.

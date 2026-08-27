@@ -65,9 +65,13 @@ local function AlternarSecundario(entry)
 end
 
 -- ─── MENU DE LA TARJETA ──────────────────────────────────────────────────────
+local AbrirPanelDeBloque   -- se asigna abajo; el menu de tarjeta cierra sobre ella
+
 local function AbrirMenu(entry, ancla)
     if not entry then return end
-    if not EsAdmin() then Print("Solo el admin gestiona los turnos.") return end
+    -- Sin ser admin no se abre menu y YA ESTA. Avisarlo convertia cada click derecho sobre una
+    -- tarjeta en una linea de chat repetida, y el click derecho es un gesto que se da constantemente.
+    if not EsAdmin() then return end
     local tipo = tostring(entry.kind or "")
     if tipo ~= "npc" and tipo ~= "player" and tipo ~= "players" and tipo ~= "generic" then
         return
@@ -85,72 +89,11 @@ local function AbrirMenu(entry, ancla)
         -- Una tarjeta ESPECIAL es un BLOQUE: aqui se gestiona quien va dentro. Sus miembros no
         -- tienen tarjeta propia -- su vida se mira en el unitframe al seleccionarlos --, asi que
         -- esta es la unica forma de verlos y de tocarlos.
+        -- Un BLOQUE no abre menu: sus miembros se gestionan en su lista, que ya abre el click
+        -- izquierdo. Tener ademas un submenu de anadir aqui era la misma cosa en dos sitios, y el
+        -- de aqui ni siquiera podia enseniar la vida ni la CA de quien esta dentro.
         if tipo == "players" or tipo == "generic" then
-            local dentro = T.GetBlockMembers(entry)
-
-            local anadir = UIDropDownMenu_CreateInfo()
-            anadir.notCheckable = true
-            anadir.text = (UnitExists and UnitExists("target"))
-                and ("Anadir a " .. tostring(UnitName("target")))
-                or "Anadir el objetivo (no hay ninguno)"
-            anadir.disabled = not (UnitExists and UnitExists("target"))
-            anadir.func = function()
-                local ok, err = T.AddBlockMember(entry, "target")
-                Print(ok and (tostring(UnitName("target")) .. " entra en "
-                    .. tostring(entry.name or "el bloque") .. ".") or tostring(err))
-                CloseDropDownMenus()
-            end
-            UIDropDownMenu_AddButton(anadir, level)
-
-            -- Solo en el bloque de PJs: a los NPC no se les puede hacer en bloque, porque el
-            -- cliente no permite enumerarlos mas alla de los que tengan placa visible.
-            if tipo == "players" then
-                local todos = UIDropDownMenu_CreateInfo()
-                todos.notCheckable = true
-                todos.text = "Anadir a todos los jugadores"
-                todos.func = function()
-                    local n = (GetNumGroupMembers and GetNumGroupMembers()) or 0
-                    local enRaid = IsInRaid and IsInRaid()
-                    local unidades = { "player" }
-                    for i = 1, (enRaid and n or math.max(0, n - 1)) do
-                        unidades[#unidades + 1] = (enRaid and "raid" or "party") .. i
-                    end
-                    local puestos = 0
-                    for _, u in ipairs(unidades) do
-                        -- Solo CONECTADOS: uno desconectado no va a jugar su turno y meterlo
-                        -- obliga a quitarlo despues.
-                        if UnitExists and UnitExists(u)
-                            and (not UnitIsConnected or UnitIsConnected(u))
-                            and T.AddBlockMember(entry, u) then
-                            puestos = puestos + 1
-                        end
-                    end
-                    Print(puestos > 0
-                        and ("Anadidos " .. puestos .. " jugador(es) a " .. tostring(entry.name) .. ".")
-                        or "No habia ningun jugador conectado que anadir.")
-                    CloseDropDownMenus()
-                end
-                UIDropDownMenu_AddButton(todos, level)
-            end
-
-            if #dentro > 0 then
-                local sep = UIDropDownMenu_CreateInfo()
-                sep.isTitle, sep.notCheckable = true, true
-                sep.text = "Dentro (" .. #dentro .. "):"
-                UIDropDownMenu_AddButton(sep, level)
-                for _, m in ipairs(dentro) do
-                    local fila = UIDropDownMenu_CreateInfo()
-                    fila.notCheckable = true
-                    fila.text = "|cffff8888x|r  " .. tostring(m.name or "?")
-                    fila.func = function()
-                        T.RemoveBlockMember(entry, m.guid)
-                        Print(tostring(m.name or "?") .. " sale de "
-                            .. tostring(entry.name or "el bloque") .. ".")
-                        CloseDropDownMenus()
-                    end
-                    UIDropDownMenu_AddButton(fila, level)
-                end
-            end
+            AbrirPanelDeBloque(entry)
             return
         end
 
@@ -202,7 +145,7 @@ end
 -- un numero viejo que nadie puede comprobar.
 do
     local panel, filas = nil, {}
-    local AnadirABloque   -- se asigna abajo; el boton cierra sobre ella
+    local AnadirObjetivo, AnadirDelGrupo   -- se asignan abajo; los botones cierran sobre ellas
     local bloqueActual
     -- Las mismas medidas que las tarjetas de la ventana de turnos (70x122): son lo mismo, un
     -- combatiente, y tienen que leerse igual. Tres por fila, cuatro filas.
@@ -216,46 +159,15 @@ do
     local function EnsureFila(i)
         local f = filas[i]
         if f then return f end
-        f = CreateFrame("Button", nil, panel.contenido, "BackdropTemplate")
-        f:SetSize(TARJ_W, TARJ_H)
-        f.fondo = f:CreateTexture(nil, "BACKGROUND")
-        f.fondo:SetAllPoints(f)
-        f.fondo:SetColorTexture(0.05, 0.05, 0.06, 0.85)
-        -- El mismo borde que las tarjetas de turnos. Por encima del contenido, como alli.
-        f.borde = CreateFrame("Frame", nil, f, "DialogBorderTemplate")
-        f.borde:SetAllPoints(f)
-        f.borde:SetFrameLevel(f:GetFrameLevel() + 3)
-
-        f.retrato = f:CreateTexture(nil, "ARTWORK")
-        f.retrato:SetSize(36, 36)
-        f.retrato:SetPoint("TOP", 0, -9)
-        f.retrato:SetTexCoord(0.08, 0.92, 0.08, 0.92)
-
-        f.texto = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        f.texto:SetPoint("TOPLEFT", 5, -46)
-        f.texto:SetPoint("TOPRIGHT", -5, -46)
-        f.texto:SetJustifyH("CENTER")
-        f.texto:SetHeight(20)
-
-        f.ca = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-        f.ca:SetPoint("TOP", 0, -68)
-
-        f.vida = CreateFrame("StatusBar", nil, f)
-        f.vida:SetSize(58, 10)
-        f.vida:SetPoint("TOP", 0, -86)
-        f.vida:SetStatusBarTexture("Interface\\TargetingFrame\\UI-StatusBar")
-        f.vida:SetMinMaxValues(0, 1)
-        f.vidaFondo = f.vida:CreateTexture(nil, "BACKGROUND")
-        f.vidaFondo:SetAllPoints()
-        f.vidaFondo:SetColorTexture(0.08, 0.08, 0.08, 0.95)
-        f.vidaTexto = f.vida:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-        f.vidaTexto:SetPoint("CENTER", 0, 0)
-        if f.vidaTexto.SetDrawLayer then f.vidaTexto:SetDrawLayer("OVERLAY", 7) end
-
+        -- La monta el CORE, con las mismas piezas que las tarjetas de la ventana de turnos.
+        -- Rehacerlas aqui fue el error de la primera version: quedaban parecidas y se actualizaban
+        -- de otra forma, asi que cualquier cambio en una no llegaba a la otra.
+        f = API().CreateCardVisuals(panel.contenido)
+        f:EnableMouse(true)
         f.quitar = CreateFrame("Button", nil, f, "UIPanelCloseButton")
         f.quitar:SetSize(20, 20)
         f.quitar:SetPoint("TOPRIGHT", f, "TOPRIGHT", 2, 2)
-        f.quitar:SetFrameLevel(f.borde:GetFrameLevel() + 1)
+        f.quitar:SetFrameLevel(f.border:GetFrameLevel() + 1)
         filas[i] = f
         return f
     end
@@ -310,9 +222,14 @@ do
 
         -- Abajo, donde se busca: anadir es lo que mas se hace en esta ventana.
         panel.anadir = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
-        panel.anadir:SetSize(PANEL_ANCHO - 24, 22)
-        panel.anadir:SetPoint("BOTTOM", panel, "BOTTOM", 0, 10)
-        panel.anadir:SetScript("OnClick", function() AnadirABloque() end)
+        panel.anadir:SetHeight(22)
+        panel.anadir:SetScript("OnClick", function() AnadirObjetivo() end)
+        -- Anadir al grupo entero es SOLO para el bloque de PJs: a los NPC no se les puede hacer
+        -- porque el cliente no permite enumerarlos mas alla de los que tengan placa visible.
+        panel.anadirGrupo = CreateFrame("Button", nil, panel, "UIPanelButtonTemplate")
+        panel.anadirGrupo:SetHeight(22)
+        panel.anadirGrupo:SetText("Anadir al grupo...")
+        panel.anadirGrupo:SetScript("OnClick", function() AnadirDelGrupo() end)
 
         panel.cerrar = CreateFrame("Button", nil, panel, "UIPanelCloseButton")
         panel.cerrar:SetPoint("TOPRIGHT", panel, "TOPRIGHT", -4, -4)
@@ -337,10 +254,23 @@ do
         local dentro = T.GetBlockMembers(bloqueActual)
         panel.titulo:SetText(tostring(bloqueActual.name or "Bloque")
             .. "  |cff999999(" .. #dentro .. ")|r")
-        -- El boton dice lo que va a hacer, que no es lo mismo en un bloque de PJs que en uno de
-        -- NPCs: alli hay lista, aqui se anade lo que tengas delante.
-        panel.anadir:SetText(tostring(bloqueActual.kind or "") == "players"
-            and "Anadir al grupo..." or "Anadir el objetivo")
+        -- En PJs van los dos, uno al lado del otro; en un bloque de NPCs solo el del objetivo, y
+        -- entonces ocupa el ancho entero.
+        panel.anadir:SetText("Anadir el objetivo")
+        panel.anadir:ClearAllPoints()
+        if tostring(bloqueActual.kind or "") == "players" then
+            local mitad = (PANEL_ANCHO - 28) / 2
+            panel.anadir:SetWidth(mitad)
+            panel.anadir:SetPoint("BOTTOMLEFT", panel, "BOTTOMLEFT", 10, 10)
+            panel.anadirGrupo:SetWidth(mitad)
+            panel.anadirGrupo:ClearAllPoints()
+            panel.anadirGrupo:SetPoint("BOTTOMRIGHT", panel, "BOTTOMRIGHT", -10, 10)
+            panel.anadirGrupo:Show()
+        else
+            panel.anadir:SetWidth(PANEL_ANCHO - 24)
+            panel.anadir:SetPoint("BOTTOM", panel, "BOTTOM", 0, 10)
+            panel.anadirGrupo:Hide()
+        end
         -- El alto del contenido crece con las tarjetas; el area a la vista no. Eso es lo que hace
         -- que aparezca la barra en vez de recortar la lista.
         local filasNecesarias = math.max(FILAS_A_LA_VISTA, math.ceil(#dentro / COLUMNAS))
@@ -350,34 +280,31 @@ do
             if not m then f:Hide()
             else
                 local unidad = UnidadDe(m.guid)
-                f.texto:SetText(tostring(m.name or "?"))
-                if m.jugador and HarfordClassColors and HarfordClassColors.UnitColorRGB and unidad then
-                    local r, g, b = HarfordClassColors.UnitColorRGB(unidad)
-                    if r then f.texto:SetTextColor(r, g, b) end
-                else
-                    f.texto:SetTextColor(0.9, 0.85, 0.7)
-                end
-                -- La vida sale de la unidad viva. Si no esta a la vista se dice, en vez de enseniar
-                -- un numero viejo que nadie puede comprobar.
+                -- Se pinta con la funcion del core, dandole una entrada como las suyas. Los valores
+                -- se leen de la unidad VIVA porque la vida de un miembro no se guarda en ninguna
+                -- parte: no tiene tarjeta en la lista compartida, ese es el modelo.
+                local vida, maxima = 0, 0
                 if unidad and UnitHealth then
-                    local vida, maxima = UnitHealth(unidad), UnitHealthMax(unidad)
-                    f.vida:SetValue(maxima > 0 and (vida / maxima) or 0)
-                    f.vida:SetStatusBarColor(0.16, 0.68, 0.24)
-                    f.vidaTexto:SetText(tostring(vida) .. "/" .. tostring(maxima))
-                else
-                    -- Sin vista no se inventa una barra: se dice. Un numero viejo que nadie puede
-                    -- comprobar es peor que no tener numero.
-                    f.vida:SetValue(0)
-                    f.vidaTexto:SetText("|cff808080sin vista|r")
+                    vida, maxima = UnitHealth(unidad), UnitHealthMax(unidad)
                 end
-                -- La CA sale de la misma resolucion que usa el ataque, no de una copia aparte.
                 local ca = unidad and HarfordDnDCombat and HarfordDnDCombat.GetArmorClassForUnit
                     and HarfordDnDCombat.GetArmorClassForUnit(unidad)
-                f.ca:SetText(ca and ("CA " .. tostring(ca)) or "|cff808080CA --|r")
-                if unidad and SetPortraitTexture then
-                    SetPortraitTexture(f.retrato, unidad)
-                else
-                    f.retrato:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
+                API().PaintEntryCard(f, {
+                    -- `npc` y no `player`: la entrada de jugador saca la vida del snapshot Harford
+                    -- por nombre, y aqui se quiere lo que marca la unidad delante.
+                    kind = "npc",
+                    name = m.name,
+                    id = m.guid,
+                    unitName = m.name,
+                    armorClass = ca or 0,
+                    hp = vida,
+                    maxHp = maxima,
+                }, false)
+                -- Sin vista no se enseña una barra vacia como si estuviera muerto: se dice.
+                if not unidad then f.hpText:SetText("|cff808080sin vista|r") end
+                if m.jugador and HarfordClassColors and HarfordClassColors.UnitColorRGB and unidad then
+                    local r, g, b = HarfordClassColors.UnitColorRGB(unidad)
+                    if r then f.name:SetTextColor(r, g, b) end
                 end
                 f.quitar:SetScript("OnClick", function()
                     T.RemoveBlockMember(bloqueActual, m.guid)
@@ -393,29 +320,41 @@ do
         end
     end
 
-    -- En PJs se despliega la LISTA del grupo: son varios y estan todos a mano. En los demas se
-    -- anade el OBJETIVO, porque a los NPC no hay forma de enumerarlos.
+    -- Anadir al que tengas delante. Vale para cualquier bloque, PJs incluido: un jugador tambien
+    -- se mete apuntandolo, sin tener que buscarlo en una lista.
     local menuAnadir
-    AnadirABloque = function()
+    AnadirObjetivo = function()
         local T = API()
         if not bloqueActual then return end
-
-        if tostring(bloqueActual.kind or "") ~= "players" then
-            -- Un jugador NO entra en un bloque de NPCs: los PJs van siempre con los PJs, y meterlo
-            -- aqui lo sacaria de su bando sin que nadie lo note.
-            if UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target") then
-                Print("|cffff5555" .. tostring(UnitName("target")) .. " es un jugador:|r va en el "
-                    .. "bloque de PJs, no en " .. tostring(bloqueActual.name) .. ".")
-                return
-            end
-            local ok, err = T.AddBlockMember(bloqueActual, "target")
-            Print(ok and (tostring(UnitName("target")) .. " entra en "
-                .. tostring(bloqueActual.name) .. ".") or tostring(err))
-            RefrescarPanel()
+        if not (UnitExists and UnitExists("target")) then
+            Print("No tienes ningun objetivo.")
             return
         end
+        -- Un jugador NO entra en un bloque de NPCs: los PJs van siempre con los PJs, y meterlo
+        -- aqui lo sacaria de su bando sin que nadie lo note.
+        local esJugador = UnitIsPlayer and UnitIsPlayer("target")
+        local esBloqueDePJs = tostring(bloqueActual.kind or "") == "players"
+        if esJugador and not esBloqueDePJs then
+            Print("|cffff5555" .. tostring(UnitName("target")) .. " es un jugador:|r va en el "
+                .. "bloque de PJs, no en " .. tostring(bloqueActual.name) .. ".")
+            return
+        end
+        -- Y al reves: el bloque de PJs es de jugadores. Un NPC ahi rompe el bando igual de callado.
+        if esBloqueDePJs and not esJugador then
+            Print("|cffff5555" .. tostring(UnitName("target")) .. " no es un jugador:|r va en un "
+                .. "bloque de NPCs, no en " .. tostring(bloqueActual.name) .. ".")
+            return
+        end
+        local ok, err = T.AddBlockMember(bloqueActual, "target")
+        Print(ok and (tostring(UnitName("target")) .. " entra en "
+            .. tostring(bloqueActual.name) .. ".") or tostring(err))
+        RefrescarPanel()
+    end
 
-        -- Bloque de PJs: la lista del grupo, con los que ya estan marcados.
+    -- Y la lista del grupo, solo para PJs: son varios y estan todos a mano.
+    AnadirDelGrupo = function()
+        local T = API()
+        if not bloqueActual then return end
         menuAnadir = menuAnadir or CreateFrame("Frame", "HarfordAdminBlockAddMenu", UIParent,
             "UIDropDownMenuTemplate")
         UIDropDownMenu_Initialize(menuAnadir, function(_, level)
@@ -471,10 +410,10 @@ do
             end
             UIDropDownMenu_AddButton(todos, level)
         end, "MENU")
-        ToggleDropDownMenu(1, nil, menuAnadir, panel.anadir, 0, 0)
+        ToggleDropDownMenu(1, nil, menuAnadir, panel.anadirGrupo, 0, 0)
     end
 
-    function AbrirPanelDeBloque(entry)
+    AbrirPanelDeBloque = function(entry)
         if not EsAdmin() then return end
         CrearPanel()
         -- Pulsar el mismo bloque cierra; otro CAMBIA sin cerrar, que es lo que se espera al ir

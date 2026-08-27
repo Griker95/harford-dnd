@@ -3333,6 +3333,24 @@ de ids lo blindaria a costa de engordar el mensaje.
 
 Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
+## El marcador de turno (2026-08-27)
+
+- Ventanita PERMANENTE con de quien es el turno y por que asalto vamos
+  (`HarfordTurnOrderAPI.RefreshTurnMarker`). El estandarte pasa en cuatro segundos; esa pregunta se
+  hace cinco minutos despues, y hasta ahora la respuesta vivia solo en la ventana de turnos, que
+  nadie tiene abierta todo el rato. Copiado del `TurnTracker` de DiceMaster.
+- Arte NATIVO y por faccion: `AllianceScenario-TrackerHeader` / `HordeScenario-TrackerHeader`
+  (243x77), comprobado con `C_Texture.GetAtlasInfo` antes de pintar.
+- **En bandos dice tambien la FASE**: "cerrando el bloque" o "jugando". `cierra Enemigos` y
+  `empiezan Enemigos` son dos momentos distintos del mismo bloque y desde fuera se confunden.
+- **Se repinta en TRES sitios y hacen falta los tres**: `AlertTurnChanged` (cambio de turno),
+  `MarkChanged` (iniciar y terminar el combate NO son cambios de turno, asi que sin este se quedaba
+  puesto despues de terminar) y al recibir estado de otro cliente, que no pasa por `MarkChanged`
+  porque seria reenviarlo.
+- `MEDIUM` nivel 60, no DIALOG: se queda en pantalla y no puede ponerse por delante de una ventana.
+  Movible con `SetUserPlaced`. Ajuste `turnmarker` (`on` por defecto). **Sin ticker**: solo se
+  repinta cuando cambia lo que dice.
+
 ## El estandarte de turno (2026-08-27)
 
 - Aviso grande al empezar un turno, al estilo del de DiceMaster. **Todo el arte es NATIVO**

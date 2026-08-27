@@ -307,6 +307,7 @@ local function AlertRoundStates(entry, activeIndex, turnSerial)
 end
 
 local function AlertTurnChanged(entry, activeIndex, turnSerial)
+    if HarfordTurnOrderAPI.RefreshTurnMarker then HarfordTurnOrderAPI.RefreshTurnMarker() end
     if HarfordTurnOrderAPI and HarfordTurnOrderAPI._turnChangedListeners then
         for _, fn in ipairs(HarfordTurnOrderAPI._turnChangedListeners) do
             pcall(fn, entry, turnSerial, activeIndex)
@@ -777,6 +778,12 @@ local function ApplyTurnNotice(message, sender)
     return true
 end
 
+-- Recibir el estado de otro cliente NO pasa por `MarkChanged` (seria reenviarlo), asi que el
+-- marcador se repinta aparte o se queda con lo del turno anterior.
+local function RefrescarMarcadorTrasRecibir()
+    if HarfordTurnOrderAPI.RefreshTurnMarker then HarfordTurnOrderAPI.RefreshTurnMarker() end
+end
+
 local function ApplySerializedState(message)
     local opcode, activeRaw, third, fourth = strsplit("|", message or "")
     if opcode ~= "STATE" then return false end
@@ -813,6 +820,7 @@ local function ApplySerializedState(message)
     EnsureRoundMarker()
     ClampActiveIndex()
     EnsureActiveVisible()
+    RefrescarMarcadorTrasRecibir()
     return true
 end
 
@@ -981,6 +989,9 @@ end
 MarkChanged = function()
     TouchStore()
     if RefreshFrame then RefreshFrame() end
+    -- El marcador tambien: iniciar y terminar el combate no son cambios de TURNO, asi que no
+    -- pasan por `AlertTurnChanged` y se quedaria puesto despues de terminar.
+    if HarfordTurnOrderAPI.RefreshTurnMarker then HarfordTurnOrderAPI.RefreshTurnMarker() end
     ScheduleBroadcast()
 end
 
@@ -2554,6 +2565,121 @@ if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
     HarfordAuthority.RegisterChangeListener("HarfordTurns", function()
         if TurnFrame and TurnFrame:IsShown() and RefreshFrame then RefreshFrame() end
     end)
+end
+
+-- ─── EL MARCADOR DE TURNO ───────────────────────────────────────────────────
+-- Una ventanita que se QUEDA, con de quien es el turno y por que asalto vamos. El estandarte pasa
+-- en cuatro segundos; esto contesta la misma pregunta cinco minutos despues, que es cuando se hace
+-- de verdad -- hasta ahora esa informacion vivia solo en la ventana de turnos, que nadie tiene
+-- abierta todo el rato.
+--
+-- Arte NATIVO: `AllianceScenario-TrackerHeader` / `HordeScenario-TrackerHeader` (243x77), la misma
+-- cabecera que usa el juego para los escenarios y que DiceMaster usa para lo mismo que esto.
+--
+-- Va en un `do...end` (el fichero ronda los 140 locales y el limite de Lua 5.1 es 200) y SIN
+-- ticker: se repinta cuando cambia el turno, que es la unica vez que cambia lo que dice.
+do
+    local marcador
+
+    local function Activo()
+        if HarfordConfig and HarfordConfig.Get and HarfordConfig.Get("turnmarker") == "off" then
+            return false
+        end
+        return HarfordTurnOrderAPI.HasActiveCombat()
+    end
+
+    local function Crear()
+        if marcador then return marcador end
+        marcador = CreateFrame("Frame", "HarfordTurnMarkerFrame", UIParent)
+        marcador:SetSize(243, 77)
+        marcador:SetPoint("TOP", UIParent, "TOP", 0, -18)
+        -- MEDIUM, no DIALOG: se queda en pantalla y no puede ponerse por delante de una ventana.
+        marcador:SetFrameStrata("MEDIUM")
+        marcador:SetFrameLevel(60)
+        marcador:SetClampedToScreen(true)
+        marcador:SetMovable(true)
+        marcador:EnableMouse(true)
+        marcador:RegisterForDrag("LeftButton")
+        marcador:SetScript("OnDragStart", marcador.StartMoving)
+        marcador:SetScript("OnDragStop", function(self)
+            self:StopMovingOrSizing()
+            self:SetUserPlaced(true)
+        end)
+        marcador:SetUserPlaced(true)
+
+        marcador.fondo = marcador:CreateTexture(nil, "BACKGROUND")
+        -- Por faccion, como el nativo. Si la sonda no lo encuentra no se pinta nada: un atlas que
+        -- falta deja la textura anterior, no la borra.
+        local faccion = (UnitFactionGroup and UnitFactionGroup("player")) or "Alliance"
+        local nombre = (faccion == "Horde") and "HordeScenario-TrackerHeader"
+            or "AllianceScenario-TrackerHeader"
+        if C_Texture and C_Texture.GetAtlasInfo and C_Texture.GetAtlasInfo(nombre) then
+            marcador.fondo:SetAtlas(nombre, true)
+            marcador.fondo:SetPoint("CENTER")
+        end
+
+        marcador.titulo = marcador:CreateFontString(nil, "OVERLAY", "GameFontNormalMed2")
+        marcador.titulo:SetPoint("TOPLEFT", marcador, "TOPLEFT", 14, -10)
+        marcador.titulo:SetWidth(150)
+        marcador.titulo:SetJustifyH("LEFT")
+        marcador.titulo:SetMaxLines(1)
+
+        marcador.asalto = marcador:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall2")
+        marcador.asalto:SetPoint("TOPRIGHT", marcador, "TOPRIGHT", -14, -10)
+        marcador.asalto:SetJustifyH("RIGHT")
+
+        marcador.detalle = marcador:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        marcador.detalle:SetPoint("TOPLEFT", marcador.titulo, "BOTTOMLEFT", 0, -2)
+        marcador.detalle:SetWidth(210)
+        marcador.detalle:SetJustifyH("LEFT")
+        marcador.detalle:SetTextColor(0.75, 0.72, 0.62)
+
+        marcador:SetScript("OnEnter", function(self)
+            if not GameTooltip then return end
+            GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
+            GameTooltip:AddLine("Turno de combate", 1, 1, 1)
+            GameTooltip:AddLine("Arrastra para moverlo.", 0.7, 0.7, 0.7)
+            GameTooltip:AddLine("Se apaga con /harford config turnmarker off", 0.6, 0.6, 0.6)
+            GameTooltip:Show()
+        end)
+        marcador:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+        marcador:Hide()
+        return marcador
+    end
+
+    -- Repinta con lo que hay ahora. Sale de la MISMA fuente que la ventana de turnos, para que no
+    -- puedan decir cosas distintas.
+    function HarfordTurnOrderAPI.RefreshTurnMarker()
+        if not Activo() then
+            if marcador then marcador:Hide() end
+            return false
+        end
+        Crear()
+        local store = HarfordTurnOrderStore
+        if type(store) ~= "table" then marcador:Hide() return false end
+
+        local nombre, detalle
+        if store.modoBandos then
+            local indice = tonumber(store.activeBando) or 0
+            local bando = indice >= 1 and HarfordTurnOrderAPI.BANDOS[indice] or nil
+            nombre = bando and (HarfordTurnOrderAPI.BANDO_ETIQUETA[bando] or bando) or "Sin empezar"
+            -- La FASE importa tanto como el bando: "cierra Enemigos" y "empiezan Enemigos" son dos
+            -- momentos distintos del mismo bloque, y desde fuera se confunden.
+            if bando then
+                detalle = (store.faseBando == "fin") and "cerrando el bloque" or "jugando"
+            end
+        else
+            local entrada = store.entries and store.entries[store.activeIndex or 0]
+            nombre = entrada and tostring(entrada.name or "") or "Sin empezar"
+            if entrada and entrada.kind == "round" then nombre = "Cambio de asalto" end
+        end
+        marcador.titulo:SetText(tostring(nombre))
+        marcador.detalle:SetText(tostring(detalle or ""))
+        local asalto = tonumber(store.asalto) or 0
+        marcador.asalto:SetText(asalto > 0 and ("Asalto " .. asalto) or "")
+        marcador:Show()
+        return true
+    end
 end
 
 -- ─── EL ESTANDARTE DE TURNO ────────────────────────────────────────────

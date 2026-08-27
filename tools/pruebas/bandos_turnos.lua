@@ -517,6 +517,34 @@ chk("y el boton se queda fuera",
 chk("un desconectado no se enumera",
     admin2:find("(desconectado)", 1, true) == nil, true)
 
+-- ─── EL MARCADOR PERMANENTE ─────────────────────────────────────────────────
+-- El estandarte pasa en cuatro segundos; la pregunta "de quien es el turno" se hace cinco minutos
+-- despues. Hasta ahora esa respuesta vivia solo en la ventana de turnos, que nadie tiene abierta
+-- todo el rato.
+print("El marcador de turno")
+chk("existe", turnos:find("function HarfordTurnOrderAPI.RefreshTurnMarker()", 1, true) ~= nil, true)
+-- Arte nativo, y por faccion como el del juego.
+chk("con la cabecera de escenario",
+    turnos:find("AllianceScenario-TrackerHeader", 1, true) ~= nil
+    and turnos:find("HordeScenario-TrackerHeader", 1, true) ~= nil, true)
+-- Si el atlas no estuviera no se pinta: uno que falta deja la textura anterior, no la borra.
+chk("comprobando que exista",
+    turnos:find("C_Texture.GetAtlasInfo(nombre)", 1, true) ~= nil, true)
+-- Se repinta en los TRES sitios donde cambia lo que dice. Iniciar y terminar el combate no son
+-- cambios de turno, asi que sin el de `MarkChanged` se quedaba puesto despues de terminar; y
+-- recibir el estado de otro cliente no pasa por ahi, asi que necesita el suyo.
+chk("se repinta al cambiar el turno",
+    turnos:find("RefreshTurnMarker() end\n    if HarfordTurnOrderAPI and", 1, true) ~= nil, true)
+chk("al cambiar el estado",
+    turnos:find("RefreshTurnMarker() end\n    ScheduleBroadcast", 1, true) ~= nil, true)
+chk("y al recibirlo de otro",
+    turnos:find("RefrescarMarcadorTrasRecibir()", 1, true) ~= nil, true)
+-- La FASE importa tanto como el bando: "cierra Enemigos" y "empiezan Enemigos" son dos momentos
+-- distintos del mismo bloque y desde fuera se confunden.
+chk("y dice la fase, no solo el bando",
+    turnos:find('(store.faseBando == "fin") and "cerrando el bloque" or "jugando"', 1, true) ~= nil, true)
+chk("se puede apagar", turnos:find('HarfordConfig.Get("turnmarker") == "off"', 1, true) ~= nil, true)
+
 print("El estandarte de turno")
 chk("existe", turnos:find("function HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo, esMio)",
     1, true) ~= nil, true)

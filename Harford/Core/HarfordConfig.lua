@@ -10,6 +10,7 @@ local DEFAULTS = {
     xpbar                  = "on",         -- "on" | "off": barra de experiencia Harford (posicion de la barra de exp nativa)
     spell_cost_mode        = "mana",       -- "mana" | "slots": coste global de lanzamiento
     turnbanner             = "estandarte", -- "estandarte" | "franja" | "off": aviso de turno
+    turnmarker             = "on",         -- "on" | "off": marcador permanente de turno y asalto
 }
 
 local listeners = {}

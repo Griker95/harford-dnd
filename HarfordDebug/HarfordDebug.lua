@@ -1632,22 +1632,35 @@ API.RegisterCommand("estandarte", function(args)
         Print("HarfordTurnOrderAPI.ShowTurnBanner no existe.")
         return
     end
+    -- El chat escapa la barra vertical como `||`, asi que separar por ella dejaba la segunda
+    -- pegada al subtitulo. Se separa por `;`, que el chat no toca.
     local texto = tostring(args or "")
-    local titulo, subtitulo = texto:match("^(.-)%s*|%s*(.+)$")
+    local titulo, subtitulo = texto:match("^(.-)%s*;%s*(.+)$")
     titulo = titulo or (texto ~= "" and texto) or "ES TU TURNO"
     local ok = HarfordTurnOrderAPI.ShowTurnBanner(titulo, subtitulo or "Asalto 1", true)
     if not ok then
         Print("No se pinto: mira `turnbanner` en la config y `/harford debug run atlas`.")
     end
-end, "Levanta el estandarte de turno (estandarte <titulo> | <subtitulo>)")
+end, "Levanta el estandarte de turno (estandarte <titulo> ; <subtitulo>)")
 
 API.RegisterCommand("atlas", function(args)
     local lista = {
-        "BossBanner-BgBanner-Mid", "BossBanner-RedLightning", "BossBanner-Title",
-        "LootBanner-ItemBg", "LootBanner-IconGlow",
+        -- El estandarte de jefe, COMPLETO: con los extremos se puede colgar en vertical, que es la
+        -- forma que usa DiceMaster. Sin ellos solo sale la franja de en medio.
+        "BossBanner-BgBanner-Mid", "BossBanner-BgBanner-Top", "BossBanner-BgBanner-Bottom",
+        "BossBanner-RedLightning", "BossBanner-Title", "BossBanner-SkullCircle",
+        "BossBanner-Skull", "BossBanner-BgGlow", "BossBanner-Shield",
+        -- El titular de escenario: la otra forma nativa de anunciar una fase.
+        "ScenarioTrackerToast", "Scenario-Stage-Banner",
         "AllianceScenario-TrackerHeader", "HordeScenario-TrackerHeader",
+        "NeutralScenario-TrackerHeader",
+        -- El toast de botin, para un aviso pequenio de esquina.
+        "LootBanner-ItemBg", "LootBanner-IconGlow", "loottoast-glow",
+        -- La barra de objetivo, para el temporizador de turno.
         "bonusobjectives-bar-frame", "bonusobjectives-bar-glow", "bonusobjectives-bar-sheen",
         "bonusobjectives-bar-starburst",
+        -- El rotulo de la mision destacada y el marco de campania: dos titulares mas discretos.
+        "QuestBonusObjective", "Campaign-QuestLog-LoreBG", "UI-Frame-Bar-InsetLeft",
     }
     -- Y los que pida quien lo llame, para probar uno suelto sin tocar el codigo.
     for extra in tostring(args or ""):gmatch("%S+") do lista[#lista + 1] = extra end

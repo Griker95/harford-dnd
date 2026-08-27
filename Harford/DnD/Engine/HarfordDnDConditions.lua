@@ -1843,13 +1843,34 @@ do
         return "action"
     end
 
+    -- Un CLICK cobra una vez. El repartidor del Libro cobra por adelantado --hay ramas que nunca
+    -- pasan por el anuncio: Imposicion de manos y toda la familia `actionKind`-- y las que SI
+    -- anuncian volverian a cobrar por el mismo gesto. Con la marca del click, la segunda llamada
+    -- devuelve lo que devolvio la primera y no toca nada.
+    --
+    -- No es un temporizador ni una ventana de tiempo: es el MISMO click, identificado por quien lo
+    -- abre. Dos clicks seguidos traen marcas distintas y cobran los dos.
+    function Turn.BeginClick(marca)
+        ECONOMIA.clickMarca = marca
+        ECONOMIA.clickResultado = nil
+        ECONOMIA.clickCobrado = false
+    end
+
     -- Gasta lo que declare el rasgo. Devuelve nil si no declara nada (no se cuenta ni se avisa).
-    function Turn.SpendForFeature(feature)
+    function Turn.SpendForFeature(feature, marca)
         local kind = Turn.KindFromFeature(feature)
         if not kind then return nil end
+        -- Ya se cobro en este mismo click: se devuelve aquel resultado sin volver a tocar nada.
+        if marca == nil and ECONOMIA.clickMarca and ECONOMIA.clickCobrado then
+            return ECONOMIA.clickResultado, Turn.GetRemaining(kind), kind
+        end
         local cabia, restante = Turn.Spend(kind, 1)
         if not cabia then
             Print(string.format("Ya habias gastado tu %s este turno.", ETIQUETA[kind]:lower()))
+        end
+        if ECONOMIA.clickMarca then
+            ECONOMIA.clickCobrado = true
+            ECONOMIA.clickResultado = cabia
         end
         return cabia, restante, kind
     end

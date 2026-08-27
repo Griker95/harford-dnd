@@ -333,14 +333,31 @@ chk("y lo hace ANTES de conceder", (guardia or 0) < (efecto or 0), true)
 local j = panel:find("local function BookButtonOnClick(self)", 1, true)
 chk("el click del Libro existe", j ~= nil, true)
 local reparto = panel:sub(j or 1, (j or 1) + 3000)
-local arriba = reparto:find("WarnFeatureWithoutUses(conUsos)", 1, true)
-local primeraRama = reparto:find('if cat == "forma" then', 1, true)
+-- La ventana de inspeccion tiene que llegar hasta la primera rama: entre el guardia y ella hay
+-- ahora el cobro del coste de turno, que tambien va antes de repartir.
+local reparto2 = panel:sub(j or 1, (j or 1) + 5000)
+local arriba = reparto2:find("WarnFeatureWithoutUses(conUsos)", 1, true)
+local primeraRama = reparto2:find('if cat == "forma" then', 1, true)
 chk("comprueba los usos antes de repartir", arriba ~= nil, true)
 chk("y antes de la primera rama", (arriba or 0) < (primeraRama or 0), true)
 -- Con dos excepciones, y las dos a proposito: un pasivo es un tooltip y no gasta nada, y una
 -- trampa ya colocada tiene que poder dispararse con el contador a 0.
 chk("salvo pasivos y trampas",
-    reparto:find('if cat ~= "pasivo" and not self.feature.trap then', 1, true) ~= nil, true)
+    reparto2:find('if cat ~= "pasivo" and not self.feature.trap then', 1, true) ~= nil, true)
+-- Y el COSTE DE TURNO tambien se cobra ahi. Cobrarlo solo en el anuncio dejaba fuera las ramas que
+-- no anuncian: Imposicion de manos declaraba `cast = "accion"` y no gastaba nada, y con ella la
+-- familia `actionKind` entera.
+chk("y el coste de turno se cobra en el repartidor",
+    reparto2:find("T.SpendForFeature and T.SpendForFeature(self.feature) == false then return end",
+        1, true) ~= nil, true)
+-- Las ramas que SI anuncian volverian a cobrar por el mismo gesto: el click se marca para que la
+-- segunda llamada devuelva lo de la primera y no toque nada.
+chk("una sola vez por click",
+    reparto2:find("if T.BeginClick then T.BeginClick(", 1, true) ~= nil, true)
+local condSrc = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+chk("y el motor lo respeta",
+    condSrc:find("if marca == nil and ECONOMIA.clickMarca and ECONOMIA.clickCobrado then",
+        1, true) ~= nil, true)
 
 -- ─── LA ECONOMIA DE TURNO SE GASTA DE VERDAD ────────────────────────────────
 -- Solo cobraba a los rasgos del Libro que declaran `cast`. Atacar con el arma y lanzar un conjuro

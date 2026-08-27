@@ -3504,6 +3504,20 @@ local function BookButtonOnClick(self)
         end
     end
 
+    -- ── Y EL COSTE DE TURNO, TAMBIEN AQUI ───────────────────────────────────
+    -- Cobrarlo solo en el anuncio dejaba fuera todas las ramas que no anuncian: Imposicion de
+    -- manos declaraba `cast = "accion"` y no gastaba nada, y con ella la familia `actionKind`
+    -- entera (Tormenta divina, Penitencia, Rejuvenecimiento, Absolucion...). Aqui pasan TODAS.
+    --
+    -- Las que SI anuncian volverian a cobrar por el mismo gesto, asi que el click se marca: la
+    -- segunda llamada devuelve lo que devolvio la primera y no toca nada.
+    if cat ~= "pasivo" and not self.feature.trap
+        and HarfordDnDConditions and HarfordDnDConditions.Turn then
+        local T = HarfordDnDConditions.Turn
+        if T.BeginClick then T.BeginClick(self.feature.id or self) end
+        if T.SpendForFeature and T.SpendForFeature(self.feature) == false then return end
+    end
+
     if cat ~= "pasivo" and HarfordDnDConditions and HarfordDnDConditions.CanPerform then
         local actionType = (cat == "reaccion" or (powerOption and powerOption.cast == "reaccion")) and "reaction" or "action"
         local allowed, condition = HarfordDnDConditions.CanPerform(actionType, { actorUnit = "player", targetUnit = "target" })

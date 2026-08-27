@@ -673,6 +673,8 @@ function API.AttachMovementTracker(opts)
 
     -- Vuelve a cero SIN contarlo en la mesa: el turno nuevo empieza limpio, no es que hayas
     -- terminado de moverte.
+    -- Se expone para que la recogida de fin de combate pueda pararlo desde fuera.
+    API.ResetTurnMovement = function() if ReiniciarPorTurno then ReiniciarPorTurno() end end
     ReiniciarPorTurno = function()
         tracking = false
         button:SetScript("OnUpdate", nil)
@@ -837,6 +839,12 @@ function API.AttachMovementTracker(opts)
         end)
     end
     RefreshConditionState()
+end
+
+-- Para el contador y lo deja a cero. Lo llama la recogida de fin de combate: fuera de un combate
+-- no hay turno que gastar, y el ancla del muro apunta a un sitio de un combate que ya no existe.
+function API.StopTurnMovement()
+    if API.ResetTurnMovement then API.ResetTurnMovement() end
 end
 
 function API.GetRecordedMovementMeters()

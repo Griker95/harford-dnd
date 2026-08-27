@@ -780,7 +780,17 @@ end
 
 -- Recibir el estado de otro cliente NO pasa por `MarkChanged` (seria reenviarlo), asi que el
 -- marcador se repinta aparte o se queda con lo del turno anterior.
+--
+-- Y si el combate se ha ACABADO ahi tambien hay que recoger: quien pulsa Terminar limpia su ficha,
+-- no la de los demas. Sin esto solo quedaba limpio el que dio al boton -- al resto se le quedaba el
+-- contador de movimiento corriendo y el estandarte del ultimo turno puesto.
+local habiaCombate = false
 local function RefrescarMarcadorTrasRecibir()
+    local hay = HarfordTurnOrderAPI.HasActiveCombat and HarfordTurnOrderAPI.HasActiveCombat()
+    if habiaCombate and not hay then
+        if Combate and Combate.CleanUpAfterCombat then pcall(Combate.CleanUpAfterCombat) end
+    end
+    habiaCombate = hay and true or false
     if HarfordTurnOrderAPI.RefreshTurnMarker then HarfordTurnOrderAPI.RefreshTurnMarker() end
 end
 
@@ -2972,6 +2982,17 @@ do
             if banner:IsShown() then banner.salida:Play() end
         end)
         return true
+    end
+
+    -- Se retira YA, sin desvanecerse. Al terminar el combate no hay nada que rematar: si se dejara
+    -- salir solo, el aviso del ultimo turno seguiria en pantalla cuatro segundos despues de que el
+    -- combate haya dejado de existir.
+    function HarfordTurnOrderAPI.HideTurnBanner()
+        if not banner then return end
+        if ocultar then ocultar:Cancel() ocultar = nil end
+        banner.entrada:Stop()
+        banner.salida:Stop()
+        banner:Hide()
     end
 
     -- Para probar un estilo sin dejarlo puesto: lo aplica a la siguiente aparicion y nada mas.

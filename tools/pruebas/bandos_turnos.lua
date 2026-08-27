@@ -521,6 +521,30 @@ chk("un desconectado no se enumera",
 -- El estandarte pasa en cuatro segundos; la pregunta "de quien es el turno" se hace cinco minutos
 -- despues. Hasta ahora esa respuesta vivia solo en la ventana de turnos, que nadie tiene abierta
 -- todo el rato.
+-- ─── LA RECOGIDA DE FIN DE COMBATE ──────────────────────────────────────────
+-- UN solo sitio. Antes cada cosa que caducaba al terminar se enganchaba donde buenamente podia --el
+-- contador de movimiento acabo escuchando al motor de condiciones para enterarse-- y de lo que se
+-- anadia despues no se acordaba nadie. Atlas lo tiene en una funcion (`EndCombatState`) que recoge
+-- todo de golpe, y es la forma correcta.
+print("Al terminar el combate se recoge todo, en un sitio")
+local combate = io.open("Harford/Frames/HarfordTurnsCombat.lua"):read("*a")
+chk("hay un punto unico", combate:find("local function RecogerTodo()", 1, true) ~= nil, true)
+chk("y un modulo nuevo trae su limpieza consigo",
+    combate:find("function API.RegisterCombatCleanup(nombre, fn)", 1, true) ~= nil, true)
+-- Cada apartado con `pcall`: que falle uno no puede dejar los demas sin recoger, porque entonces
+-- el combate siguiente arranca con restos del anterior.
+chk("un fallo no arrastra al resto", combate:find("local ok, err = pcall(l.fn)", 1, true) ~= nil, true)
+chk("recoge la economia de turno",
+    combate:find("HarfordDnDConditions.Turn.Reset", 1, true) ~= nil, true)
+chk("el movimiento", combate:find("HarfordDnDAttackUI.StopTurnMovement", 1, true) ~= nil, true)
+chk("y el estandarte", combate:find("HarfordTurnOrderAPI.HideTurnBanner", 1, true) ~= nil, true)
+-- Y al RECIBIR el fin de combate hay que recoger igual: quien pulsa Terminar limpia su ficha, no
+-- la de los demas. Sin esto solo quedaba limpio el que dio al boton.
+chk("tambien al recibirlo de otro",
+    turnos:find("if habiaCombate and not hay then", 1, true) ~= nil, true)
+chk("y el estandarte se retira YA, sin desvanecerse",
+    turnos:find("function HarfordTurnOrderAPI.HideTurnBanner()", 1, true) ~= nil, true)
+
 print("El marcador de turno")
 chk("existe", turnos:find("function HarfordTurnOrderAPI.RefreshTurnMarker()", 1, true) ~= nil, true)
 -- Arte nativo, y por faccion como el del juego.

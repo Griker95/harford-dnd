@@ -182,6 +182,45 @@ local function StartCombat()
     if SendCombatStart then SendCombatStart(combatientes) end
 end
 
+-- ─── LO QUE HAY QUE RECOGER AL TERMINAR ──────────────────────────────────────
+-- UN solo sitio, a proposito. Antes cada cosa que caducaba al terminar el combate se enganchaba
+-- por su cuenta donde buenamente podia --el contador de movimiento acabo escuchando al motor de
+-- condiciones para enterarse-- y lo que se anadia despues no se acordaba nadie de limpiarlo. Atlas
+-- lo tiene en una funcion (`EndCombatState`) que recoge todo de golpe, y es la forma correcta.
+--
+-- Cada apartado va con `pcall`: que falte un modulo o falle uno no puede dejar los demas sin
+-- recoger, porque entonces el combate siguiente arranca con restos del anterior.
+local limpiadores = {}
+
+-- Registra algo que hay que recoger al terminar el combate. Se llama al REGISTRAR y no se apunta
+-- en una lista fija aqui para que un modulo nuevo traiga su propia limpieza consigo.
+function API.RegisterCombatCleanup(nombre, fn)
+    if type(fn) ~= "function" then return false end
+    limpiadores[#limpiadores + 1] = { nombre = tostring(nombre or "?"), fn = fn }
+    return true
+end
+
+local function RecogerTodo()
+    -- La economia de turno: acciones, adicionales y reacciones vuelven a su sitio.
+    if HarfordDnDConditions and HarfordDnDConditions.Turn and HarfordDnDConditions.Turn.Reset then
+        pcall(HarfordDnDConditions.Turn.Reset)
+    end
+    -- El contador de movimiento: fuera de combate no hay turno que gastar, y su ancla apunta a un
+    -- sitio de un combate que ya no existe.
+    if HarfordDnDAttackUI and HarfordDnDAttackUI.StopTurnMovement then
+        pcall(HarfordDnDAttackUI.StopTurnMovement)
+    end
+    -- El estandarte y el marcador, que si no se quedan con el ultimo turno puesto.
+    if HarfordTurnOrderAPI.HideTurnBanner then pcall(HarfordTurnOrderAPI.HideTurnBanner) end
+    if HarfordTurnOrderAPI.RefreshTurnMarker then pcall(HarfordTurnOrderAPI.RefreshTurnMarker) end
+    for _, l in ipairs(limpiadores) do
+        local ok, err = pcall(l.fn)
+        if not ok then
+            Print("|cffff5555No se pudo recoger " .. l.nombre .. ":|r " .. tostring(err))
+        end
+    end
+end
+
 local function EndCombat()
     if not IsTurnAdmin() then Print("Solo el admin puede terminar el combate.") return end
     ClaimAdminIfNeeded()
@@ -195,10 +234,15 @@ local function EndCombat()
     store.faseBando = nil
     store.asalto = nil
     EnsureRoundMarker()
+    RecogerTodo()
     Print("|cffffff00Fin del combate.|r")
     MarkChanged()
     SendState()
 end
+
+-- Al RECIBIR el fin de combate de otro cliente hay que recoger igual: el que lo termina no puede
+-- limpiar la ficha de los demas, y sin esto solo quedaba limpio el que pulso el boton.
+API.CleanUpAfterCombat = RecogerTodo
 
 API.RollD20 = RollD20
 API.LocalInitiativeBonus = LocalInitiativeBonus

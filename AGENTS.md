@@ -3365,6 +3365,24 @@ de ids lo blindaria a costa de engordar el mensaje.
 
 Pruebas: `tools/pruebas/bandos_turnos.lua`.
 
+## Al terminar el combate se recoge TODO, y en un sitio (2026-08-27)
+
+- `RecogerTodo()` en `HarfordTurnsCombat` es el UNICO punto de limpieza de fin de combate: economia
+  de turno, contador de movimiento, estandarte y marcador. Antes cada cosa que caducaba se
+  enganchaba donde buenamente podia --el contador de movimiento acabo escuchando al motor de
+  condiciones para enterarse-- y de lo que se anadia despues no se acordaba nadie. Copiado del
+  `EndCombatState` de Atlas, que recoge todo de golpe.
+- **Un modulo nuevo trae su limpieza consigo**: `HarfordTurnsCombat.RegisterCombatCleanup(nombre,
+  fn)`. No ampliar la lista fija de dentro.
+- **Cada apartado con `pcall`**: que falte un modulo o falle uno no puede dejar los demas sin
+  recoger, porque entonces el combate siguiente arranca con restos del anterior.
+- **Tambien al RECIBIRLO de otro cliente.** Quien pulsa Terminar limpia su ficha, no la de los
+  demas: `ApplySerializedState` compara si habia combate y ya no, y recoge. Sin eso solo quedaba
+  limpio el que dio al boton -- al resto se le quedaba el contador corriendo y el estandarte del
+  ultimo turno puesto.
+- `HideTurnBanner` retira el estandarte YA, sin desvanecerse: al terminar no hay nada que rematar y
+  dejarlo salir solo mantiene en pantalla el aviso de un combate que ya no existe.
+
 ## El marcador de turno (2026-08-27)
 
 - Ventanita PERMANENTE con de quien es el turno y por que asalto vamos

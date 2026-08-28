@@ -737,6 +737,35 @@ local function ApplyTurnNotice(message, sender)
 
     -- `TURNB` era el aviso de turno por bloque. Se descarta en silencio: un cliente sin actualizar
     -- puede seguir mandandolo, y aplicarlo volveria a meter aqui el modo que se ha retirado.
+    -- Vida de un NPC, sola. Se aplica a su tarjeta y a su hueco dentro de un bloque, que tambien
+    -- guarda vida y no tiene tarjeta propia.
+    if opcode == "THP" then
+        local guid, hpRaw, maxRaw = activeRaw, countRaw, adminRaw
+        if not (guid and guid ~= "") then return false end
+        local store = EnsureStore()
+        local hp, maxHp = SafeNumber(hpRaw, 0), SafeNumber(maxRaw, 0)
+        local cambio = false
+        local function Aplicar(lista)
+            for _, e in ipairs(lista or {}) do
+                if e and tostring(e.guid or e.id or "") == guid then
+                    if SafeNumber(e.hp, 0) ~= hp or SafeNumber(e.maxHp, 0) ~= maxHp then
+                        e.hp, e.maxHp = hp, maxHp
+                        cambio = true
+                    end
+                end
+            end
+        end
+        for _, entry in ipairs(store.entries or {}) do
+            Aplicar({ entry })
+            Aplicar(entry.miembros)
+        end
+        if cambio then
+            TouchStore()
+            RepintarProtegido(RefreshFrame)
+        end
+        return true
+    end
+
     if opcode == "TURNB" then return false end
 
     if opcode ~= "TURN" then return false end
@@ -1554,7 +1583,23 @@ local function RefreshTargetNpcHealthFromUnit(unit)
 
     local changed = false
     local store = EnsureStore()
+    -- Los miembros de un bloque tambien llevan vida, y no tienen tarjeta propia: si no se
+    -- actualizan aqui, la suya se queda con la del momento en que se les metio.
+    local function Aplicar(lista)
+        for _, e in ipairs(lista or {}) do
+            if e and e.kind ~= "round" and e.kind ~= "player"
+                and tostring(e.guid or e.id or "") == guid then
+                local h = SafeNumber(hp, e.hp or 0)
+                local m = SafeNumber(maxHp, e.maxHp or h)
+                if SafeNumber(e.hp, 0) ~= h or SafeNumber(e.maxHp, 0) ~= m then
+                    e.hp, e.maxHp = h, m
+                    changed = true
+                end
+            end
+        end
+    end
     for _, entry in ipairs(store.entries or {}) do
+        Aplicar(entry.miembros)
         if entry and entry.kind ~= "round" and entry.kind ~= "player" and entry.id == guid then
             hp = SafeNumber(hp, entry.hp or 0)
             maxHp = SafeNumber(maxHp, entry.maxHp or hp)
@@ -1566,7 +1611,28 @@ local function RefreshTargetNpcHealthFromUnit(unit)
         end
     end
 
-    return changed
+    return changed, guid, hp, maxHp
+end
+
+-- La vida de un NPC va SOLA por el cable, no dentro de la foto entera. `UNIT_HEALTH` dispara en
+-- rafaga durante un combate, y cada una difundia los 2400 bytes de la lista completa --doce
+-- mensajes troceados-- para cambiar un numero. Con esto es uno.
+local envioVidaPendiente
+local function EnviarVidaNpc(guid, hp, maxHp)
+    if not IsTurnAdmin() then return false end
+    if not (guid and guid ~= "") then return false end
+    if envioVidaPendiente then return false end
+    envioVidaPendiente = true
+    local function mandar()
+        envioVidaPendiente = nil
+        local ch = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+        if not ch then return end
+        HarfordSync.Send(COMM_PREFIX, table.concat({ "THP", tostring(guid),
+            tostring(SafeNumber(hp, 0)), tostring(SafeNumber(maxHp, 0)) }, "|"), ch)
+    end
+    -- Mismo aplazamiento que la foto: una rafaga de golpes se resume en un envio.
+    if C_Timer and C_Timer.After then C_Timer.After(0.15, mandar) else mandar() end
+    return true
 end
 
 RefreshFrame = function()
@@ -2422,8 +2488,10 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     end
 
     if event == "PLAYER_TARGET_CHANGED" then
-        if RefreshTargetNpcHealthFromUnit("target") then
-            MarkChanged()
+        local cambio, guid, hp, maxHp = RefreshTargetNpcHealthFromUnit("target")
+        if cambio then
+            MarcarLocal()
+            EnviarVidaNpc(guid, hp, maxHp)
             return
         end
         if RefreshFrame then RefreshFrame() end
@@ -2434,8 +2502,12 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         local unit = ...
         -- Solo interesa el HP del target (NPC trackeado). Cambios de HP de otras
         -- unidades no modifican el estado de los turnos -> no hacer RefreshFrame.
-        if unit == "target" and RefreshTargetNpcHealthFromUnit("target") then
-            MarkChanged()
+        if unit == "target" then
+            local cambio, guid, hp, maxHp = RefreshTargetNpcHealthFromUnit("target")
+            if cambio then
+                MarcarLocal()
+                EnviarVidaNpc(guid, hp, maxHp)
+            end
         end
         return
     end

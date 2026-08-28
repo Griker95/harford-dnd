@@ -137,6 +137,36 @@ do
     chk("se revisaron rasgos de las 12 clases", revisados > 300, true)
     chk("todo activable declara su coste", table.concat(sinCast, ","), "")
     chk("y nadie queda en el limbo", table.concat(limbo, ","), "")
+
+    -- Y las otras tres familias, con la misma regla. Sus rasgos no tienen nivel: se revisan todos.
+    cargaFichero("Harford/DnD/Data/HarfordDnDRaces.lua")
+    cargaFichero("Harford/DnD/Data/HarfordDnDBackgrounds.lua")
+    cargaFichero("Harford/DnD/Data/HarfordDnDFeats.lua")
+    local limboF = {}
+    local function recorrerTraits(entradas)
+        for _, e in ipairs(entradas or {}) do
+            for _, f in ipairs(e.traits or {}) do
+                if not esMec(f) and f.type ~= "pasivo" then
+                    limboF[#limboF + 1] = f.id or f.name or "?"
+                end
+            end
+            for _, s in ipairs(e.subraces or {}) do
+                for _, f in ipairs(s.traits or {}) do
+                    if not esMec(f) and f.type ~= "pasivo" then
+                        limboF[#limboF + 1] = f.id or f.name or "?"
+                    end
+                end
+            end
+        end
+    end
+    recorrerTraits(HarfordDnDRaces and HarfordDnDRaces.RACES)
+    recorrerTraits(HarfordDnDBackgrounds and HarfordDnDBackgrounds.BACKGROUNDS)
+    if HarfordDnDFeats and HarfordDnDFeats.FEATS then
+        local dotes = {}
+        for _, d in ipairs(HarfordDnDFeats.FEATS) do dotes[#dotes + 1] = { traits = d.traits or { d } } end
+        recorrerTraits(dotes)
+    end
+    chk("razas, trasfondos y dotes tampoco tienen limbo", table.concat(limboF, ","), "")
 end
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

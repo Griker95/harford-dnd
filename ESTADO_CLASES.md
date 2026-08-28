@@ -35,6 +35,12 @@ incluido); y *colocar una trampa* no cobraba la accion que el texto de Trampero 
 La suite `coste_de_accion` carga los ficheros REALES y exige los dos invariantes: todo activable
 declara su coste, y nadie vuelve al limbo. Un rasgo nuevo tiene que decidir que es.
 
+**El mismo trato se aplico despues a RAZAS (177 rasgos), TRASFONDOS (193) y DOTES (139)**: sus 227
+del limbo eran, sin excepcion, lo que la norma ya dice que se queda guiado -- vision en la
+oscuridad, ventajas situacionales, resistencias, idiomas, herramientas, armas naturales, equipo --
+y pasaron a `pasivo` deliberado (cero activables sin coste entre ellos, verificado antes del
+volcado). El candado de la suite cubre las tres familias: **509 rasgos de datos, 0 en el limbo**.
+
 El Mago sale bajo porque casi todo su peso está en Metamagia y en los tres
 Estudios, que son texto de referencia; su mecánica real (puntos, metamagia,
 estudios) está completa.

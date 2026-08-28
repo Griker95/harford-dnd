@@ -654,6 +654,18 @@ function API.AttachMovementTracker(opts)
         return true
     end
 
+    -- El DM se mueve LIBRE mientras no le toca: esta llevando la escena, no jugando su personaje.
+    -- Atarle el cuerpo cada dos pasos le impide dirigir. En vez de eso vuelve DE GOLPE al empezar
+    -- su turno --el TP de `ReiniciarPorTurno`-- asi que su personaje no gana un palmo de terreno:
+    -- roda todo lo que quiera y acaba donde lo dejo.
+    --
+    -- Solo si esta DENTRO del combate, claro. Un DM que no figura en la lista no tiene turno ni
+    -- movimiento que gastar, y `EnCombate` ya devuelve false para el.
+    local function DirigiendoLaEscena()
+        return HarfordAuthority and HarfordAuthority.CanUseDMTools
+            and HarfordAuthority.CanUseDMTools() == true
+    end
+
     -- Moverse es tuyo mientras TE TOCA. Fuera de tu turno el contador no arranca y el muro te
     -- devuelve a donde estabas: si no, cruzabas la sala gratis durante el turno del enemigo.
     local function EsMiTurno()
@@ -746,7 +758,11 @@ function API.AttachMovementTracker(opts)
         -- --con el ancla ya puesta-- asi que no quedaba nadie para hacerla cumplir: podias cruzar
         -- la sala entera durante el turno de los enemigos. Se para de CONTAR, no de vigilar.
         if not tracking then
-            if API.RecordedMovementAnchor and EnCombate() and not LlevandoNpc() then Anclar() end
+            -- Al DM no se le ata mientras dirige: vuelve de una vez al empezar su turno.
+            if API.RecordedMovementAnchor and EnCombate() and not LlevandoNpc()
+                and not DirigiendoLaEscena() then
+                Anclar()
+            end
             return
         end
 
@@ -864,6 +880,18 @@ function API.AttachMovementTracker(opts)
         lastX, lastY, lastZ = nil, nil, nil
         API.RecordedMovementMeters = 0
         API.RecordedMovementInfo = nil
+        -- El DM que se movio dirigiendo vuelve AHORA, de una vez, a donde dejo su personaje: se
+        -- le deja roldar durante el turno de los demas, pero su PJ no gana terreno por ello. Al
+        -- resto no le hace falta -- a ellos el muro ya les fue devolviendo sobre la marcha.
+        if API.RecordedMovementAnchor and DirigiendoLaEscena() and EnCombate() then
+            ultimoTiron = 0  -- el enfriamiento del muro no debe comerse este tiron
+            Anclar()
+            -- `Anclar` deja el contador AL MAXIMO, porque su uso normal es el muro: te devuelve
+            -- porque ya lo gastaste todo. Aqui es lo contrario --te devuelve para que empieces tu
+            -- turno donde debes-- asi que el turno arranca a cero, con todo su movimiento.
+            totalMeters = 0
+            lastX, lastY, lastZ = nil, nil, nil
+        end
         -- El ancla del turno pasado ya no vale: volver ahi te devolveria un asalto entero atras.
         API.RecordedMovementAnchor = nil
         API.MovimientoSinMuro = nil

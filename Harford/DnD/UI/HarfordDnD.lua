@@ -4534,9 +4534,9 @@ end
             if hit and (action.damageDice or action.conditionId) then
                 onImpactOnce = function()
                     -- mitigationUnit "focus": jugador → sin mitigacion (no NPC).
-                    local damageTotal, damageComponents
+                    local damageTotal, damageComponents, etiquetaDano
                     if action.damageDice then
-                        damageTotal, damageComponents = RollActionDamage(action, isCritical, "focus")
+                        damageTotal, damageComponents, etiquetaDano = RollActionDamage(action, isCritical, "focus")
                     end
                     damageTotal = damageTotal or 0
                     if damageTotal and damageTotal > 0 then
@@ -4550,7 +4550,9 @@ end
                                 paraFocus[#paraFocus + 1] = { amount = c.total, damageType = c.damageType }
                             end
                         end
-                        HarfordDnDCombat.ApplyActionDamageToFocus(paraFocus)
+                        -- La etiqueta viaja: la publica el jugador del focus con el nombre del NPC.
+                        HarfordDnDCombat.ApplyActionDamageToFocus(paraFocus, nil, isCritical,
+                            { label = etiquetaDano })
                     end
                     if action.conditionId and HarfordDnDConditions and HarfordDnDConditions.ApplyToUnit then
                         HarfordDnDConditions.ApplyToUnit("focus", action.conditionId, {
@@ -4652,16 +4654,23 @@ end
             if c.marker and c.marker ~= "" then e.marker = c.marker end
         end
         local headlineTotal, modifiersTxt = HarfordDnDRolls.FormatDamageHeader(dmgTypeOrder, dmgTypeMap, total)
-        HarfordDnDRolls.Broadcast({
-            type = "damage",
-            label = "Daño " .. tostring(action.title or "Accion"),
-            total = headlineTotal,
-            dice = table.concat(details, " + "),
-            modifiers = modifiersTxt,
-            critical = maximizeDice and "CRÍTICO" or "",
-            mode = "",
-        })
-        return total, rolledComponents
+        local etiquetaDano = "Daño " .. tostring(action.title or "Accion")
+        -- Igual que el ataque de arma: si la victima es un jugador que corre Harford, la linea la
+        -- publica EL con su numero ya mitigado. Contra un NPC se resuelve aqui como siempre.
+        local publicaLaVictima = HarfordDnDCombat and HarfordDnDCombat.VictimaPublicaSuDano
+            and HarfordDnDCombat.VictimaPublicaSuDano(mitigationUnit)
+        if not publicaLaVictima then
+            HarfordDnDRolls.Broadcast({
+                type = "damage",
+                label = etiquetaDano,
+                total = headlineTotal,
+                dice = table.concat(details, " + "),
+                modifiers = modifiersTxt,
+                critical = maximizeDice and "CRÍTICO" or "",
+                mode = "",
+            })
+        end
+        return total, rolledComponents, etiquetaDano
     end
 
     -- Fase 2 del combate NPC vs NPC: cuando el DM targetea al NPC victima cuyo GUID

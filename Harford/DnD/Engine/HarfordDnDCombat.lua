@@ -492,7 +492,10 @@ end
 -- `total` puede ser un numero YA mitigado (comportamiento antiguo) o una LISTA de componentes en
 -- bruto `{ { amount, damageType } }`. Contra otro jugador la lista viaja tal cual y la resuelve su
 -- cliente; contra uno mismo se mitiga aqui, que es lo mismo que haria su cliente.
-function HarfordDnDCombat.ApplyActionDamageToFocus(total, damageType, isCritical)
+-- `opts.label` es la que publicara el jugador del focus: la linea sale con el nombre del NPC y su
+-- accion, igual que si la hubiera publicado este cliente, pero con el numero ya mitigado por SUS
+-- resistencias. Mismo trato que un ataque de arma entre jugadores.
+function HarfordDnDCombat.ApplyActionDamageToFocus(total, damageType, isCritical, opts)
     if not (UnitExists and UnitExists("focus")) then return false end
     local componentes = AsComponents(total, damageType)
     if not componentes then return false end
@@ -514,7 +517,7 @@ function HarfordDnDCombat.ApplyActionDamageToFocus(total, damageType, isCritical
         return false
     end
     if not (UnitIsPlayer and UnitIsPlayer("focus")) then return false end
-    return ApplyDamageToPlayerUnit("focus", componentes, isCritical)
+    return ApplyDamageToPlayerUnit("focus", componentes, isCritical, opts)
 end
 
 -- ─── Reaccion defensiva al fallar el ataque (parry/dodge) ─────────────────────

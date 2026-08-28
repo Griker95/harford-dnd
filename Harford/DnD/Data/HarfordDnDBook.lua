@@ -401,8 +401,18 @@ end
 function API.GetChoiceOption(feature, optionId)
     optionId = tostring(optionId or "")
     if optionId == "" then return nil end
-    for _, opt in ipairs(API.GetChoiceOptions(feature) or {}) do
+    local opciones = API.GetChoiceOptions(feature) or {}
+    for _, opt in ipairs(opciones) do
         if opt.id == optionId then return opt end
+    end
+    -- Tolerancia de acentos: hubo ids con tilde/enie ("doble_empuñadura") ya guardados en
+    -- perfiles antes de normalizarlos a ASCII; sin esto, esa eleccion vieja perderia su efecto.
+    local Strip = HarfordClassColors and HarfordClassColors.StripAccents
+    if Strip then
+        local buscado = Strip(optionId)
+        for _, opt in ipairs(opciones) do
+            if Strip(tostring(opt.id or "")) == buscado then return opt end
+        end
     end
     return nil
 end

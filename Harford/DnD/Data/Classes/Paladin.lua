@@ -64,7 +64,6 @@ API.CLASSES[#API.CLASSES + 1] =
             options = {
                 { id = "guerrero_bendito", label = "Guerrero Bendito (2 trucos de sacerdote, Carisma)", effects = {} },
                 { id = "defensa",          label = "Defensa (+1 CA con armadura)",            effects = { { kind = "flag", flag = "styleDefense" } } },
-                { id = "doble_empuñadura", label = "Doble Empuñadura (+2 daño un arma a una mano)", effects = { { kind = "flag", flag = "styleDueling" } } },
                 { id = "doble_empunadura", label = "Doble Empunadura (+2 dano con un arma a una mano y sin otras armas)", effects = { { kind = "flag", flag = "styleDueling" } } },
                 { id = "gran_arma",        label = "Gran Arma (repetir 1-2 a dos manos)",     effects = { { kind = "flag", flag = "greatWeaponFighting" } } },
                 { id = "proteccion",       label = "Proteccion (desventaja a atacantes, con escudo)", effects = {} },

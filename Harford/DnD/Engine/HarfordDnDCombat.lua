@@ -49,11 +49,30 @@ function HarfordDnDCombat.HandleAttackReactionResult(requestId, used, sender)
 end
 
 
+-- Llevas ARMADURA de verdad? (El escudo no cuenta: Defensa pide armadura.) Es el contexto del
+-- estilo Defensa, que antes era un +1 global y sumaba tambien desnudo.
+local function LlevaArmadura()
+    if not (HarfordDnDItems and HarfordDnDItems.GetSlot) then return false end
+    local chest = HarfordDnDItems.GetSlot("Chest")
+    if not chest then return false end
+    if chest.basicArmorKey and chest.basicArmorKey ~= "none" then return true end
+    if chest.itemLink and HarfordDnDItems.ResolveItem then
+        local r = HarfordDnDItems.ResolveItem(chest.itemLink)
+        return (r and r.category == "armadura") and true or false
+    end
+    return false
+end
+
 local function GetSelfArmorClass()
     local bonus = HarfordDnDFeatureEffects
         and HarfordDnDFeatureEffects.GetBonus
         and HarfordDnDFeatureEffects.GetBonus("armorClass")
         or 0
+    -- Estilo Defensa: +1 SOLO con armadura puesta. Flag con contexto, no bono global.
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("styleDefense") and LlevaArmadura() then
+        bonus = bonus + 1
+    end
     -- La CA manual de la ficha quedo OBSOLETA: se usa la CA de la armadura EQUIPADA
     -- (que ya incluye Destreza por categoria y escudo). La CA de TRP3 "Currently"/"Other
     -- Information" tiene aun mas prioridad y se resuelve antes en GetArmorClassForUnit.

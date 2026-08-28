@@ -2899,6 +2899,17 @@ para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja d
 
 - **Objetos**: crea uno nuevo o carga uno de los 1.944 pendientes para completarlo -- ahi
   esta el trabajo que queda, 1.198 sin descripcion. Avisa si la clave ya existe.
+- **Objetos, armas y armaduras del sistema**: la mecanica de un objeto Harford vive en su
+  DESCRIPCION. `HarfordDnDItems` la lee linea a linea y solo aplica las que casan con una
+  etiqueta que conoce; una etiqueta inventada da un objeto bonito que no hace nada, y desde
+  el juego no hay forma de notarlo. Por eso el Yunque saca etiquetas, caracteristicas,
+  habilidades, tipos de dano y las 52 armas **del propio addon** via `gen_yunque_datos.py`.
+  Cada modificador es una LINEA COMPLETA, porque los patrones estan anclados asi. Ojo con
+  dos formas distintas: `CA +1` es un bonus y `Armadura 14` es un valor ABSOLUTO. El color
+  es seguro: `CleanTooltipLine` quita `|c…|r` y `$RRGGBB$` ANTES de interpretar la regla, asi
+  que pintar una linea no le quita la mecanica. La descripcion puede tener varias lineas
+  porque viaja por mensaje de addon, no por chat; el limite de longitud lo marca el texto
+  ENTERO, modificadores incluidos.
 - **Recetas**: saca la linea de `HarfordProfessionsData.RECIPES`. Materiales y resultado se
   referencian por CLAVE y se **autocompletan y validan contra el registro real**: una clave
   inventada deja la receta como pendiente para siempre sin decir nada, que es el mismo

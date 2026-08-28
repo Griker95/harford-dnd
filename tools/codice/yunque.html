@@ -321,9 +321,19 @@ tr:last-child td{border-bottom:none}
           <span class="pista">El id del objeto de WoW.</span>
         </div>
         <div class="campo ancho">
-          <label for="desc">Descripción</label>
-          <textarea id="desc" maxlength="180" placeholder="Un vial helado al tacto."></textarea>
-          <span class="pista"><span id="cuenta">0</span>/180 &mdash; el comando no admite más.</span>
+          <p class="sub" style="margin-top:2px">Modificadores del sistema</p>
+          <span class="pista">Cada uno es una <b>línea completa</b> de la descripción, que es
+            de donde <code>HarfordDnDItems</code> las lee. El color se limpia antes de
+            interpretarla, así que pintarlas no les quita la mecánica.</span>
+          <div class="mats" id="mods" style="margin-top:9px"></div>
+          <div class="acciones" style="margin-top:9px">
+            <button type="button" id="addMod">Añadir modificador</button>
+          </div>
+        </div>
+        <div class="campo ancho">
+          <label for="desc">Texto narrativo</label>
+          <textarea id="desc" placeholder="Un vial helado al tacto."></textarea>
+          <span class="pista" id="cuentaDesc"></span>
         </div>
       </div>
 
@@ -1138,11 +1148,149 @@ function refrescaSubclases(){
 }
 $("clase").addEventListener("change", refrescaSubclases);
 
+// ── Modificadores del sistema ───────────────────────────────────────────────
+// `HarfordDnDItems` lee la descripcion LINEA A LINEA y solo aplica como mecanica las que
+// casan con una etiqueta que conoce; el resto se queda como texto narrativo. Un objeto con
+// una etiqueta inventada sale bonito y no da nada, y desde el juego no hay forma de notarlo.
+// Por eso las etiquetas, caracteristicas, habilidades, tipos de dano y armas salen del propio
+// addon (`gen_yunque_datos.py`) y no de una lista escrita aqui.
+//
+// Los patrones estan anclados a la LINEA COMPLETA, asi que cada modificador va en su linea.
+const REGLAS = (DATOS.reglas && DATOS.reglas.reglas) || [];
+const CARACTERISTICAS = (DATOS.reglas && DATOS.reglas.caracteristicas) || [];
+const HABILIDADES = (DATOS.reglas && DATOS.reglas.habilidades) || [];
+const TIPOS_DANO = (DATOS.reglas && DATOS.reglas.tiposDano) || [];
+const ARMAS_DND = DATOS.armasDnD || [];
+
+const CLASES_MOD = [
+  ["regla", "Regla de combate"],
+  ["caracteristica", "Característica"],
+  ["habilidad", "Habilidad"],
+  ["salvacion", "Salvación"],
+  ["danoExtra", "Daño extra"],
+  ["arma", "Tipo de arma"]
+];
+// El color se limpia antes de leer la regla (`CleanTooltipLine` quita |c…|r y $RRGGBB$),
+// asi que pintar una linea NO le quita la mecanica.
+const COLORES = [
+  ["", "Sin color"], ["ffd100", "Dorado"], ["1eff00", "Verde"], ["0070dd", "Azul"],
+  ["a335ee", "Morado"], ["ff8000", "Naranja"], ["ff2020", "Rojo"], ["9d9d9d", "Gris"]
+];
+
+let mods = [];
+
+function destinosDe(clase){
+  if (clase === "regla") return REGLAS.map(r => [r[0], r[0]]);
+  if (clase === "caracteristica") return CARACTERISTICAS.map(c => [c, c]);
+  if (clase === "habilidad") return HABILIDADES.map(h => [h, h]);
+  if (clase === "salvacion") return CARACTERISTICAS.concat(HABILIDADES).map(x => [x, x]);
+  if (clase === "danoExtra") return TIPOS_DANO.map(t => [t, t]);
+  if (clase === "arma") return ARMAS_DND.map(a => [a, a]);
+  return [];
+}
+
+// La linea EXACTA que el parser espera para cada clase de modificador.
+function lineaMod(m){
+  if (!m.destino) return "";
+  if (m.clase === "arma") return "Arma: " + m.destino;
+  if (m.clase === "danoExtra"){
+    if (!m.dados) return "";
+    return "Daño extra " + m.dados + " " + m.destino;
+  }
+  if (m.clase === "regla"){
+    const regla = REGLAS.find(r => r[0] === m.destino);
+    // `Armadura N` es un valor ABSOLUTO -- la CA base de la pieza --, no un bonus.
+    if (regla && regla[2] === "absoluto") return m.destino + " " + Math.abs(m.valor);
+    return m.destino + " " + (m.valor < 0 ? "-" : "+") + Math.abs(m.valor);
+  }
+  const etiqueta = m.clase === "salvacion" ? "Salvación " + m.destino : m.destino;
+  return etiqueta + " " + (m.valor < 0 ? "-" : "+") + Math.abs(m.valor);
+}
+function lineaPintada(m){
+  const t = lineaMod(m);
+  if (!t) return "";
+  return m.color ? "|cff" + m.color + t + "|r" : t;
+}
+
+function pintaMods(){
+  const caja = $("mods"); caja.innerHTML = "";
+  mods.forEach((m, i) => {
+    const fila = document.createElement("div"); fila.className = "mat";
+
+    const cClase = document.createElement("div");
+    cClase.className = "campo"; cClase.style.flex = "none"; cClase.style.width = "160px";
+    const clase = document.createElement("select");
+    clase.setAttribute("aria-label", "Tipo de modificador " + (i+1));
+    opciones(clase, CLASES_MOD); clase.value = m.clase;
+    clase.onchange = () => {
+      m.clase = clase.value;
+      const ds = destinosDe(m.clase);
+      m.destino = ds.length ? ds[0][0] : "";
+      pintaMods(); pintaObj();
+    };
+    cClase.append(clase);
+
+    const cDest = document.createElement("div"); cDest.className = "campo";
+    const dest = document.createElement("select");
+    dest.setAttribute("aria-label", "A qué afecta " + (i+1));
+    opciones(dest, destinosDe(m.clase)); dest.value = m.destino;
+    dest.onchange = () => { m.destino = dest.value; pintaObj(); };
+    cDest.append(dest);
+    fila.append(cClase, cDest);
+
+    if (m.clase === "danoExtra"){
+      const cD = document.createElement("div");
+      cD.className = "campo"; cD.style.flex = "none"; cD.style.width = "84px";
+      const d = document.createElement("input");
+      d.className = "mono"; d.value = m.dados; d.placeholder = "1d6";
+      d.setAttribute("aria-label", "Dados del daño extra " + (i+1));
+      d.oninput = () => { m.dados = d.value.trim(); pintaObj(); };
+      cD.append(d); fila.append(cD);
+    } else if (m.clase !== "arma"){
+      const cV = document.createElement("div");
+      cV.className = "campo"; cV.style.flex = "none"; cV.style.width = "76px";
+      const v = document.createElement("input");
+      v.type = "number"; v.value = m.valor;
+      v.setAttribute("aria-label", "Valor " + (i+1));
+      v.oninput = () => { m.valor = Number(v.value) || 0; pintaObj(); };
+      cV.append(v); fila.append(cV);
+    }
+
+    const cCol = document.createElement("div");
+    cCol.className = "campo"; cCol.style.flex = "none"; cCol.style.width = "116px";
+    const col = document.createElement("select");
+    col.setAttribute("aria-label", "Color " + (i+1));
+    opciones(col, COLORES); col.value = m.color;
+    col.onchange = () => { m.color = col.value; pintaObj(); };
+    cCol.append(col); fila.append(cCol);
+
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "quitar"; x.textContent = "×";
+    x.setAttribute("aria-label", "Quitar modificador " + (i+1));
+    x.onclick = () => { mods.splice(i,1); pintaMods(); pintaObj(); };
+    fila.append(x);
+    caja.append(fila);
+  });
+}
+
+// La descripcion final: primero las lineas mecanicas, luego el texto narrativo.
+function descripcionCompleta(){
+  const lineas = mods.map(lineaPintada).filter(Boolean);
+  const narrativa = $("desc").value.trim();
+  if (!lineas.length) return narrativa;
+  return lineas.join("\n") + (narrativa ? "\n" + narrativa : "");
+}
+
+$("addMod").onclick = () => {
+  mods.push({clase:"regla", destino:(REGLAS[0] || ["CA"])[0], valor:1, dados:"1d6", color:""});
+  pintaMods(); pintaObj();
+};
+
 function objActual(){
   const o = {
     clave: aClave($("nombre").value), nombre: $("nombre").value.trim(),
     prof: $("prof").value, papel: $("papel").value, icono: aIcono($("icono").value),
-    display: Number($("display").value) || 0, desc: $("desc").value.trim(),
+    display: Number($("display").value) || 0, desc: descripcionCompleta(),
     clase: Number($("clase").value), subclase: Number($("subclase").value),
     hueco: Number($("hueco").value), calidad: Number($("calidad").value),
     apilable: Math.max(1, Number($("apilable").value) || 1),
@@ -1198,7 +1346,12 @@ let _cargado = null;   // clave del objeto que se cargo, para saber si se edita 
 function pintaObj(){
   const o = objActual();
   $("clave").value = o.clave;
-  $("cuenta").textContent = $("desc").value.length;
+  // El limite del comando lo marca la descripcion ENTERA, no solo la parte narrativa.
+  const largo = o.desc.length;
+  const cd = $("cuentaDesc");
+  cd.className = largo > 170 ? "marca no" : "pista";
+  cd.textContent = largo + "/180 en total, contando los modificadores"
+    + (largo > 170 ? " — el comando se recortará" : "");
 
   // Un icono que no existe NO borra la textura anterior: el objeto hereda la del hueco que
   // ocupaba antes y no se nota hasta verlo en juego.
@@ -1230,7 +1383,12 @@ function pintaObj(){
 
   const cmds = comandos(o);
   $("nCmds").textContent = cmds.length;
-  $("outCmd").textContent = cmds.length ? cmds.join("\n") : "—";
+  // Un comando puede llevar saltos DENTRO -- la descripcion con modificadores son varias
+  // lineas --, asi que las de continuacion se sangran. Sin esto la vista partia el comando
+  // y parecia que solo se enviaba la primera linea.
+  $("outCmd").textContent = cmds.length
+    ? cmds.map(c => c.split("\n").join("\n    ")).join("\n")
+    : "—";
   $("outJson").textContent = JSON.stringify({[o.clave || "sin_clave"]: bloqueJson(o)}, null, 2);
   $("outReg").textContent = o.nombre
     ? (REGISTRO.has(o.clave) ? "— ya está en el registro —" : lineaRegistro(o)) : "—";
@@ -1399,7 +1557,7 @@ $("anadirObj").onclick = () => {
   guardaObj(); pintaListaObj();
 };
 $("limpiarObj").onclick = () => {
-  $("fo").reset(); _cargado = null;
+  $("fo").reset(); _cargado = null; mods = []; pintaMods();
   $("ai_anyone").value = "on";
   $("cargado").textContent = "Nada cargado: lo que rellenes será un objeto nuevo.";
   refrescaSubclases(); pintaPaleta(); $("nombre").focus();
@@ -2683,6 +2841,7 @@ $("addPaso").onclick = () => {
 
 pintaListaObj(); pintaListaRec(); pintaListaMis();
 pintaMats(); pintaObjs(); pintaReps(); pintaPremios();
+pintaMods();
 refrescaSubclases(); pintaPaleta(); pintaRec(); pintaMis(); pintaPaginas(); pintaGos();
 pintaDisplays(); pintaAuras(); pintaArmas(); pintaEquipo(); pintaDesequipar(); pintaNpc();
 pintaNodos(); pintaRuta();

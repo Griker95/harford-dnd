@@ -12,19 +12,25 @@ Regenerar las cifras: cargar `HarfordDnDBook.lua`, los doce `Classes/*.lua` y
 
 | Clase | Rasgos 1-6 | Mecanizados | % |
 |---|---|---|---|
-| Chamán | 40 | 35 | 87 |
-| Guerrero | 30 | 26 | 86 |
+| Guerrero | 30 | 29 | 96 |
+| Monje | 30 | 28 | 93 |
 | Cazador de Demonios | 22 | 18 | 81 |
-| Cazador | 33 | 27 | 81 |
-| Paladín | 28 | 22 | 78 |
-| Druida | 22 | 17 | 77 |
-| Monje | 30 | 23 | 76 |
-| Caballero de la Muerte | 24 | 18 | 75 |
-| Sacerdote | 44 | 33 | 75 |
-| Pícaro | 20 | 15 | 75 |
-| Brujo | 43 | 31 | 72 |
-| Mago | 20 | 9 | 45 |
-| **Total** | **356** | **274 (76%)** | |
+| Brujo | 47 | 36 | 76 |
+| Pícaro | 19 | 14 | 73 |
+| Sacerdote | 45 | 32 | 71 |
+| Chamán | 40 | 28 | 70 |
+| Druida | 22 | 15 | 68 |
+| Mago | 20 | 13 | 65 |
+| Paladín | 28 | 18 | 64 |
+| Caballero de la Muerte | 24 | 15 | 62 |
+| Cazador | 34 | 21 | 61 |
+| **Total** | **361** | **267 (73%)** | |
+
+Cifras regeneradas el **2026-08-28** (offline, cargando Book + las 12 clases + Derived). Al criterio
+original se suma: un `cast` declarado con coste real cuenta como mecánica (se cobra), y
+`cast = "ninguna"` marca lo gratis **a propósito** — riders sobre algo ya pagado — para
+distinguirlo de un olvido. Desde esa fecha **todo rasgo activable declara su coste**
+(la suite `coste_de_accion` lo exige) y los conjuros cobran por su tiempo de lanzamiento.
 
 El Mago sale bajo porque casi todo su peso está en Metamagia y en los tres
 Estudios, que son texto de referencia; su mecánica real (puntos, metamagia,

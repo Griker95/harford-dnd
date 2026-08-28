@@ -48,6 +48,13 @@ end
 
 -- Registrador que se pasa a cada grupo. Acumula en vez de imprimir para poder dar primero el
 -- resumen y luego solo lo que falla: una pared de cien lineas verdes no se lee.
+-- Los codigos de color de WoW sobran en un fichero: se quitan al volcar el informe.
+local function SinColor(texto)
+    texto = tostring(texto or "")
+    texto = texto:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    return texto
+end
+
 local function NuevoRegistro()
     local r = { ok = 0, fallos = {}, manuales = {}, notas = {} }
     function r.chk(texto, condicion, detalle)
@@ -1117,9 +1124,38 @@ end)
 ------------------------------------------------------------
 -- Ejecucion
 ------------------------------------------------------------
+-- Que hay montado AHORA MISMO, y que desbloquea cada cosa. Se dice ANTES de correr: enterarse al
+-- final de que faltaba un objetivo obliga a repetir la pasada entera.
+local function Preflight()
+    local hayTarget = UnitExists and UnitExists("target")
+    local esJugador = hayTarget and UnitIsPlayer and UnitIsPlayer("target")
+        and not (UnitIsUnit and UnitIsUnit("target", "player"))
+    local esNpc = hayTarget and not (UnitIsPlayer and UnitIsPlayer("target"))
+    local store = _G.HarfordTurnOrderStore
+    local combate = type(store) == "table" and type(store.entries) == "table" and #store.entries > 0
+    local T = _G.HarfordTurnOrderAPI
+    local mandas = T and T.IsTurnAdmin and T.IsTurnAdmin()
+
+    Print("|cff00ccff--- que tienes montado ---|r")
+    local function linea(ok, texto, desbloquea)
+        Print(string.format("  %s %s|r  %s", ok and "|cff00ff00si " or "|cffff8800NO",
+            texto, ok and "" or ("|cff808080-> " .. desbloquea .. "|r")))
+    end
+    linea(esNpc, "un NPC seleccionado    ", "13 comprobaciones: selecciona una criatura")
+    linea(esJugador, "OTRO JUGADOR seleccionado", "5 comprobaciones: selecciona a otro jugador")
+    linea(combate, "un combate montado     ", "7 comprobaciones: monta 3-4 tarjetas en Turnos")
+    linea(mandas, "permiso de DM (.ph dm) ", "las de admin y el limite de 4 h de caducidad")
+    if not (esNpc or esJugador) then
+        Print("  |cff808080El objetivo es lo que mas desbloquea: NPC y jugador comprueban cosas")
+        Print("  distintas, asi que merece la pena lanzarlo dos veces, una con cada uno.|r")
+    end
+    Print(" ")
+end
+
 API.RegisterCommand("verificar", function(args)
     local pedido, extra = tostring(args or ""):match("^%s*(%S*)%s*(%S*)")
     local lista = {}
+    if pedido == "todo" then pedido, extra = "", extra end
     if pedido and pedido ~= "" then
         if pedido == "ayuda" or pedido == "grupos" then
             ListarGrupos()
@@ -1134,6 +1170,9 @@ API.RegisterCommand("verificar", function(args)
     else
         lista = ORDEN_GRUPOS
     end
+
+    -- Solo en la pasada completa: para un grupo suelto sobra, ya sabes que estas montando.
+    if #lista > 1 then Preflight() end
 
     local totalOk, totalFallos, totalManuales, totalNotas = 0, 0, 0, 0
     local detalle = {}
@@ -1189,6 +1228,39 @@ API.RegisterCommand("verificar", function(args)
 
     Print(string.format("TOTAL: |cff00ff00%d ok|r, |cffff3333%d fallan|r, |cffffcc00%d a mano|r, "
         .. "|cff808080%d notas|r", totalOk, totalFallos, totalManuales, totalNotas))
+
+    -- Y ADEMAS a SavedVariables. Leerlo del chat obliga a mandar capturas, que se cortan y no se
+    -- pueden buscar; en disco se lee entero. Solo la ULTIMA pasada: esto es un informe, no un log.
+    -- Se vuelca al hacer `/reload` o al salir, que es cuando WoW escribe las SavedVariables.
+    HarfordDebugSettings = HarfordDebugSettings or {}
+    local informe = {
+        cuando = date and date("%Y-%m-%d %H:%M:%S") or tostring(time and time() or 0),
+        personaje = UnitName and UnitName("player") or "?",
+        montaje = {
+            objetivo = UnitExists and UnitExists("target") and (UnitName("target") or "?") or "ninguno",
+            objetivoEsJugador = (UnitExists and UnitExists("target") and UnitIsPlayer
+                and UnitIsPlayer("target")) and true or false,
+            combatientes = (type(_G.HarfordTurnOrderStore) == "table"
+                and type(_G.HarfordTurnOrderStore.entries) == "table")
+                and #_G.HarfordTurnOrderStore.entries or 0,
+            mandas = (_G.HarfordTurnOrderAPI and _G.HarfordTurnOrderAPI.IsTurnAdmin
+                and _G.HarfordTurnOrderAPI.IsTurnAdmin()) and true or false,
+        },
+        total = { ok = totalOk, fallan = totalFallos, aMano = totalManuales, notas = totalNotas },
+        grupos = {},
+    }
+    for _, d in ipairs(detalle) do
+        local g = { nombre = d.nombre, ok = d.r.ok, fallos = {}, aMano = {}, notas = {} }
+        for _, f in ipairs(d.r.fallos) do g.fallos[#g.fallos + 1] = SinColor(f) end
+        for _, m in ipairs(d.r.manuales) do
+            g.aMano[#g.aMano + 1] = (m.montaje or "suelto") .. ": " .. SinColor(m.texto)
+        end
+        for _, n in ipairs(d.r.notas or {}) do g.notas[#g.notas + 1] = SinColor(n) end
+        informe.grupos[#informe.grupos + 1] = g
+    end
+    HarfordDebugSettings.ultimaVerificacion = informe
+    Print("|cff808080Guardado en SavedVariables (HarfordDebugSettings.ultimaVerificacion). "
+        .. "Haz /reload y ya se puede leer del disco: no hace falta captura.|r")
     if totalManuales > 0 then
         Print("Lo marcado 'a mano' NO esta verificado: el cliente no puede comprobarlo solo.")
     end

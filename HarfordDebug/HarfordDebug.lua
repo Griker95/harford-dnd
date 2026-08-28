@@ -4433,9 +4433,12 @@ API.RegisterCommand("svclean", function(args)
         for _ in pairs(type(st.merchantDump) == "table" and st.merchantDump or {}) do
             mercaderes = mercaderes + 1
         end
-        st.soundLog, st.merchantDump = nil, nil
-        Print(string.format("svclean debug: %d entrada(s) de sonido y %d id(s) de mercader retirados.",
-            sonidos, mercaderes))
+        -- El informe de la ultima verificacion tambien: es un volcado para leerlo desde fuera, no
+        -- un ajuste, asi que entra en la misma limpieza.
+        local informe = (type(st.ultimaVerificacion) == "table") and 1 or 0
+        st.soundLog, st.merchantDump, st.ultimaVerificacion = nil, nil, nil
+        Print(string.format("svclean debug: %d entrada(s) de sonido, %d id(s) de mercader y %d "
+            .. "informe(s) de verificacion retirados.", sonidos, mercaderes, informe))
     end
 
     local function CleanContractLeftovers()

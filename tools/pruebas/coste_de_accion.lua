@@ -167,6 +167,49 @@ do
         recorrerTraits(dotes)
     end
     chk("razas, trasfondos y dotes tampoco tienen limbo", table.concat(limboF, ","), "")
+
+    -- ── REFERENCIAS CRUZADAS: cada id citado existe donde se define ──────────
+    -- La clase de fallo mas silenciosa que hay: una condicion, un rasgo de usos o una opcion que
+    -- no existen no dan error nunca -- ese trozo simplemente no funciona. Ya cazo tres reales
+    -- (alias de razas muertos, DEL sin receptor, ids de condicion colados como conjuros).
+    local condSrc = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+    local condiciones = {}
+    for id in tostring(condSrc:match("API%.ORDER = %{(.-)%}") or ""):gmatch('"([a-z_]+)"') do
+        condiciones[id] = true
+    end
+    -- ORDER se completa en runtime con lo que falte del catalogo: aqui se anaden igual.
+    for id in condSrc:gmatch("\n    ([a-z_]+) = %{") do condiciones[id] = true end
+
+    local rasgosPorId, opcionesPorId = {}, {}
+    local todos = {}
+    local function junta(fs) for _, f in ipairs(fs or {}) do todos[#todos + 1] = f end end
+    for _, c in ipairs((HarfordDnDBook and HarfordDnDBook.CLASSES) or {}) do
+        junta(c.features)
+        for _, s in ipairs(c.subclasses or {}) do junta(s.features) end
+    end
+    for _, f in ipairs(todos) do
+        if f.id then rasgosPorId[f.id] = true end
+        if f.choice then for _, o in ipairs(f.choice.options or {}) do
+            if o.id then opcionesPorId[tostring(o.id)] = true end
+        end end
+    end
+    local rotas = {}
+    for _, f in ipairs(todos) do
+        local function checa(cid, donde)
+            if cid and cid ~= "" and not condiciones[cid] then
+                rotas[#rotas + 1] = tostring(f.id) .. ":" .. donde .. ":" .. tostring(cid)
+            end
+        end
+        if type(f.selfCondition) == "table" then checa(f.selfCondition.id, "self") end
+        if type(f.area) == "table" then checa(f.area.conditionId, "area") end
+        if f.usesFrom and not rasgosPorId[f.usesFrom] then
+            rotas[#rotas + 1] = tostring(f.id) .. ":usesFrom:" .. tostring(f.usesFrom)
+        end
+        if f.requiresOption and not opcionesPorId[tostring(f.requiresOption)] then
+            rotas[#rotas + 1] = tostring(f.id) .. ":requiresOption:" .. tostring(f.requiresOption)
+        end
+    end
+    chk("toda condicion, usesFrom y requiresOption citados existen", table.concat(rotas, ","), "")
 end
 
 -- ─── EL MENU DE COSTE COBRA LO ELEGIDO, NO EL CLICK ─────────────────────────

@@ -837,7 +837,11 @@ Grupo("turnos", "bandos, bloques y quien va dentro de cada uno", function(r)
         T.BANDOS and #T.BANDOS)
     r.chk("en el orden acordado", T.BANDOS and T.BANDOS[1] == "pjs" and T.BANDOS[4] == "aliados",
         T.BANDOS and (T.BANDOS[1] .. ".." .. T.BANDOS[4]))
-    r.chk("con dos fases por bloque", type(T.FASES) == "table" and #T.FASES == 2)
+    -- SIN fases: el avance por bloques se retiro el 27/08 y con el las dos fases por bloque, que
+    -- obligaban a pulsar `Siguiente` dos veces. Se comprueba que NO han vuelto: el turno pasa de
+    -- criatura en criatura y los bloques son tarjetas, no un modo de avance.
+    r.chk("y sin fases: el avance por bloques se retiro", T.FASES == nil)
+    r.chk("  ni interruptor de modo", T.SetModoBandos == nil and T.IsModoBandos == nil)
 
     -- Un PJ no se mueve de su bando ni a mano, y el hueco COLECTIVO tampoco: su `kind` es
     -- "players", no "player", y durante un tiempo caia por reaccion 0 en enemigos.

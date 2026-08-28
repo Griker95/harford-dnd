@@ -149,8 +149,16 @@ end
 chk("solo se comprime lo que no cabe",
     turnos:find("payload = Comprimir(payload) or payload", 1, true) >
     turnos:find("if #payload <= TURN_SINGLE_MESSAGE_LIMIT then", 1, true), true)
--- Y si no encoge, no compensa.
-chk("y si no encoge se manda en claro",
-    turnos:find("if #codificado + #MARCA_COMPRIMIDO >= #payload then return nil end", 1, true) ~= nil, true)
+-- La compresion vive en el TRANSPORTE, no aqui: la usan varios sistemas y duplicarla seria tener
+-- dos formatos de cable que divergen sin avisar.
+local sync = io.open("Harford/Core/HarfordSync.lua"):read("*a")
+chk("y vive en el transporte", sync:find("function HarfordSync.Comprimir", 1, true) ~= nil, true)
+-- Si no encoge, no compensa.
+chk("si no encoge se manda en claro",
+    sync:find("if #codificado + #HarfordSync.MARCA_COMPRIMIDO >= #payload then return nil end", 1, true) ~= nil, true)
+-- Y NUNCA en el vault de fase: alli trocea EpsilonLib, el servidor lo persiste y sobrescribir con
+-- menos datos deja segmentos colgados -- una via real de corrupcion.
+chk("y avisa de que el vault de fase queda fuera",
+    sync:find("NO se usa para el vault de fase", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

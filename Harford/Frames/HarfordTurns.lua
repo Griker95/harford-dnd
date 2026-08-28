@@ -825,46 +825,16 @@ end
 -- lo hizo.
 ULTIMA_FOTO_VISTA = 0
 
--- LibDeflate viene con EpsilonLib (y con TRP3, y con Epsilon_Book): se registra en LibStub y como
--- global. Se busca en caliente y se tolera que no este -- entonces no se comprime y todo sigue
--- como antes.
-local function GetDeflate()
-    if LibStub and LibStub.GetLibrary then
-        local ok, lib = pcall(LibStub.GetLibrary, LibStub, "LibDeflate", true)
-        if ok and lib then return lib end
-    end
-    return _G.LibDeflate
-end
-
--- Marca de payload comprimido. Un cliente sin actualizar no la reconoce y descarta el mensaje sin
--- romperse: su parser exige que empiece por `STATE`. Se queda sin actualizar la lista, que es lo
--- mismo que le pasa HOY cuando se pierde uno de los doce trozos -- solo que hoy pasa a menudo.
-local MARCA_COMPRIMIDO = "Z|"
-
--- La foto entera son ~2400 bytes de texto muy repetitivo --las mismas rutas de icono, la misma
--- estructura de campos-- y comprime a ~275: de doce mensajes troceados a dos. Importa porque el
--- reensamblado es todo o nada y no hay acuse ni reintento: perder un trozo tira el estado entero.
+-- La compresion vive en HarfordSync, que es el transporte, porque la usan varios sistemas. Aqui
+-- solo se le da nombre corto. Ver AGENTS.md: se comprime SOLO lo que no cabe en un mensaje, y
+-- nunca lo que va al vault de fase.
 local function Comprimir(payload)
-    local D = GetDeflate()
-    if not (D and D.CompressDeflate and D.EncodeForWoWAddonChannel) then return nil end
-    local ok, comprimido = pcall(D.CompressDeflate, D, payload, { level = 9 })
-    if not ok or not comprimido then return nil end
-    local ok2, codificado = pcall(D.EncodeForWoWAddonChannel, D, comprimido)
-    if not ok2 or not codificado then return nil end
-    -- Si no encoge, no compensa: se manda en claro y lo entiende todo el mundo.
-    if #codificado + #MARCA_COMPRIMIDO >= #payload then return nil end
-    return MARCA_COMPRIMIDO .. codificado
+    return HarfordSync and HarfordSync.Comprimir and HarfordSync.Comprimir(payload) or nil
 end
 
 local function Descomprimir(payload)
-    if payload:sub(1, #MARCA_COMPRIMIDO) ~= MARCA_COMPRIMIDO then return payload end
-    local D = GetDeflate()
-    if not (D and D.DecodeForWoWAddonChannel and D.DecompressDeflate) then return nil end
-    local ok, bruto = pcall(D.DecodeForWoWAddonChannel, D, payload:sub(#MARCA_COMPRIMIDO + 1))
-    if not ok or not bruto then return nil end
-    local ok2, texto = pcall(D.DecompressDeflate, D, bruto)
-    if not ok2 or not texto then return nil end
-    return texto
+    if not (HarfordSync and HarfordSync.Descomprimir) then return payload end
+    return HarfordSync.Descomprimir(payload)
 end
 
 local function ApplySerializedState(message)

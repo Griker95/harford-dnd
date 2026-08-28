@@ -3397,6 +3397,22 @@ Tres cambios, por orden de importancia:
    registra en LibStub y como global). Es texto muy repetitivo y pasa de ~2400 a ~275 bytes:
    **12 trozos a 2**. Marca `Z|` al principio del payload; el transporte no cambia.
 
+La compresion vive en **`HarfordSync.Comprimir` / `.Descomprimir`**, no en cada sistema: es el
+transporte y la usan varios. Duplicarla seria tener dos formatos de cable que divergen sin avisar.
+Aplicada ya en la foto de turnos y en `DNDEQUIP` (equipo completo: 1210 bytes / 7 trozos -> 360 / 2).
+
+**Por que comprimir y no arreglar el troceado.** El fallo es MULTIPLICATIVO: tienen que llegar
+TODOS los trozos, asi que con 12 trozos y un 1% de perdida por mensaje falla el 11,4% de los
+envios; con 2, el 2%. Al 5% de perdida, 12 trozos fallan el 46% de las veces. Ademas menos
+mensajes bajan la propia tasa de perdida, porque satura menos el throttle. Un acuse con reintento
+seria un protocolo nuevo -- quien acusa, cada cuanto, que pasa si el que pide ya no esta --;
+comprimir QUITA el problema en vez de gestionarlo, en veinte lineas y con una libreria que ya esta.
+
+**NUNCA en el vault de fase.** Es otro transporte y otra cosa: alli trocea EpsilonLib en segmentos
+de 3000 caracteres, el SERVIDOR lo persiste (no hay perdida silenciosa que arreglar) y sobrescribir
+con menos datos **NO limpia los segmentos sobrantes** -- via real de corrupcion, la misma que sufre
+TRP3 al desvincular un perfil de NPC. Comprimir alli ahorraria segmentos y dejaria cola colgada.
+
 Reglas que NO deben perderse:
 
 - **Se comprime SOLO lo que no cabe en un mensaje.** Por debajo de `TURN_SINGLE_MESSAGE_LIMIT` se

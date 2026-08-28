@@ -926,6 +926,55 @@ function HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
 end
 
 -- ---------------------------------------------------------------------------
+-- ─── COMPRESION DEL PAYLOAD ─────────────────────────────────────────────────
+-- Vive aqui, en el transporte, porque la usan varios sistemas: lo que se trocea a mano en mensajes
+-- de addon se pierde en silencio si falta un trozo --no hay acuse ni reintento-- y el fallo es
+-- MULTIPLICATIVO: con 12 trozos y un 1% de perdida por mensaje, el 11% de los envios no llega
+-- entero; con 2 trozos, el 2%.
+--
+-- NO se usa para el vault de fase: alli trocea EpsilonLib en segmentos de 3000 caracteres, el
+-- servidor lo PERSISTE (no hay perdida silenciosa que arreglar) y sobrescribir con menos datos deja
+-- segmentos colgados, que es una via real de corrupcion.
+--
+-- LibDeflate viene con EpsilonLib, con TRP3 y con Epsilon_Book; se registra en LibStub y como
+-- global. Si no esta, no se comprime y todo sigue igual.
+HarfordSync.MARCA_COMPRIMIDO = "Z|"
+
+local function Deflate()
+  if LibStub and LibStub.GetLibrary then
+    local ok, lib = pcall(LibStub.GetLibrary, LibStub, "LibDeflate", true)
+    if ok and lib then return lib end
+  end
+  return _G.LibDeflate
+end
+
+-- Devuelve nil si no se puede o si no compensa; el llamador manda entonces el original en claro.
+function HarfordSync.Comprimir(payload)
+  local D = Deflate()
+  if not (D and D.CompressDeflate and D.EncodeForWoWAddonChannel) then return nil end
+  local ok, comprimido = pcall(D.CompressDeflate, D, payload, { level = 9 })
+  if not ok or not comprimido then return nil end
+  local ok2, codificado = pcall(D.EncodeForWoWAddonChannel, D, comprimido)
+  if not ok2 or not codificado then return nil end
+  if #codificado + #HarfordSync.MARCA_COMPRIMIDO >= #payload then return nil end
+  return HarfordSync.MARCA_COMPRIMIDO .. codificado
+end
+
+-- Deshace la marca si la trae. Devuelve nil si venia comprimido y NO se pudo deshacer: descartar
+-- es preferible a aplicar medio estado.
+function HarfordSync.Descomprimir(payload)
+  payload = tostring(payload or "")
+  local marca = HarfordSync.MARCA_COMPRIMIDO
+  if payload:sub(1, #marca) ~= marca then return payload end
+  local D = Deflate()
+  if not (D and D.DecodeForWoWAddonChannel and D.DecompressDeflate) then return nil end
+  local ok, bruto = pcall(D.DecodeForWoWAddonChannel, D, payload:sub(#marca + 1))
+  if not ok or not bruto then return nil end
+  local ok2, texto = pcall(D.DecompressDeflate, D, bruto)
+  if not ok2 or not texto then return nil end
+  return texto
+end
+
 -- DNDEQUIP: equipo virtual Harford. slot -> itemLink + seleccion basica opcional.
 -- ---------------------------------------------------------------------------
 
@@ -952,6 +1001,10 @@ end
 -- Devuelve profileName, equipment, isInspect (igual semantica que la progresion).
 function HarfordSync.DeserializeDnDEquipment(message)
     if type(message) ~= "string" then return nil, nil end
+    -- Puede venir comprimido. Se deshace aqui, que cubre las DOS rutas: el mensaje suelto y el
+    -- reensamblado por trozos, que acaba llamando a esta misma funcion.
+    message = HarfordSync.Descomprimir(message)
+    if not message then return nil, nil end
     local opcode, profileName, raw = message:match("^([^|]+)|([^|]+)|(.*)$")
     if (opcode ~= "DNDEQUIP" and opcode ~= "DNDINSEQUIP") or not profileName or profileName == "" then
         return nil, nil
@@ -1003,6 +1056,13 @@ function HarfordSync.SendDnDEquipment(prefix, profileName, equipment, channel, t
 
     opcode = tostring(opcode or "DNDEQUIP")
     local payload = HarfordSync.SerializeDnDEquipment(profileName, equipment, opcode)
+    if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
+        return HarfordSync.Send(prefix, payload, ch, target)
+    end
+
+    -- Solo lo que NO cabe: por debajo de un mensaje se manda en claro y lo entiende cualquier
+    -- cliente. El equipo comprime muy bien -- son item links repetidos con la misma estructura.
+    payload = HarfordSync.Comprimir(payload) or payload
     if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
         return HarfordSync.Send(prefix, payload, ch, target)
     end

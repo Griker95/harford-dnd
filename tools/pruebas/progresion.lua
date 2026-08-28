@@ -152,4 +152,50 @@ chk("con su subclase", P.GetClassLevels()[2].subclassId, "forajido")
 P.RemoveClassEntry(2)
 chk("quitarla baja el total", P.GetTotalLevel(), 3)
 
+-- ─── EL EQUIPO VIAJA COMPRIMIDO ─────────────────────────────────────────────
+-- Un equipo completo son item links repetidos con la misma estructura: comprime muy bien. Importa
+-- porque hoy se trocea a mano y el reensamblado es todo o nada -- si falta un trozo, se descarta
+-- entero y no hay acuse ni reintento. El fallo es MULTIPLICATIVO: con 7 trozos y un 1% de perdida
+-- por mensaje falla el 6,8% de los envios; con 2 trozos, el 2%.
+--
+-- De COMPORTAMIENTO: comprime, deshace y compara byte a byte. LibDeflate vive en el cliente
+-- (EpsilonLib), no en el repo, asi que si no esta se salta en vez de fallar.
+do
+    local ruta = "G:/Epsilon/_retail_/Interface/AddOns/EpsilonLib/Lib/LibDeflate/LibDeflate.lua"
+    local hay = io.open(ruta)
+    if not hay then
+        print("El equipo viaja comprimido  (saltada: LibDeflate no esta en este equipo)")
+    else
+        hay:close()
+        local D = dofile(ruta)
+        print("El equipo viaja comprimido")
+        local partes = {}
+        for i, hueco in ipairs({ "Head","Shoulder","Back","Chest","Wrist","Hands","Waist","Legs",
+            "Feet","Finger0","Finger1","Trinket0","Trinket1","MainHand","SecondaryHand" }) do
+            partes[#partes+1] = hueco .. "=" .. string.format(
+                "|cff1eff00|Hitem:1408%04d::::::::60:259:::::::::|h[Objeto %d]|h|r", 8000 + i, i)
+        end
+        local payload = "DNDEQUIP|Griker|" .. table.concat(partes, ";")
+        local comp = "Z|" .. D:EncodeForWoWAddonChannel(D:CompressDeflate(payload, { level = 9 }))
+        chk("encoge de verdad", #comp < #payload, true)
+        -- Lo que importa no son los bytes sino los TROZOS: cada uno es una oportunidad de perderlo.
+        local CHUNK = 200
+        chk("y en menos trozos", math.ceil(#comp/CHUNK) < math.ceil(#payload/CHUNK), true)
+        local vuelta = D:DecompressDeflate(D:DecodeForWoWAddonChannel(comp:sub(3)))
+        chk("y vuelve al original exacto", vuelta == payload, true)
+    end
+end
+
+-- El receptor lo deshace en `DeserializeDnDEquipment`, que cubre las DOS rutas: mensaje suelto y
+-- reensamblado por trozos, porque el segundo acaba llamando al primero.
+do
+    local sync = io.open("Harford/Core/HarfordSync.lua"):read("*a")
+    chk("el receptor lo deshace",
+        sync:find("message = HarfordSync.Descomprimir(message)", 1, true) ~= nil, true)
+    -- Y solo se comprime lo que NO cabe en un mensaje: por debajo de eso se manda en claro y lo
+    -- entiende cualquier cliente, incluido uno sin actualizar.
+    chk("solo lo que no cabe",
+        sync:find("payload = HarfordSync.Comprimir(payload) or payload", 1, true) ~= nil, true)
+end
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

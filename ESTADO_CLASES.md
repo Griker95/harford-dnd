@@ -14,7 +14,8 @@ Regenerar las cifras: cargar `HarfordDnDBook.lua`, los doce `Classes/*.lua` y
 |---|---|---|---|
 | Guerrero | 30 | 29 | 96 |
 | Monje | 30 | 28 | 93 |
-| Cazador de Demonios | 22 | 18 | 81 |
+| Cazador de Demonios | 22 | 19 | 86 |
+| Cazador | 34 | 29 | 85 |
 | Brujo | 47 | 36 | 76 |
 | Pícaro | 19 | 14 | 73 |
 | Sacerdote | 45 | 32 | 71 |
@@ -23,14 +24,20 @@ Regenerar las cifras: cargar `HarfordDnDBook.lua`, los doce `Classes/*.lua` y
 | Mago | 20 | 13 | 65 |
 | Paladín | 28 | 18 | 64 |
 | Caballero de la Muerte | 24 | 15 | 62 |
-| Cazador | 34 | 21 | 61 |
-| **Total** | **361** | **267 (73%)** | |
+| **Total** | **361** | **276 (76%)** | |
 
-Cifras regeneradas el **2026-08-28** (offline, cargando Book + las 12 clases + Derived). Al criterio
-original se suma: un `cast` declarado con coste real cuenta como mecánica (se cobra), y
-`cast = "ninguna"` marca lo gratis **a propósito** — riders sobre algo ya pagado — para
-distinguirlo de un olvido. Desde esa fecha **todo rasgo activable declara su coste**
-(la suite `coste_de_accion` lo exige) y los conjuros cobran por su tiempo de lanzamiento.
+Cifras regeneradas el **2026-08-28**. El criterio suma desde esa fecha: un `cast` con coste real
+(se cobra), y los ejecutables cuya mecánica no vive en `effects` — `trap` (se coloca y se dispara
+por el motor de áreas), `usesFrom` (gasta los usos de otro rasgo) y `area` (salvación/daño/condición).
+Sin eso, las ocho trampas del Cazador contaban como no mecanizadas **siendo ejecutables**, y la
+clase salía 61% cuando está al 85%.
+
+**Cazador, repasado el 2026-08-28**: sus 5 sin mecanizar están todos justificados — *Empatía
+animal* es narrativa por norma; el marcador de arquetipo se filtra del Libro; y los tres de bestia
+(*Domador*, *Aspecto*, *Vínculo*) son texto de presentación de una mecánica que **sí existe** en
+`HarfordDnDBeast` (bloque TRP3 del compañero + reglas del Vínculo: tu competencia sustituye la
+suya, se suma a CA y daño, pierde Multiataque). El umbral de doma (desafío/tamaño) no se valida a
+propósito: el bloque lo escribe el jugador y lo adjudica la mesa.
 
 El Mago sale bajo porque casi todo su peso está en Metamagia y en los tres
 Estudios, que son texto de referencia; su mecánica real (puntos, metamagia,

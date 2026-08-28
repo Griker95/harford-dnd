@@ -2916,6 +2916,14 @@ para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja d
   enteras en el catalogo del cliente; la lista de huecos de `equip` esta truncada, asi que se
   ofrece el segundo argumento sin etiquetarlo, y los nombres de hueco para vaciar salen de
   los subcomandos reales de `outfit unequip`. Se vacia antes de vestir.
+- **Rutas**: guion, no tirada, por el mismo motivo que el gossip: `waypoints add` pone el
+  nodo DONDE ESTAS TU y los `modify` van al nodo seleccionado, asi que la ruta hay que
+  andarla. Se asume que el nodo recien anadido queda seleccionado, que es como se encadena
+  al crear una ruta del tiron; para retocar una ya hecha hay que seleccionar a mano y el
+  guion lo dice. Cubre espera, probabilidad, decir/gritar/emotear, lanzar, emote, sonido,
+  activar un GUID, quitar aura y movetype, mas el modo aleatorio (`waypoints random`). El
+  enumerado de `movetype` esta truncado en el catalogo ("walk"), asi que va como texto libre
+  y se avisa. Solo hay `unaura`: no existe comando para PONER un aura en un nodo.
 - **Gossip**: NO saca una tirada de comandos, saca un **guion**. `text add` y `option add`
   actuan sobre **la pagina abierta en la ventana de gossip**, asi que un arbol de dialogo no
   se puede montar de una tacada: hay que navegar por el juego. El guion intercala los pasos

@@ -231,6 +231,12 @@ tr:last-child td{border-bottom:none}
 }
 .gossip .op::before{content:"CF"; position:absolute; left:8px; color:var(--verdin); font-size:8px}
 .gossip .op:hover{border-color:var(--verdin); color:var(--verdin)}
+.ruta{margin-top:10px; padding-top:10px; border-top:1px solid var(--borde); font-size:13px}
+.ruta div{display:flex; justify-content:space-between; gap:12px; padding:3px 0;
+  border-bottom:1px solid var(--borde)}
+.ruta div:last-child{border-bottom:none}
+.ruta span:last-child{color:var(--tinta-suave); text-align:right}
+.ruta em{font-style:normal; color:var(--cobre)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -246,6 +252,7 @@ tr:last-child td{border-bottom:none}
   <button type="button" role="tab" data-yunque="misiones" aria-selected="false">Misiones</button>
   <button type="button" role="tab" data-yunque="gossip" aria-selected="false">Gossip</button>
   <button type="button" role="tab" data-yunque="npc" aria-selected="false">NPC</button>
+  <button type="button" role="tab" data-yunque="rutas" aria-selected="false">Rutas</button>
 </div>
 
 <!-- ══════════════════════ OBJETOS ══════════════════════ -->
@@ -866,6 +873,66 @@ tr:last-child td{border-bottom:none}
       <h3><span>Comandos <span class="chip" id="nCmdsNpc">0</span></span>
         <button type="button" data-copia="outNpc">Copiar</button></h3>
       <pre id="outNpc">—</pre>
+    </div>
+  </aside>
+</div>
+</section>
+
+<!-- ══════════════════════ RUTAS ══════════════════════ -->
+<section class="panel" id="p-rutas" hidden>
+<p class="aviso">
+  Otro <b>guion</b>, como el de gossip. <code>waypoints add</code> pone el nodo
+  <b>donde estés tú</b>, y los <code>modify</code> actúan sobre el nodo seleccionado, así que
+  hay que ir andando la ruta. Los pasos de colocación van intercalados.
+</p>
+
+<div class="rejilla">
+  <form id="fw" autocomplete="off">
+    <fieldset class="comando">
+      <legend><span class="leyenda"><b>Cómo se mueve</b>
+        <span>una ruta fija o dar vueltas sin rumbo</span></span></legend>
+      <div class="campos">
+        <div class="campo">
+          <label for="wModo">Movimiento</label>
+          <select id="wModo">
+            <option value="ruta">Ruta de nodos</option>
+            <option value="azar">Aleatorio alrededor del punto de aparición</option>
+          </select>
+        </div>
+        <div class="campo" id="campoDistancia">
+          <label for="wDistancia">Radio</label>
+          <input id="wDistancia" type="number" min="0" placeholder="0">
+          <span class="pista">En yardas. Con 0 o vacío, se queda quieto.</span>
+        </div>
+        <div class="campo ancho">
+          <div class="fila-check">
+            <input type="checkbox" id="wArrancar" checked>
+            <label for="wArrancar">Ponerlo a andar al terminar (<code>waypoints start</code>)</label>
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="comando" id="fsNodos">
+      <legend><span class="leyenda"><b>Los nodos</b>
+        <span>lo que pasa al llegar a cada uno</span></span></legend>
+      <div id="nodos"></div>
+      <div class="acciones" style="margin-top:14px">
+        <button type="button" id="addNodo">Añadir nodo</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <aside class="lateral">
+    <div class="tooltip">
+      <div class="tt-nombre" id="wttTitulo">La ronda</div>
+      <div class="tt-lineas" id="wttResumen"></div>
+      <div class="ruta" id="wttRuta"></div>
+    </div>
+    <div class="salida">
+      <h3><span>El guion <span class="chip" id="nPasosW">0</span></span>
+        <button type="button" data-copia="outRuta">Copiar</button></h3>
+      <pre id="outRuta">—</pre>
     </div>
   </aside>
 </div>
@@ -2232,8 +2299,197 @@ $("limpiarNpc").onclick = () => {
 };
 $("nWow").textContent = OBJETOS_WOW.size.toLocaleString("es");
 
+// ══════════════════ YUNQUE DE RUTAS ══════════════════
+// Igual que el gossip, esto no es una tirada de comandos: `waypoints add` pone el nodo DONDE
+// ESTAS TU, y los `modify` van al nodo seleccionado. O sea que la ruta hay que andarla. El
+// guion intercala los pasos de colocacion.
+//
+// Se asume que el nodo recien anadido queda seleccionado, que es como se encadena al crear
+// una ruta del tiron. Para retocar una ya hecha hay que seleccionar el nodo a mano, y el
+// guion lo recuerda.
+const TIPOS_CHAT = [["","Sin decir nada"],["say","Dice"],["yell","Grita"],["emote","Emotea"]];
+
+let nodos = [{etiqueta:"", espera:0, prob:0, chatTipo:"", chat:"",
+              hechizo:0, emote:0, sonido:0, activar:"", quitarAura:"", andar:""}];
+
+function pintaNodos(){
+  const caja = $("nodos"); caja.innerHTML = "";
+  nodos.forEach((n, i) => {
+    const bloque = document.createElement("div"); bloque.className = "pagina";
+    const cab = document.createElement("div"); cab.className = "pagina-cab";
+    const tit = document.createElement("span");
+    tit.innerHTML = "<b>Nodo " + (i + 1) + "</b>";
+    tit.style.fontSize = "13px";
+    cab.append(tit);
+    const del = document.createElement("button");
+    del.type = "button"; del.className = "quitar"; del.textContent = "×";
+    del.setAttribute("aria-label", "Quitar nodo " + (i + 1));
+    del.onclick = () => {
+      nodos.splice(i, 1);
+      if (!nodos.length) nodos.push({etiqueta:"", espera:0, prob:0, chatTipo:"", chat:"",
+        hechizo:0, emote:0, sonido:0, activar:"", quitarAura:"", andar:""});
+      pintaNodos(); pintaRuta();
+    };
+    cab.append(del);
+    bloque.append(cab);
+
+    const campos = document.createElement("div"); campos.className = "campos";
+    const mete = (etiqueta, clave, opts) => {
+      const c = document.createElement("div"); c.className = "campo";
+      if (opts && opts.ancho) c.classList.add("ancho");
+      const l = document.createElement("label");
+      l.textContent = etiqueta; l.setAttribute("for", "w_" + clave + "_" + i);
+      let el;
+      if (opts && opts.opciones){
+        el = document.createElement("select");
+        opciones(el, opts.opciones);
+        el.value = n[clave];
+        el.onchange = () => { n[clave] = el.value; pintaRuta(); };
+      } else {
+        el = document.createElement("input");
+        if (opts && opts.numero){
+          el.type = "number"; el.min = "0";
+          if (opts.max) el.max = opts.max;
+          el.value = n[clave] || "";
+          el.oninput = () => { n[clave] = Number(el.value) || 0; pintaRuta(); };
+        } else {
+          el.value = n[clave] || "";
+          el.oninput = () => { n[clave] = el.value; pintaRuta(); };
+        }
+        if (opts && opts.hueco) el.placeholder = opts.hueco;
+      }
+      el.id = "w_" + clave + "_" + i;
+      c.append(l, el);
+      if (opts && opts.pista){
+        const p = document.createElement("span"); p.className = "pista";
+        p.textContent = opts.pista; c.append(p);
+      }
+      campos.append(c);
+    };
+
+    mete("Dónde está", "etiqueta", {ancho:true, hueco:"junto a la fragua",
+      pista:"Solo para el guion: te dice dónde ponerte."});
+    mete("Espera al llegar", "espera", {numero:true, max:"3600000",
+      hueco:"ms", pista:"En milisegundos. 1000 = 1 s."});
+    mete("Probabilidad", "prob", {numero:true, max:"100", hueco:"0-100",
+      pista:"Todo lo del nodo se dispara junto."});
+    mete("Al llegar", "chatTipo", {opciones:TIPOS_CHAT});
+    mete("Qué dice", "chat", {ancho:true, hueco:"Aquí no hay nada que ver."});
+    mete("Lanza el hechizo", "hechizo", {numero:true, hueco:"spellid"});
+    mete("Hace el emote", "emote", {numero:true, hueco:"id",
+      pista:"Conviene ponerle espera."});
+    mete("Suena", "sonido", {numero:true, hueco:"soundid"});
+    mete("Activa el objeto", "activar", {hueco:"GUID",
+      pista:"Tiene que estar en el mismo trozo de mapa."});
+    mete("Se quita el aura", "quitarAura", {hueco:"spellid o all"});
+    mete("Cambia el andar", "andar", {hueco:"walk",
+      pista:"El catálogo del cliente solo confirma walk."});
+    bloque.append(campos);
+    caja.append(bloque);
+  });
+}
+
+function comandosNodo(n){
+  const C = [];
+  const P = "waypoints modify ";
+  if (n.espera) C.push(P + "delay " + n.espera);
+  if (n.prob) C.push(P + "chance " + n.prob);
+  if (n.chatTipo && n.chat.trim()) C.push(P + "chat " + n.chatTipo + " " + n.chat.trim());
+  if (n.hechizo) C.push(P + "cast " + n.hechizo);
+  if (n.emote) C.push(P + "emote " + n.emote);
+  if (n.sonido) C.push(P + "playsound " + n.sonido);
+  if (n.activar.trim()) C.push(P + "activate " + n.activar.trim());
+  if (n.quitarAura.trim()) C.push(P + "unaura " + n.quitarAura.trim());
+  if (n.andar.trim()) C.push(P + "movetype " + n.andar.trim());
+  return C;
+}
+
+function guionRuta(){
+  const L = [];
+  const azar = $("wModo").value === "azar";
+  L.push("-- 1. Con el NPC seleccionado");
+  if (azar){
+    const d = Number($("wDistancia").value) || 0;
+    L.push("waypoints random" + (d ? " " + d : ""));
+    L.push("--    Sin distancia o con 0, se queda quieto en su sitio.");
+    return L;
+  }
+
+  L.push("waypoints show on");
+  L.push("--    Con los nodos a la vista se pueden seleccionar para retocarlos luego.");
+  let paso = 2;
+  nodos.forEach((n, i) => {
+    const cmds = comandosNodo(n);
+    L.push("");
+    L.push("-- " + (paso++) + ". Nodo " + (i + 1) +
+      (n.etiqueta.trim() ? " — " + n.etiqueta.trim() : ""));
+    L.push("--    Colócate donde va este nodo" +
+      (n.etiqueta.trim() ? " (" + n.etiqueta.trim() + ")" : "") + " y añádelo.");
+    L.push("waypoints add");
+    if (cmds.length){
+      // Los `modify` van al nodo seleccionado; el que se acaba de anadir lo esta.
+      L.push(...cmds);
+    }
+  });
+  L.push("");
+  L.push("-- " + (paso++) + ". Rematar");
+  L.push("waypoints show off");
+  if ($("wArrancar").checked) L.push("waypoints start");
+  return L;
+}
+
+function pintaRuta(){
+  const azar = $("wModo").value === "azar";
+  $("campoDistancia").style.display = azar ? "" : "none";
+  $("fsNodos").style.display = azar ? "none" : "";
+
+  $("wttTitulo").textContent = azar ? "Da vueltas" : "La ronda";
+  if (azar){
+    const d = Number($("wDistancia").value) || 0;
+    $("wttResumen").innerHTML = "<span>" +
+      (d ? "Se mueve al azar hasta " + d + " yardas de donde aparece."
+         : "Se queda quieto en su sitio.") + "</span>";
+    $("wttRuta").innerHTML = "";
+  } else {
+    const conAlgo = nodos.filter(n => comandosNodo(n).length).length;
+    $("wttResumen").innerHTML = "<span>" + nodos.length + " nodos, " + conAlgo +
+      " con algo que hacer</span>";
+    const filas = nodos.map((n, i) => {
+      const que = [];
+      if (n.espera) que.push("espera " + (n.espera / 1000) + " s");
+      if (n.chatTipo && n.chat.trim()){
+        const verbo = (TIPOS_CHAT.find(t => t[0] === n.chatTipo) || ["","",""])[1];
+        que.push(verbo.toLowerCase() + ' "' + n.chat.trim() + '"');
+      }
+      if (n.hechizo) que.push("lanza " + n.hechizo);
+      if (n.emote) que.push("emote " + n.emote);
+      if (n.sonido) que.push("suena " + n.sonido);
+      if (n.activar.trim()) que.push("activa " + n.activar.trim());
+      if (n.quitarAura.trim()) que.push("se quita " + n.quitarAura.trim());
+      if (n.andar.trim()) que.push("pasa a " + n.andar.trim());
+      const prob = n.prob ? " <em>(" + n.prob + "%)</em>" : "";
+      return '<div><span><b>' + (i + 1) + '.</b> ' +
+        (n.etiqueta.trim() || "sin situar").replace(/</g,"&lt;") + "</span><span>" +
+        (que.join(", ") || "—") + prob + "</span></div>";
+    });
+    $("wttRuta").innerHTML = filas.join("");
+  }
+
+  const g = guionRuta();
+  $("nPasosW").textContent = g.filter(l => l && !l.startsWith("--")).length;
+  $("outRuta").textContent = g.join("\n");
+}
+$("fw").addEventListener("input", pintaRuta);
+$("fw").addEventListener("change", pintaRuta);
+$("addNodo").onclick = () => {
+  nodos.push({etiqueta:"", espera:0, prob:0, chatTipo:"", chat:"",
+    hechizo:0, emote:0, sonido:0, activar:"", quitarAura:"", andar:""});
+  pintaNodos(); pintaRuta();
+};
+
 pintaListaObj(); pintaListaRec(); pintaListaMis();
 pintaMats(); pintaObjs(); pintaReps(); pintaPremios();
 refrescaSubclases(); pintaPaleta(); pintaRec(); pintaMis(); pintaPaginas(); pintaGos();
 pintaDisplays(); pintaAuras(); pintaArmas(); pintaEquipo(); pintaDesequipar(); pintaNpc();
+pintaNodos(); pintaRuta();
 </script>

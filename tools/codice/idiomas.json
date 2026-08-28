@@ -51,6 +51,12 @@
     "escritura": "Orco"
    },
    {
+    "id": "mogu",
+    "nombre": "Mogu",
+    "hablantes": "Mogu",
+    "escritura": "Mogu"
+   },
+   {
     "id": "pandaren",
     "nombre": "Pandaren",
     "hablantes": "Pandaren",

@@ -950,6 +950,51 @@ function API.AttachMovementTracker(opts)
         motor:SetScript("OnUpdate", OnUpdate)
     end
 
+    -- Arrancar el motor CONSERVANDO lo restaurado. `ArrancarSeguimiento` pone el contador a cero
+    -- --es su trabajo: empieza un turno--, asi que la reanudacion del /reload restauraba los
+    -- metros y acto seguido los borraba: imprimia "retomado 8,3 m" y el contador arrancaba en
+    -- cero, o sea, recargar a mitad de turno regalaba el movimiento entero otra vez.
+    local function RetomarSeguimiento()
+        if tracking then return true end
+        if HarfordDnDConditions and HarfordDnDConditions.IsSpeedZero
+            and HarfordDnDConditions.IsSpeedZero("player") then
+            RefreshConditionState()
+            return false
+        end
+        local x, y, z = GetPosition()
+        if not x then return false end
+        lastX, lastY, lastZ = x, y, z
+        API.RecordedMovementMeters = totalMeters
+        tracking = true
+        button:SetText("Parar " .. FormatMeters(totalMeters))
+        label:SetText(FormatMeters(totalMeters))
+        motor:SetScript("OnUpdate", OnUpdate)
+        return true
+    end
+
+    -- El turno YA ESTABA EMPEZADO cuando llegaste: te acabas de unir, o vuelves de una
+    -- desconexion. El aviso de "es tu turno" paso antes de que estuvieras, asi que nadie arranco
+    -- tu contador ni tu economia -- te movias gratis ese turno. Se reconcilia al llegar la FOTO:
+    --   * con sello valido (mismo guid, mismo asalto: un /reload limpio) se RETOMA lo gastado;
+    --   * sin sello (recien unido, o crash sin guardar) se empieza el turno de cero, entero.
+    -- Idempotente: con el seguimiento ya corriendo no toca nada, y restaurar la economia desde el
+    -- store es un no-op cuando el store ya refleja lo vivo, que es siempre salvo justo tras volver.
+    function API.ReconciliarTurnoEnCurso()
+        if LlevandoNpc() then return end
+        if not EnCombate() or not EsMiTurno() then return end
+        local T = HarfordDnDConditions and HarfordDnDConditions.Turn
+        if T and not (T.RestoreFromStore and T.RestoreFromStore()) and T.Reset then
+            T.Reset()
+        end
+        if tracking then return end
+        if Restaurar() then
+            RetomarSeguimiento()
+            AvisarMovimiento(totalMeters, MaximoDelTurno())
+        else
+            ArrancarSeguimiento()
+        end
+    end
+
     -- Deshacer el movimiento del turno: vuelves a donde EMPEZASTE y el contador se pone a cero,
     -- como si no te hubieras movido. Es lo que quieres cuando te has colocado mal, no volver al
     -- punto donde se te acabo -- para eso ya esta el muro.
@@ -984,9 +1029,9 @@ function API.AttachMovementTracker(opts)
             self:UnregisterAllEvents()
             if not EnCombate() then return end
             if not Restaurar() then return end
-            label:SetText(FormatMeters(totalMeters))
+            -- RETOMAR, no arrancar: arrancar pone el contador a cero y borraba lo restaurado.
+            if not RetomarSeguimiento() then return end
             AvisarMovimiento(totalMeters, MaximoDelTurno())
-            ArrancarSeguimiento(true)
             HarfordChat.Print(string.format(
                 "Retomado tu movimiento del turno: |cffffcc00%.1f m|r gastados.", totalMeters))
         end)

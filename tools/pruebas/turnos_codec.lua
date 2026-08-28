@@ -214,4 +214,26 @@ chk("despues de levantar la supresion",
     turnos:find("suppressBroadcast = false", 1, true) <
     turnos:find("if broadcastSuprimido then", 1, true), true)
 
+-- ─── QUIEN LLEGA CON EL TURNO EMPEZADO SE RECONCILIA ────────────────────────
+-- Unirse durante el turno de PJs, o volver de una desconexion: el aviso de "es tu turno" paso
+-- antes de que estuvieras, asi que nadie arrancaba tu contador ni tu economia y ese turno te
+-- movias gratis. La foto que te trae al combate dispara ahora la reconciliacion.
+local attackui = io.open("Harford/DnD/UI/HarfordDnDAttackUI.lua"):read("*a")
+print("Llegar con el turno empezado reconcilia")
+chk("la foto recibida la dispara",
+    turnos:find("pcall(HarfordDnDAttackUI.ReconciliarTurnoEnCurso)", 1, true) ~= nil, true)
+chk("y existe", attackui:find("function API.ReconciliarTurnoEnCurso()", 1, true) ~= nil, true)
+-- Con sello valido (mismo guid y asalto: /reload limpio) se RETOMA lo gastado; sin sello (recien
+-- unido, o crash sin guardar) el turno empieza de cero. Resetear siempre habria devuelto la
+-- accion gastada con solo recargar, que es el exploit que el sello existe para impedir.
+chk("economia: retoma el sello o resetea",
+    attackui:find("not (T.RestoreFromStore and T.RestoreFromStore()) and T.Reset", 1, true) ~= nil, true)
+-- Y el arranque tras restaurar CONSERVA los metros: `ArrancarSeguimiento` pone el contador a
+-- cero --es su trabajo, empieza un turno-- asi que la reanudacion del /reload restauraba los
+-- metros y acto seguido los borraba: recargar a mitad de turno regalaba el movimiento entero.
+chk("movimiento: retomar no pone a cero",
+    attackui:find("local function RetomarSeguimiento()", 1, true) ~= nil, true)
+chk("y el /reload usa retomar, no arrancar",
+    attackui:find("if not RetomarSeguimiento() then return end", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

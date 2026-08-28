@@ -874,6 +874,15 @@ local function ApplySerializedState(message)
     ClampActiveIndex()
     EnsureActiveVisible()
     RefrescarMarcadorTrasRecibir()
+    -- La foto puede llegar con el turno YA empezado: acabas de unirte, o vuelves de una
+    -- desconexion. El aviso de "es tu turno" paso antes de que estuvieras y nadie arranco tu
+    -- contador ni tu economia -- ese turno te movias gratis. La reconciliacion decide sola entre
+    -- RETOMAR lo sellado (un /reload limpio) o empezar el turno de cero (recien unido, crash), y
+    -- es idempotente: las fotos siguientes del mismo turno no tocan nada. Protegida: un fallo
+    -- pintando o reconciliando no puede tirar la aplicacion del estado, que ya esta hecha.
+    if HarfordDnDAttackUI and HarfordDnDAttackUI.ReconciliarTurnoEnCurso then
+        pcall(HarfordDnDAttackUI.ReconciliarTurnoEnCurso)
+    end
     return true
 end
 

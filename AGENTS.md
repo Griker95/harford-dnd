@@ -2903,6 +2903,17 @@ para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja d
   referencian por CLAVE y se **autocompletan y validan contra el registro real**: una clave
   inventada deja la receta como pendiente para siempre sin decir nada, que es el mismo
   problema que el icono inexistente.
+- **Misiones**: saca la entrada de `HarfordQuestCatalog`. **No inventar campos**: los que
+  existen son `title`, `description`, `category`, `difficulty`, `icon`, `source`,
+  `objectives[{text, required}]` y `rewards{rep|reps, xp, money{gold,silver,copper}, items}`.
+  Tres cosas que costaron cotejarlas y no deben perderse:
+  - **`source` vale SIEMPRE `"world"`** en todo el addon. No hay otros valores.
+  - **`category` NO es texto libre**: `HarfordQuestLog` lo resuelve con
+    `TC.Data.GetTypeByKey`, asi que son las 12 claves de tipo de contrato (`mercenary`,
+    `hunt`, `investigation`...).
+  - **El icono va con RUTA COMPLETA** (`Interface\Icons\nombre`), al reves que en objetos,
+    donde es el nombre pelado. Y en `rewards.items` conviene emitir el `id`: con el,
+    `FormatRewardItemForText` resuelve nombre, enlace e icono solo.
 
 Dos ideas ordenan los formularios:
 

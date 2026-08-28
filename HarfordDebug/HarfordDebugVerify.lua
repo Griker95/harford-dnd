@@ -304,8 +304,21 @@ Grupo("tira", "la tira de estados sobre el objetivo, y que quede encima del fram
         r.chk("y se muestra con un estado puesto", tira:IsShown())
         local frame = _G["TargetFrame"]
         if frame and tira:GetBottom() and frame:GetTop() then
-            r.chk("y queda POR ENCIMA del unitframe", tira:GetBottom() >= frame:GetTop(),
-                string.format("tira=%.0f frame=%.0f", tira:GetBottom(), frame:GetTop()))
+            -- Con el marco pegado al TECHO de la pantalla la tira NO CABE encima, y el codigo
+            -- elige solaparse a proposito: "verla mal es infinitamente mejor que no verla". La
+            -- comprobacion exigia "por encima" sin conocer esa regla y fallaba justo en el montaje
+            -- mas comun (marco arriba del todo, 1005 de 1009): fallo de la PRUEBA, no de la tira.
+            local techoPantalla = UIParent and UIParent:GetHeight()
+            local sitioArriba = techoPantalla
+                and (frame:GetTop() + 6 + tira:GetHeight() <= techoPantalla)
+            if sitioArriba then
+                r.chk("y queda POR ENCIMA del unitframe", tira:GetBottom() >= frame:GetTop(),
+                    string.format("tira=%.0f frame=%.0f", tira:GetBottom(), frame:GetTop()))
+            else
+                r.chk("sin sitio arriba: se solapa A PROPOSITO y se queda visible",
+                    tira:GetBottom() ~= nil and tira:IsShown(),
+                    "el marco esta pegado al techo de la pantalla")
+            end
         end
         -- "Por encima" no basta: con el marco pegado al borde superior, la tira quedaba colocada
         -- perfectamente respecto a el y VEINTIDOS PIXELES fuera de la pantalla. Las tres

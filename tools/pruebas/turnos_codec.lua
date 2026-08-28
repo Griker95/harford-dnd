@@ -177,4 +177,26 @@ chk("equipo y progresion llaman al deserializador sin puerta de opcode",
     comm:find("HarfordSync.DeserializeDnDClassProgression(message)", 1, true) ~= nil
     and comm:find("HarfordSync.DeserializeDnDEquipment(message)", 1, true) ~= nil, true)
 
+-- ─── LA VIDA DEL NPC LLEGA, Y CON SUS CAMPOS EN SU SITIO ────────────────────
+-- Doble fallo que se tapaba a si mismo: el manejador de `THP` vivia dentro del aviso de turno, a
+-- donde el enrutador solo manda los `TURN` --asi que nunca le llegaba nada-- y ademas leia el guid
+-- del tercer campo cuando el emisor lo manda en el segundo. Cero sintomas en el emisor, y la vida
+-- del NPC sin compartirse, que era todo el proposito del mensaje.
+print("La vida del NPC llega y casa campo a campo")
+chk("el enrutador tiene rama para THP",
+    turnos:find('elseif opcode == "THP" then', 1, true) ~= nil, true)
+chk("con manejador propio",
+    turnos:find("local function ApplyNpcHealth(message)", 1, true) ~= nil, true)
+-- De COMPORTAMIENTO: se construye el mensaje COMO EL EMISOR y se parsea CON EL PATRON DEL
+-- RECEPTOR, sacado del fichero. Si alguien cambia un lado y no el otro, esto casca.
+local patron = turnos:match('match%("(^THP[^"]+)"%)')
+chk("el patron del receptor se encuentra", patron ~= nil, true)
+if patron then
+    local mensaje = table.concat({ "THP", "Creature-0-1-2-3-4-5", "18", "34" }, "|")
+    local guid, hp, mx = mensaje:match(patron)
+    chk("el guid sale del campo del guid", guid, "Creature-0-1-2-3-4-5")
+    chk("la vida del campo de la vida", hp, "18")
+    chk("y el maximo del suyo", mx, "34")
+end
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

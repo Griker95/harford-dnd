@@ -748,35 +748,6 @@ local function ApplyTurnNotice(message, sender)
 
     -- `TURNB` era el aviso de turno por bloque. Se descarta en silencio: un cliente sin actualizar
     -- puede seguir mandandolo, y aplicarlo volveria a meter aqui el modo que se ha retirado.
-    -- Vida de un NPC, sola. Se aplica a su tarjeta y a su hueco dentro de un bloque, que tambien
-    -- guarda vida y no tiene tarjeta propia.
-    if opcode == "THP" then
-        local guid, hpRaw, maxRaw = activeRaw, countRaw, adminRaw
-        if not (guid and guid ~= "") then return false end
-        local store = EnsureStore()
-        local hp, maxHp = SafeNumber(hpRaw, 0), SafeNumber(maxRaw, 0)
-        local cambio = false
-        local function Aplicar(lista)
-            for _, e in ipairs(lista or {}) do
-                if e and tostring(e.guid or e.id or "") == guid then
-                    if SafeNumber(e.hp, 0) ~= hp or SafeNumber(e.maxHp, 0) ~= maxHp then
-                        e.hp, e.maxHp = hp, maxHp
-                        cambio = true
-                    end
-                end
-            end
-        end
-        for _, entry in ipairs(store.entries or {}) do
-            Aplicar({ entry })
-            Aplicar(entry.miembros)
-        end
-        if cambio then
-            TouchStore()
-            RepintarProtegido(RefreshFrame)
-        end
-        return true
-    end
-
     if opcode == "TURNB" then return false end
 
     if opcode ~= "TURN" then return false end
@@ -954,6 +925,41 @@ end
 
 -- El DM pide a cada jugador que tire la suya. Se responde por susurro al DM.
 
+-- Vida de un NPC, sola (`THP|guid|hp|maxHp`). Se aplica a su tarjeta y a su hueco dentro de un
+-- bloque, que tambien guarda vida y no tiene tarjeta propia.
+--
+-- Funcion PROPIA, con SU parseo, por un doble fallo que se tapaba a si mismo: el manejador vivia
+-- dentro de `ApplyTurnNotice` --a donde el enrutador solo manda los `TURN`, asi que un `THP` no
+-- llegaba NUNCA-- y ademas leia el guid del tercer campo cuando el emisor lo manda en el segundo.
+-- El descuadre jamas se noto porque el enrutado nunca lo entrego: dos fallos, cero sintomas
+-- visibles aqui... y la vida del NPC sin compartirse, que era todo el proposito del mensaje.
+local function ApplyNpcHealth(message)
+    local guid, hpRaw, maxRaw = tostring(message or ""):match("^THP|([^|]+)|([^|]+)|([^|]*)$")
+    if not guid or guid == "" then return false end
+    local store = EnsureStore()
+    local hp, maxHp = SafeNumber(hpRaw, 0), SafeNumber(maxRaw, 0)
+    local cambio = false
+    local function Aplicar(lista)
+        for _, e in ipairs(lista or {}) do
+            if e and tostring(e.guid or e.id or "") == guid then
+                if SafeNumber(e.hp, 0) ~= hp or SafeNumber(e.maxHp, 0) ~= maxHp then
+                    e.hp, e.maxHp = hp, maxHp
+                    cambio = true
+                end
+            end
+        end
+    end
+    for _, entry in ipairs(store.entries or {}) do
+        Aplicar({ entry })
+        Aplicar(entry.miembros)
+    end
+    if cambio then
+        TouchStore()
+        RepintarProtegido(RefreshFrame)
+    end
+    return true
+end
+
 local function ApplyTurnMessage(message, sender)
     -- Un payload comprimido que CABE EN UN MENSAJE llega entero, con su marca delante: `Z|...`.
     -- El enrutado por opcode leia "Z", no encontraba rama y lo descartaba EN SILENCIO -- solo la
@@ -973,6 +979,8 @@ local function ApplyTurnMessage(message, sender)
         return ApplyTurnNotice(message, sender)
     elseif opcode == "TCHUNK" then
         return ApplyChunkedTurnNotice(message, sender)
+    elseif opcode == "THP" then
+        return ApplyNpcHealth(message)
     elseif opcode == "TSTART" then
         local _, cuantos = strsplit("|", message or "")
         AnnounceCombatStart(SafeNumber(cuantos, 0))

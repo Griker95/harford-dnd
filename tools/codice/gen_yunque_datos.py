@@ -31,15 +31,29 @@ PAGINA = os.path.join(BASE, 'yunque.html')
 
 
 def registro():
-    """clave -> nombre, de TODO el registro (con id o sin el)."""
+    """clave -> (nombre, id). El id importa: en las recompensas de mision, el addon
+    resuelve nombre, enlace e icono a partir de el (`FormatRewardItemForText`)."""
     if not os.path.exists(REGISTRO):
         return {}
     t = io.open(REGISTRO, encoding='utf-8').read()
     salida = {}
     for m in re.finditer(r'\["([a-z0-9_]+)"\]\s*=\s*\{([^}]*)\}', t):
         nom = re.search(r'name\s*=\s*"([^"]*)"', m.group(2))
-        salida[m.group(1)] = nom.group(1) if nom else m.group(1)
+        idm = re.search(r'\bid\s*=\s*(\d+)', m.group(2))
+        salida[m.group(1)] = (nom.group(1) if nom else m.group(1),
+                              int(idm.group(1)) if idm else 0)
     return salida
+
+
+CATEGORIAS = 'Harford/Contracts/HarfordContractsData.lua'
+
+
+def categorias():
+    """`category` NO es texto libre: se resuelve con `GetTypeByKey` contra estas."""
+    if not os.path.exists(CATEGORIAS):
+        return []
+    t = io.open(CATEGORIAS, encoding='utf-8').read()
+    return re.findall(r'key = "(\w+)",\s*label = "([^"]+)"', t)
 
 
 def profesiones():
@@ -95,15 +109,17 @@ def main():
     print("Registro de objetos:  %d claves" % len(reg))
     print("Profesiones:          %d" % len(profs))
     print("Recetas existentes:   %d ids" % len(recetas))
+    print("Categorias de contrato:%d" % len(categorias()))
     print("Objetos pendientes:   %d  (editables desde la pagina)" % len(pend))
     sinDesc = sum(1 for p in pend if not p[11])
     print("   de esos sin descripcion: %d" % sinDesc)
 
     datos = {
-        'registro': [[k, v] for k, v in sorted(reg.items())],
+        'registro': [[k, v[0], v[1]] for k, v in sorted(reg.items())],
         'profs': profs,
         'recetaIds': recetas,
         'pendientes': pend,
+        'categorias': categorias(),
     }
     bloque = ('/*DATOS_INICIO*/const DATOS=%s;/*DATOS_FIN*/'
               % json.dumps(datos, separators=(',', ':'), ensure_ascii=False))

@@ -179,7 +179,10 @@ for m in re.finditer(r'\["([a-z0-9_]+)"\]\s*=\s*\{([^}]*)\}', texto):
 recetas = io.open(RECETAS, encoding='utf-8').read()
 comoResultado, profesionDe, comoMaterial = set(), {}, set()
 for m in re.finditer(r'\{\s*id\s*=\s*"[^"]+",\s*profession\s*=\s*"([a-z_]+)"(.*?)\n', recetas):
-    prof, resto = m.group(1), m.group(2)
+    # El registro nuevo trae la profesion como `prof_alquimia`; el clasificador compara
+    # contra `alquimia`. Sin quitar el prefijo, NINGUNA receta casaba con su profesion y
+    # todo caia al cajon de materiales: los 235 consumibles se quedaron en cero.
+    prof, resto = m.group(1).replace('prof_', '', 1), m.group(2)
     for bloque in re.findall(r'materials\s*=\s*\{(.*?)\}\s*\}', resto):
         for key in re.findall(r'key\s*=\s*"([a-z0-9_]+)"', bloque):
             comoMaterial.add(key)

@@ -3,6 +3,16 @@
 ## Notes: Sistema de Loot y Fichas DnD 5e de |cff3536CCCompañía Harford|r
 ## Author: Griker
 ## Version: 2.0.0
+# EpsilonLib es OBLIGATORIA, y no solo por costumbre: de ella salen los comandos de servidor
+# (AddonCommands), el almacen de fase (PhaseAddonData) y LibDeflate, que es con lo que se comprime
+# lo que va troceado por el cable -- la foto de turnos, el equipo y la progresion.
+#
+# Declararla evita un fallo ASIMETRICO Y MUDO: si tu tienes LibDeflate y otro no, el otro descarta
+# sin aviso todo lo que le mandes comprimido, y el sintoma ("no me llega el equipo al inspeccionar")
+# se parece a otras diez cosas. Antes era dependencia BLANDA --todo el codigo la consulta con
+# `if EpsilonLib and ...`-- asi que sin ella Harford cargaba a medias y en silencio. Mejor no
+# cargar que cargar roto.
+## RequiredDeps: EpsilonLib
 ## OptionalDeps: totalRP3, totalRP3_Extended
 ## SavedVariables: HarfordLootTaggedCreatureRegistry, HarfordLootLootRegistry, HarfordLootGlobalLootRegistry, HarfordDnDMinimapSettings, HarfordDnDPersistStore, HarfordDnDTargetResourceSettings, HarfordTurnOrderStore, HarfordConfigStore, HarfordReputationStore, HarfordCompendioDB, HarfordContractsDB, HarfordQuestsStore, HarfordCommunicatorStore, HarfordLootPhaseStore, HarfordReputationPhaseStore
 ## SavedVariablesPerCharacter: HarfordCompendioCharacterDB, HarfordCourierStore, HarfordProfessionsStore, HarfordActionBarStore

@@ -369,6 +369,145 @@ end)
 -- TIRADAS. La API publica es la que usan Arcanum y los propios rasgos: si devuelve basura, falla
 -- todo lo que cuelga de ella y el sintoma aparece lejos de la causa.
 ------------------------------------------------------------
+------------------------------------------------------------
+-- COMPRESION Y ATRIBUCION DEL DANO. Lo que cambio el 28/08: la foto de turnos, el equipo y la
+-- progresion viajan comprimidos, y la linea de dano la publica la VICTIMA.
+--
+-- Lo que este cliente NO puede comprobar solo va marcado a mano: si el OTRO recibe. Aqui se
+-- verifica el FORMATO y la ida y vuelta; la ENTREGA solo se ve con dos clientes.
+------------------------------------------------------------
+Grupo("comprimir", "que la compresion este disponible y no pierda un byte", function(r)
+    local S = _G.HarfordSync
+    r.chk("el transporte expone la compresion", S and S.Comprimir ~= nil and S.Descomprimir ~= nil)
+    if not (S and S.Comprimir) then return end
+
+    -- LA pieza fragil: LibDeflate NO viene con Harford, se toma prestada de EpsilonLib, TRP3 o
+    -- Epsilon_Book. Si un cliente la tiene y otro no, el que no la tiene DESCARTA EN SILENCIO todo
+    -- lo comprimido -- y antes le llegaba troceado y funcionaba.
+    local ok, lib = pcall(function()
+        if LibStub and LibStub.GetLibrary then return LibStub:GetLibrary("LibDeflate", true) end
+    end)
+    local D = (ok and lib) or _G.LibDeflate
+    r.chk("LibDeflate esta en ESTE cliente", D ~= nil,
+        "sin ella no comprimes, pero tampoco DESCOMPRIMES lo que te llegue")
+    if not D then
+        r.manual("SIN LibDeflate: lo que otro te mande comprimido lo descartaras sin aviso. "
+            .. "Instala EpsilonLib o pide que se empaquete dentro de Harford.")
+        return
+    end
+
+    local original = "STATE|1|~~activo|" .. string.rep(
+        "1,Nombre,npc,Nombre,,28,34,Interface\\Icons\\inv_misc_head_01,12345,15,5,ff00ff;", 20)
+    local comprimido = S.Comprimir(original)
+    r.chk("comprime un estado grande", comprimido ~= nil)
+    if comprimido then
+        r.chk("y encoge de verdad", #comprimido < #original,
+            #original .. " -> " .. #comprimido .. " bytes")
+        r.chk("vuelve al original EXACTO", S.Descomprimir(comprimido) == original)
+    end
+
+    -- Lo pequenio va en CLARO a proposito: asi lo entiende cualquier cliente, incluido uno sin
+    -- actualizar. Si esto dejara de cumplirse, romperiamos la mesa por un mensaje corto.
+    local corto = "STATE|1|~~activo|uno"
+    r.chk("lo corto NO se comprime (no compensa)", S.Comprimir(corto) == nil,
+        "si comprimiera, un cliente sin actualizar dejaria de entenderlo")
+    r.chk("y un texto sin marca pasa tal cual", S.Descomprimir(corto) == corto)
+
+    r.manual("ENTREGA: equipa 4-5 objetos y que OTRO cliente te inspeccione. Si no le llega el "
+        .. "equipo, mira si el tiene LibDeflate: es el fallo mas silencioso de este cambio.")
+end)
+
+Grupo("dano", "quien publica la linea de dano: el atacante o la victima", function(r)
+    local C = _G.HarfordDnDCombat
+    r.chk("existe la decision de quien publica", C and C.VictimaPublicaSuDano ~= nil)
+    if not (C and C.VictimaPublicaSuDano) then return end
+
+    -- Contra un NPC no cambia nada y NO DEBE: lo resuelve y lo publica el atacante, como siempre.
+    -- Lo garantiza `UnitIsPlayer`, no una tabla de excepciones.
+    if UnitExists and UnitExists("target") then
+        local esJugador = UnitIsPlayer and UnitIsPlayer("target")
+        local publica = C.VictimaPublicaSuDano("target")
+        if not esJugador then
+            r.chk("con un NPC delante publica el ATACANTE", publica == false,
+                "si saliera true, el dano a NPC habria cambiado y no debe")
+        elseif UnitIsUnit and UnitIsUnit("target", "player") then
+            r.chk("contigo mismo delante publica el atacante", publica == false)
+        else
+            r.manual("Con " .. tostring(UnitName("target")) .. " delante publica "
+                .. (publica and "LA VICTIMA" or "el ATACANTE (aun no difundio sus recursos)")
+                .. ". Pegale y comprueba que sale UNA sola linea de dano, no dos.")
+        end
+    else
+        r.manual("Sin objetivo: selecciona un NPC y repite, para comprobar que el dano a NPC "
+            .. "sigue igual que siempre.")
+    end
+
+    local S = _G.HarfordSync
+    if S and S.SerializeDamage and S.DeserializeDamage then
+        local enlace = "|cff1eff00|Hitem:14088020::::::::60:259:::::::::|h[Espada larga]|h|r"
+        local p = S.SerializeDamage({ { amount = 10, damageType = "cortante" } }, false, false,
+            "Dano " .. enlace)
+        r.chk("el dano viaja con la etiqueta del arma", p ~= nil)
+        if p then
+            local comps, _crit, _mag, etq = S.DeserializeDamage(p)
+            r.chk("los componentes vuelven", comps ~= nil and #comps == 1)
+            -- Un enlace lleva PIPES dentro y el separador tambien es pipe: por eso va el ultimo y
+            -- se coge de una pieza. Cortarlo ahi dejaba la etiqueta en "Dano " -- fallo real.
+            r.chk("y el enlace entero, con su ID",
+                etq ~= nil and etq:find("|Hitem:14088020|h", 1, true) ~= nil, tostring(etq))
+            r.chk("conservando el color de calidad",
+                etq ~= nil and etq:find("|cff1eff00", 1, true) ~= nil)
+            r.chk("y cabe en un mensaje", #p <= 240, #p .. " bytes")
+        end
+    end
+
+    r.manual("Con arma BASICA la linea sale con el nombre a secas, sin enlace.")
+    r.manual("Si la victima tiene RESISTENCIA, el numero debe venir YA mitigado y NO debe salir "
+        .. "una segunda linea de correccion detras.")
+    r.manual("Y con un NPC poseido pegando a un jugador: mismo trato, una sola linea.")
+end)
+
+Grupo("turnored", "que avanzar turno mande UN mensaje y no la lista entera", function(r)
+    local T = _G.HarfordTurnOrderAPI
+    r.chk("api de turnos cargada", T ~= nil)
+    if not T then return end
+    r.chk("hay estado de combate explicito", T.GetCombatState ~= nil)
+    r.chk("y se sabe si mandas tu", T.IsTurnAdmin ~= nil)
+
+    local store = _G.HarfordTurnOrderStore
+    local entradas = (type(store) == "table" and type(store.entries) == "table") and #store.entries or 0
+    if entradas == 0 then
+        r.manual("Mesa vacia: monta un combate con 3-4 tarjetas para poder medir el estado.")
+        return
+    end
+    r.chk("hay combatientes montados", entradas > 0, entradas .. " entradas")
+
+    -- El tamanio REAL de tu mesa ahora mismo, que es lo que decide si se trocea.
+    local S = _G.HarfordSync
+    local Codec = _G.HarfordTurnsCodec
+    if S and Codec and Codec.SerializeEntry then
+        local partes = {}
+        for _, e in ipairs(store.entries) do partes[#partes + 1] = Codec.SerializeEntry(e) end
+        local payload = table.concat(partes, ";")
+        local comprimido = S.Comprimir and S.Comprimir(payload)
+        local trozos = math.ceil(#payload / 200)
+        local trozosC = comprimido and math.ceil(#comprimido / 200) or trozos
+        r.chk("la foto de TU mesa cabe en pocos trozos", trozosC <= 3,
+            #payload .. " B en " .. trozos .. " trozos -> " .. trozosC .. " comprimida")
+        -- El reensamblado es todo o nada y no hay acuse: basta perder UN trozo para que el receptor
+        -- descarte el estado entero, en silencio.
+        if trozosC > 3 then
+            r.manual("Tu mesa genera " .. trozosC .. " trozos aun comprimida: con esa cifra el "
+                .. "estado se pierde a menudo. Quita tarjetas o revisa que miembros llevan dentro.")
+        end
+    end
+
+    r.manual("Dale a Siguiente varias veces con OTRO cliente delante: el turno activo tiene que "
+        .. "moverse alli y salir el anuncio en su chat. Eso es lo que estaba roto.")
+    r.manual("Golpea a un NPC de la lista: su vida debe bajar tambien en el otro cliente.")
+    r.manual("Y haz /reload en mitad del combate: la ventana debe volver sola.")
+end)
+
 Grupo("tiradas", "la API publica de tiradas, y que registre la ultima", function(r)
     local api = _G.DND5E_ARC_API
     if not api then

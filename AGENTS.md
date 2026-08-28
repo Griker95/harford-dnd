@@ -2935,6 +2935,12 @@ para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja d
     donde es el nombre pelado. Y en `rewards.items` conviene emitir el `id`: con el,
     `FormatRewardItemForText` resuelve nombre, enlace e icono solo.
 
+**Los yunques comparten lo que estas creando.** Una clave vale si esta en el registro del
+proyecto O si la acabas de crear en el yunque de objetos. Sin eso, el orden natural de
+trabajo -- crear el objeto y despues su receta o la mision que lo da -- marcaba en rojo la
+clave que acababas de inventar. La marca distingue las dos procedencias ("lo estas creando
+ahora"), porque una todavia hay que pegarla en el registro y la otra no.
+
 Dos ideas ordenan los formularios:
 
 1. **Los campos se separan por naturaleza.** Los que se convierten en un `.forge item set …`

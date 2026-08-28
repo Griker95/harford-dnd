@@ -14,8 +14,10 @@
 --   una accion con `attackFrom = "spellAttack"` usa TU modificador de ataque de conjuros
 --   `damagePlusProficiency` suma tu PB al dano (el elemental: "1d8 + 2 + PB")
 --
--- Pendientes de tener su pagina: los demonios del Brujo (Anexo C) y la bestia del Cazador
--- (que no es un bloque fijo, sino cualquier bestia de desafio 1/2 o menor).
+-- COMPLETO (verificado 2026-08-28): las siete criaturas tienen pagina -- esbirro del CdM,
+-- elemental de agua del Mago y los cinco demonios del Brujo (Anexo C). La bestia del Cazador no
+-- lleva pagina A PROPOSITO: el manual dice "cualquier bestia" sin bestiario, asi que su bloque lo
+-- escribe el jugador en TRP3 y lo transforma HarfordDnDBeast, que entra por esta misma puerta.
 
 HarfordDnDCompanionsData = HarfordDnDCompanionsData or {}
 

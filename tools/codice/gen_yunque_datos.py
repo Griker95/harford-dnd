@@ -75,6 +75,23 @@ def idsDeReceta():
     return sorted(set(re.findall(r'\{\s*id\s*=\s*"([a-z0-9_]+)",\s*profession\s*=', t)))
 
 
+WOWHEAD = os.path.join(BASE, 'cotejo', 'objetos_wowhead.json')
+
+
+def objetosDeWow():
+    """id de WoW -> nombre. `outfit equip` toma el ID DEL OBJETO (negativo = displayid),
+    asi que con esto se puede vestir a un NPC buscando por nombre en vez de a ciegas."""
+    if not os.path.exists(WOWHEAD):
+        return []
+    wh = json.load(io.open(WOWHEAD, encoding='utf-8'))
+    out = []
+    for idOriginal, ficha in wh.items():
+        nombre = ficha.get('name') or ficha.get('classicName')
+        if nombre:
+            out.append([int(idOriginal), nombre])
+    return sorted(out)
+
+
 def pendientes():
     """Los objetos de la lista, en forma compacta para poder editarlos."""
     if not os.path.exists(PENDIENTES):
@@ -110,6 +127,7 @@ def main():
     print("Profesiones:          %d" % len(profs))
     print("Recetas existentes:   %d ids" % len(recetas))
     print("Categorias de contrato:%d" % len(categorias()))
+    print("Objetos de WoW:       %d  (para vestir NPCs)" % len(objetosDeWow()))
     print("Objetos pendientes:   %d  (editables desde la pagina)" % len(pend))
     sinDesc = sum(1 for p in pend if not p[11])
     print("   de esos sin descripcion: %d" % sinDesc)
@@ -120,6 +138,7 @@ def main():
         'recetaIds': recetas,
         'pendientes': pend,
         'categorias': categorias(),
+        'wow': objetosDeWow(),
     }
     bloque = ('/*DATOS_INICIO*/const DATOS=%s;/*DATOS_FIN*/'
               % json.dumps(datos, separators=(',', ':'), ensure_ascii=False))

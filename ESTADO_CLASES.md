@@ -82,7 +82,16 @@ y es *witch bolt*. Ver [`CONJUROS_PENDIENTES.md`](CONJUROS_PENDIENTES.md).
 
 Ordenados por cuántas clases desbloquean.
 
-### Criatura acompañante — 4 clases
+### Criatura acompañante — 4 clases — **RESUELTO (verificado 2026-08-28)**
+
+Las siete páginas existen en `HarfordDnDCompanionsData` y el Libro las abre con su flyout
+(invocar/despedir/ordenar): esbirro no-muerto (CdM), elemental de agua (Mago) y los cinco
+demonios del Brujo del Anexo C (guardia vil, manáfago, diablillo, súcubo, abisario), con la
+fórmula de PG por invocador y el coste de ordenar declarados. La bestia del Cazador va aparte
+por diseño: bloque libre en TRP3 transformado por `HarfordDnDBeast`. La nota de "pendiente"
+llevaba tiempo desfasada.
+
+#### El detalle histórico
 
 Todas comparten la misma forma en el manual: bloque de estadísticas propio,
 iniciativa compartida contigo pero turno inmediatamente después, y **solo toma

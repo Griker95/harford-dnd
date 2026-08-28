@@ -3532,7 +3532,12 @@ local function BookButtonOnClick(self)
     --
     -- Las que SI anuncian volverian a cobrar por el mismo gesto, asi que el click se marca: la
     -- segunda llamada devuelve lo que devolvio la primera y no toca nada.
-    if cat ~= "pasivo" and not self.feature.trap
+    -- Las acciones BASICAS quedan fuera del cobro de click: su coste se elige DENTRO del menu
+    -- (Correr puede ser accion, o adicional por Accion Astuta) y lo cobra el anuncio de la
+    -- seleccion con el coste elegido. Cobrar aqui gastaba la ACCION al abrir el menu, eligieras lo
+    -- que eligieras -- el anuncio posterior quedaba deduplicado por la marca de click y ya no
+    -- corregia nada.
+    if cat ~= "pasivo" and not self.feature.trap and not self.feature.basicAction
         and HarfordDnDConditions and HarfordDnDConditions.Turn then
         local T = HarfordDnDConditions.Turn
         if T.BeginClick then T.BeginClick(self.feature.id or self) end

@@ -169,4 +169,18 @@ do
     chk("razas, trasfondos y dotes tampoco tienen limbo", table.concat(limboF, ","), "")
 end
 
+-- ─── EL MENU DE COSTE COBRA LO ELEGIDO, NO EL CLICK ─────────────────────────
+-- Correr puede ser accion o, con Accion Astuta, adicional: el coste se elige DENTRO del menu. El
+-- repartidor cobraba el cast del rasgo AL ABRIRLO, gastando la accion eligieras lo que eligieras
+-- (el anuncio posterior quedaba deduplicado por la marca de click). Las acciones basicas quedan
+-- fuera del cobro de click: cobra el anuncio de la seleccion.
+print("El menu de coste cobra lo elegido")
+local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+chk("el repartidor exime a las acciones basicas",
+    panel:find('not self.feature.basicAction', 1, true) ~= nil, true)
+chk("y la seleccion anuncia con el coste elegido",
+    panel:find('cast = disparando and "reaccion" or coste.cast', 1, true) ~= nil, true)
+chk("bloqueando si no cabe",
+    panel:find("if AnnounceAbility(anuncio, { silencioso = vaATirar }) == false then return false end", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

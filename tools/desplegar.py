@@ -35,6 +35,11 @@ ADDONS = ['Harford', 'HarfordAdmin', 'HarfordDebug',
 SOLO_REVISAR = '--revisar' in sys.argv
 FORZAR = '--forzar' in sys.argv
 MARGEN_MINIMO = 25
+# Por debajo de este margen NO SE DESPLIEGA. Pasarse de los 200 locales no da un error legible en
+# el juego: el fichero no compila al cargar y el modulo entero DESAPARECE sin decir por que. Con 10
+# de margen el error salta aqui, con nombre y cifra, cuando aun hay sitio para arreglarlo en calma
+# (bloques do...end, ver CLAUDE.md).
+MARGEN_ERROR = 10
 
 MOJIBAKE = ['\u00c3\u0192', '\u00c3\u201a', '\u00c3\u00a2', '\u00e2\u20ac', '\ufffd']
 
@@ -91,7 +96,13 @@ for addon in ADDONS:
             continue
         libre = margen(f)
         if libre is not None:
-            avisos.append('%s: solo %d locales libres de 200' % (rel, libre))
+            if libre <= MARGEN_ERROR:
+                errores.append('%s: solo %d locales libres de 200 -- a esta distancia, el '
+                               'siguiente punado de locals tira el modulo entero y sin error '
+                               'visible. Mover codigo a bloques do...end antes de seguir.'
+                               % (rel, libre))
+            else:
+                avisos.append('%s: solo %d locales libres de 200' % (rel, libre))
         s = io.open(f, encoding='utf-8', errors='replace').read()
         crudo = io.open(f, 'rb').read()
         if crudo.startswith(b'\xef\xbb\xbf'):

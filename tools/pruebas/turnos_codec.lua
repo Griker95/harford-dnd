@@ -82,4 +82,35 @@ local combate = io.open("Harford/Frames/HarfordTurnsCombat.lua"):read("*a")
 chk("la foto se manda ANTES que el aviso",
     combate:find("SendState()", 1, true) < combate:find("SendCombatStart(combatientes)", 1, true), true)
 
+-- ─── EL AVISO DE TURNO SE BASTA SOLO ────────────────────────────────────────
+-- Avanzar el turno mandaba TAMBIEN la foto entera: 12 mensajes troceados por pulsacion, cuando el
+-- aviso ya lleva todo lo que el receptor necesita. Y basta perder UNO de los doce para que el
+-- receptor descarte el estado completo en silencio, porque no hay acuse ni reintento.
+local turnos = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
+print("El aviso de turno lleva el asalto")
+-- Va en el quinto hueco, que iba vacio desde que se retiro el avance por bloques: asi no cambia el
+-- numero de campos y un cliente sin actualizar lo ignora como ignoraba el hueco.
+chk("se envia", turnos:find("tostring(store.asalto or 0),", 1, true) ~= nil, true)
+chk("se recibe", turnos:find("local asaltoRecibido = SafeNumber(adminRaw, 0)", 1, true) ~= nil, true)
+-- Un cliente anterior manda ahi la fase (texto): `SafeNumber` la deja en 0 y se ignora, que es lo
+-- que se quiere -- no bajarle el asalto a nadie por recibir un aviso viejo.
+chk("y un aviso viejo no lo pisa", turnos:find("if asaltoRecibido > 0 then store.asalto = asaltoRecibido end", 1, true) ~= nil, true)
+-- `OnTurnChanged` lee `entry.asalto` para bajar las duraciones medidas en asaltos.
+chk("y la entrada se lo lleva puesta",
+    turnos:find("if asaltoRecibido > 0 and type(entry) == \"table\" then entry.asalto = asaltoRecibido end", 1, true) ~= nil, true)
+
+print("Avanzar y retroceder NO mandan la foto")
+chk("hay una marca local sin difusion", turnos:find("MarcarLocal = function()", 1, true) ~= nil, true)
+-- Se declara adelantada: se usa en `NextTurn`, muy por encima de donde se asigna. Una local
+-- declarada despues de usarse se compila como lectura de global -- o sea nil.
+chk("declarada antes de usarse",
+    turnos:find("local MarcarLocal", 1, true) < turnos:find("MarcarLocal = function()", 1, true), true)
+local nextIni = turnos:find("local function NextTurn()", 1, true)
+local nextFin = turnos:find("local function PrevTurn()", nextIni, true)
+chk("y avanzar ya no difunde la foto",
+    turnos:sub(nextIni, nextFin):find("MarkChanged()", 1, true) == nil, true)
+local prevFin = turnos:find("local function StartCombat", nextFin, true) or (nextFin + 3000)
+chk("retroceder tampoco",
+    turnos:sub(nextFin, prevFin):find("MarkChanged()", 1, true) == nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

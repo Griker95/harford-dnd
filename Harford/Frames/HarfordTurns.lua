@@ -684,7 +684,11 @@ local function SerializeTurnNotice()
         tostring(turnSerial or 0),
         tostring(index),
         tostring(#store.entries),
-        "",
+        -- El ASALTO. Este hueco iba vacio --era la fase del avance por bloques-- asi que entra sin
+        -- cambiar el numero de campos y un cliente sin actualizar lo ignora igual que antes.
+        -- Hace falta porque el avance ya no manda la foto entera, y el asalto viajaba en ella:
+        -- sin esto las duraciones medidas en asaltos dejarian de bajar en los demas clientes.
+        tostring(store.asalto or 0),
         Codec.SerializeTurnNoticeEntry(entry),
     }, "|")
 end
@@ -745,6 +749,11 @@ local function ApplyTurnNotice(message, sender)
 
     local store = EnsureStore()
     turnSerial = serial
+    -- El asalto viene en el aviso desde que el avance dejo de mandar la foto entera. Un cliente
+    -- anterior manda aqui la fase (texto), y `SafeNumber` la deja en 0: se ignora, que es lo que
+    -- se quiere -- no bajar el asalto de nadie por recibir un aviso viejo.
+    local asaltoRecibido = SafeNumber(adminRaw, 0)
+    if asaltoRecibido > 0 then store.asalto = asaltoRecibido end
 
     local entry = noticeEntry
     if activeIndex >= 1 and activeIndex <= #store.entries then
@@ -757,6 +766,9 @@ local function ApplyTurnNotice(message, sender)
     end
 
     TouchStore()
+    -- La entrada se lo lleva puesto: `HarfordDnDConditions.OnTurnChanged` lee `entry.asalto` para
+    -- bajar las duraciones medidas en asaltos.
+    if asaltoRecibido > 0 and type(entry) == "table" then entry.asalto = asaltoRecibido end
     PrintTurnNotice(entry, activeIndex, count, serial)
     AlertRoundStates(entry, activeIndex, serial)
     AlertTurnChanged(entry, activeIndex, serial)
@@ -1038,6 +1050,17 @@ local function ScheduleBroadcast()
         SendState()
     end
     if C_Timer and C_Timer.After then C_Timer.After(0.15, sendLater) else sendLater() end
+end
+
+local MarcarLocal
+
+-- Cambio LOCAL: se apunta y se repinta, pero no se manda la foto. Para lo que el aviso de turno
+-- ya cuenta por su cuenta -- avanzar y retroceder --, donde mandarla ademas era repetir con 12
+-- mensajes lo que ya iba en uno.
+MarcarLocal = function()
+    TouchStore()
+    RepintarProtegido(RefreshFrame)
+    RepintarProtegido(HarfordTurnOrderAPI.RefreshTurnMarker)
 end
 
 MarkChanged = function()
@@ -1966,7 +1989,11 @@ local function NextTurn()
         activa.asalto = store.asalto
         Print("|cffffff00Asalto " .. tostring(store.asalto) .. "|r")
     end
-    MarkChanged()
+    -- SIN mandar la foto: el aviso de turno lleva serial, indice, asalto y la entrada, que es todo
+    -- lo que el receptor necesita para avanzar. La lista no ha cambiado. Mandarla igual eran 12
+    -- mensajes troceados por pulsacion, y basta con perder UNO para que el receptor descarte el
+    -- estado entero en silencio -- no hay acuse ni reintento.
+    MarcarLocal()
     PrintTurnNotice(store.entries[store.activeIndex], store.activeIndex, #store.entries, turnSerial)
     AlertRoundStates(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     AlertTurnChanged(store.entries[store.activeIndex], store.activeIndex, turnSerial)
@@ -1986,7 +2013,7 @@ local function PrevTurn()
     ClampActiveIndex()
     EnsureActiveVisible()
     local turnSerial = AdvanceTurnSerial()
-    MarkChanged()
+    MarcarLocal()
     PrintTurnNotice(store.entries[store.activeIndex], store.activeIndex, #store.entries, turnSerial)
     AlertRoundStates(store.entries[store.activeIndex], store.activeIndex, turnSerial)
     AlertTurnChanged(store.entries[store.activeIndex], store.activeIndex, turnSerial)

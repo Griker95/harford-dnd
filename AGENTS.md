@@ -3429,6 +3429,18 @@ RAID, a todos a la vez, y no se puede comprimir para unos y no para otros en el 
 La garantia depende de que EpsilonLib SIGA incluyendo LibDeflate; si algun dia la quita, toca
 empaquetarla dentro de Harford, y el grupo `comprimir` de la bateria lo dice.
 
+**`EpsilonLib` es `RequiredDeps`, y en parte POR ESTO.** De ella sale LibDeflate. Sin esa
+declaracion el fallo era asimetrico y mudo: si un cliente la tiene y otro no, el que no la tiene
+DESCARTA EN SILENCIO todo lo comprimido --y antes le llegaba troceado y le funcionaba--, con un
+sintoma ("no me llega el equipo al inspeccionar") que se parece a otras diez cosas. Ya era una
+dependencia de hecho --`AddonCommands`, `PhaseAddonData`, `EventManager` en 13 ficheros, todos
+guardados con `if EpsilonLib and ...`-- asi que solo se hizo explicita: mejor no cargar que cargar
+a medias y callado. Anunciar la capacidad en un saludo NO habria bastado, porque la foto de turnos
+va por RAID, a todos a la vez, y no se puede comprimir para unos y no para otros en el mismo
+mensaje. La garantia depende de que EpsilonLib SIGA incluyendo LibDeflate (hoy la carga en
+`Lib/Lib.xml`); si algun dia la quita, toca empaquetarla dentro de Harford, y el grupo `comprimir`
+de la bateria lo dice con esas palabras.
+
 **NUNCA en el vault de fase.** Es otro transporte y otra cosa: alli trocea EpsilonLib en segmentos
 de 3000 caracteres, el SERVIDOR lo persiste (no hay perdida silenciosa que arreglar) y sobrescribir
 con menos datos **NO limpia los segmentos sobrantes** -- via real de corrupcion, la misma que sufre

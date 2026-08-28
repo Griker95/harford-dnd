@@ -3904,27 +3904,9 @@ DoWeaponAttack = function(options)
         bonusTxt = bonusTxt .. armorText
     end
 
-    -- Barrera consulta al defensor ANTES de anunciar, animar o aplicar dano. Si no
-    -- se activa, se reutiliza este d20; si se activa, la misma ruta tira uno nuevo.
-    if armorClass and hit and not options.reactionChecked
-        and HarfordDnDCombat and HarfordDnDCombat.RequestAttackReaction then
-        local originalOptions = options
-        local handled = HarfordDnDCombat.RequestAttackReaction("target", "attack_hit", function(forceReroll)
-            local retry = {}
-            for k, v in pairs(originalOptions) do retry[k] = v end
-            retry.reactionChecked = true
-            if not forceReroll then
-                retry.resolvedRoll = {
-                    chosen = chosen, ra = ra, rb = rb, critTag = critTag,
-                    modeTag = modeTag, resolvedMode = resolvedMode,
-                }
-            else
-                retry.resolvedRoll = nil
-            end
-            DoWeaponAttack(retry)
-        end)
-        if handled then return end
-    end
+    -- La consulta de Barrera al defensor se RETIRO (RequestAttackReaction devolvia false
+    -- siempre): no hay ventana de reaccion fiable entre clientes, y Barrera se anuncia y se
+    -- resuelve en mesa. El bloque que vivia aqui era inalcanzable desde entonces.
 
     -- El bono del arma va coloreado como cualquier otro bono de la linea: verde suma, rojo resta.
     local wmodLabel = ""
@@ -4498,17 +4480,8 @@ end
             bonusTxt = bonusTxt .. armorText
         end
 
-        -- Misma Barrera que los ataques de jugador: antes de emitir, animar o
-        -- aplicar dano. Sin Barrera se conserva este d20; con Barrera se relanza.
-        if armorClass and hit and not reactionChecked
-            and HarfordDnDCombat and HarfordDnDCombat.RequestAttackReaction then
-            local handled = HarfordDnDCombat.RequestAttackReaction("focus", "attack_hit", function(forceReroll)
-                RollActionAttack(action, true, forceReroll and nil or {
-                    chosen = chosen, ra = ra, rb = rb, critTag = critTag, modeTag = modeTag,
-                })
-            end)
-            if handled then return nil end
-        end
+        -- (La consulta de Barrera se retiro: ver el ataque de jugador. Inalcanzable desde
+        -- que RequestAttackReaction devuelve false siempre.)
 
         -- "Ataque <NOMBREFOCUS coloreado> <link de la accion>".
         local focusName = GetFocusColoredName()

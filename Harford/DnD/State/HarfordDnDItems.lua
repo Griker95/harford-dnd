@@ -250,13 +250,6 @@ local perfItems = { events = 0, processed = 0, ignored = 0, evicted = 0 }
 local scanTooltip
 local EMPTY_EQUIPMENT = {}
 
-local function CountTable(t)
-    local n = 0
-    if type(t) == "table" then
-        for _ in pairs(t) do n = n + 1 end
-    end
-    return n
-end
 
 local function CacheResolvedItem(itemLink, resolved)
     itemLink = tostring(itemLink or "")

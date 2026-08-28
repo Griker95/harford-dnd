@@ -1914,9 +1914,6 @@ local function FeatureUseAvailable(feature)
 end
 
 do
-    local function FeatureRechargeText(recharge)
-        return (recharge == "short") and "Descanso corto" or "Descanso largo"
-    end
 end
 
 local function WarnFeatureWithoutUses(feature)

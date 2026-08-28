@@ -325,19 +325,6 @@ local function IsBoardAuthority(sender)
       or tostring(sender or "") == tostring(boardAuthoritySender or "")
 end
 
-local function CountPublishedContracts()
-  local count = 0
-  local db = TC.GetDB and TC.GetDB()
-  if type(db) ~= "table" or type(db.contracts) ~= "table" then
-    return 0
-  end
-  for _, contract in ipairs(db.contracts) do
-    if type(contract) == "table" and contract.status ~= "draft" and contract.status ~= "archived" then
-      count = count + 1
-    end
-  end
-  return count
-end
 
 local function IsPublicContract(contract)
   return type(contract) == "table"

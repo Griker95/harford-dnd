@@ -256,10 +256,6 @@ local function TextToObjectives(text)
   return objectives
 end
 
-local function SetEditing(contract)
-  editingContractId = contract and contract.id or nil
-  DM.LoadEditingContract()
-end
 
 local function SaveEditing()
   if not TC.IsDMMode() then

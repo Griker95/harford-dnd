@@ -325,26 +325,6 @@ local function GetBackgroundTraits(draft)
     return out
 end
 
-local function GetClassTraits(draft)
-    local out = {}
-    for _, entry in ipairs(draft.classes or {}) do
-        local class = HarfordDnDBook.GetClass(entry.classId)
-        if class then
-            for _, feature in ipairs(class.features or {}) do
-                if (tonumber(feature.level) or 99) <= entry.level then
-                    out[#out + 1] = { feature = feature, source = "Clase", classId = class.id }
-                end
-            end
-            local subclass = HarfordDnDBook.GetSubclass(class.id, entry.subclassId)
-            for _, feature in ipairs((subclass and subclass.features) or {}) do
-                if (tonumber(feature.level) or 99) <= entry.level then
-                    out[#out + 1] = { feature = feature, source = "Subclase", classId = class.id }
-                end
-            end
-        end
-    end
-    return out
-end
 
 local function ChoiceText(feature, choices)
     local selected = choices[tostring(feature.id or "")] or {}

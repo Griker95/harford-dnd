@@ -27,10 +27,23 @@ local ESTACIONES = {
     -- { name = "Tema de la Compania", file = "Interface\\AddOns\\HarfordMusic\\Media\\compania.ogg" },
 }
 
+-- Lo escrito a mano arriba MAS lo que haya generado `tools/musica.py` en `Emisoras.lua`. Se suman
+-- en vez de elegir uno para poder mezclar pistas del cliente (a mano, por id) con ficheros propios
+-- (generados) en la misma radio.
+local function Todas()
+    local todas = {}
+    for _, e in ipairs(ESTACIONES) do todas[#todas + 1] = e end
+    for _, e in ipairs((HarfordMusic and HarfordMusic.EMISORAS_FICHERO) or {}) do
+        todas[#todas + 1] = e
+    end
+    return todas
+end
+
 local function Registrar()
     if not (HarfordCommunicator and HarfordCommunicator.RegisterRadioStations) then return end
-    if #ESTACIONES == 0 then return end
-    HarfordCommunicator.RegisterRadioStations(ESTACIONES)
+    local todas = Todas()
+    if #todas == 0 then return end
+    HarfordCommunicator.RegisterRadioStations(todas)
 end
 
 -- Se registra al cargar Y en `PLAYER_LOGIN`: `RequiredDeps` garantiza que Harford esta cargado,

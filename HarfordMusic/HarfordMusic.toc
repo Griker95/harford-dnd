@@ -5,4 +5,7 @@
 ## Version: 1.0.0
 ## RequiredDeps: Harford
 
+# Generado por `tools/musica.py` a partir de la carpeta de audio. Va primero para que el fichero
+# de abajo lo encuentre ya puesto.
+Emisoras.lua
 HarfordMusic.lua

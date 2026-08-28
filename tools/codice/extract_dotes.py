@@ -249,6 +249,7 @@ print("dotes que repetian el requisito en el texto: %d" % _nreq)
 
 for _d in dotes:
     if _d.get("desc"): _d["desc"] = limpiar(_d["desc"])
+    if _d.get("manual"): _d["manual"] = limpiar(_d["manual"])
     for _tr in _d.get("traits", []):
         if _tr.get("desc"): _tr["desc"] = limpiar(_tr["desc"])
 

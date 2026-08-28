@@ -41,8 +41,8 @@ API.CLASSES[#API.CLASSES + 1] =
                 { kind = "skillExpertise", skill = "Acrobacias" },
                 { kind = "flag", flag = "initiativeProfBonus" },
             } },
-            { id = "dh_dev_embestida", level = 3, name = "Embestida vil", type = "pasivo", description = "Cuando usas Momentum para Correr o Desengancharte, puedes moverte exactamente la mitad de tu velocidad en línea recta. Las criaturas que atraviesan tu recorrido reciben daño de fuego vil igual a tu dado de Caos.", effects = {} },
-            { id = "dh_dev_momentum_vengativo", level = 6, name = "Momentum vengativo", type = "pasivo", resourceGain = { key = "fel_point", amount = 1 }, description = "Cuando las dos tiradas de ataque de Mordida de Demonio impactan, recuperas 1 punto de Vil. La comprobacion de ambas tiradas sigue siendo manual.", effects = {} },
+            { id = "dh_dev_embestida", level = 3, name = "Embestida vil", type = "pasivo", description = "Cuando usas Momentum para Correr o Desengancharte, puedes moverte exactamente la mitad de tu velocidad en línea recta. Las criaturas que atraviesan tu recorrido reciben daño de fuego vil igual a tu dado de Caos (se tira y anuncia solo al usar Momentum).", effects = { { kind = "flag", flag = "felRush" } } },
+            { id = "dh_dev_momentum_vengativo", level = 6, name = "Momentum vengativo", type = "pasivo", description = "Cuando las dos tiradas de ataque de Mordida de Demonio impactan, recuperas 1 punto de Vil (automatico si la CA del objetivo se pudo resolver).", effects = { { kind = "flag", flag = "vengefulMomentum" } } },
         } },
         { id = "venganza", name = "Venganza", desc = "Defensa demoniaca que absorbe el castigo y lo devuelve.", features = {
             { id = "dh_ven_competencia", level = 3, name = "Competencia adicional (intimidacion)", type = "pasivo", description = "Pericia en Intimidación (competencia y bonus de competencia duplicado).", effects = {

@@ -2749,6 +2749,43 @@ do
     end
 end
 
+-- FURIA ELEMENTAL (Chaman Elemental): elige el tipo al que conviertes el daño elemental de tus
+-- conjuros. No es un lanzamiento: es un ajuste persistente por perfil que el Compendio consulta al
+-- construir cada conjuro. En do...end por el limite de 200 locales del fichero.
+do
+    local furyMenu = CreateFrame("Frame", "HarfordBookElementalFuryMenu", UIParent, "UIDropDownMenuTemplate")
+    local TIPOS = { "acid", "cold", "fire", "lightning", "thunder" }
+
+    UIDropDownMenu_Initialize(furyMenu, function()
+        local actual = tostring(HarfordDnDStore.GetValue("FuriaElemental", "") or "")
+        for _, key in ipairs(TIPOS) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = (HarfordDamageTypes and HarfordDamageTypes.GetLabel and HarfordDamageTypes.GetLabel(key)) or key
+            info.checked = (actual == key)
+            info.func = function()
+                HarfordDnDStore.SetValue("FuriaElemental", key)
+                Print("Furia elemental: tus conjuros elementales haran daño de "
+                    .. ((HarfordDamageTypes and HarfordDamageTypes.GetLabel and HarfordDamageTypes.GetLabel(key)) or key) .. ".")
+                CloseDropDownMenus()
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+        local info = UIDropDownMenu_CreateInfo()
+        info.text = "No cambiar (tipo original)"
+        info.checked = (actual == "")
+        info.func = function()
+            HarfordDnDStore.SetValue("FuriaElemental", "")
+            Print("Furia elemental desactivada: cada conjuro conserva su tipo.")
+            CloseDropDownMenus()
+        end
+        UIDropDownMenu_AddButton(info)
+    end)
+
+    function HarfordDnDStore.OpenElementalFuryMenu(feature, anchor)
+        ToggleDropDownMenu(1, nil, furyMenu, anchor or "cursor", 0, 0)
+    end
+end
+
 -- ABSOLUCION: PENITENCIA (Sacerdote Disciplina, nivel 2).
 --
 -- Gasta HASTA CINCO puntos de fe, y todo el efecto escala por punto, asi que ni el coste ni el
@@ -4114,6 +4151,9 @@ DoWeaponAttack = function(options)
         end
     end
     ConsumeMode()
+    -- Devuelve si ESTE golpe impacto (true/false), o nil si la CA no se pudo resolver: quien lo
+    -- consuma (Momentum vengativo) debe distinguir "fallo" de "no se sabe".
+    return hitFlag
 end
 
 local function IsPriestSpell(spell)

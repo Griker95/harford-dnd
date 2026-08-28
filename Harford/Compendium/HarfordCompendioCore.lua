@@ -744,6 +744,24 @@ function API.BuildAreaDefinition(spell, options)
     -- de cualquier conjuro con dano se comia la carga.
     -- Se MIRA sin gastar; el cobro real se hace al final, cuando ya se sabe que hay definicion
     -- que devolver. Cobrar aqui perdia la carga en las dos ramas que salen con nil.
+    -- FURIA ELEMENTAL (Chaman Elemental): si el jugador eligio un tipo en el Libro, cada
+    -- componente de daño ELEMENTAL del conjuro se convierte a ese tipo. Solo la lista del rasgo
+    -- (acido/frio/fuego/rayo/trueno): un daño necrotico o radiante no se toca. El ajuste vive por
+    -- perfil en el store y solo se puede fijar desde el boton del rasgo, que solo ven quienes lo
+    -- tienen; consultar tambien lo muestra convertido, que es lo que va a salir al lanzar.
+    do
+        local ELEMENTALES = { acid = true, cold = true, fire = true, lightning = true, thunder = true }
+        local furia = HarfordDnDStore and HarfordDnDStore.GetValue
+            and tostring(HarfordDnDStore.GetValue("FuriaElemental", "") or "") or ""
+        if damageComponents and ELEMENTALES[furia] then
+            for _, comp in ipairs(damageComponents) do
+                if ELEMENTALES[comp.damageType] and comp.damageType ~= furia then
+                    comp.damageType = furia
+                end
+            end
+        end
+    end
+
     local soloMirando = options and options.soloConsultar == true
     local cargaArcana = 0
     if not soloMirando and damageComponents and HarfordDnDStore

@@ -106,19 +106,20 @@ la acción de Esquivar salvo que gastes tu acción en ordenarle otra**.
 
 Es el bloqueo más rentable del proyecto.
 
-### Conversión puntos ↔ ranuras — 2 clases
+### Conversión puntos ↔ ranuras — RESUELTO
 
-Mago (Lanzamiento Flexible) y Sacerdote (Devoción) tienen la **misma tabla de
-costes** (2/3/5/6/7 para 1.º-5.º). Los rasgos existen y anuncian, pero no mueven
-las ranuras: hay que tocar `HarfordDnDMana`.
+Mago (Lanzamiento Flexible) y Sacerdote (Devoción) convierten de verdad:
+`HarfordDnDMana` crea/consume ranuras (`SpellSlotsBonus`), el menú del Libro
+elige el nivel y el descanso largo hace desaparecer las creadas. Candado en
+`tools/pruebas/furia_y_riders.lua`.
 
-### Otros
+### Otros — RESUELTOS
 
-| Bloqueo | Clase |
+| Bloqueo | Resolución |
 |---|---|
-| Condición en los efectos `bonus` | Guerrero (4 estilos de combate aplican su bono sin condición) |
-| *Riders* sobre otro rasgo | Cazador de Demonios (Embestida Vil, Moméntum Vengativo) |
-| Sustituir el tipo de daño de un conjuro | Chamán (Furia Elemental) |
+| Estilos de combate sin condición | Flags `styleDefense/styleDueling/styleArchery/styleSharpshooter`; el motor los evalúa con el arma/armadura delante (suite `estilos_condicionales`) |
+| Riders del CdD | Embestida Vil tira y publica el dado de Caos al usar Momentum; Momentum Vengativo devuelve el punto de Vil si AMBAS mordidas impactan (CA resuelta) |
+| Furia Elemental (Chamán) | Botón en el Libro elige el tipo; el Compendio convierte los componentes elementales de cada conjuro (suite `furia_y_riders`) |
 
 ## Decisión de mesa pendiente
 

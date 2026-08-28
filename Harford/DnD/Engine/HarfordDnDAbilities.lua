@@ -63,19 +63,59 @@ HarfordDnDStore.UseDemonBite = function()
             description = "Tras atacar con un arma, gastas 1 punto de Vil para realizar dos ataques con arma como accion adicional.",
         }, { targetUnit = "target" })
     end
-    DoWeaponAttack({
+    local golpe1 = DoWeaponAttack({
         expectedTargetGuid = targetGuid,
         suppressAbilityDamage = true,
         demonBite = true,
         labelSuffix = "[Mordida de Demonio]",
     })
-    DoWeaponAttack({
+    local golpe2 = DoWeaponAttack({
         expectedTargetGuid = targetGuid,
         suppressAbilityDamage = true,
         demonBite = true,
         labelSuffix = "[Mordida de Demonio]",
     })
+    -- MOMENTUM VENGATIVO (Devoradora 6): si AMBOS impactan, recuperas el punto de Vil. Solo
+    -- cuando la CA se pudo resolver en los dos (true estricto): con nil no se sabe si impacto,
+    -- y devolver recurso por un golpe dudoso seria regalarlo -- ahi queda manual, como antes.
+    if golpe1 == true and golpe2 == true
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("vengefulMomentum") then
+        HarfordDnDStore.AdjustResourceCurrent("fel_point", 1)
+        if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+            HarfordDnDRolls.Broadcast({ type = "info",
+                label = "recupera 1 punto de Vil (Momentum vengativo: ambas mordidas impactan)" })
+        end
+    end
     return true
+end
+
+-- Dado de Caos del Cazador de Demonios, por su tabla de clase: d4 (niveles 2-4), d6 (5-8),
+-- d8 (9+). Con multiclase cuenta SOLO el nivel de Cazador de Demonios.
+local function ChaosDieSides()
+    local nivel = 0
+    for _, e in ipairs((HarfordDnDProgression and HarfordDnDProgression.GetClassLevels
+        and HarfordDnDProgression.GetClassLevels()) or {}) do
+        if tostring(e.classId) == "cazador_demonios" then nivel = nivel + (tonumber(e.level) or 0) end
+    end
+    if nivel >= 9 then return 8 end
+    if nivel >= 5 then return 6 end
+    if nivel >= 2 then return 4 end
+    return 0
+end
+
+-- EMBESTIDA VIL (Devoradora 3): rider de Momentum. Se tira el dado de Caos y se publica cuanto
+-- fuego vil recibe quien atraviese el recorrido; a quien se lo lleva lo decide la mesa (el
+-- recorrido es geometria del mundo que el cliente no ve), asi que no se aplica dano a nadie aqui.
+HarfordDnDStore.AnnounceFelRush = function()
+    local caras = ChaosDieSides()
+    if caras <= 0 then return end
+    local dano = (HarfordDnDCalc and HarfordDnDCalc.RollDie and HarfordDnDCalc.RollDie(caras))
+        or math.random(1, caras)
+    if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+        HarfordDnDRolls.Broadcast({ type = "info",
+            label = string.format("Embestida vil: 1d%d = %d de fuego vil a cada criatura que atraviese su recorrido", caras, dano) })
+    end
 end
 
 -- Sacerdocio de Elune: la Gracia consume Canalizar Divinidad y deja un estado

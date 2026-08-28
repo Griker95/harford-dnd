@@ -3099,6 +3099,14 @@ AnnounceAbility = function(feature, opciones)
         local amount = math.max(0, tonumber(feature.resourceGain.amount) or 0)
         if key ~= "" and amount > 0 then HarfordDnDStore.AdjustResourceCurrent(key, amount) end
     end
+    -- EMBESTIDA VIL (CdD Devoradora): rider sobre Momentum. Al usarlo con el rasgo desbloqueado
+    -- se tira y publica el dado de Caos del recorrido; el anuncio de Momentum ya salio.
+    if tostring(feature.id or "") == "dh_momentum" and not IsInspecting()
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("felRush")
+        and HarfordDnDStore and HarfordDnDStore.AnnounceFelRush then
+        HarfordDnDStore.AnnounceFelRush()
+    end
     return true
 end
 
@@ -3630,6 +3638,11 @@ local function BookButtonOnClick(self)
     elseif self.feature.actionKind == "atonement" then
         if HarfordDnDStore and HarfordDnDStore.OpenAtonementMenu then
             HarfordDnDStore.OpenAtonementMenu(self.feature, self)
+        end
+    elseif self.feature.actionKind == "elementalFury" then
+        -- Furia Elemental: elegir el tipo no es un lanzamiento, es configurar el siguiente.
+        if HarfordDnDStore and HarfordDnDStore.OpenElementalFuryMenu then
+            HarfordDnDStore.OpenElementalFuryMenu(self.feature, self)
         end
     elseif self.feature.actionKind == "slotConversion" then
         -- Lanzamiento Flexible / Devocion: el nivel del espacio se elige en un desplegable,

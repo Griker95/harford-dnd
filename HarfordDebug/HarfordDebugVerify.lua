@@ -110,6 +110,22 @@ Grupo("iconos", "que los iconos existan de verdad (uno inventado sale verde)", f
     end
     r.chk("los " .. total .. " iconos del catalogo existen", rotos == 0, rotos .. " rotos")
 
+    -- La tabla de NOMBRES es el fallback visual y donde acaban los iconos escritos a mano
+    -- (maniobras del Guerrero, Maldiciones del Brujo): tambien se comprueba entera. El arte
+    -- declarado puede no estar en este build aunque exista en retail.
+    if type(cat.names) == "table" then
+        local totalN, rotosN = 0, 0
+        for nombre, icono in pairs(cat.names) do
+            totalN = totalN + 1
+            local ruta = "Interface\\Icons\\" .. tostring(icono)
+            if not GetFileIDFromPath(ruta) then
+                rotosN = rotosN + 1
+                r.chk("icono por nombre inexistente: " .. tostring(nombre), false, icono)
+            end
+        end
+        r.chk("los " .. totalN .. " iconos por nombre existen", rotosN == 0, rotosN .. " rotos")
+    end
+
     -- Todo estado sin aura necesita icono propio; el que la tiene usa el del aura.
     local C = _G.HarfordDnDConditions
     if C and C.DEFS and C.GetIcon then

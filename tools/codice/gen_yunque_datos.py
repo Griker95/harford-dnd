@@ -92,6 +92,54 @@ def objetosDeWow():
     return sorted(out)
 
 
+ITEMS_LUA = 'Harford/DnD/State/HarfordDnDItems.lua'
+ARMAS_LUA = 'Harford/DnD/Data/HarfordDnDWeapons.lua'
+
+
+def reglasDeObjeto():
+    """Las etiquetas que el parser de descripcion reconoce DE VERDAD.
+
+    `HarfordDnDItems` lee la descripcion del objeto linea a linea y solo aplica como
+    mecanica las que casan con una etiqueta conocida. Si el Yunque ofreciera etiquetas
+    inventadas, el objeto saldria bonito y sin dar nada, y no habria forma de notarlo desde
+    el juego. Por eso salen de ahi y no de una lista escrita a mano.
+    """
+    if not os.path.exists(ITEMS_LUA):
+        return {}
+    t = io.open(ITEMS_LUA, encoding='utf-8').read()
+
+    def valores(nombre):
+        m = re.search(r'local %s = \{(.*?)\n\}' % nombre, t, re.S)
+        if not m:
+            return []
+        return sorted(set(re.findall(r'= "([^"]+)"', m.group(1))))
+
+    # De RULE_LABELS interesa la etiqueta que se escribe, no la clave interna: se toman las
+    # formas mas legibles de cada regla.
+    reglas = [
+        ["CA", "armorClass", "bonus"],
+        ["Armadura", "armorClass", "absoluto"],
+        ["Iniciativa", "initiative", "bonus"],
+        ["Ataque", "weaponAttack", "bonus"],
+        ["Daño", "weaponDamage", "bonus"],
+        ["Ataque conjuro", "spellAttack", "bonus"],
+        ["CD conjuro", "spellDC", "bonus"],
+    ]
+    return {
+        'reglas': reglas,
+        'caracteristicas': valores('ABILITY_ALIASES'),
+        'habilidades': valores('SKILL_ALIASES'),
+        'tiposDano': valores('DAMAGE_TYPE_ALIASES'),
+    }
+
+
+def armasDnD():
+    if not os.path.exists(ARMAS_LUA):
+        return []
+    t = io.open(ARMAS_LUA, encoding='utf-8').read()
+    return re.findall(r'key="([^"]+)"', t)
+
+
 def pendientes():
     """Los objetos de la lista, en forma compacta para poder editarlos."""
     if not os.path.exists(PENDIENTES):
@@ -128,6 +176,11 @@ def main():
     print("Recetas existentes:   %d ids" % len(recetas))
     print("Categorias de contrato:%d" % len(categorias()))
     print("Objetos de WoW:       %d  (para vestir NPCs)" % len(objetosDeWow()))
+    r = reglasDeObjeto()
+    print("Reglas de objeto:     %d etiquetas, %d habilidades, %d tipos de dano"
+          % (len(r.get("reglas", [])), len(r.get("habilidades", [])),
+             len(r.get("tiposDano", []))))
+    print("Armas D&D:            %d" % len(armasDnD()))
     print("Objetos pendientes:   %d  (editables desde la pagina)" % len(pend))
     sinDesc = sum(1 for p in pend if not p[11])
     print("   de esos sin descripcion: %d" % sinDesc)
@@ -139,6 +192,8 @@ def main():
         'pendientes': pend,
         'categorias': categorias(),
         'wow': objetosDeWow(),
+        'reglas': reglasDeObjeto(),
+        'armasDnD': armasDnD(),
     }
     bloque = ('/*DATOS_INICIO*/const DATOS=%s;/*DATOS_FIN*/'
               % json.dumps(datos, separators=(',', ':'), ensure_ascii=False))

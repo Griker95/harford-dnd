@@ -3399,7 +3399,17 @@ Tres cambios, por orden de importancia:
 
 La compresion vive en **`HarfordSync.Comprimir` / `.Descomprimir`**, no en cada sistema: es el
 transporte y la usan varios. Duplicarla seria tener dos formatos de cable que divergen sin avisar.
-Aplicada ya en la foto de turnos y en `DNDEQUIP` (equipo completo: 1210 bytes / 7 trozos -> 360 / 2).
+Aplicada en la foto de turnos (2398 B / 12 trozos -> 295 / 2), en `DNDEQUIP` (equipo completo:
+1210 / 7 -> 360 / 2) y en `DNDCLASS` (progresion multiclase nivel 6: 662 / 4 -> 246 / 2).
+
+**Al anadir un sistema hay que tocar DOS sitios**: comprimir en el envio y deshacer en su
+deserializador. Olvidar el segundo no da error -- los mensajes llegan y se descartan en silencio,
+que es justo el fallo que se persigue. La suite `progresion` cuenta las dos apariciones para que no
+se quede a medias.
+
+**Loot resuelto y snapshots de reputacion quedan FUERA por ahora**: escapan el payload
+(`EscapeProgressionText`) ANTES de trocear, asi que el orden con la compresion hay que pensarlo
+aparte. No es que no compensen; es que no es el mismo cambio.
 
 **Por que comprimir y no arreglar el troceado.** El fallo es MULTIPLICATIVO: tienen que llegar
 TODOS los trozos, asi que con 12 trozos y un 1% de perdida por mensaje falla el 11,4% de los

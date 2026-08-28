@@ -186,12 +186,16 @@ do
     end
 end
 
--- El receptor lo deshace en `DeserializeDnDEquipment`, que cubre las DOS rutas: mensaje suelto y
+-- El receptor lo deshace en el deserializador, que cubre las DOS rutas: mensaje suelto y
 -- reensamblado por trozos, porque el segundo acaba llamando al primero.
 do
     local sync = io.open("Harford/Core/HarfordSync.lua"):read("*a")
-    chk("el receptor lo deshace",
-        sync:find("message = HarfordSync.Descomprimir(message)", 1, true) ~= nil, true)
+    local _, veces = sync:gsub("message = HarfordSync%.Descomprimir%(message%)", "")
+    -- DOS: equipo y progresion. Si alguien anade un tercer sistema comprimido y olvida el receptor,
+    -- los mensajes llegan y se descartan en silencio -- que es justo el fallo que se persigue.
+    chk("el receptor lo deshace, en equipo Y progresion", veces, 2)
+    local _, envios = sync:gsub("HarfordSync%.Comprimir%(payload%) or payload", "")
+    chk("y se comprime en los dos envios", envios, 2)
     -- Y solo se comprime lo que NO cabe en un mensaje: por debajo de eso se manda en claro y lo
     -- entiende cualquier cliente, incluido uno sin actualizar.
     chk("solo lo que no cabe",

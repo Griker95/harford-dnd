@@ -798,6 +798,10 @@ end
 -- inspeccion (DNDINSCLASS): el receptor NO debe importarlo a persistencia, solo cachearlo.
 function HarfordSync.DeserializeDnDClassProgression(message)
     if type(message) ~= "string" then return nil, nil end
+    -- Puede venir comprimida. Se deshace aqui, que cubre las DOS rutas: el mensaje suelto y el
+    -- reensamblado por trozos, que acaba llamando a esta misma funcion.
+    message = HarfordSync.Descomprimir(message)
+    if not message then return nil, nil end
     local opcode, profileName, raw = message:match("^([^|]+)|([^|]+)|(.*)$")
     if (opcode ~= "DNDCLASS" and opcode ~= "DNDINSCLASS") or not profileName or profileName == "" then
         return nil, nil
@@ -879,6 +883,14 @@ function HarfordSync.SendDnDClassProgression(prefix, profileName, data, channel,
 
     opcode = tostring(opcode or "DNDCLASS")
     local payload = HarfordSync.SerializeDnDClassProgression(profileName, data, opcode)
+    if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
+        return HarfordSync.Send(prefix, payload, ch, target)
+    end
+
+    -- Solo lo que NO cabe: por debajo se manda en claro y lo entiende cualquier cliente. Una
+    -- progresion completa es texto muy repetitivo -- ids de rasgo, claves de eleccion -- y encoge
+    -- mucho, que es lo que quita trozos y con ellos las oportunidades de perder uno.
+    payload = HarfordSync.Comprimir(payload) or payload
     if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
         return HarfordSync.Send(prefix, payload, ch, target)
     end

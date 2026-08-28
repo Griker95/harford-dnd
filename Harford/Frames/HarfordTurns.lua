@@ -397,12 +397,30 @@ local function IsTurnAdmin()
         and HarfordAuthority.CanUseDMTools() == true
 end
 
+-- Una economia de turno VACIA no es un combate. `Turn.Reset` la escribe en cada cambio de turno
+-- --incluso a cero, para que una recarga no resucite lo del turno anterior--, asi que la tabla
+-- existe casi siempre; tomarla por senal de combate hacia saltar la caducidad con la mesa vacia y
+-- anunciar "se retiro un combate abandonado" cuando no habia ninguno.
+local function EconomiaConAlgo(economia)
+    if type(economia) ~= "table" then return false end
+    if (tonumber(economia.ataques) or 0) > 0 then return true end
+    for _, v in pairs(economia.spent or {}) do
+        if (tonumber(v) or 0) > 0 then return true end
+    end
+    for _, v in pairs(economia.extra or {}) do
+        if (tonumber(v) or 0) > 0 then return true end
+    end
+    return false
+end
+
 local function PurgeStaleEntries()
     local store = EnsureStore()
     -- No se sale por lista vacia: lo que caduca es el COMBATE, y su estado puede haber quedado
     -- puesto sin entradas. Si no hay ni entradas ni estado no hay nada que hacer.
     if #store.entries == 0 and store.estado == nil and not store.movimiento
-        and not store.economia then
+        and not EconomiaConAlgo(store.economia) then
+        -- Se limpia el resto vacio de todas formas, pero EN SILENCIO: no habia combate que retirar.
+        store.economia = nil
         return false
     end
     local ahora = (time and time()) or 0
@@ -2480,7 +2498,18 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             C_Timer.After(12, function()
                 if (ULTIMA_FOTO_VISTA or 0) >= alEntrar then return end
                 if PurgeStaleEntries() then
-                    Print("|cff808080Se retiro un combate abandonado.|r")
+                    -- Con el motivo: "se retiro un combate abandonado" a secas no deja saber si
+                    -- tiene razon. Con la edad y el limite, el propio aviso se explica -- y si el
+                    -- limite sale de 15 min siendo tu quien manda, es que el permiso de DM aun no
+                    -- estaba listo al entrar.
+                    local p = HarfordTurnOrderAPI.ultimaPurga or {}
+                    local edad = (tonumber(p.ahora) or 0) - (tonumber(p.sello) or 0)
+                    Print(string.format(
+                        "|cff808080Se retiro un combate abandonado|r (%s; limite %d min porque %s).",
+                        (p.motivo == "sin sello") and "sin sello de tiempo"
+                            or string.format("sin tocar desde hace %d min", math.floor(edad / 60)),
+                        math.floor((tonumber(p.limite) or 0) / 60),
+                        p.mandaba and "mandas tu" or "no mandas tu"))
                 end
             end)
         else

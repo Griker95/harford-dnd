@@ -7,17 +7,19 @@ local src = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
 -- trozo se coge por partes: el almacen y el sello por un lado, la limpieza por otro.
 local i = assert(src:find("local function EnsureStore"))
 local fin = assert(src:find("\nlocal STALE_SECONDS", i))
+-- `EconomiaConAlgo` va en el trozo: la limpieza la llama, y sin ella seria un global nil.
+local p0 = assert(src:find("local function EconomiaConAlgo"))
 local p1 = assert(src:find("local function PurgeStaleEntries"))
 local p2 = assert(src:find("\n    return true\nend", p1))
 -- Los dos limites van en el trozo: la limpieza los compara, y sin ellos serian globales nil.
 local lim1 = assert(src:find("local STALE_SECONDS = "))
 local lim2 = assert(src:find("\n", assert(src:find("local STALE_SECONDS_DM = "))))
 local bloque = src:sub(i, fin) .. "\n" .. src:sub(lim1, lim2)
-    .. src:sub(p1, p2 + #"\n    return true\nend")
+    .. src:sub(p0, p2 + #"\n    return true\nend")
     .. "\nreturn TouchStore, PurgeStaleEntries"
 local AHORA = 1000000
 -- Sin ser DM: el margen corto es el que se comprueba aqui.
-local env = { type = type, tonumber = tonumber, time = function() return AHORA end,
+local env = { type = type, tonumber = tonumber, time = function() return AHORA end, pairs = pairs,
               ipairs = ipairs, IsTurnAdmin = function() return false end,
               -- La limpieza apunta ahi por que lo hizo, para poder explicarlo despues.
               HarfordTurnOrderAPI = {} }
@@ -75,5 +77,21 @@ chk("tocada hace 5 horas -> ni el DM la salva", Purge(), true)
 env.IsTurnAdmin = function() return false end
 env.HarfordTurnOrderStore = { entries = {{kind="npc"}}, lastTouched = AHORA - 60*60 }
 chk("y sin mandar, esa misma hora se purga", Purge(), true)
+
+-- Una economia de turno VACIA no es un combate. `Turn.Reset` la escribe en CADA cambio de turno,
+-- aunque este a cero, para que una recarga no resucite lo del turno anterior: la tabla existe casi
+-- siempre. Tomarla por senal de combate hacia saltar la caducidad con la mesa vacia y anunciar
+-- "se retiro un combate abandonado" sin que hubiera ninguno -- eso es lo que salia en el chat una
+-- y otra vez, tuviera razon o no.
+print("Una economia vacia no es un combate")
+env.HarfordTurnOrderStore = { entries = {}, economia = { spent = {}, extra = {}, ataques = 0 } }
+chk("no anuncia nada", Purge(), false)
+chk("  y limpia el resto vacio, en silencio", tostring(env.HarfordTurnOrderStore.economia), "nil")
+
+env.HarfordTurnOrderStore = { entries = {}, economia = { spent = { action = 1 }, extra = {}, ataques = 0 } }
+chk("pero una economia GASTADA sin sello si caduca", Purge(), true)
+
+env.HarfordTurnOrderStore = { entries = {}, economia = { spent = {}, extra = {}, ataques = 2 } }
+chk("y unos ataques hechos, tambien", Purge(), true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

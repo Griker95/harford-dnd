@@ -175,8 +175,11 @@ local function ParseSpecialAction(block)
         dynamicDexterityDc = not dc and body:find("cd%s*8%s*%+%s*modificador de%s+destreza", 1) ~= nil,
         requiredActionName = Clean(body:match("ataque de%s+([%a]+)") or body:match("golpeas? con%s+([%a]+)") or ""),
         conditionId = "prone",
-        onHitExtraDamageDice = onHitExtra,
-        nextAttackExtraDamageDice = nextAttackExtra,
+        -- De SU propio texto. Antes leia dos locales de la funcion de ARRIBA --la que parsea el
+        -- ataque--, que aqui no existen: se resolvian como globales, o sea nil, y el dano
+        -- adicional de una accion especial no se aplicaba NUNCA. No daba error de ningun tipo.
+        onHitExtraDamageDice = body:match("sufre%s+(%d*d%d+)%s+de%s+da[nn]o%s+adicional"),
+        nextAttackExtraDamageDice = body:match("proximo ataque.-causa%s+(%d*d%d+)%s+de%s+da[nn]o%s+adicional"),
     }
 end
 

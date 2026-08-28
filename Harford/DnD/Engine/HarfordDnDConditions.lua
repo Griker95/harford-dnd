@@ -1755,6 +1755,13 @@ do
     function Turn.GetRemaining(kind)
         -- Lo que no es tuyo ahora mismo esta a cero, aunque no lo hayas gastado.
         if Turn.IsActive() and FUERA_DE_TURNO[tostring(kind or "")] and not Turn.IsMyTurn() then
+            -- La UNICA rendija del turno ajeno: una accion PREPARADA. Preparar existe exactamente
+            -- para esto -- pagaste tu accion por adelantado y comprometiste la reaccion --, asi
+            -- que con el estado `preparado` puesto la reaccion vuelve a estar disponible. Solo la
+            -- reaccion, y solo mientras dure el estado: dispararla lo retira y el cerrojo vuelve.
+            if tostring(kind) == "reaction" and API.Has and API.Has("player", "preparado") then
+                return math.max(0, Turn.GetBudget(kind) - Turn.GetSpent(kind))
+            end
             return 0
         end
         return math.max(0, Turn.GetBudget(kind) - Turn.GetSpent(kind))

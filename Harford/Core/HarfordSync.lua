@@ -870,71 +870,81 @@ function HarfordSync.DeserializeDnDClassProgression(message)
     return profileName, data, isInspect
 end
 
--- opcode: "DNDCLASS" (sync normal -> import) o "DNDINSCLASS" (inspeccion -> solo cache).
-function HarfordSync.SendDnDClassProgression(prefix, profileName, data, channel, target, opcode)
-    local ch = channel
-    if (not ch or ch == "") and (target and target ~= "") then
-        ch = "WHISPER"
-    end
-    ch = ch or HarfordSync.BestChannel()
-    if not ch or ch == "" then
-        return false, "Sin canal disponible"
-    end
-
-    opcode = tostring(opcode or "DNDCLASS")
-    local payload = HarfordSync.SerializeDnDClassProgression(profileName, data, opcode)
+-- ─── ENVIO Y RECEPCION TROCEADOS, COMPARTIDOS ──────────────────────────────
+-- Progresion y equipo tenian cada uno una COPIA de esto, y la duplicacion ya costo: la compresion
+-- hubo que anadirla dos veces, y el dia que una copia cambie y la otra no, el fallo sera mudo.
+-- Un solo camino: mensaje unico si cabe, comprimir si no, trocear lo que siga sin caber.
+local function EnviarPayloadTroceado(prefix, payload, ch, target, opcodeChunk)
     if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
         return HarfordSync.Send(prefix, payload, ch, target)
     end
-
-    -- Solo lo que NO cabe: por debajo se manda en claro y lo entiende cualquier cliente. Una
-    -- progresion completa es texto muy repetitivo -- ids de rasgo, claves de eleccion -- y encoge
-    -- mucho, que es lo que quita trozos y con ellos las oportunidades de perder uno.
+    -- Solo lo que NO cabe: por debajo se manda en claro y lo entiende cualquier cliente, incluso
+    -- sin actualizar. Estos payloads son texto repetitivo y encogen mucho: menos trozos, menos
+    -- oportunidades de perder uno (no hay acuse ni reintento).
     payload = HarfordSync.Comprimir(payload) or payload
     if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
         return HarfordSync.Send(prefix, payload, ch, target)
     end
-
     local transferId = tostring((GetServerTime and GetServerTime()) or time() or 0) .. tostring(math.random(1000, 9999))
     local total = math.max(1, math.ceil(#payload / CLASS_CHUNK_BYTES))
     for i = 1, total do
         local chunk = payload:sub(((i - 1) * CLASS_CHUNK_BYTES) + 1, i * CLASS_CHUNK_BYTES)
-        local ok, err = HarfordSync.Send(prefix, table.concat({ opcode .. "C", transferId, tostring(i), tostring(total), chunk }, "|"), ch, target)
+        local ok, err = HarfordSync.Send(prefix, table.concat({ opcodeChunk, transferId, tostring(i), tostring(total), chunk }, "|"), ch, target)
         if not ok then return false, err end
     end
     return true
 end
 
-function HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
+-- El canal por defecto de estos envios: WHISPER si hay target, el mejor canal de grupo si no.
+local function CanalDeEnvio(channel, target)
+    local ch = channel
+    if (not ch or ch == "") and (target and target ~= "") then ch = "WHISPER" end
+    return ch or HarfordSync.BestChannel()
+end
+
+-- Reensamblado todo-o-nada de un payload troceado; devuelve lo que devuelva `deserializar`
+-- cuando llega el ultimo trozo, o nil,nil mientras falten.
+local function RecibirPayloadTroceado(buffers, message, sender, opA, opB, deserializar)
     local opcode, transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^([^|]+)|([^|]+)|([^|]+)|([^|]+)|(.*)$")
-    if opcode ~= "DNDCLASSC" and opcode ~= "DNDINSCLASSC" then return nil, nil end
+    if opcode ~= opA and opcode ~= opB then return nil, nil end
     if not transferId then return nil, nil end
-    local index = tonumber(indexRaw)
-    local total = tonumber(totalRaw)
+    local index, total = tonumber(indexRaw), tonumber(totalRaw)
     if not index or not total or index < 1 or index > total or total > 50 then
         return nil, nil
     end
-
     local key = tostring(sender or "") .. ":" .. transferId
-    PruneChunkBuffers(classProgressionChunkBuffers)
-    local buffer = classProgressionChunkBuffers[key]
+    PruneChunkBuffers(buffers)
+    local buffer = buffers[key]
     if not buffer or buffer.total ~= total then
         buffer = { total = total, received = 0, chunks = {}, createdAt = Now() }
-        classProgressionChunkBuffers[key] = buffer
+        buffers[key] = buffer
     end
     if not buffer.chunks[index] then
         buffer.chunks[index] = chunk
         buffer.received = buffer.received + 1
     end
     if buffer.received < total then return nil, nil end
-
     local parts = {}
     for i = 1, total do
         if not buffer.chunks[i] then return nil, nil end
         parts[i] = buffer.chunks[i]
     end
-    classProgressionChunkBuffers[key] = nil
-    return HarfordSync.DeserializeDnDClassProgression(table.concat(parts))
+    buffers[key] = nil
+    return deserializar(table.concat(parts))
+end
+
+-- opcode: "DNDCLASS" (sync normal -> import) o "DNDINSCLASS" (inspeccion -> solo cache).
+function HarfordSync.SendDnDClassProgression(prefix, profileName, data, channel, target, opcode)
+    local ch = CanalDeEnvio(channel, target)
+    if not ch or ch == "" then return false, "Sin canal disponible" end
+    opcode = tostring(opcode or "DNDCLASS")
+    local payload = HarfordSync.SerializeDnDClassProgression(profileName, data, opcode)
+    return EnviarPayloadTroceado(prefix, payload, ch, target, opcode .. "C")
+end
+
+function HarfordSync.ReceiveDnDClassProgressionChunk(message, sender)
+    return RecibirPayloadTroceado(classProgressionChunkBuffers, message, sender,
+        "DNDCLASSC", "DNDINSCLASSC", HarfordSync.DeserializeDnDClassProgression)
 end
 
 -- ---------------------------------------------------------------------------
@@ -1057,68 +1067,16 @@ end
 
 -- opcode: "DNDEQUIP" (sync normal -> import) o "DNDINSEQUIP" (inspeccion -> solo cache).
 function HarfordSync.SendDnDEquipment(prefix, profileName, equipment, channel, target, opcode)
-    local ch = channel
-    if (not ch or ch == "") and (target and target ~= "") then
-        ch = "WHISPER"
-    end
-    ch = ch or HarfordSync.BestChannel()
-    if not ch or ch == "" then
-        return false, "Sin canal disponible"
-    end
-
+    local ch = CanalDeEnvio(channel, target)
+    if not ch or ch == "" then return false, "Sin canal disponible" end
     opcode = tostring(opcode or "DNDEQUIP")
     local payload = HarfordSync.SerializeDnDEquipment(profileName, equipment, opcode)
-    if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
-        return HarfordSync.Send(prefix, payload, ch, target)
-    end
-
-    -- Solo lo que NO cabe: por debajo de un mensaje se manda en claro y lo entiende cualquier
-    -- cliente. El equipo comprime muy bien -- son item links repetidos con la misma estructura.
-    payload = HarfordSync.Comprimir(payload) or payload
-    if #payload <= HarfordSync.MAX_RESOURCE_MESSAGE_BYTES then
-        return HarfordSync.Send(prefix, payload, ch, target)
-    end
-
-    local transferId = tostring((GetServerTime and GetServerTime()) or time() or 0) .. tostring(math.random(1000, 9999))
-    local total = math.max(1, math.ceil(#payload / CLASS_CHUNK_BYTES))
-    for i = 1, total do
-        local chunk = payload:sub(((i - 1) * CLASS_CHUNK_BYTES) + 1, i * CLASS_CHUNK_BYTES)
-        local ok, err = HarfordSync.Send(prefix, table.concat({ opcode .. "C", transferId, tostring(i), tostring(total), chunk }, "|"), ch, target)
-        if not ok then return false, err end
-    end
-    return true
+    return EnviarPayloadTroceado(prefix, payload, ch, target, opcode .. "C")
 end
 
 function HarfordSync.ReceiveDnDEquipmentChunk(message, sender)
-    local opcode, transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^([^|]+)|([^|]+)|([^|]+)|([^|]+)|(.*)$")
-    if opcode ~= "DNDEQUIPC" and opcode ~= "DNDINSEQUIPC" then return nil, nil end
-    if not transferId then return nil, nil end
-    local index = tonumber(indexRaw)
-    local total = tonumber(totalRaw)
-    if not index or not total or index < 1 or index > total or total > 50 then
-        return nil, nil
-    end
-
-    local key = tostring(sender or "") .. ":" .. transferId
-    PruneChunkBuffers(equipChunkBuffers)
-    local buffer = equipChunkBuffers[key]
-    if not buffer or buffer.total ~= total then
-        buffer = { total = total, received = 0, chunks = {}, createdAt = Now() }
-        equipChunkBuffers[key] = buffer
-    end
-    if not buffer.chunks[index] then
-        buffer.chunks[index] = chunk
-        buffer.received = buffer.received + 1
-    end
-    if buffer.received < total then return nil, nil end
-
-    local parts = {}
-    for i = 1, total do
-        if not buffer.chunks[i] then return nil, nil end
-        parts[i] = buffer.chunks[i]
-    end
-    equipChunkBuffers[key] = nil
-    return HarfordSync.DeserializeDnDEquipment(table.concat(parts))
+    return RecibirPayloadTroceado(equipChunkBuffers, message, sender,
+        "DNDEQUIPC", "DNDINSEQUIPC", HarfordSync.DeserializeDnDEquipment)
 end
 
 

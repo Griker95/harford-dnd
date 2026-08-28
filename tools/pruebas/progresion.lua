@@ -194,8 +194,15 @@ do
     -- DOS: equipo y progresion. Si alguien anade un tercer sistema comprimido y olvida el receptor,
     -- los mensajes llegan y se descartan en silencio -- que es justo el fallo que se persigue.
     chk("el receptor lo deshace, en equipo Y progresion", veces, 2)
+    -- El envio se DEDUPLICO: la compresion vive UNA vez, en el troceador compartido, y los dos
+    -- emisores pasan por el. Tener dos copias fue lo que obligo a anadir la compresion dos veces;
+    -- si esta cuenta vuelve a subir, alguien esta clonando el camino otra vez.
     local _, envios = sync:gsub("HarfordSync%.Comprimir%(payload%) or payload", "")
-    chk("y se comprime en los dos envios", envios, 2)
+    chk("la compresion vive UNA vez, en el troceador compartido", envios, 1)
+    local _, rutas = sync:gsub("EnviarPayloadTroceado%(prefix, payload, ch, target,", "")
+    chk("y los dos emisores pasan por el (2 llamadas + 1 definicion)", rutas, 3)
+    local _, rec = sync:gsub("RecibirPayloadTroceado%(", "")
+    chk("igual que los dos receptores (2 llamadas + 1 definicion)", rec, 3)
     -- Y solo se comprime lo que NO cabe en un mensaje: por debajo de eso se manda en claro y lo
     -- entiende cualquier cliente, incluido uno sin actualizar.
     chk("solo lo que no cabe",

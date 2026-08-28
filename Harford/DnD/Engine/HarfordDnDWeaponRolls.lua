@@ -381,8 +381,11 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
     for _, t in ipairs(dmgTypeOrder) do
         componentes[#componentes + 1] = { amount = dmgTypeMap[t].total, damageType = t }
     end
-    -- La etiqueta viaja con los componentes: es la que usara la victima al publicar.
-    return total, componentes, etiquetaDano
+    -- La etiqueta se devuelve SOLO si este cliente ha callado. Las dos decisiones --callarme yo y
+    -- publicar tu-- tienen que ser LA MISMA o salen dos lineas: mandar la etiqueta siempre hacia
+    -- que la victima publicara aunque el atacante hubiera publicado ya, que es justo lo que este
+    -- cambio venia a quitar. Atadas aqui no pueden divergir.
+    return total, componentes, (publicaLaVictima and etiquetaDano or nil)
 end
 
 local function ResolveWeaponManeuverAfterHitSave(data)

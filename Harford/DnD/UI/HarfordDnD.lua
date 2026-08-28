@@ -4670,7 +4670,9 @@ end
                 mode = "",
             })
         end
-        return total, rolledComponents, etiquetaDano
+        -- Igual que el arma: la etiqueta solo se devuelve si este cliente ha callado, o
+        -- publicarian los dos.
+        return total, rolledComponents, (publicaLaVictima and etiquetaDano or nil)
     end
 
     -- Fase 2 del combate NPC vs NPC: cuando el DM targetea al NPC victima cuyo GUID

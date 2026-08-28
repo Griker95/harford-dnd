@@ -2903,6 +2903,14 @@ para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja d
   referencian por CLAVE y se **autocompletan y validan contra el registro real**: una clave
   inventada deja la receta como pendiente para siempre sin decir nada, que es el mismo
   problema que el icono inexistente.
+- **NPC**: saca la cadena de `.phase forge npc ...` (36 comandos). **Los enumerados no salen
+  de la memoria**: el catalogo del cliente los trae TRUNCADOS -- corta en la primera coma,
+  la misma corrupcion que la descripcion de `forge item` --, asi que los 11 tipos de criatura
+  y los 5 rangos (0 Normal, 1 Elite, 2 Raro elite, 3 Jefe, 4 Raro) se sacaron del editor de
+  NPC de PhaseToolkit, que es quien los manda de verdad. Lo del envainado sigue truncado y
+  por eso se ofrece por numero, sin etiquetas inventadas. Solo se emite lo que se toca.
+  Queda fuera `outfit` (raza, sexo, pelo y los once huecos de equipo), que necesita
+  displayids de equipo.
 - **Gossip**: NO saca una tirada de comandos, saca un **guion**. `text add` y `option add`
   actuan sobre **la pagina abierta en la ventana de gossip**, asi que un arbol de dialogo no
   se puede montar de una tacada: hay que navegar por el juego. El guion intercala los pasos

@@ -245,6 +245,7 @@ tr:last-child td{border-bottom:none}
   <button type="button" role="tab" data-yunque="recetas" aria-selected="false">Recetas</button>
   <button type="button" role="tab" data-yunque="misiones" aria-selected="false">Misiones</button>
   <button type="button" role="tab" data-yunque="gossip" aria-selected="false">Gossip</button>
+  <button type="button" role="tab" data-yunque="npc" aria-selected="false">NPC</button>
 </div>
 
 <!-- ══════════════════════ OBJETOS ══════════════════════ -->
@@ -698,6 +699,122 @@ tr:last-child td{border-bottom:none}
       <h3><span>El guion <span class="chip" id="nPasos">0</span></span>
         <button type="button" data-copia="outGos">Copiar</button></h3>
       <pre id="outGos">—</pre>
+    </div>
+  </aside>
+</div>
+</section>
+
+<!-- ══════════════════════ NPC ══════════════════════ -->
+<section class="panel" id="p-npc" hidden>
+<p class="aviso">
+  Sale la cadena de <code>.phase forge npc …</code> para montar la plantilla. Solo se envía
+  lo que toques: los interruptores en <b>Sin tocar</b> no generan comando.
+</p>
+
+<div class="rejilla">
+  <form id="fn" autocomplete="off">
+    <fieldset class="comando">
+      <legend><span class="leyenda"><b>Identidad</b>
+        <span>lo que se ve al mirarlo</span></span></legend>
+      <div class="campos">
+        <div class="campo ancho">
+          <label for="nNombre">Nombre</label>
+          <input id="nNombre" placeholder="Guardia Enrique Vela">
+        </div>
+        <div class="campo ancho">
+          <label for="nSub">Subtítulo</label>
+          <input id="nSub" placeholder="Guardia de la Puerta del Vado">
+          <span class="pista">Va bajo el nombre, entre &lt;&gt;.</span>
+        </div>
+        <div class="campo ancho">
+          <label for="nHembra">Nombre en femenino</label>
+          <input id="nHembra" placeholder="Opcional">
+          <span class="pista">Solo si el modelo puede salir de los dos sexos.</span>
+        </div>
+        <div class="campo"><label for="nMin">Nivel mínimo</label>
+          <input id="nMin" type="number" min="1" max="130" placeholder="—"></div>
+        <div class="campo"><label for="nMax">Nivel máximo</label>
+          <input id="nMax" type="number" min="1" max="130" placeholder="igual que el mínimo"></div>
+        <div class="campo"><label for="nRango">Rango</label><select id="nRango"></select></div>
+        <div class="campo"><label for="nTipo">Tipo de criatura</label><select id="nTipo"></select></div>
+        <div class="campo"><label for="nFaccion">Facción</label>
+          <input id="nFaccion" type="number" min="0" placeholder="id">
+          <span class="pista">Id de plantilla de facción.</span></div>
+      </div>
+    </fieldset>
+
+    <fieldset class="comando">
+      <legend><span class="leyenda"><b>Cuerpo</b>
+        <span>vida, tamaño y modelos</span></span></legend>
+      <div class="campos">
+        <div class="campo">
+          <label for="nVidaModo">Vida</label>
+          <select id="nVidaModo">
+            <option value="">Sin tocar</option>
+            <option value="exacta">Exacta</option>
+            <option value="mod">Multiplicador</option>
+          </select>
+        </div>
+        <div class="campo"><label for="nVida">Valor</label>
+          <input id="nVida" type="number" min="0" placeholder="—">
+          <span class="pista" id="pistaVida">&nbsp;</span></div>
+        <div class="campo"><label for="nMana">Maná (multiplicador)</label>
+          <input id="nMana" type="number" min="0" step="0.1" placeholder="—"></div>
+        <div class="campo"><label for="nEscala">Escala</label>
+          <input id="nEscala" type="number" min="0.1" step="0.05" placeholder="1"></div>
+        <div class="campo"><label for="nEnvaina">Envainado</label><select id="nEnvaina"></select></div>
+        <div class="campo"><label for="nMontura">Montura</label>
+          <input id="nMontura" type="number" min="0" placeholder="displayid"></div>
+      </div>
+      <p class="sub">Modelos</p>
+      <span class="pista">Cada uno con su escala y su peso: el peso reparte la probabilidad
+        entre los modelos cuando el NPC aparece.</span>
+      <div class="mats" id="displays"></div>
+      <div class="acciones" style="margin-top:9px">
+        <button type="button" id="addDisplay">Añadir modelo</button>
+      </div>
+    </fieldset>
+
+    <fieldset class="comando">
+      <legend><span class="leyenda"><b>Comportamiento</b>
+        <span>lo que queda sin tocar no genera comando</span></span></legend>
+      <div class="campos">
+        <div class="campo"><label for="t_clickable">Se puede clicar</label><select id="t_clickable"></select></div>
+        <div class="campo"><label for="t_displayfaction">Muestra su facción</label><select id="t_displayfaction"></select></div>
+        <div class="campo"><label for="t_fakeplayer">Nombre en azul</label><select id="t_fakeplayer"></select></div>
+        <div class="campo"><label for="t_flyable">Puede volar</label><select id="t_flyable"></select></div>
+        <div class="campo"><label for="t_regen">Regenera vida</label><select id="t_regen"></select></div>
+        <div class="campo"><label for="t_vehicle">Es un vehículo</label><select id="t_vehicle"></select></div>
+        <div class="campo"><label for="nHover">Flotar</label><select id="nHover"></select></div>
+      </div>
+      <p class="sub">Auras</p>
+      <div class="mats" id="auras"></div>
+      <div class="acciones" style="margin-top:9px">
+        <button type="button" id="addAura">Añadir aura</button>
+      </div>
+      <p class="sub">Armas</p>
+      <div class="mats" id="armas"></div>
+      <div class="acciones" style="margin-top:9px">
+        <button type="button" id="addArma">Añadir arma</button>
+      </div>
+    </fieldset>
+
+    <div class="acciones">
+      <button type="button" id="limpiarNpc">Vaciar el formulario</button>
+    </div>
+  </form>
+
+  <aside class="lateral">
+    <div class="tooltip">
+      <div class="tt-nombre" id="nttNombre">NPC sin nombre</div>
+      <div class="tt-lineas" id="nttLineas"></div>
+      <div class="tt-mats" id="nttExtra"></div>
+      <div class="tt-pie" id="nttPie"></div>
+    </div>
+    <div class="salida">
+      <h3><span>Comandos <span class="chip" id="nCmdsNpc">0</span></span>
+        <button type="button" data-copia="outNpc">Copiar</button></h3>
+      <pre id="outNpc">—</pre>
     </div>
   </aside>
 </div>
@@ -1722,7 +1839,177 @@ function pintaGos(){
 $("gIcono").addEventListener("input", pintaGos);
 $("addPagina").onclick = nuevaPagina;
 
+// ══════════════════ YUNQUE DE NPC ══════════════════
+// Los enumerados NO salen de mi memoria: el catalogo del cliente los trae truncados -- corta
+// en la primera coma, la misma corrupcion que tiene la descripcion de `forge item` -- asi que
+// los tipos y los rangos se han sacado del editor de NPC de PhaseToolkit, que es quien los
+// usa de verdad.
+const TIPOS_CRIATURA = ["Beast","Dragonkin","Demon","Elemental","Giant","Undead","Humanoid",
+  "Critter","Mechanical","Totem","Pet"];
+// Los radios de PhaseToolkit mandan estos numeros.
+const RANGOS = [["","Sin tocar"],["0","Normal"],["1","Élite"],["2","Raro élite"],
+  ["3","Jefe"],["4","Raro"]];
+const HOVER = [["","Sin tocar"],["off","Nunca"],["dynamic","Solo en el aire"],["always","Siempre"]];
+// El catalogo corta los valores aceptados, asi que se ofrecen por numero y sin inventar
+// etiquetas que no constan.
+const ENVAINA_NPC = [["","Sin tocar"],["0","0 — sin envainar"],["1","1"],["2","2"],["3","3"],
+  ["4","4"],["5","5"],["6","6"],["7","7"]];
+const INTERRUPTORES = [
+  ["t_clickable","clickable"],["t_displayfaction","displayfaction"],
+  ["t_fakeplayer","fakeplayer"],["t_flyable","flyable"],
+  ["t_regen","regen"],["t_vehicle","vehicle"]
+];
+// El catalogo lo dice completo: 0 mano principal, 1 secundaria, 2 a distancia.
+const HUECOS_ARMA = [["0","Mano principal"],["1","Mano secundaria"],["2","A distancia"]];
+
+opciones($("nRango"), RANGOS);
+opciones($("nTipo"), [["","Sin tocar"]].concat(TIPOS_CRIATURA.map(t => [t, t])));
+opciones($("nHover"), HOVER);
+opciones($("nEnvaina"), ENVAINA_NPC);
+for (const [id] of INTERRUPTORES) opciones($(id), TRIESTADO);
+
+let displays = [];
+let auras = [];
+let armas = [];
+
+function npcActual(){
+  return {
+    nombre: $("nNombre").value.trim(), sub: $("nSub").value.trim(),
+    hembra: $("nHembra").value.trim(),
+    min: Number($("nMin").value) || 0, max: Number($("nMax").value) || 0,
+    rango: $("nRango").value, tipo: $("nTipo").value,
+    faccion: Number($("nFaccion").value) || 0,
+    vidaModo: $("nVidaModo").value, vida: Number($("nVida").value) || 0,
+    mana: Number($("nMana").value) || 0, escala: Number($("nEscala").value) || 0,
+    envaina: $("nEnvaina").value, montura: Number($("nMontura").value) || 0,
+    hover: $("nHover").value,
+    inter: Object.fromEntries(INTERRUPTORES.filter(([id]) => $(id).value)
+      .map(([id, cmd]) => [cmd, $(id).value])),
+    displays: displays.filter(d => d.id),
+    auras: auras.filter(a => a.id),
+    armas: armas.filter(a => a.entrada)
+  };
+}
+
+function comandosNpc(n){
+  const C = [];
+  C.push("phase forge npc create");
+  if (n.nombre) C.push("phase forge npc name " + n.nombre);
+  if (n.hembra) C.push("phase forge npc femalename " + n.hembra);
+  if (n.sub) C.push("phase forge npc subname " + n.sub);
+  // El maximo es opcional; sin el, el nivel queda fijo.
+  if (n.min) C.push("phase forge npc level " + n.min + (n.max && n.max !== n.min ? " " + n.max : ""));
+  if (n.rango) C.push("phase forge npc rank " + n.rango);
+  if (n.tipo) C.push("phase forge npc creaturetype " + n.tipo);
+  if (n.faccion) C.push("phase forge npc faction " + n.faccion);
+  if (n.vidaModo === "exacta" && n.vida) C.push("phase forge npc healthexact " + n.vida);
+  else if (n.vidaModo === "mod" && n.vida) C.push("phase forge npc health " + n.vida);
+  if (n.mana) C.push("phase forge npc mana " + n.mana);
+  if (n.escala) C.push("phase forge npc scale " + n.escala);
+  if (n.envaina) C.push("phase forge npc sheath " + n.envaina);
+  for (const d of n.displays)
+    C.push("phase forge npc displays add " + d.id + " " + (d.escala || 1) + " " + (d.peso || 1));
+  if (n.montura) C.push("phase forge npc mount " + n.montura);
+  for (const a of n.auras) C.push("phase forge npc aura " + a.id);
+  for (const a of n.armas)
+    C.push("phase forge npc weapon " + a.entrada + " " + a.hueco + (a.bonus ? " " + a.bonus : ""));
+  for (const [cmd, val] of Object.entries(n.inter)) C.push("phase forge npc " + cmd + " " + val);
+  if (n.hover) C.push("phase forge npc autohover " + n.hover);
+  return C;
+}
+
+// Las tres listas de NPC comparten forma: campos numericos con etiqueta.
+function filasNpc(caja, datos, campos, alPintar){
+  caja.innerHTML = "";
+  datos.forEach((d, i) => {
+    const fila = document.createElement("div"); fila.className = "mat";
+    campos.forEach(c => {
+      const campo = document.createElement("div"); campo.className = "campo";
+      if (c.opciones){
+        const sel = document.createElement("select");
+        sel.setAttribute("aria-label", c.etiqueta + " " + (i+1));
+        opciones(sel, c.opciones);
+        sel.value = d[c.clave];
+        sel.onchange = () => { d[c.clave] = sel.value; pintaNpc(); };
+        campo.append(sel);
+      } else {
+        const inp = document.createElement("input");
+        inp.type = "number"; inp.min = c.min !== undefined ? c.min : 0;
+        if (c.step) inp.step = c.step;
+        inp.value = d[c.clave] || ""; inp.placeholder = c.etiqueta;
+        inp.setAttribute("aria-label", c.etiqueta + " " + (i+1));
+        inp.oninput = () => { d[c.clave] = Number(inp.value) || 0; pintaNpc(); };
+        campo.append(inp);
+      }
+      if (c.ancho) campo.style.flex = "none", campo.style.width = c.ancho;
+      fila.append(campo);
+    });
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "quitar"; x.textContent = "×";
+    x.setAttribute("aria-label", "Quitar " + (i+1));
+    x.onclick = () => { datos.splice(i,1); alPintar(); pintaNpc(); };
+    fila.append(x); caja.append(fila);
+  });
+}
+const pintaDisplays = () => filasNpc($("displays"), displays, [
+  {clave:"id", etiqueta:"displayid"},
+  {clave:"escala", etiqueta:"escala", step:"0.05", ancho:"84px"},
+  {clave:"peso", etiqueta:"peso", ancho:"72px"}], pintaDisplays);
+const pintaAuras = () => filasNpc($("auras"), auras,
+  [{clave:"id", etiqueta:"spellid"}], pintaAuras);
+const pintaArmas = () => filasNpc($("armas"), armas, [
+  {clave:"entrada", etiqueta:"id del objeto"},
+  {clave:"hueco", etiqueta:"hueco", opciones:HUECOS_ARMA, ancho:"148px"},
+  {clave:"bonus", etiqueta:"bonus", ancho:"84px"}], pintaArmas);
+
+function pintaNpc(){
+  const n = npcActual();
+  $("pistaVida").textContent = n.vidaModo === "exacta" ? "Puntos de vida exactos."
+    : (n.vidaModo === "mod" ? "Multiplica la vida base." : " ");
+
+  $("nttNombre").textContent = n.nombre || "NPC sin nombre";
+  const l = [];
+  if (n.sub) l.push("<" + n.sub + ">");
+  const nivel = n.min ? ("Nivel " + n.min + (n.max && n.max !== n.min ? "-" + n.max : "")) : "";
+  const rango = (RANGOS.find(r => r[0] === n.rango) || ["",""])[1];
+  const cab = [nivel, n.rango && n.rango !== "0" ? rango : "", n.tipo].filter(Boolean);
+  if (cab.length) l.push(cab.join(" · "));
+  if (n.faccion) l.push("Facción " + n.faccion);
+  $("nttLineas").innerHTML = l.map(x => "<span>" + x.replace(/</g,"&lt;").replace(/>/g,"&gt;") + "</span>").join("");
+
+  const extra = [];
+  if (n.vidaModo && n.vida) extra.push('<div><span>Vida</span><b>' +
+    (n.vidaModo === "exacta" ? n.vida : "x" + n.vida) + "</b></div>");
+  if (n.escala) extra.push('<div><span>Escala</span><b>' + n.escala + "</b></div>");
+  for (const d of n.displays) extra.push('<div><span>Modelo ' + d.id +
+    '</span><b>peso ' + (d.peso || 1) + "</b></div>");
+  if (n.montura) extra.push('<div><span>Montura</span><b>' + n.montura + "</b></div>");
+  for (const a of n.auras) extra.push('<div><span>Aura</span><b>' + a.id + "</b></div>");
+  for (const a of n.armas) extra.push('<div><span>' +
+    (HUECOS_ARMA.find(h => h[0] === String(a.hueco)) || ["","arma"])[1] +
+    '</span><b>' + a.entrada + "</b></div>");
+  $("nttExtra").innerHTML = extra.join("");
+
+  const pie = Object.entries(n.inter).map(([c, v]) => c + " " + v);
+  if (n.hover) pie.push("autohover " + n.hover);
+  $("nttPie").innerHTML = pie.map(x => "<span>" + x + "</span>").join("");
+
+  const C = comandosNpc(n);
+  $("nCmdsNpc").textContent = C.length;
+  $("outNpc").textContent = C.join("\n");
+}
+$("fn").addEventListener("input", pintaNpc);
+$("fn").addEventListener("change", pintaNpc);
+$("addDisplay").onclick = () => { displays.push({id:0,escala:1,peso:1}); pintaDisplays(); pintaNpc(); };
+$("addAura").onclick = () => { auras.push({id:0}); pintaAuras(); pintaNpc(); };
+$("addArma").onclick = () => { armas.push({entrada:0,hueco:"0",bonus:0}); pintaArmas(); pintaNpc(); };
+$("limpiarNpc").onclick = () => {
+  $("fn").reset(); displays = []; auras = []; armas = [];
+  pintaDisplays(); pintaAuras(); pintaArmas(); pintaNpc(); $("nNombre").focus();
+};
+
 pintaListaObj(); pintaListaRec(); pintaListaMis();
 pintaMats(); pintaObjs(); pintaReps(); pintaPremios();
 refrescaSubclases(); pintaPaleta(); pintaRec(); pintaMis(); pintaPaginas(); pintaGos();
+pintaDisplays(); pintaAuras(); pintaArmas(); pintaNpc();
 </script>

@@ -2916,6 +2916,15 @@ para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja d
   enteras en el catalogo del cliente; la lista de huecos de `equip` esta truncada, asi que se
   ofrece el segundo argumento sin etiquetarlo, y los nombres de hueco para vaciar salen de
   los subcomandos reales de `outfit unequip`. Se vacia antes de vestir.
+- **Secuencias**: saca el bloque `Register` de `HarfordActionSequencePresets`. **El retardo
+  de cada paso es ABSOLUTO desde que arranca**, no un hueco respecto al anterior: el motor
+  programa un temporizador por paso en el mismo instante y los que comparten retardo salen
+  juntos. Por eso el orden del codigo NO es el orden de los hechos -- en `FistAttack` los
+  retardos van `0, 0.95, 0.25, 0.25` y suceden 0, 0.25, 0.25, 0.95, que leido asi tiene
+  sentido: golpe, impacto y sonido, y vuelta a postura. 65 de los 68 presets se leen
+  desordenados por eso y NO estan mal. El yunque ordena la previa y la salida por momento,
+  para que el archivo se lea como ocurre. Los tipos son los cinco que registra el motor
+  (`anim`, `cast`, `npccast`, `command`, `sound`) y se emiten con los alias de SpellCreator.
 - **Rutas**: guion, no tirada, por el mismo motivo que el gossip: `waypoints add` pone el
   nodo DONDE ESTAS TU y los `modify` van al nodo seleccionado, asi que la ruta hay que
   andarla. Se asume que el nodo recien anadido queda seleccionado, que es como se encadena

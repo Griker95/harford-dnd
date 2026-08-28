@@ -253,6 +253,7 @@ tr:last-child td{border-bottom:none}
   <button type="button" role="tab" data-yunque="gossip" aria-selected="false">Gossip</button>
   <button type="button" role="tab" data-yunque="npc" aria-selected="false">NPC</button>
   <button type="button" role="tab" data-yunque="rutas" aria-selected="false">Rutas</button>
+  <button type="button" role="tab" data-yunque="secuencias" aria-selected="false">Secuencias</button>
 </div>
 
 <!-- ══════════════════════ OBJETOS ══════════════════════ -->
@@ -933,6 +934,51 @@ tr:last-child td{border-bottom:none}
       <h3><span>El guion <span class="chip" id="nPasosW">0</span></span>
         <button type="button" data-copia="outRuta">Copiar</button></h3>
       <pre id="outRuta">—</pre>
+    </div>
+  </aside>
+</div>
+</section>
+
+<!-- ══════════════════════ SECUENCIAS ══════════════════════ -->
+<section class="panel" id="p-secuencias" hidden>
+<p class="aviso">
+  Sale el bloque <code>Register</code> para <code>HarfordActionSequencePresets</code>. Ojo
+  con el retardo: es <b>absoluto desde que arranca</b>, no un hueco respecto al paso
+  anterior. Por eso el orden en que los escribes no es el orden en que pasan, y la previa
+  los ordena por momento.
+</p>
+
+<div class="rejilla">
+  <form id="fs" autocomplete="off">
+    <fieldset class="interno">
+      <legend><span class="leyenda"><b>La secuencia</b>
+        <span>solo datos; el motor la ejecuta</span></span></legend>
+      <div class="campos">
+        <div class="campo ancho">
+          <label for="sNombre">Nombre</label>
+          <input id="sNombre" class="mono" placeholder="MartilloAtaque">
+          <span class="pista">Con el que se registra y se invoca.</span>
+        </div>
+      </div>
+      <p class="sub">Pasos <span class="pista" style="text-transform:none;letter-spacing:0">
+        &mdash; segundo · qué · con qué</span></p>
+      <div class="mats" id="pasos"></div>
+      <div class="acciones" style="margin-top:11px">
+        <button type="button" id="addPaso">Añadir paso</button>
+      </div>
+    </fieldset>
+  </form>
+
+  <aside class="lateral">
+    <div class="tooltip">
+      <div class="tt-nombre" id="sttNombre">Secuencia sin nombre</div>
+      <div class="tt-lineas" id="sttResumen"></div>
+      <div class="ruta" id="sttLinea"></div>
+    </div>
+    <div class="salida">
+      <h3><span>El bloque <span class="chip" id="nPasosS">0</span></span>
+        <button type="button" data-copia="outSec">Copiar</button></h3>
+      <pre id="outSec">—</pre>
     </div>
   </aside>
 </div>
@@ -2487,9 +2533,158 @@ $("addNodo").onclick = () => {
   pintaNodos(); pintaRuta();
 };
 
+// ══════════════════ YUNQUE DE SECUENCIAS ══════════════════
+// El retardo de cada paso es ABSOLUTO desde que arranca la secuencia, no un hueco respecto
+// al paso anterior: el motor programa un temporizador por paso en el mismo instante, y los
+// que comparten retardo salen juntos. Por eso el orden en que se escriben NO es el orden en
+// que ocurren, y de ahi que la previa sea una linea de tiempo ordenada por momento.
+//
+// Los cinco tipos son los que registra el motor; los alias en mayuscula son los que usa
+// SpellCreator, y se emiten esos para que los presets existentes y estos se lean igual.
+const TIPOS_PASO = [
+  ["Anim", "Animación"],
+  ["cast", "Lanzar hechizo (yo)"],
+  ["npccast", "Lanzar hechizo (el NPC)"],
+  ["Command", "Comando del servidor"],
+  ["TRP3e_Sound_playLocalSoundID", "Sonido"]
+];
+const CANALES = ["SFX", "Music", "Ambience", "Dialog", "Master"];
+
+let pasos = [{momento:0, tipo:"Anim", vars:"", sonido:0, canal:"SFX", alcance:20, propio:false}];
+
+function pasoTexto(p){
+  if (p.tipo === "TRP3e_Sound_playLocalSoundID")
+    return p.sonido + ", " + p.canal + ", " + p.alcance;
+  return p.vars.trim();
+}
+
+function pintaPasos(){
+  const caja = $("pasos"); caja.innerHTML = "";
+  pasos.forEach((p, i) => {
+    const fila = document.createElement("div"); fila.className = "mat";
+
+    const cMom = document.createElement("div");
+    cMom.className = "campo"; cMom.style.flex = "none"; cMom.style.width = "92px";
+    const mom = document.createElement("input");
+    mom.type = "number"; mom.min = "0"; mom.step = "0.05"; mom.value = p.momento;
+    mom.setAttribute("aria-label", "Momento del paso " + (i+1));
+    mom.oninput = () => { p.momento = Math.max(0, Number(mom.value) || 0); pintaSec(); };
+    cMom.append(mom);
+
+    const cTipo = document.createElement("div");
+    cTipo.className = "campo"; cTipo.style.flex = "none"; cTipo.style.width = "190px";
+    const tipo = document.createElement("select");
+    tipo.setAttribute("aria-label", "Tipo del paso " + (i+1));
+    opciones(tipo, TIPOS_PASO);
+    tipo.value = p.tipo;
+    tipo.onchange = () => { p.tipo = tipo.value; pintaPasos(); pintaSec(); };
+    cTipo.append(tipo);
+
+    const cVars = document.createElement("div"); cVars.className = "campo";
+    if (p.tipo === "TRP3e_Sound_playLocalSoundID"){
+      const fila2 = document.createElement("div"); fila2.className = "mat";
+      const s = document.createElement("input");
+      s.type = "number"; s.min = "0"; s.value = p.sonido || ""; s.placeholder = "soundid";
+      s.setAttribute("aria-label", "Sonido del paso " + (i+1));
+      s.oninput = () => { p.sonido = Number(s.value) || 0; pintaSec(); };
+      const c = document.createElement("select");
+      c.setAttribute("aria-label", "Canal del paso " + (i+1));
+      c.style.width = "108px"; c.style.flex = "none";
+      opciones(c, CANALES.map(x => [x, x]));
+      c.value = p.canal;
+      c.onchange = () => { p.canal = c.value; pintaSec(); };
+      const d = document.createElement("input");
+      d.type = "number"; d.min = "0"; d.value = p.alcance; d.placeholder = "m";
+      d.style.width = "72px"; d.style.flex = "none";
+      d.setAttribute("aria-label", "Alcance del paso " + (i+1));
+      d.oninput = () => { p.alcance = Number(d.value) || 0; pintaSec(); };
+      fila2.append(s, c, d);
+      cVars.append(fila2);
+    } else {
+      const v = document.createElement("input");
+      v.value = p.vars; v.className = "mono";
+      v.placeholder = p.tipo === "Anim" ? "id de animación"
+        : (p.tipo === "Command" ? ".npc cast 78960" : "spellid");
+      v.setAttribute("aria-label", "Valor del paso " + (i+1));
+      v.oninput = () => { p.vars = v.value; pintaSec(); };
+      cVars.append(v);
+    }
+
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "quitar"; x.textContent = "×";
+    x.setAttribute("aria-label", "Quitar paso " + (i+1));
+    x.onclick = () => {
+      pasos.splice(i,1);
+      if (!pasos.length) pasos.push({momento:0,tipo:"Anim",vars:"",sonido:0,canal:"SFX",alcance:20,propio:false});
+      pintaPasos(); pintaSec();
+    };
+    fila.append(cMom, cTipo, cVars, x);
+    caja.append(fila);
+  });
+}
+
+function bloqueSecuencia(){
+  const nombre = $("sNombre").value.trim();
+  // Se emite ordenado por momento: al ser absolutos, el orden del codigo da igual para el
+  // motor, pero asi el archivo se lee en el orden en que las cosas pasan de verdad.
+  const orden = pasos.filter(p => pasoTexto(p)).slice()
+    .sort((a, b) => a.momento - b.momento);
+  const L = ['Register("' + nombre + '", {'];
+  for (const p of orden)
+    L.push('    { delay = ' + p.momento + ', actionType = "' + p.tipo +
+      '", vars = "' + escapa(pasoTexto(p)) + '", selfOnly = ' + (p.propio ? "true" : "false") + ' },');
+  L.push("})");
+  return L.join("\n");
+}
+
+function pintaSec(){
+  const nombre = $("sNombre").value.trim();
+  const validos = pasos.filter(p => pasoTexto(p));
+  const orden = validos.slice().sort((a, b) => a.momento - b.momento);
+
+  $("sttNombre").textContent = nombre || "Secuencia sin nombre";
+  const fin = orden.length ? orden[orden.length - 1].momento : 0;
+  $("sttResumen").innerHTML = "<span>" + validos.length + " pasos, " +
+    (fin ? "dura " + fin + " s" : "todo a la vez") + "</span>";
+
+  // Linea de tiempo: los que comparten momento van juntos, porque salen juntos.
+  const porMomento = new Map();
+  for (const p of orden){
+    if (!porMomento.has(p.momento)) porMomento.set(p.momento, []);
+    porMomento.get(p.momento).push(p);
+  }
+  const filas = [];
+  for (const [m, grupo] of porMomento){
+    // Se escapa CADA entrada antes de unirlas: escapar despues del join convertia mi
+    // propio separador en texto y salia un "<br>" literal en la previa.
+    const que = grupo.map(p => {
+      const et = (TIPOS_PASO.find(t => t[0] === p.tipo) || ["","?"])[1];
+      return (et + " " + pasoTexto(p)).replace(/</g, "&lt;");
+    });
+    filas.push('<div><span><b>' + m.toFixed(2) + ' s</b></span><span>' +
+      que.join("<br>") + "</span></div>");
+  }
+  $("sttLinea").innerHTML = filas.join("") ||
+    '<p class="pista">Sin pasos con contenido.</p>';
+
+  $("outSec").textContent = nombre && validos.length ? bloqueSecuencia()
+    : "— hace falta un nombre y al menos un paso —";
+  $("nPasosS").textContent = validos.length;
+}
+$("fs").addEventListener("input", pintaSec);
+$("fs").addEventListener("change", pintaSec);
+$("addPaso").onclick = () => {
+  // Nace justo despues del ultimo, que es lo que se suele querer.
+  const ultimo = pasos.reduce((m, p) => Math.max(m, p.momento), 0);
+  pasos.push({momento: Math.round((ultimo + 0.25) * 100) / 100, tipo:"Anim", vars:"",
+    sonido:0, canal:"SFX", alcance:20, propio:false});
+  pintaPasos(); pintaSec();
+};
+
 pintaListaObj(); pintaListaRec(); pintaListaMis();
 pintaMats(); pintaObjs(); pintaReps(); pintaPremios();
 refrescaSubclases(); pintaPaleta(); pintaRec(); pintaMis(); pintaPaginas(); pintaGos();
 pintaDisplays(); pintaAuras(); pintaArmas(); pintaEquipo(); pintaDesequipar(); pintaNpc();
 pintaNodos(); pintaRuta();
+pintaPasos(); pintaSec();
 </script>

@@ -435,6 +435,133 @@ end)
 -- Lo que este cliente NO puede comprobar solo va marcado a mano: si el OTRO recibe. Aqui se
 -- verifica el FORMATO y la ida y vuelta; la ENTREGA solo se ve con dos clientes.
 ------------------------------------------------------------
+------------------------------------------------------------
+-- SISTEMAS SIN SUITE PROPIA. Estos grupos EJERCITAN de verdad -- estado sintetico, ciclo completo
+-- y limpieza garantizada -- lo que hasta ahora solo cubrian los barridos estaticos.
+------------------------------------------------------------
+Grupo("misiones", "el ciclo completo de una mision con una sintetica (se limpia sola)", function(r)
+    local Q = _G.HarfordQuests or _G.HarfordQuestAPI
+    r.chk("el sistema de misiones esta cargado", Q and Q.Accept ~= nil)
+    if not (Q and Q.Accept) then return end
+
+    -- Mision SINTETICA y SIN recompensas: ejercita aceptar, rastrear, progresar, auto-completar y
+    -- abandonar sin conceder nada real. El id es propio de la bateria y se limpia SIEMPRE.
+    local ID = "debug:bateria_verificar"
+    pcall(Q.Abandon, ID)  -- resto de una pasada anterior, si lo hubiera
+
+    local ok = Q.Accept(ID, {
+        title = "Prueba de la bateria",
+        description = "Mision sintetica del verificador; si la ves, puedes abandonarla.",
+        objectives = {
+            { text = "Primer objetivo", required = 1 },
+            { text = "Segundo objetivo", required = 2 },
+        },
+    })
+    r.chk("se acepta", ok and Q.IsAccepted(ID) or false)
+    if not Q.IsAccepted(ID) then return end
+
+    -- Todo lo que sigue va protegido para que la limpieza corra aunque algo falle.
+    local okTodo, err = pcall(function()
+        if Q.SetTracked then
+            Q.SetTracked(ID, true, true)
+            r.chk("se rastrea", Q.IsTracked and Q.IsTracked(ID) or false)
+        end
+        if Q.AdvanceObjective then
+            Q.AdvanceObjective(ID, 1)
+            r.chk("con un objetivo hecho NO se completa", not Q.IsComplete(ID))
+        end
+        if Q.SetObjectiveProgress then
+            Q.SetObjectiveProgress(ID, 2, 2)
+            -- El auto-completado es de RecomputeCompletion: todos los objetivos hechos cierran la
+            -- mision sin que nadie llame a "completar".
+            r.chk("con todos hechos se completa SOLA", Q.IsComplete(ID) == true)
+        end
+        if Q.GetObjectives then
+            local objetivos = Q.GetObjectives(ID) or {}
+            r.chk("los objetivos conservan su contador", #objetivos == 2
+                and tonumber(objetivos[2].current or objetivos[2].curr or -1) == 2)
+        end
+    end)
+    Q.Abandon(ID)
+    r.chk("y abandonar la limpia del todo", not Q.IsAccepted(ID)
+        and not (Q.IsTracked and Q.IsTracked(ID)))
+    if not okTodo then
+        r.chk("el ciclo no reviento", false, tostring(err))
+    end
+end)
+
+Grupo("loot", "que el loot serializado vuelva identico de la red", function(r)
+    local S = _G.HarfordSync
+    r.chk("la serializacion de loot existe", S and S.SerializeTaggedLootMessage ~= nil)
+    if not (S and S.SerializeTaggedLootMessage and S.DeserializeTaggedLootMessage) then return end
+
+    -- Ida y vuelta con una tabla sintetica: guid + filas {itemId, cantidad, asignado}.
+    local guid = "Creature-0-1111-2-3-4-0001"
+    local tabla = { { 14074575, 3, true }, { 14088020, 1, false }, { 2770, 12, true } }
+    local payload = S.SerializeTaggedLootMessage(guid, tabla)
+    r.chk("cabe en un mensaje", #payload <= 240, #payload .. " bytes")
+    local guidVuelta, filas = S.DeserializeTaggedLootMessage(payload)
+    r.chk("el guid vuelve", guidVuelta == guid, tostring(guidVuelta))
+    r.chk("las filas vuelven", type(filas) == "table" and #filas == 3)
+    if type(filas) == "table" and filas[1] then
+        local f = filas[1]
+        r.chk("con item, cantidad y asignacion", (tonumber(f[1]) == 14074575)
+            and (tonumber(f[2]) == 3) and (f[3] == true or f[3] == 1),
+            tostring(f[1]) .. "/" .. tostring(f[2]) .. "/" .. tostring(f[3]))
+    end
+end)
+
+Grupo("subida", "la tabla de XP 5e y el aviso de subida pendiente", function(r)
+    local X = _G.HarfordCharacterXP
+    r.chk("el sistema de XP esta cargado", X and X.LevelForXP ~= nil)
+    if not (X and X.LevelForXP) then return end
+
+    -- Umbrales del manual, niveles 1-6 (el alcance del addon): el nivel que da cada XP exacta y
+    -- la anterior. Una tabla mal copiada aqui sube o retiene niveles a todo el mundo.
+    local UMBRALES = { [2] = 300, [3] = 900, [4] = 2700, [5] = 6500, [6] = 14000 }
+    local mal = {}
+    for nivel, xp in pairs(UMBRALES) do
+        if X.LevelForXP(xp) ~= nivel then mal[#mal + 1] = xp .. "->" .. tostring(X.LevelForXP(xp)) end
+        if X.LevelForXP(xp - 1) ~= nivel - 1 then mal[#mal + 1] = (xp - 1) .. "->" .. tostring(X.LevelForXP(xp - 1)) end
+    end
+    r.chk("los umbrales 1-6 casan con el manual", #mal == 0, table.concat(mal, ", "))
+    r.chk("con 0 XP eres nivel 1", X.LevelForXP(0) == 1)
+    -- Coherencia del aviso: pendiente == (nivel por XP > nivel real). Solo se COMPRUEBA la
+    -- formula; la subida sigue siendo manual siempre.
+    if X.PendingLevelUp and X.GetXP and HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel then
+        local porXP = X.LevelForXP(tonumber(X.GetXP()) or 0)
+        local real = tonumber(HarfordDnDProgression.GetTotalLevel()) or 0
+        local esperado = (real > 0) and (porXP > real) or false
+        r.chk("el aviso de subida dice la verdad", (X.PendingLevelUp() == true) == esperado,
+            string.format("porXP=%d real=%d", porXP, real))
+    end
+end)
+
+Grupo("secuencias", "que la biblioteca de secuencias este bien formada (sin ejecutarlas)", function(r)
+    local A = _G.HarfordActionSequence
+    r.chk("el motor de secuencias esta cargado", A and A.Run ~= nil)
+    if not (A and A.LIBRARY) then return end
+    -- Solo FORMA: ejecutarlas mandaria comandos reales al servidor. Cada secuencia es una lista de
+    -- pasos con retardo numerico y algo que hacer.
+    local total, rotas = 0, {}
+    for nombre, secuencia in pairs(A.LIBRARY) do
+        total = total + 1
+        if type(secuencia) ~= "table" or #secuencia == 0 then
+            rotas[#rotas + 1] = nombre .. " (vacia)"
+        else
+            for i, paso in ipairs(secuencia) do
+                if type(paso) ~= "table" then
+                    rotas[#rotas + 1] = nombre .. "#" .. i .. " (no es tabla)"
+                elseif paso.delay and not tonumber(paso.delay) then
+                    rotas[#rotas + 1] = nombre .. "#" .. i .. " (delay no numerico)"
+                end
+            end
+        end
+    end
+    r.chk("hay secuencias registradas", total > 0, tostring(total))
+    r.chk("y todas bien formadas", #rotas == 0, table.concat(rotas, ", "))
+end)
+
 Grupo("comprimir", "que la compresion este disponible y no pierda un byte", function(r)
     local S = _G.HarfordSync
     r.chk("el transporte expone la compresion", S and S.Comprimir ~= nil and S.Descomprimir ~= nil)

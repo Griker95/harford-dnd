@@ -14,30 +14,36 @@ Regenerar las cifras: cargar `HarfordDnDBook.lua`, los doce `Classes/*.lua` y
 |---|---|---|---|
 | Guerrero | 30 | 29 | 96 |
 | Monje | 30 | 28 | 93 |
+| Sacerdote | 45 | 41 | 91 |
+| Chamán | 40 | 36 | 90 |
+| Caballero de la Muerte | 24 | 21 | 87 |
+| Druida | 22 | 19 | 86 |
 | Cazador de Demonios | 22 | 19 | 86 |
+| Paladín | 28 | 24 | 85 |
 | Cazador | 34 | 29 | 85 |
-| Brujo | 47 | 36 | 76 |
+| Brujo | 47 | 38 | 80 |
+| Mago | 20 | 16 | 80 |
 | Pícaro | 19 | 14 | 73 |
-| Sacerdote | 45 | 32 | 71 |
-| Chamán | 40 | 28 | 70 |
-| Druida | 22 | 15 | 68 |
-| Mago | 20 | 13 | 65 |
-| Paladín | 28 | 18 | 64 |
-| Caballero de la Muerte | 24 | 15 | 62 |
-| **Total** | **361** | **276 (76%)** | |
+| **Total** | **361** | **314 (86%)** | |
 
-Cifras regeneradas el **2026-08-28**. El criterio suma desde esa fecha: un `cast` con coste real
-(se cobra), y los ejecutables cuya mecánica no vive en `effects` — `trap` (se coloca y se dispara
-por el motor de áreas), `usesFrom` (gasta los usos de otro rasgo) y `area` (salvación/daño/condición).
-Sin eso, las ocho trampas del Cazador contaban como no mecanizadas **siendo ejecutables**, y la
-clase salía 61% cuando está al 85%.
+Cifras del **2026-08-28**, tras dos pasadas de ese día:
 
-**Cazador, repasado el 2026-08-28**: sus 5 sin mecanizar están todos justificados — *Empatía
-animal* es narrativa por norma; el marcador de arquetipo se filtra del Libro; y los tres de bestia
-(*Domador*, *Aspecto*, *Vínculo*) son texto de presentación de una mecánica que **sí existe** en
-`HarfordDnDBeast` (bloque TRP3 del compañero + reglas del Vínculo: tu competencia sustituye la
-suya, se suma a CA y daño, pierde Multiataque). El umbral de doma (desafío/tamaño) no se valida a
-propósito: el bloque lo escribe el jugador y lo adjudica la mesa.
+1. **Criterio corregido**: cuentan `cast` con coste real, `trap`/`usesFrom`/`area` (ejecutables por
+   el motor de áreas) y `conditionalWeaponDamage`. Las trampas del Cazador eran ejecutables y
+   contaban como deuda.
+2. **Los "conjuros siempre preparados" de camino/dominio son ya `spellGrants` reales** (42 rasgos:
+   Sacerdote, Paladín, Druida, Chamán, CdM, trucos de estudio del Mago, Piromaníaco y Maestro de
+   Maldiciones del Brujo). Los vínculos elementales del Chamán van con `requiresOption` a su
+   afinidad, para no conceder los de las cuatro. Cada rasgo conserva su `grantedSpells` (siembra en
+   CREACIÓN) y los dos campos llevan **los mismos ids** — hay desajuste = hay bug, y la resolución
+   de nombres fue contra el compendio por igualdad exacta, con las equivalencias verificadas por
+   nivel (Imponer/Levantar maldición, Explosión de cadáver, Fuerza brillante).
+
+**Lo que queda sin mecanizar está justificado**: 10 marcadores de subclase (se filtran del Libro),
+9 cabeceras de "Lanzamiento de conjuros" (la mecánica vive en Compendio/maná/espacios), las listas
+ampliadas del Brujo (expansión de lista, no preparación), y pasivas narrativas por norma (Empatía
+animal, Misivas, telepatías, visión en la oscuridad, Renacer Oscuro). **Las que son pasivas, son
+pasivas** — no son deuda.
 
 El Mago sale bajo porque casi todo su peso está en Metamagia y en los tres
 Estudios, que son texto de referencia; su mecánica real (puntos, metamagia,

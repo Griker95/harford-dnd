@@ -49,14 +49,33 @@ end
 -- Registrador que se pasa a cada grupo. Acumula en vez de imprimir para poder dar primero el
 -- resumen y luego solo lo que falla: una pared de cien lineas verdes no se lee.
 local function NuevoRegistro()
-    local r = { ok = 0, fallos = {}, manuales = {} }
+    local r = { ok = 0, fallos = {}, manuales = {}, notas = {} }
     function r.chk(texto, condicion, detalle)
         if condicion then r.ok = r.ok + 1
         else r.fallos[#r.fallos + 1] = texto .. (detalle and ("  |cff808080" .. tostring(detalle) .. "|r") or "") end
     end
-    function r.manual(texto) r.manuales[#r.manuales + 1] = texto end
+    -- `montaje` dice QUE HAY QUE PREPARAR para poder comprobarlo. Se agrupa por eso al final, no
+    -- por grupo: asi un solo preparativo --seleccionar un NPC, montar un combate-- desbloquea un
+    -- lote entero, en vez de obligar a repasar veinte grupos uno a uno.
+    function r.manual(texto, montaje)
+        r.manuales[#r.manuales + 1] = { texto = texto, montaje = montaje or "suelto" }
+    end
+    -- Una NOTA informa; no es algo que quede por comprobar. Se separan porque mezclarlas hacia
+    -- que la bateria pareciera una lista de sesenta tareas cuando de verdad quedan muchas menos.
+    function r.nota(texto) r.notas[#r.notas + 1] = texto end
     return r
 end
+
+-- Los montajes, en el orden en que conviene hacerlos: de lo que no pide nada a lo que pide a otra
+-- persona. Cada uno dice como prepararlo, para no tener que recordarlo.
+local MONTAJES = {
+    { clave = "suelto",   titulo = "Sin preparar nada" },
+    { clave = "npc",      titulo = "Con un NPC seleccionado" },
+    { clave = "jugador",  titulo = "Con OTRO JUGADOR seleccionado" },
+    { clave = "combate",  titulo = "Con un combate montado (3-4 tarjetas)" },
+    { clave = "ficha",    titulo = "Con la ficha o el panel abiertos" },
+    { clave = "dos",      titulo = "CON DOS CLIENTES (lo unico que no se puede automatizar)" },
+}
 
 ------------------------------------------------------------
 -- ICONOS. El que no existe sale VERDE en Epsilon, y desde fuera del juego no hay forma de saberlo:
@@ -69,7 +88,7 @@ Grupo("iconos", "que los iconos existan de verdad (uno inventado sale verde)", f
         return
     end
     if not GetFileIDFromPath then
-        r.manual("GetFileIDFromPath no existe en este cliente: los iconos no se pueden verificar.")
+        r.nota("GetFileIDFromPath no existe en este cliente: los iconos no se pueden verificar.")
         return
     end
     local total, rotos = 0, 0
@@ -195,8 +214,8 @@ Grupo("acciones", 'las diez acciones basicas; anade "ejecutar" para dispararlas 
     -- chat, asi que no se hace sola: `verificar acciones ejecutar`. Con gente delante, el ruido
     -- seria peor que la comprobacion.
     if extra ~= "ejecutar" then
-        r.manual("Para ejecutarlas de verdad: /harford debug run verificar acciones ejecutar")
-        r.manual("  (anuncia cada una por chat; hazlo a solas)")
+        r.nota("Para ejecutarlas de verdad: /harford debug run verificar acciones ejecutar")
+        r.nota("  (anuncia cada una por chat; hazlo a solas)")
         return
     end
     local P = _G.HarfordCharacterPanel
@@ -229,7 +248,7 @@ Grupo("acciones", 'las diez acciones basicas; anade "ejecutar" para dispararlas 
             C.RemoveOwned(caso.estado)
         end
     end
-    r.manual("Las de objetivo y las de menu no se automatizan: usa /harford debug run accion <id>")
+    r.manual("Las de objetivo y las de menu no se automatizan: usa /harford debug run accion <id>", "npc")
 end)
 
 ------------------------------------------------------------
@@ -242,7 +261,7 @@ Grupo("tira", "la tira de estados sobre el objetivo, y que quede encima del fram
     if not (UF and UF.RefreshConditionStrip) then return end
 
     if not (UnitExists and UnitExists("target")) then
-        r.manual("Sin objetivo: coge uno y repite este grupo para comprobar el anclaje.")
+        r.manual("Sin objetivo: coge uno y repite este grupo para comprobar el anclaje.", "npc")
         return
     end
     local C = _G.HarfordDnDConditions
@@ -282,10 +301,10 @@ Grupo("tira", "la tira de estados sobre el objetivo, y que quede encima del fram
     if C and C.RemoveFromUnit and not tenia then C.RemoveFromUnit("target", prueba) end
     -- El estado se pone y se QUITA, asi que no queda nada que mirar: pedir "mira el objetivo" aqui
     -- era una instruccion imposible de seguir. Para verlo hace falta uno que se quede.
-    r.manual("Para VERLO, deja un estado puesto y vuelve a mirar:")
-    r.manual("  /harford debug run estadoen prone")
-    r.manual("  /harford debug run tira        (dice que deberia pintar, y si quedo por encima)")
-    r.manual("  /harford debug run estadoen prone quitar")
+    r.nota("Para VERLO, deja un estado puesto y vuelve a mirar:")
+    r.nota("  /harford debug run estadoen prone")
+    r.nota("  /harford debug run tira        (dice que deberia pintar, y si quedo por encima)")
+    r.nota("  /harford debug run estadoen prone quitar")
 end)
 
 ------------------------------------------------------------
@@ -357,12 +376,12 @@ Grupo("red", "que los mensajes se compongan y se vuelvan a leer, con su limite d
     r.chk("hay canal para publicar estados y tiradas", canal ~= nil,
         "sin grupo, los estados no se publican a nadie")
 
-    r.manual("Queda por ver con OTRO jugador de objetivo (que llegue, no que se componga):")
-    r.manual("  1. Agarrar -> el debe tirar Atletismo o Acrobacias en SU cliente y salir Agarrado si pierde.")
-    r.manual("  2. Empujar -> elige Apartar: NO debe quedar Derribado. Repite con Derribar: si debe.")
-    r.manual("  3. Ayudar -> elige prueba: su siguiente prueba sale con ventaja y el estado se le va.")
-    r.manual("Con un NPC de objetivo: Agarrar debe resolverse en TU cliente, sin pedirle nada a nadie.")
-    r.manual("Preparar: primer clic gasta ACCION, segundo clic gasta REACCION y retira el estado.")
+    r.manual("Queda por ver con OTRO jugador de objetivo (que llegue, no que se componga):", "dos")
+    r.manual("  1. Agarrar -> el debe tirar Atletismo o Acrobacias en SU cliente y salir Agarrado si pierde.", "dos")
+    r.manual("  2. Empujar -> elige Apartar: NO debe quedar Derribado. Repite con Derribar: si debe.", "suelto")
+    r.manual("  3. Ayudar -> elige prueba: su siguiente prueba sale con ventaja y el estado se le va.", "combate")
+    r.manual("Con un NPC de objetivo: Agarrar debe resolverse en TU cliente, sin pedirle nada a nadie.", "npc")
+    r.manual("Preparar: primer clic gasta ACCION, segundo clic gasta REACCION y retira el estado.", "suelto")
 end)
 
 ------------------------------------------------------------
@@ -392,7 +411,7 @@ Grupo("comprimir", "que la compresion este disponible y no pierda un byte", func
         "sin ella no comprimes, pero tampoco DESCOMPRIMES lo que te llegue")
     if not D then
         r.manual("SIN LibDeflate: lo que otro te mande comprimido lo descartaras sin aviso. "
-            .. "Instala EpsilonLib o pide que se empaquete dentro de Harford.")
+            .. "Instala EpsilonLib o pide que se empaquete dentro de Harford.", "dos")
         return
     end
 
@@ -414,7 +433,7 @@ Grupo("comprimir", "que la compresion este disponible y no pierda un byte", func
     r.chk("y un texto sin marca pasa tal cual", S.Descomprimir(corto) == corto)
 
     r.manual("ENTREGA: equipa 4-5 objetos y que OTRO cliente te inspeccione. Si no le llega el "
-        .. "equipo, mira si el tiene LibDeflate: es el fallo mas silencioso de este cambio.")
+        .. "equipo, mira si el tiene LibDeflate: es el fallo mas silencioso de este cambio.", "dos")
 end)
 
 Grupo("dano", "quien publica la linea de dano: el atacante o la victima", function(r)
@@ -435,11 +454,11 @@ Grupo("dano", "quien publica la linea de dano: el atacante o la victima", functi
         else
             r.manual("Con " .. tostring(UnitName("target")) .. " delante publica "
                 .. (publica and "LA VICTIMA" or "el ATACANTE (aun no difundio sus recursos)")
-                .. ". Pegale y comprueba que sale UNA sola linea de dano, no dos.")
+                .. ". Pegale y comprueba que sale UNA sola linea de dano, no dos.", "jugador")
         end
     else
         r.manual("Sin objetivo: selecciona un NPC y repite, para comprobar que el dano a NPC "
-            .. "sigue igual que siempre.")
+            .. "sigue igual que siempre.", "npc")
     end
 
     local S = _G.HarfordSync
@@ -461,10 +480,10 @@ Grupo("dano", "quien publica la linea de dano: el atacante o la victima", functi
         end
     end
 
-    r.manual("Con arma BASICA la linea sale con el nombre a secas, sin enlace.")
+    r.manual("Con arma BASICA la linea sale con el nombre a secas, sin enlace.", "suelto")
     r.manual("Si la victima tiene RESISTENCIA, el numero debe venir YA mitigado y NO debe salir "
-        .. "una segunda linea de correccion detras.")
-    r.manual("Y con un NPC poseido pegando a un jugador: mismo trato, una sola linea.")
+        .. "una segunda linea de correccion detras.", "suelto")
+    r.manual("Y con un NPC poseido pegando a un jugador: mismo trato, una sola linea.", "jugador")
 end)
 
 Grupo("turnored", "que avanzar turno mande UN mensaje y no la lista entera", function(r)
@@ -477,7 +496,7 @@ Grupo("turnored", "que avanzar turno mande UN mensaje y no la lista entera", fun
     local store = _G.HarfordTurnOrderStore
     local entradas = (type(store) == "table" and type(store.entries) == "table") and #store.entries or 0
     if entradas == 0 then
-        r.manual("Mesa vacia: monta un combate con 3-4 tarjetas para poder medir el estado.")
+        r.manual("Mesa vacia: monta un combate con 3-4 tarjetas para poder medir el estado.", "combate")
         return
     end
     r.chk("hay combatientes montados", entradas > 0, entradas .. " entradas")
@@ -498,14 +517,14 @@ Grupo("turnored", "que avanzar turno mande UN mensaje y no la lista entera", fun
         -- descarte el estado entero, en silencio.
         if trozosC > 3 then
             r.manual("Tu mesa genera " .. trozosC .. " trozos aun comprimida: con esa cifra el "
-                .. "estado se pierde a menudo. Quita tarjetas o revisa que miembros llevan dentro.")
+                .. "estado se pierde a menudo. Quita tarjetas o revisa que miembros llevan dentro.", "combate")
         end
     end
 
     r.manual("Dale a Siguiente varias veces con OTRO cliente delante: el turno activo tiene que "
-        .. "moverse alli y salir el anuncio en su chat. Eso es lo que estaba roto.")
-    r.manual("Golpea a un NPC de la lista: su vida debe bajar tambien en el otro cliente.")
-    r.manual("Y haz /reload en mitad del combate: la ventana debe volver sola.")
+        .. "moverse alli y salir el anuncio en su chat. Eso es lo que estaba roto.", "dos")
+    r.manual("Golpea a un NPC de la lista: su vida debe bajar tambien en el otro cliente.", "dos")
+    r.manual("Y haz /reload en mitad del combate: la ventana debe volver sola.", "combate")
 end)
 
 Grupo("tiradas", "la API publica de tiradas, y que registre la ultima", function(r)
@@ -644,7 +663,7 @@ Grupo("ataque", "contra EL OBJETIVO QUE TENGAS: distingue NPC de jugador", funct
         return
     end
     if not (UnitExists and UnitExists("target")) then
-        r.manual("Sin objetivo. Selecciona un NPC o un jugador y repite: verificar ataque")
+        r.manual("Sin objetivo. Selecciona un NPC o un jugador y repite: verificar ataque", "npc")
         return
     end
 
@@ -652,7 +671,7 @@ Grupo("ataque", "contra EL OBJETIVO QUE TENGAS: distingue NPC de jugador", funct
     local yo = UnitIsUnit and UnitIsUnit("target", "player")
     local nombre = tostring(UnitName("target"))
     r.manual("Objetivo: " .. nombre .. " (" .. (esJugador and "JUGADOR" or "NPC")
-        .. (yo and ", eres tu" or "") .. ")")
+        .. (yo and ", eres tu" or "") .. ")", "npc")
 
     -- La CA es lo primero: sin ella el ataque se anuncia sin veredicto, y eso se lee como que
     -- "no funciona" cuando en realidad es que no se sabe contra que comparar.
@@ -662,7 +681,7 @@ Grupo("ataque", "contra EL OBJETIVO QUE TENGAS: distingue NPC de jugador", funct
     if not ca then
         r.manual(esJugador
             and "Jugador sin CA: que la escriba en TRP3 (Currently/Other Information) o que abra su ficha."
-            or "NPC sin CA: ponsela con el editbox CA, o dale un stat block en su perfil TRP3.")
+            or "NPC sin CA: ponsela con el editbox CA, o dale un stat block en su perfil TRP3.", "npc")
         return
     end
 
@@ -688,8 +707,8 @@ Grupo("ataque", "contra EL OBJETIVO QUE TENGAS: distingue NPC de jugador", funct
             r.chk("el paquete de dano se compone", ok and payload ~= nil,
                 not ok and tostring(payload) or nil)
         end
-        r.manual("Pegale de verdad y confirma EN SU CLIENTE: que le baje la vida, que aplique")
-        r.manual("  sus resistencias, y que la linea salga con tu nombre.")
+        r.manual("Pegale de verdad y confirma EN SU CLIENTE: que le baje la vida, que aplique", "dos")
+        r.manual("  sus resistencias, y que la linea salga con tu nombre.", "suelto")
     elseif not esJugador then
         -- Contra NPC el dano lo aplica el atacante por comando de servidor, asi que hace falta
         -- permiso de oficial de fase: sin el, el ataque sale pero la vida no se mueve.
@@ -698,9 +717,9 @@ Grupo("ataque", "contra EL OBJETIVO QUE TENGAS: distingue NPC de jugador", funct
         r.chk("puedes modificar la vida del NPC", puede == true,
             "sin permiso de oficial de fase el ataque sale pero su vida no baja")
         r.chk("hay ruta de dano a NPC", K.ApplyWeaponDamageToNpc ~= nil)
-        r.manual("Pegale de verdad y confirma que le baja la vida y que emota la herida.")
+        r.manual("Pegale de verdad y confirma que le baja la vida y que emota la herida.", "jugador")
     else
-        r.manual("Te tienes a ti mismo de objetivo: para el resto, coge un NPC o a otro jugador.")
+        r.manual("Te tienes a ti mismo de objetivo: para el resto, coge un NPC o a otro jugador.", "npc")
     end
 end)
 
@@ -721,7 +740,7 @@ Grupo("areas", "posicion, contexto y donde va a caer el centro de un area", func
             -- La z falta en algunos builds; no es un fallo, pero conviene saberlo porque es lo
             -- que corta el area en vertical.
             if tonumber(z) == nil then
-                r.manual("Este build no da altura (z): el corte vertical de las areas no filtra.")
+                r.nota("Este build no da altura (z): el corte vertical de las areas no filtra.")
             end
             r.chk("y un identificador de contexto", tostring(ctx or "") ~= "",
                 "sin contexto no se distinguen dos fases con las mismas coordenadas")
@@ -741,13 +760,13 @@ Grupo("areas", "posicion, contexto y donde va a caer el centro de un area", func
     if UnitExists and UnitExists("target") then
         local esJugador = UnitIsPlayer and UnitIsPlayer("target")
         if esJugador then
-            r.manual("Objetivo jugador: una esfera se centrara EN EL, que es lo correcto.")
+            r.manual("Objetivo jugador: una esfera se centrara EN EL, que es lo correcto.", "npc")
         else
-            r.manual("Objetivo NPC: una esfera se centrara EN TI (los NPC no responden posicion).")
-            r.manual("  Para centrarla lejos, apunta a un jugador que este en el punto.")
+            r.manual("Objetivo NPC: una esfera se centrara EN TI (los NPC no responden posicion).", "npc")
+            r.manual("  Para centrarla lejos, apunta a un jugador que este en el punto.", "jugador")
         end
     end
-    r.manual("Lanza un area y comprueba en la ventana: distancia por objetivo y los de fuera en gris.")
+    r.manual("Lanza un area y comprueba en la ventana: distancia por objetivo y los de fuera en gris.", "npc")
 end)
 
 ------------------------------------------------------------
@@ -776,8 +795,8 @@ Grupo("seguridad", "quien puede aplicarte dano o estados, y quien no", function(
                 C_ChatInfo.IsAddonMessagePrefixRegistered(prefijo) == true)
         end
     end
-    r.manual("Con otro jugador: que un ataque suyo te baje la vida, y que uno de fuera del")
-    r.manual("  grupo y sin verte NO pueda (esto ultimo solo se puede probar con un tercero).")
+    r.manual("Con otro jugador: que un ataque suyo te baje la vida, y que uno de fuera del", "dos")
+    r.manual("  grupo y sin verte NO pueda (esto ultimo solo se puede probar con un tercero).", "dos")
 end)
 
 ------------------------------------------------------------
@@ -851,9 +870,9 @@ Grupo("turnos", "bandos, bloques y quien va dentro de cada uno", function(r)
     end
 
     if bloques == 0 then
-        r.manual("No hay bloques: pulsa `PJs`/`Aliado`/`Neutral`/`Enemigo` en la ventana de turnos.")
+        r.manual("No hay bloques: pulsa `PJs`/`Aliado`/`Neutral`/`Enemigo` en la ventana de turnos.", "combate")
     elseif dentro == 0 then
-        r.manual("Los bloques estan vacios: click DERECHO en uno y `Anadir` con algo en el objetivo.")
+        r.manual("Los bloques estan vacios: click DERECHO en uno y `Anadir` con algo en el objetivo.", "npc")
     end
 end)
 
@@ -887,11 +906,11 @@ Grupo("economia", "que la accion, la adicional y la reaccion se gasten Y bloquee
     r.chk("se guarda para sobrevivir a un /reload", type(T.RestoreFromStore) == "function")
 
     if not T.IsActive() then
-        r.manual("Sin combate activo (o no estas en la lista): la economia no limita nada, a proposito.")
+        r.nota("Sin combate activo (o no estas en la lista): la economia no limita nada, a proposito.")
     else
         for _, k in ipairs(T.ORDEN or {}) do
             r.manual(string.format("%s: %d/%d", tostring(T.ETIQUETA[k]),
-                T.GetRemaining(k), T.GetBudget(k)))
+                T.GetRemaining(k), T.GetBudget(k)), "suelto")
         end
     end
 end)
@@ -921,10 +940,10 @@ Grupo("movimiento", "que el contador arranque solo, mida y te ate al agotarse", 
     r.chk("se puede volver al inicio del turno", type(U.ReturnToTurnStart) == "function")
 
     if not (TO and TO.HasActiveCombat and TO.HasActiveCombat()) then
-        r.manual("Sin combate no se cuenta ni se ata: es lo correcto. Inicia un combate para probarlo.")
+        r.manual("Sin combate no se cuenta ni se ata: es lo correcto. Inicia un combate para probarlo.", "combate")
     else
         r.manual(string.format("Llevas %.1f m de %.1f. Anda y mira si sube solo.",
-            (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0, tope))
+            (U.GetRecordedMovementMeters and U.GetRecordedMovementMeters()) or 0, tope), "suelto")
     end
 end)
 
@@ -940,12 +959,12 @@ Grupo("espacios", "los espacios de conjuro y los de pacto del brujo", function(r
     r.chk("y hay tabla de pacto", type(M.PACT_SLOTS) == "table")
 
     if mana then
-        r.manual("Modo MANA: no hay orbes, a proposito. Para verlos: /harford config spell_cost_mode slots")
+        r.nota("Modo MANA: no hay orbes, a proposito. Para verlos: /harford config spell_cost_mode slots")
         return
     end
     local maxNivel = (M.GetMaxSpellLevel and M.GetMaxSpellLevel()) or 0
     if maxNivel <= 0 then
-        r.manual("Sin niveles de lanzador: no hay espacios que pintar.")
+        r.nota("Sin niveles de lanzador: no hay espacios que pintar.")
         return
     end
     -- Lo que QUEDA nunca puede pasar del tope: si pasa, algo devolvio de mas.
@@ -959,7 +978,7 @@ Grupo("espacios", "los espacios de conjuro y los de pacto del brujo", function(r
     local B = _G.HarfordActionBars
     local _, orbes = B and B.RefreshTurnEconomy and B.RefreshTurnEconomy()
     r.chk("se pintan orbes", (tonumber(orbes) or 0) > 0, tostring(orbes))
-    r.manual("Detalle nivel a nivel: /harford debug run espacios")
+    r.nota("Detalle nivel a nivel: /harford debug run espacios")
 end)
 
 Grupo("aviso", "el estandarte y el marcador de turno, y que su arte exista", function(r)
@@ -986,7 +1005,7 @@ Grupo("aviso", "el estandarte y el marcador de turno, y que su arte exista", fun
 
     local estilo = _G.HarfordConfig and _G.HarfordConfig.Get and _G.HarfordConfig.Get("turnbanner")
     r.manual("Estilo puesto: " .. tostring(estilo)
-        .. ". Verlos todos: /harford debug run banners")
+        .. ". Verlos todos: /harford debug run banners", "suelto")
 end)
 
 Grupo("combate", "los tres estados del combate y que terminar no vacie la mesa", function(r)
@@ -1011,7 +1030,7 @@ Grupo("combate", "los tres estados del combate y que terminar no vacie la mesa",
         type(Combate and Combate.RegisterCombatCleanup) == "function")
 
     r.manual("Estado: " .. tostring(estado or "sin combate")
-        .. ". Terminar ya NO vacia la lista -- eso es `Limpiar`.")
+        .. ". Terminar ya NO vacia la lista -- eso es `Limpiar`.", "combate")
 end)
 
 Grupo("delegar", "que un jugador sin permiso pueda pegarle a un NPC igual", function(r)
@@ -1035,14 +1054,14 @@ Grupo("delegar", "que un jugador sin permiso pueda pegarle a un NPC igual", func
 
     if puedo then
         r.manual("Eres oficial de fase: TU aplicas directo y no delegas. Para probar la cadena hace "
-            .. "falta un segundo cliente SIN ese permiso.")
+            .. "falta un segundo cliente SIN ese permiso.", "suelto")
     elseif #cadena == 0 then
         r.chk("hay a quien delegar", false, "no estas en grupo con un lider que no seas tu")
     else
-        r.manual("Pega a un NPC: deberia decir que el efecto se envio al lider.")
+        r.manual("Pega a un NPC: deberia decir que el efecto se envio al lider.", "jugador")
     end
     if pendientes > 0 then
-        r.manual("Hay " .. pendientes .. " efecto(s) esperando: selecciona a ese NPC y se aplicaran.")
+        r.manual("Hay " .. pendientes .. " efecto(s) esperando: selecciona a ese NPC y se aplicaran.", "npc")
     end
 end)
 
@@ -1085,9 +1104,9 @@ Grupo("dotes", "que una dote sea UNA habilidad y este activada, no solo elegida"
 
     if #lista == 0 then
         r.manual("Esta ficha no tiene dotes. Se eligen en la Mejora de Caracteristica (nivel 4); "
-            .. "`ficha6 <clase>` monta una al azar.")
+            .. "`ficha6 <clase>` monta una al azar.", "ficha")
     else
-        r.manual("Abre el Libro y comprueba que sale en General como una sola entrada.")
+        r.manual("Abre el Libro y comprueba que sale en General como una sola entrada.", "ficha")
     end
 end)
 
@@ -1112,7 +1131,7 @@ API.RegisterCommand("verificar", function(args)
         lista = ORDEN_GRUPOS
     end
 
-    local totalOk, totalFallos, totalManuales = 0, 0, 0
+    local totalOk, totalFallos, totalManuales, totalNotas = 0, 0, 0, 0
     local detalle = {}
     for _, nombre in ipairs(lista) do
         local r = NuevoRegistro()
@@ -1123,6 +1142,7 @@ API.RegisterCommand("verificar", function(args)
         totalOk = totalOk + r.ok
         totalFallos = totalFallos + #r.fallos
         totalManuales = totalManuales + #r.manuales
+        totalNotas = totalNotas + #(r.notas or {})
         detalle[#detalle + 1] = { nombre = nombre, r = r }
         Print(string.format("%-10s %s%d ok|r  %s  %s", nombre,
             "|cff00ff00", r.ok,
@@ -1136,15 +1156,35 @@ API.RegisterCommand("verificar", function(args)
             for _, f in ipairs(d.r.fallos) do Print("  " .. f) end
         end
     end
+    -- Agrupadas por MONTAJE y no por grupo: lo que cuesta no es leer la comprobacion, es preparar
+    -- la escena. Juntas todas las que comparten preparativo, se hacen de una tacada.
+    local porMontaje = {}
     for _, d in ipairs(detalle) do
-        if #d.r.manuales > 0 then
-            Print("|cffffcc00--- " .. d.nombre .. ": comprobar a mano ---|r")
-            for _, m in ipairs(d.r.manuales) do Print("  " .. m) end
+        for _, m in ipairs(d.r.manuales) do
+            local clave = m.montaje or "suelto"
+            porMontaje[clave] = porMontaje[clave] or {}
+            porMontaje[clave][#porMontaje[clave] + 1] = "|cff808080[" .. d.nombre .. "]|r " .. m.texto
+        end
+    end
+    for _, montaje in ipairs(MONTAJES) do
+        local lista = porMontaje[montaje.clave]
+        if lista and #lista > 0 then
+            Print("|cffffcc00--- " .. montaje.titulo .. " (" .. #lista .. ") ---|r")
+            for _, linea in ipairs(lista) do Print("  " .. linea) end
         end
     end
 
-    Print(string.format("TOTAL: |cff00ff00%d ok|r, |cffff3333%d fallan|r, |cffffcc00%d a mano|r",
-        totalOk, totalFallos, totalManuales))
+    -- Las NOTAS al final y aparte: informan, no son tarea pendiente.
+    local hayNotas = false
+    for _, d in ipairs(detalle) do
+        if #(d.r.notas or {}) > 0 then
+            if not hayNotas then Print("|cff808080--- notas ---|r") hayNotas = true end
+            for _, n in ipairs(d.r.notas) do Print("  |cff808080[" .. d.nombre .. "]|r " .. n) end
+        end
+    end
+
+    Print(string.format("TOTAL: |cff00ff00%d ok|r, |cffff3333%d fallan|r, |cffffcc00%d a mano|r, "
+        .. "|cff808080%d notas|r", totalOk, totalFallos, totalManuales, totalNotas))
     if totalManuales > 0 then
         Print("Lo marcado 'a mano' NO esta verificado: el cliente no puede comprobarlo solo.")
     end

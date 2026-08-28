@@ -70,7 +70,10 @@ API.CLASSES[#API.CLASSES + 1] =
                 { id = "golpe_torbellino", label = "Golpe de Torbellino", resourceKey = "maelstrom", resourceCost = 1, desc = "Al realizar la accion de ataque, gastas 1 punto de torbellino para que todos tus ataques con arma cuenten como magicos hasta el final de tu turno. Combinable con otro ataque con armas.", maneuver = { cost = 1, attack = true, spendOnHit = true } },
                 { id = "golpe_impactante", label = "Golpe Impactante", resourceKey = "maelstrom", resourceCost = 3, requiresLevel = 7, desc = "Cuando golpeas con un ataque con arma, gastas 3 puntos de torbellino para intentar un golpe impactante. Salvacion de Constitucion o queda incapacitada hasta el inicio de tu proximo turno.", maneuver = { cost = 3, attack = true, spendOnHit = true, save = "Constitucion", outcome = "Incapacitado", conditionId = "incapacitated" } },
             } } },
-            { id = "cha_mej_golpe_elemental", level = 3, name = "Golpe elemental", type = "maniobra", description = "Al realizar la accion de ataque, gastas 1 punto de torbellino para envolver tus ataques en tu Afinidad Elemental hasta el final del turno: cada ataque inflige 1d4 adicional de ese tipo.", effects = {
+            -- `cast = "ninguna"` A PROPOSITO: es un dano condicional conmutable (como Golpe Runico) y quien
+            -- paga la accion es el ATAQUE que lo consume. Sin declararlo, la deduccion de "maniobra =
+            -- accion" cobraria una accion por darle al conmutador, o sea dos por el mismo golpe.
+            { id = "cha_mej_golpe_elemental", level = 3, name = "Golpe elemental", type = "maniobra", cast = "ninguna", description = "Al realizar la accion de ataque, gastas 1 punto de torbellino para envolver tus ataques en tu Afinidad Elemental hasta el final del turno: cada ataque inflige 1d4 adicional de ese tipo.", effects = {
             { kind = "conditionalWeaponDamage", id = "shaman_elemental_strike", label = "Golpe elemental", count = 1, die = 4, resourceCost = "maelstrom", costPerLevel = 1, minLevel = 1, maxLevel = 1 },
             } },
             { id = "cha_mej_ataque_adicional", level = 6, name = "Ataque adicional", type = "pasivo", description = "Atacas dos veces, en lugar de una, al realizar la acción de Atacar.", effects = {

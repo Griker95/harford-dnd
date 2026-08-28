@@ -1685,6 +1685,10 @@ do
         reaction = "Reaccion",
     }
     -- `cast` tal como lo declaran los datos de clase -> presupuesto que consume.
+    -- `cast = "ninguna"` en los datos es GRATIS A PROPOSITO: el rasgo es un rider que modifica
+    -- algo ya pagado (un ataque hecho, un conjuro lanzado, una prueba en curso) o un rasgo que
+    -- CONCEDE en vez de costar. No se mapea aqui a proposito -- cae al nil de "no cobra" -- pero
+    -- deja la decision escrita en el dato, que es lo que separa "gratis porque si" de un olvido.
     local DE_CAST = {
         accion             = "action",
         accion_adicional   = "bonus",

@@ -77,4 +77,32 @@ for i = 1, math.min(#malos, 12) do print("     " .. malos[i]) end
 if #malos > 12 then print("     ... y " .. (#malos - 12) .. " mas") end
 chk("todos declaran el coste que dice su texto", #malos, 0)
 
+-- ─── TODO ACTIVABLE DECLARA SU COSTE ────────────────────────────────────────
+-- Un rasgo de tipo accion/reaccion sin `cast` no cobra nada, y eso no se distingue de un olvido:
+-- el 45% de los activables estaba asi. Ahora TODOS declaran -- un coste real, o `"ninguna"`, que
+-- es gratis A PROPOSITO (riders que modifican algo ya pagado, o rasgos que conceden). Las
+-- maniobras quedan exentas: su coste se DEDUCE del tipo, y escribirlo en quince tablas era el
+-- error que la deduccion vino a quitar.
+print("Todo activable declara su coste")
+local sinCast, revisados = {}, 0
+for fichero in ("Brujo Caballerodelamuerte Cazador CazadordeDemonios Chaman Druida Guerrero "
+    .. "Mago Monje Paladin Picaro Sacerdote"):gmatch("%S+") do
+    local ruta = "Harford/DnD/Data/Classes/" .. fichero .. ".lua"
+    local h = io.open(ruta) or io.open(ruta:gsub("delamuerte", "delaMuerte"))
+    if h then
+        local src = h:read("*a") h:close()
+        for linea in src:gmatch('{ id = "[a-z0-9_]+", level = %d+, name = "[^"]+",[%g ]*') do
+            local tipo = linea:match('type = "(%a+)"')
+            if tipo == "accion" or tipo == "reaccion" then
+                revisados = revisados + 1
+                if not linea:find('cast = "', 1, true) then
+                    sinCast[#sinCast + 1] = linea:match('id = "([a-z0-9_]+)"')
+                end
+            end
+        end
+    end
+end
+chk("se revisaron rasgos activables", revisados > 50, true)
+chk("y ninguno se queda sin declarar", table.concat(sinCast, ","), "")
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

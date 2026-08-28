@@ -32,7 +32,7 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "monje_cer_competencia", level = 3, name = "Competencia adicional (cervecero)", type = "pasivo", description = "Competencia con herramientas de cervecero (bonus de competencia duplicado en sus pruebas).", effects = {
                 { kind = "toolProf", tool = "Herramientas de cervecero" },
             } },
-            { id = "monje_cer_buey_negro", level = 3, name = "Brebaje del Buey Negro", type = "accion", resourceKey = "chi", resourceCost = 1, selfCondition = { id = "buey_negro", duration = "rounds", turns = 10 }, description = "Lo conoces siempre. Gastas 1 punto de chi para darte ventaja en el proximo ataque cuerpo a cuerpo que realices dentro de 1 minuto. Puedes atacar como parte de la misma accion.", effects = {} },
+            { id = "monje_cer_buey_negro", level = 3, name = "Brebaje del Buey Negro", cast = "ninguna", type = "accion", resourceKey = "chi", resourceCost = 1, selfCondition = { id = "buey_negro", duration = "rounds", turns = 10 }, description = "Lo conoces siempre. Gastas 1 punto de chi para darte ventaja en el proximo ataque cuerpo a cuerpo que realices dentro de 1 minuto. Puedes atacar como parte de la misma accion.", effects = {} },
             { id = "monje_cer_brebajes", level = 3, name = "Cervecero elusivo", actionKind = "optionAbility", bookHidden = true, type = "choice", description = "Canalizas tu chi en brebajes. Conoces el Brebaje del Buey Negro y UNO mas a tu eleccion; aprendes otro a los niveles 6, 11 y 17. Usarlos cuesta una accion y sus puntos de chi cada vez, y necesitas un frasco de liquido potable contigo.", effects = {}, choice = {
                 slots = 1,
                 options = {
@@ -66,11 +66,11 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "monje_tej_estatua_del_dragon_de_jade", level = 17, name = "Estatua del Dragón de Jade", type = "informativo", description = "A nivel 17, puedes dar forma física a tu chi, moldeándolo en una estatua de Yu'lon, el Dragón de Jade. Puedes gastar 3 puntos de chi como acción y elegir un espacio vacío a 9,1 metros de ti para manifestar una estatua de jade. La estatua tiene puntos de golpe igual al doble de tu nivel de monje, resistencia a todo el daño e inmunidad al daño psíquico y por veneno. Siempre que uses tu característica de Niebla reconfortante, puedes elegir un segundo objetivo dentro de 18,3 metros de la estatua para ser sanado por la mitad de los puntos de golpe que restores. La estatua permanece durante 1 minuto o hasta que sea destruida.", effects = {} },
         } },
         { id = "caminavientos", name = "Viajero del viento", desc = "Daño agil y veloz con golpes encadenados.", features = {
-            { id = "monje_cam_golpes_lanza", level = 3, name = "Golpes de mano de lanza", type = "accion", actionKind = "spearHand", description = "Al golpear con Puños de Furia, impones un efecto (derribar, empujar 15 pies o impedir reacciones).", effects = {} },
+            { id = "monje_cam_golpes_lanza", level = 3, name = "Golpes de mano de lanza", cast = "ninguna", type = "accion", actionKind = "spearHand", description = "Al golpear con Puños de Furia, impones un efecto (derribar, empujar 15 pies o impedir reacciones).", effects = {} },
             { id = "monje_cam_reflejos", level = 3, name = "Reflejos del tigre", type = "pasivo", description = "Sumas tu Mod. Sabiduría a la iniciativa.", effects = {
                 { kind = "initiativeAbility", ability = "Sabiduria" },
             } },
-            { id = "monje_cam_caminavientos", level = 6, name = "Caminavientos", type = "accion", actionKind = "windwalking", description = "Al usar Paso del Viento ganas velocidad de vuelo (mitad de tu velocidad) hasta el final del turno; reduces daño por caida.", effects = {} },
+            { id = "monje_cam_caminavientos", level = 6, name = "Caminavientos", cast = "ninguna", type = "accion", actionKind = "windwalking", description = "Al usar Paso del Viento ganas velocidad de vuelo (mitad de tu velocidad) hasta el final del turno; reduces daño por caida.", effects = {} },
         } },
     },
     features = {

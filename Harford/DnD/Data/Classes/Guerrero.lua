@@ -72,13 +72,13 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "gue_estilo_combate", level = 1, name = "Estilo de combate", type = "choice", description = "Adoptas un estilo de combate como especialidad. Elige una opcion.", effects = {}, choice = {
             slots = 1,
             options = {
-                { id = "defensa",    label = "Defensa (+1 CA con armadura)",          effects = { { kind = "bonus", target = "armorClass", value = 1 } } },
-                { id = "duelo",      label = "Duelo (+2 daño un arma a una mano)",    effects = { { kind = "bonus", target = "weaponDamage", value = 2 } } },
+                { id = "defensa",    label = "Defensa (+1 CA con armadura)",          effects = { { kind = "flag", flag = "styleDefense" } } },
+                { id = "duelo",      label = "Duelo (+2 daño un arma a una mano)",    effects = { { kind = "flag", flag = "styleDueling" } } },
                 { id = "gran_arma",  label = "Gran Arma (repetir 1-2 en daño a dos manos)", effects = { { kind = "flag", flag = "greatWeaponFighting" } } },
                 { id = "proteccion", label = "Proteccion (desventaja a atacantes, con escudo)", effects = {} },
                 { id = "dos_armas",  label = "Combate con Dos Armas (+mod al daño del 2º ataque)", effects = { { kind = "flag", flag = "offhandDamageMod" } } },
-                { id = "tiro_arco", label = "Tiro con Arco (+2 ataque a distancia)", effects = { { kind = "bonus", target = "weaponAttack", value = 2 } } },
-                { id = "tirador", label = "Tirador en Combate Cercano (+1 ataque a distancia, ignora cobertura)", effects = { { kind = "bonus", target = "weaponAttack", value = 1 } } },
+                { id = "tiro_arco", label = "Tiro con Arco (+2 ataque a distancia)", effects = { { kind = "flag", flag = "styleArchery" } } },
+                { id = "tirador", label = "Tirador en Combate Cercano (+1 ataque a distancia, ignora cobertura)", effects = { { kind = "flag", flag = "styleSharpshooter" } } },
             },
         } },
         { id = "gue_segundo_aliento", level = 1, name = "Segundo aliento", cast = "accion_adicional", type = "accion", description = "Acción adicional: gasta un dado de golpe d10 para recuperar PG (tirada + Mod. Constitución).", actionKind = "secondWind", effects = {} },

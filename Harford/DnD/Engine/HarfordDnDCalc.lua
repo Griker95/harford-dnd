@@ -149,21 +149,37 @@ function HarfordDnDCalc.HasWeaponProficiency(def)
     return false
 end
 
-function HarfordDnDCalc.GetWeaponAttackBonus()
+-- `def` es el ARMA de la tirada, y es opcional: los estilos de combate CONDICIONALES solo suman
+-- con su contexto delante. Sin `def` (rutas que no saben con que arma se tira) no suman -- mejor
+-- cero que un bono falso, que era justo el defecto: Tiro con Arco subia tambien los ataques cuerpo
+-- a cuerpo, y Duelo daba +2 con cualquier arma. Mismo patron que greatWeaponFighting: el flag se
+-- evalua donde vive el contexto, no como bono global.
+function HarfordDnDCalc.GetWeaponAttackBonus(def)
     if IsNpcContext() then return 0 end
-    local bonus = HarfordDnDFeatureEffects
-        and HarfordDnDFeatureEffects.GetBonus
-        and HarfordDnDFeatureEffects.GetBonus("weaponAttack")
-        or 0
+    local FE = HarfordDnDFeatureEffects
+    local bonus = FE and FE.GetBonus and FE.GetBonus("weaponAttack") or 0
+    if def and def.mode == "Ranged" and FE and FE.HasFlag then
+        if FE.HasFlag("styleArchery") then bonus = bonus + 2 end
+        if FE.HasFlag("styleSharpshooter") then bonus = bonus + 1 end
+    end
     return bonus
 end
 
-function HarfordDnDCalc.GetWeaponDamageBonus()
+function HarfordDnDCalc.GetWeaponDamageBonus(def)
     if IsNpcContext() then return 0 end
-    local bonus = HarfordDnDFeatureEffects
-        and HarfordDnDFeatureEffects.GetBonus
-        and HarfordDnDFeatureEffects.GetBonus("weaponDamage")
-        or 0
+    local FE = HarfordDnDFeatureEffects
+    local bonus = FE and FE.GetBonus and FE.GetBonus("weaponDamage") or 0
+    -- Duelo: +2 al dano con un arma cuerpo a cuerpo a UNA mano y NINGUNA otra cosa en la
+    -- secundaria. Un arma Versatil usada a una mano cuenta (no lleva la propiedad "Dos manos").
+    if def and def.mode == "Melee" and FE and FE.HasFlag and FE.HasFlag("styleDueling") then
+        local dosManos = false
+        for _, p in ipairs(def.props or {}) do
+            if tostring(p) == "Dos manos" then dosManos = true break end
+        end
+        local offhand = HarfordDnDItems and HarfordDnDItems.HasOffhandCombatItem
+            and HarfordDnDItems.HasOffhandCombatItem()
+        if not dosManos and not offhand then bonus = bonus + 2 end
+    end
     return bonus
 end
 

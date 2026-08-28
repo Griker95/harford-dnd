@@ -88,7 +88,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
     local wmod = GetWeaponSlotDamageBonus(def)
     if not (def and def.ignoreGlobalWeaponBonuses) then
         wmod = wmod + (HarfordDnDCalc.GetWeaponDamageBonus
-            and HarfordDnDCalc.GetWeaponDamageBonus() or HarfordDnDCalc.GetWeaponMod())
+            and HarfordDnDCalc.GetWeaponDamageBonus(def) or HarfordDnDCalc.GetWeaponMod())
     end
 
     -- Gran Lucha con Armas (flag greatWeaponFighting): repetir una vez los dados de daño que

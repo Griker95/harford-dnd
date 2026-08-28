@@ -258,8 +258,10 @@ for addon in ADDONS:
     for base, _, nombres in os.walk(org):
         rel_dir = base.replace(org, '').lstrip('\\/')
         for n in nombres:
-            if not (n.lower().endswith('.lua') or n.lower().endswith('.toc')
-                    or n.lower().endswith('.xml')):
+            # `.ogg` para el paquete de musica: sin esto los ficheros se quedaban en el repo y
+            # en juego cada emisora avisaba de que no suena -- la funcion entera rota, y con un
+            # sintoma que apunta a otro sitio.
+            if not n.lower().endswith(('.lua', '.toc', '.xml', '.ogg')):
                 continue
             o = os.path.join(base, n)
             d = os.path.join(dst, rel_dir, n)

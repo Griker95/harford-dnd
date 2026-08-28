@@ -100,8 +100,8 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "cdm_estilo_combate", level = 2, name = "Estilo de combate", type = "choice", description = "Adoptas un estilo de combate como especialidad.", effects = {}, choice = {
             slots = 1,
             options = {
-                { id = "defensa",         label = "Defensa (+1 CA con armadura)",       effects = { { kind = "bonus", target = "armorClass", value = 1 } } },
-                { id = "duelos",          label = "Duelos (+2 daño un arma a una mano)", effects = { { kind = "bonus", target = "weaponDamage", value = 2 } } },
+                { id = "defensa",         label = "Defensa (+1 CA con armadura)",       effects = { { kind = "flag", flag = "styleDefense" } } },
+                { id = "duelos",          label = "Duelos (+2 daño un arma a una mano)", effects = { { kind = "flag", flag = "styleDueling" } } },
                 { id = "gran_arma",       label = "Gran Lucha con Armas (repetir 1-2 a dos manos)", effects = { { kind = "flag", flag = "greatWeaponFighting" } } },
                 { id = "guerrero_profano", label = "Guerrero Profano (2 trucos de brujo, Carisma)", effects = {} },
                 { id = "dos_armas",       label = "Combate con Dos Armas (+mod al 2º ataque)", effects = { { kind = "flag", flag = "offhandDamageMod" } } },

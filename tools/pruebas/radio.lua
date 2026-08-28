@@ -51,6 +51,17 @@ chk("se avisa si no sono", com:find("if not (ok and sono) then", 1, true) ~= nil
 chk("y se explica lo del reinicio",
     com:find("un /reload no basta", 1, true) ~= nil, true)
 
+print("Los ficheros de audio llegan al juego")
+-- El despliegue solo copiaba .lua/.toc/.xml, asi que los OGG se quedaban en el repo: en juego cada
+-- emisora avisaba de que no suena. La funcion entera rota, y con un sintoma que apunta a otro
+-- sitio (parecia que faltaba el fichero, y faltaba el COPIADO).
+local desp = io.open("tools/desplegar.py"):read("*a")
+chk("el despliegue copia los .ogg", desp:find(".ogg", 1, true) ~= nil, true)
+-- Y la carpeta tiene que existir tras un clon: git no guarda carpetas vacias.
+local marca = io.open("HarfordMusic/Media/.gitkeep")
+chk("la carpeta Media sobrevive a un clon", marca ~= nil, true)
+if marca then marca:close() end
+
 print("El paquete es opcional de verdad")
 chk("depende de Harford", toc:find("## RequiredDeps: Harford", 1, true) ~= nil, true)
 -- Al reves NO: el core no puede DEPENDER de el, o dejaria de ser opcional. Nombrarlo en un

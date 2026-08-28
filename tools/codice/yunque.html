@@ -902,6 +902,25 @@ const REGISTRO = new Map(DATOS.registro.map(r => [r[0], r[1]]));   // clave -> n
 // mision el addon resuelve nombre, enlace e icono a partir de el.
 const ID_DE = new Map(DATOS.registro.filter(r => r[2]).map(r => [r[0], r[2]]));
 const RECETA_IDS = new Set(DATOS.recetaIds);
+
+// Las claves vienen de dos sitios: el registro del proyecto y lo que se esta creando en el
+// yunque de objetos ahora mismo. Lo segundo importa porque el orden natural de trabajo es
+// crear el objeto y despues su receta o la mision que lo da: sin esto, la clave que acabas
+// de inventar salia marcada como inexistente.
+function nombreDeClave(k){
+  if (REGISTRO.has(k)) return REGISTRO.get(k);
+  const mio = (typeof listaObj !== "undefined") && listaObj.find(o => o.clave === k);
+  return mio ? mio.nombre : null;
+}
+function esDeLaSesion(k){
+  return (typeof listaObj !== "undefined") && listaObj.some(o => o.clave === k);
+}
+function clavesConocidas(){
+  const t = new Map(REGISTRO);
+  if (typeof listaObj !== "undefined")
+    for (const o of listaObj) if (o.clave) t.set(o.clave, o.nombre);
+  return t;
+}
 const PENDIENTES = DATOS.pendientes;
 const CLAVES_PEND = new Set(PENDIENTES.map(p => p[0]));
 
@@ -1296,9 +1315,12 @@ function recActual(){
 function lineaReceta(r){
   const trozos = [
     `id = "${r.id}"`, `profession = "${r.prof}"`, `skillReq = ${r.skill}`,
-    `name = "${escapa(r.nombre)}"`, `icon = "${r.icono}"`, `dc = ${r.dc}`,
-    `source = "${r.source}"`
+    `name = "${escapa(r.nombre)}"`
   ];
+  // Ninguna receta del catalogo lleva el icono vacio: si no hay, no se emite el campo,
+  // porque `icon = ""` deja el hueco en blanco en la ventana de fabricacion.
+  if (r.icono) trozos.push(`icon = "${r.icono}"`);
+  trozos.push(`dc = ${r.dc}`, `source = "${r.source}"`);
   if (r.source === "entrenador" && r.train) trozos.push(`trainCost = ${r.train}`);
   trozos.push("materials = { " + (r.mats.length
     ? r.mats.map(m => `{ key = "${m.clave}", qty = ${m.qty} }`).join(", ") : "") + " }");
@@ -1337,7 +1359,7 @@ function autocompleta(inp, caja, valor){
   const q = sinTildes(valor).toLowerCase().trim();
   if (q.length < 2){ caja.classList.remove("abierto"); return; }
   const res = [];
-  for (const [k, n] of REGISTRO){
+  for (const [k, n] of clavesConocidas()){
     if (k.includes(q) || sinTildes(n).toLowerCase().includes(q)) res.push([k, n]);
     if (res.length >= 30) break;
   }
@@ -1364,14 +1386,18 @@ function pintaRec(){
 
   const mi = $("marcaRicono");
   mi.className = r.icono ? (CONOCIDOS.has(r.icono) ? "marca si" : "marca no") : "pista";
-  mi.textContent = !r.icono ? "" : (CONOCIDOS.has(r.icono) ? "✓ existe" : "⚠ no está en el catálogo");
+  mi.textContent = !r.icono ? "sin icono la receta sale con el hueco vacío"
+    : (CONOCIDOS.has(r.icono) ? "✓ existe" : "⚠ no está en el catálogo");
   ponFondo($("rMuestra"), r.icono);
   ponFondo($("rttIcono"), r.icono);
 
   const mo = $("marcaOut");
+  const nom = nombreDeClave(r.out);
   if (!r.out){ mo.className = "pista"; mo.textContent = "La clave del objeto que produce."; }
-  else if (REGISTRO.has(r.out)){ mo.className = "marca si"; mo.textContent = "✓ " + REGISTRO.get(r.out); }
-  else { mo.className = "marca no"; mo.textContent = "⚠ esa clave no está en el registro"; }
+  else if (nom){
+    mo.className = "marca si";
+    mo.textContent = "✓ " + nom + (esDeLaSesion(r.out) ? " — lo estás creando ahora" : "");
+  } else { mo.className = "marca no"; mo.textContent = "⚠ esa clave no está en el registro"; }
 
   $("rttNombre").textContent = r.nombre || "Receta sin nombre";
   const l = [texto($("rProf")) + " · nivel " + r.skill, "CD " + r.dc];
@@ -1384,7 +1410,7 @@ function pintaRec(){
   filas.push('<div><span><b>Produce</b> ' + (REGISTRO.get(r.out) || r.out || "—") +
     '</span><b>' + r.outQty + '</b></div>');
   for (const m of r.mats){
-    const nom = REGISTRO.get(m.clave);
+    const nom = nombreDeClave(m.clave);
     filas.push('<div class="' + (nom ? "" : "falta") + '"><span>' +
       (nom || (m.clave + " — no está en el registro")) + '</span><b>' + m.qty + '</b></div>');
   }
@@ -1419,7 +1445,7 @@ function pintaListaRec(){
     const p = document.createElement("td"); p.textContent = r.prof.replace("prof_","");
     const sk = document.createElement("td"); sk.className = "num"; sk.textContent = r.skill;
     const ma = document.createElement("td");
-    const malas = r.mats.filter(m => !REGISTRO.has(m.clave)).length;
+    const malas = r.mats.filter(m => !nombreDeClave(m.clave)).length;
     ma.innerHTML = r.mats.length + (malas ? ' <span class="chip aviso2">' + malas + ' sin registro</span>' : "");
     const x = document.createElement("td");
     const b = document.createElement("button");
@@ -1531,7 +1557,7 @@ function bloqueMision(m){
     for (const p of m.premios){
       const id = ID_DE.get(p.clave);
       rec.push('                { ' + (id ? "id = " + id + ", " : "") + 'name = "' +
-               escapa(REGISTRO.get(p.clave) || p.clave) + '", count = ' + p.cuantos + ' },');
+               escapa(nombreDeClave(p.clave) || p.clave) + '", count = ' + p.cuantos + ' },');
     }
     rec.push('            },');
   }
@@ -1610,7 +1636,7 @@ function pintaMis(){
       .filter(Boolean).join(" "));
   for (const r of m.reps) prem.push("+" + r.cuanto + " " + r.faccion);
   for (const p of m.premios)
-    prem.push((REGISTRO.get(p.clave) || p.clave) + (p.cuantos > 1 ? " x" + p.cuantos : ""));
+    prem.push((nombreDeClave(p.clave) || p.clave) + (p.cuantos > 1 ? " x" + p.cuantos : ""));
   if (prem.length) filas.push('<div style="margin-top:6px"><span><b>Recompensa</b> ' +
     prem.join(", ") + "</span></div>");
   $("mttObjs").innerHTML = filas.join("");

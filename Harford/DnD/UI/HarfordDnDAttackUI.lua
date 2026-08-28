@@ -394,7 +394,7 @@ function API.RefreshWeaponInfo()
     local weaponMod = (deps.getWeaponSlotDamageBonus and deps.getWeaponSlotDamageBonus(def) or 0)
     if not (def and def.ignoreGlobalWeaponBonuses) then
         weaponMod = weaponMod + (HarfordDnDCalc and HarfordDnDCalc.GetWeaponDamageBonus
-            and HarfordDnDCalc.GetWeaponDamageBonus() or (HarfordDnDCalc and HarfordDnDCalc.GetWeaponMod and HarfordDnDCalc.GetWeaponMod() or 0))
+            and HarfordDnDCalc.GetWeaponDamageBonus(def) or (HarfordDnDCalc and HarfordDnDCalc.GetWeaponMod and HarfordDnDCalc.GetWeaponMod() or 0))
     end
     -- Para MOSTRAR se usa WeaponDamageText: el desarmado es 1 fijo y "1d1" se lee mal.
     local dice = HarfordDnDWeapons and HarfordDnDWeapons.WeaponDamageText

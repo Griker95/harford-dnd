@@ -3865,7 +3865,7 @@ DoWeaponAttack = function(options)
     local wmod = GetWeaponSlotAttackBonus(def)
     if not (def and def.ignoreGlobalWeaponBonuses) then
         wmod = wmod + (HarfordDnDCalc.GetWeaponAttackBonus
-            and HarfordDnDCalc.GetWeaponAttackBonus() or HarfordDnDCalc.GetWeaponMod())
+            and HarfordDnDCalc.GetWeaponAttackBonus(def) or HarfordDnDCalc.GetWeaponMod())
     end
     local misc = HarfordDnDCalc.GetMiscBonus()
     local condPenalty = ActorIsPlayer(def) and GetActiveConditionalAttackPenalty() or 0

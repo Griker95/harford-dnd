@@ -103,8 +103,8 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "caz_estilo_combate", level = 2, name = "Estilo de combate", type = "choice", description = "Adoptas un estilo de combate como especialidad.", effects = {}, choice = {
             slots = 1,
             options = {
-                { id = "tiro_arco",   label = "Tiro con Arco (+2 ataque a distancia)", effects = { { kind = "bonus", target = "weaponAttack", value = 2 } } },
-                { id = "tirador",     label = "Tirador en Combate Cercano (+1 ataque a distancia, ignora cobertura)", effects = { { kind = "bonus", target = "weaponAttack", value = 1 } } },
+                { id = "tiro_arco",   label = "Tiro con Arco (+2 ataque a distancia)", effects = { { kind = "flag", flag = "styleArchery" } } },
+                { id = "tirador",     label = "Tirador en Combate Cercano (+1 ataque a distancia, ignora cobertura)", effects = { { kind = "flag", flag = "styleSharpshooter" } } },
                 { id = "dos_armas",   label = "Combate con Dos Armas (+mod al 2º ataque)", effects = { { kind = "flag", flag = "offhandDamageMod" } } },
                 { id = "gran_arma",   label = "Combate con Arma Grande (repetir 1-2 a dos manos)", effects = { { kind = "flag", flag = "greatWeaponFighting" } } },
             },

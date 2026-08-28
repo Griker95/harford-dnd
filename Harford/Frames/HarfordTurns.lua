@@ -31,6 +31,13 @@ local SendStateTo   -- se asigna abajo; el manejador de mensajes la usa antes
 local AlguienSeQuedaElClick   -- idem: la tarjeta se crea antes que el API
 local AnnounceCombatStart   -- idem: la usa el manejador de TSTART
 local suppressBroadcast = false
+-- Un broadcast PEDIDO durante la supresion no se tira: se apunta y se dispara al levantarla. La
+-- supresion existe para no REBOTAR lo recibido, pero hay dos manejadores --TJOIN e INITRES-- en
+-- los que el DM CAMBIA la lista al recibir y difundirla es el proposito: con el descarte a secas,
+-- quien se unia no recibia nunca la foto con el dentro, y la iniciativa que devolvia un jugador
+-- reordenaba la lista SOLO en el cliente del DM. Aplicar una foto recibida no pasa por
+-- `MarkChanged` (verificado), asi que esto no puede crear un eco.
+local broadcastSuprimido = false
 local broadcastPending = false
 local viewStart = 1
 local editMode = false
@@ -1028,8 +1035,9 @@ local function ApplyTurnMessage(message, sender)
                 local ok, err = HarfordTurnOrderAPI.AddBlockMember(e, unidad)
                 Print(ok and ("|cff88ff88" .. tostring(sender) .. " se une al combate.|r")
                     or (tostring(sender) .. " no se pudo unir: " .. tostring(err)))
-                -- La foto se manda por el camino normal (`MarkChanged` la programa): llamar aqui
-                -- a `SendState` seria usarla antes de declararla.
+                -- La foto se manda por el camino normal: `MarkChanged` la pide, la supresion la
+                -- apunta y el receptor la dispara al terminar de aplicar. Sin ese apunte, este
+                -- broadcast se descartaba y quien se unia no recibia nunca la lista con el dentro.
                 if ok then MarkChanged() end
                 return true
             end
@@ -1123,7 +1131,8 @@ local function SendTurnNotice()
 end
 
 local function ScheduleBroadcast()
-    if suppressBroadcast or broadcastPending then return end
+    if suppressBroadcast then broadcastSuprimido = true return end
+    if broadcastPending then return end
     broadcastPending = true
     local function sendLater()
         broadcastPending = false
@@ -2583,6 +2592,10 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     suppressBroadcast = true
     local applied = ApplyTurnMessage(message, sender)
     suppressBroadcast = false
+    if broadcastSuprimido then
+        broadcastSuprimido = false
+        ScheduleBroadcast()
+    end
     if applied then
         local store = EnsureStore()
         if opcode ~= "TURN" then

@@ -199,4 +199,19 @@ if patron then
     chk("y el maximo del suyo", mx, "34")
 end
 
+-- ─── LA SUPRESION APUNTA, NO TIRA ───────────────────────────────────────────
+-- El receptor envuelve la aplicacion en `suppressBroadcast` para no rebotar lo recibido. Pero en
+-- TJOIN e INITRES el DM CAMBIA la lista al recibir, y difundirla es el proposito: el descarte a
+-- secas hacia que quien se unia no recibiera nunca la foto con el dentro, y que la iniciativa
+-- devuelta por un jugador reordenara la lista SOLO en el cliente del DM.
+print("La supresion apunta el broadcast, no lo tira")
+chk("pedirlo suprimido lo apunta",
+    turnos:find("if suppressBroadcast then broadcastSuprimido = true return end", 1, true) ~= nil, true)
+chk("y al levantarla se dispara",
+    turnos:find("if broadcastSuprimido then", 1, true) ~= nil, true)
+-- El orden importa: primero levantar, luego disparar, o se re-apuntaria a si mismo.
+chk("despues de levantar la supresion",
+    turnos:find("suppressBroadcast = false", 1, true) <
+    turnos:find("if broadcastSuprimido then", 1, true), true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -22,8 +22,10 @@ import unicodedata
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-REGISTRO = 'Harford/Professions/HarfordProfessionsItems.lua'
-RECETAS = 'Harford/Professions/HarfordProfessionsData.lua'
+# El otro chat saco los datos de profesiones a su propio addon (commit 3133ccb). Si
+# vuelven a moverse, es esta linea la que hay que tocar.
+REGISTRO = 'HarfordProfessionsData/HarfordProfessionsItems.lua'
+RECETAS = 'HarfordProfessionsData/HarfordProfessionsData.lua'
 SALIDA = 'AddonsIndependientes/HarfordItemForge/Data.lua'
 
 # La KB es lo que consume la web: se usa para COTEJAR, de modo que nada publicado en el

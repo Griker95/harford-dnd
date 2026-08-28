@@ -1,6 +1,6 @@
 {
  "pocion_mana": {
-  "nombre": "Pocion de mana",
+  "nombre": "Poción de maná",
   "ids": [
    14018928
   ]
@@ -41,12 +41,6 @@
    14074744
   ]
  },
- "glandula_veneno": {
-  "nombre": "Glandula de veneno",
-  "ids": [
-   14065229
-  ]
- },
  "garra_maligna": {
   "nombre": "Garra maligna",
   "ids": [
@@ -63,18 +57,6 @@
   "nombre": "Seda de araña",
   "ids": [
    14065231
-  ]
- },
- "piedra_aspera": {
-  "nombre": "Piedra aspera",
-  "ids": [
-   14074576
-  ]
- },
- "piedra_gruesa": {
-  "nombre": "Piedra gruesa",
-  "ids": [
-   14074578
   ]
  }
 }

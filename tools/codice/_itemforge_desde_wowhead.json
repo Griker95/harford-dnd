@@ -2547,8 +2547,9 @@
   "apilable": 20
  },
  "almofar_de_escamas_doradas": {
-  "display": 3837,
-  "calidad": 2
+  "display": 217279,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p."
  },
  "almofar_de_mitril": {
   "display": 7931,
@@ -2607,8 +2608,9 @@
   "calidad": 1
  },
  "botas_de_escamas_doradas": {
-  "display": 3847,
-  "calidad": 2
+  "display": 217275,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
  },
  "botas_de_hierro_verdes": {
   "display": 3484,
@@ -2772,14 +2774,13 @@
   "calidad": 1
  },
  "cinturon_de_obsidiana_ligero": {
-  "display": 22195,
-  "calidad": 3,
-  "desc": "Equipar: +32 p. de poder de ataque."
+  "display": 234321,
+  "calidad": 4,
+  "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "cinturon_de_obsidiana_pesado": {
-  "display": 22197,
-  "calidad": 3,
-  "desc": "Equipar: +5 p. de todas las resistencias."
+  "display": 234319,
+  "calidad": 4
  },
  "cinturon_de_placas_imperiales": {
   "display": 12424,
@@ -2903,9 +2904,9 @@
   "desc": "Equipar: Al recibir un golpe en combate hay un 3% de probabilidad de curarte en 60 al 100. (Probabilidad de que accione: 3%)"
  },
  "coraza_deliriohelado": {
-  "display": 22669,
+  "display": 236695,
   "calidad": 4,
-  "desc": "Equipar: Defensa aumentada +8."
+  "desc": "Equipar: Mejora un 2% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "coraza_gruesa_de_obsidiana": {
   "display": 22196,
@@ -2993,8 +2994,9 @@
   "desc": "Equipar: Aumenta la probabilidad de bloquear ataques con un escudo en un 2%."
  },
  "espada_ancha_de_acero_lunar": {
-  "display": 3853,
-  "calidad": 2
+  "display": 217281,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 26 p."
  },
  "espada_ancha_de_cobre_pesada": {
   "display": 3487,
@@ -3125,8 +3127,9 @@
   "calidad": 2
  },
  "guanteletes_de_escamas_doradas": {
-  "display": 9366,
-  "calidad": 2
+  "display": 217273,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 5 p."
  },
  "guanteletes_de_forjaz": {
   "display": 6733,
@@ -3365,8 +3368,9 @@
   "calidad": 2
  },
  "leotardos_de_escamas_doradas": {
-  "display": 3843,
-  "calidad": 2
+  "display": 217285,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 6 p."
  },
  "leotardos_de_guerra_orcos": {
   "display": 7929,
@@ -3435,8 +3439,9 @@
   "calidad": 1
  },
  "loriga_de_escamas_doradas": {
-  "display": 3845,
-  "calidad": 2
+  "display": 217277,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
  },
  "malla_espina_salvaje": {
   "display": 12624,
@@ -3784,8 +3789,9 @@
   "calidad": 2
  },
  "sobrehombros_de_escamas_doradas": {
-  "display": 3841,
-  "calidad": 2
+  "display": 217283,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
  },
  "sobrehombros_de_hierro_verdes": {
   "display": 3840,
@@ -5350,1950 +5356,6 @@
   "calidad": 3,
   "desc": "Equipar: Mejora el índice de golpe crítico en 9 p."
  },
- "glifo_carbonizado": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_10": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_100": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_101": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_102": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_103": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_104": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_105": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_106": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_107": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_108": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_109": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_11": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_110": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_111": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_112": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_113": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_114": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_115": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_116": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_117": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_118": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_119": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_12": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_120": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_121": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_122": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_123": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_124": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_125": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_126": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_127": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_128": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_129": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_13": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_130": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_131": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_132": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_133": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_134": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_135": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_136": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_137": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_138": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_139": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_14": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_140": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_141": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_142": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_143": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_144": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_145": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_146": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_147": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_148": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_149": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_15": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_150": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_151": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_152": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_153": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_154": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_155": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_156": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_157": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_158": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_159": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_16": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_160": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_161": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_162": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_163": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_164": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_165": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_166": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_167": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_168": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_169": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_17": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_170": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_171": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_172": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_173": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_174": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_175": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_176": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_177": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_178": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_179": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_18": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_180": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_181": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_182": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_183": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_184": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_185": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_186": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_187": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_188": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_189": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_19": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_190": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_191": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_192": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_193": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_194": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_195": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_196": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_197": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_198": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_199": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_2": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_20": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_200": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_201": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_202": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_203": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_204": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_205": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_206": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_207": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_208": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_209": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_21": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_210": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_211": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_212": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_213": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_214": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_215": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_216": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_217": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_218": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_219": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_22": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_220": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_221": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_222": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_223": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_224": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_225": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_226": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_227": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_228": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_229": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_23": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_230": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_231": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_232": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_233": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_234": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_235": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_236": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_237": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_238": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_239": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_24": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_240": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_241": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_242": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_243": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_244": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_245": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_246": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_247": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_248": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_249": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_25": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_250": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_251": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_252": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_253": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_254": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_255": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_256": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_257": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_258": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_259": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_26": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_260": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_261": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_262": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_263": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_264": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_265": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_266": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_267": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_268": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_269": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_27": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_270": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_271": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_272": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_273": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_274": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_275": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_276": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_277": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_278": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_279": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_28": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_280": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_281": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_282": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_283": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_284": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_285": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_286": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_287": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_288": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_289": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_29": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_290": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_291": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_292": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_293": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_294": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_295": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_296": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_297": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_298": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_299": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_3": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_30": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_300": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_301": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_302": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_303": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_304": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_305": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_306": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_307": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_308": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_309": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_31": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_310": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_311": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_312": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_313": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_314": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_315": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_316": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_317": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_318": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_319": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_32": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_320": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_321": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_322": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_323": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_324": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_33": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_34": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_35": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_36": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_37": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_38": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_39": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_4": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_40": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_41": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_42": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_43": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_44": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_45": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_46": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_47": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_48": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_49": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_5": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_50": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_51": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_52": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_53": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_54": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_55": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_56": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_57": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_58": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_59": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_6": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_60": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_61": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_62": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_63": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_64": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_65": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_66": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_67": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_68": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_69": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_7": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_70": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_71": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_72": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_73": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_74": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_75": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_76": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_77": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_78": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_79": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_8": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_80": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_81": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_82": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_83": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_84": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_85": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_86": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_87": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_88": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_89": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_9": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_90": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_91": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_92": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_93": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_94": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_95": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_96": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_97": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_98": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_carbonizado_99": {
-  "display": 40896,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
  "glifo_de_augurio_de_claridad": {
   "display": 206580,
   "calidad": 1,
@@ -7422,18 +5484,6 @@
  },
  "glifo_de_victoria_aplastante": {
   "display": 43400,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_desvaido": {
-  "display": 42468,
-  "calidad": 1,
-  "apilable": 20,
-  "desc": "Uso: Te enseña permanentemente este glifo."
- },
- "glifo_desvaido_2": {
-  "display": 42468,
   "calidad": 1,
   "apilable": 20,
   "desc": "Uso: Te enseña permanentemente este glifo."
@@ -7855,31 +5905,6 @@
   "calidad": 1,
   "apilable": 20
  },
- "vitela_estropeada": {
-  "display": 37602,
-  "calidad": 1,
-  "apilable": 20
- },
- "vitela_estropeada_2": {
-  "display": 37602,
-  "calidad": 1,
-  "apilable": 20
- },
- "vitela_estropeada_3": {
-  "display": 37602,
-  "calidad": 1,
-  "apilable": 20
- },
- "vitela_estropeada_4": {
-  "display": 37602,
-  "calidad": 1,
-  "apilable": 20
- },
- "vitela_estropeada_5": {
-  "display": 37602,
-  "calidad": 1,
-  "apilable": 20
- },
  "orbe_congelado": {
   "display": 43102,
   "calidad": 3,
@@ -8006,32 +6031,12 @@
   "display": 32212,
   "calidad": 4
  },
- "amatista_cantosombrio_cambiante_2": {
-  "display": 32212,
-  "calidad": 4
- },
- "amatista_cantosombrio_destellante": {
-  "display": 32214,
-  "calidad": 4
- },
- "amatista_cantosombrio_destellante_2": {
-  "display": 32214,
-  "calidad": 4
- },
  "amatista_cantosombrio_intemporal": {
   "display": 32215,
   "calidad": 4
  },
  "amatista_cantosombrio_purificada": {
-  "display": 32216,
-  "calidad": 4
- },
- "amatista_cantosombrio_purificada_2": {
-  "display": 32216,
-  "calidad": 4
- },
- "amatista_cantosombrio_purificada_3": {
-  "display": 32216,
+  "display": 37503,
   "calidad": 4
  },
  "amatista_cantosombrio_soberana": {
@@ -8440,28 +6445,12 @@
   "display": 23110,
   "calidad": 2
  },
- "draenita_de_sombras_cambiante_2": {
-  "display": 23110,
-  "calidad": 2
- },
- "draenita_de_sombras_cambiante_3": {
-  "display": 23110,
-  "calidad": 2
- },
  "draenita_de_sombras_destellante": {
   "display": 23100,
   "calidad": 2
  },
  "draenita_de_sombras_intemporal": {
   "display": 23108,
-  "calidad": 2
- },
- "draenita_de_sombras_purificada": {
-  "display": 23106,
-  "calidad": 2
- },
- "draenita_de_sombras_purificada_2": {
-  "display": 23106,
   "calidad": 2
  },
  "draenita_de_sombras_soberana": {
@@ -8473,11 +6462,7 @@
   "calidad": 2
  },
  "draenita_dorada_lisa": {
-  "display": 23114,
-  "calidad": 2
- },
- "draenita_dorada_lisa_2": {
-  "display": 23114,
+  "display": 28290,
   "calidad": 2
  },
  "draenita_dorada_sutil": {
@@ -8547,24 +6532,8 @@
   "display": 32194,
   "calidad": 4
  },
- "espinela_carmesi_delicada_2": {
-  "display": 32194,
-  "calidad": 4
- },
  "espinela_carmesi_llamativa": {
   "display": 32193,
-  "calidad": 4
- },
- "espinela_carmesi_luminosa": {
-  "display": 32195,
-  "calidad": 4
- },
- "espinela_carmesi_luminosa_2": {
-  "display": 32195,
-  "calidad": 4
- },
- "espinela_carmesi_luminosa_3": {
-  "display": 32195,
   "calidad": 4
  },
  "espinela_carmesi_ostentosa": {
@@ -8609,18 +6578,6 @@
  },
  "estrella_de_elune_chispeante": {
   "display": 24035,
-  "calidad": 3
- },
- "estrella_de_elune_chispeante_2": {
-  "display": 24035,
-  "calidad": 3
- },
- "estrella_de_elune_rigida": {
-  "display": 24051,
-  "calidad": 3
- },
- "estrella_de_elune_rigida_2": {
-  "display": 24051,
   "calidad": 3
  },
  "estrella_de_elune_solida": {
@@ -8748,24 +6705,8 @@
   "display": 23097,
   "calidad": 2
  },
- "granate_de_sangre_delicado_2": {
-  "display": 23097,
-  "calidad": 2
- },
  "granate_de_sangre_llamativo": {
   "display": 23095,
-  "calidad": 2
- },
- "granate_de_sangre_luminoso": {
-  "display": 23094,
-  "calidad": 2
- },
- "granate_de_sangre_luminoso_2": {
-  "display": 23094,
-  "calidad": 2
- },
- "granate_de_sangre_luminoso_3": {
-  "display": 23094,
   "calidad": 2
  },
  "hilo_de_cobre_delicado": {
@@ -8806,10 +6747,6 @@
   "display": 32205,
   "calidad": 4
  },
- "ojo_de_leon_liso_2": {
-  "display": 32205,
-  "calidad": 4
- },
  "ojo_de_leon_mistico": {
   "display": 32209,
   "calidad": 4
@@ -8818,40 +6755,12 @@
   "display": 35761,
   "calidad": 4
  },
- "ojo_de_leon_sutil": {
-  "display": 32198,
-  "calidad": 4
- },
- "ojo_de_leon_sutil_2": {
-  "display": 32198,
-  "calidad": 4
- },
  "ojo_de_noche_cambiante": {
   "display": 24055,
   "calidad": 3
  },
- "ojo_de_noche_cambiante_2": {
-  "display": 24055,
-  "calidad": 3
- },
- "ojo_de_noche_destellante": {
-  "display": 24061,
-  "calidad": 3
- },
- "ojo_de_noche_destellante_2": {
-  "display": 24061,
-  "calidad": 3
- },
  "ojo_de_noche_intemporal": {
   "display": 24056,
-  "calidad": 3
- },
- "ojo_de_noche_purificado": {
-  "display": 24057,
-  "calidad": 3
- },
- "ojo_de_noche_purificado_2": {
-  "display": 24057,
   "calidad": 3
  },
  "ojo_de_noche_soberano": {
@@ -8886,10 +6795,6 @@
   "display": 24048,
   "calidad": 3
  },
- "piedra_del_alba_lisa_2": {
-  "display": 24048,
-  "calidad": 3
- },
  "piedra_del_alba_mistica": {
   "display": 24053,
   "calidad": 3
@@ -8898,32 +6803,12 @@
   "display": 35315,
   "calidad": 3
  },
- "piedra_del_alba_sutil": {
-  "display": 24032,
-  "calidad": 3
- },
- "piedra_del_alba_sutil_2": {
-  "display": 24032,
-  "calidad": 3
- },
  "piedra_lunar_azur_chispeante": {
-  "display": 23119,
-  "calidad": 2
- },
- "piedra_lunar_azur_chispeante_2": {
   "display": 23119,
   "calidad": 2
  },
  "piedra_lunar_azur_maciza": {
   "display": 23118,
-  "calidad": 2
- },
- "piedra_lunar_azur_rigida": {
-  "display": 23116,
-  "calidad": 2
- },
- "piedra_lunar_azur_rigida_2": {
-  "display": 23116,
   "calidad": 2
  },
  "piedra_lunar_azur_tormentosa": {
@@ -8947,11 +6832,7 @@
   "calidad": 4
  },
  "piropiedra_temeraria": {
-  "display": 32219,
-  "calidad": 4
- },
- "piropiedra_temeraria_2": {
-  "display": 32219,
+  "display": 35760,
   "calidad": 4
  },
  "rosa_de_kailee": {
@@ -8962,24 +6843,8 @@
   "display": 24028,
   "calidad": 3
  },
- "rubi_vivo_delicado_2": {
-  "display": 24028,
-  "calidad": 3
- },
  "rubi_vivo_llamativo": {
   "display": 24027,
-  "calidad": 3
- },
- "rubi_vivo_luminoso": {
-  "display": 24029,
-  "calidad": 3
- },
- "rubi_vivo_luminoso_2": {
-  "display": 24029,
-  "calidad": 3
- },
- "rubi_vivo_luminoso_3": {
-  "display": 24029,
   "calidad": 3
  },
  "rubi_vivo_ostentoso": {
@@ -9087,14 +6952,6 @@
   "display": 24066,
   "calidad": 3
  },
- "talasita_regia": {
-  "display": 24062,
-  "calidad": 3
- },
- "talasita_regia_2": {
-  "display": 24062,
-  "calidad": 3
- },
  "topacio_noble_con_inscripciones": {
   "display": 24058,
   "calidad": 3
@@ -9108,11 +6965,7 @@
   "calidad": 3
  },
  "topacio_noble_temerario": {
-  "display": 24060,
-  "calidad": 3
- },
- "topacio_noble_temerario_2": {
-  "display": 24060,
+  "display": 35316,
   "calidad": 3
  },
  "torques_de_bronce": {
@@ -9122,18 +6975,6 @@
  },
  "zafiro_empireo_chispeante": {
   "display": 32201,
-  "calidad": 4
- },
- "zafiro_empireo_chispeante_2": {
-  "display": 32201,
-  "calidad": 4
- },
- "zafiro_empireo_rigido": {
-  "display": 32206,
-  "calidad": 4
- },
- "zafiro_empireo_rigido_2": {
-  "display": 32206,
   "calidad": 4
  },
  "zafiro_empireo_solido": {
@@ -9954,13 +7795,14 @@
   "desc": "Equipar: Mejora tu probabilidad de conseguir un golpe crítico en 1%."
  },
  "coraza_de_escamas_de_tortuga": {
-  "display": 8189,
-  "calidad": 2
+  "display": 217268,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 11 p."
  },
  "coraza_de_escamas_heladas": {
-  "display": 22664,
+  "display": 236699,
   "calidad": 4,
-  "desc": "Equipar: +40 p. de poder de ataque."
+  "desc": "Equipar: Mejora un 2% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "coraza_de_escamas_oniricas": {
   "display": 20380,
@@ -10266,8 +8108,9 @@
   "calidad": 2
  },
  "guerrera_polar": {
-  "display": 22661,
-  "calidad": 4
+  "display": 236702,
+  "calidad": 4,
+  "desc": "Equipar: Mejora un 2% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "hombreras_de_filozarza": {
   "display": 233804,
@@ -10476,8 +8319,9 @@
   "calidad": 2
  },
  "pantalones_de_guardian": {
-  "display": 5962,
-  "calidad": 2
+  "display": 217267,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
  },
  "pantalones_de_infiltrado_escarlata": {
   "display": 238278,
@@ -11381,8 +9225,9 @@
   "calidad": 3
  },
  "capa_larga_de_seda": {
-  "display": 4326,
-  "calidad": 2
+  "display": 217252,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
  },
  "caperuza_de_augur_escarlata": {
   "display": 238264,
@@ -11732,8 +9577,9 @@
   "desc": "Equipar: Restaura 8 p. de maná cada 5 s."
  },
  "jubon_de_tejido_magico_negro": {
-  "display": 9998,
-  "calidad": 2
+  "display": 217246,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 13 p."
  },
  "jubon_de_tejido_magico_rojo": {
   "display": 10007,
@@ -11788,8 +9634,9 @@
   "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "leotardos_de_tejido_magico_negros": {
-  "display": 9999,
-  "calidad": 2
+  "display": 217247,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
  },
  "leotardos_de_tejido_zahori": {
   "display": 14132,
@@ -12044,8 +9891,9 @@
   "desc": "Equipar: Aumenta el daño causado por los hechizos de Sombras y los efectos hasta en 21 p."
  },
  "sobrehombros_de_seda_carmesies": {
-  "display": 7059,
-  "calidad": 2
+  "display": 217250,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 8 p."
  },
  "sobrehombros_de_seda_verdes": {
   "display": 7057,
@@ -12303,8 +10151,21 @@
   "apilable": 10
  },
  "almofar_de_escamas_doradas_2": {
-  "display": 3837,
-  "calidad": 2
+  "display": 217279,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p."
+ },
+ "amatista_cantosombrio_cambiante_2": {
+  "display": 32212,
+  "calidad": 4
+ },
+ "amatista_cantosombrio_purificada_2": {
+  "display": 37503,
+  "calidad": 4
+ },
+ "amatista_cantosombrio_purificada_3": {
+  "display": 37503,
+  "calidad": 4
  },
  "antidoto": {
   "display": 6452,
@@ -12317,8 +10178,9 @@
   "calidad": 3
  },
  "botas_de_escamas_doradas_2": {
-  "display": 3847,
-  "calidad": 2
+  "display": 217275,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
  },
  "botas_del_encantador_2": {
   "display": 4325,
@@ -12360,8 +10222,9 @@
   "calidad": 4
  },
  "capa_larga_de_seda_2": {
-  "display": 4326,
-  "calidad": 2
+  "display": 217252,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
  },
  "capucha_de_encantador_2": {
   "display": 4322,
@@ -12372,14 +10235,13 @@
   "calidad": 2
  },
  "cinturon_de_obsidiana_ligero_2": {
-  "display": 22195,
-  "calidad": 3,
-  "desc": "Equipar: +32 p. de poder de ataque."
+  "display": 234321,
+  "calidad": 4,
+  "desc": "Equipar: Mejora un 1% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "cinturon_de_obsidiana_pesado_2": {
-  "display": 22197,
-  "calidad": 3,
-  "desc": "Equipar: +5 p. de todas las resistencias."
+  "display": 234319,
+  "calidad": 4
  },
  "cinturon_de_seda_carmesi_2": {
   "display": 7055,
@@ -12399,26 +10261,52 @@
   "calidad": 3
  },
  "coraza_de_escamas_de_tortuga_2": {
-  "display": 8189,
-  "calidad": 2
+  "display": 217268,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 11 p."
  },
  "coraza_de_escamas_heladas_2": {
-  "display": 22664,
+  "display": 236699,
   "calidad": 4,
-  "desc": "Equipar: +40 p. de poder de ataque."
+  "desc": "Equipar: Mejora un 2% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "coraza_deliriohelado_2": {
-  "display": 22669,
+  "display": 236695,
   "calidad": 4,
-  "desc": "Equipar: Defensa aumentada +8."
+  "desc": "Equipar: Mejora un 2% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "corona_nemorosa_2": {
   "display": 22757,
   "calidad": 3,
   "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 18 p."
  },
+ "draenita_de_sombras_cambiante_2": {
+  "display": 23110,
+  "calidad": 2
+ },
+ "draenita_de_sombras_cambiante_3": {
+  "display": 23110,
+  "calidad": 2
+ },
+ "draenita_dorada_lisa_2": {
+  "display": 28290,
+  "calidad": 2
+ },
  "espada_ancha_de_acero_lunar_2": {
-  "display": 3853,
+  "display": 217281,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 26 p."
+ },
+ "espinela_carmesi_delicada_2": {
+  "display": 32194,
+  "calidad": 4
+ },
+ "estrella_de_elune_chispeante_2": {
+  "display": 24035,
+  "calidad": 3
+ },
+ "granate_de_sangre_delicado_2": {
+  "display": 23097,
   "calidad": 2
  },
  "guanteletes_acecharenas_2": {
@@ -12426,8 +10314,9 @@
   "calidad": 3
  },
  "guanteletes_de_escamas_doradas_2": {
-  "display": 9366,
-  "calidad": 2
+  "display": 217273,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 5 p."
  },
  "guanteletes_de_escamas_heladas_2": {
   "display": 22666,
@@ -12463,12 +10352,14 @@
   "calidad": 4
  },
  "guerrera_polar_2": {
-  "display": 22661,
-  "calidad": 4
+  "display": 236702,
+  "calidad": 4,
+  "desc": "Equipar: Mejora un 2% tu probabilidad de golpear con todos los hechizos y ataques."
  },
  "jubon_de_tejido_magico_negro_2": {
-  "display": 9998,
-  "calidad": 2
+  "display": 217246,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 13 p."
  },
  "jubon_glacial_2": {
   "display": 22652,
@@ -12485,12 +10376,14 @@
   "calidad": 2
  },
  "leotardos_de_escamas_doradas_2": {
-  "display": 3843,
-  "calidad": 2
+  "display": 217285,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 6 p."
  },
  "leotardos_de_tejido_magico_negros_2": {
-  "display": 9999,
-  "calidad": 2
+  "display": 217247,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
  },
  "lingote_torio": {
   "display": 12359,
@@ -12498,8 +10391,9 @@
   "apilable": 20
  },
  "loriga_de_escamas_doradas_2": {
-  "display": 3845,
-  "calidad": 2
+  "display": 217277,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
  },
  "martillo_de_sulfuron_2": {
   "display": 17193,
@@ -12515,9 +10409,30 @@
   "display": 8201,
   "calidad": 2
  },
+ "ojo_de_leon_liso_2": {
+  "display": 32205,
+  "calidad": 4
+ },
+ "ojo_de_noche_cambiante_2": {
+  "display": 24055,
+  "calidad": 3
+ },
  "pantalones_de_guardian_2": {
-  "display": 5962,
+  "display": 217267,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
+ },
+ "piedra_del_alba_lisa_2": {
+  "display": 24048,
+  "calidad": 3
+ },
+ "piedra_lunar_azur_chispeante_2": {
+  "display": 23119,
   "calidad": 2
+ },
+ "piropiedra_temeraria_2": {
+  "display": 35760,
+  "calidad": 4
  },
  "placa_hierro_negro_2": {
   "display": 11604,
@@ -12535,6 +10450,10 @@
   "apilable": 5,
   "desc": "Uso: Restaura 455 al 585 p. de salud. (2 Min Reutilización)"
  },
+ "rubi_vivo_delicado_2": {
+  "display": 24028,
+  "calidad": 3
+ },
  "runa_congelada_2": {
   "display": 22682,
   "calidad": 3,
@@ -12542,12 +10461,14 @@
   "desc": "Uso: Amortigua 1500 al 2500 p. de daño de Fuego. Dura 1 h. (3 Min Reutilización)"
  },
  "sobrehombros_de_escamas_doradas_2": {
-  "display": 3841,
-  "calidad": 2
+  "display": 217283,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
  },
  "sobrehombros_de_seda_carmesies_2": {
-  "display": 7059,
-  "calidad": 2
+  "display": 217250,
+  "calidad": 2,
+  "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 8 p."
  },
  "toga_de_gran_vudu_2": {
   "display": 8200,
@@ -12557,6 +10478,10 @@
   "display": 7063,
   "calidad": 2
  },
+ "topacio_noble_temerario_2": {
+  "display": 35316,
+  "calidad": 3
+ },
  "varita_mistica_superior_2": {
   "display": 11290,
   "calidad": 2
@@ -12564,5 +10489,9 @@
  "yelmo_zarzal_2": {
   "display": 22759,
   "calidad": 3
+ },
+ "zafiro_empireo_chispeante_2": {
+  "display": 32201,
+  "calidad": 4
  }
 }

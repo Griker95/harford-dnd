@@ -253,12 +253,14 @@
   "almofar_de_escamas_doradas": {
     "calidad": 2,
     "display": 3837,
-    "displayid": 15301
+    "displayid": 15301,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p."
   },
   "almofar_de_escamas_doradas_2": {
     "calidad": 2,
     "display": 3837,
-    "displayid": 15301
+    "displayid": 15301,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 12 p."
   },
   "almofar_de_escamas_hiperconductoras_bril": {
     "calidad": 4,
@@ -1060,12 +1062,14 @@
   "botas_de_escamas_doradas": {
     "calidad": 2,
     "display": 3847,
-    "displayid": 4153
+    "displayid": 4153,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   },
   "botas_de_escamas_doradas_2": {
     "calidad": 2,
     "display": 3847,
-    "displayid": 4153
+    "displayid": 4153,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   },
   "botas_de_escorpido_resistentes": {
     "calidad": 2,
@@ -1920,7 +1924,8 @@
   },
   "capa_glacial_2": {
     "calidad": 4,
-    "display": 22658
+    "display": 22658,
+    "displayid": 23125
   },
   "capa_helada": {
     "calidad": 3,
@@ -1930,12 +1935,14 @@
   "capa_larga_de_seda": {
     "calidad": 2,
     "display": 4326,
-    "displayid": 15076
+    "displayid": 15076,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   },
   "capa_larga_de_seda_2": {
     "calidad": 2,
     "display": 4326,
-    "displayid": 15076
+    "displayid": 15076,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   },
   "capa_lino": {
     "calidad": 1,
@@ -3066,12 +3073,14 @@
   "coraza_de_escamas_de_tortuga": {
     "calidad": 2,
     "display": 8189,
-    "displayid": 11598
+    "displayid": 11598,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 11 p."
   },
   "coraza_de_escamas_de_tortuga_2": {
     "calidad": 2,
     "display": 8189,
-    "displayid": 11598
+    "displayid": 11598,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 11 p."
   },
   "coraza_de_escamas_heladas": {
     "calidad": 4,
@@ -4393,12 +4402,14 @@
   "espada_ancha_de_acero_lunar": {
     "calidad": 2,
     "display": 3853,
-    "displayid": 5105
+    "displayid": 5105,
+    "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 26 p."
   },
   "espada_ancha_de_acero_lunar_2": {
     "calidad": 2,
     "display": 3853,
-    "displayid": 5105
+    "displayid": 5105,
+    "desc": "Equipar: Aumenta la curación de los hechizos y los efectos hasta en 26 p."
   },
   "espada_ancha_de_cobre_pesada": {
     "calidad": 2,
@@ -7591,12 +7602,14 @@
   "guanteletes_de_escamas_doradas": {
     "calidad": 2,
     "display": 9366,
-    "displayid": 18256
+    "displayid": 18256,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 5 p."
   },
   "guanteletes_de_escamas_doradas_2": {
     "calidad": 2,
     "display": 9366,
-    "displayid": 18256
+    "displayid": 18256,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 5 p."
   },
   "guanteletes_de_escamas_heladas": {
     "calidad": 4,
@@ -8131,12 +8144,14 @@
   "guerrera_polar": {
     "calidad": 4,
     "display": 22661,
-    "displayid": 35290
+    "displayid": 35290,
+    "desc": "Equipar: Mejora un 2% tu probabilidad de golpear con todos los hechizos y ataques."
   },
   "guerrera_polar_2": {
     "calidad": 4,
     "display": 22661,
-    "displayid": 35290
+    "displayid": 35290,
+    "desc": "Equipar: Mejora un 2% tu probabilidad de golpear con todos los hechizos y ataques."
   },
   "guia_de_tragafuegos": {
     "display": 43660,
@@ -8572,12 +8587,14 @@
   "jubon_de_tejido_magico_negro": {
     "calidad": 2,
     "display": 9998,
-    "displayid": 24352
+    "displayid": 24352,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 13 p."
   },
   "jubon_de_tejido_magico_negro_2": {
     "calidad": 2,
     "display": 9998,
-    "displayid": 24352
+    "displayid": 24352,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 13 p."
   },
   "jubon_de_tejido_magico_rojo": {
     "calidad": 2,
@@ -8846,12 +8863,14 @@
   "leotardos_de_escamas_doradas": {
     "calidad": 2,
     "display": 3843,
-    "displayid": 4744
+    "displayid": 4744,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 6 p."
   },
   "leotardos_de_escamas_doradas_2": {
     "calidad": 2,
     "display": 3843,
-    "displayid": 4744
+    "displayid": 4744,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 6 p."
   },
   "leotardos_de_escorpido_pesados": {
     "calidad": 2,
@@ -8897,12 +8916,14 @@
   "leotardos_de_tejido_magico_negros": {
     "calidad": 2,
     "display": 9999,
-    "displayid": 20405
+    "displayid": 20405,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   },
   "leotardos_de_tejido_magico_negros_2": {
     "calidad": 2,
     "display": 9999,
-    "displayid": 20405
+    "displayid": 20405,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   },
   "leotardos_de_tejido_zahori": {
     "calidad": 2,
@@ -9077,12 +9098,14 @@
   "loriga_de_escamas_doradas": {
     "calidad": 2,
     "display": 3845,
-    "displayid": 9425
+    "displayid": 9425,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   },
   "loriga_de_escamas_doradas_2": {
     "calidad": 2,
     "display": 3845,
-    "displayid": 9425
+    "displayid": 9425,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   },
   "loto_cardeno": {
     "calidad": 1,
@@ -9935,12 +9958,14 @@
   "pantalones_de_guardian": {
     "calidad": 2,
     "display": 5962,
-    "displayid": 8426
+    "displayid": 8426,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   },
   "pantalones_de_guardian_2": {
     "calidad": 2,
     "display": 5962,
-    "displayid": 8426
+    "displayid": 8426,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 9 p."
   },
   "pantalones_de_infiltrado_escarlata": {
     "calidad": 3,
@@ -12069,12 +12094,14 @@
   "sobrehombros_de_escamas_doradas": {
     "calidad": 2,
     "display": 3841,
-    "displayid": 9424
+    "displayid": 9424,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   },
   "sobrehombros_de_escamas_doradas_2": {
     "calidad": 2,
     "display": 3841,
-    "displayid": 9424
+    "displayid": 9424,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 7 p."
   },
   "sobrehombros_de_escorpido_pesados": {
     "calidad": 2,
@@ -12136,12 +12163,14 @@
   "sobrehombros_de_seda_carmesies": {
     "calidad": 2,
     "display": 7059,
-    "displayid": 9574
+    "displayid": 9574,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 8 p."
   },
   "sobrehombros_de_seda_carmesies_2": {
     "calidad": 2,
     "display": 7059,
-    "displayid": 9574
+    "displayid": 9574,
+    "desc": "Equipar: Aumenta el daño y la curación de los hechizos mágicos y los efectos hasta en 8 p."
   },
   "sobrehombros_de_seda_verdes": {
     "calidad": 2,
@@ -13426,7 +13455,8 @@
   },
   "yelmo_zarzal_2": {
     "calidad": 3,
-    "display": 22759
+    "display": 22759,
+    "displayid": 35211
   },
   "yeti_mecanico_tranquilo": {
     "calidad": 1,

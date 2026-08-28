@@ -1,4 +1,5 @@
 HarfordReputationAdmin = HarfordReputationAdmin or {}
+local renamePopup
 local AdminAPI = HarfordReputationAdmin
 
 -- ─── Constantes de layout ─────────────────────────────────────────────────────
@@ -924,7 +925,7 @@ local function CreateListRow(parent, index)
 end
 
 local function ShowRenamePopup(parentRow, rowData, onConfirm)
-    if not renamePopup then
+    if not renamePopup then  -- (local declarado arriba; era un global accidental)
         renamePopup = CreateFrame("Frame", "HarfordRepAdminRenamePopup", UIParent, "BackdropTemplate")
         renamePopup:SetSize(280, 80)
         renamePopup:SetFrameStrata("DIALOG")

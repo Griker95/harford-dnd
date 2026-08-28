@@ -3,6 +3,9 @@
 
 HarfordCharacterAdvancement = HarfordCharacterAdvancement or {}
 
+-- Adelantada: se usa (linea ~1034) antes de definirse (linea ~1600). Era un global accidental.
+local OpenWeaponPickDialog
+
 local API = HarfordCharacterAdvancement
 local S = { frame = nil, mode = "creation", targetTotal = nil, stage = "race", raceId = "raza_humano", subraceId = "", backgroundId = nil, selected = nil, nodeRows = {}, choiceSelections = {}, choiceRows = {}, attributeArrays = nil, selectedArray = nil, attributeAssignments = {}, pendingScore = nil, classConfirmed = false, secondaryClassId = nil, secondarySubclassId = "", primaryLevel = 0, secondaryLevel = 0, levelPlan = {}, pendingClassId = nil, pendingFeatures = {}, classSelectionOpen = true, classSelectionMode = "base" }
 
@@ -1597,7 +1600,7 @@ OpenChoiceDialog = function(feature, level, source)
 end
 
 -- Elegir un arma concreta de una categoria ("Marcial", "Simple"...). `alElegir` recibe el nombre.
-function OpenWeaponPickDialog(categoria, alElegir, modo)
+OpenWeaponPickDialog = function(categoria, alElegir, modo)
     local dialog = CreateChoiceDialog()
     for _, row in ipairs(S.choiceDialogRows or {}) do row:Hide() end
     S.choiceDialogRows = {}

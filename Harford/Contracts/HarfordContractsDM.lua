@@ -609,7 +609,9 @@ local function AddRepFactionButton(faction, level)
   UIDropDownMenu_AddButton(info, level)
 end
 
-function RepFactionDropDownInit(self, level, menuList)
+-- Local: solo lo referencia este fichero (UIDropDownMenu_Initialize recibe la referencia).
+-- Era un global accidental.
+local function RepFactionDropDownInit(self, level, menuList)
   level = level or 1
   local R = HarfordReputation
   if not (R and R.GetFactions) then return end

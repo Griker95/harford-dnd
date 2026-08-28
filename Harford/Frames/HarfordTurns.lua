@@ -812,7 +812,10 @@ end
 
 -- Cuando se vio la ultima foto. Lo mira el relevo entre companeros para no contestar si el DM ya
 -- lo hizo.
-ULTIMA_FOTO_VISTA = 0
+-- Cuando llego la ultima foto por el canal. Era un GLOBAL accidental (sin `local`): funcionaba,
+-- pero cualquier addon que escribiera un nombre igual rompia el relevo de TREQ y la purga sin
+-- dejar rastro. Solo lo usa este fichero.
+local ULTIMA_FOTO_VISTA = 0
 
 -- La compresion vive en HarfordSync, que es el transporte, porque la usan varios sistemas. Aqui
 -- solo se le da nombre corto. Ver AGENTS.md: se comprime SOLO lo que no cabe en un mensaje, y

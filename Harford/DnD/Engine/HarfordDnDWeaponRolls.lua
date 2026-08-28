@@ -352,23 +352,37 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
     -- numero de cada tipo extra se colorea con COLOR_ROLL (|cff66ccff) para igualar al de cabecera.
     local headlineTotal, modifiersTxt = HarfordDnDRolls.FormatDamageHeader(dmgTypeOrder, dmgTypeMap, total)
 
-    HarfordDnDRolls.Broadcast({
-        type = "damage",
-        label = ((def.actorLabel and (def.actorLabel .. ": ")) or "")
-            .. (offhand and "Daño Offhand " or "Daño ") .. WeaponRollName(def),
-        total = headlineTotal,
-        dice = table.concat(diceParts, " + "),
-        modifiers = modifiersTxt,
-        critical = maximizeDice and "CRÍTICO" or "",
-        mode = ""
-    })
+    local etiquetaDano = ((def.actorLabel and (def.actorLabel .. ": ")) or "")
+        .. (offhand and "Daño Offhand " or "Daño ") .. WeaponRollName(def)
+
+    -- Contra un jugador que corre Harford, la linea la publica EL: solo el conoce sus resistencias,
+    -- asi que solo el puede decir el numero definitivo. Sale con ESTA etiqueta y con el nombre del
+    -- atacante, o sea igual que si la hubiera publicado este cliente -- lo unico que cambia es que
+    -- el numero ya es el de verdad, en vez de un bruto seguido de una linea de correccion.
+    --
+    -- Si no sabemos que corre Harford, publica este cliente: preferible un numero sin mitigar a que
+    -- en la mesa no salga nada. No hay acuse, asi que callarse a ciegas es perder la linea.
+    local publicaLaVictima = HarfordDnDCombat and HarfordDnDCombat.VictimaPublicaSuDano
+        and HarfordDnDCombat.VictimaPublicaSuDano("target")
+    if not publicaLaVictima then
+        HarfordDnDRolls.Broadcast({
+            type = "damage",
+            label = etiquetaDano,
+            total = headlineTotal,
+            dice = table.concat(diceParts, " + "),
+            modifiers = modifiersTxt,
+            critical = maximizeDice and "CRÍTICO" or "",
+            mode = ""
+        })
+    end
     -- Segundo valor: los componentes POR TIPO. Contra un jugador viajan tal cual y los mitiga su
     -- cliente; contra un NPC ya vienen mitigados de aqui y el total basta.
     local componentes = {}
     for _, t in ipairs(dmgTypeOrder) do
         componentes[#componentes + 1] = { amount = dmgTypeMap[t].total, damageType = t }
     end
-    return total, componentes
+    -- La etiqueta viaja con los componentes: es la que usara la victima al publicar.
+    return total, componentes, etiquetaDano
 end
 
 local function ResolveWeaponManeuverAfterHitSave(data)

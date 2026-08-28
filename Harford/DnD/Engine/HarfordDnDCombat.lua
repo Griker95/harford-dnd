@@ -440,7 +440,21 @@ local function ApplyDamageToPlayerUnit(unit, components, isCritical, opts)
     if not name or name == "" then return false end
     if not (HarfordSync and HarfordSync.SendDamage) then return false end
     return HarfordSync.SendDamage(ADDON_PREFIX, name, components, isCritical,
-        opts and opts.magical) and true or false
+        opts and opts.magical, opts and opts.label) and true or false
+end
+
+-- Va a publicar la victima su propia linea de dano? Solo si es un jugador que corre Harford, y eso
+-- se sabe porque ha difundido sus recursos alguna vez. Si no lo sabemos, publica el atacante como
+-- siempre: preferible un numero sin mitigar a que en la mesa no salga NADA.
+function HarfordDnDCombat.VictimaPublicaSuDano(unit)
+    unit = unit or "target"
+    if not (UnitExists and UnitExists(unit) and UnitIsPlayer and UnitIsPlayer(unit)) then return false end
+    if UnitIsUnit and UnitIsUnit(unit, "player") then return false end
+    if not (HarfordDnDResources and HarfordDnDResources.RemoteCache) then return false end
+    local name = HarfordClassColors.UnitFullName(unit)
+    local short = name and Ambiguate and Ambiguate(name, "short") or name
+    return (name and HarfordDnDResources.RemoteCache[name] ~= nil)
+        or (short and HarfordDnDResources.RemoteCache[short] ~= nil) or false
 end
 
 -- Normaliza lo que llega del llamador: una lista de componentes, o un total suelto con su tipo.

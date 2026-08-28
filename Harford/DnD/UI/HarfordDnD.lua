@@ -1501,7 +1501,7 @@ end
 --   resistencia/inmunidad/vulnerabilidad por tipo -> reduccion plana de condiciones -> vida
 --   temporal -> salud.
 -- El atacante ya no decide nada de esto: manda cuanto y de que tipo.
-local function ApplyIncomingDamage(components, isCritical, sender, esMagico)
+local function ApplyIncomingDamage(components, isCritical, sender, esMagico, etiqueta)
     if type(components) ~= "table" or #components == 0 then return false end
     -- Cada componente se mitiga con SU tipo: se puede ser resistente a uno y vulnerable a otro.
     local total, detalle = 0, {}
@@ -1547,7 +1547,20 @@ local function ApplyIncomingDamage(components, isCritical, sender, esMagico)
     -- mismo numero y ese mismo tipo: repetirlo desde la victima es una linea de ruido por golpe.
     -- Se dice cuando el resultado NO es el que se anuncio: resistencia, inmunidad, vulnerabilidad,
     -- reduccion plana de una condicion, o dano desviado al demonio del brujo.
-    if mitigado or total ~= bruto then
+    if etiqueta and etiqueta ~= "" then
+        -- El atacante NO ha publicado nada: la linea definitiva es esta. Sale con SU nombre y SU
+        -- arma --por eso viajan en el mensaje-- y con el numero YA mitigado, porque las
+        -- resistencias son mias y solo yo las conozco. En la mesa se lee igual que antes; lo que
+        -- desaparece es la linea de correccion que venia detras.
+        HarfordDnDRolls.Broadcast({
+            type = "damage", label = etiqueta, total = total, dice = "",
+            player = sender,
+            modifiers = table.concat(partes, "  "),
+            critical = isCritical and "CRITICO" or "", mode = "",
+        })
+    elseif mitigado or total ~= bruto then
+        -- Sin etiqueta (cliente anterior, o no cabia en el mensaje) el atacante SI publico su
+        -- numero: aqui solo se corrige cuando el resultado real no es ese.
         HarfordDnDRolls.Broadcast({
             -- `dice` vacio: aqui no se tira nada, se recibe. Con "-" el render pintaba un "(-)"
             -- que no significaba nada.
@@ -4000,7 +4013,7 @@ DoWeaponAttack = function(options)
                 -- coloca al final de tu turno; aqui se concede al confirmar el impacto, porque el
                 -- cliente no observa el fin de turno y el resultado es el mismo punto.
                 if spendsRage then TriggerResourceGain("rage_maneuver_hit") end
-                local damageTotal, damageComponents = WeaponRolls.RollWeaponDamage(def, abil, isCritical, options.suppressAbilityDamage == true)
+                local damageTotal, damageComponents, etiquetaDano = WeaponRolls.RollWeaponDamage(def, abil, isCritical, options.suppressAbilityDamage == true)
                 if man and man.afterHitSave and man.afterHitSave.onHitExtraDamageDice then
                     local count, sides = tostring(man.afterHitSave.onHitExtraDamageDice):match("^(%d*)d(%d+)$")
                     count, sides = tonumber(count == "" and "1" or count), tonumber(sides)
@@ -4033,8 +4046,13 @@ DoWeaponAttack = function(options)
                     and HarfordDamageMitigation.TargetResolvesOwnDamage("target") and damageComponents then
                     paraObjetivo = damageComponents
                 end
+                -- La etiqueta viaja con el dano: contra un jugador que corre Harford, la linea la
+                -- publica EL con su numero ya mitigado, y tiene que salir con el arma y el nombre
+                -- del atacante para que en la mesa se lea igual que siempre.
+                local opcionesGolpe = OpcionesGolpeMagico(def) or {}
+                opcionesGolpe.label = etiquetaDano
                 HarfordDnDCombat.ApplyWeaponDamageToTarget(paraObjetivo, isCritical, nil,
-                    OpcionesGolpeMagico(def))
+                    opcionesGolpe)
                 -- +1 Furia solo en ataque de arma normal (no si esta maniobra ya gasto Furia).
                 if not spendsRage and not (SheetContext and SheetContext.active)
                     and GetResourceMax("rage") > 0 then

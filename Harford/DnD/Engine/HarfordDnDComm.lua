@@ -140,13 +140,13 @@ function HarfordDnDComm.CreateHandlers(deps)
         -- RADJ, porque aplica un efecto real sobre nosotros.
         -- OJO: `f and f(x)` se ajusta a UN valor. Sin este `if`, `dmgCrit` y `dmgMagico` llegaban
         -- siempre nil y ningun golpe entrante contaba como magico.
-        local dmgComponents, dmgCrit, dmgMagico
+        local dmgComponents, dmgCrit, dmgMagico, dmgEtiqueta
         if HarfordSync.DeserializeDamage then
-            dmgComponents, dmgCrit, dmgMagico = HarfordSync.DeserializeDamage(message)
+            dmgComponents, dmgCrit, dmgMagico, dmgEtiqueta = HarfordSync.DeserializeDamage(message)
         end
         if dmgComponents then
             if not IsTrustedEffectSender(sender) then return false end
-            if deps.ApplyIncomingDamage then deps.ApplyIncomingDamage(dmgComponents, dmgCrit, sender, dmgMagico) end
+            if deps.ApplyIncomingDamage then deps.ApplyIncomingDamage(dmgComponents, dmgCrit, sender, dmgMagico, dmgEtiqueta) end
             return true  -- cambia la vida -> refrescar overlays
         end
 

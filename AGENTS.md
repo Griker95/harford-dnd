@@ -3348,6 +3348,32 @@ traerla. Ahora el bonus por calidad acepta tambien el HUECO (`ARMOR_EQUIPLOC`: c
 pecho, tunica, cintura, piernas, pies, muneca, manos, capa). Anillos, abalorios y cuello quedan
 FUERA a proposito: su rareza no es una pieza de armadura y no debe dar CA.
 
+## La linea de dano la publica LA VICTIMA (2026-08-28)
+
+Solo el defensor conoce sus resistencias, asi que solo el puede decir el numero definitivo. Antes
+el atacante publicaba su numero en bruto y la victima anadia DETRAS una linea de correccion cuando
+no coincidia: dos lineas por golpe mitigado. Ahora hay UNA, y la dice la victima.
+
+En la mesa se lee **igual que antes** -- `Gmaster [Espada larga] 5 Cortante R` -- porque la
+etiqueta del atacante viaja con el dano (`DNDDMG|<componentes>|C|M|<etiqueta>`) y la victima
+publica con `player = sender` y esa etiqueta. Lo unico que cambia es que el numero ya es el real.
+
+Detalles que costaron y no deben perderse:
+
+- **La etiqueta va la ULTIMA y NO se saca con `strsplit("|")`.** Un enlace de objeto lleva pipes
+  dentro (`|cff…|Hitem:…|h[Espada larga]|h|r`), asi que el split la cortaba en el primero y llegaba
+  como `"Dano "`. Se coge el resto de la cadena de una pieza con un `match`. Lo cazo la prueba de
+  `dano_payload`, no el juego.
+- Se compacta con `HarfordDnDRolls.NetworkLabel` (expuesto para esto): conserva color y
+  clicabilidad y suelta la cadena larga de estadisticas. Si aun asi no cabe en 240 bytes se recorta
+  **la etiqueta**, nunca los componentes -- el dano es el dato.
+- **El atacante solo calla si sabe que la victima corre Harford**, y eso se sabe porque ha
+  difundido sus recursos alguna vez (`HarfordDnDCombat.VictimaPublicaSuDano` mira
+  `HarfordDnDResources.RemoteCache`). Si no lo sabe, publica el bruto como siempre: no hay acuse en
+  ningun sitio de este sistema, asi que callarse a ciegas seria perder la linea entera.
+- Un mensaje **sin** etiqueta (cliente anterior, o no cabia) mantiene el comportamiento viejo: el
+  atacante publico, y la victima solo corrige si el resultado real no es ese.
+
 ## La foto de turnos: comprimida, y solo cuando cambia la LISTA (2026-08-28)
 
 El reensamblado de un mensaje troceado es **todo o nada** y **no hay acuse ni reintento**: si falta

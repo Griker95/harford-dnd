@@ -175,6 +175,10 @@ local function NetworkLabel(label)
     return label
 end
 
+-- Se expone porque el mensaje de dano tambien lleva etiqueta ahora: la victima publica la linea
+-- con el arma del atacante, y ese enlace hay que compactarlo igual que en una tirada.
+HarfordDnDRolls.NetworkLabel = NetworkLabel
+
 function HarfordDnDRolls.Serialize(data)
     data = data or {}
     local label = NetworkLabel(data.label)

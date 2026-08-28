@@ -1334,7 +1334,10 @@ end
 -- magico es del GOLPE, no de un tipo de dano suelto. Ademas asi es compatible en los dos sentidos:
 -- un cliente viejo manda tres campos y aqui sale nil (no magico), y uno viejo que reciba cuatro
 -- simplemente ignora el que no conoce.
-function HarfordSync.SerializeDamage(components, isCritical, esMagico)
+-- `label` es la que publicara LA VICTIMA: "Dano [Espada larga]". Va aqui porque solo ella conoce
+-- sus resistencias, asi que solo ella puede publicar el numero definitivo -- pero la linea tiene
+-- que salir con el nombre y el arma del ATACANTE, o en la mesa no se entiende de donde viene.
+function HarfordSync.SerializeDamage(components, isCritical, esMagico, label)
     if type(components) ~= "table" then return nil end
     local partes, total = {}, 0
     for _, c in ipairs(components) do
@@ -1346,13 +1349,35 @@ function HarfordSync.SerializeDamage(components, isCritical, esMagico)
         end
     end
     if total <= 0 or #partes == 0 then return nil end
-    local payload = "DNDDMG|" .. table.concat(partes, ",") .. "|" .. (isCritical and "C" or "")
-        .. "|" .. (esMagico and "M" or "")
+    -- El enlace del arma se compacta igual que en una tirada: conserva color y clicabilidad, y
+    -- suelta la cadena larga de estadisticas, que desbordaria el limite de ~255 bytes.
+    label = (HarfordDnDRolls and HarfordDnDRolls.NetworkLabel
+        and HarfordDnDRolls.NetworkLabel(label)) or tostring(label or "")
+    -- La etiqueta es lo unico recortable: los componentes son el dato. Si aun asi no cabe, se
+    -- manda sin ella y la victima cae al comportamiento anterior (publicar solo si difiere).
+    local function build(lbl)
+        return "DNDDMG|" .. table.concat(partes, ",") .. "|" .. (isCritical and "C" or "")
+            .. "|" .. (esMagico and "M" or "") .. "|" .. lbl
+    end
+    local payload = build(label)
+    while #payload > 240 and label ~= "" do
+        label = label:sub(1, math.max(0, #label - 16))
+        payload = build(label)
+    end
     return #payload <= 240 and payload or nil
 end
 
 function HarfordSync.DeserializeDamage(message)
-    local opcode, lista, crit, mag = strsplit("|", tostring(message or ""))
+    -- La etiqueta NO se puede sacar con `strsplit("|")`: un enlace de objeto lleva pipes dentro
+    -- (`|cff…|Hitem:…|h[Espada larga]|h|r`) y quedaria cortada en el primero. Va la ULTIMA a
+    -- proposito, asi que se coge todo el resto de la cadena de una pieza.
+    local mensaje = tostring(message or "")
+    local opcode, lista, crit, mag, label = mensaje:match("^([^|]*)|([^|]*)|([^|]*)|([^|]*)|(.*)$")
+    if not opcode then
+        -- Cuatro campos: mensaje de un cliente anterior, sin etiqueta.
+        opcode, lista, crit, mag = strsplit("|", mensaje)
+        label = nil
+    end
     if opcode ~= "DNDDMG" or not lista then return nil end
     local out = {}
     for amount, tipo in tostring(lista):gmatch("(%d+):([%w_%-]*)") do
@@ -1360,11 +1385,12 @@ function HarfordSync.DeserializeDamage(message)
         if amount > 0 then out[#out + 1] = { amount = amount, damageType = tipo } end
     end
     if #out == 0 then return nil end
-    return out, crit == "C", mag == "M"
+    -- La etiqueta puede no venir: un cliente anterior manda cuatro campos.
+    return out, crit == "C", mag == "M", (label ~= "" and label or nil)
 end
 
-function HarfordSync.SendDamage(prefix, target, components, isCritical, esMagico)
-    local payload = HarfordSync.SerializeDamage(components, isCritical, esMagico)
+function HarfordSync.SendDamage(prefix, target, components, isCritical, esMagico, label)
+    local payload = HarfordSync.SerializeDamage(components, isCritical, esMagico, label)
     if not payload then return false end
     return HarfordSync.Send(prefix, payload, "WHISPER", target)
 end

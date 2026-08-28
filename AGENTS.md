@@ -2903,6 +2903,13 @@ para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja d
   referencian por CLAVE y se **autocompletan y validan contra el registro real**: una clave
   inventada deja la receta como pendiente para siempre sin decir nada, que es el mismo
   problema que el icono inexistente.
+- **Gossip**: NO saca una tirada de comandos, saca un **guion**. `text add` y `option add`
+  actuan sobre **la pagina abierta en la ventana de gossip**, asi que un arbol de dialogo no
+  se puede montar de una tacada: hay que navegar por el juego. El guion intercala los pasos
+  ("desde la pagina 0, pulsa X") donde tocan, crea TODAS las paginas primero (una opcion no
+  puede enlazar a lo que no existe) y avisa de las paginas a las que no llega ninguna
+  opcion, que no se podrian escribir. Al borrar una pagina renumera enlaces igual que hace
+  `page remove` en el servidor. La pagina 0 es la que sale al hablar y no se crea.
 - **Misiones**: saca la entrada de `HarfordQuestCatalog`. **No inventar campos**: los que
   existen son `title`, `description`, `category`, `difficulty`, `icon`, `source`,
   `objectives[{text, required}]` y `rewards{rep|reps, xp, money{gold,silver,copper}, items}`.

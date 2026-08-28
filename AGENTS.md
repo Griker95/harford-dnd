@@ -3348,6 +3348,45 @@ traerla. Ahora el bonus por calidad acepta tambien el HUECO (`ARMOR_EQUIPLOC`: c
 pecho, tunica, cintura, piernas, pies, muneca, manos, capa). Anillos, abalorios y cuello quedan
 FUERA a proposito: su rareza no es una pieza de armadura y no debe dar CA.
 
+## La foto de turnos: comprimida, y solo cuando cambia la LISTA (2026-08-28)
+
+El reensamblado de un mensaje troceado es **todo o nada** y **no hay acuse ni reintento**: si falta
+un trozo, `buffer.received < total` devuelve false, el TTL de 15 s borra el buffer en silencio y no
+se aplica nada. Ni el emisor sabe que falto, ni el receptor sabe que le faltaba. En el cliente eso
+no se ve como un error: se ve como que el DM ha dejado de hablar.
+
+Con la mesa llena la foto son ~2400 bytes = **12 mensajes**. Basta perder uno.
+
+Tres cambios, por orden de importancia:
+
+1. **Avanzar el turno ya no manda la foto.** El aviso `TURN` lleva serial, indice, la entrada y
+   ahora tambien el **asalto** -- que era lo unico que viajaba solo en la foto. Va en el quinto
+   hueco, vacio desde que se retiro el avance por bloques, asi que no cambia el numero de campos.
+   Un aviso de un cliente viejo trae ahi texto: `SafeNumber` lo deja en 0 y no pisa el asalto de
+   nadie. De 13 mensajes por pulsacion a 1. `MarcarLocal` apunta y repinta sin difundir.
+2. **La vida de un NPC va sola** (`THP|guid|hp|maxHp`). `UNIT_HEALTH` dispara en rafaga y cada
+   disparo difundia la lista entera para cambiar un numero. Se aplica ademas a los MIEMBROS de un
+   bloque, que guardan vida y no tienen tarjeta propia.
+3. **La foto va comprimida** con LibDeflate (viene en EpsilonLib, en TRP3 y en Epsilon_Book; se
+   registra en LibStub y como global). Es texto muy repetitivo y pasa de ~2400 a ~275 bytes:
+   **12 trozos a 2**. Marca `Z|` al principio del payload; el transporte no cambia.
+
+Reglas que NO deben perderse:
+
+- **Se comprime SOLO lo que no cabe en un mensaje.** Por debajo de `TURN_SINGLE_MESSAGE_LIMIT` se
+  manda en claro y lo entiende cualquier cliente, incluido uno sin actualizar. Y si comprimir no
+  encoge, se manda en claro igual.
+- Un cliente sin actualizar que reciba un payload `Z|` lo descarta (su parser exige `STATE`): se
+  queda sin actualizar la lista, que es lo mismo que le pasa HOY al perder un trozo, solo que hoy
+  pasa a menudo. No se corrompe nada.
+- **El ICONO se queda en el cable.** Se penso quitarlo por tamanio y es un error: sale del perfil
+  TRP3 de la unidad (`GetProfileIcon`), no de `displayId` ni de nada derivable, y el receptor puede
+  no tener a esa criatura ni a la vista -- lo que no se manda no se puede recuperar alli. Ademas,
+  comprimido cuesta 37 bytes (275 con icono, 238 sin) y no ahorra ni un mensaje.
+- `Chomp` NO es el camino, aunque sea lo que usa TRP3: antepone 12 hex de cabecera y descarta lo
+  que no la traiga, asi que dejaria sordo a todo cliente sin actualizar. De TRP3 se toma la otra
+  mitad de su receta, que es comprimir.
+
 ## El avance por BLOQUES se retiro; los bloques se quedan (2026-08-27)
 
 Hubo un segundo modo de avanzar el turno: en vez de ir de criatura en criatura, iba de **bloque en

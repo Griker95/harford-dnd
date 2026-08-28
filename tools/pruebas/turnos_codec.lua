@@ -113,4 +113,44 @@ local prevFin = turnos:find("local function StartCombat", nextFin, true) or (nex
 chk("retroceder tampoco",
     turnos:sub(nextFin, prevFin):find("MarkChanged()", 1, true) == nil, true)
 
+-- ─── LA FOTO VIAJA COMPRIMIDA ───────────────────────────────────────────────
+-- Esta es de COMPORTAMIENTO, no de texto: comprime, trocea con el codec real, reensambla y
+-- descomprime, y compara byte a byte. LibDeflate vive en el cliente (EpsilonLib), no en el repo,
+-- asi que si no esta se salta en vez de fallar.
+do
+    local rutaLib = "G:/Epsilon/_retail_/Interface/AddOns/EpsilonLib/Lib/LibDeflate/LibDeflate.lua"
+    local hay = io.open(rutaLib)
+    if not hay then
+        print("La foto viaja comprimida  (saltada: LibDeflate no esta en este equipo)")
+    else
+        hay:close()
+        local D = dofile(rutaLib)
+        print("La foto viaja comprimida")
+        local trozo = "1,Nombrelargo,npc,Nombrelargo,,28,34,Interface" .. string.char(92)
+            .. "Icons" .. string.char(92) .. "inv_misc_head_undead_01,12345,15,5,ff00ff"
+        local original = "STATE|1|~~activo|" .. string.rep(trozo .. ";", 20)
+        local marca = "Z|"
+        local comprimido = marca .. D:EncodeForWoWAddonChannel(D:CompressDeflate(original, { level = 9 }))
+        chk("encoge de verdad", #comprimido < #original, true)
+        -- Lo que importa no son los bytes sino los MENSAJES: el reensamblado es todo o nada y no
+        -- hay acuse ni reintento, asi que cada trozo de menos es una oportunidad menos de perderlo.
+        chk("y en menos trozos",
+            #C.SplitEscapedChunks(comprimido) < #C.SplitEscapedChunks(original), true)
+        local juntos = {}
+        for i, tz in ipairs(C.SplitEscapedChunks(comprimido)) do juntos[i] = C.UnescapeChunk(tz) end
+        chk("reensambla identico", table.concat(juntos) == comprimido, true)
+        local final = D:DecompressDeflate(D:DecodeForWoWAddonChannel(table.concat(juntos):sub(#marca + 1)))
+        chk("y vuelve al original exacto", final == original, true)
+    end
+end
+
+-- La marca solo se pone cuando NO cabe en un mensaje: por debajo de eso se manda en claro y lo
+-- entiende cualquier cliente, incluido uno sin actualizar.
+chk("solo se comprime lo que no cabe",
+    turnos:find("payload = Comprimir(payload) or payload", 1, true) >
+    turnos:find("if #payload <= TURN_SINGLE_MESSAGE_LIMIT then", 1, true), true)
+-- Y si no encoge, no compensa.
+chk("y si no encoge se manda en claro",
+    turnos:find("if #codificado + #MARCA_COMPRIMIDO >= #payload then return nil end", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

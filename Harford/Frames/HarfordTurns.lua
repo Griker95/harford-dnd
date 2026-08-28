@@ -825,8 +825,54 @@ end
 -- lo hizo.
 ULTIMA_FOTO_VISTA = 0
 
+-- LibDeflate viene con EpsilonLib (y con TRP3, y con Epsilon_Book): se registra en LibStub y como
+-- global. Se busca en caliente y se tolera que no este -- entonces no se comprime y todo sigue
+-- como antes.
+local function GetDeflate()
+    if LibStub and LibStub.GetLibrary then
+        local ok, lib = pcall(LibStub.GetLibrary, LibStub, "LibDeflate", true)
+        if ok and lib then return lib end
+    end
+    return _G.LibDeflate
+end
+
+-- Marca de payload comprimido. Un cliente sin actualizar no la reconoce y descarta el mensaje sin
+-- romperse: su parser exige que empiece por `STATE`. Se queda sin actualizar la lista, que es lo
+-- mismo que le pasa HOY cuando se pierde uno de los doce trozos -- solo que hoy pasa a menudo.
+local MARCA_COMPRIMIDO = "Z|"
+
+-- La foto entera son ~2400 bytes de texto muy repetitivo --las mismas rutas de icono, la misma
+-- estructura de campos-- y comprime a ~275: de doce mensajes troceados a dos. Importa porque el
+-- reensamblado es todo o nada y no hay acuse ni reintento: perder un trozo tira el estado entero.
+local function Comprimir(payload)
+    local D = GetDeflate()
+    if not (D and D.CompressDeflate and D.EncodeForWoWAddonChannel) then return nil end
+    local ok, comprimido = pcall(D.CompressDeflate, D, payload, { level = 9 })
+    if not ok or not comprimido then return nil end
+    local ok2, codificado = pcall(D.EncodeForWoWAddonChannel, D, comprimido)
+    if not ok2 or not codificado then return nil end
+    -- Si no encoge, no compensa: se manda en claro y lo entiende todo el mundo.
+    if #codificado + #MARCA_COMPRIMIDO >= #payload then return nil end
+    return MARCA_COMPRIMIDO .. codificado
+end
+
+local function Descomprimir(payload)
+    if payload:sub(1, #MARCA_COMPRIMIDO) ~= MARCA_COMPRIMIDO then return payload end
+    local D = GetDeflate()
+    if not (D and D.DecodeForWoWAddonChannel and D.DecompressDeflate) then return nil end
+    local ok, bruto = pcall(D.DecodeForWoWAddonChannel, D, payload:sub(#MARCA_COMPRIMIDO + 1))
+    if not ok or not bruto then return nil end
+    local ok2, texto = pcall(D.DecompressDeflate, D, bruto)
+    if not ok2 or not texto then return nil end
+    return texto
+end
+
 local function ApplySerializedState(message)
-    local opcode, activeRaw, third, fourth = strsplit("|", message or "")
+    -- Puede venir comprimido: se deshace antes de mirar el opcode. Si no se puede --sin LibDeflate,
+    -- o datos corruptos-- se descarta, que es preferible a aplicar medio estado.
+    message = Descomprimir(tostring(message or ""))
+    if not message then return false end
+    local opcode, activeRaw, third, fourth = strsplit("|", message)
     if opcode ~= "STATE" then return false end
 
     local store = EnsureStore()
@@ -873,6 +919,13 @@ local function ApplySerializedState(message)
 end
 
 local function SendSerializedState(payload, channel, target)
+    if #payload <= TURN_SINGLE_MESSAGE_LIMIT then
+        return HarfordSync.Send(COMM_PREFIX, payload, channel, target)
+    end
+
+    -- Solo cuando NO cabe: por debajo de un mensaje no hay nada que ganar, y mandarlo en claro lo
+    -- entiende cualquier cliente. Comprimir arriba cambia doce trozos por dos.
+    payload = Comprimir(payload) or payload
     if #payload <= TURN_SINGLE_MESSAGE_LIMIT then
         return HarfordSync.Send(COMM_PREFIX, payload, channel, target)
     end

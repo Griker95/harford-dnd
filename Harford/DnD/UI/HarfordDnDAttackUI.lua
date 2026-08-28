@@ -524,12 +524,22 @@ function API.AttachMovementTracker(opts)
     -- La lista si se puede sembrar, porque `HarfordTurns` la crea con `or {}` y respeta lo que
     -- encuentre. Esto NO es un apano de orden con temporizadores -- es no depender del orden.
     local ReiniciarPorTurno
+    -- Y el ancla del turno AJENO. Va por el oyente de cambio de turno --no por el de condiciones--
+    -- porque tiene que dispararse SIEMPRE que el turno pase a otro, aunque tu contador nunca
+    -- llegara a arrancar en este combate: el camino viejo solo anclaba al PARAR un seguimiento
+    -- vivo, asi que quien se unia, recargaba o empezaba el combate en turno enemigo no tenia ni
+    -- ancla ni motor, y cruzaba la sala gratis mientras jugaban los demas.
+    local AnclarPorTurnoAjeno
     do
         _G.HarfordTurnOrderAPI = _G.HarfordTurnOrderAPI or {}
         local T = _G.HarfordTurnOrderAPI
         T._myTurnListeners = T._myTurnListeners or {}
         T._myTurnListeners[#T._myTurnListeners + 1] = function()
             if ReiniciarPorTurno then ReiniciarPorTurno() end
+        end
+        T._turnChangedListeners = T._turnChangedListeners or {}
+        T._turnChangedListeners[#T._turnChangedListeners + 1] = function()
+            if AnclarPorTurnoAjeno then AnclarPorTurnoAjeno() end
         end
     end
 
@@ -970,6 +980,23 @@ function API.AttachMovementTracker(opts)
         label:SetText(FormatMeters(totalMeters))
         motor:SetScript("OnUpdate", OnUpdate)
         return true
+    end
+
+    -- Al pasar el turno a OTRO te quedas donde estas: se ancla TU POSICION DE ESE MOMENTO y se
+    -- garantiza que el motor este instalado para hacerla cumplir. Siempre, no solo si el contador
+    -- estaba corriendo. El DM dirigiendo y el NPC poseido quedan fuera, como en el resto del muro.
+    AnclarPorTurnoAjeno = function()
+        if not EnCombate() then return end
+        if EsMiTurno() then return end
+        if LlevandoNpc() or DirigiendoLaEscena() then return end
+        tracking = false
+        button:SetText("Movimiento")
+        -- Ancla FRESCA en el sitio donde te pilla el cambio de turno: es la posicion a la que el
+        -- muro te devuelve si andas. La del agotamiento, si existia, apunta al mismo sitio -- el
+        -- muro ya te tenia ahi.
+        local ancla = CapturarAncla()
+        if ancla then API.RecordedMovementAnchor = ancla end
+        motor:SetScript("OnUpdate", OnUpdate)
     end
 
     -- El turno YA ESTABA EMPEZADO cuando llegaste: te acabas de unir, o vuelves de una

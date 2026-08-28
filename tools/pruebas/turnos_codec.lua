@@ -236,4 +236,19 @@ chk("movimiento: retomar no pone a cero",
 chk("y el /reload usa retomar, no arrancar",
     attackui:find("if not RetomarSeguimiento() then return end", 1, true) ~= nil, true)
 
+-- ─── EL TURNO AJENO TE ANCLA DONDE ESTAS, SIEMPRE ──────────────────────────
+-- El camino viejo solo ponia el ancla al PARAR un seguimiento vivo: quien se unia, recargaba o
+-- empezaba el combate en turno enemigo no tenia ni ancla ni motor, y cruzaba la sala gratis. El
+-- oyente de CAMBIO de turno ancla tu posicion de ese momento e instala el motor, incondicional.
+print("El turno ajeno ancla siempre")
+local atk = io.open("Harford/DnD/UI/HarfordDnDAttackUI.lua"):read("*a")
+chk("hay oyente de cambio de turno sembrado",
+    atk:find("T._turnChangedListeners[#T._turnChangedListeners + 1]", 1, true) ~= nil, true)
+chk("ancla FRESCA en la posicion del cambio",
+    atk:find("local ancla = CapturarAncla()", 1, true) ~= nil, true)
+chk("e instala el motor aunque nunca arrancara",
+    atk:find('motor:SetScript("OnUpdate", OnUpdate)', 1, true) ~= nil, true)
+chk("el DM dirigiendo queda fuera",
+    atk:find("if LlevandoNpc() or DirigiendoLaEscena() then return end", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

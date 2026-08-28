@@ -271,11 +271,31 @@ Grupo("tira", "la tira de estados sobre el objetivo, y que quede encima del fram
         r.manual("Sin objetivo: coge uno y repite este grupo para comprobar el anclaje.", "npc")
         return
     end
+    -- Un estado sobre OTRO JUGADOR lo aplica SU cliente, no el tuyo: aqui no aparece nada, y las
+    -- comprobaciones de abajo caian las dos por eso. No es un fallo de la tira -- es que desde este
+    -- cliente no se puede montar la escena. Con un NPC (o contigo mismo) si se aplica en local.
+    local otroJugador = UnitIsPlayer and UnitIsPlayer("target")
+        and not (UnitIsUnit and UnitIsUnit("target", "player"))
+    if otroJugador then
+        r.manual("El objetivo es otro JUGADOR: un estado suyo lo aplica su cliente, asi que la "
+            .. "tira no se puede comprobar desde aqui. Coge un NPC y repite este grupo.", "npc")
+        return
+    end
+
     local C = _G.HarfordDnDConditions
     local prueba = "esquivando"
     local tenia = C and C.Has and C.Has("target", prueba)
     if C and C.ApplyToUnit and not tenia then
         C.ApplyToUnit("target", prueba, { duration = "manual" })
+    end
+    -- Que el estado haya prendido DE VERDAD antes de medir nada: si no, lo que sigue mide una tira
+    -- vacia y el fallo sale ilegible ("no se muestra") sin decir por que.
+    local prendio = C and C.Has and C.Has("target", prueba)
+    r.chk("el estado de prueba prende en el objetivo", prendio and true or false,
+        "sin el, la tira no tiene nada que pintar y lo de abajo no significa nada")
+    if not prendio then
+        if C and C.RemoveFromUnit and not tenia then C.RemoveFromUnit("target", prueba) end
+        return
     end
     UF.RefreshConditionStrip("target")
     local tira = _G["HarfordEstadostarget"]

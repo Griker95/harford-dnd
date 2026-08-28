@@ -204,16 +204,6 @@ local function SoyMiembroDe(entry)
     return false
 end
 
--- Estoy en el bloque de PJs? Se busca el bloque de verdad en la lista, porque la entrada sintetica
--- de un BANDO no lleva miembros: solo dice de que bando es el turno.
-local function EstoyEnElBloqueDePJs()
-    local store = HarfordTurnOrderStore
-    for _, e in ipairs((type(store) == "table" and store.entries) or {}) do
-        if tostring(e.kind or "") == "players" and SoyMiembroDe(e) then return true end
-    end
-    return false
-end
-
 local function EntryBelongsToMe(entry)
     -- El turno del bloque de PJs es de SUS MIEMBROS, no de todo el que tenga el addon puesto.
     -- Devolver true a secas mandaba "ES TU TURNO" a la raid entera, incluida la gente que solo
@@ -2177,6 +2167,12 @@ local function CreateCard(parent, index)
     return card
 end
 
+-- Se declara AQUI, no junto a su API mil lineas mas abajo: `CreateTurnFrame` la recorre, y una
+-- local declarada despues de usarse se compila como lectura de GLOBAL -- o sea nil --, asi que
+-- `ipairs(nil or {})` no recorria nada y los avisos de "ventana creada" no se disparaban NUNCA.
+-- No da error: simplemente no pasa.
+local alCrearVentana = {}
+
 local function CreateTurnFrame()
     TurnFrame = CreateFrame("Frame", "HarfordTurnOrderFrame", UIParent, "BackdropTemplate")
     TurnFrame:SetSize(512, 238)
@@ -3367,7 +3363,6 @@ end
 
 -- La ventana se crea al abrirla por primera vez, que puede ser despues de que HarfordAdmin haya
 -- arrancado. Se le avisa para que cuelgue entonces lo suyo.
-local alCrearVentana = {}
 function HarfordTurnOrderAPI.RegisterOnFrameCreated(fn)
     if type(fn) ~= "function" then return false end
     alCrearVentana[#alCrearVentana + 1] = fn

@@ -955,7 +955,16 @@ end
 -- El DM pide a cada jugador que tire la suya. Se responde por susurro al DM.
 
 local function ApplyTurnMessage(message, sender)
-    local opcode = tostring(message or ""):match("^([^|]+)")
+    -- Un payload comprimido que CABE EN UN MENSAJE llega entero, con su marca delante: `Z|...`.
+    -- El enrutado por opcode leia "Z", no encontraba rama y lo descartaba EN SILENCIO -- solo la
+    -- ruta troceada descomprimia, porque el reensamblado desemboca en ApplySerializedState. El
+    -- agujero afectaba justo a las mesas MEDIANAS: una foto de 300-900 bytes comprime por debajo
+    -- del limite del mensaje unico y entraba por aqui. La grande se trocea y funcionaba; la
+    -- pequenia va en claro y funcionaba. Se descomprime ANTES de mirar el opcode.
+    local mensaje = Descomprimir(tostring(message or ""))
+    if not mensaje then return false end
+    message = mensaje
+    local opcode = message:match("^([^|]+)")
     if opcode == "STATE" then
         return ApplySerializedState(message)
     elseif opcode == "SCHUNK" then

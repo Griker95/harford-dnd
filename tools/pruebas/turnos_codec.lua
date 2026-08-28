@@ -161,4 +161,20 @@ chk("si no encoge se manda en claro",
 chk("y avisa de que el vault de fase queda fuera",
     sync:find("NO se usa para el vault de fase", 1, true) ~= nil, true)
 
+-- ─── EL COMPRIMIDO DE UN SOLO MENSAJE TAMBIEN SE ENTIENDE ──────────────────
+-- El agujero de las mesas MEDIANAS: una foto de 300-900 bytes comprime por debajo del limite del
+-- mensaje unico y llega ENTERA con su marca (`Z|...`). El enrutado por opcode leia "Z", no
+-- encontraba rama y la descartaba en silencio -- la grande se trocea y funcionaba, la pequenia va
+-- en claro y funcionaba, y justo la mediana se perdia. Se descomprime ANTES de mirar el opcode.
+print("El comprimido de un solo mensaje se enruta")
+chk("se descomprime antes de leer el opcode",
+    turnos:find("local mensaje = Descomprimir(tostring(message or \"\"))", 1, true) <
+    turnos:find("local opcode = message:match(\"^([^|]+)\")", 1, true), true)
+-- Y las OTRAS dos rutas con compresion no tienen puerta de prefijo que saltar: sus
+-- deserializadores descomprimen dentro y se llaman con el mensaje crudo.
+local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
+chk("equipo y progresion llaman al deserializador sin puerta de opcode",
+    comm:find("HarfordSync.DeserializeDnDClassProgression(message)", 1, true) ~= nil
+    and comm:find("HarfordSync.DeserializeDnDEquipment(message)", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

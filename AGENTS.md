@@ -2909,8 +2909,13 @@ para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja d
   y los 5 rangos (0 Normal, 1 Elite, 2 Raro elite, 3 Jefe, 4 Raro) se sacaron del editor de
   NPC de PhaseToolkit, que es quien los manda de verdad. Lo del envainado sigue truncado y
   por eso se ofrece por numero, sin etiquetas inventadas. Solo se emite lo que se toca.
-  Queda fuera `outfit` (raza, sexo, pelo y los once huecos de equipo), que necesita
-  displayids de equipo.
+  Incluye el **atuendo**: `outfit equip` toma el **ID DEL OBJETO**, no un displayid (un
+  numero NEGATIVO si de verdad es un displayid), asi que se puede vestir buscando por nombre
+  contra los 2.525 objetos de `objetos_wowhead.json`. Ese detalle es lo que lo desbloqueo:
+  parecia que hacia falta un catalogo de displayids de equipo y no. Las 37 razas SI vienen
+  enteras en el catalogo del cliente; la lista de huecos de `equip` esta truncada, asi que se
+  ofrece el segundo argumento sin etiquetarlo, y los nombres de hueco para vaciar salen de
+  los subcomandos reales de `outfit unequip`. Se vacia antes de vestir.
 - **Gossip**: NO saca una tirada de comandos, saca un **guion**. `text add` y `option add`
   actuan sobre **la pagina abierta en la ventana de gossip**, asi que un arbol de dialogo no
   se puede montar de una tacada: hay que navegar por el juego. El guion intercala los pasos

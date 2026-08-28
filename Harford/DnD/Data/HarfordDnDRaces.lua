@@ -515,9 +515,13 @@ end
 -- pero comparten rasgos con una existente. "Elfo noble" / "alto elfo" (quel'dorei) se tratan
 -- como Elfo de Sangre (sin'dorei) a efectos de rasgos. (Semielfo SI es raza propia, ver
 -- abajo.) Las claves van normalizadas (sin acentos, minusculas); el femenino lo cubre Masculinize.
+-- OJO: el destino es el ID ACTUAL, con su prefijo `raza_`. Los dos alias se quedaron apuntando a
+-- "elfo_sangre" tras el renombrado de razas, y como el alias gana el "match mas largo" y despues
+-- se busca por id, resolvian a una raza inexistente: una ficha TRP3 con "Elfo noble" o "Alto elfo"
+-- cargaba SIN rasgos raciales y sin dar error. Lo cazo la auditoria de referencias cruzadas.
 local RACE_TEXT_ALIAS = {
-    ["elfo noble"] = "elfo_sangre",
-    ["alto elfo"]  = "elfo_sangre",
+    ["elfo noble"] = "raza_elfo_sangre",
+    ["alto elfo"]  = "raza_elfo_sangre",
 }
 
 local function EnsureIndex()

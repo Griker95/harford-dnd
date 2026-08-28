@@ -50,4 +50,37 @@ local usos, n4 = Renombrar({ ["cazador_demo_preparado"] = 1, ["monje_cer_breb_ag
 chk("traduce el que cambia", n4, 1)
 chk("  al nombre nuevo", usos.dh_preparado, 1)
 chk("  y respeta el de runtime", usos.monje_cer_breb_agil, 2)
+-- ─── LOS ALIAS DE RAZA APUNTAN A IDS QUE EXISTEN ───────────────────────────
+-- Resto real del renombrado a `raza_`: los alias de texto ("elfo noble", "alto elfo") se quedaron
+-- apuntando a "elfo_sangre", que ya no existe. El alias gana el "match mas largo" y despues se
+-- busca por id, asi que una ficha TRP3 con ese texto cargaba SIN rasgos raciales y sin error.
+-- Se comprueba contra los ficheros REALES: cada destino de alias y de renombrado debe ser un id
+-- vivo de HarfordDnDRaces.
+print("Los alias y renombrados de raza apuntan a ids vivos")
+local razasSrc = io.open("Harford/DnD/Data/HarfordDnDRaces.lua"):read("*a")
+local vivos = {}
+for id in razasSrc:gmatch('id = "(raza_[a-z_]+)"') do vivos[id] = true end
+chk("hay ids de raza que comprobar", (next(vivos) ~= nil), true)
+
+local aliasRotos = {}
+local bloqueAlias = razasSrc:match("local RACE_TEXT_ALIAS = %{(.-)%}")
+for destino in tostring(bloqueAlias or ""):gmatch('= "([a-z_]+)"') do
+    if not vivos[destino] then aliasRotos[#aliasRotos + 1] = destino end
+end
+chk("ningun alias apunta a un id muerto", table.concat(aliasRotos, ","), "")
+
+local progSrc = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
+local renRotos = {}
+for tabla in progSrc:gmatch("RAZAS_RENOMBRADAS = %{(.-)\n%}") do
+    for destino in tabla:gmatch('%] = "([a-z_]+)"') do
+        if not vivos[destino] then renRotos[#renRotos + 1] = destino end
+    end
+end
+for tabla in progSrc:gmatch("SUBRAZAS_RENOMBRADAS = %{(.-)\n%}") do
+    for destino in tabla:gmatch('%] = "([a-z_]+)"') do
+        if not vivos[destino] then renRotos[#renRotos + 1] = destino end
+    end
+end
+chk("ningun renombrado apunta a un id muerto", table.concat(renRotos, ","), "")
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

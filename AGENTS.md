@@ -2892,8 +2892,19 @@ y sigue holgado: el peor caso son 169 caracteres de 249. Lo que sigue SIN enviar
 0..7 no esta verificado y equivocarlo solo afecta a donde se envaina, asi que se deja hasta
 poder comprobarlo en juego.
 
-**Yunque** (`tools/codice/yunque.html`, generado por `gen_yunque.py`): pagina suelta para
-definir objetos a mano y sacarlos en el formato de las anulaciones. Dos ideas la ordenan:
+**Yunque** (`tools/codice/yunque.html`): pagina suelta con VARIOS yunques en pestanas.
+La montan tres generadores y hay que lanzarlos en este orden: `gen_yunque.py` (nombres de
+icono), `gen_yunque_datos.py` (registro, profesiones, ids de receta y los objetos pendientes,
+para poder EDITARLOS y no solo crear nuevos) y `gen_yunque_iconos.py` (la hoja de sprites).
+
+- **Objetos**: crea uno nuevo o carga uno de los 1.944 pendientes para completarlo -- ahi
+  esta el trabajo que queda, 1.198 sin descripcion. Avisa si la clave ya existe.
+- **Recetas**: saca la linea de `HarfordProfessionsData.RECIPES`. Materiales y resultado se
+  referencian por CLAVE y se **autocompletan y validan contra el registro real**: una clave
+  inventada deja la receta como pendiente para siempre sin decir nada, que es el mismo
+  problema que el icono inexistente.
+
+Dos ideas ordenan los formularios:
 
 1. **Los campos se separan por naturaleza.** Los que se convierten en un `.forge item set …`
    van juntos y marcados en verdin; los que solo ordenan la lista de Harford (profesion,

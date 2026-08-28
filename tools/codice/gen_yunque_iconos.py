@@ -51,7 +51,7 @@ PAGINA = os.path.join(BASE, 'yunque.html')
 # limite de 16 MB del artefacto. A 50 px hay que quedarse en unos 9.000 iconos.
 # 36 px es el mayor tamano al que caben TODOS los propios (20.780). A 40 px se pasarian de
 # los 16 MB y a 50 px solo entrarian unos 12.600, dejando fuera BG3 y medio `eps_`.
-LADO = 36
+LADO = 34   # 36 dejaba la pagina a 1,2 MB del limite al embeber los datos del proyecto
 CUPO = 22200   # los 20.780 propios + los que usan los objetos + margen
 # Paquetes de arte que NO son de Blizzard. `eps_` es el espacio propio de Epsilon e incluye
 # los de BG3 (`eps_bg3_*`); el resto son colecciones portadas de otros juegos.

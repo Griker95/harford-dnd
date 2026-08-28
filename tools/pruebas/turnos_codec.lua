@@ -251,4 +251,16 @@ chk("e instala el motor aunque nunca arrancara",
 chk("el DM dirigiendo queda fuera",
     atk:find("if LlevandoNpc() or DirigiendoLaEscena() then return end", 1, true) ~= nil, true)
 
+-- ─── EL "NO" DE UNIRSE SE CONTESTA ──────────────────────────────────────────
+-- "Te unes al combate" era optimista: se imprimia al PEDIR. Si el DM no podia meterte, tu unica
+-- pista era que el boton seguia ahi. El motivo viaja ahora de vuelta (TJOINNO por susurro); el
+-- "si" no necesita mensaje porque la foto contigo dentro ya es la confirmacion.
+print("El no de unirse se contesta")
+chk("las tres negativas responden", (function()
+    local _, n = turnos:gsub('DecirNo%(', '')
+    return n
+end)(), 4)  -- 3 llamadas + 1 definicion
+chk("por susurro al que pidio", turnos:find('"TJOINNO|" .. tostring(motivo), "WHISPER", sender', 1, true) ~= nil, true)
+chk("y el receptor lo cuenta", turnos:find('elseif opcode == "TJOINNO" then', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

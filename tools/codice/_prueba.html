@@ -1,0 +1,1728 @@
+<title>Yunque de Harford</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Source+Sans+3:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --papel:#eef0ed; --tarjeta:#f7f8f6; --tinta:#131a18; --tinta-suave:#5a6663;
+  --borde:#d3d9d5; --borde-fuerte:#b9c2be; --verdin:#1f6f63; --verdin-claro:#e3efec;
+  --cobre:#a8571f; --cobre-claro:#f6ece2; --sombra:rgba(19,26,24,.07);
+  --q0:#8a8a8a; --q1:#3a3a3a; --q2:#1a8f2e; --q3:#0060c4; --q4:#8b2ecc; --q5:#c96a00;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --papel:#12171a; --tarjeta:#1a2124; --tinta:#e4e8e5; --tinta-suave:#93a09c;
+    --borde:#2b3438; --borde-fuerte:#3d484e;
+    --verdin:#5fbfae; --verdin-claro:#17322e; --cobre:#d98b43; --cobre-claro:#33241a;
+    --sombra:rgba(0,0,0,.3);
+    --q0:#9d9d9d; --q1:#e4e8e5; --q2:#1eff00; --q3:#3d9bff; --q4:#c07bf0; --q5:#ff9c1a;
+  }
+}
+:root[data-theme="dark"]{
+  --papel:#12171a; --tarjeta:#1a2124; --tinta:#e4e8e5; --tinta-suave:#93a09c;
+  --borde:#2b3438; --borde-fuerte:#3d484e; --verdin:#5fbfae; --verdin-claro:#17322e;
+  --cobre:#d98b43; --cobre-claro:#33241a; --sombra:rgba(0,0,0,.3);
+  --q0:#9d9d9d; --q1:#e4e8e5; --q2:#1eff00; --q3:#3d9bff; --q4:#c07bf0; --q5:#ff9c1a;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--papel); color:var(--tinta);
+  font-family:"Source Sans 3",system-ui,sans-serif; font-size:15px; line-height:1.5;
+}
+h1,h2,h3{font-family:Bitter,Georgia,serif; text-wrap:balance; margin:0}
+.envoltura{max-width:1180px; margin:0 auto; padding:26px 20px 64px}
+header{display:flex; flex-wrap:wrap; align-items:baseline; gap:12px 18px}
+h1{font-size:27px; font-weight:700; letter-spacing:-.01em}
+.lema{color:var(--tinta-suave); font-size:14px}
+code{font-family:"JetBrains Mono",monospace; font-size:12.5px}
+
+/* ── Los yunques ── */
+.yunques{display:flex; gap:4px; margin:20px 0 0; border-bottom:1px solid var(--borde)}
+.yunques button{
+  border:none; border-bottom:2px solid transparent; border-radius:6px 6px 0 0;
+  background:none; color:var(--tinta-suave); font-family:Bitter,Georgia,serif;
+  font-size:14px; font-weight:600; padding:8px 15px; cursor:pointer; margin-bottom:-1px;
+}
+.yunques button:hover{color:var(--tinta); background:var(--tarjeta)}
+.yunques button[aria-selected="true"]{color:var(--verdin); border-bottom-color:var(--verdin)}
+.panel[hidden]{display:none}
+.aviso{
+  margin:18px 0 22px; padding:11px 14px; border-left:3px solid var(--verdin);
+  background:var(--verdin-claro); border-radius:0 6px 6px 0; font-size:14px;
+}
+
+.rejilla{display:grid; grid-template-columns:1fr 380px; gap:26px; align-items:start}
+@media (max-width:900px){.rejilla{grid-template-columns:1fr}}
+
+fieldset{
+  border:1px solid var(--borde); border-radius:9px; padding:6px 18px 18px;
+  margin:0 0 18px; background:var(--tarjeta);
+}
+legend{padding:0 7px; margin-left:-4px}
+.leyenda{display:flex; align-items:baseline; gap:9px; flex-wrap:wrap}
+.leyenda b{
+  font-family:Bitter,Georgia,serif; font-size:11px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.1em;
+}
+.leyenda span{font-size:11.5px; color:var(--tinta-suave)}
+/* Las dos naturalezas: lo que sale por el cable y lo que se queda en casa. */
+.comando .leyenda b{color:var(--verdin)}
+.comando{border-left:3px solid var(--verdin)}
+.interno .leyenda b{color:var(--cobre)}
+.interno{border-left:3px solid var(--cobre)}
+
+.campos{display:grid; grid-template-columns:repeat(auto-fit,minmax(148px,1fr)); gap:13px;
+  margin-top:12px}
+.campo{display:flex; flex-direction:column; gap:5px; min-width:0; position:relative}
+.campo.ancho{grid-column:1/-1}
+label{font-size:12px; font-weight:600; color:var(--tinta-suave); letter-spacing:.02em}
+input,select,textarea{
+  font:inherit; font-size:14px; color:var(--tinta); background:var(--papel);
+  border:1px solid var(--borde-fuerte); border-radius:6px; padding:7px 9px; width:100%;
+}
+textarea{resize:vertical; min-height:58px; line-height:1.45}
+input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible,
+summary:focus-visible{outline:2px solid var(--verdin); outline-offset:1px}
+input[readonly]{color:var(--tinta-suave); font-family:"JetBrains Mono",monospace; font-size:12.5px}
+.mono{font-family:"JetBrains Mono",monospace; font-size:12.5px}
+.pista{font-size:11.5px; color:var(--tinta-suave); line-height:1.35}
+.marca{font-size:11.5px; font-weight:600}
+.marca.si{color:var(--verdin)}
+.marca.no{color:var(--cobre)}
+
+details{margin-top:14px; border-top:1px solid var(--borde); padding-top:10px}
+summary{
+  cursor:pointer; font-size:12px; font-weight:600; color:var(--verdin);
+  letter-spacing:.02em; list-style:none; display:flex; align-items:center; gap:7px;
+}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"\25B8"; font-size:10px}
+details[open] summary::before{content:"\25BE"}
+.sub{margin:11px 0 3px; font-size:11px; text-transform:uppercase; letter-spacing:.09em;
+  color:var(--tinta-suave); font-weight:600}
+
+/* ── Selector de iconos ── */
+/* La imagen la inyecta el script como una sola regla, con una url de blob. */
+.fila-icono{display:flex; gap:10px; align-items:flex-start}
+.muestra{
+  flex:none; border-radius:6px; border:1px solid var(--borde-fuerte);
+  background-color:var(--papel); background-repeat:no-repeat;
+  background-origin:content-box; background-clip:content-box;
+}
+.paleta{
+  margin-top:8px; border:1px solid var(--borde); border-radius:8px; background:var(--papel);
+  padding:7px; height:300px; overflow-y:auto; position:relative;
+}
+#lienzo{position:relative; width:100%}
+.paleta button{
+  position:absolute; border:1px solid transparent; border-radius:5px;
+  background-color:transparent; background-repeat:no-repeat; cursor:pointer;
+  background-origin:content-box; background-clip:content-box;
+}
+.paleta button:hover,.paleta button:focus-visible{border-color:var(--verdin)}
+.paleta button[aria-selected="true"]{border-color:var(--verdin); background-color:var(--verdin-claro)}
+.paleta .nada{padding:10px 4px; font-size:12.5px; color:var(--tinta-suave)}
+
+/* ── Autocompletado de claves ── */
+.sugerencias{
+  position:absolute; z-index:30; top:100%; left:0; right:0; margin-top:3px;
+  max-height:210px; overflow-y:auto; background:var(--tarjeta);
+  border:1px solid var(--borde-fuerte); border-radius:7px;
+  box-shadow:0 6px 18px var(--sombra); display:none;
+}
+.sugerencias.abierto{display:block}
+.sugerencias button{
+  display:block; width:100%; text-align:left; border:none; border-radius:0;
+  background:none; padding:6px 10px; font-size:12.5px; font-weight:400; color:var(--tinta);
+}
+.sugerencias button:hover,.sugerencias button:focus-visible{
+  background:var(--verdin-claro); color:var(--verdin)}
+.sugerencias b{font-family:"JetBrains Mono",monospace; font-size:11.5px; font-weight:500;
+  color:var(--tinta-suave); display:block}
+
+.acciones{display:flex; flex-wrap:wrap; gap:9px; align-items:center}
+button{
+  font:inherit; font-weight:600; font-size:14px; cursor:pointer; border-radius:6px;
+  padding:8px 15px; border:1px solid var(--borde-fuerte);
+  background:var(--tarjeta); color:var(--tinta);
+}
+button:hover{border-color:var(--verdin); color:var(--verdin)}
+button.primario{background:var(--verdin); border-color:var(--verdin); color:var(--papel)}
+button.primario:hover{filter:brightness(1.1); color:var(--papel)}
+
+.lateral{position:sticky; top:20px; display:flex; flex-direction:column; gap:16px}
+.tooltip{
+  background:var(--tarjeta); border:1px solid var(--borde-fuerte); border-radius:9px;
+  padding:14px 15px; box-shadow:0 2px 10px var(--sombra);
+}
+.tt-cabeza{display:flex; gap:11px; align-items:flex-start}
+.tt-icono{
+  flex:none; border-radius:5px; border:1px solid var(--borde-fuerte);
+  background-color:var(--papel); background-repeat:no-repeat;
+  background-origin:content-box; background-clip:content-box;
+}
+.tt-nombre{font-family:Bitter,Georgia,serif; font-size:16px; font-weight:600; line-height:1.25}
+.tt-lineas{margin-top:9px; display:flex; flex-direction:column; gap:2px; font-size:13px}
+.tt-lineas span{color:var(--tinta-suave)}
+.tt-desc{margin-top:8px; font-size:13px; font-style:italic; color:var(--verdin); line-height:1.4}
+.tt-pie{
+  margin-top:10px; padding-top:9px; border-top:1px solid var(--borde);
+  font-family:"JetBrains Mono",monospace; font-size:11px; color:var(--cobre);
+  display:flex; flex-wrap:wrap; gap:3px 12px;
+}
+.tt-mats{margin-top:9px; padding-top:9px; border-top:1px solid var(--borde); font-size:13px}
+.tt-mats div{display:flex; justify-content:space-between; gap:10px; padding:1px 0}
+.tt-mats .falta{color:var(--cobre)}
+.tt-mats b{font-weight:600; font-variant-numeric:tabular-nums}
+
+.salida h3{font-size:13px; margin-bottom:7px; display:flex; justify-content:space-between;
+  align-items:center; gap:10px}
+.salida h3 button{padding:3px 9px; font-size:12px}
+pre{
+  margin:0 0 14px; background:var(--tarjeta); border:1px solid var(--borde);
+  border-radius:7px; padding:11px 12px; overflow-x:auto; max-height:230px;
+  font-family:"JetBrains Mono",monospace; font-size:11.5px; line-height:1.55; color:var(--tinta);
+  white-space:pre-wrap; word-break:break-word;
+}
+
+/* ── Materiales de la receta ── */
+.mats{display:flex; flex-direction:column; gap:8px; margin-top:12px}
+.mat{display:flex; gap:8px; align-items:flex-start}
+.mat .campo{flex:1}
+.mat input[type="number"]{width:72px; flex:none}
+.mat .quitar{margin-top:4px}
+
+.lista{margin-top:6px}
+.lista h2{font-size:17px; margin-bottom:10px}
+table{width:100%; border-collapse:collapse; font-size:13.5px}
+th{
+  text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+  color:var(--tinta-suave); font-weight:600; padding:0 9px 6px; border-bottom:1px solid var(--borde);
+}
+td{padding:7px 9px; border-bottom:1px solid var(--borde); vertical-align:middle}
+td.num{font-family:"JetBrains Mono",monospace; font-variant-numeric:tabular-nums; font-size:12.5px}
+tr:last-child td{border-bottom:none}
+.mini{border-radius:4px; border:1px solid var(--borde);
+  background-color:var(--papel); background-repeat:no-repeat;
+  background-origin:content-box; background-clip:content-box}
+.chip{
+  display:inline-block; font-size:11px; padding:1px 7px; border-radius:20px;
+  background:var(--verdin-claro); color:var(--verdin); font-weight:600; white-space:nowrap;
+}
+.chip.aviso2{background:var(--cobre-claro); color:var(--cobre)}
+.quitar{background:none; border:none; color:var(--tinta-suave); padding:2px 6px; font-size:16px;
+  line-height:1; cursor:pointer}
+.quitar:hover{color:var(--cobre)}
+.vacio{color:var(--tinta-suave); font-size:14px; padding:14px 0}
+.envuelto{overflow-x:auto}
+.pagina{border:1px solid var(--borde); border-radius:8px; padding:10px 12px 14px;
+  margin-top:12px; background:var(--papel)}
+.pagina.mirando{border-color:var(--verdin); box-shadow:0 0 0 1px var(--verdin)}
+.pagina-cab{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.pagina-cab .titulo{padding:2px 0; font-size:13px; color:var(--tinta); text-align:left; flex:1}
+.pagina-cab .titulo:hover{color:var(--verdin)}
+.pagina .mat{margin-top:7px}
+.pagina textarea{min-height:44px}
+/* La previa imita la ventana de gossip del juego. */
+.gossip{margin-top:10px; padding-top:10px; border-top:1px solid var(--borde)}
+.gossip p{margin:0 0 10px; font-size:13.5px; line-height:1.5}
+.gossip .op{
+  display:block; width:100%; text-align:left; margin:0 0 5px; padding:6px 9px 6px 20px;
+  font-size:13px; font-weight:400; position:relative;
+  background:var(--papel); border:1px solid var(--borde);
+}
+.gossip .op::before{content:"CF"; position:absolute; left:8px; color:var(--verdin); font-size:8px}
+.gossip .op:hover{border-color:var(--verdin); color:var(--verdin)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="envoltura">
+<header>
+  <h1>Yunque de Harford</h1>
+  <span class="lema">Define lo que haga falta y llévatelo en el formato que ya come el pipeline</span>
+</header>
+
+<div class="yunques" role="tablist">
+  <button type="button" role="tab" data-yunque="objetos" aria-selected="true">Objetos</button>
+  <button type="button" role="tab" data-yunque="recetas" aria-selected="false">Recetas</button>
+  <button type="button" role="tab" data-yunque="misiones" aria-selected="false">Misiones</button>
+  <button type="button" role="tab" data-yunque="gossip" aria-selected="false">Gossip</button>
+</div>
+
+<!-- ══════════════════════ OBJETOS ══════════════════════ -->
+<section class="panel" id="p-objetos">
+<p class="aviso">
+  Nada de esto toca el servidor. Sale el bloque para <code>itemforge_anulaciones.json</code>
+  &mdash; que <code>importar_itemforge.py</code> vuelca sin pisar lo ya afinado &mdash; y la
+  línea del registro si el objeto es nuevo.
+</p>
+
+<div class="rejilla">
+  <form id="fo" autocomplete="off">
+    <fieldset class="interno" style="margin-bottom:16px">
+      <legend><span class="leyenda"><b>Partir de uno que ya existe</b>
+        <span>lo que queda por hacer son <span id="nSinDesc">0</span> sin descripción</span></span></legend>
+      <div class="campos">
+        <div class="campo ancho">
+          <label for="buscarObj">Buscar en la lista</label>
+          <input id="buscarObj" placeholder="daga, poción, lino…">
+          <div class="sugerencias" id="sugObj" role="listbox"></div>
+          <span class="pista" id="cargado">Nada cargado: lo que rellenes será un objeto nuevo.</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="comando">
+      <legend><span class="leyenda"><b>Se forja en el servidor</b>
+        <span>cada campo de aquí es un <code>.forge item set …</code></span></span></legend>
+      <div class="campos">
+        <div class="campo ancho">
+          <label for="nombre">Nombre visible</label>
+          <input id="nombre" placeholder="Daga de acero destellante">
+        </div>
+        <div class="campo ancho">
+          <label for="icono">Icono <span class="chip"><span id="nIconos">0</span> con miniatura</span></label>
+          <div class="fila-icono">
+            <div class="muestra" id="muestra" aria-hidden="true"></div>
+            <div style="flex:1;min-width:0">
+              <input id="icono" class="mono" placeholder="inv_weapon_shortblade_05">
+              <span class="pista" id="marcaIcono"></span>
+            </div>
+          </div>
+          <input id="buscar" style="margin-top:9px"
+                 placeholder="Filtra la rejilla: espada, poción, lingote, cuero…">
+          <div class="paleta" id="paleta" role="listbox" aria-label="Iconos"><div id="lienzo"></div></div>
+        </div>
+        <div class="campo"><label for="calidad">Calidad</label><select id="calidad"></select></div>
+        <div class="campo"><label for="clase">Clase</label><select id="clase"></select></div>
+        <div class="campo"><label for="subclase">Subclase</label><select id="subclase"></select></div>
+        <div class="campo"><label for="hueco">Hueco</label><select id="hueco"></select></div>
+        <div class="campo">
+          <label for="apilable">Se apila hasta</label>
+          <input id="apilable" type="number" min="1" max="9999" value="1">
+          <span class="pista">No admite armas ni armadura.</span>
+        </div>
+        <div class="campo"><label for="vinculacion">Vinculación</label><select id="vinculacion"></select></div>
+        <div class="campo">
+          <label for="envainado">Envainado</label><select id="envainado"></select>
+          <span class="pista">Solo manos principal y secundaria.</span>
+        </div>
+        <div class="campo"><label for="material">Sonido del material</label><select id="material"></select></div>
+        <div class="campo">
+          <label for="display">Modelo copiado de</label>
+          <input id="display" type="number" min="0" placeholder="12259">
+          <span class="pista">El id del objeto de WoW.</span>
+        </div>
+        <div class="campo ancho">
+          <label for="desc">Descripción</label>
+          <textarea id="desc" maxlength="180" placeholder="Un vial helado al tacto."></textarea>
+          <span class="pista"><span id="cuenta">0</span>/180 &mdash; el comando no admite más.</span>
+        </div>
+      </div>
+
+      <details>
+        <summary>Permisos y listas blancas</summary>
+        <p class="sub">Quién puede sacarlo con <code>.additem</code></p>
+        <div class="campos" style="margin-top:8px">
+          <div class="campo"><label for="ai_anyone">Cualquiera</label><select id="ai_anyone"></select></div>
+          <div class="campo"><label for="ai_character">Personajes de la lista</label><select id="ai_character"></select></div>
+          <div class="campo"><label for="ai_member">Miembros de la fase</label><select id="ai_member"></select></div>
+          <div class="campo"><label for="ai_officer">Oficiales de la fase</label><select id="ai_officer"></select></div>
+        </div>
+        <p class="sub">Otras propiedades</p>
+        <div class="campos" style="margin-top:8px">
+          <div class="campo"><label for="p_copy">Se puede copiar</label><select id="p_copy"></select></div>
+          <div class="campo"><label for="p_info">Otros ven su info</label><select id="p_info"></select></div>
+          <div class="campo"><label for="p_lookup">Aparece en búsquedas</label><select id="p_lookup"></select></div>
+          <div class="campo"><label for="p_adder">Marca quién lo añadió</label><select id="p_adder"></select></div>
+          <div class="campo"><label for="p_creator">Marca a su creador</label><select id="p_creator"></select></div>
+        </div>
+        <p class="sub">Listas blancas</p>
+        <div class="campos" style="margin-top:8px">
+          <div class="campo ancho">
+            <label for="wl_character">Personajes</label>
+            <input id="wl_character" placeholder="Griker, Trahyndra">
+            <span class="pista">Separados por comas. Uno por comando.</span>
+          </div>
+          <div class="campo"><label for="wl_member">Fases (miembros)</label><input id="wl_member" placeholder="169, 412"></div>
+          <div class="campo"><label for="wl_officer">Fases (oficiales)</label><input id="wl_officer" placeholder="169"></div>
+        </div>
+      </details>
+    </fieldset>
+
+    <fieldset class="interno">
+      <legend><span class="leyenda"><b>Solo para Harford</b>
+        <span>ordena la lista; no se envía nada al servidor</span></span></legend>
+      <div class="campos">
+        <div class="campo"><label for="prof">Profesión</label><select id="prof"></select></div>
+        <div class="campo">
+          <label for="papel">Papel</label>
+          <select id="papel">
+            <option value="resultado">Producto final</option>
+            <option value="material">Materia prima</option>
+            <option value="suelto">Suelto, sin receta</option>
+          </select>
+        </div>
+        <div class="campo ancho">
+          <label for="clave">Clave</label>
+          <input id="clave" readonly>
+          <span class="pista" id="marcaClave"></span>
+        </div>
+      </div>
+    </fieldset>
+
+    <div class="acciones">
+      <button type="button" class="primario" id="anadirObj">Añadir a la lista</button>
+      <button type="button" id="limpiarObj">Vaciar el formulario</button>
+    </div>
+  </form>
+
+  <aside class="lateral">
+    <div class="tooltip">
+      <div class="tt-cabeza">
+        <div class="tt-icono" id="ttIcono"></div>
+        <div>
+          <div class="tt-nombre" id="ttNombre">Objeto sin nombre</div>
+          <div class="tt-lineas" id="ttLineas"></div>
+        </div>
+      </div>
+      <div class="tt-desc" id="ttDesc"></div>
+      <div class="tt-pie" id="ttPie"></div>
+    </div>
+    <div class="salida">
+      <h3><span>Comandos <span class="chip" id="nCmds">0</span></span>
+        <button type="button" data-copia="outCmd">Copiar</button></h3>
+      <pre id="outCmd">—</pre>
+      <h3>Anulaciones <button type="button" data-copia="outJson">Copiar</button></h3>
+      <pre id="outJson">{}</pre>
+      <h3>Línea del registro <button type="button" data-copia="outReg">Copiar</button></h3>
+      <pre id="outReg">—</pre>
+    </div>
+  </aside>
+</div>
+
+<section class="lista">
+  <h2>En la lista <span class="chip" id="cuentaObj">0</span></h2>
+  <div class="envuelto">
+    <table><thead><tr><th></th><th>Objeto</th><th>Profesión</th><th>Papel</th><th>Clase</th><th></th></tr></thead>
+    <tbody id="cuerpoObj"></tbody></table>
+  </div>
+  <p class="vacio" id="vacioObj">Nada todavía. Rellena el formulario y pulsa Añadir.</p>
+  <div class="acciones" style="margin-top:14px">
+    <button type="button" class="primario" data-copia="todoJson">Copiar todas las anulaciones</button>
+    <button type="button" data-copia="todoReg">Copiar todas las líneas del registro</button>
+    <button type="button" id="vaciarObj">Vaciar la lista</button>
+  </div>
+</section>
+</section>
+
+<!-- ══════════════════════ RECETAS ══════════════════════ -->
+<section class="panel" id="p-recetas" hidden>
+<p class="aviso">
+  Sale la línea para <code>HarfordProfessionsData.RECIPES</code>. Los materiales y el
+  resultado se referencian por <b>clave</b>, y una clave que no existe deja la receta como
+  pendiente sin avisar: por eso aquí se validan contra las
+  <span id="nRegistro">0</span> del registro.
+</p>
+
+<div class="rejilla">
+  <form id="fr" autocomplete="off">
+    <fieldset class="interno">
+      <legend><span class="leyenda"><b>La receta</b>
+        <span>solo datos; nada de esto se envía al servidor</span></span></legend>
+      <div class="campos">
+        <div class="campo"><label for="rProf">Profesión</label><select id="rProf"></select></div>
+        <div class="campo">
+          <label for="rSource">De dónde se aprende</label>
+          <select id="rSource">
+            <option value="receta">Receta suelta</option>
+            <option value="entrenador">Entrenador</option>
+            <option value="mundo">Se aprende usándola</option>
+          </select>
+        </div>
+        <div class="campo ancho">
+          <label for="rNombre">Nombre</label>
+          <input id="rNombre" placeholder="Elixir de fuerza de león">
+        </div>
+        <div class="campo ancho">
+          <label for="rId">Identificador</label>
+          <input id="rId" class="mono" readonly>
+          <span class="pista" id="marcaRid"></span>
+        </div>
+        <div class="campo">
+          <label for="rSkill">Nivel de profesión</label>
+          <input id="rSkill" type="number" min="1" max="300" value="1">
+        </div>
+        <div class="campo">
+          <label for="rDc">Dificultad (CD)</label>
+          <input id="rDc" type="number" min="1" max="30" value="16">
+        </div>
+        <div class="campo">
+          <label for="rTrain">Coste del entrenador</label>
+          <input id="rTrain" type="number" min="0" placeholder="0">
+          <span class="pista">En cobre. Solo si se aprende ahí.</span>
+        </div>
+        <div class="campo ancho">
+          <label for="rIcono">Icono <span class="pista" id="marcaRicono"></span></label>
+          <div class="fila-icono">
+            <div class="muestra" id="rMuestra" aria-hidden="true"></div>
+            <input id="rIcono" class="mono" placeholder="inv_potion_56">
+          </div>
+        </div>
+        <div class="campo ancho">
+          <label for="rDesc">Descripción</label>
+          <textarea id="rDesc" placeholder="Uso: aumenta la Fuerza durante una hora."></textarea>
+        </div>
+        <div class="campo ancho">
+          <label for="rTools">Herramienta especial</label>
+          <input id="rTools" placeholder="Piedra filosofal">
+          <span class="pista">Solo si necesita una además de la de la profesión.</span>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="interno">
+      <legend><span class="leyenda"><b>Qué consume y qué produce</b>
+        <span>por clave del registro, nunca por id</span></span></legend>
+      <div class="campos">
+        <div class="campo ancho" style="position:relative">
+          <label for="rOut">Produce</label>
+          <div class="mat">
+            <div class="campo"><input id="rOut" class="mono" placeholder="elixir_de_fuerza_de_leon">
+              <div class="sugerencias" id="sugOut" role="listbox"></div></div>
+            <input id="rOutQty" type="number" min="1" value="1" aria-label="Cantidad que produce">
+          </div>
+          <span class="pista" id="marcaOut"></span>
+        </div>
+      </div>
+      <p class="sub">Materiales</p>
+      <div class="mats" id="mats"></div>
+      <div class="acciones" style="margin-top:11px">
+        <button type="button" id="addMat">Añadir material</button>
+      </div>
+    </fieldset>
+
+    <div class="acciones">
+      <button type="button" class="primario" id="anadirRec">Añadir a la lista</button>
+      <button type="button" id="limpiarRec">Vaciar el formulario</button>
+    </div>
+  </form>
+
+  <aside class="lateral">
+    <div class="tooltip">
+      <div class="tt-cabeza">
+        <div class="tt-icono" id="rttIcono"></div>
+        <div>
+          <div class="tt-nombre" id="rttNombre">Receta sin nombre</div>
+          <div class="tt-lineas" id="rttLineas"></div>
+        </div>
+      </div>
+      <div class="tt-mats" id="rttMats"></div>
+      <div class="tt-desc" id="rttDesc"></div>
+      <div class="tt-pie" id="rttPie"></div>
+    </div>
+    <div class="salida">
+      <h3>Línea de la receta <button type="button" data-copia="outRec">Copiar</button></h3>
+      <pre id="outRec">—</pre>
+    </div>
+  </aside>
+</div>
+
+<section class="lista">
+  <h2>Recetas en la lista <span class="chip" id="cuentaRec">0</span></h2>
+  <div class="envuelto">
+    <table><thead><tr><th></th><th>Receta</th><th>Profesión</th><th>Nivel</th><th>Materiales</th><th></th></tr></thead>
+    <tbody id="cuerpoRec"></tbody></table>
+  </div>
+  <p class="vacio" id="vacioRec">Nada todavía.</p>
+  <div class="acciones" style="margin-top:14px">
+    <button type="button" class="primario" data-copia="todoRec">Copiar todas las recetas</button>
+    <button type="button" id="vaciarRec">Vaciar la lista</button>
+  </div>
+</section>
+</section>
+
+<!-- ══════════════════════ MISIONES ══════════════════════ -->
+<section class="panel" id="p-misiones" hidden>
+<p class="aviso">
+  Sale la entrada para <code>HarfordQuestCatalog</code>. Ojo con el icono: aquí va con
+  <b>ruta completa</b> (<code>Interface\Icons\…</code>), no como en objetos.
+</p>
+
+<div class="rejilla">
+  <form id="fm" autocomplete="off">
+    <fieldset class="interno">
+      <legend><span class="leyenda"><b>La misión</b>
+        <span>solo datos; el estado lo lleva HarfordQuests</span></span></legend>
+      <div class="campos">
+        <div class="campo">
+          <label for="mDif">Dificultad</label>
+          <select id="mDif"></select>
+        </div>
+        <div class="campo">
+          <label for="mCat">Categoría</label>
+          <select id="mCat"></select>
+        </div>
+        <div class="campo ancho">
+          <label for="mTitulo">Título</label>
+          <input id="mTitulo" placeholder="El heraldo de Rocavarancolia">
+        </div>
+        <div class="campo ancho">
+          <label for="mId">Clave</label>
+          <input id="mId" class="mono" readonly>
+          <span class="pista">Se deriva del espacio y el título.</span>
+        </div>
+        <div class="campo ancho">
+          <label for="mDesc">Descripción</label>
+          <textarea id="mDesc" placeholder="Un mensajero ha caído cerca del vado."></textarea>
+        </div>
+        <div class="campo ancho">
+          <label for="mIcono">Icono <span class="pista" id="marcaMicono"></span></label>
+          <div class="fila-icono">
+            <div class="muestra" id="mMuestra" aria-hidden="true"></div>
+            <input id="mIcono" class="mono" placeholder="inv_misc_note_01">
+          </div>
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset class="interno">
+      <legend><span class="leyenda"><b>Objetivos</b>
+        <span>con cantidad mayor que 1 se vuelven contador</span></span></legend>
+      <div class="mats" id="objs"></div>
+      <div class="acciones" style="margin-top:11px">
+        <button type="button" id="addObj">Añadir objetivo</button>
+      </div>
+    </fieldset>
+
+    <fieldset class="interno">
+      <legend><span class="leyenda"><b>Recompensas</b>
+        <span>reputación y experiencia se reparten; dinero y objetos son de quien entrega</span></span></legend>
+      <div class="campos">
+        <div class="campo"><label for="mXp">Experiencia</label>
+          <input id="mXp" type="number" min="0" placeholder="0"></div>
+        <div class="campo"><label for="mOro">Oro</label>
+          <input id="mOro" type="number" min="0" placeholder="0"></div>
+        <div class="campo"><label for="mPlata">Plata</label>
+          <input id="mPlata" type="number" min="0" max="99" placeholder="0"></div>
+        <div class="campo"><label for="mCobre">Cobre</label>
+          <input id="mCobre" type="number" min="0" max="99" placeholder="0"></div>
+      </div>
+      <p class="sub">Reputación</p>
+      <div class="mats" id="reps"></div>
+      <div class="acciones" style="margin-top:9px">
+        <button type="button" id="addRep">Añadir facción</button>
+      </div>
+      <p class="sub">Objetos</p>
+      <div class="mats" id="premios"></div>
+      <div class="acciones" style="margin-top:9px">
+        <button type="button" id="addPremio">Añadir objeto</button>
+      </div>
+    </fieldset>
+
+    <div class="acciones">
+      <button type="button" class="primario" id="anadirMis">Añadir a la lista</button>
+      <button type="button" id="limpiarMis">Vaciar el formulario</button>
+    </div>
+  </form>
+
+  <aside class="lateral">
+    <div class="tooltip">
+      <div class="tt-cabeza">
+        <div class="tt-icono" id="mttIcono"></div>
+        <div>
+          <div class="tt-nombre" id="mttNombre">Misión sin título</div>
+          <div class="tt-lineas" id="mttLineas"></div>
+        </div>
+      </div>
+      <div class="tt-desc" id="mttDesc"></div>
+      <div class="tt-mats" id="mttObjs"></div>
+      <div class="tt-pie" id="mttPie"></div>
+    </div>
+    <div class="salida">
+      <h3>Entrada del catálogo <button type="button" data-copia="outMis">Copiar</button></h3>
+      <pre id="outMis">—</pre>
+    </div>
+  </aside>
+</div>
+
+<section class="lista">
+  <h2>Misiones en la lista <span class="chip" id="cuentaMis">0</span></h2>
+  <div class="envuelto">
+    <table><thead><tr><th></th><th>Misión</th><th>Dificultad</th><th>Objetivos</th><th>Recompensa</th><th></th></tr></thead>
+    <tbody id="cuerpoMis"></tbody></table>
+  </div>
+  <p class="vacio" id="vacioMis">Nada todavía.</p>
+  <div class="acciones" style="margin-top:14px">
+    <button type="button" class="primario" data-copia="todoMis">Copiar todas las misiones</button>
+    <button type="button" id="vaciarMis">Vaciar la lista</button>
+  </div>
+</section>
+</section>
+
+<!-- ══════════════════════ GOSSIP ══════════════════════ -->
+<section class="panel" id="p-gossip" hidden>
+<p class="aviso">
+  Aquí no sale una tirada de comandos, sale un <b>guion</b>. <code>text add</code> y
+  <code>option add</code> actúan sobre <b>la página que tengas abierta</b> en la ventana de
+  gossip, así que hay que ir navegando: el guion intercala esos pasos donde tocan.
+</p>
+
+<div class="rejilla">
+  <div>
+    <fieldset class="comando">
+      <legend><span class="leyenda"><b>El diálogo</b>
+        <span>una página por rama; la 0 es con la que abre</span></span></legend>
+      <div class="campos">
+        <div class="campo ancho">
+          <label for="gIcono">Icono al pasar por encima del NPC</label>
+          <div class="fila-icono">
+            <div class="muestra" id="gMuestra" aria-hidden="true"></div>
+            <input id="gIcono" class="mono" placeholder="opcional">
+          </div>
+          <span class="pista" id="marcaGicono"></span>
+        </div>
+      </div>
+      <div id="paginas"></div>
+      <div class="acciones" style="margin-top:14px">
+        <button type="button" id="addPagina">Añadir página</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <aside class="lateral">
+    <div class="tooltip">
+      <div class="tt-nombre" id="gttTitulo">Vista previa</div>
+      <div class="tt-lineas" id="gttRuta"></div>
+      <div class="gossip" id="gttCuerpo"></div>
+    </div>
+    <div class="salida">
+      <h3><span>El guion <span class="chip" id="nPasos">0</span></span>
+        <button type="button" data-copia="outGos">Copiar</button></h3>
+      <pre id="outGos">—</pre>
+    </div>
+  </aside>
+</div>
+</section>
+</div>
+
+<script>
+"use strict";
+/*ICONOS_INICIO*/const ICONOS=["ability_hunter_pet_crab","ability_hunter_pet_gorilla","ability_rogue_sprint","classic_inv_misc_dust_06","classic_inv_misc_quiver_05","inv_ammo_arrow_02","inv_ammo_bullet_01","inv_ammo_bullet_02","inv_ammo_bullet_03","inv_ammo_bullet_07","inv_ammo_firetar","inv_ammo_snowball","inv_axe_05","inv_axe_09","inv_axe_12","inv_axe_17","inv_axe_21","inv_axe_23","inv_axe_24","inv_banner_01","inv_battery_01","inv_battery_02","inv_belt_01","inv_belt_02","inv_belt_03","inv_belt_04","inv_belt_05","inv_belt_06","inv_belt_09","inv_belt_11","inv_belt_13","inv_belt_14","inv_belt_15","inv_belt_16","inv_belt_17","inv_belt_19","inv_belt_21","inv_belt_22","inv_belt_23","inv_belt_24"];/*ICONOS_FIN*/
+/*HOJA_INICIO*/const HOJA={lado:34,columnas:8,orden:["ability_hunter_pet_crab","ability_hunter_pet_gorilla","ability_rogue_sprint","classic_inv_misc_dust_06","classic_inv_misc_quiver_05","inv_ammo_arrow_02","inv_ammo_bullet_01","inv_ammo_bullet_02","inv_ammo_bullet_03","inv_ammo_bullet_07","inv_ammo_firetar","inv_ammo_snowball","inv_axe_05","inv_axe_09","inv_axe_12","inv_axe_17","inv_axe_21","inv_axe_23","inv_axe_24","inv_banner_01","inv_battery_01","inv_battery_02","inv_belt_01","inv_belt_02","inv_belt_03","inv_belt_04","inv_belt_05","inv_belt_06","inv_belt_09","inv_belt_11","inv_belt_13","inv_belt_14","inv_belt_15","inv_belt_16","inv_belt_17","inv_belt_19","inv_belt_21","inv_belt_22","inv_belt_23","inv_belt_24"],img:"data:image/webp;base64,UklGRkIAAABXRUJQVlA4IDYAAAAwAwCdASoiACIAPm02mEkkIyKhI4gAgA2JZwAAG4G9Pg4AAP7Iv+2TvS///gP7A/7A7EAAAAA="};/*HOJA_FIN*/
+/*DATOS_INICIO*/const DATOS={"registro":[["abrazo_de_gaia","Abrazo de Gaia",0],["aceite_de_bocanegra","Aceite de bocanegra",0],["aceite_de_escama_petrea","Aceite de escama pétrea",0],["aceite_de_escarcha","Aceite de Escarcha",0],["aceite_de_fuego","Aceite de Fuego",0],["aceite_de_inmolacion","Aceite de inmolación",0],["aceite_de_las_sombras","Aceite de las Sombras",0],["aceite_de_mana_caducado","Aceite de maná caducado",0],["aceite_de_mana_inferior","Aceite de maná inferior",0],["aceite_de_mana_menor","Aceite de maná menor",0],["aceite_de_zahori","Aceite de zahorí",0],["aceite_de_zahori_caducado","Aceite de zahorí caducado",0],["aceite_de_zahori_inferior","Aceite de zahorí inferior",0],["aceite_de_zahori_menor","Aceite de zahorí menor",0],["aceroflor","Acérita salvaje",14074717],["acido_de_larva","Ácido de larva",0],["activador_inestable","Activador inestable",0],["acurascopio_247x128_de_biznicks","Acurascopio 247x128 de Biznicks",0],["agata_musgosa","Ágata musgosa",0],["agua_de_manantial_refrescante","Agua de manantial refrescante",0],["agua_elemental","Agua elemental",0],["aguijon_de_escorpido","Aguijón de escórpido",0],["aire_elemental","Aire elemental",0],["aji_aliento_de_dragon","Ají aliento de dragón",0],["ala_de_aguila_ratonera","Ala de águila ratonera",0],["ala_de_aguila_ratonera_a_la_parrilla","Ala de águila ratonera a la parrilla",0],["ala_de_murcielago_carnosa","Ala de murciélago carnosa",0],["ala_de_murcielago_crujiente","Ala de murciélago crujiente",0],["alarma_movil","Alarma móvil",0],["albondigas_del_desierto_ahumadas","Albóndigas del desierto ahumadas",0],["aleta_de_murloc","Aleta de múrloc",0],["alga_estranguladora","Alga estranguladora",14074715],["aliento_de_viento","Aliento de viento",0],["almarita","Almarita",0],["almeja_gigante_a_la_brasa","Almeja gigante a la brasa",0],["almejas_hervidas","Almejas hervidas",0],["almejas_picantes_a_la_goblin","Almejas picantes a la goblin",0],["almofar_de_cazador_escarlata","Almófar de cazador Escarlata",0],["almofar_de_escamas_de_oro","Almófar de escamas de oro",0],["almofar_de_mitril","Almófar de mitril",0],["amnistia_negra","Amnistía negra",0],["amplificador_de_mundo","Amplificador de mundo",0],["amuleto_de_la_luna","Amuleto de la Luna",0],["anguila_escama_petrea","Anguila escama pétrea",0],["anillo_con_perla_sencillo","Anillo con perla sencillo",0],["anillo_de_acometida","Anillo de acometida",0],["anillo_de_bronce_solido","Anillo de bronce sólido",0],["anillo_de_citrino_de_sanacion_rapida","Anillo de citrino de sanación rápida",0],["anillo_de_citrino_llameante","Anillo de citrino llameante",0],["anillo_de_cobre_pesado","Anillo de cobre pesado",0],["anillo_de_cobre_tejido","Anillo de cobre tejido",0],["anillo_de_cobre_trenzado","Anillo de cobre trenzado",0],["anillo_de_diamante_de_enfoque","Anillo de diamante de enfoque",0],["anillo_de_dragon_dorado","Anillo de dragón dorado",0],["anillo_de_jade_pesado","Anillo de jade pesado",0],["anillo_de_leon_de_esmeralda","Anillo de león de esmeralda",0],["anillo_de_malaquita_taraceado","Anillo de malaquita taraceado",0],["anillo_de_opalo_sencillo","Anillo de ópalo sencillo",0],["anillo_de_oro_de_poder","Anillo de oro de poder",0],["anillo_de_piedra_lunar_maligno","Anillo de piedra lunar maligno",0]],"profs":[["prof_herreria","Herreria","craft","trade_blacksmithing"],["prof_alquimia","Alquimia","craft","trade_alchemy"],["prof_herboristeria","Herboristeria","gather","trade_herbalism"],["prof_mineria","Mineria","gather","trade_mining"],["prof_peleteria","Peleteria","craft","trade_leatherworking"],["prof_desollar","Desollar","gather","inv_misc_pelt_wolf_01"],["prof_sastreria","Sastreria","craft","trade_tailoring"],["prof_encantamiento","Encantamiento","craft","trade_engraving"],["prof_ingenieria","Ingenieria","craft","trade_engineering"],["prof_joyeria","Joyeria","craft","inv_misc_gem_01"],["prof_inscripcion","Inscripcion","craft","inv_inscription_tradeskill01"],["prof_cocina","Cocina","craft","inv_misc_food_15"],["prof_pesca","Pesca","gather","trade_fishing"],["prof_primeros_auxilios","Primeros Auxilios","craft","spell_holy_sealofsacrifice"],["prof_carpinteria","Carpinteria","craft","trade_engineering"],["prof_cartografia","Cartografia","craft","inv_misc_map_01"],["prof_zapateria","Zapateria","craft","inv_boots_cloth_05"],["prof_soplavidrio","Soplado de vidrio","craft","inv_misc_orb_02"],["prof_albanileria","Albanileria","craft","trade_brewpoison"],["prof_pintura","Pintura","craft","inv_misc_dye_01"],["prof_alfareria","Alfareria","craft","inv_misc_pot_01"],["prof_talla_madera","Talla de madera","craft","inv_misc_wood_01"],["prof_cerveceria","Cerveceria","craft","inv_drink_05"],["prof_envenenador","Fabricar venenos","craft","trade_brewpoison"],["prof_disfraz","Kit de disfraz","utility","inv_mask_01"],["prof_falsificacion","Falsificacion","utility","inv_scroll_08"],["prof_ladron","Herramientas de ladron","utility","inv_misc_key_03"],["prof_navegante","Navegacion","utility","inv_misc_spyglass_02"],["prof_instrumento","Instrumento musical","utility","inv_misc_drum_02"],["prof_juego","Juego de azar","utility","inv_misc_dice_01"]],"recetaIds":["alq_aceite_de_bocanegra","alq_aceite_de_escama_petrea","alq_aceite_de_escarcha","alq_aceite_de_fuego","alq_aceite_de_inmolacion","alq_aceite_de_las_sombras","alq_combustible_de_cohete_goblin","alq_elixir_arcano","alq_elixir_arcano_superior","alq_elixir_de_agilidad"],"pendientes":[["aceite_de_bocanegra","Aceite de bocanegra","alquimia","resultado","inv_drink_12",1,0,1,0,20,0,"Aceite espeso destilado de bocanegra. Aplicado al filo, entorpece a quien lo prueba.",6370,0],["aceite_de_escama_petrea","Aceite de escama pétrea","alquimia","resultado","inv_potion_68",1,0,1,0,20,0,"",13423,0],["aceite_de_escarcha","Aceite de Escarcha","alquimia","resultado","inv_potion_20",1,0,1,0,5,0,"Un vial helado al tacto. El arma untada con el muerde con el frio del norte.",3829,0],["aceite_de_fuego","Aceite de Fuego","alquimia","resultado","inv_potion_38",1,0,1,0,20,0,"",6371,0],["aceite_de_inmolacion","Aceite de inmolación","alquimia","resultado","inv_potion_11",1,0,1,0,5,0,"Uso: Causa 50 p. de daño de Fuego a cualquier enemigo situado en un radio de 5 metros alrededor del taumaturgo cada 3 s durante 15 s. (3 Seg Reutilización)",8956,0],["aceite_de_las_sombras","Aceite de las Sombras","alquimia","resultado","inv_potion_23",1,0,1,0,5,0,"Uso: Si se aplica a un arma cuerpo a cuerpo otorga un 15% de probabilidad de lanzar Descarga de las Sombras al enemigo. Dura 30 minutos.",3824,0],["combustible_de_cohete_goblin","Combustible de cohete goblin","alquimia","resultado","inv_cask_02",1,0,1,0,20,0,"",9061,0],["elixir_arcano","Elixir Arcano","alquimia","resultado","inv_potion_30",1,0,2,0,5,0,"Uso: Aumenta el daño de los hechizos hasta en 20 p. durante 30 min. (3 Seg Reutilización)",9155,0],["elixir_arcano_superior","Elixir Arcano superior","alquimia","resultado","inv_potion_25",1,0,2,0,5,0,"Uso: Aumenta el daño de los hechizos hasta en 35 p. durante 1 h. (3 Seg Reutilización)",13454,0],["elixir_agilidad","Elixir de agilidad","alquimia","resultado","inv_potion_93",1,0,2,0,5,0,"Uso: Aumenta la agilidad del objetivo en 15 p. durante 1 h. (3 Seg Reutilización)",8949,0]],"categorias":[["mercenary","Mercenario"],["hunt","Caza"],["investigation","Investigacion"],["exploration","Exploracion"],["resources","Recursos"],["crafting","Creacion"],["alliance","Alianza"],["horde","Horda"],["neutral","Neutrales"],["social","Sociales"],["magic","Magicos"],["legendary","Harford"]]};/*DATOS_FIN*/
+
+const $ = id => document.getElementById(id);
+const sinTildes = s => (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+const aClave = s => sinTildes(s).toLowerCase()
+  .replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"").slice(0,48);
+// El guion se conserva: hay iconos custom que lo llevan (`inv-sword_53`).
+const aIcono = s => sinTildes(s).trim().replace(/^.*[\\\/]/, "")
+  .replace(/\.(blp|png|tga|jpg)$/i, "").toLowerCase().replace(/[^a-z0-9_-]/g,"");
+const escapa = s => (s||"").replace(/\\/g,"\\\\").replace(/"/g,'\\"');
+const trocea = s => (s||"").split(",").map(x => x.trim()).filter(Boolean);
+const opciones = (sel, pares) => {
+  sel.innerHTML = "";
+  for (const [v,t] of pares){
+    const o = document.createElement("option"); o.value = v; o.textContent = t; sel.append(o);
+  }
+};
+const texto = sel => sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex].textContent : "";
+
+const CONOCIDOS = new Set(ICONOS);
+const EN_HOJA = new Map(HOJA.orden.map((n,i) => [n,i]));
+const REGISTRO = new Map(DATOS.registro.map(r => [r[0], r[1]]));   // clave -> nombre
+// El id solo lo tienen 31 de las 1.975 claves, pero cuando esta, en las recompensas de
+// mision el addon resuelve nombre, enlace e icono a partir de el.
+const ID_DE = new Map(DATOS.registro.filter(r => r[2]).map(r => [r[0], r[2]]));
+const RECETA_IDS = new Set(DATOS.recetaIds);
+const PENDIENTES = DATOS.pendientes;
+const CLAVES_PEND = new Set(PENDIENTES.map(p => p[0]));
+
+// ── La hoja de sprites, por blob ────────────────────────────────────────────
+// La data-URI son megas de TEXTO: en el style de cada boton, o detras de un var() de CSS
+// que se sustituye textualmente, la pagina se queda clavada. Con un blob la regla se
+// parsea una vez y todos comparten la misma imagen decodificada.
+(function montaHoja(){
+  if (!HOJA.img) return;
+  let url = HOJA.img;
+  try {
+    const bin = atob(HOJA.img.slice(HOJA.img.indexOf(",") + 1));
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    url = URL.createObjectURL(new Blob([bytes], {type:"image/webp"}));
+    HOJA.img = null;
+  } catch(e) {}
+  // Las medidas salen del tamano de la hoja, no van fijas en el CSS.
+  const L = HOJA.lado;
+  const hueco = px => "width:"+px+"px;height:"+px+"px;padding:"+((px-L)/2)+"px";
+  const est = document.createElement("style");
+  est.textContent =
+    ".conIcono{background-image:url(" + url + ")}" +
+    ".paleta button{" + hueco(L + 6) + "}" +
+    ".muestra{" + hueco(L + 16) + "}" +
+    ".tt-icono{" + hueco(L + 14) + "}" +
+    ".mini{" + hueco(L + 2) + "}";
+  document.head.append(est);
+})();
+
+function ponFondo(el, nombre){
+  const i = EN_HOJA.get(nombre);
+  el.classList.toggle("conIcono", i !== undefined);
+  if (i === undefined){ el.style.backgroundPosition = "0 0"; return; }
+  el.style.backgroundPosition =
+    "-" + (i % HOJA.columnas) * HOJA.lado + "px -" + Math.floor(i / HOJA.columnas) * HOJA.lado + "px";
+}
+
+// ── Yunques ─────────────────────────────────────────────────────────────────
+for (const b of document.querySelectorAll('[data-yunque]')){
+  b.onclick = () => {
+    for (const otro of document.querySelectorAll('[data-yunque]')){
+      const activo = otro === b;
+      otro.setAttribute("aria-selected", activo ? "true" : "false");
+      $("p-" + otro.dataset.yunque).hidden = !activo;
+    }
+    if (b.dataset.yunque === "objetos") pintaVisible(true);
+  };
+}
+
+// ══════════════════ YUNQUE DE OBJETOS ══════════════════
+const CLASES = [[7,"Material"],[0,"Consumible"],[2,"Arma"],[4,"Armadura"],[15,"Útiles"]];
+const SUBCLASES = {
+  0:[[1,"Poción"],[2,"Elixir"],[5,"Comida"],[7,"Vendaje"],[8,"Otro"]],
+  2:[[15,"Daga"],[7,"Espada 1M"],[8,"Espada 2M"],[0,"Hacha 1M"],[1,"Hacha 2M"],
+     [4,"Maza 1M"],[5,"Maza 2M"],[6,"Arma de asta"],[10,"Bastón"],[13,"Puños"],
+     [2,"Arco"],[18,"Ballesta"],[3,"Arma de fuego"],[19,"Varita"]],
+  4:[[1,"Tela"],[2,"Cuero"],[3,"Malla"],[4,"Placas"],[6,"Escudo"],[0,"Varios"]],
+  7:[[0,"Genérico"],[7,"Metal"],[5,"Tela"],[6,"Cuero"],[9,"Hierba"],[4,"Joyería"],
+     [12,"Encantamiento"],[8,"Carne"],[1,"Piezas"],[11,"Otro"]],
+  15:[[0,"Varios"]]
+};
+const HUECOS = [[0,"No se equipa"],[1,"Cabeza"],[2,"Cuello"],[3,"Hombros"],[5,"Pecho"],
+  [6,"Cintura"],[7,"Piernas"],[8,"Pies"],[9,"Muñecas"],[10,"Manos"],[11,"Dedo"],
+  [12,"Abalorio"],[16,"Espalda"],[13,"Una mano"],[17,"Dos manos"],[21,"Mano principal"],
+  [22,"Mano secundaria"],[23,"Sostenido"],[14,"Escudo"],[26,"A distancia"]];
+const CALIDADES = [[1,"Común"],[0,"Pobre"],[2,"Poco común"],[3,"Raro"],[4,"Épico"],[5,"Legendario"]];
+const VINCULACIONES = [[0,"Sin vínculo"],[1,"Al recogerlo"],[2,"Al equiparlo"],[3,"Al usarlo"],
+  [4,"Objeto de misión"]];
+// El catalogo solo confirma que los escudos van con 4; el resto se ofrece por numero.
+const ENVAINADOS = [[0,"Sin envainar"],[1,"Dos manos, a la espalda"],[2,"Bastón, a la espalda"],
+  [3,"Una mano, en la cadera"],[4,"Escudo"],[5,"Tipo 5"],[6,"Tipo 6"],[7,"Tipo 7"]];
+const MATERIALES = [[-1,"Sin tocar"],[1,"Metal"],[2,"Madera"],[3,"Líquido"],[4,"Joyería"],
+  [5,"Cota de malla"],[6,"Placas"],[7,"Tela"],[8,"Cuero"]];
+const TRIESTADO = [["","Sin tocar"],["on","Sí"],["off","No"]];
+const PROPIEDADES = [
+  ["ai_anyone","property additem anyone"],["ai_character","property additem character"],
+  ["ai_member","property additem member"],["ai_officer","property additem officer"],
+  ["p_copy","property copy"],["p_info","property info"],["p_lookup","property lookup"],
+  ["p_adder","property adder"],["p_creator","property creator"]
+];
+const LISTAS = [["wl_character","whitelist character add"],["wl_member","whitelist member add"],
+  ["wl_officer","whitelist officer add"]];
+
+const PROFS = DATOS.profs.length ? DATOS.profs.map(p => [p[0], p[1]])
+  : [["prof_herreria","Herreria"]];
+opciones($("prof"), PROFS);
+opciones($("clase"), CLASES);
+opciones($("hueco"), HUECOS);
+opciones($("calidad"), CALIDADES);
+opciones($("vinculacion"), VINCULACIONES);
+opciones($("envainado"), ENVAINADOS);
+opciones($("material"), MATERIALES);
+for (const [id] of PROPIEDADES) opciones($(id), TRIESTADO);
+$("ai_anyone").value = "on";
+$("nSinDesc").textContent = PENDIENTES.filter(p => !p[11]).length;
+$("nRegistro").textContent = REGISTRO.size.toLocaleString("es");
+
+function refrescaSubclases(){
+  opciones($("subclase"), SUBCLASES[Number($("clase").value)] || [[0,"Varios"]]);
+  pintaObj();
+}
+$("clase").addEventListener("change", refrescaSubclases);
+
+function objActual(){
+  const o = {
+    clave: aClave($("nombre").value), nombre: $("nombre").value.trim(),
+    prof: $("prof").value, papel: $("papel").value, icono: aIcono($("icono").value),
+    display: Number($("display").value) || 0, desc: $("desc").value.trim(),
+    clase: Number($("clase").value), subclase: Number($("subclase").value),
+    hueco: Number($("hueco").value), calidad: Number($("calidad").value),
+    apilable: Math.max(1, Number($("apilable").value) || 1),
+    vinculacion: Number($("vinculacion").value), envainado: Number($("envainado").value),
+    material: Number($("material").value), props:{}, listas:{}
+  };
+  for (const [id] of PROPIEDADES) if ($(id).value) o.props[id] = $(id).value;
+  for (const [id] of LISTAS){ const v = trocea($(id).value); if (v.length) o.listas[id] = v; }
+  return o;
+}
+
+function bloqueJson(o){
+  const c = {};
+  if (o.icono) c.icono = o.icono;
+  c.calidad = o.calidad; c.clase = o.clase; c.subclase = o.subclase;
+  if (o.hueco) c.hueco = o.hueco;
+  if (o.apilable > 1) c.apilable = o.apilable;
+  if (o.vinculacion) c.vinculacion = o.vinculacion;
+  if (o.envainado) c.envainado = o.envainado;
+  if (o.material >= 0) c.material = o.material;
+  if (o.display) c.display = o.display;
+  if (o.desc) c.desc = o.desc;
+  if (o.props.ai_anyone === "off") c.additem = false;
+  if (Object.keys(o.props).length) c.props = o.props;
+  if (Object.keys(o.listas).length) c.listas = o.listas;
+  return c;
+}
+const lineaRegistro = o =>
+  `    ${('["'+o.clave+'"]').padEnd(32)} = { id = nil, name = "${escapa(o.nombre)}" },`;
+
+function comandos(o){
+  const L = " <enlace> ";
+  const c = [];
+  if (o.nombre) c.push("forge item set name" + L + o.nombre);
+  if (o.desc) c.push("f i s de" + L + o.desc);
+  if (o.icono) c.push("forge item set icon" + L + o.icono);
+  c.push("forge item set quality" + L + o.calidad);
+  c.push("forge item set class" + L + o.clase);
+  c.push("forge item set subclass" + L + o.subclase);
+  if (o.hueco) c.push("forge item set inventorytype" + L + o.hueco);
+  if (o.display) c.push("forge item set display" + L + "|item:" + o.display + "|h[…]|h|r");
+  if (o.apilable > 1) c.push("forge item set stackable" + L + o.apilable);
+  if (o.vinculacion) c.push("forge item set bonding" + L + o.vinculacion);
+  if (o.envainado) c.push("forge item set sheath" + L + o.envainado);
+  if (o.material >= 0) c.push("forge item set material" + L + o.material);
+  for (const [id, cmd] of PROPIEDADES) if (o.props[id]) c.push("forge item set " + cmd + L + o.props[id]);
+  for (const [id, cmd] of LISTAS) for (const v of (o.listas[id] || [])) c.push("forge item set " + cmd + L + v);
+  return c;
+}
+
+let _cargado = null;   // clave del objeto que se cargo, para saber si se edita o se crea
+
+function pintaObj(){
+  const o = objActual();
+  $("clave").value = o.clave;
+  $("cuenta").textContent = $("desc").value.length;
+
+  // Un icono que no existe NO borra la textura anterior: el objeto hereda la del hueco que
+  // ocupaba antes y no se nota hasta verlo en juego.
+  const m = $("marcaIcono");
+  if (!o.icono){ m.className = "pista"; m.textContent = "Busca entre " + ICONOS.length.toLocaleString("es") + " iconos."; }
+  else if (CONOCIDOS.has(o.icono)){ m.className = "marca si"; m.textContent = "✓ está en el catálogo"; }
+  else { m.className = "marca no"; m.textContent = "⚠ no está en el catálogo — heredaría otra textura"; }
+
+  // Y avisar si la clave ya existe: crear una repetida ensucia el registro.
+  const mc = $("marcaClave");
+  if (!o.clave){ mc.className = "pista"; mc.textContent = "Se deriva del nombre."; }
+  else if (o.clave === _cargado){ mc.className = "marca si"; mc.textContent = "✓ editando este objeto"; }
+  else if (REGISTRO.has(o.clave) || CLAVES_PEND.has(o.clave)){
+    mc.className = "marca no"; mc.textContent = "⚠ esta clave YA existe — cárgala arriba en vez de duplicarla";
+  } else { mc.className = "marca si"; mc.textContent = "✓ clave libre"; }
+
+  ponFondo($("muestra"), o.icono);
+  ponFondo($("ttIcono"), o.icono);
+  $("ttNombre").textContent = o.nombre || "Objeto sin nombre";
+  $("ttNombre").style.color = `var(--q${o.calidad})`;
+  const l = [];
+  if (o.hueco) l.push(texto($("hueco")));
+  l.push(`${texto($("clase"))} · ${texto($("subclase"))}`);
+  if (o.vinculacion) l.push(texto($("vinculacion")));
+  if (o.apilable > 1) l.push(`Carga máx: ${o.apilable}`);
+  $("ttLineas").innerHTML = l.map(x => `<span>${x}</span>`).join("");
+  $("ttDesc").textContent = o.desc;
+  $("ttPie").innerHTML = [o.prof.replace("prof_",""), o.papel].map(x => `<span>${x}</span>`).join("");
+
+  const cmds = comandos(o);
+  $("nCmds").textContent = cmds.length;
+  $("outCmd").textContent = cmds.length ? cmds.join("\n") : "—";
+  $("outJson").textContent = JSON.stringify({[o.clave || "sin_clave"]: bloqueJson(o)}, null, 2);
+  $("outReg").textContent = o.nombre
+    ? (REGISTRO.has(o.clave) ? "— ya está en el registro —" : lineaRegistro(o)) : "—";
+}
+$("fo").addEventListener("input", e => {
+  pintaObj();
+  if (e.target.id === "buscar") pintaPaleta();
+  if (e.target.id === "buscarObj") buscaObjeto();
+});
+$("fo").addEventListener("change", pintaObj);
+
+// ── Cargar un objeto que ya existe ──────────────────────────────────────────
+function cargaObjeto(p){
+  _cargado = p[0];
+  $("nombre").value = p[1];
+  // Data.lua guarda la profesion sin prefijo (`alquimia`) y el desplegable usa
+  // `prof_alquimia`. Sin normalizar, cargar un objeto no seleccionaba su profesion.
+  const prof = p[2] ? (p[2].startsWith("prof_") ? p[2] : "prof_" + p[2]) : "";
+  $("prof").value = [...$("prof").options].some(o => o.value === prof) ? prof : PROFS[0][0];
+  $("papel").value = p[3] || "resultado";
+  $("icono").value = p[4] || "";
+  $("calidad").value = p[5]; $("clase").value = p[6];
+  opciones($("subclase"), SUBCLASES[p[6]] || [[0,"Varios"]]);
+  $("subclase").value = p[7]; $("hueco").value = p[8];
+  $("apilable").value = p[9]; $("vinculacion").value = p[10];
+  $("desc").value = p[11] || "";
+  $("display").value = p[12] || "";
+  $("cargado").innerHTML = 'Editando <b>' + p[0] + '</b>. Se generará solo su anulación.';
+  $("buscarObj").value = "";
+  $("sugObj").classList.remove("abierto");
+  pintaObj();
+}
+function buscaObjeto(){
+  const q = sinTildes($("buscarObj").value).toLowerCase().trim();
+  const caja = $("sugObj");
+  if (q.length < 2){ caja.classList.remove("abierto"); return; }
+  const res = [];
+  for (const p of PENDIENTES){
+    if (sinTildes(p[1]).toLowerCase().includes(q) || p[0].includes(q)) res.push(p);
+    if (res.length >= 40) break;
+  }
+  caja.innerHTML = "";
+  if (!res.length){ caja.innerHTML = '<p class="nada" style="padding:9px 10px">Ninguno coincide.</p>'; }
+  for (const p of res){
+    const b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = (p[11] ? "" : "⚠ ") + p[1] + "<b>" + p[0] + (p[11] ? "" : "  · sin descripción") + "</b>";
+    b.onclick = () => cargaObjeto(p);
+    caja.append(b);
+  }
+  caja.classList.add("abierto");
+}
+
+// ── La rejilla de iconos, virtual ───────────────────────────────────────────
+const TRADUCE = {
+  espada:"sword", daga:"knife", hacha:"axe", maza:"mace", martillo:"hammer", lanza:"spear",
+  arco:"bow", ballesta:"crossbow", varita:"wand", baston:"staff", escudo:"shield", arma:"weapon",
+  casco:"helmet", yelmo:"helmet", hombreras:"shoulder", pechera:"chest", peto:"chest",
+  tunica:"robe", capa:"cape", manto:"cape", cinturon:"belt", guantes:"glove", botas:"boot",
+  pantalones:"pants", piernas:"pants", brazales:"bracer", muneca:"bracer", anillo:"ring",
+  collar:"necklace", abalorio:"trinket", tela:"cloth", cuero:"leather", malla:"mail",
+  placas:"plate", pocion:"potion", frasco:"potion", vial:"potion", elixir:"potion",
+  bebida:"drink", comida:"food", pan:"bread", carne:"meat", pescado:"fish", queso:"cheese",
+  hierba:"herb", flor:"flower", mineral:"ore", lingote:"ingot", barra:"ingot", gema:"gem",
+  piedra:"stone", polvo:"dust", pergamino:"scroll", libro:"book", llave:"key", bolsa:"bag",
+  caja:"box", pluma:"feather", hueso:"bone", cristal:"crystal", oro:"gold", plata:"silver",
+  cobre:"copper", hierro:"iron", acero:"steel", fuego:"fire", hielo:"frost", sombra:"shadow",
+  veneno:"poison", sangre:"blood", joyeria:"jewel", pesca:"fishing", herreria:"blacksmith"
+};
+const CELDA = HOJA.lado + 10;
+let _filtrados = [], _columnas = 0, _pool = [], _rango = "";
+
+function filtraIconos(q){
+  if (!q) return HOJA.orden;
+  const t = TRADUCE[q] || q;
+  const empiezan = [], dentro = [];
+  for (const n of HOJA.orden){
+    if (n.startsWith(t) || n.startsWith(q)) empiezan.push(n);
+    else if (n.includes(t) || n.includes(q)) dentro.push(n);
+  }
+  return empiezan.concat(dentro);
+}
+// Virtual: en el DOM viven solo los botones visibles y se reciclan. El scroll dispara
+// decenas de veces por gesto, asi que se sale enseguida si el rango no ha cambiado.
+function pintaVisible(forzar){
+  const p = $("paleta"), lienzo = $("lienzo");
+  if (!p.clientWidth) return;
+  _columnas = Math.max(1, Math.floor((p.clientWidth - 14) / CELDA));
+  const filas = Math.ceil(_filtrados.length / _columnas);
+  lienzo.style.height = (filas * CELDA) + "px";
+  const primera = Math.max(0, Math.floor(p.scrollTop / CELDA) - 1);
+  const ultima = Math.min(filas, Math.ceil((p.scrollTop + p.clientHeight) / CELDA) + 1);
+  const rango = primera + ":" + ultima + ":" + _columnas + ":" + _filtrados.length;
+  if (!forzar && rango === _rango) return;
+  _rango = rango;
+  const desde = primera * _columnas;
+  const hacen = Math.min(ultima * _columnas, _filtrados.length) - desde;
+  const sel = aIcono($("icono").value);
+  while (_pool.length < hacen){
+    const b = document.createElement("button");
+    b.type = "button"; b.setAttribute("role","option");
+    b.onclick = () => {
+      $("icono").value = b.title; pintaObj();
+      for (const otro of _pool) otro.setAttribute("aria-selected", otro.title === b.title ? "true" : "false");
+    };
+    _pool.push(b); lienzo.append(b);
+  }
+  for (let k = 0; k < _pool.length; k++){
+    const b = _pool[k];
+    if (k >= hacen){ b.style.display = "none"; continue; }
+    const i = desde + k, n = _filtrados[i];
+    b.style.display = "";
+    b.style.left = ((i % _columnas) * CELDA) + "px";
+    b.style.top = (Math.floor(i / _columnas) * CELDA) + "px";
+    b.title = n; b.setAttribute("aria-label", n);
+    b.setAttribute("aria-selected", n === sel ? "true" : "false");
+    ponFondo(b, n);
+  }
+}
+function pintaPaleta(){
+  _filtrados = filtraIconos(aIcono($("buscar").value));
+  $("nIconos").textContent = _filtrados.length.toLocaleString("es");
+  $("paleta").scrollTop = 0;
+  pintaVisible(true);
+}
+$("paleta").addEventListener("scroll", () => pintaVisible(false), {passive:true});
+addEventListener("resize", () => pintaVisible(true));
+
+// ── Lista de objetos ────────────────────────────────────────────────────────
+let listaObj = [];
+try { listaObj = JSON.parse(localStorage.getItem("yunque") || "[]"); } catch(e) {}
+const guardaObj = () => { try { localStorage.setItem("yunque", JSON.stringify(listaObj)); } catch(e){} };
+
+function pintaListaObj(){
+  const cuerpo = $("cuerpoObj"); cuerpo.innerHTML = "";
+  $("cuentaObj").textContent = listaObj.length;
+  $("vacioObj").style.display = listaObj.length ? "none" : "block";
+  listaObj.forEach((o, i) => {
+    const tr = document.createElement("tr");
+    const ic = document.createElement("td");
+    const cua = document.createElement("div"); cua.className = "mini"; ponFondo(cua, o.icono);
+    ic.append(cua);
+    const nom = document.createElement("td");
+    const f = document.createElement("strong");
+    f.textContent = o.nombre; f.style.color = `var(--q${o.calidad})`;
+    const sub = document.createElement("span"); sub.className = "pista"; sub.textContent = o.clave;
+    nom.append(f, document.createElement("br"), sub);
+    const p = document.createElement("td"); p.textContent = (o.prof||"").replace("prof_","");
+    const pa = document.createElement("td"); pa.textContent = o.papel;
+    const cl = document.createElement("td"); cl.className = "num";
+    cl.textContent = `${o.clase}/${o.subclase}${o.hueco ? " · " + o.hueco : ""}`;
+    const x = document.createElement("td");
+    const b = document.createElement("button");
+    b.className = "quitar"; b.type = "button"; b.textContent = "×";
+    b.setAttribute("aria-label", "Quitar " + o.nombre);
+    b.onclick = () => { listaObj.splice(i,1); guardaObj(); pintaListaObj(); };
+    x.append(b);
+    tr.append(ic, nom, p, pa, cl, x); cuerpo.append(tr);
+  });
+}
+$("anadirObj").onclick = () => {
+  const o = objActual();
+  if (!o.nombre){ $("nombre").focus(); return; }
+  const ya = listaObj.findIndex(x => x.clave === o.clave);
+  if (ya >= 0) listaObj[ya] = o; else listaObj.push(o);
+  guardaObj(); pintaListaObj();
+};
+$("limpiarObj").onclick = () => {
+  $("fo").reset(); _cargado = null;
+  $("ai_anyone").value = "on";
+  $("cargado").textContent = "Nada cargado: lo que rellenes será un objeto nuevo.";
+  refrescaSubclases(); pintaPaleta(); $("nombre").focus();
+};
+$("vaciarObj").onclick = () => { listaObj = []; guardaObj(); pintaListaObj(); };
+
+// ══════════════════ YUNQUE DE RECETAS ══════════════════
+opciones($("rProf"), PROFS);
+const PREFIJO_PROF = {};   // prof_alquimia -> alq_, para el id de la receta
+for (const [id] of PROFS) PREFIJO_PROF[id] = id.replace("prof_","").slice(0,3) + "_";
+
+let mats = [{clave:"", qty:1}];
+
+function recActual(){
+  return {
+    prof: $("rProf").value, nombre: $("rNombre").value.trim(),
+    id: $("rId").value, skill: Math.max(1, Number($("rSkill").value) || 1),
+    dc: Math.max(1, Number($("rDc").value) || 16), source: $("rSource").value,
+    train: Number($("rTrain").value) || 0, icono: aIcono($("rIcono").value),
+    desc: $("rDesc").value.trim(), tools: $("rTools").value.trim(),
+    out: aClave($("rOut").value), outQty: Math.max(1, Number($("rOutQty").value) || 1),
+    mats: mats.filter(m => m.clave)
+  };
+}
+
+function lineaReceta(r){
+  const trozos = [
+    `id = "${r.id}"`, `profession = "${r.prof}"`, `skillReq = ${r.skill}`,
+    `name = "${escapa(r.nombre)}"`, `icon = "${r.icono}"`, `dc = ${r.dc}`,
+    `source = "${r.source}"`
+  ];
+  if (r.source === "entrenador" && r.train) trozos.push(`trainCost = ${r.train}`);
+  trozos.push("materials = { " + (r.mats.length
+    ? r.mats.map(m => `{ key = "${m.clave}", qty = ${m.qty} }`).join(", ") : "") + " }");
+  trozos.push(`output = { key = "${r.out}", qty = ${r.outQty} }`);
+  if (r.desc) trozos.push(`desc = "${escapa(r.desc)}"`);
+  if (r.tools) trozos.push(`tools = "${escapa(r.tools)}"`);
+  return "    { " + trozos.join(", ") + " },";
+}
+
+function pintaMats(){
+  const caja = $("mats"); caja.innerHTML = "";
+  mats.forEach((m, i) => {
+    const fila = document.createElement("div"); fila.className = "mat";
+    const campo = document.createElement("div"); campo.className = "campo";
+    const inp = document.createElement("input");
+    inp.className = "mono"; inp.value = m.clave; inp.placeholder = "clave del material";
+    inp.setAttribute("aria-label", "Material " + (i+1));
+    const sug = document.createElement("div"); sug.className = "sugerencias";
+    inp.oninput = () => { m.clave = aClave(inp.value); autocompleta(inp, sug, inp.value); pintaRec(); };
+    inp.onblur = () => setTimeout(() => sug.classList.remove("abierto"), 150);
+    campo.append(inp, sug);
+    const qty = document.createElement("input");
+    qty.type = "number"; qty.min = "1"; qty.value = m.qty;
+    qty.setAttribute("aria-label", "Cantidad del material " + (i+1));
+    qty.oninput = () => { m.qty = Math.max(1, Number(qty.value) || 1); pintaRec(); };
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "quitar"; x.textContent = "×";
+    x.setAttribute("aria-label", "Quitar material " + (i+1));
+    x.onclick = () => { mats.splice(i,1); if (!mats.length) mats.push({clave:"",qty:1}); pintaMats(); pintaRec(); };
+    fila.append(campo, qty, x); caja.append(fila);
+  });
+}
+// Autocompletado contra el registro REAL: una clave inventada deja la receta pendiente
+// para siempre y nadie se entera.
+function autocompleta(inp, caja, valor){
+  const q = sinTildes(valor).toLowerCase().trim();
+  if (q.length < 2){ caja.classList.remove("abierto"); return; }
+  const res = [];
+  for (const [k, n] of REGISTRO){
+    if (k.includes(q) || sinTildes(n).toLowerCase().includes(q)) res.push([k, n]);
+    if (res.length >= 30) break;
+  }
+  caja.innerHTML = "";
+  if (!res.length){ caja.innerHTML = '<p class="nada" style="padding:9px 10px">Ninguna clave coincide.</p>'; }
+  for (const [k, n] of res){
+    const b = document.createElement("button");
+    b.type = "button"; b.innerHTML = n + "<b>" + k + "</b>";
+    b.onclick = () => { inp.value = k; inp.dispatchEvent(new Event("input", {bubbles:true})); caja.classList.remove("abierto"); };
+    caja.append(b);
+  }
+  caja.classList.add("abierto");
+}
+
+function pintaRec(){
+  const r = recActual();
+  const pref = PREFIJO_PROF[r.prof] || "";
+  $("rId").value = r.nombre ? pref + aClave(r.nombre).slice(0, 40) : "";
+  const rid = $("rId").value;
+  const mr = $("marcaRid");
+  if (!rid){ mr.className = "pista"; mr.textContent = "Se deriva de la profesión y el nombre."; }
+  else if (RECETA_IDS.has(rid)){ mr.className = "marca no"; mr.textContent = "⚠ ya existe una receta con este id"; }
+  else { mr.className = "marca si"; mr.textContent = "✓ id libre"; }
+
+  const mi = $("marcaRicono");
+  mi.className = r.icono ? (CONOCIDOS.has(r.icono) ? "marca si" : "marca no") : "pista";
+  mi.textContent = !r.icono ? "" : (CONOCIDOS.has(r.icono) ? "✓ existe" : "⚠ no está en el catálogo");
+  ponFondo($("rMuestra"), r.icono);
+  ponFondo($("rttIcono"), r.icono);
+
+  const mo = $("marcaOut");
+  if (!r.out){ mo.className = "pista"; mo.textContent = "La clave del objeto que produce."; }
+  else if (REGISTRO.has(r.out)){ mo.className = "marca si"; mo.textContent = "✓ " + REGISTRO.get(r.out); }
+  else { mo.className = "marca no"; mo.textContent = "⚠ esa clave no está en el registro"; }
+
+  $("rttNombre").textContent = r.nombre || "Receta sin nombre";
+  const l = [texto($("rProf")) + " · nivel " + r.skill, "CD " + r.dc];
+  if (r.source === "entrenador") l.push("Entrenador" + (r.train ? " · " + r.train + " de cobre" : ""));
+  else if (r.source === "mundo") l.push("Se aprende al usarla");
+  if (r.tools) l.push("Necesita: " + r.tools);
+  $("rttLineas").innerHTML = l.map(x => `<span>${x}</span>`).join("");
+
+  const filas = [];
+  filas.push('<div><span><b>Produce</b> ' + (REGISTRO.get(r.out) || r.out || "—") +
+    '</span><b>' + r.outQty + '</b></div>');
+  for (const m of r.mats){
+    const nom = REGISTRO.get(m.clave);
+    filas.push('<div class="' + (nom ? "" : "falta") + '"><span>' +
+      (nom || (m.clave + " — no está en el registro")) + '</span><b>' + m.qty + '</b></div>');
+  }
+  $("rttMats").innerHTML = filas.join("");
+  $("rttDesc").textContent = r.desc;
+  $("rttPie").innerHTML = '<span>' + r.prof.replace("prof_","") + '</span><span>' + r.source + '</span>';
+  $("outRec").textContent = r.nombre && r.out ? lineaReceta(r) : "—";
+}
+$("fr").addEventListener("input", pintaRec);
+$("fr").addEventListener("change", pintaRec);
+$("addMat").onclick = () => { mats.push({clave:"",qty:1}); pintaMats(); pintaRec(); };
+$("rOut").addEventListener("input", () => autocompleta($("rOut"), $("sugOut"), $("rOut").value));
+$("rOut").addEventListener("blur", () => setTimeout(() => $("sugOut").classList.remove("abierto"), 150));
+
+let listaRec = [];
+try { listaRec = JSON.parse(localStorage.getItem("yunqueRecetas") || "[]"); } catch(e) {}
+const guardaRec = () => { try { localStorage.setItem("yunqueRecetas", JSON.stringify(listaRec)); } catch(e){} };
+
+function pintaListaRec(){
+  const cuerpo = $("cuerpoRec"); cuerpo.innerHTML = "";
+  $("cuentaRec").textContent = listaRec.length;
+  $("vacioRec").style.display = listaRec.length ? "none" : "block";
+  listaRec.forEach((r, i) => {
+    const tr = document.createElement("tr");
+    const ic = document.createElement("td");
+    const cua = document.createElement("div"); cua.className = "mini"; ponFondo(cua, r.icono);
+    ic.append(cua);
+    const nom = document.createElement("td");
+    const f = document.createElement("strong"); f.textContent = r.nombre;
+    const sub = document.createElement("span"); sub.className = "pista"; sub.textContent = r.id;
+    nom.append(f, document.createElement("br"), sub);
+    const p = document.createElement("td"); p.textContent = r.prof.replace("prof_","");
+    const sk = document.createElement("td"); sk.className = "num"; sk.textContent = r.skill;
+    const ma = document.createElement("td");
+    const malas = r.mats.filter(m => !REGISTRO.has(m.clave)).length;
+    ma.innerHTML = r.mats.length + (malas ? ' <span class="chip aviso2">' + malas + ' sin registro</span>' : "");
+    const x = document.createElement("td");
+    const b = document.createElement("button");
+    b.className = "quitar"; b.type = "button"; b.textContent = "×";
+    b.setAttribute("aria-label", "Quitar " + r.nombre);
+    b.onclick = () => { listaRec.splice(i,1); guardaRec(); pintaListaRec(); };
+    x.append(b);
+    tr.append(ic, nom, p, sk, ma, x); cuerpo.append(tr);
+  });
+}
+$("anadirRec").onclick = () => {
+  const r = recActual();
+  if (!r.nombre || !r.out){ $("rNombre").focus(); return; }
+  const ya = listaRec.findIndex(x => x.id === r.id);
+  if (ya >= 0) listaRec[ya] = r; else listaRec.push(r);
+  guardaRec(); pintaListaRec();
+};
+$("limpiarRec").onclick = () => {
+  $("fr").reset(); mats = [{clave:"",qty:1}]; pintaMats(); pintaRec(); $("rNombre").focus();
+};
+$("vaciarRec").onclick = () => { listaRec = []; guardaRec(); pintaListaRec(); };
+
+// ── Copiar ──────────────────────────────────────────────────────────────────
+function paraCopiar(que){
+  if (que === "todoJson"){
+    const t = {}; for (const o of listaObj) t[o.clave] = bloqueJson(o);
+    return JSON.stringify(t, null, 2);
+  }
+  if (que === "todoReg") return listaObj.map(lineaRegistro).join("\n");
+  if (que === "todoRec") return listaRec.map(lineaReceta).join("\n");
+  if (que === "todoMis") return listaMis.map(bloqueMision).join("\n");
+  return $(que).textContent;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-copia]");
+  if (!b) return;
+  const antes = b.textContent;
+  navigator.clipboard.writeText(paraCopiar(b.dataset.copia)).then(
+    () => { b.textContent = "Copiado"; setTimeout(() => b.textContent = antes, 1200); },
+    () => { b.textContent = "No se pudo"; setTimeout(() => b.textContent = antes, 1600); });
+});
+document.addEventListener("click", e => {
+  if (!e.target.closest("#buscarObj") && !e.target.closest("#sugObj"))
+    $("sugObj").classList.remove("abierto");
+});
+
+// ══════════════════ YUNQUE DE MISIONES ══════════════════
+// La escala es la misma de los contratos: de gris a rojo.
+const DIFICULTADES = [["gray","Muy fácil"],["green","Fácil"],["yellow","Media"],
+  ["orange","Difícil"],["red","Muy difícil"]];
+const COLOR_DIF = {gray:"var(--q0)", green:"var(--q2)", yellow:"#c9a227",
+  orange:"var(--cobre)", red:"#c0392b"};
+opciones($("mDif"), DIFICULTADES);
+// `category` NO es texto libre: el registro de misiones lo resuelve con GetTypeByKey contra
+// los tipos de contrato. Se ofrecen los reales y nada mas.
+opciones($("mCat"), [["", "Sin categoría"]].concat(DATOS.categorias || []));
+// El navegador restaura el valor de los select al recargar, asi que se fija a mano.
+$("mDif").value = "yellow";
+// `source` es "world" en TODO el addon: no hay otros valores, asi que no se ofrece elegir.
+const FUENTE = "world";
+
+let objetivos = [{texto:"", cuantos:1}];
+let repsMis = [];
+let premios = [];
+
+function misActual(){
+  const t = $("mTitulo").value.trim();
+  return {
+    ns: FUENTE, titulo: t,
+    id: t ? FUENTE + ":" + aClave(t) : "",
+    desc: $("mDesc").value.trim(), cat: $("mCat").value.trim(),
+    dif: $("mDif").value, icono: aIcono($("mIcono").value),
+    xp: Number($("mXp").value) || 0,
+    oro: Number($("mOro").value) || 0, plata: Number($("mPlata").value) || 0,
+    cobre: Number($("mCobre").value) || 0,
+    objs: objetivos.filter(o => o.texto),
+    reps: repsMis.filter(r => r.faccion && r.cuanto),
+    premios: premios.filter(p => p.clave)
+  };
+}
+
+function bloqueMision(m){
+  const L = [];
+  L.push('    ["' + m.id + '"] = {');
+  L.push('        title = "' + escapa(m.titulo) + '",');
+  if (m.desc) L.push('        description = "' + escapa(m.desc) + '",');
+  L.push('        category = "' + escapa(m.cat) + '",');
+  L.push('        difficulty = "' + m.dif + '",');
+  // El icono de mision va con RUTA COMPLETA, al contrario que el de objeto.
+  if (m.icono) L.push('        icon = "Interface\\\\Icons\\\\' + m.icono + '",');
+  L.push('        source = "' + m.ns + '",');
+
+  const rec = [];
+  if (m.reps.length === 1){
+    rec.push('            rep = { faction = "' + escapa(m.reps[0].faccion) +
+             '", amount = ' + m.reps[0].cuanto + ' },');
+  } else if (m.reps.length > 1){
+    rec.push('            reps = {');
+    for (const r of m.reps)
+      rec.push('                { faction = "' + escapa(r.faccion) + '", amount = ' + r.cuanto + ' },');
+    rec.push('            },');
+  }
+  if (m.xp) rec.push('            xp = ' + m.xp + ',');
+  if (m.oro || m.plata || m.cobre)
+    rec.push('            money = { gold = ' + m.oro + ', silver = ' + m.plata +
+             ', copper = ' + m.cobre + ' },');
+  if (m.premios.length){
+    rec.push('            items = {');
+    for (const p of m.premios){
+      const id = ID_DE.get(p.clave);
+      rec.push('                { ' + (id ? "id = " + id + ", " : "") + 'name = "' +
+               escapa(REGISTRO.get(p.clave) || p.clave) + '", count = ' + p.cuantos + ' },');
+    }
+    rec.push('            },');
+  }
+  if (rec.length){ L.push('        rewards = {'); L.push(...rec); L.push('        },'); }
+
+  L.push('        objectives = {');
+  for (const o of m.objs)
+    L.push('            { text = "' + escapa(o.texto) + '", required = ' + o.cuantos + ' },');
+  L.push('        },');
+  L.push('    },');
+  return L.join("\n");
+}
+
+// Las tres listas de filas comparten forma: un texto y un numero.
+function pintaFilas(caja, datos, campos, alPintar){
+  caja.innerHTML = "";
+  datos.forEach((d, i) => {
+    const fila = document.createElement("div"); fila.className = "mat";
+    const campo = document.createElement("div"); campo.className = "campo";
+    const inp = document.createElement("input");
+    inp.value = d[campos.texto]; inp.placeholder = campos.hueco;
+    inp.setAttribute("aria-label", campos.hueco + " " + (i+1));
+    if (campos.mono) inp.className = "mono";
+    let sug = null;
+    if (campos.autocompleta){
+      sug = document.createElement("div"); sug.className = "sugerencias";
+      inp.onblur = () => setTimeout(() => sug.classList.remove("abierto"), 150);
+    }
+    inp.oninput = () => {
+      d[campos.texto] = campos.autocompleta ? aClave(inp.value) : inp.value;
+      if (sug) autocompleta(inp, sug, inp.value);
+      pintaMis();
+    };
+    campo.append(inp); if (sug) campo.append(sug);
+    const num = document.createElement("input");
+    num.type = "number"; num.min = "1"; num.value = d[campos.num];
+    num.setAttribute("aria-label", "Cantidad " + (i+1));
+    num.oninput = () => { d[campos.num] = Math.max(1, Number(num.value) || 1); pintaMis(); };
+    const x = document.createElement("button");
+    x.type = "button"; x.className = "quitar"; x.textContent = "×";
+    x.setAttribute("aria-label", "Quitar " + (i+1));
+    x.onclick = () => { datos.splice(i,1); alPintar(); pintaMis(); };
+    fila.append(campo, num, x); caja.append(fila);
+  });
+}
+const pintaObjs = () => pintaFilas($("objs"), objetivos,
+  {texto:"texto", num:"cuantos", hueco:"Habla con el capitán en el puente"}, pintaObjs);
+const pintaReps = () => pintaFilas($("reps"), repsMis,
+  {texto:"faccion", num:"cuanto", hueco:"Nombre de la facción"}, pintaReps);
+const pintaPremios = () => pintaFilas($("premios"), premios,
+  {texto:"clave", num:"cuantos", hueco:"clave del objeto", mono:true, autocompleta:true},
+  pintaPremios);
+
+function pintaMis(){
+  const m = misActual();
+  $("mId").value = m.id;
+  const mi = $("marcaMicono");
+  mi.className = m.icono ? (CONOCIDOS.has(m.icono) ? "marca si" : "marca no") : "pista";
+  mi.textContent = !m.icono ? "" : (CONOCIDOS.has(m.icono) ? "✓ existe" : "⚠ no está en el catálogo");
+  ponFondo($("mMuestra"), m.icono);
+  ponFondo($("mttIcono"), m.icono);
+
+  $("mttNombre").textContent = m.titulo || "Misión sin título";
+  $("mttNombre").style.color = COLOR_DIF[m.dif] || "var(--tinta)";
+  const l = [texto($("mDif"))];
+  if (m.cat) l.push(m.cat);
+  $("mttLineas").innerHTML = l.map(x => "<span>" + x + "</span>").join("");
+  $("mttDesc").textContent = m.desc;
+
+  const filas = m.objs.map(o => "<div><span>" + o.texto.replace(/</g,"&lt;") + "</span><b>" +
+    (o.cuantos > 1 ? "0/" + o.cuantos : "") + "</b></div>");
+  const prem = [];
+  if (m.xp) prem.push(m.xp + " XP");
+  if (m.oro || m.plata || m.cobre)
+    prem.push([m.oro && m.oro+"o", m.plata && m.plata+"p", m.cobre && m.cobre+"c"]
+      .filter(Boolean).join(" "));
+  for (const r of m.reps) prem.push("+" + r.cuanto + " " + r.faccion);
+  for (const p of m.premios)
+    prem.push((REGISTRO.get(p.clave) || p.clave) + (p.cuantos > 1 ? " x" + p.cuantos : ""));
+  if (prem.length) filas.push('<div style="margin-top:6px"><span><b>Recompensa</b> ' +
+    prem.join(", ") + "</span></div>");
+  $("mttObjs").innerHTML = filas.join("");
+  $("mttPie").innerHTML = "<span>" + m.ns + "</span><span>" + m.dif + "</span>";
+  $("outMis").textContent = m.titulo && m.objs.length ? bloqueMision(m)
+    : "— hacen falta título y al menos un objetivo —";
+}
+$("fm").addEventListener("input", pintaMis);
+$("fm").addEventListener("change", pintaMis);
+$("addObj").onclick = () => { objetivos.push({texto:"",cuantos:1}); pintaObjs(); pintaMis(); };
+$("addRep").onclick = () => { repsMis.push({faccion:"",cuanto:100}); pintaReps(); pintaMis(); };
+$("addPremio").onclick = () => { premios.push({clave:"",cuantos:1}); pintaPremios(); pintaMis(); };
+
+let listaMis = [];
+try { listaMis = JSON.parse(localStorage.getItem("yunqueMisiones") || "[]"); } catch(e) {}
+const guardaMis = () => { try { localStorage.setItem("yunqueMisiones", JSON.stringify(listaMis)); } catch(e){} };
+
+function pintaListaMis(){
+  const cuerpo = $("cuerpoMis"); cuerpo.innerHTML = "";
+  $("cuentaMis").textContent = listaMis.length;
+  $("vacioMis").style.display = listaMis.length ? "none" : "block";
+  listaMis.forEach((m, i) => {
+    const tr = document.createElement("tr");
+    const ic = document.createElement("td");
+    const cua = document.createElement("div"); cua.className = "mini"; ponFondo(cua, m.icono);
+    ic.append(cua);
+    const nom = document.createElement("td");
+    const f = document.createElement("strong");
+    f.textContent = m.titulo; f.style.color = COLOR_DIF[m.dif] || "var(--tinta)";
+    const sub = document.createElement("span"); sub.className = "pista"; sub.textContent = m.id;
+    nom.append(f, document.createElement("br"), sub);
+    const d = document.createElement("td");
+    d.textContent = (DIFICULTADES.find(x => x[0] === m.dif) || ["","?"])[1];
+    const o = document.createElement("td"); o.className = "num"; o.textContent = m.objs.length;
+    const r = document.createElement("td");
+    const trozos = [];
+    if (m.xp) trozos.push(m.xp + " XP");
+    if (m.reps.length) trozos.push(m.reps.length + " rep");
+    if (m.premios.length) trozos.push(m.premios.length + " obj");
+    r.textContent = trozos.join(" · ") || "—";
+    const x = document.createElement("td");
+    const b = document.createElement("button");
+    b.className = "quitar"; b.type = "button"; b.textContent = "×";
+    b.setAttribute("aria-label", "Quitar " + m.titulo);
+    b.onclick = () => { listaMis.splice(i,1); guardaMis(); pintaListaMis(); };
+    x.append(b);
+    tr.append(ic, nom, d, o, r, x); cuerpo.append(tr);
+  });
+}
+$("anadirMis").onclick = () => {
+  const m = misActual();
+  if (!m.titulo || !m.objs.length){ $("mTitulo").focus(); return; }
+  const ya = listaMis.findIndex(x => x.id === m.id);
+  if (ya >= 0) listaMis[ya] = m; else listaMis.push(m);
+  guardaMis(); pintaListaMis();
+};
+$("limpiarMis").onclick = () => {
+  $("fm").reset(); objetivos = [{texto:"",cuantos:1}]; repsMis = []; premios = [];
+  $("mDif").value = "yellow";
+  pintaObjs(); pintaReps(); pintaPremios(); pintaMis(); $("mTitulo").focus();
+};
+$("vaciarMis").onclick = () => { listaMis = []; guardaMis(); pintaListaMis(); };
+
+// ══════════════════ YUNQUE DE GOSSIP ══════════════════
+// Las paginas son un arbol, pero los comandos no lo saben: `text add` y `option add` van
+// SIEMPRE a la pagina que este abierta en la ventana de gossip. Por eso lo que sale no es
+// una tirada de comandos sino un guion con los pasos de navegacion intercalados.
+//
+// La pagina 0 es con la que abre el NPC y no se crea: ya existe. Las demas nacen con
+// `page add`, que ademas les pone su primer bloque de texto.
+let paginas = [{ bloques: ["El guardia te mira de arriba abajo."], opciones: [] }];
+let verPagina = 0;   // cual se esta previsualizando
+
+function nuevaPagina(){
+  paginas.push({ bloques: ["Texto de la página nueva."], opciones: [] });
+  pintaPaginas(); pintaGos();
+}
+
+// Una pagina no se puede borrar sin mas: `page remove` renumera todas las siguientes Y los
+// enlaces de las opciones. Se hace aqui lo mismo para que lo que ves sea lo que quedara.
+function borraPagina(i){
+  if (i === 0) return;                       // la inicial no se borra
+  paginas.splice(i, 1);
+  for (const p of paginas){
+    for (const o of p.opciones){
+      if (o.destino === i) o.destino = 0;    // la que apuntaba ahi se queda sin destino
+      else if (o.destino > i) o.destino--;   // el resto baja un numero
+    }
+  }
+  if (verPagina >= paginas.length) verPagina = 0;
+  pintaPaginas(); pintaGos();
+}
+
+function filaTexto(valor, alCambiar, alQuitar, hueco){
+  const fila = document.createElement("div"); fila.className = "mat";
+  const campo = document.createElement("div"); campo.className = "campo";
+  const ta = document.createElement("textarea");
+  ta.value = valor; ta.placeholder = hueco; ta.rows = 2;
+  ta.setAttribute("aria-label", hueco);
+  ta.oninput = () => { alCambiar(ta.value); pintaGos(); };
+  campo.append(ta);
+  const x = document.createElement("button");
+  x.type = "button"; x.className = "quitar"; x.textContent = "×";
+  x.setAttribute("aria-label", "Quitar");
+  x.onclick = alQuitar;
+  fila.append(campo, x);
+  return fila;
+}
+
+function pintaPaginas(){
+  const caja = $("paginas"); caja.innerHTML = "";
+  paginas.forEach((pag, i) => {
+    const bloque = document.createElement("div");
+    bloque.className = "pagina";
+    if (i === verPagina) bloque.classList.add("mirando");
+
+    const cab = document.createElement("div"); cab.className = "pagina-cab";
+    const tit = document.createElement("button");
+    tit.type = "button"; tit.className = "quitar titulo";
+    tit.innerHTML = "<b>Página " + i + "</b>" + (i === 0 ? " · con la que abre" : "");
+    tit.onclick = () => { verPagina = i; pintaPaginas(); pintaGos(); };
+    cab.append(tit);
+    if (i > 0){
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "quitar";
+      del.textContent = "×"; del.setAttribute("aria-label", "Borrar página " + i);
+      del.onclick = () => borraPagina(i);
+      cab.append(del);
+    }
+    bloque.append(cab);
+
+    const sub1 = document.createElement("p"); sub1.className = "sub"; sub1.textContent = "Texto";
+    bloque.append(sub1);
+    pag.bloques.forEach((b, j) => {
+      bloque.append(filaTexto(b,
+        v => pag.bloques[j] = v,
+        () => { pag.bloques.splice(j,1); if (!pag.bloques.length) pag.bloques.push(""); pintaPaginas(); pintaGos(); },
+        j === 0 ? "Primer bloque de texto" : "Bloque " + j));
+    });
+    const mas = document.createElement("button");
+    mas.type = "button"; mas.textContent = "Añadir bloque";
+    mas.style.marginTop = "6px";
+    mas.onclick = () => { pag.bloques.push(""); pintaPaginas(); pintaGos(); };
+    bloque.append(mas);
+
+    const sub2 = document.createElement("p"); sub2.className = "sub"; sub2.textContent = "Opciones";
+    bloque.append(sub2);
+    pag.opciones.forEach((o, j) => {
+      const fila = document.createElement("div"); fila.className = "mat";
+      const campo = document.createElement("div"); campo.className = "campo";
+      const inp = document.createElement("input");
+      inp.value = o.texto; inp.placeholder = "Etiqueta de la opción";
+      inp.setAttribute("aria-label", "Opción " + j);
+      inp.oninput = () => { o.texto = inp.value; pintaGos(); };
+      campo.append(inp);
+      const sel = document.createElement("select");
+      sel.setAttribute("aria-label", "Destino de la opción " + j);
+      sel.style.width = "116px"; sel.style.flex = "none";
+      paginas.forEach((_, k) => {
+        const op = document.createElement("option");
+        op.value = k; op.textContent = "→ página " + k; sel.append(op);
+      });
+      sel.value = o.destino;
+      sel.onchange = () => { o.destino = Number(sel.value); pintaGos(); };
+      const x = document.createElement("button");
+      x.type = "button"; x.className = "quitar"; x.textContent = "×";
+      x.setAttribute("aria-label", "Quitar opción " + j);
+      x.onclick = () => { pag.opciones.splice(j,1); pintaPaginas(); pintaGos(); };
+      fila.append(campo, sel, x);
+      bloque.append(fila);
+    });
+    const mas2 = document.createElement("button");
+    mas2.type = "button"; mas2.textContent = "Añadir opción";
+    mas2.style.marginTop = "6px";
+    mas2.onclick = () => { pag.opciones.push({texto:"", destino:0}); pintaPaginas(); pintaGos(); };
+    bloque.append(mas2);
+
+    caja.append(bloque);
+  });
+}
+
+// Como se llega a una pagina desde la 0, para poder decirlo en el guion.
+function rutaHasta(destino){
+  if (destino === 0) return [];
+  const visto = new Set([0]);
+  const cola = [[0, []]];
+  while (cola.length){
+    const [pag, camino] = cola.shift();
+    const ops = (paginas[pag] || {}).opciones || [];
+    for (let i = 0; i < ops.length; i++){
+      const d = ops[i].destino;
+      const paso = camino.concat([{desde: pag, opcion: i, texto: ops[i].texto, a: d}]);
+      if (d === destino) return paso;
+      if (!visto.has(d)){ visto.add(d); cola.push([d, paso]); }
+    }
+  }
+  return null;   // no se llega: hay que avisar
+}
+
+function guion(){
+  const L = [];
+  const icono = aIcono($("gIcono").value);
+  L.push("-- 1. Con el NPC seleccionado");
+  L.push("phase forge npc gossip enable");
+  if (icono) L.push("phase forge npc gossip icon " + icono);
+
+  // Todas las paginas primero: una opcion no puede enlazar a algo que no existe.
+  if (paginas.length > 1){
+    L.push("");
+    L.push("-- 2. Crear las páginas (el texto que va aquí es su primer bloque)");
+    for (let i = 1; i < paginas.length; i++)
+      L.push('phase forge npc gossip page add ' + (paginas[i].bloques[0] || ""));
+  }
+
+  let paso = paginas.length > 1 ? 3 : 2;
+  paginas.forEach((pag, i) => {
+    const extra = pag.bloques.slice(i === 0 ? 0 : 1).filter(b => b.trim());
+    if (!extra.length && !pag.opciones.length) return;
+    L.push("");
+    L.push("-- " + (paso++) + ". Página " + i);
+    if (i === 0){
+      L.push("--    Abre el gossip del NPC (la página 0 es la que sale al hablarle)");
+    } else {
+      const ruta = rutaHasta(i);
+      if (ruta === null){
+        L.push("--    ⚠ A esta página no llega ninguna opción: no se puede navegar hasta");
+        L.push("--      ella para escribirla. Enlázala desde otra antes.");
+      } else {
+        L.push("--    Desde la página 0, pulsa: " +
+          ruta.map(r => '"' + (r.texto || "opción " + r.opcion) + '"').join("  →  "));
+      }
+    }
+    for (const b of extra) L.push("phase forge npc gossip text add " + b);
+    pag.opciones.forEach(o => {
+      if (o.texto.trim()) L.push("phase forge npc gossip option add " + o.texto);
+    });
+    pag.opciones.forEach((o, j) => {
+      if (o.texto.trim() && o.destino !== 0)
+        L.push("phase forge npc gossip option link " + j + " " + o.destino);
+    });
+  });
+  return L;
+}
+
+function pintaGos(){
+  const icono = aIcono($("gIcono").value);
+  const mg = $("marcaGicono");
+  mg.className = icono ? (CONOCIDOS.has(icono) ? "marca si" : "marca no") : "pista";
+  mg.textContent = !icono ? "El de la manita al pasar por encima. Opcional."
+    : (CONOCIDOS.has(icono) ? "✓ existe" : "⚠ no está en el catálogo");
+  ponFondo($("gMuestra"), icono);
+
+  // La previa imita la ventana de gossip: el texto de la pagina y sus opciones.
+  const pag = paginas[verPagina] || paginas[0];
+  $("gttTitulo").textContent = "Página " + verPagina;
+  const ruta = rutaHasta(verPagina);
+  $("gttRuta").innerHTML = verPagina === 0
+    ? "<span>Lo primero que ve el jugador</span>"
+    : (ruta === null ? '<span style="color:var(--cobre)">No se llega desde la página 0</span>'
+       : "<span>" + ruta.map(r => (r.texto || "opción " + r.opcion)).join(" → ") + "</span>");
+
+  const partes = [];
+  for (const b of pag.bloques) if (b.trim()) partes.push("<p>" + b.replace(/</g,"&lt;") + "</p>");
+  pag.opciones.forEach((o, j) => {
+    if (!o.texto.trim()) return;
+    partes.push('<button type="button" class="op" data-ir="' + o.destino + '">' +
+      o.texto.replace(/</g,"&lt;") + "</button>");
+  });
+  $("gttCuerpo").innerHTML = partes.join("") || '<p class="pista">Sin contenido.</p>';
+  for (const b of $("gttCuerpo").querySelectorAll("[data-ir]"))
+    b.onclick = () => { verPagina = Number(b.dataset.ir); pintaPaginas(); pintaGos(); };
+
+  const g = guion();
+  $("nPasos").textContent = g.filter(l => l && !l.startsWith("--")).length;
+  $("outGos").textContent = g.join("\n");
+}
+$("gIcono").addEventListener("input", pintaGos);
+$("addPagina").onclick = nuevaPagina;
+
+pintaListaObj(); pintaListaRec(); pintaListaMis();
+pintaMats(); pintaObjs(); pintaReps(); pintaPremios();
+refrescaSubclases(); pintaPaleta(); pintaRec(); pintaMis(); pintaPaginas(); pintaGos();
+</script>

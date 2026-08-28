@@ -1000,6 +1000,12 @@ local function ApplyTurnMessage(message, sender)
         return ApplyChunkedTurnNotice(message, sender)
     elseif opcode == "THP" then
         return ApplyNpcHealth(message)
+    elseif opcode == "TJOINNO" then
+        -- El DM no pudo meterte, y te dice por que. Un cliente sin actualizar no conoce este
+        -- opcode y lo ignora, que es exactamente el comportamiento de antes.
+        local _, motivo = strsplit("|", message or "")
+        Print("|cffff5555No has entrado al combate:|r " .. tostring(motivo or "motivo desconocido") .. ".")
+        return true
     elseif opcode == "TSTART" then
         local _, cuantos = strsplit("|", message or "")
         AnnounceCombatStart(SafeNumber(cuantos, 0))
@@ -1030,14 +1036,25 @@ local function ApplyTurnMessage(message, sender)
         -- nada: al DM se le avisa y ya. Pasa por el porque la lista es suya --una entrada anadida
         -- en local desapareceria con la siguiente foto--, no porque haya que pedirle permiso.
         if not IsTurnAdmin() then return true end
+        -- El "no" se CONTESTA. El "Te unes al combate" del boton es optimista -- se imprime al
+        -- pedir, no al conseguir -- y si el DM no podia meterte, tu unica pista era que el boton
+        -- seguia ahi. Ahora el motivo viaja de vuelta por susurro; el "si" no necesita mensaje,
+        -- porque la foto con el joiner dentro ya es la confirmacion.
+        local function DecirNo(motivo)
+            if HarfordSync and HarfordSync.Send and sender and sender ~= "" then
+                HarfordSync.Send(COMM_PREFIX, "TJOINNO|" .. tostring(motivo), "WHISPER", sender)
+            end
+        end
         if HarfordTurnOrderAPI.GetCombatState() ~= "activo" then
             Print(tostring(sender) .. " pide unirse, pero no hay combate empezado.")
+            DecirNo("no hay combate empezado")
             return true
         end
         local unidad = HarfordClassColors and HarfordClassColors.FindUnitByName
             and HarfordClassColors.FindUnitByName(sender)
         if not unidad then
             Print("|cffff5555" .. tostring(sender) .. " pide unirse|r pero no lo veo: metelo a mano.")
+            DecirNo("el DM no te ve desde donde esta; que te meta a mano")
             return true
         end
         -- Al bloque de PJs, que es donde va un jugador se ponga donde se ponga.
@@ -1055,6 +1072,7 @@ local function ApplyTurnMessage(message, sender)
             end
         end
         Print("|cffff5555" .. tostring(sender) .. " pide unirse|r pero no hay bloque de PJs.")
+        DecirNo("no hay bloque de PJs en la mesa")
         return true
     elseif opcode == "INITREQ" then
         return Combate.ApplyInitiativeRequest(message, sender)

@@ -213,6 +213,24 @@ tr:last-child td{border-bottom:none}
 .quitar:hover{color:var(--cobre)}
 .vacio{color:var(--tinta-suave); font-size:14px; padding:14px 0}
 .envuelto{overflow-x:auto}
+.pagina{border:1px solid var(--borde); border-radius:8px; padding:10px 12px 14px;
+  margin-top:12px; background:var(--papel)}
+.pagina.mirando{border-color:var(--verdin); box-shadow:0 0 0 1px var(--verdin)}
+.pagina-cab{display:flex; justify-content:space-between; align-items:center; gap:8px}
+.pagina-cab .titulo{padding:2px 0; font-size:13px; color:var(--tinta); text-align:left; flex:1}
+.pagina-cab .titulo:hover{color:var(--verdin)}
+.pagina .mat{margin-top:7px}
+.pagina textarea{min-height:44px}
+/* La previa imita la ventana de gossip del juego. */
+.gossip{margin-top:10px; padding-top:10px; border-top:1px solid var(--borde)}
+.gossip p{margin:0 0 10px; font-size:13.5px; line-height:1.5}
+.gossip .op{
+  display:block; width:100%; text-align:left; margin:0 0 5px; padding:6px 9px 6px 20px;
+  font-size:13px; font-weight:400; position:relative;
+  background:var(--papel); border:1px solid var(--borde);
+}
+.gossip .op::before{content:"CF"; position:absolute; left:8px; color:var(--verdin); font-size:8px}
+.gossip .op:hover{border-color:var(--verdin); color:var(--verdin)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 
@@ -226,6 +244,7 @@ tr:last-child td{border-bottom:none}
   <button type="button" role="tab" data-yunque="objetos" aria-selected="true">Objetos</button>
   <button type="button" role="tab" data-yunque="recetas" aria-selected="false">Recetas</button>
   <button type="button" role="tab" data-yunque="misiones" aria-selected="false">Misiones</button>
+  <button type="button" role="tab" data-yunque="gossip" aria-selected="false">Gossip</button>
 </div>
 
 <!-- ══════════════════════ OBJETOS ══════════════════════ -->
@@ -637,6 +656,51 @@ tr:last-child td{border-bottom:none}
     <button type="button" id="vaciarMis">Vaciar la lista</button>
   </div>
 </section>
+</section>
+
+<!-- ══════════════════════ GOSSIP ══════════════════════ -->
+<section class="panel" id="p-gossip" hidden>
+<p class="aviso">
+  Aquí no sale una tirada de comandos, sale un <b>guion</b>. <code>text add</code> y
+  <code>option add</code> actúan sobre <b>la página que tengas abierta</b> en la ventana de
+  gossip, así que hay que ir navegando: el guion intercala esos pasos donde tocan.
+</p>
+
+<div class="rejilla">
+  <div>
+    <fieldset class="comando">
+      <legend><span class="leyenda"><b>El diálogo</b>
+        <span>una página por rama; la 0 es con la que abre</span></span></legend>
+      <div class="campos">
+        <div class="campo ancho">
+          <label for="gIcono">Icono al pasar por encima del NPC</label>
+          <div class="fila-icono">
+            <div class="muestra" id="gMuestra" aria-hidden="true"></div>
+            <input id="gIcono" class="mono" placeholder="opcional">
+          </div>
+          <span class="pista" id="marcaGicono"></span>
+        </div>
+      </div>
+      <div id="paginas"></div>
+      <div class="acciones" style="margin-top:14px">
+        <button type="button" id="addPagina">Añadir página</button>
+      </div>
+    </fieldset>
+  </div>
+
+  <aside class="lateral">
+    <div class="tooltip">
+      <div class="tt-nombre" id="gttTitulo">Vista previa</div>
+      <div class="tt-lineas" id="gttRuta"></div>
+      <div class="gossip" id="gttCuerpo"></div>
+    </div>
+    <div class="salida">
+      <h3><span>El guion <span class="chip" id="nPasos">0</span></span>
+        <button type="button" data-copia="outGos">Copiar</button></h3>
+      <pre id="outGos">—</pre>
+    </div>
+  </aside>
+</div>
 </section>
 </div>
 
@@ -1442,7 +1506,223 @@ $("limpiarMis").onclick = () => {
 };
 $("vaciarMis").onclick = () => { listaMis = []; guardaMis(); pintaListaMis(); };
 
+// ══════════════════ YUNQUE DE GOSSIP ══════════════════
+// Las paginas son un arbol, pero los comandos no lo saben: `text add` y `option add` van
+// SIEMPRE a la pagina que este abierta en la ventana de gossip. Por eso lo que sale no es
+// una tirada de comandos sino un guion con los pasos de navegacion intercalados.
+//
+// La pagina 0 es con la que abre el NPC y no se crea: ya existe. Las demas nacen con
+// `page add`, que ademas les pone su primer bloque de texto.
+let paginas = [{ bloques: ["El guardia te mira de arriba abajo."], opciones: [] }];
+let verPagina = 0;   // cual se esta previsualizando
+
+function nuevaPagina(){
+  paginas.push({ bloques: ["Texto de la página nueva."], opciones: [] });
+  pintaPaginas(); pintaGos();
+}
+
+// Una pagina no se puede borrar sin mas: `page remove` renumera todas las siguientes Y los
+// enlaces de las opciones. Se hace aqui lo mismo para que lo que ves sea lo que quedara.
+function borraPagina(i){
+  if (i === 0) return;                       // la inicial no se borra
+  paginas.splice(i, 1);
+  for (const p of paginas){
+    for (const o of p.opciones){
+      if (o.destino === i) o.destino = 0;    // la que apuntaba ahi se queda sin destino
+      else if (o.destino > i) o.destino--;   // el resto baja un numero
+    }
+  }
+  if (verPagina >= paginas.length) verPagina = 0;
+  pintaPaginas(); pintaGos();
+}
+
+function filaTexto(valor, alCambiar, alQuitar, hueco){
+  const fila = document.createElement("div"); fila.className = "mat";
+  const campo = document.createElement("div"); campo.className = "campo";
+  const ta = document.createElement("textarea");
+  ta.value = valor; ta.placeholder = hueco; ta.rows = 2;
+  ta.setAttribute("aria-label", hueco);
+  ta.oninput = () => { alCambiar(ta.value); pintaGos(); };
+  campo.append(ta);
+  const x = document.createElement("button");
+  x.type = "button"; x.className = "quitar"; x.textContent = "×";
+  x.setAttribute("aria-label", "Quitar");
+  x.onclick = alQuitar;
+  fila.append(campo, x);
+  return fila;
+}
+
+function pintaPaginas(){
+  const caja = $("paginas"); caja.innerHTML = "";
+  paginas.forEach((pag, i) => {
+    const bloque = document.createElement("div");
+    bloque.className = "pagina";
+    if (i === verPagina) bloque.classList.add("mirando");
+
+    const cab = document.createElement("div"); cab.className = "pagina-cab";
+    const tit = document.createElement("button");
+    tit.type = "button"; tit.className = "quitar titulo";
+    tit.innerHTML = "<b>Página " + i + "</b>" + (i === 0 ? " · con la que abre" : "");
+    tit.onclick = () => { verPagina = i; pintaPaginas(); pintaGos(); };
+    cab.append(tit);
+    if (i > 0){
+      const del = document.createElement("button");
+      del.type = "button"; del.className = "quitar";
+      del.textContent = "×"; del.setAttribute("aria-label", "Borrar página " + i);
+      del.onclick = () => borraPagina(i);
+      cab.append(del);
+    }
+    bloque.append(cab);
+
+    const sub1 = document.createElement("p"); sub1.className = "sub"; sub1.textContent = "Texto";
+    bloque.append(sub1);
+    pag.bloques.forEach((b, j) => {
+      bloque.append(filaTexto(b,
+        v => pag.bloques[j] = v,
+        () => { pag.bloques.splice(j,1); if (!pag.bloques.length) pag.bloques.push(""); pintaPaginas(); pintaGos(); },
+        j === 0 ? "Primer bloque de texto" : "Bloque " + j));
+    });
+    const mas = document.createElement("button");
+    mas.type = "button"; mas.textContent = "Añadir bloque";
+    mas.style.marginTop = "6px";
+    mas.onclick = () => { pag.bloques.push(""); pintaPaginas(); pintaGos(); };
+    bloque.append(mas);
+
+    const sub2 = document.createElement("p"); sub2.className = "sub"; sub2.textContent = "Opciones";
+    bloque.append(sub2);
+    pag.opciones.forEach((o, j) => {
+      const fila = document.createElement("div"); fila.className = "mat";
+      const campo = document.createElement("div"); campo.className = "campo";
+      const inp = document.createElement("input");
+      inp.value = o.texto; inp.placeholder = "Etiqueta de la opción";
+      inp.setAttribute("aria-label", "Opción " + j);
+      inp.oninput = () => { o.texto = inp.value; pintaGos(); };
+      campo.append(inp);
+      const sel = document.createElement("select");
+      sel.setAttribute("aria-label", "Destino de la opción " + j);
+      sel.style.width = "116px"; sel.style.flex = "none";
+      paginas.forEach((_, k) => {
+        const op = document.createElement("option");
+        op.value = k; op.textContent = "→ página " + k; sel.append(op);
+      });
+      sel.value = o.destino;
+      sel.onchange = () => { o.destino = Number(sel.value); pintaGos(); };
+      const x = document.createElement("button");
+      x.type = "button"; x.className = "quitar"; x.textContent = "×";
+      x.setAttribute("aria-label", "Quitar opción " + j);
+      x.onclick = () => { pag.opciones.splice(j,1); pintaPaginas(); pintaGos(); };
+      fila.append(campo, sel, x);
+      bloque.append(fila);
+    });
+    const mas2 = document.createElement("button");
+    mas2.type = "button"; mas2.textContent = "Añadir opción";
+    mas2.style.marginTop = "6px";
+    mas2.onclick = () => { pag.opciones.push({texto:"", destino:0}); pintaPaginas(); pintaGos(); };
+    bloque.append(mas2);
+
+    caja.append(bloque);
+  });
+}
+
+// Como se llega a una pagina desde la 0, para poder decirlo en el guion.
+function rutaHasta(destino){
+  if (destino === 0) return [];
+  const visto = new Set([0]);
+  const cola = [[0, []]];
+  while (cola.length){
+    const [pag, camino] = cola.shift();
+    const ops = (paginas[pag] || {}).opciones || [];
+    for (let i = 0; i < ops.length; i++){
+      const d = ops[i].destino;
+      const paso = camino.concat([{desde: pag, opcion: i, texto: ops[i].texto, a: d}]);
+      if (d === destino) return paso;
+      if (!visto.has(d)){ visto.add(d); cola.push([d, paso]); }
+    }
+  }
+  return null;   // no se llega: hay que avisar
+}
+
+function guion(){
+  const L = [];
+  const icono = aIcono($("gIcono").value);
+  L.push("-- 1. Con el NPC seleccionado");
+  L.push("phase forge npc gossip enable");
+  if (icono) L.push("phase forge npc gossip icon " + icono);
+
+  // Todas las paginas primero: una opcion no puede enlazar a algo que no existe.
+  if (paginas.length > 1){
+    L.push("");
+    L.push("-- 2. Crear las páginas (el texto que va aquí es su primer bloque)");
+    for (let i = 1; i < paginas.length; i++)
+      L.push('phase forge npc gossip page add ' + (paginas[i].bloques[0] || ""));
+  }
+
+  let paso = paginas.length > 1 ? 3 : 2;
+  paginas.forEach((pag, i) => {
+    const extra = pag.bloques.slice(i === 0 ? 0 : 1).filter(b => b.trim());
+    if (!extra.length && !pag.opciones.length) return;
+    L.push("");
+    L.push("-- " + (paso++) + ". Página " + i);
+    if (i === 0){
+      L.push("--    Abre el gossip del NPC (la página 0 es la que sale al hablarle)");
+    } else {
+      const ruta = rutaHasta(i);
+      if (ruta === null){
+        L.push("--    ⚠ A esta página no llega ninguna opción: no se puede navegar hasta");
+        L.push("--      ella para escribirla. Enlázala desde otra antes.");
+      } else {
+        L.push("--    Desde la página 0, pulsa: " +
+          ruta.map(r => '"' + (r.texto || "opción " + r.opcion) + '"').join("  →  "));
+      }
+    }
+    for (const b of extra) L.push("phase forge npc gossip text add " + b);
+    pag.opciones.forEach(o => {
+      if (o.texto.trim()) L.push("phase forge npc gossip option add " + o.texto);
+    });
+    pag.opciones.forEach((o, j) => {
+      if (o.texto.trim() && o.destino !== 0)
+        L.push("phase forge npc gossip option link " + j + " " + o.destino);
+    });
+  });
+  return L;
+}
+
+function pintaGos(){
+  const icono = aIcono($("gIcono").value);
+  const mg = $("marcaGicono");
+  mg.className = icono ? (CONOCIDOS.has(icono) ? "marca si" : "marca no") : "pista";
+  mg.textContent = !icono ? "El de la manita al pasar por encima. Opcional."
+    : (CONOCIDOS.has(icono) ? "✓ existe" : "⚠ no está en el catálogo");
+  ponFondo($("gMuestra"), icono);
+
+  // La previa imita la ventana de gossip: el texto de la pagina y sus opciones.
+  const pag = paginas[verPagina] || paginas[0];
+  $("gttTitulo").textContent = "Página " + verPagina;
+  const ruta = rutaHasta(verPagina);
+  $("gttRuta").innerHTML = verPagina === 0
+    ? "<span>Lo primero que ve el jugador</span>"
+    : (ruta === null ? '<span style="color:var(--cobre)">No se llega desde la página 0</span>'
+       : "<span>" + ruta.map(r => (r.texto || "opción " + r.opcion)).join(" → ") + "</span>");
+
+  const partes = [];
+  for (const b of pag.bloques) if (b.trim()) partes.push("<p>" + b.replace(/</g,"&lt;") + "</p>");
+  pag.opciones.forEach((o, j) => {
+    if (!o.texto.trim()) return;
+    partes.push('<button type="button" class="op" data-ir="' + o.destino + '">' +
+      o.texto.replace(/</g,"&lt;") + "</button>");
+  });
+  $("gttCuerpo").innerHTML = partes.join("") || '<p class="pista">Sin contenido.</p>';
+  for (const b of $("gttCuerpo").querySelectorAll("[data-ir]"))
+    b.onclick = () => { verPagina = Number(b.dataset.ir); pintaPaginas(); pintaGos(); };
+
+  const g = guion();
+  $("nPasos").textContent = g.filter(l => l && !l.startsWith("--")).length;
+  $("outGos").textContent = g.join("\n");
+}
+$("gIcono").addEventListener("input", pintaGos);
+$("addPagina").onclick = nuevaPagina;
+
 pintaListaObj(); pintaListaRec(); pintaListaMis();
 pintaMats(); pintaObjs(); pintaReps(); pintaPremios();
-refrescaSubclases(); pintaPaleta(); pintaRec(); pintaMis();
+refrescaSubclases(); pintaPaleta(); pintaRec(); pintaMis(); pintaPaginas(); pintaGos();
 </script>

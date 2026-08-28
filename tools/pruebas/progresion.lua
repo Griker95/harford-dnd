@@ -202,7 +202,8 @@ do
     local _, rutas = sync:gsub("EnviarPayloadTroceado%(prefix, payload, ch, target,", "")
     chk("y los dos emisores pasan por el (2 llamadas + 1 definicion)", rutas, 3)
     local _, rec = sync:gsub("RecibirPayloadTroceado%(", "")
-    chk("igual que los dos receptores (2 llamadas + 1 definicion)", rec, 3)
+    -- CUATRO receptores ya: progresion, equipo y los dos de loot (que desescapan tras reensamblar).
+chk("igual que los CUATRO receptores (4 llamadas + 1 definicion)", rec, 5)
     -- Y solo se comprime lo que NO cabe en un mensaje: por debajo de eso se manda en claro y lo
     -- entiende cualquier cliente, incluido uno sin actualizar.
     chk("solo lo que no cabe",

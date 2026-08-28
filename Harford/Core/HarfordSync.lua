@@ -904,12 +904,14 @@ end
 
 -- Reensamblado todo-o-nada de un payload troceado; devuelve lo que devuelva `deserializar`
 -- cuando llega el ultimo trozo, o nil,nil mientras falten.
-local function RecibirPayloadTroceado(buffers, message, sender, opA, opB, deserializar)
+local function RecibirPayloadTroceado(buffers, message, sender, opA, opB, deserializar, maxTotal)
     local opcode, transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^([^|]+)|([^|]+)|([^|]+)|([^|]+)|(.*)$")
     if opcode ~= opA and opcode ~= opB then return nil, nil end
     if not transferId then return nil, nil end
     local index, total = tonumber(indexRaw), tonumber(totalRaw)
-    if not index or not total or index < 1 or index > total or total > 50 then
+    -- Tope de trozos por transferencia: 50 para progresion/equipo, 80 para el loot resuelto, que
+    -- siempre lo permitio. Es defensa contra basura, no un limite de diseno.
+    if not index or not total or index < 1 or index > total or total > (maxTotal or 50) then
         return nil, nil
     end
     local key = tostring(sender or "") .. ":" .. transferId
@@ -2278,39 +2280,10 @@ function HarfordSync.SendTaggedLoot(prefix, guid, lootTable, channel, target)
 end
 
 function HarfordSync.ReceiveTaggedLootChunk(message, sender)
-    local opcode, transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^([^|]+)|([^|]+)|([^|]+)|([^|]+)|(.*)$")
-    if opcode ~= "LOOTC" or not transferId then
-        return nil, nil
-    end
-
-    local index = tonumber(indexRaw)
-    local total = tonumber(totalRaw)
-    if not index or not total or index < 1 or index > total or total > 80 then
-        return nil, nil
-    end
-
-    local key = tostring(sender or "") .. ":" .. transferId
-    PruneChunkBuffers(taggedLootChunkBuffers)
-    local buffer = taggedLootChunkBuffers[key]
-    if not buffer or buffer.total ~= total then
-        buffer = { total = total, received = 0, chunks = {}, createdAt = Now() }
-        taggedLootChunkBuffers[key] = buffer
-    end
-
-    if not buffer.chunks[index] then
-        buffer.chunks[index] = chunk or ""
-        buffer.received = buffer.received + 1
-    end
-    if buffer.received < total then return nil, nil end
-
-    local parts = {}
-    for i = 1, total do
-        if buffer.chunks[i] == nil then return nil, nil end
-        parts[i] = buffer.chunks[i]
-    end
-    taggedLootChunkBuffers[key] = nil
-
-    return HarfordSync.DeserializeTaggedLootMessage(UnescapeProgressionText(table.concat(parts)))
+    -- El payload viaja ESCAPADO y se desescapa tras reensamblar; por lo demas, el mismo camino
+    -- compartido que progresion y equipo.
+    return RecibirPayloadTroceado(taggedLootChunkBuffers, message, sender, "LOOTC", "LOOTC",
+        function(texto) return HarfordSync.DeserializeTaggedLootMessage(UnescapeProgressionText(texto)) end, 80)
 end
 
 HarfordSync.LootKeys = HarfordSync.LootKeys or {
@@ -2486,39 +2459,8 @@ function HarfordSync.SendLootConfig(prefix, regRaw, globalRaw, channel, target)
 end
 
 function HarfordSync.ReceiveLootConfigChunk(message, sender)
-    local opcode, transferId, indexRaw, totalRaw, chunk = tostring(message or ""):match("^([^|]+)|([^|]+)|([^|]+)|([^|]+)|(.*)$")
-    if opcode ~= "LOOTCFGC" or not transferId then
-        return nil
-    end
-
-    local index = tonumber(indexRaw)
-    local total = tonumber(totalRaw)
-    if not index or not total or index < 1 or index > total or total > 80 then
-        return nil
-    end
-
-    local key = tostring(sender or "") .. ":" .. transferId
-    PruneChunkBuffers(lootConfigChunkBuffers)
-    local buffer = lootConfigChunkBuffers[key]
-    if not buffer or buffer.total ~= total then
-        buffer = { total = total, received = 0, chunks = {}, createdAt = Now() }
-        lootConfigChunkBuffers[key] = buffer
-    end
-
-    if not buffer.chunks[index] then
-        buffer.chunks[index] = chunk or ""
-        buffer.received = buffer.received + 1
-    end
-    if buffer.received < total then return nil end
-
-    local parts = {}
-    for i = 1, total do
-        if buffer.chunks[i] == nil then return nil end
-        parts[i] = buffer.chunks[i]
-    end
-    lootConfigChunkBuffers[key] = nil
-
-    return UnescapeProgressionText(table.concat(parts))
+    return RecibirPayloadTroceado(lootConfigChunkBuffers, message, sender, "LOOTCFGC", "LOOTCFGC",
+        function(texto) return UnescapeProgressionText(texto) end, 80)
 end
 
 function HarfordSync.LoadLootConfigTables(store, fallbackRegistry, fallbackGlobal)

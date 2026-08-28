@@ -144,9 +144,9 @@ function API.BroadcastChange(kind, ...)
         local playerKey, factionId = ...
         local points = HarfordReputation.GetPlayerPoints(playerKey, factionId)
         return Send(table.concat({ "REP", Escape(playerKey), Escape(factionId), tostring(points or 0) }, "|"))
-    elseif kind == "LOG" then
-        local text = ...
-        return Send(table.concat({ "LOG", Escape(text) }, "|"))
+    -- Sin rama para "LOG": se emitia un opcode que ningun receptor entendio jamas -- trafico
+    -- muerto puro. Los logs de reputacion solo se imprimen en local (AddLog), y de hecho el aviso
+    -- de un borrado le llega ahora a cada cliente por su propio DeleteFaction al aplicar DEL.
     elseif kind == "DELETE" then
         local factionId = ...
         return Send(table.concat({ "DEL", Escape(factionId) }, "|"))
@@ -607,6 +607,20 @@ local function HandleMessage(message, sender)
                 local current = HarfordReputation.GetPlayerPoints(localKey, factionId)
                 HarfordReputation.SetPlayerPoints(localKey, factionId, (current or 0) + delta, { fromSync = true })
             end
+        end
+        RefreshReputationViews()
+        return true
+    end
+
+    -- Borrado de una faccion anunciado por el DM. Este opcode se EMITIA desde el primer dia y no
+    -- lo escuchaba nadie: el DM borraba una reputacion y en el resto de clientes se quedaba de
+    -- fantasma hasta que llegara un snapshot completo, si llegaba. Lo encontro el detector de
+    -- opcodes sin receptor, no un sintoma -- que es justo lo malo de esta clase de fallo.
+    if opcode == "DEL" then
+        local _, factionId = strsplit("|", message)
+        factionId = Unescape(factionId or "")
+        if factionId ~= "" then
+            HarfordReputation.DeleteFaction(factionId, { fromSync = true })
         end
         RefreshReputationViews()
         return true

@@ -679,8 +679,11 @@ function API.UpdateFaction(factionId, data)
     return true
 end
 
-function API.DeleteFaction(factionId)
-    if not API.CanEdit() then return false, "Solo DM." end
+-- `opts.fromSync` es la llamada del RECEPTOR al aplicar un borrado que anuncio el DM: salta el
+-- permiso local (quien decidio fue el DM, no este cliente) y NO vuelve a difundir, o el eco
+-- rebotaria por la mesa. Es el mismo trato que ya tiene `SetPlayerPoints`.
+function API.DeleteFaction(factionId, opts)
+    if not API.CanEdit() and not (opts and opts.fromSync) then return false, "Solo DM." end
     local store = EnsureStore()
     factionId = tostring(factionId or "")
     local faction = store.factions[factionId]
@@ -693,7 +696,7 @@ function API.DeleteFaction(factionId)
         end
     end
     API.AddLog("GM borro la reputacion " .. tostring(faction.name or factionId) .. ".")
-    FireChanged("DELETE", factionId)
+    if not (opts and opts.fromSync) then FireChanged("DELETE", factionId) end
     return true
 end
 

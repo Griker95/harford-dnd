@@ -12,26 +12,39 @@ datos se extraen del addon con `tools/codice/build_codice.py` (`kb_icons.json`).
 
 ## Dependencias externas
 
-Deben estar instaladas en el cliente Epsilon antes de cargar Harford:
-
-| Addon | Rol |
-|---|---|
-| **EpsilonLib** | Capa de comunicacion con el servidor Epsilon |
-| **TotalRP3** | Perfiles de roleplay (iconos, colores, estados) |
-| **ARC** (SpellCreator) | Comandos de servidor fire-and-forget |
+| Addon | Rol | |
+|---|---|---|
+| **EpsilonLib** | Comunicacion con el servidor y LibDeflate (compresion de la sincronizacion) | **OBLIGATORIA** -- Harford no carga sin ella (`RequiredDeps`) |
+| **TotalRP3** | Perfiles de roleplay (iconos, colores, estados) | Recomendada |
+| **ARC** (SpellCreator) | Comandos de servidor fire-and-forget | Recomendada |
 
 ---
 
 ## Instalacion
 
-1. Clonar o descargar este repositorio.
-2. Copiar las carpetas **`Harford/`**, **`HarfordAdmin/`** y (opcional) **`HarfordDebug/`** a:
-   ```
-   [Cliente Epsilon]\_retail_\Interface\AddOns\
-   ```
-3. Iniciar el cliente Epsilon y activar **`Harford`** en el selector de addons.
-4. Activar **`HarfordAdmin`** solo en cuentas con permisos de DM/Admin. Las herramientas DM requieren `HarfordAdmin` cargado y `.ph dm` activo.
-5. Activar **`HarfordDebug`** solo durante una investigacion tecnica. Es opcional, depende de `Harford` y guarda sus capturas/debug en SavedVariables propias.
+Copiar a `[Cliente Epsilon]\_retail_\Interface\AddOns\`:
+
+| Carpeta | Quien la necesita |
+|---|---|
+| **`Harford/`** | Todos. El sistema entero. |
+| **`HarfordCompendioData/`** | Todos. Los 396 conjuros del compendio (carga bajo demanda). |
+| **`HarfordProfessionsData/`** | Todos. Recetas y objetos de profesiones (carga bajo demanda). |
+| **`HarfordAdmin/`** | Solo cuentas DM. Las herramientas exigen ademas `.ph dm` activo. |
+| **`HarfordMusic/`** | Opcional. Emisoras con audio propio (pesa; solo lo oye quien lo tiene). |
+| **`HarfordDebug/`** | Opcional. Diagnostico (`/harford debug run verificar`); util para reportar fallos. |
+
+Despues, activar en el selector de addons y entrar.
+
+### Notas de la version 2.1.0
+
+- **Actualizad TODOS a la vez.** La sincronizacion viaja ahora comprimida cuando no cabe en un
+  mensaje; un cliente con la version anterior descarta esos mensajes en silencio. Lo pequeno sigue
+  en claro, pero el estado de turnos, el equipo y la progresion grandes solo los entienden
+  clientes 2.1.0.
+- **HarfordMusic**: WoW indexa el audio al ARRANCAR. Tras instalarla o actualizarla, reiniciar el
+  cliente entero (no basta `/reload`) o las emisoras nuevas suenan a silencio.
+- Fuera de tu turno no hay accion, adicional, reaccion ni movimiento (decision de mesa). La unica
+  rendija es **Preparar**. El DM en la lista rueda libre y vuelve a su sitio al empezar su turno.
 
 ---
 

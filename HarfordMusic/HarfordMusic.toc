@@ -2,7 +2,7 @@
 ## Title: |cff3536CCHarford|r Musica
 ## Notes: Emisoras extra para la radio del Comunicador. Opcional: sin esto la radio funciona igual, con menos emisoras.
 ## Author: Griker
-## Version: 1.0.0
+## Version: 1.1.0
 ## RequiredDeps: Harford
 
 # Generado por `tools/musica.py` a partir de la carpeta de audio. Va primero para que el fichero

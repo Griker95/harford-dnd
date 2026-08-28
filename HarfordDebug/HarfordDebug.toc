@@ -2,7 +2,7 @@
 ## Title: |cff88ccffHarfordDebug|r
 ## Notes: Herramientas opcionales de diagnostico para Harford
 ## Author: Griker
-## Version: 2.0.0
+## Version: 2.1.0
 ## RequiredDeps: Harford
 ## OptionalDeps: HarfordAdmin
 ## SavedVariables: HarfordDebugSettings, HarfordFrameProbe

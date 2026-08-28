@@ -1711,13 +1711,18 @@ do
         return true
     end
 
-    -- Fuera de TU turno no tienes accion ni adicional ni movimiento: son tuyos mientras te toca.
-    -- La REACCION si, que para eso es una reaccion -- se usa en el turno de otro por definicion.
+    -- Fuera de TU turno no tienes NADA: ni accion, ni adicional, ni reaccion, ni movimiento.
+    --
+    -- Es una divergencia DELIBERADA del manual, decidida en mesa: en 5e una reaccion se usa por
+    -- definicion en el turno de otro --Oportunidad, Escudo, Contrahechizo, Esquiva Sobrenatural--
+    -- asi que incluirla aqui las deja inservibles. Se hace igual porque lo que se quiere en mesa es
+    -- que cuando le toca a los enemigos los jugadores esten QUIETOS. Para devolver la reaccion al
+    -- comportamiento del manual basta sacar `reaction` de esta tabla; no hay nada mas que tocar.
     --
     -- No se "gastan" al pasar el turno: se consideran NO DISPONIBLES mientras no te toque, que es
     -- lo mismo de cara al jugador y ademas no ensucia el contador -- si se gastaran de verdad,
     -- devolverlas seria imposible de distinguir de un gasto real.
-    local FUERA_DE_TURNO = { action = true, bonus = true }
+    local FUERA_DE_TURNO = { action = true, bonus = true, reaction = true }
 
     function Turn.IsMyTurn()
         if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.IsMyTurn) then return true end

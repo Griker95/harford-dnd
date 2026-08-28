@@ -742,6 +742,14 @@ function API.AttachMovementTracker(opts)
         local trozo = elapsed
         elapsed = 0
 
+        -- FUERA DE TU TURNO el muro sigue en pie. Antes el motor se desinstalaba al pasar el turno
+        -- --con el ancla ya puesta-- asi que no quedaba nadie para hacerla cumplir: podias cruzar
+        -- la sala entera durante el turno de los enemigos. Se para de CONTAR, no de vigilar.
+        if not tracking then
+            if API.RecordedMovementAnchor and EnCombate() and not LlevandoNpc() then Anclar() end
+            return
+        end
+
         local avance
         if LlevandoNpc() then
             -- De una criatura poseida no hay posicion que leer, asi que se INTEGRA su velocidad.
@@ -1012,14 +1020,19 @@ function API.AttachMovementTracker(opts)
             -- combate entero --, asi que sin esto el contador se quedaba corriendo con un tope que
             -- ya no significaba nada, y el muro seguia devolviendote a un sitio de otro combate.
             if tracking and (not EnCombate() or not EsMiTurno()) then
-                -- Al pasar el turno a otro se para donde estabas: el ancla se queda, asi que si
-                -- sigues andando el muro te devuelve. Moverse en el turno de otro no es gratis.
+                -- Al pasar el turno a otro se para de CONTAR donde estabas, pero el motor sigue
+                -- puesto: es el que hace cumplir el ancla. Desinstalarlo aqui era lo que dejaba
+                -- moverse gratis durante el turno del enemigo -- el ancla estaba, pero nadie la
+                -- miraba. Fuera de combate si se desinstala, mas abajo.
                 tracking = false
-                motor:SetScript("OnUpdate", nil)
                 button:SetText("Movimiento")
                 if not API.RecordedMovementAnchor then
                     API.RecordedMovementAnchor = CapturarAncla()
                 end
+                -- Y si lo que se acabo es el COMBATE, entonces si se desinstala: sin combate no
+                -- hay muro que hacer cumplir, y el ancla apunta a un sitio de una pelea que ya no
+                -- existe. Dejarlo corriendo seria un OnUpdate permanente para nada.
+                if not EnCombate() then motor:SetScript("OnUpdate", nil) end
             end
         end)
     end

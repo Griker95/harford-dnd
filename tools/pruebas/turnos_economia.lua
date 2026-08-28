@@ -172,11 +172,18 @@ chk("y la adicional tambien", T.GetRemaining("bonus"), 1)
 miTurno = false
 chk("en turno ajeno, sin accion", T.GetRemaining("action"), 0)
 chk("ni adicional", T.GetRemaining("bonus"), 0)
-chk("pero la REACCION sigue", T.GetRemaining("reaction"), 1)
+-- Y la REACCION tampoco. Es una divergencia DELIBERADA del manual, decidida en mesa: en 5e una
+-- reaccion se usa por definicion en el turno de otro --Oportunidad, Escudo, Contrahechizo, Esquiva
+-- Sobrenatural--, asi que bloquearla aqui las deja inservibles. Se quiere igual, porque lo que se
+-- busca es que cuando le toca a los enemigos los jugadores esten QUIETOS.
+-- Para volver al manual basta sacar `reaction` de `FUERA_DE_TURNO`; esta prueba es lo unico mas
+-- que habria que cambiar.
+chk("y la reaccion TAMPOCO (divergencia de mesa)", T.GetRemaining("reaction"), 0)
 -- Y no se ha gastado nada: al volver tu turno esta entera.
 chk("no se apunto como gastada", T.GetSpent("action"), 0)
 miTurno = true
 chk("y vuelve entera", T.GetRemaining("action"), 1)
+chk("  y la reaccion tambien", T.GetRemaining("reaction"), 1)
 HarfordTurnOrderAPI.IsMyTurn = nil
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

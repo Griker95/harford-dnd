@@ -32,7 +32,7 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "monje_cer_competencia", level = 3, name = "Competencia adicional (cervecero)", type = "pasivo", description = "Competencia con herramientas de cervecero (bonus de competencia duplicado en sus pruebas).", effects = {
                 { kind = "toolProf", tool = "Herramientas de cervecero" },
             } },
-            { id = "monje_cer_buey_negro", level = 3, name = "Brebaje del Buey Negro", cast = "ninguna", type = "accion", resourceKey = "chi", resourceCost = 1, selfCondition = { id = "buey_negro", duration = "rounds", turns = 10 }, description = "Lo conoces siempre. Gastas 1 punto de chi para darte ventaja en el proximo ataque cuerpo a cuerpo que realices dentro de 1 minuto. Puedes atacar como parte de la misma accion.", effects = {} },
+            { id = "monje_cer_buey_negro", level = 3, name = "Brebaje del Buey Negro", cast = "accion", type = "accion", resourceKey = "chi", resourceCost = 1, selfCondition = { id = "buey_negro", duration = "rounds", turns = 10 }, description = "Lo conoces siempre. Gastas 1 punto de chi para darte ventaja en el proximo ataque cuerpo a cuerpo que realices dentro de 1 minuto. Puedes atacar como parte de la misma accion.", effects = {} },
             { id = "monje_cer_brebajes", level = 3, name = "Cervecero elusivo", actionKind = "optionAbility", bookHidden = true, type = "choice", description = "Canalizas tu chi en brebajes. Conoces el Brebaje del Buey Negro y UNO mas a tu eleccion; aprendes otro a los niveles 6, 11 y 17. Usarlos cuesta una accion y sus puntos de chi cada vez, y necesitas un frasco de liquido potable contigo.", effects = {}, choice = {
                 slots = 1,
                 options = {
@@ -88,7 +88,7 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "monje_chi_danza", level = 2, name = "Danza Elusiva", cast = "accion_adicional", type = "accion", resourceKey = "chi", resourceCost = 1, selfCondition = { id = "esquivando", duration = "source_turn_start" }, description = "Gastas 1 punto de chi para tomar la accion de Esquivar como accion adicional en tu turno.", effects = {} },
         { id = "monje_chi_paso", level = 2, name = "Paso del Viento", cast = "accion_adicional", type = "accion", grantsAsBonus = { "correr", "desengancharse" }, resourceKey = "chi", resourceCost = 1, description = "Gastas 1 punto de chi para tomar la accion de Desengancharse o Correr como accion adicional en tu turno, y tu distancia de salto se duplica ese turno.", effects = {} },
         { id = "monje_chi_efusion", level = 2, name = "Efusion", cast = "accion_adicional", type = "accion", resourceKey = "chi", resourceCost = 1, grant = { resource = "health", ability = "Sabiduria", noun = "curacion" }, description = "Gastas 1 punto de chi y usas tu accion adicional para tocar a una criatura: recupera puntos de golpe iguales a tu Mod. Sabiduria.", effects = {} },
-        { id = "monje_rodar", level = 2, name = "Rodar", type = "informativo", description = "Sin escudo, una vez por turno ruedas en línea recta gastando movimiento; los ataques de oportunidad contra ti se hacen con desventaja.", effects = {} },
+        { id = "monje_rodar", level = 2, name = "Rodar", type = "pasivo", description = "Sin escudo, una vez por turno ruedas en línea recta gastando movimiento; los ataques de oportunidad contra ti se hacen con desventaja.", effects = {} },
         { id = "monje_tradicion", level = 3, name = "Tradicion monastica", type = "informativo", description = "Eliges tu tradicion (Maestro Cervecero, Tejedor de Niebla o Caminavientos). Concede rasgos en niveles 3, 6, 11 y 17.", effects = {} },
         { id = "monje_serenidad", level = 3, name = "Serenidad", type = "pasivo", description = "Al usar chi entras en postura serena 1 minuto: usas tu Mod. Sabiduría al ataque/daño con armas de monje o golpes desarmados.", effects = {
             { kind = "toggleState", state = "serene_stance", label = "Postura serena",
@@ -135,6 +135,8 @@ do
             icon = opcion.icon,
             level = tonumber(opcion.requiresLevel) or 3,
             name = opcion.label,
+            -- "Usarlos cuesta una accion", dice la eleccion: se cobra al beberlo.
+            cast = "accion",
             type = "accion",
             description = opcion.desc,
             requiresOption = opcion.id,

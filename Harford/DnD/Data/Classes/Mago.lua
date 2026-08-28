@@ -63,8 +63,8 @@ API.CLASSES[#API.CLASSES + 1] =
         } },
     },
     features = {
-        { id = "mago_lanzamiento_conjuros", level = 1, name = "Lanzamiento de conjuros", type = "informativo", description = "Libro de conjuros; preparas Mod. Inteligencia + nivel. CD = 8 + comp + Mod. Inteligencia; ataque = comp + Mod. Inteligencia. Foco arcano.", effects = {} },
-        { id = "mago_sentido_magico", level = 1, name = "Sentido magico", type = "informativo", description = "Percibes magia residual reciente y lees escritura mágica oculta. Además puedes crear escritura mágica oculta en idiomas que conozcas.", effects = {} },
+        { id = "mago_lanzamiento_conjuros", level = 1, name = "Lanzamiento de conjuros", type = "pasivo", description = "Libro de conjuros; preparas Mod. Inteligencia + nivel. CD = 8 + comp + Mod. Inteligencia; ataque = comp + Mod. Inteligencia. Foco arcano.", effects = {} },
+        { id = "mago_sentido_magico", level = 1, name = "Sentido magico", type = "pasivo", description = "Percibes magia residual reciente y lees escritura mágica oculta. Además puedes crear escritura mágica oculta en idiomas que conozcas.", effects = {} },
         { id = "mago_fuente_magia", level = 2, name = "Fuente de magia", type = "pasivo", description = "Puntos de hechicería (= nivel) para Lanzamiento Flexible (convertir puntos en espacios de conjuro y viceversa). Recargan en descanso largo.", effects = {
             { kind = "resourceMax", resource = "mage_point", perClassLevel = "mago", perLevel = 1 },
         } },
@@ -84,7 +84,7 @@ API.CLASSES[#API.CLASSES + 1] =
                 { id = "gemelo", label = "Conjuro Gemelo (puntos = nivel del conjuro)", desc = "Al lanzar un conjuro de un solo objetivo y sin alcance personal, gastas puntos iguales al nivel del conjuro (1 si es un truco) para apuntar a una segunda criatura en el rango. El conjuro no debe ser capaz de apuntar a mas de una criatura a su nivel actual.", effects = {} },
             },
         } },
-        { id = "mago_formulas_cantrips", level = 3, name = "Formulas de trucos", type = "informativo", description = "Aprendes a modificar tus trucos con formulas arcanas.", effects = {} },
+        { id = "mago_formulas_cantrips", level = 3, name = "Formulas de trucos", type = "pasivo", description = "Aprendes a modificar tus trucos con formulas arcanas.", effects = {} },
         ASI("mago", 4),
     },
 }

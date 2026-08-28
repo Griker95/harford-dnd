@@ -52,8 +52,8 @@ API.CLASSES[#API.CLASSES + 1] =
             } },
         } },
         { id = "sutileza", name = "Sutileza", desc = "Sigilo extremo y ataques furtivos precisos.", casterType = "third", expandedSpells = { "Resguardo contra las hojas", "Hoja retumbante", "Amistad", "Rafaga", "Mano de mago", "Mensaje", "Ilusion menor", "Prestidigitacion", "Rompante de espadas" }, features = {
-            { id = "pic_sut_conjuracion", level = 3, name = "Conjuracion", type = "informativo", description = "Aprendes magia de sombras (trucos + hechizos). Inteligencia es tu habilidad de conjuro: CD = 8 + comp + Mod. Inteligencia.", effects = {} },
-            { id = "pic_sut_vista", level = 3, name = "Vista de penumbra", type = "informativo", description = "Visión en la oscuridad 60 pies (o +30 si ya la tienes por raza).", effects = {} },
+            { id = "pic_sut_conjuracion", level = 3, name = "Conjuracion", type = "pasivo", description = "Aprendes magia de sombras (trucos + hechizos). Inteligencia es tu habilidad de conjuro: CD = 8 + comp + Mod. Inteligencia.", effects = {} },
+            { id = "pic_sut_vista", level = 3, name = "Vista de penumbra", type = "pasivo", description = "Visión en la oscuridad 60 pies (o +30 si ya la tienes por raza).", effects = {} },
         } },
     },
     features = {
@@ -63,7 +63,7 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "pic_ataque_furtivo", level = 1, name = "Ataque furtivo", type = "pasivo", description = "Una vez por turno, +1d6 de daño (sube con nivel) a una criatura si tienes ventaja o un aliado adyacente, con arma ligera/precision/distancia.", effects = {
             { kind = "conditionalWeaponDamage", id = "sneak", label = "Ataque Furtivo", die = 6, perTwoClassLevels = "picaro" },
         } },
-        { id = "pic_misivas", level = 1, name = "Misivas secretas", type = "informativo", description = "Ocultas mensajes e ideas en conversaciones y cartas mediante jerga y códigos.", effects = {} },
+        { id = "pic_misivas", level = 1, name = "Misivas secretas", type = "pasivo", description = "Ocultas mensajes e ideas en conversaciones y cartas mediante jerga y códigos.", effects = {} },
         { id = "pic_energia", level = 2, name = "Energia", type = "pasivo", description = "Puntos de energía (según la tabla) para maniobras (Mutilar, Exponer Armadura, Garrote). CD de Energía = 8 + comp + Mod. Destreza. Recargan en descanso.", effects = {
             { kind = "resourceMax", resource = "energy", perClassLevel = "picaro",
               values = { 0, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10 } },

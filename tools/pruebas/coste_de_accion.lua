@@ -77,32 +77,66 @@ for i = 1, math.min(#malos, 12) do print("     " .. malos[i]) end
 if #malos > 12 then print("     ... y " .. (#malos - 12) .. " mas") end
 chk("todos declaran el coste que dice su texto", #malos, 0)
 
--- ─── TODO ACTIVABLE DECLARA SU COSTE ────────────────────────────────────────
--- Un rasgo de tipo accion/reaccion sin `cast` no cobra nada, y eso no se distingue de un olvido:
--- el 45% de los activables estaba asi. Ahora TODOS declaran -- un coste real, o `"ninguna"`, que
--- es gratis A PROPOSITO (riders que modifican algo ya pagado, o rasgos que conceden). Las
--- maniobras quedan exentas: su coste se DEDUCE del tipo, y escribirlo en quince tablas era el
--- error que la deduccion vino a quitar.
-print("Todo activable declara su coste")
-local sinCast, revisados = {}, 0
-for fichero in ("Brujo Caballerodelamuerte Cazador CazadordeDemonios Chaman Druida Guerrero "
-    .. "Mago Monje Paladin Picaro Sacerdote"):gmatch("%S+") do
-    local ruta = "Harford/DnD/Data/Classes/" .. fichero .. ".lua"
-    local h = io.open(ruta) or io.open(ruta:gsub("delamuerte", "delaMuerte"))
-    if h then
+-- ─── TODO ACTIVABLE DECLARA SU COSTE, Y NADIE VIVE EN EL LIMBO ─────────────
+-- Se cargan los ficheros de clase REALES (los cortes por linea se rompian con los acentos y no
+-- veian los `effects` multilinea). Dos reglas de una pasada:
+--   1. Un rasgo de tipo accion sin `cast` no cobra nada, indistinguible de un olvido: todos
+--      declaran un coste real o `"ninguna"` (gratis A PROPOSITO: riders sobre algo ya pagado).
+--      Las maniobras quedan exentas -- su coste se DEDUCE del tipo.
+--   2. SIN LIMBO: cada rasgo 1-6 es MECANIZADO, PASIVO deliberado o MARCADOR de subclase.
+--      "Informativo sin mecanica" era el cajon de lo sin revisar y el 2026-08-28 se vacio: si
+--      esto falla, un rasgo nuevo entro sin decidir cual de las tres cosas es.
+print("Activables con coste declarado, y nadie en el limbo")
+do
+    local cargarSrc = loadstring or load
+    local function cargaFichero(ruta)
+        local h = io.open(ruta) if not h then return false end
         local src = h:read("*a") h:close()
-        for linea in src:gmatch('{ id = "[a-z0-9_]+", level = %d+, name = "[^"]+",[%g ]*') do
-            local tipo = linea:match('type = "(%a+)"')
-            if tipo == "accion" or tipo == "reaccion" then
-                revisados = revisados + 1
-                if not linea:find('cast = "', 1, true) then
-                    sinCast[#sinCast + 1] = linea:match('id = "([a-z0-9_]+)"')
+        local f = cargarSrc(src, ruta) if not f then return false end
+        return pcall(f)
+    end
+    cargaFichero("Harford/DnD/Data/HarfordDnDBook.lua")
+    for fichero in ("Guerrero Picaro Mago Sacerdote Paladin Cazador Druida Chaman Brujo Monje "
+        .. "CaballerodelaMuerte CazadordeDemonios"):gmatch("%S+") do
+        cargaFichero("Harford/DnD/Data/Classes/" .. fichero .. ".lua")
+    end
+    cargaFichero("Harford/DnD/Data/HarfordDnDBookDerived.lua")
+
+    local function esMec(f)
+        if f.effects and #f.effects > 0 then return true end
+        if f.type == "choice" or f.options or f.optionsFrom then return true end
+        if f.uses or f.resourceKey or f.resourceCost or f.spellGrants or f.actionKind then return true end
+        if f.type == "reaccion" then return true end
+        if f.cast and f.cast ~= "ninguna" then return true end
+        if f.trap or f.usesFrom or f.area or f.conditionalWeaponDamage then return true end
+        if f.grantsAsBonus or f.grantsTurnAction then return true end
+        return false
+    end
+    local function esMarcador(f)
+        local d = tostring(f.description or ""):lower()
+        return (d:find("concede rasgos", 1, true) and d:find("eliges tu", 1, true)) and true or false
+    end
+    local sinCast, limbo, revisados = {}, {}, 0
+    for _, c in ipairs((HarfordDnDBook and HarfordDnDBook.CLASSES) or {}) do
+        local function recorrer(fs)
+            for _, f in ipairs(fs or {}) do
+                if (tonumber(f.level) or 99) <= 6 and not esMarcador(f) then
+                    revisados = revisados + 1
+                    if (f.type == "accion" or f.type == "reaccion") and not f.cast then
+                        sinCast[#sinCast + 1] = f.id
+                    end
+                    if not esMec(f) and f.type ~= "pasivo" then
+                        limbo[#limbo + 1] = f.id
+                    end
                 end
             end
         end
+        recorrer(c.features)
+        for _, s in ipairs(c.subclasses or {}) do recorrer(s.features) end
     end
+    chk("se revisaron rasgos de las 12 clases", revisados > 300, true)
+    chk("todo activable declara su coste", table.concat(sinCast, ","), "")
+    chk("y nadie queda en el limbo", table.concat(limbo, ","), "")
 end
-chk("se revisaron rasgos activables", revisados > 50, true)
-chk("y ninguno se queda sin declarar", table.concat(sinCast, ","), "")
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -10,40 +10,30 @@ proyecto es no convertir ventajas situacionales sin una capa mecánica explícit
 Regenerar las cifras: cargar `HarfordDnDBook.lua`, los doce `Classes/*.lua` y
 `HarfordDnDBookDerived.lua` en el orden del `.toc`, y recorrer `GetClasses()`.
 
-| Clase | Rasgos 1-6 | Mecanizados | % |
+**2026-08-28, tarde: 100% ATENDIDO.** La metrica cambio de "mecanizado/total" a la pregunta que
+de verdad importa: ¿queda algun rasgo SIN DECIDIR? Cada rasgo 1-6 es ahora una de tres cosas:
+
+1. **Mecanizado** — efectos, usos, grants, area, `cast` con coste, `grantsAsBonus`/`grantsTurnAction`
+   (Accion Astuta ya lo estaba y no se contaba), trampas, danos condicionales.
+2. **Pasivo deliberado** (`type = "pasivo"`) — no hace nada activo y esta bien que no lo haga:
+   narrativas (Empatia animal, Misivas), cabeceras de lanzamiento (la mecanica vive en el
+   Compendio), indices de opciones ya ejecutables (los tres `Canalizar` del Paladin resumen
+   rasgos que existen completos), y presentacion de maquinaria externa (los tres de bestia,
+   cuya mecanica vive en HarfordDnDBeast).
+3. **Marcador de subclase** — el Libro lo filtra; no cuenta en el total.
+
+El limbo — `informativo` sin mecanica, indistinguible de "sin revisar" — se vacio: 32 rasgos
+reclasificados a pasivo tras leerlos uno a uno, y tres correcciones que salieron del repaso:
+*Momentum vengativo* estaba tipado como accion siendo un disparador pasivo; los *brebajes del
+Monje* no cobraban la accion que su propio texto declara ("usarlos cuesta una accion", Buey Negro
+incluido); y *colocar una trampa* no cobraba la accion que el texto de Trampero declara.
+
+| Clase | Rasgos 1-6 (sin marcadores) | Atendidos | % |
 |---|---|---|---|
-| Guerrero | 30 | 29 | 96 |
-| Monje | 30 | 28 | 93 |
-| Sacerdote | 45 | 41 | 91 |
-| Chamán | 40 | 36 | 90 |
-| Caballero de la Muerte | 24 | 21 | 87 |
-| Druida | 22 | 19 | 86 |
-| Cazador de Demonios | 22 | 19 | 86 |
-| Paladín | 28 | 24 | 85 |
-| Cazador | 34 | 29 | 85 |
-| Brujo | 47 | 38 | 80 |
-| Mago | 20 | 16 | 80 |
-| Pícaro | 19 | 14 | 73 |
-| **Total** | **361** | **314 (86%)** | |
+| Las 12 | 349 | 349 | **100** |
 
-Cifras del **2026-08-28**, tras dos pasadas de ese día:
-
-1. **Criterio corregido**: cuentan `cast` con coste real, `trap`/`usesFrom`/`area` (ejecutables por
-   el motor de áreas) y `conditionalWeaponDamage`. Las trampas del Cazador eran ejecutables y
-   contaban como deuda.
-2. **Los "conjuros siempre preparados" de camino/dominio son ya `spellGrants` reales** (42 rasgos:
-   Sacerdote, Paladín, Druida, Chamán, CdM, trucos de estudio del Mago, Piromaníaco y Maestro de
-   Maldiciones del Brujo). Los vínculos elementales del Chamán van con `requiresOption` a su
-   afinidad, para no conceder los de las cuatro. Cada rasgo conserva su `grantedSpells` (siembra en
-   CREACIÓN) y los dos campos llevan **los mismos ids** — hay desajuste = hay bug, y la resolución
-   de nombres fue contra el compendio por igualdad exacta, con las equivalencias verificadas por
-   nivel (Imponer/Levantar maldición, Explosión de cadáver, Fuerza brillante).
-
-**Lo que queda sin mecanizar está justificado**: 10 marcadores de subclase (se filtran del Libro),
-9 cabeceras de "Lanzamiento de conjuros" (la mecánica vive en Compendio/maná/espacios), las listas
-ampliadas del Brujo (expansión de lista, no preparación), y pasivas narrativas por norma (Empatía
-animal, Misivas, telepatías, visión en la oscuridad, Renacer Oscuro). **Las que son pasivas, son
-pasivas** — no son deuda.
+La suite `coste_de_accion` carga los ficheros REALES y exige los dos invariantes: todo activable
+declara su coste, y nadie vuelve al limbo. Un rasgo nuevo tiene que decidir que es.
 
 El Mago sale bajo porque casi todo su peso está en Metamagia y en los tres
 Estudios, que son texto de referencia; su mecánica real (puntos, metamagia,

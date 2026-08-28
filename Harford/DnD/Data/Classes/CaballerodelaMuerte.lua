@@ -82,7 +82,7 @@ API.CLASSES[#API.CLASSES + 1] =
         } },
     },
     features = {
-        { id = "cdm_renacer_oscuro", level = 1, name = "Renacer oscuro", type = "informativo", description = "Eres humanoide y no-muerto a la vez. No duermes (4h de trance = 8h de sueño). Ventaja en salvaciones contra efectos exclusivos de no-muertos.", effects = {} },
+        { id = "cdm_renacer_oscuro", level = 1, name = "Renacer oscuro", type = "pasivo", description = "Eres humanoide y no-muerto a la vez. No duermes (4h de trance = 8h de sueño). Ventaja en salvaciones contra efectos exclusivos de no-muertos.", effects = {} },
         { id = "cdm_armas_runicas", level = 1, name = "Armas runicas", type = "informativo", description = "Vinculas armas runicas (un arma a dos manos o dos de una mano). No te pueden desarmar salvo incapacitado; las invocas como acción adicional.", effects = {
             -- "No puedes ser desarmado de tus armas runicas a menos que estes incapacitado."
             -- Lo comprueba el cliente del PROPIO caballero al recibir el aura de Desarme.
@@ -107,7 +107,7 @@ API.CLASSES[#API.CLASSES + 1] =
                 { id = "dos_armas",       label = "Combate con Dos Armas (+mod al 2º ataque)", effects = { { kind = "flag", flag = "offhandDamageMod" } } },
             },
         } },
-        { id = "cdm_lanzamiento_conjuros", level = 2, name = "Lanzamiento de conjuros", type = "informativo", description = "Lanzas conjuros de caballero de la muerte usando Carisma. CD = 8 + comp + Mod. Carisma; ataque = comp + Mod. Carisma. Foco: tu arma runica.", effects = {} },
+        { id = "cdm_lanzamiento_conjuros", level = 2, name = "Lanzamiento de conjuros", type = "pasivo", description = "Lanzas conjuros de caballero de la muerte usando Carisma. CD = 8 + comp + Mod. Carisma; ataque = comp + Mod. Carisma. Foco: tu arma runica.", effects = {} },
         { id = "cdm_constitucion_nomuerta", level = 3, name = "Constitucion no-muerta", type = "pasivo", description = "Inmune a enfermedades y a la condicion envenenado; resistente al daño por veneno.", effects = {
             { kind = "resist", damage = "veneno" },
             { kind = "conditionImmunity", condition = "poisoned" },

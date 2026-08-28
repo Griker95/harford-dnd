@@ -397,30 +397,23 @@ local function IsTurnAdmin()
         and HarfordAuthority.CanUseDMTools() == true
 end
 
--- Una economia de turno VACIA no es un combate. `Turn.Reset` la escribe en cada cambio de turno
--- --incluso a cero, para que una recarga no resucite lo del turno anterior--, asi que la tabla
--- existe casi siempre; tomarla por senal de combate hacia saltar la caducidad con la mesa vacia y
--- anunciar "se retiro un combate abandonado" cuando no habia ninguno.
-local function EconomiaConAlgo(economia)
-    if type(economia) ~= "table" then return false end
-    if (tonumber(economia.ataques) or 0) > 0 then return true end
-    for _, v in pairs(economia.spent or {}) do
-        if (tonumber(v) or 0) > 0 then return true end
-    end
-    for _, v in pairs(economia.extra or {}) do
-        if (tonumber(v) or 0) > 0 then return true end
-    end
-    return false
-end
-
 local function PurgeStaleEntries()
     local store = EnsureStore()
-    -- No se sale por lista vacia: lo que caduca es el COMBATE, y su estado puede haber quedado
-    -- puesto sin entradas. Si no hay ni entradas ni estado no hay nada que hacer.
-    if #store.entries == 0 and store.estado == nil and not store.movimiento
-        and not EconomiaConAlgo(store.economia) then
-        -- Se limpia el resto vacio de todas formas, pero EN SILENCIO: no habia combate que retirar.
+    -- Lo que hace que esto sea un COMBATE son dos cosas y solo dos: que haya combatientes, o que
+    -- alguien haya declarado el estado. No se sale por lista vacia porque el estado puede haber
+    -- quedado puesto sin entradas.
+    --
+    -- La economia de turno y el movimiento NO cuentan: son contabilidad. Se escriben en cada
+    -- cambio de turno aunque esten a cero --para que una recarga no resucite lo del turno
+    -- anterior-- asi que casi siempre hay una tabla puesta, y tomarla por combate hacia salir
+    -- "se retiro un combate abandonado" una y otra vez sin haber ninguno. Se limpian SIEMPRE y en
+    -- silencio.
+    --
+    -- Va como lista de lo que SI cuenta, no de lo que no: al reves, cada campo nuevo que alguien
+    -- guarde aqui volveria a disparar el aviso hasta que alguien se acordara de excluirlo.
+    if #store.entries == 0 and store.estado == nil then
         store.economia = nil
+        store.movimiento = nil
         return false
     end
     local ahora = (time and time()) or 0

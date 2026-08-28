@@ -80,4 +80,30 @@ local outV, _cv, _mv, etqV = D(viejo)
 chk("un mensaje sin etiqueta se entiende", outV and #outV or 0, 2)
 chk("y no inventa etiqueta", etqV == nil, true)
 
+-- La etiqueta pasa por el compactador DOS veces: una al mandar el dano y otra cuando la victima la
+-- publica como tirada. Si no fuera idempotente, el enlace se degradaria por el camino y llegaria a
+-- la mesa sin color, sin nombre o sin poder pincharse.
+print("El enlace del arma sobrevive a las dos pasadas")
+local unaVez = HarfordDnDRolls.NetworkLabel(etiqueta)
+local dosVeces = HarfordDnDRolls.NetworkLabel(unaVez)
+chk("compactar dos veces es igual que una", dosVeces == unaVez, true)
+chk("conserva el ID del objeto", dosVeces:find("|Hitem:14088020|h", 1, true) ~= nil, true)
+chk("conserva el nombre visible", dosVeces:find("[Espada larga]", 1, true) ~= nil, true)
+chk("conserva el color de calidad", dosVeces:find("|cff1eff00", 1, true) ~= nil, true)
+chk("y lo cierra", dosVeces:sub(-2) == "|r", true)
+-- Un hyperlink solo es clicable con su apertura y su cierre.
+local _, marcas = dosVeces:gsub("|h", "")
+chk("sigue siendo clicable (|h abre y cierra)", marcas, 2)
+
+-- Y con arma BASICA, sin enlace, la etiqueta es el nombre a secas -- como siempre ha sido.
+-- `WeaponRollName` devuelve el itemLink solo si el arma viene de un objeto; si no, su nombre. La
+-- etiqueta que viaja es la MISMA cadena que habria publicado el atacante, asi que los dos casos se
+-- conservan sin ramas aparte.
+print("Sin objeto, el nombre del arma tal cual")
+local basica = S(comps, false, false, "Dano Espada larga")
+local outB, _cb, _mb, etqB = D(basica)
+chk("vuelve igual", etqB, "Dano Espada larga")
+chk("sin enlace inventado", etqB:find("|Hitem", 1, true) == nil, true)
+chk("y los componentes intactos", outB and #outB or 0, 2)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

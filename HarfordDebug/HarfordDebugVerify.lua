@@ -178,7 +178,8 @@ Grupo("estados", "las 48 condiciones: alcanzables, y su ciclo aplicar/ver/retira
                     end
                 end
                 if not (aplicado and activo and enLista) then
-                    fallidos[#fallidos + 1] = id
+                    fallidos[#fallidos + 1] = id .. "(" .. (not aplicado and "aplicar"
+                        or (not activo and "ver" or "listar")) .. ")"
                 end
                 if C.RemoveOwned then C.RemoveOwned(id) end
             end
@@ -1274,7 +1275,10 @@ Grupo("dotes", "que una dote sea UNA habilidad y este activada, no solo elegida"
             #agrupadas .. " entradas para " .. #lista .. " dote(s)")
         for _, item in ipairs(agrupadas) do
             local n = item.feature and tostring(item.feature.name or "")
-            r.chk("se llama 'Dote: ...'", n:find("Dote:", 1, true) == 1, n)
+            -- El prefijo "Dote: " se retiro a proposito (la categoria ya lo dice); lo que se
+            -- exige es nombre propio y la marca esDote para que el Libro la etiquete.
+            r.chk("con nombre y marcada como dote",
+                n ~= "" and item.feature.esDote == true, n)
             r.chk("y trae su contenido",
                 item.feature and #tostring(item.feature.description or "") > 0, n)
         end

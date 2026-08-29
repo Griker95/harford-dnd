@@ -98,7 +98,7 @@ API.USOS = {
       anuncio = "gasta su punto de heroe: su ataque de arma impacta y MUTILA (dano normal; la criatura supera salvacion de Constitucion CD 10 o mitad del dano, o pierde el miembro elegido)." },
     { id = "magico_sobrecarga", label = "Luchador Magico: Sobrecarga",
       anuncio = "gasta su punto de heroe: su hechizo impacta como Golpe Critico Masivo (dados de dano x10 + su nivel de personaje)." },
-    { id = "magico_preciso", label = "Luchador Magico: Hechizo Preciso",
+    { id = "magico_preciso", label = "Luchador Magico: Impacto Certero",
       anuncio = "gasta su punto de heroe: su hechizo impacta, y tantas criaturas como su modificador de lanzamiento fallan automaticamente la salvacion." },
     { id = "defensa_esquiva", label = "Defensa: Esquiva",
       anuncio = "gasta su punto de heroe: el ataque que le apunta FALLA automaticamente." },

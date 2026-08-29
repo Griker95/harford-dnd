@@ -199,6 +199,9 @@ end
 -- de rasgos lo resume como "Subclase <Clase>: <Subclase>".
 local function IsSubclassMarkerFeature(feature)
     if type(feature) ~= "table" then return false end
+    -- Campo EXPLICITO primero: la heuristica de texto se rompio en cuanto las descripciones se
+    -- sincronizaron con la web (la frase "concede rasgos... eliges tu" cambio de redaccion).
+    if feature.subclassMarker == true then return true end
     local desc = NormalizeFeatureText(feature.description)
     if not desc:find("concede rasgos", 1, true) then return false end
     if desc:find("eliges tu", 1, true) then return true end

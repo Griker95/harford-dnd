@@ -113,6 +113,7 @@ do
         return false
     end
     local function esMarcador(f)
+        if f.subclassMarker == true then return true end
         local d = tostring(f.description or ""):lower()
         return (d:find("concede rasgos", 1, true) and d:find("eliges tu", 1, true)) and true or false
     end

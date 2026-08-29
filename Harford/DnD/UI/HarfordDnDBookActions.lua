@@ -24,6 +24,7 @@ local function GetSpellAbilityKey() return D.GetSpellAbilityKey() end
 local function GetWeaponDef(key) return D.GetWeaponDef(key) end
 local function RefreshMainUI() return D.RefreshMainUI() end
 local function fmtSigned(n) return D.fmtSigned(n) end
+local function AnnounceFeatureById(id, unit) return D.AnnounceFeatureById(id, unit) end
 
 -- Maldiciones del Brujo (Estudio de la Afliccion). Gastan un uso de Corrupcion (`usesFrom`) y,
 -- opcionalmente, un fragmento de alma para AMPLIAR. El manual deja decidir el ampliado en el
@@ -729,5 +730,178 @@ do
             })
             if not opened then Print(tostring(err or "No se pudo lanzar Tormenta divina.")) end
         end)
+    end
+end
+
+-- CARGAS ARCANAS (Mago del Arcano). Una sola carga a la vez, con NIVEL: se gana al lanzar un
+-- conjuro de mago de nivel 1+, y una carga nueva solo sustituye a la anterior si es de nivel
+-- mayor. Se gasta para un bono de un solo uso al PROXIMO conjuro o a las salvaciones contra magia.
+--
+-- El "1 minuto" de duracion no se modela: no hay temporizadores en el proyecto. La carga vive
+-- hasta que se usa, la sustituye otra mayor o llega un descanso largo (los contadores se limpian).
+do
+    local CARGA, BONO_CONJURO, BONO_SALV = "arcane_charge", "arcane_spell_bonus", "arcane_save_bonus"
+    local MAX_NIVEL = 5
+
+    local function Leer(clave)
+        return (HarfordDnDProgression and HarfordDnDProgression.GetRestCounter
+            and HarfordDnDProgression.GetRestCounter(clave)) or 0
+    end
+    local function Anotar(clave, valor)
+        if HarfordDnDProgression and HarfordDnDProgression.SetRestCounter then
+            HarfordDnDProgression.SetRestCounter(clave, valor)
+        end
+    end
+
+    -- La llama el compendio al pagar un conjuro. `nivel` es el nivel al que se lanzo.
+    function HarfordDnDStore.GainArcaneCharge(nivel)
+        if SheetContext and SheetContext.active then return end
+        if not (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+            and HarfordDnDFeatureEffects.HasFlag("arcaneCharges")) then return end
+        nivel = math.min(MAX_NIVEL, math.floor(tonumber(nivel) or 0))
+        if nivel < 1 then return end
+        if nivel <= Leer(CARGA) then return end   -- solo sustituye una carga MAYOR
+        Anotar(CARGA, nivel)
+        AnnounceFeatureById("mago_arc_cargas")
+        if HarfordCharacterPanel and HarfordCharacterPanel.RefreshBookIfShown then
+            HarfordCharacterPanel.RefreshBookIfShown()
+        end
+    end
+
+    -- Bono pendiente para el proximo conjuro (ataque y dano). Lo consume quien lo usa.
+    function HarfordDnDStore.TakeArcaneSpellBonus()
+        local bono = Leer(BONO_CONJURO)
+        if bono > 0 then Anotar(BONO_CONJURO, 0) end
+        return bono
+    end
+    -- Mirar sin gastar: el compendio necesita saber cuanto hay para construir la definicion, pero
+    -- hay ramas que salen sin resolver nada y ahi la carga no debe perderse.
+    function HarfordDnDStore.PeekArcaneSpellBonus()
+        return Leer(BONO_CONJURO)
+    end
+    function HarfordDnDStore.PeekArcaneSaveBonus()
+        return Leer(BONO_SALV)
+    end
+    function HarfordDnDStore.TakeArcaneSaveBonus()
+        local bono = Leer(BONO_SALV)
+        if bono > 0 then Anotar(BONO_SALV, 0) end
+        return bono
+    end
+
+    function HarfordDnDStore.GetArcaneChargeState()
+        local carga, conjuro, salv = Leer(CARGA), Leer(BONO_CONJURO), Leer(BONO_SALV)
+        local partes = {}
+        if carga > 0 then partes[#partes + 1] = "Carga nivel " .. tostring(carga) end
+        if conjuro > 0 then partes[#partes + 1] = "+" .. tostring(conjuro) .. " al proximo conjuro" end
+        if salv > 0 then partes[#partes + 1] = "+" .. tostring(salv) .. " a salvaciones vs magia" end
+        return #partes > 0 and table.concat(partes, "  ·  ") or "Sin carga"
+    end
+
+    local menu = CreateFrame("Frame", "HarfordBookArcaneChargeMenu", UIParent, "UIDropDownMenuTemplate")
+    UIDropDownMenu_Initialize(menu, function()
+        local carga = Leer(CARGA)
+        if carga < 1 then return end
+        for _, o in ipairs({
+            { clave = BONO_CONJURO, texto = "Accion adicional: +%d al ataque y dano de tu proximo conjuro" },
+            { clave = BONO_SALV,    texto = "Accion adicional o reaccion: +%d a salvaciones contra magia" },
+        }) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = string.format(o.texto, carga)
+            info.notCheckable = true
+            info.func = function()
+                CloseDropDownMenus()
+                Anotar(CARGA, 0)
+                Anotar(o.clave, carga)
+                AnnounceFeatureById("mago_arc_cargas")
+                if HarfordCharacterPanel and HarfordCharacterPanel.RefreshBookIfShown then
+                    HarfordCharacterPanel.RefreshBookIfShown()
+                end
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+
+    function HarfordDnDStore.OpenArcaneChargeMenu(feature, anchor)
+        if SheetContext and SheetContext.active then return end
+        if Leer(CARGA) < 1 then
+            Print("No tienes ninguna carga arcana. Se gana al lanzar un conjuro de mago de nivel 1 o superior.")
+            return
+        end
+        ToggleDropDownMenu(1, nil, menu, anchor or "cursor", 0, 0)
+    end
+end
+
+-- REJUVENECIMIENTO (Druida Restauracion, N2). Del manual: accion adicional, criatura a 120 pies,
+-- gastas hasta la MITAD de tu nivel de druida en d6, el objetivo cura la suma y gana 1 PG TEMPORAL
+-- por dado. Los dados vuelven con el descanso largo (el recurso ya recarga en "long").
+--
+-- Los PG temporales NO se aplican solos: darselos a OTRO jugador necesitaria un opcode propio
+-- (`temp_health` es un recurso local de cada ficha). Van en la nota del area, que es lo que hace
+-- el proyecto con lo que no puede resolver en el cliente del emisor.
+do
+    local menuRejuv = CreateFrame("Frame", "HarfordBookRejuvMenu", UIParent, "UIDropDownMenuTemplate")
+    local rejuvFeature
+
+    local function NivelDruida()
+        for _, e in ipairs((HarfordDnDProgression and HarfordDnDProgression.GetClassLevels
+            and HarfordDnDProgression.GetClassLevels()) or {}) do
+            if e.classId == "druida" then return tonumber(e.level) or 0 end
+        end
+        return 0
+    end
+
+    local function DadosDisponibles()
+        return math.max(0, math.floor(tonumber(GetResourceCurrent("living_seeds")) or 0))
+    end
+
+    -- Tope del manual: la MITAD del nivel de druida (y nunca mas de los que te queden).
+    local function TopeDados()
+        return math.max(0, math.min(math.floor(NivelDruida() / 2), DadosDisponibles()))
+    end
+
+    UIDropDownMenu_Initialize(menuRejuv, function()
+        local feature = rejuvFeature
+        if not feature then return end
+        for n = 1, TopeDados() do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = string.format("%dd6  (+%d PG temporal%s)", n, n, n == 1 and "" or "es")
+            info.notCheckable = true
+            info.func = function()
+                CloseDropDownMenus()
+                local opened, err = HarfordDnDArea.Open({
+                    title = tostring(feature.name or "Rejuvenecimiento"),
+                    shape = "other", sizeText = "Objetivo a 36,6 m",
+                    resolution = "heal",
+                    healingComponents = { { dice = tostring(n) .. "d6" } },
+                    note = "Gana ademas " .. n .. " punto(s) de golpe TEMPORAL(es), uno por dado.",
+                }, {
+                    sourceKind = "player",
+                    sourceGuid = UnitGUID and UnitGUID("player") or "",
+                    abilityFeature = feature,
+                    autoResolve = true,
+                    onCommit = function()
+                        if DadosDisponibles() < n then
+                            return false, "Ya no te quedan " .. n .. " dados de Rejuvenecimiento."
+                        end
+                        AdjustResourceCurrent("living_seeds", -n)
+                        return true
+                    end,
+                })
+                if not opened then Print(tostring(err or "No se pudo usar Rejuvenecimiento.")) end
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+
+    function HarfordDnDStore.OpenRejuvenationMenu(feature, anchor)
+        if SheetContext and SheetContext.active then return end
+        if TopeDados() < 1 then
+            Print(DadosDisponibles() < 1
+                and "No te quedan dados de Rejuvenecimiento."
+                or "Tu nivel de druida aun no te permite gastar ningun dado.")
+            return
+        end
+        rejuvFeature = feature
+        ToggleDropDownMenu(1, nil, menuRejuv, anchor or "cursor", 0, 0)
     end
 end

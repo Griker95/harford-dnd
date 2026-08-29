@@ -401,7 +401,8 @@ chk("la accion basica tambien se para",
 -- anunciarla aparte son dos lineas para decir lo mismo. Se cobra igual.
 chk("y sale en una sola linea",
     rolls:find("if not opts.skipBroadcast then", 1, true) ~= nil, true)
-local fichaSrc = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+-- El API externo de tiradas vive en HarfordDnDArcApi desde la fase C de refactorizacion.
+local fichaSrc = io.open("Harford/DnD/Engine/HarfordDnDArcApi.lua"):read("*a")
 chk("con el nombre de la accion en la tirada",
     fichaSrc:find('local nombre = (etiqueta and etiqueta ~= "") and (etiqueta .. ": " .. s.name) or s.name',
         1, true) ~= nil, true)

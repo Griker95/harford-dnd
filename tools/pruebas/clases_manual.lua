@@ -152,7 +152,7 @@ print("Todo recurso declarado tiene quien lo gaste")
 -- las semillas del Druida y el Canalizar Divinidad. No es declarativa, pero es legitima: ignorarla
 -- daria dos falsos positivos mas.
 local gastoEnMotor = {}
-for _, ruta in ipairs({ "Harford/DnD/UI/HarfordDnD.lua", "Harford/DnD/Engine/HarfordDnDAbilities.lua",
+for _, ruta in ipairs({ "Harford/DnD/UI/HarfordDnD.lua", "Harford/DnD/UI/HarfordDnDBookActions.lua", "Harford/DnD/Engine/HarfordDnDAbilities.lua",
                         "Harford/Character/HarfordCharacterPanel.lua" }) do
     local fh = io.open(ruta)
     if fh then

@@ -104,6 +104,7 @@ DnD\Engine\HarfordDnDArea.lua
 DnD\Engine\HarfordDnDComm.lua
 DnD\Engine\HarfordDnDWeaponRolls.lua
 DnD\Engine\HarfordDnDAbilities.lua
+DnD\Engine\HarfordDnDArcApi.lua
 DnD\UI\HarfordDnDBookActions.lua
 
 # --- DnD/UI ---

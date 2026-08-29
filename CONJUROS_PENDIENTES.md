@@ -1,7 +1,7 @@
 # Conjuros pendientes de comprobar en el compendio
 
 Seguimiento de conjuros que el manual (`Rulebooks/Warcraft 5º Edición.txt`) cita
-pero que no se encuentran en `HarfordCompendioData.lua`.
+pero que no se encuentran en `HarfordCompendio.lua`.
 
 **Los nombres del compendio son los canónicos.** El manual usa traducciones
 distintas para el mismo conjuro, así que antes de dar uno por ausente hay que
@@ -55,7 +55,7 @@ Estaban en el compendio con otro título; todos concedidos ya en sus rasgos.
 
 ## Incoherencias del compendio detectadas
 
-No las corrijo: `HarfordCompendioData.lua` es compartido con otro chat y con Codex.
+No las corrijo: `HarfordCompendio.lua` es compartido con otro chat y con Codex.
 
 | Qué | Detalle |
 |---|---|
@@ -132,7 +132,7 @@ Cotejados los 15 conjuros de los cinco nucleos contra el compendio.
 - `dominar persona` (nivel 5 de conjuro)
 - `desgaste` (XGE; nivel 5 de conjuro)
 
-**Fallo de datos del compendio, sin tocar** (`HarfordCompendioData.lua` es co-propiedad de otro chat):
+**Fallo de datos del compendio, sin tocar** (`HarfordCompendio.lua` es co-propiedad de otro chat):
 
 - `hechizar_persona` y `encantar_persona` son DOS entradas del mismo conjuro (*charm person*): ambas nivel 1, Encantamiento, `condition = charmed`.
 - Las dos declaran `classes = { "Sacerdote" }`. *Charm person* es conjuro de Brujo, y el nucleo de Sucubo lo necesita: hoy un brujo no puede acceder a el.

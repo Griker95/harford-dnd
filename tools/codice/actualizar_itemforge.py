@@ -35,7 +35,7 @@ WTF = 'G:/Epsilon/_retail_/WTF'
 DATOS = 'AddonsIndependientes/HarfordItemForge/Data.lua'
 # El otro chat saco los datos de profesiones a su propio addon (commit 3133ccb). Si
 # vuelven a moverse, es esta linea la que hay que tocar.
-REGISTRO = 'HarfordProfessionsData/HarfordProfessionsItems.lua'
+REGISTRO = 'HarfordProfesiones/HarfordProfesionesItems.lua'
 SALIDA_VUELTA = os.path.join(BASE, '_itemforge_forjados.txt')
 
 

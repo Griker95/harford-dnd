@@ -1092,7 +1092,7 @@ end
 -- `duration` ("Concentracion, hasta 1 minuto") pero con `concentration = false`. La duracion es
 -- el texto copiado del manual, asi que manda: si lo dice ahi, el conjuro exige concentracion
 -- aunque el campo booleano no lo declare. Se resuelve aqui y no en los datos porque
--- HarfordCompendioData lo mantiene el pipeline del codice y se regenera.
+-- HarfordCompendio (antes HarfordCompendioData) lo mantiene el pipeline del codice y se regenera.
 function API.RequiresConcentration(spell)
     if type(spell) ~= "table" then return false end
     if spell.concentration == true then return true end
@@ -1101,7 +1101,7 @@ function API.RequiresConcentration(spell)
     return NormalizeText(spell.duration):find("concentraci", 1, true) ~= nil
 end
 
--- Los conjuros viven en el addon HarfordCompendioData, marcado LoadOnDemand: son 609 KB de
+-- Los conjuros viven en el addon HarfordCompendio, marcado LoadOnDemand: son 609 KB de
 -- constructores de tabla que WoW parseaba en cada login aunque nadie abriera el compendio.
 -- Esta funcion es la UNICA puerta a esos datos, asi que la compuerta va aqui y ningun llamador
 -- cambia. `GetSpellIndex` ya se reconstruye cuando la tabla cambia de referencia, asi que el
@@ -1117,10 +1117,10 @@ function API.EnsureSpellData()
     conjurosPedidos = true
     local cargar = (C_AddOns and C_AddOns.LoadAddOn) or _G.LoadAddOn
     if not cargar then return false end
-    cargar("HarfordCompendioData")
+    cargar("HarfordCompendio")
     conjurosListos = _G.HarfordCompendioSpells ~= nil
     if not conjurosListos and HarfordChat and HarfordChat.Print then
-        HarfordChat.Print("No se pudo cargar |cffffcc00HarfordCompendioData|r: "
+        HarfordChat.Print("No se pudo cargar |cffffcc00HarfordCompendio|r: "
             .. "el compendio se quedara sin conjuros. Comprueba que la carpeta esta instalada y activada.")
     end
     return conjurosListos

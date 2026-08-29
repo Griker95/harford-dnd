@@ -13,7 +13,7 @@
 --  * Los IDs de items viven en HarfordProfessionsItems (registro por clave); receta con material sin
 --    ID registrado = "pendiente" (no crafteable) hasta que llegue el ID.
 --
--- Datos (catalogo de profesiones + recetas) en HarfordProfessionsData.
+-- Datos (catalogo de profesiones + recetas) en el addon HarfordProfesiones (globals HarfordProfessionsData/Items, que conservan su nombre).
 ------------------------------------------------------------
 
 -- Declaracion adelantada: sin ella, la referencia de mas arriba compila como acceso a
@@ -125,9 +125,9 @@ local function ProfileName()
 end
 
 ------------------------------------------------------------
--- Catalogo (delega en HarfordProfessionsData)
+-- Catalogo (delega en el addon HarfordProfesiones)
 ------------------------------------------------------------
--- El catalogo vive en el addon HarfordProfessionsData, marcado LoadOnDemand: es 1 MB de
+-- El catalogo vive en el addon HarfordProfesiones, marcado LoadOnDemand: es 1 MB de
 -- constructores de tabla que WoW parseaba en cada login aunque nadie abriera profesiones.
 -- Se carga la PRIMERA vez que alguien lo consulta y no antes. Si el addon no esta instalado o
 -- esta desactivado, se avisa UNA vez y las profesiones quedan vacias en vez de romper.
@@ -142,7 +142,7 @@ function API.EnsureData()
     datosPedidos = true
     local cargar = (C_AddOns and C_AddOns.LoadAddOn) or _G.LoadAddOn
     if not cargar then return false end
-    local ok = cargar("HarfordProfessionsData")
+    local ok = cargar("HarfordProfesiones")
     datosListos = ok and _G.HarfordProfessionsData ~= nil and _G.HarfordProfessionsItems ~= nil
     if not datosListos and HarfordChat and HarfordChat.Print then
         HarfordChat.Print("No se pudo cargar |cffffcc00HarfordProfessionsData|r: "

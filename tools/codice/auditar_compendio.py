@@ -13,7 +13,7 @@ import collections
 sys.stdout.reconfigure(encoding='utf-8')
 
 # El compendio salio de Harford/ al pasar a addon LoadOnDemand.
-SRC = 'HarfordCompendioData/HarfordCompendioData.lua'
+SRC = 'HarfordCompendio/HarfordCompendio.lua'
 text = io.open(SRC, encoding='utf-8').read()
 
 # Cada conjuro es un bloque que empieza en `id = "..."`.

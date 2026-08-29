@@ -322,7 +322,7 @@ def ids_del_libro():
         s = io.open(f, encoding='utf-8').read()
         for m in RE.finditer(s):
             rasgos.setdefault(m.group(1), m.group(3))
-    comp = RAIZ + 'HarfordCompendioData/HarfordCompendioData.lua'  # salio de Harford/
+    comp = RAIZ + 'HarfordCompendio/HarfordCompendio.lua'  # salio de Harford/
     conjuros = {}
     if os.path.exists(comp):
         s = io.open(comp, encoding='utf-8').read()

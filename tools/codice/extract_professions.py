@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Genera js/compendium-professions.js para la web desde HarfordProfessionsData/Items.
+"""Genera js/compendium-professions.js para la web desde el addon HarfordProfesiones (globals HarfordProfessionsData/Items).
 
 Cada profesion sale con sus recetas resueltas (materiales/salida por nombre visible del
 registro de items) y copia a assets/compendium-icons/ los PNG de EpsilonIcons que use.
@@ -20,8 +20,8 @@ def _lee(nombre):
     return io.open(hits[0], encoding="utf-8").read()
 
 
-DATA = _lee("HarfordProfessionsData.lua")
-ITEMS = _lee("HarfordProfessionsItems.lua")
+DATA = _lee("HarfordProfesiones.lua")
+ITEMS = _lee("HarfordProfesionesItems.lua")
 
 g = lambda blk, k: (re.search(r'\b%s\s*=\s*"((?:[^"\\]|\\.)*)"' % k, blk).group(1) if re.search(r'\b%s\s*=\s*"' % k, blk) else "")
 gn = lambda blk, k: (int(re.search(r"\b%s\s*=\s*(\d+)" % k, blk).group(1)) if re.search(r"\b%s\s*=\s*\d+" % k, blk) else None)

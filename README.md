@@ -27,8 +27,8 @@ Copiar a `[Cliente Epsilon]\_retail_\Interface\AddOns\`:
 | Carpeta | Quien la necesita |
 |---|---|
 | **`Harford/`** | Todos. El sistema entero. |
-| **`HarfordCompendioData/`** | Todos. Los 396 conjuros del compendio (carga bajo demanda). |
-| **`HarfordProfessionsData/`** | Todos. Recetas y objetos de profesiones (carga bajo demanda). |
+| **`HarfordCompendio/`** | Todos. Los 396 conjuros del compendio (carga bajo demanda). |
+| **`HarfordProfesiones/`** | Todos. Recetas y objetos de profesiones (carga bajo demanda). |
 | **`HarfordAdmin/`** | Solo cuentas DM. Las herramientas exigen ademas `.ph dm` activo. |
 | **`HarfordMusic/`** | Opcional. Emisoras con audio propio (pesa; solo lo oye quien lo tiene). |
 | **`HarfordDebug/`** | Opcional. Diagnostico (`/harford debug run verificar`); util para reportar fallos. |

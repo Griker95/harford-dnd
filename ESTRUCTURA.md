@@ -314,7 +314,7 @@ siempre el remitente** (propio, unidad visible o miembro de grupo/raid).
 | Una clase, subclase o rasgo | `DnD/Data/Classes/<Clase>.lua` |
 | La API del Libro o un helper compartido | `DnD/Data/HarfordDnDBook.lua` |
 | Una raza o un trasfondo | `DnD/Data/HarfordDnDRaces.lua` - `HarfordDnDBackgrounds.lua` |
-| Un conjuro | `Compendium/HarfordCompendioData.lua` |
+| Un conjuro | `Compendium/HarfordCompendio.lua` |
 | Como se calcula una tirada o un bonus | `DnD/Engine/HarfordDnDCalc.lua` - `HarfordDnDFeatureEffects.lua` |
 | La CA, el impacto o la mitigacion | `DnD/Engine/HarfordDnDCombat.lua` - `DnD/Data/HarfordDamageMitigation.lua` |
 | La ventana de la ficha | `DnD/UI/HarfordDnD.lua` |

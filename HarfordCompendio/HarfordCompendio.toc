@@ -1,6 +1,6 @@
 ## Interface: 90207
 ## Title: |cff3536CCHarford|r Compendio
-## Notes: Los 384 conjuros del compendio. Se carga BAJO DEMANDA desde Harford.
+## Notes: Compendio de conjuros |cff3536CCHarford|r.
 ## Author: Griker
 ## Version: 2.1.0
 ## RequiredDeps: Harford
@@ -10,4 +10,4 @@
 # jugador no abriera el compendio ni lanzara un conjuro. Harford los pide desde
 # HarfordCompendioAPI.GetAllSpells(), que es la unica puerta a estos datos.
 
-HarfordCompendioData.lua
+HarfordCompendio.lua

@@ -303,7 +303,7 @@ print(string.format("     %d rasgos de nivel 1-6, %d por encima", dentro, fuera)
 -- parecido -- `Rayo de hechiceria` parece *rayo del caos* y es *witch bolt*.
 local IDS, NOMBRES = {}, {}
 do
-    local fh = io.open("HarfordCompendioData/HarfordCompendioData.lua")
+    local fh = io.open("HarfordCompendio/HarfordCompendio.lua")
     if fh then
         local src = fh:read("*a")
         fh:close()
@@ -522,7 +522,7 @@ chk("los de trasfondo tambien", envueltoF ~= nil and envueltoF.feature ~= nil, t
 -- HarfordCompendioAPI, que aqui no esta cargado: stub minimo desde los DATOS reales del
 -- compendio para que la eleccion se verifique con sus opciones de verdad.
 if not env.HarfordCompendioAPI then
-    local fhC = io.open("HarfordCompendioData/HarfordCompendioData.lua")
+    local fhC = io.open("HarfordCompendio/HarfordCompendio.lua")
     if fhC then
         local envC = { _G = {} }
         local fnC = (loadstring or load)(fhC:read("*a"), "compendio", "t", envC)

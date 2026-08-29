@@ -1,6 +1,6 @@
 ## Interface: 90207
-## Title: |cff3536CCHarford|r Objetos
-## Notes: Catalogo de profesiones, recetas y objetos. Se carga BAJO DEMANDA desde Harford.
+## Title: |cff3536CCHarford|r Profesiones
+## Notes: Catalogo de profesiones y recetas |cff3536CCHarford|r
 ## Author: Griker
 ## Version: 2.1.0
 ## RequiredDeps: Harford
@@ -10,5 +10,5 @@
 # el jugador no abriera profesiones en toda la sesion. Harford los pide con
 # HarfordProfessions.EnsureData() la primera vez que alguien consulta el catalogo.
 
-HarfordProfessionsData.lua
-HarfordProfessionsItems.lua
+HarfordProfesiones.lua
+HarfordProfesionesItems.lua

@@ -24,8 +24,8 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
 BASE = os.path.dirname(os.path.abspath(__file__))
-REGISTRO = 'HarfordProfessionsData/HarfordProfessionsItems.lua'
-RECETAS = 'HarfordProfessionsData/HarfordProfessionsData.lua'
+REGISTRO = 'HarfordProfesiones/HarfordProfesionesItems.lua'
+RECETAS = 'HarfordProfesiones/HarfordProfesiones.lua'
 PENDIENTES = 'AddonsIndependientes/HarfordItemForge/Data.lua'
 PAGINA = os.path.join(BASE, 'yunque.html')
 

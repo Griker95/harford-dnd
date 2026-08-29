@@ -41,7 +41,7 @@ chk("ninguna dice 'gastas N puntos' sin declararlo", sinDeclarar, 0)
 -- Un `castsSpell` que apunte a un conjuro inexistente no da error: el rasgo simplemente no hace
 -- nada al pulsarlo. Se comprueba contra los datos REALES del compendio.
 print("Rasgos que lanzan un conjuro del compendio")
-local compendio = io.open("HarfordCompendioData/HarfordCompendioData.lua")
+local compendio = io.open("HarfordCompendio/HarfordCompendio.lua")
 local datos = compendio and compendio:read("*a") or ""
 if compendio then compendio:close() end
 local revisados, huerfanos = 0, {}

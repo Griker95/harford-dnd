@@ -28,7 +28,7 @@ sys.path.insert(0, os.path.join(AQUI, 'codice'))
 import lua51
 
 ADDONS = ['Harford', 'HarfordAdmin', 'HarfordDebug',
-          'HarfordProfessionsData', 'HarfordCompendioData',
+          'HarfordProfesiones', 'HarfordCompendio',
           # Opcional: sin el, la radio funciona igual con menos emisoras.
           'HarfordMusic']
 

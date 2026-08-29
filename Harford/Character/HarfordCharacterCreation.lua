@@ -952,9 +952,15 @@ function API.BuildAbout(draft, profileName)
         for _, featId in ipairs(Pg.GetFeats(prof) or {}) do
             local def = F.GetFeat(featId)
             if def then
-                local icono = FeatureIconName((def.traits or {})[1])
+                -- Icono de la PROPIA dote (todas lo declaran ya); el respaldo del primer trait
+                -- daba el signo '+' del Incremento de caracteristica, que no es arte de la dote.
+                local icono = FeatureIconName({ id = def.id, icon = def.icon, name = def.name })
                 out[#out + 1] = "{h2}{icon:" .. icono .. ":25}{col:" .. COL_RACIAL
                     .. "} Dote{/col} " .. tostring(def.name) .. "{/h2}"
+                -- Formato de los perfiles reales: descripcion de la dote debajo de la cabecera,
+                -- SIEMPRE (una dote sin cuerpo salia como titulo suelto), y los traits despues.
+                local desc = Trim(def.description)
+                if desc ~= "" then out[#out + 1] = ColorizeDescription(desc) end
                 local cuerpo = F.GetFeatTraits and BuildTraitLines(F.GetFeatTraits({ featId }), draft) or ""
                 if cuerpo ~= "" then out[#out + 1] = cuerpo end
             end

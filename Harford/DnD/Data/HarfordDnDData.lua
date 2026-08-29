@@ -85,7 +85,7 @@ HarfordDnDData.TOOLS = {
     { id="ins_zampona",      name="Zampona", instrumento=true },
     { id="ins_chirimia",     name="Chirimia", instrumento=true },
     { id="ins_viola",        name="Viola", instrumento=true },
-    { id="her_juego",        name="Juego de azar", categoria=true },
+    { id="her_juego",        name="Juego", categoria=true },
     { id="jue_dados",        name="Juego de dados", juego=true },
     { id="jue_ajedrez",      name="Ajedrez draconico", juego=true },
     { id="jue_naipes",       name="Juego de naipes", juego=true },

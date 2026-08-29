@@ -413,10 +413,12 @@ function API.GetChoiceOptions(feature)
         end
     elseif (from == "instrument" or from == "game" or from == "instrumentOrGame")
         and HarfordDnDData and HarfordDnDData.TOOLS then
-        -- "Competencia con un instrumento o juego": el manual los da como UN grupo combinado, asi
-        -- que el selector lista instrumentos Y juegos juntos y se elige un miembro concreto.
+        -- Miembro CONCRETO de la categoria: "instrumento musical" lista instrumentos, "juego"
+        -- lista juegos (dados, ajedrez, naipes...; la categoria se llama Juego a secas, no
+        -- "juego de azar"), y el combinado ambos.
         for _, tool in ipairs(HarfordDnDData.TOOLS) do
-            if tool.instrumento or tool.juego then
+            local entra = (from ~= "game" and tool.instrumento) or (from ~= "instrument" and tool.juego)
+            if entra then
                 out[#out + 1] = {
                     id = tool.id, label = tool.name or tool.id,
                     effects = { { kind = "toolProf", tool = tool.name or tool.id } },
@@ -464,8 +466,8 @@ function API.GetChoiceOption(feature, optionId)
         return { id = optionId, label = "Instrumento musical",
             effects = { { kind = "toolProf", tool = "Instrumento musical" } } }
     elseif optionId == "her_juego" then
-        return { id = optionId, label = "Juego de azar",
-            effects = { { kind = "toolProf", tool = "Juego de azar" } } }
+        return { id = optionId, label = "Juego",
+            effects = { { kind = "toolProf", tool = "Juego" } } }
     end
     return nil
 end

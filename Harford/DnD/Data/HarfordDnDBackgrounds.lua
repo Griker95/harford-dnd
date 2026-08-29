@@ -380,7 +380,7 @@ API.BACKGROUNDS = {
         desc = "Has servido en la Cruzada Argenta, sobreviviendo al fanatismo, la guerra santa y la disciplina de quienes se enfrentan a horrores imposibles.",
         traits = {
             { id = "bg_arg_comp", name = "Competencias", type = "pasivo", description = "Competencia en Religión y Atletismo.", effects = { Skill("Religion"), Skill("Atletismo") } },
-            { id = "bg_arg_juego", name = "Competencia con un instrumento o juego", type = "choice", description = "Competencia con un instrumento o juego a tu eleccion.", effects = {}, choice = { slots = 1, optionsFrom = "instrumentOrGame" } },
+            { id = "bg_arg_juego", name = "Juego", type = "choice", description = "Competencia con un juego a tu eleccion.", effects = {}, choice = { slots = 1, optionsFrom = "game" } },
             { id = "bg_arg_determinacion", name = "Determinacion inquebrantable", type = "pasivo", description = "Tu reputación como cruzado puede darte reconocimiento, ayuda o confianza frente a amenazas no-muertas, corruptas o apocalipticas, a discreción del DM.", effects = {} },
         },
     },
@@ -390,8 +390,8 @@ API.BACKGROUNDS = {
         desc = "Los desertores errantes son individuos que han escapado del dominio de su facción, guiados por el deseo de autonomía personal y la oportunidad de reescribir su destino bajo sus propios términos.\n\nLos desertores errantes son individuos que han dejado atrás las ataduras de su facción anterior, impulsados por una sed de libertad personal y el deseo de forjar su propio destino. Desencantados con las ideologías que antes los definían, siguen ahora un camino incierto como agentes independientes, guiados por un renovado sentido de autonomía y su propio código moral.\n\nEstos desertores están unidos por su valentía para romper con el pasado, abrazando una vida de incertidumbre mientras forjan alianzas, desafían normas y buscan su lugar en el turbulento mundo de Azeroth.",
         traits = {
             { id = "bg_des_comp", name = "Competencias", type = "pasivo", description = "Competencia en Perspicacia y Supervivencia.", effects = { Skill("Perspicacia"), Skill("Supervivencia") } },
-            { id = "bg_des_herr", name = "Competencia con herramientas", type = "choice", description = "Elige un juego de azar o un instrumento musical.", choice = { slots = 1, options = {
-                { id = "her_juego", label = "Juego de azar", effects = { Tool("Un juego de azar") } },
+            { id = "bg_des_herr", name = "Competencia con herramientas", type = "choice", description = "Elige un juego o un instrumento musical.", choice = { slots = 1, options = {
+                { id = "her_juego", label = "Juego", effects = { Tool("Un juego") } },
                 { id = "her_instrumento", label = "Instrumento musical", effects = { Tool("Instrumento musical") } },
             } }, effects = {} },
             { id = "bg_des_saboteador", icon = "inv_misc_enggizmos_38", name = "Saboteador", type = "pasivo", description = "Conoces rutinas militares y puntos debiles de campamentos, patrullas y suministros, a discreción del DM.", effects = {} },
@@ -403,7 +403,7 @@ API.BACKGROUNDS = {
         desc = "Los Eremitas, como colectivo, comparten una sed insaciable por el conocimiento, una curiosidad inagotable por los misterios del mundo y una devoción inquebrantable por preservar y compartir las historias del pasado, presente y futuro de Azeroth.\n\nComo devoto miembro de los Eremitas, eres un ávido buscador de conocimiento, impulsado por una pasión por desentrañar el rico tapiz de historia, leyenda y cultura que recorre todo Azeroth. Tu insaciable curiosidad y meticulosa atención al detalle te convierten en un hábil historiador y narrador, encargado de preservar las historias más preciadas del mundo. Con reverencia por el pasado y el deseo de compartir sus enseñanzas, te embarcas en misiones en busca de conocimientos olvidados y verdades ocultas, asegurándote de que el legado de Azeroth perdure para las generaciones futuras.",
         traits = {
             { id = "bg_ere_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia y Perspicacia.", effects = { Skill("Historia"), Skill("Perspicacia") } },
-            { id = "bg_ere_herr", name = "Competencia con herramientas", type = "choice", description = "Competencia con suministros de caligrafo y un instrumento o juego a tu eleccion.", effects = { Tool("Suministros de caligrafo") }, choice = { slots = 1, optionsFrom = "instrumentOrGame" } },
+            { id = "bg_ere_herr", name = "Competencia con herramientas", type = "choice", description = "Competencia con suministros de caligrafo y un instrumento musical a tu eleccion.", effects = { Tool("Suministros de caligrafo") }, choice = { slots = 1, optionsFrom = "instrument" } },
             { id = "bg_ere_perspicacia", name = "Perspicacia erudita", type = "pasivo", description = "Tu retiro y estudio te permiten reconocer claves historicas, simbolicas o personales que otros pasan por alto, a discreción del DM.", effects = {} },
         },
     },
@@ -534,7 +534,7 @@ API.BACKGROUNDS = {
         desc = "Los chamanes del Anillo de la Tierra comparten un profundo respeto por el equilibrio elemental, un compromiso inquebrantable con la sanación y la protección, y una conexión profunda con el mundo natural.\n\nComo miembro reverenciado del Anillo de la Tierra, canalizas las fuerzas primigenias de los elementos para restaurar el equilibrio en Azeroth. Guiado por antiguas tradiciones y una profunda conexión con la naturaleza, has dominado el arte del chamanismo, canalizando los poderes de la tierra, el aire, el fuego y el agua.\n\nCon una devoción inquebrantable por la sanación, la protección y el dominio elemental, te eriges como un guardián del orden natural, encargado de mantener la armonía entre los elementos y el mundo que moldean.",
         traits = {
             { id = "bg_anillo_comp", name = "Competencias", type = "pasivo", description = "Competencia en Naturaleza y Medicina.", effects = { Skill("Naturaleza"), Skill("Medicina") } },
-            { id = "bg_anillo_herr", name = "Competencia con herramientas", type = "choice", description = "Competencia con kit de herboristeria y un instrumento o juego a tu eleccion.", effects = { Tool("Kit de herboristeria") }, choice = { slots = 1, optionsFrom = "instrumentOrGame" } },
+            { id = "bg_anillo_herr", name = "Competencia con herramientas", type = "choice", description = "Competencia con kit de herboristeria y un instrumento musical a tu eleccion.", effects = { Tool("Kit de herboristeria") }, choice = { slots = 1, optionsFrom = "instrument" } },
             { id = "bg_anillo_idioma", icon = "inv_misc_note_05", name = "Idioma", type = "informativo", description = "Hablas, lees y escribes Kalimag.", effects = { { kind = "language", language = "Kalimag" } } },
             { id = "bg_anillo_sintonia", name = "Sintonia elemental", type = "pasivo", description = "Puedes interpretar señales elementales y tratar con chamanes o comunidades ligadas al Anillo de la Tierra, a discreción del DM.", effects = {} },
         },

@@ -18,11 +18,8 @@ Dos entradas para `compendium-data.js` → regeneración de `HarfordCompendioDat
 El addon NO las añade por su cuenta (fichero compartido). Al incorporarlas, avisar
 para cablear los `spellGrants`.
 
-1. **Rayo del caos** (*chaos bolt*, nivel 1, Brujo/Destrucción). El manual lo marca
-   `^XGE^`: traducir de la Guía de Xanathar (2d8 de tipo aleatorio por 1d8, salta a
-   otra criatura con dobles). No confundir con `toque_del_caos` (truco Warcraft,
-   1d8 variable) ni con el rasgo *Chaos Bolt* de Destrucción del libro inglés
-   (gasta Ascuas Ardientes: habilidad, no este conjuro).
+1. ~~Rayo del caos~~ — **RESUELTO (2026-08-29)**: la web lo incorporó (`rayo_del_caos`,
+   nivel 1) y ya está en la lista ampliada de Brujo/Destrucción del addon.
 2. **Conocer la Intención** (truco, Pícaro/Sutileza). El manual solo lo LISTA, sin
    descripción en ningún libro. Necesita decisión: redactarlo (propuesta:
    adivinación, acción, 9 m, saber si la criatura miente o su actitud, al estilo

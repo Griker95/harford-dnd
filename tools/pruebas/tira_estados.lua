@@ -17,6 +17,17 @@ local cat = io.open("Harford/Compendium/HarfordIconCatalog.lua"):read("*a")
 
 print("La tira existe y es propia, no toca las auras nativas")
 chk("hay tira", uf:find("function API.RefreshConditionStrip", 1, true) ~= nil, true)
+-- La tira tambien pinta los estados PROPIOS sobre el PlayerFrame: admite "player", el repintado
+-- de contadores la incluye (sin tocar botones nativos, que con "player" se fuerzan a target), y
+-- hay primera pintada al entrar al mundo (los persistidos se restauran antes del anclaje).
+chk("admite al propio jugador",
+    uf:find('unit ~= "target" and unit ~= "focus" and unit ~= "player"', 1, true) ~= nil, true)
+chk("el repintado de contadores la incluye",
+    uf:find('{ "target", "focus", "player" }', 1, true) ~= nil, true)
+chk("sin contadores nativos para player",
+    uf:find('unit ~= "player" and UnitExists and UnitExists(unit) and RefreshNativeAuraButtons', 1, true) ~= nil, true)
+chk("primera pintada al entrar al mundo",
+    uf:find('API.RefreshConditionStrip("player")', 1, true) ~= nil, true)
 chk("con frame propio por unidad", uf:find('CreateFrame("Frame", "HarfordEstados"', 1, true) ~= nil, true)
 -- Regla de Epsilon: overlays de unitframe en UIParent/MEDIUM, nunca DIALOG (taparia otros addons).
 chk("en UIParent", uf:find('CreateFrame("Frame", "HarfordEstados" .. unit, UIParent)', 1, true) ~= nil, true)

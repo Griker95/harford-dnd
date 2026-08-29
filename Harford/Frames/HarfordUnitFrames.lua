@@ -936,8 +936,11 @@ do
     end
 
     function API.RefreshConditionStrip(unit)
-        if unit ~= "target" and unit ~= "focus" then return end
-        local prefix = unit == "focus" and "FocusFrame" or "TargetFrame"
+        if unit ~= "target" and unit ~= "focus" and unit ~= "player" then return end
+        -- "player": tus PROPIOS estados, encima de tu unitframe. Sus buffs nativos viven en
+        -- BuffFrame (esquina de pantalla), no en el marco, asi que aqui no hay columna de auras
+        -- con la que alinearse: el ancla queda en el propio PlayerFrame y desplazamiento 0.
+        local prefix = unit == "focus" and "FocusFrame" or (unit == "player" and "PlayerFrame" or "TargetFrame")
         local frame = _G[prefix]
         local tira = EnsureTira(unit)
         local hay = frame and UnitExists and UnitExists(unit)
@@ -1028,8 +1031,12 @@ end
 -- haya subido un contador, y sin esto el icono se quedaria con el numero viejo hasta la siguiente
 -- aura que entrara o saliera.
 function API.RefreshAuraCounters()
-    for _, unit in ipairs({ "target", "focus" }) do
-        if UnitExists and UnitExists(unit) and RefreshNativeAuraButtons then
+    -- "player" va en la lista: es lo que repinta TU tira cuando el motor te pone o quita un
+    -- estado (los contadores nativos no aplican: tus buffs no estan en el PlayerFrame).
+    for _, unit in ipairs({ "target", "focus", "player" }) do
+        -- Los contadores nativos son solo de target/focus (la funcion ademas fuerza a "target"
+        -- cualquier otra unidad): con "player" solo se repinta la tira.
+        if unit ~= "player" and UnitExists and UnitExists(unit) and RefreshNativeAuraButtons then
             RefreshNativeAuraButtons(unit)
         end
         API.RefreshConditionStrip(unit)
@@ -4786,6 +4793,9 @@ events:SetScript("OnEvent", function(_, event, ...)
     local forceMeasure = event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" or event == "UI_SCALE_CHANGED" or event == "DISPLAY_SIZE_CHANGED"
     if event == "PLAYER_ENTERING_WORLD" or event == "PLAYER_LOGIN" then
         InvalidateNativePiecesCache()  -- los frames nativos pueden recrearse tras reload/zona
+        -- Los estados PROPIOS persistidos se restauran antes de que exista el PlayerFrame medible:
+        -- primera pintada de la tira propia aqui, que es cuando ya se puede anclar.
+        API.RefreshConditionStrip("player")
     end
     if event == "UNIT_PORTRAIT_UPDATE" or event == "UNIT_NAME_UPDATE" or event == "UNIT_AURA" then
         local unit = ...

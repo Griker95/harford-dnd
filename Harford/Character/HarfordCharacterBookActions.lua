@@ -270,8 +270,6 @@ do
             if HarfordDnDAttackUI and HarfordDnDAttackUI.SetDashActive then
                 HarfordDnDAttackUI.SetDashActive(true)
             end
-        elseif def.sinEfecto then
-            HarfordChat.Print("|cff808080" .. tostring(def.sinEfecto) .. "|r")
         end
         if RefreshGameUI then RefreshGameUI() end
         if RefreshBook then RefreshBook() end

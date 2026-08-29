@@ -15,9 +15,10 @@
 -- crearia una segunda version que dejaria de coincidir en cuanto se tocara una de las dos.
 --
 -- Lo que una accion HACE es otra cosa que lo que CUESTA. Esquivar tiene efecto mecanico completo
--- (su estado ya existe); Correr y Desengancharse no, porque el addon no lleva presupuesto de
--- movimiento ni ataques de oportunidad. Su coste si se cuenta, que es lo que da sentido a los
--- rasgos que las abren. `sinEfecto` lo dice explicitamente para no venderlas como algo que no son.
+-- (su estado ya existe) y Correr dobla el contador de movimiento; Desengancharse solo cobra su
+-- coste, porque los ataques de oportunidad son de la mesa. Ya NO lleva coletilla de aviso
+-- (`sinEfecto` fue retirado a peticion de mesa: la linea gris era ruido); anunciar la accion
+-- con su coste basta.
 ------------------------------------------------------------
 
 HarfordDnDActions = HarfordDnDActions or {}
@@ -42,7 +43,6 @@ API.DEFS = {
         id = "desengancharse", name = "Desengancharse",
         cast = "accion", orden = 3,
         description = "Tu movimiento no provoca ataques de oportunidad durante el resto del turno.",
-        sinEfecto = "Los ataques de oportunidad se llevan en mesa: Harford no sabe quien esta trabado con quien.",
     },
     esconderse = {
         id = "esconderse", name = "Esconderse",

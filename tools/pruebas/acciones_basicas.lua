@@ -66,7 +66,9 @@ print("Lo que NO tiene efecto lo dice, en vez de fingirlo")
 -- el contador supo su maximo.
 chk("correr ya hace algo", A.Get("correr").dobleMovimiento, true)
 chk("y ya no dice que no", A.Get("correr").sinEfecto, "nil")
-chk("desengancharse", A.Get("desengancharse").sinEfecto ~= nil, true)
+-- Desengancharse tampoco imprime coletilla: la mesa ya sabe que las oportunidades son suyas
+-- y la linea gris solo era ruido en el chat (retirada a peticion de mesa, 2026-08-29).
+chk("desengancharse tampoco dice que no", A.Get("desengancharse").sinEfecto, "nil")
 chk("esquivar si tiene efecto", A.Get("esquivar").selfCondition.id, "esquivando")
 chk("esconderse tira Sigilo", A.Get("esconderse").skillCheck.skill, "Sigilo")
 -- Sin CD: la de esconderse es la Percepcion pasiva de quien mira, que este cliente no conoce.

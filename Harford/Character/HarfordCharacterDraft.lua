@@ -29,7 +29,9 @@ end
 -- clase/subclase, mas las opciones de otras elecciones ya marcadas. Durante la creacion el PJ aun
 -- no existe como perfil, asi que no se puede preguntar a HarfordDnDFeatureEffects.GetSkillRank:
 -- hay que derivarlo de lo elegido en el asistente.
-local function DraftSkillProficiencies()
+-- `excludeFeatureId`: al filtrar las opciones de una eleccion ABIERTA, lo marcado en ella misma
+-- no debe contar como "ya lo tienes" -- desapareceria de su propia lista y no podria desmarcarse.
+local function DraftSkillProficiencies(excludeFeatureId)
     local prof = {}
     local function ApplyEffects(effects)
         for _, effect in ipairs(effects or {}) do
@@ -39,6 +41,7 @@ local function DraftSkillProficiencies()
     local function ApplyFeature(feature)
         if type(feature) ~= "table" then return end
         ApplyEffects(feature.effects)
+        if excludeFeatureId and feature.id == excludeFeatureId then return end
         -- Una eleccion ya resuelta (p.ej. las dos habilidades del trasfondo) tambien da competencia.
         for _, optionId in ipairs(S.choiceSelections[feature.id] or {}) do
             local option = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
@@ -66,7 +69,7 @@ end
 -- que DraftSkillProficiencies mas, si el personaje ya existe como perfil (subida de nivel), los
 -- idiomas vivos de FeatureEffects. Sirve para que el selector de "un idioma adicional" no
 -- ofrezca los que ya se hablan: el Goblin veia Comun y Goblin en su propia lista.
-local function DraftLanguages()
+local function DraftLanguages(excludeFeatureId)
     local conocidos = {}
     local function Normaliza(nombre)
         nombre = tostring(nombre or "")
@@ -85,6 +88,7 @@ local function DraftLanguages()
     local function ApplyFeature(feature)
         if type(feature) ~= "table" then return end
         ApplyEffects(feature.effects)
+        if excludeFeatureId and feature.id == excludeFeatureId then return end
         for _, optionId in ipairs(S.choiceSelections[feature.id] or {}) do
             local option = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
                 and HarfordDnDBook.GetChoiceOption(feature, optionId)

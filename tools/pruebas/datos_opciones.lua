@@ -110,5 +110,19 @@ chk("DraftLanguages recorre los mismos origenes que las competencias",
     draft:find("local function DraftLanguages()", 1, true) ~= nil, true)
 chk("y solo mezcla el perfil vivo SIN borrador de origen (re-crear no filtra con la ficha vieja)",
     draft:find("if not S.raceId and HarfordDnDFeatureEffects", 1, true) ~= nil, true)
+-- Y no solo idiomas: el filtro es GENERICO (habilidades ya competentes, dotes/trucos ya tomados
+-- en otra eleccion), excluye lo marcado en la eleccion ABIERTA (debe poder desmarcarse) y deja
+-- en paz las apilables.
+chk("el filtro cubre competencias de habilidad",
+    adv:find('e.kind == "skillProf" and e.skill and habilidades[e.skill]', 1, true) ~= nil, true)
+chk("y dotes/trucos repetidos entre elecciones",
+    adv:find('(option.feat or id:find("^truco_")) and elegidosOtra[id]', 1, true) ~= nil, true)
+chk("la eleccion abierta se excluye del computo",
+    adv:find("Draft.DraftLanguages(feature.id)", 1, true) ~= nil
+    and adv:find("Draft.DraftSkillProficiencies(feature.id)", 1, true) ~= nil, true)
+chk("las apilables no se filtran",
+    adv:find("if not IsStackableChoice(feature) and Draft.DraftLanguages", 1, true) ~= nil, true)
+chk("el draft sabe excluir una eleccion",
+    draft:find("if excludeFeatureId and feature.id == excludeFeatureId then return end", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

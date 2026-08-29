@@ -1524,20 +1524,41 @@ local function RefreshChoiceDialog()
         -- Si no quedara ninguna (no deberia pasar), se muestran todas antes que bloquear.
         if #libres > 0 then options = libres end
     end
-    -- Idiomas: fuera los que el borrador (o el personaje vivo) YA habla. "Un idioma adicional
-    -- de tu eleccion" no puede ofrecer Comun al que ya habla Comun. Si no quedara ninguno
-    -- (no deberia pasar), se muestran todos antes que bloquear.
-    if tostring(feature.choice and feature.choice.optionsFrom or "") == "language"
-        and Draft.DraftLanguages then
-        local conocidos = Draft.DraftLanguages()
+    -- LO QUE YA TIENES NO SE VUELVE A OFRECER: idiomas que ya hablas, habilidades en las que ya
+    -- eres competente (Conocimiento nomada no debe ofrecer el Sigilo que ya te dio la clase) y
+    -- dotes o trucos ya tomados en OTRA eleccion. Lo marcado en ESTA eleccion se excluye del
+    -- computo -- debe seguir visible para poder desmarcarse -- y las elecciones apilables
+    -- (Mejora de Caracteristica +1/+1) no se filtran: repetir es su gracia. Si no quedara
+    -- ninguna opcion (no deberia pasar), se muestran todas antes que bloquear.
+    if not IsStackableChoice(feature) and Draft.DraftLanguages and Draft.DraftSkillProficiencies then
+        local idiomas = Draft.DraftLanguages(feature.id)
+        local habilidades = Draft.DraftSkillProficiencies(feature.id)
+        local elegidosOtra = {}
+        for fid, lista in pairs(S.choiceSelections or {}) do
+            if fid ~= feature.id then
+                for _, oid in ipairs(lista) do elegidosOtra[tostring(oid)] = true end
+            end
+        end
+        local function Normaliza(nombre)
+            nombre = tostring(nombre or "")
+            if HarfordClassColors and HarfordClassColors.StripAccents then
+                nombre = HarfordClassColors.StripAccents(nombre)
+            end
+            return nombre:lower()
+        end
         local nuevas = {}
         for _, option in ipairs(options) do
-            local lang = option.effects and option.effects[1] and option.effects[1].language
-            local clave = tostring(lang or ""):lower()
-            if HarfordClassColors and HarfordClassColors.StripAccents then
-                clave = HarfordClassColors.StripAccents(tostring(lang or "")):lower()
+            local repetida = false
+            for _, e in ipairs(option.effects or {}) do
+                if e.kind == "language" and e.language and idiomas[Normaliza(e.language)] then repetida = true end
+                if e.kind == "skillProf" and e.skill and habilidades[e.skill] then repetida = true end
             end
-            if not conocidos[clave] then nuevas[#nuevas + 1] = option end
+            -- Dotes y trucos: el MISMO id tomado en otra eleccion no se repite. Solo ellos: un
+            -- id generico ("defensa") puede ser legitimo en dos elecciones distintas y los
+            -- estilos ya tienen su propio filtro.
+            local id = tostring(option.id or "")
+            if (option.feat or id:find("^truco_")) and elegidosOtra[id] then repetida = true end
+            if not repetida then nuevas[#nuevas + 1] = option end
         end
         if #nuevas > 0 then options = nuevas end
     end

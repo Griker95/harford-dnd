@@ -25,9 +25,11 @@ exit code y ya se hizo commit sobre despliegues rojos cuatro veces — por eso e
 - Rama `dev`. Mensaje en español, convención `tipo(ámbito): resumen` (feat/fix/docs/refactor).
 - Tras el commit: `git tag -f v2.1.0 -m "Harford v2.1.0"` (o la versión vigente del `.toc`).
 
-## 4. Zips de distribución — SOLO aquí (o si el usuario los pide)
+## 4. Zips de distribución — SOLO si el usuario los pide expresamente
 
-No reconstruirlos entre cambios: el usuario lo pidió expresamente (2026-08-29).
+**NUNCA generarlos por iniciativa propia** — ni entre cambios, ni al hacer commit. El cierre
+normal de lote TERMINA en el retag. Los zips son un acto de distribución que decide el usuario
+(2026-08-29, corregido dos veces: "en cada commit" tampoco vale).
 
 - **jugador**: `Harford` + `HarfordCompendio` + `HarfordProfesiones` + `README.md` + `CHANGELOG.md`
 - **dm**: lo anterior + `HarfordAdmin` + `HarfordDebug`

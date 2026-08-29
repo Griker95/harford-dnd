@@ -933,8 +933,8 @@ RefreshOrigin = function()
     -- Descripcion dentro del scroll: los rasgos arrancan justo debajo de donde termina,
     -- y descripcion + rasgos se desplazan juntos con la rueda.
     local desc = MakeText(S.tree, "GameFontHighlightSmall", tostring(def.desc or ""))
-    desc:SetPoint("TOPLEFT", 46, -8)
-    desc:SetWidth(302)  -- cierra en el mismo borde derecho que las filas (348 - 46)
+    desc:SetPoint("TOPLEFT", 8, -8)
+    desc:SetWidth(340)  -- cierra en el mismo borde derecho que las filas (348 - 8)
     desc:SetJustifyH("LEFT")
     desc:SetWordWrap(true)
     desc:SetTextColor(0.82, 0.82, 0.82)
@@ -942,17 +942,17 @@ RefreshOrigin = function()
     local descBottom = 8 + math.ceil(desc:GetStringHeight() or 0)
 
     local heading = MakeText(S.tree, "GameFontNormal", isRace and "RASGOS DE RAZA" or "RASGOS DE TRASFONDO")
-    heading:SetPoint("TOPLEFT", 46, -(descBottom + 20))
+    heading:SetPoint("TOPLEFT", 8, -(descBottom + 20))
     heading:SetTextColor(1, 0.82, 0)
     S.nodeRows[#S.nodeRows + 1] = heading
     local y = -(descBottom + 48)
     for _, entry in ipairs(traits) do
-        CreateNode(S.tree, entry.source == "Subraza" and 64 or 46, y, nil, entry.feature, entry.source)
+        CreateNode(S.tree, entry.source == "Subraza" and 28 or 8, y, nil, entry.feature, entry.source)
         y = y - 44
     end
     if #traits == 0 then
         local empty = MakeText(S.tree, "GameFontDisableSmall", "No hay rasgos registrados para esta opcion.")
-        empty:SetPoint("TOPLEFT", 46, y)
+        empty:SetPoint("TOPLEFT", 8, y)
         S.nodeRows[#S.nodeRows + 1] = empty
         y = y - 28
     end

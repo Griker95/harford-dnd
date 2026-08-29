@@ -112,7 +112,9 @@ local GRID_COLUMNS, GRID_CELL_W, GRID_CELL_H, GRID_GAP, GRID_ICON = 4, 94, 82, 4
 -- clases eso son 6 filas, que a la altura de las de raza no cabrian en los 620 del frame.
 local CLASS_COLUMNS, CLASS_CELL_W, CLASS_CELL_H, CLASS_ICON = 2, 130, 72, 32
 
-local BASE_RACE_IDS = { elfo_noche = true }
+-- Ambas formas del id: el renombrado a `raza_` dejo esta lista atras y la tarjeta de la raza
+-- base del Elfo de la Noche desaparecio del selector de subraza.
+local BASE_RACE_IDS = { elfo_noche = true, raza_elfo_noche = true }
 
 local function MakeText(parent, template, text)
     local fs = parent:CreateFontString(nil, "OVERLAY", template or "GameFontHighlightSmall")
@@ -708,7 +710,8 @@ RefreshOptionCards = function(opciones, seleccionadoId, iconoDe, alElegir)
             S.subraceCards[indice] = card
         end
         local columna = (indice - 1) % 4
-        card:SetPoint("TOPLEFT", S.frame, "TOPLEFT", 592 + columna * (SUB_CELL_W + SUB_GAP), -118)
+        card:SetPoint("TOPLEFT", S.frame, "TOPLEFT",
+            592 + (S.layoutDX or 0) + columna * (SUB_CELL_W + SUB_GAP), S.subraceCardsY or -118)
         local seleccionada = (choice.id or "") == (seleccionadoId or "")
         -- El icono puede venir pelado o como ruta completa segun la fuente; Ruta() de GridIconFor
         -- ya normaliza eso, pero aqui llega crudo, asi que se normaliza igual.
@@ -844,6 +847,8 @@ RefreshOrigin = function()
     -- frame y los rasgos a altura fija, las descripciones largas de trasfondo se solapaban.
     S.classSummary:SetText("")
     S.selectorLabel:SetText(isRace and "Subraza" or "Origen")
+    -- ANTES de pintar las tarjetas: su y la leen al anclarse.
+    S.subraceCardsY = -78
 
     -- Subraza: tarjetas con icono, como la rejilla de razas, en vez de un desplegable. El
     -- desplegable compartido se reserva para la subclase.
@@ -901,6 +906,21 @@ RefreshOrigin = function()
             end)
     end
 
+    -- Recolocacion vertical segun haya tarjetas o no. ApplyModeLayout (que corre al principio,
+    -- via RefreshSteps) deja las posiciones del modo; aqui se ajusta la vertical del detalle.
+    do
+        local dx = S.layoutDX or 0
+        local hayTarjetas = S.selectorLabel:IsShown()
+        S.selectorLabel:ClearAllPoints()
+        S.selectorLabel:SetPoint("TOPLEFT", 592 + dx, -62)
+        local topArbol = hayTarjetas and -(78 + SUB_CELL_H + 14) or -64
+        if S.treeScroll then
+            S.treeScroll:ClearAllPoints()
+            S.treeScroll:SetPoint("TOPLEFT", 588 + dx, topArbol)
+            S.treeScroll:SetPoint("BOTTOMRIGHT", 602 + dx, 48)
+        end
+    end
+
     local traits = {}
     if isRace then
         for _, feature in ipairs(def.traits or {}) do traits[#traits + 1] = { feature = feature, source = "Raza" } end
@@ -913,7 +933,7 @@ RefreshOrigin = function()
     -- y descripcion + rasgos se desplazan juntos con la rueda.
     local desc = MakeText(S.tree, "GameFontHighlightSmall", tostring(def.desc or ""))
     desc:SetPoint("TOPLEFT", 46, -8)
-    desc:SetWidth(322)
+    desc:SetWidth(302)  -- cierra en el mismo borde derecho que las filas (348 - 46)
     desc:SetJustifyH("LEFT")
     desc:SetWordWrap(true)
     desc:SetTextColor(0.82, 0.82, 0.82)
@@ -2432,6 +2452,7 @@ ApplyModeLayout = function()
     -- se recolocan a la izquierda y el frame se estrecha otro tanto.
     local dxPasos = LeftShift()
     dx = dx + dxPasos
+    S.layoutDX = dx  -- para anclajes hechos fuera de esta funcion (tarjetas de subraza)
     local newWidth = 1200 + dx
     if math.abs((S.frame:GetWidth() or 0) - newWidth) > 0.5 then
         -- Conservar la esquina superior izquierda al cambiar de ancho: la barra de pasos

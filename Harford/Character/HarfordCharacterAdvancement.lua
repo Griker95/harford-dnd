@@ -1657,6 +1657,40 @@ local function RefreshChoiceDialog()
             RefreshChoiceDialog()
         end)
         row:SetPoint("TOPLEFT", 4, y)
+        -- Un CONJURO como opcion se presenta como en el compendio: icono a la izquierda y
+        -- tooltip con escuela y descripcion, para poder leer que es antes de elegirlo. El resto
+        -- de opciones ganan tooltip con su desc si la tienen.
+        local spell = choice.spellId and _G.HarfordCompendioAPI
+            and _G.HarfordCompendioAPI.GetSpellById
+            and _G.HarfordCompendioAPI.GetSpellById(choice.spellId) or nil
+        if spell then
+            local icono = row:CreateTexture(nil, "ARTWORK")
+            icono:SetSize(20, 20)
+            icono:SetPoint("LEFT", row, "LEFT", 5, 0)
+            icono:SetTexCoord(0.06, 0.94, 0.06, 0.94)
+            local api = _G.HarfordCompendioAPI
+            icono:SetTexture((api.GetSpellIcon and api.GetSpellIcon(spell)) or spell.icon or 134400)
+        end
+        row:SetScript("OnEnter", function(self)
+            if not GameTooltip then return end
+            if spell then
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(spell.name or "?", 1, 0.82, 0)
+                local nivel = tonumber(spell.level) or 0
+                GameTooltip:AddLine((nivel == 0 and "Truco" or ("Nivel " .. nivel))
+                    .. "  -  " .. (spell.school or "-"), 0.8, 0.8, 0.8)
+                if spell.description and spell.description ~= "" then
+                    GameTooltip:AddLine(spell.description, 1, 1, 1, true)
+                end
+                GameTooltip:Show()
+            elseif choice.desc or choice.description then
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(tostring(choice.label or choice.id), 1, 0.82, 0)
+                GameTooltip:AddLine(tostring(choice.desc or choice.description), 1, 1, 1, true)
+                GameTooltip:Show()
+            end
+        end)
+        row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
         S.choiceDialogRows[#S.choiceDialogRows + 1] = row
         y = y - 29
     end

@@ -162,15 +162,14 @@ API.RACES = {
                 { id = "dra_tab_paria", name = "Paria", type = "pasivo", description = "Competencia en Supervivencia.", effects = { { kind = "skillProf", skill = "Supervivencia" } } },
             } },
             { id = "raza_draenei_man_ari", name = "Man'ari", desc = "Draenei corrompidos por la energia vil de la Legion Ardiente; cuerpo y alma alterados por fuerzas infernales. Algunos aun caminan por Azeroth buscando redencion... o poder.", traits = {
-                { id = "dra_man_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Sabiduría +2 y Constitución +1.", effects = {
-                    { kind = "bonus", target = "ability", ability = "Sabiduria", value = 2 },
+                { id = "dra_man_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1.", effects = {
                     { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 },
                 } },
                 { id = "dra_man_vision", name = "Vision en la oscuridad", type = "pasivo", description = "Ves en la oscuridad a 18 metros (60 pies) como si fuera luz tenue; en oscuridad total ves en escala de grises.", effects = {} },
                 { id = "dra_man_resiliencia", name = "Resiliencia vil", type = "pasivo", description = "Resistencia al daño por fuego.", effects = {
                     { kind = "resist", damage = "fuego" },
                 } },
-                { id = "dra_man_magia", name = "Magia vil", type = "pasivo", description = "Conoces el truco Taumaturgia. A nivel 3 puedes lanzar Reprension Infernal 1/descanso largo; a nivel 5, Oscuridad 1/descanso largo. La característica para estos conjuros es Carisma.", effects = {} },
+                { id = "dra_man_magia", name = "Magia vil", type = "pasivo", description = "Conoces el truco Taumaturgia. A nivel 3 puedes lanzar Reprension Infernal 1/descanso largo; a nivel 5, Oscuridad 1/descanso largo. La característica para estos conjuros es Carisma.", spellGrants = { { level = 0, ids = { "taumaturgia" }, ability = "Carisma" }, { level = 1, ids = { "reprension_infernal" }, ability = "Carisma", note = "1/descanso largo desde nivel 3" }, { level = 2, ids = { "oscuridad" }, ability = "Carisma", note = "1/descanso largo desde nivel 5" } }, effects = {} },
                 { id = "dra_man_presencia", name = "Presencia retorcida", type = "pasivo", description = "Competencia en Intimidación. Además tienes desventaja en tiradas de Persuasión contra criaturas de alineamiento bueno o que usen la Luz abiertamente, salvo que ocultes tu naturaleza.", effects = {
                     { kind = "skillProf", skill = "Intimidacion" },
                 } },

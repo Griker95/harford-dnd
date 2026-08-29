@@ -2021,14 +2021,30 @@ stateBtn:SetScript("OnClick", function(self)
         }
     end
 
-    -- Gastar un punto de heroe sobre la ULTIMA tirada: el manual lo permite despues de tirar.
+    -- Punto de heroe (manual Warcraft): UNO o ninguno, lo concede el DM. Con punto, submenu con
+    -- los seis usos (el gasto publica el uso elegido, vinculante); sin el, la opcion de
+    -- registrarlo cuando el DM lo conceda en mesa (se anuncia, para que quede constancia).
     local hp = HarfordDnDHeroPoints and HarfordDnDHeroPoints.GetStatus and HarfordDnDHeroPoints.GetStatus()
-    if hp and hp.current > 0 then
-        menu[#menu + 1] = {
-            text = string.format("Gastar punto de heroe (+1d6)  %d/%d", hp.current, hp.max),
-            notCheckable = true,
-            func = function() HarfordDnDHeroPoints.Spend() end,
-        }
+    if hp then
+        if hp.current > 0 then
+            local usos = {}
+            for _, uso in ipairs(HarfordDnDHeroPoints.USOS or {}) do
+                usos[#usos + 1] = {
+                    text = uso.label, notCheckable = true,
+                    func = function() HarfordDnDHeroPoints.SpendUse(uso.id) end,
+                }
+            end
+            menu[#menu + 1] = {
+                text = "Gastar punto de heroe (exito inmediato)",
+                notCheckable = true, hasArrow = true, menuList = usos,
+            }
+        else
+            menu[#menu + 1] = {
+                text = "Recibir punto de heroe (lo concede el DM)",
+                notCheckable = true,
+                func = function() HarfordDnDHeroPoints.Grant() end,
+            }
+        end
     end
 
     -- Cansancio: lo fija el DM o el propio jugador segun lo que pase en mesa; no hay forma de

@@ -77,64 +77,51 @@ local envH = cargarModulo("Harford/DnD/Engine/HarfordDnDHeroPoints.lua",
     }, { __index = function() return nil end }))
 local H = envH.HarfordDnDHeroPoints
 
--- Del manual: 5 mas la mitad del nivel, redondeando hacia abajo.
-print("Cuantos hay: 5 mas la mitad del nivel")
-local esperado = { [1] = 5, [2] = 6, [3] = 6, [4] = 7, [5] = 7, [10] = 10, [20] = 15 }
-for _, n in ipairs({ 1, 2, 3, 4, 5, 10, 20 }) do
+-- MANUAL WARCRAFT (2026-08-29): un punto o ninguno, NO se recibe por defecto ni al subir de
+-- nivel (lo concede el DM por actos heroicos) y gastarlo publica uno de los seis usos.
+print("Un punto o ninguno")
+for _, n in ipairs({ 1, 5, 20 }) do
     NIVEL = n
-    chk("nivel " .. n, H.GetMax(), esperado[n])
+    chk("maximo 1 a nivel " .. n, H.GetMax(), 1)
 end
--- Los impares son los que distinguen redondear hacia abajo de hacia arriba.
-NIVEL = 3
-chk("el nivel 3 no llega a 7 (se redondea abajo)", H.GetMax(), 6)
 
-print("Sin nada guardado se empieza con todos")
+print("Sin dato NO hay punto: es algo especial, lo concede el DM")
 NIVEL, PROG = 5, {}
-chk("llenos", H.Get(), 7)
-
-print("Lo guardado se respeta, pero acotado")
-PROG = { heroPoints = 3 }
-chk("tres", H.Get(), 3)
+chk("a cero", H.Get(), 0)
 PROG = { heroPoints = 99 }
-chk("mas del maximo se corta al maximo", H.Get(), 7)
-PROG = { heroPoints = -4 }
-chk("y por debajo de cero, cero", H.Get(), 0)
+chk("mas de uno se corta a uno", H.Get(), 1)
 
-print("Guardar acota igual")
+print("Subir de nivel no regala nada")
 PROG = {}
-H.Set(nil, 99)
-chk("no deja pasarse", PROG.heroPoints, 7)
-H.Set(nil, -5)
-chk("ni bajar de cero", PROG.heroPoints, 0)
-H.Set(nil, 2.9)
-chk("y los decimales se truncan", PROG.heroPoints, 2)
-
--- Al subir de nivel se PIERDEN los no gastados y se recibe el total nuevo. Es la regla del manual,
--- y por eso no se acumulan de un nivel a otro.
-print("Subir de nivel repone, no acumula")
-NIVEL, PROG = 5, { heroPoints = 1 }
-NIVEL = 6
 H.OnLevelUp()
-chk("se recibe el total del nivel nuevo", PROG.heroPoints, 8)
-PROG = { heroPoints = 8 }
-NIVEL = 7
+chk("sigue sin punto", H.Get(), 0)
+PROG = { heroPoints = 1 }
 H.OnLevelUp()
-chk("y no se suman los que sobraban", PROG.heroPoints, 8)
+chk("y el concedido se conserva", H.Get(), 1)
 
-print("Gastar")
-NIVEL, PROG, MODIFICABLE = 5, { heroPoints = 2 }, true
-chk("con puntos, se puede", (H.Spend()), true)
-chk("y queda uno menos", PROG.heroPoints, 1)
-PROG = { heroPoints = 0 }
-chk("sin puntos, no", (H.Spend()), false)
-chk("y no baja de cero", PROG.heroPoints, 0)
+print("Conceder no acumula")
+PROG = {}
+chk("se concede", (H.Grant()), true)
+chk("y queda uno", PROG.heroPoints, 1)
+chk("con punto, no se concede otro", (H.Grant()), false)
+chk("sigue habiendo uno", PROG.heroPoints, 1)
 
--- Si no hay ninguna tirada a la que aplicarlo, el punto NO se pierde. Perder un recurso escaso por
--- pulsar en mal momento es de las cosas que mas molestan en mesa.
-print("Sin tirada que modificar, el punto no se gasta")
-PROG, MODIFICABLE = { heroPoints = 3 }, false
-chk("no se gasta", (H.Spend()), false)
-chk("y sigue habiendo tres", PROG.heroPoints, 3)
-MODIFICABLE = true
+print("Gastar publica el uso elegido y deja cero")
+PROG = { heroPoints = 1 }
+chk("uso valido", (H.SpendUse("defensa_esquiva")), true)
+chk("queda a cero", PROG.heroPoints, 0)
+chk("sin punto no se gasta", (H.SpendUse("impulso")), false)
+PROG = { heroPoints = 1 }
+chk("uso desconocido no cobra", (H.SpendUse("volar")), false)
+chk("y el punto sigue ahi", PROG.heroPoints, 1)
+
+print("Los seis usos del manual estan declarados")
+local ids = {}
+for _, u in ipairs(H.USOS) do ids[u.id] = true end
+for _, id in ipairs({ "impulso", "fisico_poderoso", "fisico_mutilar", "magico_sobrecarga",
+                      "magico_preciso", "defensa_esquiva", "defensa_resistente",
+                      "sobreviviente", "experto" }) do
+    chk("uso " .. id, ids[id], true)
+end
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

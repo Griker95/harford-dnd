@@ -1,19 +1,16 @@
 ------------------------------------------------------------
--- HarfordDnDHeroPoints - Puntos de heroe (regla opcional de la Guia del Dungeon Master).
+-- HarfordDnDHeroPoints - Puntos de heroe segun el MANUAL WARCRAFT (capitulo propio), que
+-- sustituye a la regla opcional de la DMG que este modulo implementaba antes (5 + nivel/2 con
+-- +1d6 a la tirada). La regla de la casa es otra:
+--   * Tienes UN punto de heroe o no tienes ninguno. No se acumulan.
+--   * NO se recibe por defecto ni al subir de nivel: lo CONCEDE el DM por actos valientes
+--     contra enemigos poderosos. Es algo especial.
+--   * Gastarlo hace la prueba un EXITO INMEDIATO, con seis usos declarados (Impulso de Accion,
+--     Luchador Fisico, Luchador Magico, Defensa, Sobreviviente, Experto Innato). El detalle de
+--     cada uso se resuelve en mesa; el gasto se ANUNCIA con su uso elegido, vinculante.
+--   * No se gana un punto con una accion en la que se gasto uno.
 --
--- Regla literal del manual:
---   * Cada personaje empieza con 5 puntos a nivel 1. Al subir de nivel PIERDE los no gastados
---     y recibe un total nuevo: 5 + la mitad del nivel del personaje.
---   * Se gasta 1 punto en una tirada de ataque, prueba de caracteristica o salvacion. Se
---     decide DESPUES de tirar pero ANTES de aplicar los efectos: se tira 1d6 y se suma al d20.
---     Solo 1 punto por tirada.
---   * Ademas, al fallar una salvacion contra muerte se puede gastar 1 punto para convertir
---     el fallo en exito.
---
--- Por que "despues de tirar": es lo que hace util el sistema, y encaja con `_lastRoll` que ya
--- guarda la ultima tirada. La ventana de gasto se cierra en cuanto se hace otra tirada.
---
--- Persistencia: en la progresion del perfil (`heroPoints`), junto al nivel que la determina.
+-- Persistencia: en la progresion del perfil (`heroPoints`).
 ------------------------------------------------------------
 
 HarfordDnDHeroPoints = HarfordDnDHeroPoints or {}
@@ -46,15 +43,16 @@ local function CharacterLevel(profileName)
     return 1
 end
 
--- Total del manual: 5 + la mitad del nivel.
+-- El manual Warcraft: un punto o ninguno.
 function API.GetMax(profileName)
-    return 5 + math.floor(CharacterLevel(profileName) / 2)
+    return 1
 end
 
 function API.Get(profileName)
     local prog = Progression(profileName)
     local stored = prog and tonumber(prog.heroPoints)
-    if stored == nil then return API.GetMax(profileName) end
+    -- Sin dato NO hay punto: se empieza a cero y solo el DM lo concede.
+    if stored == nil then return 0 end
     return math.max(0, math.min(API.GetMax(profileName), stored))
 end
 
@@ -66,67 +64,66 @@ function API.Set(profileName, value)
     return true
 end
 
--- Al subir de nivel se PIERDEN los no gastados y se recibe el total nuevo. Lo llama la
--- progresion; no se recalcula solo, porque perder puntos sin avisar seria confuso.
+-- Subir de nivel NO da puntos de heroe: se ganan por actos heroicos, no por experiencia.
+-- La progresion sigue llamando aqui por compatibilidad; el punto (si lo hay) se conserva.
 function API.OnLevelUp(profileName)
-    local nuevo = API.GetMax(profileName)
-    API.Set(profileName, nuevo)
-    Print(string.format("Puntos de heroe restablecidos a |cffffd100%d|r por la subida de nivel.", nuevo))
-    return nuevo
+    return API.Get(profileName)
 end
 
-------------------------------------------------------------
--- Gasto sobre la ultima tirada
-------------------------------------------------------------
-
--- Tipos de tirada donde el manual permite gastar el punto: ataque, prueba de caracteristica y
--- salvacion. El dano no entra.
-local SPENDABLE = { roll = true, attack = true, save = true, ability = true, skill = true }
-
--- Gasta 1 punto: tira 1d6 y lo suma a la ultima tirada. Un punto por tirada.
---
--- La mecanica de "sumar a la ultima tirada" ya no vive aqui: es de `HarfordDnDRolls`, porque los
--- dados de enfoque del Cazador hacen exactamente lo mismo con otro dado. Aqui queda lo que si es
--- propio de los puntos de heroe: cuantos tienes y cuando se recuperan.
-function API.Spend(profileName)
-    local disponibles = API.Get(profileName)
-    if disponibles <= 0 then
-        Print("|cffff5555No te quedan puntos de heroe.|r")
-        return false, "sin puntos"
+-- El DM te lo concede (por chat/mesa) y lo registras aqui: se anuncia a la mesa para que quede
+-- constancia. Si ya lo tienes, no se acumula.
+function API.Grant(profileName)
+    if API.Get(profileName) >= API.GetMax(profileName) then
+        Print("Ya tienes tu punto de heroe: no se acumulan.")
+        return false
     end
-    if not (HarfordDnDRolls and HarfordDnDRolls.ModifyLastRoll) then
-        return false, "El sistema de tiradas no esta disponible"
-    end
-    local ok, nuevo, err, dado = HarfordDnDRolls.ModifyLastRoll({
-        label = "Punto de heroe", die = 6, applies = SPENDABLE, markKey = "heroPointSpent",
-    })
-    if not ok then
-        Print("|cffff5555" .. tostring(err) .. ".|r")
-        return false, err
-    end
-
-    API.Set(profileName, disponibles - 1)
-    Print(string.format("Gastas un punto de heroe: +%d = |cff38d26a%d|r. Te quedan %d.",
-        dado, nuevo, API.Get(profileName)))
-    return true, nuevo
-end
-
--- Convierte un fallo de salvacion contra muerte en exito. Lo llama la ficha cuando el jugador
--- lo pide tras fallar; aqui solo se cobra el punto y se anuncia.
-function API.SpendOnDeathSave(profileName)
-    local disponibles = API.Get(profileName)
-    if disponibles <= 0 then
-        Print("|cffff5555No te quedan puntos de heroe.|r")
-        return false, "sin puntos"
-    end
-    API.Set(profileName, disponibles - 1)
+    API.Set(profileName, 1)
     if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
-        HarfordDnDRolls.Broadcast({
-            type = "info",
-            label = "gasta un punto de heroe y convierte el fallo de salvacion de muerte en exito.",
-        })
+        HarfordDnDRolls.Broadcast({ type = "info", label = "recibe un punto de heroe." })
     end
-    Print(string.format("Punto de heroe gastado. Te quedan %d.", API.Get(profileName)))
+    return true
+end
+
+------------------------------------------------------------
+-- Gasto: los seis usos del manual. Cada uno se ANUNCIA con su efecto vinculante; el detalle
+-- fino (miembro cortado, dano x10) se resuelve en mesa con la linea ya publicada.
+------------------------------------------------------------
+
+API.USOS = {
+    { id = "impulso", label = "Impulso de Accion",
+      anuncio = "gasta su punto de heroe: Impulso de Accion. Toma su proximo turno fuera del orden de iniciativa." },
+    { id = "fisico_poderoso", label = "Luchador Fisico: Golpe Poderoso",
+      anuncio = "gasta su punto de heroe: su ataque de arma impacta como Golpe Critico Masivo (dados de dano x10 + modificadores + su nivel de personaje)." },
+    { id = "fisico_mutilar", label = "Luchador Fisico: Mutilar",
+      anuncio = "gasta su punto de heroe: su ataque de arma impacta y MUTILA (dano normal; la criatura supera salvacion de Constitucion CD 10 o mitad del dano, o pierde el miembro elegido)." },
+    { id = "magico_sobrecarga", label = "Luchador Magico: Sobrecarga",
+      anuncio = "gasta su punto de heroe: su hechizo impacta como Golpe Critico Masivo (dados de dano x10 + su nivel de personaje)." },
+    { id = "magico_preciso", label = "Luchador Magico: Hechizo Preciso",
+      anuncio = "gasta su punto de heroe: su hechizo impacta, y tantas criaturas como su modificador de lanzamiento fallan automaticamente la salvacion." },
+    { id = "defensa_esquiva", label = "Defensa: Esquiva",
+      anuncio = "gasta su punto de heroe: el ataque que le apunta FALLA automaticamente." },
+    { id = "defensa_resistente", label = "Defensa: Resistente",
+      anuncio = "gasta su punto de heroe: exito en su salvacion, con evasion de picaro hasta el final del turno actual." },
+    { id = "sobreviviente", label = "Sobreviviente",
+      anuncio = "gasta su punto de heroe: sobrevive con su salud a 0, estabilizado." },
+    { id = "experto", label = "Experto Innato",
+      anuncio = "gasta su punto de heroe: su prueba de habilidad cuenta como 20 natural (no vale para Inteligencia, Sabiduria ni Carisma)." },
+}
+
+-- Cobra el punto y publica el uso elegido. La linea es vinculante para la mesa.
+function API.SpendUse(usoId, profileName)
+    local disponibles = API.Get(profileName)
+    if disponibles <= 0 then
+        Print("|cffff5555No tienes punto de heroe.|r")
+        return false, "sin punto"
+    end
+    local uso
+    for _, u in ipairs(API.USOS) do if u.id == usoId then uso = u break end end
+    if not uso then return false, "uso desconocido" end
+    API.Set(profileName, 0)
+    if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+        HarfordDnDRolls.Broadcast({ type = "info", label = uso.anuncio })
+    end
     return true
 end
 

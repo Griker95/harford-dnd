@@ -119,6 +119,50 @@ local function DraftLanguages(excludeFeatureId)
     return conocidos
 end
 
+-- Competencias de ARMADURA y ARMA del borrador, como sets de tokens. Salen de los efectos
+-- armorProf/weaponProf de los rasgos elegidos y de las listas armorProfs/weaponProfs de las
+-- clases del plan. Para los prerequisitos de dote (Muy acorazado, Iniciado en el combate).
+local function DraftEquipProficiencies(excludeFeatureId)
+    local profs = { armor = {}, weapon = {} }
+    local function ApplyEffects(effects)
+        for _, effect in ipairs(effects or {}) do
+            if effect.kind == "armorProf" and (effect.armor or effect.value) then
+                profs.armor[tostring(effect.armor or effect.value)] = true
+            elseif effect.kind == "weaponProf" and (effect.weapon or effect.value) then
+                profs.weapon[tostring(effect.weapon or effect.value):lower()] = true
+            end
+        end
+    end
+    local function ApplyFeature(feature)
+        if type(feature) ~= "table" then return end
+        ApplyEffects(feature.effects)
+        if excludeFeatureId and feature.id == excludeFeatureId then return end
+        for _, optionId in ipairs(S.choiceSelections[feature.id] or {}) do
+            local option = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
+                and HarfordDnDBook.GetChoiceOption(feature, optionId)
+            ApplyEffects(option and option.effects)
+        end
+    end
+    local race = HarfordDnDRaces and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(S.raceId)
+    for _, feature in ipairs((race and race.traits) or {}) do ApplyFeature(feature) end
+    local subrace = HarfordDnDRaces and HarfordDnDRaces.GetSubrace
+        and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
+    for _, feature in ipairs((subrace and subrace.traits) or {}) do ApplyFeature(feature) end
+    local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
+        and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+    for _, feature in ipairs((background and background.traits) or {}) do ApplyFeature(feature) end
+    for _, classId in ipairs({ S.classId, S.secondaryClassId }) do
+        local classDef = classId and HarfordDnDBook and HarfordDnDBook.GetClass
+            and HarfordDnDBook.GetClass(classId)
+        if classDef then
+            for _, a in ipairs(classDef.armorProfs or {}) do profs.armor[tostring(a)] = true end
+            for _, w in ipairs(classDef.weaponProfs or {}) do profs.weapon[tostring(w):lower()] = true end
+            for _, feature in ipairs(classDef.features or {}) do ApplyFeature(feature) end
+        end
+    end
+    return profs
+end
+
 local function BuildCreationDraft()
     local abilities = {}
     local array = S.attributeArrays and S.attributeArrays[S.selectedArray]
@@ -365,6 +409,7 @@ end
 
 HarfordCharacterDraft.DraftSkillProficiencies = DraftSkillProficiencies
 HarfordCharacterDraft.DraftLanguages = DraftLanguages
+HarfordCharacterDraft.DraftEquipProficiencies = DraftEquipProficiencies
 HarfordCharacterDraft.BuildCreationDraft = BuildCreationDraft
 HarfordCharacterDraft.PersistSpellPicks = PersistSpellPicks
 HarfordCharacterDraft.FinishCreation = FinishCreation

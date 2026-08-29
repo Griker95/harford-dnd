@@ -1576,6 +1576,7 @@ local function RefreshChoiceDialog()
             -- Puntuacion para el prerequisito de caracteristica: en creacion, la asignada MAS el
             -- bono racial (que es la puntuacion final que tendra); en subida, la de la ficha viva.
             local esBorrador = S.raceId and S.raceId ~= ""
+            local profsCache  -- se calcula UNA vez por refresco, solo si alguna dote lo pide
             local function Puntuacion(clave)
                 if esBorrador then
                     local base = BaseScoreFor and tonumber(BaseScoreFor(clave)) or 0
@@ -1593,6 +1594,19 @@ local function RefreshChoiceDialog()
                     ok = HarfordDnDFeats.RaceAllowed(def, razaId, subrazaId)
                     if ok and def and def.requiredAbility and HarfordDnDFeats.AbilityAllowed then
                         ok = HarfordDnDFeats.AbilityAllowed(def, Puntuacion)
+                    end
+                    if ok and def and def.requiredProficiency and HarfordDnDFeats.ProficiencyAllowed then
+                        if not profsCache then
+                            if esBorrador and Draft.DraftEquipProficiencies then
+                                profsCache = Draft.DraftEquipProficiencies(feature.id)
+                            elseif HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.Resolve then
+                                local r = HarfordDnDFeatureEffects.Resolve()
+                                profsCache = { armor = r.armorProf or {}, weapon = r.weaponProf or {} }
+                            else
+                                profsCache = { armor = {}, weapon = {} }
+                            end
+                        end
+                        ok = HarfordDnDFeats.ProficiencyAllowed(def, profsCache)
                     end
                 end
                 if ok then permitidas[#permitidas + 1] = option end

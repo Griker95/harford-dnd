@@ -347,13 +347,13 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_maestro_armaduras_medias", name = "Maestro en armaduras medias", requires = "Competente con armaduras medias", description = "Te mueves con armadura media como si no la llevaras.", source = "PHB",
+        id = "feat_maestro_armaduras_medias", requiredProficiency = { armor = "media" }, name = "Maestro en armaduras medias", requires = "Competente con armaduras medias", description = "Te mueves con armadura media como si no la llevaras.", source = "PHB",
         traits = {
             { id = "feat_phb_amedias", name = "Beneficios", type = "pasivo", description = "La armadura media no te da desventaja en Sigilo. Con Destreza 16+ sumas 3 (en vez de 2) a la CA con armadura media.", effects = {} },
         },
     },
     {
-        id = "feat_maestro_armaduras_pesadas", name = "Maestro en armaduras pesadas", requires = "Competencia con armaduras pesadas", description = "La armadura pesada desvía contigo golpes que a otros los matarían.", source = "PHB",
+        id = "feat_maestro_armaduras_pesadas", requiredProficiency = { armor = "pesada" }, name = "Maestro en armaduras pesadas", requires = "Competencia con armaduras pesadas", description = "La armadura pesada desvía contigo golpes que a otros los matarían.", source = "PHB",
         traits = {
             { id = "feat_phb_apes_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Fuerza +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
             { id = "feat_phb_apes_b", name = "Beneficios", type = "pasivo", description = "Con armadura pesada, el daño contundente/cortante/perforante de armas no mágicas que recibes se reduce en 3.", effects = {} },
@@ -392,7 +392,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_moderadamente_acorazado", name = "Moderadamente acorazado", requires = "Competencia con armaduras ligeras", description = "Entrenamiento con armadura media y escudo, para quien solo llevaba ligera.", source = "PHB",
+        id = "feat_moderadamente_acorazado", requiredProficiency = { armor = "ligera" }, name = "Moderadamente acorazado", requires = "Competencia con armaduras ligeras", description = "Entrenamiento con armadura media y escudo, para quien solo llevaba ligera.", source = "PHB",
         traits = {
             { id = "feat_phb_macor_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_phb_macor_b", name = "Beneficios", type = "pasivo", description = "Competencia con armaduras medias y escudos.", effects = { { kind = "armorProf", armor = "media" }, { kind = "armorProf", armor = "escudo" } } },
@@ -405,7 +405,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_muy_acorazado", name = "Muy acorazado", requires = "Competente con armaduras medias", description = "Entrenamiento con armadura pesada, para quien ya manejaba la media.", source = "PHB",
+        id = "feat_muy_acorazado", requiredProficiency = { armor = "media" }, name = "Muy acorazado", requires = "Competente con armaduras medias", description = "Entrenamiento con armadura pesada, para quien ya manejaba la media.", source = "PHB",
         traits = {
             { id = "feat_phb_muyacor_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Fuerza +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
             { id = "feat_phb_muyacor_b", name = "Beneficios", type = "pasivo", description = "Competencia con armaduras pesadas.", effects = { { kind = "armorProf", armor = "pesada" } } },
@@ -501,7 +501,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_iniciado_combate", name = "Iniciado en el combate", requires = "Competencia con un arma marcial", description = "Adoptas un estilo de combate y un truco marcial que lo acompaña.", source = "TCoE",
+        id = "feat_iniciado_combate", requiredProficiency = { weapon = "marciales" }, name = "Iniciado en el combate", requires = "Competencia con un arma marcial", description = "Adoptas un estilo de combate y un truco marcial que lo acompaña.", source = "TCoE",
         traits = {
             { id = "feat_tco_inicomb", name = "Beneficios", type = "pasivo", description = "Aprendes un Estilo de Combate de la clase guerrero (distinto si ya tienes uno). Puedes cambiarlo al subir de nivel.", effects = {} },
         },
@@ -605,6 +605,17 @@ function API.AbilityAllowed(featDef, scoreFn)
         if (tonumber(scoreFn(clave)) or 0) >= minimo then return true end
     end
     return false
+end
+
+-- Prerequisito de competencia ("Competente con armaduras medias", "arma marcial"). Los sets
+-- llegan de quien llama: {armor={ligera=true,...}, weapon={marciales=true,...}} -- del borrador
+-- en creacion, de FeatureEffects en subida. `escudo` no cuenta como armadura para esto.
+function API.ProficiencyAllowed(featDef, profs)
+    local req = featDef and featDef.requiredProficiency
+    if type(req) ~= "table" or type(profs) ~= "table" then return true end
+    if req.armor and not (profs.armor and profs.armor[tostring(req.armor)]) then return false end
+    if req.weapon and not (profs.weapon and profs.weapon[tostring(req.weapon)]) then return false end
+    return true
 end
 
 function API.GetFeats()

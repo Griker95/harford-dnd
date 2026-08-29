@@ -188,4 +188,28 @@ do
     chk("sin requisito siempre pasa", AbilityAllowed({}, function() return 1 end), true)
 end
 
+-- Y los de COMPETENCIA: armadura por token, arma por token; escudo no vale como armadura.
+print("Prerequisitos de competencia validados de verdad")
+chk("las 5 dotes con prerequisito de competencia lo llevan estructurado",
+    (function() local n = 0 for _ in feats:gmatch("requiredProficiency = {") do n = n + 1 end return n end)(), 5)
+do
+    local cargar = loadstring or load
+    local i = feats:find("function API.ProficiencyAllowed", 1, true)
+    local j = feats:find(string.char(10) .. "end", i)
+    local f = cargar("local API = {}" .. string.char(10) .. feats:sub(i, j + 4)
+        .. string.char(10) .. "return API.ProficiencyAllowed")
+    local ProficiencyAllowed = f()
+    local media = { requiredProficiency = { armor = "media" } }
+    chk("con la armadura, pasa", ProficiencyAllowed(media, { armor = { media = true }, weapon = {} }), true)
+    chk("sin ella, no", ProficiencyAllowed(media, { armor = { ligera = true }, weapon = {} }), false)
+    local marcial = { requiredProficiency = { weapon = "marciales" } }
+    chk("arma marcial pasa", ProficiencyAllowed(marcial, { armor = {}, weapon = { marciales = true } }), true)
+    chk("solo sencillas no", ProficiencyAllowed(marcial, { armor = {}, weapon = { sencillas = true } }), false)
+end
+chk("el dialogo filtra tambien por competencia",
+    advSrc:find("ok = HarfordDnDFeats.ProficiencyAllowed(def, profsCache)", 1, true) ~= nil, true)
+local draftSrc2 = io.open("Harford/Character/HarfordCharacterDraft.lua"):read("*a")
+chk("el borrador agrega armorProfs y weaponProfs de las clases",
+    draftSrc2:find("for _, a in ipairs(classDef.armorProfs or {}) do", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

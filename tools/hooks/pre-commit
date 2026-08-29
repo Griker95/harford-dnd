@@ -1,0 +1,4 @@
+#!/bin/sh
+# Guardian de pre-commit de Harford: .lua en stage compilan, UTF-8 sin BOM, sin mojibake.
+# Instalado con: git config core.hooksPath tools/hooks
+python tools/hooks/comprobar_staged.py

@@ -21,6 +21,20 @@ Documentos hermanos: **`ESTRUCTURA.md`** es el organigrama de modulos (que hace 
   carpetas viejas de `Interface/AddOns` (el README lo avisa). Titulos de la familia en la lista
   de addons: `Harford`, `Harford Admin`, `Harford Compendio`, `Harford Profesiones` (antes `Harford Objetos`), `Harford Debug`, `Harford Musica`, todos con la marca `|cff3536CC`.
 
+- **Hook de pre-commit compartido (2026-08-29)**: el repo versiona `tools/hooks/pre-commit`,
+  que ejecuta `tools/hooks/comprobar_staged.py` sobre los `.lua` en stage — compilacion
+  `luac -p`, UTF-8 valido SIN BOM y escaneo de mojibake compuesto (los patrones de CLAUDE.md;
+  nunca `A~`/`A^` sueltos). Cada clon debe activarlo UNA vez con
+  `git config core.hooksPath tools/hooks` (Claude, Codex y el chat del codice incluidos). Si
+  bloquea un commit, se arregla el fichero; no saltarselo con `--no-verify` salvo emergencia
+  explicita del usuario.
+
+- **Skills de proyecto (`.claude/skills/`)**: `harford-release` (cierre de lote: bateria ->
+  despliegue con exit code directo -> commit -> retag -> zips SOLO aqui), `harford-cotejo-web`
+  (sincronizacion contra la web con sus guardas) y `harford-prueba` (como candar comportamiento
+  en `tools/pruebas/`). Codifican los flujos que mas errores costaron; mantenerlas al dia cuando
+  el flujo cambie.
+
 - Repo privado: `harford-dnd`.
 - Ramas:
   - `main`: version estable. No hacer push directo; solo via PR desde `dev`.

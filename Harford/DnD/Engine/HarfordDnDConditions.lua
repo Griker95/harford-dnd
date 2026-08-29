@@ -22,6 +22,53 @@ API.ORDER = {
     "piedra_salud", "piedra_fuego", "piedra_conjuro", "piedra_alma",
 }
 
+-- Categorias de PRESENTACION del catalogo. Son dato neutral (el core las declara; quien lista
+-- estados las usa para agrupar): el menu DM paso de 39 filas en plano a un submenu por categoria.
+-- Toda id de ORDER debe estar en exactamente UNA categoria — lo sella la suite orden_condiciones.
+API.CATEGORIES = {
+    { id = "manual", label = "Manual (5e)", ids = {
+        "blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated",
+        "invisible", "paralyzed", "petrified", "poisoned", "prone", "restrained",
+        "stunned", "exhaustion",
+    } },
+    { id = "combate", label = "Combate", ids = {
+        "sleeping", "silenced", "rooted", "slowed", "disarmed", "exposed_armor",
+        "imprudente", "esquivando", "apartado",
+    } },
+    -- Estados que deja la economia de turno y el apoyo entre PJs (Ayudar, Preparar).
+    { id = "apoyo", label = "Apoyo y turno", ids = {
+        "ayudado_ataque", "ayudado_prueba", "preparado",
+    } },
+    { id = "elemental", label = "Elementales", ids = {
+        "burning", "frozen", "chilled",
+    } },
+    { id = "clase", label = "Clase y bendiciones", ids = {
+        "blessed", "elunes_grace", "piel_hierro", "escudo_sagrado", "veredicto",
+        "buey_negro", "circulo_demoniaco", "marca_ignea", "orden_oscura",
+        "palabra_dolor", "palabra_fortaleza", "supresion_dolor", "unleashed_rage",
+    } },
+    { id = "piedras", label = "Piedras del Brujo", ids = {
+        "piedra_salud", "piedra_fuego", "piedra_conjuro", "piedra_alma",
+    } },
+    { id = "visual", label = "Visuales", ids = {
+        "bioluminescence", "dancing_lights",
+    } },
+}
+
+-- Definiciones de UNA categoria, en el orden de su lista (mismo formato que GetDefinitions).
+function API.GetDefinitionsForCategory(categoryId)
+    local out = {}
+    for _, cat in ipairs(API.CATEGORIES) do
+        if cat.id == categoryId then
+            for _, id in ipairs(cat.ids) do
+                local def = API.DEFS[id]
+                if def then out[#out + 1] = { id = id, label = def.label, auraId = def.auraId, description = def.description } end
+            end
+        end
+    end
+    return out
+end
+
 API.DEFS = {
     -- Guerrero "Ira desatada": no es una condicion del manual sino el estado que deja el rasgo.
     -- Se modela como condicion porque el motor ya sabe hacer las dos mitades a la vez: ventaja en

@@ -50,4 +50,29 @@ chk("sin duplicados", #API.ORDER, definidas)
 print("Y el orden es estable entre cargas")
 chk("se ordena antes de anadir", src:find("table.sort(resto)", 1, true) ~= nil, true)
 
+-- ─── LAS CATEGORIAS CUBREN EL CATALOGO ENTERO, SIN SOLAPES NI FANTASMAS ────
+-- El menu DM lista los estados POR CATEGORIA: una id fuera de toda categoria desaparece del
+-- menu en silencio, y una id en dos categorias sale duplicada. Un id fantasma en una categoria
+-- es una fila muerta.
+print("Las categorias cubren el catalogo entero")
+local vistos, dobles, fantasmas = {}, {}, {}
+local totalCat = 0
+for _, cat in ipairs(API.CATEGORIES or {}) do
+    for _, id in ipairs(cat.ids or {}) do
+        totalCat = totalCat + 1
+        if vistos[id] then dobles[#dobles + 1] = id end
+        vistos[id] = true
+        if not API.DEFS[id] then fantasmas[#fantasmas + 1] = cat.id .. ":" .. id end
+    end
+end
+local huerfanos = {}
+for _, id in ipairs(API.ORDER) do
+    if not vistos[id] then huerfanos[#huerfanos + 1] = id end
+end
+chk("hay categorias", (API.CATEGORIES and #API.CATEGORIES or 0) > 0, true)
+chk("toda id de ORDER esta en una categoria", table.concat(huerfanos, ","), "")
+chk("ninguna id en dos categorias", table.concat(dobles, ","), "")
+chk("ninguna categoria con ids fantasma", table.concat(fantasmas, ","), "")
+chk("y no hay ids extra fuera de ORDER", totalCat, #API.ORDER)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

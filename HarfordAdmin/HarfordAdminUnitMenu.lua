@@ -440,6 +440,19 @@ local function AddSubmenu(text, menuList, level)
     UIDropDownMenu_AddButton(info, level)
 end
 
+-- Los 39 estados en plano eran ilegibles: un submenu por categoria del catalogo. La menuList
+-- lleva la categoria dentro ("ESTADOS:manual") y el dispatcher la desempaqueta.
+local function AddEstadoSubmenus(level)
+    local categorias = HarfordDnDConditions and HarfordDnDConditions.CATEGORIES
+    if type(categorias) ~= "table" or #categorias == 0 then
+        AddSubmenu("Estados", "ESTADOS", level)
+        return
+    end
+    for _, cat in ipairs(categorias) do
+        AddSubmenu("Estados: " .. tostring(cat.label), "ESTADOS:" .. tostring(cat.id), level)
+    end
+end
+
 -- Devolverle a un jugador lo que gasto este turno. Lo aplica SU cliente --es quien lleva su
 -- economia-- asi que esto solo manda el aviso: escribirle el contador desde fuera daria dos
 -- verdades distintas sobre lo mismo.
@@ -463,9 +476,16 @@ local function BuildDevolverSubmenu(snapshot, level)
     end
 end
 
-local function BuildEstadosSubmenu(snapshot, level)
-    local definitions = HarfordDnDConditions and HarfordDnDConditions.GetDefinitions
-        and HarfordDnDConditions.GetDefinitions() or {}
+-- Con categoria: solo los estados de esa categoria (el catalogo core las declara). Sin ella,
+-- la lista completa, que queda como fallback si el catalogo no trae categorias.
+local function BuildEstadosSubmenu(snapshot, level, categoryId)
+    local definitions
+    if categoryId and HarfordDnDConditions and HarfordDnDConditions.GetDefinitionsForCategory then
+        definitions = HarfordDnDConditions.GetDefinitionsForCategory(categoryId)
+    else
+        definitions = HarfordDnDConditions and HarfordDnDConditions.GetDefinitions
+            and HarfordDnDConditions.GetDefinitions() or {}
+    end
     for _, estado in ipairs(definitions) do
         local activo = HarfordAdminConditions and HarfordAdminConditions.Has
             and HarfordAdminConditions.Has(snapshot, estado.id)
@@ -491,9 +511,9 @@ local function BuildNpcSubmenu(menuList, level)
         AddAction("Aura",       function() PromptNpcAura(snapshot) end, level)
         AddAction("Unaura",     function() ApplyAura(snapshot, false) end, level)
         AddAction("Unaura all", function() RemoveNpcAuraAll(snapshot) end, level)
-        AddSubmenu("Estados",   "ESTADOS", level)
-    elseif menuList == "ESTADOS" then
-        BuildEstadosSubmenu(snapshot, level)
+        AddEstadoSubmenus(level)
+    elseif menuList == "ESTADOS" or (type(menuList) == "string" and menuList:find("^ESTADOS:")) then
+        BuildEstadosSubmenu(snapshot, level, type(menuList) == "string" and menuList:match("^ESTADOS:(.+)$") or nil)
     elseif menuList == "LOOT" then
         AddAction("Loot Aura", function() ApplyNpcLootAura(snapshot) end, level)
         AddAction("Cargar loot...", function() OpenLootEditor(snapshot) end, level)
@@ -796,9 +816,9 @@ local function BuildPlayerSubmenu(menuList, level)
         AddAction("Aura",       function() ApplyAura(snapshot, true) end, level)
         AddAction("Unaura",     function() ApplyAura(snapshot, false) end, level)
         AddAction("Unaura all", function() RemoveAuraAll(snapshot) end, level)
-        AddSubmenu("Estados",   "ESTADOS", level)
-    elseif menuList == "ESTADOS" then
-        BuildEstadosSubmenu(snapshot, level)
+        AddEstadoSubmenus(level)
+    elseif menuList == "ESTADOS" or (type(menuList) == "string" and menuList:find("^ESTADOS:")) then
+        BuildEstadosSubmenu(snapshot, level, type(menuList) == "string" and menuList:match("^ESTADOS:(.+)$") or nil)
     end
     -- Loot no aplica a jugadores: solo aparece en el menu de NPC
 end
@@ -816,9 +836,9 @@ local function BuildSelfSubmenu(menuList, level)
         AddAction("Aura",       function() ApplyAura(snapshot, true) end, level)
         AddAction("Unaura",     function() ApplyAura(snapshot, false) end, level)
         AddAction("Unaura all", function() RemoveAuraAll(snapshot) end, level)
-        AddSubmenu("Estados",   "ESTADOS", level)
-    elseif menuList == "ESTADOS" then
-        BuildEstadosSubmenu(snapshot, level)
+        AddEstadoSubmenus(level)
+    elseif menuList == "ESTADOS" or (type(menuList) == "string" and menuList:find("^ESTADOS:")) then
+        BuildEstadosSubmenu(snapshot, level, type(menuList) == "string" and menuList:match("^ESTADOS:(.+)$") or nil)
     end
 end
 

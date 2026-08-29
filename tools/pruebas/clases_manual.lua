@@ -670,4 +670,22 @@ chk("la creacion sigue leyendo los rasgos enteros",
 chk("y no pasa por el agregado del Libro",
     creacion:find("BuildSections", 1, true) == nil, true)
 
+
+
+-- ─── LA MAGIA RACIAL CUENTA EN EL GRIMORIO ──────────────────────────────────
+print("Los conjuros de raza son siempre preparados, con su puerta de nivel")
+local coreC = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
+chk("el colector recorre raza y subraza",
+    coreC:find("HarfordDnDProgression.GetRace and HarfordDnDProgression.GetRace(profileName)", 1, true) ~= nil, true)
+chk("con puerta de NIVEL DE PERSONAJE",
+    coreC:find("nivelPJ >= (tonumber(grant.minCharacterLevel) or 0)", 1, true) ~= nil, true)
+chk("y los trucos elegidos por opcion",
+    coreC:find('tostring(opt.spellId or "") == wanted', 1, true) ~= nil, true)
+local razasSrc = io.open("Harford/DnD/Data/HarfordDnDRaces.lua"):read("*a")
+local sinPuerta = 0
+for nota in razasSrc:gmatch('note = "[^"]*desde nivel %d[^"]*"') do sinPuerta = sinPuerta + 1 end
+local conPuerta = 0
+for _ in razasSrc:gmatch('minCharacterLevel = %d+, note = "[^"]*desde nivel') do conPuerta = conPuerta + 1 end
+chk("toda nota 'desde nivel N' lleva su puerta estructurada", conPuerta, sinPuerta)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -105,6 +105,43 @@ local function IsFeatureGrantedSpell(spellId)
             end
         end
     end
+
+    -- CONJUROS DE RAZA: los spellGrants de raza/subraza cuentan como siempre preparados, igual
+    -- que los de clase. La puerta de nivel racial es de NIVEL DE PERSONAJE y viaja en
+    -- `minCharacterLevel` (el `level` del grant es el nivel de RANURA, como en las clases); sin
+    -- ella, el conjuro esta desde nivel 1. Los trucos ELEGIDOS en un rasgo de eleccion racial
+    -- (Legado elfico) llegan por su opcion resuelta, que lleva el spellId.
+    do
+        local race = HarfordDnDProgression.GetRace and HarfordDnDProgression.GetRace(profileName)
+        local nivelPJ = (HarfordDnDProgression.GetTotalLevel
+            and tonumber(HarfordDnDProgression.GetTotalLevel(profileName))) or 0
+        local raceDef = race and race.id ~= "" and HarfordDnDRaces
+            and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(race.id)
+        local subDef = raceDef and HarfordDnDRaces.GetSubrace
+            and HarfordDnDRaces.GetSubrace(race.id, race.subraceId)
+        local listas = { raceDef and raceDef.traits, subDef and subDef.traits }
+        for _, traits in ipairs(listas) do
+            for _, feature in ipairs(traits or {}) do
+                for _, grant in ipairs(feature.spellGrants or {}) do
+                    if nivelPJ >= (tonumber(grant.minCharacterLevel) or 0) then
+                        for _, id in ipairs(grant.ids or {}) do
+                            if tostring(id) == wanted then return true end
+                        end
+                    end
+                end
+                for _, id in ipairs(feature.cantripSpellIds or {}) do
+                    if tostring(id) == wanted then return true end
+                end
+                if feature.choice and HarfordDnDProgression.GetChoice
+                    and HarfordDnDBook and HarfordDnDBook.GetChoiceOption then
+                    for _, optId in ipairs(HarfordDnDProgression.GetChoice(feature.id, profileName) or {}) do
+                        local opt = HarfordDnDBook.GetChoiceOption(feature, optId)
+                        if opt and tostring(opt.spellId or "") == wanted then return true end
+                    end
+                end
+            end
+        end
+    end
     return false
 end
 

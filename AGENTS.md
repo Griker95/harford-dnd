@@ -2575,6 +2575,17 @@ contienda es de donde sale la dificultad.
 - **Flecha junto al nivel**: se tomo del `ReputationBar` nativo mediante `FrameDump.lua`, no de una ruta supuesta. El boton usa `FileDataID 130821` (normal/pulsado), `130837` (highlight), mide `13x13` y se ancla a la derecha del texto. El numero de nivel conserva su centro exacto en el `ValueBounceFrame`; nunca desplazarlo para dejar hueco a la flecha. Si se altera, volver a capturar el control nativo antes de editar.
 - **Pruebas de progresion**: solo en `HarfordDebug`: `/harford debug run xp <cantidad>`, `/harford debug run rep <faccionId> <cantidad>` y `/harford debug run nivel <1-20> [indiceClase]`. Son atajos locales de diagnostico; no son una via de juego, no deben migrar al core ni sustituir XP, recompensas o el asistente de subida.
 
+- **Markup `{icon:NOMBRE}` del About: solo NOMBRES de icono validos en este build.** TRP3
+  antepone `Interface\ICONS\` al texto TAL CUAL (`Utils.getIconTexture`): un fileID numerico
+  ("136234"), un "spell:<id>" o un nombre que Epsilon no sirva salen como textura rota. El
+  generador (`HarfordCharacterCreation`) valida con `IconNameParaMarkup` (rechaza numeros y
+  `spell:`, y en juego comprueba `GetFileIDFromPath`) y cae a `ICON_TRAIT_DEFAULT`. LECCION del
+  refactor 918a636: la tabla de candidatos de icono por conjuro
+  (`BG3_ICON_CANDIDATES_BY_SPELL_ID`, HarfordCompendioIconMap) se sustituyo por
+  `IconCatalog.GetSpellCandidates` SIN que nadie llamara a `RegisterSpells`, y los candidatos
+  quedaron vacios meses: al mover datos a un registro, verificar que ALGUIEN los registra
+  (candado en `tools/pruebas/iconos_about.lua`).
+
 - **`HarfordTRP3.WritePlayerAbout(content)`**: escribe el About del perfil LOCAL. Harford fuerza
   siempre la **plantilla 2** (`TE=2`, `T2`): acepta una lista de frames `{ IC=icono, TX=texto }` y,
   por compatibilidad, convierte una cadena en un unico frame T2. Escribe IN-PLACE sobre

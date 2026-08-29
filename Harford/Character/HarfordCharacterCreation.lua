@@ -294,12 +294,24 @@ local function FormatMod(mod)
     return " 0"
 end
 
+-- Un nombre valido para el markup {icon:NOMBRE} de TRP3, o nil. TRP3 antepone
+-- Interface\ICONS\ al TEXTO tal cual (Utils.getIconTexture), asi que un fileID numerico o un
+-- "spell:<id>" salen como textura rota. Y un nombre que ESTE build de Epsilon no tiene (pasa
+-- con arte declarado por la web: ver tools/codice/_iconos_faltan_en_epsilon.md) pinta el
+-- cuadro verde: en juego se comprueba con GetFileIDFromPath, igual que hacen los frames.
+local function IconNameParaMarkup(value)
+    if type(value) == "number" then return nil end
+    local name = IconName(value)
+    if name == "" or name:find("^spell:") or name:match("^%d+$") then return nil end
+    if GetFileIDFromPath and not GetFileIDFromPath("Interface\\Icons\\" .. name) then return nil end
+    return name
+end
+
 local function FeatureIconName(feature)
     local path = HarfordDnDData and HarfordDnDData.GetFeatureIcon and HarfordDnDData.GetFeatureIcon(feature)
-    local name = IconName(path)
-    if name == "" then name = IconName(feature and feature.icon) end
-    if name == "" then name = ICON_TRAIT_DEFAULT end
-    return name
+    return IconNameParaMarkup(path)
+        or IconNameParaMarkup(feature and feature.icon)
+        or ICON_TRAIT_DEFAULT
 end
 
 local function Copy(value)
@@ -480,12 +492,18 @@ end
 -- componentes/duracion separados por ||) + descripcion coloreada.
 local function FormatSpellEntry(spell)
     -- TRP3 {icon:NOMBRE} necesita el NOMBRE del icono, no un fileID/ruta. GetSpellIcon resuelve a
-    -- fileID (cuadro verde en el markup), asi que se toma el NOMBRE crudo del catalogo de conjuros.
+    -- fileID (cuadro verde en el markup), asi que se toma el NOMBRE crudo del catalogo de conjuros:
+    -- el PRIMER candidato que sea un nombre valido en este build ("spell:<id>" y numericos se
+    -- saltan). El icon del propio conjuro en el Compendio es casi siempre un fileID y NO sirve
+    -- aqui; sin candidato valido se cae al icono por defecto, nunca a un numero.
     local IC = _G.HarfordIconCatalog
     local cands = IC and IC.GetSpellCandidates and spell and IC.GetSpellCandidates(spell.id)
-    local iconName = (type(cands) == "table" and cands[1]) or (spell and spell.icon)
-    local icon = IconName(iconName)
-    if icon == "" then icon = ICON_TRAIT_DEFAULT end
+    local icon
+    for _, cand in ipairs(type(cands) == "table" and cands or {}) do
+        icon = IconNameParaMarkup(cand)
+        if icon then break end
+    end
+    icon = icon or IconNameParaMarkup(spell and spell.icon) or ICON_TRAIT_DEFAULT
     local lines = { "{h3}{icon:" .. icon .. ":25} " .. tostring(spell.name or "Conjuro") .. "{/h3}" }
     local sep = " {col:" .. COL_TAG .. "}||{/col} "
     local meta = "{col:" .. COL_SCHOOL .. "}" .. tostring(spell.school or "") .. "{/col}"

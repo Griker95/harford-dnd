@@ -107,7 +107,7 @@ chk("el dialogo filtra por optionsFrom language",
 chk("y no se queda vacio", adv:find("if #nuevas > 0 then options = nuevas end", 1, true) ~= nil, true)
 local draft = io.open("Harford/Character/HarfordCharacterDraft.lua"):read("*a")
 chk("DraftLanguages recorre los mismos origenes que las competencias",
-    draft:find("local function DraftLanguages()", 1, true) ~= nil, true)
+    draft:find("local function DraftLanguages(excludeFeatureId)", 1, true) ~= nil, true)
 chk("y solo mezcla el perfil vivo SIN borrador de origen (re-crear no filtra con la ficha vieja)",
     draft:find("if not S.raceId and HarfordDnDFeatureEffects", 1, true) ~= nil, true)
 -- Y no solo idiomas: el filtro es GENERICO (habilidades ya competentes, dotes/trucos ya tomados

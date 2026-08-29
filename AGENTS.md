@@ -8,6 +8,19 @@ Documentos hermanos: **`ESTRUCTURA.md`** es el organigrama de modulos (que hace 
 
 - **Fuente de contenido y pipeline**: la web publica `harfordweb` es la fuente canonica de contenido curado para clases, subclases, razas, trasfondos y conjuros. El addon consume una copia validada de ese contenido; los manuales de `RuleSource/Rulebooks/` siguen siendo la autoridad para comprobar reglas, traducciones y artefactos OCR antes de importar. El alcance vigente de la sincronizacion web -> addon es clases/subclases de nivel 1-6 y conjuros de nivel 0-4. La creacion automatica basada en esos datos esta **en curso**, no se declara terminada ni se debe dar por funcional hasta su revision en juego. `tools/codice/` conserva utilidades de extraccion, cotejo y publicacion historicas: no ejecutar una direccion addon -> web ni web -> addon sin confirmar el flujo actual y revisar el diff de datos. El HTML local `Codice_Harford.html` queda como fallback offline y no se mantiene por duplicado. Las copias del scratchpad de sesion quedan OBSOLETAS: editar solo las de `tools/codice/`. `bgs_source.json` es FUENTE (extraccion de Discord, no regenerable); `kb*.json`/`icons_data.json` son intermedios gitignored. Requiere en disco `EpsilonIcons/png` y `RuleSource/` (ambos fuera de git).
 
+- **RENOMBRADO de los addons de datos (2026-08-29)**: `HarfordCompendioData/` es ahora
+  **`HarfordCompendio/`** (fichero `HarfordCompendio.lua`) y `HarfordProfessionsData/` es
+  **`HarfordProfesiones/`** (`HarfordProfesiones.lua` + `HarfordProfesionesItems.lua`). Cambia
+  SOLO el nombre de addon/carpeta/fichero: los **globals Lua conservan su nombre**
+  (`HarfordCompendioSpells`, `HarfordProfessionsData`, `HarfordProfessionsItems`) y las
+  SavedVariables viven en `Harford.toc`, asi que nada persiste distinto. Implicaciones para
+  CUALQUIER agente (chat del codice y Codex incluidos): (1) el pipeline que regenera el compendio
+  debe escribir en `HarfordCompendio/HarfordCompendio.lua` — escribir en la ruta vieja RECREARIA
+  la carpeta retirada; los scripts de `tools/codice/` de este repo ya estan actualizados; (2) los
+  `LoadAddOn` del core piden los nombres nuevos; (3) al actualizar un cliente hay que BORRAR las
+  carpetas viejas de `Interface/AddOns` (el README lo avisa). Titulos de la familia en la lista
+  de addons: `Harford`, `Harford Admin`, `Harford Compendio`, `Harford Profesiones` (antes `Harford Objetos`), `Harford Debug`, `Harford Musica`, todos con la marca `|cff3536CC`.
+
 - Repo privado: `harford-dnd`.
 - Ramas:
   - `main`: version estable. No hacer push directo; solo via PR desde `dev`.

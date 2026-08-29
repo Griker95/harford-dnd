@@ -986,6 +986,12 @@ do
         do
             local ref = _G[prefix .. "Buff1"]
             if not (ref and ref.IsShown and ref:IsShown()) then ref = _G[prefix .. "Debuff1"] end
+            -- En el marco PROPIO no hay botones de aura: la columna es donde EMPIEZAN las barras
+            -- (la de salud), que es donde el ojo espera que arranque la tira. Anclada al borde
+            -- del frame quedaba medio metida bajo el retrato y casi no se veia.
+            if unit == "player" and not (ref and ref.IsShown and ref:IsShown()) then
+                ref = _G[prefix .. "HealthBar"]
+            end
             if ref and ref.IsShown and ref:IsShown() and ref.GetLeft and ancla.GetLeft then
                 local a, b = ref:GetLeft(), ancla:GetLeft()
                 -- `medido` aparte del valor: 0 es un desplazamiento VALIDO -- pasa cuando el ancla

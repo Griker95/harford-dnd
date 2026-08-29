@@ -28,6 +28,8 @@ chk("sin contadores nativos para player",
     uf:find('unit ~= "player" and UnitExists and UnitExists(unit) and RefreshNativeAuraButtons', 1, true) ~= nil, true)
 chk("primera pintada al entrar al mundo",
     uf:find('API.RefreshConditionStrip("player")', 1, true) ~= nil, true)
+chk("y en el marco propio la columna es la barra de salud",
+    uf:find('ref = _G[prefix .. "HealthBar"]', 1, true) ~= nil, true)
 chk("con frame propio por unidad", uf:find('CreateFrame("Frame", "HarfordEstados"', 1, true) ~= nil, true)
 -- Regla de Epsilon: overlays de unitframe en UIParent/MEDIUM, nunca DIALOG (taparia otros addons).
 chk("en UIParent", uf:find('CreateFrame("Frame", "HarfordEstados" .. unit, UIParent)', 1, true) ~= nil, true)

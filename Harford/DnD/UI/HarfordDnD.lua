@@ -2038,13 +2038,9 @@ stateBtn:SetScript("OnClick", function(self)
                 text = "Gastar punto de heroe (exito inmediato)",
                 notCheckable = true, hasArrow = true, menuList = usos,
             }
-        else
-            menu[#menu + 1] = {
-                text = "Recibir punto de heroe (lo concede el DM)",
-                notCheckable = true,
-                func = function() HarfordDnDHeroPoints.Grant() end,
-            }
         end
+        -- Sin punto NO hay entrada: un jugador no puede autoconcederselo. El punto llega SOLO
+        -- por el DM (menu del target -> DNDHERO), que es quien decide el acto heroico.
     end
 
     -- Cansancio: lo fija el DM o el propio jugador segun lo que pase en mesa; no hay forma de

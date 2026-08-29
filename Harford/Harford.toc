@@ -118,6 +118,7 @@ DnD\UI\HarfordActionBars.lua
 # --- Character ---
 Character\HarfordCharacterInspect.lua
 Character\HarfordCharacterBook.lua
+Character\HarfordCharacterBookActions.lua
 Character\HarfordCharacterSpellbook.lua
 Character\HarfordCharacterCreation.lua
 Character\HarfordCharacterDraft.lua

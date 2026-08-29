@@ -595,7 +595,7 @@ chk("Correr levanta el muro",
     ataque:find("if corriendo and API.RecordedMovementAnchor", 1, true) ~= nil, true)
 chk("solo si con el doble vuelve a caber",
     ataque:find("and totalMeters < MaximoDelTurno() then", 1, true) ~= nil, true)
-local panel2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel2 = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 chk("y la accion lo enciende",
     panel2:find("HarfordDnDAttackUI.SetDashActive(true)", 1, true) ~= nil, true)
 

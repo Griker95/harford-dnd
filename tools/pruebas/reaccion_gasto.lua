@@ -31,7 +31,7 @@ chunk()
 local T = API.Turn
 
 -- 2. El sintetizador real, extraido de HarfordCharacterPanel.
-local src2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local src2 = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 local a = assert(src2:find("local function PowerWordDisplayFeature"))
 local b = assert(src2:find("\nend", a))
 local env2 = { tostring = tostring }

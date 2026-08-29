@@ -16,7 +16,7 @@ end
 print("Furia elemental: cadena completa")
 local chaman = io.open("Harford/DnD/Data/Classes/Chaman.lua"):read("*a")
 chk("el rasgo es un boton con menu", chaman:find('actionKind = "elementalFury"', 1, true) ~= nil, true)
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 chk("el repartidor abre el menu", panel:find('OpenElementalFuryMenu(self.feature', 1, true) ~= nil, true)
 local ficha = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
 -- Los menus del Libro viven en HarfordDnDBookActions desde la fase C de refactorizacion.

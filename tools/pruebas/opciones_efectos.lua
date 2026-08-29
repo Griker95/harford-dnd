@@ -4,7 +4,7 @@
 -- reales de la ficha que la usa. Sin esto un area declarada en el libro llevaria valores fijos,
 -- que es justo lo que no puede ser: dependen del nivel y de la caracteristica del personaje.
 local cargar = loadstring or load
-local src = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local src = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 local i = assert(src:find("local function OptionSaveDC"))
 local j = assert(src:find("\n%-%- Abre el area de un rasgo", i))
 local codigo = src:sub(i, j) .. "\nreturn ResolveAreaValues, OptionSaveDC"

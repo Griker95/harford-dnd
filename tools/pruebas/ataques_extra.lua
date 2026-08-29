@@ -3,7 +3,7 @@
 -- Se disparan por la ruta normal de ataque de arma para que traigan consigo lo que esa ruta ya sabe
 -- hacer -- CA del objetivo, criticos, Artes Marciales subiendo el dado del desarmado, mitigacion
 -- del defensor y animacion -- en vez de reimplementarlo en el rasgo.
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 local monje = io.open("Harford/DnD/Data/Classes/Monje.lua"):read("*a")
 
 local fallos = 0

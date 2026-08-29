@@ -4,7 +4,7 @@
 -- lanzamiento necesario". Ofrecer uno de nivel 5 a un brujo de nivel 3 seria dejarle gastar el
 -- fragmento en algo que no puede lanzar.
 local cargar = loadstring or load
-local src = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local src = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 local i = assert(src:find("        local elegibles = {}", 1, true))
 local j = assert(src:find("        if #elegibles == 0 then", i, true))
 local codigo = "local api, spec, maximo, clase = ...\n" .. src:sub(i, j) .. "\nreturn elegibles"

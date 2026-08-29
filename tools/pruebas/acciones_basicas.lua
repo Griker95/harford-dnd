@@ -132,5 +132,5 @@ chk("y no abre lo que no declara", #A.CostsFor("agarrar", porCondicion), 1)
 
 local cond2 = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
 chk("la condicion lo declara", cond2:find('elunes_grace = {.-grantsAsBonus = { "desengancharse", "esquivar", "esconderse" }') ~= nil, true)
-local panel2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel2 = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 chk("y el panel las aporta", panel2:find('if type(activo.definition.grantsAsBonus) == "table" then', 1, true) ~= nil, true)

@@ -14,7 +14,7 @@ end
 
 local wr = io.open("Harford/DnD/Engine/HarfordDnDWeaponRolls.lua"):read("*a")
 local acc = io.open("Harford/DnD/Data/HarfordDnDActions.lua"):read("*a")
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 
 print("La dificultad la pone el atacante, no una CD fija")
 chk("hay motor", wr:find("local function RollContest", 1, true) ~= nil, true)

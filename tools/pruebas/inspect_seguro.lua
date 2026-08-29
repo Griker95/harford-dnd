@@ -15,7 +15,7 @@ end
 
 local prog = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
 local insp = io.open("Harford/Character/HarfordCharacterInspect.lua"):read("*a")
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 
 -- 1. No se puede inspeccionar a uno mismo. Es la barrera que impide que un snapshot ensombrezca tu
 --    propio perfil y se trague todo lo que guardes despues.

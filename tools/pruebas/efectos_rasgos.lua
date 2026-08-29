@@ -318,7 +318,7 @@ conClases({}, {})
 -- estaba dentro de `AnnounceAbility`, que se llama al final, y la concesion iba antes. Un rasgo
 -- agotado no puede conceder nada, asi que la comprobacion tiene que ir ANTES del efecto.
 print("Un rasgo sin usos no concede nada")
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 local i = panel:find("ApplyPowerWordGrant = function(feature, option, display)", 1, true)
 chk("existe la concesion", i ~= nil, true)
 local cuerpo = panel:sub(i or 1, (i or 1) + 4000)

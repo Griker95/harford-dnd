@@ -116,7 +116,7 @@ end
 -- Una via de prueba que no pase por donde pasa el jugador no prueba lo que hay que probar.
 chk("la accion va por la ruta del boton",
     v:find("P.RunBasicAction(id)", 1, true) ~= nil, true)
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 chk("y esa ruta es la misma", panel:find("return AbrirAccionBasica(actionId, anchor)", 1, true) ~= nil, true)
 -- `conditiontest` solo opera sobre uno mismo, y lo que suele fallar es el salto al otro cliente.
 chk("estadoen usa la ruta de red", v:find('C.ApplyToUnit("target", id', 1, true) ~= nil, true)

@@ -18,7 +18,7 @@ f()
 local A = env.HarfordDnDActions
 
 local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 local cat = io.open("Harford/Compendium/HarfordIconCatalog.lua"):read("*a")
 
 print("Ninguna de las tres sigue declarandose sin efecto")

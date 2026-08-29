@@ -384,7 +384,7 @@ local texto = io.open("Harford/DnD/Data/HarfordDnDBookText.lua"):read("*a")
 chk("y el mapeo al titulo del manual sigue",
     texto:find('monje_tej_niebla_calmante = "Niebla Calmante"', 1, true) ~= nil, true)
 
-local panel2 = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel2 = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 chk("el Libro la enruta", panel2:find('type(self.feature.poolHeal) == "table"', 1, true) ~= nil, true)
 -- Curar enfermedad gasta de la reserva pero NO da puntos de golpe: son dos usos de lo mismo.
 chk("curar enfermedad no da ademas vida",
@@ -616,7 +616,7 @@ chk("el Libro pide la agrupada",
 -- del Libro vienen de un pool, la habilidad heredaba el icono de la que ocupaba ese hueco antes.
 -- Media pagina salia con el mismo dibujo.
 print("El icono se comprueba antes de ponerlo")
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 chk("se valida la ruta",
     panel:find("GetFileIDFromPath and not GetFileIDFromPath(final)", 1, true) ~= nil, true)
 chk("y hay respaldo por categoria",

@@ -218,7 +218,7 @@ end
 -- (el anuncio posterior quedaba deduplicado por la marca de click). Las acciones basicas quedan
 -- fuera del cobro de click: cobra el anuncio de la seleccion.
 print("El menu de coste cobra lo elegido")
-local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 chk("el repartidor exime a las acciones basicas",
     panel:find('not self.feature.basicAction', 1, true) ~= nil, true)
 chk("y la seleccion anuncia con el coste elegido",

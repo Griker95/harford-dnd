@@ -145,7 +145,7 @@ function API.EnsureData()
     local ok = cargar("HarfordProfesiones")
     datosListos = ok and _G.HarfordProfessionsData ~= nil and _G.HarfordProfessionsItems ~= nil
     if not datosListos and HarfordChat and HarfordChat.Print then
-        HarfordChat.Print("No se pudo cargar |cffffcc00HarfordProfessionsData|r: "
+        HarfordChat.Print("No se pudo cargar |cffffcc00HarfordProfesiones|r: "
             .. "las profesiones no tendran catalogo. Comprueba que la carpeta esta instalada y activada.")
     end
     return datosListos
@@ -695,7 +695,7 @@ end
 ------------------------------------------------------------
 -- RECETAS DINAMICAS (fuera del catalogo)
 --
--- Para contenido puntual que no tiene sentido hornear en HarfordProfessionsData: un plano que
+-- Para contenido puntual que no tiene sentido hornear en el addon HarfordProfesiones: un plano que
 -- suelta un jefe, una receta de evento, una recompensa de mision. Un ArcSpell/gossip llama a
 -- `TeachCustomRecipe` y la receta queda definida Y aprendida en ese personaje, persistida en su
 -- SavedVariable. A partir de ahi se comporta como cualquier otra: sale en la ventana, comprueba

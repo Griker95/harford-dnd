@@ -133,8 +133,8 @@ local function ficherosDelToc(carpeta, toc)
 end
 
 local ADDONS = {
-    { "HarfordProfessionsData", "HarfordProfessionsData.toc" },
-    { "HarfordCompendioData", "HarfordCompendioData.toc" },
+    { "HarfordProfesiones", "HarfordProfesiones.toc" },
+    { "HarfordCompendio", "HarfordCompendio.toc" },
     { "Harford", "Harford.toc" },
     { "HarfordAdmin", "HarfordAdmin.toc" },
     { "HarfordDebug", "HarfordDebug.toc" },

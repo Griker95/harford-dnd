@@ -1,49 +1,50 @@
 # Conjuros pendientes de comprobar en el compendio
 
 Seguimiento de conjuros que el manual (`Rulebooks/Warcraft 5º Edición.txt`) cita
-pero que no se encuentran en `Harford/Compendium/HarfordCompendioData.lua`.
+pero que no se encuentran en `HarfordCompendioData.lua`.
 
 **Los nombres del compendio son los canónicos.** El manual usa traducciones
 distintas para el mismo conjuro, así que antes de dar uno por ausente hay que
-buscar por NIVEL y EFECTO, no por nombre.
+buscar por NIVEL y EFECTO, no por nombre. Los ✦ del manual son conjuros nuevos
+descritos en su capítulo 6 — y varios YA estaban en el compendio con el texto
+idéntico bajo otro título (ver la tabla de resueltos).
 
 **Cotejadas las 12 clases** (todas sus listas de conjuros de subclase, niveles de
 clase 1-6). Guerrero, Monje y Cazador de Demonios no tienen listas propias.
 
-## Faltan de verdad (dentro del alcance 0-4)
+## PETICIÓN A LA WEB (chat del códice) — lo único que falta de verdad
 
-Verificados por mecánica, no solo por nombre.
+Dos entradas para `compendium-data.js` → regeneración de `HarfordCompendioData.lua`.
+El addon NO las añade por su cuenta (fichero compartido). Al incorporarlas, avisar
+para cablear los `spellGrants`.
 
-| Conjuro (manual) | Nivel | Lo pide | Por qué no vale ningún candidato |
-|---|---|---|---|
-| rayo del caos | 1 | Brujo / Destrucción | Daño de tipo ALEATORIO que salta a otra criatura. `Rayo de hechicería` es *witch bolt* (1d12 relámpago, arco continuo). `Orbe cromático` deja ELEGIR el tipo. Búsqueda por mecánica de nivel 1 con daño aleatorio: sin resultados. |
-| Conocer la Intención | 0 | Pícaro / Sutileza | El manual solo lo LISTA, sin descripción. No hay ningún truco con "intención" en el compendio. Sutileza queda con 9 de 10 trucos. |
+1. **Rayo del caos** (*chaos bolt*, nivel 1, Brujo/Destrucción). El manual lo marca
+   `^XGE^`: traducir de la Guía de Xanathar (2d8 de tipo aleatorio por 1d8, salta a
+   otra criatura con dobles). No confundir con `toque_del_caos` (truco Warcraft,
+   1d8 variable) ni con el rasgo *Chaos Bolt* de Destrucción del libro inglés
+   (gasta Ascuas Ardientes: habilidad, no este conjuro).
+2. **Conocer la Intención** (truco, Pícaro/Sutileza). El manual solo lo LISTA, sin
+   descripción en ningún libro. Necesita decisión: redactarlo (propuesta:
+   adivinación, acción, 9 m, saber si la criatura miente o su actitud, al estilo
+   *detect thoughts* menor) o dejar Sutileza con 9/10 trucos y anotarlo. Decide la web.
 
 ## Resueltos como equivalencia (2026-08-29)
 
+Estaban en el compendio con otro título; todos concedidos ya en sus rasgos.
+
 | Manual | Compendio | Comprobado por |
 |---|---|---|
-| ✦ penitencia | `arrepentimiento` | El compendio trae el TEXTO IDÉNTICO del capítulo 6 (Encantamiento 1, reacción, salvación de Sabiduría que desvía el ataque). Concedido en `pal_sag_conjuros_3`. |
-| castigo abrasador | `golpe_llameante` | *Searing smite* (Reglas básicas): acción adicional, +1d6 fuego y el objetivo arde con salvación de Constitución. Aparece como "Golpe Llameante" en la lista de Paladín nivel 1 del capítulo 6, junto a Golpe Trueno (*thunderous*) y Golpe Furioso (*wrathful*). Concedido en `pal_ret_conjuros_3` (antes lo suplantaba `golpe_furioso`, que es otro conjuro). |
-| ✦ castigo justo | `golpe_justo` ("Golpe de cruzado") | TEXTO IDÉNTICO del capítulo 6 ("Golpe Justiciero"/"✦ Golpe Justo" en la lista de nivel 2): Evocación 2, +2d6 radiante y ventaja al siguiente ataque. Concedido en `pal_ret_conjuros_5`. |
-| descarga mental | `aguijon_mental` | *Mind Spike* (Xanathar): 3d8 psíquico, salvación de Sabiduría, conoces la ubicación — la mecánica exacta que pedía esta tabla. Clases: Brujo y Sacerdote. Concedido en `sac_som_conjuros_3`. |
+| ✦ penitencia | `arrepentimiento` | TEXTO IDÉNTICO del capítulo 6 (Encantamiento 1, reacción, salvación de Sabiduría que desvía el ataque); la lista de Paladín nivel 1 del cap. 6 trae `✦ Arrepentimiento` donde la tabla de clase decía `✦ penitencia`. Concedido en `pal_sag_conjuros_3`. |
+| descarga mental | `aguijon_mental` | *Mind Spike* (Xanathar): 3d8 psíquico, salvación de Sabiduría, conoces la ubicación. Clases: Brujo y Sacerdote. Concedido en `sac_som_conjuros_3`. |
+| castigo abrasador | `golpe_llameante` | *Searing smite* (Reglas básicas): acción adicional, +1d6 fuego y el objetivo arde con salvación de Constitución. En la lista de Paladín nivel 1 del cap. 6 junto a Golpe Trueno (*thunderous*) y Golpe Furioso (*wrathful*). Concedido en `pal_ret_conjuros_3` (antes lo suplantaba `golpe_furioso`, que es *wrathful*: otro conjuro). |
+| ✦ castigo justo | `golpe_justo` ("Golpe de cruzado") | TEXTO IDÉNTICO del "Golpe Justiciero" del cap. 6 (listado como `✦ Golpe Justo` en nivel 2): Evocación 2, +2d6 radiante y ventaja al siguiente ataque. Concedido en `pal_ret_conjuros_5`. |
+| ✦ estallido estelar | `oleada_estelar` ("Oleada de estrellas") | TEXTO IDÉNTICO de la "Oleada de Estrellas" del cap. 6 (*starsurge*): línea de 30 m, salvación de Destreza, 6d6 radiante, +2d6 bajo luna clara. Concedido en `dru_eq_conjuros_camino_5`. Ojo: el compendio lo declara nivel 2 y su propio texto dice "Evocación de nivel 3" (ver incoherencias). |
 
-## PETICIÓN A LA WEB (chat del códice) — 2026-08-29
+## Sin resolver con seguridad
 
-Dos entradas para `compendium-data.js` → regeneración de `HarfordCompendioData.lua`.
-El addon NO las añade por su cuenta (fichero compartido). Al incorporarlas, avisar para
-cablear los `spellGrants` correspondientes. (La petición original traía cuatro: *castigo
-abrasador* y *castigo justo* resultaron estar ya — ver tabla de resueltos.)
-
-1. **Rayo del caos** (*chaos bolt*, nivel 1, Brujo/Destrucción). El manual lo marca
-   `^XGE^` en la lista de Destrucción: traducir de la Guía de Xanathar (2d8 de tipo
-   aleatorio por 1d8, salta a otra criatura con dobles). No confundir con
-   `toque_del_caos` (truco Warcraft, 1d8 variable) ni con el rasgo *Chaos Bolt* de
-   Destrucción del libro inglés (gasta Ascuas Ardientes: habilidad, no este conjuro).
-2. **Conocer la Intención** (truco, Pícaro/Sutileza). El manual solo lo LISTA, sin
-   descripción en ningún libro. Necesita decisión: redactarlo (propuesta: adivinación,
-   acción, 9 m, saber si la criatura miente o su actitud, al estilo *detect thoughts*
-   menor) o dejar Sutileza con 9/10 trucos y anotarlo. Decide la web.
+| Conjuro (manual) | Lo pide | Situación |
+|---|---|---|
+| castigo deslumbrante | Paladín / Protección, nivel de clase 5 | La tabla de equivalencias lo empareja con `golpe_cegador` (*blinding smite*, 3d8 radiante), pero ese es de NIVEL 3 de conjuro y el escalón de clase 5 corresponde a ranura de 2.º. O el manual adelanta un conjuro de 3.º, o el candidato no es él. `pal_pro_conjuros_5` concede solo `guardian_del_rey` mientras tanto. No cablear sin decidirlo. |
 
 ## Incoherencias del compendio detectadas
 
@@ -51,25 +52,16 @@ No las corrijo: `HarfordCompendioData.lua` es compartido con otro chat y con Cod
 
 | Qué | Detalle |
 |---|---|
+| `oleada_estelar` | Declara `level = 2` pero su propio texto dice "Evocación de nivel 3" y escala "por cada nivel por encima del 3". El manual también lo da como nivel 3. Debería ser nivel 3. |
 | `guardia_con_hoja` | El id sugiere *blade ward*, pero el conjuro se llama "Rompante de espadas" y su efecto es *sword burst*. El blade ward real está en `resguardo_de_hoja`. Emparejar por id cruzaría los dos. |
 | Longstrider duplicado | `zancada_prodigiosa` (etiquetado Pícaro Sutileza) y `pies_ligeros` (Druida/Mago, con el componente de tierra) son el mismo conjuro: +3 m de velocidad y mejorable. El manual de Sutileza dice "Pies Ligeros"; el compendio le da "Zancada prodigiosa". |
-
-| estallido estelar | 3 | Druida / Equilibrio | Marcado con ✦ en el manual: conjuro nuevo del capítulo 6. Buscado por nivel 3 y por efecto (estrellas/luz): `Estrella divina`, `Explosión lunar` y `Faro de luz` no encajan lo bastante como para darlo por bueno. |
-
-| penitencia | 1 | Paladín / Sagrado | Marcado con ✦: conjuro nuevo del capítulo 6. Sin candidatos en el compendio. |
-| castigo deslumbrante | 2 | Paladín / Protección | La familia "Castigo" del compendio tiene `Castigo furioso` (nivel 1, *searing smite*), `Castigo marcador` (nivel 2, *branding smite*) y `Castigo cegador` (nivel 3). Ninguno encaja con seguridad en una ranura de 2.º nivel. |
-| castigo justo | 2 | Paladín / Retribución | Mismo problema: no se distingue de `Castigo marcador` sin más datos. |
-
-| protección con cuchilla | 0 | Pícaro / Sutileza | *Blade ward*. No está por nombre. Ojo: el id `guardia_con_hoja` (que traduce blade ward) lo lleva **Rompante de espadas** (*sword burst*), así que puede haberse reutilizado la entrada. |
-| amigos | 0 | Pícaro / Sutileza | *Friends*. Sin candidatos en el compendio. |
-| conocer la intención | 0 | Pícaro / Sutileza | Sin candidatos. `Codificar pensamientos` es otro conjuro. |
-
-| miedo | 3 | Sacerdote / Sombra | *Fear*, nivel 3. `Causar miedo` del compendio es **nivel 1** (*cause fear*), otro conjuro. |
+| *Charm person* duplicado | `hechizar_persona` y `encantar_persona` son DOS entradas del mismo conjuro (ambas nivel 1, Encantamiento, `condition = charmed`); las dos declaran `classes = { "Sacerdote" }` cuando es conjuro de Brujo (el núcleo de Súcubo lo necesita); y `encantar_persona` lleva un `mechanics` de *conjurar seres del bosque* que no es suyo. |
 
 ## Fuera del alcance actual (nivel 5)
 
-El proyecto llega a conjuros de nivel 4, y un brujo de nivel 6 solo tiene
-ranuras de 3.º. No bloquean nada; se listan por si el alcance sube.
+El proyecto llega a conjuros de nivel 4, y un brujo de nivel 6 solo alcanza
+nivel 3 de conjuro (con pacto Y con maná). No bloquean nada; se listan por si
+el alcance sube.
 
 | Conjuro | Lo pide |
 |---|---|
@@ -141,15 +133,15 @@ Cotejados los 15 conjuros de los cinco nucleos contra el compendio.
 
 ## Conjuros de camino (repaso de clases)
 
-Cotejadas las 111 promesas de conjuro del Libro (listas ampliadas, `grantedSpells`, `spellGrants`, trucos) contra los 384 del compendio: **ninguna rota**.
+Cotejadas las 111 promesas de conjuro del Libro (listas ampliadas, `grantedSpells`,
+`spellGrants`, trucos) contra los 384 del compendio: **ninguna rota**.
 
-**Hueco corregido**: el Druida solo concedia el par de nivel 3 de su camino; el manual da conjuros en 3, 5, 7 y 9. Anadido el escalon de nivel 5 con rasgo propio (patron `_3`/`_5` del Chaman):
+**Hueco corregido**: el Druida solo concedia el par de nivel 3 de su camino; el
+manual da conjuros en 3, 5, 7 y 9. Anadido el escalon de nivel 5 con rasgo propio
+(patron `_3`/`_5` del Chaman). Equilibrio concede `luz_del_dia` + `oleada_estelar`
+y Restauracion `palabra_de_curacion_en_masa` + `revivir` (divergencias de nombre:
+*palabra curativa en masa* -> Palabra de curacion en masa; *revivificar* -> Revivir).
 
-| Camino | Nivel 5 segun el manual | Estado |
-|---|---|---|
-| Equilibrio | luz del dia, estallido estelar | `luz_del_dia` OK; **estallido estelar falta** |
-| Restauracion | palabra curativa en masa, revivificar | `palabra_de_curacion_en_masa` y `revivir` OK |
-
-Divergencias de nombre resueltas: *palabra curativa en masa* -> **Palabra de curacion en masa**; *revivificar* -> **Revivir**.
-
-**Paladin**: sus tres caminos conceden 3 de los 4 conjuros de nivel 3-5. Falta uno por camino, y los tres son contenido propio de Warcraft que no esta en el compendio: `penitencia` (Sagrado, nivel 3), `castigo deslumbrante` (Proteccion, nivel 5) y `castigo justo` (Retribucion, nivel 5).
+**Paladin**: los tres caminos conceden ya sus conjuros de nivel 3-5 salvo UNO:
+`castigo deslumbrante` (Proteccion, nivel de clase 5), pendiente por el conflicto
+de nivel descrito en "Sin resolver con seguridad".

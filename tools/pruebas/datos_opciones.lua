@@ -94,4 +94,21 @@ print("  condiciones distintas revisadas: " .. condRevisadas)
 for _, id in ipairs(condHuerfanas) do print("     no esta en el catalogo: " .. id) end
 chk("todas existen en el catalogo", #condHuerfanas, 0)
 
+
+
+-- ─── EL SELECTOR DE IDIOMA NO OFRECE LOS YA CONOCIDOS ───────────────────────
+-- "Un idioma adicional de tu eleccion" ofrecia Comun y Goblin al propio Goblin. El dialogo
+-- filtra con DraftLanguages (mismos origenes que las competencias del borrador; en subida sin
+-- borrador, los idiomas vivos del perfil) y nunca se queda vacio.
+print("El selector de idioma filtra los conocidos")
+local adv = io.open("Harford/Character/HarfordCharacterAdvancement.lua"):read("*a")
+chk("el dialogo filtra por optionsFrom language",
+    adv:find('== "language"', 1, true) ~= nil and adv:find("Draft.DraftLanguages", 1, true) ~= nil, true)
+chk("y no se queda vacio", adv:find("if #nuevas > 0 then options = nuevas end", 1, true) ~= nil, true)
+local draft = io.open("Harford/Character/HarfordCharacterDraft.lua"):read("*a")
+chk("DraftLanguages recorre los mismos origenes que las competencias",
+    draft:find("local function DraftLanguages()", 1, true) ~= nil, true)
+chk("y solo mezcla el perfil vivo SIN borrador de origen (re-crear no filtra con la ficha vieja)",
+    draft:find("if not S.raceId and HarfordDnDFeatureEffects", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

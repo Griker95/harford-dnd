@@ -62,6 +62,59 @@ local function DraftSkillProficiencies()
     return prof
 end
 
+-- Idiomas que el borrador YA conoce, normalizados (sin acentos, minusculas): mismos origenes
+-- que DraftSkillProficiencies mas, si el personaje ya existe como perfil (subida de nivel), los
+-- idiomas vivos de FeatureEffects. Sirve para que el selector de "un idioma adicional" no
+-- ofrezca los que ya se hablan: el Goblin veia Comun y Goblin en su propia lista.
+local function DraftLanguages()
+    local conocidos = {}
+    local function Normaliza(nombre)
+        nombre = tostring(nombre or "")
+        if HarfordClassColors and HarfordClassColors.StripAccents then
+            nombre = HarfordClassColors.StripAccents(nombre)
+        end
+        return nombre:lower()
+    end
+    local function ApplyEffects(effects)
+        for _, effect in ipairs(effects or {}) do
+            if effect.kind == "language" and effect.language then
+                conocidos[Normaliza(effect.language)] = true
+            end
+        end
+    end
+    local function ApplyFeature(feature)
+        if type(feature) ~= "table" then return end
+        ApplyEffects(feature.effects)
+        for _, optionId in ipairs(S.choiceSelections[feature.id] or {}) do
+            local option = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
+                and HarfordDnDBook.GetChoiceOption(feature, optionId)
+            ApplyEffects(option and option.effects)
+        end
+    end
+    local race = HarfordDnDRaces and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(S.raceId)
+    for _, feature in ipairs((race and race.traits) or {}) do ApplyFeature(feature) end
+    local subrace = HarfordDnDRaces and HarfordDnDRaces.GetSubrace
+        and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
+    for _, feature in ipairs((subrace and subrace.traits) or {}) do ApplyFeature(feature) end
+    local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
+        and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+    for _, feature in ipairs((background and background.traits) or {}) do ApplyFeature(feature) end
+    for _, classId in ipairs({ S.classId, S.secondaryClassId }) do
+        local classDef = classId and HarfordDnDBook and HarfordDnDBook.GetClass
+            and HarfordDnDBook.GetClass(classId)
+        for _, feature in ipairs((classDef and classDef.features) or {}) do ApplyFeature(feature) end
+    end
+    -- Personaje ya existente (subida SIN borrador de origen): sus idiomas vivos cuentan. Con
+    -- S.raceId puesto estamos CREANDO (quiza re-creando encima de una ficha vieja) y el perfil
+    -- vivo es el anterior: mezclarlo filtraria idiomas por datos que van a ser sustituidos.
+    if not S.raceId and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetLanguages then
+        for _, lang in ipairs(HarfordDnDFeatureEffects.GetLanguages() or {}) do
+            conocidos[Normaliza(type(lang) == "table" and (lang.name or lang.id) or lang)] = true
+        end
+    end
+    return conocidos
+end
+
 local function BuildCreationDraft()
     local abilities = {}
     local array = S.attributeArrays and S.attributeArrays[S.selectedArray]
@@ -307,6 +360,7 @@ local function FinishLevelUp()
 end
 
 HarfordCharacterDraft.DraftSkillProficiencies = DraftSkillProficiencies
+HarfordCharacterDraft.DraftLanguages = DraftLanguages
 HarfordCharacterDraft.BuildCreationDraft = BuildCreationDraft
 HarfordCharacterDraft.PersistSpellPicks = PersistSpellPicks
 HarfordCharacterDraft.FinishCreation = FinishCreation

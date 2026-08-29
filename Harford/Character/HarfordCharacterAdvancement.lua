@@ -1514,6 +1514,23 @@ local function RefreshChoiceDialog()
         -- Si no quedara ninguna (no deberia pasar), se muestran todas antes que bloquear.
         if #libres > 0 then options = libres end
     end
+    -- Idiomas: fuera los que el borrador (o el personaje vivo) YA habla. "Un idioma adicional
+    -- de tu eleccion" no puede ofrecer Comun al que ya habla Comun. Si no quedara ninguno
+    -- (no deberia pasar), se muestran todos antes que bloquear.
+    if tostring(feature.choice and feature.choice.optionsFrom or "") == "language"
+        and Draft.DraftLanguages then
+        local conocidos = Draft.DraftLanguages()
+        local nuevas = {}
+        for _, option in ipairs(options) do
+            local lang = option.effects and option.effects[1] and option.effects[1].language
+            local clave = tostring(lang or ""):lower()
+            if HarfordClassColors and HarfordClassColors.StripAccents then
+                clave = HarfordClassColors.StripAccents(tostring(lang or "")):lower()
+            end
+            if not conocidos[clave] then nuevas[#nuevas + 1] = option end
+        end
+        if #nuevas > 0 then options = nuevas end
+    end
     if tostring(feature.choice and feature.choice.optionsFrom or "") == "skillExpertise" then
         local prof = Draft.DraftSkillProficiencies()
         local eligible = {}

@@ -1394,14 +1394,16 @@ local function RefreshAttributes()
             end
             y = y - 30
         end
-        -- Reiniciar la colocacion: devuelve todos los dados al pool (conserva el array elegido)
+        -- Reiniciar la colocacion: devuelve todos los dados al pool (conserva el array elegido).
+        -- En el borde IZQUIERDO, bajo la lista, que es donde esta tambien en compra por puntos:
+        -- anclado a x108 quedaba bajo la columna de valores y parecia que no habia boton.
         local resetAssign = MakeButton(S.tree, "Reiniciar", 100, 22, function()
             S.attributeAssignments, S.pendingScore = {}, nil
             RefreshAttributes()
         end)
-        resetAssign:SetPoint("TOPLEFT", 108, y - 6)
+        resetAssign:SetPoint("TOPLEFT", 6, y - 10)
         S.nodeRows[#S.nodeRows + 1] = resetAssign
-        y = y - 34
+        y = y - 40
         local assigned = 0
         for _ in pairs(S.attributeAssignments) do assigned = assigned + 1 end
         S.nextButton:SetText(assigned == 6 and "Confirmar caracteristicas" or "Asigna " .. tostring(6 - assigned) .. " valores")

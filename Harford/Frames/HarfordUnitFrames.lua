@@ -854,6 +854,7 @@ do
     local function EnsureTira(unit)
         if tiras[unit] then return tiras[unit] end
         local f = CreateFrame("Frame", "HarfordEstados" .. unit, UIParent)
+        f.unidad = unit
         f:SetFrameStrata("MEDIUM")
         f:SetFrameLevel(85)
         f:SetSize(1, ESTADO_TAM)
@@ -887,9 +888,33 @@ do
             if self.estado.restante then
                 GameTooltip:AddLine(self.estado.restante, 0.6, 0.8, 1)
             end
+            local unidad = self:GetParent() and self:GetParent().unidad
+            if (unidad == "player" and self.estado.id ~= "dying") or (unidad ~= "player" and API.OnConditionIconRightClick) then
+                GameTooltip:AddLine("Click derecho: retirar", 0.7, 0.7, 0.7)
+            end
             GameTooltip:Show()
         end)
         b:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+        -- Click derecho retira el estado. En el marco PROPIO lo hace el core (es tu estado);
+        -- en target/focus solo si HarfordAdmin instalo su callback (patron InsertGlanceLink:
+        -- el core expone el gancho y no consulta permisos DM). "Muriendo" propio no se toca:
+        -- su aura la gobierna el sistema de Salv Muerte y quitarla a mano lo desincronizaria.
+        b:SetScript("OnMouseUp", function(self, boton)
+            if boton ~= "RightButton" or not self.estado then return end
+            local unidad = self:GetParent() and self:GetParent().unidad
+            if unidad == "player" then
+                if self.estado.id == "dying" then
+                    HarfordChat.Print("Muriendo se retira recuperando vida, no a mano.")
+                    return
+                end
+                if HarfordDnDConditions and HarfordDnDConditions.RequestPlayer then
+                    HarfordDnDConditions.RequestPlayer("player", self.estado.id, false)
+                end
+            elseif API.OnConditionIconRightClick then
+                API.OnConditionIconRightClick(unidad, self.estado.id)
+            end
+            if GameTooltip then GameTooltip:Hide() end
+        end)
         tira.iconos[i] = b
         return b
     end

@@ -30,6 +30,18 @@ chk("primera pintada al entrar al mundo",
     uf:find('API.RefreshConditionStrip("player")', 1, true) ~= nil, true)
 chk("y en el marco propio la columna es la barra de salud",
     uf:find('ref = _G[prefix .. "HealthBar"]', 1, true) ~= nil, true)
+-- Click derecho retira: lo propio lo hace el core via RequestPlayer (Muriendo NO: su aura la
+-- gobierna Salv Muerte); lo ajeno solo a traves del gancho que instala HarfordAdmin, que valida
+-- autoridad y exige target para NPC (npc unaura actua sobre el target del SERVIDOR).
+chk("click derecho propio retira por RequestPlayer",
+    uf:find('HarfordDnDConditions.RequestPlayer("player", self.estado.id, false)', 1, true) ~= nil, true)
+chk("Muriendo propio no se retira a mano",
+    uf:find('if self.estado.id == "dying" then', 1, true) ~= nil, true)
+chk("lo ajeno pasa por el gancho de Admin",
+    uf:find('API.OnConditionIconRightClick(unidad, self.estado.id)', 1, true) ~= nil, true)
+local adm = io.open("HarfordAdmin/HarfordAdminConditions.lua"):read("*a")
+chk("Admin instala el gancho", adm:find("HarfordUnitFrames.OnConditionIconRightClick = function", 1, true) ~= nil, true)
+chk("y exige target para NPC", adm:find('if not snapshot.isPlayer and unit ~= "target" then', 1, true) ~= nil, true)
 chk("con frame propio por unidad", uf:find('CreateFrame("Frame", "HarfordEstados"', 1, true) ~= nil, true)
 -- Regla de Epsilon: overlays de unitframe en UIParent/MEDIUM, nunca DIALOG (taparia otros addons).
 chk("en UIParent", uf:find('CreateFrame("Frame", "HarfordEstados" .. unit, UIParent)', 1, true) ~= nil, true)

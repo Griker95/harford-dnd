@@ -160,3 +160,27 @@ do
         end
     end)
 end
+
+-- Click derecho en un icono de la tira de estados de target/focus: retirar la condicion.
+-- El core expone el gancho sin consultar permisos DM; aqui se valida todo (IsAllowed +
+-- SameUnit dentro de Remove) y se construye el snapshot fresco en el momento del click.
+if HarfordUnitFrames then
+    HarfordUnitFrames.OnConditionIconRightClick = function(unit, conditionId)
+        if not (UnitExists and UnitExists(unit)) then return end
+        local snapshot = {
+            unit = unit,
+            guid = UnitGUID and UnitGUID(unit) or "",
+            name = HarfordClassColors and HarfordClassColors.UnitFullName
+                and HarfordClassColors.UnitFullName(unit) or "",
+            isPlayer = UnitIsPlayer and UnitIsPlayer(unit) or false,
+        }
+        -- Los comandos npc actuan sobre el TARGET del servidor: retirar el aura de un NPC en
+        -- focus se la quitaria al NPC equivocado. Jugadores van por red y no les afecta.
+        if not snapshot.isPlayer and unit ~= "target" then
+            Print("Para retirar estados de un NPC tiene que ser tu target actual.")
+            return
+        end
+        local ok, err = API.Remove(snapshot, conditionId)
+        if not ok and err then Print(err) end
+    end
+end

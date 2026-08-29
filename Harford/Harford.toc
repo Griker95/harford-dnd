@@ -107,6 +107,7 @@ DnD\Engine\HarfordDnDAbilities.lua
 DnD\Engine\HarfordDnDArcApi.lua
 DnD\UI\HarfordDnDBookActions.lua
 DnD\UI\HarfordDnDActionPanel.lua
+DnD\UI\HarfordDnDRest.lua
 
 # --- DnD/UI ---
 DnD\UI\HarfordDnDUI.lua

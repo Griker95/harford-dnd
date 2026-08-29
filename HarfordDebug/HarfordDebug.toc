@@ -1,5 +1,5 @@
 ## Interface: 90207
-## Title: |cff88ccffHarfordDebug|r
+## Title: |cff3536CCHarford|r Debug
 ## Notes: Herramientas opcionales de diagnostico para Harford
 ## Author: Griker
 ## Version: 2.1.0

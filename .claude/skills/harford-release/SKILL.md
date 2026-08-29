@@ -7,21 +7,18 @@ description: Cierra un lote de cambios de Harford - bateria de pruebas, desplieg
 
 Orden FIJO. No saltarse pasos ni reordenarlos.
 
-## 1. Batería de pruebas
+## 1-2. Compilación + batería + despliegue: UN comando, UN exit code
 
 ```bash
-cd "C:/Users/marco/Documents/New project" && for f in tools/pruebas/*.lua; do out=$(lua "$f" 2>&1 | tail -1); case "$out" in *CORRECTO*|*ok*) : ;; *) echo "REVISAR $(basename $f): $out";; esac; done; echo "bateria hecha"
+cd "C:/Users/marco/Documents/New project" && python tools/lote.py; echo "lote exit $?"
 ```
 
-Cualquier `REVISAR` bloquea el cierre. Antes de la batería, `luac -p` sobre cada `.lua` tocado.
+`tools/lote.py` compila los 6 addons con `luac -p`, corre la batería completa de
+`tools/pruebas/` y despliega con `tools/desplegar.py`. Si algo falla NO despliega y sale
+con 1: solo se sigue con `LOTE VERDE`. Con `--sin-desplegar` se queda en compilación+batería.
 
-## 2. Despliegue — exit code DIRECTO
-
-```bash
-cd "C:/Users/marco/Documents/New project" && python tools/desplegar.py > "$TEMP/dep.log" 2>&1; echo "deploy exit $?"; tail -3 "$TEMP/dep.log"
-```
-
-**NUNCA `desplegar.py | tail`**: el pipe enmascara el exit code y ya se hizo commit sobre despliegues rojos cuatro veces. Si el exit no es 0, leer `$TEMP/dep.log` entero y arreglar antes de seguir.
+**NUNCA encadenar el despliegue a un pipe** (`desplegar.py | tail`): el pipe enmascara el
+exit code y ya se hizo commit sobre despliegues rojos cuatro veces — por eso existe lote.py.
 
 ## 3. Commit y retag
 

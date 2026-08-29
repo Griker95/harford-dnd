@@ -29,11 +29,17 @@ Documentos hermanos: **`ESTRUCTURA.md`** es el organigrama de modulos (que hace 
   bloquea un commit, se arregla el fichero; no saltarselo con `--no-verify` salvo emergencia
   explicita del usuario.
 
-- **Skills de proyecto (`.claude/skills/`)**: `harford-release` (cierre de lote: bateria ->
-  despliegue con exit code directo -> commit -> retag -> zips SOLO aqui), `harford-cotejo-web`
-  (sincronizacion contra la web con sus guardas) y `harford-prueba` (como candar comportamiento
-  en `tools/pruebas/`). Codifican los flujos que mas errores costaron; mantenerlas al dia cuando
-  el flujo cambie.
+- **Skills de proyecto (`.claude/skills/`)**: `harford-release` (cierre de lote via
+  `tools/lote.py` -> commit -> retag -> zips SOLO aqui), `harford-cotejo-web` (sincronizacion
+  contra la web con sus guardas), `harford-prueba` (como candar comportamiento en
+  `tools/pruebas/`) y `harford-debug` (patron RegisterCommand). Codifican los flujos que mas
+  errores costaron; mantenerlas al dia cuando el flujo cambie.
+
+- **`tools/lote.py`** es el cierre de lote en un comando y un exit code: compila los 6 addons
+  con `luac -p`, corre la bateria completa de `tools/pruebas/` y despliega con
+  `tools/desplegar.py`. Si algo falla NO despliega y sale con 1. `--sin-desplegar` se queda en
+  compilacion+bateria. Los subprocesos se leen con `encoding="utf-8"` explicito: en Windows
+  `text=True` decodifica cp1252 y la salida UTF-8 de las suites lo reventaba.
 
 - Repo privado: `harford-dnd`.
 - Ramas:

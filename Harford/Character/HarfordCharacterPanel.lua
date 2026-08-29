@@ -3255,10 +3255,18 @@ end
 function API.DatosDeHabilidad(featureId)
     local feature = ResolveBookFeatureById(featureId)
     if not feature then return nil end
+    -- GetFeatureIcon espera la TABLA del rasgo (dentro lee feature.id); pasarle el id como
+    -- string devolvia nil sin error. Y IconPath(nil) devuelve "" -- truthy -- que ganaba el
+    -- `or` y dejaba el icono de arrastre INVISIBLE: parecia que la habilidad no se arrastraba.
+    local icono = HarfordDnDData and HarfordDnDData.GetFeatureIcon
+        and HarfordDnDData.GetFeatureIcon(feature) or nil
+    if (not icono or icono == "") and feature.icon then
+        icono = HarfordCharacterBook.IconPath(feature.icon)
+    end
+    if icono == "" then icono = nil end
     return {
         name = feature.name,
-        icon = HarfordCharacterBook.IconPath(feature.icon) or (HarfordDnDData and HarfordDnDData.GetFeatureIcon
-            and HarfordDnDData.GetFeatureIcon(feature.id, feature.name)) or nil,
+        icon = icono or 134400,  -- INV_Misc_QuestionMark: mejor interrogante que invisible
         description = feature.description,
         feature = feature,
     }

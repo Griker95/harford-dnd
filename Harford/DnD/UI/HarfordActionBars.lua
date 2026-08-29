@@ -572,6 +572,10 @@ do
             button:SetNormalTexture(TEX_LLENO)
             if button.NormalTexture then button.NormalTexture:SetVertexColor(0.45, 0.75, 1, 1) end
         end
+        -- Nombre sobre el boton, en el FontString del nombre de macro (es el hueco nativo para
+        -- "esto no es un hechizo de verdad"), y recortado como hace Blizzard.
+        local nombre = button.Name or (button.GetName and _G[button:GetName() .. "Name"])
+        if nombre and button.harfordName then nombre:SetText(button.harfordName) end
     end
 
     -- Estamos llevando OTRA barra (posesion de NPC / vehiculo): Blizzard superpone acciones
@@ -595,6 +599,9 @@ do
         button:SetAttribute("type", "action")
         button:SetAttribute("_" .. TIPO, nil)
         button.harfordFeature, button.harfordIcon = nil, nil
+        button.harfordName, button.harfordDesc = nil, nil
+        local nombre = button.Name or (button.GetName and _G[button:GetName() .. "Name"])
+        if nombre then nombre:SetText("") end
         if not conservarRegistro then
             local r = Ranura(button)
             if r then Store().botones[r] = nil end
@@ -615,6 +622,7 @@ do
             return {
                 name = spell.name,
                 icon = (api.GetSpellIcon and api.GetSpellIcon(spell)) or spell.icon,
+                description = spell.description,
             }
         end
         return HarfordCharacterPanel and HarfordCharacterPanel.DatosDeHabilidad
@@ -631,6 +639,8 @@ do
         end
         button.harfordFeature = tostring(carga)
         button.harfordIcon = datos.icon
+        button.harfordName = datos.name
+        button.harfordDesc = datos.description
         button:SetAttribute("type", TIPO)
         button:SetAttribute("_" .. TIPO, function(self)
             local id = tostring(self.harfordFeature or "")
@@ -706,10 +716,25 @@ do
         return arrastre and arrastre.activo and arrastre.featureId or nil
     end
 
+    local BotonesNativos  -- adelantada: se define mas abajo y aqui solo se llama al soltar
+
+    -- Suelta la carga y, si el raton esta sobre un boton nativo, la COLOCA. No se puede confiar
+    -- en el OnReceiveDrag del boton: solo dispara con cargas del cursor REAL de WoW (hechizos,
+    -- items), y la nuestra es un icono propio -- por eso arrastrar "no hacia nada". Mismo
+    -- enfoque que Arcanum: mirar que hay bajo el raton en el momento de soltar.
     function API.SoltarHabilidad()
-        if arrastre then
-            arrastre.activo, arrastre.featureId = false, nil
-            arrastre:Hide()
+        if not arrastre then return end
+        local carga = arrastre.activo and arrastre.featureId or nil
+        arrastre.activo, arrastre.featureId = false, nil
+        arrastre:Hide()
+        if not carga then return end
+        if MouseIsOver and BotonesNativos then
+            for _, b in ipairs(BotonesNativos()) do
+                if b:IsVisible() and MouseIsOver(b) then
+                    API.AsignarBoton(b, carga)
+                    return
+                end
+            end
         end
     end
 
@@ -725,6 +750,18 @@ do
             API.AsignarBoton(self, id)
             API.SoltarHabilidad()
         end
+        button:HookScript("OnEnter", function(self)
+            if self:GetAttribute("type") ~= TIPO or not (GameTooltip and self.harfordName) then return end
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(self.harfordName, 1, 0.82, 0)
+            if self.harfordDesc and self.harfordDesc ~= "" then
+                GameTooltip:AddLine(self.harfordDesc, 1, 1, 1, true)
+            end
+            GameTooltip:Show()
+        end)
+        button:HookScript("OnLeave", function(self)
+            if self:GetAttribute("type") == TIPO and GameTooltip then GameTooltip:Hide() end
+        end)
         button:HookScript("OnReceiveDrag", soltar)
         button:HookScript("OnClick", soltar)
         button:HookScript("OnDragStart", function(self)
@@ -733,7 +770,7 @@ do
         end)
     end
 
-    local function BotonesNativos()
+    function BotonesNativos()
         local fuera = {}
         if ActionBarButtonEventsFrame and ActionBarButtonEventsFrame.frames then
             for _, b in ipairs(ActionBarButtonEventsFrame.frames) do fuera[#fuera + 1] = b end

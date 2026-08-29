@@ -1411,6 +1411,13 @@ local function CreateChoiceDialog()
     dialog.status:SetPoint("BOTTOMLEFT", 20, 48)
     dialog.status:SetWidth(280)
     dialog.status:SetJustifyH("LEFT")
+    -- Debajo del contador, los NOMBRES de lo marcado: con la lista larga y scroll, lo elegido
+    -- puede quedar fuera de la vista y el contador solo no dice que hay dentro.
+    dialog.selectedNames = MakeText(dialog, "GameFontHighlightSmall", "")
+    dialog.selectedNames:SetPoint("TOPLEFT", dialog.status, "BOTTOMLEFT", 0, -4)
+    dialog.selectedNames:SetWidth(280)
+    dialog.selectedNames:SetJustifyH("LEFT")
+    dialog.selectedNames:SetWordWrap(true)
     -- Shadowlands/Epsilon no expone ScrollFrameTemplate; este panel controla
     -- rueda y contenido directamente, asi que no necesita heredar un template.
     local scroll = CreateFrame("ScrollFrame", nil, dialog)
@@ -1553,6 +1560,14 @@ local function RefreshChoiceDialog()
     dialog.TitleText:SetText("Elegir: " .. tostring(feature.name or "Rasgo"))
     dialog.description:SetText(tostring(feature.description or "") .. "\n\nElige " .. tostring(slots) .. ".")
     dialog.status:SetText("Seleccionadas: " .. tostring(#selected) .. "/" .. tostring(slots))
+    if dialog.selectedNames then
+        local nombres = {}
+        for _, id in ipairs(selected) do
+            local o = HarfordDnDBook.GetChoiceOption and HarfordDnDBook.GetChoiceOption(feature, id)
+            nombres[#nombres + 1] = tostring((o and (o.label or o.name)) or id)
+        end
+        dialog.selectedNames:SetText(table.concat(nombres, ", "))
+    end
     dialog.status:SetTextColor(#selected == slots and 0.22 or 1, #selected == slots and 0.82 or 0.78, #selected == slots and 0.42 or 0.2)
     dialog.confirm:SetEnabled(#selected == slots)
     local stackable = IsStackableChoice(feature)

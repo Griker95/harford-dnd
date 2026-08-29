@@ -751,13 +751,27 @@ do
             API.SoltarHabilidad()
         end
         button:HookScript("OnEnter", function(self)
-            if self:GetAttribute("type") ~= TIPO or not (GameTooltip and self.harfordName) then return end
-            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText(self.harfordName, 1, 0.82, 0)
-            if self.harfordDesc and self.harfordDesc ~= "" then
-                GameTooltip:AddLine(self.harfordDesc, 1, 1, 1, true)
+            if self:GetAttribute("type") ~= TIPO or not GameTooltip then return end
+            local id = tostring(self.harfordFeature or "")
+            local spellId = id:match("^conjuro:(.+)$")
+            if spellId then
+                -- Formato de la pestana Conjuros: nombre, "Nivel N - Escuela" y descripcion.
+                local api = _G.HarfordCompendioAPI
+                local spell = api and api.GetSpellById and api.GetSpellById(spellId)
+                if not spell then return end
+                GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+                GameTooltip:SetText(spell.name or "?", 1, 0.82, 0)
+                local nivel = tonumber(spell.level) or 0
+                GameTooltip:AddLine((nivel == 0 and "Truco" or ("Nivel " .. nivel))
+                    .. "  -  " .. (spell.school or "-"), 0.8, 0.8, 0.8)
+                if spell.description and spell.description ~= "" then
+                    GameTooltip:AddLine(spell.description, 1, 1, 1, true)
+                end
+                GameTooltip:Show()
+            elseif HarfordCharacterPanel and HarfordCharacterPanel.TooltipDeHabilidad then
+                -- El MISMO tooltip que el Libro de habilidades: cabecera, usos y colores.
+                HarfordCharacterPanel.TooltipDeHabilidad(id, self)
             end
-            GameTooltip:Show()
         end)
         button:HookScript("OnLeave", function(self)
             if self:GetAttribute("type") == TIPO and GameTooltip then GameTooltip:Hide() end

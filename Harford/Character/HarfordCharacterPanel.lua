@@ -3251,6 +3251,21 @@ function API.ActivarHabilidadPorId(featureId, anchor)
     return true
 end
 
+-- Tooltip IDENTICO al del Libro, para botones ajenos (barra de accion). Mismo shim que
+-- ActivarHabilidadPorId: BookButtonOnEnter decide cabecera, usos y colores una sola vez.
+function API.TooltipDeHabilidad(featureId, anchor)
+    local feature = ResolveBookFeatureById(featureId)
+    if not (feature and anchor) then return false end
+    anchor.feature = feature
+    anchor.featLevel = tonumber(feature.level) or 0
+    -- classId/source colorean el origen si existen; en un boton ajeno no deben quedar restos.
+    local classIdAntes, sourceAntes = anchor.classId, anchor.source
+    BookButtonOnEnter(anchor)
+    anchor.feature, anchor.featLevel = nil, nil
+    anchor.classId, anchor.source = classIdAntes, sourceAntes
+    return true
+end
+
 -- Datos de presentacion para pintar la habilidad en un boton ajeno.
 function API.DatosDeHabilidad(featureId)
     local feature = ResolveBookFeatureById(featureId)

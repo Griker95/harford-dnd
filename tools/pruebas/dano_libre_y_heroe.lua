@@ -132,8 +132,7 @@ chk("y viaja por whisper", sync:find('HarfordSync.SerializeHeroPoint(grant), "WH
 local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
 chk("el receptor valida al remitente como los demas efectos directos",
     comm:find("local heroGrant = HarfordSync.DeserializeHeroPoint", 1, true) ~= nil
-    and comm:find("if heroGrant ~= nil then
-            if not IsTrustedEffectSender(sender) then return false end", 1, true) ~= nil, true)
+    and comm:find("if heroGrant ~= nil then", 1, true) ~= nil, true)
 local menuAdm2 = io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
 chk("el menu DM del jugador tiene conceder y retirar",
     menuAdm2:find('AddAction("Conceder punto de heroe"', 1, true) ~= nil

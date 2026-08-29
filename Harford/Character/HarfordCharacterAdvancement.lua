@@ -2115,7 +2115,7 @@ AppendSpellPickers = function(classDef, classLevel, y)
 
     local cantripLimit = tonumber(prog.cantrips and prog.cantrips[classLevel]) or 0
     if cantripLimit > 0 then
-        AddPickerButton("Trucos", picks.cantrips, cantripLimit, "cantrip", "Trucos de " .. className)
+        AddPickerButton("Trucos", picks.cantrips, cantripLimit, "cantrip", "Trucos de " .. spellClassName)
     end
     -- Botones de conjuro/preparar solo si la clase ya lanza conjuros con nivel (maxLevel > 0).
     if maxLevel > 0 then
@@ -2123,7 +2123,7 @@ AppendSpellPickers = function(classDef, classLevel, y)
             local spellLimit = tonumber(prog.spells[classLevel]) or 0
             if spellLimit > 0 then
                 local label = casting.mode == "wizard_book" and "Libro de conjuros" or "Conjuros conocidos"
-                AddPickerButton(label, picks.spells, spellLimit, "spell", label .. " - " .. className)
+                AddPickerButton(label, picks.spells, spellLimit, "spell", label .. " - " .. spellClassName)
             end
         elseif prog.prepared then
             -- En CREACION la puntuacion sale del reparto en curso; en una SUBIDA ese estado no
@@ -2140,12 +2140,12 @@ AppendSpellPickers = function(classDef, classLevel, y)
             else
                 mod = 0
             end
-            local prepLimit = (C.GetPreparedCount and C.GetPreparedCount(className, mod, classLevel)) or 0
+            local prepLimit = (C.GetPreparedCount and C.GetPreparedCount(castingClassName, mod, classLevel)) or 0
             if prepLimit > 0 then
                 -- Se anota para que la poda de preparados solo afecte a las clases que los usan.
                 picks.usaPreparados = picks.usaPreparados or {}
                 picks.usaPreparados[pickerKey] = true
-                AddPickerButton("Preparar conjuros", picks.prepared, prepLimit, "spell", "Preparar - " .. className)
+                AddPickerButton("Preparar conjuros", picks.prepared, prepLimit, "spell", "Preparar - " .. spellClassName)
             end
         end
     end

@@ -22,7 +22,7 @@ end
 API.FEATS = {
     -- ===== Dotes especiales =====
     {
-        id = "feat_mago_de_batalla", name = "Mago de batalla", requires = "Capacidad de lanzar al menos un conjuro", description = "Magia de combate a quemarropa: más trucos, sin penalización por tener al enemigo encima y la opción de cambiar puntería por potencia.",
+        id = "feat_mago_de_batalla", requiredCaster = "any", name = "Mago de batalla", requires = "Capacidad de lanzar al menos un conjuro", description = "Magia de combate a quemarropa: más trucos, sin penalización por tener al enemigo encima y la opción de cambiar puntería por potencia.",
         traits = {
             { id = "feat_mb_trucos", name = "Trucos de Mago", type = "pasivo", description = "Aprendes dos trucos extra de la lista de conjuros de mago.", effects = {} },
             { id = "feat_mb_cercania", name = "Sin desventaja en cercania", type = "pasivo", description = "Al hacer un ataque de conjuro a distancia, no sufres desventaja por estar a 1,5 m de una criatura hostil.", effects = {} },
@@ -284,13 +284,13 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_lanzador_combate", name = "Lanzador en combate", requires = "Capacidad de lanzar al menos un conjuro", description = "Lanzar bajo presión: no pierdes el conjuro por un golpe ni por tener las manos ocupadas.", source = "PHB",
+        id = "feat_lanzador_combate", requiredCaster = "any", name = "Lanzador en combate", requires = "Capacidad de lanzar al menos un conjuro", description = "Lanzar bajo presión: no pierdes el conjuro por un golpe ni por tener las manos ocupadas.", source = "PHB",
         traits = {
             { id = "feat_phb_lcombate", name = "Beneficios", type = "pasivo", description = "Ventaja en salvaciones de Constitución para mantener concentración al recibir daño. Ejecutas componentes somaticos con las manos ocupadas por armas/escudo. Reacción para lanzar un conjuro (1 acción, 1 objetivo) en lugar de un ataque de oportunidad.", effects = {} },
         },
     },
     {
-        id = "feat_lanzador_preciso", name = "Lanzador preciso", requires = "Capacidad de lanzar al menos un conjuro", description = "Puntería con la magia: tus ataques de conjuro no sufren por la cercanía ni por la cobertura.", source = "PHB",
+        id = "feat_lanzador_preciso", requiredCaster = "any", name = "Lanzador preciso", requires = "Capacidad de lanzar al menos un conjuro", description = "Puntería con la magia: tus ataques de conjuro no sufren por la cercanía ni por la cobertura.", source = "PHB",
         traits = {
             { id = "feat_phb_lpreciso", name = "Beneficios", type = "pasivo", description = "Al lanzar un conjuro con tirada de ataque, su alcance se duplica. Tus ataques de conjuro a distancia ignoran cobertura media y tres cuartos. Aprendes un truco con tirada de ataque.", effects = {} },
         },
@@ -460,7 +460,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_versado_elemento", name = "Versado en un elemento", requires = "Capacidad de lanzar al menos un conjuro", description = "Eliges un elemento y tus conjuros de ese tipo pegan más y atraviesan resistencias.", source = "PHB",
+        id = "feat_versado_elemento", requiredCaster = "any", name = "Versado en un elemento", requires = "Capacidad de lanzar al menos un conjuro", description = "Eliges un elemento y tus conjuros de ese tipo pegan más y atraviesan resistencias.", source = "PHB",
         traits = {
             { id = "feat_phb_verselem", name = "Beneficios", type = "pasivo", description = "Elige un tipo de daño (acido, frío, fuego, relámpago o trueno): tus conjuros ignoran la resistencia a ese tipo y puedes contar cualquier 1 en sus dados de daño como 2. Puedes tomar el dote varias veces (tipo distinto).", effects = {} },
         },
@@ -488,7 +488,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_adepto_sobrenatural", name = "Adepto sobrenatural", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", description = "Desbloqueas una invocación sobrenatural del brujo.", source = "TCoE",
+        id = "feat_adepto_sobrenatural", requiredCaster = "class", name = "Adepto sobrenatural", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", description = "Desbloqueas una invocación sobrenatural del brujo.", source = "TCoE",
         traits = {
             { id = "feat_tco_sobren", name = "Beneficios", type = "pasivo", description = "Aprendes una Invocacion Sobrenatural de la clase brujo (si tiene requisito, debes cumplirlo como brujo). Puedes cambiarla al subir de nivel.", effects = {} },
         },
@@ -514,7 +514,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_adepto_metamagia", name = "Adepto de la metamagia", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", description = "Aprendes a retorcer tus conjuros con los recursos del hechicero.", source = "TCoE",
+        id = "feat_adepto_metamagia", requiredCaster = "class", name = "Adepto de la metamagia", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", description = "Aprendes a retorcer tus conjuros con los recursos del hechicero.", source = "TCoE",
         traits = {
             { id = "feat_tco_metamagia", name = "Beneficios", type = "pasivo", description = "Aprendes dos opciones de Metamagia de la clase hechicero (cambiables al subir nivel). Obtienes 2 puntos de hechicería solo para Metamagia, que recargan en descanso largo.", effects = {} },
         },
@@ -616,6 +616,16 @@ function API.ProficiencyAllowed(featDef, profs)
     if req.armor and not (profs.armor and profs.armor[tostring(req.armor)]) then return false end
     if req.weapon and not (profs.weapon and profs.weapon[tostring(req.weapon)]) then return false end
     return true
+end
+
+-- Prerequisito de lanzador. "any" = capacidad de lanzar AL MENOS un conjuro (vale la magia
+-- racial: un Man'ari con Taumaturgia califica); "class" = rasgo de CLASE Lanzamiento de
+-- Conjuros o Magia del Pacto (la magia racial NO vale). `caster` = { class = bool, any = bool }.
+function API.CasterAllowed(featDef, caster)
+    local req = featDef and featDef.requiredCaster
+    if not req or type(caster) ~= "table" then return true end
+    if req == "class" then return caster.class == true end
+    return caster.any == true
 end
 
 function API.GetFeats()

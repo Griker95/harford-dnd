@@ -212,4 +212,30 @@ local draftSrc2 = io.open("Harford/Character/HarfordCharacterDraft.lua"):read("*
 chk("el borrador agrega armorProfs y weaponProfs de las clases",
     draftSrc2:find("for _, a in ipairs(classDef.armorProfs or {}) do", 1, true) ~= nil, true)
 
+-- Y los de LANZADOR: "any" acepta magia racial, "class" exige rasgo de clase (medio desde
+-- nivel 2, tercio desde 3, pacto y completo desde 1).
+print("Prerequisitos de lanzador validados")
+chk("las 6 dotes de lanzador lo llevan estructurado",
+    (function() local n = 0 for _ in feats:gmatch('requiredCaster = "') do n = n + 1 end return n end)(), 6)
+do
+    local cargar = loadstring or load
+    local i = feats:find("function API.CasterAllowed", 1, true)
+    local j = feats:find(string.char(10) .. "end", i)
+    local f = cargar("local API = {}" .. string.char(10) .. feats:sub(i, j + 4)
+        .. string.char(10) .. "return API.CasterAllowed")
+    local CasterAllowed = f()
+    local anyF = { requiredCaster = "any" }
+    local classF = { requiredCaster = "class" }
+    chk("magia racial vale para any", CasterAllowed(anyF, { class = false, any = true }), true)
+    chk("pero NO para class", CasterAllowed(classF, { class = false, any = true }), false)
+    chk("lanzador de clase vale para ambos", CasterAllowed(classF, { class = true, any = true }), true)
+    chk("mundano no vale para any", CasterAllowed(anyF, { class = false, any = false }), false)
+    chk("sin requisito siempre pasa", CasterAllowed({}, { class = false, any = false }), true)
+end
+chk("el dialogo filtra por lanzador",
+    advSrc:find("ok = HarfordDnDFeats.CasterAllowed(def, casterCache or {})", 1, true) ~= nil, true)
+chk("con las puertas de nivel del medio y el tercio",
+    draftSrc2:find('elseif ct == "half" then', 1, true) ~= nil
+    and draftSrc2:find('elseif ct == "third" then', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

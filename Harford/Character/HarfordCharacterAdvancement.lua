@@ -1577,6 +1577,7 @@ local function RefreshChoiceDialog()
             -- bono racial (que es la puntuacion final que tendra); en subida, la de la ficha viva.
             local esBorrador = S.raceId and S.raceId ~= ""
             local profsCache  -- se calcula UNA vez por refresco, solo si alguna dote lo pide
+            local casterCache -- idem para el prerequisito de lanzador
             local function Puntuacion(clave)
                 if esBorrador then
                     local base = BaseScoreFor and tonumber(BaseScoreFor(clave)) or 0
@@ -1594,6 +1595,12 @@ local function RefreshChoiceDialog()
                     ok = HarfordDnDFeats.RaceAllowed(def, razaId, subrazaId)
                     if ok and def and def.requiredAbility and HarfordDnDFeats.AbilityAllowed then
                         ok = HarfordDnDFeats.AbilityAllowed(def, Puntuacion)
+                    end
+                    if ok and def and def.requiredCaster and HarfordDnDFeats.CasterAllowed then
+                        if not casterCache and Draft.DraftCasterInfo then
+                            casterCache = Draft.DraftCasterInfo(feature.id)
+                        end
+                        ok = HarfordDnDFeats.CasterAllowed(def, casterCache or {})
                     end
                     if ok and def and def.requiredProficiency and HarfordDnDFeats.ProficiencyAllowed then
                         if not profsCache then

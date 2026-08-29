@@ -163,6 +163,65 @@ local function DraftEquipProficiencies(excludeFeatureId)
     return profs
 end
 
+-- Es lanzador? { class = tiene rasgo de clase (con sus puertas de nivel: medio desde 2,
+-- tercio desde 3), any = eso o magia RACIAL (spellGrants/trucos de raza, incluidos los
+-- elegidos, p.ej. Legado elfico) }. Borrador si hay plan de clases en S; si no, progresion.
+local function DraftCasterInfo(excludeFeatureId)
+    local clase = false
+    local plan = {}
+    if S.classId then
+        plan[#plan + 1] = { classId = S.classId, subclassId = S.subclassId, level = S.primaryLevel }
+        if S.secondaryClassId then
+            plan[#plan + 1] = { classId = S.secondaryClassId, subclassId = S.secondarySubclassId, level = S.secondaryLevel }
+        end
+    elseif HarfordDnDProgression and HarfordDnDProgression.GetClassLevels then
+        for _, e in ipairs(HarfordDnDProgression.GetClassLevels() or {}) do plan[#plan + 1] = e end
+    end
+    for _, e in ipairs(plan) do
+        local classDef = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(e.classId)
+        if classDef then
+            local ct = classDef.casterType
+            local sub = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(classDef.id, e.subclassId)
+            if sub and sub.casterType then ct = sub.casterType end
+            local nivel = tonumber(e.level) or 0
+            if ct == "full" or ct == "pact" then
+                if nivel >= 1 then clase = true end
+            elseif ct == "half" then
+                if nivel >= 2 then clase = true end
+            elseif ct == "third" then
+                if nivel >= 3 then clase = true end
+            end
+        end
+    end
+    local magia = false
+    local raceId, subraceId = S.raceId, S.subraceId
+    if (not raceId or raceId == "") and HarfordDnDProgression and HarfordDnDProgression.GetRace then
+        local r = HarfordDnDProgression.GetRace()
+        raceId, subraceId = r and r.id, r and r.subraceId
+    end
+    local function Mira(feature)
+        if type(feature) ~= "table" then return end
+        if (feature.spellGrants and #feature.spellGrants > 0)
+            or (feature.cantripSpellIds and #feature.cantripSpellIds > 0) then magia = true end
+        if feature.choice and not (excludeFeatureId and feature.id == excludeFeatureId) then
+            local elegidos = S.choiceSelections[feature.id]
+            if not elegidos and HarfordDnDProgression and HarfordDnDProgression.GetChoice then
+                elegidos = HarfordDnDProgression.GetChoice(feature.id)
+            end
+            for _, optId in ipairs(elegidos or {}) do
+                local opt = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
+                    and HarfordDnDBook.GetChoiceOption(feature, optId)
+                if opt and opt.spellId then magia = true end
+            end
+        end
+    end
+    local race = raceId and HarfordDnDRaces and HarfordDnDRaces.GetRace and HarfordDnDRaces.GetRace(raceId)
+    for _, feature in ipairs((race and race.traits) or {}) do Mira(feature) end
+    local subrace = race and HarfordDnDRaces.GetSubrace and HarfordDnDRaces.GetSubrace(raceId, subraceId)
+    for _, feature in ipairs((subrace and subrace.traits) or {}) do Mira(feature) end
+    return { class = clase, any = clase or magia }
+end
+
 local function BuildCreationDraft()
     local abilities = {}
     local array = S.attributeArrays and S.attributeArrays[S.selectedArray]
@@ -410,6 +469,7 @@ end
 HarfordCharacterDraft.DraftSkillProficiencies = DraftSkillProficiencies
 HarfordCharacterDraft.DraftLanguages = DraftLanguages
 HarfordCharacterDraft.DraftEquipProficiencies = DraftEquipProficiencies
+HarfordCharacterDraft.DraftCasterInfo = DraftCasterInfo
 HarfordCharacterDraft.BuildCreationDraft = BuildCreationDraft
 HarfordCharacterDraft.PersistSpellPicks = PersistSpellPicks
 HarfordCharacterDraft.FinishCreation = FinishCreation

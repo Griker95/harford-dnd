@@ -260,6 +260,23 @@ local function Trim(value)
     return tostring(value or ""):gsub("^%s+", ""):gsub("%s+$", "")
 end
 
+-- Resumen para el About: DOS parrafos como maximo. Las descripciones de origen (trasfondo,
+-- variante) pueden traer paginas enteras del manual, y el About es la ficha del personaje,
+-- no el manual: quien quiera el detalle lo tiene en el creador y en el Libro.
+local function Resumen2(value)
+    local texto = Trim(value)
+    if texto == "" then return "" end
+    local parrafos = {}
+    for p in (texto .. "\n\n"):gmatch("(.-)\n%s*\n") do
+        p = Trim(p)
+        if p ~= "" then
+            parrafos[#parrafos + 1] = p
+            if #parrafos == 2 then break end
+        end
+    end
+    return table.concat(parrafos, "\n\n")
+end
+
 -- Ruta de icono (Interface\Icons\X o solo X) -> NOMBRE que usa el markup {icon:NOMBRE}.
 local function IconName(path)
     path = tostring(path or ""):gsub("^.*[\\/]", "")
@@ -984,9 +1001,25 @@ function API.BuildAbout(draft, profileName)
     -- ===== Frame 3: TRASFONDO ===== (nombre coloreado teal como en los perfiles)
     -- Sin trasfondo no hay frame: no todos los personajes tienen uno.
     if bg then
-        local lines = { "{h1:c}Trasfondo {col:" .. COL_RACIAL .. "}" .. tostring(bg.name) .. "{/col}{/h1}" }
-        local desc = Trim(bg.desc)
+        -- Variante elegida (Gladiador, Espia, Comerciante gremial...): entra en el titulo entre
+        -- parentesis -- NormalizeAboutHeading los quita, asi que cargarficha sigue reconociendo
+        -- el trasfondo -- y su texto va como bloque propio tras la descripcion base. Antes la
+        -- variante NO entraba en el About en absoluto.
+        local variante
+        for _, v in ipairs(bg.variants or {}) do
+            if tostring(v.id) == tostring(draft.backgroundVariantId or "") then variante = v break end
+        end
+        local titulo = tostring(bg.name) .. (variante and (" (" .. tostring(variante.name) .. ")") or "")
+        local lines = { "{h1:c}Trasfondo {col:" .. COL_RACIAL .. "}" .. titulo .. "{/col}{/h1}" }
+        -- Las descripciones de origen son RESUMEN en el About: dos parrafos como maximo.
+        local desc = Resumen2(bg.desc)
         if desc ~= "" then lines[#lines + 1] = desc end
+        if variante then
+            local iconoVar = FeatureIconName({ id = variante.id, icon = variante.icon, name = variante.name })
+            lines[#lines + 1] = "{h2}{icon:" .. iconoVar .. ":25} " .. tostring(variante.name) .. "{/h2}"
+            local descVar = Resumen2(variante.desc)
+            if descVar ~= "" then lines[#lines + 1] = ColorizeDescription(descVar) end
+        end
         local body = BuildTraitLines(GetBackgroundTraits(draft), draft)
         if body ~= "" then lines[#lines + 1] = body end
         local iconoBg = IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetFeatureIcon
@@ -1249,6 +1282,7 @@ local function DraftDesdeProgresion(profileName)
         raceId = race.id or "",
         subraceId = race.subraceId or "",
         backgroundId = (P.GetBackground and P.GetBackground(profileName)) or "",
+        backgroundVariantId = (P.GetBackgroundVariant and P.GetBackgroundVariant(profileName)) or "",
         classes = {},
         abilities = {},
         choices = (data and data.choices) or {},

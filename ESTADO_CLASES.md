@@ -136,3 +136,26 @@ Los iconos de las maniobras del Guerrero y de las Maldiciones del Brujo se
 comprobaron contra el cliente con la batería (`grupo iconos`, incluye la tabla
 por nombre completa con `GetFileIDFromPath`): **todos existen en el build**.
 Batería completa: 178 ok / 0 fallos en GRIKER, 183 ok / 0 fallos en MORTYN.
+
+## Cierre 2026-08-29 (tarde)
+
+- **Conjuros pendientes: 6/6 resueltos.** Cinco equivalencias (penitencia =
+  `arrepentimiento`, descarga mental = `aguijon_mental`, castigo abrasador =
+  `golpe_llameante`, castigo justo = `golpe_justo`, estallido estelar =
+  `oleada_estelar`, Conocer la Intención = `impacto_certero`) y rayo del caos
+  incorporado por la web y cableado en Destrucción. La petición a la web queda vacía.
+- **Prerrequisitos de dote APLICADOS los cuatro tipos**: raza (13 dotes,
+  `requiredRaces` con subrazas), característica (5, `requiredAbility`, "una de la
+  lista llega al mínimo"), competencia (5, `requiredProficiency` por token) y
+  lanzador (6, `requiredCaster` any/class con puertas de nivel de medio y tercio).
+  Validados en creación (borrador) y subida (ficha viva). El requisito racial de
+  subclase (Sacerdocio de Elune) se filtra también en las tarjetas del asistente.
+- **Contenido cotejado contra la web** por id en las cuatro familias: trasfondos
+  (41 descs + 61 rasgos), razas (38 + 82), clases (188 seguras, 106 con mecánica
+  adaptada respetadas) y dotes (11). Los 10 marcadores de subclase llevan ahora
+  `subclassMarker = true` (la detección por frase se rompió con el texto web).
+- **Magia racial en el grimorio**: los `spellGrants` de raza/subraza cuentan como
+  siempre preparados (puerta `minCharacterLevel`), trucos elegidos incluidos.
+- **Verificado in-game**: batería 0 fallos en GRIKER (182 ok, con la nota de
+  inmunidad al sueño del Renegado, que es la mecanización funcionando) y MORTYN.
+

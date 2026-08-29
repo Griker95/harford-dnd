@@ -12,11 +12,12 @@ idéntico bajo otro título (ver la tabla de resueltos).
 **Cotejadas las 12 clases** (todas sus listas de conjuros de subclase, niveles de
 clase 1-6). Guerrero, Monje y Cazador de Demonios no tienen listas propias.
 
-## PETICIÓN A LA WEB (chat del códice) — lo único que falta de verdad
+## PETICIÓN A LA WEB — VACÍA (cerrada el 2026-08-29)
 
-Dos entradas para `compendium-data.js` → regeneración de `HarfordCompendioData.lua`.
-El addon NO las añade por su cuenta (fichero compartido). Al incorporarlas, avisar
-para cablear los `spellGrants`.
+**Los 6 conjuros pendientes originales están todos resueltos**: cinco eran
+equivalencias que ya existían en el compendio con otro título (tabla de abajo) y
+el sexto (rayo del caos) lo incorporó la web tras la petición. Solo siguen vivas
+las incoherencias de datos anotadas más abajo, que son de la web.
 
 1. ~~Rayo del caos~~ — **RESUELTO (2026-08-29)**: la web lo incorporó (`rayo_del_caos`,
    nivel 1) y ya está en la lista ampliada de Brujo/Destrucción del addon.

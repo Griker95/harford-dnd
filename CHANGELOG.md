@@ -9,12 +9,49 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 Regeneralo con `python tools/gen_changelog.py`.
 
-- Commits: **500** - del **2026-05-18** al **2026-08-28**
+- Commits: **594** - del **2026-05-18** al **2026-08-29**
 
 ## Agosto de 2026
 
 **Nuevo**
 
+- **picaro** - Conocer la Intencion resuelto — es Impacto certero (True Strike) `0997169`
+- **brujo** - Rayo del caos cableado en la lista ampliada de Destruccion `1b1cff2`
+- **creacion** - los prerequisitos de LANZADOR de las dotes se validan `402a9c4`
+- **creacion** - los prerequisitos de COMPETENCIA de las dotes se validan `6d95f92`
+- **creacion** - los prerequisitos de caracteristica de las dotes se validan `04e4757`
+- **creacion** - los requisitos raciales de dotes y subclases se APLICAN `6f41721`
+- **creacion** - las opciones de conjuro se presentan como en el compendio `42bf05e`
+- **compendio** - la magia racial cuenta como siempre preparada en el grimorio `d359b13`
+- **razas** - Legado elfico del Semielfo elige su truco de mago y sale en el About `e9b2099`
+- **trasfondos** - "un instrumento o juego" es UN grupo combinado a elegir `0a58e42`
+- **razas** - las otras subrazas Draenei mecanizadas con sus descripciones `58d6e49`
+- **razas** - el incremento del Elfo de la Noche es por subraza — Altonato lo cambia `76f911c`
+- **razas** - Elfo de la Noche con DOS subrazas reales, como la web `b4332e1`
+- **creacion** - instrumento musical y juego se eligen por miembro concreto `d627ad8`
+- **creacion** - ninguna eleccion ofrece lo que ya tienes `e7bf877`
+- **creacion** - el dialogo de eleccion lista los nombres de lo marcado `fd583e6`
+- **heroe** - el DM concede el punto desde el menu del target (DNDHERO) `5bfaf26`
+- **heroe** - puntos de heroe segun el manual Warcraft — uno, especial y del DM `bd478f0`
+- **barras** - el tooltip del boton es el MISMO del Libro (y el del grimorio) `0b3aa2d`
+- **barras** - conjuros arrastrables a la barra nativa y supervivencia a .poss `b7e7315`
+- **admin** - click derecho DM en un aura nativa del target lanza su .unaura `b41fdbf`
+- **estados** - click derecho en la tira retira el estado (propio y, con DM, ajeno) `9155df0`
+- **estados** - Inconsciente y Muriendo entran al catalogo; aviso a la web `aea94c6`
+- **frames** - la tira de estados tambien pinta los PROPIOS sobre el PlayerFrame `3e48942`
+- **admin** - el menu de estados del DM se agrupa por categorias del catalogo `4f2c5fc`
+- **yunque** - entrenadores, con el id de catalogo que el codigo espera `28c69f4`
+- **conjuros** - castigo abrasador y castigo justo tambien estaban en el compendio `70fcab0`
+- **conjuros** - penitencia y descarga mental resueltos como equivalencia; peticion a la web `b8e5565`
+- **yunque** - armas y armaduras del sistema, con modificadores y color `560b5df`
+- **clases** - Furia Elemental funcional y riders del Cazador de Demonios `87fbc9d`
+- **yunque** - yunque de secuencias de accion `92d7e46`
+- **yunque** - yunque de rutas de patrulla `c37109f`
+- **estilos** - los estilos de combate condicionales aplican con su condicion `ea3277d`
+- **yunque** - atuendo del NPC, que no estaba bloqueado `6fb2f14`
+- **yunque** - yunque de NPC de fase `4dd963e`
+- **yunque** - yunque de gossip, que saca un guion y no una tirada `26c18ce`
+- **turnos** - el "no" de unirse se contesta con su motivo `21a4d1e`
 - **turnos** - Preparar es la unica rendija del turno ajeno `46be976`
 - **datos** - razas, trasfondos y dotes sin limbo -- 509 rasgos, todos decididos `61b2ce6`
 - **clases** - 100% atendido -- el limbo de "informativo sin mecanica" se vacia `cf3c63a`
@@ -175,6 +212,38 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Arreglos**
 
+- **toc** - Harford a secas y Harford Admin en la lista de addons `1b53a4b`
+- **toc** - HarfordDebug se titula Harford Debug con el color de la familia `ab6c008`
+- **toc** - los addons de datos se titulan Harford Compendio y Harford Objetos `15f9cd8`
+- **heroe** - el uso magico se llama Impacto Certero, no Hechizo Preciso `17230ef`
+- **creacion** - el motor lee requiredAbility (barrera de datos muertos) y candado al dia `b5c7c0b`
+- **dotes** - descripciones cotejadas contra la web — 11 al dia, 0 sin pareja `6dd3580`
+- **clases** - descripciones cotejadas contra la web (188) con marcadores explicitos `f99bf36`
+- **razas** - el Man'ari conserva el CON+1 de hoy; notas de recarga segun la web `e370147`
+- **razas** - descripciones cotejadas contra la web por id — 38 descs y 82 rasgos `618ce35`
+- **trasfondos** - rasgos cotejados contra la web por id — 61 descripciones al dia `3512441`
+- **trasfondos** - descripciones sincronizadas desde la web canonica `6eae4f8`
+- **creacion** - los huecos de arma del equipo se numeran y BLOQUEAN el confirmar `ef1a5fe`
+- **creacion** - la etapa de Equipo colapsa la columna de lista vacia `8b64807`
+- **creacion** - Reiniciar de Caracteristicas fijo junto a Confirmar, fuera del scroll `186a0f5`
+- **trasfondos** - terminologia y grupos correctos de instrumento y juego `72a689b`
+- **iconos** - Competencias de clase usa inv_scroll_11, como la entrada agregada `e6a6d8b`
+- **creacion** - el Reiniciar del array 4d6 va al borde izquierdo, visible `6b54c16`
+- **razas** - Man'ari segun la web — solo CON +1 y Magia Vil con conjuros `e9421d4`
+- **creacion** - el detalle de origen alinea con el titulo, sin canalon izquierdo `4954da0`
+- **creacion** - detalle de raza sin hueco muerto, sin solape y con la raza base `f1674db`
+- **creacion** - los nombres marcados caben en 3 lineas sin pisar Confirmar `1fcb384`
+- **creacion** - el selector de idioma ya no ofrece los que ya hablas `669a05b`
+- **iconos** - Esconderse usa eps_bg3_hide, a juego con el resto de acciones basicas BG3 `15cfac7`
+- **barras** - las acciones basicas se pueden colocar en la barra nativa `557fba3`
+- **barras** - habilidades arrastrables de verdad, con nombre y tooltip en el boton `b316e6a`
+- **acciones** - Desengancharse se resuelve anunciandose, con marcador explicito `0b222a5`
+- **acciones** - fuera la coletilla gris de Desengancharse `0d3ba40`
+- **frames** - la tira propia arranca donde empiezan las barras, no bajo el retrato `baafd24`
+- **estados** - el TTL de cache remota ya no se muestra como "Quedan 600 s" `5acd3e9`
+- **yunque** - los yunques no se veian entre ellos `bf56b35`
+- **musica** - el despliegue no copiaba los .ogg, asi que ninguna emisora sonaba `a4bc96a`
+- cuatro globales accidentales, cazados por la auditoria de bytecode `da291f8`
 - **acciones** - el menu de coste cobra LO ELEGIDO, no el click que lo abre `cb8a242`
 - **movimiento** - el turno ajeno te ancla donde estas, SIEMPRE `946a934`
 - **razas** - "Elfo noble" y "Alto elfo" cargaban sin rasgos raciales `d077f45`
@@ -351,6 +420,15 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Refactor**
 
+- **ficha** - descansos (corto/largo/dados de golpe/menu) a HarfordDnDRest `948b99c`
+- **panel** - tooltip de competencias y reacciones preparadas al modulo de acciones `a89d293`
+- **panel** - acciones basicas, rituales, reservas y prompts a modulo propio `3f5d2b6`
+- **ficha** - panel de acciones externas (ficha NPC) a HarfordDnDActionPanel `5b33c13`
+- **ficha** - API externa de tiradas y dos mecanicas mas fuera de HarfordDnD `25b9fc9`
+- **ficha** - menus y riders del Libro extraidos a HarfordDnDBookActions `5c73ebc`
+- los receptores de loot entran al troceador compartido `ee8081c`
+- fase B -- un solo troceador para progresion y equipo `d17e6a6`
+- fase A -- fuera el codigo muerto verificado `4b64027`
 - **turnos** - una sola tarjeta y un solo sitio donde se pinta `ebc65f8`
 - **tiradas** - un solo formato de linea, sin dos puntos y con el desenlace al final `99ba4e3`
 - **ids** - prefijo raza_ en 39 entidades e idioma_ en 21 idiomas `4ec0f16`
@@ -378,6 +456,12 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Documentacion**
 
+- **epsilon** - la forja no acepta las clases de WoW, y el rechazo corta la cadena `38e91b7`
+- **claude** - fase C al dia — sexto corte, leccion del boton de combate y fin de cortes limpios `5ee475a`
+- **claude** - fase C documentada — patrones Init/Build y estado de los cortes `3022dc1`
+- **conjuros** - CONJUROS_PENDIENTES al dia; estallido estelar resuelto y concedido `feb113d`
+- **estado** - Brujo resuelto (pact ya cubre ambas reglas) e iconos verificados `7a14a0f`
+- el bloqueo de criatura acompanante estaba RESUELTO y sin tachar `b42ec81`
 - el Cazador estaba al 85%, no al 61% -- el criterio contaba mal las trampas `734659c`
 - cifras de mecanizacion regeneradas a 2026-08-28, con el cast en el criterio `5960e91`
 - por que EpsilonLib es RequiredDeps `5e1467a`
@@ -432,6 +516,16 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Otros**
 
+- test(debug): el ciclo de estados respeta las inmunidades del verificador `104a327`
+- test(debug): la bateria sigue al naming actual de dotes y detalla el paso del ciclo `d0a4039`
+- test(clases): el stub del compendio entra en el env aislado del Libro `a16ddde`
+- test(clases): stub de HarfordCompendioAPI para verificar elecciones de truco `913f0dd`
+- test(opciones): el candado de DraftLanguages sigue a su firma nueva `76ec1f6`
+- test(heroe): candado del DNDHERO sin salto de linea literal en el find `17f4c7c`
+- test(debug): la bateria verifica tambien los iconos por NOMBRE del catalogo `6f01fbc`
+- test(verificar): cuatro grupos que EJERCITAN los sistemas sin suite propia `9286f28`
+- test(auditoria): las referencias cruzadas de datos quedan como candado permanente `82ff891`
+- release: version 2.1.0 -- lista para distribuir `62a7146`
 - build: pasar del margen de locales deja de ser un aviso y no despliega `feba5a4`
 - test(verificar): la tira sin sitio arriba se solapa a proposito, y la prueba no lo sabia `6e3f278`
 - build: EpsilonLib pasa a RequiredDeps, y con ella LibDeflate `6a1b89c`

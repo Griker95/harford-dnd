@@ -12611,7 +12611,17 @@ local function CleanMarkdown(value, rich)
     value = value:gsub("}}", "")
     value = value:gsub("!%b[]%b()", "")               -- imagenes ![alt](url)
     value = value:gsub("%[([^%]]*)%]%b()", "%1")      -- enlaces [texto](url) -> texto
-    value = value:gsub("\n[ \t]*|[^\n]*", "")         -- filas de tabla completas (cabecera/separador/datos)
+    value = value:gsub("\n[ \t]*|[^\n]*", "")         -- filas de tabla que EMPIEZAN por | (raras)
+    -- Tablas GMbinder normales: `celda|celda`, SIN pipe inicial ("Nivel de Conjuro|Conjuros",
+    -- "1.º|vacío oscuro, ..."). El gsub de arriba no las tocaba y la tabla entera salia cruda
+    -- en el About (Conjuros Ampliados de Afliccion). La fila separadora (----|----) se elimina
+    -- y cada fila de datos se vuelve texto plano "izquierda: derecha".
+    value = value:gsub("[^\n]*|[^\n]*", function(linea)
+        if linea:match("^[%s%-|:]+$") then return "" end
+        return (linea:gsub("%s*|%s*", ": "))
+    end)
+    value = value:gsub("%^[^%^\n]+%^", "")            -- marcadores de fuente ^XGE^ del manual
+    value = value:gsub("\226\156\166%s*", "")         -- adorno ✦ (sale como cuadro en el cliente)
     -- Sub-encabezados: en modo rich (About) se convierten a {h3} (titulos secundarios); en plano
     -- (tooltips) se quita el marcador y queda como linea de texto.
     -- Blockquote ANTES de los headings: en el manual hay lineas "> #### Titulo"; si se quitara el

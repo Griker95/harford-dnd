@@ -167,7 +167,12 @@ Grupo("estados", "las 48 condiciones: alcanzables, y su ciclo aplicar/ver/retira
     for id, def in pairs(C.DEFS) do
         if def.tracking == "state" and not def.auraId then
             local yaEstaba = C.Has and C.Has("player", id)
-            if not yaEstaba then
+            -- El VERIFICADOR puede ser inmune (un Renegado no puede dormirse: Naturaleza
+            -- no-muerta): que el motor rechace aplicarselo es lo CORRECTO, no un fallo.
+            local inmune = C.HasConditionImmunity and C.HasConditionImmunity("player", id)
+            if inmune then
+                r.nota("inmune a " .. id .. " (correcto para esta raza): ciclo no probado aqui")
+            elseif not yaEstaba then
                 probados = probados + 1
                 local aplicado = C.ApplyOwned and C.ApplyOwned(id, { duration = "manual" })
                 local activo = aplicado and C.Has and C.Has("player", id)

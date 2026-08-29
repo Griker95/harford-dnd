@@ -4,7 +4,7 @@
 import io, json, re, sys, glob, collections
 sys.stdout.reconfigure(encoding="utf-8")
 rows = json.load(io.open("cotejo2.json", encoding="utf-8"))
-COMP = glob.glob(r"C:/Users/marco/Documents/New project/**/HarfordCompendioData.lua"  # desde la RAIZ: el compendio salio de Harford/ al pasar a addon LoadOnDemand, recursive=True)[0]
+COMP = glob.glob(r"C:/Users/marco/Documents/New project/**/HarfordCompendio.lua", recursive=True)[0]
 d = io.open(COMP, encoding="utf-8").read()
 st = list(re.finditer(r'\n {8}id = "[a-z0-9_]+",', d))
 dlen = {}

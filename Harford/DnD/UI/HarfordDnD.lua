@@ -3021,7 +3021,16 @@ DoWeaponAttack = function(options)
         bonusTxt = HarfordDnDCalc.BonusConcat(base, prof, wmod, misc)
     end
     if condPenalty ~= 0 then bonusTxt = bonusTxt .. " " .. fmtSigned(-condPenalty) end
-    local armorClass, hit, armorText = HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, "target")
+    local armorClass, hit, armorText
+    if HarfordDnDStore.pendingHeroAutoHit then
+        -- Punto de heroe (Luchador Fisico): el ataque IMPACTA sin consultar la CA. La marca la
+        -- puso SpendUse y la consume el primer ataque de arma tras el gasto. armorClass=0 (y no
+        -- nil) para que las rutas de "CA resuelta" (daño automatico, animacion) sigan corriendo.
+        HarfordDnDStore.pendingHeroAutoHit = nil
+        armorClass, hit, armorText = 0, true, " |cffffd100Impacto automatico (Punto de Heroe)|r"
+    else
+        armorClass, hit, armorText = HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, "target")
+    end
     if armorText and armorText ~= "" then
         bonusTxt = bonusTxt .. armorText
     end

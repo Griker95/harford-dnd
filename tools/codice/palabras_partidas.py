@@ -145,7 +145,7 @@ if "--apply" in sys.argv:
 
     # se corrige en el Lua del addon, que es la fuente; la web se regenera despues
     FICHEROS = []
-    for nombre in ("HarfordCompendioData", "HarfordDnDBook", "HarfordDnDBackgrounds",
+    for nombre in ("HarfordCompendio", "HarfordDnDBook", "HarfordDnDBackgrounds",
                    "HarfordDnDFeats", "HarfordDnDRaces", "HarfordDnDBookText", "HarfordDnDData"):
         FICHEROS += glob.glob(RAIZ + "/**/%s.lua" % nombre, recursive=True)
     reglas = [(re.compile(r"\b" + re.escape(a) + r"\s" + re.escape(b) + r"\b"), a + b)

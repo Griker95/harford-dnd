@@ -14,9 +14,9 @@ import sys
 
 sys.stdout.reconfigure(encoding='utf-8')
 
-BASE = 'Harford/Professions/'
-DATA = BASE + 'HarfordProfessionsData.lua'
-ITEMS = BASE + 'HarfordProfessionsItems.lua'
+BASE = 'HarfordProfesiones/'
+DATA = BASE + 'HarfordProfesiones.lua'
+ITEMS = BASE + 'HarfordProfesionesItems.lua'
 
 TBC = 0.8          # 375 -> 300
 LICH = 2.0 / 3.0   # 450 -> 300

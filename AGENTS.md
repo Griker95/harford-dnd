@@ -3974,7 +3974,7 @@ falla, asi que sirve tal cual para un hook. Probado rompiendo un fichero a propo
 a desplegar y dice cual y por que.
 
 Los addons desplegados son cinco: `Harford`, `HarfordAdmin`, `HarfordDebug` y los dos
-LoadOnDemand `HarfordProfessionsData` y `HarfordCompendioData`.
+LoadOnDemand `HarfordProfesiones` y `HarfordCompendio`.
 
 ## Comprobar Lua contra el 5.1 REAL, no contra el interprete local (2026-08-21)
 

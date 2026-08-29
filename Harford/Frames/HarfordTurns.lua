@@ -748,16 +748,19 @@ end
 local function ApplyTurnNotice(message, sender)
     local opcode, serialRaw, activeRaw, countRaw, adminRaw, entryRaw = strsplit("|", message or "")
 
-    if (opcode == "TURN" or opcode == "TURNB") and sender and sender ~= "" then
-        ultimoAvanceAjeno.quien = Ambiguate and Ambiguate(sender, "short") or sender
-        ultimoAvanceAjeno.cuando = (time and time()) or 0
-    end
-
     -- `TURNB` era el aviso de turno por bloque. Se descarta en silencio: un cliente sin actualizar
     -- puede seguir mandandolo, y aplicarlo volveria a meter aqui el modo que se ha retirado.
     if opcode == "TURNB" then return false end
 
     if opcode ~= "TURN" then return false end
+    -- Un aviso de turno solo tiene sentido dentro de un combate activo. Si llega retrasado despues
+    -- de `TEND`, no debe mover el indice ni hacer caducar condiciones de una pelea ya terminada.
+    if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.HasActiveCombat
+        and HarfordTurnOrderAPI.HasActiveCombat()) then return false end
+    if sender and sender ~= "" then
+        ultimoAvanceAjeno.quien = Ambiguate and Ambiguate(sender, "short") or sender
+        ultimoAvanceAjeno.cuando = (time and time()) or 0
+    end
 
     local serial = SafeNumber(serialRaw, 0)
     local activeIndex = SafeNumber(activeRaw, 1)
@@ -808,6 +811,21 @@ local function RefrescarMarcadorTrasRecibir()
     end
     habiaCombate = hay and true or false
     if HarfordTurnOrderAPI.RefreshTurnMarker then HarfordTurnOrderAPI.RefreshTurnMarker() end
+end
+
+-- `TEND` es el cierre inmediato del combate. La foto STATE que le sigue conserva la lista
+-- preparada, pero no puede ser el unico mecanismo: si llega tarde o se pierde, el jugador no
+-- debe quedarse dentro de un combate que el DM ya ha terminado.
+local function ApplyCombatEnd()
+    local store = EnsureStore()
+    HarfordTurnOrderAPI.SetCombatState(nil)
+    store.activeIndex = 1
+    store.activeBando = nil
+    store.faseBando = nil
+    store.asalto = nil
+    EnsureRoundMarker()
+    if Combate and Combate.CleanUpAfterCombat then pcall(Combate.CleanUpAfterCombat) end
+    return true
 end
 
 -- Cuando se vio la ultima foto. Lo mira el relevo entre companeros para no contestar si el DM ya
@@ -1010,6 +1028,8 @@ local function ApplyTurnMessage(message, sender)
         local _, cuantos = strsplit("|", message or "")
         AnnounceCombatStart(SafeNumber(cuantos, 0))
         return true
+    elseif opcode == "TEND" then
+        return ApplyCombatEnd()
     elseif opcode == "TREQ" then
         -- Solo el DM tiene la foto buena. Si hay varios, contestan todos: la foto es la misma y
         -- aplicarla dos veces no cambia nada, a diferencia de los estados de NPC, donde la lista
@@ -1117,6 +1137,12 @@ local function SendCombatStart(combatientes)
     local ch = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
     if not ch then return false end
     return HarfordSync.Send(COMM_PREFIX, "TSTART|" .. tostring(math.floor(tonumber(combatientes) or 0)), ch)
+end
+
+local function SendCombatEnd()
+    local ch = HarfordSync and HarfordSync.BestChannel and HarfordSync.BestChannel()
+    if not ch then return false end
+    return HarfordSync.Send(COMM_PREFIX, "TEND|", ch)
 end
 
 AnnounceCombatStart = function(combatientes)
@@ -2126,6 +2152,10 @@ end
 -- ─── AVANCE POR BANDOS ──────────────────────────────────────────────────────
 local function NextTurn()
     if not IsTurnAdmin() then Print("Solo el admin puede avanzar turnos.") return end
+    if not HarfordTurnOrderAPI.HasActiveCombat() then
+        Print("Inicia el combate antes de avanzar turnos.")
+        return
+    end
     if OtroDMAcabaDeAvanzar() then return end
     ClaimAdminIfNeeded()
     local store = EnsureStore()
@@ -2159,6 +2189,10 @@ end
 
 local function PrevTurn()
     if not IsTurnAdmin() then Print("Solo el admin puede retroceder turnos.") return end
+    if not HarfordTurnOrderAPI.HasActiveCombat() then
+        Print("Inicia el combate antes de avanzar turnos.")
+        return
+    end
     if OtroDMAcabaDeAvanzar() then return end
     ClaimAdminIfNeeded()
     local store = EnsureStore()
@@ -2546,20 +2580,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
             local alEntrar = (time and time()) or 0
             C_Timer.After(12, function()
                 if (ULTIMA_FOTO_VISTA or 0) >= alEntrar then return end
-                if PurgeStaleEntries() then
-                    -- Con el motivo: "se retiro un combate abandonado" a secas no deja saber si
-                    -- tiene razon. Con la edad y el limite, el propio aviso se explica -- y si el
-                    -- limite sale de 15 min siendo tu quien manda, es que el permiso de DM aun no
-                    -- estaba listo al entrar.
-                    local p = HarfordTurnOrderAPI.ultimaPurga or {}
-                    local edad = (tonumber(p.ahora) or 0) - (tonumber(p.sello) or 0)
-                    Print(string.format(
-                        "|cff808080Se retiro un combate abandonado|r (%s; limite %d min porque %s).",
-                        (p.motivo == "sin sello") and "sin sello de tiempo"
-                            or string.format("sin tocar desde hace %d min", math.floor(edad / 60)),
-                        math.floor((tonumber(p.limite) or 0) / 60),
-                        p.mandaba and "mandas tu" or "no mandas tu"))
-                end
+                PurgeStaleEntries()
             end)
         else
             PurgeStaleEntries()
@@ -2628,7 +2649,8 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     end
     if applied then
         local store = EnsureStore()
-        if opcode ~= "TURN" then
+        if opcode ~= "TURN" and opcode ~= "TEND"
+            and HarfordTurnOrderAPI.HasActiveCombat() then
             -- TURN y STATE pueden llegar en orden distinto. El serial de sesion
             -- mantiene la clave de deduplicacion alineada sin persistir nada.
             AlertTurnChanged(store.entries[store.activeIndex], store.activeIndex, turnSerial)
@@ -2679,6 +2701,7 @@ if Combate and Combate.Init then
         SendState = SendState,
         AnnounceCombatStart = AnnounceCombatStart,
         SendCombatStart = SendCombatStart,
+        SendCombatEnd = SendCombatEnd,
     })
 end
 

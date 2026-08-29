@@ -721,13 +721,21 @@ local function CreateDetailFrame()
     DetailFrame.role = BodyText(DetailFrame.mechanics, -10)
     DetailFrame.source = CreateFont(DetailFrame, "GameFontHighlightSmall", "BOTTOMLEFT", DetailFrame, "BOTTOMLEFT", 28, 52)
     DetailFrame.source:SetTextColor(0.08, 0.04, 0.015, 1)
-    -- Fila de botones: Lanzar Hechizo | Enlace Chat | Ajuste (dropdown Favorito/Preparado/Mi Conjuro).
+    -- Fila de botones: Lanzar conjuro | Enlace Chat | Ajuste (dropdown Favorito/Preparado/Mi Conjuro).
     DetailFrame.launch = CreateFrame("Button", nil, DetailFrame, "UIPanelButtonTemplate")
     DetailFrame.launch:SetSize(140, 28)
     DetailFrame.launch:SetPoint("BOTTOMLEFT", DetailFrame, "BOTTOMLEFT", 28, 18)
-    DetailFrame.launch:SetText("Lanzar Hechizo")
+    DetailFrame.launch:SetText("Lanzar conjuro")
     DetailFrame.launch:SetScript("OnClick", function()
-        if state.selectedSpell then ShowCastFrame(state.selectedSpell) end
+        if not state.selectedSpell then return end
+
+        -- ResolveCast conserva la ruta unica de reglas: solo las areas reales abren el
+        -- selector; los conjuros de objetivo unico o informativos se resuelven aqui.
+        local ok, err = API.ResolveCast(state.selectedSpell.id, {})
+        if not ok then
+            PrintMessage(tostring(err or "no se pudo lanzar el conjuro"))
+        end
+        RefreshDetailCastState()
     end)
 
     DetailFrame.chat = CreateFrame("Button", nil, DetailFrame, "UIPanelButtonTemplate")
@@ -748,7 +756,7 @@ local function CreateDetailFrame()
         ToggleDropDownMenu(1, nil, DetailFrame.adjustDropdown, self, 0, 0)
     end)
 
-    -- Re-evalua "Lanzar Hechizo" ante CUALQUIER cambio de recurso local (gasto al lanzar, +/- de la
+    -- Re-evalua "Lanzar conjuro" ante CUALQUIER cambio de recurso local (gasto al lanzar, +/- de la
     -- UI de recursos, descanso, ajuste manual). Todos terminan en ScheduleMyResourceBroadcast ->
     -- HarfordUnitFrames.Refresh(), el endpoint universal; lo enganchamos. Sin polling.
     if not API._castStateHooked and hooksecurefunc then
@@ -1500,7 +1508,6 @@ init:SetScript("OnEvent", function()
         HarfordDebug.Log("HarfordCompendio cargado.")
     end
 end)
-
 
 
 

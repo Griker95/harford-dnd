@@ -40,15 +40,13 @@ function API.CreateBase(opts)
     controls.armorClassLabel = armorLabel
     controls.armorClassBox = armorBox
 
-    -- MANIOBRAS del Manual del Jugador que no son un ataque: agarrar, empujar, escapar,
-    -- estabilizar y cobertura. Van todas en un unico boton porque la seccion Ataque no tiene
-    -- alto libre para otra fila (las dos filas de botones ya llegan a -166 sobre 183 de panel).
     -- La COBERTURA se DECLARA, no se calcula: el addon conoce posiciones pero no la geometria
     -- del mundo, asi que no puede saber que hay un muro en medio.
     if armorBox then
-        local manBtn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
-        manBtn:SetSize(96, 18)
-        manBtn:SetPoint("TOPRIGHT", armorBox, "BOTTOMRIGHT", 0, -4)
+        local coverBtn = CreateFrame("Button", nil, parent, "UIPanelButtonTemplate")
+        coverBtn:SetSize(96, 18)
+        coverBtn:SetPoint("TOPRIGHT", armorBox, "BOTTOMRIGHT", 0, -4)
+        coverBtn:SetText("Cobertura")
 
         local function CoverMenu(M)
             local out = {}
@@ -66,56 +64,26 @@ function API.CreateBase(opts)
             return out
         end
 
-        manBtn:SetScript("OnClick", function(self)
+        coverBtn:SetScript("OnClick", function(self)
             local M = HarfordDnDManeuvers
             if not M then return end
-            -- Agarrar/empujar sustituyen a UNO de tus ataques y son prueba enfrentada: aqui se
-            -- tira y se anuncia el numero a superar; quien defiende elige Atletismo o Acrobacias
-            -- y responde con su ficha, igual que en las salvaciones de las maniobras de picaro.
-            local menu = {
-                { text = "Maniobras", isTitle = true, notCheckable = true },
-                { text = "Agarrar", notCheckable = true, func = function() M.Grapple("target") end },
-                { text = "Empujar", notCheckable = true, func = function() M.Shove("target") end },
-                { text = "Escapar del agarre", notCheckable = true, hasArrow = true, menuList = {
-                    { text = "Con Atletismo", notCheckable = true, func = function() M.Escape("Atletismo") end },
-                    { text = "Con Acrobacias", notCheckable = true, func = function() M.Escape("Acrobacias") end },
-                } },
-                { text = "Soltar a quien agarras", notCheckable = true, func = function() M.ReleaseGrapple("target") end },
-                { text = "Estabilizar", notCheckable = true, hasArrow = true, menuList = {
-                    { text = "Prueba de Medicina (CD 10)", notCheckable = true, func = function() M.Stabilize("target", false) end },
-                    { text = "Con utiles de sanador (sin prueba)", notCheckable = true, func = function() M.Stabilize("target", true) end },
-                } },
-                { text = "Cobertura del objetivo", notCheckable = true, hasArrow = true, menuList = CoverMenu(M) },
-            }
             if EasyMenu then
-                parent._maneuverMenu = parent._maneuverMenu
-                    or CreateFrame("Frame", "HarfordManeuverMenu", UIParent, "UIDropDownMenuTemplate")
-                EasyMenu(menu, parent._maneuverMenu, self, 0, 0, "MENU")
+                parent._coverMenu = parent._coverMenu
+                    or CreateFrame("Frame", "HarfordCoverMenu", UIParent, "UIDropDownMenuTemplate")
+                EasyMenu(CoverMenu(M), parent._coverMenu, self, 0, 0, "MENU")
             end
         end)
-        manBtn:SetScript("OnEnter", function(self)
+        coverBtn:SetScript("OnEnter", function(self)
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            GameTooltip:SetText("Maniobras", 1, 0.82, 0)
-            GameTooltip:AddLine("Agarrar y empujar sustituyen a uno de tus ataques: prueba enfrentada de Atletismo contra el Atletismo o las Acrobacias del objetivo, a su eleccion.", 1, 1, 1, true)
-            GameTooltip:AddLine("Estabilizar es una accion: Medicina CD 10, o sin prueba con los utiles de sanador.", 1, 1, 1, true)
-            GameTooltip:AddLine("Cobertura: media +2, tres cuartos +5 a la CA y salvaciones de Destreza del objetivo. Total: no puede ser elegido.", 1, 1, 1, true)
+            GameTooltip:SetText("Cobertura", 1, 0.82, 0)
+            GameTooltip:AddLine("Cobertura: media +2 o alta +5 a la CA y salvaciones de Destreza del objetivo.", 1, 1, 1, true)
             GameTooltip:Show()
         end)
-        manBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
-        controls.maneuverButton = manBtn
-        controls.coverButton = manBtn   -- compatibilidad con el nombre anterior
+        coverBtn:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        controls.coverButton = coverBtn
 
-        -- La cara del boton muestra la cobertura cuando hay una declarada, porque es el unico
-        -- estado del menu que sigue activo y modifica cada tirada de ataque.
         function API.RefreshCover()
-            local M = HarfordDnDManeuvers
-            local level, def
-            if M then level, def = M.GetCover() end
-            if def and level ~= "none" then
-                manBtn:SetText("Cob: " .. def.label)
-            else
-                manBtn:SetText("Maniobras")
-            end
+            coverBtn:SetText("Cobertura")
         end
         API.RefreshCover()
     end

@@ -92,7 +92,7 @@ for w, bien in sorted(REGLAS.items(), key=lambda x: -sum(formas[sa(x[0])].values
 
 if "--apply" in sys.argv:
     FICHEROS = []
-    for nombre in ("HarfordCompendioData", "HarfordDnDBook", "HarfordDnDBackgrounds",
+    for nombre in ("HarfordCompendio", "HarfordDnDBook", "HarfordDnDBackgrounds",
                    "HarfordDnDFeats", "HarfordDnDRaces", "HarfordDnDBookText", "HarfordDnDData"):
         FICHEROS += glob.glob(RAIZ + "/**/%s.lua" % nombre, recursive=True)
     # Solo la PROSA. Ni `name` ni `label`: el addon empareja por ese texto (listas de

@@ -293,17 +293,21 @@ local function PersistSpellPicks(draft)
     if not next(ampliados) then ampliados = nil end
 
     local picks = S.spellPicks
-    for className in pairs(picks.sembradas or {}) do
-        for _, spell in ipairs((SpellsForClass and SpellsForClass(className, "cantrip", 9, ampliados)) or {}) do
+    for pickerKey in pairs(picks.sembradas or {}) do
+        local source = (picks.spellSources or {})[pickerKey] or {}
+        local className = source.className or pickerKey
+        local extraNames = source.extraNames or ampliados
+        local subclassClassName = source.subclassClassName
+        for _, spell in ipairs((SpellsForClass and SpellsForClass(className, "cantrip", 9, extraNames, subclassClassName)) or {}) do
             if db.knownSpells[spell.id] and not (picks.cantrips or {})[spell.id] then
                 db.knownSpells[spell.id] = nil
             end
         end
-        for _, spell in ipairs((SpellsForClass and SpellsForClass(className, "spell", 9, ampliados)) or {}) do
+        for _, spell in ipairs((SpellsForClass and SpellsForClass(className, "spell", 9, extraNames, subclassClassName)) or {}) do
             if poolTbl[spell.id] and not (picks.spells or {})[spell.id] then
                 poolTbl[spell.id] = nil
             end
-            if (picks.usaPreparados or {})[className]
+            if (picks.usaPreparados or {})[pickerKey]
                 and db.preparedSpells[spell.id] and not (picks.prepared or {})[spell.id] then
                 db.preparedSpells[spell.id] = nil
             end

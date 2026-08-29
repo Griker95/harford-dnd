@@ -211,7 +211,7 @@ for i, (pos, bid, bname) in enumerate(bstarts):
                 "traits": parse_features(block)})
 
 # ---------- CONJUROS ----------
-comp = rd("HarfordCompendioData.lua")
+comp = rd("HarfordCompendio.lua")
 spells = []
 SPELL_KEYS_STR = ["name", "school", "affinity", "castingTime", "range", "components", "duration",
                   "savingThrow", "attack", "damage", "condition", "source", "description", "mechanics", "roleNotes"]
@@ -272,8 +272,8 @@ for c in classes:
 # ---------- PROFESIONES ----------
 # Parseo POR LINEA con extraccion de campo individual: los datos van alineados con espacios
 # variables y las regex de linea completa se rompian con ellos.
-prof_src = rd("HarfordProfessionsData.lua")
-items_src = rd("HarfordProfessionsItems.lua")
+prof_src = rd("HarfordProfesiones.lua")
+items_src = rd("HarfordProfesionesItems.lua")
 item_names = dict(re.findall(r'\["([a-z_0-9]+)"\]\s*=\s*\{\s*id\s*=\s*[^,]+,\s*name\s*=\s*"([^"]+)"', items_src))
 
 def fld(line, key):

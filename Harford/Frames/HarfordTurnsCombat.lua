@@ -17,7 +17,7 @@ local API = HarfordTurnsCombat
 -- "Preparado" actua en el conteo 30.
 local ROUND_MARKER_INITIATIVE = 9999
 local COMM_PREFIX
-local AnnounceCombatStart, SendCombatStart
+local AnnounceCombatStart, SendCombatStart, SendCombatEnd
 
 -- Inyectadas por HarfordTurns: este modulo no toca su estado interno directamente.
 local AdvanceTurnSerial, ClaimAdminIfNeeded, EnsureActiveVisible, EnsureRoundMarker, EnsureStore, EntryBelongsToMe, IsSystemEntry, IsTurnAdmin, MarkChanged, Print, SafeNumber, SendState
@@ -29,6 +29,7 @@ function API.Init(deps)
     AdvanceTurnSerial = deps.AdvanceTurnSerial or AdvanceTurnSerial
     AnnounceCombatStart = deps.AnnounceCombatStart or AnnounceCombatStart
     SendCombatStart = deps.SendCombatStart or SendCombatStart
+    SendCombatEnd = deps.SendCombatEnd or SendCombatEnd
     ClaimAdminIfNeeded = deps.ClaimAdminIfNeeded or ClaimAdminIfNeeded
     EnsureActiveVisible = deps.EnsureActiveVisible or EnsureActiveVisible
     EnsureRoundMarker = deps.EnsureRoundMarker or EnsureRoundMarker
@@ -245,6 +246,9 @@ local function EndCombat()
     EnsureRoundMarker()
     RecogerTodo()
     Print("|cffffff00Fin del combate.|r")
+    -- El cierre necesita su propio aviso, igual que el inicio. La foto posterior conserva la
+    -- mesa preparada, pero no debe ser la unica forma de enterarse de que ya no hay combate.
+    if SendCombatEnd then SendCombatEnd() end
     MarkChanged()
     SendState()
 end

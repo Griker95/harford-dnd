@@ -254,8 +254,13 @@ chk("y su rotulo se queda vacio",
     areaSrc:find('if EsObjetivoUnico(def) then return "" end', 1, true) ~= nil, true)
 -- Y donde se pinta, un rotulo vacio no deja los parentesis colgando.
 chk("sin parentesis vacios",
-    areaSrc:find('and (" (" .. ShapeText(session.definition) .. ")") or ""', 1, true) ~= nil, true)
+    areaSrc:find('and (" (" .. ShapeText(definition) .. ")") or ""', 1, true) ~= nil, true)
 chk("ni guiones sueltos",
     areaSrc:find('((forma ~= "") and (forma .. " - ") or "")', 1, true) ~= nil, true)
+
+-- Un ataque debe publicar primero el resultado de impacto; los dados de daño quedan para el
+-- primer EXITO y no se anuncian cuando todos los objetivos fallan.
+chk("el dano de ataque espera al impacto",
+    areaSrc:find('and session.definition.resolution ~= "attack" then', 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

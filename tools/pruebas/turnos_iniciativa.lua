@@ -38,6 +38,7 @@ C.Init({
     EntryBelongsToMe = function(e) return e and e.name == "Marcos" end,
     MarkChanged = function() end,
     SendState = function() end,
+    SendCombatEnd = function() enviados[#enviados + 1] = { msg = "TEND|", ch = "RAID" } end,
     Print = function(m) impresos[#impresos+1] = m end,
     SafeNumber = function(v, d) local n = tonumber(v) if n == nil then return d end return n end,
 })
@@ -89,6 +90,7 @@ C.EndCombat()
 chk("el combate deja de estar activo", estadoCombate, nil)
 chk("pero la mesa se queda montada", #store.entries > 0, true)
 chk("y el asalto vuelve a cero", store.asalto, nil)
+chk("y avisa del fin a la raid", enviados[#enviados] and enviados[#enviados].msg, "TEND|")
 
 print("Solo el admin")
 esAdmin = false

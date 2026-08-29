@@ -76,6 +76,12 @@ print("Empezar el combate avisa a la mesa")
 chk("hay aviso propio", turnos:find('"TSTART|"', 1, true) ~= nil, true)
 chk("y quien lo recibe lo ve", turnos:find("COMIENZA EL COMBATE", 1, true) ~= nil, true)
 chk("se le abre la ventana", turnos:find("if TurnFrame and not TurnFrame:IsShown() then TurnFrame:Show() end", 1, true) ~= nil, true)
+chk("el fin tambien tiene aviso propio", turnos:find('"TEND|"', 1, true) ~= nil, true)
+local aplicarTurno = assert(turnos:find("local function ApplyTurnNotice", 1, true))
+chk("un turno retrasado fuera de combate se descarta",
+    turnos:find("HarfordTurnOrderAPI.HasActiveCombat()", aplicarTurno, true) ~= nil, true)
+chk("el fin no dispara oyentes de cambio de turno",
+    turnos:find('opcode ~= "TURN" and opcode ~= "TEND"', 1, true) ~= nil, true)
 -- Mensaje PROPIO y no deducido de la foto: quien llega tarde tambien recibe una foto con combate
 -- activo, y deducirlo de ahi le anunciaria un combate que empezo hace cinco asaltos.
 local combate = io.open("Harford/Frames/HarfordTurnsCombat.lua"):read("*a")

@@ -37,9 +37,9 @@ from nombres_display import casa                                  # noqa: E402
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 ENTRADA = os.path.join(BASE, "cotejo", "profesiones_wowhead.json")
-ADDON = r"C:/Users/marco/Documents/New project/Harford/Professions"
-F_DATA = os.path.join(ADDON, "HarfordProfessionsData.lua")
-F_ITEMS = os.path.join(ADDON, "HarfordProfessionsItems.lua")
+ADDON = r"C:/Users/marco/Documents/New project/HarfordProfesiones"
+F_DATA = os.path.join(ADDON, "HarfordProfesiones.lua")
+F_ITEMS = os.path.join(ADDON, "HarfordProfesionesItems.lua")
 
 ROTULO = {"encantamiento": "Encantamiento", "ingenieria": "Ingenieria",
           "joyeria": "Joyeria", "inscripcion": "Inscripcion",

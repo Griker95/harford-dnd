@@ -26,8 +26,8 @@ mientras que `eps_bg3_levitate` esta en la web y no. No es que falte la familia 
 | `operativo_ravenholdt` | Operativo de Ravenholdt | `Medivh_RavenForm` | compendium-data.js | HarfordDnDBackgrounds.lua | si |
 | `feat_pe_reroll` | Precisión | `Tyrande_HuntersMark` | compendium-dotes.js | HarfordDnDFeats.lua | si |
 | `feat_fe_esquivar` | Esquivar y curar | `XinZhao_Determination` | compendium-dotes.js | HarfordDnDFeats.lua | si |
-| `levitar` | Levitar | `eps_bg3_levitate` | compendium-data.js | HarfordCompendioData.lua | si |
-| `enmaranar` | Enmarañar | `eps_lol_zyra_graspingroot` | compendium-data.js | HarfordCompendioData.lua | si |
+| `levitar` | Levitar | `eps_bg3_levitate` | compendium-data.js | HarfordCompendio.lua | si |
+| `enmaranar` | Enmarañar | `eps_lol_zyra_graspingroot` | compendium-data.js | HarfordCompendio.lua | si |
 | `feriante_luna_negra` | Feriante de la Luna Negra | `poster_darkmoon1` | compendium-data.js | HarfordDnDBackgrounds.lua | si |
 
 ## Dos que NO son trabajo de la web
@@ -43,7 +43,7 @@ mientras que `eps_bg3_levitate` esta en la web y no. No es que falte la familia 
 ## Reparto
 
 - -: 2
-- HarfordCompendioData.lua: 2
+- HarfordCompendio.lua: 2
 - HarfordDnDBackgrounds.lua: 4
 - HarfordDnDFeats.lua: 7
 

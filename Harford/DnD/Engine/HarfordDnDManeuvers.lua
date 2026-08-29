@@ -198,14 +198,13 @@ end
 -- Cobertura
 ------------------------------------------------------------
 
--- Los tres niveles del manual. No se acumulan: solo cuenta la mayor.
+-- Los niveles de cobertura que Harford permite declarar. No se acumulan: solo cuenta la mayor.
 API.COVER = {
-    none    = { id = "none",    label = "Sin cobertura", ac = 0 },
-    half    = { id = "half",    label = "Media",         ac = 2 },
-    three   = { id = "three",   label = "Tres cuartos",  ac = 5 },
-    total   = { id = "total",   label = "Total",         ac = nil },  -- no se puede elegir como objetivo
+    none    = { id = "none",  label = "Sin cobertura",  ac = 0 },
+    half    = { id = "half",  label = "Media",          ac = 2 },
+    three   = { id = "three", label = "Cobertura alta", ac = 5 },
 }
-API.COVER_ORDER = { "none", "half", "three", "total" }
+API.COVER_ORDER = { "none", "half", "three" }
 
 local currentCover = "none"
 
@@ -221,14 +220,13 @@ function API.SetCover(level)
     return true
 end
 
--- Bonificador de CA y salvaciones de Destreza que da la cobertura declarada. `nil` significa
--- cobertura total: el objetivo no puede ser elegido.
+-- Bonificador de CA y salvaciones de Destreza que da la cobertura declarada.
 function API.GetCoverBonus(level)
     local def = API.COVER[level or currentCover]
     return def and def.ac or nil
 end
 
--- CA efectiva del objetivo con la cobertura aplicada. Devuelve nil si la cobertura es total.
+-- CA efectiva del objetivo con la cobertura aplicada.
 function API.ApplyCoverToArmorClass(baseAC, level)
     local bonus = API.GetCoverBonus(level)
     if bonus == nil then return nil end

@@ -31,7 +31,6 @@ ROLE = {
  "Server/HarfordServerActions.lua": "Acciones de servidor validadas (dar item, auras, vida y emotes de NPC). Unica puerta desde gameplay.",
  "TRP3/HarfordTRP3.lua": "Lectura segura de perfiles TRP3: ficha de jugador, stat block de NPC, enlaces y escritura del About.",
  "Compendium/HarfordCompendioCore.lua": "API del compendio: coste y resolucion de lanzamiento (`ResolveCast`), progresion de conjuros y filtros.",
- "Compendium/HarfordCompendioData.lua": "Catalogo de conjuros (nivel, escuela, componentes, dano, mecanica). Solo datos.",
  "Compendium/HarfordCompendioIconMap.lua": "Resuelve el icono de un conjuro (fileID, `spell:`, ruta o LibRPMedia).",
  "Compendium/HarfordCompendioUI.lua": "Ventana del compendio: listado, filtros y detalle de conjuro.",
  "DnD/State/HarfordDnDResources.lua": "Definicion y orden de los recursos, cache de recursos remotos y flags de animacion.",

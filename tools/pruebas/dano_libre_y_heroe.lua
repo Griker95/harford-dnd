@@ -69,11 +69,14 @@ local envH = cargarModulo("Harford/DnD/Engine/HarfordDnDHeroPoints.lua",
             Get = function() return PROG end,
         },
         HarfordChat = { Print = function() end },
+        -- Las marcas de mecanizacion aterrizan aqui; la ultima linea publicada se captura para
+        -- comprobar que el gasto sale como DOS enlaces.
+        HarfordDnDStore = {},
         -- El punto se cobra solo si la tirada se pudo modificar de verdad.
         HarfordDnDRolls = { ModifyLastRoll = function()
             if MODIFICABLE then return true, 18, nil, 4 end
             return false, nil, "No hay ninguna tirada reciente que modificar"
-        end },
+        end, Broadcast = function(data) ULTIMA = data and data.label or "" end },
     }, { __index = function() return nil end }))
 local H = envH.HarfordDnDHeroPoints
 
@@ -137,5 +140,72 @@ local menuAdm2 = io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
 chk("el menu DM del jugador tiene conceder y retirar",
     menuAdm2:find('AddAction("Conceder punto de heroe"', 1, true) ~= nil
     and menuAdm2:find('AddAction("Retirar punto de heroe"', 1, true) ~= nil, true)
+
+-- ─── GASTO = DOS ENLACES + MECANIZACION (2026-08-29) ────────────────────────
+-- La linea publicada son dos enlaces de habilidad, [Punto de Heroe][<Uso>], con el detalle
+-- vinculante en el tooltip. Y los usos que el cliente PUEDE automatizar dejan su marca:
+-- Golpe Poderoso/Mutilar arman auto-impacto (+dano x10 / +salvacion de mutilacion),
+-- Sobrecarga arma el proximo conjuro y Sobreviviente reinicia las salvaciones de muerte.
+print("El gasto publica dos enlaces")
+local ST = envH.HarfordDnDStore
+PROG = { heroPoints = 1 }
+H.SpendUse("impulso")
+chk("enlace del punto", tostring(ULTIMA):find("[Punto de Heroe]", 1, true) ~= nil, true)
+chk("enlace del uso", tostring(ULTIMA):find("[Impulso de Accion]", 1, true) ~= nil, true)
+
+print("Golpe Poderoso arma auto-impacto y dano masivo")
+PROG = { heroPoints = 1 }
+H.SpendUse("fisico_poderoso")
+chk("impacta sin CA", ST.pendingHeroAutoHit, true)
+chk("dados x10 + nivel armados", ST.pendingHeroMassiveDamage, true)
+chk("no arma mutilacion", ST.pendingHeroMutilate, "nil")
+
+print("Mutilar arma auto-impacto y la salvacion de mutilacion")
+ST.pendingHeroAutoHit, ST.pendingHeroMassiveDamage = nil, nil
+PROG = { heroPoints = 1 }
+H.SpendUse("fisico_mutilar")
+chk("impacta sin CA", ST.pendingHeroAutoHit, true)
+chk("salvacion de mutilacion armada", ST.pendingHeroMutilate, true)
+chk("el dano sigue siendo normal", ST.pendingHeroMassiveDamage, "nil")
+
+print("Sobrecarga arma el proximo conjuro")
+PROG = { heroPoints = 1 }
+H.SpendUse("magico_sobrecarga")
+chk("conjuro sobrecargado armado", ST.pendingHeroSpellOverload, true)
+
+print("Sobreviviente reinicia las salvaciones de muerte")
+ST.deathSaveSuccesses, ST.deathSaveFailures = 1, 2
+PROG = { heroPoints = 1 }
+H.SpendUse("sobreviviente")
+chk("exitos a cero", ST.deathSaveSuccesses, 0)
+chk("fallos a cero", ST.deathSaveFailures, 0)
+
+print("Los usos de mesa no dejan marcas")
+ST.pendingHeroAutoHit, ST.pendingHeroMassiveDamage = nil, nil
+ST.pendingHeroMutilate, ST.pendingHeroSpellOverload = nil, nil
+PROG = { heroPoints = 1 }
+H.SpendUse("experto")
+chk("experto no arma nada", ST.pendingHeroAutoHit or ST.pendingHeroMassiveDamage
+    or ST.pendingHeroMutilate or ST.pendingHeroSpellOverload, "nil")
+
+-- Los motores CONSUMEN las marcas: el ataque las gasta en DoWeaponAttack/RollWeaponDamage y el
+-- Compendio en BuildAreaDefinition (patron mirar-sin-gastar de la carga arcana, consultar no
+-- gasta). Se cierra por texto porque viven en tres chunks con UI.
+print("Los motores consumen las marcas")
+local dnd = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("el ataque consume el auto-impacto",
+    dnd:find("if HarfordDnDStore.pendingHeroAutoHit then", 1, true) ~= nil
+    and dnd:find("HarfordDnDStore.pendingHeroAutoHit = nil", 1, true) ~= nil, true)
+local wr = io.open("Harford/DnD/Engine/HarfordDnDWeaponRolls.lua"):read("*a")
+chk("el dano consume el golpe masivo (x10 + nivel)",
+    wr:find("HarfordDnDStore.pendingHeroMassiveDamage = nil", 1, true) ~= nil
+    and wr:find("n = n * 10", 1, true) ~= nil, true)
+chk("y publica la salvacion de mutilacion tras el dano",
+    wr:find("HarfordDnDStore.pendingHeroMutilate = nil", 1, true) ~= nil
+    and wr:find("math.max(10, math.floor(total / 2))", 1, true) ~= nil, true)
+local comp = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
+chk("el Compendio consume la sobrecarga sin gastarla al consultar",
+    comp:find("not soloMirando and damageComponents and HarfordDnDStore", 1, true) ~= nil
+    and comp:find("HarfordDnDStore.pendingHeroSpellOverload = nil", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

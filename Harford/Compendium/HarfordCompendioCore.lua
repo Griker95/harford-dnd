@@ -765,7 +765,13 @@ function API.BuildAreaDefinition(spell, options)
     if NeedsRepeatedAttackResolution(spell) or NeedsStagedResolution(spell) then return nil end
     local healing = HealingDefinition(spell, options)
     if healing then
-        return { name = SpellName(spell), title = SpellName(spell), area = healing }
+        return {
+            name = SpellName(spell),
+            title = SpellName(spell),
+            hyperlink = SpellLink(spell),
+            networkLabel = SpellLink(spell),
+            area = healing,
+        }
     end
     local area = ParseAreaMeta(spell)
     local damageComponents = ParseDamageComponents(spell.damage or SpellText(spell))
@@ -811,6 +817,32 @@ function API.BuildAreaDefinition(spell, options)
         end
     end
 
+    -- SOBRECARGA (punto de heroe, Luchador Magico): el hechizo impacta como Golpe Critico
+    -- Masivo -- dados de daño x10 mas el nivel de personaje (una vez, en el primer componente).
+    -- Mismo patron que la carga arcana: consultar (soloConsultar) NO gasta, y la marca solo se
+    -- consume al final, cuando ya hay definicion que devolver; las ramas nil no la pierden.
+    -- En un conjuro de salvacion los dados van x10 pero la salvacion se tira igual: el fallo
+    -- automatico es el OTRO uso (Hechizo Preciso), que se resuelve en mesa.
+    local sobrecargaHeroe = false
+    if not soloMirando and damageComponents and HarfordDnDStore
+        and HarfordDnDStore.pendingHeroSpellOverload then
+        sobrecargaHeroe = true
+        local nivelHeroe = (HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel
+            and tonumber(HarfordDnDProgression.GetTotalLevel())) or 1
+        for i, comp in ipairs(damageComponents) do
+            local count, sides
+            if HarfordDnDWeapons and HarfordDnDWeapons.ParseDice then
+                count, sides = HarfordDnDWeapons.ParseDice(comp.damageDice)
+            end
+            if count and sides then
+                comp.damageDice = tostring(count * 10) .. "d" .. tostring(sides)
+            end
+            if i == 1 then
+                comp.damageBonus = (tonumber(comp.damageBonus) or 0) + nivelHeroe
+            end
+        end
+    end
+
     local saveAbility = ParseSaveAbility(spell)
     local directSave = IsDirectSaveSpell(spell)
     if spell.autohit == true and damageComponents then
@@ -850,6 +882,12 @@ function API.BuildAreaDefinition(spell, options)
     if cargaArcana > 0 and HarfordDnDStore and HarfordDnDStore.TakeArcaneSpellBonus then
         HarfordDnDStore.TakeArcaneSpellBonus()
     end
+    if sobrecargaHeroe then
+        -- "Impacta automaticamente": un ataque de conjuro se resuelve como auto-impacto (el
+        -- mismo camino que Proyectil Magico). La marca se consume aqui, ya sin salidas nil.
+        if area.resolution == "attack" then area.resolution = "auto" end
+        HarfordDnDStore.pendingHeroSpellOverload = nil
+    end
     area.damageComponents = damageComponents  -- nil = condicion pura (el motor lo acepta)
     if condition then
         area.conditionId = condition.id
@@ -878,6 +916,8 @@ function API.BuildAreaDefinition(spell, options)
     return {
         name = SpellName(spell),
         title = SpellName(spell),
+        hyperlink = SpellLink(spell),
+        networkLabel = SpellLink(spell),
         area = area,
     }
 end
@@ -918,7 +958,7 @@ local function RollSpellAttack(spell, skipValidation)
     HarfordDnDRolls.Broadcast({
         type = "spell",
         targetUnit = "target",
-        label = "Ataque Conjuro " .. SpellName(spell) .. (target ~= "" and (" " .. target) or ""),
+        label = "Ataque Conjuro " .. SpellLink(spell) .. (target ~= "" and (" " .. target) or ""),
         total = total,
         dice = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb),
         modifiers = bonusTxt,

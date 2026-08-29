@@ -20,6 +20,26 @@ local function Print(text)
     if HarfordChat and HarfordChat.Print then HarfordChat.Print(text) end
 end
 
+-- Descripcion del PUNTO en si, para el tooltip de su enlace. La regla completa vive aqui y no
+-- en la linea de chat: la linea son solo los dos enlaces, como cualquier habilidad del Libro.
+local REGLA_PUNTO = "Un punto de heroe o ninguno: no se acumulan. Lo concede el DM por actos "
+    .. "valientes contra enemigos poderosos. Gastarlo convierte la prueba en un EXITO INMEDIATO "
+    .. "con uno de sus usos declarados; no se gana un punto con la accion en la que se gasto uno."
+
+-- Enlace clicable de "habilidad" (hyperlink totalrp3 de TRP3, el mismo de las tiradas del
+-- Libro). Sin TRP3 cae a texto coloreado no clicable; nunca lanza error.
+local function Enlace(nombre, descripcion)
+    if HarfordTRP3 and HarfordTRP3.GetAbilityChatLink then
+        return HarfordTRP3.GetAbilityChatLink({
+            id = "hero_" .. tostring(nombre):lower():gsub("%W", "_"),
+            name = nombre,
+            icon = "achievement_legionpvptier4",
+            description = descripcion,
+        })
+    end
+    return "|cff66bbff[" .. tostring(nombre) .. "]|r"
+end
+
 local function ProfileName(profileName)
     if profileName and profileName ~= "" then return profileName end
     -- `HarfordDnDAPI.GetProfileName` no existe: `activeProfile` quedo obsoleto y el perfil es
@@ -79,7 +99,7 @@ function API.Grant(profileName)
     end
     API.Set(profileName, 1)
     if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
-        HarfordDnDRolls.Broadcast({ type = "info", label = "recibe un punto de heroe." })
+        HarfordDnDRolls.Broadcast({ type = "info", label = "recibe " .. Enlace("Punto de Heroe", REGLA_PUNTO) })
     end
     return true
 end
@@ -89,28 +109,57 @@ end
 -- fino (miembro cortado, dano x10) se resuelve en mesa con la linea ya publicada.
 ------------------------------------------------------------
 
+-- `anuncio` es la descripcion VINCULANTE del uso: ya no sale en la linea de chat (que son solo
+-- los dos enlaces, como pidio la mesa) sino en el tooltip del enlace del uso, donde cualquiera
+-- puede leerla con un click. `mecanica` es lo que el cliente automatiza al gastar, si hay algo
+-- que automatizar; el resto se resuelve en mesa con la linea publicada.
 API.USOS = {
     { id = "impulso", label = "Impulso de Accion",
-      anuncio = "gasta su punto de heroe: Impulso de Accion. Toma su proximo turno fuera del orden de iniciativa." },
+      anuncio = "Toma su proximo turno fuera del orden de iniciativa." },
     { id = "fisico_poderoso", label = "Luchador Fisico: Golpe Poderoso",
-      anuncio = "gasta su punto de heroe: su ataque de arma impacta como Golpe Critico Masivo (dados de dano x10 + modificadores + su nivel de personaje)." },
+      anuncio = "Su proximo ataque de arma impacta automaticamente como Golpe Critico Masivo: dados de dano x10, mas modificadores, mas su nivel de personaje." },
     { id = "fisico_mutilar", label = "Luchador Fisico: Mutilar",
-      anuncio = "gasta su punto de heroe: su ataque de arma impacta y MUTILA (dano normal; la criatura supera salvacion de Constitucion CD 10 o mitad del dano, o pierde el miembro elegido)." },
+      anuncio = "Su proximo ataque de arma impacta automaticamente y MUTILA: dano normal, y la criatura supera una salvacion de Constitucion CD 10 o mitad del dano (la mayor) o pierde el miembro elegido." },
     { id = "magico_sobrecarga", label = "Luchador Magico: Sobrecarga",
-      anuncio = "gasta su punto de heroe: su hechizo impacta como Golpe Critico Masivo (dados de dano x10 + su nivel de personaje)." },
+      anuncio = "Su proximo hechizo impacta automaticamente como Golpe Critico Masivo: dados de dano x10 mas su nivel de personaje." },
     { id = "magico_preciso", label = "Luchador Magico: Hechizo Preciso",
-      anuncio = "gasta su punto de heroe: su hechizo impacta, y tantas criaturas como su modificador de lanzamiento fallan automaticamente la salvacion." },
+      anuncio = "Su hechizo impacta, y tantas criaturas como su modificador de lanzamiento fallan automaticamente la salvacion." },
     { id = "defensa_esquiva", label = "Defensa: Esquiva",
-      anuncio = "gasta su punto de heroe: el ataque que le apunta FALLA automaticamente." },
+      anuncio = "El ataque que le apunta FALLA automaticamente." },
     { id = "defensa_resistente", label = "Defensa: Resistente",
-      anuncio = "gasta su punto de heroe: exito en su salvacion, con evasion de picaro hasta el final del turno actual." },
+      anuncio = "Exito en su salvacion, con evasion de picaro hasta el final del turno actual." },
     { id = "sobreviviente", label = "Sobreviviente",
-      anuncio = "gasta su punto de heroe: sobrevive con su salud a 0, estabilizado." },
+      anuncio = "Sobrevive con su salud a 0, estabilizado: sus salvaciones de muerte se reinician." },
     { id = "experto", label = "Experto Innato",
-      anuncio = "gasta su punto de heroe: su prueba de habilidad cuenta como 20 natural (no vale para Inteligencia, Sabiduria ni Carisma)." },
+      anuncio = "Su prueba de habilidad cuenta como 20 natural (no vale para Inteligencia, Sabiduria ni Carisma)." },
 }
 
--- Cobra el punto y publica el uso elegido. La linea es vinculante para la mesa.
+-- Mecanizacion por uso: marcas de un solo consumo en HarfordDnDStore que los motores ya
+-- existentes recogen. Golpe Poderoso/Mutilar las consume el proximo Ataque/Daño de arma
+-- (DoWeaponAttack + RollWeaponDamage); Sobrecarga, el proximo lanzamiento del Compendio
+-- (BuildAreaDefinition, con el mismo patron mirar-sin-gastar de la carga arcana);
+-- Sobreviviente reinicia las salvaciones de muerte en el acto.
+local MECANICA = {
+    fisico_poderoso = function()
+        HarfordDnDStore.pendingHeroAutoHit = true
+        HarfordDnDStore.pendingHeroMassiveDamage = true
+    end,
+    fisico_mutilar = function()
+        HarfordDnDStore.pendingHeroAutoHit = true
+        HarfordDnDStore.pendingHeroMutilate = true
+    end,
+    magico_sobrecarga = function()
+        HarfordDnDStore.pendingHeroSpellOverload = true
+    end,
+    sobreviviente = function()
+        HarfordDnDStore.deathSaveSuccesses = 0
+        HarfordDnDStore.deathSaveFailures  = 0
+        if HarfordDnDStore.RefreshMainUI then HarfordDnDStore.RefreshMainUI() end
+    end,
+}
+
+-- Cobra el punto y publica el uso elegido como DOS enlaces clicables:
+-- `Nombre [Punto de Heroe][<Uso>]`. El detalle vinculante va en el tooltip de cada enlace.
 function API.SpendUse(usoId, profileName)
     local disponibles = API.Get(profileName)
     if disponibles <= 0 then
@@ -121,8 +170,12 @@ function API.SpendUse(usoId, profileName)
     for _, u in ipairs(API.USOS) do if u.id == usoId then uso = u break end end
     if not uso then return false, "uso desconocido" end
     API.Set(profileName, 0)
+    if HarfordDnDStore and MECANICA[uso.id] then MECANICA[uso.id]() end
     if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
-        HarfordDnDRolls.Broadcast({ type = "info", label = uso.anuncio })
+        HarfordDnDRolls.Broadcast({
+            type = "info",
+            label = Enlace("Punto de Heroe", REGLA_PUNTO) .. Enlace(uso.label, uso.anuncio),
+        })
     end
     return true
 end

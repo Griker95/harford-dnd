@@ -4,7 +4,7 @@
 # mayuscula solo inicial (preservando nombres propios).
 import io, re, os, sys, glob, unicodedata
 sys.stdout.reconfigure(encoding="utf-8")
-COMP = glob.glob(r"C:/Users/marco/Documents/New project/**/HarfordCompendioData.lua"  # desde la RAIZ: el compendio salio de Harford/ al pasar a addon LoadOnDemand, recursive=True)[0]
+COMP = glob.glob(r"C:/Users/marco/Documents/New project/**/HarfordCompendio.lua", recursive=True)[0]
 
 # viejo -> nuevo (ya en la convencion del addon)
 RENAMES = {

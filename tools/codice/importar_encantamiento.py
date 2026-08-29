@@ -26,9 +26,9 @@ import unicodedata
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 JSON_WH = os.path.join(BASE, "cotejo", "encantamiento_wowhead.json")
-ADDON = r"C:/Users/marco/Documents/New project/Harford/Professions"
-F_DATA = os.path.join(ADDON, "HarfordProfessionsData.lua")
-F_ITEMS = os.path.join(ADDON, "HarfordProfessionsItems.lua")
+ADDON = r"C:/Users/marco/Documents/New project/HarfordProfesiones"
+F_DATA = os.path.join(ADDON, "HarfordProfesiones.lua")
+F_ITEMS = os.path.join(ADDON, "HarfordProfesionesItems.lua")
 
 
 def sa(s):

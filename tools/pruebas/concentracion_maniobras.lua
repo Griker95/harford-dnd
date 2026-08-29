@@ -170,11 +170,10 @@ chk("media", (M.GetCover()), "half")
 chk("suma 2 a la CA", select(2, M.GetCover()).ac, 2)
 M.SetCover("three")
 chk("tres cuartos suma 5", select(2, M.GetCover()).ac, 5)
--- La total no es una CA mas alta: no se puede elegir como objetivo, y por eso no declara `ac`.
-M.SetCover("total")
-chk("la total no tiene bonus de CA", select(2, M.GetCover()).ac, "nil")
+-- La cobertura total no se declara desde Harford: impide elegir al objetivo y se resuelve en mesa.
+chk("la total no se puede seleccionar", (M.SetCover("total")), false)
 chk("una cobertura inventada se rechaza", (M.SetCover("muchisima")), false)
-chk("y no cambia la que habia", (M.GetCover()), "total")
+chk("y no cambia la que habia", (M.GetCover()), "three")
 M.SetCover("none")
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

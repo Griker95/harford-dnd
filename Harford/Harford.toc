@@ -43,7 +43,7 @@ TRP3\HarfordTRP3.lua
 # --- Compendium ---
 Compendium\HarfordIconCatalog.lua
 Compendium\HarfordCompendioCore.lua
-# HarfordCompendioData.lua se movio al addon aparte HarfordCompendioData/ (LoadOnDemand):
+# HarfordCompendio.lua vive en el addon aparte HarfordCompendio/ (LoadOnDemand):
 # 609 KB de constructores de tabla. Lo pide HarfordCompendioAPI.GetAllSpells().
 Compendium\HarfordCompendioIconMap.lua
 Compendium\HarfordCompendioUI.lua
@@ -162,8 +162,8 @@ Contracts\HarfordContractsPhase.lua
 Contracts\HarfordContractsMinimap.lua
 
 # --- Professions ---
-# HarfordProfessionsData.lua y HarfordProfessionsItems.lua se movieron al addon aparte
-# HarfordProfessionsData/ (LoadOnDemand): 1 MB de constructores de tabla que se parseaban en
+# HarfordProfesiones.lua y HarfordProfesionesItems.lua viven en el addon aparte
+# HarfordProfesiones/ (LoadOnDemand): 1 MB de constructores de tabla que se parseaban en
 # cada login. Los pide HarfordProfessions.EnsureData() al consultar el catalogo por primera vez.
 # HarfordObjectCatalog.lua NO se carga (2026-08-24): son 1,2 MB y 41.539 lineas que WoW parsea
 # en cada login y que NINGUN modulo lee. Se genero para cruzar los `wow = <id>` de

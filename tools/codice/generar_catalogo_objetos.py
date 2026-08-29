@@ -13,7 +13,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "tools" / "codice" / "cotejo" / "objetos_wowhead.json"
-REGISTRY = ROOT / "Harford" / "Professions" / "HarfordProfessionsItems.lua"
+REGISTRY = ROOT / "HarfordProfesiones" / "HarfordProfesionesItems.lua"
 OUTPUT = ROOT / "Harford" / "Professions" / "HarfordObjectCatalog.lua"
 
 FIELDS = (

@@ -89,7 +89,7 @@ def recetasConNivel():
 
 def rangos():
     """Los cinco rangos con su minimo, de HarfordProfessions."""
-    p = 'Harford/Professions/HarfordProfessions.lua'
+    p = 'HarfordProfesiones/HarfordProfesiones.lua'
     if not os.path.exists(p):
         return []
     t = io.open(p, encoding='utf-8').read()

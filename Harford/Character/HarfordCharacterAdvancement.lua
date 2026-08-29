@@ -657,11 +657,20 @@ CommitClassLevel = function()
         S.secondaryLevel = S.secondaryLevel + 1
     elseif not S.classId then
         S.classId = id
-        S.subclassId = ""
+        -- En clases cuya subclase se desbloquea a nivel 1 (Sacerdote incluido),
+        -- ConfigureSubclassChoice ya la ha elegido antes de confirmar la clase.
+        -- Solo descartamos un id que no pertenezca a la clase recien elegida.
+        if not (HarfordDnDBook and HarfordDnDBook.GetSubclass
+            and HarfordDnDBook.GetSubclass(id, S.subclassId)) then
+            S.subclassId = ""
+        end
         S.primaryLevel = 1
     elseif not S.secondaryClassId then
         S.secondaryClassId = id
-        S.secondarySubclassId = ""
+        if not (HarfordDnDBook and HarfordDnDBook.GetSubclass
+            and HarfordDnDBook.GetSubclass(id, S.secondarySubclassId)) then
+            S.secondarySubclassId = ""
+        end
         S.secondaryLevel = 1
     else
         return
@@ -1821,7 +1830,10 @@ end
 -- Conjuros de una clase filtrados por tipo ("cantrip" = nivel 0; "spell" = nivel 1..maxLevel).
 -- `extraNames` son las Listas Ampliadas de Conjuros de la subclase: nombres del COMPENDIO que se
 -- suman a la lista de la clase aunque el conjuro no la incluya entre sus `classes`.
-SpellsForClass = function(className, kind, maxLevel, extraNames)
+-- `className` es la lista base; `subclassClassName`, cuando existe, es una lista propia
+-- declarada directamente en el Compendio (ej. "Picaro Sutileza"). Ambas se UNEN, junto a
+-- `extraNames` del Libro: una subclase nunca debe ocultar los conjuros de su clase madre.
+SpellsForClass = function(className, kind, maxLevel, extraNames, subclassClassName)
     local C = _G.HarfordCompendioAPI
     if not (C and C.GetAllSpells) then return {} end
     local out = {}
@@ -1829,7 +1841,12 @@ SpellsForClass = function(className, kind, maxLevel, extraNames)
         local lvl = tonumber(spell.level) or 0
         local classes = spell.classes or {}
         local match = false
-        for _, cn in ipairs(classes) do if cn == className then match = true break end end
+        for _, cn in ipairs(classes) do
+            if cn == className or (subclassClassName and cn == subclassClassName) then
+                match = true
+                break
+            end
+        end
         if (not match) and extraNames and extraNames[tostring(spell.name or "")] then match = true end
         if match then
             if kind == "cantrip" and lvl == 0 then out[#out + 1] = spell
@@ -1909,6 +1926,34 @@ RefreshSpellDialog = function()
             RefreshSpellDialog()
         end)
         row:SetPoint("TOPLEFT", 4, y)
+        -- El selector de conjuros es una vista del Compendio, no una lista de texto plana:
+        -- usa su resolvedor de iconos (TRP3/Epsilon) y expone la descripcion canonica al pasar.
+        local icon = row:CreateTexture(nil, "ARTWORK")
+        icon:SetSize(20, 20)
+        icon:SetPoint("LEFT", row, "LEFT", 5, 0)
+        icon:SetTexCoord(0.06, 0.94, 0.06, 0.94)
+        local compendio = _G.HarfordCompendioAPI
+        icon:SetTexture((compendio and compendio.GetSpellIcon and compendio.GetSpellIcon(sp))
+            or sp.icon or "Interface\\Icons\\INV_Misc_Book_09")
+        local text = row.GetFontString and row:GetFontString()
+        if text then
+            text:ClearAllPoints()
+            text:SetPoint("LEFT", icon, "RIGHT", 5, 0)
+            text:SetPoint("RIGHT", row, "RIGHT", -5, 0)
+            text:SetJustifyH("LEFT")
+        end
+        row:SetScript("OnEnter", function(self)
+            if not GameTooltip then return end
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(tostring(sp.name or sp.id or "Conjuro"), 1, 0.82, 0)
+            local level = tonumber(sp.level) or 0
+            GameTooltip:AddLine((level == 0 and "Truco" or ("Nivel " .. tostring(level)))
+                .. " - " .. tostring(sp.school or "Sin escuela"), 0.8, 0.8, 0.8)
+            local description = tostring(sp.description or sp.mechanics or "")
+            if description ~= "" then GameTooltip:AddLine(description, 1, 1, 1, true) end
+            GameTooltip:Show()
+        end)
+        row:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
         S.spellDialogRows[#S.spellDialogRows + 1] = row
         y = y - 28
     end
@@ -1917,10 +1962,10 @@ RefreshSpellDialog = function()
 end
 
 -- Abre el picker. store = tabla {spellId=true}; limit = maximo; kind = "cantrip"/"spell"/"prepared".
-local function OpenSpellDialog(className, store, limit, kind, maxLevel, subtitle, title, onClose, extraNames)
+local function OpenSpellDialog(className, store, limit, kind, maxLevel, subtitle, title, onClose, extraNames, subclassClassName)
     local dialog = CreateSpellDialog()
     dialog.store, dialog.limit, dialog.subtitle, dialog.onClose = store, tonumber(limit) or 0, subtitle, onClose
-    dialog.spells = SpellsForClass(className, kind == "cantrip" and "cantrip" or "spell", maxLevel, extraNames)
+    dialog.spells = SpellsForClass(className, kind == "cantrip" and "cantrip" or "spell", maxLevel, extraNames, subclassClassName)
     dialog.TitleText:SetText(title or ("Conjuros de " .. tostring(className)))
     RefreshSpellDialog()
     dialog:Show()
@@ -1987,7 +2032,11 @@ end
 AppendSpellPickers = function(classDef, classLevel, y)
     local C = _G.HarfordCompendioAPI
     if not (classDef and C and C.GetClassCasting and C.GetSpellProgression) then return y end
-    local className = classDef.name
+    -- La progresion puede pertenecer a una subclase (p. ej. Chaman Mejora), pero los
+    -- conjuros del Compendio estan indexados por su clase BASE. No mezclar ambos nombres:
+    -- hacerlo dejaba al creador con una lista parcial o vacia al elegir una subclase.
+    local spellClassName = classDef.name
+    local castingClassName = spellClassName
     -- La tabla de la SUBCLASE manda sobre la de la clase: Chaman Mejora sustituye la progresion
     -- del Chaman desde N3 (medio lanzador). Antes solo se miraba si la clase base no lanzaba, asi
     -- que una subclase de una clase lanzadora nunca se consultaba.
@@ -1996,31 +2045,43 @@ AppendSpellPickers = function(classDef, classLevel, y)
         local subId = classDef.id == S.classId and S.subclassId or S.secondarySubclassId
         local subclass = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(classDef.id, subId)
         if subclass then
-            local combo = className .. " " .. subclass.name
-            if C.GetClassCasting(combo) then casting, className = C.GetClassCasting(combo), combo end
+            local combo = spellClassName .. " " .. subclass.name
+            if C.GetClassCasting(combo) then
+                casting, castingClassName = C.GetClassCasting(combo), combo
+            end
         end
     end
-    casting = casting or C.GetClassCasting(className)
+    casting = casting or C.GetClassCasting(spellClassName)
     if not casting then return y end
-    local prog = C.GetSpellProgression(className)
+    local prog = C.GetSpellProgression(castingClassName)
     if not prog then return y end
 
     local subIdSel = (classDef.id == S.classId) and S.subclassId or S.secondarySubclassId
     local extraNames = ExpandedSpellNames(classDef.id, subIdSel)
     local picks = EnsureSpellPicks()
-    local maxLevel = (C.GetMaxSpellLevel and C.GetMaxSpellLevel(className, classLevel))
+    local subclassSpellClassName = castingClassName ~= spellClassName and castingClassName or nil
+    -- La llave identifica esta entrada de clase/subclase en una ficha multiclase. Se conserva
+    -- para que la poda final use EXACTAMENTE la misma union de listas que vio el jugador.
+    local pickerKey = tostring(classDef.id or spellClassName) .. ":" .. tostring(subIdSel or "")
+    picks.spellSources = picks.spellSources or {}
+    picks.spellSources[pickerKey] = {
+        className = spellClassName,
+        subclassClassName = subclassSpellClassName,
+        extraNames = extraNames,
+    }
+    local maxLevel = (C.GetMaxSpellLevel and C.GetMaxSpellLevel(castingClassName, classLevel))
         or math.max(1, math.min(5, math.ceil(classLevel / 2)))
 
     -- Siembra: lo que el personaje YA sabe de ESTA clase entra en el selector, para que se vea
     -- marcado y el contador cuente sobre el total real. Solo una vez por clase y sesion.
     picks.sembradas = picks.sembradas or {}
-    if not picks.sembradas[className] then
-        picks.sembradas[className] = true
+    if not picks.sembradas[pickerKey] then
+        picks.sembradas[pickerKey] = true
         local db = _G.HarfordCompendioCharacterDB
         if type(db) == "table" then
             local function Sembrar(destino, origen, kind)
                 if type(origen) ~= "table" then return end
-                for _, spell in ipairs(SpellsForClass(className, kind, 9, extraNames) or {}) do
+                for _, spell in ipairs(SpellsForClass(spellClassName, kind, 9, extraNames, subclassSpellClassName) or {}) do
                     if origen[spell.id] then destino[spell.id] = true end
                 end
             end
@@ -2031,7 +2092,7 @@ AppendSpellPickers = function(classDef, classLevel, y)
         end
     end
 
-    local heading = MakeText(S.tree, "GameFontNormal", "CONJUROS DE " .. string.upper(className))
+    local heading = MakeText(S.tree, "GameFontNormal", "CONJUROS DE " .. string.upper(spellClassName))
     heading:SetPoint("TOPLEFT", 26, y)
     heading:SetTextColor(0.4, 0.8, 1)
     S.nodeRows[#S.nodeRows + 1] = heading
@@ -2044,8 +2105,8 @@ AppendSpellPickers = function(classDef, classLevel, y)
     end
     local function AddPickerButton(label, store, limit, kind, title)
         local b = MakeButton(S.tree, label .. " (" .. CountStore(store) .. "/" .. limit .. ")", 240, 24, function()
-            OpenSpellDialog(className, store, limit, kind, kind == "cantrip" and 0 or maxLevel,
-                label, title, function() RefreshClassStage() end, extraNames)
+            OpenSpellDialog(spellClassName, store, limit, kind, kind == "cantrip" and 0 or maxLevel,
+                label, title, function() RefreshClassStage() end, extraNames, subclassSpellClassName)
         end)
         b:SetPoint("TOPLEFT", 40, y)
         S.nodeRows[#S.nodeRows + 1] = b
@@ -2083,7 +2144,7 @@ AppendSpellPickers = function(classDef, classLevel, y)
             if prepLimit > 0 then
                 -- Se anota para que la poda de preparados solo afecte a las clases que los usan.
                 picks.usaPreparados = picks.usaPreparados or {}
-                picks.usaPreparados[className] = true
+                picks.usaPreparados[pickerKey] = true
                 AddPickerButton("Preparar conjuros", picks.prepared, prepLimit, "spell", "Preparar - " .. className)
             end
         end

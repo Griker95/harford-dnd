@@ -69,6 +69,11 @@ A.SetCombatState(nil)
 -- Terminar YA NO vacia la lista: la mesa se queda montada para la escena siguiente.
 chk("terminado NO, aunque siga la gente puesta", A.HasActiveCombat(), false)
 chk("y los combatientes siguen ahi", A.HasCombatants(), true)
+local siguiente = assert(src:find("local function NextTurn()", 1, true))
+local anterior = assert(src:find("local function PrevTurn()", siguiente, true))
+chk("no se puede avanzar una mesa terminada",
+    src:find("if not HarfordTurnOrderAPI.HasActiveCombat() then", siguiente, true) ~= nil, true)
+chk("ni retrocederla", src:find("if not HarfordTurnOrderAPI.HasActiveCombat() then", anterior, true) ~= nil, true)
 -- Una lista guardada por una version anterior no trae estado. Sin este apano, un combate en curso
 -- se quedaba muerto al actualizar el addon.
 env2.HarfordTurnOrderStore = { entries = { { kind = "npc" } }, asalto = 3 }

@@ -73,6 +73,16 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
         end
     end
 
+    -- GOLPE CRITICO MASIVO (punto de heroe, Luchador Fisico): los dados de daño del arma se
+    -- tiran x10 y se suma el nivel de personaje UNA vez. La marca la puso SpendUse (el
+    -- auto-impacto ya lo consumio DoWeaponAttack) y se consume en esta tirada.
+    local heroMassive = HarfordDnDStore.pendingHeroMassiveDamage and true or false
+    if heroMassive then
+        HarfordDnDStore.pendingHeroMassiveDamage = nil
+        n = n * 10
+        diceStr = tostring(n) .. "d" .. tostring(sides)
+    end
+
     local offhand = HarfordDnDStore.GetOffhandActive and HarfordDnDStore.GetOffhandActive(def)
     local abiMod = (not suppressAbilityDamage and def.addAbi and abilKey)
         and HarfordDnDCalc.GetAbilityMod(abilKey) or 0
@@ -89,6 +99,10 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
     if not (def and def.ignoreGlobalWeaponBonuses) then
         wmod = wmod + (HarfordDnDCalc.GetWeaponDamageBonus
             and HarfordDnDCalc.GetWeaponDamageBonus(def) or HarfordDnDCalc.GetWeaponMod())
+    end
+    if heroMassive then
+        wmod = wmod + ((HarfordDnDProgression and HarfordDnDProgression.GetTotalLevel
+            and tonumber(HarfordDnDProgression.GetTotalLevel())) or 1)
     end
 
     -- Gran Lucha con Armas (flag greatWeaponFighting): repetir una vez los dados de daño que
@@ -375,6 +389,20 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
             mode = ""
         })
     end
+    -- MUTILAR (punto de heroe): con el daño total ya conocido se publica, DETRAS de la linea de
+    -- daño, la salvacion que la victima debe superar -- Constitucion CD 10 o mitad del daño, la
+    -- que sea MAYOR -- o pierde el miembro elegido. La CD sale calculada; la amputacion en si se
+    -- resuelve en mesa.
+    if HarfordDnDStore.pendingHeroMutilate then
+        HarfordDnDStore.pendingHeroMutilate = nil
+        local cdMutilar = math.max(10, math.floor(total / 2))
+        HarfordDnDRolls.Broadcast({
+            type = "info",
+            label = "MUTILA: la victima supera una salvacion de Constitucion CD " .. cdMutilar
+                .. " o pierde el miembro elegido.",
+        })
+    end
+
     -- Segundo valor: los componentes POR TIPO. Contra un jugador viajan tal cual y los mitiga su
     -- cliente; contra un NPC ya vienen mitigados de aqui y el total basta.
     local componentes = {}

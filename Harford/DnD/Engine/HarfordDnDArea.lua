@@ -426,7 +426,7 @@ local function NormalizeDefinition(definition)
     if not conditionApplySaveAbility then conditionApplySaveDC = 0 end
     local out = {
         label = tostring(definition.hyperlink or definition.title or definition.name or area.label or "Ataque de area"),
-        networkLabel = tostring(definition.title or definition.name or area.label or "Ataque de area"),
+        networkLabel = tostring(definition.networkLabel or definition.title or definition.name or area.label or "Ataque de area"),
         shape = shape,
         sizeText = tostring(area.sizeText or ""):sub(1, 40),
         resolution = resolution,
@@ -1242,6 +1242,10 @@ local function PlayerResultLabel(request, status, total, summaries, rollText)
     return FormatVictimResult(name, request, status, total, summaries, rollText)
 end
 
+-- Se declara antes del handler de resultados porque un objetivo remoto confirma el impacto de
+-- forma asincrona. La implementacion queda junto a la emision de los dados, mas abajo.
+local MaybeBroadcastAttackDamage
+
 local function ResolvePlayerRequest(request, sender)
     local cacheKey = tostring(sender or "") .. "|" .. request.id
     PruneProcessed()
@@ -1316,7 +1320,11 @@ local function ResolvePlayerRequest(request, sender)
         end
     end
 
-    local label = PlayerResultLabel(request, status, applied, summaries, rollText)
+    -- En ataques, el impacto/fallo debe verse ANTES que los dados de daño. El atacante anuncia
+    -- esos dados al recibir esta confirmacion; no los incrustamos aqui aunque ya se hayan aplicado.
+    local visibleApplied, visibleSummaries = applied, summaries
+    if request.mode == "attack" then visibleApplied, visibleSummaries = 0, {} end
+    local label = PlayerResultLabel(request, status, visibleApplied, visibleSummaries, rollText)
     BroadcastInfo(label, sender, true)
     -- La linea completa ya se publica como tirada. El ACK queda deliberadamente minimo
     -- para no desbordar SendAddonMessage con colores/nombres largos.
@@ -1431,6 +1439,7 @@ function API.HandleResult(message, sender)
             if expected ~= "" and actual ~= expected and actualShort ~= expectedShort then return true end
             target.status = result.status .. " (" .. tostring(result.applied) .. ")"
             target.result = result
+            if MaybeBroadcastAttackDamage then MaybeBroadcastAttackDamage(session, target) end
             break
         end
     end
@@ -1481,23 +1490,44 @@ end
 -- victimas). El numero aplicado a cada victima se publica por separado en su `BroadcastInfo`
 -- y puede diferir del base: salvacion superada (mitad/nada), critico de ataque (maximo) y
 -- resistencias/inmunidades/vulnerabilidades por tipo. No leer este total como el daño final.
-local function BroadcastSharedRoll(session, details)
-    local first = session.rolledComponents[1]
+local function BroadcastRolledComponents(definition, components, details, suffix)
+    local first = components and components[1]
+    if not first then return false end
     local modifiers = DamageLabel(first.damageType)
-    for i = 2, #session.rolledComponents do
-        local c = session.rolledComponents[i]
+    for i = 2, #components do
+        local c = components[i]
         modifiers = modifiers .. " |cff66ccff" .. tostring(c.amount) .. "|r " .. DamageLabel(c.damageType)
     end
     HarfordDnDRolls.Broadcast({
-        type = session.definition.resolution == "heal" and "heal" or "damage",
-        label = (session.definition.resolution == "heal" and "Curacion " or "")
-            .. session.definition.label
-            .. ((ShapeText(session.definition) ~= "")
-                and (" (" .. ShapeText(session.definition) .. ")") or ""),
+        type = definition.resolution == "heal" and "heal" or "damage",
+        label = (definition.resolution == "heal" and "Curacion " or "")
+            .. definition.label
+            .. (suffix or "")
+            .. ((ShapeText(definition) ~= "")
+                and (" (" .. ShapeText(definition) .. ")") or ""),
         total = first.amount,
         dice = details,
         modifiers = modifiers,
     })
+    return true
+end
+
+local function BroadcastSharedRoll(session, details)
+    return BroadcastRolledComponents(session.definition, session.rolledComponents, details)
+end
+
+-- El daño de un ataque se tira para poder enviarlo al defensor, pero no se PUBLICA hasta que
+-- existe al menos un impacto. Asi nunca aparece "Daño ..." antes de saber si el conjuro acertó.
+MaybeBroadcastAttackDamage = function(session, target)
+    if not (session and target and session.definition and session.definition.resolution == "attack") then return end
+    if not (target.result and target.result.status == "hit") then return end
+    if session.definition.rollPerTarget then
+        if target.damageAnnounced then return end
+        target.damageAnnounced = BroadcastRolledComponents(session.definition, target.damageComponents,
+            target.rollDetails, " " .. tostring(target.rollIndex or ""))
+    elseif not session.damageAnnounced then
+        session.damageAnnounced = BroadcastSharedRoll(session, session.rollDetails)
+    end
 end
 
 function API.Resolve()
@@ -1524,7 +1554,8 @@ function API.Resolve()
         session.rolledComponents, session.rollDetails = RollComponents(session.definition)
     end
     -- Condicion pura (sin daño): no hay tirada de daño compartida que anunciar.
-    if session.rolledComponents and #session.rolledComponents > 0 and not session.definition.rollPerTarget then
+    if session.rolledComponents and #session.rolledComponents > 0 and not session.definition.rollPerTarget
+        and session.definition.resolution ~= "attack" then
         BroadcastSharedRoll(session, session.rollDetails)
     end
     session.pendingNpc, session.pendingNpcIndex = {}, 1
@@ -1536,7 +1567,7 @@ function API.Resolve()
             else
                 session.rolledComponents, session.rollDetails = RollComponents(session.definition)
             end
-            if #session.rolledComponents > 0 then
+            if #session.rolledComponents > 0 and session.definition.resolution ~= "attack" then
                 local first = session.rolledComponents[1]
                 HarfordDnDRolls.Broadcast({
                     type = session.definition.resolution == "heal" and "heal" or "damage",
@@ -1549,12 +1580,20 @@ function API.Resolve()
             end
         end
         local request = MakeRequest(session, target, index)
+        -- Las aplicaciones multimpacto conservan su propia tirada hasta que sepamos si acertaron.
+        -- `request.components` ya apunta a la misma tabla que se envio al defensor.
+        if session.definition.rollPerTarget then
+            target.damageComponents = session.rolledComponents
+            target.rollDetails = session.rollDetails
+            target.rollIndex = index
+        end
         target.requestId = request.id
         if target.kind == "player" then
             if target.guid == (UnitGUID and UnitGUID("player")) then
                 local _ok, result = ResolvePlayerRequest(request, nil)
                 target.status = result and (result.status .. " (" .. tostring(result.applied) .. ")") or "Error"
                 target.result = result
+                MaybeBroadcastAttackDamage(session, target)
             elseif target.unitName and target.unitName ~= "" then
                 local ok, err = HarfordSync.SendAreaRequest(PREFIX, target.unitName, request)
                 target.status = ok and "Esperando" or "Error"
@@ -1667,8 +1706,11 @@ local function ResolveNpcEntry(entry)
             end
         end
     end
-    BroadcastInfo(FormatVictimResult(target.name, request, status, applied, summaries, rollText))
+    local visibleApplied, visibleSummaries = applied, summaries
+    if request.mode == "attack" then visibleApplied, visibleSummaries = 0, {} end
+    BroadcastInfo(FormatVictimResult(target.name, request, status, visibleApplied, visibleSummaries, rollText))
     target.status = status .. " (" .. tostring(applied) .. ")"
+    target.result = { status = status, applied = applied }
     return true
 end
 
@@ -1682,6 +1724,7 @@ function API.TryResolvePendingNpc()
     end
     if UnitGUID("target") ~= entry.target.guid then RefreshFrame(); return false end
     if not ResolveNpcEntry(entry) then RefreshFrame(); return false end
+    MaybeBroadcastAttackDamage(session, entry.target)
     session.pendingNpcIndex = (session.pendingNpcIndex or 1) + 1
     RefreshFrame()
     -- Varias aplicaciones (rayos, proyectiles o curacion) pueden recaer sobre el mismo

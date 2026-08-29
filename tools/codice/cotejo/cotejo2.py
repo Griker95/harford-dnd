@@ -7,7 +7,7 @@ from metrico import a_metrico
 sys.stdout.reconfigure(encoding="utf-8")
 HERE = os.path.dirname(os.path.abspath(__file__))
 RS = r"C:/Users/marco/Documents/New project/RuleSource"
-COMP = glob.glob(r"C:/Users/marco/Documents/New project/**/HarfordCompendioData.lua"  # desde la RAIZ: el compendio salio de Harford/ al pasar a addon LoadOnDemand, recursive=True)[0]
+COMP = glob.glob(r"C:/Users/marco/Documents/New project/**/HarfordCompendio.lua", recursive=True)[0]
 
 LIBRO = {"conjuros_d_d_5_0_edge_manual_del_jugador": "Manual del Jugador",
          "conjuros_warcraft_5_edici_n_compressed": "Warcraft 5ª",

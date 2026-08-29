@@ -29,6 +29,11 @@ Copiar a `[Cliente Epsilon]\_retail_\Interface\AddOns\`:
 | **`Harford/`** | Todos. El sistema entero. |
 | **`HarfordCompendio/`** | Todos. Los 396 conjuros del compendio (carga bajo demanda). |
 | **`HarfordProfesiones/`** | Todos. Recetas y objetos de profesiones (carga bajo demanda). |
+
+> **Actualizas desde una version anterior?** Borra las carpetas viejas
+> `HarfordCompendioData/` y `HarfordProfessionsData/` de `Interface/AddOns`:
+> se renombraron a `HarfordCompendio/` y `HarfordProfesiones/` y las viejas
+> solo duplicarian entradas en la lista de addons.
 | **`HarfordAdmin/`** | Solo cuentas DM. Las herramientas exigen ademas `.ph dm` activo. |
 | **`HarfordMusic/`** | Opcional. Emisoras con audio propio (pesa; solo lo oye quien lo tiene). |
 | **`HarfordDebug/`** | Opcional. Diagnostico (`/harford debug run verificar`); util para reportar fallos. |

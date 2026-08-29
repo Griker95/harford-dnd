@@ -1,5 +1,5 @@
 ## Interface: 90207
-## Title: |cff88ccffHarford|r Datos de conjuros
+## Title: |cff3536CCHarford|r Compendio
 ## Notes: Los 384 conjuros del compendio. Se carga BAJO DEMANDA desde Harford.
 ## Author: Griker
 ## Version: 2.1.0

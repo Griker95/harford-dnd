@@ -521,7 +521,7 @@ chk("los de trasfondo tambien", envueltoF ~= nil and envueltoF.feature ~= nil, t
 -- Las elecciones de truco (extraFrom cantrip:<Clase>) generan sus opciones preguntando a
 -- HarfordCompendioAPI, que aqui no esta cargado: stub minimo desde los DATOS reales del
 -- compendio para que la eleccion se verifique con sus opciones de verdad.
-if not _G.HarfordCompendioAPI then
+if not env.HarfordCompendioAPI then
     local fhC = io.open("HarfordCompendioData/HarfordCompendioData.lua")
     if fhC then
         local envC = { _G = {} }
@@ -530,7 +530,9 @@ if not _G.HarfordCompendioAPI then
         if setfenv and fnC then setfenv(fnC, envC) end
         if fnC then pcall(fnC) end
         local lista = envC.HarfordCompendioSpells or (envC._G and envC._G.HarfordCompendioSpells) or {}
-        _G.HarfordCompendioAPI = { GetAllSpells = function() return lista end }
+        -- El Libro corre en `env` aislado y lee _G.HarfordCompendioAPI DE AHI: el stub va a env.
+        env.HarfordCompendioAPI = { GetAllSpells = function() return lista end }
+        env._G = env
     end
 end
 

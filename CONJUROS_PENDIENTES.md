@@ -46,6 +46,17 @@ Estaban en el compendio con otro título; todos concedidos ya en sus rasgos.
 |---|---|---|
 | castigo deslumbrante | Paladín / Protección, nivel de clase 5 | La tabla de equivalencias lo empareja con `golpe_cegador` (*blinding smite*, 3d8 radiante), pero ese es de NIVEL 3 de conjuro y el escalón de clase 5 corresponde a ranura de 2.º. O el manual adelanta un conjuro de 3.º, o el candidato no es él. `pal_pro_conjuros_5` concede solo `guardian_del_rey` mientras tanto. No cablear sin decidirlo. |
 
+## Avisos a la web (no conjuros)
+
+- **"Apresado" vs "Restringido"** (2026-08-29): la seccion Estados de la web llama
+  "Apresado (Restrained)" al estado que el addon llama **"Restringido"** (mismo id
+  `restrained`, misma mecanica). Conviene alinear una de las dos fuentes para que el
+  jugador lea lo mismo en ambos sitios; los buscadores de texto del addon toleran
+  variantes, asi que no rompe nada mientras tanto — es solo consistencia.
+- Los 16 estados de esa seccion ya estan todos en el addon: "Inconsciente" y
+  "Muriendo" se añadieron el 2026-08-29 (Muriendo se rastrea por el aura de muerte
+  29266 que pone el sistema de Salv Muerte a 0 PG).
+
 ## Incoherencias del compendio detectadas
 
 No las corrijo: `HarfordCompendioData.lua` es compartido con otro chat y con Codex.

@@ -1143,6 +1143,7 @@ Catalog.features = {
     harford_estado_restrained = "eps_wc3_entanglingroots",
     harford_estado_stunned = "spell_frost_stun",
     harford_estado_sleeping = "spell_nature_sleep",
+    harford_estado_unconscious = "spell_shadow_soulleech",
     harford_estado_slowed = "spell_nature_slow",
     guerrero_man_carga = "ability_warrior_charge",
     guerrero_man_desarme = "ability_warrior_disarm",

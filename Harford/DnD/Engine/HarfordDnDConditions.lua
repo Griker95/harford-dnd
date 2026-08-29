@@ -16,7 +16,7 @@ local MAX_STATES_PER_UNIT = 32
 API.ORDER = {
     "blinded", "charmed", "deafened", "frightened", "grappled",
     "incapacitated", "invisible", "paralyzed", "petrified", "poisoned",
-    "prone", "restrained", "stunned", "sleeping", "silenced", "rooted", "slowed",
+    "prone", "restrained", "stunned", "unconscious", "dying", "sleeping", "silenced", "rooted", "slowed",
     "disarmed", "exposed_armor", "burning", "frozen", "chilled", "blessed",
     "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado", "buey_negro", "esquivando", "circulo_demoniaco",
     "piedra_salud", "piedra_fuego", "piedra_conjuro", "piedra_alma",
@@ -29,7 +29,7 @@ API.CATEGORIES = {
     { id = "manual", label = "Manual (5e)", ids = {
         "blinded", "charmed", "deafened", "frightened", "grappled", "incapacitated",
         "invisible", "paralyzed", "petrified", "poisoned", "prone", "restrained",
-        "stunned", "exhaustion",
+        "stunned", "unconscious", "dying", "exhaustion",
     } },
     { id = "combate", label = "Combate", ids = {
         "sleeping", "silenced", "rooted", "slowed", "disarmed", "exposed_armor",
@@ -362,6 +362,34 @@ API.DEFS = {
     stunned = {
         label = "Aturdido", tracking = "state",
         description = "Incapacitado; falla salvaciones de Fuerza y Destreza; ataques recibidos con ventaja.",
+        effects = {
+            { kind = "blockAction", actions = { action = true, reaction = true } },
+            { kind = "autoFailSave", abilities = { Fuerza = true, Destreza = true } },
+            { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" },
+            { kind = "speedZero" },
+        },
+    },
+    -- Inconsciente del manual: como Dormido pero sin despertar por daño (quien lo pone decide
+    -- cuando acaba). Sin aura conocida en este build: se lleva por estado, como Dormido.
+    unconscious = {
+        label = "Inconsciente", tracking = "state", persist = true,
+        description = "Incapacitado, derribado y sin moverse; falla salvaciones de Fuerza y Destreza; los ataques contra el tienen ventaja.",
+        effects = {
+            { kind = "blockAction", actions = { action = true, reaction = true } },
+            { kind = "autoFailSave", abilities = { Fuerza = true, Destreza = true } },
+            { kind = "incomingRollMode", rolls = { attack = true }, mode = "adv" },
+            { kind = "speedZero" },
+        },
+    },
+    -- Muriendo: SU AURA ES LA DE MUERTE (29266), la misma que el sistema de Salv Muerte pone al
+    -- llegar a 0 PG con animaciones activas. Por eso se rastrea por aura y NO se aplica desde
+    -- ningun menu como estado: quien lleve el aura muestra "Muriendo" en la tira solo, y al
+    -- recuperar vida el propio sistema retira el aura y el estado desaparece. La mecanica de
+    -- morir (contador de salvaciones, desenlaces) sigue siendo del sistema moribundo; esto es
+    -- la cara visible para la mesa.
+    dying = {
+        label = "Muriendo", auraId = 29266, tracking = "aura",
+        description = "A 0 PG: inconsciente y haciendo salvaciones de muerte. Los ataques contra el tienen ventaja.",
         effects = {
             { kind = "blockAction", actions = { action = true, reaction = true } },
             { kind = "autoFailSave", abilities = { Fuerza = true, Destreza = true } },

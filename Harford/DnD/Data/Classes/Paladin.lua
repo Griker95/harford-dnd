@@ -62,10 +62,10 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "pal_estilo_combate", level = 2, name = "Estilo de combate", type = "choice", description = "Adoptas un estilo de combate como especialidad.", effects = {}, choice = {
             slots = 1,
             options = {
-                { id = "guerrero_bendito", label = "Guerrero Bendito (2 trucos de sacerdote, Carisma)", effects = {} },
-                { id = "defensa",          label = "Defensa (+1 CA con armadura)",            effects = { { kind = "flag", flag = "styleDefense" } } },
-                { id = "doble_empunadura", label = "Doble Empunadura (+2 dano con un arma a una mano y sin otras armas)", effects = { { kind = "flag", flag = "styleDueling" } } },
-                { id = "gran_arma",        label = "Gran Arma (repetir 1-2 a dos manos)",     effects = { { kind = "flag", flag = "greatWeaponFighting" } } },
+                { id = "guerrero_bendito", icon = "spell_holy_holysmite", label = "Guerrero Bendito (2 trucos de sacerdote, Carisma)", effects = {} },
+                { id = "defensa", icon = "ability_warrior_defensivestance",          label = "Defensa (+1 CA con armadura)",            effects = { { kind = "flag", flag = "styleDefense" } } },
+                { id = "doble_empunadura", icon = "ability_warrior_challange", label = "Doble Empunadura (+2 dano con un arma a una mano y sin otras armas)", effects = { { kind = "flag", flag = "styleDueling" } } },
+                { id = "gran_arma", icon = "ability_warrior_cleave",        label = "Gran Arma (repetir 1-2 a dos manos)",     effects = { { kind = "flag", flag = "greatWeaponFighting" } } },
                 { id = "proteccion",       label = "Proteccion (desventaja a atacantes, con escudo)", effects = {} },
             },
         } },
@@ -83,7 +83,7 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "pal_aura_proteccion", level = 6, name = "Aura de proteccion", type = "pasivo", description = "A partir del 6º nivel, siempre que tú o una criatura aliada dentro de 3 metros de ti deba hacer una tirada de salvación, la criatura gana un bono a la tirada de salvación igual a Mod. Carisma (con un bono mínimo de +1). Debes estar consciente para otorgar este bono.\n\nEn el nivel 18, el alcance de esta aura aumenta a 9 metros.", effects = {
             { kind = "allSavesAbility", ability = "Carisma", min = 1 },
         } },
-                { id = "pal_aura_de_coraje", level = 10, name = "Aura de Coraje", type = "informativo", description = "A partir de nivel 10. ni tú ni las criaturas amistosas a 3 metros o menos de ti podréis ser asustadas mientras permanezcas consciente. A nivel 18 el alcance de esta aura aumenta a 9 metros.", effects = {} },
-        { id = "pal_toque_purificador", level = 14, name = "Toque Purificador", type = "informativo", description = "A partir de nivel 14, puedes utilizar tu acción para finalizar un conjuro que te esté afectando a ti o a una criatura voluntaria a la que toques. Puedes emplear este rasgo tantas veces como Mod. Carisma (mínimo una vez). Recuperas todos los usos tras finalizar un descanso largo.", effects = {} },
+                { id = "pal_aura_de_coraje", icon = "spell_holy_auraoflight", level = 10, name = "Aura de Coraje", type = "informativo", description = "A partir de nivel 10. ni tú ni las criaturas amistosas a 3 metros o menos de ti podréis ser asustadas mientras permanezcas consciente. A nivel 18 el alcance de esta aura aumenta a 9 metros.", effects = {} },
+        { id = "pal_toque_purificador", icon = "spell_holy_purify", level = 14, name = "Toque Purificador", type = "informativo", description = "A partir de nivel 14, puedes utilizar tu acción para finalizar un conjuro que te esté afectando a ti o a una criatura voluntaria a la que toques. Puedes emplear este rasgo tantas veces como Mod. Carisma (mínimo una vez). Recuperas todos los usos tras finalizar un descanso largo.", effects = {} },
     },
 }

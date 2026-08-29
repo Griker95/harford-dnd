@@ -369,6 +369,12 @@ local function NormalizeDefinition(definition)
         components = {}
         for _, component in ipairs(area.healingComponents or definition.healingComponents or {}) do
             local fixedAmount = tonumber(component.fixedAmount)
+            -- Curacion "= tu nivel de personaje" (Don de los Naaru): la cifra no puede vivir en
+            -- los datos porque cambia al subir; se resuelve aqui, al abrir el area.
+            if component.fixedPerCharacterLevel and HarfordDnDProgression
+                and HarfordDnDProgression.GetTotalLevel then
+                fixedAmount = math.max(1, tonumber(HarfordDnDProgression.GetTotalLevel()) or 1)
+            end
             if fixedAmount then
                 fixedAmount = math.max(1, math.min(10000, math.floor(fixedAmount)))
                 components[#components + 1] = {

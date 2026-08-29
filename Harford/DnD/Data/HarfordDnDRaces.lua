@@ -144,8 +144,8 @@ API.RACES = {
                 { id = "dra_exo_gemas", name = "Tallado de gemas", type = "pasivo", description = "Competencia con herramientas de joyero.", effects = {
                     { kind = "toolProf", tool = "Herramientas de joyero" },
                 } },
-                { id = "dra_exo_naaru", name = "Don de los Naaru", type = "informativo", description = "Accion: tocas y curas (= tu nivel). 1 uso por descanso largo.", uses = { max = 1, recharge = "long" }, effects = {} },
-                { id = "dra_exo_heroica", name = "Presencia heroica", type = "informativo", description = "Lanzas heroismo y favor divino usando Sabiduría. 1 uso por descanso largo.", uses = { max = 1, recharge = "long" }, effects = {} },
+                { id = "dra_exo_naaru", name = "Don de los Naaru", cast = "accion", type = "accion", description = "Accion: tocas y curas (= tu nivel). 1 uso por descanso largo.", uses = { max = 1, recharge = "long" }, area = { shape = "other", sizeText = "Objetivo", resolution = "heal", healingComponents = { { fixedPerCharacterLevel = true } } }, effects = {} },
+                { id = "dra_exo_heroica", name = "Presencia heroica", type = "informativo", description = "Lanzas heroismo y favor divino usando Sabiduría. 1 uso por descanso largo.", uses = { max = 1, recharge = "long" }, spellGrants = { { level = 1, ids = { "heroismo", "favor_divino" }, ability = "Sabiduria", note = "1 uso por descanso largo" } }, effects = {} },
             } },
             { id = "raza_draenei_forjado_luz", name = "Draenei Forjado por la Luz", nameF = "Draenei Forjada por la Luz", desc = "Cruzados imbuidos de Luz Sagrada, forjados como arma viviente contra la Legion Ardiente.", traits = {
                 { id = "dra_fl_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1.", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
@@ -153,12 +153,12 @@ API.RACES = {
                 { id = "dra_fl_resistencia", name = "Resistencia sagrada", type = "pasivo", description = "Resistencia al daño radiante.", effects = {
                     { kind = "resist", damage = "radiante" },
                 } },
-                { id = "dra_fl_juicio", name = "Juicio de la Luz", type = "pasivo", description = "Conoces luz; a niveles 3/5 lanzas rayo guiador / golpe de marca (Sabiduría).", effects = {} },
+                { id = "dra_fl_juicio", name = "Juicio de la Luz", type = "pasivo", description = "Conoces luz; a niveles 3/5 lanzas rayo guiador / golpe de marca (Sabiduría).", spellGrants = { { level = 0, ids = { "luz" }, ability = "Sabiduria" }, { level = 1, ids = { "saeta_guiada" }, ability = "Sabiduria", note = "1/dia desde nivel 3" }, { level = 2, ids = { "castigo_marcador" }, ability = "Sabiduria", note = "1/dia desde nivel 5" } }, effects = {} },
             } },
             { id = "raza_draenei_tabido", name = "Draenei Tabido", nameF = "Draenei Tábida", desc = "Draenei rotos por la energia vil; marginados pero resistentes y perseverantes.", traits = {
                 { id = "dra_tab_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Sabiduría +1.", effects = { { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 } } },
                 { id = "dra_tab_vision", name = "Vision en la oscuridad", type = "pasivo", description = "Visión en la oscuridad a 18 metros (tonos de gris).", effects = {} },
-                { id = "dra_tab_elemental", name = "Vinculo elemental", type = "pasivo", description = "Conoces escarcha; a niveles 3/5 lanzas temblor de tierra / rafaga de viento (Sabiduría).", effects = {} },
+                { id = "dra_tab_elemental", name = "Vinculo elemental", type = "pasivo", description = "Conoces escarcha; a niveles 3/5 lanzas temblor de tierra / rafaga de viento (Sabiduría).", spellGrants = { { level = 0, ids = { "mordedura_helada" }, ability = "Sabiduria" }, { level = 1, ids = { "temblor_de_tierra" }, ability = "Sabiduria", note = "1/dia desde nivel 3" }, { level = 2, ids = { "rafaga_de_viento" }, ability = "Sabiduria", note = "1/dia desde nivel 5" } }, effects = {} },
                 { id = "dra_tab_paria", name = "Paria", type = "pasivo", description = "Competencia en Supervivencia.", effects = { { kind = "skillProf", skill = "Supervivencia" } } },
             } },
             { id = "raza_draenei_man_ari", name = "Man'ari", desc = "Draenei corrompidos por la energia vil de la Legion Ardiente; cuerpo y alma alterados por fuerzas infernales. Algunos aun caminan por Azeroth buscando redencion... o poder.", traits = {

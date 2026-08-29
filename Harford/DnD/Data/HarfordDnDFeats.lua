@@ -54,14 +54,14 @@ API.FEATS = {
     },
     -- ===== Dotes raciales =====
     {
-        id = "feat_teletransporte_arcano", name = "Teletransporte arcano", requires = "Elfo de sangre, renegado (elfo) o nocheterna", description = "Herencia arcana élfica que permite desaparecer y reaparecer unos pasos más allá, una vez entre descansos.",
+        id = "feat_teletransporte_arcano", requiredRaces = { "raza_elfo_sangre", "raza_renegado_elfo", "raza_nocheterna" }, name = "Teletransporte arcano", requires = "Elfo de sangre, renegado (elfo) o nocheterna", description = "Herencia arcana élfica que permite desaparecer y reaparecer unos pasos más allá, una vez entre descansos.",
         traits = {
             { id = "feat_ta_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Carisma") } } },
             { id = "feat_ta_conjuro", name = "Paso brumoso", type = "pasivo", description = "Aprendes paso brumoso y puedes lanzarlo una vez sin gastar espacio; lo recuperas al terminar un descanso corto o largo. Característica de lanzamiento: Inteligencia.", effects = {} },
         },
     },
     {
-        id = "feat_mejor_quimica", name = "Mejor quimica", requires = "Goblin", description = "Instinto goblin para la alquimia: reconoces una poción de un vistazo y sabes sacarle más provecho.",
+        id = "feat_mejor_quimica", requiredRaces = { "raza_goblin" }, name = "Mejor quimica", requires = "Goblin", description = "Instinto goblin para la alquimia: reconoces una poción de un vistazo y sabes sacarle más provecho.",
         traits = {
             { id = "feat_mq_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
             { id = "feat_mq_alquimista", name = "Suministros de alquimista", type = "pasivo", description = "Competencia con suministros de alquimista; si ya la tienes, duplicas Bonus Competencia con ellos.", effects = { { kind = "toolProf", tool = "Suministros de alquimista" } } },
@@ -70,14 +70,14 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_amigo_criaturas", name = "Amigo de las criaturas", requires = "Elfo nocturno", description = "Trato natural con las bestias: te entienden, te escuchan y rara vez te ven como una amenaza.",
+        id = "feat_amigo_criaturas", requiredRaces = { "raza_elfo_noche" }, name = "Amigo de las criaturas", requires = "Elfo nocturno", description = "Trato natural con las bestias: te entienden, te escuchan y rara vez te ven como una amenaza.",
         traits = {
             { id = "feat_ac_animales", name = "Trato con Animales", type = "pasivo", description = "Competencia en Trato con Animales; si ya eres competente, duplicas Bonus Competencia en ella.", effects = { { kind = "skillProf", skill = "Animales" } } },
             { id = "feat_ac_conjuros", name = "Conjuros de bestias", type = "pasivo", description = "Aprendes hablar con animales (a voluntad, sin espacio) y amistad con los animales (una vez con este dote, recuperado en descanso largo). Característica: Sabiduría.", effects = {} },
         },
     },
     {
-        id = "feat_herencia_darnassiana", name = "Herencia darnassiana", requires = "Elfo nocturno", description = "El legado de Darnassus: moverte sin ser visto en la penumbra y un espíritu que vela por ti cuando la muerte se acerca.",
+        id = "feat_herencia_darnassiana", requiredRaces = { "raza_elfo_noche" }, name = "Herencia darnassiana", requires = "Elfo nocturno", description = "El legado de Darnassus: moverte sin ser visto en la penumbra y un espíritu que vela por ti cuando la muerte se acerca.",
         traits = {
             { id = "feat_hd_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria") } } },
             { id = "feat_hd_sigilo", name = "Sigilo en penumbra", type = "pasivo", description = "Ventaja en pruebas de Destreza (Sigilo) en areas con luz tenue o sin luz.", effects = {} },
@@ -85,21 +85,21 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_fortaleza_enana", name = "Fortaleza enana", requires = "Enano", description = "Aguante enano: cuando te cubres, aprovechas el respiro para recomponerte.",
+        id = "feat_fortaleza_enana", requiredRaces = { "raza_enano" }, name = "Fortaleza enana", requires = "Enano", description = "Aguante enano: cuando te cubres, aprovechas el respiro para recomponerte.",
         traits = {
             { id = "feat_fe_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
             { id = "feat_fe_esquivar", name = "Esquivar y curar", type = "pasivo", description = "Al tomar la acción de Esquivar, puedes gastar un dado de golpe para curarte (tirada + Mod. Constitución, mínimo 1).", effects = {} },
         },
     },
     {
-        id = "feat_precision_elfica", name = "Precision elfica", requires = "Cualquier elfo o renegado (elfo)", description = "Puntería élfica: cuando la ocasión te favorece, la aprovechas mejor que nadie.",
+        id = "feat_precision_elfica", requiredRaces = { "raza_elfo_noche", "raza_elfo_sangre", "raza_nocheterna", "raza_elfo_vacio", "raza_semielfo", "raza_renegado_elfo" }, name = "Precision elfica", requires = "Cualquier elfo o renegado (elfo)", description = "Puntería élfica: cuando la ocasión te favorece, la aprovechas mejor que nadie.",
         traits = {
             { id = "feat_pe_inc", name = "Incremento de caracteristica", type = "choice", description = "Destreza, Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Destreza"), AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_pe_reroll", name = "Precision", type = "pasivo", description = "Con ventaja en un ataque de Destreza, Inteligencia, Sabiduría o Carisma, puedes volver a tirar uno de los dados una vez.", effects = {} },
         },
     },
     {
-        id = "feat_abrazo_vacio", name = "Abrazo del Vacio", requires = "Elfo del Vacio", description = "El Vacío responde a tu magia necrótica, la refuerza y te envuelve mientras la canalizas.",
+        id = "feat_abrazo_vacio", requiredRaces = { "raza_elfo_vacio" }, name = "Abrazo del Vacio", requires = "Elfo del Vacio", description = "El Vacío responde a tu magia necrótica, la refuerza y te envuelve mientras la canalizas.",
         traits = {
             { id = "feat_av_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_av_reroll", name = "Daño necrotico", type = "pasivo", description = "Al tirar daño necrótico de un conjuro tuyo, puedes volver a tirar los 1 (usas el nuevo resultado, aunque sea otro 1).", effects = {} },
@@ -116,7 +116,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_depredador_endurecido", name = "Depredador endurecido", requires = "Huargen", description = "El instinto huargen a flor de piel: olfato, Correr a cuatro patas y garras que cuentan como arma.",
+        id = "feat_depredador_endurecido", requiredRaces = { "raza_huargen" }, name = "Depredador endurecido", requires = "Huargen", description = "El instinto huargen a flor de piel: olfato, Correr a cuatro patas y garras que cuentan como arma.",
         traits = {
             { id = "feat_de_olfato", name = "Olfato agudo", type = "pasivo", description = "Ventaja en pruebas de Sabiduría (Percepción) que dependan del olfato.", effects = {} },
             { id = "feat_de_correr", name = "Carrera a cuatro patas", type = "pasivo", description = "Con ambas manos vacias, puedes Correr como acción adicional, desplazandote a cuatro patas.", effects = {} },
@@ -125,7 +125,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_furia_orca", name = "Furia orca", requires = "Orco", description = "Furia orca en cada golpe, y una embestida más cuando la sangre ya te hierve.",
+        id = "feat_furia_orca", requiredRaces = { "raza_orco" }, name = "Furia orca", requires = "Orco", description = "Furia orca en cada golpe, y una embestida más cuando la sangre ya te hierve.",
         traits = {
             { id = "feat_fo_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Constitución +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion") } } },
             { id = "feat_fo_dado", name = "Golpe furioso", type = "pasivo", description = "Al golpear con un arma simple o marcial, tiras un dado de daño del arma extra (mismo tipo). 1 uso por descanso corto o largo.", effects = {} },
@@ -133,7 +133,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_prodigio", name = "Prodigio", requires = "Renegado (humano) o humano", description = "Versatilidad humana: aprendes deprisa una habilidad, una herramienta y un idioma, y dominas algo que ya sabías.",
+        id = "feat_prodigio", requiredRaces = { "raza_humano", "raza_renegado_humano" }, name = "Prodigio", requires = "Renegado (humano) o humano", description = "Versatilidad humana: aprendes deprisa una habilidad, una herramienta y un idioma, y dominas algo que ya sabías.",
         traits = {
             { id = "feat_pr_competencia", name = "Competencia en habilidad", type = "choice", description = "Competencia en una habilidad de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "skillProf" } },
             { id = "feat_pr_extra", name = "Herramienta e idioma", type = "choice", description = "Competencia en una herramienta de tu elección (elige abajo) y fluidez en un idioma de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "toolProf" } },
@@ -141,7 +141,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_guia_espiritual", name = "Guia espiritual", requires = "Enano (Martillo Salvaje), orco, tauren o trol", description = "Los espíritus de tu pueblo te acompañan: sostienen tu ánimo y sanan a los tuyos.",
+        id = "feat_guia_espiritual", requiredRaces = { "raza_enano_martillo_salvaje", "raza_orco", "raza_tauren", "raza_trol" }, name = "Guia espiritual", requires = "Enano (Martillo Salvaje), orco, tauren o trol", description = "Los espíritus de tu pueblo te acompañan: sostienen tu ánimo y sanan a los tuyos.",
         traits = {
             { id = "feat_ge_inc", name = "Incremento de caracteristica", type = "choice", description = "Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_ge_miedo", name = "Valor espiritual", type = "pasivo", description = "Ventaja en tiradas de salvación contra el miedo.", effects = {} },
@@ -149,7 +149,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_agilidad_robusta", name = "Agilidad robusta", requires = "Enano, gnomo o goblin", description = "Cuerpo bajo y compacto, pero rápido: te mueves más y cuesta sujetarte.",
+        id = "feat_agilidad_robusta", requiredRaces = { "raza_enano", "raza_gnomo", "raza_goblin" }, name = "Agilidad robusta", requires = "Enano, gnomo o goblin", description = "Cuerpo bajo y compacto, pero rápido: te mueves más y cuesta sujetarte.",
         traits = {
             { id = "feat_ar_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
             { id = "feat_ar_velocidad", name = "Velocidad", type = "pasivo", description = "Tu velocidad aumenta en 1,5 metros.", effects = {} },
@@ -164,7 +164,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_resistencia_tauren", name = "Resistencia Tauren", requires = "Tauren", description = "Corpulencia tauren: aguantas golpes sin armadura y tu vida crece con cada nivel.",
+        id = "feat_resistencia_tauren", requiredRaces = { "raza_tauren" }, name = "Resistencia Tauren", requires = "Tauren", description = "Corpulencia tauren: aguantas golpes sin armadura y tu vida crece con cada nivel.",
         traits = {
             { id = "feat_rt_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza, Destreza o Constitución +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza"), AbilOpt("Constitucion") } } },
             { id = "feat_rt_piel", name = "Piel gruesa", type = "pasivo", description = "Sin armadura, tu CA = 10 + Mod. Destreza + Mod. Constitución. Puedes usar escudo y mantener este beneficio.", effects = {} },
@@ -579,6 +579,18 @@ local function EnsureIndex()
         featById[featDef.id] = featDef
         featOrder[#featOrder + 1] = featDef.id
     end
+end
+
+-- El requisito racial ESTRUCTURADO (el campo `requires` sigue siendo el texto para el tooltip).
+-- Casa contra el id de RAZA o el de SUBRAZA: "renegado (elfo)" es una subraza.
+function API.RaceAllowed(featDef, raceId, subraceId)
+    local req = featDef and featDef.requiredRaces
+    if type(req) ~= "table" or #req == 0 then return true end
+    raceId, subraceId = tostring(raceId or ""), tostring(subraceId or "")
+    for _, id in ipairs(req) do
+        if id == raceId or (subraceId ~= "" and id == subraceId) then return true end
+    end
+    return false
 end
 
 function API.GetFeats()

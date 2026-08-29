@@ -783,6 +783,16 @@ function API.IsFeatureEnabled(feature, profileName)
     local data = API.Get(profileName)
     -- Una subclase especial puede exigir raza concreta. Durante una importacion
     -- incompleta no bloqueamos la ficha; una raza ya conocida distinta si la bloquea.
+    -- Lista de razas admitidas (dotes raciales): casa contra raza O subraza.
+    if type(feature.requiredRaces) == "table" and #feature.requiredRaces > 0
+        and data.race and data.race.id ~= "" then
+        local ok = false
+        for _, id in ipairs(feature.requiredRaces) do
+            if tostring(id) == tostring(data.race.id)
+                or tostring(id) == tostring(data.race.subraceId or "") then ok = true break end
+        end
+        if not ok then return false end
+    end
     if feature.requiredRace and data.race and data.race.id ~= ""
         and tostring(data.race.id) ~= tostring(feature.requiredRace) then
         return false

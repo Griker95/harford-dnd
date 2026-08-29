@@ -507,6 +507,24 @@ local function ConfigureSubclassChoice(classDef, classLevel)
     local primarySlot = classDef.id == S.classId or not S.classId
     local selectedId = primarySlot and S.subclassId or S.secondarySubclassId
     local subclasses = classDef.subclasses or {}
+    -- Requisito racial de subclase (Sacerdocio de Elune = raza_elfo_noche): la que tu raza no
+    -- puede tomar no aparece como tarjeta. Raza del borrador en creacion; de la progresion en
+    -- subida. Si el filtro vaciara la lista (datos raros), se muestran todas antes que bloquear.
+    do
+        local razaId = S.raceId
+        if (not razaId or razaId == "") and HarfordDnDProgression and HarfordDnDProgression.GetRace then
+            local r = HarfordDnDProgression.GetRace()
+            razaId = r and r.id
+        end
+        razaId = tostring(razaId or "")
+        local permitidas = {}
+        for _, sub in ipairs(subclasses) do
+            if not sub.requiredRace or razaId == "" or razaId == tostring(sub.requiredRace) then
+                permitidas[#permitidas + 1] = sub
+            end
+        end
+        if #permitidas > 0 then subclasses = permitidas end
+    end
     if #subclasses == 0 then return true end
     S.selectorLabel:SetText("Subclase")
     S.selectorLabel:Show()
@@ -1546,6 +1564,26 @@ local function RefreshChoiceDialog()
     -- computo -- debe seguir visible para poder desmarcarse -- y las elecciones apilables
     -- (Mejora de Caracteristica +1/+1) no se filtran: repetir es su gracia. Si no quedara
     -- ninguna opcion (no deberia pasar), se muestran todas antes que bloquear.
+    -- DOTES RACIALES: las que tu raza (o subraza) no puede tomar no se ofrecen. La raza sale
+    -- del borrador en creacion y de la progresion en subida.
+    do
+        local razaId, subrazaId = S.raceId, S.subraceId
+        if (not razaId or razaId == "") and HarfordDnDProgression and HarfordDnDProgression.GetRace then
+            local r = HarfordDnDProgression.GetRace()
+            razaId, subrazaId = r and r.id, r and r.subraceId
+        end
+        if HarfordDnDFeats and HarfordDnDFeats.RaceAllowed and HarfordDnDFeats.GetFeat then
+            local permitidas = {}
+            for _, option in ipairs(options) do
+                local ok = true
+                if option.feat then
+                    ok = HarfordDnDFeats.RaceAllowed(HarfordDnDFeats.GetFeat(option.feat), razaId, subrazaId)
+                end
+                if ok then permitidas[#permitidas + 1] = option end
+            end
+            if #permitidas > 0 then options = permitidas end
+        end
+    end
     if not IsStackableChoice(feature) and Draft.DraftLanguages and Draft.DraftSkillProficiencies then
         local idiomas = Draft.DraftLanguages(feature.id)
         local habilidades = Draft.DraftSkillProficiencies(feature.id)

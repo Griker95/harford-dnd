@@ -144,4 +144,21 @@ chk("toolProf salta los marcadores de categoria",
 chk("la eleccion vieja de categoria sigue resolviendo",
     libroSrc:find('if optionId == "her_instrumento" then', 1, true) ~= nil, true)
 
+
+
+-- ─── LOS REQUISITOS RACIALES SE APLICAN, NO SOLO SE ESCRIBEN ────────────────
+print("Dotes raciales y Sacerdocio de Elune se filtran por raza")
+local feats = io.open("Harford/DnD/Data/HarfordDnDFeats.lua"):read("*a")
+chk("hay validador estructurado", feats:find("function API.RaceAllowed(featDef, raceId, subraceId)", 1, true) ~= nil, true)
+chk("las 13 dotes raciales llevan requiredRaces",
+    (function() local n = 0 for _ in feats:gmatch("requiredRaces = {") do n = n + 1 end return n end)(), 13)
+local advSrc = io.open("Harford/Character/HarfordCharacterAdvancement.lua"):read("*a")
+chk("el dialogo de dotes filtra por raza",
+    advSrc:find("HarfordDnDFeats.RaceAllowed(HarfordDnDFeats.GetFeat(option.feat), razaId, subrazaId)", 1, true) ~= nil, true)
+chk("las tarjetas de subclase tambien",
+    advSrc:find("if not sub.requiredRace or razaId ==", 1, true) ~= nil, true)
+local progSrc = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
+chk("y el runtime respeta requiredRaces con subraza",
+    progSrc:find('tostring(id) == tostring(data.race.subraceId or "")', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

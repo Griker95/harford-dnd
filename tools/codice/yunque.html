@@ -2905,7 +2905,6 @@ $("addPaso").onclick = () => {
 const RANGOS_PROF = DATOS.rangos || [];
 const RECETAS_NIVEL = DATOS.recetas || [];
 
-function sinPrefijo(p){ return (p || "").replace("prof_", ""); }
 
 // El rango de una receta sale de su nivel: [min del rango, min del siguiente).
 function rangoDe(skill){
@@ -2917,8 +2916,13 @@ function rangoDe(skill){
 function entrenadorActual(){
   const prof = $("eProf").value;
   const rango = $("eRango").value;
-  // El nombre de catalogo se normaliza igual que en el addon: sin tildes y en minusculas.
-  const id = sinPrefijo(prof) + "_" + aClave(rango);
+  // El id CONSERVA el prefijo `prof_`: es `prof_herreria_aprendiz`, no `herreria_aprendiz`.
+  // La cabecera del modulo pone el ejemplo sin prefijo, pero el codigo manda: `GetAll` construye
+  // el nombre como `prof.id .. "_" .. rango`, y `TrainerTeaches` compara la profesion deducida
+  // contra `recipe.profession` -- que es `prof_herreria` -- con igualdad de cadena pelada. Sin el
+  // prefijo el entrenador no cubre ninguna receta, y uno sin recetas NO EXISTE (`_Construir`
+  // devuelve nil), asi que `Bind` responderia "nombre de entrenador desconocido".
+  const id = prof + "_" + aClave(rango);
   return {
     prof: prof, rango: rango, id: id,
     nombre: $("eNombre").value.trim(), zona: $("eZona").value.trim()

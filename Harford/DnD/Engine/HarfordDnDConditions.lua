@@ -2213,7 +2213,8 @@ local function PruneRuntime()
     for key, bucket in pairs(S.units) do
         if key ~= "player" then
         for id, record in pairs(bucket) do
-                if record.expiresAt and record.expiresAt <= now then bucket[id] = nil end
+                local corte = record.staleAt or record.expiresAt
+                if corte and corte <= now then bucket[id] = nil end
             end
             if not next(bucket) then S.units[key] = nil end
         end
@@ -2232,7 +2233,10 @@ local function CacheRemoteState(data, sender)
     if data.op == "remove" then bucket[data.conditionId] = nil
     else
         local record = CopyRecord(data)
-        record.id, record.expiresAt = data.conditionId, Now() + REMOTE_TTL
+        -- La caducidad de CONTABILIDAD va en `staleAt`, no en `expiresAt`: el tooltip pintaba el
+        -- TTL de cache (600 s) como si fuera duracion del estado. Y el expiresAt del emisor se
+        -- descarta: GetTime es tiempo de sesion de SU cliente, en este reloj no significa nada.
+        record.id, record.staleAt, record.expiresAt = data.conditionId, Now() + REMOTE_TTL, nil
         bucket[data.conditionId] = record
     end
     if not next(bucket) then S.units[key] = nil end
@@ -2436,7 +2440,7 @@ function API.CacheStateList(guid, name, estados, sender)
                 saveDC = antes and antes.saveDC or nil,
                 vars = vars,
                 targetGuid = guid, targetName = name,
-                created = (antes and antes.created) or Now(), expiresAt = Now() + REMOTE_TTL,
+                created = (antes and antes.created) or Now(), staleAt = Now() + REMOTE_TTL,
             }
         end
     end

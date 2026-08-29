@@ -94,3 +94,24 @@ env.HarfordTurnOrderStore = { entries = {}, estado = "activo", economia = { spen
 chk("un estado declarado SIN sello si caduca", Purge(), true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))
+
+-- ─── EL TTL DE CACHE NO ES DURACION DEL ESTADO ─────────────────────────────
+-- Los registros remotos caducan por contabilidad (REMOTE_TTL, 600 s) y eso iba en `expiresAt`,
+-- el mismo campo que la duracion real: el tooltip de la tira pintaba "Quedan 600 s" en TODOS los
+-- estados vistos en remoto. La contabilidad va en `staleAt`; `expiresAt` queda solo para
+-- duraciones reales del reloj LOCAL (el del emisor es GetTime de SU sesion y no significa nada).
+print("El TTL de cache no se disfraza de duracion")
+local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+chk("la recepcion remota usa staleAt",
+    cond:find("record.id, record.staleAt, record.expiresAt = data.conditionId, Now() + REMOTE_TTL, nil", 1, true) ~= nil, true)
+chk("el snapshot remoto tambien",
+    cond:find("staleAt = Now() + REMOTE_TTL", 1, true) ~= nil, true)
+chk("y la poda remota mira ambos campos",
+    cond:find("local corte = record.staleAt or record.expiresAt", 1, true) ~= nil, true)
+local frames = io.open("Harford/Frames/HarfordUnitFrames.lua"):read("*a")
+chk("el tooltip solo lee expiresAt (duracion real)",
+    frames:find('string.format("Quedan %d s"', 1, true) ~= nil
+        and frames:find("tonumber(record.staleAt)", 1, true) == nil, true)
+
+print(fallos == 0 and "TODO CORRECTO (caducidad)" or (fallos .. " FALLOS"))
+

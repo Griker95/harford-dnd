@@ -1591,7 +1591,7 @@ local function RefreshChoiceDialog()
                 if option.feat then
                     local def = HarfordDnDFeats.GetFeat(option.feat)
                     ok = HarfordDnDFeats.RaceAllowed(def, razaId, subrazaId)
-                    if ok and HarfordDnDFeats.AbilityAllowed then
+                    if ok and def and def.requiredAbility and HarfordDnDFeats.AbilityAllowed then
                         ok = HarfordDnDFeats.AbilityAllowed(def, Puntuacion)
                     end
                 end

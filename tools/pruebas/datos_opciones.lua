@@ -154,7 +154,7 @@ chk("las 13 dotes raciales llevan requiredRaces",
     (function() local n = 0 for _ in feats:gmatch("requiredRaces = {") do n = n + 1 end return n end)(), 13)
 local advSrc = io.open("Harford/Character/HarfordCharacterAdvancement.lua"):read("*a")
 chk("el dialogo de dotes filtra por raza",
-    advSrc:find("HarfordDnDFeats.RaceAllowed(HarfordDnDFeats.GetFeat(option.feat), razaId, subrazaId)", 1, true) ~= nil, true)
+    advSrc:find("ok = HarfordDnDFeats.RaceAllowed(def, razaId, subrazaId)", 1, true) ~= nil, true)
 chk("las tarjetas de subclase tambien",
     advSrc:find("if not sub.requiredRace or razaId ==", 1, true) ~= nil, true)
 local progSrc = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")

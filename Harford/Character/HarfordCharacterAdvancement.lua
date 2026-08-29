@@ -1019,6 +1019,7 @@ RefreshEquipmentStage = function()
     RefreshOptionCards(nil)
 
     local y = -34
+    local armasPendientes = 0
     for i, grupo in ipairs(EquipmentGroups()) do
         local pick = EquipPick(i)
         local titulo = MakeText(S.tree, "GameFontNormal", string.upper(tostring(grupo.label or "Grupo")))
@@ -1053,7 +1054,10 @@ RefreshEquipmentStage = function()
                         hueco = hueco + 1
                         local idx = hueco
                         local actual = pick.armas[idx]
-                        local texto = actual or ("Elegir arma " .. tostring(item.pick):lower())
+                        if not actual then armasPendientes = armasPendientes + 1 end
+                        -- Numerado: "Dos armas marciales" son DOS elecciones y debe verse.
+                        local texto = actual or ("Elegir arma " .. tostring(item.pick):lower()
+                            .. " (" .. tostring(idx) .. ")")
                         local w = MakeButton(S.tree, texto, 300, 22, function()
                             OpenWeaponPickDialog(item.pick, function(nombre)
                                 pick.armas[idx] = nombre
@@ -1071,8 +1075,11 @@ RefreshEquipmentStage = function()
     end
 
     S.treeChild:SetHeight(math.max(240, -y + 10))
-    S.nextButton:SetText("Confirmar equipo")
-    S.nextButton:SetEnabled(true)
+    -- No se confirma con huecos de arma sin elegir: "Dos armas marciales" son DOS elecciones y
+    -- confirmarlas vacias dejaba la ficha sin las armas que el manual promete.
+    S.nextButton:SetText(armasPendientes == 0 and "Confirmar equipo"
+        or ("Elige " .. armasPendientes .. (armasPendientes == 1 and " arma" or " armas")))
+    S.nextButton:SetEnabled(armasPendientes == 0)
     S.nextButton:SetShown(true)
 end
 

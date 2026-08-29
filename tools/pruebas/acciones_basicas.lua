@@ -95,7 +95,7 @@ local narrativas = 0
 for _, def in ipairs(A.GetOrdered()) do
     if def.sinEfecto then narrativas = narrativas + 1 end
 end
-chk("solo queda Desengancharse sin efecto", narrativas, 1)
+chk("ninguna accion lleva coletilla narrativa", narrativas, 0)
 
 -- ─── TODA ACCION TIENE FORMA DE RESOLVERSE ──────────────────────────────────
 -- La bateria en juego comprueba lo mismo, y se le habia quedado vieja la lista: Correr paso de
@@ -103,7 +103,7 @@ chk("solo queda Desengancharse sin efecto", narrativas, 1)
 -- que las dos listas no se separen otra vez.
 print("Toda accion basica sabe resolverse")
 local RUTAS = { "selfCondition", "skillCheck", "contest", "helpOther", "throwWeapon",
-                "readyAction", "dobleMovimiento", "sinEfecto" }
+                "readyAction", "dobleMovimiento", "soloAnuncio" }
 for _, def in ipairs(A.GetOrdered()) do
     local tiene = false
     for _, k in ipairs(RUTAS) do if def[k] then tiene = true break end end

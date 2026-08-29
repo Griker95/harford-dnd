@@ -213,7 +213,7 @@ Grupo("acciones", 'las diez acciones basicas; anade "ejecutar" para dispararlas 
         -- bateria que da falsos fallos entrena a ignorarla entera, asi que se corrige EN CUANTO se
         -- ve -- no se convive con un rojo conocido.
         local ruta = def.selfCondition or def.skillCheck or def.contest or def.helpOther
-            or def.throwWeapon or def.readyAction or def.dobleMovimiento or def.sinEfecto
+            or def.throwWeapon or def.readyAction or def.dobleMovimiento or def.soloAnuncio
         r.chk("accion sin forma de resolverse: " .. def.id, ruta ~= nil)
         r.chk("accion sin coste: " .. def.id, def.cast ~= nil)
         local costes = A.CostsFor(def.id, {})

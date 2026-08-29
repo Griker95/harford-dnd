@@ -43,6 +43,9 @@ API.DEFS = {
         id = "desengancharse", name = "Desengancharse",
         cast = "accion", orden = 3,
         description = "Tu movimiento no provoca ataques de oportunidad durante el resto del turno.",
+        -- Se resuelve ANUNCIANDOSE (y cobrando su accion): los ataques de oportunidad son de la
+        -- mesa. Marcador explicito para que la suite sepa que no es una accion sin ruta.
+        soloAnuncio = true,
     },
     esconderse = {
         id = "esconderse", name = "Esconderse",

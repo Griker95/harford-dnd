@@ -710,6 +710,16 @@ local function CollectRacialSpells(draft)
             for _, id in ipairs(grant.ids or {}) do add(id, grant.note) end
         end
         for _, id in ipairs(feature.cantripSpellIds or {}) do add(id, nil) end
+        -- Trucos ELEGIDOS en un rasgo de eleccion racial (Legado elfico del Semielfo): la opcion
+        -- lleva su spellId y el rasgo declara la caracteristica en `spellAbility`.
+        if feature.choice then
+            ability = ability or feature.spellAbility
+            for _, optId in ipairs((draft.choices or {})[feature.id] or {}) do
+                local opt = HarfordDnDBook and HarfordDnDBook.GetChoiceOption
+                    and HarfordDnDBook.GetChoiceOption(feature, optId)
+                if opt and opt.spellId then add(opt.spellId, nil) end
+            end
+        end
     end
     return out, ability
 end

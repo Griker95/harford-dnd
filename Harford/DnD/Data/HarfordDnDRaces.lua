@@ -101,7 +101,7 @@ API.RACES = {
             { id = "sme_arcano", name = "Conocimiento Arcano", type = "pasivo", description = "Tienes competencia en la habilidad de Conocimiento Arcano. Además, puedes lanzar el conjuro Detectar magia una vez al día. La Inteligencia es tu característica de lanzamiento para este conjuro.", uses = { max = 1, recharge = "long" }, spellGrants = { { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia" } }, effects = {
                 { kind = "skillProf", skill = "Arcano" },
             } },
-            { id = "sme_legado", name = "Legado elfico", type = "pasivo", description = "Conoces un truco de mago a tu elección (característica Inteligencia).", effects = {} },
+            { id = "sme_legado", name = "Legado elfico", type = "choice", description = "Conoces un truco de mago a tu elección (característica Inteligencia).", spellAbility = "Inteligencia", effects = {}, choice = { slots = 1, extraFrom = "cantrip:Mago", options = {} } },
         },
     },
     {

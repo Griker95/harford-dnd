@@ -121,15 +121,18 @@ elige el nivel y el descanso largo hace desaparecer las creadas. Candado en
 | Riders del CdD | Embestida Vil tira y publica el dado de Caos al usar Momentum; Momentum Vengativo devuelve el punto de Vil si AMBAS mordidas impactan (CA resuelta) |
 | Furia Elemental (Chamán) | Botón en el Libro elige el tipo; el Compendio convierte los componentes elementales de cada conjuro (suite `furia_y_riders`) |
 
-## Decisión de mesa pendiente
+## Decisión de mesa pendiente — RESUELTA (2026-08-29)
 
-**El `casterType` del Brujo.** Está como lanzador completo. La tabla de clase del
-manual da **magia de pacto** (2 ranuras a nivel 6, recarga en descanso corto),
-pero `HarfordDnDMana` cita la regla variante de maná que sí lo clasifica como
-completo. Dos fuentes para dos reglas distintas y **un solo campo que gobierna
-ambas**. No se toca sin decidir cuál manda.
+**El `casterType` del Brujo**: la mesa decidió AMBAS. `casterType = "pact"` ya
+implementa exactamente eso en `CasterContribution` (`HarfordDnDMana`): con la
+variante de maná cuenta su nivel entero (funciona como siempre) y en modo
+ranuras usa su tabla de magia de pacto (`PACT_SLOTS`, recarga en descanso
+corto, se gasta antes que las ranuras normales). Verificado por el grupo
+`espacios` de la batería in-game.
 
-## Sin verificar
+## Sin verificar — VERIFICADO (2026-08-29)
 
-Los **iconos** de las maniobras del Guerrero (8) y de las Maldiciones del Brujo
-siguen sin comprobar contra el cliente. Los del Guerrero los invente yo.
+Los iconos de las maniobras del Guerrero y de las Maldiciones del Brujo se
+comprobaron contra el cliente con la batería (`grupo iconos`, incluye la tabla
+por nombre completa con `GetFileIDFromPath`): **todos existen en el build**.
+Batería completa: 178 ok / 0 fallos en GRIKER, 183 ok / 0 fallos en MORTYN.

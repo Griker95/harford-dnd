@@ -17,11 +17,41 @@ Verificados por mecánica, no solo por nombre.
 | Conjuro (manual) | Nivel | Lo pide | Por qué no vale ningún candidato |
 |---|---|---|---|
 | rayo del caos | 1 | Brujo / Destrucción | Daño de tipo ALEATORIO que salta a otra criatura. `Rayo de hechicería` es *witch bolt* (1d12 relámpago, arco continuo). `Orbe cromático` deja ELEGIR el tipo. Búsqueda por mecánica de nivel 1 con daño aleatorio: sin resultados. |
-| descarga mental | 2 | Brujo / Aflicción **y** Sacerdote / Sombra | 3d8 psíquico, salvación de Sabiduría, sigues conociendo su posición. `Tortura mental` es 2d6 y de Sacerdote. `Látigo mental de Tasha` usa salvación de Inteligencia y otro efecto. |
 | castigo abrasador | 1 | Paladín / Retribución | *searing smite* estándar. El compendio solo tiene tres castigos: `Castigo furioso` (wrathful, 1d6 psíquico), `Castigo marcador` (branding, 2d6) y `Castigo cegador` (blinding, 3d8 radiante). Ninguno es el de fuego. |
 | ✦ castigo justo | 3 | Paladín / Retribución | Marcado como conjuro NUEVO en el manual (capítulo 6). Sin candidato: el único castigo de nivel 3 es `Castigo cegador`, ya asignado a *castigo deslumbrante*. |
-| ✦ penitencia | 1 | Paladín / Sagrado | Marcado como NUEVO. No confundir con la Absolución: Penitencia del Sacerdote, que es una habilidad, no un conjuro. |
 | Conocer la Intención | 0 | Pícaro / Sutileza | El manual solo lo LISTA, sin descripción. No hay ningún truco con "intención" en el compendio. Sutileza queda con 9 de 10 trucos. |
+
+## Resueltos como equivalencia (2026-08-29)
+
+| Manual | Compendio | Comprobado por |
+|---|---|---|
+| ✦ penitencia | `arrepentimiento` | El compendio trae el TEXTO IDÉNTICO del capítulo 6 (Encantamiento 1, reacción, salvación de Sabiduría que desvía el ataque). Concedido en `pal_sag_conjuros_3`. |
+| descarga mental | `aguijon_mental` | *Mind Spike* (Xanathar): 3d8 psíquico, salvación de Sabiduría, conoces la ubicación — la mecánica exacta que pedía esta tabla. Clases: Brujo y Sacerdote. Concedido en `sac_som_conjuros_3`. |
+
+## PETICIÓN A LA WEB (chat del códice) — 2026-08-29
+
+Cuatro entradas para `compendium-data.js` → regeneración de `HarfordCompendioData.lua`.
+El addon NO las añade por su cuenta (fichero compartido). Al incorporarlas, avisar para
+cablear los `spellGrants` correspondientes.
+
+1. **Castigo abrasador** (*searing smite*, PHB, nivel 1, Paladín). Traducir del PHB.
+   Lo pide Paladín/Retribución nivel 3 (hoy sustituido por `golpe_furioso`, que es
+   *wrathful*: 1d6 radiante/necrótico, otro conjuro).
+2. **Golpe Justiciero** (*castigo justo*, nivel 2, Paladín). **El texto canónico YA está
+   en el manual**, capítulo 6 de `Warcraft 5º Edición.txt`: Evocación 2, acción adicional,
+   uno mismo, V, Concentración 1 minuto; próximo golpe cuerpo a cuerpo +2d6 radiante y la
+   siguiente tirada de ataque contra ese objetivo antes del final de tu próximo turno tiene
+   ventaja; +1d6 por nivel de espacio sobre 2. Copiar tal cual. Lo pide
+   Paladín/Retribución nivel 5 (hoy sustituido por `arma_magica`).
+3. **Rayo del caos** (*chaos bolt*, XGE, nivel 1, Brujo/Destrucción). Traducir de XGE
+   (2d8 de tipo aleatorio, puede saltar a otra criatura con dobles). No confundir con
+   `toque_del_caos` (truco Warcraft, 1d8 variable) ni con el rasgo *Chaos Bolt* de
+   Destrucción del libro inglés (que gasta Ascuas Ardientes: es una habilidad, no este
+   conjuro).
+4. **Conocer la Intención** (truco, Pícaro/Sutileza). El manual solo lo LISTA, sin
+   descripción en ningún libro. Necesita decisión: redactarlo (propuesta: adivinación,
+   acción, 9 m, saber si la criatura miente o su actitud, al estilo *detect thoughts*
+   menor) o dejar Sutileza con 9/10 trucos y anotarlo. Decide la web.
 
 ## Incoherencias del compendio detectadas
 

@@ -20,10 +20,8 @@ para cablear los `spellGrants`.
 
 1. ~~Rayo del caos~~ — **RESUELTO (2026-08-29)**: la web lo incorporó (`rayo_del_caos`,
    nivel 1) y ya está en la lista ampliada de Brujo/Destrucción del addon.
-2. **Conocer la Intención** (truco, Pícaro/Sutileza). El manual solo lo LISTA, sin
-   descripción en ningún libro. Necesita decisión: redactarlo (propuesta:
-   adivinación, acción, 9 m, saber si la criatura miente o su actitud, al estilo
-   *detect thoughts* menor) o dejar Sutileza con 9/10 trucos y anotarlo. Decide la web.
+2. ~~Conocer la Intención~~ — **RESUELTO (2026-08-29)**: es *True Strike* = `impacto_certero`,
+   que ya estaba en el compendio. Añadido a la lista de trucos de Sutileza (10/10).
 
 ## Resueltos como equivalencia (2026-08-29)
 

@@ -219,6 +219,19 @@ local function CreateSpellsPage()
             local api = CompendioAPI()
             if self.spell and api and api.OpenSpellById then api.OpenSpellById(self.spell.id) end
         end)
+        -- Arrastrar el conjuro a la barra de accion nativa (mismo flujo que las habilidades del
+        -- Libro; el click en la barra lanza ResolveCast, que ya cobra coste y resuelve area).
+        b:RegisterForDrag("LeftButton")
+        b:SetScript("OnDragStart", function(self)
+            if self.spell and self.spell.id and HarfordActionBars and HarfordActionBars.RecogerConjuro then
+                HarfordActionBars.RecogerConjuro(self.spell.id)
+            end
+        end)
+        b:SetScript("OnDragStop", function()
+            if C_Timer and HarfordActionBars and HarfordActionBars.SoltarHabilidad then
+                C_Timer.After(0, HarfordActionBars.SoltarHabilidad)
+            end
+        end)
         b:Hide()
         buttons[i] = b
     end

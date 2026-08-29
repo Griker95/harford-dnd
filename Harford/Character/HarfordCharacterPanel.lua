@@ -3418,9 +3418,11 @@ local function CreateBookPage()
         b:RegisterForDrag("LeftButton")
         b:SetScript("OnDragStart", function(self)
             local f = self.feature
-            if f and f.id and HarfordActionBars and HarfordActionBars.RecogerHabilidad then
-                HarfordActionBars.RecogerHabilidad(f.id)
-            end
+            if not (f and f.id and HarfordActionBars and HarfordActionBars.RecogerHabilidad) then return end
+            -- Una pasiva no tiene click que ejecutar: en la barra seria un boton muerto.
+            if HarfordCharacterBook and HarfordCharacterBook.Category
+                and HarfordCharacterBook.Category(f) == "pasivo" then return end
+            HarfordActionBars.RecogerHabilidad(f.id)
         end)
         -- Soltar en el vacio no debe dejar el icono pegado al cursor. Se difiere un tick porque
         -- el `OnReceiveDrag` del boton de la barra corre en el mismo instante y necesita leerlo.

@@ -574,34 +574,75 @@ do
         end
     end
 
-    -- Quita la habilidad y devuelve al boton sus atributos normales.
-    function API.LimpiarBoton(button)
+    -- Estamos llevando OTRA barra (posesion de NPC / vehiculo): Blizzard superpone acciones
+    -- reales sobre los mismos botones y las retira al soltar. En ese estado, apartarse es
+    -- temporal y el registro NO debe tocarse.
+    local function EnPosesion()
+        if HasOverrideActionBar and HasOverrideActionBar() then return true end
+        if HasVehicleActionBar and HasVehicleActionBar() then return true end
+        if UnitHasVehicleUI and UnitHasVehicleUI("player") then return true end
+        return false
+    end
+
+    -- Quita la habilidad y devuelve al boton sus atributos normales. `conservarRegistro` aparta
+    -- solo el BOTON (posesion): la ranura guardada sobrevive y la restauracion la devuelve al
+    -- soltar al NPC. Sin el, se olvida tambien la ranura (arrastre/limpieza del usuario). Esto
+    -- es justo lo que pierde Arcanum con .poss: limpia el registro al ceder el boton y al
+    -- despose(er) ya no queda nada que restaurar.
+    function API.LimpiarBoton(button, conservarRegistro)
         if not button or EnCombate() then return false end
         if button:GetAttribute("type") ~= TIPO then return false end
         button:SetAttribute("type", "action")
         button:SetAttribute("_" .. TIPO, nil)
         button.harfordFeature, button.harfordIcon = nil, nil
-        local r = Ranura(button)
-        if r then Store().botones[r] = nil end
+        if not conservarRegistro then
+            local r = Ranura(button)
+            if r then Store().botones[r] = nil end
+        end
         if button.Update then pcall(button.Update, button) end
         return true
     end
 
-    -- Coloca una habilidad del Libro en un boton nativo.
-    function API.AsignarBoton(button, featureId, silencioso)
+    -- Datos de presentacion de una carga: habilidad del Libro (featureId pelado, el formato
+    -- guardado de siempre) o conjuro del compendio ("conjuro:<id>").
+    local function DatosDeCarga(carga)
+        carga = tostring(carga or "")
+        local spellId = carga:match("^conjuro:(.+)$")
+        if spellId then
+            local api = _G.HarfordCompendioAPI
+            local spell = api and api.GetSpellById and api.GetSpellById(spellId)
+            if not spell then return nil end
+            return {
+                name = spell.name,
+                icon = (api.GetSpellIcon and api.GetSpellIcon(spell)) or spell.icon,
+            }
+        end
+        return HarfordCharacterPanel and HarfordCharacterPanel.DatosDeHabilidad
+            and HarfordCharacterPanel.DatosDeHabilidad(carga)
+    end
+
+    -- Coloca una carga (habilidad del Libro o conjuro) en un boton nativo.
+    function API.AsignarBoton(button, carga, silencioso)
         if not button or EnCombate() then return false end
-        local datos = HarfordCharacterPanel and HarfordCharacterPanel.DatosDeHabilidad
-            and HarfordCharacterPanel.DatosDeHabilidad(featureId)
+        local datos = DatosDeCarga(carga)
         if not datos then
             if not silencioso then Aviso("Esa habilidad ya no existe en tu ficha.") end
             return false
         end
-        button.harfordFeature = tostring(featureId)
+        button.harfordFeature = tostring(carga)
         button.harfordIcon = datos.icon
         button:SetAttribute("type", TIPO)
         button:SetAttribute("_" .. TIPO, function(self)
-            if HarfordCharacterPanel and HarfordCharacterPanel.ActivarHabilidadPorId then
-                HarfordCharacterPanel.ActivarHabilidadPorId(self.harfordFeature, self)
+            local id = tostring(self.harfordFeature or "")
+            local spellId = id:match("^conjuro:(.+)$")
+            if spellId then
+                local api = _G.HarfordCompendioAPI
+                if api and api.ResolveCast then
+                    local ok, err = api.ResolveCast(spellId)
+                    if ok == false and err then Aviso(tostring(err)) end
+                end
+            elseif HarfordCharacterPanel and HarfordCharacterPanel.ActivarHabilidadPorId then
+                HarfordCharacterPanel.ActivarHabilidadPorId(id, self)
             end
         end)
         Pintar(button)
@@ -641,6 +682,20 @@ do
         if not datos then return false end
         local f = IconoArrastre()
         f.featureId, f.activo = tostring(featureId), true
+        f.tex:SetTexture(datos.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+        f:Show()
+        if GameTooltip then GameTooltip:Hide() end
+        return true
+    end
+
+    -- Recoge un conjuro del compendio; misma carga de cursor que las habilidades.
+    function API.RecogerConjuro(spellId)
+        if EnCombate() then return false end
+        local carga = "conjuro:" .. tostring(spellId or "")
+        local datos = DatosDeCarga(carga)
+        if not datos then return false end
+        local f = IconoArrastre()
+        f.featureId, f.activo = carga, true
         f.tex:SetTexture(datos.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
         f:Show()
         if GameTooltip then GameTooltip:Hide() end
@@ -699,7 +754,11 @@ do
             Enganchar(b)
             local r = Ranura(b)
             local id = r and Store().botones[r]
-            if id and b:GetAttribute("type") ~= TIPO then
+            -- Con accion real presente (posesion o hechizo del usuario) no se asigna NI se
+            -- olvida: si la accion es pasajera, la siguiente restauracion la devuelve.
+            local accionReal = b.CalculateAction and GetActionInfo
+                and b:CalculateAction() and GetActionInfo(b:CalculateAction())
+            if id and not accionReal and b:GetAttribute("type") ~= TIPO then
                 if API.AsignarBoton(b, id, true) then n = n + 1 end
             elseif not id and b:GetAttribute("type") == TIPO then
                 API.LimpiarBoton(b)
@@ -717,7 +776,9 @@ do
             if self.CalculateAction and GetActionInfo then
                 local accion = self:CalculateAction()
                 if accion and GetActionInfo(accion) then
-                    API.LimpiarBoton(self)
+                    -- En posesion la accion real es la del NPC y es pasajera: apartarse SIN
+                    -- olvidar la ranura. Fuera de posesion es el usuario poniendo algo encima.
+                    API.LimpiarBoton(self, EnPosesion())
                     if self.Update then pcall(self.Update, self) end
                     return
                 end
@@ -730,5 +791,18 @@ do
     ev:RegisterEvent("PLAYER_LOGIN")
     ev:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
     ev:RegisterEvent("PLAYER_REGEN_ENABLED")
-    ev:SetScript("OnEvent", function() API.RestaurarBarra() end)
+    -- Posesion (.poss) y vehiculos: al entrar, la barra del NPC manda; al salir, restaurar lo
+    -- nuestro. Diferido un tick para mirar la barra DESPUES de que el cliente la haya movido.
+    ev:RegisterEvent("UPDATE_OVERRIDE_ACTIONBAR")
+    ev:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
+    ev:RegisterEvent("UNIT_ENTERED_VEHICLE")
+    ev:RegisterEvent("UNIT_EXITED_VEHICLE")
+    ev:SetScript("OnEvent", function(_, evento, unidad)
+        if (evento == "UNIT_ENTERED_VEHICLE" or evento == "UNIT_EXITED_VEHICLE") and unidad ~= "player" then return end
+        if C_Timer and C_Timer.After then
+            C_Timer.After(0, function() API.RestaurarBarra() end)
+        else
+            API.RestaurarBarra()
+        end
+    end)
 end

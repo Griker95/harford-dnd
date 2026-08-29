@@ -2422,7 +2422,10 @@ ApplyModeLayout = function()
     local layout
     if IsLevelUpMode() then
         layout = "list"
-    elseif S.stage == "attributes" or S.stage == "race_choices" or S.stage == "background_choices" then
+    elseif S.stage == "attributes" or S.stage == "race_choices" or S.stage == "background_choices"
+        or S.stage == "equipment" then
+        -- Equipo tambien va sin columna de lista: sus grupos se pintan enteros en el detalle y la
+        -- lista quedaba VACIA con el titulo "EQUIPO INICIAL" duplicando al de la seccion.
         layout = "none"
     elseif S.stage == "class" then
         layout = "class"

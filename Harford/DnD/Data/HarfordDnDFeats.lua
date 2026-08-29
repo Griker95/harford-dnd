@@ -25,7 +25,7 @@ API.FEATS = {
         id = "feat_mago_de_batalla", name = "Mago de batalla", requires = "Capacidad de lanzar al menos un conjuro", description = "Magia de combate a quemarropa: más trucos, sin penalización por tener al enemigo encima y la opción de cambiar puntería por potencia.",
         traits = {
             { id = "feat_mb_trucos", name = "Trucos de Mago", type = "pasivo", description = "Aprendes dos trucos extra de la lista de conjuros de mago.", effects = {} },
-            { id = "feat_mb_cercania", name = "Sin desventaja en cercania", type = "pasivo", description = "Al hacer un ataque de conjuro a distancia, no sufres desventaja por estar a 1.5 m de una criatura hostil.", effects = {} },
+            { id = "feat_mb_cercania", name = "Sin desventaja en cercania", type = "pasivo", description = "Al hacer un ataque de conjuro a distancia, no sufres desventaja por estar a 1,5 m de una criatura hostil.", effects = {} },
             { id = "feat_mb_potente", name = "Conjuro potente", type = "pasivo", description = "Antes de lanzar un conjuro instantaneo de ataque a un solo objetivo, puedes recibir -5 a la tirada; si impacta, +10 al daño del conjuro.", effects = {} },
         },
     },
@@ -33,7 +33,7 @@ API.FEATS = {
         id = "feat_experto_armas_fuego", name = "Experto en armas de fuego", requires = "", description = "Manejo veterano de la pólvora: recargas sin perder el turno, disparas cómodo en corta distancia y encadenas un segundo tiro.",
         traits = {
             { id = "feat_eaf_recarga", name = "Sin recarga", type = "pasivo", description = "Ignoras la propiedad de recarga de las armas de fuego con las que eres competente.", effects = {} },
-            { id = "feat_eaf_cercania", name = "Sin desventaja en cercania", type = "pasivo", description = "Estar a 1.5 m de una criatura hostil no impone desventaja en tus ataques a distancia.", effects = {} },
+            { id = "feat_eaf_cercania", name = "Sin desventaja en cercania", type = "pasivo", description = "Estar a 1,5 m de una criatura hostil no impone desventaja en tus ataques a distancia.", effects = {} },
             { id = "feat_eaf_extra", name = "Disparo adicional", type = "pasivo", description = "Al usar la acción de Ataque con un arma de una mano, puedes usar una acción adicional para atacar con un arma de fuego de una mano cargada que sostengas.", effects = {} },
         },
     },
@@ -64,15 +64,15 @@ API.FEATS = {
         id = "feat_mejor_quimica", name = "Mejor quimica", requires = "Goblin", description = "Instinto goblin para la alquimia: reconoces una poción de un vistazo y sabes sacarle más provecho.",
         traits = {
             { id = "feat_mq_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
-            { id = "feat_mq_alquimista", name = "Suministros de alquimista", type = "pasivo", description = "Competencia con suministros de alquimista; si ya la tienes, duplicas tu bono de competencia con ellos.", effects = { { kind = "toolProf", tool = "Suministros de alquimista" } } },
-            { id = "feat_mq_pocion", name = "Identificar pocion", type = "pasivo", description = "Como acción, identificas una pocion a 1.5 m como si la hubieras probado (debes ver el liquido).", effects = {} },
+            { id = "feat_mq_alquimista", name = "Suministros de alquimista", type = "pasivo", description = "Competencia con suministros de alquimista; si ya la tienes, duplicas Bonus Competencia con ellos.", effects = { { kind = "toolProf", tool = "Suministros de alquimista" } } },
+            { id = "feat_mq_pocion", name = "Identificar pocion", type = "pasivo", description = "Como acción, identificas una pocion a 1,5 m como si la hubieras probado (debes ver el líquido).", effects = {} },
             { id = "feat_mq_mejora", name = "Mejorar pocion", type = "pasivo", description = "Durante un descanso corto, con suministros de alquimista mejoras una pocion de curación: durante 1 h quien la beba recupera el maximo de PG en vez de tirar los dados.", effects = {} },
         },
     },
     {
         id = "feat_amigo_criaturas", name = "Amigo de las criaturas", requires = "Elfo nocturno", description = "Trato natural con las bestias: te entienden, te escuchan y rara vez te ven como una amenaza.",
         traits = {
-            { id = "feat_ac_animales", name = "Trato con Animales", type = "pasivo", description = "Competencia en Trato con Animales; si ya eres competente, duplicas tu bono de competencia en ella.", effects = { { kind = "skillProf", skill = "Animales" } } },
+            { id = "feat_ac_animales", name = "Trato con Animales", type = "pasivo", description = "Competencia en Trato con Animales; si ya eres competente, duplicas Bonus Competencia en ella.", effects = { { kind = "skillProf", skill = "Animales" } } },
             { id = "feat_ac_conjuros", name = "Conjuros de bestias", type = "pasivo", description = "Aprendes hablar con animales (a voluntad, sin espacio) y amistad con los animales (una vez con este dote, recuperado en descanso largo). Característica: Sabiduría.", effects = {} },
         },
     },
@@ -103,7 +103,7 @@ API.FEATS = {
         traits = {
             { id = "feat_av_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_av_reroll", name = "Daño necrotico", type = "pasivo", description = "Al tirar daño necrótico de un conjuro tuyo, puedes volver a tirar los 1 (usas el nuevo resultado, aunque sea otro 1).", effects = {} },
-            { id = "feat_av_aura", name = "Aura del Vacio", type = "pasivo", description = "Al lanzar un conjuro de daño necrótico, el vacío te envuelve hasta el fin de tu próximo turno: reduce la luz cercana y daña 1d4 a quien te golpee cuerpo a cuerpo a 1.5 m.", effects = {} },
+            { id = "feat_av_aura", name = "Aura del Vacio", type = "pasivo", description = "Al lanzar un conjuro de daño necrótico, el vacío te envuelve hasta el fin de tu próximo turno: reduce la luz cercana y daña 1d4 a quien te golpee cuerpo a cuerpo a 1,5 m.", effects = {} },
         },
     },
     {
@@ -112,11 +112,11 @@ API.FEATS = {
             { id = "feat_rf_inc", name = "Incremento de caracteristica", type = "choice", description = "Fuerza, Constitución o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion"), AbilOpt("Sabiduria") } } },
             { id = "feat_rf_enemigos", name = "Enemigos jurados", type = "pasivo", description = "Elige dos razas de la facción opuesta. En el primer asalto de combate, tus ataques contra ellas tienen ventaja.", effects = {} },
             { id = "feat_rf_oportunidad", name = "Reflejos contra enemigos", type = "pasivo", description = "Cuando un enemigo elegido hace un ataque de oportunidad contra ti, lo hace con desventaja.", effects = {} },
-            { id = "feat_rf_conocimiento", name = "Conocimiento del enemigo", type = "pasivo", description = "En pruebas de Inteligencia (Arcano, Historia, Naturaleza o Religión) sobre tus enemigos elegidos, sumas el doble de tu bono de competencia, aunque no seas competente.", effects = {} },
+            { id = "feat_rf_conocimiento", name = "Conocimiento del enemigo", type = "pasivo", description = "En pruebas de Inteligencia (Arcano, Historia, Naturaleza o Religión) sobre tus enemigos elegidos, sumas el doble de Bonus Competencia, aunque no seas competente.", effects = {} },
         },
     },
     {
-        id = "feat_depredador_endurecido", name = "Depredador endurecido", requires = "Huargen", description = "El instinto huargen a flor de piel: olfato, carrera a cuatro patas y garras que cuentan como arma.",
+        id = "feat_depredador_endurecido", name = "Depredador endurecido", requires = "Huargen", description = "El instinto huargen a flor de piel: olfato, Correr a cuatro patas y garras que cuentan como arma.",
         traits = {
             { id = "feat_de_olfato", name = "Olfato agudo", type = "pasivo", description = "Ventaja en pruebas de Sabiduría (Percepción) que dependan del olfato.", effects = {} },
             { id = "feat_de_correr", name = "Carrera a cuatro patas", type = "pasivo", description = "Con ambas manos vacias, puedes Correr como acción adicional, desplazandote a cuatro patas.", effects = {} },
@@ -250,7 +250,7 @@ API.FEATS = {
     {
         id = "feat_duelista_defensivo", name = "Duelista defensivo", requires = "Destreza 13 o mas", description = "Con arma sutil, conviertes la parada en defensa cuando te van a impactar.", source = "PHB",
         traits = {
-            { id = "feat_phb_duelista", name = "Beneficios", type = "pasivo", description = "Empuñando un arma sutil con la que seas competente, al recibir un ataque cuerpo a cuerpo puedes usar tu reacción para sumar tu bono de competencia a la CA contra ese ataque.", effects = {} },
+            { id = "feat_phb_duelista", name = "Beneficios", type = "pasivo", description = "Empuñando un arma sutil con la que seas competente, al recibir un ataque cuerpo a cuerpo puedes usar tu reacción para sumar Bonus Competencia a la CA contra ese ataque.", effects = {} },
         },
     },
     {
@@ -438,7 +438,7 @@ API.FEATS = {
         id = "feat_resistente", name = "Resistente", description = "Constitución de sobra: cada nivel te deja más vida de la que te corresponde.", source = "PHB",
         traits = {
             { id = "feat_phb_resistente_inc", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
-            { id = "feat_phb_resistente_b", name = "Beneficios", type = "pasivo", description = "Al tirar un Dado de Golpe para curarte, el mínimo que recuperas es 2x tu Mod. Constitución (mínimo 2).", effects = {} },
+            { id = "feat_phb_resistente_b", name = "Beneficios", type = "pasivo", description = "Al tirar un Dado de Golpe para curarte, el mínimo que recuperas es 2x Mod. Constitución (mínimo 2).", effects = {} },
         },
     },
     {
@@ -477,7 +477,7 @@ API.FEATS = {
         id = "feat_cocinero", name = "Cocinero", description = "Cocina de campamento que alimenta el cuerpo y el ánimo de la partida.", source = "TCoE",
         traits = {
             { id = "feat_tco_cocinero_inc", name = "Incremento de caracteristica", type = "choice", description = "Constitución o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Constitucion"), AbilOpt("Sabiduria") } } },
-            { id = "feat_tco_cocinero_b", name = "Beneficios", type = "informativo", description = "Competencia con útiles de cocinero. En un descanso corto cocinas comida para 4 + tu bono de competencia (recuperan 1d8 PG extra al gastar Dados de Golpe). Tras un descanso largo preparas golosinas que dan PG temporales.", effects = { { kind = "toolProf", tool = "Utiles de cocinero" } } },
+            { id = "feat_tco_cocinero_b", name = "Beneficios", type = "informativo", description = "Competencia con útiles de cocinero. En un descanso corto cocinas comida para 4 + Bonus Competencia (recuperan 1d8 PG extra al gastar Dados de Golpe). Tras un descanso largo preparas golosinas que dan PG temporales.", effects = { { kind = "toolProf", tool = "Utiles de cocinero" } } },
         },
     },
     {

@@ -411,6 +411,18 @@ function API.GetChoiceOptions(feature)
                 }
             end
         end
+    elseif (from == "instrument" or from == "game" or from == "instrumentOrGame")
+        and HarfordDnDData and HarfordDnDData.TOOLS then
+        -- "Competencia con un instrumento o juego": el manual los da como UN grupo combinado, asi
+        -- que el selector lista instrumentos Y juegos juntos y se elige un miembro concreto.
+        for _, tool in ipairs(HarfordDnDData.TOOLS) do
+            if tool.instrumento or tool.juego then
+                out[#out + 1] = {
+                    id = tool.id, label = tool.name or tool.id,
+                    effects = { { kind = "toolProf", tool = tool.name or tool.id } },
+                }
+            end
+        end
     elseif from == "toolProf" and HarfordDnDData and HarfordDnDData.TOOLS then
         -- Competencia con una herramienta a elegir del catalogo estandar (Prodigio, Artifice, etc.).
         -- Los marcadores de CATEGORIA no son elegibles: se eligen sus miembros concretos.

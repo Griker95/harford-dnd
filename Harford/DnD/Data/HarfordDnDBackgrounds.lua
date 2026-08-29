@@ -380,7 +380,7 @@ API.BACKGROUNDS = {
         desc = "Has servido en la Cruzada Argenta, sobreviviendo al fanatismo, la guerra santa y la disciplina de quienes se enfrentan a horrores imposibles.",
         traits = {
             { id = "bg_arg_comp", name = "Competencias", type = "pasivo", description = "Competencia en Religión y Atletismo.", effects = { Skill("Religion"), Skill("Atletismo") } },
-            { id = "bg_arg_juego", name = "Juego", type = "pasivo", description = "Competencia con un juego de azar.", effects = { Tool("Un juego de azar") } },
+            { id = "bg_arg_juego", name = "Competencia con un instrumento o juego", type = "choice", description = "Competencia con un instrumento o juego a tu eleccion.", effects = {}, choice = { slots = 1, optionsFrom = "instrumentOrGame" } },
             { id = "bg_arg_determinacion", name = "Determinacion inquebrantable", type = "pasivo", description = "Tu reputación como cruzado puede darte reconocimiento, ayuda o confianza frente a amenazas no-muertas, corruptas o apocalipticas, a discreción del DM.", effects = {} },
         },
     },
@@ -403,7 +403,7 @@ API.BACKGROUNDS = {
         desc = "Los Eremitas, como colectivo, comparten una sed insaciable por el conocimiento, una curiosidad inagotable por los misterios del mundo y una devoción inquebrantable por preservar y compartir las historias del pasado, presente y futuro de Azeroth.\n\nComo devoto miembro de los Eremitas, eres un ávido buscador de conocimiento, impulsado por una pasión por desentrañar el rico tapiz de historia, leyenda y cultura que recorre todo Azeroth. Tu insaciable curiosidad y meticulosa atención al detalle te convierten en un hábil historiador y narrador, encargado de preservar las historias más preciadas del mundo. Con reverencia por el pasado y el deseo de compartir sus enseñanzas, te embarcas en misiones en busca de conocimientos olvidados y verdades ocultas, asegurándote de que el legado de Azeroth perdure para las generaciones futuras.",
         traits = {
             { id = "bg_ere_comp", name = "Competencias", type = "pasivo", description = "Competencia en Historia y Perspicacia.", effects = { Skill("Historia"), Skill("Perspicacia") } },
-            { id = "bg_ere_herr", name = "Competencia con herramientas", type = "pasivo", description = "Competencia con suministros de caligrafo y un instrumento musical.", effects = { Tool("Suministros de caligrafo"), Tool("Instrumento musical") } },
+            { id = "bg_ere_herr", name = "Competencia con herramientas", type = "choice", description = "Competencia con suministros de caligrafo y un instrumento o juego a tu eleccion.", effects = { Tool("Suministros de caligrafo") }, choice = { slots = 1, optionsFrom = "instrumentOrGame" } },
             { id = "bg_ere_perspicacia", name = "Perspicacia erudita", type = "pasivo", description = "Tu retiro y estudio te permiten reconocer claves historicas, simbolicas o personales que otros pasan por alto, a discreción del DM.", effects = {} },
         },
     },
@@ -534,7 +534,7 @@ API.BACKGROUNDS = {
         desc = "Los chamanes del Anillo de la Tierra comparten un profundo respeto por el equilibrio elemental, un compromiso inquebrantable con la sanación y la protección, y una conexión profunda con el mundo natural.\n\nComo miembro reverenciado del Anillo de la Tierra, canalizas las fuerzas primigenias de los elementos para restaurar el equilibrio en Azeroth. Guiado por antiguas tradiciones y una profunda conexión con la naturaleza, has dominado el arte del chamanismo, canalizando los poderes de la tierra, el aire, el fuego y el agua.\n\nCon una devoción inquebrantable por la sanación, la protección y el dominio elemental, te eriges como un guardián del orden natural, encargado de mantener la armonía entre los elementos y el mundo que moldean.",
         traits = {
             { id = "bg_anillo_comp", name = "Competencias", type = "pasivo", description = "Competencia en Naturaleza y Medicina.", effects = { Skill("Naturaleza"), Skill("Medicina") } },
-            { id = "bg_anillo_herr", name = "Competencia con herramientas", type = "pasivo", description = "Competencia con kit de herboristeria y un instrumento musical.", effects = { Tool("Kit de herboristeria"), Tool("Instrumento musical") } },
+            { id = "bg_anillo_herr", name = "Competencia con herramientas", type = "choice", description = "Competencia con kit de herboristeria y un instrumento o juego a tu eleccion.", effects = { Tool("Kit de herboristeria") }, choice = { slots = 1, optionsFrom = "instrumentOrGame" } },
             { id = "bg_anillo_idioma", icon = "inv_misc_note_05", name = "Idioma", type = "informativo", description = "Hablas, lees y escribes Kalimag.", effects = { { kind = "language", language = "Kalimag" } } },
             { id = "bg_anillo_sintonia", name = "Sintonia elemental", type = "pasivo", description = "Puedes interpretar señales elementales y tratar con chamanes o comunidades ligadas al Anillo de la Tierra, a discreción del DM.", effects = {} },
         },
@@ -545,7 +545,7 @@ API.BACKGROUNDS = {
         desc = "Como miembro de una tribu, lo que más importa es la comunidad. Todos deben colaborar y cumplir su papel para que la tribu funcione. Nadie debe quedarse atrás ni dejar que otros carguen con su parte.\n\nNaciste y creciste en las tierras de tu tribu. Tu tribu posee un territorio propio. Puede que procedas de uno de los muchos clanes menores de tauren que habitan Kalimdor, o de una de las vastas tribus de los trols. Tal vez seas miembro de uno de los clanes prominentes. Quizá provengas de una tribu que vive en aislamiento, con poco contacto con el mundo exterior, o de una que comercia activamente con las sociedades civilizadas.",
         traits = {
             { id = "bg_tribal_comp", name = "Competencias", type = "pasivo", description = "Competencia en Naturaleza y Supervivencia.", effects = { Skill("Naturaleza"), Skill("Supervivencia") } },
-            { id = "bg_tribal_herr", name = "Competencia con herramientas", type = "pasivo", description = "Competencia con una herramienta de artesano y un instrumento musical.", effects = { Tool("Herramientas de artesano"), Tool("Instrumento musical") } },
+            { id = "bg_tribal_herr", name = "Competencia con herramientas", type = "choice", description = "Competencia con una herramienta de artesano y un instrumento musical, a tu eleccion (elige una de cada).", effects = {}, choice = { slots = 2, optionsFrom = "artisanTool" } },
             { id = "bg_tribal_naturaleza", name = "Uno con la naturaleza", type = "pasivo", description = "Tu comunidad y sus costumbres te ayudan a comprender tierras salvajes, clanes y tradiciones locales, a discreción del DM.", effects = {} },
         },
     },

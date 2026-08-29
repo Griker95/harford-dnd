@@ -88,6 +88,73 @@ function API.RegisterCommand(name, handler, helpText)
     return true
 end
 
+-- ─── VENTANA DE RESULTADOS COPIABLE ─────────────────────────────────────────
+-- Para salidas largas (ficha6 todas, auditorias): el chat las hace ilegibles y no se pueden
+-- copiar. Ventana unica con EditBox multilinea de solo-copiar; los codigos de color |c..|r se
+-- retiran, que en un EditBox salen como basura. Se reutiliza entre comandos.
+do
+    local ventana
+    local function AsegurarVentana()
+        if ventana then return ventana end
+        local f = CreateFrame("Frame", "HarfordDebugResultsFrame", UIParent, "BackdropTemplate")
+        f:SetSize(640, 420)
+        f:SetPoint("CENTER")
+        f:SetFrameStrata("DIALOG")
+        f:SetFrameLevel(510)
+        f:SetMovable(true)
+        f:EnableMouse(true)
+        f:RegisterForDrag("LeftButton")
+        f:SetScript("OnDragStart", f.StartMoving)
+        f:SetScript("OnDragStop", f.StopMovingOrSizing)
+        f:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            tile = true, tileSize = 32, edgeSize = 32,
+            insets = { left = 8, right = 8, top = 8, bottom = 8 },
+        })
+
+        f.titulo = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        f.titulo:SetPoint("TOP", 0, -14)
+
+        local cerrar = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+        cerrar:SetPoint("TOPRIGHT", -4, -4)
+
+        local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+        scroll:SetPoint("TOPLEFT", 14, -36)
+        scroll:SetPoint("BOTTOMRIGHT", -32, 14)
+
+        local eb = CreateFrame("EditBox", nil, scroll)
+        eb:SetMultiLine(true)
+        eb:SetFontObject(ChatFontNormal)
+        eb:SetWidth(580)
+        eb:SetAutoFocus(false)
+        -- Solo-copiar: cualquier tecleo restaura el texto (Ctrl+C sigue funcionando).
+        eb:SetScript("OnTextChanged", function(self, porUsuario)
+            if porUsuario and self._harfordTexto then self:SetText(self._harfordTexto) end
+        end)
+        eb:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+        scroll:SetScrollChild(eb)
+        f.editBox = eb
+
+        tinsert(UISpecialFrames, "HarfordDebugResultsFrame")  -- Escape cierra
+        ventana = f
+        return f
+    end
+
+    -- Muestra `texto` (string o lista de lineas) en la ventana copiable, sin codigos de color.
+    function API.ShowResults(titulo, texto)
+        local f = AsegurarVentana()
+        if type(texto) == "table" then texto = table.concat(texto, "\n") end
+        texto = tostring(texto or "")
+        texto = texto:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+        f.titulo:SetText(tostring(titulo or "Resultados"))
+        f.editBox._harfordTexto = texto
+        f.editBox:SetText(texto)
+        f.editBox:SetCursorPosition(0)
+        f:Show()
+    end
+end
+
 function API.RunCommand(name, args)
     name = tostring(name or ""):lower()
     local entry = commands[name]
@@ -8049,35 +8116,40 @@ do
 
         if sub == "todas" then
             Guardar()
-            Print("Montando nivel " .. NIVEL .. " de cada clase...")
+            -- La salida entera va tambien a la VENTANA copiable: doce clases por chat se
+            -- pierden scroll arriba y no se pueden repasar ni copiar.
+            local lineas = {}
+            local function Anota(s) lineas[#lineas + 1] = s; Print(s) end
+            Anota("Montando nivel " .. NIVEL .. " de cada clase...")
             local fallos, totalPend = 0, 0
             for _, c in ipairs(Clases()) do
                 local r, err = Montar(c.id, nil)
                 if not r then
                     fallos = fallos + 1
-                    Print(string.format("  |cffff4444%-18s FALLA|r %s", tostring(c.id), tostring(err)))
+                    Anota(string.format("  |cffff4444%-18s FALLA|r %s", tostring(c.id), tostring(err)))
                 else
                     totalPend = totalPend + r.pendientes
-                    Print(string.format("  %-18s d%-2s %-16s %2d rasgos  %2d elegidas  %s",
+                    Anota(string.format("  %-18s d%-2s %-16s %2d rasgos  %2d elegidas  %s",
                         tostring(r.classId), tostring(r.hitDie), tostring(r.subclassId),
                         r.rasgos, r.puestas,
                         r.pendientes > 0
                             and ("|cffffcc00" .. r.pendientes .. " sin resolver|r: "
                                 .. table.concat(r.conEleccion, ", "))
                             or "|cff88ff88lista|r"))
-                    Print(string.format("      %s | %s | %s",
+                    Anota(string.format("      %s | %s | %s",
                         tostring(r.raza), tostring(r.trasfondo),
                         table.concat(r.caract or {}, " ")))
                 end
             end
-            Print(string.format("%d clases, %d fallos, %d elecciones sin resolver.",
+            Anota(string.format("%d clases, %d fallos, %d elecciones sin resolver.",
                 #Clases(), fallos, totalPend))
             if totalPend > 0 then
-                Print("Las que quedan no tienen opciones declaradas: no se pueden rellenar solas.")
+                Anota("Las que quedan no tienen opciones declaradas: no se pueden rellenar solas.")
             end
             -- La ficha queda con la ULTIMA clase montada. Se avisa, porque quedarse con una ficha
             -- de prueba sin saberlo es peor que perderla.
-            Print("La ficha ha quedado con la ultima clase. Usa 'ficha6 restaurar' para deshacer.")
+            Anota("La ficha ha quedado con la ultima clase. Usa 'ficha6 restaurar' para deshacer.")
+            if API.ShowResults then API.ShowResults("ficha6 todas", lineas) end
             return
         end
 

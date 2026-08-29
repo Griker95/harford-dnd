@@ -787,6 +787,10 @@ function HarfordSync.SerializeDnDClassProgression(profileName, data, opcode)
         "b=" .. EscapeProgressionText(data.background or "") .. "~" .. EscapeProgressionText(data.backgroundDesc or ""),
         "d=" .. table.concat(featParts, "~"),
         "x=" .. tostring(math.max(0, math.floor(tonumber(data.xp) or 0))),
+        -- Punto de heroe (0/1): viaja con la ficha para que el menu DM pueda etiquetar
+        -- "Punto de heroe +1/-1" segun lo que sepa del target. Clave nueva: los clientes
+        -- antiguos la ignoran (el bucle de deserializacion salta claves desconocidas).
+        "e=" .. tostring(math.max(0, math.floor(tonumber(data.heroPoints) or 0))),
         "s=" .. table.concat(stateParts, "~"),
         "p=" .. SerializeImportedProficiencies(data.importedProficiencies),
     }, ";")
@@ -857,6 +861,8 @@ function HarfordSync.DeserializeDnDClassProgression(message)
             end
         elseif key == "x" then
             data.xp = math.max(0, math.floor(tonumber(value) or 0))
+        elseif key == "e" then
+            data.heroPoints = math.max(0, math.floor(tonumber(value) or 0))
         elseif key == "s" and value ~= "" then
             for stateId in value:gmatch("([^~]+)") do
                 stateId = UnescapeProgressionText(stateId)

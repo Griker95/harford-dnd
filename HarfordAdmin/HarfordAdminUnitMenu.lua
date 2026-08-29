@@ -889,6 +889,22 @@ local function InitializeMenu(_, level, menuList)
             AddSubmenu("Turnos", "TURNOS", level)
             AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Auras", "AURAS", level)
+            -- El DM SI puede darse el punto a si mismo: la entrada de la ficha del jugador se
+            -- retiro (un jugador no se lo autoconcede), pero esta es herramienta de mesa. Una
+            -- sola entrada que alterna: +1 si no lo tiene, -1 si lo tiene. Todo local: es su
+            -- propio perfil, no hace falta pasar por DNDHERO. Grant() ya anuncia a la mesa.
+            if HarfordDnDHeroPoints and HarfordDnDHeroPoints.Get then
+                if HarfordDnDHeroPoints.Get() > 0 then
+                    AddAction("Punto de heroe -1", function()
+                        HarfordDnDHeroPoints.Set(nil, 0)
+                        Print("Punto de heroe retirado.")
+                    end, level)
+                else
+                    AddAction("Punto de heroe +1", function()
+                        HarfordDnDHeroPoints.Grant()
+                    end, level)
+                end
+            end
 
         elseif ctx == "player" then
             -- Jugador ajeno: enviar ficha (primera opcion), turnos, recursos, auras. Sin TRP3, sin loot.
@@ -899,22 +915,27 @@ local function InitializeMenu(_, level, menuList)
             AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Auras", "AURAS", level)
             -- Punto de heroe del manual Warcraft: lo concede el DM por actos heroicos. Se manda
-            -- por whisper (DNDHERO) y el cliente del jugador lo registra y lo ANUNCIA a la mesa;
-            -- no sabemos aqui si ya lo tiene, su cliente rechaza acumular. Retirar es el reverso.
-            AddAction("Conceder punto de heroe", function()
-                if not (snapshot and snapshot.name and snapshot.name ~= "") then return end
-                if HarfordSync and HarfordSync.SendHeroPoint then
-                    HarfordSync.SendHeroPoint("DND5EARC", true, snapshot.name)
-                    Print("Punto de heroe concedido a " .. snapshot.name .. ".")
-                end
-            end, level)
-            AddAction("Retirar punto de heroe", function()
-                if not (snapshot and snapshot.name and snapshot.name ~= "") then return end
-                if HarfordSync and HarfordSync.SendHeroPoint then
-                    HarfordSync.SendHeroPoint("DND5EARC", false, snapshot.name)
-                    Print("Punto de heroe retirado a " .. snapshot.name .. ".")
-                end
-            end, level)
+            -- por whisper (DNDHERO) y el cliente del jugador lo registra y lo ANUNCIA a la mesa.
+            -- UNA entrada que alterna: "+1" si no le consta punto, "-1" si le consta uno. El
+            -- conteo sale de la ultima ficha recibida de ese jugador (el punto viaja en DNDCLASS,
+            -- campo "e"); puede estar desactualizado, y no pasa nada: su cliente rechaza acumular
+            -- y retirar a quien no tiene deja cero igual.
+            do
+                -- Lectura DIRECTA del persist store, sin pasar por Progression.Get: aquella
+                -- crearia un slot (perfil fantasma) para un jugador cuya ficha nunca llego.
+                local perfiles = HarfordDnDPersistStore and HarfordDnDPersistStore.profiles
+                local progRemota = perfiles and perfiles[snapshot.name]
+                    and perfiles[snapshot.name]._progression
+                local tiene = ((progRemota and tonumber(progRemota.heroPoints)) or 0) > 0
+                AddAction(tiene and "Punto de heroe -1" or "Punto de heroe +1", function()
+                    if not (snapshot and snapshot.name and snapshot.name ~= "") then return end
+                    if HarfordSync and HarfordSync.SendHeroPoint then
+                        HarfordSync.SendHeroPoint("DND5EARC", not tiene, snapshot.name)
+                        Print((tiene and "Punto de heroe retirado a " or "Punto de heroe concedido a ")
+                            .. snapshot.name .. ".")
+                    end
+                end, level)
+            end
 
         else -- npc
             -- NPC / criatura: turnos, recursos (mod.recursos+mod.salud), auras, loot, misiones. Sin TRP3.

@@ -136,10 +136,19 @@ local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
 chk("el receptor valida al remitente como los demas efectos directos",
     comm:find("local heroGrant = HarfordSync.DeserializeHeroPoint", 1, true) ~= nil
     and comm:find("if heroGrant ~= nil then", 1, true) ~= nil, true)
+-- Menu DM (2026-08-29): UNA entrada que alterna "+1"/"-1" segun el conteo conocido, tanto en
+-- el menu propio (local, sin red) como en el del target jugador (DNDHERO). El conteo del target
+-- sale del persist store SIN pasar por Progression.Get, que crearia un perfil fantasma.
 local menuAdm2 = io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
-chk("el menu DM del jugador tiene conceder y retirar",
-    menuAdm2:find('AddAction("Conceder punto de heroe"', 1, true) ~= nil
-    and menuAdm2:find('AddAction("Retirar punto de heroe"', 1, true) ~= nil, true)
+chk("el menu DM alterna +1/-1",
+    menuAdm2:find('tiene and "Punto de heroe -1" or "Punto de heroe +1"', 1, true) ~= nil, true)
+chk("y el DM puede darse el suyo en local",
+    menuAdm2:find('AddAction("Punto de heroe +1", function()\n                        HarfordDnDHeroPoints.Grant()', 1, true) ~= nil, true)
+chk("sin crear perfiles fantasma al mirar el conteo",
+    menuAdm2:find("HarfordDnDPersistStore.profiles", 1, true) ~= nil, true)
+chk("el punto viaja con la ficha (campo e de DNDCLASS)",
+    sync:find('"e=" .. tostring(math.max(0, math.floor(tonumber(data.heroPoints) or 0)))', 1, true) ~= nil
+    and sync:find('elseif key == "e" then', 1, true) ~= nil, true)
 
 -- ─── GASTO = DOS ENLACES + MECANIZACION (2026-08-29) ────────────────────────
 -- La linea publicada son dos enlaces de habilidad, [Punto de Heroe][<Uso>], con el detalle

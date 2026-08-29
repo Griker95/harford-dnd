@@ -1319,3 +1319,43 @@ do
     end
 end
 -- ─── Fin Botón Modo NPC ────────────────────────────────────────────────────────
+
+-- ─── Click derecho en un aura NATIVA del target: .unaura de ese spell ───────────────────────
+-- Gesto DM sobre los botones de buff/debuff del TargetFrame. Solo target: `.unaura` actua sobre
+-- el target del SERVIDOR, asi que desde el focus se la quitaria al objetivo equivocado (por eso
+-- el hook ignora al FocusFrame aunque comparta TargetFrame_UpdateAuras). Sin permisos DM el
+-- click no hace nada: el jugador raso conserva el comportamiento nativo intacto.
+do
+    local instalados = {}
+    local function InstalarClickUnaura(boton, filtro)
+        if not boton or instalados[boton] then return end
+        instalados[boton] = true
+        boton:HookScript("OnMouseUp", function(self, b)
+            if b ~= "RightButton" then return end
+            if not (HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools()) then return end
+            if not (UnitExists and UnitExists("target")) then return end
+            local nombre, _, _, _, _, _, _, _, _, spellId = UnitAura("target", self:GetID() or 0, filtro)
+            if not spellId then return end
+            local ok, err = HarfordServerActions and HarfordServerActions.RemoveAura
+                and HarfordServerActions.RemoveAura(spellId, { addonName = "HarfordAdmin" })
+            if ok == false then
+                Print(tostring(err or "No se pudo retirar el aura."))
+            else
+                Print("Aura retirada: " .. tostring(nombre or spellId) .. " (" .. tostring(spellId) .. ").")
+            end
+            if GameTooltip then GameTooltip:Hide() end
+        end)
+    end
+    if hooksecurefunc and TargetFrame_UpdateAuras then
+        hooksecurefunc("TargetFrame_UpdateAuras", function(frame)
+            if frame ~= TargetFrame then return end
+            for i = 1, 40 do
+                local buff = _G["TargetFrameBuff" .. i]
+                if buff then InstalarClickUnaura(buff, "HELPFUL") end
+                local debuff = _G["TargetFrameDebuff" .. i]
+                if debuff then InstalarClickUnaura(debuff, "HARMFUL") end
+                if not buff and not debuff then break end
+            end
+        end)
+    end
+end

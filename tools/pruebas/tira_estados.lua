@@ -42,6 +42,13 @@ chk("lo ajeno pasa por el gancho de Admin",
 local adm = io.open("HarfordAdmin/HarfordAdminConditions.lua"):read("*a")
 chk("Admin instala el gancho", adm:find("HarfordUnitFrames.OnConditionIconRightClick = function", 1, true) ~= nil, true)
 chk("y exige target para NPC", adm:find('if not snapshot.isPlayer and unit ~= "target" then', 1, true) ~= nil, true)
+-- Y las auras NATIVAS del target: click derecho DM lanza .unaura de ese spell. Solo TargetFrame
+-- (unaura actua sobre el target del servidor; el hook ignora al FocusFrame) y solo con permisos.
+local menuAdm = io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
+chk("las auras nativas del target tienen click DM",
+    menuAdm:find('hooksecurefunc("TargetFrame_UpdateAuras"', 1, true) ~= nil, true)
+chk("que ignora al FocusFrame", menuAdm:find("if frame ~= TargetFrame then return end", 1, true) ~= nil, true)
+chk("y exige CanUseDMTools", menuAdm:find("CanUseDMTools()) then return end", 1, true) ~= nil, true)
 chk("con frame propio por unidad", uf:find('CreateFrame("Frame", "HarfordEstados"', 1, true) ~= nil, true)
 -- Regla de Epsilon: overlays de unitframe en UIParent/MEDIUM, nunca DIALOG (taparia otros addons).
 chk("en UIParent", uf:find('CreateFrame("Frame", "HarfordEstados" .. unit, UIParent)', 1, true) ~= nil, true)

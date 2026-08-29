@@ -124,4 +124,19 @@ for _, id in ipairs({ "impulso", "fisico_poderoso", "fisico_mutilar", "magico_so
     chk("uso " .. id, ids[id], true)
 end
 
+-- ─── EL DM LO CONCEDE DESDE EL MENU DEL TARGET (DNDHERO por whisper) ────────
+print("El DM concede y retira por red")
+local sync = io.open("Harford/Core/HarfordSync.lua"):read("*a")
+chk("serializa conceder", sync:find('"DNDHERO|" .. (grant and "1" or "0")', 1, true) ~= nil, true)
+chk("y viaja por whisper", sync:find('HarfordSync.SerializeHeroPoint(grant), "WHISPER", target', 1, true) ~= nil, true)
+local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
+chk("el receptor valida al remitente como los demas efectos directos",
+    comm:find("local heroGrant = HarfordSync.DeserializeHeroPoint", 1, true) ~= nil
+    and comm:find("if heroGrant ~= nil then
+            if not IsTrustedEffectSender(sender) then return false end", 1, true) ~= nil, true)
+local menuAdm2 = io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
+chk("el menu DM del jugador tiene conceder y retirar",
+    menuAdm2:find('AddAction("Conceder punto de heroe"', 1, true) ~= nil
+    and menuAdm2:find('AddAction("Retirar punto de heroe"', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

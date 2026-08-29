@@ -300,6 +300,14 @@ function HarfordDnDComm.CreateHandlers(deps)
             return false
         end
 
+        -- DNDHERO: el DM nos concede (o retira) NUESTRO punto de heroe
+        local heroGrant = HarfordSync.DeserializeHeroPoint and HarfordSync.DeserializeHeroPoint(message)
+        if heroGrant ~= nil then
+            if not IsTrustedEffectSender(sender) then return false end
+            if deps.HandleHeroPoint then deps.HandleHeroPoint(heroGrant, sender) end
+            return false
+        end
+
         -- DODEFENSE: el atacante fallo contra nosotros -> ejecutar nuestra defensa
         if HarfordSync.IsDefenseMessage and HarfordSync.IsDefenseMessage(message) then
             if not IsTrustedEffectSender(sender) then return false end

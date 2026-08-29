@@ -898,6 +898,23 @@ local function InitializeMenu(_, level, menuList)
             AddSubmenu("Turnos", "TURNOS", level)
             AddSubmenu("Recursos", "RECURSOS", level)
             AddSubmenu("Auras", "AURAS", level)
+            -- Punto de heroe del manual Warcraft: lo concede el DM por actos heroicos. Se manda
+            -- por whisper (DNDHERO) y el cliente del jugador lo registra y lo ANUNCIA a la mesa;
+            -- no sabemos aqui si ya lo tiene, su cliente rechaza acumular. Retirar es el reverso.
+            AddAction("Conceder punto de heroe", function()
+                if not (snapshot and snapshot.name and snapshot.name ~= "") then return end
+                if HarfordSync and HarfordSync.SendHeroPoint then
+                    HarfordSync.SendHeroPoint("DND5EARC", true, snapshot.name)
+                    Print("Punto de heroe concedido a " .. snapshot.name .. ".")
+                end
+            end, level)
+            AddAction("Retirar punto de heroe", function()
+                if not (snapshot and snapshot.name and snapshot.name ~= "") then return end
+                if HarfordSync and HarfordSync.SendHeroPoint then
+                    HarfordSync.SendHeroPoint("DND5EARC", false, snapshot.name)
+                    Print("Punto de heroe retirado a " .. snapshot.name .. ".")
+                end
+            end, level)
 
         else -- npc
             -- NPC / criatura: turnos, recursos (mod.recursos+mod.salud), auras, loot, misiones. Sin TRP3.

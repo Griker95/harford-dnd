@@ -4310,6 +4310,17 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
             HarfordDnDRolls.DisplayInChat(data)
         end
     end,
+    -- El DM nos concede o retira el punto de heroe (Grant ya anuncia a la mesa y no acumula)
+    HandleHeroPoint = function(grant, sender)
+        if not HarfordDnDHeroPoints then return end
+        if grant then
+            HarfordDnDHeroPoints.Grant()
+        else
+            HarfordDnDHeroPoints.Set(nil, 0)
+            Print("El DM retira tu punto de heroe.")
+        end
+        RefreshMainUI()
+    end,
     -- El DM nos ordena aplicarnos una aura a nosotros mismos
     HandleApplyAuraSelf = function(spellId)
         -- Rasgos DEFENSIVOS contra efectos que llegan de otro cliente. Se comprueban AQUI, en el

@@ -1506,6 +1506,23 @@ function HarfordSync.SendAnimFlag(prefix, enabled, target)
     return false, "Sin canal disponible"
 end
 
+-- ─── Punto de heroe concedido o retirado por el DM (DNDHERO) ─────────────────
+function HarfordSync.SerializeHeroPoint(grant)
+    return "DNDHERO|" .. (grant and "1" or "0")
+end
+
+-- Devuelve true (conceder) / false (retirar), o nil si el mensaje no es DNDHERO.
+function HarfordSync.DeserializeHeroPoint(message)
+    local opcode, val = strsplit("|", tostring(message or ""))
+    if opcode ~= "DNDHERO" then return nil end
+    return val == "1"
+end
+
+function HarfordSync.SendHeroPoint(prefix, grant, target)
+    if not target or target == "" then return false, "Target invalido" end
+    return HarfordSync.Send(prefix, HarfordSync.SerializeHeroPoint(grant), "WHISPER", target)
+end
+
 -- ─── Instrucción de aura sobre uno mismo (DOAPPLYAURA) ────────────────────────
 function HarfordSync.SerializeApplyAuraSelf(spellId)
     return "DOAPPLYAURA|" .. tostring(math.floor(tonumber(spellId) or 0))

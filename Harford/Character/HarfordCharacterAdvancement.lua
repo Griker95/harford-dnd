@@ -1414,10 +1414,13 @@ local function CreateChoiceDialog()
     -- Debajo del contador, los NOMBRES de lo marcado: con la lista larga y scroll, lo elegido
     -- puede quedar fuera de la vista y el contador solo no dice que hay dentro.
     dialog.selectedNames = MakeText(dialog, "GameFontHighlightSmall", "")
-    dialog.selectedNames:SetPoint("TOPLEFT", dialog.status, "BOTTOMLEFT", 0, -4)
-    dialog.selectedNames:SetWidth(280)
+    -- Ocupa el hueco de abajo a la IZQUIERDA de los botones: ancho corto para no tocar
+    -- Confirmar, hasta tres lineas y de ahi no pasa (elipsis).
+    dialog.selectedNames:SetPoint("BOTTOMLEFT", 20, 12)
+    dialog.selectedNames:SetWidth(190)
     dialog.selectedNames:SetJustifyH("LEFT")
     dialog.selectedNames:SetWordWrap(true)
+    if dialog.selectedNames.SetMaxLines then dialog.selectedNames:SetMaxLines(3) end
     -- Shadowlands/Epsilon no expone ScrollFrameTemplate; este panel controla
     -- rueda y contenido directamente, asi que no necesita heredar un template.
     local scroll = CreateFrame("ScrollFrame", nil, dialog)

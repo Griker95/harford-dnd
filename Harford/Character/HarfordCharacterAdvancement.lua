@@ -1267,12 +1267,6 @@ local function RefreshAttributes()
         counter:SetPoint("TOPLEFT", 6, py - 6)
         counter:SetTextColor(remaining == 0 and 0.22 or 1, remaining == 0 and 0.82 or 0.82, remaining == 0 and 0.42 or 0)
         S.nodeRows[#S.nodeRows + 1] = counter
-        local reset = MakeButton(S.tree, "Reiniciar", 100, 22, function()
-            S.pointBuy = nil
-            RefreshAttributes()
-        end)
-        reset:SetPoint("TOPLEFT", 182, py - 8)
-        S.nodeRows[#S.nodeRows + 1] = reset
 
         S.nextButton:SetText(remaining == 0 and "Confirmar caracteristicas"
             or string.format("Reparte %d puntos", remaining))
@@ -1394,16 +1388,8 @@ local function RefreshAttributes()
             end
             y = y - 30
         end
-        -- Reiniciar la colocacion: devuelve todos los dados al pool (conserva el array elegido).
-        -- En el borde IZQUIERDO, bajo la lista, que es donde esta tambien en compra por puntos:
-        -- anclado a x108 quedaba bajo la columna de valores y parecia que no habia boton.
-        local resetAssign = MakeButton(S.tree, "Reiniciar", 100, 22, function()
-            S.attributeAssignments, S.pendingScore = {}, nil
-            RefreshAttributes()
-        end)
-        resetAssign:SetPoint("TOPLEFT", 6, y - 10)
-        S.nodeRows[#S.nodeRows + 1] = resetAssign
-        y = y - 40
+        -- El Reiniciar vive FUERA del scroll (S.attrResetButton, junto a Confirmar): dentro
+        -- quedaba bajo el borde visible.
         local assigned = 0
         for _ in pairs(S.attributeAssignments) do assigned = assigned + 1 end
         S.nextButton:SetText(assigned == 6 and "Confirmar caracteristicas" or "Asigna " .. tostring(6 - assigned) .. " valores")
@@ -2532,6 +2518,20 @@ ApplyModeLayout = function()
         S.nextButton:ClearAllPoints()
         S.nextButton:SetPoint("BOTTOMLEFT", 18 + (IsLevelUpMode() and (160 + dxPasos - 18) or 0), 16)
     end
+    -- Reiniciar de Caracteristicas: FUERA del scroll (dentro quedaba bajo el borde visible y
+    -- parecia que no existia), pegado a Confirmar. Resetea lo que toque segun el modo.
+    if not S.attrResetButton and S.nextButton then
+        S.attrResetButton = MakeButton(S.frame, "Reiniciar", 100, 22, function()
+            if S.abilityMode == "points" then
+                S.pointBuy = nil
+            else
+                S.attributeAssignments, S.pendingScore = {}, nil
+            end
+            RefreshAttributes()
+        end)
+        S.attrResetButton:SetPoint("BOTTOMLEFT", S.nextButton, "BOTTOMRIGHT", 10, 0)
+    end
+    if S.attrResetButton then S.attrResetButton:SetShown(S.stage == "attributes") end
 end
 
 function API.OpenPrototype(classId)

@@ -69,10 +69,35 @@ def profesiones():
 
 
 def idsDeReceta():
+    return [r[0] for r in recetasConNivel()]
+
+
+def recetasConNivel():
+    """[id, profesion, skillReq, nombre]. El nivel es lo que decide QUE ENTRENADOR la ensena:
+    los entrenadores no son una lista, se deducen del par (profesion, rango) y cada receta
+    cae en un rango por su `skillReq`."""
     if not os.path.exists(RECETAS):
         return []
     t = io.open(RECETAS, encoding='utf-8').read()
-    return sorted(set(re.findall(r'\{\s*id\s*=\s*"([a-z0-9_]+)",\s*profession\s*=', t)))
+    out = []
+    for m in re.finditer(
+            r'\{\s*id\s*=\s*"([a-z0-9_]+)",\s*profession\s*=\s*"([a-z_]+)",'
+            r'\s*skillReq\s*=\s*(\d+),\s*name\s*=\s*"([^"]*)"', t):
+        out.append([m.group(1), m.group(2), int(m.group(3)), m.group(4)])
+    return sorted(out)
+
+
+def rangos():
+    """Los cinco rangos con su minimo, de HarfordProfessions."""
+    p = 'Harford/Professions/HarfordProfessions.lua'
+    if not os.path.exists(p):
+        return []
+    t = io.open(p, encoding='utf-8').read()
+    m = re.search(r'API\.TIERS = \{(.*?)\n\}', t, re.S)
+    if not m:
+        return []
+    return [[n, int(v)] for n, v in
+            re.findall(r'name = "(\w+)",\s*min = (\d+)', m.group(1))]
 
 
 WOWHEAD = os.path.join(BASE, 'cotejo', 'objetos_wowhead.json')
@@ -181,6 +206,7 @@ def main():
           % (len(r.get("reglas", [])), len(r.get("habilidades", [])),
              len(r.get("tiposDano", []))))
     print("Armas D&D:            %d" % len(armasDnD()))
+    print("Rangos de profesion:  %d" % len(rangos()))
     print("Objetos pendientes:   %d  (editables desde la pagina)" % len(pend))
     sinDesc = sum(1 for p in pend if not p[11])
     print("   de esos sin descripcion: %d" % sinDesc)
@@ -194,6 +220,8 @@ def main():
         'wow': objetosDeWow(),
         'reglas': reglasDeObjeto(),
         'armasDnD': armasDnD(),
+        'recetas': recetasConNivel(),
+        'rangos': rangos(),
     }
     bloque = ('/*DATOS_INICIO*/const DATOS=%s;/*DATOS_FIN*/'
               % json.dumps(datos, separators=(',', ':'), ensure_ascii=False))

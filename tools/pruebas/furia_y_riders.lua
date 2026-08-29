@@ -19,9 +19,11 @@ chk("el rasgo es un boton con menu", chaman:find('actionKind = "elementalFury"',
 local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
 chk("el repartidor abre el menu", panel:find('OpenElementalFuryMenu(self.feature', 1, true) ~= nil, true)
 local ficha = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+-- Los menus del Libro viven en HarfordDnDBookActions desde la fase C de refactorizacion.
+local acciones = io.open("Harford/DnD/UI/HarfordDnDBookActions.lua"):read("*a")
 chk("el menu escribe FuriaElemental en el store",
-    ficha:find('HarfordDnDStore.SetValue("FuriaElemental", key)', 1, true) ~= nil, true)
-chk("y puede apagarse", ficha:find('HarfordDnDStore.SetValue("FuriaElemental", "")', 1, true) ~= nil, true)
+    acciones:find('HarfordDnDStore.SetValue("FuriaElemental", key)', 1, true) ~= nil, true)
+chk("y puede apagarse", acciones:find('HarfordDnDStore.SetValue("FuriaElemental", "")', 1, true) ~= nil, true)
 
 -- El intercambio del Compendio, extraido y ejercitado con un stub de store.
 local core = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")

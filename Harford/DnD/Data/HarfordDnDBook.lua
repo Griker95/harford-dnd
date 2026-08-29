@@ -296,11 +296,39 @@ function API.GetChoiceOptions(feature)
     end
 
     if type(choice.options) == "table" then
+        -- CATEGORIAS del catalogo de herramientas dentro de opciones literales: muchos trasfondos
+        -- declaran "her_instrumento"/"her_juego" como UNA opcion, pero son categorias y se elige
+        -- un miembro concreto (laud, dados...). Se expanden AQUI, en el unico punto por el que
+        -- pasan todas las listas, en una COPIA (la tabla del libro es compartida).
+        local function Expandir(lista)
+            local hayCategoria = false
+            for _, o in ipairs(lista) do
+                if o.id == "her_instrumento" or o.id == "her_juego" then hayCategoria = true break end
+            end
+            if not hayCategoria then return lista end
+            local fuera = {}
+            for _, o in ipairs(lista) do
+                if o.id == "her_instrumento" or o.id == "her_juego" then
+                    local marca = o.id == "her_instrumento" and "instrumento" or "juego"
+                    for _, tool in ipairs((HarfordDnDData and HarfordDnDData.TOOLS) or {}) do
+                        if tool[marca] then
+                            fuera[#fuera + 1] = {
+                                id = tool.id, label = tool.name or tool.id,
+                                effects = { { kind = "toolProf", tool = tool.name or tool.id } },
+                            }
+                        end
+                    end
+                else
+                    fuera[#fuera + 1] = o
+                end
+            end
+            return fuera
+        end
         local extra = tostring(choice.extraFrom or ""):match("^cantrip:(.+)$")
-        if not extra then return choice.options end
+        if not extra then return Expandir(choice.options) end
         -- Copia: no se toca la tabla del libro, que es compartida.
         local combinadas = {}
-        for _, o in ipairs(choice.options) do combinadas[#combinadas + 1] = o end
+        for _, o in ipairs(Expandir(choice.options)) do combinadas[#combinadas + 1] = o end
         for _, o in ipairs(CantripsDe(extra)) do combinadas[#combinadas + 1] = o end
         return combinadas
     end
@@ -371,12 +399,12 @@ function API.GetChoiceOptions(feature)
             end
         end
     elseif from == "artisanTool" and HarfordDnDData and HarfordDnDData.TOOLS then
-        -- "Un tipo de herramientas de artesano o un instrumento musical" (Monje). Solo las
-        -- marcadas `artisan` mas el instrumento. `instrumento` y `juego` son CATEGORIAS (agrupan
-        -- laud/flauta, dados/ajedrez), no herramientas concretas; aqui entra solo la primera
-        -- porque es la que ofrece el rasgo. No entran kits, ladron ni vehiculos.
+        -- "Un tipo de herramientas de artesano o un instrumento musical" (Monje). Las marcadas
+        -- `artisan` mas los INSTRUMENTOS CONCRETOS: "instrumento musical" es una categoria y se
+        -- elige uno de verdad (laud, flauta...), no la categoria entera. No entran kits, ladron,
+        -- juegos ni vehiculos.
         for _, tool in ipairs(HarfordDnDData.TOOLS) do
-            if tool.artisan or tool.id == "her_instrumento" then
+            if tool.artisan or tool.instrumento then
                 out[#out + 1] = {
                     id = tool.id, label = tool.name or tool.id,
                     effects = { { kind = "toolProf", tool = tool.name or tool.id } },
@@ -385,11 +413,14 @@ function API.GetChoiceOptions(feature)
         end
     elseif from == "toolProf" and HarfordDnDData and HarfordDnDData.TOOLS then
         -- Competencia con una herramienta a elegir del catalogo estandar (Prodigio, Artifice, etc.).
+        -- Los marcadores de CATEGORIA no son elegibles: se eligen sus miembros concretos.
         for _, tool in ipairs(HarfordDnDData.TOOLS) do
-            out[#out + 1] = {
-                id = tool.id, label = tool.name or tool.id,
-                effects = { { kind = "toolProf", tool = tool.name or tool.id } },
-            }
+            if not tool.categoria then
+                out[#out + 1] = {
+                    id = tool.id, label = tool.name or tool.id,
+                    effects = { { kind = "toolProf", tool = tool.name or tool.id } },
+                }
+            end
         end
     else
         return nil
@@ -413,6 +444,16 @@ function API.GetChoiceOption(feature, optionId)
         for _, opt in ipairs(opciones) do
             if Strip(tostring(opt.id or "")) == buscado then return opt end
         end
+    end
+    -- Compatibilidad: perfiles que eligieron la CATEGORIA ("her_instrumento"/"her_juego") antes
+    -- de que los selectores la expandieran a miembros concretos. Su eleccion sigue valiendo como
+    -- competencia generica de la categoria.
+    if optionId == "her_instrumento" then
+        return { id = optionId, label = "Instrumento musical",
+            effects = { { kind = "toolProf", tool = "Instrumento musical" } } }
+    elseif optionId == "her_juego" then
+        return { id = optionId, label = "Juego de azar",
+            effects = { { kind = "toolProf", tool = "Juego de azar" } } }
     end
     return nil
 end

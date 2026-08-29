@@ -125,4 +125,23 @@ chk("las apilables no se filtran",
 chk("el draft sabe excluir una eleccion",
     draft:find("if excludeFeatureId and feature.id == excludeFeatureId then return end", 1, true) ~= nil, true)
 
+
+
+-- ─── LAS CATEGORIAS DE HERRAMIENTA SE ELIGEN POR MIEMBRO CONCRETO ───────────
+-- "Instrumento musical" y "Juego" son categorias: el selector lista laud, flauta, dados... y no
+-- la categoria entera. Un perfil viejo que eligio la categoria sigue resolviendo (fallback).
+print("Instrumento y juego se expanden a miembros concretos")
+local datos = io.open("Harford/DnD/Data/HarfordDnDData.lua"):read("*a")
+chk("hay instrumentos concretos en TOOLS", datos:find('instrumento=true', 1, true) ~= nil, true)
+chk("y juegos concretos", datos:find('juego=true', 1, true) ~= nil, true)
+local libroSrc = io.open("Harford/DnD/Data/HarfordDnDBook.lua"):read("*a")
+chk("las opciones literales expanden la categoria",
+    libroSrc:find('o.id == "her_instrumento" or o.id == "her_juego"', 1, true) ~= nil, true)
+chk("artisanTool lista instrumentos, no la categoria",
+    libroSrc:find("if tool.artisan or tool.instrumento then", 1, true) ~= nil, true)
+chk("toolProf salta los marcadores de categoria",
+    libroSrc:find("if not tool.categoria then", 1, true) ~= nil, true)
+chk("la eleccion vieja de categoria sigue resolviendo",
+    libroSrc:find('if optionId == "her_instrumento" then', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -71,8 +71,25 @@ HarfordDnDData.TOOLS = {
     { id="her_ladron",       name="Herramientas de ladron" },
     { id="her_navegante",    name="Herramientas de navegante" },
     { id="her_envenenador",  name="Utiles de envenenador" },
+    -- `instrumento` y `juego` son categorias del manual: cuando un rasgo ofrece "un instrumento
+    -- musical" se elige UNO CONCRETO de estos. Los marcadores de categoria se conservan para los
+    -- textos que las citan, pero los selectores listan los miembros.
     { id="her_instrumento",  name="Instrumento musical", categoria=true },
+    { id="ins_gaita",        name="Gaita", instrumento=true },
+    { id="ins_tambor",       name="Tambor", instrumento=true },
+    { id="ins_dulcimer",     name="Dulcimer", instrumento=true },
+    { id="ins_flauta",       name="Flauta", instrumento=true },
+    { id="ins_laud",         name="Laud", instrumento=true },
+    { id="ins_lira",         name="Lira", instrumento=true },
+    { id="ins_trompa",       name="Trompa", instrumento=true },
+    { id="ins_zampona",      name="Zampona", instrumento=true },
+    { id="ins_chirimia",     name="Chirimia", instrumento=true },
+    { id="ins_viola",        name="Viola", instrumento=true },
     { id="her_juego",        name="Juego de azar", categoria=true },
+    { id="jue_dados",        name="Juego de dados", juego=true },
+    { id="jue_ajedrez",      name="Ajedrez draconico", juego=true },
+    { id="jue_naipes",       name="Juego de naipes", juego=true },
+    { id="jue_tres_dragones", name="Tablas de los Tres Dragones", juego=true },
     { id="her_vehiculos_tierra", name="Vehiculos (terrestres)", vehiculo=true },
     { id="her_vehiculos_agua",   name="Vehiculos (acuaticos)", vehiculo=true },
 }

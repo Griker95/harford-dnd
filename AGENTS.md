@@ -1537,6 +1537,42 @@ end
 
 `messages` contiene las lineas devueltas por el servidor y deben parsearse segun el comando.
 
+### La forja de objetos NO acepta las clases de WoW (2026-08-29, confirmado en juego)
+
+`forge item set class` admite **cinco valores y ya**: `-1` ninguna, `2` Arma, `4` Armadura,
+`13` Llave y `15` Miscelaneo. Cualquier otra la rechaza en seco:
+
+```
+EpsiLib -> Failed Command by HarfordItemForge: forge item set class [Item ID #14088100] 0
+The specified class 0 is not currently supported
+```
+
+**El rechazo CORTA la cadena**, asi que el objeto no queda sin clase: queda **a medias**. El
+orden de `Comandos()` es nombre, descripcion, icono, calidad, clase, subclase, hueco, modelo,
+apilable, vinculacion, additem — o sea que lo anterior a `class` SI se aplico y todo lo
+posterior no, incluido el `additem anyone` que abre el objeto a los demas. Se confirmo con
+`aceite_de_bocanegra` (id 14088100).
+
+No hay categoria de consumible: **pociones, comida, vendajes y materiales van todos como `15`**,
+con subclase `1` Reactivo (bienes comerciales, que literalmente lo son) o `4` Otro. Las
+subclases de Miscelaneo llegan solo hasta `6`: 0 Basura, 1 Reactivo, 2 Mascota, 3 Festividad,
+4 Otro, 5 Montura, 6 Equipo de montura.
+
+`set stackable` tiene la misma trampa: *"Cannot be done on weapons or armour"*, y su rechazo
+corta la cadena igual. No mandarlo en clases 2 ni 4.
+
+**El catalogo de EpsilonLib NO sirve para averiguar esto**: su descripcion de `set class` se
+corta en `"2 is for weapons"` y se traga el resto de la frase, que es justo la lista. Es el
+mismo truncado por coma que ya afecta a `description`, `creaturetype`, `rank`, `sheath`,
+`movetype` y los huecos de `outfit equip`. La fuente buena es **`PhaseToolkit.itemClass`**, la
+tabla que llena el desplegable del creador oficial: da clases, subclases y sus nombres.
+
+`gen_itemforge_data.py` sigue clasificando con las clases de WoW —saber que algo es un
+consumible decide su subclase y su apilamiento— y traduce al emitir (`para_la_forja`), despues
+de aplicar las anulaciones para que una correccion a mano tampoco pueda colar una clase
+rechazada. `HarfordItemForge/Core.lua` lo vuelve a comprobar al enviar (`CLASES_FORJA`), porque
+`Data.lua` se puede editar a mano.
+
 ## Almacen De Fase Epsilon (PhaseAddonData) (2026-08-21)
 
 Almacen clave -> valor **guardado en el servidor y ligado a la fase**. Es la unica via conocida

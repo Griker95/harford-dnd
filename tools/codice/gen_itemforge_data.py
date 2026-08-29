@@ -38,7 +38,41 @@ KB = 'tools/codice/kb.json'
 ANULACIONES = 'tools/codice/itemforge_anulaciones.json'
 
 # ── Clases de objeto (wow.gamepedia.com/ItemType) ───────────────────────────
+# Estas son las de WoW y se usan para CLASIFICAR, que es informacion util: saber que algo es
+# un consumible o un bien comercial decide su subclase, su apilamiento y como se lista.
 CONSUM, TRADE, WEAPON, ARMOR, MISC = 0, 7, 2, 4, 15
+
+# ── Pero la forja de Epsilon NO acepta las clases de WoW ─────────────────────
+# Solo admite CINCO: -1 (ninguna), 2 Arma, 4 Armadura, 13 Llave y 15 Misceláneo. Mandar
+# cualquier otra la rechaza en seco -- `class 0` responde "The specified class 0 is not
+# currently supported" -- y como la cadena aborta ahi, el objeto se queda a medias: con
+# nombre, descripcion, icono y calidad puestos, y sin clase, subclase, modelo ni additem.
+#
+# Confirmado en juego con `aceite_de_bocanegra` (id 14088100) y contrastado con la tabla
+# `PhaseToolkit.itemClass`, que es la que llena el desplegable del creador oficial. El
+# catalogo de EpsilonLib NO sirve para saberlo: su descripcion de `set class` se corta en
+# "2 is for weapons" y se traga el resto de la frase.
+#
+# Asi que TODO lo que no sea arma ni armadura acaba en Misceláneo. Sus subclases son
+# 0 Basura, 1 Reactivo, 2 Mascota, 3 Festividad, 4 Otro, 5 Montura, 6 Equipo de montura.
+FORJA_CLASES = (2, 4, 13, 15)
+M_BASURA, M_REACTIVO, M_OTRO = 0, 1, 4
+
+
+def para_la_forja(clase, subclase):
+    """Traduce la clasificacion de WoW a lo que la forja admite de verdad.
+
+    Se hace al EMITIR y no al clasificar: la clase de WoW sigue siendo la que decide el
+    apilamiento y el reparto del informe, y perderla haria indistinguible una pocion de un
+    lingote. Lo que cambia es lo que se le manda al servidor.
+    """
+    if clase in (WEAPON, ARMOR):
+        return clase, subclase
+    if clase == TRADE:
+        return MISC, M_REACTIVO      # un bien comercial es, literalmente, un reactivo
+    # Consumibles, herramientas y cualquier cosa suelta: no hay categoria mejor que "Otro".
+    # "Basura" existe, pero es lo que el jugador vende sin mirar y estos objetos no lo son.
+    return MISC, M_OTRO
 
 # Subclases de consumible
 C_POCION, C_ELIXIR, C_COMIDA, C_VENDAJE, C_OTRO = 1, 2, 5, 7, 8
@@ -254,7 +288,10 @@ out = ["-- GENERADO por tools/codice/gen_itemforge_data.py. Regenerable: no edit
        "-- Clasificado por PROFESION de la receta, luego por PAPEL (resultado o materia prima) y",
        "-- solo despues por nombre, para afinar tipo de arma y hueco de armadura.",
        "--",
-       "-- clase/subclase/hueco son los enums de WoW; hueco 0 = no equipable.",
+       "-- clase/subclase son los que ADMITE LA FORJA de Epsilon, no los de WoW: solo 2 Arma,",
+       "-- 4 Armadura, 13 Llave y 15 Misceláneo. Todo lo demas (pociones, comida, materiales)",
+       "-- va como 15 con subclase 1 Reactivo o 4 Otro. `papel` conserva lo que la cosa ES.",
+       "-- hueco es Enum.InventoryType; 0 = no equipable, y solo vale en clases 2 y 4.",
        "-- Todos se abren para que cualquiera pueda .additem salvo los marcados additem = false.",
        "",
        "HarfordItemForgeData = HarfordItemForgeData or {}",
@@ -300,6 +337,16 @@ for e in sorted(pendientes, key=orden):
         if campo in campos:
             campos[campo] = valor
             anuladas[campo] += 1
+
+    # La traduccion va DESPUES de las anulaciones, para que una correccion a mano tampoco
+    # pueda colar una clase que el servidor rechaza. Si alguien anula con `clase = 0`, sale
+    # como Misceláneo igual: es eso o un objeto a medias.
+    campos['clase'], campos['subclase'] = para_la_forja(campos['clase'], campos['subclase'])
+    # "Cannot be done on weapons or armour" dice el catalogo de `set stackable`. Un rechazo
+    # corta la cadena igual que el de `class`, y el objeto se queda a medias. Seis objetos
+    # llegaban aqui con apilable heredado de la web sobre un arma o una armadura.
+    if campos['clase'] in (WEAPON, ARMOR):
+        campos['apilable'] = 1
 
     icono = ('"%s"' % campos['icono']) if campos['icono'] else 'nil'
     out.append('    { clave = "%s", nombre = %s,' % (e['clave'], escapa(campos['nombre'])))

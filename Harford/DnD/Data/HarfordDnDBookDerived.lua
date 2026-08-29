@@ -34,6 +34,7 @@ do
                 -- lugar de la eleccion.
                 name = "Competencias de clase",
                 type = "choice",
+                icon = "inv_scroll_11",  -- el mismo arte que la entrada agregada Competencias
                 description = "Elige " .. cuantas .. " habilidades de la lista de tu clase.",
                 effects = {},
                 choice = { slots = cuantas, options = opciones },

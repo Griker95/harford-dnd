@@ -112,9 +112,10 @@ local GRID_COLUMNS, GRID_CELL_W, GRID_CELL_H, GRID_GAP, GRID_ICON = 4, 94, 82, 4
 -- clases eso son 6 filas, que a la altura de las de raza no cabrian en los 620 del frame.
 local CLASS_COLUMNS, CLASS_CELL_W, CLASS_CELL_H, CLASS_ICON = 2, 130, 72, 32
 
--- Ambas formas del id: el renombrado a `raza_` dejo esta lista atras y la tarjeta de la raza
--- base del Elfo de la Noche desaparecio del selector de subraza.
-local BASE_RACE_IDS = { elfo_noche = true, raza_elfo_noche = true }
+-- Razas cuyo tronco es elegible como "subraza" ademas de las declaradas. HOY NINGUNA: el Elfo
+-- de la Noche paso a tener DOS subrazas reales (Elfo de la Noche y Altonato), como en la web.
+-- El mecanismo se conserva por si otra raza lo necesita.
+local BASE_RACE_IDS = {}
 
 local function MakeText(parent, template, text)
     local fs = parent:CreateFontString(nil, "OVERLAY", template or "GameFontHighlightSmall")

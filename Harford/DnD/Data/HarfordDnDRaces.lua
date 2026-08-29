@@ -66,12 +66,16 @@ API.RACES = {
     {
         id = "raza_elfo_noche", name = "Elfo de la Noche", nameF = "Elfa de la Noche", desc = "Kaldorei antiguos y orgullosos, primeros estudiosos de la magia; hoy guardianes de la naturaleza y devotos de Elune.", faction = "alianza", size = "Mediano", speed = 10.5,
         subraces = {
+            { id = "raza_elfo_noche_kaldorei", name = "Elfo de la Noche", nameF = "Elfa de la Noche", desc = "Kaldorei guardianes de la naturaleza: cazadores silenciosos que se funden con el bosque y la sombra.", traits = {
+                { id = "eln_kal_mascara", name = "Mascara de lo salvaje", type = "pasivo", description = "Puedes ocultarte cuando estés ligeramente cubierto por elementos naturales.", effects = {} },
+                { id = "eln_kal_fusion", name = "Fusion con las sombras", type = "pasivo", description = "Ventaja en tiradas de Sigilo al estar completamente oculto por la oscuridad.", effects = {} },
+            } },
             { id = "raza_elfo_noche_altonato", name = "Altonato", nameF = "Altonata", desc = "Kaldorei de Eldre'Thalas (los Shen'dralar/Altonato), eruditos arcanos de la antigua Dire Maul; conservan un saber mágico vedado al resto de los suyos.", traits = {
                 { id = "eln_alt_conocimiento", name = "Conocimiento antiguo de eldre'thalas", type = "pasivo", description = "Competencia en Conocimiento Arcano e Historia. Además duplicas tu bono de competencia en Historia en tiradas relacionadas con civilizaciones antiguas o artefactos.", effects = {
                     { kind = "skillProf", skill = "Arcano" },
                     { kind = "skillProf", skill = "Historia" },
                 } },
-                { id = "eln_alt_erudito", name = "Erudito arcano", type = "pasivo", description = "Conoces el truco Mano de mago. A nivel 3 puedes lanzar Detectar magia 1 vez al día; a nivel 5, Identificar 1 vez al día. La característica para estos conjuros es Inteligencia.", effects = {} },
+                { id = "eln_alt_erudito", name = "Erudito arcano", type = "pasivo", description = "Conoces el truco Mano de mago. A nivel 3 puedes lanzar Detectar magia 1 vez al día; a nivel 5, Identificar 1 vez al día. La característica para estos conjuros es Inteligencia.", spellGrants = { { level = 0, ids = { "mano_de_mago" }, ability = "Inteligencia" }, { level = 1, ids = { "detectar_magia" }, ability = "Inteligencia", note = "1/dia desde nivel 3" }, { level = 1, ids = { "identificar" }, ability = "Inteligencia", note = "1/dia desde nivel 5" } }, effects = {} },
                 { id = "eln_alt_proteccion", name = "Proteccion mental", type = "pasivo", description = "Ventaja en todas las tiradas de salvación de Inteligencia, Sabiduría y Carisma contra magia.", effects = {} },
             } },
         },
@@ -82,9 +86,6 @@ API.RACES = {
             } },
             { id = "eln_vision", name = "Vision en la oscuridad superior", type = "pasivo", description = "Puedes ver en penumbra hasta 36 metros como luz brillante y en oscuridad como penumbra, todo en un tono violeta.", effects = {} },
             { id = "eln_armas", name = "Entrenamiento con armas Kaldorei", type = "pasivo", description = "Competencia con arco largo, espada lunar, glaive lunar y glaive de guerra.", effects = WeaponProfEffects("arco largo", "espada lunar", "glaive lunar", "glaive de guerra") },
-            { id = "eln_sentidos", name = "Sentidos agudos", type = "pasivo", description = "Competencia en Percepción.", effects = { { kind = "skillProf", skill = "Percepcion" } } },
-            { id = "eln_mascara", name = "Mascara de lo salvaje", type = "pasivo", description = "Puedes ocultarte cuando estés ligeramente cubierto por elementos naturales.", effects = {} },
-            { id = "eln_fusion", name = "Fusion con las sombras", type = "pasivo", description = "Ventaja en tiradas de Sigilo al estar completamente oculto por la oscuridad.", effects = {} },
             { id = "eln_idiomas", name = "Idiomas", type = "informativo", description = "Hablas, lees y escribes Comun y Darnassiano.", effects = { { kind = "language", language = "Comun" }, { kind = "language", language = "Darnassiano" } } },
         },
     },

@@ -1851,6 +1851,20 @@ local FeatureReactionEffect   = HarfordCharacterBook.ReactionEffect
 local function ResolveBookFeatureById(id)
     id = tostring(id or "")
     if id == "" then return nil end
+    -- Acciones basicas: sus entradas del Libro son SINTETICAS (las fabrica BuildSections con el
+    -- prefijo harford_accion_), asi que no estan en ningun catalogo de rasgos y aqui se
+    -- reconstruyen igual. Sin esto no se podian arrastrar a la barra ni resolver su tooltip.
+    local accId = id:match("^harford_accion_(.+)$")
+    if accId and HarfordDnDActions and HarfordDnDActions.Get then
+        local acc = HarfordDnDActions.Get(accId)
+        if acc then
+            return {
+                id = id, name = acc.name, description = acc.description,
+                cast = acc.cast, type = "accion", basicAction = acc.id,
+            }
+        end
+        return nil
+    end
     if HarfordDnDRaces and HarfordDnDRaces.GetTrait then local t = HarfordDnDRaces.GetTrait(id); if t then return t end end
     if HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetTrait then local t = HarfordDnDBackgrounds.GetTrait(id); if t then return t end end
     if HarfordDnDFeats and HarfordDnDFeats.GetTrait then local t = HarfordDnDFeats.GetTrait(id); if t then return t end end

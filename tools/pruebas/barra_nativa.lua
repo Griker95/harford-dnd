@@ -29,6 +29,12 @@ chk("la pestana Conjuros arrastra conjuros", libro:find("HarfordActionBars.Recog
 chk("y soltar en el vacio limpia el cursor (diferido un tick)",
     libro:find("C_Timer.After(0, HarfordActionBars.SoltarHabilidad)", 1, true) ~= nil, true)
 
+print("Las acciones basicas tambien viajan a la barra")
+chk("el resolutor reconstruye las entradas sinteticas",
+    panel:find('id:match("^harford_accion_(.+)$")', 1, true) ~= nil, true)
+chk("con su marcador basicAction (el repartidor abre su menu de coste)",
+    panel:find("cast = acc.cast, type = \"accion\", basicAction = acc.id,", 1, true) ~= nil, true)
+
 print("Convivencia con Blizzard y Arcanum")
 chk("type propio, no secuestra el action", barras:find('local TIPO = "harford"', 1, true) ~= nil, true)
 chk("si Blizzard pone un hechizo real encima, manda Blizzard",

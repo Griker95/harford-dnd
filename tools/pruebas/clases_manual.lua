@@ -518,6 +518,22 @@ chk("los rasgos de raza vienen envueltos", envuelto ~= nil and envuelto.feature 
 local envueltoF = (FONDOS.GetBackgroundTraits((FONDOS.GetBackgrounds() or {})[1].id) or {})[1]
 chk("los de trasfondo tambien", envueltoF ~= nil and envueltoF.feature ~= nil, true)
 
+-- Las elecciones de truco (extraFrom cantrip:<Clase>) generan sus opciones preguntando a
+-- HarfordCompendioAPI, que aqui no esta cargado: stub minimo desde los DATOS reales del
+-- compendio para que la eleccion se verifique con sus opciones de verdad.
+if not _G.HarfordCompendioAPI then
+    local fhC = io.open("HarfordCompendioData/HarfordCompendioData.lua")
+    if fhC then
+        local envC = { _G = {} }
+        local fnC = (loadstring or load)(fhC:read("*a"), "compendio", "t", envC)
+        fhC:close()
+        if setfenv and fnC then setfenv(fnC, envC) end
+        if fnC then pcall(fnC) end
+        local lista = envC.HarfordCompendioSpells or (envC._G and envC._G.HarfordCompendioSpells) or {}
+        _G.HarfordCompendioAPI = { GetAllSpells = function() return lista end }
+    end
+end
+
 local huecosOrigen, mudasOrigen = 0, {}
 local function RevisarOrigen(lista, quien)
     for _, item in ipairs(lista or {}) do

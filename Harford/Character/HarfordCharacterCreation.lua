@@ -410,9 +410,19 @@ local function BuildTraitLines(traits, draft)
     for _, entry in ipairs(traits) do
         local feature = entry.feature
         if not IsMarkerFeature(feature) then
-            local description = HarfordDnDBookText and HarfordDnDBookText.GetFeatureDescription
-                and HarfordDnDBookText.GetFeatureDescription(feature, entry.classId, entry.source, draft.backgroundId, true)
-                or feature.description
+            -- Un rasgo con ELECCION no usa la seccion del manual: esa seccion enumera TODAS
+            -- las opciones ("Palabra de Poder" con sus ocho palabras, "Estilo de Combate" con
+            -- todos los estilos) y el About del personaje solo debe llevar lo SUYO. Su texto
+            -- corto + la linea de eleccion bastan; las opciones elegidas con entrada propia
+            -- (sac_pp_*, requiresOption) ya salen como rasgos derivados.
+            local description
+            if feature.choice then
+                description = feature.description
+            else
+                description = HarfordDnDBookText and HarfordDnDBookText.GetFeatureDescription
+                    and HarfordDnDBookText.GetFeatureDescription(feature, entry.classId, entry.source, draft.backgroundId, true)
+                    or feature.description
+            end
             if feature.type == "maniobra" then
                 local hexClase = COL_TAG
                 local clase = entry.classId and HarfordDnDBook and HarfordDnDBook.GetClass

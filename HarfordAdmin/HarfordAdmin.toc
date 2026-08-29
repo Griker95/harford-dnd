@@ -1,5 +1,5 @@
 ## Interface: 90207
-## Title: |cff3536CCHarford|r DnD 5e (Admin)
+## Title: |cff3536CCHarford|r Admin
 ## Notes: Complemento admin para |cff3536CCHarford|r DnD 5e
 ## Author: Griker
 ## Version: 2.1.0

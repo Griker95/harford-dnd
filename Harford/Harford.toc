@@ -1,5 +1,5 @@
 ## Interface: 90207
-## Title: |cff3536CCHarford|r DnD 5e 
+## Title: |cff3536CCHarford|r
 ## Notes: Sistema de Loot y Fichas DnD 5e de |cff3536CCCompañía Harford|r
 ## Author: Griker
 ## Version: 2.1.0

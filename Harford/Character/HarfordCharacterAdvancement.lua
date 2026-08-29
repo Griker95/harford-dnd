@@ -1573,11 +1573,27 @@ local function RefreshChoiceDialog()
             razaId, subrazaId = r and r.id, r and r.subraceId
         end
         if HarfordDnDFeats and HarfordDnDFeats.RaceAllowed and HarfordDnDFeats.GetFeat then
+            -- Puntuacion para el prerequisito de caracteristica: en creacion, la asignada MAS el
+            -- bono racial (que es la puntuacion final que tendra); en subida, la de la ficha viva.
+            local esBorrador = S.raceId and S.raceId ~= ""
+            local function Puntuacion(clave)
+                if esBorrador then
+                    local base = BaseScoreFor and tonumber(BaseScoreFor(clave)) or 0
+                    local bono = RaceAbilityBonus and tonumber(RaceAbilityBonus(clave)) or 0
+                    return base + bono
+                end
+                return HarfordDnDCalc and HarfordDnDCalc.GetAbilityScore
+                    and tonumber(HarfordDnDCalc.GetAbilityScore(clave)) or 0
+            end
             local permitidas = {}
             for _, option in ipairs(options) do
                 local ok = true
                 if option.feat then
-                    ok = HarfordDnDFeats.RaceAllowed(HarfordDnDFeats.GetFeat(option.feat), razaId, subrazaId)
+                    local def = HarfordDnDFeats.GetFeat(option.feat)
+                    ok = HarfordDnDFeats.RaceAllowed(def, razaId, subrazaId)
+                    if ok and HarfordDnDFeats.AbilityAllowed then
+                        ok = HarfordDnDFeats.AbilityAllowed(def, Puntuacion)
+                    end
                 end
                 if ok then permitidas[#permitidas + 1] = option end
             end

@@ -160,5 +160,32 @@ chk("las tarjetas de subclase tambien",
 local progSrc = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
 chk("y el runtime respeta requiredRaces con subraza",
     progSrc:find('tostring(id) == tostring(data.race.subraceId or "")', 1, true) ~= nil, true)
+-- Y los prerequisitos de CARACTERISTICA: campo estructurado + validador "una de la lista llega
+-- al minimo" + filtro en el dialogo con la puntuacion del borrador (creacion) o de la ficha
+-- viva (subida).
+chk("las 5 dotes con prerequisito de caracteristica lo llevan estructurado",
+    (function() local n = 0 for _ in feats:gmatch("requiredAbility = {") do n = n + 1 end return n end)(), 5)
+chk("el validador acepta cualquiera de la lista",
+    feats:find("function API.AbilityAllowed(featDef, scoreFn)", 1, true) ~= nil, true)
+chk("y el dialogo lo usa con la puntuacion que toca",
+    advSrc:find("ok = HarfordDnDFeats.AbilityAllowed(def, Puntuacion)", 1, true) ~= nil
+    and advSrc:find("local base = BaseScoreFor and tonumber(BaseScoreFor(clave)) or 0", 1, true) ~= nil, true)
+
+-- El validador de verdad, ejecutado con stubs:
+do
+    local cargar = loadstring or load
+    local src = feats
+    local i = src:find("function API.AbilityAllowed", 1, true)
+    local j = src:find("\nend", i)
+    local envA = { ipairs = ipairs, type = type, tonumber = tonumber }
+    local f = cargar("local API = {}\n" .. src:sub(i, j + 4) .. "\nreturn API.AbilityAllowed")
+    if setfenv then setfenv(f, envA) end
+    local AbilityAllowed = f()
+    local dote = { requiredAbility = { abilities = { "Inteligencia", "Sabiduria" }, min = 13 } }
+    chk("INT 14 pasa", AbilityAllowed(dote, function(k) return k == "Inteligencia" and 14 or 8 end), true)
+    chk("SAB 13 justo pasa", AbilityAllowed(dote, function(k) return k == "Sabiduria" and 13 or 8 end), true)
+    chk("ninguna al minimo NO pasa", AbilityAllowed(dote, function() return 12 end), false)
+    chk("sin requisito siempre pasa", AbilityAllowed({}, function() return 1 end), true)
+end
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

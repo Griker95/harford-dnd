@@ -173,7 +173,7 @@ API.FEATS = {
     },
     -- ===== Dotes del Manual del Jugador (PHB 5e ES) =====
     {
-        id = "feat_acechador", name = "Acechador", requires = "Destreza 13 o mas", description = "Sabes esconderte donde otros no podrían, y un intento fallido no te delata.", source = "PHB",
+        id = "feat_acechador", requiredAbility = { abilities = { "Destreza" }, min = 13 }, name = "Acechador", requires = "Destreza 13 o mas", description = "Sabes esconderte donde otros no podrían, y un intento fallido no te delata.", source = "PHB",
         traits = {
             { id = "feat_phb_acechador", name = "Beneficios", type = "pasivo", description = "Puedes esconderte si solo estas ligeramente oscurecido para la criatura. Fallar un ataque a distancia estando escondido no revela tu posición. La luz tenue no te da desventaja en Percepción (vista).", effects = {} },
         },
@@ -199,7 +199,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_apresador", name = "Apresador", requires = "Fuerza 13 o mas", description = "Pelea pegado al enemigo: agarrar, sujetar y castigar a quien tienes encima.", source = "PHB",
+        id = "feat_apresador", requiredAbility = { abilities = { "Fuerza" }, min = 13 }, name = "Apresador", requires = "Fuerza 13 o mas", description = "Pelea pegado al enemigo: agarrar, sujetar y castigar a quien tienes encima.", source = "PHB",
         traits = {
             { id = "feat_phb_apresador", name = "Beneficios", type = "pasivo", description = "Ventaja en ataques contra criaturas que estés agarrando. Con una acción puedes someter a un agarrado: ambos quedais apresados si tienes éxito.", effects = {} },
         },
@@ -248,7 +248,7 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_duelista_defensivo", name = "Duelista defensivo", requires = "Destreza 13 o mas", description = "Con arma sutil, conviertes la parada en defensa cuando te van a impactar.", source = "PHB",
+        id = "feat_duelista_defensivo", requiredAbility = { abilities = { "Destreza" }, min = 13 }, name = "Duelista defensivo", requires = "Destreza 13 o mas", description = "Con arma sutil, conviertes la parada en defensa cuando te van a impactar.", source = "PHB",
         traits = {
             { id = "feat_phb_duelista", name = "Beneficios", type = "pasivo", description = "Empuñando un arma sutil con la que seas competente, al recibir un ataque cuerpo a cuerpo puedes usar tu reacción para sumar Bonus Competencia a la CA contra ese ataque.", effects = {} },
         },
@@ -296,13 +296,13 @@ API.FEATS = {
         },
     },
     {
-        id = "feat_lanzador_ritual", name = "Lanzador ritual", requires = "Inteligencia o Sabiduria 13 o mas", description = "Un libro propio de rituales que puedes lanzar sin gastar espacios.", source = "PHB",
+        id = "feat_lanzador_ritual", requiredAbility = { abilities = { "Inteligencia", "Sabiduria" }, min = 13 }, name = "Lanzador ritual", requires = "Inteligencia o Sabiduria 13 o mas", description = "Un libro propio de rituales que puedes lanzar sin gastar espacios.", source = "PHB",
         traits = {
             { id = "feat_phb_lritual", name = "Beneficios", type = "pasivo", description = "Obtienes un libro de rituales con dos conjuros de nivel 1 con etiqueta ritual de una clase a elegir. Puedes copiar al libro otros conjuros rituales que encuentres.", effects = {} },
         },
     },
     {
-        id = "feat_lider_inspirador", name = "Lider inspirador", requires = "Carisma 13 o mas", description = "Una arenga antes del combate deja a los tuyos con aguante de sobra.", source = "PHB",
+        id = "feat_lider_inspirador", requiredAbility = { abilities = { "Carisma" }, min = 13 }, name = "Lider inspirador", requires = "Carisma 13 o mas", description = "Una arenga antes del combate deja a los tuyos con aguante de sobra.", source = "PHB",
         traits = {
             { id = "feat_phb_lider", name = "Beneficios", type = "pasivo", description = "Tras 10 minutos, hasta seis criaturas (incluido tu) a 9 m que te vean u oigan reciben PG temporales = tu nivel + Mod. Carisma. No se repite hasta un descanso.", effects = {} },
         },
@@ -589,6 +589,20 @@ function API.RaceAllowed(featDef, raceId, subraceId)
     raceId, subraceId = tostring(raceId or ""), tostring(subraceId or "")
     for _, id in ipairs(req) do
         if id == raceId or (subraceId ~= "" and id == subraceId) then return true end
+    end
+    return false
+end
+
+-- Prerequisito de caracteristica ("Destreza 13 o mas"): basta con que UNA de las listadas
+-- llegue al minimo (Lanzador ritual pide Inteligencia O Sabiduria). `scoreFn(clave)` la aporta
+-- quien llama, porque la puntuacion vive en el borrador durante la creacion y en la ficha viva
+-- durante la subida.
+function API.AbilityAllowed(featDef, scoreFn)
+    local req = featDef and featDef.requiredAbility
+    if type(req) ~= "table" or type(scoreFn) ~= "function" then return true end
+    local minimo = tonumber(req.min) or 13
+    for _, clave in ipairs(req.abilities or {}) do
+        if (tonumber(scoreFn(clave)) or 0) >= minimo then return true end
     end
     return false
 end

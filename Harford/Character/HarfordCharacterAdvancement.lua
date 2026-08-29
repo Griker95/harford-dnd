@@ -506,6 +506,24 @@ local function ConfigureSubclassChoice(classDef, classLevel)
     if classLevel < unlockLevel then return true end
     local primarySlot = classDef.id == S.classId or not S.classId
     local selectedId = primarySlot and S.subclassId or S.secondarySubclassId
+    -- Una subclase ya CONFIRMADA en la progresion viva no se vuelve a elegir: la subida a
+    -- nivel 2+ mostraba otra vez las tarjetas (Sacerdote elige dominio a nivel 1) e invitaba
+    -- a cambiar de subclase, cosa que las reglas no permiten. Se muestra fija, sin tarjetas.
+    -- La PRIMERA eleccion (la progresion aun no la tiene) sigue abriendo el selector normal.
+    if IsLevelUpMode() and selectedId and selectedId ~= "" then
+        local vivo = HarfordDnDProgression and HarfordDnDProgression.Get and HarfordDnDProgression.Get()
+        for _, e in ipairs((vivo and vivo.classLevels) or {}) do
+            if tostring(e.classId) == tostring(classDef.id)
+                and tostring(e.subclassId or "") == tostring(selectedId) then
+                local sub = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(classDef.id, selectedId)
+                S.selectorLabel:SetText("Subclase: " .. tostring((sub and sub.name) or selectedId))
+                S.selectorLabel:Show()
+                S.subclassDrop:Hide()
+                RefreshOptionCards(nil)
+                return true
+            end
+        end
+    end
     local subclasses = classDef.subclasses or {}
     -- Requisito racial de subclase (Sacerdocio de Elune = raza_elfo_noche): la que tu raza no
     -- puede tomar no aparece como tarjeta. Raza del borrador en creacion; de la progresion en

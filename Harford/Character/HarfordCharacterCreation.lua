@@ -307,6 +307,16 @@ local function IconNameParaMarkup(value)
     return name
 end
 
+-- Titulo visible de un rasgo en el About. Los trasfondos sincronizados de la web titulan
+-- "Caracteristica: Descubrimiento", pero los perfiles reales escriben el nombre A SECAS:
+-- el prefijo se retira solo aqui (el Libro y el creador conservan el nombre completo).
+local function TituloDeRasgo(name)
+    local titulo = tostring(name or "Rasgo")
+    titulo = titulo:gsub("^%s*Caracteristica%s*:%s*", "")
+    titulo = titulo:gsub("^%s*Caracter\195\173stica%s*:%s*", "")
+    return titulo ~= "" and titulo or tostring(name or "Rasgo")
+end
+
 local function FeatureIconName(feature)
     local path = HarfordDnDData and HarfordDnDData.GetFeatureIcon and HarfordDnDData.GetFeatureIcon(feature)
     return IconNameParaMarkup(path)
@@ -413,7 +423,7 @@ local function BuildTraitLines(traits, draft)
                     .. tostring(feature.name or "Maniobra") .. "{/col}{/h3}"
             else
                 lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "
-                    .. tostring(feature.name or "Rasgo") .. "{/h2}"
+                    .. TituloDeRasgo(feature.name) .. "{/h2}"
             end
             lines[#lines + 1] = ColorizeDescription(Trim(description)) .. ChoiceText(feature, draft.choices)
         end
@@ -683,7 +693,9 @@ local function BuildMagicFrames(profileName, idsRaciales)
                     frames[#frames + 1] = { IC = icono or ICON_MAGIC_FRAME, TX = table.concat(out, "\n") }
                 end
 
-                local iconoSub = (HarfordDnDData and HarfordDnDData.GetSubclassIcon
+                -- GetSubclassIcon devuelve RUTA completa (TexturePath): para el IC del frame
+                -- hace falta el NOMBRE pelado y validado, o TRP3 pinta el cuadro verde.
+                local iconoSub = IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetSubclassIcon
                     and HarfordDnDData.GetSubclassIcon(class.id, subclass and subclass.id))
                     or ICON_MAGIC_FRAME
                 if soloSubclase and subclass then
@@ -950,7 +962,7 @@ function API.BuildAbout(draft, profileName)
         -- reales (5 de 5 en los {PJ}) y donde las busca ResolveFeatsFromAbout al recargar.
         local dotes = BuildFeatLines(profileName)
         if dotes ~= "" then lines[#lines + 1] = dotes end
-        frames[#frames + 1] = { IC = RaceFrameIcon(race.id, subrace and subrace.id), TX = table.concat(lines, "\n") }
+        frames[#frames + 1] = { IC = IconNameParaMarkup(RaceFrameIcon(race.id, subrace and subrace.id)) or ICON_GENERIC, TX = table.concat(lines, "\n") }
     end
 
     -- ===== Frame 3: TRASFONDO ===== (nombre coloreado teal como en los perfiles)
@@ -961,7 +973,9 @@ function API.BuildAbout(draft, profileName)
         if desc ~= "" then lines[#lines + 1] = desc end
         local body = BuildTraitLines(GetBackgroundTraits(draft), draft)
         if body ~= "" then lines[#lines + 1] = body end
-        frames[#frames + 1] = { IC = ICON_GENERIC, TX = table.concat(lines, "\n") }
+        local iconoBg = IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetFeatureIcon
+            and HarfordDnDData.GetFeatureIcon({ id = bg.id, icon = bg.icon, name = bg.name }))
+        frames[#frames + 1] = { IC = iconoBg or ICON_GENERIC, TX = table.concat(lines, "\n") }
     end
 
     -- ===== Bloques de CLASE: [Clase, Especializacion <Sub>, Magia <Clase>, Magia <Sub>] =====
@@ -990,8 +1004,8 @@ function API.BuildAbout(draft, profileName)
                         .. tostring(subclass.name) .. "{/col}{/h1}",
                     subBody,
                 }
-                local icono = HarfordDnDData and HarfordDnDData.GetSubclassIcon
-                    and HarfordDnDData.GetSubclassIcon(class.id, subclass.id)
+                local icono = IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetSubclassIcon
+                    and HarfordDnDData.GetSubclassIcon(class.id, subclass.id))
                 frames[#frames + 1] = {
                     IC = icono or ("classicon_" .. ClassIconToken(class.name)),
                     TX = table.concat(lines, "\n"),

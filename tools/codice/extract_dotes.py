@@ -43,7 +43,11 @@ def parse_traits(region):
 
 # cada dote: { id, name, requires?, traits = { ... } }
 dotes = []
-for m in re.finditer(r'\{\s*\n\s*id = "([a-z0-9_]+)", name = "((?:[^"\\]|\\.)*)"(?:, requires = "((?:[^"\\]|\\.)*)")?', t):
+# Entre `id` y `name` puede colarse cualquier campo escalar -hoy `icon`-. Exigirlos
+# pegados dejo las 77 dotes en CERO el dia que se les puso icono, y sin una queja: el
+# fichero se reescribio vacio. Mismo caso que el `nameF` de las razas.
+OPC = r'(?:\s*[a-zA-Z]+ = (?:"(?:[^"\\]|\\.)*"|\{[^{}]*(?:\{[^{}]*\}[^{}]*)*\}|[\w.]+),)*'
+for m in re.finditer(r'\{\s*\n\s*id = "([a-z0-9_]+)",' + OPC + r'\s*name = "((?:[^"\\]|\\.)*)"(?:, requires = "((?:[^"\\]|\\.)*)")?', t):
     start = m.start()
     blk = t[start:balanced(t, start)]
     tr = re.search(r'\btraits = \{', blk)
@@ -252,6 +256,21 @@ for _d in dotes:
     if _d.get("manual"): _d["manual"] = limpiar(_d["manual"])
     for _tr in _d.get("traits", []):
         if _tr.get("desc"): _tr["desc"] = limpiar(_tr["desc"])
+
+# ---- SEGURO DE VUELCO ----
+_destino = os.path.join(WEB, "js", "compendium-dotes.js")
+_ya = 0
+try:
+    _viejo = io.open(_destino, encoding="utf-8").read()
+    # se parsea el array publicado: contar '"id":' sumaria tambien los rasgos anidados
+    _ya = len(json.loads(_viejo[_viejo.index("["):_viejo.rindex("]") + 1]))
+except Exception:
+    pass
+if _ya and len(dotes) < _ya * 0.8:
+    raise SystemExit(
+        "ABORTADO: salen %d dotes y habia %d publicadas. Casi seguro que el extractor ha "
+        "dejado de entender HarfordDnDFeats.lua (un campo nuevo en la cabecera, como paso "
+        "con `icon`), no que se hayan borrado. Revisa antes de escribir." % (len(dotes), _ya))
 
 payload = "window.HARFORD_COMPENDIUM = window.HARFORD_COMPENDIUM || {};\nwindow.HARFORD_COMPENDIUM.dotes = " + \
           json.dumps(dotes, ensure_ascii=False, indent=1) + ";\n"

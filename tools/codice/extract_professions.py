@@ -125,13 +125,17 @@ if os.path.exists(TERM):
     icon_i = term.get("instrument_icons", {})
     icon_g = term.get("game_icons", {})
     icon_v = term.get("vehicle_icons", {})
+    # el id puede venir con prefijo (`prof_instrumento`) o sin el: compararlo pelado evita
+    # que un renombrado deje de expandirlos y los publique como dos entradas genericas
+    def _pelado(pid):
+        return pid[5:] if pid.startswith("prof_") else pid
     for p in data:
-        if p["id"] == "instrumento":
+        if _pelado(p["id"]) == "instrumento":
             for n in term.get("instruments", {}).values():
                 nuevos.append({"id": "instrumento_" + slug(n), "name": n, "kind": "utility",
                                "ability": p["ability"], "tool": n, "family": "Instrumento musical",
                                "icon": icon_i.get(n, p["icon"]), "recipes": []})
-        elif p["id"] == "juego":
+        elif _pelado(p["id"]) == "juego":
             for n in term.get("games", {}).values():
                 nuevos.append({"id": "juego_" + slug(n), "name": n, "kind": "utility",
                                "ability": p["ability"], "tool": n, "family": "Juego de azar",

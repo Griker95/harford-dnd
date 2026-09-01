@@ -299,6 +299,7 @@ SUBRACE_GENERO = {
   "enano/forjaz": ("dwarf_m", "dwarf_f", "Enana de Forjaz"),
   "enano/martillo_salvaje": ("eps_wc3h_wildhammermale", "eps_hots_dwarfshaman", "Enana Martillo Salvaje"),
   "enano/hierro_negro": ("darkiron_m", "darkiron_f", "Enana Hierro Negro"),
+  "elfo_noche/kaldorei": ("achievement_character_nightelf_male", "achievement_character_nightelf_female", "Elfa de la Noche"),
   "elfo_noche/altonato": ("eps_wc3h_nightelfmalewarrior", "eps_wc3h_nightelfcharm", "Altonata"),
   "gnomo/gnomeregan": ("achievement_character_gnome_male", "achievement_character_gnome_female", "Gnoma de Gnomeregan"),
   "gnomo/mecagnomo": ("mechagnome_m", "mechagnome_f", "Mecagnoma"),
@@ -320,8 +321,18 @@ SUBRACE_GENERO = {
   "trol/hielo": ("eps_wc3_icetrollshadowpriest", "eps_wc3h_trollpeasant", "Troll de Hielo"),
 }
 
+def _clave_raza(rid):
+    """`raza_humano` -> `humano`. Las tablas de iconos se indexaron sin el prefijo."""
+    return rid[5:] if rid.startswith("raza_") else rid
+
+def _clave_subraza(rid, sid):
+    """`raza_enano` + `raza_enano_forjaz` -> `enano/forjaz`."""
+    corto = sid[len(rid) + 1:] if sid.startswith(rid + "_") else _clave_raza(sid)
+    return _clave_raza(rid) + "/" + corto
+
+_sin_icono = []
 for r in kb["races"]:
-    _g = RACE_GENERO.get(r["id"], ("", "", ""))
+    _g = RACE_GENERO.get(_clave_raza(r["id"]), ("", "", ""))
     _m, _f, _nf = _g[0], _g[1], _g[2]
     r["icon"] = use(_m) if _m else None
     r["iconF"] = use(_f) if _f else None
@@ -329,7 +340,7 @@ for r in kb["races"]:
     r["nameM"] = _g[3] if len(_g) > 3 else None
     for f in r["traits"]: f["icon"] = use(signo_incremento(f) or feat_icon(f))
     for sr in r.get("subraces", []):
-        _sg = SUBRACE_GENERO.get(r["id"] + "/" + sr["id"])
+        _sg = SUBRACE_GENERO.get(_clave_subraza(r["id"], sr["id"]))
         if _sg:
             sr["icon"] = use(_sg[0])
             sr["iconF"] = use(_sg[1]) if _sg[1] else None
@@ -414,6 +425,12 @@ for s in kb.get("spells", []):
             ex = spell_icon(raw)
             nm = ex if _good_exact(ex, raw) else better_spell_icon(s)  # 3) fileID real / 4) afinidad
     if nm: s["icon"] = use(nm)
+
+_sin_icono = [r["id"] for r in kb["races"] if not r.get("icon")]
+_sin_icono += [s["id"] for r in kb["races"] for s in r.get("subraces", [])
+               if not s.get("icon")]
+if _sin_icono:
+    raise SystemExit("ABORTADO: %d razas o subrazas se quedan sin icono (%s). Suele ser que RACE_GENERO/SUBRACE_GENERO no reconocen el id: mira si ha cambiado el prefijo." % (len(_sin_icono), ", ".join(_sin_icono[:5])))
 
 # profesiones: icono de la profesion y de cada receta (nombres WoW tipo Trade_BlackSmithing);
 # si el PNG no existe en el dump, la receta cae al icono de su profesion y esta a uno generico.

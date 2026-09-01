@@ -660,15 +660,10 @@ RefreshClassStage = function()
         RefreshClassList()
         local preview = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(S.pendingClassId)
         S.classTitle:SetText(preview and tostring(preview.name) or "Elige la clase que recibira este nivel")
-        -- Con SUBCLASE elegida, su descripcion sustituye a la de la clase (la tarjeta de
-        -- Sombra debe contar lo suyo, no repetir el resumen del Sacerdote).
-        local previewDesc = preview and tostring(preview.desc or "") or nil
-        if preview then
-            local subId = SubclassIdFor(preview.id)
-            local sub = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(preview.id, subId)
-            if sub and tostring(sub.desc or "") ~= "" then previewDesc = tostring(sub.desc) end
-        end
-        S.classSummary:SetText(previewDesc or (S.classSelectionMode == "add"
+        -- Con clase elegida, el resumen flotante se VACIA: la descripcion (de la clase o de
+        -- la subclase seleccionada) vive dentro del scroll y pintarla en los dos sitios la
+        -- duplicaba. El flotante queda solo para las pistas sin clase elegida.
+        S.classSummary:SetText(preview and "" or (S.classSelectionMode == "add"
             and "La nueva clase empezara en nivel 1. Solo se permiten dos clases."
             or "Selecciona una clase para continuar la subida de nivel."))
         S.subclassDrop:Hide()

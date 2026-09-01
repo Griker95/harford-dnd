@@ -446,7 +446,7 @@ local function RefreshClassList()
             end)
             AttachTooltip(card,
                 function() return tostring(chosen.name or "") end,
-                function() return ResumenTooltip(chosen.desc or chosen.description) end,
+                function() return chosen.summary or ResumenTooltip(chosen.desc or chosen.description) end,
                 function()
                     if classFile and HarfordClassColors.ColorRGBForClassFile then
                         return HarfordClassColors.ColorRGBForClassFile(classFile)
@@ -828,7 +828,7 @@ RefreshOptionCards = function(opciones, seleccionadoId, iconoDe, alElegir)
         end)
         AttachTooltip(card,
             function() return tostring(choice.name or "") end,
-            function() return ResumenTooltip(choice.desc or choice.description) end)
+            function() return choice.summary or ResumenTooltip(choice.desc or choice.description) end)
         card:Show()
     end
 end
@@ -897,7 +897,7 @@ local function RefreshOriginList()
         if PonerBorde(card) then card:SetBackdropBorderColor(mc[1], mc[2], mc[3], selected and 1 or 0.55) end
         AttachTooltip(card,
             function() return tostring(choice.name or "") end,
-            function() return ResumenTooltip(choice.desc or choice.description) end)
+            function() return choice.summary or ResumenTooltip(choice.desc or choice.description) end)
         card:Show()
         column = column + 1
         if column >= GRID_COLUMNS then column, row = 0, row + 1 end
@@ -1023,7 +1023,9 @@ RefreshOrigin = function()
     -- texto completo del manual. Con SUBRAZA elegida manda la descripcion de la subraza
     -- (Altonato debe contar lo suyo, no repetir el texto del Elfo de la Noche); sin texto
     -- propio de subraza se cae al de la raza.
-    local descTexto = def.desc
+    -- El summary de la raza manda sobre el resumen automatico: varias razas (Trol) no
+    -- tienen parrafo introductorio general y el automatico mezclaba parrafos de subrazas.
+    local descTexto = def.summary or def.desc
     if isRace then
         local sub = HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
         if sub and tostring(sub.desc or "") ~= "" then descTexto = sub.desc end

@@ -126,6 +126,28 @@ end
 -- Tooltip al pasar por encima, para razas, subrazas, clases y subclases. Los textos se piden con
 -- callbacks y no se guardan en el frame: las tarjetas se reutilizan entre refrescos y un texto
 -- pegado al frame se quedaria mostrando la eleccion anterior.
+-- Resumen de una descripcion de origen (raza, subraza, clase, subclase, trasfondo, variante):
+-- parrafos narrativos (la cita en cursiva de apertura y su atribucion se saltan), corta en el
+-- primer encabezado ### y limita a DOS parrafos. Los textos cortos sin estructura pasan tal
+-- cual. Es lo que muestran los tooltips de las tarjetas y la seccion de origen: el texto
+-- completo del manual sigue en los datos, pero la UI enseña el resumen, como la web.
+local function ResumenDeOrigen(texto)
+    texto = tostring(texto or "")
+    local parrafos = {}
+    for p in (texto .. "\n\n"):gmatch("(.-)\n%s*\n") do
+        p = p:gsub("^%s+", ""):gsub("%s+$", "")
+        if p:find("^#") then break end                -- empieza el detalle por secciones
+        local esCita = p:find("^%*") and (p:find("%*$") or p:find("^%*[—%-]"))
+        if p ~= "" and not esCita then
+            p = p:gsub("%*%*%*", ""):gsub("%*%*", ""):gsub("%*", "")
+            parrafos[#parrafos + 1] = p
+            if #parrafos == 2 then break end
+        end
+    end
+    if #parrafos == 0 then return texto end           -- textos cortos sin estructura: tal cual
+    return table.concat(parrafos, "\n\n")
+end
+
 local function AttachTooltip(frame, obtenerTitulo, obtenerCuerpo, colorTitulo)
     if not frame or not frame.SetScript then return end
     frame:SetScript("OnEnter", function(self)
@@ -411,7 +433,7 @@ local function RefreshClassList()
             end)
             AttachTooltip(card,
                 function() return tostring(chosen.name or "") end,
-                function() return tostring(chosen.desc or chosen.description or "") end,
+                function() return ResumenDeOrigen(chosen.desc or chosen.description) end,
                 function()
                     if classFile and HarfordClassColors.ColorRGBForClassFile then
                         return HarfordClassColors.ColorRGBForClassFile(classFile)
@@ -785,7 +807,7 @@ RefreshOptionCards = function(opciones, seleccionadoId, iconoDe, alElegir)
         end)
         AttachTooltip(card,
             function() return tostring(choice.name or "") end,
-            function() return tostring(choice.desc or choice.description or "") end)
+            function() return ResumenDeOrigen(choice.desc or choice.description) end)
         card:Show()
     end
 end
@@ -854,7 +876,7 @@ local function RefreshOriginList()
         if PonerBorde(card) then card:SetBackdropBorderColor(mc[1], mc[2], mc[3], selected and 1 or 0.55) end
         AttachTooltip(card,
             function() return tostring(choice.name or "") end,
-            function() return tostring(choice.desc or choice.description or "") end)
+            function() return ResumenDeOrigen(choice.desc or choice.description) end)
         card:Show()
         column = column + 1
         if column >= GRID_COLUMNS then column, row = 0, row + 1 end
@@ -980,22 +1002,6 @@ RefreshOrigin = function()
     -- texto completo del manual: parrafos narrativos (la cita en cursiva de apertura y su
     -- atribucion se saltan), cortando en el primer encabezado ### y con dos parrafos como
     -- maximo -- igual que la tarjeta de la web, que tampoco vuelca el capitulo entero.
-    local function ResumenDeOrigen(texto)
-        texto = tostring(texto or "")
-        local parrafos = {}
-        for p in (texto .. "\n\n"):gmatch("(.-)\n%s*\n") do
-            p = p:gsub("^%s+", ""):gsub("%s+$", "")
-            if p:find("^#") then break end                -- empieza el detalle por secciones
-            local esCita = p:find("^%*") and (p:find("%*$") or p:find("^%*[—%-]"))
-            if p ~= "" and not esCita then
-                p = p:gsub("%*%*%*", ""):gsub("%*%*", ""):gsub("%*", "")
-                parrafos[#parrafos + 1] = p
-                if #parrafos == 2 then break end
-            end
-        end
-        if #parrafos == 0 then return texto end           -- textos cortos sin estructura: tal cual
-        return table.concat(parrafos, "\n\n")
-    end
     local desc = MakeText(S.tree, "GameFontHighlightSmall", ResumenDeOrigen(def.desc))
     desc:SetPoint("TOPLEFT", 8, -8)
     desc:SetWidth(340)  -- cierra en el mismo borde derecho que las filas (348 - 8)

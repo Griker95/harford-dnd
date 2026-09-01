@@ -161,6 +161,15 @@ local function ResumenTooltip(texto)
     return parrafo
 end
 
+-- Nombre segun el sexo del PJ (nameF si es mujer): el mismo helper que usa el About. Cae al
+-- name para todo lo que no lo declara (clases, trasfondos, variantes, opciones).
+local function NombreSexo(def)
+    if HarfordCharacterCreation and HarfordCharacterCreation.NombreDeOrigen then
+        return HarfordCharacterCreation.NombreDeOrigen(def)
+    end
+    return tostring(type(def) == "table" and def.name or "")
+end
+
 local function AttachTooltip(frame, obtenerTitulo, obtenerCuerpo, colorTitulo)
     if not frame or not frame.SetScript then return end
     frame:SetScript("OnEnter", function(self)
@@ -815,7 +824,7 @@ RefreshOptionCards = function(opciones, seleccionadoId, iconoDe, alElegir)
             card.icono:SetTexture(icono)
         end
         card.icono:SetDesaturated(not seleccionada)
-        card.nombre:SetText(tostring(choice.name or choice.id or ""))
+        card.nombre:SetText(NombreSexo(choice) ~= "" and NombreSexo(choice) or tostring(choice.id or ""))
         card.nombre:SetTextColor(seleccionada and 1 or 0.85, seleccionada and 0.82 or 0.85,
             seleccionada and 0 or 0.85)
         card.sel:SetShown(seleccionada)
@@ -827,7 +836,7 @@ RefreshOptionCards = function(opciones, seleccionadoId, iconoDe, alElegir)
             if alElegir then alElegir(choice) end
         end)
         AttachTooltip(card,
-            function() return tostring(choice.name or "") end,
+            function() return NombreSexo(choice) end,
             function() return choice.summary or ResumenTooltip(choice.desc or choice.description) end)
         card:Show()
     end
@@ -887,7 +896,7 @@ local function RefreshOriginList()
         -- Sin marco circular ni mascara: todos los iconos son cuadrados y se muestran tal cual
         -- (decision 2026-08-20; el recorte por mascara no funciono de forma fiable en Epsilon
         -- para estas tarjetas).
-        card.nombre:SetText(tostring(choice.name or ""))
+        card.nombre:SetText(NombreSexo(choice))
         card.nombre:SetTextColor(selected and 1 or 0.85, selected and 0.82 or 0.85, selected and 0 or 0.85)
         card.icono:SetDesaturated(not selected)
         card.sel:SetShown(selected)
@@ -896,7 +905,7 @@ local function RefreshOriginList()
         marco:SetVertexColor(mc[1], mc[2], mc[3])
         if PonerBorde(card) then card:SetBackdropBorderColor(mc[1], mc[2], mc[3], selected and 1 or 0.55) end
         AttachTooltip(card,
-            function() return tostring(choice.name or "") end,
+            function() return NombreSexo(choice) end,
             function() return choice.summary or ResumenTooltip(choice.desc or choice.description) end)
         card:Show()
         column = column + 1
@@ -931,7 +940,7 @@ RefreshOrigin = function()
         or (S.stage == "background_choices" and "TRASFONDO CONFIRMADO" or (isRace and "RAZAS" or "TRASFONDOS")))
     -- Solo el nombre: la seccion ya dice si estas en Raza o en Trasfondo, y el prefijo robaba
     -- ancho a nombres largos ("Trasfondo: Mercenario veterano harford").
-    S.classTitle:SetText(tostring(def.name or ""))
+    S.classTitle:SetText(NombreSexo(def))
     -- La descripcion larga va DENTRO del scroll (ver mas abajo): con el texto fijo en el
     -- frame y los rasgos a altura fija, las descripciones largas de trasfondo se solapaban.
     S.classSummary:SetText("")
@@ -2257,8 +2266,8 @@ local function StepValue(index)
         if not race then return "" end
         local sub = S.subraceId ~= "" and HarfordDnDRaces.GetSubrace
             and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
-        if not sub then return tostring(race.name or "") end
-        return tostring(race.name or "") .. string.char(10) .. tostring(sub.name or "")
+        if not sub then return NombreSexo(race) end
+        return NombreSexo(race) .. string.char(10) .. NombreSexo(sub)
     elseif index == 2 then
         local bg = S.backgroundId and HarfordDnDBackgrounds.GetBackground
             and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
@@ -2292,8 +2301,8 @@ local function RefreshSummary()
         and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
     local bg = S.backgroundId and HarfordDnDBackgrounds.GetBackground
         and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
-    local origin = race and tostring(race.name or "") or "Sin raza"
-    if sub then origin = origin .. " (" .. tostring(sub.name or "") .. ")" end
+    local origin = race and NombreSexo(race) or "Sin raza"
+    if sub then origin = origin .. " (" .. NombreSexo(sub) .. ")" end
     if bg then origin = origin .. "  |cffcccccc" .. tostring(bg.name or "") .. "|r" end
     S.sumOrigin:SetText(origin)
 

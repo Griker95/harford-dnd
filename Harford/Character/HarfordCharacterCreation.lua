@@ -218,6 +218,10 @@ local function NombreDeOrigen(def)
     return tostring(def.name or "")
 end
 
+-- Publico: el asistente de creacion/subida tambien pinta nombres de raza/subraza y debe
+-- respetar el sexo del PJ igual que el About (los iconos ya lo hacian; el texto no).
+API.NombreDeOrigen = NombreDeOrigen
+
 local function SubclassColor(subName, classHex)
     local key = HarfordClassColors and HarfordClassColors.StripAccents
         and HarfordClassColors.StripAccents(tostring(subName or "")):lower() or tostring(subName or ""):lower()

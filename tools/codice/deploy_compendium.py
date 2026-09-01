@@ -150,6 +150,37 @@ for _grupo, _clave in (("clases", "classes"), ("razas", "races")):
         print("Resumenes de %s: %d puestos%s" % (
             _grupo, _puestos, (" | sin resumen: %s" % ", ".join(_faltan)) if _faltan else ""))
 
+# ---- CORRECCIONES SOBRE EL DATO DEL ADDON ----
+# Parches para lo que el addon todavia no puede expresar. Cada uno se anuncia al aplicarlo:
+# si el addon se arregla y el parche sigue aqui, estaria pisando el dato bueno.
+_corr = json.load(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                       "correcciones_web.json"), encoding="utf-8"))
+for _bid, _c in (_corr.get("trasfondos") or {}).items():
+    _b = next((x for x in kb.get("backgrounds", []) if x["id"] == _bid), None)
+    if not _b:
+        print("CORRECCION SIN APLICAR: no existe el trasfondo %s" % _bid)
+        continue
+    _porid = {t["id"]: t for t in _b.get("traits", [])}
+    # los rasgos que en realidad son de la variante se MUEVEN, no se duplican
+    for _vid, _v in (_c.get("variantes") or {}).items():
+        _var = next((x for x in _b.get("variants", []) if x["id"] == _vid), None)
+        if not _var:
+            print("CORRECCION SIN APLICAR: no existe la variante %s" % _vid)
+            continue
+        _var["traits"] = [_porid[i] for i in _v.get("mover_rasgos", []) if i in _porid]
+    _quedan = {i: _porid[i] for i in _c.get("conservar_rasgos", []) if i in _porid}
+    for _n in _c.get("rasgos_nuevos", []):
+        _quedan[_n["id"]] = _n
+    _b["traits"] = [_quedan[i] for i in _c.get("orden", []) if i in _quedan]
+    if _c.get("skills"):
+        _b["skills"] = _c["skills"]
+    if _c.get("tools"):
+        _b["tools"] = _c["tools"]
+    print("CORRECCION APLICADA a %s: %d rasgos en el base, %d movidos a la variante. "
+          "RETIRAR de correcciones_web.json cuando el addon lo arregle."
+          % (_bid, len(_b["traits"]),
+             sum(len(v.get("mover_rasgos", [])) for v in (_c.get("variantes") or {}).values())))
+
 # ---- SEGURO DE VUELCO, NIVELES ANIDADOS ----
 # El seguro de arriba solo mira las colecciones de primer nivel, y ahi no se ve el fallo
 # tipico: 17 razas siguen siendo 17 aunque se hayan quedado sin una sola subraza. Los tres

@@ -1,0 +1,36 @@
+{
+ "_leeme": "Correcciones que la web aplica ENCIMA del dato del addon, porque el addon todavia no puede expresarlas. Son TEMPORALES y ruidosas a proposito: deploy_compendium avisa de cada una al aplicarla. Cuando el addon quede arreglado hay que RETIRAR la entrada de aqui, o la web seguira pisando el dato bueno.",
+ "trasfondos": {
+  "mercenario_veterano_harford": {
+   "_motivo": "El trasfondo base llevaba el contenido de su variante: eleccion de habilidad, armas marciales, eleccion de herramienta, Espiritu Harford y el equipo del tabardo. Segun el texto original, el base es el Mercenario veterano de siempre -Atletismo y Persuasion fijas, un juego y vehiculos terrestres, 10 po, solo Vida mercenaria- y todo lo demas es de Veterano Harford. En el addon las variantes no admiten rasgos ni efectos, asi que alli no hay donde ponerlo (avisado a la sesion del addon).",
+   "skills": ["Atletismo", "Persuasión"],
+   "tools": ["Un juego", "Vehiculos terrestres"],
+   "conservar_rasgos": ["bg_merc_vida"],
+   "rasgos_nuevos": [
+    {
+     "id": "bg_merc_competencias",
+     "level": null,
+     "name": "Competencias",
+     "type": "pasivo",
+     "desc": "Competencia en Atletismo y Persuasión. Competencia con un juego y con vehículos terrestres.",
+     "icon": "inv_scroll_11"
+    },
+    {
+     "id": "bg_merc_equipo_base",
+     "level": null,
+     "name": "Equipo",
+     "type": "pasivo",
+     "desc": "El uniforme de tu compañía (ropas de viaje de calidad), una insignia con tu rango, las piezas de un juego que escojas y una bolsa que contiene lo que queda de tu última paga (10 po).",
+     "icon": "inv_misc_bag_09"
+    }
+   ],
+   "orden": ["bg_merc_competencias", "bg_merc_vida", "bg_merc_equipo_base"],
+   "variantes": {
+    "mercenario_veterano_harford_veterano_harford": {
+     "mover_rasgos": ["bg_merc_hab", "bg_merc_armas", "bg_merc_herr_juego", "bg_merc_herr",
+                      "bg_merc_espiritu", "bg_merc_equipo"]
+    }
+   }
+  }
+ }
+}

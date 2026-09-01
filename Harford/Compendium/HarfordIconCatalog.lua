@@ -1929,6 +1929,13 @@ function Catalog.GetSpellCandidates(spellId)
     return Catalog.spells[tostring(spellId or "")]
 end
 
+-- Icono del frame "Magia <Sub>" de los perfiles reales (Catalog.subclassSpells). Devuelve el
+-- NOMBRE pelado, sin TexturePath: su consumidor es el IC de frame del About, que necesita
+-- nombre (TRP3 antepone Interface\ICONS\ al texto tal cual).
+function Catalog.GetSubclassSpellsIconName(classId, subclassId)
+    return Catalog.subclassSpells[tostring(classId or "") .. "/" .. tostring(subclassId or "")]
+end
+
 function Catalog.GetSubclassIcon(classId, subclassId)
     local subclasses = Catalog.subclasses[tostring(classId or "")]
     return TexturePath(subclasses and subclasses[tostring(subclassId or "")])

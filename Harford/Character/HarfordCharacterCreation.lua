@@ -483,7 +483,31 @@ local function BuildTraitLines(traits, draft)
                 lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "
                     .. TituloDeRasgo(feature.name) .. "{/h2}"
             end
-            lines[#lines + 1] = ColorizeDescription(Trim(description)) .. ChoiceText(feature, draft.choices)
+            -- Opciones ELEGIDAS con texto propio (Metamagia, Palabras...): cada una sale como
+            -- bloque con su icono y su descripcion, como en los perfiles reales. Las que no
+            -- tienen texto se resumen en la linea "Eleccion: X" de siempre.
+            local bloques, sinTexto = {}, {}
+            if feature.choice then
+                for _, optionId in ipairs(draft.choices[tostring(feature.id or "")] or {}) do
+                    local option = HarfordDnDBook.GetChoiceOption(feature, optionId)
+                    local descOpcion = Trim(option and (option.desc or option.description))
+                    if option and descOpcion ~= "" then
+                        bloques[#bloques + 1] = "{h2}{icon:" .. FeatureIconName(option) .. ":25} "
+                            .. tostring(option.label or optionId) .. "{/h2}"
+                        bloques[#bloques + 1] = ColorizeDescription(descOpcion)
+                    else
+                        sinTexto[#sinTexto + 1] = tostring(option and option.label or optionId)
+                    end
+                end
+            end
+            local colaEleccion = ""
+            if feature.choice and #bloques == 0 then
+                colaEleccion = ChoiceText(feature, draft.choices)
+            elseif #sinTexto > 0 then
+                colaEleccion = " Eleccion: " .. table.concat(sinTexto, ", ") .. "."
+            end
+            lines[#lines + 1] = ColorizeDescription(Trim(description)) .. colaEleccion
+            for _, bloque in ipairs(bloques) do lines[#lines + 1] = bloque end
         end
     end
     return table.concat(lines, "\n")
@@ -589,6 +613,22 @@ end
 -- Frames de magia (uno por clase lanzadora del PJ): cabecera "Ataque Conjuro/DC Conjuro" + conjuros
 -- agrupados por nivel (Trucos, Nivel 1...). Lee los conjuros conocidos/preparados/libro del compendio
 -- segun el modo de la clase. Vacio al crear (los conjuros se eligen despues en el compendio).
+-- Icono del rasgo "Lanzamiento de conjuros" de una clase: es el arte que los perfiles reales
+-- usan en su frame "Magia <Clase>". Sin rasgo (o sin arte valido) se cae al generico.
+local function IconoLanzamiento(classDef)
+    for _, feature in ipairs((classDef and classDef.features) or {}) do
+        local nombre = tostring(feature.name or "")
+        if HarfordClassColors and HarfordClassColors.StripAccents then
+            nombre = HarfordClassColors.StripAccents(nombre)
+        end
+        if nombre:lower():find("^lanzamiento de conjuros") then
+            return IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetFeatureIcon
+                and HarfordDnDData.GetFeatureIcon(feature))
+        end
+    end
+    return nil
+end
+
 local function BuildMagicFrames(profileName, idsRaciales)
     local C = _G.HarfordCompendioAPI
     if not (C and C.GetSpellById and C.GetClassCasting) then return {} end
@@ -726,13 +766,16 @@ local function BuildMagicFrames(profileName, idsRaciales)
                 local abilityMod = (Calc and Calc.GetAbilityMod and Calc.GetAbilityMod(casting.ability)) or 0
                 local hex = ClassHex(class.name)
 
-                local function EscribirFrame(byLevel, titulo, colorTitulo, icono)
+                local function EscribirFrame(byLevel, titulo, colorTitulo, icono, tituloPropio)
                     local levels = {}
                     for lvl in pairs(byLevel) do levels[#levels + 1] = lvl end
                     if #levels == 0 then return end
                     table.sort(levels)
+                    local cabecera = tituloPropio
+                        and ("{h1:c}{col:" .. colorTitulo .. "}" .. tostring(tituloPropio) .. "{/col}{/h1}")
+                        or ("{h1:c}Magia {col:" .. colorTitulo .. "}" .. tostring(titulo) .. "{/col}{/h1}")
                     local out = {
-                        "{h1:c}Magia {col:" .. colorTitulo .. "}" .. tostring(titulo) .. "{/col}{/h1}",
+                        cabecera,
                         "{h3:c}Ataque Conjuro{col:" .. COL_DERIVED .. "} +" .. (pb + abilityMod)
                             .. " {/col}{col:" .. COL_TAG .. "}||{/col} DC Conjuro{col:" .. COL_DERIVED .. "} "
                             .. (8 + pb + abilityMod) .. "{/col}{/h3}",
@@ -751,11 +794,15 @@ local function BuildMagicFrames(profileName, idsRaciales)
                     frames[#frames + 1] = { IC = icono or ICON_MAGIC_FRAME, TX = table.concat(out, "\n") }
                 end
 
-                -- GetSubclassIcon devuelve RUTA completa (TexturePath): para el IC del frame
-                -- hace falta el NOMBRE pelado y validado, o TRP3 pinta el cuadro verde.
-                local iconoSub = IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetSubclassIcon
-                    and HarfordDnDData.GetSubclassIcon(class.id, subclass and subclass.id))
-                    or ICON_MAGIC_FRAME
+                -- Iconos de los perfiles reales: el frame "Magia <Clase>" lleva el arte del
+                -- rasgo Lanzamiento de conjuros de esa clase, y "Magia <Sub>" el del catalogo
+                -- subclassSpells (sacado de esos mismos perfiles); nunca el generico si hay
+                -- algo mejor. GetSubclassSpellsIconName ya devuelve NOMBRE pelado.
+                local iconoClase = IconoLanzamiento(class) or ICON_MAGIC_FRAME
+                local iconoSub = IconNameParaMarkup(HarfordIconCatalog
+                        and HarfordIconCatalog.GetSubclassSpellsIconName
+                        and HarfordIconCatalog.GetSubclassSpellsIconName(class.id, subclass and subclass.id))
+                    or iconoClase
                 if soloSubclase and subclass then
                     -- Todo lo que lanza lo concede la subclase: un unico frame, con su nombre.
                     for lvl, lista in pairs(porClase) do
@@ -763,8 +810,16 @@ local function BuildMagicFrames(profileName, idsRaciales)
                         for _, sp in ipairs(lista) do porSub[lvl][#porSub[lvl] + 1] = sp end
                     end
                     EscribirFrame(porSub, subclass.name, SubclassColor(subclass.name, hex), iconoSub)
+                elseif casting.mode == "wizard_book" then
+                    -- MAGO: el frame se titula "Libro de conjuros", como los perfiles reales
+                    -- (Dornalei, Reena), y lleva TODO lo aprendido del libro. Es un frame EXTRA
+                    -- de clase para el orden canonico (EXTRAS_DE_CLASE ya lo conoce).
+                    EscribirFrame(porClase, class.name, hex, iconoClase, "Libro de conjuros")
+                    if subclass then
+                        EscribirFrame(porSub, subclass.name, SubclassColor(subclass.name, hex), iconoSub)
+                    end
                 else
-                    EscribirFrame(porClase, class.name, hex, ICON_MAGIC_FRAME)
+                    EscribirFrame(porClase, class.name, hex, iconoClase)
                     if subclass then
                         EscribirFrame(porSub, subclass.name, SubclassColor(subclass.name, hex), iconoSub)
                     end
@@ -838,6 +893,18 @@ local function BuildRacialMagicFrame(draft)
     if #spells == 0 then return nil end
     local race = HarfordDnDRaces.GetRace(draft.raceId)
     local subrace = HarfordDnDRaces.GetSubrace(draft.raceId, draft.subraceId)
+    -- Icono del frame: el del rasgo racial que CONCEDE la magia (Magia vil, Juicio de la
+    -- Luz...), no el generico de magia. Primer rasgo con spellGrants/trucos y arte valido.
+    local iconoRacial
+    for _, lista in ipairs({ (race and race.traits) or {}, (subrace and subrace.traits) or {} }) do
+        for _, feature in ipairs(lista) do
+            if (feature.spellGrants and #feature.spellGrants > 0)
+                or (feature.cantripSpellIds and #feature.cantripSpellIds > 0) then
+                iconoRacial = iconoRacial or IconNameParaMarkup(HarfordDnDData
+                    and HarfordDnDData.GetFeatureIcon and HarfordDnDData.GetFeatureIcon(feature))
+            end
+        end
+    end
     local raceName = NombreDeOrigen(subrace) ~= "" and NombreDeOrigen(subrace) or NombreDeOrigen(race)
     local Calc = HarfordDnDCalc
     local pb = (Calc and Calc.GetSpellPB and Calc.GetSpellPB()) or (Calc and Calc.GetPB and Calc.GetPB()) or 2
@@ -855,7 +922,7 @@ local function BuildRacialMagicFrame(draft)
         end
         out[#out + 1] = text
     end
-    return { IC = ICON_MAGIC_FRAME, TX = table.concat(out, "\n") }
+    return { IC = iconoRacial or ICON_MAGIC_FRAME, TX = table.concat(out, "\n") }
 end
 
 -- Devuelve una LISTA DE FRAMES (plantilla 2 de TRP3): cada frame = { IC=icono, TX=texto }. Replica

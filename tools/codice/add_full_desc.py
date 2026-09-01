@@ -1127,15 +1127,41 @@ _ANCLA_ETNIAS = re.compile(r"(?m)^### .*\betnias\b.*$")
 _FIN_ETNIAS = re.compile(r"(?m)^\*\*\*Edad[.:]\*\*\*")
 _NOMBRES_DE = re.compile(r"(?m)^\*{0,3}Nombres\b[^:]*:\*{0,3}\s*(.+)$")
 
+def _etnias_del_libro(nombre_raza):
+    """El tramo de etnias tal como esta en el Libro 1.
+
+    Antes salia de la propia descripcion de la raza, pero al resincronizar las
+    descripciones del addon contra la web ese apartado desaparecio y las tarjetas de
+    reino se quedaban en cero sin que nada avisara. El libro sigue teniendolo, asi que
+    se lee de ahi cuando la descripcion ya no lo trae.
+    """
+    md = io.open(MD, encoding="utf-8").read()
+    raiz = nk(nombre_raza)[:4]
+    for m in _ANCLA_ETNIAS.finditer(md):
+        if raiz and raiz in nk(m.group(0)):
+            # la seccion acaba en el siguiente apartado del mismo nivel
+            sig = re.compile(r"(?m)^### ").search(md, m.end())
+            fin = _FIN_ETNIAS.search(md, m.end())
+            cortes = [x.start() for x in (sig, fin) if x]
+            tramo = md[m.end():min(cortes) if cortes else len(md)]
+            # en el libro los reinos son de cuarto nivel; el resto espera tercero
+            return tramo.replace("\n#### ", "\n### ")
+    return None
+
 _net = 0
 for r in kb["races"]:
     texto = r.get("desc") or ""
     anc = _ANCLA_ETNIAS.search(texto)
-    if not anc:
-        continue
-    fin = _FIN_ETNIAS.search(texto)
-    corte = fin.start() if fin else len(texto)
-    tramo = texto[anc.end():corte]
+    # `rescribe`: solo se toca la descripcion si las etnias salieron de ella
+    rescribe = bool(anc)
+    if anc:
+        fin = _FIN_ETNIAS.search(texto)
+        corte = fin.start() if fin else len(texto)
+        tramo = texto[anc.end():corte]
+    else:
+        tramo = _etnias_del_libro(r["name"])
+        if not tramo:
+            continue
     primera = tramo.find("\n### ")
     if primera < 0:
         continue
@@ -1157,6 +1183,10 @@ for r in kb["races"]:
     if not etnias:
         continue
     r["ethnicities"] = etnias
+    if not rescribe:
+        _net += len(etnias)
+        print("Etnias de %s (del libro): %s" % (r["name"], ", ".join(e["name"] for e in etnias)))
+        continue
     # el titulo del libro ("Nombres y etnias humanas") anunciaba las etnias que ya no van
     # debajo, porque ahora son tarjetas: lo que queda en la prosa son los nombres
     r["desc"] = texto[:anc.start()] + "### Nombres" + tramo[:primera].rstrip() + "\n\n" + texto[corte:]

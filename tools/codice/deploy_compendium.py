@@ -101,12 +101,17 @@ for _grupo, _clave in (("clases", "classes"), ("razas", "races")):
     _textos = _res.get(_grupo) or {}
     _puestos = 0
     for _o in kb.get(_clave, []):
-        _r = _textos.get(_o["id"])
+        # se acepta el id con prefijo y sin el: los de raza lo llevan (raza_humano) y los
+        # de clase no, y asi un renombrado futuro no se lleva por delante los resumenes
+        _r = (_textos.get(_o["id"])
+              or _textos.get("raza_" + _o["id"])
+              or _textos.get(_o["id"].replace("raza_", "", 1)))
         if _r:
             _o["summary"] = _r
             _puestos += 1
     if _textos:
-        _faltan = [o["id"] for o in kb.get(_clave, []) if o["id"] not in _textos]
+        _faltan = [o["id"] for o in kb.get(_clave, [])
+                   if not (o.get("summary") or "").strip()]
         print("Resumenes de %s: %d puestos%s" % (
             _grupo, _puestos, (" | sin resumen: %s" % ", ".join(_faltan)) if _faltan else ""))
 

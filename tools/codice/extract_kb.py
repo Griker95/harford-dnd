@@ -40,11 +40,21 @@ def sin_subtablas(blk):
         j += 1
     return "".join(out)
 
+def desescapa(s):
+    """Des-escapado Lua completo: \n a salto real, \" a comilla, \\ a barra.
+
+    Las cabeceras de raza, subraza, clase y trasfondo solo deshacian las comillas, asi que
+    sus descripciones llegaban con los saltos de linea como texto literal. Eso rompia en
+    silencio todo lo que busca cabeceras por linea: las etnias humanas dejaban de salir.
+    """
+    if s is None:
+        return None
+    return re.sub(r'\\(.)', lambda e: "\n" if e.group(1) == "n" else e.group(1), s)
+
 def field(blk, key):
     m = re.search(r'\b' + key + r' = "((?:[^"\\]|\\.)*)"', blk)
     if not m: return None
-    # des-escapado Lua completo: \n -> salto real, \" -> comilla, \\ -> barra
-    return re.sub(r'\\(.)', lambda e: "\n" if e.group(1) == "n" else e.group(1), m.group(1))
+    return desescapa(m.group(1))
 
 def strlist(blk, key):
     m = re.search(r'\b' + key + r' = \{([^}]*)\}', blk)
@@ -64,7 +74,7 @@ def parse_features(region):
         om = re.search(r'options = \{', blk)
         if om:
             oreg = blk[om.end()-1:balanced(blk, om.end()-1)]
-            opts = [{"id": o.group(1), "label": o.group(2).replace('\\"', '"')}
+            opts = [{"id": o.group(1), "label": desescapa(o.group(2))}
                     for o in re.finditer(r'\{\s*id = "([^"]+)",\s*label = "((?:[^"\\]|\\.)*)"', oreg)]
             if opts: feat["options"] = opts
         out.append(feat)
@@ -107,14 +117,14 @@ for i, (pos, cid, cname, cdesc, hd) in enumerate(cstarts):
         r'(?:,\s*\w+ = (?:"(?:[^"\\]|\\.)*"|\d+|true|false|\{[^{}]*\}))*,\s*features =', sub_region))
     for j, sm in enumerate(sub_hdrs):
         s_end = sub_hdrs[j+1].start() if j+1 < len(sub_hdrs) else len(sub_region)
-        sub = {"id": sm.group(1), "name": sm.group(2), "desc": sm.group(3).replace('\\"', '"'),
+        sub = {"id": sm.group(1), "name": sm.group(2), "desc": desescapa(sm.group(3)),
                "features": parse_features(sub_region[sm.end():s_end])}
         # el Sacerdocio de Elune solo esta abierto a elfos de la noche: sin este dato el
         # lector no tiene forma de saber que la subclase esta restringida
         rr = re.search(r'\brequiredRace = "([a-z_]+)"', sm.group(0))
         if rr: sub["requiredRace"] = rr.group(1)
         subclasses.append(sub)
-    classes.append({"id": cid, "name": cname, "desc": cdesc.replace('\\"', '"'), "hitDie": int(hd),
+    classes.append({"id": cid, "name": cname, "desc": desescapa(cdesc), "hitDie": int(hd),
                     "features": parse_features(class_region), "subclasses": subclasses})
 
 # ---------- RAZAS ----------
@@ -138,7 +148,7 @@ for i, (pos, rid, rname, rdesc) in enumerate(rstarts):
         sub_hdrs = list(re.finditer(r'\{ id = "([a-z_]+)", name = "([^"]+)",' + OPC_NAMEF + r' desc = "((?:[^"\\]|\\.)*)", traits =', sub_region))
         for j, sm in enumerate(sub_hdrs):
             s_end = sub_hdrs[j+1].start() if j+1 < len(sub_hdrs) else len(sub_region)
-            subraces.append({"id": sm.group(1), "name": sm.group(2), "desc": sm.group(3).replace('\\"', '"'),
+            subraces.append({"id": sm.group(1), "name": sm.group(2), "desc": desescapa(sm.group(3)),
                              "traits": parse_features(sub_region[sm.end():s_end])})
     else:
         rest = block
@@ -147,7 +157,7 @@ for i, (pos, rid, rname, rdesc) in enumerate(rstarts):
     _size = re.search(r'size = "([^"]+)"', block[:400])
     _speed = re.search(r'speed = ([\d.]+)', block[:400])
     _fac = re.search(r'faction = "([^"]+)"', block[:400])
-    _raza = {"id": rid, "name": rname, "desc": rdesc.replace('\\"', '"'),
+    _raza = {"id": rid, "name": rname, "desc": desescapa(rdesc),
              "traits": parse_features(rest), "subraces": subraces}
     if _size: _raza["size"] = _size.group(1)
     if _speed: _raza["speed"] = float(_speed.group(1))
@@ -205,7 +215,7 @@ for i, (pos, bid, bname) in enumerate(bstarts):
     # de donde sale el trasfondo (PHB, SCAG, Warcraft o propio de Harford): el addon lo
     # marca y el compendio lo tiraba, asi que el lector no sabia cual era cual
     sm = re.search(r'\bsource = "([^"]+)"', block.split("traits =")[0])
-    bgs.append({"id": bid, "name": bname, "desc": (dm.group(1).replace('\\"', '"') if dm else ""),
+    bgs.append({"id": bid, "name": bname, "desc": desescapa((dm.group(1)) if dm else ""),
                 "source": sm.group(1) if sm else None,
                 "skills": _competencias(block)[0], "tools": _competencias(block)[1],
                 "traits": parse_features(block)})

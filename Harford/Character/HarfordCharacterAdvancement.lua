@@ -2730,7 +2730,10 @@ ApplyModeLayout = function()
     if not S.frame then return end
     local layout
     if IsLevelUpMode() then
-        layout = "list"
+        -- La seleccion de clase en subida usa TARJETAS (las mismas que en creacion), no la
+        -- lista de botones de antes: con el ancho "list" el divisor y el panel derecho caian
+        -- DENTRO de la segunda columna de tarjetas y todo se acoplaba.
+        layout = S.stage == "class" and "class" or "list"
     elseif S.stage == "attributes" or S.stage == "race_choices" or S.stage == "background_choices"
         or S.stage == "equipment" then
         -- Equipo tambien va sin columna de lista: sus grupos se pintan enteros en el detalle y la

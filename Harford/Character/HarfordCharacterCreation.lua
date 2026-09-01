@@ -361,12 +361,37 @@ local function GetRaceTraits(draft)
     return out
 end
 
+-- Rasgos de trasfondo PARA EL ABOUT: solo el rasgo caracteristico (Herencia, Descubrimiento,
+-- Vida mercenaria...) acompaña a la descripcion. Los LISTADOS -- competencias, idiomas,
+-- herramientas, equipo y las elecciones -- son cosa del creador y del Libro, no de la ficha
+-- publica: en el About solo ensuciaban el frame. Un rasgo caracteristico se reconoce por ser
+-- pasivo, sin efectos mecanicos y sin nombre de listado.
+local function EsRasgoDeAbout(feature)
+    if type(feature) ~= "table" then return false end
+    if feature.choice then return false end
+    if type(feature.effects) == "table" and #feature.effects > 0 then return false end
+    local nombre = tostring(feature.name or "")
+    if HarfordClassColors and HarfordClassColors.StripAccents then
+        nombre = HarfordClassColors.StripAccents(nombre)
+    end
+    nombre = nombre:lower()
+    for _, listado in ipairs({ "^competencia", "^equipo", "^equipamiento", "^idioma",
+        "^herramienta", "^juego", "^habilidad", "^instrumento" }) do
+        if nombre:find(listado) then return false end
+    end
+    return true
+end
+
 local function GetBackgroundTraits(draft)
     local out = {}
     local traits = HarfordDnDBackgrounds.ResolveTraits
         and HarfordDnDBackgrounds.ResolveTraits(draft.backgroundId, draft.backgroundVariantId)
         or ((HarfordDnDBackgrounds.GetBackground(draft.backgroundId) or {}).traits) or {}
-    for _, feature in ipairs(traits) do out[#out + 1] = { feature = feature, source = "Trasfondo" } end
+    for _, feature in ipairs(traits) do
+        if EsRasgoDeAbout(feature) then
+            out[#out + 1] = { feature = feature, source = "Trasfondo" }
+        end
+    end
     return out
 end
 

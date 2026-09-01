@@ -122,6 +122,10 @@ _ps = 0
 for _r in kb.get("races", []):
     for _s in _r.get("subraces", []) or []:
         _t = _subs.get(_s["id"]) or _subs.get("raza_" + _s["id"])
+        # `=raza`: la subraza BASE -la que no cambia nada respecto a su pueblo- muestra el
+        # resumen de la raza. Se guarda el marcador y no una copia para que no se separen.
+        if _t == "=raza":
+            _t = _r.get("summary") or (_res.get("razas") or {}).get(_r["id"])
         if _t:
             _s["summary"] = _t
             _ps += 1

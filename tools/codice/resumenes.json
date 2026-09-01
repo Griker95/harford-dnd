@@ -55,7 +55,8 @@
   "raza_trol_jungla": "Troll de los pueblos selváticos, marcado por una cultura tribal, guerrera y religiosa en la que los loa, el vudú y la supervivencia ocupan un lugar central.",
   "raza_trol_zandalari": "Troll heredero de una antigua civilización imperial, con una cultura sofisticada, una fuerte tradición religiosa y una estrecha relación con los loa.",
   "raza_trol_bosque": "Troll adaptado a regiones boscosas y heredero de culturas como la Amani, con una larga tradición guerrera y una profunda hostilidad histórica hacia los altos elfos.",
-  "raza_trol_hielo": "Troll adaptado a regiones frías y montañosas, perteneciente a tribus endurecidas por el clima y caracterizadas por su resistencia, aislamiento y tradición guerrera."
+  "raza_trol_hielo": "Troll adaptado a regiones frías y montañosas, perteneciente a tribus endurecidas por el clima y caracterizadas por su resistencia, aislamiento y tradición guerrera.",
+  "raza_elfo_noche_kaldorei": "=raza"
  },
  "subclases": {
   "guerrero": {

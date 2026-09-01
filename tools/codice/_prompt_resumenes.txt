@@ -1,0 +1,114 @@
+Necesito un resumen de una o dos frases para cada entrada de un compendio de D&D 5e
+ambientado en Warcraft (en español). Se muestra junto al nombre, como presentación.
+
+REGLAS
+- Registro enciclopédico: tercera persona, neutro, informativo. Nada de giros
+  literarios ni coloquiales. La frase dice lo que es, no lo adorna.
+- Clases y razas: 140-180 caracteres. Subclases y subrazas: 90-150.
+- Cada resumen dice QUÉ ES y CÓMO SE REPARTE en sus especializaciones o ramas.
+- En las clases, indica si lanza conjuros o no (te lo doy en la lista).
+- NO inventes topónimos en español. Si no conoces el nombre oficial de un lugar en
+  la versión española de WoW, describe el hecho sin nombrarlo.
+- Apóyate en el lore real de Warcraft, no en paráfrasis del nombre.
+
+=== 12 CLASES (dado de golpe, si lanza conjuros, y sus especializaciones) ===
+- Guerrero | d10 | SIN conjuros | Armas, Ira, Protección
+- Cazador | d10 | SIN conjuros | Bestias, Puntería, Supervivencia
+- Mago | d6 | lanza conjuros | Arcano, Fuego, Escarcha
+- Pícaro | d8 | lanza conjuros | Asesinato, Forajido, Sutileza
+- Sacerdote | d6 | lanza conjuros | Disciplina, Sagrado, Sombra, Sacerdocio de Elune
+- Brujo | d8 | lanza conjuros | Aflicción, Demonología, Destrucción
+- Paladín | d10 | lanza conjuros | Sagrado, Protección, Represión
+- Druida | d8 | lanza conjuros | Equilibrio, Feral, Restauración
+- Chamán | d8 | lanza conjuros | Elemental, Mejora, Restauración
+- Monje | d8 | SIN conjuros | Maestro cervecero, Tejedor de niebla, Viajero del viento
+- Cazador de Demonios | d8 | SIN conjuros | Devastación, Venganza, Ira
+- Caballero de la Muerte | d10 | lanza conjuros | Sangre, Escarcha, Profano
+
+=== 37 SUBCLASES (agrupadas por clase) ===
+- Guerrero > Armas
+- Guerrero > Ira
+- Guerrero > Protección
+- Cazador > Bestias
+- Cazador > Puntería
+- Cazador > Supervivencia
+- Mago > Arcano
+- Mago > Fuego
+- Mago > Escarcha
+- Pícaro > Asesinato
+- Pícaro > Forajido
+- Pícaro > Sutileza
+- Sacerdote > Disciplina
+- Sacerdote > Sagrado
+- Sacerdote > Sombra
+- Sacerdote > Sacerdocio de Elune
+- Brujo > Aflicción
+- Brujo > Demonología
+- Brujo > Destrucción
+- Paladín > Sagrado
+- Paladín > Protección
+- Paladín > Represión
+- Druida > Equilibrio
+- Druida > Feral
+- Druida > Restauración
+- Chamán > Elemental
+- Chamán > Mejora
+- Chamán > Restauración
+- Monje > Maestro cervecero
+- Monje > Tejedor de niebla
+- Monje > Viajero del viento
+- Cazador de Demonios > Devastación
+- Cazador de Demonios > Venganza
+- Cazador de Demonios > Ira
+- Caballero de la Muerte > Sangre
+- Caballero de la Muerte > Escarcha
+- Caballero de la Muerte > Profano
+
+=== 17 RAZAS (facción y sus subrazas) ===
+- Humano | alianza | sin subrazas
+- Enano | alianza | Enano de Forjaz, Enano Martillo Salvaje, Enano Hierro Negro
+- Elfo de la Noche | alianza | Altonato
+- Semielfo | aliada | sin subrazas
+- Gnomo | alianza | Gnomo de Gnomeregan, Mecagnomo
+- Draenei | alianza | Draenei del Exodar, Draenei Forjado por la Luz, Draenei Tábido, Man'ari
+- Huargen | alianza | sin subrazas
+- Orco | horda | Clanes Cazadores, Clanes Místicos, Clanes Guerreros
+- Renegado | horda | Renegado Humano, Renegado Elfo
+- Tauren | horda | Tauren de Mulgore, Tauren de Monte Alto, Taunka
+- Troll | horda | Troll de la Jungla, Troll Zandalari, Troll de Bosque, Troll de Hielo
+- Elfo de Sangre | horda | sin subrazas
+- Goblin | horda | sin subrazas
+- Pandaren | aliada | sin subrazas
+- Nocheterna | aliada | sin subrazas
+- Elfo del Vacío | aliada | sin subrazas
+- Vulpera | aliada | sin subrazas
+
+=== 22 SUBRAZAS (agrupadas por raza) ===
+- Enano > Enano de Forjaz
+- Enano > Enano Martillo Salvaje
+- Enano > Enano Hierro Negro
+- Elfo de la Noche > Altonato
+- Gnomo > Gnomo de Gnomeregan
+- Gnomo > Mecagnomo
+- Draenei > Draenei del Exodar
+- Draenei > Draenei Forjado por la Luz
+- Draenei > Draenei Tábido
+- Draenei > Man'ari
+- Orco > Clanes Cazadores
+- Orco > Clanes Místicos
+- Orco > Clanes Guerreros
+- Renegado > Renegado Humano
+- Renegado > Renegado Elfo
+- Tauren > Tauren de Mulgore
+- Tauren > Tauren de Monte Alto
+- Tauren > Taunka
+- Troll > Troll de la Jungla
+- Troll > Troll Zandalari
+- Troll > Troll de Bosque
+- Troll > Troll de Hielo
+
+NOTA: los tres grupos de clanes orcos y los dos linajes de Renegado son una
+división propia de este manual, no de Warcraft: los clanes que agrupan son
+Cazadores (Mano Destrozada, Foso Sangrante), Místicos (Sombraluna,
+Reavizatormentas) y Guerreros (Grito de Guerra, Hoja Ardiente, Lobo Gélido).
+El Sacerdocio de Elune también es propio y está restringido a elfos de la noche.

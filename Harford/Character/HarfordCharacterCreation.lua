@@ -471,23 +471,45 @@ local function BuildTraitLines(traits, draft)
                     and HarfordDnDBookText.GetFeatureDescription(feature, entry.classId, entry.source, draft.backgroundId, true)
                     or feature.description
             end
-            if feature.type == "maniobra" then
-                local hexClase = COL_TAG
+            local hexClase = COL_TAG
+            do
                 local clase = entry.classId and HarfordDnDBook and HarfordDnDBook.GetClass
                     and HarfordDnDBook.GetClass(entry.classId)
                 if clase and clase.name then hexClase = ClassHex(clase.name) end
+            end
+            -- Eleccion de UN slot ya resuelta: formato de los perfiles reales ({Reserva}
+            -- Meneldor) — la opcion va EN la cabecera coloreada ("Estilo de combate
+            -- {col}Gran Arma{/col}") y el cuerpo es la regla de la opcion: su desc, o la nota
+            -- entre parentesis del label, o la descripcion del rasgo como ultimo recurso.
+            local inlineTitulo, inlineCuerpo
+            if feature.choice then
+                local slots = HarfordDnDBook.GetChoiceSlots and HarfordDnDBook.GetChoiceSlots(feature) or 1
+                local elegidos = draft.choices[tostring(feature.id or "")] or {}
+                if slots == 1 and #elegidos == 1 then
+                    local option = HarfordDnDBook.GetChoiceOption(feature, elegidos[1])
+                    if option then
+                        local label = tostring(option.label or elegidos[1])
+                        local corto = Trim(label:match("^(.-)%s*%(") or label)
+                        local nota = label:match("%((.-)%)")
+                        inlineTitulo = " {col:" .. hexClase .. "}" .. corto .. "{/col}"
+                        inlineCuerpo = Trim(option.desc or option.description)
+                        if inlineCuerpo == "" and nota then inlineCuerpo = Trim(nota) end
+                    end
+                end
+            end
+            if feature.type == "maniobra" then
                 lines[#lines + 1] = "{h3}{icon:" .. FeatureIconName(feature) .. ":25}{col:" .. hexClase
                     .. "} Maniobra{/col}{col:" .. COL_NEG .. "} "
                     .. tostring(feature.name or "Maniobra") .. "{/col}{/h3}"
             else
                 lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "
-                    .. TituloDeRasgo(feature.name) .. "{/h2}"
+                    .. TituloDeRasgo(feature.name) .. (inlineTitulo or "") .. "{/h2}"
             end
             -- Opciones ELEGIDAS con texto propio (Metamagia, Palabras...): cada una sale como
             -- bloque con su icono y su descripcion, como en los perfiles reales. Las que no
             -- tienen texto se resumen en la linea "Eleccion: X" de siempre.
             local bloques, sinTexto = {}, {}
-            if feature.choice then
+            if feature.choice and not inlineTitulo then
                 for _, optionId in ipairs(draft.choices[tostring(feature.id or "")] or {}) do
                     local option = HarfordDnDBook.GetChoiceOption(feature, optionId)
                     local descOpcion = Trim(option and (option.desc or option.description))
@@ -501,12 +523,16 @@ local function BuildTraitLines(traits, draft)
                 end
             end
             local colaEleccion = ""
-            if feature.choice and #bloques == 0 then
+            if feature.choice and not inlineTitulo and #bloques == 0 then
                 colaEleccion = ChoiceText(feature, draft.choices)
             elseif #sinTexto > 0 then
                 colaEleccion = " Eleccion: " .. table.concat(sinTexto, ", ") .. "."
             end
-            lines[#lines + 1] = ColorizeDescription(Trim(description)) .. colaEleccion
+            if inlineTitulo and inlineCuerpo and inlineCuerpo ~= "" then
+                lines[#lines + 1] = ColorizeDescription(inlineCuerpo)
+            else
+                lines[#lines + 1] = ColorizeDescription(Trim(description)) .. colaEleccion
+            end
             for _, bloque in ipairs(bloques) do lines[#lines + 1] = bloque end
         end
     end

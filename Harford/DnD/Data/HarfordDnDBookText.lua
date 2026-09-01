@@ -1265,7 +1265,7 @@ Prefieren tácticas de emboscada, como los clanes Mano Destrozada y Foso Sangran
 ***Ataque Sorpresa.*** Si sorprendes a una criatura y la atacas en tu primer turno, infliges 1d6 de daño extra (aumenta con niveles).
 
 #### Clanes Místicos  
-Raramente practican magia y suelen ser nómadas. Ejemplos: Sombraluna, Reavizatormentas.
+Raramente practican magia y suelen ser nómadas. Ejemplos: Sombraluna, Cazatormentas.
 
 ***Incremento de caracteristica.*** Inteligencia o Sabiduria +1.
 

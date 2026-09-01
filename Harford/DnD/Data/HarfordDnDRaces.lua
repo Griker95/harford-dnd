@@ -218,7 +218,7 @@ API.RACES = {
                     { kind = "conditionalWeaponDamage", id = "surprise_attack", label = "Ataque Sorpresa", count = 1, die = 6 },
                 } },
             } },
-            { id = "raza_orco_misticos", name = "Clanes Misticos", desc = "Orcos de los clanes místicos: videntes y chamanes en contacto con los ancestros y los elementos.\n\nRaramente practican magia y suelen ser nómadas. Ejemplos: Sombraluna, Reavizatormentas.", summary = "Clanes orcos como Sombraluna y Cazatormentas, ligados al chamanismo, la espiritualidad y al estudio de fuerzas sobrenaturales y ancestrales.", traits = {
+            { id = "raza_orco_misticos", name = "Clanes Misticos", desc = "Orcos de los clanes místicos: videntes y chamanes en contacto con los ancestros y los elementos.\n\nRaramente practican magia y suelen ser nómadas. Ejemplos: Sombraluna, Cazatormentas.", summary = "Clanes orcos como Sombraluna y Cazatormentas, ligados al chamanismo, la espiritualidad y al estudio de fuerzas sobrenaturales y ancestrales.", traits = {
                 { id = "orc_mis_inc", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Sabiduría +1.", effects = {}, choice = {
                     slots = 1,
                     options = {

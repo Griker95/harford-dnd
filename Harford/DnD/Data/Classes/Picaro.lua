@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "picaro", name = "Picaro", desc = "Especialista en llegar donde nadie mira: sigilo, cerraduras y emboscadas. Golpea una vez y fuerte, y se va antes de que le respondan.", hitDie = 8, startingGold = { dice = 4, sides = 4, multiplier = 1 },
+    id = "picaro", name = "Picaro", nameF = "Pícara", desc = "Especialista en llegar donde nadie mira: sigilo, cerraduras y emboscadas. Golpea una vez y fuerte, y se va antes de que le respondan.", hitDie = 8, startingGold = { dice = 4, sides = 4, multiplier = 1 },
     -- Herramientas de clase segun el manual.
     toolProfs = { "Herramientas de ladron" },
     startingEquipment = {
@@ -45,7 +45,7 @@ API.CLASSES[#API.CLASSES + 1] =
                 { kind = "conditionalWeaponDamage", id = "assassin_intuition", label = "Intuicion del Asesino", flatBonus = "level", flatClassId = "picaro" },
             } },
         } },
-        { id = "forajido", name = "Forajido", desc = "Combate audaz con armas de fuego y trucos sucios.", features = {
+        { id = "forajido", name = "Forajido", nameF = "Forajida", desc = "Combate audaz con armas de fuego y trucos sucios.", features = {
             { id = "pic_for_competencia", level = 3, name = "Competencia con armas de fuego", type = "pasivo", description = "Obtienes competencia con pistolas y rifles.", effects = WeaponProfEffects("pistolas", "rifles") },
             { id = "pic_for_alacridad", level = 3, name = "Alacridad", type = "pasivo", description = "Cuando eliges este arquetipo en el nivel 3, tu confianza te impulsa al combate. Puedes darte un bono a tus tiradas de iniciativa igual a Mod. Carisma.\n\nAdemás, aprendes cómo golpear y retirarte sin represalias. Durante tu turno, si haces un ataque cuerpo a cuerpo contra una criatura, esa criatura no puede hacer ataques de oportunidad contra ti durante el resto de tu turno.", effects = {
                 { kind = "initiativeAbility", ability = "Carisma" },

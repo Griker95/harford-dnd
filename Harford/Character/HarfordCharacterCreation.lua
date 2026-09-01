@@ -222,6 +222,16 @@ end
 -- respetar el sexo del PJ igual que el About (los iconos ya lo hacian; el texto no).
 API.NombreDeOrigen = NombreDeOrigen
 
+-- Nombre de clase/subclase segun el sexo del PJ ({Reserva} Daiquiri: "Picara Forajida").
+-- Solo DISPLAY: los lookups de color/icono/casting siguen usando el nombre masculino, y los
+-- lectores ya toleran femenino (Masculinize).
+local function NombreClase(def)
+    if type(def) ~= "table" then return "" end
+    local femenino = UnitSex and UnitSex("player") == 3
+    if femenino and def.nameF and def.nameF ~= "" then return tostring(def.nameF) end
+    return tostring(def.name or "")
+end
+
 local function SubclassColor(subName, classHex)
     local key = HarfordClassColors and HarfordClassColors.StripAccents
         and HarfordClassColors.StripAccents(tostring(subName or "")):lower() or tostring(subName or ""):lower()
@@ -891,19 +901,19 @@ local function BuildMagicFrames(profileName, idsRaciales)
                         porSub[lvl] = porSub[lvl] or {}
                         for _, sp in ipairs(lista) do porSub[lvl][#porSub[lvl] + 1] = sp end
                     end
-                    EscribirFrame(porSub, subclass.name, SubclassColor(subclass.name, hex), iconoSub)
+                    EscribirFrame(porSub, NombreClase(subclass), SubclassColor(subclass.name, hex), iconoSub)
                 elseif casting.mode == "wizard_book" then
                     -- MAGO: el frame se titula "Libro de conjuros", como los perfiles reales
                     -- (Dornalei, Reena), y lleva TODO lo aprendido del libro. Es un frame EXTRA
                     -- de clase para el orden canonico (EXTRAS_DE_CLASE ya lo conoce).
-                    EscribirFrame(porClase, class.name, hex, iconoClase, "Libro de conjuros")
+                    EscribirFrame(porClase, NombreClase(class), hex, iconoClase, "Libro de conjuros")
                     if subclass then
-                        EscribirFrame(porSub, subclass.name, SubclassColor(subclass.name, hex), iconoSub)
+                        EscribirFrame(porSub, NombreClase(subclass), SubclassColor(subclass.name, hex), iconoSub)
                     end
                 else
-                    EscribirFrame(porClase, class.name, hex, iconoClase)
+                    EscribirFrame(porClase, NombreClase(class), hex, iconoClase)
                     if subclass then
-                        EscribirFrame(porSub, subclass.name, SubclassColor(subclass.name, hex), iconoSub)
+                        EscribirFrame(porSub, NombreClase(subclass), SubclassColor(subclass.name, hex), iconoSub)
                     end
                 end
             end
@@ -1030,9 +1040,9 @@ function API.BuildAbout(draft, profileName)
         local subclass = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
         local hex = ClassHex(class.name)
         local line = "{h2}{icon:classicon_" .. ClassIconToken(class.name) .. ":25}{col:" .. hex .. "} "
-            .. tostring(class.name) .. "{/col}"
+            .. NombreClase(class) .. "{/col}"
         if subclass then
-            line = line .. "{col:" .. SubclassColor(subclass.name, hex) .. "} " .. tostring(subclass.name) .. "{/col}"
+            line = line .. "{col:" .. SubclassColor(subclass.name, hex) .. "} " .. NombreClase(subclass) .. "{/col}"
         end
         ficha[#ficha + 1] = line .. " (" .. tostring(entry.level) .. "){/h2}"
     end
@@ -1220,7 +1230,7 @@ function API.BuildAbout(draft, profileName)
         local body = BuildTraitLines(traits, draft)
         if class and body ~= "" then
             local hex = ClassHex(class.name)
-            local lines = { "{h1:c}{col:" .. hex .. "}" .. tostring(class.name) .. "{/col}{/h1}", body }
+            local lines = { "{h1:c}{col:" .. hex .. "}" .. NombreClase(class) .. "{/col}{/h1}", body }
             frames[#frames + 1] = { IC = "classicon_" .. ClassIconToken(class.name), TX = table.concat(lines, "\n") }
         end
         -- Frame propio de la especializacion, justo detras del de su clase.
@@ -1232,9 +1242,9 @@ function API.BuildAbout(draft, profileName)
                 -- ("Picaro Asesinato"). El formato viejo "Especializacion <Sub>" se sigue
                 -- LEYENDO (TituloRango) para los perfiles anteriores; solo cambia lo escrito.
                 local lines = {
-                    "{h1:c}{col:" .. hex .. "}" .. tostring(class.name) .. "{/col} {col:"
+                    "{h1:c}{col:" .. hex .. "}" .. NombreClase(class) .. "{/col} {col:"
                         .. SubclassColor(subclass.name, hex) .. "}"
-                        .. tostring(subclass.name) .. "{/col}{/h1}",
+                        .. NombreClase(subclass) .. "{/col}{/h1}",
                     subBody,
                 }
                 local icono = IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetSubclassIcon

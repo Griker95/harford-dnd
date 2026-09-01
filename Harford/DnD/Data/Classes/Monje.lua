@@ -28,7 +28,7 @@ API.CLASSES[#API.CLASSES + 1] =
     armorProfs = { "ligera" },
     weaponProfs = { "sencillas", "espadas cortas" },
     subclasses = {
-        { id = "cervecero", name = "Maestro cervecero", desc = "Muro resistente que aguanta y dispersa el daño.", features = {
+        { id = "cervecero", name = "Maestro cervecero", nameF = "Maestra cervecera", desc = "Muro resistente que aguanta y dispersa el daño.", features = {
             { id = "monje_cer_competencia", level = 3, name = "Competencia adicional (cervecero)", type = "pasivo", description = "A partir del 3er nivel, obtienes competencia con herramientas de cervecero. Si ya eres competente con estas herramientas, tu bonificación de competencia se duplica para cualquier prueba de habilidad que hagas con ellas.", effects = {
                 { kind = "toolProf", tool = "Herramientas de cervecero" },
             } },
@@ -49,7 +49,7 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "monje_cer_elaboracion_ligera", icon = "inv_drink_13", level = 11, name = "Elaboración Ligera", type = "informativo", description = "A partir del 11º nivel, cuando usas tu acción para beber un brebaje, puedes realizar un golpe desarmado como acción adicional. En el 17º nivel, esto aumenta a dos golpes desarmados.", effects = {} },
             { id = "monje_cer_brebajes_elusivos", icon = "spell_monk_brewmaster_spec", level = 11, name = "Brebajes Elusivos", type = "informativo", description = "Los brebajes elusivos se presentan en orden alfabético. Si un brebaje requiere un nivel, debes tener ese nivel en esta clase para aprender el brebaje. ***Brebaje del Buey Negro.*** Puedes gastar 1 punto de chi para darte ventaja en el próximo ataque cuerpo a cuerpo que realices dentro de 1 minuto. Puedes realizar un ataque cuerpo a cuerpo como parte de la misma acción. ***Brebaje del Desmayo (Requiere 11º nivel).*** Puedes gastar 3 puntos de chi para obtener los efectos del hechizo *desenfoque* durante 1 minuto. ***Aliento de Fuego (Requiere 6º nivel).*** Puedes gastar 2 puntos de chi para exhalar fuego en un cono de 4,5 metros. Cada criatura en el área debe realizar una tirada de salvación de Destreza, recibiendo daño por fuego igual a tu nivel de Monje + Mod. Sabiduría si falla la tirada, o la mitad de daño si tiene éxito.", effects = {} },
         } },
-        { id = "tejedor", name = "Tejedor de niebla", desc = "Sanacion y apoyo mediante nieblas restauradoras.", features = {
+        { id = "tejedor", name = "Tejedor de niebla", nameF = "Tejedora de niebla", desc = "Sanacion y apoyo mediante nieblas restauradoras.", features = {
             { id = "monje_tej_niebla_calmante", level = 3, name = "Niebla reconfortante", cast = "accion", type = "accion", description = "Reserva de chi sanador (= nivel x 10 PG). Acción: rayo a 9 metros que cura; o gasta 5 para curar enfermedad/veneno. Recarga en descanso largo.",
                 -- La cantidad la ELIGE el jugador: el manual dice "hasta el maximo que quede en tu
                 -- reservorio", asi que no hay una cifra que declarar aqui. Los escalones son solo

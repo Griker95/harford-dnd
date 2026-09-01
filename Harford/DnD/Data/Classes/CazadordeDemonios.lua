@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "cazador_demonios", name = "Cazador de Demonios", desc = "No se entrena: se crea. Lleva atada el alma de un demonio y los ojos quemados, y vuelve esa energía vil contra la Legión, a dos hojas y a velocidad inhumana.", hitDie = 8, startingGold = { dice = 2, sides = 4, multiplier = 1 },
+    id = "cazador_demonios", name = "Cazador de Demonios", nameF = "Cazadora de Demonios", desc = "No se entrena: se crea. Lleva atada el alma de un demonio y los ojos quemados, y vuelve esa energía vil contra la Legión, a dos hojas y a velocidad inhumana.", hitDie = 8, startingGold = { dice = 2, sides = 4, multiplier = 1 },
     -- Idioma que concede la clase (rasgo de nivel 1 del manual).
     languages = { "Eredun" },
     startingEquipment = {

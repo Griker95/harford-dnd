@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "sacerdote", name = "Sacerdote", desc = "Canaliza la fe para curar, escudar y castigar. Según su devoción tira de la Luz, de la Sombra o de Elune.", hitDie = 6, casterType = "full", startingGold = { dice = 4, sides = 4, multiplier = 1 },
+    id = "sacerdote", name = "Sacerdote", nameF = "Sacerdotisa", desc = "Canaliza la fe para curar, escudar y castigar. Según su devoción tira de la Luz, de la Sombra o de Elune.", hitDie = 6, casterType = "full", startingGold = { dice = 4, sides = 4, multiplier = 1 },
     -- Herramientas de clase segun el manual.
     toolProfs = { "Kit de herborista" },
     startingEquipment = {

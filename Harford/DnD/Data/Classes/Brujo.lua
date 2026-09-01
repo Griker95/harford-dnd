@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "brujo", name = "Brujo", desc = "Esclaviza demonios y porta el vil: una magia que es un pacto, corrompe la mente y profana la tierra. Prohibida casi en todas partes, se practica a escondidas.", hitDie = 8, casterType = "pact", startingGold = { dice = 4, sides = 4, multiplier = 1 },
+    id = "brujo", name = "Brujo", nameF = "Bruja", desc = "Esclaviza demonios y porta el vil: una magia que es un pacto, corrompe la mente y profana la tierra. Prohibida casi en todas partes, se practica a escondidas.", hitDie = 8, casterType = "pact", startingGold = { dice = 4, sides = 4, multiplier = 1 },
     -- Idioma que concede la clase (rasgo de nivel 1 del manual).
     languages = { "Eredun" },
     startingEquipment = {

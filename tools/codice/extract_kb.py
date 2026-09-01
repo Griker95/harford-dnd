@@ -141,6 +141,9 @@ for i, (pos, cid, cname, cdesc, hd) in enumerate(cstarts):
 # `nameF` (nombre en femenino) es un campo opcional que va entre `name` y `desc`.
 # Sin contemplarlo, las razas que lo declaran no se reconocian.
 OPC_NAMEF = r'(?:\s*nameF = "[^"]*",)?'
+# Entre `desc` y `traits` puede colarse cualquier campo -hoy `summary`-. Exigirlos
+# pegados dejo las 23 subrazas en CERO el dia que se importaron los resumenes.
+OPC_CAMPOS = r'(?:\s*[a-zA-Z]+ = (?:"(?:[^"\\]|\\.)*"|\{[^{}]*\}|[\w.]+),)*'
 races_txt = rd("HarfordDnDRaces.lua")
 race_hdr = re.compile(r'id = "([a-z_]+)", name = "([^"]+)",' + OPC_NAMEF + r' desc = "((?:[^"\\]|\\.)*)", faction')
 races = []
@@ -155,7 +158,7 @@ for i, (pos, rid, rname, rdesc) in enumerate(rstarts):
         s = block.index("{", ms.start())
         sub_region = block[s:balanced(block, s)]
         rest = block[:ms.start()] + block[s + len(sub_region):]
-        sub_hdrs = list(re.finditer(r'\{ id = "([a-z_]+)", name = "([^"]+)",' + OPC_NAMEF + r' desc = "((?:[^"\\]|\\.)*)", traits =', sub_region))
+        sub_hdrs = list(re.finditer(r'\{ id = "([a-z_]+)", name = "([^"]+)",' + OPC_NAMEF + r' desc = "((?:[^"\\]|\\.)*)",' + OPC_CAMPOS + r'\s*traits =', sub_region))
         for j, sm in enumerate(sub_hdrs):
             s_end = sub_hdrs[j+1].start() if j+1 < len(sub_hdrs) else len(sub_region)
             subraces.append({"id": sm.group(1), "name": sm.group(2), "desc": desescapa(sm.group(3)),
@@ -221,6 +224,13 @@ bstarts = [(m.start(), m.group(1), m.group(2)) for m in bg_hdr.finditer(bg_txt)]
 for i, (pos, bid, bname) in enumerate(bstarts):
     end = bstarts[i+1][0] if i+1 < len(bstarts) else len(bg_txt)
     block = bg_txt[pos:end]
+    # Las variantes viven DENTRO del bloque del trasfondo. Si no se recortan, sus rasgos y
+    # sus competencias se leen como del trasfondo base: "Espiritu Harford" salia entre los
+    # rasgos del Mercenario veterano. Mismo recorte que se hace con las subrazas.
+    _mv = re.search(r"\bvariants = \{", block)   # puede ir inline, tras el `name`
+    if _mv:
+        _s = block.index("{", _mv.start())
+        block = block[:_mv.start()] + block[_s + len(block[_s:balanced(block, _s)]):]
     dm = re.search(r'\bdesc = "((?:[^"\\]|\\.)*)"', block.split("traits =")[0])
     # de donde sale el trasfondo (PHB, SCAG, Warcraft o propio de Harford): el addon lo
     # marca y el compendio lo tiraba, asi que el lector no sabia cual era cual

@@ -150,6 +150,36 @@ for _grupo, _clave in (("clases", "classes"), ("razas", "races")):
         print("Resumenes de %s: %d puestos%s" % (
             _grupo, _puestos, (" | sin resumen: %s" % ", ".join(_faltan)) if _faltan else ""))
 
+# ---- SEGURO DE VUELCO, NIVELES ANIDADOS ----
+# El seguro de arriba solo mira las colecciones de primer nivel, y ahi no se ve el fallo
+# tipico: 17 razas siguen siendo 17 aunque se hayan quedado sin una sola subraza. Los tres
+# desplomes de hoy -subrazas, dotes, iconos- eran todos de nivel anidado.
+def _anidados(kbx):
+    c = {"subclasses": 0, "subraces": 0, "variants": 0, "features": 0, "traits": 0}
+    for _n in ("classes", "races", "backgrounds"):
+        for _o in kbx.get(_n, []):
+            for _k in c:
+                c[_k] += len(_o.get(_k) or [])
+                for _h in ("subclasses", "subraces", "variants"):
+                    for _s in _o.get(_h) or []:
+                        c[_k] += len(_s.get(_k) or []) if _k in ("features", "traits") else 0
+    return c
+
+try:
+    _pub = io.open(os.path.join(WEB, "js", "compendium-data.js"), encoding="utf-8").read()
+    _antes = _anidados(json.loads(_pub[_pub.index("{"):_pub.rindex("}") + 1]))
+    _ahora = _anidados(kb)
+    _caidas = ["%s %d -> %d" % (k, _antes[k], _ahora[k])
+               for k in _antes if _antes[k] and _ahora[k] < _antes[k] * 0.8]
+    if _caidas:
+        raise SystemExit("ABORTADO: se desploma un nivel anidado (%s). Suele ser que el "
+                         "extractor dejo de reconocer la cabecera por un campo nuevo en "
+                         "medio; revisa antes de publicar." % "; ".join(_caidas))
+except SystemExit:
+    raise
+except Exception:
+    pass
+
 io.open(os.path.join(WEB, "js", "compendium-data.js"), "w", encoding="utf-8").write(
     "window.HARFORD_COMPENDIUM = " + json.dumps(kb, ensure_ascii=False, indent=1) + ";\n")
 

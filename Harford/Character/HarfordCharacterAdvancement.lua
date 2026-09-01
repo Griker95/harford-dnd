@@ -1028,7 +1028,7 @@ RefreshOrigin = function()
     local descTexto = def.summary or def.desc
     if isRace then
         local sub = HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
-        if sub and tostring(sub.desc or "") ~= "" then descTexto = sub.desc end
+        if sub then descTexto = sub.summary or ((tostring(sub.desc or "") ~= "") and sub.desc) or descTexto end
     else
         -- Variante de trasfondo elegida: manda su descripcion (Gladiador cuenta lo suyo,
         -- no repite el texto del Animador). El "base" no tiene desc propia: texto del padre.

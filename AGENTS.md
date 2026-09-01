@@ -33,11 +33,14 @@ Documentos hermanos: **`ESTRUCTURA.md`** es el organigrama de modulos (que hace 
   los RECUENTOS tras regenerar (12 clases, 17 razas, 52 trasfondos, 77 dotes, 44 profesiones).
   El daño es latente: la web publicada no lo enseña hasta el siguiente rebuild.
 
-- **Etnias humanas fuera del addon (2026-09-01)**: al resincronizar descripciones contra la
-  web, el apartado `### Nombres y etnias humanas` del Humano en `HarfordDnDRaces.lua` paso a
-  `### Nombres` y los siete reinos se perdieron. El pipeline del codice las lee ahora del
-  Libro 1 (que si las conserva). DECISION PENDIENTE del usuario: si la fuente debe volver a
-  ser el addon, hay que devolver ese apartado (esta en el git anterior al cotejo 2026-08-29).
+- **Etnias humanas: su fuente es el LIBRO 1, no el addon (2026-09-01)**: el apartado
+  `### Nombres y etnias humanas` (los siete reinos) nunca estuvo en `HarfordDnDRaces.lua`
+  (verificado con `git log -S`): salia de `add_full_desc.py`, que SUSTITUIA la descripcion
+  del addon por el capitulo del Libro 1 cuando este era mas largo. El cotejo del 2026-08-29
+  dejo las descripciones del addon largas, asi que ese reemplazo dejo de aplicarse — eso es
+  lo que cambio de verdad: **la descripcion larga del addon manda ahora sobre el capitulo del
+  libro**. El pipeline del codice lee las etnias directamente del Libro 1 cuando la
+  descripcion no las trae, que es la fuente correcta y la unica que las ha tenido.
 
 - **Hook de pre-commit compartido (2026-08-29)**: el repo versiona `tools/hooks/pre-commit`,
   que ejecuta `tools/hooks/comprobar_staged.py` sobre los `.lua` en stage — compilacion

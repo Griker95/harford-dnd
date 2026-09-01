@@ -8,7 +8,7 @@ local ManeuverEffects = API.ManeuverEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "chaman", name = "Chaman", desc = "Mediador de los elementos y los espíritus ancestrales; desata furia elemental, potencia armas o restaura con totems.", hitDie = 8, casterType = "full", startingGold = { dice = 5, sides = 4, multiplier = 1 },
+    id = "chaman", name = "Chaman", desc = "Pacta con los elementos en vez de mandarlos: rayo, agua y tierra, tótems plantados y armas encantadas.", hitDie = 8, casterType = "full", startingGold = { dice = 5, sides = 4, multiplier = 1 },
     -- Idioma que concede la clase (rasgo de nivel 1 del manual).
     languages = { "Kalimag" },
     -- Herramientas de clase segun el manual.

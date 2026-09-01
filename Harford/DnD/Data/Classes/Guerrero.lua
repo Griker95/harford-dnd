@@ -8,7 +8,7 @@ local ManeuverEffects = API.ManeuverEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "guerrero", name = "Guerrero", desc = "Maestro de las armas y la armadura, versatil en el combate cuerpo a cuerpo y a distancia, puro musculo y tecnica.", hitDie = 10, startingGold = { dice = 5, sides = 4, multiplier = 1 },
+    id = "guerrero", name = "Guerrero", desc = "El combatiente completo: cualquier arma, cualquier armadura. Sostiene la primera línea o la rompe, según se decante por las armas, la ira o el escudo.", hitDie = 10, startingGold = { dice = 5, sides = 4, multiplier = 1 },
     saves = { "Fuerza", "Constitucion" },
     armorProfs = { "ligera", "media", "pesada", "escudo" },
     weaponProfs = { "sencillas", "marciales", "armas de fuego" },

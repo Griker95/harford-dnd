@@ -976,8 +976,27 @@ RefreshOrigin = function()
         for _, feature in ipairs(def.traits or {}) do traits[#traits + 1] = { feature = feature, source = "Trasfondo" } end
     end
     -- Descripcion dentro del scroll: los rasgos arrancan justo debajo de donde termina,
-    -- y descripcion + rasgos se desplazan juntos con la rueda.
-    local desc = MakeText(S.tree, "GameFontHighlightSmall", tostring(def.desc or ""))
+    -- y descripcion + rasgos se desplazan juntos con la rueda. Se muestra un RESUMEN, no el
+    -- texto completo del manual: parrafos narrativos (la cita en cursiva de apertura y su
+    -- atribucion se saltan), cortando en el primer encabezado ### y con dos parrafos como
+    -- maximo -- igual que la tarjeta de la web, que tampoco vuelca el capitulo entero.
+    local function ResumenDeOrigen(texto)
+        texto = tostring(texto or "")
+        local parrafos = {}
+        for p in (texto .. "\n\n"):gmatch("(.-)\n%s*\n") do
+            p = p:gsub("^%s+", ""):gsub("%s+$", "")
+            if p:find("^#") then break end                -- empieza el detalle por secciones
+            local esCita = p:find("^%*") and (p:find("%*$") or p:find("^%*[—%-]"))
+            if p ~= "" and not esCita then
+                p = p:gsub("%*%*%*", ""):gsub("%*%*", ""):gsub("%*", "")
+                parrafos[#parrafos + 1] = p
+                if #parrafos == 2 then break end
+            end
+        end
+        if #parrafos == 0 then return texto end           -- textos cortos sin estructura: tal cual
+        return table.concat(parrafos, "\n\n")
+    end
+    local desc = MakeText(S.tree, "GameFontHighlightSmall", ResumenDeOrigen(def.desc))
     desc:SetPoint("TOPLEFT", 8, -8)
     desc:SetWidth(340)  -- cierra en el mismo borde derecho que las filas (348 - 8)
     desc:SetJustifyH("LEFT")

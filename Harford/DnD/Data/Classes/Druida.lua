@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "druida", name = "Druida", desc = "Guardian de la naturaleza capaz de adoptar formas animales y lanzar magia primigenia de equilibrio, fiereza o restauración.", hitDie = 8, casterType = "full", startingGold = { dice = 2, sides = 4, multiplier = 1 },
+    id = "druida", name = "Druida", desc = "La naturaleza como arma y como remedio. Cambia de forma para pelear, invoca el poder de Elune o hace crecer lo que otros pisan.", hitDie = 8, casterType = "full", startingGold = { dice = 2, sides = 4, multiplier = 1 },
     -- Herramientas de clase segun el manual.
     toolProfs = { "Kit de herborista" },
     startingEquipment = {

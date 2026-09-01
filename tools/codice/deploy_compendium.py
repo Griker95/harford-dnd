@@ -92,6 +92,24 @@ if _art:
     print("arte de trasfondos: %d imagenes | %.1f MB en total%s"
           % (_hechos, _peso / 1e6, (" | sin origen: %d" % len(_fallos)) if _fallos else ""))
 
+# Resumen de tarjeta. La descripcion del manual abre con una cita de ambientacion y la
+# tarjeta la cortaba a media palabra, asi que no presentaba nada. Los textos estan en
+# resumenes.json, escritos a mano; la ficha completa sigue mostrando el manual entero.
+_res = json.load(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                      "resumenes.json"), encoding="utf-8"))
+for _grupo, _clave in (("clases", "classes"), ("razas", "races")):
+    _textos = _res.get(_grupo) or {}
+    _puestos = 0
+    for _o in kb.get(_clave, []):
+        _r = _textos.get(_o["id"])
+        if _r:
+            _o["summary"] = _r
+            _puestos += 1
+    if _textos:
+        _faltan = [o["id"] for o in kb.get(_clave, []) if o["id"] not in _textos]
+        print("Resumenes de %s: %d puestos%s" % (
+            _grupo, _puestos, (" | sin resumen: %s" % ", ".join(_faltan)) if _faltan else ""))
+
 io.open(os.path.join(WEB, "js", "compendium-data.js"), "w", encoding="utf-8").write(
     "window.HARFORD_COMPENDIUM = " + json.dumps(kb, ensure_ascii=False, indent=1) + ";\n")
 

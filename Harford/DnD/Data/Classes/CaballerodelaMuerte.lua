@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "caballero_muerte", name = "Caballero de la Muerte", desc = "Antiguo campeon caido y resucitado que empuna poder runico y magia profana, de escarcha y de sangre para dominar el campo de batalla.", hitDie = 10, casterType = "half", startingGold = { dice = 4, sides = 4, multiplier = 1 },
+    id = "caballero_muerte", name = "Caballero de la Muerte", desc = "Guerrero resucitado por las val'kyr: parece muerto, pero está vivo. Runas en el filo, escarcha y tierra marchita, y un rechazo que lo empuja a los márgenes.", hitDie = 10, casterType = "half", startingGold = { dice = 4, sides = 4, multiplier = 1 },
     startingEquipment = {
         { label = "Arma principal",
             options = {

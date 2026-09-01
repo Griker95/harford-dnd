@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "paladin", name = "Paladin", desc = "Cruzado sagrado que une fuerza marcial y Luz Sagrada para proteger, castigar y sanar.", hitDie = 10, casterType = "half", startingGold = { dice = 5, sides = 4, multiplier = 1 },
+    id = "paladin", name = "Paladin", desc = "Armadura pesada y juramento. Cura con las manos, castiga con el arma y protege a quien lleva detrás.", hitDie = 10, casterType = "half", startingGold = { dice = 5, sides = 4, multiplier = 1 },
     startingEquipment = {
         { label = "Arma principal",
             options = {

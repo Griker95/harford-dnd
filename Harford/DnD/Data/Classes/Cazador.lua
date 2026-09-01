@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "cazador", name = "Cazador", desc = "Experto rastreador y tirador que combate junto a una bestia companera y domina las armas a distancia.", hitDie = 10, startingGold = { dice = 5, sides = 4, multiplier = 1 },
+    id = "cazador", name = "Cazador", desc = "Rastreador y tirador de largo alcance, con una bestia al lado o una trampa en el camino. Vive de la puntería, del vínculo animal y del terreno.", hitDie = 10, startingGold = { dice = 5, sides = 4, multiplier = 1 },
     -- Herramientas de clase segun el manual.
     toolProfs = { "Herramientas de armero" },
     startingEquipment = {

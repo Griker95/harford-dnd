@@ -1,0 +1,17 @@
+{
+ "_leeme": "Resumen de una o dos frases para la TARJETA del compendio. La descripcion larga del manual abre con una cita de ambientacion, que como presentacion no dice nada: la tarjeta cortaba esa cita a media palabra. Estos textos son de la casa, escritos a partir de la descripcion y de las subclases reales de cada entrada; no declaran mecanica. La ficha completa sigue mostrando el texto del manual entero. OJO: van ACENTUADOS y se inyectan tal cual, sin pasar por el restaurador de tildes de limpieza.py, que no cubre todas las palabras.",
+ "clases": {
+  "guerrero": "El combatiente completo: cualquier arma, cualquier armadura. Sostiene la primera línea o la rompe, según se decante por las armas, la ira o el escudo.",
+  "cazador": "Rastreador y tirador de largo alcance, con una bestia al lado o una trampa en el camino. Vive de la puntería, del vínculo animal y del terreno.",
+  "mago": "Estudioso de lo arcano que convierte años de biblioteca en fuego, escarcha y magia pura. Poco cuerpo y mucho alcance.",
+  "picaro": "Especialista en llegar donde nadie mira: sigilo, cerraduras y emboscadas. Golpea una vez y fuerte, y se va antes de que le respondan.",
+  "sacerdote": "Canaliza la fe para curar, escudar y castigar. Según su devoción tira de la Luz, de la Sombra o de Elune.",
+  "brujo": "Esclaviza demonios y porta el vil: una magia que es un pacto, corrompe la mente y profana la tierra. Prohibida casi en todas partes, se practica a escondidas.",
+  "paladin": "Armadura pesada y juramento. Cura con las manos, castiga con el arma y protege a quien lleva detrás.",
+  "druida": "La naturaleza como arma y como remedio. Cambia de forma para pelear, invoca el poder de Elune o hace crecer lo que otros pisan.",
+  "chaman": "Pacta con los elementos en vez de mandarlos: rayo, agua y tierra, tótems plantados y armas encantadas.",
+  "monje": "El cuerpo entrenado como arma. Golpea rápido, encaja lo que otros esquivan y reparte su chi entre defensa, curación y velocidad.",
+  "cazador_demonios": "No se entrena: se crea. Lleva atada el alma de un demonio y los ojos quemados, y vuelve esa energía vil contra la Legión, a dos hojas y a velocidad inhumana.",
+  "caballero_muerte": "Guerrero resucitado por las val'kyr: parece muerto, pero está vivo. Runas en el filo, escarcha y tierra marchita, y un rechazo que lo empuja a los márgenes."
+ }
+}

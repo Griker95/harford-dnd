@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "monje", name = "Monje", desc = "Artista marcial que canaliza el chi para golpear con rapidez, sanar con nieblas o resistir como un muro.", hitDie = 8, startingGold = { dice = 4, sides = 1, multiplier = 1 },
+    id = "monje", name = "Monje", desc = "El cuerpo entrenado como arma. Golpea rápido, encaja lo que otros esquivan y reparte su chi entre defensa, curación y velocidad.", hitDie = 8, startingGold = { dice = 4, sides = 1, multiplier = 1 },
     startingEquipment = {
         { label = "Arma principal",
             options = {

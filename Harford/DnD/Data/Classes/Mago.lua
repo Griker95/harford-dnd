@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "mago", name = "Mago", desc = "Estudioso de las artes arcanas que moldea fuego, escarcha y energía pura mediante conjuros aprendidos.", hitDie = 6, casterType = "full", startingGold = { dice = 4, sides = 4, multiplier = 1 },
+    id = "mago", name = "Mago", desc = "Estudioso de lo arcano que convierte años de biblioteca en fuego, escarcha y magia pura. Poco cuerpo y mucho alcance.", hitDie = 6, casterType = "full", startingGold = { dice = 4, sides = 4, multiplier = 1 },
     startingEquipment = {
         { label = "Arma principal",
             options = {

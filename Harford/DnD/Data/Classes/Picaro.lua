@@ -7,7 +7,7 @@ local ASI, WeaponProfEffects = API.ASI, API.WeaponProfEffects
 
 API.CLASSES[#API.CLASSES + 1] =
 {
-    id = "picaro", name = "Picaro", desc = "Maestro del sigilo, las trampas y el ataque furtivo que prospera con astucia y precision.", hitDie = 8, startingGold = { dice = 4, sides = 4, multiplier = 1 },
+    id = "picaro", name = "Picaro", desc = "Especialista en llegar donde nadie mira: sigilo, cerraduras y emboscadas. Golpea una vez y fuerte, y se va antes de que le respondan.", hitDie = 8, startingGold = { dice = 4, sides = 4, multiplier = 1 },
     -- Herramientas de clase segun el manual.
     toolProfs = { "Herramientas de ladron" },
     startingEquipment = {

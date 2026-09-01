@@ -21,6 +21,14 @@ Documentos hermanos: **`ESTRUCTURA.md`** es el organigrama de modulos (que hace 
   carpetas viejas de `Interface/AddOns` (el README lo avisa). Titulos de la familia en la lista
   de addons: `Harford`, `Harford Admin`, `Harford Compendio`, `Harford Profesiones` (antes `Harford Objetos`), `Harford Debug`, `Harford Musica`, todos con la marca `|cff3536CC`.
 
+- **Variantes de trasfondo con `traits` propios (2026-09-01, esquema cerrado en ambos lados)**:
+  si una variante declara `traits`, SUSTITUYEN por completo a los del base
+  (`HarfordDnDBackgrounds.ResolveTraits(backgroundId, variantId)` es el resolver central y la
+  variante viaja a Libro/progresion/creacion/borrador/asistente/economia); sin `traits` es
+  narrativa y hereda los del base. Unico caso con mecanica: Veterano Harford (Mercenario
+  veterano). El pipeline del codice ya lee esos `traits` y su fase 3 los conserva (el export
+  de Discord solo aporta texto e imagen). Candado: `tools/pruebas/trasfondo_variante.lua`.
+
 - **Añadir un CAMPO a una cabecera de datos puede dejar una coleccion del codice en CERO
   (2026-09-01)**: varios extractores de `tools/codice/` localizaban cada entrada con un regex
   que exigia `id` y `name` PEGADOS; meter un campo entre medias (`nameF` en razas, `icon` en

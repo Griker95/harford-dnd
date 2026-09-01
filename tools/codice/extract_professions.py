@@ -15,6 +15,9 @@ PNG = os.path.join(BASE, "EpsilonIcons", "png")
 # LoadOnDemand hermano de esa carpeta, igual que el compendio.
 def _lee(nombre):
     hits = glob.glob(os.path.join(BASE, "**", nombre), recursive=True)
+    # fuera las copias empaquetadas: los zips dejan el addon entero duplicado bajo dist/ y
+    # el glob puede devolver ese snapshot antes que la fuente viva
+    hits = [h for h in hits if "dist" not in h.replace("\\", "/").split("/")] or hits
     if not hits:
         raise SystemExit("no encuentro %s bajo %s" % (nombre, BASE))
     return io.open(hits[0], encoding="utf-8").read()

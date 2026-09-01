@@ -7,8 +7,18 @@ import re, json, os
 import glob
 BASE = r"C:/Users/marco/Documents/New project"  # la raiz, no Harford/: el compendio y los
 # datos de profesiones salieron a addons LoadOnDemand hermanos de esa carpeta.
+def _vivos(rutas):
+    """Descarta las copias empaquetadas de dist/.
+
+    Los zips de distribucion dejan el addon entero duplicado bajo dist/, asi que el glob
+    encontraba TRES copias de cada fichero: las 12 clases salian 36 veces y `rd` llegaba a
+    leer la version de dist en lugar de la viva. Son snapshots de una release, no fuente.
+    """
+    limpias = [r for r in rutas if "dist" not in r.replace("\\", "/").split("/")]
+    return limpias or rutas
+
 def rd(p):
-    hits = glob.glob(os.path.join(BASE, "**", p), recursive=True)  # el addon se reorganizo en subcarpetas
+    hits = _vivos(glob.glob(os.path.join(BASE, "**", p), recursive=True))  # el addon se reorganizo en subcarpetas
     if not hits: hits = [os.path.join(BASE, p)]
     return open(hits[0], encoding="utf-8", errors="replace").read()
 
@@ -88,7 +98,7 @@ def parse_features(region):
 # una parte esta en cada sitio.
 def _texto_de_clases():
     partes = []
-    for ruta in sorted(glob.glob(os.path.join(BASE, "**", "Classes", "*.lua"), recursive=True)):
+    for ruta in sorted(_vivos(glob.glob(os.path.join(BASE, "**", "Classes", "*.lua"), recursive=True))):
         partes.append(open(ruta, encoding="utf-8", errors="replace").read())
     partes.append(rd("HarfordDnDBook.lua"))
     # separador entre modulos: sin el, el ultimo bloque de un fichero y el primero del

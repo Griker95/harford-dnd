@@ -56,5 +56,68 @@
   "raza_trol_zandalari": "Troll heredero de una antigua civilización imperial, con una cultura sofisticada, una fuerte tradición religiosa y una estrecha relación con los loa.",
   "raza_trol_bosque": "Troll adaptado a regiones boscosas y heredero de culturas como la Amani, con una larga tradición guerrera y una profunda hostilidad histórica hacia los altos elfos.",
   "raza_trol_hielo": "Troll adaptado a regiones frías y montañosas, perteneciente a tribus endurecidas por el clima y caracterizadas por su resistencia, aislamiento y tradición guerrera."
+ },
+ "subclases": {
+  "guerrero": {
+   "Armas": "Veterano que domina armas pesadas y técnicas precisas, imponiéndose mediante disciplina, experiencia y control del ritmo del combate.",
+   "Ira": "Combatiente que convierte su furia en una ofensiva implacable, encadenando golpes violentos y manteniendo una presión constante sobre el enemigo.",
+   "Protección": "Especialista defensivo que domina el uso del escudo y la armadura pesada, resistiendo ataques y controlando el frente para proteger a sus aliados."
+  },
+  "cazador": {
+   "Bestias": "Especialista cuyo vínculo con las criaturas salvajes le permite combatir junto a compañeros animales y coordinar sus instintos con precisión.",
+   "Puntería": "Tirador experto en disparos precisos y combate a larga distancia, capaz de abatir objetivos mediante paciencia, técnica y elección del momento.",
+   "Supervivencia": "Combatiente adaptado al enfrentamiento cercano y a entornos hostiles, que combina armas, trampas, rastreo y conocimiento práctico de la naturaleza."
+  },
+  "mago": {
+   "Arcano": "Especialista en manipular la energía arcana en su forma más pura, recurriendo a conocimientos complejos para alterar espacio, materia y flujo mágico.",
+   "Fuego": "Especialista en dominar llamas y explosiones, desatando una ofensiva intensa basada en combustión, calor y destrucción inmediata.",
+   "Escarcha": "Especialista en controlar el frío y el hielo para ralentizar, inmovilizar y castigar a sus enemigos mediante una magia precisa y contenida."
+  },
+  "picaro": {
+   "Asesinato": "Especialista en eliminar objetivos mediante venenos, dagas y heridas persistentes, favoreciendo ataques calculados y letales.",
+   "Forajido": "Combatiente de estilo directo que combina esgrima, oportunismo y trucos sucios, confiando en reflejos rápidos y una actitud temeraria.",
+   "Sutileza": "Experto en sigilo y manipulación de las sombras, capaz de atacar desde posiciones inesperadas y desaparecer antes de ser alcanzado."
+  },
+  "sacerdote": {
+   "Disciplina": "Equilibra Luz y Sombra para proteger y sostener a sus aliados, combinando fe, barreras y poder ofensivo con gran control.",
+   "Sagrado": "Profundamente vinculado a la Luz, se dedica a sanar, purificar y proteger mediante una fe capaz de obrar auténticos milagros.",
+   "Sombra": "Recurre al Vacío y a las Sombras para quebrar la mente y el cuerpo de sus enemigos mediante poderes oscuros y corruptores.",
+   "Sacerdocio de Elune": "Kaldorei consagrado a Elune, capaz de canalizar su poder lunar para sanar, proteger y combatir en defensa de su pueblo."
+  },
+  "brujo": {
+   "Aflicción": "Especialista en maldiciones y tormentos prolongados, capaz de consumir lentamente la fuerza vital y la voluntad de sus enemigos.",
+   "Demonología": "Centrado en invocar, controlar y potenciar demonios, convierte a estas criaturas en el principal instrumento de su poder.",
+   "Destrucción": "Canaliza magia vil y fuego caótico en ataques devastadores, priorizando la potencia directa sobre la sutileza o el control."
+  },
+  "paladin": {
+   "Sagrado": "Concentra su vínculo con la Luz en sanar heridas, sostener a sus aliados y purificar los efectos de fuerzas corruptoras.",
+   "Protección": "Combina armadura pesada, escudo y poder sagrado para resistir ataques y mantener a salvo a sus compañeros.",
+   "Represión": "Canaliza la Luz a través de sus armas para juzgar, perseguir y castigar a los enemigos de su causa."
+  },
+  "druida": {
+   "Equilibrio": "Canaliza fuerzas solares, lunares y astrales para mantener el equilibrio natural y combatir mediante magia a distancia.",
+   "Feral": "Perfecciona sus formas depredadoras para cazar y combatir mediante velocidad, sigilo, instinto y ferocidad animal.",
+   "Restauración": "Se dedica a la renovación de la vida, acelerando el crecimiento natural y sanando heridas mediante energía vital y magia vegetal."
+  },
+  "chaman": {
+   "Elemental": "Invoca directamente el poder del fuego, la tierra, el aire y el agua para desencadenar la fuerza destructiva de los elementos.",
+   "Mejora": "Imbuye armas y cuerpo con poder elemental, combinando combate físico con la fuerza de los espíritus y los elementos.",
+   "Restauración": "Recurre al agua y a los espíritus ancestrales para sanar heridas, restaurar fuerzas y proteger a quienes combaten a su lado."
+  },
+  "monje": {
+   "Maestro cervecero": "Combina artes marciales, movilidad y brebajes especiales para resistir golpes y desviar la fuerza de sus enemigos.",
+   "Tejedor de niebla": "Manipula el chi y las nieblas restauradoras para devolver equilibrio, vigor y armonía a sus aliados.",
+   "Viajero del viento": "Se especializa en artes marciales ofensivas, encadenando golpes rápidos y precisos mediante un dominio excepcional del chi."
+  },
+  "cazador_demonios": {
+   "Devastación": "Canaliza poder vil en una ofensiva rápida y agresiva, combinando movilidad extrema, gujas y capacidades demoníacas.",
+   "Venganza": "Utiliza su transformación y resistencia sobrenatural para contener enemigos y soportar castigos extraordinarios.",
+   "Ira": "Libera su poder demoníaco de forma especialmente agresiva, llevando su furia y metamorfosis hasta límites extremos."
+  },
+  "caballero_muerte": {
+   "Sangre": "Manipula sangre y energía vital para fortalecerse, recuperarse de sus heridas y soportar daños devastadores.",
+   "Escarcha": "Canaliza frío sobrenatural y poder rúnico para congelar, debilitar y destruir a sus enemigos.",
+   "Profano": "Domina enfermedades, descomposición y nigromancia, propagando plagas y alzando muertos a su servicio."
+  }
  }
 }

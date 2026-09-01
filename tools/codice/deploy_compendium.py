@@ -97,6 +97,37 @@ if _art:
 # resumenes.json, escritos a mano; la ficha completa sigue mostrando el manual entero.
 _res = json.load(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                       "resumenes.json"), encoding="utf-8"))
+# Subclases: van por CLASE y por NOMBRE, no por id. Los ids de subclase se repiten entre
+# clases (`sagrado` en Sacerdote y Paladin, `escarcha` en Mago y Caballero de la Muerte) y
+# una tabla plana los cruzaria; el nombre si es unico dentro de su clase.
+_sc = _res.get("subclases") or {}
+_psc = 0
+for _c in kb.get("classes", []):
+    _porclase = _sc.get(_c["id"]) or {}
+    for _s in _c.get("subclasses", []) or []:
+        _t = _porclase.get(_s["name"])
+        if _t:
+            _s["summary"] = _t
+            _psc += 1
+if _sc:
+    _faltan = [c["id"] + " > " + s["name"] for c in kb.get("classes", [])
+               for s in c.get("subclasses", []) or [] if not s.get("summary")]
+    print("Resumenes de subclases: %d puestos%s" % (
+        _psc, (" | sin resumen: %s" % ", ".join(_faltan)) if _faltan else ""))
+
+# las subrazas se ven plegadas, solo con su nombre: el resumen es la unica pista de que
+# hay dentro sin abrirlas una por una
+_subs = _res.get("subrazas") or {}
+_ps = 0
+for _r in kb.get("races", []):
+    for _s in _r.get("subraces", []) or []:
+        _t = _subs.get(_s["id"]) or _subs.get("raza_" + _s["id"])
+        if _t:
+            _s["summary"] = _t
+            _ps += 1
+if _subs:
+    print("Resumenes de subrazas: %d puestos de %d escritos" % (_ps, len(_subs)))
+
 for _grupo, _clave in (("clases", "classes"), ("razas", "races")):
     _textos = _res.get(_grupo) or {}
     _puestos = 0

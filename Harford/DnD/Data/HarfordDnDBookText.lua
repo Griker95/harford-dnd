@@ -12822,11 +12822,21 @@ function API.GetFeatureDescription(feature, classId, source, backgroundId, rich)
     if (source == "bg" or source == "Trasfondo") and backgroundId
         and HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground then
         local background = HarfordDnDBackgrounds.GetBackground(backgroundId)
-        if background and title:find("Caracteristica:", 1, true) then
-            title = title:gsub("^Caracteristica:", "Característica:")
-            return API.GetNestedSection(background.name, 3, title, 4)
-                or API.GetNestedSectionMatching(background.name, 3, title, 4)
-                or fallback
+        if background then
+            -- Los nombres de rasgo van ya SIN el prefijo "Caracteristica:", pero el manual
+            -- titula sus secciones con el: se prueba el titulo tal cual y el prefijado.
+            local titles = { title }
+            if title:find("Caracteristica:", 1, true) then
+                titles = { (title:gsub("^Caracteristica:", "Característica:")) }
+            else
+                titles[#titles + 1] = "Característica: " .. title
+            end
+            for _, candidato in ipairs(titles) do
+                local texto = API.GetNestedSection(background.name, 3, candidato, 4)
+                    or API.GetNestedSectionMatching(background.name, 3, candidato, 4)
+                if texto then return texto end
+            end
+            return fallback
         end
     end
     return fallback

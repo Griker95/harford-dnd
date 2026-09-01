@@ -409,7 +409,7 @@ function API.GetInitialGold(draft)
         and HarfordDnDBackgrounds.GetBackground(draft.backgroundId)
     if not classDef or not bgDef then return nil, "Clase o trasfondo sin datos de inicio." end
     local classGold = Roll(classDef.startingGold)
-    local backgroundGold = HarfordDnDBackgrounds.GetStartingGold and HarfordDnDBackgrounds.GetStartingGold(bgDef.id) or 0
+    local backgroundGold = HarfordDnDBackgrounds.GetStartingGold and HarfordDnDBackgrounds.GetStartingGold(bgDef.id, draft.backgroundVariantId) or 0
     return {
         classGold = classGold,
         backgroundGold = math.max(0, math.floor(tonumber(backgroundGold) or 0)),

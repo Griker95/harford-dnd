@@ -358,9 +358,11 @@ local function GetRaceTraits(draft)
 end
 
 local function GetBackgroundTraits(draft)
-    local bg = HarfordDnDBackgrounds.GetBackground(draft.backgroundId)
     local out = {}
-    for _, feature in ipairs((bg and bg.traits) or {}) do out[#out + 1] = { feature = feature, source = "Trasfondo" } end
+    local traits = HarfordDnDBackgrounds.ResolveTraits
+        and HarfordDnDBackgrounds.ResolveTraits(draft.backgroundId, draft.backgroundVariantId)
+        or ((HarfordDnDBackgrounds.GetBackground(draft.backgroundId) or {}).traits) or {}
+    for _, feature in ipairs(traits) do out[#out + 1] = { feature = feature, source = "Trasfondo" } end
     return out
 end
 
@@ -1519,11 +1521,11 @@ end
 
 -- Objetos que aporta un trasfondo, de su rasgo "Equipo". El manual los escribe como una frase
 -- con comas, asi que se trocea por comas y se limpia; una entrada vacia no cuenta.
-function API.BackgroundEquipment(backgroundId)
+function API.BackgroundEquipment(backgroundId, variantId)
     local out = {}
-    local bg = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
-        and HarfordDnDBackgrounds.GetBackground(backgroundId)
-    for _, trait in ipairs((bg and bg.traits) or {}) do
+    local traits = (HarfordDnDBackgrounds and HarfordDnDBackgrounds.ResolveTraits
+        and HarfordDnDBackgrounds.ResolveTraits(backgroundId, variantId)) or {}
+    for _, trait in ipairs(traits) do
         if tostring(trait.name or "") == "Equipo" then
             for trozo in tostring(trait.description or ""):gmatch("[^,]+") do
                 local item = trozo:gsub("^%s+", ""):gsub("%s+$", ""):gsub("%.$", "")

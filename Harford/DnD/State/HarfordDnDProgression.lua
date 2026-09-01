@@ -953,9 +953,11 @@ function API.SetBackground(backgroundId, profileName)
     return true
 end
 
--- Variante de trasfondo (Criminal -> Espia, Noble -> Caballero nobiliario...). Es OPCIONAL y
--- solo narrativa: no concede rasgos ni efectos. Se guarda unicamente cuando hay una elegida —
--- la clave se BORRA al deseleccionar, en vez de dejar "" en las SavedVariables.
+-- Variante de trasfondo (Criminal -> Espia, Noble -> Caballero nobiliario...). Es OPCIONAL.
+-- La mayoria son narrativas, pero una variante puede declarar `traits` propios que SUSTITUYEN
+-- a los del base (Veterano Harford): por eso la variante viaja a todos los consumidores de
+-- rasgos de trasfondo. Se guarda unicamente cuando hay una elegida — la clave se BORRA al
+-- deseleccionar, en vez de dejar "" en las SavedVariables.
 function API.GetBackgroundVariant(profileName)
     local data = API.Get(profileName)
     return data.backgroundVariant or ""
@@ -1212,7 +1214,7 @@ function API.GetUnlockedFeatures(profileName)
     end
     -- Rasgos de trasfondo (siempre activos al elegir trasfondo).
     if HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackgroundTraits and data.background and data.background ~= "" then
-        for _, item in ipairs(HarfordDnDBackgrounds.GetBackgroundTraits(data.background)) do
+        for _, item in ipairs(HarfordDnDBackgrounds.GetBackgroundTraits(data.background, data.backgroundVariant)) do
             out[#out + 1] = item
         end
     end

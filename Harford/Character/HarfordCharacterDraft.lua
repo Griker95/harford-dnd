@@ -54,9 +54,14 @@ local function DraftSkillProficiencies(excludeFeatureId)
     local subrace = HarfordDnDRaces and HarfordDnDRaces.GetSubrace
         and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
     for _, feature in ipairs((subrace and subrace.traits) or {}) do ApplyFeature(feature) end
-    local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
-        and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
-    for _, feature in ipairs((background and background.traits) or {}) do ApplyFeature(feature) end
+    local bgTraits = HarfordDnDBackgrounds and HarfordDnDBackgrounds.ResolveTraits
+        and HarfordDnDBackgrounds.ResolveTraits(S.backgroundId, S.backgroundVariantId)
+    if not bgTraits then
+        local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
+            and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+        bgTraits = (background and background.traits) or {}
+    end
+    for _, feature in ipairs(bgTraits) do ApplyFeature(feature) end
     for _, classId in ipairs({ S.classId, S.secondaryClassId }) do
         local classDef = classId and HarfordDnDBook and HarfordDnDBook.GetClass
             and HarfordDnDBook.GetClass(classId)
@@ -100,9 +105,14 @@ local function DraftLanguages(excludeFeatureId)
     local subrace = HarfordDnDRaces and HarfordDnDRaces.GetSubrace
         and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
     for _, feature in ipairs((subrace and subrace.traits) or {}) do ApplyFeature(feature) end
-    local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
-        and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
-    for _, feature in ipairs((background and background.traits) or {}) do ApplyFeature(feature) end
+    local bgTraits = HarfordDnDBackgrounds and HarfordDnDBackgrounds.ResolveTraits
+        and HarfordDnDBackgrounds.ResolveTraits(S.backgroundId, S.backgroundVariantId)
+    if not bgTraits then
+        local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
+            and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+        bgTraits = (background and background.traits) or {}
+    end
+    for _, feature in ipairs(bgTraits) do ApplyFeature(feature) end
     for _, classId in ipairs({ S.classId, S.secondaryClassId }) do
         local classDef = classId and HarfordDnDBook and HarfordDnDBook.GetClass
             and HarfordDnDBook.GetClass(classId)
@@ -148,9 +158,14 @@ local function DraftEquipProficiencies(excludeFeatureId)
     local subrace = HarfordDnDRaces and HarfordDnDRaces.GetSubrace
         and HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
     for _, feature in ipairs((subrace and subrace.traits) or {}) do ApplyFeature(feature) end
-    local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
-        and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
-    for _, feature in ipairs((background and background.traits) or {}) do ApplyFeature(feature) end
+    local bgTraits = HarfordDnDBackgrounds and HarfordDnDBackgrounds.ResolveTraits
+        and HarfordDnDBackgrounds.ResolveTraits(S.backgroundId, S.backgroundVariantId)
+    if not bgTraits then
+        local background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackground
+            and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
+        bgTraits = (background and background.traits) or {}
+    end
+    for _, feature in ipairs(bgTraits) do ApplyFeature(feature) end
     for _, classId in ipairs({ S.classId, S.secondaryClassId }) do
         local classDef = classId and HarfordDnDBook and HarfordDnDBook.GetClass
             and HarfordDnDBook.GetClass(classId)

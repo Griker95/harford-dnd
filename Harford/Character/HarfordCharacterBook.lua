@@ -330,7 +330,7 @@ function API.BuildSections(data)
         addList(HarfordDnDRaces.GetRaceTraits(data.race.id, data.race.subraceId), "race")
     end
     if HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackgroundTraits and data.background and data.background ~= "" then
-        addList(HarfordDnDBackgrounds.GetBackgroundTraits(data.background), "bg")
+        addList(HarfordDnDBackgrounds.GetBackgroundTraits(data.background, data.backgroundVariant), "bg")
     end
     -- Una entrada POR DOTE, no una por cada cosa que hace: `GetFeatTraits` las devuelve sueltas y
     -- el Libro las pintaba como habilidades independientes, asi que la dote no salia por su

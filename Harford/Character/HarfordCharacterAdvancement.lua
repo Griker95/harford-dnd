@@ -1016,7 +1016,9 @@ RefreshOrigin = function()
         local sub = HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
         for _, feature in ipairs((sub and sub.traits) or {}) do traits[#traits + 1] = { feature = feature, source = "Subraza" } end
     else
-        for _, feature in ipairs(def.traits or {}) do traits[#traits + 1] = { feature = feature, source = "Trasfondo" } end
+        local bgTraits = (HarfordDnDBackgrounds.ResolveTraits
+            and HarfordDnDBackgrounds.ResolveTraits(S.backgroundId, S.backgroundVariantId)) or def.traits or {}
+        for _, feature in ipairs(bgTraits) do traits[#traits + 1] = { feature = feature, source = "Trasfondo" } end
     end
     -- Descripcion dentro del scroll: los rasgos arrancan justo debajo de donde termina,
     -- y descripcion + rasgos se desplazan juntos con la rueda. Se muestra un RESUMEN, no el
@@ -2344,7 +2346,8 @@ local function StepDone(index)
     elseif index == 2 then
         local bg = S.backgroundId and HarfordDnDBackgrounds.GetBackground and HarfordDnDBackgrounds.GetBackground(S.backgroundId)
         if not bg then return false end
-        return TraitListChoicesComplete(bg.traits)
+        return TraitListChoicesComplete((HarfordDnDBackgrounds.ResolveTraits
+            and HarfordDnDBackgrounds.ResolveTraits(S.backgroundId, S.backgroundVariantId)) or bg.traits)
     elseif index == 3 then
         if S.abilityMode == "roll" then
             if not S.selectedArray then return false end

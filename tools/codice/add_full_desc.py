@@ -590,11 +590,15 @@ for b in kb["backgrounds"]:
     if d.get("image"):
         b["art"] = "%s/media/attachments/%s" % (best, d["image"])
     if d.get("variants"):
+        # los rasgos vienen del addon; el export solo aporta texto e ilustracion
+        _rasgos_addon = {nk(v.get("name", "")): v.get("traits") or []
+                         for v in (b.get("variants") or [])}
         b["variants"] = [{
             "id": "%s_%s" % (b["id"], re.sub(r"[^a-z0-9]+", "_", nk(v["name"])).strip("_")),
             "name": v["name"],
             "desc": v.get("desc") or "",
             "art": ("%s/media/attachments/%s" % (best, v["image"])) if v.get("image") else None,
+            "traits": _rasgos_addon.get(nk(v["name"]), []),
         } for v in d["variants"]]
     rn = nk(d.get("rasgoName", ""))
     for f in b["traits"]:

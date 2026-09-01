@@ -228,9 +228,31 @@ for i, (pos, bid, bname) in enumerate(bstarts):
     # sus competencias se leen como del trasfondo base: "Espiritu Harford" salia entre los
     # rasgos del Mercenario veterano. Mismo recorte que se hace con las subrazas.
     _mv = re.search(r"\bvariants = \{", block)   # puede ir inline, tras el `name`
+    _variantes = []
     if _mv:
         _s = block.index("{", _mv.start())
-        block = block[:_mv.start()] + block[_s + len(block[_s:balanced(block, _s)]):]
+        _region = block[_s:balanced(block, _s)]
+        # Una variante puede declarar `traits` propios, que SUSTITUYEN a los del trasfondo
+        # base. Antes se tiraba la region entera y sus rasgos no llegaban nunca a la web.
+        _p = 1                      # dentro de la llave que abre la lista
+        while True:
+            _ini = _region.find("{", _p)
+            if _ini < 0:
+                break
+            _fin = balanced(_region, _ini)
+            _trozo = _region[_ini:_fin]
+            _p = _fin
+            _id = field(_trozo.split("traits =")[0], "id")
+            if not _id:
+                continue
+            _mt = re.search(r"\btraits = \{", _trozo)
+            _variantes.append({
+                "id": _id,
+                "name": field(_trozo.split("traits =")[0], "name") or "",
+                "desc": field(_trozo.split("traits =")[0], "desc") or "",
+                "traits": parse_features(_trozo[_mt.start():]) if _mt else [],
+            })
+        block = block[:_mv.start()] + block[_s + len(_region):]
     dm = re.search(r'\bdesc = "((?:[^"\\]|\\.)*)"', block.split("traits =")[0])
     # de donde sale el trasfondo (PHB, SCAG, Warcraft o propio de Harford): el addon lo
     # marca y el compendio lo tiraba, asi que el lector no sabia cual era cual
@@ -238,7 +260,7 @@ for i, (pos, bid, bname) in enumerate(bstarts):
     bgs.append({"id": bid, "name": bname, "desc": desescapa((dm.group(1)) if dm else ""),
                 "source": sm.group(1) if sm else None,
                 "skills": _competencias(block)[0], "tools": _competencias(block)[1],
-                "traits": parse_features(block)})
+                "traits": parse_features(block), "variants": _variantes})
 
 # ---------- CONJUROS ----------
 comp = rd("HarfordCompendio.lua")

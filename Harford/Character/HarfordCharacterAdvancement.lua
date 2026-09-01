@@ -163,6 +163,14 @@ end
 
 -- Nombre segun el sexo del PJ (nameF si es mujer): el mismo helper que usa el About. Cae al
 -- name para todo lo que no lo declara (clases, trasfondos, variantes, opciones).
+-- Slot de subclase para una clase dada, con el MISMO criterio que ConfigureSubclassChoice:
+-- en creacion S.classId aun es nil y la eleccion vive en el slot primario. Leer por igualdad
+-- de id a secas miraba el slot contrario y la subclase seleccionada "no aparecia".
+local function SubclassIdFor(classId)
+    local primarySlot = classId == S.classId or not S.classId
+    return primarySlot and S.subclassId or S.secondarySubclassId
+end
+
 local function NombreSexo(def)
     if HarfordCharacterCreation and HarfordCharacterCreation.NombreDeOrigen then
         return HarfordCharacterCreation.NombreDeOrigen(def)
@@ -492,7 +500,7 @@ local function RefreshPendingLevelFeatures(classDef, classLevel)
     -- tarjetas de subclase. Con subclase seleccionada manda su descripcion (cambia al pinchar
     -- cada tarjeta, igual que las subrazas); sin ella, el resumen de la clase.
     do
-        local subId = classDef.id == S.classId and S.subclassId or S.secondarySubclassId
+        local subId = SubclassIdFor(classDef.id)
         local sub = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(classDef.id, subId)
         local texto = (sub and tostring(sub.desc or "") ~= "" and sub.desc) or classDef.desc
         if tostring(texto or "") ~= "" then
@@ -608,8 +616,8 @@ local function ConfigureSubclassChoice(classDef, classLevel)
         if #permitidas > 0 then subclasses = permitidas end
     end
     if #subclasses == 0 then return true end
-    S.selectorLabel:SetText("Subclase")
-    S.selectorLabel:Show()
+    -- Sin rotulo "Subclase": quedaba DETRAS de la primera tarjeta y las tarjetas se explican solas.
+    S.selectorLabel:Hide()
     S.subclassDrop:Hide()
     -- El resumen flotante ocupa el mismo hueco que las tarjetas: con selector visible se vacia
     -- (la descripcion vive ya dentro del scroll y cambia con la subclase).
@@ -656,7 +664,7 @@ RefreshClassStage = function()
         -- Sombra debe contar lo suyo, no repetir el resumen del Sacerdote).
         local previewDesc = preview and tostring(preview.desc or "") or nil
         if preview then
-            local subId = preview.id == S.classId and S.subclassId or S.secondarySubclassId
+            local subId = SubclassIdFor(preview.id)
             local sub = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(preview.id, subId)
             if sub and tostring(sub.desc or "") ~= "" then previewDesc = tostring(sub.desc) end
         end
@@ -2154,7 +2162,7 @@ AppendSpellPickers = function(classDef, classLevel, y)
     -- que una subclase de una clase lanzadora nunca se consultaba.
     local casting
     do
-        local subId = classDef.id == S.classId and S.subclassId or S.secondarySubclassId
+        local subId = SubclassIdFor(classDef.id)
         local subclass = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(classDef.id, subId)
         if subclass then
             local combo = spellClassName .. " " .. subclass.name
@@ -2168,7 +2176,7 @@ AppendSpellPickers = function(classDef, classLevel, y)
     local prog = C.GetSpellProgression(castingClassName)
     if not prog then return y end
 
-    local subIdSel = (classDef.id == S.classId) and S.subclassId or S.secondarySubclassId
+    local subIdSel = SubclassIdFor(classDef.id)
     local extraNames = ExpandedSpellNames(classDef.id, subIdSel)
     local picks = EnsureSpellPicks()
     local subclassSpellClassName = castingClassName ~= spellClassName and castingClassName or nil

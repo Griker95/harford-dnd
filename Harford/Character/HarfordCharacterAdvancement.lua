@@ -487,7 +487,27 @@ end
 
 local function RefreshPendingLevelFeatures(classDef, classLevel)
     S.pendingFeatures = {}
-    local y = -34
+    local y = -8
+    -- Descripcion DENTRO del scroll, como en la seccion de origen: fuera se acoplaba con las
+    -- tarjetas de subclase. Con subclase seleccionada manda su descripcion (cambia al pinchar
+    -- cada tarjeta, igual que las subrazas); sin ella, el resumen de la clase.
+    do
+        local subId = classDef.id == S.classId and S.subclassId or S.secondarySubclassId
+        local sub = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(classDef.id, subId)
+        local texto = (sub and tostring(sub.desc or "") ~= "" and sub.desc) or classDef.desc
+        if tostring(texto or "") ~= "" then
+            local desc = MakeText(S.tree, "GameFontHighlightSmall", ResumenDeOrigen(texto))
+            desc:SetPoint("TOPLEFT", 28, y)
+            desc:SetWidth(320)
+            desc:SetJustifyH("LEFT")
+            desc:SetWordWrap(true)
+            desc:SetTextColor(0.82, 0.82, 0.82)
+            S.nodeRows[#S.nodeRows + 1] = desc
+            y = y - math.ceil(desc:GetStringHeight() or 0) - 18
+        else
+            y = -34
+        end
+    end
     local heading = MakeText(S.tree, "GameFontNormal", "RASGOS QUE RECIBIRAS EN ESTE NIVEL")
     heading:SetPoint("TOPLEFT", 28, y)
     heading:SetTextColor(1, 0.82, 0)
@@ -591,6 +611,9 @@ local function ConfigureSubclassChoice(classDef, classLevel)
     S.selectorLabel:SetText("Subclase")
     S.selectorLabel:Show()
     S.subclassDrop:Hide()
+    -- El resumen flotante ocupa el mismo hueco que las tarjetas: con selector visible se vacia
+    -- (la descripcion vive ya dentro del scroll y cambia con la subclase).
+    S.classSummary:SetText("")
 
     -- Igual que las subrazas: tarjetas con icono en vez de desplegable, y una elegida de entrada
     -- para que el panel no quede en un "Elige subclase" vacio. Aqui no hay equivalente a la raza

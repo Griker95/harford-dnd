@@ -452,6 +452,52 @@ end
 
 -- Cuerpo de rasgos con estilo de ficha real: cada rasgo = "{h2}{icon:X:25} Nombre{/h2}" +
 -- descripcion. Devuelve "" si no hay rasgos, para que el llamador omita el frame.
+-- Linea cian "Puntos N || CD Salv M" para un rasgo que declara un recurso de maniobras
+-- (Energia, Ira, Chi...), como en los perfiles reales. Devuelve nil si el rasgo no declara
+-- resourceMax. El nivel es el de ESA clase en el borrador; la CD sale de la dcAbility de las
+-- maniobras del mismo recurso (8 + competencia + mod).
+local function LineaDeRecurso(feature, entry, draft)
+    local efectoMax
+    for _, effect in ipairs(feature.effects or {}) do
+        if effect.kind == "resourceMax" then efectoMax = effect break end
+    end
+    if not efectoMax then return nil end
+    local nivel = 0
+    for _, e in ipairs((draft and draft.classes) or {}) do
+        if e.classId == (efectoMax.perClassLevel or entry.classId) then nivel = tonumber(e.level) or 0 end
+    end
+    if nivel <= 0 then
+        for _, e in ipairs((draft and draft.classes) or {}) do nivel = nivel + (tonumber(e.level) or 0) end
+    end
+    local puntos
+    if type(efectoMax.values) == "table" then
+        puntos = tonumber(efectoMax.values[math.max(1, math.min(#efectoMax.values, nivel))]) or 0
+    else
+        puntos = (tonumber(efectoMax.base) or 0) + (tonumber(efectoMax.perLevel) or 0) * nivel
+    end
+    if puntos <= 0 then return nil end
+    -- dcAbility de las maniobras del mismo recurso en esa clase (viven en rasgos hermanos).
+    local dcAbility
+    local classDef = entry.classId and HarfordDnDBook and HarfordDnDBook.GetClass
+        and HarfordDnDBook.GetClass(entry.classId)
+    for _, f in ipairs((classDef and classDef.features) or {}) do
+        for _, effect in ipairs(f.effects or {}) do
+            if effect.kind == "energyManeuver" and effect.resource == efectoMax.resource
+                and effect.dcAbility then dcAbility = effect.dcAbility break end
+        end
+        if dcAbility then break end
+    end
+    local linea = "{col:00ffff}Puntos " .. puntos .. " {/col}"
+    if dcAbility and HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod then
+        local total = 0
+        for _, e in ipairs((draft and draft.classes) or {}) do total = total + (tonumber(e.level) or 0) end
+        local pb = 2 + math.floor((math.max(1, total) - 1) / 4)
+        local cd = 8 + pb + (tonumber(HarfordDnDCalc.GetAbilityMod(dcAbility)) or 0)
+        linea = linea .. "{col:cccccc}||{/col}{col:00ffff} CD Salv " .. cd .. "{/col}"
+    end
+    return linea
+end
+
 local function BuildTraitLines(traits, draft)
     if #traits == 0 then return "" end
     local lines = {}
@@ -535,6 +581,8 @@ local function BuildTraitLines(traits, draft)
             elseif feature.choice and not inlineTitulo and #bloques == 0 then
                 colaEleccion = ChoiceText(feature, draft.choices)
             end
+            local recurso = LineaDeRecurso(feature, entry, draft)
+            if recurso then lines[#lines + 1] = recurso end
             if lineaCian then lines[#lines + 1] = lineaCian end
             if inlineTitulo and inlineCuerpo and inlineCuerpo ~= "" then
                 lines[#lines + 1] = ColorizeDescription(inlineCuerpo)

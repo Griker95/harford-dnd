@@ -1177,7 +1177,25 @@ function API.BuildAbout(draft, profileName)
 
     -- ===== Frame 2: RAZA ===== (titulo centrado + rasgos; sin linea "Raza:", como los perfiles reales)
     do
+        -- Titulo con la SUBRAZA coloreada en teal, como {Reserva} Acramura ("Renegada
+        -- {col:008c7f}Humana{/col}"): si el nombre de la subraza empieza por el de la raza,
+        -- se colorea solo el resto; si no lo repite, raza + subraza coloreada. Sin subraza
+        -- (o subraza base con el mismo nombre), el nombre a secas.
         local raceName = NombreDeOrigen(subrace or race)
+        do
+            local baseName = NombreDeOrigen(race)
+            local subName = subrace and NombreDeOrigen(subrace) or ""
+            if subName ~= "" and subName ~= baseName then
+                if subName:sub(1, #baseName) == baseName then
+                    local resto = Trim(subName:sub(#baseName + 1))
+                    if resto ~= "" then
+                        raceName = baseName .. " {col:" .. COL_RACIAL .. "}" .. resto .. "{/col}"
+                    end
+                else
+                    raceName = baseName .. " {col:" .. COL_RACIAL .. "}" .. subName .. "{/col}"
+                end
+            end
+        end
         local lines = { "{h1:c}" .. raceName .. "{/h1}" }
         local body = BuildTraitLines(GetRaceTraits(draft), draft)
         if body ~= "" then lines[#lines + 1] = body end
@@ -1199,7 +1217,7 @@ function API.BuildAbout(draft, profileName)
         for _, v in ipairs(bg.variants or {}) do
             if tostring(v.id) == tostring(draft.backgroundVariantId or "") then variante = v break end
         end
-        local titulo = tostring(bg.name) .. (variante and (" (" .. tostring(variante.name) .. ")") or "")
+        local titulo = NombreDeOrigen(bg) .. (variante and (" (" .. tostring(variante.name) .. ")") or "")
         local lines = { "{h1:c}Trasfondo {col:" .. COL_RACIAL .. "}" .. titulo .. "{/col}{/h1}" }
         -- Las descripciones de origen son RESUMEN en el About: dos parrafos como maximo.
         local desc = Resumen2(bg.desc)

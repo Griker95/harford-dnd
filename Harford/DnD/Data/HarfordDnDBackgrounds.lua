@@ -29,7 +29,7 @@ end
 
 API.BACKGROUNDS = {
     {
-        id = "boticario_oscuro", name = "Boticario Oscuro", source = "Warcraft", icon = "ui_darkshore_warfront_horde_alchemist",
+        id = "boticario_oscuro", name = "Boticario Oscuro", nameF = "Boticaria Oscura", source = "Warcraft", icon = "ui_darkshore_warfront_horde_alchemist",
         desc = "Has formado parte de la Sociedad Real de Boticarios (conocida como la Sociedad de Boticarios o abreviada como S.R.B.), una organización alquímica con sede en el Apothecarium de Entrañas. Fue fundada por Lady Sylvanas Brisaveloz para crear una nueva plaga no-muerta destinada a erradicar a la Plaga. Sus miembros son Renegados u otros tipos de no-muertos que sirven a la causa de Sylvanas. Trabajan constantemente en nuevas plagas y venenos para desatar sobre los enemigos de Sylvanas.\n\nOtras razas de la Horda también colaboran, algunas en busca de una cura para su \"condición\". Los miembros de esta sociedad suelen llamarse boticarios o boticarios oscuros.",
         traits = {
             { id = "bg_bot_competencias", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Conocimiento Arcano e Investigación.", effects = {
@@ -86,7 +86,7 @@ API.BACKGROUNDS = {
     },
     -- ===== Trasfondos del Manual del Jugador (PHB 5e ES) =====
     {
-        id = "acolito", name = "Acolito", source = "PHB", icon = "spell_holy_impholyconcentration",
+        id = "acolito", name = "Acolito", nameF = "Acolita", source = "PHB", icon = "spell_holy_impholyconcentration",
         aliases = { "ac_lito" },
         desc = "Has dedicado tu vida al servicio de un templo consagrado a un dios o panteón de dioses. Sirves de intermediario entre el reino de lo sagrado y el mundo mortal, realizando rituales religiosos y ofreciendo sacrificios para que los fieles puedan ser partícipes de la presencia divina. No tienes por qué ser un clérigo; llevar a cabo ritos sagrados no es lo mismo que canalizar el poder divino. Escoge un dios, un panteón de deidades o cualquier otro ente cuasidivino de entre los enumerados en el apéndice B o los especificados por tu DM, y habla con este último para definir claramente la naturaleza de tu servicio a la religión. ¿Eras un funcionario menor en el templo, criado desde pequeño para asistir a los sacerdotes en los rituales sacros? ¿O eras un sumo sacerdote que fue llamado por su dios a servirle de otra forma? Quizá fueras el líder de una pequeña secta al margen de cualquier religión establecida o, incluso, de un grupo de adoradores de lo oculto que servían a un amo infernal del que ahora reniegas.",
         traits = {
@@ -99,7 +99,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "animador", name = "Animador", variants = { { id = "animador_gladiador", icon = "achievement_featsofstrength_gladiator_03", name = "Gladiador", desc = "Los gladiadores son tan merecedores del título de animador como un juglar o un artista circense, solo que recurren a las artes del combate para dar al público un espectáculo del que disfrutar. Esta clase de florituras marciales son un tipo de actuación, aunque también podrías ganarte la vida como saltimbanqui o actor.  Podrás usar el rasgo Por petición popular para encontrar dónde actuar en cualquier entorno en el que se conciba el combate como un entretenimiento. Una arena de gladiadores o un club de la lucha son dos buenos ejemplos.  Puedes sustituir el instrumento musical de tu equipo inicial por un arma inusual (aunque asequible), como puede ser un tridente o una red.", icon = "achievement_featsofstrength_gladiator_03" } }, source = "PHB", icon = "achievement_halloween_smiley_01",
+        id = "animador", name = "Animador", nameF = "Animadora", variants = { { id = "animador_gladiador", icon = "achievement_featsofstrength_gladiator_03", name = "Gladiador", desc = "Los gladiadores son tan merecedores del título de animador como un juglar o un artista circense, solo que recurren a las artes del combate para dar al público un espectáculo del que disfrutar. Esta clase de florituras marciales son un tipo de actuación, aunque también podrías ganarte la vida como saltimbanqui o actor.  Podrás usar el rasgo Por petición popular para encontrar dónde actuar en cualquier entorno en el que se conciba el combate como un entretenimiento. Una arena de gladiadores o un club de la lucha son dos buenos ejemplos.  Puedes sustituir el instrumento musical de tu equipo inicial por un arma inusual (aunque asequible), como puede ser un tridente o una red.", icon = "achievement_featsofstrength_gladiator_03" } }, source = "PHB", icon = "achievement_halloween_smiley_01",
         desc = "Tu sitio favorito es frente al público. Sabes cómo encandilarlo, entretenerlo e incluso inspirarlo. Tus poemas animan el corazón de quienes te escuchan, despertando en ellos la pena, la alegría, la risa o la furia. Tu música levanta sus á nimos o apresa su melancolía. Tus pasos de baile les cautivan y tus burlas les hieren en el alma. Sean cuales sean las técnicas que emplees, tu arte es tu vida.",
         traits = {
             { id = "bg_ani_comp", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Acrobacias e Interpretación.", effects = {
@@ -111,7 +111,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "artesano_gremial", name = "Artesano gremial", variants = { { id = "artesano_gremial_comerciante_gremial", icon = "eps_arc_sign_oribos_trade", name = "Comerciante gremial", desc = "En lugar de pertenecer a un gremio de artesanos, formas parte de un gremio de comerciantes, caravaneros o tenderos. No produces objetos tú mismo, sino que para ganarte la vida compras y vendes el trabajo de los demás (o las materias primas que los artesanos necesitan para hacer su trabajo). Tu gremio podría tratarse de un gran consorcio (o familia) de mercaderes con intereses a lo largo y ancho de la región. Quizás transportabas bienes de un sitio a otro, ya fuera en barco, carro o caravana. O puede que se los compraras a mercaderes itinerantes y los vendieras en tu pequeña tienda. En cierta forma, la vida de un comerciante en tránsito se parece mucho más a la aventura que la de un artesano.  En lugar de ser competente con herramientas de artesano, podrías serlo con herramientas de navegación o en un idioma adicional. Si decides renunciar a las herramientas de artesano, podrías poseer una mula y un carro mercante.", icon = "eps_arc_sign_oribos_trade" } }, source = "PHB", icon = "eps_arc_sign_oribos_trade",
+        id = "artesano_gremial", name = "Artesano gremial", nameF = "Artesana gremial", variants = { { id = "artesano_gremial_comerciante_gremial", icon = "eps_arc_sign_oribos_trade", name = "Comerciante gremial", desc = "En lugar de pertenecer a un gremio de artesanos, formas parte de un gremio de comerciantes, caravaneros o tenderos. No produces objetos tú mismo, sino que para ganarte la vida compras y vendes el trabajo de los demás (o las materias primas que los artesanos necesitan para hacer su trabajo). Tu gremio podría tratarse de un gran consorcio (o familia) de mercaderes con intereses a lo largo y ancho de la región. Quizás transportabas bienes de un sitio a otro, ya fuera en barco, carro o caravana. O puede que se los compraras a mercaderes itinerantes y los vendieras en tu pequeña tienda. En cierta forma, la vida de un comerciante en tránsito se parece mucho más a la aventura que la de un artesano.  En lugar de ser competente con herramientas de artesano, podrías serlo con herramientas de navegación o en un idioma adicional. Si decides renunciar a las herramientas de artesano, podrías poseer una mula y un carro mercante.", icon = "eps_arc_sign_oribos_trade" } }, source = "PHB", icon = "eps_arc_sign_oribos_trade",
         desc = "Eres un miembro de un gremio, hábil en una disciplina concreta y con lazos estrechos con otros artesanos. Tu papel supone una parte fundamental de la cadena comercial, libre de las restricciones de una sociedad fe uda l gracias a tu talento y riqueza. Adquiriste tus habilidades bajo la tutela de un maestro artesano y, gracias al patrocinio de tu gremio, tú mismo te convertirse en maestro por derecho propio.",
         traits = {
             { id = "bg_art_comp", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Perspicacia y Persuasión.", effects = {
@@ -124,7 +124,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "charlatan", name = "Charlatan", source = "PHB",
+        id = "charlatan", name = "Charlatan", nameF = "Charlatana", source = "PHB",
         aliases = { "charlat_n" },
         desc = "Eres consciente de lo que la gente desea y tú se los das. O, mejor dicho, prometes dárselo. Deberían desconfiar de aquello que parece demasiado bueno para ser verdad, pero el sentido común es el menos común de los sentidos; un hecho que parece acentuarse con tu presencia: seguro que esa botella de líquido rosáceo puede curar ese sarpullido indecoroso; resulta que este ungüento (que en realidad no es más que grasa y una pizca de polvo de plata) proporciona juventud y vigor; casualmente uno de los pendientes de la ciudad está en venta. Todas estas maravillas aparentan ser poco plausibles, pero cuando salen de tus labios suenan auténticas.",
         traits = {
@@ -149,7 +149,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "ermitano", name = "Ermitaño", source = "PHB",
+        id = "ermitano", name = "Ermitaño", nameF = "Ermitaña", source = "PHB",
         aliases = { "ermita_o" },
         desc = "Has pasado gran parte de tus años de aprendizaje aislado, ya fuera como parte de una comunidad resguardada del exterior, como un monasterio, o completamente solo. Apartado del clamor de la sociedad has encontrado quietud, soledad y puede que, incluso, algunas de las respuestas que estabas buscando.",
         traits = {
@@ -163,7 +163,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "erudito", name = "Erudito", source = "PHB", icon = "wh_focusedmind",
+        id = "erudito", name = "Erudito", nameF = "Erudita", source = "PHB", icon = "wh_focusedmind",
         desc = "Has pasado años aprendiendo sobre el universo. Has leído detenidamente manuscritos, estudiado pergaminos y escuchado a los mayores expertos de los temas que te interesan. Tus esfuerzos te han convertido en un maestro de tu campo.",
         traits = {
             { id = "bg_eru_comp", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Conocimiento Arcano e Historia.", effects = {
@@ -175,7 +175,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "heroe_pueblo", name = "Heroe del pueblo", source = "PHB",
+        id = "heroe_pueblo", name = "Heroe del pueblo", nameF = "Heroina del pueblo", source = "PHB",
         aliases = { "h_roe del pueblo", "h_roe_del_pueblo" },
         desc = "Provienes de un estrato social bajo, pero estás destinado a llegar muy lejos. Los habitantes de tu pueblo natal ya te consideran su campeón y los hados te llaman a enfrentarte a los tiranos y monstruos que amenazan a la gente sencilla.",
         traits = {
@@ -188,7 +188,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "huerfano", name = "Huerfano", source = "PHB", icon = "eps_lol_profileicon_ezbereal",
+        id = "huerfano", name = "Huerfano", nameF = "Huerfana", source = "PHB", icon = "eps_lol_profileicon_ezbereal",
         aliases = { "hu_rfano" },
         desc = "Creciste solo y en la calle, huérfano y pobre. No había nadie que te cuidara o mantuviera, así que aprendiste a sobrevivir por ti mismo. Luchaste ferozmente por conseguir comida y nunca quitabas la vista del resto de pobres almas, que querían robarte. Dormías en tejados y callejones, a la intemperie, y te sobrepusiste a enfermedades sin la ayuda de la medicina o un lugar en el que recuperarte. Contra todo pronóstico, sobreviviste, y lo hiciste gracias a tu astucia, fuerza, velocidad o una combinación de ellas. Empezaste tu vida como aventurero con el dinero suficiente como para vivir de forma modesta pero segura durante al menos diez días. ¿Cómo conseguiste ese dinero? ¿Qué te permitió libera rte de tus circunstancias desesperadas y embarcarte en una vida mejor?",
         traits = {
@@ -201,7 +201,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "marinero", name = "Marinero", variants = { { id = "marinero_pirata", name = "Pirata", desc = "Has pasado tu juventud bajo la influencia de un temible pirata; un asesino despiadado que te enseñó a sobrevivir en un mundo de tiburones y salvajes. Te has dado el gusto de hurtar a otros barcos y has enviado a más de un alma a una tumba salada. El miedo y el derramamiento de sangre no te son extraños, pues te has forjado una despreciable reputación en multitud de puertos.  Si decides que tu carrera como marinero ha incluido la piratería, puedes elegir el rasgo Mala Reputación en lugar de Pasaje en un Barco.", icon = "inv_helm_cloth_b_01pirate_classic" } }, source = "PHB",
+        id = "marinero", name = "Marinero", nameF = "Marinera", variants = { { id = "marinero_pirata", name = "Pirata", desc = "Has pasado tu juventud bajo la influencia de un temible pirata; un asesino despiadado que te enseñó a sobrevivir en un mundo de tiburones y salvajes. Te has dado el gusto de hurtar a otros barcos y has enviado a más de un alma a una tumba salada. El miedo y el derramamiento de sangre no te son extraños, pues te has forjado una despreciable reputación en multitud de puertos.  Si decides que tu carrera como marinero ha incluido la piratería, puedes elegir el rasgo Mala Reputación en lugar de Pasaje en un Barco.", icon = "inv_helm_cloth_b_01pirate_classic" } }, source = "PHB",
         desc = "Has sido marinero en un barco durante años. A lo largo de este periodo te has enfrentado a tormentas portentosas, monstruos de las profundidades y aquellos que querían hundir tu navío en las profundidades sin fondo. Tu primer amor fueron los vastos horizontes, pero ha llegado la hora de probar algo nuevo.\n\nHabla con tu DM para determinar el tipo de barco en el que navegabas. Pudo tratarse de un navío mercante, un buque de guerra, un velero en busca de descubrimiento o un barco pirata. ¿Era una nave famosa (o infame)?, ¿ha visto mucho mundo?, ¿sigue en activo o se ha perdido junto con su tripulación?\n\nPiensa en cuál era tu labor a bordo: contramaestre, capitán, navegante, cocinero o cualquier otro cargo. ¿Quiénes eran el capitán y el primer oficial? ¿Abandonaste el barco de manera amistosa o huyendo de tus compañeros?",
         traits = {
             { id = "bg_mar_comp", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Atletismo y Percepción.", effects = {
@@ -252,7 +252,7 @@ API.BACKGROUNDS = {
     },
     -- ===== Trasfondos de mesa / suplementos usados en perfiles Harford =====
     {
-        id = "capitan_veterano_harford", name = "Capitan veterano harford", source = "Harford", icon = "inv_tabard_duelersguild",
+        id = "capitan_veterano_harford", name = "Capitan veterano harford", nameF = "Capitana veterana harford", source = "Harford", icon = "inv_tabard_duelersguild",
         aliases = { "capitan", "capitan harford", "veterano harford" },
         desc = "Fuiste mas que un simple mercenario: diste órdenes que salvaron vidas y lideraste cuando otros habrían huido. Tu reputación como Capitán de la Compañía Harford te precede en muchos rincones del mundo.",
         traits = {
@@ -263,7 +263,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "el_loco", name = "El loco", source = "Harford", icon = "spell_magic_polymorphrabbit",
+        id = "el_loco", name = "El loco", nameF = "La loca", source = "Harford", icon = "spell_magic_polymorphrabbit",
         aliases = { "loco" },
         desc = "Tu paso por la Compañía Harford, la Espada de Ébano y una antigua herida rúnica te han dejado una reputación irregular, útil y difícil de ignorar.",
         traits = {
@@ -276,7 +276,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "mercenario_veterano_harford", name = "Mercenario veterano", variants = { {
+        id = "mercenario_veterano_harford", name = "Mercenario veterano", nameF = "Mercenaria veterana", variants = { {
             id = "mercenario_veterano_harford_veterano_harford", icon = "inv_tabard_duelersguild", name = "Veterano Harford",
             desc = "Has combatido bajo una bandera que pocos recordarían con honor, pero que tú llevas con orgullo. Fuiste parte de la Compañía Harford, un grupo caótico, desigual y extremadamente ruidoso de mercenarios cuya fama procede más de su terquedad y supervivencia que de su disciplina o precisión militar. Leal no al mando, sino al emblema de la compañía y a sus camaradas, tu vida ha sido un desfile de asedios imposibles, retiradas gloriosas, saqueos improvisados y victorias ganadas por pura testarudez.\n\nQuizá empuñaste una espada junto a desertores, navegaste en una bañera flotante apodada \"barco\", o luchaste codo con codo con magos descalzos, guerreros sin armadura y gentes extrañas. En Harford no importaba tu raza, pasado o linaje, sino si sabías mantenerte en pie tras una emboscada. Allí aprendiste a sobrevivir más que a guerrear, y a confiar en la fuerza de la costumbre, el ingenio callejero y la suerte de los insensatos.",
             -- Rasgos PROPIOS: sustituyen por completo a los del base (esquema de variantes con
@@ -320,7 +320,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "exiliado_alterac", name = "Exiliado de Alterac", source = "Warcraft",
+        id = "exiliado_alterac", name = "Exiliado de Alterac", nameF = "Exiliada de Alterac", source = "Warcraft",
         aliases = { "alterac", "exiliado alterac", "exiliado de alterac" },
         desc = "Fuiste criado entre los restos de un reino traicionado y borrado del mapa. Tu familia fue leal al trono de Alterac, o quizás solo fue arrastrada por la caída del rey Perenolde y la humillación pública de tu pueblo. Tras la Segunda Guerra, mientras los reinos humanos reescribían la historia, tú creciste escuchando una versión distinta: una de abandono, de culpa compartida, de dignidad pisoteada.\n\nAlgunos de los tuyos se unieron al Sindicato, otros huyeron al exilio, muchos vivieron décadas como ciudadanos de segunda. Pero los exiliados de Alterac no olvidan, y aunque su reino esté en ruinas, su identidad sigue viva. Tú eres uno de ellos: marcado por la historia, endurecido por la pérdida, y con un legado que no desaparece.",
         traits = {
@@ -337,7 +337,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "acolito_luz_abisal", name = "Acolito de la Luz Abisal", source = "Warcraft",
+        id = "acolito_luz_abisal", name = "Acolito de la Luz Abisal", nameF = "Acolita de la Luz Abisal", source = "Warcraft",
         aliases = { "luz abisal", "acolito luz abisal" },
         desc = "Has sido moldeado por las enseñanzas del Templo de la Luz Abisal, un santuario nacido durante la campaña de Legión, donde discípulos de la Luz y campeones de la Sombra se alzaron juntos en desafío de una oscuridad mayor.\n\nAdiestrado por sacerdotes, caminantes del vacío y profetas poco ortodoxos, aprendiste a transitar el estrecho sendero entre lo divino y lo profano. Ya seas un verdadero creyente, un escéptico que presenció un milagro, o un recipiente reacio imbuido tanto por la Luz como por el Vacío, tu presencia emana una calma que incomoda a los fanáticos de ambos extremos.",
         traits = {
@@ -356,7 +356,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "adepto_cosecha_oscura", name = "Adepto de la cosecha oscura", source = "Warcraft",
+        id = "adepto_cosecha_oscura", name = "Adepto de la cosecha oscura", nameF = "Adepta de la cosecha oscura", source = "Warcraft",
         aliases = { "cosecha oscura", "adepto cosecha oscura" },
         desc = "Fuiste entrenado por la Cosecha Oscura, una oscura cábala de brujos y eruditos arcanos que buscan dominar la magia vil y del vacío—no por devoción, sino por dominación.\n\nPara la Cosecha Oscura, el conocimiento es el arma más afilada. Sus miembros no sirven a fuerzas oscuras ciegamente—las diseccionan, las controlan y las doblegan a su voluntad. Ya fueras un pícaro siniestro, un superviviente de la influencia demoníaca o un estudioso de saberes prohibidos, tu iniciación te marcó como algo más: un portador de conocimientos peligrosos.\n\nTu entrenamiento fue arduo, secreto y, a menudo, solitario, pero te concedió herramientas que pocos mortales se atreven siquiera a reclamar. Cargas contigo las lecciones de aquellos que creen que el control sobre la oscuridad no solo es posible—es necesario.",
         traits = {
@@ -378,7 +378,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "bucanero_retirado", name = "Bucanero retirado", source = "Warcraft",
+        id = "bucanero_retirado", name = "Bucanero retirado", nameF = "Bucanera retirada", source = "Warcraft",
         desc = "Fuiste en su día un temido miembro de una tripulación notoria, sembrando el terror por los mares con tus hazañas piratas.\n\nSin embargo, has dejado atrás tu pasado criminal. Ahora recorres el mundo, buscando demostrar tu valía más allá de la piratería. Ya sea que hayas pertenecido a los Bucaneros Velasangre, los Asaltantes Aguasnegras, las Ratas de Pantoque o cualquier otra tripulación, el mundo te percibe del mismo modo.",
         traits = {
             { id = "bg_buc_comp", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Engaño y Atletismo.", effects = { Skill("Engano"), Skill("Atletismo") } },
@@ -387,7 +387,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "buscador_sombrio", name = "Buscador sombrio", source = "Harford", icon = "dos2_shadow12",
+        id = "buscador_sombrio", name = "Buscador sombrio", nameF = "Buscadora sombria", source = "Harford", icon = "dos2_shadow12",
         aliases = { "buscador sombrio" },
         desc = "Nunca has tenido un gran propósito heroico. Te mueven impulsos mas pequeños pero intensos: proteger lo que importa y encontrar tu lugar en un mundo que nunca te lo puso fácil.",
         traits = {
@@ -398,7 +398,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "caballero_orden", name = "Caballero de la orden", source = "Warcraft",
+        id = "caballero_orden", name = "Caballero de la orden", nameF = "Caballera de la orden", source = "Warcraft",
         aliases = { "caballero de la orden" },
         desc = "Fuiste entrenado por una orden marcial estructurada como la Mano de Plata, los Caballeros de Sangre, los Caminasol, la Cruzada Escarlata o la Espada de Ébano, todos ellos devotos de un ideal superior al de ellos mismos.\n\nYa sea que hayas sido un acólito de la Luz, un sacerdote de An’she, o un soldado templado en las sombras, tu disciplina y sentido del deber te distinguen. Algunos aún portan el símbolo de su orden con orgullo; otros recorren un camino solitario, comprometidos con causas que otros han abandonado o repudiado. Ya fuera que tus votos se juraran bajo el sol o se grabaran en la no-muerte, estos continúan moldeando tus convicciones... y tu poder.",
         traits = {
@@ -412,7 +412,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "cruzado_argenta", name = "Cruzado Argenta", source = "Warcraft",
+        id = "cruzado_argenta", name = "Cruzado Argenta", nameF = "Cruzada Argenta", source = "Warcraft",
         aliases = { "cruzada argenta", "argenta" },
         desc = "Como miembro leal de la Cruzada Argenta, eres un defensor tenaz contra las fuerzas de oscuridad que amenazan Azeroth. Forjado en el crisol del conflicto, portas el estandarte de la esperanza y empuñas el poder de la rectitud para erradicar horrores no-muertos y otras entidades malévolas. Tu inquebrantable dedicación al honor, al deber y a la justicia te impulsa a luchar al frente de la batalla, liderando la carga contra la oscuridad que busca envolver el mundo.",
         traits = {
@@ -422,7 +422,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "desertor_errante", name = "Desertor errante", source = "Warcraft", icon = "achievement_general_classicbattles",
+        id = "desertor_errante", name = "Desertor errante", nameF = "Desertora errante", source = "Warcraft", icon = "achievement_general_classicbattles",
         aliases = { "desertor" },
         desc = "Los desertores errantes son individuos que han dejado atrás las ataduras de su facción anterior, impulsados por una sed de libertad personal y el deseo de forjar su propio destino. Desencantados con las ideologías que antes los definían, siguen ahora un camino incierto como agentes independientes, guiados por un renovado sentido de autonomía y su propio código moral.\n\nEstos desertores están unidos por su valentía para romper con el pasado, abrazando una vida de incertidumbre mientras forjan alianzas, desafían normas y buscan su lugar en el turbulento mundo de Azeroth.",
         traits = {
@@ -460,7 +460,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "devoto_elune", name = "Devoto de Elune", source = "Harford", icon = "eps_wow_eluneschosen",
+        id = "devoto_elune", name = "Devoto de Elune", nameF = "Devota de Elune", source = "Harford", icon = "eps_wow_eluneschosen",
         aliases = { "devoto de elune", "devota de elune", "devoto elune", "devota elune" },
         desc = "Has dedicado tu vida a servir a Elune, la Dama de la Luna, llevando consuelo, remedios y esperanza a quienes sufren. Para ti, mientras quede una chispa de vida, merece la pena intentar salvarla.",
         traits = {
@@ -476,7 +476,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "forastero", name = "Forastero", source = "Warcraft",
+        id = "forastero", name = "Forastero", nameF = "Forastera", source = "Warcraft",
         aliases = { "extranjero" },
         desc = "La mayoría de los habitantes de Azeroth jamás abandonan su tierra natal. Ya sea un campesino de los Reinos del Este, un tabernero en Kalimdor o un comerciante en Zandalar, muchos viven y mueren sin alejarse más que unos pocos kilómetros de donde nacieron. Tú no eres como ellos.\n\nVienes de una región lejana, exótica o directamente desconocida para la mayoría. Quizá naciste en los valles ocultos de Pandaria, entre las ruinas susurrantes de Uldum, o en alguna aldea perdida de Rasganorte. Tal vez incluso tu patria se halle más allá del Gran Mar o en una isla apenas registrada en los mapas de la Horda o la Alianza. Sea como sea, tu historia es inusual, y las razones que te han traído hasta aquí pueden ser personales, políticas, místicas... o un misterio que prefieres no revelar.\n\nAl llegar a estas tierras, muchas costumbres te resultan extrañas, incluso ridículas; pero también hay maravillas que nunca imaginaste: ciudades suspendidas en el aire, mercados infestados de goblins y criaturas que solo habías oído en viejas canciones. De igual forma, tú eres un enigma andante para los demás: alguien con acento raro, hábitos desconcertantes o apariencia única. Donde vayas, despertarás curiosidad, respeto o desconfianza... o las tres cosas a la vez.",
         traits = {
@@ -490,7 +490,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "forjador_torio", name = "Forjador de la Hermandad del Torio", source = "Warcraft",
+        id = "forjador_torio", name = "Forjador de la Hermandad del Torio", nameF = "Forjadora de la Hermandad del Torio", source = "Warcraft",
         aliases = { "hermandad del torio", "forjador de torio", "forjador torio" },
         desc = "Perteneces a una casta de artesanos que anteponen la perfección a cualquier otra virtud. La Hermandad no acepta mediocridad: solo aquellos que soportan el calor y la presión de sus hornos pueden ganarse un nombre entre los suyos. Has aprendido los secretos de la forja encantada, de la runomagia práctica, y sabes que el valor de un objeto está en su equilibrio entre utilidad y arte.\n\nPuede que seas enano, pero no necesariamente. Aunque raros, se conocen casos de orcos, elfos o humanos que han sido aceptados como aprendices si demostraban una maestría sin igual y un respeto absoluto por el oficio. En cualquier caso, el orgullo de tu trabajo habla antes que tu raza.",
         traits = {
@@ -501,7 +501,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "guardian_salvaje", name = "Guardian de lo salvaje", source = "Warcraft", icon = "ability_hunter_huntervswild",
+        id = "guardian_salvaje", name = "Guardian de lo salvaje", nameF = "Guardiana de lo salvaje", source = "Warcraft", icon = "ability_hunter_huntervswild",
         aliases = { "guardian de lo salvaje", "guardiana de lo salvaje", "guardian salvaje" },
         desc = "Fuiste entrenado por un enclave primitivo, una sociedad de supervivencia o un grupo de sabiduría salvaje vinculados a organizaciones como el Refugio Alblanco, la Senda Oculta, los Errantes, las Centinelas, las expediciones de Hemet Nesingwary o círculos locales en la naturaleza a lo largo de Azeroth.\n\nDesde las brumosas alturas de las Colinas Pardas hasta las enredadas raíces de Val’sharah y los cañones de Nagrand, los parajes salvajes de Azeroth perduran solo bajo la custodia de quienes conocen sus ritmos. Aprendiste no solo a sobrevivir en tierras indómitas, sino a leer sus señales, proteger sus secretos y restaurar su equilibrio cuando se ve amenazado.",
         traits = {
@@ -524,7 +524,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "heredero", name = "Heredero", source = "Warcraft",
+        id = "heredero", name = "Heredero", nameF = "Heredera", source = "Warcraft",
         desc = "Has heredado algo de gran valor; no solo dinero o fortuna, sino un objeto que se te ha confiado a ti y solo a ti. Puede que esta herencia te la haya legado directamente un miembro de tu familia por derecho de nacimiento, o bien que te la haya dejado un amigo, mentor, profesor o alguien importante. La revelación de esta herencia te cambió la vida, y quizá te condujo al camino de la aventura. Sin embargo, también puede estar cargada de peligros, incluyendo a quienes codician tu tesoro y te lo quieren arrebatar, si hace falta, por la fuerza.",
         traits = {
             { id = "bg_hered_superv", icon = "inv_scroll_11", name = "Supervivencia", type = "pasivo", description = "Competencia en Supervivencia.", effects = { Skill("Supervivencia") } },
@@ -587,7 +587,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "novato_liga_expedicionarios", name = "Novato de la Liga de Expedicionarios", source = "Warcraft",
+        id = "novato_liga_expedicionarios", name = "Novato de la Liga de Expedicionarios", nameF = "Novata de la Liga de Expedicionarios", source = "Warcraft",
         aliases = { "liga de expedicionarios", "novato expedicionarios" },
         desc = "Eres un orgulloso miembro de la renombrada Liga de Expedicionarios, una estimada organización dedicada a descubrir tesoros ocultos, artefactos ancestrales y los misterios del pasado de Azeroth. Con una sed de aventuras y pasión por el conocimiento, has recorrido territorios inexplorados, enfrentado desafíos peligrosos y desentrañado acertijos en tu búsqueda por la verdad.\n\nComo miembro de la Liga de Expedicionarios, encarnas el espíritu de la curiosidad, el coraje y la camaradería, siempre dispuesto a revelar los secretos del mundo y compartirlos con mentes ansiosas por aprender.",
         traits = {
@@ -598,7 +598,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "operativo_ravenholdt", name = "Operativo de Ravenholdt", source = "Warcraft",
+        id = "operativo_ravenholdt", name = "Operativo de Ravenholdt", nameF = "Operativa de Ravenholdt", source = "Warcraft",
         aliases = { "ravenholdt" },
         desc = "Los miembros del trasfondo Operativo de Ravenholdt son infiltradores expertos y agentes encubiertos dentro de la enigmática organización Ravenholdt. Con talento para el espionaje y el subterfugio, destacan en la obtención de información crítica, la ejecución de misiones sigilosas y el uso de verdades ocultas. Estos operativos navegan con destreza el mundo del secreto, guiados por motivaciones o lealtades propias, manipulando las sombras para cumplir sus objetivos clandestinos.",
         traits = {
@@ -608,7 +608,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "protector_cenarion", name = "Protector Cenarion", source = "Warcraft",
+        id = "protector_cenarion", name = "Protector Cenarion", nameF = "Protectora Cenarion", source = "Warcraft",
         aliases = { "cenarion", "protector cenarion" },
         desc = "Los Protectores Cenarion son guardianes dedicados de la naturaleza, unidos por una conexión inquebrantable con el mundo natural y un solemne deber de preservar su equilibrio. Con una profunda reverencia por lo salvaje, poseen una afinidad innata por la sanación y el dominio sobre plantas y animales. Estos protectores obtienen su fuerza de su inquebrantable compromiso con la protección del entorno, y a menudo se internan en las tierras más indómitas para defenderse de amenazas y nutrir la armonía de los ecosistemas de Azeroth.",
         traits = {
@@ -641,7 +641,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "cazarrecompensas_urbano", name = "Cazarrecompensas urbano", source = "SCAG", icon = "inv_bountyhunting",
+        id = "cazarrecompensas_urbano", name = "Cazarrecompensas urbano", nameF = "Cazarrecompensas urbana", source = "SCAG", icon = "inv_bountyhunting",
         aliases = { "cazarrecompensas", "cazador de recompensas urbano" },
         desc = "Antes de convertirte en aventurero, tu vida ya estaba llena de conflictos y emoción, pues te ganabas el sustento persiguiendo a personas a cambio de dinero. Pero, a diferencia de quienes recogen recompensas, no eres un salvaje que sigue a una presa cruzando la naturaleza. Estás relacionado con un comercio lucrativo en el lugar en el que resides, trabajo que a diario pone a prueba tus habilidades e instintos de supervivencia. Además, no estás solo como lo estaría un cazarrecompensas en la naturaleza. Habitualmente interactúas tanto con la subcultura criminal como con otros cazadores de recompensas y conservas contactos en ambos ambientes que te permiten triunfar.\n\nQuizá seas un cazador de ladrones astuto, que acecha en los tejados para capturar a uno de los muchísimos rateros de la ciudad. Puede que sigas alguien con los oídos abiertos en la calle, un individuo que sabe qué se traen entre manos los gremios de ladrones y las bandas callejeras. O quizá seas un cazarrecompensas con máscara de terciopelo, alguien capaz de infiltrarse en la alta sociedad y los círculos negros para localizar a los criminales que se aprovechan de personas con características o estafadores. La comunidad en la que llevabas a cabo tus negocios tal vez fuera una de las grandes ciudades o un lugar menos poblado. Sirve cualquier lugar lo suficientemente grande como para tener un flujo continuo de presas potenciales.\n\nComo miembro de un grupo de aventureros, quizá descubras que es más complicado servir a tus intereses personales cuando no encajan con los objetivos del resto. Por otra parte, puedes hacer caer a objetivos mucho más imponentes con la ayuda de tus compañeros.",
         traits = {
@@ -691,7 +691,7 @@ API.BACKGROUNDS = {
         },
     },
     {
-        id = "veterano_campo_batalla", name = "Veterano del campo de batalla", source = "Warcraft", icon = "inv_banner_03",
+        id = "veterano_campo_batalla", name = "Veterano del campo de batalla", nameF = "Veterana del campo de batalla", source = "Warcraft", icon = "inv_banner_03",
         aliases = { "veterano de campo de batalla", "veterano" },
         desc = "Los veteranos del campo de batalla son guerreros endurecidos por la guerra, con amplia experiencia en los feroces conflictos de los campos de batalla más emblemáticos de Azeroth. Estos veteranos poseen una mezcla de adaptabilidad, camaradería y espíritu competitivo que se ha forjado a lo largo de incontables enfrentamientos.\n\nViven la emoción de la victoria, encarnan el honor del campo de batalla y llevan las cicatrices de sus triunfos y derrotas pasadas. Los veteranos inspiran a otros, forjan lazos inquebrantables y persiguen la gloria con determinación, mientras enfrentan sus propios demonios internos nacidos del caos de la guerra.",
         traits = {
@@ -703,7 +703,7 @@ API.BACKGROUNDS = {
         -- Trasfondo propio: su unica fuente es la ficha TRP3 del jugador. De ahi salen la
         -- descripcion y el rasgo; las competencias, herramientas y equipo no estan
         -- declaradas en ninguna parte y por eso no se inventan aqui.
-        id = "gladiador_goriano", name = "Gladiador goriano", source = "Harford", icon = "achievement_dungeon_ogreslagmines",
+        id = "gladiador_goriano", name = "Gladiador goriano", nameF = "Gladiadora goriana", source = "Harford", icon = "achievement_dungeon_ogreslagmines",
         aliases = { "gladiador goriano", "gladiador de gorgrond", "gladiador" },
         desc = "Fuiste forjado en las arenas del Imperio Goriano, donde los débiles desaparecían bajo la arena y los fuertes vivían un combate más. Entre cadenas, gritos y acero, aprendiste a convertir el miedo en furia y el dolor en disciplina. Los ogros creyeron haberte domesticado; solo lograron enseñarte a sobrevivir. Ahora luchas por tu propia voluntad, y ningún amo volverá a decidir tu destino.",
         traits = {
@@ -777,7 +777,7 @@ function API.FindBackgroundIdByText(text)
     EnsureIndex()
     local bestId, bestLen
     for _, bgDef in ipairs(API.BACKGROUNDS) do
-        local candidates = { bgDef.id, bgDef.name }
+        local candidates = { bgDef.id, bgDef.name, bgDef.nameF }
         for _, alias in ipairs(bgDef.aliases or {}) do
             candidates[#candidates + 1] = alias
         end

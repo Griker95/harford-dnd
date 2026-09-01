@@ -2565,6 +2565,9 @@ local function CreateFrameIfNeeded()
     S.classSummary = MakeText(frame, "GameFontDisableSmall", "")
     S.classSummary:SetPoint("TOPLEFT", 592, -82)
     S.classSummary:SetWidth(350)
+    -- Tres lineas como maximo: el resumen web de clase ocupa 2-3 y sin tope invadia el
+    -- selector de subclase y la cabecera de rasgos.
+    if S.classSummary.SetMaxLines then S.classSummary:SetMaxLines(3) end
     S.classSummary:SetJustifyH("LEFT")
     S.classSummary:SetNonSpaceWrap(false)
     local subclassLabel = MakeText(frame, "GameFontDisableSmall", "Subraza")
@@ -2608,6 +2611,10 @@ local function CreateFrameIfNeeded()
     S.detailText = MakeText(frame, "GameFontHighlightSmall", "")
     S.detailText:SetPoint("TOPLEFT", 970, -296)
     S.detailText:SetWidth(214)
+    -- El hueco hasta el bloque de elecciones (-468) son ~170px: sin tope, un rasgo con texto
+    -- largo del manual (Lanzamiento de Conjuros del Paladin) se desbordaba por debajo del
+    -- frame entero. El texto completo se consulta en el Libro; aqui es un panel de resumen.
+    if S.detailText.SetMaxLines then S.detailText:SetMaxLines(12) end
     S.detailText:SetJustifyH("LEFT")
     S.detailText:SetNonSpaceWrap(false)
     S.detailChoices = MakeText(frame, "GameFontDisableSmall", "")

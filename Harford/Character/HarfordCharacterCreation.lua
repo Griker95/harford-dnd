@@ -1146,8 +1146,12 @@ function API.BuildAbout(draft, profileName)
             local subBody = BuildTraitLines(subTraits, draft)
             if subBody ~= "" then
                 local hex = ClassHex(class.name)
+                -- Formato nuevo: "{Clase} {Subclase}" con el color de clase y el de spec
+                -- ("Picaro Asesinato"). El formato viejo "Especializacion <Sub>" se sigue
+                -- LEYENDO (TituloRango) para los perfiles anteriores; solo cambia lo escrito.
                 local lines = {
-                    "{h1:c}Especializacion {col:" .. SubclassColor(subclass.name, hex) .. "}"
+                    "{h1:c}{col:" .. hex .. "}" .. tostring(class.name) .. "{/col} {col:"
+                        .. SubclassColor(subclass.name, hex) .. "}"
                         .. tostring(subclass.name) .. "{/col}{/h1}",
                     subBody,
                 }
@@ -1292,6 +1296,19 @@ local function TituloRango(titulo, clases, raceId, rangoPrevio)
     end
     if SinPrefijo(t, "Trasfondo ") then return RANGO_TRASFONDO end
 
+    -- Formato nuevo "Clase Subclase" ("Picaro Asesinato"): si el texto resuelve la clase Y
+    -- ADEMAS una subclase suya, es el frame de SUBCLASE. Va antes que RangoClase, que lo
+    -- reclamaria como frame de clase. El formato viejo "Especializacion <Sub>" ya se leyo.
+    if B and B.FindClassIdByText and B.FindSubclassIdByText then
+        for i, e in ipairs(clases or {}) do
+            if B.FindClassIdByText(t) == e.classId then
+                local sub = B.FindSubclassIdByText(e.classId, t)
+                if sub and sub ~= "" and (e.subclassId == "" or sub == e.subclassId) then
+                    return 10 * i + 2
+                end
+            end
+        end
+    end
     return RangoClase(t, 1) or RangoSubclase(t, 2) or (EsRaza(t) and RANGO_RAZA) or nil
 end
 

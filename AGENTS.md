@@ -21,6 +21,24 @@ Documentos hermanos: **`ESTRUCTURA.md`** es el organigrama de modulos (que hace 
   carpetas viejas de `Interface/AddOns` (el README lo avisa). Titulos de la familia en la lista
   de addons: `Harford`, `Harford Admin`, `Harford Compendio`, `Harford Profesiones` (antes `Harford Objetos`), `Harford Debug`, `Harford Musica`, todos con la marca `|cff3536CC`.
 
+- **Añadir un CAMPO a una cabecera de datos puede dejar una coleccion del codice en CERO
+  (2026-09-01)**: varios extractores de `tools/codice/` localizaban cada entrada con un regex
+  que exigia `id` y `name` PEGADOS; meter un campo entre medias (`nameF` en razas, `icon` en
+  las 77 dotes, `requiredRaces`/`requiredAbility` en 23) hacia que no reconocieran NINGUNA
+  cabecera y reescribieran el fichero web VACIO sin quejarse. El chat del codice los arreglo
+  (toleran cualquier campo, escalar o tabla) y `extract_dotes` lleva ahora el mismo SEGURO DE
+  VUELCO que `deploy_compendium`: si una coleccion cae por debajo del 80% de lo publicado,
+  aborta. Regla practica para CUALQUIER agente que toque `HarfordDnDFeats/Backgrounds/Races` o
+  los ficheros de clase: tras añadir campos a cabeceras, avisar al chat del codice o comprobar
+  los RECUENTOS tras regenerar (12 clases, 17 razas, 52 trasfondos, 77 dotes, 44 profesiones).
+  El daño es latente: la web publicada no lo enseña hasta el siguiente rebuild.
+
+- **Etnias humanas fuera del addon (2026-09-01)**: al resincronizar descripciones contra la
+  web, el apartado `### Nombres y etnias humanas` del Humano en `HarfordDnDRaces.lua` paso a
+  `### Nombres` y los siete reinos se perdieron. El pipeline del codice las lee ahora del
+  Libro 1 (que si las conserva). DECISION PENDIENTE del usuario: si la fuente debe volver a
+  ser el addon, hay que devolver ese apartado (esta en el git anterior al cotejo 2026-08-29).
+
 - **Hook de pre-commit compartido (2026-08-29)**: el repo versiona `tools/hooks/pre-commit`,
   que ejecuta `tools/hooks/comprobar_staged.py` sobre los `.lua` en stage — compilacion
   `luac -p`, UTF-8 valido SIN BOM y escaneo de mojibake compuesto (los patrones de CLAUDE.md;

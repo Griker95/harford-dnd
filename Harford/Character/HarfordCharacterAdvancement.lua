@@ -2746,8 +2746,10 @@ ApplyModeLayout = function()
     end
     -- "class" es un intermedio entre "list" y "grid": la columna de clases necesita mas ancho que
     -- una lista de botones porque son tarjetas, pero no los 400 px de la rejilla de razas.
+    -- En subida el ancho "class" gana 40 px extra de holgura: con dos tarjetas (multiclase)
+    -- el titulo y las etiquetas quedaban pegados al borde de la segunda tarjeta.
     local dx = layout == "list" and -204
-        or (layout == "class" and -150)
+        or (layout == "class" and (IsLevelUpMode() and -110 or -150))
         or (layout == "none" and -424)
         -- "grid": -16 para que la rejilla de razas/trasfondos deje el mismo margen (20 px) hasta
         -- el panel de detalle que la de clases; sin el, dejaba 36.

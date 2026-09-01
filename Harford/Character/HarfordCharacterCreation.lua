@@ -498,8 +498,9 @@ local function BuildTraitLines(traits, draft)
                 end
             end
             if feature.type == "maniobra" then
-                lines[#lines + 1] = "{h3}{icon:" .. FeatureIconName(feature) .. ":25}{col:" .. hexClase
-                    .. "} Maniobra{/col}{col:" .. COL_NEG .. "} "
+                -- Formato de los perfiles reales (Meneldor, Maxwell, Ashzynde): nombre en
+                -- amarillo con el icono dentro del color, sin la palabra "Maniobra".
+                lines[#lines + 1] = "{h3}{col:ffff00}{icon:" .. FeatureIconName(feature) .. ":25} "
                     .. tostring(feature.name or "Maniobra") .. "{/col}{/h3}"
             else
                 lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "
@@ -522,12 +523,19 @@ local function BuildTraitLines(traits, draft)
                     end
                 end
             end
-            local colaEleccion = ""
-            if feature.choice and not inlineTitulo and #bloques == 0 then
+            local colaEleccion, lineaCian = "", nil
+            if #sinTexto > 0 then
+                -- Elegidas SIN texto propio (Pericia): linea cian bajo la cabecera, como los
+                -- perfiles reales ("Sigilo || Percepcion"); el label se corta en el parentesis.
+                local cortos = {}
+                for _, label in ipairs(sinTexto) do
+                    cortos[#cortos + 1] = Trim(label:match("^(.-)%s*%(") or label)
+                end
+                lineaCian = "{col:00ffff}" .. table.concat(cortos, " {col:cccccc}||{/col} ") .. "{/col}"
+            elseif feature.choice and not inlineTitulo and #bloques == 0 then
                 colaEleccion = ChoiceText(feature, draft.choices)
-            elseif #sinTexto > 0 then
-                colaEleccion = " Eleccion: " .. table.concat(sinTexto, ", ") .. "."
             end
+            if lineaCian then lines[#lines + 1] = lineaCian end
             if inlineTitulo and inlineCuerpo and inlineCuerpo ~= "" then
                 lines[#lines + 1] = ColorizeDescription(inlineCuerpo)
             else

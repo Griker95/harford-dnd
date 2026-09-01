@@ -2135,11 +2135,19 @@ AppendSpellPickers = function(classDef, classLevel, y)
         end
     end
 
-    local heading = MakeText(S.tree, "GameFontNormal", "CONJUROS DE " .. string.upper(spellClassName))
-    heading:SetPoint("TOPLEFT", 26, y)
-    heading:SetTextColor(0.4, 0.8, 1)
-    S.nodeRows[#S.nodeRows + 1] = heading
-    y = y - 30
+    -- La cabecera "CONJUROS DE X" solo aparece si hay ALGUN selector debajo: un medio
+    -- lanzador a nivel 1 (Paladin, Caballero de la Muerte) ya tiene tabla de lanzamiento
+    -- pero aun no lanza nada, y la cabecera sola sugeria conjuros que no existen.
+    local headingPuesto = false
+    local function PonHeading()
+        if headingPuesto then return end
+        headingPuesto = true
+        local heading = MakeText(S.tree, "GameFontNormal", "CONJUROS DE " .. string.upper(spellClassName))
+        heading:SetPoint("TOPLEFT", 26, y)
+        heading:SetTextColor(0.4, 0.8, 1)
+        S.nodeRows[#S.nodeRows + 1] = heading
+        y = y - 30
+    end
 
     local function CountStore(store)
         local n = 0
@@ -2147,6 +2155,7 @@ AppendSpellPickers = function(classDef, classLevel, y)
         return n
     end
     local function AddPickerButton(label, store, limit, kind, title)
+        PonHeading()
         local b = MakeButton(S.tree, label .. " (" .. CountStore(store) .. "/" .. limit .. ")", 240, 24, function()
             OpenSpellDialog(spellClassName, store, limit, kind, kind == "cantrip" and 0 or maxLevel,
                 label, title, function() RefreshClassStage() end, extraNames, subclassSpellClassName)

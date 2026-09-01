@@ -1,18 +1,18 @@
 {
  "_leeme": "Resumen de una o dos frases para la TARJETA del compendio. La descripcion larga del manual abre con una cita de ambientacion, que como presentacion no dice nada: la tarjeta cortaba esa cita a media palabra. Registro ENCICLOPEDICO por decision de Griker: tercera persona, neutro, dice que es la clase, si lanza conjuros y como se especializa; nada de voz literaria. Escritos a partir de la descripcion y de las subclases reales de cada entrada. La ficha completa sigue mostrando el texto del manual entero. REGISTRO: tercera persona, neutro e informativo. Nada de giros literarios ni coloquiales -se colaron y hubo que retirarlos-: la frase dice lo que es, no lo adorna. OJO: van ACENTUADOS y se inyectan tal cual, sin pasar por el restaurador de tildes de limpieza.py, que no cubre todas las palabras.",
  "clases": {
-  "guerrero": "Combatiente marcial que domina todas las armas y armaduras. No lanza conjuros: pelea con la paciencia del duelista, con la furia que descuida su propia defensa o protegido tras el escudo.",
-  "cazador": "Combatiente a distancia y rastreador, sin conjuros. Pelea junto a una bestia, afina el tiro de largo alcance o se especializa en el combate y la vida en terreno salvaje.",
-  "mago": "Lanzador puro de magia arcana, formado en el estudio. Ataca desde lejos y se protege con barreras; se especializa en lo arcano, en el fuego o en la escarcha.",
-  "picaro": "Especialista en sigilo y cerraduras que prefiere el ingenio a la fuerza. Mata con veneno, combate con armas de fuego o ataca desde unas sombras que parecen magia.",
-  "sacerdote": "Lanzador de apoyo que canaliza la fe para curar, escudar y castigar. Se decanta por el escudo preventivo, la curación, la magia de sombra o la senda de Elune.",
-  "brujo": "Lanzador que maneja magia vil y esclaviza demonios. Combina maldiciones que desgastan con el tiempo, invocaciones que luchan por él y daño directo a distancia.",
-  "paladin": "Guerrero sagrado de armadura pesada, ligado por un juramento. Mezcla el cuerpo a cuerpo con magia de la Luz: cura, protege al grupo o castiga con el arma.",
-  "druida": "Lanzador ligado a la naturaleza y capaz de cambiar de forma. Ataca con magia lunar y solar, pelea en forma animal o se dedica a curar y restaurar.",
-  "chaman": "Lanzador que media con los elementos en vez de mandarlos. Ataca a distancia con rayo y fuego, encanta sus armas para el cuerpo a cuerpo o cura con agua y tótems.",
-  "monje": "Luchador desarmado que canaliza su chi, sin conjuros. Encaja el daño y lo dosifica, cura a distancia con nieblas o golpea rápido moviéndose por todo el campo.",
-  "cazador_demonios": "Guerrero creado en un rito que le ata el alma de un demonio y le quema los ojos. Pelea a dos hojas con enorme movilidad y se transforma para devastar o para resistir.",
-  "caballero_muerte": "Héroe caído que pagó con su vida y ha vuelto en un oscuro renacimiento. Guerrero de armas rúnicas y magia de muerte: se sostiene con sangre, congela el terreno o extiende la plaga."
+  "guerrero": "Maestro del combate armado que confía en fuerza, disciplina, armaduras y conocimiento táctico para imponerse en toda batalla.",
+  "cazador": "Explorador y rastreador experto que domina su entorno, las trampas, las armas de proyectiles y el vínculo con bestias salvajes.",
+  "mago": "Erudito de disciplina férrea que estudia la magia arcana y la emplea para controlar el campo de batalla, destruir enemigos y alterar espacio y materia.",
+  "picaro": "Especialista en sigilo, infiltración y eliminación rápida que recurre a venenos, emboscadas y tácticas poco honorables para vencer.",
+  "sacerdote": "Guía espiritual cuya fe le permite canalizar la Luz, la Sombra u otros poderes sagrados para sanar, proteger o combatir a sus enemigos.",
+  "brujo": "Hechicero que persigue poder mediante artes prohibidas, magia vil, maldiciones, almas y la dominación de criaturas demoníacas.",
+  "paladin": "Guerrero sagrado consagrado a la Luz, llamado a proteger a los débiles, combatir el mal y sostener a sus aliados mediante fe y disciplina.",
+  "druida": "Guardián del equilibrio natural que canaliza los poderes de la naturaleza y adopta formas animales para combatir, sanar y adaptarse a cada situación.",
+  "chaman": "Guía espiritual que entra en comunión con tierra, fuego, agua y aire para equilibrar sus fuerzas y solicitar su ayuda mediante tótems y rituales.",
+  "monje": "Artista marcial que domina cuerpo, mente y chi mediante disciplina, equilibrio y entrenamiento, empleando su cuerpo como principal instrumento de combate.",
+  "cazador_demonios": "Guerrero Illidari que sacrifica parte de sí mismo para apropiarse del poder de los demonios y emplearlo contra amenazas sobrenaturales.",
+  "caballero_muerte": "Campeón no-muerto formado para la guerra, armado con hojarrunas y poderes oscuros capaces de dominar muerte, enfermedad y frío."
  },
  "razas": {
   "raza_humano": "Pueblo numeroso y adaptable, organizado en diversos reinos y con una fuerte tradición militar, religiosa y arcana. Constituye uno de los principales pilares de la Alianza.",

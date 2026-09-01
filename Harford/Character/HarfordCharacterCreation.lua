@@ -497,7 +497,10 @@ local function LineaDeRecurso(feature, entry, draft)
         end
         if dcAbility then break end
     end
-    local linea = "{col:00ffff}Puntos " .. puntos .. " {/col}"
+    -- Los perfiles de Guerrero escriben "Puntos maximos N" (Meneldor, Alderion, Axus, Hector,
+    -- Kalmiya, Remel); los de Picaro, "Puntos N" (Colmillo, Elarien).
+    local palabra = entry.classId == "guerrero" and "Puntos maximos " or "Puntos "
+    local linea = "{col:00ffff}" .. palabra .. puntos .. " {/col}"
     if dcAbility and HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod then
         local total = 0
         for _, e in ipairs((draft and draft.classes) or {}) do total = total + (tonumber(e.level) or 0) end
@@ -554,9 +557,16 @@ local function BuildTraitLines(traits, draft)
                 end
             end
             if feature.type == "maniobra" then
-                -- Formato de los perfiles reales (Meneldor, Maxwell, Ashzynde): nombre en
-                -- amarillo con el icono dentro del color, sin la palabra "Maniobra".
-                lines[#lines + 1] = "{h3}{col:ffff00}{icon:" .. FeatureIconName(feature) .. ":25} "
+                -- Formato de los perfiles reales: nombre coloreado con el icono dentro del
+                -- color, sin la palabra "Maniobra". El color va POR CLASE (barrido {Reserva}):
+                -- Guerrero rojo (Carga en Meneldor/Alderion/Axus/Hector/Kalmiya/Remel),
+                -- Picaro amarillo (Mutilar en Colmillo/Elarien), Cazador naranja claro
+                -- (Llamada de lo salvaje) y Druida su color de clase. Sin dato, amarillo.
+                local colManiobra = ({
+                    guerrero = "ff0000", picaro = "ffff00",
+                    cazador = "ff7f3f", druida = "fe7b09",
+                })[tostring(entry.classId or "")] or "ffff00"
+                lines[#lines + 1] = "{h3}{col:" .. colManiobra .. "}{icon:" .. FeatureIconName(feature) .. ":25} "
                     .. tostring(feature.name or "Maniobra") .. "{/col}{/h3}"
             else
                 lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "

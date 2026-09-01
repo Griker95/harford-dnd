@@ -148,6 +148,19 @@ local function ResumenDeOrigen(texto)
     return table.concat(parrafos, "\n\n")
 end
 
+-- Version para TOOLTIP: UN solo parrafo y tope de ~600 caracteres (unas 7-10 lineas en el
+-- GameTooltip), cortando en limite de palabra (el espacio es ASCII: no parte UTF-8). Varios
+-- trasfondos traen un unico parrafo enorme y el tooltip ocupaba media pantalla.
+local function ResumenTooltip(texto)
+    texto = ResumenDeOrigen(texto)
+    local parrafo = texto:match("^(.-)\n%s*\n") or texto
+    if #parrafo > 600 then
+        local corte = parrafo:sub(1, 600):match("^(.*)%s%S*$") or parrafo:sub(1, 600)
+        parrafo = corte .. "…"
+    end
+    return parrafo
+end
+
 local function AttachTooltip(frame, obtenerTitulo, obtenerCuerpo, colorTitulo)
     if not frame or not frame.SetScript then return end
     frame:SetScript("OnEnter", function(self)
@@ -433,7 +446,7 @@ local function RefreshClassList()
             end)
             AttachTooltip(card,
                 function() return tostring(chosen.name or "") end,
-                function() return ResumenDeOrigen(chosen.desc or chosen.description) end,
+                function() return ResumenTooltip(chosen.desc or chosen.description) end,
                 function()
                     if classFile and HarfordClassColors.ColorRGBForClassFile then
                         return HarfordClassColors.ColorRGBForClassFile(classFile)
@@ -607,7 +620,15 @@ RefreshClassStage = function()
         RefreshClassList()
         local preview = HarfordDnDBook and HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(S.pendingClassId)
         S.classTitle:SetText(preview and tostring(preview.name) or "Elige la clase que recibira este nivel")
-        S.classSummary:SetText(preview and tostring(preview.desc or "") or (S.classSelectionMode == "add"
+        -- Con SUBCLASE elegida, su descripcion sustituye a la de la clase (la tarjeta de
+        -- Sombra debe contar lo suyo, no repetir el resumen del Sacerdote).
+        local previewDesc = preview and tostring(preview.desc or "") or nil
+        if preview then
+            local subId = preview.id == S.classId and S.subclassId or S.secondarySubclassId
+            local sub = HarfordDnDBook.GetSubclass and HarfordDnDBook.GetSubclass(preview.id, subId)
+            if sub and tostring(sub.desc or "") ~= "" then previewDesc = tostring(sub.desc) end
+        end
+        S.classSummary:SetText(previewDesc or (S.classSelectionMode == "add"
             and "La nueva clase empezara en nivel 1. Solo se permiten dos clases."
             or "Selecciona una clase para continuar la subida de nivel."))
         S.subclassDrop:Hide()
@@ -807,7 +828,7 @@ RefreshOptionCards = function(opciones, seleccionadoId, iconoDe, alElegir)
         end)
         AttachTooltip(card,
             function() return tostring(choice.name or "") end,
-            function() return ResumenDeOrigen(choice.desc or choice.description) end)
+            function() return ResumenTooltip(choice.desc or choice.description) end)
         card:Show()
     end
 end
@@ -876,7 +897,7 @@ local function RefreshOriginList()
         if PonerBorde(card) then card:SetBackdropBorderColor(mc[1], mc[2], mc[3], selected and 1 or 0.55) end
         AttachTooltip(card,
             function() return tostring(choice.name or "") end,
-            function() return ResumenDeOrigen(choice.desc or choice.description) end)
+            function() return ResumenTooltip(choice.desc or choice.description) end)
         card:Show()
         column = column + 1
         if column >= GRID_COLUMNS then column, row = 0, row + 1 end
@@ -999,10 +1020,22 @@ RefreshOrigin = function()
     end
     -- Descripcion dentro del scroll: los rasgos arrancan justo debajo de donde termina,
     -- y descripcion + rasgos se desplazan juntos con la rueda. Se muestra un RESUMEN, no el
-    -- texto completo del manual: parrafos narrativos (la cita en cursiva de apertura y su
-    -- atribucion se saltan), cortando en el primer encabezado ### y con dos parrafos como
-    -- maximo -- igual que la tarjeta de la web, que tampoco vuelca el capitulo entero.
-    local desc = MakeText(S.tree, "GameFontHighlightSmall", ResumenDeOrigen(def.desc))
+    -- texto completo del manual. Con SUBRAZA elegida manda la descripcion de la subraza
+    -- (Altonato debe contar lo suyo, no repetir el texto del Elfo de la Noche); sin texto
+    -- propio de subraza se cae al de la raza.
+    local descTexto = def.desc
+    if isRace then
+        local sub = HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
+        if sub and tostring(sub.desc or "") ~= "" then descTexto = sub.desc end
+    else
+        -- Variante de trasfondo elegida: manda su descripcion (Gladiador cuenta lo suyo,
+        -- no repite el texto del Animador). El "base" no tiene desc propia: texto del padre.
+        for _, v in ipairs(def.variants or {}) do
+            if tostring(v.id) == tostring(S.backgroundVariantId or "")
+                and tostring(v.desc or "") ~= "" then descTexto = v.desc break end
+        end
+    end
+    local desc = MakeText(S.tree, "GameFontHighlightSmall", ResumenDeOrigen(descTexto))
     desc:SetPoint("TOPLEFT", 8, -8)
     desc:SetWidth(340)  -- cierra en el mismo borde derecho que las filas (348 - 8)
     desc:SetJustifyH("LEFT")

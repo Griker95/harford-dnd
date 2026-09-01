@@ -5,6 +5,12 @@
 --
 -- Competencias en habilidades -> effects { kind="skillProf", skill=... }.
 -- Herramientas, idiomas, caracteristica y equipo van como `informativo` con su texto.
+-- Las opciones de herramienta llevan prefijo `her_` de HERRAMIENTA (her_ladron,
+-- her_instrumento, her_disfraz...). El mismo prefijo lo usan en HarfordProfesiones.lua
+-- las 244 recetas de HERRERIA; son espacios de nombres distintos, sin ids repetidos y
+-- sin ninguna busqueda comun, asi que la coincidencia es solo de nombre.
+-- NO renombrarlos: la eleccion de un personaje se guarda por id de opcion y ya hay
+-- compatibilidad para ids viejos en HarfordDnDBook (her_instrumento/her_juego).
 -- Contenido inicial: los 4 trasfondos nuevos del manual Warcraft (Cap. 3). Los
 -- trasfondos estandar del PHB se añadiran como ampliacion cuando corresponda.
 

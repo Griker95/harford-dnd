@@ -421,6 +421,11 @@ D.RECIPES = {
     { id = "enc_encantar_pechera_estadisticas_supe", profession = "prof_encantamiento", skillReq = 300, name = "Encantar pechera: estadísticas superiores", icon = "spell_holy_greaterheal", dc = 16, colors = { 300, 320, 340, 360 }, source = "receta", materials = { { key = "fragmento_luminoso_grande", qty = 4 }, { key = "polvo_de_ilusion_ligero", qty = 15 }, { key = "esencia_eterna_superior", qty = 10 } }, output = { key = "pergamino_pechera_estadisticas_superiore", qty = 1 }, desc = "Encanta de forma permanente una coraza para que proporcione +4 de todas las estadísticas.", tools = "Vara rúnica de arcanita" },
 
     -- ===== Herreria (244 recetas, Wowhead Classic con nombres actuales) =====
+    -- El prefijo `her_` es de HERRERIA, como `pel_` peleteria o `sas_` sastreria. Lo
+    -- comparte con las 7 HERRAMIENTAS de HarfordDnDBackgrounds.lua (her_ladron,
+    -- her_instrumento...), que ahi significa `herramienta`. No chocan: ningun id se
+    -- repite y nadie los busca en la misma tabla -estas las consume
+    -- HarfordProfessions y aquellas HarfordDnDBook-, asi que se deja como esta.
     { id = "her_cota_de_malla_de_forjaz", profession = "prof_herreria", skillReq = 70, name = "Cota de malla de Forjaz", icon = "inv_chest_chain", dc = 17, qmod = 1, source = "receta", materials = { { key = "lingote_cobre", qty = 12 }, { key = "gema_malaquita", qty = 2 }, { key = "piedra_de_pulir_ferrea", qty = 2 } }, output = { key = "cota_de_malla_de_forjaz", qty = 1 }, tools = "Martillo de herrero" },
     { id = "her_brazales_de_bronce_ferreos", profession = "prof_herreria", skillReq = 100, name = "Brazales de bronce férreos", icon = "inv_bracer_05", dc = 17, qmod = 1, source = "receta", materials = { { key = "lingote_bronce", qty = 4 } }, output = { key = "brazales_de_bronce_ferreos", qty = 1 }, tools = "Martillo de herrero" },
     { id = "her_espada_magna_de_torio", profession = "prof_herreria", skillReq = 260, name = "Espada magna de torio", icon = "inv_sword_22", dc = 17, qmod = 1, source = "receta", materials = { { key = "lingote_torio", qty = 16 }, { key = "piedra_de_pulir_densa", qty = 2 }, { key = "cuero_basto", qty = 4 } }, output = { key = "espada_magna_de_torio", qty = 1 }, tools = "Martillo de herrero" },

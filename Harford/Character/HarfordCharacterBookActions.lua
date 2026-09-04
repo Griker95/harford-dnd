@@ -201,6 +201,18 @@ do
     end
 
     local function Ejecutar(def, coste)
+        -- Posturas TOGGLE (Trabado en melee): con el estado puesto, volver a pulsar lo retira
+        -- sin anunciar ni cobrar nada. Va ANTES del anuncio por eso mismo.
+        if def.toggleSelf and type(def.selfCondition) == "table" and HarfordDnDConditions
+            and HarfordDnDConditions.Has and HarfordDnDConditions.Has("player", def.selfCondition.id) then
+            if HarfordDnDConditions.RemoveOwned then
+                HarfordDnDConditions.RemoveOwned(def.selfCondition.id)
+                HarfordChat.Print(tostring(def.name) .. ": retirado.")
+            end
+            if RefreshGameUI then RefreshGameUI() end
+            if RefreshBook then RefreshBook() end
+            return true
+        end
         -- El recurso lo pide el RASGO que abre el coste (el chi de Paso del Viento), no la accion.
         if coste.resourceKey and (tonumber(coste.resourceCost) or 0) > 0 then
             local ok, err = SpendPowerWord({ resourceKey = coste.resourceKey, resourceCost = coste.resourceCost })

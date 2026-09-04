@@ -2968,6 +2968,18 @@ DoWeaponAttack = function(options)
     -- ataque con la secundaria es accion ADICIONAL. `skipTurnCost` lo ponen las rutas que ya
     -- cobraron por su cuenta (maniobras), para no cobrar dos veces el mismo golpe. Solo el
     -- jugador: la criatura acompanante no gasta la economia de su duenio.
+    -- Alcance de MELEE, ANTES de cobrar la accion: el cliente no puede medir 1,5 m
+    -- (UnitPosition solo habla del jugador), pero CheckInteractDistance(3) es una COTA (~9 m):
+    -- si el objetivo esta mas alla, seguro que ningun arma cuerpo a cuerpo llega, y el golpe
+    -- no ocurre ni cuesta nada. Dentro de la cota decide la mesa; si la API no responde, se
+    -- ataca -- en duda no se bloquea.
+    if def and def.mode == "Melee" and ActorIsPlayer(def) and CheckInteractDistance then
+        local okDist, cerca = pcall(CheckInteractDistance, "target", 3)
+        if okDist and cerca == false then
+            Print("Objetivo fuera del alcance del arma cuerpo a cuerpo.")
+            return
+        end
+    end
     if not options.skipTurnCost and ActorIsPlayer(def)
         and HarfordDnDConditions and HarfordDnDConditions.Turn
         and HarfordDnDConditions.Turn.SpendWeaponAttack then
@@ -3001,6 +3013,10 @@ DoWeaponAttack = function(options)
     else
         chosen, ra, rb, critTag, modeTag, resolvedMode = HarfordDnDCalc.RollD20Full("attack", {
             actorUnit = "player", targetUnit = "target", attackRange = attackRange,
+            -- Dotes que perdonan la desventaja del estado "Trabado en melee" al disparar.
+            ignoreMeleeProximity = ActorIsPlayer(def) and HarfordDnDFeatureEffects
+                and HarfordDnDFeatureEffects.HasFlag
+                and HarfordDnDFeatureEffects.HasFlag("ignoreRangedMeleePenalty") or nil,
         })
     end
     -- Critico ampliado (p.ej. "Maquina de Matar" 19-20) en armas cuerpo a cuerpo: recalcula

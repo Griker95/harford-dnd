@@ -1513,6 +1513,11 @@ local function MakeRequest(session, target, index)
             targetGuid = target.guid,
             targetConditionIds = target.conditionIds,
             attackRange = session.definition.attackRange or "ranged",
+            -- Dotes que perdonan la desventaja de "Trabado en melee": las genericas de
+            -- disparo y la de Mago de batalla (solo ataques de CONJURO, que es esta ruta).
+            ignoreMeleeProximity = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+                and (HarfordDnDFeatureEffects.HasFlag("ignoreRangedMeleePenalty")
+                    or HarfordDnDFeatureEffects.HasFlag("ignoreSpellMeleePenalty")) or nil,
         })
         local die = chosen
         request.attackTotal = die + session.definition.attackBonus

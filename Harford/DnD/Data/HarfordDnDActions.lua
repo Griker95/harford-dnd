@@ -107,6 +107,16 @@ API.DEFS = {
         -- lanza -- y el ataque sale por la ruta normal, con su CA, critico y mitigacion.
         throwWeapon = { slots = { "MainHand", "SecondaryHand" } },
     },
+    trabado_melee = {
+        id = "trabado_melee", name = "Trabado en melee", icon = "ability_warrior_challange_2",
+        cast = "ninguna", orden = 12,
+        description = "Declara que tienes una criatura hostil a 1,5 metros: tus ataques a "
+            .. "distancia se hacen con desventaja hasta que te zafes. Pulsar de nuevo lo retira.",
+        -- Postura DECLARADA (el cliente no mide 1,5 m). Es un toggle: no cuesta nada y se ve
+        -- en tu tira de estados, para que la mesa sepa que estas trabado.
+        selfCondition = { id = "trabado", duration = "manual" },
+        toggleSelf = true,
+    },
     ataque_oportunidad = {
         id = "ataque_oportunidad", name = "Ataque de oportunidad", icon = "ability_warrior_challange",
         cast = "reaccion", orden = 11,

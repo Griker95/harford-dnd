@@ -25,7 +25,7 @@ API.FEATS = {
         id = "feat_mago_de_batalla", icon = "inv_shoulders_cloth_raidmage_s_01", requiredCaster = "any", name = "Mago de batalla", requires = "Capacidad de lanzar al menos un conjuro", description = "Magia de combate a quemarropa: más trucos, sin penalización por tener al enemigo encima y la opción de cambiar puntería por potencia.",
         traits = {
             { id = "feat_mb_trucos", icon = "spell_mage_arcaneorb", name = "Trucos de Mago", type = "pasivo", description = "Aprendes dos trucos extra de la lista de conjuros de mago.", effects = {} },
-            { id = "feat_mb_cercania", icon = "spell_misc_hellifrepvpcombatmorale", name = "Sin desventaja en cercania", type = "pasivo", description = "Al hacer un ataque de conjuro a distancia, no sufres desventaja por estar a 1,5 m de una criatura hostil.", effects = {} },
+            { id = "feat_mb_cercania", icon = "spell_misc_hellifrepvpcombatmorale", name = "Sin desventaja en cercania", type = "pasivo", description = "Al hacer un ataque de conjuro a distancia, no sufres desventaja por estar a 1,5 m de una criatura hostil.", effects = { { kind = "flag", flag = "ignoreSpellMeleePenalty" } } },
             { id = "feat_mb_potente", icon = "spell_arcane_arcane03", name = "Conjuro potente", type = "pasivo", description = "Antes de lanzar un conjuro instantaneo de ataque a un solo objetivo, puedes recibir -5 a la tirada; si impacta, +10 al daño del conjuro.", effects = {} },
         },
     },
@@ -33,7 +33,7 @@ API.FEATS = {
         id = "feat_experto_armas_fuego", icon = "inv_legendary_gun", name = "Experto en armas de fuego", requires = "", description = "Manejo veterano de la pólvora: recargas sin perder el turno, disparas cómodo en corta distancia y encadenas un segundo tiro.",
         traits = {
             { id = "feat_eaf_recarga", icon = "ability_hunter_lockandload", name = "Sin recarga", type = "pasivo", description = "Ignoras la propiedad de recarga de las armas de fuego con las que eres competente.", effects = {} },
-            { id = "feat_eaf_cercania", icon = "spell_misc_hellifrepvpcombatmorale", name = "Sin desventaja en cercania", type = "pasivo", description = "Estar a 1,5 m de una criatura hostil no impone desventaja en tus ataques a distancia.", effects = {} },
+            { id = "feat_eaf_cercania", icon = "spell_misc_hellifrepvpcombatmorale", name = "Sin desventaja en cercania", type = "pasivo", description = "Estar a 1,5 m de una criatura hostil no impone desventaja en tus ataques a distancia.", effects = { { kind = "flag", flag = "ignoreRangedMeleePenalty" } } },
             { id = "feat_eaf_extra", icon = "ability_hunter_rapidregeneration", name = "Disparo adicional", type = "pasivo", description = "Al usar la acción de Ataque con un arma de una mano, puedes usar una acción adicional para atacar con un arma de fuego de una mano cargada que sostengas.", effects = {} },
         },
     },
@@ -264,7 +264,7 @@ API.FEATS = {
     {
         id = "feat_experto_ballestas", icon = "inv_weapon_crossbow_09", name = "Experto en ballestas", description = "La ballesta en tus manos no se atasca ni pierde ritmo, ni con el enemigo encima.", source = "PHB",
         traits = {
-            { id = "feat_phb_ballestas", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Ignoras la recarga de ballestas con las que eres competente. Estar a 1,5 m de un enemigo no da desventaja a tus ataques a distancia. Al atacar con un arma a una mano, acción adicional para atacar con ballesta de mano.", effects = {} },
+            { id = "feat_phb_ballestas", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Ignoras la recarga de ballestas con las que eres competente. Estar a 1,5 m de un enemigo no da desventaja a tus ataques a distancia. Al atacar con un arma a una mano, acción adicional para atacar con ballesta de mano.", effects = { { kind = "flag", flag = "ignoreRangedMeleePenalty" } } },
         },
     },
     {

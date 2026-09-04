@@ -32,7 +32,7 @@ print("El catalogo, en el orden del manual y no alfabetico")
 local orden = {}
 for _, d in ipairs(A.GetOrdered()) do orden[#orden + 1] = d.id end
 chk("orden", table.concat(orden, ","),
-    "esquivar,correr,desengancharse,esconderse,agarrar,empujar,ayudar,estabilizar,lanzar_arma,preparar,ataque_oportunidad")
+    "esquivar,correr,desengancharse,esconderse,agarrar,empujar,ayudar,estabilizar,lanzar_arma,preparar,ataque_oportunidad,trabado_melee")
 
 print("Sin rasgos que la abran, solo su coste base")
 chk("esquivar", costes("esquivar", {}), "accion")

@@ -33,7 +33,7 @@ API.CATEGORIES = {
     } },
     { id = "combate", label = "Combate", ids = {
         "sleeping", "silenced", "rooted", "slowed", "disarmed", "exposed_armor",
-        "imprudente", "esquivando", "apartado",
+        "imprudente", "esquivando", "apartado", "trabado",
     } },
     -- Estados que deja la economia de turno y el apoyo entre PJs (Ayudar, Preparar).
     { id = "apoyo", label = "Apoyo y turno", ids = {
@@ -123,6 +123,16 @@ API.DEFS = {
         label = "Circulo demoniaco", tracking = "state",
         description = "Ventaja en los chequeos de concentracion mientras permanezcas dentro del circulo.",
         effects = { { kind = "rollMode", rolls = { save = true }, ability = "Constitucion", mode = "adv" } },
+    },
+    -- "Trabado en melee": postura DECLARADA por el propio jugador (el cliente no puede medir
+    -- 1,5 m: UnitPosition solo habla del jugador). Mientras esta puesta, los ataques a
+    -- distancia -- de arma y de conjuro -- se hacen con desventaja (regla 5e de disparar con
+    -- el enemigo encima). `meleeProximity` marca el efecto para que las dotes que perdonan esa
+    -- desventaja (Experto en ballestas/armas de fuego, Mago de batalla) puedan saltarselo.
+    trabado = {
+        label = "Trabado en melee", tracking = "state",
+        description = "Tienes una criatura hostil a 1,5 metros: tus ataques a distancia se hacen con desventaja.",
+        effects = { { kind = "rollMode", rolls = { attack = true }, mode = "dis", range = "ranged", meleeProximity = true } },
     },
     -- Ayudar. UN solo estado sin declarar el uso (decision de mesa 2026-09): la ventaja va a la
     -- SIGUIENTE tirada de ataque o de prueba de caracteristica del ayudado, la que llegue antes,
@@ -1355,6 +1365,9 @@ local function EffectApplies(effect, rollType, context)
     if not (effect.rolls and effect.rolls[rollType]) then return false end
     if effect.ability and tostring(context.ability or "") ~= effect.ability then return false end
     if effect.range and tostring(context.attackRange or "") ~= effect.range then return false end
+    -- Dotes que perdonan la desventaja por disparar con el enemigo a 1,5 m: el llamador pone
+    -- `ignoreMeleeProximity` en el contexto y los efectos marcados `meleeProximity` no aplican.
+    if effect.meleeProximity and context.ignoreMeleeProximity then return false end
     return true
 end
 

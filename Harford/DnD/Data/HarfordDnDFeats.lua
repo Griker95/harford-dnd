@@ -389,7 +389,7 @@ API.FEATS = {
         id = "feat_maton_taberna", icon = "ability_racial_brushitoff", name = "Maton de taberna", description = "Pelea sucia: puños, botellas y cualquier cosa que esté a mano.", source = "PHB",
         traits = {
             { id = "feat_phb_maton_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Constitución +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion") } } },
-            { id = "feat_phb_maton_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Competente con armas improvisadas. Tus ataques sin armas infligen 1d4. Al impactar con golpe desarmado o arma improvisada, acción adicional para agarrar.", effects = {} },
+            { id = "feat_phb_maton_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Competente con armas improvisadas. Tus ataques sin armas infligen 1d4. Al impactar con golpe desarmado o arma improvisada, acción adicional para agarrar.", effects = { { kind = "unarmedDie", die = 4 } } },
         },
     },
     {

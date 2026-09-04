@@ -877,6 +877,13 @@ local function BuildMagicFrames(profileName, idsRaciales)
                 collect(C.GetKnownSpells and C.GetKnownSpells())
                 if casting.mode == "wizard_book" then collect(C.GetWizardBook and C.GetWizardBook())
                 elseif casting.mode == "prepared" then collect(C.GetPreparedSpells and C.GetPreparedSpells()) end
+                -- Los conjuros CONCEDIDOS por la subclase (Conjuros de presencia del CdM) se
+                -- conocen por definicion: entran aunque el compendio no los liste entre los
+                -- elegidos. Sin esto, una ficha sin conjuros marcados a mano no generaba el
+                -- frame "Magia <Sub>" ({PJ} Cody si lo tiene, con esos mismos conjuros).
+                for spellId, quien in pairs(concedidoPor) do
+                    if quien == indiceClase then ids[spellId] = true end
+                end
                 local claveLanzamiento = claveDeEntrada[indiceClase]
                 -- Dos cubos: los conjuros propios de la clase y los concedidos por la subclase.
                 -- El corte NO es trucos/niveles: hay perfiles reales con "Nivel 1" en los dos

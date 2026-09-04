@@ -383,7 +383,7 @@ API.BACKGROUNDS = {
         traits = {
             { id = "bg_buc_comp", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Engaño y Atletismo.", effects = { Skill("Engano"), Skill("Atletismo") } },
             { id = "bg_buc_herr", icon = "inv_scroll_11", name = "Competencia con herramientas", type = "pasivo", description = "Competencia con herramientas de navegación y una herramienta de artesano a tu elección.", effects = { Tool("Herramientas de navegacion"), Tool("Herramientas de artesano") } },
-            { id = "bg_buc_canalla", icon = "ability_rogue_blackjack", name = "Canalla veterano", type = "pasivo", description = "Tu vida como corsario te ha brindado conocimientos del inframundo criminal y una gran familiaridad con los mares abiertos. Ya no te ralentiza nadar con armadura media y debes escoger uno de los siguientes beneficios:\n\n• Ganas ventaja en pruebas de Carisma (Engaño) cuando subvertir o infringir la ley esté en juego.\n\n• Ganas ventaja en pruebas de Sabiduría (Supervivencia) cuando estés en el mar o a bordo de un barco.", effects = {} },
+            { id = "bg_buc_canalla", icon = "ability_rogue_blackjack", name = "Canalla veterano", type = "pasivo", description = "Tu vida como corsario te ha brindado conocimientos del inframundo criminal y una gran familiaridad con los mares abiertos. Ya no te ralentiza nadar con armadura media y debes escoger uno de los siguientes beneficios:\n- Ganas ventaja en pruebas de Carisma (Engaño) cuando subvertir o infringir la ley esté en juego.\n- Ganas ventaja en pruebas de Sabiduría (Supervivencia) cuando estés en el mar o a bordo de un barco.", effects = {} },
         },
     },
     {

@@ -1416,14 +1416,22 @@ function API.ConfirmCast(spellId, options)
     local spell = API.GetSpellById(spellId)
     if not spell then return false, "Conjuro no encontrado" end
     -- Cuesta lo que diga su TIEMPO DE LANZAMIENTO, y se cobra ANTES que el mana: si no te queda
-    -- esa accion el conjuro no sale, y asi no hay que devolver nada. Casi todos son accion; los que no lo dicen en
-    -- su texto ("1 accion adicional", "1 reaccion"). Un ritual no cuesta accion -- por eso se
-    -- lanza como ritual, y esa rama sale antes de llegar aqui.
-    if HarfordDnDConditions and HarfordDnDConditions.Turn and not (options and options.silent) then
+    -- esa accion el conjuro no sale, y asi no hay que devolver nada. Casi todos son accion; los
+    -- demas lo dicen en su texto ("1 accion adicional", "1 reaccion"; minutos/horas no se juegan
+    -- por turnos y no cobran). OJO: `silent` solo CALLA el anuncio -- las rutas de ataque y de
+    -- area lo usan porque su tirada ya anuncia, pero deben cobrar la accion igual; saltarse el
+    -- cobro con silent dejaba los conjuros de COMBATE gratis en la economia. Solo lo saltan el
+    -- ritual (se lanza fuera de turnos, +10 minutos) y un `skipTurnCost` explicito de una ruta
+    -- que ya cobro por su cuenta.
+    if HarfordDnDConditions and HarfordDnDConditions.Turn
+        and not (options and (options.skipTurnCost or options.ritual)) then
         local texto = tostring(spell.castingTime or spell.casting_time or spell.tiempo or ""):lower()
         local coste = "accion"
+        -- El orden importa: "accion" se comprueba ANTES que minutos/horas porque existe
+        -- "1 accion, u 8 horas" (Circulo magico y similares) — lanzado en combate es 1 accion.
         if texto:find("adicional") or texto:find("bonus") then coste = "accion_adicional"
         elseif texto:find("reacc") then coste = "reaccion"
+        elseif texto:find("accion") then coste = "accion"
         -- Un conjuro de minutos u horas no se juega por turnos: no cobra nada.
         elseif texto:find("minuto") or texto:find("hora") then coste = nil end
         if coste and HarfordDnDConditions.Turn.SpendForFeature(

@@ -1051,9 +1051,34 @@ RefreshOrigin = function()
 
     local traits = {}
     if isRace then
-        for _, feature in ipairs(def.traits or {}) do traits[#traits + 1] = { feature = feature, source = "Raza" } end
+        -- Puerta por nivel de PERSONAJE del objetivo del asistente ("Mejora mecanica adicional"
+        -- del Mecagnomo es de nivel 5: en creacion no se ofrece ni cuenta para completar) y
+        -- rasgos derivados de una opcion (requiresOption): solo con su opcion elegida.
+        local objetivo = (IsLevelUpMode() and ((HarfordDnDProgression.GetTotalLevel
+            and HarfordDnDProgression.GetTotalLevel() or 0) + 1)) or 1
+        local elegidasSet
+        local function EntraRacial(feature)
+            local minimo = tonumber(feature.minCharacterLevel)
+            if minimo and objetivo < minimo then return false end
+            local req = feature.requiresOption
+            if req then
+                if not elegidasSet then
+                    elegidasSet = {}
+                    for _, seleccion in pairs(S.choiceSelections or {}) do
+                        for _, optId in ipairs(seleccion or {}) do elegidasSet[tostring(optId)] = true end
+                    end
+                end
+                return elegidasSet[tostring(req)] == true
+            end
+            return true
+        end
+        for _, feature in ipairs(def.traits or {}) do
+            if EntraRacial(feature) then traits[#traits + 1] = { feature = feature, source = "Raza" } end
+        end
         local sub = HarfordDnDRaces.GetSubrace(S.raceId, S.subraceId)
-        for _, feature in ipairs((sub and sub.traits) or {}) do traits[#traits + 1] = { feature = feature, source = "Subraza" } end
+        for _, feature in ipairs((sub and sub.traits) or {}) do
+            if EntraRacial(feature) then traits[#traits + 1] = { feature = feature, source = "Subraza" } end
+        end
     else
         local bgTraits = (HarfordDnDBackgrounds.ResolveTraits
             and HarfordDnDBackgrounds.ResolveTraits(S.backgroundId, S.backgroundVariantId)) or def.traits or {}

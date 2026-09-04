@@ -97,7 +97,13 @@ local function GetSelfArmorClass()
             if mod > unarmored then unarmored = mod end
         end
     end
-    return math.floor(10 + dex + unarmored + bonus)
+    -- Base alternativa por rasgo (Resiliencia Metalica del Mecagnomo: CA 13 + Des). Sustituye
+    -- al 10 si es mayor; se combina con el Mod. extra de Defensa sin Armadura si lo hubiera.
+    local base = 10
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetUnarmoredDefenseBase then
+        base = HarfordDnDFeatureEffects.GetUnarmoredDefenseBase()
+    end
+    return math.floor(base + dex + unarmored + bonus)
 end
 
 -- CA efectiva del jugador para PERSISTIR/ENVIAR a otros clientes: TRP3 "Other Information"

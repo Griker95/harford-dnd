@@ -1206,42 +1206,61 @@ end
 function API.GetUnlockedFeatures(profileName)
     local data = API.Get(profileName)
     local out = {}
-    -- Rasgos raciales (siempre activos al elegir raza).
+    -- Filtro comun a TODAS las fuentes: `requiresOption` (el rasgo solo entra con esa opcion
+    -- elegida; antes solo se aplicaba a clase/subclase y las razas no podian derivar rasgos de
+    -- una eleccion, como el Sistema de Emergencia del Mecagnomo) y `minCharacterLevel` (puerta
+    -- por NIVEL TOTAL de personaje, como la de spellGrants: la segunda Mejora mecanica es de
+    -- nivel 5).
+    local elegidas, nivelTotal
+    local function Entra(item)
+        local feature = item and item.feature
+        if not feature then return false end
+        local minimo = tonumber(feature.minCharacterLevel)
+        if minimo then
+            if not nivelTotal then
+                nivelTotal = 0
+                for _, e in ipairs(data.classLevels or {}) do
+                    nivelTotal = nivelTotal + (tonumber(e.level) or 0)
+                end
+            end
+            if nivelTotal < minimo then return false end
+        end
+        local req = feature.requiresOption
+        if req then
+            if not elegidas then
+                elegidas = {}
+                for _, seleccion in pairs(data.choices or {}) do
+                    for _, optId in ipairs(seleccion or {}) do elegidas[tostring(optId)] = true end
+                end
+            end
+            return elegidas[tostring(req)] == true
+        end
+        return true
+    end
+    -- Rasgos raciales (activos al elegir raza, con el filtro comun).
     if HarfordDnDRaces and HarfordDnDRaces.GetRaceTraits and data.race and data.race.id ~= "" then
         for _, item in ipairs(HarfordDnDRaces.GetRaceTraits(data.race.id, data.race.subraceId)) do
-            out[#out + 1] = item
+            if Entra(item) then out[#out + 1] = item end
         end
     end
-    -- Rasgos de trasfondo (siempre activos al elegir trasfondo).
+    -- Rasgos de trasfondo (activos al elegir trasfondo).
     if HarfordDnDBackgrounds and HarfordDnDBackgrounds.GetBackgroundTraits and data.background and data.background ~= "" then
         for _, item in ipairs(HarfordDnDBackgrounds.GetBackgroundTraits(data.background, data.backgroundVariant)) do
-            out[#out + 1] = item
+            if Entra(item) then out[#out + 1] = item end
         end
     end
-    -- Rasgos de dotes (siempre activos al elegir el dote).
+    -- Rasgos de dotes (activos al elegir el dote).
     if HarfordDnDFeats and HarfordDnDFeats.GetFeatTraits and data.feats and #data.feats > 0 then
         for _, item in ipairs(HarfordDnDFeats.GetFeatTraits(data.feats)) do
-            out[#out + 1] = item
+            if Entra(item) then out[#out + 1] = item end
         end
     end
     -- Rasgos de clase/subclase. Los que declaran `requiresOption` (maniobras elegibles) solo
     -- entran si esa opcion esta realmente elegida: existen como rasgo para que el Libro pueda
     -- mostrarlas y ejecutarlas, pero el PJ solo conoce las que ha aprendido.
     if HarfordDnDBook and HarfordDnDBook.GetUnlockedFeatures then
-        local elegidas
         for _, item in ipairs(HarfordDnDBook.GetUnlockedFeatures(data.classLevels)) do
-            local req = item.feature and item.feature.requiresOption
-            if req then
-                if not elegidas then
-                    elegidas = {}
-                    for _, seleccion in pairs(data.choices or {}) do
-                        for _, optId in ipairs(seleccion or {}) do elegidas[tostring(optId)] = true end
-                    end
-                end
-                if elegidas[tostring(req)] then out[#out + 1] = item end
-            else
-                out[#out + 1] = item
-            end
+            if Entra(item) then out[#out + 1] = item end
         end
     end
     return out

@@ -3114,6 +3114,29 @@ local function BookButtonOnClick(self)
             if RefreshBook then RefreshBook() end
             return
         end
+        -- Curacion declarativa sin dados (Sistema de Emergencia del Mecagnomo): anuncia y
+        -- gasta el uso por la ruta comun, y cura healBase ("level" = nivel total de personaje,
+        -- o un numero) + Mod. de healAbility. AdjustResourceCurrent refresca los recursos.
+        if self.feature.actionKind == "selfHeal" then
+            if not AnnounceAbility(self.feature) then
+                return
+            end
+            local cantidad = 0
+            if tostring(self.feature.healBase) == "level" then
+                for _, entry in ipairs(HarfordDnDProgression.GetClassLevels(GetProfileName()) or {}) do
+                    cantidad = cantidad + (tonumber(entry.level) or 0)
+                end
+            else
+                cantidad = tonumber(self.feature.healBase) or 0
+            end
+            if self.feature.healAbility and HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod then
+                cantidad = cantidad + (HarfordDnDCalc.GetAbilityMod(self.feature.healAbility) or 0)
+            end
+            HarfordDnDStore.AdjustResourceCurrent("health", math.max(1, cantidad))
+            if RefreshGameUI then RefreshGameUI() end
+            if RefreshBook then RefreshBook() end
+            return
+        end
         if self.feature.actionKind == "metamorphosis" then
             local profileName = GetProfileName()
             local active = HarfordDnDProgression.IsToggleStateActive("metamorphosis", profileName)

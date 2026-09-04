@@ -118,17 +118,39 @@ API.RACES = {
             } },
             { id = "raza_gnomo_mecagnomo", name = "Mecagnomo", nameF = "Mecagnoma", desc = "Gnomos parcialmente mecanizados, con miembros y mejoras de metal integrados en su cuerpo.\n\nLos mecagnomos han mejorado sus cuerpos con maravillas mecánicas. Aunque comparten la curiosidad de sus parientes, son más precavidos debido a su historia con la tecnología.", summary = "Gnomo profundamente modificado mediante tecnología, que integra componentes mecánicos en su propio cuerpo y considera la mejora física una extensión natural de la ingeniería.", traits = {
                 { id = "gno_mec_inc", icon = "hd_plussign_deathknight", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1.", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
-                { id = "gno_mec_mejoras", name = "Mejoras mecanicas", type = "choice", description = "Elige una mejora (otra al nivel 5).", effects = {}, choice = {
+                -- Mejoras MECANIZADAS: piernas suma velocidad (gnomo 7,5 + 1,5 = 9 m), brazos
+                -- sube el dado desarmado y da herramienta, resiliencia usa la base alternativa
+                -- de CA sin armadura, y el generador concede el truco por `spellId` (via de
+                -- trucos raciales elegidos). Vision queda narrativa (el cliente no observa la
+                -- vision) y el Sistema de Emergencia es un rasgo DERIVADO con `requiresOption`
+                -- + `actionKind = "selfHeal"` (boton en el Libro con su uso por descanso largo).
+                { id = "gno_mec_mejoras", name = "Mejoras mecanicas", type = "choice", spellAbility = "Inteligencia", description = "Elige una mejora mecanica (integraras otra al nivel 5).", effects = {}, choice = {
                     slots = 1,
                     options = {
-                        { id = "emergencia",  label = "Sistema de Emergencia (curacion una vez/descanso largo)", effects = {} },
-                        { id = "vision",      label = "Vision Mejorada (vision en la oscuridad 18 m)", effects = {} },
-                        { id = "piernas",     label = "Piernas Mecanicas (velocidad 9 m; duplicar 1/turno)", effects = {} },
-                        { id = "brazos",      label = "Brazos Mecanicos (golpe desarmado 1d6 + herramienta)", effects = {} },
-                        { id = "resiliencia", label = "Resiliencia Metalica (sin armadura, CA 13 + Des)", effects = {} },
-                        { id = "generador_luz", icon = "inv_mechagon_wrench", label = "Generador de Luz Hiperorganica (truco Ilusion menor)", effects = {} },
+                        { id = "emergencia",  label = "Sistema de Emergencia", desc = "Recuperas puntos de golpe iguales a tu nivel + Mod. Constitucion. Puedes usarlo incluso estando inconsciente, una vez por descanso largo.", effects = {} },
+                        { id = "vision",      label = "Vision Mejorada", desc = "Ves en penumbra hasta 18 metros como si fuera luz brillante y en la oscuridad como en penumbra, solo en tonos de gris.", effects = {} },
+                        { id = "piernas",     label = "Piernas Mecanicas", desc = "Tu velocidad aumenta a 9 metros. Puedes duplicar tu velocidad una vez por turno.", effects = { { kind = "bonus", target = "speed", value = 1.5 } } },
+                        { id = "brazos",      label = "Brazos Mecanicos", desc = "Tus golpes desarmados causan 1d6 de daño contundente y tienes competencia con una herramienta de artesano integrada.", effects = { { kind = "unarmedDie", die = 6 }, { kind = "toolProf", tool = "Herramientas de artesano (integrada)" } } },
+                        { id = "resiliencia", label = "Resiliencia Metalica", desc = "Si no llevas armadura, tu CA es 13 + Mod. Destreza.", effects = { { kind = "unarmoredDefenseBase", base = 13 } } },
+                        { id = "generador_luz", icon = "inv_mechagon_wrench", label = "Generador de Luz Hiperorganica", desc = "Conoces el truco Ilusion menor. La Inteligencia es tu caracteristica de lanzamiento para el.", spellId = "ilusion_menor", effects = {} },
                     },
                 } },
+                -- Segunda mejora al NIVEL 5 (puerta `minCharacterLevel`, como los spellGrants):
+                -- mismo catalogo de opciones, eleccion propia. Se ofrece en la subida al 5.
+                { id = "gno_mec_mejoras_5", minCharacterLevel = 5, name = "Mejora mecanica adicional", type = "choice", spellAbility = "Inteligencia", description = "Al alcanzar el nivel 5 integras una segunda mejora mecanica. Elige una distinta de la primera.", effects = {}, choice = {
+                    slots = 1,
+                    options = {
+                        { id = "emergencia",  label = "Sistema de Emergencia", desc = "Recuperas puntos de golpe iguales a tu nivel + Mod. Constitucion. Puedes usarlo incluso estando inconsciente, una vez por descanso largo.", effects = {} },
+                        { id = "vision",      label = "Vision Mejorada", desc = "Ves en penumbra hasta 18 metros como si fuera luz brillante y en la oscuridad como en penumbra, solo en tonos de gris.", effects = {} },
+                        { id = "piernas",     label = "Piernas Mecanicas", desc = "Tu velocidad aumenta a 9 metros. Puedes duplicar tu velocidad una vez por turno.", effects = { { kind = "bonus", target = "speed", value = 1.5 } } },
+                        { id = "brazos",      label = "Brazos Mecanicos", desc = "Tus golpes desarmados causan 1d6 de daño contundente y tienes competencia con una herramienta de artesano integrada.", effects = { { kind = "unarmedDie", die = 6 }, { kind = "toolProf", tool = "Herramientas de artesano (integrada)" } } },
+                        { id = "resiliencia", label = "Resiliencia Metalica", desc = "Si no llevas armadura, tu CA es 13 + Mod. Destreza.", effects = { { kind = "unarmoredDefenseBase", base = 13 } } },
+                        { id = "generador_luz", icon = "inv_mechagon_wrench", label = "Generador de Luz Hiperorganica", desc = "Conoces el truco Ilusion menor. La Inteligencia es tu caracteristica de lanzamiento para el.", spellId = "ilusion_menor", effects = {} },
+                    },
+                } },
+                -- Rasgo derivado de la eleccion "Sistema de Emergencia": boton real en el Libro
+                -- con 1 uso por descanso largo que cura nivel + Mod. Constitucion.
+                { id = "gno_mec_emergencia", requiresOption = "emergencia", icon = "inv_gizmo_runichealthinjector", name = "Sistema de Emergencia", type = "accion", cast = "accion", actionKind = "selfHeal", healBase = "level", healAbility = "Constitucion", uses = { max = 1, recharge = "long" }, description = "Recuperas puntos de golpe iguales a tu nivel + Mod. Constitucion. Puedes usarlo incluso estando inconsciente, una vez por descanso largo.", effects = {} },
             } },
         },
         traits = {

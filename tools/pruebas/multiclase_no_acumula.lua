@@ -57,13 +57,17 @@ chk("2 no lo baja", resolved.resourceMax.channel_divinity, 3)
 -- ── 2. Defensa sin Armadura, extraida de HarfordDnDCombat ──
 local MODS = { Destreza = 3, Sabiduria = 4, Inteligencia = 2 }
 local ABILIDADES = {}
+local BASE = 10
 HarfordDnDCalc = { GetAbilityMod = function(a) return MODS[a] or 0 end }
-HarfordDnDFeatureEffects = { GetUnarmoredDefenseAbilities = function() return ABILIDADES end }
+HarfordDnDFeatureEffects = {
+    GetUnarmoredDefenseAbilities = function() return ABILIDADES end,
+    GetUnarmoredDefenseBase = function() return BASE end,
+}
 local src2 = io.open("Harford/DnD/Engine/HarfordDnDCombat.lua"):read("*a")
 local a2 = assert(src2:find("local unarmored = 0"))
-local b2 = assert(src2:find("return math.floor%(10 %+ dex %+ unarmored %+ bonus%)", a2))
+local b2 = assert(src2:find("return math.floor%(base %+ dex %+ unarmored %+ bonus%)", a2))
 local codigo2 = "local dex, bonus = ...\n" .. src2:sub(a2, b2 - 1) ..
-    "\nreturn math.floor(10 + dex + unarmored + bonus)"
+    "\nreturn math.floor(base + dex + unarmored + bonus)"
 local env2 = { ipairs = ipairs, math = math,
     HarfordDnDCalc = HarfordDnDCalc, HarfordDnDFeatureEffects = HarfordDnDFeatureEffects }
 local f2
@@ -78,4 +82,11 @@ ABILIDADES = { "Sabiduria", "Inteligencia" }
 chk("Monje/CdD: NO suma las dos, coge la mejor", f2(3, 0), 17)
 ABILIDADES = { "Inteligencia", "Sabiduria" }
 chk("el orden da igual", f2(3, 0), 17)
+-- Resiliencia Metalica del Mecagnomo: base ALTERNATIVA que sustituye al 10 (CA 13 + Des).
+ABILIDADES = {}
+BASE = 13
+chk("base alternativa: 13 + Des", f2(3, 0), 16)
+ABILIDADES = { "Sabiduria" }
+chk("y se combina con Defensa sin Armadura", f2(3, 0), 20)
+BASE = 10
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

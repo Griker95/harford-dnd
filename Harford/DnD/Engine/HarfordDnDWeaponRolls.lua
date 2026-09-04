@@ -73,6 +73,17 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
         end
     end
 
+    -- Dado desarmado por rasgo (Brazos Mecanicos: 1d6): SOLO al arma Desarmado y nunca por
+    -- debajo del dado que ya tenga (Artes Marciales puede haberlo subido mas arriba).
+    if ActorIsPlayer(def) and def.key == "Desarmado"
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetUnarmedDie then
+        local die = HarfordDnDFeatureEffects.GetUnarmedDie()
+        if die and die > (tonumber(sides) or 0) then
+            n, sides = 1, die
+            diceStr = "1d" .. tostring(die)
+        end
+    end
+
     -- GOLPE CRITICO MASIVO (punto de heroe, Luchador Fisico): los dados de daño del arma se
     -- tiran x10 y se suma el nivel de personaje UNA vez. La marca la puso SpendUse (el
     -- auto-impacto ya lo consumio DoWeaponAttack) y se consume en esta tirada.

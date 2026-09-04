@@ -364,10 +364,35 @@ end
 
 local function GetRaceTraits(draft)
     local out = {}
+    -- Mismo filtro que Progression.GetUnlockedFeatures pero sobre el BORRADOR: puerta por
+    -- nivel total (`minCharacterLevel`, la segunda Mejora mecanica del Mecagnomo es de nivel 5)
+    -- y rasgos derivados de una opcion (`requiresOption`, su Sistema de Emergencia).
+    local nivelTotal = 0
+    for _, e in ipairs(draft.classes or {}) do nivelTotal = nivelTotal + (tonumber(e.level) or 0) end
+    local elegidas
+    local function Entra(feature)
+        local minimo = tonumber(feature.minCharacterLevel)
+        if minimo and nivelTotal < minimo then return false end
+        local req = feature.requiresOption
+        if req then
+            if not elegidas then
+                elegidas = {}
+                for _, seleccion in pairs(draft.choices or {}) do
+                    for _, optId in ipairs(seleccion or {}) do elegidas[tostring(optId)] = true end
+                end
+            end
+            return elegidas[tostring(req)] == true
+        end
+        return true
+    end
     local race = HarfordDnDRaces.GetRace(draft.raceId)
-    for _, feature in ipairs((race and race.traits) or {}) do out[#out + 1] = { feature = feature, source = "Raza" } end
+    for _, feature in ipairs((race and race.traits) or {}) do
+        if Entra(feature) then out[#out + 1] = { feature = feature, source = "Raza" } end
+    end
     local subrace = HarfordDnDRaces.GetSubrace(draft.raceId, draft.subraceId)
-    for _, feature in ipairs((subrace and subrace.traits) or {}) do out[#out + 1] = { feature = feature, source = "Subraza" } end
+    for _, feature in ipairs((subrace and subrace.traits) or {}) do
+        if Entra(feature) then out[#out + 1] = { feature = feature, source = "Subraza" } end
+    end
     return out
 end
 

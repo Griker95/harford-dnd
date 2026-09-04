@@ -143,6 +143,8 @@ local function Empty()
         initiativeAbilities = {}, -- caracteristicas cuyo Mod. se suma a la iniciativa (ej. Alacridad: Carisma)
         allSavesAbilities = {},   -- caracteristicas cuyo Mod. (>= min) se suma a TODAS las salvaciones (Aura de Proteccion)
         unarmoredDefenseAbilities = {}, -- caracteristicas cuyo Mod. se suma a la CA SIN armadura ni escudo (Defensa sin Armadura del Monje: Sabiduria)
+        unarmoredDefenseBase = 0, -- base ALTERNATIVA de la CA sin armadura (Resiliencia Metalica del Mecagnomo: 13 + Des); 0 = la normal de 10
+        unarmedDie = 0, -- dado del golpe desarmado (Brazos Mecanicos: 1d6); 0 = el 1 fijo del arma Desarmado
         weaponFinesse = {}, -- reglas que permiten tratar armas concretas como Sutiles
         martialArts = {}, -- reglas de armas de monje: Destreza y dado marcial por nivel
         -- Sustitucion de la caracteristica de ataque/dano de un arma (Monje "Serenidad": Sabiduria
@@ -337,6 +339,20 @@ local function ApplyEffect(resolved, effect, profileName)
             classId = tostring(effect.classId or "monje"),
             values = effect.values,
         }
+    elseif kind == "unarmoredDefenseBase" then
+        -- Base alternativa de la CA sin armadura (Resiliencia Metalica: 13 + Des). Con varias
+        -- fuentes gana la mayor; Combat la usa en lugar del 10 si es mayor.
+        local base = tonumber(effect.base) or 0
+        if base > (tonumber(resolved.unarmoredDefenseBase) or 0) then
+            resolved.unarmoredDefenseBase = base
+        end
+    elseif kind == "unarmedDie" then
+        -- Dado del golpe desarmado (Brazos Mecanicos: 1d6). Gana el mayor; WeaponRolls lo
+        -- aplica solo al arma Desarmado y nunca por debajo del dado que ya tenga.
+        local die = tonumber(effect.die) or 0
+        if die > (tonumber(resolved.unarmedDie) or 0) then
+            resolved.unarmedDie = die
+        end
     elseif kind == "conditionalWeaponDamage" then
         -- Daño condicional conmutable que el jugador suma al siguiente Daño Arma.
         -- Nº de dados: fijo (effect.count) o ceil(nivel/2) de effect.perTwoClassLevels (Ataque Furtivo).
@@ -703,6 +719,17 @@ function API.GetWeaponAbilityOverride(def, profileName)
         end
     end
     return nil
+end
+
+-- Base de la CA sin armadura (10 salvo un rasgo con base propia, como Resiliencia Metalica).
+function API.GetUnarmoredDefenseBase(profileName)
+    return math.max(10, tonumber(API.Resolve(profileName).unarmoredDefenseBase) or 0)
+end
+
+-- Dado del golpe desarmado por rasgo (Brazos Mecanicos), o nil si no hay mejora.
+function API.GetUnarmedDie(profileName)
+    local die = tonumber(API.Resolve(profileName).unarmedDie) or 0
+    return die > 0 and die or nil
 end
 
 function API.GetMartialArtsDamageDice(def, profileName)

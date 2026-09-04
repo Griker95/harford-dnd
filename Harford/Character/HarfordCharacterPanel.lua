@@ -3114,9 +3114,10 @@ local function BookButtonOnClick(self)
             if RefreshBook then RefreshBook() end
             return
         end
-        -- Curacion declarativa sin dados (Sistema de Emergencia del Mecagnomo): anuncia y
-        -- gasta el uso por la ruta comun, y cura healBase ("level" = nivel total de personaje,
-        -- o un numero) + Mod. de healAbility. AdjustResourceCurrent refresca los recursos.
+        -- Curacion declarativa sin dados (Sistema de Emergencia del Mecagnomo; Lider
+        -- inspirador con healResource = "temp_health"): anuncia y gasta el uso por la ruta
+        -- comun, y aplica healBase ("level" = nivel total, o un numero) + Mod. de healAbility
+        -- al recurso indicado (salud por defecto). AdjustResourceCurrent refresca recursos.
         if self.feature.actionKind == "selfHeal" then
             if not AnnounceAbility(self.feature) then
                 return
@@ -3132,8 +3133,26 @@ local function BookButtonOnClick(self)
             if self.feature.healAbility and HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod then
                 cantidad = cantidad + (HarfordDnDCalc.GetAbilityMod(self.feature.healAbility) or 0)
             end
-            HarfordDnDStore.AdjustResourceCurrent("health", math.max(1, cantidad))
+            HarfordDnDStore.AdjustResourceCurrent(tostring(self.feature.healResource or "health"),
+                math.max(1, cantidad))
             if RefreshGameUI then RefreshGameUI() end
+            if RefreshBook then RefreshBook() end
+            return
+        end
+        -- Reaccion que golpea (Golpe de castigo de Centinela): el anuncio cobra la REACCION y
+        -- el golpe sale por la ruta normal de ataque de arma con skipTurnCost, igual que el
+        -- Ataque de oportunidad. Requiere target; sin el, no se gasta nada.
+        if self.feature.actionKind == "reactionWeaponAttack" then
+            if not (UnitExists and UnitExists("target")) then
+                Print("Necesitas un objetivo.")
+                return
+            end
+            if not AnnounceAbility(self.feature) then
+                return
+            end
+            if HarfordDnDStore and HarfordDnDStore.DoWeaponAttack then
+                HarfordDnDStore.DoWeaponAttack({ skipTurnCost = true })
+            end
             if RefreshBook then RefreshBook() end
             return
         end

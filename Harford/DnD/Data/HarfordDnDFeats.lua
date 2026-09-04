@@ -234,7 +234,8 @@ API.FEATS = {
     {
         id = "feat_centinela", icon = "ability_warrior_revenge", name = "Centinela", description = "Nadie se escapa de tu lado: castigas a quien lo intenta y frenas a quien pasa.", source = "PHB",
         traits = {
-            { id = "feat_phb_centinela", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Al impactar con un ataque de oportunidad, la velocidad del objetivo baja a 0 ese turno. Atacas de oportunidad aunque el enemigo se Destrabe. Reacción para atacar a quien ataque a un aliado a 1,5 m de ti.", effects = {} },
+            { id = "feat_phb_centinela", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Al impactar con un ataque de oportunidad, la velocidad del objetivo baja a 0 ese turno. Atacas de oportunidad aunque el enemigo se Destrabe.", effects = {} },
+            { id = "feat_phb_centinela_golpe", icon = "ability_warrior_revenge", name = "Golpe de castigo", type = "reaccion", cast = "reaccion", actionKind = "reactionWeaponAttack", description = "Cuando una criatura a 1,5 m de ti ataca a un objetivo que no eres tú, usas tu reacción para hacerle un ataque de arma cuerpo a cuerpo.", effects = {} },
         },
     },
     {
@@ -252,7 +253,7 @@ API.FEATS = {
     {
         id = "feat_duelista_defensivo", icon = "ability_parry", requiredAbility = { abilities = { "Destreza" }, min = 13 }, name = "Duelista defensivo", requires = "Destreza 13 o mas", description = "Con arma sutil, conviertes la parada en defensa cuando te van a impactar.", source = "PHB",
         traits = {
-            { id = "feat_phb_duelista", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Empuñando un arma sutil con la que seas competente, al recibir un ataque cuerpo a cuerpo puedes usar tu reacción para sumar Bonus Competencia a la CA contra ese ataque.", effects = {} },
+            { id = "feat_phb_duelista", icon = "ability_parry", name = "Parada defensiva", type = "reaccion", cast = "reaccion", description = "Empuñando un arma sutil con la que seas competente, al recibir un ataque cuerpo a cuerpo usas tu reacción para sumar tu Bonus de Competencia a la CA contra ese ataque.", effects = {} },
         },
     },
     {
@@ -288,7 +289,8 @@ API.FEATS = {
     {
         id = "feat_lanzador_combate", icon = "ability_mage_burnout", requiredCaster = "any", name = "Lanzador en combate", requires = "Capacidad de lanzar al menos un conjuro", description = "Lanzar bajo presión: no pierdes el conjuro por un golpe ni por tener las manos ocupadas.", source = "PHB",
         traits = {
-            { id = "feat_phb_lcombate", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Ventaja en salvaciones de Constitución para mantener concentración al recibir daño. Ejecutas componentes somaticos con las manos ocupadas por armas/escudo. Reacción para lanzar un conjuro (1 acción, 1 objetivo) en lugar de un ataque de oportunidad.", effects = {} },
+            { id = "feat_phb_lcombate", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Ventaja en salvaciones de Constitución para mantener concentración al recibir daño. Ejecutas componentes somaticos con las manos ocupadas por armas/escudo.", effects = {} },
+            { id = "feat_phb_lcombate_conjuro", icon = "ability_mage_burnout", name = "Conjuro de oportunidad", type = "reaccion", cast = "reaccion", description = "Cuando una criatura provoca tu ataque de oportunidad, usas tu reacción para lanzarle un conjuro (1 acción, un solo objetivo) en su lugar. Lánzalo justo después desde tu grimorio.", effects = {} },
         },
     },
     {
@@ -306,7 +308,7 @@ API.FEATS = {
     {
         id = "feat_lider_inspirador", icon = "achievement_guildperk_everyones a hero", requiredAbility = { abilities = { "Carisma" }, min = 13 }, name = "Lider inspirador", requires = "Carisma 13 o mas", description = "Una arenga antes del combate deja a los tuyos con aguante de sobra.", source = "PHB",
         traits = {
-            { id = "feat_phb_lider", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Tras 10 minutos, hasta seis criaturas (incluido tu) a 9 m que te vean u oigan reciben PG temporales = tu nivel + Mod. Carisma. No se repite hasta un descanso.", effects = {} },
+            { id = "feat_phb_lider", icon = "achievement_guildperk_everyones a hero", name = "Arenga inspiradora", type = "accion", cast = "accion", actionKind = "selfHeal", healBase = "level", healAbility = "Carisma", healResource = "temp_health", uses = { max = 1, recharge = "short" }, description = "Tras 10 minutos de arenga, hasta seis criaturas (incluido tú) a 9 m que te vean u oigan reciben PG temporales = tu nivel + Mod. Carisma. Los tuyos se aplican solos; tus aliados se los anotan al ver el anuncio. No se repite hasta un descanso.", effects = {} },
         },
     },
     {
@@ -379,7 +381,8 @@ API.FEATS = {
     {
         id = "feat_maestro_escudos", icon = "inv_shield_06", name = "Maestro en escudos", description = "El escudo también golpea: derribas y te cubres de lo que estalla.", source = "PHB",
         traits = {
-            { id = "feat_phb_escudos", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Con escudo: al usar la acción de Atacar, acción adicional para empujar con el escudo a 1,5 m. Sumas el bono de CA del escudo a salvaciones de Destreza que solo te afecten a ti; con reacción puedes anular el daño si superas la salvación.", effects = {} },
+            { id = "feat_phb_escudos", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Con escudo: al usar la acción de Atacar, acción adicional para empujar con el escudo a 1,5 m. Sumas el bono de CA del escudo a salvaciones de Destreza que solo te afecten a ti.", effects = {} },
+            { id = "feat_phb_escudos_abrigo", icon = "inv_shield_06", name = "Abrigo del escudo", type = "reaccion", cast = "reaccion", description = "Si superas una salvación de Destreza contra un efecto que solo te afecta a ti y hace mitad de daño al superarla, usas tu reacción para no recibir ningún daño, interponiendo el escudo.", effects = {} },
         },
     },
     {
@@ -451,7 +454,8 @@ API.FEATS = {
     {
         id = "feat_sanador", icon = "eps_rumble_traithealer", name = "Sanador", description = "Manos de médico: levantas a un caído y curas más de lo normal con un botiquín.", source = "PHB",
         traits = {
-            { id = "feat_phb_sanador", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Al estabilizar con útiles de sanador, la criatura recupera además 1 PG. Como acción, gastas un uso de útiles de sanador para curar 1d6+4 PG mas su numero de Dados de Golpe (1 vez por descanso por criatura).", effects = {} },
+            { id = "feat_phb_sanador", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Al estabilizar con útiles de sanador, la criatura recupera además 1 PG.", effects = {} },
+            { id = "feat_phb_sanador_botiquin", icon = "eps_rumble_traithealer", name = "Botiquin de sanador", type = "accion", cast = "accion", description = "Gastas un uso de tus útiles de sanador sobre una criatura: recupera 1d6+4 PG más tantos PG como Dados de Golpe tenga. Una vez por descanso por criatura; la curación se aplica en mesa.", effects = {} },
         },
     },
     {

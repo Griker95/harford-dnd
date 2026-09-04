@@ -1266,7 +1266,9 @@ function API.BuildAbout(draft, profileName)
             local baseName = NombreDeOrigen(race)
             local subName = subrace and NombreDeOrigen(subrace) or ""
             if subName ~= "" and subName ~= baseName then
-                if subName:sub(1, #baseName) == baseName then
+                -- El prefijo solo se recorta en LIMITE DE PALABRA: con "Trol"/"Troll Zandalari"
+                -- el corte a media palabra dejaba una "l" suelta coloreada que parecia un "|".
+                if subName:sub(1, #baseName + 1) == baseName .. " " then
                     local resto = Trim(subName:sub(#baseName + 1))
                     if resto ~= "" then
                         raceName = baseName .. " {col:" .. COL_RACIAL .. "}" .. resto .. "{/col}"

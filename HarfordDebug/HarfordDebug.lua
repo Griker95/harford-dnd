@@ -7810,8 +7810,20 @@ do
             return out
         end
         copia = Copiar(datos)
+        -- Los conjuros del compendio tambien: las fichas de prueba los rellenan al azar para
+        -- que el About tenga frames de Magia, y 'restaurar' debe devolver los del personaje.
+        local compendio
+        local C = _G.HarfordCompendioAPI
+        if C and C.GetKnownSpells then
+            compendio = {
+                known = Copiar(C.GetKnownSpells() or {}),
+                prepared = Copiar((C.GetPreparedSpells and C.GetPreparedSpells()) or {}),
+                book = Copiar((C.GetWizardBook and C.GetWizardBook()) or {}),
+            }
+        end
         HarfordDebugSettings.fichaPrevia = {
             datos = copia,
+            compendio = compendio,
             perfil = (UnitName and UnitName("player")) or "?",
             cuando = (date and date("%d/%m %H:%M")) or "?",
         }
@@ -7827,6 +7839,18 @@ do
         local P = Prog()
         if not (P and P.Set) then Print("HarfordDnDProgression no disponible") return end
         P.Set(nil, guardada.datos)
+        -- Conjuros del compendio de vuelta (in place: los getters devuelven las tablas vivas).
+        local C = _G.HarfordCompendioAPI
+        if guardada.compendio and C and C.GetKnownSpells then
+            local function Volcar(destino, origen)
+                if not destino then return end
+                for k in pairs(destino) do destino[k] = nil end
+                for k, v in pairs(origen or {}) do destino[k] = v end
+            end
+            Volcar(C.GetKnownSpells(), guardada.compendio.known)
+            Volcar(C.GetPreparedSpells and C.GetPreparedSpells(), guardada.compendio.prepared)
+            Volcar(C.GetWizardBook and C.GetWizardBook(), guardada.compendio.book)
+        end
         HarfordDebugSettings.fichaPrevia = nil
         Print("Ficha restaurada a la copia de " .. tostring(guardada.cuando)
             .. " (" .. tostring(guardada.perfil) .. ").")
@@ -8052,6 +8076,77 @@ do
         return resumen
     end
 
+    -- Conjuros al azar para la clase montada, para que el About tenga sus frames de Magia
+    -- ("Magia Caballero de la Muerte" + "Magia Sangre", como {PJ} Cody). Se vacian las tres
+    -- listas del compendio (la copia del personaje real ya la tomo Guardar) y se rellenan
+    -- respetando el modo de lanzamiento: known -> conocidos, prepared -> preparados,
+    -- wizard_book -> libro (los trucos siempre a conocidos). Cantidades de la progresion
+    -- del compendio a nivel 6, capadas por lo que exista en el catalogo.
+    local function RellenarConjuros(classId, subclassId)
+        local C = _G.HarfordCompendioAPI
+        local L = Libro()
+        if not (C and C.GetClassCasting and C.FilterSpells and L) then return end
+        local classDef = L.GetClass and L.GetClass(classId)
+        if not classDef then return end
+        local clave = C.GetClassCasting(classDef.name) and classDef.name or nil
+        if not clave then
+            local sub = L.GetSubclass and L.GetSubclass(classId, subclassId)
+            local compuesta = sub and (classDef.name .. " " .. sub.name)
+            if compuesta and C.GetClassCasting(compuesta) then clave = compuesta end
+        end
+        local known = C.GetKnownSpells and C.GetKnownSpells()
+        local prepared = C.GetPreparedSpells and C.GetPreparedSpells()
+        local book = C.GetWizardBook and C.GetWizardBook()
+        for _, tabla in ipairs({ known, prepared, book }) do
+            if tabla then for k in pairs(tabla) do tabla[k] = nil end end
+        end
+        if not (clave and known) then return end
+        local casting = C.GetClassCasting(clave)
+
+        -- Totales a nivel 6: la progresion da el DELTA por nivel; se suman.
+        local trucos, conjuros = 0, 0
+        local preparaEnVezDeConocer = C.GetPreparedCount and C.GetPreparedCount(clave, 0, 6) ~= nil
+        for lvl = 1, NIVEL do
+            local dTrucos, dConjuros = C.GetSpellPickCounts(clave, lvl)
+            trucos = trucos + (tonumber(dTrucos) or 0)
+            conjuros = conjuros + (tonumber(dConjuros) or 0)
+        end
+        if preparaEnVezDeConocer then conjuros = math.max(conjuros, 4) end
+        local maxNivel = (C.GetMaxSpellLevel and C.GetMaxSpellLevel(clave, NIVEL)) or 0
+
+        local candidatos = C.FilterSpells({ className = clave }) or {}
+        local porNivel = {}
+        for _, spell in ipairs(candidatos) do
+            local lvl = tonumber(spell.level) or 0
+            if lvl == 0 or lvl <= maxNivel then
+                porNivel[lvl] = porNivel[lvl] or {}
+                porNivel[lvl][#porNivel[lvl] + 1] = spell.id
+            end
+        end
+        local function Elegir(lista, cuantos, destino)
+            lista = lista or {}
+            for _ = 1, math.min(cuantos, #lista) do
+                local idx = math.random(#lista)
+                destino[table.remove(lista, idx)] = true
+            end
+        end
+        Elegir(porNivel[0], trucos, known)
+        -- Los niveles se reparten empezando por el mas alto disponible, dos por nivel, y el
+        -- resto al nivel 1: da frames con varias secciones "Nivel N", como las fichas reales.
+        -- El destino sigue EXACTAMENTE el criterio del recolector del About (casting.mode):
+        -- meterlos en otra lista los perderia al montar los frames.
+        local destino = known
+        if casting and casting.mode == "wizard_book" and book then destino = book
+        elseif casting and casting.mode == "prepared" and prepared then destino = prepared end
+        local restantes = conjuros
+        for lvl = maxNivel, 2, -1 do
+            local coger = math.min(2, restantes)
+            Elegir(porNivel[lvl], coger, destino)
+            restantes = restantes - coger
+        end
+        if restantes > 0 then Elegir(porNivel[1], restantes, destino) end
+    end
+
     -- Monta la ficha. Devuelve un resumen, que es lo que hace util el recorrido de `todas`.
     local function Montar(classId, subclassId)
         local P, L = Prog(), Libro()
@@ -8074,6 +8169,7 @@ do
         -- Las caracteristicas al final: hornean los bonos de raza y trasfondo, que no existen
         -- hasta que sus elecciones estan resueltas.
         local caracteristicas = CaracteristicasAlAzar()
+        RellenarConjuros(classId, subclassId)
         Refrescar()
 
         local entrada = P.GetClassLevels()[1]

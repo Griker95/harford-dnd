@@ -26,13 +26,18 @@ if setfenv then f = assert(cargar(src)); setfenv(f, env) else f = assert(cargar(
 pcall(f)
 API = env.HarfordDnDConditions
 
+-- Las definiciones `legacy` existen SOLO para resolver mensajes de clientes antiguos
+-- (ayudado_prueba/ayudado_ataque tras unificarse en `ayudado`): quedan fuera de ORDER,
+-- del menu DM y de la particion por categorias, y aqui no cuentan como olvidadas.
 local definidas, enOrden = 0, {}
-for _ in pairs(API.DEFS) do definidas = definidas + 1 end
+for _, def in pairs(API.DEFS) do
+    if not def.legacy then definidas = definidas + 1 end
+end
 for _, id in ipairs(API.ORDER) do enOrden[id] = true end
 
 local faltan = {}
-for id in pairs(API.DEFS) do
-    if not enOrden[id] then faltan[#faltan + 1] = id end
+for id, def in pairs(API.DEFS) do
+    if not enOrden[id] and not def.legacy then faltan[#faltan + 1] = id end
 end
 table.sort(faltan)
 

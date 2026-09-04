@@ -7404,6 +7404,17 @@ do
             for nombre, icono in pairs(C.names or {}) do anota("por nombre", nombre, icono) end
         end
 
+        -- Trasfondos y sus variantes: declaran su arte en los propios datos, no en el catalogo.
+        local B = _G.HarfordDnDBackgrounds
+        if B and B.GetBackgrounds then
+            for _, bg in ipairs(B.GetBackgrounds() or {}) do
+                anota("trasfondo", bg.id, bg.icon)
+                for _, v in ipairs(bg.variants or {}) do
+                    anota("variante", v.id, v.icon)
+                end
+            end
+        end
+
         -- Arte de origen: no esta en el catalogo, tiene tablas propias por sexo.
         local Cre = _G.HarfordCharacterCreation
         if Cre and Cre.GetAllOriginIcons then

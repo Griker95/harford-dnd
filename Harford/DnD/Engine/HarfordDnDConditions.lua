@@ -37,7 +37,7 @@ API.CATEGORIES = {
     } },
     -- Estados que deja la economia de turno y el apoyo entre PJs (Ayudar, Preparar).
     { id = "apoyo", label = "Apoyo y turno", ids = {
-        "ayudado_ataque", "ayudado_prueba", "preparado",
+        "ayudado", "preparado",
     } },
     { id = "elemental", label = "Elementales", ids = {
         "burning", "frozen", "chilled",
@@ -124,18 +124,26 @@ API.DEFS = {
         description = "Ventaja en los chequeos de concentracion mientras permanezcas dentro del circulo.",
         effects = { { kind = "rollMode", rolls = { save = true }, ability = "Constitucion", mode = "adv" } },
     },
-    -- Ayudar. Son DOS estados y no uno con dos efectos porque en el manual son dos usos distintos
-    -- de la accion: o ayudas en una prueba, o distraes a una criatura para el ataque de un aliado.
-    -- Quien ayuda declara cual, y con un solo estado la ventaja se gastaria en la primera tirada
-    -- que hiciera el ayudado, que casi nunca seria la que le prometieron.
-    ayudado_prueba = {
+    -- Ayudar. UN solo estado sin declarar el uso (decision de mesa 2026-09): la ventaja va a la
+    -- SIGUIENTE tirada de ataque o de prueba de caracteristica del ayudado, la que llegue antes,
+    -- y ahi se gasta. Menos ceremonia que los dos usos del manual y ningun menu al ayudar.
+    ayudado = {
         label = "Ayudado", tracking = "state",
+        description = "Ventaja en tu proxima tirada de ataque o prueba de caracteristica.",
+        effects = { { kind = "rollMode", rolls = { attack = true, ability = true }, mode = "adv" } },
+        consumeAfterRoll = { attack = true, ability = true },
+    },
+    -- Compat: los dos estados antiguos se conservan SOLO para resolver DNDCOND de clientes
+    -- anteriores. `legacy = true` los deja fuera de ORDER (y por tanto del menu DM y de la
+    -- particion por categorias); siguen resolviendo si llegan por red.
+    ayudado_prueba = {
+        label = "Ayudado", tracking = "state", legacy = true,
         description = "Ventaja en tu proxima prueba de caracteristica.",
         effects = { { kind = "rollMode", rolls = { ability = true }, mode = "adv" } },
         consumeAfterRoll = { ability = true },
     },
     ayudado_ataque = {
-        label = "Ayudado en el ataque", tracking = "state",
+        label = "Ayudado en el ataque", tracking = "state", legacy = true,
         description = "Ventaja en tu proximo ataque contra la criatura distraida.",
         effects = { { kind = "rollMode", rolls = { attack = true }, mode = "adv" } },
         consumeAfterRoll = { attack = true },
@@ -470,8 +478,10 @@ do
     local listadas = {}
     for _, id in ipairs(API.ORDER) do listadas[id] = true end
     local resto = {}
-    for id in pairs(API.DEFS) do
-        if not listadas[id] then resto[#resto + 1] = id end
+    for id, def in pairs(API.DEFS) do
+        -- `legacy` = definicion solo para resolver mensajes de clientes antiguos: fuera del
+        -- catalogo visible (ORDER, menu DM, particion de categorias).
+        if not listadas[id] and not def.legacy then resto[#resto + 1] = id end
     end
     table.sort(resto)
     for _, id in ipairs(resto) do API.ORDER[#API.ORDER + 1] = id end

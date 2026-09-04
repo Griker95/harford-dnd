@@ -26,18 +26,22 @@ for _, id in ipairs({ "ayudar", "preparar", "lanzar_arma" }) do
     chk(id, A.Get(id).sinEfecto, "nil")
 end
 
--- AYUDAR. Dos usos distintos del manual, no uno con dos efectos: la ventaja se gasta en la primera
--- tirada del tipo que sea, asi que un estado unico la gastaria en la que no era.
-print("Ayudar: dos usos, y se declara cual antes")
-chk("dos opciones", #A.Get("ayudar").helpOther.options, 2)
-chk("prueba", A.Get("ayudar").helpOther.options[1].conditionId, "ayudado_prueba")
-chk("ataque", A.Get("ayudar").helpOther.options[2].conditionId, "ayudado_ataque")
-chk("el estado de prueba da ventaja en pruebas",
-    cond:find('ayudado_prueba = {.-rolls = { ability = true }, mode = "adv"') ~= nil, true)
-chk("y se gasta al tirarla", cond:find('ayudado_prueba = {.-consumeAfterRoll = { ability = true }') ~= nil, true)
-chk("el de ataque da ventaja en ataques",
-    cond:find('ayudado_ataque = {.-rolls = { attack = true }, mode = "adv"') ~= nil, true)
-chk("y se gasta al atacar", cond:find('ayudado_ataque = {.-consumeAfterRoll = { attack = true }') ~= nil, true)
+-- AYUDAR. Decision de mesa 2026-09: UN solo estado sin declarar el uso. La ventaja va a la
+-- SIGUIENTE tirada de ataque o de prueba del ayudado, la que llegue antes, y ahi se gasta.
+-- Una unica opcion => `Elegir` ejecuta directo y no hay menu.
+print("Ayudar: un solo estado, sin declarar el uso")
+chk("una opcion", #A.Get("ayudar").helpOther.options, 1)
+chk("el estado unico", A.Get("ayudar").helpOther.options[1].conditionId, "ayudado")
+chk("da ventaja en ataque Y prueba",
+    cond:find('ayudado = {.-rolls = { attack = true, ability = true }, mode = "adv"') ~= nil, true)
+chk("y se gasta con la primera de las dos",
+    cond:find('ayudado = {.-consumeAfterRoll = { attack = true, ability = true }') ~= nil, true)
+-- Los estados antiguos siguen DEFINIDOS (compat con DNDCOND de clientes viejos) pero fuera de
+-- las categorias del menu DM.
+chk("compat prueba definida", cond:find("ayudado_prueba = {") ~= nil, true)
+chk("compat ataque definida", cond:find("ayudado_ataque = {") ~= nil, true)
+chk("fuera del menu DM", cond:find('"ayudado_ataque", "ayudado_prueba", "preparado"') == nil, true)
+chk("el unificado en el menu DM", cond:find('"ayudado", "preparado"', 1, true) ~= nil, true)
 
 -- El estado va sobre el ALIADO. `ApplyToUnit` ya sabe pedirselo a su cliente si es jugador.
 print("Ayudar: el estado va sobre el aliado, no sobre quien ayuda")
@@ -79,8 +83,8 @@ chk("lo usa la contienda", panel:find("if Elegir(contest.options, def, Contienda
 chk("lo usa ayudar", panel:find("if Elegir(def.helpOther.options, def, Ayudar, elegida) then return true end", 1, true) ~= nil, true)
 chk("lo usa lanzar arma", panel:find("if Elegir(opciones, def, LanzarArma, nil) then return true end", 1, true) ~= nil, true)
 
-print("Los tres estados nuevos tienen icono")
-for _, id in ipairs({ "ayudado_prueba", "ayudado_ataque", "preparado" }) do
+print("Los estados tienen icono")
+for _, id in ipairs({ "ayudado", "ayudado_prueba", "ayudado_ataque", "preparado" }) do
     chk(id, cat:find("\n    harford_estado_" .. id .. " = ", 1, true) ~= nil, true)
 end
 

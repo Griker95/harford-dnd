@@ -314,8 +314,9 @@ print("Toda condicion definida es recorrible")
 local faltan = {}
 local enOrden = {}
 for _, id in ipairs(C.ORDER) do enOrden[id] = true end
-for id in pairs(C.DEFS) do
-    if not enOrden[id] then faltan[#faltan + 1] = id end
+for id, def in pairs(C.DEFS) do
+    -- `legacy` = compat de red con clientes antiguos: fuera de ORDER a proposito.
+    if not enOrden[id] and not def.legacy then faltan[#faltan + 1] = id end
 end
 chk("ninguna se queda fuera", #faltan, 0)
 

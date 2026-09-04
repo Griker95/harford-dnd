@@ -412,7 +412,7 @@ Grupo("red", "que los mensajes se compongan y se vuelvan a leer, con su limite d
     -- La peticion de estado a otro cliente, ida y vuelta.
     local S = _G.HarfordSync
     if S and S.SerializeConditionRequest and S.DeserializeConditionRequest then
-        local datos = { id = "1.1", op = "apply", conditionId = "ayudado_prueba",
+        local datos = { id = "1.1", op = "apply", conditionId = "ayudado",
             sourceGuid = "Player-1-0000", sourceName = "Prueba", duration = "source_turn_start", turns = 0 }
         local v = S.DeserializeConditionRequest(S.SerializeConditionRequest(datos))
         r.chk("una peticion de estado vuelve", v ~= nil)
@@ -441,7 +441,7 @@ Grupo("red", "que los mensajes se compongan y se vuelvan a leer, con su limite d
     r.manual("Queda por ver con OTRO jugador de objetivo (que llegue, no que se componga):", "dos")
     r.manual("  1. Agarrar -> el debe tirar Atletismo o Acrobacias en SU cliente y salir Agarrado si pierde.", "dos")
     r.manual("  2. Empujar -> elige Apartar: NO debe quedar Derribado. Repite con Derribar: si debe.", "suelto")
-    r.manual("  3. Ayudar -> elige prueba: su siguiente prueba sale con ventaja y el estado se le va.", "combate")
+    r.manual("  3. Ayudar -> sin menu: su siguiente ataque O prueba sale con ventaja y el estado se le va.", "combate")
     r.manual("Con un NPC de objetivo: Agarrar debe resolverse en TU cliente, sin pedirle nada a nadie.", "npc")
     r.manual("Preparar: primer clic gasta ACCION, segundo clic gasta REACCION y retira el estado.", "suelto")
 end)

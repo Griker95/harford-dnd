@@ -2303,6 +2303,9 @@ do
             elseif not line:match("{h%d") then
                 -- Contenido: limpiar todo el markup TRP3
                 local clean = line:gsub("{[^}]*}",""):gsub("^%s+",""):gsub("%s+$","")
+                -- Las fichas de NPC usan guiones como prefijo de lista en TRP3; el guion es
+                -- visual y no debe impedir que salvaciones, habilidades o velocidad se parseen.
+                clean = clean:gsub("^%-%s*", "")
                 if not IsDecor(clean) then
                     if inHeader then
                         -- Primera línea con texto → tipo/alineamiento

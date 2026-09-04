@@ -80,14 +80,13 @@ API.DEFS = {
     ayudar = {
         id = "ayudar", name = "Ayudar",
         cast = "accion", orden = 7,
-        description = "Un aliado tira con ventaja su proxima prueba de caracteristica, o su proximo "
-            .. "ataque contra una criatura a la que distraes.",
-        -- Los dos usos del manual, y se declara cual ANTES: la ventaja se gasta en la primera
-        -- tirada del tipo que sea, asi que prometer las dos seria prometer la que no era.
+        description = "Un aliado tira con ventaja su proxima tirada de ataque o prueba de "
+            .. "caracteristica, la que llegue antes.",
+        -- Decision de mesa: sin declarar el uso. Un solo estado y ningun menu; la ventaja se
+        -- gasta en la siguiente tirada de ataque o de prueba del ayudado.
         helpOther = {
             options = {
-                { label = "En una prueba", conditionId = "ayudado_prueba" },
-                { label = "En un ataque contra mi objetivo", conditionId = "ayudado_ataque" },
+                { label = "Ayudar", conditionId = "ayudado" },
             },
         },
     },

@@ -847,7 +847,11 @@ RefreshOptionCards = function(opciones, seleccionadoId, iconoDe, alElegir)
             if icono:sub(1, 10) ~= "Interface" .. sep then
                 icono = "Interface" .. sep .. "Icons" .. sep .. icono
             end
-            card.icono:SetTexture(icono)
+            -- Un icono que no existe en este build NO borra la textura (dejaria el respaldo),
+            -- pero se comprueba explicitamente para no depender de ese efecto colateral.
+            if not GetFileIDFromPath or GetFileIDFromPath(icono) then
+                card.icono:SetTexture(icono)
+            end
         end
         card.icono:SetDesaturated(not seleccionada)
         card.nombre:SetText(NombreSexo(choice) ~= "" and NombreSexo(choice) or tostring(choice.id or ""))

@@ -114,7 +114,7 @@ chk("ninguna con aura duplica el arte", sobran, 0)
 print("Nomenclatura consistente con el resto del catalogo")
 chk("clave desnuda, no [\"clave\"]", cat:find('["harford_estado_', 1, true), "nil")
 chk("junto a las acciones basicas",
-    cat:find('harford_accion_preparar = "eps_bg3_detectthoughts",\n    --', 1, true) ~= nil, true)
+    cat:find('harford_accion_trabado_melee = "eps_bg3_forcedmove",\n    --', 1, true) ~= nil, true)
 
 print("El contador es una sola regla, no dos copias")
 chk("regla unica", cond:find("function API.CounterFor", 1, true) ~= nil, true)

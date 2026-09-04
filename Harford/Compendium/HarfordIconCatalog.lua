@@ -1107,11 +1107,13 @@ Catalog.features = {
     harford_accion_estabilizar = "eps_bg3_secondwind",
     harford_accion_lanzar_arma = "eps_bg3_throwweapon",
     harford_accion_preparar = "eps_bg3_detectthoughts",
+    harford_accion_ataque_oportunidad = "ability_warrior_challange",
+    harford_accion_trabado_melee = "eps_bg3_forcedmove",
     -- Estados de Harford (HarfordDnDConditions), para la tira sobre el unitframe del target.
     -- Solo los que NO tienen aura: los que la tienen usan el arte del propio aura, que es el
     -- que el jugador ya ve en pantalla, y una segunda version acabaria por no coincidir.
     -- Los nombres salen del arte que el proyecto ya usa: uno inventado sale en verde.
-    harford_estado_trabado = "ability_warrior_challange_2",
+    harford_estado_trabado = "eps_bg3_forcedmove",
     harford_estado_ayudado = "eps_bg3_help",
     harford_estado_ayudado_prueba = "eps_bg3_help",
     harford_estado_ayudado_ataque = "eps_bg3_help",
@@ -1138,7 +1140,7 @@ Catalog.features = {
     harford_estado_marca_ignea = "spell_fire_felfire",
     harford_estado_palabra_dolor = "spell_shadow_shadowwordpain",
     harford_estado_deafened = "spell_holy_silence",
-    harford_estado_grappled = "ability_warrior_titansgrip",
+    harford_estado_grappled = "eps_bg3_dip",
     harford_estado_invisible = "spell_magic_lesserinvisibilty",
     harford_estado_paralyzed = "ability_monk_paralysis",
     harford_estado_orden_oscura = "spell_nature_shamanrage",

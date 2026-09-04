@@ -531,10 +531,14 @@ local function BuildTraitLines(traits, draft)
                     or feature.description
             end
             local hexClase = COL_TAG
+            local nombreClase
             do
                 local clase = entry.classId and HarfordDnDBook and HarfordDnDBook.GetClass
                     and HarfordDnDBook.GetClass(entry.classId)
-                if clase and clase.name then hexClase = ClassHex(clase.name) end
+                if clase and clase.name then
+                    hexClase = ClassHex(clase.name)
+                    nombreClase = tostring(clase.name)
+                end
             end
             -- Eleccion de UN slot ya resuelta: formato de los perfiles reales ({Reserva}
             -- Meneldor) — la opcion va EN la cabecera coloreada ("Estilo de combate
@@ -552,19 +556,42 @@ local function BuildTraitLines(traits, draft)
                         local nota = label:match("%((.-)%)")
                         inlineTitulo = " {col:" .. hexClase .. "}" .. corto .. "{/col}"
                         inlineCuerpo = Trim(option.desc or option.description)
+                        -- Sin desc propia, la REGLA LARGA del manual: la opcion es una
+                        -- sub-seccion del capitulo de clase ("#### Combate con Dos Armas"
+                        -- bajo "Estilo de Combate"). La nota entre parentesis del label
+                        -- ("+mod al 2\194\186 ataque") es el rotulo corto del boton, no la regla,
+                        -- y queda como ultimo recurso.
+                        if inlineCuerpo == "" and nombreClase and HarfordDnDBookText
+                            and HarfordDnDBookText.GetClassChapterFeature then
+                            inlineCuerpo = Trim(HarfordDnDBookText.GetClassChapterFeature(nombreClase, corto, 4, true))
+                        end
                         if inlineCuerpo == "" and nota then inlineCuerpo = Trim(nota) end
                     end
                 end
             end
-            if feature.type == "maniobra" then
+            -- Un rider de dano condicional que GASTA recurso (Golpe runico paga Poder Runico)
+            -- se presenta como maniobra: en {PJ} Cody va coloreado en h3 igual que Espiral de
+            -- la Muerte. Los condicionales gratuitos (Ataque Sorpresa racial) siguen en h2.
+            local esManiobra = feature.type == "maniobra"
+            if not esManiobra then
+                for _, effect in ipairs(feature.effects or {}) do
+                    if effect.kind == "conditionalWeaponDamage" and effect.resourceCost then
+                        esManiobra = true
+                        break
+                    end
+                end
+            end
+            if esManiobra then
                 -- Formato de los perfiles reales: nombre coloreado con el icono dentro del
                 -- color, sin la palabra "Maniobra". El color va POR CLASE (barrido {Reserva}):
                 -- Guerrero rojo (Carga en Meneldor/Alderion/Axus/Hector/Kalmiya/Remel),
                 -- Picaro amarillo (Mutilar en Colmillo/Elarien), Cazador naranja claro
-                -- (Llamada de lo salvaje) y Druida su color de clase. Sin dato, amarillo.
+                -- (Llamada de lo salvaje), Druida su color de clase y Caballero de la Muerte
+                -- el granate de {PJ} Cody. Sin dato, amarillo.
                 local colManiobra = ({
                     guerrero = "ff0000", picaro = "ffff00",
                     cazador = "ff7f3f", druida = "fe7b09",
+                    caballero_muerte = "c31d38",
                 })[tostring(entry.classId or "")] or "ffff00"
                 lines[#lines + 1] = "{h3}{col:" .. colManiobra .. "}{icon:" .. FeatureIconName(feature) .. ":25} "
                     .. tostring(feature.name or "Maniobra") .. "{/col}{/h3}"
@@ -633,18 +660,30 @@ local function GetClassEntryTraits(entry, elegidas)
         if not req then return true end
         return elegidas ~= nil and elegidas[tostring(req)] == true
     end
+    -- Un rasgo informativo cuyo UNICO contenido es conceder conjuros ("Conjuros de presencia
+    -- (Sangre)" del CdM) no sale en el frame de clase/subclase: sus conjuros ya aparecen en el
+    -- frame "Magia <X>" y el bloque solo duplicaba texto. Los perfiles reales ({PJ} Cody,
+    -- Especializacion Sangre) tampoco lo listan. Los rasgos raciales no pasan por aqui.
+    local function SoloConcedeConjuros(feature)
+        return tostring(feature.type) == "informativo"
+            and ((feature.spellGrants and #feature.spellGrants > 0)
+                or (feature.grantedSpells and #feature.grantedSpells > 0))
+            and not (feature.effects and #feature.effects > 0)
+    end
     local base, sub = {}, {}
     local class = HarfordDnDBook.GetClass(entry.classId)
     local subclass
     if class then
         for _, feature in ipairs(class.features or {}) do
-            if (tonumber(feature.level) or 99) <= entry.level and Concedido(feature) then
+            if (tonumber(feature.level) or 99) <= entry.level and Concedido(feature)
+                and not SoloConcedeConjuros(feature) then
                 base[#base + 1] = { feature = feature, source = "Clase", classId = class.id }
             end
         end
         subclass = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
         for _, feature in ipairs((subclass and subclass.features) or {}) do
-            if (tonumber(feature.level) or 99) <= entry.level and Concedido(feature) then
+            if (tonumber(feature.level) or 99) <= entry.level and Concedido(feature)
+                and not SoloConcedeConjuros(feature) then
                 sub[#sub + 1] = { feature = feature, source = "Subclase", classId = class.id }
             end
         end

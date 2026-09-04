@@ -12735,6 +12735,31 @@ local function ClassNameSet()
     return set
 end
 
+-- Nombres NORMALIZADOS de todos los rasgos (clase + subclases) de la clase cuyo nombre visible
+-- casa con `className`. Se usa para detectar sub-secciones del manual que son rasgos propios.
+-- Incluye tambien los titulos de FEATURE_TITLES (rasgos renombrados respecto al manual).
+local function ClassFeatureNameSet(className)
+    local out = {}
+    local B = _G.HarfordDnDBook
+    if not (B and B.GetClasses) then return out end
+    local want = NormalizeHeading(tostring(className or ""))
+    if want == "" then return out end
+    for _, c in ipairs(B.GetClasses() or {}) do
+        if NormalizeHeading(tostring(c.name or "")) == want then
+            local function Anota(f)
+                if f and f.name then out[NormalizeHeading(tostring(f.name))] = true end
+                local titulo = f and API.FEATURE_TITLES and API.FEATURE_TITLES[tostring(f.id or "")]
+                if titulo then out[NormalizeHeading(titulo)] = true end
+            end
+            for _, f in ipairs(c.features or {}) do Anota(f) end
+            for _, s in ipairs(c.subclasses or {}) do
+                for _, f in ipairs(s.features or {}) do Anota(f) end
+            end
+        end
+    end
+    return out
+end
+
 function API.GetClassChapterFeature(className, title, level, rich)
     local wantClass = NormalizeHeading(className)
     if wantClass == "" then return nil end
@@ -12775,6 +12800,26 @@ function API.GetClassChapterFeature(className, title, level, rich)
                 local bodyStart = SOURCE:find("\n", to + 1) or (#SOURCE + 1)
                 local nextHeading = FindNextHeading(bodyStart + 1, #hashes)
                 local bodyEnd = math.min(nextHeading and (nextHeading - 1) or #SOURCE, chapterEnd)
+                -- Una seccion puede INCRUSTAR como sub-secciones rasgos que ya existen por si
+                -- mismos ("### Poder Runico" trae "#### Espiral de la Muerte" y "#### Golpe
+                -- Runico"): el cuerpo se corta en la primera sub-seccion cuyo titulo sea OTRO
+                -- rasgo de la clase, porque ese rasgo ya sale por su cuenta con su icono y su
+                -- color, y aqui solo duplicaba el texto. Las sub-secciones que NO son rasgos
+                -- (las opciones de "Estilo de Combate") se conservan.
+                local nombres = ClassFeatureNameSet(className)
+                if next(nombres) then
+                    local scanAt = bodyStart
+                    while true do
+                        local from2, to2, hashes2, heading2 = SOURCE:find("\n(#+)%s*([^\n]+)", scanAt)
+                        if not from2 or from2 >= bodyEnd then break end
+                        if #hashes2 > #hashes
+                            and nombres[NormalizeHeading((heading2:gsub("<[^>]*>", "")))] then
+                            bodyEnd = from2 - 1
+                            break
+                        end
+                        scanAt = to2 + 1
+                    end
+                end
                 local text = CleanMarkdown(SOURCE:sub(bodyStart, bodyEnd), rich)
                 return text ~= "" and text or nil
             end

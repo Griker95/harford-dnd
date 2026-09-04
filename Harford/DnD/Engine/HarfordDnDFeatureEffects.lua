@@ -107,6 +107,10 @@ local function Empty()
             spellDC = 0,
             -- Velocidad en METROS, como el dato de raza (9 m = 30 pies). Afinidad Aire suma 1,5.
             speed = 0,
+            -- Bonos a las puntuaciones PASIVAS (dote Observador: +5 a ambas). La pasiva base
+            -- (10 + bono total de la habilidad) la calcula HarfordDnDCalc.
+            passivePerception = 0,
+            passiveInvestigation = 0,
         },
         -- Velocidad FIJA que sustituye a la de la raza mientras dure (Bestia Espiritual: 15 m).
         -- Se queda con la mayor si hubiera varias.

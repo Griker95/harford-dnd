@@ -442,7 +442,7 @@ API.FEATS = {
         id = "feat_observador", icon = "WH_EagleEye", name = "Observador", description = "Detalle que se te escapa, detalle que no existe; y además lees los labios.", source = "PHB",
         traits = {
             { id = "feat_phb_obs_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria") } } },
-            { id = "feat_phb_obs_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Lees los labios de quien hable un idioma que conozcas y veas su boca. +5 a tu Percepción e Investigación pasivas.", effects = {} },
+            { id = "feat_phb_obs_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Lees los labios de quien hable un idioma que conozcas y veas su boca. +5 a tu Percepción e Investigación pasivas.", effects = { { kind = "bonus", target = "passivePerception", value = 5 }, { kind = "bonus", target = "passiveInvestigation", value = 5 } } },
         },
     },
     {

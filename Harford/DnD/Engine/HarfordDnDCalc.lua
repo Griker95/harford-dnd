@@ -248,6 +248,30 @@ function HarfordDnDCalc.GetSkillRollBonuses(skill)
     return HarfordDnDCalc.GetAbilityMod(skill.ability) + bonus, HarfordDnDCalc.GetSkillProfBonus(skill)
 end
 
+-- Puntuacion PASIVA de una habilidad (regla 5e): 10 + bono TOTAL de la habilidad (modificador
+-- + competencia/pericia + bonos de rasgos/objetos). No hay tirada: es el valor que el DM
+-- compara (Sigilo del que se esconde contra tu Percepcion pasiva). La dote Observador suma
+-- su +5 via el bono passivePerception/passiveInvestigation.
+function HarfordDnDCalc.GetPassiveScore(skillId)
+    local skill
+    for _, s in ipairs((HarfordDnDData and HarfordDnDData.SKILLS) or {}) do
+        if s.id == skillId then skill = s break end
+    end
+    if not skill then return nil end
+    local base, prof = HarfordDnDCalc.GetSkillRollBonuses(skill)
+    local extra = 0
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus then
+        local target = skillId == "Percepcion" and "passivePerception"
+            or skillId == "Investigacion" and "passiveInvestigation" or nil
+        if target then extra = tonumber(HarfordDnDFeatureEffects.GetBonus(target)) or 0 end
+    end
+    return 10 + (tonumber(base) or 0) + (tonumber(prof) or 0) + extra
+end
+
+function HarfordDnDCalc.GetPassivePerception()
+    return HarfordDnDCalc.GetPassiveScore("Percepcion")
+end
+
 function HarfordDnDCalc.GetSaveRollBonuses(abilityKey)
     local State = HarfordDnDContext.State
     local explicit = State.active and State.overrides

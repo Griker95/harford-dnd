@@ -1746,6 +1746,23 @@ local function RefreshSheet()
                             skill.name, skill.desc or ("Caracteristica: " .. abil.key .. "."),
                             { labelWidth = 140, valueWidth = 32 })
                         y = y - 13; index = index + 1
+                        -- Puntuacion PASIVA bajo su habilidad (regla 5e: 10 + bono total; la
+                        -- dote Observador ya viene sumada por Calc). Sin tirada: es el valor
+                        -- que el DM compara contra el Sigilo de quien se esconde.
+                        if (skill.id == "Percepcion" or skill.id == "Investigacion")
+                            and not IsInspecting() and HarfordDnDCalc and HarfordDnDCalc.GetPassiveScore
+                            and SH.sheetRows[index] then
+                            local pasiva = HarfordDnDCalc.GetPassiveScore(skill.id)
+                            if pasiva then
+                                SetSheetRow(SH.sheetRows[index], y,
+                                    "      |cff9d9d9d" .. skill.name .. " pasiva|r",
+                                    "|cff66ccff" .. tostring(pasiva) .. "|r",
+                                    skill.name .. " pasiva",
+                                    "10 + bono total de " .. skill.name .. ". Lo que notas sin buscar: el DM la compara sin pedirte tirada.",
+                                    { labelWidth = 140, valueWidth = 32 })
+                                y = y - 13; index = index + 1
+                            end
+                        end
                     end
                 end
             end

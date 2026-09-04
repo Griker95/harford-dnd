@@ -134,7 +134,16 @@ local BASIC_ARMOR = {
 -- Aporte de Destreza a la CA segun categoria de armadura.
 local function ArmorDexBonus(cat, dexMod)
     dexMod = tonumber(dexMod) or 0
-    if cat == "media" then return math.min(dexMod, 2) end
+    if cat == "media" then
+        -- Dote "Maestro de armaduras medias" (flag mediumArmorMaster): el tope de Destreza
+        -- con armadura media sube de 2 a 3.
+        local tope = 2
+        if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+            and HarfordDnDFeatureEffects.HasFlag("mediumArmorMaster") then
+            tope = 3
+        end
+        return math.min(dexMod, tope)
+    end
     if cat == "pesada" then return 0 end
     return dexMod  -- ligera / ninguna: Destreza completa
 end

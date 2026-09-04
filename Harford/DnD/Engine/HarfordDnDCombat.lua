@@ -73,6 +73,15 @@ local function GetSelfArmorClass()
         and HarfordDnDFeatureEffects.HasFlag("styleDefense") and LlevaArmadura() then
         bonus = bonus + 1
     end
+    -- Dote "Combatiente con dos armas" (flag twoWeaponDefense): +1 CA SOLO empunando un arma
+    -- cuerpo a cuerpo en cada mano (un escudo en la secundaria no cuenta: eso ya es su CA).
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("twoWeaponDefense")
+        and HarfordDnDItems and HarfordDnDItems.GetEquippedWeapon
+        and HarfordDnDItems.GetEquippedWeapon("MainHand")
+        and HarfordDnDItems.GetEquippedWeapon("SecondaryHand") then
+        bonus = bonus + 1
+    end
     -- La CA manual de la ficha quedo OBSOLETA: se usa la CA de la armadura EQUIPADA
     -- (que ya incluye Destreza por categoria y escudo). La CA de TRP3 "Currently"/"Other
     -- Information" tiene aun mas prioridad y se resuelve antes en GetArmorClassForUnit.

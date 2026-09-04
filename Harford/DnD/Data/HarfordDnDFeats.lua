@@ -57,7 +57,7 @@ API.FEATS = {
         id = "feat_teletransporte_arcano", icon = "spell_arcane_arcanepotency_nightborne", requiredRaces = { "raza_elfo_sangre", "raza_renegado_elfo", "raza_nocheterna" }, name = "Teletransporte arcano", requires = "Elfo de sangre, renegado (elfo) o nocheterna", description = "Herencia arcana élfica que permite desaparecer y reaparecer unos pasos más allá, una vez entre descansos.",
         traits = {
             { id = "feat_ta_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Carisma") } } },
-            { id = "feat_ta_conjuro", icon = "eps_lol_shen_shadowdashold", name = "Paso brumoso", type = "pasivo", description = "Aprendes paso brumoso y puedes lanzarlo una vez sin gastar espacio; lo recuperas al terminar un descanso corto o largo. Característica de lanzamiento: Inteligencia.", effects = {} },
+            { id = "feat_ta_conjuro", icon = "eps_lol_shen_shadowdashold", name = "Paso brumoso", type = "activo", uses = { max = 1, recharge = "short" }, spellGrants = { { level = 0, ids = { "paso_brumoso" }, ability = "Inteligencia", note = "1/descanso corto" } }, description = "Aprendes paso brumoso y puedes lanzarlo una vez sin gastar espacio; lo recuperas al terminar un descanso corto o largo. Característica de lanzamiento: Inteligencia.", effects = {} },
         },
     },
     {
@@ -81,14 +81,14 @@ API.FEATS = {
         traits = {
             { id = "feat_hd_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria") } } },
             { id = "feat_hd_sigilo", icon = "ability_racial_shadowmeld", name = "Sigilo en penumbra", type = "pasivo", description = "Ventaja en pruebas de Destreza (Sigilo) en areas con luz tenue o sin luz.", effects = {} },
-            { id = "feat_hd_espiritu", icon = "ability_racial_ultravision", name = "Espiritu protector", type = "pasivo", description = "Al fallar una salvación contra la muerte, invocas un espíritu para cambiar el dado a éxito; no puedes repetirlo hasta pasar dos descansos largos.", effects = {} },
+            { id = "feat_hd_espiritu", icon = "ability_racial_ultravision", name = "Espiritu protector", type = "activo", uses = { max = 1, recharge = "long" }, description = "Al fallar una salvación contra la muerte, invocas un espíritu para cambiar el dado a éxito; no puedes repetirlo hasta pasar dos descansos largos.", effects = {} },
         },
     },
     {
         id = "feat_fortaleza_enana", icon = "WH_DeadlyDetermination", requiredRaces = { "raza_enano" }, name = "Fortaleza enana", requires = "Enano", description = "Aguante enano: cuando te cubres, aprovechas el respiro para recomponerte.",
         traits = {
             { id = "feat_fe_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
-            { id = "feat_fe_esquivar", icon = "hots_xinzhao_determination", name = "Esquivar y curar", type = "pasivo", description = "Al tomar la acción de Esquivar, puedes gastar un dado de golpe para curarte (tirada + Mod. Constitución, mínimo 1).", effects = {} },
+            { id = "feat_fe_esquivar", icon = "hots_xinzhao_determination", name = "Esquivar y curar", type = "accion", cast = "ninguna", actionKind = "hitDieHeal", description = "Al tomar la acción de Esquivar, puedes gastar un dado de golpe para curarte (tirada + Mod. Constitución, mínimo 1).", effects = {} },
         },
     },
     {
@@ -128,8 +128,8 @@ API.FEATS = {
         id = "feat_furia_orca", icon = "spell_winston_rage", requiredRaces = { "raza_orco" }, name = "Furia orca", requires = "Orco", description = "Furia orca en cada golpe, y una embestida más cuando la sangre ya te hierve.",
         traits = {
             { id = "feat_fo_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Constitución +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion") } } },
-            { id = "feat_fo_dado", icon = "ability_warrior_deepcuts", name = "Golpe furioso", type = "pasivo", description = "Al golpear con un arma simple o marcial, tiras un dado de daño del arma extra (mismo tipo). 1 uso por descanso corto o largo.", effects = {} },
-            { id = "feat_fo_reaccion", icon = "ability_warrior_warcry", name = "Furia implacable", type = "pasivo", description = "Justo después de usar Resistencia Implacable, puedes hacer un ataque con arma como reacción.", effects = {} },
+            { id = "feat_fo_dado", icon = "ability_warrior_deepcuts", name = "Golpe furioso", type = "activo", uses = { max = 1, recharge = "short" }, description = "Al golpear con un arma simple o marcial, tiras un dado de daño del arma extra (mismo tipo). 1 uso por descanso corto o largo.", effects = {} },
+            { id = "feat_fo_reaccion", icon = "ability_warrior_warcry", name = "Furia implacable", type = "reaccion", cast = "reaccion", actionKind = "reactionWeaponAttack", description = "Justo después de usar Resistencia Implacable, puedes hacer un ataque con arma como reacción.", effects = {} },
         },
     },
     {
@@ -145,7 +145,7 @@ API.FEATS = {
         traits = {
             { id = "feat_ge_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_ge_miedo", icon = "eps_lol_profileicon_runespirit2", name = "Valor espiritual", type = "pasivo", description = "Ventaja en tiradas de salvación contra el miedo.", effects = {} },
-            { id = "feat_ge_conjuro", icon = "spell_nature_healingwavelesser", name = "Espiritu sanador", type = "pasivo", description = "Aprendes espíritu sanador y puedes lanzarlo una vez con este dote, recuperado en descanso largo. Característica: Sabiduría.", effects = {} },
+            { id = "feat_ge_conjuro", icon = "spell_nature_healingwavelesser", name = "Espiritu sanador", type = "activo", uses = { max = 1, recharge = "long" }, spellGrants = { { level = 0, ids = { "espiritu_curativo" }, ability = "Sabiduria", note = "1/descanso largo" } }, description = "Aprendes espíritu sanador y puedes lanzarlo una vez con este dote, recuperado en descanso largo. Característica: Sabiduría.", effects = {} },
         },
     },
     {
@@ -241,7 +241,7 @@ API.FEATS = {
     {
         id = "feat_combatiente_dos_armas", icon = "ability_dualwield", name = "Combatiente con dos armas", description = "Dominio de las dos manos: mejor guardia y golpes de la mano torpe.", source = "PHB",
         traits = {
-            { id = "feat_phb_2armas", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "+1 CA empuñando un arma cuerpo a cuerpo en cada mano. Puedes combatir con dos armas aunque no sean ligeras. Envainas/desenvainas dos armas a una mano a la vez.", effects = {} },
+            { id = "feat_phb_2armas", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "+1 CA empuñando un arma cuerpo a cuerpo en cada mano. Puedes combatir con dos armas aunque no sean ligeras. Envainas/desenvainas dos armas a una mano a la vez.", effects = { { kind = "flag", flag = "twoWeaponDefense" } } },
         },
     },
     {
@@ -332,7 +332,7 @@ API.FEATS = {
         id = "feat_maestro_armas", icon = "garrison_weaponupgrade", name = "Maestro de armas", description = "Práctica con un puñado de armas nuevas, elegidas por ti.", source = "PHB",
         traits = {
             { id = "feat_phb_marmas_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
-            { id = "feat_phb_marmas_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Competencia con cuatro armas a tu elección (sencillas o marciales).", effects = {} },
+            { id = "feat_phb_marmas_b", icon = "inv_scroll_11", name = "Beneficios", type = "choice", choice = { slots = 4, optionsFrom = "weaponProf" }, description = "Competencia con cuatro armas a tu elección (sencillas o marciales).", effects = {} },
         },
     },
     {
@@ -356,7 +356,7 @@ API.FEATS = {
     {
         id = "feat_maestro_armaduras_medias", icon = "inv_chest_chain_05", requiredProficiency = { armor = "media" }, name = "Maestro en armaduras medias", requires = "Competente con armaduras medias", description = "Te mueves con armadura media como si no la llevaras.", source = "PHB",
         traits = {
-            { id = "feat_phb_amedias", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "La armadura media no te da desventaja en Sigilo. Con Destreza 16+ sumas 3 (en vez de 2) a la CA con armadura media.", effects = {} },
+            { id = "feat_phb_amedias", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "La armadura media no te da desventaja en Sigilo. Con Destreza 16+ sumas 3 (en vez de 2) a la CA con armadura media.", effects = { { kind = "flag", flag = "mediumArmorMaster" } } },
         },
     },
     {
@@ -517,7 +517,7 @@ API.FEATS = {
         id = "feat_tocado_hadas", icon = "eps_bg3_feyprotectiongreen", name = "Tocado por las hadas", description = "La magia feérica te ha marcado: apareces donde no estabas y encantas a quien te mira.", source = "TCoE",
         traits = {
             { id = "feat_tco_hadas_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
-            { id = "feat_tco_hadas_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Aprendes paso brumoso y un conjuro de nivel 1 de adivinacion o encantamiento; lanzas cada uno 1 vez por descanso largo sin espacio (también con espacios). Aptitud mágica: la característica aumentada.", effects = {} },
+            { id = "feat_tco_hadas_b", icon = "inv_scroll_11", name = "Beneficios", type = "activo", uses = { max = 1, recharge = "long" }, spellGrants = { { level = 0, ids = { "paso_brumoso" }, note = "1/descanso largo" } }, description = "Aprendes paso brumoso y un conjuro de nivel 1 de adivinacion o encantamiento; lanzas cada uno 1 vez por descanso largo sin espacio (también con espacios). Aptitud mágica: la característica aumentada.", effects = {} },
         },
     },
     {
@@ -543,7 +543,7 @@ API.FEATS = {
         id = "feat_perforador", icon = "ability_warrior_shieldbreak", name = "Perforador", description = "Buscas el hueco de la armadura: repites el daño de tus golpes perforantes.", source = "TCoE",
         traits = {
             { id = "feat_tco_perf_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Fuerza o Destreza +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Destreza") } } },
-            { id = "feat_tco_perf_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Una vez por turno, al dañar con daño perforante puedes repetir un dado de daño (usas el nuevo). Con un crítico perforante, tiras un dado de daño perforante adicional.", effects = {} },
+            { id = "feat_tco_perf_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Una vez por turno, al dañar con daño perforante puedes repetir un dado de daño (usas el nuevo). Con un crítico perforante, tiras un dado de daño perforante adicional.", effects = { { kind = "flag", flag = "piercingReroll" } } },
         },
     },
     {
@@ -556,7 +556,7 @@ API.FEATS = {
         id = "feat_tocado_sombras", icon = "spell_shadow_shadowembrace", name = "Tocado por las sombras", description = "El Páramo Sombrío te ha cambiado: te vuelves invisible y ves lo que otros no.", source = "TCoE",
         traits = {
             { id = "feat_tco_sombras_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
-            { id = "feat_tco_sombras_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Aprendes invisibilidad y un conjuro de nivel 1 de ilusion o nigromancia; lanzas cada uno 1 vez por descanso largo sin espacio (también con espacios). Aptitud mágica: la característica aumentada.", effects = {} },
+            { id = "feat_tco_sombras_b", icon = "inv_scroll_11", name = "Beneficios", type = "activo", uses = { max = 1, recharge = "long" }, spellGrants = { { level = 0, ids = { "invisibilidad" }, note = "1/descanso largo" } }, description = "Aprendes invisibilidad y un conjuro de nivel 1 de ilusion o nigromancia; lanzas cada uno 1 vez por descanso largo sin espacio (también con espacios). Aptitud mágica: la característica aumentada.", effects = {} },
         },
     },
     {
@@ -578,14 +578,15 @@ API.FEATS = {
         id = "feat_telequinetico", icon = "WH_FocusedMind", name = "Telequinetico", description = "Mueves objetos y empujas criaturas con la mente.", source = "TCoE",
         traits = {
             { id = "feat_tco_telek_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
-            { id = "feat_tco_telek_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Aprendes mano de mago (sin componentes V/S, mano invisible). Como acción adicional, empujas telequineticamente a una criatura a 9 m (salvación de Fuerza o movida 1,5 m). Aptitud mágica: la característica aumentada.", effects = {} },
+            { id = "feat_tco_telek_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", cantripSpellIds = { "mano_de_mago" }, description = "Aprendes mano de mago (sin componentes V/S, mano invisible). Como acción adicional, empujas telequineticamente a una criatura a 9 m (salvación de Fuerza o movida 1,5 m). Aptitud mágica: la característica aumentada.", effects = {} },
+            { id = "feat_tco_telek_empuje", icon = "WH_FocusedMind", name = "Empuje telequinetico", type = "accion", cast = "accion_adicional", description = "Como acción adicional, empujas telequinéticamente a una criatura que puedas ver a 9 m: salvación de Fuerza (CD 8 + competencia + la característica aumentada) o es movida 1,5 m hacia ti o lejos de ti. La salvación se resuelve en mesa.", effects = {} },
         },
     },
     {
         id = "feat_telepata", icon = "spell_arcane_mindmastery", name = "Telepata", description = "Hablas mente a mente y puedes asomarte a los pensamientos ajenos.", source = "TCoE",
         traits = {
             { id = "feat_tco_telep_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
-            { id = "feat_tco_telep_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Hablas telepaticamente con cualquier criatura a 18 m (en un idioma que conozcas). Lanzas detectar pensamientos 1 vez por descanso largo sin espacio (aptitud: la característica aumentada).", effects = {} },
+            { id = "feat_tco_telep_b", icon = "inv_scroll_11", name = "Beneficios", type = "activo", uses = { max = 1, recharge = "long" }, spellGrants = { { level = 0, ids = { "detectar_pensamientos" }, note = "1/descanso largo" } }, description = "Hablas telepaticamente con cualquier criatura a 18 m (en un idioma que conozcas). Lanzas detectar pensamientos 1 vez por descanso largo sin espacio (aptitud: la característica aumentada).", effects = {} },
         },
     },
 }

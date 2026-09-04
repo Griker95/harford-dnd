@@ -146,6 +146,23 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
         baseFinals[#baseFinals + 1] = final
     end
 
+    -- Dote Perforador (flag piercingReroll): una vez por ataque, con daño PERFORANTE, se
+    -- repite el dado base mas bajo y se usa el nuevo resultado (el manual dice por turno; el
+    -- cliente no observa el fin de turno, igual que Racha de calor). No en maximizado.
+    if (not maximizeDice) and ActorIsPlayer(def) and #baseFinals > 0
+        and tostring(def.dmgType or ""):lower():find("perforante", 1, true)
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("piercingReroll") then
+        local bajoIdx, bajoVal = 1, baseFinals[1]
+        for i = 2, #baseFinals do
+            if baseFinals[i] < bajoVal then bajoIdx, bajoVal = i, baseFinals[i] end
+        end
+        local nuevo = HarfordDnDCalc.RollDie(sides)
+        rolls[bajoIdx] = "(" .. tostring(bajoVal) .. "→" .. tostring(nuevo) .. ")"
+        sum = sum - bajoVal + nuevo
+        baseFinals[bajoIdx] = nuevo
+    end
+
     -- Golpe heroico: se armo al lanzar la maniobra y se resuelve AQUI, antes de sumar el total,
     -- para que el daño que se aplica al objetivo sea ya el definitivo. Se repiten los dados mas
     -- bajos y "debes usar el nuevo resultado", aunque sea peor.

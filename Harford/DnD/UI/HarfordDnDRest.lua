@@ -242,6 +242,9 @@ RefreshRestMenu = function()
     menu:SetHeight(shown > 0 and (74 + 12 + shown * 22) or 70)
 end
 
+    -- Publicado tambien en el modulo: "Esquivar y curar" (Fortaleza enana) gasta un dado de
+    -- golpe desde el boton del Libro, fuera del chunk padre.
+    HarfordDnDRest.RollHitDieHeal = RollHitDieHeal
     return {
         ApplyShortRest = ApplyShortRest,
         ApplyLongRest = ApplyLongRest,

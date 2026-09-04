@@ -3139,6 +3139,25 @@ local function BookButtonOnClick(self)
             if RefreshBook then RefreshBook() end
             return
         end
+        -- Gastar un dado de golpe para curarse fuera del descanso ("Esquivar y curar" de
+        -- Fortaleza enana, que va DENTRO de la accion de Esquivar y por eso no cobra nada:
+        -- cast "ninguna"). RollHitDieHeal ya avisa si no quedan dados y anuncia la curacion.
+        if self.feature.actionKind == "hitDieHeal" then
+            local R = _G.HarfordDnDRest
+            if not (R and R.RollHitDieHeal) then
+                Print("El motor de descansos no esta disponible.")
+                return
+            end
+            local sides = 8
+            local entry = (HarfordDnDProgression.GetClassLevels(GetProfileName()) or {})[1]
+            local classDef = entry and HarfordDnDBook and HarfordDnDBook.GetClass
+                and HarfordDnDBook.GetClass(entry.classId)
+            if classDef and tonumber(classDef.hitDie) then sides = tonumber(classDef.hitDie) end
+            R.RollHitDieHeal(sides, self.feature)
+            if RefreshGameUI then RefreshGameUI() end
+            if RefreshBook then RefreshBook() end
+            return
+        end
         -- Reaccion que golpea (Golpe de castigo de Centinela): el anuncio cobra la REACCION y
         -- el golpe sale por la ruta normal de ataque de arma con skipTurnCost, igual que el
         -- Ataque de oportunidad. Requiere target; sin el, no se gasta nada.

@@ -385,6 +385,18 @@ function API.GetChoiceOptions(feature)
                 effects = { { kind = kind, skill = skill.id } },
             }
         end
+    elseif from == "weaponProf" and HarfordDnDWeapons and HarfordDnDWeapons.WEAPONS then
+        -- Un arma concreta a elegir (Maestro de armas: 4 huecos). Cada opcion concede la
+        -- competencia con ESA arma; "Desarmado" no se ofrece (ya la tiene todo el mundo).
+        for _, weapon in ipairs(HarfordDnDWeapons.WEAPONS) do
+            if weapon.key ~= "Desarmado" then
+                out[#out + 1] = {
+                    id = "arma_" .. tostring(weapon.key),
+                    label = tostring(weapon.key),
+                    effects = { { kind = "weaponProf", weapon = tostring(weapon.key) } },
+                }
+            end
+        end
     elseif from == "language" and HarfordDnDData and HarfordDnDData.LANGUAGES then
         -- Un idioma a elegir. `choice.exotic` decide si entran los exoticos; por defecto no,
         -- que es lo que dan raza y trasfondo ("un idioma adicional de tu eleccion").

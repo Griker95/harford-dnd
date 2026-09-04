@@ -130,7 +130,7 @@ Entorno objetivo:
 
 ### Sonidos De Interfaz
 
-  - `HarfordUISounds.lua` es la fuente unica de sonidos de interfaz propios de Harford. Los consumidores llaman `HarfordUISounds.Play(evento)`; cada entrada de `HarfordUISounds.SOUNDS` declara `{ id = <numero>, kind = "file"|"soundkit" }`. `file` usa `PlaySoundFile` (FileDataID) y `soundkit` usa `PlaySound` (SoundKitID). No repartir IDs literales ni decidir la API en paneles o sistemas. Para clasificar un ID nuevo, usar solo diagnostico explicito: `/harford debug run soundprobe <ID> [file|soundkit|both] [SFX|Master]`; `soundevent <evento>` prueba una entrada ya registrada. El cambio de faccion seguida usa `reputation_tracking_changed` (SoundKit 856).
+  - `HarfordUISounds.lua` es la fuente unica de sonidos de interfaz propios de Harford. Los consumidores llaman `HarfordUISounds.Play(evento)`; cada entrada de `HarfordUISounds.SOUNDS` declara `{ id = <numero>, kind = "file"|"soundkit" }`. `file` usa `PlaySoundFile` (FileDataID) y `soundkit` usa `PlaySound` (SoundKitID). No repartir IDs literales ni decidir la API en paneles o sistemas. Para clasificar un ID nuevo, usar solo diagnostico explicito: `/harford debug run soundprobe <ID> [file|soundkit|both] [SFX|Master]`; `soundevent <evento>` prueba una entrada ya registrada. El cambio de faccion seguida usa `reputation_tracking_changed` (SoundKit 856). `PlayOutOfRange()` resuelve la voz nativa por raza/sexo desde su catalogo de SoundKitID; si el cliente no aporta esa voz, queda mudo y no usa una raza ajena.
 - Eventos de mision actuales: `quest_accepted` (567400), `quest_gossip_shown` (567503), `quest_log_opened` y `quest_tracking_changed` (567504), `quest_log_closed` (567508), `quest_completed` (567439), `quest_abandoned`/`quest_failed` (567459) y `quest_objective_completed` (1045704). `communicator_message_received` (567402) acompana cada recepcion verde/amarilla incluso con el Comunicador abierto; el modo rojo y el modo silencioso no suenan. `character_panel_opened` (567507) se reproduce solo al mostrar el panel de personaje; `character_panel_tab_changed` (567422) al pulsar `Personaje`, `Reputacion` o `Profesiones`; `character_sidebar_tab_changed` (567407) al cambiar entre las tres vistas del lateral derecho; `skills_panel_opened` y `skills_panel_tab_changed` (567440) al abrir o cambiar entre `Habilidades` y `Conjuros`.
 
 Contrato `HarfordCommunicator`:
@@ -195,6 +195,7 @@ Harford/
   HarfordDnDCalc.lua          -- calculo puro: modificadores, dados, bonos (lee via HarfordDnDContext)
   HarfordDnDNet.lua           -- recursos/red: export/request/adjust de recursos via HarfordSync
   HarfordDnDCombat.lua        -- reglas de combate con contexto de unit: CA, impacto, daño servidor NPC
+  HarfordDnDRange.lua         -- distancia `.distance`, conversion yardas/metros y puerta de alcance comun
   HarfordDnDArea.lua          -- ataques de area: marcado manual, receptor jugador y cola NPC por GUID
   HarfordDnDMinimap.lua       -- boton de minimapa de la ficha (toggle + reset de posiciones inyectado)
   HarfordCommunicator.lua     -- mensajeria Harford: contactos, grupos, historial y protocolo HARFCOM
@@ -258,6 +259,7 @@ Coste y cobertura de conjuros:
 
 - `HarfordConfig.spell_cost_mode` es global: `mana` (predeterminado) o `slots`. En `slots`, `HarfordDnDMana` es la unica fuente de maximos y gasto, y `HarfordDnDProgression.spellSlots` solo persiste los espacios gastados por nivel; el descanso largo los reinicia. No reintroducir el antiguo flag por perfil `useMana` ni tablas de coste paralelas.
 - Ataques de conjuro simples y salvaciones con daño pasan por `HarfordDnDArea`, con CA/salvación/mitigación calculada por el defensor. Si un ataque requiere además una salvación contra una condición (ej. Rayo de Enfermedad), conserva el ataque inicial y el receptor resuelve `conditionApplySaveAbility/DC` antes de aplicar la condición. No auto-resolver múltiples proyectiles, explosiones por fases, daño recurrente ni riders de ataque de arma: necesitan resolvedor propio para no falsear objetivos, impactos o costes.
+- **Distancia y alcance (2026-09-04):** `HarfordDnDRange` es la puerta unica para medir alcance. Consulta `.distance` por `EpsilonLib.AddonCommands` con `forceEpsilon`, conserva el GUID del target y cancela si cambia o la respuesta no se puede leer; nunca gastar accion, mana o usos antes de esa respuesta. La salida confirmada de Epsilon es `Hitbox distance ... in 3D ... Exact distance ... in 3D`, ambas en yardas y convertidas una vez a metros (`0.9144`). Un hitbox a `0` es contacto: armas melé corrientes y conjuros de `Toque` exigen ese valor (solo se tolera `0,01 m` por coma flotante). **Todo alcance numerico** -- `Alcance`, `Municion`, `Arrojadiza` y conjuros a distancia o de area -- se compara con la **exacta 3D**. `Alcance` llega a 10 pies (`3,048 m`); el tramo largo permite atacar con desventaja y fuera del maximo bloquea. Una arma arrojadiza equipada NO se arroja automaticamente: requiere un modo explicito de UI. `.npc info` y `.gps` confirman las coordenadas para areas: jugador y receptores usan `C_Epsilon.GetPosition()` (X/Y/Z+mapa), mientras un NPC origen usa `.npc info` para X/Y/Z y adopta el mapa actual porque sigue seleccionado. El motor conserva solo el mapa en `contextId`; la fase no participa en el calculo ni en el marcado. Conjuros interpretan `range` textual (`metros`, `pies`, `Toque`, `Personal`); las areas numericas usan el target como punto de referencia antes de abrir el selector. `HarfordDebug rangeprobe` muestra la respuesta literal y ambas medidas interpretadas.
 
 Contrato `HarfordEpsilonCommands`:
 
@@ -4450,3 +4452,115 @@ equilibrio ya acordado. Si una auditoria futura las senala, la respuesta es esta
 que apuntan a ids inexistentes, conjuros prometidos que no estan en el compendio, rasgos con coste
 de recurso que no lo cobran, y escalones de nivel que faltan (el Druida solo concedia el par de
 nivel 3 de sus conjuros de camino, faltando el de nivel 5). Esas si son fallos.
+
+## Reelegir rasgos en el descanso largo: `rechooseOnLongRest` (2026-09-04)
+
+Un rasgo `choice` cuya regla permita cambiar la eleccion al terminar un descanso largo (Forja de
+runas del CdM) declara `rechooseOnLongRest = true`. `HarfordCharacterAdvancement` expone
+`_G.HarfordOpenLongRestChoicesMenu(silent)` — mismo espiritu que reelegir preparados — y
+`HarfordDnDRest.ApplyLongRest` lo llama en silencio tras el de conjuros. El menu lista cada rasgo
+re-eligible como submenu (la opcion actual marcada), reescribe UN slot con `SetChoiceSlot` y
+regenera el About SOLO por la via guardada (`CanRewriteAbout` -> `RewriteAbout`); si la ficha es
+manual, avisa por chat. Candado: `tools/pruebas/descanso_reelecciones.lua`.
+
+## Puertas raciales `requiresOption` y `minCharacterLevel` + Mecagnomo mecanizado (2026-09-04)
+
+`Progression.GetUnlockedFeatures` aplica ahora un filtro COMUN a todas las fuentes (raza,
+trasfondo, dotes y clase): `requiresOption` (el rasgo solo entra con esa opcion elegida) y
+`minCharacterLevel` (puerta por nivel TOTAL de personaje, como la de spellGrants). El mismo filtro
+existe en el About del creador (`GetRaceTraits` de HarfordCharacterCreation, sobre el borrador) y
+en la oferta racial del asistente (`EntraRacial` en HarfordCharacterAdvancement, sobre el objetivo
+de la subida). Las "Mejoras Mecanicas" del Mecagnomo usan todo el paquete: opciones con efectos
+reales (`bonus speed` +1,5; `unarmedDie` 6; `unarmoredDefenseBase` 13; truco por `spellId`),
+rasgo derivado `gno_mec_emergencia` (`requiresOption` + `actionKind = "selfHeal"`, 1 uso/descanso
+largo) y una SEGUNDA eleccion `gno_mec_mejoras_5` con `minCharacterLevel = 5`. Vision Mejorada
+queda narrativa A PROPOSITO: el cliente no observa la vision. Candado:
+`tools/pruebas/mecagnomo_mejoras.lua`.
+
+Motores nuevos que esto estrena (reutilizables): `unarmoredDefenseBase` (base alternativa de la CA
+sin armadura; Combat usa `max(10, base)` y se combina con Defensa sin Armadura), `unarmedDie`
+(solo sube el dado del arma `Desarmado` y nunca por debajo de Artes Marciales) y
+`actionKind = "selfHeal"` en el boton del Libro (`healBase` = "level" o numero, `healAbility`,
+`healResource` opcional — "temp_health" para la Arenga del Lider inspirador).
+
+## Iconos de dote: el Libro prioriza el DECLARADO — datos y catalogo deben decir lo mismo (2026-09-04)
+
+La fila del Libro usa `item.feature.icon` ANTES que el catalogo (regla necesaria por las Palabras
+de Poder homonimas), y el About acaba usando el catalogo. Si difieren, cada superficie ensena un
+arte distinto: paso con las dotes (datos con `inv_scroll_11` generico, catalogo curado). Los 77
+iconos de dote de `HarfordDnDFeats` se sincronizaron con las entradas `feat_*` del catalogo. Al
+curar iconos de dote en el futuro, cambiar LAS DOS fuentes (o solo el catalogo y re-sincronizar).
+
+## Dotes mecanizadas: accionables, flags y Versado en un elemento (2026-09-04)
+
+- `GetFeatAbilities` saca como fila PROPIA del Libro cualquier rasgo de dote accionable (`uses`,
+  `cast` o `actionKind`); el resto sigue agrupado en la entrada unica de la dote. Candado en
+  `clases_manual`.
+- Mecanizadas con motores existentes: Movil (`bonus speed` +3), Afortunado (Suerte con
+  `uses = 3/long`, fila con contador), Linguista (choice de 3 idiomas `optionsFrom = "language"`
+  con exoticos), Resistente (flag `resilientHitDieMin`: el dado de golpe cura minimo 2x Mod CON,
+  aplicado en `RollHitDieHeal`).
+- Reacciones/acciones de dote divididas en rasgo propio que ANUNCIA Y COBRA por la ruta comun:
+  Centinela "Golpe de castigo" (`actionKind = "reactionWeaponAttack"`: reaccion + ataque real con
+  `skipTurnCost`), Duelista defensivo, Lanzador en combate "Conjuro de oportunidad", Maestro en
+  escudos "Abrigo del escudo", Lider inspirador "Arenga" (selfHeal a `temp_health` + anuncio para
+  aliados), Sanador "Botiquin". El efecto que el cliente no observa se resuelve en mesa.
+- "Versado en un elemento": choice de 5 tipos con `kind = "elementAdept"` (clave CANONICA via
+  `KeyFromTypeText`: rayo y relampago son el mismo). Lado atacante: en conjuros (hay `castLevel`)
+  los 1 FINALES de los dados de ese tipo valen 2 — DESPUES de Muerte y Racha, anotado
+  "(Versado: Nx 1=2)". Lado receptor: `request.ignoreResistType` viaja como campo NUEVO AL FINAL
+  de `DNDAREAREQ` (compatible: strsplit sobrante en clientes viejos) y
+  `HarfordDamageMitigation.ForTarget` acepta `opts.ignoreResist` — SOLO perdona la resistencia,
+  nunca la inmunidad.
+
+## Alcance de melee y postura "Trabado en melee" (2026-09-04)
+
+El cliente NO puede medir 1,5 m: `UnitPosition` solo habla del jugador (por eso el motor de areas
+pide posiciones por red). La capa de alcance se construye con lo medible:
+
+- **Postura declarada**: estado `trabado` (accion basica `trabado_melee`, un TOGGLE sin coste via
+  `toggleSelf` + `selfCondition`; volver a pulsar lo retira sin anunciar). Su efecto `rollMode`
+  lleva `range = "ranged"` y la marca `meleeProximity`: desventaja en ataques a distancia de arma
+  Y de conjuro mientras esta puesto, visible en la tira para toda la mesa.
+- **Dotes que la perdonan**: el contexto de tirada acepta `ignoreMeleeProximity` y
+  `EffectApplies` salta los efectos marcados. Flags: `ignoreRangedMeleePenalty` (Experto en
+  ballestas, Experto en armas de fuego; lo mira `DoWeaponAttack`) e `ignoreSpellMeleePenalty`
+  (Mago de batalla; lo mira el ataque de conjuro del motor de areas, junto con el generico).
+- **Cota de alcance en melee**: `CheckInteractDistance("target", 3)` (~9 m) como COTA superior:
+  si responde false, ningun arma cuerpo a cuerpo llega y el ataque se bloquea ANTES de cobrar
+  la accion. Dentro de la cota decide la mesa; si la API no responde (pcall), no se bloquea.
+- **Ataque de oportunidad**: accion basica activable (`opportunityAttack`, cast reaccion). El
+  anuncio cobra la REACCION (fuera de tu turno solo con `preparado`, la divergencia de mesa de
+  siempre) y el golpe sale por `HarfordDnDStore.DoWeaponAttack({ skipTurnCost = true })` — el
+  Store expone `DoWeaponAttack` exactamente para rutas que ya cobraron su coste.
+
+## About: variante titula sola, incrustados cortados y conjuros concedidos enrutados (2026-09-04)
+
+- **Trasfondo con variante**: el frame titula SOLO la variante ("Trasfondo Veterano Harford"), su
+  descripcion es el cuerpo (sin bloque duplicado) y el frame lleva su icono.
+  `FindBackgroundAndVariantByText` devuelve bgId + variantId desde ese titulo (los nombres de
+  variante son candidatos; a igual longitud gana la lectura CON variante) y cargarficha persiste
+  la variante. OJO datos: "veterano harford" era alias de DOS trasfondos (capitan y mercenario) y
+  ademas le ganaba el empate a la propia variante — retirado de ambos.
+- **Secciones del manual que INCRUSTAN otro rasgo**: `GetClassChapterFeature` corta el cuerpo en
+  la primera sub-seccion cuyo titulo sea OTRO rasgo de la clase (`ClassFeatureNameSet`, con
+  `FEATURE_TITLES`); "Poder Runico" traia enteros Espiral de la Muerte y Golpe Runico y salian
+  duplicados. Las sub-secciones que NO son rasgos (opciones de Estilo de Combate) se conservan.
+- **Rasgos que solo conceden conjuros**: los informativos de SUBCLASE sin efectos se filtran del
+  frame (sus conjuros ya van a "Magia <Sub>"); los de CLASE (Nucleo demoniaco del Brujo) se
+  quedan, porque no tienen frame de magia que los recoja. El enrutado a "Magia <Sub>" cubre las
+  TRES vias: `grantedSpells`, `spellGrants` y `cantripSpellIds` (Truco adicional del Mago). Los
+  conjuros concedidos cuentan como conocidos aunque el compendio no los liste. Candados en
+  `tools/pruebas/about_clases.lua` (12 clases: incrustados, conjuros sin ruta, duplicados de
+  nombre a nivel 6, opciones de un slot sin regla).
+- **Dotes en el About**: texto corrido (cabecera + descripcion + rasgos como parrafos; el
+  sub-bloque "Beneficios" con pergamino era salida nuestra, no canon). Los rotulos markdown
+  de triple asterisco se convierten a etiqueta coloreada (azul de niveles) en
+  `ColorizeDescription`.
+- **Raza "Troll"** (canon web, doble ele; alias "trol" para About viejos) y recorte de prefijo de
+  subraza SOLO en limite de palabra ("Trol"+"Troll Zandalari" dejaba una "l" coloreada que
+  parecia un pipe).
+- **ficha6**: `menu` (desplegable clases->subclases que monta ficha + About), `siguiente`
+  (recorrido paso a paso) y conjuros AL AZAR por modo de lanzamiento (known/prepared/wizard_book)
+  para que el About genere "Magia <Clase>" ademas de "Magia <Sub>"; Guardar/Restaurar preservan
+  los conjuros reales del personaje.

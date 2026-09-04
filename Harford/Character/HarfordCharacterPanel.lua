@@ -3139,6 +3139,42 @@ local function BookButtonOnClick(self)
             if RefreshBook then RefreshBook() end
             return
         end
+        -- Selector de conjuros POR DOTE (Iniciado en la magia, Lanzador ritual, Iniciado
+        -- artificiero): reutiliza el dialogo de conjuros del asistente. La clase viene fija en
+        -- el rasgo (`pickClass`) o de una eleccion previa (`pickClassFromChoice`); lo elegido
+        -- se guarda en un almacen PROPIO por rasgo (featSpells del SV del compendio) para no
+        -- mezclarse con los conocidos de clase ni contar contra sus limites.
+        if self.feature.actionKind == "featSpellPick" then
+            local abrir = _G.HarfordAdvancementOpenSpellDialog
+            if not abrir then
+                Print("El dialogo de conjuros no esta disponible.")
+                return
+            end
+            local clase = self.feature.pickClass
+            if (not clase or clase == "") and self.feature.pickClassFromChoice
+                and HarfordDnDProgression.GetChoice then
+                local sel = HarfordDnDProgression.GetChoice(self.feature.pickClassFromChoice, GetProfileName())
+                clase = sel and sel[1]
+            end
+            if not clase or clase == "" then
+                Print("Elige primero la clase de lanzador de la dote (en sus elecciones).")
+                return
+            end
+            local db = _G.HarfordCompendioCharacterDB
+            if type(db) ~= "table" then
+                Print("El compendio no esta disponible.")
+                return
+            end
+            db.featSpells = db.featSpells or {}
+            db.featSpells[self.feature.id] = db.featSpells[self.feature.id] or {}
+            abrir(tostring(clase), db.featSpells[self.feature.id],
+                tonumber(self.feature.pickLimit) or 1,
+                tostring(self.feature.pickKind or "spell"),
+                tonumber(self.feature.pickMaxLevel) or 1,
+                "de la dote", tostring(self.feature.name or "Conjuros de la dote"),
+                function() Print("Conjuros de la dote guardados.") end)
+            return
+        end
         -- Ventaja situacional de dote (Acechador, Apresador, Azote de magos...): la situacion
         -- la valida la MESA; el boton anuncia (gratis, cast ninguna) y aplica el estado
         -- `ayudado` — ventaja en la siguiente tirada de ataque o prueba, que se gasta sola al

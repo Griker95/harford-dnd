@@ -294,6 +294,9 @@ API.FEATS = {
     {
         id = "feat_iniciado_magia", icon = "spell_mage_presenceofmind", name = "Iniciado en la magia", description = "Un pie en otra tradición mágica: unos trucos y un conjuro prestados.", source = "PHB",
         traits = {
+            { id = "feat_im_clase", icon = "inv_misc_book_09", name = "Clase del iniciado", type = "choice", description = "Elige la clase de cuya lista aprendes los conjuros de esta dote.", effects = {}, choice = { slots = 1, options = { { id = "Mago", label = "Mago", effects = {} }, { id = "Sacerdote", label = "Sacerdote", effects = {} }, { id = "Druida", label = "Druida", effects = {} }, { id = "Brujo", label = "Brujo", effects = {} }, { id = "Chaman", label = "Chaman", effects = {} } } } },
+            { id = "feat_im_trucos", icon = "inv_misc_book_09", name = "Trucos del iniciado", type = "accion", cast = "ninguna", actionKind = "featSpellPick", pickClassFromChoice = "feat_im_clase", pickKind = "cantrip", pickLimit = 2, pickMaxLevel = 0, description = "Elige (o cambia) los DOS trucos de la lista de tu clase elegida.", effects = {} },
+            { id = "feat_im_conjuro", icon = "inv_misc_book_09", name = "Conjuro del iniciado", type = "accion", cast = "ninguna", actionKind = "featSpellPick", pickClassFromChoice = "feat_im_clase", pickKind = "spell", pickLimit = 1, pickMaxLevel = 1, description = "Elige (o cambia) el conjuro de nivel 1. Lo lanzas una vez por descanso largo sin gastar espacio; tambien con tus espacios si tu clase puede.", effects = {} },
             { id = "feat_phb_iniciado", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Elige una clase lanzadora: aprendes dos trucos de su lista y un conjuro de nivel 1 (lanzable 1 vez por descanso largo con este dote). La aptitud mágica depende de la clase elegida.", effects = {} },
         },
     },
@@ -314,6 +317,8 @@ API.FEATS = {
     {
         id = "feat_lanzador_ritual", icon = "hots_mageprofile", requiredAbility = { abilities = { "Inteligencia", "Sabiduria" }, min = 13 }, name = "Lanzador ritual", requires = "Inteligencia o Sabiduria 13 o mas", description = "Un libro propio de rituales que puedes lanzar sin gastar espacios.", source = "PHB",
         traits = {
+            { id = "feat_lr_clase", icon = "inv_misc_book_07", name = "Clase del ritualista", type = "choice", description = "Elige la clase de cuya lista aprendes tus rituales.", effects = {}, choice = { slots = 1, options = { { id = "Mago", label = "Mago", effects = {} }, { id = "Sacerdote", label = "Sacerdote", effects = {} }, { id = "Druida", label = "Druida", effects = {} }, { id = "Brujo", label = "Brujo", effects = {} }, { id = "Chaman", label = "Chaman", effects = {} } } } },
+            { id = "feat_lr_rituales", icon = "inv_misc_book_07", name = "Rituales del lanzador", type = "accion", cast = "ninguna", actionKind = "featSpellPick", pickClassFromChoice = "feat_lr_clase", pickKind = "spell", pickLimit = 2, pickMaxLevel = 1, description = "Elige (o cambia) DOS conjuros de nivel 1 que tengan la etiqueta de ritual (lo valida la mesa). Solo puedes lanzarlos como rituales.", effects = {} },
             { id = "feat_phb_lritual", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Obtienes un libro de rituales con dos conjuros de nivel 1 con etiqueta ritual de una clase a elegir. Puedes copiar al libro otros conjuros rituales que encuentres.", effects = {} },
         },
     },
@@ -502,6 +507,8 @@ API.FEATS = {
     {
         id = "feat_iniciado_artificiero", icon = "eps_lol_profileicon_elementofmagma", name = "Iniciado artificiero", description = "Un poco de la inventiva del artífice: un truco, un conjuro y herramientas.", source = "TCoE",
         traits = {
+            { id = "feat_ia_truco", icon = "eps_lol_profileicon_elementofmagma", name = "Truco del artificiero", type = "accion", cast = "ninguna", actionKind = "featSpellPick", pickClass = "Mago", pickKind = "cantrip", pickLimit = 1, pickMaxLevel = 0, description = "Elige (o cambia) un truco de la lista de Mago (la lista de artifice de esta mesa).", effects = {} },
+            { id = "feat_ia_conjuro", icon = "eps_lol_profileicon_elementofmagma", name = "Conjuro del artificiero", type = "accion", cast = "ninguna", actionKind = "featSpellPick", pickClass = "Mago", pickKind = "spell", pickLimit = 1, pickMaxLevel = 1, description = "Elige (o cambia) un conjuro de nivel 1 de la lista de Mago. Lo lanzas una vez por descanso largo sin gastar espacio.", effects = {} },
             { id = "feat_tco_artif_tool", icon = "inv_scroll_11", name = "Herramientas de artesano", type = "choice", description = "Competencia con un tipo de herramientas de artesano de tu elección (canalizador mágico para conjuros con Inteligencia).", effects = {}, choice = { slots = 1, optionsFrom = "toolProf" } },
             { id = "feat_tco_artif", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Aprendes un truco y un conjuro de nivel 1 de la lista de artífice (Inteligencia); el conjuro 1 vez por descanso largo sin espacio.", effects = {} },
         },

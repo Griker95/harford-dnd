@@ -1306,20 +1306,22 @@ function API.BuildAbout(draft, profileName)
         for _, v in ipairs(bg.variants or {}) do
             if tostring(v.id) == tostring(draft.backgroundVariantId or "") then variante = v break end
         end
-        local titulo = NombreDeOrigen(bg) .. (variante and (" (" .. tostring(variante.name) .. ")") or "")
+        -- Con variante elegida, el titulo es SOLO la variante ("Trasfondo Veterano Harford"),
+        -- su descripcion es EL cuerpo (nada de bloque aparte, que duplicaba el texto) y el
+        -- frame lleva su icono. cargarficha resuelve base + variante con
+        -- FindBackgroundAndVariantByText.
+        local titulo = variante and NombreDeOrigen(variante) or NombreDeOrigen(bg)
         local lines = { "{h1:c}Trasfondo {col:" .. COL_RACIAL .. "}" .. titulo .. "{/col}{/h1}" }
         -- Las descripciones de origen son RESUMEN en el About: dos parrafos como maximo.
-        local desc = Resumen2(bg.desc)
-        if desc ~= "" then lines[#lines + 1] = desc end
-        if variante then
-            local iconoVar = FeatureIconName({ id = variante.id, icon = variante.icon, name = variante.name })
-            lines[#lines + 1] = "{h2}{icon:" .. iconoVar .. ":25} " .. tostring(variante.name) .. "{/h2}"
-            local descVar = Resumen2(variante.desc)
-            if descVar ~= "" then lines[#lines + 1] = ColorizeDescription(descVar) end
-        end
+        local desc = Resumen2(variante and variante.desc or bg.desc)
+        if desc ~= "" then lines[#lines + 1] = ColorizeDescription(desc) end
         local body = BuildTraitLines(GetBackgroundTraits(draft), draft)
         if body ~= "" then lines[#lines + 1] = body end
-        local iconoBg = IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetFeatureIcon
+        local iconoBg
+        if variante then
+            iconoBg = IconNameParaMarkup(variante.icon)
+        end
+        iconoBg = iconoBg or IconNameParaMarkup(HarfordDnDData and HarfordDnDData.GetFeatureIcon
             and HarfordDnDData.GetFeatureIcon({ id = bg.id, icon = bg.icon, name = bg.name }))
         frames[#frames + 1] = { IC = iconoBg or ICON_GENERIC, TX = table.concat(lines, "\n") }
     end

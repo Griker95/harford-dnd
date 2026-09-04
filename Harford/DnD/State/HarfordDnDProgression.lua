@@ -1899,6 +1899,11 @@ function API.LoadFromTRP3Replace(sheet, profileName)
     else
         API.SetBackground("", profileName)
     end
+    -- Variante detectada en el titulo del About ("Trasfondo Veterano Harford"): se persiste
+    -- solo si vino resuelta; sin dato no se pisa lo que hubiera.
+    if sheet.backgroundVariant and sheet.backgroundVariant ~= "" and API.SetBackgroundVariant then
+        API.SetBackgroundVariant(sheet.backgroundVariant, profileName)
+    end
 
     -- Con clases/raza/trasfondo ya fijados, resolver desde el texto del About: las elecciones
     -- con opciones explicitas (estilo de combate, afinidades...) y las dotes ("Dote <Nombre>").

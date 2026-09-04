@@ -80,4 +80,33 @@ for etiqueta, ruta, frag in (function(l) local i = 0; return function()
     chk("variante en " .. etiqueta, src:find(frag, 1, true) ~= nil, true)
 end
 
+-- El About titula SOLO la variante ("Trasfondo Veterano Harford"): el buscador debe resolver
+-- base + variante desde ese texto, y el frame no duplica la descripcion en un bloque aparte.
+print("El titulo con solo la variante resuelve base + variante")
+do
+    local env2 = setmetatable({}, { __index = function() return nil end })
+    cargarModulo("Harford/Core/HarfordClassColors.lua", env2)
+    env2.HarfordClassColors = env2.HarfordClassColors
+    local envB = setmetatable({ HarfordClassColors = env2.HarfordClassColors },
+        { __index = function() return nil end })
+    cargarModulo("Harford/DnD/Data/HarfordDnDBackgrounds.lua", envB)
+    local B2 = envB.HarfordDnDBackgrounds
+    local bgId, varId = B2.FindBackgroundAndVariantByText("Trasfondo Veterano Harford")
+    chk("trasfondo base", bgId, "mercenario_veterano_harford")
+    chk("variante", varId, "mercenario_veterano_harford_veterano_harford")
+    local soloBase = select(1, B2.FindBackgroundAndVariantByText("Trasfondo Mercenario veterano"))
+    local _, sinVar = B2.FindBackgroundAndVariantByText("Trasfondo Mercenario veterano")
+    chk("el base a secas sigue resolviendo", soloBase, "mercenario_veterano_harford")
+    chk("y sin variante", sinVar, "nil")
+end
+do
+    local src = io.open("Harford/Character/HarfordCharacterCreation.lua"):read("*a")
+    chk("titulo = variante si la hay",
+        src:find("local titulo = variante and NombreDeOrigen(variante) or NombreDeOrigen(bg)", 1, true) ~= nil, true)
+    chk("desc de la variante como cuerpo",
+        src:find("Resumen2(variante and variante.desc or bg.desc)", 1, true) ~= nil, true)
+    chk("sin bloque duplicado de variante",
+        src:find('"{h2}{icon:" .. iconoVar', 1, true) == nil, true)
+end
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

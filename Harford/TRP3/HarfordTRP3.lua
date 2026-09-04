@@ -1424,8 +1424,15 @@ do
                     local bgText = h1s[i]:gsub("^%s*[Tt]rasfondo%s*", ""):gsub("^%s+", ""):gsub("%s+$", "")
                     sheet.backgroundRaw = bgText
                     sheet.backgroundDesc = table.concat(backgroundDescLines, " ")
-                    sheet.background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundIdByText
-                        and HarfordDnDBackgrounds.FindBackgroundIdByText(bgText) or nil
+                    -- El About generado puede titular SOLO la variante ("Trasfondo Veterano
+                    -- Harford"): el buscador con variantes recupera trasfondo base + variante.
+                    if HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundAndVariantByText then
+                        sheet.background, sheet.backgroundVariant =
+                            HarfordDnDBackgrounds.FindBackgroundAndVariantByText(bgText)
+                    else
+                        sheet.background = HarfordDnDBackgrounds and HarfordDnDBackgrounds.FindBackgroundIdByText
+                            and HarfordDnDBackgrounds.FindBackgroundIdByText(bgText) or nil
+                    end
                 end
             elseif not sheet.raceId then
                 -- Primera cabecera (no-Ficha, no-Trasfondo) que resuelva a una raza conocida.

@@ -253,7 +253,9 @@ API.BACKGROUNDS = {
     -- ===== Trasfondos de mesa / suplementos usados en perfiles Harford =====
     {
         id = "capitan_veterano_harford", name = "Capitan veterano harford", nameF = "Capitana veterana harford", source = "Harford", icon = "inv_tabard_duelersguild",
-        aliases = { "capitan", "capitan harford", "veterano harford" },
+        -- "veterano harford" retirado de aqui: es la VARIANTE del Mercenario veterano y el
+        -- buscador la resuelve como tal; con el alias, "Trasfondo Veterano Harford" caia aqui.
+        aliases = { "capitan", "capitan harford" },
         desc = "Fuiste mas que un simple mercenario: diste órdenes que salvaron vidas y lideraste cuando otros habrían huido. Tu reputación como Capitán de la Compañía Harford te precede en muchos rincones del mundo.",
         traits = {
             { id = "bg_capharf_comp", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Atletismo.", effects = {
@@ -306,7 +308,9 @@ API.BACKGROUNDS = {
                 { id = "bg_merc_vh_equipo", icon = "inv_misc_bag_20", name = "Equipo", type = "pasivo", description = "Un recuerdo cochambroso de tu tiempo en Harford (un clavo bendito, una petaca vacía, una insignia oxidada...), un juego al que jugabas con tus compañeros de barco o campamento, un tabardo Harford remendado varias veces y una bolsa con 8 po (2 po se los quedó el capitán al pagaros).", effects = {} },
             },
         } }, source = "Warcraft", icon = "w3reforgedbandit",
-        aliases = { "veterano harford", "mercenario veterano", "mercenario harford" },
+        -- "veterano harford" ya no es alias del BASE: es su variante, y como alias ganaba el
+        -- empate y el buscador devolvia el trasfondo sin la variante.
+        aliases = { "mercenario veterano", "mercenario harford" },
         desc = "Como mercenario que lucha en contiendas a cambio de dinero, estás muy acostumbrado a jugarte la vida por la oportunidad de ganar parte de un tesoro. Ahora estás dispuesto a matar a enemigos y a conseguir incluso mejores recompensas como aventurero. Tu experiencia te familiariza con los pormenores de la vida del mercenario y es posible que tengas relatos desgarradores de lo acontecido en el campo de batalla. Tal vez serviste en un batallón grande o en un grupo menor de mercenarios (o puede que incluso con más de uno).\n\nAhora buscas algo distinto, tal vez una recompensa mayor a cambio de los riesgos que asumes o quizá la libertad de escoger tus propias actividades. Sea cual sea el motivo, dejas atrás la vida de un soldado a sueldo, pero tus habilidades son sin duda adecuadas para el combate, de modo que ahora sigues luchando, pero de otro modo.",
         traits = {
             { id = "bg_merc_comp", icon = "inv_scroll_11", name = "Competencias", type = "pasivo", description = "Competencia en Atletismo y Persuasión.", effects = {
@@ -772,26 +776,43 @@ function API.GetStartingGold(backgroundId, variantId)
 end
 
 function API.FindBackgroundIdByText(text)
+    local id = API.FindBackgroundAndVariantByText(text)
+    return id
+end
+
+-- Como FindBackgroundIdByText pero reconociendo tambien los nombres de VARIANTE: el About
+-- generado titula "Trasfondo Veterano Harford" (solo la variante), y cargarficha debe
+-- resolver desde ahi tanto el trasfondo base como la variante. Devuelve bgId, variantId
+-- (variantId nil si el texto casa con el trasfondo a secas).
+function API.FindBackgroundAndVariantByText(text)
     local clean = Normalize(text)
-    if clean == "" then return nil end
+    if clean == "" then return nil, nil end
     EnsureIndex()
-    local bestId, bestLen
-    for _, bgDef in ipairs(API.BACKGROUNDS) do
-        local candidates = { bgDef.id, bgDef.name, bgDef.nameF }
-        for _, alias in ipairs(bgDef.aliases or {}) do
-            candidates[#candidates + 1] = alias
-        end
-        for _, candidate in ipairs(candidates) do
-            local normalized = Normalize(candidate)
-            if normalized ~= "" and clean:find(normalized, 1, true) then
-                local len = #normalized
-                if not bestLen or len > bestLen then
-                    bestId, bestLen = bgDef.id, len
-                end
+    local bestId, bestVariant, bestLen
+    local function Prueba(candidate, bgId, variantId)
+        if not candidate then return end
+        local normalized = Normalize(candidate)
+        if normalized ~= "" and clean:find(normalized, 1, true) then
+            local len = #normalized
+            -- A misma longitud gana la lectura CON variante: es la interpretacion mas
+            -- especifica del texto ("Veterano Harford" es la variante, no un alias del base).
+            if not bestLen or len > bestLen
+                or (len == bestLen and variantId and not bestVariant) then
+                bestId, bestVariant, bestLen = bgId, variantId, len
             end
         end
     end
-    return bestId
+    for _, bgDef in ipairs(API.BACKGROUNDS) do
+        Prueba(bgDef.id, bgDef.id, nil)
+        Prueba(bgDef.name, bgDef.id, nil)
+        Prueba(bgDef.nameF, bgDef.id, nil)
+        for _, alias in ipairs(bgDef.aliases or {}) do Prueba(alias, bgDef.id, nil) end
+        for _, variant in ipairs(bgDef.variants or {}) do
+            Prueba(variant.name, bgDef.id, variant.id)
+            Prueba(variant.nameF, bgDef.id, variant.id)
+        end
+    end
+    return bestId, bestVariant
 end
 
 -- Devuelve los rasgos del trasfondo en el MISMO formato que

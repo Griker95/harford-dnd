@@ -1746,13 +1746,18 @@ local function RefreshSheet()
                             skill.name, skill.desc or ("Caracteristica: " .. abil.key .. "."),
                             { labelWidth = 140, valueWidth = 32 })
                         y = y - 13; index = index + 1
-                        -- Puntuacion PASIVA bajo su habilidad (regla 5e: 10 + bono total; la
-                        -- dote Observador ya viene sumada por Calc). Sin tirada: es el valor
-                        -- que el DM compara contra el Sigilo de quien se esconde.
+                        -- Puntuacion PASIVA bajo su habilidad (regla 5e: 10 + bono total). Sin
+                        -- tirada: es el valor que el DM compara contra el Sigilo de quien se
+                        -- esconde. Se calcula sobre SkillTotal, que ya sabe de INSPECCION
+                        -- (snapshot remoto), asi que el DM la ve tambien al inspeccionar; el +5
+                        -- de Observador entra por el bonus pasivo del perfil que toque.
                         if (skill.id == "Percepcion" or skill.id == "Investigacion")
-                            and not IsInspecting() and HarfordDnDCalc and HarfordDnDCalc.GetPassiveScore
                             and SH.sheetRows[index] then
-                            local pasiva = HarfordDnDCalc.GetPassiveScore(skill.id)
+                            local extraPasiva = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetBonus
+                                and HarfordDnDFeatureEffects.GetBonus(
+                                    skill.id == "Percepcion" and "passivePerception" or "passiveInvestigation",
+                                    nil, GetProfileName()) or 0
+                            local pasiva = 10 + (tonumber(SkillTotal(skill)) or 0) + (tonumber(extraPasiva) or 0)
                             if pasiva then
                                 SetSheetRow(SH.sheetRows[index], y,
                                     "      |cff9d9d9d" .. skill.name .. " pasiva|r",

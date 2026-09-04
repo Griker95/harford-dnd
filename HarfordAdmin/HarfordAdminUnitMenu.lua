@@ -874,6 +874,15 @@ local function InitializeMenu(_, level, menuList)
     if level == 1 then
         local title = snapshot.name ~= "" and snapshot.name or snapshot.unit
         AddTitle(title, level)
+        -- Percepcion pasiva del NPC (bloque de Sentidos de su TRP3): valor de CONSULTA para
+        -- el DM — se compara contra el Sigilo de quien se esconde, sin pedir tirada. Solo se
+        -- pinta si el stat block la trae; una linea de titulo, no una accion.
+        if ctx == "npc" and HarfordTRP3 and HarfordTRP3.GetNPCStatBlock then
+            local block = HarfordTRP3.GetNPCStatBlock(snapshot.unit)
+            if block and tonumber(block.passivePerception) then
+                AddTitle("|cff66ccffPercepcion pasiva " .. tostring(block.passivePerception) .. "|r", level)
+            end
+        end
 
         if ctx == "self" then
             -- Jugador propio: TRP3 propio, turnos, recursos (mod.recursos+mod.salud), auras.

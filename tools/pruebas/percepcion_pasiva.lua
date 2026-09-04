@@ -30,10 +30,22 @@ chk("Observador +5/+5", feats:find(
     1, true) ~= nil, true)
 
 print("La ficha la muestra bajo su habilidad")
-chk("fila de pasiva en la vista de habilidades",
-    sheet:find("GetPassiveScore(skill.id)", 1, true) ~= nil, true)
+-- Sobre SkillTotal, que ya sabe de inspeccion: el DM la ve tambien al inspeccionar.
+chk("fila de pasiva sobre SkillTotal",
+    sheet:find("10 + (tonumber(SkillTotal(skill)) or 0)", 1, true) ~= nil, true)
+chk("con el bonus pasivo del perfil que toque",
+    sheet:find('skill.id == "Percepcion" and "passivePerception" or "passiveInvestigation"', 1, true) ~= nil, true)
 -- El pool de filas de la vista es de 26 y la vista usa 24 + las 2 pasivas: JUSTO. Si se anade
 -- una habilidad o cabecera mas, hay que ampliar el pool o las ultimas filas se caen en silencio.
 chk("el pool sigue en 26", sheet:find("for i = 1, 26 do", 1, true) ~= nil, true)
+
+print("El DM tambien la ve")
+local trp3 = io.open("Harford/TRP3/HarfordTRP3.lua"):read("*a")
+chk("el parser NPC la saca del bloque de Sentidos",
+    trp3:find("percepcion pasiva%s*", 1, true) ~= nil
+    and trp3:find("result.passivePerception = tonumber(valor)", 1, true) ~= nil, true)
+local menu = io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
+chk("y el menu DM la pinta para NPC",
+    menu:find("block.passivePerception", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

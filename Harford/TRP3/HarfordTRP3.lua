@@ -2352,6 +2352,18 @@ do
             end
         end
 
+        -- Percepcion pasiva del bloque de Sentidos ("vision en la oscuridad 60 pies,
+        -- Percepcion pasiva 12"): valor de CONSULTA para el DM (se compara contra el Sigilo
+        -- de quien se esconde), expuesto como campo propio. CleanStatText ya normaliza
+        -- tildes y mayusculas.
+        for _, linea in ipairs(result.senses or {}) do
+            local valor = CleanStatText(linea):match("percepcion pasiva%s*(%d+)")
+            if valor then
+                result.passivePerception = tonumber(valor)
+                break
+            end
+        end
+
         return result
     end
 

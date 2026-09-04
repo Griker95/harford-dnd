@@ -2964,21 +2964,48 @@ DoWeaponAttack = function(options)
     local def = options.weaponDef or GetWeaponDef(GetWeaponKey())
     local offhand = ActorIsPlayer(def) and HarfordDnDStore.GetOffhandActive
         and HarfordDnDStore.GetOffhandActive(def)
+    local function DebugRangeGate(message)
+        if HarfordDebug and HarfordDebug.IsEnabled and HarfordDebug.IsEnabled() then
+            HarfordDebug.Log("rangegate arma: " .. tostring(message))
+        end
+    end
     -- Lo que cuesta este ataque lo decide el motor, que sabe cuantos caben en una accion y que un
     -- ataque con la secundaria es accion ADICIONAL. `skipTurnCost` lo ponen las rutas que ya
     -- cobraron por su cuenta (maniobras), para no cobrar dos veces el mismo golpe. Solo el
     -- jugador: la criatura acompanante no gasta la economia de su duenio.
-    -- Alcance de MELEE, ANTES de cobrar la accion: el cliente no puede medir 1,5 m
-    -- (UnitPosition solo habla del jugador), pero CheckInteractDistance(3) es una COTA (~9 m):
-    -- si el objetivo esta mas alla, seguro que ningun arma cuerpo a cuerpo llega, y el golpe
-    -- no ocurre ni cuesta nada. Dentro de la cota decide la mesa; si la API no responde, se
-    -- ataca -- en duda no se bloquea.
-    if def and def.mode == "Melee" and ActorIsPlayer(def) and CheckInteractDistance then
-        local okDist, cerca = pcall(CheckInteractDistance, "target", 3)
-        if okDist and cerca == false then
-            Print("Objetivo fuera del alcance del arma cuerpo a cuerpo.")
+    -- La distancia real llega asincronamente de `.distance`. Se consulta ANTES de
+    -- gastar accion/reaccion; al volver se reentra con el GUID fijado para que una
+    -- respuesta tardia jamas pueda atacar a un objetivo distinto.
+    if def and ActorIsPlayer(def) and not options._rangeChecked and HarfordDnDRange
+        and HarfordDnDRange.CheckTargetRange and HarfordDnDWeapons.GetAttackRange then
+        local expectedGuid = UnitGUID and UnitGUID("target") or nil
+        local range = HarfordDnDWeapons.GetAttackRange(def, options.attackMode)
+        if range then
+            DebugRangeGate(tostring(def.key) .. " contacto=" .. tostring(range.requiresContact == true)
+                .. " normal=" .. tostring(range.normalMeters))
+            local sent = HarfordDnDRange.CheckTargetRange(range, function(result)
+                DebugRangeGate("respuesta hitbox=" .. tostring(result.hitboxMeters)
+                    .. " exacta=" .. tostring(result.exactMeters) .. " permitido=" .. tostring(result.ok))
+                if not result.ok then
+                    if not result.outOfRange then Print(result.message or "No se pudo comprobar el alcance.") end
+                    return
+                end
+                options._rangeChecked = true
+                options.rangeDisadvantage = result.disadvantage == true
+                options.expectedTargetGuid = result.targetGuid or expectedGuid
+                DoWeaponAttack(options)
+            end, expectedGuid)
+            if sent then return end
+            -- `CheckTargetRange` ya comunico el motivo por callback. No continuar
+            -- sin medicion: cobrar una accion para un ataque de alcance desconocido
+            -- seria peor que pedir al jugador que vuelva a intentarlo.
             return
         end
+        DebugRangeGate("sin alcance calculado para " .. tostring(def.key))
+    elseif not options._rangeChecked then
+        DebugRangeGate("bypass def=" .. tostring(def and def.key)
+            .. " externo=" .. tostring(def and def.externalActor)
+            .. " rango=" .. tostring(HarfordDnDRange ~= nil))
     end
     if not options.skipTurnCost and ActorIsPlayer(def)
         and HarfordDnDConditions and HarfordDnDConditions.Turn
@@ -3013,7 +3040,8 @@ DoWeaponAttack = function(options)
     else
         chosen, ra, rb, critTag, modeTag, resolvedMode = HarfordDnDCalc.RollD20Full("attack", {
             actorUnit = "player", targetUnit = "target", attackRange = attackRange,
-            -- Dotes que perdonan la desventaja del estado "Trabado en melee" al disparar.
+            rangeDisadvantage = options.rangeDisadvantage == true,
+            -- Dotes que perdonan la desventaja del estado "Flanqueado" al disparar.
             ignoreMeleeProximity = ActorIsPlayer(def) and HarfordDnDFeatureEffects
                 and HarfordDnDFeatureEffects.HasFlag
                 and HarfordDnDFeatureEffects.HasFlag("ignoreRangedMeleePenalty") or nil,
@@ -3245,20 +3273,6 @@ DoWeaponAttack = function(options)
             targetGuid = UnitGUID and UnitGUID("target") or nil,
             at = GetTime and GetTime() or 0,
         }
-    end
-    -- Ataque Extra comparte la ruta normal: segunda tirada, CA, daño, defensas y
-    -- animacion. Se limita a una repeticion y conserva el mismo objetivo por GUID.
-    if not options.skipExtraAttack and not options.demonBite
-        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
-        and HarfordDnDFeatureEffects.HasFlag("extraAttack") then
-        local extraTargetGuid = UnitGUID and UnitGUID("target") or nil
-        if extraTargetGuid then
-            DoWeaponAttack({
-                expectedTargetGuid = extraTargetGuid,
-                skipExtraAttack = true,
-                labelSuffix = "[Ataque adicional]",
-            })
-        end
     end
     ConsumeMode()
     -- Devuelve si ESTE golpe impacto (true/false), o nil si la CA no se pudo resolver: quien lo
@@ -4190,6 +4204,15 @@ function HarfordDnDAPI.HasSheetContext()
     return SheetContext.active
 end
 
+-- La UI de movimiento no puede consultar el perfil TRP3 de `pet`: Epsilon no lo asocia de forma
+-- fiable con el NPC poseido. La velocidad se captura al cargar su ficha y se sirve por GUID.
+function HarfordDnDAPI.GetNpcMovementMeters(guid)
+    if not (SheetContext.active and SheetContext.kind == "npc") then return nil end
+    guid = tostring(guid or "")
+    if guid ~= "" and guid ~= tostring(SheetContext.npcSourceGuid or "") then return nil end
+    return tonumber(SheetContext.movementMeters)
+end
+
 function HarfordDnDAPI.ApplySheetContext(context)
     if type(context) ~= "table" then
         return false, "contexto de ficha invalido"
@@ -4211,6 +4234,7 @@ function HarfordDnDAPI.ApplySheetContext(context)
     SheetContext.onDamageRolled = type(context.onDamageRolled) == "function" and context.onDamageRolled or nil
     SheetContext.onArmorClassChanged = type(context.onArmorClassChanged) == "function" and context.onArmorClassChanged or nil
     SheetContext.spellProficiencyBonus = SheetContext.kind == "npc" and tonumber(context.spellProficiencyBonus) or nil
+    SheetContext.movementMeters = SheetContext.kind == "npc" and tonumber(context.movementMeters) or nil
     if FrameTitle and SheetContext.kind == "npc" then
         FrameTitle:SetText(context.titleText or SheetContext.rollName or "Harford DnD 5\194\170 - Ficha")
         local color = context.titleColor or { 1, 0.82, 0 }
@@ -4238,6 +4262,7 @@ function HarfordDnDAPI.ClearSheetContext()
     SheetContext.actions = nil
     SheetContext.showActionPanel = false
     SheetContext.spellProficiencyBonus = nil
+    SheetContext.movementMeters = nil
     SheetContext.kind = nil
     SheetContext.lockedSource = false
     SheetContext.canAttack = nil
@@ -4503,6 +4528,14 @@ SlashCmdList["HARFORDMAIN"] = function(msg)
     elseif sub == "char" or sub == "personaje" then route("HARFORDCHARACTERPANEL")
     elseif sub == "rep" or sub == "reputacion" then route("HARFORDREP")
     elseif sub == "turnos" then route("HARFORDTURNOS")
+    elseif sub == "combatstop" then
+        local stopped = HarfordTurnOrderAPI and HarfordTurnOrderAPI.StopLocalCombat
+            and HarfordTurnOrderAPI.StopLocalCombat()
+        if stopped then
+            HarfordChat.Print("Has salido localmente del modo combate.")
+        else
+            HarfordChat.Print("No estabas en modo combate.")
+        end
     elseif sub == "config" then route("HARFORDCONFIG")
     elseif sub == "inspect" then route("HARFORDCHARACTERINSPECT")
     elseif sub == "herramientas" or sub == "tools" then
@@ -4536,7 +4569,7 @@ SlashCmdList["HARFORDMAIN"] = function(msg)
             HarfordChat.Print("Las herramientas de diagnostico requieren el addon opcional HarfordDebug.")
         end
     else
-        HarfordChat.Print("/harford: herramientas | comunicador | radio | cargarficha | ficha | char | rep | turnos | contratos | misiones | reparto | loot | config | inspect | compendio/magia | debug")
+        HarfordChat.Print("/harford: herramientas | comunicador | radio | cargarficha | ficha | char | rep | turnos | combatstop | contratos | misiones | reparto | loot | config | inspect | compendio/magia | debug")
     end
 end
 

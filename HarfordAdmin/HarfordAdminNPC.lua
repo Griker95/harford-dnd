@@ -105,6 +105,16 @@ local function RequestNpcInfoPosition(expectedGuid, callback)
                 if callback then callback(false, nil, "No se pudo parsear posicion de npc info") end
                 return
             end
+            -- `.npc info` confirma X/Y/Z pero no devuelve el mapa. El NPC sigue
+            -- seleccionado, asi que comparte el mapa actual del jugador.
+            local mapId
+            if C_Epsilon and C_Epsilon.GetPosition then
+                local okPos, _, _, _, value = pcall(C_Epsilon.GetPosition)
+                if okPos then mapId = value end
+            end
+            if HarfordDnDRange and HarfordDnDRange.BuildPositionContext then
+                pos.contextId = HarfordDnDRange.BuildPositionContext(mapId)
+            end
             pos.guid = expectedGuid
             pos.name = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
                 or GetTargetName() or "NPC"
@@ -594,6 +604,18 @@ local function GetTurnArmorClassForGuid(guid)
     end
 end
 
+local function GetNpcMovementMeters(parsed)
+    local raw = parsed and parsed.speed
+    if type(raw) == "table" then raw = raw.walk or raw.ground or raw[1] end
+    local text = tostring(raw or "")
+    local value = tonumber(text:match("([%d%.]+)"))
+    if not value then return nil end
+    if text:lower():find("pie") or text:lower():find("ft", 1, true) then
+        return value * 0.3048
+    end
+    return value
+end
+
 function API.UpdateNpcSheetArmorClass(armorClass, guid)
     guid = tostring(guid or (UnitGUID and UnitGUID("target")) or "")
     if guid == "" then return false end
@@ -663,6 +685,7 @@ function API.BuildDnDSheetContext(unit, opts)
         titleText = titleText,
         titleColor = nameColorRGB,
         spellProficiencyBonus = GetNpcSpellProficiencyBonus(unit, parsed and parsed.approximateLevel),
+        movementMeters = GetNpcMovementMeters(parsed),
         showActionPanel = true,
         actions = BuildNpcActions(unit),
         canAttack = API.CanNpcSheetAttack,

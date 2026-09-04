@@ -377,6 +377,10 @@ chk("uno, o dos con el rasgo", cond:find("return extra and 2 or 1", 1, true) ~= 
 -- Los de en medio ya estan pagados; el que abre otra tanda cobra otra accion.
 chk("solo cobra el que abre la tanda",
     cond:find('if (ECONOMIA.ataques - 1) % porAccion ~= 0 then return "action" end', 1, true) ~= nil, true)
+-- Ataque adicional amplia esta tanda, pero cada pulsacion sigue siendo UNA tirada: el segundo
+-- ataque lo elige el jugador y no puede aparecer por una llamada recursiva al final del primero.
+chk("ataque adicional no repite la tirada solo",
+    ficha:find("skipExtraAttack = true", 1, true) == nil, true)
 -- El ataque con la SECUNDARIA es Combate con Dos Armas: cuesta accion ADICIONAL, no la accion, y
 -- no cuenta contra los ataques de la accion.
 chk("la secundaria cuesta accion adicional",

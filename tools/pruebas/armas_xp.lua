@@ -78,6 +78,59 @@ chk("a distancia, ninguna", W.GetAnimFamily({ key = "Arco", mode = "Ranged", pro
 chk("versatil apagado, una mano", W.GetAnimFamily(espada, false), "one_hand")
 chk("versatil encendido, dos manos", W.GetAnimFamily(espada, true), "two_hand")
 
+-- El rango se lee de las propiedades del arma, no de una segunda tabla que
+-- pudiera desincronizarse del manual. Los numeros del manual son pies y el
+-- motor comun trabaja en metros.
+print("Alcance de armas")
+local arco = { key = "Arco", mode = "Ranged", props = { "Munición (80/320)" } }
+local range = W.GetAttackRange(arco)
+chk("arco normal en metros", string.format("%.2f", range.normalMeters), "24.38")
+chk("arco largo en metros", string.format("%.2f", range.longMeters), "97.54")
+range = W.GetAttackRange({ key = "Lanza", mode = "Melee", props = { "Alcance" } })
+chk("alcance melee", string.format("%.3f", range.normalMeters), "3.048")
+range = W.GetAttackRange({ key = "Daga", mode = "Melee", props = { "Arrojadiza (20/60)" } })
+chk("daga equipada exige contacto", string.format("%.3f", range.normalMeters), "0.000")
+range = W.GetAttackRange({ key = "Daga", mode = "Melee", props = { "Arrojadiza (20/60)" } }, "thrown")
+chk("daga arrojada normal", string.format("%.2f", range.normalMeters), "6.10")
+chk("daga arrojada largo", string.format("%.2f", range.longMeters), "18.29")
+
+-- Epsilon responde en yardas. El alcance usa el borde del hitbox en 3D, no el
+-- centro del modelo: una criatura grande no debe requerir llegar hasta su centro.
+local envRange = cargarModulo("Harford/DnD/Engine/HarfordDnDRange.lua",
+    setmetatable({}, { __index = function() return nil end }))
+local D = envRange.HarfordDnDRange
+print("Distancias de Epsilon y conjuros")
+local meters, _, _, source = D.ParseDistanceReply({
+    "Hitbox distance to target is 4.430309 in 3D, 4.430304 in 2D Exact distance to target is 7.430309 in 3D, 7.430304 in 2D",
+})
+chk("hitbox 3D antes que centro", string.format("%.4f", meters), "4.0511")
+chk("origen hitbox 3D", source, "hitbox_3d")
+local distanceDetails = D.ParseDistanceDetails({
+    "Hitbox distance to target is 4.430309 in 3D, 4.430304 in 2D Exact distance to target is 7.430309 in 3D, 7.430304 in 2D",
+})
+chk("exacta 3D separada", string.format("%.4f", distanceDetails.exactMeters), "6.7943")
+local coloredDistance = D.ParseDistanceDetails({
+    "|cff00ff00Hitbox distance to target is |cffffffff4.430309|r in 3D, 4.430304 in 2D Exact distance to target is 7.430309 in 3D, 7.430304 in 2D|r",
+})
+chk("respuesta coloreada conserva hitbox", string.format("%.4f", coloredDistance.hitboxMeters), "4.0511")
+chk("contexto de mapa", D.BuildPositionContext(1220), "1220")
+local spellRange = D.ParseSpellRange("30 metros")
+chk("conjuro en metros", string.format("%.1f", spellRange.normalMeters), "30.0")
+spellRange = D.ParseSpellRange("Toque")
+chk("toque exige contacto", spellRange.requiresContact, true)
+chk("toque sin alcance metrico", string.format("%.3f", spellRange.normalMeters), "0.000")
+local contact = D.CheckDistance(0, { normalMeters = 0, longMeters = 0, requiresContact = true })
+chk("contacto permitido", contact.ok, true)
+local noContact = D.CheckDistance(0.1, { normalMeters = 0, longMeters = 0, requiresContact = true })
+chk("melé fuera de contacto bloqueado", noContact.ok, false)
+local exactRange = D.CheckDistance(distanceDetails.exactMeters, { normalMeters = 6.8 })
+chk("alcance numerico usa exacta", exactRange.ok, true)
+local out = D.CheckDistance(31, { normalMeters = 30 })
+chk("fuera de alcance", out.ok, false)
+local long = D.CheckDistance(20, { normalMeters = 10, longMeters = 30 })
+chk("rango largo permitido", long.ok, true)
+chk("rango largo da desventaja", long.disadvantage, true)
+
 -- ═══ XP ═════════════════════════════════════════════════════════════════════
 local XP = 0
 local envX = cargarModulo("Harford/Character/HarfordCharacterXP.lua",

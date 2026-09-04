@@ -485,12 +485,14 @@ local function ResolveWeaponManeuverAfterHitSave(data)
     local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
         or HarfordClassColors.UnitFullName("target") or "el objetivo"
     local outcome = FormatSaveOutcome(saved, data.outcome)
+    local conditionApplied = false
     if not saved and (data.conditionId or data.onFailAura) then
         local applied, applyErr = ApplyConditionalHitEffect(data.conditionId, data.onFailAura, {
             duration = data.conditionDuration,
             turns = data.conditionTurns,
             silentFailure = true,
         })
+        conditionApplied = applied == true
         if not applied then
             local suffix = applyErr == "immune" and "inmune" or "no aplicado"
             outcome = FormatSaveOutcome(false, tostring(data.outcome or "afectado") .. " (" .. suffix .. ")")
@@ -501,18 +503,20 @@ local function ResolveWeaponManeuverAfterHitSave(data)
             dice = data.nextAttackExtraDamageDice, name = "Embestida", damageType = data.extraDamageType,
         }
     end
-    HarfordDnDRolls.Broadcast({
-        type = "info",
-        targetUnit = "target",
-        label = string.format("%s %s", targetName, esPrueba
-            and FormatCheckRollLabel(data.skill, saveTotal, d, dc, outcome, saveBonus)
-            or FormatSaveRollLabel(data.save, saveTotal, d, dc, outcome, saveBonus)),
-        total = "",
-        dice = "",
-        modifiers = "",
-        critical = "",
-        mode = ""
-    })
+    local label = string.format("%s %s", targetName, esPrueba
+        and FormatCheckRollLabel(data.skill, saveTotal, d, dc, outcome, saveBonus)
+        or FormatSaveRollLabel(data.save, saveTotal, d, dc, outcome, saveBonus))
+    if not data.silent then
+        HarfordDnDRolls.Broadcast({
+            type = "info", targetUnit = "target", label = label,
+            total = "", dice = "", modifiers = "", critical = "", mode = ""
+        })
+    end
+    return {
+        targetName = targetName, label = label, saved = saved,
+        total = saveTotal, die = d, bonus = saveBonus, skill = data.skill,
+        conditionApplied = conditionApplied,
+    }
 end
 
 local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTarget,
@@ -636,16 +640,18 @@ local function DoRollEx(label, baseBonus, profBonus, rollType, rollContext)
     local bonusTxt = HarfordDnDCalc.BonusConcat(baseBonus, profBonus, miscBonus)
     local diceText = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb)
 
-    HarfordDnDRolls.Broadcast({
-        type = "roll",
-        label = label,
-        total = total,
-        dice = diceText,
-        modifiers = bonusTxt,
-        critical = critTag,
-        mode = modeTag,
-        miscBonus = miscBonus,
-    })
+    if not (rollContext and rollContext.silent) then
+        HarfordDnDRolls.Broadcast({
+            type = "roll",
+            label = label,
+            total = total,
+            dice = diceText,
+            modifiers = bonusTxt,
+            critical = critTag,
+            mode = modeTag,
+            miscBonus = miscBonus,
+        })
+    end
     ConsumeMode()
     result.total = total
     result.die = chosen
@@ -678,7 +684,12 @@ local function RollContest(contest, opts)
     local api = _G.DND5E_ARC_API
     if not (api and api.RollSkillEx) then return false, "sin tiradas" end
 
-    local propia = api.RollSkillEx(contest.skill)
+    local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
+        or HarfordClassColors.UnitFullName("target") or "el objetivo"
+    local targetIsPlayer = UnitIsPlayer and UnitIsPlayer("target")
+    local propia = api.RollSkillEx(contest.skill,
+        targetIsPlayer and ("[" .. tostring(opts and opts.actionName or "Contienda") .. "] " .. targetName) or nil,
+        targetIsPlayer and nil or { silent = true })
     local total = propia and tonumber(propia.total)
     if not total then return false, "no se pudo tirar" end
 
@@ -695,7 +706,7 @@ local function RollContest(contest, opts)
         estado = opts.conditionId or nil
     end
 
-    ResolveWeaponManeuverAfterHitSave({
+    local defense = ResolveWeaponManeuverAfterHitSave({
         dc = total,
         skill = contra,
         -- Solo se usa si el defensor no reconoce ninguna de las habilidades pedidas.
@@ -703,7 +714,32 @@ local function RollContest(contest, opts)
         conditionId = estado,
         conditionDuration = contest.duration or "manual",
         outcome = contest.outcome or "resiste",
+        silent = not targetIsPlayer,
     })
+    -- Contra NPC conocemos ambas tiradas en este cliente: se publica UNA linea de contienda.
+    -- Contra un jugador el defensor debe tirar en su propio cliente, asi que mantiene su linea.
+    if defense then
+        local ownDice = tostring(propia.dice or "-") .. tostring(propia.modifiers or "")
+        local defenseBonus = tonumber(defense.bonus) or 0
+        local defenseDice = tostring(defense.die or 0)
+            .. (defenseBonus >= 0 and "+" or "") .. tostring(defenseBonus)
+        local result = "Sin efecto"
+        if not defense.saved and defense.conditionApplied and estado then
+            local condition = HarfordDnDConditions and HarfordDnDConditions.GetDefinition
+                and HarfordDnDConditions.GetDefinition(estado)
+            result = (condition and condition.label) or tostring(estado)
+        end
+        local actionName = tostring(opts and opts.actionName or "Contienda")
+        if opts and opts.resultLabel and opts.resultLabel ~= "" then
+            actionName = actionName .. ": " .. tostring(opts.resultLabel)
+        end
+        HarfordDnDRolls.Broadcast({
+            type = "info",
+            label = string.format("[%s] %s (|cff66ccff%s %d (%s)|r vs |cff66ccff%s %d (%s)|r) %s",
+                actionName, targetName, tostring(contest.skill or "Prueba"), total, ownDice,
+                tostring(defense.skill or contra or "Prueba"), tonumber(defense.total) or 0, defenseDice, result),
+        })
+    end
     return true
 end
 

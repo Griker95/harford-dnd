@@ -79,7 +79,8 @@ print("Un solo selector para las tres, no tres copias")
 chk("selector generico", panel:find("local function Elegir(opciones, def, ejecutor, yaElegida)", 1, true) ~= nil, true)
 chk("una sola opcion no se pregunta",
     panel:find("if #opciones == 1 then ejecutor(def, opciones[1]); return true end", 1, true) ~= nil, true)
-chk("lo usa la contienda", panel:find("if Elegir(contest.options, def, Contienda, elegida) then return true end", 1, true) ~= nil, true)
+chk("lo usa la contienda antes de ejecutarla",
+    panel:find("if Elegir(def.contest.options, def, ConEleccion, nil) then return true end", 1, true) ~= nil, true)
 chk("lo usa ayudar", panel:find("if Elegir(def.helpOther.options, def, Ayudar, elegida) then return true end", 1, true) ~= nil, true)
 chk("lo usa lanzar arma", panel:find("if Elegir(opciones, def, LanzarArma, nil) then return true end", 1, true) ~= nil, true)
 

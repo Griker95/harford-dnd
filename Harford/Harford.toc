@@ -100,6 +100,7 @@ DnD\Engine\HarfordDnDManeuvers.lua
 DnD\Engine\HarfordDnDCalc.lua
 DnD\Engine\HarfordDnDNet.lua
 DnD\Engine\HarfordDnDCombat.lua
+DnD\Engine\HarfordDnDRange.lua
 DnD\Engine\HarfordDnDArea.lua
 DnD\Engine\HarfordDnDComm.lua
 DnD\Engine\HarfordDnDWeaponRolls.lua

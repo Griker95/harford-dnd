@@ -444,6 +444,45 @@ local function CastOptions()
     return options
 end
 
+local damageVariantDropdown
+
+-- La formula alternativa se declara ANTES de resolver el conjuro. El core conserva la eleccion
+-- dentro de `damageVariant`; la UI solo presenta el menu y no interpreta reglas de dano.
+local function ResolveCastWithDamageChoice(spell, options, anchor, onResult)
+    if not spell then return false end
+    local function Resolve(variant)
+        local resolvedOptions = {}
+        for key, value in pairs(options or {}) do resolvedOptions[key] = value end
+        if variant then resolvedOptions.damageVariant = variant.id end
+        local ok, err = API.ResolveCast(spell.id, resolvedOptions)
+        if onResult then onResult(ok, err) end
+        return ok, err
+    end
+
+    local variants = API.GetDamageVariants and API.GetDamageVariants(spell)
+    if not variants or #variants < 2 then return Resolve(nil) end
+
+    if not damageVariantDropdown then
+        damageVariantDropdown = CreateFrame("Frame", "HarfordCompendioDamageVariantDropdown", UIParent,
+            "UIDropDownMenuTemplate")
+    end
+    UIDropDownMenu_Initialize(damageVariantDropdown, function()
+        for _, variant in ipairs(variants) do
+            local choice = variant
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = choice.label
+            info.notCheckable = true
+            info.func = function()
+                CloseDropDownMenus()
+                Resolve(choice)
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end, "MENU")
+    ToggleDropDownMenu(1, nil, damageVariantDropdown, anchor or UIParent, 0, 0)
+    return true
+end
+
 local function ShowCastFrame(spell, requestedLevel)
     if not CastFrame then return end
     local baseLevel = math.max(0, tonumber(spell.level) or 0)
@@ -731,10 +770,9 @@ local function CreateDetailFrame()
 
         -- ResolveCast conserva la ruta unica de reglas: solo las areas reales abren el
         -- selector; los conjuros de objetivo unico o informativos se resuelven aqui.
-        local ok, err = API.ResolveCast(state.selectedSpell.id, {})
-        if not ok then
-            PrintMessage(tostring(err or "no se pudo lanzar el conjuro"))
-        end
+        ResolveCastWithDamageChoice(state.selectedSpell, {}, DetailFrame.launch, function(ok, err)
+            if not ok then PrintMessage(tostring(err or "no se pudo lanzar el conjuro")) end
+        end)
         RefreshDetailCastState()
     end)
 
@@ -838,13 +876,15 @@ local function CreateCastFrame()
     CastFrame.success:SetText("Confirmar Exito")
     CastFrame.success:SetScript("OnClick", function()
         if CastFrame.spell then
-            local resolver = API.ResolveCast or API.ConfirmCast
-            local ok, costOrErr = resolver(CastFrame.spell.id, CastOptions())
-            if not ok then
-                PrintMessage(tostring(costOrErr or "no se pudo lanzar"))
-                ShowCastFrame(CastFrame.spell)
-                return
-            end
+            ResolveCastWithDamageChoice(CastFrame.spell, CastOptions(), CastFrame.success, function(ok, err)
+                if not ok then
+                    PrintMessage(tostring(err or "no se pudo lanzar"))
+                    ShowCastFrame(CastFrame.spell)
+                    return
+                end
+                CastFrame:Hide()
+            end)
+            return
         end
         CastFrame:Hide()
     end)
@@ -1508,7 +1548,6 @@ init:SetScript("OnEvent", function()
         HarfordDebug.Log("HarfordCompendio cargado.")
     end
 end)
-
 
 
 

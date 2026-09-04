@@ -155,6 +155,7 @@ Calculo y reglas: tiradas, combate, condiciones, area y red.
 | `HarfordDnDCalc.lua` | 361 | Calculo puro de la ficha D&D 5e (modificadores, dados, bonos). |
 | `HarfordDnDNet.lua` | 146 | Capa de recursos/red de la ficha (export, request, adjust). |
 | `HarfordDnDCombat.lua` | 754 | Reglas de combate compartidas que no pertenecen a UI. |
+| `HarfordDnDRange.lua` | 188 | Consulta `.distance`, convierte yardas/metros y valida alcance de armas/conjuros antes de costes. |
 | `HarfordDnDArea.lua` | 1722 | Motor comun de ataques de area. |
 | `HarfordDnDComm.lua` | 358 | Despachador de `DND5EARC`: valida el remitente y enruta cada opcode a su handler. |
 | `HarfordDnDWeaponRolls.lua` | 659 | Tiradas grandes de la ficha: dano de arma, maniobras con salvacion posterior, la salvacion que pide otro cliente y el nucleo de tirada con ventaja/desventaja. |
@@ -323,6 +324,7 @@ siempre el remitente** (propio, unidad visible o miembro de grupo/raid).
 | Un conjuro | `Compendium/HarfordCompendioData.lua` |
 | Como se calcula una tirada o un bonus | `DnD/Engine/HarfordDnDCalc.lua` - `HarfordDnDFeatureEffects.lua` |
 | La CA, el impacto o la mitigacion | `DnD/Engine/HarfordDnDCombat.lua` - `DnD/Data/HarfordDamageMitigation.lua` |
+| La distancia o el alcance de un ataque/conjuro | `DnD/Engine/HarfordDnDRange.lua` - `DnD/Data/HarfordDnDWeapons.lua` |
 | La ventana de la ficha | `DnD/UI/HarfordDnD.lua` |
 | La creacion o la subida de nivel | `Character/HarfordCharacterCreation.lua` - `HarfordCharacterAdvancement.lua` |
 | Los overlays sobre unitframes | `Frames/HarfordUnitFrames.lua` |

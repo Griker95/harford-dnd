@@ -90,6 +90,60 @@ function HarfordDnDWeapons.GetVersatileDice(def)
     return nil
 end
 
+-- Alcance utilizable del ataque. Los datos base guardan las armas del manual en
+-- pies dentro de `Municion (normal/largo)` o `Arrojadiza (normal/largo)`.
+-- `attackMode="thrown"` queda listo para la futura eleccion explicita de arrojar;
+-- nunca se selecciona solo por tener al objetivo lejos.
+function HarfordDnDWeapons.GetAttackRange(def, attackMode)
+    if not def then return nil end
+    local feetToMeters = 0.3048
+    local function hasProp(fragment)
+        for _, prop in ipairs(def.props or {}) do
+            if tostring(prop):find(fragment, 1, true) then return prop end
+        end
+        return nil
+    end
+    local function parseRange(prop)
+        if not prop then return nil end
+        local normal, long = tostring(prop):match("%((%d+)%s*/%s*(%d+)%)")
+        normal, long = tonumber(normal), tonumber(long)
+        if not normal then return nil end
+        return { normalMeters = normal * feetToMeters, longMeters = (long or normal) * feetToMeters,
+            normalFeet = normal, longFeet = long or normal }
+    end
+
+    if attackMode == "thrown" then
+        local range = parseRange(hasProp("Arrojadiza"))
+        if range then range.kind = "thrown" end
+        return range
+    end
+    if tostring(def.mode) == "Ranged" then
+        local range = parseRange(hasProp("Munición")) or parseRange(hasProp("Arrojadiza"))
+        if range then range.kind = "ranged"; return range end
+        local feet = tonumber(def.rangeFeet)
+        if feet and feet > 0 then
+            return { kind = "ranged", normalMeters = feet * feetToMeters, longMeters = feet * feetToMeters,
+                normalFeet = feet, longFeet = feet }
+        end
+    end
+    local feet = tonumber(def.rangeFeet)
+    if feet and feet > 0 then
+        return { kind = "melee", normalMeters = feet * feetToMeters, longMeters = feet * feetToMeters,
+            normalFeet = feet, longFeet = feet }
+    end
+    if not hasProp("Alcance") then
+        -- En Epsilon el hitbox ya expresa el contacto real entre ambos modelos.
+        -- Un arma melé corriente no alcanza a distancia: debe devolver exactamente 0.
+        return { kind = "melee", normalMeters = 0, longMeters = 0, requiresContact = true }
+    end
+    return {
+        kind = "melee",
+        -- `Alcance` es la excepcion declarada: permite golpear sin contacto.
+        normalMeters = 10 * feetToMeters,
+        longMeters = 10 * feetToMeters,
+    }
+end
+
 -- Familia de animacion de ataque (presets de HarfordActionSequence) segun el arma.
 -- Devuelve: "unarmed" | "one_hand" | "two_hand" | "polearm" | "shield", o nil para
 -- armas a distancia/conjuro (sin preset cuerpo a cuerpo: mantienen el emote actual).

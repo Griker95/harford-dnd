@@ -56,6 +56,36 @@ API.SOUNDS = API.SOUNDS or {
     reputation_detail_closed = { id = 840, kind = "soundkit" },
 }
 
+-- Voces nativas de "fuera de alcance", catalogadas por raza inglesa de UnitRace y
+-- sexo de UnitSex (2 masculino, 3 femenino). Son SoundKitID, no FileDataID. Se
+-- omite cualquier raza cuyo kit no exista en este cliente: nunca se suplanta la
+-- voz de un personaje con la de otra raza.
+local OUT_OF_RANGE_SOUNDKITS = {
+    Human = { [2] = 1913, [3] = 2037 },
+    Dwarf = { [2] = 1633, [3] = 1691 },
+    Gnome = { [2] = 1748, [3] = 1803 },
+    NightElf = { [2] = 2156, [3] = 2267 },
+    Orc = { [2] = 2324, [3] = 2379 },
+    -- UnitRace devuelve "Undead", no "Scourge". Mantener ambos nombres evita
+    -- perder la voz si algun cliente personalizado usa el alias antiguo.
+    Undead = { [2] = 2101, [3] = 2212 },
+    Scourge = { [2] = 2101, [3] = 2212 },
+    Troll = { [2] = 1858, [3] = 1968 },
+    Tauren = { [2] = 2472, [3] = 2473 },
+    Draenei = { [2] = 9525, [3] = 9526 },
+    Worgen = { [2] = 19333, [3] = 19419 },
+    Goblin = { [2] = 19126, [3] = 19235 },
+    Pandaren = { [2] = 28863, [3] = 29916 },
+    VoidElf = { [2] = 95652, [3] = 95824 },
+    Nightborne = { [2] = 96370, [3] = 96302 },
+    LightforgedDraenei = { [2] = 96234, [3] = 96166 },
+    HighmountainTauren = { [2] = 95947, [3] = 95526 },
+    DarkIronDwarf = { [2] = 101949, [3] = 101875 },
+    MagharOrc = { [2] = 110386, [3] = 110311 },
+    ZandalariTroll = { [2] = 127305, [3] = 126927 },
+    KulTiran = { [2] = 127118, [3] = 127024 },
+}
+
 local function PlayEntry(entry, channel)
     if type(entry) == "number" then entry = { id = entry, kind = "file" } end
     if type(entry) ~= "table" then return false end
@@ -91,6 +121,15 @@ function API.Play(event, channel)
     local entry = API.SOUNDS[event]
     local played = PlayEntry(entry, channel)
     return played == true
+end
+
+function API.PlayOutOfRange(channel)
+    local _, race = UnitRace and UnitRace("player")
+    local sex = UnitSex and UnitSex("player")
+    local soundKit = OUT_OF_RANGE_SOUNDKITS[tostring(race or "")]
+    soundKit = soundKit and soundKit[tonumber(sex)]
+    if not soundKit then return false end
+    return PlayEntry({ id = soundKit, kind = "soundkit" }, channel)
 end
 
 -- Diagnostico explicito: permite averiguar si un numero debe catalogarse como

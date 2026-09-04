@@ -186,6 +186,8 @@ do
     -- Empujar deja elegir entre derribar y apartar, y se pregunta ANTES de tirar porque es cuando
     -- lo decide el manual: se declara la intencion y despues se ve si sale. Apartar no deja estado
     -- -- mueve, y el movimiento se lleva en mesa --, asi que su opcion trae `conditionId = false`.
+    local Ejecutar
+
     local function Contienda(def, elegida)
         local contest = def.contest
         local rolls = _G.HarfordDnDWeaponRolls
@@ -193,15 +195,15 @@ do
             HarfordChat.Print("El motor de tiradas enfrentadas no esta disponible.")
             return false
         end
-        if Elegir(contest.options, def, Contienda, elegida) then return true end
         local ok, err = rolls.RollContest(contest,
-            elegida and { conditionId = elegida.conditionId } or nil)
+            elegida and { conditionId = elegida.conditionId, actionName = def.name, resultLabel = elegida.label }
+                or { actionName = def.name })
         if not ok then HarfordChat.Print(tostring(def.name) .. ": " .. tostring(err)) end
         return ok
     end
 
-    local function Ejecutar(def, coste)
-        -- Posturas TOGGLE (Trabado en melee): con el estado puesto, volver a pulsar lo retira
+    Ejecutar = function(def, coste)
+        -- Posturas TOGGLE (Flanqueado): con el estado puesto, volver a pulsar lo retira
         -- sin anunciar ni cobrar nada. Va ANTES del anuncio por eso mismo.
         if def.toggleSelf and type(def.selfCondition) == "table" and HarfordDnDConditions
             and HarfordDnDConditions.Has and HarfordDnDConditions.Has("player", def.selfCondition.id) then
@@ -212,6 +214,24 @@ do
             if RefreshGameUI then RefreshGameUI() end
             if RefreshBook then RefreshBook() end
             return true
+        end
+        -- Empujar exige escoger derribar o apartar. La eleccion se completa ANTES
+        -- de cobrar o anunciar: hasta entonces la accion todavia no ha ocurrido.
+        if type(def.contest) == "table" and type(def.contest.options) == "table"
+            and not coste.contestChoice then
+            local function ConEleccion(definicion, elegida)
+                local diferido = {}
+                for key, value in pairs(coste) do diferido[key] = value end
+                diferido.contestChoice = elegida
+                Ejecutar(definicion, diferido)
+            end
+            if Elegir(def.contest.options, def, ConEleccion, nil) then return true end
+            -- Sin menu disponible no se bloquea la accion; se conserva el primer
+            -- resultado declarado, como en los otros selectores del Libro.
+            local diferido = {}
+            for key, value in pairs(coste) do diferido[key] = value end
+            diferido.contestChoice = def.contest.options[1]
+            coste = diferido
         end
         -- El recurso lo pide el RASGO que abre el coste (el chi de Paso del Viento), no la accion.
         if coste.resourceKey and (tonumber(coste.resourceCost) or 0) > 0 then
@@ -239,8 +259,9 @@ do
         -- UNA linea por accion. Si la accion va a tirar, la tirada YA lleva su nombre delante
         -- ("Esconderse: Sigilo"), asi que anunciarla aparte son dos lineas para decir lo mismo.
         -- Se cobra igual --el coste no depende de cuantas lineas salgan-- pero sin difundir.
-        local vaATirar = type(def.skillCheck) == "table" and _G.DND5E_ARC_API
-            and _G.DND5E_ARC_API.RollSkillEx and type(def.selfCondition) ~= "table"
+        local vaATirar = (type(def.skillCheck) == "table" or type(def.contest) == "table")
+            and _G.DND5E_ARC_API and _G.DND5E_ARC_API.RollSkillEx
+            and type(def.selfCondition) ~= "table"
         -- Si no cabe el coste, la accion NO ocurre: ni tirada, ni estado, ni nada.
         if AnnounceAbility(anuncio, { silencioso = vaATirar }) == false then return false end
 
@@ -269,7 +290,7 @@ do
                 })
             end
         elseif type(def.contest) == "table" then
-            Contienda(def)
+            Contienda(def, coste.contestChoice)
         elseif type(def.helpOther) == "table" then
             Ayudar(def)
         elseif type(def.throwWeapon) == "table" then

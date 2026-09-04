@@ -39,13 +39,13 @@ chk("con el bonus pasivo del perfil que toque",
 -- una habilidad o cabecera mas, hay que ampliar el pool o las ultimas filas se caen en silencio.
 chk("el pool sigue en 26", sheet:find("for i = 1, 26 do", 1, true) ~= nil, true)
 
-print("El DM tambien la ve")
+print("El DM conserva el dato del NPC")
 local trp3 = io.open("Harford/TRP3/HarfordTRP3.lua"):read("*a")
 chk("el parser NPC la saca del bloque de Sentidos",
     trp3:find("percepcion pasiva%s*", 1, true) ~= nil
     and trp3:find("result.passivePerception = tonumber(valor)", 1, true) ~= nil, true)
 local menu = io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
-chk("y el menu DM la pinta para NPC",
-    menu:find("block.passivePerception", 1, true) ~= nil, true)
+chk("pero el menu DM no la duplica",
+    menu:find("block.passivePerception", 1, true) == nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

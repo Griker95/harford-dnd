@@ -124,14 +124,14 @@ API.DEFS = {
         description = "Ventaja en los chequeos de concentracion mientras permanezcas dentro del circulo.",
         effects = { { kind = "rollMode", rolls = { save = true }, ability = "Constitucion", mode = "adv" } },
     },
-    -- "Trabado en melee": postura DECLARADA por el propio jugador (el cliente no puede medir
+    -- "Flanqueado": postura DECLARADA por el propio jugador (el cliente no puede medir
     -- 1,5 m: UnitPosition solo habla del jugador). Mientras esta puesta, los ataques a
     -- distancia -- de arma y de conjuro -- se hacen con desventaja (regla 5e de disparar con
     -- el enemigo encima). `meleeProximity` marca el efecto para que las dotes que perdonan esa
     -- desventaja (Experto en ballestas/armas de fuego, Mago de batalla) puedan saltarselo.
     trabado = {
-        label = "Trabado en melee", tracking = "state",
-        description = "Tienes una criatura hostil a 1,5 metros: tus ataques a distancia se hacen con desventaja.",
+        label = "Flanqueado", tracking = "state",
+        description = "Una criatura hostil te flanquea a 1,5 metros: tus ataques a distancia se hacen con desventaja.",
         effects = { { kind = "rollMode", rolls = { attack = true }, mode = "dis", range = "ranged", meleeProximity = true } },
     },
     -- Ayudar. UN solo estado sin declarar el uso (decision de mesa 2026-09): la ventaja va a la
@@ -1405,6 +1405,10 @@ end
 function API.ResolveRollMode(baseMode, rollType, context)
     context = context or {}
     local flags = { adv = baseMode == "adv", dis = baseMode == "dis" }
+    -- El rango largo es una fuente real de desventaja, no un cambio temporal del
+    -- modo global. Entra antes de combinar estados para que ventaja y desventaja
+    -- se anulen correctamente segun las reglas.
+    if context.rangeDisadvantage then flags.dis = true end
     local actor = context.actorUnit or context.actorGuid or "player"
     local actorEffects = context.actorConditionIds and EffectsForIds(context.actorConditionIds) or EffectsFor(actor)
     for _, effect in ipairs(actorEffects) do
@@ -1814,21 +1818,25 @@ do
     end
 
     -- Fuera de TU turno no tienes NADA: ni accion, ni adicional, ni reaccion, ni movimiento.
-    --
-    -- Es una divergencia DELIBERADA del manual, decidida en mesa: en 5e una reaccion se usa por
-    -- definicion en el turno de otro --Oportunidad, Escudo, Contrahechizo, Esquiva Sobrenatural--
-    -- asi que incluirla aqui las deja inservibles. Se hace igual porque lo que se quiere en mesa es
-    -- que cuando le toca a los enemigos los jugadores esten QUIETOS. Para devolver la reaccion al
-    -- comportamiento del manual basta sacar `reaction` de esta tabla; no hay nada mas que tocar.
-    --
-    -- No se "gastan" al pasar el turno: se consideran NO DISPONIBLES mientras no te toque, que es
-    -- lo mismo de cara al jugador y ademas no ensucia el contador -- si se gastaran de verdad,
-    -- devolverlas seria imposible de distinguir de un gasto real.
+    -- Preparar es la excepcion: permite disparar UNA de esas acciones usando la reaccion que se
+    -- comprometio al prepararla. No se "gastan" al pasar el turno: se consideran no disponibles
+    -- mientras no te toque, para no ensuciar el contador ni devolver recursos gastados de verdad.
     local FUERA_DE_TURNO = { action = true, bonus = true, reaction = true }
 
     function Turn.IsMyTurn()
         if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.IsMyTurn) then return true end
         return HarfordTurnOrderAPI.IsMyTurn()
+    end
+
+    function Turn.IsPreparedTrigger(kind)
+        kind = tostring(kind or "")
+        return Turn.IsActive() and not Turn.IsMyTurn() and ETIQUETA[kind]
+            and API.Has and API.Has("player", "preparado") == true
+    end
+
+    local function ConsumePreparedState()
+        if API.RemoveOwned then API.RemoveOwned("preparado") end
+        if API.PublishOwnedCondition then API.PublishOwnedCondition("preparado", "remove") end
     end
 
     -- Presupuesto de cada tipo. Uno de cada por turno; los rasgos que conceden acciones extra
@@ -1853,10 +1861,8 @@ do
     function Turn.GetRemaining(kind)
         -- Lo que no es tuyo ahora mismo esta a cero, aunque no lo hayas gastado.
         if Turn.IsActive() and FUERA_DE_TURNO[tostring(kind or "")] and not Turn.IsMyTurn() then
-            -- La UNICA rendija del turno ajeno: una accion PREPARADA. Preparar existe exactamente
-            -- para esto -- pagaste tu accion por adelantado y comprometiste la reaccion --, asi
-            -- que con el estado `preparado` puesto la reaccion vuelve a estar disponible. Solo la
-            -- reaccion, y solo mientras dure el estado: dispararla lo retira y el cerrojo vuelve.
+            -- La accion preparada se COBRA como reaccion. La accion/adicional sigue figurando a
+            -- cero en la banda: ya se pago cuando se preparo y no se concede una nueva.
             if tostring(kind) == "reaction" and API.Has and API.Has("player", "preparado") then
                 return math.max(0, Turn.GetBudget(kind) - Turn.GetSpent(kind))
             end
@@ -1871,12 +1877,17 @@ do
         kind = tostring(kind or "")
         if not ETIQUETA[kind] then return true, 0 end
         if not Turn.IsActive() then return true, Turn.GetBudget(kind) end
+        -- Preparar adelanta el coste de accion. Al activarse fuera de turno, sea una accion,
+        -- adicional o reaccion declarada, todo se paga con la unica reaccion comprometida.
+        local disparandoPreparada = Turn.IsPreparedTrigger(kind)
+        if disparandoPreparada then kind = "reaction" end
         amount = math.max(1, math.floor(tonumber(amount) or 1))
         -- Si NO cabe, no se apunta nada: antes se sumaba igual y el contador se iba a negativo,
         -- asi que el "ya lo habias gastado" era un aviso y nada mas. Devolver false tiene que
         -- significar que la accion NO ocurre.
         if Turn.GetRemaining(kind) < amount then return false, 0 end
         ECONOMIA.spent[kind] = Turn.GetSpent(kind) + amount
+        if disparandoPreparada then ConsumePreparedState() end
         GuardarEconomia()
         Notify()
         return true, Turn.GetRemaining(kind)
@@ -1938,6 +1949,15 @@ do
     -- otra da un hueco mas en el turno.
     function Turn.SpendWeaponAttack(esOffhand)
         if not Turn.IsActive() then return nil end
+        -- Un ataque que dispara Preparar es la accion ya pagada, no un ataque nuevo dentro de
+        -- la economia de este turno. Cobra reaccion y no altera el contador de Ataque Extra.
+        if Turn.IsPreparedTrigger(esOffhand and "bonus" or "action") then
+            if not Turn.Spend("reaction", 1) then
+                Print("Ya habias gastado tu reaccion este turno.")
+                return false
+            end
+            return "reaction"
+        end
         if esOffhand then
             if not Turn.Spend("bonus", 1) then
                 Print("Ya habias gastado tu accion adicional: el ataque con la mano secundaria la cuesta.")

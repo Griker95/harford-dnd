@@ -186,25 +186,31 @@ chk("y vuelve entera", T.GetRemaining("action"), 1)
 chk("  y la reaccion tambien", T.GetRemaining("reaction"), 1)
 
 -- La UNICA rendija del turno ajeno: PREPARAR. Pagaste la accion por adelantado y comprometiste la
--- reaccion, asi que con el estado `preparado` puesto la reaccion vuelve a estar disponible en el
--- turno de otro -- solo ella, y solo mientras dure el estado. Sin esta rendija, el bloqueo total
--- dejaba Preparar muerto: su segundo clic cobra reaccion y siempre daba cero.
+-- reaccion, asi que con el estado `preparado` puesto puede dispararse una accion, adicional o
+-- reaccion declarada. Todas consumen esa unica reaccion y retiran Preparar.
 print("Preparar es la unica rendija del turno ajeno")
 miTurno = false
 local preparado = false
 API.Has = function(unit, id) return unit == "player" and id == "preparado" and preparado end
+API.RemoveOwned = function(id) if id == "preparado" then preparado = false end end
 chk("sin preparar, la reaccion sigue a cero", T.GetRemaining("reaction"), 0)
 preparado = true
 chk("PREPARADO: la reaccion vuelve", T.GetRemaining("reaction"), 1)
-chk("  pero la accion no (solo la reaccion)", T.GetRemaining("action"), 0)
+chk("  la accion ya pagada sigue a cero", T.GetRemaining("action"), 0)
 chk("  ni la adicional", T.GetRemaining("bonus"), 0)
--- Y si ya la habias gastado este turno, preparar no te da otra.
-T.Spend("reaction")
+chk("ataque preparado cobra reaccion", T.SpendWeaponAttack(false), "reaction")
 chk("  y gastada, gastada esta", T.GetRemaining("reaction"), 0)
+chk("  retira Preparar", preparado, false)
+T.Reset()
+preparado = true
+chk("adicional preparada cobra reaccion", T.SpendForFeature({ cast = "accion_adicional" }), true)
+chk("  no gasta la adicional", T.GetSpent("bonus"), 0)
+chk("  vuelve a retirar Preparar", preparado, false)
 T.Reset()
 preparado = false
 miTurno = true
 API.Has = nil
+API.RemoveOwned = nil
 HarfordTurnOrderAPI.IsMyTurn = nil
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

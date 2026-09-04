@@ -828,6 +828,14 @@ local function ApplyCombatEnd()
     return true
 end
 
+-- Salida de emergencia SOLO local. No emite TEND ni STATE: un jugador puede limpiar una UI que
+-- se quedo atascada sin terminar el combate que el DM sigue dirigiendo para el resto de la mesa.
+function HarfordTurnOrderAPI.StopLocalCombat()
+    if not HarfordTurnOrderAPI.HasActiveCombat() then return false end
+    ApplyCombatEnd()
+    return true
+end
+
 -- Cuando se vio la ultima foto. Lo mira el relevo entre companeros para no contestar si el DM ya
 -- lo hizo.
 -- Cuando llego la ultima foto por el canal. Era un GLOBAL accidental (sin `local`): funcionaba,
@@ -3751,6 +3759,25 @@ function HarfordTurnOrderAPI.IsMyTurn()
     if type(store) ~= "table" then return false end
     local entrada = store.entries and store.entries[store.activeIndex or 0]
     return entrada ~= nil and EntryBelongsToMe(entrada)
+end
+
+-- Le toca a un NPC concreto? Los turnos por bando no activan la ficha individual: la criatura
+-- esta dentro de `miembros` del bloque activo. El DM que la posee necesita esta consulta para
+-- reiniciar y contar SU movimiento sin confundirlo con el turno de todos los NPC del combate.
+function HarfordTurnOrderAPI.IsNpcTurn(guid)
+    if not HarfordTurnOrderAPI.HasActiveCombat() then return false end
+    guid = tostring(guid or "")
+    if guid == "" then return false end
+    local store = HarfordTurnOrderStore
+    local entry = type(store) == "table" and store.entries and store.entries[store.activeIndex or 0]
+    if not entry then return false end
+    local kind = tostring(entry.kind or "")
+    if kind == "round" or kind == "players" or kind == "player" then return false end
+    if guid == tostring(entry.guid or entry.id or "") then return true end
+    for _, member in ipairs(entry.miembros or {}) do
+        if guid == tostring(member.guid or member.id or "") then return true end
+    end
+    return false
 end
 
 -- Cuantos combatientes hay montados, este el combate empezado o no. Lo que antes contestaba

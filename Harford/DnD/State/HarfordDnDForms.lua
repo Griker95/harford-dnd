@@ -389,8 +389,17 @@ function API.RevertIfDefeated(currentHealth)
     return false
 end
 
+local function IconPath(icon)
+    icon = tostring(icon or "")
+    if icon == "" then return nil end
+    if icon:find("^Interface\\", 1, false) then return icon end
+    return "Interface\\Icons\\" .. icon
+end
+
 local function FormIcon(form)
-    if form and form.icon and form.icon ~= "" then return form.icon end
+    -- Las formas declaradas por TRP3 ya traen ruta completa; las canonicas
+    -- guardan solo el nombre de textura. El flyout debe aceptar ambas formas.
+    if form and form.icon and form.icon ~= "" then return IconPath(form.icon) end
     local id = tostring(form and form.id or "")
     if id:find("gato", 1, true) then return "Interface\\Icons\\Ability_Druid_CatForm" end
     if id:find("oso", 1, true) then return "Interface\\Icons\\Ability_Druid_Bash" end
@@ -421,7 +430,7 @@ local function FormDetails(form)
 end
 
 local function ActionIcon(action, form)
-    if action and action.icon and action.icon ~= "" then return action.icon end
+    if action and action.icon and action.icon ~= "" then return IconPath(action.icon) end
     return FormIcon(form)
 end
 

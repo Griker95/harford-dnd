@@ -18,8 +18,12 @@ local panel = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
 
 print("La dificultad la pone el atacante, no una CD fija")
 chk("hay motor", wr:find("local function RollContest", 1, true) ~= nil, true)
-chk("el atacante tira primero", wr:find("local propia = api.RollSkillEx(contest.skill)", 1, true) ~= nil, true)
+chk("el atacante tira primero", wr:find("local propia = api.RollSkillEx(contest.skill,", 1, true) ~= nil, true)
 chk("y su total ES la dificultad", wr:find("dc = total,", 1, true) ~= nil, true)
+chk("NPC: la tirada inicial se silencia para publicar la contienda unida",
+    wr:find("{ silent = true }", 1, true) ~= nil, true)
+chk("NPC: la contienda se publica en una unica linea",
+    wr:find("local defense = ResolveWeaponManeuverAfterHitSave({", 1, true) ~= nil, true)
 
 -- Reutiliza la ruta de salvacion-tras-impacto en vez de escribir otra: esa ya distingue jugador de
 -- NPC, le pide la tirada al cliente defensor y aplica el estado al que pierde.
@@ -105,8 +109,8 @@ chk("ambas se defienden con dos habilidades",
 print("Empujar deja elegir, y se pregunta antes de tirar")
 chk("tiene opciones", acc:find("options = {", 1, true) ~= nil, true)
 chk("apartar no deja estado", acc:find("conditionId = false", 1, true) ~= nil, true)
-chk("se pregunta antes de tirar",
-    panel:find("if Elegir(contest.options, def, Contienda, elegida) then return true end", 1, true) ~= nil, true)
+chk("se pregunta antes de tirar, anunciar o gastar",
+    panel:find("if Elegir(def.contest.options, def, ConEleccion, nil) then return true end", 1, true) ~= nil, true)
 -- `cond and X or Y` devuelve Y cuando X es FALSE, que es justo lo que vale "apartar". Con ese
 -- idioma, elegir apartar derribaba igual. Se resuelve con un `if`, y la prueba lo fija ejecutando
 -- la logica de verdad en vez de mirar el texto.

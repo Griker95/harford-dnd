@@ -32,7 +32,7 @@ FALLAN = {
     "inv_helm_armor_explorer_d_01", "ivern_friendoftheforest", "liming_talrashaselements",
     "malzahar_voidshift", "medivh_ravenform", "tyrande_huntersmark",
     "xinzhao_determination", "eps_bg3_levitate", "eps_lol_zyra_graspingroot",
-    "poster_darkmoon1", "eps_bg3_aid", "secret",
+    "poster_darkmoon1", "eps_bg3_aid",
 }
 
 # id, nombre, donde vive, icono que falla, propuesta, alternativas
@@ -64,8 +64,6 @@ ENTRADAS = [
      "eps_wc3_entanglingroots", ["inv_misc_root_01", "w3reforgedentanglingroots"]),
     ("feriante_luna_negra", "Feriante de la Luna Negra", "trasfondo", "poster_darkmoon1",
      "inv_misc_ticket_tarot_madness", ["inv_darkmoon_vengeance", "inv_misc_ticket_tarot_furies"]),
-    ("guardia_ciudad_detective", "Detective", "variante de trasfondo", "Secret",
-     "spell_shadow_detectinvisibility", ["eps_bg3_detectthoughts", "eps_bg3_detectevilandgood"]),
 ]
 
 ESTILO = """

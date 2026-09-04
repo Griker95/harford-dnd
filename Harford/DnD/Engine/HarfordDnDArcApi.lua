@@ -81,12 +81,15 @@ do
     -- Prueba de habilidad (con su competencia). skillNameOrId: "Sigilo" o su id.
     -- `etiqueta` deja que quien tira ponga su propio nombre delante ("Esconderse: Sigilo"). Sirve
     -- para que una accion no ocupe dos lineas de chat: el anuncio y la tirada son la misma cosa.
-    _G.DND5E_ARC_API.RollSkillEx = function(skillNameOrId, etiqueta)
+    _G.DND5E_ARC_API.RollSkillEx = function(skillNameOrId, etiqueta, opts)
         local s = FindSkill(skillNameOrId)
         if not s then return nil end
         local base, prof = HarfordDnDCalc.GetSkillRollBonuses(s)
         local nombre = (etiqueta and etiqueta ~= "") and (etiqueta .. ": " .. s.name) or s.name
-        local result = WeaponRolls.DoRollEx(nombre, base, prof, "ability", { actorUnit = "player", ability = s.ability, skill = s.id })
+        local result = WeaponRolls.DoRollEx(nombre, base, prof, "ability", {
+            actorUnit = "player", ability = s.ability, skill = s.id,
+            silent = type(opts) == "table" and opts.silent == true,
+        })
         result.kind = "skill"
         return SetLastRoll(result)
     end

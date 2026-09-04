@@ -92,7 +92,10 @@ function API.Toggle(snapshot, conditionId, extra)
     local ok, err
     if API.Has(snapshot, conditionId) then ok, err = API.Remove(snapshot, conditionId)
     else ok, err = API.Apply(snapshot, conditionId, extra) end
-    if not ok and err then Print(err) end
+    -- El menu de condiciones puede seguir visible mientras cambia el estado de autoridad.
+    -- El rechazo de permisos ya impide la accion; repetirlo en el chat al pulsar una condicion
+    -- no aporta informacion y ensucia la conversacion de la partida.
+    if not ok and err and err ~= "Requiere HarfordAdmin y .ph dm activo" then Print(err) end
     return ok, err
 end
 

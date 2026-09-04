@@ -205,6 +205,52 @@ API.RegisterCommand("deps", function()
     Print("ARC.CMD/ARC.COMM: " .. (status.arc and "OK" or "NO"))
 end, "estado de EpsilonLib/ARC")
 
+-- Muestra la respuesta literal y el valor normalizado de `.distance`. Es una
+-- sonda de compatibilidad de Epsilon, no una regla de juego: el motor central
+-- es el unico que la consulta al atacar o lanzar un conjuro.
+API.RegisterCommand("rangeprobe", function()
+    if not (HarfordDnDRange and HarfordDnDRange.RequestTargetDistance) then
+        Print("HarfordDnDRange no disponible")
+        return
+    end
+    local def = HarfordDnDStore and HarfordDnDStore.GetWeaponDef
+        and HarfordDnDStore.GetWeaponDef(HarfordDnDStore.GetWeaponKey and HarfordDnDStore.GetWeaponKey())
+    local range = def and HarfordDnDWeapons and HarfordDnDWeapons.GetAttackRange
+        and HarfordDnDWeapons.GetAttackRange(def)
+    if def then
+        if range then
+            Print("Arma: " .. tostring(def.key) .. " (" .. tostring(range.kind) .. ")"
+                .. " normal=" .. HarfordDnDRange.FormatMeters(range.normalMeters)
+                .. " maximo=" .. HarfordDnDRange.FormatMeters(range.longMeters))
+        else
+            Print("Arma: " .. tostring(def.key) .. " (sin alcance calculable)")
+        end
+    end
+    local guid = UnitGUID and UnitGUID("target") or nil
+    if not guid then Print("Selecciona un objetivo antes de ejecutar rangeprobe."); return end
+    Print("Consultando .distance...")
+    HarfordDnDRange.RequestTargetDistance(function(result)
+        for i, line in ipairs(result.messages or {}) do
+            Print("distance[" .. tostring(i) .. "]: " .. tostring(line))
+        end
+        if result.ok then
+            Print("Hitbox 3D: " .. HarfordDnDRange.FormatMeters(result.hitboxMeters)
+                .. " | Exacta 3D: " .. HarfordDnDRange.FormatMeters(result.exactMeters)
+                .. " [" .. tostring(result.source or "?") .. "]"
+                .. " (respuesta: " .. tostring(result.raw or "?") .. ")")
+            if range then
+                local measured = range.requiresContact and result.hitboxMeters
+                    or result.exactMeters or result.hitboxMeters
+                local verdict = measured and HarfordDnDRange.CheckDistance(measured, range)
+                Print("Decision de ataque: " .. (verdict.ok and "PERMITIDO" or "BLOQUEADO")
+                    .. (verdict.disadvantage and " (desventaja por alcance largo)" or ""))
+            end
+        else
+            Print("No leida: " .. tostring(result.message or "error desconocido"))
+        end
+    end, guid)
+end, "sonda .distance contra el target seleccionado")
+
 -- Atajos de prueba para la progresion propia. Permanecen en HarfordDebug: no son
 -- comandos de juego ni una alternativa al flujo normal de recompensas/subida.
 -- Estado de las barras Harford de XP/reputacion: cuanto ha subido la barra de accion y con
@@ -431,6 +477,20 @@ API.RegisterCommand("dineroeventos", function(args)
         end
     end)
 end, "sonda temporal: dineroeventos [segundos]; ejecuta .modify money mientras esta activa")
+
+API.RegisterCommand("npcmovimiento", function()
+    local ui = HarfordDnDAttackUI
+    local state = ui and ui.GetNpcMovementDebugState and ui.GetNpcMovementDebugState()
+    if type(state) ~= "table" then
+        Print("Rastreador de movimiento NPC no disponible")
+        return
+    end
+    Print(string.format(
+        "NPC mov: pet=%s guid=%s turnoNPC=%s siguiendo=%s velocidad=%.2f yd/s gastado=%.2f/%.2f m",
+        tostring(state.pet), tostring(state.petGuid or "-"), tostring(state.npcTurn),
+        tostring(state.tracking), tonumber(state.speedYards) or 0,
+        tonumber(state.spentMeters) or 0, tonumber(state.maxMeters) or 0))
+end, "muestra el estado real del movimiento de un NPC poseido")
 
 API.RegisterCommand("nivel", function(args)
     local requested, classIndex = tostring(args or ""):match("^%s*(%d+)%s*(%d*)%s*$")

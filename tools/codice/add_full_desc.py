@@ -1299,7 +1299,10 @@ if _cat_v:
 _nvi = 0
 for b in kb["backgrounds"]:
     for v in b.get("variants") or []:
-        if not v.get("icon") and ICONO_VARIANTE.get(v.get("id")):
+        # El catalogo del addon es la autoridad para las variantes conocidas. La web puede
+        # conservar un nombre heredado que no corresponde a una textura valida (Detective
+        # llegaba como "Secret"), asi que no basta con rellenar iconos vacios.
+        if ICONO_VARIANTE.get(v.get("id")):
             v["icon"] = ICONO_VARIANTE[v["id"]]
             _nvi += 1
         # y su rasgo propio, que tambien es una entrada del catalogo

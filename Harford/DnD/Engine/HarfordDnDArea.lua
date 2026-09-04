@@ -72,7 +72,10 @@ local function CapturePlayerPosition()
         x = tonumber(x),
         y = tonumber(y),
         z = tonumber(z) or 0,
-        contextId = tostring(contextId or ""),
+        -- El cuarto valor de GetPosition es el mapa y evita mezclar zonas con
+        -- coordenadas X/Y equivalentes.
+        contextId = HarfordDnDRange and HarfordDnDRange.BuildPositionContext
+            and HarfordDnDRange.BuildPositionContext(contextId) or tostring(contextId or ""),
     }
 end
 
@@ -444,6 +447,7 @@ local function NormalizeDefinition(definition)
         resourceKey = tostring(area.resourceKey or area.resource or ""),
         resourceCost = math.max(0, math.floor(tonumber(area.resourceCost or area.cost) or 0)),
         attackRange = area.attackRange == "melee" and "melee" or "ranged",
+        rangeDisadvantage = area.rangeDisadvantage == true or definition.rangeDisadvantage == true,
         repeatTargets = area.repeatTargets == true or definition.repeatTargets == true,
         rollPerTarget = area.rollPerTarget == true or definition.rollPerTarget == true,
         rerollDamageDice = math.max(0, math.min(99,
@@ -1513,7 +1517,8 @@ local function MakeRequest(session, target, index)
             targetGuid = target.guid,
             targetConditionIds = target.conditionIds,
             attackRange = session.definition.attackRange or "ranged",
-            -- Dotes que perdonan la desventaja de "Trabado en melee": las genericas de
+            rangeDisadvantage = session.definition.rangeDisadvantage == true,
+            -- Dotes que perdonan la desventaja de "Flanqueado": las genericas de
             -- disparo y la de Mago de batalla (solo ataques de CONJURO, que es esta ruta).
             ignoreMeleeProximity = HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
                 and (HarfordDnDFeatureEffects.HasFlag("ignoreRangedMeleePenalty")

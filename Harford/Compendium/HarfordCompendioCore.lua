@@ -330,6 +330,60 @@ local function ParseDamageComponents(text)
     return #out > 0 and out or nil
 end
 
+local function CopyDamageComponents(components)
+    local out = {}
+    for _, component in ipairs(components or {}) do
+        out[#out + 1] = {
+            damageDice = component.damageDice,
+            damageBonus = component.damageBonus,
+            damageType = component.damageType,
+        }
+    end
+    return out
+end
+
+-- Algunas entradas describen dos formulas EXCLUYENTES, no dos componentes acumulativos:
+-- "1d8 relampago o 1d12 contra metal". El dato sigue siendo texto canonico del compendio;
+-- este parser solo expone elecciones cuando hay dos formulas de dados separadas por "o".
+function API.GetDamageVariants(spellOrId)
+    local spell = type(spellOrId) == "table" and spellOrId or API.GetSpellById(spellOrId)
+    local raw = tostring(spell and spell.damage or "")
+    if not raw:find("%s+[oO]%s+") then return nil end
+
+    local variants = {}
+    local inheritedType
+    for fragment in (raw .. " o "):gmatch("(.-)%s+[oO]%s+") do
+        local label = fragment:gsub("^%s+", ""):gsub("%s+$", "")
+        local components = ParseDamageComponents(label)
+        if not components then
+            -- "1d12 contra metal" omite el tipo porque lo hereda del primer tramo.
+            local dice = label:match("(%d*d%d+[+-]?%d*)")
+            if dice and inheritedType then
+                local count, sides, bonus = dice:match("^(%d*)d(%d+)([+-]%d+)$")
+                if not count then count, sides = dice:match("^(%d*)d(%d+)$") end
+                if count and sides then
+                    components = {
+                        {
+                            damageDice = tostring((count ~= "" and tonumber(count)) or 1) .. "d" .. tostring(tonumber(sides)),
+                            damageBonus = tonumber(bonus) or 0,
+                            damageType = inheritedType,
+                        },
+                    }
+                end
+            end
+        end
+        if components then
+            inheritedType = inheritedType or components[1].damageType
+            variants[#variants + 1] = {
+                id = "damage_" .. tostring(#variants + 1),
+                label = label,
+                components = CopyDamageComponents(components),
+            }
+        end
+    end
+    return #variants > 1 and variants or nil
+end
+
 -- Escalado seguro por nivel de espacio: solo se interpreta una formula explicita de dados.
 -- Ejemplos admitidos: "+1d6 por cada nivel ... por encima del 1" y "+2d10 ...".
 -- No intenta inferir objetivos, duracion ni otros cambios narrativos.
@@ -749,6 +803,15 @@ local function SpellAttackRange(spell)
     return text:find("cuerpo a cuerpo", 1, true) and "melee" or "ranged"
 end
 
+-- El texto del compendio sigue siendo la fuente de datos. El modulo de rango solo
+-- interpreta las unidades y compara contra la respuesta de `.distance`; no se
+-- añade un segundo campo mecanico de alcance por conjuro.
+function API.GetSpellRange(spellOrId)
+    local spell = type(spellOrId) == "table" and spellOrId or API.GetSpellById(spellOrId)
+    if not (spell and HarfordDnDRange and HarfordDnDRange.ParseSpellRange) then return nil end
+    return HarfordDnDRange.ParseSpellRange(spell.range)
+end
+
 -- Condicion estructurada opcional del conjuro: spell.condition = "restrained" o
 -- { id, duration, persist, turns }. id debe existir en HarfordDnDConditions.
 local function SpellCondition(spell)
@@ -774,7 +837,17 @@ function API.BuildAreaDefinition(spell, options)
         }
     end
     local area = ParseAreaMeta(spell)
-    local damageComponents = ParseDamageComponents(spell.damage or SpellText(spell))
+    local damageVariant
+    local variants = API.GetDamageVariants(spell)
+    if variants then
+        local wanted = tostring(options and options.damageVariant or "")
+        for _, variant in ipairs(variants) do
+            if variant.id == wanted then damageVariant = variant; break end
+        end
+        if not damageVariant then return nil end
+    end
+    local damageComponents = damageVariant and CopyDamageComponents(damageVariant.components)
+        or ParseDamageComponents(spell.damage or SpellText(spell))
     damageComponents = ApplyUpcastDamage(spell, damageComponents, API.GetCastLevel(spell, options))
     damageComponents = ApplyCantripScaling(spell, damageComponents)
     local condition = SpellCondition(spell)
@@ -913,11 +986,13 @@ function API.BuildAreaDefinition(spell, options)
         area.zone = true
         if area.sizeText == "Objetivo" then area.sizeText = "Zona" end
     end
+    local link = SpellLink(spell)
+    if damageVariant then link = link .. " |cffcccccc[" .. damageVariant.label .. "]|r" end
     return {
         name = SpellName(spell),
         title = SpellName(spell),
-        hyperlink = SpellLink(spell),
-        networkLabel = SpellLink(spell),
+        hyperlink = link,
+        networkLabel = link,
         area = area,
     }
 end
@@ -939,7 +1014,7 @@ local function ValidateSpellAttack()
     return true
 end
 
-local function RollSpellAttack(spell, skipValidation)
+local function RollSpellAttack(spell, skipValidation, options)
     if not skipValidation then
         local valid, err = ValidateSpellAttack()
         if not valid then return false, err end
@@ -949,6 +1024,7 @@ local function RollSpellAttack(spell, skipValidation)
         actorUnit = "player",
         targetUnit = "target",
         attackRange = SpellAttackRange(spell),
+        rangeDisadvantage = options and options.rangeDisadvantage == true,
     })
     local total = chosen + totalBonus
     local bonusTxt = HarfordDnDCalc.BonusConcat(mod, pb, featureBonus, global)
@@ -1435,6 +1511,48 @@ function API.ResolveCast(spellId, options)
         return API.ConfirmCast(spellId, options)
     end
 
+    local variants = API.GetDamageVariants(spell)
+    if variants then
+        local selected = tostring(options.damageVariant or "")
+        local valid = false
+        for _, variant in ipairs(variants) do
+            if variant.id == selected then valid = true; break end
+        end
+        if not valid then return false, "Elige la formula de dano antes de lanzar el conjuro." end
+    end
+
+    -- Las areas y los ataques directos tambien tienen alcance de lanzamiento. La
+    -- ventana de area puede marcar varias victimas, pero su punto de origen se
+    -- mide contra el target seleccionado antes de abrirla. Sin ese punto no hay
+    -- una coordenada fiable que comparar, asi que no se inicia el lanzamiento.
+    if not options._rangeChecked and HarfordDnDRange and HarfordDnDRange.CheckTargetRange then
+        local preview = API.BuildAreaDefinition and API.BuildAreaDefinition(spell, { soloConsultar = true })
+        local range = API.GetSpellRange(spell)
+        local needsRange = range and tonumber(range.normalMeters)
+            and (preview ~= nil or IsSpellAttack(spell))
+        if needsRange then
+            local expectedGuid = UnitGUID and UnitGUID("target") or nil
+            local sent = HarfordDnDRange.CheckTargetRange(range, function(result)
+                if not result.ok then
+                    if not result.outOfRange then
+                        Print(result.message or "No se pudo comprobar el alcance del conjuro.")
+                    end
+                    return
+                end
+                options._rangeChecked = true
+                options.rangeDisadvantage = result.disadvantage == true
+                options.expectedTargetGuid = result.targetGuid or expectedGuid
+                API.ResolveCast(spellId, options)
+            end, expectedGuid)
+            if sent then return true end
+            return false, "No se pudo solicitar la distancia al objetivo."
+        end
+    end
+
+    if options.expectedTargetGuid and UnitGUID and UnitGUID("target") ~= options.expectedTargetGuid then
+        return false, "El objetivo cambio mientras se comprobaba el alcance."
+    end
+
     local areaDefinition = API.BuildAreaDefinition and API.BuildAreaDefinition(spell, options)
     if areaDefinition and HarfordDnDArea and HarfordDnDArea.Open then
         -- Objetivo unico: auto-resuelve sin ventana (como un ataque normal). Area real: ventana
@@ -1442,6 +1560,9 @@ function API.ResolveCast(spellId, options)
         local isZone = areaDefinition.area and areaDefinition.area.zone == true
         local isSingle = areaDefinition.area and areaDefinition.area.shape == "other"
             and areaDefinition.area.sizeText == "Objetivo"
+        if areaDefinition.area then
+            areaDefinition.area.rangeDisadvantage = options.rangeDisadvantage == true
+        end
         -- ULTIMO CONJURO DE OBJETIVO UNICO. Se guarda su definicion ya construida para los rasgos
         -- que actuan DESPUES de lanzarlo: apuntar a una segunda criatura (Caos del Brujo) o
         -- redirigirlo si fallo (Quemar alma: Rebotar). Solo objetivo unico: "otra criatura" no
@@ -1483,7 +1604,7 @@ function API.ResolveCast(spellId, options)
         local ok, castErr = API.ConfirmCast(spellId, { silent = true, free = options.free,
             castLevel = API.GetCastLevel(spell, options) })
         if not ok then return false, castErr end
-        return RollSpellAttack(spell, true)
+        return RollSpellAttack(spell, true, options)
     end
 
     return API.ConfirmCast(spellId, options)

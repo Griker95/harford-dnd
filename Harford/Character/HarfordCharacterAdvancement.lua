@@ -555,6 +555,54 @@ local function RefreshPendingLevelFeatures(classDef, classLevel)
         SetDetail(firstFeature.feature, classLevel, firstFeature.source)
     end
 
+    -- FICHAS ANTIGUAS: elecciones PENDIENTES de rasgos que YA se poseen — una dote o un rasgo
+    -- racial que hoy es `choice` y cuando se creo el personaje no existia o no elegia nada, o
+    -- una eleccion que quedo a medias. La subida es el momento natural de acoplarse a la
+    -- mecanica nueva: se listan aqui, bloquean el "Siguiente" como cualquier otra eleccion y
+    -- se persisten por el mismo bucle de pendingFeatures (SetChoiceSlot + dote + truco). Solo
+    -- en subida: en creacion no hay ficha vieja que reconciliar. Lo YA elegido se siembra en
+    -- choiceSelections para que el selector lo muestre y solo pida los huecos que falten.
+    if IsLevelUpMode() and HarfordDnDProgression and HarfordDnDProgression.GetUnlockedFeatures then
+        local yaListado = {}
+        for _, f in ipairs(S.pendingFeatures) do yaListado[tostring(f.id)] = true end
+        local atrasadas = {}
+        for _, item in ipairs(HarfordDnDProgression.GetUnlockedFeatures() or {}) do
+            local f = item.feature
+            if f and f.choice and not f.subclassMarker and not yaListado[tostring(f.id)]
+                and PendingOptionChosen(f) then
+                yaListado[tostring(f.id)] = true  -- una dote puede llegar por dos fuentes
+                local slots = HarfordDnDBook.GetChoiceSlots and HarfordDnDBook.GetChoiceSlots(f) or 1
+                local mapa = (HarfordDnDProgression.GetChoiceSlotMap
+                    and HarfordDnDProgression.GetChoiceSlotMap(f.id)) or {}
+                local puestas = 0
+                for _ in pairs(mapa) do puestas = puestas + 1 end
+                if puestas < slots then
+                    atrasadas[#atrasadas + 1] = { feature = f, source = tostring(item.className or "Rasgo"), mapa = mapa }
+                end
+            end
+        end
+        if #atrasadas > 0 then
+            local heading2 = MakeText(S.tree, "GameFontNormal", "ELECCIONES PENDIENTES DE TU FICHA")
+            heading2:SetPoint("TOPLEFT", 28, y)
+            heading2:SetTextColor(1, 0.82, 0)
+            S.nodeRows[#S.nodeRows + 1] = heading2
+            y = y - 34
+            for _, entrada in ipairs(atrasadas) do
+                local f = entrada.feature
+                if not S.choiceSelections[f.id] then
+                    local previa = {}
+                    for slot = 1, (HarfordDnDBook.GetChoiceSlots and HarfordDnDBook.GetChoiceSlots(f) or 1) do
+                        if entrada.mapa[slot] then previa[#previa + 1] = entrada.mapa[slot] end
+                    end
+                    if #previa > 0 then S.choiceSelections[f.id] = previa end
+                end
+                S.pendingFeatures[#S.pendingFeatures + 1] = f
+                CreateNode(S.tree, 26, y, tonumber(f.level) or 0, f, entrada.source)
+                y = y - 44
+            end
+        end
+    end
+
     -- Selector de conjuros: solo si la clase (o clase+subclase) es lanzadora en este nivel.
     y = AppendSpellPickers(classDef, classLevel, y)
 

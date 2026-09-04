@@ -224,7 +224,9 @@ API.DEFS = {
         },
     },
     charmed = {
-        label = "Hechizado", tracking = "state",
+        -- aura_state y no aura pura: el aura es la cara visible, pero blockAttackSource
+        -- necesita el registro con la FUENTE que lo hechizo (mismo patron que Asustado).
+        label = "Hechizado", auraId = 253996, tracking = "aura_state",
         description = "No puede atacar a la fuente que lo hechizo.",
         effects = { { kind = "blockAttackSource" } },
     },
@@ -1328,7 +1330,15 @@ function API.RecibirEfectoNpc(guid, tipo, valor, autor, sender, salto)
         end
         return false
     end
-    if not EsNpcDeLosTurnos(guid) then return false end
+    -- NPC fuera del orden de turnos: el guardia es deliberado (sin el, cualquiera podria hacer
+    -- que el DM emitiera comandos sobre cualquier NPC), pero rechazar EN SILENCIO dejaba al
+    -- atacante creyendo que su golpe conto. Se le avisa con el motivo.
+    if not EsNpcDeLosTurnos(guid) then
+        if autor and autor ~= "" then
+            HarfordSync.Send(PREFIX, "DNDNPCFAIL|" .. tostring(guid) .. "|turnos", "WHISPER", autor)
+        end
+        return false
+    end
     local quien = autor ~= "" and ShortName(autor) or ShortName(sender or "")
     if tipo == "damage" then
         API.QueueNpcDamage(guid, valor, quien)
@@ -2612,12 +2622,19 @@ function API.HandleMessage(message, sender)
         if IsTrustedSender(sender) then CacheRemoteState(state, sender) end
         return true
     end
-    -- Nadie de la cadena pudo emitir un efecto que delegue.
-    local sinNadie = tostring(message or ""):match("^DNDNPCFAIL|(.+)$")
+    -- Un efecto que delegue no se pudo aplicar. Con motivo `turnos` es que el NPC no esta en el
+    -- orden de turnos (el receptor solo acepta NPCs montados en el tracker); sin motivo, que
+    -- nadie de la cadena tiene permiso de fase.
+    local sinNadie, motivoFail = tostring(message or ""):match("^DNDNPCFAIL|([^|]+)|?(.*)$")
     if sinNadie then
         if IsTrustedSender(sender) and HarfordChat and HarfordChat.Print then
-            HarfordChat.Print("|cffff5555Tu efecto sobre el NPC no se aplico:|r nadie del grupo "
-                .. "tiene permiso de fase para emitirlo. Diselo al DM.")
+            if motivoFail == "turnos" then
+                HarfordChat.Print("|cffff5555Tu efecto sobre el NPC no se aplico:|r ese NPC no "
+                    .. "esta en el orden de turnos. Pide al DM que lo monte o lo aplique a mano.")
+            else
+                HarfordChat.Print("|cffff5555Tu efecto sobre el NPC no se aplico:|r nadie del grupo "
+                    .. "tiene permiso de fase para emitirlo. Diselo al DM.")
+            end
         end
         return true
     end

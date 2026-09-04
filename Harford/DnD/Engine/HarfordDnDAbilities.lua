@@ -84,7 +84,7 @@ HarfordDnDStore.UseDemonBite = function()
         HarfordDnDStore.AdjustResourceCurrent("fel_point", 1)
         if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
             HarfordDnDRolls.Broadcast({ type = "info",
-                label = "recupera 1 punto de Vil (Momentum vengativo: ambas mordidas impactan)" })
+                label = "recupera 1 Vil (Momentum vengativo)" })
         end
     end
     return true
@@ -114,7 +114,7 @@ HarfordDnDStore.AnnounceFelRush = function()
         or math.random(1, caras)
     if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
         HarfordDnDRolls.Broadcast({ type = "info",
-            label = string.format("Embestida vil: 1d%d = %d de fuego vil a cada criatura que atraviese su recorrido", caras, dano) })
+            label = string.format("Embestida vil 1d%d=%d fuego vil a quien atraviese el recorrido", caras, dano) })
     end
 end
 

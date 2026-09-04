@@ -1132,7 +1132,6 @@ Catalog.features = {
     harford_estado_imprudente = "ability_warrior_warcry",
     harford_estado_piel_hierro = "ability_monk_fortifyingale_new",
     harford_estado_blinded = "ability_paladin_blindinglight",
-    harford_estado_charmed = "spell_shadow_charm",
     harford_estado_exhaustion = "ability_creature_cursed_04",
     harford_estado_elunes_grace = "spell_holy_elunesgrace",
     harford_estado_palabra_fortaleza = "spell_holy_wordfortitude",

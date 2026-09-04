@@ -2602,8 +2602,11 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
 
     local link = (HarfordTRP3 and HarfordTRP3.GetAbilityChatLink and HarfordTRP3.GetAbilityChatLink(feature))
         or (feature.name or "Maniobra")
-    local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
-        or HarfordClassColors.UnitFullName("target") or "el objetivo"
+    local targetName = (HarfordDnDStore.ColoredUnitName and HarfordDnDStore.ColoredUnitName("target")) or ""
+    if targetName == "" then
+        targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
+            or HarfordClassColors.UnitFullName("target") or "el objetivo"
+    end
     local damageText = ""
     if (not saved) and man.damageDie then
         local die = math.max(1, math.floor(tonumber(man.damageDie) or 6))
@@ -2644,10 +2647,11 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
         })
     end
 
+    -- Formato minimo de mesa: Origen [link] Destino tirada vs CD DESENLACE — sin prosa.
     HarfordDnDRolls.Broadcast({
         type = "info",
         targetUnit = "target",
-        label = string.format("usa %s contra %s. %s",
+        label = string.format("%s %s %s",
             link, targetName, FormatSaveRollLabel(man.save, saveTotal, d, dc, outcome, saveBonus)),
     })
 end
@@ -3108,16 +3112,19 @@ DoWeaponAttack = function(options)
     local sinCompetencia = (not competente) and " |cffff5555sin competencia|r" or ""
     -- Actor externo: la linea empieza por su nombre, para que en mesa se lea quien golpea.
     local actorPrefix = (def and def.actorLabel and (def.actorLabel .. ": ")) or ""
+    -- Formato de mesa: Origen [arma] Destino ... total vs CA N EXITO/FALLO. El DESTINO va
+    -- pegado al arma, antes de bonos y sufijos: se lee "quien, con que, a quien" de un vistazo
+    -- y los numeros quedan juntos al final de la etiqueta.
     local attackLabel
     if man and man.afterHitSave then
         local maneuverLabel = manLabel and (" " .. manLabel) or ""
-        attackLabel = actorPrefix .. (offhand and "Ataque Offhand " or "Ataque ") .. WeaponRollName(def) .. sinCompetencia
-            .. wmodLabel .. maneuverLabel
-            .. (options.labelSuffix and (" " .. options.labelSuffix) or "") .. targetLabel
+        attackLabel = actorPrefix .. (offhand and "Ataque Offhand " or "Ataque ") .. WeaponRollName(def)
+            .. targetLabel .. sinCompetencia .. wmodLabel .. maneuverLabel
+            .. (options.labelSuffix and (" " .. options.labelSuffix) or "")
     else
         attackLabel = actorPrefix .. manPrefix .. (offhand and "Ataque Offhand " or "Ataque ") .. WeaponRollName(def)
-            .. sinCompetencia .. wmodLabel
-            .. (options.labelSuffix and (" " .. options.labelSuffix) or "") .. targetLabel .. manSuffix
+            .. targetLabel .. sinCompetencia .. wmodLabel
+            .. (options.labelSuffix and (" " .. options.labelSuffix) or "") .. manSuffix
     end
 
     HarfordDnDRolls.Broadcast({
@@ -4607,6 +4614,10 @@ end
 HarfordDnDStore.DoWeaponAttack = function(options)
     DoWeaponAttack(options)
 end
+
+-- Nombre RP coloreado de una unidad, para que otros modulos (la linea de Daño de WeaponRolls)
+-- etiqueten al DESTINO igual que la linea de Ataque, sin duplicar la resolucion TRP3.
+HarfordDnDStore.ColoredUnitName = ColoredUnitName
 
 HarfordDnDStore.AttackWithCompanion = function(actionKey)
     if not (HarfordDnDCompanions and HarfordDnDCompanions.GetWeaponDef) then return end

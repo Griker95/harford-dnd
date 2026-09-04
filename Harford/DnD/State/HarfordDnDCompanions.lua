@@ -516,7 +516,7 @@ function API.AdjustHP(delta, profileName)
         -- el dano, no automaticamente aqui.
         API.Dismiss(profileName)
         if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
-            HarfordDnDRolls.Broadcast({ type = "info", label = "pierde a su " .. tostring(c.name) .. ", que cae a 0 PG." })
+            HarfordDnDRolls.Broadcast({ type = "info", label = "pierde a su " .. tostring(c.name) .. " (0 PG)" })
         end
     end
     return nuevo

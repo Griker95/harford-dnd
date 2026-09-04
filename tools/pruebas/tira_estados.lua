@@ -94,7 +94,7 @@ defs = defs:sub(1, (assert(defs:find("\n}", 1, true))))
 for id, cuerpo in defs:gmatch("\n    ([a-z_0-9]+) = (%b{})") do
     if cuerpo:find("auraId", 1, true) then conAura[#conAura + 1] = id else sinAura[#sinAura + 1] = id end
 end
-chk("condiciones con aura", #conAura, 16)  -- dying entro 2026-08-29 (aura de muerte 29266)
+chk("condiciones con aura", #conAura, 17)  -- dying 2026-08-29 (29266); charmed 2026-09-04 (253996)
 -- Sin numero fijo: cada condicion nueva sube esta cuenta, y una prueba que hay que retocar cada
 -- vez deja de leerse y se actualiza sin mirar. Lo que importa es que TODAS tengan icono, y eso se
 -- comprueba justo debajo.

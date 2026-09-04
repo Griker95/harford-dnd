@@ -2,7 +2,7 @@
 --
 -- Aqui se decide si un ataque entra, y estaba sin cubrir: de 14 mutaciones, las 14 pasaban. Un `>`
 -- por `>=` convierte cada empate en impacto, que es el fallo mas silencioso posible -- nadie mira
--- la tirada que empata, solo lee "Superada".
+-- la tirada que empata, solo lee "EXITO".
 
 local fallos = 0
 local function chk(etiqueta, real, esp)
@@ -45,7 +45,7 @@ K.SetArmorClassForUnit("target", 15)
 
 local ca, impacta, texto = K.ResolveArmorClassOutcome(16, "", "target")
 chk("por encima, entra", impacta, true)
-chk("y dice contra que CA", limpio(texto), " vs CA 15 Superada")
+chk("y dice contra que CA", limpio(texto), " vs CA 15 EXITO")
 _, impacta = K.ResolveArmorClassOutcome(15, "", "target")
 chk("empatando, NO entra", impacta, false)
 _, impacta = K.ResolveArmorClassOutcome(14, "", "target")
@@ -207,7 +207,7 @@ env.UnitExists = function() return true end
 -- ─── EL DEFENSOR GANA LOS EMPATES ───────────────────────────────────────────
 -- Divergencia DELIBERADA del manual: en 5e una tirada que iguala la CA impacta; en esta mesa no.
 -- Se comprueba que los TRES sitios que resuelven la comparacion dicen lo mismo, porque uno usaba
--- `>=` y la misma tirada contra la misma CA salia "No superada" al atacar y "Superada" al gastar
+-- `>=` y la misma tirada contra la misma CA salia "FALLO" al atacar y "EXITO" al gastar
 -- un dado sobre ella.
 print("Los tres sitios resuelven el empate igual")
 local combate2 = io.open("Harford/DnD/Engine/HarfordDnDCombat.lua"):read("*a")
@@ -215,7 +215,7 @@ local area2 = io.open("Harford/DnD/Engine/HarfordDnDArea.lua"):read("*a")
 local rolls2 = io.open("Harford/DnD/Engine/HarfordDnDRolls.lua"):read("*a")
 chk("al atacar", combate2:find("(tonumber(total) or 0) > armorClass", 1, true) ~= nil, true)
 chk("en area", area2:find("request.attackTotal > armorClass", 1, true) ~= nil, true)
-chk("y al recalcular tras gastar", rolls2:find('nuevo > ca and "Superada"', 1, true) ~= nil, true)
+chk("y al recalcular tras gastar", rolls2:find('nuevo > ca and "|cff00ff00EXITO|r"', 1, true) ~= nil, true)
 -- Si alguno vuelve a `>=`, esto lo caza antes de que la mesa vea dos respuestas distintas.
 chk("ninguno usa >= contra la CA",
     (rolls2:find("nuevo >= ca", 1, true) == nil)

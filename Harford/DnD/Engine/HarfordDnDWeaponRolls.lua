@@ -394,8 +394,13 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
     -- numero de cada tipo extra se colorea con COLOR_ROLL (|cff66ccff) para igualar al de cabecera.
     local headlineTotal, modifiersTxt = HarfordDnDRolls.FormatDamageHeader(dmgTypeOrder, dmgTypeMap, total)
 
+    -- El DESTINO va en la etiqueta igual que en la linea de Ataque: el daño de arma se resuelve
+    -- siempre contra "target" (la mitigacion de arriba usa esa unidad), asi que su nombre RP
+    -- coloreado sale del mismo helper que exporta la ficha.
+    local nombreDestino = HarfordDnDStore.ColoredUnitName and HarfordDnDStore.ColoredUnitName("target") or ""
     local etiquetaDano = ((def.actorLabel and (def.actorLabel .. ": ")) or "")
         .. (offhand and "Daño Offhand " or "Daño ") .. WeaponRollName(def)
+        .. (nombreDestino ~= "" and (" " .. nombreDestino) or "")
 
     -- Contra un jugador que corre Harford, la linea la publica EL: solo el conoce sus resistencias,
     -- asi que solo el puede decir el numero definitivo. Sale con ESTA etiqueta y con el nombre del
@@ -426,8 +431,7 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
         local cdMutilar = math.max(10, math.floor(total / 2))
         HarfordDnDRolls.Broadcast({
             type = "info",
-            label = "MUTILA: la victima supera una salvacion de Constitucion CD " .. cdMutilar
-                .. " o pierde el miembro elegido.",
+            label = "MUTILA: Salv CON CD " .. cdMutilar .. " o pierde el miembro elegido",
         })
     end
 
@@ -482,8 +486,11 @@ local function ResolveWeaponManeuverAfterHitSave(data)
     local saveTotal = d + saveBonus
     local dc = tonumber(data.dc) or 10
     local saved = not autoFail and saveTotal >= dc
-    local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
-        or HarfordClassColors.UnitFullName("target") or "el objetivo"
+    local targetName = (HarfordDnDStore.ColoredUnitName and HarfordDnDStore.ColoredUnitName("target")) or ""
+    if targetName == "" then
+        targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
+            or HarfordClassColors.UnitFullName("target") or "el objetivo"
+    end
     local outcome = FormatSaveOutcome(saved, data.outcome)
     local conditionApplied = false
     if not saved and (data.conditionId or data.onFailAura) then

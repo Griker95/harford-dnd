@@ -199,12 +199,12 @@ function HarfordDnDActionPanel.Build(D)
         -- (La consulta de Barrera se retiro: ver el ataque de jugador. Inalcanzable desde
         -- que RequestAttackReaction devuelve false siempre.)
 
-        -- "Ataque <NOMBREFOCUS coloreado> <link de la accion>".
+        -- Mismo orden que el ataque de jugador: "Ataque <link de la accion> <destino>".
         local focusName = GetFocusColoredName()
         HarfordDnDRolls.Broadcast({
             type = "roll",
             targetUnit = "focus",
-            label = "Ataque " .. (focusName and (focusName .. " ") or "") .. GetActionChatName(action),
+            label = "Ataque " .. GetActionChatName(action) .. (focusName and (" " .. focusName) or ""),
             total = total,
             dice = HarfordDnDCalc.FormatD20Dice(chosen, ra, rb),
             modifiers = bonusTxt,
@@ -343,7 +343,11 @@ function HarfordDnDActionPanel.Build(D)
             if c.marker and c.marker ~= "" then e.marker = c.marker end
         end
         local headlineTotal, modifiersTxt = HarfordDnDRolls.FormatDamageHeader(dmgTypeOrder, dmgTypeMap, total)
+        -- Destino en la etiqueta, igual que el daño de arma del jugador.
+        local nombreVictima = HarfordDnDStore.ColoredUnitName
+            and HarfordDnDStore.ColoredUnitName(mitigationUnit) or ""
         local etiquetaDano = "Daño " .. tostring(action.title or "Accion")
+            .. (nombreVictima ~= "" and (" " .. nombreVictima) or "")
         -- Igual que el ataque de arma: si la victima es un jugador que corre Harford, la linea la
         -- publica EL con su numero ya mitigado. Contra un NPC se resuelve aqui como siempre.
         local publicaLaVictima = HarfordDnDCombat and HarfordDnDCombat.VictimaPublicaSuDano

@@ -310,8 +310,13 @@ function HarfordDnDCombat.ResolveArmorClassOutcome(total, critTag, unit)
         hit = (tonumber(total) or 0) > armorClass  -- empate = fallo para el atacante (el defensor gana los empates)
     end
 
-    local status = hit and (GREEN .. "Superada" .. ENDCLR) or (RED .. "No superada" .. ENDCLR)
-    return armorClass, hit, " vs CA " .. tostring(armorClass) .. coverText .. " " .. status
+    -- Desenlace en el vocabulario comun de las tiradas (EXITO/FALLO), no en prosa: la linea
+    -- queda "total vs CA N EXITO" y el color ya dice el resto. El CRITICO/PIFIA del d20 lo
+    -- pinta el render por su cuenta; aqui solo se anade cuando NO hay tag que lo diga.
+    local status = hit and (GREEN .. "EXITO" .. ENDCLR) or (RED .. "FALLO" .. ENDCLR)
+    if HarfordDnDCombat.IsCriticalRollTag(critTag) or critTag == "PIFIA" then status = "" end
+    return armorClass, hit, " vs CA " .. tostring(armorClass) .. coverText
+        .. (status ~= "" and (" " .. status) or "")
 end
 
 -- Caracteristica ES -> clave del stat block TRP3 (ingles), para resolver salvaciones.

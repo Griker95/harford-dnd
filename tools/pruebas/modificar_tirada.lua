@@ -84,10 +84,10 @@ end
 print("Si la tirada sabia contra que CA iba, se dice si ahora la supera")
 poner({ kind = "attack", label = "Ataque", total = 14, armorClass = 17 })
 HR.ModifyLastRoll({ amount = 5, label = "Ataque preciso", applies = { attack = true }, markKey = "focusDie" })
-chk("ahora impacta", difundido[1].modifiers, " vs CA 17 Superada")
+chk("ahora impacta", difundido[1].modifiers, " vs CA 17 |cff00ff00EXITO|r")
 poner({ kind = "attack", label = "Ataque", total = 10, armorClass = 17 })
 HR.ModifyLastRoll({ amount = 1, label = "Ataque preciso", applies = { attack = true }, markKey = "focusDie" })
-chk("sigue sin impactar", difundido[1].modifiers, " vs CA 17 No superada")
+chk("sigue sin impactar", difundido[1].modifiers, " vs CA 17 |cffff3333FALLO|r")
 
 print("Anuncio de un numero suelto, sin tocar ninguna tirada")
 poner({ kind = "attack", label = "Ataque", total = 14 })

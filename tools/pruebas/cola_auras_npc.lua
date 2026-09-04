@@ -204,8 +204,14 @@ chk("y el lider encabeza", cond:find("if lider then cadena[#cadena + 1] = lider 
 -- receptor lo rechaza si no puede emitirlo y se perderia.
 chk("sin repetir eslabones", cond:find("local repetido = (lider and ShortName(lider) == corto) or (corto == yo)", 1, true) ~= nil, true)
 -- Y solo sobre NPCs que la mesa ya conoce: si no, cualquiera podria pedir dano sobre cualquier cosa.
+-- Pero el rechazo AVISA al autor con el motivo (`|turnos`): rechazar en silencio le dejaba
+-- creyendo que su golpe conto.
 chk("y solo sobre NPCs de la lista de turnos",
-    cond:find("if not EsNpcDeLosTurnos(guid) then return false end", 1, true) ~= nil, true)
+    cond:find("if not EsNpcDeLosTurnos(guid) then", 1, true) ~= nil, true)
+chk("rechazando con aviso, no en silencio",
+    cond:find('"DNDNPCFAIL|" .. tostring(guid) .. "|turnos"', 1, true) ~= nil, true)
+chk("y el atacante lee el motivo",
+    cond:find("esta en el orden de turnos", 1, true) ~= nil, true)
 chk("el remitente tiene que ser de fiar",
     cond:find("API.RecibirEfectoNpc(guid, tipo, valor, autor, sender, salto)", 1, true) ~= nil, true)
 

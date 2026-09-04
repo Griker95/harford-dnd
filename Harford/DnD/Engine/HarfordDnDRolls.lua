@@ -548,7 +548,8 @@ function HarfordDnDRolls.ModifyLastRoll(spec)
         -- deliberada del manual (5e impacta al igualar la CA). `HarfordDnDCombat` y
         -- `HarfordDnDArea` ya lo hacian asi; esta linea decia lo contrario, y la misma tirada
         -- contra la misma CA salia "No superada" al atacar y "Superada" al gastar el dado.
-        extra = string.format(" vs CA %d %s", ca, nuevo > ca and "Superada" or "No superada")
+        extra = string.format(" vs CA %d %s", ca,
+            nuevo > ca and "|cff00ff00EXITO|r" or "|cffff3333FALLO|r")
     end
 
     HarfordDnDRolls.Broadcast({

@@ -448,7 +448,7 @@ API.FEATS = {
         id = "feat_resistente", icon = "ability_warrior_strengthofarms", name = "Resistente", description = "Constitución de sobra: cada nivel te deja más vida de la que te corresponde.", source = "PHB",
         traits = {
             { id = "feat_phb_resistente_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "pasivo", description = "Constitución +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Constitucion", value = 1 } } },
-            { id = "feat_phb_resistente_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Al tirar un Dado de Golpe para curarte, el mínimo que recuperas es 2x Mod. Constitución (mínimo 2).", effects = {} },
+            { id = "feat_phb_resistente_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Al tirar un Dado de Golpe para curarte, el mínimo que recuperas es 2x Mod. Constitución (mínimo 2).", effects = { { kind = "flag", flag = "resilientHitDieMin" } } },
         },
     },
     {

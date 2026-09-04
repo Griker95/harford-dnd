@@ -466,6 +466,9 @@ function API.AttachMovementTracker(opts)
     local yardsToMeters = 0.9144
     local pollInterval = 0.05
     local tracking = false
+    -- La sesion de seguimiento pertenece al NPC poseido o al jugador desde que ARRANCA; el
+    -- OnUpdate corta y reinicia cuando el cuerpo activo deja de casar con la sesion.
+    local sesionNpc = false
     local ArrancarSeguimiento  -- se asigna abajo; lo llama el reinicio de turno, que esta antes
     local ultimoTiron = 0
     local totalMeters = 0
@@ -492,6 +495,7 @@ function API.AttachMovementTracker(opts)
     -- La lista si se puede sembrar, porque `HarfordTurns` la crea con `or {}` y respeta lo que
     -- encuentre. Esto NO es un apano de orden con temporizadores -- es no depender del orden.
     local ReiniciarPorTurno
+    local StopTracking  -- forward: el OnUpdate corta la sesion NPC al des-poseer y se define abajo
     -- Y el ancla del turno AJENO. Va por el oyente de cambio de turno --no por el de condiciones--
     -- porque tiene que dispararse SIEMPRE que el turno pase a otro, aunque tu contador nunca
     -- llegara a arrancar en este combate: el camino viejo solo anclaba al PARAR un seguimiento
@@ -507,6 +511,13 @@ function API.AttachMovementTracker(opts)
         end
         T._turnChangedListeners = T._turnChangedListeners or {}
         T._turnChangedListeners[#T._turnChangedListeners + 1] = function()
+            -- El NPC no tiene una entrada de turno individual cuando se juega por bandos. Se
+            -- compara el GUID de la criatura poseida contra los miembros del bloque activo.
+            local petGuid = UnitGUID and UnitGUID("pet")
+            if petGuid and T.IsNpcTurn and T.IsNpcTurn(petGuid) then
+                if ReiniciarPorTurno then ReiniciarPorTurno() end
+                return
+            end
             if AnclarPorTurnoAjeno then AnclarPorTurnoAjeno() end
         end
     end
@@ -516,14 +527,6 @@ function API.AttachMovementTracker(opts)
     -- criatura poseida no devuelve nada.
     local function LlevandoNpc()
         return (UnitExists and UnitExists("pet")) and true or false
-    end
-
-    -- Velocidad REAL del NPC en metros por segundo. `GetUnitSpeed` da yardas/segundo y responde a
-    -- ralentizaciones y aceleraciones; dar por buena la carrera base (7 yd/s, que es lo que hace
-    -- Atlas) haria que un NPC ralentizado gastase su turno igual de rapido que uno suelto.
-    local function VelocidadMetrosNpc()
-        if not GetUnitSpeed then return 0 end
-        return (tonumber(GetUnitSpeed("pet")) or 0) * 0.9144
     end
 
     local function GetPosition()
@@ -577,19 +580,13 @@ function API.AttachMovementTracker(opts)
 
     local corriendo = false
 
-    -- Metros que puede recorrer el NPC que llevas, de SU stat block TRP3 ("Velocidad 9 m"). Sin
-    -- esto se le aplicaba la velocidad de TU raza, que no tiene nada que ver con la suya -- y si
-    -- el jugador no tenia raza puesta salia 0, o sea sin limite.
+    -- Metros que puede recorrer el NPC que llevas. Se leen del contexto que HarfordAdmin creo al
+    -- seleccionar al NPC, no de `pet`: el perfil TRP3 de una unidad poseida no es consultable de
+    -- manera fiable y devolvia nil aunque la ficha tuviera velocidad.
     local function VelocidadDelNpc()
-        if not (HarfordTRP3 and HarfordTRP3.GetNPCStatBlock) then return nil end
-        local ok, bloque = pcall(HarfordTRP3.GetNPCStatBlock, "pet")
-        local texto = ok and bloque and tostring(bloque.speed or "") or ""
-        if texto == "" then return nil end
-        -- Se escribe a mano: "9 m", "9m", "9 metros", "30 pies". El primer numero es el que vale.
-        local n = tonumber(texto:match("([%d%.]+)"))
-        if not n then return nil end
-        if texto:lower():find("pie") then return n * 0.3048 end
-        return n
+        local guid = UnitGUID and UnitGUID("pet")
+        if not (guid and HarfordDnDAPI and HarfordDnDAPI.GetNpcMovementMeters) then return nil end
+        return HarfordDnDAPI.GetNpcMovementMeters(guid)
     end
 
     -- Se publica para que la barra del marcador use ESTA cuenta y no otra.
@@ -647,10 +644,14 @@ function API.AttachMovementTracker(opts)
     -- Moverse es tuyo mientras TE TOCA. Fuera de tu turno el contador no arranca y el muro te
     -- devuelve a donde estabas: si no, cruzabas la sala gratis durante el turno del enemigo.
     local function EsMiTurno()
-        -- Llevar un NPC ES jugar SU turno: el DM lo mueve cuando le toca a el, no a los PJs.
-        -- Preguntar aqui por el turno de los PJs le bloquearia el movimiento justo cuando debe
-        -- moverse.
-        if LlevandoNpc and LlevandoNpc() then return true end
+        -- Llevar un NPC no equivale a que le toque siempre: en un combate por bandos solo puede
+        -- moverse cuando su GUID pertenece al bloque activo.
+        if LlevandoNpc and LlevandoNpc() then
+            local T = HarfordTurnOrderAPI
+            local guid = UnitGUID and UnitGUID("pet")
+            if T and T.IsNpcTurn and guid then return T.IsNpcTurn(guid) end
+            return false
+        end
         local T = HarfordTurnOrderAPI
         if not (T and T.IsMyTurn) then return true end
         return T.IsMyTurn()
@@ -744,13 +745,36 @@ function API.AttachMovementTracker(opts)
             return
         end
 
+        -- Una sesion es DEL NPC o DEL JUGADOR desde que arranca (`sesionNpc`), y no se mezclan:
+        -- * sesion NPC sin pet -> se acabo la posesion: se corta, o el ritmo fijo seguiria
+        --   descontando mientras el DM anda libre.
+        -- * sesion de JUGADOR con pet -> acabas de poseer con el contador de tu PJ aun vivo:
+        --   se corta y se reinicia COMO NPC (contador a cero, tope del stat block). Este era
+        --   el sintoma de "me cuenta el del player": el gasto del NPC caia en tu barra.
+        if sesionNpc and not LlevandoNpc() then
+            StopTracking()
+            return
+        end
+        if not sesionNpc and LlevandoNpc() then
+            tracking = false
+            motor:SetScript("OnUpdate", nil)
+            if ReiniciarPorTurno then ReiniciarPorTurno() end
+            return
+        end
+
         local avance
         if LlevandoNpc() then
-            -- De una criatura poseida no hay posicion que leer, asi que se INTEGRA su velocidad.
-            -- Es una estimacion, pero con la velocidad REAL, no con la de carrera base.
-            local v = VelocidadMetrosNpc()
+            -- Como ATLAS de verdad (combat_tracker OnUpdate): la velocidad es solo el DETECTOR
+            -- de "se esta moviendo" (GetUnitSpeed > 0) y el gasto avanza a RITMO FIJO de 7 m/s
+            -- (`elapsed * 7`), NO multiplicando la velocidad medida. Detector en `pet` y, si
+            -- este da cero, en `player`: en algunos clientes Epsilon la orden de movimiento de
+            -- la posesion se expone en el cuerpo del jugador aunque el NPC sea el pet.
+            local v = GetUnitSpeed and tonumber(GetUnitSpeed("pet")) or 0
+            if v <= 0 then
+                v = GetUnitSpeed and tonumber(GetUnitSpeed("player")) or 0
+            end
             if v <= 0 then return end
-            avance = v * trozo
+            avance = 7 * trozo
         else
             -- Un JUGADOR si tiene posicion: se mide de donde estaba a donde esta. Eso es el dato
             -- real, y para el jugador no hace falta estimar nada.
@@ -808,7 +832,7 @@ function API.AttachMovementTracker(opts)
         Guardar()
     end
 
-    local function StopTracking()
+    StopTracking = function()
         if not tracking then return end
         tracking = false
         motor:SetScript("OnUpdate", nil)
@@ -912,10 +936,16 @@ function API.AttachMovementTracker(opts)
             return
         end
 
-        local x, y, z = GetPosition()
-        if not x then
-            label:SetText("Sin posición")
-            return
+        -- El NPC poseido se cuenta integrando `GetUnitSpeed("pet")`: no necesita ni puede
+        -- depender de la posicion del jugador. Pedirsela aqui hacia que el seguimiento no
+        -- arrancase justo al poseer, aunque el turno y la velocidad del NPC fueran correctos.
+        local x, y, z
+        if not LlevandoNpc() then
+            x, y, z = GetPosition()
+            if not x then
+                label:SetText("Sin posición")
+                return
+            end
         end
         totalMeters, elapsed = 0, 0
         API.RecordedMovementMeters = 0
@@ -923,6 +953,7 @@ function API.AttachMovementTracker(opts)
         startX, startY, startZ = x, y, z
         API.RecordedMovementInfo = { meters = 0, startX = x, startY = y, startZ = z, endX = x, endY = y, endZ = z }
         tracking = true
+        sesionNpc = LlevandoNpc() and true or false
         button:SetText("Parar  0.0m")
         label:SetText(FormatMeters(0))
         motor:SetScript("OnUpdate", OnUpdate)
@@ -944,6 +975,7 @@ function API.AttachMovementTracker(opts)
         lastX, lastY, lastZ = x, y, z
         API.RecordedMovementMeters = totalMeters
         tracking = true
+        sesionNpc = LlevandoNpc() and true or false
         button:SetText("Parar " .. FormatMeters(totalMeters))
         label:SetText(FormatMeters(totalMeters))
         motor:SetScript("OnUpdate", OnUpdate)
@@ -975,7 +1007,14 @@ function API.AttachMovementTracker(opts)
     -- Idempotente: con el seguimiento ya corriendo no toca nada, y restaurar la economia desde el
     -- store es un no-op cuando el store ya refleja lo vivo, que es siempre salvo justo tras volver.
     function API.ReconciliarTurnoEnCurso()
-        if LlevandoNpc() then return end
+        if LlevandoNpc() then
+            -- La posesion ocurre DESPUES de que ya entro el turno del NPC. Por eso el listener
+            -- de cambio de turno no puede arrancar el contador: hay que hacerlo al recibir el
+            -- control, pero solo si ese NPC es miembro del bloque activo.
+            if not EnCombate() or not EsMiTurno() or tracking then return end
+            if ReiniciarPorTurno then ReiniciarPorTurno() end
+            return
+        end
         if not EnCombate() or not EsMiTurno() then return end
         local T = HarfordDnDConditions and HarfordDnDConditions.Turn
         if T and not (T.RestoreFromStore and T.RestoreFromStore()) and T.Reset then
@@ -988,6 +1027,40 @@ function API.AttachMovementTracker(opts)
         else
             ArrancarSeguimiento()
         end
+    end
+
+    -- Atlas no espera a un evento ambiguo: su boton de posesion avisa al contador ANTES de mandar
+    -- `.possess`. Aqui se conserva la misma garantia, pero se espera al GUID solicitado para no
+    -- arrancar sobre el NPC anterior mientras Epsilon procesa `.unposs` + `.poss`.
+    function API.NotifyNpcPossessionRequested(expectedGuid)
+        expectedGuid = tostring(expectedGuid or "")
+        local tries = 0
+        local function Confirmar()
+            tries = tries + 1
+            local petGuid = UnitGUID and UnitGUID("pet")
+            if petGuid and (expectedGuid == "" or petGuid == expectedGuid) then
+                if API.ReconciliarTurnoEnCurso then API.ReconciliarTurnoEnCurso() end
+                return
+            end
+            -- La cadena de Epsilon suelta primero al anterior y crea el nuevo pet despues. Dos
+            -- segundos cubren ese relevo sin dejar un ticker permanente cuando el comando falla.
+            if tries < 20 and C_Timer and C_Timer.After then C_Timer.After(0.1, Confirmar) end
+        end
+        Confirmar()
+    end
+
+    function API.GetNpcMovementDebugState()
+        local petGuid = UnitGUID and UnitGUID("pet")
+        local speed = GetUnitSpeed and tonumber(GetUnitSpeed("pet")) or 0
+        return {
+            pet = LlevandoNpc(),
+            petGuid = petGuid,
+            speedYards = speed or 0,
+            tracking = tracking,
+            npcTurn = LlevandoNpc() and EsMiTurno() or false,
+            spentMeters = totalMeters,
+            maxMeters = MaximoDelTurno(),
+        }
     end
 
     -- Deshacer el movimiento del turno: vuelves a donde EMPEZASTE y el contador se pone a cero,
@@ -1029,6 +1102,27 @@ function API.AttachMovementTracker(opts)
             AvisarMovimiento(totalMeters, MaximoDelTurno())
             HarfordChat.Print(string.format(
                 "Retomado tu movimiento del turno: |cffffcc00%.1f m|r gastados.", totalMeters))
+        end)
+    end
+
+    -- `.possess` no cambia el turno: el DM suele poseer al NPC cuando su bloque YA esta activo.
+    -- UNIT_PET es la senal estable de que `pet` ya representa la criatura; PLAYER_CONTROL_GAINED
+    -- cubre clientes que no emiten la primera en una posesion de Epsilon. Se difiere un frame para
+    -- que UnitGUID("pet") y la velocidad esten listos antes de reconciliar.
+    do
+        local ev = CreateFrame("Frame")
+        ev:RegisterEvent("UNIT_PET")
+        ev:RegisterEvent("PLAYER_CONTROL_GAINED")
+        ev:SetScript("OnEvent", function(_, event, unit)
+            if event == "UNIT_PET" and unit ~= "player" then return end
+            local function ReconciliarPosesion()
+                if API.ReconciliarTurnoEnCurso then API.ReconciliarTurnoEnCurso() end
+            end
+            if C_Timer and C_Timer.After then
+                C_Timer.After(0.1, ReconciliarPosesion)
+            else
+                ReconciliarPosesion()
+            end
         end)
     end
 

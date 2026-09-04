@@ -468,12 +468,24 @@ chk("y se muestrea a 20 por segundo",
 -- integra su velocidad. Es una estimacion, pero es la unica via.
 print("El movimiento se mide distinto segun quien se mueva")
 chk("un NPC poseido es el `pet`", ataque:find('UnitExists("pet")', 1, true) ~= nil, true)
-chk("y se le integra la velocidad",
-    ataque:find("avance = v * trozo", 1, true) ~= nil, true)
--- Con la velocidad REAL, no con la de carrera base: Atlas da por buena 7 yd/s y un ralentizado
--- gasta su turno igual de rapido que uno suelto, que es mentira.
-chk("con su velocidad real",
-    ataque:find('GetUnitSpeed("pet")) or 0) * 0.9144', 1, true) ~= nil, true)
+-- MODELO ATLAS REAL (combat_tracker OnUpdate): la velocidad es solo el DETECTOR de "se esta
+-- moviendo" y el gasto avanza a RITMO FIJO de 7 m/s. Multiplicar por la velocidad medida
+-- fallaba en Epsilon, que puede exponerla a 0 o en el cuerpo equivocado durante la posesion.
+chk("gasto a ritmo fijo de Atlas (7 m/s)",
+    ataque:find("avance = 7 * trozo", 1, true) ~= nil, true)
+-- Detector en `pet` y, si da cero, en `player`: en algunos clientes la orden de movimiento de
+-- la posesion se expone en el cuerpo del jugador. Solo DETECTA: el gasto sigue siendo fijo.
+chk("detector con respaldo en player",
+    ataque:find('v = GetUnitSpeed and tonumber(GetUnitSpeed("player")) or 0', 1, true) ~= nil, true)
+-- Las sesiones no se mezclan: la del jugador se corta y reinicia como NPC al poseer (el gasto
+-- del NPC caia en la barra del PLAYER), y la del NPC se corta al des-poseer (el ritmo fijo
+-- seguiria descontando mientras el DM anda libre).
+chk("sesion etiquetada al arrancar",
+    ataque:find("sesionNpc = LlevandoNpc() and true or false", 1, true) ~= nil, true)
+chk("posesion sobre sesion de jugador reinicia",
+    ataque:find("if not sesionNpc and LlevandoNpc() then", 1, true) ~= nil, true)
+chk("des-posesion corta la sesion NPC",
+    ataque:find("if sesionNpc and not LlevandoNpc() then", 1, true) ~= nil, true)
 chk("y el jugador sigue midiendose por posicion",
     ataque:find("local x, y, z = GetPosition()", 1, true) ~= nil, true)
 -- Al NPC se le cuenta, pero NO se le pone muro: `worldport` mueve tu cuerpo, no a la criatura
@@ -507,18 +519,29 @@ chk("no arranca solo fuera de combate",
 -- el turno del enemigo.
 chk("ni fuera de tu turno",
     ataque:find("local function EsMiTurno()", 1, true) ~= nil, true)
--- Pero llevar un NPC ES jugar SU turno: el DM lo mueve cuando le toca a el, no a los PJs.
--- Preguntar ahi por el turno de los PJs le bloquearia el movimiento justo cuando debe moverse.
-chk("salvo si llevas un NPC",
-    ataque:find("if LlevandoNpc and LlevandoNpc() then return true end", 1, true) ~= nil, true)
--- Y su tope sale de SU ficha ("Velocidad 9 m"), no de tu raza: aplicarle la tuya no tiene nada que
--- ver con la suya, y sin raza puesta salia 0, o sea sin limite.
-chk("y su tope sale de su stat block",
+-- El NPC solo juega cuando ESTA en el bloque activo. No vale que exista `pet`: durante el turno de
+-- Aliados no puede gastar el movimiento de un NPC de Enemigos, ni al reves.
+chk("el NPC mira su bloque activo",
+    ataque:find("T.IsNpcTurn(guid)", 1, true) ~= nil, true)
+local turnosNpc = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
+chk("y el bloque reconoce sus miembros",
+    turnosNpc:find("for _, member in ipairs(entry.miembros or {}) do", 1, true) ~= nil, true)
+-- Y su tope sale de la ficha NPC ya cargada, no de tu raza ni de consultar TRP3 sobre `pet`.
+chk("y su tope sale de su ficha cargada",
     ataque:find("local function VelocidadDelNpc()", 1, true) ~= nil, true)
-chk("leyendo la Velocidad del bloque",
-    ataque:find('tostring(bloque.speed or "")', 1, true) ~= nil, true)
--- Se escribe a mano: "9 m", "9m", "30 pies". El primer numero es el que vale, y los pies se pasan.
-chk("y entendiendo pies", ataque:find('if texto:lower():find("pie") then', 1, true) ~= nil, true)
+chk("sin consultar TRP3 sobre pet",
+    ataque:find("HarfordDnDAPI.GetNpcMovementMeters(guid)", 1, true) ~= nil, true)
+local fichaNpc = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("la velocidad se publica por GUID",
+    fichaNpc:find("function HarfordDnDAPI.GetNpcMovementMeters(guid)", 1, true) ~= nil, true)
+chk("poseer durante el turno arranca el contador",
+    ataque:find('ev:RegisterEvent("UNIT_PET")', 1, true) ~= nil
+    and ataque:find("API.ReconciliarTurnoEnCurso()", 1, true) ~= nil, true)
+chk("el NPC no requiere posicion del jugador",
+    ataque:find("if not LlevandoNpc() then\n            x, y, z = GetPosition()", 1, true) ~= nil, true)
+chk("la posesion notifica al motor antes del comando",
+    io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
+        :find("NotifyNpcPossessionRequested(snapshot.guid)", 1, true) ~= nil, true)
 -- UNA sola cuenta: la barra del marcador usa la MISMA que el contador. Calcularla aparte daba dos
 -- topes distintos --la barra el tuyo, el contador el del NPC-- y eso ya nos costo la barra entera.
 chk("y la barra usa esa misma cuenta",

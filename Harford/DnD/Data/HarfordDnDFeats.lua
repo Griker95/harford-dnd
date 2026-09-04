@@ -188,7 +188,9 @@ API.FEATS = {
     {
         id = "feat_afortunado", icon = "inv_misc_herb_goldclover", name = "Afortunado", description = "Una suerte inexplicable que puedes gastar cuando el dado no acompaña.", source = "PHB",
         traits = {
-            { id = "feat_phb_afortunado", icon = "inv_misc_herb_goldclover_leaf", name = "Suerte", type = "pasivo", description = "Tienes 3 puntos de suerte. Gastas 1 para tirar un d20 extra en un ataque/prueba/salvación (tuyo o contra ti) y elegir el resultado. Recargan en descanso largo.", effects = {} },
+            -- Con `uses` el Libro lo saca como habilidad propia con contador 3/3 y anuncio al
+            -- gastar; la repeticion del d20 sigue siendo de mesa.
+            { id = "feat_phb_afortunado", icon = "inv_misc_herb_goldclover_leaf", name = "Suerte", type = "activo", uses = { max = 3, recharge = "long" }, description = "Tienes 3 puntos de suerte. Gastas 1 para tirar un d20 extra en un ataque/prueba/salvación (tuyo o contra ti) y elegir el resultado. Recargan en descanso largo.", effects = {} },
         },
     },
     {
@@ -318,7 +320,10 @@ API.FEATS = {
         id = "feat_linguista", icon = "trade_archaeology_silverscrollcase", name = "Linguista", description = "Estudio de lenguas y códigos: hablas más idiomas y escribes en clave.", source = "PHB",
         traits = {
             { id = "feat_phb_ling_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "pasivo", description = "Inteligencia +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Inteligencia", value = 1 } } },
-            { id = "feat_phb_ling_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Aprendes tres idiomas. Puedes crear códigos cifrados para tus mensajes escritos.", effects = {} },
+            { id = "feat_phb_ling_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Puedes crear códigos cifrados para tus mensajes escritos.", effects = {} },
+            -- Los tres idiomas son eleccion REAL (selector de idiomas, exoticos incluidos):
+            -- entran en la entrada Idiomas del Libro con su origen.
+            { id = "feat_phb_ling_idiomas", icon = "inv_misc_note_05", name = "Idiomas", type = "choice", description = "Aprendes tres idiomas de tu elección.", effects = {}, choice = { slots = 3, optionsFrom = "language", exotic = true } },
         },
     },
     {
@@ -401,7 +406,9 @@ API.FEATS = {
     {
         id = "feat_movil", icon = "ability_rogue_fleetfooted", name = "Movil", description = "Rápido y escurridizo: cubres más terreno y te vas sin que te castiguen.", source = "PHB",
         traits = {
-            { id = "feat_phb_movil", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Tu velocidad aumenta 3 m. Al Correr, el terreno difícil no cuesta movimiento extra ese turno. Tras un ataque cuerpo a cuerpo a una criatura, no provocas ataques de oportunidad de ella ese turno.", effects = {} },
+            -- El +3 m es real (bono de velocidad: ficha y muro de movimiento); terreno dificil
+            -- y oportunidad quedan en mesa.
+            { id = "feat_phb_movil", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Tu velocidad aumenta 3 m. Al Correr, el terreno difícil no cuesta movimiento extra ese turno. Tras un ataque cuerpo a cuerpo a una criatura, no provocas ataques de oportunidad de ella ese turno.", effects = { { kind = "bonus", target = "speed", value = 3 } } },
         },
     },
     {
@@ -671,8 +678,9 @@ end
 -- como tres habilidades sin nombre reconocible -- "Trucos de Mago", "Sin desventaja en cercania",
 -- "Conjuro potente" -- y la dote como tal no salia por ninguna parte.
 --
--- Agrupar no pierde nada porque NINGUN rasgo de dote es accionable: no hay uno solo con `cast`,
--- `uses` ni `actionKind`. Si alguna vez lo hubiera, habria que sacarlo aparte para poder usarlo.
+-- Agrupar no pierde nada mientras el rasgo NO sea accionable. Los que SI lo son (`uses`,
+-- `cast` o `actionKind` — la Suerte de Afortunado tiene 3 usos por descanso largo) salen como
+-- entrada PROPIA ademas de la agrupada: el Libro necesita la fila para el contador y el gasto.
 function API.GetFeatAbilities(featIds)
     local out = {}
     if type(featIds) ~= "table" then return out end
@@ -684,11 +692,16 @@ function API.GetFeatAbilities(featIds)
                 partes[#partes + 1] = featDef.description
             end
             for _, trait in ipairs(featDef.traits or {}) do
-                local nombre = tostring(trait.name or "")
-                local texto = tostring(trait.description or "")
-                -- El nombre del rasgo delante y en negrita: dentro de la dote sigue siendo util
-                -- saber que parte hace que, aunque ya no sea una habilidad aparte.
-                partes[#partes + 1] = (nombre ~= "" and ("|cffffd100" .. nombre .. ":|r ") or "") .. texto
+                if trait.uses or trait.cast or trait.actionKind then
+                    out[#out + 1] = { className = "Dote: " .. tostring(featDef.name or featDef.id),
+                        level = 0, feature = trait }
+                else
+                    local nombre = tostring(trait.name or "")
+                    local texto = tostring(trait.description or "")
+                    -- El nombre del rasgo delante y en negrita: dentro de la dote sigue siendo util
+                    -- saber que parte hace que, aunque ya no sea una habilidad aparte.
+                    partes[#partes + 1] = (nombre ~= "" and ("|cffffd100" .. nombre .. ":|r ") or "") .. texto
+                end
             end
             out[#out + 1] = {
                 className = "Dote",

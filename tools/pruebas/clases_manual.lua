@@ -615,15 +615,17 @@ for _, tr in ipairs(unaDote.traits or {}) do
     if cuerpo:find(tostring(tr.description or ""), 1, true) then dentro = dentro + 1 end
 end
 chk("con todo lo que hace dentro", dentro, #(unaDote.traits or {}))
--- Agrupar solo vale porque ningun rasgo de dote es accionable. Si alguno lo fuera, quedaria
--- enterrado en un texto y no habria forma de usarlo.
-local accionables = 0
-for _, f in ipairs(FEATS.GetFeats() or {}) do
-    for _, tr in ipairs(f.traits or {}) do
-        if tr.cast or tr.uses or tr.actionKind then accionables = accionables + 1 end
-    end
+-- Un rasgo de dote ACCIONABLE (uses/cast/actionKind, como la Suerte de Afortunado con sus 3
+-- usos) no puede quedar enterrado en el texto agrupado: GetFeatAbilities lo saca como entrada
+-- PROPIA para que el Libro tenga la fila con el contador y el gasto.
+local sueltas = FEATS.GetFeatAbilities({ "feat_afortunado" })
+chk("Afortunado saca la Suerte como fila propia", #sueltas, 2)
+local suerte
+for _, item in ipairs(sueltas) do
+    if item.feature and item.feature.id == "feat_phb_afortunado" then suerte = item.feature end
 end
-chk("y ninguna dote tiene rasgos accionables", accionables, 0)
+chk("con sus usos", suerte and suerte.uses and suerte.uses.max, 3)
+chk("y recarga en descanso largo", suerte and suerte.uses and suerte.uses.recharge, "long")
 -- El Libro tiene que pedir la agrupada, no la suelta.
 local libro = io.open("Harford/Character/HarfordCharacterBook.lua"):read("*a")
 chk("el Libro pide la agrupada",

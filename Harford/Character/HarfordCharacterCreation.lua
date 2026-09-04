@@ -451,6 +451,13 @@ local GRAY_TERMS = {
 }
 local function ColorizeDescription(text)
     text = tostring(text or "")
+    -- Artefactos markdown que el compendio arrastra del manual: "***A niveles superiores.***"
+    -- y demas negritas-cursivas. El rotulo entre *** se convierte a etiqueta coloreada (el azul
+    -- de los niveles de conjuro) y el resto de asteriscos se retira. Los perfiles reales tienen
+    -- los *** crudos: esto los deja mejor que el canon, no distinto.
+    text = text:gsub("%*%*%*%s*(.-)%s*%*%*%*", "{col:" .. COL_SPELL_LEVEL .. "}%1{/col}")
+    text = text:gsub("%*%*%s*(.-)%s*%*%*", "%1")
+    text = text:gsub("%*", "")
     text = text:gsub("(%d*d%d+)", "{col:" .. COL_PROP .. "}%1{/col}")          -- dados: 1d6, 2d8, d4
     text = text:gsub("%f[%a][Dd]esventaja%f[%A]", "{col:" .. COL_PROP .. "}%0{/col}")
     text = text:gsub("%f[%a][Vv]entaja%f[%A]", "{col:" .. COL_PROP .. "}%0{/col}")

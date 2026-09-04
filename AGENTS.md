@@ -4515,6 +4515,12 @@ curar iconos de dote en el futuro, cambiar LAS DOS fuentes (o solo el catalogo y
 
 ## Alcance de melee y postura "Flanqueado" (2026-09-04)
 
+**`.distance` lo puede ejecutar CUALQUIER jugador en Epsilon** (confirmado por Griker,
+2026-09-04): el gate de alcance de `HarfordDnDRange` no depende de permisos. Que la medicion
+falle solo puede ser un hiccup del servidor, y en ese caso el ataque/conjuro se bloquea A
+PROPOSITO (decision de Codex: no cobrar una accion por un alcance desconocido) — reintentar
+es gratis.
+
 El cliente NO puede medir 1,5 m: `UnitPosition` solo habla del jugador (por eso el motor de areas
 pide posiciones por red). La capa de alcance se construye con lo medible:
 

@@ -660,14 +660,17 @@ local function GetClassEntryTraits(entry, elegidas)
         if not req then return true end
         return elegidas ~= nil and elegidas[tostring(req)] == true
     end
-    -- Un rasgo informativo cuyo UNICO contenido es conceder conjuros ("Conjuros de presencia
-    -- (Sangre)" del CdM) no sale en el frame de clase/subclase: sus conjuros ya aparecen en el
-    -- frame "Magia <X>" y el bloque solo duplicaba texto. Los perfiles reales ({PJ} Cody,
-    -- Especializacion Sangre) tampoco lo listan. Los rasgos raciales no pasan por aqui.
+    -- Un rasgo informativo de SUBCLASE cuyo unico contenido es conceder conjuros ("Conjuros de
+    -- presencia (Sangre)" del CdM, "Truco adicional" del Mago) no sale en el frame: sus conjuros
+    -- ya aparecen en "Magia <Sub>" (BuildMagicFrames los enruta por grantedSpells, spellGrants y
+    -- cantripSpellIds) y el bloque solo duplicaba texto; los perfiles reales ({PJ} Cody) tampoco
+    -- lo listan. Los rasgos de CLASE que conceden conjuros ("Nucleo demoniaco" del Brujo) SI se
+    -- quedan: no tienen frame de magia que los recoja. Los raciales no pasan por aqui.
     local function SoloConcedeConjuros(feature)
         return tostring(feature.type) == "informativo"
             and ((feature.spellGrants and #feature.spellGrants > 0)
-                or (feature.grantedSpells and #feature.grantedSpells > 0))
+                or (feature.grantedSpells and #feature.grantedSpells > 0)
+                or (feature.cantripSpellIds and #feature.cantripSpellIds > 0))
             and not (feature.effects and #feature.effects > 0)
     end
     local base, sub = {}, {}
@@ -675,8 +678,7 @@ local function GetClassEntryTraits(entry, elegidas)
     local subclass
     if class then
         for _, feature in ipairs(class.features or {}) do
-            if (tonumber(feature.level) or 99) <= entry.level and Concedido(feature)
-                and not SoloConcedeConjuros(feature) then
+            if (tonumber(feature.level) or 99) <= entry.level and Concedido(feature) then
                 base[#base + 1] = { feature = feature, source = "Clase", classId = class.id }
             end
         end
@@ -812,14 +814,21 @@ local function BuildMagicFrames(profileName, idsRaciales)
     end
 
     -- Que clase concede cada conjuro (indice de la entrada), respetando nivel y `requiresOption`.
+    -- Ademas de `grantedSpells` (CdM), las subclases conceden por `spellGrants` y
+    -- `cantripSpellIds` (Truco adicional del Mago): las tres rutas van al frame "Magia <Sub>".
     local concedidoPor = {}
     for i, entry in ipairs(classLevels) do
         local sub = HarfordDnDBook.GetSubclass(entry.classId, entry.subclassId)
         for _, feature in ipairs((sub and sub.features) or {}) do
             if (tonumber(feature.level) or 99) <= (tonumber(entry.level) or 0)
                 and (not feature.requiresOption or OpcionElegida(feature.requiresOption)) then
-                for _, spellId in ipairs(feature.grantedSpells or {}) do
+                local function Anota(spellId)
                     if concedidoPor[spellId] == nil then concedidoPor[spellId] = i end
+                end
+                for _, spellId in ipairs(feature.grantedSpells or {}) do Anota(spellId) end
+                for _, spellId in ipairs(feature.cantripSpellIds or {}) do Anota(spellId) end
+                for _, grant in ipairs(feature.spellGrants or {}) do
+                    for _, spellId in ipairs(grant.ids or {}) do Anota(spellId) end
                 end
             end
         end

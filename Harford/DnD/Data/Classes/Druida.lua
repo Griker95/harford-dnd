@@ -44,8 +44,8 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "dru_fer_adaptacion", level = 2, name = "Adaptacion salvaje", type = "choice", description = "Ganas competencia en salvaciones de Destreza o Constitución (además de las del druida). Cuentas como medio lanzador (tabla Feral).", effects = {}, choice = {
                 slots = 1,
                 options = {
-                    { id = "destreza", icon = "spell_nature_invisibilty",     label = "Salvacion de Destreza",     effects = { { kind = "saveProf", ability = "Destreza" } } },
-                    { id = "constitucion", icon = "spell_holy_blessingofstamina", label = "Salvacion de Constitucion", effects = { { kind = "saveProf", ability = "Constitucion" } } },
+                    { id = "destreza", icon = "spell_nature_invisibilty",     label = "Salvacion de Destreza",     desc = "Ganas competencia en las tiradas de salvación de Destreza.", effects = { { kind = "saveProf", ability = "Destreza" } } },
+                    { id = "constitucion", icon = "spell_holy_blessingofstamina", label = "Salvacion de Constitucion", desc = "Ganas competencia en las tiradas de salvación de Constitución.", effects = { { kind = "saveProf", ability = "Constitucion" } } },
                 },
             } },
             { id = "dru_fer_marca_ursol", level = 2, name = "Marca de ursol", type = "informativo", description = "A partir del nivel 2, puedes canalizar la sabiduría del antiguo Ursol para permitirte lanzar hechizos sutilmente, incluso mientras estás transformado.\n\nPuedes usar esta característica para lanzar hechizos mientras estás transformado hasta el final de tu turno. Mientras está activa, ignoras los componentes verbales y somáticos de tus hechizos de druida, así como cualquier componente material que no tenga un costo y que no se consuma por el hechizo.\n\nPuedes usar esta característica dos veces. Recuperas los usos gastados cuando terminas un descanso corto o largo.", uses = { max = 2, recharge = "short" }, effects = {} },
@@ -69,8 +69,8 @@ API.CLASSES[#API.CLASSES + 1] =
             { id = "dru_fer_tacticas", level = 6, name = "Tacticas ferales", type = "choice", description = "Transformado, elige Defensor de la Manada (intercambiar lugar para recibir un ataque) o Demoledor Pulverizante (derribar con salvación de Fuerza).", effects = {}, choice = {
                 slots = 1,
                 options = {
-                    { id = "defensor", icon = "ability_hunter_pet_bear",  label = "Defensor de la Manada", effects = {} },
-                    { id = "demoledor", icon = "ability_druid_maul", label = "Demoledor Pulverizante", effects = {} },
+                    { id = "defensor", icon = "ability_hunter_pet_bear",  label = "Defensor de la Manada", desc = "Cuando una criatura amiga que puedes ver a 5 pies de ti sea objetivo de una tirada de ataque, puedes usar tu reacción para intercambiar lugares con la criatura y que el ataque te apunte a ti en su lugar.", effects = {} },
+                    { id = "demoledor", icon = "ability_druid_maul", label = "Demoledor Pulverizante", desc = "Cuando golpeas a una criatura con un ataque de arma, la criatura debe hacer una tirada de salvación de Fuerza (CD 8 + tu modificador de Fuerza o Destreza + tu bonificador de competencia). Si falla, cae derribada. Solo puedes pulverizar una vez por turno.", effects = {} },
                 },
             } },
             { id = "dru_fer_mutilacion_brutal", icon = "ability_druid_mangle2", level = 10, name = "Mutilación Brutal", type = "informativo", description = "En el nivel 10, cuando golpeas a una criatura con un ataque de arma mientras estás transformado, la criatura golpeada tiene desventaja en la próxima tirada de salvación que haga contra un hechizo de druida que lances antes del final de tu siguiente turno.", effects = {} },

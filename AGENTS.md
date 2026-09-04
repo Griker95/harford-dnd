@@ -4513,7 +4513,7 @@ curar iconos de dote en el futuro, cambiar LAS DOS fuentes (o solo el catalogo y
   `HarfordDamageMitigation.ForTarget` acepta `opts.ignoreResist` — SOLO perdona la resistencia,
   nunca la inmunidad.
 
-## Alcance de melee y postura "Trabado en melee" (2026-09-04)
+## Alcance de melee y postura "Flanqueado" (2026-09-04)
 
 El cliente NO puede medir 1,5 m: `UnitPosition` solo habla del jugador (por eso el motor de areas
 pide posiciones por red). La capa de alcance se construye con lo medible:
@@ -4564,3 +4564,71 @@ pide posiciones por red). La capa de alcance se construye con lo medible:
   (recorrido paso a paso) y conjuros AL AZAR por modo de lanzamiento (known/prepared/wizard_book)
   para que el About genere "Magia <Clase>" ademas de "Magia <Sub>"; Guardar/Restaurar preservan
   los conjuros reales del personaje.
+
+## Mecanizacion de dotes: campana "todo mecanizado" (2026-09-04, segunda tanda)
+
+Estado: ~70 de 77 dotes con mecanica real. Piezas nuevas, todas reutilizables:
+
+- **Flags de combate** (kind `flag`, los consume el motor que corresponda):
+  `twoWeaponDefense` (+1 CA SOLO con arma cuerpo a cuerpo en cada mano, no con escudo; lo mira
+  `GetSelfArmorClass` en Combat), `mediumArmorMaster` (tope de Des 3 con armadura media; lo mira
+  `ArmorDexBonus` en Items), `heavyArmorMaster` (-3 al dano fisico NO magico recibido llevando
+  pesada; lo aplica `ForTarget` en Mitigation SOLO cuando la victima es el cliente local — los
+  remotos mitigan en su cliente), `piercingReroll` (Perforador: repite el dado base mas bajo de
+  dano perforante una vez por ataque, anotado "(v→n)" como Gran Arma; en WeaponRolls),
+  `resilientHitDieMin` (Resistente: minimo 2x Mod CON al curar con dado de golpe; en
+  RollHitDieHeal. OJO: el flag hay que declararlo EN LA DOTE ademas de consumirlo — se nos
+  olvido la primera vez).
+- **actionKinds nuevos del boton del Libro** (HarfordCharacterPanel):
+  `selfAdvantage` (anuncia gratis y aplica el estado `ayudado` — ventaja de UN SOLO USO en la
+  siguiente tirada de ataque o prueba; la situacion la valida la mesa. Lo usan las 13 dotes
+  situacionales: Acechador, Apresador, Actor, Azote de magos, Explorador de mazmorras,
+  Depredador endurecido, Atacante en carga/salvaje, Combatiente montado, Precision elfica,
+  Rencor de faccion, Lanzador preciso, Tirador de primera. UN estado reutilizado, no una copia
+  por dote), `hitDieHeal` (gasta un dado de golpe real via HarfordDnDRest.RollHitDieHeal,
+  publicado en el modulo; Fortaleza enana con cast "ninguna" porque va dentro de Esquivar) y
+  `featSpellPick` (ver abajo). Ya existian `selfHeal` (con `healResource`) y
+  `reactionWeaponAttack`.
+- **Conjuros concedidos por dote**: `spellGrants` con `level = 0` en el trait (la puerta de
+  nivel de ranura no aplica: se lanzan 1 vez sin espacio) + `uses` para el contador. Asi:
+  Teletransporte arcano, Tocado por las hadas/sombras, Telepata, Guia espiritual, Herencia
+  darnassiana. Telequinetico concede el truco por `cantripSpellIds` + accionable de empuje.
+- **Selector de conjuros por dote** (`actionKind = "featSpellPick"`): reutiliza
+  `HarfordAdvancementOpenSpellDialog` con `pickClass` fija o `pickClassFromChoice` (una
+  eleccion previa cuyos option ids SON nombres de clase). Lo elegido va al almacen PROPIO
+  `HarfordCompendioCharacterDB.featSpells[traitId]` — no se mezcla con los conocidos de clase
+  ni cuenta contra sus limites. Dotes: Iniciado en la magia (clase + 2 trucos + 1 conjuro N1),
+  Lanzador ritual (clase + 2 N1, etiqueta ritual validada en mesa), Iniciado artificiero
+  (lista de Mago). **PENDIENTE**: el gancho del grimorio (IsFeatureGrantedSpell leyendo
+  featSpells) vive en HarfordCompendioCore, abierto por Codex al escribir esto.
+- **Prestamos de otra clase** (`optionsFrom` en Book): "fightingStyle" y "metamagic" devuelven
+  LAS MISMAS opciones del rasgo donante (gue_estilo_combate / mago_metamagia) con sus efectos;
+  "weaponProf" genera un arma concreta por opcion (Maestro de armas, 4 huecos). Iniciado en el
+  combate y Adepto de la metamagia usan los dos primeros (este con contador 2 puntos/largo).
+- **Quedan sin mecanizar, con razon**: Adepto sobrenatural y Versado en las armas (referencian
+  contenido que esta adaptacion cambio: Invocaciones -> Maldiciones de Afliccion, y no existe
+  el dado de superioridad — necesitan equivalencia de mesa) y Mente aguda / Atleta (sin dato
+  observable por el cliente).
+- Leccion `subclassMarker`: la heuristica por frase NO casaba "Eliges tu senda" del Druida —
+  el selector estuvo sin marcar. Al crear una clase, poner SIEMPRE el campo.
+
+## Percepcion pasiva (2026-09-04)
+
+Regla 5e: pasiva = 10 + bono TOTAL de la habilidad (mod + competencia/pericia + bonos); sin
+tirada — el DM la compara contra el Sigilo de quien se esconde. Implementacion:
+
+- `HarfordDnDCalc.GetPassiveScore(skillId)` / `GetPassivePerception()`: 10 +
+  `GetSkillRollBonuses` + el bonus pasivo. Buckets nuevos `passivePerception` /
+  `passiveInvestigation` en FeatureEffects; la dote **Observador** aplica su +5 a ambos.
+- **Display**: vista de Habilidades del paperdoll — fila propia bajo Percepcion e
+  Investigacion, calculada sobre `SkillTotal` (que ya sabe de INSPECCION) + el bonus del
+  perfil que toque: el DM la ve tambien al inspeccionar a otro jugador. OJO: el pool de filas
+  de esa vista queda JUSTO en 26 (6 cabeceras + 18 habilidades + 2 pasivas); si se anade una
+  habilidad, ampliarlo o las ultimas filas se caen en silencio.
+- **NPCs**: `ParseNPCStatBlock` extrae "Percepcion pasiva N" del bloque de Sentidos (campo
+  `passivePerception`; CleanStatText normaliza tildes). La linea que la pintaba en el menu DM
+  de unidad se RETIRO (decision de Codex: no duplicar); el campo queda en el stat block para
+  cualquier superficie DM, y la suite canda que el menu no la duplique.
+- El +-5 por ventaja/desventaja PERMANENTE no se automatiza a proposito: el cliente no sabe
+  cuando la ventaja es permanente; el DM lo suma de cabeza.
+- Candado: `tools/pruebas/percepcion_pasiva.lua`.

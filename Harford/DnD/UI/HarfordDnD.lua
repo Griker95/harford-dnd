@@ -3020,8 +3020,10 @@ DoWeaponAttack = function(options)
     local base = HarfordDnDCalc.GetAbilityMod(abil)
     -- Sin competencia con el arma no se suma el bono de competencia (regla de 5e). Se puede
     -- atacar igual: no hay desventaja ni penalizacion, solo se pierde el bono.
-    local competente = (not ActorIsPlayer(def)) or (HarfordDnDCalc.HasWeaponProficiency == nil)
-        or HarfordDnDCalc.HasWeaponProficiency(def)
+    -- Un arma lanzada SIN la propiedad Arrojadiza es un ataque IMPROVISADO (regla 5e): 1d4,
+    -- alcance 20/60 y SIN bono de competencia. La marca `improvised` la pone Lanzar arma.
+    local competente = (not ActorIsPlayer(def)) or ((HarfordDnDCalc.HasWeaponProficiency == nil)
+        or HarfordDnDCalc.HasWeaponProficiency(def)) and not (def and def.improvised)
     local prof = competente and HarfordDnDCalc.GetPB() or 0
     local wmod = GetWeaponSlotAttackBonus(def)
     if not (def and def.ignoreGlobalWeaponBonuses) then

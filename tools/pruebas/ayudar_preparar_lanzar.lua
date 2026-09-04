@@ -70,9 +70,22 @@ print("Lanzar arma: se elige mano, y solo entre las que llevan arma")
 chk("las dos manos", #A.Get("lanzar_arma").throwWeapon.slots, 2)
 chk("solo las que devuelven arma", panel:find("local arma = items.GetEquippedWeapon(slot)\n                if arma then", 1, true) ~= nil, true)
 chk("sin arma avisa", panel:find('HarfordChat.Print("No llevas ningun arma que lanzar.")', 1, true) ~= nil, true)
--- Un arma lanzada suma tu modificador, como cualquier ataque con arma.
-chk("suma el modificador", panel:find("AttackWithBlock(arma, { suppressAbilityDamage = false })", 1, true) ~= nil, true)
-chk("sin reimplementar el ataque", panel:find("HarfordDnDStore.AttackWithBlock(arma", 1, true) ~= nil, true)
+-- Un arma lanzada suma tu modificador, como cualquier ataque con arma, y mide su alcance de
+-- LANZAMIENTO (attackMode thrown), no el contacto de melee.
+chk("suma el modificador y mide como lanzada",
+    panel:find('AttackWithBlock(proyectil, { suppressAbilityDamage = false, attackMode = "thrown" })', 1, true) ~= nil, true)
+chk("sin reimplementar el ataque", panel:find("HarfordDnDStore.AttackWithBlock(proyectil", 1, true) ~= nil, true)
+-- SIN la propiedad Arrojadiza es un ataque IMPROVISADO (1d4, 20/60, sin competencia): se lanza
+-- una COPIA marcada, nunca el def compartido del catalogo.
+chk("improvisada = copia con 1d4",
+    panel:find("proyectil.dmgN, proyectil.dmgS = 1, 4", 1, true) ~= nil
+    and panel:find("proyectil.improvised = true", 1, true) ~= nil, true)
+local armas = io.open("Harford/DnD/Data/HarfordDnDWeapons.lua"):read("*a")
+chk("alcance improvisado 20/60 en el gate",
+    armas:find('kind = "thrown", improvised = true', 1, true) ~= nil, true)
+local dnd = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("la improvisada pierde la competencia",
+    dnd:find("and not (def and def.improvised)", 1, true) ~= nil, true)
 
 -- Empujar, Ayudar y Lanzar arma preguntan lo mismo: un menu, no tres.
 print("Un solo selector para las tres, no tres copias")

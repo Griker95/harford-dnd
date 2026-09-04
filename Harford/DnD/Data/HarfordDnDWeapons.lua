@@ -114,8 +114,12 @@ function HarfordDnDWeapons.GetAttackRange(def, attackMode)
 
     if attackMode == "thrown" then
         local range = parseRange(hasProp("Arrojadiza"))
-        if range then range.kind = "thrown" end
-        return range
+        if range then range.kind = "thrown"; return range end
+        -- Sin la propiedad Arrojadiza, lanzarla es un ataque IMPROVISADO (regla 5e): alcance
+        -- 20/60 pies. El 1d4 y la perdida de competencia los pone la accion de Lanzar arma.
+        return { kind = "thrown", improvised = true,
+            normalMeters = 20 * feetToMeters, longMeters = 60 * feetToMeters,
+            normalFeet = 20, longFeet = 60 }
     end
     if tostring(def.mode) == "Ranged" then
         local range = parseRange(hasProp("Munición")) or parseRange(hasProp("Arrojadiza"))

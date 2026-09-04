@@ -152,9 +152,25 @@ do
         end
         local arma = items.GetEquippedWeapon(elegida.slot)
         if not arma then return false end
+        -- CON la propiedad Arrojadiza se lanza tal cual: mismo dado y mismo modificador que en
+        -- melee (Fuerza, o Destreza si ademas es Sutil), con el alcance de la propiedad. SIN
+        -- ella es un ataque IMPROVISADO (regla 5e): 1d4, alcance 20/60 y sin competencia — se
+        -- lanza una COPIA del arma con el dado y la marca cambiados, sin tocar la original.
+        -- `attackMode = "thrown"` hace que el gate de alcance mida la distancia de lanzamiento
+        -- y no exija el contacto de melee (una daga lanzada quedaba "fuera de alcance").
+        local esArrojadiza = HarfordDnDStore.HasWeaponProp and HarfordDnDStore.HasWeaponProp(arma, "Arrojadiza")
+        local proyectil = arma
+        if not esArrojadiza then
+            proyectil = {}
+            for k, v in pairs(arma) do proyectil[k] = v end
+            proyectil.dmgN, proyectil.dmgS = 1, 4
+            proyectil.improvised = true
+            HarfordChat.Print("|cffffcc00" .. tostring(arma.key or "El arma")
+                .. " no es arrojadiza:|r se lanza como arma improvisada (1d4, 20/60 pies, sin competencia).")
+        end
         -- `suppressAbilityDamage = false`: un arma lanzada suma tu modificador, como cualquier otro
         -- ataque con arma. El valor por defecto es para ataques de bloque y acompanantes.
-        HarfordDnDStore.AttackWithBlock(arma, { suppressAbilityDamage = false })
+        HarfordDnDStore.AttackWithBlock(proyectil, { suppressAbilityDamage = false, attackMode = "thrown" })
         return true
     end
 

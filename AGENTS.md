@@ -4599,8 +4599,10 @@ Estado: ~70 de 77 dotes con mecanica real. Piezas nuevas, todas reutilizables:
   `HarfordCompendioCharacterDB.featSpells[traitId]` — no se mezcla con los conocidos de clase
   ni cuenta contra sus limites. Dotes: Iniciado en la magia (clase + 2 trucos + 1 conjuro N1),
   Lanzador ritual (clase + 2 N1, etiqueta ritual validada en mesa), Iniciado artificiero
-  (lista de Mago). **PENDIENTE**: el gancho del grimorio (IsFeatureGrantedSpell leyendo
-  featSpells) vive en HarfordCompendioCore, abierto por Codex al escribir esto.
+  (lista de Mago). El gancho del grimorio esta PUESTO: `IsFeatureGrantedSpell` recorre
+  `featSpells` y esos conjuros cuentan como concedidos (aparecen y se lanzan); el 1/dia sin
+  espacio se lleva con el contador del rasgo y lanzarlos por el grimorio cobra mana/espacio
+  normal, que es lo que el manual permite ademas del uso gratis.
 - **Prestamos de otra clase** (`optionsFrom` en Book): "fightingStyle" y "metamagic" devuelven
   LAS MISMAS opciones del rasgo donante (gue_estilo_combate / mago_metamagia) con sus efectos;
   "weaponProf" genera un arma concreta por opcion (Maestro de armas, 4 huecos). Iniciado en el

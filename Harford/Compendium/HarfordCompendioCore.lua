@@ -142,6 +142,17 @@ local function IsFeatureGrantedSpell(spellId)
             end
         end
     end
+
+    -- CONJUROS ELEGIDOS POR DOTE (Iniciado en la magia, Lanzador ritual, Iniciado
+    -- artificiero): el selector del Libro (`featSpellPick`) los guarda en el almacen propio
+    -- `featSpells[traitId]` del SV, separados de los conocidos de clase para no contar contra
+    -- sus limites. Aqui cuentan como concedidos: aparecen en el grimorio y se pueden lanzar.
+    do
+        local db = _G.HarfordCompendioCharacterDB
+        for _, lista in pairs((type(db) == "table" and db.featSpells) or {}) do
+            if type(lista) == "table" and lista[wanted] then return true end
+        end
+    end
     return false
 end
 

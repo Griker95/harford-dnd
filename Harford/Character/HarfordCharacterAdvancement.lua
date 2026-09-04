@@ -2134,6 +2134,89 @@ local function OpenPrepareSpellsMenu(silent)
 end
 _G.HarfordOpenPrepareSpellsMenu = OpenPrepareSpellsMenu
 
+-- Menu de descanso largo GENERICO para rasgos `choice` con `rechooseOnLongRest` (Forja de
+-- runas del CdM: el manual permite reinscribir la runa al terminar cada descanso largo).
+-- Mismo espiritu que reelegir preparados: el descanso lo abre en silencio si no hay nada.
+-- Cada rasgo re-eligible es un submenu con sus opciones (la actual marcada); elegir reescribe
+-- la eleccion de UN slot con SetChoiceSlot y actualiza el About por la misma via guardada que
+-- la subida (solo si CanRewriteAbout lo reconoce como suyo; si no, se avisa por chat).
+local longRestMenu
+local function OpenLongRestChoicesMenu(silent)
+    local P = HarfordDnDProgression
+    local B = HarfordDnDBook
+    if not (P and P.GetClassLevels and B and B.GetUnlockedFeatures) then return end
+    local reeligibles = {}
+    for _, item in ipairs(B.GetUnlockedFeatures(P.GetClassLevels()) or {}) do
+        local f = item.feature
+        if f and f.choice and f.rechooseOnLongRest then reeligibles[#reeligibles + 1] = f end
+    end
+    if #reeligibles == 0 then
+        if not silent and HarfordChat and HarfordChat.Print then
+            HarfordChat.Print("No tienes rasgos que reelegir tras el descanso largo.")
+        end
+        return
+    end
+    if not (UIDropDownMenu_Initialize and ToggleDropDownMenu and UIDropDownMenu_CreateInfo) then return end
+    longRestMenu = longRestMenu or CreateFrame("Frame", "HarfordLongRestChoicesMenu", UIParent, "UIDropDownMenuTemplate")
+    UIDropDownMenu_Initialize(longRestMenu, function(_, level)
+        level = level or 1
+        if level == 1 then
+            local info = UIDropDownMenu_CreateInfo()
+            info.isTitle = true
+            info.notCheckable = true
+            info.text = "Descanso largo: reelegir"
+            UIDropDownMenu_AddButton(info, level)
+            for _, f in ipairs(reeligibles) do
+                info = UIDropDownMenu_CreateInfo()
+                info.text = tostring(f.name or f.id)
+                info.notCheckable = true
+                info.hasArrow = true
+                info.value = f.id
+                UIDropDownMenu_AddButton(info, level)
+            end
+        elseif level == 2 then
+            for _, f in ipairs(reeligibles) do
+                if f.id == UIDROPDOWNMENU_MENU_VALUE then
+                    local mapa = (P.GetChoiceSlotMap and P.GetChoiceSlotMap(f.id)) or {}
+                    local actual = mapa[1]
+                    local opciones = (B.GetChoiceOptions and B.GetChoiceOptions(f))
+                        or (f.choice and f.choice.options) or {}
+                    for _, opt in ipairs(opciones) do
+                        local elegida = opt
+                        local info = UIDropDownMenu_CreateInfo()
+                        info.text = tostring(elegida.label or elegida.id)
+                        info.checked = tostring(actual) == tostring(elegida.id)
+                        info.func = function()
+                            CloseDropDownMenus()
+                            local ok, err = P.SetChoiceSlot(f.id, 1, elegida.id)
+                            if ok == false then
+                                if HarfordChat and HarfordChat.Print then
+                                    HarfordChat.Print(tostring(f.name) .. ": " .. tostring(err or "no se pudo cambiar"))
+                                end
+                                return
+                            end
+                            if HarfordChat and HarfordChat.Print then
+                                HarfordChat.Print(tostring(f.name) .. " -> "
+                                    .. tostring(elegida.label or elegida.id) .. ".")
+                            end
+                            local Cre = _G.HarfordCharacterCreation
+                            if Cre and Cre.CanRewriteAbout and Cre.CanRewriteAbout()
+                                and Cre.RewriteAbout then
+                                Cre.RewriteAbout()
+                            elseif HarfordChat and HarfordChat.Print then
+                                HarfordChat.Print("Actualiza el About a mano: la ficha no es del generador.")
+                            end
+                        end
+                        UIDropDownMenu_AddButton(info, level)
+                    end
+                end
+            end
+        end
+    end, "MENU")
+    ToggleDropDownMenu(1, nil, longRestMenu, "cursor", 0, 0)
+end
+_G.HarfordOpenLongRestChoicesMenu = OpenLongRestChoicesMenu
+
 -- Conjuntos de nombres de las Listas Ampliadas de la subclase (Brujo: Afliccion/Demonologia/
 -- Destruccion). Devuelve nil si esa subclase no declara ninguna, para no cambiar el filtro.
 ExpandedSpellNames = function(classId, subclassId)

@@ -143,6 +143,9 @@ ApplyLongRest = function()
 
     -- Tras el descanso largo, ofrecer reelegir conjuros preparados (silencioso si el PJ no prepara).
     if _G.HarfordOpenPrepareSpellsMenu then _G.HarfordOpenPrepareSpellsMenu(true) end
+    -- Y los rasgos `choice` con `rechooseOnLongRest` (Forja de runas del CdM): mismo flujo,
+    -- silencioso si el PJ no tiene ninguno.
+    if _G.HarfordOpenLongRestChoicesMenu then _G.HarfordOpenLongRestChoicesMenu(true) end
 end
 
 -- Gasta un dado de golpe del tipo indicado y cura dX + Mod. Constitucion (min 0).

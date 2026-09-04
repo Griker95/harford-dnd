@@ -117,7 +117,10 @@ API.CLASSES[#API.CLASSES + 1] =
         { id = "cdm_ataque_extra", level = 5, name = "Ataque adicional", type = "pasivo", description = "Atacas dos veces, en lugar de una, al realizar la acción de Atacar.", effects = {
             { kind = "flag", flag = "extraAttack" },
         } },
-        { id = "cdm_forja_runas", level = 6, name = "Forja de runas", type = "choice", description = "Al terminar un descanso largo inscribes una de estas runas en tus armas runicas. Obtienes su beneficio mientras las empunes. Solo puedes tener UNA runa activa a la vez.", effects = {}, choice = {
+        -- `rechooseOnLongRest`: el manual permite reinscribir la runa al terminar cada descanso
+        -- largo, asi que el menu de descanso largo la ofrece a reelegir (mismo flujo que los
+        -- conjuros preparados). Cualquier rasgo `choice` futuro con esa regla usa este flag.
+        { id = "cdm_forja_runas", level = 6, name = "Forja de runas", type = "choice", rechooseOnLongRest = true, description = "Al terminar un descanso largo inscribes una de estas runas en tus armas runicas. Obtienes su beneficio mientras las empunes. Solo puedes tener UNA runa activa a la vez.", effects = {}, choice = {
             slots = 1,
             options = {
                 { id = "glaciar_ceniza", icon = "spell_frost_glacier", label = "Runa de Glaciar de Ceniza", desc = "Cuando golpeas a una criatura con un ataque de arma, tiene desventaja en cualquier tirada de salvacion que haga contra tus rasgos y conjuros de caballero de la muerte hasta tu proximo turno.", effects = {  } },

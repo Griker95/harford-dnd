@@ -8113,14 +8113,13 @@ do
             Print(string.format("  |cffffcc00%-18s|r d%-2s  %s", tostring(c.id),
                 tostring(c.hitDie or "?"), table.concat(subs, ", ")))
         end
-        Print("Uso: ficha6 <clase> [subclase] | ficha6 todas | ficha6 siguiente | ficha6 restaurar")
-        Print("'siguiente' recorre un combo clase+subclase por llamada ('arcficha6' importa un ArcSpell que lo castea).")
+        Print("Uso: ficha6 <clase> [subclase] | ficha6 todas | ficha6 menu | ficha6 siguiente | ficha6 restaurar")
+        Print("'menu' abre el desplegable clases->subclases: cada eleccion monta la ficha y regenera el About.")
         Print("|cffff8888Sustituye la ficha actual|r; se guarda copia y se recupera con 'restaurar'.")
     end
 
-    -- Recorrido PASO A PASO para el boton de Arcanum ('arcficha6' lo importa): cada llamada
-    -- monta el SIGUIENTE combo clase+subclase y regenera el About TRP3, asi que castear el
-    -- ArcSpell repetidamente recorre el catalogo entero sin escribir comandos. El contador es
+    -- Recorrido PASO A PASO: cada llamada monta el SIGUIENTE combo clase+subclase y regenera
+    -- el About TRP3, asi que repetir el comando recorre el catalogo entero. El contador es
     -- de sesion (se reinicia con /reload); la copia de la ficha real la toma Guardar() solo
     -- la primera vez, como siempre.
     local combos, paso = nil, 0
@@ -8138,16 +8137,14 @@ do
         return combos
     end
 
-    local function Siguiente()
-        local lista = Combos()
-        if #lista == 0 then Print("No hay clases cargadas.") return end
-        paso = paso % #lista + 1
+    -- Monta un combo, regenera el About y resume en una linea. Lo comparten el recorrido
+    -- 'siguiente' y el menu desplegable del ArcSpell.
+    local function Probar(classId, subclassId, prefijo)
         Guardar()
-        local combo = lista[paso]
-        local r, err = Montar(combo[1], combo[2])
+        local r, err = Montar(classId, subclassId)
         if not r then
-            Print(string.format("|cffff4444%s %s FALLA|r %s", tostring(combo[1]),
-                tostring(combo[2] or ""), tostring(err)))
+            Print(string.format("|cffff4444%s %s FALLA|r %s", tostring(classId),
+                tostring(subclassId or ""), tostring(err)))
             return
         end
         local about = ""
@@ -8155,16 +8152,89 @@ do
             local okA, errA = HarfordCharacterCreation.RewriteAbout()
             about = okA and "About regenerado." or ("|cffff5555About: " .. tostring(errA) .. "|r")
         end
-        Print(string.format("|cff88ff88[%d/%d] %s %s|r  %s | %s  %s",
-            paso, #lista, tostring(r.className), tostring(r.subclassId),
+        Print(string.format("|cff88ff88%s%s %s|r  %s | %s  %s",
+            tostring(prefijo or ""), tostring(r.className), tostring(r.subclassId),
             tostring(r.raza), tostring(r.trasfondo), about))
         if r.pendientes > 0 then
             Print("  |cffffcc00" .. r.pendientes .. " eleccion(es) sin resolver|r: "
                 .. table.concat(r.conEleccion, ", "))
         end
+    end
+
+    local function Siguiente()
+        local lista = Combos()
+        if #lista == 0 then Print("No hay clases cargadas.") return end
+        paso = paso % #lista + 1
+        local combo = lista[paso]
+        Probar(combo[1], combo[2], string.format("[%d/%d] ", paso, #lista))
         if paso == #lista then
             Print("Vuelta completa: el proximo cast empieza de nuevo. 'ficha6 restaurar' recupera tu ficha.")
         end
+    end
+
+    -- Menu en cascada (clases -> subclases): mismo patron de UIDropDownMenu de dos niveles que
+    -- los menus DM. El click en la CLASE monta su primera subclase (la que elegiria Montar sin
+    -- dato); el submenu elige una concreta. Al final del menu, "Restaurar mi ficha".
+    local menuFicha6
+    local function NombreColoreado(c)
+        local CC = _G.HarfordClassColors
+        local file = CC and CC.ClassFileFromText and CC.ClassFileFromText(c.name)
+        local hex = file and CC.RGBToHex and CC.RGBToHex(CC.ColorRGBForClassFile(file))
+        return hex and ("|cff" .. hex .. tostring(c.name) .. "|r") or tostring(c.name)
+    end
+
+    local function AbrirMenu()
+        if not (UIDropDownMenu_Initialize and ToggleDropDownMenu and UIDropDownMenu_CreateInfo) then
+            Print("El desplegable nativo no esta disponible.") return
+        end
+        menuFicha6 = menuFicha6 or CreateFrame("Frame", "HarfordFicha6Menu", UIParent, "UIDropDownMenuTemplate")
+        UIDropDownMenu_Initialize(menuFicha6, function(_, level)
+            level = level or 1
+            if level == 1 then
+                local info = UIDropDownMenu_CreateInfo()
+                info.isTitle = true; info.notCheckable = true
+                info.text = "Ficha de prueba nivel " .. NIVEL
+                UIDropDownMenu_AddButton(info, level)
+                for _, c in ipairs(Clases()) do
+                    local clase = c
+                    info = UIDropDownMenu_CreateInfo()
+                    info.notCheckable = true
+                    info.text = NombreColoreado(clase)
+                    if #(clase.subclasses or {}) > 0 then
+                        info.hasArrow = true
+                        info.value = clase.id
+                    end
+                    info.func = function()
+                        CloseDropDownMenus()
+                        Probar(clase.id, nil)
+                    end
+                    UIDropDownMenu_AddButton(info, level)
+                end
+                info = UIDropDownMenu_CreateInfo()
+                info.notCheckable = true
+                info.text = "|cffff8888Restaurar mi ficha|r"
+                info.func = function() CloseDropDownMenus(); Restaurar() end
+                UIDropDownMenu_AddButton(info, level)
+            elseif level == 2 then
+                local classId = UIDROPDOWNMENU_MENU_VALUE
+                for _, c in ipairs(Clases()) do
+                    if c.id == classId then
+                        for _, s in ipairs(c.subclasses or {}) do
+                            local sub = s
+                            local info = UIDropDownMenu_CreateInfo()
+                            info.notCheckable = true
+                            info.text = tostring(sub.name or sub.id)
+                            info.func = function()
+                                CloseDropDownMenus()
+                                Probar(classId, sub.id)
+                            end
+                            UIDropDownMenu_AddButton(info, level)
+                        end
+                    end
+                end
+            end
+        end, "MENU")
+        ToggleDropDownMenu(1, nil, menuFicha6, "cursor", 0, 0)
     end
 
     API.RegisterCommand("ficha6", function(args)
@@ -8175,6 +8245,7 @@ do
         if sub == "" then return Listar() end
         if sub == "restaurar" then return Restaurar() end
         if sub == "siguiente" then return Siguiente() end
+        if sub == "menu" then return AbrirMenu() end
 
         if sub == "todas" then
             Guardar()
@@ -8234,46 +8305,7 @@ do
                 .. table.concat(r.conEleccion, ", "))
         end
         if nueva then Print("  Copia de la ficha anterior guardada ('ficha6 restaurar').") end
-    end, "monta una ficha de nivel 6 (ficha6 [clase|todas|siguiente|restaurar])")
-
-    -- ─── ARCSPELL DE PRUEBA: un boton de Arcanum que castea 'ficha6 siguiente' ──
-    -- Importa al vault PERSONAL un ArcSpell de un solo paso MacroText. Se usa la misma tuberia
-    -- de exportacion de SpellCreator (AceSerializer + LibDeflate, que Arcanum ya carga via
-    -- LibStub) y su API publica ARC.ImportSpell: nada de escribir en sus SavedVariables ni de
-    -- tocar tablas privadas. Si el commID ya existe, Arcanum muestra su popup de sobrescritura.
-    API.RegisterCommand("arcficha6", function()
-        if not (_G.ARC and _G.ARC.ImportSpell) then
-            Print("Arcanum (SpellCreator) no esta cargado: no hay donde importar el ArcSpell.")
-            return
-        end
-        local LS = _G.LibStub
-        local Ace = LS and LS.GetLibrary and LS:GetLibrary("AceSerializer-3.0", true)
-        local Deflate = LS and LS.GetLibrary and LS:GetLibrary("LibDeflate", true)
-        if not (Ace and Deflate) then
-            Print("Faltan AceSerializer/LibDeflate (los trae el propio Arcanum).")
-            return
-        end
-        local spell = {
-            commID = "harford_ficha6",
-            fullName = "Harford: siguiente ficha de prueba",
-            description = "Monta la siguiente ficha de prueba de nivel 6 (recorre clase+subclase)"
-                .. " y regenera su About TRP3. Requiere Harford + HarfordDebug."
-                .. " Al terminar: /harford debug run ficha6 restaurar",
-            author = (UnitName and UnitName("player")) or "Harford",
-            cooldown = 0,
-            castbar = 0,
-            actions = {
-                { actionType = "MacroText", delay = 0, selfOnly = false,
-                  vars = "/harford debug run ficha6 siguiente" },
-            },
-            items = {},
-        }
-        local datos = Ace:Serialize(spell)
-        datos = Deflate:CompressDeflate(datos, { level = 9 })
-        datos = Deflate:EncodeForPrint(datos)
-        _G.ARC.ImportSpell(spell.commID .. ":" .. datos, true)
-        Print("ArcSpell importado al vault personal. Casteo: |cffffcc00/sf harford_ficha6|r (o desde el vault de Arcanum).")
-    end, "importa a Arcanum un ArcSpell que castea 'ficha6 siguiente'")
+    end, "monta una ficha de nivel 6 (ficha6 [clase|todas|menu|siguiente|restaurar])")
 end
 
 -- ─── POR QUE NO SE VEN LAS FICHAS DE ACCION ─────────────────────────────────

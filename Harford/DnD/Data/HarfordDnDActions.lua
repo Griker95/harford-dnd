@@ -107,6 +107,16 @@ API.DEFS = {
         -- lanza -- y el ataque sale por la ruta normal, con su CA, critico y mitigacion.
         throwWeapon = { slots = { "MainHand", "SecondaryHand" } },
     },
+    ataque_oportunidad = {
+        id = "ataque_oportunidad", name = "Ataque de oportunidad", icon = "ability_warrior_challange",
+        cast = "reaccion", orden = 11,
+        description = "Cuando una criatura que puedes ver sale de tu alcance, usas tu reaccion "
+            .. "para hacerle un ataque de arma cuerpo a cuerpo.",
+        -- Activable: el anuncio cobra la REACCION (bajo la regla de mesa, fuera de tu turno solo
+        -- con el estado `preparado`) y el golpe sale por la ruta normal de ataque de arma con
+        -- `skipTurnCost` para no cobrar ademas la accion. El disparador lo reconoce la mesa.
+        opportunityAttack = true,
+    },
     preparar = {
         id = "preparar", name = "Preparar",
         cast = "accion", orden = 10,

@@ -145,6 +145,7 @@ local function Empty()
         unarmoredDefenseAbilities = {}, -- caracteristicas cuyo Mod. se suma a la CA SIN armadura ni escudo (Defensa sin Armadura del Monje: Sabiduria)
         unarmoredDefenseBase = 0, -- base ALTERNATIVA de la CA sin armadura (Resiliencia Metalica del Mecagnomo: 13 + Des); 0 = la normal de 10
         unarmedDie = 0, -- dado del golpe desarmado (Brazos Mecanicos: 1d6); 0 = el 1 fijo del arma Desarmado
+        elementAdept = {}, -- tipos de dano de "Versado en un elemento": los 1 de sus dados de conjuro valen 2 y la resistencia del objetivo se ignora
         weaponFinesse = {}, -- reglas que permiten tratar armas concretas como Sutiles
         martialArts = {}, -- reglas de armas de monje: Destreza y dado marcial por nivel
         -- Sustitucion de la caracteristica de ataque/dano de un arma (Monje "Serenidad": Sabiduria
@@ -346,6 +347,13 @@ local function ApplyEffect(resolved, effect, profileName)
         if base > (tonumber(resolved.unarmoredDefenseBase) or 0) then
             resolved.unarmoredDefenseBase = base
         end
+    elseif kind == "elementAdept" and effect.damageType then
+        -- Clave CANONICA del tipo (rayo y relampago son el mismo): KeyFromTypeText resuelve
+        -- alias; NormDamageKey queda de respaldo si Mitigation no esta.
+        local claveElemento = HarfordDamageMitigation and HarfordDamageMitigation.KeyFromTypeText
+            and HarfordDamageMitigation.KeyFromTypeText(effect.damageType)
+            or NormDamageKey(effect.damageType)
+        resolved.elementAdept[claveElemento] = true
     elseif kind == "unarmedDie" then
         -- Dado del golpe desarmado (Brazos Mecanicos: 1d6). Gana el mayor; WeaponRolls lo
         -- aplica solo al arma Desarmado y nunca por debajo del dado que ya tenga.
@@ -724,6 +732,14 @@ end
 -- Base de la CA sin armadura (10 salvo un rasgo con base propia, como Resiliencia Metalica).
 function API.GetUnarmoredDefenseBase(profileName)
     return math.max(10, tonumber(API.Resolve(profileName).unarmoredDefenseBase) or 0)
+end
+
+-- Versado en un elemento: true si el jugador es adepto a ese tipo de dano.
+function API.IsElementAdept(damageType, profileName)
+    local clave = HarfordDamageMitigation and HarfordDamageMitigation.KeyFromTypeText
+        and HarfordDamageMitigation.KeyFromTypeText(damageType)
+        or NormDamageKey(damageType)
+    return API.Resolve(profileName).elementAdept[clave] == true
 end
 
 -- Dado del golpe desarmado por rasgo (Brazos Mecanicos), o nil si no hay mejora.

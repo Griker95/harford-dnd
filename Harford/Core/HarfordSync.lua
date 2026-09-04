@@ -1822,11 +1822,14 @@ function HarfordSync.SerializeAreaRequest(request)
         if applySaveCode == "" then applySaveDC = 0 end
     end
     local labelText = tostring(request.label or "Ataque de area"):sub(1, 80)
+    -- "Versado en un elemento": tipo cuya RESISTENCIA ignora el receptor. Campo AL FINAL:
+    -- los clientes antiguos lo ignoran (strsplit sobrante) y de los nuevos llega "" si falta.
+    local ignoreResist = AreaField(tostring(request.ignoreResistType or ""):sub(1, 16))
     local function BuildPayload()
         return table.concat({ "DNDAREAREQ", id, mode, ability, dc, success,
             attackTotal, critical, auraId, AreaField(labelText), components, conditionId or "",
             durationCode, turns, saveCode, conditionSaveDC, persist, sourceGuid, sourceName,
-            applySaveCode, applySaveDC }, "|")
+            applySaveCode, applySaveDC, ignoreResist }, "|")
     end
     local payload = BuildPayload()
     while #payload > 240 and labelText ~= "" do
@@ -1840,7 +1843,7 @@ end
 function HarfordSync.DeserializeAreaRequest(message)
     local opcode, id, mode, ability, dc, success, attackTotal, critical, auraId, label, components, conditionId,
         durationCode, conditionTurns, conditionSaveAbility, conditionSaveDC, conditionPersist, sourceGuid, sourceName,
-        conditionApplySaveAbility, conditionApplySaveDC =
+        conditionApplySaveAbility, conditionApplySaveDC, ignoreResistType =
         strsplit("|", tostring(message or ""))
     if opcode ~= "DNDAREAREQ" or not id or not id:match("^[%w%._%-]+$") or #id > 40 then return nil end
     mode = mode == "A" and "attack" or mode == "S" and "save" or mode == "U" and "auto"
@@ -1880,6 +1883,7 @@ function HarfordSync.DeserializeAreaRequest(message)
         sourceName = LoadAreaField(sourceName):sub(1, 48),
         conditionApplySaveAbility = conditionApplySaveAbility,
         conditionApplySaveDC = conditionApplySaveDC,
+        ignoreResistType = LoadAreaField(ignoreResistType):sub(1, 16),
     }
 end
 

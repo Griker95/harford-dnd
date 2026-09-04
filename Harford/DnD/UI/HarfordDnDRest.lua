@@ -168,6 +168,13 @@ RollHitDieHeal = function(sides, sourceFeature)
         and HarfordDnDFeatureEffects.HasFlag("trollRegenHitDie")) and 2 or 1
     local conMod = HarfordDnDCalc.GetAbilityMod("Constitucion") * conMult
     local heal = roll + conMod
+    -- Dote Resistente (flag resilientHitDieMin): el MINIMO que recupera un dado de golpe es
+    -- 2 x Mod. CON base (minimo 2), diga lo que diga el dado.
+    if HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("resilientHitDieMin") then
+        local suelo = math.max(2, 2 * HarfordDnDCalc.GetAbilityMod("Constitucion"))
+        if heal < suelo then heal = suelo end
+    end
     if heal < 1 then heal = 1 end
 
     AdjustResourceCurrent("health", heal)

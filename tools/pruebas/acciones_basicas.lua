@@ -32,7 +32,7 @@ print("El catalogo, en el orden del manual y no alfabetico")
 local orden = {}
 for _, d in ipairs(A.GetOrdered()) do orden[#orden + 1] = d.id end
 chk("orden", table.concat(orden, ","),
-    "esquivar,correr,desengancharse,esconderse,agarrar,empujar,ayudar,estabilizar,lanzar_arma,preparar")
+    "esquivar,correr,desengancharse,esconderse,agarrar,empujar,ayudar,estabilizar,lanzar_arma,preparar,ataque_oportunidad")
 
 print("Sin rasgos que la abran, solo su coste base")
 chk("esquivar", costes("esquivar", {}), "accion")
@@ -103,7 +103,7 @@ chk("ninguna accion lleva coletilla narrativa", narrativas, 0)
 -- que las dos listas no se separen otra vez.
 print("Toda accion basica sabe resolverse")
 local RUTAS = { "selfCondition", "skillCheck", "contest", "helpOther", "throwWeapon",
-                "readyAction", "dobleMovimiento", "soloAnuncio" }
+                "readyAction", "dobleMovimiento", "soloAnuncio", "opportunityAttack" }
 for _, def in ipairs(A.GetOrdered()) do
     local tiene = false
     for _, k in ipairs(RUTAS) do if def[k] then tiene = true break end end

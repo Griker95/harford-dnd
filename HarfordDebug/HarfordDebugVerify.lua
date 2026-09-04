@@ -220,6 +220,7 @@ Grupo("acciones", 'las diez acciones basicas; anade "ejecutar" para dispararlas 
         -- ve -- no se convive con un rojo conocido.
         local ruta = def.selfCondition or def.skillCheck or def.contest or def.helpOther
             or def.throwWeapon or def.readyAction or def.dobleMovimiento or def.soloAnuncio
+            or def.opportunityAttack
         r.chk("accion sin forma de resolverse: " .. def.id, ruta ~= nil)
         r.chk("accion sin coste: " .. def.id, def.cast ~= nil)
         local costes = A.CostsFor(def.id, {})

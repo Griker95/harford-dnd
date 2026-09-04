@@ -1048,6 +1048,21 @@ local function RollComponents(definition)
                 end
             end
         end
+        -- Dote "Versado en un elemento": en CONJUROS (hay castLevel) de su tipo, cada 1 FINAL
+        -- de los dados vale 2. Va DESPUES de las repeticiones (Muerte, Racha): el manual habla
+        -- del resultado que te quedas, y antes rompia las comparaciones numericas de esas reglas.
+        local adeptoSubidas = 0
+        if definition.castLevel ~= nil and HarfordDnDFeatureEffects
+            and HarfordDnDFeatureEffects.IsElementAdept
+            and HarfordDnDFeatureEffects.IsElementAdept(component.damageType) then
+            for i, v in ipairs(values) do
+                if v == 1 then
+                    values[i] = 2
+                    amount = amount + 1
+                    adeptoSubidas = adeptoSubidas + 1
+                end
+            end
+        end
         rolled[#rolled + 1] = {
             amount = math.max(0, amount),
             maximum = math.max(0, count * sides + component.damageBonus),
@@ -1058,6 +1073,7 @@ local function RollComponents(definition)
             .. ": " .. table.concat(values, "+")
             .. (#replaced > 0 and (" (Muerte " .. table.concat(replaced, ", ") .. ")") or "")
             .. (racha and (" (Racha de calor +" .. tostring(racha) .. ")") or "")
+            .. (adeptoSubidas > 0 and (" (Versado: " .. adeptoSubidas .. "x 1=2)") or "")
         end
     end
     return rolled, table.concat(details, " | ")
@@ -1138,7 +1154,16 @@ local function ApplyComponents(unit, request, affected, critical)
         end
         local applied, _status, marker = amount, nil, ""
         if amount > 0 and HarfordDamageMitigation and HarfordDamageMitigation.ForTarget then
-            applied, _status, marker = HarfordDamageMitigation.ForTarget(unit, component.damageType, amount)
+            -- "Versado en un elemento" del atacante (viaja en la peticion): la resistencia a
+            -- ESE tipo no aplica. Se compara por clave canonica (rayo/relampago son el mismo).
+            local ignora = false
+            local tipoIgnorado = tostring(request.ignoreResistType or "")
+            if tipoIgnorado ~= "" and HarfordDamageMitigation.KeyFromTypeText then
+                ignora = HarfordDamageMitigation.KeyFromTypeText(tipoIgnorado)
+                    == HarfordDamageMitigation.KeyFromTypeText(component.damageType)
+            end
+            applied, _status, marker = HarfordDamageMitigation.ForTarget(unit, component.damageType, amount,
+                ignora and { ignoreResist = true } or nil)
         end
         total = total + (tonumber(applied) or 0)
         summaries[#summaries + 1] = tostring(applied or 0) .. " " .. DamageLabel(component.damageType)
@@ -1469,6 +1494,18 @@ local function MakeRequest(session, target, index)
         label = session.definition.networkLabel,
         components = session.rolledComponents,
     }
+    -- Dote "Versado en un elemento" del lanzador: el receptor debe IGNORAR su resistencia a ese
+    -- tipo, asi que el tipo viaja en la peticion. Solo en conjuros (hay castLevel) y solo un
+    -- tipo (el primero adepto entre los componentes; la dote es de un elemento).
+    if session.definition.castLevel ~= nil and HarfordDnDFeatureEffects
+        and HarfordDnDFeatureEffects.IsElementAdept then
+        for _, component in ipairs(session.rolledComponents or {}) do
+            if HarfordDnDFeatureEffects.IsElementAdept(component.damageType) then
+                request.ignoreResistType = component.damageType
+                break
+            end
+        end
+    end
     if request.mode == "attack" then
         local chosen, dieA, dieB, critTag = HarfordDnDCalc.RollD20Full("attack", {
             actorGuid = session.context.sourceGuid,

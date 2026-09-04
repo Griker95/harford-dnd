@@ -4551,6 +4551,12 @@ HarfordDnDStore.AttackWithBlock = function(def, options)
     DoWeaponAttack(options)
 end
 
+-- Ataque de arma ESTANDAR con el arma activa, para rutas que ya cobraron su coste de turno
+-- (Ataque de oportunidad: el anuncio cobra la reaccion y este golpe no debe cobrar la accion).
+HarfordDnDStore.DoWeaponAttack = function(options)
+    DoWeaponAttack(options)
+end
+
 HarfordDnDStore.AttackWithCompanion = function(actionKey)
     if not (HarfordDnDCompanions and HarfordDnDCompanions.GetWeaponDef) then return end
     local def, err = HarfordDnDCompanions.GetWeaponDef(actionKey)

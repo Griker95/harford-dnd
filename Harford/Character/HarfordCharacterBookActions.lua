@@ -262,6 +262,15 @@ do
             Ayudar(def)
         elseif type(def.throwWeapon) == "table" then
             LanzarArma(def)
+        elseif def.opportunityAttack then
+            -- El anuncio de arriba ya cobro la REACCION; el golpe no debe cobrar ademas la
+            -- accion (skipTurnCost, como las maniobras). Requiere target: la ruta normal de
+            -- ataque ya lo valida y resuelve CA, critico y mitigacion.
+            if not (UnitExists and UnitExists("target")) then
+                HarfordChat.Print("El ataque de oportunidad necesita un objetivo.")
+            elseif HarfordDnDStore and HarfordDnDStore.DoWeaponAttack then
+                HarfordDnDStore.DoWeaponAttack({ skipTurnCost = true })
+            end
         elseif type(def.readyAction) == "table" then
             Preparar(def)
         elseif def.dobleMovimiento then

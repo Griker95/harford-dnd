@@ -290,6 +290,11 @@ function HarfordDamageMitigation.ForTarget(unit, typeText, amount, opts)
     elseif status == STATUS_NORMAL and conditionStatus then
         status = conditionStatus
     end
+    -- Dote "Versado en un elemento" del ATACANTE (viaja en la peticion de area): la resistencia
+    -- a ese tipo se ignora. La inmunidad no -- el manual solo perdona la resistencia.
+    if opts and opts.ignoreResist and status == STATUS_RESISTANT then
+        status = STATUS_NORMAL
+    end
     return HarfordDamageMitigation.ApplyMultiplier(amount, status), status,
         HarfordDamageMitigation.Marker(status)
 end

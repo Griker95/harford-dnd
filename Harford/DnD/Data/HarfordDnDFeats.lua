@@ -469,7 +469,16 @@ API.FEATS = {
     {
         id = "feat_versado_elemento", icon = "spell_fire_masterofelements", requiredCaster = "any", name = "Versado en un elemento", requires = "Capacidad de lanzar al menos un conjuro", description = "Eliges un elemento y tus conjuros de ese tipo pegan más y atraviesan resistencias.", source = "PHB",
         traits = {
-            { id = "feat_phb_verselem", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Elige un tipo de daño (acido, frío, fuego, relámpago o trueno): tus conjuros ignoran la resistencia a ese tipo y puedes contar cualquier 1 en sus dados de daño como 2. Puedes tomar el dote varias veces (tipo distinto).", effects = {} },
+            -- MECANIZADO: la eleccion aplica `elementAdept` — los 1 de los dados de conjuro de
+            -- ese tipo valen 2 (lado atacante) y la resistencia del objetivo se ignora (viaja
+            -- en la peticion de area; la inmunidad no se perdona).
+            { id = "feat_phb_verselem", icon = "inv_scroll_11", name = "Elemento versado", type = "choice", description = "Elige un tipo de daño (acido, frío, fuego, relámpago o trueno): tus conjuros ignoran la resistencia a ese tipo y puedes contar cualquier 1 en sus dados de daño como 2.", effects = {}, choice = { slots = 1, options = {
+                { id = "verselem_acido", label = "Acido", effects = { { kind = "elementAdept", damageType = "acido" } } },
+                { id = "verselem_frio", label = "Frio", effects = { { kind = "elementAdept", damageType = "frio" } } },
+                { id = "verselem_fuego", label = "Fuego", effects = { { kind = "elementAdept", damageType = "fuego" } } },
+                { id = "verselem_relampago", label = "Relampago", effects = { { kind = "elementAdept", damageType = "relampago" } } },
+                { id = "verselem_trueno", label = "Trueno", effects = { { kind = "elementAdept", damageType = "trueno" } } },
+            } } },
         },
     },
     -- ===== Dotes de El Caldero para Todo de Tasha (TCoE 5e ES) =====

@@ -94,6 +94,7 @@ API.FEATS = {
     {
         id = "feat_precision_elfica", icon = "ability_hunter_aimedshot", requiredRaces = { "raza_elfo_noche", "raza_elfo_sangre", "raza_nocheterna", "raza_elfo_vacio", "raza_semielfo", "raza_renegado_elfo" }, name = "Precision elfica", requires = "Cualquier elfo o renegado (elfo)", description = "Puntería élfica: cuando la ocasión te favorece, la aprovechas mejor que nadie.",
         traits = {
+            { id = "feat_precision_elfica_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_pe_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Destreza, Inteligencia, Sabiduría o Carisma +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Destreza"), AbilOpt("Inteligencia"), AbilOpt("Sabiduria"), AbilOpt("Carisma") } } },
             { id = "feat_pe_reroll", icon = "hots_tyrande_huntersmark", name = "Precision", type = "pasivo", description = "Con ventaja en un ataque de Destreza, Inteligencia, Sabiduría o Carisma, puedes volver a tirar uno de los dados una vez.", effects = {} },
         },
@@ -109,6 +110,7 @@ API.FEATS = {
     {
         id = "feat_rencor_faccion", icon = "eps_lol_tryndamere_undyingrage", name = "Rencor de faccion", requires = "Cualquier raza", description = "Odio jurado a dos razas enemigas: las conoces, las lees y reaccionas antes ante ellas.",
         traits = {
+            { id = "feat_rencor_faccion_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_rf_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "choice", description = "Fuerza, Constitución o Sabiduría +1 (max 20).", effects = {}, choice = { slots = 1, options = { AbilOpt("Fuerza"), AbilOpt("Constitucion"), AbilOpt("Sabiduria") } } },
             { id = "feat_rf_enemigos", icon = "eps_lol_gnar_ragegene", name = "Enemigos jurados", type = "pasivo", description = "Elige dos razas de la facción opuesta. En el primer asalto de combate, tus ataques contra ellas tienen ventaja.", effects = {} },
             { id = "feat_rf_oportunidad", icon = "d3_battlerage", name = "Reflejos contra enemigos", type = "pasivo", description = "Cuando un enemigo elegido hace un ataque de oportunidad contra ti, lo hace con desventaja.", effects = {} },
@@ -118,6 +120,7 @@ API.FEATS = {
     {
         id = "feat_depredador_endurecido", icon = "ability_racial_darkflight", requiredRaces = { "raza_huargen" }, name = "Depredador endurecido", requires = "Huargen", description = "El instinto huargen a flor de piel: olfato, Correr a cuatro patas y garras que cuentan como arma.",
         traits = {
+            { id = "feat_depredador_endurecido_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_de_olfato", icon = "eps_wc3_enchantedbear", name = "Olfato agudo", type = "pasivo", description = "Ventaja en pruebas de Sabiduría (Percepción) que dependan del olfato.", effects = {} },
             { id = "feat_de_correr", icon = "ability_racial_runningwild", name = "Carrera a cuatro patas", type = "pasivo", description = "Con ambas manos vacias, puedes Correr como acción adicional, desplazandote a cuatro patas.", effects = {} },
             { id = "feat_de_garras", icon = "ability_racial_flayer", name = "Garras", type = "pasivo", description = "Tus garras son armas naturales: golpe desarmado que inflige 1d4 + Mod. Fuerza cortante.", effects = {} },
@@ -175,12 +178,14 @@ API.FEATS = {
     {
         id = "feat_acechador", icon = "ability_druid_prowl", requiredAbility = { abilities = { "Destreza" }, min = 13 }, name = "Acechador", requires = "Destreza 13 o mas", description = "Sabes esconderte donde otros no podrían, y un intento fallido no te delata.", source = "PHB",
         traits = {
+            { id = "feat_acechador_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_acechador", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Puedes esconderte si solo estas ligeramente oscurecido para la criatura. Fallar un ataque a distancia estando escondido no revela tu posición. La luz tenue no te da desventaja en Percepción (vista).", effects = {} },
         },
     },
     {
         id = "feat_actor", icon = "eps_lol_profileicon_songofnunubraum", name = "Actor", description = "Talento para la imitación y el disfraz verbal: convences con la voz y con el gesto.", source = "PHB",
         traits = {
+            { id = "feat_actor_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_actor_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "pasivo", description = "Carisma +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Carisma", value = 1 } } },
             { id = "feat_phb_actor_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Ventaja en Engaño e Interpretación para hacerte pasar por otra persona. Puedes imitar voces y sonidos oidos al menos 1 minuto.", effects = {} },
         },
@@ -203,18 +208,21 @@ API.FEATS = {
     {
         id = "feat_apresador", icon = "ability_warrior_titansgrip", requiredAbility = { abilities = { "Fuerza" }, min = 13 }, name = "Apresador", requires = "Fuerza 13 o mas", description = "Pelea pegado al enemigo: agarrar, sujetar y castigar a quien tienes encima.", source = "PHB",
         traits = {
+            { id = "feat_apresador_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_apresador", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Ventaja en ataques contra criaturas que estés agarrando. Con una acción puedes someter a un agarrado: ambos quedais apresados si tienes éxito.", effects = {} },
         },
     },
     {
         id = "feat_atacante_carga", icon = "ability_warrior_charge", name = "Atacante a la carga", description = "Aprovechas la carrera para rematarla con un golpe o una embestida.", source = "PHB",
         traits = {
+            { id = "feat_atacante_carga_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_carga", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Al usar la acción de Correr puedes usar acción adicional para un ataque cuerpo a cuerpo o empujar. Si te moviste 3 m en línea recta antes, +5 al daño o empujas 3 m.", effects = {} },
         },
     },
     {
         id = "feat_atacante_salvaje", icon = "warrior_wild_strike", name = "Atacante salvaje", description = "Una vez por turno, repites el daño de un golpe cuerpo a cuerpo que no te convenza.", source = "PHB",
         traits = {
+            { id = "feat_atacante_salvaje_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_salvaje", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Una vez por turno, al tirar el daño de un ataque cuerpo a cuerpo con arma, puedes repetir los dados de daño y usar el resultado que prefieras.", effects = {} },
         },
     },
@@ -228,6 +236,7 @@ API.FEATS = {
     {
         id = "feat_azote_magos", icon = "ability_demonhunter_consumemagic", name = "Azote de magos", description = "Técnicas para ahogar la magia enemiga en cuanto la tienes al alcance.", source = "PHB",
         traits = {
+            { id = "feat_azote_magos_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_azote", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Reacción para atacar cuerpo a cuerpo a quien lance un conjuro a 1,5 m. Si lo dañas mientras se concentra, tiene desventaja en la salvación de concentración. Ventaja en salvaciones contra conjuros lanzados a 1,5 m.", effects = {} },
         },
     },
@@ -247,6 +256,7 @@ API.FEATS = {
     {
         id = "feat_combatiente_montado", icon = "w3reforgedknight", name = "Combatiente montado", description = "A caballo eres otra cosa: proteges a tu montura y golpeas desde arriba.", source = "PHB",
         traits = {
+            { id = "feat_combatiente_montado_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_montado", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Montado y no incapacitado: ventaja en ataques cuerpo a cuerpo contra criaturas no montadas de tamaño menor que tu montura; rediriges a ti ataques contra tu montura; tu montura no recibe daño si supera una salvación de Destreza por mitad.", effects = {} },
         },
     },
@@ -271,6 +281,7 @@ API.FEATS = {
     {
         id = "feat_explorador_mazmorras", icon = "inv_enchanting_70_pet_torch", name = "Explorador de mazmorras", description = "Ojo entrenado para trampas y puertas secretas, y memoria para el terreno.", source = "PHB",
         traits = {
+            { id = "feat_explorador_mazmorras_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_mazmorras", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Ventaja en Percepción e Investigación para detectar puertas secretas y en salvaciones contra trampas. Resistencia al daño de trampas. Buscas trampas a ritmo normal.", effects = {} },
         },
     },
@@ -296,6 +307,7 @@ API.FEATS = {
     {
         id = "feat_lanzador_preciso", icon = "eps_lol_profileicon_truedamage", requiredCaster = "any", name = "Lanzador preciso", requires = "Capacidad de lanzar al menos un conjuro", description = "Puntería con la magia: tus ataques de conjuro no sufren por la cercanía ni por la cobertura.", source = "PHB",
         traits = {
+            { id = "feat_lanzador_preciso_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_lpreciso", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Al lanzar un conjuro con tirada de ataque, su alcance se duplica. Tus ataques de conjuro a distancia ignoran cobertura media y tres cuartos. Aprendes un truco con tirada de ataque.", effects = {} },
         },
     },
@@ -363,7 +375,7 @@ API.FEATS = {
         id = "feat_maestro_armaduras_pesadas", icon = "inv_chest_plate02", requiredProficiency = { armor = "pesada" }, name = "Maestro en armaduras pesadas", requires = "Competencia con armaduras pesadas", description = "La armadura pesada desvía contigo golpes que a otros los matarían.", source = "PHB",
         traits = {
             { id = "feat_phb_apes_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "pasivo", description = "Fuerza +1 (max 20).", effects = { { kind = "bonus", target = "ability", ability = "Fuerza", value = 1 } } },
-            { id = "feat_phb_apes_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Con armadura pesada, el daño contundente/cortante/perforante de armas no mágicas que recibes se reduce en 3.", effects = {} },
+            { id = "feat_phb_apes_b", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Con armadura pesada, el daño contundente/cortante/perforante de armas no mágicas que recibes se reduce en 3.", effects = { { kind = "flag", flag = "heavyArmorMaster" } } },
         },
     },
     {
@@ -461,6 +473,7 @@ API.FEATS = {
     {
         id = "feat_tirador_primera", icon = "ability_marksmanship", name = "Tirador de primera", description = "Disparos que otros dan por imposibles: distancia, cobertura y potencia a cambio de puntería.", source = "PHB",
         traits = {
+            { id = "feat_tirador_primera_ventaja", icon = "eps_bg3_help", name = "Ventaja situacional", type = "accion", cast = "ninguna", actionKind = "selfAdvantage", description = "Cuando se dé la situación que describe la dote (la valida la mesa), actívalo: tu siguiente tirada de ataque o prueba sale con ventaja y el estado se gasta solo.", effects = {} },
             { id = "feat_phb_tirador", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Sin desventaja a alcance largo. Tus ataques a distancia ignoran cobertura media y tres cuartos. Con arma a distancia competente puedes -5 al ataque por +10 al daño.", effects = {} },
         },
     },

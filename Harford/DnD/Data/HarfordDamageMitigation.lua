@@ -295,6 +295,22 @@ function HarfordDamageMitigation.ForTarget(unit, typeText, amount, opts)
     if opts and opts.ignoreResist and status == STATUS_RESISTANT then
         status = STATUS_NORMAL
     end
-    return HarfordDamageMitigation.ApplyMultiplier(amount, status), status,
-        HarfordDamageMitigation.Marker(status)
+    local applied = HarfordDamageMitigation.ApplyMultiplier(amount, status)
+    -- Dote "Maestro de armaduras pesadas" (flag heavyArmorMaster): -3 al dano FISICO no magico
+    -- que recibe EL PROPIO jugador llevando armadura pesada. Solo cuando la victima es este
+    -- cliente: los golpes a otros jugadores llegan en bruto y los mitiga su propio cliente
+    -- (TargetResolvesOwnDamage), que aplicara su propia dote.
+    if applied > 0 and UnitIsUnit and UnitIsUnit(unit, "player")
+        and not (opts and opts.magical)
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("heavyArmorMaster") then
+        local clave = HarfordDamageMitigation.KeyFromTypeText and HarfordDamageMitigation.KeyFromTypeText(typeText)
+        local def = clave and HarfordDamageTypes and HarfordDamageTypes.DEFS and HarfordDamageTypes.DEFS[clave]
+        local pesada = HarfordDnDItems and HarfordDnDItems.GetEquippedArmorCategory
+            and HarfordDnDItems.GetEquippedArmorCategory() == "pesada"
+        if pesada and def and def.category == "fisico" then
+            applied = math.max(0, applied - 3)
+        end
+    end
+    return applied, status, HarfordDamageMitigation.Marker(status)
 end

@@ -3139,6 +3139,24 @@ local function BookButtonOnClick(self)
             if RefreshBook then RefreshBook() end
             return
         end
+        -- Ventaja situacional de dote (Acechador, Apresador, Azote de magos...): la situacion
+        -- la valida la MESA; el boton anuncia (gratis, cast ninguna) y aplica el estado
+        -- `ayudado` — ventaja en la siguiente tirada de ataque o prueba, que se gasta sola al
+        -- tirar. Un solo estado reutilizado: no se llena el catalogo con una copia por dote.
+        if self.feature.actionKind == "selfAdvantage" then
+            if not AnnounceAbility(self.feature) then
+                return
+            end
+            if HarfordDnDConditions and HarfordDnDConditions.ApplyOwned then
+                HarfordDnDConditions.ApplyOwned("ayudado", {
+                    sourceName = HarfordClassColors and HarfordClassColors.UnitFullName
+                        and HarfordClassColors.UnitFullName("player") or nil,
+                })
+            end
+            if RefreshGameUI then RefreshGameUI() end
+            if RefreshBook then RefreshBook() end
+            return
+        end
         -- Gastar un dado de golpe para curarse fuera del descanso ("Esquivar y curar" de
         -- Fortaleza enana, que va DENTRO de la accion de Esquivar y por eso no cobra nada:
         -- cast "ninguna"). RollHitDieHeal ya avisa si no quedan dados y anuncia la curacion.

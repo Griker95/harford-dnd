@@ -1327,6 +1327,26 @@ function API.HasOffhandCombatItem(profileName)
         or resolved.equipLoc == "INVTYPE_SHIELD"
 end
 
+-- Categoria D&D ("ligera"/"media"/"pesada") de la armadura EQUIPADA en el pecho, o nil sin
+-- armadura. Mismo criterio de resolucion que GetEquippedArmorClass: el tipo reconocido por
+-- nombre manda sobre la subclase WoW. La usan las dotes de maestria de armadura.
+function API.GetEquippedArmorCategory(profileName)
+    local profile = ReadProfile(profileName)
+    local entry = profile and profile.Chest
+    if type(entry) ~= "table" then return nil end
+    local resolved = entry.itemLink and API.ResolveItem(entry.itemLink) or nil
+    if resolved and not resolved.pending and resolved.category == "armadura" then
+        local def = resolved.armorBasicKey and FindArmorDefByKey(resolved.armorBasicKey) or nil
+        if def then return def.cat end
+        return ARMOR_KIND_CAT[resolved.armorKind]
+    end
+    if not entry.itemLink and entry.basicArmorKey then
+        local armor = FindArmorDefByKey(entry.basicArmorKey)
+        if armor then return armor.cat end
+    end
+    return nil
+end
+
 function API.GetEquippedArmorClass(profileName)
     local profile = ReadProfile(profileName)
     local dex = SelfDexMod()

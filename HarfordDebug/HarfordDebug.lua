@@ -8113,8 +8113,58 @@ do
             Print(string.format("  |cffffcc00%-18s|r d%-2s  %s", tostring(c.id),
                 tostring(c.hitDie or "?"), table.concat(subs, ", ")))
         end
-        Print("Uso: ficha6 <clase> [subclase] | ficha6 todas | ficha6 restaurar")
+        Print("Uso: ficha6 <clase> [subclase] | ficha6 todas | ficha6 siguiente | ficha6 restaurar")
+        Print("'siguiente' recorre un combo clase+subclase por llamada ('arcficha6' importa un ArcSpell que lo castea).")
         Print("|cffff8888Sustituye la ficha actual|r; se guarda copia y se recupera con 'restaurar'.")
+    end
+
+    -- Recorrido PASO A PASO para el boton de Arcanum ('arcficha6' lo importa): cada llamada
+    -- monta el SIGUIENTE combo clase+subclase y regenera el About TRP3, asi que castear el
+    -- ArcSpell repetidamente recorre el catalogo entero sin escribir comandos. El contador es
+    -- de sesion (se reinicia con /reload); la copia de la ficha real la toma Guardar() solo
+    -- la primera vez, como siempre.
+    local combos, paso = nil, 0
+    local function Combos()
+        if combos then return combos end
+        combos = {}
+        for _, c in ipairs(Clases()) do
+            local subs = c.subclasses or {}
+            if #subs == 0 then
+                combos[#combos + 1] = { c.id, nil }
+            else
+                for _, s in ipairs(subs) do combos[#combos + 1] = { c.id, s.id } end
+            end
+        end
+        return combos
+    end
+
+    local function Siguiente()
+        local lista = Combos()
+        if #lista == 0 then Print("No hay clases cargadas.") return end
+        paso = paso % #lista + 1
+        Guardar()
+        local combo = lista[paso]
+        local r, err = Montar(combo[1], combo[2])
+        if not r then
+            Print(string.format("|cffff4444%s %s FALLA|r %s", tostring(combo[1]),
+                tostring(combo[2] or ""), tostring(err)))
+            return
+        end
+        local about = ""
+        if HarfordCharacterCreation and HarfordCharacterCreation.RewriteAbout then
+            local okA, errA = HarfordCharacterCreation.RewriteAbout()
+            about = okA and "About regenerado." or ("|cffff5555About: " .. tostring(errA) .. "|r")
+        end
+        Print(string.format("|cff88ff88[%d/%d] %s %s|r  %s | %s  %s",
+            paso, #lista, tostring(r.className), tostring(r.subclassId),
+            tostring(r.raza), tostring(r.trasfondo), about))
+        if r.pendientes > 0 then
+            Print("  |cffffcc00" .. r.pendientes .. " eleccion(es) sin resolver|r: "
+                .. table.concat(r.conEleccion, ", "))
+        end
+        if paso == #lista then
+            Print("Vuelta completa: el proximo cast empieza de nuevo. 'ficha6 restaurar' recupera tu ficha.")
+        end
     end
 
     API.RegisterCommand("ficha6", function(args)
@@ -8124,6 +8174,7 @@ do
 
         if sub == "" then return Listar() end
         if sub == "restaurar" then return Restaurar() end
+        if sub == "siguiente" then return Siguiente() end
 
         if sub == "todas" then
             Guardar()
@@ -8183,7 +8234,46 @@ do
                 .. table.concat(r.conEleccion, ", "))
         end
         if nueva then Print("  Copia de la ficha anterior guardada ('ficha6 restaurar').") end
-    end, "monta una ficha de nivel 6 (ficha6 [clase|todas|restaurar])")
+    end, "monta una ficha de nivel 6 (ficha6 [clase|todas|siguiente|restaurar])")
+
+    -- ─── ARCSPELL DE PRUEBA: un boton de Arcanum que castea 'ficha6 siguiente' ──
+    -- Importa al vault PERSONAL un ArcSpell de un solo paso MacroText. Se usa la misma tuberia
+    -- de exportacion de SpellCreator (AceSerializer + LibDeflate, que Arcanum ya carga via
+    -- LibStub) y su API publica ARC.ImportSpell: nada de escribir en sus SavedVariables ni de
+    -- tocar tablas privadas. Si el commID ya existe, Arcanum muestra su popup de sobrescritura.
+    API.RegisterCommand("arcficha6", function()
+        if not (_G.ARC and _G.ARC.ImportSpell) then
+            Print("Arcanum (SpellCreator) no esta cargado: no hay donde importar el ArcSpell.")
+            return
+        end
+        local LS = _G.LibStub
+        local Ace = LS and LS.GetLibrary and LS:GetLibrary("AceSerializer-3.0", true)
+        local Deflate = LS and LS.GetLibrary and LS:GetLibrary("LibDeflate", true)
+        if not (Ace and Deflate) then
+            Print("Faltan AceSerializer/LibDeflate (los trae el propio Arcanum).")
+            return
+        end
+        local spell = {
+            commID = "harford_ficha6",
+            fullName = "Harford: siguiente ficha de prueba",
+            description = "Monta la siguiente ficha de prueba de nivel 6 (recorre clase+subclase)"
+                .. " y regenera su About TRP3. Requiere Harford + HarfordDebug."
+                .. " Al terminar: /harford debug run ficha6 restaurar",
+            author = (UnitName and UnitName("player")) or "Harford",
+            cooldown = 0,
+            castbar = 0,
+            actions = {
+                { actionType = "MacroText", delay = 0, selfOnly = false,
+                  vars = "/harford debug run ficha6 siguiente" },
+            },
+            items = {},
+        }
+        local datos = Ace:Serialize(spell)
+        datos = Deflate:CompressDeflate(datos, { level = 9 })
+        datos = Deflate:EncodeForPrint(datos)
+        _G.ARC.ImportSpell(spell.commID .. ":" .. datos, true)
+        Print("ArcSpell importado al vault personal. Casteo: |cffffcc00/sf harford_ficha6|r (o desde el vault de Arcanum).")
+    end, "importa a Arcanum un ArcSpell que castea 'ficha6 siguiente'")
 end
 
 -- ─── POR QUE NO SE VEN LAS FICHAS DE ACCION ─────────────────────────────────

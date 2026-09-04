@@ -1174,12 +1174,27 @@ function API.BuildAbout(draft, profileName)
                 local icono = FeatureIconName({ id = def.id, icon = def.icon, name = def.name })
                 out[#out + 1] = "{h2}{icon:" .. icono .. ":25}{col:" .. COL_RACIAL
                     .. "} Dote{/col} " .. tostring(def.name) .. "{/h2}"
-                -- Formato de los perfiles reales: descripcion de la dote debajo de la cabecera,
-                -- SIEMPRE (una dote sin cuerpo salia como titulo suelto), y los traits despues.
+                -- Formato de los perfiles reales (Observador, Sanador, Duro, Centinela en los
+                -- {PJ}): cabecera + TEXTO CORRIDO. Los traits de la dote NO son bloques {h2}
+                -- propios -- el sub-bloque "Beneficios" con el pergamino era salida nuestra, no
+                -- canon --: su texto se anade como parrafos. "Beneficios" va a pelo; el resto
+                -- ("Incremento de caracteristica", "Suerte", "Pericia"...) conserva su nombre
+                -- delante para no perder que es cada cosa.
                 local desc = Trim(def.description)
                 if desc ~= "" then out[#out + 1] = ColorizeDescription(desc) end
-                local cuerpo = F.GetFeatTraits and BuildTraitLines(F.GetFeatTraits({ featId }), draft) or ""
-                if cuerpo ~= "" then out[#out + 1] = cuerpo end
+                for _, item in ipairs((F.GetFeatTraits and F.GetFeatTraits({ featId })) or {}) do
+                    local trait = item.feature or item
+                    local textoTrait = Trim(trait.description)
+                    if textoTrait ~= "" then
+                        local nombre = Trim(trait.name)
+                        local clave = (HarfordClassColors and HarfordClassColors.StripAccents
+                            and HarfordClassColors.StripAccents(nombre) or nombre):lower()
+                        if nombre ~= "" and clave ~= "beneficios" then
+                            textoTrait = nombre .. ": " .. textoTrait
+                        end
+                        out[#out + 1] = ColorizeDescription(textoTrait)
+                    end
+                end
             end
         end
         return table.concat(out, string.char(10))

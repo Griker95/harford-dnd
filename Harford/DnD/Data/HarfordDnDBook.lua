@@ -385,6 +385,15 @@ function API.GetChoiceOptions(feature)
                 effects = { { kind = kind, skill = skill.id } },
             }
         end
+    elseif from == "fightingStyle" or from == "metamagic" then
+        -- PRESTAMO de otra clase (dotes de Tasha): las opciones son LAS MISMAS del rasgo
+        -- donante — Estilo de combate del Guerrero o Metamagia del Mago — con sus efectos,
+        -- asi que elegirlas aplica lo mismo que en la clase original (flags, riders...).
+        local donante = API.GetFeature(from == "fightingStyle" and "gue_estilo_combate" or "mago_metamagia")
+        if donante and donante.choice then
+            for _, option in ipairs(API.GetChoiceOptions(donante) or {}) do out[#out + 1] = option end
+        end
+        return out
     elseif from == "weaponProf" and HarfordDnDWeapons and HarfordDnDWeapons.WEAPONS then
         -- Un arma concreta a elegir (Maestro de armas: 4 huecos). Cada opcion concede la
         -- competencia con ESA arma; "Desarmado" no se ofrece (ya la tiene todo el mundo).

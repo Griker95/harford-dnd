@@ -523,7 +523,7 @@ API.FEATS = {
     {
         id = "feat_iniciado_combate", icon = "ability_rogue_combatreadiness", requiredProficiency = { weapon = "marciales" }, name = "Iniciado en el combate", requires = "Competencia con un arma marcial", description = "Adoptas un estilo de combate y un truco marcial que lo acompaña.", source = "TCoE",
         traits = {
-            { id = "feat_tco_inicomb", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Aprendes un Estilo de Combate de la clase guerrero (distinto si ya tienes uno). Puedes cambiarlo al subir de nivel.", effects = {} },
+            { id = "feat_tco_inicomb", icon = "inv_scroll_11", name = "Beneficios", type = "choice", choice = { slots = 1, optionsFrom = "fightingStyle" }, description = "Aprendes un Estilo de Combate de la clase guerrero (distinto si ya tienes uno). Puedes cambiarlo al subir de nivel.", effects = {} },
         },
     },
     {
@@ -536,7 +536,7 @@ API.FEATS = {
     {
         id = "feat_adepto_metamagia", icon = "spell_holy_dispelmagic", requiredCaster = "class", name = "Adepto de la metamagia", requires = "Rasgo Lanzamiento de Conjuros o Magia del Pacto", description = "Aprendes a retorcer tus conjuros con los recursos del hechicero.", source = "TCoE",
         traits = {
-            { id = "feat_tco_metamagia", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Aprendes dos opciones de Metamagia de la clase hechicero (cambiables al subir nivel). Obtienes 2 puntos de hechicería solo para Metamagia, que recargan en descanso largo.", effects = {} },
+            { id = "feat_tco_metamagia", icon = "inv_scroll_11", name = "Beneficios", type = "choice", choice = { slots = 2, optionsFrom = "metamagic" }, uses = { max = 2, recharge = "long" }, description = "Aprendes dos opciones de Metamagia de la clase hechicero (cambiables al subir nivel). Obtienes 2 puntos de hechicería solo para Metamagia, que recargan en descanso largo.", effects = {} },
         },
     },
     {

@@ -9,12 +9,137 @@ comportamiento, `docs` documentacion y `chore` mantenimiento.
 
 Regeneralo con `python tools/gen_changelog.py`.
 
-- Commits: **594** - del **2026-05-18** al **2026-08-29**
+- Commits: **723** - del **2026-05-18** al **2026-09-05**
+
+## Septiembre de 2026
+
+**Nuevo**
+
+- **estados** - el tooltip de Cansancio dice el nivel y lista sus efectos acumulados `c43f2e2`
+- **curacion** - sin objetivo te curas a ti mismo — 'sin objetivo, lo propio' `e9a9bff`
+- **compendio+areas** - Proyectil magico reparte dardos y Bendicion abre el selector `1d219ef`
+- **compendio** - sin objetivo = lanzamiento sin mas, regla UNIVERSAL (no por lista) `2f82d6b`
+- **compendio** - conjuros de doble uso — sin objetivo se lanzan sin mas, con objetivo hacen daño `21e7fc2`
+- **concentracion+areas** - estado propio con conjuro en cian; el daño espera al desenlace `eb91e54`
+- **concentracion** - una linea por gesto — desenlace CONCENTRACION morado y estado como aura `f8681e6`
+- **quests** - las definiciones de quest de mundo viven en la FASE — editor DM in-game `ed26b70`
+- **dano** - deuda RADJ cerrada — todo el daño a jugador viaja en bruto (DNDDMG) `2aea2a7`
+- **multiclase+descanso** - competencias de multiclase del manual y menu unico de descanso largo `3f8e2e4`
+- **defensas** - resistencias del jugador sincronizadas estilo CA — clave DmgStatus `0702a6e`
+- **brujo** - nucleos demoniacos con mecanica completa — ventaja real, contador y puerta de uso `2e78eb7`
+- **cola-npc** - los pendientes aceptan cualquier NPC — sin puerta de turnos ni combate `e0020c7`
+- **tiradas** - formato minimo en chat — Origen [link] Destino tirada vs tirada EXITO/FALLO `7f972fa`
+- **grimorio** - los conjuros elegidos por dote cuentan como concedidos `562a36f`
+- **subida** - las fichas antiguas se ACOPLAN al subir — elecciones pendientes de toda la ficha `7a5644a`
+- **alcance** - validacion de distancia real con .distance antes de costes (trabajo de Codex) `527a6d8`
+- **ficha** - percepcion pasiva visible al INSPECCIONAR y en NPCs para el DM `ad04b5e`
+- **ficha** - Percepcion e Investigacion PASIVAS (10 + bono total) + dote Observador mecanizada `3ababff`
+- **dotes** - selector de conjuros por dote — Iniciado en la magia, Lanzador ritual e Iniciado artificiero `35beef8`
+- **dotes** - ventaja situacional de un solo uso (13 dotes) y Maestro de armaduras pesadas `da51dca`
+- **dotes** - Maton de taberna — golpe desarmado 1d4 (unarmedDie) `5aa9d5f`
+- **dotes** - prestamos de clase — Iniciado en el combate y Adepto de la metamagia `b9e727e`
+- **dotes** - lote A de mecanizacion — 14 dotes mas con mecanica real `9a472fa`
+- **dotes** - reacciones y acciones de dote como activables del Libro (6 dotes mas) `fede3c7`
+- **combate** - alcance de melee y postura 'Trabado en melee' — desventaja a distancia con el enemigo encima `4f377a3`
+- **mecanica** - Resistente, Versado en un elemento y Ataque de oportunidad activable `b6c9d42`
+- **dotes** - mecanizadas las factibles — Movil (+3 m velocidad), Afortunado (3 usos/descanso largo con fila propia en el Libro) y Linguista (3 idiomas a elegir) `8425276`
+- **razas** - Mejoras Mecanicas del Mecagnomo mecanizadas + puertas requiresOption/minCharacterLevel raciales `6bc63d8`
+- **descanso** - reeleccion de rasgos en descanso largo (rechooseOnLongRest) — Forja de runas `8d687de`
+- **debug** - 'ficha6 menu' — desplegable clases->subclases que monta la ficha de prueba y regenera el About (se retira arcficha6) `184e778`
+- **debug** - 'ficha6 siguiente' (recorrido paso a paso) y 'arcficha6' (ArcSpell de Arcanum que lo castea) `a564d18`
+- **acciones** - Ayudar sin declarar uso (estado unico 'ayudado') + fix iconos de variante de trasfondo `b591a19`
+- **about** - color de maniobra por clase y 'Puntos maximos' en Guerrero (barrido Reserva) `46c2af3`
+- **about** - trasfondo en femenino y subraza coloreada en el titulo de raza `22a7b7a`
+- **about** - clase y subclase en femenino cuando el PJ es mujer `919e969`
+- **about** - linea cian 'Puntos N || CD Salv M' bajo el rasgo de recurso de maniobras `c447a3a`
+- **about** - maniobras en amarillo y elecciones multi-slot como linea cian `6d1a2d7`
+- **about** - la eleccion de un slot va en la cabecera, como los perfiles reales `614b28c`
+- **about** - el frame de subclase se titula 'Clase Subclase' con sus colores `3198fb8`
+- **codice** - las variantes de trasfondo traen sus rasgos desde el addon `01d9945`
+- **trasfondos** - variantes con rasgos propios, Mercenario veterano restaurado y nombres sin prefijo `dcf0fb8`
+- **creacion** - summaries de raza y SUBRAZA importados de la web, que ya los declara `da5fc52`
+- **creacion** - resumen propio por raza (summary), y la seleccion manda en la descripcion `f653316`
+- **creacion** - resumen de origen como en la web, y las clases usan su summary `3a25842`
+
+**Arreglos**
+
+- **movimiento** - el DM en la lista rueda libre en turno ajeno y VUELVE a su PJ al empezar el suyo `d1d9842`
+- **movimiento** - el muro solo tira si de verdad te alejaste del ancla `5189eab`
+- **compendio+areas** - los campos del detalle no se escapan del frame; el selector de area sale por encima `240483f`
+- **estados** - el tooltip de Cansancio queda solo con nivel y efectos `4cd09a4`
+- **estados** - Cansancio usa el icono w3reforgedsleep (ojo cerrado) `f5ddba0`
+- **areas** - el orden SIEMPRE es tirada y luego daño — tambien en multiimpactos por victima `3735099`
+- **paladin+compendio** - castigo deslumbrante resuelto = Castigo marcador; 64 concentration duplicadas fuera `6df17e3`
+- **compendio** - barrido OCR comparado CERRADO — 1 arreglo, 1 alta, candado `246982c`
+- **multiclase** - las fichas antiguas se acoplan — migracion de elecciones y carga TRP3 asegurada `61578c3`
+- **brujo** - Toque de vida cubre "no me llega" y gasta su uso 1/descanso `0bae2cd`
+- **conjuros** - los conjuros de COMBATE cobran su accion/adicional/reaccion — silent solo calla el anuncio `16f045f`
+- **lanzar** - Arrojadiza de verdad e improvisada sin ella (regla 5e) `d7a6a4a`
+- **libro** - Ataque de oportunidad con eps_bg3_feintingattack (eleccion del usuario) `6d646d5`
+- **libro** - iconos de Ataque de oportunidad y Flanqueado — las acciones basicas leen el catalogo (harford_accion_<id>), no el icon del def `330a5f1`
+- **movimiento** - NPC poseido con el modelo REAL de Atlas — ritmo fijo 7 m/s y sesiones sin mezclar `c94360d`
+- **druida** - Senda del Druida con subclassMarker (la heuristica por frase no casaba 'Eliges tu senda') `5175466`
+- **dotes** - Resistente declaraba el consumo pero no el flag resilientHitDieMin `968d0de`
+- **dotes** - iconos de dote sincronizados con el catalogo (77) — Libro y About ensenan el mismo arte `30d0771`
+- **about** - trasfondo con variante titula SOLO la variante, sin bloque duplicado y con su icono `91334e5`
+- **about** - artefactos markdown '***' fuera — 'A niveles superiores' como etiqueta coloreada `4a34bc9`
+- **razas+debug** - raza 'Troll' (canon web, alias 'Trol') y ficha6 con conjuros al azar `33a0930`
+- **about** - auditoria de las 12 clases contra los errores del CdM + suite about_clases `a198256`
+- **about** - frame 'Magia <Sub>' con conjuros concedidos y listas con guion por linea `13d9d75`
+- **about** - CdM sin duplicados y con formato de Cody `b01f583`
+- **about** - dotes con texto corrido, sin sub-bloque 'Beneficios' (formato de los perfiles PJ reales) `5cb6349`
+- **about** - frames de magia con los iconos de los perfiles reales, Libro de conjuros del Mago y opciones desplegadas `d256cbc`
+- **creacion** - holgura extra del panel derecho en la subida con tarjetas `b32f421`
+- **creacion** - About del trasfondo solo con su rasgo, y la subida usa ancho de tarjetas `07fffa6`
+- **creacion** - la descripcion de clase salia duplicada (flotante + scroll) `6f0082a`
+- **creacion** - la subclase seleccionada se lee del slot correcto en TODOS los sitios `1433461`
+- **creacion** - la descripcion de clase/subclase vive en el scroll y sigue a la seleccion `3558342`
+- **creacion** - los nombres del asistente respetan el sexo del PJ (nameF) `dad3753`
+- **razas** - el Semielfo gana su Incremento de Caracteristica (+2 y +1 a elegir) `13683d5`
+- **trasfondos** - el Mercenario veterano llevaba el contenido de su variante `4af33ba`
+- **codice** - las 23 subrazas volvian a salir a CERO, y el seguro no lo veia `530b083`
+- **datos** - el clan es Cazatormentas, no Reavizatormentas `d2e4911`
+- **codice** - el rebuild dejaba a las 17 razas y 22 subrazas SIN ICONO `4c02d7d`
+- **creacion** - topes de lineas en DETALLE y en el resumen de clase `cca39e3`
+- **creacion** - la descripcion sigue a la seleccion y los tooltips van a un parrafo `473bdbd`
+- **creacion** - la cabecera CONJUROS DE X solo sale si hay algun selector debajo `3af4bd1`
+- **creacion** - los tooltips de las tarjetas muestran el resumen, no el manual entero `7afa754`
+- **codice** - el rebuild dejaba las dotes en cero y las profesiones a medias `3fe03b1`
+- **resumenes** - pasada de tono, fuera los giros literarios `787f9ee`
+- **codice** - los extractores leian las copias empaquetadas de dist/ `6df46e2`
+- **codice** - el rebuild habria roto las descripciones de raza y perdido las etnias `25bc4f1`
+
+**Documentacion**
+
+- el editor de quest de mundo ya no esta pendiente; ESTRUCTURA al dia `e6dbf68`
+- los contadores de objetivos de contrato YA existen — notas rancias fuera `30377a2`
+- barrido post-sincronizacion de defensas `918b8f8`
+- barrido de pendientes rancios en CLAUDE/AGENTS `1c2af23`
+- .distance lo ejecuta cualquier jugador — el gate de alcance no depende de permisos `afff45a`
+- segunda tanda de mecanizacion de dotes y percepcion pasiva `1dd11a8`
+- AGENTS y CLAUDE al dia con la tanda del 2026-09-04 `d3d0672`
+- **colaboracion** - el esquema de variantes con traits queda cerrado en ambos lados `75ac01d`
+- **colaboracion** - las etnias humanas salen del Libro 1, no del addon `d493c5f`
+- **colaboracion** - campo nuevo en cabecera de datos = riesgo de coleccion a cero en el codice `23788a9`
+- **ids** - el prefijo her_ significa dos cosas, y queda escrito en ambos sitios `9378bd2`
+
+**Otros**
+
+- docs+prueba: los estados y sus auras sobreviven al fin de combate — candado `b738bc0`
+- content(kaldorei): la subraza base hereda el resumen de su raza `1032738`
+- content(subclases): los 37 resumenes de subclase los escribe Griker `7a23d40`
+- content(clases): los 12 resumenes de clase los escribe Griker `41646c3`
+- content(subrazas): los 22 resumenes de subraza los escribe Griker `95f5c6c`
+- content(razas): los 17 resumenes de raza los escribe Griker `2b3940c`
+- content(resumenes): las subrazas se reescriben con datos, no con parafrasis `787b632`
 
 ## Agosto de 2026
 
 **Nuevo**
 
+- **debug** - ventana de resultados copiable y ficha6 todas la usa `6e57875`
+- **heroe** - menu DM con Punto de heroe +1/-1, propio y target, y el punto viaja en la ficha `7bac3b3`
+- **heroe** - el gasto son dos enlaces clicables y los usos mecanizables se mecanizan `1ce8ad0`
 - **picaro** - Conocer la Intencion resuelto — es Impacto certero (True Strike) `0997169`
 - **brujo** - Rayo del caos cableado en la lista ampliada de Destruccion `1b1cff2`
 - **creacion** - los prerequisitos de LANZADOR de las dotes se validan `402a9c4`
@@ -212,6 +337,17 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Arreglos**
 
+- **about** - la variante de trasfondo entra en el About y las descripciones de origen van resumidas `8b2d24c`
+- **about** - todas las dotes con icono propio y descripcion bajo la cabecera `854ece7`
+- **about** - las notas de magia racial dicen solo el uso, sin 'desde nivel N' `5f0d9cd`
+- **about** - las tablas GMbinder del manual se convierten a texto en vez de salir crudas `a6954d1`
+- **datos** - icono para los 192 rasgos y opciones de clase que no tenian `44170aa`
+- **about** - un rasgo con eleccion no vuelca la seccion entera del manual `758e367`
+- **about** - iconos de frame validados, icono propio de trasfondo, titulos sin prefijo, subclase no se reelige, e iconos de la web `f010970`
+- **creacion** - los titulos de los pickers de conjuro leian className, un global nil `7cef65b`
+- **about** - repone los candidatos de icono por conjuro y valida todo {icon:} del generador `22a42eb`
+- **heroe** - un jugador no puede autoconcederse el punto de heroe `0922adb`
+- **rename** - restos del renombrado — arranque.lua, mensaje de error y glob del codice `06c6ee4`
 - **toc** - Harford a secas y Harford Admin en la lista de addons `1b53a4b`
 - **toc** - HarfordDebug se titula Harford Debug con el color de la familia `ab6c008`
 - **toc** - los addons de datos se titulan Harford Compendio y Harford Objetos `15f9cd8`
@@ -420,6 +556,7 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Refactor**
 
+- **addons** - los addons de datos se llaman HarfordCompendio y HarfordProfesiones `4e767d7`
 - **ficha** - descansos (corto/largo/dados de golpe/menu) a HarfordDnDRest `948b99c`
 - **panel** - tooltip de competencias y reacciones preparadas al modulo de acciones `a89d293`
 - **panel** - acciones basicas, rituales, reservas y prompts a modulo propio `3f5d2b6`
@@ -456,6 +593,10 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Documentacion**
 
+- **skill** - los zips SOLO a peticion expresa, nunca como paso del cierre `611f637`
+- **agents** - el renombrado de los addons de datos, con sus implicaciones `f65a9c2`
+- **readme** - aviso de borrar las carpetas de datos viejas al actualizar `806d58e`
+- CONJUROS_PENDIENTES cerrado, ESTADO_CLASES con el cierre del dia y CLAUDE.md al dia `b72cce1`
 - **epsilon** - la forja no acepta las clases de WoW, y el rechazo corta la cadena `38e91b7`
 - **claude** - fase C al dia — sexto corte, leccion del boton de combate y fin de cortes limpios `5ee475a`
 - **claude** - fase C documentada — patrones Init/Build y estado de los cortes `3022dc1`
@@ -486,6 +627,8 @@ Regeneralo con `python tools/gen_changelog.py`.
 
 **Mantenimiento**
 
+- **tooling** - tools/lote.py (cierre de lote en un comando) y skill harford-debug `ed36e2f`
+- **tooling** - skills de proyecto y hook de pre-commit compartido `df15aad`
 - **debug** - decir que tarjeta deberia estar iluminada y por que `95dc034`
 - **debug** - ver los espacios de conjuro y los de pacto `0bec1a8`
 - **economia** - fuera el constructor de la barra de movimiento, que ya no lo llama nadie `02f5967`

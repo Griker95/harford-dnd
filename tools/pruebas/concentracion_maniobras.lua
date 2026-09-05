@@ -24,12 +24,23 @@ end
 
 -- ═══ CONCENTRACION ══════════════════════════════════════════════════════════
 local ESTADOS, CANSANCIO, DADO, ANUNCIOS = {}, 0, 10, {}
-local AURAS = {}   -- registro de Apply/Remove del aura de concentracion
+local LLAMADAS = {}   -- registro de ApplyOwned/RemoveOwned del estado `concentrando`
 local envC = cargarModulo("Harford/DnD/Engine/HarfordDnDConcentration.lua",
     setmetatable({
         HarfordDnDConditions = {
             Has = function(_, id) return ESTADOS[id] == true end,
             GetExhaustion = function() return CANSANCIO end,
+            -- El mock imita al motor real: aplicar deja el estado consultable por Has.
+            ApplyOwned = function(id, opts)
+                ESTADOS[id] = true
+                LLAMADAS[#LLAMADAS + 1] = "apply:" .. tostring(id) .. ":" .. tostring(opts and opts.sourceName)
+                return true
+            end,
+            RemoveOwned = function(id)
+                ESTADOS[id] = nil
+                LLAMADAS[#LLAMADAS + 1] = "remove:" .. tostring(id)
+                return true
+            end,
         },
         HarfordDnDCalc = {
             GetAbilityMod = function() return 2 end,
@@ -38,10 +49,6 @@ local envC = cargarModulo("Harford/DnD/Engine/HarfordDnDConcentration.lua",
         },
         HarfordDnDRolls = { Broadcast = function(d) ANUNCIOS[#ANUNCIOS + 1] = d end },
         HarfordChat = { Print = function() end },
-        HarfordAuras = {
-            Apply = function(key) AURAS[#AURAS + 1] = "apply:" .. tostring(key) end,
-            Remove = function(key) AURAS[#AURAS + 1] = "remove:" .. tostring(key) end,
-        },
     }, { __index = function() return nil end }))
 local C = envC.HarfordDnDConcentration
 -- El d20 se fija para poder comprobar la regla y no la suerte.
@@ -72,33 +79,50 @@ chk("y soltar lo que no hay no hace nada", (C.Break()), false)
 
 -- Una linea por gesto (decision de mesa 2026-09-05): empezar NO anuncia nada por chat -- la
 -- linea del lanzamiento ya sale con el desenlace CONCENTRACION -- y el estado visible es el
--- aura. Soltar/perder SI anuncia (es su unica linea).
-print("Empezar es silencioso y pone el aura; soltar anuncia y la retira")
+-- estado NUESTRO `concentrando` de la tira Harford, con el conjuro activo como detalle
+-- (viaja en sourceName). Soltar/perder SI anuncia (es su unica linea).
+print("Empezar es silencioso y pone el estado; soltar anuncia y lo retira")
 local antes = #ANUNCIOS
-AURAS = {}
+LLAMADAS = {}
 C.Begin("Telarana")
 chk("Begin no emite ninguna linea", #ANUNCIOS, antes)
-chk("y aplica el aura de concentracion", AURAS[1], "apply:concentration")
+chk("y aplica el estado con el conjuro como fuente", LLAMADAS[1], "apply:concentrando:Telarana")
 C.Begin("Bola de fuego")
 chk("cambiar de conjuro tampoco anuncia", #ANUNCIOS, antes)
+chk("y re-aplica el estado con el conjuro nuevo", LLAMADAS[#LLAMADAS], "apply:concentrando:Bola de fuego")
 C.Break()
 chk("Break si anuncia (su unica linea)", #ANUNCIOS, antes + 1)
-chk("y retira el aura", AURAS[#AURAS], "remove:concentration")
+chk("y retira el estado", LLAMADAS[#LLAMADAS], "remove:concentrando")
 
--- Y la linea del lanzamiento: un conjuro con concentracion no dice EXITO, dice CONCENTRACION
--- en morado. El aura esta declarada en el catalogo con scope self (la pone el propio jugador,
--- como la de muerte).
-print("La linea de lanzamiento y el catalogo de auras")
+-- El click derecho en la tira retira el estado SIN pasar por Break: el listener lo detecta y
+-- suelta la concentracion para que estado y modulo no diverjan.
+print("Retirar el estado desde la tira suelta la concentracion")
+C.Begin("Telarana")
+ESTADOS.concentrando = nil   -- lo que deja RequestPlayer("player", "concentrando", false)
+C.OnConditionsChanged()
+chk("la concentracion se solto", C.IsActive(), false)
+chk("y se anuncio la soltada", #ANUNCIOS > antes + 1, true)
+
+-- La linea del lanzamiento: un conjuro con concentracion no dice EXITO, dice CONCENTRACION en
+-- morado. Y el estado existe en el catalogo de condiciones con su icono y su detalle de fuente.
+print("La linea de lanzamiento y el estado del catalogo")
 local core = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
 chk("el desenlace es condicional a la concentracion",
     core:find('esConcentracion and " |cffa335eeCONCENTRACION|r" or " |cff00ff00EXITO|r"', 1, true) ~= nil, true)
-local auras = io.open("Harford/Server/HarfordAuras.lua"):read("*a")
-local defConc = auras:find('concentration = {', 1, true)
-chk("el aura de concentracion existe en el catalogo", defConc ~= nil, true)
+local cond = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+local defConc = cond:find("concentrando = {", 1, true)
+chk("el estado concentrando existe en el catalogo", defConc ~= nil, true)
 if defConc then
-    local bloqueAura = auras:sub(defConc, defConc + 400)
-    chk("con scope self", bloqueAura:find('scope = "self"', 1, true) ~= nil, true)
+    local bloque = cond:sub(defConc, defConc + 500)
+    chk("como estado propio, sin aura de servidor", bloque:find('tracking = "state"', 1, true) ~= nil, true)
+    chk("con la fuente como detalle del tooltip", bloque:find("sourceAsDetail = true", 1, true) ~= nil, true)
 end
+local cat = io.open("Harford/Compendium/HarfordIconCatalog.lua"):read("*a")
+chk("tiene icono en el catalogo",
+    cat:find("\n    harford_estado_concentrando = ", 1, true) ~= nil, true)
+local uf = io.open("Harford/Frames/HarfordUnitFrames.lua"):read("*a")
+chk("la tira pinta el detalle en cian tras el titulo",
+    uf:find("GameTooltip:AddLine(self.estado.detalle, 0, 1, 1)", 1, true) ~= nil, true)
 
 print("El dano obliga a una salvacion, una POR FUENTE")
 C.Begin("Telarana")
@@ -128,21 +152,23 @@ _, total = C.OnDamage(4)
 chk("con competencia, dos mas", total, 13)
 envC.HarfordDnDCalc.GetSaveProf = function() return false end
 
--- Estar incapacitado, dormido o muerto la rompe sin tirada.
+-- Estar incapacitado, dormido o muerto la rompe sin tirada. OJO: al reasignar ESTADOS hay que
+-- conservar `concentrando` puesto (en el juego real el estado sigue ahi), o el listener creeria
+-- que se retiro desde la tira y rompe por la via equivocada.
 print("Se pierde al quedar incapacitado, y sin tirar nada")
 for _, id in ipairs({ "incapacitated", "paralyzed", "petrified", "stunned", "sleeping" }) do
     C.Begin("Telarana")
-    ESTADOS = { [id] = true }
+    ESTADOS = { [id] = true, concentrando = true }
     C.OnConditionsChanged()
     chk("por " .. id, C.IsActive(), false)
     ESTADOS = {}
 end
 -- Pero no cualquier estado: estar envenenado no te hace perderla.
 C.Begin("Telarana")
-ESTADOS = { poisoned = true, frightened = true }
+ESTADOS = { poisoned = true, frightened = true, concentrando = true }
 C.OnConditionsChanged()
 chk("envenenado o asustado NO la rompen", C.IsActive(), true)
-ESTADOS = {}
+ESTADOS = { concentrando = true }
 -- Cansancio 6 es la muerte.
 CANSANCIO = 5
 C.OnConditionsChanged()
@@ -151,6 +177,7 @@ CANSANCIO = 6
 C.OnConditionsChanged()
 chk("cansancio 6 si, que es morir", C.IsActive(), false)
 CANSANCIO = 0
+ESTADOS = {}
 
 print("Y a 0 puntos de golpe")
 C.Begin("Telarana")

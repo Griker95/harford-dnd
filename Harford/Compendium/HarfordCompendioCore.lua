@@ -1469,7 +1469,8 @@ function API.ConfirmCast(spellId, options)
     -- CONCENTRACION: el conjuro declara si la exige. Empezar sustituye a la anterior, porque el
     -- manual no permite concentrarse en dos a la vez. Begin NO anuncia nada (una linea por
     -- gesto): el desenlace de ESTA linea dice CONCENTRACION en morado en vez de EXITO, y el
-    -- estado queda visible como aura sobre el lanzador.
+    -- estado queda visible como el estado `concentrando` de la tira Harford, con el conjuro
+    -- activo en cian en su tooltip.
     local esConcentracion = API.RequiresConcentration(spell)
     if esConcentracion and HarfordDnDConcentration and HarfordDnDConcentration.Begin then
         HarfordDnDConcentration.Begin(spell.name or tostring(spellId), spellId)
@@ -1581,8 +1582,11 @@ function API.ResolveCast(spellId, options)
             local expectedGuid = UnitGUID and UnitGUID("target") or nil
             local sent = HarfordDnDRange.CheckTargetRange(range, function(result)
                 if not result.ok then
-                    if not result.outOfRange then
-                        Print(result.message or "No se pudo comprobar el alcance del conjuro.")
+                    -- OJO: aqui no hay ningun `Print` local — llamarlo a pelo era un nil global
+                    -- que REVENTABA el lanzamiento sin target en vez de avisar (Explosion arcana
+                    -- sin objetivo: "attempt to call global 'Print'").
+                    if not result.outOfRange and HarfordChat and HarfordChat.Print then
+                        HarfordChat.Print(result.message or "No se pudo comprobar el alcance del conjuro.")
                     end
                     return
                 end

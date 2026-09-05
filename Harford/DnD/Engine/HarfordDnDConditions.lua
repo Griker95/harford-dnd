@@ -35,9 +35,10 @@ API.CATEGORIES = {
         "sleeping", "silenced", "rooted", "slowed", "disarmed", "exposed_armor",
         "imprudente", "esquivando", "apartado", "trabado",
     } },
-    -- Estados que deja la economia de turno y el apoyo entre PJs (Ayudar, Preparar).
+    -- Estados que deja la economia de turno y el apoyo entre PJs (Ayudar, Preparar), y los que
+    -- el propio jugador se pone al jugar (Concentracion).
     { id = "apoyo", label = "Apoyo y turno", ids = {
-        "ayudado", "preparado",
+        "ayudado", "preparado", "concentrando",
     } },
     { id = "elemental", label = "Elementales", ids = {
         "burning", "frozen", "chilled",
@@ -473,6 +474,16 @@ API.DEFS = {
     dancing_lights = {
         label = "Luces danzantes", auraId = 128987, tracking = "aura",
         description = "Estado visual sin modificador mecanico general.", effects = {},
+    },
+    -- Concentracion en un conjuro. SIN aura de servidor a proposito (2026-09-05: se probo la
+    -- 19746 y el cliente moderno ya no la tiene): es un estado NUESTRO que se pinta en la tira
+    -- Harford, con el conjuro activo como detalle (viaja en `sourceName`, que ya se sincroniza).
+    -- Lo aplica y retira HarfordDnDConcentration; el click derecho en la tira lo retira y el
+    -- modulo lo detecta por listener y suelta la concentracion.
+    concentrando = {
+        label = "Concentracion", tracking = "state", sourceAsDetail = true,
+        description = "Concentrado en un conjuro: lanzar otro con concentracion lo termina, y recibir dano obliga a una salvacion de Constitucion (CD 10 o la mitad del dano, lo que sea mayor).",
+        effects = {},
     },
 }
 

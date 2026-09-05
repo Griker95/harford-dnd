@@ -1113,6 +1113,7 @@ Catalog.features = {
     -- Solo los que NO tienen aura: los que la tienen usan el arte del propio aura, que es el
     -- que el jugador ya ve en pantalla, y una segunda version acabaria por no coincidir.
     -- Los nombres salen del arte que el proyecto ya usa: uno inventado sale en verde.
+    harford_estado_concentrando = "spell_holy_impholyconcentration",
     harford_estado_trabado = "eps_bg3_forcedmove",
     harford_estado_ayudado = "eps_bg3_help",
     harford_estado_ayudado_prueba = "eps_bg3_help",

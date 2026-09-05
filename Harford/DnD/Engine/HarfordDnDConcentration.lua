@@ -50,13 +50,19 @@ end
 
 -- Empieza a concentrarse. Si ya habia otro conjuro, lo termina: el manual no permite dos.
 -- SIN anuncio propio (2026-09-05, decision de mesa "una linea por gesto"): la linea del
--- lanzamiento ya sale con el desenlace CONCENTRACION en morado, y el estado visible es el
--- AURA (`HarfordAuras` key `concentration`, scope self), que se pone aqui y se retira en Break.
+-- lanzamiento ya sale con el desenlace CONCENTRACION en morado. El estado visible es el
+-- estado NUESTRO `concentrando` de la tira Harford (se probo un aura de servidor, la 19746, y
+-- el cliente moderno ya no la tiene); el conjuro activo viaja como `sourceName` del registro,
+-- que la tira pinta en cian tras el titulo y el sync de estados ya reparte a los demas.
 function API.Begin(spellName, spellId)
     spellName = tostring(spellName or "")
     if spellName == "" then return false, "Falta el nombre del conjuro" end
     current = { spell = spellName, spellId = tonumber(spellId), startedAt = (time and time()) or 0 }
-    if HarfordAuras and HarfordAuras.Apply then HarfordAuras.Apply("concentration") end
+    if HarfordDnDConditions and HarfordDnDConditions.ApplyOwned then
+        -- Volver a aplicarlo con otro conjuro SUSTITUYE el registro: el detalle cambia solo.
+        current.stateApplied = HarfordDnDConditions.ApplyOwned("concentrando",
+            { sourceName = spellName }) == true
+    end
     if HarfordDnDStore and HarfordDnDStore.RefreshMainUI then HarfordDnDStore.RefreshMainUI() end
     return true
 end
@@ -65,10 +71,12 @@ end
 function API.Break(reason)
     if not current then return false end
     local spell = current.spell
+    -- `current` se vacia ANTES de retirar el estado: la retirada dispara Notify y el listener
+    -- de abajo volveria a entrar aqui si viera la concentracion todavia activa.
     current = nil
-    -- La retirada del aura no depende de ningun flag local: si Break llega, el aura sobra
-    -- (misma leccion que la aura de muerte 29266, que se quedaba puesta al perderse el flag).
-    if HarfordAuras and HarfordAuras.Remove then HarfordAuras.Remove("concentration") end
+    if HarfordDnDConditions and HarfordDnDConditions.RemoveOwned then
+        HarfordDnDConditions.RemoveOwned("concentrando")
+    end
     if reason then
         Announce(string.format("pierde la concentracion en %s (%s).", spell, reason))
     else
@@ -147,6 +155,13 @@ end
 
 function API.OnConditionsChanged()
     CheckIncapacitated()
+    -- Si el estado `concentrando` desaparecio sin pasar por Break (click derecho en la tira),
+    -- soltar la concentracion: el estado ES la cara visible y no pueden divergir. Solo si
+    -- consta que se llego a aplicar, para no romperla cuando el estado no pudo ponerse.
+    if current and current.stateApplied and HarfordDnDConditions and HarfordDnDConditions.Has
+        and not HarfordDnDConditions.Has("player", "concentrando") then
+        API.Break()
+    end
 end
 
 -- Vida a 0: inconsciente, se pierde la concentracion.

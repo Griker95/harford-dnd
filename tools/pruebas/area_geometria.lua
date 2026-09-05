@@ -258,9 +258,18 @@ chk("sin parentesis vacios",
 chk("ni guiones sueltos",
     areaSrc:find('((forma ~= "") and (forma .. " - ") or "")', 1, true) ~= nil, true)
 
--- Un ataque debe publicar primero el resultado de impacto; los dados de daño quedan para el
--- primer EXITO y no se anuncian cuando todos los objetivos fallan.
-chk("el dano de ataque espera al impacto",
-    areaSrc:find('and session.definition.resolution ~= "attack" then', 1, true) ~= nil, true)
+-- El desenlace se publica primero SIEMPRE que hay desenlace: los dados de daño quedan para la
+-- primera victima alcanzada, sea por impacto o por salvacion fallada (Explosion arcana los
+-- sacaba ANTES de la salvacion). Solo la curacion, que no depende de ninguna tirada, se anuncia
+-- al tirar. Y la linea de la victima no incrusta el daño en los modos de daño: la linea de
+-- dados llega justo despues y salia duplicado (y teñido del rojo del FALLO).
+chk("solo la curacion se anuncia al tirar",
+    areaSrc:find('and session.definition.resolution == "heal" then', 1, true) ~= nil, true)
+chk("el dano espera a una victima alcanzada",
+    areaSrc:find('or (result.status == "saved" and (tonumber(result.applied) or 0) > 0)', 1, true) ~= nil, true)
+chk("la linea de victima solo incrusta curacion",
+    areaSrc:find('if request.mode ~= "heal" then visibleApplied, visibleSummaries = 0, {} end', 1, true) ~= nil, true)
+chk("y sin dos puntos: el color separa",
+    areaSrc:find("Salv %s: %d", 1, true) == nil and areaSrc:find('%s %s: %s', 1, true) == nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

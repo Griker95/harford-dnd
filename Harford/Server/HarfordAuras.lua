@@ -10,7 +10,7 @@
 
 HarfordAuras = HarfordAuras or {}
 
-HarfordAuras.ORDER = { "death", "loot", "communicator", "concentration" }
+HarfordAuras.ORDER = { "death", "loot", "communicator" }
 
 HarfordAuras.DEFS = {
     death = {
@@ -30,12 +30,6 @@ HarfordAuras.DEFS = {
         label = "Comunicador",
         scope = "self",
         note  = "Aura visual aplicada al abrir el Comunicador Harford.",
-    },
-    concentration = {
-        id    = 19746,
-        label = "Concentracion",
-        scope = "self",
-        note  = "La pone HarfordDnDConcentration.Begin y la retira Break: es la cara visible de estar concentrado en un conjuro.",
     },
 }
 

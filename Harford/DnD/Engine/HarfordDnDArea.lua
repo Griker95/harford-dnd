@@ -1251,17 +1251,21 @@ local function ResolveConditionApplySave(unit, request)
     end
     local total = die + (tonumber(bonus) or 0) + (tonumber(prof) or 0)
     local saved = not autoFail and total >= dc
-    local detail = string.format("Salv %s: %d (%d%+d%+d vs CD %d) %s", ability, total, die,
+    local detail = string.format("Salv %s |cff66ccff%d|r (%d%+d%+d vs CD %d) %s", ability, total, die,
         tonumber(bonus) or 0, tonumber(prof) or 0, dc,
         saved and "|cff00ff00EXITO|r" or "|cffff3333FALLO|r")
     return saved, detail
 end
 
--- Linea de resultado por victima: "<nombre> <label>: <rollText> EXITO/FALLO [- daño]".
--- Compartida por la ruta jugador y la NPC.
+-- Linea de resultado por victima: "<nombre> <label> <rollText> EXITO/FALLO [- curacion]".
+-- Compartida por la ruta jugador y la NPC. Sin ':' — el canon de formato separa por COLOR, no
+-- por puntuacion — y sin daño incrustado en los modos de daño (queda solo para la curacion):
+-- los dados salen en su propia linea DESPUES del desenlace, via MaybeBroadcastAttackDamage.
 local function FormatVictimResult(name, request, status, applied, summaries, rollText)
     local result = (status == "saved" or status == "hit") and "|cff00ff00EXITO|r" or "|cffff3333FALLO|r"
-    return string.format("%s %s: %s %s%s", name, request.label, rollText or "", result,
+    rollText = tostring(rollText or "")
+    return string.format("%s %s %s%s%s", name, request.label,
+        rollText ~= "" and (rollText .. " ") or "", result,
         (applied or 0) > 0 and (" - " .. table.concat(summaries, " + ")) or "")
 end
 
@@ -1300,7 +1304,7 @@ local function ResolvePlayerRequest(request, sender)
         request.saved = not autoFail and total >= request.dc
         affected = not request.saved or request.success == "half"
         status = request.saved and "saved" or "failed"
-        rollText = string.format("Salv %s: %d (%d%+d%+d vs CD %d)", request.ability, total, die,
+        rollText = string.format("Salv %s |cff66ccff%d|r (%d%+d%+d vs CD %d)", request.ability, total, die,
             tonumber(base) or 0, tonumber(prof) or 0, request.dc)
     elseif request.mode == "auto" then
         -- Auto-impacto (tipo Proyectil Magico): sin tirada, siempre afecta.
@@ -1349,10 +1353,12 @@ local function ResolvePlayerRequest(request, sender)
         end
     end
 
-    -- En ataques, el impacto/fallo debe verse ANTES que los dados de daño. El atacante anuncia
-    -- esos dados al recibir esta confirmacion; no los incrustamos aqui aunque ya se hayan aplicado.
+    -- El desenlace debe verse ANTES que los dados de daño, y sin duplicarlo: el atacante anuncia
+    -- esos dados al recibir esta confirmacion, asi que la linea de la victima no incrusta el
+    -- daño ("no me pongas '- 11 Fuerza' si me anuncias el daño luego"). Solo la curacion, que
+    -- no tiene linea posterior por victima, lo conserva.
     local visibleApplied, visibleSummaries = applied, summaries
-    if request.mode == "attack" then visibleApplied, visibleSummaries = 0, {} end
+    if request.mode ~= "heal" then visibleApplied, visibleSummaries = 0, {} end
     local label = PlayerResultLabel(request, status, visibleApplied, visibleSummaries, rollText)
     BroadcastInfo(label, sender, true)
     -- La linea completa ya se publica como tirada. El ACK queda deliberadamente minimo
@@ -1563,16 +1569,32 @@ local function BroadcastSharedRoll(session, details)
     return BroadcastRolledComponents(session.definition, session.rolledComponents, details)
 end
 
--- El daño de un ataque se tira para poder enviarlo al defensor, pero no se PUBLICA hasta que
--- existe al menos un impacto. Asi nunca aparece "Daño ..." antes de saber si el conjuro acertó.
+-- El daño se tira para poder enviarlo al defensor, pero no se PUBLICA hasta que existe al menos
+-- una victima alcanzada. Vale para ataque Y salvacion (2026-09-05: los dados de Explosion arcana
+-- salian ANTES de la salvacion que decidia si conectaba): la linea de dados nunca aparece antes
+-- que la tirada del desenlace. "Alcanzada" = impacto, salvacion fallada, o salvacion superada de
+-- un conjuro a mitad de daño (algo se aplica igual).
 MaybeBroadcastAttackDamage = function(session, target)
-    if not (session and target and session.definition and session.definition.resolution == "attack") then return end
-    if not (target.result and target.result.status == "hit") then return end
-    if session.definition.rollPerTarget then
+    if not (session and target and session.definition) then return end
+    local def = session.definition
+    if def.resolution == "heal" then return end
+    local result = target.result
+    if not result then return end
+    local landed = result.status == "hit" or result.status == "failed"
+        or (result.status == "saved" and (tonumber(result.applied) or 0) > 0)
+    if not landed then return end
+    if def.rollPerTarget then
+        -- Solo el multimpacto de ATAQUE difiere por victima; el resto ya anuncio su tirada
+        -- por aplicacion en Resolve (auto-impactos, que no tienen desenlace que esperar).
+        if def.resolution ~= "attack" then return end
         if target.damageAnnounced then return end
-        target.damageAnnounced = BroadcastRolledComponents(session.definition, target.damageComponents,
+        target.damageAnnounced = BroadcastRolledComponents(def, target.damageComponents,
             target.rollDetails, " " .. tostring(target.rollIndex or ""))
     elseif not session.damageAnnounced then
+        if not (session.rolledComponents and #session.rolledComponents > 0) then
+            session.damageAnnounced = true
+            return
+        end
         session.damageAnnounced = BroadcastSharedRoll(session, session.rollDetails)
     end
 end
@@ -1600,9 +1622,11 @@ function API.Resolve()
     else
         session.rolledComponents, session.rollDetails = RollComponents(session.definition)
     end
-    -- Condicion pura (sin daño): no hay tirada de daño compartida que anunciar.
+    -- Solo la CURACION se anuncia al tirar: no tiene desenlace del que depender. El daño —
+    -- ataque O salvacion — se difiere a la primera victima alcanzada (MaybeBroadcastAttackDamage):
+    -- los dados no deben salir antes de la tirada que dice si el conjuro conecta.
     if session.rolledComponents and #session.rolledComponents > 0 and not session.definition.rollPerTarget
-        and session.definition.resolution ~= "attack" then
+        and session.definition.resolution == "heal" then
         BroadcastSharedRoll(session, session.rollDetails)
     end
     session.pendingNpc, session.pendingNpcIndex = {}, 1
@@ -1704,7 +1728,7 @@ local function ResolveNpcEntry(entry)
         request.saved = not autoFail and total >= request.dc
         affected = not request.saved or request.success == "half"
         status = request.saved and "saved" or "failed"
-        rollText = string.format("Salv %s: %d (%d%+d vs CD %d)", request.ability, total, die, bonus, request.dc)
+        rollText = string.format("Salv %s |cff66ccff%d|r (%d%+d vs CD %d)", request.ability, total, die, bonus, request.dc)
     elseif request.mode == "auto" then
         affected, status, rollText = true, "hit", "Impacto automatico"
     else
@@ -1753,8 +1777,11 @@ local function ResolveNpcEntry(entry)
             end
         end
     end
+    -- Igual que en la victima jugador: el daño no se incrusta en la linea del desenlace porque
+    -- MaybeBroadcastAttackDamage lo anuncia justo despues; duplicarlo era la "inconsistencia"
+    -- de Explosion arcana (y el "- 11 Fuerza" salia ademas tenido del rojo del FALLO).
     local visibleApplied, visibleSummaries = applied, summaries
-    if request.mode == "attack" then visibleApplied, visibleSummaries = 0, {} end
+    if request.mode ~= "heal" then visibleApplied, visibleSummaries = 0, {} end
     BroadcastInfo(FormatVictimResult(target.name, request, status, visibleApplied, visibleSummaries, rollText))
     target.status = status .. " (" .. tostring(applied) .. ")"
     target.result = { status = status, applied = applied }

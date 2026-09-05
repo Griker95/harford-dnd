@@ -882,6 +882,10 @@ do
             if not (GameTooltip and self.estado) then return end
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:AddLine(self.estado.label, 1, 0.82, 0)
+            -- Detalle en cian justo tras el titulo: en Concentracion es el conjuro activo.
+            if self.estado.detalle then
+                GameTooltip:AddLine(self.estado.detalle, 0, 1, 1)
+            end
             if self.estado.description then
                 GameTooltip:AddLine(self.estado.description, 1, 1, 1, true)
             end
@@ -948,9 +952,16 @@ do
             if expira and expira > ahora then
                 restante = string.format("Quedan %d s", math.ceil(expira - ahora))
             end
+            -- `sourceAsDetail`: la definicion pide ensenar la FUENTE como detalle del tooltip
+            -- (Concentracion guarda ahi el conjuro activo, y sourceName ya viaja en el sync).
+            local detalle
+            if def.sourceAsDetail and record and tostring(record.sourceName or "") ~= "" then
+                detalle = record.sourceName
+            end
             fuera[#fuera + 1] = {
                 id = activo.id,
                 label = def.label,
+                detalle = detalle,
                 description = def.description,
                 restante = restante,
                 icono = HarfordDnDConditions.GetIcon(activo.id),

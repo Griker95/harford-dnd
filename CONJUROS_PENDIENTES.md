@@ -38,9 +38,20 @@ Estaban en el compendio con otro título; todos concedidos ya en sus rasgos.
 
 ## Sin resolver con seguridad
 
-| Conjuro (manual) | Lo pide | Situación |
+*(vacío — el último, castigo deslumbrante, se resolvió el 2026-09-05, tabla de abajo)*
+
+| Manual | Compendio | Comprobado por |
 |---|---|---|
-| castigo deslumbrante | Paladín / Protección, nivel de clase 5 | La tabla de equivalencias lo empareja con `golpe_cegador` (*blinding smite*, 3d8 radiante), pero ese es de NIVEL 3 de conjuro y el escalón de clase 5 corresponde a ranura de 2.º. O el manual adelanta un conjuro de 3.º, o el candidato no es él. `pal_pro_conjuros_5` concede solo `guardian_del_rey` mientras tanto. No cablear sin decidirlo. |
+| castigo deslumbrante | `castigo_marcador` ("Castigo marcador", *Branding Smite*, nivel 2) | La fila 5º del Camino de la Protección es de ranura de NIVEL 2: su compañero ✦ `guardian_del_rey` es nivel 2 y toda la tabla es consistente por ranura (3º→1, 9º→3 —confirmado porque su ✦ Luz Cegadora se define "Evocación de nivel 3"—, 13º→4, 17º→5). El único castigo radiante de nivel 2 es *Branding Smite*, y su efecto ES la luz deslumbrante ("tu arma brilla con un resplandor astral… el objetivo emite luz… no puede volverse invisible"). `golpe_cegador` (*Blinding Smite*, "Castigo cegador") queda descartado: nivel 3, y el manual usa "cegador/a" para la ✦ Luz Cegadora del escalón 9º, distinguiéndolo de "deslumbrante". Cableado en `pal_pro_conjuros_5` (2026-09-05). |
+
+## Limpieza addon-side (2026-09-05): claves `concentration` duplicadas
+
+64 conjuros del compendio del addon tenían `concentration = false` seguido más abajo de
+`concentration = true` — un parche por lotes añadió el `true` sin quitar el default. En Lua
+gana la última clave (el juego siempre vio `true`, que era el valor correcto en los 64), pero
+cualquier extractor que lea la PRIMERA aparición se llevaba `false`. **Aviso al chat del
+códice**: si algún extractor de la web leyó ese campo, conviene re-comprobar el flag de
+concentración de esos conjuros en la web. Candado en `tools/pruebas/compendio_ocr.lua`.
 
 ## Barrido OCR comparado (2026-09-05) — CERRADO
 

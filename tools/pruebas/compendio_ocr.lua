@@ -66,4 +66,36 @@ local n = 0
 for _ in t:gmatch('\n        id = "[%w_]+",') do n = n + 1 end
 chk("385 entradas de nivel superior (384 + la alta)", n, 385)
 
+-- ─── SIN CLAVES concentration DUPLICADAS (2026-09-05) ───────────────────────
+-- Un parche por lotes puso `concentration = true` a 64 conjuros SIN quitar el
+-- `concentration = false` por defecto que ya tenian. En Lua gana la ultima clave, asi que el
+-- juego funcionaba, pero cualquier extractor que lea la PRIMERA aparicion (los del codice, un
+-- escaner) se llevaba `false`. Se limpiaron los 64; esto impide que el patron vuelva.
+print("Sin claves concentration duplicadas por entrada")
+local duplicadas = 0
+local posiciones = {}
+for pos in t:gmatch('()\n        id = "[%w_]+",') do posiciones[#posiciones + 1] = pos end
+for i, ini in ipairs(posiciones) do
+    local fin = posiciones[i + 1] or #t
+    local bloque = t:sub(ini, fin)
+    local cuantas = 0
+    for _ in bloque:gmatch("\n%s+concentration = ") do cuantas = cuantas + 1 end
+    if cuantas > 1 then duplicadas = duplicadas + 1 end
+end
+chk("cero entradas con concentration repetida", duplicadas, 0)
+
+-- ─── "castigo deslumbrante" RESUELTO: es Castigo marcador (Branding Smite) ──
+-- La fila 5 del Camino de la Proteccion es de ranura de NIVEL 2 (su companero ✦ guardian_del_rey
+-- es nivel 2 y toda la tabla es consistente por ranura: 3->1, 9->3 confirmado por ✦ Luz Cegadora
+-- "Evocacion de nivel 3", 13->4, 17->5). El unico castigo radiante de nivel 2 es Castigo marcador,
+-- cuyo efecto ES la luz deslumbrante (resplandor astral, emite luz, no puede hacerse invisible).
+-- Castigo cegador (golpe_cegador) queda descartado: nivel 3, y el manual reserva "cegador/a" para
+-- la ✦ Luz Cegadora del escalon 9.
+print("Camino de la Proteccion nivel 5 concede los dos conjuros")
+local pal = io.open("Harford/DnD/Data/Classes/Paladin.lua"):read("*a")
+chk("castigo_marcador concedido",
+    pal:find('spellGrants = { { level = 2, ids = { "castigo_marcador", "guardian_del_rey" } } }', 1, true) ~= nil, true)
+chk("y ya no dice 'sin identificar'",
+    pal:find("Castigo deslumbrante sin identificar", 1, true), nil)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

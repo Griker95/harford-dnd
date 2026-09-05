@@ -1445,6 +1445,10 @@ function API.ResolveRollMode(baseMode, rollType, context)
     -- modo global. Entra antes de combinar estados para que ventaja y desventaja
     -- se anulen correctamente segun las reglas.
     if context.rangeDisadvantage then flags.dis = true end
+    -- Ventaja concedida por un RASGO del que tira (efecto `skillAdvantage`, nucleos demoniacos):
+    -- la detecta HarfordDnDCalc y viaja en el contexto igual que rangeDisadvantage, para que la
+    -- anulacion 5e (cualquier ventaja + cualquier desventaja = normal) se resuelva aqui.
+    if context.featureAdvantage then flags.adv = true end
     local actor = context.actorUnit or context.actorGuid or "player"
     local actorEffects = context.actorConditionIds and EffectsForIds(context.actorConditionIds) or EffectsFor(actor)
     for _, effect in ipairs(actorEffects) do

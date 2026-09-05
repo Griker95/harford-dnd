@@ -2621,6 +2621,14 @@ end
 -- limitado, gasta un uso. (La mecanica de recurso/daño activable vive en la seccion Ataque.)
 AnnounceAbility = function(feature, opciones)
     if not feature then return false end
+    -- Un rasgo presente pero NO habilitado (nucleo demoniaco que no sostienes, puerta racial,
+    -- desactivado a mano) se ve en el Libro para poder leerlo, pero no se usa ni se anuncia.
+    -- Los rasgos sinteticos de presentacion (Palabras de Poder) pasan: su id no tiene estado.
+    if HarfordDnDProgression and HarfordDnDProgression.IsFeatureEnabled
+        and not HarfordDnDProgression.IsFeatureEnabled(feature, GetProfileName()) then
+        HarfordChat.Print(tostring(feature.name or "Ese rasgo") .. " no esta activo en tu ficha.")
+        return false
+    end
     if (feature.uses or feature.usesFrom) and not FeatureUseAvailable(feature) then
         WarnFeatureWithoutUses(feature)
         return false

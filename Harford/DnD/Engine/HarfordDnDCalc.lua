@@ -361,6 +361,17 @@ function HarfordDnDCalc.RollD20Full(rollType, context)
     local consumir = propia and HarfordDnDConditions
         and HarfordDnDConditions.ConditionsToConsumeAfterRoll
         and HarfordDnDConditions.ConditionsToConsumeAfterRoll(rollType) or nil
+    -- Ventaja declarada por RASGO sobre una habilidad concreta (efecto `skillAdvantage`, nucleos
+    -- demoniacos del Brujo). Solo en tiradas PROPIAS y nunca con contexto NPC cargado
+    -- (aislamiento de ficha: los rasgos del jugador no tocan las tiradas del NPC). Viaja como
+    -- flag de contexto — mismo patron que rangeDisadvantage — y la fusion 5e la hace
+    -- ResolveRollMode en un unico sitio.
+    if propia and context and context.skill
+        and not (HarfordDnDContext and HarfordDnDContext.State and HarfordDnDContext.State.active)
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasSkillAdvantage
+        and HarfordDnDFeatureEffects.HasSkillAdvantage(context.skill) then
+        context.featureAdvantage = true
+    end
     local mode = HarfordDnDCalc.GetMode()
     if rollType and HarfordDnDConditions and HarfordDnDConditions.ResolveRollMode then
         mode = HarfordDnDConditions.ResolveRollMode(mode, rollType, context)

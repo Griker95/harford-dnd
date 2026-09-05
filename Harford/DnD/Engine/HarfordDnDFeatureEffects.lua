@@ -123,6 +123,9 @@ local function Empty()
         creationBonus = { ability = {} },
         saveProf = {},
         skillRank = {},
+        -- Ventaja PERMANENTE en chequeos de habilidades concretas mientras el rasgo este activo
+        -- (nucleo demoniaco del Brujo). Clave: id de habilidad en minusculas -> true.
+        skillAdvantage = {},
         resourceMax = {},
         -- Recuperacion PARCIAL de un recurso al descansar, que no es lo mismo que su `recharge`:
         -- el recurso puede recargar en largo y aun asi un rasgo devolver N en el corto
@@ -260,6 +263,12 @@ local function ApplyEffect(resolved, effect, profileName)
         resolved.skillRank[effect.skill] = math.max(tonumber(resolved.skillRank[effect.skill]) or 0, 1)
     elseif kind == "skillExpertise" and effect.skill then
         resolved.skillRank[effect.skill] = math.max(tonumber(resolved.skillRank[effect.skill]) or 0, 2)
+    elseif kind == "skillAdvantage" and type(effect.skills) == "table" then
+        -- Lista de ids de HarfordDnDData.SKILLS; se guarda en minusculas para que la consulta
+        -- no dependa de mayusculas ("JuegoManos" vs "juegomanos").
+        for _, s in ipairs(effect.skills) do
+            resolved.skillAdvantage[tostring(s):lower()] = true
+        end
     elseif kind == "resourceMax" and effect.resource then
         -- Valor fijo (effect.value) o escalado por nivel de una clase:
         -- `base + perLevel * (nivel de effect.perClassLevel)`. Ej. Poder Runico = 1 + nivel CdM.
@@ -812,6 +821,13 @@ end
 
 function API.GetSkillRank(skillId, profileName)
     return tonumber(API.Resolve(profileName).skillRank[skillId]) or 0
+end
+
+-- Ventaja de RASGO en chequeos de esa habilidad (efecto `skillAdvantage`). Solo cuenta si el
+-- rasgo esta activo — la puerta `requiredCore` de los nucleos demoniacos ya la aplica el
+-- Resolve via IsFeatureEnabled. La consume HarfordDnDCalc.RollD20Full como flag de contexto.
+function API.HasSkillAdvantage(skillId, profileName)
+    return API.Resolve(profileName).skillAdvantage[tostring(skillId or ""):lower()] == true
 end
 
 -- Recuperaciones parciales al descansar: { [recurso] = cantidad }. Las aplica ApplyShortRest /

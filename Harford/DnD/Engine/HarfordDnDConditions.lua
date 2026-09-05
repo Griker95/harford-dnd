@@ -9,7 +9,7 @@ local API = HarfordDnDConditions
 local PREFIX = "DND5EARC"
 local AURA_GRACE = 2
 local REMOTE_TTL = 600
-local EsNpcDeLosTurnos   -- se asigna abajo; el guardia de efectos delegados la usa antes
+local EsNpcDeLosTurnos   -- declarada aqui para que su asignacion de abajo sea local, no global
 local REQUEST_TTL = 60
 local MAX_STATES_PER_UNIT = 32
 
@@ -1110,15 +1110,32 @@ end
 -- Mismo patron que la cola por GUID del motor de areas, que ya resolvia esto para el dano.
 local pendientesAura = {}
 
+-- Tope de GUIDs distintos apuntados a la vez. Desde que la cola acepta CUALQUIER NPC (ya no
+-- solo los del orden de turnos), un remitente podria hincharla con GUIDs que nunca se van a
+-- seleccionar; con tope, el rechazo se detecta y se AVISA en vez de crecer sin fin. Un GUID ya
+-- apuntado sigue aceptando entradas: el tope es de bichos, no de golpes.
+local MAX_GUIDS_PENDIENTES = 80
+local function BucketPendientes(guid)
+    local bucket = pendientesAura[guid]
+    if bucket then return bucket end
+    local n = 0
+    for _ in pairs(pendientesAura) do n = n + 1 end
+    if n >= MAX_GUIDS_PENDIENTES then return nil end
+    bucket = {}
+    pendientesAura[guid] = bucket
+    return bucket
+end
+
 function API.QueueNpcAura(guid, auraId, op)
     guid, auraId = tostring(guid or ""), tonumber(auraId)
     if guid == "" or not auraId or auraId <= 0 then return false end
-    pendientesAura[guid] = pendientesAura[guid] or {}
+    local bucket = BucketPendientes(guid)
+    if not bucket then return false end
     -- Sin duplicados: si ya estaba apuntado quitar esa aura, apuntarlo otra vez no anade nada.
-    for _, p in ipairs(pendientesAura[guid]) do
+    for _, p in ipairs(bucket) do
         if p.auraId == auraId and p.op == op then return true end
     end
-    pendientesAura[guid][#pendientesAura[guid] + 1] = { auraId = auraId, op = op or "remove" }
+    bucket[#bucket + 1] = { auraId = auraId, op = op or "remove" }
     Notify()
     return true
 end
@@ -1133,7 +1150,7 @@ function API.QueueNpcHealth(guid, delta, autor)
     guid = tostring(guid or "")
     delta = math.floor(tonumber(delta) or 0)
     if guid == "" or delta == 0 then return false end
-    pendientesAura[guid] = pendientesAura[guid] or {}
+    if not BucketPendientes(guid) then return false end
     for _, p in ipairs(pendientesAura[guid]) do
         if p.op == "health" then
             p.delta = p.delta + delta
@@ -1225,7 +1242,6 @@ function API.FlushPendingAuras(unit)
 end
 
 -- ─── DELEGAR EL EFECTO EN QUIEN PUEDA EMITIRLO ──────────────────────────────
--- `EsNpcDeLosTurnos` se declara mas abajo; aqui solo se cierra sobre ella.
 -- Quien manda el efecto ya lo ha resuelto entero: tirada, dano y mitigacion son del cliente. Lo
 -- unico que no puede hacer es EMITIR el comando de servidor, porque no es oficial.
 --
@@ -1289,9 +1305,12 @@ function API.AplicarEfectoNpc(guid, tipo, valor, unidad)
     if guid == "" then return nil end
 
     if API.PuedoAplicarEnNpc() then
-        if tipo == "damage" then API.QueueNpcDamage(guid, valor, nil)
-        elseif tipo == "heal" then API.QueueNpcHealth(guid, math.abs(valor), nil)
-        else API.QueueNpcAura(guid, valor, tipo) end
+        local apuntado
+        if tipo == "damage" then apuntado = API.QueueNpcDamage(guid, valor, nil)
+        elseif tipo == "heal" then apuntado = API.QueueNpcHealth(guid, math.abs(valor), nil)
+        else apuntado = API.QueueNpcAura(guid, valor, tipo) end
+        -- La cola puede rechazar (valor invalido o tope de GUIDs): nil, no "encolado" a ciegas.
+        if not apuntado then return nil end
         -- Si ya lo tengo delante, se ejecuta ahora mismo en vez de esperar a re-seleccionarlo.
         local mirando = UnitExists and UnitExists(unidad or "target")
             and UnitGUID and UnitGUID(unidad or "target") == guid
@@ -1330,23 +1349,30 @@ function API.RecibirEfectoNpc(guid, tipo, valor, autor, sender, salto)
         end
         return false
     end
-    -- NPC fuera del orden de turnos: el guardia es deliberado (sin el, cualquiera podria hacer
-    -- que el DM emitiera comandos sobre cualquier NPC), pero rechazar EN SILENCIO dejaba al
-    -- atacante creyendo que su golpe conto. Se le avisa con el motivo.
-    if not EsNpcDeLosTurnos(guid) then
-        if autor and autor ~= "" then
-            HarfordSync.Send(PREFIX, "DNDNPCFAIL|" .. tostring(guid) .. "|turnos", "WHISPER", autor)
-        end
+    -- La cola acepta CUALQUIER NPC (decision de mesa 2026-09-05): aunque no este en el orden de
+    -- turnos y aunque no haya combate, el pendiente se apunta y espera. El guardia de turnos que
+    -- habia aqui se retiro a proposito; lo que protege es que el remitente tiene que ser de fiar
+    -- (grupo/visible, validado antes de llamar) y que NADA se ejecuta hasta que el DM targetea a
+    -- ese NPC, con linea de chat de cuanto aplico y de quien venia. El unico rechazo que queda es
+    -- la cola llena, y tambien AVISA (`|cola`) en vez de callar.
+    local cantidad = tonumber(valor)
+    if (tipo == "damage" or tipo == "heal") and math.floor(math.abs(cantidad or 0)) <= 0 then return false end
+    if (tipo == "apply" or tipo == "remove") and not (cantidad and cantidad > 0) then return false end
+    local quien = autor ~= "" and ShortName(autor) or ShortName(sender or "")
+    local apuntado
+    if tipo == "damage" then
+        apuntado = API.QueueNpcDamage(guid, valor, quien)
+    elseif tipo == "heal" then
+        apuntado = API.QueueNpcHealth(guid, math.abs(valor), quien)
+    elseif tipo == "apply" or tipo == "remove" then
+        apuntado = API.QueueNpcAura(guid, valor, tipo)
+    else
         return false
     end
-    local quien = autor ~= "" and ShortName(autor) or ShortName(sender or "")
-    if tipo == "damage" then
-        API.QueueNpcDamage(guid, valor, quien)
-    elseif tipo == "heal" then
-        API.QueueNpcHealth(guid, math.abs(valor), quien)
-    elseif tipo == "apply" or tipo == "remove" then
-        API.QueueNpcAura(guid, valor, tipo)
-    else
+    if not apuntado then
+        if autor and autor ~= "" and HarfordSync and HarfordSync.Send then
+            HarfordSync.Send(PREFIX, "DNDNPCFAIL|" .. tostring(guid) .. "|cola", "WHISPER", autor)
+        end
         return false
     end
     -- Si ya lo tengo seleccionado, se ejecuta sin esperar.
@@ -2622,13 +2648,17 @@ function API.HandleMessage(message, sender)
         if IsTrustedSender(sender) then CacheRemoteState(state, sender) end
         return true
     end
-    -- Un efecto que delegue no se pudo aplicar. Con motivo `turnos` es que el NPC no esta en el
-    -- orden de turnos (el receptor solo acepta NPCs montados en el tracker); sin motivo, que
-    -- nadie de la cadena tiene permiso de fase.
+    -- Un efecto que delegue no se pudo aplicar. Motivos: `cola` = la cola de pendientes del
+    -- receptor esta llena (tope de GUIDs); `turnos` ya NO se emite (la cola acepta NPCs fuera de
+    -- turnos desde 2026-09-05) pero se sigue entendiendo por si el DM corre un cliente anterior;
+    -- sin motivo, nadie de la cadena tiene permiso de fase.
     local sinNadie, motivoFail = tostring(message or ""):match("^DNDNPCFAIL|([^|]+)|?(.*)$")
     if sinNadie then
         if IsTrustedSender(sender) and HarfordChat and HarfordChat.Print then
-            if motivoFail == "turnos" then
+            if motivoFail == "cola" then
+                HarfordChat.Print("|cffff5555Tu efecto sobre el NPC no se aplico:|r la cola de "
+                    .. "pendientes del receptor esta llena. Diselo al DM.")
+            elseif motivoFail == "turnos" then
                 HarfordChat.Print("|cffff5555Tu efecto sobre el NPC no se aplico:|r ese NPC no "
                     .. "esta en el orden de turnos. Pide al DM que lo monte o lo aplique a mano.")
             else

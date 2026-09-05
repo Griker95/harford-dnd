@@ -70,4 +70,61 @@ chk("el aviso lo respeta", prog:find("if total > 0 and not silencioso", 1, true)
 chk("inspeccion migra en silencio",
     prog:find("Migrate(CopyTable(data), true)", 1, true) ~= nil, true)
 
+-- La marca del NPC ocupa bytes aunque solo se vea una calavera. Antes provocaba un
+-- recorte dentro del hyperlink del ataque en la copia recibida por el otro jugador.
+HarfordDnDStore = { ToNumber = function(n, defecto) return tonumber(n) or defecto end }
+function strsplit(sep, texto)
+    local partes = {}
+    for campo in (texto .. sep):gmatch("(.-)" .. sep) do partes[#partes + 1] = campo end
+    return (unpack or table.unpack)(partes)
+end
+dofile("Harford/Core/HarfordSync.lua")
+dofile("Harford/DnD/Engine/HarfordDnDRolls.lua")
+local R = HarfordDnDRolls
+local original = {
+    type = "attack", player = "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:14:14|t Horror de la Pesadilla",
+    nameColor = "ff0000", total = 24, dice = "18", modifiers = "+6 vs CA 18 |cff00ff00EXITO|r",
+    critical = "EXITO", label = "Ataque |cffffd100|Htotalrp3:Griker-Epsilon:123456789012345678901234567890|h[Garras de Pesadilla]|h|r |cffffcc00Cody|r",
+}
+local rutaLib = "G:/Epsilon/_retail_/Interface/AddOns/EpsilonLib/Lib/LibDeflate/LibDeflate.lua"
+local hay = io.open(rutaLib)
+if hay then
+    hay:close()
+    LibDeflate = dofile(rutaLib)
+    local payload = R.Serialize(original)
+    local vuelta = R.Deserialize(payload)
+    chk("la tirada marcada cabe", #payload <= 240, true)
+    chk("el ataque llega completo con su enlace", vuelta and vuelta.label, original.label)
+    chk("la calavera y el nombre llegan completos", vuelta and vuelta.player, original.player)
+    chk("el total no cambia", vuelta and vuelta.total, 24)
+    chk("el desenlace no cambia", vuelta and vuelta.critical, "EXITO")
+    local nombreBase = "Horror de la Pesadilla"
+    for marca = 0, 8 do
+        original.player = marca == 0 and nombreBase or
+            ("|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_" .. marca .. ":14:14|t " .. nombreBase)
+        local recibido = R.Deserialize(R.Serialize(original))
+        local salida
+        DEFAULT_CHAT_FRAME = { AddMessage = function(_, texto) salida = texto end }
+        R.DisplayInChat(original)
+        local localTexto = salida
+        R.DisplayInChat(recibido)
+        chk("chat local y remoto iguales, marca " .. marca, salida == localTexto, true)
+    end
+else
+    print("Compresion real saltada: falta LibDeflate del cliente")
+end
+LibDeflate = nil
+local vuelta = R.Deserialize(R.Serialize(original))
+local _, marcas = vuelta.label:gsub("|h", "")
+chk("sin compresion no queda medio hyperlink", marcas % 2, 0)
+chk("sin compresion no queda cabecera abierta",
+    vuelta.label:match("|H[^|]*$") == nil, true)
+chk("sin compresion conserva el total", vuelta.total, 24)
+chk("sin compresion conserva el nombre del ataque",
+    vuelta.label:find("[Garras de Pesadilla]", 1, true) ~= nil, true)
+chk("el recorte no deja una textura abierta",
+    R.NetworkLabel(string.rep("x", 185) .. "|TInterface\\TargetingFrame\\UI-RaidTargetingIcon_8:14:14|t"):find("|T", 1, true), nil)
+chk("el recorte no parte una letra UTF-8",
+    R.NetworkLabel(string.rep("x", 199) .. "\195\177"), string.rep("x", 199))
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

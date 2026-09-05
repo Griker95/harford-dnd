@@ -158,6 +158,17 @@ end
 
 -- Tras recortar la label, cierra/elimina codigos de color partidos para que no "sangre" color.
 local function SanitizeLabelTail(label)
+    -- Un corte dentro de un enlace o textura retira el token incompleto entero.
+    label = label:gsub("|H[^|]*|h[^|]*$", "")
+    label = label:gsub("|H[^|]*$", "")
+    label = label:gsub("|T[^|]*$", "")
+    -- El limite es en bytes: no dejar media letra UTF-8 al final.
+    local inicio = label:find("[\194-\244][\128-\191]*$")
+    if inicio then
+        local byte = label:byte(inicio)
+        local longitud = byte < 224 and 2 or (byte < 240 and 3 or 4)
+        if #label - inicio + 1 < longitud then label = label:sub(1, inicio - 1) end
+    end
     label = label:gsub("|$", "")
     label = label:gsub("|c%x?%x?%x?%x?%x?%x?%x?$", "")  -- |c... incompleto al final
     local _, opens = label:gsub("|c%x%x%x%x%x%x%x%x", "")
@@ -181,7 +192,9 @@ HarfordDnDRolls.NetworkLabel = NetworkLabel
 
 function HarfordDnDRolls.Serialize(data)
     data = data or {}
-    local label = NetworkLabel(data.label)
+    -- Comprimir ANTES de recortar: una marca de banda en el nombre puede hacer
+    -- que un ataque normal exceda 240 bytes aunque visualmente sea una linea corta.
+    local label = CompactItemLinks(data.label)
     local function build(lbl)
         return string.format("%s^%s^%s^%d^%s^%s^%s^%s^%s^%s",
             EscapeRollField(data.type or "roll"),
@@ -197,6 +210,16 @@ function HarfordDnDRolls.Serialize(data)
         )
     end
     local payload = build(label)
+    if #payload > MAX_SAFE_PAYLOAD_BYTES and HarfordSync and HarfordSync.Comprimir then
+        local comprimido = HarfordSync.Comprimir(payload)
+        if comprimido and #comprimido <= MAX_SAFE_PAYLOAD_BYTES then return comprimido end
+    end
+    -- Sin compresion suficiente se conserva primero el TEXTO visible del enlace.
+    -- Quitar sus metadatos ahorra bytes sin perder el nombre del ataque o destino.
+    if #payload > MAX_SAFE_PAYLOAD_BYTES then
+        label = label:gsub("|H[^|]*|h(.-)|h", "%1")
+        payload = build(label)
+    end
     -- Recorta SOLO la label (la parte variable larga: notas/maniobras) hasta que el payload
     -- completo quepa en un addon message (~255 bytes; HarfordSync.Send NO trocea tiradas, asi que
     -- un payload mas largo se descarta y la tirada NO llega al target). Usa el mismo umbral seguro
@@ -209,6 +232,10 @@ function HarfordDnDRolls.Serialize(data)
 end
 
 function HarfordDnDRolls.Deserialize(msg)
+    if HarfordSync and HarfordSync.Descomprimir then
+        msg = HarfordSync.Descomprimir(msg)
+    end
+    if type(msg) ~= "string" then return nil end
     local parts = {strsplit("^", msg)}
     if #parts < 8 then return nil end
     local color = UnescapeRollField(parts[10])

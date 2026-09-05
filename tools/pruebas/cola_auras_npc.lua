@@ -203,17 +203,40 @@ chk("y el lider encabeza", cond:find("if lider then cadena[#cadena + 1] = lider 
 -- Sin repetir al lider si ademas esta nombrado secundario, y sin mandarmelo a mi mismo: el
 -- receptor lo rechaza si no puede emitirlo y se perderia.
 chk("sin repetir eslabones", cond:find("local repetido = (lider and ShortName(lider) == corto) or (corto == yo)", 1, true) ~= nil, true)
--- Y solo sobre NPCs que la mesa ya conoce: si no, cualquiera podria pedir dano sobre cualquier cosa.
--- Pero el rechazo AVISA al autor con el motivo (`|turnos`): rechazar en silencio le dejaba
--- creyendo que su golpe conto.
-chk("y solo sobre NPCs de la lista de turnos",
-    cond:find("if not EsNpcDeLosTurnos(guid) then", 1, true) ~= nil, true)
-chk("rechazando con aviso, no en silencio",
-    cond:find('"DNDNPCFAIL|" .. tostring(guid) .. "|turnos"', 1, true) ~= nil, true)
-chk("y el atacante lee el motivo",
-    cond:find("esta en el orden de turnos", 1, true) ~= nil, true)
 chk("el remitente tiene que ser de fiar",
     cond:find("API.RecibirEfectoNpc(guid, tipo, valor, autor, sender, salto)", 1, true) ~= nil, true)
+
+-- ─── LA COLA ACEPTA CUALQUIER NPC (decision de mesa 2026-09-05) ─────────────
+-- Aunque el NPC no este en el orden de turnos y aunque no haya combate, el pendiente se apunta y
+-- espera a que el DM lo seleccione. El guardia EsNpcDeLosTurnos que habia en la recepcion se
+-- retiro a proposito; lo que protege es el remitente de fiar y que nada se ejecuta sin targetear.
+print("La cola acepta NPCs fuera de turnos")
+C.ClearPendingAuras()
+OBJETIVO = nil
+chk("un golpe delegado de un NPC sin montar se apunta",
+    C.RecibirEfectoNpc("GUID-FUERA", "damage", 7, "Deryk", "Deryk", 1), true)
+chk("con su delta en la cola", (C.GetPendingAurasFor("GUID-FUERA") or { {} })[1].delta, -7)
+chk("y el autor apuntado", (C.GetPendingAurasFor("GUID-FUERA") or { {} })[1].autores[1], "Deryk")
+local recibir = cond:sub(assert(cond:find("function API.RecibirEfectoNpc", 1, true)),
+    assert(cond:find("function API.ClearPendingAuras", 1, true)))
+chk("la recepcion ya no mira los turnos", recibir:find("EsNpcDeLosTurnos", 1, true), "nil")
+-- Basura que no es un efecto no se apunta (antes lo filtraba de rebote el guardia de turnos).
+chk("cantidad cero no se apunta", C.RecibirEfectoNpc("GUID-FUERA", "damage", 0, "Deryk", "Deryk", 1), false)
+chk("aura invalida tampoco", C.RecibirEfectoNpc("GUID-FUERA", "apply", 0, "Deryk", "Deryk", 1), false)
+
+-- Sin fondo no: al aceptar cualquier GUID, sin tope un remitente podria hinchar la cola con
+-- bichos que nunca se seleccionaran. El tope es de GUIDs; uno ya apuntado sigue aceptando.
+print("La cola tiene tope de GUIDs y el rechazo avisa")
+C.ClearPendingAuras()
+for i = 1, 80 do C.QueueNpcAura("GUID-" .. i, 5, "remove") end
+chk("80 bichos caben", C.GetPendingAuraCount(), 80)
+chk("el 81 nuevo no", C.QueueNpcAura("GUID-81", 5, "remove"), false)
+chk("pero uno ya apuntado sigue aceptando auras", C.QueueNpcAura("GUID-1", 6, "remove"), true)
+chk("y dano tambien", C.QueueNpcHealth("GUID-2", -3, "X"), true)
+chk("el rechazo delegado avisa con motivo cola",
+    cond:find('"DNDNPCFAIL|" .. tostring(guid) .. "|cola"', 1, true) ~= nil, true)
+chk("y el atacante lee ese motivo", cond:find('motivoFail == "cola"', 1, true) ~= nil, true)
+C.ClearPendingAuras()
 
 -- ─── LAS DOS RUTAS DE ATAQUE LO USAN ────────────────────────────────────────
 -- No basta con que la cola exista: hay que ENTRAR en ella. Antes, sin permiso de oficial, el dano

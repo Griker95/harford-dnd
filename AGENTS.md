@@ -931,6 +931,7 @@ Regla de timers/refresco:
 - **`HandleAddonMessage` en `HarfordDnDComm` retorna boolean**: `true` solo cuando se actualiza la cache de recursos remotos (`RES`, `RESCFG`, `RADJ`); `false` para `REQ`, sincronias de perfil, prof flags, tiradas, `ANIMFLG` y `DOAPPLYAURA`. El caller en `HarfordDnD` debe usar ese return para condicionar `HarfordUnitFrames.Refresh()`: no hacer Refresh completo en cada mensaje de turnos, loot, reputaciones o tiradas.
 - **`HarfordDnDResources.AnimFlagCache`**: tabla `{[nombre]=boolean}`, indexada tanto por nombre corto como nombre completo. `true` = el jugador quiere recibir animaciones; `nil` = desconocido (tratar como `true`); `false` = animaciones desactivadas. Se llena al recibir `ANIMFLG` en `HarfordDnDComm`. Siempre usar `Ambiguate(name, "short")` para el lookup y para poblar la cache.
 - **`RequestResourcesFromPlayer` en `HarfordDnD`**: throttle de 12s por jugador (`_resourceRequestTimes` tabla local + `RESOURCE_REQUEST_COOLDOWN = 12`). Sin el throttle, `PLAYER_TARGET_CHANGED` podía enviar WHISPER en cada cambio de objetivo al mismo jugador. La tabla debe vivir en scope de modulo, no dentro del handler de evento.
+- **Tiradas con marca de banda (2026-09-05)**: el markup de textura del NPC ocupa decenas de bytes y podia forzar el recorte del hyperlink del ataque. HarfordDnDRolls.Serialize comprime el mensaje completo con HarfordSync.Comprimir antes de recortar; Deserialize descomprime antes de separar los diez campos. Si no cabe comprimido, elimina metadatos de hyperlinks conservando su texto y solo despues acorta la etiqueta, sin dejar tokens o UTF-8 partidos. Emisor y receptor necesitan esta version para las tiradas comprimidas. Candado: tools/pruebas/formato_tirada.lua, ida/vuelta y render con las ocho marcas usando LibDeflate real.
 - **Nombre y color TRP3 en tiradas (`HarfordDnDRolls`)**: las tiradas emitidas por el jugador local deben mostrar el nombre y color TRP3, no el nombre WoW ni el dorado fijo.
   - `HarfordDnDRolls.GetDisplayName()`: si `HarfordDnDContext.State.rollName` está activo (contexto NPC), lo usa; si no, intenta `HarfordTRP3.GetUnitRPName("player")`; cae a `UnitName("player")`.
   - `HarfordDnDRolls.Serialize` incluye un **10.º campo** `nameColor` (hex 6 dígitos o string vacío).
@@ -3410,12 +3411,22 @@ mitigar.
   aplicaria dos veces -- un golpe de 7 quitaria 14, y eso no se ve venir en mesa.
 - El lider va **primero** porque quien aplica tiene que tener el NPC seleccionado o se le queda en
   la cola; el lider suele estar en todo, un secundario puede no mirar nunca a ese NPC.
-- Dos guardias al recibir: solo se acepta si **yo puedo emitirlo**, y solo sobre **NPCs que ya
-  estan en el orden de turnos** (`EsNpcDeLosTurnos`), que es lo que impide pedir dano sobre
-  cualquier cosa. **Ninguno de los dos rechaza en silencio** (2026-09-04): sin permiso se pasa al
-  siguiente eslabon y, agotada la cadena, `DNDNPCFAIL|guid` avisa al autor; con el NPC fuera de
-  turnos se manda `DNDNPCFAIL|guid|turnos` y el autor lee el motivo ("no esta en el orden de
-  turnos"). El parse del receptor admite ambas formas (`^DNDNPCFAIL|([^|]+)|?(.*)$`).
+- **La cola acepta CUALQUIER NPC** (decision de mesa 2026-09-05): aunque no este en el orden de
+  turnos y aunque no haya combate, el pendiente se apunta y espera. El guardia `EsNpcDeLosTurnos`
+  que habia en `RecibirEfectoNpc` se RETIRO a proposito (la funcion sigue existiendo para el
+  desempate de fotos de estado en `CacheStateList`); no reintroducirlo. Lo que protege: el
+  remitente tiene que ser de fiar (`IsTrustedSender`: grupo/visible), la recepcion valida el
+  efecto (cantidad entera > 0, aura > 0), y NADA se ejecuta hasta que el DM targetea al NPC — con
+  linea de chat de cuanto aplico y de quien venia. Nada limpia la cola al terminar el combate
+  (`ClearPendingAuras` no tiene llamadores en gameplay): los pendientes sobreviven.
+- **Tope de 80 GUIDs distintos** (`MAX_GUIDS_PENDIENTES`, helper `BucketPendientes`): al aceptar
+  cualquier GUID, sin tope un remitente podria hinchar la cola con bichos que nunca se
+  seleccionaran. El tope es de GUIDs, no de golpes: uno ya apuntado sigue aceptando entradas.
+  `AplicarEfectoNpc` local devuelve nil (no "encolado") si la cola rechaza.
+- **Ningun rechazo es silencioso**: sin permiso se pasa al siguiente eslabon y, agotada la
+  cadena, `DNDNPCFAIL|guid` avisa al autor; con la cola llena se manda `DNDNPCFAIL|guid|cola`.
+  El parse del receptor (`^DNDNPCFAIL|([^|]+)|?(.*)$`) entiende ademas el motivo `|turnos` de
+  clientes anteriores (hasta 7f972fa), que ya no se emite.
 - El vaciado de la cola cuelga de `PLAYER_TARGET_CHANGED` -> `FlushPendingAuras("target")` (y de
   un flush inmediato si el NPC ya esta seleccionado al recibir): **seleccionar al NPC ejecuta los
   pendientes solo**, con linea de chat "Aplicado N de dano pendiente a X (autores)".

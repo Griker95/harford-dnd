@@ -660,22 +660,29 @@ chk("y ANTES de que Correr doble",
 chk("terreno dificil dobla el gasto contado",
     ataque:find('HarfordDnDConditions.IsMovementDoubled("player") then\n                avance = avance * 2', 1, true) ~= nil, true)
 
--- `/harford libre`: roamear sin gasto ni muro y volver al ancla al empezar tu turno (un ciclo,
--- como el DM dirigiendo pero a peticion de cualquier jugador). El cambio de turno NO pisa su
--- ancla "casa" con la posicion de roameo, la vigilancia le salta, y al tocarle el turno el TP
--- de vuelta lo apaga.
-print("Modo libre: roamear y volver")
+-- `/harfordcombat`: modo libre PERSISTENTE (decision de mesa 2026-09-05, sustituye al "un
+-- ciclo" del primer intento). `libre` guarda la CASA (aparte del ancla del muro, que los
+-- reinicios de turno pisan) y deja moverse sin gasto ni muro SIN que el cambio de turno
+-- devuelva ni apague; `posicion` teletransporta a la casa a peticion; `stop` lo para donde
+-- estes (re-anclando en turno ajeno para que el muro vuelva a valer). El fin de combate lo
+-- recoge todo.
+print("Modo libre persistente: libre / posicion / stop")
 chk("la vigilancia salta al modo libre",
     ataque:find("and not DirigiendoLaEscena() and not API.ModoLibre then", 1, true) ~= nil, true)
-chk("el cambio de turno no pisa su ancla",
+chk("el cambio de turno no lo ancla",
     ataque:find("if API.ModoLibre then return end", 1, true) ~= nil, true)
-chk("al tocarle el turno vuelve y se apaga",
-    ataque:find("(DirigiendoLaEscena() or API.ModoLibre) and EnCombate() then", 1, true) ~= nil
-    and ataque:find('HarfordChat.Print("Modo libre terminado: de vuelta a tu posicion, con el movimiento integro.")', 1, true) ~= nil, true)
-chk("activar captura la casa solo si no habia ancla",
-    ataque:find("if not API.RecordedMovementAnchor then\n            API.RecordedMovementAnchor = CapturarAncla()", 1, true) ~= nil, true)
-chk("apagarlo a mano en TU turno levanta el muro y reanuda el contador",
-    ataque:find("if totalMeters < MaximoDelTurno() then API.RecordedMovementAnchor = nil end", 1, true) ~= nil, true)
+chk("y el contador no arranca ni en tu turno",
+    ataque:find("if not aMano and API.ModoLibre then return end", 1, true) ~= nil, true)
+chk("la casa vive aparte del ancla del muro",
+    ataque:find("API.ModoLibreCasa = API.ModoLibreCasa or API.RecordedMovementAnchor or CapturarAncla()", 1, true) ~= nil, true)
+chk("el turno NO te devuelve: el TP de vuelta es solo del DM",
+    ataque:find("if API.RecordedMovementAnchor and DirigiendoLaEscena() and EnCombate() then", 1, true) ~= nil, true)
+chk("solo el fin de combate lo recoge",
+    ataque:find("if API.ModoLibre and not EnCombate() then", 1, true) ~= nil, true)
+chk("posicion vuelve a la casa por worldport",
+    ataque:find("local ok, err = HarfordServerActions.WorldportSelf(casa, { addonName = \"Harford\" })", 1, true) ~= nil, true)
+chk("stop en turno ajeno re-ancla el muro donde estas",
+    ataque:find("local ancla = CapturarAncla()\n                if ancla then API.RecordedMovementAnchor = ancla end", 1, true) ~= nil, true)
 -- El enganche de soltar tecla se queda como RESPALDO, por si la ultima muestra no llego a verlo.
 chk("y el soltar la tecla queda de respaldo",
     ataque:find('"MoveForwardStop", "MoveBackwardStop",', 1, true) ~= nil, true)

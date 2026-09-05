@@ -4542,13 +4542,8 @@ SlashCmdList["HARFORDMAIN"] = function(msg)
             HarfordDnDAttackUI.ToggleModoLibre()
         end
     elseif sub == "combatstop" then
-        local stopped = HarfordTurnOrderAPI and HarfordTurnOrderAPI.StopLocalCombat
-            and HarfordTurnOrderAPI.StopLocalCombat()
-        if stopped then
-            HarfordChat.Print("Has salido localmente del modo combate.")
-        else
-            HarfordChat.Print("No estabas en modo combate.")
-        end
+        -- Sustituido (2026-09-05): los gestos de combate viven en /harfordcombat.
+        HarfordChat.Print("Ese comando ahora es |cffffcc00/harfordcombat stop|r.")
     elseif sub == "config" then route("HARFORDCONFIG")
     elseif sub == "inspect" then route("HARFORDCHARACTERINSPECT")
     elseif sub == "herramientas" or sub == "tools" then
@@ -4582,7 +4577,32 @@ SlashCmdList["HARFORDMAIN"] = function(msg)
             HarfordChat.Print("Las herramientas de diagnostico requieren el addon opcional HarfordDebug.")
         end
     else
-        HarfordChat.Print("/harford: herramientas | comunicador | radio | cargarficha | ficha | char | rep | turnos | libre | combatstop | contratos | misiones | reparto | loot | config | inspect | compendio/magia | debug")
+        HarfordChat.Print("/harford: herramientas | comunicador | radio | cargarficha | ficha | char | rep | turnos | libre | contratos | misiones | reparto | loot | config | inspect | compendio/magia | debug — y /harfordcombat: libre | posicion | stop")
+    end
+end
+
+-- `/harfordcombat`: gestos de combate. `libre` ALTERNA el modo libre (moverte sin gasto ni
+-- muro, persistente: el cambio de turno no te devuelve ni lo apaga); `posicion` = TP a tu
+-- posicion guardada; `stop` = salir localmente del modo combate (SUSTITUYE al antiguo
+-- `/harford combatstop`).
+SLASH_HARFORDCOMBAT1 = "/harfordcombat"
+SlashCmdList["HARFORDCOMBAT"] = function(msg)
+    local sub = tostring(msg or ""):match("^%s*(%S*)"):lower()
+    local M = HarfordDnDAttackUI
+    if sub == "libre" then
+        if M and M.ToggleModoLibre then M.ToggleModoLibre() end
+    elseif sub == "stop" then
+        local stopped = HarfordTurnOrderAPI and HarfordTurnOrderAPI.StopLocalCombat
+            and HarfordTurnOrderAPI.StopLocalCombat()
+        if stopped then
+            HarfordChat.Print("Has salido localmente del modo combate.")
+        else
+            HarfordChat.Print("No estabas en modo combate.")
+        end
+    elseif sub == "posicion" or sub == "pos" then
+        if M and M.ModoLibreVolver then M.ModoLibreVolver() end
+    else
+        HarfordChat.Print("/harfordcombat: libre (alterna moverte sin gasto ni muro) | posicion (volver a tu posicion guardada) | stop (salir del modo combate)")
     end
 end
 

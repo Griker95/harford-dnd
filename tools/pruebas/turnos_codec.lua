@@ -264,7 +264,7 @@ chk("solo el NPC poseido queda fuera del anclado",
 chk("la vigilancia si salta al DM (y al modo libre)",
     atk:find("and not DirigiendoLaEscena() and not API.ModoLibre then", 1, true) ~= nil, true)
 chk("y al empezar su turno se le devuelve al ancla",
-    atk:find("if API.RecordedMovementAnchor and (DirigiendoLaEscena() or API.ModoLibre) and EnCombate() then", 1, true) ~= nil, true)
+    atk:find("if API.RecordedMovementAnchor and DirigiendoLaEscena() and EnCombate() then", 1, true) ~= nil, true)
 
 -- ─── EL "NO" DE UNIRSE SE CONTESTA ──────────────────────────────────────────
 -- "Te unes al combate" era optimista: se imprimia al PEDIR. Si el DM no podia meterte, tu unica

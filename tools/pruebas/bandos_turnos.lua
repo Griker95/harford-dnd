@@ -465,10 +465,14 @@ chk("y el estandarte se retira YA, sin desvanecerse",
 -- El jugador puede salir de un cliente atascado sin mandar TEND ni alterar el combate del DM.
 chk("hay salida local de emergencia",
     turnos:find("function HarfordTurnOrderAPI.StopLocalCombat()", 1, true) ~= nil, true)
+-- El comando vive ahora en /harfordcombat stop (sustituye a /harford combatstop, que solo
+-- apunta al nuevo); sigue siendo salida LOCAL, sin tocar el combate del DM.
 local fichaComando = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
 chk("y el comando no termina el combate remoto",
-    fichaComando:find('elseif sub == "combatstop" then', 1, true) ~= nil
+    fichaComando:find('elseif sub == "stop" then', 1, true) ~= nil
     and fichaComando:find("HarfordTurnOrderAPI.StopLocalCombat()", 1, true) ~= nil, true)
+chk("el viejo combatstop solo apunta al nuevo",
+    fichaComando:find("Ese comando ahora es |cffffcc00/harfordcombat stop|r.", 1, true) ~= nil, true)
 
 print("El marcador de turno")
 chk("existe", turnos:find("function HarfordTurnOrderAPI.RefreshTurnMarker()", 1, true) ~= nil, true)

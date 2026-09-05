@@ -234,4 +234,26 @@ chk("con icono en el catalogo",
     io.open("Harford/Compendium/HarfordIconCatalog.lua"):read("*a")
         :find("\n    harford_estado_terreno_dificil = ", 1, true) ~= nil, true)
 
+-- ─── ENGRANAJE DE AUTOGESTION EN EL UNITFRAME PROPIO (2026-09-05) ───────────
+-- Menu del propio jugador SIN .ph dm y SIN HarfordAdmin: estados del catalogo (toggle por
+-- ApplyOwned/RemoveOwned, Cansancio por niveles, Muriendo excluido) y devoluciones de
+-- movimiento/accion/adicional/reaccion. Autogestion de LO PROPIO por vias que ya existian.
+print("El engranaje de autogestion del unitframe propio")
+chk("el boton existe",
+    uf:find('CreateFrame("Button", "HarfordPlayerGearButton", UIParent)', 1, true) ~= nil, true)
+chk("sin puerta de DM ni Admin",
+    uf:find("HarfordPlayerGearButton", 1, true) ~= nil
+    and not uf:sub(uf:find("Engranaje de AUTOGESTION", 1, true) or 1)
+        :find("CanUseDMTools", 1, true), true)
+chk("estados por toggle propio",
+    uf:find("if C.RemoveOwned then C.RemoveOwned(id) end", 1, true) ~= nil
+    and uf:find("C.ApplyOwned(id)", 1, true) ~= nil, true)
+chk("Muriendo y Cansancio tratados aparte",
+    uf:find('if def.id ~= "dying" and def.id ~= "exhaustion" then', 1, true) ~= nil, true)
+chk("devoluciones de las cuatro cosas",
+    uf:find('Devolver("action", "accion")', 1, true) ~= nil
+    and uf:find('Devolver("bonus", "accion adicional")', 1, true) ~= nil
+    and uf:find('Devolver("reaction", "reaccion")', 1, true) ~= nil
+    and uf:find("HarfordDnDAttackUI.RefundTurnMovement", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -5038,3 +5038,113 @@ API.GetClassColor = function(unit)
     -- 3. Clase WoW nativa (fallback para jugadores sin perfil TRP3)
     return HarfordClassColors.UnitColorRGB(unit)
 end
+
+-- ─── Engranaje de AUTOGESTION en el unitframe propio ─────────────────────────
+-- Menu del PROPIO jugador, sin `.ph dm` y sin HarfordAdmin: ponerse o quitarse cualquier estado
+-- del catalogo (lo que en mesa se declara — cobertura, posturas, lo que el DM dicte de palabra)
+-- y devolverse movimiento, accion, adicional o reaccion cuando algo no llego a pasar. Es
+-- autogestion de LO PROPIO: todo lo que abre ya era posible por otras vias del core (ApplyOwned,
+-- Refund, click derecho de la tira); esto solo lo reune en un gesto.
+do
+    local function Devolver(kind, etiqueta)
+        local T = HarfordDnDConditions and HarfordDnDConditions.Turn
+        if not (T and T.Refund) then return end
+        if T.Refund(kind) then
+            HarfordChat.Print("|cff88ff88Te has devuelto tu " .. etiqueta .. " de este turno.|r")
+        else
+            HarfordChat.Print("No tenias gastada tu " .. etiqueta .. ".")
+        end
+    end
+
+    local function MenuEstados()
+        local C = HarfordDnDConditions
+        if not (C and C.CATEGORIES and C.GetDefinitionsForCategory) then return nil end
+        local categorias = {}
+        for _, cat in ipairs(C.CATEGORIES) do
+            local entradas = {}
+            for _, def in ipairs(C.GetDefinitionsForCategory(cat.id)) do
+                -- Muriendo lo gobierna Salv Muerte y Cansancio tiene su submenu de niveles.
+                if def.id ~= "dying" and def.id ~= "exhaustion" then
+                    local id = def.id
+                    entradas[#entradas + 1] = {
+                        text = def.label,
+                        checked = C.Has and C.Has("player", id) or false,
+                        keepShownOnClick = true,
+                        isNotRadio = true,
+                        func = function()
+                            if C.Has and C.Has("player", id) then
+                                if C.RemoveOwned then C.RemoveOwned(id) end
+                            elseif C.ApplyOwned then
+                                C.ApplyOwned(id)
+                            end
+                        end,
+                    }
+                end
+            end
+            if #entradas > 0 then
+                categorias[#categorias + 1] = {
+                    text = cat.label, notCheckable = true, hasArrow = true, menuList = entradas,
+                }
+            end
+        end
+        -- Cansancio por niveles, como en el menu de estado de la ficha.
+        if C.SetExhaustion then
+            local actual = C.GetExhaustion and C.GetExhaustion("player") or 0
+            local niveles = {}
+            for nivel = 0, 6 do
+                local etiqueta = (C.GetExhaustionLevelLabel and C.GetExhaustionLevelLabel(nivel)) or ""
+                niveles[#niveles + 1] = {
+                    text = nivel == 0 and "0 - Sin cansancio" or string.format("%d - %s", nivel, etiqueta),
+                    checked = actual == nivel,
+                    func = function() C.SetExhaustion("player", nivel) end,
+                }
+            end
+            categorias[#categorias + 1] = { text = "Cansancio", notCheckable = true, hasArrow = true, menuList = niveles }
+        end
+        return categorias
+    end
+
+    local function ConstruirMenu()
+        local menu = { { text = "Harford", isTitle = true, notCheckable = true } }
+        local estados = MenuEstados()
+        if estados then
+            menu[#menu + 1] = { text = "Estados", notCheckable = true, hasArrow = true, menuList = estados }
+        end
+        menu[#menu + 1] = {
+            text = "Devolver", notCheckable = true, hasArrow = true, menuList = {
+                { text = "Movimiento", notCheckable = true, func = function()
+                    if HarfordDnDAttackUI and HarfordDnDAttackUI.RefundTurnMovement then
+                        HarfordDnDAttackUI.RefundTurnMovement()
+                    end
+                end },
+                { text = "Accion", notCheckable = true, func = function() Devolver("action", "accion") end },
+                { text = "Accion adicional", notCheckable = true, func = function() Devolver("bonus", "accion adicional") end },
+                { text = "Reaccion", notCheckable = true, func = function() Devolver("reaction", "reaccion") end },
+            },
+        }
+        return menu
+    end
+
+    -- Boton pequeño pegado a la esquina superior derecha del PlayerFrame. Overlay en
+    -- UIParent/MEDIUM como el resto (contrato de strata cross-tree), anclado al frame nativo.
+    local gear = CreateFrame("Button", "HarfordPlayerGearButton", UIParent)
+    gear:SetFrameStrata("MEDIUM")
+    gear:SetFrameLevel(85)
+    gear:SetSize(16, 16)
+    gear:SetPoint("TOPRIGHT", PlayerFrame, "TOPRIGHT", -8, -6)
+    gear:SetNormalTexture("Interface\\Buttons\\UI-OptionsButton")
+    gear:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    gear:SetScript("OnClick", function(self)
+        if not EasyMenu then return end
+        gear._menu = gear._menu or CreateFrame("Frame", "HarfordPlayerGearMenu", UIParent, "UIDropDownMenuTemplate")
+        EasyMenu(ConstruirMenu(), gear._menu, self, 0, 0, "MENU")
+    end)
+    gear:SetScript("OnEnter", function(self)
+        if not GameTooltip then return end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:AddLine("Harford", 1, 0.82, 0)
+        GameTooltip:AddLine("Tus estados y devoluciones de turno.", 1, 1, 1)
+        GameTooltip:Show()
+    end)
+    gear:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)
+end

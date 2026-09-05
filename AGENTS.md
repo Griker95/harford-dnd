@@ -440,6 +440,14 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   mitad-al-exito con daño, la preparada salta, cobra la reaccion y deja el daño en CERO — vale
   contra AREAS tambien (RAW: el escudo se interpone ante la bola de fuego; el `single` solo lo
   exige el +CA). Candados en `turnos_economia` (marca GMA funcional) y `area_geometria`.
+- **Engranaje de autogestion en el unitframe propio (2026-09-05)**: boton `HarfordPlayerGearButton`
+  (overlay UIParent/MEDIUM 85 anclado al PlayerFrame, contrato de strata) con menu del PROPIO
+  jugador SIN `.ph dm` y SIN HarfordAdmin: **Estados** (todo el catalogo por categorias, toggle
+  `ApplyOwned`/`RemoveOwned`; Cansancio con su submenu de niveles via `SetExhaustion`; `dying`
+  excluido — lo gobierna Salv Muerte) y **Devolver** (movimiento via `RefundTurnMovement`, y
+  accion/adicional/reaccion via `Turn.Refund`). Es autogestion de LO PROPIO por vias que ya
+  existian en el core — el gesto solo las reune; no confundir con el menu DM de AdminUnitMenu
+  (estados y auras sobre OTROS). Candado en `tira_estados`.
 - **Lo que el DM "da" fuera de tu turno SE PUEDE USAR (2026-09-05)**: el gesto de devolver
   accion/adicional (`TREFUND`) recibido FUERA de tu turno se traduce a `Turn.GrantOutOfTurn` —
   contador propio `concedidaFuera`, porque el presupuesto base no es tuyo mientras no te toca y

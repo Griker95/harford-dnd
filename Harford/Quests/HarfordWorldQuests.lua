@@ -129,6 +129,155 @@ function API.DefineWorldQuest(def)
 end
 
 ------------------------------------------------------------
+-- Definiciones EN LA FASE (Epsilon PhaseAddonData) — 2026-09-05
+--
+-- La def de una quest de mundo vive en el servidor, ligada a la fase, bajo `HARFORD_WQ_<tid>`
+-- (template id del NPC), mas un indice `HARFORD_WQ_INDEX` = { [tid] = titulo } para poder
+-- listar sin recorrer claves (el servidor no deja listarlas). Mismo patron y mismas guardas
+-- que el tablon de contratos (HarfordContractsPhase): pcall al escribir, timeout al leer y
+-- descarte si la fase cambio durante el viaje.
+--
+-- PRIORIDAD: la def de FASE pisa a la definida inline por un ArcSpell viejo — es la editable.
+-- La inline queda como fallback para NPCs sin migrar, y el ArcSpell GENERICO
+-- (`HarfordQuestAPI.OpenWorldQuest()`) ni lleva def: el addon la baja al abrir el gossip.
+------------------------------------------------------------
+do
+    local CLAVE_INDICE = "HARFORD_WQ_INDEX"
+    local PREFIJO = "HARFORD_WQ_"
+    local ESPERA = 8
+
+    local function Lib() return EpsilonLib and EpsilonLib.PhaseAddonData end
+    local function FaseId() return C_Epsilon and C_Epsilon.GetPhaseId and C_Epsilon.GetPhaseId() or nil end
+    function API.PhaseAvailable()
+        return Lib() ~= nil and C_Epsilon ~= nil and C_Epsilon.GetPhaseAddonData ~= nil
+    end
+
+    -- El servidor VALIDA y lanza error Lua; sin pcall una escritura invalida aborta al llamador.
+    local function Escribir(clave, tabla)
+        local L = Lib()
+        if not L then return false, "EpsilonLib no disponible" end
+        local ok, err = pcall(L.SaveTable, clave, tabla)
+        if not ok then return false, tostring(err):gsub("^.*%.lua:%d+: ", "") end
+        return true
+    end
+
+    -- Si el servidor calla, el callback no llega JAMAS: el timeout evita colgar la UI. Y la
+    -- fase pudo cambiar mientras la lectura viajaba: ese dato ya no es de aqui.
+    local function LeerTabla(clave, alRecibir)
+        local L = Lib()
+        if not L then alRecibir(nil, "EpsilonLib no disponible") return end
+        local fase = FaseId()
+        local contestado = false
+        L.LoadTable(clave, function(tabla)
+            if contestado then return end
+            contestado = true
+            if FaseId() ~= fase then alRecibir(nil, "cambio de fase durante la lectura") return end
+            alRecibir(type(tabla) == "table" and tabla or nil)
+        end)
+        if C_Timer and C_Timer.After then
+            C_Timer.After(ESPERA, function()
+                if contestado then return end
+                contestado = true
+                alRecibir(nil, "sin respuesta del servidor")
+            end)
+        end
+    end
+
+    -- Una consulta por NPC y fase: el resultado (haya def o no) se recuerda para no preguntar
+    -- al servidor en cada apertura del gossip.
+    local consultado = {}  -- ["fase:tid"] = true
+
+    -- Una def vacia ({} escrito al retirar: el servidor no borra claves) no es una def.
+    local function EsDefValida(def)
+        return type(def) == "table" and tostring(def.id or "") ~= "" and tonumber(def.npc) ~= nil
+    end
+
+    -- Baja la def de fase del template `tid` y, si existe, la registra (pisando la inline).
+    -- `callback(def|nil)` opcional; `force` salta la marca de consultado (tras editar).
+    function API.FetchPhaseDef(tid, callback, force)
+        tid = tonumber(tid)
+        if not tid or not API.PhaseAvailable() then
+            if callback then callback(nil) end
+            return false
+        end
+        local marca = tostring(FaseId() or "?") .. ":" .. tid
+        if consultado[marca] and not force then
+            if callback then callback(byNpc[tid]) end
+            return false
+        end
+        consultado[marca] = true
+        LeerTabla(PREFIJO .. tid, function(def)
+            if EsDefValida(def) then
+                def.fromPhase = true
+                API.DefineWorldQuest(def)  -- pisa la inline y re-pinta el gossip si esta abierto
+            end
+            if callback then callback(EsDefValida(def) and def or nil) end
+        end)
+        return true
+    end
+
+    -- Publica/actualiza la def en la fase (DM) y actualiza el indice. El indice se
+    -- lee-fusiona-escribe async y sin cerrojo: lo edita solo el DM y rara vez; si dos publican
+    -- a la vez gana el ultimo, la misma semantica que el tablon de contratos.
+    function API.PublishWorldQuest(def)
+        if not (HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools()) then
+            return false, "Requiere HarfordAdmin y .ph dm."
+        end
+        if not API.PhaseAvailable() then return false, "PhaseAddonData no disponible." end
+        if not EsDefValida(def) then return false, "Definicion invalida (id y npc obligatorios)." end
+        local tid = tonumber(def.npc)
+        local ok, err = Escribir(PREFIJO .. tid, def)
+        if not ok then return false, err end
+        def.fromPhase = true
+        API.DefineWorldQuest(def)
+        consultado[tostring(FaseId() or "?") .. ":" .. tid] = true
+        LeerTabla(CLAVE_INDICE, function(indice)
+            indice = type(indice) == "table" and indice or {}
+            indice[tostring(tid)] = tostring(def.title or def.id)
+            Escribir(CLAVE_INDICE, indice)
+        end)
+        return true
+    end
+
+    -- Retira la def de fase de un NPC (DM): escribe {} y la saca del indice y del runtime.
+    function API.DeleteWorldQuest(tid)
+        if not (HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools()) then
+            return false, "Requiere HarfordAdmin y .ph dm."
+        end
+        tid = tonumber(tid)
+        if not tid then return false, "template id invalido" end
+        local ok, err = Escribir(PREFIJO .. tid, {})
+        if not ok then return false, err end
+        local def = byNpc[tid]
+        byNpc[tid] = nil
+        if def and def.id then byId[tostring(def.id)] = nil end
+        LeerTabla(CLAVE_INDICE, function(indice)
+            if type(indice) == "table" and indice[tostring(tid)] ~= nil then
+                indice[tostring(tid)] = nil
+                Escribir(CLAVE_INDICE, indice)
+            end
+        end)
+        if RenderGossip then RenderGossip() end
+        return true
+    end
+
+    function API.LoadPhaseIndex(callback)
+        if not API.PhaseAvailable() then callback(nil, "PhaseAddonData no disponible") return end
+        LeerTabla(CLAVE_INDICE, callback)
+    end
+
+    -- Punto de entrada del ArcSpell GENERICO, identico para todos los NPCs de mision (se pega
+    -- UNA vez en SpellCreator y no se vuelve a tocar): pinta lo que haya y baja la def de fase
+    -- si hace falta — al llegar, DefineWorldQuest re-pinta este mismo gossip.
+    function API.OpenWorldQuest()
+        local tid = API.GetNpcTemplateId((UnitExists and UnitExists("npc")) and "npc" or "target")
+        if RenderGossip then RenderGossip() end
+        if tid then API.FetchPhaseDef(tid) end
+        return true
+    end
+end
+
+------------------------------------------------------------
 -- Info que se mete en el nucleo (HarfordQuests) segun el estado
 ------------------------------------------------------------
 
@@ -820,7 +969,13 @@ RenderGossip = function()
     if not (GossipFrame and GossipFrame:IsShown()) then hide(); return end
     local tid = API.GetNpcTemplateId("npc")
     local def = tid and byNpc[tid]
-    if not def then hide(); return end
+    if not def then
+        -- Sin def runtime: puede vivir en la FASE (ArcSpell generico, o /reload que vacio el
+        -- registro). Se consulta una vez por NPC y fase; si existe, DefineWorldQuest re-pinta
+        -- este mismo gossip al llegar la respuesta.
+        if tid and API.FetchPhaseDef then API.FetchPhaseDef(tid) end
+        hide(); return
+    end
 
     -- Estado EFECTIVO: si el jugador ya la acepto, manda su propio progreso (auto-completada ->
     -- entrega, aunque el aura del NPC aun no se haya cambiado); si no, la oferta segun el aura.
@@ -922,16 +1077,45 @@ do
     ev:RegisterEvent("GOSSIP_SHOW")
     ev:RegisterEvent("GOSSIP_CLOSED")
     ev:RegisterEvent("GET_ITEM_INFO_RECEIVED")  -- re-pintar cuando un item de recompensa cargue su nombre/icono
+
+    -- Boton "Quest (DM)" del gossip: abre el editor de la def de FASE. Existe AUNQUE el NPC no
+    -- tenga quest todavia (crearla es justo el caso), asi que se gestiona aqui y no en
+    -- RenderGossip, que se esconde sin def. Solo con herramientas DM.
+    local dmButton
+    local function RefreshDmButton()
+        local tid = (GossipFrame and GossipFrame:IsShown()) and API.GetNpcTemplateId("npc") or nil
+        local esDM = HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools()
+        if not (tid and esDM) then
+            if dmButton then dmButton:Hide() end
+            return
+        end
+        if not dmButton then
+            dmButton = CreateFrame("Button", nil, GossipFrame, "UIPanelButtonTemplate")
+            dmButton:SetSize(90, 22)
+            dmButton:SetPoint("BOTTOMRIGHT", GossipFrame, "BOTTOMRIGHT", -40, 4)
+            dmButton:SetFrameStrata("HIGH")
+            dmButton:SetText("Quest (DM)")
+        end
+        dmButton:SetScript("OnClick", function() API.OpenWorldQuestEditor(tid) end)
+        dmButton:Show()
+    end
+
     ev:SetScript("OnEvent", function(_, event)
         if event == "GOSSIP_CLOSED" then
             if questPanel then questPanel:Hide(); if questPanel.button then questPanel.button:Hide() end end
+            if dmButton then dmButton:Hide() end
         elseif event == "GET_ITEM_INFO_RECEIVED" then
             if questPanel and questPanel:IsShown() then RenderGossip() end
             if HarfordQuestLog and HarfordQuestLog.RefreshShareOffer then
                 HarfordQuestLog.RefreshShareOffer()
             end
         else
+            -- GOSSIP_SHOW: consultar la fase AUNQUE haya def inline (un ArcSpell viejo puede
+            -- estar por detras de la editada; la marca de consultado evita repetir la lectura).
+            local tid = API.GetNpcTemplateId("npc")
+            if tid and API.FetchPhaseDef then API.FetchPhaseDef(tid) end
             RenderGossip()
+            RefreshDmButton()
         end
     end)
 end
@@ -982,6 +1166,230 @@ function API.DmSendReward(questId)
 end
 
 ------------------------------------------------------------
+-- EDITOR DM de la definicion (edita la def de FASE sin pasar por SpellCreator)
+--
+-- Un frame compacto: titulo, descripcion, texto de oferta, objetivos (una linea por objetivo
+-- con la MISMA sintaxis que el editor de contratos: `Texto *N #itemId`), oro, XP, reputacion
+-- ("faccion cantidad" por linea) e items ("itemId cantidad" por linea). Publicar escribe la
+-- def en la fase; Retirar la quita. Se abre con el boton "Quest (DM)" del gossip, que existe
+-- AUNQUE el NPC aun no tenga quest (para eso el ArcSpell generico basta y sobra).
+------------------------------------------------------------
+do
+    local editor
+
+    -- `Texto *N #itemId` -> { text, required, item }. La sintaxis es la del editor de
+    -- contratos; si su modulo esta cargado se usa SU parser (fuente unica), si no, el local.
+    local function ParseObjetivo(linea)
+        local TC = _G.HarfordContracts
+        if TC and TC.Util and TC.Util.ParseObjective then return TC.Util.ParseObjective(linea) end
+        linea = tostring(linea or "")
+        local item = tonumber(linea:match("#(%d+)"))
+        local required = tonumber(linea:match("%*(%d+)"))
+        local text = linea:gsub("%*%d+", ""):gsub("#%d+", ""):gsub("%s+", " ")
+            :gsub("^%s+", ""):gsub("%s+$", "")
+        return { text = text, required = math.max(1, math.floor(required or 1)), item = item }
+    end
+
+    local function CadaLinea(texto, fn)
+        for linea in (tostring(texto or "") .. "\n"):gmatch("(.-)\n") do
+            linea = linea:gsub("^%s+", ""):gsub("%s+$", "")
+            if linea ~= "" then fn(linea) end
+        end
+    end
+
+    -- Campo de texto con etiqueta y fondo oscuro. `alto > 20` lo hace multilinea.
+    local function Campo(parent, etiqueta, alto, ancla, dy)
+        local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+        label:SetPoint("TOPLEFT", ancla, "BOTTOMLEFT", 0, dy or -8)
+        label:SetText(etiqueta)
+        local caja = CreateFrame("Frame", nil, parent, "BackdropTemplate")
+        caja:SetPoint("TOPLEFT", label, "BOTTOMLEFT", 0, -2)
+        caja:SetSize(390, alto)
+        caja:SetBackdrop({ bgFile = "Interface\\ChatFrame\\ChatFrameBackground",
+            edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 10,
+            insets = { left = 2, right = 2, top = 2, bottom = 2 } })
+        caja:SetBackdropColor(0, 0, 0, 0.6)
+        caja:SetBackdropBorderColor(0.4, 0.4, 0.4)
+        local eb = CreateFrame("EditBox", nil, caja)
+        eb:SetPoint("TOPLEFT", 6, -4)
+        eb:SetPoint("BOTTOMRIGHT", -6, 4)
+        eb:SetFontObject(GameFontHighlightSmall)
+        eb:SetAutoFocus(false)
+        eb:SetMultiLine(alto > 20)
+        eb:SetMaxLetters(0)
+        eb:SetTextInsets(0, 0, 0, 0)
+        eb:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+        if alto <= 20 then eb:SetScript("OnEnterPressed", function(self) self:ClearFocus() end) end
+        -- Click en el marco enfoca el editbox (el multilinea no llena el frame clicable solo).
+        caja:EnableMouse(true)
+        caja:SetScript("OnMouseDown", function() eb:SetFocus() end)
+        return eb, caja, label
+    end
+
+    local function EnsureEditor()
+        if editor then return editor end
+        local f = CreateFrame("Frame", "HarfordWorldQuestEditor", UIParent, "BackdropTemplate")
+        f:SetSize(420, 585)
+        f:SetPoint("CENTER")
+        f:SetFrameStrata("DIALOG")
+        f:SetFrameLevel(520)
+        f:SetMovable(true)
+        f:EnableMouse(true)
+        f:RegisterForDrag("LeftButton")
+        f:SetScript("OnDragStart", f.StartMoving)
+        f:SetScript("OnDragStop", f.StopMovingOrSizing)
+        f:SetBackdrop({ bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border", edgeSize = 24,
+            insets = { left = 6, right = 6, top = 6, bottom = 6 } })
+        f.titulo = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        f.titulo:SetPoint("TOP", 0, -14)
+
+        -- Cadena de campos: cada etiqueta cuelga de la caja anterior; la primera del margen.
+        local caja, label, cajaOro
+        f.ebTitle, caja, label = Campo(f, "Titulo", 20, f.titulo, -6)
+        label:ClearAllPoints()
+        label:SetPoint("TOPLEFT", f, "TOPLEFT", 16, -40)
+        f.ebDesc, caja = Campo(f, "Descripcion", 64, caja)
+        f.ebOferta, caja = Campo(f, "Texto de oferta (al abrir el gossip, opcional)", 48, caja)
+        f.ebObj, caja = Campo(f, "Objetivos (uno por linea: Texto *N #itemId)", 64, caja)
+        f.ebOro, cajaOro = Campo(f, "Oro", 20, caja)
+        cajaOro:SetWidth(120)
+        f.ebXP, caja, label = Campo(f, "XP", 20, caja)
+        caja:SetWidth(120)
+        caja:ClearAllPoints()
+        caja:SetPoint("TOPLEFT", cajaOro, "TOPRIGHT", 60, 0)
+        label:ClearAllPoints()
+        label:SetPoint("BOTTOMLEFT", caja, "TOPLEFT", 0, 2)
+        f.ebRep, caja = Campo(f, "Reputacion (por linea: faccion cantidad)", 44, cajaOro)
+        f.ebItems, caja = Campo(f, "Items (por linea: itemId cantidad)", 44, caja)
+
+        f.publicar = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        f.publicar:SetSize(110, 22)
+        f.publicar:SetPoint("BOTTOMLEFT", 16, 14)
+        f.publicar:SetText("Publicar")
+        f.retirar = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        f.retirar:SetSize(110, 22)
+        f.retirar:SetPoint("LEFT", f.publicar, "RIGHT", 8, 0)
+        f.retirar:SetText("Retirar")
+        f.cerrar = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+        f.cerrar:SetSize(90, 22)
+        f.cerrar:SetPoint("BOTTOMRIGHT", -16, 14)
+        f.cerrar:SetText("Cerrar")
+        f.cerrar:SetScript("OnClick", function() f:Hide() end)
+        f:Hide()
+        editor = f
+        return f
+    end
+
+    -- Def -> campos del editor.
+    local function Rellenar(f, tid, def)
+        f.tid = tid
+        f.defId = def and def.id or ("wq_" .. tostring(tid))
+        f.titulo:SetText("Quest de mundo — NPC " .. tostring(tid))
+        f.ebTitle:SetText(def and def.title or "")
+        f.ebDesc:SetText(def and def.description or "")
+        f.ebOferta:SetText((def and def.available and def.available.text) or "")
+        local lineas = {}
+        for _, o in ipairs((def and def.available and def.available.objectives) or {}) do
+            local l = tostring(o.text or "")
+            if (tonumber(o.required) or 1) > 1 then l = l .. " *" .. o.required end
+            if tonumber(o.item) then l = l .. " #" .. o.item end
+            lineas[#lineas + 1] = l
+        end
+        f.ebObj:SetText(table.concat(lineas, "\n"))
+        local r = (def and def.rewards) or {}
+        f.ebOro:SetText(tostring((r.money and r.money.gold) or ""))
+        f.ebXP:SetText(tostring(r.xp or ""))
+        local reps = {}
+        for _, rr in ipairs((type(r.reps) == "table" and r.reps) or (type(r.rep) == "table" and { r.rep }) or {}) do
+            reps[#reps + 1] = tostring(rr.faction or rr.factionId or "?") .. " " .. tostring(rr.amount or 0)
+        end
+        f.ebRep:SetText(table.concat(reps, "\n"))
+        local items = {}
+        for _, it in ipairs(r.items or {}) do
+            items[#items + 1] = tostring(it.id or "?") .. " " .. tostring(it.count or 1)
+        end
+        f.ebItems:SetText(table.concat(items, "\n"))
+    end
+
+    -- Campos del editor -> def.
+    local function Construir(f)
+        local def = { id = f.defId, npc = f.tid }
+        def.title = f.ebTitle:GetText()
+        if tostring(def.title or ""):gsub("%s", "") == "" then return nil, "La quest necesita un titulo." end
+        def.description = f.ebDesc:GetText()
+        local objetivos = {}
+        CadaLinea(f.ebObj:GetText(), function(linea)
+            local o = ParseObjetivo(linea)
+            if o and o.text ~= "" then objetivos[#objetivos + 1] = o end
+        end)
+        local oferta = tostring(f.ebOferta:GetText() or "")
+        def.available = {
+            text = oferta ~= "" and oferta or nil,
+            objectives = #objetivos > 0 and objetivos or nil,
+        }
+        local rewards = {}
+        local oro = tonumber(f.ebOro:GetText())
+        if oro and oro > 0 then rewards.money = { gold = math.floor(oro) } end
+        local xp = tonumber(f.ebXP:GetText())
+        if xp and xp > 0 then rewards.xp = math.floor(xp) end
+        local reps = {}
+        CadaLinea(f.ebRep:GetText(), function(linea)
+            local faccion, cantidad = linea:match("^(.-)%s+(-?%d+)$")
+            if faccion and faccion ~= "" then
+                reps[#reps + 1] = { faction = faccion, amount = tonumber(cantidad) }
+            end
+        end)
+        if #reps > 0 then rewards.reps = reps end
+        local items = {}
+        CadaLinea(f.ebItems:GetText(), function(linea)
+            local id, cantidad = linea:match("^(%d+)%s*x?%s*(%d*)$")
+            if id then items[#items + 1] = { id = tonumber(id), count = tonumber(cantidad) or 1 } end
+        end)
+        if #items > 0 then rewards.items = items end
+        if next(rewards) ~= nil then def.rewards = rewards end
+        return def
+    end
+
+    function API.OpenWorldQuestEditor(tid)
+        tid = tonumber(tid)
+        if not tid then print("|cffff5555Necesitas el NPC en gossip o target.|r") return false end
+        if not (HarfordAuthority and HarfordAuthority.CanUseDMTools and HarfordAuthority.CanUseDMTools()) then
+            print("El editor de quests de mundo requiere HarfordAdmin y .ph dm.")
+            return false
+        end
+        local f = EnsureEditor()
+        -- Prefill con lo mejor que haya: def de fase (fresca si se puede), si no la runtime.
+        Rellenar(f, tid, byNpc[tid])
+        API.FetchPhaseDef(tid, function(def)
+            if def and f:IsShown() and f.tid == tid then Rellenar(f, tid, def) end
+        end, true)
+        f.publicar:SetScript("OnClick", function()
+            local def, err = Construir(f)
+            if not def then print("|cffff5555" .. tostring(err) .. "|r") return end
+            local ok, pubErr = API.PublishWorldQuest(def)
+            if ok then
+                print("|cff33ff99Quest publicada en la fase para el NPC " .. tostring(tid) .. ".|r")
+                f:Hide()
+            else
+                print("|cffff5555No se pudo publicar: " .. tostring(pubErr) .. "|r")
+            end
+        end)
+        f.retirar:SetScript("OnClick", function()
+            local ok, err = API.DeleteWorldQuest(tid)
+            if ok then
+                print("|cff33ff99Quest retirada de la fase (NPC " .. tostring(tid) .. ").|r")
+                f:Hide()
+            else
+                print("|cffff5555No se pudo retirar: " .. tostring(err) .. "|r")
+            end
+        end)
+        f:Show()
+        return true
+    end
+end
+
+------------------------------------------------------------
 -- Alias para ArcSpells (subconjunto seguro; jamas ejecuta comandos arbitrarios)
 ------------------------------------------------------------
 _G.HarfordQuestAPI = _G.HarfordQuestAPI or {}
@@ -992,6 +1400,9 @@ do
     ext.GetNpcTemplateId = API.GetNpcTemplateId
     ext.AcceptWorldQuest = API.AcceptCurrent
     ext.TurnInWorldQuest = API.TurnInCurrent
+    -- ArcSpell GENERICO: la def vive en la FASE (HARFORD_WQ_<tid>); este punto de entrada la
+    -- baja si hace falta y pinta el panel. Un solo ArcSpell identico sirve para TODOS los NPCs.
+    ext.OpenWorldQuest   = API.OpenWorldQuest
     ext.ShowQuestPanel   = function() if RenderGossip then RenderGossip() end end
     ext.HideQuestPanel   = function() if questPanel then questPanel:Hide() end end
     ext.DmSendReward     = API.DmSendReward  -- auto-gateado por CanUseDMTools()

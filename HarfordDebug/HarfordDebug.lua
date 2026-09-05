@@ -5287,9 +5287,19 @@ end
 -- escribir la def a mano y reduce el drift. Uso: questarc <catalogId>  (con el NPC en target).
 API.RegisterCommand("questarc", function(args)
     local id = tostring(args or ""):gsub("%s+", "")
+    -- `questarc generic`: el ArcSpell GENERICO del modelo de fase — identico para todos los
+    -- NPCs de mision, se pega UNA vez y no se vuelve a tocar. La def vive en la fase
+    -- (HARFORD_WQ_<tid>) y se edita con el boton "Quest (DM)" del gossip.
+    if id == "generic" or id == "generico" then
+        Print("ArcSpell generico (on-greeting del gossip; el mismo para todos los NPCs):")
+        Print("|cff88ff88if HarfordQuestAPI and HarfordQuestAPI.OpenWorldQuest then HarfordQuestAPI.OpenWorldQuest() end|r")
+        Print("Luego, con el NPC en gossip y modo DM, boton |cffffd100Quest (DM)|r para crear/editar su quest.")
+        return
+    end
     if id == "" then
         Print("Uso: questarc <catalogId>  (con el NPC en target). Ids: " ..
             table.concat((HarfordQuestCatalog and HarfordQuestCatalog.GetIds and HarfordQuestCatalog.GetIds()) or {}, ", "))
+        Print("O |cffffd100questarc generic|r: el ArcSpell unico del modelo de fase (def editable in-game).")
         return
     end
     local base = HarfordQuestCatalog and HarfordQuestCatalog.Get and HarfordQuestCatalog.Get(id)

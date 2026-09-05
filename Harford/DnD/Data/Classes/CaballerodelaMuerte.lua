@@ -38,6 +38,9 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Constitucion", "Carisma" },
     armorProfs = { "ligera", "media", "pesada" },
     weaponProfs = { "sencillas", "marciales" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Fuerza" }, { "Carisma" } },
+        armorProfs = { "ligera", "media" }, weaponProfs = { "sencillas", "marciales" } },
     subclasses = {
         { id = "sangre", name = "Sangre", desc = "Tanque no-muerto que se sostiene drenando la vida de sus enemigos.", features = {
                 { id = "cdm_san_conjuros_3", level = 3, name = "Conjuros de presencia (Sangre)", type = "informativo", grantedSpells = { "orden_imperiosa", "agarre_de_la_muerte" }, description = "Nivel 3: Orden imperiosa (mandato) y Agarre de la muerte. Los conjuros de presencia NO cuentan contra los conjuros de caballero de la muerte que puedes conocer.", spellGrants = { { level = 1, ids = { "orden_imperiosa", "agarre_de_la_muerte" } } }, effects = {} },

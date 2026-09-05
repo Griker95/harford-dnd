@@ -41,6 +41,10 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Fuerza", "Destreza" },
     armorProfs = { "ligera", "media" },
     weaponProfs = { "sencillas", "marciales", "armas de fuego" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Fuerza", "Destreza" } },
+        armorProfs = { "ligera", "media" }, weaponProfs = { "sencillas", "marciales" },
+        skillChoices = 1 },
     subclasses = {
         { id = "bestias", name = "Bestias", desc = "Vínculo profundo con una poderosa bestia companera.", features = {
             { id = "caz_bes_domador", level = 3, name = "Domador de bestias", type = "pasivo", companions = true, description = "Puedes domar bestias Grandes o menores con valor de desafío 1 o menor.", effects = {} },

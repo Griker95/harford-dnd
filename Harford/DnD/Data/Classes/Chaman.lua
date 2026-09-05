@@ -38,6 +38,9 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Fuerza", "Sabiduria" },
     armorProfs = { "ligera", "media", "escudo" },
     weaponProfs = { "sencillas" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Sabiduria" } },
+        armorProfs = { "ligera", "media", "escudo" }, weaponProfs = { "sencillas" } },
     subclasses = {
         { id = "elemental", name = "Elemental", desc = "Desata rayos, fuego y tierra contra el enemigo a distancia.", features = {
             { id = "cha_ele_poder", level = 3, name = "Poder totemico: Mente tranquila", type = "informativo", cast = "reaccion", description = "Puedes activar el tótem cuando una criatura a 4,5 metros de él se vea obligada a realizar una tirada de salvación de Constitución para mantener la concentración, otorgándole ventaja en la tirada.", effects = {} },

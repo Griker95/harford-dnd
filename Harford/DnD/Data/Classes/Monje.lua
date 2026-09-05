@@ -27,6 +27,9 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Fuerza", "Destreza" },
     armorProfs = { "ligera" },
     weaponProfs = { "sencillas", "espadas cortas" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Destreza" }, { "Sabiduria" } },
+        armorProfs = { "ligera" }, weaponProfs = { "sencillas", "espadas cortas" } },
     subclasses = {
         { id = "cervecero", name = "Maestro cervecero", nameF = "Maestra cervecera", desc = "Muro resistente que aguanta y dispersa el daño.", features = {
             { id = "monje_cer_competencia", level = 3, name = "Competencia adicional (cervecero)", type = "pasivo", description = "A partir del 3er nivel, obtienes competencia con herramientas de cervecero. Si ya eres competente con estas herramientas, tu bonificación de competencia se duplica para cualquier prueba de habilidad que hagas con ellas.", effects = {

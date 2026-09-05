@@ -141,11 +141,10 @@ ApplyLongRest = function()
         _G.DND5E_ARC_API.Refresh()
     end
 
-    -- Tras el descanso largo, ofrecer reelegir conjuros preparados (silencioso si el PJ no prepara).
-    if _G.HarfordOpenPrepareSpellsMenu then _G.HarfordOpenPrepareSpellsMenu(true) end
-    -- Y los rasgos `choice` con `rechooseOnLongRest` (Forja de runas del CdM): mismo flujo,
-    -- silencioso si el PJ no tiene ninguno.
-    if _G.HarfordOpenLongRestChoicesMenu then _G.HarfordOpenLongRestChoicesMenu(true) end
+    -- Tras el descanso largo, UN solo menu con todo lo que el manual deja cambiar: preparar
+    -- conjuros (una entrada por clase preparadora) y los rasgos `choice` con
+    -- `rechooseOnLongRest` (Forja de runas del CdM). Silencioso si el PJ no tiene nada.
+    if _G.HarfordOpenLongRestMenu then _G.HarfordOpenLongRestMenu(true) end
 end
 
 -- Gasta un dado de golpe del tipo indicado y cura dX + Mod. Constitucion (min 0).

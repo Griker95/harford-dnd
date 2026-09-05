@@ -1215,6 +1215,17 @@ function API.GetUnlockedFeatures(profileName)
     local function Entra(item)
         local feature = item and item.feature
         if not feature then return false end
+        -- Puertas de MULTICLASE (regla del manual: solo la clase INICIAL da sus competencias
+        -- completas). `onlyFirstClass` = el rasgo solo existe si esa clase es la primera del PJ;
+        -- `onlyMulticlass` = solo si NO lo es. Asi la eleccion de habilidades de clase completa
+        -- y su variante multiclase (1 habilidad, o fija) se excluyen mutuamente y la que no
+        -- aplica no aparece en NINGUNA superficie (Libro, asistente, Resolve).
+        if feature.onlyFirstClass or feature.onlyMulticlass then
+            local primera = data.classLevels and data.classLevels[1]
+            local esPrimera = primera ~= nil and tostring(primera.classId) == tostring(item.classId)
+            if feature.onlyFirstClass and not esPrimera then return false end
+            if feature.onlyMulticlass and esPrimera then return false end
+        end
         local minimo = tonumber(feature.minCharacterLevel)
         if minimo then
             if not nivelTotal then

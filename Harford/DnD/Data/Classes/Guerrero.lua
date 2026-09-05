@@ -12,6 +12,9 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Fuerza", "Constitucion" },
     armorProfs = { "ligera", "media", "pesada", "escudo" },
     weaponProfs = { "sencillas", "marciales", "armas de fuego" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Fuerza", "Destreza" } },
+        armorProfs = { "ligera", "media", "escudo" }, weaponProfs = { "sencillas", "marciales" } },
     -- Equipo inicial: cada grupo es una eleccion; cada opcion, los objetos que aporta.
     startingEquipment = {
         { label = "Armadura", options = {

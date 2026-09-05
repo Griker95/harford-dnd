@@ -686,8 +686,13 @@ local function OpcionesElegidasDelDraft(draft)
     return elegidas
 end
 
-local function GetClassEntryTraits(entry, elegidas)
+local function GetClassEntryTraits(entry, elegidas, esPrimera)
+    -- Puertas de multiclase: la eleccion de habilidades COMPLETA es de la clase INICIAL y su
+    -- variante multiclase de las posteriores. Sin el dato (llamadas viejas), primera.
+    if esPrimera == nil then esPrimera = true end
     local function Concedido(feature)
+        if (feature.onlyFirstClass and not esPrimera)
+            or (feature.onlyMulticlass and esPrimera) then return false end
         local req = feature and feature.requiresOption
         if not req then return true end
         return elegidas ~= nil and elegidas[tostring(req)] == true
@@ -1360,7 +1365,7 @@ function API.BuildAbout(draft, profileName)
     end
     local magiaPorClase = BuildMagicFrames(profileName, idsRaciales)
     for indiceClase, entry in ipairs(draft.classes or {}) do
-        local traits, class, subTraits, subclass = GetClassEntryTraits(entry, opcionesDelDraft)
+        local traits, class, subTraits, subclass = GetClassEntryTraits(entry, opcionesDelDraft, indiceClase == 1)
         local body = BuildTraitLines(traits, draft)
         if class and body ~= "" then
             local hex = ClassHex(class.name)

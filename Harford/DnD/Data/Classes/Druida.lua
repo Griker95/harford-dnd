@@ -30,6 +30,9 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Inteligencia", "Sabiduria" },
     armorProfs = { "ligera" },
     weaponProfs = { "sencillas" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Sabiduria" } },
+        armorProfs = { "ligera" }, skillFixed = { "Naturaleza" } },
     subclasses = {
         { id = "equilibrio", name = "Equilibrio", desc = "Magia lunar y solar que castiga al enemigo a distancia.", features = {
             { id = "dru_eq_conjuros_camino", level = 3, name = "Conjuros del camino", type = "informativo", grantedSpells = { "potenciar_caracteristica", "rayo_de_luna" }, description = "Nivel 3 del Camino del Equilibrio: Potenciar caracteristica (habilidad mejorada) y Rayo de luna. Siempre los tienes preparados y NO cuentan contra los conjuros que puedes preparar.", spellGrants = { { level = 2, ids = { "potenciar_caracteristica", "rayo_de_luna" } } }, effects = {} },

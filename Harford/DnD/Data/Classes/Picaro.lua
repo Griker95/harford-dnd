@@ -36,6 +36,9 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Destreza", "Inteligencia" },
     armorProfs = { "ligera" },
     weaponProfs = { "sencillas", "ballestas de mano", "espadas largas", "floretes", "espadas cortas" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Destreza" } },
+        armorProfs = { "ligera" }, toolProfs = { "Herramientas de ladron" }, skillChoices = 1 },
     subclasses = {
         { id = "asesino", name = "Asesinato", desc = "Golpes letales, venenos y muerte desde las sombras.", features = {
             { id = "pic_ase_competencia", level = 3, name = "Competencia con venenos", type = "pasivo", description = "Competencia con el equipo de envenenador.", effects = {

@@ -34,6 +34,8 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Constitucion", "Inteligencia" },
     armorProfs = {},
     weaponProfs = { "sencillas" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Inteligencia" } }, skillChoices = 1 },
     subclasses = {
         { id = "afliccion", name = "Afliccion", desc = "Maldiciones y enfermedades que consumen poco a poco.", expandedSpells = { "Vacio oscuro", "Susurros discordantes", "Ceguera/sordera", "Ralentizar", "Nube apestosa", "Confusion", "Perdicion elemental" }, features = {
             { id = "bru_afl_lista", level = 2, name = "Lista ampliada de conjuros (afliccion)", type = "pasivo", description = "Añade conjuros de sombra/tormento a tu lista de brujo.", showsExpandedSpells = true, effects = {} },

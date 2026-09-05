@@ -67,11 +67,27 @@ chk("Constitucion, de la primera", F.HasSaveProf("Constitucion"), true)
 chk("Destreza, de la SEGUNDA, no", F.HasSaveProf("Destreza"), false)
 chk("Inteligencia tampoco", F.HasSaveProf("Inteligencia"), false)
 
-print("Pero las competencias de armadura y arma se UNEN")
+-- Armadura/arma/herramienta siguen la regla de multiclase del manual (2026-09-05): la clase
+-- INICIAL da sus listas completas; una posterior solo el subconjunto de su seccion "Multiclase"
+-- (`classDef.multiclass`), y sin esa tabla no da NADA (el Mago multiclase no da nada).
+print("Armadura y arma: la primera entera, la segunda su subconjunto multiclase")
 chk("pesada, de la primera", F.Resolve().armorProf["pesada"], true)
-chk("ligera, de la segunda, tambien", F.Resolve().armorProf["ligera"], true)
-chk("marciales", F.Resolve().weaponProf["marciales"], true)
-chk("y sencillas", F.Resolve().weaponProf["sencillas"], true)
+chk("marciales, de la primera", F.Resolve().weaponProf["marciales"], true)
+chk("ligera, de la segunda SIN tabla multiclass, NO", F.Resolve().armorProf["ligera"], nil)
+chk("sencillas tampoco", F.Resolve().weaponProf["sencillas"], nil)
+conClases(
+    { { classId = "guerrero", level = 3 }, { classId = "picaro", level = 2 } },
+    {
+        guerrero = { saves = { "Fuerza", "Constitucion" }, armorProfs = { "pesada" },
+                     weaponProfs = { "marciales" } },
+        picaro   = { saves = { "Destreza", "Inteligencia" }, armorProfs = { "ligera" },
+                     weaponProfs = { "sencillas" },
+                     multiclass = { armorProfs = { "ligera" },
+                         toolProfs = { "Herramientas de ladron" } } },
+    })
+chk("con tabla multiclass: ligera SI", F.Resolve().armorProf["ligera"], true)
+chk("y sus herramientas", F.Resolve().toolProf["Herramientas de ladron"], true)
+chk("pero sencillas sigue fuera (no esta en el subconjunto)", F.Resolve().weaponProf["sencillas"], nil)
 
 -- Invertir el orden invierte quien da las salvaciones: es el orden en que se subio de nivel.
 print("El orden importa: manda con que clase empezaste")

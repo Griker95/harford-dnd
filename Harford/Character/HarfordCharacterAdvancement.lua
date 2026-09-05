@@ -516,6 +516,60 @@ local function RefreshPendingLevelFeatures(classDef, classLevel)
             y = -34
         end
     end
+    -- ¿Es esta clase la INICIAL del personaje? Decide que variante de "Competencias de clase"
+    -- se ofrece (completa vs multiclase) y si toca avisar de los minimos de caracteristica.
+    -- En subida lo dice la progresion (una clase estrenada nunca es la primera); en creacion,
+    -- la clase que se crea es la inicial salvo que sea la secundaria del plan.
+    local esClasePrimera
+    if IsLevelUpMode() then
+        local niveles = (HarfordDnDProgression and HarfordDnDProgression.GetClassLevels
+            and HarfordDnDProgression.GetClassLevels()) or {}
+        esClasePrimera = niveles[1] ~= nil and tostring(niveles[1].classId) == tostring(classDef.id)
+        -- Multiclase ESTRENADA: el manual exige 13 en las caracteristicas de la clase nueva Y de
+        -- las que ya tienes. Se AVISA, no se bloquea: una ficha llevada a mano puede tener las
+        -- puntuaciones sin importar (10 por defecto) y bloquear sobre ese dato seria hostil.
+        local estrenada = true
+        for _, e in ipairs((HarfordDnDProgression and HarfordDnDProgression.GetClassLevels
+            and HarfordDnDProgression.GetClassLevels()) or {}) do
+            if tostring(e.classId) == tostring(classDef.id) then estrenada = false break end
+        end
+        if estrenada and HarfordDnDCalc and HarfordDnDCalc.GetAbilityScore then
+            S.multiclassWarned = S.multiclassWarned or {}
+            local faltan = {}
+            local function RevisaMinimos(def)
+                for _, grupo in ipairs((def and def.multiclass and def.multiclass.minimums) or {}) do
+                    local cumple, nombres = false, {}
+                    for _, ab in ipairs(grupo) do
+                        nombres[#nombres + 1] = ab
+                        if (tonumber(HarfordDnDCalc.GetAbilityScore(ab)) or 0) >= 13 then cumple = true end
+                    end
+                    if not cumple then faltan[#faltan + 1] = table.concat(nombres, " o ") end
+                end
+            end
+            RevisaMinimos(classDef)
+            for _, e in ipairs(HarfordDnDProgression.GetClassLevels() or {}) do
+                RevisaMinimos(HarfordDnDBook.GetClass and HarfordDnDBook.GetClass(e.classId))
+            end
+            if #faltan > 0 then
+                local aviso = MakeText(S.tree, "GameFontHighlightSmall",
+                    "|cffff5555Multiclase: el manual pide 13 en " .. table.concat(faltan, ", ")
+                    .. ".|r Lo decide la mesa; aqui no se bloquea.")
+                aviso:SetPoint("TOPLEFT", 28, y)
+                aviso:SetWidth(320)
+                aviso:SetJustifyH("LEFT")
+                aviso:SetWordWrap(true)
+                S.nodeRows[#S.nodeRows + 1] = aviso
+                y = y - math.ceil(aviso:GetStringHeight() or 12) - 12
+                if not S.multiclassWarned[classDef.id] and HarfordChat and HarfordChat.Print then
+                    S.multiclassWarned[classDef.id] = true
+                    HarfordChat.Print("Multiclase " .. tostring(classDef.name or classDef.id)
+                        .. ": el manual pide 13 en " .. table.concat(faltan, ", ") .. ". Consultalo con la mesa.")
+                end
+            end
+        end
+    else
+        esClasePrimera = tostring(classDef.id) ~= tostring(S.secondaryClassId or "")
+    end
     local heading = MakeText(S.tree, "GameFontNormal", "RASGOS QUE RECIBIRAS EN ESTE NIVEL")
     heading:SetPoint("TOPLEFT", 28, y)
     heading:SetTextColor(1, 0.82, 0)
@@ -523,7 +577,10 @@ local function RefreshPendingLevelFeatures(classDef, classLevel)
     y = y - 34
     local firstFeature
     for _, feature in ipairs(classDef.features or {}) do
-        if tonumber(feature.level) == classLevel and PendingOptionChosen(feature) then
+        -- Variantes primera-clase/multiclase de un mismo rasgo: solo se lista la que aplica.
+        local multiOk = not ((feature.onlyFirstClass and not esClasePrimera)
+            or (feature.onlyMulticlass and esClasePrimera))
+        if multiOk and tonumber(feature.level) == classLevel and PendingOptionChosen(feature) then
             S.pendingFeatures[#S.pendingFeatures + 1] = feature
             CreateNode(S.tree, 26, y, classLevel, feature, "Clase")
             firstFeature = firstFeature or { feature = feature, source = "Clase" }
@@ -2164,14 +2221,13 @@ local function OpenSpellDialog(className, store, limit, kind, maxLevel, subtitle
 end
 _G.HarfordAdvancementOpenSpellDialog = OpenSpellDialog  -- reutilizado por el menu de descanso largo
 
--- Menu de descanso largo: reelegir conjuros PREPARADOS del PJ actual. Standalone (no depende del
--- frame de creacion): opera directamente sobre HarfordCompendioCharacterDB.preparedSpells y usa el
--- Mod real de HarfordDnDCalc. `silent` evita el aviso cuando se dispara automatico tras el descanso.
-local function OpenPrepareSpellsMenu(silent)
+-- Clases del PJ que PREPARAN conjuros. Devuelve TODAS (una ficha multiclase puede preparar por
+-- dos clases; el menu de descanso ofrece cada una, no solo la primera encontrada).
+local function PreparedCasters()
     local C = _G.HarfordCompendioAPI
     local P = HarfordDnDProgression
-    if not (C and P and P.GetClassLevels and HarfordDnDBook) then return end
-    local className, classLevel, casting
+    local out = {}
+    if not (C and P and P.GetClassLevels and HarfordDnDBook) then return out end
     for _, e in ipairs(P.GetClassLevels() or {}) do
         local cls = HarfordDnDBook.GetClass(e.classId)
         local name = cls and cls.name
@@ -2185,25 +2241,37 @@ local function OpenPrepareSpellsMenu(silent)
         end
         local prog = name and C.GetSpellProgression and C.GetSpellProgression(name)
         if cast and prog and prog.prepared then
-            className, classLevel, casting = name, tonumber(e.level) or 1, cast
-            break
+            out[#out + 1] = { className = name, classLevel = tonumber(e.level) or 1, casting = cast }
         end
     end
-    if not className then
-        if not silent and HarfordChat and HarfordChat.Print then HarfordChat.Print("Tu personaje no prepara conjuros.") end
-        return
-    end
-    local mod = (HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod and HarfordDnDCalc.GetAbilityMod(casting.ability)) or 0
-    local limit = (C.GetPreparedCount and C.GetPreparedCount(className, mod, classLevel)) or 1
-    local maxLevel = (C.GetMaxSpellLevel and C.GetMaxSpellLevel(className, classLevel))
-        or math.max(1, math.min(5, math.ceil((classLevel or 1) / 2)))
+    return out
+end
+
+-- Abre el picker de preparados de UNA clase preparadora concreta.
+local function OpenPrepareDialogFor(caster)
+    local C = _G.HarfordCompendioAPI
+    if not (C and caster) then return end
+    local mod = (HarfordDnDCalc and HarfordDnDCalc.GetAbilityMod and HarfordDnDCalc.GetAbilityMod(caster.casting.ability)) or 0
+    local limit = (C.GetPreparedCount and C.GetPreparedCount(caster.className, mod, caster.classLevel)) or 1
+    local maxLevel = (C.GetMaxSpellLevel and C.GetMaxSpellLevel(caster.className, caster.classLevel))
+        or math.max(1, math.min(5, math.ceil((caster.classLevel or 1) / 2)))
     local db = _G.HarfordCompendioCharacterDB
     if type(db) ~= "table" then return end
     db.preparedSpells = db.preparedSpells or {}
-    OpenSpellDialog(className, db.preparedSpells, limit, "spell", maxLevel, "preparados",
-        "Descanso largo - Preparar conjuros de " .. className, function()
+    OpenSpellDialog(caster.className, db.preparedSpells, limit, "spell", maxLevel, "preparados",
+        "Descanso largo - Preparar conjuros de " .. caster.className, function()
             if HarfordChat and HarfordChat.Print then HarfordChat.Print("Conjuros preparados actualizados.") end
         end)
+end
+
+-- Compat: reelegir preparados a secas (primera clase preparadora), como hasta ahora.
+local function OpenPrepareSpellsMenu(silent)
+    local lista = PreparedCasters()
+    if #lista == 0 then
+        if not silent and HarfordChat and HarfordChat.Print then HarfordChat.Print("Tu personaje no prepara conjuros.") end
+        return
+    end
+    OpenPrepareDialogFor(lista[1])
 end
 _G.HarfordOpenPrepareSpellsMenu = OpenPrepareSpellsMenu
 
@@ -2213,19 +2281,32 @@ _G.HarfordOpenPrepareSpellsMenu = OpenPrepareSpellsMenu
 -- Cada rasgo re-eligible es un submenu con sus opciones (la actual marcada); elegir reescribe
 -- la eleccion de UN slot con SetChoiceSlot y actualiza el About por la misma via guardada que
 -- la subida (solo si CanRewriteAbout lo reconoce como suyo; si no, se avisa por chat).
-local longRestMenu
-local function OpenLongRestChoicesMenu(silent)
+-- Rasgos `choice` con `rechooseOnLongRest` que el PJ tiene desbloqueados.
+local function ReeligiblesLongRest()
     local P = HarfordDnDProgression
     local B = HarfordDnDBook
-    if not (P and P.GetClassLevels and B and B.GetUnlockedFeatures) then return end
+    if not (P and P.GetClassLevels and B and B.GetUnlockedFeatures) then return {} end
     local reeligibles = {}
     for _, item in ipairs(B.GetUnlockedFeatures(P.GetClassLevels()) or {}) do
         local f = item.feature
         if f and f.choice and f.rechooseOnLongRest then reeligibles[#reeligibles + 1] = f end
     end
-    if #reeligibles == 0 then
+    return reeligibles
+end
+
+-- MENU UNICO DE DESCANSO LARGO: todo lo que el manual deja cambiar al terminarlo, en un solo
+-- desplegable — preparar conjuros (una entrada por cada clase preparadora, que en multiclase
+-- puede haber dos) y los rasgos `choice` con `rechooseOnLongRest` (Forja de runas del CdM),
+-- cada uno con sus opciones en submenu. Antes se encadenaban dos menus sueltos; ahora el
+-- descanso abre ESTE, y en silencio si no hay nada que ofrecer.
+local longRestMenu
+local function OpenLongRestMenu(silent)
+    local P = HarfordDnDProgression
+    local casters = PreparedCasters()
+    local reeligibles = ReeligiblesLongRest()
+    if #casters == 0 and #reeligibles == 0 then
         if not silent and HarfordChat and HarfordChat.Print then
-            HarfordChat.Print("No tienes rasgos que reelegir tras el descanso largo.")
+            HarfordChat.Print("No tienes nada que cambiar tras el descanso largo (ni conjuros preparados ni rasgos reelegibles).")
         end
         return
     end
@@ -2237,8 +2318,18 @@ local function OpenLongRestChoicesMenu(silent)
             local info = UIDropDownMenu_CreateInfo()
             info.isTitle = true
             info.notCheckable = true
-            info.text = "Descanso largo: reelegir"
+            info.text = "Descanso largo"
             UIDropDownMenu_AddButton(info, level)
+            for _, caster in ipairs(casters) do
+                info = UIDropDownMenu_CreateInfo()
+                info.text = "Preparar conjuros (" .. tostring(caster.className) .. ")"
+                info.notCheckable = true
+                info.func = function()
+                    CloseDropDownMenus()
+                    OpenPrepareDialogFor(caster)
+                end
+                UIDropDownMenu_AddButton(info, level)
+            end
             for _, f in ipairs(reeligibles) do
                 info = UIDropDownMenu_CreateInfo()
                 info.text = tostring(f.name or f.id)
@@ -2250,9 +2341,9 @@ local function OpenLongRestChoicesMenu(silent)
         elseif level == 2 then
             for _, f in ipairs(reeligibles) do
                 if f.id == UIDROPDOWNMENU_MENU_VALUE then
-                    local mapa = (P.GetChoiceSlotMap and P.GetChoiceSlotMap(f.id)) or {}
+                    local mapa = (P and P.GetChoiceSlotMap and P.GetChoiceSlotMap(f.id)) or {}
                     local actual = mapa[1]
-                    local opciones = (B.GetChoiceOptions and B.GetChoiceOptions(f))
+                    local opciones = (HarfordDnDBook.GetChoiceOptions and HarfordDnDBook.GetChoiceOptions(f))
                         or (f.choice and f.choice.options) or {}
                     for _, opt in ipairs(opciones) do
                         local elegida = opt
@@ -2288,7 +2379,10 @@ local function OpenLongRestChoicesMenu(silent)
     end, "MENU")
     ToggleDropDownMenu(1, nil, longRestMenu, "cursor", 0, 0)
 end
-_G.HarfordOpenLongRestChoicesMenu = OpenLongRestChoicesMenu
+_G.HarfordOpenLongRestMenu = OpenLongRestMenu
+-- Compat: el nombre historico sigue abriendo el menu (ahora unificado). El comando/flujos
+-- antiguos que lo llamen ven lo mismo que el descanso.
+_G.HarfordOpenLongRestChoicesMenu = OpenLongRestMenu
 
 -- Conjuntos de nombres de las Listas Ampliadas de la subclase (Brujo: Afliccion/Demonologia/
 -- Destruccion). Devuelve nil si esa subclase no declara ninguna, para no cambiar el filtro.

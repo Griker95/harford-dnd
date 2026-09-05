@@ -29,6 +29,8 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Sabiduria", "Carisma" },
     armorProfs = {},
     weaponProfs = { "sencillas" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Carisma" } }, skillChoices = 1 },
     subclasses = {
         { id = "disciplina", name = "Disciplina", desc = "Escudos y prevencion que sanan mitigando el daño.", features = {
                 { id = "sac_dis_conjuros_1", level = 1, name = "Conjuros del llamado (Disciplina)", type = "informativo", grantedSpells = { "curar_heridas", "infligir_heridas" }, description = "Nivel 1: Curar heridas e Infligir heridas. Siempre los tienes preparados y NO cuentan contra los conjuros que puedes preparar cada dia.", spellGrants = { { level = 1, ids = { "curar_heridas", "infligir_heridas" } } }, effects = {} },

@@ -498,15 +498,23 @@ function API.Resolve(profileName)
                 resolved.saveProf[abilityKey] = true
             end
         end
-        -- Competencias de armadura/arma: union de TODAS las clases (base por clase).
-        for _, entry in ipairs(levels) do
+        -- Competencias de armadura/arma/herramienta: regla de MULTICLASE del manual. Solo la
+        -- clase INICIAL da sus listas completas; entrar en otra clase da el subconjunto de su
+        -- seccion "Multiclase" (`classDef.multiclass`). Una clase posterior sin esa tabla no da
+        -- ninguna competencia base (el Mago multiclase no da nada: es el default seguro). Los
+        -- idiomas solo con la clase inicial — el manual no los incluye en multiclase; los que
+        -- concede un RASGO (Eredun de Secretos profanos) llegan igual por su efecto.
+        for i, entry in ipairs(levels) do
             local classDef = HarfordDnDBook.GetClass(entry.classId)
             if classDef then
-                for _, a in ipairs(classDef.armorProfs or {}) do resolved.armorProf[tostring(a)] = true end
-                for _, w in ipairs(classDef.weaponProfs or {}) do resolved.weaponProf[NormWeaponProf(w)] = true end
-                for _, t in ipairs(classDef.toolProfs or {}) do resolved.toolProf[tostring(t)] = true end
-                for _, lg in ipairs(classDef.languages or {}) do
-                    resolved.language[tostring(lg)] = tostring(classDef.name or entry.classId)
+                local src = (i == 1) and classDef or (classDef.multiclass or {})
+                for _, a in ipairs(src.armorProfs or {}) do resolved.armorProf[tostring(a)] = true end
+                for _, w in ipairs(src.weaponProfs or {}) do resolved.weaponProf[NormWeaponProf(w)] = true end
+                for _, t in ipairs(src.toolProfs or {}) do resolved.toolProf[tostring(t)] = true end
+                if i == 1 then
+                    for _, lg in ipairs(classDef.languages or {}) do
+                        resolved.language[tostring(lg)] = tostring(classDef.name or entry.classId)
+                    end
                 end
             end
         end

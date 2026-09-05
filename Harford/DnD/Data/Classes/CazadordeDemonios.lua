@@ -35,6 +35,9 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Destreza", "Carisma" },
     armorProfs = { "ligera" },
     weaponProfs = { "sencillas", "marciales", "Guja de guerra" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Destreza" }, { "Inteligencia" } },
+        weaponProfs = { "sencillas", "marciales", "Guja de guerra" } },
     subclasses = {
         { id = "devastacion", name = "Devastacion", desc = "Agresion implacable de gran movilidad y daño demoniaco.", features = {
             { id = "dh_dev_competencia", level = 3, name = "Competencia adicional (acrobacias)", type = "pasivo", description = "Al elegir esta marca en el nivel 3, obtienes competencia en la habilidad de Acrobacias si no la tienes. Bonus Competencia se duplica en cualquier prueba de habilidad que uses con esta competencia.", effects = {

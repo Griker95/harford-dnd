@@ -28,6 +28,9 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Sabiduria", "Carisma" },
     armorProfs = { "ligera", "media", "pesada", "escudo" },
     weaponProfs = { "sencillas", "marciales" },
+    -- Seccion "Multiclase" del manual: al ENTRAR en la clase (no siendo la inicial).
+    multiclass = { minimums = { { "Fuerza" }, { "Carisma" } },
+        armorProfs = { "ligera", "media", "escudo" }, weaponProfs = { "sencillas", "marciales" } },
     subclasses = {
         { id = "sagrado", name = "Sagrado", desc = "Luz sanadora y apoyo para los aliados.", features = {
                 { id = "pal_sag_conjuros_3", level = 3, name = "Conjuros de camino (Sagrado)", type = "informativo", grantedSpells = { "proteccion_contra_el_bien_y_el_mal", "arrepentimiento" }, description = "Nivel 3: Proteccion contra el bien y el mal y Arrepentimiento (la Penitencia del manual: mismo texto del capitulo 6). Los conjuros de camino siempre los tienes preparados y NO cuentan contra los conjuros de paladin que puedes preparar.", spellGrants = { { level = 1, ids = { "proteccion_contra_el_bien_y_el_mal", "arrepentimiento" } } }, effects = {} },

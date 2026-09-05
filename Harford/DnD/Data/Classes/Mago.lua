@@ -32,6 +32,8 @@ API.CLASSES[#API.CLASSES + 1] =
     saves = { "Inteligencia", "Sabiduria" },
     armorProfs = {},
     weaponProfs = { "sencillas" },
+    -- Seccion "Multiclase" del manual: NO recibes competencias si no es tu clase inicial.
+    multiclass = { minimums = { { "Inteligencia" } } },
     subclasses = {
         { id = "arcano", name = "Arcano", desc = "Manipulacion de energía arcana pura y gran eficiencia mágica.", features = {
             { id = "mago_arc_truco", level = 2, name = "Truco adicional (prestidigitacion)", type = "informativo", description = "Aprendes prestidigitacion (u otro truco de mago); no cuenta en tu limite.", cantripSpellIds = { "prestidigitacion" }, spellGrants = { { level = 0, ids = { "prestidigitacion" } } }, effects = {} },

@@ -413,7 +413,12 @@ function API.BuildSections(data)
         local clsName = (HarfordDnDBook.GetClassName and HarfordDnDBook.GetClassName(entry.classId)) or entry.classId
         local clsF, subF = {}, {}
         for _, it in ipairs((HarfordDnDBook.GetUnlockedFeatures and HarfordDnDBook.GetUnlockedFeatures({ entry })) or {}) do
-            if API.IsVisible(it.feature) and OpcionConcedida(it.feature) then
+            -- Puertas de multiclase: la eleccion de habilidades COMPLETA solo si esta clase es
+            -- la inicial (i == 1); su variante multiclase solo si no lo es. Aqui se consulta el
+            -- Book por entrada suelta, asi que el filtro de Progression no llega y se replica.
+            local multiOk = not ((it.feature.onlyFirstClass and i > 1)
+                or (it.feature.onlyMulticlass and i == 1))
+            if multiOk and API.IsVisible(it.feature) and OpcionConcedida(it.feature) then
                 local isSub = type(it.className) == "string" and it.className:find(" / ", 1, true)
                 local bucket = isSub and subF or clsF
                 AddFeature(bucket, it.feature, it.level, "class")

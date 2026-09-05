@@ -12,8 +12,11 @@
 -- Estado canonico = aura sobre el NPC (3 constantes globales). Solo los OFICIALES tocan el aura
 -- (comandos de servidor). El reparto y el estado de mision viven en el nucleo HarfordQuests.
 --
--- Pendiente (siguientes fases): render de gossip propio de Harford; hook BAG_UPDATE_DELAYED para
--- objetivos por inventario; comando DM de reparto a ausentes.
+-- Las "siguientes fases" de la primera version estan HECHAS: render de gossip propio
+-- (RenderGossip), progreso por inventario (BAG_UPDATE_DELAYED + GetItemCount con baseline al
+-- aceptar) y reparto DM a ausentes (DmSendReward). Lo unico pendiente es el editor DM completo
+-- de la DEFINICION en el phase: las defs viven en ArcSpells del vault (SpellCreator) y el addon
+-- no puede escribirlo; `/harford debug run questarc` genera el Lua para copiar/pegar.
 ------------------------------------------------------------
 
 HarfordWorldQuests = HarfordWorldQuests or {}

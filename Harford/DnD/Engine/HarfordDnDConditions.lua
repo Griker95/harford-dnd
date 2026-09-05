@@ -1843,7 +1843,10 @@ do
     -- `extra`: presupuesto CONCEDIDO este turno por un rasgo (Accion adicional del Guerrero, que
     -- da una adicional mas y se gasta con usos propios). Se limpia con el turno, igual que lo
     -- gastado: es un permiso de ESTE turno, no una mejora permanente.
-    local ECONOMIA = { spent = {}, extra = {}, activa = false, ataques = 0 }
+    -- `concedidaFuera`: acciones/adicionales CONCEDIDAS por el DM para usarlas FUERA de tu
+    -- turno. Contador propio: el presupuesto base no es tuyo fuera de turno y `extra` es del
+    -- turno en curso — mezclarlas haria imposible distinguir la concesion del presupuesto.
+    local ECONOMIA = { spent = {}, extra = {}, concedidaFuera = {}, activa = false, ataques = 0 }
 
     -- Se guarda en el store de turnos --que es SavedVariable-- sellado con el ASALTO y con tu
     -- guid. El sello impide que lo de un combate se aplique a otro: si el asalto no coincide, no
@@ -1856,6 +1859,7 @@ do
             asalto = tonumber(store.asalto) or 0,
             spent = ECONOMIA.spent,
             extra = ECONOMIA.extra,
+            concedidaFuera = ECONOMIA.concedidaFuera,
             ataques = ECONOMIA.ataques,
         }
     end
@@ -1950,9 +1954,10 @@ do
     function Turn.GetRemaining(kind)
         -- Lo que no es tuyo ahora mismo esta a cero, aunque no lo hayas gastado. La reaccion ya
         -- no entra aqui (FUERA_DE_TURNO): esta disponible tambien en turno ajeno, como manda el
-        -- manual, y la accion preparada se sigue COBRANDO de ella.
+        -- manual, y la accion preparada se sigue COBRANDO de ella. La excepcion es lo CONCEDIDO
+        -- por el DM para usarlo fuera de turno, que tiene su contador propio.
         if Turn.IsActive() and FUERA_DE_TURNO[tostring(kind or "")] and not Turn.IsMyTurn() then
-            return 0
+            return math.max(0, math.floor(tonumber(ECONOMIA.concedidaFuera[tostring(kind or "")]) or 0))
         end
         return math.max(0, Turn.GetBudget(kind) - Turn.GetSpent(kind))
     end
@@ -1968,6 +1973,16 @@ do
         local disparandoPreparada = Turn.IsPreparedTrigger(kind)
         if disparandoPreparada then kind = "reaction" end
         amount = math.max(1, math.floor(tonumber(amount) or 1))
+        -- Lo CONCEDIDO por el DM fuera de tu turno se gasta de SU contador, no de `spent`:
+        -- el gasto del turno propio no debe ensuciarse con lo que ocurrio fuera de el.
+        if Turn.IsActive() and FUERA_DE_TURNO[kind] and not Turn.IsMyTurn() then
+            local concedida = math.floor(tonumber(ECONOMIA.concedidaFuera[kind]) or 0)
+            if concedida < amount then return false, 0 end
+            ECONOMIA.concedidaFuera[kind] = concedida - amount
+            GuardarEconomia()
+            Notify()
+            return true, Turn.GetRemaining(kind)
+        end
         -- Si NO cabe, no se apunta nada: antes se sumaba igual y el contador se iba a negativo,
         -- asi que el "ya lo habias gastado" era un aviso y nada mas. Devolver false tiene que
         -- significar que la accion NO ocurre.
@@ -2007,6 +2022,7 @@ do
         if (tonumber(g.asalto) or -1) ~= (tonumber(store.asalto) or 0) then return false end
         ECONOMIA.spent = type(g.spent) == "table" and g.spent or {}
         ECONOMIA.extra = type(g.extra) == "table" and g.extra or {}
+        ECONOMIA.concedidaFuera = type(g.concedidaFuera) == "table" and g.concedidaFuera or {}
         ECONOMIA.ataques = tonumber(g.ataques) or 0
         Notify()
         return true
@@ -2149,11 +2165,26 @@ do
         ECONOMIA.ataqueAdicionalGratis = true
     end
 
+    -- El DM concede una accion o adicional USABLE FUERA de tu turno ("si doy accion como DM
+    -- fuera del turno de PJs deberia poder usarla"). `GetRemaining` la ensena y `Spend` la
+    -- consume de este contador, sin ensuciar el gasto del turno propio. Reset la limpia.
+    function Turn.GrantOutOfTurn(kind, amount)
+        kind = tostring(kind or "")
+        if not ETIQUETA[kind] then return 0 end
+        amount = math.max(1, math.floor(tonumber(amount) or 1))
+        ECONOMIA.concedidaFuera[kind] =
+            math.max(0, math.floor(tonumber(ECONOMIA.concedidaFuera[kind]) or 0)) + amount
+        GuardarEconomia()
+        Notify()
+        return ECONOMIA.concedidaFuera[kind]
+    end
+
     function Turn.Reset()
         -- Los ataques ya hechos son de ESTE turno: sin reiniciarlos, el primer ataque del turno
         -- siguiente se tomaria por el segundo y saldria gratis.
         ECONOMIA.ataques = 0
         ECONOMIA.ataqueAdicionalGratis = nil
+        ECONOMIA.concedidaFuera = {}
         ECONOMIA.spent = {}
         -- Y se guarda el turno limpio: si no, una recarga resucitaria lo del turno anterior.
         if GuardarEconomia then GuardarEconomia() end

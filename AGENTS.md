@@ -440,6 +440,15 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   mitad-al-exito con daño, la preparada salta, cobra la reaccion y deja el daño en CERO — vale
   contra AREAS tambien (RAW: el escudo se interpone ante la bola de fuego; el `single` solo lo
   exige el +CA). Candados en `turnos_economia` (marca GMA funcional) y `area_geometria`.
+- **Lo que el DM "da" fuera de tu turno SE PUEDE USAR (2026-09-05)**: el gesto de devolver
+  accion/adicional (`TREFUND`) recibido FUERA de tu turno se traduce a `Turn.GrantOutOfTurn` —
+  contador propio `concedidaFuera`, porque el presupuesto base no es tuyo mientras no te toca y
+  devolver gasto no lo haria usable. `GetRemaining` lo ensena en turno ajeno, `Spend` lo consume
+  SIN ensuciar el gasto del turno propio (tu proxima accion queda intacta), persiste con el sello
+  de asalto y `Reset` (tu turno) lo limpia. La reaccion no lo necesita (ya es usable en turno
+  ajeno): su refund normal funciona, y si no estaba gastada el gesto concede UNA extra
+  (`GrantExtra`). En TU turno el gesto sigue siendo la devolucion de siempre. Candado funcional
+  en `turnos_economia`.
 - **El ORIGEN del daño a jugador viaja plegado en la etiqueta DNDDMG (2026-09-05)**: la victima
   publica la linea definitiva, y sin el ponia al REMITENTE como origen — un ataque de NPC desde
   la ficha salia "de" el personaje del GM ("Ashzynde Daño Zarzillo..." en vez de "Flor

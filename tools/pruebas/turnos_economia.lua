@@ -216,6 +216,36 @@ API.Has = nil
 API.RemoveOwned = nil
 HarfordTurnOrderAPI.IsMyTurn = nil
 
+-- ─── LO CONCEDIDO POR EL DM SE USA FUERA DE TU TURNO ────────────────────────
+-- "Si doy accion como DM fuera del turno de PJs deberia poder usarla": la concesion va en
+-- contador propio (GrantOutOfTurn) — el presupuesto base no es tuyo fuera de turno y devolver
+-- gasto no la haria usable. Se gasta de ese contador sin ensuciar el gasto del turno propio,
+-- y Reset (tu turno) la limpia.
+print("Lo concedido por el DM se usa fuera de tu turno")
+T.Reset()
+HarfordTurnOrderAPI.IsMyTurn = function() return miTurno end
+miTurno = false
+chk("sin concesion, la accion sigue a cero", T.GetRemaining("action"), 0)
+T.GrantOutOfTurn("action", 1)
+chk("concedida: la accion aparece", T.GetRemaining("action"), 1)
+chk("y se puede gastar", (T.Spend("action", 1)), true)
+chk("  una sola vez", T.GetRemaining("action"), 0)
+chk("  sin ensuciar el gasto del turno propio", T.GetSpent("action"), 0)
+miTurno = true
+chk("de vuelta en tu turno, tu accion esta entera", T.GetRemaining("action"), 1)
+T.GrantOutOfTurn("bonus", 1)
+T.Reset()
+miTurno = false
+chk("Reset limpia las concesiones", T.GetRemaining("bonus"), 0)
+miTurno = true
+HarfordTurnOrderAPI.IsMyTurn = nil
+-- Y el receptor del gesto del DM traduce: fuera de turno concede; reaccion sin gastar = extra.
+local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
+chk("el receptor concede fuera de turno",
+    comm:find('T.GrantOutOfTurn(refundKind, 1)', 1, true) ~= nil, true)
+chk("y la reaccion sin gastar se concede como extra",
+    comm:find('T.GrantExtra("reaction", 1)', 1, true) ~= nil, true)
+
 -- ─── GRAN MAESTRO DE ARMAS: EL CRITICO/REMATE ABRE UN ATAQUE COMO ADICIONAL ─
 -- La marca (GrantBonusWeaponAttack) la ponen el critico c/c y el remate; al abrir la siguiente
 -- tanda, el ataque se cobra como ACCION ADICIONAL y la tanda no avanza. Sin adicional

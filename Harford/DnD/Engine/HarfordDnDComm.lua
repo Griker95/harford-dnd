@@ -172,11 +172,26 @@ function HarfordDnDComm.CreateHandlers(deps)
                 end
             elseif HarfordDnDConditions and HarfordDnDConditions.Turn
                 and HarfordDnDConditions.Turn.Refund then
-                local etiqueta = HarfordDnDConditions.Turn.ETIQUETA
-                    and HarfordDnDConditions.Turn.ETIQUETA[refundKind] or refundKind
-                if HarfordDnDConditions.Turn.Refund(refundKind) then
+                local T = HarfordDnDConditions.Turn
+                local etiqueta = T.ETIQUETA and T.ETIQUETA[refundKind] or refundKind
+                -- FUERA de tu turno, "dar" una accion/adicional significa CONCEDERLA para
+                -- usarla AHORA: el presupuesto base no es tuyo mientras no te toca y devolver
+                -- gasto no la haria usable ("si doy accion como DM fuera del turno de PJs
+                -- deberia poder usarla"). Va al contador de concesiones (GrantOutOfTurn).
+                if (refundKind == "action" or refundKind == "bonus")
+                    and T.IsActive and T.IsActive() and T.IsMyTurn and not T.IsMyTurn()
+                    and T.GrantOutOfTurn then
+                    T.GrantOutOfTurn(refundKind, 1)
+                    HarfordChat.Print("|cff88ff88El DM te concede tu " .. tostring(etiqueta):lower()
+                        .. ": puedes usarla AHORA, fuera de tu turno.|r")
+                elseif T.Refund(refundKind) then
                     HarfordChat.Print("|cff88ff88Se te ha devuelto tu " .. tostring(etiqueta):lower()
                         .. " de este turno.|r")
+                elseif refundKind == "reaction" and T.GrantExtra then
+                    -- Reaccion sin gastar: "darla" es conceder UNA extra este asalto (la
+                    -- reaccion ya es usable en turno ajeno por si misma).
+                    T.GrantExtra("reaction", 1)
+                    HarfordChat.Print("|cff88ff88El DM te concede una reaccion extra este asalto.|r")
                 else
                     HarfordChat.Print("No tenias gastada tu " .. tostring(etiqueta):lower() .. ".")
                 end

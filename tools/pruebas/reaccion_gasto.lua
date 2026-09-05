@@ -88,4 +88,33 @@ T.Reset()
 chk("al empezar el turno, la concedida SE VA", T.GetRemaining("bonus"), 1)
 chk("un rasgo sin grantsTurnAction no concede",
     tostring(T.GrantForFeature({ id = "y", cast = "accion" })), "nil")
+
+-- ─── FLANQUEADO ES GRATIS ───────────────────────────────────────────────────
+-- La postura toggle (`trabado_melee`, cast = "ninguna") no gasta accion ni nada: la economia no
+-- conoce ese cast y KindFromFeature tiene que devolver nil — sin defaults a "action" por tipo.
+print("Flanqueado (cast ninguna) no cuesta nada")
+chk("KindFromFeature da nil",
+    tostring(T.KindFromFeature({ id = "trabado_melee", cast = "ninguna", type = "accion" })), "nil")
+chk("y la accion lo declara asi",
+    io.open("Harford/DnD/Data/HarfordDnDActions.lua"):read("*a")
+        :find('cast = "ninguna", orden = 12,', 1, true) ~= nil, true)
+
+-- ─── ARMAR ES GRATIS; EL DISPARO COBRA (2026-09-05) ─────────────────────────
+-- Una reaccion QUE SE PREPARA (Esquiva Sobrenatural) cobraba al ARMARLA en el Libro y OTRA VEZ
+-- al dispararse con el daño (el anuncio re-cobraba): el jugador veia "ya habias gastado tu
+-- reaccion" sin haber hecho nada mas. Ahora el armado (y el desarmado) no cobran; el disparo
+-- cobra UNA vez, con marca de click para que su anuncio no re-cobre, tras comprobar el recurso.
+-- Sin reaccion ese asalto, la preparada no salta y SIGUE armada.
+print("Armar es gratis; el disparo cobra la reaccion una sola vez")
+local panel = io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+chk("el repartidor exime a la reaccion que se prepara",
+    panel:find("and not reaccionQueSePrepara", 1, true) ~= nil, true)
+chk("definida por disparador y efecto resolubles",
+    panel:find('local reaccionQueSePrepara = cat == "reaccion"', 1, true) ~= nil, true)
+local acciones = io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a")
+local _, marcasDisparo = acciones:gsub('T%.BeginClick%("reaccion_disparada:', "")
+chk("el disparo cobra con marca de click, en las DOS rutas", marcasDisparo, 2)
+chk("y sin reaccion no salta",
+    acciones:find("if T.SpendForFeature and T.SpendForFeature(feature) == false then", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

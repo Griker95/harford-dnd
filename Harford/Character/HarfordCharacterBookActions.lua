@@ -893,6 +893,20 @@ do
                         or HarfordDnDStore.GetResourceCurrent(resourceKey) < resourceCost then
                         return damage, false
                     end
+                end
+                -- La reaccion se paga AQUI, al dispararse (el armado ya no cobra: era un DOBLE
+                -- cobro y el jugador veia "ya habias gastado tu reaccion" sin haber hecho nada
+                -- mas). Tras comprobar el recurso y antes de gastarlo, para no cobrar por lo que
+                -- no sale. La marca de click hace que el AnnounceAbility de abajo no vuelva a
+                -- cobrar el mismo gesto. Sin reaccion este asalto no salta, y SIGUE ARMADA.
+                if HarfordDnDConditions and HarfordDnDConditions.Turn then
+                    local T = HarfordDnDConditions.Turn
+                    if T.BeginClick then T.BeginClick("reaccion_disparada:" .. tostring(id)) end
+                    if T.SpendForFeature and T.SpendForFeature(feature) == false then
+                        return damage, false
+                    end
+                end
+                if resourceKey ~= "" and resourceCost > 0 then
                     HarfordDnDStore.AdjustResourceCurrent(resourceKey, -resourceCost)
                 end
                 local newDamage = ApplyReactionEffect(reaction, damage, context)
@@ -941,6 +955,16 @@ function API.TriggerPreparedAttackReaction(trigger, context)
                     and HarfordDnDStore.AdjustResourceCurrent)
                 or HarfordDnDStore.GetResourceCurrent(resourceKey) < resourceCost then
                 return false
+            end
+            -- Mismo trato que TriggerPreparedReaction: la reaccion se cobra al DISPARARSE,
+            -- con marca de click para que el anuncio de abajo no re-cobre. Sin reaccion este
+            -- asalto no salta y sigue armada.
+            if HarfordDnDConditions and HarfordDnDConditions.Turn then
+                local T = HarfordDnDConditions.Turn
+                if T.BeginClick then T.BeginClick("reaccion_disparada:" .. tostring(id)) end
+                if T.SpendForFeature and T.SpendForFeature(feature) == false then
+                    return false
+                end
             end
             S.activeReactions[id] = nil
             if HarfordDnDCombat and HarfordDnDCombat.SetPreparedAttackReaction then

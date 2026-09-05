@@ -2871,7 +2871,16 @@ local function BookButtonOnClick(self)
     -- seleccion con el coste elegido. Cobrar aqui gastaba la ACCION al abrir el menu, eligieras lo
     -- que eligieras -- el anuncio posterior quedaba deduplicado por la marca de click y ya no
     -- corregia nada.
+    -- Una reaccion QUE SE PREPARA (disparador+efecto resolubles) tampoco cobra aqui: ARMARLA es
+    -- gratis y la reaccion se paga al DISPARARSE (TriggerPreparedReaction). Cobrar al armar era
+    -- un DOBLE cobro — el disparo anunciaba y volvia a cobrar, y el jugador veia "ya habias
+    -- gastado tu reaccion" sin haber hecho nada mas ("me sigue diciendo que he gastado la
+    -- reaccion", 2026-09-05). De paso, DESARMARLA con otro click ya no cobra nada. Las reacciones
+    -- sin disparador resoluble anuncian y gastan ahora, como siempre.
+    local reaccionQueSePrepara = cat == "reaccion"
+        and FeatureReactionTrigger(self.feature) and FeatureReactionEffect(self.feature)
     if cat ~= "pasivo" and not self.feature.trap and not self.feature.basicAction
+        and not reaccionQueSePrepara
         and HarfordDnDConditions and HarfordDnDConditions.Turn then
         local T = HarfordDnDConditions.Turn
         if T.BeginClick then T.BeginClick(self.feature.id or self) end

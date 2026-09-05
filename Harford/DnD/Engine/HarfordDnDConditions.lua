@@ -1210,8 +1210,13 @@ function API.FlushPendingAuras(unit)
     local lista = guid and pendientesAura[guid]
     if not lista or #lista == 0 then return 0 end
     -- Sin permiso no se intenta: se deja apuntado para quien pueda, en vez de perderlo.
-    if not (HarfordAuthority and HarfordAuthority.CanUseOfficerCommands
-        and HarfordAuthority.CanUseOfficerCommands()) then
+    -- RANGO REAL de fase (IsOfficerPlus, eje 1 del modelo de autoridad), NO CanUseOfficerCommands:
+    -- ese helper da true solo por tener el addon HarfordAdmin instalado, y un cliente con el
+    -- addon pero sin rango emitia el comando, el servidor lo rechazaba en silencio, el cliente
+    -- lo daba por hecho y TACHABA el pendiente — el golpe delegado se perdia sin rastro
+    -- (2026-09-05: "no se me esta enviando al raid leader").
+    if not (HarfordAuthority and HarfordAuthority.IsOfficerPlus
+        and HarfordAuthority.IsOfficerPlus()) then
         return 0
     end
     local hechas = 0
@@ -1303,10 +1308,13 @@ function API.CadenaDeMando()
     return cadena
 end
 
--- ¿Puedo emitirlo yo? Si si, no hay nada que delegar.
+-- ¿Puedo emitirlo yo? Si si, no hay nada que delegar. RANGO REAL de fase (IsOfficerPlus), no
+-- CanUseOfficerCommands: tener HarfordAdmin instalado sin rango hacia creer al cliente que podia
+-- emitir — se encolaba el efecto a si mismo, sus comandos morian en el servidor y al lider no le
+-- llegaba nada (el mismo agujero que la puerta de FlushPendingAuras).
 function API.PuedoAplicarEnNpc()
-    return (HarfordAuthority and HarfordAuthority.CanUseOfficerCommands
-        and HarfordAuthority.CanUseOfficerCommands()) == true
+    return (HarfordAuthority and HarfordAuthority.IsOfficerPlus
+        and HarfordAuthority.IsOfficerPlus()) == true
 end
 
 -- Punto unico: aplicar un efecto a un NPC, lo pueda yo o no. Devuelve "aplicado", "encolado",
@@ -1386,8 +1394,16 @@ function API.RecibirEfectoNpc(guid, tipo, valor, autor, sender, salto)
         end
         return false
     end
-    -- Si ya lo tengo seleccionado, se ejecuta sin esperar.
-    API.FlushPendingAuras("target")
+    -- Si ya lo tengo seleccionado, se ejecuta sin esperar. Si queda pendiente, se AVISA: el DM
+    -- tiene que saber que le llego trabajo delegado — "no se me esta enviando" era, entre otras
+    -- cosas, no enterarse de lo que si llegaba y esperaba en la cola.
+    if API.FlushPendingAuras("target") == 0 and HarfordChat and HarfordChat.Print then
+        local que = tipo == "damage" and (tostring(math.floor(math.abs(cantidad))) .. " de dano")
+            or tipo == "heal" and (tostring(math.floor(math.abs(cantidad))) .. " de curacion")
+            or ("aura " .. tostring(valor) .. (tipo == "remove" and " (retirar)" or ""))
+        HarfordChat.Print(string.format("|cffffcc00%s|r te delega %s sobre un NPC: seleccionalo para aplicarlo.",
+            tostring(quien or "?"), que))
+    end
     return true
 end
 

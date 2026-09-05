@@ -35,7 +35,10 @@ end
 env.UnitExists = function() return OBJETIVO ~= nil end
 env.UnitIsPlayer = function() return ES_JUGADOR end
 env.UnitGUID = function() return OBJETIVO end
-env.HarfordAuthority = { CanUseOfficerCommands = function() return PERMISO end }
+-- IsOfficerPlus = RANGO REAL de fase (2026-09-05): la cola y la delegacion NO usan
+-- CanUseOfficerCommands, cuyo atajo "tengo HarfordAdmin instalado" hacia que un cliente sin
+-- rango se encolara el efecto a si mismo y sus comandos murieran en el servidor en silencio.
+env.HarfordAuthority = { IsOfficerPlus = function() return PERMISO end }
 env.HarfordServerActions = {
     RemoveAura = function(id)
         if FALLA_SERVIDOR then return false end

@@ -926,6 +926,7 @@ function API.AttachMovementTracker(opts)
         -- El modo libre se APAGA al empezar TU turno — pero SIN devolverte (decision de mesa
         -- 2026-09-05: no hay TP automatico; volver es siempre /harfordcombat posicion, y la casa
         -- se conserva justo para eso). Durante los turnos ajenos sigue encendido.
+        local veniaDeLibre = API.ModoLibre and true or false
         if API.ModoLibre then
             API.ModoLibre = nil
             if EnCombate() then
@@ -949,6 +950,12 @@ function API.AttachMovementTracker(opts)
         -- Donde empiezas el turno. Son DOS anclas y hacen cosas distintas: a esta se vuelve a mano
         -- para deshacer el turno entero; a la del agotamiento te devuelve el muro.
         API.TurnStartAnchor = CapturarAncla()
+        -- La posicion de /harfordcombat posicion se fija en cada INICIO DE TURNO DE PJs, alli
+        -- donde estes, y vale hasta que el siguiente la actualice — salvo que vengas de libre:
+        -- entonces estas en el punto de roameo y la casa debe seguir apuntando a donde estabas.
+        if not veniaDeLibre and EnCombate() and API.TurnStartAnchor then
+            API.ModoLibreCasa = API.TurnStartAnchor
+        end
         if Guardar then Guardar() end
         if ArrancarSeguimiento then ArrancarSeguimiento(false) end
     end
@@ -1107,16 +1114,35 @@ function API.AttachMovementTracker(opts)
     function API.ModoLibreVolver()
         local casa = API.ModoLibreCasa
         if not casa then
-            HarfordChat.Print("No hay posicion guardada: activa antes /harfordcombat libre.")
+            HarfordChat.Print("No hay posicion de principio de turno guardada todavia.")
             return
         end
         if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then return end
         local ok, err = HarfordServerActions.WorldportSelf(casa, { addonName = "Harford" })
         if ok then
-            -- El salto no debe contarse como paso (si el contador corre, la guardia de 5 m ya
-            -- lo ignora; el reset de lastX evita ademas un tramo fantasma).
+            -- Vuelves a donde estabas al PRINCIPIO de tu turno Y con el movimiento REINICIADO:
+            -- es deshacer el desplazamiento, no un paso mas. La posicion sigue valiendo hasta
+            -- que el siguiente inicio de turno de PJs la actualice.
+            totalMeters, elapsed = 0, 0
+            API.RecordedMovementMeters = 0
+            API.MovimientoSinMuro = nil
             lastX, lastY, lastZ = nil, nil, nil
-            HarfordChat.Print("De vuelta a tu posicion guardada.")
+            if EnCombate() and not EsMiTurno() and not API.ModoLibre then
+                -- Turno ajeno sin libre: el muro te sostiene EN CASA el resto del asalto (su
+                -- ancla vieja apuntaba al sitio del que acabas de volver).
+                API.RecordedMovementAnchor = casa
+                motor:SetScript("OnUpdate", OnUpdate)
+            else
+                API.RecordedMovementAnchor = nil
+                if tracking then
+                    button:SetText("Parar " .. FormatMeters(0))
+                    label:SetText(FormatMeters(0))
+                elseif EnCombate() and EsMiTurno() and not LlevandoNpc() and not API.ModoLibre then
+                    if ArrancarSeguimiento then ArrancarSeguimiento(false) end
+                end
+            end
+            AvisarMovimiento(0, MaximoDelTurno())
+            HarfordChat.Print("De vuelta al principio de tu turno, con el movimiento reiniciado.")
         else
             HarfordChat.Print("|cffff5555No se pudo volver:|r " .. tostring(err or "error desconocido"))
         end

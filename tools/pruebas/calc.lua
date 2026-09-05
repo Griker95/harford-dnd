@@ -682,6 +682,14 @@ chk("y la casa solo se recoge fuera de combate",
     ataque:find("if not EnCombate() then API.ModoLibreCasa = nil end", 1, true) ~= nil, true)
 chk("posicion vuelve a la casa por worldport",
     ataque:find("local ok, err = HarfordServerActions.WorldportSelf(casa, { addonName = \"Harford\" })", 1, true) ~= nil, true)
+-- La casa se fija en cada INICIO DE TURNO DE PJs (donde estes), no en el turno ajeno, y venir
+-- de libre no la pisa con el punto de roameo. Y posicion REINICIA el movimiento al volver.
+chk("la casa se fija al inicio del turno de PJs",
+    ataque:find("if not veniaDeLibre and EnCombate() and API.TurnStartAnchor then", 1, true) ~= nil, true)
+chk("y posicion reinicia el movimiento",
+    ataque:find("De vuelta al principio de tu turno, con el movimiento reiniciado.", 1, true) ~= nil, true)
+chk("sosteniendote en casa si es turno ajeno",
+    ataque:find("API.RecordedMovementAnchor = casa", 1, true) ~= nil, true)
 chk("stop en turno ajeno re-ancla el muro donde estas",
     ataque:find("local ancla = CapturarAncla()\n                if ancla then API.RecordedMovementAnchor = ancla end", 1, true) ~= nil, true)
 -- El enganche de soltar tecla se queda como RESPALDO, por si la ultima muestra no llego a verlo.

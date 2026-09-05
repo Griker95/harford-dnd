@@ -3998,9 +3998,13 @@ Compatibilidad, que es donde esto se puede volver a romper en silencio:
   libre: guarda la CASA en `API.ModoLibreCasa` — APARTE del ancla del muro, que los reinicios de
   turno pisan — y deja moverse sin gasto ni muro durante los turnos AJENOS. **Al empezar TU
   turno se apaga solo pero SIN devolverte** (tercera iteracion de mesa: ni "un ciclo con TP" ni
-  "persistente"): juegas desde donde estas, y volver es siempre `posicion`, que teletransporta a
-  la casa a peticion — la casa se conserva justo para eso y solo se recoge fuera de combate. El
-  TP automatico al empezar el turno queda SOLO para el DM dirigiendo. Repetir `libre` tambien lo
+  "persistente"): juegas desde donde estas, y volver es siempre `posicion`. **La casa se fija en
+  cada INICIO DE TURNO DE PJs, alli donde estes** (cuarta iteracion; venir de libre NO la pisa
+  con el punto de roameo), y `posicion` te devuelve alli **REINICIANDO el movimiento** (contador
+  a cero; en turno ajeno sin libre, el muro re-anclado EN casa — su ancla vieja apuntaba al sitio
+  del que acabas de volver); vale hasta que el siguiente inicio de turno de PJs la actualice, y
+  solo se recoge fuera de combate. El TP automatico al empezar el turno queda SOLO para el DM
+  dirigiendo. Repetir `libre` tambien lo
   para (en TU turno reanuda el contador desde ahi; en turno ajeno re-ancla el muro en tu
   posicion). `stop` = salir LOCALMENTE del modo combate (SUSTITUYE a `/harford combatstop`, que
   ahora solo apunta al nuevo). `/harford libre` queda como alternador compatible. Candados en

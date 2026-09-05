@@ -4602,7 +4602,7 @@ SlashCmdList["HARFORDCOMBAT"] = function(msg)
     elseif sub == "posicion" or sub == "pos" then
         if M and M.ModoLibreVolver then M.ModoLibreVolver() end
     else
-        HarfordChat.Print("/harfordcombat: libre (alterna moverte sin gasto ni muro) | posicion (volver a tu posicion guardada) | stop (salir del modo combate)")
+        HarfordChat.Print("/harfordcombat: libre (alterna moverte sin gasto ni muro) | posicion (volver al principio de tu turno, reiniciando el movimiento) | stop (salir del modo combate)")
     end
 end
 

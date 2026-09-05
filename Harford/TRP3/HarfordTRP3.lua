@@ -2544,6 +2544,46 @@ do
     end)
 end
 
+-- ─── Cache de ChatLinks por CONTENIDO ────────────────────────────────────────
+-- `StoreSentLink` de TRP3 hace unico cada identificador ENCADENANDO numeros mientras exista:
+-- "Curar heridas" -> "Curar heridas1" -> "Curar heridas12" -> "...123..." — y el identificador
+-- ES el texto visible del marcador `[TRP3:id]`. Crear un enlace NUEVO en cada mencion (cada
+-- anuncio de lanzamiento, cada intento, cada insercion) iba alargando la ristra hasta que el
+-- chat mostraba "Curar heridas123456789101112..." (2026-09-05, la noche del estreno). NO hacen
+-- falta 63 lanzamientos: 63 menciones del mismo nombre bastan. La cura: UN enlace por
+-- contenido (modulo+nombre+descripcion), reutilizado en todas sus menciones — igual que ya
+-- hacia el cache de estados (glanceLinkCache).
+do
+    local linkCache = {}
+
+    function API.CachedChatLink(mod, name, data)
+        if not (mod and TRP3_API and TRP3_API.ChatLink) then return nil end
+        local key = tostring(mod:GetID()) .. "\1" .. tostring(name or "")
+            .. "\1" .. tostring(data and data.desc or "")
+        local cached = linkCache[key]
+        if cached then return cached end
+        local link = TRP3_API.ChatLink(name, data, mod:GetID())
+        linkCache[key] = link
+        return link
+    end
+
+    -- Insertar el texto del enlace en el chat activo (el marcador [TRP3:id] del propio link),
+    -- para reutilizar un link CACHEADO en vez de dejar que mod:InsertLink cree otro.
+    function API.InsertChatLinkText(link)
+        if not link then return false end
+        local ok, text = pcall(function() return link:GetText() end)
+        if not ok or type(text) ~= "string" then return false end
+        local editbox = ChatEdit_GetActiveWindow and ChatEdit_GetActiveWindow()
+        if editbox then
+            if ChatEdit_FocusActiveWindow then ChatEdit_FocusActiveWindow() end
+            editbox:Insert(text)
+        elseif ChatFrame_OpenChat then
+            ChatFrame_OpenChat(text)
+        end
+        return true
+    end
+end
+
 -- ─── Enlaces de habilidad clicables via TRP3 ChatLinks ───────────────────────
 -- Los enlaces de tipo propio no son clicables en este cliente (no disparan SetItemRef) y no
 -- podemos enganchar ChatFrame_OnHyperlinkShow. TRP3 SI hace clicables sus enlaces `totalrp3:`
@@ -2605,7 +2645,7 @@ do
         if mod then
             local ok, text = pcall(function()
                 local name, data = mod:GetLinkData(feature)
-                local link = TRP3_API.ChatLink(name, data, mod:GetID())  -- almacena el enlace
+                local link = API.CachedChatLink(mod, name, data)  -- UN enlace por contenido
                 local id = link:GetIdentifier()
                 local player = (TRP3_API.globals and TRP3_API.globals.player_id)
                     or (GetUnitName and GetUnitName("player", true))
@@ -2619,15 +2659,18 @@ do
         return "|cff66bbff[" .. nm .. "]|r"
     end
 
-    -- Inserta la habilidad usando el propio modulo ChatLinks de TRP3. No construye texto
-    -- manualmente: asi Shift+click conserva el mismo comportamiento que un conjuro del
-    -- Compendio y que los enlaces nativos de TRP3.
+    -- Inserta la habilidad con el enlace CACHEADO (mod:InsertLink crearia otro por mencion y
+    -- alargaria el identificador): mismo marcador [TRP3:id] que insertaria TRP3.
     function API.InsertAbilityChatLink(feature)
         if not feature then return false end
         local mod = EnsureAbilModule()
-        if not mod or not mod.InsertLink then return false end
-        local ok = pcall(mod.InsertLink, mod, feature)
-        return ok
+        if not mod then return false end
+        local ok, link = pcall(function()
+            local name, data = mod:GetLinkData(feature)
+            return API.CachedChatLink(mod, name, data)
+        end)
+        if not ok or not link then return false end
+        return API.InsertChatLinkText(link)
     end
 end
 
@@ -2708,7 +2751,7 @@ do
         if mod then
             local ok, text = pcall(function()
                 local name, data = mod:GetLinkData(faction, standingText)
-                local link = TRP3_API.ChatLink(name, data, mod:GetID())
+                local link = API.CachedChatLink(mod, name, data)  -- UN enlace por contenido
                 local id = link:GetIdentifier()
                 local player = (TRP3_API.globals and TRP3_API.globals.player_id)
                     or (GetUnitName and GetUnitName("player", true))
@@ -2811,7 +2854,7 @@ do
         if mod then
             local ok, text = pcall(function()
                 local name, data = mod:GetLinkData(quest)
-                local link = TRP3_API.ChatLink(name, data, mod:GetID())
+                local link = API.CachedChatLink(mod, name, data)  -- UN enlace por contenido
                 local id = link:GetIdentifier()
                 local player = (TRP3_API.globals and TRP3_API.globals.player_id)
                     or (GetUnitName and GetUnitName("player", true))

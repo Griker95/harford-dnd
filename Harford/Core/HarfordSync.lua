@@ -1375,7 +1375,7 @@ end
 -- `label` es la que publicara LA VICTIMA: "Dano [Espada larga]". Va aqui porque solo ella conoce
 -- sus resistencias, asi que solo ella puede publicar el numero definitivo -- pero la linea tiene
 -- que salir con el nombre y el arma del ATACANTE, o en la mesa no se entiende de donde viene.
-function HarfordSync.SerializeDamage(components, isCritical, esMagico, label)
+function HarfordSync.SerializeDamage(components, isCritical, esMagico, label, attackerName)
     if type(components) ~= "table" then return nil end
     local partes, total = {}, 0
     for _, c in ipairs(components) do
@@ -1391,6 +1391,16 @@ function HarfordSync.SerializeDamage(components, isCritical, esMagico, label)
     -- suelta la cadena larga de estadisticas, que desbordaria el limite de ~255 bytes.
     label = (HarfordDnDRolls and HarfordDnDRolls.NetworkLabel
         and HarfordDnDRolls.NetworkLabel(label)) or tostring(label or "")
+    -- El nombre de DISPLAY del atacante (NPC de la ficha, o nombre RP) viaja PLEGADO en el campo
+    -- de etiqueta con un tabulador: la etiqueta debe ir ULTIMA (los enlaces llevan pipes), asi
+    -- que no cabe otro campo detras, y un cliente viejo que reciba esto solo ve un tab de mas.
+    -- Sin el, la victima ponia al REMITENTE como origen de la linea (el GM en vez de su NPC).
+    local atacante = tostring(attackerName or "")
+    if atacante ~= "" and label ~= "" then
+        atacante = (HarfordDnDRolls and HarfordDnDRolls.NetworkLabel
+            and HarfordDnDRolls.NetworkLabel(atacante)) or atacante
+        label = atacante .. "\t" .. label
+    end
     -- La etiqueta es lo unico recortable: los componentes son el dato. Si aun asi no cabe, se
     -- manda sin ella y la victima cae al comportamiento anterior (publicar solo si difiere).
     local function build(lbl)
@@ -1427,8 +1437,8 @@ function HarfordSync.DeserializeDamage(message)
     return out, crit == "C", mag == "M", (label ~= "" and label or nil)
 end
 
-function HarfordSync.SendDamage(prefix, target, components, isCritical, esMagico, label)
-    local payload = HarfordSync.SerializeDamage(components, isCritical, esMagico, label)
+function HarfordSync.SendDamage(prefix, target, components, isCritical, esMagico, label, attackerName)
+    local payload = HarfordSync.SerializeDamage(components, isCritical, esMagico, label, attackerName)
     if not payload then return false end
     return HarfordSync.Send(prefix, payload, "WHISPER", target)
 end

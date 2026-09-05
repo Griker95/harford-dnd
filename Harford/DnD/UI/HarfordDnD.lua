@@ -1405,6 +1405,18 @@ end
 -- El atacante ya no decide nada de esto: manda cuanto y de que tipo.
 local function ApplyIncomingDamage(components, isCritical, sender, esMagico, etiqueta)
     if type(components) ~= "table" or #components == 0 then return false end
+    -- El nombre de DISPLAY del atacante viaja PLEGADO en la etiqueta con un tabulador: sin el,
+    -- la linea salia con el REMITENTE como origen — un ataque de NPC desde la ficha aparecia
+    -- "de" el personaje del GM en vez del NPC, y un jugador salia con su nombre de WoW en vez
+    -- del RP. Un mensaje de cliente anterior no lleva tab y cae al remitente como siempre.
+    local atacante
+    if etiqueta and etiqueta ~= "" then
+        local a, resto = etiqueta:match("^(.-)\t(.*)$")
+        if a and resto and resto ~= "" then
+            atacante = (a ~= "" and a) or nil
+            etiqueta = resto
+        end
+    end
     -- Cada componente se mitiga con SU tipo: se puede ser resistente a uno y vulnerable a otro.
     local total, detalle = 0, {}
     local bruto, mitigado = 0, false
@@ -1456,7 +1468,7 @@ local function ApplyIncomingDamage(components, isCritical, sender, esMagico, eti
         -- desaparece es la linea de correccion que venia detras.
         HarfordDnDRolls.Broadcast({
             type = "damage", label = etiqueta, total = total, dice = "",
-            player = sender,
+            player = atacante or sender,
             modifiers = table.concat(partes, "  "),
             critical = isCritical and "CRITICO" or "", mode = "",
         })

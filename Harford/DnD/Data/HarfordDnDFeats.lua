@@ -398,7 +398,7 @@ API.FEATS = {
     {
         id = "feat_maestro_escudos", icon = "inv_shield_06", name = "Maestro en escudos", description = "El escudo también golpea: derribas y te cubres de lo que estalla.", source = "PHB",
         traits = {
-            { id = "feat_phb_escudos", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", grantsAsBonus = { "empujar" }, description = "Con escudo: al usar la acción de Atacar, acción adicional para empujar con el escudo a 1,5 m. Sumas el bono de CA del escudo a salvaciones de Destreza contra efectos que solo te afecten a ti.", effects = { { kind = "flag", flag = "shieldMasterSave" } } },
+            { id = "feat_phb_escudos", icon = "inv_scroll_11", name = "Maestro en escudos", type = "pasivo", grantsAsBonus = { "empujar" }, description = "Con escudo: al usar la acción de Atacar, acción adicional para empujar con el escudo a 1,5 m. Sumas el bono de CA del escudo a salvaciones de Destreza contra efectos que solo te afecten a ti.", effects = { { kind = "flag", flag = "shieldMasterSave" } } },
             { id = "feat_phb_escudos_abrigo", icon = "inv_shield_06", name = "Abrigo del escudo", type = "reaccion", cast = "reaccion", reactionTrigger = "dex_save_damage", reactionEffect = "no_damage", description = "Prepárala: si superas una salvación de Destreza contra un efecto que hace mitad de daño al superarla, usas tu reacción para no recibir ningún daño, interponiendo el escudo.", effects = {} },
         },
     },

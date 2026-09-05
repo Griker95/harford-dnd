@@ -643,6 +643,15 @@ local function InsertTRP3SpellChatLink(spell)
         PrintMessage("TRP3 no esta disponible para crear el enlace publico del conjuro.")
         return
     end
+    -- Con el enlace CACHEADO: module:InsertLink crearia otro por mencion y alargaria el
+    -- identificador. Si el cache no esta (TRP3 a medias), cae al InsertLink de siempre.
+    if HarfordTRP3 and HarfordTRP3.CachedChatLink and HarfordTRP3.InsertChatLinkText then
+        local ok, link = pcall(function()
+            local name, data = module:GetLinkData(spell)
+            return HarfordTRP3.CachedChatLink(module, name, data)
+        end)
+        if ok and link and HarfordTRP3.InsertChatLinkText(link) then return end
+    end
     module:InsertLink(spell)
 end
 
@@ -655,7 +664,11 @@ function API.GetSpellChatLink(spell)
     if module and TRP3_API and TRP3_API.ChatLink then
         local ok, text = pcall(function()
             local name, data = module:GetLinkData(spell)
-            local link = TRP3_API.ChatLink(name, data, module:GetID())
+            -- UN enlace por contenido: crear otro en cada mencion alargaba el identificador
+            -- ("Curar heridas123456789..."), porque StoreSentLink de TRP3 encadena numeros.
+            local link = (HarfordTRP3 and HarfordTRP3.CachedChatLink
+                and HarfordTRP3.CachedChatLink(module, name, data))
+                or TRP3_API.ChatLink(name, data, module:GetID())
             local id = link:GetIdentifier()
             local player = (TRP3_API.globals and TRP3_API.globals.player_id)
                 or (GetUnitName and GetUnitName("player", true))

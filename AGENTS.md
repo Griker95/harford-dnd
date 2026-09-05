@@ -440,6 +440,27 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   mitad-al-exito con daño, la preparada salta, cobra la reaccion y deja el daño en CERO — vale
   contra AREAS tambien (RAW: el escudo se interpone ante la bola de fuego; el `single` solo lo
   exige el +CA). Candados en `turnos_economia` (marca GMA funcional) y `area_geometria`.
+- **El ORIGEN del daño a jugador viaja plegado en la etiqueta DNDDMG (2026-09-05)**: la victima
+  publica la linea definitiva, y sin el ponia al REMITENTE como origen — un ataque de NPC desde
+  la ficha salia "de" el personaje del GM ("Ashzynde Daño Zarzillo..." en vez de "Flor
+  corrompida..."), y un jugador salia con su nombre de WoW en vez del RP. El nombre de DISPLAY
+  del emisor (`HarfordDnDRolls.GetDisplayName()`: el NPC en modo ficha NPC, el RP coloreado si
+  no) va DELANTE de la etiqueta separado por un TABULADOR — la etiqueta debe ir ULTIMA en el
+  payload por los pipes de los enlaces, asi que no cabe otro campo detras. El receptor lo separa
+  y lo usa como `player` de la linea; un mensaje sin tab (cliente viejo) cae al remitente como
+  siempre. Punto unico de emision: `ApplyDamageToPlayerUnit` en HarfordDnDCombat. Candado en
+  `dano_payload`.
+- **Enlaces TRP3: UN enlace por CONTENIDO, no por mencion (2026-09-05, la noche del estreno)**:
+  `StoreSentLink` de TRP3 hace unico cada identificador ENCADENANDO numeros mientras exista
+  ("X"->"X1"->"X12"->"X123"...) y el identificador ES el texto visible del marcador `[TRP3:id]`.
+  Crear un `TRP3_API.ChatLink` NUEVO en cada mencion (cada anuncio de lanzamiento, cada intento,
+  cada insercion, cada composicion de etiqueta) alargaba la ristra hasta que el chat mostraba
+  "Curar heridas123456789101112..." — NO hacen falta 63 lanzamientos, 63 menciones bastan. La
+  cura: `HarfordTRP3.CachedChatLink(mod, name, data)` (cache por modulo+nombre+descripcion) en
+  TODOS los creadores (habilidad, faccion, quest, conjuro del compendio) y las inserciones con
+  el link cacheado (`InsertChatLinkText`) en vez de `mod:InsertLink`, que crearia otro. El cache
+  de estados (glanceLinkCache) ya deduplicaba por contenido y se queda como esta. Candado en
+  `enlaces_trp3` (cuenta las creaciones directas restantes: exactamente 2).
 - **Botones de daño = Daño Custom** (frame parametrizado por unidad): el frame de daño custom (`HarfordDnDStore.OpenCustomDamageFrame(applyUnit)`) acepta `applyUnit` (`"target"` o `"focus"`). `ApplyCustomDamage` valida esa unidad, mitiga contra ella (`RollCustomDamage(..., mitigationUnit)`) y aplica: `"focus"` → `HarfordDnDCombat.ApplyActionDamageToFocus` (**en nombre del NPC** porque la tirada usa el contexto NPC activo): focus = mi propio PJ → daño local (`HarfordDnDStore.ApplyLocalResourceDamage`); focus = otro jugador → RADJ; focus NPC → no aplica. `"target"` → `ApplyWeaponDamageToTarget`.
   - **Jugador**: el boton de daño es **siempre "Daño Custom"** (sin el toggle Shift): el daño de arma al impactar ya esta automatizado en `DoWeaponAttack`, asi que el boton solo abre el frame custom sobre `target`.
   - **Ficha NPC**: el boton `Atacar` se habilita **con un focus victima valido** (existe y no es el propio NPC = target); **SI se permite que el focus sea mi propio PJ** (el NPC puede atacar a mi personaje → daño/herida/defensa en local). El boton de daño pasa a ser **"Daño Custom"** sobre `focus`. El panel se refresca en `PLAYER_FOCUS_CHANGED`/`PLAYER_TARGET_CHANGED` (`RefreshSheetActionPanel`). El antiguo flujo de daño de accion al `target` (`onDamageRolled`/`SetNpcHealthDelta` desde el boton) se retira; el daño de ataque al focus jugador sigue siendo automatico al impactar.

@@ -132,4 +132,30 @@ chk("menu DM: el daño va por SendDamage",
 chk("menu DM: la curacion y el editor siguen por RADJ",
     menu:find('AdjustResourceForName(snapshot.name, "health", delta)', 1, true) ~= nil, true)
 
+-- ─── EL NOMBRE DEL ATACANTE VIAJA PLEGADO EN LA ETIQUETA (2026-09-05) ───────
+-- La victima publica la linea, y sin el ponia al REMITENTE como origen: un ataque de NPC desde
+-- la ficha salia "de" el personaje del GM. El nombre de display va delante de la etiqueta con
+-- un tabulador (la etiqueta debe ir ULTIMA por los pipes de los enlaces); un cliente viejo no
+-- manda tab y el receptor cae al remitente.
+print("El origen viaja con la etiqueta")
+local pAt = S(comps, false, false, "Daño Zarzillo", "Flor corrompida")
+local okAt = pAt:find("Flor corrompida\tDaño Zarzillo", 1, true) ~= nil
+if not okAt then fallos = fallos + 1 end
+print("  atacante plegado con tab " .. (okAt and "ok" or "FALLA"))
+local _, _, _, lblAt = D(pAt)
+local okRt = lblAt == "Flor corrompida\tDaño Zarzillo"
+if not okRt then fallos = fallos + 1 end
+print("  y sobrevive la ida y vuelta " .. (okRt and "ok" or "FALLA"))
+local pSin = S(comps, false, false, "Daño Zarzillo")
+local okSin = not pSin:find("\t", 1, true)
+if not okSin then fallos = fallos + 1 end
+print("  sin atacante no hay tab " .. (okSin and "ok" or "FALLA"))
+local dndSrc = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("el receptor separa el atacante y lo usa como origen",
+    dndSrc:find('local a, resto = etiqueta:match("^(.-)\\t(.*)$")', 1, true) ~= nil
+    and dndSrc:find("player = atacante or sender,", 1, true) ~= nil, true)
+local combatSrc = io.open("Harford/DnD/Engine/HarfordDnDCombat.lua"):read("*a")
+chk("el emisor manda su nombre de display (NPC en ficha NPC)",
+    combatSrc:find("HarfordDnDRolls.GetDisplayName() or nil) and true or false", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

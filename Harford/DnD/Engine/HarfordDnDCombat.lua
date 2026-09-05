@@ -478,8 +478,13 @@ local function ApplyDamageToPlayerUnit(unit, components, isCritical, opts)
     local name = HarfordClassColors.UnitFullName(unit)
     if not name or name == "" then return false end
     if not (HarfordSync and HarfordSync.SendDamage) then return false end
+    -- El nombre de DISPLAY del atacante viaja con la etiqueta: la victima publica la linea y sin
+    -- el ponia al REMITENTE como origen — un ataque de NPC desde la ficha salia "de" el personaje
+    -- del GM ("esta apareciendo como origen el GM y no el NPC"). GetDisplayName ya resuelve el
+    -- nombre del NPC en modo ficha NPC y el nombre RP en jugadores.
     return HarfordSync.SendDamage(ADDON_PREFIX, name, components, isCritical,
-        opts and opts.magical, opts and opts.label) and true or false
+        opts and opts.magical, opts and opts.label,
+        HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName() or nil) and true or false
 end
 
 -- Va a publicar la victima su propia linea de dano? Solo si es un jugador que corre Harford, y eso

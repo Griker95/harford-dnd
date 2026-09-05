@@ -3994,18 +3994,17 @@ Compatibilidad, que es donde esto se puede volver a romper en silencio:
   `movementCostDouble` + helper `IsMovementDoubled`) dobla el GASTO contado por muestra: es gasto,
   no velocidad, asi que con la mitad se ACUMULAN (un cuarto util). Candados en `calc` (bloque del
   muro) y `tira_estados`.
-- **`/harfordcombat` (2026-09-05, sustituye al primer diseño "de un ciclo")**: gestos de combate
-  del jugador. `libre` ALTERNA el modo libre PERSISTENTE: guarda la CASA en `API.ModoLibreCasa`
-  — APARTE del ancla del muro, que los reinicios de turno pisan — y deja moverse sin gasto ni
-  muro, en tu turno o el ajeno, SIN que el cambio de turno te devuelva ni lo apague (el TP de
-  vuelta automatico queda SOLO para el DM dirigiendo); el contador no arranca ni en tu turno
-  (`ArrancarSeguimiento` lo salta salvo a mano, que sigue midiendo). `posicion` teletransporta a
-  la casa a peticion, sigas en libre o no. `stop` = salir LOCALMENTE del modo combate (SUSTITUYE
-  a `/harford combatstop`, que ahora solo apunta al nuevo). Apagar libre (repetir `libre`) te
-  deja donde estas: en TU turno reanuda el contador desde ahi (lo roameado no se cobra) y en
-  turno ajeno re-ancla el muro en tu posicion. El fin de combate recoge modo y casa.
-  `/harford libre` queda como alternador compatible. Candados en `calc` (bloque del muro) y
-  `bandos_turnos` (stop local).
+- **`/harfordcombat` (2026-09-05)**: gestos de combate del jugador. `libre` ALTERNA el modo
+  libre: guarda la CASA en `API.ModoLibreCasa` — APARTE del ancla del muro, que los reinicios de
+  turno pisan — y deja moverse sin gasto ni muro durante los turnos AJENOS. **Al empezar TU
+  turno se apaga solo pero SIN devolverte** (tercera iteracion de mesa: ni "un ciclo con TP" ni
+  "persistente"): juegas desde donde estas, y volver es siempre `posicion`, que teletransporta a
+  la casa a peticion — la casa se conserva justo para eso y solo se recoge fuera de combate. El
+  TP automatico al empezar el turno queda SOLO para el DM dirigiendo. Repetir `libre` tambien lo
+  para (en TU turno reanuda el contador desde ahi; en turno ajeno re-ancla el muro en tu
+  posicion). `stop` = salir LOCALMENTE del modo combate (SUSTITUYE a `/harford combatstop`, que
+  ahora solo apunta al nuevo). `/harford libre` queda como alternador compatible. Candados en
+  `calc` (bloque del muro) y `bandos_turnos` (stop local).
 - **El DM dirigiendo (Admin + `.ph dm`, DENTRO de la lista como PJ) TAMBIEN ancla al perder el
   turno (2026-09-05)**: `AnclarPorTurnoAjeno` le saltaba entero (`return` antes de capturar), y
   eso rompia su flujo por los DOS lados — sin ancla, `ReiniciarPorTurno` no tenia a donde

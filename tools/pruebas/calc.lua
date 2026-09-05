@@ -660,13 +660,12 @@ chk("y ANTES de que Correr doble",
 chk("terreno dificil dobla el gasto contado",
     ataque:find('HarfordDnDConditions.IsMovementDoubled("player") then\n                avance = avance * 2', 1, true) ~= nil, true)
 
--- `/harfordcombat`: modo libre PERSISTENTE (decision de mesa 2026-09-05, sustituye al "un
--- ciclo" del primer intento). `libre` guarda la CASA (aparte del ancla del muro, que los
--- reinicios de turno pisan) y deja moverse sin gasto ni muro SIN que el cambio de turno
--- devuelva ni apague; `posicion` teletransporta a la casa a peticion; `stop` lo para donde
--- estes (re-anclando en turno ajeno para que el muro vuelva a valer). El fin de combate lo
--- recoge todo.
-print("Modo libre persistente: libre / posicion / stop")
+-- `/harfordcombat libre`: la CASA se guarda aparte del ancla del muro (que los reinicios de
+-- turno pisan) y te mueves sin gasto ni muro durante los turnos AJENOS. Al empezar TU turno se
+-- apaga solo pero SIN devolverte — volver es siempre `posicion`, que teletransporta a la casa a
+-- peticion. Repetir `libre` tambien lo para (re-anclando en turno ajeno para que el muro vuelva
+-- a valer). El fin de combate recoge modo y casa.
+print("Modo libre: libre / posicion, apagado en tu turno sin TP")
 chk("la vigilancia salta al modo libre",
     ataque:find("and not DirigiendoLaEscena() and not API.ModoLibre then", 1, true) ~= nil, true)
 chk("el cambio de turno no lo ancla",
@@ -677,8 +676,10 @@ chk("la casa vive aparte del ancla del muro",
     ataque:find("API.ModoLibreCasa = API.ModoLibreCasa or API.RecordedMovementAnchor or CapturarAncla()", 1, true) ~= nil, true)
 chk("el turno NO te devuelve: el TP de vuelta es solo del DM",
     ataque:find("if API.RecordedMovementAnchor and DirigiendoLaEscena() and EnCombate() then", 1, true) ~= nil, true)
-chk("solo el fin de combate lo recoge",
-    ataque:find("if API.ModoLibre and not EnCombate() then", 1, true) ~= nil, true)
+chk("TU turno lo apaga sin devolverte",
+    ataque:find("Modo libre terminado: es tu turno y juegas desde donde estas. ", 1, true) ~= nil, true)
+chk("y la casa solo se recoge fuera de combate",
+    ataque:find("if not EnCombate() then API.ModoLibreCasa = nil end", 1, true) ~= nil, true)
 chk("posicion vuelve a la casa por worldport",
     ataque:find("local ok, err = HarfordServerActions.WorldportSelf(casa, { addonName = \"Harford\" })", 1, true) ~= nil, true)
 chk("stop en turno ajeno re-ancla el muro donde estas",

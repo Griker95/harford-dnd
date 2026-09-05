@@ -923,13 +923,18 @@ function API.AttachMovementTracker(opts)
             totalMeters = 0
             lastX, lastY, lastZ = nil, nil, nil
         end
-        -- El modo libre es PERSISTENTE (decision de mesa 2026-09-05): el cambio de turno NI te
-        -- devuelve NI lo apaga — volver es /harfordcombat posicion y pararlo /harfordcombat stop.
-        -- La CASA se conserva mientras dure el combate; el fin de combate la recoge.
-        if API.ModoLibre and not EnCombate() then
+        -- El modo libre se APAGA al empezar TU turno — pero SIN devolverte (decision de mesa
+        -- 2026-09-05: no hay TP automatico; volver es siempre /harfordcombat posicion, y la casa
+        -- se conserva justo para eso). Durante los turnos ajenos sigue encendido.
+        if API.ModoLibre then
             API.ModoLibre = nil
-            API.ModoLibreCasa = nil
+            if EnCombate() then
+                HarfordChat.Print("Modo libre terminado: es tu turno y juegas desde donde estas. "
+                    .. "/harfordcombat posicion te devuelve a tu posicion guardada.")
+            end
         end
+        -- Fuera de combate la casa ya no apunta a nada util: se recoge.
+        if not EnCombate() then API.ModoLibreCasa = nil end
         -- El ancla del turno pasado ya no vale: volver ahi te devolveria un asalto entero atras.
         API.RecordedMovementAnchor = nil
         API.MovimientoSinMuro = nil
@@ -1050,12 +1055,12 @@ function API.AttachMovementTracker(opts)
         motor:SetScript("OnUpdate", OnUpdate)
     end
 
-    -- `/harfordcombat`: modo libre PERSISTENTE (decision de mesa 2026-09-05, sustituye al "un
-    -- ciclo" del primer intento). `libre` guarda tu CASA y te deja moverte sin gasto ni muro —
-    -- en tu turno o el ajeno — sin que el cambio de turno te devuelva ni lo apague. `posicion`
-    -- te teletransporta a la casa cuando quieras (sigas en libre o no). `stop` lo para y te
-    -- quedas donde estas. La casa vive APARTE del ancla del muro (`API.ModoLibreCasa`): asi los
-    -- reinicios de turno no la pisan, y se recoge sola al terminar el combate.
+    -- `/harfordcombat libre`: guarda tu CASA y te deja moverte sin gasto ni muro durante los
+    -- turnos AJENOS. Al empezar TU turno se apaga solo — SIN devolverte: juegas desde donde
+    -- estas, y volver es siempre `/harfordcombat posicion` (la casa se conserva justo para eso).
+    -- Repetir `libre` tambien lo para. La casa vive APARTE del ancla del muro
+    -- (`API.ModoLibreCasa`): asi los reinicios de turno no la pisan; se recoge al terminar el
+    -- combate.
     function API.ModoLibreOn()
         if API.ModoLibre then
             HarfordChat.Print("El modo libre ya estaba activo (repite /harfordcombat libre para pararlo).")
@@ -1073,8 +1078,9 @@ function API.AttachMovementTracker(opts)
         tracking = false
         button:SetText("Movimiento")
         API.ModoLibre = true
-        HarfordChat.Print("|cff88ff88Modo libre:|r te mueves sin gasto ni muro. /harfordcombat "
-            .. "posicion vuelve a tu posicion guardada; repite /harfordcombat libre para pararlo.")
+        HarfordChat.Print("|cff88ff88Modo libre:|r te mueves sin gasto ni muro hasta que empiece "
+            .. "tu turno (se apaga solo, SIN devolverte). /harfordcombat posicion vuelve a tu "
+            .. "posicion guardada; repetir /harfordcombat libre tambien lo para.")
     end
 
     function API.ModoLibreStop()

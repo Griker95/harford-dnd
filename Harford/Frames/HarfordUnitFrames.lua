@@ -5177,10 +5177,25 @@ do
                             if HarfordDnDMana.RecoverSpellSlot
                                 and HarfordDnDMana.RecoverSpellSlot(nivelFijo) then
                                 local c2, m2 = HarfordDnDMana.GetSpellSlotCurrent(nivelFijo)
-                                HarfordChat.Print(string.format(
-                                    "|cff88ff88Recuperas un espacio de nivel %d (%d/%d).|r", nivelFijo, c2 or 0, m2 or 0))
+                                -- A LA MESA, no solo local: recuperar un recurso es un evento
+                                -- que la raid debe ver (mismo trato que los desenlaces de Salv
+                                -- Muerte). El render info sale como "[D&D] Nombre <texto>".
+                                if HarfordDnDRolls and HarfordDnDRolls.Broadcast then
+                                    HarfordDnDRolls.Broadcast({ type = "info", label = string.format(
+                                        "recupera un espacio de conjuro de nivel %d (%d/%d).", nivelFijo, c2 or 0, m2 or 0) })
+                                else
+                                    HarfordChat.Print(string.format(
+                                        "|cff88ff88Recuperas un espacio de nivel %d (%d/%d).|r", nivelFijo, c2 or 0, m2 or 0))
+                                end
                                 if HarfordDnDStore and HarfordDnDStore.RefreshMainUI then
                                     HarfordDnDStore.RefreshMainUI()
+                                end
+                                -- Los orbes de espacios sobre la barra nativa (HarfordActionBars,
+                                -- config `actionbar`) no cuelgan del refresh de la ficha: al
+                                -- gastar los repinta el listener de la economia (el lanzamiento
+                                -- gasta accion), pero recuperar no gasta nada — repintar aqui.
+                                if HarfordActionBars and HarfordActionBars.RefreshTurnEconomy then
+                                    HarfordActionBars.RefreshTurnEconomy()
                                 end
                             else
                                 HarfordChat.Print("No tenías gastado ningún espacio de nivel " .. nivelFijo .. ".")

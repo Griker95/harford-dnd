@@ -612,6 +612,9 @@ local COMM_PREFIX = "HARFORDQUEST"
 
 local function DebugObjectiveSync(message)
     if not _G.HARFORD_QOBJ_DEBUG then return end
+    -- Salida de DEBUG de verdad (solo existe con HARFORD_QOBJ_DEBUG puesto a mano): conserva el
+    -- prefijo [HarfordDebug] y el print global, con la misma excepcion de la norma de chat que
+    -- el addon HarfordDebug. No migrar a HarfordChat.Print: doblaria el prefijo.
     if print then
         print("|cff88ccff[HarfordDebug]|r " .. tostring(message))
     end

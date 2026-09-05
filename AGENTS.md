@@ -127,6 +127,7 @@ Entorno objetivo:
 - Todo mensaje visible para usuario emitido por `Harford` o `HarfordAdmin`, incluidas tiradas, misiones, reputacion, loot y avisos de herramientas, debe pasar por `HarfordChat.Print` o `HarfordChat.Format`.
 - El prefijo unico es `|cff00ccff[Harford]|r`. Los colores de error, exito o resultado se aplican despues del prefijo, nunca creando etiquetas alternativas como `[D&D]`, `[HarfordAdmin]` o `[Mision compartida]`.
 - `HarfordDebug` es la unica excepcion: conserva `[HarfordDebug]` porque solo existe bajo diagnostico explicito.
+- **Patron de sombra local (no re-marcar en auditorias)**: `HarfordLoot`, `HarfordProfessions`, `HarfordQuestLog`, `HarfordWorldQuests` y `HarfordAdmin.lua` definen `local function print(...)` al principio del fichero que redirige a `HarfordChat.Print` — sus `print("...")` a pelo YA cumplen la norma. Un escaner ingenuo de "prints sueltos" los marca como violacion (paso en la revision de distribucion 2026-09-05: 7 supuestos hallazgos, 0 reales). Los usos legitimos del `print` GLOBAL en ficheros distribuidos son exactamente DOS: el fallback interno de `HarfordChat.Print` (HarfordChat.lua) y la salida de DEBUG gateada de `HarfordQuests` (`DebugObjectiveSync`, solo con `HARFORD_QOBJ_DEBUG` puesto a mano), que conserva el prefijo `[HarfordDebug]` a proposito — es debug de verdad y le aplica la misma excepcion de la norma que al addon HarfordDebug; migrarla a `HarfordChat.Print` doblaria el prefijo. Candado en `salida_chat` (escaner consciente de sombras y de debug declarado).
 
 ### Sonidos De Interfaz
 

@@ -661,11 +661,29 @@ function API.AttachMovementTracker(opts)
     -- tarda en responder al `worldport`, y sin el se mandaria uno por muestra --veinte por
     -- segundo-- mientras el primero esta de camino.
     local ultimoTiron = 0
+    -- ¿Estas de verdad LEJOS del ancla? Sin esta guardia el muro tiraba de ti cada 0,6 s aunque
+    -- estuvieras QUIETO encima del ancla: el worldport continuo tenia al PJ "saltando" todo el
+    -- turno ajeno y, como worldport tambien fija la orientacion, no dejaba ni girar el
+    -- personaje. Girar no cambia la posicion, asi que con la guardia queda libre. Se compara
+    -- contra C_Epsilon.GetPosition, la MISMA fuente con la que se capturo el ancla (UnitPosition
+    -- vive en otro sistema de coordenadas). Umbral ~1,8 m: tolera el jitter del servidor y un
+    -- salto en el sitio, y sigue parando cualquier paso real.
+    local function LejosDelAncla(ancla)
+        if not (C_Epsilon and C_Epsilon.GetPosition) then return true end
+        local ok, x, y, z = pcall(C_Epsilon.GetPosition)
+        x, y = tonumber(x), tonumber(y)
+        if not ok or not x or not y then return true end
+        local dx = x - (tonumber(ancla.x) or 0)
+        local dy = y - (tonumber(ancla.y) or 0)
+        local dz = (tonumber(z) or 0) - (tonumber(ancla.z) or 0)
+        return (dx * dx + dy * dy + dz * dz) > 4  -- 2 yardas (~1,8 m) al cuadrado
+    end
     local function Anclar()
         local ancla = API.RecordedMovementAnchor
         if not ancla then return end
         local ahora = (GetTime and GetTime()) or 0
         if ahora - ultimoTiron < 0.6 then return end
+        if not LejosDelAncla(ancla) then return end
         if not (HarfordServerActions and HarfordServerActions.WorldportSelf) then return end
         ultimoTiron = ahora
         local ok, err = HarfordServerActions.WorldportSelf(ancla, { addonName = "Harford" })

@@ -586,6 +586,17 @@ chk("y vuelve a tirar si insistes",
 -- Con enfriamiento: el servidor tarda en responder al worldport y sin el se mandaria uno por
 -- muestra, veinte por segundo, mientras el primero esta de camino.
 chk("con enfriamiento", ataque:find("if ahora - ultimoTiron < 0.6 then return end", 1, true) ~= nil, true)
+-- Y SOLO si de verdad te alejaste: sin la guardia de distancia, el muro tiraba de ti cada 0,6 s
+-- aunque estuvieras QUIETO encima del ancla (el PJ "saltaba" todo el turno ajeno y el worldport,
+-- que fija orientacion, no dejaba ni girar). Se mide contra C_Epsilon.GetPosition, la misma
+-- fuente del ancla; girar no cambia la posicion y queda libre.
+chk("solo tira si estas lejos del ancla",
+    ataque:find("if not LejosDelAncla(ancla) then return end", 1, true) ~= nil, true)
+chk("midiendo contra la fuente del ancla",
+    ataque:find("local function LejosDelAncla(ancla)", 1, true) ~= nil
+    and ataque:find("local ok, x, y, z = pcall(C_Epsilon.GetPosition)", 1, true) ~= nil, true)
+chk("con umbral que tolera el jitter",
+    ataque:find("> 4  -- 2 yardas (~1,8 m) al cuadrado", 1, true) ~= nil, true)
 -- El enganche de soltar tecla se queda como RESPALDO, por si la ultima muestra no llego a verlo.
 chk("y el soltar la tecla queda de respaldo",
     ataque:find('"MoveForwardStop", "MoveBackwardStop",', 1, true) ~= nil, true)

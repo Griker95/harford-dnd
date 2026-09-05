@@ -3974,6 +3974,14 @@ Compatibilidad, que es donde esto se puede volver a romper en silencio:
   medio. Si sigues andando te devuelve otra vez -- no es un aviso de una sola vez --, con
   enfriamiento de 0.6 s porque el servidor tarda en responder al `worldport` y sin el se mandaria
   uno por muestra (veinte por segundo) mientras el primero esta de camino.
+- **Y SOLO si de verdad te has ALEJADO del ancla (guardia `LejosDelAncla`, 2026-09-05)**: sin la
+  guardia de distancia, fuera de tu turno `Anclar()` emitia el `worldport` cada 0,6 s aunque
+  estuvieras QUIETO encima del ancla -- el PJ se pasaba el turno ajeno "saltando" y, como
+  `worldport` fija tambien la orientacion, no dejaba NI GIRAR el personaje. La guardia mide
+  contra `C_Epsilon.GetPosition`, la MISMA fuente con la que se capturo el ancla (`UnitPosition`
+  vive en otro sistema de coordenadas: no mezclarlos), con umbral de 2 yardas (~1,8 m) que tolera
+  el jitter del servidor y un salto en el sitio. Girar no cambia la posicion, asi que queda libre.
+  Candado en `calc` (bloque del muro).
 - Los enganches de soltar tecla (`MoveForwardStop` y companeros) se quedan como **RESPALDO**, por
   si la ultima muestra no llego a ver el agotamiento. **`TurnOrActionStop` queda FUERA a
   proposito** -- es el giro de camara con el raton, y girar la vista no es moverse.

@@ -5160,6 +5160,39 @@ do
                 end },
             },
         }
+        -- Espacios de conjuro (solo con la mesa en modo slots): recuperar UNO a mano — pociones,
+        -- rasgos, dictados de mesa. Cada nivel ensena su cuenta y el click devuelve un espacio.
+        local compendio = _G.HarfordCompendioAPI
+        if compendio and compendio.GetSpellCostMode and compendio.GetSpellCostMode() == "slots"
+            and HarfordDnDMana and HarfordDnDMana.GetSpellSlotCurrent then
+            local espacios = {}
+            for nivel = 1, 9 do
+                local cur, maxi = HarfordDnDMana.GetSpellSlotCurrent(nivel)
+                if (maxi or 0) > 0 then
+                    local nivelFijo = nivel
+                    espacios[#espacios + 1] = {
+                        text = string.format("Espacios %dº %d/%d", nivelFijo, cur or 0, maxi),
+                        notCheckable = true,
+                        func = function()
+                            if HarfordDnDMana.RecoverSpellSlot
+                                and HarfordDnDMana.RecoverSpellSlot(nivelFijo) then
+                                local c2, m2 = HarfordDnDMana.GetSpellSlotCurrent(nivelFijo)
+                                HarfordChat.Print(string.format(
+                                    "|cff88ff88Recuperas un espacio de nivel %d (%d/%d).|r", nivelFijo, c2 or 0, m2 or 0))
+                                if HarfordDnDStore and HarfordDnDStore.RefreshMainUI then
+                                    HarfordDnDStore.RefreshMainUI()
+                                end
+                            else
+                                HarfordChat.Print("No tenías gastado ningún espacio de nivel " .. nivelFijo .. ".")
+                            end
+                        end,
+                    }
+                end
+            end
+            if #espacios > 0 then
+                menu[#menu + 1] = { text = "Conjuros", notCheckable = true, hasArrow = true, menuList = espacios }
+            end
+        end
         return menu
     end
 

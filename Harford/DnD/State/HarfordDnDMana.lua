@@ -257,6 +257,27 @@ function API.SpendSpellSlot(spellLevel, profileName)
 end
 
 
+-- Recupera UN espacio del nivel, a mano (gesto del engranaje: pociones, rasgos, dictados de
+-- mesa). Primero el gasto NORMAL — el de pacto vuelve solo con el descanso corto —; si solo hay
+-- gasto de pacto, se recupera ese. Devuelve false si no habia nada gastado.
+function API.RecoverSpellSlot(spellLevel, profileName)
+    spellLevel = math.floor(tonumber(spellLevel) or 0)
+    if spellLevel <= 0 then return false end
+    if not (HarfordDnDProgression and HarfordDnDProgression.GetSpellSlotsSpent) then return false end
+    local spent = HarfordDnDProgression.GetSpellSlotsSpent(spellLevel, profileName) or 0
+    if spent > 0 then
+        HarfordDnDProgression.SetSpellSlotsSpent(spellLevel, spent - 1, profileName)
+        return true
+    end
+    local pactSpent = API.GetPactSpent(spellLevel, profileName)
+    if pactSpent > 0 and HarfordDnDProgression.SetPactSpent and HarfordDnDProgression.GetPactSpent then
+        HarfordDnDProgression.SetPactSpent(
+            math.max(0, HarfordDnDProgression.GetPactSpent(profileName) - 1), profileName)
+        return true
+    end
+    return false
+end
+
 -- LANZAMIENTO FLEXIBLE / DEVOCION: puntos <-> espacios de conjuro.
 --
 -- Mago (puntos de hechiceria) y Sacerdote (puntos de fe) tienen la MISMA mecanica con distinto

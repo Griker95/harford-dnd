@@ -262,5 +262,14 @@ chk("y la seccion Combate con los tres gestos de /harfordcombat",
 chk("mas el tope de movimiento manual con su dialogo",
     uf:find('StaticPopupDialogs["HARFORD_MOVE_MAX"] = {', 1, true) ~= nil
     and uf:find("HarfordDnDAttackUI.SetMovementMaxOverride", 1, true) ~= nil, true)
+-- Conjuros (solo en modo slots): "Espacios Nº X/Y" por nivel; el click recupera UNO. La
+-- recuperacion devuelve primero el gasto NORMAL (el de pacto vuelve con el descanso corto).
+chk("y Conjuros recupera espacios en modo slots",
+    uf:find("compendio.GetSpellCostMode() == \"slots\"", 1, true) ~= nil
+    and uf:find('string.format("Espacios %dº %d/%d", nivelFijo, cur or 0, maxi)', 1, true) ~= nil
+    and uf:find("HarfordDnDMana.RecoverSpellSlot(nivelFijo) then", 1, true) ~= nil, true)
+chk("RecoverSpellSlot devuelve primero el gasto normal",
+    io.open("Harford/DnD/State/HarfordDnDMana.lua"):read("*a")
+        :find("HarfordDnDProgression.SetSpellSlotsSpent(spellLevel, spent - 1, profileName)", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

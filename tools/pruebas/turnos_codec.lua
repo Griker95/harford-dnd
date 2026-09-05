@@ -254,8 +254,17 @@ chk("ancla FRESCA en la posicion del cambio",
     atk:find("local ancla = CapturarAncla()", 1, true) ~= nil, true)
 chk("e instala el motor aunque nunca arrancara",
     atk:find('motor:SetScript("OnUpdate", OnUpdate)', 1, true) ~= nil, true)
-chk("el DM dirigiendo queda fuera",
-    atk:find("if LlevandoNpc() or DirigiendoLaEscena() then return end", 1, true) ~= nil, true)
+-- El DM dirigiendo TAMBIEN ancla y para el contador (2026-09-05): antes salia antes de capturar
+-- y eso le dejaba sin TP de vuelta al empezar su turno Y con el contador contandole el roaming
+-- (el muro de agotamiento le tironeaba en el turno enemigo). De la vigilancia le libra el guard
+-- del OnUpdate; el TP de vuelta vive en ReiniciarPorTurno.
+chk("solo el NPC poseido queda fuera del anclado",
+    atk:find("if LlevandoNpc() then return end", 1, true) ~= nil
+    and atk:find("if LlevandoNpc() or DirigiendoLaEscena() then return end", 1, true) == nil, true)
+chk("la vigilancia si salta al DM",
+    atk:find("and not DirigiendoLaEscena() then", 1, true) ~= nil, true)
+chk("y al empezar su turno se le devuelve al ancla",
+    atk:find("if API.RecordedMovementAnchor and DirigiendoLaEscena() and EnCombate() then", 1, true) ~= nil, true)
 
 -- ─── EL "NO" DE UNIRSE SE CONTESTA ──────────────────────────────────────────
 -- "Te unes al combate" era optimista: se imprimia al PEDIR. Si el DM no podia meterte, tu unica

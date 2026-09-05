@@ -130,9 +130,10 @@ function API.CheckDistance(distanceMeters, range)
     local normal = tonumber(range.normalMeters)
     local long = tonumber(range.longMeters) or normal
     if range.requiresContact then
-        -- `.distance` responde cero al tocar el hitbox. La tolerancia minima solo
-        -- protege de residuos de coma flotante; no crea un alcance de 1,5 metros.
-        if distanceMeters <= 0.01 then
+        -- Melee corriente: borde del hitbox + 1 yarda. Toque conserva contacto.
+        -- No sumar la tolerancia de contacto al alcance de melee.
+        local limite = range.kind == "melee" and API.METROS_POR_YARDA or 0.01
+        if distanceMeters <= limite then
             return { ok = true, meters = distanceMeters, range = range }
         end
         return {
@@ -140,7 +141,9 @@ function API.CheckDistance(distanceMeters, range)
             outOfRange = true,
             meters = distanceMeters,
             range = range,
-            message = "Debes estar en contacto con el objetivo para atacar cuerpo a cuerpo.",
+            message = range.kind == "melee"
+                and "Objetivo fuera de alcance cuerpo a cuerpo (hitbox + 1 yarda)."
+                or "Debes estar en contacto con el objetivo.",
         }
     end
     if distanceMeters <= normal + 0.01 then

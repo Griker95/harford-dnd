@@ -137,7 +137,7 @@ function HarfordDnDWeapons.GetAttackRange(def, attackMode)
     end
     if not hasProp("Alcance") then
         -- En Epsilon el hitbox ya expresa el contacto real entre ambos modelos.
-        -- Un arma melé corriente no alcanza a distancia: debe devolver exactamente 0.
+        -- El gate comun permite 1 yarda desde ese borde para un arma melee corriente.
         return { kind = "melee", normalMeters = 0, longMeters = 0, requiresContact = true }
     end
     return {

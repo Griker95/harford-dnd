@@ -398,7 +398,59 @@ chk("y todas las razas van en metros", fuera, 0)
 -- El contador tiene que decir cuanto te QUEDA: un numero suelto no dice si te has pasado, que es
 -- lo unico que la mesa necesita saber. Y reiniciarse al empezar tu turno, o no significa nada.
 local ataque = io.open("Harford/DnD/UI/HarfordDnDAttackUI.lua"):read("*a")
+-- GetUnitSpeed devuelve varias velocidades. Si se pasan todas a tonumber,
+-- la segunda se interpreta como BASE numerica: 8 deja de ser una velocidad.
+-- Ejecutar la rama real del contador con los retornos completos del cliente.
+do
+    local inicio = assert(ataque:find('            local v = GetUnitSpeed', 1, true))
+    local fin = assert(ataque:find('\n        else', inicio, true))
+    local medir = assert(cargar('local trozo = 0.1; local avance\n'
+        .. ataque:sub(inicio, fin - 1) .. '\nreturn avance or 0'))
+    local previo = GetUnitSpeed
+    for _, caso in ipairs({
+        { pet = 8, player = 0, esperado = 0.7, nombre = "NPC andando con cuatro retornos" },
+        { pet = 0, player = 0, esperado = 0, nombre = "NPC quieto no gasta metros" },
+        { pet = 0, player = 8, esperado = 0.7, nombre = "respaldo player conserva primer retorno" },
+    }) do
+        GetUnitSpeed = function(unit)
+            return caso[unit] or 0, 7, 7, 4.72
+        end
+        local ok, metros = pcall(medir)
+        chk(caso.nombre .. " sin error", ok, true)
+        chk(caso.nombre, ok and string.format("%.1f", metros or 0) or "error",
+            string.format("%.1f", caso.esperado))
+    end
+    GetUnitSpeed = previo
+end
 print("Y el contador lo usa")
+-- Superar el tope del NPC no lo bloquea ni suelta su posesion.
+do
+    local inicio = assert(ataque:find("        local tope = MaximoDelTurno()\n        if EnCombate()", 1, true))
+    local fin = assert(ataque:find("        API.RecordedMovementInfo =", inicio, true))
+    local fuente = "return function(API, totalMeters, EnCombate, DirigiendoLaEscena, HarfordServerActions, HarfordChat)\n"
+        .. "local function MaximoDelTurno() return 9 end\n"
+        .. "local function LlevandoNpc() return true end\n"
+        .. ataque:sub(inicio, fin - 1) .. "\nend"
+    local cerrar = assert(cargar(fuente))()
+    local si, no = function() return true end, function() return false end
+    local estado, envios, avisos, callback = {}, 0, 0
+    local server = { UnpossessCurrentNpc = function(opts)
+        envios = envios + 1; callback = opts.callback; return true
+    end }
+    local chat = { Print = function() avisos = avisos + 1 end }
+    cerrar(estado, 8.9, si, si, server, chat)
+    chk("antes del limite no suelta", envios, 0)
+    cerrar(estado, 9, no, si, server, chat)
+    chk("fuera de combate no suelta", envios, 0)
+    cerrar(estado, 9, si, si, server, chat)
+    cerrar(estado, 10, si, si, server, chat)
+    chk("al agotarse no suelta la posesion", envios, 0)
+    chk("no pide soltar la posesion", avisos, 0)
+    cerrar({}, 9, si, no, server, chat)
+    chk("sin autoridad DM no envia", envios, 0)
+    chk("fin de sesion NPC no ancla al jugador",
+        ataque:find("API.RecordedMovementAnchor = not sesionNpc and CapturarAncla() or nil", 1, true) ~= nil, true)
+end
 chk("muestra llevado y tope", ataque:find('"%s%.1f|r / %.1f m"', 1, true) ~= nil, true)
 chk("avisa si te pasas", ataque:find("(se pasa ", 1, true) ~= nil, true)
 chk("se reinicia en tu turno",
@@ -475,8 +527,7 @@ chk("gasto a ritmo fijo de Atlas (7 m/s)",
     ataque:find("avance = 7 * trozo", 1, true) ~= nil, true)
 -- Detector en `pet` y, si da cero, en `player`: en algunos clientes la orden de movimiento de
 -- la posesion se expone en el cuerpo del jugador. Solo DETECTA: el gasto sigue siendo fijo.
-chk("detector con respaldo en player",
-    ataque:find('v = GetUnitSpeed and tonumber(GetUnitSpeed("player")) or 0', 1, true) ~= nil, true)
+-- El respaldo player se ejecuta con retornos multiples en el candado de arriba.
 -- Las sesiones no se mezclan: la del jugador se corta y reinicia como NPC al poseer (el gasto
 -- del NPC caia en la barra del PLAYER), y la del NPC se corta al des-poseer (el ritmo fijo
 -- seguiria descontando mientras el DM anda libre).
@@ -632,5 +683,22 @@ chk("solo si con el doble vuelve a caber",
 local panel2 = (io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a") .. io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a"))
 chk("y la accion lo enciende",
     panel2:find("HarfordDnDAttackUI.SetDashActive(true)", 1, true) ~= nil, true)
+
+-- La unidad pertenece a la cifra, no a toda la descripcion: "a pie" no son pies.
+do
+    local srcNpc = io.open("HarfordAdmin/HarfordAdminNPC.lua"):read("*a")
+    local inicio = assert(srcNpc:find("local function GetNpcMovementMeters(parsed)", 1, true))
+    local fin = assert(srcNpc:find("\nfunction API.UpdateNpcSheetArmorClass", inicio, true))
+    local leer = assert(cargar(srcNpc:sub(inicio, fin - 1) .. "\nreturn GetNpcMovementMeters"))()
+    chk("9 m a pie no son 9 pies", leer({ speed = "9 m a pie" }), 9)
+    chk("otra velocidad en pies no cambia caminar", leer({ speed = "9 metros, vuelo 30 pies" }), 9)
+    chk("30 pies se convierten", leer({ speed = "30 pies" }), 30 * 0.3048)
+    chk("30 ft se convierten", leer({ speed = "30 ft." }), 30 * 0.3048)
+    chk("30 feet se convierten", leer({ speed = "30 feet" }), 30 * 0.3048)
+    chk("decimal con coma", leer({ speed = "7,5 m a pie" }), 7.5)
+    chk("velocidad de tabla", leer({ speed = { walk = "9 m a pie" } }), 9)
+    chk("sin unidad conserva metros", leer({ speed = 9 }), 9)
+    chk("sin cifra no inventa velocidad", leer({ speed = "desconocida" }), nil)
+end
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -262,7 +262,7 @@ Coste y cobertura de conjuros:
 
 - `HarfordConfig.spell_cost_mode` es global: `mana` (predeterminado) o `slots`. En `slots`, `HarfordDnDMana` es la unica fuente de maximos y gasto, y `HarfordDnDProgression.spellSlots` solo persiste los espacios gastados por nivel; el descanso largo los reinicia. No reintroducir el antiguo flag por perfil `useMana` ni tablas de coste paralelas.
 - Ataques de conjuro simples y salvaciones con daño pasan por `HarfordDnDArea`, con CA/salvación/mitigación calculada por el defensor. Si un ataque requiere además una salvación contra una condición (ej. Rayo de Enfermedad), conserva el ataque inicial y el receptor resuelve `conditionApplySaveAbility/DC` antes de aplicar la condición. No auto-resolver múltiples proyectiles, explosiones por fases, daño recurrente ni riders de ataque de arma: necesitan resolvedor propio para no falsear objetivos, impactos o costes.
-- **Distancia y alcance (2026-09-04):** `HarfordDnDRange` es la puerta unica para medir alcance. Consulta `.distance` por `EpsilonLib.AddonCommands` con `forceEpsilon`, conserva el GUID del target y cancela si cambia o la respuesta no se puede leer; nunca gastar accion, mana o usos antes de esa respuesta. La salida confirmada de Epsilon es `Hitbox distance ... in 3D ... Exact distance ... in 3D`, ambas en yardas y convertidas una vez a metros (`0.9144`). Un hitbox a `0` es contacto: armas melé corrientes y conjuros de `Toque` exigen ese valor (solo se tolera `0,01 m` por coma flotante). **Todo alcance numerico** -- `Alcance`, `Municion`, `Arrojadiza` y conjuros a distancia o de area -- se compara con la **exacta 3D**. `Alcance` llega a 10 pies (`3,048 m`); el tramo largo permite atacar con desventaja y fuera del maximo bloquea. Una arma arrojadiza equipada NO se arroja automaticamente: requiere un modo explicito de UI. `.npc info` y `.gps` confirman las coordenadas para areas: jugador y receptores usan `C_Epsilon.GetPosition()` (X/Y/Z+mapa), mientras un NPC origen usa `.npc info` para X/Y/Z y adopta el mapa actual porque sigue seleccionado. El motor conserva solo el mapa en `contextId`; la fase no participa en el calculo ni en el marcado. Conjuros interpretan `range` textual (`metros`, `pies`, `Toque`, `Personal`); las areas numericas usan el target como punto de referencia antes de abrir el selector. `HarfordDebug rangeprobe` muestra la respuesta literal y ambas medidas interpretadas.
+- **Distancia y alcance (2026-09-04):** `HarfordDnDRange` es la puerta unica para medir alcance. Consulta `.distance` por `EpsilonLib.AddonCommands` con `forceEpsilon`, conserva el GUID del target y cancela si cambia o la respuesta no se puede leer; nunca gastar accion, mana o usos antes de esa respuesta. La salida confirmada de Epsilon es `Hitbox distance ... in 3D ... Exact distance ... in 3D`, ambas en yardas y convertidas una vez a metros (`0.9144`). Melee corriente (2026-09-05): permite hitbox + 1 yarda (0,9144 m desde el borde), sin sumar tolerancia adicional. Los conjuros de Toque conservan contacto (0,01 m de tolerancia). Candado: tools/pruebas/armas_xp.lua. **Todo alcance numerico** -- `Alcance`, `Municion`, `Arrojadiza` y conjuros a distancia o de area -- se compara con la **exacta 3D**. `Alcance` llega a 10 pies (`3,048 m`); el tramo largo permite atacar con desventaja y fuera del maximo bloquea. Una arma arrojadiza equipada NO se arroja automaticamente: requiere un modo explicito de UI. `.npc info` y `.gps` confirman las coordenadas para areas: jugador y receptores usan `C_Epsilon.GetPosition()` (X/Y/Z+mapa), mientras un NPC origen usa `.npc info` para X/Y/Z y adopta el mapa actual porque sigue seleccionado. El motor conserva solo el mapa en `contextId`; la fase no participa en el calculo ni en el marcado. Conjuros interpretan `range` textual (`metros`, `pies`, `Toque`, `Personal`); las areas numericas usan el target como punto de referencia antes de abrir el selector. `HarfordDebug rangeprobe` muestra la respuesta literal y ambas medidas interpretadas.
 
 Contrato `HarfordEpsilonCommands`:
 
@@ -3965,10 +3965,12 @@ Compatibilidad, que es donde esto se puede volver a romper en silencio:
   (`API.TurnStartAnchor`), a la que se vuelve A MANO con click derecho en el boton -- deshace el
   turno entero y pone el contador a cero --, y la del AGOTAMIENTO (`API.RecordedMovementAnchor`),
   que es a donde te devuelve el muro. Las dos se olvidan al empezar el turno siguiente.
-- **Al NPC NO se le pone muro, solo se le cuenta.** `worldport` mueve TU cuerpo, no a la criatura
-  poseida, y `npc info` actua sobre el objetivo, que mientras posees no es ella: no hay comando con
-  el que devolverla. Se avisa al agotarlo y corregir es cosa del DM -- que es exactamente lo que
-  hace Atlas, cuyo `TryOutOfTurnMovementSnapback` empieza con `if isPossessing then return end`.
+- **NPC sin bloqueo de movimiento (2026-09-05, decision de mesa)**: el contador
+  conserva los metros y el tope como referencia, pero superarlo no ejecuta comandos
+  ni pide soltar la posesion. La desposesion automatica mediante `.unposs` se probo
+  y el usuario la rechazo: retirada, no reintroducirla. Al desaparecer `pet` se
+  cierra la sesion NPC sin capturar un ancla del jugador. `worldport` tampoco se
+  usa para NPC: moveria el cuerpo del jugador. Candado: `tools/pruebas/calc.lua`.
 - **El muro salta EN EL INSTANTE en que se agota el recurso**, dentro del `OnUpdate`, no al soltar
   la tecla: el movimiento se acaba cuando se acaba, y esperar a que pares regala los metros de en
   medio. Si sigues andando te devuelve otra vez -- no es un aviso de una sola vez --, con
@@ -3982,6 +3984,16 @@ Compatibilidad, que es donde esto se puede volver a romper en silencio:
   vive en otro sistema de coordenadas: no mezclarlos), con umbral de 2 yardas (~1,8 m) que tolera
   el jitter del servidor y un salto en el sitio. Girar no cambia la posicion, asi que queda libre.
   Candado en `calc` (bloque del muro).
+- **El DM dirigiendo (Admin + `.ph dm`, DENTRO de la lista como PJ) TAMBIEN ancla al perder el
+  turno (2026-09-05)**: `AnclarPorTurnoAjeno` le saltaba entero (`return` antes de capturar), y
+  eso rompia su flujo por los DOS lados — sin ancla, `ReiniciarPorTurno` no tenia a donde
+  devolverle el PJ al empezar su turno; y con `tracking` encendido el contador le contaba el
+  roaming, se agotaba y la rama de AGOTAMIENTO del muro (que no distingue DM) le tironeaba en
+  pleno turno enemigo. El contrato correcto: al pasar el turno se le captura el ancla (donde
+  DEJA a su PJ) y se le para el contador COMO A TODOS; de la vigilancia le libra solo el guard
+  `DirigiendoLaEscena()` del OnUpdate (rueda libre), y al empezar su turno el TP de
+  `ReiniciarPorTurno` le devuelve al ancla con el contador a cero. Solo el NPC poseido queda
+  fuera del anclado. Candado en `turnos_codec`.
 - Los enganches de soltar tecla (`MoveForwardStop` y companeros) se quedan como **RESPALDO**, por
   si la ultima muestra no llego a ver el agotamiento. **`TurnOrActionStop` queda FUERA a
   proposito** -- es el giro de camara con el raton, y girar la vista no es moverse.
@@ -3989,6 +4001,22 @@ Compatibilidad, que es donde esto se puede volver a romper en silencio:
   validas Y mapa (`GetInstanceInfo`, no `C_Map`, que devuelve el id de la interfaz).
 
 ## Economia de turno: accion, adicional y reaccion (2026-08-24)
+
+- **Movimiento NPC y retornos multiples (2026-09-05)**: la sonda en juego confirmo
+  `pet=8 yd/s`, turno/seguimiento/motor activos y cero metros acumulados. El fallo era
+  `tonumber(GetUnitSpeed(unit))`: la API devuelve varias velocidades y `tonumber` tomaba
+  la segunda como base numerica (en Lua 5.1, 8 en base 7 devuelve nil). Usar
+  `tonumber((GetUnitSpeed(unit)))` o capturar primero un unico retorno. Corregido en el
+  contador, el respaldo player y el estado de diagnostico. Candado de comportamiento
+  en `tools/pruebas/calc.lua`, reproducido tambien con Lua 5.1 real. No sustituir la
+  medicion por teclas ni asumir que Epsilon devuelve cero al moverse: esa hipotesis
+  queda descartada por la sonda.
+
+- **Velocidad NPC: unidad junto a la cifra (2026-09-05)**: `HarfordAdminNPC.GetNpcMovementMeters`
+  interpreta solo la unidad inmediatamente posterior al numero. Buscar `pie` en toda la
+  descripcion convertia `9 m a pie` o `9 metros, vuelo 30 pies` en 2,7432 m. Se aceptan
+  decimales con coma y `pie/pies/ft/foot/feet`; sin unidad se conserva el valor en metros.
+  Candado de comportamiento sobre el parser real en `tools/pruebas/calc.lua`.
 
 `HarfordDnDConditions.Turn` lleva el presupuesto por turno. Vive **dentro del motor de condiciones**,
 no en un modulo propio, porque ese modulo ya posee la frontera de turno (`OnTurnChanged`, duraciones

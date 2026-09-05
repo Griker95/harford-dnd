@@ -608,9 +608,13 @@ local function GetNpcMovementMeters(parsed)
     local raw = parsed and parsed.speed
     if type(raw) == "table" then raw = raw.walk or raw.ground or raw[1] end
     local text = tostring(raw or "")
-    local value = tonumber(text:match("([%d%.]+)"))
+    -- Leer la unidad INMEDIATA de la primera cifra. Buscar "pie" en toda la
+    -- descripcion convertia "9 m a pie" en 2,7432 m y mezclaba caminar con vuelo.
+    local cifra, unidad = text:lower():match("(%d+[,.]?%d*)%s*([a-z]*)")
+    local value = cifra and tonumber((cifra:gsub(",", ".")))
     if not value then return nil end
-    if text:lower():find("pie") or text:lower():find("ft", 1, true) then
+    if unidad == "pie" or unidad == "pies" or unidad == "ft"
+        or unidad == "foot" or unidad == "feet" then
         return value * 0.3048
     end
     return value

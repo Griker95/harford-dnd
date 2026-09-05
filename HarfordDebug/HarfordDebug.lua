@@ -478,7 +478,9 @@ API.RegisterCommand("dineroeventos", function(args)
     end)
 end, "sonda temporal: dineroeventos [segundos]; ejecuta .modify money mientras esta activa")
 
-API.RegisterCommand("npcmovimiento", function()
+do
+local sesionMovimiento = 0
+API.RegisterCommand("npcmovimiento", function(args)
     local ui = HarfordDnDAttackUI
     local state = ui and ui.GetNpcMovementDebugState and ui.GetNpcMovementDebugState()
     if type(state) ~= "table" then
@@ -490,7 +492,47 @@ API.RegisterCommand("npcmovimiento", function()
         tostring(state.pet), tostring(state.petGuid or "-"), tostring(state.npcTurn),
         tostring(state.tracking), tonumber(state.speedYards) or 0,
         tonumber(state.spentMeters) or 0, tonumber(state.maxMeters) or 0))
-end, "muestra el estado real del movimiento de un NPC poseido")
+    if tostring(args or ""):lower():match("^%s*medir%s*$") then
+        if not (C_Timer and C_Timer.After) then Print("No hay temporizador para medir."); return end
+        sesionMovimiento = sesionMovimiento + 1
+        local sesion = sesionMovimiento
+        local guid = state.petGuid
+        local muestras, maxPet, maxPlayer, maxVehicle = 0, 0, 0, 0
+        local muestrasActivas, muestrasMotor, muestrasTurno = 0, 0, 0
+        local inicial = tonumber(state.spentMeters) or 0
+        local function Velocidad(unit)
+            if not GetUnitSpeed then return 0 end
+            local ok, valor = pcall(GetUnitSpeed, unit)
+            return ok and tonumber(valor) or 0
+        end
+        local function Medir()
+            if sesion ~= sesionMovimiento then return end
+            local actual = ui.GetNpcMovementDebugState and ui.GetNpcMovementDebugState()
+            if not actual or actual.petGuid ~= guid then
+                Print("Medicion cancelada: cambio el NPC poseido.")
+                return
+            end
+            muestras = muestras + 1
+            maxPet = math.max(maxPet, Velocidad("pet"))
+            maxPlayer = math.max(maxPlayer, Velocidad("player"))
+            maxVehicle = math.max(maxVehicle, Velocidad("vehicle"))
+            if actual.tracking then muestrasActivas = muestrasActivas + 1 end
+            if actual.npcTurn then muestrasTurno = muestrasTurno + 1 end
+            local motor = ui.MovementDriver
+            if motor and motor:IsVisible() and motor:GetScript("OnUpdate") then
+                muestrasMotor = muestrasMotor + 1
+            end
+            if muestras < 100 then C_Timer.After(0.1, Medir); return end
+            Print(string.format(
+                "NPC medicion: max pet=%.2f player=%.2f vehicle=%.2f yd/s; turno=%d/%d seguimiento=%d/%d motor=%d/%d; metros=%.2f -> %.2f",
+                maxPet, maxPlayer, maxVehicle, muestrasTurno, muestras, muestrasActivas, muestras,
+                muestrasMotor, muestras, inicial, tonumber(actual.spentMeters) or 0))
+        end
+        Print("Medicion de 10 s iniciada: cierra el chat y camina con el NPC; el resultado saldra solo.")
+        C_Timer.After(0.1, Medir)
+    end
+end, "estado del movimiento NPC; npcmovimiento medir observa 10 s mientras caminas")
+end
 
 API.RegisterCommand("nivel", function(args)
     local requested, classIndex = tostring(args or ""):match("^%s*(%d+)%s*(%d*)%s*$")

@@ -787,9 +787,12 @@ function API.AttachMovementTracker(opts)
             -- (`elapsed * 7`), NO multiplicando la velocidad medida. Detector en `pet` y, si
             -- este da cero, en `player`: en algunos clientes Epsilon la orden de movimiento de
             -- la posesion se expone en el cuerpo del jugador aunque el NPC sea el pet.
-            local v = GetUnitSpeed and tonumber(GetUnitSpeed("pet")) or 0
+            -- GetUnitSpeed devuelve actual/carrera/vuelo/nado. Los parentesis
+            -- interiores limitan a UN retorno: el segundo argumento de tonumber
+            -- seria la base numerica (8 en base 7 da nil en Lua 5.1).
+            local v = GetUnitSpeed and tonumber((GetUnitSpeed("pet"))) or 0
             if v <= 0 then
-                v = GetUnitSpeed and tonumber(GetUnitSpeed("player")) or 0
+                v = GetUnitSpeed and tonumber((GetUnitSpeed("player"))) or 0
             end
             if v <= 0 then return end
             avance = 7 * trozo
@@ -829,14 +832,8 @@ function API.AttachMovementTracker(opts)
         if EnCombate() and tope > 0 and totalMeters >= tope and not API.RecordedMovementAnchor
             and not API.MovimientoSinMuro then
             if LlevandoNpc() then
-                -- Al NPC se le cuenta y se le avisa, pero no se le pone muro: no hay con que.
-                -- `worldport` mueve TU cuerpo, no a la criatura poseida, y `npc info` actua sobre
-                -- el objetivo, que mientras posees no es ella. Corregir es cosa del DM, igual que
-                -- en Atlas, cuyo muro se salta entero mientras se posee.
+                -- NPC sin bloqueo: el tope es solo una referencia del contador.
                 API.MovimientoSinMuro = true
-                HarfordChat.Print("|cffffcc00" .. tostring(UnitName and UnitName("pet") or "El NPC")
-                    .. " ha agotado su movimiento.|r Devuelvelo tu: no hay comando que mueva a una "
-                    .. "criatura poseida.")
             else
                 -- Se marca EL PUNTO EXACTO donde se acabo y te quedas ahi EN ESE MOMENTO, no al
                 -- soltar la tecla: el recurso se agota cuando se agota, y esperar a que pares
@@ -860,7 +857,7 @@ function API.AttachMovementTracker(opts)
         AvisarMovimiento(totalMeters, MaximoDelTurno())
         -- Y se ANCLA aqui: es el sitio donde terminaste, al que querras volver si te empujan o te
         -- mueves durante el turno de otro.
-        API.RecordedMovementAnchor = CapturarAncla()
+        API.RecordedMovementAnchor = not sesionNpc and CapturarAncla() or nil
         -- Se cuenta en la mesa AL PARAR, no en cada paso: difundir cada decima llenaria el canal
         -- para decir lo mismo. Lo que importa es cuanto recorriste y si te pasaste.
         if totalMeters > 0.05 and HarfordDnDRolls and HarfordDnDRolls.Broadcast then
@@ -1002,11 +999,20 @@ function API.AttachMovementTracker(opts)
 
     -- Al pasar el turno a OTRO te quedas donde estas: se ancla TU POSICION DE ESE MOMENTO y se
     -- garantiza que el motor este instalado para hacerla cumplir. Siempre, no solo si el contador
-    -- estaba corriendo. El DM dirigiendo y el NPC poseido quedan fuera, como en el resto del muro.
+    -- estaba corriendo. El NPC poseido queda fuera, como en el resto del muro.
+    --
+    -- El DM dirigiendo (Admin + .ph dm, DENTRO de la lista como PJ) NO queda fuera del anclado
+    -- (2026-09-05): antes salia ANTES de capturar nada, y eso rompia SU flujo por los dos lados
+    -- — sin ancla, `ReiniciarPorTurno` no tenia a donde devolverle el PJ al empezar su turno; y
+    -- con `tracking` aun encendido el contador le seguia contando el roaming, se agotaba y el
+    -- muro (que en la rama de agotamiento no distingue DM) le tironeaba en pleno turno enemigo.
+    -- Ahora se le captura el ancla (el sitio donde DEJA a su PJ) y se le para el contador igual
+    -- que a todos; de la vigilancia ya le libra el guard `DirigiendoLaEscena` del OnUpdate, asi
+    -- que rueda libre y al empezar su turno el TP de `ReiniciarPorTurno` le devuelve alli.
     AnclarPorTurnoAjeno = function()
         if not EnCombate() then return end
         if EsMiTurno() then return end
-        if LlevandoNpc() or DirigiendoLaEscena() then return end
+        if LlevandoNpc() then return end
         tracking = false
         button:SetText("Movimiento")
         -- Ancla FRESCA en el sitio donde te pilla el cambio de turno: es la posicion a la que el
@@ -1069,7 +1075,7 @@ function API.AttachMovementTracker(opts)
 
     function API.GetNpcMovementDebugState()
         local petGuid = UnitGUID and UnitGUID("pet")
-        local speed = GetUnitSpeed and tonumber(GetUnitSpeed("pet")) or 0
+        local speed = GetUnitSpeed and tonumber((GetUnitSpeed("pet"))) or 0
         return {
             pet = LlevandoNpc(),
             petGuid = petGuid,

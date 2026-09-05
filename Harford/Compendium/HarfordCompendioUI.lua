@@ -745,6 +745,13 @@ local function CreateDetailFrame()
     DetailFrame.damage = CreateFont(DetailFrame, "GameFontHighlight", "TOPLEFT", DetailFrame.attack, "BOTTOMLEFT", 0, -6)
     for _, fs in ipairs({ DetailFrame.cost, DetailFrame.cast, DetailFrame.range, DetailFrame.duration, DetailFrame.components, DetailFrame.flags, DetailFrame.classes, DetailFrame.categories, DetailFrame.attack, DetailFrame.damage }) do
         fs:SetTextColor(0.03, 0.018, 0.01, 1)
+        -- Ancho acotado al frame (680 - 28 de margen por lado): un texto largo (el Tiempo de
+        -- Escudo, "1 reaccion, la cual puedes realizar cuando...") se ENVUELVE en vez de
+        -- escaparse por el borde. La cadena de anclas BOTTOMLEFT ya empuja las lineas de abajo
+        -- cuando una se hace mas alta.
+        fs:SetWidth(624)
+        fs:SetJustifyH("LEFT")
+        fs:SetWordWrap(true)
     end
 
     local function BodyText(anchor, y)

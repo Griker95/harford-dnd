@@ -687,7 +687,11 @@ local function EnsureFrame()
     local frame = CreateFrame("Frame", "HarfordDnDAreaFrame", UIParent, "BasicFrameTemplateWithInset")
     frame:SetSize(430, 350)
     frame:SetPoint("CENTER")
-    frame:SetFrameStrata("DIALOG")
+    -- POR ENCIMA del compendio (detalle 80 y ventana de lanzamiento 90, ambos
+    -- FULLSCREEN_DIALOG): con DIALOG a secas, lanzar un conjuro de salvacion desde el detalle
+    -- abria el selector DEBAJO y parecia que el conjuro no se habia lanzado (2026-09-05).
+    frame:SetFrameStrata("FULLSCREEN_DIALOG")
+    frame:SetFrameLevel(95)
     frame:SetClampedToScreen(true)
     frame:SetMovable(true)
     frame:EnableMouse(true)

@@ -32,6 +32,16 @@ incluido); y *colocar una trampa* no cobraba la accion que el texto de Trampero 
 |---|---|---|---|
 | Las 12 | 349 | 349 | **100** |
 
+**Re-auditoria 2026-09-05** (misma carga que el juego: Libro + 12 ficheros + derivados): 361
+rasgos 1-6 = **325 mecanizados + 24 pasivos deliberados + 12 marcadores, 0 en el limbo**. Los 24
+pasivos, revisados uno a uno, caen en cuatro familias con motivo: cabeceras de lanzamiento (7,
+mecanica en Mana/Compendio), cabeceras-indice (5: Absolucion, los tres Canalizar del Paladin,
+Forja de almas — resumen rasgos que existen completos), narrativos puros (7) y sin dato
+observable por el cliente (5). Novedades desde la tabla de arriba: los 5 nucleos demoniacos del
+Brujo con mecanica completa (ventaja `skillAdvantage`, contador escalonado, puerta de uso),
+Toque de vida cubre "no me llega" y gasta su 1/descanso, y las defensas del jugador viajan
+sincronizadas (clave `DmgStatus`, estilo CA).
+
 La suite `coste_de_accion` carga los ficheros REALES y exige los dos invariantes: todo activable
 declara su coste, y nadie vuelve al limbo. Un rasgo nuevo tiene que decidir que es.
 

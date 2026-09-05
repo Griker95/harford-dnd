@@ -24,6 +24,7 @@ end
 
 -- ═══ CONCENTRACION ══════════════════════════════════════════════════════════
 local ESTADOS, CANSANCIO, DADO, ANUNCIOS = {}, 0, 10, {}
+local AURAS = {}   -- registro de Apply/Remove del aura de concentracion
 local envC = cargarModulo("Harford/DnD/Engine/HarfordDnDConcentration.lua",
     setmetatable({
         HarfordDnDConditions = {
@@ -37,6 +38,10 @@ local envC = cargarModulo("Harford/DnD/Engine/HarfordDnDConcentration.lua",
         },
         HarfordDnDRolls = { Broadcast = function(d) ANUNCIOS[#ANUNCIOS + 1] = d end },
         HarfordChat = { Print = function() end },
+        HarfordAuras = {
+            Apply = function(key) AURAS[#AURAS + 1] = "apply:" .. tostring(key) end,
+            Remove = function(key) AURAS[#AURAS + 1] = "remove:" .. tostring(key) end,
+        },
     }, { __index = function() return nil end }))
 local C = envC.HarfordDnDConcentration
 -- El d20 se fija para poder comprobar la regla y no la suerte.
@@ -64,6 +69,36 @@ chk("sin nombre no se empieza", (C.Begin("")), false)
 C.Break()
 chk("soltarla la termina", C.IsActive(), false)
 chk("y soltar lo que no hay no hace nada", (C.Break()), false)
+
+-- Una linea por gesto (decision de mesa 2026-09-05): empezar NO anuncia nada por chat -- la
+-- linea del lanzamiento ya sale con el desenlace CONCENTRACION -- y el estado visible es el
+-- aura. Soltar/perder SI anuncia (es su unica linea).
+print("Empezar es silencioso y pone el aura; soltar anuncia y la retira")
+local antes = #ANUNCIOS
+AURAS = {}
+C.Begin("Telarana")
+chk("Begin no emite ninguna linea", #ANUNCIOS, antes)
+chk("y aplica el aura de concentracion", AURAS[1], "apply:concentration")
+C.Begin("Bola de fuego")
+chk("cambiar de conjuro tampoco anuncia", #ANUNCIOS, antes)
+C.Break()
+chk("Break si anuncia (su unica linea)", #ANUNCIOS, antes + 1)
+chk("y retira el aura", AURAS[#AURAS], "remove:concentration")
+
+-- Y la linea del lanzamiento: un conjuro con concentracion no dice EXITO, dice CONCENTRACION
+-- en morado. El aura esta declarada en el catalogo con scope self (la pone el propio jugador,
+-- como la de muerte).
+print("La linea de lanzamiento y el catalogo de auras")
+local core = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
+chk("el desenlace es condicional a la concentracion",
+    core:find('esConcentracion and " |cffa335eeCONCENTRACION|r" or " |cff00ff00EXITO|r"', 1, true) ~= nil, true)
+local auras = io.open("Harford/Server/HarfordAuras.lua"):read("*a")
+local defConc = auras:find('concentration = {', 1, true)
+chk("el aura de concentracion existe en el catalogo", defConc ~= nil, true)
+if defConc then
+    local bloqueAura = auras:sub(defConc, defConc + 400)
+    chk("con scope self", bloqueAura:find('scope = "self"', 1, true) ~= nil, true)
+end
 
 print("El dano obliga a una salvacion, una POR FUENTE")
 C.Begin("Telarana")

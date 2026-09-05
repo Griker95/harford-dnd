@@ -1467,8 +1467,11 @@ function API.ConfirmCast(spellId, options)
     local ok, costOrErr, current, maxValue = API.SpendSpellMana(spell, options)
     if not ok then return false, costOrErr end
     -- CONCENTRACION: el conjuro declara si la exige. Empezar sustituye a la anterior, porque el
-    -- manual no permite concentrarse en dos a la vez; el modulo se encarga de anunciarlo.
-    if API.RequiresConcentration(spell) and HarfordDnDConcentration and HarfordDnDConcentration.Begin then
+    -- manual no permite concentrarse en dos a la vez. Begin NO anuncia nada (una linea por
+    -- gesto): el desenlace de ESTA linea dice CONCENTRACION en morado en vez de EXITO, y el
+    -- estado queda visible como aura sobre el lanzador.
+    local esConcentracion = API.RequiresConcentration(spell)
+    if esConcentracion and HarfordDnDConcentration and HarfordDnDConcentration.Begin then
         HarfordDnDConcentration.Begin(spell.name or tostring(spellId), spellId)
     end
     if options and options.silent then return true, costOrErr, current, maxValue end
@@ -1476,7 +1479,8 @@ function API.ConfirmCast(spellId, options)
     -- Anuncio limpio: solo lanzador (lo antepone el render) + link del conjuro + target si hay.
     local target = ColoredTargetName()
     local suffix = target ~= "" and (" " .. target) or ""
-    BroadcastInfo(SpellLink(spell) .. suffix .. " |cff00ff00EXITO|r")
+    local desenlace = esConcentracion and " |cffa335eeCONCENTRACION|r" or " |cff00ff00EXITO|r"
+    BroadcastInfo(SpellLink(spell) .. suffix .. desenlace)
     return true, cost, current, maxValue
 end
 

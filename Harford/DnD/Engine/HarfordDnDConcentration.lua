@@ -49,16 +49,14 @@ function API.GetSpellName()
 end
 
 -- Empieza a concentrarse. Si ya habia otro conjuro, lo termina: el manual no permite dos.
+-- SIN anuncio propio (2026-09-05, decision de mesa "una linea por gesto"): la linea del
+-- lanzamiento ya sale con el desenlace CONCENTRACION en morado, y el estado visible es el
+-- AURA (`HarfordAuras` key `concentration`, scope self), que se pone aqui y se retira en Break.
 function API.Begin(spellName, spellId)
     spellName = tostring(spellName or "")
     if spellName == "" then return false, "Falta el nombre del conjuro" end
-    local previo = current and current.spell
     current = { spell = spellName, spellId = tonumber(spellId), startedAt = (time and time()) or 0 }
-    if previo and previo ~= spellName then
-        Announce(string.format("deja de concentrarse en %s para concentrarse en %s.", previo, spellName))
-    else
-        Announce(string.format("se concentra en %s.", spellName))
-    end
+    if HarfordAuras and HarfordAuras.Apply then HarfordAuras.Apply("concentration") end
     if HarfordDnDStore and HarfordDnDStore.RefreshMainUI then HarfordDnDStore.RefreshMainUI() end
     return true
 end
@@ -68,6 +66,9 @@ function API.Break(reason)
     if not current then return false end
     local spell = current.spell
     current = nil
+    -- La retirada del aura no depende de ningun flag local: si Break llega, el aura sobra
+    -- (misma leccion que la aura de muerte 29266, que se quedaba puesta al perderse el flag).
+    if HarfordAuras and HarfordAuras.Remove then HarfordAuras.Remove("concentration") end
     if reason then
         Announce(string.format("pierde la concentracion en %s (%s).", spell, reason))
     else

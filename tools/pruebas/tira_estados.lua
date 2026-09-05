@@ -218,5 +218,10 @@ chk("Cansancio ensena su nivel en el tooltip",
 chk("y lista los efectos acumulados",
     uf:find("lineas = HarfordDnDConditions.GetExhaustionEffects(nivel)", 1, true) ~= nil
     and uf:find('GameTooltip:AddLine("- " .. tostring(linea), 1, 1, 1, true)', 1, true) ~= nil, true)
+-- Y SOLO eso: ni la descripcion generica ni la ayuda del click derecho (el gesto sigue vivo).
+chk("sin la descripcion generica",
+    uf:find("descripcion = nil", 1, true) ~= nil, true)
+chk("sin la ayuda del click derecho",
+    uf:find('if self.estado.id ~= "exhaustion"', 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -898,7 +898,9 @@ do
                 GameTooltip:AddLine(self.estado.restante, 0.6, 0.8, 1)
             end
             local unidad = self:GetParent() and self:GetParent().unidad
-            if (unidad == "player" and self.estado.id ~= "dying") or (unidad ~= "player" and API.OnConditionIconRightClick) then
+            -- Cansancio no ensena la ayuda del click derecho (el gesto sigue funcionando).
+            if self.estado.id ~= "exhaustion"
+                and ((unidad == "player" and self.estado.id ~= "dying") or (unidad ~= "player" and API.OnConditionIconRightClick)) then
                 GameTooltip:AddLine("Click derecho: retirar", 0.7, 0.7, 0.7)
             end
             GameTooltip:Show()
@@ -963,22 +965,25 @@ do
             if def.sourceAsDetail and record and tostring(record.sourceName or "") ~= "" then
                 detalle = record.sourceName
             end
-            -- Cansancio: el tooltip dice EL NIVEL y lista sus efectos acumulados, no solo la
-            -- descripcion generica ("Cansancio deberia listarme lo que tengo activo"). El nivel
-            -- viaja en el registro sincronizado, asi que tambien se ve al inspeccionar a otro.
+            -- Cansancio: el tooltip dice EL NIVEL y lista sus efectos acumulados — y SOLO eso
+            -- (decision de mesa 2026-09-05: ni la descripcion generica ni la ayuda del click
+            -- derecho pintan nada ahi). El nivel viaja en el registro sincronizado, asi que
+            -- tambien se ve al inspeccionar a otro.
+            local descripcion = def.description
             if activo.id == "exhaustion" then
                 local nivel = math.max(1, math.min(6, tonumber(record and record.level) or 1))
                 detalle = "Nivel " .. nivel .. (nivel >= 6 and " (muerte)" or "")
                 if HarfordDnDConditions.GetExhaustionEffects then
                     lineas = HarfordDnDConditions.GetExhaustionEffects(nivel)
                 end
+                descripcion = nil
             end
             fuera[#fuera + 1] = {
                 id = activo.id,
                 label = def.label,
                 detalle = detalle,
                 lineas = lineas,
-                description = def.description,
+                description = descripcion,
                 restante = restante,
                 icono = HarfordDnDConditions.GetIcon(activo.id),
                 contador = HarfordDnDConditions.CounterFor(def, record),

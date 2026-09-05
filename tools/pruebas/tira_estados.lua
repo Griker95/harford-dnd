@@ -184,4 +184,31 @@ chk("sin buff, ninguno", Desplazamiento(nil, 100), 0)
 -- Si el ancla YA es un boton de aura, estan en la misma columna y no hay que mover nada.
 chk("si el ancla ya es el buff, cero", Desplazamiento(120, 120), 0)
 
+-- ─── LOS ESTADOS SOBREVIVEN AL FIN DE COMBATE (decision de mesa 2026-09-05) ─
+-- Terminar el combate NO retira estados ni auras: RecogerTodo solo recoge economia de turno,
+-- movimiento y estandarte. Un estado con turnos/rondas restantes se queda CONGELADO (la
+-- caducidad por turnos solo avanza con OnTurnChanged, y sin combate no hay turnos) y se retira
+-- a mano: el propio jugador con click derecho en su tira (menos Muriendo), los ajenos el DM.
+-- Si alguien ve un "10 rondas" congelado fuera de combate y le parece un despiste: NO lo es.
+print("Los estados sobreviven al fin de combate")
+local tc = io.open("Harford/Frames/HarfordTurnsCombat.lua"):read("*a")
+local ini = assert(tc:find("local function RecogerTodo()", 1, true))
+local fin = assert(tc:find("\nend", ini))
+local recoger = tc:sub(ini, fin)
+chk("RecogerTodo no toca condiciones (solo Turn.Reset)",
+    recoger:find("RemoveOwned", 1, true) == nil
+    and recoger:find("ClearPendingAuras", 1, true) == nil
+    and recoger:find("RemoveRecord", 1, true) == nil, true)
+chk("recoge la economia", recoger:find("HarfordDnDConditions.Turn.Reset", 1, true) ~= nil, true)
+chk("nadie registra un limpiador de estados",
+    cond:find("RegisterCombatCleanup", 1, true), nil)
+-- El propio jugador se quita los suyos: click derecho en el icono de su tira (core, sin DM).
+chk("click derecho propio retira (via RequestPlayer)",
+    uf:find('HarfordDnDConditions.RequestPlayer("player", self.estado.id, false)', 1, true) ~= nil, true)
+chk("Muriendo propio no se toca a mano",
+    uf:find("Muriendo se retira recuperando vida, no a mano.", 1, true) ~= nil, true)
+-- Y quitarse el estado retira tambien su aura de servidor (RemoveOwned -> ApplyAura remove self).
+chk("RemoveOwned retira el aura del estado",
+    cond:find("local auraOk, auraErr = ApplyAura(def, \"self\", true)", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

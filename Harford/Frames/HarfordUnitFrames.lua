@@ -5124,9 +5124,9 @@ do
                         HarfordDnDAttackUI.RefundTurnMovement()
                     end
                 end },
-                { text = "Accion", notCheckable = true, func = function() Devolver("action", "accion") end },
-                { text = "Accion adicional", notCheckable = true, func = function() Devolver("bonus", "accion adicional") end },
-                { text = "Reaccion", notCheckable = true, func = function() Devolver("reaction", "reaccion") end },
+                { text = "Acción", notCheckable = true, func = function() Devolver("action", "acción") end },
+                { text = "Acción adicional", notCheckable = true, func = function() Devolver("bonus", "acción adicional") end },
+                { text = "Reacción", notCheckable = true, func = function() Devolver("reaction", "reacción") end },
             },
         }
         -- Los gestos de /harfordcombat, a un click: libre (toggle, con su check), posicion y stop.
@@ -5154,7 +5154,7 @@ do
                 end },
                 { text = (function()
                       local m = HarfordDnDAttackUI and tonumber(HarfordDnDAttackUI.MovementMaxOverride)
-                      return "Movimiento maximo..." .. (m and string.format(" (%.1f m)", m) or "")
+                      return "Movimiento máximo..." .. (m and string.format(" (%.1f m)", m) or "")
                   end)(), notCheckable = true, func = function()
                     if StaticPopup_Show then StaticPopup_Show("HARFORD_MOVE_MAX") end
                 end },
@@ -5166,7 +5166,7 @@ do
     -- Tope de movimiento manual: metros por turno, vacio o 0 para volver al de la ficha.
     if StaticPopupDialogs and not StaticPopupDialogs["HARFORD_MOVE_MAX"] then
         StaticPopupDialogs["HARFORD_MOVE_MAX"] = {
-            text = "Movimiento maximo del turno (metros; vacio = el de tu ficha):",
+            text = "Movimiento máximo del turno (metros; vacío = el de tu ficha):",
             button1 = OKAY or "Aceptar",
             button2 = CANCEL or "Cancelar",
             hasEditBox = true,

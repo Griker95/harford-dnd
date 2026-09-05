@@ -745,10 +745,10 @@ function API.AttachMovementTracker(opts)
         metros = tonumber(metros)
         if metros and metros > 0 then
             API.MovementMaxOverride = metros
-            HarfordChat.Print(string.format("|cff88ff88Movimiento maximo fijado en %.1f m.|r", metros))
+            HarfordChat.Print(string.format("|cff88ff88Movimiento máximo fijado en %.1f m.|r", metros))
         else
             API.MovementMaxOverride = nil
-            HarfordChat.Print("Movimiento maximo restaurado al de tu ficha.")
+            HarfordChat.Print("Movimiento máximo restaurado al de tu ficha.")
         end
         AvisarMovimiento(totalMeters, MaximoDelTurno())
         if tracking then

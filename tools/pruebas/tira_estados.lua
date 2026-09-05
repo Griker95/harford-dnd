@@ -251,9 +251,9 @@ chk("estados por toggle propio",
 chk("Muriendo y Cansancio tratados aparte",
     uf:find('if def.id ~= "dying" and def.id ~= "exhaustion" then', 1, true) ~= nil, true)
 chk("devoluciones de las cuatro cosas",
-    uf:find('Devolver("action", "accion")', 1, true) ~= nil
-    and uf:find('Devolver("bonus", "accion adicional")', 1, true) ~= nil
-    and uf:find('Devolver("reaction", "reaccion")', 1, true) ~= nil
+    uf:find('Devolver("action", "acci', 1, true) ~= nil
+    and uf:find('Devolver("bonus", "acci', 1, true) ~= nil
+    and uf:find('Devolver("reaction", "reacci', 1, true) ~= nil
     and uf:find("HarfordDnDAttackUI.RefundTurnMovement", 1, true) ~= nil, true)
 chk("y la seccion Combate con los tres gestos de /harfordcombat",
     uf:find('{ text = "Movimiento libre", isNotRadio = true,', 1, true) ~= nil

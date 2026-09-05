@@ -152,7 +152,7 @@ chk("el mensaje tiene lista cerrada",
 -- distintas sobre lo mismo.
 local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
 chk("y lo aplica el receptor",
-    comm:find("HarfordDnDConditions.Turn.Refund(refundKind)", 1, true) ~= nil, true)
+    comm:find("elseif T.Refund(refundKind) then", 1, true) ~= nil, true)
 -- Con el mismo filtro de remitente que el resto de mensajes con efecto: cambia lo que TU puedes
 -- hacer este turno.
 chk("con el filtro de siempre",

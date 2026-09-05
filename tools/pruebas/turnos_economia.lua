@@ -216,4 +216,25 @@ API.Has = nil
 API.RemoveOwned = nil
 HarfordTurnOrderAPI.IsMyTurn = nil
 
+-- ─── GRAN MAESTRO DE ARMAS: EL CRITICO/REMATE ABRE UN ATAQUE COMO ADICIONAL ─
+-- La marca (GrantBonusWeaponAttack) la ponen el critico c/c y el remate; al abrir la siguiente
+-- tanda, el ataque se cobra como ACCION ADICIONAL y la tanda no avanza. Sin adicional
+-- disponible, la marca se pierde y se cae al cobro normal. Reset la limpia.
+print("Gran maestro de armas: la marca cobra el ataque como adicional")
+T.Reset()
+chk("primer ataque cobra accion", T.SpendWeaponAttack(false), "action")
+T.GrantBonusWeaponAttack()
+chk("con la marca, el siguiente cobra ADICIONAL", T.SpendWeaponAttack(false), "bonus")
+chk("  y la adicional queda gastada", T.GetRemaining("bonus"), 0)
+chk("  la accion sigue gastada (la marca no la devolvio)", T.GetRemaining("action"), 0)
+chk("el siguiente sin marca ya no cabe", (T.SpendWeaponAttack(false)), false)
+T.Reset()
+T.GrantBonusWeaponAttack()
+T.SpendForFeature({ cast = "accion_adicional" })
+chk("sin adicional disponible, la marca se pierde y cobra accion", T.SpendWeaponAttack(false), "action")
+T.Reset()
+T.GrantBonusWeaponAttack()
+T.Reset()
+chk("Reset limpia la marca (cobra accion)", T.SpendWeaponAttack(false), "action")
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

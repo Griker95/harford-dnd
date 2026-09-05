@@ -2055,6 +2055,17 @@ do
         local porAccion = Turn.AtaquesPorAccion()
         -- El primero de cada tanda cobra; los de en medio ya estan pagados.
         if (ECONOMIA.ataques - 1) % porAccion ~= 0 then return "action" end
+        -- Gran maestro de armas: el critico (o el remate) c/c de este turno abre UN ataque mas
+        -- que se cobra como ACCION ADICIONAL. Se consume aqui, al abrir tanda nueva; la tanda
+        -- no avanza (el siguiente ataque vuelve a abrir la suya y cobra accion). Si la
+        -- adicional ya se gasto, la marca se pierde y se cae al cobro normal.
+        if ECONOMIA.ataqueAdicionalGratis then
+            ECONOMIA.ataqueAdicionalGratis = nil
+            if Turn.Spend("bonus", 1) then
+                ECONOMIA.ataques = ECONOMIA.ataques - 1
+                return "bonus"
+            end
+        end
         if not Turn.Spend("action", 1) then
             -- El ataque no ocurre, asi que tampoco se apunta: si no, el siguiente intento se
             -- tomaria por el segundo de la tanda y saldria gratis.
@@ -2132,10 +2143,17 @@ do
         return kind, Turn.GrantExtra(kind, 1)
     end
 
+    -- El critico/remate c/c del Gran maestro de armas abre un ataque extra este turno. La marca
+    -- vive en la economia y muere con ella (Reset).
+    function Turn.GrantBonusWeaponAttack()
+        ECONOMIA.ataqueAdicionalGratis = true
+    end
+
     function Turn.Reset()
         -- Los ataques ya hechos son de ESTE turno: sin reiniciarlos, el primer ataque del turno
         -- siguiente se tomaria por el segundo y saldria gratis.
         ECONOMIA.ataques = 0
+        ECONOMIA.ataqueAdicionalGratis = nil
         ECONOMIA.spent = {}
         -- Y se guarda el turno limpio: si no, una recarga resucitaria lo del turno anterior.
         if GuardarEconomia then GuardarEconomia() end

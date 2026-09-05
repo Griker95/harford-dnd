@@ -3061,6 +3061,17 @@ DoWeaponAttack = function(options)
             critTag = HarfordDnDCalc.GetCritTag(resolvedMode, ra, rb, threshold)
         end
     end
+    -- Gran maestro de armas: un CRITICO c/c en tu turno abre un ataque mas como accion
+    -- adicional. La marca la cobra Turn.SpendWeaponAttack al abrir la siguiente tanda.
+    if critTag == "CRÍTICO" and def and def.mode == "Melee" and ActorIsPlayer(def)
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("gwmBonusAttack")
+        and HarfordDnDConditions and HarfordDnDConditions.Turn
+        and HarfordDnDConditions.Turn.GrantBonusWeaponAttack
+        and HarfordDnDConditions.Turn.IsActive() and HarfordDnDConditions.Turn.IsMyTurn() then
+        HarfordDnDConditions.Turn.GrantBonusWeaponAttack()
+        HarfordChat.Print("|cff88ff88Gran maestro de armas:|r critico c/c — tu proximo ataque de este turno se cobra como accion adicional.")
+    end
     local explicitFormBonus = def and tonumber(def.attackBonusOverride)
     local total, bonusTxt
     if explicitFormBonus ~= nil then

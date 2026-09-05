@@ -1825,11 +1825,14 @@ function HarfordSync.SerializeAreaRequest(request)
     -- "Versado en un elemento": tipo cuya RESISTENCIA ignora el receptor. Campo AL FINAL:
     -- los clientes antiguos lo ignoran (strsplit sobrante) y de los nuevos llega "" si falta.
     local ignoreResist = AreaField(tostring(request.ignoreResistType or ""):sub(1, 16))
+    -- ¿Objetivo UNICO? ("1"/""; tambien campo final). Maestro en escudos lo necesita en el
+    -- defensor: su +CA de escudo solo vale contra efectos que SOLO le afectan a el.
+    local single = request.single and "1" or ""
     local function BuildPayload()
         return table.concat({ "DNDAREAREQ", id, mode, ability, dc, success,
             attackTotal, critical, auraId, AreaField(labelText), components, conditionId or "",
             durationCode, turns, saveCode, conditionSaveDC, persist, sourceGuid, sourceName,
-            applySaveCode, applySaveDC, ignoreResist }, "|")
+            applySaveCode, applySaveDC, ignoreResist, single }, "|")
     end
     local payload = BuildPayload()
     while #payload > 240 and labelText ~= "" do
@@ -1843,7 +1846,7 @@ end
 function HarfordSync.DeserializeAreaRequest(message)
     local opcode, id, mode, ability, dc, success, attackTotal, critical, auraId, label, components, conditionId,
         durationCode, conditionTurns, conditionSaveAbility, conditionSaveDC, conditionPersist, sourceGuid, sourceName,
-        conditionApplySaveAbility, conditionApplySaveDC, ignoreResistType =
+        conditionApplySaveAbility, conditionApplySaveDC, ignoreResistType, singleTarget =
         strsplit("|", tostring(message or ""))
     if opcode ~= "DNDAREAREQ" or not id or not id:match("^[%w%._%-]+$") or #id > 40 then return nil end
     mode = mode == "A" and "attack" or mode == "S" and "save" or mode == "U" and "auto"
@@ -1884,6 +1887,7 @@ function HarfordSync.DeserializeAreaRequest(message)
         conditionApplySaveAbility = conditionApplySaveAbility,
         conditionApplySaveDC = conditionApplySaveDC,
         ignoreResistType = LoadAreaField(ignoreResistType):sub(1, 16),
+        single = singleTarget == "1",
     }
 end
 

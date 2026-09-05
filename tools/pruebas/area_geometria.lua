@@ -308,6 +308,40 @@ chk("bendicion declara la condicion Bendito",
 chk("el auto sin daño no rotula Impacto automatico",
     areaSrc:find('rollText = #(request.components or {}) > 0 and "Impacto automatico" or ""', 1, true) ~= nil, true)
 
+-- ─── MAESTRO EN ESCUDOS Y GRAN MAESTRO DE ARMAS (2026-09-05) ────────────────
+-- Escudos: el marcador `single` (objetivo unico) viaja como CAMPO FINAL del DNDAREAREQ (los
+-- clientes viejos lo ignoran); el defensor suma el bono del escudo a salvaciones de DESTREZA
+-- solo-para-ti, y el Abrigo PREPARADO deja el daño en cero al superar una salvacion de
+-- mitad-al-exito (vale contra areas: RAW). GMA: el critico y el remate c/c conceden la marca
+-- que Turn.SpendWeaponAttack cobra como adicional.
+print("Maestro en escudos y Gran maestro de armas")
+local syncSrc = io.open("Harford/Core/HarfordSync.lua"):read("*a")
+chk("single viaja al final del payload",
+    syncSrc:find("applySaveCode, applySaveDC, ignoreResist, single }, \"|\")", 1, true) ~= nil, true)
+chk("y se lee al deserializar",
+    syncSrc:find('single = singleTarget == "1",', 1, true) ~= nil, true)
+chk("la peticion lo marca con EsObjetivoUnico",
+    areaSrc:find("single = EsObjetivoUnico(session.definition) and true or nil,", 1, true) ~= nil, true)
+chk("el defensor suma el escudo a la salvacion de Destreza solo-para-ti",
+    areaSrc:find('HarfordDnDFeatureEffects.HasFlag("shieldMasterSave")', 1, true) ~= nil
+    and areaSrc:find("base = (tonumber(base) or 0) + (HarfordDnDItems.GetShieldBonus() or 0)", 1, true) ~= nil, true)
+chk("el Abrigo preparado deja el daño a cero (sin exigir objetivo unico)",
+    areaSrc:find('HarfordCharacterPanel.TriggerPreparedReaction("dex_save_damage", { damage = applied })', 1, true) ~= nil, true)
+local itemsSrc = io.open("Harford/DnD/State/HarfordDnDItems.lua"):read("*a")
+chk("GetShieldBonus detecta item y seleccion basica",
+    itemsSrc:find("function API.GetShieldBonus(profileName)", 1, true) ~= nil, true)
+local featsSrc = io.open("Harford/DnD/Data/HarfordDnDFeats.lua"):read("*a")
+chk("el empujon con escudo abre coste adicional",
+    featsSrc:find('grantsAsBonus = { "empujar" }', 1, true) ~= nil, true)
+chk("y los rasgos con grantsAsBonus tienen fila propia en el Libro",
+    featsSrc:find("or trait.grantsAsBonus then", 1, true) ~= nil, true)
+local wrollsSrc = io.open("Harford/DnD/Engine/HarfordDnDWeaponRolls.lua"):read("*a")
+local dndSrc = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("GMA: el critico c/c concede la marca",
+    dndSrc:find('HarfordDnDFeatureEffects.HasFlag("gwmBonusAttack")', 1, true) ~= nil, true)
+chk("GMA: el remate c/c tambien",
+    wrollsSrc:find('HarfordDnDFeatureEffects.HasFlag("gwmBonusAttack")', 1, true) ~= nil, true)
+
 -- ─── CURACION SIN TARGET = A UNO MISMO (2026-09-05) ─────────────────────────
 -- "Sin objetivo, lo propio": Curar heridas sin target te toca a ti (antes caia a la ventana de
 -- marcado manual), y el gate de alcance no exige target cuando no hay nada que medir (a ese

@@ -1347,6 +1347,25 @@ function API.GetEquippedArmorCategory(profileName)
     return nil
 end
 
+-- Bono de CA del escudo equipado (2 si hay escudo — item o seleccion basica — y 0 sin el).
+-- Lo usa Maestro en escudos para sumarlo a salvaciones de Destreza contra efectos que solo te
+-- afectan a ti; el mismo criterio de deteccion que GetEquippedArmorClass.
+function API.GetShieldBonus(profileName)
+    local profile = ReadProfile(profileName)
+    for slotKey, entry in pairs(profile) do
+        local resolved = type(entry) == "table" and API.ResolveItem(entry.itemLink) or nil
+        if resolved and not resolved.pending
+            and (resolved.category == "escudo" or resolved.equipLoc == "INVTYPE_SHIELD") then
+            return 2
+        end
+        if type(entry) == "table" and not entry.itemLink
+            and slotKey == "SecondaryHand" and entry.basicWeaponKey == "Escudo" then
+            return 2
+        end
+    end
+    return 0
+end
+
 function API.GetEquippedArmorClass(profileName)
     local profile = ReadProfile(profileName)
     local dex = SelfDexMod()

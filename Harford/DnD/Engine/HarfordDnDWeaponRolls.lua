@@ -389,6 +389,21 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
         HarfordDnDAttackUI.RefreshWeaponInfo()
     end
 
+    -- Gran maestro de armas: REMATAR (el daño total alcanza la vida conocida del objetivo) con
+    -- un arma c/c en tu turno abre un ataque mas como accion adicional — mismo camino que el
+    -- critico del ataque. Solo con vida conocida (NPC con Turnos): a un jugador no se le "ve"
+    -- caer desde aqui.
+    if (lethalReached or (targetHP and total >= targetHP)) and def and def.mode == "Melee"
+        and ActorIsPlayer(def)
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+        and HarfordDnDFeatureEffects.HasFlag("gwmBonusAttack")
+        and HarfordDnDConditions and HarfordDnDConditions.Turn
+        and HarfordDnDConditions.Turn.GrantBonusWeaponAttack
+        and HarfordDnDConditions.Turn.IsActive() and HarfordDnDConditions.Turn.IsMyTurn() then
+        HarfordDnDConditions.Turn.GrantBonusWeaponAttack()
+        HarfordChat.Print("|cff88ff88Gran maestro de armas:|r remate c/c — tu proximo ataque de este turno se cobra como accion adicional.")
+    end
+
     -- Cabecera por tipo: el render hace "<total> <modifiers>", asi que el primer tipo aporta el
     -- numero de cabecera y el resto van "N Tipo" dentro de modifiers => "6 Cortante 10 Frio". El
     -- numero de cada tipo extra se colorea con COLOR_ROLL (|cff66ccff) para igualar al de cabecera.

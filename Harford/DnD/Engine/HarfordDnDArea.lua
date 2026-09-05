@@ -1308,6 +1308,15 @@ local function ResolvePlayerRequest(request, sender)
         affected, status, rollText = true, "hit", "Curacion"
     elseif request.mode == "save" then
         local base, prof = HarfordDnDCalc.GetSaveRollBonuses(request.ability)
+        -- Maestro en escudos: +bono de CA del escudo a salvaciones de DESTREZA contra efectos
+        -- que SOLO te afectan a ti (el marcador `single` viaja en la peticion), con escudo
+        -- equipado. Entra en `base` y sale sumado en el detalle de la tirada.
+        if request.single and request.ability == "Destreza"
+            and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.HasFlag
+            and HarfordDnDFeatureEffects.HasFlag("shieldMasterSave")
+            and HarfordDnDItems and HarfordDnDItems.GetShieldBonus then
+            base = (tonumber(base) or 0) + (HarfordDnDItems.GetShieldBonus() or 0)
+        end
         local autoFail = HarfordDnDConditions and HarfordDnDConditions.IsSaveAutoFailed
             and HarfordDnDConditions.IsSaveAutoFailed("player", request.ability)
         local mode = HarfordDnDCalc.GetMode()
@@ -1343,6 +1352,18 @@ local function ResolvePlayerRequest(request, sender)
         summaries = { tostring(applied) .. " curacion" }
     else
         applied, summaries = ApplyComponents("player", request, affected, critical)
+    end
+    -- Abrigo del escudo (Maestro en escudos, PREPARADA en el Libro): salvacion de DESTREZA
+    -- superada contra un efecto de mitad-al-exito -> la reaccion deja el daño en CERO. Vale
+    -- contra areas tambien (RAW: interpones el escudo ante la bola de fuego); la reaccion se
+    -- cobra al dispararse, como todas las preparadas.
+    if request.mode == "save" and request.saved and request.success == "half"
+        and tostring(request.ability or "") == "Destreza" and (applied or 0) > 0
+        and HarfordCharacterPanel and HarfordCharacterPanel.TriggerPreparedReaction then
+        local nuevo, disparada = HarfordCharacterPanel.TriggerPreparedReaction("dex_save_damage", { damage = applied })
+        if disparada then
+            applied = math.max(0, math.floor(tonumber(nuevo) or 0))
+        end
     end
     if request.mode ~= "heal" and applied > 0 and HarfordDnDStore.ApplyLocalResourceDamage then
         HarfordDnDStore.ApplyLocalResourceDamage(applied)
@@ -1520,6 +1541,10 @@ local function MakeRequest(session, target, index)
         sourceName = session.context.sourceName,
         label = session.definition.networkLabel,
         components = session.rolledComponents,
+        -- ¿El efecto SOLO afecta al receptor? (objetivo unico, no area). Lo necesita Maestro en
+        -- escudos en el defensor: su +CA de escudo a salvaciones de Destreza exige "que solo te
+        -- afecte a ti". Viaja como campo final del payload (los clientes viejos lo ignoran).
+        single = EsObjetivoUnico(session.definition) and true or nil,
     }
     -- Dote "Versado en un elemento" del lanzador: el receptor debe IGNORAR su resistencia a ese
     -- tipo, asi que el tipo viaja en la peticion. Solo en conjuros (hay castLevel) y solo un

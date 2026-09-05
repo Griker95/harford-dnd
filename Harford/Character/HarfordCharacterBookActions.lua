@@ -863,6 +863,9 @@ do
         elseif effect == "reduce_damage_roll" then
             local reduction = RollReactionDice(feature.reactionDice) + ReactionFlatBonus(feature)
             return math.max(0, damage - reduction)
+        elseif effect == "no_damage" then
+            -- Abrigo del escudo (Maestro en escudos): la salvacion superada deja el daño en CERO.
+            return 0
         end
         return nil
     end

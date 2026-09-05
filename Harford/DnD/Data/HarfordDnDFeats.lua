@@ -364,7 +364,7 @@ API.FEATS = {
     {
         id = "feat_gran_maestro_armas", icon = "ability_warrior_unrelentingassault", name = "Gran maestro de armas", description = "Armas grandes llevadas al límite: cambias puntería por daño y encadenas ataques cuando cae un enemigo.", source = "PHB",
         traits = {
-            { id = "feat_gma_adicional", icon = "eps_bg3_multiattack", name = "Ataque adicional", type = "pasivo", description = "En tu turno, al hacer un golpe crítico con un arma cuerpo a cuerpo o reducir a una criatura a 0 PG con ella, puedes hacer un ataque cuerpo a cuerpo como acción adicional.", effects = {} },
+            { id = "feat_gma_adicional", icon = "eps_bg3_multiattack", name = "Ataque adicional", type = "pasivo", description = "En tu turno, al hacer un golpe crítico con un arma cuerpo a cuerpo o reducir a una criatura a 0 PG con ella, puedes hacer un ataque cuerpo a cuerpo como acción adicional.", effects = { { kind = "flag", flag = "gwmBonusAttack" } } },
             { id = "feat_gma_potente", icon = "ability_rogue_sabreslash", name = "Golpe potente", type = "recurso", description = "Toggle: antes de atacar c/c con un arma a dos manos competente, -5 a la tirada de ataque y +10 al daño si impacta. Actívalo en 'Daño extra'.", effects = {
                 { kind = "conditionalWeaponDamage", id = "gwm_potente", label = "Golpe Potente (-5/+10)", flatBonus = 10, attackPenalty = 5 },
             } },
@@ -398,8 +398,8 @@ API.FEATS = {
     {
         id = "feat_maestro_escudos", icon = "inv_shield_06", name = "Maestro en escudos", description = "El escudo también golpea: derribas y te cubres de lo que estalla.", source = "PHB",
         traits = {
-            { id = "feat_phb_escudos", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", description = "Con escudo: al usar la acción de Atacar, acción adicional para empujar con el escudo a 1,5 m. Sumas el bono de CA del escudo a salvaciones de Destreza que solo te afecten a ti.", effects = {} },
-            { id = "feat_phb_escudos_abrigo", icon = "inv_shield_06", name = "Abrigo del escudo", type = "reaccion", cast = "reaccion", description = "Si superas una salvación de Destreza contra un efecto que solo te afecta a ti y hace mitad de daño al superarla, usas tu reacción para no recibir ningún daño, interponiendo el escudo.", effects = {} },
+            { id = "feat_phb_escudos", icon = "inv_scroll_11", name = "Beneficios", type = "pasivo", grantsAsBonus = { "empujar" }, description = "Con escudo: al usar la acción de Atacar, acción adicional para empujar con el escudo a 1,5 m. Sumas el bono de CA del escudo a salvaciones de Destreza contra efectos que solo te afecten a ti.", effects = { { kind = "flag", flag = "shieldMasterSave" } } },
+            { id = "feat_phb_escudos_abrigo", icon = "inv_shield_06", name = "Abrigo del escudo", type = "reaccion", cast = "reaccion", reactionTrigger = "dex_save_damage", reactionEffect = "no_damage", description = "Prepárala: si superas una salvación de Destreza contra un efecto que hace mitad de daño al superarla, usas tu reacción para no recibir ningún daño, interponiendo el escudo.", effects = {} },
         },
     },
     {
@@ -726,7 +726,7 @@ function API.GetFeatAbilities(featIds)
                 partes[#partes + 1] = featDef.description
             end
             for _, trait in ipairs(featDef.traits or {}) do
-                if trait.uses or trait.cast or trait.actionKind then
+                if trait.uses or trait.cast or trait.actionKind or trait.grantsAsBonus then
                     out[#out + 1] = { className = "Dote: " .. tostring(featDef.name or featDef.id),
                         level = 0, feature = trait }
                 else

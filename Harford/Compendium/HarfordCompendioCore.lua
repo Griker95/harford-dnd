@@ -1551,11 +1551,34 @@ function API.RecastLastSingleTarget(marca, etiqueta)
     return true, u.nombre
 end
 
+-- Doble uso confirmado en el barrido 2026-09-05 sobre los 385 conjuros 0-4 (marcadores de
+-- utilidad en el texto + revision una a una): utilidad al lanzar, daño opcional con objetivo.
+local DUAL_USE_SPELLS = {
+    crear_fogata = true,       -- coloca la fogata (luz, campamento); daña solo a quien este o entre
+    crear_llama = true,        -- llama en la mano que ilumina; puede arrojarse (1d8 fuego)
+    hoja_de_fuego = true,      -- crea la cimitarra ardiente; el ataque es opcional
+    hoja_sombria = true,       -- crea la hoja psiquica; el ataque es opcional
+    esfera_de_llamas = true,   -- crea la esfera; el daño llega al embestir o por cercania
+    rayo_de_luna = true,       -- coloca el cilindro; el daño llega al entrar o empezar dentro
+}
+
 function API.ResolveCast(spellId, options)
     local spell = API.GetSpellById(spellId)
     if not spell then return false, "Conjuro no encontrado" end
     options = options or {}
     if options.ritual then
+        return API.ConfirmCast(spellId, options)
+    end
+
+    -- CONJUROS DE DOBLE USO (regla de mesa 2026-09-05): crean algo que sirve por si solo — una
+    -- llama que ilumina, una hoja en la mano, una esfera o un rayo colocados — y ADEMAS pueden
+    -- hacer daño. Sin objetivo se lanzan "sin mas" (anuncio, coste y concentracion por
+    -- ConfirmCast); con objetivo se resuelve el daño por la via normal. Antes, sin objetivo,
+    -- el gate de alcance los abortaba con "Necesitas un objetivo". La lista vive en el CORE
+    -- (como RequiresConcentration) porque HarfordCompendio.lua lo regenera el pipeline del
+    -- codice. Los ataques puros con sabor de luz (ira_solar, saeta_guiada) NO estan: sin
+    -- objetivo no tienen nada que crear y el aviso es el correcto.
+    if DUAL_USE_SPELLS[spellId] and not (UnitExists and UnitExists("target")) then
         return API.ConfirmCast(spellId, options)
     end
 

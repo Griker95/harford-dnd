@@ -26,23 +26,23 @@ chk("area: en el onCommit",
 chk("ataque: antes de tirar",
     core:find('local ok, castErr = API.ConfirmCast(spellId, { silent = true, free = options.free,', 1, true) ~= nil, true)
 
--- CONJUROS DE DOBLE USO (2026-09-05): crean algo util por si solo y ADEMAS pueden dañar.
--- Sin objetivo se lanzan sin mas (ConfirmCast: anuncio, coste, concentracion); con objetivo,
--- daño por la via normal. Antes el gate de alcance los abortaba ("Necesitas un objetivo").
-print("Doble uso: sin objetivo se lanza sin mas, con objetivo hace daño")
-chk("la puerta existe y cae a ConfirmCast",
-    core:find("if DUAL_USE_SPELLS[spellId] and not (UnitExists and UnitExists(\"target\")) then", 1, true) ~= nil, true)
-for _, id in ipairs({ "crear_fogata", "crear_llama", "hoja_de_fuego", "hoja_sombria", "esfera_de_llamas", "rayo_de_luna" }) do
-    chk(id .. " esta en la lista", core:find("    " .. id .. " = true,", 1, true) ~= nil, true)
-end
--- Y los ataques PUROS con sabor de luz NO: sin objetivo, su aviso es el correcto.
-chk("ira_solar no esta (ataque puro)", core:find("    ira_solar = true,", 1, true) == nil, true)
--- La puerta va ANTES del selector de variante de daño: para iluminar no se elige formula.
+-- SIN OBJETIVO = LANZAMIENTO SIN MAS (2026-09-05, regla UNIVERSAL, no por lista): cualquier
+-- conjuro sin target cae a ConfirmCast (anuncio, coste, concentracion) — Crear llama ilumina,
+-- una Descarga de fuego contra un barril la resuelve la mesa. Con objetivo, daño por la via
+-- normal. La unica excepcion es la curacion, que sin objetivo se resuelve sobre uno mismo.
+print("Sin objetivo se lanza sin mas; con objetivo hace daño")
+chk("la puerta universal existe",
+    core:find('if not (UnitExists and UnitExists("target")) then', 1, true) ~= nil, true)
+chk("y cae a ConfirmCast salvo curacion",
+    core:find('local esCuracion = preview and preview.area and preview.area.resolution == "heal"', 1, true) ~= nil, true)
+chk("consultando el area sin consumir cargas",
+    core:find('API.BuildAreaDefinition(spell, { soloConsultar = true })\n        local esCuracion', 1, true) ~= nil, true)
+-- La puerta va ANTES del selector de variante de daño: para lanzar sin mas no se elige formula.
 -- (El literal de variantes existe tambien en BuildAreaDefinition: se busca DESDE la puerta.)
-local posDual = core:find("if DUAL_USE_SPELLS[spellId]", 1, true)
+local posPuerta = core:find('if not (UnitExists and UnitExists("target")) then', 1, true)
 chk("y antes de exigir la variante de daño",
-    posDual ~= nil
-    and core:find("local variants = API.GetDamageVariants(spell)", posDual, true) ~= nil, true)
+    posPuerta ~= nil
+    and core:find("local variants = API.GetDamageVariants(spell)", posPuerta, true) ~= nil, true)
 
 print("El mapeo de castingTime cubre el catalogo")
 chk("adicional -> accion_adicional",

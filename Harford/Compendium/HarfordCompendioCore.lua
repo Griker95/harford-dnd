@@ -1551,17 +1551,6 @@ function API.RecastLastSingleTarget(marca, etiqueta)
     return true, u.nombre
 end
 
--- Doble uso confirmado en el barrido 2026-09-05 sobre los 385 conjuros 0-4 (marcadores de
--- utilidad en el texto + revision una a una): utilidad al lanzar, daño opcional con objetivo.
-local DUAL_USE_SPELLS = {
-    crear_fogata = true,       -- coloca la fogata (luz, campamento); daña solo a quien este o entre
-    crear_llama = true,        -- llama en la mano que ilumina; puede arrojarse (1d8 fuego)
-    hoja_de_fuego = true,      -- crea la cimitarra ardiente; el ataque es opcional
-    hoja_sombria = true,       -- crea la hoja psiquica; el ataque es opcional
-    esfera_de_llamas = true,   -- crea la esfera; el daño llega al embestir o por cercania
-    rayo_de_luna = true,       -- coloca el cilindro; el daño llega al entrar o empezar dentro
-}
-
 function API.ResolveCast(spellId, options)
     local spell = API.GetSpellById(spellId)
     if not spell then return false, "Conjuro no encontrado" end
@@ -1570,16 +1559,20 @@ function API.ResolveCast(spellId, options)
         return API.ConfirmCast(spellId, options)
     end
 
-    -- CONJUROS DE DOBLE USO (regla de mesa 2026-09-05): crean algo que sirve por si solo — una
-    -- llama que ilumina, una hoja en la mano, una esfera o un rayo colocados — y ADEMAS pueden
-    -- hacer daño. Sin objetivo se lanzan "sin mas" (anuncio, coste y concentracion por
-    -- ConfirmCast); con objetivo se resuelve el daño por la via normal. Antes, sin objetivo,
-    -- el gate de alcance los abortaba con "Necesitas un objetivo". La lista vive en el CORE
-    -- (como RequiresConcentration) porque HarfordCompendio.lua lo regenera el pipeline del
-    -- codice. Los ataques puros con sabor de luz (ira_solar, saeta_guiada) NO estan: sin
-    -- objetivo no tienen nada que crear y el aviso es el correcto.
-    if DUAL_USE_SPELLS[spellId] and not (UnitExists and UnitExists("target")) then
-        return API.ConfirmCast(spellId, options)
+    -- SIN OBJETIVO = LANZAMIENTO SIN MAS (regla de mesa 2026-09-05, universal): cualquier
+    -- conjuro sin target se anuncia, cobra su accion y su mana y arranca su concentracion via
+    -- ConfirmCast — Crear llama ilumina, Crear fogata se coloca, y una Descarga de fuego contra
+    -- un barril o una puerta la resuelve la mesa. Con objetivo, el daño va por la via normal.
+    -- No es por lista de conjuros a proposito ("no tiene por que ser crear/colocar algo"):
+    -- antes, el gate de alcance abortaba todo esto con "Necesitas un objetivo". La UNICA
+    -- excepcion es la curacion, que sin objetivo ya se resuelve sobre uno mismo y no debe
+    -- degradarse a un anuncio.
+    if not (UnitExists and UnitExists("target")) then
+        local preview = API.BuildAreaDefinition and API.BuildAreaDefinition(spell, { soloConsultar = true })
+        local esCuracion = preview and preview.area and preview.area.resolution == "heal"
+        if not esCuracion then
+            return API.ConfirmCast(spellId, options)
+        end
     end
 
     local variants = API.GetDamageVariants(spell)

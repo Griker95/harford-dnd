@@ -4537,6 +4537,10 @@ SlashCmdList["HARFORDMAIN"] = function(msg)
     elseif sub == "char" or sub == "personaje" then route("HARFORDCHARACTERPANEL")
     elseif sub == "rep" or sub == "reputacion" then route("HARFORDREP")
     elseif sub == "turnos" then route("HARFORDTURNOS")
+    elseif sub == "libre" then
+        if HarfordDnDAttackUI and HarfordDnDAttackUI.ToggleModoLibre then
+            HarfordDnDAttackUI.ToggleModoLibre()
+        end
     elseif sub == "combatstop" then
         local stopped = HarfordTurnOrderAPI and HarfordTurnOrderAPI.StopLocalCombat
             and HarfordTurnOrderAPI.StopLocalCombat()
@@ -4578,7 +4582,7 @@ SlashCmdList["HARFORDMAIN"] = function(msg)
             HarfordChat.Print("Las herramientas de diagnostico requieren el addon opcional HarfordDebug.")
         end
     else
-        HarfordChat.Print("/harford: herramientas | comunicador | radio | cargarficha | ficha | char | rep | turnos | combatstop | contratos | misiones | reparto | loot | config | inspect | compendio/magia | debug")
+        HarfordChat.Print("/harford: herramientas | comunicador | radio | cargarficha | ficha | char | rep | turnos | libre | combatstop | contratos | misiones | reparto | loot | config | inspect | compendio/magia | debug")
     end
 end
 

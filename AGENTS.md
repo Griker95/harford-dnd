@@ -3986,6 +3986,15 @@ Compatibilidad, que es donde esto se puede volver a romper en silencio:
   vive en otro sistema de coordenadas: no mezclarlos), con umbral de 2 yardas (~1,8 m) que tolera
   el jitter del servidor y un salto en el sitio. Girar no cambia la posicion, asi que queda libre.
   Candado en `calc` (bloque del muro).
+- **`/harford libre` (2026-09-05)**: cualquier jugador puede roamear SIN gasto ni muro — en su
+  turno o en el ajeno — y VOLVER a donde estaba al empezar su proximo turno (un ciclo; el TP de
+  vuelta lo apaga), o antes repitiendo el comando. Es el trato del DM dirigiendo pero a peticion:
+  `ToggleModoLibre` en `HarfordDnDAttackUI` guarda la "casa" (el ancla existente, o la posicion
+  al activarlo), para el contador, y la vigilancia del muro le salta (`API.ModoLibre`);
+  `AnclarPorTurnoAjeno` NO pisa su ancla con la posicion de roameo. Apagarlo a mano devuelve al
+  ancla, restaura los metros gastados y, en TU turno sin agotar, retira el ancla y reanuda el
+  contador (dejarla puesta convertia cada paso legitimo en un tiron a casa). El PJ nunca gana
+  terreno. Candado en `calc` (bloque del muro).
 - **El DM dirigiendo (Admin + `.ph dm`, DENTRO de la lista como PJ) TAMBIEN ancla al perder el
   turno (2026-09-05)**: `AnclarPorTurnoAjeno` le saltaba entero (`return` antes de capturar), y
   eso rompia su flujo por los DOS lados — sin ancla, `ReiniciarPorTurno` no tenia a donde

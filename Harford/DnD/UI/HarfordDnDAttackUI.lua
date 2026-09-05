@@ -755,9 +755,10 @@ function API.AttachMovementTracker(opts)
         -- --con el ancla ya puesta-- asi que no quedaba nadie para hacerla cumplir: podias cruzar
         -- la sala entera durante el turno de los enemigos. Se para de CONTAR, no de vigilar.
         if not tracking then
-            -- Al DM no se le ata mientras dirige: vuelve de una vez al empezar su turno.
+            -- Al DM no se le ata mientras dirige, ni a quien activo `/harford libre`: los dos
+            -- vuelven de una vez al empezar su turno.
             if API.RecordedMovementAnchor and EnCombate() and not LlevandoNpc()
-                and not DirigiendoLaEscena() then
+                and not DirigiendoLaEscena() and not API.ModoLibre then
                 Anclar()
             end
             return
@@ -900,7 +901,7 @@ function API.AttachMovementTracker(opts)
         -- El DM que se movio dirigiendo vuelve AHORA, de una vez, a donde dejo su personaje: se
         -- le deja roldar durante el turno de los demas, pero su PJ no gana terreno por ello. Al
         -- resto no le hace falta -- a ellos el muro ya les fue devolviendo sobre la marcha.
-        if API.RecordedMovementAnchor and DirigiendoLaEscena() and EnCombate() then
+        if API.RecordedMovementAnchor and (DirigiendoLaEscena() or API.ModoLibre) and EnCombate() then
             ultimoTiron = 0  -- el enfriamiento del muro no debe comerse este tiron
             Anclar()
             -- `Anclar` deja el contador AL MAXIMO, porque su uso normal es el muro: te devuelve
@@ -908,6 +909,11 @@ function API.AttachMovementTracker(opts)
             -- turno donde debes-- asi que el turno arranca a cero, con todo su movimiento.
             totalMeters = 0
             lastX, lastY, lastZ = nil, nil, nil
+        end
+        -- `/harford libre` es de UN ciclo: al tocarte el turno ya has vuelto (arriba) y se apaga.
+        if API.ModoLibre then
+            API.ModoLibre = nil
+            HarfordChat.Print("Modo libre terminado: de vuelta a tu posicion, con el movimiento integro.")
         end
         -- El ancla del turno pasado ya no vale: volver ahi te devolveria un asalto entero atras.
         API.RecordedMovementAnchor = nil
@@ -1013,6 +1019,9 @@ function API.AttachMovementTracker(opts)
         if not EnCombate() then return end
         if EsMiTurno() then return end
         if LlevandoNpc() then return end
+        -- Modo libre: el ancla "casa" se capturo al activarlo y NO se pisa con la posicion de
+        -- roameo en la que te pille el cambio de turno; el motor ya esta instalado.
+        if API.ModoLibre then return end
         tracking = false
         button:SetText("Movimiento")
         -- Ancla FRESCA en el sitio donde te pilla el cambio de turno: es la posicion a la que el
@@ -1021,6 +1030,50 @@ function API.AttachMovementTracker(opts)
         local ancla = CapturarAncla()
         if ancla then API.RecordedMovementAnchor = ancla end
         motor:SetScript("OnUpdate", OnUpdate)
+    end
+
+    -- `/harford libre`: roamear SIN gasto ni muro, en tu turno o en el ajeno, y volver al ancla
+    -- al empezar tu proximo turno (un ciclo, como el DM dirigiendo pero a peticion). El PJ no
+    -- gana terreno: la "casa" es donde estaba al activarlo (o el ancla que ya hubiera), y ahi se
+    -- vuelve — al tocarte el turno, o antes con otro `/harford libre`.
+    local libreMetros = 0
+    function API.ToggleModoLibre()
+        if API.ModoLibre then
+            API.ModoLibre = nil
+            if API.RecordedMovementAnchor then
+                ultimoTiron = 0
+                Anclar()
+            end
+            -- `Anclar` deja el contador al maximo (su uso normal es el muro); aqui se restaura
+            -- lo que llevabas gastado al activar el modo.
+            totalMeters = libreMetros
+            API.RecordedMovementMeters = totalMeters
+            lastX, lastY, lastZ = nil, nil, nil
+            if EsMiTurno() and not LlevandoNpc() then
+                -- En TU turno el ancla del modo no es el muro (no estabas agotado): se retira y
+                -- el contador vuelve a correr, o cada paso legitimo te devolveria a casa.
+                if totalMeters < MaximoDelTurno() then API.RecordedMovementAnchor = nil end
+                tracking = true
+                button:SetText("Parar " .. FormatMeters(totalMeters))
+            end
+            AvisarMovimiento(totalMeters, MaximoDelTurno())
+            HarfordChat.Print("Modo libre terminado: de vuelta donde estabas.")
+            return
+        end
+        if not EnCombate() then
+            HarfordChat.Print("Modo libre: solo aplica dentro de un combate por turnos (fuera no hay muro).")
+            return
+        end
+        libreMetros = totalMeters
+        if not API.RecordedMovementAnchor then
+            API.RecordedMovementAnchor = CapturarAncla()
+        end
+        tracking = false
+        button:SetText("Movimiento")
+        motor:SetScript("OnUpdate", OnUpdate)
+        API.ModoLibre = true
+        HarfordChat.Print("|cff88ff88Modo libre:|r te mueves sin gasto ni muro. Al empezar tu "
+            .. "proximo turno volveras a este punto — o antes, con otro /harford libre.")
     end
 
     -- El turno YA ESTABA EMPEZADO cuando llegaste: te acabas de unir, o vuelves de una

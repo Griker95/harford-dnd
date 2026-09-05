@@ -5048,9 +5048,16 @@ end
 do
     local function Devolver(kind, etiqueta)
         local T = HarfordDnDConditions and HarfordDnDConditions.Turn
-        if not (T and T.Refund) then return end
-        if T.Refund(kind) then
+        if not (T and T.ConcederODevolver) then return end
+        -- Mismo punto unico que el gesto del DM: fuera de tu turno la accion/adicional se
+        -- CONCEDE para usarla ahora; con gasto se devuelve; reaccion sin gastar = una extra.
+        local modo = T.ConcederODevolver(kind)
+        if modo == "concedida" then
+            HarfordChat.Print("|cff88ff88Te concedes tu " .. etiqueta .. ": puedes usarla AHORA, fuera de tu turno.|r")
+        elseif modo == "devuelta" then
             HarfordChat.Print("|cff88ff88Te has devuelto tu " .. etiqueta .. " de este turno.|r")
+        elseif modo == "extra" then
+            HarfordChat.Print("|cff88ff88Te concedes una reaccion extra este asalto.|r")
         else
             HarfordChat.Print("No tenias gastada tu " .. etiqueta .. ".")
         end
@@ -5145,9 +5152,39 @@ do
                     HarfordChat.Print(stopped and "Has salido localmente del modo combate."
                         or "No estabas en modo combate.")
                 end },
+                { text = (function()
+                      local m = HarfordDnDAttackUI and tonumber(HarfordDnDAttackUI.MovementMaxOverride)
+                      return "Movimiento maximo..." .. (m and string.format(" (%.1f m)", m) or "")
+                  end)(), notCheckable = true, func = function()
+                    if StaticPopup_Show then StaticPopup_Show("HARFORD_MOVE_MAX") end
+                end },
             },
         }
         return menu
+    end
+
+    -- Tope de movimiento manual: metros por turno, vacio o 0 para volver al de la ficha.
+    if StaticPopupDialogs and not StaticPopupDialogs["HARFORD_MOVE_MAX"] then
+        StaticPopupDialogs["HARFORD_MOVE_MAX"] = {
+            text = "Movimiento maximo del turno (metros; vacio = el de tu ficha):",
+            button1 = OKAY or "Aceptar",
+            button2 = CANCEL or "Cancelar",
+            hasEditBox = true,
+            timeout = 0, whileDead = true, hideOnEscape = true,
+            OnAccept = function(self)
+                if HarfordDnDAttackUI and HarfordDnDAttackUI.SetMovementMaxOverride then
+                    HarfordDnDAttackUI.SetMovementMaxOverride(self.editBox and self.editBox:GetText())
+                end
+            end,
+            EditBoxOnEnterPressed = function(self)
+                local parent = self:GetParent()
+                if HarfordDnDAttackUI and HarfordDnDAttackUI.SetMovementMaxOverride then
+                    HarfordDnDAttackUI.SetMovementMaxOverride(self:GetText())
+                end
+                parent:Hide()
+            end,
+            EditBoxOnEscapePressed = function(self) self:GetParent():Hide() end,
+        }
     end
 
     -- Boton pequeño pegado a la esquina superior derecha del PlayerFrame. Overlay en

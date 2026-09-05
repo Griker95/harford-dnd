@@ -605,6 +605,10 @@ function API.AttachMovementTracker(opts)
         end
         local base = (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
             and HarfordDnDCalc.GetTurnMovement()) or 0
+        -- Tope MANUAL (engranaje del unitframe): sustituye la base de la ficha — monturas,
+        -- dictados de mesa — y las capas de estado (mitad, Correr) siguen aplicando encima.
+        local override = tonumber(API.MovementMaxOverride)
+        if override and override > 0 then base = override end
         -- Velocidad A LA MITAD (nivel 2 de cansancio y equivalentes): el motor de condiciones lo
         -- sabia (IsSpeedHalved) pero el contador no lo miraba — el tooltip lo decia y el muro te
         -- dejaba andar entero. Correr dobla DESPUES, sobre la velocidad ya partida, como en 5e.
@@ -734,6 +738,23 @@ function API.AttachMovementTracker(opts)
         API.RecordedMovementAnchor = g.ancla
         API.TurnStartAnchor = g.inicio
         return true
+    end
+
+    -- Fija (o retira, con nil/0) el tope de movimiento manual y refresca la barra al momento.
+    function API.SetMovementMaxOverride(metros)
+        metros = tonumber(metros)
+        if metros and metros > 0 then
+            API.MovementMaxOverride = metros
+            HarfordChat.Print(string.format("|cff88ff88Movimiento maximo fijado en %.1f m.|r", metros))
+        else
+            API.MovementMaxOverride = nil
+            HarfordChat.Print("Movimiento maximo restaurado al de tu ficha.")
+        end
+        AvisarMovimiento(totalMeters, MaximoDelTurno())
+        if tracking then
+            button:SetText("Parar " .. FormatMeters(totalMeters))
+            label:SetText(FormatMeters(totalMeters))
+        end
     end
 
     function API.SetDashActive(activo)

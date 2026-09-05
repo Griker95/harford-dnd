@@ -448,8 +448,12 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   accion/adicional/reaccion via `Turn.Refund`). Es autogestion de LO PROPIO por vias que ya
   existian en el core — el gesto solo las reune; no confundir con el menu DM de AdminUnitMenu
   (estados y auras sobre OTROS). Candado en `tira_estados`.
-- **Lo que el DM "da" fuera de tu turno SE PUEDE USAR (2026-09-05)**: el gesto de devolver
-  accion/adicional (`TREFUND`) recibido FUERA de tu turno se traduce a `Turn.GrantOutOfTurn` —
+- **Lo que el DM "da" fuera de tu turno SE PUEDE USAR (2026-09-05) — y el menu del PROPIO
+  jugador hace lo mismo**: la logica vive en el punto UNICO `Turn.ConcederODevolver(kind)`
+  ("concedida" fuera de turno para accion/adicional, "devuelta" si habia gasto, "extra" para la
+  reaccion sin gastar, false si nada que dar), compartido por el receptor de `TREFUND` y por la
+  seccion Devolver del engranaje del unitframe — dos gestos, una sola verdad. El gesto de
+  devolver accion/adicional recibido FUERA de tu turno se traduce a `Turn.GrantOutOfTurn` —
   contador propio `concedidaFuera`, porque el presupuesto base no es tuyo mientras no te toca y
   devolver gasto no lo haria usable. `GetRemaining` lo ensena en turno ajeno, `Spend` lo consume
   SIN ensuciar el gasto del turno propio (tu proxima accion queda intacta), persiste con el sello

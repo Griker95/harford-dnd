@@ -655,6 +655,12 @@ chk("con umbral que tolera el jitter",
 print("Velocidad a la mitad y terreno dificil cuentan en el contador")
 chk("cansancio 2 parte el tope",
     ataque:find('HarfordDnDConditions.IsSpeedHalved("player") then\n            base = base / 2', 1, true) ~= nil, true)
+-- El tope MANUAL sustituye la base y las capas de estado (mitad, Correr) aplican ENCIMA.
+chk("el tope manual sustituye la base",
+    ataque:find("local override = tonumber(API.MovementMaxOverride)", 1, true) ~= nil
+    and ataque:find("if override and override > 0 then base = override end", 1, true) ~= nil, true)
+chk("y su setter refresca la barra",
+    ataque:find("function API.SetMovementMaxOverride(metros)", 1, true) ~= nil, true)
 chk("y ANTES de que Correr doble",
     ataque:find("base = base / 2\n        end\n        local tope = corriendo and (base * 2) or base", 1, true) ~= nil, true)
 chk("terreno dificil dobla el gasto contado",

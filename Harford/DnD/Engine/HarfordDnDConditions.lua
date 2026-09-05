@@ -2179,6 +2179,26 @@ do
         return ECONOMIA.concedidaFuera[kind]
     end
 
+    -- "Dar" una accion/adicional/reaccion — venga del DM (TREFUND) o del menu del propio
+    -- jugador: fuera de tu turno, accion/adicional se CONCEDEN para usarlas AHORA; si hay gasto
+    -- que devolver, se devuelve; y una reaccion sin gastar se concede como EXTRA (ya es usable
+    -- en turno ajeno por si misma). Punto unico para que ambos gestos no diverjan.
+    -- Devuelve "concedida" | "devuelta" | "extra" | false (nada que dar).
+    function Turn.ConcederODevolver(kind)
+        kind = tostring(kind or "")
+        if not ETIQUETA[kind] then return false end
+        if (kind == "action" or kind == "bonus") and Turn.IsActive() and not Turn.IsMyTurn() then
+            Turn.GrantOutOfTurn(kind, 1)
+            return "concedida"
+        end
+        if Turn.Refund(kind) then return "devuelta" end
+        if kind == "reaction" then
+            Turn.GrantExtra("reaction", 1)
+            return "extra"
+        end
+        return false
+    end
+
     function Turn.Reset()
         -- Los ataques ya hechos son de ESTE turno: sin reiniciarlos, el primer ataque del turno
         -- siguiente se tomaria por el segundo y saldria gratis.

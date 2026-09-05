@@ -259,5 +259,8 @@ chk("y la seccion Combate con los tres gestos de /harfordcombat",
     uf:find('{ text = "Movimiento libre", isNotRadio = true,', 1, true) ~= nil
     and uf:find('{ text = "Reubicar", notCheckable = true,', 1, true) ~= nil
     and uf:find('{ text = "Parar combate", notCheckable = true,', 1, true) ~= nil, true)
+chk("mas el tope de movimiento manual con su dialogo",
+    uf:find('StaticPopupDialogs["HARFORD_MOVE_MAX"] = {', 1, true) ~= nil
+    and uf:find("HarfordDnDAttackUI.SetMovementMaxOverride", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

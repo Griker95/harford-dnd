@@ -151,8 +151,8 @@ chk("el mensaje tiene lista cerrada",
 -- Lo aplica el RECEPTOR: es quien lleva su economia, y escribirsela desde fuera daria dos verdades
 -- distintas sobre lo mismo.
 local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
-chk("y lo aplica el receptor",
-    comm:find("elseif T.Refund(refundKind) then", 1, true) ~= nil, true)
+chk("y lo aplica el receptor (punto unico ConcederODevolver)",
+    comm:find("local modo = T.ConcederODevolver(refundKind)", 1, true) ~= nil, true)
 -- Con el mismo filtro de remitente que el resto de mensajes con efecto: cambia lo que TU puedes
 -- hacer este turno.
 chk("con el filtro de siempre",
@@ -239,12 +239,31 @@ miTurno = false
 chk("Reset limpia las concesiones", T.GetRemaining("bonus"), 0)
 miTurno = true
 HarfordTurnOrderAPI.IsMyTurn = nil
--- Y el receptor del gesto del DM traduce: fuera de turno concede; reaccion sin gastar = extra.
-local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
-chk("el receptor concede fuera de turno",
-    comm:find('T.GrantOutOfTurn(refundKind, 1)', 1, true) ~= nil, true)
-chk("y la reaccion sin gastar se concede como extra",
-    comm:find('T.GrantExtra("reaction", 1)', 1, true) ~= nil, true)
+-- El punto UNICO ConcederODevolver decide: fuera de turno concede, con gasto devuelve, reaccion
+-- sin gastar = extra. Lo comparten el receptor del gesto del DM y el menu del propio jugador.
+print("ConcederODevolver: la misma logica para el DM y el menu PJ")
+HarfordTurnOrderAPI.IsMyTurn = function() return miTurno end
+T.Reset()
+miTurno = false
+chk("fuera de turno, accion = concedida", T.ConcederODevolver("action"), "concedida")
+chk("  y aparece usable", T.GetRemaining("action"), 1)
+miTurno = true
+T.Reset()
+T.Spend("action", 1)
+chk("en tu turno con gasto = devuelta", T.ConcederODevolver("action"), "devuelta")
+chk("en tu turno sin gasto = nada que dar", tostring(T.ConcederODevolver("action")), "false")
+T.Spend("reaction", 1)
+chk("reaccion gastada = devuelta", T.ConcederODevolver("reaction"), "devuelta")
+chk("reaccion sin gastar = extra", T.ConcederODevolver("reaction"), "extra")
+chk("  y el presupuesto sube a 2", T.GetRemaining("reaction"), 2)
+T.Reset()
+HarfordTurnOrderAPI.IsMyTurn = nil
+local comm2 = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
+local ufSrc = io.open("Harford/Frames/HarfordUnitFrames.lua"):read("*a")
+chk("el receptor del DM usa el punto unico",
+    comm2:find("T.ConcederODevolver(refundKind)", 1, true) ~= nil, true)
+chk("y el menu del propio jugador tambien",
+    ufSrc:find("T.ConcederODevolver(kind)", 1, true) ~= nil, true)
 
 -- ─── GRAN MAESTRO DE ARMAS: EL CRITICO/REMATE ABRE UN ATAQUE COMO ADICIONAL ─
 -- La marca (GrantBonusWeaponAttack) la ponen el critico c/c y el remate; al abrir la siguiente

@@ -921,6 +921,17 @@ function API.Open(definition, context)
             API.Resolve()
             return true
         end
+        -- CURACION de objetivo unico sin target: te tocas a ti mismo (regla de mesa 2026-09-05,
+        -- "sin objetivo, lo propio"). Solo curacion — un ataque sin objetivo ya no llega aqui
+        -- (ResolveCast lo convierte en lanzamiento sin mas) y si llegara debe pedir victima.
+        if normalized.resolution == "heal" and S.session and not S.session.resolved then
+            local yo = CaptureUnit("player")
+            if yo then
+                S.session.targets[#S.session.targets + 1] = yo
+                API.Resolve()
+                return true
+            end
+        end
         Print("Sin objetivo valido: marca las victimas manualmente.")
     end
     frame:Show()

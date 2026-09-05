@@ -307,6 +307,18 @@ chk("bendicion declara la condicion Bendito",
         :find('condition = { id = "blessed" }', 1, true) ~= nil, true)
 chk("el auto sin daño no rotula Impacto automatico",
     areaSrc:find('rollText = #(request.components or {}) > 0 and "Impacto automatico" or ""', 1, true) ~= nil, true)
+
+-- ─── CURACION SIN TARGET = A UNO MISMO (2026-09-05) ─────────────────────────
+-- "Sin objetivo, lo propio": Curar heridas sin target te toca a ti (antes caia a la ventana de
+-- marcado manual), y el gate de alcance no exige target cuando no hay nada que medir (a ese
+-- punto sin target solo llegan curaciones; Palabra de curacion sin target abortaba).
+print("Curacion sin objetivo se resuelve sobre uno mismo")
+chk("el auto-resolve cae a uno mismo solo en curacion",
+    areaSrc:find('if normalized.resolution == "heal" and S.session and not S.session.resolved then', 1, true) ~= nil, true)
+chk("marcandote con CaptureUnit(player)",
+    areaSrc:find('local yo = CaptureUnit("player")', 1, true) ~= nil, true)
+chk("y el gate de alcance del core exige target para medir",
+    coreSrc:find('and (UnitExists and UnitExists("target"))\n        if needsRange then', 1, true) ~= nil, true)
 chk("la linea de victima solo incrusta curacion",
     areaSrc:find('if request.mode ~= "heal" then visibleApplied, visibleSummaries = 0, {} end', 1, true) ~= nil, true)
 chk("y sin dos puntos: el color separa",

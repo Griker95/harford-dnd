@@ -1633,8 +1633,12 @@ function API.ResolveCast(spellId, options)
     if not options._rangeChecked and HarfordDnDRange and HarfordDnDRange.CheckTargetRange then
         local preview = API.BuildAreaDefinition and API.BuildAreaDefinition(spell, { soloConsultar = true })
         local range = API.GetSpellRange(spell)
+        -- Sin target no se mide nada: aqui solo llegan curaciones (todo lo demas ya cayo al
+        -- lanzamiento sin mas), y una curacion sin objetivo se resuelve sobre uno mismo — el
+        -- alcance contra ti es trivial. Antes, Palabra de curacion sin target abortaba.
         local needsRange = range and tonumber(range.normalMeters)
             and (preview ~= nil or IsSpellAttack(spell))
+            and (UnitExists and UnitExists("target"))
         if needsRange then
             local expectedGuid = UnitGUID and UnitGUID("target") or nil
             local sent = HarfordDnDRange.CheckTargetRange(range, function(result)

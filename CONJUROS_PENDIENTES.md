@@ -42,6 +42,33 @@ Estaban en el compendio con otro título; todos concedidos ya en sus rasgos.
 |---|---|---|
 | castigo deslumbrante | Paladín / Protección, nivel de clase 5 | La tabla de equivalencias lo empareja con `golpe_cegador` (*blinding smite*, 3d8 radiante), pero ese es de NIVEL 3 de conjuro y el escalón de clase 5 corresponde a ranura de 2.º. O el manual adelanta un conjuro de 3.º, o el candidato no es él. `pal_pro_conjuros_5` concede solo `guardian_del_rey` mientras tanto. No cablear sin decidirlo. |
 
+## Barrido OCR comparado (2026-09-05) — CERRADO
+
+Auditoría completa del compendio del addon (384 conjuros) contra los 558 de la web,
+por id, sobre descripción + mecánica + daño: **1 artefacto OCR** (`rociada_venenosa`
+"(2dl 2)" → "(2d12)", corregido), **0 dados desviados** de la web, **0 cabeceras de
+página**, **0 mojibake**, **0 conjuros con contenido de otro incrustado**. El candado
+vive en `tools/pruebas/compendio_ocr.lua`.
+
+Hallazgos de cobertura:
+
+1. **`sp_resplandor_enfermizo`** (Sickening Radiance, Xanathar, nivel 4, Brujo): era el
+   único conjuro de nivel 0–4 de la web que faltaba en el addon. **Alta hecha** con el id
+   de la web (para que el cotejo por id siga casando), texto web (ya en métrico), icono
+   reutilizado de `rayo_de_enfermedad` (137020). Sin condición automática: la recurrencia
+   del área y el agotamiento son de mesa.
+2. **AVISO A LA WEB — `sp_castigo_abrasador` es un DUPLICADO**: es el mismo *Searing
+   Smite* que la web ya tiene como `golpe_llameante` (mismo nivel 1, Paladín, 1 acción
+   adicional, V, concentración 1 minuto, +1d6 fuego y arde con salvación CON). El addon
+   resolvió esa equivalencia en 2026-08-29 (`pal_ret_conjuros_3` concede
+   `golpe_llameante`); NO se importa el duplicado. Decidir en el chat del códice cuál de
+   las dos entradas se queda.
+3. Los **otros 172 `sp_*` solo-web son de nivel 5–9** (57/49/23/22/21 por nivel): fuera
+   del alcance actual (conjuros 0–4). Son el material ya preparado para cuando se amplíe.
+4. **`Restablecimiento mayor` tampoco está en la web** (solo `restablecimiento_menor`):
+   ya no es "alta pendiente" del addon — es nivel 5 (fuera de alcance) y cuando la web lo
+   incorpore entrará con la ampliación.
+
 ## Avisos a la web (no conjuros)
 
 - **"Apresado" vs "Restringido"** (2026-08-29): la seccion Estados de la web llama

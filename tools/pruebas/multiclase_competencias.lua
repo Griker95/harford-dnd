@@ -118,6 +118,24 @@ local crea = io.open("Harford/Character/HarfordCharacterCreation.lua"):read("*a"
 chk("el About del generador",
     crea:find("(feature.onlyFirstClass and not esPrimera)", 1, true) ~= nil, true)
 
+-- ─── (4b) LAS FICHAS ANTIGUAS SE ACOPLAN, NO PIERDEN EN SILENCIO ────────────
+-- Una multiclase creada con la regla vieja eligio 2-3 habilidades por la eleccion COMPLETA de
+-- su segunda clase; la puerta nueva la apagaria en silencio. La migracion de Migrate traslada
+-- la PRIMERA elegida a `_competencias_multiclase` (las demas caen, que es la regla), conserva
+-- la eleccion vieja por si esa clase vuelve a ser inicial, y es idempotente.
+print("Migracion de elecciones antiguas de la segunda clase")
+local prog = io.open("Harford/DnD/State/HarfordDnDProgression.lua"):read("*a")
+chk("traslada al primer slot con valor (los slots admiten huecos)",
+    prog:find("for s = 1, 8 do if viejo[s] ~= nil then primera = viejo[s] break end end", 1, true) ~= nil, true)
+chk("solo si la variante esta vacia (idempotente)",
+    prog:find('primera and (type(nuevo) ~= "table" or next(nuevo) == nil)', 1, true) ~= nil, true)
+chk("rellena la variante multiclase",
+    prog:find("data.choices[claveNueva] = { primera }", 1, true) ~= nil, true)
+chk("y NO borra la eleccion vieja",
+    prog:find('data.choices[tostring(entry.classId) .. "_competencias_clase"] = nil', 1, true), nil)
+chk("avisando al jugador (no silencioso)",
+    prog:find("conservas ", 1, true) ~= nil, true)
+
 -- ─── (5) EL AVISO DE MINIMOS: AVISA, NO BLOQUEA ─────────────────────────────
 print("Minimos de caracteristica al estrenar clase")
 chk("el asistente los revisa (clase nueva Y las que ya tienes)",

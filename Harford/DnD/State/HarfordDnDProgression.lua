@@ -484,6 +484,33 @@ local function Migrate(data, silencioso, slot)
     end
     if type(data.featureStates) ~= "table" then data.featureStates = {} end
     if type(data.choices) ~= "table" then data.choices = {} end
+    -- MULTICLASE (2026-09-05): antes una segunda clase daba su eleccion COMPLETA de habilidades
+    -- (2-3) y las elecciones se guardaron bajo `<clase>_competencias_clase`. Con la regla del
+    -- manual esa eleccion es solo de la clase INICIAL y una posterior da UNA habilidad
+    -- (`<clase>_competencias_multiclase`), asi que la puerta nueva apagaria las elegidas EN
+    -- SILENCIO. Para que la ficha antigua se acople: su primera habilidad elegida se TRASLADA a
+    -- la variante multiclase (las demas caen, que es lo que dice la regla) y la eleccion vieja
+    -- SE CONSERVA por si esa clase vuelve a ser la inicial. Idempotente: solo rellena si la
+    -- variante esta vacia; corre en cada carga porque no depende del numero de esquema.
+    for i, entry in ipairs(data.classLevels) do
+        if i > 1 and type(entry) == "table" and entry.classId then
+            local viejo = data.choices[tostring(entry.classId) .. "_competencias_clase"]
+            local claveNueva = tostring(entry.classId) .. "_competencias_multiclase"
+            local nuevo = data.choices[claveNueva]
+            local primera
+            if type(viejo) == "table" then
+                -- Los slots pueden tener huecos: la primera elegida es el primer slot con valor.
+                for s = 1, 8 do if viejo[s] ~= nil then primera = viejo[s] break end end
+            end
+            if primera and (type(nuevo) ~= "table" or next(nuevo) == nil) then
+                data.choices[claveNueva] = { primera }
+                if not silencioso and HarfordChat and HarfordChat.Print then
+                    HarfordChat.Print("Multiclase " .. tostring(entry.classId) .. ": la regla del manual da UNA "
+                        .. "habilidad al entrar en la clase; conservas " .. tostring(primera) .. ".")
+                end
+            end
+        end
+    end
     if type(data.importedProficiencies) ~= "table" then data.importedProficiencies = {} end
     if type(data.importedProficiencies.skillRank) ~= "table" then data.importedProficiencies.skillRank = {} end
     if type(data.importedProficiencies.saveProf) ~= "table" then data.importedProficiencies.saveProf = {} end

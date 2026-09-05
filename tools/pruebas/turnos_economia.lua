@@ -158,11 +158,17 @@ chk("y lo aplica el receptor",
 chk("con el filtro de siempre",
     comm:find("if not IsTrustedEffectSender(sender) then return false end", 1, true) ~= nil, true)
 
--- ─── FUERA DE TU TURNO NO TIENES ACCION NI ADICIONAL ────────────────────────
--- Son tuyas mientras te TOCA. La reaccion no: para eso es una reaccion, se usa en el turno de otro
--- por definicion. No se "gastan" al pasar el turno --se consideran no disponibles-- porque gastarlas
--- de verdad haria imposible distinguirlas de un gasto real a la hora de devolverlas.
-print("Fuera de tu turno no hay accion ni adicional")
+-- ─── FUERA DE TU TURNO NO TIENES ACCION NI ADICIONAL — PERO LA REACCION SI ──
+-- Accion y adicional son tuyas mientras te TOCA. No se "gastan" al pasar el turno --se
+-- consideran no disponibles-- porque gastarlas de verdad haria imposible distinguirlas de un
+-- gasto real a la hora de devolverlas.
+--
+-- La REACCION vuelve al MANUAL (decision de mesa 2026-09-05, revierte la divergencia anterior):
+-- en 5e una reaccion se usa por definicion en el turno de otro --Oportunidad, Escudo,
+-- Contrahechizo, Esquiva Sobrenatural-- y el cerrojo total las dejaba inservibles ("estamos
+-- perdiendo la reaccion de los PJs en el turno enemigo"). Su refresco sigue al manual: se
+-- reinicia al empezar TU turno, asi que la gastada en turno ajeno sigue gastada hasta entonces.
+print("Fuera de tu turno no hay accion ni adicional, pero la reaccion si")
 HarfordTurnOrderStore.entries = { { name = "Alguien", kind = "npc" } }
 T.Reset()
 local miTurno = true
@@ -172,30 +178,27 @@ chk("y la adicional tambien", T.GetRemaining("bonus"), 1)
 miTurno = false
 chk("en turno ajeno, sin accion", T.GetRemaining("action"), 0)
 chk("ni adicional", T.GetRemaining("bonus"), 0)
--- Y la REACCION tampoco. Es una divergencia DELIBERADA del manual, decidida en mesa: en 5e una
--- reaccion se usa por definicion en el turno de otro --Oportunidad, Escudo, Contrahechizo, Esquiva
--- Sobrenatural--, asi que bloquearla aqui las deja inservibles. Se quiere igual, porque lo que se
--- busca es que cuando le toca a los enemigos los jugadores esten QUIETOS.
--- Para volver al manual basta sacar `reaction` de `FUERA_DE_TURNO`; esta prueba es lo unico mas
--- que habria que cambiar.
-chk("y la reaccion TAMPOCO (divergencia de mesa)", T.GetRemaining("reaction"), 0)
--- Y no se ha gastado nada: al volver tu turno esta entera.
-chk("no se apunto como gastada", T.GetSpent("action"), 0)
+chk("pero la reaccion ESTA (manual 5e)", T.GetRemaining("reaction"), 1)
+-- Gastarla en turno ajeno la deja gastada: no se regala otra hasta que TE toque.
+chk("se puede gastar en turno ajeno", (T.Spend("reaction", 1)), true)
+chk("  y gastada, gastada esta", T.GetRemaining("reaction"), 0)
+chk("  tambien al pedir otra", (T.Spend("reaction", 1)), false)
+-- La accion no se apunto como gastada: al volver tu turno esta entera, y Reset devuelve la reaccion.
+chk("la accion no se apunto como gastada", T.GetSpent("action"), 0)
 miTurno = true
 chk("y vuelve entera", T.GetRemaining("action"), 1)
-chk("  y la reaccion tambien", T.GetRemaining("reaction"), 1)
+T.Reset()
+chk("  y la reaccion vuelve con TU turno (Reset)", T.GetRemaining("reaction"), 1)
 
--- La UNICA rendija del turno ajeno: PREPARAR. Pagaste la accion por adelantado y comprometiste la
--- reaccion, asi que con el estado `preparado` puesto puede dispararse una accion, adicional o
--- reaccion declarada. Todas consumen esa unica reaccion y retiran Preparar.
-print("Preparar es la unica rendija del turno ajeno")
+-- PREPARAR conserva su sentido: sigue siendo LA forma de disparar una ACCION completa (o
+-- adicional) en turno ajeno — pagada por adelantado al preparar y COBRADA como reaccion.
+print("Preparar dispara la accion pagada cobrando la reaccion")
 miTurno = false
 local preparado = false
 API.Has = function(unit, id) return unit == "player" and id == "preparado" and preparado end
 API.RemoveOwned = function(id) if id == "preparado" then preparado = false end end
-chk("sin preparar, la reaccion sigue a cero", T.GetRemaining("reaction"), 0)
 preparado = true
-chk("PREPARADO: la reaccion vuelve", T.GetRemaining("reaction"), 1)
+chk("PREPARADO: la reaccion esta", T.GetRemaining("reaction"), 1)
 chk("  la accion ya pagada sigue a cero", T.GetRemaining("action"), 0)
 chk("  ni la adicional", T.GetRemaining("bonus"), 0)
 chk("ataque preparado cobra reaccion", T.SpendWeaponAttack(false), "reaction")

@@ -1868,11 +1868,17 @@ do
         return true
     end
 
-    -- Fuera de TU turno no tienes NADA: ni accion, ni adicional, ni reaccion, ni movimiento.
-    -- Preparar es la excepcion: permite disparar UNA de esas acciones usando la reaccion que se
-    -- comprometio al prepararla. No se "gastan" al pasar el turno: se consideran no disponibles
-    -- mientras no te toque, para no ensuciar el contador ni devolver recursos gastados de verdad.
-    local FUERA_DE_TURNO = { action = true, bonus = true, reaction = true }
+    -- Fuera de TU turno no tienes accion, ni adicional, ni movimiento. LA REACCION SI (decision
+    -- de mesa 2026-09-05, vuelta al manual): en 5e una reaccion se usa por definicion en el
+    -- turno de otro -- Oportunidad, Escudo, Contrahechizo, Esquiva Sobrenatural -- y el cerrojo
+    -- total las dejaba inservibles ("estamos perdiendo la reaccion de los PJs en el turno
+    -- enemigo"). Su refresco ya es el del manual: `Turn.Reset` corre en el listener de MI turno,
+    -- asi que la gastada en turno ajeno sigue gastada hasta que te vuelva a tocar. Preparar
+    -- conserva su sentido: sigue siendo LA forma de disparar una ACCION completa en turno ajeno
+    -- (pagada por adelantado y cobrada como reaccion). Lo demas no se "gasta" al pasar el turno:
+    -- se considera no disponible mientras no te toque, para no ensuciar el contador ni devolver
+    -- recursos gastados de verdad.
+    local FUERA_DE_TURNO = { action = true, bonus = true }
 
     function Turn.IsMyTurn()
         if not (HarfordTurnOrderAPI and HarfordTurnOrderAPI.IsMyTurn) then return true end
@@ -1910,13 +1916,10 @@ do
     end
 
     function Turn.GetRemaining(kind)
-        -- Lo que no es tuyo ahora mismo esta a cero, aunque no lo hayas gastado.
+        -- Lo que no es tuyo ahora mismo esta a cero, aunque no lo hayas gastado. La reaccion ya
+        -- no entra aqui (FUERA_DE_TURNO): esta disponible tambien en turno ajeno, como manda el
+        -- manual, y la accion preparada se sigue COBRANDO de ella.
         if Turn.IsActive() and FUERA_DE_TURNO[tostring(kind or "")] and not Turn.IsMyTurn() then
-            -- La accion preparada se COBRA como reaccion. La accion/adicional sigue figurando a
-            -- cero en la banda: ya se pago cuando se preparo y no se concede una nueva.
-            if tostring(kind) == "reaction" and API.Has and API.Has("player", "preparado") then
-                return math.max(0, Turn.GetBudget(kind) - Turn.GetSpent(kind))
-            end
             return 0
         end
         return math.max(0, Turn.GetBudget(kind) - Turn.GetSpent(kind))

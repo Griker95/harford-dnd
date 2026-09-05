@@ -229,7 +229,7 @@ Catalogo, estado por PJ, registro, tracker y quests de mundo.
 | `HarfordQuests.lua` | 1136 | Estado per-PJ de misiones (quest log Harford) Capa de SISTEMA (addon), cross-fase, per-personaje. |
 | `HarfordQuestLog.lua` | 1257 | Registro de misiones Harford. Replica la composicion de ClassicQuestLog 2.1.0 para Shadowlands: ButtonFrameTemplate, HybridScrollFrameTemplate y QuestScrollFrameTemplate. El estado de las... |
 | `HarfordQuestTracker.lua` | 222 | Misiones Harford como modulo real del ObjectiveTracker de Shadowlands. |
-| `HarfordWorldQuests.lua` | 1028 | Capa de quests de MUNDO (NPC de fase) sobre el nucleo HarfordQuests. |
+| `HarfordWorldQuests.lua` | 1441 | Capa de quests de MUNDO (NPC de fase) sobre el nucleo HarfordQuests. Defs en PhaseAddonData (`HARFORD_WQ_*`) con editor DM in-game; ArcSpell generico `OpenWorldQuest`. |
 
 ## `Contracts/` - Contratos
 

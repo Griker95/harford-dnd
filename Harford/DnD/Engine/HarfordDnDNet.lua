@@ -26,6 +26,18 @@ function HarfordDnDNet.BuildActiveResourcePayload(readValueFn, options)
         out.ArmorClass = tostring((readValueFn and readValueFn("ArmorClass")) or "10")
         keysToSend[#keysToSend + 1] = "ArmorClass"
     end
+    -- Defensas del PROPIO jugador (resist/inmune/vulnerable por rasgos, raza y objetos),
+    -- sincronizadas estilo CA: viajan como clave `DmgStatus` y aterrizan en la RemoteCache del
+    -- receptor con el mismo ciclo de vida que el resto de recursos. Siempre las del jugador
+    -- vivo — el envio de fichas del BANCO pasa includeDamageStatus=false porque de un perfil
+    -- ajeno no se puede derivar el mapa, y una cadena vacia mentiria ("sin defensas");
+    -- la clave AUSENTE significa "no se sabe".
+    if (options == nil or options.includeDamageStatus ~= false)
+        and HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.EncodeDamageStatus then
+        out.DmgStatus = HarfordDnDFeatureEffects.EncodeDamageStatus(
+            (UnitName and UnitName("player")) or nil)
+        keysToSend[#keysToSend + 1] = "DmgStatus"
+    end
     return out, keysToSend
 end
 
@@ -107,9 +119,11 @@ function HarfordDnDNet.SendResourceResponseForProfileTo(profileName, targetName)
         profile = {}
     end
 
+    -- Sin DmgStatus: el payload describe un perfil del BANCO, no al jugador vivo, y adjuntar
+    -- el mapa propio lo atribuiria a ese perfil en la cache del receptor.
     local tbl, keysToSend = HarfordDnDNet.BuildActiveResourcePayload(WrapDerivedMax(function(key)
         return profile[key] or "0"
-    end, resolvedProfile, true))
+    end, resolvedProfile, true), { includeDamageStatus = false })
 
     return HarfordSync.SendResourceResponse(
         ADDON_PREFIX,

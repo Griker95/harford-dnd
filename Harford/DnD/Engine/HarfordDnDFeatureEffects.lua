@@ -793,6 +793,36 @@ function API.GetDamageStatusMap(profileName)
     return out
 end
 
+-- ─── Sincronizacion del mapa de defensas (viaja con los recursos, estilo CA) ─
+-- Formato compacto para la clave `DmgStatus` del payload de recursos: "fuego.i,veneno.r"
+-- (clave normalizada + letra r/i/v, ordenado para que el payload sea estable entre envios).
+-- La cadena VACIA es dato afirmativo ("sin defensas"); la clave AUSENTE en un payload es un
+-- cliente antiguo que no la manda — el receptor distingue ambos casos.
+-- Solo letras sin acentos: no puede llevar `;`, `=` ni `|`, que romperian la serializacion
+-- key=value del payload y el framing del addon message.
+local LETRA_DE_STATUS = { resistant = "r", immune = "i", vulnerable = "v" }
+local STATUS_DE_LETRA = { r = "resistant", i = "immune", v = "vulnerable" }
+
+function API.EncodeDamageStatus(profileName)
+    local partes = {}
+    for clave, status in pairs(API.Resolve(profileName).damageStatus) do
+        local letra = LETRA_DE_STATUS[status]
+        if letra then partes[#partes + 1] = tostring(clave) .. "." .. letra end
+    end
+    table.sort(partes)
+    return table.concat(partes, ",")
+end
+
+function API.DecodeDamageStatus(encoded)
+    if type(encoded) ~= "string" then return nil end
+    local map = {}
+    for clave, letra in encoded:gmatch("([^,%.]+)%.(%a)") do
+        local status = STATUS_DE_LETRA[letra]
+        if status then map[clave] = status end
+    end
+    return map
+end
+
 function API.HasConditionImmunity(conditionId, profileName)
     return API.Resolve(profileName).conditionImmunity[tostring(conditionId or "")] == true
 end

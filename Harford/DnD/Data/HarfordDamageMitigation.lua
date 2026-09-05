@@ -122,6 +122,28 @@ local function EnsureUnitInspectProgression(unit, profileName)
     return HarfordDnDProgression.SetInspectDataFromTRP3Sheet(profileName, sheet)
 end
 
+-- Mapa de defensas SINCRONIZADO de un jugador remoto: su cliente lo calcula con su ficha viva
+-- (rasgos + raza + objetos) y viaja como clave `DmgStatus` del payload de recursos, estilo CA.
+-- Devuelve (status|nil, conocido): `conocido=true` significa que ese jugador SI mando su mapa
+-- (aunque el status sea nil = normal), y entonces manda sobre cualquier reconstruccion local
+-- (About TRP3, inspect), que solo es una copia que puede faltar o estar vieja. `conocido=false`
+-- es un cliente antiguo o sin datos: se cae a los fallbacks de siempre.
+function HarfordDamageMitigation.GetSyncedStatus(unit, typeText)
+    if not (HarfordDnDResources and HarfordDnDResources.RemoteCache) then return nil, false end
+    if not (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.DecodeDamageStatus
+        and HarfordDnDFeatureEffects.NormDamageKey) then return nil, false end
+    for _, name in ipairs(GetUnitProfileCandidates(unit)) do
+        local tbl = HarfordDnDResources.RemoteCache[name]
+        local raw = tbl and tbl.DmgStatus
+        if type(raw) == "string" then
+            local map = HarfordDnDFeatureEffects.DecodeDamageStatus(raw)
+            local key = HarfordDnDFeatureEffects.NormDamageKey(typeText)
+            return (map and key and map[key]) or nil, true
+        end
+    end
+    return nil, false
+end
+
 local function ResolvePlayerFeatureStatus(unit, typeText)
     if not (HarfordDnDFeatureEffects and HarfordDnDFeatureEffects.GetCachedDamageStatus) then
         return nil
@@ -136,6 +158,11 @@ local function ResolvePlayerFeatureStatus(unit, typeText)
         end
         return status
     end
+
+    -- Jugador REMOTO: primero el mapa que su propio cliente ha sincronizado. Si lo mando
+    -- (aunque diga "sin defensas"), es la verdad de su ficha y no se sigue buscando.
+    local synced, conocido = HarfordDamageMitigation.GetSyncedStatus(unit, typeText)
+    if conocido then return synced end
 
     if not (HarfordDnDProgression and HarfordDnDProgression.HasProgression) then
         return nil

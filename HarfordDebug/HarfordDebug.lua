@@ -8651,4 +8651,45 @@ do
             Print("  |cff88ff88Deberian verse en General.|r Si no salen, el fallo esta al pintar.")
         end
     end, "por que no salen las dotes en el Libro")
+
+    API.RegisterCommand("defensas", function(args)
+        local FE, DM = _G.HarfordDnDFeatureEffects, _G.HarfordDamageMitigation
+        Print("--- Defensas PROPIAS (rasgos + raza + objetos) ---")
+        if FE and FE.GetDamageStatusMap then
+            local mapa = FE.GetDamageStatusMap(UnitName and UnitName("player"))
+            local alguna = false
+            for tipo, status in pairs(mapa) do
+                alguna = true
+                Print(string.format("  %-14s %s", tipo, tostring(status)))
+            end
+            if not alguna then Print("  (ninguna)") end
+            Print("  Codificado para la red: \"" .. tostring(FE.EncodeDamageStatus
+                and FE.EncodeDamageStatus(UnitName and UnitName("player")) or "?") .. "\"")
+        end
+        local unit = tostring(args or ""):match("%S+") or "target"
+        Print("--- Mapa SINCRONIZADO de '" .. unit .. "' (clave DmgStatus de su RemoteCache) ---")
+        if not (UnitExists and UnitExists(unit)) then Print("  esa unidad no existe") return end
+        if not (UnitIsPlayer and UnitIsPlayer(unit)) then Print("  no es un jugador") return end
+        local crudo
+        for _, name in ipairs({ GetUnitName and GetUnitName(unit, true),
+            Ambiguate and Ambiguate(GetUnitName and GetUnitName(unit, true) or "", "short") }) do
+            local tbl = name and HarfordDnDResources and HarfordDnDResources.RemoteCache
+                and HarfordDnDResources.RemoteCache[name]
+            if tbl and type(tbl.DmgStatus) == "string" then crudo = tbl.DmgStatus break end
+        end
+        if not crudo then
+            Print("  sin mapa: cliente antiguo o sin broadcast de recursos todavia.")
+            Print("  (se cae al About TRP3 / inspect, como antes de la sincronizacion)")
+            return
+        end
+        Print("  crudo: \"" .. crudo .. "\"")
+        local mapa = FE and FE.DecodeDamageStatus and FE.DecodeDamageStatus(crudo) or {}
+        local alguna = false
+        for tipo, status in pairs(mapa) do
+            alguna = true
+            local marca = DM and DM.Marker and DM.Marker(status) or ""
+            Print(string.format("  %-14s %s %s", tipo, tostring(status), marca))
+        end
+        if not alguna then Print("  (mando el mapa y no tiene ninguna defensa)") end
+    end, "defensas propias y mapa DmgStatus sincronizado de un jugador (arg: unidad)")
 end

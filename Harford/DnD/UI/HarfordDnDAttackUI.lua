@@ -605,6 +605,13 @@ function API.AttachMovementTracker(opts)
         end
         local base = (HarfordDnDCalc and HarfordDnDCalc.GetTurnMovement
             and HarfordDnDCalc.GetTurnMovement()) or 0
+        -- Velocidad A LA MITAD (nivel 2 de cansancio y equivalentes): el motor de condiciones lo
+        -- sabia (IsSpeedHalved) pero el contador no lo miraba — el tooltip lo decia y el muro te
+        -- dejaba andar entero. Correr dobla DESPUES, sobre la velocidad ya partida, como en 5e.
+        if HarfordDnDConditions and HarfordDnDConditions.IsSpeedHalved
+            and HarfordDnDConditions.IsSpeedHalved("player") then
+            base = base / 2
+        end
         local tope = corriendo and (base * 2) or base
         API.TurnMovementMax = tope
         return tope
@@ -810,6 +817,12 @@ function API.AttachMovementTracker(opts)
             -- desplazamiento (el teleporte de vuelta, un empujon), no un paso.
             if avance > 5 then avance = 0 end
             if avance <= 0.05 then return end
+            -- TERRENO DIFICIL: cada metro cuesta DOS. Es gasto, no velocidad — se dobla lo
+            -- contado — y con la velocidad a la mitad se acumulan (un cuarto util), como en 5e.
+            if HarfordDnDConditions and HarfordDnDConditions.IsMovementDoubled
+                and HarfordDnDConditions.IsMovementDoubled("player") then
+                avance = avance * 2
+            end
         end
 
         totalMeters = totalMeters + avance

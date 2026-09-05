@@ -33,7 +33,7 @@ API.CATEGORIES = {
     } },
     { id = "combate", label = "Combate", ids = {
         "sleeping", "silenced", "rooted", "slowed", "disarmed", "exposed_armor",
-        "imprudente", "esquivando", "apartado", "trabado",
+        "imprudente", "esquivando", "apartado", "trabado", "terreno_dificil",
     } },
     -- Estados que deja la economia de turno y el apoyo entre PJs (Ayudar, Preparar), y los que
     -- el propio jugador se pone al jugar (Concentracion).
@@ -484,6 +484,13 @@ API.DEFS = {
         label = "Concentracion", tracking = "state", sourceAsDetail = true,
         description = "Concentrado en un conjuro: lanzar otro con concentracion lo termina, y recibir dano obliga a una salvacion de Constitucion (CD 10 o la mitad del dano, lo que sea mayor).",
         effects = {},
+    },
+    -- Terreno dificil: cada metro de movimiento cuesta dos. Lo aplica el DM (o el propio
+    -- jugador) mientras se cruza la zona; el contador de movimiento dobla el gasto contado.
+    terreno_dificil = {
+        label = "Terreno dificil", tracking = "state",
+        description = "Cada metro de movimiento cuesta el doble mientras cruzas la zona.",
+        effects = { { kind = "movementCostDouble" } },
     },
 }
 
@@ -1613,6 +1620,15 @@ end
 function API.IsSpeedHalved(ref)
     for _, effect in ipairs(EffectsFor(ref or "player")) do
         if effect.kind == "speedHalved" then return true end
+    end
+    return false
+end
+
+-- ¿Cada metro de movimiento cuesta el doble? (Terreno dificil). Es GASTO, no velocidad: el
+-- contador dobla lo contado, y con la velocidad a la mitad se acumulan, como en 5e.
+function API.IsMovementDoubled(ref)
+    for _, effect in ipairs(EffectsFor(ref or "player")) do
+        if effect.kind == "movementCostDouble" then return true end
     end
     return false
 end

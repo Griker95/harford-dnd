@@ -224,4 +224,14 @@ chk("sin la descripcion generica",
 chk("sin la ayuda del click derecho",
     uf:find('if self.estado.id ~= "exhaustion"', 1, true) ~= nil, true)
 
+-- Terreno dificil: estado con efecto declarativo movementCostDouble y su helper, para que el
+-- contador de movimiento doble el gasto. Con icono propio (estado sin aura).
+chk("terreno_dificil existe con su efecto",
+    cond:find('effects = { { kind = "movementCostDouble" } },', 1, true) ~= nil, true)
+chk("y su helper IsMovementDoubled",
+    cond:find("function API.IsMovementDoubled(ref)", 1, true) ~= nil, true)
+chk("con icono en el catalogo",
+    io.open("Harford/Compendium/HarfordIconCatalog.lua"):read("*a")
+        :find("\n    harford_estado_terreno_dificil = ", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

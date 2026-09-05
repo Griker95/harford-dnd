@@ -3986,6 +3986,14 @@ Compatibilidad, que es donde esto se puede volver a romper en silencio:
   vive en otro sistema de coordenadas: no mezclarlos), con umbral de 2 yardas (~1,8 m) que tolera
   el jitter del servidor y un salto en el sitio. Girar no cambia la posicion, asi que queda libre.
   Candado en `calc` (bloque del muro).
+- **La velocidad a la mitad y el terreno dificil CUENTAN en el contador (2026-09-05)**: el nivel 2
+  de cansancio decia "velocidad a la mitad" en el tooltip pero el muro te dejaba andar entero —
+  `MaximoDelTurno` consulta ahora `HarfordDnDConditions.IsSpeedHalved("player")` y parte la BASE
+  (Correr dobla despues, sobre la velocidad ya partida, como en 5e). Y el estado nuevo
+  `terreno_dificil` (categoria combate, icono `harford_estado_terreno_dificil`, efecto declarativo
+  `movementCostDouble` + helper `IsMovementDoubled`) dobla el GASTO contado por muestra: es gasto,
+  no velocidad, asi que con la mitad se ACUMULAN (un cuarto util). Candados en `calc` (bloque del
+  muro) y `tira_estados`.
 - **`/harford libre` (2026-09-05)**: cualquier jugador puede roamear SIN gasto ni muro — en su
   turno o en el ajeno — y VOLVER a donde estaba al empezar su proximo turno (un ciclo; el TP de
   vuelta lo apaga), o antes repitiendo el comando. Es el trato del DM dirigiendo pero a peticion:

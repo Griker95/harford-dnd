@@ -648,6 +648,18 @@ chk("midiendo contra la fuente del ancla",
     and ataque:find("local ok, x, y, z = pcall(C_Epsilon.GetPosition)", 1, true) ~= nil, true)
 chk("con umbral que tolera el jitter",
     ataque:find("> 4  -- 2 yardas (~1,8 m) al cuadrado", 1, true) ~= nil, true)
+-- La velocidad a la mitad (cansancio 2) y el terreno dificil por fin CUENTAN en el contador:
+-- el tooltip los decia y el muro te dejaba andar entero. La mitad parte el TOPE (y Correr dobla
+-- despues, sobre la velocidad ya partida); el terreno dificil dobla el GASTO contado — juntos,
+-- un cuarto util, como en 5e.
+print("Velocidad a la mitad y terreno dificil cuentan en el contador")
+chk("cansancio 2 parte el tope",
+    ataque:find('HarfordDnDConditions.IsSpeedHalved("player") then\n            base = base / 2', 1, true) ~= nil, true)
+chk("y ANTES de que Correr doble",
+    ataque:find("base = base / 2\n        end\n        local tope = corriendo and (base * 2) or base", 1, true) ~= nil, true)
+chk("terreno dificil dobla el gasto contado",
+    ataque:find('HarfordDnDConditions.IsMovementDoubled("player") then\n                avance = avance * 2', 1, true) ~= nil, true)
+
 -- `/harford libre`: roamear sin gasto ni muro y volver al ancla al empezar tu turno (un ciclo,
 -- como el DM dirigiendo pero a peticion de cualquier jugador). El cambio de turno NO pisa su
 -- ancla "casa" con la posicion de roameo, la vigilancia le salta, y al tocarle el turno el TP

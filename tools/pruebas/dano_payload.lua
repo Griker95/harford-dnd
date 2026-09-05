@@ -106,4 +106,30 @@ chk("vuelve igual", etqB, "Dano Espada larga")
 chk("sin enlace inventado", etqB:find("|Hitem", 1, true) == nil, true)
 chk("y los componentes intactos", outB and #outB or 0, 2)
 
+-- ─── DAÑO SIN TIPO: el ajuste de mesa del DM ────────────────────────────────
+-- Los botones de vida de TURNOS y el menu DM mandan ahora el daño EN BRUTO sin tipo (daño de
+-- mesa: sin tipo no se aplica ninguna resistencia) y lo resuelve la victima con sus datos
+-- vivos. Antes turnos partia temp/salud con la CACHE remota (reparto erroneo con cache vieja)
+-- y el menu DM iba directo a salud saltandose la vida temporal y la reaccion preparada.
+print("Daño sin tipo (ajustes de mesa)")
+local sinTipo = S({ { amount = 12, damageType = "" } }, false, false, nil)
+chk("serializa", sinTipo ~= nil, true)
+local outT = D(sinTipo)
+chk("y vuelve entero", outT and outT[1] and outT[1].amount, 12)
+chk("con el tipo vacio intacto", outT and outT[1] and outT[1].damageType, "")
+
+print("Los dos emisores de mesa migrados a bruto")
+local turnos = io.open("Harford/Frames/HarfordTurns.lua"):read("*a")
+chk("turnos: el daño va por SendDamage",
+    turnos:find('HarfordSync.SendDamage("DND5EARC", targetName', 1, true) ~= nil, true)
+chk("turnos: ya no parte temp/salud en el emisor",
+    turnos:find('AdjustResourceForName(targetName, "temp_health"', 1, true), nil)
+chk("turnos: la curacion sigue por RADJ",
+    turnos:find('AdjustResourceForName(targetName, "health", amount)', 1, true) ~= nil, true)
+local menu = io.open("HarfordAdmin/HarfordAdminUnitMenu.lua"):read("*a")
+chk("menu DM: el daño va por SendDamage",
+    menu:find("HarfordSync.SendDamage(\"DND5EARC\", nombre", 1, true) ~= nil, true)
+chk("menu DM: la curacion y el editor siguen por RADJ",
+    menu:find('AdjustResourceForName(snapshot.name, "health", delta)', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

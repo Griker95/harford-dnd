@@ -180,6 +180,28 @@ end
 
 local function AdjustPlayerHealth(snapshot, delta)
     if not EnsureSameUnit(snapshot, "ajustar vida jugador") then return end
+    delta = tonumber(delta) or 0
+    if delta < 0 then
+        -- DAÑO EN BRUTO (DNDDMG): lo resuelve el cliente de la victima (reaccion preparada ->
+        -- mitigacion -> vida temporal -> salud). El RADJ de salud directo se saltaba la vida
+        -- temporal y cualquier reaccion; queda solo para la CURACION y para el editor de
+        -- recursos, que son ajustes deliberados, no golpes. Sin tipo a proposito: es daño de
+        -- mesa sin tipar y sin tipo no se aplica ninguna resistencia.
+        if not (HarfordSync and HarfordSync.SendDamage) then
+            Print("HarfordSync.SendDamage no disponible.")
+            return
+        end
+        local nombre = tostring(snapshot.name or "")
+        local myShortName = UnitName("player")
+        if nombre == myShortName then
+            nombre = (GetUnitName and GetUnitName("player", true)) or myShortName
+        end
+        if not HarfordSync.SendDamage("DND5EARC", nombre,
+            { { amount = math.abs(delta), damageType = "" } }, false, false, nil) then
+            Print("No se pudo enviar el daño a " .. nombre .. ".")
+        end
+        return
+    end
     local ok, err = AdjustResourceForName(snapshot.name, "health", delta)
     if not ok then
         Print("No se pudo ajustar vida: " .. tostring(err or "error desconocido"))

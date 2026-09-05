@@ -1976,31 +1976,31 @@ local function AdjustHp(index, amount)
     if amount == 0 then return end
 
     if entry.kind == "player" then
+        local targetName = tostring(entry.unitName or entry.name or "")
+        if amount < 0 then
+            -- DAÑO EN BRUTO (DNDDMG): lo resuelve el cliente de la VICTIMA con sus datos vivos,
+            -- en el orden del manual (reaccion preparada -> mitigacion -> vida temporal ->
+            -- salud). Antes se partia aqui temp/salud con la CACHE remota y se mandaban dos
+            -- RADJ: con cache vieja el reparto salia mal y la reaccion de la victima nunca
+            -- podia saltar. Sin tipo de daño A PROPOSITO: el ajuste del DM es daño de mesa sin
+            -- tipar, y sin tipo no se aplica ninguna resistencia. RADJ queda solo para la
+            -- CURACION (abajo) y para clientes antiguos que sigan mandandolo.
+            if not (HarfordSync and HarfordSync.SendDamage) then
+                Print("No puedo enviar el daño: HarfordSync no disponible.")
+                return
+            end
+            if not HarfordSync.SendDamage("DND5EARC", targetName,
+                { { amount = math.abs(amount), damageType = "" } }, false, false, nil) then
+                Print("No se pudo enviar el daño a " .. tostring(entry.name or targetName) .. ".")
+            end
+            return
+        end
+        -- Curacion: ajuste directo de salud, sin semantica de reaccion/mitigacion.
         if not HarfordDnDAPI or not HarfordDnDAPI.AdjustResourceForName then
             Print("No puedo enviar ajuste de vida: HarfordDnDAPI no disponible.")
             return
         end
-
-        local targetName = tostring(entry.unitName or entry.name or "")
-        local healthDelta = amount
-        if amount < 0 then
-            local _, _, tempHp = GetEntryResourceValues(entry)
-            tempHp = math.max(0, SafeNumber(tempHp, 0))
-            if tempHp > 0 then
-                local absorb = math.min(tempHp, math.abs(amount))
-                local okTemp, errTemp = HarfordDnDAPI.AdjustResourceForName(targetName, "temp_health", -absorb)
-                if not okTemp then
-                    Print("No se pudo ajustar vida temporal de " .. tostring(entry.name or targetName) .. ": " .. tostring(errTemp or "error desconocido"))
-                    return
-                end
-                healthDelta = amount + absorb
-            end
-        end
-
-        local ok, err = true, nil
-        if healthDelta ~= 0 then
-            ok, err = HarfordDnDAPI.AdjustResourceForName(targetName, "health", healthDelta)
-        end
+        local ok, err = HarfordDnDAPI.AdjustResourceForName(targetName, "health", amount)
         if not ok then
             Print("No se pudo enviar ajuste de vida a " .. tostring(entry.name or targetName) .. ": " .. tostring(err or "error desconocido"))
         end

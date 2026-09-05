@@ -1355,6 +1355,7 @@ _G.HarfordCompendioSpells = {
         components = "V, S, M",
         duration = "Concentración, hasta 1 minuto",
         concentration = true,
+        condition = { id = "blessed" },  -- adaptacion mecanica: la ventana de marcado reparte Bendito a hasta 3 criaturas
         ritual = false,
         savingThrow = "",
         attack = "",
@@ -2163,7 +2164,7 @@ _G.HarfordCompendioSpells = {
     },
     {
         id = "proyectil_magico",
-        autohit = true,  -- impacta sin tirada (resolution="auto"); daño = 3 dardos base a un objetivo
+        autohit = true,  -- impacta sin tirada (resolution="auto"); el CORE reparte los dardos (1d4+1 cada uno, +1 dardo por nivel de espacio)
         name = "Proyectil magico",
         level = 1,
         school = "Evocacion",

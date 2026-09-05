@@ -934,6 +934,33 @@ function API.BuildAreaDefinition(spell, options)
         -- No se puede detectar por texto sin falsos positivos, por eso es un campo explicito.
         area = area or { shape = "other", sizeText = "Objetivo" }
         area.resolution = "auto"
+        -- DARDOS REPARTIBLES (2026-09-05): "Creas tres dardos... cada dardo inflige 1d4+1". El
+        -- campo `damage` trae el TOTAL (3d4+3) y antes se aplicaba como UN paquete a UN unico
+        -- objetivo; para repartir hace falta el numero de aplicaciones y el daño POR DARDO, que
+        -- se leen del propio texto (mismo camino que los multiimpactos de ataque). Si el parse
+        -- no es fiable, se queda el paquete unico de siempre. Con la sobrecarga de heroe (x10)
+        -- tampoco se reparte: la multiplicacion ya se aplico sobre el total.
+        if not sobrecargaHeroe then
+            local texto = NormalizeText((spell.mechanics or "") .. " " .. (spell.description or ""))
+            local dardos = tonumber(texto:match("(%d+)%s+dardos"))
+                or NUMBER_WORDS[texto:match("([%a]+)%s+dardos") or ""]
+            if dardos and dardos > 1 then
+                local porDardo = ParseDamageComponents(texto:match("cada dardo inflige%s+([^%.]+)") or "")
+                if porDardo then
+                    -- "+1 por cada nivel de conjuro por encima": un dardo mas por nivel de espacio.
+                    if texto:find("por cada nivel de conjuro por encima", 1, true) then
+                        local base = math.max(0, math.floor(tonumber(spell.level) or 1))
+                        local lanzado = (API.GetCastLevel and API.GetCastLevel(spell, options)) or base
+                        dardos = dardos + math.max(0, math.floor(tonumber(lanzado) or base) - base)
+                    end
+                    area.sizeText = tostring(dardos) .. " dardos"
+                    area.applicationCount = dardos
+                    area.repeatTargets = true
+                    area.rollPerTarget = true
+                    damageComponents = porDardo
+                end
+            end
+        end
     elseif saveAbility and not IsSpellAttack(spell) and (area or directSave or condition) then
         local success = ParseSaveSuccess(spell) or (SaveFailsForNoDamage(spell) and "none")
             or (not damageComponents and "none") or nil  -- condicion pura: success no aplica
@@ -943,6 +970,20 @@ function API.BuildAreaDefinition(spell, options)
         area.saveAbility = saveAbility
         area.dc = SpellDC()
         area.success = success
+    elseif condition and not damageComponents and not IsSpellAttack(spell) then
+        -- CONDICION PURA SIN SALVACION (Bendicion: "hasta tres criaturas"): no hay tirada ni
+        -- daño, solo repartir el estado. Se resuelve como auto-impacto, y si el texto declara
+        -- "hasta N criaturas" la ventana de marcado admite N objetivos (2026-09-05: Bendicion
+        -- caia al anuncio informativo y no abria el selector).
+        area = area or { shape = "other", sizeText = "Objetivo" }
+        area.resolution = "auto"
+        local texto = NormalizeText((spell.description or "") .. " " .. (spell.mechanics or ""))
+        local n = tonumber(texto:match("hasta%s+(%d+)%s+criaturas"))
+            or NUMBER_WORDS[texto:match("hasta%s+([%a]+)%s+criaturas") or ""]
+        if n and n > 1 then
+            area.sizeText = "Hasta " .. tostring(n) .. " objetivos"
+            area.applicationCount = n
+        end
     elseif IsSpellAttack(spell) and (damageComponents or condition) then
         -- Ataque de conjuro de objetivo unico (con daño y/o condicion): se resuelve por el motor
         -- de area como "Objetivo" (auto-marca el target), aplicando daño/condicion a Player y NPC.

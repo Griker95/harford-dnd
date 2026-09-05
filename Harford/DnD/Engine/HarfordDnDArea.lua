@@ -1307,8 +1307,10 @@ local function ResolvePlayerRequest(request, sender)
         rollText = string.format("Salv %s |cff66ccff%d|r (%d%+d%+d vs CD %d)", request.ability, total, die,
             tonumber(base) or 0, tonumber(prof) or 0, request.dc)
     elseif request.mode == "auto" then
-        -- Auto-impacto (tipo Proyectil Magico): sin tirada, siempre afecta.
-        affected, status, rollText = true, "hit", "Impacto automatico"
+        -- Auto-impacto (tipo Proyectil Magico): sin tirada, siempre afecta. Una condicion pura
+        -- (Bendicion) no "impacta": su linea va sin rotulo de tirada.
+        affected, status = true, "hit"
+        rollText = #(request.components or {}) > 0 and "Impacto automatico" or ""
     else
         local armorClass = HarfordDnDCombat.ComputeSelfArmorClass()
         critical = request.critical == "critical"
@@ -1734,7 +1736,8 @@ local function ResolveNpcEntry(entry)
         status = request.saved and "saved" or "failed"
         rollText = string.format("Salv %s |cff66ccff%d|r (%d%+d vs CD %d)", request.ability, total, die, bonus, request.dc)
     elseif request.mode == "auto" then
-        affected, status, rollText = true, "hit", "Impacto automatico"
+        affected, status = true, "hit"
+        rollText = #(request.components or {}) > 0 and "Impacto automatico" or ""
     else
         critical = request.critical == "critical"
         local critTag = critical and "CRITICO" or request.critical == "fumble" and "PIFIA" or ""

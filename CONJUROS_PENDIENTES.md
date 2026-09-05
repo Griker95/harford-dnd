@@ -101,6 +101,7 @@ No las corrijo: `HarfordCompendio.lua` es compartido con otro chat y con Codex.
 | `guardia_con_hoja` | El id sugiere *blade ward*, pero el conjuro se llama "Rompante de espadas" y su efecto es *sword burst*. El blade ward real está en `resguardo_de_hoja`. Emparejar por id cruzaría los dos. |
 | Longstrider duplicado | `zancada_prodigiosa` (etiquetado Pícaro Sutileza) y `pies_ligeros` (Druida/Mago, con el componente de tierra) son el mismo conjuro: +3 m de velocidad y mejorable. El manual de Sutileza dice "Pies Ligeros"; el compendio le da "Zancada prodigiosa". |
 | *Charm person* duplicado | `hechizar_persona` y `encantar_persona` son DOS entradas del mismo conjuro (ambas nivel 1, Encantamiento, `condition = charmed`); las dos declaran `classes = { "Sacerdote" }` cuando es conjuro de Brujo (el núcleo de Súcubo lo necesita); y `encantar_persona` lleva un `mechanics` de *conjurar seres del bosque* que no es suyo. |
+| `bendicion` | `damage = "1d4 y"` es un fragmento truncado del texto del buff ("puede tirar 1d4 y añadir el resultado"): Bendición no hace daño y ese campo debería ir vacío. Inofensivo en el addon (no parsea a componente de daño), pero un extractor que lea `damage` se lleva basura. (2026-09-05: el addon le añadió `condition = { id = "blessed" }`, adaptación mecánica propia — conservarla al regenerar.) |
 
 ## Fuera del alcance actual (nivel 5)
 

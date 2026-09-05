@@ -273,6 +273,40 @@ chk("por victima, solo lo que no tiene tirada anuncia al tirar",
     areaSrc:find('and (session.definition.resolution == "heal" or session.definition.resolution == "auto") then', 1, true) ~= nil, true)
 chk("y el diferido por victima solo exime al auto-impacto",
     areaSrc:find('if def.resolution == "auto" then return end', 1, true) ~= nil, true)
+
+-- ─── PROYECTIL MAGICO REPARTE SUS DARDOS (2026-09-05) ───────────────────────
+-- El campo damage trae el TOTAL (3d4+3) y antes se aplicaba como UN paquete a UN objetivo. El
+-- auto-impacto lee del texto el numero de dardos y el daño POR DARDO ("cada dardo inflige
+-- 1d4+1"), suma un dardo por nivel de espacio, y abre la ventana de reparto como cualquier
+-- multiimpacto. Sin parse fiable, o con la sobrecarga de heroe (x10 sobre el total), se queda
+-- el paquete unico.
+print("Proyectil magico reparte sus dardos")
+local coreSrc = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
+chk("cuenta los dardos del texto",
+    coreSrc:find('local dardos = tonumber(texto:match("(%d+)%s+dardos"))', 1, true) ~= nil, true)
+chk("con el daño POR dardo, leido del texto",
+    coreSrc:find('ParseDamageComponents(texto:match("cada dardo inflige%s+([^%.]+)") or "")', 1, true) ~= nil, true)
+chk("un dardo mas por nivel de espacio",
+    coreSrc:find('dardos = dardos + math.max(0, math.floor(tonumber(lanzado) or base) - base)', 1, true) ~= nil, true)
+chk("con sobrecarga de heroe no se reparte",
+    coreSrc:find("if not sobrecargaHeroe then", 1, true) ~= nil, true)
+chk("y el reparto usa la ventana de multiimpacto",
+    coreSrc:find('area.sizeText = tostring(dardos) .. " dardos"', 1, true) ~= nil, true)
+
+-- ─── BENDICION ABRE EL SELECTOR (2026-09-05) ────────────────────────────────
+-- Una condicion pura SIN salvacion ("hasta tres criaturas") caia al anuncio informativo: la
+-- rama nueva la resuelve como auto-impacto y la ventana admite N objetivos. La linea de la
+-- victima va sin "Impacto automatico": una bendicion no impacta.
+print("Condicion pura sin salvacion: selector de hasta N objetivos")
+chk("la rama existe",
+    coreSrc:find("elseif condition and not damageComponents and not IsSpellAttack(spell) then", 1, true) ~= nil, true)
+chk("y parsea hasta N criaturas",
+    coreSrc:find('tonumber(texto:match("hasta%s+(%d+)%s+criaturas"))', 1, true) ~= nil, true)
+chk("bendicion declara la condicion Bendito",
+    io.open("HarfordCompendio/HarfordCompendio.lua"):read("*a")
+        :find('condition = { id = "blessed" }', 1, true) ~= nil, true)
+chk("el auto sin daño no rotula Impacto automatico",
+    areaSrc:find('rollText = #(request.components or {}) > 0 and "Impacto automatico" or ""', 1, true) ~= nil, true)
 chk("la linea de victima solo incrusta curacion",
     areaSrc:find('if request.mode ~= "heal" then visibleApplied, visibleSummaries = 0, {} end', 1, true) ~= nil, true)
 chk("y sin dos puntos: el color separa",

@@ -882,9 +882,14 @@ do
             if not (GameTooltip and self.estado) then return end
             GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
             GameTooltip:AddLine(self.estado.label, 1, 0.82, 0)
-            -- Detalle en cian justo tras el titulo: en Concentracion es el conjuro activo.
+            -- Detalle en cian justo tras el titulo: en Concentracion es el conjuro activo,
+            -- en Cansancio el nivel actual.
             if self.estado.detalle then
                 GameTooltip:AddLine(self.estado.detalle, 0, 1, 1)
+            end
+            -- Lineas propias del estado (Cansancio: un efecto acumulado por nivel).
+            for _, linea in ipairs(self.estado.lineas or {}) do
+                GameTooltip:AddLine("- " .. tostring(linea), 1, 1, 1, true)
             end
             if self.estado.description then
                 GameTooltip:AddLine(self.estado.description, 1, 1, 1, true)
@@ -954,14 +959,25 @@ do
             end
             -- `sourceAsDetail`: la definicion pide ensenar la FUENTE como detalle del tooltip
             -- (Concentracion guarda ahi el conjuro activo, y sourceName ya viaja en el sync).
-            local detalle
+            local detalle, lineas
             if def.sourceAsDetail and record and tostring(record.sourceName or "") ~= "" then
                 detalle = record.sourceName
+            end
+            -- Cansancio: el tooltip dice EL NIVEL y lista sus efectos acumulados, no solo la
+            -- descripcion generica ("Cansancio deberia listarme lo que tengo activo"). El nivel
+            -- viaja en el registro sincronizado, asi que tambien se ve al inspeccionar a otro.
+            if activo.id == "exhaustion" then
+                local nivel = math.max(1, math.min(6, tonumber(record and record.level) or 1))
+                detalle = "Nivel " .. nivel .. (nivel >= 6 and " (muerte)" or "")
+                if HarfordDnDConditions.GetExhaustionEffects then
+                    lineas = HarfordDnDConditions.GetExhaustionEffects(nivel)
+                end
             end
             fuera[#fuera + 1] = {
                 id = activo.id,
                 label = def.label,
                 detalle = detalle,
+                lineas = lineas,
                 description = def.description,
                 restante = restante,
                 icono = HarfordDnDConditions.GetIcon(activo.id),

@@ -211,4 +211,12 @@ chk("Muriendo propio no se toca a mano",
 chk("RemoveOwned retira el aura del estado",
     cond:find("local auraOk, auraErr = ApplyAura(def, \"self\", true)", 1, true) ~= nil, true)
 
+-- El tooltip de Cansancio dice EL NIVEL (cian, tras el titulo) y lista sus efectos acumulados,
+-- no solo la descripcion generica. El nivel viaja en el registro sincronizado.
+chk("Cansancio ensena su nivel en el tooltip",
+    uf:find('detalle = "Nivel " .. nivel .. (nivel >= 6 and " (muerte)" or "")', 1, true) ~= nil, true)
+chk("y lista los efectos acumulados",
+    uf:find("lineas = HarfordDnDConditions.GetExhaustionEffects(nivel)", 1, true) ~= nil
+    and uf:find('GameTooltip:AddLine("- " .. tostring(linea), 1, 1, 1, true)', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -5122,6 +5122,31 @@ do
                 { text = "Reaccion", notCheckable = true, func = function() Devolver("reaction", "reaccion") end },
             },
         }
+        -- Los gestos de /harfordcombat, a un click: libre (toggle, con su check), posicion y stop.
+        menu[#menu + 1] = {
+            text = "Combate", notCheckable = true, hasArrow = true, menuList = {
+                { text = "Movimiento libre", isNotRadio = true,
+                  checked = function()
+                      return HarfordDnDAttackUI and HarfordDnDAttackUI.ModoLibre and true or false
+                  end,
+                  func = function()
+                      if HarfordDnDAttackUI and HarfordDnDAttackUI.ToggleModoLibre then
+                          HarfordDnDAttackUI.ToggleModoLibre()
+                      end
+                  end },
+                { text = "Reubicar", notCheckable = true, func = function()
+                    if HarfordDnDAttackUI and HarfordDnDAttackUI.ModoLibreVolver then
+                        HarfordDnDAttackUI.ModoLibreVolver()
+                    end
+                end },
+                { text = "Parar combate", notCheckable = true, func = function()
+                    local stopped = HarfordTurnOrderAPI and HarfordTurnOrderAPI.StopLocalCombat
+                        and HarfordTurnOrderAPI.StopLocalCombat()
+                    HarfordChat.Print(stopped and "Has salido localmente del modo combate."
+                        or "No estabas en modo combate.")
+                end },
+            },
+        }
         return menu
     end
 

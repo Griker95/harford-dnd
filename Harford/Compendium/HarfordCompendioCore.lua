@@ -1117,20 +1117,34 @@ end
 
 local function IsWarlockLifeTapAvailable(spell, options)
     if not (spell and (tonumber(spell.level) or 0) > 0) then return false end
-    if API.GetSpellCostMode() ~= "mana" or API.GetManaCurrent() > 0 then return false end
+    -- Cubre "NO ME LLEGA", no solo mana a cero (decision de mesa 2026-09-05): con 2/4 de mana
+    -- antes no podias ni pagar ni sacrificar vida. El sacrificio paga el lanzamiento ENTERO con
+    -- la formula del libro (nivel + nivel del espacio) y el mana que te quede no se toca — en el
+    -- modelo de espacios del manual no existe "espacio parcial", asi que no se mezclan.
+    if API.GetSpellCostMode() ~= "mana" then return false end
+    if API.GetManaCurrent() >= API.GetSpellCost(spell, options) then return false end
     if not (HarfordDnDProgression and HarfordDnDProgression.GetUnlockedFeatures
         and HarfordDnDProgression.IsFeatureEnabled) then return false end
     local profileName = HarfordClassColors and HarfordClassColors.UnitFullName
         and HarfordClassColors.UnitFullName("player") or (UnitName and UnitName("player"))
-    local hasTouch = false
+    local rasgoToque
     for _, item in ipairs(HarfordDnDProgression.GetUnlockedFeatures(profileName) or {}) do
         if item.feature and item.feature.id == "bru_toque_vida"
             and HarfordDnDProgression.IsFeatureEnabled(item.feature, profileName) then
-            hasTouch = true
+            rasgoToque = item.feature
             break
         end
     end
-    if not hasTouch then return false end
+    if not rasgoToque then return false end
+    -- El "1 vez por descanso largo" del rasgo SE RESPETA: sin usos no hay sacrificio. Antes el
+    -- contador existia pero el pago no lo gastaba, asi que era decorativo.
+    if rasgoToque.uses and HarfordDnDFeatureUses
+        and HarfordDnDFeatureUses.GetMax and HarfordDnDFeatureUses.GetSpent then
+        local maxUsos = HarfordDnDFeatureUses.GetMax(rasgoToque.uses, profileName)
+        if maxUsos > 0 and HarfordDnDFeatureUses.GetSpent(rasgoToque.id, profileName) >= maxUsos then
+            return false
+        end
+    end
     local level = HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel(profileName) or 0
     local hpCost = math.max(1, tonumber(level) or 0) + API.GetCastLevel(spell, options)
     local health = HarfordDnDStore and HarfordDnDStore.GetResourceCurrent
@@ -1386,6 +1400,16 @@ function API.SpendSpellMana(spellOrId, options)
         local canTap, hpCost = IsWarlockLifeTapAvailable(spell, options)
         if canTap and HarfordDnDStore and HarfordDnDStore.AdjustResourceCurrent then
             local health = HarfordDnDStore.AdjustResourceCurrent("health", -hpCost)
+            -- El uso 1/descanso largo se gasta AQUI, en el punto unico donde se paga el
+            -- sacrificio; la disponibilidad de arriba ya comprobo que quedaba.
+            if HarfordDnDFeatureUses and HarfordDnDFeatureUses.Spend then
+                HarfordDnDFeatureUses.Spend("bru_toque_vida",
+                    HarfordClassColors and HarfordClassColors.UnitFullName
+                    and HarfordClassColors.UnitFullName("player") or (UnitName and UnitName("player")))
+            end
+            if HarfordChat and HarfordChat.Print then
+                HarfordChat.Print("Toque de vida: -" .. tostring(hpCost) .. " de salud (mana insuficiente).")
+            end
             return true, 0, current, API.GetManaMax(), { lifeTap = true, health = health, healthCost = hpCost }
         end
         return false, "Mana insuficiente (" .. tostring(current) .. "/" .. tostring(cost) .. ")"

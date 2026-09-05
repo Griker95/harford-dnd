@@ -1584,9 +1584,9 @@ MaybeBroadcastAttackDamage = function(session, target)
         or (result.status == "saved" and (tonumber(result.applied) or 0) > 0)
     if not landed then return end
     if def.rollPerTarget then
-        -- Solo el multimpacto de ATAQUE difiere por victima; el resto ya anuncio su tirada
-        -- por aplicacion en Resolve (auto-impactos, que no tienen desenlace que esperar).
-        if def.resolution ~= "attack" then return end
+        -- Los auto-impactos no tienen tirada que esperar y ya anunciaron por aplicacion en
+        -- Resolve; ataque y salvacion difieren su linea por victima hasta aqui.
+        if def.resolution == "auto" then return end
         if target.damageAnnounced then return end
         target.damageAnnounced = BroadcastRolledComponents(def, target.damageComponents,
             target.rollDetails, " " .. tostring(target.rollIndex or ""))
@@ -1638,7 +1638,11 @@ function API.Resolve()
             else
                 session.rolledComponents, session.rollDetails = RollComponents(session.definition)
             end
-            if #session.rolledComponents > 0 and session.definition.resolution ~= "attack" then
+            -- El orden SIEMPRE es tirada y luego daño: por aplicacion solo se anuncia al tirar
+            -- lo que no tiene tirada delante (curacion y auto-impactos). El multimpacto con
+            -- ataque o salvacion difiere su linea a MaybeBroadcastAttackDamage.
+            if #session.rolledComponents > 0
+                and (session.definition.resolution == "heal" or session.definition.resolution == "auto") then
                 local first = session.rolledComponents[1]
                 HarfordDnDRolls.Broadcast({
                     type = session.definition.resolution == "heal" and "heal" or "damage",

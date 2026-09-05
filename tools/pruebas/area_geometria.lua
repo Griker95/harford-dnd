@@ -267,6 +267,12 @@ chk("solo la curacion se anuncia al tirar",
     areaSrc:find('and session.definition.resolution == "heal" then', 1, true) ~= nil, true)
 chk("el dano espera a una victima alcanzada",
     areaSrc:find('or (result.status == "saved" and (tonumber(result.applied) or 0) > 0)', 1, true) ~= nil, true)
+-- Y el invariante vale tambien POR VICTIMA (multiimpactos): al tirar solo anuncian curacion y
+-- auto-impactos, que no tienen tirada delante; ataque y salvacion difieren su linea.
+chk("por victima, solo lo que no tiene tirada anuncia al tirar",
+    areaSrc:find('and (session.definition.resolution == "heal" or session.definition.resolution == "auto") then', 1, true) ~= nil, true)
+chk("y el diferido por victima solo exime al auto-impacto",
+    areaSrc:find('if def.resolution == "auto" then return end', 1, true) ~= nil, true)
 chk("la linea de victima solo incrusta curacion",
     areaSrc:find('if request.mode ~= "heal" then visibleApplied, visibleSummaries = 0, {} end', 1, true) ~= nil, true)
 chk("y sin dos puntos: el color separa",

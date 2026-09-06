@@ -606,14 +606,17 @@ NormalizeVars = function(vars)
     return n > 0 and out or nil
 end
 
+-- TODOS los estados propios persisten entre /reload y reinicios (peticion de mesa 2026-09-06):
+-- antes solo se guardaban los marcados `persist` (Dormido, Inconsciente) y el resto era de
+-- runtime — un buff de conjuro puesto se evaporaba al recargar. El flag `persist` de las defs
+-- queda sin efecto de filtro (todo se guarda); se conserva en los datos por compatibilidad.
 local function SaveOwned()
     local root = PersistRoot(true)
     local profile = PlayerProfileName()
     local src = S.units.player or {}
     local out = {}
     for id, record in pairs(src) do
-        local def = API.DEFS[id]
-        if def and (def.persist or record.persist == true) then out[id] = CopyRecord(record) end
+        if API.DEFS[id] then out[id] = CopyRecord(record) end
     end
     root[profile] = next(out) and out or nil
     if not next(root) then HarfordDnDPersistStore.conditionStates = nil end
@@ -625,11 +628,27 @@ local function LoadOwned()
     local root = PersistRoot(false)
     local saved = root and root[PlayerProfileName()]
     S.units.player = S.units.player or {}
+    -- Estados de CONJURO guardados: sus defs se generan PEREZOSAS desde el compendio
+    -- (LoadOnDemand). Sin generarlas aqui, el registro guardado no resolveria definicion y el
+    -- buff se perderia justo en el /reload que debia sobrevivir. Solo paga la carga quien
+    -- llevaba alguno puesto.
+    if type(saved) == "table" then
+        for id in pairs(saved) do
+            if tostring(id):find("^conjuro_") and not API.DEFS[id] and API.EnsureSpellStates then
+                API.EnsureSpellStates()
+                break
+            end
+        end
+    end
     for id, record in pairs(type(saved) == "table" and saved or {}) do
         local def = API.DEFS[id]
         if def then
             local copy = CopyRecord(record)
             copy.id = id
+            -- `expiresAt` es reloj de la SESION vieja (GetTime): restaurarlo caducaria o
+            -- eternizaria el estado sin criterio. Misma leccion que la cache remota: el
+            -- estado vuelve CONGELADO y se retira a mano o por sus turnos.
+            copy.expiresAt = nil
             S.units.player[id] = copy
         end
     end

@@ -102,6 +102,51 @@ chk("cae el del mago sobre el NPC registrado", API.State.units["npc-123"], "nil"
 chk("NO cae el de otra fuente", API.State.units.player.conjuro_buff1 ~= nil, true)
 chk("NO cae uno sin concentracion aunque case la fuente", API.State.units.player.conjuro_buff2 ~= nil, true)
 
+-- LOS ESTADOS PROPIOS PERSISTEN ENTRE REINICIOS (peticion de mesa 2026-09-06): antes solo se
+-- guardaban los marcados `persist` y un buff puesto se evaporaba al recargar. Se EJECUTA de
+-- verdad: se aplica un estado de conjuro, se "reinicia" cargando el fichero OTRA VEZ con el
+-- mismo SavedVariable, y el estado tiene que seguir puesto — lo que exige ademas que LoadOwned
+-- genere las defs perezosas de conjuro al ver un `conjuro_*` guardado.
+print("Un estado puesto sobrevive al reinicio")
+local STORE = {}
+local function NuevoEntorno()
+    local e = setmetatable({
+        HarfordDnDConditions = {}, ipairs = ipairs, pairs = pairs, table = table,
+        tostring = tostring, tonumber = tonumber, math = math, string = string, type = type,
+        select = select, unpack = unpack, setmetatable = setmetatable, next = next,
+        error = error, assert = assert, print = function() end, pcall = pcall,
+        HarfordCompendioAPI = { GetAllSpells = function() return SPELLS end },
+        HarfordDnDPersistStore = STORE,
+        GetTime = function() return 0 end, time = function() return 0 end,
+        UnitName = function() return "Probador" end, UnitGUID = function() return "GUID-YO" end,
+        HarfordClassColors = {
+            UnitFullName = function() return "Probador" end,
+            StripAccents = function(s) return s end,
+            NormalizeKey = function(s) return tostring(s or ""):lower() end,
+        },
+    }, { __index = function() return nil end })
+    e._G = e
+    local g
+    if setfenv then g = assert(cargar(src)); setfenv(g, e) else g = assert(cargar(src, "t", "t", e)) end
+    pcall(g)
+    return e.HarfordDnDConditions
+end
+local S1 = NuevoEntorno()
+S1.EnsureSpellStates()
+local okAplicar = S1.ApplyOwned("conjuro_luz", { expiresAt = 123 })
+chk("se aplica", okAplicar, true)
+chk("y queda guardado SIN necesitar marca persist",
+    STORE.conditionStates and STORE.conditionStates.Probador
+    and STORE.conditionStates.Probador.conjuro_luz ~= nil, true)
+local S2 = NuevoEntorno()  -- "reinicio": defs de conjuro NO generadas aun
+-- Como en el cliente real: el primer GetActive (la tira al entrar al mundo) dispara LoadOwned,
+-- que al ver un `conjuro_*` guardado genera las defs perezosas.
+S2.GetActive("player")
+chk("tras reiniciar sigue puesto (y LoadOwned genero las defs)",
+    S2.Has("player", "conjuro_luz"), true)
+chk("el expiresAt de la sesion vieja se descarta",
+    S2.State.units.player.conjuro_luz.expiresAt, "nil")
+
 -- Los puntos de ENTRADA de la generacion perezosa y el arrastre de la concentracion se fijan
 -- por texto: son enganches de una linea en modulos que la suite no puede ejecutar entera.
 print("Enganches: menus, red y concentracion")
@@ -130,5 +175,12 @@ chk("el receptor barre al ver el remove",
     src:find('if state.op == "remove" and cid == "concentrando" and API.OnConcentrationBroken then', 1, true) ~= nil, true)
 chk("y el lanzador barre sus registros locales",
     conc:find("HarfordDnDConditions.OnConcentrationBroken(", 1, true) ~= nil, true)
+-- La concentracion tambien sobrevive al /reload (revierte el diseno efimero inicial): al
+-- entrar al mundo, `current` se reconstruye desde el registro persistido de `concentrando`
+-- (el conjuro viaja en sourceName) con stateApplied para que el listener de divergencia siga
+-- soltandola si el estado se retira a mano.
+chk("la concentracion se restaura al entrar al mundo",
+    conc:find('ev:RegisterEvent("PLAYER_ENTERING_WORLD")', 1, true) ~= nil
+    and conc:find("stateApplied = true,", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

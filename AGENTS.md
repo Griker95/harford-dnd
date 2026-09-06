@@ -467,6 +467,18 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   llevar la Bendicion del mago Y tu propia concentracion) y un estado sin fuente registrada
   (declarado a mano desde el engranaje) no se toca. Suite ejecutable con compendio falso y
   registros sembrados: `estados_de_conjuro`.
+- **TODOS los estados propios PERSISTEN entre /reload y reinicios (2026-09-06)**: `SaveOwned`
+  guarda todo registro de `S.units.player` (el filtro `persist` se retiro; el flag queda en las
+  defs sin efecto). `LoadOwned` restaura descartando `expiresAt` (reloj de la sesion vieja —
+  misma leccion que la cache remota: el estado vuelve CONGELADO) y, si hay algun `conjuro_*`
+  guardado, llama `EnsureSpellStates()` para generar sus defs perezosas ANTES de resolver — sin
+  eso el buff se perdia justo en el reload que debia sobrevivir. OJO: `Has(id)` corta si la def
+  no existe todavia; quien carga de verdad es el primer `GetActive` (la tira al entrar al
+  mundo). La CONCENTRACION tambien sobrevive (revierte su diseno efimero inicial): al
+  PLAYER_ENTERING_WORLD, `HarfordDnDConcentration` reconstruye `current` desde el registro
+  persistido de `concentrando` (conjuro en `sourceName`, `stateApplied = true` para que el
+  listener de divergencia siga funcionando). Prueba de reinicio REAL en `estados_de_conjuro`:
+  doble carga del fichero compartiendo el SavedVariable.
 - **El engranaje es EL UNICO boton del PlayerFrame y el Admin le AÑADE, no duplica (2026-09-06)**:
   lleva el MISMO arte que StyleButton del Admin (circulo de minimapa + `INV_Misc_Gear_01`
   enmascarado + borde de tracking; el engranaje amarillo plano de `UI-OptionsButton` desentonaba

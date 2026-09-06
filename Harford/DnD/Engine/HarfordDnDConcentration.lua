@@ -15,8 +15,12 @@
 -- el compendio. La tirada de salvacion sale por la via normal de tiradas, para que la mesa la
 -- vea como cualquier otra.
 --
--- Estado EFIMERO a proposito: la concentracion no sobrevive a un /reload, igual que no
--- sobrevive a la inconsciencia. Persistirla daria un estado fantasma imposible de limpiar.
+-- La concentracion SOBREVIVE al /reload (peticion de mesa 2026-09-06, que revierte el diseno
+-- efimero inicial): el estado `concentrando` persiste con el resto de estados propios, y al
+-- entrar al mundo `current` se reconstruye desde su registro (el conjuro viaja en sourceName).
+-- Sin esto, los estados de conjuro persistidos quedaban huerfanos de su concentracion tras
+-- recargar y el arrastre al romperla no funcionaba. No es un estado fantasma: el click derecho
+-- en la tira lo retira, y el listener de divergencia suelta la concentracion con el.
 ------------------------------------------------------------
 
 HarfordDnDConcentration = HarfordDnDConcentration or {}
@@ -210,5 +214,30 @@ do
     -- El motor de condiciones publica sus cambios; si existe ese registro, se engancha.
     if HarfordDnDConditions and HarfordDnDConditions.RegisterListener then
         HarfordDnDConditions.RegisterListener(API.OnConditionsChanged)
+    end
+
+    -- Restauracion tras /reload: si el estado `concentrando` persistido sigue puesto,
+    -- reconstruir `current` desde su registro — el conjuro mantenido viaja en sourceName.
+    -- Con `stateApplied = true` el listener de divergencia vuelve a funcionar: quitar el
+    -- estado (click derecho) suelta la concentracion, como antes de recargar.
+    local ev = CreateFrame and CreateFrame("Frame")
+    if ev then
+        ev:RegisterEvent("PLAYER_ENTERING_WORLD")
+        ev:SetScript("OnEvent", function()
+            if current then return end
+            local C = HarfordDnDConditions
+            if not (C and C.GetActive) then return end
+            for _, activo in ipairs(C.GetActive("player")) do
+                if activo.id == "concentrando" then
+                    current = {
+                        spell = tostring((activo.record and activo.record.sourceName ~= ""
+                            and activo.record.sourceName) or "un conjuro"),
+                        startedAt = (time and time()) or 0,
+                        stateApplied = true,
+                    }
+                    break
+                end
+            end
+        end)
     end
 end

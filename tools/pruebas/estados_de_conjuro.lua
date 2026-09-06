@@ -196,5 +196,18 @@ chk("y el lanzador barre sus registros locales",
 chk("la concentracion se restaura al entrar al mundo",
     conc:find('ev:RegisterEvent("PLAYER_ENTERING_WORLD")', 1, true) ~= nil
     and conc:find("stateApplied = true,", 1, true) ~= nil, true)
+-- LANZAR un conjuro sostenido APLICA su estado (2026-09-06): en el objetivo amistoso si
+-- apuntas a otro, o en ti. Solo la ruta de ANUNCIO de ConfirmCast (ataque y area entran con
+-- silent y aplican su propia condicion). La fuente es el lanzador: el arrastre de
+-- concentracion depende de ella.
+local core = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
+chk("ConfirmCast aplica el estado del conjuro al anunciar",
+    core:find('local stateId = "conjuro_" .. tostring(spell.id)', 1, true) ~= nil
+    and core:find('C.ApplyToUnit("target", stateId,', 1, true) ~= nil, true)
+chk("con el lanzador como fuente y publicandolo si es propio",
+    core:find('{ duration = "manual", sourceGuid = miGuid, sourceName = miNombre })\n                        and C.PublishOwnedCondition then', 1, true) ~= nil, true)
+chk("solo la ruta de anuncio (tras el corte de silent)",
+    (core:find("if options and options.silent then return true, costOrErr", 1, true) or math.huge)
+    < (core:find('local stateId = "conjuro_"', 1, true) or 0), true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

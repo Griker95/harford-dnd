@@ -1528,6 +1528,35 @@ function API.ConfirmCast(spellId, options)
     end
     if options and options.silent then return true, costOrErr, current, maxValue end
     local cost = tonumber(costOrErr) or 0
+    -- EL ESTADO DEL CONJURO (catalogo generado `conjuro_<id>`, peticion de mesa 2026-09-06):
+    -- un lanzamiento SOSTENIDO deja su estado PUESTO con el icono del conjuro — en el objetivo
+    -- si apuntas a un jugador o NPC amistoso, o en ti (tambien al apuntarte a ti mismo). La
+    -- FUENTE es el lanzador: es lo que permite que al perder la concentracion caigan tambien
+    -- los estados que mantenias sobre otros. Solo esta ruta de ANUNCIO: las de ataque y area
+    -- entran con `silent` y aplican su propia condicion al resolverse.
+    do
+        local C = HarfordDnDConditions
+        if C and C.EnsureSpellStates and C.EnsureSpellStates() then
+            local stateId = "conjuro_" .. tostring(spell.id)
+            if C.GetDefinition and C.GetDefinition(stateId) then
+                local miGuid = UnitGUID and UnitGUID("player") or ""
+                local miNombre = (HarfordDnDRolls and HarfordDnDRolls.GetDisplayName
+                    and HarfordDnDRolls.GetDisplayName()) or (UnitName and UnitName("player")) or ""
+                local aOtro = UnitExists and UnitExists("target")
+                    and not (UnitIsUnit and UnitIsUnit("target", "player"))
+                    and UnitIsFriend and UnitIsFriend("player", "target")
+                if aOtro and C.ApplyToUnit then
+                    C.ApplyToUnit("target", stateId,
+                        { duration = "manual", sourceGuid = miGuid, sourceName = miNombre })
+                elseif C.ApplyOwned then
+                    if C.ApplyOwned(stateId, { duration = "manual", sourceGuid = miGuid, sourceName = miNombre })
+                        and C.PublishOwnedCondition then
+                        C.PublishOwnedCondition(stateId, "apply")
+                    end
+                end
+            end
+        end
+    end
     -- Anuncio limpio: solo lanzador (lo antepone el render) + link del conjuro + target si hay.
     local target = ColoredTargetName()
     local suffix = target ~= "" and (" " .. target) or ""

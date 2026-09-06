@@ -479,6 +479,21 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   persistido de `concentrando` (conjuro en `sourceName`, `stateApplied = true` para que el
   listener de divergencia siga funcionando). Prueba de reinicio REAL en `estados_de_conjuro`:
   doble carga del fichero compartiendo el SavedVariable.
+- **Elfo Noble (High Elf del Libro 2) y la reestructuracion del Elfo de Sangre (2026-09-06)**:
+  la raza `raza_elfo_sangre` gano DOS subrazas y lo comun quedo en la base (vision, Conocimiento
+  Arcano, idiomas). `raza_elfo_sangre_sindorei` (PRIMERA: es el default) conserva CON SUS IDS
+  los rasgos que antes eran de la raza base (esa_inc, esa_sentidos, esa_reversion, esa_legado) —
+  las elecciones guardadas siguen resolviendo. `raza_elfo_sangre_noble` ("Elfo Noble"/"Elfa
+  Noble", ficha de Reena como referencia): DES+2 SAB+1, Artes de los quel'dorei (weaponProf arco
+  largo + espada corta; la hoja quel'dorei y la ALTERNATIVA del truco de mago del libro quedan
+  narrativas a proposito), Herencia de Quel'Thalas (choice `rechooseOnLongRest` con el generador
+  NUEVO `optionsFrom = "weaponOrTool"` — armas del catalogo + todas las TOOLS), Legado de
+  precision (activo, `uses = { base = 0, proficiencyBonus = true, recharge = "long" }` — el d4 a
+  la tirada lo suma la mesa; el rasgo anuncia y gasta) e Idioma adicional (choice language).
+  **Migracion en Progression.Migrate** (cada carga, idempotente): ficha de elfo de sangre sin
+  subraceId (o con el "raza_elfo_sangre" del renombrado viejo) pasa a sin'dorei con aviso — sin
+  ella perderia sus rasgos EN SILENCIO. Iconos de tarjeta en SUBRACE_FRAME_ICONS (el noble reusa
+  el arte de alto elfo del semielfo). Suite ejecutable: `elfo_noble`.
 - **El engranaje es EL UNICO boton del PlayerFrame y el Admin le AÑADE, no duplica (2026-09-06)**:
   lleva el MISMO arte que StyleButton del Admin (circulo de minimapa + `INV_Misc_Gear_01`
   enmascarado + borde de tracking; el engranaje amarillo plano de `UI-OptionsButton` desentonaba

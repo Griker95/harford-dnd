@@ -64,6 +64,12 @@ local RACE_FRAME_ICONS = {
 -- Iconos de subraza, tambien de la web. Van anidados por raza porque los ids de subraza se
 -- repiten entre razas (renegado tiene "humano" y "elfo").
 local SUBRACE_FRAME_ICONS = {
+    -- Linajes del elfo de sangre (2026-09-06): el sin'dorei reusa el arte de la raza y el
+    -- noble usa el arte de alto elfo que ya empleaba el semielfo (mismo linaje quel'dorei).
+    raza_elfo_sangre = {
+        raza_elfo_sangre_sindorei = { "achievement_character_bloodelf_male", "achievement_character_bloodelf_female" },
+        raza_elfo_sangre_noble    = { "eps_wc3h_highelfrangermale", "eps_wc3h_highelfbaddiegirl" },
+    },
     raza_enano = {
         raza_enano_forjaz           = { "dwarf_m", "dwarf_f" },
         raza_enano_martillo_salvaje = { "eps_wc3h_wildhammermale", "eps_hots_dwarfshaman" },

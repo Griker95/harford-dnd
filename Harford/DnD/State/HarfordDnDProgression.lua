@@ -522,6 +522,19 @@ local function Migrate(data, silencioso, slot)
     if type(data.race) ~= "table" then data.race = { id = "", subraceId = "" } end
     data.race.id = tostring(data.race.id or "")
     data.race.subraceId = tostring(data.race.subraceId or "")
+    -- ELFO DE SANGRE CON SUBRAZAS (2026-09-06): la raza gano las subrazas "Elfo de Sangre"
+    -- (sin'dorei, con los rasgos que ANTES eran de la raza base) y "Elfo Noble" (High Elf del
+    -- Libro 2). Una ficha anterior no tiene subraza y perderia incremento, sentidos, reversion
+    -- y legado EN SILENCIO: se le asigna la sin'dorei, que ES lo que su raza siempre fue.
+    -- Tambien cubre el subraceId "raza_elfo_sangre" que dejaba el renombrado antiguo.
+    -- Idempotente; corre en cada carga como la migracion de multiclase.
+    if data.race.id == "raza_elfo_sangre"
+        and (data.race.subraceId == "" or data.race.subraceId == "raza_elfo_sangre") then
+        data.race.subraceId = "raza_elfo_sangre_sindorei"
+        if not silencioso and HarfordChat and HarfordChat.Print then
+            HarfordChat.Print("Tu Elfo de Sangre pasa a la subraza Sin'dorei (los rasgos de siempre): la raza gano la subraza Elfo Noble.")
+        end
+    end
     data.background = tostring(data.background or "")
     data.backgroundDesc = tostring(data.backgroundDesc or "")
     if type(data.feats) ~= "table" then data.feats = {} end

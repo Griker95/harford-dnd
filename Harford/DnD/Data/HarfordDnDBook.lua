@@ -394,7 +394,7 @@ function API.GetChoiceOptions(feature)
             for _, option in ipairs(API.GetChoiceOptions(donante) or {}) do out[#out + 1] = option end
         end
         return out
-    elseif from == "weaponProf" and HarfordDnDWeapons and HarfordDnDWeapons.WEAPONS then
+    elseif (from == "weaponProf" or from == "weaponOrTool") and HarfordDnDWeapons and HarfordDnDWeapons.WEAPONS then
         -- Un arma concreta a elegir (Maestro de armas: 4 huecos). Cada opcion concede la
         -- competencia con ESA arma; "Desarmado" no se ofrece (ya la tiene todo el mundo).
         for _, weapon in ipairs(HarfordDnDWeapons.WEAPONS) do
@@ -403,6 +403,16 @@ function API.GetChoiceOptions(feature)
                     id = "arma_" .. tostring(weapon.key),
                     label = tostring(weapon.key),
                     effects = { { kind = "weaponProf", weapon = tostring(weapon.key) } },
+                }
+            end
+        end
+        -- `weaponOrTool` ("una herramienta o arma": Herencia de Quel'Thalas del Elfo Noble)
+        -- suma TODAS las herramientas del catalogo a las armas de arriba.
+        if from == "weaponOrTool" and HarfordDnDData and HarfordDnDData.TOOLS then
+            for _, tool in ipairs(HarfordDnDData.TOOLS) do
+                out[#out + 1] = {
+                    id = tool.id, label = tool.name or tool.id,
+                    effects = { { kind = "toolProf", tool = tool.name or tool.id } },
                 }
             end
         end

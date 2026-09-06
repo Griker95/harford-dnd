@@ -86,6 +86,9 @@ chk("estabilizar: 1 PG al exito", A.Get("estabilizar").skillCheck.healOnSuccess,
 -- propia del recurso local, la de otro jugador de su cache sincronizada (mapa Res_health_Cur),
 -- la del NPC de su vida real (1 de servidor = "a 0" de mesa). Sin dato no se bloquea.
 chk("estabilizar: exige objetivo a 0", A.Get("estabilizar").skillCheck.requiresTargetAtZero, true)
+-- Al usarla (pasadas las guardias) lanza la animacion de servidor `cas 211155` (primeros
+-- auxilios), por el wrapper validado y con o sin exito en la tirada.
+chk("estabilizar: animacion de servidor declarada", A.Get("estabilizar").skillCheck.castSpellId, 211155)
 local panelG = io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a")
 chk("la guardia corre antes de cobrar",
     (panelG:find("def.skillCheck.requiresTargetAtZero then", 1, true) or math.huge)
@@ -94,6 +97,8 @@ chk("y mira las tres fuentes de vida",
     panelG:find('vida = tonumber(GetResourceCurrent("health"))', 1, true) ~= nil
     and panelG:find("vida = tonumber(tbl.Res_health_Cur)", 1, true) ~= nil
     and panelG:find('vida = (hp <= 1) and 0 or hp', 1, true) ~= nil, true)
+chk("y el ejecutor lanza el cast por el wrapper",
+    panelG:find('HarfordEpsilonCommands.Send("cas " .. tostring(def.skillCheck.castSpellId)', 1, true) ~= nil, true)
 
 -- Desengancharse deja su estado visible hasta el FIN de tu turno (2026-09-06): los ataques de
 -- oportunidad siguen siendo de la mesa, pero la mesa VE quien esta desenganchado en la tira.

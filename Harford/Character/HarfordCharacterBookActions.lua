@@ -356,6 +356,13 @@ do
             -- no la conoce: ahi se tira y decide la mesa.
             local enlace = (HarfordTRP3 and HarfordTRP3.GetAbilityChatLink
                 and HarfordTRP3.GetAbilityChatLink(def)) or tostring(def.name)
+            -- Animacion de servidor declarada por la accion (Estabilizar: `cas 211155`,
+            -- primeros auxilios): se lanza al USARLA, pasadas ya las guardias — el gesto se
+            -- ve exista o no exito en la tirada.
+            if def.skillCheck.castSpellId and HarfordEpsilonCommands and HarfordEpsilonCommands.Send then
+                HarfordEpsilonCommands.Send("cas " .. tostring(def.skillCheck.castSpellId),
+                    { addonName = "Harford", forceEpsilon = true })
+            end
             local dc = tonumber(def.skillCheck.dc)
             if dc then
                 -- Con CD la linea es UNA y completa (formato de mesa: Origen [link] Destino

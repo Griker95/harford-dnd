@@ -102,7 +102,9 @@ API.DEFS = {
         -- La UNICA de las nuevas con CD fija en el manual, asi que se resuelve entera aqui.
         -- `healOnSuccess`: decision de mesa 2026-09-06 — el exito otorga 1 PG al objetivo.
         -- `requiresTargetAtZero`: solo se puede usar sobre un objetivo con la vida a 0.
-        skillCheck = { skill = "Medicina", dc = 10, healOnSuccess = 1, requiresTargetAtZero = true },
+        -- `castSpellId`: al usarla (pasadas las guardias) se ejecuta `cas 211155` en el
+        -- servidor — la animacion de primeros auxilios, exito o fallo.
+        skillCheck = { skill = "Medicina", dc = 10, healOnSuccess = 1, requiresTargetAtZero = true, castSpellId = 211155 },
     },
     lanzar_arma = {
         id = "lanzar_arma", name = "Lanzar arma",

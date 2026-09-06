@@ -416,16 +416,19 @@ API.RACES = {
                 } },
             } },
             -- High Elf del Libro 2 ("Heroes of Warcraft 5º (Alt)", High Elf Traits): DES+2 SAB+1,
-            -- armas quel'dorei, competencia temporal por descanso largo y el d4 de precision.
-            -- El libro ofrece ademas ELEGIR un truco de mago (SAB) en lugar de las armas y un
-            -- idioma extra: el idioma se mecaniza (choice de idiomas); la alternativa del truco
-            -- queda narrativa A PROPOSITO — la mesa (ficha de Reena) fijo las armas.
+            -- armas quel'dorei (las TRES mecanizadas: la "hoja quel'dorei" del libro es la
+            -- "Espada quel'dorei" del catalogo), competencia temporal por descanso largo y el
+            -- d4 de precision. El libro ofrece ademas ELEGIR un truco de mago (SAB) en lugar de
+            -- las armas y un idioma extra: el idioma se mecaniza (choice de idiomas); la
+            -- alternativa del truco queda narrativa A PROPOSITO — la mesa (ficha de Reena) fijo
+            -- las armas.
             { id = "raza_elfo_sangre_noble", name = "Elfo Noble", nameF = "Elfa Noble", desc = "Los quel'dorei que nunca juraron lealtad a la Horda: disciplina noble, reflexión y el legado mágico del antiguo Quel'Thalas.\n\nComo elfo noble llevas contigo el peso de la historia — reinos caídos, parientes distanciados y un poder que ahora se contiene con disciplina. \"Por Quel'Thalas\" es para ti un voto silencioso.", summary = "El linaje quel'dorei: altos elfos de disciplina serena y gracia mesurada, herederos del legado arcano de Quel'Thalas sin la sed vil de sus primos.", traits = {
                 { id = "eno_inc", icon = "hd_plussign_hunter", name = "Incremento de caracteristica", type = "pasivo", description = "Destreza +2, y Sabiduría +1.", effects = {
                     { kind = "bonus", target = "ability", ability = "Destreza", value = 2 },
                     { kind = "bonus", target = "ability", ability = "Sabiduria", value = 1 },
                 } },
-                { id = "eno_artes", icon = "inv_sword_bloodelf_03", name = "Artes de los quel'dorei", type = "pasivo", description = "Eres competente con la hoja quel'dorei, el arco largo y la espada corta.", effects = WeaponProfEffects("arco largo", "espada corta") },
+                -- La "hoja quel'dorei" del libro ES la "Espada quel'dorei" del catalogo de armas.
+                { id = "eno_artes", icon = "inv_sword_bloodelf_03", name = "Artes de los quel'dorei", type = "pasivo", description = "Eres competente con la espada quel'dorei, el arco largo y la espada corta.", effects = WeaponProfEffects("espada quel'dorei", "arco largo", "espada corta") },
                 { id = "eno_herencia", icon = "spell_arcane_teleportsilvermoon", name = "Herencia de Quel'Thalas", type = "choice", description = "Cuando terminas un descanso largo, elige una herramienta o arma con la que no seas competente. Ganas competencia temporal con esa herramienta o arma hasta que termines tu siguiente descanso largo.", effects = {}, choice = {
                     slots = 1, optionsFrom = "weaponOrTool", rechooseOnLongRest = true,
                 } },

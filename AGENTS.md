@@ -484,9 +484,10 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   Arcano, idiomas). `raza_elfo_sangre_sindorei` (PRIMERA: es el default) conserva CON SUS IDS
   los rasgos que antes eran de la raza base (esa_inc, esa_sentidos, esa_reversion, esa_legado) —
   las elecciones guardadas siguen resolviendo. `raza_elfo_sangre_noble` ("Elfo Noble"/"Elfa
-  Noble", ficha de Reena como referencia): DES+2 SAB+1, Artes de los quel'dorei (weaponProf arco
-  largo + espada corta; la hoja quel'dorei y la ALTERNATIVA del truco de mago del libro quedan
-  narrativas a proposito), Herencia de Quel'Thalas (choice `rechooseOnLongRest` con el generador
+  Noble", ficha de Reena como referencia): DES+2 SAB+1, Artes de los quel'dorei (weaponProf de
+  las TRES armas: la "hoja quel'dorei" del libro ES la "Espada quel'dorei" del catalogo, mas
+  arco largo y espada corta; solo la ALTERNATIVA del truco de mago del libro queda narrativa a
+  proposito), Herencia de Quel'Thalas (choice `rechooseOnLongRest` con el generador
   NUEVO `optionsFrom = "weaponOrTool"` — armas del catalogo + todas las TOOLS), Legado de
   precision (activo, `uses = { base = 0, proficiencyBonus = true, recharge = "long" }` — el d4 a
   la tirada lo suma la mesa; el rasgo anuncia y gasta) e Idioma adicional (choice language).

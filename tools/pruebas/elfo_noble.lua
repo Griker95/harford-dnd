@@ -71,9 +71,12 @@ print("El noble trae los rasgos del Libro 2")
 chk("DES+2 SAB+1", n.eno_inc and n.eno_inc.effects[1].ability .. "+"
     .. n.eno_inc.effects[1].value .. "/" .. n.eno_inc.effects[2].ability .. "+"
     .. n.eno_inc.effects[2].value, "Destreza+2/Sabiduria+1")
-chk("Artes de los quel'dorei: arco largo y espada corta",
-    n.eno_artes and n.eno_artes.effects[1].weapon .. "/" .. n.eno_artes.effects[2].weapon,
-    "arco largo/espada corta")
+-- La "hoja quel'dorei" del libro ES la "Espada quel'dorei" del catalogo: las tres armas
+-- van mecanizadas, ninguna se queda en la prosa.
+chk("Artes de los quel'dorei: las TRES armas",
+    n.eno_artes and n.eno_artes.effects[1].weapon .. "/" .. n.eno_artes.effects[2].weapon
+    .. "/" .. n.eno_artes.effects[3].weapon,
+    "espada quel'dorei/arco largo/espada corta")
 -- Herencia de Quel'Thalas: competencia TEMPORAL elegida en cada descanso largo. Reusa el
 -- mecanismo de la Forja de runas (rechooseOnLongRest) y el generador nuevo weaponOrTool.
 chk("Herencia: se reelige en cada descanso largo",

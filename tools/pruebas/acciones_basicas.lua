@@ -75,9 +75,17 @@ chk("esquivar si tiene efecto", A.Get("esquivar").selfCondition.id, "esquivando"
 chk("esconderse tira Sigilo", A.Get("esconderse").skillCheck.skill, "Sigilo")
 -- Sin CD: la de esconderse es la Percepcion pasiva de quien mira, que este cliente no conoce.
 chk("y sin CD, que no la sabemos", tostring(A.Get("esconderse").skillCheck.dc), "nil")
--- Estabilizar es la unica de las nuevas con CD fija en el manual.
+-- Estabilizar es la unica de las nuevas con CD fija en el manual. El exito otorga ademas
+-- 1 PG al objetivo (decision de mesa 2026-09-06): lo declara la accion (healOnSuccess) y lo
+-- entrega la rama de skillCheck via EntregarAObjetivo, solo a jugadores — la vida de un NPC
+-- la gestiona su ficha de DM.
 chk("estabilizar: Medicina", A.Get("estabilizar").skillCheck.skill, "Medicina")
 chk("estabilizar: CD 10", A.Get("estabilizar").skillCheck.dc, 10)
+chk("estabilizar: 1 PG al exito", A.Get("estabilizar").skillCheck.healOnSuccess, 1)
+local panelBA = io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a")
+chk("la entrega existe y respeta al NPC",
+    panelBA:find("if supera and def.skillCheck.healOnSuccess and EntregarAObjetivo", 1, true) ~= nil
+    and panelBA:find('EntregarAObjetivo("health", def.skillCheck.healOnSuccess, def.name)', 1, true) ~= nil, true)
 -- Agarrar y Empujar se resuelven por tirada enfrentada (ver `tirada_enfrentada`), asi que ya no
 -- son narrativas. Una accion tiene UNA forma de resolverse: declarar las dos seria contradecirse.
 print("Las que se resuelven por contienda no declaran ademas que no hacen nada")

@@ -2649,7 +2649,11 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
     elseif damageText ~= "" then
         outcome = FormatSaveOutcome(false, damageText)
     else
-        outcome = FormatSaveOutcome(false, man.outcome or "afectado")
+        -- El estado aplicado sale con el color de "estado" de la web (helper de WeaponRolls,
+        -- que usa el label del catalogo por conditionId; sin def, el texto de la maniobra).
+        local etiqueta = (WeaponRolls and WeaponRolls.EtiquetaDeEstado
+            and WeaponRolls.EtiquetaDeEstado(man.conditionId, man.outcome)) or man.outcome
+        outcome = FormatSaveOutcome(false, etiqueta or "afectado")
     end
     if not saved and (man.conditionId or man.onFailAura) then
         ApplyConditionalHitEffect(man.conditionId, man.onFailAura, {

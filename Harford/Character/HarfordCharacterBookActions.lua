@@ -341,6 +341,15 @@ do
                             supera and (C.crit or "") or (C.fumble or ""),
                             supera and "EXITO" or "FALLO", C.close or ""),
                     })
+                    -- Decision de mesa 2026-09-06: Estabilizar con EXITO otorga 1 punto de vida
+                    -- al objetivo, ademas de dejarlo estable. Solo a JUGADORES (la propia rama
+                    -- de EntregarAObjetivo cubre a uno mismo); la vida de un NPC la gestiona su
+                    -- ficha de DM, como el resto del apoyo.
+                    if supera and def.skillCheck.healOnSuccess and EntregarAObjetivo
+                        and UnitExists and UnitExists("target")
+                        and ((UnitIsPlayer and UnitIsPlayer("target")) or (UnitIsUnit and UnitIsUnit("target", "player"))) then
+                        EntregarAObjetivo("health", def.skillCheck.healOnSuccess, def.name)
+                    end
                 end
             else
                 -- Sin CD (Esconderse) la tirada de RollSkillEx ya es la linea; el enlace va de

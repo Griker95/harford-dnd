@@ -463,11 +463,23 @@ local function RollWeaponDamage(def, abilKey, maximizeDice, suppressAbilityDamag
     return total, componentes, (publicaLaVictima and etiquetaDano or nil)
 end
 
+-- El nombre de un estado que se APLICA (Derribado, Agarrado, Desarmado...) sale con el color de
+-- "estado" de la web (.hl-cond de harfordweb/css/styles.css) en todas las superficies. Con el
+-- `conditionId` se usa el label del catalogo LIMPIO, asi que aplicarlo dos veces (emisor y
+-- receptor) no dobla el color; sin definicion, el texto queda tal cual.
+local COLOR_ESTADO = "|cffff6b6b"
+local function EtiquetaDeEstado(conditionId, fallback)
+    local def = HarfordDnDConditions and HarfordDnDConditions.GetDefinition
+        and HarfordDnDConditions.GetDefinition(conditionId)
+    if def and def.label then return COLOR_ESTADO .. tostring(def.label) .. "|r" end
+    return fallback
+end
+
 local function ResolveWeaponManeuverAfterHitSave(data)
     if not data or not data.save then return end
     if not (UnitExists and UnitExists("target")) then return end
     if UnitIsPlayer and UnitIsPlayer("target") then
-        RequestPlayerTargetSave(data.save, data.dc, data.outcome, data.onFailAura,
+        RequestPlayerTargetSave(data.save, data.dc, EtiquetaDeEstado(data.conditionId, data.outcome), data.onFailAura,
             data.conditionId, data.conditionDuration, data.conditionTurns, data.nextAttackExtraDamageDice,
             data.extraDamageType, data.skill, data.actionName)
         if data.nextAttackExtraDamageDice then
@@ -506,7 +518,7 @@ local function ResolveWeaponManeuverAfterHitSave(data)
         targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
             or HarfordClassColors.UnitFullName("target") or "el objetivo"
     end
-    local outcome = FormatSaveOutcome(saved, data.outcome)
+    local outcome = FormatSaveOutcome(saved, EtiquetaDeEstado(data.conditionId, data.outcome))
     local conditionApplied = false
     if not saved and (data.conditionId or data.onFailAura) then
         local applied, applyErr = ApplyConditionalHitEffect(data.conditionId, data.onFailAura, {
@@ -583,7 +595,9 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
     local total = d + bonus
     dc = tonumber(dc) or 10
     local saved = not autoFail and total >= dc
-    local result = FormatSaveOutcome(saved, outcome)
+    -- El emisor ya manda el estado coloreado, pero un cliente viejo lo manda plano: con el
+    -- conditionId (que viaja aparte) el helper lo re-etiqueta desde el catalogo sin doblar color.
+    local result = FormatSaveOutcome(saved, EtiquetaDeEstado(conditionId, outcome))
     if not saved then
         local def = HarfordDnDConditions and HarfordDnDConditions.GetDefinition
             and HarfordDnDConditions.GetDefinition(conditionId)
@@ -729,8 +743,14 @@ local function RollContest(contest, opts)
     local api = _G.DND5E_ARC_API
     if not (api and api.RollSkillEx) then return false, "sin tiradas" end
 
-    local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
-        or HarfordClassColors.UnitFullName("target") or "el objetivo"
+    -- El destino con el helper canonico (RP COLOREADO por clase, como en Ataque Arma y en el
+    -- resto de lineas dirigidas) — no el nombre WoW pelado, que salia "DM" sin color.
+    local targetName = (HarfordDnDStore and HarfordDnDStore.ColoredUnitName
+        and HarfordDnDStore.ColoredUnitName("target")) or ""
+    if targetName == "" then
+        targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
+            or HarfordClassColors.UnitFullName("target") or "el objetivo"
+    end
     local targetIsPlayer = UnitIsPlayer and UnitIsPlayer("target")
     -- La accion va CLICABLE cuando el llamador trae su enlace TRP3; el nombre pelado queda de
     -- respaldo. `targetUnit` hace que la tirada del atacante LLEGUE a la victima aunque no
@@ -790,9 +810,7 @@ local function RollContest(contest, opts)
             .. (defenseBonus >= 0 and "+" or "") .. tostring(defenseBonus)
         local result = "Sin efecto"
         if not defense.saved and defense.conditionApplied and estado then
-            local condition = HarfordDnDConditions and HarfordDnDConditions.GetDefinition
-                and HarfordDnDConditions.GetDefinition(estado)
-            result = (condition and condition.label) or tostring(estado)
+            result = EtiquetaDeEstado(estado, tostring(estado))
         end
         local cabecera = prefijo
         if opts and opts.resultLabel and opts.resultLabel ~= "" then
@@ -808,6 +826,7 @@ local function RollContest(contest, opts)
     return true
 end
 
+HarfordDnDWeaponRolls.EtiquetaDeEstado = EtiquetaDeEstado
 HarfordDnDWeaponRolls.RollContest = RollContest
 HarfordDnDWeaponRolls.RollWeaponDamage = RollWeaponDamage
 HarfordDnDWeaponRolls.ResolveWeaponManeuverAfterHitSave = ResolveWeaponManeuverAfterHitSave

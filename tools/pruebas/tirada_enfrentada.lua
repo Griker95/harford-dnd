@@ -161,6 +161,32 @@ chk("la victima lo pone delante de su tirada",
 -- el nombre: un hyperlink no cabe en el campo). Y la tirada del atacante lleva `targetUnit`
 -- para que el whisper extra de Broadcast se la haga llegar a una victima fuera de su grupo —
 -- sin eso, la victima solo veia su propia salvacion.
+-- El destino de la contienda usa el helper canonico (RP coloreado por clase, como en Ataque
+-- Arma): con GetUnitRPName/UnitFullName a pelo salia "DM" sin color.
+print("El destino va con su nombre RP coloreado")
+chk("helper canonico primero",
+    wr:find('and HarfordDnDStore.ColoredUnitName("target")) or ""\n    if targetName == "" then', 1, true) ~= nil, true)
+
+-- El nombre de un estado APLICADO (Derribado, Agarrado, Desarmado...) sale con el color de
+-- "estado" de la web (.hl-cond de harfordweb = #ff6b6b) en todas las superficies. El helper usa
+-- el label del catalogo por conditionId, asi que emisor y receptor pueden aplicarlo los dos sin
+-- doblar el color, y un outcome sin definicion queda tal cual (Apartar 1,5 m, textos de dano).
+print("El estado aplicado va en el color de estado de la web")
+chk("el color es el de la web", wr:find('local COLOR_ESTADO = "|cffff6b6b"', 1, true) ~= nil, true)
+chk("con el label limpio del catalogo",
+    wr:find('if def and def.label then return COLOR_ESTADO .. tostring(def.label) .. "|r" end', 1, true) ~= nil, true)
+chk("lo aplica el emisor hacia el defensor jugador",
+    wr:find("RequestPlayerTargetSave(data.save, data.dc, EtiquetaDeEstado(data.conditionId, data.outcome), data.onFailAura,", 1, true) ~= nil, true)
+chk("la resolucion NPC local",
+    wr:find("local outcome = FormatSaveOutcome(saved, EtiquetaDeEstado(data.conditionId, data.outcome))", 1, true) ~= nil, true)
+chk("la victima (re-etiqueta compatible con emisores viejos)",
+    wr:find("local result = FormatSaveOutcome(saved, EtiquetaDeEstado(conditionId, outcome))", 1, true) ~= nil, true)
+chk("y la contienda consolidada contra NPC",
+    wr:find("result = EtiquetaDeEstado(estado, tostring(estado))", 1, true) ~= nil, true)
+chk("las maniobras de energia tambien",
+    io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+        :find("WeaponRolls.EtiquetaDeEstado(man.conditionId, man.outcome)) or man.outcome", 1, true) ~= nil, true)
+
 print("La accion es un enlace y la tirada del atacante llega a la victima")
 chk("el llamador entrega el enlace",
     panel:find("local actionLink = HarfordTRP3 and HarfordTRP3.GetAbilityChatLink", 1, true) ~= nil, true)

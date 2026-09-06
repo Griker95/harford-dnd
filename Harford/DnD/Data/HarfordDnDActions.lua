@@ -94,9 +94,10 @@ API.DEFS = {
         id = "estabilizar", name = "Estabilizar",
         cast = "accion", orden = 8,
         description = "Prueba de Medicina CD 10 sobre una criatura a 0 puntos de golpe. Si la superas, "
-            .. "queda estable: deja de tirar salvaciones de muerte.",
+            .. "queda estable y recupera 1 punto de golpe.",
         -- La UNICA de las nuevas con CD fija en el manual, asi que se resuelve entera aqui.
-        skillCheck = { skill = "Medicina", dc = 10 },
+        -- `healOnSuccess`: decision de mesa 2026-09-06 — el exito otorga 1 PG al objetivo.
+        skillCheck = { skill = "Medicina", dc = 10, healOnSuccess = 1 },
     },
     lanzar_arma = {
         id = "lanzar_arma", name = "Lanzar arma",

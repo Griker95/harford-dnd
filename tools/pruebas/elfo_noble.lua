@@ -78,9 +78,10 @@ chk("Artes de los quel'dorei: las TRES armas",
     .. "/" .. n.eno_artes.effects[3].weapon,
     "espada quel'dorei/arco largo/espada corta")
 -- Herencia de Quel'Thalas: competencia TEMPORAL elegida en cada descanso largo. Reusa el
--- mecanismo de la Forja de runas (rechooseOnLongRest) y el generador nuevo weaponOrTool.
+-- mecanismo de la Forja de runas — el flag va A NIVEL DE RASGO, que es donde lo mira el menu
+-- del descanso largo (f.rechooseOnLongRest); dentro de choice era invisible.
 chk("Herencia: se reelige en cada descanso largo",
-    n.eno_herencia and n.eno_herencia.choice.rechooseOnLongRest, true)
+    n.eno_herencia and n.eno_herencia.rechooseOnLongRest, true)
 chk("entre TODAS las armas y herramientas",
     n.eno_herencia and n.eno_herencia.choice.optionsFrom, "weaponOrTool")
 -- Legado de precision: usos = bonificador por competencia, mecanismo existente de FeatureUses

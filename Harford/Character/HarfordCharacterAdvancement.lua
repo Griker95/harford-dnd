@@ -2384,6 +2384,110 @@ _G.HarfordOpenLongRestMenu = OpenLongRestMenu
 -- antiguos que lo llamen ven lo mismo que el descanso.
 _G.HarfordOpenLongRestChoicesMenu = OpenLongRestMenu
 
+-- "Siempre que ganes un nivel en esta clase, puedes reemplazar uno de estos trucos por otro"
+-- (Guerrero Bendito del Paladin). Rasgos `choice` con `rechooseOnLevelUp = "<classId>"`: al
+-- aplicar una subida que toque esa clase se abre este menu OPCIONAL — nivel 1 lista lo elegido
+-- ("Reemplazar <truco>") y nivel 2 el sustituto (las ya elegidas en otros huecos no se
+-- ofrecen). Cerrar el menu mantiene lo que hay: reemplazar es un derecho, no una obligacion.
+local levelUpSwapMenu
+local function OfferLevelUpSwaps(classIds)
+    local P, B = HarfordDnDProgression, HarfordDnDBook
+    if not (P and P.GetClassLevels and B and B.GetUnlockedFeatures) then return end
+    local clases = {}
+    for _, id in ipairs(classIds or {}) do clases[tostring(id)] = true end
+    local reeligibles = {}
+    for _, item in ipairs(B.GetUnlockedFeatures(P.GetClassLevels()) or {}) do
+        local f = item.feature
+        if f and f.choice and f.rechooseOnLevelUp and clases[tostring(f.rechooseOnLevelUp)] then
+            reeligibles[#reeligibles + 1] = f
+        end
+    end
+    if #reeligibles == 0 then return end
+    if not (UIDropDownMenu_Initialize and ToggleDropDownMenu and UIDropDownMenu_CreateInfo) then return end
+    levelUpSwapMenu = levelUpSwapMenu or CreateFrame("Frame", "HarfordLevelUpSwapMenu", UIParent, "UIDropDownMenuTemplate")
+    UIDropDownMenu_Initialize(levelUpSwapMenu, function(_, level)
+        level = level or 1
+        if level == 1 then
+            local info = UIDropDownMenu_CreateInfo()
+            info.isTitle = true
+            info.notCheckable = true
+            info.text = "Reemplazos por subir de nivel (opcional)"
+            UIDropDownMenu_AddButton(info, level)
+            for _, f in ipairs(reeligibles) do
+                local mapa = (P.GetChoiceSlotMap and P.GetChoiceSlotMap(f.id)) or {}
+                local slots = (B.GetChoiceSlots and B.GetChoiceSlots(f)) or 1
+                for slot = 1, slots do
+                    if mapa[slot] then
+                        local opt = B.GetChoiceOption and B.GetChoiceOption(f, mapa[slot])
+                        info = UIDropDownMenu_CreateInfo()
+                        info.text = "Reemplazar " .. tostring((opt and opt.label) or mapa[slot])
+                        info.notCheckable = true
+                        info.hasArrow = true
+                        info.value = tostring(f.id) .. "#" .. slot
+                        UIDropDownMenu_AddButton(info, level)
+                    end
+                end
+            end
+        elseif level == 2 then
+            local fid, slot = tostring(UIDROPDOWNMENU_MENU_VALUE or ""):match("^(.-)#(%d+)$")
+            slot = tonumber(slot)
+            for _, f in ipairs(reeligibles) do
+                if f.id == fid and slot then
+                    local mapa = (P.GetChoiceSlotMap and P.GetChoiceSlotMap(f.id)) or {}
+                    local ocupadas = {}
+                    for s, opt in pairs(mapa) do
+                        if s ~= slot then ocupadas[tostring(opt)] = true end
+                    end
+                    for _, opcion in ipairs((B.GetChoiceOptions and B.GetChoiceOptions(f)) or {}) do
+                        if not ocupadas[tostring(opcion.id)] then
+                            local elegida = opcion
+                            local info = UIDropDownMenu_CreateInfo()
+                            info.text = tostring(elegida.label or elegida.id)
+                            info.checked = tostring(mapa[slot]) == tostring(elegida.id)
+                            info.func = function()
+                                CloseDropDownMenus()
+                                local anterior = mapa[slot]
+                                local ok, err = P.SetChoiceSlot(f.id, slot, elegida.id)
+                                if ok == false then
+                                    if HarfordChat and HarfordChat.Print then
+                                        HarfordChat.Print(tostring(f.name) .. ": " .. tostring(err or "no se pudo cambiar"))
+                                    end
+                                    return
+                                end
+                                -- El truco nuevo entra al grimorio y el reemplazado SALE (via
+                                -- knownSpells, la misma que usa la subida al conceder trucos
+                                -- elegidos; la resolucion por opcion se actualiza sola).
+                                local db = _G.HarfordCompendioCharacterDB
+                                if type(db) == "table" then
+                                    db.knownSpells = db.knownSpells or {}
+                                    local optAnterior = anterior and B.GetChoiceOption
+                                        and B.GetChoiceOption(f, anterior)
+                                    if optAnterior and optAnterior.spellId then
+                                        db.knownSpells[optAnterior.spellId] = nil
+                                    end
+                                    if elegida.spellId then db.knownSpells[elegida.spellId] = true end
+                                end
+                                if HarfordChat and HarfordChat.Print then
+                                    HarfordChat.Print(tostring(f.name) .. " -> "
+                                        .. tostring(elegida.label or elegida.id) .. ".")
+                                end
+                                local Cre = _G.HarfordCharacterCreation
+                                if Cre and Cre.CanRewriteAbout and Cre.CanRewriteAbout()
+                                    and Cre.RewriteAbout then
+                                    Cre.RewriteAbout()
+                                end
+                            end
+                            UIDropDownMenu_AddButton(info, level)
+                        end
+                    end
+                end
+            end
+        end
+    end, "MENU")
+    ToggleDropDownMenu(1, nil, levelUpSwapMenu, "cursor", 0, 0)
+end
+_G.HarfordOfferLevelUpSwaps = OfferLevelUpSwaps
+
 -- Conjuntos de nombres de las Listas Ampliadas de la subclase (Brujo: Afliccion/Demonologia/
 -- Destruccion). Devuelve nil si esa subclase no declara ninguna, para no cambiar el filtro.
 ExpandedSpellNames = function(classId, subclassId)

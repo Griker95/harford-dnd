@@ -138,4 +138,40 @@ chk("cabecera de subclase coloreada",
 chk("el truco elegido va a la linea cian, no a la cabecera",
     crea:find("if option and option.spellId then option = nil end", 1, true) ~= nil, true)
 
+-- ── PLANTILLA DE MESA DEL GUERRERO BENDITO (2026-09-06) ──
+-- El rasgo derivado NO sale como bloque del About (aboutHidden): sus trucos van en la linea
+-- cian bajo la cabecera del Estilo de combate, separados por "|", con el icono de la OPCION
+-- (ability_paladin_veneration, perfil de Melyan) mandando sobre el del rasgo.
+print("Los trucos del Guerrero Bendito viven bajo su estilo en el About")
+chk("el derivado se oculta del About", pal:find("aboutHidden = true", 1, true) ~= nil
+    and crea:find("and not feature.aboutHidden then", 1, true) ~= nil, true)
+chk("sus elegidos van en la linea cian dependiente",
+    crea:find('lineaCianInline = table.concat(nombres, " {col:cccccc}|{/col} ")', 1, true) ~= nil
+    and crea:find("if lineaCianInline then lines[#lines + 1] = lineaCianInline end", 1, true) ~= nil, true)
+chk("el icono de la opcion manda en la cabecera",
+    crea:find("(inlineIcono or FeatureIconName(feature))", 1, true) ~= nil, true)
+chk("icono y descripcion de la mesa en la opcion",
+    pal:find('id = "guerrero_bendito", icon = "ability_paladin_veneration"', 1, true) ~= nil, true)
+
+-- ── REEMPLAZO AL SUBIR DE NIVEL (mecanizado) ──
+-- "Siempre que ganes un nivel en esta clase, puedes reemplazar uno de estos trucos por otro":
+-- rechooseOnLevelUp = "paladin" en el derivado; al aplicar una subida que toque esa clase,
+-- FinishLevelUp abre el menu opcional (HarfordOfferLevelUpSwaps) — nivel 1 lo elegido, nivel 2
+-- el sustituto sin ofrecer las ya elegidas; el truco reemplazado sale del grimorio y entra el
+-- nuevo. En la cadena de creacion no se ofrece (se acaban de elegir).
+print("El reemplazo por nivel esta mecanizado")
+chk("el derivado lo declara", pal:find('rechooseOnLevelUp = "paladin"', 1, true) ~= nil, true)
+local adv = io.open("Harford/Character/HarfordCharacterAdvancement.lua"):read("*a")
+chk("el menu existe y filtra por clase subida",
+    adv:find("local function OfferLevelUpSwaps(classIds)", 1, true) ~= nil
+    and adv:find("clases[tostring(f.rechooseOnLevelUp)]", 1, true) ~= nil, true)
+chk("no ofrece las ya elegidas en otros huecos",
+    adv:find("if s ~= slot then ocupadas[tostring(opt)] = true end", 1, true) ~= nil, true)
+chk("el truco reemplazado sale del grimorio y entra el nuevo",
+    adv:find("db.knownSpells[optAnterior.spellId] = nil", 1, true) ~= nil
+    and adv:find("if elegida.spellId then db.knownSpells[elegida.spellId] = true end", 1, true) ~= nil, true)
+local draftSrc = io.open("Harford/Character/HarfordCharacterDraft.lua"):read("*a")
+chk("la subida lo ofrece, la cadena de creacion no",
+    draftSrc:find("if not veniaDeCadena and _G.HarfordOfferLevelUpSwaps then", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

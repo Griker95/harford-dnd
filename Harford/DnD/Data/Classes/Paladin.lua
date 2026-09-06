@@ -66,8 +66,9 @@ API.CLASSES[#API.CLASSES + 1] =
             slots = 1,
             options = {
                 -- Los DOS trucos los abre el rasgo derivado `pal_guerrero_bendito_trucos`
-                -- (requiresOption): elegir el estilo destapa esa segunda eleccion.
-                { id = "guerrero_bendito", icon = "spell_holy_holysmite", label = "Guerrero Bendito (2 trucos de sacerdote, Carisma)", effects = {} },
+                -- (requiresOption): elegir el estilo destapa esa segunda eleccion. Icono y
+                -- descripcion confirmados por la mesa (perfil de Melyan).
+                { id = "guerrero_bendito", icon = "ability_paladin_veneration", label = "Guerrero Bendito (2 trucos de sacerdote, Carisma)", desc = "Aprendes dos trucos de tu elección de la lista de conjuros de sacerdote. Cuentan como conjuros de paladín para ti, y el Carisma es tu habilidad de lanzamiento de conjuros para ellos. Siempre que ganes un nivel en esta clase, puedes reemplazar uno de estos trucos por otro truco de la lista de sacerdote.", effects = {} },
                 { id = "defensa", icon = "ability_warrior_defensivestance",          label = "Defensa (+1 CA con armadura)",            effects = { { kind = "flag", flag = "styleDefense" } } },
                 { id = "doble_empunadura", icon = "ability_warrior_challange", label = "Doble Empunadura (+2 dano con un arma a una mano y sin otras armas)", effects = { { kind = "flag", flag = "styleDueling" } } },
                 { id = "gran_arma", icon = "ability_warrior_cleave",        label = "Gran Arma (repetir 1-2 a dos manos)",     effects = { { kind = "flag", flag = "greatWeaponFighting" } } },
@@ -77,8 +78,11 @@ API.CLASSES[#API.CLASSES + 1] =
         -- Rasgo DERIVADO del estilo Guerrero Bendito (patron Sistema de Emergencia del
         -- Mecagnomo): solo existe con esa opcion elegida, y es quien abre la eleccion de los
         -- DOS trucos de la lista de sacerdote (extraFrom los lista uno a uno del compendio; el
-        -- truco elegido entra al grimorio por spellId como los raciales).
-        { id = "pal_guerrero_bendito_trucos", requiresOption = "guerrero_bendito", level = 2, name = "Guerrero Bendito: trucos", type = "choice", description = "Aprendes dos trucos de la lista de conjuros del sacerdote. Cuentan como conjuros de paladín para ti, y el Carisma es tu característica de lanzamiento para ellos.", effects = {}, choice = {
+        -- truco elegido entra al grimorio por spellId como los raciales). `aboutHidden`: en el
+        -- About NO sale como bloque — los trucos van en la linea cian bajo el Estilo de
+        -- combate. `rechooseOnLevelUp`: al ganar un nivel de paladin puedes reemplazar UNO de
+        -- los trucos por otro de la lista (menu opcional tras aplicar la subida).
+        { id = "pal_guerrero_bendito_trucos", requiresOption = "guerrero_bendito", level = 2, name = "Guerrero Bendito: trucos", type = "choice", icon = "ability_paladin_veneration", aboutHidden = true, rechooseOnLevelUp = "paladin", description = "Aprendes dos trucos de tu elección de la lista de conjuros de sacerdote. Cuentan como conjuros de paladín para ti, y el Carisma es tu habilidad de lanzamiento de conjuros para ellos. Siempre que ganes un nivel en esta clase, puedes reemplazar uno de estos trucos por otro truco de la lista de sacerdote.", effects = {}, choice = {
             slots = 2,
             extraFrom = "cantrip:Sacerdote",
             options = {},

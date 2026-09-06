@@ -554,7 +554,10 @@ local function BuildTraitLines(traits, draft)
     local lines = {}
     for _, entry in ipairs(traits) do
         local feature = entry.feature
-        if not IsMarkerFeature(feature) then
+        -- `aboutHidden`: rasgos derivados que NO salen como bloque propio del About (los trucos
+        -- del Guerrero Bendito van en la linea cian bajo su Estilo de combate). Siguen enteros
+        -- en el asistente y el Libro; solo se ocultan aqui.
+        if not IsMarkerFeature(feature) and not feature.aboutHidden then
             -- Un rasgo con ELECCION no usa la seccion del manual: esa seccion enumera TODAS
             -- las opciones ("Palabra de Poder" con sus ocho palabras, "Estilo de Combate" con
             -- todos los estilos) y el About del personaje solo debe llevar lo SUYO. Su texto
@@ -582,7 +585,7 @@ local function BuildTraitLines(traits, draft)
             -- Meneldor) — la opcion va EN la cabecera coloreada ("Estilo de combate
             -- {col}Gran Arma{/col}") y el cuerpo es la regla de la opcion: su desc, o la nota
             -- entre parentesis del label, o la descripcion del rasgo como ultimo recurso.
-            local inlineTitulo, inlineCuerpo
+            local inlineTitulo, inlineCuerpo, inlineIcono, lineaCianInline
             if feature.choice then
                 local slots = HarfordDnDBook.GetChoiceSlots and HarfordDnDBook.GetChoiceSlots(feature) or 1
                 local elegidos = draft.choices[tostring(feature.id or "")] or {}
@@ -598,6 +601,29 @@ local function BuildTraitLines(traits, draft)
                         local nota = label:match("%((.-)%)")
                         inlineTitulo = " {col:" .. hexClase .. "}" .. corto .. "{/col}"
                         inlineCuerpo = Trim(option.desc or option.description)
+                        -- El icono de la OPCION manda sobre el del rasgo (perfiles reales:
+                        -- "{icon:ability_defend} Estilo de combate Defensa").
+                        if option.icon then inlineIcono = tostring(option.icon) end
+                        -- Eleccion DEPENDIENTE de la opcion (Guerrero Bendito -> sus trucos):
+                        -- el rasgo derivado (requiresOption + aboutHidden) no sale como bloque;
+                        -- sus elegidos van en la linea cian bajo esta cabecera, separados por
+                        -- "|" (plantilla de mesa 2026-09-06).
+                        local clase = entry.classId and HarfordDnDBook.GetClass
+                            and HarfordDnDBook.GetClass(entry.classId)
+                        for _, f2 in ipairs((clase and clase.features) or {}) do
+                            if f2.aboutHidden and f2.choice
+                                and tostring(f2.requiresOption or "") == tostring(elegidos[1]) then
+                                local nombres = {}
+                                for _, oid in ipairs(draft.choices[tostring(f2.id)] or {}) do
+                                    local o2 = HarfordDnDBook.GetChoiceOption(f2, oid)
+                                    nombres[#nombres + 1] = "{col:00ffff}"
+                                        .. tostring((o2 and o2.label) or oid) .. "{/col}"
+                                end
+                                if #nombres > 0 then
+                                    lineaCianInline = table.concat(nombres, " {col:cccccc}|{/col} ")
+                                end
+                            end
+                        end
                         -- Sin desc propia, la REGLA LARGA del manual: la opcion es una
                         -- sub-seccion del capitulo de clase ("#### Combate con Dos Armas"
                         -- bajo "Estilo de Combate"). La nota entre parentesis del label
@@ -642,10 +668,10 @@ local function BuildTraitLines(traits, draft)
                 -- clase (decision de mesa 2026-09-06: "Veredicto del Templario" en el rosa del
                 -- Paladin, sin el prefijo "Canalizar:", que se retiro de los datos). El color
                 -- no rompe el matching de cabeceras: se compara sin markup.
-                lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} {col:" .. hexClase .. "}"
+                lines[#lines + 1] = "{h2}{icon:" .. (inlineIcono or FeatureIconName(feature)) .. ":25} {col:" .. hexClase .. "}"
                     .. TituloDeRasgo(feature.name) .. "{/col}" .. (inlineTitulo or "") .. "{/h2}"
             else
-                lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "
+                lines[#lines + 1] = "{h2}{icon:" .. (inlineIcono or FeatureIconName(feature)) .. ":25} "
                     .. TituloDeRasgo(feature.name) .. (inlineTitulo or "") .. "{/h2}"
             end
             -- Opciones ELEGIDAS con texto propio (Metamagia, Palabras...): cada una sale como
@@ -679,6 +705,9 @@ local function BuildTraitLines(traits, draft)
             end
             local recurso = LineaDeRecurso(feature, entry, draft)
             if recurso then lines[#lines + 1] = recurso end
+            -- Los elegidos de la eleccion DEPENDIENTE (trucos del Guerrero Bendito) van en su
+            -- linea cian bajo la cabecera del estilo.
+            if lineaCianInline then lines[#lines + 1] = lineaCianInline end
             if lineaCian then lines[#lines + 1] = lineaCian end
             if inlineTitulo and inlineCuerpo and inlineCuerpo ~= "" then
                 lines[#lines + 1] = ColorizeDescription(inlineCuerpo)

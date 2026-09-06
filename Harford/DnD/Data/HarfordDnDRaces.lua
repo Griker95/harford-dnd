@@ -429,8 +429,10 @@ API.RACES = {
                 } },
                 -- La "hoja quel'dorei" del libro ES la "Espada quel'dorei" del catalogo de armas.
                 { id = "eno_artes", icon = "inv_sword_bloodelf_03", name = "Artes de los quel'dorei", type = "pasivo", description = "Eres competente con la espada quel'dorei, el arco largo y la espada corta.", effects = WeaponProfEffects("espada quel'dorei", "arco largo", "espada corta") },
-                { id = "eno_herencia", icon = "spell_arcane_teleportsilvermoon", name = "Herencia de Quel'Thalas", type = "choice", description = "Cuando terminas un descanso largo, elige una herramienta o arma con la que no seas competente. Ganas competencia temporal con esa herramienta o arma hasta que termines tu siguiente descanso largo.", effects = {}, choice = {
-                    slots = 1, optionsFrom = "weaponOrTool", rechooseOnLongRest = true,
+                -- `rechooseOnLongRest` va A NIVEL DE RASGO (como la Forja de runas del CdM):
+                -- el menu del descanso largo mira `f.rechooseOnLongRest`, no dentro de choice.
+                { id = "eno_herencia", icon = "spell_arcane_teleportsilvermoon", name = "Herencia de Quel'Thalas", type = "choice", rechooseOnLongRest = true, description = "Cuando terminas un descanso largo, elige una herramienta o arma con la que no seas competente. Ganas competencia temporal con esa herramienta o arma hasta que termines tu siguiente descanso largo.", effects = {}, choice = {
+                    slots = 1, optionsFrom = "weaponOrTool",
                 } },
                 { id = "eno_precision", icon = "eps_wc3h_highelfsunwellguard", name = "Legado de precision", type = "activo", description = "Una vez por turno, cuando realices una tirada de ataque, prueba de habilidad o tirada de salvación, puedes sumar 1d4 a la tirada. Puedes usar esta característica un número de veces igual a tu bonificador por competencia, y recuperas todos los usos gastados cuando terminas un descanso largo.", uses = { base = 0, proficiencyBonus = true, recharge = "long" }, effects = {} },
                 { id = "eno_idioma", icon = "inv_misc_note_05", name = "Idioma adicional", type = "choice", description = "Hablas, lees y escribes un idioma adicional de tu elección.", effects = {}, choice = { slots = 1, optionsFrom = "language" } },

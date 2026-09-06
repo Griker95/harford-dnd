@@ -472,6 +472,7 @@ local function FinishLevelUp()
     S.frame:Hide()
     -- Cadena de creacion: si venimos del asistente de creacion, seguir subiendo
     -- automaticamente hasta el nivel objetivo (3), un nivel por pasada.
+    local veniaDeCadena = false
     if S.autoLevelTarget then
         local total = HarfordDnDProgression.GetTotalLevel and HarfordDnDProgression.GetTotalLevel() or 0
         if total < S.autoLevelTarget then
@@ -479,9 +480,19 @@ local function FinishLevelUp()
             return
         end
         S.autoLevelTarget = nil
+        veniaDeCadena = true
         if HarfordChat and HarfordChat.Print then
             HarfordChat.Print("|cff38d26aCreacion completada: ficha a nivel " .. total .. ".|r")
         end
+    end
+    -- "Siempre que ganes un nivel en esta clase, puedes reemplazar...": rasgos `choice` con
+    -- `rechooseOnLevelUp` de una clase de esta subida abren su menu de reemplazo OPCIONAL
+    -- (cerrarlo mantiene lo que hay). En la cadena de creacion NO se ofrece: los trucos se
+    -- acaban de elegir y no hay nada que reemplazar.
+    if not veniaDeCadena and _G.HarfordOfferLevelUpSwaps then
+        local subidas = {}
+        for _, entry in ipairs(entries) do subidas[#subidas + 1] = entry.classId end
+        _G.HarfordOfferLevelUpSwaps(subidas)
     end
 end
 

@@ -605,11 +605,27 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
         HarfordSync.SendRequestedSaveResult(K.ADDON_PREFIX, responseTarget, saved, sourceGuid)
     end
     -- El nombre de la accion delante ("[Empujar] Atletismo ..."): sin el, la linea del defensor
-    -- es una prueba huerfana y en mesa no se sabe a QUE esta respondiendo.
+    -- es una prueba huerfana y en mesa no se sabe a QUE esta respondiendo. Por la red viaja solo
+    -- el NOMBRE (un hyperlink no cabe en el campo), asi que el enlace clicable se reconstruye
+    -- AQUI desde el catalogo local de acciones basicas; sin coincidencia, texto plano.
     local accion = tostring(actionName or "")
+    local prefijoAccion = ""
+    if accion ~= "" then
+        local enlace
+        if HarfordTRP3 and HarfordTRP3.GetAbilityChatLink and HarfordClassColors.NormalizeKey then
+            local buscado = HarfordClassColors.NormalizeKey(accion)
+            for _, defAccion in pairs((HarfordDnDActions and HarfordDnDActions.DEFS) or {}) do
+                if HarfordClassColors.NormalizeKey(defAccion.name or "") == buscado then
+                    enlace = HarfordTRP3.GetAbilityChatLink(defAccion)
+                    break
+                end
+            end
+        end
+        prefijoAccion = (enlace or ("[" .. accion .. "]")) .. " "
+    end
     local rollData = {
         type = "info",
-        label = (accion ~= "" and ("[" .. accion .. "] ") or "") .. (skillDef
+        label = prefijoAccion .. (skillDef
             and FormatCheckRollLabel(skillDef.name, total, d, dc, result, base, prof)
             or FormatSaveRollLabel(ability, total, d, dc, result, base, prof)),
         -- La salvacion la haces TU, no la ficha que tengas cargada.
@@ -675,6 +691,10 @@ local function DoRollEx(label, baseBonus, profBonus, rollType, rollContext)
             critical = critTag,
             mode = modeTag,
             miscBonus = miscBonus,
+            -- `targetUnit` activa el whisper extra de Broadcast: una tirada dirigida a un jugador
+            -- que NO esta en tu grupo le llega igual (la contienda de Empujar lo necesita — sin
+            -- esto, la victima no veia la tirada del atacante si no compartian raid).
+            targetUnit = rollContext and rollContext.targetUnit or nil,
         })
     end
     ConsumeMode()
@@ -712,9 +732,14 @@ local function RollContest(contest, opts)
     local targetName = (HarfordTRP3 and HarfordTRP3.GetUnitRPName and HarfordTRP3.GetUnitRPName("target"))
         or HarfordClassColors.UnitFullName("target") or "el objetivo"
     local targetIsPlayer = UnitIsPlayer and UnitIsPlayer("target")
+    -- La accion va CLICABLE cuando el llamador trae su enlace TRP3; el nombre pelado queda de
+    -- respaldo. `targetUnit` hace que la tirada del atacante LLEGUE a la victima aunque no
+    -- compartan grupo (whisper extra de Broadcast) — sin el, la victima solo veia su salvacion.
+    local prefijo = (opts and opts.actionLink)
+        or ("[" .. tostring(opts and opts.actionName or "Contienda") .. "]")
     local propia = api.RollSkillEx(contest.skill,
-        targetIsPlayer and ("[" .. tostring(opts and opts.actionName or "Contienda") .. "] " .. targetName) or nil,
-        targetIsPlayer and nil or { silent = true })
+        targetIsPlayer and (prefijo .. " " .. targetName) or nil,
+        targetIsPlayer and { targetUnit = "target" } or { silent = true })
     local total = propia and tonumber(propia.total)
     if not total then return false, "no se pudo tirar" end
 
@@ -769,14 +794,14 @@ local function RollContest(contest, opts)
                 and HarfordDnDConditions.GetDefinition(estado)
             result = (condition and condition.label) or tostring(estado)
         end
-        local actionName = tostring(opts and opts.actionName or "Contienda")
+        local cabecera = prefijo
         if opts and opts.resultLabel and opts.resultLabel ~= "" then
-            actionName = actionName .. ": " .. tostring(opts.resultLabel)
+            cabecera = cabecera .. " " .. tostring(opts.resultLabel)
         end
         HarfordDnDRolls.Broadcast({
             type = "info",
-            label = string.format("[%s] %s (|cff66ccff%s %d (%s)|r vs |cff66ccff%s %d (%s)|r) %s",
-                actionName, targetName, tostring(contest.skill or "Prueba"), total, ownDice,
+            label = string.format("%s %s (|cff66ccff%s %d (%s)|r vs |cff66ccff%s %d (%s)|r) %s",
+                cabecera, targetName, tostring(contest.skill or "Prueba"), total, ownDice,
                 tostring(defense.skill or contra or "Prueba"), tonumber(defense.total) or 0, defenseDice, result),
         })
     end

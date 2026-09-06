@@ -211,9 +211,12 @@ do
             HarfordChat.Print("El motor de tiradas enfrentadas no esta disponible.")
             return false
         end
+        local actionLink = HarfordTRP3 and HarfordTRP3.GetAbilityChatLink
+            and HarfordTRP3.GetAbilityChatLink(def) or nil
         local ok, err = rolls.RollContest(contest,
-            elegida and { conditionId = elegida.conditionId, actionName = def.name, resultLabel = elegida.label }
-                or { actionName = def.name })
+            elegida and { conditionId = elegida.conditionId, actionName = def.name,
+                resultLabel = elegida.label, actionLink = actionLink }
+                or { actionName = def.name, actionLink = actionLink })
         if not ok then HarfordChat.Print(tostring(def.name) .. ": " .. tostring(err)) end
         return ok
     end
@@ -293,17 +296,38 @@ do
             -- compararlo con la CD. Estabilizar la tiene fija en el manual (Medicina 10);
             -- Esconderse no, porque la suya es la Percepcion pasiva de quien mira y este cliente
             -- no la conoce: ahi se tira y decide la mesa.
-            local resultado = _G.DND5E_ARC_API.RollSkillEx(def.skillCheck.skill, def.name)
+            local enlace = (HarfordTRP3 and HarfordTRP3.GetAbilityChatLink
+                and HarfordTRP3.GetAbilityChatLink(def)) or tostring(def.name)
             local dc = tonumber(def.skillCheck.dc)
-            if dc and resultado and tonumber(resultado.total) then
-                local supera = tonumber(resultado.total) >= dc
-                local C = (HarfordDnDRolls and HarfordDnDRolls.COLORS) or {}
-                HarfordDnDRolls.Broadcast({
-                    type = "info",
-                    label = string.format("%s vs CD %d: %s%s%s", tostring(def.name), dc,
-                        supera and (C.crit or "") or (C.fumble or ""),
-                        supera and "EXITO" or "FALLO", C.close or ""),
-                })
+            if dc then
+                -- Con CD la linea es UNA y completa (formato de mesa: Origen [link] Destino
+                -- tirada vs CD DESENLACE): la tirada va silenciada y se compone aqui — antes
+                -- salian DOS lineas (la tirada y aparte el veredicto), sin enlace y sin decir
+                -- a QUIEN se intentaba estabilizar.
+                local resultado = _G.DND5E_ARC_API.RollSkillEx(def.skillCheck.skill, nil, { silent = true })
+                if resultado and tonumber(resultado.total) then
+                    local supera = tonumber(resultado.total) >= dc
+                    local C = (HarfordDnDRolls and HarfordDnDRolls.COLORS) or {}
+                    local targetName = ""
+                    if UnitExists and UnitExists("target") and not (UnitIsUnit and UnitIsUnit("target", "player")) then
+                        targetName = (HarfordDnDStore and HarfordDnDStore.ColoredUnitName
+                            and HarfordDnDStore.ColoredUnitName("target")) or ""
+                    end
+                    HarfordDnDRolls.Broadcast({
+                        type = "info",
+                        targetUnit = (targetName ~= "" and "target") or nil,
+                        label = string.format("%s%s %s %s (%s%s) vs CD %d %s%s%s",
+                            enlace, targetName ~= "" and (" " .. targetName) or "",
+                            tostring(def.skillCheck.skill), tostring(resultado.total),
+                            tostring(resultado.dice or ""), tostring(resultado.modifiers or ""), dc,
+                            supera and (C.crit or "") or (C.fumble or ""),
+                            supera and "EXITO" or "FALLO", C.close or ""),
+                    })
+                end
+            else
+                -- Sin CD (Esconderse) la tirada de RollSkillEx ya es la linea; el enlace va de
+                -- etiqueta para que la accion salga clicable.
+                _G.DND5E_ARC_API.RollSkillEx(def.skillCheck.skill, enlace)
             end
         elseif type(def.contest) == "table" then
             Contienda(def, coste.contestChoice)

@@ -89,6 +89,7 @@ do
         local result = WeaponRolls.DoRollEx(nombre, base, prof, "ability", {
             actorUnit = "player", ability = s.ability, skill = s.id,
             silent = type(opts) == "table" and opts.silent == true,
+            targetUnit = type(opts) == "table" and opts.targetUnit or nil,
         })
         result.kind = "skill"
         return SetLastRoll(result)

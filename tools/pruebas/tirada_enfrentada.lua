@@ -154,7 +154,41 @@ chk("DOSAVE lo serializa como ultimo campo",
 chk("el receptor lo desempaqueta y lo pasa",
     comm:find("saveExtraDice, saveExtraType, saveSkill, saveActionName)", 1, true) ~= nil, true)
 chk("la victima lo pone delante de su tirada",
-    wr:find('("[" .. accion .. "] ")', 1, true) ~= nil, true)
+    wr:find('prefijoAccion = (enlace or ("[" .. accion .. "]")) .. " "', 1, true) ~= nil, true)
+
+-- La accion sale CLICABLE: el atacante recibe el enlace TRP3 del llamador (actionLink) y la
+-- victima lo RECONSTRUYE en local desde el catalogo de acciones basicas (por la red viaja solo
+-- el nombre: un hyperlink no cabe en el campo). Y la tirada del atacante lleva `targetUnit`
+-- para que el whisper extra de Broadcast se la haga llegar a una victima fuera de su grupo —
+-- sin eso, la victima solo veia su propia salvacion.
+print("La accion es un enlace y la tirada del atacante llega a la victima")
+chk("el llamador entrega el enlace",
+    panel:find("local actionLink = HarfordTRP3 and HarfordTRP3.GetAbilityChatLink", 1, true) ~= nil, true)
+chk("el atacante lo usa de prefijo",
+    wr:find("local prefijo = (opts and opts.actionLink)", 1, true) ~= nil, true)
+chk("y su tirada viaja dirigida",
+    wr:find('targetIsPlayer and { targetUnit = "target" } or { silent = true })', 1, true) ~= nil, true)
+chk("RollSkillEx transporta targetUnit",
+    io.open("Harford/DnD/Engine/HarfordDnDArcApi.lua"):read("*a")
+        :find('targetUnit = type(opts) == "table" and opts.targetUnit or nil', 1, true) ~= nil, true)
+chk("y DoRollEx lo pone en el broadcast",
+    wr:find("targetUnit = rollContext and rollContext.targetUnit or nil", 1, true) ~= nil, true)
+chk("la victima reconstruye el enlace en local",
+    wr:find("for _, defAccion in pairs((HarfordDnDActions and HarfordDnDActions.DEFS) or {}) do", 1, true) ~= nil, true)
+
+-- Estabilizar (skillCheck con CD) salia en DOS lineas (tirada + veredicto aparte), sin enlace y
+-- sin decir a quien: ahora la tirada va silenciada y se publica UNA linea completa con enlace,
+-- target y desenlace. Sin CD (Esconderse) la tirada sigue siendo la linea, con el enlace de
+-- etiqueta.
+print("Accion con CD: una linea con enlace, target y desenlace")
+chk("la tirada con CD va silenciada",
+    panel:find("local resultado = _G.DND5E_ARC_API.RollSkillEx(def.skillCheck.skill, nil, { silent = true })", 1, true) ~= nil, true)
+chk("la linea lleva enlace, target y veredicto",
+    panel:find('label = string.format("%s%s %s %s (%s%s) vs CD %d %s%s%s"', 1, true) ~= nil, true)
+chk("y viaja dirigida al target",
+    panel:find('targetUnit = (targetName ~= "" and "target") or nil', 1, true) ~= nil, true)
+chk("sin CD el enlace es la etiqueta de la tirada",
+    panel:find("_G.DND5E_ARC_API.RollSkillEx(def.skillCheck.skill, enlace)", 1, true) ~= nil, true)
 
 -- La linea de ataque de una maniobra decia "[Desarme]: Ataque ... (suelta el objeto)": prosa que
 -- no aporta (el desenlace lo cuenta la tirada) y un colon que ninguna otra etiqueta lleva.

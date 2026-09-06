@@ -933,6 +933,40 @@ do
         Notify()
         return true
     end
+
+    -- Un estado de conjuro puede estar puesto sobre OTROS (el DM se lo aplica a un NPC, el
+    -- lanzador a un aliado): cuando el LANZADOR pierde la concentracion, esos tambien caen.
+    -- Cada cliente barre LO SUYO al enterarse: sus estados propios cuya FUENTE sea quien
+    -- rompio (los publica al retirarlos), y los registros que tenga cacheados sobre NPCs y
+    -- otras unidades con esa misma fuente. El filtro por fuente es obligatorio: un receptor
+    -- puede llevar la Bendicion del mago Y su propia concentracion — solo cae la del mago.
+    -- Un estado sin fuente registrada (declarado a mano desde el engranaje) no se toca.
+    function API.OnConcentrationBroken(sourceGuid, sourceName)
+        sourceGuid = tostring(sourceGuid or "")
+        local nombreCorto = ShortName(tostring(sourceName or ""))
+        local function EsDeLaFuente(record)
+            if not record then return false end
+            if sourceGuid ~= "" and tostring(record.sourceGuid or "") == sourceGuid then return true end
+            if nombreCorto ~= "" and ShortName(tostring(record.sourceName or "")) == nombreCorto then return true end
+            return false
+        end
+        for _, activo in ipairs(API.GetActive("player")) do
+            if activo.definition and activo.definition.concentration and EsDeLaFuente(activo.record) then
+                API.RemoveOwned(activo.id)
+                if API.PublishOwnedCondition then API.PublishOwnedCondition(activo.id, "remove") end
+            end
+        end
+        for key, bucket in pairs(S.units) do
+            if key ~= "player" then
+                for id, record in pairs(bucket) do
+                    local def = API.DEFS[id]
+                    if def and def.concentration and EsDeLaFuente(record) then bucket[id] = nil end
+                end
+                if not next(bucket) then S.units[key] = nil end
+            end
+        end
+        Notify()
+    end
 end
 
 -- El numero que lleva una condicion activa, o nil si no lleva ninguno.
@@ -2859,6 +2893,11 @@ function API.HandleMessage(message, sender)
                 API.EnsureSpellStates()
             end
             CacheRemoteState(state, sender)
+            -- Alguien acaba de PERDER la concentracion: caen tambien los estados de conjuro
+            -- que ese alguien mantenia sobre mi o sobre unidades que tengo registradas.
+            if state.op == "remove" and cid == "concentrando" and API.OnConcentrationBroken then
+                API.OnConcentrationBroken(state.targetGuid, state.targetName)
+            end
         end
         return true
     end

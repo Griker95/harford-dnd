@@ -62,6 +62,12 @@ function API.Begin(spellName, spellId)
         -- Volver a aplicarlo con otro conjuro SUSTITUYE el registro: el detalle cambia solo.
         current.stateApplied = HarfordDnDConditions.ApplyOwned("concentrando",
             { sourceName = spellName }) == true
+        -- PUBLICAR: el resto de clientes necesita el apply al instante (no solo por el
+        -- snapshot bajo peticion), porque el REMOVE de este mismo estado es lo que les
+        -- dispara la caida de los estados de conjuro que mantengas sobre ellos.
+        if current.stateApplied and HarfordDnDConditions.PublishOwnedCondition then
+            HarfordDnDConditions.PublishOwnedCondition("concentrando", "apply")
+        end
     end
     if HarfordDnDStore and HarfordDnDStore.RefreshMainUI then HarfordDnDStore.RefreshMainUI() end
     return true
@@ -76,6 +82,12 @@ function API.Break(reason)
     current = nil
     if HarfordDnDConditions and HarfordDnDConditions.RemoveOwned then
         HarfordDnDConditions.RemoveOwned("concentrando")
+        -- PUBLICAR el remove ANTES que nada: es la senal que dispara en cada cliente la
+        -- caida de los estados de conjuro que este lanzador mantenia sobre ellos o sobre
+        -- sus unidades registradas (OnConcentrationBroken en el receptor).
+        if HarfordDnDConditions.PublishOwnedCondition then
+            HarfordDnDConditions.PublishOwnedCondition("concentrando", "remove")
+        end
         -- El estado del CONJURO mantenido cae CON la concentracion (peticion de mesa
         -- 2026-09-06): solo puedes concentrarte en uno, asi que se retira todo estado de
         -- conjuro marcado `concentration` que lleves puesto, y se publica la retirada para
@@ -89,6 +101,15 @@ function API.Break(reason)
                     end
                 end
             end
+        end
+        -- Y el barrido LOCAL del lanzador: lo que EL puso con su fuente sobre NPCs u otras
+        -- unidades registradas en su cliente cae tambien (los receptores jugadores hacen su
+        -- propio barrido al recibir el remove de arriba).
+        if HarfordDnDConditions.OnConcentrationBroken then
+            HarfordDnDConditions.OnConcentrationBroken(
+                UnitGUID and UnitGUID("player") or "",
+                HarfordClassColors and HarfordClassColors.UnitFullName
+                    and HarfordClassColors.UnitFullName("player") or "")
         end
     end
     if reason then

@@ -84,6 +84,24 @@ chk("los trucos van antes que nivel 1 en ORDER",
         return a < b
     end)(), true)
 
+-- UN ESTADO DE CONJURO PUESTO SOBRE OTROS cae cuando su LANZADOR pierde la concentracion.
+-- Cada cliente barre lo suyo al recibir el remove de `concentrando`: sus estados propios cuya
+-- FUENTE sea quien rompio, y los registros cacheados sobre NPCs con esa fuente. El filtro por
+-- fuente es obligatorio (puedes llevar la Bendicion del mago Y tu propia concentracion), y un
+-- estado sin fuente (declarado a mano) no se toca. Se EJECUTA sembrando registros.
+print("Perder la concentracion arrastra lo puesto sobre otros, solo lo de esa fuente")
+API.State.units.player = API.State.units.player or {}
+API.State.units.player.conjuro_proteccion_bm = { sourceGuid = "GUID-MAGO", sourceName = "Mago" }
+API.State.units.player.conjuro_buff1 = { sourceGuid = "GUID-OTRO", sourceName = "Otra" }
+API.State.units["npc-123"] = { conjuro_proteccion_bm = { sourceGuid = "GUID-MAGO" } }
+-- buff1 NO es de concentracion: aunque la fuente casara, no debe caer.
+API.State.units.player.conjuro_buff2 = { sourceGuid = "GUID-MAGO", sourceName = "Mago" }
+API.OnConcentrationBroken("GUID-MAGO", "Mago")
+chk("cae el del mago sobre mi", API.State.units.player and API.State.units.player.conjuro_proteccion_bm, "nil")
+chk("cae el del mago sobre el NPC registrado", API.State.units["npc-123"], "nil")
+chk("NO cae el de otra fuente", API.State.units.player.conjuro_buff1 ~= nil, true)
+chk("NO cae uno sin concentracion aunque case la fuente", API.State.units.player.conjuro_buff2 ~= nil, true)
+
 -- Los puntos de ENTRADA de la generacion perezosa y el arrastre de la concentracion se fijan
 -- por texto: son enganches de una linea en modulos que la suite no puede ejecutar entera.
 print("Enganches: menus, red y concentracion")
@@ -101,5 +119,16 @@ chk("el receptor de red genera ante un conjuro_ desconocido",
 chk("Break retira el estado del conjuro mantenido",
     conc:find("if activo.definition and activo.definition.concentration then", 1, true) ~= nil
     and conc:find('HarfordDnDConditions.PublishOwnedCondition(activo.id, "remove")', 1, true) ~= nil, true)
+-- El remove de `concentrando` ES la senal para los receptores: Begin publica el apply y Break
+-- el remove; el receptor de DNDCONDSTATE dispara OnConcentrationBroken con la fuente, y el
+-- lanzador hace ademas su barrido local (NPCs registrados en su cliente).
+chk("Begin publica concentrando",
+    conc:find('HarfordDnDConditions.PublishOwnedCondition("concentrando", "apply")', 1, true) ~= nil, true)
+chk("Break publica el remove que dispara a los receptores",
+    conc:find('HarfordDnDConditions.PublishOwnedCondition("concentrando", "remove")', 1, true) ~= nil, true)
+chk("el receptor barre al ver el remove",
+    src:find('if state.op == "remove" and cid == "concentrando" and API.OnConcentrationBroken then', 1, true) ~= nil, true)
+chk("y el lanzador barre sus registros locales",
+    conc:find("HarfordDnDConditions.OnConcentrationBroken(", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

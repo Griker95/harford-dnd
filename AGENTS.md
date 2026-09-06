@@ -459,7 +459,14 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   ("Conjuros: nivel 2 (1/2)") para no desbordar el dropdown. **La concentracion ARRASTRA**: al
   romperse (`HarfordDnDConcentration.Break`), se retira ademas todo estado de conjuro con
   `concentration` que lleve el jugador — solo puedes concentrarte en uno — y se publica la
-  retirada. Suite ejecutable con compendio falso: `estados_de_conjuro`.
+  retirada. **Y arrastra tambien lo puesto SOBRE OTROS**: `Begin` publica `concentrando` y
+  `Break` publica su remove — esa señal dispara en cada receptor de DNDCONDSTATE
+  `API.OnConcentrationBroken(guid, nombre)`, que barre SUS estados propios de conjuro cuya
+  FUENTE sea quien rompio (publicando la retirada) y los registros cacheados sobre NPCs con esa
+  fuente; el lanzador hace ademas su barrido local. El filtro por fuente es obligatorio (puedes
+  llevar la Bendicion del mago Y tu propia concentracion) y un estado sin fuente registrada
+  (declarado a mano desde el engranaje) no se toca. Suite ejecutable con compendio falso y
+  registros sembrados: `estados_de_conjuro`.
 - **El engranaje es EL UNICO boton del PlayerFrame y el Admin le AÑADE, no duplica (2026-09-06)**:
   lleva el MISMO arte que StyleButton del Admin (circulo de minimapa + `INV_Misc_Gear_01`
   enmascarado + borde de tracking; el engranaje amarillo plano de `UI-OptionsButton` desentonaba

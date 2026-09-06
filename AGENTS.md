@@ -441,13 +441,25 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   contra AREAS tambien (RAW: el escudo se interpone ante la bola de fuego; el `single` solo lo
   exige el +CA). Candados en `turnos_economia` (marca GMA funcional) y `area_geometria`.
 - **Engranaje de autogestion en el unitframe propio (2026-09-05)**: boton `HarfordPlayerGearButton`
-  (overlay UIParent/MEDIUM 85 anclado al PlayerFrame, contrato de strata) con menu del PROPIO
-  jugador SIN `.ph dm` y SIN HarfordAdmin: **Estados** (todo el catalogo por categorias, toggle
-  `ApplyOwned`/`RemoveOwned`; Cansancio con su submenu de niveles via `SetExhaustion`; `dying`
-  excluido — lo gobierna Salv Muerte) y **Devolver** (movimiento via `RefundTurnMovement`, y
-  accion/adicional/reaccion via `Turn.Refund`). Es autogestion de LO PROPIO por vias que ya
-  existian en el core — el gesto solo las reune; no confundir con el menu DM de AdminUnitMenu
-  (estados y auras sobre OTROS). Candado en `tira_estados`.
+  con menu del PROPIO jugador SIN `.ph dm` y SIN HarfordAdmin: **Estados** (todo el catalogo por
+  categorias, toggle `ApplyOwned`/`RemoveOwned`; Cansancio con su submenu de niveles via
+  `SetExhaustion`; `dying` excluido — lo gobierna Salv Muerte) y **Devolver** (movimiento via
+  `RefundTurnMovement`, y accion/adicional/reaccion via `Turn.Refund`). Es autogestion de LO
+  PROPIO por vias que ya existian en el core — el gesto solo las reune; no confundir con el menu
+  DM de AdminUnitMenu (estados y auras sobre OTROS). Candado en `tira_estados`.
+- **El engranaje es EL UNICO boton del PlayerFrame y el Admin le AÑADE, no duplica (2026-09-06)**:
+  lleva el MISMO arte que StyleButton del Admin (circulo de minimapa + `INV_Misc_Gear_01`
+  enmascarado + borde de tracking; el engranaje amarillo plano de `UI-OptionsButton` desentonaba
+  y se retiro) y el anclaje CALCADO de `AnchorUnitButton`: parent = frame Harford del player si
+  esta visible (si no, PlayerFrame nativo), strata/level sincronizados con el parent — NO vale
+  dejarlo en UIParent/MEDIUM con offset fijo, salia en otra capa y otra posicion — y CENTER en el
+  borde derecho del retrato MEDIDO (`GetMeasuredLayout`); se re-ancla en `API.Refresh` via
+  `API.ReanchorPlayerGear`. **HarfordAdmin ya NO crea boton de Player** (`AttachButtons` solo crea
+  el de Target): engancha en el engranaje del core con el patron `InsertGlanceLink` — dos ganchos
+  sobrescribibles que VALIDAN AUTORIDAD DENTRO del Admin (`IsAllowed`), nunca en el core:
+  `HarfordUnitFrames.ExtendPlayerGearMenu(menu)` añade "Harford Admin > Menú DM" al final del
+  menu, y `HarfordUnitFrames.PlayerGearRightClick(anchor)` abre el menu DM con click derecho
+  sobre el mismo boton. Candado en `tira_estados`.
 - **Lo que el DM "da" fuera de tu turno SE PUEDE USAR (2026-09-05) — y el menu del PROPIO
   jugador hace lo mismo**: la logica vive en el punto UNICO `Turn.ConcederODevolver(kind)`
   ("concedida" fuera de turno para accion/adicional, "devuelta" si habia gasto, "extra" para la

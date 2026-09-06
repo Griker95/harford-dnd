@@ -4752,6 +4752,9 @@ function API.Refresh(forceMeasure)
     if HarfordAdminUnitMenu and HarfordAdminUnitMenu.RefreshAnchors then
         HarfordAdminUnitMenu.RefreshAnchors()
     end
+    -- El engranaje de autogestion del jugador se re-ancla por el mismo camino que los botones
+    -- del Admin (se define mas abajo; late-binding).
+    if API.ReanchorPlayerGear then API.ReanchorPlayerGear() end
 end
 
 -- Re-aplica valores, colores y texto de las barras nativas (health/power) sin reconstruir el frame.
@@ -5243,10 +5246,8 @@ do
     -- Boton del PlayerFrame con EL MISMO arte que el boton de HarfordAdmin (StyleButton de
     -- HarfordAdminUnitMenu): circulo de minimapa con INV_Misc_Gear_01 enmascarado, borde de
     -- tracking, pushed y highlight — no el engranaje amarillo plano que llevaba antes y
-    -- desentonaba. Overlay en UIParent/MEDIUM (contrato de strata cross-tree).
+    -- desentonaba.
     local gear = CreateFrame("Button", "HarfordPlayerGearButton", UIParent)
-    gear:SetFrameStrata("MEDIUM")
-    gear:SetFrameLevel(85)
     gear:SetSize(22, 22)
 
     local gearBg = gear:CreateTexture(nil, "BACKGROUND")
@@ -5295,18 +5296,40 @@ do
         gearIcon:SetPoint("CENTER", gear, "CENTER", 0, 1)
     end)
 
-    -- Misma posicion canonica que el boton Admin del PlayerFrame (TOPLEFT 78,-18). Si el boton
-    -- del Admin esta visible ahi (DM con .ph dm), el del core se pega a su derecha para no
-    -- superponerse: son menus distintos y el DM usa los dos.
+    -- Anclaje CALCADO de AnchorUnitButton del Admin, que no usa un offset fijo: se parenta al
+    -- frame Harford del player (si esta visible; si no, al PlayerFrame nativo), sincroniza
+    -- strata/level con el parent (por eso no vale dejarlo en UIParent/MEDIUM: quedaba en otra
+    -- capa y otra posicion que el boton del Admin) y coloca el CENTER en el borde derecho del
+    -- retrato MEDIDO (GetMeasuredLayout). Si el boton del Admin esta visible (DM con .ph dm),
+    -- el del core se pega a su derecha: son menus distintos y el DM usa los dos.
     local function ColocarGear()
+        local parent = API.GetFrame and API.GetFrame("player")
+        if not (parent and parent.IsShown and parent:IsShown()) then parent = _G.PlayerFrame end
+        if not parent then return end
+        if gear:GetParent() ~= parent then gear:SetParent(parent) end
+        if parent.GetFrameStrata then gear:SetFrameStrata(parent:GetFrameStrata()) end
+        local parentLevel = (parent.GetFrameLevel and parent:GetFrameLevel()) or 0
+        local overlay = _G.PlayerFrameTextureFrame
+        local overlayLevel = (overlay and overlay.GetFrameLevel and overlay:GetFrameLevel()) or parentLevel
+        gear:SetFrameLevel(math.max(parentLevel, overlayLevel) + 10)
         local admin = _G["HarfordAdminUnitMenuPlayerButton"]
         local offset = (admin and admin.IsVisible and admin:IsVisible()) and 22 or 0
         gear:ClearAllPoints()
-        gear:SetPoint("TOPLEFT", PlayerFrame, "TOPLEFT", 78 + offset, -18)
+        local layout = API.GetMeasuredLayout and API.GetMeasuredLayout("player", false)
+        local box = layout and (layout.portrait or layout.name or layout.health)
+        if box then
+            gear:SetPoint("CENTER", parent, "TOPLEFT",
+                (box.x or 0) + (box.width or 0) - 2 + offset, -((box.y or 0) + 13))
+        else
+            gear:SetPoint("TOPLEFT", parent, "TOPLEFT", 78 + offset, -18)
+        end
     end
+    -- Se re-ancla por los MISMOS caminos que el boton del Admin: API.Refresh (que ya re-ancla
+    -- los suyos) llama a este export, y el cambio de autoridad cubre aparecer/desaparecer el
+    -- boton Admin con .ph dm (diferido puntual: el Admin refresca su visibilidad en ese cambio).
+    API.ReanchorPlayerGear = ColocarGear
     ColocarGear()
     if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
-        -- Diferido puntual: el Admin refresca la visibilidad de su boton en este mismo cambio.
         HarfordAuthority.RegisterChangeListener("HarfordPlayerGear", function()
             if C_Timer and C_Timer.After then C_Timer.After(0, ColocarGear) else ColocarGear() end
         end)

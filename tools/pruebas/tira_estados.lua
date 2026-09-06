@@ -273,14 +273,22 @@ chk("RecoverSpellSlot devuelve primero el gasto normal",
         :find("HarfordDnDProgression.SetSpellSlotsSpent(spellLevel, spent - 1, profileName)", 1, true) ~= nil, true)
 -- El boton lleva EL MISMO arte que el boton de HarfordAdmin (StyleButton): circulo de minimapa
 -- con INV_Misc_Gear_01 enmascarado y borde de tracking — no el engranaje amarillo plano de
--- UI-OptionsButton, que desentonaba. Y en su misma posicion canonica del PlayerFrame; si el
--- boton Admin esta visible ahi, el del core se pega a su derecha para no superponerse.
+-- UI-OptionsButton, que desentonaba.
 chk("con el arte del boton Admin, no el engranaje amarillo",
     uf:find('gearIcon:SetTexture("Interface\\\\Icons\\\\INV_Misc_Gear_01")', 1, true) ~= nil
     and uf:find('gearBorder:SetTexture("Interface\\\\Minimap\\\\MiniMap-TrackingBorder")', 1, true) ~= nil
     and not uf:find("UI-OptionsButton", 1, true), true)
-chk("misma posicion canonica, apartandose del boton Admin si esta",
-    uf:find('gear:SetPoint("TOPLEFT", PlayerFrame, "TOPLEFT", 78 + offset, -18)', 1, true) ~= nil
+-- Y el anclaje esta CALCADO de AnchorUnitButton del Admin, no es un offset fijo sobre el
+-- PlayerFrame nativo (asi salia en otra posicion y otra capa): parent = frame Harford del
+-- player si esta visible, strata/level sincronizados, y CENTER en el borde derecho del retrato
+-- MEDIDO. Se re-ancla por el mismo camino que los botones del Admin (API.Refresh) y se aparta
+-- a la derecha si el boton Admin esta visible (DM con .ph dm usa los dos menus).
+chk("parentado y medido como el boton Admin",
+    uf:find('local parent = API.GetFrame and API.GetFrame("player")', 1, true) ~= nil
+    and uf:find('local layout = API.GetMeasuredLayout and API.GetMeasuredLayout("player", false)', 1, true) ~= nil
+    and uf:find("(box.x or 0) + (box.width or 0) - 2 + offset, -((box.y or 0) + 13))", 1, true) ~= nil, true)
+chk("re-anclado en API.Refresh y apartandose del boton Admin",
+    uf:find("if API.ReanchorPlayerGear then API.ReanchorPlayerGear() end", 1, true) ~= nil
     and uf:find('_G["HarfordAdminUnitMenuPlayerButton"]', 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

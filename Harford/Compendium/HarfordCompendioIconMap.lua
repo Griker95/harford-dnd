@@ -430,14 +430,17 @@ local function ResolveIcon(iconName)
 
     local resolved
     local media = GetLibRPMedia()
-    if media and media.IsIconDataLoaded and media:IsIconDataLoaded() then
+    local baseLista = media and media.IsIconDataLoaded and media:IsIconDataLoaded()
+    if baseLista then
         local ok, fileId = pcall(media.GetIconFileByName, media, iconName)
         if ok and fileId then
             resolved = fileId
         end
     end
 
-    iconCache[iconName] = resolved or false
+    -- Solo se cachea (incluido el negativo) si la base de iconos estaba CARGADA: cachear el
+    -- nil de una base aun sin registrar envenenaba ese nombre para toda la sesion.
+    if baseLista then iconCache[iconName] = resolved or false end
     return resolved
 end
 

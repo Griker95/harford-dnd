@@ -3785,9 +3785,12 @@ RefreshBook = function()
                 -- Nombre SIN ruta fisica en este cliente pero registrado en LibRPMedia (arte
                 -- moderno/custom: spell_paladin_templarsverdict, ability_paladin_turnevil...):
                 -- el About lo pinta via TRP3 y el Libro caia al respaldo. Se resuelve a su
-                -- FileDataID por la misma via del compendio antes de rendirse.
-                local porMedia = HarfordCompendioIconMap and HarfordCompendioIconMap.ResolveRP3IconName
-                    and HarfordCompendioIconMap.ResolveRP3IconName(final:match("([^\\]+)$"))
+                -- FileDataID por la misma via del compendio antes de rendirse. OJO: la funcion
+                -- vive en HarfordCompendioAPI (el fichero IconMap escribe ahi, no hay global
+                -- HarfordCompendioIconMap — con ese nombre el respaldo salia SIEMPRE).
+                local C = _G.HarfordCompendioAPI
+                local porMedia = C and C.ResolveRP3IconName
+                    and C.ResolveRP3IconName(final:match("([^\\]+)$"))
                 final = porMedia or respaldo
             end
             b.icon:SetTexture(final)

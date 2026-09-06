@@ -385,8 +385,10 @@ chk("Tormenta divina se rotula Area sin cambiar su mecanica",
 -- Iconos modernos/custom (spell_paladin_templarsverdict...): sin ruta fisica en el cliente,
 -- GetFileIDFromPath los rechazaba y el Libro caia al respaldo aunque TRP3 los pinta. Se
 -- resuelven a FileDataID via LibRPMedia (la via del compendio) antes de rendirse.
+-- OJO con el nombre: la funcion vive en HarfordCompendioAPI (el fichero IconMap escribe ahi;
+-- no existe un global HarfordCompendioIconMap — con ese nombre el respaldo salia SIEMPRE).
 chk("el Libro resuelve iconos via LibRPMedia antes del respaldo",
     io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
-        :find("HarfordCompendioIconMap.ResolveRP3IconName(final:match(", 1, true) ~= nil, true)
+        :find("C.ResolveRP3IconName(final:match(", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

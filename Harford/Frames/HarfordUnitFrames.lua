@@ -5082,10 +5082,18 @@ do
                         keepShownOnClick = true,
                         isNotRadio = true,
                         func = function()
+                            -- PUBLICAR ademas de aplicar/retirar: ApplyOwned/RemoveOwned son
+                            -- solo locales, y un estado que los demas no ven no existe para
+                            -- sus tiradas (la desventaja de Esquivando la resuelve el ATACANTE
+                            -- mirando los estados sincronizados de su target).
                             if C.Has and C.Has("player", id) then
-                                if C.RemoveOwned then C.RemoveOwned(id) end
+                                if C.RemoveOwned and C.RemoveOwned(id) and C.PublishOwnedCondition then
+                                    C.PublishOwnedCondition(id, "remove")
+                                end
                             elseif C.ApplyOwned then
-                                C.ApplyOwned(id)
+                                if C.ApplyOwned(id) and C.PublishOwnedCondition then
+                                    C.PublishOwnedCondition(id, "apply")
+                                end
                             end
                         end,
                     }

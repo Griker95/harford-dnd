@@ -304,10 +304,16 @@ do
 
         if type(def.selfCondition) == "table" and HarfordDnDConditions
             and HarfordDnDConditions.ApplyOwned then
-            HarfordDnDConditions.ApplyOwned(def.selfCondition.id, {
+            local aplicado = HarfordDnDConditions.ApplyOwned(def.selfCondition.id, {
                 duration = def.selfCondition.duration, turns = def.selfCondition.turns,
                 sourceName = HarfordClassColors.UnitFullName("player"),
             })
+            -- PUBLICAR: ApplyOwned solo aplica en local. Sin esto, `esquivando` no llegaba al
+            -- resto de clientes y el atacante tiraba SIN la desventaja de su `incomingRollMode`
+            -- (el atacante resuelve el modo mirando los estados sincronizados del target).
+            if aplicado and HarfordDnDConditions.PublishOwnedCondition then
+                HarfordDnDConditions.PublishOwnedCondition(def.selfCondition.id, "apply")
+            end
         elseif type(def.skillCheck) == "table" and _G.DND5E_ARC_API
             and _G.DND5E_ARC_API.RollSkillEx then
             -- Se tira con `RollSkillEx` y no con `RollSkill` porque hace falta el TOTAL para

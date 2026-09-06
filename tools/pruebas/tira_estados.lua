@@ -245,9 +245,15 @@ chk("sin puerta de DM ni Admin",
     uf:find("HarfordPlayerGearButton", 1, true) ~= nil
     and not uf:sub(uf:find("Engranaje de AUTOGESTION", 1, true) or 1)
         :find("CanUseDMTools", 1, true), true)
-chk("estados por toggle propio",
-    uf:find("if C.RemoveOwned then C.RemoveOwned(id) end", 1, true) ~= nil
-    and uf:find("C.ApplyOwned(id)", 1, true) ~= nil, true)
+-- El toggle PUBLICA ademas de aplicar/retirar: ApplyOwned/RemoveOwned son solo locales, y un
+-- estado que los demas clientes no ven no existe para sus tiradas — la desventaja de Esquivando
+-- la resuelve el ATACANTE mirando los estados sincronizados de su target (incomingRollMode).
+chk("estados por toggle propio, publicados",
+    uf:find("if C.RemoveOwned and C.RemoveOwned(id) and C.PublishOwnedCondition then", 1, true) ~= nil
+    and uf:find("if C.ApplyOwned(id) and C.PublishOwnedCondition then", 1, true) ~= nil, true)
+chk("la accion Esquivar tambien publica su estado",
+    io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a")
+        :find("if aplicado and HarfordDnDConditions.PublishOwnedCondition then", 1, true) ~= nil, true)
 chk("Muriendo y Cansancio tratados aparte",
     uf:find('if def.id ~= "dying" and def.id ~= "exhaustion" then', 1, true) ~= nil, true)
 chk("devoluciones de las cuatro cosas",

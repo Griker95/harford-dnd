@@ -89,15 +89,17 @@ chk("al empezar el turno, la concedida SE VA", T.GetRemaining("bonus"), 1)
 chk("un rasgo sin grantsTurnAction no concede",
     tostring(T.GrantForFeature({ id = "y", cast = "accion" })), "nil")
 
--- ─── FLANQUEADO ES GRATIS ───────────────────────────────────────────────────
--- La postura toggle (`trabado_melee`, cast = "ninguna") no gasta accion ni nada: la economia no
--- conoce ese cast y KindFromFeature tiene que devolver nil — sin defaults a "action" por tipo.
-print("Flanqueado (cast ninguna) no cuesta nada")
+-- ─── CAST "ninguna" ES GRATIS ───────────────────────────────────────────────
+-- Un gesto declarado con cast = "ninguna" no gasta accion ni nada: la economia no conoce ese
+-- cast y KindFromFeature tiene que devolver nil — sin defaults a "action" por tipo. (Nacio con
+-- la accion Flanqueado, retirada del catalogo el 2026-09-06 — el estado `trabado` se pone desde
+-- el engranaje —, pero la regla de economia sigue en pie para cualquier gesto gratuito.)
+print("Un gesto con cast ninguna no cuesta nada")
 chk("KindFromFeature da nil",
-    tostring(T.KindFromFeature({ id = "trabado_melee", cast = "ninguna", type = "accion" })), "nil")
-chk("y la accion lo declara asi",
+    tostring(T.KindFromFeature({ id = "gesto_gratis", cast = "ninguna", type = "accion" })), "nil")
+chk("y Flanqueado ya no es una accion del catalogo",
     io.open("Harford/DnD/Data/HarfordDnDActions.lua"):read("*a")
-        :find('cast = "ninguna", orden = 12,', 1, true) ~= nil, true)
+        :find("trabado_melee = {", 1, true), "nil")
 
 -- ─── ARMAR ES GRATIS; EL DISPARO COBRA (2026-09-05) ─────────────────────────
 -- Una reaccion QUE SE PREPARA (Esquiva Sobrenatural) cobraba al ARMARLA en el Libro y OTRA VEZ

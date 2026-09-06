@@ -1108,7 +1108,6 @@ Catalog.features = {
     harford_accion_lanzar_arma = "eps_bg3_throwweapon",
     harford_accion_preparar = "eps_bg3_detectthoughts",
     harford_accion_ataque_oportunidad = "eps_bg3_feintingattack",
-    harford_accion_trabado_melee = "eps_bg3_forcedmove",
     -- Estados de Harford (HarfordDnDConditions), para la tira sobre el unitframe del target.
     -- Solo los que NO tienen aura: los que la tienen usan el arte del propio aura, que es el
     -- que el jugador ya ve en pantalla, y una segunda version acabaria por no coincidir.

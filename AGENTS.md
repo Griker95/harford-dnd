@@ -4690,10 +4690,12 @@ es gratis.
 El cliente NO puede medir 1,5 m: `UnitPosition` solo habla del jugador (por eso el motor de areas
 pide posiciones por red). La capa de alcance se construye con lo medible:
 
-- **Postura declarada**: estado `trabado` (accion basica `trabado_melee`, un TOGGLE sin coste via
-  `toggleSelf` + `selfCondition`; volver a pulsar lo retira sin anunciar). Su efecto `rollMode`
-  lleva `range = "ranged"` y la marca `meleeProximity`: desventaja en ataques a distancia de arma
-  Y de conjuro mientras esta puesto, visible en la tira para toda la mesa.
+- **Postura declarada**: estado `trabado` (nombre visible "Flanqueado"). El jugador se lo pone y
+  quita desde el ENGRANAJE de su unitframe (seccion Estados) — la accion basica `trabado_melee`
+  del Libro que hacia de toggle se RETIRO el 2026-09-06 (con ella se fue el soporte `toggleSelf`
+  del ejecutor): era el mismo gesto dos veces. Su efecto `rollMode` lleva `range = "ranged"` y la
+  marca `meleeProximity`: desventaja en ataques a distancia de arma Y de conjuro mientras esta
+  puesto, visible en la tira para toda la mesa.
 - **Dotes que la perdonan**: el contexto de tirada acepta `ignoreMeleeProximity` y
   `EffectApplies` salta los efectos marcados. Flags: `ignoreRangedMeleePenalty` (Experto en
   ballestas, Experto en armas de fuego; lo mira `DoWeaponAttack`) e `ignoreSpellMeleePenalty`

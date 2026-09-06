@@ -107,16 +107,9 @@ API.DEFS = {
         -- lanza -- y el ataque sale por la ruta normal, con su CA, critico y mitigacion.
         throwWeapon = { slots = { "MainHand", "SecondaryHand" } },
     },
-    trabado_melee = {
-        id = "trabado_melee", name = "Flanqueado", icon = "eps_bg3_forcedmove",
-        cast = "ninguna", orden = 12,
-        description = "Declara que estas flanqueado por una criatura hostil a 1,5 metros: tus ataques a "
-            .. "distancia se hacen con desventaja hasta que te zafes. Pulsar de nuevo lo retira.",
-        -- Postura DECLARADA (el cliente no mide 1,5 m). Es un toggle: no cuesta nada y se ve
-        -- en tu tira de estados, para que la mesa sepa que estas flanqueado.
-        selfCondition = { id = "trabado", duration = "manual" },
-        toggleSelf = true,
-    },
+    -- `trabado_melee` (Flanqueado) se RETIRO del catalogo (2026-09-06): el estado `trabado` es
+    -- un aura/estado del catalogo que el propio jugador se pone o quita desde el engranaje de su
+    -- unitframe (seccion Estados), y la fila del Libro duplicaba ese gesto.
     ataque_oportunidad = {
         id = "ataque_oportunidad", name = "Ataque de oportunidad", icon = "eps_bg3_Feintingattack",
         cast = "reaccion", orden = 11,

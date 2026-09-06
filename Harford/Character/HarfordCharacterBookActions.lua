@@ -119,6 +119,18 @@ do
             sourceGuid = UnitGUID and UnitGUID("player") or nil,
         })
         if not ok then HarfordChat.Print("Ayudar: " .. tostring(err or "no se pudo")) end
+        if ok then
+            -- La linea dice A QUIEN ayudas (el anuncio generico no llevaba target) y la accion
+            -- va clicable; `targetUnit` se la hace llegar al ayudado aunque no comparta grupo.
+            local enlace = (HarfordTRP3 and HarfordTRP3.GetAbilityChatLink
+                and HarfordTRP3.GetAbilityChatLink(def)) or tostring(def.name)
+            local targetName = (HarfordDnDStore and HarfordDnDStore.ColoredUnitName
+                and HarfordDnDStore.ColoredUnitName("target")) or ""
+            HarfordDnDRolls.Broadcast({
+                type = "info", targetUnit = "target",
+                label = enlace .. (targetName ~= "" and (" " .. targetName) or ""),
+            })
+        end
         return ok and true or false
     end
 
@@ -170,6 +182,12 @@ do
         end
         -- `suppressAbilityDamage = false`: un arma lanzada suma tu modificador, como cualquier otro
         -- ataque con arma. El valor por defecto es para ataques de bloque y acompanantes.
+        -- La accion prefija la linea de ataque (mismo mecanismo que las maniobras de arma), con
+        -- su enlace clicable: el anuncio aparte era una segunda linea para decir lo mismo.
+        HarfordDnDStore.pendingWeaponManeuver = {
+            name = def.name,
+            link = HarfordTRP3 and HarfordTRP3.GetAbilityChatLink and HarfordTRP3.GetAbilityChatLink(def) or nil,
+        }
         HarfordDnDStore.AttackWithBlock(proyectil, { suppressAbilityDamage = false, attackMode = "thrown" })
         return true
     end
@@ -222,18 +240,6 @@ do
     end
 
     Ejecutar = function(def, coste)
-        -- Posturas TOGGLE (Flanqueado): con el estado puesto, volver a pulsar lo retira
-        -- sin anunciar ni cobrar nada. Va ANTES del anuncio por eso mismo.
-        if def.toggleSelf and type(def.selfCondition) == "table" and HarfordDnDConditions
-            and HarfordDnDConditions.Has and HarfordDnDConditions.Has("player", def.selfCondition.id) then
-            if HarfordDnDConditions.RemoveOwned then
-                HarfordDnDConditions.RemoveOwned(def.selfCondition.id)
-                HarfordChat.Print(tostring(def.name) .. ": retirado.")
-            end
-            if RefreshGameUI then RefreshGameUI() end
-            if RefreshBook then RefreshBook() end
-            return true
-        end
         -- Empujar exige escoger derribar o apartar. La eleccion se completa ANTES
         -- de cobrar o anunciar: hasta entonces la accion todavia no ha ocurrido.
         if type(def.contest) == "table" and type(def.contest.options) == "table"
@@ -275,12 +281,24 @@ do
         elseif coste.porRasgo then
             anuncio.name = def.name .. " (" .. tostring(coste.porRasgo) .. ")"
         end
-        -- UNA linea por accion. Si la accion va a tirar, la tirada YA lleva su nombre delante
-        -- ("Esconderse: Sigilo"), asi que anunciarla aparte son dos lineas para decir lo mismo.
-        -- Se cobra igual --el coste no depende de cuantas lineas salgan-- pero sin difundir.
-        local vaATirar = (type(def.skillCheck) == "table" or type(def.contest) == "table")
-            and _G.DND5E_ARC_API and _G.DND5E_ARC_API.RollSkillEx
-            and type(def.selfCondition) ~= "table"
+        -- Las acciones DIRIGIDAS exigen objetivo ANTES de anunciar: el anuncio es lo que cobra
+        -- el coste, y sin objetivo la accion no ocurre — antes "Empujar: sin objetivo" llegaba
+        -- DESPUES de haber cobrado la accion.
+        if (type(def.contest) == "table" or type(def.helpOther) == "table" or def.opportunityAttack)
+            and not (UnitExists and UnitExists("target")) then
+            HarfordChat.Print(tostring(def.name) .. ": necesitas un objetivo.")
+            return false
+        end
+        -- UNA linea por accion. Si la accion va a producir su PROPIA linea (una tirada, un
+        -- ataque de arma, o la linea con target de Ayudar), anunciarla aparte son dos lineas
+        -- para decir lo mismo. Se cobra igual --el coste no depende de cuantas lineas salgan--
+        -- pero sin difundir.
+        local vaATirar = ((type(def.skillCheck) == "table" or type(def.contest) == "table")
+                and _G.DND5E_ARC_API and _G.DND5E_ARC_API.RollSkillEx
+                and type(def.selfCondition) ~= "table")
+            or type(def.helpOther) == "table"
+            or type(def.throwWeapon) == "table"
+            or (def.opportunityAttack and true)
         -- Si no cabe el coste, la accion NO ocurre: ni tirada, ni estado, ni nada.
         if AnnounceAbility(anuncio, { silencioso = vaATirar }) == false then return false end
 
@@ -337,11 +355,15 @@ do
             LanzarArma(def)
         elseif def.opportunityAttack then
             -- El anuncio de arriba ya cobro la REACCION; el golpe no debe cobrar ademas la
-            -- accion (skipTurnCost, como las maniobras). Requiere target: la ruta normal de
-            -- ataque ya lo valida y resuelve CA, critico y mitigacion.
-            if not (UnitExists and UnitExists("target")) then
-                HarfordChat.Print("El ataque de oportunidad necesita un objetivo.")
-            elseif HarfordDnDStore and HarfordDnDStore.DoWeaponAttack then
+            -- accion (skipTurnCost, como las maniobras). La accion prefija la linea de ataque
+            -- con su enlace (mismo mecanismo que las maniobras): el anuncio aparte era una
+            -- linea extra sin target.
+            if HarfordDnDStore and HarfordDnDStore.DoWeaponAttack then
+                HarfordDnDStore.pendingWeaponManeuver = {
+                    name = def.name,
+                    link = HarfordTRP3 and HarfordTRP3.GetAbilityChatLink
+                        and HarfordTRP3.GetAbilityChatLink(def) or nil,
+                }
                 HarfordDnDStore.DoWeaponAttack({ skipTurnCost = true })
             end
         elseif type(def.readyAction) == "table" then

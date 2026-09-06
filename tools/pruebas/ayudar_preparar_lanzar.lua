@@ -102,4 +102,29 @@ for _, id in ipairs({ "ayudado", "ayudado_prueba", "ayudado_ataque", "preparado"
     chk(id, cat:find("\n    harford_estado_" .. id .. " = ", 1, true) ~= nil, true)
 end
 
+-- FORMATO DE MESA (2026-09-06, mismo repaso que Empujar/Estabilizar): una linea por gesto, con
+-- el enlace de la accion y el target. Ayudar publica su propia linea "[Ayudar] <aliado>"
+-- (el anuncio generico no decia a quien) y Lanzar arma / Ataque de oportunidad prefijan la
+-- linea de ataque con la accion via pendingWeaponManeuver (mismo mecanismo que las maniobras)
+-- en vez de anunciar aparte. El anuncio de todas ellas va silenciado — cobra igual.
+print("Una linea con enlace y target tambien en Ayudar, Lanzar arma y Oportunidad")
+chk("ayudar dice a quien y clicable",
+    panel:find('type = "info", targetUnit = "target",', 1, true) ~= nil
+    and panel:find('label = enlace .. (targetName ~= "" and (" " .. targetName) or ""),', 1, true) ~= nil, true)
+chk("lanzar arma prefija el ataque",
+    select(2, panel:gsub("HarfordDnDStore%.pendingWeaponManeuver = {", "")), 2)
+chk("oportunidad tambien, sin anuncio aparte",
+    panel:find('HarfordDnDStore.DoWeaponAttack({ skipTurnCost = true })', 1, true) ~= nil, true)
+chk("sus anuncios van silenciados",
+    panel:find('or type(def.helpOther) == "table"', 1, true) ~= nil
+    and panel:find('or type(def.throwWeapon) == "table"', 1, true) ~= nil
+    and panel:find("or (def.opportunityAttack and true)", 1, true) ~= nil, true)
+
+-- Y las acciones DIRIGIDAS exigen objetivo ANTES de anunciar: el anuncio cobra el coste, y
+-- "Empujar: sin objetivo" llegaba DESPUES de haber cobrado la accion.
+print("Sin objetivo no se cobra")
+chk("la guardia va antes del anuncio",
+    panel:find('and not (UnitExists and UnitExists("target")) then\n            HarfordChat.Print(tostring(def.name) .. ": necesitas un objetivo.")', 1, true)
+    < panel:find("if AnnounceAbility(anuncio", 1, true), true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

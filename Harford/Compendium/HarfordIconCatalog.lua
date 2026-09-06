@@ -1113,6 +1113,11 @@ Catalog.features = {
     -- que el jugador ya ve en pantalla, y una segunda version acabaria por no coincidir.
     -- Los nombres salen del arte que el proyecto ya usa: uno inventado sale en verde.
     harford_estado_concentrando = "spell_holy_impholyconcentration",
+    harford_estado_desenganchado = "eps_bg3_disengage",
+    -- EXCEPCION a la regla "un estado con aura no duplica arte": Escondido lleva el aura de
+    -- sigilo 8822 pero la mesa quiere en la tira EL MISMO icono que la accion Esconderse
+    -- (decision 2026-09-06); GetIcon prioriza el catalogo sobre la textura del aura.
+    harford_estado_escondido = "eps_bg3_hide",
     harford_estado_terreno_dificil = "spell_nature_stranglevines",
     harford_estado_trabado = "eps_bg3_forcedmove",
     harford_estado_ayudado = "eps_bg3_help",

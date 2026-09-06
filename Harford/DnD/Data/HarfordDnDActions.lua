@@ -43,9 +43,10 @@ API.DEFS = {
         id = "desengancharse", name = "Desengancharse",
         cast = "accion", orden = 3,
         description = "Tu movimiento no provoca ataques de oportunidad durante el resto del turno.",
-        -- Se resuelve ANUNCIANDOSE (y cobrando su accion): los ataques de oportunidad son de la
-        -- mesa. Marcador explicito para que la suite sepa que no es una accion sin ruta.
-        soloAnuncio = true,
+        -- Deja el estado VISIBLE hasta que acaba tu turno (peticion de mesa 2026-09-06): los
+        -- ataques de oportunidad siguen siendo de la mesa, pero ahora la mesa VE quien esta
+        -- desenganchado en la tira en vez de fiarse del scroll del chat.
+        selfCondition = { id = "desenganchado", duration = "source_turn_end" },
     },
     esconderse = {
         id = "esconderse", name = "Esconderse",
@@ -53,7 +54,10 @@ API.DEFS = {
         description = "Haces una prueba de Sigilo para ocultarte.",
         -- Sin CD: la de esconderse es la Percepcion pasiva de quien mira, que este cliente no
         -- conoce. Se tira y decide la mesa; inventarse un numero seria peor que no ponerlo.
+        -- Ademas deja el estado Escondido con su aura de servidor (8822): tirada Y estado, las
+        -- dos ramas del ejecutor corren juntas.
         skillCheck = { skill = "Sigilo" },
+        selfCondition = { id = "escondido", duration = "manual" },
     },
     agarrar = {
         id = "agarrar", name = "Agarrar",
@@ -97,7 +101,8 @@ API.DEFS = {
             .. "queda estable y recupera 1 punto de golpe.",
         -- La UNICA de las nuevas con CD fija en el manual, asi que se resuelve entera aqui.
         -- `healOnSuccess`: decision de mesa 2026-09-06 — el exito otorga 1 PG al objetivo.
-        skillCheck = { skill = "Medicina", dc = 10, healOnSuccess = 1 },
+        -- `requiresTargetAtZero`: solo se puede usar sobre un objetivo con la vida a 0.
+        skillCheck = { skill = "Medicina", dc = 10, healOnSuccess = 1, requiresTargetAtZero = true },
     },
     lanzar_arma = {
         id = "lanzar_arma", name = "Lanzar arma",

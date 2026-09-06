@@ -289,19 +289,51 @@ do
             HarfordChat.Print(tostring(def.name) .. ": necesitas un objetivo.")
             return false
         end
+        -- Estabilizar SOLO sobre un objetivo con la vida a 0 (decision de mesa 2026-09-06),
+        -- comprobado ANTES de cobrar. La vida se mira donde vive: la propia en el recurso
+        -- local, la de otro jugador en su cache sincronizada, la de un NPC en su vida real de
+        -- servidor (que no baja de 1 sin matarlo: 1 cuenta como "a 0" de mesa). SIN dato no se
+        -- bloquea — negarse sobre una cache vacia seria hostil, como en los minimos de
+        -- multiclase.
+        if type(def.skillCheck) == "table" and def.skillCheck.requiresTargetAtZero then
+            if not (UnitExists and UnitExists("target")) then
+                HarfordChat.Print(tostring(def.name) .. ": necesitas un objetivo.")
+                return false
+            end
+            local vida
+            if UnitIsUnit and UnitIsUnit("target", "player") then
+                vida = tonumber(GetResourceCurrent("health"))
+            elseif UnitIsPlayer and UnitIsPlayer("target") then
+                -- El export de recursos es un MAPA plano ("Res_health_Cur"), no una lista.
+                local tbl = HarfordDnDAPI and HarfordDnDAPI.GetResourcesForName
+                    and HarfordDnDAPI.GetResourcesForName(HarfordClassColors.UnitFullName("target"))
+                if type(tbl) == "table" and (tonumber(tbl.Res_health_Max) or 0) > 0 then
+                    vida = tonumber(tbl.Res_health_Cur)
+                end
+            elseif UnitHealthMax and (tonumber(UnitHealthMax("target")) or 0) > 0 then
+                local hp = tonumber(UnitHealth and UnitHealth("target")) or 0
+                vida = (hp <= 1) and 0 or hp
+            end
+            if vida and vida > 0 then
+                HarfordChat.Print(tostring(def.name) .. ": el objetivo no esta a 0 puntos de golpe.")
+                return false
+            end
+        end
         -- UNA linea por accion. Si la accion va a producir su PROPIA linea (una tirada, un
         -- ataque de arma, o la linea con target de Ayudar), anunciarla aparte son dos lineas
         -- para decir lo mismo. Se cobra igual --el coste no depende de cuantas lineas salgan--
         -- pero sin difundir.
+        -- Una accion puede TIRAR y ademas dejar estado (Esconderse: prueba de Sigilo + estado
+        -- Escondido con su aura): la tirada silencia el anuncio y el estado se aplica aparte.
         local vaATirar = ((type(def.skillCheck) == "table" or type(def.contest) == "table")
-                and _G.DND5E_ARC_API and _G.DND5E_ARC_API.RollSkillEx
-                and type(def.selfCondition) ~= "table")
+                and _G.DND5E_ARC_API and _G.DND5E_ARC_API.RollSkillEx)
             or type(def.helpOther) == "table"
             or type(def.throwWeapon) == "table"
             or (def.opportunityAttack and true)
         -- Si no cabe el coste, la accion NO ocurre: ni tirada, ni estado, ni nada.
         if AnnounceAbility(anuncio, { silencioso = vaATirar }) == false then return false end
 
+        -- El estado sobre uno mismo NO es excluyente con la tirada: bloque propio, no rama.
         if type(def.selfCondition) == "table" and HarfordDnDConditions
             and HarfordDnDConditions.ApplyOwned then
             local aplicado = HarfordDnDConditions.ApplyOwned(def.selfCondition.id, {
@@ -314,7 +346,9 @@ do
             if aplicado and HarfordDnDConditions.PublishOwnedCondition then
                 HarfordDnDConditions.PublishOwnedCondition(def.selfCondition.id, "apply")
             end
-        elseif type(def.skillCheck) == "table" and _G.DND5E_ARC_API
+        end
+
+        if type(def.skillCheck) == "table" and _G.DND5E_ARC_API
             and _G.DND5E_ARC_API.RollSkillEx then
             -- Se tira con `RollSkillEx` y no con `RollSkill` porque hace falta el TOTAL para
             -- compararlo con la CD. Estabilizar la tiene fija en el manual (Medicina 10);

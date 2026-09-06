@@ -82,6 +82,37 @@ chk("y sin CD, que no la sabemos", tostring(A.Get("esconderse").skillCheck.dc), 
 chk("estabilizar: Medicina", A.Get("estabilizar").skillCheck.skill, "Medicina")
 chk("estabilizar: CD 10", A.Get("estabilizar").skillCheck.dc, 10)
 chk("estabilizar: 1 PG al exito", A.Get("estabilizar").skillCheck.healOnSuccess, 1)
+-- Y SOLO sobre un objetivo a 0 PG (2026-09-06), comprobado ANTES de cobrar la accion: la vida
+-- propia del recurso local, la de otro jugador de su cache sincronizada (mapa Res_health_Cur),
+-- la del NPC de su vida real (1 de servidor = "a 0" de mesa). Sin dato no se bloquea.
+chk("estabilizar: exige objetivo a 0", A.Get("estabilizar").skillCheck.requiresTargetAtZero, true)
+local panelG = io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a")
+chk("la guardia corre antes de cobrar",
+    (panelG:find("def.skillCheck.requiresTargetAtZero then", 1, true) or math.huge)
+    < (panelG:find("if AnnounceAbility(anuncio", 1, true) or 0), true)
+chk("y mira las tres fuentes de vida",
+    panelG:find('vida = tonumber(GetResourceCurrent("health"))', 1, true) ~= nil
+    and panelG:find("vida = tonumber(tbl.Res_health_Cur)", 1, true) ~= nil
+    and panelG:find('vida = (hp <= 1) and 0 or hp', 1, true) ~= nil, true)
+
+-- Desengancharse deja su estado visible hasta el FIN de tu turno (2026-09-06): los ataques de
+-- oportunidad siguen siendo de la mesa, pero la mesa VE quien esta desenganchado en la tira.
+chk("desengancharse aplica su estado",
+    A.Get("desengancharse").selfCondition.id .. "/" .. A.Get("desengancharse").selfCondition.duration,
+    "desenganchado/source_turn_end")
+local condsrc = io.open("Harford/DnD/Engine/HarfordDnDConditions.lua"):read("*a")
+chk("el estado existe en el catalogo", condsrc:find("\n    desenganchado = {", 1, true) ~= nil, true)
+chk("en la categoria de combate", condsrc:find('"esquivando", "desenganchado", "escondido", "apartado"', 1, true) ~= nil, true)
+
+-- Esconderse TIRA Sigilo y ademas deja el estado Escondido con su aura de servidor (8822):
+-- el estado sobre uno mismo ya no es excluyente con la tirada en el ejecutor (bloque propio).
+chk("esconderse tira Y deja estado",
+    A.Get("esconderse").skillCheck.skill .. "/" .. A.Get("esconderse").selfCondition.id,
+    "Sigilo/escondido")
+chk("el estado lleva el aura de sigilo",
+    condsrc:find('label = "Escondido", auraId = 8822, tracking = "aura_state",', 1, true) ~= nil, true)
+chk("y el ejecutor aplica estado y tirada juntos",
+    panelG:find("-- El estado sobre uno mismo NO es excluyente con la tirada: bloque propio, no rama.", 1, true) ~= nil, true)
 local panelBA = io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a")
 chk("la entrega existe y respeta al NPC",
     panelBA:find("if supera and def.skillCheck.healOnSuccess and EntregarAObjetivo", 1, true) ~= nil

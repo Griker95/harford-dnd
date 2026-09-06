@@ -18,7 +18,7 @@ API.ORDER = {
     "incapacitated", "invisible", "paralyzed", "petrified", "poisoned",
     "prone", "restrained", "stunned", "unconscious", "dying", "sleeping", "silenced", "rooted", "slowed",
     "disarmed", "exposed_armor", "burning", "frozen", "chilled", "blessed",
-    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado", "buey_negro", "esquivando", "circulo_demoniaco",
+    "bioluminescence", "dancing_lights", "elunes_grace", "exhaustion", "piel_hierro", "imprudente", "escudo_sagrado", "veredicto", "apartado", "buey_negro", "esquivando", "desenganchado", "escondido", "circulo_demoniaco",
     "piedra_salud", "piedra_fuego", "piedra_conjuro", "piedra_alma",
 }
 
@@ -33,7 +33,7 @@ API.CATEGORIES = {
     } },
     { id = "combate", label = "Combate", ids = {
         "sleeping", "silenced", "rooted", "slowed", "disarmed", "exposed_armor",
-        "imprudente", "esquivando", "apartado", "trabado", "terreno_dificil",
+        "imprudente", "esquivando", "desenganchado", "escondido", "apartado", "trabado", "terreno_dificil",
     } },
     -- Estados que deja la economia de turno y el apoyo entre PJs (Ayudar, Preparar), y los que
     -- el propio jugador se pone al jugar (Concentracion).
@@ -109,6 +109,21 @@ API.DEFS = {
     -- ESQUIVAR. No es de ninguna clase: es la accion basica del manual, y esta aqui porque hay
     -- rasgos que la conceden como accion adicional (Danza Elusiva del Monje). Dura hasta el inicio
     -- de tu proximo turno.
+    -- DESENGANCHARSE deja su estado visible hasta el FIN del turno del que lo usa
+    -- (source_turn_end): los ataques de oportunidad los lleva la mesa, pero asi VE quien esta
+    -- desenganchado en la tira en vez de fiarse del scroll del chat.
+    desenganchado = {
+        label = "Desenganchado", tracking = "state",
+        description = "Tu movimiento no provoca ataques de oportunidad durante el resto del turno.",
+        effects = {},
+    },
+    -- ESCONDERSE deja estado CON AURA de servidor (8822, peticion de mesa 2026-09-06): la mesa
+    -- ve el sigilo en pantalla. Manual: se pierde cuando la mesa lo diga (atacar, ser visto).
+    escondido = {
+        label = "Escondido", auraId = 8822, tracking = "aura_state",
+        description = "Estas oculto tras una prueba de Sigilo. Se pierde al atacar, lanzar un conjuro o ser descubierto.",
+        effects = {},
+    },
     esquivando = {
         label = "Esquivando", tracking = "state",
         description = "Los ataques contra ti se hacen con desventaja y tus salvaciones de Destreza tienen ventaja.",

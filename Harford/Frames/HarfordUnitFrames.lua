@@ -5120,8 +5120,13 @@ do
         menu[#menu + 1] = {
             text = "Devolver", notCheckable = true, hasArrow = true, menuList = {
                 { text = "Movimiento", notCheckable = true, func = function()
-                    if HarfordDnDAttackUI and HarfordDnDAttackUI.RefundTurnMovement then
-                        HarfordDnDAttackUI.RefundTurnMovement()
+                    local M = HarfordDnDAttackUI
+                    if M and M.ConcederODevolverMovimiento then
+                        if M.ConcederODevolverMovimiento() == "concedido" then
+                            HarfordChat.Print("|cff88ff88Te concedes movimiento: puedes moverte AHORA — tu tope cuenta desde aqui.|r")
+                        end
+                    elseif M and M.RefundTurnMovement then
+                        M.RefundTurnMovement()
                     end
                 end },
                 { text = "Acción", notCheckable = true, func = function() Devolver("action", "acción") end },

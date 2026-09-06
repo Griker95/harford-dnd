@@ -661,6 +661,15 @@ chk("el tope manual sustituye la base",
     and ataque:find("if override and override > 0 then base = override end", 1, true) ~= nil, true)
 chk("y su setter refresca la barra",
     ataque:find("function API.SetMovementMaxOverride(metros)", 1, true) ~= nil, true)
+-- Dar movimiento FUERA del turno de PJs es una CONCESION: muro levantado y contador desde cero
+-- a mano (aMano salta los guards de turno); el tope manda y el muro te para al agotarlo. En tu
+-- turno (o en libre, o llevando NPC) es la devolucion de siempre.
+print("Dar movimiento fuera de turno concede")
+chk("el punto unico existe",
+    ataque:find("function API.ConcederODevolverMovimiento()", 1, true) ~= nil, true)
+chk("fuera de turno levanta el muro y arranca a mano",
+    ataque:find("if fuera and not API.ModoLibre and not (LlevandoNpc and LlevandoNpc()) then", 1, true) ~= nil
+    and ataque:find("if ArrancarSeguimiento then ArrancarSeguimiento(true) end", 1, true) ~= nil, true)
 chk("y ANTES de que Correr doble",
     ataque:find("base = base / 2\n        end\n        local tope = corriendo and (base * 2) or base", 1, true) ~= nil, true)
 chk("terreno dificil dobla el gasto contado",

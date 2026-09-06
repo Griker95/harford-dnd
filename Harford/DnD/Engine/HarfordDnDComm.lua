@@ -167,7 +167,13 @@ function HarfordDnDComm.CreateHandlers(deps)
         if refundKind then
             if not IsTrustedEffectSender(sender) then return false end
             if refundKind == "movement" then
-                if HarfordDnDAttackUI and HarfordDnDAttackUI.RefundTurnMovement then
+                -- Punto unico: fuera del turno de PJs es una CONCESION (muro levantado y
+                -- contador desde cero: te mueves AHORA); en tu turno, la devolucion de siempre.
+                if HarfordDnDAttackUI and HarfordDnDAttackUI.ConcederODevolverMovimiento then
+                    if HarfordDnDAttackUI.ConcederODevolverMovimiento() == "concedido" then
+                        HarfordChat.Print("|cff88ff88El DM te concede movimiento: puedes moverte AHORA — tu tope cuenta desde aqui.|r")
+                    end
+                elseif HarfordDnDAttackUI and HarfordDnDAttackUI.RefundTurnMovement then
                     HarfordDnDAttackUI.RefundTurnMovement()
                 end
             elseif HarfordDnDConditions and HarfordDnDConditions.Turn

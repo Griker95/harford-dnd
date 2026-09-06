@@ -740,6 +740,26 @@ function API.AttachMovementTracker(opts)
         return true
     end
 
+    -- "Dar" movimiento, venga del DM (TREFUND movement) o del engranaje propio. FUERA del turno
+    -- de PJs es una CONCESION ("si te da movimiento aunque no sea turno de PJs, deberia dejarme
+    -- moverme"): se levanta el muro, el contador arranca de cero A MANO (aMano salta los guards
+    -- de turno) y el tope normal vuelve a mandar — al agotarlo, el muro te para donde toque, y
+    -- el siguiente cambio de turno re-ancla como siempre. En tu turno (o en modo libre, donde ya
+    -- te mueves gratis) es la devolucion de siempre. Devuelve "concedido" | "devuelto".
+    function API.ConcederODevolverMovimiento()
+        local T = HarfordDnDConditions and HarfordDnDConditions.Turn
+        local fuera = T and T.IsActive and T.IsActive() and T.IsMyTurn and not T.IsMyTurn()
+        if fuera and not API.ModoLibre and not (LlevandoNpc and LlevandoNpc()) then
+            API.RecordedMovementAnchor = nil
+            API.MovimientoSinMuro = nil
+            if ArrancarSeguimiento then ArrancarSeguimiento(true) end
+            AvisarMovimiento(0, MaximoDelTurno())
+            return "concedido"
+        end
+        if API.ResetTurnMovementKeepAnchor then API.ResetTurnMovementKeepAnchor() end
+        return "devuelto"
+    end
+
     -- Fija (o retira, con nil/0) el tope de movimiento manual y refresca la barra al momento.
     function API.SetMovementMaxOverride(metros)
         metros = tonumber(metros)

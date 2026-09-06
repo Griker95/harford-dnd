@@ -254,7 +254,7 @@ chk("devoluciones de las cuatro cosas",
     uf:find('Devolver("action", "acci', 1, true) ~= nil
     and uf:find('Devolver("bonus", "acci', 1, true) ~= nil
     and uf:find('Devolver("reaction", "reacci', 1, true) ~= nil
-    and uf:find("HarfordDnDAttackUI.RefundTurnMovement", 1, true) ~= nil, true)
+    and uf:find("M.ConcederODevolverMovimiento()", 1, true) ~= nil, true)
 chk("y la seccion Combate con los tres gestos de /harfordcombat",
     uf:find('{ text = "Movimiento libre", isNotRadio = true,', 1, true) ~= nil
     and uf:find('{ text = "Reubicar", notCheckable = true,', 1, true) ~= nil

@@ -358,4 +358,35 @@ chk("la linea de victima solo incrusta curacion",
 chk("y sin dos puntos: el color separa",
     areaSrc:find("Salv %s: %d", 1, true) == nil and areaSrc:find('%s %s: %s', 1, true) == nil, true)
 
+-- ─── LUZ DEL AMANECER: AREA DE CURACION REPARTIDA (2026-09-06) ──────────────
+-- Anunciaba el total ("30 PG de curacion a repartir") y NO abria area. Ahora es un cono de 9 m
+-- resolution heal: el total (5 x nivel de paladin, `fixedPerClassLevel` con multiplicador) se
+-- DIVIDE a partes iguales entre los marcados (`splitHealing`); el anuncio sale ya con la parte
+-- de cada uno. Y los rotulos del Libro: un OBJETIVO UNICO (shape "other", Veredicto) no se
+-- rotula Area — misma regla que el chat — y Tormenta divina declara `category = "area"` para
+-- el rotulo sin cambiar su mecanica de rider (el click despacha por actionKind).
+print("Luz del Amanecer reparte su curacion en area")
+local palSrc = io.open("Harford/DnD/Data/Classes/Paladin.lua"):read("*a")
+chk("la accion es un cono heal con reparto",
+    palSrc:find('area = { shape = "cone", sizeText = "cono de 9 m", resolution = "heal", splitHealing = true', 1, true) ~= nil, true)
+chk("el total es 5 x nivel de paladin",
+    palSrc:find('healingComponents = { { fixedPerClassLevel = "paladin", multiplier = 5 } }', 1, true) ~= nil, true)
+chk("el motor entiende nivel de clase",
+    areaSrc:find("if component.fixedPerClassLevel and HarfordDnDProgression", 1, true) ~= nil, true)
+chk("y divide entre los marcados",
+    areaSrc:find("if session.definition.splitHealing then", 1, true) ~= nil
+    and areaSrc:find("c.amount = math.max(1, math.floor((tonumber(c.amount) or 0) / n))", 1, true) ~= nil, true)
+print("Los rotulos del Libro dicen la verdad")
+local bookSrc = io.open("Harford/Character/HarfordCharacterBook.lua"):read("*a")
+chk("objetivo unico no se rotula Area",
+    bookSrc:find('and tostring(feature.area.shape or "") == "other" then', 1, true) ~= nil, true)
+chk("Tormenta divina se rotula Area sin cambiar su mecanica",
+    palSrc:find('category = "area", actionKind = "divineStorm"', 1, true) ~= nil, true)
+-- Iconos modernos/custom (spell_paladin_templarsverdict...): sin ruta fisica en el cliente,
+-- GetFileIDFromPath los rechazaba y el Libro caia al respaldo aunque TRP3 los pinta. Se
+-- resuelven a FileDataID via LibRPMedia (la via del compendio) antes de rendirse.
+chk("el Libro resuelve iconos via LibRPMedia antes del respaldo",
+    io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
+        :find("HarfordCompendioIconMap.ResolveRP3IconName(final:match(", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -161,6 +161,13 @@ function API.CategoryLabel(cat, feature)
     if cat == "al_accion" and feature and feature.type == "maniobra" then
         return API.CAT_LABEL.maniobra
     end
+    -- OBJETIVO UNICO (shape "other": Veredicto del Templario): reusa el motor de areas para
+    -- resolverse pero NO es un area y no se rotula como tal — misma regla que el chat. Se
+    -- etiqueta por su coste real (Accion/Adicional).
+    if cat == "area" and feature and type(feature.area) == "table"
+        and tostring(feature.area.shape or "") == "other" then
+        cat = "activo"
+    end
     if cat == "activo" then
         local d = ((feature and feature.description) or ""):lower()
         if d:find("accion adicional", 1, true) or d:find("acción adicional", 1, true) then
@@ -175,6 +182,11 @@ end
 -- la mecanica que tenga por debajo.
 function API.CategoryColor(cat, feature)
     if feature and feature.esDote then return API.CAT_COLOR.dote end
+    -- Mismo trato que CategoryLabel: el objetivo unico no se pinta como area.
+    if cat == "area" and feature and type(feature.area) == "table"
+        and tostring(feature.area.shape or "") == "other" then
+        return API.CAT_COLOR.activo
+    end
     return API.CAT_COLOR[cat]
 end
 

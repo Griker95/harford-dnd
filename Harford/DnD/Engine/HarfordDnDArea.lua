@@ -378,6 +378,18 @@ local function NormalizeDefinition(definition)
                 and HarfordDnDProgression.GetTotalLevel then
                 fixedAmount = math.max(1, tonumber(HarfordDnDProgression.GetTotalLevel()) or 1)
             end
+            -- Curacion "= N x tu nivel de CLASE" (Luz del Amanecer: 5 x nivel de paladin).
+            if component.fixedPerClassLevel and HarfordDnDProgression
+                and HarfordDnDProgression.GetClassLevels then
+                local lvl = 0
+                for _, e in ipairs(HarfordDnDProgression.GetClassLevels() or {}) do
+                    if tostring(e.classId) == tostring(component.fixedPerClassLevel) then
+                        lvl = tonumber(e.level) or 0
+                        break
+                    end
+                end
+                fixedAmount = math.max(1, lvl * (tonumber(component.multiplier) or 1))
+            end
             if fixedAmount then
                 fixedAmount = math.max(1, math.min(10000, math.floor(fixedAmount)))
                 components[#components + 1] = {
@@ -450,6 +462,8 @@ local function NormalizeDefinition(definition)
         rangeDisadvantage = area.rangeDisadvantage == true or definition.rangeDisadvantage == true,
         repeatTargets = area.repeatTargets == true or definition.repeatTargets == true,
         rollPerTarget = area.rollPerTarget == true or definition.rollPerTarget == true,
+        -- Curacion REPARTIDA (Luz del Amanecer): el total se divide entre los marcados.
+        splitHealing = area.splitHealing == true or definition.splitHealing == true,
         rerollDamageDice = math.max(0, math.min(99,
             math.floor(tonumber(area.rerollDamageDice or definition.rerollDamageDice) or 0))),
         applicationCount = math.max(1, math.min(MAX_TARGETS,
@@ -1661,6 +1675,15 @@ function API.Resolve()
         session.rolledComponents, session.rollDetails = nil, nil
     elseif session.definition.resolution == "heal" then
         session.rolledComponents, session.rollDetails = RollHealingComponents(session.definition)
+        -- CURACION REPARTIDA ("un total de 5 x nivel repartido entre las criaturas que
+        -- elijas"): el total se divide a partes iguales entre los marcados. Si la mesa quiere
+        -- otro reparto, lo ajusta a mano; el anuncio ya sale con la parte de cada uno.
+        if session.definition.splitHealing then
+            local n = math.max(1, #session.targets)
+            for _, c in ipairs(session.rolledComponents or {}) do
+                c.amount = math.max(1, math.floor((tonumber(c.amount) or 0) / n))
+            end
+        end
     else
         session.rolledComponents, session.rollDetails = RollComponents(session.definition)
     end

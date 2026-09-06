@@ -3782,7 +3782,13 @@ RefreshBook = function()
             local respaldo = K.BOOK_ICON[cat] or K.BOOK_ICON.pasivo
             local final = realIcon or respaldo
             if type(final) == "string" and GetFileIDFromPath and not GetFileIDFromPath(final) then
-                final = respaldo
+                -- Nombre SIN ruta fisica en este cliente pero registrado en LibRPMedia (arte
+                -- moderno/custom: spell_paladin_templarsverdict, ability_paladin_turnevil...):
+                -- el About lo pinta via TRP3 y el Libro caia al respaldo. Se resuelve a su
+                -- FileDataID por la misma via del compendio antes de rendirse.
+                local porMedia = HarfordCompendioIconMap and HarfordCompendioIconMap.ResolveRP3IconName
+                    and HarfordCompendioIconMap.ResolveRP3IconName(final:match("([^\\]+)$"))
+                final = porMedia or respaldo
             end
             b.icon:SetTexture(final)
             b.icon:SetTexCoord(0.06, 0.94, 0.06, 0.94)

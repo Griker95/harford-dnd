@@ -466,8 +466,16 @@ local function NormalizeDefinition(definition)
         splitHealing = area.splitHealing == true or definition.splitHealing == true,
         rerollDamageDice = math.max(0, math.min(99,
             math.floor(tonumber(area.rerollDamageDice or definition.rerollDamageDice) or 0))),
-        applicationCount = math.max(1, math.min(MAX_TARGETS,
-            math.floor(tonumber(area.applicationCount or definition.applicationCount) or 1))),
+        -- `applicationCount` LIMITA el marcado (los dardos de Proyectil magico) y SOLO existe
+        -- si el area lo declara — o si es de OBJETIVO UNICO (shape "other"), que por definicion
+        -- admite uno. El default 1 de antes capaba TODA area normal a UN objetivo marcado a
+        -- mano ("Todas las aplicaciones ya estan asignadas" al segundo), mientras el
+        -- auto-marcado por posiciones no pasaba por el limite y si metia varios.
+        applicationCount = (tonumber(area.applicationCount or definition.applicationCount)
+                and math.max(1, math.min(MAX_TARGETS,
+                    math.floor(tonumber(area.applicationCount or definition.applicationCount)))))
+            or (shape == "other" and 1)
+            or nil,
     }
     if resolution == "save" then
         out.saveAbility = CanonicalAbility(area.saveAbility or area.ability)

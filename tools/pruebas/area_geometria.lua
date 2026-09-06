@@ -391,4 +391,16 @@ chk("el Libro resuelve iconos via LibRPMedia antes del respaldo",
     io.open("Harford/Character/HarfordCharacterPanel.lua"):read("*a")
         :find("C.ResolveRP3IconName(final:match(", 1, true) ~= nil, true)
 
+-- ─── EL MARCADO MANUAL NO ESTA CAPADO A UNO (2026-09-06) ────────────────────
+-- `applicationCount` limita el marcado (los dardos de Proyectil magico) y SOLO existe si el
+-- area lo declara — o en OBJETIVO UNICO (shape "other"), que por definicion admite uno. El
+-- default 1 de antes capaba TODA area normal a UN objetivo marcado a mano ("Todas las
+-- aplicaciones ya estan asignadas" al segundo), mientras el auto-marcado por posiciones no
+-- pasaba por el limite y si metia varios.
+print("El marcado manual admite varios objetivos")
+chk("sin declarar, sin limite (nil)",
+    areaSrc:find('or (shape == "other" and 1)\n            or nil,', 1, true) ~= nil, true)
+chk("y el limite del marcado cae a MAX_TARGETS sin el",
+    areaSrc:find("local limit = math.min(MAX_TARGETS, tonumber(session.definition.applicationCount) or MAX_TARGETS)", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

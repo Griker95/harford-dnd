@@ -255,7 +255,7 @@ chk("la accion Esquivar tambien publica su estado",
     io.open("Harford/Character/HarfordCharacterBookActions.lua"):read("*a")
         :find("if aplicado and HarfordDnDConditions.PublishOwnedCondition then", 1, true) ~= nil, true)
 chk("Muriendo y Cansancio tratados aparte",
-    uf:find('if def.id ~= "dying" and def.id ~= "exhaustion" then', 1, true) ~= nil, true)
+    uf:find('if def.id == "dying" or def.id == "exhaustion" then return nil end', 1, true) ~= nil, true)
 chk("devoluciones de las cuatro cosas",
     uf:find('Devolver("action", "acci', 1, true) ~= nil
     and uf:find('Devolver("bonus", "acci', 1, true) ~= nil

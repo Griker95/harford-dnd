@@ -5072,40 +5072,61 @@ do
         -- Los estados de CONJURO se generan perezosos desde el compendio (LoadOnDemand):
         -- se piden al abrir este menu, que es donde el jugador va a buscarlos.
         if C.EnsureSpellStates then C.EnsureSpellStates() end
+        local function EntradaEstado(def)
+            -- Muriendo lo gobierna Salv Muerte y Cansancio tiene su submenu de niveles.
+            if def.id == "dying" or def.id == "exhaustion" then return nil end
+            local id = def.id
+            return {
+                text = def.label,
+                checked = C.Has and C.Has("player", id) or false,
+                keepShownOnClick = true,
+                isNotRadio = true,
+                func = function()
+                    -- PUBLICAR ademas de aplicar/retirar: ApplyOwned/RemoveOwned son
+                    -- solo locales, y un estado que los demas no ven no existe para
+                    -- sus tiradas (la desventaja de Esquivando la resuelve el ATACANTE
+                    -- mirando los estados sincronizados de su target).
+                    if C.Has and C.Has("player", id) then
+                        if C.RemoveOwned and C.RemoveOwned(id) and C.PublishOwnedCondition then
+                            C.PublishOwnedCondition(id, "remove")
+                        end
+                    elseif C.ApplyOwned then
+                        if C.ApplyOwned(id) and C.PublishOwnedCondition then
+                            C.PublishOwnedCondition(id, "apply")
+                        end
+                    end
+                end,
+            }
+        end
         local categorias = {}
         for _, cat in ipairs(C.CATEGORIES) do
-            local entradas = {}
-            for _, def in ipairs(C.GetDefinitionsForCategory(cat.id)) do
-                -- Muriendo lo gobierna Salv Muerte y Cansancio tiene su submenu de niveles.
-                if def.id ~= "dying" and def.id ~= "exhaustion" then
-                    local id = def.id
-                    entradas[#entradas + 1] = {
-                        text = def.label,
-                        checked = C.Has and C.Has("player", id) or false,
-                        keepShownOnClick = true,
-                        isNotRadio = true,
-                        func = function()
-                            -- PUBLICAR ademas de aplicar/retirar: ApplyOwned/RemoveOwned son
-                            -- solo locales, y un estado que los demas no ven no existe para
-                            -- sus tiradas (la desventaja de Esquivando la resuelve el ATACANTE
-                            -- mirando los estados sincronizados de su target).
-                            if C.Has and C.Has("player", id) then
-                                if C.RemoveOwned and C.RemoveOwned(id) and C.PublishOwnedCondition then
-                                    C.PublishOwnedCondition(id, "remove")
-                                end
-                            elseif C.ApplyOwned then
-                                if C.ApplyOwned(id) and C.PublishOwnedCondition then
-                                    C.PublishOwnedCondition(id, "apply")
-                                end
-                            end
-                        end,
+            -- Una categoria larga (los conjuros de un nivel) va PAGINADA como submenus, con el
+            -- corte comun de PaginateCategory: "Conjuros: nivel 2" > "Pagina 1/3 (A–E)".
+            local paginas, defs = nil, nil
+            if C.PaginateCategory then paginas, defs = C.PaginateCategory(cat.id) end
+            defs = defs or C.GetDefinitionsForCategory(cat.id)
+            if paginas then
+                local subs = {}
+                for _, pag in ipairs(paginas) do
+                    local items = {}
+                    for i = pag.desde, pag.hasta do
+                        items[#items + 1] = EntradaEstado(defs[i])
+                    end
+                    subs[#subs + 1] = { text = pag.label, notCheckable = true, hasArrow = true, menuList = items }
+                end
+                categorias[#categorias + 1] = {
+                    text = cat.label, notCheckable = true, hasArrow = true, menuList = subs,
+                }
+            else
+                local entradas = {}
+                for _, def in ipairs(defs) do
+                    entradas[#entradas + 1] = EntradaEstado(def)
+                end
+                if #entradas > 0 then
+                    categorias[#categorias + 1] = {
+                        text = cat.label, notCheckable = true, hasArrow = true, menuList = entradas,
                     }
                 end
-            end
-            if #entradas > 0 then
-                categorias[#categorias + 1] = {
-                    text = cat.label, notCheckable = true, hasArrow = true, menuList = entradas,
-                }
             end
         end
         -- Cansancio por niveles, como en el menu de estado de la ficha.

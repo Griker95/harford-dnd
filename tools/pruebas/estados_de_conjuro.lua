@@ -62,14 +62,21 @@ chk("concentracion marcada", API.DEFS.conjuro_proteccion_bm.concentration, true)
 chk("la descripcion dice duracion y concentracion",
     API.DEFS.conjuro_proteccion_bm.description:find("10 minutos (Concentracion)", 1, true) ~= nil, true)
 
-print("Categorias por nivel, troceadas para que el submenu quepa")
+-- UNA categoria por nivel (trocearlas en hermanas "(1/4), (2/4)..." llenaba el menu en plano);
+-- las largas se presentan PAGINADAS como submenus con el corte comun de PaginateCategory.
+print("Una categoria por nivel; las largas se paginan como submenus")
 local etiquetas = {}
 for i = antesCat + 1, #API.CATEGORIES do etiquetas[#etiquetas + 1] = API.CATEGORIES[i].label end
-chk("trucos y nivel 1 en categoria propia", table.concat(etiquetas, "|"),
-    "Conjuros: trucos|Conjuros: nivel 1|Conjuros: nivel 2 (1/2)|Conjuros: nivel 2 (2/2)")
-chk("el troceo reparte 22+3", #API.CATEGORIES[antesCat + 3].ids .. "+" .. #API.CATEGORIES[antesCat + 4].ids, "22+3")
+chk("una categoria por nivel", table.concat(etiquetas, "|"),
+    "Conjuros: trucos|Conjuros: nivel 1|Conjuros: nivel 2")
 chk("GetDefinitionsForCategory resuelve las generadas",
     #API.GetDefinitionsForCategory(API.CATEGORIES[antesCat + 1].id), 1)
+local paginas, defs2 = API.PaginateCategory("conjuros_2")
+chk("nivel 2 (25) se pagina", paginas ~= nil and #paginas, 2)
+chk("el corte reparte 22+3", (paginas[1].hasta - paginas[1].desde + 1) .. "+" .. (paginas[2].hasta - paginas[2].desde + 1), "22+3")
+chk("la etiqueta orienta con iniciales", paginas[1].label, "Pagina 1/2 (B–B)")
+chk("y devuelve las defs para no pedirlas dos veces", #defs2, 25)
+chk("una corta NO se pagina", API.PaginateCategory("conjuros_1"), "nil")
 
 print("Idempotente y estable")
 API.EnsureSpellStates()
@@ -157,6 +164,13 @@ chk("el engranaje genera al abrir su menu",
     uf:find("if C.EnsureSpellStates then C.EnsureSpellStates() end", 1, true) ~= nil, true)
 chk("el menu DM tambien",
     adm:find("HarfordDnDConditions.EnsureSpellStates()", 1, true) ~= nil, true)
+-- Ambos consumidores paginan con el corte comun: el engranaje anida submenus de pagina y el
+-- menu DM viaja con "ESTADOS:cat#p" por su dispatcher de menuList.
+chk("el engranaje pagina con el corte comun",
+    uf:find("paginas, defs = C.PaginateCategory(cat.id)", 1, true) ~= nil, true)
+chk("el menu DM tambien, via ESTADOS:cat#p",
+    adm:find('AddSubmenu(pag.label, "ESTADOS:" .. tostring(categoryId) .. "#" .. p, level)', 1, true) ~= nil
+    and adm:find('categoryId:match("^(.-)#(%d+)$")', 1, true) ~= nil, true)
 chk("el receptor de red genera ante un conjuro_ desconocido",
     src:find('if cid:find("^conjuro_") and not API.DEFS[cid] and API.EnsureSpellStates then', 1, true) ~= nil, true)
 -- Romper la concentracion retira TODO estado de conjuro marcado `concentration` (solo puedes

@@ -880,7 +880,36 @@ end
 -- categorias propias por NIVEL, troceadas para que ningun submenu desborde la pantalla.
 do
     local generado = false
-    local TROZO = 22  -- filas por submenu; un dropdown mas largo se sale de pantalla
+    local TROZO = 22  -- filas por pagina de submenu; un dropdown mas largo se sale de pantalla
+
+    -- Una categoria larga no cabe en un dropdown, pero trocearla en CATEGORIAS hermanas llenaba
+    -- el menu de "nivel 2 (1/4), (2/4)..." en plano. La categoria es UNA por nivel y son los
+    -- CONSUMIDORES quienes la presentan paginada como submenus ("Conjuros: nivel 2" > "Pagina
+    -- 1/3 (A–E)"). El corte y la etiqueta viven aqui para que el engranaje y el menu DM paginen
+    -- IGUAL. Devuelve nil si cabe entera; si no, la lista de paginas { desde, hasta, label } y
+    -- las defs ya resueltas para no pedirlas dos veces.
+    function API.PaginateCategory(categoryId, porPagina)
+        porPagina = tonumber(porPagina) or TROZO
+        local defs = API.GetDefinitionsForCategory(categoryId)
+        if #defs <= porPagina then return nil, defs end
+        local function Inicial(label)
+            local limpio = (HarfordClassColors and HarfordClassColors.StripAccents
+                and HarfordClassColors.StripAccents(tostring(label or ""))) or tostring(label or "")
+            return limpio:sub(1, 1):upper()
+        end
+        local paginas = {}
+        local total = math.ceil(#defs / porPagina)
+        for p = 1, total do
+            local desde = (p - 1) * porPagina + 1
+            local hasta = math.min(p * porPagina, #defs)
+            paginas[#paginas + 1] = {
+                desde = desde, hasta = hasta,
+                label = string.format("Pagina %d/%d (%s–%s)", p, total,
+                    Inicial(defs[desde].label), Inicial(defs[hasta].label)),
+            }
+        end
+        return paginas, defs
+    end
 
     function API.EnsureSpellStates()
         if generado then return true end
@@ -934,19 +963,11 @@ do
         for nivel = 0, 9 do
             local lista = porNivel[nivel]
             if lista then
-                local etiqueta = nivel == 0 and "Conjuros: trucos" or ("Conjuros: nivel " .. nivel)
-                local trozos = math.ceil(#lista / TROZO)
-                for t = 1, trozos do
-                    local ids = {}
-                    for i = (t - 1) * TROZO + 1, math.min(t * TROZO, #lista) do
-                        ids[#ids + 1] = lista[i]
-                    end
-                    API.CATEGORIES[#API.CATEGORIES + 1] = {
-                        id = "conjuros_" .. nivel .. (trozos > 1 and ("_" .. t) or ""),
-                        label = etiqueta .. (trozos > 1 and string.format(" (%d/%d)", t, trozos) or ""),
-                        ids = ids,
-                    }
-                end
+                API.CATEGORIES[#API.CATEGORIES + 1] = {
+                    id = "conjuros_" .. nivel,
+                    label = nivel == 0 and "Conjuros: trucos" or ("Conjuros: nivel " .. nivel),
+                    ids = lista,
+                }
             end
         end
         Notify()

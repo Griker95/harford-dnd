@@ -511,14 +511,35 @@ end
 -- Con categoria: solo los estados de esa categoria (el catalogo core las declara). Sin ella,
 -- la lista completa, que queda como fallback si el catalogo no trae categorias.
 local function BuildEstadosSubmenu(snapshot, level, categoryId)
-    local definitions
+    -- Una categoria larga va PAGINADA (corte comun de PaginateCategory, igual que el engranaje
+    -- del core): sin pagina se listan las paginas como submenus "ESTADOS:cat#p"; con ella, su
+    -- trozo. El separador es "#" porque los ids de categoria no lo llevan.
+    local pagina
+    if type(categoryId) == "string" then
+        local base, p = categoryId:match("^(.-)#(%d+)$")
+        if base then categoryId, pagina = base, tonumber(p) end
+    end
+    local definitions, paginas
     if categoryId and HarfordDnDConditions and HarfordDnDConditions.GetDefinitionsForCategory then
-        definitions = HarfordDnDConditions.GetDefinitionsForCategory(categoryId)
+        if HarfordDnDConditions.PaginateCategory then
+            paginas, definitions = HarfordDnDConditions.PaginateCategory(categoryId)
+        end
+        definitions = definitions or HarfordDnDConditions.GetDefinitionsForCategory(categoryId)
     else
         definitions = HarfordDnDConditions and HarfordDnDConditions.GetDefinitions
             and HarfordDnDConditions.GetDefinitions() or {}
     end
-    for _, estado in ipairs(definitions) do
+    local desde, hasta = 1, #definitions
+    if paginas and not pagina then
+        for p, pag in ipairs(paginas) do
+            AddSubmenu(pag.label, "ESTADOS:" .. tostring(categoryId) .. "#" .. p, level)
+        end
+        return
+    elseif paginas and paginas[pagina] then
+        desde, hasta = paginas[pagina].desde, paginas[pagina].hasta
+    end
+    for i = desde, hasta do
+        local estado = definitions[i]
         local activo = HarfordAdminConditions and HarfordAdminConditions.Has
             and HarfordAdminConditions.Has(snapshot, estado.id)
         local label = (activo and "[x] " or "[ ] ") .. estado.label

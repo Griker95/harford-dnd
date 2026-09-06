@@ -169,7 +169,16 @@ chk("la armadura real, con Sin armadura solo de respaldo",
 chk("con la seleccion basica de los slots como respaldo",
     crea:find('I.GetBasicArmorInfo("Chest", profileName)', 1, true) ~= nil
     and crea:find('I.GetBasicWeaponInfo("MainHand", profileName)', 1, true) ~= nil, true)
-chk("y la linea de Armas por fin existe (ICON_WEAPON en uso)",
-    crea:find('ficha[#ficha + 1] = "{h3}{icon:" .. ICON_WEAPON .. ":25} Armas "', 1, true) ~= nil, true)
+-- Formato del perfil de referencia (2026-09-06): cabecera "Armas" sola y una linea h3 POR ARMA
+-- — nombre en gris, dado + Mod. + Tipo en naranja, propiedades en cian. Las armas fuera de las
+-- manos (la pistola al cinto) tambien se listan aqui, no en el resto del equipo.
+chk("cabecera Armas y una linea por arma (ICON_WEAPON en uso)",
+    crea:find(':25} Armas {/h3}"', 1, true) ~= nil
+    and crea:find("local function LineaDeArma(nombre, def)", 1, true) ~= nil, true)
+chk("dado + mod + tipo en naranja y props en cian",
+    crea:find('linea = linea .. "{col:" .. COL_DERIVED .. "} " .. dados .. modTxt .. " " .. tipo .. "{/col}"', 1, true) ~= nil
+    and crea:find('linea .. "{col:00ffff} " .. props .. "{/col}"', 1, true) ~= nil, true)
+chk("las armas extra van a la linea de Armas, no al resto",
+    crea:find("equipado.armas[#equipado.armas + 1] = { nombre = nombre, def = arma }", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

@@ -1234,11 +1234,15 @@ function API.BuildAbout(draft, profileName)
             end
             if not equipado.mainhand and I.GetBasicWeaponInfo then
                 local info = I.GetBasicWeaponInfo("MainHand", profileName)
-                if info and info.label then equipado.mainhand = tostring(info.label) end
+                if info and info.label then
+                    equipado.mainhand, equipado.mainhandDef = tostring(info.label), info.def
+                end
             end
             if not equipado.offhand and I.GetBasicWeaponInfo then
                 local info = I.GetBasicWeaponInfo("SecondaryHand", profileName)
-                if info and info.label then equipado.offhand = tostring(info.label) end
+                if info and info.label then
+                    equipado.offhand, equipado.offhandDef = tostring(info.label), info.def
+                end
             end
         end
     end
@@ -1248,12 +1252,51 @@ function API.BuildAbout(draft, profileName)
             .. "}" .. tostring(equipado.armadura or "Sin armadura") .. "{/col}{col:" .. COL_DERIVED
             .. "} " .. tonumber(ca) .. "{/col}{/h3}"
     end
-    if equipado.mainhand or equipado.offhand then
-        local armas = {}
-        if equipado.mainhand then armas[#armas + 1] = "{col:" .. COL_SCORE .. "}" .. tostring(equipado.mainhand) .. "{/col}" end
-        if equipado.offhand then armas[#armas + 1] = "{col:" .. COL_SCORE .. "}" .. tostring(equipado.offhand) .. "{/col}" end
-        ficha[#ficha + 1] = "{h3}{icon:" .. ICON_WEAPON .. ":25} Armas "
-            .. table.concat(armas, " {col:cccccc}||{/col} ") .. "{/h3}"
+    -- Formato de mesa (perfil de referencia 2026-09-06): cabecera "Armas" y una linea h3 por
+    -- arma — nombre en gris, dado + Mod. de caracteristica + Tipo en naranja, propiedades en
+    -- cian. El mod sigue la regla base del arma (a distancia Destreza; Sutil la mejor de
+    -- Fuerza/Destreza; el resto Fuerza); un escudo en la mano secundaria se lista sin daño.
+    local function LineaDeArma(nombre, def)
+        local linea = "{h3}{col:" .. COL_SCORE .. "}- " .. tostring(nombre) .. "{/col}"
+        if def then
+            local dados = tostring(def.dmgN or 1) .. "d" .. tostring(def.dmgS or 4)
+            local mod = 0
+            if def.addAbi and Calc and Calc.GetAbilityMod then
+                if def.mode == "Ranged" then
+                    mod = tonumber(Calc.GetAbilityMod("Destreza")) or 0
+                else
+                    local sutil = false
+                    for _, p in ipairs(def.props or {}) do
+                        if tostring(p):find("Sutil") then sutil = true break end
+                    end
+                    local fue = tonumber(Calc.GetAbilityMod("Fuerza")) or 0
+                    if sutil then
+                        local des = tonumber(Calc.GetAbilityMod("Destreza")) or 0
+                        mod = (des >= fue) and des or fue
+                    else
+                        mod = fue
+                    end
+                end
+            end
+            local modTxt = ""
+            if mod > 0 then modTxt = " + " .. mod elseif mod < 0 then modTxt = " - " .. (-mod) end
+            local tipo = tostring(def.dmgType or "")
+            tipo = tipo:sub(1, 1):upper() .. tipo:sub(2)
+            linea = linea .. "{col:" .. COL_DERIVED .. "} " .. dados .. modTxt .. " " .. tipo .. "{/col}"
+            local props = table.concat(def.props or {}, ", ")
+            if props ~= "" then linea = linea .. "{col:00ffff} " .. props .. "{/col}" end
+        end
+        return linea .. "{/h3}"
+    end
+    local armasLineas = {}
+    if equipado.mainhand then armasLineas[#armasLineas + 1] = LineaDeArma(equipado.mainhand, equipado.mainhandDef) end
+    if equipado.offhand then armasLineas[#armasLineas + 1] = LineaDeArma(equipado.offhand, equipado.offhandDef) end
+    for _, a in ipairs(equipado.armas or {}) do
+        armasLineas[#armasLineas + 1] = LineaDeArma(a.nombre, a.def)
+    end
+    if #armasLineas > 0 then
+        ficha[#ficha + 1] = "{h3}{icon:" .. ICON_WEAPON .. ":25} Armas {/h3}"
+        for _, l in ipairs(armasLineas) do ficha[#ficha + 1] = l end
     end
     -- Competencia (+PB): armas, armaduras, herramientas, salvaciones y habilidades.
     local pb = (Calc and Calc.GetPB and Calc.GetPB()) or 2
@@ -2005,9 +2048,16 @@ function API.SplitStartingEquipment(items)
         elseif arma and not principal then
             principal = arma
             equipado.mainhand = nombre
+            equipado.mainhandDef = arma
         elseif not equipado.offhand and principal and not EsDosManos(principal)
             and (EsEscudo(nombre) or (arma and not EsDosManos(arma))) then
             equipado.offhand = nombre
+            equipado.offhandDef = arma  -- nil si es escudo
+        elseif arma then
+            -- Un arma mas alla de las manos (la pistola al cinto): se lista en la linea de
+            -- Armas de la Ficha, no en el resto del equipo.
+            equipado.armas = equipado.armas or {}
+            equipado.armas[#equipado.armas + 1] = { nombre = nombre, def = arma }
         else
             resto[#resto + 1] = nombre
         end

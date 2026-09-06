@@ -618,11 +618,12 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
     if extraDamageDice and extraDamageDice ~= "" and responseTarget and HarfordSync and HarfordSync.SendRequestedSaveResult then
         HarfordSync.SendRequestedSaveResult(K.ADDON_PREFIX, responseTarget, saved, sourceGuid)
     end
-    -- El nombre de la accion delante ("[Empujar] de Fulano Atletismo ..."): sin el, la linea
-    -- del defensor es una prueba huerfana, y sin el "de <atacante>" se leia AL REVES — "DM
-    -- [Empujar] Atletismo..." parecia que la victima era quien empujaba. Por la red viaja solo
-    -- el NOMBRE (un hyperlink no cabe en el campo), asi que el enlace clicable se reconstruye
-    -- AQUI desde el catalogo local de acciones basicas; sin coincidencia, texto plano.
+    -- FORMATO DE MESA (2026-09-06): la linea del defensor sale como cualquier gesto dirigido —
+    -- "Origen [link] Destino tirada vs CD DESENLACE" — con el ATACANTE de ORIGEN y la victima
+    -- de destino: "Griker [Empujar] DM Atletismo 6 vs CD 6 EXITO". Con la victima de origen
+    -- ("DM [Empujar] Atletismo...") la linea se leia AL REVES, como si la victima empujara.
+    -- Por la red viaja solo el NOMBRE de la accion (un hyperlink no cabe en el campo), asi que
+    -- el enlace clicable se reconstruye AQUI desde el catalogo local de acciones basicas.
     local accion = tostring(actionName or "")
     local prefijoAccion = ""
     if accion ~= "" then
@@ -636,16 +637,24 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
                 end
             end
         end
-        local deQuien = (sourceName and sourceName ~= "" and (" de " .. tostring(sourceName))) or ""
-        prefijoAccion = (enlace or ("[" .. accion .. "]")) .. deQuien .. " "
+        local victima = (HarfordDnDStore and HarfordDnDStore.ColoredUnitName
+            and HarfordDnDStore.ColoredUnitName("player")) or ""
+        if victima == "" then
+            victima = (HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName()) or ""
+        end
+        prefijoAccion = (enlace or ("[" .. accion .. "]"))
+            .. (victima ~= "" and (" " .. victima) or "") .. " "
     end
+    local conAtacante = accion ~= "" and sourceName and sourceName ~= ""
     local rollData = {
         type = "info",
         label = prefijoAccion .. (skillDef
             and FormatCheckRollLabel(skillDef.name, total, d, dc, result, base, prof)
             or FormatSaveRollLabel(ability, total, d, dc, result, base, prof)),
-        -- La salvacion la haces TU, no la ficha que tengas cargada.
-        player = HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName() or nil,
+        -- Con accion y atacante conocidos, el ORIGEN de la linea es el atacante (formato de
+        -- mesa); si no, la salvacion la haces TU — no la ficha que tengas cargada.
+        player = (conAtacante and tostring(sourceName))
+            or (HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName()) or nil,
     }
     HarfordDnDRolls.Broadcast(rollData)
     if responseTarget and responseTarget ~= "" and HarfordSync and HarfordSync.Send

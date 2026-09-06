@@ -153,11 +153,18 @@ chk("DOSAVE lo serializa como ultimo campo",
     sync:find('SaveRequestField(tostring(actionName or ""):sub(1, 40))', 1, true) ~= nil, true)
 chk("el receptor lo desempaqueta y lo pasa",
     comm:find("saveExtraDice, saveExtraType, saveSkill, saveActionName)", 1, true) ~= nil, true)
--- Y con "de <atacante>" delante de la tirada: sin el, "DM [Empujar] Atletismo..." se leia AL
--- REVES, como si la victima fuera quien empujaba. El atacante viaja en sourceName.
-chk("la victima lo pone delante, nombrando al atacante",
-    wr:find('prefijoAccion = (enlace or ("[" .. accion .. "]")) .. deQuien .. " "', 1, true) ~= nil
-    and wr:find('local deQuien = (sourceName and sourceName ~= "" and (" de " .. tostring(sourceName))) or ""', 1, true) ~= nil, true)
+-- FORMATO DE MESA en la defensa: "Origen [link] Destino tirada vs CD DESENLACE" con el
+-- ATACANTE de origen (viaja en sourceName) y la victima de destino. Con la victima de origen
+-- ("DM [Empujar] Atletismo...") la linea se leia AL REVES, como si la victima empujara.
+chk("el atacante es el origen de la linea del defensor",
+    wr:find('player = (conAtacante and tostring(sourceName))', 1, true) ~= nil, true)
+chk("y la victima va de destino tras el enlace",
+    wr:find('local victima = (HarfordDnDStore and HarfordDnDStore.ColoredUnitName', 1, true) ~= nil
+    and wr:find('.. (victima ~= "" and (" " .. victima) or "") .. " "', 1, true) ~= nil, true)
+-- Sin accion (salvaciones post-impacto de maniobras) todo sigue como estaba: tu linea, tu
+-- nombre de origen.
+chk("sin accion, la victima sigue siendo el origen",
+    wr:find('or (HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName()) or nil,', 1, true) ~= nil, true)
 
 -- La linea del atacante DECLARA la intencion elegida: "Derribar"/"Agarrado" en el color de
 -- estado (deja uno) o "Apartar 1,5 m" tal cual. Antes solo se sabia si el defensor fallaba.

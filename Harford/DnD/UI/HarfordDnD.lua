@@ -2407,11 +2407,12 @@ local function FormatSaveRollLabel(ability, total, die, dc, outcomeText, ...)
     total = tonumber(total) or 0
     local formula = FormatSaveFormula(die, ...)
     -- Solo muestra la formula (dado+bonus) si aporta algo sobre el total; si no, evita el "10 (10..."
-    -- duplicado. Resultado: "Salv CON 10 vs CD 13: <outcome>" o "Salv CON 8+2=10 vs CD 13: ...".
+    -- duplicado. Resultado: "Salv CON 10 vs CD 13 <outcome>" o "Salv CON 8+2=10 vs CD 13 ..."
+    -- (sin colon antes del desenlace: formato de mesa 2026-09-06).
     local rollStr = (formula == tostring(total))
         and string.format("|cff66ccff%d|r", total)
         or string.format("|cffb0b0b0%s=|r|cff66ccff%d|r", formula, total)
-    return string.format("Salv %s %s vs CD %d: %s",
+    return string.format("Salv %s %s vs CD %d %s",
         GetSaveAbilityShort(ability), rollStr, tonumber(dc) or 0, tostring(outcomeText or ""))
 end
 
@@ -2423,7 +2424,7 @@ local function FormatCheckRollLabel(skillName, total, die, dc, outcomeText, ...)
     local rollStr = (formula == tostring(total))
         and string.format("|cff66ccff%d|r", total)
         or string.format("|cffb0b0b0%s=|r|cff66ccff%d|r", formula, total)
-    return string.format("%s %s vs CD %d: %s",
+    return string.format("%s %s vs CD %d %s",
         tostring(skillName or "Prueba"), rollStr, tonumber(dc) or 0, tostring(outcomeText or ""))
 end
 

@@ -54,7 +54,12 @@ local dnd = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
 local wr = io.open("Harford/DnD/Engine/HarfordDnDWeaponRolls.lua"):read("*a")
 local ar = io.open("Harford/DnD/Engine/HarfordDnDArea.lua"):read("*a")
 chk("dano recibido", dnd:find("player = HarfordDnDRolls.GetOwnName", 1, true) ~= nil, true)
-chk("salvacion pedida", wr:find("player = HarfordDnDRolls.GetOwnName", 1, true) ~= nil, true)
+-- 2026-09-06: en una CONTIENDA (accion + atacante conocidos) el origen de la linea es el
+-- ATACANTE — formato de mesa "Origen [link] Destino tirada" — y el nombre propio queda de
+-- respaldo para las salvaciones sin accion (post-impacto de maniobras).
+chk("salvacion pedida",
+    wr:find("player = (conAtacante and tostring(sourceName))", 1, true) ~= nil
+    and wr:find("or (HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName()) or nil,", 1, true) ~= nil, true)
 chk("resolucion de area del defensor", ar:find("BroadcastInfo(label, sender, true)", 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

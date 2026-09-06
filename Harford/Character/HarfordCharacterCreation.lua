@@ -68,7 +68,7 @@ local SUBRACE_FRAME_ICONS = {
     -- noble usa el arte de alto elfo que ya empleaba el semielfo (mismo linaje quel'dorei).
     raza_elfo_sangre = {
         raza_elfo_sangre_sindorei = { "achievement_character_bloodelf_male", "achievement_character_bloodelf_female" },
-        raza_elfo_sangre_noble    = { "eps_wc3h_highelfrangermale", "eps_wc3h_highelfbaddiegirl" },
+        raza_elfo_sangre_noble    = { "eps_wc3h_highelfswordsman", "eps_wc3h_highelfpriestess" },
     },
     raza_enano = {
         raza_enano_forjaz           = { "dwarf_m", "dwarf_f" },

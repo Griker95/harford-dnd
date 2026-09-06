@@ -5216,6 +5216,13 @@ do
                 menu[#menu + 1] = { text = "Conjuros", notCheckable = true, hasArrow = true, menuList = espacios }
             end
         end
+        -- HarfordAdmin ENGANCHA aqui (patron InsertGlanceLink): el MISMO boton, con la
+        -- funcionalidad de DM anadida al final del menu — el Admin no crea otro boton en el
+        -- PlayerFrame. El core no comprueba autoridad: la valida el gancho, que solo anade
+        -- su entrada cuando procede.
+        if type(API.ExtendPlayerGearMenu) == "function" then
+            API.ExtendPlayerGearMenu(menu)
+        end
         return menu
     end
 
@@ -5300,8 +5307,8 @@ do
     -- frame Harford del player (si esta visible; si no, al PlayerFrame nativo), sincroniza
     -- strata/level con el parent (por eso no vale dejarlo en UIParent/MEDIUM: quedaba en otra
     -- capa y otra posicion que el boton del Admin) y coloca el CENTER en el borde derecho del
-    -- retrato MEDIDO (GetMeasuredLayout). Si el boton del Admin esta visible (DM con .ph dm),
-    -- el del core se pega a su derecha: son menus distintos y el DM usa los dos.
+    -- retrato MEDIDO (GetMeasuredLayout). Es EL UNICO boton del PlayerFrame: con Admin, ese
+    -- mismo boton gana el menu DM via los ganchos, no aparece un segundo engranaje.
     local function ColocarGear()
         local parent = API.GetFrame and API.GetFrame("player")
         if not (parent and parent.IsShown and parent:IsShown()) then parent = _G.PlayerFrame end
@@ -5312,32 +5319,31 @@ do
         local overlay = _G.PlayerFrameTextureFrame
         local overlayLevel = (overlay and overlay.GetFrameLevel and overlay:GetFrameLevel()) or parentLevel
         gear:SetFrameLevel(math.max(parentLevel, overlayLevel) + 10)
-        local admin = _G["HarfordAdminUnitMenuPlayerButton"]
-        local offset = (admin and admin.IsVisible and admin:IsVisible()) and 22 or 0
         gear:ClearAllPoints()
         local layout = API.GetMeasuredLayout and API.GetMeasuredLayout("player", false)
         local box = layout and (layout.portrait or layout.name or layout.health)
         if box then
             gear:SetPoint("CENTER", parent, "TOPLEFT",
-                (box.x or 0) + (box.width or 0) - 2 + offset, -((box.y or 0) + 13))
+                (box.x or 0) + (box.width or 0) - 2, -((box.y or 0) + 13))
         else
-            gear:SetPoint("TOPLEFT", parent, "TOPLEFT", 78 + offset, -18)
+            gear:SetPoint("TOPLEFT", parent, "TOPLEFT", 78, -18)
         end
     end
-    -- Se re-ancla por los MISMOS caminos que el boton del Admin: API.Refresh (que ya re-ancla
-    -- los suyos) llama a este export, y el cambio de autoridad cubre aparecer/desaparecer el
-    -- boton Admin con .ph dm (diferido puntual: el Admin refresca su visibilidad en ese cambio).
+    -- Se re-ancla por el MISMO camino que los botones del Admin: API.Refresh llama este export.
     API.ReanchorPlayerGear = ColocarGear
     ColocarGear()
-    if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
-        HarfordAuthority.RegisterChangeListener("HarfordPlayerGear", function()
-            if C_Timer and C_Timer.After then C_Timer.After(0, ColocarGear) else ColocarGear() end
-        end)
-    end
 
-    gear:SetScript("OnClick", function(self)
-        if not EasyMenu then return end
+    gear:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    gear:SetScript("OnClick", function(self, mouseButton)
         ColocarGear()
+        -- Click derecho: atajo del DM al menu Admin sobre este MISMO boton (gancho de
+        -- HarfordAdmin; sin Admin o sin permiso no hay gancho o devuelve false y cae al
+        -- menu normal del jugador).
+        if mouseButton == "RightButton" and type(API.PlayerGearRightClick) == "function"
+            and API.PlayerGearRightClick(self) then
+            return
+        end
+        if not EasyMenu then return end
         gear._menu = gear._menu or CreateFrame("Frame", "HarfordPlayerGearMenu", UIParent, "UIDropDownMenuTemplate")
         EasyMenu(ConstruirMenu(), gear._menu, self, 0, 0, "MENU")
     end)
@@ -5347,6 +5353,9 @@ do
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:AddLine("Harford", 1, 0.82, 0)
         GameTooltip:AddLine("Tus estados y devoluciones de turno.", 1, 1, 1)
+        if type(API.PlayerGearRightClick) == "function" then
+            GameTooltip:AddLine("Click derecho: menú DM.", 1, 1, 1)
+        end
         GameTooltip:Show()
     end)
     gear:SetScript("OnLeave", function() if GameTooltip then GameTooltip:Hide() end end)

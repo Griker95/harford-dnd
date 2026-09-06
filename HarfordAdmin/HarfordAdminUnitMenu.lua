@@ -1169,10 +1169,29 @@ local function CreateUnitButton(key, parentName, unit, point, relPoint, x, y)
 end
 
 function API.AttachButtons()
-    CreateUnitButton("Player", "PlayerFrame", "player", "TOPLEFT", "TOPLEFT", 78, -18)
+    -- El PlayerFrame ya tiene el engranaje del core (HarfordPlayerGearButton): el Admin NO crea
+    -- otro boton ahi (decision de mesa 2026-09-06) — le anade su funcionalidad via los ganchos
+    -- ExtendPlayerGearMenu/PlayerGearRightClick de abajo. Solo el Target conserva boton propio.
     CreateUnitButton("Target", "TargetFrame", "target", "TOPRIGHT", "TOPRIGHT", -78, -18)
     API.RefreshAnchors()
     API.RefreshVisibility()
+end
+
+-- Ganchos sobre el engranaje del core (patron InsertGlanceLink: el core llama si existen, la
+-- autoridad se valida AQUI). Entrada "Menu DM" al final del menu del engranaje, y click derecho
+-- como atajo directo al menu Admin sobre el mismo boton.
+if HarfordUnitFrames then
+    function HarfordUnitFrames.ExtendPlayerGearMenu(menu)
+        if not IsAllowed() then return end
+        menu[#menu + 1] = { text = "Harford Admin", isTitle = true, notCheckable = true }
+        menu[#menu + 1] = { text = "Menú DM", notCheckable = true, func = function()
+            API.Open("player", _G.HarfordPlayerGearButton)
+        end }
+    end
+    function HarfordUnitFrames.PlayerGearRightClick(anchor)
+        if not IsAllowed() then return false end
+        return API.Open("player", anchor) and true or false
+    end
 end
 
 function API.RefreshAnchors()
@@ -1183,9 +1202,6 @@ end
 
 function API.RefreshVisibility()
     local allowed = IsAllowed()
-    if buttons.Player then
-        buttons.Player:SetShown(allowed and UnitExistsSafe("player"))
-    end
     if buttons.Target then
         buttons.Target:SetShown(allowed and UnitExistsSafe("target"))
     end

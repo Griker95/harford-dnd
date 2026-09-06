@@ -281,14 +281,30 @@ chk("con el arte del boton Admin, no el engranaje amarillo",
 -- Y el anclaje esta CALCADO de AnchorUnitButton del Admin, no es un offset fijo sobre el
 -- PlayerFrame nativo (asi salia en otra posicion y otra capa): parent = frame Harford del
 -- player si esta visible, strata/level sincronizados, y CENTER en el borde derecho del retrato
--- MEDIDO. Se re-ancla por el mismo camino que los botones del Admin (API.Refresh) y se aparta
--- a la derecha si el boton Admin esta visible (DM con .ph dm usa los dos menus).
+-- MEDIDO. Se re-ancla por el mismo camino que los botones del Admin (API.Refresh).
 chk("parentado y medido como el boton Admin",
     uf:find('local parent = API.GetFrame and API.GetFrame("player")', 1, true) ~= nil
     and uf:find('local layout = API.GetMeasuredLayout and API.GetMeasuredLayout("player", false)', 1, true) ~= nil
-    and uf:find("(box.x or 0) + (box.width or 0) - 2 + offset, -((box.y or 0) + 13))", 1, true) ~= nil, true)
-chk("re-anclado en API.Refresh y apartandose del boton Admin",
-    uf:find("if API.ReanchorPlayerGear then API.ReanchorPlayerGear() end", 1, true) ~= nil
-    and uf:find('_G["HarfordAdminUnitMenuPlayerButton"]', 1, true) ~= nil, true)
+    and uf:find("(box.x or 0) + (box.width or 0) - 2, -((box.y or 0) + 13))", 1, true) ~= nil, true)
+chk("re-anclado en API.Refresh",
+    uf:find("if API.ReanchorPlayerGear then API.ReanchorPlayerGear() end", 1, true) ~= nil, true)
+-- ES EL UNICO boton del PlayerFrame (decision de mesa 2026-09-06): el Admin NO crea otro
+-- engranaje ahi — anade su funcionalidad a ESTE via ganchos sobrescribibles (patron
+-- InsertGlanceLink): entrada "Menu DM" al final del menu (ExtendPlayerGearMenu) y click
+-- derecho como atajo (PlayerGearRightClick). La autoridad la valida el GANCHO en el Admin
+-- (IsAllowed), nunca el core.
+chk("el core llama al gancho de menu si existe",
+    uf:find("if type(API.ExtendPlayerGearMenu) == \"function\" then", 1, true) ~= nil
+    and uf:find("API.ExtendPlayerGearMenu(menu)", 1, true) ~= nil, true)
+chk("y al de click derecho",
+    uf:find('gear:RegisterForClicks("LeftButtonUp", "RightButtonUp")', 1, true) ~= nil
+    and uf:find("API.PlayerGearRightClick(self)", 1, true) ~= nil, true)
+chk("el Admin ya no crea boton en el PlayerFrame",
+    menuAdm:find('CreateUnitButton("Player"', 1, true), "nil")
+chk("el Admin instala ambos ganchos validando autoridad dentro",
+    menuAdm:find("function HarfordUnitFrames.ExtendPlayerGearMenu(menu)", 1, true) ~= nil
+    and menuAdm:find("function HarfordUnitFrames.PlayerGearRightClick(anchor)", 1, true) ~= nil
+    and select(2, menuAdm:sub((menuAdm:find("function HarfordUnitFrames.ExtendPlayerGearMenu(menu)", 1, true)))
+        :gsub("if not IsAllowed%(%) then return", "")) >= 2, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

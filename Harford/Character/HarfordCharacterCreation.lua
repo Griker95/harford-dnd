@@ -1215,10 +1215,45 @@ function API.BuildAbout(draft, profileName)
     if mana > 0 then
         ficha[#ficha + 1] = "{h3}{icon:" .. ICON_MANA .. ":25} PM{col:" .. COL_DERIVED .. "} " .. mana .. "{/col}{/h3}"
     end
+    -- Armadura y armas EQUIPADAS con su NOMBRE REAL: el texto "Sin armadura" iba HARDCODEADO
+    -- aunque llevaras cota de malla, y las armas no salian en NINGUN sitio — la seccion Equipo
+    -- las excluia "porque ya salen arriba" pero arriba no habia lineas de armas (ICON_WEAPON
+    -- llevaba definido sin usar desde entonces). Fuentes, de mas a menos fresca: la lista de
+    -- equipo inicial persistida y, si falta (ficha anterior a esa lista), la SELECCION BASICA
+    -- viva de los slots — la misma que pinta el panel del jugador.
+    local equipado = {}
+    do
+        local lista = (HarfordDnDProgression and HarfordDnDProgression.GetEquipmentList
+            and HarfordDnDProgression.GetEquipmentList(profileName)) or {}
+        equipado = API.SplitStartingEquipment(lista)
+        local I = HarfordDnDItems
+        if I then
+            if not equipado.armadura and I.GetBasicArmorInfo then
+                local info = I.GetBasicArmorInfo("Chest", profileName)
+                if info and info.label then equipado.armadura = tostring(info.label) end
+            end
+            if not equipado.mainhand and I.GetBasicWeaponInfo then
+                local info = I.GetBasicWeaponInfo("MainHand", profileName)
+                if info and info.label then equipado.mainhand = tostring(info.label) end
+            end
+            if not equipado.offhand and I.GetBasicWeaponInfo then
+                local info = I.GetBasicWeaponInfo("SecondaryHand", profileName)
+                if info and info.label then equipado.offhand = tostring(info.label) end
+            end
+        end
+    end
     local ca = HarfordDnDCombat and HarfordDnDCombat.ComputeSelfArmorClass and HarfordDnDCombat.ComputeSelfArmorClass()
     if tonumber(ca) then
         ficha[#ficha + 1] = "{h3}{icon:" .. ICON_ARMOR .. ":25} Armadura {col:" .. COL_SCORE
-            .. "}Sin armadura{/col}{col:" .. COL_DERIVED .. "} " .. tonumber(ca) .. "{/col}{/h3}"
+            .. "}" .. tostring(equipado.armadura or "Sin armadura") .. "{/col}{col:" .. COL_DERIVED
+            .. "} " .. tonumber(ca) .. "{/col}{/h3}"
+    end
+    if equipado.mainhand or equipado.offhand then
+        local armas = {}
+        if equipado.mainhand then armas[#armas + 1] = "{col:" .. COL_SCORE .. "}" .. tostring(equipado.mainhand) .. "{/col}" end
+        if equipado.offhand then armas[#armas + 1] = "{col:" .. COL_SCORE .. "}" .. tostring(equipado.offhand) .. "{/col}" end
+        ficha[#ficha + 1] = "{h3}{icon:" .. ICON_WEAPON .. ":25} Armas "
+            .. table.concat(armas, " {col:cccccc}||{/col} ") .. "{/h3}"
     end
     -- Competencia (+PB): armas, armaduras, herramientas, salvaciones y habilidades.
     local pb = (Calc and Calc.GetPB and Calc.GetPB()) or 2

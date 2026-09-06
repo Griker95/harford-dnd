@@ -156,4 +156,20 @@ print("4. Toda opcion de un slot tiene regla que mostrar")
 chk("opciones sin regla", #sinRegla, 0)
 for _, e in ipairs(sinRegla) do print("     " .. e) end
 
+-- ─── ARMADURA Y ARMAS EQUIPADAS EN LA FICHA (2026-09-06) ────────────────────
+-- "Sin armadura" iba HARDCODEADO en la linea de Armadura aunque llevaras cota de malla, y las
+-- armas equipadas no salian en NINGUN sitio: la seccion Equipo las excluia "porque ya salen
+-- arriba" pero arriba no habia lineas de armas (ICON_WEAPON llevaba definido sin usar). Ahora
+-- el nombre real sale de la lista de equipo inicial y, si falta (ficha anterior), de la
+-- SELECCION BASICA viva de los slots — la misma que pinta el panel del jugador.
+print("5. La Ficha nombra la armadura y las armas equipadas")
+local crea = io.open("Harford/Character/HarfordCharacterCreation.lua"):read("*a")
+chk("la armadura real, con Sin armadura solo de respaldo",
+    crea:find('tostring(equipado.armadura or "Sin armadura")', 1, true) ~= nil, true)
+chk("con la seleccion basica de los slots como respaldo",
+    crea:find('I.GetBasicArmorInfo("Chest", profileName)', 1, true) ~= nil
+    and crea:find('I.GetBasicWeaponInfo("MainHand", profileName)', 1, true) ~= nil, true)
+chk("y la linea de Armas por fin existe (ICON_WEAPON en uso)",
+    crea:find('ficha[#ficha + 1] = "{h3}{icon:" .. ICON_WEAPON .. ":25} Armas "', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

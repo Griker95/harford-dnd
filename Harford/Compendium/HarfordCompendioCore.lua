@@ -1487,6 +1487,13 @@ function API.AnnounceCastAttempt(spellId)
     return true
 end
 
+-- Conjuros cuyo estado SOLO entra en un NPC si su ALINEAMIENTO lo cumple (peticion de mesa
+-- 2026-09-06). Las palabras se buscan en la cabecera del stat block TRP3 del NPC, sin acentos
+-- y en minusculas; con dato que no cumple, el estado no se aplica y se avisa.
+local ALINEAMIENTO_REQUERIDO = {
+    proteccion_contra_el_bien_y_el_mal = { "bueno", "buena", "malign", "malvad" },
+}
+
 function API.ConfirmCast(spellId, options)
     local spell = API.GetSpellById(spellId)
     if not spell then return false, "Conjuro no encontrado" end
@@ -1530,10 +1537,12 @@ function API.ConfirmCast(spellId, options)
     local cost = tonumber(costOrErr) or 0
     -- EL ESTADO DEL CONJURO (catalogo generado `conjuro_<id>`, peticion de mesa 2026-09-06):
     -- un lanzamiento SOSTENIDO deja su estado PUESTO con el icono del conjuro — en el objetivo
-    -- si apuntas a un jugador o NPC amistoso, o en ti (tambien al apuntarte a ti mismo). La
-    -- FUENTE es el lanzador: es lo que permite que al perder la concentracion caigan tambien
-    -- los estados que mantenias sobre otros. Solo esta ruta de ANUNCIO: las de ataque y area
-    -- entran con `silent` y aplican su propia condicion al resolverse.
+    -- al que apuntas (CUALQUIER jugador o NPC: la faccion WoW no es dato de RP en Epsilon, y
+    -- quien cumple los requisitos del conjuro — el alineamiento de Proteccion contra el bien y
+    -- el mal, por ejemplo — lo juzga la mesa, no el cliente), o en ti si no apuntas a nadie o
+    -- te apuntas a ti mismo. La FUENTE es el lanzador: es lo que permite que al perder la
+    -- concentracion caigan tambien los estados que mantenias sobre otros. Solo esta ruta de
+    -- ANUNCIO: las de ataque y area entran con `silent` y aplican su propia condicion.
     do
         local C = HarfordDnDConditions
         if C and C.EnsureSpellStates and C.EnsureSpellStates() then
@@ -1544,8 +1553,41 @@ function API.ConfirmCast(spellId, options)
                     and HarfordDnDRolls.GetDisplayName()) or (UnitName and UnitName("player")) or ""
                 local aOtro = UnitExists and UnitExists("target")
                     and not (UnitIsUnit and UnitIsUnit("target", "player"))
-                    and UnitIsFriend and UnitIsFriend("player", "target")
-                if aOtro and C.ApplyToUnit then
+                -- REQUISITO DE ALINEAMIENTO sobre NPC (Proteccion contra el bien y el mal:
+                -- "todo NPC de alineamiento bueno o maligno"): el alineamiento vive en la
+                -- CABECERA del stat block TRP3 del NPC ("No-muerto mediano, caotico maligno").
+                -- Si el NPC declara alineamiento y NO cumple, el estado no entra y se avisa;
+                -- SIN dato no se bloquea (la mesa juzga). Los jugadores no se filtran: su
+                -- alineamiento no viaja.
+                local bloqueado = false
+                if aOtro and ALINEAMIENTO_REQUERIDO[tostring(spell.id)]
+                    and UnitIsPlayer and not UnitIsPlayer("target")
+                    and HarfordTRP3 and HarfordTRP3.GetNPCStatBlock then
+                    local bloque = HarfordTRP3.GetNPCStatBlock("target")
+                    local cabecera = tostring((bloque and bloque.rawHeader) or "")
+                    if HarfordClassColors and HarfordClassColors.StripAccents then
+                        cabecera = HarfordClassColors.StripAccents(cabecera)
+                    end
+                    cabecera = cabecera:lower()
+                    if cabecera ~= "" then
+                        local cumple = false
+                        for _, palabra in ipairs(ALINEAMIENTO_REQUERIDO[tostring(spell.id)]) do
+                            if cabecera:find(palabra, 1, true) then cumple = true break end
+                        end
+                        if not cumple then
+                            -- El conjuro iba SOBRE el NPC: si no cumple, no se aplica a NADIE
+                            -- (caer a ponertelo a ti seria inventarse otro objetivo).
+                            bloqueado = true
+                            if HarfordChat and HarfordChat.Print then
+                                HarfordChat.Print(tostring(spell.name or spell.id)
+                                    .. ": el alineamiento del objetivo no aplica (" .. cabecera .. ").")
+                            end
+                        end
+                    end
+                end
+                if bloqueado then
+                    -- sin estado: el requisito del conjuro no se cumple
+                elseif aOtro and C.ApplyToUnit then
                     C.ApplyToUnit("target", stateId,
                         { duration = "manual", sourceGuid = miGuid, sourceName = miNombre })
                 elseif C.ApplyOwned then

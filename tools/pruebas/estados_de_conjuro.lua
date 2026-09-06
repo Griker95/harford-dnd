@@ -196,14 +196,31 @@ chk("y el lanzador barre sus registros locales",
 chk("la concentracion se restaura al entrar al mundo",
     conc:find('ev:RegisterEvent("PLAYER_ENTERING_WORLD")', 1, true) ~= nil
     and conc:find("stateApplied = true,", 1, true) ~= nil, true)
--- LANZAR un conjuro sostenido APLICA su estado (2026-09-06): en el objetivo amistoso si
--- apuntas a otro, o en ti. Solo la ruta de ANUNCIO de ConfirmCast (ataque y area entran con
--- silent y aplican su propia condicion). La fuente es el lanzador: el arrastre de
+-- LANZAR un conjuro sostenido APLICA su estado (2026-09-06): en el objetivo al que apuntas —
+-- CUALQUIER jugador o NPC, sin filtro UnitIsFriend (la faccion WoW no es dato de RP en
+-- Epsilon; los requisitos del conjuro, como el alineamiento de Proteccion contra el bien y el
+-- mal, los juzga la mesa) — o en ti. Solo la ruta de ANUNCIO de ConfirmCast (ataque y area
+-- entran con silent y aplican su propia condicion). La fuente es el lanzador: el arrastre de
 -- concentracion depende de ella.
 local core = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
 chk("ConfirmCast aplica el estado del conjuro al anunciar",
     core:find('local stateId = "conjuro_" .. tostring(spell.id)', 1, true) ~= nil
     and core:find('C.ApplyToUnit("target", stateId,', 1, true) ~= nil, true)
+-- Sin filtro de faccion WoW (no es dato de RP en Epsilon); el UNICO filtro es el requisito de
+-- ALINEAMIENTO declarado por conjuro (Proteccion contra el bien y el mal): se lee de la
+-- cabecera del stat block TRP3 del NPC, sin acentos; con dato que no cumple NO se aplica a
+-- NADIE (caer a ponertelo a ti seria inventarse otro objetivo) y se avisa; sin dato no se
+-- bloquea. Los jugadores no se filtran: su alineamiento no viaja.
+chk("sin filtro de faccion WoW",
+    core:find("UnitIsFriend", 1, true) == nil, true)
+chk("el requisito de alineamiento es declarativo",
+    core:find('proteccion_contra_el_bien_y_el_mal = { "bueno", "buena", "malign", "malvad" },', 1, true) ~= nil, true)
+chk("se lee del stat block TRP3 del NPC",
+    core:find('local bloque = HarfordTRP3.GetNPCStatBlock("target")', 1, true) ~= nil
+    and core:find("bloque and bloque.rawHeader", 1, true) ~= nil, true)
+chk("con dato que no cumple, no se aplica a nadie",
+    core:find("bloqueado = true", 1, true) ~= nil
+    and core:find("if bloqueado then", 1, true) ~= nil, true)
 chk("con el lanzador como fuente y publicandolo si es propio",
     core:find('{ duration = "manual", sourceGuid = miGuid, sourceName = miNombre })\n                        and C.PublishOwnedCondition then', 1, true) ~= nil, true)
 chk("solo la ruta de anuncio (tras el corte de silent)",

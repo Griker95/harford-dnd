@@ -76,6 +76,20 @@ function API.Break(reason)
     current = nil
     if HarfordDnDConditions and HarfordDnDConditions.RemoveOwned then
         HarfordDnDConditions.RemoveOwned("concentrando")
+        -- El estado del CONJURO mantenido cae CON la concentracion (peticion de mesa
+        -- 2026-09-06): solo puedes concentrarte en uno, asi que se retira todo estado de
+        -- conjuro marcado `concentration` que lleves puesto, y se publica la retirada para
+        -- que el resto de clientes dejen de verlo.
+        if HarfordDnDConditions.GetActive then
+            for _, activo in ipairs(HarfordDnDConditions.GetActive("player")) do
+                if activo.definition and activo.definition.concentration then
+                    HarfordDnDConditions.RemoveOwned(activo.id)
+                    if HarfordDnDConditions.PublishOwnedCondition then
+                        HarfordDnDConditions.PublishOwnedCondition(activo.id, "remove")
+                    end
+                end
+            end
+        end
     end
     if reason then
         Announce(string.format("pierde la concentracion en %s (%s).", spell, reason))

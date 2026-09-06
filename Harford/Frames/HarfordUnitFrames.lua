@@ -5069,6 +5069,9 @@ do
     local function MenuEstados()
         local C = HarfordDnDConditions
         if not (C and C.CATEGORIES and C.GetDefinitionsForCategory) then return nil end
+        -- Los estados de CONJURO se generan perezosos desde el compendio (LoadOnDemand):
+        -- se piden al abrir este menu, que es donde el jugador va a buscarlos.
+        if C.EnsureSpellStates then C.EnsureSpellStates() end
         local categorias = {}
         for _, cat in ipairs(C.CATEGORIES) do
             local entradas = {}

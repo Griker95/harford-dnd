@@ -834,10 +834,12 @@ end
 
 -- Arte del estado. El que TIENE aura usa el icono del propio aura: es el que el jugador ya ve en
 -- pantalla, y declarar una segunda version solo serviria para que un dia dejaran de coincidir. Los
--- demas lo sacan del catalogo de iconos, que es la fuente unica de arte del proyecto.
+-- demas lo sacan del catalogo de iconos, que es la fuente unica de arte del proyecto. Los estados
+-- DE CONJURO llevan `spellIcon`: el MISMO FileDataID que declara el conjuro en el compendio.
 function API.GetIcon(conditionId)
     local def = API.DEFS[tostring(conditionId or "")]
     if not def then return nil end
+    if def.spellIcon then return def.spellIcon end
     if HarfordIconCatalog and HarfordIconCatalog.GetFeatureIcon then
         local icono = HarfordIconCatalog.GetFeatureIcon("harford_estado_" .. tostring(conditionId))
         if icono then return icono end
@@ -847,6 +849,90 @@ function API.GetIcon(conditionId)
         if textura then return textura end
     end
     return "Interface\\Icons\\INV_Misc_QuestionMark"
+end
+
+-- ─── ESTADOS DE CONJURO (peticion de mesa 2026-09-06) ────────────────────────
+-- TODO conjuro del compendio con duracion SOSTENIDA (no instantanea) existe como estado del
+-- catalogo: la mesa declara "llevo X puesto" desde el engranaje o el menu DM y el resto lo ve
+-- en la tira con el mismo icono del conjuro. Se generan PEREZOSOS: los datos viven en el addon
+-- LoadOnDemand HarfordCompendio (609 KB) y no estan cargados al arrancar, asi que la primera
+-- llamada los pide (GetAllSpells carga el addon). Entran en ORDER — una condicion fuera de
+-- ORDER no existe para GetActive (leccion de orden_condiciones) — y en CATEGORIES como
+-- categorias propias por NIVEL, troceadas para que ningun submenu desborde la pantalla.
+do
+    local generado = false
+    local TROZO = 22  -- filas por submenu; un dropdown mas largo se sale de pantalla
+
+    function API.EnsureSpellStates()
+        if generado then return true end
+        local compendio = _G.HarfordCompendioAPI
+        if not (compendio and compendio.GetAllSpells) then return false end
+        local ok, spells = pcall(compendio.GetAllSpells)
+        if not ok or type(spells) ~= "table" or #spells == 0 then return false end
+        generado = true
+
+        local nuevos = {}
+        for _, spell in ipairs(spells) do
+            local dur = tostring(spell.duration or "")
+            if spell.id and dur ~= "" and not dur:lower():find("instant", 1, true) then
+                local id = "conjuro_" .. tostring(spell.id)
+                if not API.DEFS[id] then
+                    local desc = dur
+                    if spell.concentration then desc = desc .. " (Concentracion)" end
+                    local mec = tostring(spell.mechanics or "")
+                    if mec ~= "" then desc = desc .. "\n" .. mec end
+                    API.DEFS[id] = {
+                        label = tostring(spell.name or spell.id),
+                        tracking = "state",
+                        spellIcon = spell.icon,
+                        spellLevel = tonumber(spell.level) or 0,
+                        concentration = spell.concentration == true,
+                        description = desc,
+                        effects = {},
+                    }
+                    nuevos[#nuevos + 1] = id
+                end
+            end
+        end
+        -- Orden ESTABLE (nivel y despues nombre sin acentos): ORDER es tambien el orden de
+        -- presentacion de la tira y no puede bailar entre sesiones.
+        table.sort(nuevos, function(a, b)
+            local da, db = API.DEFS[a], API.DEFS[b]
+            if da.spellLevel ~= db.spellLevel then return da.spellLevel < db.spellLevel end
+            local na = (HarfordClassColors and HarfordClassColors.StripAccents
+                and HarfordClassColors.StripAccents(da.label)) or da.label
+            local nb = (HarfordClassColors and HarfordClassColors.StripAccents
+                and HarfordClassColors.StripAccents(db.label)) or db.label
+            return tostring(na):lower() < tostring(nb):lower()
+        end)
+        local porNivel = {}
+        for _, id in ipairs(nuevos) do
+            API.ORDER[#API.ORDER + 1] = id
+            local nivel = API.DEFS[id].spellLevel
+            porNivel[nivel] = porNivel[nivel] or {}
+            porNivel[nivel][#porNivel[nivel] + 1] = id
+        end
+        for nivel = 0, 9 do
+            local lista = porNivel[nivel]
+            if lista then
+                local etiqueta = nivel == 0 and "Conjuros: trucos" or ("Conjuros: nivel " .. nivel)
+                local trozos = math.ceil(#lista / TROZO)
+                for t = 1, trozos do
+                    local ids = {}
+                    for i = (t - 1) * TROZO + 1, math.min(t * TROZO, #lista) do
+                        ids[#ids + 1] = lista[i]
+                    end
+                    API.CATEGORIES[#API.CATEGORIES + 1] = {
+                        id = "conjuros_" .. nivel .. (trozos > 1 and ("_" .. t) or ""),
+                        label = etiqueta .. (trozos > 1 and string.format(" (%d/%d)", t, trozos) or ""),
+                        ids = ids,
+                    }
+                end
+            end
+        end
+        Notify()
+        return true
+    end
 end
 
 -- El numero que lleva una condicion activa, o nil si no lleva ninguno.
@@ -2764,7 +2850,16 @@ function API.HandleMessage(message, sender)
     end
     local state = HarfordSync.DeserializeConditionState and HarfordSync.DeserializeConditionState(message)
     if state then
-        if IsTrustedSender(sender) then CacheRemoteState(state, sender) end
+        if IsTrustedSender(sender) then
+            -- Un `conjuro_*` que este cliente aun no genero (los estados de conjuro son
+            -- perezosos): generar el catalogo antes de cachear, o el estado remoto no
+            -- resolveria definicion y no se pintaria.
+            local cid = tostring(state.conditionId or "")
+            if cid:find("^conjuro_") and not API.DEFS[cid] and API.EnsureSpellStates then
+                API.EnsureSpellStates()
+            end
+            CacheRemoteState(state, sender)
+        end
         return true
     end
     -- Un efecto que delegue no se pudo aplicar. Motivos: `cola` = la cola de pendientes del

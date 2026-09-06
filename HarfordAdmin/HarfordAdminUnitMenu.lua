@@ -471,6 +471,10 @@ end
 -- Los 39 estados en plano eran ilegibles: un submenu por categoria del catalogo. La menuList
 -- lleva la categoria dentro ("ESTADOS:manual") y el dispatcher la desempaqueta.
 local function AddEstadoSubmenus(level)
+    -- Estados de conjuro perezosos: se generan del compendio al abrir el menu (ver core).
+    if HarfordDnDConditions and HarfordDnDConditions.EnsureSpellStates then
+        HarfordDnDConditions.EnsureSpellStates()
+    end
     local categorias = HarfordDnDConditions and HarfordDnDConditions.CATEGORIES
     if type(categorias) ~= "table" or #categorias == 0 then
         AddSubmenu("Estados", "ESTADOS", level)

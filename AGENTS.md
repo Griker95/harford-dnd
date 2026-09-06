@@ -447,6 +447,19 @@ Modularizacion de `HarfordDnD.lua` (refactor de descarga de chunk):
   `RefundTurnMovement`, y accion/adicional/reaccion via `Turn.Refund`). Es autogestion de LO
   PROPIO por vias que ya existian en el core — el gesto solo las reune; no confundir con el menu
   DM de AdminUnitMenu (estados y auras sobre OTROS). Candado en `tira_estados`.
+- **Estados de CONJURO generados del compendio (2026-09-06)**: TODO conjuro con duracion
+  sostenida (no instantanea) existe como estado `conjuro_<spellId>` del catalogo, con `spellIcon`
+  = el FileDataID del conjuro (GetIcon lo devuelve ANTES que el catalogo de iconos), label = el
+  nombre del conjuro y flag `concentration`. Se generan PEREZOSOS via
+  `HarfordDnDConditions.EnsureSpellStates()` — los datos viven en el addon LoadOnDemand
+  HarfordCompendio y no estan al arrancar — desde el menu del engranaje, el menu DM
+  (AddEstadoSubmenus) y el receptor de DNDCONDSTATE si llega un `conjuro_*` desconocido. Entran
+  en ORDER (fuera de ORDER no existirian para GetActive) con orden ESTABLE (nivel, nombre sin
+  acentos) y en CATEGORIES como categorias por NIVEL troceadas a 22 filas por submenu
+  ("Conjuros: nivel 2 (1/2)") para no desbordar el dropdown. **La concentracion ARRASTRA**: al
+  romperse (`HarfordDnDConcentration.Break`), se retira ademas todo estado de conjuro con
+  `concentration` que lleve el jugador — solo puedes concentrarte en uno — y se publica la
+  retirada. Suite ejecutable con compendio falso: `estados_de_conjuro`.
 - **El engranaje es EL UNICO boton del PlayerFrame y el Admin le AÑADE, no duplica (2026-09-06)**:
   lleva el MISMO arte que StyleButton del Admin (circulo de minimapa + `INV_Misc_Gear_01`
   enmascarado + borde de tracking; el engranaje amarillo plano de `UI-OptionsButton` desentonaba

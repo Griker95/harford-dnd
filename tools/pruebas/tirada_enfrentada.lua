@@ -153,8 +153,21 @@ chk("DOSAVE lo serializa como ultimo campo",
     sync:find('SaveRequestField(tostring(actionName or ""):sub(1, 40))', 1, true) ~= nil, true)
 chk("el receptor lo desempaqueta y lo pasa",
     comm:find("saveExtraDice, saveExtraType, saveSkill, saveActionName)", 1, true) ~= nil, true)
-chk("la victima lo pone delante de su tirada",
-    wr:find('prefijoAccion = (enlace or ("[" .. accion .. "]")) .. " "', 1, true) ~= nil, true)
+-- Y con "de <atacante>" delante de la tirada: sin el, "DM [Empujar] Atletismo..." se leia AL
+-- REVES, como si la victima fuera quien empujaba. El atacante viaja en sourceName.
+chk("la victima lo pone delante, nombrando al atacante",
+    wr:find('prefijoAccion = (enlace or ("[" .. accion .. "]")) .. deQuien .. " "', 1, true) ~= nil
+    and wr:find('local deQuien = (sourceName and sourceName ~= "" and (" de " .. tostring(sourceName))) or ""', 1, true) ~= nil, true)
+
+-- La linea del atacante DECLARA la intencion elegida: "Derribar"/"Agarrado" en el color de
+-- estado (deja uno) o "Apartar 1,5 m" tal cual. Antes solo se sabia si el defensor fallaba.
+print("El atacante declara que intenta")
+chk("la opcion elegida, coloreada si deja estado",
+    wr:find('if estado then texto = "|cffff6b6b" .. texto .. "|r" end', 1, true) ~= nil, true)
+chk("sin opcion, el estado por defecto coloreado",
+    wr:find('intencion = " " .. EtiquetaDeEstado(estado, tostring(estado))', 1, true) ~= nil, true)
+chk("y viaja en el prefijo del atacante y la consolidada",
+    wr:find('or ("[" .. tostring(opts and opts.actionName or "Contienda") .. "]")) .. intencion', 1, true) ~= nil, true)
 
 -- La accion sale CLICABLE: el atacante recibe el enlace TRP3 del llamador (actionLink) y la
 -- victima lo RECONSTRUYE en local desde el catalogo de acciones basicas (por la red viaja solo
@@ -191,7 +204,7 @@ print("La accion es un enlace y la tirada del atacante llega a la victima")
 chk("el llamador entrega el enlace",
     panel:find("local actionLink = HarfordTRP3 and HarfordTRP3.GetAbilityChatLink", 1, true) ~= nil, true)
 chk("el atacante lo usa de prefijo",
-    wr:find("local prefijo = (opts and opts.actionLink)", 1, true) ~= nil, true)
+    wr:find("local prefijo = ((opts and opts.actionLink)", 1, true) ~= nil, true)
 chk("y su tirada viaja dirigida",
     wr:find('targetIsPlayer and { targetUnit = "target" } or { silent = true })', 1, true) ~= nil, true)
 chk("RollSkillEx transporta targetUnit",

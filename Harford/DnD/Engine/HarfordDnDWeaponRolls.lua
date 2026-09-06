@@ -618,8 +618,9 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
     if extraDamageDice and extraDamageDice ~= "" and responseTarget and HarfordSync and HarfordSync.SendRequestedSaveResult then
         HarfordSync.SendRequestedSaveResult(K.ADDON_PREFIX, responseTarget, saved, sourceGuid)
     end
-    -- El nombre de la accion delante ("[Empujar] Atletismo ..."): sin el, la linea del defensor
-    -- es una prueba huerfana y en mesa no se sabe a QUE esta respondiendo. Por la red viaja solo
+    -- El nombre de la accion delante ("[Empujar] de Fulano Atletismo ..."): sin el, la linea
+    -- del defensor es una prueba huerfana, y sin el "de <atacante>" se leia AL REVES — "DM
+    -- [Empujar] Atletismo..." parecia que la victima era quien empujaba. Por la red viaja solo
     -- el NOMBRE (un hyperlink no cabe en el campo), asi que el enlace clicable se reconstruye
     -- AQUI desde el catalogo local de acciones basicas; sin coincidencia, texto plano.
     local accion = tostring(actionName or "")
@@ -635,7 +636,8 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
                 end
             end
         end
-        prefijoAccion = (enlace or ("[" .. accion .. "]")) .. " "
+        local deQuien = (sourceName and sourceName ~= "" and (" de " .. tostring(sourceName))) or ""
+        prefijoAccion = (enlace or ("[" .. accion .. "]")) .. deQuien .. " "
     end
     local rollData = {
         type = "info",
@@ -752,11 +754,34 @@ local function RollContest(contest, opts)
             or HarfordClassColors.UnitFullName("target") or "el objetivo"
     end
     local targetIsPlayer = UnitIsPlayer and UnitIsPlayer("target")
+    -- La opcion elegida manda sobre el estado por defecto, y puede ser `false` para decir
+    -- EXPRESAMENTE que no aplique ninguno (Empujar: apartar mueve, no derriba). Por eso se
+    -- resuelve con un `if` y no con `and/or`: ese idioma devuelve el otro lado cuando el valor
+    -- es false, que es justo el caso que hay que distinguir. Se calcula ANTES de tirar porque
+    -- la etiqueta del atacante declara la intencion.
+    local estado = contest.onWin
+    if opts and opts.conditionId ~= nil then
+        estado = opts.conditionId or nil
+    end
+
+    -- La INTENCION declarada, en la propia linea del atacante: "Derribar" (en el color de
+    -- estado, porque deja uno) o "Apartar 1,5 m" (tal cual). Sin opcion elegida pero con
+    -- estado por defecto (Agarrar), el nombre del estado coloreado. Antes la linea no decia
+    -- que se intentaba y solo se sabia si el defensor fallaba.
+    local intencion = ""
+    if opts and opts.resultLabel and opts.resultLabel ~= "" then
+        local texto = tostring(opts.resultLabel)
+        if estado then texto = "|cffff6b6b" .. texto .. "|r" end
+        intencion = " " .. texto
+    elseif estado then
+        intencion = " " .. EtiquetaDeEstado(estado, tostring(estado))
+    end
+
     -- La accion va CLICABLE cuando el llamador trae su enlace TRP3; el nombre pelado queda de
     -- respaldo. `targetUnit` hace que la tirada del atacante LLEGUE a la victima aunque no
     -- compartan grupo (whisper extra de Broadcast) — sin el, la victima solo veia su salvacion.
-    local prefijo = (opts and opts.actionLink)
-        or ("[" .. tostring(opts and opts.actionName or "Contienda") .. "]")
+    local prefijo = ((opts and opts.actionLink)
+        or ("[" .. tostring(opts and opts.actionName or "Contienda") .. "]")) .. intencion
     local propia = api.RollSkillEx(contest.skill,
         targetIsPlayer and (prefijo .. " " .. targetName) or nil,
         targetIsPlayer and { targetUnit = "target" } or { silent = true })
@@ -766,15 +791,6 @@ local function RollContest(contest, opts)
     -- La lista completa viaja junta: el defensor elige, no el atacante.
     local contra = contest.against
     if type(contra) == "table" then contra = table.concat(contra, "/") end
-
-    -- La opcion elegida manda sobre el estado por defecto, y puede ser `false` para decir
-    -- EXPRESAMENTE que no aplique ninguno (Empujar: apartar mueve, no derriba). Por eso se
-    -- resuelve con un `if` y no con `and/or`: ese idioma devuelve el otro lado cuando el valor
-    -- es false, que es justo el caso que hay que distinguir.
-    local estado = contest.onWin
-    if opts and opts.conditionId ~= nil then
-        estado = opts.conditionId or nil
-    end
 
     -- `outcome` es lo que le pasa al defensor AL FALLAR (FormatSaveOutcome lo pega detras de
     -- FALLO): la opcion declarada ("Apartar 1,5 m") o el nombre del estado que se le aplica
@@ -812,14 +828,11 @@ local function RollContest(contest, opts)
         if not defense.saved and defense.conditionApplied and estado then
             result = EtiquetaDeEstado(estado, tostring(estado))
         end
-        local cabecera = prefijo
-        if opts and opts.resultLabel and opts.resultLabel ~= "" then
-            cabecera = cabecera .. " " .. tostring(opts.resultLabel)
-        end
+        -- `prefijo` ya lleva la intencion declarada.
         HarfordDnDRolls.Broadcast({
             type = "info",
             label = string.format("%s %s (|cff66ccff%s %d (%s)|r vs |cff66ccff%s %d (%s)|r) %s",
-                cabecera, targetName, tostring(contest.skill or "Prueba"), total, ownDice,
+                prefijo, targetName, tostring(contest.skill or "Prueba"), total, ownDice,
                 tostring(defense.skill or contra or "Prueba"), tonumber(defense.total) or 0, defenseDice, result),
         })
     end

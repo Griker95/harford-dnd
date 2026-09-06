@@ -588,6 +588,10 @@ local function BuildTraitLines(traits, draft)
                 local elegidos = draft.choices[tostring(feature.id or "")] or {}
                 if slots == 1 and #elegidos == 1 then
                     local option = HarfordDnDBook.GetChoiceOption(feature, elegidos[1])
+                    -- Un TRUCO elegido (opcion con spellId: Legado elfico > Mensaje) NO va
+                    -- incrustado en la cabecera como los estilos: cae a la linea cian bajo el
+                    -- titulo, el formato de Pericia ("{col:00ffff}Mensaje{/col}").
+                    if option and option.spellId then option = nil end
                     if option then
                         local label = tostring(option.label or elegidos[1])
                         local corto = Trim(label:match("^(.-)%s*%(") or label)
@@ -633,6 +637,13 @@ local function BuildTraitLines(traits, draft)
                 })[tostring(entry.classId or "")] or "ffff00"
                 lines[#lines + 1] = "{h3}{col:" .. colManiobra .. "}{icon:" .. FeatureIconName(feature) .. ":25} "
                     .. tostring(feature.name or "Maniobra") .. "{/col}{/h3}"
+            elseif entry.source == "Subclase" then
+                -- Los rasgos DE ESPECIALIZACION llevan su nombre coloreado con el color de la
+                -- clase (decision de mesa 2026-09-06: "Veredicto del Templario" en el rosa del
+                -- Paladin, sin el prefijo "Canalizar:", que se retiro de los datos). El color
+                -- no rompe el matching de cabeceras: se compara sin markup.
+                lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} {col:" .. hexClase .. "}"
+                    .. TituloDeRasgo(feature.name) .. "{/col}" .. (inlineTitulo or "") .. "{/h2}"
             else
                 lines[#lines + 1] = "{h2}{icon:" .. FeatureIconName(feature) .. ":25} "
                     .. TituloDeRasgo(feature.name) .. (inlineTitulo or "") .. "{/h2}"

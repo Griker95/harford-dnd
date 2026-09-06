@@ -105,4 +105,37 @@ for _, par in ipairs(LLAMADORES) do
     chk(par[1]:match("([^/]+)%.lua") .. " pasa def", t:find(par[2], 1, true) ~= nil, true)
 end
 
+-- ── GUERRERO BENDITO (2026-09-06): elegir el estilo destapa la eleccion de sus 2 trucos ──
+-- La opcion sola no daba nada que elegir: el rasgo derivado `pal_guerrero_bendito_trucos`
+-- (requiresOption, patron Sistema de Emergencia) abre la eleccion de DOS trucos de la lista
+-- del sacerdote (extraFrom los lista uno a uno del compendio). Y el grimorio resuelve trucos
+-- elegidos por opcion tambien en rasgos de CLASE — antes solo lo hacia la rama de raza, asi
+-- que el truco se elegia y no aparecia.
+print("Guerrero Bendito abre sus dos trucos de sacerdote")
+local pal = io.open("Harford/DnD/Data/Classes/Paladin.lua"):read("*a")
+chk("rasgo derivado de la opcion",
+    pal:find('id = "pal_guerrero_bendito_trucos", requiresOption = "guerrero_bendito"', 1, true) ~= nil, true)
+chk("dos huecos de la lista del sacerdote",
+    pal:find('extraFrom = "cantrip:Sacerdote",', 1, true) ~= nil
+    and pal:find("slots = 2,\n            extraFrom", 1, true) ~= nil, true)
+local comp = io.open("Harford/Compendium/HarfordCompendioCore.lua"):read("*a")
+chk("el grimorio resuelve trucos por opcion en rasgos de CLASE",
+    (comp:find("-- Trucos ELEGIDOS en un rasgo de eleccion de CLASE", 1, true) or 0)
+    < (comp:find("-- CONJUROS DE RAZA", 1, true) or 0), true)
+
+-- ── FORMATO DEL ABOUT (2026-09-06) ──
+-- Los rasgos de Canalizar pierden el prefijo "Canalizar:" y el sufijo "(sagrado/proteccion/
+-- represion)" — cada uno vive en el tab de SU camino y era redundante. En el About, los rasgos
+-- DE ESPECIALIZACION llevan el nombre coloreado con el color de la clase, y un TRUCO elegido
+-- (opcion con spellId) no va incrustado en la cabecera: cae a la linea cian de Pericia.
+print("Canalizar sin prefijo y rasgos de especializacion coloreados")
+chk("sin 'Canalizar:' en los nombres", pal:find('name = "Canalizar:', 1, true) == nil, true)
+chk("sin sufijo de camino", pal:find('name = "Canalizar divinidad (', 1, true) == nil, true)
+local crea = io.open("Harford/Character/HarfordCharacterCreation.lua"):read("*a")
+chk("cabecera de subclase coloreada",
+    crea:find('elseif entry.source == "Subclase" then', 1, true) ~= nil
+    and crea:find(':25} {col:" .. hexClase .. "}"', 1, true) ~= nil, true)
+chk("el truco elegido va a la linea cian, no a la cabecera",
+    crea:find("if option and option.spellId then option = nil end", 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

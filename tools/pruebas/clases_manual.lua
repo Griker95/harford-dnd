@@ -464,9 +464,12 @@ for _, c in ipairs(CLASES) do
         if huecos > 0 then
             local ops = API.GetChoiceOptions and API.GetChoiceOptions(f)
             if type(ops) ~= "table" or #ops == 0 then
-                -- `Truco de bonificacion` sale del compendio, que no se carga aqui. Es la unica
-                -- excepcion conocida; cualquier otra es un rasgo que nadie podria completar.
-                if f.id ~= "sac_dis_truco" then mudas[#mudas + 1] = tostring(f.id) end
+                -- `Truco de bonificacion` y los trucos de Guerrero Bendito salen del compendio,
+                -- que no se carga aqui (extraFrom "cantrip:<Clase>"). Son las excepciones
+                -- conocidas; cualquier otra es un rasgo que nadie podria completar.
+                if f.id ~= "sac_dis_truco" and f.id ~= "pal_guerrero_bendito_trucos" then
+                    mudas[#mudas + 1] = tostring(f.id)
+                end
             else
                 resolubles = resolubles + 1
                 -- Mas huecos que opciones significa que la eleccion no se puede completar NUNCA,

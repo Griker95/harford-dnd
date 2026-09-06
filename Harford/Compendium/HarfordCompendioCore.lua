@@ -103,6 +103,16 @@ local function IsFeatureGrantedSpell(spellId)
             for _, id in ipairs(feature.cantripSpellIds or {}) do
                 if tostring(id) == wanted then return true end
             end
+            -- Trucos ELEGIDOS en un rasgo de eleccion de CLASE (Guerrero Bendito del Paladin:
+            -- 2 trucos de sacerdote): igual que en la rama de raza de abajo, la opcion
+            -- resuelta lleva el spellId. Sin esto, el truco se elegia y no aparecia.
+            if feature.choice and HarfordDnDProgression.GetChoice
+                and HarfordDnDBook and HarfordDnDBook.GetChoiceOption then
+                for _, optId in ipairs(HarfordDnDProgression.GetChoice(feature.id, profileName) or {}) do
+                    local opt = HarfordDnDBook.GetChoiceOption(feature, optId)
+                    if opt and tostring(opt.spellId or "") == wanted then return true end
+                end
+            end
         end
     end
 

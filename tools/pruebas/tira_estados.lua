@@ -271,5 +271,16 @@ chk("y Conjuros recupera espacios en modo slots",
 chk("RecoverSpellSlot devuelve primero el gasto normal",
     io.open("Harford/DnD/State/HarfordDnDMana.lua"):read("*a")
         :find("HarfordDnDProgression.SetSpellSlotsSpent(spellLevel, spent - 1, profileName)", 1, true) ~= nil, true)
+-- El boton lleva EL MISMO arte que el boton de HarfordAdmin (StyleButton): circulo de minimapa
+-- con INV_Misc_Gear_01 enmascarado y borde de tracking — no el engranaje amarillo plano de
+-- UI-OptionsButton, que desentonaba. Y en su misma posicion canonica del PlayerFrame; si el
+-- boton Admin esta visible ahi, el del core se pega a su derecha para no superponerse.
+chk("con el arte del boton Admin, no el engranaje amarillo",
+    uf:find('gearIcon:SetTexture("Interface\\\\Icons\\\\INV_Misc_Gear_01")', 1, true) ~= nil
+    and uf:find('gearBorder:SetTexture("Interface\\\\Minimap\\\\MiniMap-TrackingBorder")', 1, true) ~= nil
+    and not uf:find("UI-OptionsButton", 1, true), true)
+chk("misma posicion canonica, apartandose del boton Admin si esta",
+    uf:find('gear:SetPoint("TOPLEFT", PlayerFrame, "TOPLEFT", 78 + offset, -18)', 1, true) ~= nil
+    and uf:find('_G["HarfordAdminUnitMenuPlayerButton"]', 1, true) ~= nil, true)
 
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

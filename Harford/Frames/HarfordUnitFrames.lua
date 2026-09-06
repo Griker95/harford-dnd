@@ -5240,21 +5240,86 @@ do
         }
     end
 
-    -- Boton pequeño pegado a la esquina superior derecha del PlayerFrame. Overlay en
-    -- UIParent/MEDIUM como el resto (contrato de strata cross-tree), anclado al frame nativo.
+    -- Boton del PlayerFrame con EL MISMO arte que el boton de HarfordAdmin (StyleButton de
+    -- HarfordAdminUnitMenu): circulo de minimapa con INV_Misc_Gear_01 enmascarado, borde de
+    -- tracking, pushed y highlight — no el engranaje amarillo plano que llevaba antes y
+    -- desentonaba. Overlay en UIParent/MEDIUM (contrato de strata cross-tree).
     local gear = CreateFrame("Button", "HarfordPlayerGearButton", UIParent)
     gear:SetFrameStrata("MEDIUM")
     gear:SetFrameLevel(85)
-    gear:SetSize(16, 16)
-    gear:SetPoint("TOPRIGHT", PlayerFrame, "TOPRIGHT", -8, -6)
-    gear:SetNormalTexture("Interface\\Buttons\\UI-OptionsButton")
-    gear:SetHighlightTexture("Interface\\Buttons\\UI-Common-MouseHilight", "ADD")
+    gear:SetSize(22, 22)
+
+    local gearBg = gear:CreateTexture(nil, "BACKGROUND")
+    gearBg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+    gearBg:SetPoint("CENTER", gear, "CENTER", 0, 1)
+    gearBg:SetSize(14, 14)
+    gearBg:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+    local gearBorder = gear:CreateTexture(nil, "OVERLAY")
+    gearBorder:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    gearBorder:SetPoint("TOPLEFT", gear, "TOPLEFT", 0, 0)
+    gearBorder:SetSize(36, 36)
+
+    local gearPushed = gear:CreateTexture(nil, "OVERLAY")
+    gearPushed:SetTexture("Interface\\Buttons\\UI-Quickslot-Depress")
+    gearPushed:SetAllPoints(gear)
+    gearPushed:SetAlpha(0.65)
+    gearPushed:Hide()
+
+    local gearHighlight = gear:CreateTexture(nil, "HIGHLIGHT")
+    gearHighlight:SetTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    gearHighlight:SetBlendMode("ADD")
+    gearHighlight:SetPoint("CENTER", gear, "CENTER", 0, 1)
+    gearHighlight:SetSize(15, 15)
+
+    local gearIcon = gear:CreateTexture(nil, "ARTWORK")
+    gearIcon:SetPoint("CENTER", gear, "CENTER", 0, 1)
+    gearIcon:SetSize(12, 12)
+    gearIcon:SetTexture("Interface\\Icons\\INV_Misc_Gear_01")
+    gearIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    if gear.CreateMaskTexture and gearIcon.AddMaskTexture then
+        local mask = gear:CreateMaskTexture(nil, "BACKGROUND")
+        mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask", "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+        mask:SetAllPoints(gearIcon)
+        gearIcon:AddMaskTexture(mask)
+    end
+
+    gear:SetScript("OnMouseDown", function()
+        gearPushed:Show()
+        gearIcon:ClearAllPoints()
+        gearIcon:SetPoint("CENTER", gear, "CENTER", 1, 0)
+    end)
+    gear:SetScript("OnMouseUp", function()
+        gearPushed:Hide()
+        gearIcon:ClearAllPoints()
+        gearIcon:SetPoint("CENTER", gear, "CENTER", 0, 1)
+    end)
+
+    -- Misma posicion canonica que el boton Admin del PlayerFrame (TOPLEFT 78,-18). Si el boton
+    -- del Admin esta visible ahi (DM con .ph dm), el del core se pega a su derecha para no
+    -- superponerse: son menus distintos y el DM usa los dos.
+    local function ColocarGear()
+        local admin = _G["HarfordAdminUnitMenuPlayerButton"]
+        local offset = (admin and admin.IsVisible and admin:IsVisible()) and 22 or 0
+        gear:ClearAllPoints()
+        gear:SetPoint("TOPLEFT", PlayerFrame, "TOPLEFT", 78 + offset, -18)
+    end
+    ColocarGear()
+    if HarfordAuthority and HarfordAuthority.RegisterChangeListener then
+        -- Diferido puntual: el Admin refresca la visibilidad de su boton en este mismo cambio.
+        HarfordAuthority.RegisterChangeListener("HarfordPlayerGear", function()
+            if C_Timer and C_Timer.After then C_Timer.After(0, ColocarGear) else ColocarGear() end
+        end)
+    end
+
     gear:SetScript("OnClick", function(self)
         if not EasyMenu then return end
+        ColocarGear()
         gear._menu = gear._menu or CreateFrame("Frame", "HarfordPlayerGearMenu", UIParent, "UIDropDownMenuTemplate")
         EasyMenu(ConstruirMenu(), gear._menu, self, 0, 0, "MENU")
     end)
     gear:SetScript("OnEnter", function(self)
+        ColocarGear()
         if not GameTooltip then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:AddLine("Harford", 1, 0.82, 0)

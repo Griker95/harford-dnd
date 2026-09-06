@@ -2473,7 +2473,7 @@ HarfordDnDStore.ApplyFailedSpecialDamage = function(diceText, damageType, target
 end
 
 local function RequestPlayerTargetSave(ability, dc, outcome, auraId, conditionId, conditionDuration, conditionTurns,
-    extraDamageDice, extraDamageType, skill)
+    extraDamageDice, extraDamageType, skill, actionName)
     if not (UnitExists and UnitExists("target") and UnitIsPlayer and UnitIsPlayer("target")) then
         return false
     end
@@ -2481,7 +2481,7 @@ local function RequestPlayerTargetSave(ability, dc, outcome, auraId, conditionId
         WeaponRolls.RollRequestedSaveForSelf(ability, dc, outcome, auraId, nil, conditionId, conditionDuration, conditionTurns,
             UnitGUID and UnitGUID("player") or "",
             HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName()
-                or UnitName and UnitName("player") or "", extraDamageDice, extraDamageType, skill)
+                or UnitName and UnitName("player") or "", extraDamageDice, extraDamageType, skill, actionName)
         return true
     end
     local name = HarfordClassColors.UnitFullName("target")
@@ -2489,7 +2489,7 @@ local function RequestPlayerTargetSave(ability, dc, outcome, auraId, conditionId
         HarfordSync.SendRequestedSave(K.ADDON_PREFIX, name, ability, dc, outcome, auraId,
             conditionId, conditionDuration, conditionTurns, UnitGUID and UnitGUID("player") or "",
             HarfordDnDRolls and HarfordDnDRolls.GetDisplayName and HarfordDnDRolls.GetDisplayName()
-                or UnitName and UnitName("player") or "", extraDamageDice, extraDamageType, skill)
+                or UnitName and UnitName("player") or "", extraDamageDice, extraDamageType, skill, actionName)
         return true
     end
     return false
@@ -2568,7 +2568,6 @@ function HarfordDnDStore.UseEnergyManeuver(feature, selectedLevel)
             payWithUses = payWithUses or nil,
             featureId = feature.usesFrom or feature.id,
             link = maneuverLink,
-            note = man.outcome and ("(" .. man.outcome .. ")") or nil,
             resource = resource,
             cost = cost,
             spendOnHit = man.spendOnHit and true or false,
@@ -3123,14 +3122,14 @@ DoWeaponAttack = function(options)
     local targetName = ColoredUnitName("target")
     local targetLabel = (targetName ~= "" and (" " .. targetName)) or ""
 
-    -- Maniobra de energia que reusa este ataque (p.ej. Exponer Armadura): prefija el nombre
-    -- y anexa su nota. Es de un solo uso; se consume al construir la etiqueta.
+    -- Maniobra de energia que reusa este ataque (p.ej. Exponer Armadura): prefija su nombre y
+    -- nada mas -- el desenlace lo cuenta la propia tirada, no una nota en prosa entre parentesis.
+    -- Es de un solo uso; se consume al construir la etiqueta.
     local man = HarfordDnDStore.pendingWeaponManeuver or HarfordDnDStore.pendingFormSpecial
     HarfordDnDStore.pendingWeaponManeuver = nil
     HarfordDnDStore.pendingFormSpecial = nil
     local manLabel = man and (man.link or man.name)
-    local manPrefix = (man and manLabel and (man.afterHitSave and (manLabel .. " ") or (manLabel .. ": "))) or ""
-    local manSuffix = (man and (not man.afterHitSave) and man.note and ("  " .. man.note)) or ""
+    local manPrefix = (man and manLabel and (manLabel .. " ")) or ""
     -- Se avisa de que falta el bono de competencia: si no, la tirada baja y no se sabe por que.
     local sinCompetencia = (not competente) and " |cffff5555sin competencia|r" or ""
     -- Actor externo: la linea empieza por su nombre, para que en mesa se lea quien golpea.
@@ -3147,7 +3146,7 @@ DoWeaponAttack = function(options)
     else
         attackLabel = actorPrefix .. manPrefix .. (offhand and "Ataque Offhand " or "Ataque ") .. WeaponRollName(def)
             .. targetLabel .. sinCompetencia .. wmodLabel
-            .. (options.labelSuffix and (" " .. options.labelSuffix) or "") .. manSuffix
+            .. (options.labelSuffix and (" " .. options.labelSuffix) or "")
     end
 
     HarfordDnDRolls.Broadcast({
@@ -4457,10 +4456,10 @@ local AddonHandlers = HarfordDnDComm.CreateHandlers({
     -- Un atacante nos pide una salvacion post-impacto: se tira con NUESTRA ficha
     -- local y se anuncia desde nuestro cliente.
     HandleRequestedSave = function(ability, dc, outcome, auraId, sender, conditionId,
-        conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill)
+        conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill, actionName)
         WeaponRolls.RollRequestedSaveForSelf(ability, dc, outcome, auraId, sender,
             conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice,
-            extraDamageType, skill)
+            extraDamageType, skill, actionName)
     end,
     HandleRequestedSaveResult = function(sender, saved)
         local followup = HarfordDnDStore.pendingFormSaveFollowup

@@ -129,4 +129,40 @@ print("Conectado al Libro por la ruta de acciones basicas")
 chk("rama en el ejecutor", panel:find('elseif type(def.contest) == "table" then', 1, true) ~= nil, true)
 chk("sin objetivo no tira", wr:find('if not (UnitExists and UnitExists("target")) then return false, "sin objetivo" end', 1, true) ~= nil, true)
 
+-- `outcome` viaja al defensor como "lo que te pasa AL FALLAR": FormatSaveOutcome lo pega detras de
+-- FALLO. El "resiste" que iba de defecto era la semantica invertida -- resistir es lo que hace al
+-- GANAR -- y la victima de Empujar publicaba el contradictorio "FALLO resiste".
+print("El desenlace del defensor cuenta lo que le pasa al fallar")
+chk('"resiste" ya no es el texto de fallo', wr:find('or "resiste"', 1, true), "nil")
+chk("primero la opcion elegida (Apartar 1,5 m)",
+    wr:find("alFallar = tostring(opts.resultLabel)", 1, true) ~= nil, true)
+chk("si no, el nombre del estado que aplica (Derribado)",
+    wr:find("alFallar = (condition and condition.label) or tostring(estado)", 1, true) ~= nil, true)
+
+-- La linea de la victima de un Empujar era una prueba huerfana ("Griker Atletismo 8 vs CD 11")
+-- sin decir a QUE respondia. El nombre de la accion viaja ahora como ULTIMO campo de DOSAVE
+-- (un cliente viejo lo ignora y pierde solo el rotulo) y prefija su linea: "[Empujar] Atletismo...".
+print("El nombre de la accion viaja hasta la linea del defensor")
+local sync = io.open("Harford/Core/HarfordSync.lua"):read("*a")
+local comm = io.open("Harford/DnD/Engine/HarfordDnDComm.lua"):read("*a")
+chk("la contienda lo entrega a la resolucion",
+    wr:find("actionName = opts and opts.actionName or nil", 1, true) ~= nil, true)
+chk("y la resolucion lo reenvia a la peticion de salvacion",
+    wr:find("data.extraDamageType, data.skill, data.actionName)", 1, true) ~= nil, true)
+chk("DOSAVE lo serializa como ultimo campo",
+    sync:find('SaveRequestField(tostring(actionName or ""):sub(1, 40))', 1, true) ~= nil, true)
+chk("el receptor lo desempaqueta y lo pasa",
+    comm:find("saveExtraDice, saveExtraType, saveSkill, saveActionName)", 1, true) ~= nil, true)
+chk("la victima lo pone delante de su tirada",
+    wr:find('("[" .. accion .. "] ")', 1, true) ~= nil, true)
+
+-- La linea de ataque de una maniobra decia "[Desarme]: Ataque ... (suelta el objeto)": prosa que
+-- no aporta (el desenlace lo cuenta la tirada) y un colon que ninguna otra etiqueta lleva.
+print("Sin prosa ni colon en la linea de ataque de maniobra")
+local dnd = io.open("Harford/DnD/UI/HarfordDnD.lua"):read("*a")
+chk("la nota entre parentesis ya no existe", dnd:find("note = man.outcome", 1, true), "nil")
+chk("ni su sufijo en la etiqueta", dnd:find("manSuffix", 1, true), "nil")
+chk("el prefijo va con espacio, no con colon",
+    dnd:find('local manPrefix = (man and manLabel and (manLabel .. " ")) or ""', 1, true) ~= nil, true)
+
 print(fallos == 0 and "TODO CORRECTO" or (fallos .. " FALLOS"))

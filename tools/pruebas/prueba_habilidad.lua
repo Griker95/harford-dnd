@@ -25,7 +25,7 @@ local iTipo = sync:find('extraDamageType or ""):match("^[%a_]+$") or ""', 1, tru
 local iSkill = sync:find('SaveRequestField(tostring(skill or ""):sub(1, 32))', 1, true)
 chk("se envia", iSkill ~= nil, true)
 chk("despues de todos los demas", (iTipo and iSkill and iSkill > iTipo) and true or false, true)
-chk("se recibe", sync:find("extraDamageType, skill =", 1, true) ~= nil, true)
+chk("se recibe", sync:find("extraDamageType, skill, actionName =", 1, true) ~= nil, true)
 
 print("Cada lado la resuelve con SU competencia")
 chk("el defensor jugador", wr:find("HarfordDnDCalc.GetSkillRollBonuses(s)", 1, true) ~= nil, true)

@@ -2520,6 +2520,18 @@ contienda es de donde sale la dificultad.
 - **El empate lo gana el defensor**, y eso ya salia de la comparacion inclusiva (`total >= dc`).
 - La opcion elegida manda sobre `onWin` y puede ser `false` para no aplicar ninguno (ver la trampa
   de `and/or` mas arriba).
+- **`outcome` es lo que le pasa al defensor AL FALLAR** (`FormatSaveOutcome` lo pega detras de
+  `FALLO`): la opcion elegida (`Apartar 1,5 m`) o el label del estado que se le aplica
+  (`Derribado`). El defecto `"resiste"` que hubo era la semantica invertida — resistir es lo que
+  hace al GANAR — y la victima de Empujar publicaba el contradictorio "FALLO resiste". Todos los
+  `outcome` declarados en las tablas de maniobras (Chaman, Picaro, CdM...) siguen esa misma
+  semantica de fallo; no reinterpretarlos.
+- **El nombre de la accion viaja como ULTIMO campo de `DOSAVE`** (`actionName`, patron `skill`:
+  un cliente viejo lo ignora y pierde solo el rotulo) y prefija la linea de la victima:
+  `[Empujar] Atletismo 8 vs CD 11 ...`. Sin el, su linea era una prueba huerfana.
+- **La linea de ataque de una maniobra no lleva prosa ni colon**: el `note`/`manSuffix` con
+  `(suelta el objeto)` y el `manLabel .. ": "` se retiraron — el desenlace lo cuenta la tirada.
+  Candado en `tirada_enfrentada`.
 
 ## Reglas De Seguridad
 

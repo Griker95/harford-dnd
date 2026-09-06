@@ -469,7 +469,7 @@ local function ResolveWeaponManeuverAfterHitSave(data)
     if UnitIsPlayer and UnitIsPlayer("target") then
         RequestPlayerTargetSave(data.save, data.dc, data.outcome, data.onFailAura,
             data.conditionId, data.conditionDuration, data.conditionTurns, data.nextAttackExtraDamageDice,
-            data.extraDamageType, data.skill)
+            data.extraDamageType, data.skill, data.actionName)
         if data.nextAttackExtraDamageDice then
             HarfordDnDStore.pendingFormSaveFollowup = {
                 target = HarfordClassColors.UnitFullName("target"), dice = data.nextAttackExtraDamageDice,
@@ -542,7 +542,7 @@ local function ResolveWeaponManeuverAfterHitSave(data)
 end
 
 local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTarget,
-    conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill)
+    conditionId, conditionDuration, conditionTurns, sourceGuid, sourceName, extraDamageDice, extraDamageType, skill, actionName)
     ability = tostring(ability or "")
     if ability == "" then return end
     -- `skill`: lo que se pide es una PRUEBA de esa habilidad, no una salvacion. La tira el
@@ -604,11 +604,14 @@ local function RollRequestedSaveForSelf(ability, dc, outcome, auraId, responseTa
     if extraDamageDice and extraDamageDice ~= "" and responseTarget and HarfordSync and HarfordSync.SendRequestedSaveResult then
         HarfordSync.SendRequestedSaveResult(K.ADDON_PREFIX, responseTarget, saved, sourceGuid)
     end
+    -- El nombre de la accion delante ("[Empujar] Atletismo ..."): sin el, la linea del defensor
+    -- es una prueba huerfana y en mesa no se sabe a QUE esta respondiendo.
+    local accion = tostring(actionName or "")
     local rollData = {
         type = "info",
-        label = skillDef
+        label = (accion ~= "" and ("[" .. accion .. "] ") or "") .. (skillDef
             and FormatCheckRollLabel(skillDef.name, total, d, dc, result, base, prof)
-            or FormatSaveRollLabel(ability, total, d, dc, result, base, prof),
+            or FormatSaveRollLabel(ability, total, d, dc, result, base, prof)),
         -- La salvacion la haces TU, no la ficha que tengas cargada.
         player = HarfordDnDRolls.GetOwnName and HarfordDnDRolls.GetOwnName() or nil,
     }
@@ -728,6 +731,20 @@ local function RollContest(contest, opts)
         estado = opts.conditionId or nil
     end
 
+    -- `outcome` es lo que le pasa al defensor AL FALLAR (FormatSaveOutcome lo pega detras de
+    -- FALLO): la opcion declarada ("Apartar 1,5 m") o el nombre del estado que se le aplica
+    -- ("Derribado"). El "resiste" de antes era la semantica invertida -- resistir es lo que hace
+    -- al GANAR -- y la victima publicaba el contradictorio "FALLO resiste".
+    local alFallar = contest.outcome
+    if not alFallar and opts and opts.resultLabel and opts.resultLabel ~= "" then
+        alFallar = tostring(opts.resultLabel)
+    end
+    if not alFallar and estado then
+        local condition = HarfordDnDConditions and HarfordDnDConditions.GetDefinition
+            and HarfordDnDConditions.GetDefinition(estado)
+        alFallar = (condition and condition.label) or tostring(estado)
+    end
+
     local defense = ResolveWeaponManeuverAfterHitSave({
         dc = total,
         skill = contra,
@@ -735,7 +752,8 @@ local function RollContest(contest, opts)
         save = contest.ability or "Fuerza",
         conditionId = estado,
         conditionDuration = contest.duration or "manual",
-        outcome = contest.outcome or "resiste",
+        outcome = alFallar or "",
+        actionName = opts and opts.actionName or nil,
         silent = not targetIsPlayer,
     })
     -- Contra NPC conocemos ambas tiradas en este cliente: se publica UNA linea de contienda.
